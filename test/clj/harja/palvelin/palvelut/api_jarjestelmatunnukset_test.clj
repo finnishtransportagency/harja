@@ -71,17 +71,24 @@
       (is e))))
 
 (deftest jarjestelmatunnusten-tallennus-toimii
-  (let [testitunnukset [{:id -1, :kayttajanimi "juha88",
+  (let [ennen-muutosta (q "SELECT id, kayttajanimi, kuvaus, organisaatio FROM kayttaja;")
+        testitunnukset [{:id -1, :kayttajanimi "juha88",
                          :kuvaus "noni",
                          :organisaatio {:nimi "Liikennevirasto", :id 1}}
-                        {:id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'")),
-                         :kayttajanimi "yit-rakennus",
+                        {:id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'destia'")),
+                         :kayttajanimi "destia",
                          :kuvaus "testissä muutettu",
                          :organisaatio {:nimi "Liikennevirasto", :id 1}}]
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                          :tallenna-jarjestelmatunnukset +kayttaja-jvh+ testitunnukset)]
+                          :tallenna-jarjestelmatunnukset +kayttaja-jvh+ testitunnukset)
+        muutoksen-jalkeen (q "SELECT id, kayttajanimi, kuvaus, organisaatio FROM kayttaja;")]
 
     (is (integer? (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'juha88'"))))
     (is (= (ffirst (q "SELECT kuvaus FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'"))
            "testissä muutettu"))
+    (is (= (filterv #(and (not= (second %) "destia") (not= (second %) "juha88"))
+                    ennen-muutosta)
+           (filterv #(and (not= (second %) "destia") (not= (second %) "juha88"))
+                    muutoksen-jalkeen))
+        "Ei koskettu muihin käyttäjätunnuksiin")
     (u "DELETE FROM kayttaja WHERE kayttajanimi = 'juha88';")))
