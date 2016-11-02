@@ -30,7 +30,7 @@
         (log "SAIN: " (pr-str uudet-tunnukset))
         (reset! jarjestelmatunnukset uudet-tunnukset))))
 
-(defn api-jarjestelmatunnukset [jarjestelmatunnukset-atom]
+(defn- api-jarjestelmatunnukset [jarjestelmatunnukset-atom]
   (let [ei-muokattava (constantly false)]
     [grid/grid {:otsikko "API järjestelmätunnukset"
                 :tallenna tallenna
@@ -64,37 +64,52 @@
        :leveys 5}]
      @jarjestelmatunnukset-atom]))
 
-(defn jarjestelmatunnuksien-lisaoikeudet [jarjestelmatunnukset-atom]
-  [grid/grid
-     {:otsikko "API-järjestelmätunnusten lisäoikeudet "
-      :tunniste :id
-      :tallenna nil
-      ;:vetolaatikot (into {}
-      ;                    (map
-      ;                     (juxt :id
-      ;                           (partial valitavoite-lomake
-      ;                                    {:aseta-tavoitteet #(reset! vt/valitavoitteet %)} ur)))
-      ;                   @vt/valitavoitteet)
-      }
+(defn jarjestelmatunnuksen-lisaoikeudet [kayttaja-id]
+  (let [tunnuksen-oikeudet (atom nil)]
+    (fn []
+      [grid/grid
+       {:otsikko "Lisäoikeudet urakoihin"
+        :tunniste :id
+        :tallenna nil}
+       [{:otsikko "Urakka"
+         :nimi :urakka
+         :muokattava (constantly false)
+         :tyyppi :string
+         :leveys 5}
+        {:otsikko "Kuvaus"
+         :nimi :kuvaus
+         :hae (fn [] "Täydet oikeudet")
+         :tyyppi :string
+         :muokattava (constantly false)
+         :leveys 15}]
+       @tunnuksen-oikeudet])))
 
-   [{:otsikko "Käyttäjänimi"
+(defn- jarjestelmatunnuksien-lisaoikeudet [jarjestelmatunnukset-atom]
+  [grid/grid
+   {:otsikko "API-järjestelmätunnusten lisäoikeudet "
+    :tunniste :id
+    :tallenna nil
+    :vetolaatikot (into {} (map (juxt :id #(-> [jarjestelmatunnuksen-lisaoikeudet (:id %)]))
+                                @jarjestelmatunnukset-atom))}
+   [{:tyyppi :vetolaatikon-tila :leveys 1}
+    {:otsikko "Käyttäjänimi"
      :nimi :kayttajanimi
      :muokattava (constantly false)
      :tyyppi :string
-     :leveys 5}
+     :leveys 15}
     {:otsikko "Urakoitsija"
      :nimi :organisaatio
      :fmt :nimi
      :tyyppi :string
      :muokattava (constantly false)
-     :leveys 15}]
-     @jarjestelmatunnukset-atom])
+     :leveys 30}]
+   @jarjestelmatunnukset-atom])
 
 (defn api-jarjestelmatunnukset-paakomponentti []
 
   (komp/luo
-   (komp/lippu nakymassa?)
-   (fn []
-     [:div
-      [api-jarjestelmatunnukset jarjestelmatunnukset]
-      [jarjestelmatunnuksien-lisaoikeudet jarjestelmatunnukset]])))
+    (komp/lippu nakymassa?)
+    (fn []
+      [:div
+       [api-jarjestelmatunnukset jarjestelmatunnukset]
+       [jarjestelmatunnuksien-lisaoikeudet jarjestelmatunnukset]])))
