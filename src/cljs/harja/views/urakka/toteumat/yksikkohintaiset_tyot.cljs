@@ -312,7 +312,7 @@
          :esta-poistaminen-tooltip (fn [_] "Järjestelmän lisäämää kohdetta ei voi poistaa.")
          :max-rivimaara 300
          :max-rivimaaran-ylitys-viesti "Liikaa hakutuloksia, rajaa hakua"
-         :tunniste :tehtavaid}
+         :tunniste :tehtava_id}
         [{:otsikko "Päivämäärä"
           :nimi :alkanut
           :muokattava? (constantly false)
@@ -347,7 +347,7 @@
           :leveys 20
           :komponentti (fn [rivi]
                          [:button.nappi-toissijainen.nappi-grid
-                          {:on-click #(nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteumaid rivi))}
+                          {:on-click #(nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteuma_id rivi))}
                           (ikonit/eye-open) " Toteuma"])}]
         (when-let [toteutuneet-tehtavat @toteutuneet-tehtavat]
           (sort-by :alkanut t/after? toteutuneet-tehtavat))]])))
