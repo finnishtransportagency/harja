@@ -13,7 +13,7 @@
   (when urakka
     [:urakka
      [:id (:id urakka)]
-     (merkkijono/leikkaa 256 [:nimi (:nimi urakka)])
+     [:nimi (merkkijono/leikkaa 256 (:nimi urakka))]
      [:tyyppi (:tyyppi urakka)]]))
 
 (defn rakenna-urakoitsija [urakka]
