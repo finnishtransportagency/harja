@@ -30,12 +30,27 @@
 (deftest jarjestelmatunnuksien-haku-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-jarjestelmatunnukset +kayttaja-jvh+ nil)]
+    (is (vector? vastaus))
     (is (= (count vastaus) 5))))
 
 (deftest jarjestelmatunnuksien-haku-ei-toimi-ilman-oikeuksia
   (try+
     (let [_ (kutsu-palvelua (:http-palvelin jarjestelma)
                             :hae-jarjestelmatunnukset +kayttaja-tero+ nil)])
+    (is false "Nyt on joku paha oikeusongelma")
+    (catch EiOikeutta e
+      (is e))))
+
+(deftest jarjestelmatunnuksien-lisaoikeuksian-haku-toimii
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-jarjestelmatunnuksen-lisaoikeudet +kayttaja-jvh+ nil)]
+    (is (vector? vastaus))
+    (is (= (count vastaus) 0))))
+
+(deftest jarjestelmatunnuksien-lisaoikeuksian-haku-ei-toimi-ilman-oikeuksia
+  (try+
+    (let [_ (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :hae-jarjestelmatunnuksen-lisaoikeudet +kayttaja-tero+ nil)])
     (is false "Nyt on joku paha oikeusongelma")
     (catch EiOikeutta e
       (is e))))
