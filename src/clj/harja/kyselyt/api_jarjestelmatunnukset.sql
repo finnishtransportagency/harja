@@ -34,6 +34,13 @@ UPDATE kayttaja
  WHERE id = :id AND
        jarjestelma = true;
 
+-- name: paivita-jarjestelmatunnus!
+UPDATE kayttaja
+SET kayttajanimi = :kayttajanimi,
+  organisaatio = :organisaatio,
+  kuvaus = :kuvaus
+WHERE id = :id;
+
 -- name: paivita-jarjestelmatunnuksen-lisaoikeus-urakkaan!
 UPDATE kayttajan_lisaoikeudet_urakkaan SET
   urakka = :urakka
@@ -51,6 +58,3 @@ INSERT INTO kayttajan_lisaoikeudet_urakkaan (urakka, kayttaja)
 INSERT
    INTO kayttaja (kayttajanimi, kuvaus, organisaatio, luotu, jarjestelma, poistettu)
    VALUES (:kayttajanimi, :kuvaus, :organisaatio, NOW(), true, false)
-ON CONFLICT ON CONSTRAINT uniikki_kayttajanimi DO
-   UPDATE SET kuvaus = :kuvaus, organisaatio = :organisaatio, poistettu = false,
-              muokattu = NOW(), jarjestelma = true;

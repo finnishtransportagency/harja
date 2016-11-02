@@ -28,9 +28,14 @@
     (doseq [{:keys [id kayttajanimi kuvaus organisaatio poistettu]} tunnukset]
       (if poistettu
         (q/poista-jarjestelmatunnus! c {:id id})
-        (q/luo-jarjestelmatunnus<! c {:kayttajanimi kayttajanimi
-                                      :kuvaus kuvaus
-                                      :organisaatio (:id organisaatio)}))))
+        (if (neg? id)
+          (q/luo-jarjestelmatunnus<! c {:kayttajanimi kayttajanimi
+                                        :kuvaus kuvaus
+                                        :organisaatio (:id organisaatio)})
+          (q/paivita-jarjestelmatunnus! c {:kayttajanimi kayttajanimi
+                                           :kuvaus kuvaus
+                                           :organisaatio (:id organisaatio)
+                                           :id id})))))
   (hae-jarjestelmatunnukset db user))
 
 (defn tallenna-jarjestelmatunnuksen-lisaoikeudet [db user {:keys [oikeudet kayttaja-id]}]
