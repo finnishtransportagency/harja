@@ -121,7 +121,8 @@
                   :default oikeudet/urakat-toteumat-kokonaishintaisettyot  )
                              user urakka-id)
   (into []
-        muunna-desimaaliluvut-xf
+        (comp (map konv/keraa-tr-kentat)
+         muunna-desimaaliluvut-xf)
         (q/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db urakka-id sopimus-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) (name tyyppi) toimenpidekoodi)))
 
 
