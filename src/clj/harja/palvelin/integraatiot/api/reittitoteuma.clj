@@ -153,9 +153,9 @@ jos niille ei löydy yhteistä tietä tieverkolta."}
   (when (:reittitoteuma data)
     (tallenna-yksittainen-reittitoteuma db db-replica
                                         urakka-id kirjaaja (:reittitoteuma data)))
-  (doseq [pistetoteuma (:reittitoteumat data)]
+  (doseq [toteuma (:reittitoteumat data)]
     (tallenna-yksittainen-reittitoteuma db db-replica
-                                        urakka-id kirjaaja (:reittitoteuma pistetoteuma))))
+                                        urakka-id kirjaaja (:reittitoteuma toteuma))))
 
 (defn tarkista-pyynto [db urakka-id kirjaaja data]
   (let [sopimus-idt (api-toteuma/hae-toteuman-kaikki-sopimus-idt :reittitoteuma :reittitoteumat data)]
