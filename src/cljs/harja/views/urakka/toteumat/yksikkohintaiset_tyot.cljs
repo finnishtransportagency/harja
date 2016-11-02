@@ -27,7 +27,8 @@
             [cljs-time.core :as t]
             [reagent.core :as r]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.domain.tierekisteri :as tierekisteri])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -311,18 +312,18 @@
          :esta-poistaminen-tooltip (fn [_] "Järjestelmän lisäämää kohdetta ei voi poistaa.")
          :max-rivimaara 300
          :max-rivimaaran-ylitys-viesti "Liikaa hakutuloksia, rajaa hakua"
-         :tunniste :tehtava_id}
+         :tunniste :tehtavaid}
         [{:otsikko "Päivämäärä"
           :nimi :alkanut
           :muokattava? (constantly false)
           :tyyppi :pvm
           :hae (comp pvm/pvm :alkanut)
-          :leveys 20}
+          :leveys 12}
          {:otsikko "Määrä"
           :nimi :maara
           :muokattava? (fn [rivi] (not (:jarjestelmanlisaama rivi)))
           :tyyppi :positiivinen-numero
-          :leveys 20
+          :leveys 15
           :tasaa :oikea
           :fmt fmt/desimaaliluku-opt}
          {:otsikko "Suorittaja"
@@ -330,6 +331,10 @@
           :muokattava? (constantly false)
           :tyyppi :string
           :leveys 20}
+         {:otsikko "TR-osoite"
+          :nimi :tr
+          :leveys 20
+          :fmt tierekisteri/tierekisteriosoite-tekstina}
          {:otsikko "Lisätieto"
           :nimi :lisatieto
           :muokattava? (constantly false)
@@ -342,7 +347,7 @@
           :leveys 20
           :komponentti (fn [rivi]
                          [:button.nappi-toissijainen.nappi-grid
-                          {:on-click #(nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteuma_id rivi))}
+                          {:on-click #(nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteumaid rivi))}
                           (ikonit/eye-open) " Toteuma"])}]
         (when-let [toteutuneet-tehtavat @toteutuneet-tehtavat]
           (sort-by :alkanut t/after? toteutuneet-tehtavat))]])))
