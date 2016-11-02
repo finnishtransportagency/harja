@@ -3,7 +3,6 @@
             [clojure.java.jdbc :as jdbc]
             [clj-time.periodic :refer [periodic-seq]]
             [chime :refer [chime-at]]
-            [harja.kyselyt.hoitoluokat :as hoitoluokat]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
 (defn vie-urakka-entry [db urakka]

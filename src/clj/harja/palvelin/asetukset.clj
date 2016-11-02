@@ -91,7 +91,11 @@
                                            (s/optional-key :valaistusurakoiden-alk-tuontikohde)        s/Str
                                            (s/optional-key :paallystyspalvelusopimusten-shapefile)              s/Str
                                            (s/optional-key :paallystyspalvelusopimusten-alk-osoite)             s/Str
-                                           (s/optional-key :paallystyspalvelusopimusten-alk-tuontikohde)         s/Str}
+                                           (s/optional-key :paallystyspalvelusopimusten-alk-tuontikohde)         s/Str
+                                           (s/optional-key :tekniset-laitteet-urakat-shapefile)              s/Str
+                                           (s/optional-key :tekniset-laitteet-urakat-alk-osoite)             s/Str
+                                           (s/optional-key :tekniset-laitteet-urakat-alk-tuontikohde)         s/Str
+                                           }
 
    (s/optional-key :yha)                  {:url            s/Str
                                            :kayttajatunnus s/Str
