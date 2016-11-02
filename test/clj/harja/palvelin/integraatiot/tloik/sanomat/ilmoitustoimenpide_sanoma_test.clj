@@ -8,7 +8,8 @@
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitustoimenpide-sanoma :as ilmoitustoimenpide-sanoma])
   (:import (java.io ByteArrayInputStream)
-           (java.text SimpleDateFormat)))
+           (java.text SimpleDateFormat)
+           (java.util UUID)))
 
 (def +xsd-polku+ "xsd/tloik/")
 
@@ -39,12 +40,12 @@
                     :sahkoposti   "keijo.kasittelija@eioleolemassa.fi"}})
 
 (deftest tarkista-sanoman-validius
-  (let [xml (html (ilmoitustoimenpide-sanoma/muodosta +ilmoitustoimenpide+ "123"))
+  (let [xml (html (ilmoitustoimenpide-sanoma/muodosta +ilmoitustoimenpide+ (str (UUID/randomUUID))))
         xsd "harja-tloik.xsd"]
     (is (xml/validi-xml? +xsd-polku+ xsd xml) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 
 (deftest tarkista-sisalto
-  (let [xml (html (ilmoitustoimenpide-sanoma/muodosta +ilmoitustoimenpide+ "123"))
+  (let [xml (html (ilmoitustoimenpide-sanoma/muodosta +ilmoitustoimenpide+ (str (UUID/randomUUID))))
         data (xml-zip (parse (ByteArrayInputStream. (.getBytes xml "UTF-8"))))]
     (is (= "12345" (z/xml1-> data :ilmoitusId z/text)))
     (is (= "Soitan kunhan kerkeän" (z/xml1-> data :vapaateksti z/text)))
