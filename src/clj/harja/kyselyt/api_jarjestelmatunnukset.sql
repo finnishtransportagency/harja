@@ -10,13 +10,22 @@ SELECT k.id, k.kayttajanimi, k.kuvaus, k.luotu,
   FROM kayttaja k
        JOIN organisaatio o ON k.organisaatio = o.id
  WHERE jarjestelma = true AND
-       poistettu = false
+       poistettu = false;
+
+-- name: hae-jarjestelmatunnuksen-lisaoikeudet
+SELECT
+  u.id as "urakka-id",
+  u.nimi AS "urakka-nimi",
+  kayttaja
+FROM kayttajan_lisaoikeudet_urakkaan klu
+  JOIN urakka u ON klu.urakka = u.id
+WHERE kayttaja = :kayttaja;
 
 -- name: poista-jarjestelmatunnus!
 UPDATE kayttaja
    SET poistettu = true
  WHERE id = :id AND
-       jarjestelma = true
+       jarjestelma = true;
 
 -- name: luo-jarjestelmatunnus<!
 INSERT

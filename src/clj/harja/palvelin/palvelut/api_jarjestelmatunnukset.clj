@@ -7,6 +7,10 @@
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]))
 
+(defn hae-jarjestelmatunnuksen-lisaoikeudet [db user kayttaja-id]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
+  (into [] (q/hae-jarjestelmatunnuksen-lisaoikeudet db {:kayttaja kayttaja-id})))
+
 (defn hae-jarjestelmatunnukset [db user]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
   (into []
