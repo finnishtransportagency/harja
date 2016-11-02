@@ -53,6 +53,7 @@
       [grid/grid
        {:otsikko "Lisäoikeudet urakoihin"
         :tunniste :urakka-id
+        :tyhja "Ei lisäoikeuksia"
         :tallenna #(tiedot/tallenna-jarjestelmatunnuksen-lisaoikeudet % kayttaja-id tunnuksen-oikeudet)}
        [{:otsikko "Urakka"
          :nimi :urakka-id
@@ -74,7 +75,7 @@
 
 (defn- jarjestelmatunnuksien-lisaoikeudet [jarjestelmatunnukset-atom]
   [grid/grid
-   {:otsikko "API-järjestelmätunnusten lisäoikeudet "
+   {:otsikko "API-järjestelmätunnusten lisäoikeudet urakoihin"
     :tunniste :id
     :tallenna nil
     :vetolaatikot (into {} (map (juxt :id #(-> [jarjestelmatunnuksen-lisaoikeudet (:id %)]))
