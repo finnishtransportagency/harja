@@ -84,7 +84,7 @@
         muutoksen-jalkeen (q "SELECT id, kayttajanimi, kuvaus, organisaatio FROM kayttaja;")]
 
     (is (integer? (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'juha88'"))))
-    (is (= (ffirst (q "SELECT kuvaus FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'"))
+    (is (= (ffirst (q "SELECT kuvaus FROM kayttaja WHERE kayttajanimi = 'destia'"))
            "testissä muutettu"))
     (is (= (filterv #(and (not= (second %) "destia") (not= (second %) "juha88"))
                     ennen-muutosta)
@@ -119,12 +119,22 @@
                                    :kayttaja kayttaja-id}]
                        :kayttaja-id kayttaja-id}
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                          :tallenna-jarjestelmatunnuksen-lisaoikeudet +kayttaja-jvh+ testioikeudet)]
+                          :tallenna-jarjestelmatunnuksen-lisaoikeudet +kayttaja-jvh+ testioikeudet)
+        uusi-id (ffirst (q "SELECT id FROM kayttajan_lisaoikeudet_urakkaan WHERE kayttaja = " kayttaja-id
+                           " AND urakka = " urakka-id ";"))]
 
-    (is (integer? (ffirst (q "SELECT id FROM kayttajan_lisaoikeudet_urakkaan WHERE kayttaja = " kayttaja-id
-                             " AND urakka = " urakka-id ";"))))
+    (is (integer? uusi-id))
 
-    (u "DELETE FROM kayttajan_lisaoikeudet_urakkaan;")))
+    (let [testioikeudet {:oikeudet [{:id uusi-id
+                                     :urakka-id urakka-id
+                                     :kayttaja kayttaja-id
+                                     :poistettu true}]
+                         :kayttaja-id kayttaja-id}
+          _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :tallenna-jarjestelmatunnuksen-lisaoikeudet +kayttaja-jvh+ testioikeudet)]
+
+      (is (nil? (ffirst (q "SELECT id FROM kayttajan_lisaoikeudet_urakkaan WHERE kayttaja = " kayttaja-id
+                               " AND urakka = " urakka-id ";")))))))
 
 (deftest jarjestelmatunnuksen-lisaoikeudet-ei-toimi-ilman-oikeuksia
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
