@@ -26,7 +26,7 @@
     border-radius: 100%;
     position: absolute;
     left: -(@koko / 2);
-    top: 44%; // FIXME Laske jotenkin puoleen väliin korkeudesta riippumatta
+    top: 44%; // FIXME Laske jotenkin puoleen väliin korkeudesta riippumatta. Tämä on close enough -ratkaisu.
     z-index: 8999;
   }
 }
@@ -45,6 +45,7 @@
   }
 
   > .sisalto {
+    overflow: auto;
     border: @sisaltolaatikoiden-reunaviiva;
     border-top: 0;
     border-bottom: 0;
