@@ -138,4 +138,3 @@ ALTER TABLE urakka
   DROP COLUMN tyyppi_;
 
 DROP TYPE urakkatyyppi_;
-
