@@ -156,6 +156,19 @@ hakutiheys-historiakuva 1200000)
               (pvm/nyt)
               (second @historiakuvan-aikavali))}))
 
+(defn aikaparametrilla-kuva
+  "Aikaparametri kuvatasolle: nykytilassa ei anneta aikoja, vaan aikavalinta.
+  Koska muuten kuvatason parametrit muuttuvat koko ajan ja karttataso vilkkuu koko ajan."
+  [parametrit]
+  (merge
+   parametrit
+   (if (= @valittu-tila :nykytilanne)
+     {:aikavalinta @nykytilanteen-aikasuodattimen-arvo}
+     {:alku (first @historiakuvan-aikavali)
+      :loppu (if (= @valittu-tila :nykytilanne)
+               (pvm/nyt)
+               (second @historiakuvan-aikavali))})))
+
 (def hyt-joiden-urakoilla-ei-arvoa
   ;; Uusimmassa reagentissa tulee funktio r/track, jolla tämä
   ;; olisi hoitunut paljon mukavemmin, mutta onnistuu kai tämä näinkin
@@ -375,7 +388,7 @@ hakutiheys-historiakuva 1200000)
     ;; Aikaparametri (nykytilanteessa) pitää tietenkin laskea joka haulle uudestaan, jotta
     ;; oikeasti haetaan nykyhetkestä esim. pari tuntia menneisyyteen.
     (reset! tilannekuva-kartalla/url-hakuparametrit
-            (k/url-parametri (aikaparametrilla (dissoc hakuparametrit :alue))))
+            (k/url-parametri (aikaparametrilla-kuva (dissoc hakuparametrit :alue))))
 
     (let [tulos (-> (<! (k/post! :hae-tilannekuvaan (aikaparametrilla hakuparametrit)))
                     (assoc :tarkastukset (:tarkastukset hakuparametrit))
