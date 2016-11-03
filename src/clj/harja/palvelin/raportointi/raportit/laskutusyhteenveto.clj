@@ -277,7 +277,7 @@
                    [" Sanktiot " " Ei sanktioita "
                     :sakot_laskutettu :sakot_laskutetaan tiedot]
                    (when talvisuolasakko-kaytossa?
-                     [" Talvisuolasakko (autom. laskettu) " " Ei talvisuolasakkoa "
+                     [" Talvisuolasakko/\u00ADbonus (autom. laskettu) " " Ei talvisuolasakkoa "
                       :suolasakot_laskutettu :suolasakot_laskutetaan tiedot fmt/euro-ei-voitu-laskea])
                    [" Muutos- ja lisätyöt sekä vahinkojen korjaukset " " Ei muutos- ja lisätöitä "
                     :muutostyot_laskutettu :muutostyot_laskutetaan tiedot]
@@ -297,7 +297,7 @@
                      [" Sanktioiden indeksitarkistukset " " Ei indeksitarkistuksia "
                       :sakot_laskutettu_ind_korotus :sakot_laskutetaan_ind_korotus tiedot])
                    (when (and indeksi-kaytossa? talvisuolasakko-kaytossa?)
-                     [" Talvisuolasakon indeksitarkistus (autom. laskettu) " " Ei indeksitarkistuksia "
+                     [" Talvisuolasakon/\u00ADbonuksen indeksitarkistus (autom. laskettu) " " Ei indeksitarkistuksia "
                       :suolasakot_laskutettu_ind_korotus :suolasakot_laskutetaan_ind_korotus tiedot fmt/euro-ei-voitu-laskea])
                    (when indeksi-kaytossa?
                      [" Muutos- ja lisätöiden sekä vahinkojen korjausten indeksitarkistukset " " Ei indeksitarkistuksia "

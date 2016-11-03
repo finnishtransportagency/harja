@@ -1,11 +1,15 @@
 -- name: hae-suolasakot
 SELECT nimi as urakka_nimi, (ss).keskilampotila, (ss).pitkakeskilampotila,
-       (ss).sallittu_suolankaytto, (ss).suolankayton_sakkoraja,
+       (ss).sallittu_suolankaytto, (ss).suolankayton_sakkoraja,  (ss).suolankayton_bonusraja,
        (ss).kohtuullisuustarkistettu_sakkoraja / (ss).sallittu_suolankaytto as kerroin,
-       (ss).sakkoraja,
-       (ss).suolankaytto, ((ss).suolankaytto - (ss).sallittu_suolankaytto) AS erotus,
-       (ss).maara,
-       -(ss).suolasakko as suolasakko, -(it).korotus as korotus, -(it).korotettuna as korotettuna,
+       (ss).sakkoraja, (ss).suolankaytto,
+  CASE WHEN (ss).suolankaytto > (ss).sallittu_suolankaytto THEN
+    ((ss).suolankaytto - (ss).sallittu_suolankaytto)
+    ELSE
+      ((ss).suolankayton_bonusraja - (ss).suolankaytto)
+  END AS erotus,
+       (ss).maara, (ss).vainsakkomaara,
+       (ss).suolasakko as suolasakko, (it).korotus as korotus, (it).korotettuna as korotettuna,
        hallintayksikko_id, hallintayksikko_nimi, hallintayksikko_elynumero
   FROM
     (SELECT r1.*,

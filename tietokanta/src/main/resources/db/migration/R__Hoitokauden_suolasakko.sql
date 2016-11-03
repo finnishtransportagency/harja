@@ -15,6 +15,8 @@ DECLARE
   suolasakko NUMERIC; -- suolasakon määrä
   vertailu NUMERIC; -- pitkä keskilämpö vertailukaudelle
   urakan_alkuvuosi INTEGER;
+  sakko_tai_bonus_maara NUMERIC;
+  bonukset_kaytossa BOOLEAN DEFAULT TRUE;
 BEGIN
   -- Haetaan urakan alkuvuosi vertailukauden päättelemiseksi
   SELECT EXTRACT(YEAR FROM alkupvm) INTO urakan_alkuvuosi
@@ -30,6 +32,16 @@ BEGIN
   THEN
     RAISE NOTICE 'Urakalle % ei ole suolasakkomäärittelyä tai suolasakot eivät ole käyttössä % - %', urakka_id, hk_alkupvm, hk_loppupvm;
     RETURN NULL;
+  END IF;
+
+  IF ss.maara > 0 THEN
+  sakko_tai_bonus_maara := ss.maara;
+    RAISE NOTICE 'Urakalle % on sekä talvisuolasakko että -bonus käytössä: %', urakka_id, sakko_tai_bonus_maara;
+  ELSIF ss.vainsakkomaara > 0 THEN
+    sakko_tai_bonus_maara := ss.vainsakkomaara;
+    bonukset_kaytossa = FALSE;
+    RAISE NOTICE 'Urakalle % ei ole talvisuolabonus käytössä: %', urakka_id, sakko_tai_bonus_maara;
+  ELSE sakko_tai_bonus_maara := ss.maara;
   END IF;
 
   SELECT * INTO lampotilat FROM lampotilat
@@ -90,11 +102,20 @@ BEGIN
 
   -- Tarkistetaan ylittyykö sallittu suolankäyttö yli 5%
   IF suolankaytto > 1.05 * sallittu_suolankaytto THEN
-    RAISE NOTICE 'sakotellaan, %', ss.maara;
-    suolasakko := ss.maara * (suolankaytto - (1.05 * sallittu_suolankaytto));
+    RAISE NOTICE 'sakotellaan, %', sakko_tai_bonus_maara;
+    suolasakko := sakko_tai_bonus_maara * (suolankaytto - (1.05 * sallittu_suolankaytto));
+  -- Tarkistetaan onko bonus käytössä ja alittuuko sallittu suolankäyttö yli 5%
+  ELSIF  suolankaytto < .95 * ss.talvisuolaraja  AND bonukset_kaytossa THEN
+    -- Mikäli käyttö alittaa enemmän kuin 5 % esitetyn määrän, maksetaan yli 5 % alittavalta osalta bonusta
+    -- 30 euroa/tonni. Jos poikkeuksellisen lämpimänä talvena (yli 4,0 °C pitkän ajan keski-
+    -- arvon) suolakiintiö alittuu, ei suolakaton alituksesta makseta bonusta.
+    RAISE NOTICE 'bonustellaan, %', sakko_tai_bonus_maara;
+    suolasakko := sakko_tai_bonus_maara * (suolankaytto - (0.95 * ss.talvisuolaraja));
   ELSE
+    RAISE NOTICE 'Ei sakkoa eikä bonusta, suolankaytto %, sallittu_suolankaytto %, maara %', suolankaytto, sallittu_suolankaytto, sakko_tai_bonus_maara;
     suolasakko := 0.0;
   END IF;
+
 
   RETURN (urakka_id,
   	  -- talvikauden keskilämpötila, vertailukauden keskilämpötila ja poikkeama
@@ -109,8 +130,14 @@ BEGIN
 	  -- käyttöraja ja sakkoraja kohtuullistamisen jälkeen
 	  sallittu_suolankaytto, 1.05 * sallittu_suolankaytto,
 
-          -- sakon määrä per ylitystonni ja sakon loppusumma
-	  ss.maara, -suolasakko);
+    -- sakon määrä per ylitystonni ja sakon loppusumma
+	  ss.maara, -suolasakko,
+
+    -- sakon määrä jos urakassa vain suolasakko käytössä (ei bonusta)
+    ss.vainsakkomaara,
+
+    -- bonusraja (kohtuullistamista ei sovelleta)
+    (0.95 * ss.talvisuolaraja));
 END;
 $$ LANGUAGE plpgsql;
 
