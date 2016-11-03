@@ -8,15 +8,35 @@
   > .paatason-navigointi-rivi {
     display: flex;
     justify-content: center;
-    margin-left: 3%;
-    margin-right: 3%;
+    margin-left: 6%;
+    margin-right: 6%;
   }
 }
 
 .paatason-navigointi {
+  position: relative;
+
+  .piilotusnappi {
+    @koko: 60px;
+    @taustavari: #c1c1bd;
+    width: @koko;
+    height: @koko;
+    border: @sisaltolaatikoiden-reunaviiva;
+    background-color: @taustavari;
+    border-radius: 100%;
+    position: absolute;
+    left: -(@koko / 2);
+    top: 44%; // FIXME Laske jotenkin puoleen väliin korkeudesta riippumatta
+    z-index: 8999;
+  }
+}
+
+.paatason-navigointilaatikko {
+  z-index: 9000;
   flex: 1;
   align-self: center;
   max-width: 1024px;
+  position: relative;
   background-color: @sisaltolaatikoiden-taustavari;
 
   > header {
