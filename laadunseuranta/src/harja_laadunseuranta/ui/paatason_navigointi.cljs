@@ -31,17 +31,16 @@
        [:header
         [:ul.valilehtilista
          (doall
-           (for [valilehti valilehdet]
-            (let [avain (:avain valilehti)]
-              ^{:key avain}
+           (for [{:keys [avain] :as valilehti} valilehdet]
+            ^{:key avain}
               [:li {:class (str "valilehti "
                                 (when (= avain
                                          @valittu)
                                   "valilehti-valittu"))
                     :on-click #(aseta-valinta! avain)}
-               (:nimi valilehti)])))]]
+               (:nimi valilehti)]))]]
        [:div.sisalto
-        ;; TODO
         #_(doall (for [valilehti valilehdet]
-                   [toggle-painike "Saumavirhe"]))]
+                 ^{:key avain}
+                 [toggle-painike "Saumavirhe"]))]
        [:div.footer]])))
