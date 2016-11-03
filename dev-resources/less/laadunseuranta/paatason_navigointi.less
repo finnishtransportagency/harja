@@ -28,12 +28,15 @@
     border: @sisaltolaatikoiden-reunaviiva;
     border-top: 0;
     padding: 3%;
+
+    > .valintapainikkeet {
+      display: flex;
+    }
   }
 
   > footer {
     border: @sisaltolaatikoiden-reunaviiva;
   }
-
 }
 
 .valilehtilista {
@@ -55,21 +58,21 @@
   }
 }
 
-.pikavalintapainike {
-  width: 215px;
-  font-size: 17px;
-  background-color: #0066cc;
-  height: 50px;
-  line-height: 50px;
-  text-align: left;
-  margin-left: 14px;
-  margin-bottom: 10px;
-  margin-top: 10px;
-  padding-left: 10px;
-  box-sizing: border-box;
-  cursor: default;
-  color: white;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
+
+.toggle-valintapainike {
+  width: 150px;
+  margin-left: 5px;
+  margin-right: 5px;
+
+  > .toggle-valintapainike-ikoni {
+    width: 100%;
+    height: 130px;
+    background-color: @napin-taustavari;
+  }
+
+  > .toggle-valintapainike-otsikko {
+    text-align: center;
+    padding: 5px;
+    padding-bottom: 15px;
+  }
 }

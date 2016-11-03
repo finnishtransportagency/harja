@@ -6,19 +6,11 @@
     [cljs.core.async.macros :refer [go go-loop]]
     [devcards.core :as dc :refer [defcard deftest]]))
 
-#_(defn toggle-painike [otsikko ikoni]
-    [:nav.pikavalintapainike
-     {:class (when (avain @havainnot) "painike-aktiivinen")
-      :on-click (fn [_]
-                  (swap! havainnot #(update % avain not))
-                  (on-click))}
-     (cond (string? ikoni)
-           [:img.pikavalintaikoni {:src ikoni}]
-           (vector? ikoni)
-           [:span.pikavalintaikoni ikoni])
-     [:span.pikavalintaotsikko otsikko]
-     (when (avain @havainnot)
-       [:span.rec "REC"])])
+(defn toggle-painike [otsikko]
+    [:div.toggle-valintapainike
+     [:div.toggle-valintapainike-ikoni]
+     [:div.toggle-valintapainike-otsikko
+      otsikko]])
 
 
 (defn paatason-navigointi [valilehdet]
@@ -40,7 +32,12 @@
                     :on-click #(aseta-valinta! avain)}
                (:nimi valilehti)]))]]
        [:div.sisalto
-        #_(doall (for [valilehti valilehdet]
-                 ^{:key avain}
-                 [toggle-painike "Saumavirhe"]))]
+        [:div.valintapainikkeet
+         (let [{:keys [sisalto] :as valittu-valilehti}
+              (first (filter
+                       #(= (:avain %) @valittu)
+                       valilehdet))]
+          (doall (for [{:keys [nimi ikoni]} sisalto]
+                  ^{:key nimi}
+                  [toggle-painike nimi])))]]
        [:div.footer]])))
