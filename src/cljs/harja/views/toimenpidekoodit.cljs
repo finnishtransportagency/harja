@@ -156,19 +156,35 @@
                            :ei-mahdollinen)
                :tunniste :id}
 
-              [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :validoi [[:ei-tyhja "Anna tehtävän nimi"]] :leveys "70%"}
-               {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :validoi [[:ei-tyhja "Anna yksikkö"]] :leveys "15%"}
-               {:otsikko "Hinnoittelu" :nimi :hinnoittelu :tyyppi :valinta :leveys "15%"
+              [{:otsikko "Nimi" :nimi :nimi :tyyppi :string
+                :validoi [[:ei-tyhja "Anna tehtävän nimi"]]
+                :leveys 6}
+               {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :validoi [[:ei-tyhja "Anna yksikkö"]]
+                :leveys 1}
+               {:otsikko "Hinnoittelu" :nimi :hinnoittelu :tyyppi :valinta :leveys 2
                 :valinnat +hinnoittelu-valinnat+
                 :valinta-nayta hinnoittelun-nimet
                 :fmt #(if % (hinnoittelun-nimet %) "Ei hinnoittelua")}
-               {:otsikko "Seurataan API:n kautta" :nimi :api-seuranta :tyyppi :checkbox :leveys "15%" :fmt fmt/totuus
+               {:otsikko "Seurataan API:n kautta" :nimi :api-seuranta :tyyppi :checkbox
+                :leveys 1
+                :fmt fmt/totuus
                 :tasaa :keskita
                 ;; todo: jos muutetaan arvo esim. muutoshintaiseksi, pitää arvo asettaa nilliksi
                 :muokattava? (fn [rivi _]
                                (some (fn [h] (or (= h "kokonaishintainen")
                                                  (= h "yksikkohintainen")))
-                                     (:hinnoittelu rivi)))}]
+                                     (:hinnoittelu rivi)))}
+               {:otsikko "Passivoitu"
+                :nimi :poistettu
+                :tyyppi :checkbox
+                :fmt fmt/totuus
+                :leveys 1}
+
+               {:otsikko "Luoja"
+                :nimi :luoja
+                :tyyppi :string
+                :leveys 2
+                :muokattava? (constantly false)}]
               (sort-by (juxt :hinnoittelu :nimi) tehtavat)])
 
            [:div [yleiset/vihje "Valitse taso nähdäksesi tehtävät"]])

@@ -9,9 +9,10 @@ SELECT
   yksikko,
   jarjestys,
   hinnoittelu,
+  poistettu,
+  luoja,
   api_seuranta as "api-seuranta"
 FROM toimenpidekoodi
-WHERE poistettu = FALSE;
 
 -- name: lisaa-toimenpidekoodi<!
 -- Lisää uuden 4. tason toimenpidekoodin (tehtäväkoodi).
