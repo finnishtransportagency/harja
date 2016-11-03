@@ -224,6 +224,18 @@
                       (cheshire/decode true))))))
 
 
+(defn keraa-tr-kentat
+  "Kuin alaviiva->rakenne, mutta vain TR kentille."
+  [rivi]
+  (-> rivi
+      (assoc
+       :tr {:numero (:tr_numero rivi)
+            :alkuosa (:tr_alkuosa rivi)
+            :alkuetaisyys (:tr_alkuetaisyys rivi)
+            :loppuosa (:tr_loppuosa rivi)
+            :loppuetaisyys (:tr_loppuetaisyys rivi)})
+      (dissoc :tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys)))
+
 (extend-protocol jdbc/ISQLValue
   java.util.Date
   (sql-value [v]

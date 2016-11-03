@@ -230,7 +230,9 @@ SELECT
   k.jarjestelma                   AS jarjestelmanlisaama,
   (SELECT nimi
    FROM toimenpidekoodi tpk
-   WHERE id = tt.toimenpidekoodi) AS toimenpide
+   WHERE id = tt.toimenpidekoodi) AS toimenpide,
+  t.tr_numero, t.tr_alkuosa, t.tr_alkuetaisyys, t.tr_loppuosa, t.tr_loppuetaisyys
+
 FROM toteuma_tehtava tt
   INNER JOIN toteuma t ON tt.toteuma = t.id
                           AND urakka = :urakka
