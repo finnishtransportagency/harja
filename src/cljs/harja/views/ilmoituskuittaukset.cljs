@@ -73,38 +73,46 @@
 
                    {:nimi        :vapaateksti
                     :otsikko     "Vapaateksti"
-                    :tyyppi      :text})
+                    :tyyppi      :text
+                    :pituus-max 976})
 
      (lomake/ryhma {:otsikko    "Käsittelijä"
                     :leveys-col 3}
                    {:nimi       :kasittelija-etunimi
                     :otsikko    "Etunimi"
                     :leveys-col 3
-                    :tyyppi     :string}
+                    :tyyppi     :string
+                    :pituus-max 32}
                    {:nimi       :kasittelija-sukunimi
                     :otsikko    "Sukunimi"
                     :leveys-col 3
-                    :tyyppi     :string}
+                    :tyyppi     :string
+                    :pituus-max 32}
                    {:nimi       :kasittelija-matkapuhelin
                     :otsikko    "Matkapuhelin"
                     :leveys-col 3
-                    :tyyppi     :puhelin}
+                    :tyyppi     :puhelin
+                    :pituus-max 32}
                    {:nimi       :kasittelija-tyopuhelin
                     :otsikko    "Työpuhelin"
                     :leveys-col 3
-                    :tyyppi     :puhelin}
+                    :tyyppi     :puhelin
+                    :pituus-max 32}
                    {:nimi       :kasittelija-sahkoposti
                     :otsikko    "Sähköposti"
                     :leveys-col 3
-                    :tyyppi     :email}
+                    :tyyppi     :email
+                    :pituus-max 64}
                    {:nimi       :kasittelija-organisaatio
                     :otsikko    "Organisaation nimi"
                     :leveys-col 3
-                    :tyyppi     :string}
+                    :tyyppi     :string
+                    :pituus-max 128}
                    {:nimi       :kasittelija-ytunnus
                     :otsikko    "Organisaation y-tunnus"
                     :leveys-col 3
-                    :tyyppi     :string})]
+                    :tyyppi     :string
+                    :pituus-max 9})]
     kuittaus]])
 
 (defn kanavan-ikoni [kuittaus]
@@ -171,6 +179,7 @@
         {:otsikko "Vapaateksti"
          :tyyppi :text
          :koko [80 :auto]
+         :pituus-max 976
          :nimi :vapaateksti})]
 
       data]
