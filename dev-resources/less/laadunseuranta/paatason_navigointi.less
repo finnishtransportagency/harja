@@ -60,15 +60,17 @@
   }
 }
 
+@toggle-valintapainike-leveys: 150px;
+@toggle-valintapainike-leveys-pienempi: 80px;
 
 .toggle-valintapainike {
-  width: 150px;
+  width: @toggle-valintapainike-leveys;
   margin-left: 5px;
   margin-right: 5px;
 
   > .toggle-valintapainike-ikoni {
     width: 100%;
-    height: 130px;
+    height: @toggle-valintapainike-leveys;
     background-color: @napin-taustavari;
   }
 
@@ -76,5 +78,16 @@
     text-align: center;
     padding: 5px;
     padding-bottom: 15px;
+  }
+}
+
+@media (max-width: 700px) {
+  .toggle-valintapainike {
+    width: @toggle-valintapainike-leveys-pienempi;
+
+    > .toggle-valintapainike-ikoni {
+      width: 100%;
+      height: @toggle-valintapainike-leveys-pienempi;
+    }
   }
 }
