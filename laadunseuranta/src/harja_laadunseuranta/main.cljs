@@ -8,6 +8,7 @@
             [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset]
             [harja-laadunseuranta.ui.alustus :as alustus]
             [harja-laadunseuranta.ui.ylapalkki :as ylapalkki]
+            [harja-laadunseuranta.ui.paatason-navigointi :refer [paatason-navigointi]]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.comms :as comms]
             [harja-laadunseuranta.ui.tr-haku :as tr-haku]
@@ -186,6 +187,22 @@
           :reittipisteet-atomi s/reittipisteet
           :kirjauspisteet-atomi s/kirjauspisteet
           :optiot s/karttaoptiot}]
+
+        [:div.paatason-navigointi-container
+         [:div.paatason-navigointi-rivi
+          [paatason-navigointi ;; TODO Tämä näytetään tässä nyt testiksi
+           [{:avain :talvihoito
+             :nimi "Talvihoito"
+             :sisalto [{:nimi "Liukasta"
+                        :ikoni ""}
+                       {:nimi "Lumista"
+                        :ikoni ""}]}
+            {:avain :liikenneympariston-hoito
+             :nimi "Liikenneympäristön hoito"
+             :sisalto [{:nimi "Liikennemerkki likainen"
+                        :ikoni ""}
+                       {:nimi "Liikennemerkki vinossa"
+                        :ikoni ""}]}]]]]
 
         [:div.paasisalto
          [ilmoitukset/ilmoituskomponentti s/ilmoitukset]
