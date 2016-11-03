@@ -22,19 +22,23 @@
   (:import (org.postgresql.util PSQLException)
            (org.postgis Point)))
 
+(def ^{:const true} +yhdistamis-virhe+ :virhe-reitin-yhdistamisessa)
+
 (def ^{:const true
        :doc "Etäisyys, jota lähempänä toisiaan olevat reittipisteet yhdistetään linnuntietä,
 jos niille ei löydy yhteistä tietä tieverkolta."}
   maksimi-linnuntien-etaisyys 200)
 
 (defn- yhdista-viivat [viivat]
-  {:type  :multiline
-   :lines (mapcat
-            (fn [viiva]
-              (if (= :line (:type viiva))
-                (list viiva)
-                (:lines viiva)))
-            viivat)})
+  (if-not (empty? viivat)
+    {:type  :multiline
+     :lines (mapcat
+              (fn [viiva]
+                (if (= :line (:type viiva))
+                  (list viiva)
+                  (:lines viiva)))
+              viivat)}
+    +yhdistamis-virhe+))
 
 (defn- piste [pistepari]
   [(get-in pistepari [:reittipiste :koordinaatit :x])
@@ -146,8 +150,13 @@ jos niille ei löydy yhteistä tietä tieverkolta."}
         (log/debug "Aloitetaan reitin tallennus")
         (luo-reitti db reitti toteuma-id)
         (log/debug "Liitetään toteuman reitti")
-        (api-toteuma/paivita-toteuman-reitti db toteuma-id
-                                             (async/<!! toteuman-reitti))))))
+        (let [reitti (async/<!! toteuman-reitti)]
+          (if-not (= reitti +yhdistamis-virhe+)
+            (api-toteuma/paivita-toteuman-reitti db toteuma-id reitti)
+
+            (virheet/heita-viallinen-apikutsu-poikkeus
+              {:koodi  :virheellinen-reitti
+               :viesti (format "Reittipisteistä ei saatu kasattua reittiä. Reittipisteet eivät ole samalla tiellä, ja niiden välimatka on liian suuri (yli %sm)" maksimi-linnuntien-etaisyys)})))))))
 
 (defn tallenna-kaikki-pyynnon-reittitoteumat [db db-replica urakka-id kirjaaja data]
   (when (:reittitoteuma data)
