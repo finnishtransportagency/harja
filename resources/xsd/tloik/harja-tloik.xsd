@@ -261,6 +261,7 @@
             <xs:enumeration value="hoito" />
             <xs:enumeration value="paikkaus" />
             <xs:enumeration value="silta" />
+            <xs:enumeration value="tekniset laitteet" />
         </xs:restriction>
     </xs:simpleType>
     <xs:complexType name="organisaatio">

@@ -445,7 +445,13 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
         exists(SELECT id
                FROM paallystyspalvelusopimus pps
                WHERE pps.paallystyspalvelusopimusnro = u.urakkanro AND
-                     st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold))))
+                     st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold)))
+       OR
+       ((:urakkatyyppi = 'tekniset laitteet') AND
+        exists(SELECT id
+               FROM tekniset_laitteet_urakka tlu
+               WHERE tlu.urakkanro = u.urakkanro AND
+                     st_dwithin(tlu.alue, st_makepoint(:x, :y), :threshold))))
 ORDER BY id ASC;
 
 -- name: luo-alueurakka<!

@@ -1,15 +1,16 @@
 (ns harja.palvelin.integraatiot.tloik.tyokalut
   (:require [taoensso.timbre :as log]
-[clojure.test :refer [deftest is use-fixtures]]
-[clojure.xml :refer [parse]]
-[clojure.zip :refer [xml-zip]]
-[hiccup.core :refer [html]]
-[harja.testi :refer :all]
-[harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
-[harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
-[harja.jms-test :refer [feikki-sonja]]
-[harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
-[harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]))
+            [clojure.test :refer [deftest is use-fixtures]]
+            [clojure.xml :refer [parse]]
+            [clojure.zip :refer [xml-zip]]
+            [hiccup.core :refer [html]]
+            [harja.testi :refer :all]
+            [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
+            [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
+            [harja.jms-test :refer [feikki-sonja]]
+            [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
+            [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]
+            [clojure.string :as str]))
 
 
 (def +xsd-polku+ "xsd/tloik/")
@@ -240,9 +241,9 @@
 
 (defn luo-tloik-komponentti []
   (->Tloik {:ilmoitusviestijono +tloik-ilmoitusviestijono+
-:ilmoituskuittausjono +tloik-ilmoituskuittausjono+
-:toimenpidejono +tloik-ilmoitustoimenpideviestijono+
-:toimenpidekuittausjono +tloik-ilmoitustoimenpidekuittausjono+}))
+            :ilmoituskuittausjono +tloik-ilmoituskuittausjono+
+            :toimenpidejono +tloik-ilmoitustoimenpideviestijono+
+            :toimenpidekuittausjono +tloik-ilmoitustoimenpidekuittausjono+}))
 
 (def +ilmoitus-ruotsissa+
   (clojure.string/replace
@@ -260,9 +261,18 @@
 
 (defn tuo-paallystysilmoitus []
   (let [sanoma (clojure.string/replace +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+
-   "<urakkatyyppi>hoito</urakkatyyppi>"
-   "<urakkatyyppi>paallystys</urakkatyyppi>")
-  ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
+                                       "<urakkatyyppi>hoito</urakkatyyppi>"
+                                       "<urakkatyyppi>paallystys</urakkatyyppi>")
+        ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
+    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
+
+(defn tuo-ilmoitus-teknisista-laitteista []
+  (let [sanoma
+        (-> +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+
+            (str/replace "<urakkatyyppi>hoito</urakkatyyppi>" "<urakkatyyppi>tekniset laitteet</urakkatyyppi>")
+            (str/replace "<x>452935</x>" "<x>326269</x>")
+            (str/replace "<y>7186873</y>" "<y>6822985</y>"))
+        ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
 
 (defn tuo-valaistusilmoitus []

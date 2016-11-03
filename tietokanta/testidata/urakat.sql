@@ -1250,8 +1250,7 @@ INSERT INTO urakka
  urakkanro)
 VALUES (
   'PR00031634',
-  'PIR RATU IHJU 2016 -2022,
-   P',
+  'PIR RATU IHJU 2016 -2022, P',
   '2016-01-01',
   '2023-12-31',
   NULL,
