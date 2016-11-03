@@ -12,7 +12,6 @@
    [:div.toggle-valintapainike-otsikko
     otsikko]])
 
-
 (defn paatason-navigointi [valilehdet]
   (let [valittu (atom (:avain (first valilehdet)))
         aseta-valinta! (fn [uusi-valinta]
