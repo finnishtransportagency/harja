@@ -102,7 +102,7 @@
                                     nil
                                     (reduce + (keep :sallittu_suolankaytto hyn-suolasakot))
                                     (reduce + (keep :suolankayton_bonusraja hyn-suolasakot))
-                                    nil
+                                    (reduce + (keep :suolankayton_sakkoraja hyn-suolasakot))
                                     nil
                                     (reduce + (keep :sakkoraja hyn-suolasakot))
                                     (reduce + (keep :suolankaytto hyn-suolasakot))
@@ -118,7 +118,7 @@
                  nil
                  (reduce + (keep :sallittu_suolankaytto raportin-data))
                  (reduce + (keep :suolankayton_bonusraja raportin-data))
-                 nil
+                 (reduce + (keep :suolankayton_sakkoraja raportin-data))
                  nil
                  (reduce + (keep :sakkoraja raportin-data))
                  (reduce + (keep :suolankaytto raportin-data))
