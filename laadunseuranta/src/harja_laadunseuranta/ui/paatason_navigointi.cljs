@@ -20,19 +20,26 @@
      (when (avain @havainnot)
        [:span.rec "REC"])])
 
+
 (defn paatason-navigointi [valilehdet]
-  (let [valittu (atom (:avain (first valilehdet)))]
+  (let [valittu (atom (:avain (first valilehdet)))
+        aseta-valinta! (fn [uusi-valinta]
+                         (.log js/console "Vaihdetaan tila: " (str uusi-valinta))
+                         (reset! valittu uusi-valinta))]
     (fn []
       [:div.paatason-navigointi
        [:header
         [:ul.valilehtilista
-         (for [valilehti valilehdet]
-           ^{:key (:avain valilehti)}
-           [:li {:class (str "valilehti "
-                             (when (= (:avain valilehti)
-                                      @valittu)
-                               "valilehti-valittu"))}
-            (:nimi valilehti)])]]
+         (doall
+           (for [valilehti valilehdet]
+            (let [avain (:avain valilehti)]
+              ^{:key avain}
+              [:li {:class (str "valilehti "
+                                (when (= avain
+                                         @valittu)
+                                  "valilehti-valittu"))
+                    :on-click #(aseta-valinta! avain)}
+               (:nimi valilehti)])))]]
        [:div.sisalto
         ;; TODO
         #_(doall (for [valilehti valilehdet]
