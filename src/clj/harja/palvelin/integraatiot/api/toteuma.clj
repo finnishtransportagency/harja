@@ -75,6 +75,10 @@
     (luo-uusi-toteuma db urakka-id kirjaaja toteuma)))
 
 (defn paivita-toteuman-reitti [db toteuma-id reitti]
+  ;; Tuotantoon on lokakuun 2016 alussa toteumia, joilla pitäisi olla reitti, mutta ei ole.
+  ;; Vaikea saada virheestä kiinni, mutta logitetaan tässä, jos tyhjä reitti tallennetan.
+  ;; Pitää huomata, että periaatteessa voimme oikeasti halutakkin tallentaa tyhjän reitin..
+  (when-not reitti (log/warn "Toteumalle " toteuma-id " tallennetaan tyhjä reitti!"))
   (toteumat/paivita-toteuman-reitti! db {:id toteuma-id
                                          :reitti reitti}))
 
