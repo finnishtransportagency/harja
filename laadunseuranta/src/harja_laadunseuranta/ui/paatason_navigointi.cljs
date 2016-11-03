@@ -40,4 +40,4 @@
           (doall (for [{:keys [nimi ikoni]} sisalto]
                   ^{:key nimi}
                   [toggle-painike nimi])))]]
-       [:div.footer]])))
+       [:footer]])))
