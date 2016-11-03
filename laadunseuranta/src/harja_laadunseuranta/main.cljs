@@ -11,6 +11,7 @@
             [harja-laadunseuranta.ui.paatason-navigointi :refer [paatason-navigointi]]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.comms :as comms]
+            [harja-laadunseuranta.tiedot.paatason-navigointi :as paatason-navigointi-tiedot]
             [harja-laadunseuranta.ui.tr-haku :as tr-haku]
             [harja-laadunseuranta.tiedot.puhe :as puhe]
             [harja-laadunseuranta.utils :as utils]
@@ -190,19 +191,7 @@
 
         [:div.paatason-navigointi-container
          [:div.paatason-navigointi-rivi
-          [paatason-navigointi ;; TODO Tämä näytetään tässä nyt testiksi
-           [{:avain :talvihoito
-             :nimi "Talvihoito"
-             :sisalto [{:nimi "Liukasta"
-                        :ikoni ""}
-                       {:nimi "Lumista"
-                        :ikoni ""}]}
-            {:avain :liikenneympariston-hoito
-             :nimi "Liikenneympäristön hoito"
-             :sisalto [{:nimi "Liikennemerkki likainen"
-                        :ikoni ""}
-                       {:nimi "Liikennemerkki vinossa"
-                        :ikoni ""}]}]]]]
+          [paatason-navigointi paatason-navigointi-tiedot/oletusvalilehdet]]]
 
         [:div.paasisalto
          [ilmoitukset/ilmoituskomponentti s/ilmoitukset]
