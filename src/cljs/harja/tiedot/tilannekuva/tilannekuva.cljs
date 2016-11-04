@@ -165,9 +165,7 @@ hakutiheys-historiakuva 1200000)
    (if (= @valittu-tila :nykytilanne)
      {:aikavalinta @nykytilanteen-aikasuodattimen-arvo}
      {:alku (first @historiakuvan-aikavali)
-      :loppu (if (= @valittu-tila :nykytilanne)
-               (pvm/nyt)
-               (second @historiakuvan-aikavali))})))
+      :loppu (second @historiakuvan-aikavali)})))
 
 (def hyt-joiden-urakoilla-ei-arvoa
   ;; Uusimmassa reagentissa tulee funktio r/track, jolla tämä
