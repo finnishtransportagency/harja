@@ -1,16 +1,19 @@
 (ns harja-laadunseuranta.ui.paatason-navigointi
   (:require [reagent.core :as reagent :refer [atom]]
-            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat])
+            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
+            [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset])
   (:require-macros
     [harja-laadunseuranta.macros :as m]
     [cljs.core.async.macros :refer [go go-loop]]
     [devcards.core :as dc :refer [defcard deftest]]))
 
-(defn toggle-painike [otsikko]
-  [:div.toggle-valintapainike
-   [:div.toggle-valintapainike-ikoni]
-   [:div.toggle-valintapainike-otsikko
-    otsikko]])
+(defn toggle-painike [otsikko ikoni on-click]
+  (let [toggle-painike-painettu #(ilmoitukset/ilmoita (str "Uusi pistemäinen havainto: " otsikko))]
+    (fn []
+      [:div.toggle-valintapainike {:on-click toggle-painike-painettu}
+       [:div.toggle-valintapainike-ikoni]
+       [:div.toggle-valintapainike-otsikko
+       otsikko]])))
 
 (defn paatason-navigointi [valilehdet]
   (let [nakyvissa? (atom true)
