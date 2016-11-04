@@ -765,11 +765,6 @@ WHERE
   AND t.alkanut :: DATE = :pvm :: DATE
   AND tt.toimenpidekoodi = :toimenpidekoodi;
 
--- name: paivita-toteuman-reitti!
-UPDATE toteuma
-SET reitti = :reitti
-WHERE id = :id;
-
 -- name: hae-varustetoteuma
 SELECT
   id,
@@ -805,6 +800,11 @@ FROM tierekisteriosoitteelle_viiva(:tie :: INTEGER,
                                    :aet :: INTEGER,
                                    :losa :: INTEGER,
                                    :let :: INTEGER) AS sijainti;
+
+-- name: paivita-toteuman-reitti!
+UPDATE toteuma
+SET reitti = :reitti
+WHERE id = :id;
 
 -- name: paivita-toteuman-reitti<!
 UPDATE toteuma
