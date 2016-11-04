@@ -152,7 +152,7 @@
 (defn paivita-toteuma [c user toteuma]
   (q/paivita-toteuma! c (assoc (toteuman-parametrit toteuma user)
                                :id (:toteuma-id toteuma)))
-  (when (:reitti toteuma) (q/paivita-toteuman-reitti! c {:id     (:id (:toteuma-id toteuma))
+  (when (:reitti toteuma) (q/paivita-toteuman-reitti! c {:id     (:toteuma-id toteuma)
                                                          :reitti (geometriaksi (:reitti toteuma))}))
   (kasittele-toteuman-tehtavat c user toteuma)
   (:toteuma-id toteuma))
