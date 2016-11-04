@@ -261,7 +261,6 @@
             <xs:enumeration value="hoito" />
             <xs:enumeration value="paikkaus" />
             <xs:enumeration value="silta" />
-            <xs:enumeration value="tekniset laitteet" />
         </xs:restriction>
     </xs:simpleType>
     <xs:complexType name="organisaatio">
@@ -332,7 +331,7 @@
     </xs:complexType>
     <xs:simpleType name="uuid">
         <xs:restriction base="xs:string">
-            <xs:minLength value="256"/>
+            <xs:minLength value="32"/>
             <xs:maxLength value="36" />
         </xs:restriction>
     </xs:simpleType>
