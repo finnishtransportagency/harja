@@ -44,7 +44,7 @@
     (doseq [{:keys [id urakka-id poistettu]} oikeudet]
       (if poistettu
         (q/poista-jarjestelmatunnuksen-lisaoikeus-urakkaan! c {:id id})
-        (if (neg? id)
+        (if (or (nil? id) (neg? id))
           (q/luo-jarjestelmatunnukselle-lisaoikeus-urakkaan<! c {:kayttaja kayttaja-id
                                                                  :urakka urakka-id})
           (q/paivita-jarjestelmatunnuksen-lisaoikeus-urakkaan! c {:urakka urakka-id

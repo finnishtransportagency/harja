@@ -23,11 +23,11 @@
        :nimi :kayttajanimi
        :tyyppi :string
        :leveys 5}
-      {:otsikko "Urakoitsija"
+      {:otsikko "Organisaatio"
        :nimi :organisaatio
        :fmt :nimi
        :tyyppi :valinta
-       :valinnat (tiedot/urakoitsijavalinnat)
+       :valinnat (tiedot/organisaatiovalinnat)
        :valinta-nayta :nimi
        :leveys 5}
       {:otsikko "Käynnissä olevat urakat"

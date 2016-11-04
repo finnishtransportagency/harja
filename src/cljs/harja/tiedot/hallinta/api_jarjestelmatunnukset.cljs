@@ -5,7 +5,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log tarkkaile!]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.urakoitsijat :refer [urakoitsijat]]
+            [harja.tiedot.organisaatiot :refer [organisaatiot]]
             [harja.atom :refer [paivita!]])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]
@@ -18,8 +18,8 @@
               (when nakymassa?
                 (k/post! :hae-jarjestelmatunnukset nil))))
 
-(defn urakoitsijavalinnat []
-  (distinct (map #(select-keys % [:id :nimi]) @urakoitsijat)))
+(defn organisaatiovalinnat []
+  (distinct (map #(select-keys % [:id :nimi]) @organisaatiot)))
 
 (defonce urakkavalinnat
   (reaction<! [nakymassa? @nakymassa?
