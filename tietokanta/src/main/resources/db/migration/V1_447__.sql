@@ -15,12 +15,12 @@ VALUES ('ptj', 'tekniset-laitteet-urakat-muutospaivamaaran-haku');
 
 -- Lisää uusi urakkatyyppi 'tekniset laitteet'
 
--- 1. Urakkataulu
 ALTER TYPE urakkatyyppi
 RENAME TO urakkatyyppi_;
 
 CREATE TYPE urakkatyyppi AS ENUM ('hoito', 'paallystys', 'paikkaus', 'tiemerkinta', 'valaistus', 'siltakorjaus', 'tekniset laitteet');
 
+-- 1. Urakkataulu
 ALTER TABLE urakka
   RENAME COLUMN tyyppi TO tyyppi_;
 ALTER TABLE urakka
