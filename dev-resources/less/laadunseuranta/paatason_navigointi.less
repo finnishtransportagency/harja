@@ -18,8 +18,6 @@
   position: relative;
   background-color: @sisaltolaatikoiden-taustavari;
   margin: 1%;
-  // FIXME Tarkista voiko yhtenäistää transitio tr-selailu komponentin kanssa
-  transition: left 0.5s linear;
 
   > header {
     border: @sisaltolaatikoiden-reunaviiva;
@@ -84,7 +82,7 @@
   }
 }
 
-// Piilotusnappi
+// Piilotus ja näyttäminen
 
 @piilotusnappi-koko: 60px;
 
@@ -98,21 +96,35 @@
   background-color: @taustavari;
   position: absolute;
   left: -(@koko / 2);
-  right: auto;
   top: 44%; // FIXME Laske jotenkin puoleen väliin korkeudesta riippumatta. Tämä on close enough -ratkaisu.
-  z-index: 8999;
 }
 
-// Piilotuslogiikka
+.paatason-navigointi-container > .nayttonappi {
+  @koko: 60px;
+  @taustavari: #c1c1bd;
+  width: (@piilotusnappi-koko / 2);
+  height: @piilotusnappi-koko;
+  border: @sisaltolaatikoiden-reunaviiva;
+  border-radius: 0 90px 90px 0;
+  background-color: @taustavari;
+  position: absolute;
+  left: 0;
+  top: 44%; // FIXME Laske jotenkin puoleen väliin korkeudesta riippumatta. Tämä on close enough -ratkaisu.
+}
+
+.paatason-navigointilaatikko-nakyvissa {
+  & .nayttonappi {
+    display: none;
+  }
+}
 
 .paatason-navigointilaatikko-piilossa {
-  left: -100%;
-  transition: left 0.5s linear;
+  & .nayttonappi {
+    display: block;
+  }
 
-  > .piilotusnappi {
-    left: auto;
-    right: -@piilotusnappi-koko;
-    border-radius: 0 90px 90px 0;
+  & .paatason-navigointilaatikko {
+    left: -100%;
   }
 }
 

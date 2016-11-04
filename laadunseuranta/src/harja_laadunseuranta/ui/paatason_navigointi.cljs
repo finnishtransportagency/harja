@@ -21,30 +21,32 @@
         piilotusnappi-klikattu (fn []
                                  (swap! nakyvissa? not))]
     (fn []
-      [:div
-       {:class (str "paatason-navigointilaatikko "
-                    (when-not @nakyvissa?
-                      "paatason-navigointilaatikko-piilossa"))}
-       [:div.piilotusnappi {:on-click piilotusnappi-klikattu}]
+      [:div {:class (str "paatason-navigointi-container "
+                         (if @nakyvissa?
+                           "paatason-navigointilaatikko-nakyvissa"
+                           "paatason-navigointilaatikko-piilossa"))}
+       [:div.nayttonappi {:on-click piilotusnappi-klikattu}]
+       [:div.paatason-navigointilaatikko
+        [:div.piilotusnappi {:on-click piilotusnappi-klikattu}]
 
-       [:header
-        [:ul.valilehtilista
-         (doall
-           (for [{:keys [avain] :as valilehti} valilehdet]
-             ^{:key avain}
-             [:li {:class (str "valilehti "
-                               (when (= avain
-                                        @valittu)
-                                 "valilehti-valittu"))
-                   :on-click #(aseta-valinta! avain)}
-              (:nimi valilehti)]))]]
-       [:div.sisalto
-        [:div.valintapainikkeet
-         (let [{:keys [sisalto] :as valittu-valilehti}
-               (first (filter
-                        #(= (:avain %) @valittu)
-                        valilehdet))]
-           (doall (for [{:keys [nimi ikoni]} sisalto]
-                    ^{:key nimi}
-                    [toggle-painike nimi])))]]
-       [:footer]])))
+        [:header
+         [:ul.valilehtilista
+          (doall
+            (for [{:keys [avain] :as valilehti} valilehdet]
+              ^{:key avain}
+              [:li {:class (str "valilehti "
+                                (when (= avain
+                                         @valittu)
+                                  "valilehti-valittu"))
+                    :on-click #(aseta-valinta! avain)}
+               (:nimi valilehti)]))]]
+        [:div.sisalto
+         [:div.valintapainikkeet
+          (let [{:keys [sisalto] :as valittu-valilehti}
+                (first (filter
+                         #(= (:avain %) @valittu)
+                         valilehdet))]
+            (doall (for [{:keys [nimi ikoni]} sisalto]
+                     ^{:key nimi}
+                     [toggle-painike nimi])))]]
+        [:footer]]])))

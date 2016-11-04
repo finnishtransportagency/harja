@@ -189,8 +189,7 @@
           :kirjauspisteet-atomi s/kirjauspisteet
           :optiot s/karttaoptiot}]
 
-        [:div.paatason-navigointi-container
-         [paatason-navigointi paatason-navigointi-tiedot/oletusvalilehdet]]
+        [paatason-navigointi paatason-navigointi-tiedot/oletusvalilehdet]
 
         [:div.paasisalto
          [ilmoitukset/ilmoituskomponentti s/ilmoitukset]
