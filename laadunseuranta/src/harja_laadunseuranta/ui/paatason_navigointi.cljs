@@ -7,13 +7,15 @@
     [cljs.core.async.macros :refer [go go-loop]]
     [devcards.core :as dc :refer [defcard deftest]]))
 
-(defn toggle-painike [otsikko ikoni on-click]
-  (let [toggle-painike-painettu #(ilmoitukset/ilmoita (str "Uusi pistemäinen havainto: " otsikko))]
+(defn toggle-painike [otsikko ikoni tyyppi]
+  (let [toggle-painike-painettu #(when (= tyyppi :piste)
+                                  (ilmoitukset/ilmoita
+                                    (str "Uusi pistemäinen havainto: " otsikko)))]
     (fn []
       [:div.toggle-valintapainike {:on-click toggle-painike-painettu}
        [:div.toggle-valintapainike-ikoni]
        [:div.toggle-valintapainike-otsikko
-       otsikko]])))
+        otsikko]])))
 
 (defn paatason-navigointi [valilehdet]
   (let [nakyvissa? (atom true)
@@ -49,7 +51,7 @@
                 (first (filter
                          #(= (:avain %) @valittu)
                          valilehdet))]
-            (doall (for [{:keys [nimi ikoni]} sisalto]
+            (doall (for [{:keys [nimi ikoni tyyppi]} sisalto]
                      ^{:key nimi}
-                     [toggle-painike nimi])))]]
+                     [toggle-painike nimi nil tyyppi])))]]
         [:footer]]])))
