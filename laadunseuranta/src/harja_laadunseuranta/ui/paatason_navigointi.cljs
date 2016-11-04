@@ -8,9 +8,16 @@
     [devcards.core :as dc :refer [defcard deftest]]))
 
 (defn toggle-painike [otsikko ikoni tyyppi]
-  (let [toggle-painike-painettu #(when (= tyyppi :piste)
-                                  (ilmoitukset/ilmoita
-                                    (str "Pistemäinen havainto kirjattu: " otsikko)))]
+  (let [toggle-painike-painettu #(case tyyppi
+                                  :piste
+                                  (do
+                                    ;; TODO Luo havainto
+                                    (ilmoitukset/ilmoita
+                                     (str "Pistemäinen havainto kirjattu: " otsikko)))
+                                  :vali
+                                  (do
+                                    ;; TODO Aseta väli päälle
+                                    ))]
     (fn []
       [:div.toggle-valintapainike {:on-click toggle-painike-painettu}
        [:div.toggle-valintapainike-ikoni]
