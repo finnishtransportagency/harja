@@ -74,6 +74,7 @@
                    {:nimi        :vapaateksti
                     :otsikko     "Vapaateksti"
                     :tyyppi      :text
+                    ;; pituus on XSD-skeeman maksimi 1024 - pisimmän vakiofraasin mitta (48)
                     :pituus-max 976})
 
      (lomake/ryhma {:otsikko    "Käsittelijä"
