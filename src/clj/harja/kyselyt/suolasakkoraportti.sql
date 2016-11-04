@@ -3,8 +3,8 @@ SELECT nimi as urakka_nimi, (ss).keskilampotila, (ss).pitkakeskilampotila,
        (ss).sallittu_suolankaytto, (ss).suolankayton_sakkoraja,  (ss).suolankayton_bonusraja,
        (ss).kohtuullisuustarkistettu_sakkoraja / (ss).sallittu_suolankaytto as kerroin,
        (ss).sakkoraja, (ss).suolankaytto,
-  CASE WHEN (ss).suolankaytto > (ss).sallittu_suolankaytto THEN
-    ((ss).suolankaytto - (ss).sallittu_suolankaytto)
+  CASE WHEN (ss).suolankaytto > (ss).suolankayton_bonusraja THEN
+    ((ss).suolankaytto - 1.05 * (ss).kohtuullisuustarkistettu_sakkoraja)
     ELSE
       ((ss).suolankayton_bonusraja - (ss).suolankaytto)
   END AS erotus,
