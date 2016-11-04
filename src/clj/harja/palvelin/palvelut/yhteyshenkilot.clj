@@ -13,7 +13,10 @@
             [harja.kyselyt.konversio :as konv]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.komponentit.fim :as fim]
-            [harja.domain.puhelinnumero :as puhelinnumero])
+            [harja.domain.puhelinnumero :as puhelinnumero]
+            [harja.pvm :as pvm]
+            [clj-time.core :as t]
+            [clj-time.coerce :as c])
   (:import (java.sql Date)))
 
 (declare hae-urakan-yhteyshenkilot
@@ -142,14 +145,18 @@
 (defn hae-urakan-paivystajat [db user urakka-id]
   (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
-  (into []
-        ;; munklaukset tässä
-        (map #(if-let [org-id (:organisaatio %)]
-                (assoc % :organisaatio {:tyyppi (keyword (str (:urakoitsija_tyyppi %)))
-                                        :id org-id
-                                        :nimi (:urakoitsija_nimi %)})
-                %))
-        (q/hae-urakan-paivystajat db urakka-id nil nil)))
+  (let [kaynnissaolevan-hoitokauden-alkupvm (c/from-date (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))
+        paivystajat (into []
+                          (map #(if-let [org-id (:organisaatio %)]
+                                 (assoc % :organisaatio {:tyyppi (keyword (str (:urakoitsija_tyyppi %)))
+                                                         :id org-id
+                                                         :nimi (:urakoitsija_nimi %)})
+                                 %))
+                          (q/hae-urakan-paivystajat db urakka-id nil nil))
+        paivystajat (filterv #(pvm/sama-tai-jalkeen? (c/from-sql-time (:loppu %))
+                                                     kaynnissaolevan-hoitokauden-alkupvm)
+                             paivystajat)]
+    paivystajat))
 
 
 (defn tallenna-urakan-paivystajat [db user {:keys [urakka-id paivystajat poistettu] :as tiedot}]

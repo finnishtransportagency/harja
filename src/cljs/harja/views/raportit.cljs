@@ -301,9 +301,10 @@
 
 (def silta (atom :kaikki))
 (def urakan-sillat (reaction<! [nakymassa? @raportit/raportit-nakymassa?
-                                urakka @nav/valittu-urakka]
+                                urakka @nav/valittu-urakka
+                                oikeus? (oikeudet/urakat-laadunseuranta-siltatarkastukset urakka)]
                                {:nil-kun-haku-kaynnissa? true}
-                               (when (and urakka nakymassa?)
+                               (when (and urakka nakymassa? oikeus?)
                                  (k/post! :hae-urakan-sillat
                                           {:urakka-id (:id urakka)
                                            :listaus :kaikki}))))
