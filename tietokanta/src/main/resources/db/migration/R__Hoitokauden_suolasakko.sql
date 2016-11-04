@@ -104,13 +104,19 @@ BEGIN
   IF suolankaytto > 1.05 * sallittu_suolankaytto THEN
     RAISE NOTICE 'sakotellaan, %', sakko_tai_bonus_maara;
     suolasakko := sakko_tai_bonus_maara * (suolankaytto - (1.05 * sallittu_suolankaytto));
-  -- Tarkistetaan onko bonus käytössä ja alittuuko sallittu suolankäyttö yli 5%
+  -- Jos ei sakoteta, tarkistetaan onko bonus käytössä ja alittuuko sallittu suolankäyttö yli 5%
   ELSIF  suolankaytto < .95 * ss.talvisuolaraja  AND bonukset_kaytossa THEN
+    -- Anne Leppäsen Tuesday, 25 October 2016 at 14.48 JV:lle lähettämä sääntö:
     -- Mikäli käyttö alittaa enemmän kuin 5 % esitetyn määrän, maksetaan yli 5 % alittavalta osalta bonusta
-    -- 30 euroa/tonni. Jos poikkeuksellisen lämpimänä talvena (yli 4,0 °C pitkän ajan keski-
+    -- 30 euroa/tonni. (kooderin huomautus: käytämme urakan suolasakko-taulun maara-kentän arvoa, joka yleensä tuo 30e)
+    -- Jos poikkeuksellisen lämpimänä talvena (yli 4,0 °C pitkän ajan keski-
     -- arvon) suolakiintiö alittuu, ei suolakaton alituksesta makseta bonusta.
-    RAISE NOTICE 'bonustellaan, %', sakko_tai_bonus_maara;
-    suolasakko := sakko_tai_bonus_maara * (suolankaytto - (0.95 * ss.talvisuolaraja));
+    IF lampotilapoikkeama > 4.0 THEN
+      suolasakko := 0.0;
+    ELSE
+      RAISE NOTICE 'bonustellaan, %', sakko_tai_bonus_maara;
+      suolasakko := sakko_tai_bonus_maara * (suolankaytto - (0.95 * ss.talvisuolaraja));
+    END IF;
   ELSE
     RAISE NOTICE 'Ei sakkoa eikä bonusta, suolankaytto %, sallittu_suolankaytto %, maara %', suolankaytto, sallittu_suolankaytto, sakko_tai_bonus_maara;
     suolasakko := 0.0;

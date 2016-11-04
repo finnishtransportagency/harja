@@ -53,7 +53,11 @@
                       laskettu-suolasakko
                       (if (> kaytetty-maara (* sal 1.05))
                         (* sakko-per-tonni (- kaytetty-maara (* sal 1.05)))
-                        0.0)
+                        (if (and (< kaytetty-maara (* 0.95 sallittu-maara))
+                                 (<= erotus 4.0))
+                          (* sakko-per-tonni (- kaytetty-maara
+                                                (* 0.95 sallittu-maara)))
+                          0.0))
                       tietokannan-suolasakko
                       (suolasakko @oulun-alueurakan-2014-2019-id
                                   lampotila
