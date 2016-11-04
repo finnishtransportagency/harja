@@ -1,20 +1,16 @@
 .paatason-navigointi-container {
-  width: 100%;
   height: 100%;
   display: flex;
   flex-flow: column;
   justify-content: center;
-
-  > .paatason-navigointi-rivi {
-    display: flex;
-    justify-content: center;
-    margin-left: 6%;
-    margin-right: 6%;
-  }
 }
 
+/* FIXME Aseta tämä uudelleen paikalleen
 .paatason-navigointi {
+  margin-left: 3%;
+  margin-right: 3%;
   position: relative;
+  align-self: center;
 
   .piilotusnappi {
     @koko: 60px;
@@ -30,14 +26,18 @@
     z-index: 8999;
   }
 }
+*/
 
 .paatason-navigointilaatikko {
+  display: flex;
+  flex-flow: column;
   z-index: 9000;
-  flex: 1;
   align-self: center;
   max-width: 1024px;
   position: relative;
   background-color: @sisaltolaatikoiden-taustavari;
+  margin-left: 3%;
+  margin-right: 3%;
 
   > header {
     border: @sisaltolaatikoiden-reunaviiva;
@@ -49,7 +49,7 @@
     border: @sisaltolaatikoiden-reunaviiva;
     border-top: 0;
     border-bottom: 0;
-    min-height: 300px;
+    //min-height: 300px;
     padding: 3%;
 
     > .valintapainikkeet {

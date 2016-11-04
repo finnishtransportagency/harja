@@ -18,8 +18,7 @@
                          (.log js/console "Vaihdetaan tila: " (str uusi-valinta))
                          (reset! valittu uusi-valinta))]
     (fn []
-      [:div.paatason-navigointi
-       [:div.paatason-navigointilaatikko
+      [:div.paatason-navigointilaatikko
         [:header
          [:ul.valilehtilista
           (doall
@@ -41,5 +40,5 @@
                      ^{:key nimi}
                      [toggle-painike nimi])))]]
         [:footer]]
-       [:div.paatason-navigointi-muut
-        [:div.piilotusnappi]]])))
+       #_[:div.paatason-navigointi-muut
+        [:div.piilotusnappi]])))
