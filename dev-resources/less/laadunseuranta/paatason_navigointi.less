@@ -8,20 +8,6 @@
   flex-flow: column;
 }
 
-.paatason-navigointilaatikko > .piilotusnappi {
-  @koko: 60px;
-  @taustavari: #c1c1bd;
-  width: (@koko / 2);
-  height: @koko;
-  border: @sisaltolaatikoiden-reunaviiva;
-  border-radius: 90px 0 0 90px;
-  background-color: @taustavari;
-  position: absolute;
-  left: -(@koko / 2);
-  top: 44%; // FIXME Laske jotenkin puoleen väliin korkeudesta riippumatta. Tämä on close enough -ratkaisu.
-  z-index: 8999;
-}
-
 .paatason-navigointilaatikko {
   display: flex;
   flex-flow: column;
@@ -32,6 +18,8 @@
   position: relative;
   background-color: @sisaltolaatikoiden-taustavari;
   margin: 1%;
+  // FIXME Tarkista voiko yhtenäistää transitio tr-selailu komponentin kanssa
+  transition: left 0.5s linear;
 
   > header {
     border: @sisaltolaatikoiden-reunaviiva;
@@ -95,6 +83,40 @@
     padding-bottom: 15px;
   }
 }
+
+// Piilotusnappi
+
+@piilotusnappi-koko: 60px;
+
+.paatason-navigointilaatikko > .piilotusnappi {
+  @koko: 60px;
+  @taustavari: #c1c1bd;
+  width: (@piilotusnappi-koko / 2);
+  height: @piilotusnappi-koko;
+  border: @sisaltolaatikoiden-reunaviiva;
+  border-radius: 90px 0 0 90px;
+  background-color: @taustavari;
+  position: absolute;
+  left: -(@koko / 2);
+  right: auto;
+  top: 44%; // FIXME Laske jotenkin puoleen väliin korkeudesta riippumatta. Tämä on close enough -ratkaisu.
+  z-index: 8999;
+}
+
+// Piilotuslogiikka
+
+.paatason-navigointilaatikko-piilossa {
+  left: -100%;
+  transition: left 0.5s linear;
+
+  > .piilotusnappi {
+    left: auto;
+    right: -@piilotusnappi-koko;
+    border-radius: 0 90px 90px 0;
+  }
+}
+
+// Responsiivisuus
 
 @media (max-width: 700px) {
   .toggle-valintapainike {

@@ -13,13 +13,19 @@
     otsikko]])
 
 (defn paatason-navigointi [valilehdet]
-  (let [valittu (atom (:avain (first valilehdet)))
+  (let [nakyvissa? (atom true)
+        valittu (atom (:avain (first valilehdet)))
         aseta-valinta! (fn [uusi-valinta]
                          (.log js/console "Vaihdetaan tila: " (str uusi-valinta))
-                         (reset! valittu uusi-valinta))]
+                         (reset! valittu uusi-valinta))
+        piilotusnappi-klikattu (fn []
+                                 (swap! nakyvissa? not))]
     (fn []
-      [:div.paatason-navigointilaatikko
-       [:div.piilotusnappi]
+      [:div
+       {:class (str "paatason-navigointilaatikko "
+                    (when-not @nakyvissa?
+                      "paatason-navigointilaatikko-piilossa"))}
+       [:div.piilotusnappi {:on-click piilotusnappi-klikattu}]
 
        [:header
         [:ul.valilehtilista
