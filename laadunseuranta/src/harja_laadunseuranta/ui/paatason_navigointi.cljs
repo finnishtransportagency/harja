@@ -10,7 +10,7 @@
 (defn toggle-painike [otsikko ikoni tyyppi]
   (let [toggle-painike-painettu #(when (= tyyppi :piste)
                                   (ilmoitukset/ilmoita
-                                    (str "Uusi pistemäinen havainto: " otsikko)))]
+                                    (str "Pistemäinen havainto kirjattu: " otsikko)))]
     (fn []
       [:div.toggle-valintapainike {:on-click toggle-painike-painettu}
        [:div.toggle-valintapainike-ikoni]
