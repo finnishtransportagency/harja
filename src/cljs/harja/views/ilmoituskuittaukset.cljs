@@ -63,8 +63,8 @@
                     :tyyppi        :valinta
                     :valinnat      apurit/kuittaustyypit
                     :valinta-nayta #(if %
-                                      (apurit/kuittaustyypin-selite %)
-                                      "- Valitse kuittaustyyppi -")}
+                                     (apurit/kuittaustyypin-selite %)
+                                     "- Valitse kuittaustyyppi -")}
                    {:nimi :vakiofraasi
                     :otsikko "Vakiofraasi"
                     :tyyppi :haku
@@ -74,6 +74,7 @@
                    {:nimi        :vapaateksti
                     :otsikko     "Vapaateksti"
                     :tyyppi      :text
+                    ;; pituus on XSD-skeeman maksimi 1024 - pisimmän vakiofraasin mitta (48)
                     :pituus-max 976})
 
      (lomake/ryhma {:otsikko    "Käsittelijä"
@@ -163,24 +164,24 @@
        :otsikko "Kuittaa monta ilmoitusta"}
       [
        (lomake/rivi
-        {:otsikko "Kuittaustyyppi"
-         :pakollinen? true
-         :tyyppi :valinta
-         :valinnat apurit/kuittaustyypit
-         :valinta-nayta #(or (apurit/kuittaustyypin-selite %) "- Valitse kuittaustyyppi -")
-         :nimi :tyyppi}
+         {:otsikko "Kuittaustyyppi"
+          :pakollinen? true
+          :tyyppi :valinta
+          :valinnat apurit/kuittaustyypit
+          :valinta-nayta #(or (apurit/kuittaustyypin-selite %) "- Valitse kuittaustyyppi -")
+          :nimi :tyyppi}
 
-        {:otsikko "Vakiofraasi"
-         :tyyppi :haku
-         :hae-kun-yli-n-merkkia 0
-         :lahde fraasihaku
-         :nimi :vakiofraasi}
+         {:otsikko "Vakiofraasi"
+          :tyyppi :haku
+          :hae-kun-yli-n-merkkia 0
+          :lahde fraasihaku
+          :nimi :vakiofraasi}
 
-        {:otsikko "Vapaateksti"
-         :tyyppi :text
-         :koko [80 :auto]
-         :pituus-max 976
-         :nimi :vapaateksti})]
+         {:otsikko "Vapaateksti"
+          :tyyppi :text
+          :koko [80 :auto]
+          :pituus-max 976
+          :nimi :vapaateksti})]
 
       data]
      [napit/tallenna
