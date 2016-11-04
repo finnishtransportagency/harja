@@ -19,26 +19,26 @@
                          (reset! valittu uusi-valinta))]
     (fn []
       [:div.paatason-navigointilaatikko
-        [:header
-         [:ul.valilehtilista
-          (doall
-            (for [{:keys [avain] :as valilehti} valilehdet]
-              ^{:key avain}
-              [:li {:class (str "valilehti "
-                                (when (= avain
-                                         @valittu)
-                                  "valilehti-valittu"))
-                    :on-click #(aseta-valinta! avain)}
-               (:nimi valilehti)]))]]
-        [:div.sisalto
-         [:div.valintapainikkeet
-          (let [{:keys [sisalto] :as valittu-valilehti}
-                (first (filter
-                         #(= (:avain %) @valittu)
-                         valilehdet))]
-            (doall (for [{:keys [nimi ikoni]} sisalto]
-                     ^{:key nimi}
-                     [toggle-painike nimi])))]]
-        [:footer]]
-       #_[:div.paatason-navigointi-muut
-        [:div.piilotusnappi]])))
+       [:div.piilotusnappi]
+
+       [:header
+        [:ul.valilehtilista
+         (doall
+           (for [{:keys [avain] :as valilehti} valilehdet]
+             ^{:key avain}
+             [:li {:class (str "valilehti "
+                               (when (= avain
+                                        @valittu)
+                                 "valilehti-valittu"))
+                   :on-click #(aseta-valinta! avain)}
+              (:nimi valilehti)]))]]
+       [:div.sisalto
+        [:div.valintapainikkeet
+         (let [{:keys [sisalto] :as valittu-valilehti}
+               (first (filter
+                        #(= (:avain %) @valittu)
+                        valilehdet))]
+           (doall (for [{:keys [nimi ikoni]} sisalto]
+                    ^{:key nimi}
+                    [toggle-painike nimi])))]]
+       [:footer]])))

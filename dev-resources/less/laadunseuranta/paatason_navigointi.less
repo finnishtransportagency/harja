@@ -8,28 +8,19 @@
   flex-flow: column;
 }
 
-/* FIXME Aseta tämä uudelleen paikalleen
-.paatason-navigointi {
-  margin-left: 3%;
-  margin-right: 3%;
-  position: relative;
-  align-self: center;
-
-  .piilotusnappi {
-    @koko: 60px;
-    @taustavari: #c1c1bd;
-    width: @koko;
-    height: @koko;
-    border: @sisaltolaatikoiden-reunaviiva;
-    background-color: @taustavari;
-    border-radius: 100%;
-    position: absolute;
-    left: -(@koko / 2);
-    top: 44%; // FIXME Laske jotenkin puoleen väliin korkeudesta riippumatta. Tämä on close enough -ratkaisu.
-    z-index: 8999;
-  }
+.paatason-navigointilaatikko > .piilotusnappi {
+  @koko: 60px;
+  @taustavari: #c1c1bd;
+  width: (@koko / 2);
+  height: @koko;
+  border: @sisaltolaatikoiden-reunaviiva;
+  border-radius: 90px 0 0 90px;
+  background-color: @taustavari;
+  position: absolute;
+  left: -(@koko / 2);
+  top: 44%; // FIXME Laske jotenkin puoleen väliin korkeudesta riippumatta. Tämä on close enough -ratkaisu.
+  z-index: 8999;
 }
-*/
 
 .paatason-navigointilaatikko {
   display: flex;
