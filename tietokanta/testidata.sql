@@ -115,6 +115,9 @@ SELECT paivita_pohjavesialueet();
 \i testidata/laskutusyhteenveto_vantaa.sql
 \i testidata/laskutusyhteenveto_espoo.sql
 
+-- Suolabonustestausta varten
+\i testidata/vantaa_suolabonusta_varten.sql
+
 -- Tieverkko
 \i testidata/tierekisteri.sql
 
