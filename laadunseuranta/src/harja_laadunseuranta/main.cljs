@@ -41,7 +41,7 @@
 
 (defn- paata-ajo []
   (go-loop []
-    (if (<! (comms/paata-ajo! @s/tarkastusajo @s/valittu-urakka))
+    (if (<! (comms/paata-ajo! @s/tarkastusajo-id @s/valittu-urakka))
       (s/tarkastusajo-seis!)
 
       ;; yritä uudelleen kunnes onnistuu, spinneri pyörii
@@ -77,11 +77,12 @@
                :kuvaus ""
                :kuva nil}]
     [:div.havaintolomake-container
-     [havaintolomake/havaintolomake asetukset/+wmts-url+ asetukset/+wmts-url-kiinteistojaotus+ asetukset/+wmts-url-ortokuva+
+     [havaintolomake/havaintolomake asetukset/+wmts-url+
+      asetukset/+wmts-url-kiinteistojaotus+ asetukset/+wmts-url-ortokuva+
       model
       #(do
         (peruuta-pikavalinta)
-        (reitintallennus/kirjaa-kertakirjaus @s/idxdb % @s/tarkastusajo)
+        (reitintallennus/kirjaa-kertakirjaus @s/idxdb % @s/tarkastusajo-id)
         (lisaa-kirjausikoni "!")
         (tallennettu-fn))
       #(do
@@ -98,7 +99,7 @@
                                         :mittaukset (merge (erota-mittaukset @s/havainnot) arvot)
                                         :havainnot (erota-havainnot @s/havainnot)
                                         :sijainti (:nykyinen @s/sijainti)}
-                                       @s/tarkastusajo))
+                                       @s/tarkastusajo-id))
 
 (defn- laheta-kitkamittaus [arvo]
   (lisaa-kirjausikoni (str arvo))
@@ -150,7 +151,7 @@
     (reset! s/reittipisteet (mapv utils/keywordize-map (js->clj (get ajo "reittipisteet"))))
     (reset! s/kirjauspisteet (mapv utils/keywordize-map (js->clj (get ajo "tarkastuspisteet"))))
     (reset! s/tarkastustyyppi (keyword (get ajo "tarkastustyyppi")))
-    (reset! s/tarkastusajo (get ajo "tarkastusajo"))
+    (reset! s/tarkastusajo-id (get ajo "tarkastusajo"))
     (reset! s/tallennus-kaynnissa true))
   (reset! s/palautettava-tarkastusajo nil))
 

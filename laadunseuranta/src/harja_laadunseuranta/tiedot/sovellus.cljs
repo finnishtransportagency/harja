@@ -5,47 +5,62 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]))
 
 (def sovelluksen-alkutila
-  {:tallennus-kaynnissa false
-   :tallennustilaa-muutetaan false
-   :kayttajanimi nil
-   :kayttajatunnus nil
-   :sijainti {:nykyinen nil
-              :edellinen nil}
-   :palautettava-tarkastusajo nil
-   :valittu-urakka nil
-   :tarkastusajo nil
-   :tarkastustyyppi nil
-   :kirjaamassa-havaintoa false
-   :kirjaamassa-yleishavaintoa false
-   :reittipisteet []
-   :kirjauspisteet [] ; ikoneita varten
-   :lahettamattomia 0
-   :pikavalinta nil
-   :kuva nil
-   :tr-alku nil
-   :tr-loppu nil
-   :kitkan-keskiarvo nil
-   :lumimaara nil
-   :tasaisuus nil
-   :kiinteys nil
-   :polyavyys nil
+  {;; Sovelluksen alustustiedot
    :alustus {:alustettu false
              :gps-tuettu false
              :ensimmainen-sijainti nil ; alustusta varten
              :verkkoyhteys (.-onLine js/navigator)
              :selain-tuettu (utils/tuettu-selain?)}
-   :nayta-kiinteistorajat false
-   :nayta-ortokuva false
-   :tr-tiedot-nakyvissa false
+
+   ;; Tarkastusajon perustiedot
+   :valittu-urakka nil
+   :tarkastusajo-id nil
+   :tarkastustyyppi nil
+   :tallennus-kaynnissa false
+   :tallennustilaa-muutetaan false
+   :palautettava-tarkastusajo nil
+
+   ;; Käyttäjätiedot
+   :kayttaja {:kayttajanimi nil
+              :kayttajatunnus nil}
+
+   ;; Ajonaikaiset tiedot
+   :lahettamattomia 0
+   :sijainti {:nykyinen nil
+              :edellinen nil}
+   :reittipisteet []
+   :kirjauspisteet [] ; ikoneita varten
    :tr-tiedot {:tr-osoite {:tie 20
                            :aosa 1
                            :aet 1}
                :talvihoitoluokka 2}
+
+   ;; UI
+   :tr-tiedot-nakyvissa false
+
+   ;; Havainnot & kirjaukset
    :pikahavainnot {}
-   :keskita-ajoneuvoon false
-   :virheet []
-   :ilmoitukset []
+   :pikavalinta nil
+   :kirjaamassa-havaintoa false
+   :kirjaamassa-yleishavaintoa false
    :vakiohavaintojen-kuvaukset nil
+
+   :tr-alku nil
+   :tr-loppu nil
+
+   :kitkan-keskiarvo nil
+   :lumimaara nil
+   :tasaisuus nil
+   :kiinteys nil
+   :polyavyys nil
+
+   ;; Kartta
+   :kartta {:keskita-ajoneuvoon false
+            :nayta-kiinteistorajat false
+            :nayta-ortokuva false}
+
+   ;; Muut
+   :ilmoitukset [] ;; Sisältää jonossa olevat ajastetut ilmoitukset
    :idxdb nil
    :palvelinvirhe nil})
 
@@ -71,8 +86,8 @@
 
 (def lahettamattomia (reagent/cursor sovellus [:lahettamattomia]))
 
-(def kayttajanimi (reagent/cursor sovellus [:kayttajanimi]))
-(def kayttajatunnus (reagent/cursor sovellus [:kayttajatunnus]))
+(def kayttajanimi (reagent/cursor sovellus [:kayttaja :kayttajanimi]))
+(def kayttajatunnus (reagent/cursor sovellus [:kayttaja :kayttajatunnus]))
 
 (def kirjaamassa-havaintoa (reagent/cursor sovellus [:kirjaamassa-havaintoa]))
 (def kirjaamassa-yleishavaintoa (reagent/cursor sovellus [:kirjaamassa-yleishavaintoa]))
@@ -99,7 +114,7 @@
 
 (def sijainti (reagent/cursor sovellus [:sijainti]))
 (def valittu-urakka (reagent/cursor sovellus [:valittu-urakka]))
-(def tarkastusajo (reagent/cursor sovellus [:tarkastusajo]))
+(def tarkastusajo-id (reagent/cursor sovellus [:tarkastusajo-id]))
 (def tarkastustyyppi (reagent/cursor sovellus [:tarkastustyyppi]))
 
 (def tyhja-sijainti
@@ -115,15 +130,13 @@
 
 (def kartan-keskipiste (reaction @ajoneuvon-sijainti))
 
-(def kuva (reagent/cursor sovellus [:kuva]))
 (def tallennus-kaynnissa (reagent/cursor sovellus [:tallennus-kaynnissa]))
-(def virheet (reagent/cursor sovellus [:virheet]))
 (def ilmoitukset (reagent/cursor sovellus [:ilmoitukset]))
 
-(def nayta-kiinteistorajat (reagent/cursor sovellus [:nayta-kiinteistorajat]))
-(def nayta-ortokuva (reagent/cursor sovellus [:nayta-ortokuva]))
+(def nayta-kiinteistorajat (reagent/cursor sovellus [:kartta :nayta-kiinteistorajat]))
+(def nayta-ortokuva (reagent/cursor sovellus [:kartta :nayta-ortokuva]))
 
-(def keskita-ajoneuvoon (reagent/cursor sovellus [:keskita-ajoneuvoon]))
+(def keskita-ajoneuvoon (reagent/cursor sovellus [:kartta :keskita-ajoneuvoon]))
 
 (def karttaoptiot (reaction {:seuraa-sijaintia (or @tallennus-kaynnissa @keskita-ajoneuvoon)
                              :nayta-kiinteistorajat @nayta-kiinteistorajat
@@ -156,15 +169,15 @@
 
 (def palvelinvirhe (reagent/cursor sovellus [:palvelinvirhe]))
 
-(def sijainnin-tallennus-mahdollinen (reaction (and @idxdb @tarkastusajo)))
+(def sijainnin-tallennus-mahdollinen (reaction (and @idxdb @tarkastusajo-id)))
 
 (def tallennustilaa-muutetaan (reagent/cursor sovellus [:tallennustilaa-muutetaan]))
 
 (def tarkastusajo-paattymassa (reaction (and @tallennustilaa-muutetaan
-                                             @tarkastusajo
+                                             @tarkastusajo-id
                                              @tarkastustyyppi)))
 
-(def nayta-sivupaneeli (reaction (and @tarkastusajo
+(def nayta-sivupaneeli (reaction (and @tarkastusajo-id
                                       @tarkastustyyppi
                                       (not @tarkastusajo-paattymassa)
                                       (not @kirjaamassa-havaintoa))))
@@ -175,7 +188,7 @@
 
 
 (def tarkastusajo-luotava (reaction (and @tallennustilaa-muutetaan
-                                         (nil? @tarkastusajo)
+                                         (nil? @tarkastusajo-id)
                                          (nil? @tarkastustyyppi))))
 
 
@@ -184,7 +197,7 @@
          :tallennus-kaynnissa false
          :tallennustilaa-muutetaan false
          :tarkastustyyppi nil
-         :tarkastusajo nil
+         :tarkastusajo-id nil
          :valittu-urakka nil
          :pikahavainnot {}))
 
@@ -192,7 +205,7 @@
   (assoc sovellus
          :tallennustilaa-muutetaan false
          :tarkastustyyppi tarkastustyyppi
-         :tarkastusajo ajo-id
+         :tarkastusajo-id ajo-id
          :reittipisteet []
          :kirjauspisteet []
          :tallennus-kaynnissa true))
