@@ -103,6 +103,63 @@
         (assoc tehtava :tasot (str "1. " (:nimi taso1) ", 2. " (:nimi taso2) ", 3. " (:nimi taso3)))))
     tehtavat))
 
+(defn api-seuranta [kaikki-koodit koodit-tasoittain]
+  (let [auki (atom #{})]
+    (fn [kaikki-koodit koodit-tasoittain]
+      (let [tehtavat (rakenna-tasot kaikki-koodit (filter #(and (true? (:api-seuranta %))
+                                                                (not= "Ei yksilöity" (:nimi %)))
+                                                          (get koodit-tasoittain 4)))
+
+            kokonaishintaiset-tehtavat (filter #(some (fn [h] (= h "kokonaishintainen")) (:hinnoittelu %)) tehtavat)
+            yksikkohintaiset-tehtavat (filter #(some (fn [h] (= h "yksikkohintainen")) (:hinnoittelu %)) tehtavat)
+            auki-nyt @auki]
+        [yleiset/haitari
+         (wrap
+          (into {}
+                (map (juxt :id #(assoc %
+                                       :auki (boolean (auki-nyt (:id %))))))
+
+                [{:otsikko "API: Kokonaishintaiset toteumatehtävät"
+                   :id :api-kokonaishintaiset
+                   :sisalto [grid/grid
+                             {:otsikko "API:n kautta seurattavat kokonaishintaiset toteumatehtävät"
+                              :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
+                              :piilota-toiminnot? true
+                              :tunniste #(str "kht" (:id %))}
+
+                             [{:otsikko "Id" :nimi :id :tyyppi :string :leveys "40"}
+                              {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%"}
+                              {:otsikko "Tasot" :nimi :tasot :tyyppi :string :leveys "20%"}
+                              {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%"}]
+                             (sort-by (juxt :tasot :nimi) kokonaishintaiset-tehtavat)]}
+
+                 {:otsikko "API: Yksikköhintaiset toteumatehtävät"
+                  :id :api-yksikkohintaiset
+                  :sisalto [grid/grid
+                            {:otsikko "API:n kautta seurattavat yksikköhintaiset toteumatehtävät"
+                             :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
+                             :piilota-toiminnot? true
+                             :tunniste #(str "yht" (:id %))}
+
+                            [{:otsikko "Id" :nimi :id :tyyppi :string :leveys "40"}
+                             {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%"}
+                             {:otsikko "Tasot" :nimi :tasot :tyyppi :string :leveys "20%"}
+                             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%"}]
+                            (sort-by (juxt :tasot :nimi) yksikkohintaiset-tehtavat)]}
+
+                 {:otsikko "API: Työkoneiden reaaliaikaseuranta"
+                  :id :api-reaaliaika
+                  :sisalto (let [tehtavat @tyokoneiden-reaaliaikaseuranna-tehtavat]
+                             [grid/grid
+                              {:otsikko "API:n kautta seurattavat työkoneiden reaaliaikaseurannan tehtävät"
+                               :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
+                               :piilota-toiminnot? true
+                               :tunniste #(str "ras" (:nimi %))}
+                              [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%"}]
+                              (sort-by :nimi tehtavat)])}]))]))
+    (fn [_ _]
+      [yleiset/haitari osiot])))
+
 (def toimenpidekoodit
   "Toimenpidekoodien hallinnan pääkomponentti"
   (with-meta
@@ -145,87 +202,56 @@
            ]]
 
          [:br]
-         (if-let [emo3 (:id taso3)]
-           (let [tehtavat (filter #(= (:emo %) emo3) (get koodit-tasoittain 4))
-                 _ (log "tehtävät " (pr-str tehtavat))]
-             [grid/grid
-              {:otsikko "Tehtävät"
-               :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
-               :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/hallinta-tehtavat)
-                           #(tallenna-tehtavat tehtavat %)
-                           :ei-mahdollinen)
-               :tunniste :id}
-
-              [{:otsikko "Nimi" :nimi :nimi :tyyppi :string
-                :validoi [[:ei-tyhja "Anna tehtävän nimi"]]
-                :leveys 6}
-               {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :validoi [[:ei-tyhja "Anna yksikkö"]]
-                :leveys 1}
-               {:otsikko "Hinnoittelu" :nimi :hinnoittelu :tyyppi :valinta :leveys 2
-                :valinnat +hinnoittelu-valinnat+
-                :valinta-nayta hinnoittelun-nimet
-                :fmt #(if % (hinnoittelun-nimet %) "Ei hinnoittelua")}
-               {:otsikko "Seurataan API:n kautta" :nimi :api-seuranta :tyyppi :checkbox
-                :leveys 1
-                :fmt fmt/totuus
-                :tasaa :keskita
-                ;; todo: jos muutetaan arvo esim. muutoshintaiseksi, pitää arvo asettaa nilliksi
-                :muokattava? (fn [rivi _]
-                               (some (fn [h] (or (= h "kokonaishintainen")
-                                                 (= h "yksikkohintainen")))
-                                     (:hinnoittelu rivi)))}
-               {:otsikko "Passivoitu"
-                :nimi :poistettu
-                :tyyppi :checkbox
-                :fmt fmt/totuus
-                :leveys 1}
-
-               {:otsikko "Luoja"
-                :nimi :luoja
-                :tyyppi :string
-                :leveys 2
-                :muokattava? (constantly false)}]
-              (sort-by (juxt :hinnoittelu :nimi) tehtavat)])
-
-           [:div [yleiset/vihje "Valitse taso nähdäksesi tehtävät"]])
-
-         [:h2 "API-seuranta"]
-         (let [tehtavat (rakenna-tasot kaikki-koodit (filter #(and (true? (:api-seuranta %))
-                                                                   (not= "Ei yksilöity" (:nimi %)))
-                                                             (get koodit-tasoittain 4)))
-               kokonaishintaiset-tehtavat (filter #(some (fn [h] (= h "kokonaishintainen")) (:hinnoittelu %)) tehtavat)
-               yksikkohintaiset-tehtavat (filter #(some (fn [h] (= h "yksikkohintainen")) (:hinnoittelu %)) tehtavat)]
-           [:div
-            [grid/grid
-             {:otsikko "API:n kautta seurattavat kokonaishintaiset toteumatehtävät"
-              :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
-              :piilota-toiminnot? true
-              :tunniste #(str "kht" (:id %))}
-
-             [{:otsikko "Id" :nimi :id :tyyppi :string :leveys "40"}
-              {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%"}
-              {:otsikko "Tasot" :nimi :tasot :tyyppi :string :leveys "20%"}
-              {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%"}]
-             (sort-by (juxt :tasot :nimi) kokonaishintaiset-tehtavat)]
-            [grid/grid
-             {:otsikko "API:n kautta seurattavat yksikköhintaiset toteumatehtävät"
-              :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
-              :piilota-toiminnot? true
-              :tunniste #(str "yht" (:id %))}
-
-             [{:otsikko "Id" :nimi :id :tyyppi :string :leveys "40"}
-              {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%"}
-              {:otsikko "Tasot" :nimi :tasot :tyyppi :string :leveys "20%"}
-              {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%"}]
-             (sort-by (juxt :tasot :nimi) yksikkohintaiset-tehtavat)]])
-         (let [tehtavat @tyokoneiden-reaaliaikaseuranna-tehtavat]
+         (let [emo3 (:id taso3)
+               tehtavat (and emo3 (filter #(= (:emo %) emo3) (get koodit-tasoittain 4)))
+               _ (log "tehtävät " (pr-str tehtavat))]
            [grid/grid
-            {:otsikko "API:n kautta seurattavat työkoneiden reaaliaikaseurannan tehtävät"
-             :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
-             :piilota-toiminnot? true
-             :tunniste #(str "ras" (:nimi %))}
-            [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%"}]
-            (sort-by :nimi tehtavat)])]))
+            {:otsikko "Tehtävät"
+             :tyhja (cond
+                      (nil? (:id taso3))
+                      [yleiset/vihje "Valitse taso nähdäksesi tehtävät"]
+
+                      (nil? tehtavat)
+                      [yleiset/ajax-loader "Tehtäviä haetaan..."]
+
+                      :default "Ei tehtävätietoja")
+             :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/hallinta-tehtavat)
+                         #(tallenna-tehtavat tehtavat %)
+                         :ei-mahdollinen)
+             :tunniste :id}
+
+            [{:otsikko "Nimi" :nimi :nimi :tyyppi :string
+              :validoi [[:ei-tyhja "Anna tehtävän nimi"]]
+              :leveys 6}
+             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :validoi [[:ei-tyhja "Anna yksikkö"]]
+              :leveys 1}
+             {:otsikko "Hinnoittelu" :nimi :hinnoittelu :tyyppi :valinta :leveys 2
+              :valinnat +hinnoittelu-valinnat+
+              :valinta-nayta hinnoittelun-nimet
+              :fmt #(if % (hinnoittelun-nimet %) "Ei hinnoittelua")}
+             {:otsikko "Seurataan API:n kautta" :nimi :api-seuranta :tyyppi :checkbox
+              :leveys 1
+              :fmt fmt/totuus
+              :tasaa :keskita
+              ;; todo: jos muutetaan arvo esim. muutoshintaiseksi, pitää arvo asettaa nilliksi
+              :muokattava? (fn [rivi _]
+                             (some (fn [h] (or (= h "kokonaishintainen")
+                                               (= h "yksikkohintainen")))
+                                   (:hinnoittelu rivi)))}
+             {:otsikko "Passivoitu"
+              :nimi :poistettu
+              :tyyppi :checkbox
+              :fmt fmt/totuus
+              :leveys 1}
+
+             {:otsikko "Luoja"
+              :nimi :luoja
+              :tyyppi :string
+              :leveys 2
+              :muokattava? (constantly false)}]
+            (sort-by (juxt :hinnoittelu :nimi) tehtavat)])
+
+         [api-seuranta kaikki-koodit koodit-tasoittain]]))
 
     {:displayName "toimenpidekoodit"
      :component-did-mount

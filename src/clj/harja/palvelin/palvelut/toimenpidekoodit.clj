@@ -12,7 +12,13 @@
   "Palauttaa toimenpidekoodit listana"
   [db kayttaja]
   (into []
-        (map #(konv/array->vec % :hinnoittelu))
+        (comp (map konv/alaviiva->rakenne)
+              (map (fn [{luoja :luoja :as rivi}]
+                     (if-not (:id luoja)
+                       ;; Poista luoja, jos tietoja ei ole
+                       (assoc rivi :luoja nil)
+                       rivi)))
+              (map #(konv/array->vec % :hinnoittelu)))
         (q/hae-kaikki-toimenpidekoodit db)))
 
 (defn lisaa-toimenpidekoodi

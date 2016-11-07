@@ -1,18 +1,22 @@
 -- name: hae-kaikki-toimenpidekoodit
 -- Listaa kaikki toimenpidekoodit.
 SELECT
-  id,
-  koodi,
-  nimi,
-  emo,
-  taso,
-  yksikko,
-  jarjestys,
-  hinnoittelu,
-  poistettu,
-  luoja,
-  api_seuranta as "api-seuranta"
-FROM toimenpidekoodi
+  t.id,
+  t.koodi,
+  t.nimi,
+  t.emo,
+  t.taso,
+  t.yksikko,
+  t.jarjestys,
+  t.hinnoittelu,
+  t.poistettu,
+  t.luoja AS luoja_id,
+  k.kayttajanimi AS luoja_kayttajanimi,
+  k.etunimi AS luoja_etunimi,
+  k.sukunimi AS luoja_sukunimi,
+  api_seuranta AS "api-seuranta"
+FROM toimenpidekoodi t
+     LEFT JOIN kayttaja k ON t.luoja = k.id
 
 -- name: lisaa-toimenpidekoodi<!
 -- Lisää uuden 4. tason toimenpidekoodin (tehtäväkoodi).
