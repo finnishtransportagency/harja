@@ -28,7 +28,7 @@
     (doseq [{:keys [id kayttajanimi kuvaus organisaatio poistettu]} tunnukset]
       (if poistettu
         (q/poista-jarjestelmatunnus! c {:id id})
-        (if (neg? id)
+        (if (or (nil? id) (neg? id))
           (q/luo-jarjestelmatunnus<! c {:kayttajanimi kayttajanimi
                                         :kuvaus kuvaus
                                         :organisaatio (:id organisaatio)})
