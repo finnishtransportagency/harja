@@ -726,7 +726,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
       muuttumaton? " Muokkaa reittiä"
       :else " Muuta valintaa")))
 
-(defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti pakollinen?]} data]
+(defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? ala-nayta-virhetta-komponentissa? sijainti pakollinen?]} data]
   (let [osoite-alussa @data
 
         hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
@@ -807,7 +807,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                            (reset! virheet nil)))))
               kartta? @karttavalinta-kaynnissa]
           [:span.tierekisteriosoite-kentta (when @virheet {:class "sisaltaa-virheen"})
-           (when @virheet
+           (when (and @virheet (false? ala-nayta-virhetta-komponentissa?))
              [:div {:class "virheet"}
               [:div {:class "virhe"}
                [:span (ikonit/livicon-warning-sign) [:span @virheet]]]])
