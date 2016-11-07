@@ -179,7 +179,7 @@
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
-                                         +kayttaja-tero+ portti
+                                         (:kayttajanimi +kayttaja-tero+) portti
                                          (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
     (is (= 403 (:status vastaus)))))
 
@@ -270,7 +270,7 @@
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
-                                         +kayttaja-tero+ portti
+                                         (:kayttajanimi +kayttaja-tero+) portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
 
     (is (= 403 (:status vastaus)))))
@@ -279,7 +279,7 @@
   (let [urakka (hae-oulun-tiemerkintaurakan-id)
         kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-tiemerkinta"]
-                                         +kayttaja-tero+ portti
+                                         (:kayttajanimi +kayttaja-tero+) portti
                                          (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json"))]
 
     (is (= 403 (:status vastaus)))))

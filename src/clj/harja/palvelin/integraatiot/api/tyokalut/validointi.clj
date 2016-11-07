@@ -37,7 +37,8 @@
              :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Koordinaattien järjestys väärä"}]})))
 
 (defn tarkista-kayttajan-oikeudet-urakkaan [db urakka-id kayttaja]
-  (when-not (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja))
+  (when (and (not (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
+             (not (kayttajat/onko-kayttajalla-lisaoikeus-urakkaan? db urakka-id (:id kayttaja))))
     (throw+ {:type virheet/+viallinen-kutsu+
              :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti (str "Käyttäjällä: " (:kayttajanimi kayttaja) " ei ole oikeuksia urakkaan: "
