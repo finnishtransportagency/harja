@@ -44,31 +44,35 @@ jos niille ei löydy yhteistä tietä tieverkolta."}
   [(get-in pistepari [:reittipiste :koordinaatit :x])
    (get-in pistepari [:reittipiste :koordinaatit :y])])
 
-(defn- valin-geometria [{:keys [alku loppu geometria]}]
-  (or (and geometria (geo/pg->clj geometria))
-      (let [[x1 y1 :as p1] (:coordinates (geo/pg->clj alku))
-            [x2 y2 :as p2] (:coordinates (geo/pg->clj loppu))
-            etaisyys (geo/etaisyys p1 p2)]
-        (if (< etaisyys maksimi-linnuntien-etaisyys)
-          (do (log/warn "Reittitoteuman pisteillä"
-                        " (x1:" x1 " y1: " y1
-                        " & x2: " x2 " y2: " y2 " )"
-                        " ei ole yhteistä tietä. Tehdään linnuntie, etäisyys: " etaisyys)
-              {:type :line
-               :points [[x1 y1]
-                        [x2 y2]]})
-          (do (log/warn "EI TEHDÄ linnuntietä, etäisyys: " etaisyys)
-              nil)))))
+(defn- valin-geometria
+  ([reitti] (valin-geometria reitti maksimi-linnuntien-etaisyys))
+  ([{:keys [alku loppu geometria]} maksimi-etaisyys]
+   (or (and geometria (geo/pg->clj geometria))
+       (let [[x1 y1 :as p1] (:coordinates (geo/pg->clj alku))
+             [x2 y2 :as p2] (:coordinates (geo/pg->clj loppu))
+             etaisyys (geo/etaisyys p1 p2)]
+         (if (or (nil? maksimi-etaisyys) (< etaisyys maksimi-etaisyys))
+           (do (log/warn "Reittitoteuman pisteillä"
+                         " (x1:" x1 " y1: " y1
+                         " & x2: " x2 " y2: " y2 " )"
+                         " ei ole yhteistä tietä. Tehdään linnuntie, etäisyys: " etaisyys ", max: " maksimi-etaisyys)
+               {:type   :line
+                :points [[x1 y1]
+                         [x2 y2]]})
+           (do (log/warn "EI TEHDÄ linnuntietä, etäisyys: " etaisyys ", max: " maksimi-etaisyys)
+               nil))))))
 
-(defn- hae-reitti [db pisteet]
-  (as-> pisteet p
-    (map (fn [[x y]]
-           (str "POINT(" x " " y ")")) p)
-    (str/join "," p)
-    (str "GEOMETRYCOLLECTION(" p ")")
-    (tieverkko/hae-tieviivat-pisteille db p 250)
-    (keep valin-geometria p)
-    (yhdista-viivat p)))
+(defn- hae-reitti
+  ([db pisteet] (hae-reitti db maksimi-linnuntien-etaisyys pisteet))
+  ([db maksimi-etaisyys pisteet]
+    (as-> pisteet p
+         (map (fn [[x y]]
+                (str "POINT(" x " " y ")")) p)
+         (str/join "," p)
+         (str "GEOMETRYCOLLECTION(" p ")")
+         (tieverkko/hae-tieviivat-pisteille db p 250)
+         (keep #(valin-geometria % maksimi-etaisyys) p)
+         (yhdista-viivat p))))
 
 (defn luo-reitti-geometria [db reitti]
   (->> reitti
@@ -79,22 +83,23 @@ jos niille ei löydy yhteistä tietä tieverkolta."}
 
 (defn paivita-toteuman-reitti
   "REPL testausta ja ajastettua tehtävää varten, laskee annetun toteuman reitin uudelleen reittipisteistä."
-  [db toteuma-id]
-  (let [reitti (->> toteuma-id
-                    (toteumat/hae-toteuman-reittipisteet db)
-                    (map (comp :coordinates geo/pg->clj :sijainti))
-                    (hae-reitti db))
-        geometria (when-not (= reitti +yhdistamis-virhe+)
-                    (-> reitti
-                        geo/clj->pg
-                        geo/geometry))]
-    (if geometria
-      (do
-        (log/debug "Tallennetaan reitti toteumalle " toteuma-id)
-        (toteumat/paivita-toteuman-reitti! db {:reitti geometria
-                                              :id     toteuma-id}))
+  ([db toteuma-id] (paivita-toteuman-reitti db toteuma-id maksimi-linnuntien-etaisyys))
+  ([db toteuma-id maksimi-etaisyys]
+   (let [reitti (->> toteuma-id
+                     (toteumat/hae-toteuman-reittipisteet db)
+                     (map (comp :coordinates geo/pg->clj :sijainti))
+                     (hae-reitti db maksimi-etaisyys))
+         geometria (when-not (= reitti +yhdistamis-virhe+)
+                     (-> reitti
+                         geo/clj->pg
+                         geo/geometry))]
+     (if geometria
+       (do
+         (log/debug "Tallennetaan reitti toteumalle " toteuma-id)
+         (toteumat/paivita-toteuman-reitti! db {:reitti geometria
+                                                :id     toteuma-id}))
 
-      (log/debug "Reittiä ei saatu kasattua toteumalle " toteuma-id))))
+       (log/debug "Reittiä ei saatu kasattua toteumalle " toteuma-id)))))
 
 (defn tee-onnistunut-vastaus []
   (tee-kirjausvastauksen-body {:ilmoitukset "Reittitoteuma kirjattu onnistuneesti"}))

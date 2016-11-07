@@ -23,7 +23,7 @@
       (jdbc/with-db-transaction
        [db db]
        (doseq [{:keys [id]} toteumat]
-         (reittitoteuma/paivita-toteuman-reitti db id))))))
+         (reittitoteuma/paivita-toteuman-reitti db id 2000))))))
 
 (defn- paivita-osoitteelliset-toteumat
   "Hakee toteumat, joille on tr-osoite, mutta ei reittiä, ja yrittää muodostaa reitin uusiksi."
