@@ -3,14 +3,19 @@
   (:require [reagent.core :refer [atom wrap] :as reagent]
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
-            [harja.tiedot.toimenpidekoodit :refer [koodit tyokoneiden-reaaliaikaseuranna-tehtavat]]
+            [harja.tiedot.toimenpidekoodit :refer
+             [koodit
+              koodit-tasoittain
+              tyokoneiden-reaaliaikaseuranna-tehtavat]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.grid :as grid]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :as yleiset]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.fmt :as fmt])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.fmt :as fmt]
+            [harja.ui.kentat :refer [tee-kentta]])
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction]]))
 
 (comment
   (add-watch koodit ::debug (fn [_ _ old new]
@@ -29,6 +34,25 @@
       (reset! koodit acc)
       (recur (assoc acc (:id tpk) tpk)
              tpkt))))
+
+(defonce nayta-poistetut? (atom false))
+
+(defonce tehtavat (reaction
+                   (let [emo3 (:id @valittu-taso3)
+                         koodit-tasoittain @koodit-tasoittain
+                         nayta-poistetut? @nayta-poistetut?]
+                     (or
+                      (and emo3
+                           (sort-by (juxt :hinnoittelu :nimi)
+                                    (filter (fn [tpk]
+                                              (and (= (:emo tpk) emo3)
+                                                   (or nayta-poistetut?
+                                                       (not (:poistettu tpk)))))
+                                            (get koodit-tasoittain 4))))
+                      []))))
+
+
+
 
 (defn resetoi-tyokoneiden-reaaliaikaseuranna-tehtavat [tehtavat]
   (reset! tyokoneiden-reaaliaikaseuranna-tehtavat tehtavat))
@@ -169,7 +193,7 @@
   (with-meta
     (fn []
       (let [kaikki-koodit @koodit
-            koodit-tasoittain (group-by :taso (sort-by :koodi (vals kaikki-koodit)))
+            koodit-tasoittain @koodit-tasoittain
             taso1 @valittu-taso1
             taso2 @valittu-taso2
             taso3 @valittu-taso3
@@ -211,9 +235,13 @@
                [:option {:value (:id tpk)} (str (:koodi tpk) " " (:nimi tpk))]))
            ]]
 
+         [tee-kentta {:teksti "Näytä myös passivoidut"
+                      :tyyppi :checkbox}
+          nayta-poistetut?]
+
          [:br]
          (let [emo3 (:id taso3)
-               tehtavat (and emo3 (filter #(= (:emo %) emo3) (get koodit-tasoittain 4)))
+
                _ (log "tehtävät " (pr-str tehtavat))]
            [grid/grid
             {:otsikko "Tehtävät"
@@ -228,7 +256,9 @@
              :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/hallinta-tehtavat)
                          #(tallenna-tehtavat tehtavat %)
                          :ei-mahdollinen)
-             :tunniste :id}
+             :tunniste :id
+             :rivin-luokka #(when (:poistettu %)
+                              "tehtava-poistettu")}
 
             [{:otsikko "Nimi" :nimi :nimi :tyyppi :string
               :validoi [[:ei-tyhja "Anna tehtävän nimi"]]
@@ -248,18 +278,20 @@
                              (some (fn [h] (or (= h "kokonaishintainen")
                                                (= h "yksikkohintainen")))
                                    (:hinnoittelu rivi)))}
-             {:otsikko "Passivoitu"
-              :nimi :poistettu
-              :tyyppi :checkbox
-              :fmt fmt/totuus
-              :leveys 1}
+             (when @nayta-poistetut?
+               {:otsikko "Passivoitu"
+                :nimi :poistettu
+                :tyyppi :checkbox
+                :fmt fmt/totuus
+                :leveys 1})
 
              {:otsikko "Luoja"
               :nimi :luoja
               :tyyppi :string
               :leveys 2
-              :muokattava? (constantly false)}]
-            (sort-by (juxt :hinnoittelu :nimi) tehtavat)])
+              :muokattava? (constantly false)
+              :fmt fmt/kayttaja-opt}]
+            @tehtavat])
 
          [api-seuranta kaikki-koodit koodit-tasoittain]]))
 
