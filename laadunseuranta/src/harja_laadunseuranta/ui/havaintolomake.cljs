@@ -153,7 +153,7 @@
           [:div.havainnot
            [:div.lomake-title @pikavalinnan-kuvaus]]
           
-          (if (= :kelitarkastus @tarkastustyyppi)
+          (if true ;; FIXME Aiemmin tässä oli (= :kelitarkastus @tarkastustyyppi). Nyt kun tarkastustyyppiä ei ole, mitä tälle tehdään?
             ;; talvitarkastuksen havainnot
             [:div.havainnot
              [:div.lomake-title "Havainnot"]

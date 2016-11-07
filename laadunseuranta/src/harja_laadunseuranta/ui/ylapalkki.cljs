@@ -41,7 +41,7 @@
 
 (defn ylapalkkikomponentti [{:keys [tiedot-nakyvissa hoitoluokka soratiehoitoluokka
                                     tr-osoite kiinteistorajat ortokuva
-                                    tallennus-kaynnissa tallennustilaa-muutetaan
+                                    tallennus-kaynnissa
                                     keskita-ajoneuvoon disabloi-kaynnistys? valittu-urakka
                                     palvelinvirhe]}]
   [:div
@@ -66,7 +66,7 @@
     [:div.ylapalkki-oikea
      [kaynnistyspainike tallennus-kaynnissa
       #(when-not @disabloi-kaynnistys?
-        (tarkastusajon-luonti/luo-ajo :kelitarkastus))
+        (tarkastusajon-luonti/luo-ajo))
       #(when-not @disabloi-kaynnistys?
         (tarkastusajon-luonti/aseta-ajo-paattymaan))]]]
    (when @palvelinvirhe [:div.palvelinvirhe "Palvelinvirhe: " @palvelinvirhe])])

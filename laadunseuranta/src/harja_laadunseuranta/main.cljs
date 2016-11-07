@@ -34,7 +34,6 @@
 
 (defn- havaintolomake [tallennettu-fn peruutettu-fn]
   (let [model {:kayttajanimi @s/kayttajanimi
-               :tarkastustyyppi @s/tarkastustyyppi
                :tr-osoite (utils/unreactive-deref s/tr-osoite)
                :tr-alku @s/tr-alku
                :tr-loppu @s/tr-loppu
@@ -131,7 +130,6 @@
          :kiinteistorajat s/nayta-kiinteistorajat
          :ortokuva s/nayta-ortokuva
          :tallennus-kaynnissa s/tallennus-kaynnissa
-         :tallennustilaa-muutetaan s/tallennustilaa-muutetaan
          :keskita-ajoneuvoon s/keskita-ajoneuvoon
          :disabloi-kaynnistys? (or @s/kirjaamassa-havaintoa @s/kirjaamassa-yleishavaintoa s/palautettava-tarkastusajo)
          :valittu-urakka s/valittu-urakka
