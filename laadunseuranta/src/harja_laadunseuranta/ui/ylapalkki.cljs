@@ -26,9 +26,9 @@
 
 (defn kaynnistyspainike [tallennus-kaynnissa kaynnista-fn pysayta-fn]
   [:div.kaynnistyspainike {:class (when @tallennus-kaynnissa "kaynnissa")
-                           :on-click (when @tallennus-kaynnissa
-                                       kaynnista-fn
-                                       pysayta-fn)}
+                           :on-click (if @tallennus-kaynnissa
+                                       pysayta-fn
+                                       kaynnista-fn)}
    [:span.kaynnistyspainike-nuoli.livicon-arrow-start]
    [:span.kaynnistyspainike-teksti
     (if @tallennus-kaynnissa
@@ -65,8 +65,8 @@
       [:div.ylapalkin-metatieto.talvihoitoluokka (str "THL: " (or @hoitoluokka "-"))]]]
     [:div.ylapalkki-oikea
      [kaynnistyspainike tallennus-kaynnissa
-      #(when-not @disabloi-kaynnistys?
+      #(when-not disabloi-kaynnistys?
         (tarkastusajon-luonti/luo-ajo))
-      #(when-not @disabloi-kaynnistys?
+      #(when-not disabloi-kaynnistys?
         (tarkastusajon-luonti/aseta-ajo-paattymaan))]]]
    (when @palvelinvirhe [:div.palvelinvirhe "Palvelinvirhe: " @palvelinvirhe])])
