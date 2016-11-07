@@ -105,12 +105,12 @@
   (let [suolasakon-id (:id (first (q/hae-suolasakko-id db urakka hoitokauden-alkuvuosi)))]
     (if suolasakon-id
       (do
-        (q/paivita-suolasakko! db (:maara tiedot) (:maksukuukausi tiedot)
+        (q/paivita-suolasakko! db (:maara tiedot) (:vainsakkomaara tiedot) (:maksukuukausi tiedot)
                                (:indeksi tiedot) (:id user)
                                (:talvisuolaraja tiedot) suolasakon-id)
           suolasakon-id)
 
-      (:id (q/luo-suolasakko<! db (:maara tiedot) hoitokauden-alkuvuosi (:maksukuukausi tiedot)
+      (:id (q/luo-suolasakko<! db (:maara tiedot) (:vainsakkomaara tiedot) hoitokauden-alkuvuosi (:maksukuukausi tiedot)
                                (:indeksi tiedot) urakka (:id user) (:talvisuolaraja tiedot))))))
 
 

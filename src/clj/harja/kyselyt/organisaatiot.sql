@@ -68,3 +68,11 @@ WHERE elynumero = :elynumero;
 SELECT id
 FROM organisaatio
 WHERE sampo_ely_hash = :ely_hash;
+
+-- name: listaa-organisaatiot
+SELECT
+  id,
+  ytunnus,
+  nimi,
+  tyyppi
+FROM organisaatio;

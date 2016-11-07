@@ -322,11 +322,23 @@
              (map (juxt identity (partial yrita-hakea-osio db user tiedot urakat)))
              osiot)))))
 
+(defn- aikavalinta
+  "Jos annettu suhteellinen aikavalinta tunteina, pura se :alku ja :loppu avaimiksi."
+  [{aikavalinta :aikavalinta :as hakuparametrit}]
+  (if-not aikavalinta
+    hakuparametrit
+    (let [loppu (java.util.Date.)
+          alku (java.util.Date. (- (System/currentTimeMillis)
+                                   (* 1000 60 60 aikavalinta)))]
+      (assoc hakuparametrit
+             :alku alku
+             :loppu loppu))))
+
 (defn- karttakuvan-suodattimet
   "Tekee karttakuvan URL parametreistä suodattimet"
   [{:keys [extent parametrit]}]
   (let [[x1 y1 x2 y2] extent
-        hakuparametrit (some-> parametrit (get "tk") transit/lue-transit-string)]
+        hakuparametrit (some-> parametrit (get "tk") transit/lue-transit-string aikavalinta)]
     (as-> hakuparametrit p
           (merge p
                  {:alue {:xmin x1 :ymin y1
