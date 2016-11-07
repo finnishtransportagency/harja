@@ -183,7 +183,8 @@
                                          :nimi (:hallintayksikko_nimi %)
                                          :lyhenne (:hallintayksikko_lyhenne %)}))
         (map #(assoc %
-               :tyyppi (keyword (:tyyppi %))
+               ;; jos urakkatyypissä on välilyöntejä, korvataan ne väliviivalla, jotta muodostuu validi keyword
+               :tyyppi (keyword (str/replace (:tyyppi %) " " "-"))
                :sopimustyyppi (and (:sopimustyyppi %) (keyword (:sopimustyyppi %)))))
 
         ;; Käsitellään päällystysurakan tiedot
