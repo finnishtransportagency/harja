@@ -17,7 +17,7 @@
    :tarkastusajo-id nil
    :tarkastustyyppi nil
    :tallennus-kaynnissa false
-   :tallennustilaa-muutetaan false
+   :tallennustilaa-muutetaan false ;; true kun ollaan luomassa uutta tarkastusajoa
    :palautettava-tarkastusajo nil
 
    ;; Käyttäjätiedot
