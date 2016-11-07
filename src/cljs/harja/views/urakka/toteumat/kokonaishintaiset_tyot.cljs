@@ -140,22 +140,23 @@
           [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-kokonaishintainen-toteuma nil)]
 
           [lomake/lomake
-           {:otsikko (if (:id @muokattu)
-                       "Muokkaa kokonaishintaista toteumaa"
-                       "Luo uusi kokonaishintainen toteuma")
-            :muokkaa! #(do (reset! muokattu %))
+           {:otsikko      (if (:id @muokattu)
+                            "Muokkaa kokonaishintaista toteumaa"
+                            "Luo uusi kokonaishintainen toteuma")
+            :muokkaa!     #(do (reset! muokattu %))
             :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))
-            :footer [napit/palvelinkutsu-nappi
-                     "Tallenna toteuma"
-                     #(tiedot/tallenna-kokonaishintainen-toteuma! @muokattu)
-                     {:luokka "nappi-ensisijainen"
-                      :ikoni (ikonit/tallenna)
-                      :kun-onnistuu #(do
-                                      (tiedot/toteuman-tallennus-onnistui %)
-                                      (reset! tiedot/valittu-kokonaishintainen-toteuma nil))
-                      :disabled (or (not (lomake/voi-tallentaa? @muokattu))
-                                    jarjestelman-lisaama-toteuma?
-                                    (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))))}]}
+            :footer-fn    (fn [tiedot]
+                            [napit/palvelinkutsu-nappi
+                            "Tallenna toteuma"
+                            #(tiedot/tallenna-kokonaishintainen-toteuma! tiedot)
+                            {:luokka       "nappi-ensisijainen"
+                             :ikoni        (ikonit/tallenna)
+                             :kun-onnistuu #(do
+                                             (tiedot/toteuman-tallennus-onnistui %)
+                                             (reset! tiedot/valittu-kokonaishintainen-toteuma nil))
+                             :disabled     (or (not (lomake/voi-tallentaa? tiedot))
+                                               jarjestelman-lisaama-toteuma?
+                                               (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))))}])}
            ;; lisatieto, suorittaja {ytunnus, nimi}, pituus
            ;; reitti!
            [(when jarjestelman-lisaama-toteuma?
@@ -185,9 +186,11 @@
               (if-not (= (:reitti @muokattu) :hakee)
                {:tyyppi              :tierekisteriosoite
                 :nimi                :tr
-                :pakollinen?         true
+                ;:pakollinen?         true
                 :sijainti            (r/wrap (:reitti @muokattu)
-                                             #(swap! muokattu assoc :reitti %))}
+                                             #(swap! muokattu assoc :reitti %))
+                :ala-nayta-virhetta-komponentissa? true
+                :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:reitti]]]}
                {:tyyppi :spinner
                 :nimi :spinner
                 :viesti "Haetaan reittiä"}))
