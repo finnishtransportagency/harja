@@ -149,11 +149,15 @@
   (doseq [tehtava (:tehtavat toteuma)]
     (kasittele-toteumatehtava c user toteuma tehtava)))
 
+(defn paivita-toteuman-reitti [db id reitti]
+  (when reitti
+    (q/paivita-toteuman-reitti! db {:id id
+                                    :reitti (geometriaksi reitti)})))
+
 (defn paivita-toteuma [c user toteuma]
   (q/paivita-toteuma! c (assoc (toteuman-parametrit toteuma user)
                                :id (:toteuma-id toteuma)))
-  (when (:reitti toteuma) (q/paivita-toteuman-reitti! c {:id     (:toteuma-id toteuma)
-                                                         :reitti (geometriaksi (:reitti toteuma))}))
+  (paivita-toteuman-reitti c (:toteuma-id toteuma) (:reitti toteuma))
   (kasittele-toteuman-tehtavat c user toteuma)
   (:toteuma-id toteuma))
 
@@ -356,8 +360,7 @@
                                :loppuetaisyys (get-in toteuma [:tr :loppuetaisyys])
                                :id            (get-in toteuma [:toteuma :id])
                                :urakka        (:urakka-id toteuma)})
-        (when (:reitti toteuma) (q/paivita-toteuman-reitti! c {:reitti (geometriaksi (:reitti toteuma))
-                                                                :id (get-in toteuma [:toteuma :id])}))
+        (paivita-toteuman-reitti c (get-in toteuma [:toteuma :id]) (:reitti toteuma))
         (kasittele-toteumatehtava c user toteuma (assoc (:tehtava toteuma)
                                                    :tehtava-id (get-in toteuma [:tehtava :id]))))))
 

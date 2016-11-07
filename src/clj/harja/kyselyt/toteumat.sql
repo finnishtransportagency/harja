@@ -810,3 +810,30 @@ WHERE id = :id;
 UPDATE toteuma
 SET reitti = :reitti
 WHERE id = :id;
+
+
+-- AJASTETTUJA TEHTÄVIÄ VARTEN
+
+-- name: hae-reitittomat-mutta-reittipisteelliset-toteumat
+-- Hakee toteumat, joille on olemassa reittipisteitä, mutta reittiä ei ole jostain syystä saatu tehtyä.
+-- Käytetään ajastetussa tehtävässä
+SELECT DISTINCT t.id
+FROM toteuma t
+JOIN reittipiste rp ON t.id = rp.toteuma
+WHERE t.reitti IS NULL;
+
+-- name: hae-reitittomat-mutta-osoitteelliset-toteumat
+-- Hakee toteumat, joille on tr-osoite, mutta reittiä ei ole saatu laskettua.
+-- Käytetään ajastetussa tehtävässä
+SELECT
+  id,
+  tr_numero AS numero,
+  tr_alkuosa AS alkuosa ,
+  tr_alkuetaisyys AS alkuetaisyys,
+  tr_loppuosa AS loppuosa ,
+  tr_loppuetaisyys AS loppuetaisyys
+FROM toteuma t
+WHERE reitti IS NULL
+AND t.tr_numero IS NOT NULL
+AND t.tr_alkuosa IS NOT NULL
+AND t.tr_alkuetaisyys IS NOT NULL;

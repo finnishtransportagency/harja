@@ -91,6 +91,7 @@
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
+    [harja.palvelin.ajastetut-tehtavat.reittien-validointi :as reittitarkistukset]
     [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys :as suolasakkojen-lahetys]
     [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
     [harja.palvelin.ajastetut-tehtavat.laskutusyhteenvedot :as laskutusyhteenvedot]
@@ -211,6 +212,9 @@
       :paivystystarkistukset (component/using
                                (paivystystarkistukset/->Paivystystarkistukset (:paivystystarkistus asetukset))
                                [:http-palvelin :db :fim :sonja-sahkoposti])
+      :reittitarkistukset (component/using
+                            (reittitarkistukset/->Reittitarkistukset (:reittitarkistus asetukset))
+                            [:http-palvelin :db])
 
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using

@@ -125,4 +125,5 @@
  :virustarkistus {:url "http://localhost:8080/scan"}
 
  :paivystystarkistus  {:paivittainen-aika [12 11 00]}
+ :reittitarkistus  {:paivittainen-aika [00 30 00]}
  }

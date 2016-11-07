@@ -77,16 +77,24 @@ jos niille ei löydy yhteistä tietä tieverkolta."}
        (hae-reitti db)
        geo/clj->pg geo/geometry))
 
-(defn- paivita-toteuman-reitti
-  "REPL testausta varten, laskee annetun toteuman reitin uudelleen reittipisteistä."
+(defn paivita-toteuman-reitti
+  "REPL testausta ja ajastettua tehtävää varten, laskee annetun toteuman reitin uudelleen reittipisteistä."
   [db toteuma-id]
   (let [reitti (->> toteuma-id
                     (toteumat/hae-toteuman-reittipisteet db)
                     (map (comp :coordinates geo/pg->clj :sijainti))
-                    (hae-reitti db)
-                    geo/clj->pg geo/geometry)]
-    (toteumat/paivita-toteuman-reitti! db {:reitti reitti
-                                           :id toteuma-id})))
+                    (hae-reitti db))
+        geometria (when-not (= reitti +yhdistamis-virhe+)
+                    (-> reitti
+                        geo/clj->pg
+                        geo/geometry))]
+    (if geometria
+      (do
+        (log/debug "Tallennetaan reitti toteumalle " toteuma-id)
+        (toteumat/paivita-toteuman-reitti! db {:reitti geometria
+                                              :id     toteuma-id}))
+
+      (log/debug "Reittiä ei saatu kasattua toteumalle " toteuma-id))))
 
 (defn tee-onnistunut-vastaus []
   (tee-kirjausvastauksen-body {:ilmoitukset "Reittitoteuma kirjattu onnistuneesti"}))

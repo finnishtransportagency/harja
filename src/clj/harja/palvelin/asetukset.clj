@@ -104,6 +104,7 @@
    (s/optional-key :virustarkistus)       {:url            s/Str}
 
    (s/optional-key :paivystystarkistus)   {:paivittainen-aika [s/Num]}
+   (s/optional-key :reittitarkistus)   {:paivittainen-aika [s/Num]}
 
    (s/optional-key :api-yhteysvarmistus)  {(s/optional-key :ajovali-minuutteina)     s/Int
                                            (s/optional-key :url)                     s/Str
