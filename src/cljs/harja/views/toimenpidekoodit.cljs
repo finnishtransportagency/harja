@@ -120,18 +120,18 @@
                                        :auki (boolean (auki-nyt (:id %))))))
 
                 [{:otsikko "API: Kokonaishintaiset toteumatehtävät"
-                   :id :api-kokonaishintaiset
-                   :sisalto [grid/grid
-                             {:otsikko "API:n kautta seurattavat kokonaishintaiset toteumatehtävät"
-                              :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
-                              :piilota-toiminnot? true
-                              :tunniste #(str "kht" (:id %))}
+                  :id :api-kokonaishintaiset
+                  :sisalto [grid/grid
+                            {:otsikko "API:n kautta seurattavat kokonaishintaiset toteumatehtävät"
+                             :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
+                             :piilota-toiminnot? true
+                             :tunniste #(str "kht" (:id %))}
 
-                             [{:otsikko "Id" :nimi :id :tyyppi :string :leveys "40"}
-                              {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%"}
-                              {:otsikko "Tasot" :nimi :tasot :tyyppi :string :leveys "20%"}
-                              {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%"}]
-                             (sort-by (juxt :tasot :nimi) kokonaishintaiset-tehtavat)]}
+                            [{:otsikko "Id" :nimi :id :tyyppi :string :leveys "40"}
+                             {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%"}
+                             {:otsikko "Tasot" :nimi :tasot :tyyppi :string :leveys "20%"}
+                             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%"}]
+                            (sort-by (juxt :tasot :nimi) kokonaishintaiset-tehtavat)]}
 
                  {:otsikko "API: Yksikköhintaiset toteumatehtävät"
                   :id :api-yksikkohintaiset
@@ -156,9 +156,13 @@
                                :piilota-toiminnot? true
                                :tunniste #(str "ras" (:nimi %))}
                               [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%"}]
-                              (sort-by :nimi tehtavat)])}]))]))
-    (fn [_ _]
-      [yleiset/haitari osiot])))
+                              (sort-by :nimi tehtavat)])}])
+          (fn [rivit]
+            (reset! auki (into #{}
+                               (comp (filter :auki)
+                                     (map :id))
+                               (vals rivit)))))
+         {:luokka "haitari-levea"}]))))
 
 (def toimenpidekoodit
   "Toimenpidekoodien hallinnan pääkomponentti"
