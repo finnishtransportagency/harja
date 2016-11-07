@@ -186,6 +186,7 @@
 (def oulun-alueurakan-2005-2010-id (atom nil))
 (def oulun-alueurakan-2014-2019-id (atom nil))
 (def kajaanin-alueurakan-2014-2019-id (atom nil))
+(def vantaan-alueurakan-2014-2019-id (atom nil))
 (def oulun-alueurakan-lampotila-hk-2014-2015 (atom nil))
 (def oulun-alueurakan-2005-2010-paasopimuksen-id (atom nil))
 (def oulun-alueurakan-2014-2019-paasopimuksen-id (atom nil))
@@ -224,6 +225,11 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Kajaanin alueurakka 2014-2019'"))))
+
+(defn hae-vantaan-alueurakan-2014-2019-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Vantaan alueurakka 2009-2019'"))))
 
 (defn hae-oulun-alueurakan-lampotila-hk-2014-2015 []
   (ffirst (q (str "SELECT id, urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila
@@ -388,6 +394,7 @@
   (reset! oulun-alueurakan-2005-2010-id (hae-oulun-alueurakan-2005-2012-id))
   (reset! oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id))
   (reset! kajaanin-alueurakan-2014-2019-id (hae-kajaanin-alueurakan-2014-2019-id))
+  (reset! vantaan-alueurakan-2014-2019-id (hae-vantaan-alueurakan-2014-2019-id))
   (reset! oulun-alueurakan-lampotila-hk-2014-2015 (hae-oulun-alueurakan-lampotila-hk-2014-2015))
   (reset! pohjois-pohjanmaan-hallintayksikon-id (hae-pohjois-pohjanmaan-hallintayksikon-id))
   (reset! muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id))
