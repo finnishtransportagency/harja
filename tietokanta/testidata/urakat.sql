@@ -189,7 +189,7 @@ VALUES ('1245142-KAJ2', (SELECT id
 INSERT INTO urakka (sampoid, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, urakkanro, urakoitsija)
 VALUES ('1245142-VAN2', (SELECT id
                          FROM organisaatio
-                         WHERE lyhenne = 'UUD'), 'Vantaan alueurakka 2014-2019', '2014-10-01', '2019-09-30', 'hoito',
+                         WHERE lyhenne = 'UUD'), 'Vantaan alueurakka 2009-2019', '2009-10-01', '2019-09-30', 'hoito',
         '131',
         (SELECT id
          FROM organisaatio
