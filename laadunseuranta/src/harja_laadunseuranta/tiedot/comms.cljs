@@ -58,8 +58,8 @@
   (post! asetukset/+paatos-url+ {:urakka (:id urakka)
                                  :tarkastusajo {:id tarkastusajo-id}}))
 
-(defn luo-ajo! [tarkastustyyppi]
-  (post! asetukset/+luonti-url+ {:tyyppi tarkastustyyppi}))
+(defn luo-ajo! []
+  (post! asetukset/+luonti-url+ nil))
 
 (defn hae-kayttajatiedot []
   (get! asetukset/+kayttajatiedot-url+))

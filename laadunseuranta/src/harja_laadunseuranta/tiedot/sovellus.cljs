@@ -4,8 +4,6 @@
             [harja-laadunseuranta.utils :as utils])
   (:require-macros [reagent.ratom :refer [reaction run!]]))
 
-(def kayta-uutta-navigaatiomallia? true) ;; TODO Siirtymävaiheen ajaksi, poista kun uusi navigaatio käytössä
-
 (def sovelluksen-alkutila
   {;; Sovelluksen alustustiedot
    :alustus {:alustettu false
@@ -17,10 +15,9 @@
    ;; Tarkastusajon perustiedot
    :valittu-urakka nil
    :tarkastusajo-id nil
-   :tarkastustyyppi nil
    :tallennus-kaynnissa false
-   :tallennustilaa-muutetaan false ;; true kun ollaan luomassa uutta tarkastusajoa
    :palautettava-tarkastusajo nil
+   :tarkastusajo-paattymassa nil ;; Jos true, näytetään päättämisdialogi
 
    ;; Käyttäjätiedot
    :kayttaja {:kayttajanimi nil
@@ -117,7 +114,6 @@
 (def sijainti (reagent/cursor sovellus [:sijainti]))
 (def valittu-urakka (reagent/cursor sovellus [:valittu-urakka]))
 (def tarkastusajo-id (reagent/cursor sovellus [:tarkastusajo-id]))
-(def tarkastustyyppi (reagent/cursor sovellus [:tarkastustyyppi]))
 
 (def tyhja-sijainti
   {:lat 0
@@ -173,60 +169,12 @@
 
 (def sijainnin-tallennus-mahdollinen (reaction (and @idxdb @tarkastusajo-id)))
 
-(def tallennustilaa-muutetaan (reagent/cursor sovellus [:tallennustilaa-muutetaan]))
-
-(def tarkastusajo-paattymassa (reaction (and @tallennustilaa-muutetaan
-                                             @tarkastusajo-id
-                                             @tarkastustyyppi)))
-
-(def nayta-sivupaneeli (reaction (and @tarkastusajo-id
-                                      @tarkastustyyppi
-                                      (not @tarkastusajo-paattymassa)
-                                      (not @kirjaamassa-havaintoa))))
+(def tarkastusajo-paattymassa (reagent/cursor sovellus [:tarkastusajo-paattymassa]))
 
 (def nayta-paanavigointi? (reaction (boolean (and @tarkastusajo-id
                                                   @tallennus-kaynnissa
-                                                  kayta-uutta-navigaatiomallia?
                                                   (not @tarkastusajo-paattymassa)))))
 
-; näyttää urakkavalitsimen, arvoksi annettava urakkatyyppi stringinä
-; niin kuin se on Harjan kannassa, esim. paallystys
-(def nayta-urakkavalitsin (atom nil))
-
-
-(def tarkastusajo-luotava (reaction (and @tallennustilaa-muutetaan
-                                         (nil? @tarkastusajo-id)
-                                         (nil? @tarkastustyyppi))))
-
-
-(defn tarkastusajo-seis [sovellus]
-  (assoc sovellus
-         :tallennus-kaynnissa false
-         :tallennustilaa-muutetaan false
-         :tarkastustyyppi nil
-         :tarkastusajo-id nil
-         :valittu-urakka nil
-         :pikahavainnot {}))
-
-(defn tarkastusajo-kayntiin [sovellus tarkastustyyppi ajo-id]
-  (assoc sovellus
-         :tallennustilaa-muutetaan false
-         :tarkastustyyppi tarkastustyyppi
-         :tarkastusajo-id ajo-id
-         :reittipisteet []
-         :kirjauspisteet []
-         :tallennus-kaynnissa true))
-
-(defn tarkastusajo-kayntiin! [tarkastustyyppi ajo-id]
-  (swap! sovellus #(tarkastusajo-kayntiin % tarkastustyyppi ajo-id)))
-
-(defn tarkastusajo-seis! []
-  (swap! sovellus tarkastusajo-seis))
 
 (defn valitse-urakka! [urakka]
   (reset! valittu-urakka urakka))
-
-(def beta-kayttajat #{"A018983" "K870689"})
-
-(defn kesatarkastus-beta? []
-  (beta-kayttajat @kayttajatunnus))

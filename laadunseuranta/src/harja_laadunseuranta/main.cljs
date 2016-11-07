@@ -160,10 +160,6 @@
          (when @s/kirjaamassa-yleishavaintoa
            [havaintolomake yleishavainto-kirjattu sulje-yleishavaintodialogi])
 
-         (when @s/tarkastusajo-luotava
-           [:div.tarkastusajon-luonti-dialog-container
-            [tarkastusajon-luonti/tarkastusajon-luontidialogi]])
-
          (when @s/tarkastusajo-paattymassa
            [:div.tarkastusajon-luonti-dialog-container
             [tarkastusajon-luonti/tarkastusajon-paattamisdialogi s/lahettamattomia]])
@@ -176,7 +172,8 @@
 
          [tr-haku/tr-selailukomponentti s/tr-tiedot-nakyvissa s/tr-tiedot]
 
-         (when (and @s/nayta-sivupaneeli (not s/kayta-uutta-navigaatiomallia?))
+         ;; TODO Poista tämä kun uusi navigaatiomalli on käytössä
+         #_(when @s/nayta-sivupaneeli
            [:div
             [:div.sivupaneeli-container
              [pikavalinnat/pikavalintapaneeli s/tr-osoite s/tarkastustyyppi s/havainnot alivalikot

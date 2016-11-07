@@ -73,18 +73,9 @@
       (tarkastukset/tallenna-tarkastukset! tx tarkastukset kayttaja)
       (merkitse-ajo-paattyneeksi! tx tarkastusajo-id kayttaja))))
 
-(defn- tarkastustyypiksi [tyyppi]
-  (condp = tyyppi
-    :kelitarkastus 1
-    :soratietarkastus 2
-    :paallystys 3
-    :tiemerkinta 4
-    0))
-
 (defn- luo-uusi-tarkastusajo! [db tiedot kayttaja]
   (q/luo-uusi-tarkastusajo<! db {:ulkoinen_id 0
-                                 :kayttaja (:id kayttaja)
-                                 :tyyppi (tarkastustyypiksi (-> tiedot :tyyppi))}))
+                                 :kayttaja (:id kayttaja)}))
 
 (defn- hae-tr-osoite [db lat lon treshold]
   (try

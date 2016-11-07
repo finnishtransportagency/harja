@@ -29,16 +29,16 @@
 
 (defonce paikannus-id (cljs.core/atom nil))
 
-(defn main []
-  (sovelluksen-alustusviive)
-
+(defn- alusta-paikannus-id []
   (reset! paikannus-id (paikannus/kaynnista-paikannus
                          sovellus/sijainti
-                         sovellus/ensimmainen-sijainti))
+                         sovellus/ensimmainen-sijainti)))
 
+(defn- alusta-geolokaatio-api []
   (if (paikannus/geolokaatio-tuettu?)
-    (reset! sovellus/gps-tuettu true))
+    (reset! sovellus/gps-tuettu true)))
 
+(defn- alusta-sovellus []
   (go
     (let [kayttajatiedot (<! (comms/hae-kayttajatiedot))]
       (reset! sovellus/kayttajanimi (-> kayttajatiedot :ok :nimi))
@@ -48,9 +48,9 @@
     (reset! sovellus/idxdb (<! (reitintallennus/tietokannan-alustus)))
 
     (reitintallennus/palauta-tarkastusajo @sovellus/idxdb #(do
-                                                             (reset! sovellus/palautettava-tarkastusajo %)
-                                                             (when (= "?relogin=true" js/window.location.search)
-                                                               (tarkastusajon-luonti/jatka-ajoa))))
+                                                            (reset! sovellus/palautettava-tarkastusajo %)
+                                                            (when (= "?relogin=true" js/window.location.search)
+                                                              (tarkastusajon-luonti/jatka-ajoa))))
 
     (reitintallennus/paivita-lahettamattomien-maara @sovellus/idxdb asetukset/+pollausvali+ sovellus/lahettamattomia)
 
@@ -62,10 +62,15 @@
                                                sovellus/reittipisteet
                                                sovellus/tallennus-kaynnissa
                                                sovellus/havainnot
-                                               sovellus/tarkastustyyppi
                                                sovellus/tarkastusajo-id
                                                sovellus/kirjauspisteet)
     (tr-haku/alusta-tr-haku sovellus/sijainti sovellus/tr-tiedot)))
+
+(defn main []
+  (sovelluksen-alustusviive)
+  (alusta-paikannus-id)
+  (alusta-geolokaatio-api)
+  (alusta-sovellus))
 
 (defn ^:export aja-testireitti [url]
   (paikannus/lopeta-paikannus @paikannus-id)

@@ -24,9 +24,11 @@
                             :media "(max-width: 700px)"}]
     [:img {:src kuvat/+harja-logo+ :alt ""}]]])
 
-(defn kaynnistyspainike [tallennus-kaynnissa toiminto-fn]
+(defn kaynnistyspainike [tallennus-kaynnissa kaynnista-fn pysayta-fn]
   [:div.kaynnistyspainike {:class (when @tallennus-kaynnissa "kaynnissa")
-                           :on-click toiminto-fn}
+                           :on-click (when @tallennus-kaynnissa
+                                       kaynnista-fn
+                                       pysayta-fn)}
    [:span.kaynnistyspainike-nuoli.livicon-arrow-start]
    [:span.kaynnistyspainike-teksti
     (if @tallennus-kaynnissa
@@ -62,11 +64,9 @@
       [:div.ylapalkin-metatieto.soratiehoitoluokka (str "SHL: " (or @soratiehoitoluokka "-"))]
       [:div.ylapalkin-metatieto.talvihoitoluokka (str "THL: " (or @hoitoluokka "-"))]]]
     [:div.ylapalkki-oikea
-     [kaynnistyspainike tallennus-kaynnissa (if s/kayta-uutta-navigaatiomallia?
-                                              #(when-not @disabloi-kaynnistys?
-                                                (tarkastusajon-luonti/luo-ajo :kelitarkastus)) ;; FIXME Ilmeisesti tarkastusajotyyppiä ei enää tarvita?
-                                              #(when-not @disabloi-kaynnistys?
-                                                (do
-                                                  (reset! tallennustilaa-muutetaan true)
-                                                  (reset! tallennus-kaynnissa false))))]]]
+     [kaynnistyspainike tallennus-kaynnissa
+      #(when-not @disabloi-kaynnistys?
+        (tarkastusajon-luonti/luo-ajo :kelitarkastus))
+      #(when-not @disabloi-kaynnistys?
+        (tarkastusajon-luonti/aseta-ajo-paattymaan))]]]
    (when @palvelinvirhe [:div.palvelinvirhe "Palvelinvirhe: " @palvelinvirhe])])

@@ -91,12 +91,11 @@
       (action ajo)
       (idb/cursor-continue kursori))))
 
-(defn persistoi-tarkastusajo [db tarkastusajo-id tarkastustyyppi]
+(defn persistoi-tarkastusajo [db tarkastusajo-id]
   (with-transaction-to-store db asetukset/+tarkastusajostore+ :readwrite store
     (with-get-object store tarkastusajo-id ajo
       (when (nil? ajo)
         (idb/put-object store {:tarkastusajo tarkastusajo-id
-                               :tarkastustyyppi tarkastustyyppi
                                :reittipisteet []})))))
 
 (defn tyhjenna-reittipisteet [db]
@@ -120,14 +119,14 @@
   (with-transaction-to-store db asetukset/+tapahtumastore+ :readwrite store
     (idb/add-object store (muodosta-kertakirjausviesti kirjaus tarkastusajo))))
 
-(defn- kaynnista-tarkastusajon-lokaali-tallennus [db tarkastusajo-atom tarkastustyyppi-atom]
+(defn- kaynnista-tarkastusajon-lokaali-tallennus [db tarkastusajo-atom]
   (let [ajo-id (cljs.core/atom nil)]
     (run!
      (if (and @ajo-id (not @tarkastusajo-atom))
        (do (poista-tarkastusajo db @ajo-id)
            (reset! ajo-id nil))
-       (when (and (not @ajo-id) @tarkastusajo-atom @tarkastustyyppi-atom)
-         (persistoi-tarkastusajo db @tarkastusajo-atom @tarkastustyyppi-atom)
+       (when (and (not @ajo-id) @tarkastusajo-atom)
+         (persistoi-tarkastusajo db @tarkastusajo-atom)
          (reset! ajo-id @tarkastusajo-atom))))))
 
 (defn kaynnista-reitintallennus [sijainnin-tallennus-mahdollinen-atom
@@ -137,11 +136,10 @@
                                  reittipisteet-atomi
                                  tallennus-kaynnissa-atomi
                                  havainnot-atom
-                                 tarkastustyyppi-atom
                                  tarkastusajo-atom
                                  tarkastuspisteet-atom]
   (.log js/console "Reitintallennus käynnistetty")
-  (kaynnista-tarkastusajon-lokaali-tallennus db tarkastusajo-atom tarkastustyyppi-atom)
+  (kaynnista-tarkastusajon-lokaali-tallennus db tarkastusajo-atom)
   
   (run!
    (when (and @sijainnin-tallennus-mahdollinen-atom @tarkastusajo-atom)
