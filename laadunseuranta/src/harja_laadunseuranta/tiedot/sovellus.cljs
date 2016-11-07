@@ -102,7 +102,7 @@
                                      (get-in sovellus [:alustus :verkkoyhteys])
                                      (get-in sovellus [:alustus :selain-tuettu])
                                      (:idxdb sovellus)
-                                     (:kayttajanimi sovellus)))))
+                                     (get-in sovellus [:kayttaja :kayttajanimi])))))
 
 (def sovellus-alustettu (reagent/cursor sovellus [:alustus :alustettu]))
 (def verkkoyhteys (reagent/cursor sovellus [:alustus :verkkoyhteys]))
