@@ -12,7 +12,7 @@ WHERE id = :id;
 -- name: hae-urakan-suolasakot
 -- Hakee urakan suolasakot urakan id:llä
 SELECT
-  ss.id, ss.maara, ss.hoitokauden_alkuvuosi, ss.maksukuukausi, ss.indeksi, ss.urakka,
+  ss.id, ss.maara, ss.vainsakkomaara, ss.hoitokauden_alkuvuosi, ss.maksukuukausi, ss.indeksi, ss.urakka,
   ss.kaytossa, ss.talvisuolaraja
 FROM suolasakko ss
   WHERE ss.urakka = :urakka;
@@ -35,12 +35,12 @@ SELECT *
 
 
 -- name: luo-suolasakko<!
-INSERT INTO suolasakko (maara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, luotu, luoja, talvisuolaraja)
-    VALUES (:maara, :hoitokauden_alkuvuosi, :maksukuukausi, :indeksi, :urakka, NOW(), :kayttaja, :talvisuolaraja);
+INSERT INTO suolasakko (maara, vainsakkomaara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, luotu, luoja, talvisuolaraja)
+    VALUES (:maara, :vainsakkomaara, :hoitokauden_alkuvuosi, :maksukuukausi, :indeksi, :urakka, NOW(), :kayttaja, :talvisuolaraja);
 
 -- name: paivita-suolasakko!
 UPDATE suolasakko
-   SET maara = :maara, maksukuukausi = :maksukuukausi,
+   SET maara = :maara, vainsakkomaara = :vainsakkomaara, maksukuukausi = :maksukuukausi,
        indeksi = :indeksi, muokattu = NOW(), muokkaaja = :kayttaja,
        talvisuolaraja = :talvisuolaraja
  WHERE id = :id;

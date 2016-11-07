@@ -50,6 +50,8 @@
    {:fmt     :numero
     :otsikko "Talvi­suolan max-määrä (t)"}
    {:fmt     :numero
+    :otsikko "Bonus­raja (t)"}
+   {:fmt     :numero
     :otsikko "Sakko­raja (t)"}
    {:fmt     :numero
     :otsikko "Kerroin"}
@@ -60,9 +62,11 @@
    {:fmt     :numero
     :otsikko "Suola­erotus (t)"}
    {:fmt     :raha
-    :otsikko "Sakko € / tonni"}
+    :otsikko "Sakko/\u00ADbonus € / t"}
    {:fmt     :raha
-    :otsikko "Sakko €"}
+    :otsikko "Sakko € / t"}
+   {:fmt     :raha
+    :otsikko "Sakko/\u00ADbonus €"}
    {:fmt     :raha
     :otsikko "Indeksi €"}
    {:fmt     :raha
@@ -97,8 +101,57 @@
          (= "Yhteensä" yht)))
 
       (apurit/tarkista-taulukko-yhteensa taulukko 3)
-      (apurit/tarkista-taulukko-yhteensa taulukko 10))))
+      (apurit/tarkista-taulukko-yhteensa taulukko 12))))
 
+(deftest raportin-suoritus-vantaa-suolabonus
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :suorita-raportti
+                                +kayttaja-jvh+
+                                {:nimi       :suolasakko
+                                 :konteksti  "urakka"
+                                 :urakka-id  (hae-vantaan-alueurakan-2014-2019-id)
+                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2015 10 1))
+                                              :loppupvm (c/to-date (t/local-date 2016 9 30))}})]
+    (is (vector? vastaus))
+
+    (let [elementit (apurit/tarkista-raportti vastaus "Suolasakkoraportti")
+          taulukko (apurit/taulukko-otsikolla
+                     vastaus
+                     "Vantaan alueurakka 2009-2019, Suolasakkoraportti ajalta 01.10.2015 - 30.09.2016")]
+(log/debug "vantaa vastaus" vastaus)
+(log/debug "(nth taulukko 3) eli taulukon rivit" (nth taulukko 3))
+      (tarkista-sarakkeet taulukko)
+
+      (apurit/tarkista-taulukko-rivit
+        taulukko
+        ;;Vantaan alueurakka 2009-2019 -3.50M -5.60M 1100M 1045.00M 1155.00M 1.1000000000000000M
+        ;; 1270.5000M 842.6M 202.40M 30.0M 6072.000M 850.5558354324099552000M 6922.5558354324099552000M
+
+        (fn [[urakka-nimi lampotila keskilampo sallittu bonusraja sakkoraja kerroin
+              kohtuullistarkistettu-sakkoraja kaytetty-talvisuolaa erotus
+              sakkobonus-per-t vainsakko-per-t sakkobonus indeksi
+              indeksikorotettuna & _ ]]
+          (and (= urakka-nimi "Vantaan alueurakka 2009-2019")
+               (testi/=marginaalissa? lampotila -3.5)
+               (testi/=marginaalissa? keskilampo -5.6)
+               (testi/=marginaalissa? sallittu 1100)
+               (testi/=marginaalissa? bonusraja 1045)
+               (testi/=marginaalissa? sakkoraja 1155)
+               (testi/=marginaalissa? kerroin 1.1)
+               (testi/=marginaalissa? kohtuullistarkistettu-sakkoraja 1270.50)
+               (testi/=marginaalissa? kaytetty-talvisuolaa 842.6)
+               (testi/=marginaalissa? erotus 202.4)
+               (testi/=marginaalissa? sakkobonus-per-t 30)
+               (nil? vainsakko-per-t)
+               (testi/=marginaalissa? sakkobonus 6072)
+               (testi/=marginaalissa? indeksi 850.555)
+               (testi/=marginaalissa? indeksikorotettuna 6922.5558)))
+        (fn [[yht & _]]
+          (= "Yhteensä" yht)))
+
+      (apurit/tarkista-taulukko-yhteensa taulukko 3)
+      (apurit/tarkista-taulukko-yhteensa taulukko 12)
+      (apurit/tarkista-taulukko-yhteensa taulukko 14))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii-usean-vuoden-aikavalilla
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -117,7 +170,6 @@
                     "Pohjois-Pohjanmaa, Suolasakkoraportti ajalta 01.10.2014 - 30.09.2015")]
 
       (tarkista-sarakkeet taulukko)
-
       (apurit/tarkista-taulukko-rivit
        taulukko
        (fn [[kajaani & _ ]]
@@ -131,7 +183,7 @@
          (= "Yhteensä" yht)))
 
       (apurit/tarkista-taulukko-yhteensa taulukko 3)
-      (apurit/tarkista-taulukko-yhteensa taulukko 10))))
+      (apurit/tarkista-taulukko-yhteensa taulukko 12))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -160,4 +212,4 @@
                   (string? (first rivi))))))
 
       (apurit/tarkista-taulukko-yhteensa taulukko 3)
-      (apurit/tarkista-taulukko-yhteensa taulukko 10))))
+      (apurit/tarkista-taulukko-yhteensa taulukko 12))))
