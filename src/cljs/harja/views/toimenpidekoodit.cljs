@@ -37,19 +37,32 @@
 
 (defonce nayta-poistetut? (atom false))
 
-(defonce tehtavat (reaction
-                   (let [emo3 (:id @valittu-taso3)
-                         koodit-tasoittain @koodit-tasoittain
-                         nayta-poistetut? @nayta-poistetut?]
-                     (or
-                      (and emo3
-                           (sort-by (juxt :hinnoittelu :nimi)
-                                    (filter (fn [tpk]
-                                              (and (= (:emo tpk) emo3)
-                                                   (or nayta-poistetut?
-                                                       (not (:poistettu tpk)))))
-                                            (get koodit-tasoittain 4))))
-                      []))))
+;; Hinnoitteluvalinta, nil näyttää kaikki
+(defonce nayta-hinnoittelu (atom nil))
+
+(defonce tehtavat
+  (reaction
+   (let [emo3 (:id @valittu-taso3)
+         koodit-tasoittain @koodit-tasoittain
+         nayta-poistetut? @nayta-poistetut?
+         nayta-hinnoittelu @nayta-hinnoittelu]
+     (or
+      (and emo3
+           (sort-by (juxt :hinnoittelu :nimi)
+                    (into []
+                          (comp
+                           (filter (fn [tpk]
+                                     (and (= (:emo tpk) emo3)
+                                          (or nayta-poistetut?
+                                              (not (:poistettu tpk)))
+                                          (or (nil? nayta-hinnoittelu)
+                                              (some #(= nayta-hinnoittelu %)
+                                                    (:hinnoittelu tpk))))))
+                           (map #(assoc %
+                                        :passivoitu? (:poistettu %)
+                                        :poistettu nil)))
+                          (get koodit-tasoittain 4))))
+      []))))
 
 
 
@@ -64,7 +77,7 @@
                   (into []
                         (comp (filter
                                 #(and
-                                  (not (:poistettu %))
+                                  (not (:passivoitu? %))
                                   (< (:id %) 0))))
                         uudet-tehtavat))
             muokattavat (into []
@@ -73,20 +86,11 @@
                                         (not= true (:koskematon t)))
                                       (into []
                                             (comp (filter
-                                                    #(and
-                                                      (not (:poistettu %))
-                                                      (> (:id %) 0))))
+                                                    #(> (:id %) 0)))
                                             uudet-tehtavat)))
-            poistettavat
-            (into []
-                  (keep #(when (and (:poistettu %)
-                                    (> (:id %) 0))
-                          (:id %)))
-                  uudet-tehtavat)
             res (<! (k/post! :tallenna-tehtavat
                              {:lisattavat lisattavat
-                              :muokattavat muokattavat
-                              :poistettavat poistettavat}))]
+                              :muokattavat muokattavat}))]
         (resetoi-koodit res))))
 
 (defn hinnoittelun-nimi
@@ -101,7 +105,7 @@
 
 (defn hinnoittelun-nimet
   [hinnoittelu-vec]
-  (clojure.string/join ", " (map #(hinnoittelun-nimi %) hinnoittelu-vec)))
+  (str/join ", " (map #(hinnoittelun-nimi %) hinnoittelu-vec)))
 
 (def +hinnoittelu-valinnat+
   [["yksikkohintainen"]
@@ -236,8 +240,16 @@
            ]]
 
          [tee-kentta {:teksti "Näytä myös passivoidut"
-                      :tyyppi :checkbox}
+                      :tyyppi :checkbox
+                      :lomake? true}
           nayta-poistetut?]
+
+         [:div.label-ja-alasveto
+          [:span.alasvedon-otsikko "Näytä hinnoittelutyyppi"]
+          [yleiset/livi-pudotusvalikko {:valinta @nayta-hinnoittelu
+                                        :format-fn #(if % (hinnoittelun-nimi %) "Kaikki")
+                                        :valitse-fn #(reset! nayta-hinnoittelu %)}
+           [nil "kokonaishintainen" "yksikkohintainen" "muutoshintainen"]]]
 
          [:br]
          (let [emo3 (:id taso3)
@@ -257,20 +269,21 @@
                          #(tallenna-tehtavat tehtavat %)
                          :ei-mahdollinen)
              :tunniste :id
-             :rivin-luokka #(when (:poistettu %)
-                              "tehtava-poistettu")}
+             :rivin-luokka #(when (:passivoitu? %)
+                              "tehtava-poistettu")
+             :piilota-toiminnot? true}
 
             [{:otsikko "Nimi" :nimi :nimi :tyyppi :string
               :validoi [[:ei-tyhja "Anna tehtävän nimi"]]
-              :leveys 6}
+              :leveys 8}
              {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :validoi [[:ei-tyhja "Anna yksikkö"]]
-              :leveys 1}
-             {:otsikko "Hinnoittelu" :nimi :hinnoittelu :tyyppi :valinta :leveys 2
+              :leveys 2}
+             {:otsikko "Hinnoittelu" :nimi :hinnoittelu :tyyppi :valinta :leveys 3
               :valinnat +hinnoittelu-valinnat+
               :valinta-nayta hinnoittelun-nimet
               :fmt #(if % (hinnoittelun-nimet %) "Ei hinnoittelua")}
              {:otsikko "Seurataan API:n kautta" :nimi :api-seuranta :tyyppi :checkbox
-              :leveys 1
+              :leveys 2
               :fmt fmt/totuus
               :tasaa :keskita
               ;; todo: jos muutetaan arvo esim. muutoshintaiseksi, pitää arvo asettaa nilliksi
@@ -278,12 +291,12 @@
                              (some (fn [h] (or (= h "kokonaishintainen")
                                                (= h "yksikkohintainen")))
                                    (:hinnoittelu rivi)))}
-             (when @nayta-poistetut?
-               {:otsikko "Passivoitu"
-                :nimi :poistettu
-                :tyyppi :checkbox
-                :fmt fmt/totuus
-                :leveys 1})
+             {:otsikko "Passivoitu"
+              :nimi :passivoitu?
+              :tyyppi :checkbox
+              :tasaa :keskita
+              :fmt fmt/totuus
+              :leveys 1}
 
              {:otsikko "Luoja"
               :nimi :luoja
