@@ -63,6 +63,7 @@
     [harja.palvelin.palvelut.tilannekuva :as tilannekuva]
     [harja.palvelin.palvelut.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
     [harja.palvelin.palvelut.status :as status]
+    [harja.palvelin.palvelut.organisaatiot :as organisaatiot]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -364,6 +365,10 @@
       :api-jarjestelmatunnukset (component/using
                                   (api-jarjestelmatunnukset/->APIJarjestelmatunnukset)
                                   [:http-palvelin :db])
+
+      :organisaatiot (component/using
+                       (organisaatiot/->Organisaatiot)
+                       [:http-palvelin :db])
 
       ;; Harja API
       :api-urakat (component/using

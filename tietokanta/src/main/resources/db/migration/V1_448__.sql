@@ -1,7 +1,10 @@
--- toteuma_materiaali vaatii materiaalikoodin ja määrän
--- 
-DELETE FROM toteuma_materiaali WHERE materiaalikoodi IS NULL;
+-- Uusi kantataulu, jossa järjestelmä-käyttäjille annetaan oikeudet toiseen urakkaan
 
-ALTER TABLE toteuma_materiaali
-    ALTER COLUMN materiaalikoodi SET NOT NULL,
-    ALTER COLUMN maara SET NOT NULL;
+CREATE TABLE kayttajan_lisaoikeudet_urakkaan (
+  id          SERIAL PRIMARY KEY,
+  kayttaja    INTEGER REFERENCES kayttaja (id) NOT NULL,
+  urakka      INTEGER REFERENCES urakka (id) NOT NULL
+);
+COMMENT ON TABLE kayttajan_lisaoikeudet_urakkaan IS 'Rivi tässä taulussa antaa järjestelmäkäyttäjälle oikeudet urakkaan.';
+
+ALTER TABLE kayttajan_lisaoikeudet_urakkaan ADD CONSTRAINT uniikki_lisaoikeus UNIQUE (urakka, kayttaja);
