@@ -62,7 +62,7 @@
                                                sovellus/tallennus-kaynnissa
                                                sovellus/havainnot
                                                sovellus/tarkastustyyppi
-                                               sovellus/tarkastusajo
+                                               sovellus/tarkastusajo-id
                                                sovellus/kirjauspisteet)
     (tr-haku/alusta-tr-haku sovellus/sijainti sovellus/tr-tiedot)))
 

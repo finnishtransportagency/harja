@@ -162,6 +162,11 @@
   (let [host (.-host js/location)]
     (#{"testiextranet.liikennevirasto.fi"} host)))
 
+(defn- ms->sec
+  "Muuntaa millisekunnit sekunneiksi"
+  [s]
+  (/ s 1000))
+
 (defn kehitysymparistossa? []
   "Tarkistaa ollaanko kehitysympäristössä"
   (let [host (.-host js/location)]
