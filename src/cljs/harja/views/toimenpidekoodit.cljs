@@ -187,8 +187,14 @@
              ^{:key (:id tpk)}
              [:option {:value (:id tpk)} (str (:koodi tpk) " " (:nimi tpk))])]]
          [:div.input-group
-          [:select#taso2 {:on-change #(do (reset! valittu-taso2 (valinnan-koodi %))
-                                          (reset! valittu-taso3 nil))
+          [:select#taso2 {:on-change #(let [taso2 (valinnan-koodi %)]
+                                        (reset! valittu-taso2 taso2)
+                                        (reset! valittu-taso3
+                                                (first
+                                                 (filter (fn [k]
+                                                           (and (= "Laaja toimenpide" (:nimi k))
+                                                                (= (:id taso2) (:emo k))))
+                                                         (get koodit-tasoittain 3)))))
                           :value (str (:id @valittu-taso2))}
            [:option {:value ""} "-- Valitse 2. taso --"]
            (when-let [emo1 (:id taso1)]
