@@ -33,12 +33,12 @@ VALUES
 -- Vantaan pääsopimus
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
 VALUES
-  ('Vantaan alueurakka pääsopimus','2014-10-01','2019-09-30','7V26339/05', (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'));
+  ('Vantaan alueurakka pääsopimus','2009-10-01','2019-09-30','00LZM-0033600', (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'));
 -- Vantaan lisäsopimus
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka, paasopimus)
 VALUES
-  ('Vantaan alueurakka lisäsopimus','2014-10-01','2019-09-30','7lisaV26339/06', (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null));
+  ('Vantaan alueurakka lisäsopimus','2009-10-01','2019-09-30','7lisaV26339/06', (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null));
 
 -- Espoon pääsopimus
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)

@@ -113,7 +113,7 @@
                                               :urakkatyyppi "hoito"}})
         nurkkasumma (last (last (last (last vastaus))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 16195,3))
+    (is (=marginaalissa? nurkkasumma 15782.94))
     (let [otsikko "KOKO MAA, Sanktioiden yhteenveto ajalta 01.01.2015 - 31.12.2015"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko

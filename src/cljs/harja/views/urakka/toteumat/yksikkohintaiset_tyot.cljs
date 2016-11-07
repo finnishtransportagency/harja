@@ -334,7 +334,9 @@
          {:otsikko "TR-osoite"
           :nimi :tr
           :leveys 20
-          :fmt tierekisteri/tierekisteriosoite-tekstina}
+          :fmt tierekisteri/tierekisteriosoite-tekstina
+          :tyyppi :tierekisteriosoite
+          :muokattava? (constantly false)}
          {:otsikko "Lisätieto"
           :nimi :lisatieto
           :muokattava? (constantly false)
