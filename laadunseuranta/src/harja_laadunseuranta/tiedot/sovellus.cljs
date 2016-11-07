@@ -4,6 +4,8 @@
             [harja-laadunseuranta.utils :as utils])
   (:require-macros [reagent.ratom :refer [reaction run!]]))
 
+(def kayta-uutta-navigaatiomallia? true) ;; TODO Siirtymävaiheen ajaksi, poista kun uusi navigaatio käytössä
+
 (def sovelluksen-alkutila
   {;; Sovelluksen alustustiedot
    :alustus {:alustettu false
@@ -181,6 +183,11 @@
                                       @tarkastustyyppi
                                       (not @tarkastusajo-paattymassa)
                                       (not @kirjaamassa-havaintoa))))
+
+(def nayta-paanavigointi? (reaction (boolean (and @tarkastusajo-id
+                                                  @tallennus-kaynnissa
+                                                  kayta-uutta-navigaatiomallia?
+                                                  (not @tarkastusajo-paattymassa)))))
 
 ; näyttää urakkavalitsimen, arvoksi annettava urakkatyyppi stringinä
 ; niin kuin se on Harjan kannassa, esim. paallystys

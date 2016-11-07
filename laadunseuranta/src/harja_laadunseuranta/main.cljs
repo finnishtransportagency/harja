@@ -148,7 +148,8 @@
           :kirjauspisteet-atomi s/kirjauspisteet
           :optiot s/karttaoptiot}]
 
-        [paatason-navigointi paatason-navigointi-tiedot/oletusvalilehdet]
+        (when @s/nayta-paanavigointi?
+          [paatason-navigointi paatason-navigointi-tiedot/oletusvalilehdet])
 
         [:div.paasisalto
          [ilmoitukset/ilmoituskomponentti s/ilmoitukset]
@@ -175,7 +176,7 @@
 
          [tr-haku/tr-selailukomponentti s/tr-tiedot-nakyvissa s/tr-tiedot]
 
-         (when @s/nayta-sivupaneeli
+         (when (and @s/nayta-sivupaneeli (not s/kayta-uutta-navigaatiomallia?))
            [:div
             [:div.sivupaneeli-container
              [pikavalinnat/pikavalintapaneeli s/tr-osoite s/tarkastustyyppi s/havainnot alivalikot

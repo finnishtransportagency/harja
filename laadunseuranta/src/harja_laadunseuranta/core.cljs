@@ -8,6 +8,7 @@
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.ui.tr-haku :as tr-haku]
             [harja-laadunseuranta.tiedot.puhe :as puhe]
+            [harja-laadunseuranta.tiedot.tarkastusajon-luonti :as tarkastusajon-luonti]
             [cljs.core.async :as async :refer [<!]]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
             [clojure.string :as str])
@@ -49,7 +50,7 @@
     (reitintallennus/palauta-tarkastusajo @sovellus/idxdb #(do
                                                              (reset! sovellus/palautettava-tarkastusajo %)
                                                              (when (= "?relogin=true" js/window.location.search)
-                                                               (main/jatka-ajoa))))
+                                                               (tarkastusajon-luonti/jatka-ajoa))))
 
     (reitintallennus/paivita-lahettamattomien-maara @sovellus/idxdb asetukset/+pollausvali+ sovellus/lahettamattomia)
 

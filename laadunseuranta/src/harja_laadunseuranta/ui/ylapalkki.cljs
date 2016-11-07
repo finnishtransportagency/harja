@@ -3,6 +3,7 @@
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.utils :as utils]
+            [harja-laadunseuranta.tiedot.tarkastusajon-luonti :as tarkastusajon-luonti]
             [harja-laadunseuranta.tiedot.sovellus :as s]))
 
 (defn- formatoi-tr-osoite [tr-osoite]
@@ -23,12 +24,9 @@
                             :media "(max-width: 700px)"}]
     [:img {:src kuvat/+harja-logo+ :alt ""}]]])
 
-(defn kaynnistyspainike [tallennus-kaynnissa tallennustilaa-muutetaan disabloi?]
+(defn kaynnistyspainike [tallennus-kaynnissa toiminto-fn]
   [:div.kaynnistyspainike {:class (when @tallennus-kaynnissa "kaynnissa")
-                           :on-click #(when-not @disabloi?
-                                       (do
-                                         (reset! tallennustilaa-muutetaan true)
-                                         (reset! tallennus-kaynnissa false)))}
+                           :on-click toiminto-fn}
    [:span.kaynnistyspainike-nuoli.livicon-arrow-start]
    [:span.kaynnistyspainike-teksti
     (if @tallennus-kaynnissa
@@ -64,5 +62,11 @@
       [:div.ylapalkin-metatieto.soratiehoitoluokka (str "SHL: " (or @soratiehoitoluokka "-"))]
       [:div.ylapalkin-metatieto.talvihoitoluokka (str "THL: " (or @hoitoluokka "-"))]]]
     [:div.ylapalkki-oikea
-     [kaynnistyspainike tallennus-kaynnissa tallennustilaa-muutetaan disabloi-kaynnistys?]]]
+     [kaynnistyspainike tallennus-kaynnissa (if s/kayta-uutta-navigaatiomallia?
+                                              #(when-not @disabloi-kaynnistys?
+                                                (tarkastusajon-luonti/luo-ajo :kelitarkastus)) ;; FIXME Ilmeisesti tarkastusajotyyppiä ei enää tarvita?
+                                              #(when-not @disabloi-kaynnistys?
+                                                (do
+                                                  (reset! tallennustilaa-muutetaan true)
+                                                  (reset! tallennus-kaynnissa false))))]]]
    (when @palvelinvirhe [:div.palvelinvirhe "Palvelinvirhe: " @palvelinvirhe])])
