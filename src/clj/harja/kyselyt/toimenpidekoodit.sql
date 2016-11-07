@@ -32,9 +32,10 @@ WHERE id = :id;
 -- name: muokkaa-toimenpidekoodi!
 -- Muokkaa annetun toimenpidekoodin nimen.
 UPDATE toimenpidekoodi
-SET muokkaaja = :kayttajaid, muokattu = NOW(), nimi = :nimi, yksikko = :yksikko,
-  hinnoittelu = :hinnoittelu :: hinnoittelutyyppi [], api_seuranta = :apiseuranta
-WHERE id = :id;
+   SET muokkaaja = :kayttajaid, muokattu = NOW(), poistettu = :poistettu,
+       nimi = :nimi, yksikko = :yksikko,
+       hinnoittelu = :hinnoittelu :: hinnoittelutyyppi [], api_seuranta = :apiseuranta
+ WHERE id = :id;
 
 -- name: viimeisin-muokkauspvm
 -- Antaa MAX(muokattu) päivämäärän toimenpidekoodeista
