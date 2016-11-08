@@ -11,7 +11,6 @@
             [harja-laadunseuranta.ui.paatason-navigointi :refer [paatason-navigointi]]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.comms :as comms]
-            [harja-laadunseuranta.tiedot.paatason-navigointi :as paatason-navigointi-tiedot]
             [harja-laadunseuranta.ui.tr-haku :as tr-haku]
             [harja-laadunseuranta.tiedot.puhe :as puhe]
             [harja-laadunseuranta.utils :as utils]
@@ -136,7 +135,7 @@
           :optiot s/karttaoptiot}]
 
         (when @s/nayta-paanavigointi?
-          [paatason-navigointi paatason-navigointi-tiedot/oletusvalilehdet])
+          [paatason-navigointi])
 
         [:div.paasisalto
          [ilmoitukset/ilmoituskomponentti s/ilmoitukset]
