@@ -38,7 +38,7 @@
    :tr-tiedot-nakyvissa false
 
    ;; Havainnot & kirjaukset
-   :havainnot {} ;; Tähän tallentuu ainakin välikohtaiset havainnot (esim. liukasta, lumista jne.)
+   :havainnot [] ;; Tähän tallentuu ainakin välikohtaiset havainnot (esim. liukasta, lumista jne.)
    :pikavalinta nil ;; Tähän tallentuu pistemäinen havainto (esim. liikennemerkki vinossa)
    :kirjaamassa-havaintoa false
    :kirjaamassa-yleishavaintoa false

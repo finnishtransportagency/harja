@@ -234,8 +234,7 @@
   ;; Ja reitintallennukselta voi myös erikseen pyytää tekemään imaisun heti, kuten nyt?
   (reitintallennus/kirjaa-kertakirjaus
     @s/idxdb
-    {:havainnot {}
-     :mittaukset {}
+    {:mittaukset {}
      :aikaleima (l/local-now)
      :pikavalinnan-kuvaus (@s/vakiohavaintojen-kuvaukset @s/pikavalinta)
      :pikavalinta @s/pikavalinta
