@@ -2,40 +2,41 @@
 
 (def valilehti-talviset-pinnat
   [{:nimi "Liu\u00ADkas\u00ADta"
-    :ikoni nil
+    :ikoni "talvi_liukasta"
     :tyyppi :vali
     :vaatii-nappaimiston? true}
    {:nimi "Lu\u00ADmis\u00ADta"
-    :ikoni nil
+    :ikoni "talvi_lumista"
     :tyyppi :vali
     :vaatii-nappaimiston? true}
    {:nimi "Tasaus\u00ADpuute"
-    :ikoni nil
     :tyyppi :vali
+    :ikoni "talvi_tasauspuute"
     :vaatii-nappaimiston? true}
    {:nimi "Py\u00ADsäkki: epä\u00ADtasainen polanne"
-    :ikoni nil
     :tyyppi :piste
+    :ikoni "pysakki_epatasainen_polanne"
     :vaatii-nappaimiston? false}
    {:nimi "Py\u00ADsäkki auraa\u00ADmatta"
-    :ikoni nil
     :tyyppi :piste
+    :ikoni "pysakki_auraamatta"
     :vaatii-nappaimiston? false}
    {:nimi "Py\u00ADsäkki hiekoit\u00ADtamatta"
-    :ikoni nil
     :tyyppi :piste
+    :ikoni "pysakki_hiekoittamatta"
     :vaatii-nappaimiston? false}])
 
 (def valilehti-p-ja-l-alueet
   [{:nimi "Auraa\u00ADmatta"
-    :ikoni nil
     :tyyppi :piste
+    :ikoni "p_alue_auraamatta"
     :vaatii-nappaimiston? false}
    {:nimi "Hiekoit\u00ADtamatta"
     :tyyppi :piste
     :vaatii-nappaimiston? false}
    {:nimi "Epä\u00ADtasainen polanne"
     :tyyppi :piste
+    :ikoni "p_alue_epatasainen_polanne"
     :vaatii-nappaimiston? false}
    {:nimi "Puhdis\u00ADtet\u00ADtava"
     :tyyppi :piste
@@ -82,33 +83,39 @@
 
 (def valilehti-viherhoito
   [{:nimi "Vesakko raivaa\u00ADmatta"
-    :ikoni nil
     :tyyppi :piste
+    :ikoni "viheralue_raivaamatta"
     :vaatii-nappaimiston? false}
    {:nimi "Niit\u00ADtämättä"
     :tyyppi :piste
+    :ikoni "viheralue_niittamatta"
     :vaatii-nappaimiston? false}
    {:nimi "Näkemä\u00ADalue raivaa\u00ADmatta"
     :tyyppi :piste
+    :ikoni "viheralue_nakemaalue_raivaamatta"
     :vaatii-nappaimiston? false}
    {:nimi "Liiken\u00ADnetila hoita\u00ADmatta"
     :tyyppi :piste
+    :ikoni "viheralue_liikennetila_hoitamatta"
     :vaatii-nappaimiston? false}
    {:nimi "Istu\u00ADtukset hoita\u00ADmatta"
     :tyyppi :piste
+    :ikoni "viheralue_istutukset_hoitamatta"
     :vaatii-nappaimiston? false}])
 
 (def valilehti-soratien-hoito
   [{:nimi "Sora\u00ADtie"
-    :ikoni nil
     :tyyppi :vali
+    :ikoni "soratie_alkaa"
     :vaatii-nappaimiston? false}
    {:nimi "Soran\u00ADpienta\u00ADreet: Reuna\u00ADpaletta"
     :tyyppi :piste
+    :ikoni "soratie_reunapaletta"
     :vaatii-nappaimiston? false}
    {:nimi "Soran\u00ADpienta\u00ADreet: Reuna\u00ADtäyttö puutteel\u00ADlinen"
     :tyyppi :piste
-    :vaatii-nappaimiston? false}
+    :vaatii-nappaimiston? false
+    :ikoni "soratie_reunataytto_puutteellinen"}
    {:nimi "Soran\u00ADpienta\u00ADreet: Puutteel\u00ADlinen liuska\u00ADvaurio"
     :tyyppi :piste
     :vaatii-nappaimiston? false}])
@@ -128,21 +135,26 @@
     :vaatii-nappaimiston? false}
    {:nimi "Oja: tukossa"
     :tyyppi :piste
+    :ikoni "oja_tukossa.svg"
     :vaatii-nappaimiston? false}
    {:nimi "Oja: Ylijäämä\u00ADmassa tasattu huonosti"
     :tyyppi :piste
+    :ikoni "oja_ylijaamamassa_tasattu_huonosti"
     :vaatii-nappaimiston? false}
    {:nimi "Oja: Kiviä poista\u00ADmatta"
     :tyyppi :piste
     :vaatii-nappaimiston? false}
    {:nimi "Silta: Puhdista\u00ADmatta"
+    :ikoni "silta_puhdistamatta"
     :tyyppi :piste
     :vaatii-nappaimiston? false}
    {:nimi "Silta: Vaurioita"
     :tyyppi :piste
+    :ikoni "silta_vaurioita"
     :vaatii-nappaimiston? false}
    {:nimi "Silta: Saumoissa puutteita"
     :tyyppi :piste
+    :ikoni "silta_saumoissa_puutteita"
     :vaatii-nappaimiston? false}])
 
 (def oletusvalilehdet

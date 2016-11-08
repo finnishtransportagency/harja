@@ -12,9 +12,9 @@
     [cljs.core.async.macros :refer [go go-loop]]
     [devcards.core :as dc :refer [defcard deftest]]))
 
-(defn- toggle-painike [{:keys [otsikko ikoni tyyppi click-fn] :as tiedot}]
+(defn- toggle-painike [{:keys [nimi ikoni tyyppi click-fn] :as tiedot}]
   (fn []
-      [:div.toggle-valintapainike {:on-click #(click-fn otsikko)}
+      [:div.toggle-valintapainike {:on-click #(click-fn nimi)}
        [:div.toggle-valintapainike-ikoni
         (case tyyppi
           :piste [:img.toggle-piste {:src (kuvat/havainto-ikoni "ikoni_pistemainen")}]
@@ -22,7 +22,7 @@
         (when ikoni
           [:img.toggle-ikoni {:src (kuvat/havainto-ikoni ikoni)}])]
        [:div.toggle-valintapainike-otsikko
-        otsikko]]))
+        nimi]]))
 
 (defn- paatason-navigointikomponentti [{:keys [valilehdet
                                                kirjaa-pistemainen-havainto-fn] :as tiedot}]
