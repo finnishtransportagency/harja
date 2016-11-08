@@ -184,13 +184,14 @@
                :nimi :pituus
                :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
               (if-not (= (:reitti @muokattu) :hakee)
-               {:tyyppi              :tierekisteriosoite
-                :nimi                :tr
-                ;:pakollinen?         true
-                :sijainti            (r/wrap (:reitti @muokattu)
-                                             #(swap! muokattu assoc :reitti %))
-                :ala-nayta-virhetta-komponentissa? true
-                :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:reitti]]]}
+                {:tyyppi                            :tierekisteriosoite
+                 :nimi                              :tr
+                 :pakollinen?         true
+                 :sijainti                          (r/wrap (:reitti @muokattu)
+                                                            #(swap! muokattu assoc :reitti %))
+                 :ala-nayta-virhetta-komponentissa? true
+                 :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:reitti]]]
+                 }
                {:tyyppi :spinner
                 :nimi :spinner
                 :viesti "Haetaan reittiä"}))
