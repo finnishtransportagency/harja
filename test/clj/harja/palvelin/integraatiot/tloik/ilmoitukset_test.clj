@@ -74,6 +74,12 @@
   (is (= (first (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019';"))
          (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
       "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
+  (poista-ilmoitus)
+
+  (tuo-ilmoitus-teknisista-laitteista)
+  (is (= (first (q "select id from urakka where nimi = 'PIR RATU IHJU 2016 -2022, P';"))
+         (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
+      "Urakka on asetettu oikein tekniset laitteet urakalle.")
   (poista-ilmoitus))
 
 (deftest tarkista-viestin-kasittely-ja-kuittaukset

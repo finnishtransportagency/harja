@@ -17,27 +17,27 @@
   (.parse (SimpleDateFormat. "dd.MM.yyyy") teksti))
 
 (def +ilmoitustoimenpide+
-  {:ilmoitusid     12345,
-   :vapaateksti    "Soitan kunhan kerkeän",
+  {:ilmoitusid 12345,
+   :vapaateksti "Soitan kunhan kerkeän <TESTI>",
    :kuittaustyyppi "vastaus",
    :kasittelija
-                   {:matkapuhelin "04428121283",
-                    :organisaatio "Välittävä Urakoitsija",
-                    :ytunnus      "Y1234",
-                    :sahkoposti   "usko.untamo@valittavaurakoitsija.fi",
-                    :etunimi      "Usko",
-                    :sukunimi     "Untamo",
-                    :tyopuhelin   "0509288383"},
-   :id             2,
-   :kuitattu       #inst "2005-09-30T21:10:34.500000000-00:00",
+   {:matkapuhelin "04428121283",
+    :organisaatio "Välittävä Urakoitsija",
+    :ytunnus "Y1234",
+    :sahkoposti "usko.untamo@valittavaurakoitsija.fi",
+    :etunimi "Usko",
+    :sukunimi "Untamo",
+    :tyopuhelin "0509288383"},
+   :id 2,
+   :kuitattu #inst "2005-09-30T21:10:34.500000000-00:00",
    :kuittaaja
-                   {:sukunimi     "Käsittelijä",
-                    :tyopuhelin   "0509288383",
-                    :organisaatio "Organisaatio RY",
-                    :ytunnus      "1234567-8",
-                    :etunimi      "Keijo",
-                    :matkapuhelin "04428121283",
-                    :sahkoposti   "keijo.kasittelija@eioleolemassa.fi"}})
+   {:sukunimi "Käsittelijä",
+    :tyopuhelin "0509288383",
+    :organisaatio "Organisaatio RY",
+    :ytunnus "1234567-8",
+    :etunimi "Keijo",
+    :matkapuhelin "04428121283",
+    :sahkoposti "keijo.kasittelija@eioleolemassa.fi"}})
 
 (deftest tarkista-sanoman-validius
   (let [xml (html (ilmoitustoimenpide-sanoma/muodosta +ilmoitustoimenpide+ (str (UUID/randomUUID))))
@@ -48,7 +48,7 @@
   (let [xml (html (ilmoitustoimenpide-sanoma/muodosta +ilmoitustoimenpide+ (str (UUID/randomUUID))))
         data (xml-zip (parse (ByteArrayInputStream. (.getBytes xml "UTF-8"))))]
     (is (= "12345" (z/xml1-> data :ilmoitusId z/text)))
-    (is (= "Soitan kunhan kerkeän" (z/xml1-> data :vapaateksti z/text)))
+    (is (= "Soitan kunhan kerkeän <TESTI>" (z/xml1-> data :vapaateksti z/text)))
     (is (= "vastaus" (z/xml1-> data :tyyppi z/text)))
     (is (= "UskoUntamo04428121283usko.untamo@valittavaurakoitsija.fiVälittävä UrakoitsijaY1234" (z/xml1-> data :kasittelija z/text)))
     (is (= "KeijoKäsittelijä04428121283keijo.kasittelija@eioleolemassa.fiOrganisaatio RY1234567-8" (z/xml1-> data :ilmoittaja z/text)))
