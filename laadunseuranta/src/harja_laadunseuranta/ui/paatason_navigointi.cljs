@@ -66,4 +66,4 @@
 (defn paatason-navigointi []
   [paatason-navigointikomponentti {:valilehdet tiedot/oletusvalilehdet
                                    :kirjaa-pistemainen-havainto-fn
-                                   tiedot/kirjaa-pistemainen-havainto}])
+                                   tiedot/kirjaa-pistemainen-havainto!}])

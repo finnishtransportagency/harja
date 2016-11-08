@@ -46,6 +46,7 @@
    {:nimi "Hiekoit\u00ADtamatta"
     :tyyppi :piste
     :avain :pl-alue-hiekoittamatta
+    :ikoni "p_alue_hiekoittamatta"
     :vaatii-nappaimiston? false}
    {:nimi "Epä\u00ADtasainen polanne"
     :tyyppi :piste
@@ -151,6 +152,7 @@
    {:nimi "Soran\u00ADpienta\u00ADreet: Puutteel\u00ADlinen liuska\u00ADvaurio"
     :tyyppi :piste
     :avain :luiskavaurio
+    :ikoni "sorapientareet_puuttellinen_liuskavaurio"
     :vaatii-nappaimiston? false}])
 
 (def valilehti-muut
@@ -220,14 +222,16 @@
     :nimi "Muut"
     :sisalto valilehti-muut}])
 
-(defn kirjaa-pistemainen-havainto [{:keys [nimi avain] :as tiedot}]
+(defn kirjaa-pistemainen-havainto! [{:keys [nimi avain] :as tiedot}]
   (.log js/console (pr-str "Kirjataan pistemäinen havainto: " avain))
   (reset! s/pikavalinta avain)
   (ilmoitukset/ilmoita
     (str "Pistemäinen havainto kirjattu: " nimi))
   ;; TODO Kertakirjaus tehdään aina kun sijainti muuttuu, tässä tapauksessa halutaan
-  ;; tehdä heti. Tässä on ehkä vähän duplikointia. Voisiko tehdä niin, että
-  ;; reitintallennusta pyydetään tekemään kirjaus heti (imaisee softan tilan indexed db:n?)
+  ;; tehdä heti. Tässä on ehkä vähän duplikointia.
+  ;; Voisiko tehdä niin, että aina kun sijainti muuttuu,
+  ;; niin reitintallennus imaisee softan tilasta kaiken tarvittavan?
+  ;; Ja reitintallennukselta voi myös erikseen pyytää tekemään imaisun heti, kuten nyt?
   (reitintallennus/kirjaa-kertakirjaus
     @s/idxdb
     {:havainnot {}
