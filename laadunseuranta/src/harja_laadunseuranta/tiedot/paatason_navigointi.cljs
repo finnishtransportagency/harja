@@ -1,4 +1,9 @@
-(ns harja-laadunseuranta.tiedot.paatason-navigointi)
+(ns harja-laadunseuranta.tiedot.paatason-navigointi
+  (:require [harja-laadunseuranta.tiedot.sovellus :as s]
+            [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset]
+            [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
+            [cljs-time.local :as l]
+            [harja-laadunseuranta.utils :as utils]))
 
 (def valilehti-talviset-pinnat
   [{:nimi "Liu\u00ADkas\u00ADta"
@@ -214,3 +219,21 @@
    {:avain :muut
     :nimi "Muut"
     :sisalto valilehti-muut}])
+
+(defn kirjaa-pistemainen-havainto [{:keys [nimi avain] :as tiedot}]
+  (.log js/console (pr-str "Kirjataan pistemäinen havainto: " avain))
+  (reset! s/pikavalinta avain)
+  (ilmoitukset/ilmoita
+    (str "Pistemäinen havainto kirjattu: " nimi))
+  ;; TODO Kertakirjaus tehdään aina kun sijainti muuttuu, tässä tapauksessa halutaan
+  ;; tehdä heti. Tässä on ehkä vähän duplikointia. Voisiko tehdä niin, että
+  ;; reitintallennusta pyydetään tekemään kirjaus heti (imaisee softan tilan indexed db:n?)
+  (reitintallennus/kirjaa-kertakirjaus
+    @s/idxdb
+    {:havainnot {}
+     :mittaukset {}
+     :aikaleima (l/local-now)
+     :pikavalinnan-kuvaus (@s/vakiohavaintojen-kuvaukset @s/pikavalinta)
+     :pikavalinta @s/pikavalinta
+     :sijainti (:nykyinen (utils/unreactive-deref s/sijainti))}
+    @s/tarkastusajo-id))
