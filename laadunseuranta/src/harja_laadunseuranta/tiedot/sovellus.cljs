@@ -38,8 +38,8 @@
    :tr-tiedot-nakyvissa false
 
    ;; Havainnot & kirjaukset
-   :pikahavainnot {}
-   :pikavalinta nil
+   :havainnot {} ;; Tähän tallentuu ainakin välikohtaiset havainnot (esim. liukasta, lumista jne.)
+   :pikavalinta nil ;; Tähän tallentuu pistemäinen havainto (esim. liikennemerkki vinossa)
    :kirjaamassa-havaintoa false
    :kirjaamassa-yleishavaintoa false
    :vakiohavaintojen-kuvaukset nil
@@ -140,7 +140,7 @@
                              :nayta-kiinteistorajat @nayta-kiinteistorajat
                              :nayta-ortokuva @nayta-ortokuva}))
 
-(def havainnot (reagent/cursor sovellus [:pikahavainnot]))
+(def havainnot (reagent/cursor sovellus [:havainnot]))
 
 (def reittisegmentti (reaction
                       (let [{:keys [nykyinen edellinen]} @sijainti]
@@ -158,10 +158,7 @@
 
 (def reittipisteet (reagent/cursor sovellus [:reittipisteet]))
 
-(def liukkaus-kaynnissa (reagent/cursor sovellus [:pikahavainnot :liukasta]))
-(def lumisuus-kaynnissa (reagent/cursor sovellus [:pikahavainnot :lumista]))
-(def tasauspuute-kaynnissa (reagent/cursor sovellus [:pikahavainnot :epatasaista]))
-(def yleishavainto-kaynnissa (reagent/cursor sovellus [:pikahavainnot :yleishavainto]))
+(def yleishavainto-kaynnissa (reagent/cursor sovellus [:havainnot :yleishavainto]))
 
 (def idxdb (reagent/cursor sovellus [:idxdb]))
 

@@ -14,7 +14,7 @@
     :tallennustilaa-muutetaan false
     :tarkastusajo-id nil
     :valittu-urakka nil
-    :pikahavainnot {}))
+    :havainnot {}))
 
 (defn- tarkastusajo-kayntiin [sovellus ajo-id]
   (assoc sovellus
