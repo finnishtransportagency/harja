@@ -2,7 +2,6 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [cljs-time.local :as l]
             [harja-laadunseuranta.ui.kartta :as kartta]
-            [harja-laadunseuranta.ui.pikavalintapaneeli :as pikavalinnat]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset]
@@ -10,9 +9,7 @@
             [harja-laadunseuranta.ui.ylapalkki :as ylapalkki]
             [harja-laadunseuranta.ui.paatason-navigointi :refer [paatason-navigointi]]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
-            [harja-laadunseuranta.tiedot.comms :as comms]
             [harja-laadunseuranta.ui.tr-haku :as tr-haku]
-            [harja-laadunseuranta.tiedot.puhe :as puhe]
             [harja-laadunseuranta.utils :as utils]
             [harja-laadunseuranta.ui.havaintolomake :as havaintolomake]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
@@ -20,11 +17,6 @@
             [harja-laadunseuranta.utils :refer [flip erota-mittaukset erota-havainnot]]
             [cljs.core.async :refer [<! timeout]])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
-
-(defn- lisaa-kirjausikoni [teksti]
-  (swap! s/kirjauspisteet
-         conj (assoc (select-keys (:nykyinen @s/sijainti) [:lat :lon])
-                :label teksti)))
 
 (defn- peruuta-pikavalinta []
   (reset! s/pikavalinta nil)
@@ -55,7 +47,7 @@
       #(do
         (peruuta-pikavalinta)
         (reitintallennus/kirjaa-kertakirjaus @s/idxdb % @s/tarkastusajo-id)
-        (lisaa-kirjausikoni "!")
+        (kartta/lisaa-kirjausikoni "!")
         (tallennettu-fn))
       #(do
         (peruuta-pikavalinta)
@@ -74,17 +66,17 @@
                                        @s/tarkastusajo-id))
 
 (defn- laheta-kitkamittaus [arvo]
-  (lisaa-kirjausikoni (str arvo))
+  (kartta/lisaa-kirjausikoni (str arvo))
   (kirjaa {:kitkamittaus arvo}))
 
 (defn- laheta-lumisuus [arvo]
-  (lisaa-kirjausikoni (str arvo))
+  (kartta/lisaa-kirjausikoni (str arvo))
   (reset! s/lumimaara nil)
   (kirjaa {:lumisuus arvo})
   (swap! s/havainnot assoc :lumista false))
 
 (defn- laheta-tasaisuus [arvo]
-  (lisaa-kirjausikoni (str arvo))
+  (kartta/lisaa-kirjausikoni (str arvo))
   (reset! s/tasaisuus nil)
   (kirjaa {:tasaisuus arvo})
   (swap! s/havainnot assoc :tasauspuute false))

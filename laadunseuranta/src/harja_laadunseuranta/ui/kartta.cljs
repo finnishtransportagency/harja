@@ -17,9 +17,15 @@
             [ol.interaction :as ol-interaction]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
-            [harja-laadunseuranta.tiedot.projektiot :as projektiot])
+            [harja-laadunseuranta.tiedot.projektiot :as projektiot]
+            [harja-laadunseuranta.tiedot.sovellus :as s])
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
+
+(defn- lisaa-kirjausikoni [teksti]
+  (swap! s/kirjauspisteet
+         conj (assoc (select-keys (:nykyinen @s/sijainti) [:lat :lon])
+                :label teksti)))
 
 (defn- wmts-source [url layer]
   (ol.source.WMTS. #js {:attributions [(ol.Attribution. #js {:html "MML"})]
