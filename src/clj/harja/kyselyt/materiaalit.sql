@@ -318,6 +318,7 @@ FROM (SELECT
         JOIN kayttaja k ON tm.luoja = k.id
       WHERE k.jarjestelma = TRUE
             AND t.urakka = :urakka
+            AND t.poistettu IS NOT TRUE
             AND t.sopimus = :sopimus
             AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
             AND mk.materiaalityyppi = 'talvisuola' :: materiaalityyppi
