@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+-- Tarkastusajolta pois tyyppi, ei enää käytössä
+ALTER TABLE tarkastusajo DROP COLUMN tyyppi;
+=======
 -- Luo geometrioille uusi taulu
 CREATE TABLE tekniset_laitteet_urakka (
   id        SERIAL PRIMARY KEY,
@@ -138,3 +142,4 @@ ALTER TABLE urakka
   DROP COLUMN tyyppi_;
 
 DROP TYPE urakkatyyppi_;
+>>>>>>> develop

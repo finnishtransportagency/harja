@@ -70,7 +70,7 @@
         uusi-id (if nykyinen-id
                   (paivita-ilmoitus db nykyinen-id urakka-id ilmoitus)
                   (luo-ilmoitus db urakka-id ilmoitus))]
-    (log/debug (format "Ilmoitus (id: %s) käsitelty onnistuneesti" ilmoitus))
+    (log/debug (format "Ilmoitus (id: %s) käsitelty onnistuneesti" (:ilmoitus-id ilmoitus)))
     (when-not urakka-id
       (throw+ {:type virheet/+urakkaa-ei-loydy+}))
     uusi-id))
