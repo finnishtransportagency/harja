@@ -166,10 +166,15 @@
         uusi (q/luo-toteuma<! c toteuman-parametrit)
         id (:id uusi)
         toteumatyyppi (name (:tyyppi toteuma))]
-    (doseq [{:keys [toimenpidekoodi maara]} (:tehtavat toteuma)]
-      (q/luo-tehtava<! c id toimenpidekoodi maara (:id user) nil)
-      (q/merkitse-toteuman-maksuera-likaiseksi! c toteumatyyppi toimenpidekoodi))
-    id))
+    (if (and (= "kokonaishintainen" (:tyyppi toteuman-parametrit))
+             (nil? (:reitti toteuman-parametrit)))
+      {:virhe "Kokonaishintainen toteuma vaatii reitin. Reitti oli tyhjä."}
+
+      (do
+        (doseq [{:keys [toimenpidekoodi maara]} (:tehtavat toteuma)]
+          (q/luo-tehtava<! c id toimenpidekoodi maara (:id user) nil)
+          (q/merkitse-toteuman-maksuera-likaiseksi! c toteumatyyppi toimenpidekoodi))
+        id))))
 
 (defn hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
   [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
@@ -226,13 +231,17 @@
                        :default oikeudet/urakat-toteumat-kokonaishintaisettyot  )
                                   user (:urakka-id toteuma))
   (log/debug "Toteuman tallennus aloitettu. Payload: " (pr-str toteuma))
-  (jdbc/with-db-transaction [db db]
-    (if (:toteuma-id toteuma)
-      (paivita-toteuma db user toteuma)
-      (luo-toteuma db user toteuma))
+  (jdbc/with-db-transaction
+    [db db]
+    (let [tulos (if (:toteuma-id toteuma)
+                  (paivita-toteuma db user toteuma)
+                  (luo-toteuma db user toteuma))]
 
-    (hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
-     db user hakuparametrit)))
+      (if-not (:virhe tulos)
+        (hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
+         db user hakuparametrit)
+
+        tulos))))
 
 (defn paivita-yk-hint-toiden-tehtavat
   "Päivittää yksikköhintaisen töiden toteutuneet tehtävät. Palauttaa päivitetyt tehtävät sekä tehtävien summat"
