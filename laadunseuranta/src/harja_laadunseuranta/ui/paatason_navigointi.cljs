@@ -71,24 +71,13 @@
   [paatason-navigointikomponentti {:valilehdet paatason-navigointi-tiedot/oletusvalilehdet
                                    :kirjaa-pistemainen-havainto-fn
                                    (fn [otsikko]
+                                     (reset! s/pikavalinta )
                                      (ilmoitukset/ilmoita
                                        (str "Pistemäinen havainto kirjattu: " otsikko))
-                                     #_(reitintallennus/kirjaa-kertakirjaus
+                                     (reitintallennus/kirjaa-kertakirjaus
                                        @s/idxdb
-                                       {:kayttajanimi @s/kayttajanimi
-                                        :tr-osoite (utils/unreactive-deref s/tr-osoite)
-                                        :tr-alku @s/tr-alku
-                                        :tr-loppu @s/tr-loppu
-                                        :aikaleima (l/local-now)
-                                        :havainnot (erota-havainnot @s/havainnot)
+                                       {:aikaleima (l/local-now)
                                         :pikavalinnan-kuvaus (@s/vakiohavaintojen-kuvaukset @s/pikavalinta)
                                         :pikavalinta @s/pikavalinta
-                                        :mittaukset {}
-                                        :kitkan-keskiarvo @s/kitkan-keskiarvo
-                                        :lumisuus @s/lumimaara
-                                        :tasaisuus @s/tasaisuus
-                                        :sijainti (:nykyinen (utils/unreactive-deref s/sijainti))
-                                        :laadunalitus? false
-                                        :kuvaus ""
-                                        :kuva nil}
+                                        :sijainti (:nykyinen (utils/unreactive-deref s/sijainti))}
                                        @s/tarkastusajo-id))}])
