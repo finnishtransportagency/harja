@@ -20,7 +20,9 @@
                                     ))]
     (fn []
       [:div.toggle-valintapainike {:on-click toggle-painike-painettu}
-       [:div.toggle-valintapainike-ikoni]
+       [:div.toggle-valintapainike-ikoni
+        (when ikoni
+          [:img {:src (kuvat/havainto-ikoni ikoni)}])]
        [:div.toggle-valintapainike-otsikko
         otsikko]])))
 
@@ -58,7 +60,7 @@
                 (first (filter
                          #(= (:avain %) @valittu)
                          valilehdet))]
-            (doall (for [{:keys [nimi ikoni tyyppi]} sisalto]
+            (doall (for [{:keys [nimi ikoni tyyppi]} (sort-by :nimi sisalto)]
                      ^{:key nimi}
-                     [toggle-painike nimi nil tyyppi])))]]
+                     [toggle-painike nimi ikoni tyyppi])))]]
         [:footer]]])))

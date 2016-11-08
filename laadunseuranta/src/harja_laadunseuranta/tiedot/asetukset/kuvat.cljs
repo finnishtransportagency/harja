@@ -4,6 +4,9 @@
 (defn- ikoni [nimi]
   (str "img/" nimi))
 
+(defn havainto-ikoni [nimi]
+  (str "img/havainnot/" nimi ".svg"))
+
 (def +autonuoli+ (ikoni "nuoli.svg"))
 (def +harja-logo+ (ikoni "harja_logo_soft.svg"))
 (def +harja-logo-ilman-tekstia+ (ikoni "harja_logo_soft_ilman_tekstia.svg"))
