@@ -4,7 +4,9 @@
             [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset]
             [harja-laadunseuranta.tiedot.paatason-navigointi :as paatason-navigointi-tiedot]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
-            [harja-laadunseuranta.tiedot.sovellus :as s])
+            [harja-laadunseuranta.tiedot.sovellus :as s]
+            [cljs-time.local :as l]
+            [harja-laadunseuranta.utils :as utils])
   (:require-macros
     [harja-laadunseuranta.macros :as m]
     [cljs.core.async.macros :refer [go go-loop]]
@@ -71,7 +73,6 @@
                                    (fn [otsikko]
                                      (ilmoitukset/ilmoita
                                        (str "Pistemäinen havainto kirjattu: " otsikko))
-                                     ;; TODO Selvitä miten tallennus tehdään
                                      #_(reitintallennus/kirjaa-kertakirjaus
                                        @s/idxdb
                                        {:kayttajanimi @s/kayttajanimi
