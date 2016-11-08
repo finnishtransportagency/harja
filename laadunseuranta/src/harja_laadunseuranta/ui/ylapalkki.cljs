@@ -14,17 +14,17 @@
   (when-not @s/tallennus-kaynnissa
     (set! (.-location js/window) asetukset/+harja-url+)))
 
-(defn logo []
+(defn- logo []
   [:div.logo
    (when (or (utils/kehitysymparistossa?)
              (utils/stg-ymparistossa?))
      [:span#testiharja "TESTI"])
    [:picture {:on-click logo-klikattu}
     [:source {:srcSet kuvat/+harja-logo-ilman-tekstia+ :type "image/svg+xml"
-                            :media "(max-width: 700px)"}]
+              :media "(max-width: 700px)"}]
     [:img {:src kuvat/+harja-logo+ :alt ""}]]])
 
-(defn kaynnistyspainike [tallennus-kaynnissa kaynnista-fn pysayta-fn]
+(defn- kaynnistyspainike [tallennus-kaynnissa kaynnista-fn pysayta-fn]
   [:div.kaynnistyspainike {:class (when @tallennus-kaynnissa "kaynnissa")
                            :on-click (if @tallennus-kaynnissa
                                        pysayta-fn
@@ -32,18 +32,19 @@
    [:span.kaynnistyspainike-nuoli.livicon-arrow-start]
    [:span.kaynnistyspainike-teksti
     (if @tallennus-kaynnissa
-     "Pysäytä tarkastus"
-     "Käynnistä tarkastus")]])
+      "Pysäytä tarkastus"
+      "Käynnistä tarkastus")]])
 
-(defn keskityspainike [keskita-ajoneuvoon]
+(defn- keskityspainike [keskita-ajoneuvoon]
   [:div.ylapalkki-button.keskityspainike.livicon-crosshairs {:on-click #(do (swap! keskita-ajoneuvoon not)
                                                                             (swap! keskita-ajoneuvoon not))}])
 
-(defn ylapalkkikomponentti [{:keys [tiedot-nakyvissa hoitoluokka soratiehoitoluokka
-                                    tr-osoite kiinteistorajat ortokuva
-                                    tallennus-kaynnissa
-                                    keskita-ajoneuvoon disabloi-kaynnistys? valittu-urakka
-                                    palvelinvirhe]}]
+(defn- ylapalkkikomponentti [{:keys [tiedot-nakyvissa hoitoluokka soratiehoitoluokka
+                                     tr-osoite kiinteistorajat ortokuva
+                                     tallennus-kaynnissa
+                                     kaynnista-tarkastus-fn pysayta-tarkastusajo-fn
+                                     keskita-ajoneuvoon disabloi-kaynnistys? valittu-urakka
+                                     palvelinvirhe]}]
   [:div
    [:div.ylapalkki {:class (when (or (utils/kehitysymparistossa?)
                                      (utils/stg-ymparistossa?)) "testiharja")}
@@ -66,7 +67,25 @@
     [:div.ylapalkki-oikea
      [kaynnistyspainike tallennus-kaynnissa
       #(when-not disabloi-kaynnistys?
-        (tarkastusajon-luonti/luo-ajo))
+        (kaynnista-tarkastus-fn))
       #(when-not disabloi-kaynnistys?
-        (tarkastusajon-luonti/aseta-ajo-paattymaan))]]]
+        (pysayta-tarkastusajo-fn))]]]
    (when @palvelinvirhe [:div.palvelinvirhe "Palvelinvirhe: " @palvelinvirhe])])
+
+(defn ylapalkki []
+  [ylapalkkikomponentti
+   {:tiedot-nakyvissa s/tr-tiedot-nakyvissa
+    :hoitoluokka s/hoitoluokka
+    :soratiehoitoluokka s/soratiehoitoluokka
+    :kaynnista-tarkastus-fn tarkastusajon-luonti/luo-ajo
+    :pysayta-tarkastusajo-fn tarkastusajon-luonti/aseta-ajo-paattymaan
+    :tr-osoite s/tr-osoite
+    :kiinteistorajat s/nayta-kiinteistorajat
+    :ortokuva s/nayta-ortokuva
+    :tallennus-kaynnissa s/tallennus-kaynnissa
+    :keskita-ajoneuvoon s/keskita-ajoneuvoon
+    :disabloi-kaynnistys? (or @s/kirjaamassa-havaintoa
+                              @s/kirjaamassa-yleishavaintoa
+                              @s/palautettava-tarkastusajo)
+    :valittu-urakka s/valittu-urakka
+    :palvelinvirhe s/palvelinvirhe}])

@@ -122,20 +122,7 @@
   (let [alivalikot (atom {})]
     (fn []
       [:div.toplevel
-       [ylapalkki/ylapalkkikomponentti
-        {:tiedot-nakyvissa s/tr-tiedot-nakyvissa
-         :hoitoluokka s/hoitoluokka
-         :soratiehoitoluokka s/soratiehoitoluokka
-         :tr-osoite s/tr-osoite
-         :kiinteistorajat s/nayta-kiinteistorajat
-         :ortokuva s/nayta-ortokuva
-         :tallennus-kaynnissa s/tallennus-kaynnissa
-         :keskita-ajoneuvoon s/keskita-ajoneuvoon
-         :disabloi-kaynnistys? (or @s/kirjaamassa-havaintoa
-                                   @s/kirjaamassa-yleishavaintoa
-                                   @s/palautettava-tarkastusajo)
-         :valittu-urakka s/valittu-urakka
-         :palvelinvirhe s/palvelinvirhe}]
+       [ylapalkki/ylapalkki]
 
        [:div.paasisalto-container
         [kartta/karttakomponentti
