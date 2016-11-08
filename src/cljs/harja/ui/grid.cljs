@@ -832,16 +832,18 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
                                         (let [id ((or tunniste :id) rivi)]
                                           [^{:key id}
-                                          [nayttorivi {:ohjaus ohjaus
+                                           [nayttorivi {:ohjaus ohjaus
                                                         :vetolaatikot vetolaatikot
                                                         :id id
                                                         :tallenna tallenna
-                                                        :luokka (str (if (even? (+ i 1)) "parillinen" "pariton")
+                                                        :luokka (str (if (even? (+ i 1))
+                                                                       "parillinen "
+                                                                       "pariton ")
                                                                      (when rivi-klikattu
-                                                                       " klikattava ")
-                                                                     (when (:korosta rivi) " korostettu-rivi ")
-                                                                     (when (:lihavoi rivi) " bold ")
-                                                                     (when (:yhteenveto rivi) " yhteenveto ")
+                                                                       "klikattava ")
+                                                                     (when (:korosta rivi) "korostettu-rivi ")
+                                                                     (when (:lihavoi rivi) "bold ")
+                                                                     (when (:yhteenveto rivi) "yhteenveto ")
                                                                      (when rivin-luokka
                                                                        (rivin-luokka rivi)))
                                                         :rivi-klikattu rivi-klikattu
