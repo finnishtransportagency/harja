@@ -24,10 +24,10 @@
 
 (defn rakenna-paivystaja [{:keys [etunimi sukunimi matkapuhelin tyopuhelin sahkoposti]}]
   [:paivystaja
-   (merkkijono/leikkaa 32 [:etunimi etunimi])
-   (merkkijono/leikkaa 32 [:sukunimi sukunimi])
-   (merkkijono/leikkaa 32 [:matkapuhelin (or matkapuhelin tyopuhelin)])
-   (merkkijono/leikkaa 64 [:sahkoposti sahkoposti])])
+   [:etunimi (merkkijono/leikkaa 32 etunimi)]
+   [:sukunimi (merkkijono/leikkaa 32 sukunimi)]
+   [:matkapuhelin (merkkijono/leikkaa 32 (or matkapuhelin tyopuhelin))]
+   [:sahkoposti (merkkijono/leikkaa 64 sahkoposti)]])
 
 (defn muodosta-viesti [viesti-id ilmoitus-id aika kuittaustyyppi urakka paivystajat virhe]
   [:harja:harja-kuittaus

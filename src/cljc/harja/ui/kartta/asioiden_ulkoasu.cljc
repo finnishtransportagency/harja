@@ -102,17 +102,21 @@
    :laatupoikkeama-tilaaja "violetti"
    :laatupoikkeama-konsultti "violetti"
    :laatupoikkeama-urakoitsija "magenta"
-   :tarkastus "punainen"
-   :tarkastus-tilaaja "punainen"
-   :tarkastus-konsultti "punainen"
-   :tarkastus-urakoitsija "punainen"
+   :ok-tarkastus "sininen"
+   :ok-tarkastus-tilaaja "sininen"
+   :ok-tarkastus-konsultti "sininen"
+   :ok-tarkastus-urakoitsija "syaani"
+   :ei-ok-tarkastus "punainen"
+   :ei-ok-tarkastus-tilaaja "punainen"
+   :ei-ok-tarkastus-konsultti "punainen"
+   :ei-ok-tarkastus-urakoitsija "oranssi"
    :varustetoteuma "tummansininen"
    :yllapito "pinkki"})
 
 (def viivojen-varit
   {:yllapito-aloitettu puhtaat/keltainen
    :yllapito-valmis puhtaat/lime
-   :yllapito-muu puhtaat/syaani
+   :yllapito-muu puhtaat/tummansininen
    :yllapito-pohja puhtaat/musta
    :yllapito-katkoviiva puhtaat/tummanharmaa
 
@@ -124,11 +128,11 @@
    :ok-tarkastus puhtaat/sininen
    :ok-tarkastus-tilaaja puhtaat/sininen
    :ok-tarkastus-konsultti puhtaat/sininen
-   :ok-tarkastus-urakoitsija puhtaat/sininen
+   :ok-tarkastus-urakoitsija puhtaat/syaani
    :ei-ok-tarkastus puhtaat/punainen
    :ei-ok-tarkastus-tilaaja puhtaat/punainen
    :ei-ok-tarkastus-konsultti puhtaat/punainen
-   :ei-ok-tarkastus-urakoitsija puhtaat/punainen})
+   :ei-ok-tarkastus-urakoitsija puhtaat/oranssi})
 
 
 (def auraus-tasaus-ja-kolmas [(monivarinen-viiva-leveyksilla puhtaat/musta 0 puhtaat/oranssi 2 puhtaat/violetti 6) "oranssi"])
@@ -252,11 +256,15 @@
   (cond
     reitti? nil
     (not ok?) (pinni-ikoni (case tekija
-                             :tilaaja (:tarkastus-tilaaja ikonien-varit)
-                             :konsultti (:tarkastus-konsultti ikonien-varit)
-                             :urakoitsija (:tarkastus-urakoitsija ikonien-varit)
-                             (:tarkastus ikonien-varit)))
-    (and valittu? ok?) (pinni-ikoni (:tarkastus ikonien-varit)))) ;; Ei näytetä ok-tarkastuksia jos ei ole valittu
+                             :tilaaja (:ei-ok-tarkastus-tilaaja ikonien-varit)
+                             :konsultti (:ei-ok-tarkastus-konsultti ikonien-varit)
+                             :urakoitsija (:ei-ok-tarkastus-urakoitsija ikonien-varit)
+                             (:ei-ok-tarkastus ikonien-varit)))
+    (and valittu? ok?) (pinni-ikoni (case tekija
+                                      :tilaaja (:ok-tarkastus-tilaaja ikonien-varit)
+                                      :konsultti (:ok-tarkastus-konsultti ikonien-varit)
+                                      :urakoitsija (:ok-tarkastus-urakoitsija ikonien-varit)
+                                      (:ok-tarkastus ikonien-varit))))) ;; Ei näytetä pistemäisiä ok-tarkastuksia jos ei ole valittu
 
 (defn tarkastuksen-reitti [ok? tekija]
   (if ok? {:color (case tekija
