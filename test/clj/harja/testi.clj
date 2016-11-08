@@ -540,7 +540,7 @@
      (alter-var-root #'urakka
                      (fn [_#]
                        (ffirst (q (str "SELECT id FROM urakka WHERE urakoitsija=(SELECT organisaatio FROM kayttaja WHERE kayttajanimi='" ~kayttaja "') "
-                                       " AND tyyppi='hoito'::urakkatyyppi")))))
+                                       " AND tyyppi='hoito'::urakkatyyppi ORDER BY id")))))
      (testit#)
      (alter-var-root #'jarjestelma component/stop)))
 
