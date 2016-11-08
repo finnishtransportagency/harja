@@ -11,8 +11,8 @@ SELECT * FROM tarkastusreitti WHERE tarkastusajo = :tarkastusajo;
 
 -- name: luo-uusi-tarkastusajo<!
 -- Tekee uuden tarkastusajon ja palauttaa sen id:n
-INSERT INTO tarkastusajo (ulkoinen_id, luoja, tyyppi, luotu)
-     VALUES (:ulkoinen_id, :kayttaja, :tyyppi, now());
+INSERT INTO tarkastusajo (ulkoinen_id, luoja, luotu)
+     VALUES (:ulkoinen_id, :kayttaja, now());
 
 -- name: paata-tarkastusajo!
 -- Päättää aiemmin aloitetun tarkastusajon
