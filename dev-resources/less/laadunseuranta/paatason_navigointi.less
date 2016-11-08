@@ -73,10 +73,31 @@
     width: 100%;
     box-sizing: border-box;
     padding: 5px;
+    position: relative;
     height: @toggle-valintapainike-leveys;
     background-color: @napin-taustavari;
 
-    > img {
+    > .toggle-piste, .toggle-vali {
+      width: 32px;
+      height: 32px;
+      position: absolute;
+    }
+
+    > .toggle-piste {
+      width: 24px;
+      height: 24px;
+      left: 5px;
+      top: 5px;
+    }
+
+    > .toggle-vali {
+      width: 32px;
+      height: 32px;
+      right: 3px;
+      top: 3px;
+    }
+
+    > .toggle-ikoni {
       width: 100%;
       height: 100%;
     }

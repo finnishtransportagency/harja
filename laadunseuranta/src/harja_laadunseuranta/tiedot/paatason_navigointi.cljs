@@ -101,7 +101,7 @@
 (def valilehti-soratien-hoito
   [{:nimi "Sora\u00ADtie"
     :ikoni nil
-    :tyyppi :piste
+    :tyyppi :vali
     :vaatii-nappaimiston? false}
    {:nimi "Soran\u00ADpienta\u00ADreet: Reuna\u00ADpaletta"
     :tyyppi :piste

@@ -21,8 +21,11 @@
     (fn []
       [:div.toggle-valintapainike {:on-click toggle-painike-painettu}
        [:div.toggle-valintapainike-ikoni
+        (case tyyppi
+              :piste [:img.toggle-piste {:src (kuvat/havainto-ikoni "ikoni_pistemainen")}]
+              :vali [:img.toggle-vali {:src (kuvat/havainto-ikoni "ikoni_alue")}])
         (when ikoni
-          [:img {:src (kuvat/havainto-ikoni ikoni)}])]
+          [:img.toggle-ikoni {:src (kuvat/havainto-ikoni ikoni)}])]
        [:div.toggle-valintapainike-otsikko
         otsikko]])))
 
