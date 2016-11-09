@@ -590,3 +590,15 @@ WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
 -- name: luo-tekniset-laitteet-urakka<!
 INSERT INTO tekniset_laitteet_urakka (urakkanro, alue)
 VALUES (:urakkanro, ST_GeomFromText(:alue) :: GEOMETRY);
+
+-- name: tuhoa-siltapalvelusopimukset!
+DELETE FROM siltapalvelusopimus;
+
+-- name: hae-siltapalvelussopimuksen-urakkanumero-sijainnilla
+SELECT urakkanro
+FROM siltapalvelusopimus
+WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
+
+-- name: luo-siltapalvelusopimus<!
+INSERT INTO tekniset_laitteet_urakka (urakkanro, alue)
+VALUES (:urakkanro, ST_GeomFromText(:alue) :: GEOMETRY);

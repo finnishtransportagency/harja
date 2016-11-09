@@ -14,7 +14,8 @@
             [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as string])
-  (:use [slingshot.slingshot :only [throw+]]))
+  (:use [slingshot.slingshot :only [throw+]])
+  (:use org.httpkit.fake))
 
 (def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
 (def +virhe-urakan-kohdehaussa+ ::yha-virhe-urakan-kohdehaussa)
@@ -116,36 +117,17 @@
 
 (defn hae-urakat-yhasta [integraatioloki db {:keys [url kayttajatunnus salasana]} yha-nimi sampotunniste vuosi]
   (let [url (str url "urakkahaku")]
-    (log/debug (format "Haetaan YHA:sta urakata (tunniste: %s, sampotunnus: %s & vuosi: %s). URL: "
-                       yha-nimi sampotunniste vuosi url))
-    (integraatiotapahtuma/suorita-integraatio
-      db integraatioloki "yha" "urakoiden-haku"
-      (fn [konteksti]
-        (let [parametrit (-> {}
-                             (conj (when (not (empty? yha-nimi)) ["nimi" yha-nimi]))
-                             (conj (when (not (empty? sampotunniste)) ["sampo-id" sampotunniste]))
-                             (conj (when vuosi ["vuosi" vuosi])))
-              http-asetukset {:metodi :GET
-                              :url url
-                              :parametrit parametrit
-                              :kayttajatunnus kayttajatunnus
-                              :salasana salasana}
-              {body :body headers :headers}
-              (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-          (kasittele-urakoiden-hakuvastaus body headers))))))
-
-(defn hae-urakan-kohteet-yhasta [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kayttajatunnus]
-  (if-let [yha-id (q-yha-tiedot/hae-urakan-yha-id db {:urakkaid urakka-id})]
-    (let [url (str url (format "haeUrakanKohteet" yha-id))
-          vuosi (pvm/vuosi (pvm/nyt))]
-      (log/debug (format "Haetaan urakan (id: %s, YHA-id: %s) kohteet YHA:sta. URL: %s" urakka-id yha-id url))
+    (with-fake-http
+      [url "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<urakoiden-hakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">\n    <urakat>\n        <urakka>\n            <yha-id>3</yha-id>\n            <elyt>\n                <ely>POP</ely>\n            </elyt>\n            <vuodet>\n                <vuosi>2016</vuosi>\n            </vuodet>\n            <sampotunnus>SAMPOTUNNUS</sampotunnus>\n            <tunnus>YHATUNNUS</tunnus>\n        </urakka>\n    </urakat>\n</urakoiden-hakuvastaus>\n"]
+      (log/debug (format "Haetaan YHA:sta urakata (tunniste: %s, sampotunnus: %s & vuosi: %s). URL: "
+                         yha-nimi sampotunniste vuosi url))
       (integraatiotapahtuma/suorita-integraatio
-        db integraatioloki "yha" "kohteiden-haku"
+        db integraatioloki "yha" "urakoiden-haku"
         (fn [konteksti]
           (let [parametrit (-> {}
-                               (lisaa-http-parametri "yha-id" yha-id)
-                               (lisaa-http-parametri "vuosi" vuosi)
-                               (lisaa-http-parametri "kayttaja" kayttajatunnus))
+                               (conj (when (not (empty? yha-nimi)) ["nimi" yha-nimi]))
+                               (conj (when (not (empty? sampotunniste)) ["sampo-id" sampotunniste]))
+                               (conj (when vuosi ["vuosi" vuosi])))
                 http-asetukset {:metodi :GET
                                 :url url
                                 :parametrit parametrit
@@ -153,7 +135,30 @@
                                 :salasana salasana}
                 {body :body headers :headers}
                 (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-            (kasittele-urakan-kohdehakuvastaus body headers)))))
+            (kasittele-urakoiden-hakuvastaus body headers)))))))
+
+(defn hae-urakan-kohteet-yhasta [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kayttajatunnus]
+  (if-let [yha-id (q-yha-tiedot/hae-urakan-yha-id db {:urakkaid urakka-id})]
+    (let [url (str url (format "haeUrakanKohteet" yha-id))
+          vuosi (pvm/vuosi (pvm/nyt))]
+      (with-fake-http
+        [url "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<urakan-kohdehakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">\n    <kohteet>\n        <!--Zero or more repetitions:-->\n        <kohde>\n            <yha-id>3</yha-id>\n            <kohdetyyppi>1</kohdetyyppi>\n            <kohdetyotyyppi>paallystys</kohdetyotyyppi>\n            <nimi>Kohde 1</nimi>\n            <!--Optional:-->\n            <yllapitoluokka>1</yllapitoluokka>\n            <!--Optional:-->\n            <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>\n            <!--Optional:-->\n            <nykyinen-paallyste>1</nykyinen-paallyste>\n            <tierekisteriosoitevali>\n                <karttapaivamaara>2016-01-01</karttapaivamaara>\n                <tienumero>20</tienumero>\n                <aosa>3</aosa>\n                <aet>4468</aet>\n                <losa>4</losa>\n                <let>3571</let>\n                <ajorata>0</ajorata>\n                <kaista>11</kaista>\n            </tierekisteriosoitevali>\n            <alikohteet>\n                <!--Zero or more repetitions:-->\n                <alikohde>\n                    <yha-id>3</yha-id>\n                    <tierekisteriosoitevali>\n                        <karttapaivamaara>2016-01-01</karttapaivamaara>\n                        <tienumero>20</tienumero>\n                        <aosa>3</aosa>\n                        <aet>4468</aet>\n                        <losa>4</losa>\n                        <let>3571</let>\n                        <ajorata>0</ajorata>\n                        <kaista>11</kaista>\n                    </tierekisteriosoitevali>\n                    <tunnus>A</tunnus>\n                    <!--Optional:-->\n                    <paallystystoimenpide>\n                        <uusi-paallyste>11</uusi-paallyste>\n                        <raekoko>12</raekoko>\n                        <kokonaismassamaara>124</kokonaismassamaara>\n                        <rc-prosentti>14</rc-prosentti>\n                        <!--Optional:-->\n                        <kuulamylly>4</kuulamylly>\n                        <paallystetyomenetelma>22</paallystetyomenetelma>\n                    </paallystystoimenpide>\n                </alikohde>\n            </alikohteet>\n        </kohde>\n    </kohteet>\n</urakan-kohdehakuvastaus>"]
+        (log/debug (format "Haetaan urakan (id: %s, YHA-id: %s) kohteet YHA:sta. URL: %s" urakka-id yha-id url))
+        (integraatiotapahtuma/suorita-integraatio
+          db integraatioloki "yha" "kohteiden-haku"
+          (fn [konteksti]
+            (let [parametrit (-> {}
+                                 (lisaa-http-parametri "yha-id" yha-id)
+                                 (lisaa-http-parametri "vuosi" vuosi)
+                                 (lisaa-http-parametri "kayttaja" kayttajatunnus))
+                  http-asetukset {:metodi :GET
+                                  :url url
+                                  :parametrit parametrit
+                                  :kayttajatunnus kayttajatunnus
+                                  :salasana salasana}
+                  {body :body headers :headers}
+                  (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+              (kasittele-urakan-kohdehakuvastaus body headers))))))
     (do
       (let [virhe (format "Urakan (id: %s) YHA-id:tä ei löydy tietokannasta. Kohteita ei voida hakea." urakka-id)]
         (log/error virhe)

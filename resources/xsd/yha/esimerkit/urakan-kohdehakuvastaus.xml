@@ -5,8 +5,8 @@
         <kohde>
             <yha-id>3</yha-id>
             <kohdetyyppi>1</kohdetyyppi>
-            <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
-            <nimi>string</nimi>
+            <kohdetyotyyppi>paallystys</kohdetyotyyppi>
+            <nimi>Kohde 1</nimi>
             <!--Optional:-->
             <yllapitoluokka>1</yllapitoluokka>
             <!--Optional:-->
@@ -52,5 +52,4 @@
             </alikohteet>
         </kohde>
     </kohteet>
-    <virhe></virhe>
 </urakan-kohdehakuvastaus>
