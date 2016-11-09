@@ -20,8 +20,8 @@
      [:div.toggle-valintapainike-otsikko
       nimi]]))
 
-(defn- paatason-navigointikomponentti [{:keys [valilehdet
-                                               kirjaa-pistemainen-havainto-fn] :as tiedot}]
+(defn- paatason-navigointikomponentti [{:keys [valilehdet kirjaa-pistemainen-havainto-fn
+                                               kirjaa-valikohtainen-havainto-fn] :as tiedot}]
   (let [nakyvissa? (atom true)
         valittu (atom (:avain (first valilehdet)))
         aseta-valinta! (fn [uusi-valinta]
@@ -60,10 +60,12 @@
                      [toggle-painike (merge sisalto
                                             {:click-fn (case (:tyyppi sisalto)
                                                          :piste kirjaa-pistemainen-havainto-fn
-                                                         :vali #(.log js/console "TODO Väli painettu"))})])))]]
+                                                         :vali kirjaa-valikohtainen-havainto-fn)})])))]]
         [:footer]]])))
 
 (defn paatason-navigointi []
   [paatason-navigointikomponentti {:valilehdet tiedot/oletusvalilehdet
                                    :kirjaa-pistemainen-havainto-fn
-                                   tiedot/kirjaa-pistemainen-havainto!}])
+                                   tiedot/kirjaa-pistemainen-havainto!
+                                   :kirjaa-valikohtainen-havainto-fn
+                                   tiedot/kirjaa-valikohtainen-havainto!}])

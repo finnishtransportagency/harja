@@ -227,11 +227,6 @@
   (reset! s/pikavalinta avain)
   (ilmoitukset/ilmoita
     (str "Pistemäinen havainto kirjattu: " nimi))
-  ;; TODO Kertakirjaus tehdään aina kun sijainti muuttuu, tässä tapauksessa halutaan
-  ;; tehdä heti. Tässä on ehkä vähän duplikointia.
-  ;; Voisiko tehdä niin, että aina kun sijainti muuttuu,
-  ;; niin reitintallennus imaisee softan tilasta kaiken tarvittavan?
-  ;; Ja reitintallennukselta voi myös erikseen pyytää tekemään imaisun heti, kuten nyt?
   (reitintallennus/kirjaa-kertakirjaus
     @s/idxdb
     {:mittaukset {}
@@ -240,3 +235,6 @@
      :pikavalinta @s/pikavalinta
      :sijainti (:nykyinen (utils/unreactive-deref s/sijainti))}
     @s/tarkastusajo-id))
+
+(defn kirjaa-valikohtainen-havainto! [{:keys [nimi avain] :as tiedot}]
+  (.log js/console (pr-str "TODO Kirjataan välikohtainen havainto: " avain)))

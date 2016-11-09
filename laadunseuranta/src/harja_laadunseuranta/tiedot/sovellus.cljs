@@ -150,7 +150,7 @@
                            :vari (let [s @havainnot]
                                    (cond
                                      (:liukasta s) "blue"
-                                     (:lumista s) "blue"
+                                     (:lumista s) "blue" ;; TODO Onko tämä oikein?
                                      (:soratie s) "brown"
                                      (:tasauspuute s) "green"
                                      (:yleishavainto s) "red"
