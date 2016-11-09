@@ -30,8 +30,10 @@
 
 (defn hae-urakan-kayttajat [urakka-id]
   (k/post! :hae-urakan-kayttajat urakka-id nil true))
-                            
-   
+
+(defn hae-urakan-vastuuhenkilot [urakka-id]
+  (k/post! :hae-urakan-vastuuhenkilot urakka-id))
+
 (defn hae-urakan-paivystajat [urakka-id]
   (k/post! :hae-urakan-paivystajat urakka-id))
 
@@ -47,5 +49,3 @@
            {:urakka-id urakka-id
             :paivystajat paivystajat
             :poistettu poistettavat}))
-
-
