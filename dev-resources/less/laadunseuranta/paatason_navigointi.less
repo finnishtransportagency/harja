@@ -1,4 +1,5 @@
 @paatason-navigioinnin-fonttikoko: 1.2em;
+@paatason-navigioinnin-fonttikoko-pienempi: 1em;
 
 .paatason-navigointi-container {
   position: absolute;
@@ -186,6 +187,10 @@
 // Responsiivisuus
 
 @media (max-width: 700px) {
+  .paatason-navigointilaatikko {
+    font-size: @paatason-navigioinnin-fonttikoko-pienempi;
+  }
+
   .toggle-valintapainike {
     width: @toggle-valintapainike-leveys-pienempi;
 
