@@ -82,15 +82,7 @@
       (/ (apply + numerot) (count numerot)))))
 
 (defn- paattele-tarkastustyyppi [reittimerkinta]
-  (let [jatkuvat-havainnot (map @q/vakiohavainto-idt (:jatkuvat-havainnot reittimerkinta))]
-    (if (or (some #{:yleishavainto} jatkuvat-havainnot)
-            (:pistemainen-havainto reittimerkinta))
-      "laatu"
-      (if-not jatkuvat-havainnot
-        (if (= 1 (:tyyppi reittimerkinta))
-          "talvihoito"
-          "soratie")
-        "laatu"))))
+  "laatu") ;; TODO Tämä pitää jossain vaiheessa päätellä paremmin
 
 (defn- reittimerkinta-tarkastukseksi
   "Muuntaa reittimerkinnän Harja-tarkastukseksi"
@@ -257,7 +249,8 @@
 (defn- tallenna-tarkastus! [db tarkastus kayttaja]
   (let [tarkastus (luo-tallennettava-tarkastus tarkastus kayttaja)
         geometria (hae-tallennettavan-tarkastuksen-sijainti db tarkastus)
-        tarkastus (assoc tarkastus :sijainti geometria)
+        tarkastus (as-> tarkastus tarkastus
+                      (assoc tarkastus :sijainti geometria))
         _ (q/luo-uusi-tarkastus<! db
                                   (merge tarkastus
                                          {:luoja (:id kayttaja)}))
@@ -266,6 +259,7 @@
       (q/luo-uusi-tarkastuksen-vakiohavainto<! db
                                                {:tarkastus tarkastus-id
                                                 :vakiohavainto vakiohavainto-id}))
+    ;; FIXME Ei tämä nyt ihan oikein ole. Luodaan aina talvihoitomittaus ja soratiemittaus, vaikkei niille oikeita arvoja olisi.
     (when (:talvihoitomittaus tarkastus)
       (q/luo-uusi-talvihoitomittaus<! db
                                       (merge (:talvihoitomittaus tarkastus)

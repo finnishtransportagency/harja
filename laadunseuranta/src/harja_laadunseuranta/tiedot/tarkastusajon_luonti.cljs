@@ -11,14 +11,12 @@
 (defn- pysayta-tarkastusajo [sovellus]
   (assoc sovellus
     :tallennus-kaynnissa false
-    :tallennustilaa-muutetaan false
     :tarkastusajo-id nil
     :valittu-urakka nil
     :havainnot {}))
 
 (defn- tarkastusajo-kayntiin [sovellus ajo-id]
   (assoc sovellus
-    :tallennustilaa-muutetaan false
     :tarkastusajo-id ajo-id
     :reittipisteet []
     :kirjauspisteet []
@@ -28,8 +26,9 @@
   (swap! s/sovellus #(tarkastusajo-kayntiin % ajo-id)))
 
 (defn- tarkastusajo-seis! []
-  (swap! s/sovellus pysayta-tarkastusajo))
-
+  (swap! s/sovellus pysayta-tarkastusajo)
+  (.log js/console "STOP!")
+  (reset! s/tarkastusajo-paattymassa false))
 
 (defn luo-ajo []
   (go-loop []

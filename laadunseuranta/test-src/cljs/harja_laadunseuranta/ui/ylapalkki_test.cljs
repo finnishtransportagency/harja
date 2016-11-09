@@ -25,7 +25,6 @@
                         :kiinteistorajat (atom false)
                         :ortokuva (atom false)
                         :tallennus-kaynnissa (atom false)
-                        :tallennustilaa-muutetaan kuva
                         :keskita-ajoneuvoon (atom false)
                         :disabloi-kaynnistys? (atom false)
                         :valittu-urakka (atom {:nimi "Foo" :id 666})
