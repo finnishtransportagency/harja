@@ -516,13 +516,7 @@
                     :tyyppi :string :leveys id-leveys
                     :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
                    {:otsikko "Koh\u00ADteen ni\u00ADmi" :nimi :nimi
-                    :tyyppi :string :leveys kohde-leveys}
-                   {:otsikko "Tyyppi"
-                    :nimi :yllapitokohdetyyppi :tyyppi :string :leveys yllapitokohdetyyppi-leveys
-                    :muokattava? (constantly false)
-                    :fmt #({:paallyste "Päällyste"
-                            :sora "Sora"
-                            :kevytliikenne "Kevytliikenne"} %)}]
+                    :tyyppi :string :leveys kohde-leveys}]
                   (tierekisteriosoite-sarakkeet
                     tr-leveys
                     [nil
@@ -540,18 +534,7 @@
                    {:otsikko "YP-lk"
                     :nimi :yllapitoluokka :tyyppi :numero :leveys yllapitoluokka-leveys
                     :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                   {:otsikko "Ny\u00ADkyi\u00ADnen pääl\u00ADlys\u00ADte"
-                    :nimi :nykyinen-paallyste
-                    :fmt #(paallystys-ja-paikkaus/hae-paallyste-koodilla %)
-                    :tyyppi :valinta
-                    :valinta-arvo :koodi
-                    :valinnat paallystys-ja-paikkaus/+paallystetyypit+
-                    :valinta-nayta :nimi
-                    :leveys nykyinen-paallyste-leveys
-                    :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                   {:otsikko "In\u00ADdek\u00ADsin ku\u00ADvaus"
-                    :nimi :indeksin-kuvaus :tyyppi :string
-                    :leveys indeksin-kuvaus-leveys :pituus-max 2048}
+
                    (when (= (:nakyma optiot) :paallystys)
                      {:otsikko "Tar\u00ADjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
                       :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :tasaa :oikea})
