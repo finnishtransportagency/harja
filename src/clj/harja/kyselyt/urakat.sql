@@ -456,7 +456,7 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
         exists(SELECT id
                FROM siltapalvelusopimus sps
                WHERE sps.urakkanro = u.urakkanro AND
-                     st_dwithin(tlu.alue, st_makepoint(:x, :y), :threshold))))
+                     st_dwithin(sps.alue, st_makepoint(:x, :y), :threshold))))
 ORDER BY id ASC;
 
 -- name: luo-alueurakka<!
