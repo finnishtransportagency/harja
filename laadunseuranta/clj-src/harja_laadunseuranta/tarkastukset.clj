@@ -256,7 +256,7 @@
                                          {:luoja (:id kayttaja)}))
         tarkastus-id (tark-q/luodun-tarkastuksen-id db)
         sisaltaa-talvihoitomittauksen? (not (empty? (remove nil? (vals (:talvihoitomittaus tarkastus)))))
-        sisaltaa-soratiemittauksen (not (empty? (remove nil? (vals (:soratiemittaus tarkastus)))))]
+        sisaltaa-soratiemittauksen? (not (empty? (remove nil? (vals (:soratiemittaus tarkastus)))))]
     (doseq [vakiohavainto-id (:vakiohavainnot tarkastus)]
       (q/luo-uusi-tarkastuksen-vakiohavainto<! db
                                                {:tarkastus tarkastus-id
@@ -265,7 +265,7 @@
       (q/luo-uusi-talvihoitomittaus<! db
                                       (merge (:talvihoitomittaus tarkastus)
                                              {:tarkastus tarkastus-id})))
-    (when sisaltaa-soratiemittauksen
+    (when sisaltaa-soratiemittauksen?
       (q/luo-uusi-soratiemittaus<! db
                                    (merge (:soratiemittaus tarkastus)
                                           {:tarkastus tarkastus-id})))
