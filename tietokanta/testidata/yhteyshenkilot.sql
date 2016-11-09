@@ -150,3 +150,10 @@ VALUES ((SELECT id
            sukunimi = 'Frösén'
          LIMIT 1));
 
+
+-- Urakan vastuuhenkilöt
+INSERT INTO urakanvastuuhenkilo (urakka, rooli, nimi, kayttajanimi, ensisijainen)
+ VALUES ((SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
+         'ELY_Urakanvalvoja', 'Erno Penttikoski', 'LXPENTTIER', true),
+	((SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
+	 'ELY_Urakanvalvoja', 'Max Syöttöpaine', 'LXSYOTMAX', false);
