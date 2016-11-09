@@ -6,7 +6,7 @@
     right: 0;
     top: 0;
     max-height: 100%;
-    z-index: 1000;
+    z-index: @z-index-sivupaneeli;
     /* FIXME Elementti on leveämpi kuin viewport, joten sallitaan scrollaus vain y-akselilla
        Pitäisi korjata poistamalla elementin hardcoodattu leveys ja antamalla sisällön
        määrittää leveys. Tämän jälkeen toimii overflow: auto;*/
@@ -33,7 +33,7 @@
     box-sizing: border-box;
     transition-property: right;
     transition-duration: 0.2s;
-    z-index: 2500;
+    z-index: @z-index-sidepanel;
 }
 
 .pikavalintapaneeli {
@@ -90,5 +90,5 @@
     position: absolute;
     bottom: 0;
     right: 0;
-    z-index: 900;
+    z-index: @z-inxex-pikavalinta-footer;
 }

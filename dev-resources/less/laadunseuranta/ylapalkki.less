@@ -12,7 +12,7 @@
     justify-content: space-between;
     min-height: @ylapalkin-korkeus;
     background-color: rgb(19,19,20);
-    z-index: 1000;
+    z-index: @z-index-ylapalkki;
 }
 
 .ylapalkki-vasen, .ylapalkki-oikea {
@@ -47,7 +47,7 @@
 
 .ol-zoom {
     height: @ylapalkin-korkeus;
-    z-index: 1001;
+    z-index: @z-index-ol-zoom;
     box-sizing: border-box;
 }
 
@@ -145,7 +145,7 @@
     overflow-y: hidden;
     padding: 1px;
     max-height: 40px;
-    z-index: 10000;
+    z-index: @z-index-palvelinvirhe;
 }
 
 .ylapalkki.testiharja {

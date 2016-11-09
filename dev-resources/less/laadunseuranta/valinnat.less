@@ -140,7 +140,7 @@
 }
 /* ---------- tr-selailu ---------- */
 .tr-selailu {
-    z-index: 1000;
+    z-index: @z-index-tr-selailu;
     position: absolute;
     left: -400px;
     top: 0;
@@ -222,7 +222,7 @@ button:disabled {
     position: fixed;
     top: 70px;
     width: 100%;
-    z-index: 10000;
+    z-index: @z-index-urakkavalitsin;
 }
 .painikelaatikko > .painikerivi {
     height: 70px;
@@ -254,7 +254,7 @@ button:disabled {
     right: 7px;
     position: absolute;
     top: 28px;
-    z-index: 100;
+    z-index: @z-index-rec;
 }
 .painike-aktiivinen,
 .painikelaatikko .painike-aktiivinen {
