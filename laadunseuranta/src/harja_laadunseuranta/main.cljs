@@ -7,7 +7,7 @@
             [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset]
             [harja-laadunseuranta.ui.alustus :as alustus]
             [harja-laadunseuranta.ui.ylapalkki :as ylapalkki]
-            [harja-laadunseuranta.ui.paatason-navigointi :refer [paatason-navigointi]]
+            [harja-laadunseuranta.ui.paanavigointi :refer [paanavigointi]]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.ui.tr-haku :as tr-haku]
             [harja-laadunseuranta.utils :as utils]
@@ -127,15 +127,17 @@
           :optiot s/karttaoptiot}]
 
         (when @s/nayta-paanavigointi?
-          [paatason-navigointi])
+          [paanavigointi])
 
         [:div.paasisalto
          [ilmoitukset/ilmoituskomponentti s/ilmoitukset]
 
-         (when @s/kirjaamassa-havaintoa
+         ;; TODO Lomakkeet vaatii vielä säätämistä
+         #_(when @s/kirjaamassa-havaintoa
            [havaintolomake sulje-havaintodialogi sulje-havaintodialogi])
 
-         (when @s/kirjaamassa-yleishavaintoa
+         ;; TODO Lomakkeet vaatii vielä säätämistä
+         #_(when @s/kirjaamassa-yleishavaintoa
            [havaintolomake yleishavainto-kirjattu sulje-yleishavaintodialogi])
 
          (when @s/tarkastusajo-paattymassa
@@ -147,28 +149,7 @@
             [tarkastusajon-luonti/tarkastusajon-jatkamisdialogi]])
 
          [spinneri s/lahettamattomia]
-
-         [tr-haku/tr-selailukomponentti s/tr-tiedot-nakyvissa s/tr-tiedot]
-
-         ;; TODO Poista tämä kun uusi navigaatiomalli on käytössä
-         #_(when @s/nayta-sivupaneeli
-           [:div
-            [:div.sivupaneeli-container
-             [pikavalinnat/pikavalintapaneeli s/tr-osoite s/tarkastustyyppi s/havainnot alivalikot
-              laheta-kitkamittaus laheta-kertakirjaus laheta-yleishavainto laheta-lumisuus laheta-tasaisuus laheta-soratiehavainto
-              s/kitkan-keskiarvo s/lumimaara s/tasaisuus s/kiinteys s/polyavyys]]
-            [:div.pikavalinta-footer
-             (when-not (or @s/kirjaamassa-yleishavaintoa
-                           @s/kirjaamassa-havaintoa)
-               [pikavalinnat/lisaa-havainto @s/yleishavainto-kaynnissa
-                #(if %
-                  (do
-                    (reset! s/tr-loppu @s/tr-osoite)
-                    (reset! s/kirjaamassa-yleishavaintoa true))
-                  (reset! s/kirjaamassa-havaintoa true))
-                #(do
-                  (reset! s/tr-alku @s/tr-osoite)
-                  (reset! s/yleishavainto-kaynnissa true))])]])]]])))
+         [tr-haku/tr-selailukomponentti s/tr-tiedot-nakyvissa s/tr-tiedot]]]])))
 
 (defn main []
   (if @s/sovellus-alustettu

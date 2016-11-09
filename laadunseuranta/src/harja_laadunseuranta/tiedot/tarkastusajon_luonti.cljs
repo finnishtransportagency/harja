@@ -1,5 +1,5 @@
 (ns harja-laadunseuranta.tiedot.tarkastusajon-luonti
-  (:require [harja-laadunseuranta.ui.paatason-navigointi :refer [paatason-navigointi]]
+  (:require [harja-laadunseuranta.ui.paanavigointi :refer [paanavigointi]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [harja-laadunseuranta.tiedot.comms :as comms]
             [harja-laadunseuranta.utils :refer [flip erota-mittaukset erota-havainnot]]

@@ -1,7 +1,7 @@
-(ns harja-laadunseuranta.ui.paatason-navigointi
+(ns harja-laadunseuranta.ui.paanavigointi
   (:require [reagent.core :as reagent :refer [atom]]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
-            [harja-laadunseuranta.tiedot.paatason-navigointi :as tiedot]
+            [harja-laadunseuranta.tiedot.paanavigointi :as tiedot]
             [cljs-time.local :as l])
   (:require-macros
     [harja-laadunseuranta.macros :as m]
@@ -20,7 +20,7 @@
      [:div.toggle-valintapainike-otsikko
       nimi]]))
 
-(defn- paatason-navigointikomponentti [{:keys [valilehdet kirjaa-pistemainen-havainto-fn
+(defn- paanavigointikomponentti [{:keys [valilehdet kirjaa-pistemainen-havainto-fn
                                                kirjaa-valikohtainen-havainto-fn] :as tiedot}]
   (let [nakyvissa? (atom true)
         valittu (atom (:avain (first valilehdet)))
@@ -30,12 +30,12 @@
         piilotusnappi-klikattu (fn []
                                  (swap! nakyvissa? not))]
     (fn []
-      [:div {:class (str "paatason-navigointi-container "
+      [:div {:class (str "paanavigointi-container "
                          (if @nakyvissa?
-                           "paatason-navigointilaatikko-nakyvissa"
-                           "paatason-navigointilaatikko-piilossa"))}
+                           "paanavigointi-container-nakyvissa"
+                           "paanavigointi-container-piilossa"))}
        [:div.nayttonappi {:on-click piilotusnappi-klikattu}]
-       [:div.paatason-navigointilaatikko
+       [:div.navigointilaatikko
         [:div.piilotusnappi {:on-click piilotusnappi-klikattu}]
 
         [:header
@@ -63,8 +63,8 @@
                                                          :vali kirjaa-valikohtainen-havainto-fn)})])))]]
         [:footer]]])))
 
-(defn paatason-navigointi []
-  [paatason-navigointikomponentti {:valilehdet tiedot/oletusvalilehdet
+(defn paanavigointi []
+  [paanavigointikomponentti {:valilehdet tiedot/oletusvalilehdet
                                    :kirjaa-pistemainen-havainto-fn
                                    tiedot/kirjaa-pistemainen-havainto!
                                    :kirjaa-valikohtainen-havainto-fn

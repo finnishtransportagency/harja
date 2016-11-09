@@ -1,4 +1,4 @@
-(ns harja-laadunseuranta.tiedot.paatason-navigointi
+(ns harja-laadunseuranta.tiedot.paanavigointi
   (:require [harja-laadunseuranta.tiedot.sovellus :as s]
             [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
@@ -203,9 +203,6 @@
    {:avain :p-ja-l-alueet
     :nimi "P- ja L-alueet"
     :sisalto valilehti-p-ja-l-alueet}
-   {:avain :liikennemerkit
-    :nimi "Liikennemerkit"
-    :sisalto valilehti-liikennemerkit}
    {:avain :soratiet
     :nimi "Soratiet"
     :sisalto valilehti-soratiet}
@@ -228,4 +225,5 @@
     @s/tarkastusajo-id))
 
 (defn kirjaa-valikohtainen-havainto! [{:keys [nimi avain] :as tiedot}]
-  (.log js/console (pr-str "TODO Kirjataan välikohtainen havainto: " avain)))
+  (.log js/console (pr-str "TODO Kirjataan välikohtainen havainto: " avain))
+  (swap! s/havainnot assoc :lumista true))

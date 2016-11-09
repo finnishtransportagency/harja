@@ -1,7 +1,7 @@
-@paatason-navigioinnin-fonttikoko: 1.2em;
-@paatason-navigioinnin-fonttikoko-pienempi: 1em;
+@navigointilaatikon-fonttikoko: 1.2em;
+@navigointilaatikon-fonttikoko-pienempi: 1em;
 
-.paatason-navigointi-container {
+.paanavigointi-container {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -11,11 +11,11 @@
   flex-flow: column;
 }
 
-.paatason-navigointilaatikko {
-  font-size: @paatason-navigioinnin-fonttikoko;
+.navigointilaatikko {
+  font-size: @navigointilaatikon-fonttikoko;
   display: flex;
   flex-flow: column;
-  z-index: @z-index-paatason-navigointilaatikko;
+  z-index: @z-index-navigointilaatikko;
   align-self: center;
   width: 95%;
   max-width: 1024px;
@@ -134,11 +134,11 @@
 @piilotusnappi-koko: 60px;
 @piilotusnappi-taustavari: #c1c1bd;
 
-.paatason-navigointilaatikko {
+.navigointilaatikko {
   transition: 0.2s left linear;
 }
 
-.paatason-navigointilaatikko > .piilotusnappi {
+.navigointilaatikko > .piilotusnappi {
   width: (@piilotusnappi-koko / 2);
   height: @piilotusnappi-koko;
   border: @sisaltolaatikoiden-reunaviiva;
@@ -149,7 +149,7 @@
   top: 120px;
 }
 
-.paatason-navigointi-container > .nayttonappi {
+.paanavigointi-container > .nayttonappi {
  width: (@piilotusnappi-koko / 2);
   height: @piilotusnappi-koko;
   border: @sisaltolaatikoiden-reunaviiva;
@@ -164,22 +164,22 @@
   transition: 0.2s left linear;
 }
 
-.paatason-navigointilaatikko-nakyvissa {
+.paanavigointi-container-nakyvissa {
   & .nayttonappi {
     left: (-@piilotusnappi-koko - 15px);
   }
 
-  & .paatason-navigointilaatikko {
+  & .navigointilaatikko {
     left: 0;
   }
 }
 
-.paatason-navigointilaatikko-piilossa {
+.paanavigointi-container-piilossa {
   & .nayttonappi {
     left: 0;
   }
 
-  & .paatason-navigointilaatikko {
+  & .navigointilaatikko {
     left: -100%;
   }
 }
@@ -187,8 +187,8 @@
 // Responsiivisuus
 
 @media (max-width: 700px) {
-  .paatason-navigointilaatikko {
-    font-size: @paatason-navigioinnin-fonttikoko-pienempi;
+  .navigointilaatikko {
+    font-size: @navigointilaatikon-fonttikoko-pienempi;
   }
 
   .toggle-valintapainike {
