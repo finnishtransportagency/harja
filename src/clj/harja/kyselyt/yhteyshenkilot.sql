@@ -340,3 +340,6 @@ WHERE u.alkupvm <= :pvm
       -- PENDING Lisätään urakkatyyppejä sitä mukaan kun
       -- päätyvät tuotantoon
       AND (:tyyppi::urakkatyyppi IS NULL OR tyyppi = :tyyppi::urakkatyyppi);
+
+-- name: hae-urakan-vastuuhenkilot
+SELECT * FROM urakanvastuuhenkilo WHERE urakka = :urakka;
