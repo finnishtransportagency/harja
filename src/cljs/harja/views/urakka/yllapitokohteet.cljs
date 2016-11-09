@@ -47,17 +47,14 @@
 (def kohde-leveys 15)
 (def kvl-leveys 5)
 (def yllapitoluokka-leveys 5)
-(def nykyinen-paallyste-leveys 8)
-(def indeksin-kuvaus-leveys 8)
 (def tr-leveys 8)
 (def tarjoushinta-leveys 10)
 (def muutoshinta-leveys 10)
-(def toteutunut-hinta-leveys 10)
+(def toteutunut-hinta-leveys 20)
 (def arvonvahennykset-leveys 10)
 (def bitumi-indeksi-leveys 10)
 (def kaasuindeksi-leveys 10)
 (def yhteensa-leveys 10)
-(def yllapitokohdetyyppi-leveys 10)
 
 ;; Ylläpitokohdeosien sarakkeiden leveydet
 (def nimi-leveys 20)
@@ -593,8 +590,8 @@
               :kaasuindeksi kaasuindeksi-yhteensa
               :kokonaishinta kokonaishinta}]))]
     [grid/grid
-     {:otsikko "Yhteensä"
-      :piilota-toiminnot? true
+     {:nayta-toimintosarake? true
+      :otsikko "Yhteensä"
       :tyhja (if (nil? {}) [ajax-loader "Lasketaan..."] "")}
      [{:otsikko "" :nimi :tyhja :tyyppi :string :leveys haitari-leveys}
       {:otsikko "" :nimi :kohdenumero :tyyppi :string :leveys id-leveys}
@@ -609,8 +606,6 @@
       {:otsikko "" :nimi :pit :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :yllapitoluokka :tyyppi :string :leveys yllapitoluokka-leveys}
       {:otsikko "" :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :string :leveys kvl-leveys}
-      {:otsikko "" :nimi :nykyinen-paallyste :tyyppi :string :leveys nykyinen-paallyste-leveys}
-      {:otsikko "" :nimi :indeksin-kuvaus :tyyppi :string :leveys indeksin-kuvaus-leveys}
       (when (= (:nakyma optiot) :paallystys)
         {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
          :fmt fmt/euro-opt :tyyppi :numero
