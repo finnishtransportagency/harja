@@ -17,18 +17,23 @@
 }
 
 /* ---------- ilmoitukset ---------- */
+
 .ilmoitukset {
+    box-sizing: border-box;
     position: fixed;
+    width: 100%;
     bottom: 15px;
-    left: 220px;
-    right: 260px;
+    left: 50%;
+    transform: translateX(-50%);
     padding: 5px;
     z-index: @z-index-ilmoitukset;
 }
 
 .ilmoitukset .ilmoitus {
-    //width: 550px;
+    box-sizing: border-box;
     padding: 5px;
     border: 1px solid black;
     background-color: yellow;
+    margin-left: 5px;
+    margin-right: 5px;
 }

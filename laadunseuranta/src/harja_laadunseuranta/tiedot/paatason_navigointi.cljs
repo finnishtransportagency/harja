@@ -161,21 +161,21 @@
     :tyyppi :piste
     :avain :silta-puhdistamatta
     :vaatii-nappaimiston? false}
-   {:nimi "Saumoissa puutteita"
+   {:nimi "Sau\u00ADmoissa puut\u00ADteita"
     :tyyppi :piste
     :avain :siltasaumoissa-puutteita
     :ikoni "silta_saumoissa_puutteita"
     :vaatii-nappaimiston? false}
-   {:nimi "Päällysteessä vaurioita"
+   {:nimi "Pääl\u00ADlys\u00ADtees\u00ADsä vaurioita"
     :tyyppi :piste
     :avain :sillan-paallysteessa-vaurioita
     :vaatii-nappaimiston? false}
-   {:nimi "Kaidevauroita"
+   {:nimi "Kaide\u00ADvauri\u00ADoita"
     :tyyppi :piste
     :avain :sillassa-kaidevaurioita
     :ikoni "silta_vaurioita"
     :vaatii-nappaimiston? false}
-   {:nimi "Reunapalkkivaurioita"
+   {:nimi "Reuna\u00ADpalkki\u00ADvauri\u00ADoita"
     :tyyppi :piste
     :avain :sillassa-reunapalkkivaurioita
     :vaatii-nappaimiston? false}])
