@@ -67,6 +67,12 @@
            :akilliset_hoitotyot_laskutettu                  0.0M
            :akilliset_hoitotyot_laskutettu_ind_korotettuna  0.0M
            :akilliset_hoitotyot_laskutettu_ind_korotus      0.0M
+           :vahinkojen_korjaukset_laskutetaan                 0.0M
+           :vahinkojen_korjaukset_laskutetaan_ind_korotettuna 0.0M
+           :vahinkojen_korjaukset_laskutetaan_ind_korotus     0.0M
+           :vahinkojen_korjaukset_laskutettu                  0.0M
+           :vahinkojen_korjaukset_laskutettu_ind_korotettuna  0.0M
+           :vahinkojen_korjaukset_laskutettu_ind_korotus      0.0M
            :bonukset_laskutetaan                            1000.0M
            :bonukset_laskutetaan_ind_korotettuna            1004.06958187041174593000M
            :bonukset_laskutetaan_ind_korotus                4.06958187041174593000M
@@ -131,6 +137,12 @@
            :akilliset_hoitotyot_laskutettu                  1000.0M
            :akilliset_hoitotyot_laskutettu_ind_korotettuna  1014.04404723906800000M
            :akilliset_hoitotyot_laskutettu_ind_korotus      14.04404723906800000M
+           :vahinkojen_korjaukset_laskutetaan                 1000.0M
+           :vahinkojen_korjaukset_laskutetaan_ind_korotettuna 1016.9M
+           :vahinkojen_korjaukset_laskutetaan_ind_korotus     16.91M
+           :vahinkojen_korjaukset_laskutettu                  0.0M
+           :vahinkojen_korjaukset_laskutettu_ind_korotettuna  0.0M
+           :vahinkojen_korjaukset_laskutettu_ind_korotus      0.0M
            :bonukset_laskutetaan                            0.0M
            :bonukset_laskutetaan_ind_korotettuna            0.0M
            :bonukset_laskutetaan_ind_korotus                0.0M
@@ -158,9 +170,9 @@
            :kht_laskutettu_ind_korotettuna                  0.0M
            :kht_laskutettu_ind_korotus                      0.0M
            :lampotila_puuttuu                               false
-           :muutostyot_laskutetaan                          8000.0M
-           :muutostyot_laskutetaan_ind_korotettuna          8033.83M
-           :muutostyot_laskutetaan_ind_korotus              33.83M
+           :muutostyot_laskutetaan                          7000.0M
+           :muutostyot_laskutetaan_ind_korotettuna          7016.917M
+           :muutostyot_laskutetaan_ind_korotus              16.917M
            :muutostyot_laskutettu                           3000.0M
            :muutostyot_laskutettu_ind_korotettuna           3014.04M
            :muutostyot_laskutettu_ind_korotus               14.04M
@@ -188,6 +200,12 @@
            :akilliset_hoitotyot_laskutettu                  0.0M
            :akilliset_hoitotyot_laskutettu_ind_korotettuna  0.0M
            :akilliset_hoitotyot_laskutettu_ind_korotus      0.0M
+           :vahinkojen_korjaukset_laskutetaan                 0.0M
+           :vahinkojen_korjaukset_laskutetaan_ind_korotettuna 0.0M
+           :vahinkojen_korjaukset_laskutetaan_ind_korotus     0.0M
+           :vahinkojen_korjaukset_laskutettu                  0.0M
+           :vahinkojen_korjaukset_laskutettu_ind_korotettuna  0.0M
+           :vahinkojen_korjaukset_laskutettu_ind_korotus      0.0M
            :bonukset_laskutetaan                            0.0M
            :bonukset_laskutetaan_ind_korotettuna            0.0M
            :bonukset_laskutetaan_ind_korotus                0.0M

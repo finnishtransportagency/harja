@@ -255,7 +255,7 @@
                                 vain-jvh-voi-muokata-tietoja-viesti)])
 
         kentat-kaikki-paitsi-kht #{"yht" "sakot" "suolasakot" "muutostyot" "akilliset_hoitotyot"
-                                   "bonukset" "erilliskustannukset"}
+                                   "vahinkojen_korjaukset" "bonukset" "erilliskustannukset"}
         kentat-kaikki (conj kentat-kaikki-paitsi-kht "kht")
         taulukot
         (aseta-sheet-nimi
@@ -279,10 +279,12 @@
                    (when talvisuolasakko-kaytossa?
                      [" Talvisuolasakko/\u00ADbonus (autom. laskettu) " " Ei talvisuolasakkoa "
                       :suolasakot_laskutettu :suolasakot_laskutetaan tiedot fmt/euro-ei-voitu-laskea])
-                   [" Muutos- ja lisätyöt sekä vahinkojen korjaukset " " Ei muutos- ja lisätöitä "
+                   [" Muutos- ja lisätyöt " " Ei muutos- ja lisätöitä "
                     :muutostyot_laskutettu :muutostyot_laskutetaan tiedot]
                    [" Äkilliset hoitotyöt " " Ei äkillisiä hoitotöitä "
                     :akilliset_hoitotyot_laskutettu :akilliset_hoitotyot_laskutetaan tiedot]
+                   [" Vahinkojen korjaukset " " Ei vahinkojen korjauksia "
+                    :vahinkojen_korjaukset_laskutettu :vahinkojen_korjaukset_laskutetaan tiedot]
                    [" Bonukset " " Ei bonuksia "
                     :bonukset_laskutettu :bonukset_laskutetaan tiedot]
                    [" Erilliskustannukset (muut kuin bonukset) " " Ei erilliskustannuksia "
@@ -300,11 +302,14 @@
                      [" Talvisuolasakon/\u00ADbonuksen indeksitarkistus (autom. laskettu) " " Ei indeksitarkistuksia "
                       :suolasakot_laskutettu_ind_korotus :suolasakot_laskutetaan_ind_korotus tiedot fmt/euro-ei-voitu-laskea])
                    (when indeksi-kaytossa?
-                     [" Muutos- ja lisätöiden sekä vahinkojen korjausten indeksitarkistukset " " Ei indeksitarkistuksia "
+                     [" Muutos- ja lisätöiden indeksitarkistukset " " Ei indeksitarkistuksia "
                       :muutostyot_laskutettu_ind_korotus :muutostyot_laskutetaan_ind_korotus tiedot])
                    (when indeksi-kaytossa?
                      [" Äkillisten hoitotöiden indeksitarkistukset " " Ei indeksitarkistuksia "
                       :akilliset_hoitotyot_laskutettu_ind_korotus :akilliset_hoitotyot_laskutetaan_ind_korotus tiedot])
+                   (when indeksi-kaytossa?
+                     [" Vahinkojen korjausten indeksitarkistukset " " Ei indeksitarkistuksia "
+                      :vahinkojen_korjaukset_laskutettu_ind_korotus :vahinkojen_korjaukset_laskutetaan_ind_korotus tiedot])
                    (when indeksi-kaytossa?
                      [" Bonusten indeksitarkistukset " " Ei indeksitarkistuksia "
                       :bonukset_laskutettu_ind_korotus :bonukset_laskutetaan_ind_korotus tiedot])
