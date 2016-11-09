@@ -29,6 +29,12 @@
 
   > .sisalto {
     overflow: auto;
+    box-sizing: border-box;
+    /* Korkeuden tulisi aina olla pienin mahdollinen, johon kaikilla välilehdillä
+       olevat nappulat mahtuvat. Tätä ei voitane laskea dynaamisesti, joten
+       pitää päivittää tätä lukua jos välilehtien sisältö muuttuu */
+    height: 510px;
+    max-height: 100%;
     border: @sisaltolaatikoiden-reunaviiva;
     border-top: 0;
     border-bottom: 0;
