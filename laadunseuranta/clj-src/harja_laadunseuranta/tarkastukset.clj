@@ -51,11 +51,11 @@
     ;; Seuraava piste ei aiheuta reitin kääntymistä ympäri
     ;; PENDING GPS:n epätarkkuudesta johtuen aiheuttaa liikaa ympärikääntymisiä eikä toimi oikein, siksi kommentoitu
     #_(not (tr-osoitteet-sisaltavat-ymparikaantymisen? [; Edellinen sijainti
-                                                      (:tr-osoite (get (:sijainnit nykyinen-reittimerkinta) (- (count (:sijainnit nykyinen-reittimerkinta)) 2)))
-                                                      ;; Nykyinen sijainti
-                                                      (:tr-osoite (last (:sijainnit nykyinen-reittimerkinta)))
-                                                      ;; Seuraavan pisteen sijainti
-                                                      (:tr-osoite seuraava-reittimerkinta)]))))
+                                                        (:tr-osoite (get (:sijainnit nykyinen-reittimerkinta) (- (count (:sijainnit nykyinen-reittimerkinta)) 2)))
+                                                        ;; Nykyinen sijainti
+                                                        (:tr-osoite (last (:sijainnit nykyinen-reittimerkinta)))
+                                                        ;; Seuraavan pisteen sijainti
+                                                        (:tr-osoite seuraava-reittimerkinta)]))))
 
 (defn- yhdista-reittimerkinnan-kaikki-havainnot
   "Yhdistää reittimerkinnän pistemäiset havainnot ja jatkuvat havainnot."
@@ -222,14 +222,14 @@
                                      :losa (:aosa paatepiste)
                                      :let (:aet paatepiste)}]
     (assoc tarkastus
-                                        ;:sijainti (:geometria koko-tarkastuksen-tr-osoite)
-           :tarkastaja (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
-           :tr_numero (:tie koko-tarkastuksen-tr-osoite)
-           :tr_alkuosa (:aosa koko-tarkastuksen-tr-osoite)
-           :tr_alkuetaisyys (:aet koko-tarkastuksen-tr-osoite)
-           :tr_loppuosa (:losa koko-tarkastuksen-tr-osoite)
-           :tr_loppuetaisyys (:let koko-tarkastuksen-tr-osoite)
-           :lahde "harja-ls-mobiili")))
+      ;:sijainti (:geometria koko-tarkastuksen-tr-osoite)
+      :tarkastaja (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
+      :tr_numero (:tie koko-tarkastuksen-tr-osoite)
+      :tr_alkuosa (:aosa koko-tarkastuksen-tr-osoite)
+      :tr_alkuetaisyys (:aet koko-tarkastuksen-tr-osoite)
+      :tr_loppuosa (:losa koko-tarkastuksen-tr-osoite)
+      :tr_loppuetaisyys (:let koko-tarkastuksen-tr-osoite)
+      :lahde "harja-ls-mobiili")))
 
 (defn hae-tallennettavan-tarkastuksen-sijainti
   [db {tie :tr_numero
@@ -238,19 +238,19 @@
   (when (and tie alkuosa alkuet)
     (let [viiva? (and loppuosa loppuet)]
       (:geom
-       (first (q/tr-osoitteelle-viiva
-               db
-               {:tr_numero tie
-                :tr_alkuosa alkuosa
-                :tr_alkuetaisyys alkuet
-                :tr_loppuosa (if viiva? loppuosa alkuosa)
-                :tr_loppuetaisyys (if viiva? loppuet alkuet)}))))))
+        (first (q/tr-osoitteelle-viiva
+                 db
+                 {:tr_numero tie
+                  :tr_alkuosa alkuosa
+                  :tr_alkuetaisyys alkuet
+                  :tr_loppuosa (if viiva? loppuosa alkuosa)
+                  :tr_loppuetaisyys (if viiva? loppuet alkuet)}))))))
 
 (defn- tallenna-tarkastus! [db tarkastus kayttaja]
   (let [tarkastus (luo-tallennettava-tarkastus tarkastus kayttaja)
         geometria (hae-tallennettavan-tarkastuksen-sijainti db tarkastus)
         tarkastus (as-> tarkastus tarkastus
-                      (assoc tarkastus :sijainti geometria))
+                        (assoc tarkastus :sijainti geometria))
         _ (q/luo-uusi-tarkastus<! db
                                   (merge tarkastus
                                          {:luoja (:id kayttaja)}))
@@ -279,4 +279,4 @@
                                     (:pistemaiset-tarkastukset tarkastukset)
                                     (:reitilliset-tarkastukset tarkastukset))]
     (doseq [tarkastus kaikki-tarkastukset]
-     (tallenna-tarkastus! db tarkastus kayttaja))))
+      (tallenna-tarkastus! db tarkastus kayttaja))))

@@ -22,22 +22,22 @@
   (:gen-class))
 
 (defn- tallenna-merkinta! [tx vakiohavainto-idt merkinta]
-  (q/tallenna-reittimerkinta! tx {:id            (:id merkinta)
-                                  :tarkastusajo  (:tarkastusajo merkinta)
-                                  :aikaleima     (:aikaleima merkinta)
-                                  :x             (:lon (:sijainti merkinta))
-                                  :y             (:lat (:sijainti merkinta))
-                                  :lampotila     (get-in merkinta [:mittaukset :lampotila])
-                                  :lumisuus      (get-in merkinta [:mittaukset :lumisuus])
-                                  :tasaisuus     (get-in merkinta [:mittaukset :tasaisuus])
-                                  :kitkamittaus  (get-in merkinta [:mittaukset :kitkamittaus])
-                                  :kiinteys      (get-in merkinta [:mittaukset :kiinteys])
-                                  :polyavyys     (get-in merkinta [:mittaukset :polyavyys])
+  (q/tallenna-reittimerkinta! tx {:id (:id merkinta)
+                                  :tarkastusajo (:tarkastusajo merkinta)
+                                  :aikaleima (:aikaleima merkinta)
+                                  :x (:lon (:sijainti merkinta))
+                                  :y (:lat (:sijainti merkinta))
+                                  :lampotila (get-in merkinta [:mittaukset :lampotila])
+                                  :lumisuus (get-in merkinta [:mittaukset :lumisuus])
+                                  :tasaisuus (get-in merkinta [:mittaukset :tasaisuus])
+                                  :kitkamittaus (get-in merkinta [:mittaukset :kitkamittaus])
+                                  :kiinteys (get-in merkinta [:mittaukset :kiinteys])
+                                  :polyavyys (get-in merkinta [:mittaukset :polyavyys])
                                   :sivukaltevuus (get-in merkinta [:mittaukset :sivukaltevuus])
-                                  :havainnot     (mapv vakiohavainto-idt (:havainnot merkinta))
-                                  :kuvaus        (get-in merkinta [:kuvaus])
-                                  :laadunalitus  (get-in merkinta [:laadunalitus])
-                                  :kuva          (get-in merkinta [:kuva])}))
+                                  :havainnot (mapv vakiohavainto-idt (:havainnot merkinta))
+                                  :kuvaus (get-in merkinta [:kuvaus])
+                                  :laadunalitus (get-in merkinta [:laadunalitus])
+                                  :kuva (get-in merkinta [:kuva])}))
 
 (defn- tallenna-multipart-kuva! [db {:keys [tempfile content-type size]} kayttaja-id]
   (let [oid (tietokanta/tallenna-lob db (io/input-stream tempfile))]
@@ -62,8 +62,8 @@
   (jdbc/with-db-transaction [tx db]
     (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)
           urakka-id (or
-                     (:urakka tarkastusajo)
-                     (:id (first (q/paattele-urakka tx {:tarkastusajo tarkastusajo-id}))))
+                      (:urakka tarkastusajo)
+                      (:id (first (q/paattele-urakka tx {:tarkastusajo tarkastusajo-id}))))
           merkinnat (q/hae-reitin-merkinnat tx {:tarkastusajo tarkastusajo-id
                                                 :treshold 100})
           merkinnat-tr-osoitteilla (tarkastukset/lisaa-reittimerkinnoille-tieosoite merkinnat)
@@ -110,10 +110,10 @@
 (defn- muunna-havainnot [{kirjaukset :kirjaukset :as tiedot}]
   (if kirjaukset
     (assoc tiedot :kirjaukset
-           (mapv (fn [kirjaus]
-                   (if-let [havainnot (:havainnot kirjaus)]
-                     (assoc kirjaus :havainnot (mapv keyword havainnot))
-                     kirjaus)) kirjaukset))
+                  (mapv (fn [kirjaus]
+                          (if-let [havainnot (:havainnot kirjaus)]
+                            (assoc kirjaus :havainnot (mapv keyword havainnot))
+                            kirjaus)) kirjaukset))
     tiedot))
 
 (defn kasittele-api-kutsu [skeema-sisaan ok-skeema kasittelija]
@@ -133,52 +133,52 @@
 
 (defn- laadunseuranta-api [db http]
   (http-palvelin/julkaise-palvelut
-   http
+    http
 
-   :ls-reittimerkinta
-   (kasittele-api-kutsu
-    schemas/Havaintokirjaukset s/Str
-    (fn [user kirjaukset]
-      (tallenna-merkinnat! db kirjaukset (:id user))
-      "Reittimerkinta tallennettu"))
+    :ls-reittimerkinta
+    (kasittele-api-kutsu
+      schemas/Havaintokirjaukset s/Str
+      (fn [user kirjaukset]
+        (tallenna-merkinnat! db kirjaukset (:id user))
+        "Reittimerkinta tallennettu"))
 
 
-   :ls-paata-tarkastusajo
-   (kasittele-api-kutsu
-    schemas/TarkastuksenPaattaminen s/Str
-    (fn [user tarkastusajo]
-      (log/debug "Päätetään tarkastusajo " tarkastusajo)
-      (paata-tarkastusajo! db tarkastusajo user)
-      "Tarkastusajo päätetty"))
+    :ls-paata-tarkastusajo
+    (kasittele-api-kutsu
+      schemas/TarkastuksenPaattaminen s/Str
+      (fn [user tarkastusajo]
+        (log/debug "Päätetään tarkastusajo " tarkastusajo)
+        (paata-tarkastusajo! db tarkastusajo user)
+        "Tarkastusajo päätetty"))
 
-   :ls-uusi-tarkastusajo
-   (kasittele-api-kutsu
-    s/Any s/Any
-    (fn [user tiedot]
-      (log/debug "Luodaan uusi tarkastusajo " tiedot)
-      (luo-uusi-tarkastusajo! db tiedot user)))
+    :ls-uusi-tarkastusajo
+    (kasittele-api-kutsu
+      s/Any s/Any
+      (fn [user tiedot]
+        (log/debug "Luodaan uusi tarkastusajo " tiedot)
+        (luo-uusi-tarkastusajo! db tiedot user)))
 
-   :ls-hae-tr-tiedot
-   (kasittele-api-kutsu
-    s/Any s/Any
-    (fn [user koordinaatit]
-      (log/debug "Haetaan tierekisteritietoja pisteelle " koordinaatit)
-      (let [{:keys [lat lon treshold]} koordinaatit]
-        (hae-tr-tiedot db lat lon treshold))))
+    :ls-hae-tr-tiedot
+    (kasittele-api-kutsu
+      s/Any s/Any
+      (fn [user koordinaatit]
+        (log/debug "Haetaan tierekisteritietoja pisteelle " koordinaatit)
+        (let [{:keys [lat lon treshold]} koordinaatit]
+          (hae-tr-tiedot db lat lon treshold))))
 
-   :ls-urakkatyypin-urakat
-   (kasittele-api-kutsu
-    s/Str s/Any
-    (fn [kayttaja urakkatyyppi]
-      (log/debug "Haetaan urakkatyypin urakat " urakkatyyppi)
-      (hae-urakkatyypin-urakat db urakkatyyppi kayttaja)))
+    :ls-urakkatyypin-urakat
+    (kasittele-api-kutsu
+      s/Str s/Any
+      (fn [kayttaja urakkatyyppi]
+        (log/debug "Haetaan urakkatyypin urakat " urakkatyyppi)
+        (hae-urakkatyypin-urakat db urakkatyyppi kayttaja)))
 
-   :ls-hae-kayttajatiedot
-   (fn [kayttaja]
-     (log/debug "Käyttäjän tietojen haku")
-     {:ok {:kayttajanimi (:kayttajanimi kayttaja)
-           :nimi (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
-           :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset db)}})))
+    :ls-hae-kayttajatiedot
+    (fn [kayttaja]
+      (log/debug "Käyttäjän tietojen haku")
+      {:ok {:kayttajanimi (:kayttajanimi kayttaja)
+            :nimi (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
+            :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset db)}})))
 
 
 (defn- tallenna-liite [db req]
@@ -190,12 +190,12 @@
 (defn luo-routet [db http]
   ;; Reitti liitteen tallennukseen
   (http-palvelin/julkaise-palvelu
-   http :ls-tallenna-liite
-   (wrap-multipart-params
-    (fn [req]
-      (println "SAATIIN UPLOAD: " req)
-      (tallenna-liite db req)))
-   {:ring-kasittelija? true})
+    http :ls-tallenna-liite
+    (wrap-multipart-params
+      (fn [req]
+        (println "SAATIIN UPLOAD: " req)
+        (tallenna-liite db req)))
+    {:ring-kasittelija? true})
 
   ;; Laadunseurannan API kutsut
   (laadunseuranta-api db http))
