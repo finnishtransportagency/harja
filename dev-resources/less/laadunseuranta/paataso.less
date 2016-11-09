@@ -20,3 +20,17 @@
     height: 100%;
     z-index: @z-index-kartta;
 }
+
+.spinner {
+    z-index: @z-index-spinner;
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+    color: black;
+}
+
+@media (max-width: 700px) {
+    & .spinner {
+        width: 35px;
+    }
+}
