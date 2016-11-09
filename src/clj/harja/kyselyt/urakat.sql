@@ -75,11 +75,19 @@ SELECT
                            id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)       AS sopimukset,
-  ST_Simplify(au.alue, 50)    AS alueurakan_alue
+  ST_Simplify(au.alue, 50)    AS alueurakan_alue,
+  ST_Simplify(tlu.alue, 50)   AS tekniset_laitteet_alue,
+  ST_Simplify(sps.alue, 50)   AS siltapalvelusopimus_alue,
+  ST_Simplify(vu.alue, 50)    AS valaistusurakka_alue,
+  ST_Simplify(pps.alue, 50)   AS paallystyspalvelusopimus_alue
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
   LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
+  LEFT JOIN tekniset_laitteet_urakka tlu ON u.urakkanro = tlu.urakkanro
+  LEFT JOIN siltapalvelusopimus sps ON u.urakkanro = sps.urakkanro
+  LEFT JOIN valaistusurakka vu ON u.urakkanro = vu.valaistusurakkanro
+  LEFT JOIN paallystyspalvelusopimus pps ON u.urakkanro = pps.paallystyspalvelusopimusnro
   LEFT JOIN yhatiedot yt ON u.id = yt.urakka
 WHERE hallintayksikko = :hallintayksikko
       AND (u.id IN (:sallitut_urakat)
