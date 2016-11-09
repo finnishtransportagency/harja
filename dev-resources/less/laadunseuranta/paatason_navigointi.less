@@ -9,6 +9,7 @@
 }
 
 .paatason-navigointilaatikko {
+  font-size: 1.2em;
   display: flex;
   flex-flow: column;
   z-index: 9000;
@@ -52,12 +53,15 @@
     margin-left: 5px;
     margin-right: 5px;
     display: inline-block;
+    color: @valilehden-teksti;
     border: 1px solid black;
     border-bottom: none;
+    background-color: @napin-taustavari;
   }
 
   > .valilehti-valittu {
-    background-color: @napin-taustavari;
+    color: @valilehti-valittu-teksti;
+    background-color: @valilehti-valittu-taustavari;
   }
 }
 
