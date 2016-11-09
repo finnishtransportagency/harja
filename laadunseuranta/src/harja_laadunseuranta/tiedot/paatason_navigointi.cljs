@@ -37,6 +37,97 @@
     :ikoni "pysakki_hiekoittamatta"
     :vaatii-nappaimiston? false}])
 
+(def valilehti-liikennemerkit
+  [{:nimi "Liikenne\u00ADmerkki likai\u00ADnen"
+    :ikoni "liikennemerkki_likainen"
+    :tyyppi :piste
+    :avain :liikennemerkki-likainen
+    :vaatii-nappaimiston? false}
+   {:nimi "Liikenne\u00ADmerkki vino\u00ADssa"
+    :ikoni "liikennemerkki_vinossa"
+    :tyyppi :piste
+    :avain :liikennemerkki-vinossa
+    :vaatii-nappaimiston? false}
+   {:nimi "Liikenne\u00ADmerkki lumi\u00ADnen"
+    :ikoni "liikennemerkki_luminen"
+    :tyyppi :piste
+    :avain :liikennemerkki-luminen
+    :vaatii-nappaimiston? false}])
+
+(def valilehti-viherhoito
+  [{:nimi "Vesakko raivaa\u00ADmatta"
+    :tyyppi :vali
+    :ikoni "viheralue_raivaamatta"
+    :avain :vesakko-raivaamatta
+    :vaatii-nappaimiston? false}
+   {:nimi "Niit\u00ADtämättä"
+    :tyyppi :vali
+    :avain :niittamatta
+    :ikoni "viheralue_niittamatta"
+    :vaatii-nappaimiston? false}
+   {:nimi "Näkemä\u00ADalue raivaa\u00ADmatta"
+    :tyyppi :piste
+    :avain :nakemaalue-raivaamatta
+    :ikoni "viheralue_nakemaalue_raivaamatta"
+    :vaatii-nappaimiston? false}
+   {:nimi "Liiken\u00ADnetila hoita\u00ADmatta"
+    :tyyppi :piste
+    :avain :liikennetila-hoitamatta
+    :ikoni "viheralue_liikennetila_hoitamatta"
+    :vaatii-nappaimiston? false}
+   {:nimi "Istu\u00ADtukset hoita\u00ADmatta"
+    :tyyppi :piste
+    :avain :istutukset-hoitamatta
+    :ikoni "viheralue_istutukset_hoitamatta"
+    :vaatii-nappaimiston? false}
+   {:nimi "P- tai L-alueet hoitamatta"
+    :tyyppi :piste
+    :avain :p-tai-l-alue-hoitamatta
+    :ikoni "p_tai_l_alue_hoitamatta"
+    :vaatii-nappaimiston? false}])
+
+(def valilehti-reunat
+  [{:nimi "Reuna\u00ADpaalu likai\u00ADnen"
+    :tyyppi :piste
+    :ikoni "reunapaalu_likainen"
+    :avain :reunapaalut-likaisia
+    :vaatii-nappaimiston? false}
+   {:nimi "Reuna\u00ADpaalu vino\u00ADssa"
+    :tyyppi :piste
+    :avain :reunapaalut-vinossa
+    :ikoni "reunapaalu_vinossa"
+    :vaatii-nappaimiston? false}
+   {:nimi "Rumpu tukossa"
+    :tyyppi :piste
+    :avain :rumpu-tukossa
+    :ikoni "rumpu_tukossa"
+    :vaatii-nappaimiston? false}
+   {:nimi "Oja tukossa"
+    :tyyppi :piste
+    :avain :oja-tukossa
+    :ikoni "oja_tukossa"
+    :vaatii-nappaimiston? false}
+   {:nimi "Kaide\u00ADvaurio"
+    :tyyppi :piste
+    :avain :kaidevaurio
+    :ikoni "kaidevaurio"
+    :vaatii-nappaimiston? false}
+   {:nimi "Kiveys\u00ADvaurio"
+    :tyyppi :piste
+    :avain :kiveysvaurio
+    :ikoni "kiveysvaurio"
+    :vaatii-nappaimiston? false}
+   {:nimi "Reuna\u00ADpalletta"
+    :tyyppi :vali
+    :avain :reunapalletta
+    :ikoni "soratie_reunapalletta"
+    :vaatii-nappaimiston? false}
+   {:nimi "Reuna\u00ADtäyttö puutteel\u00ADlinen"
+    :tyyppi :vali
+    :avain :reunataytto-puutteellinen
+    :vaatii-nappaimiston? false
+    :ikoni "soratie_reunataytto_puutteellinen"}])
+
 (def valilehti-p-ja-l-alueet
   [{:nimi "Auraa\u00ADmatta"
     :tyyppi :piste
@@ -62,165 +153,65 @@
     :tyyppi :piste
     :ikoni "p_alue_korjattavaa"
     :avain :pl-alue-korjattavaa
-    :vaatii-nappaimiston? false}
-   {:nimi "Viher\u00ADalueet hoita\u00ADmatta"
-    :tyyppi :piste
-    :avain :viheralueet-hoitamatta
-    :ikoni "p_alue_viheralue"
     :vaatii-nappaimiston? false}])
 
-(def valilehti-reunat
-  [{:nimi "Reuna\u00ADpaalu likai\u00ADnen"
-    :tyyppi :piste
-    :ikoni "reunapaalu_likainen"
-    :avain :reunapaalut-likaisia
-    :vaatii-nappaimiston? false}
-   {:nimi "Reuna\u00ADpaalu vino\u00ADssa"
-    :tyyppi :piste
-    :avain :reunapaalut-vinossa
-    :ikoni "reunapaalu_vinossa"
-    :vaatii-nappaimiston? false}
-   {:nimi "Rumpu tukossa"
-    :tyyppi :piste
-    :avain :rumpu-tukossa
-    :ikoni "rumpu_tukossa"
-    :vaatii-nappaimiston? false}
-   {:nimi "Rumpu liettynyt"
-    :tyyppi :piste
-    :avain :rumpu-liettynyt
-    :ikoni "rumpu_liettynyt"
-    :vaatii-nappaimiston? false}
-   {:nimi "Rumpi rikki"
-    :tyyppi :piste
-    :avain :rumpu-rikki
-    :ikoni "rumpu_rikki"
-    :vaatii-nappaimiston? false}
-   {:nimi "Kaide\u00ADvaurio"
-    :tyyppi :piste
-    :avain :kaidevaurio
-    :ikoni "kaidevaurio"
-    :vaatii-nappaimiston? false}
-   {:nimi "Kiveys\u00ADvaurio"
-    :tyyppi :piste
-    :avain :kiveysvaurio
-    :ikoni "kiveysvaurio"
-    :vaatii-nappaimiston? false}])
-
-(def valilehti-viherhoito
-  [{:nimi "Vesakko raivaa\u00ADmatta"
-    :tyyppi :piste
-    :ikoni "viheralue_raivaamatta"
-    :avain :vesakko-raivaamatta
-    :vaatii-nappaimiston? false}
-   {:nimi "Niit\u00ADtämättä"
-    :tyyppi :piste
-    :avain :niittamatta
-    :ikoni "viheralue_niittamatta"
-    :vaatii-nappaimiston? false}
-   {:nimi "Näkemä\u00ADalue raivaa\u00ADmatta"
-    :tyyppi :piste
-    :avain :nakemaalue-raivaamatta
-    :ikoni "viheralue_nakemaalue_raivaamatta"
-    :vaatii-nappaimiston? false}
-   {:nimi "Liiken\u00ADnetila hoita\u00ADmatta"
-    :tyyppi :piste
-    :avain :liikennetila-hoitamatta
-    :ikoni "viheralue_liikennetila_hoitamatta"
-    :vaatii-nappaimiston? false}
-   {:nimi "Istu\u00ADtukset hoita\u00ADmatta"
-    :tyyppi :piste
-    :avain :istutukset-hoitamatta
-    :ikoni "viheralue_istutukset_hoitamatta"
-    :vaatii-nappaimiston? false}])
-
-(def valilehti-soratien-hoito
-  [{:nimi "Sora\u00ADtie"
-    :tyyppi :vali
-    :ikoni "soratie_alkaa"
-    :avain :soratie
-    :vaatii-nappaimiston? false}
-   {:nimi "Soran\u00ADpienta\u00ADreet: Reuna\u00ADpaletta"
-    :tyyppi :piste
-    :avain :reunapalletta
-    :ikoni "soratie_reunapaletta"
-    :vaatii-nappaimiston? false}
-   {:nimi "Soran\u00ADpienta\u00ADreet: Reuna\u00ADtäyttö puutteel\u00ADlinen"
-    :tyyppi :piste
-    :avain :reunataytto-puutteellinen
-    :vaatii-nappaimiston? false
-    :ikoni "soratie_reunataytto_puutteellinen"}
-   {:nimi "Soran\u00ADpienta\u00ADreet: Puutteel\u00ADlinen liuska\u00ADvaurio"
-    :tyyppi :piste
-    :avain :luiskavaurio
-    :ikoni "sorapientareet_puuttellinen_liuskavaurio"
-    :vaatii-nappaimiston? false}])
-
-(def valilehti-muut
-  [{:nimi "Liikenne\u00ADmerkki likai\u00ADnen"
-    :ikoni "liikennemerkki_likainen"
-    :tyyppi :piste
-    :avain :liikennemerkki-likainen ;; TODO Aiemmin oli sama kuin luminen, puuttuuko tämä tietomallista?
-    :vaatii-nappaimiston? false}
-   {:nimi "Liikenne\u00ADmerkki vino\u00ADssa"
-    :ikoni "liikennemerkki_vinossa"
-    :tyyppi :piste
-    :avain :liikennemerkki-vinossa
-    :vaatii-nappaimiston? false}
-   {:nimi "Liikenne\u00ADmerkki lumi\u00ADnen"
-    :ikoni "liikennemerkki_luminen"
-    :tyyppi :piste
-    :avain :liikennemerkki-luminen
-    :vaatii-nappaimiston? false}
-   {:nimi "Oja: tukossa"
-    :tyyppi :piste
-    :avain :oja-tukossa
-    :ikoni "oja_tukossa"
-    :vaatii-nappaimiston? false}
-   {:nimi "Oja: Ylijäämä\u00ADmassa tasattu huonosti"
-    :avain :ylijaamamassa-tasattu-huonosti
-    :tyyppi :piste
-    :ikoni "oja_ylijaamamassa_tasattu_huonosti"
-    :vaatii-nappaimiston? false}
-   {:nimi "Oja: Kiviä poista\u00ADmatta"
-    :tyyppi :piste
-    :avain :ojat-kivia-poistamatta
-    :ikoni "oja_kivia_poistamatta"
-    :vaatii-nappaimiston? false}
-   {:nimi "Silta: Puhdista\u00ADmatta"
+(def valilehti-sillat
+  [{:nimi "Puhdista\u00ADmatta"
     :ikoni "silta_puhdistamatta"
     :tyyppi :piste
     :avain :silta-puhdistamatta
     :vaatii-nappaimiston? false}
-   {:nimi "Silta: Vaurioita"
-    :tyyppi :piste
-    :avain :siltavaurioita
-    :ikoni "silta_vaurioita"
-    :vaatii-nappaimiston? false}
-   {:nimi "Silta: Saumoissa puutteita"
+   {:nimi "Saumoissa puutteita"
     :tyyppi :piste
     :avain :siltasaumoissa-puutteita
     :ikoni "silta_saumoissa_puutteita"
+    :vaatii-nappaimiston? false}
+   {:nimi "Päällysteessä vaurioita"
+    :tyyppi :piste
+    :avain :sillan-paallysteessa-vaurioita
+    :vaatii-nappaimiston? false}
+   {:nimi "Kaidevauroita"
+    :tyyppi :piste
+    :avain :sillassa-kaidevaurioita
+    :ikoni "silta_vaurioita"
+    :vaatii-nappaimiston? false}
+   {:nimi "Reunapalkkivaurioita"
+    :tyyppi :piste
+    :avain :sillassa-reunapalkkivaurioita
+    :vaatii-nappaimiston? false}])
+
+(def valilehti-soratiet
+  [{:nimi "Sora\u00ADtie"
+    :tyyppi :vali
+    :ikoni "soratie_alkaa"
+    :avain :soratie
     :vaatii-nappaimiston? false}])
 
 (def oletusvalilehdet
   [{:avain :talvihoito
     :nimi "Talviset pinnat"
     :sisalto valilehti-talviset-pinnat}
-   {:avain :p-ja-l-alueet
-    :nimi "P- ja L-alueet"
-    :sisalto valilehti-p-ja-l-alueet}
-   {:avain :reunat
-    :nimi "Reunat"
-    :sisalto valilehti-reunat}
+   {:avain :liikennemerkit
+    :nimi "Liikennemerkit"
+    :sisalto valilehti-liikennemerkit}
    {:avain :viherhoito
     :nimi "Viherhoito"
     :sisalto valilehti-viherhoito}
-   {:avain :soratien-hoito
-    :nimi "Soratien hoito"
-    :sisalto valilehti-soratien-hoito}
+   {:avain :reunat
+    :nimi "Reunat"
+    :sisalto valilehti-reunat}
+   {:avain :p-ja-l-alueet
+    :nimi "P- ja L-alueet"
+    :sisalto valilehti-p-ja-l-alueet}
+   {:avain :liikennemerkit
+    :nimi "Liikennemerkit"
+    :sisalto valilehti-liikennemerkit}
+   {:avain :soratiet
+    :nimi "Soratiet"
+    :sisalto valilehti-soratiet}
    {:avain :muut
     :nimi "Muut"
-    :sisalto valilehti-muut}])
+    :sisalto valilehti-sillat}])
 
 (defn kirjaa-pistemainen-havainto! [{:keys [nimi avain] :as tiedot}]
   (.log js/console (pr-str "Kirjataan pistemäinen havainto: " avain))
