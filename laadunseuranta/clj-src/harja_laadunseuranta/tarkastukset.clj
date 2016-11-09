@@ -7,7 +7,6 @@
             [clojure.string :as str]))
 
 (def db tietokanta/db)
-(def +reittimerkinnan-tieprojisoinnin-treshold+ 250)
 
 (defn etenemissuunta
   "Palauttaa 1 jos tr-osoite2 on suurempi kuin tr-osoite1.
@@ -50,6 +49,7 @@
     (or (nil? (:tr-osoite seuraava-reittimerkinta))
         (= (get-in nykyinen-reittimerkinta [:tr-osoite :tie]) (get-in seuraava-reittimerkinta [:tr-osoite :tie])))
     ;; Seuraava piste ei aiheuta reitin kääntymistä ympäri
+    ;; PENDING GPS:n epätarkkuudesta johtuen aiheuttaa liikaa ympärikääntymisiä eikä toimi oikein, siksi kommentoitu
     #_(not (tr-osoitteet-sisaltavat-ymparikaantymisen? [; Edellinen sijainti
                                                       (:tr-osoite (get (:sijainnit nykyinen-reittimerkinta) (- (count (:sijainnit nykyinen-reittimerkinta)) 2)))
                                                       ;; Nykyinen sijainti
@@ -184,8 +184,7 @@
   "Onko havainto pistemäinen?"
   [reittimerkinta]
   (or (:pistemainen-havainto reittimerkinta)
-      (and (:kuva reittimerkinta) (empty? (:jatkuvat-havainnot reittimerkinta)))
-      #_(:kuvaus reittimerkinta)))
+      (and (:kuva reittimerkinta) (empty? (:jatkuvat-havainnot reittimerkinta)))))
 
 (defn- reittimerkinnat-reitillisiksi-tarkastuksiksi
   "Käy annetut reittimerkinnät läpi ja muodostaa niistä reitilliset tarkastukset"
