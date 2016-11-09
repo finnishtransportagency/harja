@@ -600,5 +600,5 @@ FROM siltapalvelusopimus
 WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
 
 -- name: luo-siltapalvelusopimus<!
-INSERT INTO tekniset_laitteet_urakka (urakkanro, alue)
+INSERT INTO siltapalvelusopimus (urakkanro, alue)
 VALUES (:urakkanro, ST_GeomFromText(:alue) :: GEOMETRY);
