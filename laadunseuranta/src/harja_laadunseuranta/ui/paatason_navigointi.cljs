@@ -55,10 +55,10 @@
                 (first (filter
                          #(= (:avain %) @valittu)
                          valilehdet))]
-            (doall (for [sisalto (sort-by :nimi sisalto)]
-                     ^{:key (:nimi sisalto)}
-                     [toggle-painike (merge sisalto
-                                            {:click-fn (case (:tyyppi sisalto)
+            (doall (for [havainto sisalto]
+                     ^{:key (:nimi havainto)}
+                     [toggle-painike (merge havainto
+                                            {:click-fn (case (:tyyppi havainto)
                                                          :piste kirjaa-pistemainen-havainto-fn
                                                          :vali kirjaa-valikohtainen-havainto-fn)})])))]]
         [:footer]]])))

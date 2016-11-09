@@ -20,4 +20,3 @@
      (for [ilmoitus @atomi]
        ^{:key (hash ilmoitus)}
        [:div.ilmoitus ilmoitus])]))
-
