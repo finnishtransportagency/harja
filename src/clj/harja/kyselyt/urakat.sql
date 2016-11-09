@@ -450,6 +450,12 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
         exists(SELECT id
                FROM tekniset_laitteet_urakka tlu
                WHERE tlu.urakkanro = u.urakkanro AND
+                     st_dwithin(tlu.alue, st_makepoint(:x, :y), :threshold)))
+       OR
+       ((:urakkatyyppi = 'siltakorjaus') AND
+        exists(SELECT id
+               FROM siltapalvelusopimus sps
+               WHERE sps.urakkanro = u.urakkanro AND
                      st_dwithin(tlu.alue, st_makepoint(:x, :y), :threshold))))
 ORDER BY id ASC;
 
