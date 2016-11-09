@@ -210,7 +210,7 @@
     :nimi "Soratiet"
     :sisalto valilehti-soratiet}
    {:avain :muut
-    :nimi "Muut"
+    :nimi "Sillat"
     :sisalto valilehti-sillat}])
 
 (defn kirjaa-pistemainen-havainto! [{:keys [nimi avain] :as tiedot}]
