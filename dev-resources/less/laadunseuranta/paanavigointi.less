@@ -8,7 +8,14 @@
   left: 0;
   top: 0;
   display: flex;
+  justify-content: space-between;
+}
+
+.navigointilaatikko-container {
+  display: flex;
   flex-flow: column;
+  padding: 1%;
+  flex: 1;
 }
 
 .navigointilaatikko {
@@ -21,7 +28,6 @@
   max-width: 1024px;
   position: relative;
   background-color: @sisaltolaatikoiden-taustavari;
-  margin: 1%;
 
   > header {
     border: @sisaltolaatikoiden-reunaviiva;
@@ -123,9 +129,15 @@
   }
 }
 
-.toggle-valintapainike:active {
+.toggle-valintapainike:active, .toggle-valintapainike-aktiivinen {
   > .toggle-valintapainike-ikoni {
     background-color: @sisaltolaatikoiden-taustavari-aktiivinen;
+  }
+}
+
+.toggle-valintapainike-disabloitu {
+  > .toggle-valintapainike-ikoni {
+    background-color: @harmaa6;
   }
 }
 
@@ -135,7 +147,7 @@
 @piilotusnappi-taustavari: #c1c1bd;
 
 .navigointilaatikko {
-  transition: 0.2s left linear;
+  transition: 0.2s left ease;
 }
 
 .navigointilaatikko > .piilotusnappi {
@@ -189,6 +201,10 @@
 @media (max-width: 700px) {
   .navigointilaatikko {
     font-size: @navigointilaatikon-fonttikoko-pienempi;
+
+    > .sisalto {
+      height: 300px;
+    }
   }
 
   .toggle-valintapainike {

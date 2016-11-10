@@ -225,5 +225,5 @@
     @s/tarkastusajo-id))
 
 (defn kirjaa-valikohtainen-havainto! [{:keys [nimi avain] :as tiedot}]
-  (.log js/console (pr-str "TODO Kirjataan välikohtainen havainto: " avain))
-  (swap! s/havainnot assoc :lumista true))
+  (swap! s/havainnot assoc avain (not (avain @s/havainnot)))
+  (.log js/console (pr-str "Välikohtaiset havainnot nyt : " @s/havainnot)))

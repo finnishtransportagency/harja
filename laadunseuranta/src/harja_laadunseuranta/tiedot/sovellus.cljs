@@ -38,7 +38,9 @@
    :tr-tiedot-nakyvissa false
 
    ;; Havainnot & kirjaukset
+   ;; TODO Voisiko havainnot olla setti, ja nimeltä jatkuvat-havainnot?
    :havainnot {} ;; Tähän tallentuu ainakin välikohtaiset havainnot (esim. liukasta true, lumista true jne.)
+   ;; TODO Voisiko tämäkin olla nimeltänsä pistemäinen havainto?
    :pikavalinta nil ;; Tähän tallentuu pistemäinen havainto (esim. liikennemerkki vinossa)
    :kirjaamassa-havaintoa false
    :kirjaamassa-yleishavaintoa false
