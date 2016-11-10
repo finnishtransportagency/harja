@@ -284,6 +284,17 @@
                            kirjauspisteet-atomi
                            optiot)}))
 
+(defn kartta []
+  [karttakomponentti
+   {:wmts-url asetukset/+wmts-url+
+    :wmts-url-kiinteistorajat asetukset/+wmts-url-kiinteistojaotus+
+    :wmts-url-ortokuva asetukset/+wmts-url-ortokuva+
+    :sijainti-atomi s/kartan-keskipiste
+    :ajoneuvon-sijainti-atomi s/ajoneuvon-sijainti
+    :reittipisteet-atomi s/reittipisteet
+    :kirjauspisteet-atomi s/kirjauspisteet
+    :optiot s/karttaoptiot}])
+
 ;; devcards
 
 (def test-sijainti (atom {:lon 428147

@@ -8,11 +8,8 @@
             [harja-laadunseuranta.ui.alustus :as alustus]
             [harja-laadunseuranta.ui.ylapalkki :as ylapalkki]
             [harja-laadunseuranta.ui.paanavigointi :refer [paanavigointi]]
-            [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.ui.tr-haku :as tr-haku]
-            [harja-laadunseuranta.utils :as utils]
             [harja-laadunseuranta.ui.havaintolomake :as havaintolomake]
-            [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
             [harja-laadunseuranta.ui.tarkastusajon-luonti :as tarkastusajon-luonti]
             [harja-laadunseuranta.utils :refer [flip erota-havainnot]]
             [cljs.core.async :refer [<! timeout]])
@@ -59,7 +56,6 @@
   (when (> @lahettamattomia 0)
     [:img.spinner {:src kuvat/+spinner+}]))
 
-
 (defn- sulje-havaintodialogi []
   (reset! s/kirjaamassa-havaintoa false))
 
@@ -78,15 +74,7 @@
        [ylapalkki/ylapalkki]
 
        [:div.paasisalto-container
-        [kartta/karttakomponentti
-         {:wmts-url asetukset/+wmts-url+
-          :wmts-url-kiinteistorajat asetukset/+wmts-url-kiinteistojaotus+
-          :wmts-url-ortokuva asetukset/+wmts-url-ortokuva+
-          :sijainti-atomi s/kartan-keskipiste
-          :ajoneuvon-sijainti-atomi s/ajoneuvon-sijainti
-          :reittipisteet-atomi s/reittipisteet
-          :kirjauspisteet-atomi s/kirjauspisteet
-          :optiot s/karttaoptiot}]
+        [kartta/kartta]
 
         (when @s/nayta-paanavigointi?
           [paanavigointi])
