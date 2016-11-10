@@ -169,7 +169,7 @@
 }
 
 .paanavigointi-container > .nayttonappi {
- width: (@piilotusnappi-koko / 2);
+  width: (@piilotusnappi-koko / 2);
   height: @piilotusnappi-koko;
   border: @sisaltolaatikoiden-reunaviiva;
   border-radius: 0 90px 90px 0;
@@ -220,6 +220,20 @@
     > .toggle-valintapainike-ikoni {
       width: 100%;
       height: @toggle-valintapainike-leveys-pienempi;
+    }
+  }
+}
+
+@media (max-width: 530px) {
+  .paanavigointi-container {
+    flex-flow: column;
+
+    > .navigointilaatikko-container {
+      order: 2;
+    }
+
+    > .nappaimisto {
+      order: 1;
     }
   }
 }
