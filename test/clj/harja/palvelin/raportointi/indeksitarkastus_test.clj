@@ -1,19 +1,20 @@
 (ns harja.palvelin.raportointi.indeksitarkastus-test
   (:require [clojure.test :refer :all]
+            [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
-            [harja.testi :refer :all]
+            [harja.palvelin.palvelut.raportit :as raportit]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [harja.palvelin.raportointi :refer :all :as raportointi]
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto :as laskutusyhteenveto]
+            [harja.palvelin.raportointi.testiapurit :as apurit]
+            [harja.pvm :as pvm]
+
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
-            [harja.palvelin.raportointi :refer :all]
-            [harja.pvm :as pvm]
-            [harja.palvelin.raportointi :as raportointi]
-            [harja.palvelin.palvelut.raportit :as raportit]
             [clj-time.coerce :as c]
-            [clj-time.core :as t]
-            [harja.palvelin.raportointi.testiapurit :as apurit]))
+            [clj-time.core :as t]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -39,6 +40,50 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
+(deftest indeksiraportin-summa-sama-kuin-laskutusyhteenvedon-indeksien-summa
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :suorita-raportti
+                                +kayttaja-jvh+
+                                {:nimi :indeksitarkistus
+                                 :konteksti "urakka"
+                                 :urakka-id @oulun-alueurakan-2014-2019-id
+                                 :parametrit {:alkupvm   (pvm/->pvm "1.8.2015")
+                                              :loppupvm (pvm/->pvm "31.8.2015")
+                                              :urakkatyyppi "hoito"}})
+        taulukko (apurit/taulukko-otsikolla vastaus "Kaikki yhteensä")
+        laskutusyhteenveto (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+                                          (:db jarjestelma)
+                                          +kayttaja-jvh+
+                                          {:urakka-id @oulun-alueurakan-2014-2019-id
+                                           :alkupvm   (pvm/->pvm "1.8.2015")
+                                           :loppupvm (pvm/->pvm "31.8.2015")})
+        laskutusyhteenveto-indeksien-nurkkasumma (reduce + (map :kaikki_laskutetaan_ind_korotus laskutusyhteenveto))]
+
+    (is (vector? vastaus))
+    (apurit/tarkista-raportti vastaus "Indeksitarkistusraportti Oulun alueurakka 2014-2019 01.08.2015 - 31.08.2015")
+
+    (apurit/tarkista-taulukko-rivit
+      taulukko
+
+      (fn [[kuukausi kokhint ykshint erilliskust bonus muutos-ja-lisatyot vahinkojen-korjaukset
+            akilliset-hoitotyot sanktiot suolabonus-ja-sakko
+            yhteensa & _ ]]
+        (and (= kuukausi "elo")
+             (=marginaalissa? kokhint 228.38M)
+             (=marginaalissa? ykshint 50.75M)
+             (=marginaalissa? erilliskust 16.92M)
+             (=marginaalissa? bonus 4.07)
+             (=marginaalissa? muutos-ja-lisatyot 33.83M)
+             (=marginaalissa? vahinkojen-korjaukset 16.92M)
+             (=marginaalissa? akilliset-hoitotyot 16.92M)
+             (=marginaalissa? sanktiot -30.45M)
+             (=marginaalissa? suolabonus-ja-sakko -94.99M)
+             (=marginaalissa? yhteensa 242.34M)
+
+             (=marginaalissa? yhteensa laskutusyhteenveto-indeksien-nurkkasumma)))
+      (fn [[yht & _]]
+        (= "Yhteensä" yht)))))
+
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
@@ -54,7 +99,6 @@
     ;; Kaikki yhteensä
     (let [otsikko "Kaikki yhteensä"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
-      (log/debug "vastaus" vastaus)
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Kuukausi"}
                                           {:otsikko "Kokonais\u00ADhintaiset työt"}
