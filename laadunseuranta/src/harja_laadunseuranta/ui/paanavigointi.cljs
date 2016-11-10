@@ -1,6 +1,7 @@
 (ns harja-laadunseuranta.ui.paanavigointi
   (:require [reagent.core :as reagent :refer [atom]]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
+            [harja-laadunseuranta.ui.nappaimisto :as nappaimisto]
             [harja-laadunseuranta.tiedot.paanavigointi :as tiedot]
             [cljs-time.local :as l]
             [harja-laadunseuranta.tiedot.sovellus :as s])
@@ -90,8 +91,7 @@
            [:footer]]]
 
          (when nayta-nappaimisto?
-           [:div.nappaimisto
-            "Näppis tähän"])]))))
+           [nappaimisto/nappaimisto])]))))
 
 (defn paanavigointi []
   [paanavigointikomponentti {:valilehdet tiedot/oletusvalilehdet

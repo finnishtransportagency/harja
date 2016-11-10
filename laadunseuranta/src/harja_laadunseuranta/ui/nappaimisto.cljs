@@ -6,3 +6,6 @@
     [cljs.core.async.macros :refer [go go-loop]]
     [devcards.core :as dc :refer [defcard deftest]]))
 
+(defn nappaimisto []
+  [:div.nappaimisto
+   "Näppis tulee tähän"])
