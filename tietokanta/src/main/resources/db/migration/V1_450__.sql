@@ -1,6 +1,10 @@
 -- Tarkastusajolta pois tyyppi, ei enää käytössä
 ALTER TABLE tarkastusajo DROP COLUMN tyyppi;
 
+-- Reittimerkinälle tasauspuute (oli aiemmin virheellisesti sama kuin soratien tasaisuus)
+ALTER TABLE tarkastusreitti ADD COLUMN soratie_tasaisuus INTEGER;
+ALTER TABLE tarkastusreitti RENAME COLUMN tasaisuus TO talvihoito_tasaisuus;
+
 -- Lisää puuttuvat vakiohavainnot
 INSERT INTO public.vakiohavainto (nimi, jatkuva, avain)
 VALUES ('Liikennemerkki likainen', false, 'liikennemerkki-likainen'),

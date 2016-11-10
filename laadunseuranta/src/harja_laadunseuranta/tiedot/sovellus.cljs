@@ -39,9 +39,7 @@
    ;; osaksi koko softan tilaa?
    :tr-tiedot-nakyvissa false
 
-   ;; Havainnot & kirjaukset
-   ;; TODO Voisiko havainnot olla setti, ja nimeltä jatkuvat-havainnot?
-   :havainnot {} ; Tähän tallentuu ainakin välikohtaiset havainnot (esim. liukasta true, lumista true jne.)
+   ;; Havainnot
    ;; TODO Voisiko tämä olla nimeltänsä pistemäinen havainto?
    :pikavalinta nil ; Tähän tallentuu pistemäinen havainto (esim. liikennemerkki vinossa)
    :kirjaamassa-havaintoa false
@@ -51,11 +49,17 @@
    :tr-alku nil
    :tr-loppu nil
 
-   :kitkan-keskiarvo nil
-   :lumimaara nil
-   :tasaisuus nil
-   :kiinteys nil
-   :polyavyys nil
+   ;; Jatkuvat havainnot
+   ;; TODO Voisiko havainnot olla setti, ja nimeltä jatkuvat-havainnot?
+   :havainnot {} ; Tähän tallentuu ainakin välikohtaiset havainnot (esim. liukasta true, lumista true jne.)
+
+   ;; Mittaukset
+   :talvihoito {:kitkamittaus nil
+                :lumimaara nil
+                :tasaisuus nil}
+   :soratie {:tasaisuus nil
+             :kiinteys nil
+             :polyavyys nil}
 
    ;; Kartta
    :kartta {:keskita-ajoneuvoon false
@@ -72,11 +76,12 @@
 (def vakiohavaintojen-kuvaukset (reagent/cursor sovellus [:vakiohavaintojen-kuvaukset]))
 (def palautettava-tarkastusajo (reagent/cursor sovellus [:palautettava-tarkastusajo]))
 
-(def kitkan-keskiarvo (reagent/cursor sovellus [:kitkan-keskiarvo]))
-(def lumimaara (reagent/cursor sovellus [:lumimaara]))
-(def tasaisuus (reagent/cursor sovellus [:tasaisuus]))
-(def kiinteys (reagent/cursor sovellus [:kiinteys]))
-(def polyavyys (reagent/cursor sovellus [:polyavyys]))
+(def talvihoito-kitkamittaus (reagent/cursor sovellus [:talvihoito :kitkamittaus]))
+(def talvihoito-lumimaara (reagent/cursor sovellus [:talvihoito :lumimaara]))
+(def talvihoito-tasaisuus (reagent/cursor sovellus [:talvihoito :tasaisuus]))
+(def soratie-tasaisuus (reagent/cursor sovellus [:soratie :tasaisuus]))
+(def soratie-kiinteys (reagent/cursor sovellus [:soratie :kiinteys]))
+(def soratie-polyavyys (reagent/cursor sovellus [:soratie :polyavyys]))
 
 (def tr-tiedot-nakyvissa (reagent/cursor sovellus [:tr-tiedot-nakyvissa]))
 (def tr-tiedot (reagent/cursor sovellus [:tr-tiedot]))

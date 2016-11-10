@@ -97,14 +97,14 @@
    :havainnot (:kuvaus reittimerkinta)
    :talvihoitomittaus {:talvihoitoluokka nil
                        :lumimaara (:lumisuus reittimerkinta)
-                       :tasaisuus (:tasaisuus reittimerkinta)
+                       :tasaisuus (:talvihoito-tasaisuus reittimerkinta)
                        :kitka (or (keskiarvo (:kitkamittaukset reittimerkinta))
                                   (:kitkamittaus reittimerkinta))
                        :ajosuunta nil
                        :lampotila_ilma (:lampotila reittimerkinta)
                        :lampotila_tie nil}
    :soratiemittaus {:hoitoluokka nil
-                    :tasaisuus (:tasaisuus reittimerkinta)
+                    :tasaisuus (:soratie-tasaisuus reittimerkinta)
                     :kiinteys (:kiinteys reittimerkinta)
                     :polyavyys (:polyavyys reittimerkinta)
                     :sivukaltevuus (:sivukaltevuus reittimerkinta)}
@@ -149,7 +149,10 @@
 
 (defn- keraa-mittaukset
   [reittimerkinta seuraava-reittimerkinta]
-  (merge reittimerkinta (utils/select-non-nil-keys seuraava-reittimerkinta [:tasaisuus :kiinteys :polyavyys :sivukaltevuus :lampotila :kuva :lumisuus])))
+  (merge reittimerkinta (utils/select-non-nil-keys
+                          seuraava-reittimerkinta
+                          [:talvihoito-tasaisuus :soratie-tasaisuus :kiinteys :polyavyys
+                           :sivukaltevuus :lampotila :kuva :lumisuus])))
 
 (defn- yhdista-jatkuvat-reittimerkinnat
   "Ottaa joukon reittimerkintöjä ja yhdistää ne yhdeksi loogiseksi jatkumoksi."

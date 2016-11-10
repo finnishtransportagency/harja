@@ -33,9 +33,10 @@
                :pikavalinnan-kuvaus (@s/vakiohavaintojen-kuvaukset @s/pikavalinta)
                :pikavalinta @s/pikavalinta
                :mittaukset {}
-               :kitkan-keskiarvo @s/kitkan-keskiarvo
-               :lumisuus @s/lumimaara
-               :tasaisuus @s/tasaisuus
+               :kitkan-keskiarvo @s/talvihoito-kitkamittaus
+               :lumisuus @s/talvihoito-lumimaara
+               :soratie-tasaisuus @s/soratie-tasaisuus
+               :talvihoito-tasaisuus @s/talvihoito-tasaisuus
                :sijainti (:nykyinen (utils/unreactive-deref s/sijainti))
                :laadunalitus? false
                :kuvaus ""
@@ -71,13 +72,13 @@
 
 (defn- laheta-lumisuus [arvo]
   (kartta/lisaa-kirjausikoni (str arvo))
-  (reset! s/lumimaara nil)
+  (reset! s/talvihoito-lumimaara nil)
   (kirjaa {:lumisuus arvo})
   (swap! s/havainnot assoc :lumista false))
 
 (defn- laheta-tasaisuus [arvo]
   (kartta/lisaa-kirjausikoni (str arvo))
-  (reset! s/tasaisuus nil)
+  (reset! s/soratie-tasaisuus nil)
   (kirjaa {:tasaisuus arvo})
   (swap! s/havainnot assoc :tasauspuute false))
 
@@ -85,9 +86,9 @@
   (kirjaa {:tasaisuus tasaisuus
            :kiinteys kiinteys
            :polyavyys polyavyys})
-  (reset! s/tasaisuus nil)
-  (reset! s/polyavyys nil)
-  (reset! s/kiinteys nil)
+  (reset! s/soratie-tasaisuus nil)
+  (reset! s/soratie-polyavyys nil)
+  (reset! s/soratie-kiinteys nil)
   (swap! s/havainnot assoc :soratie false))
 
 (defn- laheta-kertakirjaus [kirjaus]

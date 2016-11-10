@@ -46,7 +46,8 @@
    :sijainti Sijainti
    :mittaukset {(s/optional-key :lampotila) (s/maybe s/Num)
                 (s/optional-key :lumisuus) (s/maybe Lumisuus)
-                (s/optional-key :tasaisuus) (s/maybe Tasaisuus)
+                (s/optional-key :talvihoito-tasaisuus) (s/maybe Tasaisuus)
+                (s/optional-key :soratie-tasaisuus) (s/maybe Tasaisuus)
                 (s/optional-key :kitkamittaus) (s/maybe Kitka)
                 (s/optional-key :kiinteys) (s/maybe Kiinteys)
                 (s/optional-key :polyavyys) (s/maybe Polyavyys)

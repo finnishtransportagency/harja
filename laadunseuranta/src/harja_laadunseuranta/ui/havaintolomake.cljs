@@ -123,7 +123,8 @@
         lampotila (reagent/cursor model [:mittaukset :lampotila])
         pikavalinta (reagent/cursor model [:pikavalinta])
         pikavalinnan-kuvaus (reagent/cursor model [:pikavalinnan-kuvaus])
-        tasaisuus (reagent/cursor model [:mittaukset :tasaisuus])
+        soratie-tasaisuus (reagent/cursor model [:mittaukset :talvihoito-tasaisuus])
+        talvihoito-tasaisuus (reagent/cursor model [:mittaukset :soratie-tasaisuus])
         kiinteys (reagent/cursor model [:mittaukset :kiinteys])
         polyavyys (reagent/cursor model [:mittaukset :polyavyys])
         sivukaltevuus (reagent/cursor model [:mittaukset :sivukaltevuus])
@@ -158,7 +159,7 @@
             [:div.havainnot
              [:div.lomake-title "Havainnot"]
              [kentta "Lumimäärä" [esitaytetty-tai-syotto :lumimaara @lumisuus "cm" virheita lumimaara]]
-             [kentta "Tasaisuus" [esitaytetty-tai-syotto :tasaisuus @tasaisuusarvo "" virheita tasaisuus]]
+             [kentta "Tasaisuus" [esitaytetty-tai-syotto :tasaisuus @tasaisuusarvo "" virheita talvihoito-tasaisuus]]
              (when-not @lumisuus
                [kentta "Kitka" (if @kitkan-keskiarvo
                                  [:span (utils/kahdella-desimaalilla (utils/avg @kitkan-keskiarvo))]

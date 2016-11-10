@@ -43,12 +43,12 @@
   (re-matches #".*iPad.*" (.-platform js/navigator)))
 
 (defn erota-mittaukset [havainnot]
-  (select-keys havainnot [:lampotila :lumisuus :tasaisuus :kitkamittaus
+  (select-keys havainnot [:lampotila :lumisuus :talvihoito-tasaisuus :soratie-tasaisuus :kitkamittaus
                           :polyavyys :kiinteys :sivukaltevuus]))
 
 (defn erota-havainnot [havainnot]
   (let [h (dissoc havainnot
-                  :lampotila :lumisuus :tasaisuus :kitkamittaus
+                  :lampotila :lumisuus :talvihoito-tasaisuus :soratie-tasaisuus :kitkamittaus
                   :polyavyys :kiinteys :sivukaltevuus)]
     (filterv h (keys h))))
 
