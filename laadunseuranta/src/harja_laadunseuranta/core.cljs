@@ -52,7 +52,7 @@
                                                             (when (= "?relogin=true" js/window.location.search)
                                                               (tarkastusajon-luonti/jatka-ajoa))))
 
-    (reitintallennus/paivita-lahettamattomien-maara @sovellus/idxdb asetukset/+pollausvali+ sovellus/lahettamattomia)
+    (reitintallennus/paivita-lahettamattomien-maara @sovellus/idxdb asetukset/+pollausvali+ sovellus/lahettamattomia-merkintoja)
 
     (reitintallennus/kaynnista-reitinlahetys asetukset/+pollausvali+ @sovellus/idxdb comms/laheta-tapahtumat!)
     (reitintallennus/kaynnista-reitintallennus sovellus/sijainnin-tallennus-mahdollinen

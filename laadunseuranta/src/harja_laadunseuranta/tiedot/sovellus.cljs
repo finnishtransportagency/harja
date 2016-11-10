@@ -13,38 +13,40 @@
              :selain-tuettu (utils/tuettu-selain?)}
 
    ;; Tarkastusajon perustiedot
-   :valittu-urakka nil
+   :valittu-urakka nil ; Urakka valitaan tietyntyyppisiin ajoihin (päällystys), muuten päätellään automaattisesti kun tarkastus päättyy
    :tarkastusajo-id nil
    :tallennus-kaynnissa false
    :palautettava-tarkastusajo nil
-   :tarkastusajo-paattymassa nil ;; Jos true, näytetään päättämisdialogi
+   :tarkastusajo-paattymassa nil ; Jos true, näytetään päättämisdialogi
 
    ;; Käyttäjätiedot
    :kayttaja {:kayttajanimi nil
               :kayttajatunnus nil}
 
    ;; Ajonaikaiset tiedot
-   :lahettamattomia 0
+   :lahettamattomia-merkintoja 0
    :sijainti {:nykyinen nil
               :edellinen nil}
    :reittipisteet []
-   :kirjauspisteet [] ; ikoneita varten
-   :tr-tiedot {:tr-osoite {:tie 20
+   :kirjauspisteet [] ; Kartalla näytettäviä ikoneita varten
+   :tr-tiedot {:tr-osoite {:tie 20 ;; TODO Älä harkoodaa tätä?
                            :aosa 1
                            :aet 1}
                :talvihoitoluokka 2}
 
    ;; UI
+   ;; TODO Mahdollisesti ei kannata sitoa tällaisia pieniä komponenttikohtaisia tiloja
+   ;; osaksi koko softan tilaa?
    :tr-tiedot-nakyvissa false
 
    ;; Havainnot & kirjaukset
    ;; TODO Voisiko havainnot olla setti, ja nimeltä jatkuvat-havainnot?
-   :havainnot {} ;; Tähän tallentuu ainakin välikohtaiset havainnot (esim. liukasta true, lumista true jne.)
-   ;; TODO Voisiko tämäkin olla nimeltänsä pistemäinen havainto?
-   :pikavalinta nil ;; Tähän tallentuu pistemäinen havainto (esim. liikennemerkki vinossa)
+   :havainnot {} ; Tähän tallentuu ainakin välikohtaiset havainnot (esim. liukasta true, lumista true jne.)
+   ;; TODO Voisiko tämä olla nimeltänsä pistemäinen havainto?
+   :pikavalinta nil ; Tähän tallentuu pistemäinen havainto (esim. liikennemerkki vinossa)
    :kirjaamassa-havaintoa false
    :kirjaamassa-yleishavaintoa false
-   :vakiohavaintojen-kuvaukset nil
+   :vakiohavaintojen-kuvaukset nil ; Serveriltä saadut tiedot vakiohavainnoista
 
    :tr-alku nil
    :tr-loppu nil
@@ -85,7 +87,7 @@
 (def hoitoluokka (reagent/cursor sovellus [:tr-tiedot :talvihoitoluokka]))
 (def soratiehoitoluokka (reagent/cursor sovellus [:tr-tiedot :soratiehoitoluokka]))
 
-(def lahettamattomia (reagent/cursor sovellus [:lahettamattomia]))
+(def lahettamattomia-merkintoja (reagent/cursor sovellus [:lahettamattomia-merkintoja]))
 
 (def kayttajanimi (reagent/cursor sovellus [:kayttaja :kayttajanimi]))
 (def kayttajatunnus (reagent/cursor sovellus [:kayttaja :kayttajatunnus]))
@@ -124,9 +126,9 @@
    })
 
 (def ajoneuvon-sijainti (reaction
-                         (if (:nykyinen @sijainti)
-                           (:nykyinen @sijainti)
-                           tyhja-sijainti)))
+                          (if (:nykyinen @sijainti)
+                            (:nykyinen @sijainti)
+                            tyhja-sijainti)))
 
 (def kartan-keskipiste (reaction @ajoneuvon-sijainti))
 
@@ -145,18 +147,18 @@
 (def havainnot (reagent/cursor sovellus [:havainnot]))
 
 (def reittisegmentti (reaction
-                      (let [{:keys [nykyinen edellinen]} @sijainti]
-                        (when (and nykyinen edellinen)
-                          {:segmentti [(p/latlon-vektoriksi edellinen)
-                                       (p/latlon-vektoriksi nykyinen)]
-                           :vari (let [s @havainnot]
-                                   (cond
-                                     (:liukasta s) "blue"
-                                     (:lumista s) "blue" ;; TODO Onko tämä oikein?
-                                     (:soratie s) "brown"
-                                     (:tasauspuute s) "green"
-                                     (:yleishavainto s) "red"
-                                     :default "black"))}))))
+                       (let [{:keys [nykyinen edellinen]} @sijainti]
+                         (when (and nykyinen edellinen)
+                           {:segmentti [(p/latlon-vektoriksi edellinen)
+                                        (p/latlon-vektoriksi nykyinen)]
+                            :vari (let [s @havainnot]
+                                    (cond
+                                      (:liukasta s) "blue"
+                                      (:lumista s) "blue" ;; TODO Onko tämä oikein?
+                                      (:soratie s) "brown"
+                                      (:tasauspuute s) "green"
+                                      (:yleishavainto s) "red"
+                                      :default "black"))}))))
 
 (def reittipisteet (reagent/cursor sovellus [:reittipisteet]))
 
