@@ -40,7 +40,14 @@
     (fn [{:keys [valilehdet kirjaa-pistemainen-havainto-fn
                  kirjaa-valikohtainen-havainto-fn
                  jatkuvat-havainnot] :as tiedot}]
-      (let [nayta-nappaimisto? (not (empty? jatkuvat-havainnot))]
+      (let [jatkuvia-havaintoja-paalla? (not (empty? jatkuvat-havainnot))
+            jatkuva-havainto-vaatii-nappaimiston? (not (empty?
+                                                         (filter
+                                                           #(and (jatkuvat-havainnot (:avain %))
+                                                                 (:vaatii-nappaimiston? %))
+                                                           (mapcat :sisalto valilehdet))))
+            nayta-nappaimisto? (and jatkuvia-havaintoja-paalla?
+                                    jatkuva-havainto-vaatii-nappaimiston?)]
         [:div {:class (str "paanavigointi-container "
                            (if @paanavigointi-nakyvissa?
                              "paanavigointi-container-nakyvissa"
@@ -77,7 +84,8 @@
                                  :jatkuvat-havainnot jatkuvat-havainnot
                                  :disabloitu? (boolean (and (= (:tyyppi havainto) :vali)
                                                             (not (empty? jatkuvat-havainnot))
-                                                            (not (jatkuvat-havainnot (:avain havainto)))))})])))]]
+                                                            (not (jatkuvat-havainnot (:avain havainto)))
+                                                            (:vaatii-nappaimiston? havainto)))})])))]]
            [:footer]]]
 
          (when nayta-nappaimisto?

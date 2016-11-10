@@ -129,15 +129,22 @@
   }
 }
 
-.toggle-valintapainike:active, .toggle-valintapainike-aktiivinen {
+.toggle-valintapainike:active:not(.toggle-valintapainike-disabloitu),
+.toggle-valintapainike-aktiivinen {
   > .toggle-valintapainike-ikoni {
     background-color: @sisaltolaatikoiden-taustavari-aktiivinen;
   }
 }
 
+.toggle-valintapainike-disabloitu:active {
+  > .toggle-valintapainike-ikoni {
+    background-color: @punainen4;
+  }
+}
+
 .toggle-valintapainike-disabloitu {
   > .toggle-valintapainike-ikoni {
-    background-color: @harmaa6;
+    background-color: @harmaa4;
   }
 }
 
