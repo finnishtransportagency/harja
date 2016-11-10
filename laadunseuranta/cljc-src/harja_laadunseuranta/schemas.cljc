@@ -52,23 +52,75 @@
                 (s/optional-key :kiinteys) (s/maybe Kiinteys)
                 (s/optional-key :polyavyys) (s/maybe Polyavyys)
                 (s/optional-key :sivukaltevuus) (s/maybe Sivukaltevuus)}
-   :havainnot #{(s/enum :liukasta :soratie :tasauspuute :lumista :liikennemerkki-luminen :pysakilla-epatasainen-polanne
-                       :aurausvalli :sulamisvesihaittoja :polanteessa-jyrkat-urat :hiekoittamatta
-                       :pysakki-auraamatta :pysakki-hiekoittamatta :pl-epatasainen-polanne :pl-alue-auraamatta
-                       :pl-alue-hiekoittamatta :sohjoa :irtolunta :lumikielekkeita
-                       :siltasaumoissa-puutteita :siltavaurioita :silta-puhdistamatta
-                       :ojat-kivia-poistamatta :ylijaamamassa-tasattu-huonosti :oja-tukossa
-                       :luiskavaurio :reunataytto-puutteellinen :reunapalletta
-                       :istutukset-hoitamatta :liikennetila-hoitamatta
-                       :nakemaalue-raivaamatta :niittamatta :vesakko-raivaamatta
-                       :liikennemerkki-vinossa
-                       :reunapaalut-vinossa :reunapaalut-likaisia
-                       :pl-alue-puhdistettava :pl-alue-korjattavaa :viheralueet-hoitamatta
-                       :rumpu-tukossa :rumpu-liettynyt :rumpu-rikki
-                       :kaidevaurio :kiveysvaurio
-                       :yleishavainto
-                       :saumavirhe :lajittuma :epatasaisuus :halkeamat :vesilammikot :epatasaisetreunat
-                       :jyranjalkia :sideainelaikkia :vaarakorkeusasema :pintaharva :pintakuivatuspuute :kaivojenkorkeusasema)}
+   :havainnot #{(s/enum
+                  ;; Jatkuvat
+
+                  :liukasta
+                  :soratie
+                  :tasauspuute
+                  :lumista
+
+                  :vesakko-raivaamatta
+                  :niittamatta
+                  :reunapalletta
+                  :reunataytto-puutteellinen
+
+                  ;; Pistekohtaiset
+
+                  :liikennemerkki-likainen
+                  :pl-alue-hoitamatta
+                  :sillan-paallysteessa-vaurioita
+                  :sillassa-kaidevaurioita
+                  :sillassa-reunapalkkivaurioita
+                  :liikennemerkki-luminen
+                  :pysakilla-epatasainen-polanne
+                  :aurausvalli
+                  :sulamisvesihaittoja
+                  :polanteessa-jyrkat-urat
+                  :hiekoittamatta
+                  :pysakki-auraamatta
+                  :pysakki-hiekoittamatta
+                  :pl-epatasainen-polanne
+                  :pl-alue-auraamatta
+                  :pl-alue-hiekoittamatta
+                  :sohjoa
+                  :irtolunta
+                  :lumikielekkeita
+                  :siltasaumoissa-puutteita
+                  :siltavaurioita
+                  :silta-puhdistamatta
+                  :ojat-kivia-poistamatta
+                  :ylijaamamassa-tasattu-huonosti
+                  :oja-tukossa
+                  :luiskavaurio
+                  :istutukset-hoitamatta
+                  :liikennetila-hoitamatta
+                  :nakemaalue-raivaamatta
+                  :liikennemerkki-vinossa
+
+                  :reunapaalut-vinossa
+                  :reunapaalut-likaisia
+                  :pl-alue-puhdistettava
+                  :pl-alue-korjattavaa
+                  :viheralueet-hoitamatta
+                  :rumpu-tukossa
+                  :rumpu-liettynyt
+                  :rumpu-rikki
+                  :kaidevaurio
+                  :kiveysvaurio
+                  :yleishavainto
+                  :saumavirhe
+                  :lajittuma
+                  :epatasaisuus
+                  :halkeamat
+                  :vesilammikot
+                  :epatasaisetreunat
+                  :jyranjalkia
+                  :sideainelaikkia
+                  :vaarakorkeusasema
+                  :pintaharva
+                  :pintakuivatuspuute
+                  :kaivojenkorkeusasema)}
 
    (s/optional-key :kuvaus) (s/maybe s/Str)
    (s/optional-key :laadunalitus) (s/maybe s/Bool)

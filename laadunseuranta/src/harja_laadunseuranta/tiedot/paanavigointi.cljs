@@ -82,7 +82,7 @@
     :vaatii-nappaimiston? false}
    {:nimi "P- tai L-alueet hoitamatta"
     :tyyppi :piste
-    :avain :p-tai-l-alue-hoitamatta
+    :avain :pl-alue-hoitamatta
     :ikoni "p_tai_l_alue_hoitamatta"
     :vaatii-nappaimiston? false}])
 
