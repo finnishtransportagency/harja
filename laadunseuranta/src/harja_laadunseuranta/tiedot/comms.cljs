@@ -65,9 +65,9 @@
   (get! asetukset/+kayttajatiedot-url+))
 
 (defn- tallenna-kuvat
-  "Tallentaa lähetettävien tapahtumien kuvat palvelimelle ja korvaa kuvadatan kuvan id:llä"
-  [tapahtumat]
-  (go-loop [tp tapahtumat
+  "Tallentaa lähetettävien reittimerkintöjen kuvat palvelimelle ja korvaa kuvadatan kuvan id:llä"
+  [reittimerkinnat]
+  (go-loop [tp reittimerkinnat
             result []]
     (if-let [t (first tp)]
       (if (get t "kuva")
@@ -78,17 +78,18 @@
         (recur (rest tp) (conj result t)))
       result)))
 
-(defn laheta-tapahtumat!
-  "Lähettää joukon tapahtumia, palauttaa kanavan josta voi lukea vektorina lähetettyjen viestien id:t"
-  [tapahtumat]
+(defn laheta-reittimerkinnat!
+  "Lähettää joukon reittimerkintöjä,
+   palauttaa kanavan josta voi lukea vektorina lähetettyjen viestien id:t"
+  [reittimerkinnat]
   (go
-    (if-not (empty? tapahtumat)
+    (if-not (empty? reittimerkinnat)
       (do
         ;; tallenna kaikki kuvat ensin, tulee nil jos ei onnistunut
-        (if-let [tapahtumat (<! (tallenna-kuvat tapahtumat))]
+        (if-let [reittimerkinnat (<! (tallenna-kuvat reittimerkinnat))]
           (do #_(js/console.log (str "Lähetetään tapahtumat: " (pr-str tapahtumat)))
-              (if (<! (post! asetukset/+tallennus-url+ {:kirjaukset tapahtumat}))
-                (let [poistetut (mapv #(get % "id") tapahtumat)]
+              (if (<! (post! asetukset/+tallennus-url+ {:kirjaukset reittimerkinnat}))
+                (let [poistetut (mapv #(get % "id") reittimerkinnat)]
                   #_(js/console.log (str "Poistetut id:t " (pr-str poistetut)))
                   poistetut)
                 []))

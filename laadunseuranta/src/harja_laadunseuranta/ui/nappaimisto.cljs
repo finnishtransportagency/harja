@@ -24,5 +24,6 @@
                                            (kitkamittaus-kirjattu mittaus))]])
 
 (defn nappaimisto [otsikko]
+  [:div.nappaimisto "Näppäimistö tulee tähän"]
   #_[nappaimistokomponentti {:otsikko otsikko
-                           :havainnot @s/havainnot}])
+                             :havainnot @s/jatkuvat-havainnot}])

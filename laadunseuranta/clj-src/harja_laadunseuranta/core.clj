@@ -37,7 +37,7 @@
                                   :sivukaltevuus (get-in merkinta [:mittaukset :sivukaltevuus])
                                   :havainnot (mapv vakiohavainto-idt (:havainnot merkinta))
                                   :kuvaus (get-in merkinta [:kuvaus])
-                                  :laadunalitus (get-in merkinta [:laadunalitus])
+                                  :laadunalitus (true? (get-in merkinta [:laadunalitus]))
                                   :kuva (get-in merkinta [:kuva])}))
 
 (defn- tallenna-multipart-kuva! [db {:keys [tempfile content-type size]} kayttaja-id]

@@ -32,10 +32,10 @@
 
 (defn- paanavigointikomponentti [{:keys [valilehdet] :as tiedot}]
   (let [paanavigointi-nakyvissa? (atom true)
-        valittu (atom (:avain (first valilehdet)))
-        aseta-valinta! (fn [uusi-valinta]
-                         (.log js/console "Vaihdetaan tila: " (str uusi-valinta))
-                         (reset! valittu uusi-valinta))
+        valittu-valilehti (atom (:avain (first valilehdet)))
+        valitse-valilehti! (fn [uusi-valinta]
+                             (.log js/console "Vaihdetaan välilehti: " (str uusi-valinta))
+                             (reset! valittu-valilehti uusi-valinta))
         piilotusnappi-klikattu (fn []
                                  (swap! paanavigointi-nakyvissa? not))]
     (fn [{:keys [valilehdet kirjaa-pistemainen-havainto-fn
@@ -65,15 +65,15 @@
                  ^{:key avain}
                  [:li {:class (str "valilehti "
                                    (when (= avain
-                                            @valittu)
+                                            @valittu-valilehti)
                                      "valilehti-valittu"))
-                       :on-click #(aseta-valinta! avain)}
+                       :on-click #(valitse-valilehti! avain)}
                   (:nimi valilehti)]))]]
            [:div.sisalto
             [:div.valintapainikkeet
              (let [{:keys [sisalto] :as valittu-valilehti}
                    (first (filter
-                            #(= (:avain %) @valittu)
+                            #(= (:avain %) @valittu-valilehti)
                             valilehdet))]
                (doall (for [havainto sisalto]
                         ^{:key (:nimi havainto)}
@@ -96,8 +96,8 @@
 (defn paanavigointi []
   [paanavigointikomponentti {:valilehdet tiedot/oletusvalilehdet
                              :kirjaa-pistemainen-havainto-fn
-                             tiedot/kirjaa-pistemainen-havainto!
+                             tiedot/pistemainen-havainto-painettu!
                              :kirjaa-valikohtainen-havainto-fn
-                             tiedot/kirjaa-valikohtainen-havainto!
+                             tiedot/valikohtainen-havainto-painettu!
                              :jatkuvat-havainnot
-                             (into #{} (filterv @s/havainnot (keys @s/havainnot)))}])
+                             @s/jatkuvat-havainnot}])

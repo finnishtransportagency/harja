@@ -42,7 +42,7 @@
                  tarkastustyyppi (atom :kelitarkastus)
                  sijainti (atom {:nykyinen {:lat 1 :lon 2} :edellinen nil})
                  tarkastuspisteet (atom [])
-                 tallennin (r/kaynnista-reitintallennus db sijainti @db segmentti reittipisteet tallennus-kaynnissa havainnot tarkastustyyppi tarkastusajo
+                 tallennin (r/kaynnista-reitintallennus db sijainti @db segmentti reittipisteet tallennus-kaynnissa tarkastustyyppi tarkastusajo
                                                         tarkastuspisteet)]
               
              (testing "Jos tallennus ei käynnissä, segmentin muutos ei mene reittipisteisiin"
@@ -76,8 +76,8 @@
 
              (testing "Reittipisteet ovat ilmestyneet IndexedDB:hen"
                (let [ajo (cljs.core/atom nil)]
-                 (with-transaction-to-store @db asetukset/+tapahtumastore+ :readwrite store
-                   (with-all-items store tapahtumat                      
+                 (with-transaction-to-store @db asetukset/+reittimerkinta-store+ :readwrite store
+                                            (with-all-items store tapahtumat
                      (is (= 6 (count tapahtumat)))
                      
                      (is (= 10000 (get-in tapahtumat [0 "tarkastusajo"])))
@@ -100,8 +100,8 @@
                      (is (= {"lat" 4 "lon" 4} (get-in tapahtumat [5 "sijainti"])))                     
                      (is (= (get-in tapahtumat [5 "havainnot"]) ["liukkaus"]))
 
-                     (with-transaction-to-store @db asetukset/+tarkastusajostore+ :readwrite store
-                       (with-cursor store cursor v
+                     (with-transaction-to-store @db asetukset/+tarkastusajo-store+ :readwrite store
+                                                (with-cursor store cursor v
                          (reset! ajo v)
                          (idb/cursor-continue cursor)
 
@@ -116,8 +116,8 @@
                            (reset! tarkastusajo nil)
 
                            (let [ajoja (cljs.core/atom false)]
-                             (with-transaction-to-store @db asetukset/+tarkastusajostore+ :readwrite store
-                               (with-cursor store cursor v
+                             (with-transaction-to-store @db asetukset/+tarkastusajo-store+ :readwrite store
+                                                        (with-cursor store cursor v
                                  (reset! ajo true)
                                  (idb/cursor-continue cursor)
 
@@ -139,14 +139,14 @@
            (let [db (atom (<! (idb/create-indexed-db +testikannan-nimi+ r/db-spec)))
                  lahetin (r/kaynnista-reitinlahetys 500 @db (fn [tapahtumat]
                                                               (go [1 2 3])))]
-             (with-transaction-to-store @db asetukset/+tapahtumastore+ :readwrite store               
-               (doseq [viesti +testiviestit+]
+             (with-transaction-to-store @db asetukset/+reittimerkinta-store+ :readwrite store
+                                        (doseq [viesti +testiviestit+]
                  (idb/put-object store viesti))
 
-               :on-complete
-               (after-delay 1000
-                            (with-transaction-to-store @db asetukset/+tapahtumastore+ :readonly store
-                              (with-all-items store tapahtumat
+                                        :on-complete
+                                        (after-delay 1000
+                            (with-transaction-to-store @db asetukset/+reittimerkinta-store+ :readonly store
+                                                       (with-all-items store tapahtumat
                                 (is (= 0 (count tapahtumat)))
                                 (close! lahetin)
                                 (sulje-tietokanta @db)
@@ -159,14 +159,14 @@
            (let [db (atom (<! (idb/create-indexed-db +testikannan-nimi+ r/db-spec)))
                  lahetin (r/kaynnista-reitinlahetys 500 @db (fn [tapahtumat]
                                                               (go [1])))] ;; simuloi lähetysvirhettä
-             (with-transaction-to-store @db asetukset/+tapahtumastore+ :readwrite store               
-               (doseq [viesti +testiviestit+]
+             (with-transaction-to-store @db asetukset/+reittimerkinta-store+ :readwrite store
+                                        (doseq [viesti +testiviestit+]
                  (idb/put-object store viesti))
 
-               :on-complete
-               (after-delay 1000
-                            (with-transaction-to-store @db asetukset/+tapahtumastore+ :readonly store
-                              (with-all-items store tapahtumat
+                                        :on-complete
+                                        (after-delay 1000
+                            (with-transaction-to-store @db asetukset/+reittimerkinta-store+ :readonly store
+                                                       (with-all-items store tapahtumat
                                 (is (= 2 (count tapahtumat)))
                                 (is (= [{"id" 2, "sijainti" [2 2]}
                                         {"id" 3, "sijainti" [5 5]}]

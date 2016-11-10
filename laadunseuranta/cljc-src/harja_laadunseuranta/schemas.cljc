@@ -52,7 +52,7 @@
                 (s/optional-key :kiinteys) (s/maybe Kiinteys)
                 (s/optional-key :polyavyys) (s/maybe Polyavyys)
                 (s/optional-key :sivukaltevuus) (s/maybe Sivukaltevuus)}
-   :havainnot [(s/enum :liukasta :soratie :tasauspuute :lumista :liikennemerkki-luminen :pysakilla-epatasainen-polanne
+   :havainnot #{(s/enum :liukasta :soratie :tasauspuute :lumista :liikennemerkki-luminen :pysakilla-epatasainen-polanne
                        :aurausvalli :sulamisvesihaittoja :polanteessa-jyrkat-urat :hiekoittamatta
                        :pysakki-auraamatta :pysakki-hiekoittamatta :pl-epatasainen-polanne :pl-alue-auraamatta
                        :pl-alue-hiekoittamatta :sohjoa :irtolunta :lumikielekkeita
@@ -68,7 +68,7 @@
                        :kaidevaurio :kiveysvaurio
                        :yleishavainto
                        :saumavirhe :lajittuma :epatasaisuus :halkeamat :vesilammikot :epatasaisetreunat
-                       :jyranjalkia :sideainelaikkia :vaarakorkeusasema :pintaharva :pintakuivatuspuute :kaivojenkorkeusasema)]
+                       :jyranjalkia :sideainelaikkia :vaarakorkeusasema :pintaharva :pintakuivatuspuute :kaivojenkorkeusasema)}
 
    (s/optional-key :kuvaus) (s/maybe s/Str)
    (s/optional-key :laadunalitus) (s/maybe s/Bool)

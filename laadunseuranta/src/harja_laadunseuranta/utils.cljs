@@ -19,12 +19,6 @@
   (after-delay delay
      (swap! atom swap-fn)))
 
-(defn unreactive-deref [atom]
-  ;; TODO Tälle ei pitäisi ehkä olla todellista tarvetta, voisi yrittää refactoroida pois.
-  ;; Jos atomia ei haluta tarkkailla renderiä varten, se voidaan lukea ennen ja passata komponentille
-  (binding [ratom/*ratom-context* nil]
-    @atom))
-
 (defn parsi-kaynnistysparametrit [params]
   (let [params (if (str/starts-with? params "?")
                  (subs params 1)

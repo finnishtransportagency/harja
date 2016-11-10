@@ -52,16 +52,17 @@
                                                             (when (= "?relogin=true" js/window.location.search)
                                                               (tarkastusajon-luonti/jatka-ajoa))))
 
-    (reitintallennus/paivita-lahettamattomien-maara @sovellus/idxdb asetukset/+pollausvali+ sovellus/lahettamattomia-merkintoja)
+    (reitintallennus/paivita-lahettamattomien-merkintojen-maara @sovellus/idxdb asetukset/+pollausvali+ sovellus/lahettamattomia-merkintoja)
 
-    (reitintallennus/kaynnista-reitinlahetys asetukset/+pollausvali+ @sovellus/idxdb comms/laheta-tapahtumat!)
+    (reitintallennus/kaynnista-reitinlahetys asetukset/+pollausvali+
+                                             @sovellus/idxdb
+                                             comms/laheta-reittimerkinnat!)
     (reitintallennus/kaynnista-reitintallennus sovellus/sijainnin-tallennus-mahdollinen
                                                sovellus/sijainti
                                                @sovellus/idxdb
                                                sovellus/reittisegmentti
                                                sovellus/reittipisteet
                                                sovellus/tallennus-kaynnissa
-                                               sovellus/havainnot
                                                sovellus/tarkastusajo-id
                                                sovellus/kirjauspisteet)
     (tr-haku/alusta-tr-haku sovellus/sijainti sovellus/tr-tiedot)))

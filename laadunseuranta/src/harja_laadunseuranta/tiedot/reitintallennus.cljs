@@ -4,11 +4,11 @@
             [harja-laadunseuranta.tiedot.indexeddb :as idb]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]
-            [harja-laadunseuranta.utils :as utils :refer [erota-mittaukset erota-havainnot]]
             [cljs.core.async :as async :refer [<! chan put! close!]]
             [cljs.core.match]
             [cljs-time.coerce :as tc]
-            [cljs-time.local :as lt])
+            [cljs-time.local :as lt]
+            [harja-laadunseuranta.tiedot.sovellus :as s])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [reagent.ratom :refer [run!]]
                    [harja-laadunseuranta.macros :refer [with-delay-loop after-delay]]
@@ -23,48 +23,37 @@
 
 (def db-spec {:version 2
               :on-error #(js/console.log (str "Tietokantavirhe " (pr-str %)))
-              :objectstores [{:name asetukset/+tapahtumastore+
+              :objectstores [{:name asetukset/+reittimerkinta-store+
                               :key-path :id
                               :auto-increment true}
-                             {:name asetukset/+tarkastusajostore+
+                             {:name asetukset/+tarkastusajo-store+
                               :key-path :tarkastusajo
                               :auto-increment false}]})
 
-(defn muodosta-kertakirjausviesti [{:keys [aikaleima havainnot mittaukset sijainti kuvaus kuva pikavalinta
-                                           laadunalitus?]} tarkastusajo]
-  {:sijainti (select-keys sijainti [:lat :lon])
-   :aikaleima (tc/to-long aikaleima)
-   :tarkastusajo tarkastusajo
-   :mittaukset mittaukset
-   :havainnot (if pikavalinta (conj havainnot pikavalinta) havainnot)
-   :kuvaus kuvaus
-   :laadunalitus (true? laadunalitus?)
-   :kuva kuva})
-
-(defn- poista-lahetetyt-tapahtumat!
+(defn- poista-lahetetyt-reittimerkinnat!
   "Poistaa kaikki lähetetyt tapahtumaid:t IndexedDB:stä"
   [db lahetetyt-idt]
   (let [c (chan)]
-    (with-transaction-to-store db asetukset/+tapahtumastore+ :readwrite store
-      (doseq [tapahtumaid lahetetyt-idt]
+    (with-transaction-to-store db asetukset/+reittimerkinta-store+ :readwrite store
+                               (doseq [tapahtumaid lahetetyt-idt]
         (idb/delete-object store tapahtumaid))
 
-      :on-complete (close! c))
+                               :on-complete (close! c))
     c))
 
 (defn kaynnista-reitinlahetys
-  "Lukee lähetettävät tapahtumat IndexedDB:stä ja poistaa onnistuneesti lähetetyt"
-  [pollausvali db tapahtumien-lahetin]
+  "Lukee lähetettävät reittimerkinnät IndexedDB:stä ja poistaa onnistuneesti lähetetyt"
+  [pollausvali db merkintojen-lahetin]
   (let [again (chan)]
     (go-loop [cont true]
       (when cont
-        (with-transaction-to-store db asetukset/+tapahtumastore+ :readonly store
-          (with-n-items store 10 tapahtumat
+        (with-transaction-to-store db asetukset/+reittimerkinta-store+ :readonly store
+                                   (with-n-items store 10 reittimerkinnat
             (go
-              (let [lahetetyt (<! (tapahtumien-lahetin tapahtumat))]
+              (let [lahetetyt (<! (merkintojen-lahetin reittimerkinnat))]
                 (if-not (empty? lahetetyt)
                   (do
-                    (<! (poista-lahetetyt-tapahtumat! db lahetetyt))
+                    (<! (poista-lahetetyt-reittimerkinnat! db lahetetyt))
                     (after-delay pollausvali (put! again true)))
                   (after-delay pollausvali (put! again true)))))))
         (recur (<! again))))
@@ -79,32 +68,32 @@
       (conj reittipisteet sijainti)
       reittipisteet)))
 
-(defn paivita-lahettamattomien-maara [db pollausvali lahettamattomat-atom]
+(defn paivita-lahettamattomien-merkintojen-maara [db pollausvali lahettamattomat-atom]
   (with-delay-loop pollausvali
-    (with-transaction-to-store db asetukset/+tapahtumastore+ :readonly store
-      (with-count store lahettamattomia
+    (with-transaction-to-store db asetukset/+reittimerkinta-store+ :readonly store
+                               (with-count store lahettamattomia
         (reset! lahettamattomat-atom lahettamattomia)))))
 
 (defn palauta-tarkastusajo [db action]
-  (with-transaction-to-store db asetukset/+tarkastusajostore+ :readonly store
-    (with-cursor store kursori ajo
+  (with-transaction-to-store db asetukset/+tarkastusajo-store+ :readonly store
+                             (with-cursor store kursori ajo
       (action ajo)
       (idb/cursor-continue kursori))))
 
 (defn persistoi-tarkastusajo [db tarkastusajo-id]
-  (with-transaction-to-store db asetukset/+tarkastusajostore+ :readwrite store
-    (with-get-object store tarkastusajo-id ajo
+  (with-transaction-to-store db asetukset/+tarkastusajo-store+ :readwrite store
+                             (with-get-object store tarkastusajo-id ajo
       (when (nil? ajo)
         (idb/put-object store {:tarkastusajo tarkastusajo-id
                                :reittipisteet []})))))
 
 (defn tyhjenna-reittipisteet [db]
-  (with-transaction-to-store db asetukset/+tapahtumastore+ :readwrite store
-    (.clear store)))
+  (with-transaction-to-store db asetukset/+reittimerkinta-store+ :readwrite store
+                             (.clear store)))
 
 (defn tallenna-tarkastusajon-geometria [db tarkastusajo-id reittipisteet tarkastuspisteet]
-  (with-transaction-to-store db asetukset/+tarkastusajostore+ :readwrite store
-    (with-get-object store tarkastusajo-id ajo
+  (with-transaction-to-store db asetukset/+tarkastusajo-store+ :readwrite store
+                             (with-get-object store tarkastusajo-id ajo
       (when ajo
         (idb/put-object store (assoc (js->clj ajo)
                                      ;; tallenna vain 500 viimeistä reittipistettä
@@ -112,12 +101,38 @@
                                      :tarkastuspisteet (clj->js (vec (take-last asetukset/+persistoitavien-max-maara+ tarkastuspisteet)))))))))
 
 (defn poista-tarkastusajo [db tarkastusajo-id]
-  (with-transaction-to-store db asetukset/+tarkastusajostore+ :readwrite store
-    (idb/delete-object store tarkastusajo-id)))
+  (with-transaction-to-store db asetukset/+tarkastusajo-store+ :readwrite store
+                             (idb/delete-object store tarkastusajo-id)))
 
-(defn kirjaa-kertakirjaus [db kirjaus tarkastusajo]
-  (with-transaction-to-store db asetukset/+tapahtumastore+ :readwrite store
-    (idb/add-object store (muodosta-kertakirjausviesti kirjaus tarkastusajo))))
+(defn- kirjaa-kertakirjaus [db kirjaus]
+  (with-transaction-to-store db asetukset/+reittimerkinta-store+ :readwrite store
+                             (idb/add-object store kirjaus)))
+
+(defn tallenna-sovelluksen-tilasta-merkinta-indexeddbn!
+  "Lukee sovelluksen tilan ja muodostaa siitä reittimerkinnän IndexedDB:n.
+   Tätä on tarkoitus kutsua aina kun tila muuttuu oleellisesti (esim. sijainti tai havainnot vaihtuu)"
+  []
+  (.log js/console "Havainnot kantaan: " (pr-str (into #{} (remove nil?
+                                                                   (conj @s/jatkuvat-havainnot
+                                                                         @s/pistemainen-havainto)))))
+  (kirjaa-kertakirjaus @s/idxdb
+                       {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
+                        :aikaleima (tc/to-long (lt/local-now))
+                        :tarkastusajo @s/tarkastusajo-id
+                        :havainnot (into #{} (remove nil?
+                                                     (conj @s/jatkuvat-havainnot
+                                                           @s/pistemainen-havainto)))
+                        :mittaukset {:lumisuus @s/talvihoito-lumimaara
+                                     :talvihoito-tasaisuus @s/talvihoito-tasaisuus
+                                     :kitkamittaus @s/talvihoito-kitkamittaus
+                                     :soratie-tasaisuus @s/soratie-tasaisuus
+                                     :polyavyys @s/soratie-polyavyys
+                                     :kiinteys @s/soratie-kiinteys}
+                        ;; TODO Nämä tulee kai lomakkeelta? Pitää selvittää, miten toimii.
+                        ;:kuvaus kuvaus
+                        ;:laadunalitus (true? laadunalitus?)
+                        ;:kuva kuva
+                        }))
 
 (defn- kaynnista-tarkastusajon-lokaali-tallennus [db tarkastusajo-atom]
   (let [ajo-id (cljs.core/atom nil)]
@@ -130,12 +145,11 @@
          (reset! ajo-id @tarkastusajo-atom))))))
 
 (defn kaynnista-reitintallennus [sijainnin-tallennus-mahdollinen-atom
-                                 sijainti-atomi
+                                 sijainti-atom
                                  db
-                                 segmentti-atomi
-                                 reittipisteet-atomi
-                                 tallennus-kaynnissa-atomi
-                                 havainnot-atom
+                                 segmentti-atom
+                                 reittipisteet-atom
+                                 tallennus-kaynnissa-atom
                                  tarkastusajo-atom
                                  tarkastuspisteet-atom]
   (.log js/console "Reitintallennus käynnistetty")
@@ -143,23 +157,18 @@
   
   (run!
    (when (and @sijainnin-tallennus-mahdollinen-atom @tarkastusajo-atom)
-     (tallenna-tarkastusajon-geometria db @tarkastusajo-atom @reittipisteet-atomi @tarkastuspisteet-atom)))
+     (tallenna-tarkastusajon-geometria db @tarkastusajo-atom @reittipisteet-atom @tarkastuspisteet-atom)))
 
   (run!
-   (when (and @tallennus-kaynnissa-atomi
-              @segmentti-atomi)
-    (swap! reittipisteet-atomi #(lisaa-piirrettava-reittipiste % @segmentti-atomi))))
+   (when (and @tallennus-kaynnissa-atom
+              @segmentti-atom)
+    (swap! reittipisteet-atom #(lisaa-piirrettava-reittipiste % @segmentti-atom))))
 
   (run!
-   (when (and @sijainnin-tallennus-mahdollinen-atom
-              @tallennus-kaynnissa-atomi
-              (:nykyinen @sijainti-atomi))
-     (kirjaa-kertakirjaus db
-                          {:havainnot (erota-havainnot @havainnot-atom)
-                           :mittaukset (erota-mittaukset @havainnot-atom)
-                           :aikaleima (lt/local-now)
-                           :sijainti (:nykyinen @sijainti-atomi)}
-                          @tarkastusajo-atom))))
+    (when (and @sijainnin-tallennus-mahdollinen-atom
+              @tallennus-kaynnissa-atom
+              (:nykyinen @sijainti-atom))
+      (tallenna-sovelluksen-tilasta-merkinta-indexeddbn!))))
 
 (defn tietokannan-alustus []
   (idb/create-indexed-db "harja2" db-spec))

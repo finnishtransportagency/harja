@@ -14,24 +14,25 @@
             [harja-laadunseuranta.ui.havaintolomake :as havaintolomake]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
             [harja-laadunseuranta.ui.tarkastusajon-luonti :as tarkastusajon-luonti]
-            [harja-laadunseuranta.utils :refer [flip erota-mittaukset erota-havainnot]]
+            [harja-laadunseuranta.utils :refer [flip erota-havainnot]]
             [cljs.core.async :refer [<! timeout]])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn- peruuta-pikavalinta []
-  (reset! s/pikavalinta nil)
+  (reset! s/pistemainen-havainto nil)
   (reset! s/tr-alku nil)
   (reset! s/tr-loppu nil))
 
 (defn- havaintolomake [tallennettu-fn peruutettu-fn]
-  (let [model {:kayttajanimi @s/kayttajanimi
+  ;; TODO Korjaa lomake uuteen malliin
+  #_(let [model {:kayttajanimi @s/kayttajanimi
                :tr-osoite (utils/unreactive-deref s/tr-osoite)
                :tr-alku @s/tr-alku
                :tr-loppu @s/tr-loppu
                :aikaleima (l/local-now)
-               :havainnot (erota-havainnot @s/havainnot)
-               :pikavalinnan-kuvaus (@s/vakiohavaintojen-kuvaukset @s/pikavalinta)
-               :pikavalinta @s/pikavalinta
+               :jatkuvan-havainnot @s/jatkuvat-havainnot
+               :pikavalinnan-kuvaus (@s/vakiohavaintojen-kuvaukset @s/pistemainen-havainto)
+               :pikavalinta @s/pistemainen-havainto
                :mittaukset {}
                :kitkan-keskiarvo @s/talvihoito-kitkamittaus
                :lumisuus @s/talvihoito-lumimaara
@@ -57,46 +58,6 @@
 (defn- spinneri [lahettamattomia]
   (when (> @lahettamattomia 0)
     [:img.spinner {:src kuvat/+spinner+}]))
-
-(defn- kirjaa [arvot]
-  (reitintallennus/kirjaa-kertakirjaus @s/idxdb
-                                       {:aikaleima (l/local-now)
-                                        :mittaukset (merge (erota-mittaukset @s/havainnot) arvot)
-                                        :havainnot (erota-havainnot @s/havainnot)
-                                        :sijainti (:nykyinen @s/sijainti)}
-                                       @s/tarkastusajo-id))
-
-(defn- laheta-kitkamittaus [arvo]
-  (kartta/lisaa-kirjausikoni (str arvo))
-  (kirjaa {:kitkamittaus arvo}))
-
-(defn- laheta-lumisuus [arvo]
-  (kartta/lisaa-kirjausikoni (str arvo))
-  (reset! s/talvihoito-lumimaara nil)
-  (kirjaa {:lumisuus arvo})
-  (swap! s/havainnot assoc :lumista false))
-
-(defn- laheta-tasaisuus [arvo]
-  (kartta/lisaa-kirjausikoni (str arvo))
-  (reset! s/soratie-tasaisuus nil)
-  (kirjaa {:tasaisuus arvo})
-  (swap! s/havainnot assoc :tasauspuute false))
-
-(defn- laheta-soratiehavainto [tasaisuus kiinteys polyavyys]
-  (kirjaa {:tasaisuus tasaisuus
-           :kiinteys kiinteys
-           :polyavyys polyavyys})
-  (reset! s/soratie-tasaisuus nil)
-  (reset! s/soratie-polyavyys nil)
-  (reset! s/soratie-kiinteys nil)
-  (swap! s/havainnot assoc :soratie false))
-
-(defn- laheta-kertakirjaus [kirjaus]
-  (reset! s/pikavalinta kirjaus)
-  (reset! s/kirjaamassa-havaintoa true))
-
-(defn- laheta-yleishavainto [havainnot]
-  (reset! s/kirjaamassa-yleishavaintoa true))
 
 
 (defn- sulje-havaintodialogi []

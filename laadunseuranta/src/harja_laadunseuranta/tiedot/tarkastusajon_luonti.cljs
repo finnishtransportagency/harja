@@ -2,7 +2,6 @@
   (:require [harja-laadunseuranta.ui.paanavigointi :refer [paanavigointi]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [harja-laadunseuranta.tiedot.comms :as comms]
-            [harja-laadunseuranta.utils :refer [flip erota-mittaukset erota-havainnot]]
             [cljs.core.async :refer [<! timeout]]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
             [harja-laadunseuranta.utils :as utils])

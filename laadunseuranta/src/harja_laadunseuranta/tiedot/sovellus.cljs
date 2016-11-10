@@ -40,8 +40,7 @@
    :tr-tiedot-nakyvissa false
 
    ;; Havainnot
-   ;; TODO Voisiko tämä olla nimeltänsä pistemäinen havainto?
-   :pikavalinta nil ; Tähän tallentuu pistemäinen havainto (esim. liikennemerkki vinossa)
+   :pistemainen-havainto nil ; Tähän tallentuu pistemäinen havainto (esim. liikennemerkki vinossa)
    :kirjaamassa-havaintoa false
    :kirjaamassa-yleishavaintoa false
    :vakiohavaintojen-kuvaukset nil ; Serveriltä saadut tiedot vakiohavainnoista
@@ -50,8 +49,7 @@
    :tr-loppu nil
 
    ;; Jatkuvat havainnot
-   ;; TODO Voisiko havainnot olla setti, ja nimeltä jatkuvat-havainnot?
-   :havainnot {} ; Tähän tallentuu ainakin välikohtaiset havainnot (esim. liukasta true, lumista true jne.)
+   :jatkuvat-havainnot #{} ; Tähän tallentuu välikohtaiset havainnot (esim. liukasta, lumista jne.)
 
    ;; Mittaukset
    :talvihoito {:kitkamittaus nil
@@ -102,7 +100,7 @@
 
 (def tr-osoite (reagent/cursor sovellus [:tr-tiedot :tr-osoite]))
 
-(def pikavalinta (reagent/cursor sovellus [:pikavalinta]))
+(def pistemainen-havainto (reagent/cursor sovellus [:pistemainen-havainto]))
 
 (def alustus-valmis (reaction (let [sovellus @sovellus]
                                 (and (get-in sovellus [:alustus :gps-tuettu])
@@ -149,14 +147,14 @@
                              :nayta-kiinteistorajat @nayta-kiinteistorajat
                              :nayta-ortokuva @nayta-ortokuva}))
 
-(def havainnot (reagent/cursor sovellus [:havainnot]))
+(def jatkuvat-havainnot (reagent/cursor sovellus [:jatkuvat-havainnot]))
 
 (def reittisegmentti (reaction
                        (let [{:keys [nykyinen edellinen]} @sijainti]
                          (when (and nykyinen edellinen)
                            {:segmentti [(p/latlon-vektoriksi edellinen)
                                         (p/latlon-vektoriksi nykyinen)]
-                            :vari (let [s @havainnot]
+                            :vari (let [s @jatkuvat-havainnot]
                                     (cond
                                       (:liukasta s) "blue"
                                       (:lumista s) "blue" ;; TODO Onko tämä oikein?

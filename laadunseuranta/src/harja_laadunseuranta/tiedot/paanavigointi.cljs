@@ -210,20 +210,19 @@
     :nimi "Sillat"
     :sisalto valilehti-sillat}])
 
-(defn kirjaa-pistemainen-havainto! [{:keys [nimi avain] :as tiedot}]
-  (.log js/console (pr-str "Kirjataan pistemäinen havainto: " avain))
-  (reset! s/pikavalinta avain)
+(defn pistemainen-havainto-painettu! [{:keys [nimi avain] :as tiedot}]
+  (reset! s/pistemainen-havainto avain)
+  (.log js/console "Kirjataan pistemäinen havainto: " (pr-str avain))
   (ilmoitukset/ilmoita
     (str "Pistemäinen havainto kirjattu: " nimi))
-  (reitintallennus/kirjaa-kertakirjaus
-    @s/idxdb
-    {:mittaukset {}
-     :aikaleima (l/local-now)
-     :pikavalinnan-kuvaus (@s/vakiohavaintojen-kuvaukset @s/pikavalinta)
-     :pikavalinta @s/pikavalinta
-     :sijainti (:nykyinen (utils/unreactive-deref s/sijainti))}
-    @s/tarkastusajo-id))
+  (reitintallennus/tallenna-sovelluksen-tilasta-merkinta-indexeddbn!)
+  (reset! s/pistemainen-havainto nil))
 
-(defn kirjaa-valikohtainen-havainto! [{:keys [nimi avain] :as tiedot}]
-  (swap! s/havainnot assoc avain (not (avain @s/havainnot)))
-  (.log js/console (pr-str "Välikohtaiset havainnot nyt : " @s/havainnot)))
+(defn valikohtainen-havainto-painettu!
+  "Asettaa välikohtaisen havainnon päälle tai pois päältä."
+  [{:keys [nimi avain] :as tiedot}]
+  (if (avain @s/jatkuvat-havainnot)
+    (reset! s/jatkuvat-havainnot (into #{} (remove #(= avain %) @s/jatkuvat-havainnot)))
+    (reset! s/jatkuvat-havainnot (conj @s/jatkuvat-havainnot avain)))
+  (.log js/console (pr-str "Välikohtaiset havainnot nyt : " @s/jatkuvat-havainnot))
+  (reitintallennus/tallenna-sovelluksen-tilasta-merkinta-indexeddbn!))
