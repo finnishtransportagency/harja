@@ -149,7 +149,6 @@ SELECT
   ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
   ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
   yllapitoluokka,
-  indeksin_kuvaus                       AS "indeksin-kuvaus",
   ypk.tr_numero                         AS "tr-numero",
   ypk.tr_alkuosa                        AS "tr-alkuosa",
   ypk.tr_alkuetaisyys                   AS "tr-alkuetaisyys",
@@ -217,9 +216,9 @@ WHERE yllapitokohde = :yllapitokohde
 INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi,
                            tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
                            tr_ajorata, tr_kaista, keskimaarainen_vuorokausiliikenne,
-                           yllapitoluokka, nykyinen_paallyste, sopimuksen_mukaiset_tyot,
+                           yllapitoluokka, sopimuksen_mukaiset_tyot,
                            arvonvahennykset, bitumi_indeksi, kaasuindeksi, yllapitokohdetyyppi,
-                           yllapitokohdetyotyyppi, indeksin_kuvaus)
+                           yllapitokohdetyotyyppi)
 VALUES (:urakka,
   :sopimus,
   :kohdenumero,
@@ -233,14 +232,12 @@ VALUES (:urakka,
   :tr_kaista,
   :keskimaarainen_vuorokausiliikenne,
   :yllapitoluokka,
-  :nykyinen_paallyste,
   :sopimuksen_mukaiset_tyot,
   :arvonvahennykset,
   :bitumi_indeksi,
   :kaasuindeksi,
   :yllapitokohdetyyppi :: yllapitokohdetyyppi,
-  :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi,
-  :indeksin_kuvaus);
+  :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi);
 
 -- name: paivita-yllapitokohde!
 -- Päivittää ylläpitokohteen
@@ -257,12 +254,10 @@ SET
   tr_kaista                         = :tr_kaista,
   keskimaarainen_vuorokausiliikenne = :keskimaarainen_vuorokausiliikenne,
   yllapitoluokka                    = :yllapitoluokka,
-  nykyinen_paallyste                = :nykyinen_paallyste,
   sopimuksen_mukaiset_tyot          = :sopimuksen_mukaiset_tyot,
   arvonvahennykset                  = :arvonvanhennykset,
   bitumi_indeksi                    = :bitumi_indeksi,
-  kaasuindeksi                      = :kaasuindeksi,
-  indeksin_kuvaus                   = :indeksin_kuvaus
+  kaasuindeksi                      = :kaasuindeksi
 WHERE id = :id
       AND urakka = :urakka;
 
