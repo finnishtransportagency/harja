@@ -219,7 +219,7 @@
     {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
      :aikaleima (l/local-now)
      :tarkastusajo @s/tarkastusajo-id
-     :havainnot (remove nil? (into #{} (conj @s/jatkuvat-havainnot avain)))
+     :havainnot (into #{} (remove nil? (conj @s/jatkuvat-havainnot avain)))
      :mittaukset {}}))
 
 (defn valikohtainen-havainto-painettu!
