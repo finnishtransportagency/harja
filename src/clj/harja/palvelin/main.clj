@@ -164,7 +164,9 @@
 
       ;; FIM REST rajapinta
       :fim (component/using
-             (fim/->FIM (:url (:fim asetukset)))
+            (if kehitysmoodi
+              (fim/->FakeFIM (:tiedosto (:fim asetukset)))
+              (fim/->FIM (:url (:fim asetukset))))
              [:db :integraatioloki])
 
       ;; Sampo
