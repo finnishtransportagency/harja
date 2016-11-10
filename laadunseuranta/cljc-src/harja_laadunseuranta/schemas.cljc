@@ -97,7 +97,6 @@
                   :liikennetila-hoitamatta
                   :nakemaalue-raivaamatta
                   :liikennemerkki-vinossa
-
                   :reunapaalut-vinossa
                   :reunapaalut-likaisia
                   :pl-alue-puhdistettava
