@@ -156,6 +156,6 @@ INSERT INTO urakanvastuuhenkilo (urakka, rooli, nimi, kayttajanimi, ensisijainen
  VALUES ((SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
          'ELY_Urakanvalvoja', 'Erno Penttikoski', 'LXPENTTIER', true),
 	((SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
-	 'ELY_Urakanvalvoja', 'Max Syöttöpaine', 'LXSYOTMAX', false)
+	 'ELY_Urakanvalvoja', 'Max Syöttöpaine', 'LXSYOTMAX', false),
         ((SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
          'vastuuhenkilo', 'Uuno Urakoitsija', 'LXUUU', true);
