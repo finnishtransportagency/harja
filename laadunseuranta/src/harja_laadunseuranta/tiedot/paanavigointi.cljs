@@ -211,12 +211,16 @@
     :sisalto valilehti-sillat}])
 
 (defn pistemainen-havainto-painettu! [{:keys [nimi avain] :as tiedot}]
-  (reset! s/pistemainen-havainto avain)
   (.log js/console "Kirjataan pistemäinen havainto: " (pr-str avain))
   (ilmoitukset/ilmoita
     (str "Pistemäinen havainto kirjattu: " nimi))
-  (reitintallennus/tallenna-sovelluksen-tilasta-merkinta-indexeddbn!)
-  (reset! s/pistemainen-havainto nil))
+  (reitintallennus/kirjaa-kertakirjaus
+    @s/idxdb
+    {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
+     :aikaleima (l/local-now)
+     :tarkastusajo @s/tarkastusajo-id
+     :havainnot (remove nil? (into #{} (conj @s/jatkuvat-havainnot avain)))
+     :mittaukset {}}))
 
 (defn valikohtainen-havainto-painettu!
   "Asettaa välikohtaisen havainnon päälle tai pois päältä."

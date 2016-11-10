@@ -112,22 +112,12 @@
   "Lukee sovelluksen tilan ja muodostaa siitä reittimerkinnän IndexedDB:n.
    Tätä on tarkoitus kutsua aina kun tila muuttuu oleellisesti (esim. sijainti tai havainnot vaihtuu)"
   []
-  (.log js/console "Havainnot kantaan: " (pr-str (into #{} (remove nil?
-                                                                   (conj @s/jatkuvat-havainnot
-                                                                         @s/pistemainen-havainto)))))
   (kirjaa-kertakirjaus @s/idxdb
                        {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
                         :aikaleima (tc/to-long (lt/local-now))
                         :tarkastusajo @s/tarkastusajo-id
-                        :havainnot (into #{} (remove nil?
-                                                     (conj @s/jatkuvat-havainnot
-                                                           @s/pistemainen-havainto)))
-                        :mittaukset {:lumisuus @s/talvihoito-lumimaara
-                                     :talvihoito-tasaisuus @s/talvihoito-tasaisuus
-                                     :kitkamittaus @s/talvihoito-kitkamittaus
-                                     :soratie-tasaisuus @s/soratie-tasaisuus
-                                     :polyavyys @s/soratie-polyavyys
-                                     :kiinteys @s/soratie-kiinteys}
+                        :havainnot @s/jatkuvat-havainnot
+                        :mittaukset {}
                         ;; TODO Nämä tulee kai lomakkeelta? Pitää selvittää, miten toimii.
                         ;:kuvaus kuvaus
                         ;:laadunalitus (true? laadunalitus?)

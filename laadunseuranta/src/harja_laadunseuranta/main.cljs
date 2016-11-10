@@ -19,7 +19,7 @@
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn- peruuta-pikavalinta []
-  (reset! s/pistemainen-havainto nil)
+  #_(reset! s/pistemainen-havainto nil)
   (reset! s/tr-alku nil)
   (reset! s/tr-loppu nil))
 

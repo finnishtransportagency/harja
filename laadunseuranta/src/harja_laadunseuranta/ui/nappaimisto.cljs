@@ -27,3 +27,21 @@
   [:div.nappaimisto "Näppäimistö tulee tähän"]
   #_[nappaimistokomponentti {:otsikko otsikko
                              :havainnot @s/jatkuvat-havainnot}])
+
+;; TODO Kirjaa tähän tyyliin:
+#_(kirjaa-kertakirjaus @s/idxdb
+                       {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
+                        :aikaleima (tc/to-long (lt/local-now))
+                        :tarkastusajo @s/tarkastusajo-id
+                        :havainnot @s/jatkuvat-havainnot
+                        :mittaukset {:lumisuus @s/talvihoito-lumimaara
+                                     :talvihoito-tasaisuus @s/talvihoito-tasaisuus
+                                     :kitkamittaus @s/talvihoito-kitkamittaus
+                                     :soratie-tasaisuus @s/soratie-tasaisuus
+                                     :polyavyys @s/soratie-polyavyys
+                                     :kiinteys @s/soratie-kiinteys}
+                        ;; TODO Nämä tulee kai lomakkeelta? Pitää selvittää, miten toimii.
+                        ;:kuvaus kuvaus
+                        ;:laadunalitus (true? laadunalitus?)
+                        ;:kuva kuva
+                        })

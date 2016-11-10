@@ -40,7 +40,6 @@
    :tr-tiedot-nakyvissa false
 
    ;; Havainnot
-   :pistemainen-havainto nil ; Tähän tallentuu pistemäinen havainto (esim. liikennemerkki vinossa)
    :kirjaamassa-havaintoa false
    :kirjaamassa-yleishavaintoa false
    :vakiohavaintojen-kuvaukset nil ; Serveriltä saadut tiedot vakiohavainnoista
@@ -48,16 +47,7 @@
    :tr-alku nil
    :tr-loppu nil
 
-   ;; Jatkuvat havainnot
    :jatkuvat-havainnot #{} ; Tähän tallentuu välikohtaiset havainnot (esim. liukasta, lumista jne.)
-
-   ;; Mittaukset
-   :talvihoito {:kitkamittaus nil
-                :lumimaara nil
-                :tasaisuus nil}
-   :soratie {:tasaisuus nil
-             :kiinteys nil
-             :polyavyys nil}
 
    ;; Kartta
    :kartta {:keskita-ajoneuvoon false
@@ -73,13 +63,6 @@
 
 (def vakiohavaintojen-kuvaukset (reagent/cursor sovellus [:vakiohavaintojen-kuvaukset]))
 (def palautettava-tarkastusajo (reagent/cursor sovellus [:palautettava-tarkastusajo]))
-
-(def talvihoito-kitkamittaus (reagent/cursor sovellus [:talvihoito :kitkamittaus]))
-(def talvihoito-lumimaara (reagent/cursor sovellus [:talvihoito :lumimaara]))
-(def talvihoito-tasaisuus (reagent/cursor sovellus [:talvihoito :tasaisuus]))
-(def soratie-tasaisuus (reagent/cursor sovellus [:soratie :tasaisuus]))
-(def soratie-kiinteys (reagent/cursor sovellus [:soratie :kiinteys]))
-(def soratie-polyavyys (reagent/cursor sovellus [:soratie :polyavyys]))
 
 (def tr-tiedot-nakyvissa (reagent/cursor sovellus [:tr-tiedot-nakyvissa]))
 (def tr-tiedot (reagent/cursor sovellus [:tr-tiedot]))
@@ -99,8 +82,6 @@
 (def kirjaamassa-yleishavaintoa (reagent/cursor sovellus [:kirjaamassa-yleishavaintoa]))
 
 (def tr-osoite (reagent/cursor sovellus [:tr-tiedot :tr-osoite]))
-
-(def pistemainen-havainto (reagent/cursor sovellus [:pistemainen-havainto]))
 
 (def alustus-valmis (reaction (let [sovellus @sovellus]
                                 (and (get-in sovellus [:alustus :gps-tuettu])
