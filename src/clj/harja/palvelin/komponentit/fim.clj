@@ -35,21 +35,24 @@
    :Role :roolit
    :Company :organisaatio})
 
-(defn- roolien-kuvaukset [roolit urakan-sampo-id]
+(defn- roolien-kuvaukset-ja-nimet [roolit urakan-sampo-id]
   (and
    roolit
-   (into []
-         (comp
-          (filter #(str/starts-with? % urakan-sampo-id))
-          (map #(subs % (inc (count urakan-sampo-id))))
-          (map #(get-in oikeudet/roolit [% :kuvaus]))
-          (remove nil?))
-         (str/split roolit #","))))
+   (let [roolit (into []
+                      (comp
+                       (filter #(str/starts-with? % urakan-sampo-id))
+                       (map #(subs % (inc (count urakan-sampo-id))))
+                       (map #(oikeudet/roolit %))
+                       (remove nil?))
+                      (str/split roolit #","))]
+     {:roolit (mapv :kuvaus roolit)
+      :roolinimet (mapv :nimi roolit)})))
 
 (defn- kuvaa-roolit [henkilot urakan-sampo-id]
   (map
-    #(update-in % [:roolit] roolien-kuvaukset urakan-sampo-id)
-    henkilot))
+   #(merge %
+           (roolien-kuvaukset-ja-nimet (:roolit %) urakan-sampo-id))
+   henkilot))
 
 (defn lue-fim-vastaus
   "Lukee FIM REST vastaus annetusta XML zipperistä. Palauttaa sekvenssin urakan käyttäjiä."
@@ -118,7 +121,7 @@
 
   FIMHaku
   (hae-urakan-kayttajat [_ sampoid]
-    (get (read-string (slurp tiedosto)) sampoid)))
+    (kuvaa-roolit (get (read-string (slurp tiedosto)) sampoid) sampoid)))
 
 (defn hae-urakan-kayttajat-jotka-roolissa [this sampo-id roolit-set]
   (let [urakan-kayttajat (hae-urakan-kayttajat this sampo-id)
