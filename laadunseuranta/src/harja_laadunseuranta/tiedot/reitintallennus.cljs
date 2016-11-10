@@ -109,8 +109,12 @@
                              (idb/add-object store kirjaus)))
 
 (defn tallenna-sovelluksen-tilasta-merkinta-indexeddbn!
-  "Lukee sovelluksen tilan ja muodostaa siitä reittimerkinnän IndexedDB:n.
-   Tätä on tarkoitus kutsua aina kun tila muuttuu oleellisesti (esim. sijainti tai havainnot vaihtuu)"
+  "'Nauhoitusfunktio', joka lukee sovelluksen tilan ja muodostaa
+   siitä reittimerkinnän IndexedDB:n.
+   Tätä on tarkoitus kutsua aina kun tila muuttuu oleellisesti
+   (esim. sijainti tai jatkuvat havainnot vaihtuu).
+   Ei ole syytä kutsua pistemäisille muutoksille (pistemäiset havainnot, mittausarvot jne.),
+   vaan niistä tulee kirjata erikseen oma merkintä."
   []
   (kirjaa-kertakirjaus @s/idxdb
                        {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
@@ -119,6 +123,7 @@
                         :havainnot @s/jatkuvat-havainnot
                         :mittaukset {}
                         ;; TODO Nämä tulee kai lomakkeelta? Pitää selvittää, miten toimii.
+                        ;; Joka tapauksessa ei ole syytä tallentaa täällä "nauhoitusfunktiossa"
                         ;:kuvaus kuvaus
                         ;:laadunalitus (true? laadunalitus?)
                         ;:kuva kuva
