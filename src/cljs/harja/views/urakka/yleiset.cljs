@@ -29,7 +29,8 @@
             [harja.ui.viesti :as viesti]
             [harja.domain.roolit :as roolit]
             [harja.ui.napit :as napit]
-            [harja.tiedot.urakat :as urakat])
+            [harja.tiedot.urakat :as urakat]
+            [harja.ui.lomake :as lomake])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; hallintayksikkö myös
@@ -339,32 +340,63 @@
                                 {:luokka "nappi-toissijainen pull-right"}]]]))
              {:luokka "nappi-kielteinen btn-xs"}])])])))
 
+(defn- aseta-vastuuhenkilo [urakka-id kayttaja kayttajat vastuuhenkilot rooli
+                            ensisijainen varalla]
+  (r/with-let [henkilot (atom {})]
+    (let [mahdolliset-henkilot (filter #(some (partial = rooli) (:roolinimet %)) kayttajat)]
+      [:div.vastuuhenkilo-muokkaus
+       [lomake/lomake {:muokkaa! #(reset! henkilot %)
+                       :footer-fn (fn [data]
+                                    [napit/palvelinkutsu-nappi "Tallenna yhteyshenkilöt"
+                                     #(go 1)
+                                     {:kun-onnistuu #(modal/piilota!)}])}
+        [{:otsikko "Ensisijainen"
+          :nimi :ensisijainen
+          :leveys 2
+          :tyyppi :valinta
+          :valinta-nayta #(if % (fmt/kayttaja %)
+                              (:nimi ensisijainen))
+          :valinnat mahdolliset-henkilot}
+         {:otsikko "Varalla"
+          :nimi :varalla
+          :leveys 2
+          :tyyppi :valinta
+          :valinta-nayta #(if % (fmt/kayttaja %)
+                              (:nimi varalla))
+          :valinnat mahdolliset-henkilot}]
+        @henkilot]])))
+
 (defn- nayta-vastuuhenkilo [urakka-id kayttaja kayttajat vastuuhenkilot rooli]
-  (r/with-let [muokkaustila? (atom false)]
-    (let [roolin-henkilot (filter #(= rooli (:rooli %)) vastuuhenkilot)
-          ensisijainen (first (filter  :ensisijainen roolin-henkilot))
-          varalla (first (filter (comp not :ensisijainen) roolin-henkilot))
-          voi-muokata? (and ;(not (k/virhe? kayttajat))
-                            (not (empty? kayttajat))
-                            (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset urakka-id)
-                            (or (not= rooli "ELY_Urakanvalvoja")
-                                (= :tilaaja (roolit/osapuoli kayttaja))))]
-      (log "KÄYTTÄJÄT: " (pr-str kayttajat))
-      [:div.vastuuhenkilo.inline-block
-       (if @muokkaustila?
-         [:span "MUOKATAAN SITTE!"]
-         [:span
-          (if ensisijainen
-            [:span.vastuuhenkilo-ensisijainen (:nimi ensisijainen)]
-            [:span.vastuuhenkilo-ei-tiedossa "Ei tiedossa"])
-          " "
-          (when varalla
-            [:span.vastuuhenkilo-varalla "(sijainen " (:nimi varalla) ")"])
-          (when voi-muokata?
-            [:span.klikattava {:on-click #(swap! muokkaustila? not)}
-             " "
-             (ikonit/livicon-wrench)
-             " "])])])))
+  (let [roolin-henkilot (filter #(= rooli (:rooli %)) vastuuhenkilot)
+        ensisijainen (first (filter  :ensisijainen roolin-henkilot))
+        varalla (first (filter (comp not :ensisijainen) roolin-henkilot))
+        voi-muokata? (and (not (k/virhe? kayttajat))
+                          (not (empty? kayttajat))
+                          (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset urakka-id)
+                          (or (not= rooli "ELY_Urakanvalvoja")
+                              (= :tilaaja (roolit/osapuoli kayttaja))))]
+    #_(log "VASTUUHENKILÖT: " (pr-str vastuuhenkilot))
+    #_(log "KÄYTTÄJÄT: " (pr-str kayttajat))
+    [:div.vastuuhenkilo.inline-block
+     [:span
+      (if ensisijainen
+        [:span.vastuuhenkilo-ensisijainen (:nimi ensisijainen)]
+        [:span.vastuuhenkilo-ei-tiedossa "Ei tiedossa"])
+      " "
+      (when varalla
+        [:span.vastuuhenkilo-varalla "(sijainen " (:nimi varalla) ")"])
+      (when voi-muokata?
+        [:span.klikattava {:on-click #(modal/nayta!
+                                       {:otsikko (str "Urakan ensisijainen "
+                                                      (case rooli
+                                                        "ELY_Urakanvalvoja" "urakanvalvoja"
+                                                        "vastuuhenkilo" "vastuuhenkilö"))}
+                                       [aseta-vastuuhenkilo urakka-id kayttaja kayttajat
+                                        vastuuhenkilot rooli
+                                        ensisijainen varalla])}
+         " "
+         (ikonit/livicon-wrench)
+         " "])]]))
 
 (defn yleiset-tiedot [ur kayttajat vastuuhenkilot]
   (let [{:keys [paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?]
