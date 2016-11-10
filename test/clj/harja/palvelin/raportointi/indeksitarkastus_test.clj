@@ -62,20 +62,22 @@
                                           {:otsikko "Erillis\u00ADkustannukset"}
                                           {:otsikko "Bonus"}
                                           {:otsikko "Muutos- ja lisä\u00ADtyöt"}
+                                          {:otsikko "Vahinkojen korjaukset"}
                                           {:otsikko "Äkillinen hoitotyö"}
                                           {:otsikko "Sanktiot"}
                                           {:otsikko "Suolabonukset ja -sanktiot"}
                                           {:otsikko "Yhteensä (€)"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko
-                                             (fn [[kuukausi kok-hint yks-hint er-kust bonus muutos akilliset-hoitotyot sanktiot
+                                             (fn [[kuukausi kok-hint yks-hint er-kust bonus muutos vahinkojen-korjaukset akilliset-hoitotyot sanktiot
                                                    suolabonus yhteensa :as rivi]]
-                                               (and (= (count rivi) 10)
+                                               (and (= (count rivi) 11)
                                                     (string? kuukausi)
                                                     (number? kok-hint)
                                                     (number? yks-hint)
                                                     (number? er-kust)
                                                     (number? bonus)
                                                     (number? muutos)
+                                                    (number? vahinkojen-korjaukset)
                                                     (number? akilliset-hoitotyot)
                                                     (number? sanktiot)
                                                     (number? suolabonus)
@@ -91,20 +93,22 @@
                                           {:otsikko "Erillis\u00ADkustannukset"}
                                           {:otsikko "Bonus"}
                                           {:otsikko "Muutos- ja lisä\u00ADtyöt"}
+                                          {:otsikko "Vahinkojen korjaukset"}
                                           {:otsikko "Äkillinen hoitotyö"}
                                           {:otsikko "Sanktiot"}
                                           {:otsikko "Suolabonukset ja -sanktiot"}
                                           {:otsikko "Yhteensä (€)"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko
-                                             (fn [[kuukausi kok-hint yks-hint er-kust bonus muutos akilliset-hoitotyot sanktiot
+                                             (fn [[kuukausi kok-hint yks-hint er-kust bonus muutos vahinkojen-korjaukset akilliset-hoitotyot sanktiot
                                                    suolabonus yhteensa :as rivi]]
-                                               (and (= (count rivi) 10)
+                                               (and (= (count rivi) 11)
                                                     (string? kuukausi)
                                                     (number? kok-hint)
                                                     (number? yks-hint)
                                                     (number? er-kust)
                                                     (number? bonus)
                                                     (number? muutos)
+                                                    (number? vahinkojen-korjaukset)
                                                     (number? akilliset-hoitotyot)
                                                     (number? sanktiot)
                                                     (number? suolabonus)
@@ -120,19 +124,21 @@
                                           {:otsikko "Erillis\u00ADkustannukset"}
                                           {:otsikko "Bonus"}
                                           {:otsikko "Muutos- ja lisä\u00ADtyöt"}
+                                          {:otsikko "Vahinkojen korjaukset"}
                                           {:otsikko "Äkillinen hoitotyö"}
                                           {:otsikko "Sanktiot"}
                                           {:otsikko "Yhteensä (€)"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko
-                                             (fn [[kuukausi kok-hint yks-hint er-kust bonus muutos akilliset-hoitotyot sanktiot
+                                             (fn [[kuukausi kok-hint yks-hint er-kust bonus muutos vahinkojen-korjaukset akilliset-hoitotyot sanktiot
                                                    yhteensa :as rivi]]
-                                               (and (= (count rivi) 9)
+                                               (and (= (count rivi) 10)
                                                     (string? kuukausi)
                                                     (number? kok-hint)
                                                     (number? yks-hint)
                                                     (number? er-kust)
                                                     (number? bonus)
                                                     (number? muutos)
+                                                    (number? vahinkojen-korjaukset)
                                                     (number? akilliset-hoitotyot)
                                                     (number? sanktiot)
                                                     (number? yhteensa)))))
@@ -147,19 +153,21 @@
                                           {:otsikko "Erillis\u00ADkustannukset"}
                                           {:otsikko "Bonus"}
                                           {:otsikko "Muutos- ja lisä\u00ADtyöt"}
+                                          {:otsikko "Vahinkojen korjaukset"}
                                           {:otsikko "Äkillinen hoitotyö"}
                                           {:otsikko "Sanktiot"}
                                           {:otsikko "Yhteensä (€)"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko
-                                             (fn [[kuukausi kok-hint yks-hint er-kust bonus muutos akilliset-hoitotyot sanktiot
+                                             (fn [[kuukausi kok-hint yks-hint er-kust bonus muutos vahinkojen-korjaukset akilliset-hoitotyot sanktiot
                                                    yhteensa :as rivi]]
-                                               (and (= (count rivi) 9)
+                                               (and (= (count rivi) 10)
                                                     (string? kuukausi)
                                                     (number? kok-hint)
                                                     (number? yks-hint)
                                                     (number? er-kust)
                                                     (number? bonus)
                                                     (number? muutos)
+                                                    (number? vahinkojen-korjaukset)
                                                     (number? akilliset-hoitotyot)
                                                     (number? sanktiot)
                                                     (number? yhteensa)))))))
