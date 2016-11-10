@@ -274,7 +274,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
          (ikonit/livicon-warning-sign)])])])
 
 (defn- nayttorivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id
-                            vetolaatikot tallenna piilota-toiminnot? valittu-rivi
+                            vetolaatikot tallenna piilota-toiminnot? nayta-toimintosarake? valittu-rivi
                             mahdollista-rivin-valinta]} skeema rivi index solun-luokka]
   [:tr {:class (str luokka (when (= rivi @valittu-rivi)
                              " rivi-valittu"))
@@ -334,8 +334,10 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                          ikoni]
                      teksti])))]])))
       skeema))
-   (when (and (not piilota-toiminnot?)
-              tallenna) [:td.toiminnot])])
+   (when (or nayta-toimintosarake?
+             (and (not piilota-toiminnot?)
+                  tallenna))
+     [:th.toiminnot {:width "40px"} " "])])
 
 (def renderoi-rivia-kerralla 100)
 
@@ -387,6 +389,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                         Parametrina muokkausdata, palauttaa uuden muokkausdatan
   :aloita-muokkaus-fn                   kutsutaan kun muokkaus alkaa. Kutsuva pää voi tällöin esim. muokata datasisällön eriksi muokkausta varten
   :piilota-toiminnot?                   boolean, piilotetaan toiminnot sarake jos true
+  :nayta-toimintosarake?                Näyttää oikealla tyhjän sarakkeen vaikka ei oltaisi muokkaustilassa. Syy: usean taulukon alignointi
   :rivin-luokka                         funktio joka palauttaa rivin luokan
   :uusi-rivi                            jos annettu uuden rivin tiedot käsitellään tällä funktiolla
   :vetolaatikot                         {id komponentti} lisäriveistä, jotka näytetään normaalirivien välissä
@@ -400,7 +403,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   "
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata?
            rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos
-           rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? rivi-valinta-peruttu
+           rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta max-rivimaara
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip] :as opts} skeema tiedot]
   (let [muokatut (atom nil) ;; muokattu datajoukko
@@ -655,7 +658,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
        :component-will-unmount
        (fn []
          (nollaa-muokkaustiedot!))}
-      (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
+      (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu
+                    piilota-toiminnot? nayta-toimintosarake?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot
                     mahdollista-rivin-valinta rivi-valinta-peruttu
                     korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts} skeema alkup-tiedot]
@@ -742,8 +746,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                    (y/tasaus-luokka tasaa))
                                   :width (or leveys "5%")}
                              otsikko]) skeema)
-                        (when (and (not piilota-toiminnot?)
-                                   tallenna)
+                        (when (or nayta-toimintosarake?
+                                  (and (not piilota-toiminnot?)
+                                       tallenna))
                           [:th.toiminnot {:width "40px"} " "])]])]
           [:div.panel.panel-default.livi-grid {:id (:id opts)
                                                :class (clojure.string/join " " luokat)}
@@ -850,7 +855,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                         :rivi-valinta-peruttu rivi-valinta-peruttu
                                                         :valittu-rivi valittu-rivi
                                                         :mahdollista-rivin-valinta mahdollista-rivin-valinta
-                                                        :piilota-toiminnot? piilota-toiminnot?}
+                                                        :piilota-toiminnot? piilota-toiminnot?
+                                                        :nayta-toimintosarake? nayta-toimintosarake?}
                                            skeema rivi i]
                                            (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))])))
                                     rivit-jarjestetty)))))))]])
