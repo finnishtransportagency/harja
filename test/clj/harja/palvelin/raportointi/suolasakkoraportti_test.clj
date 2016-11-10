@@ -118,15 +118,10 @@
           taulukko (apurit/taulukko-otsikolla
                      vastaus
                      "Vantaan alueurakka 2009-2019, Suolasakkoraportti ajalta 01.10.2015 - 30.09.2016")]
-(log/debug "vantaa vastaus" vastaus)
-(log/debug "(nth taulukko 3) eli taulukon rivit" (nth taulukko 3))
       (tarkista-sarakkeet taulukko)
 
       (apurit/tarkista-taulukko-rivit
         taulukko
-        ;;Vantaan alueurakka 2009-2019 -3.50M -5.60M 1100M 1045.00M 1155.00M 1.1000000000000000M
-        ;; 1270.5000M 842.6M 202.40M 30.0M 6072.000M 850.5558354324099552000M 6922.5558354324099552000M
-
         (fn [[urakka-nimi lampotila keskilampo sallittu bonusraja sakkoraja kerroin
               kohtuullistarkistettu-sakkoraja kaytetty-talvisuolaa erotus
               sakkobonus-per-t vainsakko-per-t sakkobonus indeksi
