@@ -1,6 +1,6 @@
 (ns harja.views.urakka.yleiset
   "Urakan 'Yleiset' välilehti: perustiedot ja yhteyshenkilöt"
-  (:require [reagent.core :refer [atom] :as reagent]
+  (:require [reagent.core :refer [atom] :as r]
             [harja.ui.bootstrap :as bs]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
@@ -339,17 +339,32 @@
                                 {:luokka "nappi-toissijainen pull-right"}]]]))
              {:luokka "nappi-kielteinen btn-xs"}])])])))
 
-(defn- nayta-vastuuhenkilo [kayttajat vastuuhenkilot rooli]
-  (let [roolin-henkilot (filter #(= rooli (:rooli %)) vastuuhenkilot)
-        ensisijainen (first (filter  :ensisijainen roolin-henkilot))
-        varalla (first (filter (comp not :ensisijainen) roolin-henkilot))]
-    [:div.vastuuhenkilo.inline-block
-     (if ensisijainen
-       [:span.vastuuhenkilo-ensisijainen (:nimi ensisijainen)]
-       [:span.vastuuhenkilo-ei-tiedossa "Ei tiedossa"])
-     " "
-     (when varalla
-       [:span.vastuuhenkilo-varalla "(sijainen " (:nimi varalla) ")"])]))
+(defn- nayta-vastuuhenkilo [urakka-id kayttaja kayttajat vastuuhenkilot rooli]
+  (r/with-let [muokkaustila? (atom false)]
+    (let [roolin-henkilot (filter #(= rooli (:rooli %)) vastuuhenkilot)
+          ensisijainen (first (filter  :ensisijainen roolin-henkilot))
+          varalla (first (filter (comp not :ensisijainen) roolin-henkilot))
+          voi-muokata? (and ;(not (k/virhe? kayttajat))
+                            (not (empty? kayttajat))
+                            (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset urakka-id)
+                            (or (not= rooli "ELY_Urakanvalvoja")
+                                (= :tilaaja (roolit/osapuoli kayttaja))))]
+      (log "KÄYTTÄJÄT: " (pr-str kayttajat))
+      [:div.vastuuhenkilo.inline-block
+       (if @muokkaustila?
+         [:span "MUOKATAAN SITTE!"]
+         [:span
+          (if ensisijainen
+            [:span.vastuuhenkilo-ensisijainen (:nimi ensisijainen)]
+            [:span.vastuuhenkilo-ei-tiedossa "Ei tiedossa"])
+          " "
+          (when varalla
+            [:span.vastuuhenkilo-varalla "(sijainen " (:nimi varalla) ")"])
+          (when voi-muokata?
+            [:span.klikattava {:on-click #(swap! muokkaustila? not)}
+             " "
+             (ikonit/livicon-wrench)
+             " "])])])))
 
 (defn yleiset-tiedot [ur kayttajat vastuuhenkilot]
   (let [{:keys [paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?]
@@ -376,10 +391,10 @@
       "Takuu päättyy:" (when paallystys-tai-paikkausurakka?
                          [takuuaika ur])
       "Tilaaja:" (:nimi (:hallintayksikko ur))
-      "Urakanvalvoja: " (nayta-vastuuhenkilo kayttajat vastuuhenkilot "ELY_Urakanvalvoja")
+      "Urakanvalvoja: " [nayta-vastuuhenkilo (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot "ELY_Urakanvalvoja"]
 
       "Urakoitsija:" (:nimi (:urakoitsija ur))
-      "Urakan vastuuhenkilö: " (nayta-vastuuhenkilo kayttajat vastuuhenkilot "vastuuhenkilo")
+      "Urakan vastuuhenkilö: " [nayta-vastuuhenkilo (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot "vastuuhenkilo"]
 
       ;; valaistus, tiemerkintä --> palvelusopimus
       ;; päällystys --> kokonaisurakka
