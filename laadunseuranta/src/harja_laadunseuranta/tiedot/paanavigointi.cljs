@@ -12,16 +12,19 @@
     :ikoni "talvi_liukasta"
     :tyyppi :vali
     :avain :liukasta
+    :mittaustyyppi :kitkamittaus
     :vaatii-nappaimiston? true}
    {:nimi "Lu\u00ADmis\u00ADta"
     :ikoni "talvi_lumista"
     :tyyppi :vali
     :avain :lumista
+    :mittaustyyppi :lumisuus
     :vaatii-nappaimiston? true}
    {:nimi "Tasaus\u00ADpuute"
     :tyyppi :vali
     :ikoni "talvi_tasauspuute"
     :avain :tasauspuute
+    :mittaustyyppi :talvihoito-tasaisuus
     :vaatii-nappaimiston? true}
    {:nimi "Py\u00ADsäkki: epä\u00ADtasainen polanne"
     :tyyppi :piste
@@ -187,7 +190,7 @@
     :tyyppi :vali
     :ikoni "soratie_alkaa"
     :avain :soratie
-    :vaatii-nappaimiston? false}])
+    :vaatii-nappaimiston? false}]) ;; TODO Oikeasti true, mutta vaatii oman erikoisnäppäimistön
 
 (def valilehti-paallystys
   [{:nimi "Sauma\u00ADvirhe"
@@ -291,9 +294,20 @@
 
 (defn valikohtainen-havainto-painettu!
   "Asettaa välikohtaisen havainnon päälle tai pois päältä."
-  [{:keys [nimi avain] :as tiedot}]
-  (if (avain @s/jatkuvat-havainnot)
-    (reset! s/jatkuvat-havainnot (into #{} (remove #(= avain %) @s/jatkuvat-havainnot)))
-    (reset! s/jatkuvat-havainnot (conj @s/jatkuvat-havainnot avain)))
+  [{:keys [avain vaatii-nappaimiston? mittaustyyppi] :as tiedot}]
+  ;; Jatkuva havainto ensin päälle
+  (s/togglaa-jatkuva-havainto! avain)
   (.log js/console (pr-str "Välikohtaiset havainnot nyt : " @s/jatkuvat-havainnot))
+
+  ;; Mittaus päälle jos tarvii
+  (when (and vaatii-nappaimiston?
+             (avain @s/jatkuvat-havainnot))
+    (s/aseta-mittaus-paalle! mittaustyyppi))
+
+  ;; Mittaus pois jos tarvii
+  (when (and vaatii-nappaimiston?
+             (not (avain @s/jatkuvat-havainnot)))
+    (s/aseta-mittaus-pois!))
+
+  ;; Tee merkintä
   (reitintallennus/tallenna-sovelluksen-tilasta-merkinta-indexeddbn!))

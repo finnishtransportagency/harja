@@ -48,6 +48,7 @@
    :tr-loppu nil
 
    :jatkuvat-havainnot #{} ; Tähän tallentuu välikohtaiset havainnot (esim. liukasta, lumista jne.)
+   :mitttaustyyppi nil ;; Suoritettava mittaustyyppi (esim. :lumista) tai nil jos ei olla mittaamassa mitään
 
    ;; Kartta
    :kartta {:keskita-ajoneuvoon false
@@ -60,6 +61,8 @@
    :palvelinvirhe nil})
 
 (defonce sovellus (atom sovelluksen-alkutila))
+
+;; Cursorit helpottamaan tilan muokkausta
 
 (def vakiohavaintojen-kuvaukset (reagent/cursor sovellus [:vakiohavaintojen-kuvaukset]))
 (def palautettava-tarkastusajo (reagent/cursor sovellus [:palautettava-tarkastusajo]))
@@ -106,8 +109,7 @@
 (def tyhja-sijainti
   {:lat 0
    :lon 0
-   :heading 0
-   })
+   :heading 0})
 
 (def ajoneuvon-sijainti (reaction
                           (if (:nykyinen @sijainti)
@@ -129,6 +131,7 @@
                              :nayta-ortokuva @nayta-ortokuva}))
 
 (def jatkuvat-havainnot (reagent/cursor sovellus [:jatkuvat-havainnot]))
+(def mittaustyyppi (reagent/cursor sovellus [:mittaustyyppi]))
 
 (def reittisegmentti (reaction
                        (let [{:keys [nykyinen edellinen]} @sijainti]
@@ -160,6 +163,26 @@
                                                   @tallennus-kaynnissa
                                                   (not @tarkastusajo-paattymassa)))))
 
+;; Apufunktiot helpottamaan tilan muokkausta
 
 (defn valitse-urakka! [urakka]
   (reset! valittu-urakka urakka))
+
+(defn lisaa-jatkuva-havainto! [avain]
+  (reset! jatkuvat-havainnot (conj @jatkuvat-havainnot avain)))
+
+(defn poista-jatkuva-havainto! [avain]
+  (reset! jatkuvat-havainnot (into #{} (remove #(= avain %) @jatkuvat-havainnot))))
+
+(defn togglaa-jatkuva-havainto!
+  "Lisää jatkuvan havainnon, jos sitä ei ole. Jos on, poistaa sen."
+  [avain]
+  (if (avain @jatkuvat-havainnot)
+    (poista-jatkuva-havainto! avain)
+    (lisaa-jatkuva-havainto! avain)))
+
+(defn aseta-mittaus-paalle! [uusi-mittaustyyppi]
+  (reset! mittaustyyppi uusi-mittaustyyppi))
+
+(defn aseta-mittaus-pois! []
+  (reset! mittaustyyppi nil))

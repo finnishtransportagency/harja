@@ -40,15 +40,10 @@
                                  (swap! paanavigointi-nakyvissa? not))]
     (fn [{:keys [valilehdet kirjaa-pistemainen-havainto-fn
                  kirjaa-valikohtainen-havainto-fn
-                 jatkuvat-havainnot] :as tiedot}]
+                 jatkuvat-havainnot
+                 mittaustyyppi] :as tiedot}]
       (let [jatkuvia-havaintoja-paalla? (not (empty? jatkuvat-havainnot))
-            jokin-jatkuva-havainto-vaatii-nappaimiston? (not (empty?
-                                                         (filter
-                                                           #(and (jatkuvat-havainnot (:avain %))
-                                                                 (:vaatii-nappaimiston? %))
-                                                           (mapcat :sisalto valilehdet))))
-            nayta-nappaimisto? (and jatkuvia-havaintoja-paalla?
-                                    jokin-jatkuva-havainto-vaatii-nappaimiston?)]
+            nayta-nappaimisto? (some? mittaustyyppi)]
         [:div {:class (str "paanavigointi-container "
                            (if @paanavigointi-nakyvissa?
                              "paanavigointi-container-nakyvissa"
@@ -86,12 +81,12 @@
                                  :disabloitu? (boolean (and (= (:tyyppi havainto) :vali)
                                                             jatkuvia-havaintoja-paalla?
                                                             (not (jatkuvat-havainnot (:avain havainto)))
-                                                            jokin-jatkuva-havainto-vaatii-nappaimiston?
+                                                            nayta-nappaimisto?
                                                             (:vaatii-nappaimiston? havainto)))})])))]]
            [:footer]]]
 
          (when nayta-nappaimisto?
-           [nappaimisto/nappaimisto])]))))
+           [nappaimisto/nappaimisto mittaustyyppi "TODO-otsikko"])]))))
 
 (defn paanavigointi []
   [paanavigointikomponentti {:valilehdet tiedot/oletusvalilehdet
@@ -99,5 +94,6 @@
                              tiedot/pistemainen-havainto-painettu!
                              :kirjaa-valikohtainen-havainto-fn
                              tiedot/valikohtainen-havainto-painettu!
-                             :jatkuvat-havainnot
-                             @s/jatkuvat-havainnot}])
+                             :aseta-mittaus-paalle s/aseta-mittaus-paalle!
+                             :jatkuvat-havainnot @s/jatkuvat-havainnot
+                             :mittaustyyppi @s/mittaustyyppi}])

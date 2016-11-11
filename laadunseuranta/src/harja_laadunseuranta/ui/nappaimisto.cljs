@@ -7,26 +7,28 @@
     [cljs.core.async.macros :refer [go go-loop]]
     [devcards.core :as dc :refer [defcard deftest]]))
 
-(defn off-painike [otsikko havainnot avain]
+(defn off-painike [{:keys [otsikko avain poista-jatkuva-havainto] :as tiedot}]
   [:button.nappaimisto-lopeta
    {:on-click (fn [_]
-                (swap! havainnot #(assoc % avain false)))}
+                (poista-jatkuva-havainto avain))}
    otsikko])
 
-(defn- nappaimistokomponentti [{:keys [otsikko havainnot] :as tiedot}]
+(defn- nappaimistokomponentti [{:keys [otsikko poista-jatkuva-havainto mittaustyyppi] :as tiedot}]
   []
-  #_[:div.nappaimisto
-   [off-painike otsikko havainnot :liukasta :on-click #(reset! keskiarvo-atom nil)]
-   [avattu-nuoli]
-   [kitkamittaustiedot keskiarvo-atom]
-   [kitkamittaus/kitkamittauskomponentti (fn [mittaus]
+  [:div.nappaimisto
+   [off-painike {:otsikko otsikko
+                 :mittaustyyppi mittaustyyppi
+                 :poista-jatkuva-havainto poista-jatkuva-havainto}]
+   #_[avattu-nuoli]
+   #_[kitkamittaustiedot keskiarvo-atom]
+   #_[kitkamittaus/kitkamittauskomponentti (fn [mittaus]
                                            (swap! keskiarvo-atom #(conj % mittaus))
                                            (kitkamittaus-kirjattu mittaus))]])
 
-(defn nappaimisto [otsikko]
-  [:div.nappaimisto "Näppäimistö tulee tähän"]
-  #_[nappaimistokomponentti {:otsikko otsikko
-                             :havainnot @s/jatkuvat-havainnot}])
+(defn nappaimisto [mittaustyyppi otsikko]
+  [nappaimistokomponentti {:mittaustyyppi mittaustyyppi
+                           :otsikko otsikko
+                           :poista-jatkuva-havainto s/poista-jatkuva-havainto!}])
 
 ;; TODO Kirjaa tähän tyyliin:
 #_(kirjaa-kertakirjaus @s/idxdb
