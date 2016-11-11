@@ -28,6 +28,8 @@
            (http/post (str "https://api.hipchat.com/v2/room/" huone-id "/notification")
                       {:headers {"Content-Type" "application/x-www-form-urlencoded"
                                  "Authorization" (str "Bearer " token)}
-                       :form-params {"message_format" "html"
+                       :form-params {"notify" "true"
+                                     "from" kone
+                                     "message_format" "html"
                                      "message"
                                      (str  kone " [" (str/upper-case (name level)) "] " msg)}})))})

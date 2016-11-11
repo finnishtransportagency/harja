@@ -75,11 +75,17 @@
 (def +paallystysilmoituksen-kirjaus+ "api/schemas/paallystysilmoituksen-kirjaus-request.schema.json")
 (def paallystysilmoituksen-kirjaus (tee-validaattori +paallystysilmoituksen-kirjaus+))
 
-(def +yllapidon-aikataulun-kirjaus+ "api/schemas/aikataulun-kirjaus-request.schema.json")
-(def yllapidon-aikataulun-kirjaus (tee-validaattori +yllapidon-aikataulun-kirjaus+))
+(def +paallystyksen-aikataulun-kirjaus+ "api/schemas/paallystyksen-aikataulun-kirjaus-request.schema.json")
+(def paallystyksen-aikataulun-kirjaus (tee-validaattori +paallystyksen-aikataulun-kirjaus+))
+(def +tiemerkinnan-aikataulun-kirjaus+ "api/schemas/tiemerkinnan-aikataulun-kirjaus-request.schema.json")
+(def tiemerkinnan-aikataulun-kirjaus (tee-validaattori +tiemerkinnan-aikataulun-kirjaus+))
 
 (def +suljetun-tieosuuden-kirjaus+ "api/schemas/suljetun-tieosuuden-kirjaus-request.schema.json")
 (def suljetun-tieosuuden-kirjaus (tee-validaattori +suljetun-tieosuuden-kirjaus+))
 (def +suljetun-tieosuuden-poisto+ "api/schemas/suljetun-tieosuuden-poisto-request.schema.json")
 (def suljetun-tieosuuden-poisto (tee-validaattori +suljetun-tieosuuden-poisto+))
+
+(def +urakan-yhteystietojen-haku-vastaus+ "api/schemas/urakan-yhteystietojen-haku-response.schema.json")
+(def urakan-yhteystietojen-haku-vastaus (tee-validaattori +urakan-yhteystietojen-haku-vastaus+))
+
 

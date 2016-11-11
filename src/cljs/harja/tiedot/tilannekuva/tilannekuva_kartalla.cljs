@@ -61,19 +61,24 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
    nil nil
    (map (lisaa-karttatyyppi-fn taso))))
 
-(defn- muodosta-kuva-karttataso [nimi selitteet hakuparametrit]
-  (openlayers/luo-kuvataso
-   nimi
-   selitteet
-   "tk" hakuparametrit))
+(defn- muodosta-kuva-karttataso
+  ([nimi selitteet hakuparametrit] (muodosta-kuva-karttataso nimi selitteet hakuparametrit nil))
+  ([nimi selitteet hakuparametrit indikaattori]
+   (openlayers/luo-kuvataso
+    nimi
+    selitteet
+    "tk" hakuparametrit
+    "ind" (str indikaattori))))
 
 (defmethod muodosta-karttataso :toteumat [taso toimenpiteet]
-  (muodosta-kuva-karttataso
-   :tilannekuva-toteumat
-   (into #{}
-         (map (comp esitettavat-asiat/toimenpiteen-selite :toimenpide))
-         toimenpiteet)
-   @url-hakuparametrit))
+  (let [yhteensa (reduce + (map :lukumaara toimenpiteet))]
+    (muodosta-kuva-karttataso
+     :tilannekuva-toteumat
+     (into #{}
+           (map (comp esitettavat-asiat/toimenpiteen-selite :toimenpide))
+           toimenpiteet)
+     @url-hakuparametrit
+     yhteensa)))
 
 (defmethod muodosta-karttataso :tarkastukset [taso tarkastukset]
   (muodosta-kuva-karttataso

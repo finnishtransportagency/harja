@@ -121,7 +121,8 @@
                   :default oikeudet/urakat-toteumat-kokonaishintaisettyot  )
                              user urakka-id)
   (into []
-        muunna-desimaaliluvut-xf
+        (comp (map konv/keraa-tr-kentat)
+         muunna-desimaaliluvut-xf)
         (q/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db urakka-id sopimus-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) (name tyyppi) toimenpidekoodi)))
 
 
@@ -341,8 +342,12 @@
       (log/debug "poista toteuma" (get-in toteuma [:toteuma :id]))
       (apply q/poista-toteuman-tehtavat! params)
       (apply q/poista-toteuma! params))
-    (do (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (name (:tyyppi toteuma)) (:id user)
-                            (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (:reitti toteuma)
+    (do (q/paivita-toteuma! c
+                            (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma))
+                            (name (:tyyppi toteuma)) (:id user)
+                            (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma)
+                            (:lisatieto toteuma)
+                            (some-> toteuma :reitti geo/clj->pg geo/geometry)
                             (get-in toteuma [:tr :numero]) (get-in toteuma [:tr :alkuosa])
                             (get-in toteuma [:tr :alkuetaisyys]) (get-in toteuma [:tr :loppuosa])
                             (get-in toteuma [:tr :loppuetaisyys])
@@ -453,8 +458,7 @@
             (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm)
                                                     (:maara tm) (:id user)))))
 
-      ;; Päivitä käytetyt materiaalit toteuman päivälle
-      (materiaalit-q/paivita-sopimuksen-materiaalin-kaytto c (:sopimus t) (:alkanut t))
+      (materiaalit-q/paivita-koko-sopimuksen-materiaalin-kaytto c (:sopimus t))
 
       ;; Jos saatiin parametrina hoitokausi, voidaan palauttaa urakassa käytetyt materiaalit
       ;; Tämä ei ole ehkä paras mahdollinen tapa hoitaa tätä, mutta toteuma/materiaalit näkymässä
@@ -490,37 +494,6 @@
     (q/merkitse-toteumatehtavien-maksuerat-likaisiksi! db tehtavaid)
 
     (q/poista-tehtava! db (:id user) (:id tiedot))))
-
-(defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user
-                                                      {:keys [urakka-id sopimus-id toteuma-id
-                                                              alkupvm loppupvm toimenpidekoodi]}]
-
-  (let [reitit (into []
-                     (comp
-                       (harja.geo/muunna-pg-tulokset :reitti)
-                       (map konv/alaviiva->rakenne))
-                     (if toteuma-id
-                       (do
-                         (log/debug "Haetaan kok. hint. reitit toteuma-id:llä: " toteuma-id)
-                         (q/hae-kokonaishintaisen-toteuman-reitti db
-                                                                 urakka-id
-                                                                 sopimus-id
-                                                                 toteuma-id))
-                       (do
-                         (log/debug (str "Haetaan kok. hint. reitit parametreilla "
-                                         (pr-str alkupvm loppupvm toimenpidekoodi)))
-                         (q/hae-kokonaishintaisten-toiden-reitit db
-                                                                urakka-id
-                                                                sopimus-id
-                                                                (konv/sql-date alkupvm)
-                                                                (konv/sql-date loppupvm)
-                                                                toimenpidekoodi))))
-        kasitellyt-reitit (konv/sarakkeet-vektoriin
-                            reitit
-                            {:reittipiste :reittipisteet
-                             :tehtava     :tehtavat}
-                            :toteumaid)]
-    kasitellyt-reitit))
 
 (defn hae-urakan-varustetoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero]}]
   (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-varusteet user urakka-id)

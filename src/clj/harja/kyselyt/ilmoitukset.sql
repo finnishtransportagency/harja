@@ -8,72 +8,67 @@ SELECT
   i.valitetty,
   i.yhteydenottopyynto,
   i.otsikko,
+  i.lisatieto,
   i.ilmoitustyyppi,
   i.selitteet,
   i.urakkatyyppi,
   i.tila,
-
   i.sijainti,
   i.tr_numero,
   i.tr_alkuosa,
   i.tr_loppuosa,
   i.tr_alkuetaisyys,
   i.tr_loppuetaisyys,
-
   it.id                                                              AS kuittaus_id,
   it.kuitattu                                                        AS kuittaus_kuitattu,
   it.kuittaustyyppi                                                  AS kuittaus_kuittaustyyppi,
-
   it.kuittaaja_henkilo_etunimi                                       AS kuittaus_kuittaaja_etunimi,
   it.kuittaaja_henkilo_sukunimi                                      AS kuittaus_kuittaaja_sukunimi,
-
   hy.id                                                              AS hallintayksikko_id,
   hy.nimi                                                            AS hallintayksikko_nimi
-
 FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
   LEFT JOIN urakka u ON i.urakka = u.id
   LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
-WHERE
-  -- Tarkasta että ilmoituksen geometria sopii hakuehtoihin
-  (i.urakka IS NULL OR i.urakka IN (:urakat)) AND
+WHERE i.id IN
+      (SELECT id FROM ilmoitus x WHERE
+       -- Tarkasta että ilmoituksen geometria sopii hakuehtoihin
+      (x.urakka IS NULL OR x.urakka IN (:urakat)) AND
 
-  -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
-  (
-    (:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
-    (:loppu_annettu IS FALSE AND i.ilmoitettu  >= :alku) OR
-    (:alku_annettu IS FALSE AND i.ilmoitettu  <= :loppu) OR
-    (i.ilmoitettu  BETWEEN :alku AND :loppu)
-  ) AND
+      -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
+      ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
+       (:loppu_annettu IS FALSE AND x.ilmoitettu  >= :alku) OR
+       (:alku_annettu IS FALSE AND x.ilmoitettu  <= :loppu) OR
+       (x.ilmoitettu  BETWEEN :alku AND :loppu)) AND
 
-  -- Tarkista ilmoituksen tilat
-  ((:kuittaamattomat IS TRUE AND i.tila = 'kuittaamaton' :: ilmoituksen_tila) OR
-   (:vastaanotetut IS TRUE AND i.tila = 'vastaanotettu' :: ilmoituksen_tila) OR
-   (:aloitetut IS TRUE AND i.tila = 'aloitettu' :: ilmoituksen_tila) OR
-   (:lopetetut IS TRUE AND i.tila = 'lopetettu' :: ilmoituksen_tila)) AND
+      -- Tarkista ilmoituksen tilat
+      ((:kuittaamattomat IS TRUE AND x.tila = 'kuittaamaton' :: ilmoituksen_tila) OR
+       (:vastaanotetut IS TRUE AND x.tila = 'vastaanotettu' :: ilmoituksen_tila) OR
+       (:aloitetut IS TRUE AND x.tila = 'aloitettu' :: ilmoituksen_tila) OR
+       (:lopetetut IS TRUE AND x.tila = 'lopetettu' :: ilmoituksen_tila)) AND
 
-  -- Tarkasta ilmoituksen tyypit
-  (:tyypit_annettu IS FALSE OR i.ilmoitustyyppi :: TEXT IN (:tyypit)) AND
+      -- Tarkasta ilmoituksen tyypit
+      (:tyypit_annettu IS FALSE OR x.ilmoitustyyppi :: TEXT IN (:tyypit)) AND
 
-  -- Tarkasta vapaatekstihakuehto
-  (:teksti_annettu IS FALSE OR (i.otsikko LIKE :teksti OR i.paikankuvaus LIKE :teksti OR i.lisatieto LIKE :teksti)) AND
+      -- Tarkasta vapaatekstihakuehto
+      (:teksti_annettu IS FALSE OR (x.otsikko LIKE :teksti OR x.paikankuvaus LIKE :teksti OR x.lisatieto LIKE :teksti)) AND
 
-  -- Tarkasta selitehakuehto
-  (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY [:selite :: TEXT])) AND
+      -- Tarkasta selitehakuehto
+      (:selite_annettu IS FALSE OR (x.selitteet @> ARRAY [:selite :: TEXT])) AND
 
-  -- Rajaa tienumerolla
-  (:tr-numero::INTEGER IS NULL OR tr_numero = :tr-numero) AND
+      -- Rajaa tienumerolla
+      (:tr-numero::INTEGER IS NULL OR tr_numero = :tr-numero) AND
 
-  -- Rajaa ilmoittajan nimellä
-  (:ilmoittaja-nimi::TEXT IS NULL OR
-   CONCAT(i.ilmoittaja_etunimi,' ',i.ilmoittaja_sukunimi) ILIKE :ilmoittaja-nimi) AND
+      -- Rajaa ilmoittajan nimellä
+      (:ilmoittaja-nimi::TEXT IS NULL OR
+       CONCAT(x.ilmoittaja_etunimi,' ',x.ilmoittaja_sukunimi) ILIKE :ilmoittaja-nimi) AND
 
-  -- Rajaa ilmoittajan puhelinnumerolla
-  (:ilmoittaja-puhelin::TEXT IS NULL OR
-   i.ilmoittaja_matkapuhelin LIKE :ilmoittaja-puhelin)
+      -- Rajaa ilmoittajan puhelinnumerolla
+      (:ilmoittaja-puhelin::TEXT IS NULL OR
+       x.ilmoittaja_matkapuhelin LIKE :ilmoittaja-puhelin)
 
-ORDER BY i.ilmoitettu DESC, it.kuitattu DESC
-LIMIT :max-maara::INTEGER;
+      LIMIT :max-maara::INTEGER)
+ORDER BY i.ilmoitettu DESC, it.kuitattu DESC;
 
 -- name: hae-ilmoitukset-ilmoitusidlla
 SELECT
@@ -147,6 +142,8 @@ SELECT
   it.vakiofraasi                           AS kuittaus_vakiofraasi,
   it.vapaateksti                           AS kuittaus_vapaateksti,
   it.kuittaustyyppi                        AS kuittaus_kuittaustyyppi,
+  it.kanava                                AS kuittaus_kanava,
+  it.suunta                                AS kuittaus_suunta,
 
   it.kuittaaja_henkilo_etunimi             AS kuittaus_kuittaaja_etunimi,
   it.kuittaaja_henkilo_sukunimi            AS kuittaus_kuittaaja_sukunimi,
@@ -168,7 +165,7 @@ FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
   LEFT JOIN urakka u ON i.urakka = u.id
   LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
-WHERE i.id = :id AND urakka IN (:urakat);
+WHERE i.id = :id;
 
 -- name: hae-ilmoitukset-idlla
 SELECT
@@ -398,6 +395,9 @@ INSERT INTO ilmoitustoimenpide
  vakiofraasi,
  vapaateksti,
  kuittaustyyppi,
+ suunta,
+ kanava,
+ tila,
  kuittaaja_henkilo_etunimi,
  kuittaaja_henkilo_sukunimi,
  kuittaaja_henkilo_matkapuhelin,
@@ -419,6 +419,9 @@ VALUES
     :vakiofraasi,
     :vapaateksti,
     :kuittaustyyppi :: kuittaustyyppi,
+    :suunta :: viestisuunta,
+    :kanava :: viestikanava,
+    :tila :: lahetyksen_tila,
     :kuittaaja_henkilo_etunimi,
     :kuittaaja_henkilo_sukunimi,
     :kuittaaja_henkilo_matkapuhelin,
@@ -464,7 +467,9 @@ GROUP BY CUBE(apl.nimi, i.ilmoitustyyppi);
 -- name: hae-lahettamattomat-ilmoitustoimenpiteet
 SELECT id
 FROM ilmoitustoimenpide
-WHERE tila IS NULL OR tila = 'virhe';
+WHERE
+  (tila IS NULL OR tila = 'virhe') AND
+  kuittaustyyppi != 'valitys'::kuittaustyyppi;
 
 -- name: hae-ilmoituksen-tieosoite
 SELECT

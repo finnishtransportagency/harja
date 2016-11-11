@@ -339,6 +339,17 @@ SELECT exists(
     WHERE u.id = :urakka_id AND
           k.id = :kayttaja_id);
 
+-- name: onko-kayttajalla-lisaoikeus-urakkaan
+-- Tarkistaa onko käyttäjälle annettu lisäoikeudet urakkaan
+SELECT exists(
+    SELECT klu.id
+    FROM kayttajan_lisaoikeudet_urakkaan klu
+      JOIN kayttaja k ON klu.kayttaja = k.id
+    WHERE urakka = :urakka
+          AND klu.kayttaja = :kayttaja
+          AND k.jarjestelma IS TRUE
+          AND k.poistettu IS NOT TRUE);
+
 -- name: onko-kayttaja-organisaatiossa
 -- Tarkistaa onko käyttäjä organisaatiossa
 SELECT exists(
@@ -376,3 +387,13 @@ SELECT tyyppi FROM urakka WHERE id IN (:idt) GROUP BY tyyppi ORDER BY count(id) 
 SELECT jarjestelma
 FROM kayttaja
 WHERE kayttajanimi = :kayttajanimi;
+
+-- name: liikenneviraston-jarjestelma?
+-- single?: true
+SELECT exists(
+    SELECT k.id
+    FROM kayttaja k
+      JOIN organisaatio o ON k.organisaatio = o.id
+    WHERE k.kayttajanimi = :kayttajanimi AND
+          k.jarjestelma IS TRUE AND
+          o.tyyppi = 'liikennevirasto');

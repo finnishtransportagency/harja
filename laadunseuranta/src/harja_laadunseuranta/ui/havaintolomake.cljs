@@ -172,8 +172,11 @@
              [kentta "Lämpötila" [input-kentta :lampotila virheita lampotila lampotilan-rajat]]]))
 
         [:div.lisatietoja
-         [:input#laatupoikkeamacheck {:type "checkbox"
-                                      :on-change #(swap! laadunalitus? not)}] "Laadun alitus"
+         [:div.laatupoikkeama-check
+          [:input {:id "laadunalitus"
+                   :type "checkbox"
+                   :on-change #(swap! laadunalitus? not)}]
+          [:label {:for "laadunalitus"} "Laadun alitus"]]
          [:div.title "Lisätietoja"]
          [tekstialue kuvaus]
          [kamera/kamerakomponentti kuva]]

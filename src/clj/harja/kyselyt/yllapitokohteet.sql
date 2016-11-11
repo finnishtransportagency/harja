@@ -114,16 +114,21 @@ WHERE
   (ypk.urakka = :urakka OR ypk.suorittava_tiemerkintaurakka = :urakka)
   AND ypk.poistettu IS NOT TRUE;
 
--- name: hae-urakkaan-liittyvat-yllapitokohteet
--- Hakee urakkaan suoraan kuuluvat ylläpitokohteet sekä ne, joihin on merkitty suorittajaksi kyseinen urakka
-SELECT
-  ypk.id
+-- name: hae-urakkaan-liittyvat-paallystyskohteet
+-- Hakee ylläpitokohteet, jotka ovat kyseisen urakan päällystyskohteita
+SELECT ypk.id
 FROM yllapitokohde ypk
 WHERE
-  (ypk.urakka = :urakka
-   OR ypk.suorittava_tiemerkintaurakka = :urakka)
+  ypk.urakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
 
+-- name: hae-urakkaan-liittyvat-tiemerkintakohteet
+-- Hakee ylläpitokohteet, joihin on merkitty suorittajaksi kyseinen urakka
+SELECT ypk.id
+FROM yllapitokohde ypk
+WHERE
+  ypk.suorittava_tiemerkintaurakka = :urakka
+  AND ypk.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-sopimuksen-yllapitokohteet
 -- Hakee urakan sopimuksen kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
@@ -144,7 +149,6 @@ SELECT
   ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
   ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
   yllapitoluokka,
-  indeksin_kuvaus                       AS "indeksin-kuvaus",
   ypk.tr_numero                         AS "tr-numero",
   ypk.tr_alkuosa                        AS "tr-alkuosa",
   ypk.tr_alkuetaisyys                   AS "tr-alkuetaisyys",
@@ -212,9 +216,9 @@ WHERE yllapitokohde = :yllapitokohde
 INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi,
                            tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
                            tr_ajorata, tr_kaista, keskimaarainen_vuorokausiliikenne,
-                           yllapitoluokka, nykyinen_paallyste, sopimuksen_mukaiset_tyot,
+                           yllapitoluokka, sopimuksen_mukaiset_tyot,
                            arvonvahennykset, bitumi_indeksi, kaasuindeksi, yllapitokohdetyyppi,
-                           yllapitokohdetyotyyppi, indeksin_kuvaus)
+                           yllapitokohdetyotyyppi)
 VALUES (:urakka,
   :sopimus,
   :kohdenumero,
@@ -228,14 +232,12 @@ VALUES (:urakka,
   :tr_kaista,
   :keskimaarainen_vuorokausiliikenne,
   :yllapitoluokka,
-  :nykyinen_paallyste,
   :sopimuksen_mukaiset_tyot,
   :arvonvahennykset,
   :bitumi_indeksi,
   :kaasuindeksi,
   :yllapitokohdetyyppi :: yllapitokohdetyyppi,
-  :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi,
-  :indeksin_kuvaus);
+  :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi);
 
 -- name: paivita-yllapitokohde!
 -- Päivittää ylläpitokohteen
@@ -252,12 +254,10 @@ SET
   tr_kaista                         = :tr_kaista,
   keskimaarainen_vuorokausiliikenne = :keskimaarainen_vuorokausiliikenne,
   yllapitoluokka                    = :yllapitoluokka,
-  nykyinen_paallyste                = :nykyinen_paallyste,
   sopimuksen_mukaiset_tyot          = :sopimuksen_mukaiset_tyot,
   arvonvahennykset                  = :arvonvanhennykset,
   bitumi_indeksi                    = :bitumi_indeksi,
-  kaasuindeksi                      = :kaasuindeksi,
-  indeksin_kuvaus                   = :indeksin_kuvaus
+  kaasuindeksi                      = :kaasuindeksi
 WHERE id = :id
       AND urakka = :urakka;
 
@@ -427,7 +427,7 @@ UPDATE yllapitokohde
 SET
   aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
 WHERE id = :id
-      AND suorittava_tiemerkintaurakka = :urakka;
+      AND suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka;
 
 -- name: merkitse-kohde-valmiiksi-tiemerkintaan<!
 UPDATE yllapitokohde
@@ -436,6 +436,47 @@ SET
   aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
 WHERE id = :id
       AND urakka = :urakka;
+
+-- name: hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+SELECT
+  ypk.id as id,
+  ypk.nimi as "kohde-nimi",
+  ypk.tr_numero as "tr-numero",
+  ypk.tr_alkuosa as "tr-alkuosa",
+  ypk.tr_alkuetaisyys as "tr-alkuetaisyys",
+  ypk.tr_loppuosa as "tr-loppuosa",
+  ypk.tr_loppuetaisyys as "tr-loppuetaisyys",
+  ypk.aikataulu_tiemerkinta_loppu as "aikataulu-tiemerkinta-loppu",
+  pu.id as "paallystysurakka-id",
+  pu.nimi as "paallystysurakka-nimi",
+  pu.sampoid as "paallystysurakka-sampo-id",
+  tu.id as "tiemerkintaurakka-id",
+  tu.nimi as "tiemerkintaurakka-nimi",
+  tu.sampoid as "tiemerkintaurakka-sampo-id"
+FROM yllapitokohde ypk
+  JOIN urakka pu ON ypk.urakka = pu.id
+  JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
+WHERE ypk.id IN (:idt);
+
+-- name: hae-kohteen-tiedot-sahkopostilahetykseen
+SELECT
+  ypk.nimi as "kohde-nimi",
+  ypk.tr_numero as "tr-numero",
+  ypk.tr_alkuosa as "tr-alkuosa",
+  ypk.tr_alkuetaisyys as "tr-alkuetaisyys",
+  ypk.tr_loppuosa as "tr-loppuosa",
+  ypk.tr_loppuetaisyys as "tr-loppuetaisyys",
+  ypk.aikataulu_tiemerkinta_loppu as "aikataulu-tiemerkinta-loppu",
+  pu.id as "paallystysurakka-id",
+  pu.nimi as "paallystysurakka-nimi",
+  pu.sampoid as "paallystysurakka-sampo-id",
+  tu.id as "tiemerkintaurakka-id",
+  tu.nimi as "tiemerkintaurakka-nimi",
+  tu.sampoid as "tiemerkintaurakka-sampo-id"
+FROM yllapitokohde ypk
+  JOIN urakka pu ON ypk.urakka = pu.id
+  JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
+WHERE ypk.id = :id;
 
 -- name: tallenna-tiemerkintakohteen-aikataulu!
 -- Tallentaa ylläpitokohteen aikataulun
@@ -446,7 +487,7 @@ SET
   aikataulu_muokattu          = NOW(),
   aikataulu_muokkaaja         = :aikataulu_muokkaaja
 WHERE id = :id
-      AND suorittava_tiemerkintaurakka = :urakka;
+      AND suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka;
 
 -- name: yllapitokohteella-paallystysilmoitus
 SELECT EXISTS(SELECT id
@@ -583,6 +624,7 @@ UPDATE yllapitokohde
 SET
   aikataulu_tiemerkinta_alku = :tiemerkinta_alku,
   aikataulu_tiemerkinta_loppu = :tiemerkinta_loppu,
+  aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja,
   aikataulu_muokattu = NOW(),
   aikataulu_muokkaaja = :muokkaaja
 WHERE id = :id;
@@ -606,6 +648,7 @@ SELECT
   tr_ajorata                     AS "tr-ajorata",
   tr_kaista                      AS "tr-kaista",
   hinta,
+  hinta_kohteelle                AS "hinta-kohteelle",
   hintatyyppi,
   muutospvm,
   yllapitoluokka
@@ -615,16 +658,18 @@ WHERE
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
   AND poistettu IS NOT TRUE;
 
--- name: paivita-tiemerkintaurakan-yksikkohintaiset-tyot<!
+-- name: paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
 UPDATE yllapitokohde_tiemerkinta SET
   hinta = :hinta,
   hintatyyppi = :hintatyyppi::yllapitokohde_tiemerkinta_hintatyyppi,
-  muutospvm = :muutospvm
+  muutospvm = :muutospvm,
+  hinta_kohteelle = :hinta_kohteelle
 WHERE yllapitokohde = :yllapitokohde;
 
--- name: luo-tiemerkintaurakan-yksikkohintaiset-tyot<!
-INSERT INTO yllapitokohde_tiemerkinta(yllapitokohde, hinta, hintatyyppi, muutospvm) VALUES
-  (:yllapitokohde, :hinta, :hintatyyppi::yllapitokohde_tiemerkinta_hintatyyppi, :muutospvm);
+-- name: luo-tiemerkintaurakan-yksikkohintainen-tyo<!
+INSERT INTO yllapitokohde_tiemerkinta(yllapitokohde, hinta, hintatyyppi, muutospvm, hinta_kohteelle) VALUES
+  (:yllapitokohde, :hinta, :hintatyyppi::yllapitokohde_tiemerkinta_hintatyyppi, :muutospvm,
+  :hinta_kohteelle);
 
 -- name: hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
 SELECT id FROM yllapitokohde_tiemerkinta

@@ -12,7 +12,7 @@
 (deftest laske-urakan-suolasakko
   (let [ur @oulun-alueurakan-2014-2019-id]
     (testing "Testidatan Oulun alueurakka 2014 - 2019 lasketaan oikein"
-      (is (== 0
+      (is (== -29760.0M
               (ffirst (q (str "SELECT hoitokauden_suolasakko(" ur ", '2014-10-01','2015-09-30')"))))))))
 
 (defn suolasakko [ur lampotila lampotila-pitka sakko-per-tonni sallittu-maara kaytetty-maara]
@@ -24,7 +24,7 @@
           " VALUES ((SELECT id FROM sopimus WHERE urakka = " ur " AND paasopimus IS NULL), '2015-01-01'::date,"
           " 1, " kaytetty-maara ");"))
   (let [hae-suolasakko-sql (str "SELECT hoitokauden_suolasakko(" ur ", '2014-10-01','2015-09-30')")]
-    (Math/abs (double (ffirst (q hae-suolasakko-sql))))))
+    (double (ffirst (q hae-suolasakko-sql)))))
 
 
 (defspec muuta-sakon-maaraa
@@ -53,7 +53,11 @@
                       laskettu-suolasakko
                       (if (> kaytetty-maara (* sal 1.05))
                         (* sakko-per-tonni (- kaytetty-maara (* sal 1.05)))
-                        0.0)
+                        (if (and (< kaytetty-maara (* 0.95 sallittu-maara))
+                                 (<= erotus 4.0))
+                          (* sakko-per-tonni (- kaytetty-maara
+                                                (* 0.95 sallittu-maara)))
+                          0.0))
                       tietokannan-suolasakko
                       (suolasakko @oulun-alueurakan-2014-2019-id
                                   lampotila
@@ -61,4 +65,4 @@
                                   sakko-per-tonni
                                   sallittu-maara
                                   kaytetty-maara)]
-                  (=marginaalissa? laskettu-suolasakko tietokannan-suolasakko 0.01))))
+                  (=marginaalissa? (- laskettu-suolasakko) tietokannan-suolasakko 0.01))))

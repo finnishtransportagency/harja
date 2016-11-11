@@ -72,6 +72,9 @@ WHERE mat.maara != 0 OR mat.kokonaismaara != 0;
 -- name: paivita-sopimuksen-materiaalin-kaytto
 SELECT paivita_sopimuksen_materiaalin_kaytto(:sopimus::integer, :alkupvm::date);
 
+-- name: paivita-koko-sopimuksen-materiaalin-kaytto
+SELECT paivita_koko_sopimuksen_materiaalin_kaytto(:sopimus::integer);
+
 -- name: paivita-sopimuksen-materiaalin-kaytto-toteumapvm
 -- Päivittää sopimuksen materiaalin käytön annetun toteuman alkupäivämäärän
 -- päivälle.
@@ -294,6 +297,7 @@ FROM (SELECT
         JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
         LEFT JOIN kayttaja k ON tm.luoja = k.id
       WHERE t.urakka = :urakka
+            AND t.sopimus = :sopimus
             AND tm.poistettu IS NOT TRUE
             AND k.jarjestelma IS NOT TRUE
             AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
@@ -314,6 +318,8 @@ FROM (SELECT
         JOIN kayttaja k ON tm.luoja = k.id
       WHERE k.jarjestelma = TRUE
             AND t.urakka = :urakka
+            AND t.poistettu IS NOT TRUE
+            AND t.sopimus = :sopimus
             AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
             AND mk.materiaalityyppi = 'talvisuola' :: materiaalityyppi
       GROUP BY mk.id, mk.nimi, date_trunc('day', t.alkanut)) toteumat

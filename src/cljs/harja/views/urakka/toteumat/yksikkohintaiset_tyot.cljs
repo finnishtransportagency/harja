@@ -27,7 +27,8 @@
             [cljs-time.core :as t]
             [reagent.core :as r]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.domain.tierekisteri :as tierekisteri])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -317,12 +318,12 @@
           :muokattava? (constantly false)
           :tyyppi :pvm
           :hae (comp pvm/pvm :alkanut)
-          :leveys 20}
+          :leveys 12}
          {:otsikko "Määrä"
           :nimi :maara
           :muokattava? (fn [rivi] (not (:jarjestelmanlisaama rivi)))
           :tyyppi :positiivinen-numero
-          :leveys 20
+          :leveys 15
           :tasaa :oikea
           :fmt fmt/desimaaliluku-opt}
          {:otsikko "Suorittaja"
@@ -330,6 +331,12 @@
           :muokattava? (constantly false)
           :tyyppi :string
           :leveys 20}
+         {:otsikko "TR-osoite"
+          :nimi :tr
+          :leveys 20
+          :fmt tierekisteri/tierekisteriosoite-tekstina
+          :tyyppi :tierekisteriosoite
+          :muokattava? (constantly false)}
          {:otsikko "Lisätieto"
           :nimi :lisatieto
           :muokattava? (constantly false)

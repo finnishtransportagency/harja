@@ -82,6 +82,25 @@
           lue-fim-vastaus
           (kuvaa-roolit urakan-sampo-id)))))
 
+(defn suodata-kayttajaroolit
+  "Suodattaa käyttäjät, jotka kuuluvat ainakin yhteen annetuista rooleista (setti)."
+  [kayttajat pidettavat-roolit]
+  (filter
+    (fn [kayttaja]
+      (let [kayttajan-roolit (into #{} (map
+                                         str/lower-case
+                                         (:roolit kayttaja)))
+            pidettavat-roolit (into #{} (map
+                                          str/lower-case
+                                          pidettavat-roolit))]
+        (some? (some pidettavat-roolit kayttajan-roolit))))
+    kayttajat))
+
+(defn hae-urakan-kayttajat-jotka-roolissa [this sampo-id roolit-set]
+  (let [urakan-kayttajat (hae-urakan-kayttajat this sampo-id)
+        kayttajat-roolissa (suodata-kayttajaroolit urakan-kayttajat roolit-set)]
+    kayttajat-roolissa))
+
 (defrecord FIM [url]
   component/Lifecycle
   (start [this]

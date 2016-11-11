@@ -25,20 +25,22 @@
                                          (ilmatieteenlaitos/hae-talvikausi url vuosi)))
         hoidon-urakoiden-lampotilat-1981-2010 (hae-urakoiden-lampotilat url)
         hoidon-urakoiden-lampotilat-1971-2000 (hae-urakoiden-lampotilat
-                                               (str/replace url "tieindeksi2" "tieindeksi"))
+                                                (str/replace url "tieindeksi2" "tieindeksi"))
         hoidon-urakka-ja-alueurakkanro-avaimet
-        (urakat/hae-aktiivisten-hoitourakoiden-alueurakkanumerot db vuosi)]
-    (into {}
-          (comp
-           (map (fn [urakka]
-                  (merge urakka
-                         (get hoidon-urakoiden-lampotilat-1981-2010
-                              (:alueurakkanro urakka))
-                         {:pitkakeskilampotila_vanha (:pitkakeskilampotila
-                                                      (get hoidon-urakoiden-lampotilat-1971-2000
-                                                           (:alueurakkanro urakka)))})))
-           (map (juxt :id identity)))
-          hoidon-urakka-ja-alueurakkanro-avaimet)))
+        (urakat/hae-aktiivisten-hoitourakoiden-alueurakkanumerot db vuosi)
+        tulos (into {}
+                    (comp
+                      (map (fn [urakka]
+                             (merge urakka
+                                    (get hoidon-urakoiden-lampotilat-1981-2010
+                                         (:alueurakkanro urakka))
+                                    {:pitkakeskilampotila_vanha (:pitkakeskilampotila
+                                                                  (get hoidon-urakoiden-lampotilat-1971-2000
+                                                                       (:alueurakkanro urakka)))})))
+                      (map (juxt :id identity)))
+                    hoidon-urakka-ja-alueurakkanro-avaimet)]
+    (log/debug "VASTAUS: " (pr-str tulos))
+    tulos))
 
 (defn hae-teiden-hoitourakoiden-lampotilat [db user hoitokausi]
   (log/debug "hae-teiden-hoitourakoiden-lampotilat hoitokaudella: " hoitokausi)
@@ -103,12 +105,12 @@
   (let [suolasakon-id (:id (first (q/hae-suolasakko-id db urakka hoitokauden-alkuvuosi)))]
     (if suolasakon-id
       (do
-        (q/paivita-suolasakko! db (:maara tiedot) (:maksukuukausi tiedot)
+        (q/paivita-suolasakko! db (:maara tiedot) (:vainsakkomaara tiedot) (:maksukuukausi tiedot)
                                (:indeksi tiedot) (:id user)
                                (:talvisuolaraja tiedot) suolasakon-id)
           suolasakon-id)
 
-      (:id (q/luo-suolasakko<! db (:maara tiedot) hoitokauden-alkuvuosi (:maksukuukausi tiedot)
+      (:id (q/luo-suolasakko<! db (:maara tiedot) (:vainsakkomaara tiedot) hoitokauden-alkuvuosi (:maksukuukausi tiedot)
                                (:indeksi tiedot) urakka (:id user) (:talvisuolaraja tiedot))))))
 
 

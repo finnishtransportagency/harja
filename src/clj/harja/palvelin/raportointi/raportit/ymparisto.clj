@@ -117,7 +117,7 @@
                          (reduce + suunnitellut))
                luokitellut (filter :luokka rivit)
                materiaalirivit (remove #(nil? (:kk %)) rivit)
-               kk-rivit (group-by :kk materiaalirivit)
+               kk-rivit (group-by :kk (filter (comp not :luokka) materiaalirivit))
                kk-arvot (reduce-kv (fn [kk-arvot kk rivit]
                                      (assoc kk-arvot kk (reduce + 0 (keep :maara rivit))))
                                    {} kk-rivit)

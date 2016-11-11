@@ -86,7 +86,9 @@
    {:nimi "Tiemerkintä" :arvo :tiemerkinta}
    {:nimi "Päällystys" :arvo :paallystys}
    {:nimi "Paikkaus" :arvo :paikkaus}
-   {:nimi "Valaistus" :arvo :valaistus}])
+   {:nimi "Valaistus" :arvo :valaistus}
+   {:nimi "Siltakorjaus" :arvo :siltakorjaus}
+   {:nimi "Tekniset laitteet" :arvo :tekniset-laitteet}])
 
 (defn urakkatyyppi-arvolle [tyyppi]
   (first (filter #(= tyyppi (:arvo %))
@@ -203,7 +205,9 @@
                                                        :paallystys @urk/urakoitsijat-paallystys
                                                        :paikkaus @urk/urakoitsijat-paikkaus
                                                        :tiemerkinta @urk/urakoitsijat-tiemerkinta
-                                                       :valaistus @urk/urakoitsijat-valaistus)]
+                                                       :valaistus @urk/urakoitsijat-valaistus
+                                                       :siltakorjaus @urk/urakoitsijat-siltakorjaus
+                                                       :tekniset-laitteet @urk/urakoitsijat-tekniset-laitteet)]
              (if (nykyisen-urakkatyypin-urakoitsijat (:id %))
                %
                nil)))))

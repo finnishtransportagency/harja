@@ -22,7 +22,7 @@
   (filter
     (fn [rivi]
       (and
-        (sanktiot-domain/sakko? rivi)
+        (sanktiot-domain/sakkoryhmasta-sakko? rivi)
         (or (nil? sakkoryhma) (if (set? sakkoryhma)
                                 (sakkoryhma (:sakkoryhma rivi))
                                 (= sakkoryhma (:sakkoryhma rivi))))
@@ -36,7 +36,7 @@
   (filter
     (fn [rivi]
       (and
-        (not (sanktiot-domain/sakko? rivi))
+        (not (sanktiot-domain/sakkoryhmasta-sakko? rivi))
         (or (nil? urakka-id) (= urakka-id (:urakka-id rivi)))
         (or (nil? hallintayksikko-id) (= hallintayksikko-id (:hallintayksikko_id rivi)))
         (or (nil? talvihoito?) (= talvihoito? (rivi-kuuluu-talvihoitoon? rivi)))))

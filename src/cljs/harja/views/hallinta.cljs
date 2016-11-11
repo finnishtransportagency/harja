@@ -53,4 +53,4 @@
    :api-jarjestelmatunnukset
    (when (oikeudet/hallinta-api-jarjestelmatunnukset)
      ^{:key "jarjestelmatunnukset"}
-     [api-jarjestelmatunnukset/api-jarjestelmatunnukset])])
+     [api-jarjestelmatunnukset/api-jarjestelmatunnukset-paakomponentti])])

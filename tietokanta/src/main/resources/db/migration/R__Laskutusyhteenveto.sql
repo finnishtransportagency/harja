@@ -78,16 +78,18 @@ DECLARE
   akilliset_hoitotyot_laskutettu                  NUMERIC;
   akilliset_hoitotyot_laskutettu_ind_korotettuna  NUMERIC;
   akilliset_hoitotyot_laskutettu_ind_korotus      NUMERIC;
-  akilliset_hoitotyot_laskutettu_rivi             RECORD;
-  akilliset_hoitotyot_laskutettu_paivanhinnalla             NUMERIC;
 
   akilliset_hoitotyot_laskutetaan                  NUMERIC;
   akilliset_hoitotyot_laskutetaan_ind_korotettuna  NUMERIC;
   akilliset_hoitotyot_laskutetaan_ind_korotus      NUMERIC;
-  akilliset_hoitotyot_laskutetaan_rivi             RECORD;
-  akilliset_hoitotyot_laskutetaan_paivanhinnalla             NUMERIC;
-  akhti RECORD;
-  akhti_aikavalilla RECORD;
+
+  vahinkojen_korjaukset_laskutettu                  NUMERIC;
+  vahinkojen_korjaukset_laskutettu_ind_korotettuna  NUMERIC;
+  vahinkojen_korjaukset_laskutettu_ind_korotus      NUMERIC;
+
+  vahinkojen_korjaukset_laskutetaan                  NUMERIC;
+  vahinkojen_korjaukset_laskutetaan_ind_korotettuna  NUMERIC;
+  vahinkojen_korjaukset_laskutetaan_ind_korotus      NUMERIC;
 
   erilliskustannukset_laskutettu                  NUMERIC;
   erilliskustannukset_laskutettu_ind_korotettuna  NUMERIC;
@@ -324,8 +326,10 @@ BEGIN
         suolasakot_laskutettu := hoitokauden_laskettu_suolasakko_rivi.summa;
         suolasakot_laskutettu_ind_korotettuna := hoitokauden_laskettu_suolasakko_rivi.korotettuna;
         suolasakot_laskutettu_ind_korotus := hoitokauden_laskettu_suolasakko_rivi.korotus;
-      ELSIF hoitokauden_suolasakko_rivi.maksukuukausi = (SELECT EXTRACT(MONTH FROM aikavali_alkupvm) :: INTEGER) THEN
-        RAISE NOTICE 'Suolasakko laskutetaan tässä kuussa %', hoitokauden_suolasakko_rivi.maksukuukausi;
+        -- Jos valittu yksittäinen kuukausi on maksukuukausi TAI jos kyseessä koko hoitokauden raportti (poikkeustapaus)
+      ELSIF (hoitokauden_suolasakko_rivi.maksukuukausi = (SELECT EXTRACT(MONTH FROM aikavali_alkupvm) :: INTEGER))
+            OR (aikavali_alkupvm = hk_alkupvm AND aikavali_loppupvm = hk_loppupvm) THEN
+        RAISE NOTICE 'Suolasakko laskutetaan tässä kuussa % tai kyseessä koko hoitokauden LYV-raportti.', hoitokauden_suolasakko_rivi.maksukuukausi;
         suolasakot_laskutetaan := hoitokauden_laskettu_suolasakko_rivi.summa;
         suolasakot_laskutetaan_ind_korotettuna := hoitokauden_laskettu_suolasakko_rivi.korotettuna;
         suolasakot_laskutetaan_ind_korotus := hoitokauden_laskettu_suolasakko_rivi.korotus;
@@ -348,6 +352,12 @@ BEGIN
     akilliset_hoitotyot_laskutetaan := 0.0;
     akilliset_hoitotyot_laskutetaan_ind_korotettuna := 0.0;
     akilliset_hoitotyot_laskutetaan_ind_korotus := 0.0;
+    vahinkojen_korjaukset_laskutettu := 0.0;
+    vahinkojen_korjaukset_laskutettu_ind_korotettuna := 0.0;
+    vahinkojen_korjaukset_laskutettu_ind_korotus := 0.0;
+    vahinkojen_korjaukset_laskutetaan := 0.0;
+    vahinkojen_korjaukset_laskutetaan_ind_korotettuna := 0.0;
+    vahinkojen_korjaukset_laskutetaan_ind_korotus := 0.0;
 
     FOR mhti IN SELECT COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta) AS mht_summa,
                        tot.alkanut AS tot_alkanut,
@@ -389,6 +399,16 @@ BEGIN
 	  akilliset_hoitotyot_laskutetaan_ind_korotettuna := akilliset_hoitotyot_laskutetaan_ind_korotettuna + muutostyot_rivi.korotettuna;
 	  akilliset_hoitotyot_laskutetaan_ind_korotus := akilliset_hoitotyot_laskutetaan_ind_korotus + muutostyot_rivi.korotus;
 	END IF;
+      ELSIF mhti.tyyppi = 'vahinkojen-korjaukset' THEN
+        IF mhti.tot_alkanut < aikavali_alkupvm THEN
+          vahinkojen_korjaukset_laskutettu := vahinkojen_korjaukset_laskutettu + COALESCE(muutostyot_rivi.summa, 0.0);
+          vahinkojen_korjaukset_laskutettu_ind_korotettuna := vahinkojen_korjaukset_laskutettu_ind_korotettuna + muutostyot_rivi.korotettuna;
+          vahinkojen_korjaukset_laskutettu_ind_korotus := vahinkojen_korjaukset_laskutettu_ind_korotus + muutostyot_rivi.korotus;
+        ELSE
+          vahinkojen_korjaukset_laskutetaan := vahinkojen_korjaukset_laskutetaan + COALESCE(muutostyot_rivi.summa, 0.0);
+          vahinkojen_korjaukset_laskutetaan_ind_korotettuna := vahinkojen_korjaukset_laskutetaan_ind_korotettuna + muutostyot_rivi.korotettuna;
+          vahinkojen_korjaukset_laskutetaan_ind_korotus := vahinkojen_korjaukset_laskutetaan_ind_korotus + muutostyot_rivi.korotus;
+        END IF;
       ELSE
         RAISE NOTICE 'mht tyyppiä %, alkanut %, summa %', mhti.tyyppi, mhti.tot_alkanut, muutostyot_rivi.summa;
         IF mhti.tot_alkanut < aikavali_alkupvm THEN
@@ -403,6 +423,7 @@ BEGIN
       END IF;
     END LOOP;
     RAISE NOTICE 'Äkilliset hoitotyot laskutettu / laskutetaan: % / %', akilliset_hoitotyot_laskutettu, akilliset_hoitotyot_laskutetaan;
+    RAISE NOTICE 'Vahinkojen korjaukset laskutettu / laskutetaan: % / %', vahinkojen_korjaukset_laskutettu, vahinkojen_korjaukset_laskutetaan;
     RAISE NOTICE 'Muutostyöt laskutettu / laskutetaan: % / %', muutostyot_laskutettu, muutostyot_laskutetaan;
 
     -- ERILLISKUSTANNUKSET  hoitokaudella
@@ -491,11 +512,13 @@ BEGIN
     kaikki_laskutetaan_ind_korotus := 0.0;
 
     kaikki_paitsi_kht_laskutettu_ind_korotus := yht_laskutettu_ind_korotus + sakot_laskutettu_ind_korotus + COALESCE(suolasakot_laskutettu_ind_korotus, 0.0) +
-                                                muutostyot_laskutettu_ind_korotus + akilliset_hoitotyot_laskutettu_ind_korotus + erilliskustannukset_laskutettu_ind_korotus + bonukset_laskutettu_ind_korotus;
+                                                muutostyot_laskutettu_ind_korotus + akilliset_hoitotyot_laskutettu_ind_korotus +
+                                                vahinkojen_korjaukset_laskutettu_ind_korotus + erilliskustannukset_laskutettu_ind_korotus + bonukset_laskutettu_ind_korotus;
     kaikki_laskutettu_ind_korotus := kaikki_paitsi_kht_laskutettu_ind_korotus + kht_laskutettu_ind_korotus;
 
     kaikki_paitsi_kht_laskutetaan_ind_korotus := yht_laskutetaan_ind_korotus + sakot_laskutetaan_ind_korotus + COALESCE(suolasakot_laskutetaan_ind_korotus, 0.0) +
-                                                 muutostyot_laskutetaan_ind_korotus + akilliset_hoitotyot_laskutetaan_ind_korotus  + erilliskustannukset_laskutetaan_ind_korotus + bonukset_laskutetaan_ind_korotus;
+                                                 muutostyot_laskutetaan_ind_korotus + akilliset_hoitotyot_laskutetaan_ind_korotus  +
+                                                 vahinkojen_korjaukset_laskutetaan_ind_korotus + erilliskustannukset_laskutetaan_ind_korotus + bonukset_laskutetaan_ind_korotus;
     kaikki_laskutetaan_ind_korotus := kaikki_paitsi_kht_laskutetaan_ind_korotus + kht_laskutetaan_ind_korotus;
 
 
@@ -508,7 +531,8 @@ BEGIN
 
     kaikki_paitsi_kht_laskutettu := yht_laskutettu_ind_korotettuna + sakot_laskutettu_ind_korotettuna +
                                     COALESCE(suolasakot_laskutettu_ind_korotettuna, 0.0) + muutostyot_laskutettu_ind_korotettuna +
-                                    akilliset_hoitotyot_laskutettu_ind_korotettuna + erilliskustannukset_laskutettu_ind_korotettuna +
+                                    akilliset_hoitotyot_laskutettu_ind_korotettuna +
+                                    vahinkojen_korjaukset_laskutettu_ind_korotettuna + erilliskustannukset_laskutettu_ind_korotettuna +
                                     bonukset_laskutettu_ind_korotettuna
                                     --Aurasta: myös kok.hint. töiden indeksitarkistus laskettava tähän mukaan
                                     + kht_laskutettu_ind_korotus;
@@ -517,7 +541,8 @@ BEGIN
 
     kaikki_paitsi_kht_laskutetaan := yht_laskutetaan_ind_korotettuna + sakot_laskutetaan_ind_korotettuna +
                                      COALESCE(suolasakot_laskutetaan_ind_korotettuna, 0.0) + muutostyot_laskutetaan_ind_korotettuna +
-                                     akilliset_hoitotyot_laskutetaan_ind_korotettuna + erilliskustannukset_laskutetaan_ind_korotettuna +
+                                     akilliset_hoitotyot_laskutetaan_ind_korotettuna +
+                                     vahinkojen_korjaukset_laskutetaan_ind_korotettuna + erilliskustannukset_laskutetaan_ind_korotettuna +
                                      bonukset_laskutetaan_ind_korotettuna
                                      --Aurasta: myös kok.hint. töiden indeksitarkistus laskettava tähän mukaan
                                      + kht_laskutetaan_ind_korotus;
@@ -537,6 +562,10 @@ BEGIN
     RAISE NOTICE 'suolasakot_laskutettu_ind_korotettuna: %', suolasakot_laskutettu_ind_korotettuna;
     RAISE NOTICE 'muutostyot_laskutettu: %', muutostyot_laskutettu;
     RAISE NOTICE 'muutostyot_laskutettu_ind_korotettuna: %', muutostyot_laskutettu_ind_korotettuna;
+    RAISE NOTICE 'akilliset_hoitotyot_laskutettu: %', akilliset_hoitotyot_laskutettu;
+    RAISE NOTICE 'akilliset_hoitotyot_laskutettu_ind_korotettuna: %', akilliset_hoitotyot_laskutettu_ind_korotettuna;
+    RAISE NOTICE 'vahinkojen_korjaukset_laskutettu: %', vahinkojen_korjaukset_laskutettu;
+    RAISE NOTICE 'vahinkojen_korjaukset_laskutettu_ind_korotettuna: %', vahinkojen_korjaukset_laskutettu_ind_korotettuna;
     RAISE NOTICE 'erilliskustannukset_laskutettu: %', erilliskustannukset_laskutettu;
     RAISE NOTICE 'erilliskustannukset_laskutettu_ind_korotettuna: %', erilliskustannukset_laskutettu_ind_korotettuna;
     RAISE NOTICE 'bonukset_laskutettu: %', bonukset_laskutettu;
@@ -556,6 +585,8 @@ BEGIN
     RAISE NOTICE 'muutostyot_laskutetaan_ind_korotettuna: %', muutostyot_laskutetaan_ind_korotettuna;
     RAISE NOTICE 'akilliset_hoitotyot_laskutetaan: %', akilliset_hoitotyot_laskutetaan;
     RAISE NOTICE 'akilliset_hoitotyot_laskutetaan_ind_korotettuna: %', akilliset_hoitotyot_laskutetaan_ind_korotettuna;
+    RAISE NOTICE 'vahinkojen_korjaukset_laskutetaan: %', vahinkojen_korjaukset_laskutetaan;
+    RAISE NOTICE 'vahinkojen_korjaukset_laskutetaan_ind_korotettuna: %', vahinkojen_korjaukset_laskutetaan_ind_korotettuna;
     RAISE NOTICE 'erilliskustannukset_laskutetaan: %', erilliskustannukset_laskutetaan;
     RAISE NOTICE 'erilliskustannukset_laskutetaan_ind_korotettuna: %', erilliskustannukset_laskutetaan_ind_korotettuna;
     RAISE NOTICE 'bonukset_laskutetaan: %', bonukset_laskutetaan;
@@ -599,7 +630,10 @@ BEGIN
  	     erilliskustannukset_laskutetaan, erilliskustannukset_laskutetaan_ind_korotettuna, erilliskustannukset_laskutetaan_ind_korotus,
  	     bonukset_laskutettu, bonukset_laskutettu_ind_korotettuna, bonukset_laskutettu_ind_korotus,
  	     bonukset_laskutetaan, bonukset_laskutetaan_ind_korotettuna, bonukset_laskutetaan_ind_korotus,
- 	     suolasakko_kaytossa, lampotila_puuttuu
+ 	     suolasakko_kaytossa, lampotila_puuttuu,
+       vahinkojen_korjaukset_laskutettu, vahinkojen_korjaukset_laskutettu_ind_korotettuna, vahinkojen_korjaukset_laskutettu_ind_korotus,
+       vahinkojen_korjaukset_laskutetaan, vahinkojen_korjaukset_laskutetaan_ind_korotettuna, vahinkojen_korjaukset_laskutetaan_ind_korotus
+
     );
 
     cache := cache || rivi;

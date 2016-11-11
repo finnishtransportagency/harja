@@ -55,16 +55,18 @@
                  :viimeinen-rivi-yhteenveto? true
                  :oikealle-tasattavat-kentat (set (range 1 14))}
       [{:leveys 10 :otsikko "Urakka"}
-       {:otsikko "Keski\u00ADlämpö\u00ADtila" :leveys 5 :fmt :numero}
-       {:otsikko "Pitkän aikavälin keski\u00ADlämpö\u00ADtila" :leveys 5 :fmt :numero}
-       {:otsikko "Talvi\u00ADsuolan max-määrä (t)" :leveys 5 :fmt :numero}
-       {:otsikko "Sakko\u00ADraja (t)" :leveys 5 :fmt :numero}
-       {:otsikko "Kerroin" :leveys 4 :fmt :numero}
-       {:otsikko "Kohtuul\u00ADlis\u00ADtarkis\u00ADtettu sakko\u00ADraja (t)" :leveys 5 :fmt :numero}
+       {:otsikko "Keski\u00ADlämpö\u00ADtila" :leveys 3 :fmt :numero}
+       {:otsikko "Pitkän aikavälin keski\u00ADlämpö\u00ADtila" :leveys 3 :fmt :numero}
+       {:otsikko "Talvi\u00ADsuolan max-määrä (t)" :leveys 4 :fmt :numero}
+       {:otsikko "Bonus\u00ADraja (t)" :leveys 4 :fmt :numero}
+       {:otsikko "Sakko\u00ADraja (t)" :leveys 4 :fmt :numero}
+       {:otsikko "Kerroin" :leveys 3 :fmt :numero}
+       {:otsikko "Kohtuul\u00ADlis\u00ADtarkis\u00ADtettu sakko\u00ADraja (t)" :leveys 4 :fmt :numero}
        {:otsikko "Käytetty suola\u00ADmäärä (t)" :leveys 5 :fmt :numero}
        {:otsikko "Suola\u00ADerotus (t)" :leveys 5 :fmt :numero}
-       {:otsikko "Sakko \u20AC / tonni" :leveys 4 :fmt :raha}
-       {:otsikko "Sakko €" :leveys 6 :fmt :raha}
+       {:otsikko "Sakko/\u00ADbonus \u20AC / t" :leveys 4 :fmt :raha}
+       {:otsikko "Sakko € / t" :leveys 4 :fmt :raha}
+       {:otsikko "Sakko/\u00ADbonus €" :leveys 6 :fmt :raha}
        {:otsikko "Indeksi €" :leveys 5 :fmt :raha}
        {:otsikko "Indeksi\u00ADkorotettu sakko €" :leveys 6 :fmt :raha}]
 
@@ -80,12 +82,14 @@
                                   (:keskilampotila rivi)
                                   (:pitkakeskilampotila rivi)
                                   (:sallittu_suolankaytto rivi)
+                                  (:suolankayton_bonusraja rivi)
                                   (:suolankayton_sakkoraja rivi)
-                                  (or (:kerroin rivi) [:virhe "Indeksi puuttuu!"])
+                                  (or (:kerroin rivi) [:virhe "Lämpötila puuttuu"])
                                   (:sakkoraja rivi)
                                   (:suolankaytto rivi)
                                   (:erotus rivi)
                                   (:maara rivi)
+                                  (:vainsakkomaara rivi)
                                   (:suolasakko rivi)
                                   (:korotus rivi)
                                   (:korotettuna rivi)])
@@ -97,26 +101,31 @@
                                     nil
                                     nil
                                     (reduce + (keep :sallittu_suolankaytto hyn-suolasakot))
-                                    nil
+                                    (reduce + (keep :suolankayton_bonusraja hyn-suolasakot))
+                                    (reduce + (keep :suolankayton_sakkoraja hyn-suolasakot))
                                     nil
                                     (reduce + (keep :sakkoraja hyn-suolasakot))
                                     (reduce + (keep :suolankaytto hyn-suolasakot))
                                     (reduce + (keep :erotus hyn-suolasakot))
                                     nil
-                                    (reduce + (keep :suolasakko hyn-suolasakot))
                                     nil
+                                    (reduce + (keep :suolasakko hyn-suolasakot))
+                                    (reduce + (keep :korotus hyn-suolasakot))
                                     (reduce + (keep :korotettuna hyn-suolasakot))]}])))))
               (when (not (empty? raportin-data))
                 ["Yhteensä"
                  nil
                  nil
                  (reduce + (keep :sallittu_suolankaytto raportin-data))
-                 nil
+                 (reduce + (keep :suolankayton_bonusraja raportin-data))
+                 (reduce + (keep :suolankayton_sakkoraja raportin-data))
                  nil
                  (reduce + (keep :sakkoraja raportin-data))
                  (reduce + (keep :suolankaytto raportin-data))
                  (reduce + (keep :erotus raportin-data))
                  nil
-                 (reduce + (keep :suolasakko raportin-data))
                  nil
-                 (reduce + (keep :korotettuna raportin-data))])))]]))
+                 (reduce + (keep :suolasakko raportin-data))
+                 (reduce + (keep :korotus raportin-data))
+                 (reduce + (keep :korotettuna raportin-data))])))]
+     [:teksti "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."]]))

@@ -16,7 +16,9 @@
 
 (def +ilmoitusviesti+
   (str "Uusi toimenpidepyyntö %s: %s (id: %s, viestinumero: %s).\n\n"
+       "Urakka: %s\n\n"
        "Yhteydenottopyyntö: %s\n\n"
+       "Ilmoittaja: %s\n\n"
        "Paikka: %s\n\n"
        "TR-osoite: %s\n\n"
        "Selitteet: %s.\n\n"
@@ -86,7 +88,9 @@
                        ilmoitusid
                        vapaateksti
                        toimenpide
-                       paivystaja))]
+                       paivystaja
+                       "sisaan"
+                       "sms"))]
 
       (when (and (= toimenpide "aloitus") (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
         (let [aloitus-kuittaus-id (tallenna "vastaanotto" "Vastaanotettu")]
@@ -139,7 +143,9 @@
               otsikko
               ilmoitus-id
               viestinumero
+              (:urakkanimi ilmoitus)
               (fmt/totuus (:yhteydenottopyynto ilmoitus))
+              (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))
               paikankuvaus
               tr-osoite
               selitteet
@@ -159,7 +165,17 @@
         (let [viestinumero (paivystajatekstiviestit/kirjaa-uusi-viesti
                              db (:id paivystaja) (:ilmoitus-id ilmoitus) puhelinnumero)
               viesti (ilmoitus-tekstiviesti ilmoitus viestinumero)]
-          (sms/laheta sms puhelinnumero viesti)))
+          (sms/laheta sms puhelinnumero viesti)
+
+          (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
+            db
+            (:id ilmoitus)
+            (:ilmoitus-id ilmoitus)
+            viesti
+            "valitys"
+            paivystaja
+            "ulos"
+            "sms")))
       (log/warn "Ilmoitusta ei voida lähettää tekstiviestillä ilman puhelinnumeroa."))
     (catch Exception e
       (log/error "Ilmoituksen lähettämisessä tekstiviestillä tapahtui poikkeus." e))))

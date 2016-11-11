@@ -15,61 +15,46 @@
 
   (is (nil? (validoi json-skeemat/laatupoikkeaman-kirjaus json-esimerkit/+laatupoikkeaman-kirjaus+)))
 
-  (is (nil? (validoi json-skeemat/ilmoitustoimenpiteen-kirjaaminen
-                     json-esimerkit/+ilmoitustoimenpiteen-kirjaaminen+)))
+  (is (nil? (validoi json-skeemat/ilmoitustoimenpiteen-kirjaaminen json-esimerkit/+ilmoitustoimenpiteen-kirjaaminen+)))
   (is (nil? (validoi json-skeemat/ilmoitusten-haku json-esimerkit/+ilmoitusten-haku+)))
-  (is (nil? (validoi json-skeemat/tietyoilmoituksen-kirjaus
-                     json-esimerkit/+tietyoilmoituksen-kirjaus+)))
+  (is (nil? (validoi json-skeemat/tietyoilmoituksen-kirjaus json-esimerkit/+tietyoilmoituksen-kirjaus+)))
 
   (is (nil? (validoi json-skeemat/pistetoteuman-kirjaus json-esimerkit/+pistetoteuman-kirjaus+)))
   (is (nil? (validoi json-skeemat/reittitoteuman-kirjaus json-esimerkit/+reittitoteuman-kirjaus+)))
 
-  (is (nil? (validoi json-skeemat/turvallisuuspoikkeamien-kirjaus
-                     json-esimerkit/+turvallisuuspoikkeamien-kirjaus+)))
+  (is (nil? (validoi json-skeemat/turvallisuuspoikkeamien-kirjaus json-esimerkit/+turvallisuuspoikkeamien-kirjaus+)))
 
   (is (nil? (validoi json-skeemat/tielupien-haku json-esimerkit/+tielupien-haku+)))
   (is (nil? (validoi json-skeemat/tielupien-haku-vastaus json-esimerkit/+tielupien-haku-vastaus+)))
 
   (is (nil? (validoi json-skeemat/tietolajien-haku json-esimerkit/+tietolajien-haku+)))
 
-  (is (nil? (validoi json-skeemat/varusteiden-haku-vastaus
-                     json-esimerkit/+varusteiden-haku-vastaus+)))
+  (is (nil? (validoi json-skeemat/varusteiden-haku-vastaus json-esimerkit/+varusteiden-haku-vastaus+)))
   (is (nil? (validoi json-skeemat/varusteen-lisays json-esimerkit/+varusteen-lisays+)))
   (is (nil? (validoi json-skeemat/varusteen-paivitys json-esimerkit/+varusteen-paivitys+)))
   (is (nil? (validoi json-skeemat/varusteen-poisto json-esimerkit/+varusteen-poisto+)))
-  (is (nil? (validoi json-skeemat/varustetoteuman-kirjaus
-                     json-esimerkit/+varustetoteuman-kirjaus+)))
+  (is (nil? (validoi json-skeemat/varustetoteuman-kirjaus json-esimerkit/+varustetoteuman-kirjaus+)))
 
-  (is (nil? (validoi json-skeemat/siltatarkastuksen-kirjaus
-                     json-esimerkit/+siltatarkastuksen-kirjaus+)))
-  (is (nil? (validoi json-skeemat/tiestotarkastuksen-kirjaus
-                     json-esimerkit/+tiestotarkastuksen-kirjaus+)))
-  (is (nil? (validoi json-skeemat/soratietarkastuksen-kirjaus
-                     json-esimerkit/+soratietarkastuksen-kirjaus+)))
-  (is (nil? (validoi json-skeemat/talvihoitotarkastuksen-kirjaus
-                     json-esimerkit/+talvihoitotarkastuksen-kirjaus+)))
+  (is (nil? (validoi json-skeemat/siltatarkastuksen-kirjaus json-esimerkit/+siltatarkastuksen-kirjaus+)))
+  (is (nil? (validoi json-skeemat/tiestotarkastuksen-kirjaus json-esimerkit/+tiestotarkastuksen-kirjaus+)))
+  (is (nil? (validoi json-skeemat/soratietarkastuksen-kirjaus json-esimerkit/+soratietarkastuksen-kirjaus+)))
+  (is (nil? (validoi json-skeemat/talvihoitotarkastuksen-kirjaus json-esimerkit/+talvihoitotarkastuksen-kirjaus+)))
 
-  (is (nil? (validoi json-skeemat/paivystajatietojen-kirjaus
-                     json-esimerkit/+paivystajatietojen-kirjaus+)))
-  (is (nil? (validoi json-skeemat/paivystajatietojen-haku-vastaus
-                     json-esimerkit/+paivystajatietojen-haku-vastaus+)))
+  (is (nil? (validoi json-skeemat/paivystajatietojen-kirjaus json-esimerkit/+paivystajatietojen-kirjaus+)))
+  (is (nil? (validoi json-skeemat/paivystajatietojen-haku-vastaus json-esimerkit/+paivystajatietojen-haku-vastaus+)))
 
-  (is (nil? (validoi json-skeemat/tyokoneenseuranta-kirjaus
-                     json-esimerkit/+tyokoneenseuranta-kirjaus+)))
+  (is (nil? (validoi json-skeemat/tyokoneenseuranta-kirjaus json-esimerkit/+tyokoneenseuranta-kirjaus+)))
 
-  (is (nil? (validoi json-skeemat/paivystyksen-poisto
-                     json-esimerkit/+paivystyksen-poisto-kirjaus+)))
+  (is (nil? (validoi json-skeemat/paivystyksen-poisto json-esimerkit/+paivystyksen-poisto-kirjaus+)))
 
-  (is (nil? (validoi json-skeemat/urakan-yllapitokohteiden-haku-vastaus
-                     json-esimerkit/+urakan-yllapitokohteiden-haku+)))
+  (is (nil? (validoi json-skeemat/urakan-yllapitokohteiden-haku-vastaus json-esimerkit/+urakan-yllapitokohteiden-haku+)))
 
-  (is (nil? (validoi json-skeemat/paallystysilmoituksen-kirjaus
-                     json-esimerkit/+paallystysilmoituksen-kirjaus+)))
+  (is (nil? (validoi json-skeemat/paallystysilmoituksen-kirjaus json-esimerkit/+paallystysilmoituksen-kirjaus+)))
 
-  (is (nil? (validoi json-skeemat/yllapidon-aikataulun-kirjaus
-                     json-esimerkit/+yllapidon-aikataulun-kirjaus+)))
+  (is (nil? (validoi json-skeemat/paallystyksen-aikataulun-kirjaus json-esimerkit/+paallystyksen-aikataulun-kirjaus+)))
+  (is (nil? (validoi json-skeemat/tiemerkinnan-aikataulun-kirjaus json-esimerkit/+tiemerkinnan-aikataulun-kirjaus+)))
 
-  (is (nil? (validoi json-skeemat/suljetun-tieosuuden-kirjaus
-                     json-esimerkit/+suljetun-tieosuuden-kirjaus+)))
-  (is (nil? (validoi json-skeemat/suljetun-tieosuuden-poisto
-                     json-esimerkit/+suljetun-tieosuuden-poisto+))))
+  (is (nil? (validoi json-skeemat/suljetun-tieosuuden-kirjaus json-esimerkit/+suljetun-tieosuuden-kirjaus+)))
+  (is (nil? (validoi json-skeemat/suljetun-tieosuuden-poisto json-esimerkit/+suljetun-tieosuuden-poisto+)))
+
+  (is (nil? (validoi json-skeemat/urakan-yhteystietojen-haku-vastaus json-esimerkit/+urakan-yhteystietoje-hakuvastaus+))))
