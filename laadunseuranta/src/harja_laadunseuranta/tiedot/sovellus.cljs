@@ -35,8 +35,6 @@
                :talvihoitoluokka 2}
 
    ;; UI
-   ;; TODO Mahdollisesti ei kannata sitoa tällaisia pieniä komponenttikohtaisia tiloja
-   ;; osaksi koko softan tilaa?
    :tr-tiedot-nakyvissa false
 
    ;; Havainnot

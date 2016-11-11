@@ -97,7 +97,7 @@
          [:span.livicon-check]]]])))
 
 (defn- nappaimistokomponentti [tiedot]
-  (let [syotto-atom (atom {:nykyinen-syotto "0,"
+  (let [syotto-atom (atom {:nykyinen-syotto "0," ;; TODO Osaksi softan tilaa
                            :syotot []})]
 
     (fn [{:keys [nimi avain lopeta-jatkuva-havainto mittaustyyppi] :as tiedot}]

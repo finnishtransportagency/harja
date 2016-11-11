@@ -10,7 +10,7 @@
                    [devcards.core :refer [defcard]]))
 
 (defn tarkastusajon-paattamisdialogi [paattamattomia]
-  (let [kylla-klikattu (atom false)]
+  (let [kylla-klikattu (atom false)] ;; TODO with-let
     (fn [_ _ _]
       (if @kylla-klikattu
         [:div.tarkastusajon-luonti-dialog
