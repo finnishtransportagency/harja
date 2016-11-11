@@ -343,3 +343,13 @@ WHERE u.alkupvm <= :pvm
 
 -- name: hae-urakan-vastuuhenkilot
 SELECT * FROM urakanvastuuhenkilo WHERE urakka = :urakka;
+
+-- name: poista-urakan-vastuuhenkilot-roolille!
+DELETE FROM urakanvastuuhenkilo
+ WHERE urakka = :urakka AND
+       rooli = :rooli;
+
+-- name: luo-urakan-vastuuhenkilo<!
+INSERT INTO urakanvastuuhenkilo
+       (urakka, rooli, nimi, kayttajanimi, ensisijainen)
+VALUES (:urakka, :rooli, :nimi, :kayttajanimi, :ensisijainen);

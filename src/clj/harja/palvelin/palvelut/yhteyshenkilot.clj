@@ -16,7 +16,8 @@
             [harja.domain.puhelinnumero :as puhelinnumero]
             [harja.pvm :as pvm]
             [clj-time.core :as t]
-            [clj-time.coerce :as c])
+            [clj-time.coerce :as c]
+            [harja.fmt :as fmt])
   (:import (java.sql Date)))
 
 (declare hae-urakan-yhteyshenkilot
@@ -27,7 +28,8 @@
          tallenna-urakan-paivystajat
 
          hae-urakan-kayttajat
-         hae-urakan-vastuuhenkilot)
+         hae-urakan-vastuuhenkilot
+         tallenna-urakan-vastuuhenkilot-roolille)
 
 (defrecord Yhteyshenkilot []
   component/Lifecycle
@@ -61,7 +63,12 @@
 
      :hae-urakan-vastuuhenkilot
      (fn [user urakka-id]
-       (hae-urakan-vastuuhenkilot (:db this) user urakka-id)))
+       (hae-urakan-vastuuhenkilot (:db this) user urakka-id))
+
+     :tallenna-urakan-vastuuhenkilot-roolille
+     (fn [user tiedot]
+       (tallenna-urakan-vastuuhenkilot-roolille (:db this) user tiedot)))
+
     this)
 
   (stop [this]
@@ -72,7 +79,8 @@
                      :hae-urakan-paivystajat
                      :tallenna-urakan-paivystajat
                      :hae-urakan-kayttajat
-                     :hae-urakan-vastuuhenkilot)
+                     :hae-urakan-vastuuhenkilot
+                     :tallenna-urakan-vastuuhenkilot-roolille)
     this))
 
 (defn hae-urakan-kayttajat [db fim user urakka-id]
@@ -218,6 +226,31 @@
     (hae-urakan-paivystajat c user urakka-id)))
 
 (defn hae-urakan-vastuuhenkilot [db user urakka-id]
-  (log/debug "HAETAANPA")
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
   (q/hae-urakan-vastuuhenkilot db urakka-id))
+
+(defn tallenna-urakan-vastuuhenkilot-roolille [db user
+                                               {:keys [urakka-id rooli vastuuhenkilo varahenkilo] :as tiedot}]
+  (println "TIEDOT: " (pr-str tiedot))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
+
+  (when (and (= (roolit/osapuoli user) :urakoitsija)
+             (not= rooli "vastuuhenkilo"))
+    (log/error "Käyttäjä " user " yritti luoda vastuuhenkilön urakkaan "
+               urakka-id " roolilla " rooli)
+    (throw (SecurityException. "Ei oikeutta luoda vastuuhenkilö annetulle roolille")))
+
+  (let [luo<! (fn [c kayttaja ensisijainen]
+                (println "LUODAAN: " kayttaja)
+                (q/luo-urakan-vastuuhenkilo<! c {:urakka urakka-id
+                                                 :rooli rooli
+                                                 :nimi (fmt/kayttaja kayttaja)
+                                                 :kayttajanimi (:kayttajatunnus kayttaja)
+                                                 :ensisijainen ensisijainen}))]
+    (jdbc/with-db-transaction [c db]
+      (q/poista-urakan-vastuuhenkilot-roolille! c {:urakka urakka-id :rooli rooli})
+      (when vastuuhenkilo
+        (luo<! c vastuuhenkilo true))
+      (when varahenkilo
+        (luo<! c varahenkilo false)))
+    (hae-urakan-vastuuhenkilot db user urakka-id)))
