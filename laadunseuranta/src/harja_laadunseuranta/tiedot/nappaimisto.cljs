@@ -8,8 +8,17 @@
             [harja-laadunseuranta.tiedot.fmt :as fmt]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]))
 
-(def mittaustyypin-lahtoarvo {:kitkamittaus "0,"})
-(def syoton-max-merkkimaara {:kitkamittaus 4})
+(def mittaustyypin-lahtoarvo {:kitkamittaus "0,"
+                              :lumisuus ""
+                              :talvihoito-tasaisuus ""})
+
+(def syoton-max-merkkimaara {:kitkamittaus 4
+                             :lumisuus 3
+                             :talvihoito-tasaisuus 3})
+
+(def syoton-rajat {:kitkamittaus [0 0.999]
+                   :lumisuus [0 100]
+                   :talvihoito-tasaisuus [0 100]})
 
 (defn numeronappain-painettu! [numero mittaustyyppi syotto-atom]
   (.log js/console "Numero syötetty: " (pr-str numero))
@@ -41,3 +50,23 @@
        :tarkastusajo @s/tarkastusajo-id
        :havainnot @s/jatkuvat-havainnot
        :mittaukset {:kitkamittaus arvo}}))
+
+(defn kirjaa-lumisuus! [arvo]
+  (.log js/console "Kirjataan uusi lumisuus: " (pr-str arvo))
+  (reitintallennus/kirjaa-kertakirjaus
+    @s/idxdb
+    {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
+     :aikaleima (tc/to-long (lt/local-now))
+     :tarkastusajo @s/tarkastusajo-id
+     :havainnot @s/jatkuvat-havainnot
+     :mittaukset {:lumisuus arvo}}))
+
+(defn kirjaa-talvihoito-tasaisuus! [arvo]
+  (.log js/console "Kirjataan uusi talvihoidon tasaisuus: " (pr-str arvo))
+  (reitintallennus/kirjaa-kertakirjaus
+    @s/idxdb
+    {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
+     :aikaleima (tc/to-long (lt/local-now))
+     :tarkastusajo @s/tarkastusajo-id
+     :havainnot @s/jatkuvat-havainnot
+     :mittaukset {:talvihoito-tasaisuus arvo}}))

@@ -7,7 +7,9 @@
                                                              numeronappain-painettu!
                                                              tyhjennyspainike-painettu!
                                                              syotto-valmis!
-                                                             kirjaa-kitkamittaus!]]
+                                                             kirjaa-kitkamittaus!
+                                                             kirjaa-lumisuus!
+                                                             kirjaa-talvihoito-tasaisuus!]]
             [harja-laadunseuranta.tiedot.sovellus :as s])
   (:require-macros
     [harja-laadunseuranta.macros :as m]
@@ -23,12 +25,17 @@
                 (lopeta-jatkuva-havainto avain))}
    (str nimi " päättyy")])
 
-(defn- mittaustiedot [mittaukset keskiarvo]
+(defn- kitkamittaustiedot [mittaukset keskiarvo]
   [:div.mittaustiedot
    [:div.mittaustieto (str "Mittauksia: " mittaukset)]
    [:div.mittaustieto (str "Keskiarvo: " (if (pos? mittaukset)
                                            keskiarvo
                                            "-"))]])
+
+(defn- mittaustiedot [mittaustyyppi mittaukset keskiarvo]
+  (case mittaustyyppi
+    :kitkamittaus [kitkamittaustiedot mittaukset keskiarvo]
+    [:div.mittaustiedot]))
 
 (defn- syottokentta [syotto-atom]
   [:div.nappaimiston-syottokentta
@@ -110,6 +117,7 @@
                        :syottoarvot (:syotot @mittaussyotto-atom)
                        :lopeta-jatkuva-havainto lopeta-jatkuva-havainto}]
       [mittaustiedot
+       mittaustyyppi
        (count (:syotot @mittaussyotto-atom))
        (fmt/n-desimaalia
          (math/avg (map fmt/string->numero (:syotot @mittaussyotto-atom)))
@@ -119,7 +127,9 @@
        [numeropainikkeet
        mittaussyotto-atom
        (case mittaustyyppi
-         :kitkamittaus kirjaa-kitkamittaus!)
+         :kitkamittaus kirjaa-kitkamittaus!
+         :lumisuus kirjaa-lumisuus!
+         :talvihoito-tasaisuus kirjaa-talvihoito-tasaisuus!)
        mittaustyyppi]]]]))
 
 (defn nappaimisto [havainto]
