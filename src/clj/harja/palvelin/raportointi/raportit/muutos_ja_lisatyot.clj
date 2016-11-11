@@ -42,7 +42,7 @@
 (defn hae-muutos-ja-lisatyot-aikavalille
   [db user urakka-annettu? urakka-id
    urakkatyyppi hallintayksikko-annettu? hallintayksikko-id
-   toimenpide-id alkupvm loppupvm ryhmiteltyna?]
+   toimenpide-id alkupvm loppupvm ryhmiteltyna? konteksti]
   (let [parametrit {:urakka_annettu urakka-annettu?
                     :urakka urakka-id
                     :urakkatyyppi urakkatyyppi
@@ -51,7 +51,10 @@
                     :rajaa_tpi (not (nil? toimenpide-id)) :tpi toimenpide-id
                     :alku alkupvm :loppu loppupvm}
         toteumat (if ryhmiteltyna?
-                   (hae-tyypin-mukaan-ryhmitellyt-muutos-ja-lisatyot-raportille db parametrit)
+                   (if (= konteksti :koko-maa)
+                     (hae-tyypin-ja-hyn-mukaan-ryhmitellyt-muutos-ja-lisatyot-raportille db parametrit)
+                     (when (= konteksti :hallintayksikko)
+                       (hae-tyypin-ja-urakan-mukaan-ryhmitellyt-hyn-muutos-ja-lisatyot-raportille db parametrit)))
                    (hae-muutos-ja-lisatyot-raportille db parametrit))]
     toteumat))
 
@@ -84,13 +87,7 @@
                         :default :koko-maa)
         urakka-annettu? (boolean urakka-id)
         hallintayksikko-annettu? (boolean hallintayksikko-id)
-        naytettavat-alueet (yleinen/naytettavat-alueet db konteksti {:urakka          urakka-id
-                                                                     :hallintayksikko hallintayksikko-id
-                                                                     :urakkatyyppi    (when urakkatyyppi (name urakkatyyppi))
-                                                                     :alku            alkupvm
-                                                                     :loppu           loppupvm})
-        kayta-ryhmittelya? (and (not urakoittain?)
-                                (not= :urakka konteksti))
+        kayta-ryhmittelya? (and (not urakoittain?) (not= :urakka konteksti))
         muutos-ja-lisatyot-kannasta (into []
                                           (map konv/alaviiva->rakenne)
                                           (hae-muutos-ja-lisatyot-aikavalille db user
@@ -98,7 +95,8 @@
                                                                               (when urakkatyyppi (name urakkatyyppi))
                                                                               hallintayksikko-annettu? hallintayksikko-id
                                                                               toimenpide-id
-                                                                              alkupvm loppupvm kayta-ryhmittelya?))
+                                                                              alkupvm loppupvm kayta-ryhmittelya?
+                                                                              konteksti))
         muutos-ja-lisatyot (if kayta-ryhmittelya?
                              muutos-ja-lisatyot-kannasta
                              (reverse (sort-by (juxt (comp :id :urakka) :alkanut) muutos-ja-lisatyot-kannasta)))
@@ -170,29 +168,33 @@
                                      [{:lihavoi? true
                                        :rivi     kentat}]))))))
                     ;; koko maan kaikki työt ryhmiteltynä
-                    (when (and (= konteksti :koko-maa)
+                    (when (and (not= konteksti :urakka)
                                (not (empty? muutos-ja-lisatyot))
                                kayta-ryhmittelya?)
-                      (concat
-                        [{:otsikko "KOKO MAA"}]
-                        (let [kokomaan-muutos-ja-lisatyot-ryhmiteltyna
-                              (for [[tyyppi toteumat] (group-by :tyyppi muutos-ja-lisatyot)]
-                                (reduce (fn [summa toteuma]
-                                          (assoc-in
-                                            (assoc summa :tyyppi tyyppi
-                                                         :korotus (+ (:korotus summa)
-                                                                     (:korotus toteuma)))
-                                            [:tehtava :summa] (+ (get-in summa [:tehtava :summa])
-                                                                 (get-in toteuma [:tehtava :summa]))))
-                                        {:tehtava {:summa 0} :korotus 0}
-                                        toteumat))
-                              kokomaa-yhteensa ["KOKO MAA yhteensä"
-                                                (reduce + (keep #(get-in % [:tehtava :summa]) muutos-ja-lisatyot))
-                                                (reduce + (keep :korotus muutos-ja-lisatyot))]]
 
-                          (concat (tyyppikohtaiset-rivit kokomaan-muutos-ja-lisatyot-ryhmiteltyna)
-                                  [{:lihavoi? true
-                                    :rivi     kokomaa-yhteensa}])))))))]
+                      (let [alueen-nimi (if (= konteksti :koko-maa)
+                                          "KOKO MAA"
+                                          (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id))))]
+                        (concat
+                         [{:otsikko alueen-nimi}]
+                         (let [kokomaan-muutos-ja-lisatyot-ryhmiteltyna
+                               (for [[tyyppi toteumat] (group-by :tyyppi muutos-ja-lisatyot)]
+                                 (reduce (fn [summa toteuma]
+                                           (assoc-in
+                                             (assoc summa :tyyppi tyyppi
+                                                          :korotus (+ (:korotus summa)
+                                                                      (:korotus toteuma)))
+                                             [:tehtava :summa] (+ (get-in summa [:tehtava :summa])
+                                                                  (get-in toteuma [:tehtava :summa]))))
+                                         {:tehtava {:summa 0} :korotus 0}
+                                         toteumat))
+                               kokomaa-yhteensa [(str alueen-nimi " yhteensä")
+                                                 (reduce + (keep #(get-in % [:tehtava :summa]) muutos-ja-lisatyot))
+                                                 (reduce + (keep :korotus muutos-ja-lisatyot))]]
+
+                           (concat (tyyppikohtaiset-rivit kokomaan-muutos-ja-lisatyot-ryhmiteltyna)
+                                   [{:lihavoi? true
+                                     :rivi     kokomaa-yhteensa}]))))))))]
      [:teksti (str "Summat ja indeksit yhteensä "
                    (fmt/euro-opt (+
                                    (reduce + (keep #(get-in % [:tehtava :summa]) muutos-ja-lisatyot))
