@@ -217,7 +217,7 @@
          [kertapainike "Sillat" #(alivalikkoon :sillat)]]))))
 
 (defn- paallystyksen-tyovirheluettelo [alivalikot havainnot]
-  (let [ikoni #(kuvat/paallystys-tyovirheet %)
+  (let [ikoni nil
         tallennuksia-kaynnissa? (some #(= true (val %)) @havainnot)]
     [:div.painikelaatikko
      [:div.painikerivi

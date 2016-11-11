@@ -86,7 +86,7 @@
     (if-not (empty? reittimerkinnat)
       (do
         ;; tallenna kaikki kuvat ensin, tulee nil jos ei onnistunut
-        (if-let [reittimerkinnat (<! (tallenna-kuvat reittimerkinnat))] ;; TODO Tee oma logitus-namespace
+        (if-let [reittimerkinnat (<! (tallenna-kuvat reittimerkinnat))]
           (do #_(js/console.log (str "Lähetetään tapahtumat: " (pr-str tapahtumat)))
               (if (<! (post! asetukset/+tallennus-url+ {:kirjaukset reittimerkinnat}))
                 (let [poistetut (mapv #(get % "id") reittimerkinnat)]

@@ -113,7 +113,7 @@
     (assoc tiedot :kirjaukset
                   (mapv (fn [kirjaus]
                           (if-let [havainnot (:havainnot kirjaus)]
-                            (assoc kirjaus :havainnot (mapv keyword havainnot))
+                            (assoc kirjaus :havainnot (into #{} (map keyword havainnot)))
                             kirjaus)) kirjaukset))
     tiedot))
 
