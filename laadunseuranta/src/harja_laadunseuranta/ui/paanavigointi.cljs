@@ -48,7 +48,6 @@
                        (first (filter #(= (get-in % [:mittaus :tyyppi])
                                           nykyinen-mittaustyyppi)
                                       (mapcat :sisalto valilehdet))))]
-        (.log js/console "Mittaus: " (pr-str mittaus))
         [:div {:class (str "paanavigointi-container "
                            (if @paanavigointi-nakyvissa?
                              "paanavigointi-container-nakyvissa"
