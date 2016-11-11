@@ -340,6 +340,7 @@
                                 {:luokka "nappi-toissijainen pull-right"}]]]))
              {:luokka "nappi-kielteinen btn-xs"}])])])))
 
+
 (defn- aseta-vastuuhenkilo [paivita-vastuuhenkilot!
                             urakka-id kayttaja kayttajat vastuuhenkilot rooli
                             ensisijainen varalla]
@@ -534,7 +535,7 @@
                     (nayta-yha-tuontidialogi-tarvittaessa ur)))
      (fn [ur]
        [:div
-        [yleiset-tiedot #(do (log "UUDET VAST: " (pr-str %)) (reset! vastuuhenkilot %)) ur @kayttajat @vastuuhenkilot]
+        [yleiset-tiedot #(reset! vastuuhenkilot %) ur @kayttajat @vastuuhenkilot]
         [urakkaan-liitetyt-kayttajat @kayttajat]
         [yhteyshenkilot ur]
         [paivystajat ur]]))))

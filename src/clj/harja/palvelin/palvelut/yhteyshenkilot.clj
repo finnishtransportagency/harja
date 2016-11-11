@@ -231,7 +231,6 @@
 
 (defn tallenna-urakan-vastuuhenkilot-roolille [db user
                                                {:keys [urakka-id rooli vastuuhenkilo varahenkilo] :as tiedot}]
-  (println "TIEDOT: " (pr-str tiedot))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
 
   (when (and (= (roolit/osapuoli user) :urakoitsija)
@@ -241,7 +240,6 @@
     (throw (SecurityException. "Ei oikeutta luoda vastuuhenkilö annetulle roolille")))
 
   (let [luo<! (fn [c kayttaja ensisijainen]
-                (println "LUODAAN: " kayttaja)
                 (q/luo-urakan-vastuuhenkilo<! c {:urakka urakka-id
                                                  :rooli rooli
                                                  :nimi (fmt/kayttaja kayttaja)
