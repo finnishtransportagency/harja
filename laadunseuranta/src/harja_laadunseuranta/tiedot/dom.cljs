@@ -4,5 +4,5 @@
                    [harja-laadunseuranta.tiedot.indexeddb-macros :refer [with-transaction with-objectstore with-cursor]]))
 
 
-(defonce korkeus #(-> js/window .-innerHeight))
-(defonce leveys #(-> js/window .-innerWidth))
+(defn korkeus [] (-> js/window .-innerHeight))
+(defn leveys [] (-> js/window .-innerWidth))

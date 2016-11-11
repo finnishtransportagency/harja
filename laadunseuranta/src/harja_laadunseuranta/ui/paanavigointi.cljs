@@ -5,7 +5,7 @@
             [harja-laadunseuranta.tiedot.paanavigointi :as tiedot]
             [cljs-time.local :as l]
             [harja-laadunseuranta.tiedot.sovellus :as s]
-            [harja.ui.dom :as dom])
+            [harja-laadunseuranta.tiedot.dom :as dom])
   (:require-macros
     [harja-laadunseuranta.macros :as m]
     [cljs.core.async.macros :refer [go go-loop]]
@@ -33,7 +33,7 @@
 
 (defn- paanavigointikomponentti [{:keys [valilehdet] :as tiedot}]
   (let [paanavigointi-nakyvissa? (atom true)
-        kayta-hampurilaisvalikkoa? (< (dom/leveys 530))
+        kayta-hampurilaisvalikkoa? (< (dom/leveys) 950)
         valilehdet-nakyvissa? (atom true)
         valittu-valilehti (atom (:avain (first valilehdet)))
         valitse-valilehti! (fn [uusi-valinta]
