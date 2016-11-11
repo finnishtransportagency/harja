@@ -13,20 +13,23 @@
     :tyyppi :vali
     :avain :liukasta
     :mittaus {:nimi "Liukkaus"
-              :tyyppi :kitkamittaus}
+              :tyyppi :kitkamittaus
+              :yksikko nil}
     :vaatii-nappaimiston? true}
    {:nimi "Lu\u00ADmis\u00ADta"
     :ikoni "talvi_lumista"
     :tyyppi :vali
     :avain :lumista
     :mittaus {:nimi "Lumisuus"
-              :tyyppi :lumisuus}
+              :tyyppi :lumisuus
+              :yksikko "cm"}
     :vaatii-nappaimiston? true}
    {:nimi "Tasaus\u00ADpuute"
     :tyyppi :vali
     :ikoni "talvi_tasauspuute"
     :mittaus {:nimi "Tasauspuute"
-              :tyyppi :talvihoito-tasaisuus}
+              :tyyppi :talvihoito-tasaisuus
+              :yksikko "cm"}
     :vaatii-nappaimiston? true}
    {:nimi "Py\u00ADsäkki: epä\u00ADtasainen polanne"
     :tyyppi :piste

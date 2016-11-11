@@ -24,7 +24,9 @@
   (.log js/console "Numero syötetty: " (pr-str numero))
   (let [nykyinen-syotto (:nykyinen-syotto @syotto-atom)
         suurin-sallittu-tarkkuus (mittaustyyppi syoton-max-merkkimaara)
-        salli-syotto? (< (count nykyinen-syotto) suurin-sallittu-tarkkuus)
+        salli-syotto? (and (< (count nykyinen-syotto) suurin-sallittu-tarkkuus)
+                           (>= numero (first (mittaustyyppi syoton-rajat)))
+                           (<= numero (second (mittaustyyppi syoton-rajat))))
         uusi-syotto (if salli-syotto?
                       (str nykyinen-syotto numero)
                       nykyinen-syotto)]
