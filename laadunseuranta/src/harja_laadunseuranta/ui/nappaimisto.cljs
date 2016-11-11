@@ -39,12 +39,8 @@
   (let [syotto-kelpaa? (fn [syotto]
                          ;; Ainakin yksi desimaali
                          (> (count syotto) 2))]
-
     (fn []
-      [:div.nappaimiston-painikkeet
-       [syottokentta syotto-atom]
-       [:div.nappaimiston-painikekentat
-
+      [:div.nappaimiston-painikekentat
         [:button
          {:class "nappaimiston-painike"
           :id "nappaimiston-painike7"
@@ -99,7 +95,7 @@
           :on-click #(when (syotto-kelpaa? (:nykyinen-syotto @syotto-atom))
                       (kirjaa-arvo! (fmt/string->numero (:nykyinen-syotto @syotto-atom)))
                       (syotto-valmis! mittaustyyppi syotto-atom))}
-         [:span.livicon-check]]]])))
+         [:span.livicon-check]]])))
 
 (defn- nappaimistokomponentti [{:keys [mittaustyyppi mittaussyotto-atom] :as tiedot}]
   (alusta-mittaussyotto! mittaustyyppi mittaussyotto-atom)
@@ -107,7 +103,8 @@
                mittaustyyppi mittaussyotto-atom] :as tiedot}]
     [:div.nappaimisto-container
      [:div.nappaimisto
-      [lopeta-mittaus {:nimi nimi
+      [:div.nappaimisto-vasen
+       [lopeta-mittaus {:nimi nimi
                        :avain avain
                        :mittaustyyppi mittaustyyppi
                        :syottoarvot (:syotot @mittaussyotto-atom)
@@ -117,11 +114,13 @@
        (fmt/n-desimaalia
          (math/avg (map fmt/string->numero (:syotot @mittaussyotto-atom)))
          2)]
-      [numeropainikkeet
+      [syottokentta mittaussyotto-atom]]
+      [:div.nappaimisto-oikea
+       [numeropainikkeet
        mittaussyotto-atom
        (case mittaustyyppi
          :kitkamittaus kirjaa-kitkamittaus!)
-       mittaustyyppi]]]))
+       mittaustyyppi]]]]))
 
 (defn nappaimisto [havainto]
   [nappaimistokomponentti {:mittaussyotto-atom s/mittaussyotto

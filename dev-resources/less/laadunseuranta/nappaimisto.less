@@ -3,6 +3,8 @@
   background-color: @sisaltolaatikoiden-taustavari;
   border: @sisaltolaatikoiden-reunaviiva;
   box-sizing: border-box;
+  display: flex;
+  flex-flow: column;
 }
 
 .mittaustiedot {
@@ -38,6 +40,7 @@
 }
 
 .nappaimiston-painikekentat {
+  width: 240px;
   text-align: center;
 }
 
@@ -63,7 +66,17 @@
 
 @media (max-width: 530px) {
   .nappaimisto {
+    width: 100%;
+    flex-flow: row;
+    justify-content: space-between;
+  }
+
+  .nappaimiston-painikekentat {
     width: 190px;
+  }
+
+  .nappaimisto-vasen {
+    flex: 1;
   }
 
   .nappaimiston-painike {
@@ -73,8 +86,8 @@
   }
 
   .nappi-peruuta {
-    width: 150px;
-    height: 32px;
+    width: 100%;
+    height: auto;
   }
 
 }
