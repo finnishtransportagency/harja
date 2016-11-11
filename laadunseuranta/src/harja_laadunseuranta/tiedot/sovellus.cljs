@@ -188,6 +188,9 @@
   (reset! mittaustyyppi uusi-mittaustyyppi))
 
 (defn aseta-mittaus-pois! []
+  (.log js/console "Asetetaan mittaus pois")
+  (reset! mittaussyotto {:nykyinen-syotto nil
+                         :syotot []})
   (reset! mittaustyyppi nil))
 
 (defn lopeta-jatkuvan-havainnon-mittaus! [avain]

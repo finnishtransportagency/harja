@@ -45,18 +45,20 @@
   (alusta-mittaussyotto! mittaustyyppi syotto-atom))
 
 (defn syotto-valmis! [mittaustyyppi syotto-atom]
-  (let [nykyinen-syotto (:nykyinen-syotto @syotto-atom)
-        suurin-sallittu-tarkkuus (mittaustyyppi syoton-max-merkkimaara)
+  (swap! syotto-atom assoc :syotot (conj (:syotot @syotto-atom) (:nykyinen-syotto @syotto-atom)))
+  (swap! syotto-atom assoc :nykyinen-syotto (mittaustyyppi mittaustyypin-lahtoarvo))
+  (.log js/console "Syötöt nyt: " (pr-str (:syotot @syotto-atom))))
+
+(defn- syotto-validi? [mittaustyyppi nykyinen-syotto]
+  (let [suurin-sallittu-tarkkuus (mittaustyyppi syoton-max-merkkimaara)
         syotto-sallittu? (and (<= (count nykyinen-syotto)
                                   suurin-sallittu-tarkkuus)
                               (>= (fmt/string->numero nykyinen-syotto)
                                   (first (mittaustyyppi syoton-rajat)))
                               (<= (fmt/string->numero nykyinen-syotto)
                                   (second (mittaustyyppi syoton-rajat))))]
-    (when syotto-sallittu?
-      (swap! syotto-atom assoc :syotot (conj (:syotot @syotto-atom) (:nykyinen-syotto @syotto-atom)))
-      (swap! syotto-atom assoc :nykyinen-syotto (mittaustyyppi mittaustyypin-lahtoarvo))
-      (.log js/console "Syötöt nyt: " (pr-str (:syotot @syotto-atom))))))
+    (.log js/console "Syöttö sallittu? " (pr-str syotto-sallittu?))
+    syotto-sallittu?))
 
 (defn kirjaa-kitkamittaus! [arvo]
   (.log js/console "Kirjataan uusi kitkamittaus: " (pr-str arvo))

@@ -8,7 +8,7 @@
                      tyhjennyspainike-painettu! syotto-valmis!
                      kirjaa-kitkamittaus! kirjaa-lumisuus!
                      kirjaa-talvihoito-tasaisuus!
-                     syoton-rajat]]
+                     syoton-rajat syotto-validi?]]
             [harja-laadunseuranta.tiedot.sovellus :as s])
   (:require-macros
     [harja-laadunseuranta.macros :as m]
@@ -53,10 +53,7 @@
            :default "")]))
 
 (defn- numeropainikkeet [syotto-atom kirjaa-arvo! mittaustyyppi]
-  (let [syotto-kelpaa? (fn [syotto]
-                         ;; Ainakin yksi desimaali
-                         (> (count syotto) 2))]
-    (fn []
+  (fn []
       [:div.nappaimiston-painikekentat
        [:button
         {:class "nappaimiston-painike"
@@ -106,13 +103,13 @@
          :id "nappaimiston-painike0"
          :on-click #(numeronappain-painettu! 0 mittaustyyppi syotto-atom)} "0"]
        [:button
-        {:disabled (not (syotto-kelpaa? (:nykyinen-syotto @syotto-atom)))
+        {:disabled (not (syotto-validi? mittaustyyppi (:nykyinen-syotto @syotto-atom)))
          :class "nappaimiston-painike"
          :id "nappaimiston-painike-ok"
-         :on-click #(when (syotto-kelpaa? (:nykyinen-syotto @syotto-atom))
+         :on-click #(when (syotto-validi? mittaustyyppi (:nykyinen-syotto @syotto-atom))
                      (kirjaa-arvo! (fmt/string->numero (:nykyinen-syotto @syotto-atom)))
                      (syotto-valmis! mittaustyyppi syotto-atom))}
-        [:span.livicon-check]]])))
+        [:span.livicon-check]]]))
 
 (defn- nappaimistokomponentti [{:keys [mittausyksikko mittaustyyppi mittaussyotto-atom] :as tiedot}]
   (alusta-mittaussyotto! mittaustyyppi mittaussyotto-atom)
