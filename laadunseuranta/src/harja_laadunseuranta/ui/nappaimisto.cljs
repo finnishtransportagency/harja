@@ -5,29 +5,24 @@
             [harja-laadunseuranta.tiedot.fmt :as fmt]
             [harja-laadunseuranta.tiedot.nappaimisto :refer [numeronappain-painettu!
                                                              tyhjennyspainike-painettu!
-                                                             syotto-valmis!]]
+                                                             syotto-valmis!
+                                                             kirjaa-kitkamittaus!]]
             [harja-laadunseuranta.tiedot.sovellus :as s])
   (:require-macros
     [harja-laadunseuranta.macros :as m]
     [cljs.core.async.macros :refer [go go-loop]]
     [devcards.core :as dc :refer [defcard deftest]]))
 
-(defn- lopeta-mittaus [tiedot]
-  (let [kitkamittaus-valmis (fn [syottoarvot]
-                              (.log js/console "Kitkamittaus-syötöt " (pr-str syottoarvot))
-                              (let [keskiarvo (math/avg (map fmt/string->numero syottoarvot))]
-                                (.log js/console "Syötetty keskiarvo: " (pr-str keskiarvo))))]
-
-    (fn [{:keys [nimi avain lopeta-jatkuva-havainto
-                 syottoarvot mittaustyyppi] :as tiedot}]
-      [:button
-       {:class "nappi nappi-kielteinen nappi-peruuta"
-        :on-click (fn [_]
-                    (.log js/console "Mittaus päättyy!")
-                    (case mittaustyyppi
-                      :kitkamittaus (kitkamittaus-valmis syottoarvot))
-                    (lopeta-jatkuva-havainto avain))}
-       (str nimi " päättyy")])))
+(defn- lopeta-mittaus [{:keys [nimi avain lopeta-jatkuva-havainto
+                               syottoarvot mittaustyyppi] :as tiedot}]
+  [:button
+   {:class "nappi nappi-kielteinen nappi-peruuta"
+    :on-click (fn [_]
+                (.log js/console "Mittaus päättyy!")
+                (case mittaustyyppi
+                  :kitkamittaus (kirjaa-kitkamittaus! syottoarvot))
+                (lopeta-jatkuva-havainto avain))}
+   (str nimi " päättyy")])
 
 (defn- mittaustiedot [{:keys [mittaukset keskiarvo]}]
   [:div.mittaustiedot
@@ -124,21 +119,3 @@
                            :nimi (get-in havainto [:mittaus :nimi])
                            :avain (:avain havainto)
                            :lopeta-jatkuva-havainto s/lopeta-jatkuvan-havainnon-mittaus!}])
-
-;; TODO Kirjaa tähän tyyliin:
-#_(kirjaa-kertakirjaus @s/idxdb
-                       {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
-                        :aikaleima (tc/to-long (lt/local-now))
-                        :tarkastusajo @s/tarkastusajo-id
-                        :havainnot @s/jatkuvat-havainnot
-                        :mittaukset {:lumisuus @s/talvihoito-lumimaara
-                                     :talvihoito-tasaisuus @s/talvihoito-tasaisuus
-                                     :kitkamittaus @s/talvihoito-kitkamittaus
-                                     :soratie-tasaisuus @s/soratie-tasaisuus
-                                     :polyavyys @s/soratie-polyavyys
-                                     :kiinteys @s/soratie-kiinteys}
-                        ;; TODO Nämä tulee kai lomakkeelta? Pitää selvittää, miten toimii.
-                        ;:kuvaus kuvaus
-                        ;:laadunalitus (true? laadunalitus?)
-                        ;:kuva kuva
-                        })

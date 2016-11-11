@@ -1,6 +1,12 @@
 (ns harja-laadunseuranta.tiedot.nappaimisto
   (:require [reagent.core :as reagent :refer [atom]]
-            [harja-laadunseuranta.utils :refer [timestamp ipad?]]))
+            [harja-laadunseuranta.utils :refer [timestamp ipad?]]
+            [harja-laadunseuranta.tiedot.sovellus :as s]
+            [cljs-time.local :as lt]
+            [cljs-time.coerce :as tc]
+            [harja-laadunseuranta.tiedot.math :as math]
+            [harja-laadunseuranta.tiedot.fmt :as fmt]
+            [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]))
 
 (def mittaustyypin-lahtoarvo {:kitkamittaus "0,"})
 
@@ -17,3 +23,15 @@
   (swap! syotto-atom assoc :syotot (conj (:syotot @syotto-atom) (:nykyinen-syotto @syotto-atom)))
   (swap! syotto-atom assoc :nykyinen-syotto (mittaustyyppi mittaustyypin-lahtoarvo))
   (.log js/console "Syötöt nyt: " (pr-str (:syotot @syotto-atom))))
+
+(defn kirjaa-kitkamittaus! [syottoarvot]
+  (.log js/console "Kitkamittaus-syötöt " (pr-str syottoarvot))
+  (let [keskiarvo (math/avg (map fmt/string->numero syottoarvot))]
+    (reitintallennus/kirjaa-kertakirjaus
+      @s/idxdb
+      {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
+       :aikaleima (tc/to-long (lt/local-now))
+       :tarkastusajo @s/tarkastusajo-id
+       :havainnot @s/jatkuvat-havainnot
+       :mittaukset {:kitkamittaus keskiarvo}})
+    (.log js/console "Syötetty keskiarvo: " (pr-str keskiarvo))))
