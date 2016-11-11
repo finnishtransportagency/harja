@@ -232,9 +232,14 @@
       order: 2;
     }
 
-    > .nappaimisto {
+    > .nappaimisto-container {
       order: 1;
       width: 100%;
+      display: flex;
+      justify-content: center;
+
+      // Tässä pelkkä container, itse näppäimistö-elementin responsiivisuus määritelty
+      // sen omassa LESS-tiedostossa
     }
   }
 }
