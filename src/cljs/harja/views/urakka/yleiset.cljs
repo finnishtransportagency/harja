@@ -340,16 +340,24 @@
                                 {:luokka "nappi-toissijainen pull-right"}]]]))
              {:luokka "nappi-kielteinen btn-xs"}])])])))
 
-(defn- aseta-vastuuhenkilo [urakka-id kayttaja kayttajat vastuuhenkilot rooli
+(defn- aseta-vastuuhenkilo [paivita-vastuuhenkilot!
+                            urakka-id kayttaja kayttajat vastuuhenkilot rooli
                             ensisijainen varalla]
-  (r/with-let [henkilot (atom {})]
+  (r/with-let [henkilot (atom {:ensisijainen ensisijainen
+                               :varalla varalla})]
+    ;; FIXME: valitse oletushenkilöksi nykyinen käyttäjänimen perusteella
     (let [mahdolliset-henkilot (filter #(some (partial = rooli) (:roolinimet %)) kayttajat)]
+
       [:div.vastuuhenkilo-muokkaus
        [lomake/lomake {:muokkaa! #(reset! henkilot %)
                        :footer-fn (fn [data]
                                     [napit/palvelinkutsu-nappi "Tallenna yhteyshenkilöt"
-                                     #(go 1)
-                                     {:kun-onnistuu #(modal/piilota!)}])}
+                                     #(let [{:keys [ensisijainen varalla]} @henkilot]
+                                        (yht/tallenna-urakan-vastuuhenkilot-roolille
+                                         urakka-id rooli ensisijainen varalla))
+                                     {:kun-onnistuu #(do
+                                                       (paivita-vastuuhenkilot! %)
+                                                       (modal/piilota!))}])}
         [{:otsikko "Ensisijainen"
           :nimi :ensisijainen
           :leveys 2
@@ -366,7 +374,8 @@
           :valinnat mahdolliset-henkilot}]
         @henkilot]])))
 
-(defn- nayta-vastuuhenkilo [urakka-id kayttaja kayttajat vastuuhenkilot rooli]
+(defn- nayta-vastuuhenkilo [paivita-vastuuhenkilot!
+                            urakka-id kayttaja kayttajat vastuuhenkilot rooli]
   (let [roolin-henkilot (filter #(= rooli (:rooli %)) vastuuhenkilot)
         ensisijainen (first (filter  :ensisijainen roolin-henkilot))
         varalla (first (filter (comp not :ensisijainen) roolin-henkilot))
@@ -391,14 +400,16 @@
                                                       (case rooli
                                                         "ELY_Urakanvalvoja" "urakanvalvoja"
                                                         "vastuuhenkilo" "vastuuhenkilö"))}
-                                       [aseta-vastuuhenkilo urakka-id kayttaja kayttajat
+                                       [aseta-vastuuhenkilo
+                                        paivita-vastuuhenkilot!
+                                        urakka-id kayttaja kayttajat
                                         vastuuhenkilot rooli
                                         ensisijainen varalla])}
          " "
          (ikonit/livicon-wrench)
          " "])]]))
 
-(defn yleiset-tiedot [ur kayttajat vastuuhenkilot]
+(defn yleiset-tiedot [paivita-vastuuhenkilot! ur kayttajat vastuuhenkilot]
   (let [{:keys [paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?]
          :as yha-tiedot} (yha-tiedot ur)]
     [bs/panel {}
@@ -423,10 +434,12 @@
       "Takuu päättyy:" (when paallystys-tai-paikkausurakka?
                          [takuuaika ur])
       "Tilaaja:" (:nimi (:hallintayksikko ur))
-      "Urakanvalvoja: " [nayta-vastuuhenkilo (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot "ELY_Urakanvalvoja"]
+      "Urakanvalvoja: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
+                         (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot "ELY_Urakanvalvoja"]
 
       "Urakoitsija:" (:nimi (:urakoitsija ur))
-      "Urakan vastuuhenkilö: " [nayta-vastuuhenkilo (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot "vastuuhenkilo"]
+      "Urakan vastuuhenkilö: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
+                                (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot "vastuuhenkilo"]
 
       ;; valaistus, tiemerkintä --> palvelusopimus
       ;; päällystys --> kokonaisurakka
@@ -521,7 +534,7 @@
                     (nayta-yha-tuontidialogi-tarvittaessa ur)))
      (fn [ur]
        [:div
-        [yleiset-tiedot ur @kayttajat @vastuuhenkilot]
+        [yleiset-tiedot #(do (log "UUDET VAST: " (pr-str %)) (reset! vastuuhenkilot %)) ur @kayttajat @vastuuhenkilot]
         [urakkaan-liitetyt-kayttajat @kayttajat]
         [yhteyshenkilot ur]
         [paivystajat ur]]))))

@@ -37,10 +37,8 @@
 (defn hae-urakan-paivystajat [urakka-id]
   (k/post! :hae-urakan-paivystajat urakka-id))
 
-
 (defn hae-urakan-yhteyshenkilot [urakka-id]
   (k/post! :hae-urakan-yhteyshenkilot urakka-id))
-
 
 (defn tallenna-urakan-paivystajat
   "Tallentaa urakan päivystäjät. Palauttaa kanavan, josta vastauksen voi lukea."
@@ -49,3 +47,10 @@
            {:urakka-id urakka-id
             :paivystajat paivystajat
             :poistettu poistettavat}))
+
+(defn tallenna-urakan-vastuuhenkilot-roolille [urakka-id rooli vastuuhenkilo varahenkilo]
+  (k/post! :tallenna-urakan-vastuuhenkilot-roolille
+           {:urakka-id urakka-id
+            :rooli rooli
+            :vastuuhenkilo vastuuhenkilo
+            :varahenkilo varahenkilo}))
