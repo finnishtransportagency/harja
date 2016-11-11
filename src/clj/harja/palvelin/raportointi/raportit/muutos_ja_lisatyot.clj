@@ -27,7 +27,17 @@
     "akillinen-hoitotyo" "Äkil\u00ADlinen hoito\u00ADtyö"
     "vahinkojen-korjaukset" "Vahinko\u00ADjen korjauk\u00ADset"
 
-    :default "Muu"))
+    "Muu"))
+
+(defn tyypin-sort-avain
+  [tyo]
+  (case (:tyyppi tyo)
+    "lisatyo" 0
+    "muutostyo" 10
+    "vahinkojen-korjaukset" 20
+    "akillinen-hoitotyo" 30
+
+    100))
 
 (defn hae-muutos-ja-lisatyot-aikavalille
   [db user urakka-annettu? urakka-id
@@ -64,7 +74,8 @@
   (mapv #(rivi
           (tyon-tyypin-nimi (:tyyppi %))
           (or (get-in % [:tehtava :summa]) [:info "Ei rahasummaa"])
-          (or (:korotus %) [:info "Indeksi puuttuu"])) tyot))
+          (or (:korotus %) [:info "Indeksi puuttuu"]))
+        (sort-by tyypin-sort-avain tyot)))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id toimenpide-id
                                alkupvm loppupvm urakkatyyppi urakoittain?] :as parametrit}]
@@ -120,9 +131,9 @@
                    {:leveys 5 :otsikko "Summa €" :fmt :raha}
                    {:leveys 5 :otsikko "Ind.korotus €" :fmt :raha}])]
     [:raportti {:nimi raportin-nimi}
-     [:taulukko {:otsikko (str otsikko ", " tpi-nimi)
+     [:taulukko {:otsikko                    (str otsikko ", " tpi-nimi)
                  :viimeinen-rivi-yhteenveto? true
-                 :sheet-nimi raportin-nimi}
+                 :sheet-nimi                 raportin-nimi}
       (keep identity otsikot)
 
 
@@ -153,15 +164,35 @@
                                        kentat (if kayta-ryhmittelya?
                                                 (keep identity [alueen-teksti summat-yht korotukset-yht])
                                                 (if (or (not urakoittain?) (= :urakka konteksti))
-                                                 (keep identity [alueen-teksti "" "" "" "" summat-yht korotukset-yht])
-                                                 (keep identity [alueen-teksti "" "" "" "" "" summat-yht korotukset-yht])))]
+                                                  (keep identity [alueen-teksti "" "" "" "" summat-yht korotukset-yht])
+                                                  (keep identity [alueen-teksti "" "" "" "" "" summat-yht korotukset-yht])))]
                                    (when (:nimi hy)
                                      [{:lihavoi? true
-                                       :rivi     kentat}]))))
+                                       :rivi     kentat}]))))))
+                    ;; koko maan kaikki työt ryhmiteltynä
+                    (when (and (= konteksti :koko-maa)
+                               (not (empty? muutos-ja-lisatyot))
+                               kayta-ryhmittelya?)
+                      (concat
+                        [{:otsikko "KOKO MAA"}]
+                        (let [kokomaan-muutos-ja-lisatyot-ryhmiteltyna
+                              (for [[tyyppi toteumat] (group-by :tyyppi muutos-ja-lisatyot)]
+                                (reduce (fn [summa toteuma]
+                                          (assoc-in
+                                            (assoc summa :tyyppi tyyppi
+                                                         :korotus (+ (:korotus summa)
+                                                                     (:korotus toteuma)))
+                                            [:tehtava :summa] (+ (get-in summa [:tehtava :summa])
+                                                                 (get-in toteuma [:tehtava :summa]))))
+                                        {:tehtava {:summa 0} :korotus 0}
+                                        toteumat))
+                              kokomaa-yhteensa ["KOKO MAA yhteensä"
+                                                (reduce + (keep #(get-in % [:tehtava :summa]) muutos-ja-lisatyot))
+                                                (reduce + (keep :korotus muutos-ja-lisatyot))]]
 
-
-
-                             )))))]
+                          (concat (tyyppikohtaiset-rivit kokomaan-muutos-ja-lisatyot-ryhmiteltyna)
+                                  [{:lihavoi? true
+                                    :rivi     kokomaa-yhteensa}])))))))]
      [:teksti (str "Summat ja indeksit yhteensä "
                    (fmt/euro-opt (+
                                    (reduce + (keep #(get-in % [:tehtava :summa]) muutos-ja-lisatyot))
