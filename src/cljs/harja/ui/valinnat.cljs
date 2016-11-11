@@ -102,7 +102,7 @@
                    (true? nayta-otsikko?)))
       [:span.alasvedon-otsikko "Aikaväli"])
     [:div.aikavali-valinnat
-     [tee-kentta {:tyyppi :pvm :pakota-suunta aloitusaika-pakota-suunta}
+     [tee-kentta {:tyyppi :pvm-aika :fmt pvm/pvm-aika :pakota-suunta aloitusaika-pakota-suunta}
       (r/wrap (first @valittu-aikavali-atom)
               (fn [uusi-arvo]
                 (let [uusi-arvo (pvm/paivan-alussa-opt uusi-arvo)]
@@ -110,8 +110,9 @@
                     (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [uusi-arvo (second %)] :alku))
                     (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [uusi-arvo (second %)] aikavalin-rajoitus :alku))))
                 (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]
+
      [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
-     [tee-kentta {:tyyppi :pvm :pakota-suunta paattymisaika-pakota-suunta}
+     [tee-kentta {:tyyppi :pvm-aika :fmt pvm/pvm-aika :pakota-suunta paattymisaika-pakota-suunta}
       (r/wrap (second @valittu-aikavali-atom)
               (fn [uusi-arvo]
                 (let [uusi-arvo (pvm/paivan-lopussa-opt uusi-arvo)]
