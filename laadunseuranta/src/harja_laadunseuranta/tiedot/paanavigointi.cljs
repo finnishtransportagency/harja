@@ -189,6 +189,68 @@
     :avain :soratie
     :vaatii-nappaimiston? false}])
 
+(def valilehti-paallystys
+  [{:nimi "Sauma\u00ADvirhe"
+    :tyyppi :vali
+    :ikoni "paallystys_saumavirhe"
+    :avain :saumavirhe
+    :vaatii-nappaimiston? false}
+   {:nimi "Lajit\u00ADtuma"
+    :tyyppi :vali
+    :ikoni "paallystys_lajittuma"
+    :avain :lajittuma
+    :vaatii-nappaimiston? false}
+   {:nimi "Epä\u00ADtasai\u00ADsuus"
+    :tyyppi :vali
+    :ikoni "paallystys_epatasaisuus"
+    :avain :epatasaisuus
+    :vaatii-nappaimiston? false}
+   {:nimi "Hal\u00ADkeamat"
+    :tyyppi :vali
+    :ikoni "paallystys_halkeama"
+    :avain :halkeamat
+    :vaatii-nappaimiston? false}
+   {:nimi "Vesi\u00ADlammi\u00ADkot"
+    :tyyppi :vali
+    :ikoni "paallystys_vesilammikko"
+    :avain :vesilammikot
+    :vaatii-nappaimiston? false}
+   {:nimi "Epä\u00ADtasai\u00ADset reunat"
+    :tyyppi :vali
+    :ikoni "paallystys_epatasaiset_reunat"
+    :avain :epatasaisetreunat
+    :vaatii-nappaimiston? false}
+   {:nimi "Jyrän jälkiä"
+    :tyyppi :vali
+    :ikoni "paallystys_jyran_jalki"
+    :avain :jyranjalkia
+    :vaatii-nappaimiston? false}
+   {:nimi "Side\u00ADaine\u00ADläikkiä"
+    :tyyppi :vali
+    :ikoni "paallystys_laikka"
+    :avain :sideainelaikkia
+    :vaatii-nappaimiston? false}
+   {:nimi "Vää\u00ADrä korkeu\u00ADsasema"
+    :tyyppi :vali
+    :ikoni "paallystys_vaara_korkeus"
+    :avain :vaarakorkeusasema
+    :vaatii-nappaimiston? false}
+   {:nimi "Pinta harva"
+    :tyyppi :vali
+    :ikoni "paallystys_harva_pinta"
+    :avain :pintaharva
+    :vaatii-nappaimiston? false}
+   {:nimi "Pinta\u00ADkuivatus puut\u00ADteel\u00ADlinen"
+    :tyyppi :vali
+    :ikoni "paallystys_pintakuivatus_puute"
+    :avain :pintakuivatuspuute
+    :vaatii-nappaimiston? false}
+   {:nimi "Kai\u00ADvojen korkeu\u00ADsasema"
+    :tyyppi :vali
+    :ikoni "paallystys_kaivon_korkeus"
+    :avain :kaivojenkorkeusasema
+    :vaatii-nappaimiston? false}])
+
 (def oletusvalilehdet
   [{:avain :talvihoito
     :nimi "Talviset pinnat"
@@ -210,7 +272,10 @@
     :sisalto valilehti-soratiet}
    {:avain :muut
     :nimi "Sillat"
-    :sisalto valilehti-sillat}])
+    :sisalto valilehti-sillat}
+   {:avain :paallystys
+    :nimi "Päällystys"
+    :sisalto valilehti-paallystys}])
 
 (defn pistemainen-havainto-painettu! [{:keys [nimi avain] :as tiedot}]
   (.log js/console "Kirjataan pistemäinen havainto: " (pr-str avain))
