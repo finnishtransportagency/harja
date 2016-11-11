@@ -46,6 +46,10 @@
    :tr-loppu nil
 
    :jatkuvat-havainnot #{} ; Tähän tallentuu välikohtaiset havainnot (esim. liukasta, lumista jne.)
+
+   ;; Mittaukset
+   :mittaussyotto {:nykyinen-syotto nil
+                   :syotot []}
    :mitttaustyyppi nil ;; Suoritettava mittaustyyppi (esim. :lumista) tai nil jos ei olla mittaamassa mitään
 
    ;; Kartta
@@ -130,6 +134,7 @@
 
 (def jatkuvat-havainnot (reagent/cursor sovellus [:jatkuvat-havainnot]))
 (def mittaustyyppi (reagent/cursor sovellus [:mittaustyyppi]))
+(def mittaussyotto (reagent/cursor sovellus [:mittaussyotto]))
 
 (def reittisegmentti (reaction
                        (let [{:keys [nykyinen edellinen]} @sijainti]

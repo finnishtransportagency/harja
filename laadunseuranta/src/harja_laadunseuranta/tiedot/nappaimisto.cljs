@@ -16,8 +16,11 @@
         uusi-syotto (str nykyinen-syotto numero)]
     (swap! syotto-atom assoc :nykyinen-syotto uusi-syotto)))
 
-(defn tyhjennyspainike-painettu! [mittaustyyppi syotto-atom]
+(defn alusta-mittaussyotto! [mittaustyyppi syotto-atom]
   (swap! syotto-atom assoc :nykyinen-syotto (mittaustyyppi mittaustyypin-lahtoarvo)))
+
+(defn tyhjennyspainike-painettu! [mittaustyyppi syotto-atom]
+  (alusta-mittaussyotto! mittaustyyppi syotto-atom))
 
 (defn syotto-valmis! [mittaustyyppi syotto-atom]
   (swap! syotto-atom assoc :syotot (conj (:syotot @syotto-atom) (:nykyinen-syotto @syotto-atom)))

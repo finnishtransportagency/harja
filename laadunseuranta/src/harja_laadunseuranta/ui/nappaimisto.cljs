@@ -3,7 +3,8 @@
             [cljs-time.local :as l]
             [harja-laadunseuranta.tiedot.math :as math]
             [harja-laadunseuranta.tiedot.fmt :as fmt]
-            [harja-laadunseuranta.tiedot.nappaimisto :refer [numeronappain-painettu!
+            [harja-laadunseuranta.tiedot.nappaimisto :refer [alusta-mittaussyotto!
+                                                             numeronappain-painettu!
                                                              tyhjennyspainike-painettu!
                                                              syotto-valmis!
                                                              kirjaa-kitkamittaus!]]
@@ -96,31 +97,31 @@
                       (syotto-valmis! mittaustyyppi syotto-atom))}
          [:span.livicon-check]]]])))
 
-(defn- nappaimistokomponentti [tiedot]
-  (let [syotto-atom (atom {:nykyinen-syotto "0," ;; TODO Osaksi softan tilaa
-                           :syotot []})]
-
-    (fn [{:keys [nimi avain lopeta-jatkuva-havainto mittaustyyppi] :as tiedot}]
-      [:div.nappaimisto-container
-       [:div.nappaimisto
-        [lopeta-mittaus {:nimi nimi
-                         :avain avain
-                         :mittaustyyppi mittaustyyppi
-                         :syottoarvot (:syotot @syotto-atom)
-                         :lopeta-jatkuva-havainto lopeta-jatkuva-havainto}]
-        [mittaustiedot
-         (count (:syotot @syotto-atom))
-         (fmt/n-desimaalia
-           (math/avg (map fmt/string->numero (:syotot @syotto-atom)))
-           2)]
-        [numeropainikkeet
-         syotto-atom
-         (case mittaustyyppi
-           :kitkamittaus kirjaa-kitkamittaus!)
-         mittaustyyppi]]])))
+(defn- nappaimistokomponentti [{:keys [mittaustyyppi mittaussyotto-atom] :as tiedot}]
+  (alusta-mittaussyotto! mittaustyyppi mittaussyotto-atom)
+  (fn [{:keys [nimi avain lopeta-jatkuva-havainto
+               mittaustyyppi mittaussyotto-atom] :as tiedot}]
+    [:div.nappaimisto-container
+     [:div.nappaimisto
+      [lopeta-mittaus {:nimi nimi
+                       :avain avain
+                       :mittaustyyppi mittaustyyppi
+                       :syottoarvot (:syotot @mittaussyotto-atom)
+                       :lopeta-jatkuva-havainto lopeta-jatkuva-havainto}]
+      [mittaustiedot
+       (count (:syotot @mittaussyotto-atom))
+       (fmt/n-desimaalia
+         (math/avg (map fmt/string->numero (:syotot @mittaussyotto-atom)))
+         2)]
+      [numeropainikkeet
+       mittaussyotto-atom
+       (case mittaustyyppi
+         :kitkamittaus kirjaa-kitkamittaus!)
+       mittaustyyppi]]]))
 
 (defn nappaimisto [havainto]
-  [nappaimistokomponentti {:mittaustyyppi (get-in havainto [:mittaus :tyyppi])
+  [nappaimistokomponentti {:mittaussyotto-atom s/mittaussyotto
+                           :mittaustyyppi (get-in havainto [:mittaus :tyyppi])
                            :nimi (get-in havainto [:mittaus :nimi])
                            :avain (:avain havainto)
                            :lopeta-jatkuva-havainto s/lopeta-jatkuvan-havainnon-mittaus!}])
