@@ -44,41 +44,41 @@
         [:button
          {:class "nappaimiston-painike"
           :id "nappaimiston-painike7"
-          :on-click #(numeronappain-painettu! 7 syotto-atom)} "7"]
+          :on-click #(numeronappain-painettu! 7 mittaustyyppi syotto-atom)} "7"]
         [:button
          {:class "nappaimiston-painike"
           :id "nappaimiston-painike8"
-          :on-click #(numeronappain-painettu! 8 syotto-atom)} "8"]
+          :on-click #(numeronappain-painettu! 8 mittaustyyppi syotto-atom)} "8"]
         [:button
          {:class "nappaimiston-painike"
           :id "nappaimiston-painike9"
-          :on-click #(numeronappain-painettu! 9 syotto-atom)} "9"]
+          :on-click #(numeronappain-painettu! 9 mittaustyyppi syotto-atom)} "9"]
 
         [:button
          {:class "nappaimiston-painike"
           :id "nappaimiston-painike4"
-          :on-click #(numeronappain-painettu! 4 syotto-atom)} "4"]
+          :on-click #(numeronappain-painettu! 4 mittaustyyppi syotto-atom)} "4"]
         [:button
          {:class "nappaimiston-painike"
           :id "nappaimiston-painike5"
-          :on-click #(numeronappain-painettu! 5 syotto-atom)} "5"]
+          :on-click #(numeronappain-painettu! 5 mittaustyyppi syotto-atom)} "5"]
         [:button
          {:class "nappaimiston-painike"
           :id "nappaimiston-painike6"
-          :on-click #(numeronappain-painettu! 6 syotto-atom)} "6"]
+          :on-click #(numeronappain-painettu! 6 mittaustyyppi syotto-atom)} "6"]
 
         [:button
          {:class "nappaimiston-painike"
           :id "nappaimiston-painike1"
-          :on-click #(numeronappain-painettu! 1 syotto-atom)} "1"]
+          :on-click #(numeronappain-painettu! 1 mittaustyyppi syotto-atom)} "1"]
         [:button
          {:class "nappaimiston-painike"
           :id "nappaimiston-painike2"
-          :on-click #(numeronappain-painettu! 2 syotto-atom)} "2"]
+          :on-click #(numeronappain-painettu! 2 mittaustyyppi syotto-atom)} "2"]
         [:button
          {:class "nappaimiston-painike"
           :id "nappaimiston-painike3"
-          :on-click #(numeronappain-painettu! 3 syotto-atom)} "3"]
+          :on-click #(numeronappain-painettu! 3 mittaustyyppi syotto-atom)} "3"]
 
         [:button
          {:class "nappaimiston-painike"
@@ -87,7 +87,7 @@
         [:button
          {:class "nappaimiston-painike"
           :id "nappaimiston-painike0"
-          :on-click #(numeronappain-painettu! 0 syotto-atom)} "0"]
+          :on-click #(numeronappain-painettu! 0 mittaustyyppi syotto-atom)} "0"]
         [:button
          {:disabled (not (syotto-kelpaa? (:nykyinen-syotto @syotto-atom)))
           :class "nappaimiston-painike"

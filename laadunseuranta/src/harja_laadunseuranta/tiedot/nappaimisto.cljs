@@ -9,11 +9,16 @@
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]))
 
 (def mittaustyypin-lahtoarvo {:kitkamittaus "0,"})
+(def syoton-max-merkkimaara {:kitkamittaus 4})
 
-(defn numeronappain-painettu! [numero syotto-atom]
+(defn numeronappain-painettu! [numero mittaustyyppi syotto-atom]
   (.log js/console "Numero syötetty: " (pr-str numero))
   (let [nykyinen-syotto (:nykyinen-syotto @syotto-atom)
-        uusi-syotto (str nykyinen-syotto numero)]
+        suurin-sallittu-tarkkuus (mittaustyyppi syoton-max-merkkimaara)
+        salli-syotto? (< (count nykyinen-syotto) suurin-sallittu-tarkkuus)
+        uusi-syotto (if salli-syotto?
+                      (str nykyinen-syotto numero)
+                      nykyinen-syotto)]
     (swap! syotto-atom assoc :nykyinen-syotto uusi-syotto)))
 
 (defn alusta-mittaussyotto! [mittaustyyppi syotto-atom]
