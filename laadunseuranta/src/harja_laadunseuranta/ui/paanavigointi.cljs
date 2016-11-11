@@ -41,9 +41,14 @@
     (fn [{:keys [valilehdet kirjaa-pistemainen-havainto-fn
                  kirjaa-valikohtainen-havainto-fn
                  jatkuvat-havainnot
-                 mittaustyyppi] :as tiedot}]
+                 nykyinen-mittaustyyppi] :as tiedot}]
       (let [jatkuvia-havaintoja-paalla? (not (empty? jatkuvat-havainnot))
-            nayta-nappaimisto? (some? mittaustyyppi)]
+            mittaus-paalla? (some? nykyinen-mittaustyyppi)
+            mittaus (when mittaus-paalla?
+                      (:mittaus (first (filter #(= (get-in % [:mittaus :tyyppi])
+                                          nykyinen-mittaustyyppi)
+                                      (mapcat :sisalto valilehdet)))))]
+        (.log js/console "Mittaus: " (pr-str mittaus))
         [:div {:class (str "paanavigointi-container "
                            (if @paanavigointi-nakyvissa?
                              "paanavigointi-container-nakyvissa"
@@ -81,12 +86,12 @@
                                  :disabloitu? (boolean (and (= (:tyyppi havainto) :vali)
                                                             jatkuvia-havaintoja-paalla?
                                                             (not (jatkuvat-havainnot (:avain havainto)))
-                                                            nayta-nappaimisto?
+                                                            mittaus-paalla?
                                                             (:vaatii-nappaimiston? havainto)))})])))]]
            [:footer]]]
 
-         (when nayta-nappaimisto?
-           [nappaimisto/nappaimisto mittaustyyppi "TODO-otsikko"])]))))
+         (when mittaus-paalla?
+           [nappaimisto/nappaimisto mittaus])]))))
 
 (defn paanavigointi []
   [paanavigointikomponentti {:valilehdet tiedot/oletusvalilehdet
@@ -96,4 +101,4 @@
                              tiedot/valikohtainen-havainto-painettu!
                              :aseta-mittaus-paalle s/aseta-mittaus-paalle!
                              :jatkuvat-havainnot @s/jatkuvat-havainnot
-                             :mittaustyyppi @s/mittaustyyppi}])
+                             :nykyinen-mittaustyyppi @s/mittaustyyppi}])

@@ -7,16 +7,16 @@
     [cljs.core.async.macros :refer [go go-loop]]
     [devcards.core :as dc :refer [defcard deftest]]))
 
-(defn off-painike [{:keys [otsikko avain poista-jatkuva-havainto] :as tiedot}]
+(defn off-painike [{:keys [nimi avain poista-jatkuva-havainto] :as tiedot}]
   [:button.nappaimisto-lopeta
    {:on-click (fn [_]
                 (poista-jatkuva-havainto avain))}
-   otsikko])
+   (str nimi " päättyy")])
 
-(defn- nappaimistokomponentti [{:keys [otsikko poista-jatkuva-havainto mittaustyyppi] :as tiedot}]
+(defn- nappaimistokomponentti [{:keys [nimi poista-jatkuva-havainto mittaustyyppi] :as tiedot}]
   []
   [:div.nappaimisto
-   [off-painike {:otsikko otsikko
+   [off-painike {:nimi nimi
                  :mittaustyyppi mittaustyyppi
                  :poista-jatkuva-havainto poista-jatkuva-havainto}]
    #_[avattu-nuoli]
@@ -25,9 +25,9 @@
                                            (swap! keskiarvo-atom #(conj % mittaus))
                                            (kitkamittaus-kirjattu mittaus))]])
 
-(defn nappaimisto [mittaustyyppi otsikko]
-  [nappaimistokomponentti {:mittaustyyppi mittaustyyppi
-                           :otsikko otsikko
+(defn nappaimisto [mittaus]
+  [nappaimistokomponentti {:mittaustyyppi (:tyyppi mittaus)
+                           :nimi (:nimi mittaus)
                            :poista-jatkuva-havainto s/poista-jatkuva-havainto!}])
 
 ;; TODO Kirjaa tähän tyyliin:

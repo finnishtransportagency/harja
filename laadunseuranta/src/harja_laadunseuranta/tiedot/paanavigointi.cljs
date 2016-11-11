@@ -12,19 +12,21 @@
     :ikoni "talvi_liukasta"
     :tyyppi :vali
     :avain :liukasta
-    :mittaustyyppi :kitkamittaus
+    :mittaus {:nimi "Liukkaus"
+              :tyyppi :kitkamittaus}
     :vaatii-nappaimiston? true}
    {:nimi "Lu\u00ADmis\u00ADta"
     :ikoni "talvi_lumista"
     :tyyppi :vali
     :avain :lumista
-    :mittaustyyppi :lumisuus
+    :mittaus {:nimi "Lumisuus"
+              :tyyppi :lumisuus}
     :vaatii-nappaimiston? true}
    {:nimi "Tasaus\u00ADpuute"
     :tyyppi :vali
     :ikoni "talvi_tasauspuute"
-    :avain :tasauspuute
-    :mittaustyyppi :talvihoito-tasaisuus
+    :mittaus {:nimi "Tasauspuute"
+              :tyyppi :talvihoito-tasaisuus}
     :vaatii-nappaimiston? true}
    {:nimi "Py\u00ADsäkki: epä\u00ADtasainen polanne"
     :tyyppi :piste
@@ -294,7 +296,7 @@
 
 (defn valikohtainen-havainto-painettu!
   "Asettaa välikohtaisen havainnon päälle tai pois päältä."
-  [{:keys [avain vaatii-nappaimiston? mittaustyyppi] :as tiedot}]
+  [{:keys [avain vaatii-nappaimiston? mittaus] :as tiedot}]
   ;; Jatkuva havainto ensin päälle
   (s/togglaa-jatkuva-havainto! avain)
   (.log js/console (pr-str "Välikohtaiset havainnot nyt : " @s/jatkuvat-havainnot))
@@ -302,7 +304,7 @@
   ;; Mittaus päälle jos tarvii
   (when (and vaatii-nappaimiston?
              (avain @s/jatkuvat-havainnot))
-    (s/aseta-mittaus-paalle! mittaustyyppi))
+    (s/aseta-mittaus-paalle! (:tyyppi mittaus)))
 
   ;; Mittaus pois jos tarvii
   (when (and vaatii-nappaimiston?
