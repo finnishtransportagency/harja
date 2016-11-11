@@ -44,10 +44,10 @@
                  nykyinen-mittaustyyppi] :as tiedot}]
       (let [jatkuvia-havaintoja-paalla? (not (empty? jatkuvat-havainnot))
             mittaus-paalla? (some? nykyinen-mittaustyyppi)
-            mittaus (when mittaus-paalla?
-                      (:mittaus (first (filter #(= (get-in % [:mittaus :tyyppi])
+            havainto (when mittaus-paalla?
+                       (first (filter #(= (get-in % [:mittaus :tyyppi])
                                           nykyinen-mittaustyyppi)
-                                      (mapcat :sisalto valilehdet)))))]
+                                      (mapcat :sisalto valilehdet))))]
         (.log js/console "Mittaus: " (pr-str mittaus))
         [:div {:class (str "paanavigointi-container "
                            (if @paanavigointi-nakyvissa?
@@ -91,7 +91,7 @@
            [:footer]]]
 
          (when mittaus-paalla?
-           [nappaimisto/nappaimisto mittaus])]))))
+           [nappaimisto/nappaimisto havainto])]))))
 
 (defn paanavigointi []
   [paanavigointikomponentti {:valilehdet tiedot/oletusvalilehdet

@@ -7,29 +7,32 @@
     [cljs.core.async.macros :refer [go go-loop]]
     [devcards.core :as dc :refer [defcard deftest]]))
 
-(defn off-painike [{:keys [nimi avain poista-jatkuva-havainto] :as tiedot}]
-  [:button.nappi-kielteinen.nappaimisto-lopeta-nappi
-   {:on-click (fn [_]
-                (poista-jatkuva-havainto avain))}
+(defn off-painike [{:keys [nimi avain lopeta-mittaus] :as tiedot}]
+  [:button
+   {:class "nappi nappi-kielteinen nappi-peruuta"
+    :on-click (fn [_]
+                (lopeta-mittaus avain))}
    (str nimi " päättyy")])
 
-(defn- nappaimistokomponentti [{:keys [nimi poista-jatkuva-havainto mittaustyyppi] :as tiedot}]
+(defn- nappaimistokomponentti [{:keys [nimi avain lopeta-mittaus mittaustyyppi] :as tiedot}]
   []
   [:div.nappaimisto-container
    [:div.nappaimisto
    [off-painike {:nimi nimi
+                 :avain avain
                  :mittaustyyppi mittaustyyppi
-                 :poista-jatkuva-havainto poista-jatkuva-havainto}]
+                 :lopeta-mittaus lopeta-mittaus}]
    #_[avattu-nuoli]
    #_[kitkamittaustiedot keskiarvo-atom]
    #_[kitkamittaus/kitkamittauskomponentti (fn [mittaus]
                                            (swap! keskiarvo-atom #(conj % mittaus))
                                            (kitkamittaus-kirjattu mittaus))]]])
 
-(defn nappaimisto [mittaus]
-  [nappaimistokomponentti {:mittaustyyppi (:tyyppi mittaus)
-                           :nimi (:nimi mittaus)
-                           :poista-jatkuva-havainto s/poista-jatkuva-havainto!}])
+(defn nappaimisto [havainto]
+  [nappaimistokomponentti {:mittaustyyppi (get-in havainto [:mittaus :tyyppi])
+                           :nimi (get-in havainto [:mittaus :nimi])
+                           :avain (:avain havainto)
+                           :lopeta-mittaus s/lopeta-jatkuvan-havainnon-mittaus!}])
 
 ;; TODO Kirjaa tähän tyyliin:
 #_(kirjaa-kertakirjaus @s/idxdb

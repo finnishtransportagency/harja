@@ -186,3 +186,7 @@
 
 (defn aseta-mittaus-pois! []
   (reset! mittaustyyppi nil))
+
+(defn lopeta-jatkuvan-havainnon-mittaus! [avain]
+  (poista-jatkuva-havainto! avain)
+  (aseta-mittaus-pois!))

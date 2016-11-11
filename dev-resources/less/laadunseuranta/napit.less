@@ -1,17 +1,29 @@
+.nappi {
+    width: 200px;
+    height: 50px;
+    font-size: 1em;
+    font-weight: normal;
+}
+
 .nappi-ensisijainen {
-    color: #ffffff;
-    background-color: #0066cc;
-    border-color: #0066cc;
-    font-weight: normal;
+    color: @valkoinen;
+    background-color: @sininen4;
+    border-color: @sininen4;
 }
+
 .nappi-toissijainen {
-    color: #0066cc;
-    background-color: #ffffff;
-    border-color: #0066cc;
+    color: @sininen4;
+    background-color: @valkoinen;
+    border-color: @sininen4;
 }
+
 .nappi-kielteinen {
-    color: #ffffff;
-    background-color: #dd0000;
-    border-color: #dd0000;
+    color: @valkoinen;
+    background-color: @punainen4;
+    border-color: @punainen4;
     font-weight: normal;
+}
+
+.nappi-kielteinen:active {
+    background-color: lighten(@punainen6, 10%);
 }
