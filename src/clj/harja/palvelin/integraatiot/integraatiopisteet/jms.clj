@@ -39,7 +39,8 @@
      (try
        (if-let [jms-viesti-id (sonja/laheta sonja jono viesti)]
          (do
-           (lokittaja :jms-viesti tapahtuma-id jms-viesti-id "ulos" viesti jono)
+           ;; Käytetään joko ulkopuolelta annettua ulkoista id:tä tai JMS-yhteyden antamaa id:täs
+           (lokittaja :jms-viesti tapahtuma-id (or viesti-id jms-viesti-id) "ulos" viesti jono)
            jms-viesti-id)
          (let [virheviesti (format "Lähetys JMS jonoon: %s epäonnistui. Viesti id:tä ei palautunut" jono)]
            (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id virheviesti)))

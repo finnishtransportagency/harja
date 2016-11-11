@@ -298,9 +298,7 @@
                                        tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
                                        yllapitoluokka yllapitokohdetyyppi yllapitokohdetyotyyppi
                                        sopimuksen-mukaiset-tyot arvonvahennykset bitumi-indeksi
-                                       kaasuindeksi poistettu nykyinen-paallyste
-                                       keskimaarainen-vuorokausiliikenne
-                                       indeksin-kuvaus]}]
+                                       kaasuindeksi poistettu keskimaarainen-vuorokausiliikenne]}]
   (log/debug "Luodaan uusi ylläpitokohde tyyppiä " yllapitokohdetyotyyppi)
   (when-not poistettu
     (q/luo-yllapitokohde<! db
@@ -317,24 +315,20 @@
                             :tr_kaista tr-kaista
                             :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
                             :yllapitoluokka yllapitoluokka
-                            :nykyinen_paallyste nykyinen-paallyste
                             :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
                             :arvonvahennykset arvonvahennykset
                             :bitumi_indeksi bitumi-indeksi
                             :kaasuindeksi kaasuindeksi
                             :yllapitokohdetyyppi (when yllapitokohdetyyppi (name yllapitokohdetyyppi))
-                            :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))
-                            :indeksin_kuvaus indeksin-kuvaus})))
+                            :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))})))
 
 (defn- paivita-yllapitokohde [db user urakka-id
                               {:keys [id kohdenumero nimi
                                       tr-numero tr-alkuosa tr-alkuetaisyys
                                       tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
-                                      yllapitoluokka
-                                      sopimuksen-mukaiset-tyot
+                                      yllapitoluokka sopimuksen-mukaiset-tyot
                                       arvonvahennykset bitumi-indeksi kaasuindeksi
-                                      nykyinen-paallyste keskimaarainen-vuorokausiliikenne
-                                      indeksin-kuvaus poistettu]}]
+                                      keskimaarainen-vuorokausiliikenne poistettu]}]
   (if poistettu
     (do (log/debug "Tarkistetaan onko ylläpitokohteella ilmoituksia")
         (let [paallystysilmoitus (q/onko-olemassa-paallystysilmoitus? db id)
@@ -359,12 +353,10 @@
                                    :tr_kaista tr-kaista
                                    :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
                                    :yllapitoluokka yllapitoluokka
-                                   :nykyinen_paallyste nykyinen-paallyste
                                    :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
                                    :arvonvanhennykset arvonvahennykset
                                    :bitumi_indeksi bitumi-indeksi
                                    :kaasuindeksi kaasuindeksi
-                                   :indeksin_kuvaus indeksin-kuvaus
                                    :id id
                                    :urakka urakka-id}))))
 
