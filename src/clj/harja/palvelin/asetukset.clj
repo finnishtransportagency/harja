@@ -95,6 +95,9 @@
                                            (s/optional-key :tekniset-laitteet-urakat-shapefile)              s/Str
                                            (s/optional-key :tekniset-laitteet-urakat-alk-osoite)             s/Str
                                            (s/optional-key :tekniset-laitteet-urakat-alk-tuontikohde)         s/Str
+                                           (s/optional-key :siltojenpalvelusopimusten-shapefile)              s/Str
+                                           (s/optional-key :siltojenpalvelusopimusten-alk-osoite)             s/Str
+                                           (s/optional-key :siltojenpalvelusopimusten-alk-tuontikohde)         s/Str
                                            }
 
    (s/optional-key :yha)                  {:url            s/Str

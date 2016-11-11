@@ -36,7 +36,7 @@
                          korrelaatio-id tapahtuma-id false virhe)))))
 
 (defn hae-urakka [db {:keys [urakkatyyppi sijainti]}]
-  (when-let [urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db urakkatyyppi sijainti))]
+  (when-let [urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db (ilmoitus/urakkatyyppi urakkatyyppi) sijainti))]
     (first (urakat/hae-urakka db urakka-id))))
 
 (defn- merkitse-automaattisesti-vastaanotetuksi [db ilmoitus ilmoitus-id jms-lahettaja]
