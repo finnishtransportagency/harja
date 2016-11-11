@@ -4,7 +4,8 @@
             [harja-laadunseuranta.ui.nappaimisto :as nappaimisto]
             [harja-laadunseuranta.tiedot.paanavigointi :as tiedot]
             [cljs-time.local :as l]
-            [harja-laadunseuranta.tiedot.sovellus :as s])
+            [harja-laadunseuranta.tiedot.sovellus :as s]
+            [harja.ui.dom :as dom])
   (:require-macros
     [harja-laadunseuranta.macros :as m]
     [cljs.core.async.macros :refer [go go-loop]]
@@ -32,10 +33,14 @@
 
 (defn- paanavigointikomponentti [{:keys [valilehdet] :as tiedot}]
   (let [paanavigointi-nakyvissa? (atom true)
+        kayta-hampurilaisvalikkoa? (< (dom/leveys 530))
+        valilehdet-nakyvissa? (atom true)
         valittu-valilehti (atom (:avain (first valilehdet)))
         valitse-valilehti! (fn [uusi-valinta]
                              (.log js/console "Vaihdetaan välilehti: " (str uusi-valinta))
-                             (reset! valittu-valilehti uusi-valinta))
+                             (reset! valittu-valilehti uusi-valinta)
+                             (when kayta-hampurilaisvalikkoa?
+                               (swap! valilehdet-nakyvissa? not)))
         piilotusnappi-klikattu (fn []
                                  (swap! paanavigointi-nakyvissa? not))]
     (fn [{:keys [valilehdet kirjaa-pistemainen-havainto-fn
@@ -58,16 +63,22 @@
            [:div.piilotusnappi {:on-click piilotusnappi-klikattu}]
 
            [:header
-            [:ul.valilehtilista
-             (doall
-               (for [{:keys [avain] :as valilehti} valilehdet]
-                 ^{:key avain}
-                 [:li {:class (str "valilehti "
-                                   (when (= avain
-                                            @valittu-valilehti)
-                                     "valilehti-valittu"))
-                       :on-click #(valitse-valilehti! avain)}
-                  (:nimi valilehti)]))]]
+            [:div.hampurilaisvalikko
+             (when kayta-hampurilaisvalikkoa?
+               [:img.hampurilaisvalikko-ikoni
+               {:src kuvat/+hampurilaisvalikko+
+                :on-click #(swap! valilehdet-nakyvissa? not)}])]
+            (when @valilehdet-nakyvissa?
+              [:ul.valilehtilista
+              (doall
+                (for [{:keys [avain] :as valilehti} valilehdet]
+                  ^{:key avain}
+                  [:li {:class (str "valilehti "
+                                    (when (= avain
+                                             @valittu-valilehti)
+                                      "valilehti-valittu"))
+                        :on-click #(valitse-valilehti! avain)}
+                   (:nimi valilehti)]))])]
            [:div.sisalto
             [:div.valintapainikkeet
              (let [{:keys [sisalto] :as valittu-valilehti}

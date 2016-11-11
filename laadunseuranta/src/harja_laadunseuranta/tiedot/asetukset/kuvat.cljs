@@ -15,5 +15,6 @@
 (def +check+ (ikoni "check.svg"))
 (def +cross+ (ikoni "cross.svg"))
 (def +spinner+ (ikoni "ajax-loader.gif"))
+(def +hampurilaisvalikko+ (ikoni "hampurilaisvalikko.svg"))
 (def +avattu+ (ikoni "avattu.png"))
 (def +havaintopiste+ (ikoni "havaintopiste.png"))
