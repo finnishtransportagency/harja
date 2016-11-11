@@ -25,7 +25,7 @@
               :yksikko "cm"}
     :vaatii-nappaimiston? true}
    {:nimi "Tasaus\u00ADpuute"
-    :avain :talvihoito-tasaisuus
+    :avain :tasauspuute
     :tyyppi :vali
     :ikoni "talvi_tasauspuute"
     :mittaus {:nimi "Tasauspuute"
