@@ -24,14 +24,12 @@
   (swap! syotto-atom assoc :nykyinen-syotto (mittaustyyppi mittaustyypin-lahtoarvo))
   (.log js/console "Syötöt nyt: " (pr-str (:syotot @syotto-atom))))
 
-(defn kirjaa-kitkamittaus! [syottoarvot]
-  (.log js/console "Kitkamittaus-syötöt " (pr-str syottoarvot))
-  (let [keskiarvo (math/avg (map fmt/string->numero syottoarvot))]
-    (reitintallennus/kirjaa-kertakirjaus
+(defn kirjaa-kitkamittaus! [arvo]
+  (.log js/console "Kirjataan uusi kitkamittaus: " (pr-str arvo))
+  (reitintallennus/kirjaa-kertakirjaus
       @s/idxdb
       {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
        :aikaleima (tc/to-long (lt/local-now))
        :tarkastusajo @s/tarkastusajo-id
        :havainnot @s/jatkuvat-havainnot
-       :mittaukset {:kitkamittaus keskiarvo}})
-    (.log js/console "Syötetty keskiarvo: " (pr-str keskiarvo))))
+       :mittaukset {:kitkamittaus arvo}}))

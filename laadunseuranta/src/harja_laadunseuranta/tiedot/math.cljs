@@ -2,5 +2,7 @@
   (:require [ol.proj :as ol-proj]
             [ol.extent :as ol-extent]))
 
-(defn- avg [mittaukset]
-  (/ (reduce + 0 mittaukset) (count mittaukset)))
+(defn- avg [arvot]
+  (if (empty? arvot)
+    0
+    (/ (reduce + 0 arvot) (count arvot))))

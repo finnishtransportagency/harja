@@ -19,19 +19,17 @@
    {:class "nappi nappi-kielteinen nappi-peruuta"
     :on-click (fn [_]
                 (.log js/console "Mittaus päättyy!")
-                (case mittaustyyppi
-                  :kitkamittaus (kirjaa-kitkamittaus! syottoarvot))
                 (lopeta-jatkuva-havainto avain))}
    (str nimi " päättyy")])
 
-(defn- mittaustiedot [{:keys [mittaukset keskiarvo]}]
+(defn- mittaustiedot [mittaukset keskiarvo]
   [:div.mittaustiedot
    [:div.mittaustieto (str "Mittauksia: " mittaukset)]
-   [:div.mittaustieto (str "Keskiarvo: " (if (empty? mittaukset)
-                                           "-"
-                                           (fmt/kahdella-desimaalilla keskiarvo)))]])
+   [:div.mittaustieto (str "Keskiarvo: " (if (pos? mittaukset)
+                                           keskiarvo
+                                           "-"))]])
 
-(defn numeropainikkeet [syotto-atom mittaustyyppi]
+(defn numeropainikkeet [syotto-atom kirjaa-arvo! mittaustyyppi]
   (let [syotto-kelpaa? (fn [syotto]
                          ;; Ainakin yksi desimaali
                          (> (count syotto) 2))]
@@ -94,6 +92,7 @@
           :class "nappaimiston-painike"
           :id "nappaimiston-painike-ok"
           :on-click #(when (syotto-kelpaa? (:nykyinen-syotto @syotto-atom))
+                      (kirjaa-arvo! (fmt/string->numero (:nykyinen-syotto @syotto-atom)))
                       (syotto-valmis! mittaustyyppi syotto-atom))}
          [:span.livicon-check]]]])))
 
@@ -111,8 +110,14 @@
                          :lopeta-jatkuva-havainto lopeta-jatkuva-havainto}]
         [mittaustiedot
          (count (:syotot @syotto-atom))
-         (math/avg (map fmt/string->numero (:syotot @syotto-atom)))]
-        [numeropainikkeet syotto-atom mittaustyyppi]]])))
+         (fmt/n-desimaalia
+           (math/avg (map fmt/string->numero (:syotot @syotto-atom)))
+           2)]
+        [numeropainikkeet
+         syotto-atom
+         (case mittaustyyppi
+           :kitkamittaus kirjaa-kitkamittaus!)
+         mittaustyyppi]]])))
 
 (defn nappaimisto [havainto]
   [nappaimistokomponentti {:mittaustyyppi (get-in havainto [:mittaus :tyyppi])
