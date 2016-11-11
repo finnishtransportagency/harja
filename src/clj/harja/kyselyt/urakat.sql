@@ -75,9 +75,17 @@ SELECT
                            id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)       AS sopimukset,
-  ST_Simplify(au.alue, 50)    AS alueurakan_alue,
-  ST_Simplify(tlu.alue, 50)   AS tekniset_laitteet_alue,
-  ST_Simplify(sps.alue, 50)   AS siltapalvelusopimus_alue
+
+  -- Urakka-alue: tällä hetkellä tuetaan joko hoidon alueurakan, teknisten laitteiden ja siltapalvelusopimusten alueita.
+  CASE
+  WHEN u.tyyppi = 'siltakorjaus' :: urakkatyyppi
+    THEN ST_Simplify(sps.alue, 50)
+  WHEN u.tyyppi = 'tekniset laitteet' :: urakkatyyppi
+    THEN ST_Simplify(tlu.alue, 50)
+  ELSE
+    ST_Simplify(au.alue, 50)
+  END                         AS alueurakan_alue
+
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id

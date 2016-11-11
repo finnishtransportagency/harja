@@ -159,13 +159,11 @@
   (comp (muunna-pg-tulokset :alue :alueurakan_alue)
 
         ;; Aseta alue, jos se löytyy
-        (map #(let [alue (or (:alueurakan_alue %)
-                             (:tekniset_laitteet_alue %)
-                             (:siltapalvelusopimus_alue %))]
-               (-> (if alue (assoc % :alue alue) %)
-                   (dissoc % :alueurakan_alue)
-                   (dissoc % :tekniset_laitteet_alue)
-                   (dissoc % :siltapalvelusopimus_alue))))
+        (map #(if-let [alueurakka (:alueurakan_alue %)]
+               (-> %
+                   (dissoc :alueurakan_alue)
+                   (assoc :alue alueurakka))
+               (dissoc % :alueurakan_alue)))
 
         (map #(assoc % :urakoitsija {:id (:urakoitsija_id %)
                                      :nimi (:urakoitsija_nimi %)
