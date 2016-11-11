@@ -8,14 +8,15 @@
     [devcards.core :as dc :refer [defcard deftest]]))
 
 (defn off-painike [{:keys [nimi avain poista-jatkuva-havainto] :as tiedot}]
-  [:button.nappaimisto-lopeta
+  [:button.nappi-kielteinen.nappaimisto-lopeta-nappi
    {:on-click (fn [_]
                 (poista-jatkuva-havainto avain))}
    (str nimi " päättyy")])
 
 (defn- nappaimistokomponentti [{:keys [nimi poista-jatkuva-havainto mittaustyyppi] :as tiedot}]
   []
-  [:div.nappaimisto
+  [:div.nappaimisto-container
+   [:div.nappaimisto
    [off-painike {:nimi nimi
                  :mittaustyyppi mittaustyyppi
                  :poista-jatkuva-havainto poista-jatkuva-havainto}]
@@ -23,7 +24,7 @@
    #_[kitkamittaustiedot keskiarvo-atom]
    #_[kitkamittaus/kitkamittauskomponentti (fn [mittaus]
                                            (swap! keskiarvo-atom #(conj % mittaus))
-                                           (kitkamittaus-kirjattu mittaus))]])
+                                           (kitkamittaus-kirjattu mittaus))]]])
 
 (defn nappaimisto [mittaus]
   [nappaimistokomponentti {:mittaustyyppi (:tyyppi mittaus)
