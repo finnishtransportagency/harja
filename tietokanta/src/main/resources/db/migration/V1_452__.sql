@@ -1,23 +1,13 @@
--- Tarkastusajolta pois tyyppi, ei enää käytössä
-ALTER TABLE tarkastusajo DROP COLUMN tyyppi;
+-- Luo geometrioille uusi taulu
+CREATE TABLE siltapalvelusopimus (
+  id        SERIAL PRIMARY KEY,
+  urakkanro VARCHAR(16),
+  alue      GEOMETRY
+);
 
--- Reittimerkinälle tasauspuute (oli aiemmin virheellisesti sama kuin soratien tasaisuus)
-ALTER TABLE tarkastusreitti ADD COLUMN soratie_tasaisuus INTEGER;
-ALTER TABLE tarkastusreitti RENAME COLUMN tasaisuus TO talvihoito_tasaisuus;
+-- Lisää uudet integraatiot lokiin
+INSERT INTO integraatio (jarjestelma, nimi)
+VALUES ('ptj', 'siltojen-palvelusopimukset-haku');
 
--- Lisää puuttuvat vakiohavainnot
-INSERT INTO vakiohavainto (nimi, jatkuva, avain)
-VALUES ('Liikennemerkki likainen', false, 'liikennemerkki-likainen'),
-('P- tai L-alueet hoitamatta', false, 'pl-alue-hoitamatta'),
-('Päällysteessä vaurioita', false, 'sillan-paallysteessa-vaurioita'),
-('Kaidevauroita', false, 'sillassa-kaidevaurioita'),
-('Reunapalkkivaurioita likainen', false, 'sillassa-reunapalkkivaurioita');
-
--- Vakiohavainnon avain uniikki
-ALTER TABLE vakiohavainto ADD CONSTRAINT uniikki_vakiohavainto UNIQUE (avain);
-
--- Päivitä vakiohavaintojen jatkuvuustieto
-UPDATE vakiohavainto SET jatkuva = TRUE WHERE nimi = 'Vesakko raivaamatta';
-UPDATE vakiohavainto SET jatkuva = TRUE WHERE nimi = 'Niittämättä';
-UPDATE vakiohavainto SET jatkuva = TRUE WHERE nimi = 'Reunapalletta';
-UPDATE vakiohavainto SET jatkuva = TRUE WHERE nimi = 'Reunatäyttö puutteellinen';
+INSERT INTO integraatio (jarjestelma, nimi)
+VALUES ('ptj', 'siltojen-palvelusopimukset-muutospaivamaaran-haku');

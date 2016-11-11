@@ -158,7 +158,7 @@
 (def urakka-xf
   (comp (muunna-pg-tulokset :alue :alueurakan_alue)
 
-        ;; Jos alueurakan alue on olemassa, käytetään sitä alueena
+        ;; Aseta alue, jos se löytyy
         (map #(if-let [alueurakka (:alueurakan_alue %)]
                (-> %
                    (dissoc :alueurakan_alue)
