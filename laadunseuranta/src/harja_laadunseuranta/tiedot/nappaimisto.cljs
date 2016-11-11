@@ -20,7 +20,13 @@
                    :lumisuus [0 100]
                    :talvihoito-tasaisuus [0 100]})
 
-(defn numeronappain-painettu! [numero mittaustyyppi syotto-atom]
+(defn numeronappain-painettu!
+  "Lisää syötteen syöttö-atomiin, jos se on sallittu.
+   Estää liian pitkät syötteet, mutta ei tarkista esim.
+   min-max rajoja ylittäviä syötteitä. Näistä on tarkoitus
+   näyttää varoitus käyttöliittymässä ja käyttäjää
+   hyväksymästä tällaista syötettä."
+  [numero mittaustyyppi syotto-atom]
   (.log js/console "Numero syötetty: " (pr-str numero))
   (let [nykyinen-syotto (:nykyinen-syotto @syotto-atom)
         uusi-syotto (str nykyinen-syotto numero)
@@ -39,19 +45,28 @@
   (alusta-mittaussyotto! mittaustyyppi syotto-atom))
 
 (defn syotto-valmis! [mittaustyyppi syotto-atom]
-  (swap! syotto-atom assoc :syotot (conj (:syotot @syotto-atom) (:nykyinen-syotto @syotto-atom)))
-  (swap! syotto-atom assoc :nykyinen-syotto (mittaustyyppi mittaustyypin-lahtoarvo))
-  (.log js/console "Syötöt nyt: " (pr-str (:syotot @syotto-atom))))
+  (let [nykyinen-syotto (:nykyinen-syotto @syotto-atom)
+        suurin-sallittu-tarkkuus (mittaustyyppi syoton-max-merkkimaara)
+        syotto-sallittu? (and (<= (count nykyinen-syotto)
+                                  suurin-sallittu-tarkkuus)
+                              (>= (fmt/string->numero nykyinen-syotto)
+                                  (first (mittaustyyppi syoton-rajat)))
+                              (<= (fmt/string->numero nykyinen-syotto)
+                                  (second (mittaustyyppi syoton-rajat))))]
+    (when syotto-sallittu?
+      (swap! syotto-atom assoc :syotot (conj (:syotot @syotto-atom) (:nykyinen-syotto @syotto-atom)))
+      (swap! syotto-atom assoc :nykyinen-syotto (mittaustyyppi mittaustyypin-lahtoarvo))
+      (.log js/console "Syötöt nyt: " (pr-str (:syotot @syotto-atom))))))
 
 (defn kirjaa-kitkamittaus! [arvo]
   (.log js/console "Kirjataan uusi kitkamittaus: " (pr-str arvo))
   (reitintallennus/kirjaa-kertakirjaus
-      @s/idxdb
-      {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
-       :aikaleima (tc/to-long (lt/local-now))
-       :tarkastusajo @s/tarkastusajo-id
-       :havainnot @s/jatkuvat-havainnot
-       :mittaukset {:kitkamittaus arvo}}))
+    @s/idxdb
+    {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
+     :aikaleima (tc/to-long (lt/local-now))
+     :tarkastusajo @s/tarkastusajo-id
+     :havainnot @s/jatkuvat-havainnot
+     :mittaukset {:kitkamittaus arvo}}))
 
 (defn kirjaa-lumisuus! [arvo]
   (.log js/console "Kirjataan uusi lumisuus: " (pr-str arvo))
