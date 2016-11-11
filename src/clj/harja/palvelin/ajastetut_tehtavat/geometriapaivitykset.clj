@@ -18,7 +18,8 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.elyt :as elyjen-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.valaistusurakat :as valaistusurakoiden-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.paallystyspalvelusopimukset :as paallystyspalvelusopimusten-tuonti]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tekniset-laitteet-urakat :as tekniset-laitteet-urakat-tuonti])
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tekniset-laitteet-urakat :as tekniset-laitteet-urakat-tuonti]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.siltapalvelusopimukset :as siltapalvelusopimukset])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.net URI)
            (java.sql Timestamp)))
@@ -248,6 +249,22 @@
     :tekniset-laitteet-urakat-shapefile
     tekniset-laitteet-urakat-tuonti/vie-tekniset-laitteet-urakat-kantaan))
 
+(def tee-siltojen-palvelusopimusten-alk-paivitystehtava
+  (maarittele-alk-paivitystehtava
+    "siltojen-palvelusopimukset"
+    :siltojenpalvelusopimusten-alk-osoite
+    :siltojenpalvelusopimusten-alk-tuontikohde
+    :siltojenpalvelusopimusten-shapefile
+    siltapalvelusopimukset/vie-siltojen-palvelusopimukset-kantaan))
+
+(def tee-siltojen-palvelusopimusten-paikallinen-paivitystehtava
+  (maarittele-paikallinen-paivitystehtava
+    "siltojen-palvelusopimukset"
+    :siltojenpalvelusopimusten-alk-osoite
+    :siltojenpalvelusopimusten-alk-tuontikohde
+    :siltojenpalvelusopimusten-shapefile
+    siltapalvelusopimukset/vie-siltojen-palvelusopimukset-kantaan))
+
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
   (start [this]
@@ -271,7 +288,9 @@
       :paallystyspalvelusopimusten-hakutehtava (tee-paallystyspalvelusopimusten-alk-paivitystehtava this asetukset)
       :paallystyspalvelusopimusten-paivitystehtava (tee-paallystyspalvelusopimusten-paikallinen-paivitystehtava this asetukset)
       :tekniset-laitteet-urakoiden-hakutehtava (tee-tekniset-laitteet-urakoiden-alk-paivitystehtava this asetukset)
-      :tekniset-laitteet-urakoiden-paivitystehtava (tee-tekniset-laitteet-urakoiden-paikallinen-paivitystehtava this asetukset)))
+      :tekniset-laitteet-urakoiden-paivitystehtava (tee-tekniset-laitteet-urakoiden-paikallinen-paivitystehtava this asetukset)
+      :siltojen-palvelusopimusten-hakutehtava (tee-siltojen-palvelusopimusten-alk-paivitystehtava this asetukset)
+      :siltojen-palvelusopimusten-paivitystehtava (tee-siltojen-palvelusopimusten-paikallinen-paivitystehtava this asetukset)))
 
   (stop [this]
     (doseq [tehtava [:tieverkon-hakutehtava
