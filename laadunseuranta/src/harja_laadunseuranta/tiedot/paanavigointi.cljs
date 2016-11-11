@@ -3,7 +3,9 @@
             [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
             [cljs-time.local :as l]
-            [harja-laadunseuranta.utils :as utils]))
+            [harja-laadunseuranta.utils :as utils]
+            [cljs-time.coerce :as tc]
+            [cljs-time.local :as lt]))
 
 (def valilehti-talviset-pinnat
   [{:nimi "Liu\u00ADkas\u00ADta"
@@ -217,7 +219,7 @@
   (reitintallennus/kirjaa-kertakirjaus
     @s/idxdb
     {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
-     :aikaleima (l/local-now)
+     :aikaleima (tc/to-long (lt/local-now))
      :tarkastusajo @s/tarkastusajo-id
      :havainnot (into #{} (remove nil? (conj @s/jatkuvat-havainnot avain)))
      :mittaukset {}}))
