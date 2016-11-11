@@ -16,21 +16,21 @@
                              :lumisuus 3
                              :talvihoito-tasaisuus 3})
 
-(def syoton-rajat {:kitkamittaus [0 0.999]
+(def syoton-rajat {:kitkamittaus [0 1]
                    :lumisuus [0 100]
                    :talvihoito-tasaisuus [0 100]})
 
 (defn numeronappain-painettu! [numero mittaustyyppi syotto-atom]
   (.log js/console "Numero syötetty: " (pr-str numero))
   (let [nykyinen-syotto (:nykyinen-syotto @syotto-atom)
+        uusi-syotto (str nykyinen-syotto numero)
         suurin-sallittu-tarkkuus (mittaustyyppi syoton-max-merkkimaara)
-        salli-syotto? (and (< (count nykyinen-syotto) suurin-sallittu-tarkkuus)
-                           (>= numero (first (mittaustyyppi syoton-rajat)))
-                           (<= numero (second (mittaustyyppi syoton-rajat))))
-        uusi-syotto (if salli-syotto?
-                      (str nykyinen-syotto numero)
-                      nykyinen-syotto)]
-    (swap! syotto-atom assoc :nykyinen-syotto uusi-syotto)))
+        salli-syotto? (<= (count uusi-syotto) suurin-sallittu-tarkkuus)
+        _ (.log js/console "Salli syöttö: " (pr-str salli-syotto?))
+        lopullinen-syotto (if salli-syotto?
+                            uusi-syotto
+                            nykyinen-syotto)]
+    (swap! syotto-atom assoc :nykyinen-syotto lopullinen-syotto)))
 
 (defn alusta-mittaussyotto! [mittaustyyppi syotto-atom]
   (swap! syotto-atom assoc :nykyinen-syotto (mittaustyyppi mittaustyypin-lahtoarvo)))

@@ -36,10 +36,12 @@
     :kitkamittaus [kitkamittaustiedot mittaukset keskiarvo]
     [:div.mittaustiedot]))
 
-(defn- syottokentta [syotto-atom]
+(defn- syottokentta [syotto-atom yksikko]
   [:div.nappaimiston-syottokentta
    [:span.nappaimiston-nykyinen-syotto (:nykyinen-syotto @syotto-atom)]
-   [:span.nappaimiston-kursori]])
+   [:span.nappaimiston-kursori]
+   (when yksikko
+     [:span.nappaimiston-syottoyksikko yksikko])])
 
 (defn- syottovihje [syotetty-arvo yksikko rajat]
   (let [arvo-liian-suuri? (if syotetty-arvo
@@ -133,7 +135,7 @@
        [syottovihje (:nykyinen-syotto @mittaussyotto-atom)
         mittausyksikko
         (mittaustyyppi syoton-rajat)]
-       [syottokentta mittaussyotto-atom]]
+       [syottokentta mittaussyotto-atom mittausyksikko]]
       [:div.nappaimisto-oikea
        [numeropainikkeet
         mittaussyotto-atom
