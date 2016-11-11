@@ -30,15 +30,19 @@
                                            keskiarvo
                                            "-"))]])
 
-(defn numeropainikkeet [syotto-atom kirjaa-arvo! mittaustyyppi]
+(defn- syottokentta [syotto-atom]
+  [:div.nappaimiston-syottokentta
+   [:span.nappaimiston-nykyinen-syotto (:nykyinen-syotto @syotto-atom)]
+   [:span.nappaimiston-kursori]])
+
+(defn- numeropainikkeet [syotto-atom kirjaa-arvo! mittaustyyppi]
   (let [syotto-kelpaa? (fn [syotto]
                          ;; Ainakin yksi desimaali
                          (> (count syotto) 2))]
 
     (fn []
       [:div.nappaimiston-painikkeet
-       [:div.nappaimiston-syottokentta (:nykyinen-syotto @syotto-atom)
-        [:div.nappaimiston-kursori]]
+       [syottokentta syotto-atom]
        [:div.nappaimiston-painikekentat
 
         [:button
