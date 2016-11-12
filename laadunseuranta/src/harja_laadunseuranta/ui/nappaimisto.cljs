@@ -53,177 +53,181 @@
 
 (defn- soratienappaimisto [{:keys [syotto-atom numeronappain-painettu] :as tiedot}]
   [:div.soratienappaimisto
-     [:div.soratienappaimiston-sarake.soratienappaimiston-tasaisuus
-      [:div.soratienappaimiston-sarake-otsikko "Tasaisuus"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "soratienappaimiston-painike-tasaisuus-5"
-        :on-click #(numeronappain-painettu 5 :tasaisuus syotto-atom)} "5"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "soratienappaimiston-painike-tasaisuus-4"
-        :on-click #(numeronappain-painettu 4 :tasaisuus syotto-atom)} "4"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "soratienappaimiston-painike-tasaisuus-3"
-        :on-click #(numeronappain-painettu 3 :tasaisuus syotto-atom)} "3"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "soratienappaimiston-painike-tasaisuus-2"
-        :on-click #(numeronappain-painettu 2 :tasaisuus syotto-atom)} "2"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "soratienappaimiston-painike-tasaisuus-1"
-        :on-click #(numeronappain-painettu 1 :tasaisuus syotto-atom)} "1"]]
+   [:div.soratienappaimiston-sarake.soratienappaimiston-tasaisuus
+    [:div.soratienappaimiston-sarake-otsikko "Tasaisuus"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "soratienappaimiston-painike-tasaisuus-5"
+      :on-click #(numeronappain-painettu 5 :tasaisuus syotto-atom)} "5"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "soratienappaimiston-painike-tasaisuus-4"
+      :on-click #(numeronappain-painettu 4 :tasaisuus syotto-atom)} "4"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "soratienappaimiston-painike-tasaisuus-3"
+      :on-click #(numeronappain-painettu 3 :tasaisuus syotto-atom)} "3"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "soratienappaimiston-painike-tasaisuus-2"
+      :on-click #(numeronappain-painettu 2 :tasaisuus syotto-atom)} "2"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "soratienappaimiston-painike-tasaisuus-1"
+      :on-click #(numeronappain-painettu 1 :tasaisuus syotto-atom)} "1"]]
 
-     [:div.soratienappaimiston-sarake.soratienappaimiston-kiinteys
-      [:div.soratienappaimiston-sarake-otsikko "Kiinteys"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "soratienappaimiston-painike-kiinteys-5"
-        :on-click #(numeronappain-painettu 5 :kiinteys syotto-atom)} "5"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "soratienappaimiston-painike-kiinteys-4"
-        :on-click #(numeronappain-painettu 4 :kiinteys syotto-atom)} "4"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "soratienappaimiston-painike-kiinteys-3"
-        :on-click #(numeronappain-painettu 3 :kiinteys syotto-atom)} "3"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "soratienappaimiston-painike-kiinteys-2"
-        :on-click #(numeronappain-painettu 2 :kiinteys syotto-atom)} "2"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "soratienappaimiston-painike-kiinteys-1"
-        :on-click #(numeronappain-painettu 1 :kiinteys syotto-atom)} "1"]]
+   [:div.soratienappaimiston-sarake.soratienappaimiston-kiinteys
+    [:div.soratienappaimiston-sarake-otsikko "Kiinteys"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "soratienappaimiston-painike-kiinteys-5"
+      :on-click #(numeronappain-painettu 5 :kiinteys syotto-atom)} "5"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "soratienappaimiston-painike-kiinteys-4"
+      :on-click #(numeronappain-painettu 4 :kiinteys syotto-atom)} "4"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "soratienappaimiston-painike-kiinteys-3"
+      :on-click #(numeronappain-painettu 3 :kiinteys syotto-atom)} "3"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "soratienappaimiston-painike-kiinteys-2"
+      :on-click #(numeronappain-painettu 2 :kiinteys syotto-atom)} "2"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "soratienappaimiston-painike-kiinteys-1"
+      :on-click #(numeronappain-painettu 1 :kiinteys syotto-atom)} "1"]]
 
-     [:div.soratienappaimiston-sarake.soratienappaimiston-polyavyys
-      [:div.soratienappaimiston-sarake-otsikko "Pölyävyys"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "soratienappaimiston-painike-polyavyys-5"
-        :on-click #(numeronappain-painettu 5 :polyavyys syotto-atom)} "5"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "soratienappaimiston-painike-polyavyys-4"
-        :on-click #(numeronappain-painettu 4 :polyavyys syotto-atom)} "4"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "soratienappaimiston-painike-polyavyys-3"
-        :on-click #(numeronappain-painettu 3 :polyavyys syotto-atom)} "3"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "soratienappaimiston-painike-polyavyys-2"
-        :on-click #(numeronappain-painettu 2 :polyavyys syotto-atom)} "2"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "soratienappaimiston-painike-polyavyys-1"
-        :on-click #(numeronappain-painettu 1 :polyavyys syotto-atom)} "1"]]])
+   [:div.soratienappaimiston-sarake.soratienappaimiston-polyavyys
+    [:div.soratienappaimiston-sarake-otsikko "Pölyävyys"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "soratienappaimiston-painike-polyavyys-5"
+      :on-click #(numeronappain-painettu 5 :polyavyys syotto-atom)} "5"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "soratienappaimiston-painike-polyavyys-4"
+      :on-click #(numeronappain-painettu 4 :polyavyys syotto-atom)} "4"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "soratienappaimiston-painike-polyavyys-3"
+      :on-click #(numeronappain-painettu 3 :polyavyys syotto-atom)} "3"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "soratienappaimiston-painike-polyavyys-2"
+      :on-click #(numeronappain-painettu 2 :polyavyys syotto-atom)} "2"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "soratienappaimiston-painike-polyavyys-1"
+      :on-click #(numeronappain-painettu 1 :polyavyys syotto-atom)} "1"]]])
 
 (defn- numeronappaimisto [{:keys [syotto-atom kirjaa-arvo mittaustyyppi
                                   numeronappain-painettu syotto-validi? syotto-valmis]
                            :as tiedot}]
   [:div.numeronappaimisto
-     [:div.nappaimiston-painikekentat
-      [:button
-       {:class "nappaimiston-painike"
-        :id "nappaimiston-painike7"
-        :on-click #(numeronappain-painettu 7 mittaustyyppi syotto-atom)} "7"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "nappaimiston-painike8"
-        :on-click #(numeronappain-painettu 8 mittaustyyppi syotto-atom)} "8"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "nappaimiston-painike9"
-        :on-click #(numeronappain-painettu 9 mittaustyyppi syotto-atom)} "9"]
+   [:div.nappaimiston-painikekentat
+    [:button
+     {:class "nappaimiston-painike"
+      :id "nappaimiston-painike7"
+      :on-click #(numeronappain-painettu 7 mittaustyyppi syotto-atom)} "7"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "nappaimiston-painike8"
+      :on-click #(numeronappain-painettu 8 mittaustyyppi syotto-atom)} "8"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "nappaimiston-painike9"
+      :on-click #(numeronappain-painettu 9 mittaustyyppi syotto-atom)} "9"]
 
-      [:button
-       {:class "nappaimiston-painike"
-        :id "nappaimiston-painike4"
-        :on-click #(numeronappain-painettu 4 mittaustyyppi syotto-atom)} "4"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "nappaimiston-painike5"
-        :on-click #(numeronappain-painettu 5 mittaustyyppi syotto-atom)} "5"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "nappaimiston-painike6"
-        :on-click #(numeronappain-painettu 6 mittaustyyppi syotto-atom)} "6"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "nappaimiston-painike4"
+      :on-click #(numeronappain-painettu 4 mittaustyyppi syotto-atom)} "4"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "nappaimiston-painike5"
+      :on-click #(numeronappain-painettu 5 mittaustyyppi syotto-atom)} "5"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "nappaimiston-painike6"
+      :on-click #(numeronappain-painettu 6 mittaustyyppi syotto-atom)} "6"]
 
-      [:button
-       {:class "nappaimiston-painike"
-        :id "nappaimiston-painike1"
-        :on-click #(numeronappain-painettu 1 mittaustyyppi syotto-atom)} "1"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "nappaimiston-painike2"
-        :on-click #(numeronappain-painettu 2 mittaustyyppi syotto-atom)} "2"]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "nappaimiston-painike3"
-        :on-click #(numeronappain-painettu 3 mittaustyyppi syotto-atom)} "3"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "nappaimiston-painike1"
+      :on-click #(numeronappain-painettu 1 mittaustyyppi syotto-atom)} "1"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "nappaimiston-painike2"
+      :on-click #(numeronappain-painettu 2 mittaustyyppi syotto-atom)} "2"]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "nappaimiston-painike3"
+      :on-click #(numeronappain-painettu 3 mittaustyyppi syotto-atom)} "3"]
 
-      [:button
-       {:class "nappaimiston-painike"
-        :id "nappaimiston-painike-delete"
-        :on-click #(tyhjennyspainike-painettu! mittaustyyppi syotto-atom)} [:span.livicon-undo]]
-      [:button
-       {:class "nappaimiston-painike"
-        :id "nappaimiston-painike0"
-        :on-click #(numeronappain-painettu! 0 mittaustyyppi syotto-atom)} "0"]
-      [:button
-       {:disabled (not (syotto-validi? mittaustyyppi (:nykyinen-syotto @syotto-atom)))
-        :class "nappaimiston-painike"
-        :id "nappaimiston-painike-ok"
-        :on-click #(when (syotto-validi? mittaustyyppi (:nykyinen-syotto @syotto-atom))
-                    (kirjaa-arvo (fmt/string->numero (:nykyinen-syotto @syotto-atom)))
-                    (syotto-valmis mittaustyyppi syotto-atom))}
-       [:span.livicon-check]]]])
+    [:button
+     {:class "nappaimiston-painike"
+      :id "nappaimiston-painike-delete"
+      :on-click #(tyhjennyspainike-painettu! mittaustyyppi syotto-atom)} [:span.livicon-undo]]
+    [:button
+     {:class "nappaimiston-painike"
+      :id "nappaimiston-painike0"
+      :on-click #(numeronappain-painettu! 0 mittaustyyppi syotto-atom)} "0"]
+    [:button
+     {:disabled (not (syotto-validi? mittaustyyppi (:nykyinen-syotto @syotto-atom)))
+      :class "nappaimiston-painike"
+      :id "nappaimiston-painike-ok"
+      :on-click #(when (syotto-validi? mittaustyyppi (:nykyinen-syotto @syotto-atom))
+                  (kirjaa-arvo (fmt/string->numero (:nykyinen-syotto @syotto-atom)))
+                  (syotto-valmis mittaustyyppi syotto-atom))}
+     [:span.livicon-check]]]])
 
 (defn- nappaimistokomponentti [{:keys [mittausyksikko mittaustyyppi mittaussyotto-atom] :as tiedot}]
-  (alusta-mittaussyotto! mittaustyyppi mittaussyotto-atom)
-  (fn [{:keys [nimi avain lopeta-jatkuva-havainto
-               mittaustyyppi mittaussyotto-atom] :as tiedot}]
-    [:div.nappaimisto-container
-     [:div.nappaimisto
-      [:div.nappaimisto-vasen
-       [lopeta-mittaus {:nimi nimi
-                        :avain avain
-                        :mittaustyyppi mittaustyyppi
-                        :syottoarvot (:syotot @mittaussyotto-atom)
-                        :lopeta-jatkuva-havainto lopeta-jatkuva-havainto}]
-       [mittaustiedot
-        mittaustyyppi
-        (count (:syotot @mittaussyotto-atom))
-        (fmt/n-desimaalia
-          (math/avg (map fmt/string->numero (:syotot @mittaussyotto-atom)))
-          2)]
-       [syottovihje (:nykyinen-syotto @mittaussyotto-atom)
-        mittausyksikko
-        (mittaustyyppi syoton-rajat)]
-       [syottokentta mittaussyotto-atom mittausyksikko]]
-      [:div.nappaimisto-oikea
-       (case mittaustyyppi
-         ;; "Erikoismittauksille" on omat näppäimistöt
-         :soratie
-         [soratienappaimisto {:syotto-atom nil
-                              :numeronappain-painettu
-                              soratienappaimiston-numeronappain-painettu!}]
-         ;; Muille mittauksille normaali numeronäppäimistö
-         [numeronappaimisto
-          {:syotto-atom mittaussyotto-atom
-           :mittaustyyppi mittaustyyppi
-           :mittausyksikko mittausyksikko
-           :numeronappain-painettu numeronappain-painettu!
-           :syotto-validi? syotto-validi?
-           :syotto-valmis syotto-valmis!
-           :kirjaa-arvo (case mittaustyyppi
-                         :kitkamittaus kirjaa-kitkamittaus!
-                         :lumisuus kirjaa-lumisuus!
-                         :talvihoito-tasaisuus kirjaa-talvihoito-tasaisuus!)}])]]]))
+  (let [nayta-syottokentta? (not= mittaustyyppi :soratie)
+        nayta-syottovihje? (not= mittaustyyppi :soratie)]
+    (alusta-mittaussyotto! mittaustyyppi mittaussyotto-atom)
+    (fn [{:keys [nimi avain lopeta-jatkuva-havainto
+                 mittaustyyppi mittaussyotto-atom] :as tiedot}]
+      [:div.nappaimisto-container
+       [:div.nappaimisto
+        [:div.nappaimisto-vasen
+         [lopeta-mittaus {:nimi nimi
+                          :avain avain
+                          :mittaustyyppi mittaustyyppi
+                          :syottoarvot (:syotot @mittaussyotto-atom)
+                          :lopeta-jatkuva-havainto lopeta-jatkuva-havainto}]
+         [mittaustiedot
+          mittaustyyppi
+          (count (:syotot @mittaussyotto-atom))
+          (fmt/n-desimaalia
+            (math/avg (map fmt/string->numero (:syotot @mittaussyotto-atom)))
+            2)]
+         (when nayta-syottovihje?
+           [syottovihje (:nykyinen-syotto @mittaussyotto-atom)
+           mittausyksikko
+           (mittaustyyppi syoton-rajat)])
+         (when nayta-syottokentta?
+           [syottokentta mittaussyotto-atom mittausyksikko])]
+        [:div.nappaimisto-oikea
+         (case mittaustyyppi
+           ;; "Erikoismittauksille" on omat näppäimistöt
+           :soratie
+           [soratienappaimisto {:syotto-atom nil
+                                :numeronappain-painettu
+                                soratienappaimiston-numeronappain-painettu!}]
+           ;; Muille mittauksille normaali numeronäppäimistö
+           [numeronappaimisto
+            {:syotto-atom mittaussyotto-atom
+             :mittaustyyppi mittaustyyppi
+             :mittausyksikko mittausyksikko
+             :numeronappain-painettu numeronappain-painettu!
+             :syotto-validi? syotto-validi?
+             :syotto-valmis syotto-valmis!
+             :kirjaa-arvo (case mittaustyyppi
+                            :kitkamittaus kirjaa-kitkamittaus!
+                            :lumisuus kirjaa-lumisuus!
+                            :talvihoito-tasaisuus kirjaa-talvihoito-tasaisuus!)}])]]])))
 
 (defn nappaimisto [havainto]
   [nappaimistokomponentti {:mittaussyotto-atom s/mittaussyotto
