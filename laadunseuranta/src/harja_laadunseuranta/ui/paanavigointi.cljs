@@ -85,10 +85,10 @@
               [:ul.valilehtilista
                (doall
                  (for [{:keys [avain sisalto] :as valilehti} valilehdet]
-                   ^{:key avain}
                    (let [valilehden-jatkuvat-havainnot
                          (set/intersection (into #{} (map :avain sisalto))
                                            jatkuvat-havainnot)]
+                     ^{:key avain}
                      [:li {:class (str "valilehti "
                                        (when (= avain
                                                 @valittu-valilehti)
