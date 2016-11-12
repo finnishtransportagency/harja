@@ -1,5 +1,4 @@
-(ns harja-laadunseuranta.tiedot.asetukset.kuvat
-  (:require-macros [harja-laadunseuranta.ui.inline-kuva :refer [inline-svg]]))
+(ns harja-laadunseuranta.tiedot.asetukset.kuvat)
 
 (defn- ikoni [nimi]
   (str "img/" nimi))
