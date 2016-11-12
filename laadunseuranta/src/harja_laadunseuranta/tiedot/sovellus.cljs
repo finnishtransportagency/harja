@@ -177,6 +177,9 @@
 (defn poista-jatkuva-havainto! [avain]
   (reset! jatkuvat-havainnot (into #{} (remove #(= avain %) @jatkuvat-havainnot))))
 
+(defn poista-kaikki-jatkuvat-havainnot! []
+  (reset! jatkuvat-havainnot #{}))
+
 (defn togglaa-jatkuva-havainto!
   "Lisää jatkuvan havainnon, jos sitä ei ole. Jos on, poistaa sen."
   [avain]
