@@ -180,6 +180,9 @@
   (.log js/console "Asetetaan mittaus pois")
   (reset! mittaussyotto {:nykyinen-syotto nil
                          :syotot []})
+  (reset! soratiemittaussyotto {:tasaisuus 5
+                                :kiinteys 5
+                                :polyavyys 5})
   (reset! mittaustyyppi nil))
 
 (defn valitse-urakka! [urakka]

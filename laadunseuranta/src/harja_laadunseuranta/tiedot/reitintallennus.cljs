@@ -13,13 +13,13 @@
                    [reagent.ratom :refer [run!]]
                    [harja-laadunseuranta.macros :refer [with-delay-loop after-delay]]
                    [harja-laadunseuranta.tiedot.indexeddb-macros :refer [with-transaction
-                                                                  with-transaction-to-store
-                                                                  with-get-object
-                                                                  with-all-items
-                                                                  with-n-items
-                                                                  with-objectstore
-                                                                  with-cursor
-                                                                  with-count]]))
+                                                                         with-transaction-to-store
+                                                                         with-get-object
+                                                                         with-all-items
+                                                                         with-n-items
+                                                                         with-objectstore
+                                                                         with-cursor
+                                                                         with-count]]))
 
 (def db-spec {:version 2
               :on-error #(js/console.log (str "Tietokantavirhe " (pr-str %)))
@@ -36,7 +36,7 @@
   (let [c (chan)]
     (with-transaction-to-store db asetukset/+reittimerkinta-store+ :readwrite store
                                (doseq [tapahtumaid lahetetyt-idt]
-        (idb/delete-object store tapahtumaid))
+                                 (idb/delete-object store tapahtumaid))
 
                                :on-complete (close! c))
     c))
@@ -49,13 +49,13 @@
       (when cont
         (with-transaction-to-store db asetukset/+reittimerkinta-store+ :readonly store
                                    (with-n-items store 10 reittimerkinnat
-            (go
-              (let [lahetetyt (<! (merkintojen-lahetin reittimerkinnat))]
-                (if-not (empty? lahetetyt)
-                  (do
-                    (<! (poista-lahetetyt-reittimerkinnat! db lahetetyt))
-                    (after-delay pollausvali (put! again true)))
-                  (after-delay pollausvali (put! again true)))))))
+                                                 (go
+                                                   (let [lahetetyt (<! (merkintojen-lahetin reittimerkinnat))]
+                                                     (if-not (empty? lahetetyt)
+                                                       (do
+                                                         (<! (poista-lahetetyt-reittimerkinnat! db lahetetyt))
+                                                         (after-delay pollausvali (put! again true)))
+                                                       (after-delay pollausvali (put! again true)))))))
         (recur (<! again))))
     again))
 
@@ -70,22 +70,22 @@
 
 (defn paivita-lahettamattomien-merkintojen-maara [db pollausvali lahettamattomat-atom]
   (with-delay-loop pollausvali
-    (with-transaction-to-store db asetukset/+reittimerkinta-store+ :readonly store
-                               (with-count store lahettamattomia
-        (reset! lahettamattomat-atom lahettamattomia)))))
+                   (with-transaction-to-store db asetukset/+reittimerkinta-store+ :readonly store
+                                              (with-count store lahettamattomia
+                                                          (reset! lahettamattomat-atom lahettamattomia)))))
 
 (defn palauta-tarkastusajo [db action]
   (with-transaction-to-store db asetukset/+tarkastusajo-store+ :readonly store
                              (with-cursor store kursori ajo
-      (action ajo)
-      (idb/cursor-continue kursori))))
+                                          (action ajo)
+                                          (idb/cursor-continue kursori))))
 
 (defn persistoi-tarkastusajo [db tarkastusajo-id]
   (with-transaction-to-store db asetukset/+tarkastusajo-store+ :readwrite store
                              (with-get-object store tarkastusajo-id ajo
-      (when (nil? ajo)
-        (idb/put-object store {:tarkastusajo tarkastusajo-id
-                               :reittipisteet []})))))
+                                              (when (nil? ajo)
+                                                (idb/put-object store {:tarkastusajo tarkastusajo-id
+                                                                       :reittipisteet []})))))
 
 (defn tyhjenna-reittipisteet [db]
   (with-transaction-to-store db asetukset/+reittimerkinta-store+ :readwrite store
@@ -94,11 +94,11 @@
 (defn tallenna-tarkastusajon-geometria [db tarkastusajo-id reittipisteet tarkastuspisteet]
   (with-transaction-to-store db asetukset/+tarkastusajo-store+ :readwrite store
                              (with-get-object store tarkastusajo-id ajo
-      (when ajo
-        (idb/put-object store (assoc (js->clj ajo)
-                                     ;; tallenna vain 500 viimeistä reittipistettä
-                                     :reittipisteet (clj->js (vec (take-last asetukset/+persistoitavien-max-maara+ reittipisteet)))
-                                     :tarkastuspisteet (clj->js (vec (take-last asetukset/+persistoitavien-max-maara+ tarkastuspisteet)))))))))
+                                              (when ajo
+                                                (idb/put-object store (assoc (js->clj ajo)
+                                                                        ;; tallenna vain 500 viimeistä reittipistettä
+                                                                        :reittipisteet (clj->js (vec (take-last asetukset/+persistoitavien-max-maara+ reittipisteet)))
+                                                                        :tarkastuspisteet (clj->js (vec (take-last asetukset/+persistoitavien-max-maara+ tarkastuspisteet)))))))))
 
 (defn poista-tarkastusajo [db tarkastusajo-id]
   (with-transaction-to-store db asetukset/+tarkastusajo-store+ :readwrite store
@@ -125,19 +125,22 @@
                         :havainnot @s/jatkuvat-havainnot
                         ;; Nauhoituksessa mittauksiin tallentuvat vain jatkuvat mittaukset
                         ;; Kertamittaukset tallennetaan erikseen heti kun sellainen syötetään.
-                        :mittaukset {:soratie-tasaisuus (:tasaisuus @s/soratiemittaussyotto)
-                                     :kiinteys (:kiinteys @s/soratiemittaussyotto)
-                                     :polyavyys (:polyavyys @s/soratiemittaussyotto)}}))
+                        ;; HUOM: Tärkeää ottaa arvot ylös vain jos mittaus on päällä!
+                        :mittaukset (merge {}
+                                           (when (= @s/mittaustyyppi :soratie)
+                                             {:soratie-tasaisuus (:tasaisuus @s/soratiemittaussyotto)
+                                              :kiinteys (:kiinteys @s/soratiemittaussyotto)
+                                              :polyavyys (:polyavyys @s/soratiemittaussyotto)}))}))
 
 (defn- kaynnista-tarkastusajon-lokaali-tallennus [db tarkastusajo-atom]
   (let [ajo-id (cljs.core/atom nil)]
     (run!
-     (if (and @ajo-id (not @tarkastusajo-atom))
-       (do (poista-tarkastusajo db @ajo-id)
-           (reset! ajo-id nil))
-       (when (and (not @ajo-id) @tarkastusajo-atom)
-         (persistoi-tarkastusajo db @tarkastusajo-atom)
-         (reset! ajo-id @tarkastusajo-atom))))))
+      (if (and @ajo-id (not @tarkastusajo-atom))
+        (do (poista-tarkastusajo db @ajo-id)
+            (reset! ajo-id nil))
+        (when (and (not @ajo-id) @tarkastusajo-atom)
+          (persistoi-tarkastusajo db @tarkastusajo-atom)
+          (reset! ajo-id @tarkastusajo-atom))))))
 
 (defn kaynnista-reitintallennus [sijainnin-tallennus-mahdollinen-atom
                                  sijainti-atom
@@ -149,20 +152,20 @@
                                  tarkastuspisteet-atom]
   (.log js/console "Reitintallennus käynnistetty")
   (kaynnista-tarkastusajon-lokaali-tallennus db tarkastusajo-atom)
-  
-  (run!
-   (when (and @sijainnin-tallennus-mahdollinen-atom @tarkastusajo-atom)
-     (tallenna-tarkastusajon-geometria db @tarkastusajo-atom @reittipisteet-atom @tarkastuspisteet-atom)))
 
   (run!
-   (when (and @tallennus-kaynnissa-atom
-              @segmentti-atom)
-    (swap! reittipisteet-atom #(lisaa-piirrettava-reittipiste % @segmentti-atom))))
+    (when (and @sijainnin-tallennus-mahdollinen-atom @tarkastusajo-atom)
+      (tallenna-tarkastusajon-geometria db @tarkastusajo-atom @reittipisteet-atom @tarkastuspisteet-atom)))
+
+  (run!
+    (when (and @tallennus-kaynnissa-atom
+               @segmentti-atom)
+      (swap! reittipisteet-atom #(lisaa-piirrettava-reittipiste % @segmentti-atom))))
 
   (run!
     (when (and @sijainnin-tallennus-mahdollinen-atom
-              @tallennus-kaynnissa-atom
-              (:nykyinen @sijainti-atom))
+               @tallennus-kaynnissa-atom
+               (:nykyinen @sijainti-atom))
       (tallenna-sovelluksen-tilasta-merkinta-indexeddbn!))))
 
 (defn tietokannan-alustus []
