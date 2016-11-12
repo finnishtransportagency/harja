@@ -33,53 +33,63 @@
       nimi]]))
 
 (defn- paanavigointikomponentti [{:keys [valilehdet] :as tiedot}]
+  ;; TODO Nämä osaksi softan tilaa
   (let [paanavigointi-nakyvissa? (atom true)
-        kayta-hampurilaisvalikkoa? (< (dom/leveys) 950)
         valilehdet-nakyvissa? (atom true)
         valittu-valilehti (atom (:avain (first valilehdet)))
-        valitse-valilehti! (fn [uusi-valinta]
+        valitse-valilehti! (fn [uusi-valinta kayta-hampurilaisvalikkoa?]
                              (.log js/console "Vaihdetaan välilehti: " (str uusi-valinta))
                              (reset! valittu-valilehti uusi-valinta)
                              (when kayta-hampurilaisvalikkoa?
                                (swap! valilehdet-nakyvissa? not)))
-        piilotusnappi-klikattu (fn []
-                                 (swap! paanavigointi-nakyvissa? not))]
+        togglaa-paanavigoinnin-nakyvyys (fn []
+                                        (swap! paanavigointi-nakyvissa? not))
+        toggllaa-valilehtien-nakyvyys (fn []
+                                        (swap! valilehdet-nakyvissa? not))]
     (fn [{:keys [valilehdet kirjaa-pistemainen-havainto-fn
                  kirjaa-valikohtainen-havainto-fn
                  jatkuvat-havainnot
                  nykyinen-mittaustyyppi] :as tiedot}]
       (let [jatkuvia-havaintoja-paalla? (not (empty? jatkuvat-havainnot))
             mittaus-paalla? (some? nykyinen-mittaustyyppi)
+            kayta-hampurilaisvalikkoa? (< @dom/leveys 950)
             havainto (when mittaus-paalla?
                        (first (filter #(= (get-in % [:mittaus :tyyppi])
                                           nykyinen-mittaustyyppi)
-                                      (mapcat :sisalto valilehdet))))]
+                                      (mapcat :sisalto valilehdet))))
+            nayta-valilehdet-tarvittaessa! (fn []
+                                            (if (and (not @valilehdet-nakyvissa?)
+                                                     (not kayta-hampurilaisvalikkoa?))
+                                              (toggllaa-valilehtien-nakyvyys)))]
+
+        (nayta-valilehdet-tarvittaessa!)
+
         [:div {:class (str "paanavigointi-container "
                            (if @paanavigointi-nakyvissa?
                              "paanavigointi-container-nakyvissa"
                              "paanavigointi-container-piilossa"))}
-         [:div.nayttonappi {:on-click piilotusnappi-klikattu}]
+         [:div.nayttonappi {:on-click togglaa-paanavigoinnin-nakyvyys}]
          [:div.navigointilaatikko-container
           [:div.navigointilaatikko
-           [:div.piilotusnappi {:on-click piilotusnappi-klikattu}]
+           [:div.piilotusnappi {:on-click togglaa-paanavigoinnin-nakyvyys}]
 
            [:header
             [:div.hampurilaisvalikko
              (when kayta-hampurilaisvalikkoa?
                [:img.hampurilaisvalikko-ikoni
-               {:src kuvat/+hampurilaisvalikko+
-                :on-click #(swap! valilehdet-nakyvissa? not)}])]
+                {:src kuvat/+hampurilaisvalikko+
+                 :on-click toggllaa-valilehtien-nakyvyys}])]
             (when @valilehdet-nakyvissa?
               [:ul.valilehtilista
-              (doall
-                (for [{:keys [avain] :as valilehti} valilehdet]
-                  ^{:key avain}
-                  [:li {:class (str "valilehti "
-                                    (when (= avain
-                                             @valittu-valilehti)
-                                      "valilehti-valittu"))
-                        :on-click #(valitse-valilehti! avain)}
-                   (:nimi valilehti)]))])]
+               (doall
+                 (for [{:keys [avain] :as valilehti} valilehdet]
+                   ^{:key avain}
+                   [:li {:class (str "valilehti "
+                                     (when (= avain
+                                              @valittu-valilehti)
+                                       "valilehti-valittu"))
+                         :on-click #(valitse-valilehti! avain kayta-hampurilaisvalikkoa?)}
+                    (:nimi valilehti)]))])]
            [:div.sisalto
             [:div.valintapainikkeet
              (let [{:keys [sisalto] :as valittu-valilehti}
@@ -105,7 +115,7 @@
                                       :luokat-str "nappi-toissijainen"}]]
             [:div.footer-oikea
              [nappi "Avaa lomake" {:on-click (fn [])
-                                      :luokat-str "nappi-ensisijainen"}]]]]]
+                                   :luokat-str "nappi-ensisijainen"}]]]]]
 
          (when mittaus-paalla?
            [nappaimisto/nappaimisto havainto])]))))
