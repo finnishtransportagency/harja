@@ -4,7 +4,8 @@
             [harja-laadunseuranta.tiedot.math :as math]
             [harja-laadunseuranta.tiedot.fmt :as fmt]
             [harja-laadunseuranta.tiedot.nappaimisto
-             :refer [alusta-mittaussyotto! numeronappain-painettu!
+             :refer [alusta-mittaussyotto! alusta-soratiemittaussyotto!
+                     numeronappain-painettu!
                      tyhjennyspainike-painettu! syotto-valmis!
                      kirjaa-kitkamittaus! kirjaa-lumisuus!
                      kirjaa-talvihoito-tasaisuus!
@@ -189,10 +190,11 @@
      [:span.livicon-check]]]])
 
 (defn- nappaimistokomponentti [{:keys [mittausyksikko mittaustyyppi
-                                       mittaussyotto-atom soratiemittaussyotto] :as tiedot}]
+                                       mittaussyotto-atom soratiemittaussyotto-atom] :as tiedot}]
   (let [nayta-syottokentta? (not= mittaustyyppi :soratie)
         nayta-syottovihje? (not= mittaustyyppi :soratie)]
     (alusta-mittaussyotto! mittaustyyppi mittaussyotto-atom)
+    (alusta-soratiemittaussyotto! soratiemittaussyotto-atom)
     (fn [{:keys [nimi avain lopeta-jatkuva-havainto
                  mittaustyyppi mittaussyotto-atom] :as tiedot}]
       [:div.nappaimisto-container
@@ -219,7 +221,7 @@
          (case mittaustyyppi
            ;; "Erikoismittauksille" on omat näppäimistöt ja syotto-atomit
            :soratie
-           [soratienappaimisto {:syotto-atom soratiemittaussyotto
+           [soratienappaimisto {:syotto-atom soratiemittaussyotto-atom
                                 :numeronappain-painettu
                                 soratienappaimiston-numeronappain-painettu!}]
            ;; Muille mittauksille normaali numeronäppäimistö
@@ -237,7 +239,7 @@
 
 (defn nappaimisto [havainto]
   [nappaimistokomponentti {:mittaussyotto-atom s/mittaussyotto
-                           :soratiemittaussyotto s/soratiemittaussyotto
+                           :soratiemittaussyotto-atom s/soratiemittaussyotto
                            :mittaustyyppi (get-in havainto [:mittaus :tyyppi])
                            :mittausyksikko (get-in havainto [:mittaus :yksikko])
                            :nimi (get-in havainto [:mittaus :nimi])

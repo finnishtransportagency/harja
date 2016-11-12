@@ -66,6 +66,11 @@
 
 ;; Erikoisnäppäimistöt
 
+(defn alusta-soratiemittaussyotto! [syotto-atom]
+  (swap! syotto-atom assoc :tasaisuus 5)
+  (swap! syotto-atom assoc :kiinteys 5)
+  (swap! syotto-atom assoc :polyavyys 5))
+
 (defn soratienappaimiston-numeronappain-painettu! [arvo mittaustyyppi syotto-atom]
   (.log js/console (pr-str "Painoit " mittaustyyppi " arvoksi " arvo))
   (swap! syotto-atom assoc mittaustyyppi arvo))
