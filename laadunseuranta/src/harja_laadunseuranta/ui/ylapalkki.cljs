@@ -84,8 +84,7 @@
     :ortokuva s/nayta-ortokuva
     :tallennus-kaynnissa s/tallennus-kaynnissa
     :keskita-ajoneuvoon s/keskita-ajoneuvoon
-    :disabloi-kaynnistys? (or @s/kirjaamassa-havaintoa
-                              @s/kirjaamassa-yleishavaintoa
+    :disabloi-kaynnistys? (or @s/havaintolomake-auki
                               @s/palautettava-tarkastusajo)
     :valittu-urakka s/valittu-urakka
     :palvelinvirhe s/palvelinvirhe}])

@@ -51,6 +51,16 @@
     border-bottom: 1px solid lightgray;
 }
 
+.havaintolomake .tarkastaja {
+    display: inline-block;
+    border: 1px solid black;
+    height: 35px;
+    padding: 5px;
+    background-color: rgb(217,218,219);
+    box-sizing: border-box;
+}
+
+
 .havaintolomake .lomake-sarake {
     float: left;
 }
@@ -150,4 +160,153 @@
     border: 1px solid lightgray;
     background-color: lightgray;
     box-sizing: border-box;
+}
+
+
+.validointivirhe {
+    width: 230px;
+    position: absolute;
+    background-color: red;
+    color: white;
+}
+
+button:disabled {
+    color: lightgray;
+}
+
+.laatupoikkeama-check {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.virhe {
+    color: red;
+}
+.odotusspinneri {
+    left: -10px;
+    position: relative;
+    top: 7px;
+}
+.peruutuspainike {
+    background-color: transparent;
+    color: rgb(9,79,192);
+    border: 1px solid rgb(9,79,192);
+}
+
+.painikelaatikko {
+    height: 500px;
+}
+.urakkavalitsin {
+    height: 500px;
+}
+.painikelaatikko,
+.urakkavalitsin {
+    background-color: white;
+    left: 0;
+    overflow: hidden;
+    position: fixed;
+    top: 70px;
+    width: 100%;
+    z-index: @z-index-urakkavalitsin;
+}
+.painikelaatikko > .painikerivi {
+    height: 70px;
+}
+
+.painikerivi > .pikavalintapainike {
+    float: left;
+    width: 30.5%;
+    height: 100%;
+    background-color: rgb(9,79,192);
+    border: 1px solid black;
+    margin-top: 1%;
+    margin-bottom: 1%;
+    margin-left: 2%;
+    mergin-right: 3%;
+    color: white;
+    padding-top: 20px;
+    font-size: 16px;
+    text-align: left;
+    line-height: 20px;
+    position: relative;
+}
+
+.pikavalintapainike > .rec {
+    background-color: red;
+    border-left: red solid 3px;
+    float: right;
+    font-weight: bold;
+    right: 7px;
+    position: absolute;
+    top: 28px;
+    z-index: @z-index-rec;
+}
+.painike-aktiivinen,
+.painikelaatikko .painike-aktiivinen {
+    border: 2px solid black;
+    border-radius: 5px;
+    background-color: red;
+    color: white;
+}
+
+.peruuta {
+    width: 30.5%;
+    height: 70px;
+    float: right;
+    text-align: center;
+    margin-top: 20px;
+    margin-left: 2%;
+    margin-right: 2.5%;
+    line-height: 70px;
+    font-size: 18px;
+}
+.aloita-tyovirhe,
+.tallennus-kaynnissa,
+.tyhja-nappi {
+    width: 30.5%;
+    height: 70px;
+    float: left;
+    text-align: left;
+    margin-top: 20px;
+    margin-left: 2%;
+    line-height: 70px;
+    font-size: 18px;
+}
+.tallennus-kaynnissa {
+    color: red;
+}
+
+
+.keskenerainen {
+    color: red;
+    margin-left: 8px;
+}
+
+
+.kameranappi {
+    display: inline-block;
+    border: 1px solid blue;
+    width: 120px;
+    height: 112px;
+    padding-left: 2px;
+    padding-top: 10px;
+    margin-left: 10px;
+    box-sizing: border-box;
+}
+
+.kameranappi .kamera-eikuvaa {
+    color: blue;
+    text-align: center;
+}
+
+.kameranappi img {
+    float: left;
+    display: inline-block;
+    height: 90px;
+}
+
+.kameranappi img:nth-of-type(2) {
+    margin-left: 20px;
+    height: 110px;
+    image-orientation: from-image;
 }

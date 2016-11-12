@@ -48,12 +48,9 @@
    :mitttaustyyppi nil ;; Suoritettava mittaustyyppi (esim. :lumista) tai nil jos ei olla mittaamassa mitään
 
    ;; Lomake
-   :kirjaamassa-havaintoa false
-   :kirjaamassa-yleishavaintoa false
-   :vakiohavaintojen-kuvaukset nil ; Serveriltä saadut tiedot vakiohavainnoista
 
-   :tr-alku nil
-   :tr-loppu nil
+   :havaintolomake-auki? false
+   :havaintolomake-data {}
 
    ;; Kartta
    :kirjauspisteet [] ; Kartalla näytettäviä ikoneita varten
@@ -62,6 +59,8 @@
             :nayta-ortokuva false}
 
    ;; Muut
+   :vakiohavaintojen-kuvaukset nil ; Serveriltä saadut tiedot vakiohavainnoista
+
    :ilmoitukset [] ;; Sisältää jonossa olevat ajastetut ilmoitukset
    :idxdb nil
    :palvelinvirhe nil})
@@ -73,12 +72,9 @@
 (def vakiohavaintojen-kuvaukset (reagent/cursor sovellus [:vakiohavaintojen-kuvaukset]))
 (def palautettava-tarkastusajo (reagent/cursor sovellus [:palautettava-tarkastusajo]))
 
-(def tr-tiedot-nakyvissa (reagent/cursor sovellus [:tr-tiedot-nakyvissa]))
 (def tr-tiedot (reagent/cursor sovellus [:tr-tiedot]))
-
-(def tr-alku (reagent/cursor sovellus [:tr-alku]))
-(def tr-loppu (reagent/cursor sovellus [:tr-loppu]))
-
+(def tr-tiedot-nakyvissa (reagent/cursor sovellus [:tr-tiedot-nakyvissa]))
+(def tr-osoite (reagent/cursor sovellus [:tr-tiedot :tr-osoite]))
 (def hoitoluokka (reagent/cursor sovellus [:tr-tiedot :talvihoitoluokka]))
 (def soratiehoitoluokka (reagent/cursor sovellus [:tr-tiedot :soratiehoitoluokka]))
 
@@ -87,10 +83,8 @@
 (def kayttajanimi (reagent/cursor sovellus [:kayttaja :kayttajanimi]))
 (def kayttajatunnus (reagent/cursor sovellus [:kayttaja :kayttajatunnus]))
 
-(def kirjaamassa-havaintoa (reagent/cursor sovellus [:kirjaamassa-havaintoa]))
-(def kirjaamassa-yleishavaintoa (reagent/cursor sovellus [:kirjaamassa-yleishavaintoa]))
+(def havaintolomake-auki (reagent/cursor sovellus [:havaintolomake-auki?]))
 
-(def tr-osoite (reagent/cursor sovellus [:tr-tiedot :tr-osoite]))
 
 (def alustus-valmis (reaction (let [sovellus @sovellus]
                                 (and (get-in sovellus [:alustus :gps-tuettu])
@@ -129,9 +123,7 @@
 
 (def nayta-kiinteistorajat (reagent/cursor sovellus [:kartta :nayta-kiinteistorajat]))
 (def nayta-ortokuva (reagent/cursor sovellus [:kartta :nayta-ortokuva]))
-
 (def keskita-ajoneuvoon (reagent/cursor sovellus [:kartta :keskita-ajoneuvoon]))
-
 (def karttaoptiot (reaction {:seuraa-sijaintia (or @tallennus-kaynnissa @keskita-ajoneuvoon)
                              :nayta-kiinteistorajat @nayta-kiinteistorajat
                              :nayta-ortokuva @nayta-ortokuva}))
@@ -157,10 +149,7 @@
 
 (def reittipisteet (reagent/cursor sovellus [:reittipisteet]))
 
-(def yleishavainto-kaynnissa (reagent/cursor sovellus [:havainnot :yleishavainto]))
-
 (def idxdb (reagent/cursor sovellus [:idxdb]))
-
 (def palvelinvirhe (reagent/cursor sovellus [:palvelinvirhe]))
 
 (def sijainnin-tallennus-mahdollinen (reaction (and @idxdb @tarkastusajo-id)))

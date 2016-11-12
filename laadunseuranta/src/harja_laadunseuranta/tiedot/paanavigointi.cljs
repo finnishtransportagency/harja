@@ -320,3 +320,7 @@
 
   ;; Tee merkintä
   (reitintallennus/tallenna-sovelluksen-tilasta-merkinta-indexeddbn!))
+
+(defn avaa-havaintolomake! []
+  (.log js/console "Avataan havaintolomake!")
+  (reset! s/havaintolomake-auki true))

@@ -6,6 +6,8 @@
    {:class (str "nappi " luokat-str)
     :on-click on-click}
    [:span
-    ikoni
-    [:span " "]
-    [:span nimi]]])
+    (when ikoni
+      [:span
+       ikoni
+       [:span " "]])
+      [:span nimi]]])

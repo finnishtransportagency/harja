@@ -51,7 +51,7 @@
     (fn [{:keys [valilehdet kirjaa-pistemainen-havainto-fn
                  kirjaa-valikohtainen-havainto-fn
                  jatkuvat-havainnot nykyinen-mittaustyyppi
-                 poista-jatkuvat-havainnot] :as tiedot}]
+                 vapauta-kaikki-painettu havaintolomake-painettu] :as tiedot}]
       (let [jatkuvia-havaintoja-paalla? (not (empty? jatkuvat-havainnot))
             mittaus-paalla? (some? nykyinen-mittaustyyppi)
             kayta-hampurilaisvalikkoa? (< @dom/leveys 950)
@@ -118,11 +118,11 @@
                                                             (:vaatii-nappaimiston? havainto)))})])))]]
            [:footer
             [:div.footer-vasen
-             [nappi "Vapauta kaikki" {:on-click poista-jatkuvat-havainnot
+             [nappi "Vapauta kaikki" {:on-click vapauta-kaikki-painettu
                                       :ikoni (ikonit/livicon-arrow-up)
                                       :luokat-str "nappi-toissijainen"}]]
             [:div.footer-oikea
-             [nappi "Avaa lomake" {:on-click (fn [])
+             [nappi "Avaa lomake" {:on-click havaintolomake-painettu
                                    :ikoni (ikonit/livicon-pen)
                                    :luokat-str "nappi-ensisijainen"}]]]]]
 
@@ -138,4 +138,5 @@
                              :aseta-mittaus-paalle s/aseta-mittaus-paalle!
                              :jatkuvat-havainnot @s/jatkuvat-havainnot
                              :nykyinen-mittaustyyppi @s/mittaustyyppi
-                             :poista-jatkuvat-havainnot s/poista-kaikki-jatkuvat-havainnot!}])
+                             :havaintolomake-painettu tiedot/avaa-havaintolomake!
+                             :vapauta-kaikki-painettu s/poista-kaikki-jatkuvat-havainnot!}])
