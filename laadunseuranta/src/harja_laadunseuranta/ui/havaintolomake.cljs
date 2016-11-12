@@ -5,7 +5,8 @@
             [harja-laadunseuranta.ui.kamera :as kamera]
             [harja-laadunseuranta.ui.napit :refer [nappi]]
             [harja.ui.ikonit :as ikonit]
-            [harja-laadunseuranta.tiedot.havaintolomake :refer [tallenna-lomake!
+            [harja-laadunseuranta.tiedot.havaintolomake :refer [alusta-uusi-lomake!
+                                                                tallenna-lomake!
                                                                 peruuta-lomake!]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [harja-laadunseuranta.ui.lomake :refer [kentta tekstialue
@@ -53,12 +54,7 @@
                             :on-click peruuta-fn}]]]])))
 
 (defn havaintolomake []
-  (let [lomakedata (atom {:kayttajanimi @s/kayttajanimi
-                          :tr-osoite @s/tr-osoite
-                          :aikaleima (l/local-now)
-                          :laadunalitus? false
-                          :kuvaus ""
-                          :kuva nil})]
+  (let [lomakedata (alusta-uusi-lomake!)]
     [havaintolomakekomponentti
       {:lomakedata lomakedata
        :tallenna-fn tallenna-lomake!

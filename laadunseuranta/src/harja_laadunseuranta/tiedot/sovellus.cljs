@@ -50,7 +50,12 @@
    ;; Lomake
 
    :havaintolomake-auki? false
-   :havaintolomake-data {}
+   :havaintolomakedata {:kayttajanimi nil
+                        :tr-osoite nil
+                        :aikaleima nil
+                        :laadunalitus? false
+                        :kuvaus ""
+                        :kuva nil}
 
    ;; Kartta
    :kirjauspisteet [] ; Kartalla näytettäviä ikoneita varten
@@ -84,7 +89,7 @@
 (def kayttajatunnus (reagent/cursor sovellus [:kayttaja :kayttajatunnus]))
 
 (def havaintolomake-auki (reagent/cursor sovellus [:havaintolomake-auki?]))
-
+(def havaintolomakedata (reagent/cursor sovellus [:havaintolomakedata]))
 
 (def alustus-valmis (reaction (let [sovellus @sovellus]
                                 (and (get-in sovellus [:alustus :gps-tuettu])
