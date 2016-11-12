@@ -11,7 +11,7 @@
 
 (defn alustuskomponentti [{:keys [gps-tuettu ensimmainen-sijainti idxdb-tuettu
                                   kayttaja selain-tuettu verkkoyhteys]}]
-  [:div.alustuskomponentticontainer
+  [:div.alustuskomponentti-container
    [:div.alustuskomponentti
     [:div.liikenneturvallisuusmuistutus "Muista aina liikenne\u00ADturvallisuus tarkastuksia tehdessäsi."]
     [:p "Tarkistetaan..."]

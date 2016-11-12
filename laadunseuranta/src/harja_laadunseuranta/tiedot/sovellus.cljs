@@ -158,7 +158,8 @@
 
 (def nayta-paanavigointi? (reaction (boolean (and @tarkastusajo-id
                                                   @tallennus-kaynnissa
-                                                  (not @tarkastusajo-paattymassa)))))
+                                                  (not @tarkastusajo-paattymassa)
+                                                  (not @havaintolomake-auki)))))
 
 ;; Apufunktiot helpottamaan tilan muokkausta
 

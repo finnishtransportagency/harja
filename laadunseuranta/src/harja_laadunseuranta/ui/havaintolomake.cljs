@@ -20,10 +20,9 @@
         laadunalitus? (reagent/cursor lomakedata [:laadunalitus?])
         virheita (atom #{})]
     (fn []
-      [:div.havaintolomake-container
+      [:div.lomake-container
        [:div.havaintolomake
-        [:div.lomake-container
-         [:div.lomake-title "Uuden havainnon perustiedot"]
+        [:div.lomake-title "Uuden havainnon perustiedot"]
 
          [:div.pvm-kellonaika-tarkastaja
           [kentta "Päivämäärä" [pvm-aika aikaleima]]
@@ -48,7 +47,7 @@
                              :disabled (not (empty? @virheita))}
            [:span.livicon-save] "Tallenna"]
           [:button.nappi-toissijainen {:on-click #(peruuta-fn)}
-           "Peruuta"]]]]])))
+           "Peruuta"]]]])))
 
 (defn havaintolomake []
   (let [lomakedata (atom {:kayttajanimi @s/kayttajanimi
