@@ -5,7 +5,6 @@
             [harja-laadunseuranta.utils :refer [avg kahdella-desimaalilla]]
             [harja-laadunseuranta.ui.kitkamittaus :as kitkamittaus]
             [harja-laadunseuranta.ui.arviokomponentti :as arviokomponentti]
-            [harja-laadunseuranta.ui.painike :as painike]
             [harja-laadunseuranta.schemas :as schemas])
   (:require-macros [devcards.core :refer [defcard]]))
 

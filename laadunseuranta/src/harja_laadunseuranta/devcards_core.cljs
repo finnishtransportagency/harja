@@ -5,5 +5,4 @@
             [harja-laadunseuranta.ui.havaintolomake]
             [harja-laadunseuranta.ui.kitkamittaus]
             [harja-laadunseuranta.ui.pikavalintapaneeli]
-            [harja-laadunseuranta.ui.arviokomponentti]
-            [harja-laadunseuranta.ui.painike]))
+            [harja-laadunseuranta.ui.arviokomponentti]))
