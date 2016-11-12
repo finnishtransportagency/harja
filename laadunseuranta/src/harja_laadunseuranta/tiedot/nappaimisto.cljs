@@ -67,7 +67,8 @@
 ;; Erikoisnäppäimistöt
 
 (defn soratienappaimiston-numeronappain-painettu! [arvo mittaustyyppi syotto-atom]
-  (.log js/console (pr-str "TODO Painoit " mittaustyyppi " arvoksi " arvo)))
+  (.log js/console (pr-str "Painoit " mittaustyyppi " arvoksi " arvo))
+  (swap! syotto-atom assoc mittaustyyppi arvo))
 
 ;; Arvojen kirjaaminen
 

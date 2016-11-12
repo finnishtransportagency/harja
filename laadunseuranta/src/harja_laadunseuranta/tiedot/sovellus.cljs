@@ -42,9 +42,9 @@
    ;; Mittaukset
    :mittaussyotto {:nykyinen-syotto nil ;; Arvo, jota ollaan syöttämässä (string)
                    :syotot []} ;; Aiemmin syötetyt arvot samassa mittauksessa
-   :soratiemittaus {:tasaisuus 5
-                    :kiinteys 5
-                    :polyavyys 5}
+   :soratiemittaussyotto {:tasaisuus 5
+                          :kiinteys 5
+                          :polyavyys 5}
    :mitttaustyyppi nil ;; Suoritettava mittaustyyppi (esim. :lumista) tai nil jos ei olla mittaamassa mitään
 
    ;; Lomake
@@ -139,6 +139,7 @@
 (def jatkuvat-havainnot (reagent/cursor sovellus [:jatkuvat-havainnot]))
 (def mittaustyyppi (reagent/cursor sovellus [:mittaustyyppi]))
 (def mittaussyotto (reagent/cursor sovellus [:mittaussyotto]))
+(def soratiemittaussyotto (reagent/cursor sovellus [:soratiemittaussyotto]))
 
 (def reittisegmentti (reaction
                        (let [{:keys [nykyinen edellinen]} @sijainti]
