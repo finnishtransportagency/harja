@@ -48,7 +48,7 @@
                             false)]
     [:div.nappaimiston-syottovaroitus
      (cond arvo-liian-suuri?
-           (str "Arvo liian suuri (max " (second rajat) yksikko ")")
+           (str "Liian suuri (max " (second rajat) yksikko ")")
            :default "")]))
 
 (defn- soratienappaimisto [{:keys [syotto-atom numeronappain-painettu] :as tiedot}]
@@ -122,11 +122,10 @@
         :id "soratienappaimiston-painike-polyavyys-1"
         :on-click #(numeronappain-painettu 1 :polyavyys syotto-atom)} "1"]]])
 
-(defn- numeronappaimisto [{:keys [syotto-atom kirjaa-arvo mittaustyyppi mittausyksikko
+(defn- numeronappaimisto [{:keys [syotto-atom kirjaa-arvo mittaustyyppi
                                   numeronappain-painettu syotto-validi? syotto-valmis]
                            :as tiedot}]
   [:div.numeronappaimisto
-     [syottokentta syotto-atom mittausyksikko]
      [:div.nappaimiston-painikekentat
       [:button
        {:class "nappaimiston-painike"
@@ -204,7 +203,8 @@
           2)]
        [syottovihje (:nykyinen-syotto @mittaussyotto-atom)
         mittausyksikko
-        (mittaustyyppi syoton-rajat)]]
+        (mittaustyyppi syoton-rajat)]
+       [syottokentta mittaussyotto-atom mittausyksikko]]
       [:div.nappaimisto-oikea
        (case mittaustyyppi
          ;; "Erikoismittauksille" on omat näppäimistöt
@@ -217,14 +217,13 @@
           {:syotto-atom mittaussyotto-atom
            :mittaustyyppi mittaustyyppi
            :mittausyksikko mittausyksikko
-           :numerinappain-painettu numeronappain-painettu!
+           :numeronappain-painettu numeronappain-painettu!
            :syotto-validi? syotto-validi?
            :syotto-valmis syotto-valmis!
            :kirjaa-arvo (case mittaustyyppi
                          :kitkamittaus kirjaa-kitkamittaus!
                          :lumisuus kirjaa-lumisuus!
-                         :talvihoito-tasaisuus kirjaa-talvihoito-tasaisuus!)
-           :numeronappain-painettu nil}])]]]))
+                         :talvihoito-tasaisuus kirjaa-talvihoito-tasaisuus!)}])]]]))
 
 (defn nappaimisto [havainto]
   [nappaimistokomponentti {:mittaussyotto-atom s/mittaussyotto
