@@ -1,3 +1,5 @@
+button:focus { outline: 0 ; } // Selaimen defaulttityyli tästä pois
+
 .nappi {
     box-sizing: border-box;
     width: 200px;
@@ -12,10 +14,18 @@
     border-color: @sininen4;
 }
 
+.nappi-ensisijainen:active {
+    background-color: @sininen5;
+}
+
 .nappi-toissijainen {
     color: @sininen4;
     background-color: @valkoinen;
     border-color: @sininen4;
+}
+
+.nappi-toissijainen:active {
+    background-color: @harmaa13;
 }
 
 .nappi-kielteinen {

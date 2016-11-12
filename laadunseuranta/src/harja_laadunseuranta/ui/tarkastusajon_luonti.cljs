@@ -1,7 +1,6 @@
 (ns harja-laadunseuranta.ui.tarkastusajon-luonti
   (:require [reagent.core :as reagent :refer [atom]]
             [harja-laadunseuranta.tiedot.comms :as comms]
-            [harja-laadunseuranta.ui.urakkavalitsin :as urakkavalitsin]
             [harja-laadunseuranta.tiedot.tarkastusajon-luonti :as tiedot]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.tiedot.sovellus :as s])
@@ -10,6 +9,7 @@
                    [devcards.core :refer [defcard]]))
 
 (defn tarkastusajon-paattamisdialogi [paattamattomia]
+  ;; TODO Refactoroi käyttämään uutta nappi-funkkaria jne.
   (let [kylla-klikattu (atom false)] ;; TODO with-let
     (fn [_ _ _]
       (if @kylla-klikattu
