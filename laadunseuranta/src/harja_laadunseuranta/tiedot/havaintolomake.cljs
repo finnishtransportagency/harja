@@ -26,7 +26,7 @@
     {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
      :aikaleima (tc/to-long (lt/local-now))
      :tarkastusajo @s/tarkastusajo-id
-     :havainnot @s/jatkuvat-havainnot
+     :havainnot (into #{} (remove nil? (conj @s/jatkuvat-havainnot :yleishavainto)))
      :mittaukset {}
      :kuvaus (:kuvaus @s/havaintolomakedata)
      :laadunalitus (:laadunalitus? @s/havaintolomakedata)
