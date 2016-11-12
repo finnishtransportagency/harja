@@ -1,5 +1,6 @@
 (ns harja-laadunseuranta.tiedot.havaintolomake
   (:require [reagent.core :as reagent :refer [atom]]
+            [harja-laadunseuranta.tiedot.sovellus :as s]
             [reagent.ratom :as ratom]))
 
 
@@ -12,5 +13,4 @@
 
 (defn peruuta-lomake! []
   (.log js/console "Peru lomake!")
-  #_(peruuta-pikavalinta)
-  #_(peruutettu-fn))
+  (reset! s/havaintolomake-auki false))
