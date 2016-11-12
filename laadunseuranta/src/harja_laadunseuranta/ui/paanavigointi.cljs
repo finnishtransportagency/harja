@@ -7,6 +7,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja-laadunseuranta.ui.napit :refer [nappi]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
+            [clojure.set :as set]
             [harja-laadunseuranta.tiedot.dom :as dom])
   (:require-macros
     [harja-laadunseuranta.macros :as m]
@@ -44,7 +45,7 @@
                              (when kayta-hampurilaisvalikkoa?
                                (swap! valilehdet-nakyvissa? not)))
         togglaa-paanavigoinnin-nakyvyys (fn []
-                                        (swap! paanavigointi-nakyvissa? not))
+                                          (swap! paanavigointi-nakyvissa? not))
         toggllaa-valilehtien-nakyvyys (fn []
                                         (swap! valilehdet-nakyvissa? not))]
     (fn [{:keys [valilehdet kirjaa-pistemainen-havainto-fn
@@ -59,9 +60,9 @@
                                           nykyinen-mittaustyyppi)
                                       (mapcat :sisalto valilehdet))))
             nayta-valilehdet-tarvittaessa! (fn []
-                                            (if (and (not @valilehdet-nakyvissa?)
-                                                     (not kayta-hampurilaisvalikkoa?))
-                                              (toggllaa-valilehtien-nakyvyys)))]
+                                             (if (and (not @valilehdet-nakyvissa?)
+                                                      (not kayta-hampurilaisvalikkoa?))
+                                               (toggllaa-valilehtien-nakyvyys)))]
 
         (nayta-valilehdet-tarvittaessa!)
 
@@ -83,14 +84,19 @@
             (when @valilehdet-nakyvissa?
               [:ul.valilehtilista
                (doall
-                 (for [{:keys [avain] :as valilehti} valilehdet]
+                 (for [{:keys [avain sisalto] :as valilehti} valilehdet]
                    ^{:key avain}
-                   [:li {:class (str "valilehti "
-                                     (when (= avain
-                                              @valittu-valilehti)
-                                       "valilehti-valittu"))
-                         :on-click #(valitse-valilehti! avain kayta-hampurilaisvalikkoa?)}
-                    (:nimi valilehti)]))])]
+                   (let [valilehden-jatkuvat-havainnot
+                         (set/intersection (into #{} (map :avain sisalto))
+                                           jatkuvat-havainnot)]
+                     [:li {:class (str "valilehti "
+                                       (when (= avain
+                                                @valittu-valilehti)
+                                         "valilehti-valittu"))
+                           :on-click #(valitse-valilehti! avain kayta-hampurilaisvalikkoa?)}
+                      [:span.valilehti-nimi (:nimi valilehti)]
+                      [:span.valilehti-havainnot (when-not (empty? valilehden-jatkuvat-havainnot)
+                                                   (str "(" (count valilehden-jatkuvat-havainnot) ")"))]])))])]
            [:div.sisalto
             [:div.valintapainikkeet
              (let [{:keys [sisalto] :as valittu-valilehti}
