@@ -31,22 +31,21 @@
         (when @s/nayta-paanavigointi?
           [paanavigointi])
 
-        [:div.paasisalto
-         [ilmoitukset/ilmoituskomponentti s/ilmoitukset]
+        [ilmoitukset/ilmoituskomponentti s/ilmoitukset]
 
-         (when @s/havaintolomake-auki
-           [havaintolomake])
+        (when @s/havaintolomake-auki
+          [havaintolomake])
 
-         (when @s/tarkastusajo-paattymassa
-           [:div.tarkastusajon-luonti-dialog-container
-            [tarkastusajon-luonti/tarkastusajon-paattamisdialogi s/lahettamattomia-merkintoja]])
+        (when @s/tarkastusajo-paattymassa
+          [:div.tarkastusajon-luonti-dialog-container
+           [tarkastusajon-luonti/tarkastusajon-paattamisdialogi s/lahettamattomia-merkintoja]])
 
-         (when (and @s/palautettava-tarkastusajo (not (= "?relogin=true" js/window.location.search)))
-           [:div.tarkastusajon-luonti-dialog-container
-            [tarkastusajon-luonti/tarkastusajon-jatkamisdialogi]])
+        (when (and @s/palautettava-tarkastusajo (not (= "?relogin=true" js/window.location.search)))
+          [:div.tarkastusajon-luonti-dialog-container
+           [tarkastusajon-luonti/tarkastusajon-jatkamisdialogi]])
 
-         [spinneri s/lahettamattomia-merkintoja]
-         [tr-haku/tr-selailukomponentti s/tr-tiedot-nakyvissa s/tr-tiedot]]]])))
+        [spinneri s/lahettamattomia-merkintoja]
+        [tr-haku/tr-selailukomponentti s/tr-tiedot-nakyvissa s/tr-tiedot]]])))
 
 (defn main []
   (if @s/sovellus-alustettu
