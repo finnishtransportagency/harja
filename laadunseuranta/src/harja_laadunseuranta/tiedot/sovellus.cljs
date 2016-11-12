@@ -168,6 +168,15 @@
 
 ;; Apufunktiot helpottamaan tilan muokkausta
 
+(defn aseta-mittaus-paalle! [uusi-mittaustyyppi]
+  (reset! mittaustyyppi uusi-mittaustyyppi))
+
+(defn aseta-mittaus-pois! []
+  (.log js/console "Asetetaan mittaus pois")
+  (reset! mittaussyotto {:nykyinen-syotto nil
+                         :syotot []})
+  (reset! mittaustyyppi nil))
+
 (defn valitse-urakka! [urakka]
   (reset! valittu-urakka urakka))
 
@@ -178,6 +187,7 @@
   (reset! jatkuvat-havainnot (into #{} (remove #(= avain %) @jatkuvat-havainnot))))
 
 (defn poista-kaikki-jatkuvat-havainnot! []
+  (aseta-mittaus-pois!)
   (reset! jatkuvat-havainnot #{}))
 
 (defn togglaa-jatkuva-havainto!
@@ -186,15 +196,6 @@
   (if (avain @jatkuvat-havainnot)
     (poista-jatkuva-havainto! avain)
     (lisaa-jatkuva-havainto! avain)))
-
-(defn aseta-mittaus-paalle! [uusi-mittaustyyppi]
-  (reset! mittaustyyppi uusi-mittaustyyppi))
-
-(defn aseta-mittaus-pois! []
-  (.log js/console "Asetetaan mittaus pois")
-  (reset! mittaussyotto {:nykyinen-syotto nil
-                         :syotot []})
-  (reset! mittaustyyppi nil))
 
 (defn lopeta-jatkuvan-havainnon-mittaus! [avain]
   (poista-jatkuva-havainto! avain)
