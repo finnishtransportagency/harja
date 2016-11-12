@@ -9,20 +9,18 @@
                      kirjaa-kitkamittaus! kirjaa-lumisuus!
                      kirjaa-talvihoito-tasaisuus!
                      syoton-rajat syotto-validi?]]
-            [harja-laadunseuranta.tiedot.sovellus :as s])
+            [harja-laadunseuranta.tiedot.sovellus :as s]
+            [harja-laadunseuranta.ui.napit :refer [nappi]])
   (:require-macros
     [harja-laadunseuranta.macros :as m]
     [cljs.core.async.macros :refer [go go-loop]]
     [devcards.core :as dc :refer [defcard deftest]]))
 
-(defn- lopeta-mittaus [{:keys [nimi avain lopeta-jatkuva-havainto
-                               syottoarvot mittaustyyppi] :as tiedot}]
-  [:button
-   {:class "nappi nappi-kielteinen nappi-peruuta"
-    :on-click (fn [_]
-                (.log js/console "Mittaus päättyy!")
-                (lopeta-jatkuva-havainto avain))}
-   (str nimi " päättyy")])
+(defn- lopeta-mittaus [{:keys [nimi avain lopeta-jatkuva-havainto] :as tiedot}]
+  [nappi (str nimi " päättyy") {:on-click (fn [_]
+                                            (.log js/console "Mittaus päättyy!")
+                                            (lopeta-jatkuva-havainto avain))
+                                :luokat-str "nappi-kielteinen nappi-peruuta"}])
 
 (defn- kitkamittaustiedot [mittaukset keskiarvo]
   [:div.mittaustiedot
