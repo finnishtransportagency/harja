@@ -29,7 +29,7 @@
      :havainnot @s/jatkuvat-havainnot
      :mittaukset {}
      :kuvaus (:kuvaus @s/havaintolomakedata)
-     :laadunalitus (:laadunalitus @s/havaintolomakedata)
+     :laadunalitus (:laadunalitus? @s/havaintolomakedata)
      :kuva (:kuva @s/havaintolomakedata)})
   (kartta/lisaa-kirjausikoni "!")
   (tyhjenna-lomake!)
