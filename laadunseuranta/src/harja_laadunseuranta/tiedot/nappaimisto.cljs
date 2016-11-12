@@ -8,6 +8,8 @@
             [harja-laadunseuranta.tiedot.fmt :as fmt]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]))
 
+;; Syöttöjen validiusehdot
+
 (def mittaustyypin-lahtoarvo {:kitkamittaus "0,"
                               :lumisuus ""
                               :talvihoito-tasaisuus ""})
@@ -19,6 +21,8 @@
 (def syoton-rajat {:kitkamittaus [0 1]
                    :lumisuus [0 100]
                    :talvihoito-tasaisuus [0 100]})
+
+;; Näppäimistön toiminnallisuus
 
 (defn numeronappain-painettu!
   "Lisää syötteen syöttö-atomiin, jos se on sallittu.
@@ -59,6 +63,13 @@
                                   (second (mittaustyyppi syoton-rajat))))]
     (.log js/console "Syöttö sallittu? " (pr-str syotto-sallittu?))
     syotto-sallittu?))
+
+;; Erikoisnäppäimistöt
+
+(defn soratienappaimiston-numeronappain-painettu! [arvo mittaustyyppi syotto-atom]
+  (.log js/console (pr-str "TODO Painoit " mittaustyyppi " arvoksi " arvo)))
+
+;; Arvojen kirjaaminen
 
 (defn kirjaa-kitkamittaus! [arvo]
   (.log js/console "Kirjataan uusi kitkamittaus: " (pr-str arvo))

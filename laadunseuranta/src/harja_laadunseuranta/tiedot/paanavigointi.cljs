@@ -196,7 +196,10 @@
     :tyyppi :vali
     :ikoni "soratie_alkaa"
     :avain :soratie
-    :vaatii-nappaimiston? false}]) ;; TODO Oikeasti true, mutta vaatii oman erikoisnäppäimistön
+    :mittaus {:nimi "Soratie"
+              :tyyppi :soratie
+              :yksikko nil}
+    :vaatii-nappaimiston? true}])
 
 (def valilehti-paallystys
   [{:nimi "Sauma\u00ADvirhe"

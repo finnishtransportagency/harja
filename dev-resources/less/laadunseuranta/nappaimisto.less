@@ -73,6 +73,31 @@
   color: @punainen6;
 }
 
+// Erikoisnäppäimistöt
+
+.soratienappaimisto {
+  display: flex;
+
+  & .soratienappaimiston-sarake-otsikko {
+    text-align: center;
+  }
+
+  & .nappaimiston-painike {
+    width: 65px;
+    height: 55px;
+  }
+
+  & .soratienappaimiston-sarake {
+    flex: 1;
+
+    > .nappaimiston-painike {
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+}
+
 // Responsiivisuus
 
 @media (max-width: 530px) {

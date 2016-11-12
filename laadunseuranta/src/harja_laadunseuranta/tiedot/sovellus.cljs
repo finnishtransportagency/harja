@@ -28,7 +28,6 @@
    :sijainti {:nykyinen nil
               :edellinen nil}
    :reittipisteet []
-   :kirjauspisteet [] ; Kartalla näytettäviä ikoneita varten
    :tr-tiedot {:tr-osoite {:tie 20 ;; TODO Älä harkoodaa tätä?
                            :aosa 1
                            :aet 1}
@@ -38,6 +37,17 @@
    :tr-tiedot-nakyvissa false
 
    ;; Havainnot
+   :jatkuvat-havainnot #{} ; Tähän tallentuu välikohtaiset havainnot (esim. liukasta, lumista jne.)
+
+   ;; Mittaukset
+   :mittaussyotto {:nykyinen-syotto nil ;; Arvo, jota ollaan syöttämässä (string)
+                   :syotot []} ;; Aiemmin syötetyt arvot samassa mittauksessa
+   :soratiemittaus {:tasaisuus 5
+                    :kiinteys 5
+                    :polyavyys 5}
+   :mitttaustyyppi nil ;; Suoritettava mittaustyyppi (esim. :lumista) tai nil jos ei olla mittaamassa mitään
+
+   ;; Lomake
    :kirjaamassa-havaintoa false
    :kirjaamassa-yleishavaintoa false
    :vakiohavaintojen-kuvaukset nil ; Serveriltä saadut tiedot vakiohavainnoista
@@ -45,14 +55,8 @@
    :tr-alku nil
    :tr-loppu nil
 
-   :jatkuvat-havainnot #{} ; Tähän tallentuu välikohtaiset havainnot (esim. liukasta, lumista jne.)
-
-   ;; Mittaukset
-   :mittaussyotto {:nykyinen-syotto nil
-                   :syotot []}
-   :mitttaustyyppi nil ;; Suoritettava mittaustyyppi (esim. :lumista) tai nil jos ei olla mittaamassa mitään
-
    ;; Kartta
+   :kirjauspisteet [] ; Kartalla näytettäviä ikoneita varten
    :kartta {:keskita-ajoneuvoon false
             :nayta-kiinteistorajat false
             :nayta-ortokuva false}
