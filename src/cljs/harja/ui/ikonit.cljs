@@ -519,6 +519,8 @@
   [:span.livicon-question-circle])
 (defn livicon-search []
   [:span.livicon-search])
+(defn livicon-save []
+  [:span.livicon-save])
 (defn livicon-plus []
   [:span.livicon-plus])
 (defn livicon-pen []

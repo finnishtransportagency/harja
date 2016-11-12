@@ -3,6 +3,8 @@
             [cljs-time.local :as l]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.ui.kamera :as kamera]
+            [harja-laadunseuranta.ui.napit :refer [nappi]]
+            [harja.ui.ikonit :as ikonit]
             [harja-laadunseuranta.tiedot.havaintolomake :refer [tallenna-lomake!
                                                                 peruuta-lomake!]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
@@ -42,12 +44,13 @@
           [kamera/kamerakomponentti kuva]]
 
          [:div.lomake-painikkeet
-          [:button.tallenna {:on-click #(when (empty? @virheita)
+          [nappi "Tallenna" {:on-click #(when (empty? @virheita)
                                          (tallenna-fn @lomakedata))
-                             :disabled (not (empty? @virheita))}
-           [:span.livicon-save] "Tallenna"]
-          [:button.nappi-toissijainen {:on-click #(peruuta-fn)}
-           "Peruuta"]]]])))
+                             :disabled (not (empty? @virheita))
+                             :luokat-str "nappi-myonteinen"
+                             :ikoni (ikonit/livicon-save)}]
+          [nappi "Peruuta" {:luokat-str "nappi-kielteinen"
+                            :on-click peruuta-fn}]]]])))
 
 (defn havaintolomake []
   (let [lomakedata (atom {:kayttajanimi @s/kayttajanimi
