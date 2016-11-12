@@ -4,6 +4,7 @@
             [harja-laadunseuranta.ui.nappaimisto :as nappaimisto]
             [harja-laadunseuranta.tiedot.paanavigointi :as tiedot]
             [cljs-time.local :as l]
+            [harja.ui.ikonit :as ikonit]
             [harja-laadunseuranta.ui.napit :refer [nappi]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [harja-laadunseuranta.tiedot.dom :as dom])
@@ -112,9 +113,11 @@
            [:footer
             [:div.footer-vasen
              [nappi "Vapauta kaikki" {:on-click poista-jatkuvat-havainnot
+                                      :ikoni (ikonit/livicon-arrow-up)
                                       :luokat-str "nappi-toissijainen"}]]
             [:div.footer-oikea
              [nappi "Avaa lomake" {:on-click (fn [])
+                                   :ikoni (ikonit/livicon-pen)
                                    :luokat-str "nappi-ensisijainen"}]]]]]
 
          (when mittaus-paalla?
