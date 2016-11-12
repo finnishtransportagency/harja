@@ -66,8 +66,14 @@
   > footer {
     padding: 5px;
     border: @sisaltolaatikoiden-reunaviiva;
-    display: flex;
-    justify-content: space-between;
+
+    .footer-vasen {
+      float: left;
+    }
+
+    .footer-oikea {
+      float: right;
+    }
   }
 }
 
@@ -243,6 +249,15 @@
 
     > .navigointilaatikko-container {
       order: 2;
+    }
+
+    .navigointilaatikko {
+      > footer {
+        & .nappi {
+          width: auto;
+          height: 35px;
+        }
+      }
     }
 
     > .nappaimisto-container {
