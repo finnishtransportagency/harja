@@ -120,14 +120,14 @@
                        {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
                         :aikaleima (tc/to-long (lt/local-now))
                         :tarkastusajo @s/tarkastusajo-id
+                        ;; Nauhoituksessa havaintoihin tallentuvat vain jatkuvat mittaukset
+                        ;; Pistemäisen havainnot kirjataan erikseen heti kun sellainen syötetään.
                         :havainnot @s/jatkuvat-havainnot
-                        :mittaukset {}
-                        ;; TODO Nämä tulee kai lomakkeelta? Pitää selvittää, miten toimii.
-                        ;; Joka tapauksessa ei ole syytä tallentaa täällä "nauhoitusfunktiossa"
-                        ;:kuvaus kuvaus
-                        ;:laadunalitus (true? laadunalitus?)
-                        ;:kuva kuva
-                        }))
+                        ;; Nauhoituksessa mittauksiin tallentuvat vain jatkuvat mittaukset
+                        ;; Kertamittaukset tallennetaan erikseen heti kun sellainen syötetään.
+                        :mittaukset {:soratie-tasaisuus (:tasaisuus @s/soratiemittaussyotto)
+                                     :kiinteys (:kiinteys @s/soratiemittaussyotto)
+                                     :polyavyys (:polyavyys @s/soratiemittaussyotto)}}))
 
 (defn- kaynnista-tarkastusajon-lokaali-tallennus [db tarkastusajo-atom]
   (let [ajo-id (cljs.core/atom nil)]
