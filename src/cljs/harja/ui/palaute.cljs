@@ -12,11 +12,11 @@
 (def +linkki-koulutusvideot+ "http://finnishtransportagency.github.io/harja/")
 
 (def palautetyypit
-  [{:nimi "Yleinen palaute" :avain :yleinen}
-   {:nimi "Kehitysidea" :avain :kehitysidea}
+  [{:nimi "Kehitysidea" :avain :kehitysidea}
    {:nimi "Bugi" :avain :ongelma}
    {:nimi "Käyttöoikeusongelma" :avain :kayttooikeus}
-   {:nimi "Tehtävälista" :avain :tehtavalista}])
+   {:nimi "Tehtävälista" :avain :tehtavalista}
+   {:nimi "Yleinen palaute" :avain :yleinen}])
 
 (defn palauteohje-yleinen []
   [:p "Klikkaa "
