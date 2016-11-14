@@ -182,10 +182,14 @@
                                  (reduce (fn [summa toteuma]
                                            (assoc-in
                                              (assoc summa :tyyppi tyyppi
-                                                          :korotus (+ (:korotus summa)
-                                                                      (:korotus toteuma)))
-                                             [:tehtava :summa] (+ (get-in summa [:tehtava :summa])
-                                                                  (get-in toteuma [:tehtava :summa]))))
+                                                          :korotus (if (nil? (:korotus toteuma))
+                                                                     nil
+                                                                     (+ (:korotus summa)
+                                                                        (:korotus toteuma))))
+                                             [:tehtava :summa] (if (nil? (get-in toteuma [:tehtava :summa]))
+                                                                 nil
+                                                                 (+ (get-in summa [:tehtava :summa])
+                                                                    (get-in toteuma [:tehtava :summa])))))
                                          {:tehtava {:summa 0} :korotus 0}
                                          toteumat))
                                kokomaa-yhteensa [(str alueen-nimi " yhteensä")
