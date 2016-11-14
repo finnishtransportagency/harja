@@ -351,5 +351,5 @@ DELETE FROM urakanvastuuhenkilo
 
 -- name: luo-urakan-vastuuhenkilo<!
 INSERT INTO urakanvastuuhenkilo
-       (urakka, rooli, nimi, kayttajanimi, ensisijainen)
-VALUES (:urakka, :rooli, :nimi, :kayttajanimi, :ensisijainen);
+       (urakka, rooli, nimi, kayttajatunnus, ensisijainen)
+VALUES (:urakka, :rooli, :nimi, :kayttajatunnus, :ensisijainen);

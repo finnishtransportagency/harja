@@ -232,7 +232,6 @@
 (defn tallenna-urakan-vastuuhenkilot-roolille [db user
                                                {:keys [urakka-id rooli vastuuhenkilo varahenkilo] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
-
   (when (and (= (roolit/osapuoli user) :urakoitsija)
              (not= rooli "vastuuhenkilo"))
     (log/error "Käyttäjä " user " yritti luoda vastuuhenkilön urakkaan "
@@ -242,8 +241,8 @@
   (let [luo<! (fn [c kayttaja ensisijainen]
                 (q/luo-urakan-vastuuhenkilo<! c {:urakka urakka-id
                                                  :rooli rooli
-                                                 :nimi (fmt/kayttaja kayttaja)
-                                                 :kayttajanimi (:kayttajatunnus kayttaja)
+                                                 :nimi (or (:nimi kayttaja) (fmt/kayttaja kayttaja))
+                                                 :kayttajatunnus (:kayttajatunnus kayttaja)
                                                  :ensisijainen ensisijainen}))]
     (jdbc/with-db-transaction [c db]
       (q/poista-urakan-vastuuhenkilot-roolille! c {:urakka urakka-id :rooli rooli})

@@ -344,8 +344,8 @@
 (defn- aseta-vastuuhenkilo [paivita-vastuuhenkilot!
                             urakka-id kayttaja kayttajat vastuuhenkilot rooli
                             ensisijainen varalla]
-  (r/with-let [henkilot (atom {:ensisijainen ensisijainen
-                               :varalla varalla})]
+  (r/with-let [henkilot (atom {:ensisijainen :ei-muutosta
+                               :varalla :ei-muutosta})]
     ;; FIXME: valitse oletushenkilöksi nykyinen käyttäjänimen perusteella
     (let [mahdolliset-henkilot (filter #(some (partial = rooli) (:roolinimet %)) kayttajat)]
 
@@ -353,9 +353,16 @@
        [lomake/lomake {:muokkaa! #(reset! henkilot %)
                        :footer-fn (fn [data]
                                     [napit/palvelinkutsu-nappi "Tallenna yhteyshenkilöt"
-                                     #(let [{:keys [ensisijainen varalla]} @henkilot]
+                                     #(let [{uusi-ensisijainen :ensisijainen
+                                             uusi-varalla :varalla} @henkilot]
                                         (yht/tallenna-urakan-vastuuhenkilot-roolille
-                                         urakka-id rooli ensisijainen varalla))
+                                         urakka-id rooli
+                                         (if (= :ei-muutosta uusi-ensisijainen)
+                                           ensisijainen
+                                           uusi-ensisijainen)
+                                         (if (= :ei-muutosta uusi-varalla)
+                                           varalla
+                                           uusi-varalla)))
                                      {:kun-onnistuu #(do
                                                        (paivita-vastuuhenkilot! %)
                                                        (modal/piilota!))}])}
@@ -363,15 +370,17 @@
           :nimi :ensisijainen
           :leveys 2
           :tyyppi :valinta
-          :valinta-nayta #(if % (fmt/kayttaja %)
-                              (:nimi ensisijainen))
+          :valinta-nayta #(if (= :ei-muutosta %)
+                            (:nimi ensisijainen)
+                            (fmt/kayttaja %))
           :valinnat mahdolliset-henkilot}
          {:otsikko "Varalla"
           :nimi :varalla
           :leveys 2
           :tyyppi :valinta
-          :valinta-nayta #(if % (fmt/kayttaja %)
-                              (:nimi varalla))
+          :valinta-nayta #(if (= :ei-muutosta %)
+                            (:nimi varalla)
+                            (fmt/kayttaja %))
           :valinnat mahdolliset-henkilot}]
         @henkilot]])))
 
