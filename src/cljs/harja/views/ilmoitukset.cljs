@@ -33,9 +33,15 @@
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.ui.kentat :as kentat]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.views.urakka.valinnat :as urakkavalinnat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(def aikavali-valinnat [["1 tunti" #(urakkavalinnat/aikavali-nyt-miinus 1)]
+                        ["1 vrk" #(urakkavalinnat/aikavali-nyt-miinus 1)]
+                        ["5 vrk" #(urakkavalinnat/aikavali-nyt-miinus 5)]
+                        ["1 viikko" #(urakkavalinnat/aikavali-nyt-miinus 7)]
+                        ["Valittu aikaväli" nil]])
 (def selitehaku
   (reify protokollat/Haku
     (hae [_ teksti]
@@ -101,11 +107,11 @@
      :otsikko "Saapunut aikavälillä"
      :tyyppi :komponentti
      :komponentti (fn [{muokkaa! :muokkaa-lomaketta}]
-                    [valinnat/aikavali
+                    [valinnat/ennaltamaaratty-tai-vapaa-aikavali
                      (r/wrap aikavali
                              #(muokkaa! (merge valinnat-nyt
                                                {:aikavali %})))
-                     {:lomake? true}])}
+                     aikavali-valinnat])}
 
 
     {:nimi :hakuehto :otsikko "Hakusana"
