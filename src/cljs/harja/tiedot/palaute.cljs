@@ -40,10 +40,10 @@
   "")
 
 (defn palaute-body-kehitysidea []
-  (str "Kerro meille ideasi. Ota mahdolliseen kuvakaappaukseen mukaan koko selainikkuna."))
+  (str "Kirjoita yläpuolelle ideasi. Ota mahdolliseen kuvakaappaukseen mukaan koko selainikkuna."))
 
 (defn palaute-body-tekninen-ongelma []
-  (str "Kerro meille mitä yritit tehdä, ja millaiseen ongelmaan törmäsit. Harkitse kuvakaappauksen "
+  (str "Kirjoita ylle, mitä yritit tehdä ja millaiseen ongelmaan törmäsit. Harkitse kuvakaappauksen "
        "mukaan liittämistä, ne ovat meille erittäin hyödyllisiä. "
        "Ota kuvakaappaukseen mukaan koko selainikkuna."))
 
