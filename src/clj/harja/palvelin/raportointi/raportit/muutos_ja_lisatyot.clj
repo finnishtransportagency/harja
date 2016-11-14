@@ -182,12 +182,11 @@
                                  (reduce (fn [summa toteuma]
                                            (assoc-in
                                              (assoc summa :tyyppi tyyppi
-                                                          :korotus (if (nil? (:korotus toteuma))
-                                                                     nil
+                                                          :korotus (when (and (:korotus summa) (:korotus toteuma))
                                                                      (+ (:korotus summa)
                                                                         (:korotus toteuma))))
-                                             [:tehtava :summa] (if (nil? (get-in toteuma [:tehtava :summa]))
-                                                                 nil
+                                             [:tehtava :summa] (when (and (get-in summa [:tehtava :summa])
+                                                                          (get-in toteuma [:tehtava :summa]))
                                                                  (+ (get-in summa [:tehtava :summa])
                                                                     (get-in toteuma [:tehtava :summa])))))
                                          {:tehtava {:summa 0} :korotus 0}
