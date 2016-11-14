@@ -9,8 +9,6 @@
     [harja.ui.yleiset :as yleiset]
     [harja.ui.ikonit :as ikonit]))
 
-(def +linkki-koulutusvideot+ "http://finnishtransportagency.github.io/harja/")
-
 (def palautetyypit
   [{:nimi "Kehitysidea" :tyyppi :kehitysidea}
    {:nimi "Bugi / Tekninen ongelma" :tyyppi :tekninen-ongelma}
@@ -22,21 +20,21 @@
   [:p "Klikkaa "
    [modal/modal-linkki
     "tästä"
-    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body) palaute-tyyppi)]
+    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body-yleinen) palaute-tyyppi)]
    [:span " lähettääksesi palautetta Harjan kehitystiimille."]])
 
 (defn- palauteohje-kehitysidea [palaute-tyyppi]
   [:p "Klikkaa "
    [modal/modal-linkki
     "tästä"
-    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body) palaute-tyyppi)]
+    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body-kehitysidea) palaute-tyyppi)]
    [:span " kertoaksesi kehitysideasi Harjan kehitystiimille."]])
 
 (defn- palauteohje-tekninen-ongelma [palaute-tyyppi]
   [:p "Klikkaa "
    [modal/modal-linkki
     "tästä"
-    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body) palaute-tyyppi)]
+    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body-tekninen-ongelma) palaute-tyyppi)]
    [:span " raportoidaksesi teknisen ongelman Harjan kehitystiimille."]])
 
 (defn- palauteohje-kayttooikeus [palaute-tyyppi]
@@ -46,14 +44,14 @@
     [:span "Mikäli et pääse suorittamaan Harjassa jotain tehtävää, johon sinulla tulisi olla oikeus, klikkaa "]
     [modal/modal-linkki
      "tästä"
-     (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body) palaute-tyyppi)]
+     (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body-tekninen-ongelma) palaute-tyyppi)]
     [:span " lähettääksesi palautetta Harjan kehitystiimille."]]])
 
 (defn- palauteohje-tehtavalista [palaute-tyyppi]
   [:p "Harjan pääkäyttäjä vastaa Harjan tehtävälistasta. Klikkaa "
     [modal/modal-linkki
      "tästä"
-     (tiedot/mailto-linkki (tiedot/mailto-paakayttaja) (tiedot/palaute-body) palaute-tyyppi)]
+     (tiedot/mailto-linkki (tiedot/mailto-paakayttaja) (tiedot/palaute-body-tekninen-ongelma) palaute-tyyppi)]
     [:span " lähettääksesi palautetta tehtävälistaa ylläpitävälle pääkäyttäjälle."]])
 
 (defn- palauteohje [palautetyyppi]
@@ -86,7 +84,7 @@
                                  [:span "Olethan tutustunut "]
                                  [modal/modal-linkki
                                   "Harjan koulutusvideoihin"
-                                  +linkki-koulutusvideot+
+                                  tiedot/+linkki-koulutusvideot+
                                   "_blank"]
                                  [:span " ennen palautteen lähettämistä?"]]]])))
 

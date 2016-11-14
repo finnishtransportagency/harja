@@ -10,6 +10,8 @@
 (def sahkoposti-kehitystiimi "harjapalaute@solita.fi")
 (def sahkoposti-paakayttaja "harjapalaute@solita.fi")
 
+(def +linkki-koulutusvideot+ "http://finnishtransportagency.github.io/harja/")
+
 (defn- mailto-kehitystiimi []
   (str "mailto:" sahkoposti-kehitystiimi))
 
@@ -34,12 +36,18 @@
           "User agent: " (enc user-agent) "\n"
           "Käyttäjä: " (enc (pr-str kayttaja))))))
 
-(defn palaute-body []
+(defn palaute-body-yleinen []
+  "")
+
+(defn palaute-body-kehitysidea []
+  (str "Kerro meille ideasi. Ota mahdolliseen kuvakaappaukseen mukaan koko selainikkuna."))
+
+(defn palaute-body-tekninen-ongelma []
   (str "Kerro meille mitä yritit tehdä, ja millaiseen ongelmaan törmäsit. Harkitse kuvakaappauksen "
        "mukaan liittämistä, ne ovat meille erittäin hyödyllisiä. "
        "Ota kuvakaappaukseen mukaan koko selainikkuna."))
 
-(defn virhe-body [virheviesti]
+(defn palaute-body-virhe [virheviesti]
   (str
     "\n---\n"
     "Kirjoita ylle, mitä olit tekemässä, kun virhe tuli vastaan. Kuvakaappaukset ovat meille myös "

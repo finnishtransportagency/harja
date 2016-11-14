@@ -16,7 +16,7 @@
       [:div.crash-component {:on-click #(swap! auki not)}
        [:a
         {:href (palaute/mailto-linkki (palaute/mailto-kehitystiimi)
-                                      (palaute/virhe-body (virhe-str e))
+                                      (palaute/palaute-body-virhe (virhe-str e))
                                       "Kaatuminen")
          :on-click #(.stopPropagation %)}
         (ikonit/ikoni-ja-teksti (ikonit/envelope) pahoitteluviesti)]
