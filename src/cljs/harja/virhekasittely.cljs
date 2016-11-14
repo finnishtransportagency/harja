@@ -2,7 +2,6 @@
   (:require [reagent.core :refer [atom]]
             [harja.tiedot.palaute :as palaute]
             [harja.tiedot.istunto :as istunto]
-            [harja.ui.ikonit :as ikonit]
             [harja.ui.ikonit :as ikonit]))
 
 (def pahoitteluviesti
@@ -16,13 +15,7 @@
     (fn [e]
       [:div.crash-component {:on-click #(swap! auki not)}
        [:a
-        {:href (-> (palaute/mailto)
-                   (palaute/subject palaute/virhe-otsikko "?")
-                   (palaute/body (palaute/virhe-body (virhe-str e)
-                                                     @istunto/kayttaja
-                                                     (-> js/window .-location .-href)
-                                                     (-> js/window .-navigator .-userAgent))
-                                 (if-not (empty? palaute/virhe-otsikko) "&" "?")))
+        {:href (palaute/mailto-linkki (palaute/mailto-kehitystiimi))
          :on-click #(.stopPropagation %)}
         (ikonit/ikoni-ja-teksti (ikonit/envelope) pahoitteluviesti)]
        [:div.crash-details {:class (if @auki "details-open" "")}

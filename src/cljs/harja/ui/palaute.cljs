@@ -7,23 +7,9 @@
     [harja.loki :refer [log]]
     [harja.ui.modal :as modal]
     [harja.ui.yleiset :as yleiset]
-    [harja.ui.ikonit :as ikonit]
-    [harja.ui.lomake :as lomake]
-    [harja.tiedot.istunto :as istunto]))
+    [harja.ui.ikonit :as ikonit]))
 
 (def +linkki-koulutusvideot+ "http://finnishtransportagency.github.io/harja/")
-
-
-
-(defn mailto-yleinen []
-  (-> (tiedot/mailto)
-      (tiedot/subject tiedot/palaute-otsikko "?")
-      (tiedot/body (str tiedot/palaute-body
-                        (tiedot/tekniset-tiedot
-                          @istunto/kayttaja
-                          (-> js/window .-location .-href)
-                          (-> js/window .-navigator .-userAgent)))
-                   (if-not (empty? tiedot/palaute-otsikko) "&" "?"))))
 
 (def palautetyypit
   [{:nimi "Yleinen palaute" :avain :yleinen}
@@ -36,10 +22,7 @@
   [:p "Klikkaa "
    [modal/modal-linkki
     "tästä"
-    (mailto-yleinen)]
-   #_[:a
-    {:href (mailto-yleinen)}
-    "tästä"]
+    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi))]
    [:span " lähettääksesi palautetta Harjan kehitystiimille."]])
 
 (defn palauteohje-kayttooikeus []
@@ -47,24 +30,17 @@
    [:p "Jos käyttäjältä puuttuu käyttäjätunnukset Harjaan, ole yhteydessä oman organisaatiosi pääkäyttäjään."]
    [:p
     [:span "Mikäli et pääse suorittamaan Harjassa jotain tehtävää, johon sinulla tulisi olla oikeus, klikkaa "]
-    [:a
-     {:href (mailto-yleinen)}
-     "tästä"]
+    [modal/modal-linkki
+     "tästä"
+     (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi))]
     [:span " lähettääksesi palautetta Harjan kehitystiimille."]]])
 
 (defn palauteohje-tehtavalista []
   [:p "Klikkaa "
-   [:a
-    {:href (-> (tiedot/mailto)
-               (tiedot/subject tiedot/palaute-otsikko "?")
-               (tiedot/body (str tiedot/palaute-body
-                                 (tiedot/tekniset-tiedot
-                                   @istunto/kayttaja
-                                   (-> js/window .-location .-href)
-                                   (-> js/window .-navigator .-userAgent)))
-                            (if-not (empty? tiedot/palaute-otsikko) "&" "?")))}
-    "tästä"]
-   [:span " lähettääksesi palautetta Harjan kehitystiimille."]])
+   [modal/modal-linkki
+    "tästä"
+    (tiedot/mailto-linkki (tiedot/mailto-paakayttaja))]
+   [:span " lähettääksesi palautetta Harjan tehtävälistaa ylläpitävälle pääkäyttäjälle."]])
 
 (defn- palauteohje [tyyppi]
   [:div.palauteohje

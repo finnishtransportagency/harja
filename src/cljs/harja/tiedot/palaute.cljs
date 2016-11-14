@@ -7,7 +7,14 @@
             [harja.asiakas.tapahtumat :as t]
             [harja.pvm :as pvm]))
 
-(def sahkoposti "harjapalaute@solita.fi")
+(def sahkoposti-kehitystiimi "harjapalaute@solita.fi")
+(def sahkoposti-paakayttaja "harja.paakayttaja@solita.fi")
+
+(defn- mailto-kehitystiimi []
+  (str "mailto:" sahkoposti-kehitystiimi))
+
+(defn- mailto-paakayttaja []
+  (str "mailto:" sahkoposti-paakayttaja))
 
 ;; Huomaa että rivinvaihto tulee mukaan tekstiin
 (def palaute-otsikko
@@ -38,9 +45,6 @@
    virheviesti
    (tekniset-tiedot kayttaja url user-agent)))
 
-(defn- mailto []
-  (str "mailto:" sahkoposti))
-
 (defn- ilman-valimerkkeja [str]
   (-> str
       (string/replace " " "%20")
@@ -59,3 +63,13 @@
 (defn- body
   ([pohja lisays] (lisaa-kentta "body=" pohja lisays))
   ([pohja lisays valimerkki] (lisaa-kentta "body=" pohja lisays valimerkki)))
+
+(defn mailto-linkki [vastaanottaja]
+  (-> vastaanottaja
+      (subject palaute-otsikko "?")
+      (body (str palaute-body
+                        (tekniset-tiedot
+                          @istunto/kayttaja
+                          (-> js/window .-location .-href)
+                          (-> js/window .-navigator .-userAgent)))
+                   (if-not (empty? palaute-otsikko) "&" "?"))))
