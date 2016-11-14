@@ -13,7 +13,7 @@
 
 (def palautetyypit
   [{:nimi "Kehitysidea" :avain :kehitysidea}
-   {:nimi "Bugi" :avain :ongelma}
+   {:nimi "Bugi / Tekninen ongelma" :avain :ongelma}
    {:nimi "Käyttöoikeusongelma" :avain :kayttooikeus}
    {:nimi "Tehtävälista" :avain :tehtavalista}
    {:nimi "Yleinen palaute" :avain :yleinen}])
