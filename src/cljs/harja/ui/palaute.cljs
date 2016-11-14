@@ -13,19 +13,33 @@
 
 (def palautetyypit
   [{:nimi "Kehitysidea" :tyyppi :kehitysidea}
-   {:nimi "Bugi / Tekninen ongelma" :tyyppi :ongelma}
+   {:nimi "Bugi / Tekninen ongelma" :tyyppi :tekninen-ongelma}
    {:nimi "Käyttöoikeusongelma" :tyyppi :kayttooikeus}
    {:nimi "Tehtävälista" :tyyppi :tehtavalista}
    {:nimi "Yleinen palaute" :tyyppi :yleinen}])
 
-(defn palauteohje-yleinen [palaute-tyyppi]
+(defn- palauteohje-yleinen [palaute-tyyppi]
   [:p "Klikkaa "
    [modal/modal-linkki
     "tästä"
     (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body) palaute-tyyppi)]
    [:span " lähettääksesi palautetta Harjan kehitystiimille."]])
 
-(defn palauteohje-kayttooikeus [palaute-tyyppi]
+(defn- palauteohje-kehitysidea [palaute-tyyppi]
+  [:p "Klikkaa "
+   [modal/modal-linkki
+    "tästä"
+    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body) palaute-tyyppi)]
+   [:span " kertoaksesi kehitysideasi Harjan kehitystiimille."]])
+
+(defn- palauteohje-tekninen-ongelma [palaute-tyyppi]
+  [:p "Klikkaa "
+   [modal/modal-linkki
+    "tästä"
+    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body) palaute-tyyppi)]
+   [:span " raportoidaksesi teknisen ongelman Harjan kehitystiimille."]])
+
+(defn- palauteohje-kayttooikeus [palaute-tyyppi]
   [:div
    [:p "Jos käyttäjältä puuttuu käyttäjätunnukset Harjaan, ole yhteydessä oman organisaatiosi pääkäyttäjään."]
    [:p
@@ -35,12 +49,12 @@
      (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body) palaute-tyyppi)]
     [:span " lähettääksesi palautetta Harjan kehitystiimille."]]])
 
-(defn palauteohje-tehtavalista [palaute-tyyppi]
-  [:p "Klikkaa "
-   [modal/modal-linkki
-    "tästä"
-    (tiedot/mailto-linkki (tiedot/mailto-paakayttaja) (tiedot/palaute-body) palaute-tyyppi)]
-   [:span " lähettääksesi palautetta Harjan tehtävälistaa ylläpitävälle pääkäyttäjälle."]])
+(defn- palauteohje-tehtavalista [palaute-tyyppi]
+  [:p "Harjan pääkäyttäjä vastaa Harjan tehtävälistasta. Klikkaa "
+    [modal/modal-linkki
+     "tästä"
+     (tiedot/mailto-linkki (tiedot/mailto-paakayttaja) (tiedot/palaute-body) palaute-tyyppi)]
+    [:span " lähettääksesi palautetta tehtävälistaa ylläpitävälle pääkäyttäjälle."]])
 
 (defn- palauteohje [palautetyyppi]
   [:div.palauteohje
@@ -48,6 +62,8 @@
      nil [:span ""]
      :tehtavalista [palauteohje-tehtavalista (:nimi palautetyyppi)]
      :kayttooikeus [palauteohje-kayttooikeus (:nimi palautetyyppi)]
+     :tekninen-ongelma [palauteohje-tekninen-ongelma (:nimi palautetyyppi)]
+     :kehitysidea [palauteohje-kehitysidea (:nimi palautetyyppi)]
      [palauteohje-yleinen (:nimi palautetyyppi)])])
 
 (defn- palautelomake []

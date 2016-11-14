@@ -8,7 +8,7 @@
             [harja.pvm :as pvm]))
 
 (def sahkoposti-kehitystiimi "harjapalaute@solita.fi")
-(def sahkoposti-paakayttaja "harja.paakayttaja@solita.fi")
+(def sahkoposti-paakayttaja "harjapalaute@solita.fi")
 
 (defn- mailto-kehitystiimi []
   (str "mailto:" sahkoposti-kehitystiimi))
