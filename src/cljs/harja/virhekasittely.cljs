@@ -15,7 +15,7 @@
                             e))]
     (fn [e]
       [:div.crash-component {:on-click #(swap! auki not)}
-       [:a.palautelinkki
+       [:a
         {:href (-> (palaute/mailto)
                    (palaute/subject palaute/virhe-otsikko "?")
                    (palaute/body (palaute/virhe-body (virhe-str e)

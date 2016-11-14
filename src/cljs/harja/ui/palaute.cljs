@@ -6,7 +6,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.asiakas.tapahtumat :as t]
             [harja.pvm :as pvm]
-            [harja.loki :as log]
+            [harja.loki :refer [log]]
             [harja.tiedot.palaute :as tiedot]
             [harja.ui.napit :as napit]
             [harja.ui.modal :as modal]
@@ -17,7 +17,7 @@
     [napit/yleinen "Lähetä palaute" laheta-palaute]))
 
 (defn palaute-linkki []
-  [:a.palautelinkki.klikattava
-   {:on-click (modal/nayta! {:otsikko "Palautteen lähettäminen"}
-                            palautelomake)}
+  [:a {:class "palautelinkki klikattava"
+       :on-click #(modal/nayta! {:otsikko "Palautteen lähettäminen"}
+                               palautelomake)}
    [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "Palautetta!"]])
