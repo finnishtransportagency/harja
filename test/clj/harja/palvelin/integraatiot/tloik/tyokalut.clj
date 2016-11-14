@@ -275,6 +275,15 @@
         ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
 
+(defn tuo-ilmoitus-siltapalvelusopimukselle []
+  (let [sanoma
+        (-> +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+
+            (str/replace "<urakkatyyppi>hoito</urakkatyyppi>" "<urakkatyyppi>silta</urakkatyyppi>")
+            (str/replace "<x>452935</x>" "<x>595754</x>")
+            (str/replace "<y>7186873</y>" "<y>6785914</y>"))
+        ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
+    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
+
 (defn tuo-valaistusilmoitus []
   (let [ilmoitus (ilmoitussanoma/lue-viesti +testi-valaistusilmoitus-sanoma+)]
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))

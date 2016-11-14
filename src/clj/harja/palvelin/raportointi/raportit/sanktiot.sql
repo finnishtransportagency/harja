@@ -34,39 +34,3 @@ WHERE ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
            (:urakka::INTEGER IS NULL AND (:urakkatyyppi :: urakkatyyppi IS NULL OR
                                  u.tyyppi = :urakkatyyppi :: urakkatyyppi)))
       AND s.perintapvm BETWEEN :alku AND :loppu;
-
--- name: hae-kontekstin-urakat
--- Listaa kaikki ne urakat, joita haku koskee
-SELECT
-  u.id           AS urakka_id,
-  u.nimi         AS urakka_nimi
-FROM urakka u
-WHERE
-  -- Urakalla oltava tietty id, jos annettu
-  (:urakka :: INTEGER IS NULL OR u.id = :urakka)
-  -- Urakan kuuluttava hallintayksikköön, jos annettu
-  AND (:hallintayksikko :: INTEGER IS NULL OR hallintayksikko = :hallintayksikko)
-  -- Urakan täytyy vastata hakuehtoja, ellei haettu juuri tiettyä urakkaa
-  AND (:urakka :: INTEGER IS NOT NULL OR
-       (:urakka :: INTEGER IS NULL AND ((:urakkatyyppi :: urakkatyyppi IS NULL OR
-                                        u.tyyppi = :urakkatyyppi :: urakkatyyppi)
-                                        AND
-                                        -- Ei testiurakoita
-                                        urakkanro IS NOT NULL
-                                        AND
-                                        -- Urakka on aktiivinen aikarajan sisällä
-                                        ((alkupvm :: DATE BETWEEN :alku AND :loppu)
-                                                                         OR (loppupvm :: DATE BETWEEN :alku AND :loppu)
-                                                                         OR (:alku >= alkupvm AND :loppu <= loppupvm)))))
-
-ORDER BY urakka_nimi;
-
--- name: hae-kontekstin-hallintayksikot
--- Listaa kaikki ne hallintayksikot, joita haku koskee
-SELECT
-  o.id           AS hallintayksikko_id,
-  o.nimi         AS hallintayksikko_nimi,
-  o.elynumero    AS hallintayksikko_elynumero
-FROM organisaatio o
-WHERE elynumero IS NOT NULL
-ORDER BY hallintayksikko_elynumero;
