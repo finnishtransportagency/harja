@@ -100,11 +100,11 @@
         muutos-ja-lisatyot (if kayta-ryhmittelya?
                              muutos-ja-lisatyot-kannasta
                              (reverse (sort-by (juxt (comp :id :urakka) :alkanut) muutos-ja-lisatyot-kannasta)))
-
-        muutos-ja-lisatyot-hyn-mukaan (sort-by #(or (:id (first %)) 100000)
+        sort-avain (if (= konteksti :koko-maa) :elynumero
+                     (if (= konteksti :hallintayksikko) :nimi :id))
+        muutos-ja-lisatyot-hyn-mukaan (sort-by #(or (sort-avain (first %)) 100000)
                                                (seq (group-by :hallintayksikko
                                                               muutos-ja-lisatyot)))
-
         raportin-nimi "Muutos- ja lisätöiden raportti"
         tpi-nimi (if toimenpide-id
                    (:nimi (first (toimenpiteet-q/hae-tuote-kolmostason-toimenpidekoodilla db {:id toimenpide-id})))
