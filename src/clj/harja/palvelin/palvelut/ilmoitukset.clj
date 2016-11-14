@@ -107,9 +107,9 @@
                    ilmoittaja-nimi ilmoittaja-puhelin]}
    max-maara]
   (let [aikavali-alku (when (first aikavali)
-                        (konv/sql-date (first aikavali)))
+                        (konv/sql-timestamp (first aikavali)))
         aikavali-loppu (when (second aikavali)
-                         (konv/sql-date (second aikavali)))
+                         (konv/sql-timestamp (second aikavali)))
         urakat (urakat/kayttajan-urakka-idt-aikavalilta
                  db user oikeudet/ilmoitukset-ilmoitukset
                  urakka urakoitsija urakkatyyppi hallintayksikko

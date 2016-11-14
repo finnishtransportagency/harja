@@ -36,11 +36,21 @@
             [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(def aikavali-valinnat [["1 tunti" #(vector (pvm/tuntia-sitten 1) (pvm/nyt))]
-                        ["12 tuntia" #(vector (pvm/tuntia-sitten 12) (pvm/nyt))]
-                        ["1 päivä" #(vector (pvm/paivaa-sitten 1) (pvm/nyt))]
-                        ["1 viikko" #(vector (pvm/paivaa-sitten 7) (pvm/nyt))]
-                        ["Valittu aikaväli" nil]])
+(def aikavali-valinnat [{:nimi "1 tunti"
+                         :aikavali-fn #(vector (pvm/tuntia-sitten 1) (pvm/nyt))
+                         :aikaleima? true}
+                        {:nimi "12 tuntia"
+                         :aikavali-fn #(vector (pvm/tuntia-sitten 12) (pvm/nyt))
+                         :aikaleima? true }
+                        {:nimi "1 päivä"
+                         :aikavali-fn #(vector (pvm/paivaa-sitten 1) (pvm/nyt))
+                         :aikaleima? false}
+                        {:nimi "1 viikko"
+                         :aikavali-fn #(vector (pvm/paivaa-sitten 7) (pvm/nyt))
+                         :aikaleima? false}
+                        {:nimi "Valittu aikaväli"
+                         :aikavali-fn nil
+                         :aikaleima? true}])
 (def selitehaku
   (reify protokollat/Haku
     (hae [_ teksti]

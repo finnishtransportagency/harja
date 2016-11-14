@@ -150,8 +150,6 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
     (let [tulos! (t/send-async! v/->IlmoitusHaku)]
       (go
         (let [haku (-> valinnat
-                       (update-in [:aikavali 0] #(and % (pvm/paivan-alussa %)))
-                       (update-in [:aikavali 1] #(and % (pvm/paivan-lopussa %)))
                        ;; jos tyyppiä/tilaa ei valittu, ota kaikki
                        (update :tyypit
                                #(if (empty? %) +ilmoitustyypit+ %))

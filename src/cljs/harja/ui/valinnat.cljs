@@ -131,38 +131,49 @@
                       ;; Aikaväli on jo valittu, valitaan valinnoista se, joka vastaa valintaa
                       (and valittu-aikavali-alku-nyt
                            valittu-aikavali-loppu-nyt
-                           (some (fn [[nimi aikavali-fn :as valinta]]
+                           (some (fn [{:keys [aikavali-fn aikaleima?] :as valinta}]
                                    (when aikavali-fn
                                      (let [[alku loppu] (aikavali-fn)]
-                                       ;; todo: kun aika otetaan mukaan, tämä ei tule pelittämään
-                                       (when (and (pvm/sama-pvm? alku valittu-aikavali-alku-nyt)
-                                                  (pvm/sama-pvm? loppu valittu-aikavali-loppu-nyt))
-                                         valinta)))) aikavali-valinnat))
+                                       (if aikaleima?
+                                         ;; todo: mieti miten aikaleimojen kanssa voidaan hoitaa valinnat
+                                         nil
+                                         (when (and (pvm/sama-pvm? alku valittu-aikavali-alku-nyt)
+                                                    (pvm/sama-pvm? loppu valittu-aikavali-loppu-nyt))
+                                           valinta))))) aikavali-valinnat))
 
                       ;; Oletuksena valitaan viimeinen
                       (last aikavali-valinnat))
         valinta (atom alkuvalinta)]
+
     (komp/luo
       (fn [valittu-aikavali-atom aikavali-valinnat]
-        [:span
-         [:div.label-ja-alasveto
-          [livi-pudotusvalikko {:valinta     @valinta
-                                :format-fn  first
-                                :valitse-fn (fn [uusi-valinta]
-                                              (reset! valinta uusi-valinta)
+        (let [valitse-aikavali (fn [{:keys [aikavali-fn aikaleima?] :as uusi-valinta}]
+                                 (reset! valinta uusi-valinta)
 
-                                              ;; Mikäli aikaväliä ei ole annettu, vapaa aikaväli on valittu
-                                              (if-let [aikavali-fn (second uusi-valinta)]
-                                                ;; Esiasetettu laskettava aikaväli
-                                                (do
-                                                  (reset! vapaa-aikavali? false)
-                                                  (reset! valittu-aikavali-atom (aikavali-fn)))
-                                                ;; Käyttäjä haluaa asettaa itse aikavälin
-                                                (do
-                                                  (reset! vapaa-aikavali? true))))}
-           aikavali-valinnat]]
-         (when @vapaa-aikavali?
-           [aikavali valittu-aikavali-atom])]))))
+                                 ;; Mikäli aikavalifunktiota ei ole annettu, on kyseessä vapaa aikavali
+                                 (if aikavali-fn
+                                   ;; Esiasetettu laskettava aikaväli
+                                   (do
+                                     (reset! vapaa-aikavali? false)
+                                     (let [uusi-aikavali (aikavali-fn)]
+                                       (reset! valittu-aikavali-atom
+                                               ;; Jos kyseessä ei ole aikaleima, asetetaan päivämäärät päivien alkuun ja loppuun
+                                               (if aikaleima?
+                                                 uusi-aikavali
+                                                 (vector
+                                                   (pvm/paivan-alussa (first uusi-aikavali))
+                                                   (pvm/paivan-lopussa (second uusi-aikavali)))))))
+                                   ;; Käyttäjä haluaa asettaa itse aikavälin
+                                   (do
+                                     (reset! vapaa-aikavali? true))))]
+          [:span
+           [:div.label-ja-alasveto
+            [livi-pudotusvalikko {:valinta     @valinta
+                                  :format-fn  first
+                                  :valitse-fn valitse-aikavali}
+             aikavali-valinnat]]
+           (when @vapaa-aikavali?
+             [aikavali valittu-aikavali-atom])])))))
 
 (defn- toimenpideinstanssi-fmt
   [tpi]
