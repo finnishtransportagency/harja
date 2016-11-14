@@ -68,11 +68,16 @@
        (kuukaudet alku)))))
 
 (defn kuukausivalit [alku loppu]
+  "Palauttaa kuukausivälejä ensimmäisestä viimeiseen päivään kellonajassa 00:00.000 koska SQL."
   (let [alku (l/to-local-date-time alku)
         loppu (l/to-local-date-time loppu)]
     (letfn [(kuukaudet [kk]
               (when-not (t/after? kk loppu)
-                (lazy-seq (cons (fmap c/to-date (pvm/kuukauden-aikavali kk))
+                (lazy-seq (cons (fmap (comp c/to-date
+                                            #(pvm/suomen-aikavyohykkeessa
+                                              (t/date-time (t/year %)
+                                                           (t/month %)
+                                                           (t/day %)))) (pvm/kuukauden-aikavali kk))
                                 (kuukaudet (t/plus kk (t/months 1)))))))]
       (kuukaudet alku))))
 
