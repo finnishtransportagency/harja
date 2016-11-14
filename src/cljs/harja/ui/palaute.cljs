@@ -31,7 +31,7 @@
    {:nimi "Tehtävälista" :avain :tehtavalista}])
 
 (defn palauteohje-yleinen []
-  [:div
+  [:span
    [:span "Klikkaa "]
    [:a
     {:href (mailto-yleinen)}
@@ -39,7 +39,7 @@
    [:span " lähettääksesi palautetta Harjan kehitystiimille"]])
 
 (defn palauteohje-kayttooikeus []
-  [:div
+  [:span
    [:div "Jos käyttäjältä puuttuu käyttäjätunnukset Harjaan, ole yhteydessä oman organisaatiosi pääkäyttäjään."]
    [:div "Mikäli et pääse suorittamaan Harjassa jotain tehtävää, johon sinulla tulisi olla oikeus, klikkaa "]
    [:a
@@ -48,7 +48,7 @@
    [:span " lähettääksesi palautetta Harjan kehitystiimille."]])
 
 (defn palauteohje-tehtavalista []
-  [:div
+  [:span
    [:span "Klikkaa "]
    [:a
     {:href (-> (tiedot/mailto)
@@ -62,27 +62,29 @@
     "tästä"]
    [:span " lähettääksesi palautetta Harjan kehitystiimille."]])
 
+(defn- palauteohje [tyyppi]
+  [:div.palauteohje
+   (case tyyppi
+     nil [:span ""]
+     :tehtavalista [palauteohje-tehtavalista]
+     :kayttooikeus [palauteohje-kayttooikeus]
+     [palauteohje-yleinen])])
+
 (defn- palautelomake []
-  (let [lomakedata-atom (atom nil)]
+  (let [valinta-atom (atom nil)]
     (fn []
       [:div
        [:p "Valitse, mitä palautteesi koskee:"]
-       [lomake/lomake
-        {:otsikko ""
-         :muokkaa! (fn [uusi]
-                     (reset! lomakedata-atom uusi))}
-        [{:otsikko ""
-          :nimi :palaute-tyyppi
-          :tyyppi :valinta
-          :valinnat palautetyypit
-          :valinta-arvo :avain
-          :valinta-nayta #(or (:nimi %) "- valitse -")}]
-        @lomakedata-atom]
+       [yleiset/livi-pudotusvalikko
+        {:valitse-fn #(reset! valinta-atom %)
+         :valinta @valinta-atom
+         :class "livi-alasveto-250"
+         :format-fn #(if %
+                      (:nimi %)
+                      "- valitse -")}
+        palautetyypit]
 
-       (case (:palaute-tyyppi @lomakedata-atom)
-         :tehtavalista [palauteohje-tehtavalista]
-         :kayttooikeus [palauteohje-kayttooikeus]
-         [palauteohje-yleinen])
+       [palauteohje (:avain @valinta-atom)]
 
        [yleiset/vihje-elementti [:span
                                  [:span "Olethan tutustunut "]
