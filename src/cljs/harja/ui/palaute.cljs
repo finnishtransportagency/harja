@@ -83,7 +83,7 @@
        [yleiset/vihje-elementti [:span
                                  [:span "Olethan tutustunut "]
                                  [modal/modal-linkki
-                                  "Harjan koulutusvideoihin"
+                                  "Harja-projektin sivuihin ja koulutusvideoihin"
                                   tiedot/+linkki-koulutusvideot+
                                   "_blank"]
                                  [:span " ennen palautteen lähettämistä?"]]]])))
