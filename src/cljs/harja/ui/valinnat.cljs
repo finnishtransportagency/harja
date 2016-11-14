@@ -122,36 +122,45 @@
                 (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]]]))
 
 (defn ennaltamaaratty-tai-vapaa-aikavali [valittu-aikavali-atom aikavali-valinnat]
-  (let [[valittu-aikavali-alku valittu-aikavali-loppu :as valittu-aikavali-nyt] @valittu-aikavali-atom
+  (let [[valittu-aikavali-alku-nyt valittu-aikavali-loppu-nyt :as valittu-aikavali-nyt] @valittu-aikavali-atom
         vapaa-aikavali? (atom false)
         alkuvalinta (or
+                      ;; Aikaväliä ei ole vielä valittu
                       (and (nil? valittu-aikavali-nyt) (first aikavali-valinnat))
-                      (and valittu-aikavali-alku
-                           valittu-aikavali-loppu
+
+                      ;; Aikaväli on jo valittu, valitaan valinnoista se, joka vastaa valintaa
+                      (and valittu-aikavali-alku-nyt
+                           valittu-aikavali-loppu-nyt
                            (some (fn [[nimi aikavali-fn :as valinta]]
                                    (when aikavali-fn
                                      (let [[alku loppu] (aikavali-fn)]
-                                       (when (and (pvm/sama-pvm? alku valittu-aikavali-alku)
-                                                  (pvm/sama-pvm? loppu valittu-aikavali-loppu))
+                                       ;; todo: kun aika otetaan mukaan, tämä ei tule pelittämään
+                                       (when (and (pvm/sama-pvm? alku valittu-aikavali-alku-nyt)
+                                                  (pvm/sama-pvm? loppu valittu-aikavali-loppu-nyt))
                                          valinta)))) aikavali-valinnat))
+
+                      ;; Oletuksena valitaan viimeinen
                       (last aikavali-valinnat))
-        valinta (atom alkuvalinta)]
+        valinta (atom alkuvalinta)
+        valitse-aikavali (fn [uusi-valinta]
+                           (reset! valinta uusi-valinta)
+
+                           ;; Mikäli aikaväliä ei ole annettu, vapaa aikaväli on valittus
+                           (if-let [aikavali-fn (second uusi-valinta)]
+                             ;; Esiasetettu laskettava aikaväli
+                             (do
+                               (reset! vapaa-aikavali? false)
+                               (reset! valittu-aikavali-atom (aikavali-fn)))
+                             ;; Käyttäjä haluaa asettaa itse aikavälin
+                             (do
+                               (reset! vapaa-aikavali? true))))]
     (komp/luo
       (fn []
         [:span
          [:div.label-ja-alasveto
           [livi-pudotusvalikko {:valinta     @valinta
                                 :format-fn  first
-                                :valitse-fn #((reset! valinta %)
-                                              ;; Mikäli aikaväliä ei ole annettu, on valinta vapaa aikaväli
-                                              (if-let [aikavali-fn (second %)]
-                                                ;; Esiasetettu laskettava aikaväli
-                                                (do
-                                                  (reset! vapaa-aikavali? false)
-                                                  (reset! valittu-aikavali-atom (aikavali-fn)))
-                                                ;; Käyttäjä haluaa asettaa itse aikavälin
-                                                (do
-                                                  (reset! vapaa-aikavali? true))))}
+                                :valitse-fn valitse-aikavali}
            aikavali-valinnat]]
          (when @vapaa-aikavali?
            [aikavali valittu-aikavali-atom])]))))
