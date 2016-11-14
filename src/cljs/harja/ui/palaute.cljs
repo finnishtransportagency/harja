@@ -17,7 +17,8 @@
     [napit/yleinen "Lähetä palaute" laheta-palaute]))
 
 (defn palaute-linkki []
-  [:a {:class "palautelinkki klikattava"
+  [:a {:class "klikattava"
+       :id "palautelinkki"
        :on-click #(modal/nayta! {:otsikko "Palautteen lähettäminen"}
                                palautelomake)}
    [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "Palautetta!"]])
