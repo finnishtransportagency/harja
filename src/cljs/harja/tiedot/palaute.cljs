@@ -1,5 +1,10 @@
 (ns harja.tiedot.palaute
   (:require [clojure.string :as string]
+            [harja.ui.ikonit :as ikonit]
+            [clojure.string :as str]
+            [reagent.core :refer [atom]]
+            [harja.tiedot.istunto :as istunto]
+            [harja.asiakas.tapahtumat :as t]
             [harja.pvm :as pvm]))
 
 (def sahkoposti "harjapalaute@solita.fi")
@@ -7,6 +12,11 @@
 ;; Huomaa että rivinvaihto tulee mukaan tekstiin
 (def palaute-otsikko
   "")
+
+(def palaute-body
+  (str "Kerro meille mitä yritit tehdä, ja millaiseen ongelmaan törmäsit. Harkitse kuvakaappauksen "
+       "mukaan liittämistä, ne ovat meille erittäin hyödyllisiä. "
+       "Ota kuvakaappaukseen mukaan koko selainikkuna."))
 
 (def virhe-otsikko
   "")
