@@ -34,7 +34,10 @@
 
 (defn palauteohje-yleinen []
   [:p "Klikkaa "
-   [:a
+   [modal/modal-linkki
+    "tästä"
+    (mailto-yleinen)]
+   #_[:a
     {:href (mailto-yleinen)}
     "tästä"]
    [:span " lähettääksesi palautetta Harjan kehitystiimille."]])
@@ -89,7 +92,10 @@
 
        [yleiset/vihje-elementti [:span
                                  [:span "Olethan tutustunut "]
-                                 [modal/modal-linkki "Harjan koulutusvideoihin" +linkki-koulutusvideot+]
+                                 [modal/modal-linkki
+                                  "Harjan koulutusvideoihin"
+                                  +linkki-koulutusvideot+
+                                  "_blank"]
                                  [:span " ennen palautteen lähettämistä?"]]]])))
 
 (defn palaute-linkki []
