@@ -12,43 +12,43 @@
 (def +linkki-koulutusvideot+ "http://finnishtransportagency.github.io/harja/")
 
 (def palautetyypit
-  [{:nimi "Kehitysidea" :avain :kehitysidea}
-   {:nimi "Bugi / Tekninen ongelma" :avain :ongelma}
-   {:nimi "Käyttöoikeusongelma" :avain :kayttooikeus}
-   {:nimi "Tehtävälista" :avain :tehtavalista}
-   {:nimi "Yleinen palaute" :avain :yleinen}])
+  [{:nimi "Kehitysidea" :tyyppi :kehitysidea}
+   {:nimi "Bugi / Tekninen ongelma" :tyyppi :ongelma}
+   {:nimi "Käyttöoikeusongelma" :tyyppi :kayttooikeus}
+   {:nimi "Tehtävälista" :tyyppi :tehtavalista}
+   {:nimi "Yleinen palaute" :tyyppi :yleinen}])
 
-(defn palauteohje-yleinen []
+(defn palauteohje-yleinen [palaute-tyyppi]
   [:p "Klikkaa "
    [modal/modal-linkki
     "tästä"
-    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi))]
+    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body) palaute-tyyppi)]
    [:span " lähettääksesi palautetta Harjan kehitystiimille."]])
 
-(defn palauteohje-kayttooikeus []
+(defn palauteohje-kayttooikeus [palaute-tyyppi]
   [:div
    [:p "Jos käyttäjältä puuttuu käyttäjätunnukset Harjaan, ole yhteydessä oman organisaatiosi pääkäyttäjään."]
    [:p
     [:span "Mikäli et pääse suorittamaan Harjassa jotain tehtävää, johon sinulla tulisi olla oikeus, klikkaa "]
     [modal/modal-linkki
      "tästä"
-     (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi))]
+     (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body) palaute-tyyppi)]
     [:span " lähettääksesi palautetta Harjan kehitystiimille."]]])
 
-(defn palauteohje-tehtavalista []
+(defn palauteohje-tehtavalista [palaute-tyyppi]
   [:p "Klikkaa "
    [modal/modal-linkki
     "tästä"
-    (tiedot/mailto-linkki (tiedot/mailto-paakayttaja))]
+    (tiedot/mailto-linkki (tiedot/mailto-paakayttaja) (tiedot/palaute-body) palaute-tyyppi)]
    [:span " lähettääksesi palautetta Harjan tehtävälistaa ylläpitävälle pääkäyttäjälle."]])
 
-(defn- palauteohje [tyyppi]
+(defn- palauteohje [palautetyyppi]
   [:div.palauteohje
-   (case tyyppi
+   (case (:tyyppi palautetyyppi)
      nil [:span ""]
-     :tehtavalista [palauteohje-tehtavalista]
-     :kayttooikeus [palauteohje-kayttooikeus]
-     [palauteohje-yleinen])])
+     :tehtavalista [palauteohje-tehtavalista (:nimi palautetyyppi)]
+     :kayttooikeus [palauteohje-kayttooikeus (:nimi palautetyyppi)]
+     [palauteohje-yleinen (:nimi palautetyyppi)])])
 
 (defn- palautelomake []
   (let [valinta-atom (atom nil)]
@@ -64,7 +64,7 @@
                       "- valitse -")}
         palautetyypit]
 
-       [palauteohje (:avain @valinta-atom)]
+       [palauteohje @valinta-atom]
 
        [yleiset/vihje-elementti [:span
                                  [:span "Olethan tutustunut "]
