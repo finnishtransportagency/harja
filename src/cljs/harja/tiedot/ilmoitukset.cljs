@@ -139,10 +139,10 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   v/YhdistaValinnat
   (process-event [{valinnat :valinnat :as e} app]
     (hae
-      ;; Kun näkymään tullaan ensimmäistä kertaa, aseta oletus aikaväliksi nykypäivästä 7 päivää taaksepäin
+      ;; Kun näkymään tullaan ensimmäistä kertaa, aseta oletus aikaväliksi nykypäivästä 1 tunti taaksepäin
       (let [valinnat (if (get-in app [:valinnat :aikavali])
                        valinnat
-                       (assoc valinnat :aikavali [(pvm/paivaa-sitten 7) (pvm/nyt)]))]
+                       (assoc valinnat :aikavali [(pvm/tuntia-sitten 1) (pvm/nyt)]))]
         (update-in app [:valinnat] merge valinnat))))
 
   v/HaeIlmoitukset

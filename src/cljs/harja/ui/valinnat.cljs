@@ -141,26 +141,25 @@
 
                       ;; Oletuksena valitaan viimeinen
                       (last aikavali-valinnat))
-        valinta (atom alkuvalinta)
-        valitse-aikavali (fn [uusi-valinta]
-                           (reset! valinta uusi-valinta)
-
-                           ;; Mikäli aikaväliä ei ole annettu, vapaa aikaväli on valittus
-                           (if-let [aikavali-fn (second uusi-valinta)]
-                             ;; Esiasetettu laskettava aikaväli
-                             (do
-                               (reset! vapaa-aikavali? false)
-                               (reset! valittu-aikavali-atom (aikavali-fn)))
-                             ;; Käyttäjä haluaa asettaa itse aikavälin
-                             (do
-                               (reset! vapaa-aikavali? true))))]
+        valinta (atom alkuvalinta)]
     (komp/luo
-      (fn []
+      (fn [valittu-aikavali-atom aikavali-valinnat]
         [:span
          [:div.label-ja-alasveto
           [livi-pudotusvalikko {:valinta     @valinta
                                 :format-fn  first
-                                :valitse-fn valitse-aikavali}
+                                :valitse-fn (fn [uusi-valinta]
+                                              (reset! valinta uusi-valinta)
+
+                                              ;; Mikäli aikaväliä ei ole annettu, vapaa aikaväli on valittu
+                                              (if-let [aikavali-fn (second uusi-valinta)]
+                                                ;; Esiasetettu laskettava aikaväli
+                                                (do
+                                                  (reset! vapaa-aikavali? false)
+                                                  (reset! valittu-aikavali-atom (aikavali-fn)))
+                                                ;; Käyttäjä haluaa asettaa itse aikavälin
+                                                (do
+                                                  (reset! vapaa-aikavali? true))))}
            aikavali-valinnat]]
          (when @vapaa-aikavali?
            [aikavali valittu-aikavali-atom])]))))

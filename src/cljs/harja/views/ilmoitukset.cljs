@@ -33,14 +33,13 @@
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.ui.kentat :as kentat]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.views.urakka.valinnat :as urakkavalinnat])
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(def aikavali-valinnat [["1 tunti" #(urakkavalinnat/aikavali-nyt-miinus 1)]
-                        ["1 vrk" #(urakkavalinnat/aikavali-nyt-miinus 1)]
-                        ["5 vrk" #(urakkavalinnat/aikavali-nyt-miinus 5)]
-                        ["1 viikko" #(urakkavalinnat/aikavali-nyt-miinus 7)]
+(def aikavali-valinnat [["1 tunti" #(vector (pvm/tuntia-sitten 1) (pvm/nyt))]
+                        ["12 tuntia" #(vector (pvm/tuntia-sitten 12) (pvm/nyt))]
+                        ["1 päivä" #(vector (pvm/paivaa-sitten 1) (pvm/nyt))]
+                        ["1 viikko" #(vector (pvm/paivaa-sitten 7) (pvm/nyt))]
                         ["Valittu aikaväli" nil]])
 (def selitehaku
   (reify protokollat/Haku
@@ -90,27 +89,13 @@
    {:luokka :horizontal
     :muokkaa! #(e! (v/->AsetaValinnat %))}
 
-   [(when (and urakka valitun-urakan-hoitokaudet)
-      {:nimi :hoitokausi
-       :palstoja 1
-       :otsikko "Hoitokausi"
-       :tyyppi :valinta
-       :aseta (fn [rivi hk]
-                ;; Jos hoitokautta vaihdetaan, vaihdetaan myös aikaväli samaan
-                (assoc rivi
-                  :hoitokausi hk
-                  :aikavali hk))
-       :valinnat (:valitun-urakan-hoitokaudet valinnat-nyt)
-       :valinta-nayta fmt/pvm-vali-opt})
-
-    {:nimi :aikavali
+   [{:nimi :aikavali
      :otsikko "Saapunut aikavälillä"
      :tyyppi :komponentti
-     :komponentti (fn [{muokkaa! :muokkaa-lomaketta}]
+     :komponentti (fn [_]
                     [valinnat/ennaltamaaratty-tai-vapaa-aikavali
                      (r/wrap aikavali
-                             #(muokkaa! (merge valinnat-nyt
-                                               {:aikavali %})))
+                             #(e! (v/->AsetaValinnat (merge valinnat-nyt {:aikavali %}))))
                      aikavali-valinnat])}
 
 
