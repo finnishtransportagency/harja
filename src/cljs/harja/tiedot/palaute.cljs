@@ -37,7 +37,7 @@
           "Käyttäjä: " (enc (pr-str kayttaja))))))
 
 (defn palaute-body-yleinen []
-  "")
+  "Kirjoita palautteesi yläpuolelle.")
 
 (defn palaute-body-kehitysidea []
   (str "Kirjoita yläpuolelle ideasi. Ota mahdolliseen kuvakaappaukseen mukaan koko selainikkuna."))
