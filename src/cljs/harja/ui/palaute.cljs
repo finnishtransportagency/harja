@@ -20,4 +20,4 @@
   [:a.palautelinkki.klikattava
    {:on-click (modal/nayta! {:otsikko "Palautteen lähettäminen"}
                             palautelomake)}
-   [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "Prööt!"]])
+   [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "Palautetta!"]])
