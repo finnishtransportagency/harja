@@ -2,6 +2,7 @@
   (:require [harja.ui.ikonit :as ikonit]
             [harja.ui.viesti :as viesti]
             [harja.ui.modal :as modal]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as y]
             [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
@@ -96,13 +97,13 @@
   [:button.nappi-toissijainen {:on-click #(do
                                            (.preventDefault %)
                                            (takaisin-fn))}
-   [y/ikoni-ja-teksti (ikonit/livicon-chevron-left) teksti]])
+   [ikonit/ikoni-ja-teksti (ikonit/livicon-chevron-left) teksti]])
 
 (defn urakan-sivulle [teksti click-fn]
   [:button.nappi-toissijainen {:on-click #(do
                                            (.preventDefault %)
                                            (click-fn))}
-   [y/ikoni-ja-teksti (ikonit/livicon-chevron-left) teksti]])
+   [ikonit/ikoni-ja-teksti (ikonit/livicon-chevron-left) teksti]])
 
 (defn uusi
   "Nappi 'uuden asian' luonnille.
@@ -117,7 +118,7 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
      :on-click #(do
                  (.preventDefault %)
                  (uusi-fn))}
-    [y/ikoni-ja-teksti [ikonit/livicon-plus] teksti]]))
+    [ikonit/ikoni-ja-teksti [ikonit/livicon-plus] teksti]]))
 
 (defn hyvaksy
   ([hyvaksy-fn] (hyvaksy "OK" hyvaksy-fn {}))
@@ -129,7 +130,7 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
       :on-click #(do
                   (.preventDefault %)
                   (hyvaksy-fn))}
-     [y/ikoni-ja-teksti [ikonit/check] teksti]]))
+     [ikonit/ikoni-ja-teksti [ikonit/check] teksti]]))
 
 (defn peruuta
   ([teksti peruuta-fn] (peruuta teksti peruuta-fn {}))
@@ -140,7 +141,7 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
      :on-click #(do
                  (.preventDefault %)
                  (peruuta-fn))}
-    [y/ikoni-ja-teksti [ikonit/livicon-ban] teksti]]))
+    [ikonit/ikoni-ja-teksti [ikonit/livicon-ban] teksti]]))
 
 (defn yleinen
   "Yleinen toimintopainike
