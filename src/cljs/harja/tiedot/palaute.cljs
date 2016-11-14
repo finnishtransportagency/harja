@@ -35,9 +35,9 @@
           "Käyttäjä: " (enc (pr-str kayttaja))))))
 
 (defn palaute-body []
-  "Kerro meille mitä yritit tehdä, ja millaiseen ongelmaan törmäsit. Harkitse kuvakaappauksen "
-  "mukaan liittämistä, ne ovat meille erittäin hyödyllisiä. "
-  "Ota kuvakaappaukseen mukaan koko selainikkuna.")
+  (str "Kerro meille mitä yritit tehdä, ja millaiseen ongelmaan törmäsit. Harkitse kuvakaappauksen "
+       "mukaan liittämistä, ne ovat meille erittäin hyödyllisiä. "
+       "Ota kuvakaappaukseen mukaan koko selainikkuna."))
 
 (defn virhe-body [virheviesti]
   (str
