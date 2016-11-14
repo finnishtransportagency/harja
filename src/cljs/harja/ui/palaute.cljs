@@ -13,6 +13,8 @@
 
 (def +linkki-koulutusvideot+ "http://finnishtransportagency.github.io/harja/")
 
+
+
 (defn mailto-yleinen []
   (-> (tiedot/mailto)
       (tiedot/subject tiedot/palaute-otsikko "?")
@@ -31,25 +33,24 @@
    {:nimi "Tehtävälista" :avain :tehtavalista}])
 
 (defn palauteohje-yleinen []
-  [:span
-   [:span "Klikkaa "]
-   [:a
-    {:href (mailto-yleinen)}
-    "tästä"]
-   [:span " lähettääksesi palautetta Harjan kehitystiimille"]])
-
-(defn palauteohje-kayttooikeus []
-  [:span
-   [:div "Jos käyttäjältä puuttuu käyttäjätunnukset Harjaan, ole yhteydessä oman organisaatiosi pääkäyttäjään."]
-   [:div "Mikäli et pääse suorittamaan Harjassa jotain tehtävää, johon sinulla tulisi olla oikeus, klikkaa "]
+  [:p "Klikkaa "
    [:a
     {:href (mailto-yleinen)}
     "tästä"]
    [:span " lähettääksesi palautetta Harjan kehitystiimille."]])
 
+(defn palauteohje-kayttooikeus []
+  [:div
+   [:p "Jos käyttäjältä puuttuu käyttäjätunnukset Harjaan, ole yhteydessä oman organisaatiosi pääkäyttäjään."]
+   [:p
+    [:span "Mikäli et pääse suorittamaan Harjassa jotain tehtävää, johon sinulla tulisi olla oikeus, klikkaa "]
+    [:a
+     {:href (mailto-yleinen)}
+     "tästä"]
+    [:span " lähettääksesi palautetta Harjan kehitystiimille."]]])
+
 (defn palauteohje-tehtavalista []
-  [:span
-   [:span "Klikkaa "]
+  [:p "Klikkaa "
    [:a
     {:href (-> (tiedot/mailto)
                (tiedot/subject tiedot/palaute-otsikko "?")
@@ -88,7 +89,7 @@
 
        [yleiset/vihje-elementti [:span
                                  [:span "Olethan tutustunut "]
-                                 [:a {:href +linkki-koulutusvideot+} "Harjan koulutusvideoihin"]
+                                 [modal/modal-linkki "Harjan koulutusvideoihin" +linkki-koulutusvideot+]
                                  [:span " ennen palautteen lähettämistä?"]]]])))
 
 (defn palaute-linkki []
