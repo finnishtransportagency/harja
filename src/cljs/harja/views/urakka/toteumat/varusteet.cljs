@@ -24,7 +24,10 @@
             [harja.ui.napit :as napit]
             [harja.tiedot.urakka.toteumat.varusteet.viestit :as v]
             [tuck.core :as t :refer [tuck]]
-            [harja.ui.lomake :as lomake])
+            [harja.ui.lomake :as lomake]
+            [harja.ui.debug :refer [debug]]
+            [harja.domain.tierekisteri.varusteet
+             :refer [varusteominaisuus->skeema]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -132,12 +135,21 @@
     {:otsikko "Varustetoteuman tiedot"
      :muokkaa! #(e! (v/->AsetaToteumanTiedot %))}
 
-    [{:nimi :tietolaji
-      :otsikko "Varusteen tyyppi"
-      :tyyppi :valinta
-      :valinnat varustetiedot/tietolaji->selitys
-      :valinta-nayta second
-      :valinta-arvo first}]]])
+    [(lomake/ryhma "Toteuman tiedot"
+                    ;; FIXME: lisää toteuman perustiedot...
+                   {:nimi :tietolaji
+                     :otsikko "Varusteen tyyppi"
+                     :tyyppi :valinta
+                     :valinnat (vec varustetiedot/tietolaji->selitys)
+                     :valinta-nayta second
+                     :valinta-arvo first})
+
+     (apply lomake/ryhma "Varusteen ominaisuudet"
+            (map varusteominaisuus->skeema
+                 (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))))]
+    varustetoteuma]
+
+   [debug (:tietolajin-kuvaus varustetoteuma)]])
 
 (defn- varusteet* [e! varusteet]
   (e! (v/->YhdistaValinnat @varustetiedot/valinnat))
