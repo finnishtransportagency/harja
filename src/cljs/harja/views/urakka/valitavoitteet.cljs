@@ -20,6 +20,12 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
+;; Valtakunnallisille välitavoitteille on haluttu eri urakkatyypeissä käyttää hieman eri nimitystä
+(def valtakunnalliset-otsikko {:tiemerkinta "Tiemerkinnän välitavoitepohjista luodut välitavoitteet"})
+(def valtakunnallinen-sarake {:tiemerkinta "Väli\u00ADtavoite\u00ADpohja"})
+(def valtakunnallinen-takaraja-sarake {:tiemerkinta "Pohjan takaraja"})
+(def valtakunnalliset-tavoitteet-vihje {:tiemerkinta "Tiemerkinnän välitavoitepohjat ovat järjestelmävastaavan hallinnoimia."})
+
 (def tallennus-kaynnissa? (atom false))
 
 (defn valmiustilan-kuvaus [{:keys [valmispvm takaraja]}]
@@ -109,7 +115,8 @@
                               voi-tehda-tarkennuksen?))]
     [:div
      [grid/grid
-      {:otsikko "Valtakunnalliset välitavoitteet"
+      {:otsikko (or (valtakunnalliset-otsikko (:tyyppi urakka))
+                    "Valtakunnalliset välitavoitteet")
        :tyhja (if (nil? @valtakunnalliset-valitavoitteet-atom)
                 [y/ajax-loader "Välitavoitteita haetaan..."]
                 "Ei välitavoitteita")
@@ -128,7 +135,9 @@
        :voi-lisata? false
        :voi-poistaa? (constantly false)}
 
-      [{:otsikko "Valta\u00ADkunnal\u00ADlinen väli\u00ADtavoite" :leveys 25
+      [{:otsikko (or (valtakunnallinen-sarake (:tyyppi urakka))
+                     "Valta\u00ADkunnal\u00ADlinen väli\u00ADtavoite")
+        :leveys 25
         :nimi :valtakunnallinen-nimi :tyyppi :string :pituus-max 128
         :muokattava? (constantly false) :hae #(str (:valtakunnallinen-nimi %))}
        {:otsikko "U\u00ADrak\u00ADka\u00ADkoh\u00ADtai\u00ADset tar\u00ADken\u00ADnuk\u00ADset"
@@ -138,7 +147,9 @@
           (when-not (= (:valtakunnallinen-nimi rivi) (:nimi rivi))
             "grid-solu-varoitus"))
         :muokattava? (constantly voi-tehda-tarkennuksen?)}
-       {:otsikko "Valta\u00ADkunnal\u00ADlinen taka\u00ADraja" :leveys 20
+       {:otsikko (or (valtakunnallinen-sarake (:tyyppi urakka))
+                     "Valta\u00ADkunnal\u00ADlinen taka\u00ADraja")
+        :leveys 20
         :nimi :valtakunnallinen-takaraja
         :hae #(cond
                (:valtakunnallinen-takaraja %)
@@ -195,9 +206,12 @@
                                  [:span "Urakkakohtaisten tarkennukset värjätty "]
                                  [:span.grid-solu-varoitus "punaisella"]
                                  [:span "."]]])
-     [yleiset/vihje (str "Valtakunnalliset välitavoitteet ovat järjestelmävastaavan hallinnoimia. "
-                         (when voi-muokata?
-                           "Voit kuitenkin tehdä tavoitteisiin urakkakohtaisia muokkauksia."))]]))
+     [yleiset/vihje (str
+                      (or (valtakunnalliset-tavoitteet-vihje (:tyyppi urakka))
+                          "Valtakunnalliset välitavoitteet ovat järjestelmävastaavan hallinnoimia.")
+                      " "
+                      (when voi-muokata?
+                        "Voit kuitenkin tehdä tavoitteisiin urakkakohtaisia muokkauksia."))]]))
 
 (defn valitavoitteet
   "Urakan välitavoitteet näkymä. Ottaa parametrinä urakan ja hakee välitavoitteet sille."
@@ -216,9 +230,9 @@
           vt/urakan-valitavoitteet]
          (when nayta-valtakunnalliset?
            [valtakunnalliset-valitavoitteet
-           ur
-           vt/valitavoitteet
-           vt/valtakunnalliset-valitavoitteet])
+            ur
+            vt/valitavoitteet
+            vt/valtakunnalliset-valitavoitteet])
 
          ;; PENDING Kommentoidaan toistaiseksi tämä ylläpidon demo pois hämmentämästä
          ;; Ylläpidon välitavoitteita pohditaan myöhemmin

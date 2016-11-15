@@ -19,17 +19,14 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 ;; Valtakunnallisille välitavoitteille on haluttu eri urakkatyypeissä käyttää hieman eri nimitystä
-(def kertaluontoiset-otsikko {:tiemerkinta "Kertaluontoiset välitavoitepohjat"
-                              :oletus "Valtakunnalliset kertaluontoiset välitavoitteet"})
-(def toistuvat-otsikko {:tiemerkinta "Vuosittain toistuvat välitavoitepohjat"
-                        :oletus "Valtakunnalliset vuosittain toistuvat välitavoitteet"})
+(def kertaluontoiset-otsikko {:tiemerkinta "Kertaluontoiset välitavoitepohjat"})
+(def toistuvat-otsikko {:tiemerkinta "Vuosittain toistuvat välitavoitepohjat"})
 
 (defn kertaluontoiset-valitavoitteet-grid
   [valitavoitteet-atom kertaluontoiset-valitavoitteet-atom valittu-urakkatyyppi-atom]
   [grid/grid
-   {:otsikko (case (:arvo @valittu-urakkatyyppi-atom)
-               :tiemerkinta (:tiemerkinta kertaluontoiset-otsikko)
-               (:oletus kertaluontoiset-otsikko))
+   {:otsikko (or (kertaluontoiset-otsikko (:arvo @valittu-urakkatyyppi-atom))
+                 "Valtakunnalliset kertaluontoiset välitavoitteet")
     :tyhja (if (nil? @kertaluontoiset-valitavoitteet-atom)
              [y/ajax-loader "Välitavoitteita haetaan..."]
              "Ei kertaluontoisia välitavoitteita")
@@ -58,9 +55,8 @@
 (defn toistuvat-valitavoitteet-grid
   [valitavoitteet-atom toistuvat-valitavoitteet-atom valittu-urakkatyyppi-atom]
   [grid/grid
-   {:otsikko (case (:arvo @valittu-urakkatyyppi-atom)
-               :tiemerkinta (:tiemerkinta toistuvat-otsikko)
-               (:oletus toistuvat-otsikko))
+   {:otsikko (or (toistuvat-otsikko (:arvo @valittu-urakkatyyppi-atom))
+                 "Valtakunnalliset vuosittain toistuvat välitavoitteet")
     :tyhja (if (nil? @toistuvat-valitavoitteet-atom)
              [y/ajax-loader "Välitavoitteita haetaan..."]
              "Ei toistuvia välitavoitteita")
