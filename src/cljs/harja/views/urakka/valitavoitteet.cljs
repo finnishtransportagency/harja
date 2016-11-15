@@ -23,7 +23,7 @@
 ;; Valtakunnallisille välitavoitteille on haluttu eri urakkatyypeissä käyttää hieman eri nimitystä
 (def valtakunnalliset-otsikko {:tiemerkinta "Tiemerkinnän välitavoitepohjista luodut välitavoitteet"})
 (def valtakunnallinen-sarake {:tiemerkinta "Väli\u00ADtavoite\u00ADpohja"})
-(def valtakunnallinen-takaraja-sarake {:tiemerkinta "Pohjan takaraja"})
+(def valtakunnallinen-takaraja-sarake {:tiemerkinta "Väli\u00ADtavoite\u00ADpohjan taka\u00ADraja"})
 (def valtakunnalliset-tavoitteet-vihje {:tiemerkinta "Tiemerkinnän välitavoitepohjat ovat järjestelmävastaavan hallinnoimia."})
 
 (def tallennus-kaynnissa? (atom false))

@@ -19,8 +19,8 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 ;; Valtakunnallisille välitavoitteille on haluttu eri urakkatyypeissä käyttää hieman eri nimitystä
-(def kertaluontoiset-otsikko {:tiemerkinta "Kertaluontoiset välitavoitepohjat"})
-(def toistuvat-otsikko {:tiemerkinta "Vuosittain toistuvat välitavoitepohjat"})
+(def kertaluontoiset-otsikko {:tiemerkinta "Tiemerkinnän kertaluontoisten välitavoitteiden mallipohjat"})
+(def toistuvat-otsikko {:tiemerkinta "Tiemerkinnän vuosittain toistuvien välitavoitteiden mallipohjat"})
 
 (defn kertaluontoiset-valitavoitteet-grid
   [valitavoitteet-atom kertaluontoiset-valitavoitteet-atom valittu-urakkatyyppi-atom]
