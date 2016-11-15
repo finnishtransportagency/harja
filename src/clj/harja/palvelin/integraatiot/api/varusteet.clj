@@ -258,7 +258,7 @@
 
     (julkaise-palvelu http :hae-tietolajin-kuvaus
                       (fn [user tietolaji]
-                        (hae-tietolaji tierekisteri {"tunniste" tietolaji} user)))
+                        (:tietolaji (hae-tietolaji tierekisteri {"tunniste" tietolaji} user))))
     this)
 
   (stop [{http :http-palvelin :as this}]
