@@ -133,7 +133,13 @@
 
    [lomake/lomake
     {:otsikko "Varustetoteuman tiedot"
-     :muokkaa! #(e! (v/->AsetaToteumanTiedot %))}
+     :muokkaa! #(e! (v/->AsetaToteumanTiedot %))
+     :footer-fn (fn [data]
+                  (log "DATA: " (pr-str data))
+                  [napit/tallenna "Tallenna"
+                   #(log "FIXME: implement")
+                   {:disabled (not (lomake/voi-tallentaa? data))}]
+                  )}
 
     [(lomake/ryhma "Toteuman tiedot"
                     ;; FIXME: lisää toteuman perustiedot...
@@ -148,8 +154,10 @@
             (map varusteominaisuus->skeema
                  (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))))]
     varustetoteuma]
-
-   [debug (:tietolajin-kuvaus varustetoteuma)]])
+[:span (pr-str (distinct (map (comp :tietotyyppi :ominaisuus)
+                                 (:ominaisuudet (:tietolajin-kuvaus varustetoteuma)))))]
+   [debug (:tietolajin-kuvaus varustetoteuma)]
+   ])
 
 (defn- varusteet* [e! varusteet]
   (e! (v/->YhdistaValinnat @varustetiedot/valinnat))
