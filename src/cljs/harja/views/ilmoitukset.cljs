@@ -19,6 +19,7 @@
             [harja.ui.napit :refer [palvelinkutsu-nappi] :as napit]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.ui.lomake :as lomake]
+            [harja.ui.debug :refer [debug] ]
             [harja.ui.protokollat :as protokollat]
             [harja.fmt :as fmt]
             [harja.tiedot.navigaatio :as nav]
