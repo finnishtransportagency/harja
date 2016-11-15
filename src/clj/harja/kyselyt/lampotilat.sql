@@ -24,7 +24,8 @@ SELECT
   alkupvm,
   loppupvm,
   keskilampotila,
-  pitka_keskilampotila as pitkakeskilampotila
+  pitka_keskilampotila as pitkakeskilampotila,
+  pitka_keskilampotila_vanha as pitkakeskilampotila_vanha
 FROM lampotilat
 WHERE urakka = :urakka;
 
