@@ -246,7 +246,7 @@
               (for [urakkatyyppi tyypit-joissa-alueita]
                 ^{:key (str "aluesuodattimet-tyypille-" urakkatyyppi)}
                 [tyypin-aluesuodattimet urakkatyyppi]))])]
-         (when-not alueita-valittu?
+         (when (and (not alueita-valittu?) (not ensimmainen-haku-kaynnissa?))
            [yleiset/vihje "Yhtään aluetta ei ole valittu."])]))))
 
 (defn- aikasuodattimet []
