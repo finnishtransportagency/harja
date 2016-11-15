@@ -11,7 +11,8 @@
             [harja-laadunseuranta.tiedot.tarkastusajon-luonti :as tarkastusajon-luonti]
             [cljs.core.async :as async :refer [<!]]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset])
   (:require-macros [reagent.ratom :refer [run!]]
                    [cljs.core.async.macros :refer [go]]
                    [harja-laadunseuranta.macros :refer [after-delay]]))
