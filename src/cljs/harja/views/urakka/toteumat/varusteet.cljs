@@ -23,7 +23,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.napit :as napit]
             [harja.tiedot.urakka.toteumat.varusteet.viestit :as v]
-            [tuck.core :as t :refer [tuck]])
+            [tuck.core :as t :refer [tuck]]
+            [harja.ui.lomake :as lomake])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -127,8 +128,16 @@
    [napit/takaisin "Takaisin toteumaluetteloon"
     #(e! (v/->TyhjennaValittuToteuma))]
 
-   [:div
-    "katsot toteumaa: " (pr-str varustetoteuma)]])
+   [lomake/lomake
+    {:otsikko "Varustetoteuman tiedot"
+     :muokkaa! #(e! (v/->AsetaToteumanTiedot %))}
+
+    [{:nimi :tietolaji
+      :otsikko "Varusteen tyyppi"
+      :tyyppi :valinta
+      :valinnat varustetiedot/tietolaji->selitys
+      :valinta-nayta second
+      :valinta-arvo first}]]])
 
 (defn- varusteet* [e! varusteet]
   (e! (v/->YhdistaValinnat @varustetiedot/valinnat))

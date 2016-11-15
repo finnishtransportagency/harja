@@ -23,3 +23,6 @@
 
 ;; Aseta uudet varustetoteuman tiedot lomakkeelta muokattaessa
 (defrecord AsetaToteumanTiedot [tiedot])
+
+;; Tietolajin vaihtaminen aiheuttaa sen skeeman hakemisen palvelimelta
+(defrecord TietolajinKuvaus [tietolaji kuvaus])
