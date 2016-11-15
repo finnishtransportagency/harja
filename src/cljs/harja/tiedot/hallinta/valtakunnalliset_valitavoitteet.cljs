@@ -20,7 +20,7 @@
 (def valittu-urakkatyyppi (atom (first nav/+urakkatyypit+)))
 
 (def valtakunnalliset-valitavoitteet-kaytossa
-  #{:hoito})
+  #{:hoito :tiemerkinta})
 
 (defn hae-valitavoitteet []
   (k/post! :hae-valtakunnalliset-valitavoitteet {}))
