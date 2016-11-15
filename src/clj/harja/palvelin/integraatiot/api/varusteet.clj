@@ -3,7 +3,8 @@
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET DELETE PUT]]
             [taoensso.timbre :as log]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
+            [harja.palvelin.komponentit.http-palvelin
+             :refer [julkaise-reitti julkaise-palvelu poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-sisainen-kasittelyvirhevastaus
                                                                              tee-viallinen-kutsu-virhevastaus
                                                                              tee-vastaus
@@ -254,6 +255,10 @@
         (kasittele-kutsu-async db integraatioloki :poista-tietue request json-skeemat/varusteen-poisto json-skeemat/kirjausvastaus
                                (fn [_ data kayttaja _]
                                  (poista-varuste tierekisteri data kayttaja)))))
+
+    (julkaise-palvelu http :hae-tietolajin-kuvaus
+                      (fn [user tietolaji]
+                        (hae-tietolaji tierekisteri {"tunniste" tietolaji} user)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -263,5 +268,6 @@
                      :hae-tietue
                      :lisaa-tietue
                      :paivita-tietue
-                     :poista-tietue)
+                     :poista-tietue
+                     :hae-tietolajin-kuvaus)
     this))

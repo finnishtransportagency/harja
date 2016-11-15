@@ -112,6 +112,9 @@
             :loppupvm   loppupvm
             :tienumero tienumero}))
 
+(defn- hae-tietolajin-kuvaus [tietolaji]
+  (k/post! :hae-tietolajin-kuvaus tietolaji))
+
 (defn uusi-varustetoteuma
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
   []
@@ -150,7 +153,30 @@
     (assoc app :varustetoteuma nil))
   v/UusiVarusteToteuma
   (process-event [_ app]
-    (assoc app :varustetoteuma (uusi-varustetoteuma))))
+    (assoc app :varustetoteuma (uusi-varustetoteuma)))
+
+  v/AsetaToteumanTiedot
+  (process-event [{tiedot :tiedot} {toteuma :varustetoteuma :as app}]
+    (let [tietolaji-muuttui? (not= (:tietolaji tiedot) (:tietolaji toteuma))
+          tiedot (if tietolaji-muuttui?
+                   (assoc tiedot :tietolajin-kuvaus nil)
+                   tiedot)
+          uusi-toteuma (merge toteuma tiedot)]
+      ;; Jos tietolajin kuvaus muuttui ja se ei ole tyhjä, haetaan uudet tiedot
+      (when (and tietolaji-muuttui? (:tietolaji tiedot))
+        (let [tulos! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
+          (go
+            (tulos! (<! (hae-tietolajin-kuvaus (:tietolaji tiedot)))))))
+
+      (assoc app :varustetoteuma (merge toteuma tiedot))))
+
+  v/TietolajinKuvaus
+  (process-event [{:keys [tietolaji kuvaus]} {toteuma :varustetoteuma :as app}]
+    ;; Uusi tietolajin kuvaus haettu palvelimelta, aseta se paikoilleen, jos
+    ;; toteuman tietolaji on sama kuin toteumassa.
+    (if (= tietolaji (:tietolaji toteuma))
+      (assoc-in app [:varustetoteuma :tietolajin-kuvaus] kuvaus)
+      app)))
 
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
