@@ -21,9 +21,9 @@
 
   #?(:cljs (:import (goog.date DateTime))
      :clj
-     (:import (java.util Calendar Date)
-              (java.text SimpleDateFormat)
-              (org.joda.time DateTimeZone))))
+           (:import (java.util Calendar Date)
+                    (java.text SimpleDateFormat)
+                    (org.joda.time DateTimeZone))))
 
 
 #?(:cljs
@@ -124,14 +124,14 @@
   Backendissä palauttaa java.util.Daten"
   []
   #?(:cljs (DateTime.)
-     :clj (Date.)))
+     :clj  (Date.)))
 
 (defn luo-pvm
   "Frontissa palauttaa goog.date.Datetimen
   Backendissä palauttaa java.util.Daten"
   [vuosi kk pv]
   #?(:cljs (DateTime. vuosi kk pv 0 0 0 0)
-     :clj (Date. (- vuosi 1900) kk pv)))
+     :clj  (Date. (- vuosi 1900) kk pv)))
 
 (defn sama-pvm? [eka toka]
   (if-not (and eka toka)
@@ -208,13 +208,13 @@
 
 (defn- luo-format [str]
   #?(:cljs (df/formatter str)
-     :clj (SimpleDateFormat. str)))
+     :clj  (SimpleDateFormat. str)))
 (defn- formatoi [format date]
   #?(:cljs (df/unparse format date)
-     :clj (.format format date)))
+     :clj  (.format format date)))
 (defn parsi [format teksti]
   #?(:cljs (df/parse-local format teksti)
-     :clj (.parse format teksti)))
+     :clj  (.parse format teksti)))
 
 (def fi-pvm
   "Päivämäärän formatointi suomalaisessa muodossa"
@@ -318,7 +318,7 @@
     (try
       (parsi fi-pvm-aika (str/trim teksti-kellonaika-korjattu))
       (catch #?(:cljs js/Error
-                :clj Exception) e
+                :clj  Exception) e
         nil))))
 
 (defn ->pvm-aika-sek [teksti]
@@ -330,7 +330,7 @@
   (try
     (parsi fi-pvm-parse teksti)
     (catch #?(:cljs js/Error
-              :clj Exception) e
+              :clj  Exception) e
       nil)))
 
 (defn kuukauden-nimi [kk]
@@ -392,9 +392,9 @@
 
 (defn- d [x]
   #?(:cljs x
-     :clj (if (instance? Date x)
-            (suomen-aikavyohykkeeseen (tc/from-date x))
-            x)))
+     :clj  (if (instance? Date x)
+             (suomen-aikavyohykkeeseen (tc/from-date x))
+             x)))
 
 (defn vuosi
   "Palauttaa annetun DateTimen vuoden, esim 2015."
@@ -698,13 +698,12 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   (let [pvmt (take n (iterate #(t/minus % (t/years 1)) (t/now)))]
     (mapv t/year pvmt)))
 
-
 #?(:cljs
    (defn paivaa-sitten [paivaa]
      (-> paivaa t/days t/ago)))
 
 #?(:cljs
    (defn tuntia-sitten [tuntia]
-     (-> tuntia t/hours t/ago)))
+     (t/minus (nyt) (t/hours tuntia))))
 
 (def kayttoonottto (t/local-date 2016 10 1))
