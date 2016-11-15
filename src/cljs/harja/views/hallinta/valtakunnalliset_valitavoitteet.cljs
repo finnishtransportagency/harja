@@ -18,10 +18,18 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+;; Valtakunnallisille välitavoitteille on haluttu eri urakkatyypeissä käyttää hieman eri nimitystä
+(def kertaluontoiset-otsikko {:tiemerkinta "Kertaluontoiset välitavoitepohjat"
+                              :oletus "Valtakunnalliset kertaluontoiset välitavoitteet"})
+(def toistuvat-otsikko {:tiemerkinta "Vuosittain toistuvat välitavoitepohjat"
+                        :oletus "Valtakunnalliset vuosittain toistuvat välitavoitteet"})
+
 (defn kertaluontoiset-valitavoitteet-grid
-  [valitavoitteet-atom kertaluontoiset-valitavoitteet-atom]
+  [valitavoitteet-atom kertaluontoiset-valitavoitteet-atom valittu-urakkatyyppi-atom]
   [grid/grid
-   {:otsikko "Valtakunnalliset kertaluontoiset välitavoitteet"
+   {:otsikko (case (:arvo @valittu-urakkatyyppi-atom)
+               :tiemerkinta (:tiemerkinta kertaluontoiset-otsikko)
+               (:oletus kertaluontoiset-otsikko))
     :tyhja (if (nil? @kertaluontoiset-valitavoitteet-atom)
              [y/ajax-loader "Välitavoitteita haetaan..."]
              "Ei kertaluontoisia välitavoitteita")
@@ -48,9 +56,11 @@
                               @kertaluontoiset-valitavoitteet-atom))])
 
 (defn toistuvat-valitavoitteet-grid
-  [valitavoitteet-atom toistuvat-valitavoitteet-atom]
+  [valitavoitteet-atom toistuvat-valitavoitteet-atom valittu-urakkatyyppi-atom]
   [grid/grid
-   {:otsikko "Valtakunnalliset vuosittain toistuvat välitavoitteet"
+   {:otsikko (case (:arvo @valittu-urakkatyyppi-atom)
+               :tiemerkinta (:tiemerkinta toistuvat-otsikko)
+               (:oletus toistuvat-otsikko))
     :tyhja (if (nil? @toistuvat-valitavoitteet-atom)
              [y/ajax-loader "Välitavoitteita haetaan..."]
              "Ei toistuvia välitavoitteita")
@@ -95,11 +105,13 @@
          (if nayta-valtakunnalliset?
            [:div [kertaluontoiset-valitavoitteet-grid
                   tiedot/valitavoitteet
-                  tiedot/kertaluontoiset-valitavoitteet]
+                  tiedot/kertaluontoiset-valitavoitteet
+                  tiedot/valittu-urakkatyyppi]
             [:br]
             [toistuvat-valitavoitteet-grid
              tiedot/valitavoitteet
-             tiedot/toistuvat-valitavoitteet]
+             tiedot/toistuvat-valitavoitteet
+             tiedot/valittu-urakkatyyppi]
             [yleiset/vihje-elementti
              [:span
               "Uudet kertaluontoiset välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin, jos välitavoitteen takaraja on urakan voimassaoloaikana."
