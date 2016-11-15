@@ -32,17 +32,17 @@
               :tyyppi :talvihoito-tasaisuus
               :yksikko "cm"}
     :vaatii-nappaimiston? true}
-   {:nimi "Py\u00ADsäkki: epä\u00ADtasainen polanne"
+   {:nimi "P: epä\u00ADtasainen polanne"
     :tyyppi :piste
     :avain :pysakilla-epatasainen-polanne
     :ikoni "pysakki_epatasainen_polanne"
     :vaatii-nappaimiston? false}
-   {:nimi "Py\u00ADsäkki auraa\u00ADmatta"
+   {:nimi "P: auraa\u00ADmatta"
     :tyyppi :piste
     :avain :pysakki-auraamatta
     :ikoni "pysakki_auraamatta"
     :vaatii-nappaimiston? false}
-   {:nimi "Py\u00ADsäkki hiekoit\u00ADtamatta"
+   {:nimi "P: hiekoit\u00ADtamatta"
     :tyyppi :piste
     :avain :pysakki-hiekoittamatta
     :ikoni "pysakki_hiekoittamatta"
