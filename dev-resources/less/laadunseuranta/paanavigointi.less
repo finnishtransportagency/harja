@@ -179,52 +179,54 @@
 @piilotusnappi-taustavari: #c1c1bd;
 
 .navigointilaatikko {
-  transition: 0.2s left ease;
+  transition: 0.2s top ease;
 }
 
 .navigointilaatikko > .piilotusnappi {
-  width: (@piilotusnappi-koko / 2);
-  height: @piilotusnappi-koko;
+  width: @piilotusnappi-koko;
+  height: (@piilotusnappi-koko / 2);
   border: @sisaltolaatikoiden-reunaviiva;
-  border-radius: 90px 0 0 90px;
+  border-radius: 90px 90px 0 0;
   background-color: @piilotusnappi-taustavari;
   position: absolute;
-  left: -(@piilotusnappi-koko / 2);
-  top: 120px;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
 }
 
 .paanavigointi-container > .nayttonappi {
-  width: (@piilotusnappi-koko / 2);
-  height: @piilotusnappi-koko;
+  width: @piilotusnappi-koko;
+  height: (@piilotusnappi-koko / 2);
   border: @sisaltolaatikoiden-reunaviiva;
-  border-radius: 0 90px 90px 0;
+  border-radius: 90px 90px 0 0;
   background-color: @piilotusnappi-taustavari;
   position: absolute;
-  left: 0;
-  top: 130px;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .nayttonappi {
-  transition: 0.2s left linear;
+  transition: 0.2s top linear;
 }
 
 .paanavigointi-container-nakyvissa {
   & .nayttonappi {
-    left: (-@piilotusnappi-koko - 15px);
+    bottom: (-@piilotusnappi-koko - 15px);
   }
 
   & .navigointilaatikko {
-    left: 0;
+    top: 0;
   }
 }
 
 .paanavigointi-container-piilossa {
   & .nayttonappi {
-    left: 0;
+    bottom: 0;
   }
 
   & .navigointilaatikko {
-    left: -110%;
+    top: 110%;
   }
 }
 
