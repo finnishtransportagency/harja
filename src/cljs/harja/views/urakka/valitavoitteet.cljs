@@ -147,7 +147,7 @@
           (when-not (= (:valtakunnallinen-nimi rivi) (:nimi rivi))
             "grid-solu-varoitus"))
         :muokattava? (constantly voi-tehda-tarkennuksen?)}
-       {:otsikko (or (valtakunnallinen-sarake (:tyyppi urakka))
+       {:otsikko (or (valtakunnallinen-takaraja-sarake (:tyyppi urakka))
                      "Valta\u00ADkunnal\u00ADlinen taka\u00ADraja")
         :leveys 20
         :nimi :valtakunnallinen-takaraja
