@@ -288,13 +288,13 @@
               (filter #(not= true (:poistettu %)) tyot))))
 
 (defn paattele-ilmoituksen-tila
-  [{:keys [tekninen-osa taloudellinen-osa valmispvm-kohde valmispvm-paallystys]}]
+  [{:keys [tekninen-osa taloudellinen-osa valmis-kasiteltavaksi]}]
   (cond
     (and (= (:paatos tekninen-osa) :hyvaksytty)
          (= (:paatos taloudellinen-osa) :hyvaksytty))
     "lukittu"
 
-    (and valmispvm-kohde valmispvm-paallystys)
+    valmis-kasiteltavaksi
     "valmis"
 
     :default

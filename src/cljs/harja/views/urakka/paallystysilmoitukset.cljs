@@ -178,19 +178,16 @@
       #(muokkaa! assoc :taloudellinen-osa %)]]))
 
 (defn tallennus
-  [urakka {:keys [valmispvm-kohde valmispvm-paallystys tekninen-osa taloudellinen-osa
+  [urakka {:keys [valmispvm-kohde tekninen-osa taloudellinen-osa
                   tila] :as lomake} valmis-tallennettavaksi? tallennus-onnistui]
   (let [paatos-tekninen-osa (:paatos tekninen-osa)
         paatos-taloudellinen-osa (:paatos taloudellinen-osa)
         huomautusteksti
-        (cond (not (and valmispvm-kohde valmispvm-paallystys))
-              "Valmistusmispäivämäärää ei ole annettu, ilmoitus tallennetaan keskeneräisenä."
-              (and (not= :lukittu tila)
+        (cond (and (not= :lukittu tila)
                    (= :hyvaksytty paatos-tekninen-osa)
                    (= :hyvaksytty paatos-taloudellinen-osa))
               "Ilmoituksen molemmat osat on hyväksytty, ilmoitus lukitaan tallennuksen yhteydessä."
-              :else
-              nil)
+              :default nil)
         urakka-id (:id urakka)
         [sopimus-id _] @u/valittu-sopimusnumero]
 
@@ -234,13 +231,9 @@
               #(assoc-in % polku
                          (vec (grid/filteroi-uudet-poistetut uusi-arvo)))))))
 
-(defn paallystysilmoitus-perustiedot [urakka {:keys [tila valmispvm-kohde] :as lomakedata-nyt} lukittu? kirjoitusoikeus? muokkaa!]
-  (let [valmis-kasiteltavaksi?
-        (do
-          #_(log "[PÄÄLLYSTYS] valmis käsiteltäväksi " (pr-str valmispvm-kohde) (pr-str tila))
-          (and tila
-               valmispvm-kohde
-               (not (= tila :aloitettu))))]
+(defn paallystysilmoitus-perustiedot [urakka {:keys [tila] :as lomakedata-nyt} lukittu? kirjoitusoikeus? muokkaa!]
+  (let [valmis-kasiteltavaksi? (and (= tila :valmis)
+                                    (not (= tila :aloitettu)))]
     [:div.row
      [:div.col-md-6
       [:h3 "Perustiedot"]
@@ -263,7 +256,13 @@
         {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
          :hae #(-> % laske-hinta :toteuman-kokonaishinta)
          :fmt fmt/euro-opt :tyyppi :numero
-         :palstoja 2 :muokattava? (constantly false)}
+         :muokattava? (constantly false) :palstoja 1}
+        (when (and (not= :valmis (:tila lomakedata-nyt))
+                   (not= :lukittu (:tila lomakedata-nyt)))
+          {:otsikko "Käsittely"
+           :teksti "Valmis tilaajan käsiteltäväksi"
+           :nimi :valmis-kasiteltavaksi :palstoja 1
+           :tyyppi :checkbox})
         (when (or (= :valmis (:tila lomakedata-nyt))
                   (= :lukittu (:tila lomakedata-nyt)))
           {:otsikko "Kommentit" :nimi :kommentit
@@ -527,7 +526,7 @@
   (komp/luo
     (komp/ulos #(kartta/poista-popup!))
     (komp/lukko (lukko/muodosta-lukon-id "paallystysilmoitus" yllapitokohde-id))
-    (fn [urakka {:keys [virheet tila valmispvm-kohde kirjoitusoikeus?] :as lomakedata-nyt}
+    (fn [urakka {:keys [virheet tila kirjoitusoikeus?] :as lomakedata-nyt}
          lukko muokkaa! historia tallennus-onnistui]
       (let [lukittu? (lukko/nakyma-lukittu? lukko)
             valmis-tallennettavaksi? (and
