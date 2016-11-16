@@ -80,13 +80,7 @@
     (if kohteella-paallystysilmoitus?
       (do (q-yllapitokohteet/paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<!
             db
-            {:aloituspvm (json/pvm-string->java-sql-date
-                           (get-in aikataulu [:paallystysilmoitus :aloituspvm]))
-             :valmispvm_paallystys (json/pvm-string->java-sql-date
-                                     (get-in aikataulu [:paallystysilmoitus :valmispvm-paallystys]))
-             :valmispvm_kohde (json/pvm-string->java-sql-date
-                                (get-in aikataulu [:paallystysilmoitus :valmispvm-kohde]))
-             :takuupvm (json/pvm-string->java-sql-date (get-in aikataulu [:paallystysilmoitus :takuupvm]))
+            {:takuupvm (json/pvm-string->java-sql-date (get-in aikataulu [:paallystysilmoitus :takuupvm]))
              :muokkaaja (:id kayttaja)
              :kohde_id kohde-id})
           {})
