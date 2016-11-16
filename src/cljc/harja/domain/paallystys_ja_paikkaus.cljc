@@ -41,7 +41,7 @@
 (defn nayta-tila [tila]
   (case tila
     :aloitettu "Aloitettu"
-    :valmis "Valmis"
+    :valmis "Valmis käsiteltäväksi"
     :lukittu "Lukittu"
     "-"))
 
