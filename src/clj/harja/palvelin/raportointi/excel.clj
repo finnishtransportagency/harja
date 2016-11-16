@@ -58,10 +58,6 @@
 (defmethod erikoiskentta :varillinen-teksti [arvo-ja-vari]
   (:arvo (second arvo-ja-vari)))
 
-(defmethod erikoiskentta :info [solu] (raportti-domain/virheen-viesti solu))
-(defmethod erikoiskentta :varoitus [solu] (raportti-domain/virheen-viesti solu))
-(defmethod erikoiskentta :virhe [solu] (raportti-domain/virheen-viesti solu))
-
 (defn- taulukko-otsikkorivi [otsikko-rivi sarakkeet sarake-tyyli]
   (dorun
     (map-indexed

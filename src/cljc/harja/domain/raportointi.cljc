@@ -1,12 +1,10 @@
 (ns harja.domain.raportointi
   (:require [harja.domain.roolit :as roolit]))
 
-(def virhetyypit #{:info :varoitus :virhe})
-
-(defn virhe? [solu]
-  (and (vector? solu) (virhetyypit (first solu))))
-
-(defn virheen-viesti [solu] (second solu))
+(def virhetyylit
+  {:virhe "rgb(221,0,0)"
+   :varoitus "rgb(255,153,0)"
+   :info "rbg(0,136,204)"})
 
 (defn voi-nahda-laajemman-kontekstin-raportit? [kayttaja]
   (and (not (roolit/roolissa? roolit/tilaajan-laadunvalvontakonsultti kayttaja))

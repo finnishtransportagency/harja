@@ -50,11 +50,10 @@
      [:fo:inline " "]
      [:fo:inline {:font-size (str (- taulukon-fonttikoko 2) taulukon-fonttikoko-yksikko)} (str "( " (:osuus tiedot) "%)")]]))
 
-(defmethod muodosta-pdf :varillinen-teksti [arvo-ja-vari]
-  (let [tiedot (second arvo-ja-vari)]
-    [:fo:inline
-     [:fo:inline {:color (or (:vari tiedot) "black")}
-      (:arvo tiedot)]]))
+(defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari]}]]
+  [:fo:inline
+   [:fo:inline {:color (or (raportti-domain/virhetyylit tyyli) itsepaisesti-maaritelty-oma-vari "black")}
+    arvo]])
 
 
 (def alareuna
@@ -130,9 +129,6 @@
                              str)
                        naytettava-arvo (or
                                          (cond
-                                           (raportti-domain/virhe? arvo-datassa)
-                                           (raportti-domain/virheen-viesti arvo-datassa)
-
                                            (vector? arvo-datassa)
                                            (muodosta-pdf arvo-datassa)
 

@@ -30,10 +30,14 @@
    [:span " "]
    [:span.osuus (str "(" (:osuus arvo-ja-osuus) "%)")]])
 
-(defmethod muodosta-html :varillinen-teksti [[_ arvo-ja-vari]]
+(defmethod muodosta-html :varillinen-teksti
+  ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
+  ;; ennaltamääriteltyjä tyylejä, mutta jos on erikoistapaus missä halutaan käyttää itsemääriteltyä väriä,
+  ;; voidaan käyttää avainta :itsepaisesti-maaritelty-oma-vari
+  [[_ [{:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari]}]]]
   [:span.varillinen-teksti
-   [:span.arvo {:style {:color (or (:vari arvo-ja-vari) "rgb(25,25,25)")}}
-    (:arvo arvo-ja-vari)]])
+   [:span.arvo {:style {:color (or (raportti-domain/virhetyylit tyyli) itsepaisesti-maaritelty-oma-vari "rgb(25,25,25)")}}
+    arvo]])
 
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                rivi-ennen
@@ -43,13 +47,12 @@
                                      sarakkeet data]]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})
         formatter (fn [{fmt :fmt}]
-                    (let [format-fn (case fmt
-                                      :numero #(fmt/desimaaliluku-opt % 1 true)
-                                      :prosentti #(fmt/prosentti-opt % 1)
-                                      :raha #(fmt/desimaaliluku-opt % 2 true)
-                                      :pvm #(fmt/pvm-opt %)
-                                      str)]
-                      #(if-not (raportti-domain/virhe? %) (format-fn %) (raportti-domain/virheen-viesti %))))]
+                    (case fmt
+                      :numero #(fmt/desimaaliluku-opt % 1 true)
+                      :prosentti #(fmt/prosentti-opt % 1)
+                      :raha #(fmt/desimaaliluku-opt % 2 true)
+                      :pvm #(fmt/pvm-opt %)
+                      str))]
     [grid/grid {:otsikko            (or otsikko "")
                 :tunniste           (fn [rivi] (str "raportti_rivi_"
                                                     (or (::rivin-indeksi rivi)
