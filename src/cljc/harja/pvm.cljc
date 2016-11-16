@@ -549,7 +549,10 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
            "pvm/varmista-aikavali: valittu pitää olla keyword :alku tai :loppu")
    (if (jalkeen? alku loppu)
      (samalle-kuukaudelle (if (= valittu :alku) alku loppu) valittu)
-     [(paivan-alussa alku) (paivan-lopussa loppu)])))
+     ;; Jos kyseessä ei ole kellonaika, asetetaan alkupäivän aika päivän alkuun ja loppupäivän aika päivän loppuun
+     (if kellonaika?
+       [alku loppu]
+       [(paivan-alussa alku) (paivan-lopussa loppu)]))))
 
 (defn varmista-aikavali-opt [[alku loppu] & args]
   (if (and alku loppu)
