@@ -255,18 +255,11 @@
                 (str "#" (:kohdenumero lomakedata-nyt) " " (:kohdenimi lomakedata-nyt)))
          :muokattava? (constantly false)
          :palstoja 2}
-        {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm :palstoja 1}
-        {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :palstoja 1}
-        {:otsikko "Päällystys valmistunut" :nimi :valmispvm-paallystys :tyyppi :pvm :palstoja 1}
+        {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm :palstoja 1 :muokattava? (constantly false)}
+        {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :palstoja 1 }
+        {:otsikko "Päällystys valmistunut" :nimi :valmispvm-paallystys :tyyppi :pvm :palstoja 1 :muokattava? (constantly false)}
         {:otsikko "Kohde valmistunut" :nimi :valmispvm-kohde :palstoja 1
-         :vihje (when (and
-                        (:valmispvm-paallystys lomakedata-nyt)
-                        (:valmispvm-kohde lomakedata-nyt)
-                        (= :aloitettu (:tila lomakedata-nyt)))
-                  "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
-         :tyyppi :pvm
-         :validoi [[:toinen-arvo-annettu-ensin :valmispvm-paallystys
-                    "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
+         :tyyppi :pvm :muokattava? (constantly false)}
         {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
          :hae #(-> % laske-hinta :toteuman-kokonaishinta)
          :fmt fmt/euro-opt :tyyppi :numero
