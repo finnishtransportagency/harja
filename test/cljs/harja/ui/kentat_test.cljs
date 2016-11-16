@@ -152,6 +152,10 @@
      (is (= "15.08.2010" (val)))
      (is (pvm/sama-pvm? (pvm/->pvm "15.8.2010") @data)))))
 
+(def +tie20-osa1-alkupiste+ {:type :point, :coordinates [426938.1807000004 7212765.558800001]})
+(def +tr-vastaukset+ {{:alkuosa 1, :numero 20, :alkuetaisyys 0}
+                      [+tie20-osa1-alkupiste+]})
+
 (deftest tierekisteriosoite
   (let [data (r/atom nil)
         sijainti (r/atom nil)
@@ -169,8 +173,7 @@
                          :hae-tr-viivaksi
                          (fn [payload]
                            (.log js/console ":hae-tr-viivaksi => " payload)
-                           {:virhe "bar"}))
-        ]
+                           (get +tr-vastaukset+ payload)))]
     (komponenttitesti
      [kentat/tee-kentta {:tyyppi :tierekisteriosoite :sijainti sijainti} data]
 
@@ -178,4 +181,15 @@
      (is (every? str/blank? (map arvo tr-kentat)))
      (aseta! :tr-numero "20")
      --
-     (is (= "20" (arvo :tr-numero))))))
+     (is (= "20" (arvo :tr-numero)))
+
+     "Tien sekä alkuosan ja -etäisyyden asettaminen hakee osoitteen"
+     (aseta! :tr-alkuosa "1")
+     (aseta! :tr-alkuetaisyys "0")
+     --
+     (u/blur (tr-sel :tr-alkuetaisyys))
+     --
+     (<! hae-tr-viivaksi)
+     --
+     (is (= @sijainti +tie20-osa1-alkupiste+) "Sijainti on päivittynyt oikein")
+     )))
