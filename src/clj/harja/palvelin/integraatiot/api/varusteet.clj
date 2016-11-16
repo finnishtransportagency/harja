@@ -18,7 +18,8 @@
             [harja.tyokalut.merkkijono :as merkkijono]
             [harja.palvelin.integraatiot.tierekisteri.tietolajin-kuvauksen-kasittely :as tr-tietolaji]
             [harja.pvm :as pvm]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [clj-time.core :as t])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
 
@@ -95,15 +96,22 @@
      {:parametri "tilannepvm"
       :tyyppi :date}]))
 
+(defn hae-tietolaji-tunnisteella
+  "Hakee tietolajion tierekisteristä tunnisteen perusteella. Optionaalisesti
+  ottaa sisään myös muutospäivämäärän hakuehdoksi."
+  ([tierekisteri tunniste] (hae-tietolaji* tierekisteri tunniste nil))
+  ([tierekisteri tunniste muutospaivamaara]
+   (let [vastausdata (tierekisteri/hae-tietolajit tierekisteri tunniste muutospaivamaara)
+         ominaisuudet (get-in vastausdata [:tietolaji :ominaisuudet])]
+     (tierekisteri-sanomat/muunna-tietolajin-hakuvastaus
+      vastausdata ominaisuudet))))
+
 (defn hae-tietolaji [tierekisteri parametrit kayttaja]
   (tarkista-tietolajihaun-parametrit parametrit)
   (let [tunniste (get parametrit "tunniste")
         muutospaivamaara (get parametrit "muutospaivamaara")]
     (log/debug "Haetaan tietolajin: " tunniste " kuvaus muutospäivämäärällä: " muutospaivamaara " käyttäjälle: " kayttaja)
-    (let [vastausdata (tierekisteri/hae-tietolajit tierekisteri tunniste muutospaivamaara)
-          ominaisuudet (get-in vastausdata [:tietolaji :ominaisuudet])
-          muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietolajin-hakuvastaus vastausdata ominaisuudet)]
-      muunnettu-vastausdata)))
+    (hae-tietolaji-tunnisteella tierekisteri tunniste muutospaivamaara)))
 
 (defn- muodosta-tietueiden-hakuvastaus [tierekisteri vastausdata]
   {:varusteet
@@ -133,6 +141,7 @@
             :tietolaji {:tunniste tietolaji,
                         :arvot arvot-mappina}}}}))
      (:tietueet vastausdata))})
+
 
 (defn hae-varusteet [tierekisteri parametrit kayttaja]
   (tarkista-tietueiden-haun-parametrit parametrit)
@@ -211,6 +220,36 @@
     (tierekisteri/poista-tietue tierekisteri poistosanoma))
   (tee-kirjausvastauksen-body {:ilmoitukset "Varuste poistettu onnistuneesti"}))
 
+(defn hae-varusteita
+  "Käsittelee UI:lta tulleen varustehaun: hakee joko tunnisteen tai tietolajin ja
+  tierekisteriosoitteen perusteella"
+  [user tierekisteri {:keys [tunniste tierekisteriosoite tietolaji] :as tiedot}]
+  (log/debug "Haetaan varusteita Tierekisteristä: " (pr-str tiedot))
+
+  (cond
+    tunniste
+    (hae-varuste tierekisteri {"tunniste" tunniste} user)
+
+    (and tierekisteriosoite tietolaji)
+    (let [nyt (t/now)
+          tulos (tierekisteri/hae-tietueet
+                 tierekisteri
+                 {:numero (:numero tierekisteriosoite)
+                  :aet (:alkuetaisyys tierekisteriosoite)
+                  :aosa (:alkuosa tierekisteriosoite)
+                  :let (:loppuetaisyys tierekisteriosoite)
+                  :losa (:loppuosa tierekisteriosoite)}
+                 tietolaji
+                 nyt nyt)]
+      (if (:onnistunut tulos)
+        (merge {:onnistunut true}
+               (hae-tietolaji-tunnisteella tierekisteri tietolaji)
+               (muodosta-tietueiden-hakuvastaus tierekisteri tulos))
+        tulos))
+
+    :default
+    {:error "Ei hakuehtoja"}))
+
 (defrecord Varusteet []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki tierekisteri :tierekisteri :as this}]
@@ -259,6 +298,10 @@
     (julkaise-palvelu http :hae-tietolajin-kuvaus
                       (fn [user tietolaji]
                         (:tietolaji (hae-tietolaji tierekisteri {"tunniste" tietolaji} user))))
+
+    (julkaise-palvelu http :hae-varusteita
+                      (fn [user tiedot]
+                        (hae-varusteita user tierekisteri tiedot)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -269,5 +312,6 @@
                      :lisaa-tietue
                      :paivita-tietue
                      :poista-tietue
-                     :hae-tietolajin-kuvaus)
+                     :hae-tietolajin-kuvaus
+                     :hae-varusteita)
     this))
