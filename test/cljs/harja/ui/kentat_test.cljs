@@ -6,10 +6,13 @@
             [cljs.core.async :as async]
             [reagent.core :as r]
             [cljs-react-test.simulate :as sim]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [clojure.string :as str])
   (:require-macros [harja.testutils.macros :refer [komponenttitesti]]))
 
-(t/use-fixtures :each u/komponentti-fixture)
+(t/use-fixtures :each
+  u/komponentti-fixture
+  u/fake-palvelut-fixture)
 
 (deftest valinta
  (let [data (r/atom nil)]
@@ -148,3 +151,31 @@
      --
      (is (= "15.08.2010" (val)))
      (is (pvm/sama-pvm? (pvm/->pvm "15.8.2010") @data)))))
+
+(deftest tierekisteriosoite
+  (let [data (r/atom nil)
+        sijainti (r/atom nil)
+        tr-sel {:tr-numero :input.tr-numero
+                :tr-alkuosa :input.tr-alkuosa
+                :tr-alkuetaisyys :input.tr-alkuetaisyys
+                :tr-loppuosa :input.tr-loppuosa
+                :tr-loppuetaisyys :input.tr-loppuetaisyys}
+        tr-kentat [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]
+        arvo (fn [kentta]
+               (.-value (u/sel1 (tr-sel kentta))))
+        aseta! (fn [kentta arvo]
+                 (u/change (tr-sel kentta) arvo))
+        hae-tr-viivaksi (u/fake-palvelukutsu
+                         :hae-tr-viivaksi
+                         (fn [payload]
+                           (.log js/console ":hae-tr-viivaksi => " payload)
+                           {:virhe "bar"}))
+        ]
+    (komponenttitesti
+     [kentat/tee-kentta {:tyyppi :tierekisteriosoite :sijainti sijainti} data]
+
+     "Alkutilassa kaikki kentät ovat tyhjiä"
+     (is (every? str/blank? (map arvo tr-kentat)))
+     (aseta! :tr-numero "20")
+     --
+     (is (= "20" (arvo :tr-numero))))))
