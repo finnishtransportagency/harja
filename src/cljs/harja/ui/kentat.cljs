@@ -722,13 +722,18 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
         virheet (atom nil)
 
-        alkuperainen-sijainti (atom @sijainti)
+        alkuperainen-sijainti (atom (when sijainti @sijainti))
 
         osoite-ennen-karttavalintaa (atom nil)
         karttavalinta-kaynnissa (atom false)
 
-        keskita-kartta! (fn [sijainti] (when sijainti
-                                         (kartta/keskita-kartta-alueeseen! (harja.geo/extent sijainti))))
+        keskita-kartta! (fn [sijainti]
+                          (when sijainti
+                            (kartta/keskita-kartta-alueeseen! (harja.geo/extent sijainti))))
+
+        ;; Tämä tarvitaan, koska sijainti voi olla wrap eikä oikea
+        ;; atomi, joten se pitää joka updatessa päivittää
+        sijainti-atom (volatile! sijainti)
 
         nayta-kartalla (fn [arvo]
                          (if (or (nil? arvo) (vkm/virhe? arvo))
@@ -749,7 +754,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
       (go-loop []
                (when-let [arvo (<! tr-osoite-ch)]
                  (log "VKM/TR: " (pr-str arvo))
-                 (reset! sijainti
+                 (reset! @sijainti-atom
                          (if-not (= arvo :virhe)
                            (do (nappaa-virhe (nayta-kartalla (piste-tai-eka arvo)))
                                (piste-tai-eka arvo))
@@ -763,9 +768,10 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
        (fn [_ _ {sijainti :sijainti}]
          (when sijainti
            (reset! alkuperainen-sijainti @sijainti)
+           (vreset! sijainti-atom sijainti)
            (nayta-kartalla @sijainti)))}
 
-      (komp/kuuntelija :kartan-koko-vaihdettu #(keskita-kartta! @sijainti))
+      (komp/kuuntelija :kartan-koko-vaihdettu #(keskita-kartta! @(deref sijainti-atom)))
 
       (komp/ulos #(do
                    (log "Lopetetaan TR sijaintipäivitys")
