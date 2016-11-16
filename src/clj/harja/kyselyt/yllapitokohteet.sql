@@ -44,13 +44,8 @@ SELECT
   ypko.sijainti                         AS "kohdeosa_sijainti",
   ypko.yhaid                            AS "kohdeosa_yhaid",
   ypko.toimenpide                       AS "kohdeosa_toimenpide",
-  pi.aloituspvm                         AS "paallystysilmoitus_aloituspvm",
-  pi.valmispvm_paallystys               AS "paallystysilmoitus_valmispvm-paallystys",
-  pi.valmispvm_kohde                    AS "paallystysilmoitus_valmispvm-kohde",
-  pi.takuupvm                           AS "paallystysilmoitus_takuupvm"
-FROM yllapitokohde ypk
+  FROM yllapitokohde ypk
   LEFT JOIN yllapitokohdeosa ypko ON ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE
-  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id AND pi.poistettu IS NOT TRUE
 WHERE
   ypk.urakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
@@ -103,9 +98,6 @@ SELECT
   ypko.sijainti                         AS "kohdeosa_sijainti",
   ypko.yhaid                            AS "kohdeosa_yhaid",
   ypko.toimenpide                       AS "kohdeosa_toimenpide",
-  pi.aloituspvm                         AS "paallystysilmoitus_aloituspvm",
-  pi.valmispvm_paallystys               AS "paallystysilmoitus_valmispvm-paallystys",
-  pi.valmispvm_kohde                    AS "paallystysilmoitus_valmispvm-kohde",
   pi.takuupvm                           AS "paallystysilmoitus_takuupvm"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohdeosa ypko ON ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE

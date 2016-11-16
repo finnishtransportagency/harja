@@ -37,9 +37,6 @@
     (is (nil? (:tiemerkinta-aloitettu (:aikataulu leppajarven-ramppi))))
     (is (nil? (:tiemerkinta-valmis (:aikataulu leppajarven-ramppi))))
     (is (nil? (:kohde-valmis (:aikataulu leppajarven-ramppi))))
-    (is (some? (:aloituspvm (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))
-    (is (nil? (:valmispvm-paallystys (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))
-    (is (nil? (:valmispvm-kohde (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))
     (is (some? (:takuupvm (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))))
 
 (deftest yllapitokohteiden-haku-ei-toimi-ilman-oikeuksia
@@ -63,8 +60,7 @@
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
     ;; Tarkistetaan, että tiedot tallentuivat oikein
-    (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, aloituspvm, valmispvm_kohde,
-                                             takuupvm, valmispvm_paallystys, muutoshinta
+    (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, muutoshinta, tila
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
           ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))]
       ;; Tiedot ovat skeeman mukaiset
@@ -108,10 +104,7 @@
                                   :verkon-sijainti 1}]}
                  true))
       (is (some? (get paallystysilmoitus 1)))
-      (is (some? (get paallystysilmoitus 2)))
-      (is (some? (get paallystysilmoitus 3)))
-      (is (some? (get paallystysilmoitus 4)))
-      (is (== (get paallystysilmoitus 5) 3)))))
+      (is (== (get paallystysilmoitus 2) 3)))))
 
 (deftest paallystysilmoituksen-paivittaminen-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -124,8 +117,7 @@
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
     ;; Tarkistetana, että tiedot tallentuivat oikein
-    (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, aloituspvm, valmispvm_kohde,
-                                             takuupvm, valmispvm_paallystys, muutoshinta, tila
+    (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, muutoshinta, tila
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
           ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))]
       ;; Tiedot ovat skeeman mukaiset
@@ -169,11 +161,7 @@
                                   :verkon-sijainti 1}]}
                  true))
       (is (some? (get paallystysilmoitus 1)))
-      (is (some? (get paallystysilmoitus 2)))
-      (is (some? (get paallystysilmoitus 3)))
-      (is (some? (get paallystysilmoitus 4)))
-      (is (== (get paallystysilmoitus 5) 3))
-      (is (= (get paallystysilmoitus 6) "valmis")))))
+      (is (== (get paallystysilmoitus 2) 3)))))
 
 (deftest paallystysilmoituksen-kirjaaminen-ei-toimi-ilman-oikeuksia
   (let [urakka (hae-muhoksen-paallystysurakan-id)

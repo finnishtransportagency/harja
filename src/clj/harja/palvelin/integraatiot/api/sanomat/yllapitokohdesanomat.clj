@@ -39,10 +39,7 @@
                :tiemerkinta-aloitettu (:tiemerkinta-alku kohde)
                :tiemerkinta-valmis (:tiemerkinta-loppu kohde)
                :kohde-valmis (:kohde-valmis kohde)
-               :paallystysilmoitus {:aloituspvm (:aloituspvm paallystysilmoitus)
-                                    :valmispvm-paallystys (:valmispvm-paallystys paallystysilmoitus)
-                                    :valmispvm-kohde (:valmispvm-kohde paallystysilmoitus)
-                                    :takuupvm (:takuupvm paallystysilmoitus)}}})
+               :paallystysilmoitus {:takuupvm (:takuupvm paallystysilmoitus)}}})
 
 (defn rakenna-kohteet [yllapitokohteet]
   {:yllapitokohteet

@@ -60,11 +60,6 @@
     {:paallystyskohde kohde-id
      :tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila perustiedot)
      :ilmoitustiedot ilmoitustiedot-json
-     :aloituspvm (json/aika-string->java-sql-date (:aloituspvm perustiedot))
-     :valmispvm_paallystys (json/aika-string->java-sql-date
-                             (:valmispvm-paallystys perustiedot))
-     :valmispvm_kohde (json/aika-string->java-sql-date
-                        (:valmispvm-kohde perustiedot))
      :takuupvm (json/aika-string->java-sql-date
                  (:takuupvm perustiedot))
      :muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
@@ -79,11 +74,6 @@
     db
     {:tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila perustiedot)
      :ilmoitustiedot ilmoitustiedot-json
-     :aloituspvm (json/aika-string->java-sql-date (:aloituspvm perustiedot))
-     :valmispvm_paallystys (json/aika-string->java-sql-date
-                             (:valmispvm-paallystys perustiedot))
-     :valmispvm_kohde (json/aika-string->java-sql-date
-                        (:valmispvm-kohde perustiedot))
      :takuupvm (json/aika-string->java-sql-date
                  (:takuupvm perustiedot))
      :muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
