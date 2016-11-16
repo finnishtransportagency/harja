@@ -27,7 +27,8 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.debug :refer [debug]]
             [harja.domain.tierekisteri.varusteet
-             :refer [varusteominaisuus->skeema]])
+             :refer [varusteominaisuus->skeema]
+             :as tierekisteri-varusteet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -132,7 +133,7 @@
     #(e! (v/->TyhjennaValittuToteuma))]
 
    [lomake/lomake
-    {:otsikko "Varustetoteuman tiedot"
+    {:otsikko "Varustetoteuma"
      :muokkaa! #(e! (v/->AsetaToteumanTiedot %))
      :footer-fn (fn [data]
                   (log "DATA: " (pr-str data))
@@ -141,20 +142,44 @@
                    {:disabled (not (lomake/voi-tallentaa? data))}]
                   )}
 
-    [(lomake/ryhma "Toteuman tiedot"
-                    ;; FIXME: lisää toteuman perustiedot...
-                   {:nimi :tietolaji
-                     :otsikko "Varusteen tyyppi"
-                     :tyyppi :valinta
-                     :valinnat (vec varustetiedot/tietolaji->selitys)
-                     :valinta-nayta second
-                     :valinta-arvo first})
+    [(lomake/ryhma
+      "Toteuman tiedot"
+      {:otsikko "Toimenpide"
+       :nimi :toimenpide
+       :tyyppi :valinta
+       :valinnat (keys tierekisteri-varusteet/toimenpiteet)
+       :valinta-nayta tierekisteri-varusteet/toimenpiteet
+       :fmt tierekisteri-varusteet/toimenpiteet}
+
+      {:otsikko (case (:toimenpide varustetoteuma)
+                  :lisays "Lisätty"
+                  :poisto "Poistettu"
+                  :paivitys "Päivitetty"
+                  "Päivämäärä")
+       :nimi :pvm
+       :tyyppi :pvm})
+
+     (lomake/ryhma
+      "Varusteen tunnistetiedot"
+      ;; FIXME: lisää toteuman perustiedot...
+      {:nimi :tietolaji
+       :otsikko "Varusteen tyyppi"
+       :tyyppi :valinta
+       :valinnat (vec varustetiedot/tietolaji->selitys)
+       :valinta-nayta second
+       :valinta-arvo first}
+      {:nimi :tierekisteriosoite
+       :otsikko "Tierekisteriosoite"
+       :tyyppi :tierekisteriosoite
+       :sijainti (r/wrap (:sijainti varustetoteuma)
+                         #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma
+                                                              :sijainti %))))})
 
      (apply lomake/ryhma "Varusteen ominaisuudet"
             (map varusteominaisuus->skeema
                  (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))))]
     varustetoteuma]
-[:span (pr-str (distinct (map (comp :tietotyyppi :ominaisuus)
+   [:span (pr-str (distinct (map (comp :tietotyyppi :ominaisuus)
                                  (:ominaisuudet (:tietolajin-kuvaus varustetoteuma)))))]
    [debug (:tietolajin-kuvaus varustetoteuma)]
    ])

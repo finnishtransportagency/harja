@@ -1,6 +1,10 @@
 (ns harja.domain.tierekisteri.varusteet
   "Tierekisterin Varusteet ja laitteet -teeman tietojen käsittelyä")
 
+(def toimenpiteet {:lisays "Lisäys"
+                   :poisto "Poisto"
+                   :paivitys "Päivitys"})
+
 (defmulti varusteominaisuus->skeema
   "Muodostaa lomake/grid tyyppisen kentän skeeman varusteen ominaisuuden kuvauksen perusteella.
   Dispatch tapahtuu ominaisuuden tietotyypin perusteella."
