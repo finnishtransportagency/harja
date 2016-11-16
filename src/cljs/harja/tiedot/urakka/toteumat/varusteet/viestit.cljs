@@ -26,3 +26,10 @@
 
 ;; Tietolajin vaihtaminen aiheuttaa sen skeeman hakemisen palvelimelta
 (defrecord TietolajinKuvaus [tietolaji kuvaus])
+
+;; Päivittää varustehaun hakuehdot
+(defrecord AsetaVarusteidenHakuehdot [hakuehdot])
+;; Suorittaa haun
+(defrecord HaeVarusteita [])
+(defrecord VarusteHakuTulos [tietolaji varusteet])
+(defrecord VarusteHakuEpaonnistui [virhe])

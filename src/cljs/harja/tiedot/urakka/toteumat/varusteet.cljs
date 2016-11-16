@@ -39,7 +39,15 @@
          :karttataso nil
 
          ;; Valittu varustetoteuma
-         :varustetoteuma nil}))
+         :varustetoteuma nil
+
+         ;; Varustehaun hakuehdot ja tulokset
+         :varustehaku {:hakuehdot {:haku-kaynnissa? false}
+
+                       ;; Tällä hetkellä näytettävä tietolaji
+                       ;; ja varusteet
+                       :tietolaji nil
+                       :varusteet nil}}))
 
 (defn- hae [{valinnat :valinnat toteumahaku-id :toteumahaku-id :as app}]
   (when toteumahaku-id
@@ -176,7 +184,38 @@
     ;; toteuman tietolaji on sama kuin toteumassa.
     (if (= tietolaji (:tietolaji toteuma))
       (assoc-in app [:varustetoteuma :tietolajin-kuvaus] kuvaus)
-      app)))
+      app))
+
+  v/AsetaVarusteidenHakuehdot
+  (process-event [{ehdot :hakuehdot} app]
+    (assoc-in app [:varustehaku :hakuehdot] ehdot))
+
+  v/HaeVarusteita
+  (process-event [_ {varustehaku :varustehaku :as app}]
+    (let [tulos! (t/send-async! v/map->VarusteHakuTulos)
+          virhe! (t/send-async! v/->VarusteHakuEpaonnistui)]
+      (go
+        (let [vastaus (<! (k/post! :hae-varusteita (get-in app [:varustehaku :hakuehdot])))]
+          (if (or (k/virhe? vastaus)
+                  (not (:onnistunut vastaus)))
+            (virhe! vastaus)
+            (tulos! vastaus))))
+      (-> app
+          (assoc-in [:varustehaku :varusteet] nil)
+          (assoc-in [:varustehaku :hakuehdot :haku-kaynnissa?] false))))
+
+  v/VarusteHakuTulos
+  (process-event [{tietolaji :tietolaji varusteet :varusteet} app]
+    (-> app
+        (assoc-in [:varustehaku :varusteet] varusteet)
+        (assoc-in [:varustehaku :tietolaji] tietolaji)
+        (assoc-in [:varustehaku :hakuehdot :haku-kaynnissa?] false)))
+
+  v/VarusteHakuEpaonnistui
+  (process-event [{virhe :virhe} app]
+    (log "VIRHE HAETTAESSA: " (pr-str virhe))
+    app)
+  )
 
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))

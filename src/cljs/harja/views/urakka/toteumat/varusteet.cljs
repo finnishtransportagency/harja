@@ -127,6 +127,43 @@
        [napit/uusi "Lisää toteuma"
         #(e! (v/->UusiVarusteToteuma))])]))
 
+(defn varustehaku-ehdot [e! hakuehdot]
+  [lomake/lomake
+   {:otsikko "Hae varusteita Tierekisteristä"
+    :muokkaa! #(e! (v/->AsetaVarusteidenHakuehdot %))
+    :footer-fn (fn [rivi]
+                 [napit/yleinen "Hae Tierekisteristä"
+                  #(e! (v/->HaeVarusteita))
+                  {:disabled (:haku-kaynnissa? hakuehdot)
+                   :ikoni (ikonit/livicon-search)}])}
+
+   [{:nimi :tietolaji
+     :otsikko "Varusteen tyyppi"
+     :tyyppi :valinta
+     :pakollinen? true
+     :valinnat (vec varustetiedot/tietolaji->selitys)
+     :valinta-nayta second
+     :valinta-arvo first}
+    {:nimi :tierekisteriosoite
+     :otsikko "Tierekisteriosoite"
+     :tyyppi :tierekisteriosoite}
+    {:nimi :tunniste
+     :otsikko "Varusteen tunniste"
+     :tyyppi :string}]
+   hakuehdot])
+
+(defn varustehaku-varusteet [e! varusteet]
+  [debug varusteet])
+
+(defn varustehaku
+  "Komponentti, joka näyttää lomakkeen varusteiden hakemiseksi tierekisteristä
+  sekä haun tulokset."
+  [e! hakuehdot tulokset]
+  [:div.varustehaku
+   [varustehaku-ehdot e! hakuehdot]
+   [varustehaku-varusteet e! tulokset]])
+
+
 (defn varustetoteumalomake [e! varustetoteuma]
   [:span.varustetoteumalomake
    [napit/takaisin "Takaisin toteumaluetteloon"
@@ -194,14 +231,18 @@
                     (fn [_ i] (e! (v/->ValitseToteuma i))))
    (fn [e! {nykyiset-valinnat :valinnat
             toteumat :toteumat
-            toteuma :varustetoteuma}]
+            toteuma :varustetoteuma
+            varustehaun-tiedot :varustehaku}]
      [:span
       [kartta/kartan-paikka]
       (if toteuma
         [varustetoteumalomake e! toteuma]
         [:span
          [valinnat e! nykyiset-valinnat]
-         [toteumataulukko e! (:tyyppi nykyiset-valinnat) toteumat]])])))
+         [toteumataulukko e! (:tyyppi nykyiset-valinnat) toteumat]
+         [varustehaku e!
+          (:hakuehdot varustehaun-tiedot)
+          (:varusteet varustehaun-tiedot)]])])))
 
 (defn varusteet []
   [tuck varustetiedot/varusteet varusteet*])
