@@ -142,7 +142,11 @@ Seuraavat optiot ovat mahdollisia:
                                                        (if (naytettava-kk-paiva? paiva)
                                                          "pvm-naytettava-kk-paiva" "pvm-muu-kk-paiva"))
 
-                                           :on-click #(do (.stopPropagation %) (valitse paiva) nil)}
+                                           :on-click #(do
+                                                       (log "---> NY LÄHTEE")
+                                                       (.stopPropagation %)
+
+                                                          (valitse paiva) nil)}
                  (t/day paiva)])])]
           [:tbody.pvm-tanaan-text
            [:tr [:td {:colSpan 7}

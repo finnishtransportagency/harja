@@ -95,6 +95,7 @@
   ([valittu-aikavali-atom {:keys [nayta-otsikko? aikavalin-rajoitus
                                   aloitusaika-pakota-suunta paattymisaika-pakota-suunta
                                   lomake? kellonajat?]}]
+   (log "---> valittu aikavali:" (pr-str @valittu-aikavali-atom))
    (let [kenttatyyppi (if kellonajat? :pvm-aika :pvm)]
      [:span {:class (if lomake?
                      "label-ja-aikavali-lomake"
@@ -107,6 +108,7 @@
       [tee-kentta {:tyyppi kenttatyyppi :pakota-suunta aloitusaika-pakota-suunta}
        (r/wrap (first @valittu-aikavali-atom)
                (fn [uusi-arvo]
+                 (log "---> uusi alkuarvo:" (pr-str uusi-arvo))
                  (let [uusi-arvo (if kellonajat? uusi-arvo (pvm/paivan-alussa-opt uusi-arvo))]
                    (if aikavalin-rajoitus
                      (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [uusi-arvo (second %)] aikavalin-rajoitus :alku))))
@@ -116,6 +118,7 @@
       [tee-kentta {:tyyppi kenttatyyppi :pakota-suunta paattymisaika-pakota-suunta}
        (r/wrap (second @valittu-aikavali-atom)
                (fn [uusi-arvo]
+                 (log "---> uusi loppuarvo:" (pr-str uusi-arvo))
                  (let [uusi-arvo (if kellonajat? uusi-arvo (pvm/paivan-lopussa-opt uusi-arvo))]
                    (if aikavalin-rajoitus
                      (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [(first %) uusi-arvo] aikavalin-rajoitus :loppu))))
