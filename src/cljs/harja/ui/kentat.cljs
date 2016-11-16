@@ -693,7 +693,10 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
 (defn tr-kentan-elementti [lomake? kartta? muuta! blur placeholder value key disabled?]
   [:td
-   [:input.tierekisteri {:class       (str (when lomake? "form-control ") (when disabled? "disabled"))
+   [:input.tierekisteri {:class       (str
+                                       "tr-" (name key) " "
+                                       (when lomake? "form-control ")
+                                       (when disabled? "disabled "))
                          :size        5 :max-length 10
                          :placeholder placeholder
                          :value       value
