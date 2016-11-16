@@ -153,8 +153,20 @@
      (is (pvm/sama-pvm? (pvm/->pvm "15.8.2010") @data)))))
 
 (def +tie20-osa1-alkupiste+ {:type :point, :coordinates [426938.1807000004 7212765.558800001]})
-(def +tr-vastaukset+ {{:alkuosa 1, :numero 20, :alkuetaisyys 0}
-                      [+tie20-osa1-alkupiste+]})
+(def +tr-vastaukset+
+  {{:alkuosa 1, :numero 20, :alkuetaisyys 0}
+   [+tie20-osa1-alkupiste+]
+
+   {:alkuosa 1 :numero 20 :alkuetaisyys 0 :loppuosa 1 :loppuetaisyys 100}
+   [{:type :multiline,
+     :lines [{:type :line,
+              :points [[426938.1807000004 7212765.558800001]
+                       [426961.68209999986 7212765.378899999]
+                       [426978.40299999993 7212763.941300001]
+                       [426991.6160000004 7212762.211199999]
+                       [427003.70409999974 7212760.276799999]
+                       [427016.42399999965 7212757.082199998]
+                       [427036.6384315559 7212751.272574459]]}]}]})
 
 (deftest tierekisteriosoite
   (let [data (r/atom nil)
@@ -192,4 +204,13 @@
      (<! hae-tr-viivaksi)
      --
      (is (= @sijainti +tie20-osa1-alkupiste+) "Sijainti on päivittynyt oikein")
-     )))
+
+     "Loppuosan ja -etäisyyden täyttäminen hakee koko osoitteen"
+     (aseta! :tr-loppuosa "1")
+     (aseta! :tr-loppuetaisyys "100")
+     --
+     (u/blur (tr-sel :tr-loppuetaisyys))
+     --
+     (<! hae-tr-viivaksi)
+     --
+     (is (= (:type @sijainti) :multiline) "Sijainti haettu uudestaan"))))
