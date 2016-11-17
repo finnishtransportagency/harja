@@ -126,35 +126,35 @@
                           [[:pvm-toisen-pvmn-jalkeen valmistumispvm
                             "Käsittely ei voi olla ennen valmistumista"]])]
     [lomake/lomake
-    {:otsikko      otsikko
-     :muokkaa!     muokkaa!
-     :voi-muokata? muokattava?}
-    [{:otsikko     "Käsitelty"
-      :nimi        :kasittelyaika
-      :pakollinen? (when (:paatos osa) true)
-      :tyyppi      :pvm
-      :validoi     pvm-validoinnit}
+     {:otsikko otsikko
+      :muokkaa! muokkaa!
+      :voi-muokata? muokattava?}
+     [{:otsikko "Käsitelty"
+       :nimi :kasittelyaika
+       :pakollinen? (when (:paatos osa) true)
+       :tyyppi :pvm
+       :validoi pvm-validoinnit}
 
-     {:otsikko       "Päätös"
-      :nimi          :paatos
-      :tyyppi        :valinta
-      :valinnat      [:hyvaksytty :hylatty]
-      :validoi       [[:ei-tyhja "Anna päätös"]]
-      :valinta-nayta #(cond
-                       % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %)
-                       muokattava? "- Valitse päätös -"
-                       :default "-")
-      :palstoja      1}
+      {:otsikko "Päätös"
+       :nimi :paatos
+       :tyyppi :valinta
+       :valinnat [:hyvaksytty :hylatty]
+       :validoi [[:ei-tyhja "Anna päätös"]]
+       :valinta-nayta #(cond
+                        % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %)
+                        muokattava? "- Valitse päätös -"
+                        :default "-")
+       :palstoja 1}
 
-     (when (:paatos osa)
-       {:otsikko    "Selitys"
-        :nimi       :perustelu
-        :tyyppi     :text
-        :koko       [60 3]
-        :pituus-max 2048
-        :palstoja   2
-        :validoi    [[:ei-tyhja "Anna päätöksen selitys"]]})]
-    osa]))
+      (when (:paatos osa)
+        {:otsikko "Selitys"
+         :nimi :perustelu
+         :tyyppi :text
+         :koko [60 3]
+         :pituus-max 2048
+         :palstoja 2
+         :validoi [[:ei-tyhja "Anna päätöksen selitys"]]})]
+     osa]))
 
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis.
@@ -232,8 +232,7 @@
                          (vec (grid/filteroi-uudet-poistetut uusi-arvo)))))))
 
 (defn paallystysilmoitus-perustiedot [urakka {:keys [tila] :as lomakedata-nyt} lukittu? kirjoitusoikeus? muokkaa!]
-  (let [valmis-kasiteltavaksi? (and (= tila :valmis)
-                                    (not (= tila :aloitettu)))]
+  (let [nayta-kasittelyosiot? (or (= tila :valmis) (= tila :lukittu))]
     [:div.row
      [:div.col-md-6
       [:h3 "Perustiedot"]
@@ -249,7 +248,7 @@
          :muokattava? (constantly false)
          :palstoja 2}
         {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm :palstoja 1 :muokattava? (constantly false)}
-        {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :palstoja 1 }
+        {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :palstoja 1}
         {:otsikko "Päällystys valmistunut" :nimi :valmispvm-paallystys :tyyppi :pvm :palstoja 1 :muokattava? (constantly false)}
         {:otsikko "Kohde valmistunut" :nimi :valmispvm-kohde :palstoja 1
          :tyyppi :pvm :muokattava? (constantly false)}
@@ -279,11 +278,11 @@
                                                     #(muokkaa! assoc :uusi-kommentti %))}
                            (:kommentit lomakedata-nyt)])})]
        lomakedata-nyt]
-      (when valmis-kasiteltavaksi?
+      (when nayta-kasittelyosiot?
         [asiatarkastus urakka lomakedata-nyt lukittu? muokkaa!])]
 
      [:div.col-md-6
-      (when valmis-kasiteltavaksi?
+      (when nayta-kasittelyosiot?
         [:div
          [kasittely urakka lomakedata-nyt lukittu? muokkaa!]])]]))
 
