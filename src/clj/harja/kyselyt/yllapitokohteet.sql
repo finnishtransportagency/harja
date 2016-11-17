@@ -22,6 +22,7 @@ SELECT
   ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
   ypk.tr_ajorata                        AS "tr-ajorata",
   ypk.tr_kaista                         AS "tr-kaista",
+  ypk.aikataulu_kohde_alku              AS "kohde-alku",
   ypk.aikataulu_paallystys_alku         AS "paallystys-alku",
   ypk.aikataulu_paallystys_loppu        AS "paallystys-loppu",
   ypk.valmis_tiemerkintaan              AS "valmis-tiemerkintaan",
@@ -75,6 +76,7 @@ SELECT
   ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
   ypk.tr_ajorata                        AS "tr-ajorata",
   ypk.tr_kaista                         AS "tr-kaista",
+  ypk.aikataulu_kohde_alku              AS "kohde-alku",
   ypk.aikataulu_paallystys_alku         AS "paallystys-alku",
   ypk.aikataulu_paallystys_loppu        AS "paallystys-loppu",
   ypk.valmis_tiemerkintaan              AS "valmis-tiemerkintaan",
@@ -324,6 +326,7 @@ SELECT
   nimi,
   urakka,
   sopimus,
+  aikataulu_kohde_alku           AS "aikataulu-kohde-alku",
   aikataulu_paallystys_alku      AS "aikataulu-paallystys-alku",
   aikataulu_paallystys_loppu     AS "aikataulu-paallystys-loppu",
   aikataulu_tiemerkinta_takaraja AS "aikataulu-tiemerkinta-takaraja",
@@ -396,6 +399,7 @@ WHERE (loppupvm IS NULL OR loppupvm >= NOW())
 -- Tallentaa ylläpitokohteen aikataulun
 UPDATE yllapitokohde
 SET
+  aikataulu_kohde_alku         = :aikataulu_kohde_alku,
   aikataulu_paallystys_alku    = :aikataulu_paallystys_alku,
   aikataulu_paallystys_loppu   = :aikataulu_paallystys_loppu,
   aikataulu_kohde_valmis       = :aikataulu_kohde_valmis,
@@ -511,6 +515,7 @@ SELECT
   bitumi_indeksi,
   kaasuindeksi,
   poistettu,
+  aikataulu_kohde_alku,
   aikataulu_paallystys_alku,
   aikataulu_paallystys_loppu,
   aikataulu_tiemerkinta_alku,
@@ -590,6 +595,7 @@ WHERE id = :id;
 -- Päivittää ylläpitokohteen aikataulutiedot
 UPDATE yllapitokohde
 SET
+  aikataulu_kohde_alku           = :kohde_alku,
   aikataulu_paallystys_alku      = :paallystys_alku,
   aikataulu_paallystys_loppu     = :paallystys_loppu,
   aikataulu_kohde_valmis         = :kohde_valmis,

@@ -145,6 +145,10 @@
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :tyyppi :numero :leveys 4
             :muokattava? (constantly false)}
+           (when (= (:nakyma optiot) :paallystys) ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
+             {:otsikko "Kohde a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-kohde-alku
+              :tyyppi :pvm :fmt pvm/pvm-aika-opt
+              :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))})
            ; FIXME Tallennus (ja validointi) epäonnistuu jos kellonaikaa ei anna
            {:otsikko "Pääl\u00ADlys\u00ADtys a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-paallystys-alku
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
@@ -158,7 +162,7 @@
                        "Valmistuminen ei voi olla ennen aloitusta."]]}
            (when (= (:nakyma optiot) :paallystys)
              {:otsikko "Tie\u00ADmer\u00ADkin\u00ADnän suo\u00ADrit\u00ADta\u00ADva u\u00ADrak\u00ADka"
-              :leveys 13 :nimi :suorittava-tiemerkintaurakka
+              :leveys 10 :nimi :suorittava-tiemerkintaurakka
               :tyyppi :valinta
               :fmt (fn [arvo]
                      (:nimi (some
