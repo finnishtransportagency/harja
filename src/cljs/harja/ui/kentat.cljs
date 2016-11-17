@@ -656,7 +656,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                                                   (aseta!))
                                                     :pvm     naytettava-pvm}])]
               [:td
-               [:input {:class       (str (when lomake? "form-control")
+               [:input.aika {:class       (str (when lomake? "form-control")
                                           (when (and (not (re-matches +aika-regex+ nykyinen-aika-teksti))
                                                      (pvm/->pvm nykyinen-pvm-teksti))
                                             " puuttuva-arvo"))

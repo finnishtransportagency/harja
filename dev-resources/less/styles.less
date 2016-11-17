@@ -211,17 +211,22 @@ tr.uusitehtavakoodi td {
   max-width: 100%;
   width: @leveys;
   .aikavali-valinnat {
-    text-align: center;
+    text-align: left;
   }
   .pvm-kentta {
-    width: 46%;
+    width: 30%;
   }
   .pvm-valiviiva-wrap {
     display: inline-block;
     height: @input-korkeus;
     text-align: center;
     width: 7%;
-
+  }
+  .aika {
+    height: @valintakontrollin-korkeus;
+    max-width: 100%;
+    position: relative;
+    top: 1px;
   }
   .pvm {
     height: @valintakontrollin-korkeus;

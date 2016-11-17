@@ -113,7 +113,7 @@
                      (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [uusi-arvo (second %)] aikavalin-rajoitus :alku))))
                      (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [uusi-arvo (second %)] :alku))
                  (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]
-      [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
+      [:span.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
       [tee-kentta {:tyyppi kenttatyyppi :pakota-suunta paattymisaika-pakota-suunta}
        (r/wrap (second @valittu-aikavali-atom)
                (fn [uusi-arvo]
@@ -124,7 +124,7 @@
                      (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [(first %) uusi-arvo] :loppu))
                  (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]]])))
 
-(defn ennaltamaaratty-tai-vapaa-aikavali [valittu-aikavali-atom aikavali-valinnat]
+(defn ennaltamaaratty-tai-vapaa-aikavali [valittu-aikavali-atom aikavali-valinnat {:keys [kellonajat?]}]
   (let [[valittu-aikavali-alku-nyt valittu-aikavali-loppu-nyt :as valittu-aikavali-nyt] @valittu-aikavali-atom
         vapaa-aikavali? (atom false)
         alkuvalinta (or
@@ -176,8 +176,7 @@
                                   :valitse-fn valitse-aikavali}
              aikavali-valinnat]]
            (when @vapaa-aikavali?
-             ;; todo: ota parametrinä :kellonajat? sisään
-             [aikavali valittu-aikavali-atom {:kellonajat? true}])])))))
+             [aikavali valittu-aikavali-atom {:kellonajat? kellonajat?}])])))))
 
 (defn- toimenpideinstanssi-fmt
   [tpi]

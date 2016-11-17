@@ -19,7 +19,7 @@
             [harja.ui.napit :refer [palvelinkutsu-nappi] :as napit]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.ui.lomake :as lomake]
-            [harja.ui.debug :refer [debug] ]
+            [harja.ui.debug :refer [debug]]
             [harja.ui.protokollat :as protokollat]
             [harja.fmt :as fmt]
             [harja.tiedot.navigaatio :as nav]
@@ -42,7 +42,7 @@
                          :aikaleima? true}
                         {:nimi "12 tuntia"
                          :aikavali-fn #(vector (pvm/tuntia-sitten 12) (pvm/nyt))
-                         :aikaleima? true }
+                         :aikaleima? true}
                         {:nimi "1 päivä"
                          :aikavali-fn #(vector (pvm/paivaa-sitten 1) (pvm/nyt))
                          :aikaleima? false}
@@ -100,15 +100,19 @@
    {:luokka :horizontal
     :muokkaa! #(e! (v/->AsetaValinnat %))}
 
-   [{:nimi :aikavali
-     :otsikko "Saapunut aikavälillä"
-     :tyyppi :komponentti
-     :komponentti (fn [_]
-                    [valinnat/ennaltamaaratty-tai-vapaa-aikavali
-                     (r/wrap aikavali
-                             #(e! (v/->AsetaValinnat (merge valinnat-nyt {:aikavali %}))))
-                     aikavali-valinnat])}
-
+   [(lomake/ryhma
+      {:rivi? true}
+      {:nimi :aikavali
+       :otsikko "Saapunut aikavälillä"
+       :tyyppi :komponentti
+       :komponentti (fn [_]
+                      [valinnat/ennaltamaaratty-tai-vapaa-aikavali
+                       (r/wrap aikavali
+                               #(e! (v/->AsetaValinnat (merge valinnat-nyt {:aikavali %}))))
+                       aikavali-valinnat
+                       {:kellonajat? true}])}
+      {:nimi :alku :otsikko "Alku" :tyyppi :pvm-aika}
+      {:nimi :loppu :otsikko "Loppu" :tyyppi :pvm-aika})
 
     {:nimi :hakuehto :otsikko "Hakusana"
      :placeholder "Hae tekstillä..."
