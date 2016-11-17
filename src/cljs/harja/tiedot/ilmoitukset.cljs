@@ -22,6 +22,12 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
+(def aikavalit [{:nimi "1 tunti sitten" :tunteja 1}
+                {:nimi "12 tuntia sitten" :tunteja 12}
+                {:nimi "1 päivä sitten" :tunteja 24}
+                {:nimi "1 viikko sitten" :tunteja 168}
+                {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
+
 ;; Valinnat jotka riippuvat ulkoisista atomeista
 (defonce valinnat
          (reaction
@@ -53,7 +59,10 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                            :vain-myohassa? false
                            :aloituskuittauksen-ajankohta :kaikki
                            :ilmoittaja-nimi ""
-                           :ilmoittaja-puhelin ""}
+                           :ilmoittaja-puhelin ""
+                           :vakioaikavali (first aikavalit)
+                           :alkuaika (pvm/nyt)
+                           :loppaika (pvm/tuntia-sitten(pvm/nyt))}
                 :kuittaa-monta nil}))
 
 (defn- jarjesta-ilmoitukset [tulos]
