@@ -100,11 +100,11 @@
         muutos-ja-lisatyot (if kayta-ryhmittelya?
                              muutos-ja-lisatyot-kannasta
                              (reverse (sort-by (juxt (comp :id :urakka) :alkanut) muutos-ja-lisatyot-kannasta)))
-
-        muutos-ja-lisatyot-hyn-mukaan (sort-by #(or (:id (first %)) 100000)
+        sort-avain (if (= konteksti :koko-maa) :elynumero
+                     (if (= konteksti :hallintayksikko) :nimi :id))
+        muutos-ja-lisatyot-hyn-mukaan (sort-by #(or (sort-avain (first %)) 100000)
                                                (seq (group-by :hallintayksikko
                                                               muutos-ja-lisatyot)))
-
         raportin-nimi "Muutos- ja lisätöiden raportti"
         tpi-nimi (if toimenpide-id
                    (:nimi (first (toimenpiteet-q/hae-tuote-kolmostason-toimenpidekoodilla db {:id toimenpide-id})))
@@ -182,10 +182,13 @@
                                  (reduce (fn [summa toteuma]
                                            (assoc-in
                                              (assoc summa :tyyppi tyyppi
-                                                          :korotus (+ (:korotus summa)
-                                                                      (:korotus toteuma)))
-                                             [:tehtava :summa] (+ (get-in summa [:tehtava :summa])
-                                                                  (get-in toteuma [:tehtava :summa]))))
+                                                          :korotus (when (and (:korotus summa) (:korotus toteuma))
+                                                                     (+ (:korotus summa)
+                                                                        (:korotus toteuma))))
+                                             [:tehtava :summa] (when (and (get-in summa [:tehtava :summa])
+                                                                          (get-in toteuma [:tehtava :summa]))
+                                                                 (+ (get-in summa [:tehtava :summa])
+                                                                    (get-in toteuma [:tehtava :summa])))))
                                          {:tehtava {:summa 0} :korotus 0}
                                          toteumat))
                                kokomaa-yhteensa [(str alueen-nimi " yhteensä")

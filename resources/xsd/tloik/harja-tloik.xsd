@@ -251,6 +251,8 @@
             <xs:enumeration value="kevyenLiikenteenVaylatOvatjaatymassa" />
             <xs:enumeration value="tietOvatjaisiaJamarkia" />
             <xs:enumeration value="kiertotienKunnossapito" />
+            <xs:enumeration value="jarjestelmanTilanTarkistus" />
+            <xs:enumeration value="jarjestelmanVikaTila" />
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="urakkatyyppi">
