@@ -59,7 +59,6 @@
                                 (doseq [f component-will-unmount]
                                   (f this)))})))
 
-
 (defn kuuntelija
   "Komponentti mixin tapahtuma-aiheiden kuuntelemiseen.
   Toteuttaa component-did-mount ja component-will-unmount elinkaarimetodit.

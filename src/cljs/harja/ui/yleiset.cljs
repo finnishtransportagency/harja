@@ -285,22 +285,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                 ^{:key (hash vaihtoehto)}
                 [lista-item vaihtoehto])))]])))))
 
-(defn ikoni-ja-teksti [ikoni teksti]
-  [:span
-   ikoni
-   [:span (str " " teksti)]])
-
-(defn ikoni-ja-elementti [ikoni elementti]
-  [:span
-   ikoni
-   [:span " "]
-   elementti])
-
-(defn teksti-ja-ikoni [teksti ikoni]
-  [:span
-   [:span (str teksti " ")]
-   ikoni])
-
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko otsikko]
@@ -515,7 +499,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    [:div {:class
           (str "yleinen-pikkuvihje " (or luokka ""))}
     [:div.vihjeen-sisalto
-     (ikoni-ja-teksti (harja.ui.ikonit/livicon-info-sign) teksti)]]))
+     (ikonit/ikoni-ja-teksti (harja.ui.ikonit/livicon-info-sign) teksti)]]))
 
 (defn vihje-elementti
   ([elementti] (vihje-elementti elementti nil))
@@ -523,7 +507,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    [:div {:class
           (str "yleinen-pikkuvihje " (or luokka ""))}
     [:div.vihjeen-sisalto
-     (ikoni-ja-elementti (harja.ui.ikonit/livicon-info-sign) elementti)]]))
+     (ikonit/ikoni-ja-elementti (harja.ui.ikonit/livicon-info-sign) elementti)]]))
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 

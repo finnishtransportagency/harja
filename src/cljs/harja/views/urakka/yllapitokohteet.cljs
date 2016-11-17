@@ -14,7 +14,7 @@
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.paallystysilmoitus :as pot]
             [harja.tiedot.urakka.yhatuonti :as yha]
-            [harja.ui.yleiset :as yleiset]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.yllapitokohteet :as tiedot]
@@ -290,12 +290,12 @@
               {:disabled (= kohdetyyppi :sora)
                :on-click
                #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))}
-              (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]
+              (ikonit/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]
              [:button.nappi-kielteinen.btn-xs
               {:disabled (= 1 (count kohdeosat-nyt))
                :on-click
                #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat-nyt (inc index)))}
-              (yleiset/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")]]))
+              (ikonit/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")]]))
 
         pituus (fn [osan-pituus tieosa]
                  (tr/laske-tien-pituus osan-pituus tieosa))]
@@ -388,7 +388,7 @@
            (when kohdeosat-paivitetty-fn
              [(fn []
                 [napit/palvelinkutsu-nappi
-                 [yleiset/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
+                 [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
                  (let [sijainnit @tr-sijainnit
                        osat (into []
                                   (map (fn [osa]
@@ -419,7 +419,7 @@
                               (fmt/pituus (reduce + 0 (keep (partial pituus osan-pituus)
                                                             (vals @grid-data))))
                               (when (= kohdetyyppi :sora)
-                                [:p (yleiset/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])])}
+                                [:p (ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])])}
           skeema
 
 
