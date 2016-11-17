@@ -588,7 +588,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
       {:component-will-receive-props
        (fn [this _ {:keys [focus] :as s} data]
          (when-not focus
-           (reset! auki false))
+           ;; todo: tämä sulkeminen pitää jotenki korjata. tarkistettava voiko tätä poistaa
+           (log "---> s:" (pr-str s) )
+           #_ (reset! auki false))
          (swap! pvm-teksti #(if-let [p @data]
                              (pvm/pvm p)
                              %)))}

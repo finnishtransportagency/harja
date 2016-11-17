@@ -95,7 +95,6 @@
   ([valittu-aikavali-atom {:keys [nayta-otsikko? aikavalin-rajoitus
                                   aloitusaika-pakota-suunta paattymisaika-pakota-suunta
                                   lomake? kellonajat?]}]
-   (log "---> valittu aikavali:" (pr-str @valittu-aikavali-atom))
    (let [kenttatyyppi (if kellonajat? :pvm-aika :pvm)]
      [:span {:class (if lomake?
                      "label-ja-aikavali-lomake"
