@@ -2,19 +2,25 @@
   (:require [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]
-            [harja.tyokalut.merkkijono :as merkkijono]))
+            [harja.tyokalut.merkkijono :as merkkijono]
+            [clojure.string :as str]))
 
 (def +xsd-polku+ "xsd/tloik/")
 
 (defn tee-xml-sanoma [sisalto]
   (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))
 
+(defn urakkatyyppi [urakkatyyppi]
+  (case (str/lower-case urakkatyyppi)
+    "siltakorjaus" "silta"
+    urakkatyyppi))
+
 (defn rakenna-urakka [urakka]
   (when urakka
     [:urakka
      [:id (:id urakka)]
      [:nimi (merkkijono/leikkaa 256 (:nimi urakka))]
-     [:tyyppi (:tyyppi urakka)]]))
+     [:tyyppi (urakkatyyppi (:tyyppi urakka))]]))
 
 (defn rakenna-urakoitsija [urakka]
   (when urakka

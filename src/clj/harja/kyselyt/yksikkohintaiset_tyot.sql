@@ -42,10 +42,10 @@ WHERE urakka = :urakka AND sopimus = :sopimus AND tehtava = :tehtava
 INSERT INTO yksikkohintainen_tyo
 (maara, yksikko, yksikkohinta,
  urakka, sopimus, tehtava,
- alkupvm, loppupvm)
+ alkupvm, loppupvm, luoja)
 VALUES (:maara, :yksikko, :yksikkohinta,
         :urakka, :sopimus, :tehtava,
-        :alkupvm, :loppupvm);
+        :alkupvm, :loppupvm, :luoja);
 
 -- name: merkitse-kustannussuunnitelmat-likaisiksi!
 -- Merkitsee yksikköhintaisia töitä vastaavat kustannussuunnitelmat likaisiksi: lähtetetään seuraavassa päivittäisessä lähetyksessä

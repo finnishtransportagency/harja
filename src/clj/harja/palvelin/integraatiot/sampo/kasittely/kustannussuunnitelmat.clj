@@ -77,7 +77,7 @@
     "43020000"
     ; Hoitotuotteet 110 - 150, 536
     (if (nil? tuotenumero)
-      (let [viesti (format "Tuotenumero on tyhjä. LPK-tilinnumeroa ei voi päätellä. Kustannussuunnitelman lähetys epäonnistui (numero %s).")]
+      (let [viesti (format "Tuotenumero on tyhjä. LPK-tilinnumeroa ei voi päätellä. Kustannussuunnitelman lähetys epäonnistui (numero %s)." numero)]
         (log/error viesti)
         (throw+ {:type :virhe-sampo-kustannussuunnitelman-lahetyksessa
                  :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella

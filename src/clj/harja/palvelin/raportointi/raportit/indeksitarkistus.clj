@@ -21,6 +21,7 @@
                 :erilliskustannukset_laskutetaan_ind_korotus
                 :bonukset_laskutetaan_ind_korotus
                 :muutostyot_laskutetaan_ind_korotus
+                :vahinkojen_korjaukset_laskutetaan_ind_korotus
                 :akilliset_hoitotyot_laskutetaan_ind_korotus
                 :sakot_laskutetaan_ind_korotus]
         kentat (if suola?
@@ -34,6 +35,7 @@
             {:otsikko "Erillis\u00ADkustannukset" :leveys 2 :fmt :raha :tasaa :oikea}
             {:otsikko "Bonus" :leveys 2 :fmt :raha :tasaa :oikea}
             {:otsikko "Muutos- ja lisä\u00ADtyöt" :leveys 2 :fmt :raha :tasaa :oikea}
+            {:otsikko "Vahinkojen korjaukset" :leveys 2 :fmt :raha :tasaa :oikea}
             {:otsikko "Äkillinen hoitotyö" :leveys 2 :fmt :raha :tasaa :oikea}
             {:otsikko "Sanktiot" :leveys 2 :fmt :raha :tasaa :oikea}]
            (concat

@@ -1,88 +1,97 @@
 (ns harja.ui.palaute
-  (:require [clojure.string :as string]
-            [harja.ui.ikonit :as ikonit]
-            [clojure.string :as str]
-            [reagent.core :refer [atom]]
-            [harja.tiedot.istunto :as istunto]
-            [harja.asiakas.tapahtumat :as t]
-            [harja.pvm :as pvm]))
+  (:require
+    [reagent.core :refer [atom]]
+    [harja.ui.ikonit :as ikonit]
+    [reagent.core :refer [atom]]
+    [harja.tiedot.palaute :as tiedot]
+    [harja.loki :refer [log]]
+    [harja.ui.modal :as modal]
+    [harja.ui.yleiset :as yleiset]
+    [harja.ui.ikonit :as ikonit]))
 
-(def sahkoposti "harjapalaute@solita.fi")
+(def palautetyypit
+  [{:nimi "Kehitysidea" :tyyppi :kehitysidea}
+   {:nimi "Bugi / Tekninen ongelma" :tyyppi :tekninen-ongelma}
+   {:nimi "Käyttöoikeusongelma" :tyyppi :kayttooikeus}
+   {:nimi "Tehtävälista" :tyyppi :tehtavalista}
+   {:nimi "Yleinen palaute" :tyyppi :yleinen}])
 
-;; Huomaa että rivinvaihto tulee mukaan tekstiin
-(def palaute-otsikko
-  "")
+(defn- palauteohje-yleinen [palaute-tyyppi]
+  [:p "Klikkaa "
+   [modal/modal-linkki
+    "tästä"
+    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body-yleinen) palaute-tyyppi)]
+   [:span " lähettääksesi palautetta Harjan kehitystiimille."]])
 
-(def palaute-body
-  (str "Kerro meille mitä yritit tehdä, ja millaiseen ongelmaan törmäsit. Harkitse kuvakaappauksen "
-       "mukaan liittämistä, ne ovat meille erittäin hyödyllisiä. "
-       "Ota kuvakaappaukseen mukaan koko selainikkuna."))
+(defn- palauteohje-kehitysidea [palaute-tyyppi]
+  [:p "Klikkaa "
+   [modal/modal-linkki
+    "tästä"
+    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body-kehitysidea) palaute-tyyppi)]
+   [:span " kertoaksesi kehitysideasi Harjan kehitystiimille."]])
 
-(def virhe-otsikko
-  "")
+(defn- palauteohje-tekninen-ongelma [palaute-tyyppi]
+  [:p "Klikkaa "
+   [modal/modal-linkki
+    "tästä"
+    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body-tekninen-ongelma) palaute-tyyppi)]
+   [:span " raportoidaksesi teknisen ongelman Harjan kehitystiimille."]])
 
-(defn tekniset-tiedot [kayttaja url user-agent]
-  (let [enc #(.encodeURIComponent js/window %)]
-    (str "\n---\n"
-         "Sijainti Harjassa: " (enc url) "\n"
-         "Aika: " (pvm/pvm-aika-opt (pvm/nyt)) "\n"
-         "User agent: " (enc user-agent) "\n"
-         "Käyttäjä: " (enc (pr-str kayttaja)))))
+(defn- palauteohje-kayttooikeus [palaute-tyyppi]
+  [:div
+   [:p "Jos käyttäjältä puuttuu käyttäjätunnukset Harjaan, ole yhteydessä oman organisaatiosi pääkäyttäjään."]
+   [:p
+    [:span "Mikäli et pääse suorittamaan Harjassa jotain tehtävää, johon sinulla tulisi olla oikeus, klikkaa "]
+    [modal/modal-linkki
+     "tästä"
+     (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body-tekninen-ongelma) palaute-tyyppi)]
+    [:span " lähettääksesi palautetta Harjan kehitystiimille."]]])
 
-(defn virhe-body [virheviesti kayttaja url user-agent]
-  (str
-   "\n---\n"
-   "Kirjoita ylle, mitä olit tekemässä, kun virhe tuli vastaan. Kuvakaappaukset ovat meille myös "
-   "hyvä apu. Ethän pyyhi alla olevia virheen teknisiä tietoja pois."
-   "\n---\nTekniset tiedot:\n"
-   virheviesti
-   (tekniset-tiedot kayttaja url user-agent)))
+(defn- palauteohje-tehtavalista [palaute-tyyppi]
+  [:p "Harjan pääkäyttäjä vastaa Harjan tehtävälistasta. Klikkaa "
+    [modal/modal-linkki
+     "tästä"
+     (tiedot/mailto-linkki (tiedot/mailto-paakayttaja) (tiedot/palaute-body-tekninen-ongelma) palaute-tyyppi)]
+    [:span " lähettääksesi palautetta tehtävälistaa ylläpitävälle pääkäyttäjälle."]])
 
-(defn- mailto []
-  (str "mailto:" sahkoposti))
+(defn- palauteohje [palautetyyppi]
+  [:div.palauteohje
+   (case (:tyyppi palautetyyppi)
+     nil [:span ""]
+     :tehtavalista [palauteohje-tehtavalista (:nimi palautetyyppi)]
+     :kayttooikeus [palauteohje-kayttooikeus (:nimi palautetyyppi)]
+     :tekninen-ongelma [palauteohje-tekninen-ongelma (:nimi palautetyyppi)]
+     :kehitysidea [palauteohje-kehitysidea (:nimi palautetyyppi)]
+     [palauteohje-yleinen (:nimi palautetyyppi)])])
 
-(defn- ilman-valimerkkeja [str]
-  (-> str
-      (string/replace " " "%20")
-      (string/replace "\n" "%0A")))
+(defn- palautelomake []
+  (let [valinta-atom (atom nil)]
+    (fn []
+      [:div
+       [:p "Valitse, mitä palautteesi koskee:"]
+       [yleiset/livi-pudotusvalikko
+        {:valitse-fn #(reset! valinta-atom %)
+         :valinta @valinta-atom
+         :class "livi-alasveto-250"
+         :format-fn #(if %
+                      (:nimi %)
+                      "- valitse -")}
+        palautetyypit]
 
-(defn- lisaa-kentta
-  ([kentta pohja lisays] (lisaa-kentta kentta pohja lisays "&"))
-  ([kentta pohja lisays valimerkki] (if (empty? lisays)
-                                      pohja
-                                      (str pohja valimerkki kentta (ilman-valimerkkeja lisays)))))
+       [palauteohje @valinta-atom]
 
-(defn- subject
-  ([pohja lisays] (lisaa-kentta "subject=" pohja lisays))
-  ([pohja lisays valimerkki] (lisaa-kentta "subject=" pohja lisays valimerkki)))
-
-(defn- body
-  ([pohja lisays] (lisaa-kentta "body=" pohja lisays))
-  ([pohja lisays valimerkki] (lisaa-kentta "body=" pohja lisays valimerkki)))
-
+       [yleiset/vihje-elementti [:span
+                                 [:span "Olethan tutustunut "]
+                                 [modal/modal-linkki
+                                  "Harja-projektin sivuihin ja koulutusvideoihin"
+                                  tiedot/+linkki-koulutusvideot+
+                                  "_blank"]
+                                 [:span " ennen palautteen lähettämistä?"]]]])))
 
 (defn palaute-linkki []
-  [:a#palautelinkki
-   {:href (-> (mailto)
-              (subject palaute-otsikko "?")
-              (body (str palaute-body
-                         (tekniset-tiedot
-                           @istunto/kayttaja
-                           (-> js/window .-location .-href)
-                           (-> js/window .-navigator .-userAgent)))
-                    (if-not (empty? palaute-otsikko) "&" "?")))}
-   [:span (ikonit/livicon-kommentti) " Palautetta!"]])
-
-(defn virhe-palaute [virhe]
-  [:a#palautelinkki
-   {:href (-> (mailto)
-              (subject virhe-otsikko "?")
-              (body (virhe-body virhe
-                                @istunto/kayttaja
-                                (-> js/window .-location .-href)
-                                (-> js/window .-navigator .-userAgent))
-                    (if-not (empty? virhe-otsikko) "&" "?")))
-    :on-click #(.stopPropagation %)}
-   [:span
-    [ikonit/envelope]
-    [:span " Hupsista, Harja räsähti! Olemme pahoillamme. Kuulisimme mielellämme miten sait vian esiin. Klikkaa tähän, niin pääset lähettämään virheraportin."]]])
+  [:a {:class "klikattava"
+       :id "palautelinkki"
+       :on-click #(modal/nayta! {:otsikko "Palautteen lähettäminen"
+                                 :luokka "palaute-dialog"}
+                                [palautelomake])}
+   [ikonit/ikoni-ja-teksti (ikonit/livicon-kommentti) "Palautetta!"]])

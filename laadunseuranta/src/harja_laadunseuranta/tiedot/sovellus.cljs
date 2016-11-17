@@ -29,6 +29,7 @@
    :tasaisuus nil
    :kiinteys nil
    :polyavyys nil
+   :alivalikot nil ;; Pikavalintapaneelissa
    :alustus {:alustettu false
              :gps-tuettu false
              :ensimmainen-sijainti nil ; alustusta varten
@@ -159,6 +160,8 @@
 (def sijainnin-tallennus-mahdollinen (reaction (and @idxdb @tarkastusajo)))
 
 (def tallennustilaa-muutetaan (reagent/cursor sovellus [:tallennustilaa-muutetaan]))
+
+(def alivalikot (reagent/cursor sovellus [:alivalikot]))
 
 (def tarkastusajo-paattymassa (reaction (and @tallennustilaa-muutetaan
                                              @tarkastusajo

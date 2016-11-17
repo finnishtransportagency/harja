@@ -75,11 +75,23 @@ SELECT
                            id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)       AS sopimukset,
-  ST_Simplify(au.alue, 50)    AS alueurakan_alue
+
+  -- Urakka-alue: tällä hetkellä tuetaan joko hoidon alueurakan, teknisten laitteiden ja siltapalvelusopimusten alueita.
+  CASE
+  WHEN u.tyyppi = 'siltakorjaus' :: urakkatyyppi
+    THEN ST_Simplify(sps.alue, 50)
+  WHEN u.tyyppi = 'tekniset laitteet' :: urakkatyyppi
+    THEN ST_Simplify(tlu.alue, 50)
+  ELSE
+    ST_Simplify(au.alue, 50)
+  END                         AS alueurakan_alue
+
 FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
   LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
+  LEFT JOIN tekniset_laitteet_urakka tlu ON u.urakkanro = tlu.urakkanro
+  LEFT JOIN siltapalvelusopimus sps ON u.urakkanro = sps.urakkanro
   LEFT JOIN yhatiedot yt ON u.id = yt.urakka
 WHERE hallintayksikko = :hallintayksikko
       AND (u.id IN (:sallitut_urakat)
@@ -450,7 +462,13 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
         exists(SELECT id
                FROM tekniset_laitteet_urakka tlu
                WHERE tlu.urakkanro = u.urakkanro AND
-                     st_dwithin(tlu.alue, st_makepoint(:x, :y), :threshold))))
+                     st_dwithin(tlu.alue, st_makepoint(:x, :y), :threshold)))
+       OR
+       ((:urakkatyyppi = 'siltakorjaus') AND
+        exists(SELECT id
+               FROM siltapalvelusopimus sps
+               WHERE sps.urakkanro = u.urakkanro AND
+                     st_dwithin(sps.alue, st_makepoint(:x, :y), :threshold))))
 ORDER BY id ASC;
 
 -- name: luo-alueurakka<!
@@ -590,3 +608,19 @@ WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
 -- name: luo-tekniset-laitteet-urakka<!
 INSERT INTO tekniset_laitteet_urakka (urakkanro, alue)
 VALUES (:urakkanro, ST_GeomFromText(:alue) :: GEOMETRY);
+
+-- name: tuhoa-siltapalvelusopimukset!
+DELETE FROM siltapalvelusopimus;
+
+-- name: hae-siltapalvelussopimuksen-urakkanumero-sijainnilla
+SELECT urakkanro
+FROM siltapalvelusopimus
+WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
+
+-- name: luo-siltapalvelusopimus<!
+INSERT INTO siltapalvelusopimus (urakkanro, alue)
+VALUES (:urakkanro, ST_GeomFromText(:alue) :: GEOMETRY);
+
+-- name: hae-urakan-alkuvuosi
+-- single?: true
+SELECT EXTRACT(YEAR FROM alkupvm)::INTEGER FROM urakka WHERE id = :urakka;

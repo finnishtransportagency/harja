@@ -14,7 +14,7 @@
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.paallystysilmoitus :as pot]
             [harja.tiedot.urakka.yhatuonti :as yha]
-            [harja.ui.yleiset :as yleiset]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.yllapitokohteet :as tiedot]
@@ -47,17 +47,14 @@
 (def kohde-leveys 15)
 (def kvl-leveys 5)
 (def yllapitoluokka-leveys 5)
-(def nykyinen-paallyste-leveys 8)
-(def indeksin-kuvaus-leveys 8)
 (def tr-leveys 8)
 (def tarjoushinta-leveys 10)
 (def muutoshinta-leveys 10)
-(def toteutunut-hinta-leveys 10)
+(def toteutunut-hinta-leveys 20)
 (def arvonvahennykset-leveys 10)
 (def bitumi-indeksi-leveys 10)
 (def kaasuindeksi-leveys 10)
 (def yhteensa-leveys 10)
-(def yllapitokohdetyyppi-leveys 10)
 
 ;; Ylläpitokohdeosien sarakkeiden leveydet
 (def nimi-leveys 20)
@@ -293,12 +290,12 @@
               {:disabled (= kohdetyyppi :sora)
                :on-click
                #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))}
-              (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]
+              (ikonit/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]
              [:button.nappi-kielteinen.btn-xs
               {:disabled (= 1 (count kohdeosat-nyt))
                :on-click
                #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat-nyt (inc index)))}
-              (yleiset/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")]]))
+              (ikonit/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")]]))
 
         pituus (fn [osan-pituus tieosa]
                  (tr/laske-tien-pituus osan-pituus tieosa))]
@@ -391,7 +388,7 @@
            (when kohdeosat-paivitetty-fn
              [(fn []
                 [napit/palvelinkutsu-nappi
-                 [yleiset/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
+                 [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
                  (let [sijainnit @tr-sijainnit
                        osat (into []
                                   (map (fn [osa]
@@ -422,7 +419,7 @@
                               (fmt/pituus (reduce + 0 (keep (partial pituus osan-pituus)
                                                             (vals @grid-data))))
                               (when (= kohdetyyppi :sora)
-                                [:p (yleiset/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])])}
+                                [:p (ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])])}
           skeema
 
 
@@ -516,13 +513,7 @@
                     :tyyppi :string :leveys id-leveys
                     :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
                    {:otsikko "Koh\u00ADteen ni\u00ADmi" :nimi :nimi
-                    :tyyppi :string :leveys kohde-leveys}
-                   {:otsikko "Tyyppi"
-                    :nimi :yllapitokohdetyyppi :tyyppi :string :leveys yllapitokohdetyyppi-leveys
-                    :muokattava? (constantly false)
-                    :fmt #({:paallyste "Päällyste"
-                            :sora "Sora"
-                            :kevytliikenne "Kevytliikenne"} %)}]
+                    :tyyppi :string :leveys kohde-leveys}]
                   (tierekisteriosoite-sarakkeet
                     tr-leveys
                     [nil
@@ -540,18 +531,7 @@
                    {:otsikko "YP-lk"
                     :nimi :yllapitoluokka :tyyppi :numero :leveys yllapitoluokka-leveys
                     :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                   {:otsikko "Ny\u00ADkyi\u00ADnen pääl\u00ADlys\u00ADte"
-                    :nimi :nykyinen-paallyste
-                    :fmt #(paallystys-ja-paikkaus/hae-paallyste-koodilla %)
-                    :tyyppi :valinta
-                    :valinta-arvo :koodi
-                    :valinnat paallystys-ja-paikkaus/+paallystetyypit+
-                    :valinta-nayta :nimi
-                    :leveys nykyinen-paallyste-leveys
-                    :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                   {:otsikko "In\u00ADdek\u00ADsin ku\u00ADvaus"
-                    :nimi :indeksin-kuvaus :tyyppi :string
-                    :leveys indeksin-kuvaus-leveys :pituus-max 2048}
+
                    (when (= (:nakyma optiot) :paallystys)
                      {:otsikko "Tar\u00ADjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
                       :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :tasaa :oikea})
@@ -610,8 +590,8 @@
               :kaasuindeksi kaasuindeksi-yhteensa
               :kokonaishinta kokonaishinta}]))]
     [grid/grid
-     {:otsikko "Yhteensä"
-      :piilota-toiminnot? true
+     {:nayta-toimintosarake? true
+      :otsikko "Yhteensä"
       :tyhja (if (nil? {}) [ajax-loader "Lasketaan..."] "")}
      [{:otsikko "" :nimi :tyhja :tyyppi :string :leveys haitari-leveys}
       {:otsikko "" :nimi :kohdenumero :tyyppi :string :leveys id-leveys}
@@ -626,8 +606,6 @@
       {:otsikko "" :nimi :pit :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :yllapitoluokka :tyyppi :string :leveys yllapitoluokka-leveys}
       {:otsikko "" :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :string :leveys kvl-leveys}
-      {:otsikko "" :nimi :nykyinen-paallyste :tyyppi :string :leveys nykyinen-paallyste-leveys}
-      {:otsikko "" :nimi :indeksin-kuvaus :tyyppi :string :leveys indeksin-kuvaus-leveys}
       (when (= (:nakyma optiot) :paallystys)
         {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
          :fmt fmt/euro-opt :tyyppi :numero

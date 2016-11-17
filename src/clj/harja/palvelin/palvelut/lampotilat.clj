@@ -70,18 +70,23 @@
   [db user urakka-id]
   (log/debug "hae-urakan-suolasakot-ja-lampotilat")
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user urakka-id)
-  {:suolasakot (into []
-                      (map #(konv/decimal->double % :maara))
-                     (q/hae-urakan-suolasakot db urakka-id))
-   :lampotilat (into []
-                     (comp
-                       (map #(konv/decimal->double % :keskilampotila))
-                       (map #(konv/decimal->double % :pitkakeskilampotila)))
-                     (q/hae-urakan-lampotilat db urakka-id))
-   :pohjavesialueet (into []
-                          (geo/muunna-pg-tulokset :alue)
-                          (pohjavesialueet-q/hae-urakan-pohjavesialueet db urakka-id))
-   :pohjavesialue-talvisuola (q/hae-urakan-pohjavesialue-talvisuolarajat db urakka-id)})
+  (let [pitkakeskilampotila (if (<= (urakat/hae-urakan-alkuvuosi db urakka-id) 2014)
+                              :pitkakeskilampotila_vanha
+                              :pitkakeskilampotila)]
+    {:suolasakot (into []
+                       (map #(konv/decimal->double % :maara))
+                       (q/hae-urakan-suolasakot db urakka-id))
+     :lampotilat (into []
+                       (comp
+                        (map #(assoc % :pitkakeskilampotila
+                                     (get % pitkakeskilampotila)))
+                        (map #(konv/decimal->double % :keskilampotila))
+                        (map #(konv/decimal->double % :pitkakeskilampotila)))
+                       (q/hae-urakan-lampotilat db urakka-id))
+     :pohjavesialueet (into []
+                            (geo/muunna-pg-tulokset :alue)
+                            (pohjavesialueet-q/hae-urakan-pohjavesialueet db urakka-id))
+     :pohjavesialue-talvisuola (q/hae-urakan-pohjavesialue-talvisuolarajat db urakka-id)}))
 
 (defn luo-suolasakko
   [params]

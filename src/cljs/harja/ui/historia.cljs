@@ -65,4 +65,4 @@
        :on-click #(do (.stopPropagation %)
                       (.preventDefault %)
                       (kumoa! historia))}
-      [y/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]])))
+      [ikonit/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]])))
