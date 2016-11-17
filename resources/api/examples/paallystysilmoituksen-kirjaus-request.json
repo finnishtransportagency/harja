@@ -15,9 +15,6 @@
 
   "paallystysilmoitus": {
     "perustiedot": {
-      "aloituspvm": "2015-01-10T12:00:00Z",
-      "valmispvm-paallystys": "2015-01-12T12:00:00Z",
-      "valmispvm-kohde": "2015-01-16T12:00:00Z",
       "takuupvm": "2015-02-15T12:00:00Z"
     },
     "yllapitokohde": {
