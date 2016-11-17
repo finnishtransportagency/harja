@@ -166,12 +166,12 @@ SELECT
   ypko.tr_loppuetaisyys,
   pi.id   AS paallystysilmoitus_id,
   pi.tila AS paallystysilmoitus_tila,
-  pi.aloituspvm,
-  pi.valmispvm_paallystys AS paallystysvalmispvm,
-  pi.valmispvm_kohde AS kohdevalmispvm,
+  ypk.aikataulu_kohde_alku as aloituspvm,
+  ypk.aikataulu_paallystys_loppu AS paallystysvalmispvm,
+  ypk.aikataulu_kohde_valmis AS kohdevalmispvm,
   pi.tila
 FROM yllapitokohdeosa ypko
-  LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
+  JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
 WHERE ypk.poistettu IS NOT TRUE
       AND (pi.tila :: TEXT != 'valmis' OR
@@ -193,12 +193,12 @@ SELECT
   ypko.tr_loppuetaisyys,
   pi.id                                   AS paallystysilmoitus_id,
   pi.tila                                 AS paallystysilmoitus_tila,
-  pi.aloituspvm,
-  pi.valmispvm_paallystys                 AS paallystysvalmispvm,
-  pi.valmispvm_kohde                      AS kohdevalmispvm,
+  ypk.aikataulu_kohde_alku as aloituspvm,
+  ypk.aikataulu_paallystys_loppu AS paallystysvalmispvm,
+  ypk.aikataulu_kohde_valmis AS kohdevalmispvm,
   pi.tila
 FROM yllapitokohdeosa ypko
-  LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
+  JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
 WHERE ypk.poistettu IS NOT TRUE AND
       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku));
