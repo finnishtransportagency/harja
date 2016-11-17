@@ -27,7 +27,7 @@ SELECT id
 FROM paallystysilmoitus
 WHERE paallystyskohde = :paallystyskohde;
 
--- name: hae-urakan-paallystysilmoitus-paallystyskohteella
+-- name: hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
 -- Hakee urakan päällystysilmoituksen päällystyskohteen id:llä
 SELECT
   pi.id,
@@ -190,9 +190,3 @@ ORDER BY k.luotu ASC;
 -- name: liita-kommentti<!
 -- Liittää päällystysilmoitukseen uuden kommentin
 INSERT INTO paallystysilmoitus_kommentti (paallystysilmoitus, kommentti) VALUES (:paallystysilmoitus, :kommentti);
-
--- name: onko-paallystysilmoitus-olemassa-kohteelle?
--- single?: true
-SELECT exists(SELECT *
-              FROM paallystysilmoitus
-              WHERE paallystyskohde = :id);

@@ -7,7 +7,6 @@
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [taoensso.timbre :as log]
             [harja.kyselyt.paallystys :as q-paallystys]
-            [harja.kyselyt.tieverkko :as q-tieverkko]
             [harja.palvelin.integraatiot.api.sanomat.paallystysilmoitus :as paallystysilmoitussanoma]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
@@ -25,7 +24,6 @@
                     :aet (:aet sijainti)
                     :losa (:losa sijainti)
                     :loppuet (:let sijainti)}
-            sijainti-geometria (q-tieverkko/tierekisteriosoite-viivaksi db osoite)
             parametrit {:yllapitokohde (:id kohde)
                         :nimi (:nimi alikohde)
                         :tunnus (:tunnus alikohde)
@@ -53,12 +51,14 @@
 
 (defn- luo-paallystysilmoitus [db kayttaja kohde-id
                                {:keys [perustiedot] :as paallystysilmoitus}
+                               valmis-kasiteltavaksi
                                ilmoitustiedot-json]
   (log/debug "Luodaan uusi päällystysilmoitus")
   (q-paallystys/luo-paallystysilmoitus<!
     db
     {:paallystyskohde kohde-id
-     :tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila perustiedot)
+     :tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila
+             valmis-kasiteltavaksi false false)
      :ilmoitustiedot ilmoitustiedot-json
      :takuupvm (json/aika-string->java-sql-date
                  (:takuupvm perustiedot))
@@ -68,11 +68,16 @@
 
 (defn- paivita-paallystysilmoitus [db kayttaja urakka-id kohde-id
                                    {:keys [perustiedot] :as paallystysilmoitus}
+                                   paallystysilmoitus-kannassa
+                                   valmis-kasiteltavaksi
                                    ilmoitustiedot-json]
   (log/debug "Päivitetään vanha päällystysilmoitus")
   (q-paallystys/paivita-paallystysilmoitus<!
     db
-    {:tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila perustiedot)
+    {:tila (if (and (= (:tila paallystysilmoitus-kannassa) "aloitettu")
+                    (true? valmis-kasiteltavaksi))
+             "valmis"
+             (:tila paallystysilmoitus-kannassa)) ;; Ei päivitetä
      :ilmoitustiedot ilmoitustiedot-json
      :takuupvm (json/aika-string->java-sql-date
                  (:takuupvm perustiedot))
@@ -82,13 +87,17 @@
      :id kohde-id
      :urakka urakka-id}))
 
-(defn luo-tai-paivita-paallystysilmoitus [db kayttaja urakka-id kohde-id
-                                          {:keys [perustiedot] :as paallystysilmoitus}]
+(defn luo-tai-paivita-paallystysilmoitus [db kayttaja urakka-id kohde-id paallystysilmoitus valmis-kasiteltavaksi]
   (let [ilmoitustiedot-json (paallystysilmoitussanoma/rakenna paallystysilmoitus)
-        paallystysilmoitus (if (q-paallystys/onko-paallystysilmoitus-olemassa-kohteelle? db {:id kohde-id})
-                             (paivita-paallystysilmoitus db kayttaja urakka-id kohde-id paallystysilmoitus ilmoitustiedot-json)
-                             (luo-paallystysilmoitus db kayttaja kohde-id paallystysilmoitus ilmoitustiedot-json))]
-    (str (:id paallystysilmoitus))))
+        paallystysilmoitus-kannassa (first (q-paallystys/hae-paallystysilmoitus-paallystyskohteella db {:paallystyskohde kohde-id}))
+        muokattu-paallystysilmoitus (if (:id paallystysilmoitus-kannassa)
+                                      (paivita-paallystysilmoitus db kayttaja urakka-id kohde-id
+                                                                  paallystysilmoitus
+                                                                  paallystysilmoitus-kannassa
+                                                                  valmis-kasiteltavaksi
+                                                                  ilmoitustiedot-json)
+                                      (luo-paallystysilmoitus db kayttaja kohde-id paallystysilmoitus valmis-kasiteltavaksi ilmoitustiedot-json))]
+    (str (:id muokattu-paallystysilmoitus))))
 
 (defn pura-paallystysilmoitus [data]
   (-> (:paallystysilmoitus data)
@@ -104,21 +113,23 @@
         kohteen-tienumero (:tr-numero kohde)]
     (validointi/tarkista-paallystysilmoitus db (:id kohde) kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet)))
 
-(defn tallenna-paallystysilmoitus [db kayttaja urakka-id kohde paallystysilmoitus]
+(defn tallenna-paallystysilmoitus [db kayttaja urakka-id kohde paallystysilmoitus valmis-kasiteltavaksi]
   (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
         alikohteet (:alikohteet paallystysilmoitus)]
     (paivita-kohde db (:id kohde) kohteen-sijainti)
     (let [paivitetyt-alikohteet (paivita-alikohteet db kohde alikohteet)
           ;; Päivittyneiden alikohteiden id:t pitää päivittää päällystysilmoituksille
           paallystysilmoitus (assoc-in paallystysilmoitus [:yllapitokohde :alikohteet] paivitetyt-alikohteet)]
-      (luo-tai-paivita-paallystysilmoitus db kayttaja urakka-id (:id kohde) paallystysilmoitus))))
+      (luo-tai-paivita-paallystysilmoitus db kayttaja urakka-id (:id kohde) paallystysilmoitus valmis-kasiteltavaksi))))
 
 
 (defn kirjaa-paallystysilmoitus [db kayttaja urakka-id kohde-id data]
   (jdbc/with-db-transaction
     [db db]
-    (let [paallystysilmoitus (pura-paallystysilmoitus data)
+    (let [purettu-paallystysilmoitus (pura-paallystysilmoitus data)
+          valmis-kasiteltavaksi (:valmis-kasiteltavaksi data)
           kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
-          _ (validoi-paallystysilmoitus db urakka-id kohde paallystysilmoitus)
-          id (tallenna-paallystysilmoitus db kayttaja urakka-id kohde paallystysilmoitus)]
+          _   (validoi-paallystysilmoitus db urakka-id kohde purettu-paallystysilmoitus)
+          id (tallenna-paallystysilmoitus db kayttaja urakka-id kohde
+                                          purettu-paallystysilmoitus valmis-kasiteltavaksi)]
       id)))

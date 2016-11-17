@@ -73,7 +73,7 @@
                                               [[:taloudellinen-osa :paatos]
                                                [:tekninen-osa :paatos]
                                                [:tila]])))
-                                 (q/hae-urakan-paallystysilmoitus-paallystyskohteella
+                                 (q/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
                                    db
                                    {:paallystyskohde paallystyskohde-id}))
         paallystysilmoitus (first (konv/sarakkeet-vektoriin
@@ -136,7 +136,10 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (log/debug "Luodaan uusi päällystysilmoitus.")
   (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
-        tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila paallystysilmoitus)
+        tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila
+               (:valmis-kasiteltavaksi paallystysilmoitus)
+               (= (get-in paallystysilmoitus [:tekninen-osa :paatos]) :hyvaksytty)
+               (= (get-in paallystysilmoitus [:taloudellinen-osa :paatos]) :hyvaksytty))
         ilmoitustiedot (-> ilmoitustiedot
                            (poista-ilmoitustiedoista-tieosoitteet)
                            (tyot-tyyppi-avain->string [:tyot]))
@@ -211,7 +214,10 @@
     (do (log/debug "Päivitetään päällystysilmoituksen perustiedot")
         (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
                             (:tyot ilmoitustiedot))
-              tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila paallystysilmoitus)
+              tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila
+                     (:valmis-kasiteltavaksi paallystysilmoitus)
+                     (= (get-in paallystysilmoitus [:tekninen-osa :paatos]) :hyvaksytty)
+                     (= (get-in paallystysilmoitus [:taloudellinen-osa :paatos]) :hyvaksytty))
               ilmoitustiedot (-> ilmoitustiedot
                                  (poista-ilmoitustiedoista-tieosoitteet)
                                  (tyot-tyyppi-avain->string [:tyot]))
