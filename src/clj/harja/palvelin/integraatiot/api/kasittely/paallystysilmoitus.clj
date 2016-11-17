@@ -11,7 +11,8 @@
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
-            [harja.domain.skeema :as skeema])
+            [harja.domain.skeema :as skeema]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn paivita-alikohteet [db kohde alikohteet]
@@ -72,20 +73,24 @@
                                    valmis-kasiteltavaksi
                                    ilmoitustiedot-json]
   (log/debug "Päivitetään vanha päällystysilmoitus")
-  (q-paallystys/paivita-paallystysilmoitus<!
-    db
-    {:tila (if (and (= (:tila paallystysilmoitus-kannassa) "aloitettu")
-                    (true? valmis-kasiteltavaksi))
-             "valmis"
-             (:tila paallystysilmoitus-kannassa)) ;; Ei päivitetä
-     :ilmoitustiedot ilmoitustiedot-json
-     :takuupvm (json/aika-string->java-sql-date
-                 (:takuupvm perustiedot))
-     :muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
-                    (:tyot paallystysilmoitus))
-     :muokkaaja (:id kayttaja)
-     :id kohde-id
-     :urakka urakka-id}))
+  (if (not= (:tila paallystysilmoitus-kannassa) "lukittu")
+    (q-paallystys/paivita-paallystysilmoitus<!
+      db
+      {:tila (if (and (= (:tila paallystysilmoitus-kannassa) "aloitettu")
+                      (true? valmis-kasiteltavaksi))
+               "valmis"
+               (:tila paallystysilmoitus-kannassa)) ;; Ei päivitetä
+       :ilmoitustiedot ilmoitustiedot-json
+       :takuupvm (json/aika-string->java-sql-date
+                   (:takuupvm perustiedot))
+       :muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
+                      (:tyot paallystysilmoitus))
+       :muokkaaja (:id kayttaja)
+       :id kohde-id
+       :urakka urakka-id})
+    (virheet/heita-poikkeus virheet/+paallystysilmoitus-lukittu+
+                            {:koodi virheet/+paallystysilmoitus-lukittu+
+                             :viesti "Päällystysilmoitus on lukittu."})))
 
 (defn luo-tai-paivita-paallystysilmoitus [db kayttaja urakka-id kohde-id paallystysilmoitus valmis-kasiteltavaksi]
   (let [ilmoitustiedot-json (paallystysilmoitussanoma/rakenna paallystysilmoitus)
@@ -97,7 +102,7 @@
                                                                   valmis-kasiteltavaksi
                                                                   ilmoitustiedot-json)
                                       (luo-paallystysilmoitus db kayttaja kohde-id paallystysilmoitus valmis-kasiteltavaksi ilmoitustiedot-json))]
-    (str (:id muokattu-paallystysilmoitus))))
+    (:id muokattu-paallystysilmoitus)))
 
 (defn pura-paallystysilmoitus [data]
   (-> (:paallystysilmoitus data)
@@ -129,7 +134,7 @@
     (let [purettu-paallystysilmoitus (pura-paallystysilmoitus data)
           valmis-kasiteltavaksi (:valmis-kasiteltavaksi data)
           kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
-          _   (validoi-paallystysilmoitus db urakka-id kohde purettu-paallystysilmoitus)
+          _ (validoi-paallystysilmoitus db urakka-id kohde purettu-paallystysilmoitus)
           id (tallenna-paallystysilmoitus db kayttaja urakka-id kohde
                                           purettu-paallystysilmoitus valmis-kasiteltavaksi)]
       id)))
