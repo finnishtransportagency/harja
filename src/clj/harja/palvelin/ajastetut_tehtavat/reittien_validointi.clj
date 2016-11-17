@@ -27,7 +27,7 @@
          [db db]
          (doseq [{:keys [id]} toteumat]
            (reittitoteuma/paivita-toteuman-reitti db id etaisyys)))
-       (when-not (< maksimi-etaisyys etaisyys)
+       (when-not (<= maksimi-etaisyys etaisyys)
          (recur (+ etaisyys 200)))))))
 
 (defn- paivita-osoitteelliset-toteumat
