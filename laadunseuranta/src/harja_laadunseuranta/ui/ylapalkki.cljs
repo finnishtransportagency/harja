@@ -23,12 +23,13 @@
                             :media "(max-width: 700px)"}]
     [:img {:src kuvat/+harja-logo+ :alt ""}]]])
 
-(defn kaynnistyspainike [tallennus-kaynnissa tallennustilaa-muutetaan disabloi?]
+(defn kaynnistyspainike [tallennus-kaynnissa tallennustilaa-muutetaan disabloi? alivalikot]
   [:div.kaynnistyspainike {:class (when @tallennus-kaynnissa "kaynnissa")
                            :on-click #(when-not @disabloi?
                                        (do
                                          (reset! tallennustilaa-muutetaan true)
-                                         (reset! tallennus-kaynnissa false)))}
+                                         (reset! tallennus-kaynnissa false)
+                                         (reset! alivalikot nil)))}
    [:span.kaynnistyspainike-nuoli.livicon-arrow-start]
    [:span.kaynnistyspainike-teksti
     (if @tallennus-kaynnissa
@@ -43,7 +44,7 @@
                                     tr-osoite kiinteistorajat ortokuva
                                     tallennus-kaynnissa tallennustilaa-muutetaan
                                     keskita-ajoneuvoon disabloi-kaynnistys? valittu-urakka
-                                    palvelinvirhe]}]
+                                    palvelinvirhe alivalikot]}]
   [:div
    [:div.ylapalkki {:class (when (or (utils/kehitysymparistossa?)
                                      (utils/stg-ymparistossa?)) "testiharja")}
@@ -64,5 +65,6 @@
       [:div.ylapalkin-metatieto.soratiehoitoluokka (str "SHL: " (or @soratiehoitoluokka "-"))]
       [:div.ylapalkin-metatieto.talvihoitoluokka (str "THL: " (or @hoitoluokka "-"))]]]
     [:div.ylapalkki-oikea
-     [kaynnistyspainike tallennus-kaynnissa tallennustilaa-muutetaan disabloi-kaynnistys?]]]
+     [kaynnistyspainike tallennus-kaynnissa tallennustilaa-muutetaan disabloi-kaynnistys?
+      alivalikot]]]
    (when @palvelinvirhe [:div.palvelinvirhe "Palvelinvirhe: " @palvelinvirhe])])
