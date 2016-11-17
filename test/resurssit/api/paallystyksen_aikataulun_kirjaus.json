@@ -13,6 +13,7 @@
     "lahetysaika": "2015-01-30T12:00:00Z"
   },
   "aikataulu": {
+    "kohde-aloitettu": "2015-01-10T12:00:00Z",
     "paallystys-aloitettu": "2015-01-10T12:00:00Z",
     "paallystys-valmis": "2015-01-12T12:00:00Z",
     "valmis-tiemerkintaan": "2015-01-12",
