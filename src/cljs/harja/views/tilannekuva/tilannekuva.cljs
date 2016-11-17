@@ -155,24 +155,25 @@
 
 (defn- asetuskokoelma
   [otsikko {:keys [salli-piilotus? luokka auki-atomi? otsikon-luokka] :as optiot} sisalto]
-  (let [auki? (or auki-atomi? (atom true))]
-    (fn [otsikko {:keys [salli-piilotus? luokka otsikon-luokka] :as optiot} sisalto]
-      [:div {:class (str "tk-asetuskokoelma" (when luokka (str " " luokka)))}
-       (when salli-piilotus?
-         [:div {:class    (str
-                            "tk-chevron-ryhma-tila chevron-rotate chevron-tk-asetuskokoelma "
-                            (when-not @auki? "chevron-rotate-down"))
-                :on-click #(swap! auki? not)}
-          (if @auki?
-            (ikonit/livicon-chevron-down)
-            (ikonit/livicon-chevron-right))])
-       [:div {:class (str "tk-otsikko "
-                          (when salli-piilotus?
-                            "tk-otsikko-sisenna")
-                          (when otsikon-luokka (str " " otsikon-luokka)))}
-        otsikko]
-       (when @auki?
-         sisalto)])))
+  (when otsikko
+    (let [auki? (or auki-atomi? (atom true))]
+     (fn [otsikko {:keys [salli-piilotus? luokka otsikon-luokka] :as optiot} sisalto]
+       [:div {:class (str "tk-asetuskokoelma" (when luokka (str " " luokka)))}
+        (when salli-piilotus?
+          [:div {:class    (str
+                             "tk-chevron-ryhma-tila chevron-rotate chevron-tk-asetuskokoelma "
+                             (when-not @auki? "chevron-rotate-down"))
+                 :on-click #(swap! auki? not)}
+           (if @auki?
+             (ikonit/livicon-chevron-down)
+             (ikonit/livicon-chevron-right))])
+        [:div {:class (str "tk-otsikko "
+                           (when salli-piilotus?
+                             "tk-otsikko-sisenna")
+                           (when otsikon-luokka (str " " otsikon-luokka)))}
+         otsikko]
+        (when @auki?
+          sisalto)]))))
 
 (def tilannekuvan-alueet ["Uusimaa"
                           "Varsinais-Suomi"
@@ -188,7 +189,9 @@
                            :paallystys "Päällystys"
                            :valaistus "Valaistus"
                            :paikkaus "Paikkaus"
-                           :tiemerkinta "Tiemerkintä"})
+                           :tiemerkinta "Tiemerkintä"
+                           #_#_:siltakorjaus "Siltakorjaus"
+                           #_#_(keyword "tekniset laitteet") "Tekniset laitteet"})
 
 (defn- tyypin-aluesuodattimet [tyyppi]
   (komp/luo
@@ -243,7 +246,7 @@
               (for [urakkatyyppi tyypit-joissa-alueita]
                 ^{:key (str "aluesuodattimet-tyypille-" urakkatyyppi)}
                 [tyypin-aluesuodattimet urakkatyyppi]))])]
-         (when-not alueita-valittu?
+         (when (and (not alueita-valittu?) (not ensimmainen-haku-kaynnissa?))
            [yleiset/vihje "Yhtään aluetta ei ole valittu."])]))))
 
 (defn- aikasuodattimet []

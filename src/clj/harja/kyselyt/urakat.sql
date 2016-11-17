@@ -620,3 +620,7 @@ WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
 -- name: luo-siltapalvelusopimus<!
 INSERT INTO siltapalvelusopimus (urakkanro, alue)
 VALUES (:urakkanro, ST_GeomFromText(:alue) :: GEOMETRY);
+
+-- name: hae-urakan-alkuvuosi
+-- single?: true
+SELECT EXTRACT(YEAR FROM alkupvm)::INTEGER FROM urakka WHERE id = :urakka;
