@@ -75,11 +75,15 @@ jos niille ei löydy yhteistä tietä tieverkolta."}
          (yhdista-viivat p))))
 
 (defn luo-reitti-geometria [db reitti]
-  (->> reitti
-       (sort-by (comp :aika :reittipiste))
-       (map piste)
-       (hae-reitti db)
-       geo/clj->pg geo/geometry))
+  (let [reitti (->> reitti
+                    (sort-by (comp :aika :reittipiste))
+                    (map piste)
+                    (hae-reitti db))]
+    (if (= reitti +yhdistamis-virhe+)
+      +yhdistamis-virhe+
+      (-> reitti
+          geo/clj->pg
+          geo/geometry))))
 
 (defn paivita-toteuman-reitti
   "REPL testausta ja ajastettua tehtävää varten, laskee annetun toteuman reitin uudelleen reittipisteistä."
