@@ -82,29 +82,29 @@
 (defn aikavalivalitsin [valinnat-nyt]
   (let [vapaa-aikavali? (get-in valinnat-nyt [:vakioaikavali :vapaa-aikavali])
         alkuaika (:alkuaika valinnat-nyt)
-        vakio-aikavali {:nimi :vakioaikavali
-                        :otsikko "Saapunut aikavälillä"
-                        :fmt :nimi
-                        :tyyppi :valinta
-                        :valinnat tiedot/aikavalit
-                        :valinta-nayta :nimi}
-        alkuaika {:nimi :alkuaika
-                  :otsikko "Alku"
-                  :tyyppi :pvm-aika
-                  :validoi [[:ei-tyhja "Anna alkuaika"]]}
-        loppuaika {:nimi :loppuaika
-                   :otsikko "Loppu"
-                   :tyyppi :pvm-aika
-                   :validoi [[:ei-tyhja "Anna loppuaika"]
-                             [:pvm-toisen-pvmn-jalkeen alkuaika-pvm "Loppu ajan on oltava alkuajan jälkeen"]]}]
+        vakio-aikavalikentta {:nimi :vakioaikavali
+                              :otsikko "Saapunut aikavälillä"
+                              :fmt :nimi
+                              :tyyppi :valinta
+                              :valinnat tiedot/aikavalit
+                              :valinta-nayta :nimi}
+        alkuaikakentta {:nimi :alkuaika
+                        :otsikko "Alku"
+                        :tyyppi :pvm-aika
+                        :validoi [[:ei-tyhja "Anna alkuaika"]]}
+        loppuaikakentta {:nimi :loppuaika
+                         :otsikko "Loppu"
+                         :tyyppi :pvm-aika
+                         :validoi [[:ei-tyhja "Anna loppuaika"]
+                                   [:pvm-toisen-pvmn-jalkeen alkuaika "Loppuajan on oltava alkuajan jälkeen"]]}]
 
     (if vapaa-aikavali?
       (lomake/ryhma
         {:rivi? true}
-        vakio-aikavali
-        alkuaika
-        loppuaika)
-      vakio-aikavali)))
+        vakio-aikavalikentta
+        alkuaikakentta
+        loppuaikakentta)
+      vakio-aikavalikentta)))
 
 (defn ilmoitusten-hakuehdot [e! {:keys [aikavali urakka valitun-urakan-hoitokaudet] :as valinnat-nyt}]
   [lomake/lomake
