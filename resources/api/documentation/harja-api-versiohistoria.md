@@ -5,7 +5,7 @@
 
 - Versionumero: 1.0.4 Julkaistu: 16.11.2016:
     - Poistettu päällystysilmoitukselta omat aikataulutiedot. Jatkossa päällystysilmoituksen aloituspvm, kohteen valmistumispvm ja päällystyksen valmistumispvm ovat sama asia kuin ilmoitukseen kuuluvan ylläpitokohteen vastaavat tiedot.
-    - Lisätty päällystysilmoituksen kirjaukseen uusi kenttä "valmis-tilaajan-kasiteltavaksi" (true/false/null).
+    - Lisätty päällystysilmoituksen kirjaukseen uusi kenttä "valmis-kasiteltavaksi" (true/false/null). Jos tässä kentässä on arvona true, asetetaan päällystysilmoitus valmiiksi tilaajan käsiteltäväksi (ellei jo ole käsiteltävänä tai käsitelty).
 - Versionumero: 1.0.3 Julkaistu: 2.11.2016:
     - Päällystys-/tiemerkintäurakan aikataulun kirjaus jaettu kahteen eri urakkatyypin mukaiseen endpointtiin (ks. API-dokumentaatio).
 - Versionumero: 1.0.2 Julkaistu: 11.10.2016:
