@@ -106,10 +106,10 @@
         :nimi :tekninen-osa
         :tyyppi :checkbox
         :fmt #(if % "Tekninen osa tarkastettu" "Teknistä osaa ei tarkastettu")}
-       {:teksti "Taloudellinen osa tarkastettu"
+       {:teksti "Hinnan muutokset tarkastettu"
         :nimi :taloudellinen-osa
         :tyyppi :checkbox
-        :fmt #(if % "Taloudellinen osa tarkastettu" "Taloudellista osaa ei tarkastettu")}
+        :fmt #(if % "Hinnan muutokset tarkastettu" "Taloudellista osaa ei tarkastettu")}
        {:otsikko "Lisätiedot"
         :nimi :lisatiedot
         :tyyppi :text
@@ -174,7 +174,7 @@
      [kasittelytiedot "Tekninen osa" muokattava? valmistumispvm tekninen-osa
       #(muokkaa! assoc :tekninen-osa %)]
 
-     [kasittelytiedot "Taloudellinen osa" muokattava? valmistumispvm taloudellinen-osa
+     [kasittelytiedot "Hinnan muutokset" muokattava? valmistumispvm taloudellinen-osa
       #(muokkaa! assoc :taloudellinen-osa %)]]))
 
 (defn tallennus
@@ -488,7 +488,7 @@
                                             grid-wrap wrap-virheet muokkaa!]
   (let [toteutuneet-maarat (grid-wrap [:ilmoitustiedot :tyot])]
     [:fieldset.lomake-osa
-     [:h3 "Taloudellinen osa"]
+     [:h3 "Muutosten hallinta"]
 
      [grid/muokkaus-grid
       {:otsikko "Toteutuneet määrät"
