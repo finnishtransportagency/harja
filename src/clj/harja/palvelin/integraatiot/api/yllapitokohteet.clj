@@ -46,7 +46,7 @@
     (when-not (some #(= kohde-id %) (map :id urakan-kohteet))
       (virheet/heita-poikkeus virheet/+viallinen-kutsu+
                               {:koodi virheet/+urakkaan-kuulumaton-yllapitokohde+
-                                                         :viesti "Ylläpitokohde ei kuulu urakkaan."}))))
+                               :viesti "Ylläpitokohde ei kuulu urakkaan."}))))
 
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
@@ -70,7 +70,8 @@
   (let [kohteella-paallystysilmoitus? (q-yllapitokohteet/onko-olemassa-paallystysilmoitus? db kohde-id)]
     (q-yllapitokohteet/paivita-yllapitokohteen-paallystysaikataulu!
       db
-      {:paallystys_alku (json/aika-string->java-sql-date (:paallystys-aloitettu aikataulu))
+      {:kohde_alku (json/aika-string->java-sql-date (:kohde-aloitettu aikataulu))
+       :paallystys_alku (json/aika-string->java-sql-date (:paallystys-aloitettu aikataulu))
        :paallystys_loppu (json/aika-string->java-sql-date (:paallystys-valmis aikataulu))
        :valmis_tiemerkintaan (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu))
        :aikataulu_tiemerkinta_takaraja (json/pvm-string->java-sql-date (:tiemerkinta-takaraja aikataulu))
