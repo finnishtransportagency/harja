@@ -66,7 +66,7 @@
           ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))
           paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))]
       ;; Päällystysilmoitusten määrä kasvoi yhdellä
-      (is (= (+ paallystysilmoitusten-maara-kannassa-ennen) paallystysilmoitusten-maara-kannassa-jalkeen))
+      (is (= (+ paallystysilmoitusten-maara-kannassa-ennen 1) paallystysilmoitusten-maara-kannassa-jalkeen))
 
       ;; Tiedot ovat skeeman mukaiset
       (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
