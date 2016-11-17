@@ -317,6 +317,13 @@
                    tr_numero = 20
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
 
+(defn hae-yllapitokohde-tielta-20-jolla-lukittu-paallystysilmoitus []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   tr_numero = 20
+                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id
+                                                                      AND tila = 'lukittu');"))))
+
 (defn hae-yllapitokohde-tielta-20-jolla-ei-paallystysilmoitusta []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE

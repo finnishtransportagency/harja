@@ -192,6 +192,16 @@
       (is (== (get paallystysilmoitus 2) 3) "Muutoshinta laskettiin oikein")
       (is (= (get paallystysilmoitus 3) (get vanha-paallystysilmoitus 3)) "Tila ei muuttunut miksikään"))))
 
+(deftest paallystysilmoituksen-paivittaminen-ei-paivita-lukittua-paallystysilmoitusta
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde (hae-yllapitokohde-tielta-20-jolla-lukittu-paallystysilmoitus)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
+                                         kayttaja-paallystys portti
+                                         (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
+
+    (is (= 500 (:status vastaus)))
+    (is (.contains (:body vastaus) "Päällystysilmoitus on lukittu"))))
+
 (deftest paallystysilmoituksen-kirjaaminen-ei-toimi-ilman-oikeuksia
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka)
