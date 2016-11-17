@@ -52,6 +52,7 @@
 (deftest uuden-paallystysilmoituksen-kirjaaminen-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-tielta-20-jolla-ei-paallystysilmoitusta)
+        paallystysilmoitusten-maara-kannassa-ennen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
@@ -62,7 +63,11 @@
     ;; Tarkistetaan, että tiedot tallentuivat oikein
     (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, muutoshinta, tila, id
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
-          ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))]
+          ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))
+          paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))]
+      ;; Päällystysilmoitusten määrä kasvoi yhdellä
+      (is (= (+ paallystysilmoitusten-maara-kannassa-ennen) paallystysilmoitusten-maara-kannassa-jalkeen))
+
       ;; Tiedot ovat skeeman mukaiset
       (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
                           ilmoitustiedot))
@@ -126,6 +131,7 @@
 (deftest paallystysilmoituksen-paivittaminen-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-tielta-20-jolla-paallystysilmoitus)
+        paallystysilmoitusten-maara-kannassa-ennen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
         vanha-paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, muutoshinta, tila
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
@@ -138,7 +144,10 @@
     ;; Tarkistetana, että tiedot tallentuivat oikein
     (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, muutoshinta, tila
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
-          ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))]
+          ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))
+          paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))]
+      ;; Pottien määrä pysyy samana
+      (is (= paallystysilmoitusten-maara-kannassa-ennen paallystysilmoitusten-maara-kannassa-jalkeen))
       ;; Tiedot ovat skeeman mukaiset
       (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
                           ilmoitustiedot))
