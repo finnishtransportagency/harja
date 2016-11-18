@@ -24,6 +24,10 @@
 (def valtakunnalliset-toistuvat-valitavoitteet-kaytossa
   #{:hoito :tiemerkinta})
 
+(defn valtakunnalliset-valitavoitteet-kaytossa? [urakkatyyppi]
+  (boolean (or (valtakunnalliset-kertaluontoiset-valitavoitteet-kaytossa urakkatyyppi)
+               (valtakunnalliset-toistuvat-valitavoitteet-kaytossa urakkatyyppi))))
+
 (defn hae-valitavoitteet []
   (k/post! :hae-valtakunnalliset-valitavoitteet {}))
 

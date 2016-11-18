@@ -16,15 +16,9 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.hallinta.valtakunnalliset-valitavoitteet :as tiedot])
+            [harja.tiedot.hallinta.valtakunnalliset-valitavoitteet :as vvt-tiedot])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
-
-;; Valtakunnallisille välitavoitteille on haluttu eri urakkatyypeissä käyttää hieman eri nimitystä
-(def valtakunnalliset-otsikko {:tiemerkinta "Tiemerkinnän välitavoitepohjista luodut välitavoitteet"})
-(def valtakunnallinen-sarake {:tiemerkinta "Väli\u00ADtavoite\u00ADpohja"})
-(def valtakunnallinen-takaraja-sarake {:tiemerkinta "Väli\u00ADtavoite\u00ADpohjan taka\u00ADraja"})
-(def valtakunnalliset-tavoitteet-vihje {:tiemerkinta "Tiemerkinnän välitavoitepohjat ovat järjestelmävastaavan hallinnoimia."})
 
 (defn valmiustilan-kuvaus [{:keys [valmispvm takaraja]}]
   (cond (nil? takaraja)
@@ -88,7 +82,7 @@
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
      @urakan-valitavoitteet-atom]))
 
-#_(defn- urakan-omat-ja-valtakunnalliset-valitavoitteet
+(defn- urakan-omat-ja-valtakunnalliset-valitavoitteet
   "Tässä gridissä näytetään sekä urakan omat että valtakunnallisten välitavoitteiden pohjalta urakkaan liitetyt
    välitavoitteet"
   [urakka urakan-kaikki-valitavoitteet-atom]
@@ -100,12 +94,12 @@
                [y/ajax-loader "Välitavoitteita haetaan..."]
                "Ei välitavoitteita")
       #_#_:tallenna (if voi-muokata? TODO KORJAA TÄMÄ
-                  #(go (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
-                         (if (k/virhe? vastaus)
-                           (viesti/nayta! "Tallentaminen epäonnistui"
-                                          :warning viesti/viestin-nayttoaika-lyhyt)
-                           (reset! kaikki-valitavoitteet-atom vastaus))))
-                  :ei-mahdollinen)
+                                     #(go (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
+                                            (if (k/virhe? vastaus)
+                                              (viesti/nayta! "Tallentaminen epäonnistui"
+                                                             :warning viesti/viestin-nayttoaika-lyhyt)
+                                              (reset! kaikki-valitavoitteet-atom vastaus))))
+                                     :ei-mahdollinen)
       :tallennus-ei-mahdollinen-tooltip
       (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)}
 
@@ -158,8 +152,7 @@
                               voi-tehda-tarkennuksen?))]
     [:div
      [grid/grid
-      {:otsikko (or (valtakunnalliset-otsikko (:tyyppi urakka))
-                    "Valtakunnalliset välitavoitteet")
+      {:otsikko "Valtakunnalliset välitavoitteet"
        :tyhja (if (nil? @valtakunnalliset-valitavoitteet-atom)
                 [y/ajax-loader "Välitavoitteita haetaan..."]
                 "Ei välitavoitteita")
@@ -176,8 +169,7 @@
        :voi-lisata? false
        :voi-poistaa? (constantly false)}
 
-      [{:otsikko (or (valtakunnallinen-sarake (:tyyppi urakka))
-                     "Valta\u00ADkunnal\u00ADlinen väli\u00ADtavoite")
+      [{:otsikko "Valta\u00ADkunnal\u00ADlinen väli\u00ADtavoite"
         :leveys 25
         :nimi :valtakunnallinen-nimi :tyyppi :string :pituus-max 128
         :muokattava? (constantly false) :hae #(str (:valtakunnallinen-nimi %))}
@@ -188,8 +180,7 @@
           (when-not (= (:valtakunnallinen-nimi rivi) (:nimi rivi))
             "grid-solu-varoitus"))
         :muokattava? (constantly voi-tehda-tarkennuksen?)}
-       {:otsikko (or (valtakunnallinen-takaraja-sarake (:tyyppi urakka))
-                     "Valta\u00ADkunnal\u00ADlinen taka\u00ADraja")
+       {:otsikko "Valta\u00ADkunnal\u00ADlinen taka\u00ADraja"
         :leveys 20
         :nimi :valtakunnallinen-takaraja
         :hae #(cond
@@ -223,7 +214,7 @@
                                    (t/day (:takaraja rivi)))
                              (not= (:valtakunnallinen-takarajan-toistokuukausi rivi)
                                    (t/month (:takaraja rivi))))))
-                    poikkeava)))
+              poikkeava)))
         :tyyppi :pvm
         :muokattava? (constantly voi-tehda-tarkennuksen?)}
        {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
@@ -248,8 +239,7 @@
                                  [:span.grid-solu-varoitus "punaisella"]
                                  [:span "."]]])
      [yleiset/vihje (str
-                      (or (valtakunnalliset-tavoitteet-vihje (:tyyppi urakka))
-                          "Valtakunnalliset välitavoitteet ovat järjestelmävastaavan hallinnoimia.")
+                      "Valtakunnalliset välitavoitteet ovat järjestelmävastaavan hallinnoimia."
                       " "
                       (when voi-muokata?
                         "Voit kuitenkin tehdä tavoitteisiin urakkakohtaisia muokkauksia."))]]))
@@ -257,20 +247,29 @@
 (defn valitavoitteet
   "Urakan välitavoitteet näkymä. Ottaa parametrinä urakan ja hakee välitavoitteet sille."
   [ur]
-  (let [tallennus-kaynnissa (atom false)
-        nayta-valtakunnalliset? (some? (tiedot/valtakunnalliset-valitavoitteet-kaytossa
-                                   (:tyyppi ur)))]
+  (let [nayta-yhdistetty-grid? (and (boolean (#{:tiemerkinta} (:tyyppi ur)))
+                                    (vvt-tiedot/valtakunnalliset-valitavoitteet-kaytossa? (:tyyppi ur)))
+        nayta-valtakunnalliset-grid? (and (not nayta-yhdistetty-grid?)
+                                          (vvt-tiedot/valtakunnalliset-valitavoitteet-kaytossa? (:tyyppi ur)))
+        nayta-urakkakohtaiset-grid? (not nayta-yhdistetty-grid?)]
     (komp/luo
       (komp/lippu vt/nakymassa?)
       (fn [ur]
-        [:div.valitavoitteet {:style {:position "relative"}}
-         (when @tallennus-kaynnissa (y/lasipaneeli (y/keskita (y/ajax-loader))))
-         [urakan-omat-valitavoitteet
-          ur
-          vt/valitavoitteet
-          vt/urakan-valitavoitteet]
-         (when nayta-valtakunnalliset?
+        [:div.valitavoitteet
+
+         (when nayta-urakkakohtaiset-grid?
+           [urakan-omat-valitavoitteet
+            ur
+            vt/valitavoitteet
+            vt/urakan-valitavoitteet])
+
+         (when nayta-valtakunnalliset-grid?
            [valtakunnalliset-valitavoitteet
             ur
             vt/valitavoitteet
-            vt/valtakunnalliset-valitavoitteet])]))))
+            vt/valtakunnalliset-valitavoitteet])
+
+         (when nayta-yhdistetty-grid?
+           [urakan-omat-ja-valtakunnalliset-valitavoitteet
+            ur
+            vt/valitavoitteet])]))))
