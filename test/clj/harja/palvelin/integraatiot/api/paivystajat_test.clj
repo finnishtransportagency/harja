@@ -49,7 +49,7 @@
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/paivystajatiedot"] kayttaja-yit portti
                                                       (-> "test/resurssit/api/kirjaa_paivystajatiedot.json"
                                                           slurp
-                                                          a(.replace "__ID__" (str ulkoinen-id))
+                                                          (.replace "__ID__" (str ulkoinen-id))
                                                           (.replace "__ETUNIMI__" "Taneli")
                                                           (.replace "__SUKUNIMI__" "Tähystäjä")
                                                           (.replace "__EMAIL__" "taneli.tahystaja@gmail.com")
