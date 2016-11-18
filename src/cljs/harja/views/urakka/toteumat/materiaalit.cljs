@@ -123,7 +123,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
      :validoi [[:ei-tyhja "Valitse materiaali."]]
      :leveys "50%"}
 
-    {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys "40%"}
+    {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys "40%" :validoi [[:ei-tyhja "Anna määrä."]]}
     {:otsikko "Yks." :muokattava? (constantly false) :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "5%"}]
    materiaalit-atom])
 

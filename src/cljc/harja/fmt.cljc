@@ -50,6 +50,15 @@
      (euro nayta-euromerkki summa)
      "")))
 
+(defn yksikolla [yksikko arvo]
+  "Lisää arvo-merkkijonon loppuun välilyönnin ja yksikkö-merkkijonon"
+  (str arvo " " yksikko))
+
+(defn yksikolla-opt [yksikko arvo]
+  "Lisää arvo-merkkijonon loppuun välilyönnin ja yksikkö-merkkijonon.
+  Jos arvo on nil, palauttaa nil"
+  (when arvo (yksikolla yksikko arvo)))
+
 (defn lyhenna-keskelta
   "Lyhentää tekstijonon haluttuun pituuteen siten, että
   pituutta otetaan pois keskeltä, ja korvataan kahdella pisteellä .."
