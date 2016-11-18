@@ -4,6 +4,8 @@
             [clojure.java.jmx :as jmx]
             [taoensso.timbre :as log]))
 
+;; JMX raportoija ottaa custom metriikat tämän alta, joten
+;; käytetään sitä prefixinä.
 (def +mbean-prefix+ "Catalina:type=DataSource,name=")
 
 (defprotocol Metriikka
@@ -42,6 +44,20 @@
 (defn dec! [mittari-ref avain]
   (dosync
    (alter mittari-ref update avain dec)))
+
+(defn muuta!
+  "Muuta monta mittariavainta samalla kertaa.
+  Ottaa mittari-ref viittauksen sekä vaihtuvat
+  avaimet ja muutosfunktiot. Avaimelle ajetaan update
+  aina sitä vastaavalla muutosfunktiolla."
+  [mittari-ref & avaimet-ja-muutosfunktiot]
+  (dosync
+   (alter mittari-ref
+          #(reduce (fn [arvot [avain muutos-fn]]
+                     (assoc arvot avain
+                            (muutos-fn (get arvot avain))))
+                   %
+                   (partition 2 avaimet-ja-muutosfunktiot)))))
 
 (defn with-counter-incremented [mittari-ref avain & body]
   `(let [ref# ~mittari-ref

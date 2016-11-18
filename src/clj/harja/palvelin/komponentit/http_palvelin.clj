@@ -267,7 +267,9 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                      (catch [:virhe :todennusvirhe] _
                        {:status 403 :body "Todennusvirhe"})
                      (finally
-                       (metriikka/dec! mittarit :aktiiviset_pyynnot)))))
+                       (metriikka/muuta! mittarit
+                                         :aktiiviset_pyynnot dec
+                                         :pyyntoja_palveltu inc)))))
 
                  {:port     (or (:portti asetukset) asetukset)
                   :thread   (or (:threads asetukset) 8)
@@ -316,7 +318,8 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 
 (defn luo-http-palvelin [asetukset kehitysmoodi]
   (->HttpPalvelin asetukset (atom []) (atom []) (atom nil) kehitysmoodi
-                  (metriikka/luo-mittari-ref {:aktiiviset_pyynnot 0})))
+                  (metriikka/luo-mittari-ref {:aktiiviset_pyynnot 0
+                                              :pyyntoja_palveltu 0})))
 
 (defn julkaise-reitti
   ([http nimi reitti] (julkaise-reitti http nimi reitti true))
