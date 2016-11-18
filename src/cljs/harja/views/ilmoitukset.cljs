@@ -104,7 +104,9 @@
         vakio-aikavalikentta
         alkuaikakentta
         loppuaikakentta)
-      vakio-aikavalikentta)))
+      (lomake/ryhma
+        {:rivi? true}
+        vakio-aikavalikentta))))
 
 (defn ilmoitusten-hakuehdot [e! {:keys [aikavali urakka valitun-urakan-hoitokaudet] :as valinnat-nyt}]
   [lomake/lomake
