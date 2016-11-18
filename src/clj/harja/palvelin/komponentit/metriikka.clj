@@ -18,7 +18,7 @@
   component/Lifecycle
   (start [this]
     (let [registry (metrics/new-registry)
-          reporter (jmx/reporter registry)]
+          reporter (jmx/reporter registry  {:domain "Catalina"})]
       (assoc this
              ::registry registry
              ::reporter reporter)))
@@ -32,6 +32,7 @@
     (gauges/gauge-fn reg nimi mittari-fn))
 
   (aloita-raportointi! [{reporter ::reporter}]
+    (log/info "Aloitetaan JMX metriikan julkaisu: " reporter)
     (jmx/start reporter)))
 
 (defn luo-jmx-metriikka []
