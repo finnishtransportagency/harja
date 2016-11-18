@@ -112,8 +112,9 @@
   ([db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit
                     kuittaustyypit hakuehto selite vain-myohassa?
                     aloituskuittauksen-ajankohta tr-numero
-                    ilmoittaja-nimi ilmoittaja-puhelin vakioaikavali] :as hakuehdot}
+                    ilmoittaja-nimi ilmoittaja-puhelin] :as hakuehdot}
     max-maara]
+
    (let [aikavali (aikavaliehto hakuehdot)
          aikavali-alku (when (first aikavali)
                          (konv/sql-timestamp (first aikavali)))

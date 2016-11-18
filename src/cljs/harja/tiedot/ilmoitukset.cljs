@@ -147,7 +147,8 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
   v/YhdistaValinnat
   (process-event [{valinnat :valinnat :as e} app]
-    (hae app))
+    (hae
+      (update-in app [:valinnat] merge valinnat)))
 
   v/HaeIlmoitukset
   (process-event [_ {valinnat :valinnat taustahaku? :taustahaku? :as app}]
