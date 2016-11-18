@@ -232,32 +232,4 @@
            [valtakunnalliset-valitavoitteet
             ur
             vt/valitavoitteet
-            vt/valtakunnalliset-valitavoitteet])
-
-         ;; PENDING Kommentoidaan toistaiseksi tämä ylläpidon demo pois hämmentämästä
-         ;; Ylläpidon välitavoitteita pohditaan myöhemmin
-         #_(when (and (= (:sopimustyyppi @nav/valittu-urakka) :kokonaisurakka)
-                      (or (= (:tyyppi @nav/valittu-urakka) :paallystys)
-                          (= (:tyyppi @nav/valittu-urakka) :paikkaus)))
-             [grid/grid
-              {:otsikko "Kohteiden välitavoitteet"
-               :tunniste :yha-id
-               :tallenna nil
-               :vetolaatikot (into {}
-                                   (map
-                                     (juxt :id
-                                           (partial valitavoite-lomake
-                                                    {:aseta-tavoitteet #(reset! vt/valitavoitteet %)} ur)))
-                                   @vt/valitavoitteet)
-               }
-
-              [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-               {:otsikko "YHA-ID" :leveys "15%" :nimi :yha-id :tyyppi :string :pituus-max 128 :muokattava? (constantly false)}
-               {:otsikko "Kohde" :leveys "60%" :nimi :kohde :tyyppi :string :muokattava? (constantly false)}
-               {:otsikko "Tila" :leveys "20%" :tyyppi :string :muokattava? (constantly false)
-                :nimi :tila}]
-              [{:yha-id 1 :kohde "Mt 22 Ruohonjuuren pätkä" :tila "Kaikki valmiina"}
-               {:yha-id 2 :kohde "Mt 22 Terilän silta" :tila "Kaikki valmiina"}
-               {:yha-id 3 :kohde "Mt 22 Matulan  pätkä" :tila "Kohde kesken"}
-               {:yha-id 4 :kohde "Mt 22 koskenlaskijan kuru" :tila "Kohde kesken"}
-               {:yha-id 5 :kohde "Mt 22 rampit" :tila "Kaikki valmiina"}]])]))))
+            vt/valtakunnalliset-valitavoitteet])]))))
