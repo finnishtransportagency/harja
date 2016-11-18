@@ -102,10 +102,9 @@
 (defn aikavaliehto [{:keys [vakioaikavali aikavali alkuaika loppuaika]}]
   (if aikavali
     aikavali
-    (let [tunteja (:tunteja vakioaikavali)]
-     (if tunteja
-       (vector (c/to-date (pvm/tuntia-sitten tunteja)) (pvm/nyt))
-       (vector alkuaika loppuaika)))))
+    (if-let [tunteja (:tunteja vakioaikavali)]
+      [(c/to-date (pvm/tuntia-sitten tunteja)) (pvm/nyt)]
+      [alkuaika loppuaika])))
 
 (defn hae-ilmoitukset
   ([db user suodattimet] (hae-ilmoitukset db user suodattimet nil))
