@@ -27,6 +27,9 @@
 
 (defrecord AsyncResponse [channel])
 
+(defn async-response? [res]
+  (instance? AsyncResponse res))
+
 (defmacro async [& body]
   `(->AsyncResponse (async/thread ~@body)))
 
