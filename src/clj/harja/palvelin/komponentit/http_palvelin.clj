@@ -20,10 +20,32 @@
 
             [slingshot.slingshot :refer [try+ throw+]]
 
-            [new-reliquary.core :as nr])
+            [new-reliquary.core :as nr]
+            [clojure.core.async :as async])
   (:import (java.text SimpleDateFormat)
            (java.io ByteArrayInputStream ByteArrayOutputStream)))
 
+(defn transit-vastaus
+  ([data] (transit-vastaus 200 data))
+  ([status data]
+   {:status  status
+    :headers {"Content-Type" "application/transit+json"}
+    :body    (transit/clj->transit data)}))
+
+(defrecord AsyncResponse [channel])
+
+(defn async-response? [res]
+  (instance? AsyncResponse res))
+
+(defmacro async [& body]
+  `(->AsyncResponse (async/thread
+                      (try+
+                       (transit-vastaus ~@body)
+                       (catch harja.domain.roolit.EiOikeutta eo#
+                         (transit-vastaus 403 eo#))
+                       (catch Throwable e#
+                         (log/warn e# "Virhe async POST palvelussa")
+                         (transit-vastaus 500 {:virhe (.getMessage e#)}))))))
 
 (defn- reitita
   "Reititä sisääntuleva pyyntö käsittelijöille."
@@ -43,13 +65,6 @@
     (fn [req]
       (when (= polku (:uri req))
         (kasittelija-fn req)))))
-
-(defn transit-vastaus
-  ([data] (transit-vastaus 200 data))
-  ([status data]
-   {:status  status
-    :headers {"Content-Type" "application/transit+json"}
-    :body    (transit/clj->transit data)}))
 
 (defn- transit-post-kasittelija
   "Luo transit käsittelijän POST kutsuille annettuun palvelufunktioon."
@@ -76,7 +91,14 @@
             {:status 400
              :body   "Ei validi kysely"}
             (try+
-             (transit-vastaus (palvelu-fn (:kayttaja req) kysely))
+             (let [palvelu-vastaus (palvelu-fn (:kayttaja req) kysely)]
+               (if (async-response? palvelu-vastaus)
+                 (http/with-channel req channel
+                   (async/go
+                     (let [vastaus (async/<! (:channel palvelu-vastaus))]
+                       (http/send! channel vastaus)
+                       (http/close channel))))
+                 (transit-vastaus palvelu-vastaus)))
              (catch harja.domain.roolit.EiOikeutta eo
                ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
                (transit-vastaus 403 eo))
