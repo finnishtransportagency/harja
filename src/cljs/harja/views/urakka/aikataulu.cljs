@@ -147,7 +147,7 @@
             :muokattava? (constantly false)}
            (when (= (:nakyma optiot) :paallystys) ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
              {:otsikko "Kohde a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-kohde-alku
-              :tyyppi :pvm :fmt pvm/pvm-aika-opt
+              :tyyppi :pvm :fmt pvm/pvm-opt
               :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))})
            ; FIXME Tallennus (ja validointi) epäonnistuu jos kellonaikaa ei anna
            {:otsikko "Pääl\u00ADlys\u00ADtys a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-paallystys-alku
