@@ -235,12 +235,12 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
            (str/includes? (:uri req) "laadunseuranta"))))
 
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat lopetus-fn kehitysmoodi
-                         aktiivisia-pyyntoja]
+                         mittarit]
   component/Lifecycle
   (start [{metriikka :metriikka :as this}]
     (log/info "HttpPalvelin käynnistetään portissa " (:portti asetukset))
     (when metriikka
-      (metriikka/lisaa-mittari! metriikka "http.aktiiviset-pyynnot" #(deref aktiivisia-pyyntoja)))
+      (metriikka/lisaa-mittari! metriikka "http" mittarit))
     (let [todennus (:todennus this)
           resurssit (route/resources "")
           dev-resurssit (when kehitysmoodi
@@ -251,7 +251,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                  (cookies/wrap-cookies
                   (fn [req]
                     (try+
-                     (swap! aktiivisia-pyyntoja inc)
+                     (metriikka/inc! mittarit :aktiiviset_pyynnot)
                      (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
                            ui-kasittelijat (mapv :fn @kasittelijat)
                            ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
@@ -267,7 +267,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                      (catch [:virhe :todennusvirhe] _
                        {:status 403 :body "Todennusvirhe"})
                      (finally
-                       (swap! aktiivisia-pyyntoja dec)))))
+                       (metriikka/dec! mittarit :aktiiviset_pyynnot)))))
 
                  {:port     (or (:portti asetukset) asetukset)
                   :thread   (or (:threads asetukset) 8)
@@ -315,7 +315,8 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
              (filterv #(not= (:nimi %) nimi) kasittelijat)))))
 
 (defn luo-http-palvelin [asetukset kehitysmoodi]
-  (->HttpPalvelin asetukset (atom []) (atom []) (atom nil) kehitysmoodi (atom 0)))
+  (->HttpPalvelin asetukset (atom []) (atom []) (atom nil) kehitysmoodi
+                  (metriikka/luo-mittari-ref {:aktiiviset_pyynnot 0})))
 
 (defn julkaise-reitti
   ([http nimi reitti] (julkaise-reitti http nimi reitti true))

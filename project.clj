@@ -27,7 +27,7 @@
                  [com.narkisr/gelfino-client "0.7.0"]
 
                  ;; Metriikkadata
-                 [metrics-clojure "2.7.0"]
+                 [org.clojure/java.jmx "0.3.3"]
 
                  ;; JSON encode/decode
                  [cheshire "5.6.1"]
