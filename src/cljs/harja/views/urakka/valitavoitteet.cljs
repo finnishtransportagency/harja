@@ -291,8 +291,7 @@
             ur
             tiedot/valitavoitteet])
 
-         (when (or nayta-yhdistetty-grid?
-                   nayta-valtakunnalliset-grid?)
+         (when nayta-valtakunnalliset-grid?
            [yleiset/vihje (str
                             "Valtakunnalliset välitavoitteet ovat järjestelmävastaavan hallinnoimia."
                             " "
