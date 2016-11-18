@@ -36,15 +36,19 @@
         (and takaraja (nil? valmispvm) (pvm/sama-tai-ennen? (pvm/nyt) takaraja))
         (let [paivia-valissa (pvm/paivia-valissa (pvm/nyt) takaraja)]
           (str "Ei valmis" (when (pos? paivia-valissa)
-                             (str " (" (fmt/kuvaile-paivien-maara paivia-valissa) " jäljellä)"))))
+                             (str " (" (fmt/kuvaile-paivien-maara paivia-valissa
+                                                                  {:lyhenna-yksikot? true})
+                                  " jäljellä)"))))
 
         (and takaraja (nil? valmispvm) (t/after? (pvm/nyt) takaraja))
         (let [paivia-valissa (pvm/paivia-valissa takaraja (pvm/nyt))]
           (str "Myöhässä" (when (pos? paivia-valissa)
-                            (str " (" (fmt/kuvaile-paivien-maara paivia-valissa) ")"))))))
+                            (str " (" (fmt/kuvaile-paivien-maara paivia-valissa
+                                                                 {:lyhenna-yksikot? true})
+                                 ")"))))))
 
-(defn- urakan-valitavoitteet [urakka kaikki-valitavoitteet-atom urakan-valitavoitteet-atom]
-  (log "Listalla: " (pr-str urakan-valitavoitteet-atom))
+(defn- urakan-omat-valitavoitteet
+  [urakka kaikki-valitavoitteet-atom urakan-valitavoitteet-atom]
   (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
         voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))]
     [grid/grid
@@ -83,6 +87,49 @@
        :nimi :merkitsija :hae (fn [rivi]
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
      @urakan-valitavoitteet-atom]))
+
+#_(defn- urakan-omat-ja-valtakunnalliset-valitavoitteet
+  "Tässä gridissä näytetään sekä urakan omat että valtakunnallisten välitavoitteiden pohjalta urakkaan liitetyt
+   välitavoitteet"
+  [urakka urakan-kaikki-valitavoitteet-atom]
+  (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
+        voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))]
+    [grid/grid
+     {:otsikko "Urakan välitavoitteet"
+      :tyhja (if (nil? @urakan-kaikki-valitavoitteet-atom)
+               [y/ajax-loader "Välitavoitteita haetaan..."]
+               "Ei välitavoitteita")
+      #_#_:tallenna (if voi-muokata? TODO KORJAA TÄMÄ
+                  #(go (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
+                         (if (k/virhe? vastaus)
+                           (viesti/nayta! "Tallentaminen epäonnistui"
+                                          :warning viesti/viestin-nayttoaika-lyhyt)
+                           (reset! kaikki-valitavoitteet-atom vastaus))))
+                  :ei-mahdollinen)
+      :tallennus-ei-mahdollinen-tooltip
+      (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)}
+
+     [{:otsikko "Nimi" :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 128}
+      {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
+                                                                   (pvm/pvm-opt %)
+                                                                   "Ei takarajaa")
+       :tyyppi :pvm}
+      {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
+       :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}
+      {:otsikko "Valmistumispäivä" :leveys 20 :tyyppi :pvm
+       :muokattava? (constantly voi-merkita-valmiiksi?)
+       :nimi :valmispvm
+       :fmt #(if %
+              (pvm/pvm-opt %)
+              "-")}
+      {:otsikko "Kom\u00ADmentti val\u00ADmis\u00ADtu\u00ADmi\u00ADses\u00ADta"
+       :leveys 35 :tyyppi :string :muokattava? #(and voi-merkita-valmiiksi?
+                                                     (:valmispvm %))
+       :nimi :valmis-kommentti}
+      {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
+       :nimi :merkitsija :hae (fn [rivi]
+                                (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
+     @urakan-kaikki-valitavoitteet-atom]))
 
 (defn ainakin-yksi-tavoite-muutettu-urakkaan [rivit]
   (some #(or
@@ -218,7 +265,7 @@
       (fn [ur]
         [:div.valitavoitteet {:style {:position "relative"}}
          (when @tallennus-kaynnissa (y/lasipaneeli (y/keskita (y/ajax-loader))))
-         [urakan-valitavoitteet
+         [urakan-omat-valitavoitteet
           ur
           vt/valitavoitteet
           vt/urakan-valitavoitteet]
