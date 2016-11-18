@@ -99,11 +99,13 @@
                  aloituskuittaukset))]
     aloituskuittauksia-annetuna-ajan-valissa))
 
-(defn aikavaliehto [{:keys [vakioaikavali alkuaika loppuaika]}]
-  (let [tunteja (:tunteja vakioaikavali)]
-    (if tunteja
-      (vector (clj-time.coerce/to-date (pvm/tuntia-sitten tunteja)) (pvm/nyt))
-      (vector alkuaika loppuaika))))
+(defn aikavaliehto [{:keys [vakioaikavali aikavali alkuaika loppuaika]}]
+  (if aikavali
+    aikavali
+    (let [tunteja (:tunteja vakioaikavali)]
+     (if tunteja
+       (vector (clj-time.coerce/to-date (pvm/tuntia-sitten tunteja)) (pvm/nyt))
+       (vector alkuaika loppuaika)))))
 
 (defn hae-ilmoitukset
   ([db user suodattimet] (hae-ilmoitukset db user suodattimet nil))
