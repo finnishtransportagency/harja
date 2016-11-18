@@ -79,7 +79,10 @@
       {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :merkitsija :hae (fn [rivi]
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
-     @urakan-valitavoitteet-atom]))
+     (filterv #(or
+                (nil? @tiedot/valittu-vuosi)
+                (= (t/year (:takaraja %)) @tiedot/valittu-vuosi))
+              @urakan-valitavoitteet-atom)]))
 
 (defn- urakan-omat-ja-valtakunnalliset-valitavoitteet
   "Tässä gridissä näytetään sekä urakan omat että valtakunnallisten välitavoitteiden pohjalta urakkaan liitetyt
@@ -122,7 +125,10 @@
       {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :merkitsija :hae (fn [rivi]
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
-     @kaikki-valitavoitteet-atom]))
+     (filterv #(or
+                (nil? @tiedot/valittu-vuosi)
+                (= (t/year (:takaraja %)) @tiedot/valittu-vuosi))
+              @kaikki-valitavoitteet-atom)]))
 
 (defn ainakin-yksi-tavoite-muutettu-urakkaan [rivit]
   (some #(or
@@ -231,17 +237,16 @@
        {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
         :nimi :merkitsija :hae (fn [rivi]
                                  (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
-      @valtakunnalliset-valitavoitteet-atom]
+      (filterv #(or
+                 (nil? @tiedot/valittu-vuosi)
+                 (= (t/year (:takaraja %)) @tiedot/valittu-vuosi))
+               @valtakunnalliset-valitavoitteet-atom)]
+
      (when (ainakin-yksi-tavoite-muutettu-urakkaan @valtakunnalliset-valitavoitteet-atom)
        [yleiset/vihje-elementti [:span
                                  [:span "Urakkakohtaisten tarkennukset värjätty "]
                                  [:span.grid-solu-varoitus "punaisella"]
-                                 [:span "."]]])
-     [yleiset/vihje (str
-                      "Valtakunnalliset välitavoitteet ovat järjestelmävastaavan hallinnoimia."
-                      " "
-                      (when voi-muokata?
-                        "Voit kuitenkin tehdä tavoitteisiin urakkakohtaisia muokkauksia."))]]))
+                                 [:span "."]]])]))
 
 (defn- valinnat [urakka]
   [tee-otsikollinen-kentta "Vuosi"
@@ -255,7 +260,8 @@
 (defn valitavoitteet
   "Urakan välitavoitteet näkymä. Ottaa parametrinä urakan ja hakee välitavoitteet sille."
   [ur]
-  (let [nayta-yhdistetty-grid? (and (boolean (#{:tiemerkinta} (:tyyppi ur)))
+  (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id ur))
+        nayta-yhdistetty-grid? (and (boolean (#{:tiemerkinta} (:tyyppi ur)))
                                     (vvt-tiedot/valtakunnalliset-valitavoitteet-kaytossa? (:tyyppi ur)))
         nayta-valtakunnalliset-grid? (and (not nayta-yhdistetty-grid?)
                                           (vvt-tiedot/valtakunnalliset-valitavoitteet-kaytossa? (:tyyppi ur)))
@@ -283,4 +289,12 @@
          (when nayta-yhdistetty-grid?
            [urakan-omat-ja-valtakunnalliset-valitavoitteet
             ur
-            tiedot/valitavoitteet])]))))
+            tiedot/valitavoitteet])
+
+         (when (or nayta-yhdistetty-grid?
+                   nayta-valtakunnalliset-grid?)
+           [yleiset/vihje (str
+                            "Valtakunnalliset välitavoitteet ovat järjestelmävastaavan hallinnoimia."
+                            " "
+                            (when voi-muokata?
+                              "Voit kuitenkin tehdä tavoitteisiin urakkakohtaisia muokkauksia."))])]))))
