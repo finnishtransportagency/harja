@@ -9,7 +9,9 @@
 (defprotocol Metriikka
   (lisaa-mittari! [this nimi mittari-fn]
     "Lisää numerotyyppinen mittari, jota pollataan. Mittari-fn on parametriton funktio, jonka
-    tulee palauttaa arvo kutsuttaessa."))
+    tulee palauttaa arvo kutsuttaessa.")
+  (aloita-raportointi! [this]
+    "Aloittaa metriikan raportoinnin"))
 
 
 (defrecord JmxMetriikka []
@@ -17,7 +19,6 @@
   (start [this]
     (let [registry (metrics/new-registry)
           reporter (jmx/reporter registry)]
-      (jmx/start reporter)
       (assoc this
              ::registry registry
              ::reporter reporter)))
@@ -28,7 +29,10 @@
 
   Metriikka
   (lisaa-mittari! [{reg ::registry} nimi mittari-fn]
-    (gauges/gauge-fn reg nimi mittari-fn)))
+    (gauges/gauge-fn reg nimi mittari-fn))
+
+  (aloita-raportointi! [{reporter ::reporter}]
+    (jmx/start reporter)))
 
 (defn luo-jmx-metriikka []
   (->JmxMetriikka))

@@ -456,6 +456,7 @@
                           luo-jarjestelma
                           component/start)))
     (status/aseta-status! (:status harja-jarjestelma) 200 "Harja käynnistetty")
+    (metriikka/aloita-raportointi! (:metriikka harja-jarjestelma))
     (catch Throwable t
       (log/fatal t "Harjan käynnistyksessä virhe")
       (when lopeta-jos-virhe?
