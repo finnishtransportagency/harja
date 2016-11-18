@@ -31,7 +31,7 @@
 
 (defn kasittele-validointivirheet
   [skeema virheet]
-  (log/error (format "JSON ei ole validia (skeema: %s). Validointivirheet: %s") skeema virheet)
+  (log/error (format "JSON ei ole validia (skeema: %s). Validointivirheet: %s" skeema virheet))
   (throw+ {:type    virheet/+invalidi-json+
            :virheet [{:koodi  virheet/+invalidi-json-koodi+
                       :viesti (str "JSON ei ole validia: " (formatoi-virhe "" virheet))}]}))
