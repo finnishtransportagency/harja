@@ -44,7 +44,7 @@
 
 (defn hae-integraatiotapahtumat
   "Palvelu, joka palauttaa järjestelmän integraation tapahtumat tietyltä aikaväliltä."
-  [db kayttaja jarjestelma integraatio alkaen paattyen]
+  [db kayttaja jarjestelma integraatio alkaen paattyen vain-epaonnistuneet?]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatioloki kayttaja)
   (let [tapahtumat
         (into []
@@ -54,10 +54,12 @@
                                                                       (boolean jarjestelma) jarjestelma
                                                                       (boolean integraatio) integraatio
                                                                       (konversio/sql-date alkaen)
-                                                                      (konversio/sql-date paattyen))
+                                                                      (konversio/sql-date paattyen)
+                                                                      (boolean vain-epaonnistuneet?))
                 (q/hae-uusimmat-integraatiotapahtumat db
                                                       (boolean jarjestelma) jarjestelma
-                                                      (boolean integraatio) integraatio)))]
+                                                      (boolean integraatio) integraatio
+                                                      (boolean vain-epaonnistuneet?))))]
     tapahtumat))
 
 (defn hae-integraatiotapahtumien-maarat
@@ -88,8 +90,8 @@
                         (hae-jarjestelmien-integraatiot (:db this) kayttaja)))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-integraatiotapahtumat
-                      (fn [kayttaja {:keys [jarjestelma integraatio alkaen paattyen]}]
-                        (hae-integraatiotapahtumat (:db this) kayttaja jarjestelma integraatio alkaen paattyen)))
+                      (fn [kayttaja {:keys [jarjestelma integraatio alkaen paattyen vain-epaonnistuneet?]}]
+                        (hae-integraatiotapahtumat (:db this) kayttaja jarjestelma integraatio alkaen paattyen vain-epaonnistuneet?)))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-integraatiotapahtumien-maarat
                       (fn [kayttaja {:keys [jarjestelma integraatio]}]

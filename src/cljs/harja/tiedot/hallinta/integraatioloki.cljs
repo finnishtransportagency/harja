@@ -20,10 +20,11 @@
   (k/post! :hae-integraatiotapahtumien-maarat {:jarjestelma jarjestelma
                                                :integraatio integraatio}))
 
-(defn hae-integraation-tapahtumat [jarjestelma integraatio aikavali]
+(defn hae-integraation-tapahtumat [jarjestelma integraatio aikavali vain-epaonnistuneet?]
   (k/post! :hae-integraatiotapahtumat
            (merge {:jarjestelma (:jarjestelma jarjestelma)
-                   :integraatio integraatio}
+                   :integraatio integraatio
+                   :vain-epaonnistuneet? vain-epaonnistuneet?}
                   (when aikavali
                     {:alkaen (first aikavali)
                      ;; loppupvm halutaan seuraavan päivän 00:00:00 aikaan, jotta valitun loppupäivän tapahtumat näkyvät
@@ -41,14 +42,16 @@
 (defonce valittu-jarjestelma (atom nil))
 (defonce valittu-integraatio (atom nil))
 (defonce valittu-aikavali (atom nil))
+(defonce vain-epaonnistuneet? (atom false))
 
 (defonce haetut-tapahtumat
          (reaction<! [valittu-jarjestelma @valittu-jarjestelma
                       valittu-integraatio @valittu-integraatio
                       valittu-aikavali @valittu-aikavali
+                      vain-epaonnistuneet? @vain-epaonnistuneet?
                       nakymassa? @nakymassa?]
                      (when nakymassa?
-                       (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali))))
+                       (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali vain-epaonnistuneet?))))
 
 (defonce tapahtumien-maarat
          (reaction<! [valittu-jarjestelma @valittu-jarjestelma

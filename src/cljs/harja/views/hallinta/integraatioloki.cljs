@@ -13,9 +13,12 @@
             [harja.fmt :as fmt]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.modal :as modal]
-            [harja.ui.dom :as dom])
+            [harja.ui.dom :as dom]
+            [harja.ui.kentat :as kentat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
+
+(def vain-epaonnistuneet? (atom false))
 
 (defn kartta-merkkijonoksi [kartta]
   (when kartta
@@ -32,7 +35,7 @@
 
 (defn nayta-sisalto-modaalissa-dialogissa [otsikko sisalto]
   (modal/nayta! {:otsikko otsikko
-                 :leveys  "80%"}
+                 :leveys "80%"}
                 [:div.kayttajan-tiedot sisalto]))
 
 (defn nayta-otsikko [otsikko]
@@ -63,7 +66,7 @@
 
 (defn lataa-tiedostona [sisalto]
   (let [encode (aget js/window "encodeURIComponent")
-        url (str "data:Application/octet-stream,"(encode sisalto))]
+        url (str "data:Application/octet-stream," (encode sisalto))]
     (set! (.-location js/document) url)))
 
 (defn nayta-sisalto [sisalto]
@@ -127,8 +130,6 @@
                                                                (reduce + (keep :onnistuneet rivit))
                                                                (reduce + (keep :epaonnistuneet rivit))]))
                                                     pvm-kohtaiset-tiedot))]
-    (log "---> pvm-kohtaiset-maarat-summattu:" (pr-str pvm-kohtaiset-maarat-summattu))
-
     [:span.pylvaat
      [:h5 (str "Vastaanotetut pyynnöt " eka-pvm " - " vika-pvm)]
 
@@ -143,7 +144,7 @@
        [vis/bars {:width w
                   :height (min 200 h)
                   :label-fn #(if nayta-labelit?
-                              (str "Onnistuneet: "(pvm/paiva-kuukausi (:pvm %)))
+                              (str "Onnistuneet: " (pvm/paiva-kuukausi (:pvm %)))
                               "")
                   :value-fn :onnistuneet
                   :format-amount str
@@ -168,8 +169,6 @@
                   :ticks tikit
                   :colors ["#f44242"]}
         pvm-kohtaiset-maarat-summattu])
-
-
 
      ]))
 
@@ -226,6 +225,11 @@
       [:span
        [valinnat/aikavali tiedot/valittu-aikavali]
        [:button.nappi-ensisijainen {:on-click #(tiedot/nayta-uusimmat-tapahtumat)} "Näytä tapahtumahistoria"]])
+
+    [kentat/tee-kentta
+     {:tyyppi :checkbox
+      :teksti "Vain epäonnistuneet"}
+     tiedot/vain-epaonnistuneet?]
 
     (if-not (empty? @tiedot/tapahtumien-maarat)
       [:div.integraatio-tilastoja

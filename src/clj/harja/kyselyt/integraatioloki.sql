@@ -75,7 +75,8 @@ SELECT it.id, it.ulkoinenid, it.lisatietoja, it.alkanut, it.paattynyt, it.onnist
   JOIN integraatio i ON it.integraatio = i.id
  WHERE (:jarjestelma_annettu = false OR jarjestelma ILIKE :jarjestelma)
    AND (:integraatio_annettu = false OR nimi ILIKE :integraatio)
-   AND alkanut >= :alkaen AND alkanut <= :paattyen;
+   AND alkanut >= :alkaen AND alkanut <= :paattyen
+   AND (NOT :vain-epaonnistuneet OR it.onnistunut IS NOT TRUE);
 
 -- name: hae-uusimmat-integraatiotapahtumat
 -- Hakee uusimmat integraatiotapahtumat
@@ -87,6 +88,7 @@ SELECT it.id, it.ulkoinenid, it.lisatietoja, it.alkanut, it.paattynyt, it.onnist
   JOIN integraatio i ON it.integraatio = i.id
  WHERE (:jarjestelma_annettu = false OR jarjestelma ILIKE :jarjestelma)
    AND (:integraatio_annettu = false OR nimi ILIKE :integraatio)
+   AND (NOT :vain-epaonnistuneet OR it.onnistunut IS NOT TRUE)
 ORDER BY alkanut DESC
  LIMIT 50;
 
