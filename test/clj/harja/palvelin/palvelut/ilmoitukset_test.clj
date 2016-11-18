@@ -131,11 +131,12 @@
                      :ulkoinen-ilmoitusid 123
                      :ilmoittaja-matkapuhelin "0400123123"
                      :vapaatesti "TESTI123"
-                     :tyyppi :aloitus}]]
-    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :tallenna-ilmoitustoimenpiteet
-                                           +kayttaja-tero+
-                                           parametrit)))))
+                     :tyyppi :aloitus}]
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-ilmoitustoimenpiteet
+                                +kayttaja-tero+
+                                parametrit)]
+    (is (= 403 (:status vastaus)))))
 
 (deftest hae-ilmoituksia-tienumerolla
   (let [oletusparametrit {:hallintayksikko nil

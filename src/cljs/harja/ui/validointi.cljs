@@ -88,6 +88,12 @@
           (or viesti
               (ei-kuukauden-aikana-str (pvm/pvm valittu-kk-alkupvm) (pvm/pvm valittu-kk-loppupvm))))))))
 
+(defmethod validoi-saanto :validi-tr [_ _ data taulukko _ & [viesti reittipolku]]
+  (when
+    (and (:numero data) (:alkuosa data) (:alkuetaisyys data)
+         (or (= 0 (:numero data)) (not (get-in taulukko reittipolku))))
+    viesti))
+
 (defmethod validoi-saanto :uusi-arvo-ei-setissa [_ _ data rivi taulukko & [setti-atom viesti]]
   "Tarkistaa, onko rivi uusi ja arvo annetussa setissä."
   (log "Tarkistetaan onko annettu arvo " (pr-str data) " setissä " (pr-str @setti-atom))

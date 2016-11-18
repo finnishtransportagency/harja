@@ -226,6 +226,8 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
       ;; Poistetaan mahd. euromerkki lopusta
       (str/replace #"€$" "")))
 
+(def +desimaalin-oletus-tarkkuus+ 2)
+
 (defmethod tee-kentta :numero [kentta data]
   (let [fmt (or
               (when-let [tarkkuus (:desimaalien-maara kentta)]
@@ -233,15 +235,14 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
               (:fmt kentta) str)
         teksti (atom nil)
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)]
-    (fn [{:keys [lomake? kokonaisluku?] :as kentta} data]
+    (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen?] :as kentta} data]
       (let [nykyinen-data @data
             nykyinen-teksti (or @teksti
                                 (normalisoi-numero (fmt nykyinen-data))
                                 "")
-            vaadi-ei-negatiivinen? (= :positiivinen-numero (:tyyppi kentta))
             kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
             desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
-                                                      (or (:desimaalien-maara kentta) 2)
+                                                      (or (:desimaalien-maara kentta) +desimaalin-oletus-tarkkuus+)
                                                       "})?"))]
         [:input {:class       (when lomake? "form-control")
                  :type        "text"
@@ -264,9 +265,20 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                        (reset! data numero)
                                        (reset! data nil)))))}]))))
 
+(defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara] :as kentta} data]
+  (let [desimaalien-maara (or (when kokonaisluku? 0) desimaalien-maara +desimaalin-oletus-tarkkuus+)
+        fmt (or
+              ;; Kentälle voi antaa :fmt option, mutta lienee turvallista olla välittämättä siitä täällä
+              #(fmt/desimaaliluku-opt % desimaalien-maara)
+              str)]
+    [:span (normalisoi-numero (fmt @data))]))
+
 (defmethod tee-kentta :positiivinen-numero [kentta data]
   (tee-kentta (assoc kentta :vaadi-ei-negatiivinen? true
                             :tyyppi :numero) data))
+
+(defmethod nayta-arvo :positiivinen-numero [kentta data]
+  (nayta-arvo (assoc kentta :tyyppi :numero) data))
 
 (defmethod tee-kentta :email [{:keys [on-focus lomake?] :as kentta} data]
   [:input {:class     (when lomake? "form-control")
@@ -714,7 +726,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
       muuttumaton? " Muokkaa reittiä"
       :else " Muuta valintaa")))
 
-(defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti pakollinen?]} data]
+(defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? ala-nayta-virhetta-komponentissa? sijainti pakollinen?]} data]
   (let [osoite-alussa @data
 
         hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
@@ -795,7 +807,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                            (reset! virheet nil)))))
               kartta? @karttavalinta-kaynnissa]
           [:span.tierekisteriosoite-kentta (when @virheet {:class "sisaltaa-virheen"})
-           (when @virheet
+           (when (and @virheet (false? ala-nayta-virhetta-komponentissa?))
              [:div {:class "virheet"}
               [:div {:class "virhe"}
                [:span (ikonit/livicon-warning-sign) [:span @virheet]]]])
