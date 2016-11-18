@@ -55,7 +55,9 @@
         paallystysilmoitusten-maara-kannassa-ennen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
-                                         (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
+                                         (-> "test/resurssit/api/paallystysilmoituksen_kirjaus.json"
+                                             slurp
+                                             (.replace "__VALMIS__" (str false))))]
 
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
@@ -119,7 +121,9 @@
         kohde (hae-yllapitokohde-tielta-20-jolla-ei-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
-                                         (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
+                                         (-> "test/resurssit/api/paallystysilmoituksen_kirjaus.json"
+                                             slurp
+                                             (.replace "__VALMIS__" (str true))))]
 
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
@@ -136,7 +140,9 @@
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
-                                         (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
+                                         (-> "test/resurssit/api/paallystysilmoituksen_kirjaus.json"
+                                             slurp
+                                             (.replace "__VALMIS__" (str false))))]
 
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
@@ -197,7 +203,9 @@
         kohde (hae-yllapitokohde-tielta-20-jolla-lukittu-paallystysilmoitus)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
-                                         (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
+                                         (-> "test/resurssit/api/paallystysilmoituksen_kirjaus.json"
+                                             slurp
+                                             (.replace "__VALMIS__" (str false))))]
 
     (is (= 500 (:status vastaus)))
     (is (.contains (:body vastaus) "Päällystysilmoitus on lukittu"))))
@@ -207,7 +215,9 @@
         kohde (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
                                          (:kayttajanimi +kayttaja-tero+) portti
-                                         (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
+                                         (-> "test/resurssit/api/paallystysilmoituksen_kirjaus.json"
+                                             slurp
+                                             (.replace "__VALMIS__" (str false))))]
     (is (= 403 (:status vastaus)))))
 
 (deftest paallystysilmoituksen-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
@@ -215,7 +225,9 @@
         kohde (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
-                                         (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
+                                         (-> "test/resurssit/api/paallystysilmoituksen_kirjaus.json"
+                                             slurp
+                                             (.replace "__VALMIS__" (str false))))]
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "Ylläpitokohde ei kuulu urakkaan"))))
 
