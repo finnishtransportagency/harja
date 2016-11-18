@@ -81,6 +81,6 @@
            (let [virheet# (validator# (cheshire/parse-string json#))]
              (if-not virheet#
                (log/debug "JSON data on validia")
-               (kasittele-validointivirheet skeemaresurssin-polku virheet#)))
+               (kasittele-validointivirheet ~skeemaresurssin-polku virheet#)))
            (catch Exception e#
-             (kasittele-validointivirheet skeemaresurssin-polku (.getMessage e#))))))))
+             (kasittele-validointivirheet ~skeemaresurssin-polku (.getMessage e#))))))))
