@@ -3,15 +3,14 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log logt]]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.urakka.valitavoitteet :as vt]
+            [harja.tiedot.urakka.valitavoitteet :as tiedot]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as y]
             [harja.pvm :as pvm]
-            [harja.ui.kentat :refer [tee-kentta]]
+            [harja.ui.kentat :refer [tee-otsikollinen-kentta]]
             [harja.fmt :as fmt]
             [cljs-time.core :as t]
             [cljs.core.async :refer [<!]]
-            [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
@@ -51,7 +50,7 @@
                [y/ajax-loader "Välitavoitteita haetaan..."]
                "Ei välitavoitteita")
       :tallenna (if voi-muokata?
-                  #(go (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
+                  #(go (let [vastaus (<! (tiedot/tallenna-valitavoitteet! (:id urakka) %))]
                          (if (k/virhe? vastaus)
                            (viesti/nayta! "Tallentaminen epäonnistui"
                                           :warning viesti/viestin-nayttoaika-lyhyt)
@@ -94,7 +93,7 @@
                [y/ajax-loader "Välitavoitteita haetaan..."]
                "Ei välitavoitteita")
       :tallenna (if voi-muokata?
-                  #(go (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
+                  #(go (let [vastaus (<! (tiedot/tallenna-valitavoitteet! (:id urakka) %))]
                          (if (k/virhe? vastaus)
                            (viesti/nayta! "Tallentaminen epäonnistui"
                                           :warning viesti/viestin-nayttoaika-lyhyt)
@@ -157,7 +156,7 @@
                 [y/ajax-loader "Välitavoitteita haetaan..."]
                 "Ei välitavoitteita")
        :tallenna (if voi-muokata?
-                   #(go (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
+                   #(go (let [vastaus (<! (tiedot/tallenna-valitavoitteet! (:id urakka) %))]
                           (if (k/virhe? vastaus)
                             (viesti/nayta! "Tallentaminen epäonnistui"
                                            :warning viesti/viestin-nayttoaika-lyhyt)
@@ -244,6 +243,15 @@
                       (when voi-muokata?
                         "Voit kuitenkin tehdä tavoitteisiin urakkakohtaisia muokkauksia."))]]))
 
+(defn- valinnat [urakka]
+  [tee-otsikollinen-kentta "Vuosi"
+   {:tyyppi :valinta
+    :valinnat (into [] (conj (reverse (map #(t/year (first %))
+                                           (pvm/urakan-vuodet (:alkupvm urakka) (:loppupvm urakka))))
+                             nil))
+    :valinta-nayta #(or % "Kaikki")}
+   tiedot/valittu-vuosi])
+
 (defn valitavoitteet
   "Urakan välitavoitteet näkymä. Ottaa parametrinä urakan ja hakee välitavoitteet sille."
   [ur]
@@ -253,23 +261,26 @@
                                           (vvt-tiedot/valtakunnalliset-valitavoitteet-kaytossa? (:tyyppi ur)))
         nayta-urakkakohtaiset-grid? (not nayta-yhdistetty-grid?)]
     (komp/luo
-      (komp/lippu vt/nakymassa?)
+      (komp/sisaan #(reset! tiedot/valittu-vuosi (min (t/year (:loppupvm ur))
+                                                      (t/year (pvm/nyt)))))
+      (komp/lippu tiedot/nakymassa?)
       (fn [ur]
         [:div.valitavoitteet
+         [valinnat ur]
 
          (when nayta-urakkakohtaiset-grid?
            [urakan-omat-valitavoitteet
             ur
-            vt/valitavoitteet
-            vt/urakan-valitavoitteet])
+            tiedot/valitavoitteet
+            tiedot/urakan-valitavoitteet])
 
          (when nayta-valtakunnalliset-grid?
            [valtakunnalliset-valitavoitteet
             ur
-            vt/valitavoitteet
-            vt/valtakunnalliset-valitavoitteet])
+            tiedot/valitavoitteet
+            tiedot/valtakunnalliset-valitavoitteet])
 
          (when nayta-yhdistetty-grid?
            [urakan-omat-ja-valtakunnalliset-valitavoitteet
             ur
-            vt/valitavoitteet])]))))
+            tiedot/valitavoitteet])]))))
