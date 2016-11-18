@@ -1,8 +1,6 @@
 (ns harja.ui.palaute
   (:require
     [reagent.core :refer [atom]]
-    [harja.ui.ikonit :as ikonit]
-    [reagent.core :refer [atom]]
     [harja.tiedot.palaute :as tiedot]
     [harja.loki :refer [log]]
     [harja.ui.modal :as modal]
