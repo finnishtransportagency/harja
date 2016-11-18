@@ -26,8 +26,6 @@
 (def valtakunnallinen-takaraja-sarake {:tiemerkinta "Väli\u00ADtavoite\u00ADpohjan taka\u00ADraja"})
 (def valtakunnalliset-tavoitteet-vihje {:tiemerkinta "Tiemerkinnän välitavoitepohjat ovat järjestelmävastaavan hallinnoimia."})
 
-(def tallennus-kaynnissa? (atom false))
-
 (defn valmiustilan-kuvaus [{:keys [valmispvm takaraja]}]
   (cond (nil? takaraja)
         "Uusi"
@@ -55,13 +53,11 @@
                [y/ajax-loader "Välitavoitteita haetaan..."]
                "Ei välitavoitteita")
       :tallenna (if voi-muokata?
-                  #(go (reset! tallennus-kaynnissa? true)
-                       (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
+                  #(go (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
                          (if (k/virhe? vastaus)
                            (viesti/nayta! "Tallentaminen epäonnistui"
                                           :warning viesti/viestin-nayttoaika-lyhyt)
-                           (reset! kaikki-valitavoitteet-atom vastaus)))
-                       (reset! tallennus-kaynnissa? false))
+                           (reset! kaikki-valitavoitteet-atom vastaus))))
                   :ei-mahdollinen)
       :tallennus-ei-mahdollinen-tooltip
       (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)}
@@ -121,13 +117,11 @@
                 [y/ajax-loader "Välitavoitteita haetaan..."]
                 "Ei välitavoitteita")
        :tallenna (if voi-muokata?
-                   #(go (reset! tallennus-kaynnissa? true)
-                        (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
+                   #(go (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
                           (if (k/virhe? vastaus)
                             (viesti/nayta! "Tallentaminen epäonnistui"
                                            :warning viesti/viestin-nayttoaika-lyhyt)
-                            (reset! kaikki-valitavoitteet-atom vastaus)))
-                        (reset! tallennus-kaynnissa? false))
+                            (reset! kaikki-valitavoitteet-atom vastaus))))
                    :ei-mahdollinen)
        :tallennus-ei-mahdollinen-tooltip
        (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)
