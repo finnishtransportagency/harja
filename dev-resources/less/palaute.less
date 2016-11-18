@@ -1,0 +1,29 @@
+#palautelinkki {
+  color: @sininen4;
+
+  &:hover {
+    color: @sininen1;
+    text-decoration: underline;
+  }
+
+  &:visited {
+    color: @sininen4;
+  }
+}
+
+.crash-component {
+  background: #d6ffd0;
+  border: 5px dashed @vihrea2;
+  padding: 5px;
+  span {
+    font-weight: bold;
+  }
+  .crash-details {
+    display: none;
+    color: black;
+    font-size: 10px;
+  }
+  .details-open {
+    display: block;
+  }
+}

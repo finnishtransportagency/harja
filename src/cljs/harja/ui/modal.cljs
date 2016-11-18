@@ -4,6 +4,22 @@
             [harja.ui.dom :as dom]
             [harja.asiakas.tapahtumat :as t]))
 
+(defn- avaa-modal-linkki
+  "Jostain merkillisestä syystä modalissa esiintyvä <a> linkki ei toimi oikein, joten
+   avataan linkki ohjelmallisesti uuteen ikkunaan / välilehteen."
+  [linkki target]
+  (.open js/window linkki target))
+
+(defn modal-linkki
+  "Jostain merkillisestä syystä modalissa esiintyvä <a> linkki ei toimi oikein, joten
+ avataan linkki ohjelmallisesti uuteen ikkunaan / välilehteen."
+  ([teksti osoite] (modal-linkki teksti osoite "_self"))
+  ([teksti osoite target]
+   [:a {:href osoite
+        :target target
+        :on-click #(avaa-modal-linkki osoite target)}
+    teksti]))
+
 (def modal-sisalto (atom {:otsikko nil
                           :sisalto nil
                           :footer nil
