@@ -121,6 +121,7 @@
         (log/error e "Validointivirhe asetuksissa!")))
 
     (component/system-map
+     :metriikka (metriikka/->JmxMetriikka)
       :db (tietokanta/luo-tietokanta tietokanta kehitysmoodi)
       :db-replica (tietokanta/luo-tietokanta tietokanta-replica kehitysmoodi)
       :klusterin-tapahtumat (component/using
@@ -133,7 +134,7 @@
       :http-palvelin (component/using
                        (http-palvelin/luo-http-palvelin http-palvelin
                                                         kehitysmoodi)
-                       [:todennus])
+                       [:todennus :metriikka])
 
       :pdf-vienti (component/using
                     (pdf-vienti/luo-pdf-vienti)
@@ -455,7 +456,6 @@
                           luo-jarjestelma
                           component/start)))
     (status/aseta-status! (:status harja-jarjestelma) 200 "Harja käynnistetty")
-    (metriikka/start)
     (catch Throwable t
       (log/fatal t "Harjan käynnistyksessä virhe")
       (when lopeta-jos-virhe?
