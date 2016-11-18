@@ -105,7 +105,10 @@
 
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset
-     :refer [lue-asetukset konfiguroi-lokitus validoi-asetukset]])
+     :refer [lue-asetukset konfiguroi-lokitus validoi-asetukset]]
+
+    ;; Metriikat
+    [harja.palvelin.komponentit.metriikka :as metriikka])
   (:gen-class))
 
 (defn luo-jarjestelma [asetukset]
@@ -452,6 +455,7 @@
                           luo-jarjestelma
                           component/start)))
     (status/aseta-status! (:status harja-jarjestelma) 200 "Harja käynnistetty")
+    (metriikka/start)
     (catch Throwable t
       (log/fatal t "Harjan käynnistyksessä virhe")
       (when lopeta-jos-virhe?

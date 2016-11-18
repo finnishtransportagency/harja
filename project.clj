@@ -26,6 +26,9 @@
 
                  [com.narkisr/gelfino-client "0.7.0"]
 
+                 ;; Metriikkadata
+                 [metrics-clojure "2.7.0"]
+
                  ;; JSON encode/decode
                  [cheshire "5.6.1"]
 
@@ -160,6 +163,12 @@
             [lein-auto "0.1.2"]
             [lein-pdo "0.1.1"]
             [lein-doo "0.1.6"]]
+
+  :jvm-opts ["-Dcom.sun.management.jmxremote=true"
+             "-Dcom.sun.management.jmxremote.port=3333"
+             "-Dcom.sun.management.jmxremote.ssl=false"
+             "-Dcom.sun.management.jmxremote.authenticate=false"
+             "-Djava.rmi.server.hostname='localhost'"]
 
   ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds
