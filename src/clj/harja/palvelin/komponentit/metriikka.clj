@@ -12,7 +12,7 @@
     tulee palauttaa arvo kutsuttaessa."))
 
 
-(defrecord JmxMetriikka [mittarit]
+(defrecord JmxMetriikka []
   component/Lifecycle
   (start [this]
     (let [registry (metrics/new-registry)
@@ -29,3 +29,6 @@
   Metriikka
   (lisaa-mittari! [{reg ::registry} nimi mittari-fn]
     (gauges/gauge-fn reg nimi mittari-fn)))
+
+(defn luo-jmx-metriikka []
+  (->JmxMetriikka))

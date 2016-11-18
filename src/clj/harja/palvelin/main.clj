@@ -121,7 +121,7 @@
         (log/error e "Validointivirhe asetuksissa!")))
 
     (component/system-map
-     :metriikka (metriikka/->JmxMetriikka)
+     :metriikka (metriikka/luo-jmx-metriikka)
       :db (tietokanta/luo-tietokanta tietokanta kehitysmoodi)
       :db-replica (tietokanta/luo-tietokanta tietokanta-replica kehitysmoodi)
       :klusterin-tapahtumat (component/using
