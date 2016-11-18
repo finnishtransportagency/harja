@@ -10,7 +10,8 @@
             [harja.geo :as geo]
             [tuck.core :as t]
             [harja.tiedot.urakka.toteumat.varusteet.viestit :as v]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.domain.tierekisteri.varusteet :as varusteet])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -58,47 +59,14 @@
                                       500)
          :toteumat nil))
 
-(def varuste-toimenpide->string {nil         "Kaikki"
-                                 :lisatty    "Lisätty"
-                                 :paivitetty "Päivitetty"
-                                 :poistettu  "Poistettu"
-                                 :tarkastus  "Tarkastus"})
 
-(def varustetoteumatyypit
-  (vec varuste-toimenpide->string))
-
-(def tietolaji->selitys
-  {"tl523" "Tekninen piste"
-   "tl501" "Kaiteet"
-   "tl517" "Portaat"
-   "tl507" "Bussipysäkin varusteet"
-   "tl508" "Bussipysäkin katos"
-   "tl506" "Liikennemerkki"
-   "tl522" "Reunakivet"
-   "tl513" "Reunapaalut"
-   "tl196" "Bussipysäkit"
-   "tl519" "Puomit ja kulkuaukot"
-   "tl505" "Jätehuolto"
-   "tl195" "Tienkäyttäjien palvelualueet"
-   "tl504" "WC"
-   "tl198" "Kohtaamispaikat ja levikkeet"
-   "tl518" "Kivetyt alueet"
-   "tl514" "Melurakenteet"
-   "tl509" "Rummut"
-   "tl515" "Aidat"
-   "tl503" "Levähdysalueiden varusteet"
-   "tl510" "Viheralueet"
-   "tl512" "Viemärit"
-   "tl165" "Välikaistat"
-   "tl516" "Hiekkalaatikot"
-   "tl511" "Viherkuviot"})
 
 (defn- selite [{:keys [toimenpide tietolaji alkupvm]}]
   (str
    (pvm/pvm alkupvm) " "
-   (varuste-toimenpide->string toimenpide)
+   (varusteet/varuste-toimenpide->string toimenpide)
    " "
-   (tietolaji->selitys tietolaji)))
+   (varusteet/tietolaji->selitys tietolaji)))
 
 (defn- varustetoteumat-karttataso [toteumat]
   (kartalla-esitettavaan-muotoon
@@ -184,38 +152,7 @@
     ;; toteuman tietolaji on sama kuin toteumassa.
     (if (= tietolaji (:tietolaji toteuma))
       (assoc-in app [:varustetoteuma :tietolajin-kuvaus] kuvaus)
-      app))
-
-  v/AsetaVarusteidenHakuehdot
-  (process-event [{ehdot :hakuehdot} app]
-    (assoc-in app [:varustehaku :hakuehdot] ehdot))
-
-  v/HaeVarusteita
-  (process-event [_ {varustehaku :varustehaku :as app}]
-    (let [tulos! (t/send-async! v/map->VarusteHakuTulos)
-          virhe! (t/send-async! v/->VarusteHakuEpaonnistui)]
-      (go
-        (let [vastaus (<! (k/post! :hae-varusteita (get-in app [:varustehaku :hakuehdot])))]
-          (if (or (k/virhe? vastaus)
-                  (not (:onnistunut vastaus)))
-            (virhe! vastaus)
-            (tulos! vastaus))))
-      (-> app
-          (assoc-in [:varustehaku :varusteet] nil)
-          (assoc-in [:varustehaku :hakuehdot :haku-kaynnissa?] false))))
-
-  v/VarusteHakuTulos
-  (process-event [{tietolaji :tietolaji varusteet :varusteet} app]
-    (-> app
-        (assoc-in [:varustehaku :varusteet] varusteet)
-        (assoc-in [:varustehaku :tietolaji] tietolaji)
-        (assoc-in [:varustehaku :hakuehdot :haku-kaynnissa?] false)))
-
-  v/VarusteHakuEpaonnistui
-  (process-event [{virhe :virhe} app]
-    (log "VIRHE HAETTAESSA: " (pr-str virhe))
-    app)
-  )
+      app)))
 
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))

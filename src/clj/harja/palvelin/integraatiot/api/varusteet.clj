@@ -99,7 +99,7 @@
 (defn hae-tietolaji-tunnisteella
   "Hakee tietolajion tierekisteristä tunnisteen perusteella. Optionaalisesti
   ottaa sisään myös muutospäivämäärän hakuehdoksi."
-  ([tierekisteri tunniste] (hae-tietolaji* tierekisteri tunniste nil))
+  ([tierekisteri tunniste] (hae-tietolaji-tunnisteella tierekisteri tunniste nil))
   ([tierekisteri tunniste muutospaivamaara]
    (let [vastausdata (tierekisteri/hae-tietolajit tierekisteri tunniste muutospaivamaara)
          ominaisuudet (get-in vastausdata [:tietolaji :ominaisuudet])]

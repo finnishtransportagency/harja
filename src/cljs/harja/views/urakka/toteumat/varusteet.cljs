@@ -26,6 +26,7 @@
             [tuck.core :as t :refer [tuck]]
             [harja.ui.lomake :as lomake]
             [harja.ui.debug :refer [debug]]
+            [harja.views.tierekisteri.varustehaku :refer [varustehaku]]
             [harja.domain.tierekisteri.varusteet
              :refer [varusteominaisuus->skeema]
              :as tierekisteri-varusteet])
@@ -63,7 +64,7 @@
 (defn varustetoteuma-klikattu [_ toteuma]
   (popupit/nayta-popup
     (assoc toteuma
-      :toimenpide (varustetiedot/varuste-toimenpide->string (keyword (:toimenpide toteuma)))
+      :toimenpide (tierekisteri-varusteet/varuste-toimenpide->string (keyword (:toimenpide toteuma)))
       :aihe :varustetoteuma-klikattu
       :varustekortti-url (kommunikaatio/varustekortti-url (:alkupvm toteuma) (:tietolaji toteuma) (:tunniste toteuma)))))
 
@@ -91,11 +92,11 @@
        {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys 15}
        {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :string :leveys 15
         :hae     (fn [rivi]
-                   (or (varustetiedot/tietolaji->selitys (:tietolaji rivi))
+                   (or (tierekisteri-varusteet/tietolaji->selitys (:tietolaji rivi))
                        (:tietolaji rivi)))}
        {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys 15
         :hae     (fn [rivi]
-                   (varustetiedot/varuste-toimenpide->string (:toimenpide rivi)))}
+                   (tierekisteri-varusteet/varuste-toimenpide->string (:toimenpide rivi)))}
        {:otsikko "Tie" :nimi :tie :tyyppi :positiivinen-numero :leveys 10 :tasaa :oikea}
        {:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea}
        {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea}
@@ -127,41 +128,7 @@
        [napit/uusi "Lisää toteuma"
         #(e! (v/->UusiVarusteToteuma))])]))
 
-(defn varustehaku-ehdot [e! hakuehdot]
-  [lomake/lomake
-   {:otsikko "Hae varusteita Tierekisteristä"
-    :muokkaa! #(e! (v/->AsetaVarusteidenHakuehdot %))
-    :footer-fn (fn [rivi]
-                 [napit/yleinen "Hae Tierekisteristä"
-                  #(e! (v/->HaeVarusteita))
-                  {:disabled (:haku-kaynnissa? hakuehdot)
-                   :ikoni (ikonit/livicon-search)}])}
 
-   [{:nimi :tietolaji
-     :otsikko "Varusteen tyyppi"
-     :tyyppi :valinta
-     :pakollinen? true
-     :valinnat (vec varustetiedot/tietolaji->selitys)
-     :valinta-nayta second
-     :valinta-arvo first}
-    {:nimi :tierekisteriosoite
-     :otsikko "Tierekisteriosoite"
-     :tyyppi :tierekisteriosoite}
-    {:nimi :tunniste
-     :otsikko "Varusteen tunniste"
-     :tyyppi :string}]
-   hakuehdot])
-
-(defn varustehaku-varusteet [e! varusteet]
-  [debug varusteet])
-
-(defn varustehaku
-  "Komponentti, joka näyttää lomakkeen varusteiden hakemiseksi tierekisteristä
-  sekä haun tulokset."
-  [e! hakuehdot tulokset]
-  [:div.varustehaku
-   [varustehaku-ehdot e! hakuehdot]
-   [varustehaku-varusteet e! tulokset]])
 
 
 (defn varustetoteumalomake [e! varustetoteuma]
@@ -179,22 +146,8 @@
                    {:disabled (not (lomake/voi-tallentaa? data))}]
                   )}
 
-    [(lomake/ryhma
-      "Toteuman tiedot"
-      {:otsikko "Toimenpide"
-       :nimi :toimenpide
-       :tyyppi :valinta
-       :valinnat (keys tierekisteri-varusteet/toimenpiteet)
-       :valinta-nayta tierekisteri-varusteet/toimenpiteet
-       :fmt tierekisteri-varusteet/toimenpiteet}
-
-      {:otsikko (case (:toimenpide varustetoteuma)
-                  :lisays "Lisätty"
-                  :poisto "Poistettu"
-                  :paivitys "Päivitetty"
-                  "Päivämäärä")
-       :nimi :pvm
-       :tyyppi :pvm})
+    [#_(lomake/ryhma
+      "Toteuman tiedot")
 
      (lomake/ryhma
       "Varusteen tunnistetiedot"
@@ -202,7 +155,7 @@
       {:nimi :tietolaji
        :otsikko "Varusteen tyyppi"
        :tyyppi :valinta
-       :valinnat (vec varustetiedot/tietolaji->selitys)
+       :valinnat (vec tierekisteri-varusteet/tietolaji->selitys)
        :valinta-nayta second
        :valinta-arvo first}
       {:nimi :tierekisteriosoite
@@ -240,7 +193,7 @@
         [:span
          [valinnat e! nykyiset-valinnat]
          [toteumataulukko e! (:tyyppi nykyiset-valinnat) toteumat]
-         [varustehaku e!
+         [varustehaku (t/wrap-path e! [:varustehaku])
           (:hakuehdot varustehaun-tiedot)
           (:varusteet varustehaun-tiedot)]])])))
 
