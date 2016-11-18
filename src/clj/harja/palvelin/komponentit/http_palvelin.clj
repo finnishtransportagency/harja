@@ -20,10 +20,15 @@
 
             [slingshot.slingshot :refer [try+ throw+]]
 
-            [new-reliquary.core :as nr])
+            [new-reliquary.core :as nr]
+            [clojure.core.async :as async])
   (:import (java.text SimpleDateFormat)
            (java.io ByteArrayInputStream ByteArrayOutputStream)))
 
+(defrecord AsyncResponse [channel])
+
+(defmacro async [& body]
+  `(->AsyncResponse (async/thread ~@body)))
 
 (defn- reitita
   "Reititä sisääntuleva pyyntö käsittelijöille."
@@ -76,7 +81,13 @@
             {:status 400
              :body   "Ei validi kysely"}
             (try+
-             (transit-vastaus (palvelu-fn (:kayttaja req) kysely))
+             (let [palvelu-vastaus (palvelu-fn (:kayttaja req) kysely)]
+               (if (instance? AsyncResponse palvelu-vastaus)
+                 (http/with-channel req channel
+                   (async/go
+                     (let [vastaus (async/<! (:channel palvelu-vastaus))]
+                       (http/send! channel (transit-vastaus vastaus)))))
+                 (transit-vastaus palvelu-vastaus)))
              (catch harja.domain.roolit.EiOikeutta eo
                ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
                (transit-vastaus 403 eo))
