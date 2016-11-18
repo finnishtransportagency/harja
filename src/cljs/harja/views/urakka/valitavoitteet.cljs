@@ -85,21 +85,21 @@
 (defn- urakan-omat-ja-valtakunnalliset-valitavoitteet
   "Tässä gridissä näytetään sekä urakan omat että valtakunnallisten välitavoitteiden pohjalta urakkaan liitetyt
    välitavoitteet"
-  [urakka urakan-kaikki-valitavoitteet-atom]
+  [urakka kaikki-valitavoitteet-atom]
   (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
         voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))]
     [grid/grid
      {:otsikko "Urakan välitavoitteet"
-      :tyhja (if (nil? @urakan-kaikki-valitavoitteet-atom)
+      :tyhja (if (nil? @kaikki-valitavoitteet-atom)
                [y/ajax-loader "Välitavoitteita haetaan..."]
                "Ei välitavoitteita")
-      #_#_:tallenna (if voi-muokata? TODO KORJAA TÄMÄ
-                                     #(go (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
-                                            (if (k/virhe? vastaus)
-                                              (viesti/nayta! "Tallentaminen epäonnistui"
-                                                             :warning viesti/viestin-nayttoaika-lyhyt)
-                                              (reset! kaikki-valitavoitteet-atom vastaus))))
-                                     :ei-mahdollinen)
+      :tallenna (if voi-muokata?
+                  #(go (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
+                         (if (k/virhe? vastaus)
+                           (viesti/nayta! "Tallentaminen epäonnistui"
+                                          :warning viesti/viestin-nayttoaika-lyhyt)
+                           (reset! kaikki-valitavoitteet-atom vastaus))))
+                  :ei-mahdollinen)
       :tallennus-ei-mahdollinen-tooltip
       (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)}
 
@@ -123,7 +123,7 @@
       {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :merkitsija :hae (fn [rivi]
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
-     @urakan-kaikki-valitavoitteet-atom]))
+     @kaikki-valitavoitteet-atom]))
 
 (defn ainakin-yksi-tavoite-muutettu-urakkaan [rivit]
   (some #(or
