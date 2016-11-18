@@ -96,7 +96,8 @@
                  (http/with-channel req channel
                    (async/go
                      (let [vastaus (async/<! (:channel palvelu-vastaus))]
-                       (http/send! channel vastaus))))
+                       (http/send! channel vastaus)
+                       (http/close channel))))
                  (transit-vastaus palvelu-vastaus)))
              (catch harja.domain.roolit.EiOikeutta eo
                ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
