@@ -113,7 +113,8 @@ SELECT
   it.integraatio as integraatio,
   i.jarjestelma as jarjestelma,
   i.nimi as nimi,
-  count(*) as maara
+  count(*) filter (where onnistunut is true) as onnistuneet,
+  count(*) filter (where onnistunut is not true) as epaonnistuneet
 FROM integraatiotapahtuma it
   JOIN integraatio i ON it.integraatio = i.id
 WHERE (:jarjestelma_annettu = false OR i.jarjestelma ILIKE :jarjestelma)
