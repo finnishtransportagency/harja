@@ -83,7 +83,7 @@
   (let [vapaa-aikavali? (get-in valinnat-nyt [:vakioaikavali :vapaa-aikavali])
         alkuaika (:alkuaika valinnat-nyt)
         vakio-aikavalikentta {:nimi :vakioaikavali
-                              :otsikko "Saapunut aikavälillä"
+                              :otsikko "Ilmoitettu aikavälillä"
                               :fmt :nimi
                               :tyyppi :valinta
                               :valinnat tiedot/aikavalit
