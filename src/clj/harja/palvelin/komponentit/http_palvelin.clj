@@ -85,7 +85,7 @@
              :body   "Ei validi kysely"}
             (try+
              (let [palvelu-vastaus (palvelu-fn (:kayttaja req) kysely)]
-               (if (instance? AsyncResponse palvelu-vastaus)
+               (if (async-response? palvelu-vastaus)
                  (http/with-channel req channel
                    (async/go
                      (let [vastaus (async/<! (:channel palvelu-vastaus))]
