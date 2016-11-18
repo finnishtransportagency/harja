@@ -1,18 +1,19 @@
 (ns harja.testi
   "Harjan testauksen apukoodia."
   (:require
-    [clojure.test :refer :all]
-    [taoensso.timbre :as log]
-    [harja.kyselyt.urakat :as urk-q]
-    [harja.palvelin.komponentit.todennus :as todennus]
-    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
-    [harja.palvelin.komponentit.http-palvelin :as http]
-    [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-    [harja.palvelin.komponentit.tietokanta :as tietokanta]
-    [harja.palvelin.komponentit.liitteet :as liitteet]
-    [com.stuartsierra.component :as component]
-    [clj-time.core :as t]
-    [clj-time.coerce :as tc])
+   [clojure.test :refer :all]
+   [taoensso.timbre :as log]
+   [harja.kyselyt.urakat :as urk-q]
+   [harja.palvelin.komponentit.todennus :as todennus]
+   [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+   [harja.palvelin.komponentit.http-palvelin :as http]
+   [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+   [harja.palvelin.komponentit.tietokanta :as tietokanta]
+   [harja.palvelin.komponentit.liitteet :as liitteet]
+   [com.stuartsierra.component :as component]
+   [clj-time.core :as t]
+   [clj-time.coerce :as tc]
+   [clojure.core.async :as async])
   (:import (java.util Locale)))
 
 (def jarjestelma nil)
@@ -163,7 +164,10 @@
       (kutsu-palvelua [_ nimi kayttaja]
         ((get @palvelut nimi) kayttaja))
       (kutsu-palvelua [_ nimi kayttaja payload]
-        ((get @palvelut nimi) kayttaja payload)))))
+        (let [vastaus ((get @palvelut nimi) kayttaja payload)]
+          (if (http/async-response? vastaus)
+            (async/<!! (:channel vastaus))
+            vastaus))))))
 
 (defn kutsu-http-palvelua
   "Lyhyt muoto testijärjestelmän HTTP palveluiden kutsumiseen."
