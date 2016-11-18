@@ -6,12 +6,13 @@
             [taoensso.timbre :as log]))
 
 (defonce metriikat (metrics/new-registry))
+(defonce JR (jmx/reporter metriikat {:domain "Catalina"}))
 
 (defgauge metriikat paljonko-kello-on
   (fn []
     (System/currentTimeMillis)))
 
-(defonce JR (jmx/reporter {:domain "Catalina"}))
+
 
 (defn start []
   (log/info "JMX metriikoiden raportointi aloitettu")
