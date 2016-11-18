@@ -19,7 +19,9 @@
 
 (def valittu-urakkatyyppi (atom (first nav/+urakkatyypit+)))
 
-(def valtakunnalliset-valitavoitteet-kaytossa
+(def valtakunnalliset-kertaluontoiset-valitavoitteet-kaytossa
+  #{:hoito})
+(def valtakunnalliset-toistuvat-valitavoitteet-kaytossa
   #{:hoito :tiemerkinta})
 
 (defn hae-valitavoitteet []

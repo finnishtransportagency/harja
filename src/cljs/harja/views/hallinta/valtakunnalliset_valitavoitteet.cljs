@@ -93,25 +93,33 @@
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (fn []
-      (let [nayta-valtakunnalliset? (some? (tiedot/valtakunnalliset-valitavoitteet-kaytossa
-                                             (:arvo @tiedot/valittu-urakkatyyppi)))]
+      (let [nayta-kertaluontoiset-valtakunnalliset?
+            (some? (tiedot/valtakunnalliset-kertaluontoiset-valitavoitteet-kaytossa
+                                             (:arvo @tiedot/valittu-urakkatyyppi)))
+            nayta-toistuvat-valtakunnalliset?
+            (some? (tiedot/valtakunnalliset-toistuvat-valitavoitteet-kaytossa
+                     (:arvo @tiedot/valittu-urakkatyyppi)))]
 
         [:div
          [suodattimet]
-         (if nayta-valtakunnalliset?
-           [:div [kertaluontoiset-valitavoitteet-grid
-                  tiedot/valitavoitteet
-                  tiedot/kertaluontoiset-valitavoitteet
-                  tiedot/valittu-urakkatyyppi]
-            [:br]
-            [toistuvat-valitavoitteet-grid
-             tiedot/valitavoitteet
-             tiedot/toistuvat-valitavoitteet
-             tiedot/valittu-urakkatyyppi]
-            [yleiset/vihje-elementti
-             [:span
-              "Uudet kertaluontoiset välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin, jos välitavoitteen takaraja on urakan voimassaoloaikana."
-              [:br] "Uudet toistuvat välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi."
-              [:br] "Välitavoitteen päivittäminen päivittää tiedot urakoihin, ellei tavoitetta ole muokattu urakassa."
-              [:br] "Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]]]
+         (when nayta-kertaluontoiset-valtakunnalliset?
+           [kertaluontoiset-valitavoitteet-grid
+            tiedot/valitavoitteet
+            tiedot/kertaluontoiset-valitavoitteet
+            tiedot/valittu-urakkatyyppi])
+         [:br]
+         (when nayta-toistuvat-valtakunnalliset?
+           [toistuvat-valitavoitteet-grid
+            tiedot/valitavoitteet
+            tiedot/toistuvat-valitavoitteet
+            tiedot/valittu-urakkatyyppi])
+
+         (if (or nayta-toistuvat-valtakunnalliset?
+                 nayta-toistuvat-valtakunnalliset?)
+           [yleiset/vihje-elementti
+            [:span
+             "Uudet kertaluontoiset välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin, jos välitavoitteen takaraja on urakan voimassaoloaikana."
+             [:br] "Uudet toistuvat välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi."
+             [:br] "Välitavoitteen päivittäminen päivittää tiedot urakoihin, ellei tavoitetta ole muokattu urakassa."
+             [:br] "Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]]
            [:div "Valtakunnalliset välitavoitteet eivät ole käytössä valitussa urakkatyypissä."])]))))
