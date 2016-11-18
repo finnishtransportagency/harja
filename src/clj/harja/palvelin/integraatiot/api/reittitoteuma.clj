@@ -171,9 +171,14 @@ jos niille ei löydy yhteistä tietä tieverkolta."}
           (if-not (= reitti +yhdistamis-virhe+)
             (api-toteuma/paivita-toteuman-reitti db toteuma-id reitti)
 
-            (virheet/heita-viallinen-apikutsu-poikkeus
-              {:koodi  :virheellinen-reitti
-               :viesti (format "Reittipisteistä ei saatu kasattua reittiä. Reittipisteet eivät ole samalla tiellä, ja niiden välimatka on liian suuri (yli %sm)" maksimi-linnuntien-etaisyys)})))))))
+            (do
+              (log/error (format "Reittitoteuman tallentaminen epäonnistui, koska reitin geometriaa ei saatu luotua. Ping @JarnoVayrynen @TeemuKaukoranta. Kirjaaja oli %s, ja toteuman aikaleimat olivat %s %s"
+                                 kirjaaja
+                                 (pr-str (:alkanut toteuma))
+                                 (pr-str (:paattynyt toteuma))))
+              (virheet/heita-viallinen-apikutsu-poikkeus
+               {:koodi  :virheellinen-reitti
+                :viesti (format "Reittipisteistä ei saatu kasattua reittiä. Reittipisteet eivät ole samalla tiellä, ja niiden välimatka on liian suuri (yli %sm)" maksimi-linnuntien-etaisyys)}))))))))
 
 (defn tallenna-kaikki-pyynnon-reittitoteumat [db db-replica urakka-id kirjaaja data]
   (when (:reittitoteuma data)
