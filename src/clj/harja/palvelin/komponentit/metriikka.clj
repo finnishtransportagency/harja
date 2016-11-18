@@ -4,7 +4,7 @@
             [clojure.java.jmx :as jmx]
             [taoensso.timbre :as log]))
 
-(def +mbean-prefix+ "Catalina,type=DataSource,name=")
+(def +mbean-prefix+ "Catalina:type=DataSource,name=")
 
 (defprotocol Metriikka
   (lisaa-mittari! [this nimi mittari-ref]
