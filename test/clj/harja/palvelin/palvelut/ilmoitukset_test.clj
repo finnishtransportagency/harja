@@ -97,19 +97,19 @@
                      :tyyppi :lopetus}]
 
         ilmoitusten-maara-ennen (ffirst (q
-                                                     (str "SELECT count(*) FROM ilmoitus;")))
+                                          (str "SELECT count(*) FROM ilmoitus;")))
         kuittausten-maara-ennen (ffirst (q
-                                                     (str "SELECT count(*) FROM ilmoitustoimenpide;")))
+                                          (str "SELECT count(*) FROM ilmoitustoimenpide;")))
         ilmoituksen-1-kuittaukset-maara-ennen
         (ffirst (q (str "SELECT count(*) FROM ilmoitustoimenpide WHERE ilmoitus = 1;")))
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                                               :tallenna-ilmoitustoimenpiteet
-                                               +kayttaja-jvh+
-                                               parametrit)
+                          :tallenna-ilmoitustoimenpiteet
+                          +kayttaja-jvh+
+                          parametrit)
         ilmoitusten-maara-jalkeen (ffirst (q
-                                                     (str "SELECT count(*) FROM ilmoitus;")))
+                                            (str "SELECT count(*) FROM ilmoitus;")))
         kuittausten-maara-jalkeen (ffirst (q
-                                                     (str "SELECT count(*) FROM ilmoitustoimenpide;")))
+                                            (str "SELECT count(*) FROM ilmoitustoimenpide;")))
         ilmoituksen-1-kuittaukset-maara-jalkeen
         (ffirst (q (str "SELECT count(*) FROM ilmoitustoimenpide WHERE ilmoitus = 1;")))]
 
@@ -223,3 +223,25 @@
   (let [ilmoitus {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset [{:kuitattu (c/to-sql-time (t/plus (t/now) (t/minutes 25)))
                                                                      :kuittaustyyppi :aloitus}]}]
     (is (true? (#'ilmoitukset/sisaltaa-aloituskuittauksen-aikavalilla? ilmoitus (t/hours 1))))))
+
+
+(deftest tarkista-aikavalihaut
+  (let [alkuaika  (clj-time.core/date-time 2005 10 10 2)
+        loppuaika  (clj-time.core/date-time 2005 10 10 4)
+        parametrit {:hallintayksikko nil
+                    :urakka nil
+                    :hoitokausi nil
+                    :alkuaika (c/to-date alkuaika)
+                    :loppuaika (c/to-date loppuaika)
+                    :tyypit +ilmoitustyypit+
+                    :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
+                    :aloituskuittauksen-ajankohta :kaikki
+                    :hakuehto ""}
+        ilmoitukset-palvelusta (kutsu-palvelua (:http-palvelin jarjestelma)
+                                               :hae-ilmoitukset +kayttaja-jvh+ parametrit)
+        ilmoitus (first ilmoitukset-palvelusta)]
+    (is (= 1 (count ilmoitukset-palvelusta)) "Annettu aikaväli palauttaa vain yhden ilmoituksen")
+    (is (t/after? (c/from-sql-time (:ilmoitettu ilmoitus)) alkuaika))
+    (is (t/before? (c/from-sql-time (:ilmoitettu ilmoitus)) loppuaika))))
+
+
