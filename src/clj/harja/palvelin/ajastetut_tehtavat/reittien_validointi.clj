@@ -13,11 +13,12 @@
             [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]))
 
-(def maksimi-etaisyys 2000)
+(def maksimi-etaisyys reittitoteuma/maksimi-linnuntien-etaisyys)
 
 (defn- paivita-reittipisteelliset-toteumat
   "Hakee toteumat joille on reittipisteitä, mutta ei reittiä, ja yrittää muodostaa reitin uusiksi."
   [db]
+  (log/debug "Aloitetaan reittien luonti reittipisteellisille toteumille.")
   (loop [etaisyys reittitoteuma/maksimi-linnuntien-etaisyys]
     (let [toteumat (toteumat-q/hae-reitittomat-mutta-reittipisteelliset-toteumat db)]
      (when-not (empty? toteumat)
@@ -33,6 +34,7 @@
 (defn- paivita-osoitteelliset-toteumat
   "Hakee toteumat, joille on tr-osoite, mutta ei reittiä, ja yrittää muodostaa reitin uusiksi."
   [db]
+  (log/debug "Aloitetaan reittien luonti tr-osoitteellisille toteumille.")
   (let [toteumat (toteumat-q/hae-reitittomat-mutta-osoitteelliset-toteumat db)]
     (when-not (empty? toteumat)
       (log/debug (format "Löydettiin %s toteumaa jolla on tr-osoite, mutta ei reittigeometriaa. Yritetään laskea reitti." (count toteumat)))
