@@ -130,7 +130,7 @@
                      (rest colors)))))))))
 
 
-(defn bars [{:keys [width height label-fn value-fn key-fn color-fn color
+(defn bars [{:keys [width height label-fn value-fn key-fn color-fn color colors
                     ticks format-amount hide-value? margin-x margin-y
                     value-font-size tick-font-size font-size y-axis-font-size
                     legend]} data]
@@ -138,7 +138,7 @@
         value-fn (or value-fn second)
         key-fn (or key-fn hash)
         color-fn (or color-fn (constantly (or color "blue")))
-        colors ["#0066cc" "#A9D0F5" "#646464" "#afafaf" "#770000" "#ff9900"]
+        colors (or colors ["#0066cc" "#A9D0F5" "#646464" "#afafaf" "#770000" "#ff9900"])
         mx (or margin-x 40)                                 ;; margin-x
         my (or margin-y 40)                                 ;; margin-y
         value-font-size (or value-font-size "8pt")

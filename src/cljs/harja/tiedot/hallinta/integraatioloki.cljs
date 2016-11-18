@@ -25,9 +25,9 @@
            (merge {:jarjestelma (:jarjestelma jarjestelma)
                    :integraatio integraatio}
                   (when aikavali
-                    {:alkaen      (first aikavali)
+                    {:alkaen (first aikavali)
                      ;; loppupvm halutaan seuraavan päivän 00:00:00 aikaan, jotta valitun loppupäivän tapahtumat näkyvät
-                     :paattyen    (t/plus (second aikavali) (t/days 1))}))))
+                     :paattyen (t/plus (second aikavali) (t/days 1))}))))
 
 (defn hae-integraatiotapahtuman-viestit [tapahtuma-id]
   (k/post! :hae-integraatiotapahtuman-viestit tapahtuma-id))
@@ -43,12 +43,12 @@
 (defonce valittu-aikavali (atom nil))
 
 (defonce haetut-tapahtumat
-  (reaction<! [valittu-jarjestelma @valittu-jarjestelma
-               valittu-integraatio @valittu-integraatio
-               valittu-aikavali @valittu-aikavali
-               nakymassa? @nakymassa?]
-              (when nakymassa?
-                (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali))))
+         (reaction<! [valittu-jarjestelma @valittu-jarjestelma
+                      valittu-integraatio @valittu-integraatio
+                      valittu-aikavali @valittu-aikavali
+                      nakymassa? @nakymassa?]
+                     (when nakymassa?
+                       (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali))))
 
 (defonce tapahtumien-maarat
          (reaction<! [valittu-jarjestelma @valittu-jarjestelma
@@ -58,12 +58,12 @@
                      {:nil-kun-haku-kaynnissa? true}
                      (when nakymassa?
                        (go (let [maarat (<! (hae-integraatiotapahtumien-maarat valittu-jarjestelma valittu-integraatio))]
-                          (if valittu-aikavali
-                            (filter #(pvm/valissa? (:pvm %)
-                                                   (first valittu-aikavali)
-                                                   (second valittu-aikavali))
-                                    maarat)
-                            maarat))))))
+                             (if valittu-aikavali
+                               (filter #(pvm/valissa? (:pvm %)
+                                                      (first valittu-aikavali)
+                                                      (second valittu-aikavali))
+                                       maarat)
+                               maarat))))))
 
 (defn nayta-tapahtumat-eilisen-jalkeen []
   (let [eilen (pvm/aikana (time/yesterday) 0 0 0 0)

@@ -122,12 +122,18 @@
         pvm-kohtaiset-tiedot (vals (group-by :pvm tiedot-pvm-sortattu))
         pvm-kohtaiset-maarat-summattu (sort-by :pvm
                                                (map (fn [rivit]
-                                                      (zipmap [:pvm :maara]
+                                                      (zipmap [:pvm :onnistuneet :epaonnistuneet]
                                                               [(:pvm (first rivit))
-                                                               (reduce + (keep :maara rivit))])) pvm-kohtaiset-tiedot))]
+                                                               (reduce + (keep :onnistuneet rivit))
+                                                               (reduce + (keep :epaonnistuneet rivit))]))
+                                                    pvm-kohtaiset-tiedot))]
+    (log "---> pvm-kohtaiset-maarat-summattu:" (pr-str pvm-kohtaiset-maarat-summattu))
+
     [:span.pylvaat
      [:h5 (str "Vastaanotetut pyynnöt " eka-pvm " - " vika-pvm)]
-     (let [lkm-max (reduce max (map :maara pvm-kohtaiset-maarat-summattu))
+
+     ;; Onnistuneet
+     (let [lkm-max (reduce max (map :onnistuneet pvm-kohtaiset-maarat-summattu))
            tikit [0
                   (js/Math.round (* .25 lkm-max))
                   (js/Math.round (* .5 lkm-max))
@@ -137,12 +143,35 @@
        [vis/bars {:width w
                   :height (min 200 h)
                   :label-fn #(if nayta-labelit?
-                              (pvm/paiva-kuukausi (:pvm %))
+                              (str "Onnistuneet: "(pvm/paiva-kuukausi (:pvm %)))
                               "")
-                  :value-fn :maara
+                  :value-fn :onnistuneet
                   :format-amount str
                   :ticks tikit}
-        pvm-kohtaiset-maarat-summattu])]))
+        pvm-kohtaiset-maarat-summattu])
+
+     ;; Epäonnistuneet
+     (let [lkm-max (reduce max (map :epaonnistuneet pvm-kohtaiset-maarat-summattu))
+           tikit [0
+                  (js/Math.round (* .25 lkm-max))
+                  (js/Math.round (* .5 lkm-max))
+                  (js/Math.round (* .75 lkm-max))
+                  lkm-max]
+           nayta-labelit? (< (count pvm-kohtaiset-maarat-summattu) 10)]
+       [vis/bars {:width w
+                  :height (min 200 h)
+                  :label-fn #(if nayta-labelit?
+                              (str "Epäonnistuneet: " (pvm/paiva-kuukausi (:pvm %)))
+                              "")
+                  :value-fn :epaonnistuneet
+                  :format-amount str
+                  :ticks tikit
+                  :colors ["#f44242"]}
+        pvm-kohtaiset-maarat-summattu])
+
+
+
+     ]))
 
 (defn eniten-kutsutut-integraatiot [tiedot]
   (let [ryhmittele #(group-by :integraatio %)
