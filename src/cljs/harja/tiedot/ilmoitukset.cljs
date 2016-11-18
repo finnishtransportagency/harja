@@ -147,20 +147,13 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
   v/YhdistaValinnat
   (process-event [{valinnat :valinnat :as e} app]
-    (hae
-      ;; Kun näkymään tullaan ensimmäistä kertaa, aseta oletus aikaväliksi nykypäivästä 7 päivää taaksepäin
-      (let [valinnat (if (get-in app [:valinnat :aikavali])
-                       valinnat
-                       (assoc valinnat :aikavali [(pvm/paivaa-sitten 7) (pvm/nyt)]))]
-        (update-in app [:valinnat] merge valinnat))))
+    (hae app))
 
   v/HaeIlmoitukset
   (process-event [_ {valinnat :valinnat taustahaku? :taustahaku? :as app}]
     (let [tulos! (t/send-async! v/->IlmoitusHaku)]
       (go
         (let [haku (-> valinnat
-                       (update-in [:aikavali 0] #(and % (pvm/paivan-alussa %)))
-                       (update-in [:aikavali 1] #(and % (pvm/paivan-lopussa %)))
                        ;; jos tyyppiä/tilaa ei valittu, ota kaikki
                        (update :tyypit
                                #(if (empty? %) +ilmoitustyypit+ %))
