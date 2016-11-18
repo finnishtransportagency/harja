@@ -11,7 +11,7 @@
   (fn []
     (System/currentTimeMillis)))
 
-(defonce JR (jmx/reporter {}))
+(defonce JR (jmx/reporter {:domain "Catalina"}))
 
 (defn start []
   (log/info "JMX metriikoiden raportointi aloitettu")
