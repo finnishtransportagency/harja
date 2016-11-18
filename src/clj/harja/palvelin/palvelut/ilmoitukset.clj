@@ -104,7 +104,7 @@
     aikavali
     (let [tunteja (:tunteja vakioaikavali)]
      (if tunteja
-       (vector (clj-time.coerce/to-date (pvm/tuntia-sitten tunteja)) (pvm/nyt))
+       (vector (c/to-date (pvm/tuntia-sitten tunteja)) (pvm/nyt))
        (vector alkuaika loppuaika)))))
 
 (defn hae-ilmoitukset
