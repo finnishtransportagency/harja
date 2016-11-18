@@ -126,6 +126,20 @@
                [:span
                 "Uudet toistuvat välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi."
                 [:br]])
-             "Välitavoitteen päivittäminen päivittää tiedot urakoihin, ellei tavoitetta ole muokattu urakassa." [:br]
+
+             [:br]
+
+             (when nayta-kertaluontoiset-valtakunnalliset?
+               [:span
+                "Kertaluontoisen välitavoitteen päivittäminen päivittää tiedot urakoihin, ellei tavoitetta ole muokattu urakassa."
+                [:br]])
+
+             (when nayta-toistuvat-valtakunnalliset?
+               [:span
+                "Toistuvan välitavoitteen päivittäminen poistaa urakoiden eri vuosille kopioidun välitavoitteen, ellei sitä ole muokattu urakassa, ja lisää sen uudelleen ei-päättyneisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi."
+                [:br]])
+
+             [:br]
+
              "Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]]
            [:div "Valtakunnalliset välitavoitteet eivät ole käytössä valitussa urakkatyypissä."])]))))
