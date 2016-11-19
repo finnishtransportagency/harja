@@ -17,3 +17,6 @@
 (def +hampurilaisvalikko+ (ikoni "hampurilaisvalikko.svg"))
 (def +avattu+ (ikoni "avattu.png"))
 (def +havaintopiste+ (ikoni "havaintopiste.png"))
+
+(def +nuoli-avaa+ (ikoni "nuoli_avaa.svg"))
+(def +nuoli-sulje+ (ikoni "nuoli_sulje.svg"))

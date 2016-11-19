@@ -70,10 +70,12 @@
                            (if @paanavigointi-nakyvissa?
                              "paanavigointi-container-nakyvissa"
                              "paanavigointi-container-piilossa"))}
-         [:div.nayttonappi {:on-click togglaa-paanavigoinnin-nakyvyys}]
+         [:div.nayttonappi {:on-click togglaa-paanavigoinnin-nakyvyys}
+          [:img {:src kuvat/+nuoli-avaa+}]]
          [:div.navigointilaatikko-container
           [:div.navigointilaatikko
-           [:div.piilotusnappi {:on-click togglaa-paanavigoinnin-nakyvyys}]
+           [:div.piilotusnappi {:on-click togglaa-paanavigoinnin-nakyvyys}
+            [:img {:src kuvat/+nuoli-sulje+}]]
 
            [:header
             [:div.hampurilaisvalikko
