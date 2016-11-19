@@ -15,7 +15,8 @@
             [schema.core :as s :include-macros true]
             [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.ikonit :as ikonit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.makrot :refer [fnc]]))
 
@@ -684,7 +685,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                              :on-click #(do (.preventDefault %)
                                                             (aloita-muokkaus! tiedot))}
                                             [:span.grid-muokkaa
-                                             [y/ikoni-ja-teksti [ikonit/muokkaa] "Muokkaa"]]]]
+                                             [ikonit/ikoni-ja-teksti [ikonit/muokkaa] "Muokkaa"]]]]
                         (if (and (= :ei-mahdollinen tallenna)
                                  tallennus-ei-mahdollinen-tooltip)
                           [yleiset/tooltip {} tallenna-nappi tallennus-ei-mahdollinen-tooltip]
@@ -695,12 +696,12 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                       :on-click #(do (.stopPropagation %)
                                      (.preventDefault %)
                                      (peru!))}
-                     [y/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]]
+                     [ikonit/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]]
 
                     (when-not (= false voi-lisata?)
                       [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
                                                                              (lisaa-rivi! ohjaus {}))}
-                       [y/ikoni-ja-teksti [ikonit/livicon-plus] (or (:lisaa-rivi opts) "Lisää rivi")]])
+                       [ikonit/ikoni-ja-teksti [ikonit/livicon-plus] (or (:lisaa-rivi opts) "Lisää rivi")]])
 
 
                     (when-not muokkaa-aina
@@ -718,7 +719,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                            (reset! tallennus-kaynnissa true)
                                            (go (if (<! (tallenna tallennettavat)))
                                                (nollaa-muokkaustiedot!)))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
-                       [y/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])
+                       [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])
 
                     (when-not muokkaa-aina
                       [:button.nappi-kielteinen.grid-peru
@@ -727,7 +728,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                      (nollaa-muokkaustiedot!)
                                      (when peruuta (peruuta))
                                      nil)}
-                       [y/ikoni-ja-teksti (ikonit/livicon-ban) "Peruuta"]])])
+                       [ikonit/ikoni-ja-teksti (ikonit/livicon-ban) "Peruuta"]])])
                  (when nayta-otsikko? [:h6.panel-title otsikko])])
               thead (fn []
                       [:thead

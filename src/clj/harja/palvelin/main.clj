@@ -92,6 +92,7 @@
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
+    [harja.palvelin.ajastetut-tehtavat.reittien-validointi :as reittitarkistukset]
     [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys :as suolasakkojen-lahetys]
     [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
     [harja.palvelin.ajastetut-tehtavat.laskutusyhteenvedot :as laskutusyhteenvedot]
@@ -104,7 +105,10 @@
 
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset
-     :refer [lue-asetukset konfiguroi-lokitus validoi-asetukset]])
+     :refer [lue-asetukset konfiguroi-lokitus validoi-asetukset]]
+
+    ;; Metriikat
+    [harja.palvelin.komponentit.metriikka :as metriikka])
   (:gen-class))
 
 (defn luo-jarjestelma [asetukset]
@@ -117,6 +121,7 @@
         (log/error e "Validointivirhe asetuksissa!")))
 
     (component/system-map
+     :metriikka (metriikka/luo-jmx-metriikka)
       :db (tietokanta/luo-tietokanta tietokanta kehitysmoodi)
       :db-replica (tietokanta/luo-tietokanta tietokanta-replica kehitysmoodi)
       :klusterin-tapahtumat (component/using
@@ -129,7 +134,7 @@
       :http-palvelin (component/using
                        (http-palvelin/luo-http-palvelin http-palvelin
                                                         kehitysmoodi)
-                       [:todennus])
+                       [:todennus :metriikka])
 
       :pdf-vienti (component/using
                     (pdf-vienti/luo-pdf-vienti)
@@ -212,6 +217,9 @@
       :paivystystarkistukset (component/using
                                (paivystystarkistukset/->Paivystystarkistukset (:paivystystarkistus asetukset))
                                [:http-palvelin :db :fim :sonja-sahkoposti])
+      :reittitarkistukset (component/using
+                            (reittitarkistukset/->Reittitarkistukset (:reittitarkistus asetukset))
+                            [:http-palvelin :db])
 
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using

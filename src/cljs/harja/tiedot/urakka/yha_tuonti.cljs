@@ -15,8 +15,7 @@
             [harja.pvm :as pvm]
             [harja.ui.modal :as modal]
             [harja.ui.ikonit :as ikonit]
-            [harja.tiedot.urakka.paallystys :as paallystys]
-            [harja.ui.yleiset :as yleiset])
+            [harja.tiedot.urakka.paallystys :as paallystys])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -274,7 +273,7 @@
     (when-not @yha-kohteiden-paivittaminen-kaynnissa?
       [harja.ui.napit/palvelinkutsu-nappi
        (if (= 1 (count paallystysilmoitukset))
-         (yleiset/teksti-ja-ikoni "Lähetä" (ikonit/livicon-arrow-right))
+         (ikonit/teksti-ja-ikoni "Lähetä" (ikonit/livicon-arrow-right))
          "Lähetä kaikki kohteet YHA:n")
        #(do
          (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")

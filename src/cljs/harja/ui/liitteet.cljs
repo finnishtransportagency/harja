@@ -8,7 +8,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.domain.liitteet :as t-liitteet]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.yleiset :as yleiset]
+            [harja.ui.ikonit :as ikonit]
             [harja.fmt :as fmt])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -131,7 +131,7 @@
          [:progress {:value edistyminen :max 100}] ;; Siirto menossa, näytetään progress
          [:span.liitekomponentti
           [:div {:class (str "file-upload nappi-toissijainen " (when grid? "nappi-grid"))}
-           [yleiset/ikoni-ja-teksti
+           [ikonit/ikoni-ja-teksti
             (ikonit/livicon-upload)
             (if @tiedosto
               (if grid?
