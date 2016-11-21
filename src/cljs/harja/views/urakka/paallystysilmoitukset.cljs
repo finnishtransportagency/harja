@@ -109,7 +109,7 @@
        {:teksti "Hinnan muutokset tarkastettu"
         :nimi :taloudellinen-osa
         :tyyppi :checkbox
-        :fmt #(if % "Hinnan muutokset tarkastettu" "Taloudellista osaa ei tarkastettu")}
+        :fmt #(if % "Hinnan muutokset tarkastettu" "Hinnan muutoksia ei tarkastettu")}
        {:otsikko "Lisätiedot"
         :nimi :lisatiedot
         :tyyppi :text

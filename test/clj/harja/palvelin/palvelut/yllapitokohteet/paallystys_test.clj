@@ -187,7 +187,7 @@
                 :osoitteet [{:edellinen-paallystetyyppi 1
                              :esiintyma "asd"
                              :km-arvo "asd"
-                             :kohdeosa-id 18
+                             :kohdeosa-id 19
                              :kokonaismassamaara 2
                              :leveys 5
                              :lisaaineet "asd"
