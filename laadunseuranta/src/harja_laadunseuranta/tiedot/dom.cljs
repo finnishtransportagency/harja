@@ -1,5 +1,6 @@
 (ns harja-laadunseuranta.tiedot.dom
   (:require
+    [harja-laadunseuranta.asiakas.tapahtumat :as tapahtumat]
     [reagent.core :as reagent :refer [atom]]
     [cljs.core.async :as async :refer [<! >! chan close!]])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -17,6 +18,7 @@
 
 (defn kuuntele-leveyksia []
   (.addEventListener js/window "resize" #(do (paivita-leveys!)
-                                             (paivita-korkeus!))))
+                                             (paivita-korkeus!)
+                                             (tapahtumat/julkaise! {:aihe :window-resize}))))
 
 (kuuntele-leveyksia)

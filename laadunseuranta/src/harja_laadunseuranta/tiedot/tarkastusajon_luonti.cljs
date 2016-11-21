@@ -80,7 +80,6 @@
 
 (defn jatka-ajoa! []
   (let [ajo @s/palautettava-tarkastusajo]
-    (js/console.log "Tarkastusajo palautetaan: " (pr-str ajo))
     (reset! s/reittipisteet (mapv utils/keywordize-map (js->clj (get ajo "reittipisteet"))))
     (reset! s/kirjauspisteet (mapv utils/keywordize-map (js->clj (get ajo "tarkastuspisteet"))))
     (reset! s/tarkastusajo-id (get ajo "tarkastusajo"))

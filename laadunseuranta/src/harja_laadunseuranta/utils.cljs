@@ -36,6 +36,9 @@
 (defn ipad? []
   (re-matches #".*iPad.*" (.-platform js/navigator)))
 
+(defn ilman-tavutusta [teksti]
+  (str/replace teksti #"\u00AD" ""))
+
 (defn erota-mittaukset [havainnot]
   (select-keys havainnot [:lampotila :lumisuus :talvihoito-tasaisuus :soratie-tasaisuus :kitkamittaus
                           :polyavyys :kiinteys :sivukaltevuus]))

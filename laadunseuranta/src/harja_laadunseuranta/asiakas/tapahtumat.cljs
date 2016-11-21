@@ -1,9 +1,6 @@
-(ns harja.asiakas.tapahtumat
-  "Harjan asiakaspään eventbus"
-  (:require [cljs.core.async :refer [<! >! chan alts! pub sub unsub unsub-all put! close!]]
-            [harja.loki])
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [harja.makrot :refer [nappaa-virhe-hiljaa]]))
+(ns harja-laadunseuranta.asiakas.tapahtumat ;; FIXME Lähes duplikaatti harja.asiakas.tapahtumat, pitäsi jakaa yhteinen koodi jotenkin
+  (:require [cljs.core.async :refer [<! >! chan alts! pub sub unsub unsub-all put! close!]])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def julkaisukanava (chan))
 
@@ -20,7 +17,7 @@
           ch (chan)]
       (go (loop [tapahtuma (<! ch)]
             (when tapahtuma
-              (nappaa-virhe-hiljaa (kasittelija tapahtuma))
+              (kasittelija tapahtuma)
               (recur (<! ch)))))
       (sub julkaisu aihe ch)
       #(unsub julkaisu aihe ch))
