@@ -62,7 +62,8 @@
      [:div.toggle-valintapainike-otsikko
       nimi]]))
 
-(defn- paanavigointi-header [{:keys [valilehdet valittu-valilehti] :as tiedot}]
+(defn- paanavigointi-header [{:keys [valilehdet valittu-valilehti
+                                     valittu-valilehtiryhma] :as tiedot}]
   (let [valilehtia-per-ryhma (atom 0)
         paivita-valilehtien-maara-per-ryhma
         (fn [this]
@@ -71,7 +72,13 @@
                                                           valilehdet)))
         valitse-valilehti! (fn [uusi-valinta]
                              (reset! valittu-valilehti uusi-valinta))
-        lopeta-leveyskuuntelu (atom nil)]
+        lopeta-leveyskuuntelu (atom nil)
+        selauspainike-painettu! (fn [suunta]
+                                  (case suunta
+                                    :oikea (when (< @valittu-valilehtiryhma 3)
+                                             (reset! valittu-valilehtiryhma (+ @valittu-valilehtiryhma 1)))
+                                    :vasen (when (> @valittu-valilehtiryhma 0)
+                                             (reset! valittu-valilehtiryhma (- @valittu-valilehtiryhma 1)))))]
 
     (r/create-class
       {:component-did-mount (fn [this]
@@ -98,8 +105,10 @@
 
             (when-not kayta-hampurilaisvalikkoa?
               [:div
-               [:div.selaa-valilehtiryhmia.selaa-valilehtiryhmia-oikealle]
-               [:div.selaa-valilehtiryhmia.selaa-valilehtiryhmia-vasemmalle]])
+               [:div.selaa-valilehtiryhmia.selaa-valilehtiryhmia-oikealle
+                {:on-click (partial selauspainike-painettu! :oikea)}]
+               [:div.selaa-valilehtiryhmia.selaa-valilehtiryhmia-vasemmalle
+                {:on-click (partial selauspainike-painettu! :vasen)}]])
 
             (when @valilehdet-nakyvissa?
               [:ul.valilehtilista
