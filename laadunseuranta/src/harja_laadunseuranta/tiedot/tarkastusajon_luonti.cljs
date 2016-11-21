@@ -7,7 +7,7 @@
             [harja-laadunseuranta.utils :as utils])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
-(defn- pysayta-tarkastusajo [sovellus]
+(defn- resetoi-tarkastusajo-sovelluksen-tilaan [sovellus]
   (assoc sovellus
     ;; Tarkastusajon perustiedot
     :valittu-urakka nil
@@ -42,23 +42,23 @@
     ;; Muut
     :ilmoitukset []))
 
-(defn- tarkastusajo-kayntiin [sovellus ajo-id]
+(defn- aseta-tarkastusajo-sovelluksen-tilaan [sovellus ajo-id]
   (assoc sovellus
     :tarkastusajo-id ajo-id
     :reittipisteet []
     :kirjauspisteet []
     :tallennus-kaynnissa true))
 
-(defn- tarkastusajo-kayntiin! [ajo-id]
-  (swap! s/sovellus #(tarkastusajo-kayntiin % ajo-id)))
+(defn- kaynnista-tarkastusajo [ajo-id]
+  (swap! s/sovellus #(aseta-tarkastusajo-sovelluksen-tilaan % ajo-id)))
 
 (defn- pysayta-tarkastusajo! []
-  (swap! s/sovellus pysayta-tarkastusajo))
+  (swap! s/sovellus resetoi-tarkastusajo-sovelluksen-tilaan))
 
 (defn luo-ajo! []
   (go-loop []
     (if-let [id (-> (<! (comms/luo-ajo!)) :ok :id)]
-      (tarkastusajo-kayntiin! id)
+      (kaynnista-tarkastusajo id)
       ;; yritä uudleleen kunnes onnistuu
       (do (<! (timeout 1000))
           (recur)))))
