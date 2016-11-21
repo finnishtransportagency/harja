@@ -153,7 +153,8 @@
     (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus")
     (let [urakka-id @muhoksen-paallystysurakan-id
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
-          paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
+          paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id
+                                                  :valmis-kasiteltavaksi true)
           maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))]
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -186,7 +187,7 @@
                 :osoitteet [{:edellinen-paallystetyyppi 1
                              :esiintyma "asd"
                              :km-arvo "asd"
-                             :kohdeosa-id 18
+                             :kohdeosa-id 19
                              :kokonaismassamaara 2
                              :leveys 5
                              :lisaaineet "asd"
@@ -266,7 +267,7 @@
                 :osoitteet [{:edellinen-paallystetyyppi 1
                              :esiintyma "asd"
                              :km-arvo "asd"
-                             :kohdeosa-id 18
+                             :kohdeosa-id 19
                              :kokonaismassamaara 2
                              :leveys 5
                              :lisaaineet "asd"

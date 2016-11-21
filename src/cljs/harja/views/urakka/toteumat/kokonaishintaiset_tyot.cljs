@@ -42,16 +42,18 @@
                   :tunniste :id
                   :tyhja    (if (nil? @tiedot) [ajax-loader "Haetaan tehtävän päiväkohtaisia tietoja..."]
                                                "Tietoja ei löytynyt")}
-       [{:otsikko "Suorittaja" :nimi :suorittaja :hae (comp :nimi :suorittaja) :leveys 3}
-        {:otsikko "Alkanut" :nimi :alkanut :leveys 2 :fmt pvm/aika}
-        {:otsikko "Päättynyt" :nimi :paattynyt :leveys 2 :fmt pvm/aika}
-        {:otsikko "Pituus" :nimi :pituus :leveys 3 :fmt fmt/pituus-opt :tasaa :oikea}
+       [{:otsikko "Suorittaja" :nimi :suorittaja :hae (comp :nimi :suorittaja) :leveys 2}
+        {:otsikko "Alkanut" :nimi :alkanut :leveys 1 :fmt pvm/aika}
+        {:otsikko "Päättynyt" :nimi :paattynyt :leveys 1 :fmt pvm/aika}
+        {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys 1 :tasaa :oikea
+         :hae     (fn [{:keys [tehtava]}] (->> (fmt/desimaaliluku-opt (:maara tehtava) 1) (fmt/yksikolla (:yksikko tehtava))))}
+        {:otsikko "Pituus" :nimi :pituus :leveys 1 :fmt fmt/pituus-opt :tasaa :oikea}
         {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 3}
         {:otsikko     "Tarkastele koko toteumaa"
          :nimi        :tarkastele-toteumaa
          :muokattava? (constantly false)
          :tyyppi      :komponentti
-         :leveys      2
+         :leveys      1
          :komponentti (fn [rivi]
                         [:div
                          [:button.nappi-toissijainen.nappi-grid
@@ -80,12 +82,13 @@
                                  (fn [{:keys [pvm toimenpidekoodi]}]
                                    [tehtavan-paivakohtaiset-tiedot pvm toimenpidekoodi])))
                            toteumat)}
-      [{:nimi :tarkemmat-tiedot :tyyppi :vetolaatikon-tila :leveys "3%"}
-       {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "19%"}
-       {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "38%"}
-       {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys "10%" :fmt #(fmt/desimaaliluku-opt % 1) :tasaa :oikea}
-       {:otsikko "Yksikkö" :tyyppi :numero :nimi :yksikko :leveys "10%"}
-       {:otsikko "Lähde" :nimi :lahde :hae #(if (:jarjestelmanlisaama %) "Urak. järj." "Harja") :tyyppi :string :leveys "20%"}]
+      [{:nimi :tarkemmat-tiedot :tyyppi :vetolaatikon-tila :leveys 1}
+       {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys 3}
+       {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys 4}
+       {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys 2 :tasaa :oikea
+        :hae     (fn [rivi] (->> (fmt/desimaaliluku-opt (:maara rivi) 2) (fmt/yksikolla (:yksikko rivi))))}
+       {:otsikko "Pituus" :nimi :pituus :leveys 2 :fmt fmt/pituus-opt :tasaa :oikea}
+       {:otsikko "Lähde" :nimi :lahde :hae #(if (:jarjestelmanlisaama %) "Urak. järj." "Harja") :tyyppi :string :leveys 3}]
       toteumat]]))
 
 (defn tee-valinnat []
@@ -137,22 +140,23 @@
           [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-kokonaishintainen-toteuma nil)]
 
           [lomake/lomake
-           {:otsikko (if (:id @muokattu)
-                       "Muokkaa kokonaishintaista toteumaa"
-                       "Luo uusi kokonaishintainen toteuma")
-            :muokkaa! #(do (reset! muokattu %))
+           {:otsikko      (if (:id @muokattu)
+                            "Muokkaa kokonaishintaista toteumaa"
+                            "Luo uusi kokonaishintainen toteuma")
+            :muokkaa!     #(do (reset! muokattu %))
             :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))
-            :footer [napit/palvelinkutsu-nappi
-                     "Tallenna toteuma"
-                     #(tiedot/tallenna-kokonaishintainen-toteuma! @muokattu)
-                     {:luokka "nappi-ensisijainen"
-                      :ikoni (ikonit/tallenna)
-                      :kun-onnistuu #(do
-                                      (tiedot/toteuman-tallennus-onnistui %)
-                                      (reset! tiedot/valittu-kokonaishintainen-toteuma nil))
-                      :disabled (or (not (lomake/voi-tallentaa? @muokattu))
-                                    jarjestelman-lisaama-toteuma?
-                                    (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))))}]}
+            :footer-fn    (fn [tiedot]
+                            [napit/palvelinkutsu-nappi
+                            "Tallenna toteuma"
+                            #(tiedot/tallenna-kokonaishintainen-toteuma! tiedot)
+                            {:luokka       "nappi-ensisijainen"
+                             :ikoni        (ikonit/tallenna)
+                             :kun-onnistuu #(do
+                                             (tiedot/toteuman-tallennus-onnistui %)
+                                             (reset! tiedot/valittu-kokonaishintainen-toteuma nil))
+                             :disabled     (or (not (lomake/voi-tallentaa? tiedot))
+                                               jarjestelman-lisaama-toteuma?
+                                               (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))))}])}
            ;; lisatieto, suorittaja {ytunnus, nimi}, pituus
            ;; reitti!
            [(when jarjestelman-lisaama-toteuma?
@@ -180,11 +184,14 @@
                :nimi :pituus
                :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
               (if-not (= (:reitti @muokattu) :hakee)
-               {:tyyppi              :tierekisteriosoite
-                :nimi                :tr
-                :pakollinen?         true
-                :sijainti            (r/wrap (:reitti @muokattu)
-                                             #(swap! muokattu assoc :reitti %))}
+                {:tyyppi                            :tierekisteriosoite
+                 :nimi                              :tr
+                 :pakollinen?         true
+                 :sijainti                          (r/wrap (:reitti @muokattu)
+                                                            #(swap! muokattu assoc :reitti %))
+                 :ala-nayta-virhetta-komponentissa? true
+                 :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:reitti]]]
+                 }
                {:tyyppi :spinner
                 :nimi :spinner
                 :viesti "Haetaan reittiä"}))

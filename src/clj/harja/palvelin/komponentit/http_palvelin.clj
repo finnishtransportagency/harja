@@ -11,8 +11,10 @@
 
             [cognitect.transit :as t]
             [schema.core :as s]
-    ;; Pyyntöjen todennus (autentikointi)
+            ;; Pyyntöjen todennus (autentikointi)
             [harja.palvelin.komponentit.todennus :as todennus]
+            ;; Metriikkadatan julkaisu
+            [harja.palvelin.komponentit.metriikka :as metriikka]
             [harja.palvelin.index :as index]
             [harja.geo :as geo]
             [harja.transit :as transit]
@@ -20,10 +22,32 @@
 
             [slingshot.slingshot :refer [try+ throw+]]
 
-            [new-reliquary.core :as nr])
+            [new-reliquary.core :as nr]
+            [clojure.core.async :as async])
   (:import (java.text SimpleDateFormat)
            (java.io ByteArrayInputStream ByteArrayOutputStream)))
 
+(defn transit-vastaus
+  ([data] (transit-vastaus 200 data))
+  ([status data]
+   {:status  status
+    :headers {"Content-Type" "application/transit+json"}
+    :body    (transit/clj->transit data)}))
+
+(defrecord AsyncResponse [channel])
+
+(defn async-response? [res]
+  (instance? AsyncResponse res))
+
+(defmacro async [& body]
+  `(->AsyncResponse (async/thread
+                      (try+
+                       (transit-vastaus ~@body)
+                       (catch harja.domain.roolit.EiOikeutta eo#
+                         (transit-vastaus 403 eo#))
+                       (catch Throwable e#
+                         (log/warn e# "Virhe async POST palvelussa")
+                         (transit-vastaus 500 {:virhe (.getMessage e#)}))))))
 
 (defn- reitita
   "Reititä sisääntuleva pyyntö käsittelijöille."
@@ -43,13 +67,6 @@
     (fn [req]
       (when (= polku (:uri req))
         (kasittelija-fn req)))))
-
-(defn transit-vastaus
-  ([data] (transit-vastaus 200 data))
-  ([status data]
-   {:status  status
-    :headers {"Content-Type" "application/transit+json"}
-    :body    (transit/clj->transit data)}))
 
 (defn- transit-post-kasittelija
   "Luo transit käsittelijän POST kutsuille annettuun palvelufunktioon."
@@ -76,7 +93,14 @@
             {:status 400
              :body   "Ei validi kysely"}
             (try+
-             (transit-vastaus (palvelu-fn (:kayttaja req) kysely))
+             (let [palvelu-vastaus (palvelu-fn (:kayttaja req) kysely)]
+               (if (async-response? palvelu-vastaus)
+                 (http/with-channel req channel
+                   (async/go
+                     (let [vastaus (async/<! (:channel palvelu-vastaus))]
+                       (http/send! channel vastaus)
+                       (http/close channel))))
+                 (transit-vastaus palvelu-vastaus)))
              (catch harja.domain.roolit.EiOikeutta eo
                ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
                (transit-vastaus 403 eo))
@@ -210,10 +234,13 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
   (not (or (str/includes? (:uri req) "ls-")
            (str/includes? (:uri req) "laadunseuranta"))))
 
-(defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat lopetus-fn kehitysmoodi]
+(defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat lopetus-fn kehitysmoodi
+                         mittarit]
   component/Lifecycle
-  (start [this]
+  (start [{metriikka :metriikka :as this}]
     (log/info "HttpPalvelin käynnistetään portissa " (:portti asetukset))
+    (when metriikka
+      (metriikka/lisaa-mittari! metriikka "http" mittarit))
     (let [todennus (:todennus this)
           resurssit (route/resources "")
           dev-resurssit (when kehitysmoodi
@@ -224,20 +251,25 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                  (cookies/wrap-cookies
                   (fn [req]
                     (try+
-                       (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
-                             ui-kasittelijat (mapv :fn @kasittelijat)
-                             ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
-                                               (wrap-anti-forgery anti-csrf-kaytossa?))]
+                     (metriikka/inc! mittarit :aktiiviset_pyynnot)
+                     (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
+                           ui-kasittelijat (mapv :fn @kasittelijat)
+                           ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
+                                              (wrap-anti-forgery anti-csrf-kaytossa?))]
 
-                         (or (reitita req (conj (mapv :fn ei-todennettavat)
-                                                 dev-resurssit resurssit))
-                             (reitita (todennus/todenna-pyynto todennus req)
-                                      (-> (mapv :fn todennettavat)
-                                          (conj (partial index-kasittelija kehitysmoodi))
-                                          (conj (partial ls-index-kasittelija kehitysmoodi))
-                                          (conj ui-kasittelija)))))
-                       (catch [:virhe :todennusvirhe] _
-                         {:status 403 :body "Todennusvirhe"}))))
+                       (or (reitita req (conj (mapv :fn ei-todennettavat)
+                                              dev-resurssit resurssit))
+                           (reitita (todennus/todenna-pyynto todennus req)
+                                    (-> (mapv :fn todennettavat)
+                                        (conj (partial index-kasittelija kehitysmoodi))
+                                        (conj (partial ls-index-kasittelija kehitysmoodi))
+                                        (conj ui-kasittelija)))))
+                     (catch [:virhe :todennusvirhe] _
+                       {:status 403 :body "Todennusvirhe"})
+                     (finally
+                       (metriikka/muuta! mittarit
+                                         :aktiiviset_pyynnot dec
+                                         :pyyntoja_palveltu inc)))))
 
                  {:port     (or (:portti asetukset) asetukset)
                   :thread   (or (:threads asetukset) 8)
@@ -285,7 +317,9 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
              (filterv #(not= (:nimi %) nimi) kasittelijat)))))
 
 (defn luo-http-palvelin [asetukset kehitysmoodi]
-  (->HttpPalvelin asetukset (atom []) (atom []) (atom nil) kehitysmoodi))
+  (->HttpPalvelin asetukset (atom []) (atom []) (atom nil) kehitysmoodi
+                  (metriikka/luo-mittari-ref {:aktiiviset_pyynnot 0
+                                              :pyyntoja_palveltu 0})))
 
 (defn julkaise-reitti
   ([http nimi reitti] (julkaise-reitti http nimi reitti true))

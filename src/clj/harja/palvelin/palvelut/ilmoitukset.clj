@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.ilmoitukset
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.http-palvelin
+             :refer [julkaise-palvelu poista-palvelut async]]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [clj-time.coerce :refer [from-sql-time]]
@@ -99,89 +100,98 @@
                  aloituskuittaukset))]
     aloituskuittauksia-annetuna-ajan-valissa))
 
+(defn aikavaliehto [{:keys [vakioaikavali aikavali alkuaika loppuaika]}]
+  (if aikavali
+    aikavali
+    (if-let [tunteja (:tunteja vakioaikavali)]
+      [(c/to-date (pvm/tuntia-sitten tunteja)) (pvm/nyt)]
+      [alkuaika loppuaika])))
+
 (defn hae-ilmoitukset
   ([db user suodattimet] (hae-ilmoitukset db user suodattimet nil))
   ([db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit
-                   kuittaustyypit aikavali hakuehto selite vain-myohassa?
-                   aloituskuittauksen-ajankohta tr-numero
-                   ilmoittaja-nimi ilmoittaja-puhelin]}
-   max-maara]
-  (let [aikavali-alku (when (first aikavali)
-                        (konv/sql-date (first aikavali)))
-        aikavali-loppu (when (second aikavali)
-                         (konv/sql-date (second aikavali)))
-        urakat (urakat/kayttajan-urakka-idt-aikavalilta
-                 db user oikeudet/ilmoitukset-ilmoitukset
-                 urakka urakoitsija urakkatyyppi hallintayksikko
-                 (first aikavali) (second aikavali))
-        tyypit (mapv name tyypit)
-        selite-annettu? (boolean (and selite (first selite)))
-        selite (if selite-annettu? (name (first selite)) "")
-        tilat (into #{} tilat)
-        debug-viesti (str "Haetaan ilmoituksia: "
-                          (viesti urakat "urakoista" "ilman urakoita")
-                          (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
-                          (viesti aikavali-loppu "päättyen" "ilman päättymisaikaa")
-                          (viesti tyypit "tyypeistä" "ilman tyyppirajoituksia")
-                          (viesti kuittaustyypit "kuittaustyypeistä" "ilman kuittaustyyppirajoituksia")
-                          (viesti aloituskuittauksen-ajankohta "aloituskuittausrajaksella: " "ilman aloituskuittausrajausta")
-                          (viesti vain-myohassa? "vain myöhässä olevat: " "myös myöhästyneet")
-                          (viesti selite "selitteellä:" "ilman selitettä")
-                          (viesti hakuehto "hakusanoilla:" "ilman tekstihakua")
-                          (viesti tr-numero "tienumerolla:" "ilman tienumeroa")
-                          (cond
-                            (:avoimet tilat) ", mutta vain avoimet."
-                            (and (:suljetut tilat) (:avoimet tilat)) ", ja näistä avoimet JA suljetut."
-                            (:suljetut tilat) ", ainoastaan suljetut."))
-        _ (log/debug debug-viesti)
-        ilmoitukset
-        (when-not (empty? urakat)
-          (konv/sarakkeet-vektoriin
-            (into []
-                  ilmoitus-xf
-                  (q/hae-ilmoitukset db
-                                     {:urakat urakat
-                                      :alku_annettu (hakuehto-annettu? aikavali-alku)
-                                      :loppu_annettu (hakuehto-annettu? aikavali-loppu)
-                                      :kuittaamattomat (contains? tilat :kuittaamaton)
-                                      :vastaanotetut (contains? tilat :vastaanotettu)
-                                      :aloitetut (contains? tilat :aloitettu)
-                                      :lopetetut (contains? tilat :lopetettu)
-                                      :alku aikavali-alku
-                                      :loppu aikavali-loppu
-                                      :tyypit_annettu (hakuehto-annettu? tyypit)
-                                      :tyypit tyypit
-                                      :teksti_annettu (hakuehto-annettu? hakuehto)
-                                      :teksti (str "%" hakuehto "%")
-                                      :selite_annettu selite-annettu?
-                                      :selite selite
-                                      :tr-numero tr-numero
-                                      :ilmoittaja-nimi (when-not (str/blank? ilmoittaja-nimi)
-                                                         (str "%" ilmoittaja-nimi "%"))
-                                      :ilmoittaja-puhelin (when-not (str/blank? ilmoittaja-puhelin)
-                                                            (str "%" ilmoittaja-puhelin "%"))
-                                      :max-maara max-maara}))
-            {:kuittaus :kuittaukset}))
-        ilmoitukset (mapv
-                      #(-> %
-                           (assoc :uusinkuittaus
-                                  (when-not (empty? (:kuittaukset %))
-                                    (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
-                           (lisaa-tieto-myohastymisesta))
-                      ilmoitukset)
-        ilmoitukset (if vain-myohassa?
-                      (suodata-myohastyneet ilmoitukset)
-                      ilmoitukset)
-        ilmoitukset (case aloituskuittauksen-ajankohta
-                      :alle-tunti (filter #(sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1)) ilmoitukset)
-                      :myohemmin (filter #(and
-                                           (sisaltaa-aloituskuittauksen? %)
-                                           (not (sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1))))
-                                         ilmoitukset)
-                      ilmoitukset)]
-    (log/debug "Löydettiin ilmoitukset: " (map :id ilmoitukset))
-    (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) ilmoitukset) "kappaletta")
-    ilmoitukset)))
+                    kuittaustyypit hakuehto selite vain-myohassa?
+                    aloituskuittauksen-ajankohta tr-numero
+                    ilmoittaja-nimi ilmoittaja-puhelin] :as hakuehdot}
+    max-maara]
+
+   (let [aikavali (aikavaliehto hakuehdot)
+         aikavali-alku (when (first aikavali)
+                         (konv/sql-timestamp (first aikavali)))
+         aikavali-loppu (when (second aikavali)
+                          (konv/sql-timestamp (second aikavali)))
+         urakat (urakat/kayttajan-urakka-idt-aikavalilta
+                  db user oikeudet/ilmoitukset-ilmoitukset
+                  urakka urakoitsija urakkatyyppi hallintayksikko
+                  (first aikavali) (second aikavali))
+         tyypit (mapv name tyypit)
+         selite-annettu? (boolean (and selite (first selite)))
+         selite (if selite-annettu? (name (first selite)) "")
+         tilat (into #{} tilat)
+         debug-viesti (str "Haetaan ilmoituksia: "
+                           (viesti urakat "urakoista" "ilman urakoita")
+                           (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
+                           (viesti aikavali-loppu "päättyen" "ilman päättymisaikaa")
+                           (viesti tyypit "tyypeistä" "ilman tyyppirajoituksia")
+                           (viesti kuittaustyypit "kuittaustyypeistä" "ilman kuittaustyyppirajoituksia")
+                           (viesti aloituskuittauksen-ajankohta "aloituskuittausrajaksella: " "ilman aloituskuittausrajausta")
+                           (viesti vain-myohassa? "vain myöhässä olevat: " "myös myöhästyneet")
+                           (viesti selite "selitteellä:" "ilman selitettä")
+                           (viesti hakuehto "hakusanoilla:" "ilman tekstihakua")
+                           (viesti tr-numero "tienumerolla:" "ilman tienumeroa")
+                           (cond
+                             (:avoimet tilat) ", mutta vain avoimet."
+                             (and (:suljetut tilat) (:avoimet tilat)) ", ja näistä avoimet JA suljetut."
+                             (:suljetut tilat) ", ainoastaan suljetut."))
+         _ (log/debug debug-viesti)
+         ilmoitukset
+         (when-not (empty? urakat)
+           (konv/sarakkeet-vektoriin
+             (into []
+                   ilmoitus-xf
+                   (q/hae-ilmoitukset db
+                                      {:urakat urakat
+                                       :alku_annettu (hakuehto-annettu? aikavali-alku)
+                                       :loppu_annettu (hakuehto-annettu? aikavali-loppu)
+                                       :kuittaamattomat (contains? tilat :kuittaamaton)
+                                       :vastaanotetut (contains? tilat :vastaanotettu)
+                                       :aloitetut (contains? tilat :aloitettu)
+                                       :lopetetut (contains? tilat :lopetettu)
+                                       :alku aikavali-alku
+                                       :loppu aikavali-loppu
+                                       :tyypit_annettu (hakuehto-annettu? tyypit)
+                                       :tyypit tyypit
+                                       :teksti_annettu (hakuehto-annettu? hakuehto)
+                                       :teksti (str "%" hakuehto "%")
+                                       :selite_annettu selite-annettu?
+                                       :selite selite
+                                       :tr-numero tr-numero
+                                       :ilmoittaja-nimi (when-not (str/blank? ilmoittaja-nimi)
+                                                          (str "%" ilmoittaja-nimi "%"))
+                                       :ilmoittaja-puhelin (when-not (str/blank? ilmoittaja-puhelin)
+                                                             (str "%" ilmoittaja-puhelin "%"))
+                                       :max-maara max-maara}))
+             {:kuittaus :kuittaukset}))
+         ilmoitukset (mapv
+                       #(-> %
+                            (assoc :uusinkuittaus
+                                   (when-not (empty? (:kuittaukset %))
+                                     (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
+                            (lisaa-tieto-myohastymisesta))
+                       ilmoitukset)
+         ilmoitukset (if vain-myohassa?
+                       (suodata-myohastyneet ilmoitukset)
+                       ilmoitukset)
+         ilmoitukset (case aloituskuittauksen-ajankohta
+                       :alle-tunti (filter #(sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1)) ilmoitukset)
+                       :myohemmin (filter #(and
+                                            (sisaltaa-aloituskuittauksen? %)
+                                            (not (sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1))))
+                                          ilmoitukset)
+                       ilmoitukset)]
+     (log/debug "Löydettiin ilmoitukset: " (map :id ilmoitukset))
+     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) ilmoitukset) "kappaletta")
+     ilmoitukset)))
 
 (defn hae-ilmoitus [db user id]
   (let [tulos (first
@@ -243,32 +253,32 @@
                                       :kasittelija_organisaatio_nimi kasittelija-organisaatio
                                       :kasittelija_organisaatio_ytunnus kasittelija-ytunnus}))]
 
-                      (-> toimenpide
-                          (assoc :tila (keyword (:tila toimenpide)))
-                          (assoc :suunta (keyword (:suunta toimenpide)))
-                          (assoc :kanava (keyword (:kanava toimenpide)))
-                          (assoc :kuittaustyyppi (keyword (:kuittaustyyppi toimenpide)))
-                          (assoc-in [:kuittaaja :etunimi] (:kuittaaja_henkilo_etunimi toimenpide))
-                          (assoc-in [:kuittaaja :sukunimi] (:kuittaaja_henkilo_sukunimi toimenpide))
-                          (assoc-in [:kuittaaja :matkapuhelin] (:kuittaaja_henkilo_matkapuhelin toimenpide))
-                          (assoc-in [:kuittaaja :tyopuhelin] (:kuittaaja_henkilo_tyopuhelin toimenpide))
-                          (assoc-in [:kuittaaja :sahkoposti] (:kuittaaja_henkilo_sahkoposti toimenpide))
-                          (assoc-in [:kuittaaja :organisaatio] (:kuittaaja_organisaatio_nimi toimenpide))
-                          (assoc-in [:kuittaaja :ytunnus] (:kuittaaja_organisaatio_ytunnus toimenpide))
-                          (assoc-in [:ilmoittaja :etunimi] (:ilmoittaja_henkilo_etunimi toimenpide))
-                          (assoc-in [:ilmoittaja :sukunimi] (:ilmoittaja_henkilo_sukunimi toimenpide))
-                          (assoc-in [:ilmoittaja :matkapuhelin] (:ilmoittaja_henkilo_matkapuhelin toimenpide))
-                          (assoc-in [:ilmoittaja :tyopuhelin] (:ilmoittaja_henkilo_tyopuhelin toimenpide))
-                          (assoc-in [:ilmoittaja :sahkoposti] (:ilmoittaja_henkilo_sahkoposti toimenpide))
-                          (assoc-in [:ilmoittaja :organisaatio] (:ilmoittaja_organisaatio_nimi toimenpide))
-                          (assoc-in [:ilmoittaja :ytunnus] (:ilmoittaja_organisaatio_ytunnus toimenpide))
-                          (assoc-in [:kasittelija :etunimi] (:kasittelija_henkilo_etunimi toimenpide))
-                          (assoc-in [:kasittelija :sukunimi] (:kasittelija_henkilo_sukunimi toimenpide))
-                          (assoc-in [:kasittelija :matkapuhelin] (:kasittelija_henkilo_matkapuhelin toimenpide))
-                          (assoc-in [:kasittelija :tyopuhelin] (:kasittelija_henkilo_tyopuhelin toimenpide))
-                          (assoc-in [:kasittelija :sahkoposti] (:kasittelija_henkilo_sahkoposti toimenpide))
-                          (assoc-in [:kasittelija :organisaatio] (:kasittelija_organisaatio_nimi toimenpide))
-                          (assoc-in [:kasittelija :ytunnus] (:kasittelija_organisaatio_ytunnus toimenpide)))))
+                     (-> toimenpide
+                         (assoc :tila (keyword (:tila toimenpide)))
+                         (assoc :suunta (keyword (:suunta toimenpide)))
+                         (assoc :kanava (keyword (:kanava toimenpide)))
+                         (assoc :kuittaustyyppi (keyword (:kuittaustyyppi toimenpide)))
+                         (assoc-in [:kuittaaja :etunimi] (:kuittaaja_henkilo_etunimi toimenpide))
+                         (assoc-in [:kuittaaja :sukunimi] (:kuittaaja_henkilo_sukunimi toimenpide))
+                         (assoc-in [:kuittaaja :matkapuhelin] (:kuittaaja_henkilo_matkapuhelin toimenpide))
+                         (assoc-in [:kuittaaja :tyopuhelin] (:kuittaaja_henkilo_tyopuhelin toimenpide))
+                         (assoc-in [:kuittaaja :sahkoposti] (:kuittaaja_henkilo_sahkoposti toimenpide))
+                         (assoc-in [:kuittaaja :organisaatio] (:kuittaaja_organisaatio_nimi toimenpide))
+                         (assoc-in [:kuittaaja :ytunnus] (:kuittaaja_organisaatio_ytunnus toimenpide))
+                         (assoc-in [:ilmoittaja :etunimi] (:ilmoittaja_henkilo_etunimi toimenpide))
+                         (assoc-in [:ilmoittaja :sukunimi] (:ilmoittaja_henkilo_sukunimi toimenpide))
+                         (assoc-in [:ilmoittaja :matkapuhelin] (:ilmoittaja_henkilo_matkapuhelin toimenpide))
+                         (assoc-in [:ilmoittaja :tyopuhelin] (:ilmoittaja_henkilo_tyopuhelin toimenpide))
+                         (assoc-in [:ilmoittaja :sahkoposti] (:ilmoittaja_henkilo_sahkoposti toimenpide))
+                         (assoc-in [:ilmoittaja :organisaatio] (:ilmoittaja_organisaatio_nimi toimenpide))
+                         (assoc-in [:ilmoittaja :ytunnus] (:ilmoittaja_organisaatio_ytunnus toimenpide))
+                         (assoc-in [:kasittelija :etunimi] (:kasittelija_henkilo_etunimi toimenpide))
+                         (assoc-in [:kasittelija :sukunimi] (:kasittelija_henkilo_sukunimi toimenpide))
+                         (assoc-in [:kasittelija :matkapuhelin] (:kasittelija_henkilo_matkapuhelin toimenpide))
+                         (assoc-in [:kasittelija :tyopuhelin] (:kasittelija_henkilo_tyopuhelin toimenpide))
+                         (assoc-in [:kasittelija :sahkoposti] (:kasittelija_henkilo_sahkoposti toimenpide))
+                         (assoc-in [:kasittelija :organisaatio] (:kasittelija_organisaatio_nimi toimenpide))
+                         (assoc-in [:kasittelija :ytunnus] (:kasittelija_organisaatio_ytunnus toimenpide)))))
 
         ilmoitustoimenpiteet [(when (and (= tyyppi :aloitus)
                                          (not (q/ilmoitukselle-olemassa-vastaanottokuittaus? db ulkoinen-ilmoitusid)))
@@ -334,7 +344,8 @@
                         (hae-ilmoitus db user tiedot)))
     (julkaise-palvelu http :tallenna-ilmoitustoimenpiteet
                       (fn [user ilmoitustoimenpiteet]
-                        (tallenna-ilmoitustoimenpiteet db tloik user ilmoitustoimenpiteet)))
+                        (async
+                         (tallenna-ilmoitustoimenpiteet db tloik user ilmoitustoimenpiteet))))
     (julkaise-palvelu http :hae-ilmoituksia-idlla
                       (fn [user tiedot]
                         (hae-ilmoituksia-idlla db user tiedot)))

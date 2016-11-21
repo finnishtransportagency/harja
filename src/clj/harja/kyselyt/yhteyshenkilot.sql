@@ -340,3 +340,16 @@ WHERE u.alkupvm <= :pvm
       -- PENDING Lisätään urakkatyyppejä sitä mukaan kun
       -- päätyvät tuotantoon
       AND (:tyyppi::urakkatyyppi IS NULL OR tyyppi = :tyyppi::urakkatyyppi);
+
+-- name: hae-urakan-vastuuhenkilot
+SELECT * FROM urakanvastuuhenkilo WHERE urakka = :urakka;
+
+-- name: poista-urakan-vastuuhenkilot-roolille!
+DELETE FROM urakanvastuuhenkilo
+ WHERE urakka = :urakka AND
+       rooli = :rooli;
+
+-- name: luo-urakan-vastuuhenkilo<!
+INSERT INTO urakanvastuuhenkilo
+       (urakka, rooli, nimi, puhelin, sahkoposti, kayttajatunnus, ensisijainen)
+VALUES (:urakka, :rooli, :nimi, :puhelin, :sahkoposti, :kayttajatunnus, :ensisijainen);

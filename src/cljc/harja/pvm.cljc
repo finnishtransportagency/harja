@@ -703,4 +703,12 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn paivaa-sitten [paivaa]
      (-> paivaa t/days t/ago)))
 
+#?(:cljs
+   (defn tuntia-sitten [tuntia]
+     (t/minus (nyt) (t/hours tuntia))))
+
+#?(:clj
+   (defn tuntia-sitten [tuntia]
+     (-> tuntia t/hours t/ago)))
+
 (def kayttoonottto (t/local-date 2016 10 1))
