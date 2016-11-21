@@ -36,6 +36,7 @@
 (def +virheellinen-sijainti+ "virheellinen-sijainti")
 (def +virheellinen-paivamaara+ "virheellinen-paivamaara")
 (def +sopimusta-ei-loydy+ "sopimusta ei löydy")
+(def +paallystysilmoitus-lukittu+ "paallystysilmoitus-kukittu")
 
 (defn heita-poikkeus [tyyppi virheet]
   (throw+

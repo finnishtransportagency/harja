@@ -30,8 +30,8 @@
   (str polku ": " (pr-str virhe)))
 
 (defn kasittele-validointivirheet
-  [virheet]
-  (log/error "JSON ei ole validia. Validointivirheet: " virheet)
+  [skeema virheet]
+  (log/error (format "JSON ei ole validia (skeema: %s). Validointivirheet: %s" skeema virheet))
   (throw+ {:type    virheet/+invalidi-json+
            :virheet [{:koodi  virheet/+invalidi-json-koodi+
                       :viesti (str "JSON ei ole validia: " (formatoi-virhe "" virheet))}]}))
@@ -50,7 +50,7 @@
   (try+
     (cheshire/decode json true)
     (catch Exception e
-      (kasittele-validointivirheet (.getMessage e))))
+      (kasittele-validointivirheet skeemaresurssin-polku (.getMessage e))))
   (log/debug "Validoidaan JSON dataa käytäen skeemaa:" skeemaresurssin-polku)
   (let [virheet (validate
                  (lue-skeemaresurssi skeemaresurssin-polku)
@@ -60,7 +60,7 @@
                                   (.substring % (count "file:resources/")))})]
     (if-not virheet
       (log/debug "JSON data on validia")
-      (kasittele-validointivirheet virheet))))
+      (kasittele-validointivirheet skeemaresurssin-polku virheet))))
 
 (defn lue-skeematiedosto [polku]
   (cheshire/parse-string (slurp polku)))
@@ -81,6 +81,6 @@
            (let [virheet# (validator# (cheshire/parse-string json#))]
              (if-not virheet#
                (log/debug "JSON data on validia")
-               (kasittele-validointivirheet virheet#)))
+               (kasittele-validointivirheet ~skeemaresurssin-polku virheet#)))
            (catch Exception e#
-             (kasittele-validointivirheet (.getMessage e#))))))))
+             (kasittele-validointivirheet ~skeemaresurssin-polku (.getMessage e#))))))))

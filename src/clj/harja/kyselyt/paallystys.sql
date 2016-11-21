@@ -27,15 +27,15 @@ SELECT id
 FROM paallystysilmoitus
 WHERE paallystyskohde = :paallystyskohde;
 
--- name: hae-urakan-paallystysilmoitus-paallystyskohteella
+-- name: hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
 -- Hakee urakan päällystysilmoituksen päällystyskohteen id:llä
 SELECT
   pi.id,
   pi.muutoshinta,
   tila,
-  aloituspvm,
-  valmispvm_kohde                 AS "valmispvm-kohde",
-  valmispvm_paallystys            AS "valmispvm-paallystys",
+  ypk.aikataulu_kohde_alku,
+  ypk.aikataulu_kohde_valmis      AS "valmispvm-kohde",
+  ypk.aikataulu_paallystys_loppu  AS "valmispvm-paallystys",
   takuupvm,
   ypk.id                          AS "yllapitokohde-id",
   ypk.nimi                        AS kohdenimi,
@@ -87,10 +87,6 @@ SELECT
   id,
   muutoshinta,
   tila,
-  aloituspvm,
-  valmispvm_kohde                 AS "valmispvm-kohde",
-  valmispvm_paallystys            AS "valmispvm-paallystys",
-  takuupvm,
   ilmoitustiedot,
   paatos_tekninen_osa             AS "tekninen-osa_paatos",
   paatos_taloudellinen_osa        AS "taloudellinen-osa_paatos",
@@ -112,9 +108,6 @@ UPDATE paallystysilmoitus
 SET
   tila                 = :tila :: paallystystila,
   ilmoitustiedot       = :ilmoitustiedot :: JSONB,
-  aloituspvm           = :aloituspvm,
-  valmispvm_kohde      = :valmispvm_kohde,
-  valmispvm_paallystys = :valmispvm_paallystys,
   takuupvm             = :takuupvm,
   muutoshinta          = :muutoshinta,
   muokattu             = NOW(),
@@ -160,13 +153,10 @@ SET
 
 -- name: luo-paallystysilmoitus<!
 -- Luo uuden päällystysilmoituksen
-INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, aloituspvm, valmispvm_kohde, valmispvm_paallystys, takuupvm, muutoshinta, luotu, luoja, poistettu)
+INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, takuupvm, muutoshinta, luotu, luoja, poistettu)
 VALUES (:paallystyskohde,
   :tila :: paallystystila,
   :ilmoitustiedot :: JSONB,
-  :aloituspvm,
-  :valmispvm_kohde,
-  :valmispvm_paallystys,
   :takuupvm,
   :muutoshinta,
   NOW(),
@@ -200,9 +190,3 @@ ORDER BY k.luotu ASC;
 -- name: liita-kommentti<!
 -- Liittää päällystysilmoitukseen uuden kommentin
 INSERT INTO paallystysilmoitus_kommentti (paallystysilmoitus, kommentti) VALUES (:paallystysilmoitus, :kommentti);
-
--- name: onko-paallystysilmoitus-olemassa-kohteelle?
--- single?: true
-SELECT exists(SELECT *
-              FROM paallystysilmoitus
-              WHERE paallystyskohde = :id);
