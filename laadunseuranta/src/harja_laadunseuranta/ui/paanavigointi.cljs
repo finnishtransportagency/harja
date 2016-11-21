@@ -104,7 +104,9 @@
             (when @valilehdet-nakyvissa?
               [:ul.valilehtilista
                (doall
-                 (for [{:keys [avain sisalto] :as valilehti} valitun-valilehtiryhman-valilehdet]
+                 (for [{:keys [avain sisalto] :as valilehti} (if kayta-hampurilaisvalikkoa?
+                                                               valilehdet
+                                                               valitun-valilehtiryhman-valilehdet)]
                    (let [valilehden-jatkuvat-havainnot
                          (set/intersection (into #{} (map :avain sisalto))
                                            jatkuvat-havainnot)]
