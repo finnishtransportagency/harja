@@ -82,7 +82,17 @@
       (/ (apply + numerot) (count numerot)))))
 
 (defn- paattele-tarkastustyyppi [reittimerkinta]
-  "laatu") ;; TODO Tämä pitää jossain vaiheessa päätellä paremmin
+  (cond
+    ;; Jos sisältää soratiemittauksia, tyyppi on soratiemittaus
+    (or (:soratie-tasaisuus reittimerkinta)
+        (:kiinteys reittimerkinta)
+        (:polyavyys reittimerkinta)
+        (:sivukaltevuus reittimerkinta))
+    "soratie"
+
+    ;; Muuten laatutarkastus
+    :default
+    "laatu"))
 
 (defn- reittimerkinta-tarkastukseksi
   "Muuntaa reittimerkinnän Harja-tarkastukseksi"
