@@ -64,12 +64,13 @@
 
 (defn- paanavigointi-header [{:keys [valilehdet valittu-valilehti
                                      valittu-valilehtiryhma] :as tiedot}]
-  (let [valilehtia-per-ryhma (atom 0)
+  (let [valilehtiryhmat (atom [])
         paivita-valilehtien-maara-per-ryhma
         (fn [this]
-          (reset! valilehtia-per-ryhma
-                  (maarittele-valilehtien-maara-per-ryhma (.-width (.getBoundingClientRect this))
-                                                          valilehdet)))
+          (let [valilehtia-per-ryhma
+                (maarittele-valilehtien-maara-per-ryhma (.-width (.getBoundingClientRect this))
+                                                                             valilehdet)]
+            (reset! valilehtiryhmat (partition-all valilehtia-per-ryhma valilehdet))))
         valitse-valilehti! (fn [uusi-valinta]
                              (reset! valittu-valilehti uusi-valinta))
         lopeta-leveyskuuntelu (atom nil)
@@ -94,8 +95,8 @@
        (fn [{:keys [kayta-hampurilaisvalikkoa? togglaa-valilehtien-nakyvyys
                     valilehdet-nakyvissa? valilehdet jatkuvat-havainnot
                     valittu-valilehti valittu-valilehtiryhma]}]
-         (let [valilehtiryhmat (partition-all @valilehtia-per-ryhma valilehdet)
-               valitun-valilehtiryhman-valilehdet (nth valilehtiryhmat @valittu-valilehtiryhma)]
+         (let [valitun-valilehtiryhman-valilehdet (when-not (empty? @valilehtiryhmat)
+                                                    (nth @valilehtiryhmat @valittu-valilehtiryhma))]
            [:header {:class (when-not kayta-hampurilaisvalikkoa? "hampurilaisvalikko-ei-kaytossa")}
             (when kayta-hampurilaisvalikkoa?
               [:div.hampurilaisvalikko
@@ -178,7 +179,7 @@
                  jatkuvat-havainnot nykyinen-mittaustyyppi
                  vapauta-kaikki-painettu havaintolomake-painettu] :as tiedot}]
       (let [mittaus-paalla? (some? nykyinen-mittaustyyppi)
-            kayta-hampurilaisvalikkoa? (< @dom/leveys 950)
+            kayta-hampurilaisvalikkoa? (< @dom/leveys 450)
             mitattava-havainto (when mittaus-paalla?
                                  (first (filter #(= (get-in % [:mittaus :tyyppi])
                                                     nykyinen-mittaustyyppi)
