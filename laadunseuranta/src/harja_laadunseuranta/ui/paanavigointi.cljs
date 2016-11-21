@@ -132,6 +132,7 @@
            [nappaimisto/nappaimisto havainto])]))))
 
 (defn paanavigointi []
+  (.log js/console "Mittaustyyppi: " (pr-str @s/mittaustyyppi))
   [paanavigointikomponentti {:valilehdet tiedot/oletusvalilehdet
                              :kirjaa-pistemainen-havainto-fn
                              tiedot/pistemainen-havainto-painettu!

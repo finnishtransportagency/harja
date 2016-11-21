@@ -289,7 +289,7 @@
     :nimi "Päällystys"
     :sisalto valilehti-paallystys}])
 
-(defn pistemainen-havainto-painettu! [{:keys [nimi avain] :as tiedot}]
+(defn pistemainen-havainto-painettu! [{:keys [nimi avain] :as havainto}]
   (.log js/console "Kirjataan pistemäinen havainto: " (pr-str avain))
   (ilmoitukset/ilmoita
     (str "Pistemäinen havainto kirjattu: " nimi))
@@ -303,10 +303,17 @@
 
 (defn valikohtainen-havainto-painettu!
   "Asettaa välikohtaisen havainnon päälle tai pois päältä."
-  [{:keys [avain vaatii-nappaimiston? mittaus] :as tiedot}]
+  [{:keys [nimi avain vaatii-nappaimiston? mittaus] :as havainto}]
   ;; Jatkuva havainto ensin päälle
   (s/togglaa-jatkuva-havainto! avain)
   (.log js/console (pr-str "Välikohtaiset havainnot nyt : " @s/jatkuvat-havainnot))
+
+  ;; Ilmoitus
+  (if (@s/jatkuvat-havainnot avain)
+    (ilmoitukset/ilmoita
+      (str (or (:nimi mittaus) nimi) " alkaa"))
+    (ilmoitukset/ilmoita
+      (str (or (:nimi mittaus) nimi) " päättyy")))
 
   ;; Mittaus päälle jos tarvii
   (when (and vaatii-nappaimiston?
