@@ -14,6 +14,13 @@
     [cljs.core.async.macros :refer [go go-loop]]
     [devcards.core :as dc :refer [defcard deftest]]))
 
+(def +valilehti-perusleveys+ 40) ;; Kun välilehti on tyhjä
+(def +kirjain-leveys 9.3) ;; kirjaimen leveys keskimäärin
+(defn- maarittele-valilehtien-maara-per-ryhma [container-leveys valilehdet]
+  (let [
+        ])
+  5)
+
 (defn- toggle-painike [_]
   (fn [{:keys [nimi ikoni avain tyyppi click-fn jatkuvat-havainnot disabloitu?] :as tiedot}]
     [:div {:on-click #(when-not disabloitu?
@@ -80,58 +87,58 @@
             [:img {:src kuvat/+nuoli-sulje+}]]
 
            [:header
-            [:div.hampurilaisvalikko
-             (when kayta-hampurilaisvalikkoa?
+            (when kayta-hampurilaisvalikkoa?
+              [:div.hampurilaisvalikko
                [:img.hampurilaisvalikko-ikoni
                 {:src kuvat/+hampurilaisvalikko+
-                 :on-click toggllaa-valilehtien-nakyvyys}])]
-            (when @valilehdet-nakyvissa?
-              [:ul.valilehtilista
-               (doall
-                 (for [{:keys [avain sisalto] :as valilehti} valilehdet]
-                   (let [valilehden-jatkuvat-havainnot
-                         (set/intersection (into #{} (map :avain sisalto))
-                                           jatkuvat-havainnot)]
-                     ^{:key avain}
-                     [:li {:class (str "valilehti "
-                                       (when (= avain
-                                                @valittu-valilehti)
-                                         "valilehti-valittu"))
-                           :on-click #(valitse-valilehti! avain kayta-hampurilaisvalikkoa?)}
-                      [:span.valilehti-nimi (:nimi valilehti)]
-                      [:span.valilehti-havainnot (when-not (empty? valilehden-jatkuvat-havainnot)
-                                                   (str "(" (count valilehden-jatkuvat-havainnot) ")"))]])))])]
-           [:div.sisalto
-            [:div.valintapainikkeet
-             (let [{:keys [sisalto] :as valittu-valilehti}
-                   (first (filter
-                            #(= (:avain %) @valittu-valilehti)
-                            valilehdet))]
-               (doall (for [havainto sisalto]
-                        ^{:key (:nimi havainto)}
-                        [toggle-painike
-                         (merge havainto
-                                {:click-fn (case (:tyyppi havainto)
-                                             :piste kirjaa-pistemainen-havainto-fn
-                                             :vali kirjaa-valikohtainen-havainto-fn)
-                                 :jatkuvat-havainnot jatkuvat-havainnot
-                                 :disabloitu? (boolean (and (= (:tyyppi havainto) :vali)
-                                                            jatkuvia-havaintoja-paalla?
-                                                            (not (jatkuvat-havainnot (:avain havainto)))
-                                                            mittaus-paalla?
-                                                            (:vaatii-nappaimiston? havainto)))})])))]]
-           [:footer
-            [:div.footer-vasen
-             [nappi "Vapauta kaikki" {:on-click vapauta-kaikki-painettu
-                                      :ikoni (ikonit/livicon-arrow-up)
-                                      :luokat-str "nappi-toissijainen"}]]
-            [:div.footer-oikea
-             [nappi "Avaa lomake" {:on-click havaintolomake-painettu
-                                   :ikoni (ikonit/livicon-pen)
-                                   :luokat-str "nappi-ensisijainen"}]]]]]
+                 :on-click toggllaa-valilehtien-nakyvyys}]])
+           (when @valilehdet-nakyvissa?
+             [:ul.valilehtilista
+              (doall
+                (for [{:keys [avain sisalto] :as valilehti} valilehdet]
+                  (let [valilehden-jatkuvat-havainnot
+                        (set/intersection (into #{} (map :avain sisalto))
+                                          jatkuvat-havainnot)]
+                    ^{:key avain}
+                    [:li {:class (str "valilehti "
+                                      (when (= avain
+                                               @valittu-valilehti)
+                                        "valilehti-valittu"))
+                          :on-click #(valitse-valilehti! avain kayta-hampurilaisvalikkoa?)}
+                     [:span.valilehti-nimi (:nimi valilehti)]
+                     [:span.valilehti-havainnot (when-not (empty? valilehden-jatkuvat-havainnot)
+                                                  (str "(" (count valilehden-jatkuvat-havainnot) ")"))]])))])]
+          [:div.sisalto
+           [:div.valintapainikkeet
+            (let [{:keys [sisalto] :as valittu-valilehti}
+                  (first (filter
+                           #(= (:avain %) @valittu-valilehti)
+                           valilehdet))]
+              (doall (for [havainto sisalto]
+                       ^{:key (:nimi havainto)}
+                       [toggle-painike
+                        (merge havainto
+                               {:click-fn (case (:tyyppi havainto)
+                                            :piste kirjaa-pistemainen-havainto-fn
+                                            :vali kirjaa-valikohtainen-havainto-fn)
+                                :jatkuvat-havainnot jatkuvat-havainnot
+                                :disabloitu? (boolean (and (= (:tyyppi havainto) :vali)
+                                                           jatkuvia-havaintoja-paalla?
+                                                           (not (jatkuvat-havainnot (:avain havainto)))
+                                                           mittaus-paalla?
+                                                           (:vaatii-nappaimiston? havainto)))})])))]]
+          [:footer
+           [:div.footer-vasen
+            [nappi "Vapauta kaikki" {:on-click vapauta-kaikki-painettu
+                                     :ikoni (ikonit/livicon-arrow-up)
+                                     :luokat-str "nappi-toissijainen"}]]
+           [:div.footer-oikea
+            [nappi "Avaa lomake" {:on-click havaintolomake-painettu
+                                  :ikoni (ikonit/livicon-pen)
+                                  :luokat-str "nappi-ensisijainen"}]]]]]
 
-         (when mittaus-paalla?
-           [nappaimisto/nappaimisto havainto])]))))
+        (when mittaus-paalla?
+          [nappaimisto/nappaimisto havainto]) ] ) ) ) )
 
 (defn paanavigointi []
   (.log js/console "Mittaustyyppi: " (pr-str @s/mittaustyyppi))
