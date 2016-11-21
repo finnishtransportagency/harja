@@ -9,10 +9,38 @@
 
 (defn- pysayta-tarkastusajo [sovellus]
   (assoc sovellus
-    :tallennus-kaynnissa false
-    :tarkastusajo-id nil
+    ;; Tarkastusajon perustiedot
     :valittu-urakka nil
-    :havainnot {}))
+    :tarkastusajo-id nil
+    :tallennus-kaynnissa false
+    :tarkastusajo-paattymassa false
+    ;; Ajonaikaiset tiedot
+    :reittipisteet []
+    :tr-tiedot {:tr-osoite {:tie nil
+                            :aosa nil
+                            :aet nil}
+                :talvihoitoluokka nil}
+    ;; Havainnot
+    :jatkuvat-havainnot #{}
+    ;; Mittaukset
+    :mittaussyotto {:nykyinen-syotto nil
+                    :syotot []}
+    :soratiemittaussyotto {:tasaisuus 5
+                           :kiinteys 5
+                           :polyavyys 5}
+    :mitttaustyyppi nil
+    ;; Lomake
+    :havaintolomake-auki? false
+    :havaintolomakedata {:kayttajanimi nil
+                         :tr-osoite nil
+                         :aikaleima nil
+                         :laadunalitus? false
+                         :kuvaus ""
+                         :kuva nil}
+    ;; Kartta
+    :kirjauspisteet []
+    ;; Muut
+    :ilmoitukset []))
 
 (defn- tarkastusajo-kayntiin [sovellus ajo-id]
   (assoc sovellus
@@ -24,12 +52,10 @@
 (defn- tarkastusajo-kayntiin! [ajo-id]
   (swap! s/sovellus #(tarkastusajo-kayntiin % ajo-id)))
 
-(defn- tarkastusajo-seis! []
-  (swap! s/sovellus pysayta-tarkastusajo)
-  (.log js/console "STOP!")
-  (reset! s/tarkastusajo-paattymassa false))
+(defn- pysayta-tarkastusajo! []
+  (swap! s/sovellus pysayta-tarkastusajo))
 
-(defn luo-ajo []
+(defn luo-ajo! []
   (go-loop []
     (if-let [id (-> (<! (comms/luo-ajo!)) :ok :id)]
       (tarkastusajo-kayntiin! id)
@@ -37,22 +63,22 @@
       (do (<! (timeout 1000))
           (recur)))))
 
-(defn paattaminen-peruttu []
+(defn paattaminen-peruttu! []
   (reset! s/tarkastusajo-paattymassa false))
 
-(defn aseta-ajo-paattymaan []
+(defn aseta-ajo-paattymaan! []
   (reset! s/tarkastusajo-paattymassa true))
 
-(defn paata-ajo []
+(defn paata-ajo! []
   (go-loop []
     (if (<! (comms/paata-ajo! @s/tarkastusajo-id @s/valittu-urakka))
-      (tarkastusajo-seis!)
+      (pysayta-tarkastusajo!)
 
       ;; yritä uudelleen kunnes onnistuu, spinneri pyörii
       (do (<! (timeout 1000))
           (recur)))))
 
-(defn jatka-ajoa []
+(defn jatka-ajoa! []
   (let [ajo @s/palautettava-tarkastusajo]
     (js/console.log "Tarkastusajo palautetaan: " (pr-str ajo))
     (reset! s/reittipisteet (mapv utils/keywordize-map (js->clj (get ajo "reittipisteet"))))
@@ -61,7 +87,7 @@
     (reset! s/tallennus-kaynnissa true))
   (reset! s/palautettava-tarkastusajo nil))
 
-(defn pakota-ajon-lopetus []
+(defn pakota-ajon-lopetus! []
   (let [ajo @s/palautettava-tarkastusajo]
     (reitintallennus/poista-tarkastusajo @s/idxdb (get ajo "tarkastusajo"))
     (reitintallennus/tyhjenna-reittipisteet @s/idxdb))

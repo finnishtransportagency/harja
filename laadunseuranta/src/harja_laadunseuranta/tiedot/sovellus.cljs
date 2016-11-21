@@ -13,11 +13,11 @@
              :selain-tuettu (utils/tuettu-selain?)}
 
    ;; Tarkastusajon perustiedot
-   :valittu-urakka nil ; Urakka valitaan tietyntyyppisiin ajoihin (päällystys), muuten päätellään automaattisesti kun tarkastus päättyy
+   :valittu-urakka nil ; Urakka valitaan tietyntyyppisiin ajoihin, muuten päätellään automaattisesti kun tarkastus päättyy
    :tarkastusajo-id nil
    :tallennus-kaynnissa false
    :palautettava-tarkastusajo nil
-   :tarkastusajo-paattymassa nil ; Jos true, näytetään päättämisdialogi
+   :tarkastusajo-paattymassa false ; Jos true, näytetään päättämisdialogi
 
    ;; Käyttäjätiedot
    :kayttaja {:kayttajanimi nil
@@ -28,10 +28,10 @@
    :sijainti {:nykyinen nil
               :edellinen nil}
    :reittipisteet []
-   :tr-tiedot {:tr-osoite {:tie 20 ;; TODO Älä harkoodaa tätä?
-                           :aosa 1
-                           :aet 1}
-               :talvihoitoluokka 2}
+   :tr-tiedot {:tr-osoite {:tie nil
+                           :aosa nil
+                           :aet nil}
+               :talvihoitoluokka nil}
 
    ;; UI
    :tr-tiedot-nakyvissa false
@@ -40,8 +40,10 @@
    :jatkuvat-havainnot #{} ; Tähän tallentuu välikohtaiset havainnot (esim. liukasta, lumista jne.)
 
    ;; Mittaukset
+   ;; Mittaustiedot kun kyseessä on "perusnäppäimistö"
    :mittaussyotto {:nykyinen-syotto nil ;; Arvo, jota ollaan syöttämässä (string)
                    :syotot []} ;; Aiemmin syötetyt arvot samassa mittauksessa
+   ;; Mittaustiedot kun kyseessä on "erikoisnäppäimistö"
    :soratiemittaussyotto {:tasaisuus 5
                           :kiinteys 5
                           :polyavyys 5}
@@ -179,9 +181,6 @@
                                 :kiinteys 5
                                 :polyavyys 5})
   (reset! mittaustyyppi nil))
-
-(defn valitse-urakka! [urakka]
-  (reset! valittu-urakka urakka))
 
 (defn lisaa-jatkuva-havainto! [avain]
   (reset! jatkuvat-havainnot (conj @jatkuvat-havainnot avain)))

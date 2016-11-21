@@ -51,7 +51,7 @@
     (reitintallennus/palauta-tarkastusajo @sovellus/idxdb #(do
                                                             (reset! sovellus/palautettava-tarkastusajo %)
                                                             (when (= "?relogin=true" js/window.location.search)
-                                                              (tarkastusajon-luonti/jatka-ajoa))))
+                                                              (tarkastusajon-luonti/jatka-ajoa!))))
 
     (reitintallennus/paivita-lahettamattomien-merkintojen-maara @sovellus/idxdb asetukset/+pollausvali+ sovellus/lahettamattomia-merkintoja)
 

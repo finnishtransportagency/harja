@@ -28,18 +28,18 @@
           {:luokat-str "nappi-ensisijainen nappi-paata-tarkastusajo"
            :on-click #(when (= 0 @paattamattomia)
                        (reset! kylla-klikattu true)
-                       (tiedot/paata-ajo))}]
+                       (tiedot/paata-ajo!))}]
          [nappi "Ei"
           {:luokat-str "nappi-toissijainen"
-           :on-click #(tiedot/paattaminen-peruttu)}]]))))
+           :on-click #(tiedot/paattaminen-peruttu!)}]]))))
 
 (defn tarkastusajon-jatkamisdialogi []
   [:div.tarkastusajon-luonti-dialog
    [:div.ohjeteksti "Jatketaanko tarkastusajoa?"]
    [nappi "Jatka" {:luokat-str "nappi-ensisijainen"
-                   :on-click #(tiedot/jatka-ajoa)}]
+                   :on-click #(tiedot/jatka-ajoa!)}]
    [nappi "Pakota lopetus" {:luokat-str "nappi-kielteinen"
-                            :on-click #(tiedot/pakota-ajon-lopetus)}]])
+                            :on-click #(tiedot/pakota-ajon-lopetus!)}]])
 
 (defcard luontidialogi-card
          (reagent/as-element [tarkastusajon-luontidialogi #() #()]))

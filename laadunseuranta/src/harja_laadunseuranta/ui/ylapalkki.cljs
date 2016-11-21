@@ -77,8 +77,8 @@
    {:tiedot-nakyvissa s/tr-tiedot-nakyvissa
     :hoitoluokka s/hoitoluokka
     :soratiehoitoluokka s/soratiehoitoluokka
-    :kaynnista-tarkastus-fn tarkastusajon-luonti/luo-ajo
-    :pysayta-tarkastusajo-fn tarkastusajon-luonti/aseta-ajo-paattymaan
+    :kaynnista-tarkastus-fn tarkastusajon-luonti/luo-ajo!
+    :pysayta-tarkastusajo-fn tarkastusajon-luonti/aseta-ajo-paattymaan!
     :tr-osoite s/tr-osoite
     :kiinteistorajat s/nayta-kiinteistorajat
     :ortokuva s/nayta-ortokuva
