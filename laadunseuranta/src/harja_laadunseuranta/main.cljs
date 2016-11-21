@@ -26,7 +26,7 @@
    [:div.paasisalto-container
     [kartta/kartta]
 
-    (when @s/nayta-paanavigointi?
+    (when @s/piirra-paanavigointi?
       [paanavigointi])
 
     [ilmoitukset/ilmoituskomponentti s/ilmoitukset]
@@ -43,7 +43,7 @@
        [tarkastusajon-luonti/tarkastusajon-jatkamisdialogi]])
 
     [spinneri s/lahettamattomia-merkintoja]
-    [tr-haku/tr-selailukomponentti s/tr-tiedot-nakyvissa s/tr-tiedot]]])
+    [tr-haku/tr-selailukomponentti s/tr-tiedot-nakyvissa? s/tr-tiedot]]])
 
 (defn main []
   (if @s/sovellus-alustettu

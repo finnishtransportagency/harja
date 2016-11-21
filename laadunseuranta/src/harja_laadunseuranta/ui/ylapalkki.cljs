@@ -74,7 +74,7 @@
 
 (defn ylapalkki []
   [ylapalkkikomponentti
-   {:tiedot-nakyvissa s/tr-tiedot-nakyvissa
+   {:tiedot-nakyvissa s/tr-tiedot-nakyvissa?
     :hoitoluokka s/hoitoluokka
     :soratiehoitoluokka s/soratiehoitoluokka
     :kaynnista-tarkastus-fn tarkastusajon-luonti/luo-ajo!

@@ -34,12 +34,9 @@
      [:div.toggle-valintapainike-otsikko
       nimi]]))
 
-(defn- paanavigointikomponentti [{:keys [valilehdet] :as tiedot}]
-  ;; TODO Nämä osaksi softan tilaa
-  (let [paanavigointi-nakyvissa? (atom true)
-        valilehdet-nakyvissa? (atom true)
-        valittu-valilehti (atom (:avain (first valilehdet)))
-        valitse-valilehti! (fn [uusi-valinta kayta-hampurilaisvalikkoa?]
+(defn- paanavigointikomponentti [{:keys [valilehdet paanavigointi-nakyvissa?
+                                         valilehdet-nakyvissa? valittu-valilehti] :as tiedot}]
+  (let [valitse-valilehti! (fn [uusi-valinta kayta-hampurilaisvalikkoa?]
                              (.log js/console "Vaihdetaan välilehti: " (str uusi-valinta))
                              (reset! valittu-valilehti uusi-valinta)
                              (when kayta-hampurilaisvalikkoa?
@@ -48,6 +45,9 @@
                                           (swap! paanavigointi-nakyvissa? not))
         toggllaa-valilehtien-nakyvyys (fn []
                                         (swap! valilehdet-nakyvissa? not))]
+
+    (reset! valittu-valilehti (:avain (first valilehdet)))
+
     (fn [{:keys [valilehdet kirjaa-pistemainen-havainto-fn
                  kirjaa-valikohtainen-havainto-fn
                  jatkuvat-havainnot nykyinen-mittaustyyppi
@@ -60,6 +60,8 @@
                                           nykyinen-mittaustyyppi)
                                       (mapcat :sisalto valilehdet))))
             nayta-valilehdet-tarvittaessa! (fn []
+                                             ;; Näytä välilehdet jos eivät näkyvissä
+                                             ;; ja ei käytetäkään hampurilaisvalikkoa
                                              (if (and (not @valilehdet-nakyvissa?)
                                                       (not kayta-hampurilaisvalikkoa?))
                                                (toggllaa-valilehtien-nakyvyys)))]
@@ -134,6 +136,9 @@
 (defn paanavigointi []
   (.log js/console "Mittaustyyppi: " (pr-str @s/mittaustyyppi))
   [paanavigointikomponentti {:valilehdet tiedot/oletusvalilehdet
+                             :paanavigointi-nakyvissa? s/nayta-paanavigointi?
+                             :valilehdet-nakyvissa? s/nayta-paanavigointi-valilehdet?
+                             :valittu-valilehti s/paanavigoinnin-valittu-valilehti
                              :kirjaa-pistemainen-havainto-fn
                              tiedot/pistemainen-havainto-painettu!
                              :kirjaa-valikohtainen-havainto-fn

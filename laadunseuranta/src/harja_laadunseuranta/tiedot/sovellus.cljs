@@ -34,7 +34,10 @@
                :talvihoitoluokka nil}
 
    ;; UI
-   :tr-tiedot-nakyvissa false
+   :ui {:tr-tiedot-nakyvissa? false
+        :paanavigointi {:nakyvissa? true
+                        :valilehdet-nakyvissa? true
+                        :valittu-valilehti nil}}
 
    ;; Havainnot
    :jatkuvat-havainnot #{} ; Tähän tallentuu välikohtaiset havainnot (esim. liukasta, lumista jne.)
@@ -50,7 +53,6 @@
    :mitttaustyyppi nil ;; Suoritettava mittaustyyppi (esim. :lumista) tai nil jos ei olla mittaamassa mitään
 
    ;; Lomake
-
    :havaintolomake-auki? false
    :havaintolomakedata {:kayttajanimi nil
                         :tr-osoite nil
@@ -80,7 +82,7 @@
 (def palautettava-tarkastusajo (reagent/cursor sovellus [:palautettava-tarkastusajo]))
 
 (def tr-tiedot (reagent/cursor sovellus [:tr-tiedot]))
-(def tr-tiedot-nakyvissa (reagent/cursor sovellus [:tr-tiedot-nakyvissa]))
+(def tr-tiedot-nakyvissa? (reagent/cursor sovellus [:ui :tr-tiedot-nakyvissa?]))
 (def tr-osoite (reagent/cursor sovellus [:tr-tiedot :tr-osoite]))
 (def hoitoluokka (reagent/cursor sovellus [:tr-tiedot :talvihoitoluokka]))
 (def soratiehoitoluokka (reagent/cursor sovellus [:tr-tiedot :soratiehoitoluokka]))
@@ -163,12 +165,15 @@
 
 (def tarkastusajo-paattymassa (reagent/cursor sovellus [:tarkastusajo-paattymassa]))
 
-(def nayta-paanavigointi? (reaction (boolean (and @tarkastusajo-id
-                                                  @tallennus-kaynnissa
-                                                  (not @tarkastusajo-paattymassa)
-                                                  (not @havaintolomake-auki)))))
+(def piirra-paanavigointi? (reaction (boolean (and @tarkastusajo-id
+                                                   @tallennus-kaynnissa
+                                                   (not @tarkastusajo-paattymassa)
+                                                   (not @havaintolomake-auki)))))
+(def nayta-paanavigointi? (reagent/cursor sovellus [:ui :paanavigointi :nakyvissa?]))
+(def nayta-paanavigointi-valilehdet? (reagent/cursor sovellus [:ui :paanavigointi :valilehdet-nakyvissa?]))
+(def paanavigoinnin-valittu-valilehti (reagent/cursor sovellus [:ui :paanavigointi :valittu-valilehti]))
 
-;; Apufunktiot helpottamaan tilan muokkausta
+;; Yleiset apufunktiot helpottamaan tilan muokkausta
 
 (defn aseta-mittaus-paalle! [uusi-mittaustyyppi]
   (reset! mittaustyyppi uusi-mittaustyyppi))
