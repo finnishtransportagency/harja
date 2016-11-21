@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.ilmoitukset
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.http-palvelin
+             :refer [julkaise-palvelu poista-palvelut async]]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [clj-time.coerce :refer [from-sql-time]]
@@ -334,7 +335,8 @@
                         (hae-ilmoitus db user tiedot)))
     (julkaise-palvelu http :tallenna-ilmoitustoimenpiteet
                       (fn [user ilmoitustoimenpiteet]
-                        (tallenna-ilmoitustoimenpiteet db tloik user ilmoitustoimenpiteet)))
+                        (async
+                         (tallenna-ilmoitustoimenpiteet db tloik user ilmoitustoimenpiteet))))
     (julkaise-palvelu http :hae-ilmoituksia-idlla
                       (fn [user tiedot]
                         (hae-ilmoituksia-idlla db user tiedot)))
