@@ -5,7 +5,9 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
-            [harja.ui.debug :refer [debug]]))
+            [harja.loki :refer [log]]
+            [harja.ui.debug :refer [debug]]
+            [harja.ui.grid :as grid]))
 
 (defn varustehaku-ehdot [e! hakuehdot]
   [lomake/lomake
@@ -15,7 +17,8 @@
                  [napit/yleinen "Hae Tierekisteristä"
                   #(e! (v/->HaeVarusteita))
                   {:disabled (:haku-kaynnissa? hakuehdot)
-                   :ikoni (ikonit/livicon-search)}])}
+                   :ikoni (ikonit/livicon-search)}])
+    :tunniste (comp :tunniste :varuste)}
 
    [{:nimi :tietolaji
      :otsikko "Varusteen tyyppi"
@@ -32,13 +35,18 @@
      :tyyppi :string}]
    hakuehdot])
 
-(defn varustehaku-varusteet [e! varusteet]
-  [debug varusteet])
+(defn varustehaku-varusteet [e! tietolajin-listaus-skeema varusteet]
+  [grid/grid
+   {:otsikko "Tierekisteristä löytyneet varusteet"}
+   tietolajin-listaus-skeema
+   varusteet])
 
 (defn varustehaku
   "Komponentti, joka näyttää lomakkeen varusteiden hakemiseksi tierekisteristä
   sekä haun tulokset."
-  [e! hakuehdot tulokset]
+  [e! {:keys [hakuehdot listaus-skeema tietolaji varusteet] :as app}]
+  (log "HAKUEHDOT: " (pr-str hakuehdot))
   [:div.varustehaku
-   [varustehaku-ehdot e! hakuehdot]
-   [varustehaku-varusteet e! tulokset]])
+   [varustehaku-ehdot e! (:hakuehdot app)]
+   (when (and listaus-skeema varusteet)
+     [varustehaku-varusteet e! listaus-skeema varusteet])])

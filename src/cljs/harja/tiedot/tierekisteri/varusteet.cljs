@@ -3,7 +3,8 @@
   (:require [tuck.core :as t]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
-            [harja.loki :refer [log]])
+            [harja.loki :refer [log]]
+            [harja.domain.tierekisteri.varusteet :as varusteet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; Määritellään varustehaun UI tapahtumat
@@ -23,11 +24,13 @@
     (assoc-in app [:hakuehdot] ehdot))
 
   HaeVarusteita
-  (process-event [_ app]
+  (process-event [_ {hakuehdot :hakuehdot :as app}]
     (let [tulos! (t/send-async! map->VarusteHakuTulos)
           virhe! (t/send-async! ->VarusteHakuEpaonnistui)]
+      (log "HAETAAN EHDOILLA: " (pr-str hakuehdot))
       (go
-        (let [vastaus (<! (k/post! :hae-varusteita (get-in app [:hakuehdot])))]
+        (let [vastaus (<! (k/post! :hae-varusteita hakuehdot))]
+          (log "VASTAUS: " (pr-str vastaus))
           (if (or (k/virhe? vastaus)
                   (not (:onnistunut vastaus)))
             (virhe! vastaus)
@@ -38,9 +41,15 @@
 
   VarusteHakuTulos
   (process-event [{tietolaji :tietolaji varusteet :varusteet} app]
+    (log "VarusteHakuTulos: " (pr-str varusteet) ", app: " (pr-str app))
+
     (-> app
         (assoc-in [:varusteet] varusteet)
         (assoc-in [:tietolaji] tietolaji)
+        (assoc-in [:listaus-skeema]
+                  (mapv varusteet/varusteominaisuus->skeema
+                        (filter varusteet/kiinnostaa-listauksessa?
+                                (:ominaisuudet tietolaji))))
         (assoc-in [:hakuehdot :haku-kaynnissa?] false)))
 
   VarusteHakuEpaonnistui

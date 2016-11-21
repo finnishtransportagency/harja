@@ -1,5 +1,7 @@
 (ns harja.domain.tierekisteri.varusteet
-  "Tierekisterin Varusteet ja laitteet -teeman tietojen käsittelyä")
+  "Tierekisterin Varusteet ja laitteet -teeman tietojen käsittelyä"
+  (:require [clojure.string :as str]
+            #?@(:cljs [[harja.loki :refer [log]]])))
 
 (def varuste-toimenpide->string {nil         "Kaikki"
                                  :lisatty    "Lisätty"
@@ -36,6 +38,11 @@
    "tl516" "Hiekkalaatikot"
    "tl511" "Viherkuviot"})
 
+(defn kiinnostaa-listauksessa?
+  [ominaisuus]
+  (let [tunniste (:kenttatunniste (:ominaisuus ominaisuus))]
+    (and (not (#{"x" "y" "z"} tunniste))
+         (not (re-matches #".*tunn" tunniste)))))
 
 (defmulti varusteominaisuus->skeema
   "Muodostaa lomake/grid tyyppisen kentän skeeman varusteen ominaisuuden kuvauksen perusteella.
@@ -46,7 +53,7 @@
   {:otsikko (:selite ominaisuus)
    :pakollinen? (:pakollinen ominaisuus)
    :nimi (keyword (:kenttatunniste ominaisuus))
-   :hae #(get % (:kenttatunniste ominaisuus))
+   :hae #(get-in % [:varuste :tietue :tietolaji :arvot (:kenttatunniste ominaisuus)])
    :aseta (fn [rivi arvo]
             (assoc rivi (:kenttatunniste ominaisuus) arvo))})
 
@@ -56,7 +63,12 @@
     (merge (varusteominaisuus-skeema-perus ominaisuus)
            {:tyyppi :valinta
             :valinnat koodisto
-            :valinta-nayta :selite})))
+            :valinta-nayta :selite
+            :fmt (fn [arvo]
+                   (let [koodi (first (filter #(= arvo (str (:koodi %))) koodisto))]
+                     (if koodi
+                       (:selite koodi)
+                       arvo)))})))
 
 (defmethod varusteominaisuus->skeema :numeerinen
   [{ominaisuus :ominaisuus}]

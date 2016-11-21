@@ -193,9 +193,7 @@
         [:span
          [valinnat e! nykyiset-valinnat]
          [toteumataulukko e! (:tyyppi nykyiset-valinnat) toteumat]
-         [varustehaku (t/wrap-path e! [:varustehaku])
-          (:hakuehdot varustehaun-tiedot)
-          (:varusteet varustehaun-tiedot)]])])))
+         [varustehaku (t/wrap-path e! :varustehaku) varustehaun-tiedot]])])))
 
 (defn varusteet []
   [tuck varustetiedot/varusteet varusteet*])

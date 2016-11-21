@@ -4,7 +4,7 @@
             [compojure.core :refer [POST GET DELETE PUT]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin
-             :refer [julkaise-reitti julkaise-palvelu poista-palvelut]]
+             :refer [julkaise-reitti julkaise-palvelu poista-palvelut async]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-sisainen-kasittelyvirhevastaus
                                                                              tee-viallinen-kutsu-virhevastaus
                                                                              tee-vastaus
@@ -19,7 +19,8 @@
             [harja.palvelin.integraatiot.tierekisteri.tietolajin-kuvauksen-kasittely :as tr-tietolaji]
             [harja.pvm :as pvm]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [clj-time.core :as t])
+            [clj-time.core :as t]
+            [clojure.string :as str])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
 
@@ -227,10 +228,11 @@
   (log/debug "Haetaan varusteita Tierekisteristä: " (pr-str tiedot))
 
   (cond
-    tunniste
+    (not (str/blank? tunniste))
     (hae-varuste tierekisteri {"tunniste" tunniste} user)
 
-    (and tierekisteriosoite tietolaji)
+    (and tierekisteriosoite
+         (not (str/blank? tietolaji)))
     (let [nyt (t/now)
           tulos (tierekisteri/hae-tietueet
                  tierekisteri
@@ -301,7 +303,8 @@
 
     (julkaise-palvelu http :hae-varusteita
                       (fn [user tiedot]
-                        (hae-varusteita user tierekisteri tiedot)))
+                        (async
+                         (hae-varusteita user tierekisteri tiedot))))
     this)
 
   (stop [{http :http-palvelin :as this}]
