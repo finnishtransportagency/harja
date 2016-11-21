@@ -17,6 +17,8 @@
     [cljs.core.async.macros :refer [go go-loop]]
     [devcards.core :as dc :refer [defcard deftest]]))
 
+(def +hampurilaisvalikko-kaytossa-leveydessa+ 450)
+
 (def +header-reuna-padding+ 80)
 (def +valilehti-perusleveys+ 50) ;; Kun välilehti on tyhjä
 (def +kirjain-leveys 9.3) ;; kirjaimen leveys keskimäärin
@@ -179,7 +181,7 @@
                  jatkuvat-havainnot nykyinen-mittaustyyppi
                  vapauta-kaikki-painettu havaintolomake-painettu] :as tiedot}]
       (let [mittaus-paalla? (some? nykyinen-mittaustyyppi)
-            kayta-hampurilaisvalikkoa? (< @dom/leveys 450)
+            kayta-hampurilaisvalikkoa? (< @dom/leveys +hampurilaisvalikko-kaytossa-leveydessa+)
             mitattava-havainto (when mittaus-paalla?
                                  (first (filter #(= (get-in % [:mittaus :tyyppi])
                                                     nykyinen-mittaustyyppi)
