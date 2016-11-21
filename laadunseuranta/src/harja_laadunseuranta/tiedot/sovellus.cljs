@@ -37,6 +37,7 @@
    :ui {:tr-tiedot-nakyvissa? false
         :paanavigointi {:nakyvissa? true
                         :valilehdet-nakyvissa? true
+                        :valittu-valilehtiryhma 0
                         :valittu-valilehti nil}}
 
    ;; Havainnot

@@ -41,16 +41,75 @@
      [:div.toggle-valintapainike-otsikko
       nimi]]))
 
+(defn- paanavigointi-header [{:keys [kayta-hampurilaisvalikkoa? togglaa-valilehtien-nakyvyys
+                                     valilehdet-nakyvissa? valilehdet jatkuvat-havainnot
+                                     valittu-valilehti]}]
+  (let [valitse-valilehti! (fn [uusi-valinta]
+                             (reset! valittu-valilehti uusi-valinta))]
+    [:header
+     (when kayta-hampurilaisvalikkoa?
+       [:div.hampurilaisvalikko
+        [:img.hampurilaisvalikko-ikoni
+         {:src kuvat/+hampurilaisvalikko+
+          :on-click togglaa-valilehtien-nakyvyys}]])
+
+     (when @valilehdet-nakyvissa?
+       [:ul.valilehtilista
+        (doall
+          (for [{:keys [avain sisalto] :as valilehti} valilehdet]
+            (let [valilehden-jatkuvat-havainnot
+                  (set/intersection (into #{} (map :avain sisalto))
+                                    jatkuvat-havainnot)]
+              ^{:key avain}
+              [:li {:class (str "valilehti "
+                                (when (= avain
+                                         @valittu-valilehti)
+                                  "valilehti-valittu"))
+                    :on-click #(valitse-valilehti! avain)}
+               [:span.valilehti-nimi (:nimi valilehti)]
+               [:span.valilehti-havainnot (when-not (empty? valilehden-jatkuvat-havainnot)
+                                            (str "(" (count valilehden-jatkuvat-havainnot) ")"))]])))])]))
+
+(defn- paanavigointi-sisalto [{:keys [valilehdet kirjaa-pistemainen-havainto-fn
+                                      kirjaa-valikohtainen-havainto-fn valittu-valilehti
+                                      jatkuvat-havainnot nykyinen-mittaustyyppi] :as tiedot}]
+  (let [mittaus-paalla? (some? nykyinen-mittaustyyppi)
+        jatkuvia-havaintoja-paalla? (not (empty? jatkuvat-havainnot))]
+    [:div.sisalto
+     [:div.valintapainikkeet
+      (let [{:keys [sisalto]} (first (filter
+                                       #(= (:avain %) @valittu-valilehti)
+                                       valilehdet))]
+        (doall (for [havainto sisalto]
+                 ^{:key (:nimi havainto)}
+                 [toggle-painike
+                  (merge havainto
+                         {:click-fn (case (:tyyppi havainto)
+                                      :piste kirjaa-pistemainen-havainto-fn
+                                      :vali kirjaa-valikohtainen-havainto-fn)
+                          :jatkuvat-havainnot jatkuvat-havainnot
+                          :disabloitu? (boolean (and (= (:tyyppi havainto) :vali)
+                                                     jatkuvia-havaintoja-paalla?
+                                                     (not (jatkuvat-havainnot (:avain havainto)))
+                                                     mittaus-paalla?
+                                                     (:vaatii-nappaimiston? havainto)))})])))]]))
+
+(defn- paanavigointi-footer [{:keys [vapauta-kaikki-painettu havaintolomake-painettu] :as tiedot}]
+  [:footer
+   [:div.footer-vasen
+    [nappi "Vapauta kaikki" {:on-click vapauta-kaikki-painettu
+                             :ikoni (ikonit/livicon-arrow-up)
+                             :luokat-str "nappi-toissijainen"}]]
+   [:div.footer-oikea
+    [nappi "Avaa lomake" {:on-click havaintolomake-painettu
+                          :ikoni (ikonit/livicon-pen)
+                          :luokat-str "nappi-ensisijainen"}]]])
+
 (defn- paanavigointikomponentti [{:keys [valilehdet paanavigointi-nakyvissa?
                                          valilehdet-nakyvissa? valittu-valilehti] :as tiedot}]
-  (let [valitse-valilehti! (fn [uusi-valinta kayta-hampurilaisvalikkoa?]
-                             (.log js/console "Vaihdetaan välilehti: " (str uusi-valinta))
-                             (reset! valittu-valilehti uusi-valinta)
-                             (when kayta-hampurilaisvalikkoa?
-                               (swap! valilehdet-nakyvissa? not)))
-        togglaa-paanavigoinnin-nakyvyys (fn []
+  (let [togglaa-paanavigoinnin-nakyvyys (fn []
                                           (swap! paanavigointi-nakyvissa? not))
-        toggllaa-valilehtien-nakyvyys (fn []
+        togglaa-valilehtien-nakyvyys (fn []
                                         (swap! valilehdet-nakyvissa? not))]
 
     (reset! valittu-valilehti (:avain (first valilehdet)))
@@ -59,19 +118,18 @@
                  kirjaa-valikohtainen-havainto-fn
                  jatkuvat-havainnot nykyinen-mittaustyyppi
                  vapauta-kaikki-painettu havaintolomake-painettu] :as tiedot}]
-      (let [jatkuvia-havaintoja-paalla? (not (empty? jatkuvat-havainnot))
-            mittaus-paalla? (some? nykyinen-mittaustyyppi)
+      (let [mittaus-paalla? (some? nykyinen-mittaustyyppi)
             kayta-hampurilaisvalikkoa? (< @dom/leveys 950)
-            havainto (when mittaus-paalla?
-                       (first (filter #(= (get-in % [:mittaus :tyyppi])
-                                          nykyinen-mittaustyyppi)
-                                      (mapcat :sisalto valilehdet))))
+            mitattava-havainto (when mittaus-paalla?
+                                 (first (filter #(= (get-in % [:mittaus :tyyppi])
+                                                    nykyinen-mittaustyyppi)
+                                                (mapcat :sisalto valilehdet))))
             nayta-valilehdet-tarvittaessa! (fn []
                                              ;; Näytä välilehdet jos eivät näkyvissä
                                              ;; ja ei käytetäkään hampurilaisvalikkoa
                                              (if (and (not @valilehdet-nakyvissa?)
                                                       (not kayta-hampurilaisvalikkoa?))
-                                               (toggllaa-valilehtien-nakyvyys)))]
+                                               (togglaa-valilehtien-nakyvyys)))]
 
         (nayta-valilehdet-tarvittaessa!)
 
@@ -86,62 +144,26 @@
            [:div.piilotusnappi {:on-click togglaa-paanavigoinnin-nakyvyys}
             [:img {:src kuvat/+nuoli-sulje+}]]
 
-           [:header
-            (when kayta-hampurilaisvalikkoa?
-              [:div.hampurilaisvalikko
-               [:img.hampurilaisvalikko-ikoni
-                {:src kuvat/+hampurilaisvalikko+
-                 :on-click toggllaa-valilehtien-nakyvyys}]])
-           (when @valilehdet-nakyvissa?
-             [:ul.valilehtilista
-              (doall
-                (for [{:keys [avain sisalto] :as valilehti} valilehdet]
-                  (let [valilehden-jatkuvat-havainnot
-                        (set/intersection (into #{} (map :avain sisalto))
-                                          jatkuvat-havainnot)]
-                    ^{:key avain}
-                    [:li {:class (str "valilehti "
-                                      (when (= avain
-                                               @valittu-valilehti)
-                                        "valilehti-valittu"))
-                          :on-click #(valitse-valilehti! avain kayta-hampurilaisvalikkoa?)}
-                     [:span.valilehti-nimi (:nimi valilehti)]
-                     [:span.valilehti-havainnot (when-not (empty? valilehden-jatkuvat-havainnot)
-                                                  (str "(" (count valilehden-jatkuvat-havainnot) ")"))]])))])]
-          [:div.sisalto
-           [:div.valintapainikkeet
-            (let [{:keys [sisalto] :as valittu-valilehti}
-                  (first (filter
-                           #(= (:avain %) @valittu-valilehti)
-                           valilehdet))]
-              (doall (for [havainto sisalto]
-                       ^{:key (:nimi havainto)}
-                       [toggle-painike
-                        (merge havainto
-                               {:click-fn (case (:tyyppi havainto)
-                                            :piste kirjaa-pistemainen-havainto-fn
-                                            :vali kirjaa-valikohtainen-havainto-fn)
-                                :jatkuvat-havainnot jatkuvat-havainnot
-                                :disabloitu? (boolean (and (= (:tyyppi havainto) :vali)
-                                                           jatkuvia-havaintoja-paalla?
-                                                           (not (jatkuvat-havainnot (:avain havainto)))
-                                                           mittaus-paalla?
-                                                           (:vaatii-nappaimiston? havainto)))})])))]]
-          [:footer
-           [:div.footer-vasen
-            [nappi "Vapauta kaikki" {:on-click vapauta-kaikki-painettu
-                                     :ikoni (ikonit/livicon-arrow-up)
-                                     :luokat-str "nappi-toissijainen"}]]
-           [:div.footer-oikea
-            [nappi "Avaa lomake" {:on-click havaintolomake-painettu
-                                  :ikoni (ikonit/livicon-pen)
-                                  :luokat-str "nappi-ensisijainen"}]]]]]
+           [paanavigointi-header {:kayta-hampurilaisvalikkoa? kayta-hampurilaisvalikkoa?
+                                  :togglaa-valilehtien-nakyvyys togglaa-valilehtien-nakyvyys
+                                  :valilehdet-nakyvissa? valilehdet-nakyvissa?
+                                  :valilehdet valilehdet
+                                  :jatkuvat-havainnot jatkuvat-havainnot
+                                  :valittu-valilehti valittu-valilehti}]
 
-        (when mittaus-paalla?
-          [nappaimisto/nappaimisto havainto]) ] ) ) ) )
+           [paanavigointi-sisalto {:valilehdet valilehdet
+                                   :valittu-valilehti valittu-valilehti
+                                   :nykyinen-mittaustyyppi nykyinen-mittaustyyppi
+                                   :kirjaa-pistemainen-havainto-fn kirjaa-pistemainen-havainto-fn
+                                   :kirjaa-valikohtainen-havainto-fn kirjaa-valikohtainen-havainto-fn
+                                   :jatkuvat-havainnot jatkuvat-havainnot}]
+           [paanavigointi-footer {:havaintolomake-painettu havaintolomake-painettu
+                                  :vapauta-kaikki-painettu vapauta-kaikki-painettu}]]]
+
+         (when mittaus-paalla?
+           [nappaimisto/nappaimisto mitattava-havainto])]))))
 
 (defn paanavigointi []
-  (.log js/console "Mittaustyyppi: " (pr-str @s/mittaustyyppi))
   [paanavigointikomponentti {:valilehdet tiedot/oletusvalilehdet
                              :paanavigointi-nakyvissa? s/nayta-paanavigointi?
                              :valilehdet-nakyvissa? s/nayta-paanavigointi-valilehdet?
