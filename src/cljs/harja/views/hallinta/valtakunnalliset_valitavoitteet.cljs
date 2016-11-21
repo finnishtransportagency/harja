@@ -120,11 +120,11 @@
             [:span
              (when nayta-kertaluontoiset-valtakunnalliset?
                [:span
-                "Uudet kertaluontoiset välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin, jos välitavoitteen takaraja on urakan voimassaoloaikana."
+                "Uudet kertaluontoiset välitavoitteet liitetään valituntyyppisiin käynnissäoleviin ja tuleviin urakoihin, jos välitavoitteen takaraja on urakan voimassaoloaikana."
                 [:br]])
              (when nayta-toistuvat-valtakunnalliset?
                [:span
-                "Uudet toistuvat välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi."
+                "Uudet toistuvat välitavoitteet liitetään valituntyyppisiin käynnissäoleviin ja tuleviin urakoihin kertaalleen per jäljellä oleva urakkavuosi."
                 [:br]])
 
              [:br]
@@ -136,7 +136,7 @@
 
              (when nayta-toistuvat-valtakunnalliset?
                [:span
-                "Toistuvan välitavoitteen päivittäminen poistaa urakoiden eri vuosille kopioidun välitavoitteen, ellei sitä ole muokattu urakassa, ja lisää sen uudelleen ei-päättyneisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi."
+                "Toistuvan välitavoitteen muokkaaminen päivittää sen käynnissä oleviin ja tuleviin urakoihin kertaalleen per jäljellä oleva urakkavuosi, ellei sitä ole muokattu urakassa."
                 [:br]])
 
              [:br]
