@@ -65,6 +65,7 @@
                (tyon-tyypin-nimi (:tyyppi %))
                (get-in % [:tpi :nimi])
                (get-in % [:tehtava :nimi])
+               (:lisatieto %)
                (if (get-in % [:tehtava :paivanhinta])
                  "Päivän hinta"
                  (get-in % [:tehtava :maara]))
@@ -125,6 +126,7 @@
                    {:leveys 7 :otsikko "Tyyppi"}
                    {:leveys 12 :otsikko "Toimenpide"}
                    {:leveys 12 :otsikko "Tehtävä"}
+                   {:leveys 12 :otsikko "Lisätieto"}
                    {:leveys 5 :otsikko "Määrä"}
                    {:leveys 5 :otsikko "Summa €" :fmt :raha}
                    {:leveys 5 :otsikko "Ind.korotus €" :fmt :raha}])]
