@@ -79,35 +79,41 @@
          [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)]])
      (remove domain/valitysviesti? kuittaukset))])
 
+(defn aikavalivalitsin [valinnat-nyt]
+  (let [vapaa-aikavali? (get-in valinnat-nyt [:vakioaikavali :vapaa-aikavali])
+        alkuaika (:alkuaika valinnat-nyt)
+        vakio-aikavalikentta {:nimi :vakioaikavali
+                              :otsikko "Ilmoitettu aikavälillä"
+                              :fmt :nimi
+                              :tyyppi :valinta
+                              :valinnat tiedot/aikavalit
+                              :valinta-nayta :nimi}
+        alkuaikakentta {:nimi :alkuaika
+                        :otsikko "Alku"
+                        :tyyppi :pvm-aika
+                        :validoi [[:ei-tyhja "Anna alkuaika"]]}
+        loppuaikakentta {:nimi :loppuaika
+                         :otsikko "Loppu"
+                         :tyyppi :pvm-aika
+                         :validoi [[:ei-tyhja "Anna loppuaika"]
+                                   [:pvm-toisen-pvmn-jalkeen alkuaika "Loppuajan on oltava alkuajan jälkeen"]]}]
+
+    (if vapaa-aikavali?
+      (lomake/ryhma
+        {:rivi? true}
+        vakio-aikavalikentta
+        alkuaikakentta
+        loppuaikakentta)
+      (lomake/ryhma
+        {:rivi? true}
+        vakio-aikavalikentta))))
+
 (defn ilmoitusten-hakuehdot [e! {:keys [aikavali urakka valitun-urakan-hoitokaudet] :as valinnat-nyt}]
   [lomake/lomake
    {:luokka :horizontal
     :muokkaa! #(e! (v/->AsetaValinnat %))}
 
-   [(when (and urakka valitun-urakan-hoitokaudet)
-      {:nimi :hoitokausi
-       :palstoja 1
-       :otsikko "Hoitokausi"
-       :tyyppi :valinta
-       :aseta (fn [rivi hk]
-                ;; Jos hoitokautta vaihdetaan, vaihdetaan myös aikaväli samaan
-                (assoc rivi
-                  :hoitokausi hk
-                  :aikavali hk))
-       :valinnat (:valitun-urakan-hoitokaudet valinnat-nyt)
-       :valinta-nayta fmt/pvm-vali-opt})
-
-    {:nimi :aikavali
-     :otsikko "Saapunut aikavälillä"
-     :tyyppi :komponentti
-     :komponentti (fn [{muokkaa! :muokkaa-lomaketta}]
-                    [valinnat/aikavali
-                     (r/wrap aikavali
-                             #(muokkaa! (merge valinnat-nyt
-                                               {:aikavali %})))
-                     {:lomake? true}])}
-
-
+   [(aikavalivalitsin valinnat-nyt)
     {:nimi :hakuehto :otsikko "Hakusana"
      :placeholder "Hae tekstillä..."
      :tyyppi :string
