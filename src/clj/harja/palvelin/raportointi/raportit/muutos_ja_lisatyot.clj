@@ -65,7 +65,7 @@
                (tyon-tyypin-nimi (:tyyppi %))
                (get-in % [:tpi :nimi])
                (get-in % [:tehtava :nimi])
-               (:lisatieto %)
+               (or (:lisatieto %) "")
                (if (get-in % [:tehtava :paivanhinta])
                  "Päivän hinta"
                  (get-in % [:tehtava :maara]))
@@ -164,8 +164,8 @@
                                        kentat (if kayta-ryhmittelya?
                                                 (keep identity [alueen-teksti summat-yht korotukset-yht])
                                                 (if (or (not urakoittain?) (= :urakka konteksti))
-                                                  (keep identity [alueen-teksti "" "" "" "" summat-yht korotukset-yht])
-                                                  (keep identity [alueen-teksti "" "" "" "" "" summat-yht korotukset-yht])))]
+                                                  (keep identity [alueen-teksti "" "" "" "" "" summat-yht korotukset-yht])
+                                                  (keep identity [alueen-teksti "" "" "" "" "" "" summat-yht korotukset-yht])))]
                                    (when (:nimi hy)
                                      [{:lihavoi? true
                                        :rivi     kentat}]))))))
