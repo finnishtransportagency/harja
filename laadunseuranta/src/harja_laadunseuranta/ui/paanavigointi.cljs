@@ -31,7 +31,6 @@
     (loop [jako 1]
       (let [ryhmat (partition-all jako valilehtien-leveydet)
             ryhmien-yhteysleveys (map #(reduce + 0 %) ryhmat)
-            _ (.log js/console "Ryhmien leveys: " (pr-str ryhmien-yhteysleveys))
             ryhmat-mahtuvat-containeriin? (every?
                                             #(< % header-leveys)
                                             ryhmien-yhteysleveys)]
