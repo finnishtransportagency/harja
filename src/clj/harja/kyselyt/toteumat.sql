@@ -257,7 +257,6 @@ SET alkanut           = :alkanut,
   suorittajan_nimi    = :suorittaja,
   suorittajan_ytunnus = :ytunnus,
   lisatieto           = :lisatieto,
-  reitti              = :reitti,
   tr_numero           = :numero,
   tr_alkuosa          = :alkuosa,
   tr_alkuetaisyys     = :alkuetaisyys,
@@ -275,7 +274,6 @@ SET alkanut           = :alkanut,
   suorittajan_ytunnus = :ytunnus,
   lisatieto           = :lisatieto,
   tyyppi              = :tyyppi :: toteumatyyppi,
-  reitti              = :reitti,
   sopimus             = :sopimus
 WHERE ulkoinen_id = :id AND urakka = :urakka;
 
@@ -621,6 +619,7 @@ SELECT
   tt.toimenpidekoodi      AS toimenpidekoodi,
   tk.nimi                 AS nimi,
   SUM(tt.maara)           AS maara,
+  SUM(ST_Length(t.reitti))AS pituus,
   tk.yksikko              AS yksikko,
   k.jarjestelma           AS jarjestelmanlisaama
 FROM toteuma_tehtava tt
@@ -766,11 +765,6 @@ WHERE
   AND t.alkanut :: DATE = :pvm :: DATE
   AND tt.toimenpidekoodi = :toimenpidekoodi;
 
--- name: paivita-toteuman-reitti!
-UPDATE toteuma
-SET reitti = :reitti
-WHERE id = :id;
-
 -- name: hae-varustetoteuma
 SELECT
   id,
@@ -807,7 +801,39 @@ FROM tierekisteriosoitteelle_viiva(:tie :: INTEGER,
                                    :losa :: INTEGER,
                                    :let :: INTEGER) AS sijainti;
 
+-- name: paivita-toteuman-reitti!
+UPDATE toteuma
+SET reitti = :reitti
+WHERE id = :id;
+
 -- name: paivita-toteuman-reitti<!
 UPDATE toteuma
 SET reitti = :reitti
 WHERE id = :id;
+
+
+-- AJASTETTUJA TEHTÄVIÄ VARTEN
+
+-- name: hae-reitittomat-mutta-reittipisteelliset-toteumat
+-- Hakee toteumat, joille on olemassa reittipisteitä, mutta reittiä ei ole jostain syystä saatu tehtyä.
+-- Käytetään ajastetussa tehtävässä
+SELECT DISTINCT t.id
+FROM toteuma t
+JOIN reittipiste rp ON t.id = rp.toteuma
+WHERE t.reitti IS NULL;
+
+-- name: hae-reitittomat-mutta-osoitteelliset-toteumat
+-- Hakee toteumat, joille on tr-osoite, mutta reittiä ei ole saatu laskettua.
+-- Käytetään ajastetussa tehtävässä
+SELECT
+  id,
+  tr_numero AS numero,
+  tr_alkuosa AS alkuosa ,
+  tr_alkuetaisyys AS alkuetaisyys,
+  tr_loppuosa AS loppuosa ,
+  tr_loppuetaisyys AS loppuetaisyys
+FROM toteuma t
+WHERE reitti IS NULL
+AND t.tr_numero IS NOT NULL
+AND t.tr_alkuosa IS NOT NULL
+AND t.tr_alkuetaisyys IS NOT NULL;
