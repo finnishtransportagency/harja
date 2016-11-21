@@ -66,6 +66,7 @@
                          :organisaatio "ELY"
                          :puhelin ""
                          :roolit ["ELY urakanvalvoja"]
+                         :roolinimet ["ELY_Urakanvalvoja"]
                          :sahkoposti "erkki.esimerkki@example.com"
                          :sukunimi "Esimerkki"
                          :tunniste nil}
@@ -74,6 +75,7 @@
                           :organisaatio "ELY"
                           :puhelin "0400123456789"
                           :roolit ["Urakan vastuuhenkilö"]
+                          :roolinimet ["vastuuhenkilo"]
                           :sahkoposti "eero.esimerkki@example.com"
                           :sukunimi "Esimerkki"
                           :tunniste nil}
@@ -82,6 +84,7 @@
                           :organisaatio "ELY"
                           :puhelin "0400123456788"
                           :roolit []
+                          :roolinimet []
                           :sahkoposti "eetvartti.esimerkki@example.com"
                           :sukunimi "Esimerkki"
                           :tunniste nil}]))))))
