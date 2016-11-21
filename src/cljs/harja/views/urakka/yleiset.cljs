@@ -384,6 +384,11 @@
           :valinnat mahdolliset-henkilot}]
         @henkilot]])))
 
+(defn- vastuuhenkilo-tooltip [vastuuhenkilo]
+  [:span
+   [:div "Puhelin: " (:puhelin vastuuhenkilo)]
+   [:div "Sähköposti: " (:sahkoposti vastuuhenkilo)]])
+
 (defn- nayta-vastuuhenkilo [paivita-vastuuhenkilot!
                             urakka-id kayttaja kayttajat vastuuhenkilot rooli]
   (let [roolin-henkilot (filter #(= rooli (:rooli %)) vastuuhenkilot)
@@ -394,16 +399,18 @@
                           (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset urakka-id)
                           (or (not= rooli "ELY_Urakanvalvoja")
                               (= :tilaaja (roolit/osapuoli kayttaja))))]
-    #_(log "VASTUUHENKILÖT: " (pr-str vastuuhenkilot))
-    #_(log "KÄYTTÄJÄT: " (pr-str kayttajat))
     [:div.vastuuhenkilo.inline-block
      [:span
       (if ensisijainen
-        [:span.vastuuhenkilo-ensisijainen (:nimi ensisijainen)]
+        [yleiset/tooltip {}
+         [:span.vastuuhenkilo-ensisijainen (:nimi ensisijainen)]
+         [vastuuhenkilo-tooltip ensisijainen]]
         [:span.vastuuhenkilo-ei-tiedossa "Ei tiedossa"])
       " "
       (when varalla
-        [:span.vastuuhenkilo-varalla "(sijainen " (:nimi varalla) ")"])
+        [yleiset/tooltip {}
+         [:span.vastuuhenkilo-varalla "(sijainen " (:nimi varalla) ")"]
+         [vastuuhenkilo-tooltip varalla]])
       (when voi-muokata?
         [:span.klikattava {:on-click #(modal/nayta!
                                        {:otsikko (str "Urakan ensisijainen "
