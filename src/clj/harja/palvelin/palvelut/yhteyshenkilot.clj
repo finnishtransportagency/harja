@@ -229,8 +229,8 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
   (q/hae-urakan-vastuuhenkilot db urakka-id))
 
-(defn tallenna-urakan-vastuuhenkilot-roolille [db user
-                                               {:keys [urakka-id rooli vastuuhenkilo varahenkilo] :as tiedot}]
+(defn tallenna-urakan-vastuuhenkilot-roolille
+  [db user {:keys [urakka-id rooli vastuuhenkilo varahenkilo] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (when (and (= (roolit/osapuoli user) :urakoitsija)
              (not= rooli "vastuuhenkilo"))
@@ -242,6 +242,8 @@
                 (q/luo-urakan-vastuuhenkilo<! c {:urakka urakka-id
                                                  :rooli rooli
                                                  :nimi (or (:nimi kayttaja) (fmt/kayttaja kayttaja))
+                                                 :puhelin (:puhelin kayttaja)
+                                                 :sahkoposti (:sahkoposti kayttaja)
                                                  :kayttajatunnus (:kayttajatunnus kayttaja)
                                                  :ensisijainen ensisijainen}))]
     (jdbc/with-db-transaction [c db]
