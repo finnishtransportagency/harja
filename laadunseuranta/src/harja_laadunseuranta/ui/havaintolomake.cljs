@@ -32,7 +32,18 @@
           [kentta "Tarkastaja" [:span.tarkastaja @kayttajanimi]]]
 
          [:div.tieosuus
-          [kentta "Tieosuus" [tr-osoite @tr-os]]]
+          ;; Tieosoitetta ei tällä hetkellä oteta vastaan palvelimella, vaan osoite päätellään
+          ;; sijainnin perusteella. Tästä syystä TR-osoitetteen muokkauskomponentti on kommentoitu.
+          ;; Toistaiseksi näytetään tässä vain nykyinen osoite. Myöhemmin tehdään tuki
+          ;; antaa osoite itse ja palvelimella käytetään sitä, jos annettu, muuten päätellään sijainnista edelleen.
+          #_[kentta "Tieosuus" [tr-osoite @tr-os]]
+          [kentta "Tieosuus" [:span (str (:tie @tr-os) ;; FIXME Base-projektissa olisi tähän suora funktio, mutta ei voi requirettaa suoraan :(
+                                         " / " (:aosa @tr-os)
+                                         " / " (:aet @tr-os)
+                                         (when (and (:losa @tr-os)
+                                                    (:let @tr-os))
+                                           " / " (:losa @tr-os)
+                                           " / " (:let @tr-os)))]]]
 
          [:div.lisatietoja
           [:div.laatupoikkeama-check
