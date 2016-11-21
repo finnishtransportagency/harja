@@ -57,6 +57,7 @@
                                           {:otsikko "Tyyppi"}
                                           {:otsikko "Toimenpide"}
                                           {:otsikko "Tehtävä"}
+                                          {:otsikko "Lisätieto"}
                                           {:otsikko "Määrä"}
                                           {:otsikko "Summa €"}
                                           {:otsikko "Ind.korotus €"}))))
@@ -104,6 +105,7 @@
                                           {:otsikko "Tyyppi"}
                                           {:otsikko "Toimenpide"}
                                           {:otsikko "Tehtävä"}
+                                          {:otsikko "Lisätieto"}
                                           {:otsikko "Määrä"}
                                           {:otsikko "Summa €"}
                                           {:otsikko "Ind.korotus €"}))))
