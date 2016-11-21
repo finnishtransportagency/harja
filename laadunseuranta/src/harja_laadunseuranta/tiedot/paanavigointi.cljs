@@ -192,7 +192,7 @@
     :vaatii-nappaimiston? false}])
 
 (def valilehti-soratiet
-  [{:nimi "Sora\u00ADtie"
+  [{:nimi "Sora\u00ADtie\u00ADtarkas\u00ADtus"
     :tyyppi :vali
     :ikoni "soratie_alkaa"
     :avain :soratie
