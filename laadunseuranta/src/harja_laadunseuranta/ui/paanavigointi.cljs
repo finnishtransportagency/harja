@@ -17,12 +17,14 @@
     [cljs.core.async.macros :refer [go go-loop]]
     [devcards.core :as dc :refer [defcard deftest]]))
 
+(def +header-reuna-padding+ 80)
 (def +valilehti-perusleveys+ 50) ;; Kun välilehti on tyhjä
 (def +kirjain-leveys 9.3) ;; kirjaimen leveys keskimäärin
 (defn- maarittele-valilehtien-maara-per-ryhma [header-leveys valilehdet]
   ;; Jaetaan välilehdet ryhmiin. Tarkoituksena etsiä sellainen jako, jossa
   ;; välilehtien määrä / ryhmä on mahdollisimman suuri niin, ettei välilehtien
   ;; leveys ylitä containerin leveyttä.
+  ;; HUOMAA, että tämä ei ole pikselintarkka lasku, mutta selkeästi riittävä
   (let [valilehtien-nimet (map #(utils/ilman-tavutusta (:nimi %)) valilehdet)
         valilehtien-leveydet (map
                                #(+ +valilehti-perusleveys+ (* +kirjain-leveys (count %)))
@@ -32,7 +34,7 @@
       (let [ryhmat (partition-all jako valilehtien-leveydet)
             ryhmien-yhteysleveys (map #(reduce + 0 %) ryhmat)
             ryhmat-mahtuvat-containeriin? (every?
-                                            #(< % header-leveys)
+                                            #(< % (- header-leveys +header-reuna-padding+))
                                             ryhmien-yhteysleveys)]
         (if ryhmat-mahtuvat-containeriin?
           ;; Voidaan kasvattaa jakoa edelleen
@@ -60,9 +62,7 @@
      [:div.toggle-valintapainike-otsikko
       nimi]]))
 
-(defn- paanavigointi-header [{:keys [kayta-hampurilaisvalikkoa? togglaa-valilehtien-nakyvyys
-                                     valilehdet-nakyvissa? valilehdet jatkuvat-havainnot
-                                     valittu-valilehti valittu-valilehtiryhma]}]
+(defn- paanavigointi-header [{:keys [valilehdet valittu-valilehti] :as tiedot}]
   (let [valilehtia-per-ryhma (atom 0)
         paivita-valilehtien-maara-per-ryhma
         (fn [this]
@@ -84,15 +84,22 @@
        :component-will-unmount (fn [_]
                                  (@lopeta-leveyskuuntelu))
        :reagent-render
-       (fn []
+       (fn [{:keys [kayta-hampurilaisvalikkoa? togglaa-valilehtien-nakyvyys
+                    valilehdet-nakyvissa? valilehdet jatkuvat-havainnot
+                    valittu-valilehti valittu-valilehtiryhma]}]
          (let [valilehtiryhmat (partition-all @valilehtia-per-ryhma valilehdet)
                valitun-valilehtiryhman-valilehdet (nth valilehtiryhmat @valittu-valilehtiryhma)]
-           [:header
+           [:header {:class (when-not kayta-hampurilaisvalikkoa? "hampurilaisvalikko-ei-kaytossa")}
             (when kayta-hampurilaisvalikkoa?
               [:div.hampurilaisvalikko
                [:img.hampurilaisvalikko-ikoni
                 {:src kuvat/+hampurilaisvalikko+
                  :on-click togglaa-valilehtien-nakyvyys}]])
+
+            (when-not kayta-hampurilaisvalikkoa?
+              [:div
+               [:div.selaa-valilehtiryhmia.selaa-valilehtiryhmia-oikealle]
+               [:div.selaa-valilehtiryhmia.selaa-valilehtiryhmia-vasemmalle]])
 
             (when @valilehdet-nakyvissa?
               [:ul.valilehtilista

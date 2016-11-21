@@ -30,6 +30,7 @@
   background-color: @sisaltolaatikoiden-taustavari;
 
   > header {
+    position: relative;
     border: @sisaltolaatikoiden-reunaviiva;
     padding-top: 5px;
 
@@ -42,6 +43,30 @@
         width: 100%;
       }
     }
+
+    & .selaa-valilehtiryhmia {
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      border: 1px solid @musta;
+      background-color: @harmaa6;
+    }
+
+    & .selaa-valilehtiryhmia-vasemmalle {
+      bottom: 0;
+      left: 0;
+    }
+
+    & .selaa-valilehtiryhmia-oikealle {
+      bottom: 0;
+      right: 0;
+    }
+  }
+
+  > header.hampurilaisvalikko-ei-kaytossa {
+    // Jyrätään reunat tyhjäksi, jotta selausnapeille jää tilaa
+    padding-left: 40px;
+    padding-right: 40px;
   }
 
   > .sisalto {
