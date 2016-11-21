@@ -232,7 +232,13 @@
                          (vec (grid/filteroi-uudet-poistetut uusi-arvo)))))))
 
 (defn paallystysilmoitus-perustiedot [urakka {:keys [tila] :as lomakedata-nyt} lukittu? kirjoitusoikeus? muokkaa!]
-  (let [nayta-kasittelyosiot? (or (= tila :valmis) (= tila :lukittu))]
+  (let [nayta-kasittelyosiot? (or (= tila :valmis) (= tila :lukittu))
+        tarkista-takuu-pvm (fn [_ {valmispvm-paallystys :valmispvm-paallystys
+                                   takuupvm :takuupvm}]
+                             (when (and valmispvm-paallystys
+                                        takuupvm
+                                        (> valmispvm-paallystys takuupvm))
+                               "Takuupvm on yleensä kohteen valmistumisen jälkeen."))]
     [:div.row
      [:div.col-md-6
       [:h3 "Perustiedot"]
@@ -248,7 +254,8 @@
          :muokattava? (constantly false)
          :palstoja 2}
         {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm :palstoja 1 :muokattava? (constantly false)}
-        {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :palstoja 1}
+        {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :palstoja 1
+         :varoita [tarkista-takuu-pvm]}
         {:otsikko "Päällystys valmistunut" :nimi :valmispvm-paallystys :tyyppi :pvm :palstoja 1 :muokattava? (constantly false)}
         {:otsikko "Kohde valmistunut" :nimi :valmispvm-kohde :palstoja 1
          :tyyppi :pvm :muokattava? (constantly false)}
