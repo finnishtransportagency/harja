@@ -93,7 +93,14 @@
                                                             oikeudet/urakat-aikataulu
                                                             urakka-id
                                                             @istunto/kayttaja)
-            voi-tallentaa? (or saa-muokata? saa-merkita-valmiiksi? saa-asettaa-valmis-takarajan?)]
+            voi-tallentaa? (or saa-muokata? saa-merkita-valmiiksi? saa-asettaa-valmis-takarajan?)
+            paallystys-aloitettu-validointi [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
+                                              "Päällystys ei voi alkaa ennen kohteen aloitusta."]]
+            paallystys-aloitettu-validointi (if (= (:nakyma optiot) :paallystys)
+                                              (conj paallystys-aloitettu-validointi
+                                                    [:toinen-arvo-annettu-ensin :aikataulu-kohde-alku
+                                                     "Päällystystä ei voi merkitä alkaneeksi ennen kohteen aloitusta."])
+                                              paallystys-aloitettu-validointi)]
         [:div.aikataulu
          [grid/grid
           {:otsikko "Kohteiden aikataulu"
@@ -153,10 +160,7 @@
            {:otsikko "Pääl\u00ADlys\u00ADtys a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-paallystys-alku
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
-            :validoi [[:toinen-arvo-annettu-ensin :aikataulu-kohde-alku
-                       "Päällystystä ei voi merkitä alkaneeksi ennen kohteen aloitusta."]
-                      [:pvm-kentan-jalkeen :aikataulu-kohde-alku
-                       "Päällystys ei voi alkaa ennen kohteen aloitusta."]]}
+            :validoi paallystys-aloitettu-validointi}
            {:otsikko "Pääl\u00ADlys\u00ADtys val\u00ADmis" :leveys 8 :nimi :aikataulu-paallystys-loppu
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
