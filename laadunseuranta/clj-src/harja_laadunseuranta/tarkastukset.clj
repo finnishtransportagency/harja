@@ -114,7 +114,7 @@
      :tarkastusajo (:tarkastusajo reittimerkinta)
      :sijainnit (or (:sijainnit reittimerkinta) [{:sijainti (:sijainti reittimerkinta)
                                                   :tr-osoite (:tr-osoite reittimerkinta)}])
-     :liite (:kuva reittimerkinta) ;; TODO Hanskataanko varmasti oikein nyt kun kuvia voi tulla monta?
+     :liite (:kuva reittimerkinta) ;; Liitteen id tai vector jos monta
      :vakiohavainnot (yhdista-reittimerkinnan-kaikki-havainnot reittimerkinta)
      :havainnot (:kuvaus reittimerkinta)
      :talvihoitomittaus {:talvihoitoluokka nil
@@ -304,10 +304,18 @@
       (q/luo-uusi-soratiemittaus<! db
                                    (merge (:soratiemittaus tarkastus)
                                           {:tarkastus tarkastus-id})))
-    (when (:liite tarkastus)
-      (q/luo-uusi-tarkastus-liite<! db
-                                    {:tarkastus tarkastus-id
-                                     :liite (:liite tarkastus)}))))
+    (cond (number? (:liite tarkastus))
+          (q/luo-uusi-tarkastus-liite<! db
+                                     {:tarkastus tarkastus-id
+                                      :liite (:liite tarkastus)})
+
+          (vector? (:liite tarkastus))
+          (doseq [liite (:liite tarkastus)]
+            (q/luo-uusi-tarkastus-liite<! db
+                                          {:tarkastus tarkastus-id
+                                           :liite liite}))
+
+          :default nil)))
 
 (defn tallenna-tarkastukset! [db tarkastukset kayttaja]
   (let [kaikki-tarkastukset (reduce conj
