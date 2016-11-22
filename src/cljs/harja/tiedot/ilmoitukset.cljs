@@ -22,6 +22,12 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
+(def aikavalit [{:nimi "1 tunnin ajalta" :tunteja 1}
+                {:nimi "12 tunnin ajalta" :tunteja 12}
+                {:nimi "1 päivän ajalta" :tunteja 24}
+                {:nimi "1 viikon ajalta" :tunteja 168}
+                {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
+
 ;; Valinnat jotka riippuvat ulkoisista atomeista
 (defonce valinnat
          (reaction
@@ -53,7 +59,10 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                            :vain-myohassa? false
                            :aloituskuittauksen-ajankohta :kaikki
                            :ilmoittaja-nimi ""
-                           :ilmoittaja-puhelin ""}
+                           :ilmoittaja-puhelin ""
+                           :vakioaikavali (first aikavalit)
+                           :alkuaika (pvm/tuntia-sitten 1)
+                           :loppuaika (pvm/nyt)}
                 :kuittaa-monta nil}))
 
 (defn- jarjesta-ilmoitukset [tulos]
@@ -139,19 +148,13 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   v/YhdistaValinnat
   (process-event [{valinnat :valinnat :as e} app]
     (hae
-      ;; Kun näkymään tullaan ensimmäistä kertaa, aseta oletus aikaväliksi nykypäivästä 7 päivää taaksepäin
-      (let [valinnat (if (get-in app [:valinnat :aikavali])
-                       valinnat
-                       (assoc valinnat :aikavali [(pvm/paivaa-sitten 7) (pvm/nyt)]))]
-        (update-in app [:valinnat] merge valinnat))))
+      (update-in app [:valinnat] merge valinnat)))
 
   v/HaeIlmoitukset
   (process-event [_ {valinnat :valinnat taustahaku? :taustahaku? :as app}]
     (let [tulos! (t/send-async! v/->IlmoitusHaku)]
       (go
         (let [haku (-> valinnat
-                       (update-in [:aikavali 0] #(and % (pvm/paivan-alussa %)))
-                       (update-in [:aikavali 1] #(and % (pvm/paivan-lopussa %)))
                        ;; jos tyyppiä/tilaa ei valittu, ota kaikki
                        (update :tyypit
                                #(if (empty? %) +ilmoitustyypit+ %))

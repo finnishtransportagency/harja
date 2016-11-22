@@ -228,7 +228,8 @@
     (doseq [kohde kohteet]
       (q/tallenna-paallystyskohteen-aikataulu!
         db
-        {:aikataulu_paallystys_alku (:aikataulu-paallystys-alku kohde)
+        {:aikataulu_kohde_alku (:aikataulu-kohde-alku kohde)
+         :aikataulu_paallystys_alku (:aikataulu-paallystys-alku kohde)
          :aikataulu_paallystys_loppu (:aikataulu-paallystys-loppu kohde)
          :aikataulu_kohde_valmis (:aikataulu-kohde-valmis kohde)
          :aikataulu_muokkaaja (:id user)

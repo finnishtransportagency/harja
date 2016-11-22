@@ -163,7 +163,7 @@
                                                  [[:taloudellinen-osa :paatos]
                                                   [:tekninen-osa :paatos]
                                                   [:tila]])))
-                                    (paallystys-q/hae-urakan-paallystysilmoitus-paallystyskohteella
+                                    (paallystys-q/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
                                       db
                                       {:paallystyskohde kohde-id})))]
       (when-not (and (= :hyvaksytty (get-in paallystysilmoitus [:tekninen-osa :paatos]))
