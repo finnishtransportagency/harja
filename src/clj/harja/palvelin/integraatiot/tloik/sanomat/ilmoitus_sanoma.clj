@@ -46,9 +46,10 @@
                        (z/xml-> (z/xml1-> selite) :selite z/text))))
 
 (defn lue-sijainti [sijainti]
-  {:tienumero (Integer/parseInt (z/xml1-> sijainti :tienumero z/text))
-   :x (Double/parseDouble (z/xml1-> sijainti :x z/text))
-   :y (Double/parseDouble (z/xml1-> sijainti :y z/text))})
+  (let [tienumero (z/xml1-> sijainti :tienumero z/text)]
+    {:tienumero (when tienumero (Integer/parseInt tienumero))
+     :x (Double/parseDouble (z/xml1-> sijainti :x z/text))
+     :y (Double/parseDouble (z/xml1-> sijainti :y z/text))}))
 
 (defn lue-vastaanottaja [vastaanottaja]
   {:nimi (z/xml1-> vastaanottaja :nimi z/text)
