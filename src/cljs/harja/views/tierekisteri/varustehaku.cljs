@@ -7,7 +7,8 @@
             [harja.ui.napit :as napit]
             [harja.loki :refer [log]]
             [harja.ui.debug :refer [debug]]
-            [harja.ui.grid :as grid]))
+            [harja.ui.grid :as grid]
+            [harja.ui.yleiset :as yleiset]))
 
 (defn varustehaku-ehdot [e! {haku? :haku-kaynnissa? :as hakuehdot}]
   [lomake/lomake
