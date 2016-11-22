@@ -73,6 +73,7 @@
         ryhmittele-valilehdet!
         (fn [this]
           (when this
+            (.log js/console "Ryhmitelläänpäs tabit")
             (let [valilehtia-per-ryhma
                   (maarittele-valilehtien-maara-per-ryhma (.-width (.getBoundingClientRect this))
                                                           valilehdet)]
@@ -94,17 +95,22 @@
                                              (reset! valittu-valilehtiryhma (+ @valittu-valilehtiryhma 1)))
                                     :vasen (when (> @valittu-valilehtiryhma 0)
                                              (reset! valittu-valilehtiryhma (- @valittu-valilehtiryhma 1)))))
+        window-resize-kuuntelija (atom nil)
         body-click-kuuntelija (atom nil)]
 
     (r/create-class
       {:component-did-mount (fn [this]
                               (reset! dom-node (reagent/dom-node this))
+                              (reset! window-resize-kuuntelija
+                                      (tapahtumat/kuuntele! :window-resize
+                                                            #(ryhmittele-valilehdet! @dom-node)))
                               (reset! body-click-kuuntelija
                                       (tapahtumat/kuuntele! :body-click
                                                             #(when-not (dom/sisalla? @dom-node (:tapahtuma %))
                                                               (body-click %)))))
        :component-will-unmount (fn [_]
-                                 (@body-click-kuuntelija))
+                                 (@body-click-kuuntelija)
+                                 (@window-resize-kuuntelija))
        :reagent-render
        (fn [{:keys [kayta-hampurilaisvalikkoa?
                     valilehdet-nakyvissa? valilehdet jatkuvat-havainnot
