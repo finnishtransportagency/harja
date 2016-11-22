@@ -199,7 +199,11 @@
     :mittaus {:nimi "Soratie"
               :tyyppi :soratie
               :yksikko nil}
-    :vaatii-nappaimiston? true}])
+    :vaatii-nappaimiston? true}
+   {:nimi "Maa\u00ADkivi"
+    :tyyppi :piste
+    :ikoni "maakivi"
+    :avain :maakivi}])
 
 (def valilehti-paallystys
   [{:nimi "Sauma\u00ADvirhe"

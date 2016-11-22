@@ -119,7 +119,8 @@
                   :vaarakorkeusasema
                   :pintaharva
                   :pintakuivatuspuute
-                  :kaivojenkorkeusasema)}
+                  :kaivojenkorkeusasema
+                  :maakivi)}
 
    (s/optional-key :kuvaus) (s/maybe s/Str)
    (s/optional-key :laadunalitus) (s/maybe s/Bool)

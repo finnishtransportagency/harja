@@ -11,6 +11,7 @@ VALUES ('Liikennemerkki likainen', false, 'liikennemerkki-likainen'),
 ('P- tai L-alueet hoitamatta', false, 'pl-alue-hoitamatta'),
 ('Päällysteessä vaurioita', false, 'sillan-paallysteessa-vaurioita'),
 ('Kaidevauroita', false, 'sillassa-kaidevaurioita'),
+('Maakivi', false, 'maakivi'),
 ('Reunapalkkivaurioita likainen', false, 'sillassa-reunapalkkivaurioita');
 
 -- Vakiohavainnon avain uniikki
