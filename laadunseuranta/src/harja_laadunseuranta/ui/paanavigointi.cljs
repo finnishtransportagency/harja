@@ -106,15 +106,27 @@
                 {:src kuvat/+hampurilaisvalikko+
                  :on-click togglaa-valilehtien-nakyvyys}]])
 
+            ;; Jos ei käytetä hampurilaisvalikkoa, välilehdet ryhmitellään
+            ;; selattavaksi nuoli-painikkeilla...
             (when-not kayta-hampurilaisvalikkoa?
               [:div
-               [:div.selaa-valilehtiryhmia.selaa-valilehtiryhmia-oikealle
-                {:on-click (partial selauspainike-painettu! :oikea)}
-                [:img {:src kuvat/+avausnuoli+}]]
-               [:div.selaa-valilehtiryhmia.selaa-valilehtiryhmia-vasemmalle
-                {:on-click (partial selauspainike-painettu! :vasen)}
-                [:img {:src kuvat/+avausnuoli+}]]])
+               (let [disabloitu? (>= @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))]
+                 [:div
+                  {:class (str "selaa-valilehtiryhmia selaa-valilehtiryhmia-oikealle "
+                               (when disabloitu? "selaa-valilehtiryhmia-disabled"))
+                   :on-click #(when-not disabloitu?
+                               (selauspainike-painettu! :oikea))}
+                  [:img {:src kuvat/+avausnuoli+}]])
+               (let [disabloitu? (<= @valittu-valilehtiryhma 0)]
+                 [:div
+                  {:class (str "selaa-valilehtiryhmia selaa-valilehtiryhmia-vasemmalle "
+                               (when disabloitu? "selaa-valilehtiryhmia-disabled"))
+                   :on-click #(when-not disabloitu?
+                               (selauspainike-painettu! :vasen))}
+                  [:img {:src kuvat/+avausnuoli+}]])])
 
+            ;; ...muuten näytetään valittu välilehti ja hampurilaisvalikko, josta voi listalta valita
+            ;; haluamansa välilehden
             (when @valilehdet-nakyvissa?
               [:ul.valilehtilista
                (doall

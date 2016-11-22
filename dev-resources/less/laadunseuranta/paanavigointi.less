@@ -49,7 +49,7 @@
       width: 32px;
       height: 32px;
       border: 1px solid @musta;
-      background-color: @harmaa6;
+      background-color: @harmaa7;
 
       > img {
         position: absolute;
@@ -57,6 +57,14 @@
         left: 50%;
         top: 50%;
       }
+    }
+
+    & .selaa-valilehtiryhmia-disabled {
+      background-color: @harmaa4;
+    }
+
+    & .selaa-valilehtiryhmia:active:not(.selaa-valilehtiryhmia-disabled) {
+      background-color: @harmaa10;
     }
 
     & .selaa-valilehtiryhmia-vasemmalle {
