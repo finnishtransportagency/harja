@@ -84,6 +84,23 @@
    {:id 8 :sijainti [467753.5999816895 7231404.000024414]
     :jatkuvat-havainnot []}])
 
+(def tarkastus-jossa-lumisuus
+  "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
+  [{:id 2 :sijainti [465641.5999816895 7230780.000024414]
+    :jatkuvat-havainnot [17]
+    :kitkamittaus 0.2}
+   {:id 3 :sijainti [466089.5999816895 7230916.000024414]
+    :jatkuvat-havainnot [17]}
+   {:id 4 :sijainti [466409.5999816895 7230996.000024414]
+    :jatkuvat-havainnot [17]}
+   {:id 5 :sijainti [467009.5999816895 7231180.000024414]
+    :jatkuvat-havainnot [17]}
+   {:id 6 :sijainti [467257.5999816895 7231252.000024414]
+    :jatkuvat-havainnot [17]}
+   {:id 7 :sijainti [467545.5999816895 7231332.000024414]
+    :jatkuvat-havainnot [17]
+    :kitkamittaus 0.3}])
+
 (def soratiehavainnon-mittaukset
   [{:id 2 :sijainti [465641.5999816895 7230780.000024414]
     :jatkuvat-havainnot [19]}

@@ -95,7 +95,9 @@
     "laatu"))
 
 (defn- reittimerkinta-tarkastukseksi
-  "Muuntaa reittimerkinnän Harja-tarkastukseksi"
+  "Muuntaa reittimerkinnän Harja-tarkastukseksi.
+   Reittimerkintä voi olla joko yksittäinen (pistemäinen) reittimerkintä tai
+   jatkuvista havainnoista kasattu, yhdistetty reittimerkintä."
   [reittimerkinta]
   {:aika (:aikaleima reittimerkinta)
    :tyyppi (paattele-tarkastustyyppi reittimerkinta)
