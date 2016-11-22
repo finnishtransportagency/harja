@@ -105,7 +105,7 @@
    :ok-tarkastus "sininen"
    :ok-tarkastus-tilaaja "sininen"
    :ok-tarkastus-konsultti "sininen"
-   :ok-tarkastus-urakoitsija "syaani"
+   :ok-tarkastus-urakoitsija "tummansininen"
    :ei-ok-tarkastus "punainen"
    :ei-ok-tarkastus-tilaaja "punainen"
    :ei-ok-tarkastus-konsultti "punainen"
@@ -128,7 +128,7 @@
    :ok-tarkastus puhtaat/sininen
    :ok-tarkastus-tilaaja puhtaat/sininen
    :ok-tarkastus-konsultti puhtaat/sininen
-   :ok-tarkastus-urakoitsija puhtaat/syaani
+   :ok-tarkastus-urakoitsija puhtaat/tummansininen
    :ei-ok-tarkastus puhtaat/punainen
    :ei-ok-tarkastus-tilaaja puhtaat/punainen
    :ei-ok-tarkastus-konsultti puhtaat/punainen
