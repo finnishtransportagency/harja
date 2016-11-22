@@ -22,6 +22,7 @@ SELECT
   ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
   ypk.tr_ajorata                        AS "tr-ajorata",
   ypk.tr_kaista                         AS "tr-kaista",
+  ypk.aikataulu_kohde_alku              AS "kohde-alku",
   ypk.aikataulu_paallystys_alku         AS "paallystys-alku",
   ypk.aikataulu_paallystys_loppu        AS "paallystys-loppu",
   ypk.valmis_tiemerkintaan              AS "valmis-tiemerkintaan",
@@ -44,13 +45,8 @@ SELECT
   ypko.sijainti                         AS "kohdeosa_sijainti",
   ypko.yhaid                            AS "kohdeosa_yhaid",
   ypko.toimenpide                       AS "kohdeosa_toimenpide",
-  pi.aloituspvm                         AS "paallystysilmoitus_aloituspvm",
-  pi.valmispvm_paallystys               AS "paallystysilmoitus_valmispvm-paallystys",
-  pi.valmispvm_kohde                    AS "paallystysilmoitus_valmispvm-kohde",
-  pi.takuupvm                           AS "paallystysilmoitus_takuupvm"
-FROM yllapitokohde ypk
+  FROM yllapitokohde ypk
   LEFT JOIN yllapitokohdeosa ypko ON ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE
-  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id AND pi.poistettu IS NOT TRUE
 WHERE
   ypk.urakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
@@ -80,6 +76,7 @@ SELECT
   ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
   ypk.tr_ajorata                        AS "tr-ajorata",
   ypk.tr_kaista                         AS "tr-kaista",
+  ypk.aikataulu_kohde_alku              AS "kohde-alku",
   ypk.aikataulu_paallystys_alku         AS "paallystys-alku",
   ypk.aikataulu_paallystys_loppu        AS "paallystys-loppu",
   ypk.valmis_tiemerkintaan              AS "valmis-tiemerkintaan",
@@ -103,9 +100,6 @@ SELECT
   ypko.sijainti                         AS "kohdeosa_sijainti",
   ypko.yhaid                            AS "kohdeosa_yhaid",
   ypko.toimenpide                       AS "kohdeosa_toimenpide",
-  pi.aloituspvm                         AS "paallystysilmoitus_aloituspvm",
-  pi.valmispvm_paallystys               AS "paallystysilmoitus_valmispvm-paallystys",
-  pi.valmispvm_kohde                    AS "paallystysilmoitus_valmispvm-kohde",
   pi.takuupvm                           AS "paallystysilmoitus_takuupvm"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohdeosa ypko ON ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE
@@ -332,6 +326,7 @@ SELECT
   nimi,
   urakka,
   sopimus,
+  aikataulu_kohde_alku           AS "aikataulu-kohde-alku",
   aikataulu_paallystys_alku      AS "aikataulu-paallystys-alku",
   aikataulu_paallystys_loppu     AS "aikataulu-paallystys-loppu",
   aikataulu_tiemerkinta_takaraja AS "aikataulu-tiemerkinta-takaraja",
@@ -404,6 +399,7 @@ WHERE (loppupvm IS NULL OR loppupvm >= NOW())
 -- Tallentaa ylläpitokohteen aikataulun
 UPDATE yllapitokohde
 SET
+  aikataulu_kohde_alku         = :aikataulu_kohde_alku,
   aikataulu_paallystys_alku    = :aikataulu_paallystys_alku,
   aikataulu_paallystys_loppu   = :aikataulu_paallystys_loppu,
   aikataulu_kohde_valmis       = :aikataulu_kohde_valmis,
@@ -519,6 +515,7 @@ SELECT
   bitumi_indeksi,
   kaasuindeksi,
   poistettu,
+  aikataulu_kohde_alku,
   aikataulu_paallystys_alku,
   aikataulu_paallystys_loppu,
   aikataulu_tiemerkinta_alku,
@@ -598,6 +595,7 @@ WHERE id = :id;
 -- Päivittää ylläpitokohteen aikataulutiedot
 UPDATE yllapitokohde
 SET
+  aikataulu_kohde_alku           = :kohde_alku,
   aikataulu_paallystys_alku      = :paallystys_alku,
   aikataulu_paallystys_loppu     = :paallystys_loppu,
   aikataulu_kohde_valmis         = :kohde_valmis,
@@ -611,9 +609,6 @@ WHERE id = :id;
 -- Päivittää päällystysilmoituksen aikataulutiedot
 UPDATE paallystysilmoitus
 SET
-  aloituspvm = :aloituspvm,
-  valmispvm_paallystys = :valmispvm_paallystys,
-  valmispvm_kohde = :valmispvm_kohde,
   takuupvm = :takuupvm
 WHERE paallystyskohde = :kohde_id
 AND poistettu IS NOT TRUE;

@@ -73,7 +73,7 @@
                                               [[:taloudellinen-osa :paatos]
                                                [:tekninen-osa :paatos]
                                                [:tila]])))
-                                 (q/hae-urakan-paallystysilmoitus-paallystyskohteella
+                                 (q/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
                                    db
                                    {:paallystyskohde paallystyskohde-id}))
         paallystysilmoitus (first (konv/sarakkeet-vektoriin
@@ -130,13 +130,16 @@
     (assoc ilmoitustiedot :osoitteet paivitetyt-osoitteet)))
 
 (defn- luo-paallystysilmoitus [db user urakka-id sopimus-id
-                               {:keys [paallystyskohde-id ilmoitustiedot aloituspvm
-                                       valmispvm-kohde valmispvm-paallystys
-                                       takuupvm] :as paallystysilmoitus}]
+                               {:keys [paallystyskohde-id ilmoitustiedot
+                                       takuupvm]
+                                :as paallystysilmoitus}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (log/debug "Luodaan uusi päällystysilmoitus.")
   (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
-        tila (if (and valmispvm-kohde valmispvm-paallystys) "valmis" "aloitettu")
+        tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila
+               (:valmis-kasiteltavaksi paallystysilmoitus)
+               (= (get-in paallystysilmoitus [:tekninen-osa :paatos]) :hyvaksytty)
+               (= (get-in paallystysilmoitus [:taloudellinen-osa :paatos]) :hyvaksytty))
         ilmoitustiedot (-> ilmoitustiedot
                            (poista-ilmoitustiedoista-tieosoitteet)
                            (tyot-tyyppi-avain->string [:tyot]))
@@ -150,9 +153,6 @@
            {:paallystyskohde paallystyskohde-id
             :tila tila
             :ilmoitustiedot encoodattu-ilmoitustiedot
-            :aloituspvm (konv/sql-date aloituspvm)
-            :valmispvm_kohde (konv/sql-date valmispvm-kohde)
-            :valmispvm_paallystys (konv/sql-date valmispvm-paallystys)
             :takuupvm (konv/sql-date takuupvm)
             :muutoshinta muutoshinta
             :kayttaja (:id user)}))))
@@ -204,8 +204,8 @@
 
 (defn- paivita-paallystysilmoituksen-perustiedot
   [db user urakka-id sopimus-id
-   {:keys [id paallystyskohde-id ilmoitustiedot aloituspvm valmispvm-kohde
-           valmispvm-paallystys takuupvm
+   {:keys [id paallystyskohde-id ilmoitustiedot
+           takuupvm
            tekninen-osa taloudellinen-osa] :as paallystysilmoitus}]
   (if (oikeudet/voi-kirjoittaa?
         oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
@@ -214,7 +214,10 @@
     (do (log/debug "Päivitetään päällystysilmoituksen perustiedot")
         (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
                             (:tyot ilmoitustiedot))
-              tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila paallystysilmoitus)
+              tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila
+                     (:valmis-kasiteltavaksi paallystysilmoitus)
+                     (= (get-in paallystysilmoitus [:tekninen-osa :paatos]) :hyvaksytty)
+                     (= (get-in paallystysilmoitus [:taloudellinen-osa :paatos]) :hyvaksytty))
               ilmoitustiedot (-> ilmoitustiedot
                                  (poista-ilmoitustiedoista-tieosoitteet)
                                  (tyot-tyyppi-avain->string [:tyot]))
@@ -228,9 +231,6 @@
             db
             {:tila tila
              :ilmoitustiedot encoodattu-ilmoitustiedot
-             :aloituspvm (konv/sql-date aloituspvm)
-             :valmispvm_kohde (konv/sql-date valmispvm-kohde)
-             :valmispvm_paallystys (konv/sql-date valmispvm-paallystys)
              :takuupvm (konv/sql-date takuupvm)
              :muutoshinta muutoshinta
              :muokkaaja (:id user)

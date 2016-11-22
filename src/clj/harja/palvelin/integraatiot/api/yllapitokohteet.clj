@@ -46,7 +46,7 @@
     (when-not (some #(= kohde-id %) (map :id urakan-kohteet))
       (virheet/heita-poikkeus virheet/+viallinen-kutsu+
                               {:koodi virheet/+urakkaan-kuulumaton-yllapitokohde+
-                                                         :viesti "Ylläpitokohde ei kuulu urakkaan."}))))
+                               :viesti "Ylläpitokohde ei kuulu urakkaan."}))))
 
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
@@ -64,13 +64,14 @@
       (let [id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
         (tee-kirjausvastauksen-body
           {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
-           :id id})))))
+           :id (str id)})))))
 
 (defn- paivita-paallystyksen-aikataulu [db kayttaja kohde-id {:keys [aikataulu] :as data}]
   (let [kohteella-paallystysilmoitus? (q-yllapitokohteet/onko-olemassa-paallystysilmoitus? db kohde-id)]
     (q-yllapitokohteet/paivita-yllapitokohteen-paallystysaikataulu!
       db
-      {:paallystys_alku (json/aika-string->java-sql-date (:paallystys-aloitettu aikataulu))
+      {:kohde_alku (json/aika-string->java-sql-date (:kohde-aloitettu aikataulu))
+       :paallystys_alku (json/aika-string->java-sql-date (:paallystys-aloitettu aikataulu))
        :paallystys_loppu (json/aika-string->java-sql-date (:paallystys-valmis aikataulu))
        :valmis_tiemerkintaan (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu))
        :aikataulu_tiemerkinta_takaraja (json/pvm-string->java-sql-date (:tiemerkinta-takaraja aikataulu))
@@ -80,13 +81,7 @@
     (if kohteella-paallystysilmoitus?
       (do (q-yllapitokohteet/paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<!
             db
-            {:aloituspvm (json/pvm-string->java-sql-date
-                           (get-in aikataulu [:paallystysilmoitus :aloituspvm]))
-             :valmispvm_paallystys (json/pvm-string->java-sql-date
-                                     (get-in aikataulu [:paallystysilmoitus :valmispvm-paallystys]))
-             :valmispvm_kohde (json/pvm-string->java-sql-date
-                                (get-in aikataulu [:paallystysilmoitus :valmispvm-kohde]))
-             :takuupvm (json/pvm-string->java-sql-date (get-in aikataulu [:paallystysilmoitus :takuupvm]))
+            {:takuupvm (json/pvm-string->java-sql-date (get-in aikataulu [:paallystysilmoitus :takuupvm]))
              :muokkaaja (:id kayttaja)
              :kohde_id kohde-id})
           {})

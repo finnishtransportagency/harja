@@ -13,7 +13,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
-            [harja.ui.kentat :refer [tee-kentta]]
+            [harja.ui.kentat :refer [tee-otsikollinen-kentta]]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.liitteet :as liitteet]
@@ -77,24 +77,18 @@
 
        [valinnat/aikavali-nykypvm-taakse urakka tarkastukset/valittu-aikavali]
 
+       [tee-otsikollinen-kentta "Tyyppi"
+        {:tyyppi :valinta :valinnat (conj (tarkastustyypit-urakkatyypille (:tyyppi urakka)) nil)
+         :valinta-nayta #(or (tarkastukset/+tarkastustyyppi->nimi+ %) "Kaikki")}
+        tarkastukset/tarkastustyyppi]
 
-       [:span.label-ja-kentta
-        [:span.kentan-otsikko "Tyyppi"]
-        [:div.kentta
-         [tee-kentta {:tyyppi :valinta :valinnat (conj (tarkastustyypit-urakkatyypille (:tyyppi urakka)) nil)
-                      :valinta-nayta #(or (tarkastukset/+tarkastustyyppi->nimi+ %) "Kaikki")}
-          tarkastukset/tarkastustyyppi]]]
-
-       [:span.label-ja-kentta
-        [:span.kentan-otsikko "Näytä"]
-        [:div.kentta
-         [tee-kentta {:tyyppi :valinta :valinnat [false true]
-                      :valinta-nayta {false "Kaikki tarkastukset"
-                                      true "Vain laadunalitukset"}}
-          tarkastukset/vain-laadunalitukset?]]]
+       [tee-otsikollinen-kentta "Näytä"
+        {:tyyppi :valinta :valinnat [false true]
+         :valinta-nayta {false "Kaikki tarkastukset"
+                         true "Vain laadunalitukset"}}
+        tarkastukset/vain-laadunalitukset?]
 
        [valinnat/tienumero tarkastukset/tienumero]
-
 
        (let [oikeus? (oikeudet/voi-kirjoittaa?
                       oikeudet/urakat-laadunseuranta-tarkastukset

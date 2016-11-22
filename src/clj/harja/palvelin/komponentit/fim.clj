@@ -12,6 +12,12 @@
             [harja.domain.oikeudet :as oikeudet])
   (:import (java.io ByteArrayInputStream)))
 
+(defprotocol FIMHaku
+  (hae-urakan-kayttajat
+    [this sampoid]
+    "Hakee urakkaan liitetyt käyttäjät."))
+
+
 ;; Kentät, joita voidaan hakea:
 ;; ObjectID EmployeeEndDate
 ;; AccountName FirstName MiddleName LastName
@@ -29,21 +35,24 @@
    :Role :roolit
    :Company :organisaatio})
 
-(defn- roolien-kuvaukset [roolit urakan-sampo-id]
+(defn- roolien-kuvaukset-ja-nimet [roolit urakan-sampo-id]
   (and
    roolit
-   (into []
-         (comp
-          (filter #(str/starts-with? % urakan-sampo-id))
-          (map #(subs % (inc (count urakan-sampo-id))))
-          (map #(get-in oikeudet/roolit [% :kuvaus]))
-          (remove nil?))
-         (str/split roolit #","))))
+   (let [roolit (into []
+                      (comp
+                       (filter #(str/starts-with? % urakan-sampo-id))
+                       (map #(subs % (inc (count urakan-sampo-id))))
+                       (map #(oikeudet/roolit %))
+                       (remove nil?))
+                      (str/split roolit #","))]
+     {:roolit (mapv :kuvaus roolit)
+      :roolinimet (mapv :nimi roolit)})))
 
 (defn- kuvaa-roolit [henkilot urakan-sampo-id]
   (map
-    #(update-in % [:roolit] roolien-kuvaukset urakan-sampo-id)
-    henkilot))
+   #(merge %
+           (roolien-kuvaukset-ja-nimet (:roolit %) urakan-sampo-id))
+   henkilot))
 
 (defn lue-fim-vastaus
   "Lukee FIM REST vastaus annetusta XML zipperistä. Palauttaa sekvenssin urakan käyttäjiä."
@@ -67,20 +76,6 @@
    :ignorecache "false"
    :fetch "AccountName,FirstName,LastName,DisplayName,Email,MobilePhone,Company"})
 
-(defn hae-urakan-kayttajat
-  "Hakee urakkaan liitetyt käyttäjät."
-  [{:keys [url db integraatioloki]} urakan-sampo-id]
-  (when-not (empty? url)
-    (integraatiotapahtuma/suorita-integraatio
-     db integraatioloki "fim" "hae-urakan-kayttajat"
-     #(-> (integraatiotapahtuma/laheta
-           % :http {:metodi :GET
-                    :url url
-                    :parametrit (urakan-kayttajat-parametrit urakan-sampo-id)})
-          :body
-          lue-xml
-          lue-fim-vastaus
-          (kuvaa-roolit urakan-sampo-id)))))
 
 (defn suodata-kayttajaroolit
   "Suodattaa käyttäjät, jotka kuuluvat ainakin yhteen annetuista rooleista (setti)."
@@ -96,15 +91,39 @@
         (some? (some pidettavat-roolit kayttajan-roolit))))
     kayttajat))
 
-(defn hae-urakan-kayttajat-jotka-roolissa [this sampo-id roolit-set]
-  (let [urakan-kayttajat (hae-urakan-kayttajat this sampo-id)
-        kayttajat-roolissa (suodata-kayttajaroolit urakan-kayttajat roolit-set)]
-    kayttajat-roolissa))
-
 (defrecord FIM [url]
   component/Lifecycle
   (start [this]
     this)
 
   (stop [this]
-    this))
+    this)
+
+  FIMHaku
+  (hae-urakan-kayttajat
+      [{:keys [url db integraatioloki]} urakan-sampo-id]
+    (when-not (empty? url)
+      (integraatiotapahtuma/suorita-integraatio
+       db integraatioloki "fim" "hae-urakan-kayttajat"
+       #(-> (integraatiotapahtuma/laheta
+             % :http {:metodi :GET
+                      :url url
+                      :parametrit (urakan-kayttajat-parametrit urakan-sampo-id)})
+            :body
+            lue-xml
+            lue-fim-vastaus
+            (kuvaa-roolit urakan-sampo-id))))))
+
+(defrecord FakeFIM [tiedosto]
+  component/Lifecycle
+  (start [this] this)
+  (stop [this] this)
+
+  FIMHaku
+  (hae-urakan-kayttajat [_ sampoid]
+    (kuvaa-roolit (get (read-string (slurp tiedosto)) sampoid) sampoid)))
+
+(defn hae-urakan-kayttajat-jotka-roolissa [this sampo-id roolit-set]
+  (let [urakan-kayttajat (hae-urakan-kayttajat this sampo-id)
+        kayttajat-roolissa (suodata-kayttajaroolit urakan-kayttajat roolit-set)]
+    kayttajat-roolissa))

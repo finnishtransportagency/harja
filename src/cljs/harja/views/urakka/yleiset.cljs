@@ -1,6 +1,6 @@
 (ns harja.views.urakka.yleiset
   "Urakan 'Yleiset' välilehti: perustiedot ja yhteyshenkilöt"
-  (:require [reagent.core :refer [atom] :as reagent]
+  (:require [reagent.core :refer [atom] :as r]
             [harja.ui.bootstrap :as bs]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
@@ -29,7 +29,8 @@
             [harja.ui.viesti :as viesti]
             [harja.domain.roolit :as roolit]
             [harja.ui.napit :as napit]
-            [harja.tiedot.urakat :as urakat])
+            [harja.tiedot.urakat :as urakat]
+            [harja.ui.lomake :as lomake])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; hallintayksikkö myös
@@ -115,39 +116,30 @@
                   "-tyyppisen urakan ")
           [:strong (str (navigaatio/nayta-urakkatyyppi uusi-urakkatyyppi) "-tyyppiseksi")] "?"]]))))
 
-(defn urakkaan-liitetyt-kayttajat [urakka-id]
-  (let [kayttajat (atom nil)
-        hae! (fn [urakka-id]
-               (reset! kayttajat nil)
-               (go (reset! kayttajat (<! (yht/hae-urakan-kayttajat urakka-id)))))]
-    (hae! urakka-id)
-    (komp/luo
-      (komp/kun-muuttuu hae!)
-      (fn [urakka-id]
-        (let [kayttajat @kayttajat]
-          [grid/grid
-           {:otsikko "Käyttövaltuushallinnassa urakkaan liitetyt käyttäjät"
-            :tunniste :kayttajatunnus
-            :tyhja (cond
-                     (nil? kayttajat)
-                     [yleiset/ajax-loader
-                      "Haetaan käyttövaltuushallinnassa urakkaan liitettyjä käyttäjiä"]
+(defn urakkaan-liitetyt-kayttajat [kayttajat]
+  [grid/grid
+   {:otsikko "Käyttövaltuushallinnassa urakkaan liitetyt käyttäjät"
+    :tunniste :kayttajatunnus
+    :tyhja (cond
+             (nil? kayttajat)
+             [yleiset/ajax-loader
+              "Haetaan käyttövaltuushallinnassa urakkaan liitettyjä käyttäjiä"]
 
-                     (k/virhe? kayttajat)
-                     "Virhe haettaessa käyttäjiä käyttövaltuushallinnan FIM-palvelusta."
+             (k/virhe? kayttajat)
+             "Virhe haettaessa käyttäjiä käyttövaltuushallinnan FIM-palvelusta."
 
-                     :default
-                     "Ei urakkaan liitettyjä käyttäjiä.")}
+             :default
+             "Ei urakkaan liitettyjä käyttäjiä.")}
 
-           [{:otsikko "Rooli" :nimi :roolit :fmt #(str/join ", " %) :tyyppi :string :leveys "15%"}
-            {:otsikko "Organisaatio" :nimi :organisaatio :tyyppi :string :leveys "15%"}
-            {:otsikko "Nimi" :nimi :nimi :hae #(str (:etunimi %) " " (:sukunimi %)) :tyyppi :string
-             :leveys "25%"}
-            {:otsikko "Puhelin" :nimi :puhelin :tyyppi :string :leveys "20%"}
-            {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :string :leveys "25%"}]
-           (if (k/virhe? kayttajat)
-             []
-             kayttajat)])))))
+   [{:otsikko "Rooli" :nimi :roolit :fmt #(str/join ", " %) :tyyppi :string :leveys "15%"}
+    {:otsikko "Organisaatio" :nimi :organisaatio :tyyppi :string :leveys "15%"}
+    {:otsikko "Nimi" :nimi :nimi :hae #(str (:etunimi %) " " (:sukunimi %)) :tyyppi :string
+     :leveys "25%"}
+    {:otsikko "Puhelin" :nimi :puhelin :tyyppi :string :leveys "20%"}
+    {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :string :leveys "25%"}]
+   (if (k/virhe? kayttajat)
+     []
+     kayttajat)])
 
 (defn paivystajalista
   [ur paivystajat tallenna!]
@@ -348,7 +340,93 @@
                                 {:luokka "nappi-toissijainen pull-right"}]]]))
              {:luokka "nappi-kielteinen btn-xs"}])])])))
 
-(defn yleiset-tiedot [ur]
+
+(defn- aseta-vastuuhenkilo [paivita-vastuuhenkilot!
+                            urakka-id kayttaja kayttajat vastuuhenkilot rooli
+                            ensisijainen varalla]
+  (r/with-let [henkilot (atom {:ensisijainen :ei-muutosta
+                               :varalla :ei-muutosta})]
+    ;; FIXME: valitse oletushenkilöksi nykyinen käyttäjänimen perusteella
+    (let [mahdolliset-henkilot (filter #(some (partial = rooli) (:roolinimet %)) kayttajat)]
+
+      [:div.vastuuhenkilo-muokkaus
+       [lomake/lomake {:muokkaa! #(reset! henkilot %)
+                       :footer-fn (fn [data]
+                                    [napit/palvelinkutsu-nappi "Tallenna yhteyshenkilöt"
+                                     #(let [{uusi-ensisijainen :ensisijainen
+                                             uusi-varalla :varalla} @henkilot]
+                                        (yht/tallenna-urakan-vastuuhenkilot-roolille
+                                         urakka-id rooli
+                                         (if (= :ei-muutosta uusi-ensisijainen)
+                                           ensisijainen
+                                           uusi-ensisijainen)
+                                         (if (= :ei-muutosta uusi-varalla)
+                                           varalla
+                                           uusi-varalla)))
+                                     {:kun-onnistuu #(do
+                                                       (paivita-vastuuhenkilot! %)
+                                                       (modal/piilota!))}])}
+        [{:otsikko "Ensisijainen"
+          :nimi :ensisijainen
+          :leveys 2
+          :tyyppi :valinta
+          :valinta-nayta #(if (= :ei-muutosta %)
+                            (:nimi ensisijainen)
+                            (fmt/kayttaja %))
+          :valinnat mahdolliset-henkilot}
+         {:otsikko "Varalla"
+          :nimi :varalla
+          :leveys 2
+          :tyyppi :valinta
+          :valinta-nayta #(if (= :ei-muutosta %)
+                            (:nimi varalla)
+                            (fmt/kayttaja %))
+          :valinnat mahdolliset-henkilot}]
+        @henkilot]])))
+
+(defn- vastuuhenkilo-tooltip [vastuuhenkilo]
+  [:span
+   [:div "Puhelin: " (:puhelin vastuuhenkilo)]
+   [:div "Sähköposti: " (:sahkoposti vastuuhenkilo)]])
+
+(defn- nayta-vastuuhenkilo [paivita-vastuuhenkilot!
+                            urakka-id kayttaja kayttajat vastuuhenkilot rooli]
+  (let [roolin-henkilot (filter #(= rooli (:rooli %)) vastuuhenkilot)
+        ensisijainen (first (filter  :ensisijainen roolin-henkilot))
+        varalla (first (filter (comp not :ensisijainen) roolin-henkilot))
+        voi-muokata? (and (not (k/virhe? kayttajat))
+                          (not (empty? kayttajat))
+                          (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset urakka-id)
+                          (or (not= rooli "ELY_Urakanvalvoja")
+                              (= :tilaaja (roolit/osapuoli kayttaja))))]
+    [:div.vastuuhenkilo.inline-block
+     [:span
+      (if ensisijainen
+        [yleiset/tooltip {}
+         [:span.vastuuhenkilo-ensisijainen (:nimi ensisijainen)]
+         [vastuuhenkilo-tooltip ensisijainen]]
+        [:span.vastuuhenkilo-ei-tiedossa "Ei tiedossa"])
+      " "
+      (when varalla
+        [yleiset/tooltip {}
+         [:span.vastuuhenkilo-varalla "(sijainen " (:nimi varalla) ")"]
+         [vastuuhenkilo-tooltip varalla]])
+      (when voi-muokata?
+        [:span.klikattava {:on-click #(modal/nayta!
+                                       {:otsikko (str "Urakan ensisijainen "
+                                                      (case rooli
+                                                        "ELY_Urakanvalvoja" "urakanvalvoja"
+                                                        "vastuuhenkilo" "vastuuhenkilö"))}
+                                       [aseta-vastuuhenkilo
+                                        paivita-vastuuhenkilot!
+                                        urakka-id kayttaja kayttajat
+                                        vastuuhenkilot rooli
+                                        ensisijainen varalla])}
+         " "
+         (ikonit/livicon-wrench)
+         " "])]]))
+
+(defn yleiset-tiedot [paivita-vastuuhenkilot! ur kayttajat vastuuhenkilot]
   (let [{:keys [paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?]
          :as yha-tiedot} (yha-tiedot ur)]
     [bs/panel {}
@@ -356,6 +434,7 @@
      [yleiset/tietoja {}
       "Urakan nimi:" (:nimi ur)
       "Urakan tunnus:" (:sampoid ur)
+
       "YHA:n urakkatunnus:"
       (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
         (get-in ur [:yhatiedot :yhatunnus]))
@@ -366,12 +445,19 @@
       (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
         (str/join ", " (get-in ur [:yhatiedot :vuodet])))
       "YHA-sidonta:" (yha-sidonta ur yha-tiedot)
+
       "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
       "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
       "Takuu päättyy:" (when paallystys-tai-paikkausurakka?
                          [takuuaika ur])
       "Tilaaja:" (:nimi (:hallintayksikko ur))
+      "Urakanvalvoja: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
+                         (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot "ELY_Urakanvalvoja"]
+
       "Urakoitsija:" (:nimi (:urakoitsija ur))
+      "Urakan vastuuhenkilö: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
+                                (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot "vastuuhenkilo"]
+
       ;; valaistus, tiemerkintä --> palvelusopimus
       ;; päällystys --> kokonaisurakka
       "Sopimustyyppi: " (yllapitourakan-sopimustyyppi ur)
@@ -388,8 +474,8 @@
                (reset! yhteyshenkilot nil)
                (go (reset! yhteyshenkilot
                            (filter
-                             #(not= "urakoitsijan paivystaja" (:rooli %))
-                             (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))))))]
+                            #(not= "urakoitsijan paivystaja" (:rooli %))
+                            (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))))))]
     (go (reset! yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))))
     (hae! ur)
     (komp/luo
@@ -447,13 +533,25 @@
                (not palvelusopimus?))
       (yha/nayta-tuontidialogi ur))))
 
+
+
+
 (defn yleiset [ur]
-  (komp/luo
-    (komp/sisaan (fn [_]
-                   (nayta-yha-tuontidialogi-tarvittaessa ur)))
-    (fn [ur]
-      [:div
-       [yleiset-tiedot ur]
-       [urakkaan-liitetyt-kayttajat (:id ur)]
-       [yhteyshenkilot ur]
-       [paivystajat ur]])))
+  (let [kayttajat (atom nil)
+        vastuuhenkilot (atom nil)
+        hae! (fn [urakka]
+               (reset! kayttajat nil)
+               (reset! vastuuhenkilot nil)
+               (go (reset! kayttajat (<! (yht/hae-urakan-kayttajat (:id urakka)))))
+               (go (reset! vastuuhenkilot (<! (yht/hae-urakan-vastuuhenkilot (:id urakka))))))]
+    (hae! ur)
+    (komp/luo
+     (komp/kun-muuttuu hae!)
+     (komp/sisaan (fn [_]
+                    (nayta-yha-tuontidialogi-tarvittaessa ur)))
+     (fn [ur]
+       [:div
+        [yleiset-tiedot #(reset! vastuuhenkilot %) ur @kayttajat @vastuuhenkilot]
+        [urakkaan-liitetyt-kayttajat @kayttajat]
+        [yhteyshenkilot ur]
+        [paivystajat ur]]))))

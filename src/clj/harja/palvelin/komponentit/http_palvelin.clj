@@ -11,8 +11,10 @@
 
             [cognitect.transit :as t]
             [schema.core :as s]
-    ;; Pyyntöjen todennus (autentikointi)
+            ;; Pyyntöjen todennus (autentikointi)
             [harja.palvelin.komponentit.todennus :as todennus]
+            ;; Metriikkadatan julkaisu
+            [harja.palvelin.komponentit.metriikka :as metriikka]
             [harja.palvelin.index :as index]
             [harja.geo :as geo]
             [harja.transit :as transit]
@@ -232,10 +234,13 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
   (not (or (str/includes? (:uri req) "ls-")
            (str/includes? (:uri req) "laadunseuranta"))))
 
-(defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat lopetus-fn kehitysmoodi]
+(defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat lopetus-fn kehitysmoodi
+                         mittarit]
   component/Lifecycle
-  (start [this]
+  (start [{metriikka :metriikka :as this}]
     (log/info "HttpPalvelin käynnistetään portissa " (:portti asetukset))
+    (when metriikka
+      (metriikka/lisaa-mittari! metriikka "http" mittarit))
     (let [todennus (:todennus this)
           resurssit (route/resources "")
           dev-resurssit (when kehitysmoodi
@@ -246,20 +251,25 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                  (cookies/wrap-cookies
                   (fn [req]
                     (try+
-                       (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
-                             ui-kasittelijat (mapv :fn @kasittelijat)
-                             ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
-                                               (wrap-anti-forgery anti-csrf-kaytossa?))]
+                     (metriikka/inc! mittarit :aktiiviset_pyynnot)
+                     (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
+                           ui-kasittelijat (mapv :fn @kasittelijat)
+                           ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
+                                              (wrap-anti-forgery anti-csrf-kaytossa?))]
 
-                         (or (reitita req (conj (mapv :fn ei-todennettavat)
-                                                 dev-resurssit resurssit))
-                             (reitita (todennus/todenna-pyynto todennus req)
-                                      (-> (mapv :fn todennettavat)
-                                          (conj (partial index-kasittelija kehitysmoodi))
-                                          (conj (partial ls-index-kasittelija kehitysmoodi))
-                                          (conj ui-kasittelija)))))
-                       (catch [:virhe :todennusvirhe] _
-                         {:status 403 :body "Todennusvirhe"}))))
+                       (or (reitita req (conj (mapv :fn ei-todennettavat)
+                                              dev-resurssit resurssit))
+                           (reitita (todennus/todenna-pyynto todennus req)
+                                    (-> (mapv :fn todennettavat)
+                                        (conj (partial index-kasittelija kehitysmoodi))
+                                        (conj (partial ls-index-kasittelija kehitysmoodi))
+                                        (conj ui-kasittelija)))))
+                     (catch [:virhe :todennusvirhe] _
+                       {:status 403 :body "Todennusvirhe"})
+                     (finally
+                       (metriikka/muuta! mittarit
+                                         :aktiiviset_pyynnot dec
+                                         :pyyntoja_palveltu inc)))))
 
                  {:port     (or (:portti asetukset) asetukset)
                   :thread   (or (:threads asetukset) 8)
@@ -307,7 +317,9 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
              (filterv #(not= (:nimi %) nimi) kasittelijat)))))
 
 (defn luo-http-palvelin [asetukset kehitysmoodi]
-  (->HttpPalvelin asetukset (atom []) (atom []) (atom nil) kehitysmoodi))
+  (->HttpPalvelin asetukset (atom []) (atom []) (atom nil) kehitysmoodi
+                  (metriikka/luo-mittari-ref {:aktiiviset_pyynnot 0
+                                              :pyyntoja_palveltu 0})))
 
 (defn julkaise-reitti
   ([http nimi reitti] (julkaise-reitti http nimi reitti true))
