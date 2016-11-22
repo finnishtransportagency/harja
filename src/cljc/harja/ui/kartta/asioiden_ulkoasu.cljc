@@ -175,11 +175,13 @@
    #{"SULAMISVEDEN HAITTOJEN TORJUNTA"}                         [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
    #{"AURAUSVIITOITUS JA KINOSTIMET"}                           [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
    #{"LUMENSIIRTO"}                                             [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
+   #{"LUMEN SIIRTO"}                                            [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
    #{"PAANNEJAAN POISTO"}                                       [(viiva-mustalla-rajalla puhtaat/turkoosi) "turkoosi"]
    #{"MUU"}                                                     [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
    ;; tilannekuva/kesähoito
    #{"SORATEIDEN PÖLYNSIDONTA"}                                 [(viiva-mustalla-rajalla puhtaat/oranssi) "oranssi"]
    #{"SORASTUS"}                                                [(viiva-mustalla-rajalla puhtaat/syaani) "syaani"]
+   #{"SORASTUS KM"}                                             [(viiva-mustalla-rajalla puhtaat/syaani) "syaani"]
    #{"SORATEIDEN TASAUS"}                                       [(viiva-mustalla-rajalla puhtaat/tummansininen) "tummansininen"]
    #{"SORATEIDEN MUOKKAUSHÖYLÄYS"}                              [(viiva-mustalla-rajalla puhtaat/pinkki) "pinkki"]
    #{"PÄÄLLYSTEIDEN PAIKKAUS"}                                  [(viiva-mustalla-rajalla puhtaat/magenta) "magenta"]
