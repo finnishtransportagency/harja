@@ -68,13 +68,16 @@
                                      valittu-valilehtiryhma] :as tiedot}]
   (let [dom-node (atom nil)
         valilehtiryhmat (atom [])
-        paivita-valilehtien-maara-per-ryhma
+        ryhmittele-valilehdet
         (fn [this]
           (when this
             (let [valilehtia-per-ryhma
                  (maarittele-valilehtien-maara-per-ryhma (.-width (.getBoundingClientRect this))
                                                          valilehdet)]
-             (reset! valilehtiryhmat (partition-all valilehtia-per-ryhma valilehdet)))))
+             (reset! valilehtiryhmat (partition-all valilehtia-per-ryhma valilehdet))
+             ;; Ryhmittely päivitetty, varmistetaan, että nykyinen valinta on edelleen taulukon sisällä
+             (when (> @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))
+               (reset! valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))))))
         valitse-valilehti! (fn [uusi-valinta]
                              (reset! valittu-valilehti uusi-valinta))
         selauspainike-painettu! (fn [suunta]
@@ -91,7 +94,7 @@
        (fn [{:keys [kayta-hampurilaisvalikkoa? togglaa-valilehtien-nakyvyys
                     valilehdet-nakyvissa? valilehdet jatkuvat-havainnot
                     valittu-valilehti valittu-valilehtiryhma]}]
-         (paivita-valilehtien-maara-per-ryhma @dom-node)
+         (ryhmittele-valilehdet @dom-node)
          (let [valitun-valilehtiryhman-valilehdet (when-not (empty? @valilehtiryhmat)
                                                     (nth @valilehtiryhmat @valittu-valilehtiryhma))]
            [:header {:class (when-not kayta-hampurilaisvalikkoa? "hampurilaisvalikko-ei-kaytossa")}
