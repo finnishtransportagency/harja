@@ -105,7 +105,7 @@
    (let [vastausdata (tierekisteri/hae-tietolajit tierekisteri tunniste muutospaivamaara)
          ominaisuudet (get-in vastausdata [:tietolaji :ominaisuudet])]
      (tierekisteri-sanomat/muunna-tietolajin-hakuvastaus
-      vastausdata ominaisuudet))))
+       vastausdata ominaisuudet))))
 
 (defn hae-tietolaji [tierekisteri parametrit kayttaja]
   (tarkista-tietolajihaun-parametrit parametrit)
@@ -176,7 +176,7 @@
         {}))))
 
 (defn lisaa-varuste [tierekisteri db {:keys [otsikko] :as data} kayttaja]
-  (log/debug "Lisätään varuste käyttäjän " kayttaja " pyynnöstä.")
+  (log/debug (format "Lisätään varuste käyttäjän: %s pyynnöstä. Data: %s" kayttaja data))
   (let [livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
         toimenpiteen-tiedot (:varusteen-lisays data)
         tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
@@ -197,14 +197,15 @@
        :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)})))
 
 (defn paivita-varuste [tierekisteri {:keys [otsikko] :as data} kayttaja]
-  (log/debug "Päivitetään varuste käyttäjän " kayttaja " pyynnöstä.")
+  (log/debug (format "Päivitetään varuste käyttäjän: %s pyynnöstä. Data: %s" kayttaja data))
   (let [toimenpiteen-tiedot (:varusteen-paivitys data)
         tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-        tietolajin-arvot (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot])
-        arvot-string (when tietolajin-arvot
+        tietueen-tunniste (get-in toimenpiteen-tiedot [:varuste :tunniste])
+        tietueen-arvot (assoc (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]) :tunniste tietueen-tunniste)
+        arvot-string (when tietueen-arvot
                        (validoi-ja-muunna-arvot-merkkijonoksi
                          tierekisteri
-                         tietolajin-arvot
+                         tietueen-arvot
                          tietolaji))
         paivityssanoma (tierekisteri-sanomat/luo-tietueen-paivityssanoma
                          otsikko
@@ -214,7 +215,7 @@
   (tee-kirjausvastauksen-body {:ilmoitukset "Varuste päivitetty onnistuneesti"}))
 
 (defn poista-varuste [tierekisteri {:keys [otsikko] :as data} kayttaja]
-  (log/debug "Poistetaan varuste käyttäjän " kayttaja " pyynnöstä.")
+  (log/debug (format "Poistetaan varuste käyttäjän: %s pyynnöstä. Data: %s " kayttaja data))
   (let [poistosanoma (tierekisteri-sanomat/luo-tietueen-poistosanoma
                        otsikko
                        (:varusteen-poisto data))]
@@ -235,14 +236,14 @@
          (not (str/blank? tietolaji)))
     (let [nyt (t/now)
           tulos (tierekisteri/hae-tietueet
-                 tierekisteri
-                 {:numero (:numero tierekisteriosoite)
-                  :aet (:alkuetaisyys tierekisteriosoite)
-                  :aosa (:alkuosa tierekisteriosoite)
-                  :let (:loppuetaisyys tierekisteriosoite)
-                  :losa (:loppuosa tierekisteriosoite)}
-                 tietolaji
-                 nyt nyt)]
+                  tierekisteri
+                  {:numero (:numero tierekisteriosoite)
+                   :aet (:alkuetaisyys tierekisteriosoite)
+                   :aosa (:alkuosa tierekisteriosoite)
+                   :let (:loppuetaisyys tierekisteriosoite)
+                   :losa (:loppuosa tierekisteriosoite)}
+                  tietolaji
+                  nyt nyt)]
       (if (:onnistunut tulos)
         (merge {:onnistunut true}
                (hae-tietolaji-tunnisteella tierekisteri tietolaji)
@@ -304,7 +305,7 @@
     (julkaise-palvelu http :hae-varusteita
                       (fn [user tiedot]
                         (async
-                         (hae-varusteita user tierekisteri tiedot))))
+                          (hae-varusteita user tierekisteri tiedot))))
     this)
 
   (stop [{http :http-palvelin :as this}]
