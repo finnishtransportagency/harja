@@ -1,5 +1,11 @@
 [
   {
+    "date": "2016-11-22",
+    "title": "Ilmoitushaun aikarajaukset muuttuneet",
+    "short": "",
+    "body": "Tieliikennekeskuksen ilmoitusten aikarajauksia on muutettu niin, että oletuksena näkymä näyttää ilmoitukset kuluneen tunnin ajalta. Vakioaikavälien lisäksi mahdollista on nyt hakea ilmoituksia myös vapaalla päivämäärä- sekä kellonaikarajauksella."
+  },
+  {
     "date": "2016-11-17",
     "title": "Harja-järjestelmä Twitterissä",
     "short": "Harja-järjestelmän tiedotteita voi jatkossa seurata myös Twitterissä: https://twitter.com/HarjaLivi",
