@@ -124,7 +124,8 @@
                                   (recur))))
        :component-will-unmount (fn [_]
                                  (@body-click-kuuntelija)
-                                 (reset! tarkkaile-leveytta? false))
+                                 (reset! tarkkaile-leveytta? false)
+                                 (reset! dom-node nil))
        :reagent-render
        (fn [{:keys [kayta-hampurilaisvalikkoa?
                     valilehdet-nakyvissa? valilehdet jatkuvat-havainnot
