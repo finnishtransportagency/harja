@@ -1,5 +1,6 @@
 (ns harja-laadunseuranta.ui.paanavigointi
   (:require [reagent.core :as reagent :refer [atom]]
+            [cljs.core.async :refer [<! >! timeout]]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.ui.nappaimisto :as nappaimisto]
             [harja-laadunseuranta.tiedot.paanavigointi :as tiedot]
@@ -19,6 +20,7 @@
 
 (def +hampurilaisvalikko-kaytossa-leveydessa+ 700)
 
+(def edellinen-header-leveys (atom nil))
 (def +header-reuna-padding+ 80)
 (def +valilehti-perusleveys+ 50) ;; Kun välilehti on tyhjä
 (def +kirjain-leveys+ 9.3) ;; kirjaimen leveys keskimäärin
@@ -70,17 +72,21 @@
                                      hampurilaisvalikon-lista-item-painettu
                                      valittu-valilehtiryhma valilehtiryhmat] :as tiedot}]
   (let [dom-node (atom nil)
-        ryhmittele-valilehdet!
+        ryhmittele-valilehdet-uudelleen-tarvittaessa!
         (fn [this]
           (when this
-            (.log js/console "Ryhmitelläänpäs tabit, container leveys on: " (.-width (.getBoundingClientRect this)))
-            (let [valilehtia-per-ryhma
-                  (maarittele-valilehtien-maara-per-ryhma (.-width (.getBoundingClientRect this))
-                                                          valilehdet)]
-              (reset! valilehtiryhmat (partition-all valilehtia-per-ryhma valilehdet))
-              ;; Ryhmittely päivitetty, varmistetaan, että nykyinen valinta on edelleen taulukon sisällä
-              (when (> @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))
-                (reset! valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))))))
+            (let [header-leveys (.-width (.getBoundingClientRect this))]
+              (.log js/console "Tarkistetaan ryhmittely, header leveys nyt: " (pr-str header-leveys) " ja vanha: " (pr-str @edellinen-header-leveys))
+              (when (not= header-leveys @edellinen-header-leveys)
+                (.log js/console "Header leveys muuttui, ryhmitellään tabit uudelleen.")
+                (let [valilehtia-per-ryhma
+                      (maarittele-valilehtien-maara-per-ryhma header-leveys
+                                                              valilehdet)]
+                  (reset! valilehtiryhmat (partition-all valilehtia-per-ryhma valilehdet))
+                  (reset! edellinen-header-leveys header-leveys)
+                  ;; Ryhmittely päivitetty, varmistetaan, että nykyinen valinta on edelleen taulukon sisällä
+                  (when (> @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))
+                    (reset! valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))))))))
         valitse-valilehti! (fn [uusi-valinta]
                              (reset! valittu-valilehti uusi-valinta))
         hampurilaisvalikon-listan-max-korkeus (atom 200)
@@ -88,14 +94,15 @@
         (fn [this]
           (when this
             (reset! hampurilaisvalikon-listan-max-korkeus
-                   (dom/elementin-etaisyys-viewportin-alareunaan this))))
+                    (dom/elementin-etaisyys-viewportin-alareunaan this))))
         selauspainike-painettu! (fn [suunta]
                                   (case suunta
                                     :oikea (when (< @valittu-valilehtiryhma 3)
                                              (reset! valittu-valilehtiryhma (+ @valittu-valilehtiryhma 1)))
                                     :vasen (when (> @valittu-valilehtiryhma 0)
                                              (reset! valittu-valilehtiryhma (- @valittu-valilehtiryhma 1)))))
-        body-click-kuuntelija (atom nil)]
+        body-click-kuuntelija (atom nil)
+        tarkkaile-leveytta? (atom false)]
 
     (r/create-class
       {:component-did-mount (fn [this]
@@ -103,15 +110,25 @@
                               (reset! body-click-kuuntelija
                                       (tapahtumat/kuuntele! :body-click
                                                             #(when-not (dom/sisalla? @dom-node (:tapahtuma %))
-                                                              (body-click %)))))
+                                                              (body-click %))))
+                              (reset! tarkkaile-leveytta? true)
+                              (go-loop []
+                                ;; Jos joskus löytyy elegantti tapa kutsua välilehtien ryhmittelyä uudelleen
+                                ;; kun headerin leveys muuttuu mistä tahansa syystä, niin tämän voi
+                                ;; poistaa. Toistaiseksi nyt näin.
+                                (when @tarkkaile-leveytta?
+                                  (<! (timeout 1000))
+                                  (ryhmittele-valilehdet-uudelleen-tarvittaessa! @dom-node)
+                                  (recur))))
        :component-will-unmount (fn [_]
-                                 (@body-click-kuuntelija))
+                                 (@body-click-kuuntelija)
+                                 (reset! tarkkaile-leveytta? false))
        :reagent-render
        (fn [{:keys [kayta-hampurilaisvalikkoa?
                     valilehdet-nakyvissa? valilehdet jatkuvat-havainnot
                     valittu-valilehti valittu-valilehtiryhma]}]
          ;; Muutama tärkeä lasku ennen renderiä
-         (ryhmittele-valilehdet! @dom-node)
+         (ryhmittele-valilehdet-uudelleen-tarvittaessa! @dom-node)
          (maarita-hampurilaisvalikon-listan-max-korkeus! @dom-node)
 
          (let [valitun-valilehtiryhman-valilehdet (when-not (empty? @valilehtiryhmat)
