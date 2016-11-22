@@ -8,8 +8,8 @@
   [:div.mobiilityokalu-container
    [:img.mobiilityokalu {:src "images/mobiilityokalu.png"}]
    [:h3 "Esittely"]
-   [:p "Tarkastuksien ja havaintojen tekemistä helpottamaan on toteutettu myös erillinen Mobiili laadunseurantatyökalu. Työkalu on tarkoitettu käytettäväksi tien päällä ja se toimii iPadilla ja useimmilla Android-tableteilla. Myös puhelinkäyttö on mahdollista."]
-   [:p "Työkalua käytetään kirjaamaan pistemäisiä ja välikohtaisia havaintoja tarkastusajon aikana. Joillekin välikohtaisille havainnoille voi syöttää myös erillisiä mittausarvoja (kuten kitka liukkaalla tiellä). Työkalulla voi kirjata myös yleisiä havaintoja tien päältä. Kun tarkastusajo on valmis, tulokset kirjataan lähimpään urakkaan suoritetun ajon sijainnin perusteella."]
+   [:p "Tarkastuksien ja havaintojen tekemistä helpottamaan on olemassa erillinen Mobiili laadunseurantatyökalu. Työkalu on tarkoitettu käytettäväksi tien päällä. Sovellus on tehty ensisijaisesti Android-tableteille, mutta se toimii myös iPadilla. Myös puhelinkäyttö on mahdollista Android-puhelimilla ja iPhonella."]
+   [:p "Työkalua käytetään kirjaamaan havaintoja, mittauksia ja valokuvia tarkastusajon aikana. Havaintoja voi kirjata joko pikahavaintonapeilla tai omin sanoin lomakkeella. Kun tarkastusajo on valmis, tulokset siirtyvät siihen urakkaan, jonka alueella tarkastus tehtiin. Tarkastusten tietoja voi myöhemmin täydentää Harjassa."]
    [:p [:strong "Laitevaatimukset:"]]
    [:ul
     [:li "Android-tabletti tai iPad"]
@@ -21,10 +21,10 @@
    [:a {:href "https://extranet.liikennevirasto.fi/harja/laadunseuranta/"}
     (ikonit/ikoni-ja-teksti (ikonit/livicon-arrow-right)
                             "Siirry Mobiiliin laadunseurantatyökaluun")]
-   [:p "Työkalulla kirjatut tarkastukset kirjataan suoraan Harjaan lähimpään urakkaan."]
+   [:p "Työkalulla kirjatut tarkastukset kirjataan suoraan Harjaan siihen urakkaan, jonka alueella tarkastus tehtiin."]
    [:a {:href "https://testiextranet.liikennevirasto.fi/harja/laadunseuranta/"}
     (ikonit/ikoni-ja-teksti (ikonit/livicon-arrow-right)
                             "Siirry testiympäristöön")]
-   [:p "Jos haluat vain testata työkalua, voit käyttää sitä Harjan testiympäristössä, jossa suoritetut ajot tallentuvat ainoastaan testiympäristöön."]
+   [:p "Jos haluat ensin testata työkalua, voit käyttää sitä Harjan testiympäristössä, jossa suoritetut ajot tallentuvat ainoastaan testiympäristöön."]
    [:br]
    [:br]])
