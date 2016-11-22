@@ -7,7 +7,8 @@
 
 (defn lisaa-reittimerkinnoille-mockattu-tieosoite
   "Mock-funktio, joka lisää tiemerkinnöille tierekisteriosoitteet ilman oikeaa kannassa olevaa tieverkkoa.
-  Mockin lisäämät tierekisteriarvot pohjautuvat kuitenkin oikeisiin tierekisteriosoitteisiin (ainakin tätä kirjoittaessa)"
+  Mockin lisäämät tierekisteriarvot pohjautuvat kuitenkin oikeisiin tierekisteriosoitteisiin
+  (ainakin tätä kirjoittaessa)"
   [reittimerkinnat]
   (map (fn [reittimerkinta]
          (let [tierekisteriosoite (get testidata/mockattu-tierekisteri (:sijainti reittimerkinta))]
@@ -17,7 +18,9 @@
        reittimerkinnat))
 
 (deftest reittimerkinnat-tarkastuksiksi-havainnot-muuttuu
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi (lisaa-reittimerkinnoille-mockattu-tieosoite testidata/tarkastukset-joissa-jatkuvat-havainnot-muuttuu))]
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastukset-joissa-jatkuvat-havainnot-muuttuu))]
     ;; Munnetaan määrällisesti okein
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 3))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))
@@ -29,21 +32,27 @@
     (is (empty? (-> tarkastukset :reitilliset-tarkastukset (get 2) :vakiohavainnot)))))
 
 (deftest reittimerkinnat-tarkastuksiksi-kitka-laskettu-oikein
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi (lisaa-reittimerkinnoille-mockattu-tieosoite testidata/tarkastukset-joissa-jatkuvat-havainnot-muuttuu))]
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastukset-joissa-jatkuvat-havainnot-muuttuu))]
     ;; Kitkamäärät laskettu oikein
     (is (= (-> tarkastukset :reitilliset-tarkastukset first :talvihoitomittaus :kitka) nil))
     (is (= (-> tarkastukset :reitilliset-tarkastukset second :talvihoitomittaus :kitka) 0.25))
     (is (= (-> tarkastukset :reitilliset-tarkastukset (get 2) :talvihoitomittaus :kitka) nil))))
 
 (deftest reittimerkinnat-tarkastuksiksi-kommentit-keraytyvat
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi (lisaa-reittimerkinnoille-mockattu-tieosoite testidata/tarkastukset-joissa-jatkuvat-havainnot-muuttuu-ja-kommentteja))]
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastukset-joissa-jatkuvat-havainnot-muuttuu-ja-kommentteja))]
     (testing "Kommentit kerääntyvät oikein"
       (is (= (-> tarkastukset :pistemaiset-tarkastukset) []))
       (is (= (-> tarkastukset :reitilliset-tarkastukset second :havainnot) "foo\nbar"))
       (is (= (-> tarkastukset :reitilliset-tarkastukset (get 2) :havainnot) nil)))))
 
 (deftest soratietarkastus-menee-oikein
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi (lisaa-reittimerkinnoille-mockattu-tieosoite testidata/soratiehavainnon-mittaukset))]
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/soratiehavainnon-mittaukset))]
     (is (= (-> tarkastukset :pistemaiset-tarkastukset) [])) 
     (is (= (-> tarkastukset :reitilliset-tarkastukset first :soratiemittaus) {:hoitoluokka nil
                                                                               :tasaisuus 3
@@ -52,7 +61,9 @@
                                                                               :sivukaltevuus nil}))))
 
 (deftest pistemaiset-reittimerkinnat-tarkastuksiksi
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi (lisaa-reittimerkinnoille-mockattu-tieosoite testidata/tarkastus-jossa-pistemainen-havainto))]
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-pistemainen-havainto))]
     ;; Munnetaan määrällisesti okein
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 1))
@@ -68,7 +79,9 @@
     (is (every? #{17 20} (-> tarkastukset :pistemaiset-tarkastukset first :vakiohavainnot)))))
 
 (deftest kaikki-reittimerkinnat-tarkastuksiksi
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi (lisaa-reittimerkinnoille-mockattu-tieosoite testidata/monipuolinen-tarkastus))]
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/monipuolinen-tarkastus))]
     ;; Muunnettu määrällisesti oikein
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 5))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 3))
@@ -78,17 +91,22 @@
     (is (= (-> tarkastukset :pistemaiset-tarkastukset last :liite) 1))))
 
 (deftest tarkastus-jossa-piste-ei-osu-tielle
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi (lisaa-reittimerkinnoille-mockattu-tieosoite testidata/tarkastus-jossa-piste-ei-osu-tielle))]
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-piste-ei-osu-tielle))]
     ;; Muunnettu määrällisesti oikein
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
 
 (deftest tarkastus-jossa-tie-vaihtuu
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi (lisaa-reittimerkinnoille-mockattu-tieosoite testidata/tarkastus-jossa-tie-vaihtuu))]
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-tie-vaihtuu))]
     ;; Muunnettu määrällisesti oikein
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
 
+;; PENDING Ympärikääntymislogiikka disabloitu tällä hetkellä GPS:n epätarkkuudesta johtuen
 #_(deftest tarkastus-jossa-kaannytaan-ympari
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi (lisaa-reittimerkinnoille-mockattu-tieosoite testidata/tarkastus-jossa-kaannytaan-ympari))]
     ;; Muunnettu määrällisesti oikein
