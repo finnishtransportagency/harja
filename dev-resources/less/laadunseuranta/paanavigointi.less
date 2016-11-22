@@ -32,7 +32,7 @@
   > header {
     position: relative;
     border: @sisaltolaatikoiden-reunaviiva;
-    padding-top: 5px;
+    padding-top: 3px;
 
     > .hampurilaisvalikko {
       width: 32px;
@@ -41,6 +41,25 @@
 
       > .hampurilaisvalikko-ikoni {
         width: 100%;
+      }
+    }
+
+    > .valilehtiryhmien-pallerot {
+      text-align: center;
+      height: 18px;
+
+      > .valilehtiryhma-pallero {
+        display: inline-block;
+        margin-right: 5px;
+        width: 13px;
+        height: 13px;
+        vertical-align: top;
+        border: 1px solid @musta;
+        border-radius: 100%;
+      }
+
+      > .valilehtiryhma-pallero-aktiivinen {
+        background-color: @sininen6;
       }
     }
 

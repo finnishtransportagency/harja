@@ -68,7 +68,7 @@
                                      valittu-valilehtiryhma] :as tiedot}]
   (let [dom-node (atom nil)
         valilehtiryhmat (atom [])
-        ryhmittele-valilehdet
+        ryhmittele-valilehdet!
         (fn [this]
           (when this
             (let [valilehtia-per-ryhma
@@ -94,10 +94,21 @@
        (fn [{:keys [kayta-hampurilaisvalikkoa? togglaa-valilehtien-nakyvyys
                     valilehdet-nakyvissa? valilehdet jatkuvat-havainnot
                     valittu-valilehti valittu-valilehtiryhma]}]
-         (ryhmittele-valilehdet @dom-node)
+         (ryhmittele-valilehdet! @dom-node)
          (let [valitun-valilehtiryhman-valilehdet (when-not (empty? @valilehtiryhmat)
                                                     (nth @valilehtiryhmat @valittu-valilehtiryhma))]
            [:header {:class (when-not kayta-hampurilaisvalikkoa? "hampurilaisvalikko-ei-kaytossa")}
+            (when-not kayta-hampurilaisvalikkoa?
+              [:div.valilehtiryhmien-pallerot
+               (doall
+                 (map-indexed
+                   (fn [index _]
+                     ^{:key index}
+                     [:div {:class (str "valilehtiryhma-pallero "
+                                        (when (= index @valittu-valilehtiryhma)
+                                          "valilehtiryhma-pallero-aktiivinen"))}])
+                   @valilehtiryhmat))])
+
             (when kayta-hampurilaisvalikkoa?
               [:div.hampurilaisvalikko
                [:img.hampurilaisvalikko-ikoni
