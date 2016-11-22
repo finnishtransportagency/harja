@@ -83,7 +83,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
         ["Otsikko" (:otsikko ilmoitus)]
         ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
         ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
-        ["Ilmoittaja" (apurit/nayta-henkilo (:ilmoittaja ilmoitus))]])]
+        ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]])]
     [:blockquote (:lisatieto ilmoitus)]
     (when-let [sijainti (:sijainti ilmoitus)]
       (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]

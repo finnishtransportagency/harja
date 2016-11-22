@@ -249,8 +249,9 @@
                                 ikoni viiva))))
 
 (def tarkastus-selitteet
-  #{{:teksti "Tarkastus (ok)" :vari (:ok-tarkastus ulkoasu/viivojen-varit)}
-    {:teksti "Laadun\u00ADalitus" :vari (:ei-ok-tarkastus ulkoasu/viivojen-varit)}})
+  #{{:teksti "Tarkastus (ok)" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true nil))}
+    {:teksti "Tarkastus, urakoitsija (ok)" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true :urakoitsija))}
+    {:teksti "Laadun\u00ADalitus" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti false nil))}})
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu-fn?]
   (let [ikoni (ulkoasu/tarkastuksen-ikoni
