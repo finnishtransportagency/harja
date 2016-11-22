@@ -114,8 +114,12 @@
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
 
 (deftest tarkastus-trvali-jossa-alkuosa-vaihtuu
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi (lisaa-reittimerkinnoille-mockattu-tieosoite testidata/tarkastus-jossa-alkuosa-vaihtuu))
-        tallennettava (luo-tallennettava-tarkastus (first (:reitilliset-tarkastukset tarkastukset)) {:kayttajanimi "jvh"})]
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-alkuosa-vaihtuu))
+        tallennettava (luo-tallennettava-tarkastus
+                        (first (:reitilliset-tarkastukset tarkastukset))
+                        {:kayttajanimi "jvh"})]
     (is (= 1 (count (:reitilliset-tarkastukset tarkastukset))))
     (is (= 20 (:tr_numero tallennettava)))
     (is (= 10 (:tr_alkuosa tallennettava)))
