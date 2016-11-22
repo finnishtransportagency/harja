@@ -53,7 +53,7 @@
    :soratiemittaussyotto {:tasaisuus 5
                           :kiinteys 5
                           :polyavyys 5}
-   :mitttaustyyppi nil ;; Suoritettava mittaustyyppi (esim. :lumista) tai nil jos ei olla mittaamassa mitään
+   :mittaustyyppi nil ;; Suoritettava mittaustyyppi (esim. :lumista) tai nil jos ei olla mittaamassa mitään
 
    ;; Lomake
    :havaintolomake-auki? false

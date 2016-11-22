@@ -28,7 +28,7 @@
     :soratiemittaussyotto {:tasaisuus 5
                            :kiinteys 5
                            :polyavyys 5}
-    :mitttaustyyppi nil
+    :mittaustyyppi nil
     ;; Lomake
     :havaintolomake-auki? false
     :havaintolomakedata {:kayttajanimi nil
