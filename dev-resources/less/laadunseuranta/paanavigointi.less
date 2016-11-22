@@ -50,16 +50,31 @@
       height: 32px;
       border: 1px solid @musta;
       background-color: @harmaa6;
+
+      > img {
+        position: absolute;
+        width: 24px;
+        left: 50%;
+        top: 50%;
+      }
     }
 
     & .selaa-valilehtiryhmia-vasemmalle {
       bottom: 0;
       left: 0;
+
+      > img {
+        transform: translateX(-50%) translateY(-50%) rotate(270deg);
+      }
     }
 
     & .selaa-valilehtiryhmia-oikealle {
       bottom: 0;
       right: 0;
+
+      > img {
+        transform: translateX(-50%) translateY(-50%) rotate(90deg);
+      }
     }
   }
 
@@ -223,7 +238,7 @@
     position: absolute;
     top: 10px;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%) rotate(180deg);
   }
 }
 

@@ -6,7 +6,7 @@
 (defn havainto-ikoni [nimi]
   (str "img/havainnot/" nimi ".svg"))
 
-(def +autonuoli+ (ikoni "nuoli.svg"))
+(def +autonuoli+ (ikoni "autonuoli.svg"))
 (def +harja-logo+ (ikoni "harja_logo_soft.svg"))
 (def +harja-logo-ilman-tekstia+ (ikoni "harja_logo_soft_ilman_tekstia.svg"))
 (def +kamera+ (ikoni "kamera.png"))
@@ -17,6 +17,4 @@
 (def +hampurilaisvalikko+ (ikoni "hampurilaisvalikko.svg"))
 (def +avattu+ (ikoni "avattu.png"))
 (def +havaintopiste+ (ikoni "havaintopiste.png"))
-
-(def +nuoli-avaa+ (ikoni "nuoli_avaa.svg"))
-(def +nuoli-sulje+ (ikoni "nuoli_sulje.svg"))
+(def +avausnuoli+ (ikoni "avausnuoli.svg"))

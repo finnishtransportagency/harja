@@ -109,9 +109,11 @@
             (when-not kayta-hampurilaisvalikkoa?
               [:div
                [:div.selaa-valilehtiryhmia.selaa-valilehtiryhmia-oikealle
-                {:on-click (partial selauspainike-painettu! :oikea)}]
+                {:on-click (partial selauspainike-painettu! :oikea)}
+                [:img {:src kuvat/+avausnuoli+}]]
                [:div.selaa-valilehtiryhmia.selaa-valilehtiryhmia-vasemmalle
-                {:on-click (partial selauspainike-painettu! :vasen)}]])
+                {:on-click (partial selauspainike-painettu! :vasen)}
+                [:img {:src kuvat/+avausnuoli+}]]])
 
             (when @valilehdet-nakyvissa?
               [:ul.valilehtilista
@@ -200,11 +202,11 @@
                              "paanavigointi-container-nakyvissa"
                              "paanavigointi-container-piilossa"))}
          [:div.nayttonappi {:on-click togglaa-paanavigoinnin-nakyvyys}
-          [:img {:src kuvat/+nuoli-avaa+}]]
+          [:img {:src kuvat/+avausnuoli+}]]
          [:div.navigointilaatikko-container
           [:div.navigointilaatikko
            [:div.piilotusnappi {:on-click togglaa-paanavigoinnin-nakyvyys}
-            [:img {:src kuvat/+nuoli-sulje+}]]
+            [:img {:src kuvat/+avausnuoli+}]]
 
            [paanavigointi-header {:kayta-hampurilaisvalikkoa? kayta-hampurilaisvalikkoa?
                                   :togglaa-valilehtien-nakyvyys togglaa-valilehtien-nakyvyys
