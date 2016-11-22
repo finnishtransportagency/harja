@@ -35,5 +35,5 @@
       (when (not-any? #(= % hinnoittelu) hinnoittelut)
         (virheet/heita-viallinen-apikutsu-poikkeus
           {:koodi :virheellinen-tehtava
-           :viesti (format "Väärä hinnoittelu toteumalla. Toteumalle annettiin hinnoittelu: %s, mutta tehtävän (%s) hinnoittelut ovat: %s. "
-                           hinnoittelut tehtava-id hinnoittelu)})))))
+           :viesti (format "Toteumalla on väärä hinnoittelu. Toteumalle annettiin hinnoittelu: %s, mutta toteumalle kirjatun tehtävän %s hinnoittelut ovat: %s. "
+                           hinnoittelu tehtava-id hinnoittelut)})))))
