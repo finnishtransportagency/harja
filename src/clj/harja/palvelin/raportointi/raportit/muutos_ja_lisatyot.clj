@@ -65,6 +65,7 @@
                (tyon-tyypin-nimi (:tyyppi %))
                (get-in % [:tpi :nimi])
                (get-in % [:tehtava :nimi])
+               (or (:lisatieto %) "")
                (if (get-in % [:tehtava :paivanhinta])
                  "Päivän hinta"
                  (get-in % [:tehtava :maara]))
@@ -125,10 +126,12 @@
                    {:leveys 7 :otsikko "Tyyppi"}
                    {:leveys 12 :otsikko "Toimenpide"}
                    {:leveys 12 :otsikko "Tehtävä"}
+                   {:leveys 12 :otsikko "Lisätieto"}
                    {:leveys 5 :otsikko "Määrä"}
                    {:leveys 5 :otsikko "Summa €" :fmt :raha}
                    {:leveys 5 :otsikko "Ind.korotus €" :fmt :raha}])]
-    [:raportti {:nimi raportin-nimi}
+    [:raportti {:nimi raportin-nimi
+                :orientaatio :landscape}
      [:taulukko {:otsikko                    (str otsikko ", " tpi-nimi)
                  :viimeinen-rivi-yhteenveto? true
                  :sheet-nimi                 raportin-nimi}
@@ -162,8 +165,8 @@
                                        kentat (if kayta-ryhmittelya?
                                                 (keep identity [alueen-teksti summat-yht korotukset-yht])
                                                 (if (or (not urakoittain?) (= :urakka konteksti))
-                                                  (keep identity [alueen-teksti "" "" "" "" summat-yht korotukset-yht])
-                                                  (keep identity [alueen-teksti "" "" "" "" "" summat-yht korotukset-yht])))]
+                                                  (keep identity [alueen-teksti "" "" "" "" "" summat-yht korotukset-yht])
+                                                  (keep identity [alueen-teksti "" "" "" "" "" "" summat-yht korotukset-yht])))]
                                    (when (:nimi hy)
                                      [{:lihavoi? true
                                        :rivi     kentat}]))))))

@@ -105,7 +105,10 @@
 
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset
-     :refer [lue-asetukset konfiguroi-lokitus validoi-asetukset]])
+     :refer [lue-asetukset konfiguroi-lokitus validoi-asetukset]]
+
+    ;; Metriikat
+    [harja.palvelin.komponentit.metriikka :as metriikka])
   (:gen-class))
 
 (defn luo-jarjestelma [asetukset]
@@ -118,6 +121,7 @@
         (log/error e "Validointivirhe asetuksissa!")))
 
     (component/system-map
+     :metriikka (metriikka/luo-jmx-metriikka)
       :db (tietokanta/luo-tietokanta tietokanta kehitysmoodi)
       :db-replica (tietokanta/luo-tietokanta tietokanta-replica kehitysmoodi)
       :klusterin-tapahtumat (component/using
@@ -130,7 +134,7 @@
       :http-palvelin (component/using
                        (http-palvelin/luo-http-palvelin http-palvelin
                                                         kehitysmoodi)
-                       [:todennus])
+                       [:todennus :metriikka])
 
       :pdf-vienti (component/using
                     (pdf-vienti/luo-pdf-vienti)
@@ -165,7 +169,9 @@
 
       ;; FIM REST rajapinta
       :fim (component/using
-             (fim/->FIM (:url (:fim asetukset)))
+            (if kehitysmoodi
+              (fim/->FakeFIM (:tiedosto (:fim asetukset)))
+              (fim/->FIM (:url (:fim asetukset))))
              [:db :integraatioloki])
 
       ;; Sampo

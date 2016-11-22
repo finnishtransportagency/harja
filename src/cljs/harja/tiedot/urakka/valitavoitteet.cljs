@@ -12,6 +12,7 @@
                    [reagent.ratom :refer [reaction]]))
 
 (def nakymassa? (atom false))
+(def valittu-vuosi (atom nil))
 
 (defn hae-urakan-valitavoitteet [urakka-id]
   (k/post! :hae-urakan-valitavoitteet urakka-id))

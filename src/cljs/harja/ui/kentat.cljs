@@ -652,7 +652,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                               (reset! auki true)
                                               %)
                             :value       nykyinen-pvm-teksti
-                            :on-focus    #(do (on-focus) (reset! auki true) %)
+                            :on-focus    #(do (when on-focus (on-focus)) (reset! auki true) %)
                             on-change*   #(muuta-pvm! (-> % .-target .-value))
                             ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
                             :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
@@ -860,3 +860,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
      [:span.alkuetaisyys alkuetaisyys]
      [:span.loppuosa loppuosa] " / "
      [:span.loppuetaisyys loppuetaisyys]]))
+
+(defn tee-otsikollinen-kentta [otsikko kentta-params arvo-atom]
+  [:span.label-ja-kentta
+   [:span.kentan-otsikko otsikko]
+   [:div.kentta
+    [tee-kentta kentta-params arvo-atom]]])

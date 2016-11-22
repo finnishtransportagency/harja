@@ -93,7 +93,14 @@
                                                             oikeudet/urakat-aikataulu
                                                             urakka-id
                                                             @istunto/kayttaja)
-            voi-tallentaa? (or saa-muokata? saa-merkita-valmiiksi? saa-asettaa-valmis-takarajan?)]
+            voi-tallentaa? (or saa-muokata? saa-merkita-valmiiksi? saa-asettaa-valmis-takarajan?)
+            paallystys-aloitettu-validointi [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
+                                              "Päällystys ei voi alkaa ennen kohteen aloitusta."]]
+            paallystys-aloitettu-validointi (if (= (:nakyma optiot) :paallystys)
+                                              (conj paallystys-aloitettu-validointi
+                                                    [:toinen-arvo-annettu-ensin :aikataulu-kohde-alku
+                                                     "Päällystystä ei voi merkitä alkaneeksi ennen kohteen aloitusta."])
+                                              paallystys-aloitettu-validointi)]
         [:div.aikataulu
          [grid/grid
           {:otsikko "Kohteiden aikataulu"
@@ -145,10 +152,15 @@
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :tyyppi :numero :leveys 4
             :muokattava? (constantly false)}
+           (when (= (:nakyma optiot) :paallystys) ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
+             {:otsikko "Kohde a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-kohde-alku
+              :tyyppi :pvm :fmt pvm/pvm-opt
+              :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))})
            ; FIXME Tallennus (ja validointi) epäonnistuu jos kellonaikaa ei anna
            {:otsikko "Pääl\u00ADlys\u00ADtys a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-paallystys-alku
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
-            :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))}
+            :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
+            :validoi paallystys-aloitettu-validointi}
            {:otsikko "Pääl\u00ADlys\u00ADtys val\u00ADmis" :leveys 8 :nimi :aikataulu-paallystys-loppu
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
@@ -158,7 +170,7 @@
                        "Valmistuminen ei voi olla ennen aloitusta."]]}
            (when (= (:nakyma optiot) :paallystys)
              {:otsikko "Tie\u00ADmer\u00ADkin\u00ADnän suo\u00ADrit\u00ADta\u00ADva u\u00ADrak\u00ADka"
-              :leveys 13 :nimi :suorittava-tiemerkintaurakka
+              :leveys 10 :nimi :suorittava-tiemerkintaurakka
               :tyyppi :valinta
               :fmt (fn [arvo]
                      (:nimi (some
