@@ -7,6 +7,7 @@
             [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.views.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.views.urakka.laadunseuranta.sanktiot :as sanktiot]
+            [harja.views.urakka.laadunseuranta.mobiilityokalu :as mobiilityokalu]
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [harja.domain.oikeudet :as oikeudet]
@@ -36,5 +37,10 @@
        (when (and (= :hoito tyyppi)
                   (oikeudet/urakat-laadunseuranta-siltatarkastukset id))
          ^{:key "siltatarkastukset"}
-         [siltatarkastukset/siltatarkastukset])])))
+         [siltatarkastukset/siltatarkastukset])
+
+       "Mobiilityökalu" :mobiilityokalu
+       (when (and (= :hoito tyyppi))
+         ^{:key "mobiilityokalu"}
+         [mobiilityokalu/mobiilityokalu])])))
 
