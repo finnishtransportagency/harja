@@ -331,3 +331,10 @@
 (defn avaa-havaintolomake! []
   (.log js/console "Avataan havaintolomake!")
   (reset! s/havaintolomake-auki true))
+
+(defn hampurilaisvalikko-painettu! []
+  (swap! s/paanavigoinnin-hampurilaisvalikon-lista-nakyvissa? not))
+
+(defn hampurilaisvalikon-lista-item-valittu! [avain]
+  (reset! s/paanavigoinnin-hampurilaisvalikon-lista-nakyvissa? false)
+  (reset! s/paanavigoinnin-valittu-valilehti avain))

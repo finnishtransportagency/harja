@@ -64,7 +64,10 @@
      [:div.toggle-valintapainike-otsikko
       nimi]]))
 
-(defn- paanavigointi-header [{:keys [valilehdet valittu-valilehti hampurilaisvalikon-lista-nakyvissa?
+(defn- paanavigointi-header [{:keys [valilehdet valittu-valilehti
+                                     hampurilaisvalikon-lista-nakyvissa?
+                                     hampurilaisvalikko-painettu
+                                     hampurilaisvalikon-lista-item-painettu
                                      valittu-valilehtiryhma valilehtiryhmat] :as tiedot}]
   (let [dom-node (atom nil)
         ryhmittele-valilehdet!
@@ -115,14 +118,17 @@
               [:div.hampurilaisvalikko
                [:img.hampurilaisvalikko-ikoni
                 {:src kuvat/+hampurilaisvalikko+
-                 :on-click #(swap! hampurilaisvalikon-lista-nakyvissa? not)}]
+                 :on-click hampurilaisvalikko-painettu}]
                (when @hampurilaisvalikon-lista-nakyvissa?
                  [:div.lista.hampurilaisvalikon-lista
                   [:ul
-                   [:li "Testi 1"]
-                   [:li "Testi 2"]
-                   [:li "Testi 3"]
-                   [:li "Testi 4"]]])])
+                   (doall
+                     (for [{:keys [avain nimi] :as valilehti} valilehdet]
+                       ^{:key (:nimi nimi)}
+                       [:li {:class (when (= avain @valittu-valilehti)
+                                      "aktiivinen-valinta")
+                             :on-click (partial hampurilaisvalikon-lista-item-painettu avain)}
+                        nimi]))]])])
 
             ;; Näytä välilehtien selaamiseen tarkoitetut nuolinapit, jos hampurilaisvalikko ei käytössä
             (when-not kayta-hampurilaisvalikkoa?
@@ -200,8 +206,12 @@
                           :ikoni (ikonit/livicon-pen)
                           :luokat-str "nappi-ensisijainen"}]]])
 
-(defn- paanavigointikomponentti [{:keys [valilehdet paanavigointi-nakyvissa? hampurilaisvalikon-lista-nakyvissa?
-                                         valittu-valilehtiryhma valilehdet-nakyvissa? valittu-valilehti] :as tiedot}]
+(defn- paanavigointikomponentti [{:keys [valilehdet paanavigointi-nakyvissa?
+                                         hampurilaisvalikon-lista-nakyvissa?
+                                         hampurilaisvalikko-painettu
+                                         hampurilaisvalikon-lista-item-painettu
+                                         valittu-valilehtiryhma valilehdet-nakyvissa?
+                                         valittu-valilehti] :as tiedot}]
   (let [togglaa-paanavigoinnin-nakyvyys (fn []
                                           (swap! paanavigointi-nakyvissa? not))
         togglaa-valilehtien-nakyvyys (fn []
@@ -240,6 +250,8 @@
             [:img {:src kuvat/+avausnuoli+}]]
 
            [paanavigointi-header {:kayta-hampurilaisvalikkoa? kayta-hampurilaisvalikkoa?
+                                  :hampurilaisvalikko-painettu hampurilaisvalikko-painettu
+                                  :hampurilaisvalikon-lista-item-painettu hampurilaisvalikon-lista-item-painettu
                                   :valilehtiryhmat valilehtiryhmat
                                   :valilehdet-nakyvissa? valilehdet-nakyvissa?
                                   :valilehdet valilehdet
@@ -263,14 +275,14 @@
 (defn paanavigointi []
   [paanavigointikomponentti {:valilehdet tiedot/oletusvalilehdet
                              :hampurilaisvalikon-lista-nakyvissa? s/paanavigoinnin-hampurilaisvalikon-lista-nakyvissa?
+                             :hampurilaisvalikko-painettu tiedot/hampurilaisvalikko-painettu!
+                             :hampurilaisvalikon-lista-item-painettu tiedot/hampurilaisvalikon-lista-item-valittu!
                              :valilehtiryhmat s/paanavigoinnin-valilehtiryhmat
                              :paanavigointi-nakyvissa? s/nayta-paanavigointi?
                              :valilehdet-nakyvissa? s/nayta-paanavigointi-valilehdet?
                              :valittu-valilehti s/paanavigoinnin-valittu-valilehti
-                             :kirjaa-pistemainen-havainto-fn
-                             tiedot/pistemainen-havainto-painettu!
-                             :kirjaa-valikohtainen-havainto-fn
-                             tiedot/valikohtainen-havainto-painettu!
+                             :kirjaa-pistemainen-havainto-fn tiedot/pistemainen-havainto-painettu!
+                             :kirjaa-valikohtainen-havainto-fn tiedot/valikohtainen-havainto-painettu!
                              :aseta-mittaus-paalle s/aseta-mittaus-paalle!
                              :jatkuvat-havainnot @s/jatkuvat-havainnot
                              :nykyinen-mittaustyyppi @s/mittaustyyppi
