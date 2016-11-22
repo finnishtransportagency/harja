@@ -17,11 +17,11 @@
     [cljs.core.async.macros :refer [go go-loop]]
     [devcards.core :as dc :refer [defcard deftest]]))
 
-(def +hampurilaisvalikko-kaytossa-leveydessa+ 450)
+(def +hampurilaisvalikko-kaytossa-leveydessa+ 700)
 
 (def +header-reuna-padding+ 80)
 (def +valilehti-perusleveys+ 50) ;; Kun välilehti on tyhjä
-(def +kirjain-leveys 9.3) ;; kirjaimen leveys keskimäärin
+(def +kirjain-leveys+ 9.3) ;; kirjaimen leveys keskimäärin
 (defn- maarittele-valilehtien-maara-per-ryhma [header-leveys valilehdet]
   ;; Jaetaan välilehdet ryhmiin. Tarkoituksena etsiä sellainen jako, jossa
   ;; välilehtien määrä / ryhmä on mahdollisimman suuri niin, ettei välilehtien
@@ -29,7 +29,7 @@
   ;; HUOMAA, että tämä ei ole pikselintarkka lasku, mutta selkeästi riittävä
   (let [valilehtien-nimet (map #(utils/ilman-tavutusta (:nimi %)) valilehdet)
         valilehtien-leveydet (map
-                               #(+ +valilehti-perusleveys+ (* +kirjain-leveys (count %)))
+                               #(+ +valilehti-perusleveys+ (* +kirjain-leveys+ (count %)))
                                valilehtien-nimet)]
 
     (loop [jako 1]
@@ -66,16 +66,17 @@
 
 (defn- paanavigointi-header [{:keys [valilehdet valittu-valilehti
                                      valittu-valilehtiryhma] :as tiedot}]
-  (let [valilehtiryhmat (atom [])
+  (let [dom-node (atom nil)
+        valilehtiryhmat (atom [])
         paivita-valilehtien-maara-per-ryhma
         (fn [this]
-          (let [valilehtia-per-ryhma
-                (maarittele-valilehtien-maara-per-ryhma (.-width (.getBoundingClientRect this))
-                                                                             valilehdet)]
-            (reset! valilehtiryhmat (partition-all valilehtia-per-ryhma valilehdet))))
+          (when this
+            (let [valilehtia-per-ryhma
+                 (maarittele-valilehtien-maara-per-ryhma (.-width (.getBoundingClientRect this))
+                                                         valilehdet)]
+             (reset! valilehtiryhmat (partition-all valilehtia-per-ryhma valilehdet)))))
         valitse-valilehti! (fn [uusi-valinta]
                              (reset! valittu-valilehti uusi-valinta))
-        lopeta-leveyskuuntelu (atom nil)
         selauspainike-painettu! (fn [suunta]
                                   (case suunta
                                     :oikea (when (< @valittu-valilehtiryhma 3)
@@ -85,18 +86,12 @@
 
     (r/create-class
       {:component-did-mount (fn [this]
-                              (paivita-valilehtien-maara-per-ryhma (reagent/dom-node this))
-                              (let [lopeta-kuuntelu-fn
-                                    (tapahtumat/kuuntele! :window-resize
-                                                          #(paivita-valilehtien-maara-per-ryhma
-                                                            (reagent/dom-node this)))]
-                                (reset! lopeta-leveyskuuntelu lopeta-kuuntelu-fn)))
-       :component-will-unmount (fn [_]
-                                 (@lopeta-leveyskuuntelu))
+                              (reset! dom-node (reagent/dom-node this)))
        :reagent-render
        (fn [{:keys [kayta-hampurilaisvalikkoa? togglaa-valilehtien-nakyvyys
                     valilehdet-nakyvissa? valilehdet jatkuvat-havainnot
                     valittu-valilehti valittu-valilehtiryhma]}]
+         (paivita-valilehtien-maara-per-ryhma @dom-node)
          (let [valitun-valilehtiryhman-valilehdet (when-not (empty? @valilehtiryhmat)
                                                     (nth @valilehtiryhmat @valittu-valilehtiryhma))]
            [:header {:class (when-not kayta-hampurilaisvalikkoa? "hampurilaisvalikko-ei-kaytossa")}
