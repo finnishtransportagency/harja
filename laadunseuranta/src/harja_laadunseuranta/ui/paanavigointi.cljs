@@ -64,20 +64,19 @@
      [:div.toggle-valintapainike-otsikko
       nimi]]))
 
-(defn- paanavigointi-header [{:keys [valilehdet valittu-valilehti
-                                     valittu-valilehtiryhma] :as tiedot}]
+(defn- paanavigointi-header [{:keys [valilehdet valittu-valilehti hampurilaisvalikon-lista-nakyvissa?
+                                     valittu-valilehtiryhma valilehtiryhmat] :as tiedot}]
   (let [dom-node (atom nil)
-        valilehtiryhmat (atom [])
         ryhmittele-valilehdet!
         (fn [this]
           (when this
             (let [valilehtia-per-ryhma
-                 (maarittele-valilehtien-maara-per-ryhma (.-width (.getBoundingClientRect this))
-                                                         valilehdet)]
-             (reset! valilehtiryhmat (partition-all valilehtia-per-ryhma valilehdet))
-             ;; Ryhmittely päivitetty, varmistetaan, että nykyinen valinta on edelleen taulukon sisällä
-             (when (> @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))
-               (reset! valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))))))
+                  (maarittele-valilehtien-maara-per-ryhma (.-width (.getBoundingClientRect this))
+                                                          valilehdet)]
+              (reset! valilehtiryhmat (partition-all valilehtia-per-ryhma valilehdet))
+              ;; Ryhmittely päivitetty, varmistetaan, että nykyinen valinta on edelleen taulukon sisällä
+              (when (> @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))
+                (reset! valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))))))
         valitse-valilehti! (fn [uusi-valinta]
                              (reset! valittu-valilehti uusi-valinta))
         selauspainike-painettu! (fn [suunta]
@@ -91,13 +90,15 @@
       {:component-did-mount (fn [this]
                               (reset! dom-node (reagent/dom-node this)))
        :reagent-render
-       (fn [{:keys [kayta-hampurilaisvalikkoa? togglaa-valilehtien-nakyvyys
+       (fn [{:keys [kayta-hampurilaisvalikkoa?
                     valilehdet-nakyvissa? valilehdet jatkuvat-havainnot
                     valittu-valilehti valittu-valilehtiryhma]}]
          (ryhmittele-valilehdet! @dom-node)
          (let [valitun-valilehtiryhman-valilehdet (when-not (empty? @valilehtiryhmat)
                                                     (nth @valilehtiryhmat @valittu-valilehtiryhma))]
            [:header {:class (when-not kayta-hampurilaisvalikkoa? "hampurilaisvalikko-ei-kaytossa")}
+
+            ;; Näytä välilehtiryhmiä ilmaisevat pallerot jos hampurilaisvalikko ei käytössä
             (when-not kayta-hampurilaisvalikkoa?
               [:div.valilehtiryhmien-pallerot
                (doall
@@ -109,14 +110,21 @@
                                           "valilehtiryhma-pallero-aktiivinen"))}])
                    @valilehtiryhmat))])
 
+            ;; Näytä hampurilaisvalikko jos käytössä
             (when kayta-hampurilaisvalikkoa?
               [:div.hampurilaisvalikko
                [:img.hampurilaisvalikko-ikoni
                 {:src kuvat/+hampurilaisvalikko+
-                 :on-click togglaa-valilehtien-nakyvyys}]])
+                 :on-click #(swap! hampurilaisvalikon-lista-nakyvissa? not)}]
+               (when @hampurilaisvalikon-lista-nakyvissa?
+                 [:div.lista.hampurilaisvalikon-lista
+                  [:ul
+                   [:li "Testi 1"]
+                   [:li "Testi 2"]
+                   [:li "Testi 3"]
+                   [:li "Testi 4"]]])])
 
-            ;; Jos ei käytetä hampurilaisvalikkoa, välilehdet ryhmitellään
-            ;; selattavaksi nuoli-painikkeilla...
+            ;; Näytä välilehtien selaamiseen tarkoitetut nuolinapit, jos hampurilaisvalikko ei käytössä
             (when-not kayta-hampurilaisvalikkoa?
               [:div
                (let [disabloitu? (>= @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))]
@@ -134,13 +142,15 @@
                                (selauspainike-painettu! :vasen))}
                   [:img {:src kuvat/+avausnuoli+}]])])
 
-            ;; ...muuten näytetään valittu välilehti ja hampurilaisvalikko, josta voi listalta valita
-            ;; haluamansa välilehden
+            ;; Näytä välilehdet. Hampurilaisvalikon kanssa näytetään aina vain aktiivinen välilehti
+            ;; Muuten näytetään valitun välilehtiryhmän välilehdet
             (when @valilehdet-nakyvissa?
               [:ul.valilehtilista
                (doall
                  (for [{:keys [avain sisalto] :as valilehti} (if kayta-hampurilaisvalikkoa?
-                                                               valilehdet
+                                                               (filter #(= (:avain %)
+                                                                           @valittu-valilehti)
+                                                                       valilehdet)
                                                                valitun-valilehtiryhman-valilehdet)]
                    (let [valilehden-jatkuvat-havainnot
                          (set/intersection (into #{} (map :avain sisalto))
@@ -190,8 +200,8 @@
                           :ikoni (ikonit/livicon-pen)
                           :luokat-str "nappi-ensisijainen"}]]])
 
-(defn- paanavigointikomponentti [{:keys [valilehdet paanavigointi-nakyvissa? :valittu-valilehtiryhma
-                                         valilehdet-nakyvissa? valittu-valilehti] :as tiedot}]
+(defn- paanavigointikomponentti [{:keys [valilehdet paanavigointi-nakyvissa? hampurilaisvalikon-lista-nakyvissa?
+                                         valittu-valilehtiryhma valilehdet-nakyvissa? valittu-valilehti] :as tiedot}]
   (let [togglaa-paanavigoinnin-nakyvyys (fn []
                                           (swap! paanavigointi-nakyvissa? not))
         togglaa-valilehtien-nakyvyys (fn []
@@ -200,8 +210,8 @@
     (reset! valittu-valilehti (:avain (first valilehdet)))
 
     (fn [{:keys [valilehdet kirjaa-pistemainen-havainto-fn
-                 kirjaa-valikohtainen-havainto-fn
-                 jatkuvat-havainnot nykyinen-mittaustyyppi
+                 kirjaa-valikohtainen-havainto-fn valilehtiryhmat
+                 jatkuvat-havainnot nykyinen-mittaustyyppi hampurilaisvalikko-painettu
                  vapauta-kaikki-painettu havaintolomake-painettu] :as tiedot}]
       (let [mittaus-paalla? (some? nykyinen-mittaustyyppi)
             kayta-hampurilaisvalikkoa? (< @dom/leveys +hampurilaisvalikko-kaytossa-leveydessa+)
@@ -230,9 +240,10 @@
             [:img {:src kuvat/+avausnuoli+}]]
 
            [paanavigointi-header {:kayta-hampurilaisvalikkoa? kayta-hampurilaisvalikkoa?
-                                  :togglaa-valilehtien-nakyvyys togglaa-valilehtien-nakyvyys
+                                  :valilehtiryhmat valilehtiryhmat
                                   :valilehdet-nakyvissa? valilehdet-nakyvissa?
                                   :valilehdet valilehdet
+                                  :hampurilaisvalikon-lista-nakyvissa? hampurilaisvalikon-lista-nakyvissa?
                                   :valittu-valilehtiryhma valittu-valilehtiryhma
                                   :jatkuvat-havainnot jatkuvat-havainnot
                                   :valittu-valilehti valittu-valilehti}]
@@ -251,6 +262,8 @@
 
 (defn paanavigointi []
   [paanavigointikomponentti {:valilehdet tiedot/oletusvalilehdet
+                             :hampurilaisvalikon-lista-nakyvissa? s/paanavigoinnin-hampurilaisvalikon-lista-nakyvissa?
+                             :valilehtiryhmat s/paanavigoinnin-valilehtiryhmat
                              :paanavigointi-nakyvissa? s/nayta-paanavigointi?
                              :valilehdet-nakyvissa? s/nayta-paanavigointi-valilehdet?
                              :valittu-valilehti s/paanavigoinnin-valittu-valilehti

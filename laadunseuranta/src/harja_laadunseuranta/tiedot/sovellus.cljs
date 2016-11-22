@@ -37,8 +37,10 @@
    :ui {:tr-tiedot-nakyvissa? false
         :paanavigointi {:nakyvissa? true
                         :valilehdet-nakyvissa? true
-                        :valittu-valilehtiryhma 0
-                        :valittu-valilehti nil}}
+                        :valilehtiryhmat []
+                        :valittu-valilehtiryhma 0 ;; Indeksi taulukossa valilehtiryhmat
+                        :valittu-valilehti nil ;; Välilehden avain
+                        :hampurilaisvalikon-lista-nakyvissa? false}}
 
    ;; Havainnot
    :jatkuvat-havainnot #{} ; Tähän tallentuu välikohtaiset havainnot (esim. liukasta, lumista jne.)
@@ -172,8 +174,10 @@
                                                    (not @havaintolomake-auki)))))
 (def nayta-paanavigointi? (reagent/cursor sovellus [:ui :paanavigointi :nakyvissa?]))
 (def nayta-paanavigointi-valilehdet? (reagent/cursor sovellus [:ui :paanavigointi :valilehdet-nakyvissa?]))
+(def paanavigoinnin-valilehtiryhmat (reagent/cursor sovellus [:ui :paanavigointi :valilehtiryhmat]))
 (def paanavigoinnin-valittu-valilehtiryhma (reagent/cursor sovellus [:ui :paanavigointi :valittu-valilehtiryhma]))
 (def paanavigoinnin-valittu-valilehti (reagent/cursor sovellus [:ui :paanavigointi :valittu-valilehti]))
+(def paanavigoinnin-hampurilaisvalikon-lista-nakyvissa? (reagent/cursor sovellus [:ui :paanavigointi :hampurilaisvalikon-lista-nakyvissa?]))
 
 ;; Yleiset apufunktiot helpottamaan tilan muokkausta
 
