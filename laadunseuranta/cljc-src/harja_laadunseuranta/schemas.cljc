@@ -120,7 +120,9 @@
                   :pintaharva
                   :pintakuivatuspuute
                   :kaivojenkorkeusasema
-                  :maakivi)}
+                  :maakivi
+                  :liikennemerkki-vaurioitunut
+                  :reunapaalut-vaurioitunut)}
 
    (s/optional-key :kuvaus) (s/maybe s/Str)
    (s/optional-key :laadunalitus) (s/maybe s/Bool)

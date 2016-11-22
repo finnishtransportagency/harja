@@ -59,6 +59,11 @@
     :tyyppi :piste
     :avain :liikennemerkki-vinossa
     :vaatii-nappaimiston? false}
+   {:nimi "Liikenne\u00ADmerkki vauri\u00ADoitunut"
+    :ikoni "liikennemerkki_vaurioitunut"
+    :tyyppi :piste
+    :avain :liikennemerkki-vaurioitunut
+    :vaatii-nappaimiston? false}
    {:nimi "Liikenne\u00ADmerkki lumi\u00ADnen"
     :ikoni "liikennemerkki_luminen"
     :tyyppi :piste
@@ -107,6 +112,11 @@
     :tyyppi :piste
     :avain :reunapaalut-vinossa
     :ikoni "reunapaalu_vinossa"
+    :vaatii-nappaimiston? false}
+   {:nimi "Reuna\u00ADpaalu vauri\u00ADoitunut"
+    :tyyppi :piste
+    :avain :reunapaalut-vaurioitunut
+    :ikoni "reunapaalu_vaurioitunut"
     :vaatii-nappaimiston? false}
    {:nimi "Rumpu tukossa"
     :tyyppi :piste
@@ -203,7 +213,8 @@
    {:nimi "Maa\u00ADkivi"
     :tyyppi :piste
     :ikoni "maakivi"
-    :avain :maakivi}])
+    :avain :maakivi
+    :vaatii-nappaimiston? false}])
 
 (def valilehti-paallystys
   [{:nimi "Sauma\u00ADvirhe"
