@@ -10,9 +10,9 @@
 
 (defn etenemissuunta
   "Palauttaa 1 jos tr-osoite2 on suurempi kuin tr-osoite1.
-  Palauttaa -1 jos tr-osoite2 on pienempi kuin tr-osoite1
-  Palauttaa 0 jos samat.
-  Jos ei jostain syystä voida määrittää, palauttaa nil"
+   Palauttaa -1 jos tr-osoite2 on pienempi kuin tr-osoite1
+   Palauttaa 0 jos samat.
+   Jos ei jostain syystä voida määrittää, palauttaa nil"
   [tr-osoite1 tr-osoite2]
   (when (and (:aet tr-osoite1) (:aet tr-osoite2))
     (cond
@@ -24,8 +24,8 @@
 ;; tulkitaan ympärikääntymiseksi.
 (defn tr-osoitteet-sisaltavat-ymparikaantymisen?
   "Ottaa kolme tr-osoitetta vectorissa ja kertoo sisältävätkö ne ympärikääntymisen. Päättely tehdään niin, että
-  tutkitaan ensin mihin suuntaan edetään kahden ensimmäisen pisteen kohdalla ja jos kolmas piste eteneekin
-  päinvastaiseen suuntaan, on tapahtunut ympärikääntyminen."
+   tutkitaan ensin mihin suuntaan edetään kahden ensimmäisen pisteen kohdalla ja jos kolmas piste eteneekin
+   päinvastaiseen suuntaan, on tapahtunut ympärikääntyminen."
   [tr-osoitteet]
   (if (every? some? tr-osoitteet)
     (let [etenemissuunta-piste1-piste2 (etenemissuunta (first tr-osoitteet) (second tr-osoitteet))
@@ -38,7 +38,7 @@
 
 (defn- tarkastus-jatkuu?
   "Ottaa reittimerkinnän ja järjestyksesä seuraavan reittimerkinnän ja kertoo muodostavatko ne loogisen jatkumon,
-  toisin sanoen tulkitaanko seuraavan pisteen olevan osa samaa tarkastusta vai ei."
+   toisin sanoen tulkitaanko seuraavan pisteen olevan osa samaa tarkastusta vai ei."
   [nykyinen-reittimerkinta seuraava-reittimerkinta]
   (and
     ;; Jatkuvat havainnot pysyvät samana myös seuraavassa pisteessä
@@ -125,8 +125,9 @@
 (defn viimeinen-indeksi [sekvenssi]
   (- (count sekvenssi) 1))
 
-(defn- lisaa-reittimerkintaan-seuraavan-pisteen-kitka
-  "Ottaa reittimerkinnän ja järjestyksessä seuraavan reittimerkinnän. Lisää seuraavan kitkan tiedot edelliseen."
+(defn- keraa-seuraavan-pisteen-kitka
+  "Ottaa reittimerkinnän ja järjestyksessä seuraavan reittimerkinnän.
+   Lisää seuraavan kitkan tiedot edelliseen."
   [reittimerkinta seuraava-reittimerkinta]
   (if (nil? (:kitkamittaus seuraava-reittimerkinta))
     reittimerkinta
@@ -136,8 +137,9 @@
           (dissoc :kitkamittaus))
       (assoc reittimerkinta :kitkamittaukset (conj (:kitkamittaukset reittimerkinta) (:kitkamittaus seuraava-reittimerkinta))))))
 
-(defn- lisaa-reittimerkintaan-seuraavan-pisteen-sijainti
-  "Ottaa reittimerkinnän ja järjestyksessä seuraavan reittimerkinnän. Lisää seuraavan sijainnin ja TR-osoitteen tiedot edelliseen."
+(defn- keraa-seuraavan-pisteen-sijainti
+  "Ottaa reittimerkinnän ja järjestyksessä seuraavan reittimerkinnän.
+   Lisää seuraavan sijainnin ja TR-osoitteen tiedot edelliseen."
   [reittimerkinta seuraava-reittimerkinta]
   (if (nil? (:sijainti seuraava-reittimerkinta)) ; Käytännössä mahdoton tilanne, mutta tarkistetaan nyt kuitenkin
     reittimerkinta
@@ -175,11 +177,12 @@
         (conj reittimerkinnat seuraava-merkinta)
         (let [viimeisin-yhdistetty-reittimerkinta (last reittimerkinnat)]
           (if (tarkastus-jatkuu? viimeisin-yhdistetty-reittimerkinta seuraava-merkinta)
-            ;; Sama tarkastus jatkuu, ota seuraavan mittauksen tiedot ja lisää ne viimeisimpään reittimerkintään
+            ;; Sama tarkastus jatkuu, ota seuraavan mittauksen tiedot
+            ;; ja lisää ne viimeisimpään reittimerkintään
             (assoc reittimerkinnat (viimeinen-indeksi reittimerkinnat)
                                    (-> viimeisin-yhdistetty-reittimerkinta
-                                       (lisaa-reittimerkintaan-seuraavan-pisteen-sijainti seuraava-merkinta)
-                                       (lisaa-reittimerkintaan-seuraavan-pisteen-kitka seuraava-merkinta)
+                                       (keraa-seuraavan-pisteen-sijainti seuraava-merkinta)
+                                       (keraa-seuraavan-pisteen-kitka seuraava-merkinta)
                                        (keraa-reittimerkintojen-kuvaukset seuraava-merkinta)
                                        (keraa-mittaukset seuraava-merkinta)))
             ;; Uusi tarkastus alkaa
@@ -222,7 +225,7 @@
 
 (defn reittimerkinnat-tarkastuksiksi
   "Käy reittimerkinnät läpi ja palauttaa mapin, jossa reittimerkinnät muutettu
-  reitillisiksi ja pistemäisiksi tarkastuksiksi"
+   reitillisiksi ja pistemäisiksi tarkastuksiksi"
   [tr-osoitteelliset-reittimerkinnat]
   {:reitilliset-tarkastukset (reittimerkinnat-reitillisiksi-tarkastuksiksi tr-osoitteelliset-reittimerkinnat)
    :pistemaiset-tarkastukset (reittimerkinnat-pistemaisiksi-tarkastuksiksi tr-osoitteelliset-reittimerkinnat)})
