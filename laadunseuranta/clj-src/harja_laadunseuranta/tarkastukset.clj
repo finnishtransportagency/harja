@@ -99,43 +99,58 @@
    Reittimerkintä voi olla joko yksittäinen (pistemäinen) reittimerkintä tai
    jatkuvista havainnoista kasattu, yhdistetty reittimerkintä."
   [reittimerkinta]
-  {:aika (:aikaleima reittimerkinta)
-   :tyyppi (paattele-tarkastustyyppi reittimerkinta)
-   :tarkastusajo (:tarkastusajo reittimerkinta)
-   :sijainnit (or (:sijainnit reittimerkinta) [{:sijainti (:sijainti reittimerkinta)
-                                                :tr-osoite (:tr-osoite reittimerkinta)}])
-   :liite (:kuva reittimerkinta)
-   :vakiohavainnot (yhdista-reittimerkinnan-kaikki-havainnot reittimerkinta)
-   :havainnot (:kuvaus reittimerkinta)
-   :talvihoitomittaus {:talvihoitoluokka nil
-                       :lumimaara (:lumisuus reittimerkinta)
-                       :tasaisuus (:talvihoito-tasaisuus reittimerkinta)
-                       :kitka (or (keskiarvo (:kitkamittaukset reittimerkinta))
-                                  (:kitkamittaus reittimerkinta))
-                       :ajosuunta nil
-                       :lampotila_ilma (:lampotila reittimerkinta)
-                       :lampotila_tie nil}
-   :soratiemittaus {:hoitoluokka nil
-                    :tasaisuus (:soratie-tasaisuus reittimerkinta)
-                    :kiinteys (:kiinteys reittimerkinta)
-                    :polyavyys (:polyavyys reittimerkinta)
-                    :sivukaltevuus (:sivukaltevuus reittimerkinta)}
-   :laadunalitus (or (:laadunalitus reittimerkinta) false)})
+  (let [yhdista-mittausarvot (fn [reittimerkinta mittaus-avain]
+                               (cond
+                                 (nil? (mittaus-avain reittimerkinta))
+                                 nil
+
+                                 (number? (mittaus-avain reittimerkinta))
+                                 (mittaus-avain reittimerkinta)
+
+                                 (vector? (mittaus-avain reittimerkinta))
+                                 (keskiarvo (mittaus-avain reittimerkinta))))]
+    {:aika (:aikaleima reittimerkinta)
+     :tyyppi (paattele-tarkastustyyppi reittimerkinta)
+     :tarkastusajo (:tarkastusajo reittimerkinta)
+     :sijainnit (or (:sijainnit reittimerkinta) [{:sijainti (:sijainti reittimerkinta)
+                                                  :tr-osoite (:tr-osoite reittimerkinta)}])
+     :liite (:kuva reittimerkinta) ;; TODO Hanskataanko varmasti oikein nyt kun kuvia voi tulla monta?
+     :vakiohavainnot (yhdista-reittimerkinnan-kaikki-havainnot reittimerkinta)
+     :havainnot (:kuvaus reittimerkinta)
+     :talvihoitomittaus {:talvihoitoluokka nil
+                         :lumimaara (yhdista-mittausarvot reittimerkinta :lumisuus)
+                         :tasaisuus (yhdista-mittausarvot reittimerkinta :talvihoito-tasaisuus)
+                         :kitka (yhdista-mittausarvot reittimerkinta :kitkamittaus)
+                         :ajosuunta nil
+                         :lampotila_ilma (yhdista-mittausarvot reittimerkinta :lampotila)
+                         :lampotila_tie nil}
+     :soratiemittaus {:hoitoluokka nil
+                      :tasaisuus (yhdista-mittausarvot reittimerkinta :soratie-tasaisuus)
+                      :kiinteys (yhdista-mittausarvot reittimerkinta :kiinteys)
+                      :polyavyys (yhdista-mittausarvot reittimerkinta :polyavyys)
+                      :sivukaltevuus (yhdista-mittausarvot reittimerkinta :sivukaltevuus)}
+     :laadunalitus (or (boolean (:laadunalitus reittimerkinta)) false)}))
 
 (defn viimeinen-indeksi [sekvenssi]
   (- (count sekvenssi) 1))
 
-(defn- keraa-seuraavan-pisteen-kitka
+(defn- keraa-seuraavan-pisteen-mittaus
   "Ottaa reittimerkinnän ja järjestyksessä seuraavan reittimerkinnän.
-   Lisää seuraavan kitkan tiedot edelliseen."
-  [reittimerkinta seuraava-reittimerkinta]
-  (if (nil? (:kitkamittaus seuraava-reittimerkinta))
+   Lisää seuraavan mittauksen tiedot edelliseen."
+  [reittimerkinta seuraava-reittimerkinta mittaus-avain]
+  (if (nil? (mittaus-avain seuraava-reittimerkinta))
     reittimerkinta
-    (if (nil? (:kitkamittaukset reittimerkinta))
-      (-> reittimerkinta
-          (assoc :kitkamittaukset (keep identity [(:kitkamittaus reittimerkinta) (:kitkamittaus seuraava-reittimerkinta)]))
-          (dissoc :kitkamittaus))
-      (assoc reittimerkinta :kitkamittaukset (conj (:kitkamittaukset reittimerkinta) (:kitkamittaus seuraava-reittimerkinta))))))
+
+    (cond (nil? (mittaus-avain reittimerkinta)) ;; Aseta arvoksi seuraava mittaus
+          (assoc reittimerkinta mittaus-avain (mittaus-avain seuraava-reittimerkinta))
+
+          (number? (mittaus-avain reittimerkinta)) ;; Muunna vectoriksi
+          (assoc reittimerkinta mittaus-avain [(mittaus-avain reittimerkinta)
+                                               (mittaus-avain seuraava-reittimerkinta)])
+
+          (vector? (mittaus-avain reittimerkinta)) ;; Lisää seuraava arvo vectoriin
+          (assoc reittimerkinta mittaus-avain (conj (mittaus-avain reittimerkinta)
+                                                    (mittaus-avain seuraava-reittimerkinta))))))
 
 (defn- keraa-seuraavan-pisteen-sijainti
   "Ottaa reittimerkinnän ja järjestyksessä seuraavan reittimerkinnän.
@@ -161,13 +176,6 @@
     (assoc reittimerkinta :kuvaus (str (when-let [k (:kuvaus reittimerkinta)]
                                          (str k "\n")) (:kuvaus seuraava-reittimerkinta)))))
 
-(defn- keraa-mittaukset
-  [reittimerkinta seuraava-reittimerkinta]
-  (merge reittimerkinta (utils/select-non-nil-keys
-                          seuraava-reittimerkinta
-                          [:talvihoito-tasaisuus :soratie-tasaisuus :kiinteys :polyavyys
-                           :sivukaltevuus :lampotila :kuva :lumisuus])))
-
 (defn- yhdista-jatkuvat-reittimerkinnat
   "Ottaa joukon reittimerkintöjä ja yhdistää ne yhdeksi loogiseksi jatkumoksi."
   [reittimerkinnat]
@@ -179,12 +187,21 @@
           (if (tarkastus-jatkuu? viimeisin-yhdistetty-reittimerkinta seuraava-merkinta)
             ;; Sama tarkastus jatkuu, ota seuraavan mittauksen tiedot
             ;; ja lisää ne viimeisimpään reittimerkintään
-            (assoc reittimerkinnat (viimeinen-indeksi reittimerkinnat)
-                                   (-> viimeisin-yhdistetty-reittimerkinta
-                                       (keraa-seuraavan-pisteen-sijainti seuraava-merkinta)
-                                       (keraa-seuraavan-pisteen-kitka seuraava-merkinta)
-                                       (keraa-reittimerkintojen-kuvaukset seuraava-merkinta)
-                                       (keraa-mittaukset seuraava-merkinta)))
+            (assoc reittimerkinnat
+              (viimeinen-indeksi reittimerkinnat)
+              (-> viimeisin-yhdistetty-reittimerkinta
+                  (keraa-seuraavan-pisteen-sijainti seuraava-merkinta)
+                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :talvihoito-tasaisuus)
+                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :lumisuus)
+                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :kitkamittaus)
+                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :soratie-tasaisuus)
+                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :kiinteys)
+                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :polyavyys)
+                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :sivukaltevuus)
+                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :lampotila)
+                  ;; Okei, kuva ei ole mittaus, mutta kerääminen toimii samalla logiikalla :-)
+                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :kuva)
+                  (keraa-reittimerkintojen-kuvaukset seuraava-merkinta)))
             ;; Uusi tarkastus alkaa
             (conj reittimerkinnat seuraava-merkinta)))))
     []
