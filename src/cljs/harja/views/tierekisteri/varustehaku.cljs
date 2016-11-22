@@ -9,15 +9,18 @@
             [harja.ui.debug :refer [debug]]
             [harja.ui.grid :as grid]))
 
-(defn varustehaku-ehdot [e! hakuehdot]
+(defn varustehaku-ehdot [e! {haku? :haku-kaynnissa? :as hakuehdot}]
   [lomake/lomake
    {:otsikko "Hae varusteita Tierekisteristä"
     :muokkaa! #(e! (v/->AsetaVarusteidenHakuehdot %))
     :footer-fn (fn [rivi]
-                 [napit/yleinen "Hae Tierekisteristä"
-                  #(e! (v/->HaeVarusteita))
-                  {:disabled (:haku-kaynnissa? hakuehdot)
-                   :ikoni (ikonit/livicon-search)}])
+                 [:div
+                  [napit/yleinen "Hae Tierekisteristä"
+                   #(e! (v/->HaeVarusteita))
+                   {:disabled (:haku-kaynnissa? hakuehdot)
+                    :ikoni (ikonit/livicon-search)}]
+                  (when haku?
+                    [yleiset/ajax-loader "Varusteita haetaan tierekisteristä"])])
     :tunniste (comp :tunniste :varuste)}
 
    [{:nimi :tietolaji
@@ -45,7 +48,6 @@
   "Komponentti, joka näyttää lomakkeen varusteiden hakemiseksi tierekisteristä
   sekä haun tulokset."
   [e! {:keys [hakuehdot listaus-skeema tietolaji varusteet] :as app}]
-  (log "HAKUEHDOT: " (pr-str hakuehdot))
   [:div.varustehaku
    [varustehaku-ehdot e! (:hakuehdot app)]
    (when (and listaus-skeema varusteet)
