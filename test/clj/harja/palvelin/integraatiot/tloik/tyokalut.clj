@@ -288,6 +288,11 @@
   (let [ilmoitus (ilmoitussanoma/lue-viesti +testi-valaistusilmoitus-sanoma+)]
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
 
+(defn tuo-ilmoitus-ilman-tienumeroa[]
+  (let [sanoma (str/replace +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+ "<tienumero>4</tienumero>" "")
+        ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
+    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
+
 (defn hae-ilmoitus []
   (q "select * from ilmoitus where ilmoitusid = 123456789;"))
 
