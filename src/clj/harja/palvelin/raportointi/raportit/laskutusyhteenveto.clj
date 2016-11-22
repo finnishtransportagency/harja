@@ -23,15 +23,17 @@
                                    [alkupvm loppupvm])]
     (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
 
-    (vec
-      (sort-by (juxt (comp toimenpidekoodit/tuotteen-jarjestys :tuotekoodi) :nimi)
-               (into []
-                     (laskutus-q/hae-laskutusyhteenvedon-tiedot db
-                                                                (konv/sql-date hk-alkupvm)
-                                                                (konv/sql-date hk-loppupvm)
-                                                                (konv/sql-date alkupvm)
-                                                                (konv/sql-date loppupvm)
-                                                                urakka-id))))))
+    (let [tulos (vec
+            (sort-by (juxt (comp toimenpidekoodit/tuotteen-jarjestys :tuotekoodi) :nimi)
+                     (into []
+                           (laskutus-q/hae-laskutusyhteenvedon-tiedot db
+                                                                      (konv/sql-date hk-alkupvm)
+                                                                      (konv/sql-date hk-loppupvm)
+                                                                      (konv/sql-date alkupvm)
+                                                                      (konv/sql-date loppupvm)
+                                                                      urakka-id))))]
+      #_(log/debug (pr-str tulos))
+      tulos)))
 
 (defn laske-asiakastyytyvaisyysbonus
   [db {:keys [urakka-id maksupvm indeksinimi summa] :as tiedot}]

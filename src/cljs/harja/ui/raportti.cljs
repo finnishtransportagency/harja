@@ -34,7 +34,7 @@
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
   ;; ennaltamääriteltyjä tyylejä, mutta jos on erikoistapaus missä halutaan käyttää itsemääriteltyä väriä,
   ;; voidaan käyttää avainta :itsepaisesti-maaritelty-oma-vari
-  [[_ [{:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari]}]]]
+  [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari]}]]
   [:span.varillinen-teksti
    [:span.arvo {:style {:color (or (raportti-domain/virhetyylit tyyli) itsepaisesti-maaritelty-oma-vari "rgb(25,25,25)")}}
     arvo]])
