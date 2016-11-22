@@ -301,13 +301,13 @@
 
 (def silta (atom :kaikki))
 (def urakan-sillat (reaction<! [nakymassa? @raportit/raportit-nakymassa?
-                                urakka @nav/valittu-urakka
-                                oikeus? (oikeudet/urakat-laadunseuranta-siltatarkastukset urakka)]
+                                urakka @nav/valittu-urakka]
                                {:nil-kun-haku-kaynnissa? true}
-                               (when (and urakka nakymassa? oikeus?)
-                                 (k/post! :hae-urakan-sillat
-                                          {:urakka-id (:id urakka)
-                                           :listaus :kaikki}))))
+                               (let [oikeus? (oikeudet/urakat-laadunseuranta-siltatarkastukset urakka)]
+                                 (when (and urakka nakymassa? oikeus?)
+                                  (k/post! :hae-urakan-sillat
+                                           {:urakka-id (:id urakka)
+                                            :listaus :kaikki})))))
 
 (defmethod raportin-parametri "silta" [p arvo]
   (reset! arvo {:silta-id (if (= @silta :kaikki)

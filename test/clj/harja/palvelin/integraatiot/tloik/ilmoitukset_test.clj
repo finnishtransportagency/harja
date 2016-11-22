@@ -185,3 +185,10 @@
            (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
         "Urakka on asetettu tyypin ja sijainnin mukaan oikein käynnissäolevaksi Oulun alueurakaksi 2014-2019.")
     (poista-ilmoitus)))
+
+(deftest tarkista-uusi-ilmoitus-ilman-tienumeroa
+  (tuo-ilmoitus-ilman-tienumeroa)
+  (let [ilmoitukset (hae-ilmoitus)]
+    (is (= 1 (count ilmoitukset)) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
+    (is (= "2015-09-29 17:49:45.0" (str (nth (first ilmoitukset) 3))) "Ilmoitusaika on parsittu oikein"))
+  (poista-ilmoitus))

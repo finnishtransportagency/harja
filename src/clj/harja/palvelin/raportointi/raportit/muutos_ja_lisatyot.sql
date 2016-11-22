@@ -3,6 +3,7 @@
 SELECT
   t.tyyppi,
   t.alkanut,
+  t.lisatieto,
   tt.id                                                  AS tehtava_id,
   tt.toteuma                                             AS toteuma_id,
   tt.toimenpidekoodi                                     AS tehtava_toimenpidekoodi,

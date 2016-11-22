@@ -89,7 +89,7 @@
     parametrit))
 
 (defn hae-kohteen-paallystysilmoitus [db kohde-id]
-  (let [ilmoitus (first (q-paallystys/hae-urakan-paallystysilmoitus-paallystyskohteella db {:paallystyskohde kohde-id}))]
+  (let [ilmoitus (first (q-paallystys/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella db {:paallystyskohde kohde-id}))]
     (konv/jsonb->clojuremap ilmoitus :ilmoitustiedot)))
 
 (defn hae-alikohteet [db kohde-id paallystys-ilmoitus]

@@ -106,10 +106,10 @@
         :nimi :tekninen-osa
         :tyyppi :checkbox
         :fmt #(if % "Tekninen osa tarkastettu" "Teknistä osaa ei tarkastettu")}
-       {:teksti "Taloudellinen osa tarkastettu"
+       {:teksti "Hinnan muutokset tarkastettu"
         :nimi :taloudellinen-osa
         :tyyppi :checkbox
-        :fmt #(if % "Taloudellinen osa tarkastettu" "Taloudellista osaa ei tarkastettu")}
+        :fmt #(if % "Hinnan muutokset tarkastettu" "Hinnan muutoksia ei tarkastettu")}
        {:otsikko "Lisätiedot"
         :nimi :lisatiedot
         :tyyppi :text
@@ -126,35 +126,35 @@
                           [[:pvm-toisen-pvmn-jalkeen valmistumispvm
                             "Käsittely ei voi olla ennen valmistumista"]])]
     [lomake/lomake
-    {:otsikko      otsikko
-     :muokkaa!     muokkaa!
-     :voi-muokata? muokattava?}
-    [{:otsikko     "Käsitelty"
-      :nimi        :kasittelyaika
-      :pakollinen? (when (:paatos osa) true)
-      :tyyppi      :pvm
-      :validoi     pvm-validoinnit}
+     {:otsikko otsikko
+      :muokkaa! muokkaa!
+      :voi-muokata? muokattava?}
+     [{:otsikko "Käsitelty"
+       :nimi :kasittelyaika
+       :pakollinen? (when (:paatos osa) true)
+       :tyyppi :pvm
+       :validoi pvm-validoinnit}
 
-     {:otsikko       "Päätös"
-      :nimi          :paatos
-      :tyyppi        :valinta
-      :valinnat      [:hyvaksytty :hylatty]
-      :validoi       [[:ei-tyhja "Anna päätös"]]
-      :valinta-nayta #(cond
-                       % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %)
-                       muokattava? "- Valitse päätös -"
-                       :default "-")
-      :palstoja      1}
+      {:otsikko "Päätös"
+       :nimi :paatos
+       :tyyppi :valinta
+       :valinnat [:hyvaksytty :hylatty]
+       :validoi [[:ei-tyhja "Anna päätös"]]
+       :valinta-nayta #(cond
+                        % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %)
+                        muokattava? "- Valitse päätös -"
+                        :default "-")
+       :palstoja 1}
 
-     (when (:paatos osa)
-       {:otsikko    "Selitys"
-        :nimi       :perustelu
-        :tyyppi     :text
-        :koko       [60 3]
-        :pituus-max 2048
-        :palstoja   2
-        :validoi    [[:ei-tyhja "Anna päätöksen selitys"]]})]
-    osa]))
+      (when (:paatos osa)
+        {:otsikko "Selitys"
+         :nimi :perustelu
+         :tyyppi :text
+         :koko [60 3]
+         :pituus-max 2048
+         :palstoja 2
+         :validoi [[:ei-tyhja "Anna päätöksen selitys"]]})]
+     osa]))
 
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis.
@@ -174,23 +174,20 @@
      [kasittelytiedot "Tekninen osa" muokattava? valmistumispvm tekninen-osa
       #(muokkaa! assoc :tekninen-osa %)]
 
-     [kasittelytiedot "Taloudellinen osa" muokattava? valmistumispvm taloudellinen-osa
+     [kasittelytiedot "Hinnan muutokset" muokattava? valmistumispvm taloudellinen-osa
       #(muokkaa! assoc :taloudellinen-osa %)]]))
 
 (defn tallennus
-  [urakka {:keys [valmispvm-kohde valmispvm-paallystys tekninen-osa taloudellinen-osa
+  [urakka {:keys [valmispvm-kohde tekninen-osa taloudellinen-osa
                   tila] :as lomake} valmis-tallennettavaksi? tallennus-onnistui]
   (let [paatos-tekninen-osa (:paatos tekninen-osa)
         paatos-taloudellinen-osa (:paatos taloudellinen-osa)
         huomautusteksti
-        (cond (not (and valmispvm-kohde valmispvm-paallystys))
-              "Valmistusmispäivämäärää ei ole annettu, ilmoitus tallennetaan keskeneräisenä."
-              (and (not= :lukittu tila)
+        (cond (and (not= :lukittu tila)
                    (= :hyvaksytty paatos-tekninen-osa)
                    (= :hyvaksytty paatos-taloudellinen-osa))
               "Ilmoituksen molemmat osat on hyväksytty, ilmoitus lukitaan tallennuksen yhteydessä."
-              :else
-              nil)
+              :default nil)
         urakka-id (:id urakka)
         [sopimus-id _] @u/valittu-sopimusnumero]
 
@@ -234,13 +231,14 @@
               #(assoc-in % polku
                          (vec (grid/filteroi-uudet-poistetut uusi-arvo)))))))
 
-(defn paallystysilmoitus-perustiedot [urakka {:keys [tila valmispvm-kohde] :as lomakedata-nyt} lukittu? kirjoitusoikeus? muokkaa!]
-  (let [valmis-kasiteltavaksi?
-        (do
-          #_(log "[PÄÄLLYSTYS] valmis käsiteltäväksi " (pr-str valmispvm-kohde) (pr-str tila))
-          (and tila
-               valmispvm-kohde
-               (not (= tila :aloitettu))))]
+(defn paallystysilmoitus-perustiedot [urakka {:keys [tila] :as lomakedata-nyt} lukittu? kirjoitusoikeus? muokkaa!]
+  (let [nayta-kasittelyosiot? (or (= tila :valmis) (= tila :lukittu))
+        tarkista-takuu-pvm (fn [_ {valmispvm-paallystys :valmispvm-paallystys
+                                   takuupvm :takuupvm}]
+                             (when (and valmispvm-paallystys
+                                        takuupvm
+                                        (> valmispvm-paallystys takuupvm))
+                               "Takuupvm on yleensä kohteen valmistumisen jälkeen."))]
     [:div.row
      [:div.col-md-6
       [:h3 "Perustiedot"]
@@ -255,22 +253,22 @@
                 (str "#" (:kohdenumero lomakedata-nyt) " " (:kohdenimi lomakedata-nyt)))
          :muokattava? (constantly false)
          :palstoja 2}
-        {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm :palstoja 1}
-        {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :palstoja 1}
-        {:otsikko "Päällystys valmistunut" :nimi :valmispvm-paallystys :tyyppi :pvm :palstoja 1}
+        {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm :palstoja 1 :muokattava? (constantly false)}
+        {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :palstoja 1
+         :varoita [tarkista-takuu-pvm]}
+        {:otsikko "Päällystys valmistunut" :nimi :valmispvm-paallystys :tyyppi :pvm :palstoja 1 :muokattava? (constantly false)}
         {:otsikko "Kohde valmistunut" :nimi :valmispvm-kohde :palstoja 1
-         :vihje (when (and
-                        (:valmispvm-paallystys lomakedata-nyt)
-                        (:valmispvm-kohde lomakedata-nyt)
-                        (= :aloitettu (:tila lomakedata-nyt)))
-                  "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
-         :tyyppi :pvm
-         :validoi [[:toinen-arvo-annettu-ensin :valmispvm-paallystys
-                    "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
+         :tyyppi :pvm :muokattava? (constantly false)}
         {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
          :hae #(-> % laske-hinta :toteuman-kokonaishinta)
          :fmt fmt/euro-opt :tyyppi :numero
-         :palstoja 2 :muokattava? (constantly false)}
+         :muokattava? (constantly false) :palstoja 1}
+        (when (and (not= :valmis (:tila lomakedata-nyt))
+                   (not= :lukittu (:tila lomakedata-nyt)))
+          {:otsikko "Käsittely"
+           :teksti "Valmis tilaajan käsiteltäväksi"
+           :nimi :valmis-kasiteltavaksi :palstoja 1
+           :tyyppi :checkbox})
         (when (or (= :valmis (:tila lomakedata-nyt))
                   (= :lukittu (:tila lomakedata-nyt)))
           {:otsikko "Kommentit" :nimi :kommentit
@@ -287,11 +285,11 @@
                                                     #(muokkaa! assoc :uusi-kommentti %))}
                            (:kommentit lomakedata-nyt)])})]
        lomakedata-nyt]
-      (when valmis-kasiteltavaksi?
+      (when nayta-kasittelyosiot?
         [asiatarkastus urakka lomakedata-nyt lukittu? muokkaa!])]
 
      [:div.col-md-6
-      (when valmis-kasiteltavaksi?
+      (when nayta-kasittelyosiot?
         [:div
          [kasittely urakka lomakedata-nyt lukittu? muokkaa!]])]]))
 
@@ -496,7 +494,7 @@
                                             grid-wrap wrap-virheet muokkaa!]
   (let [toteutuneet-maarat (grid-wrap [:ilmoitustiedot :tyot])]
     [:fieldset.lomake-osa
-     [:h3 "Taloudellinen osa"]
+     [:h3 "Muutosten hallinta"]
 
      [grid/muokkaus-grid
       {:otsikko "Toteutuneet määrät"
@@ -534,7 +532,7 @@
   (komp/luo
     (komp/ulos #(kartta/poista-popup!))
     (komp/lukko (lukko/muodosta-lukon-id "paallystysilmoitus" yllapitokohde-id))
-    (fn [urakka {:keys [virheet tila valmispvm-kohde kirjoitusoikeus?] :as lomakedata-nyt}
+    (fn [urakka {:keys [virheet tila kirjoitusoikeus?] :as lomakedata-nyt}
          lukko muokkaa! historia tallennus-onnistui]
       (let [lukittu? (lukko/nakyma-lukittu? lukko)
             valmis-tallennettavaksi? (and

@@ -37,17 +37,16 @@
   (let [sopimus-id (hae-sopimus-id db urakka-id toteuma)]
     (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
            db
-           (aika-string->java-sql-date (:alkanut toteuma))
-           (aika-string->java-sql-date (:paattynyt toteuma))
-           (:id kirjaaja)
-           (get-in toteuma [:suorittaja :nimi])
-           (get-in toteuma [:suorittaja :ytunnus])
-           ""
-           (:toteumatyyppi toteuma)
-           (:reitti toteuma)
-           sopimus-id
-           (get-in toteuma [:tunniste :id])
-           urakka-id))))
+           {:alkanut (aika-string->java-sql-date (:alkanut toteuma))
+            :paattynyt (aika-string->java-sql-date (:paattynyt toteuma))
+            :kayttaja (:id kirjaaja)
+            :suorittajan_nimi (get-in toteuma [:suorittaja :nimi])
+            :ytunnus (get-in toteuma [:suorittaja :ytunnus])
+            :lisatieto ""
+            :tyyppi (:toteumatyyppi toteuma)
+            :sopimus sopimus-id
+            :id (get-in toteuma [:tunniste :id])
+            :urakka urakka-id}))))
 
 (defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Luodaan uusi toteuma.")
@@ -76,6 +75,10 @@
     (luo-uusi-toteuma db urakka-id kirjaaja toteuma)))
 
 (defn paivita-toteuman-reitti [db toteuma-id reitti]
+  ;; Tuotantoon on lokakuun 2016 alussa toteumia, joilla pitäisi olla reitti, mutta ei ole.
+  ;; Vaikea saada virheestä kiinni, mutta logitetaan tässä, jos tyhjä reitti tallennetan.
+  ;; Pitää huomata, että periaatteessa voimme oikeasti halutakkin tallentaa tyhjän reitin..
+  (when-not reitti (log/warn "Toteumalle " toteuma-id " tallennetaan tyhjä reitti!"))
   (toteumat/paivita-toteuman-reitti! db {:id toteuma-id
                                          :reitti reitti}))
 

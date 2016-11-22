@@ -5,7 +5,7 @@
             [harja.kyselyt.yhteyshenkilot :as q]
             [harja.kyselyt.urakat :as uq]
 
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
 
@@ -16,7 +16,8 @@
             [harja.domain.puhelinnumero :as puhelinnumero]
             [harja.pvm :as pvm]
             [clj-time.core :as t]
-            [clj-time.coerce :as c])
+            [clj-time.coerce :as c]
+            [harja.fmt :as fmt])
   (:import (java.sql Date)))
 
 (declare hae-urakan-yhteyshenkilot
@@ -26,40 +27,60 @@
          hae-urakan-paivystajat
          tallenna-urakan-paivystajat
 
-         hae-urakan-kayttajat)
+         hae-urakan-kayttajat
+         hae-urakan-vastuuhenkilot
+         tallenna-urakan-vastuuhenkilot-roolille)
 
 (defrecord Yhteyshenkilot []
   component/Lifecycle
   (start [this]
-    (doto (:http-palvelin this)
-      (julkaise-palvelu :hae-urakan-yhteyshenkilot
-                        (fn [user urakka-id]
-                          (hae-urakan-yhteyshenkilot (:db this) user urakka-id)))
-      (julkaise-palvelu :hae-yhteyshenkilotyypit
-                        (fn [user _]
-                          (hae-yhteyshenkilotyypit (:db this) user)))
-      (julkaise-palvelu :hae-urakan-paivystajat
-                        (fn [user urakka-id]
-                          (hae-urakan-paivystajat (:db this) user urakka-id)))
-      (julkaise-palvelu :tallenna-urakan-yhteyshenkilot
-                        (fn [user tiedot]
-                          (tallenna-urakan-yhteyshenkilot (:db this) user tiedot)))
-      (julkaise-palvelu :tallenna-urakan-paivystajat
-                        (fn [user tiedot]
-                          (tallenna-urakan-paivystajat (:db this) user tiedot)))
-      (julkaise-palvelu :hae-urakan-kayttajat
-                        (fn [user urakka-id]
-                          (hae-urakan-kayttajat (:db this) (:fim this) user urakka-id))))
+    (julkaise-palvelut
+     (:http-palvelin this)
+
+     :hae-urakan-yhteyshenkilot
+     (fn [user urakka-id]
+       (hae-urakan-yhteyshenkilot (:db this) user urakka-id))
+
+     :hae-yhteyshenkilotyypit
+     (fn [user _]
+       (hae-yhteyshenkilotyypit (:db this) user))
+
+     :hae-urakan-paivystajat
+     (fn [user urakka-id]
+       (hae-urakan-paivystajat (:db this) user urakka-id))
+
+     :tallenna-urakan-yhteyshenkilot
+     (fn [user tiedot]
+       (tallenna-urakan-yhteyshenkilot (:db this) user tiedot))
+
+     :tallenna-urakan-paivystajat
+     (fn [user tiedot]
+       (tallenna-urakan-paivystajat (:db this) user tiedot))
+
+     :hae-urakan-kayttajat
+     (fn [user urakka-id]
+       (hae-urakan-kayttajat (:db this) (:fim this) user urakka-id))
+
+     :hae-urakan-vastuuhenkilot
+     (fn [user urakka-id]
+       (hae-urakan-vastuuhenkilot (:db this) user urakka-id))
+
+     :tallenna-urakan-vastuuhenkilot-roolille
+     (fn [user tiedot]
+       (tallenna-urakan-vastuuhenkilot-roolille (:db this) user tiedot)))
+
     this)
 
   (stop [this]
-    (doseq [p [:hae-urakan-yhteyshenkilot
-               :hae-yhteyshenkilotyypit
-               :tallenna-urakan-yhteyshenkilot
-               :hae-urakan-paivystajat
-               :tallenna-urakan-paivystajat
-               :hae-urakan-kayttajat]]
-      (poista-palvelu (:http-palvelin this) p))
+    (poista-palvelut (:http-palvelin this)
+                     :hae-urakan-yhteyshenkilot
+                     :hae-yhteyshenkilotyypit
+                     :tallenna-urakan-yhteyshenkilot
+                     :hae-urakan-paivystajat
+                     :tallenna-urakan-paivystajat
+                     :hae-urakan-kayttajat
+                     :hae-urakan-vastuuhenkilot
+                     :tallenna-urakan-vastuuhenkilot-roolille)
     this))
 
 (defn hae-urakan-kayttajat [db fim user urakka-id]
@@ -203,3 +224,32 @@
 
     ;; Haetaan lopuksi uuden päivystäjät
     (hae-urakan-paivystajat c user urakka-id)))
+
+(defn hae-urakan-vastuuhenkilot [db user urakka-id]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
+  (q/hae-urakan-vastuuhenkilot db urakka-id))
+
+(defn tallenna-urakan-vastuuhenkilot-roolille
+  [db user {:keys [urakka-id rooli vastuuhenkilo varahenkilo] :as tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
+  (when (and (= (roolit/osapuoli user) :urakoitsija)
+             (not= rooli "vastuuhenkilo"))
+    (log/error "Käyttäjä " user " yritti luoda vastuuhenkilön urakkaan "
+               urakka-id " roolilla " rooli)
+    (throw (SecurityException. "Ei oikeutta luoda vastuuhenkilö annetulle roolille")))
+
+  (let [luo<! (fn [c kayttaja ensisijainen]
+                (q/luo-urakan-vastuuhenkilo<! c {:urakka urakka-id
+                                                 :rooli rooli
+                                                 :nimi (or (:nimi kayttaja) (fmt/kayttaja kayttaja))
+                                                 :puhelin (:puhelin kayttaja)
+                                                 :sahkoposti (:sahkoposti kayttaja)
+                                                 :kayttajatunnus (:kayttajatunnus kayttaja)
+                                                 :ensisijainen ensisijainen}))]
+    (jdbc/with-db-transaction [c db]
+      (q/poista-urakan-vastuuhenkilot-roolille! c {:urakka urakka-id :rooli rooli})
+      (when vastuuhenkilo
+        (luo<! c vastuuhenkilo true))
+      (when varahenkilo
+        (luo<! c varahenkilo false)))
+    (hae-urakan-vastuuhenkilot db user urakka-id)))

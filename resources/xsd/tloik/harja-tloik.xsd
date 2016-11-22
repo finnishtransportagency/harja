@@ -143,7 +143,7 @@
     </xs:complexType>
     <xs:complexType name="sijainti">
         <xs:sequence>
-            <xs:element name="tienumero" type="xs:integer" minOccurs="1" />
+            <xs:element name="tienumero" type="xs:integer" minOccurs="0" />
             <xs:element name="x" type="xs:decimal" minOccurs="1" />
             <xs:element name="y" type="xs:decimal" minOccurs="1" />
             <xs:element name="tieosa" type="xs:integer" minOccurs="0" />
@@ -251,8 +251,6 @@
             <xs:enumeration value="kevyenLiikenteenVaylatOvatjaatymassa" />
             <xs:enumeration value="tietOvatjaisiaJamarkia" />
             <xs:enumeration value="kiertotienKunnossapito" />
-            <xs:enumeration value="jarjestelmanTilanTarkistus" />
-            <xs:enumeration value="jarjestelmanVikaTila" />
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="urakkatyyppi">
@@ -263,6 +261,7 @@
             <xs:enumeration value="hoito" />
             <xs:enumeration value="paikkaus" />
             <xs:enumeration value="silta" />
+            <xs:enumeration value="tekniset laitteet" />
         </xs:restriction>
     </xs:simpleType>
     <xs:complexType name="organisaatio">
@@ -333,8 +332,7 @@
     </xs:complexType>
     <xs:simpleType name="uuid">
         <xs:restriction base="xs:string">
-            <xs:minLength value="32"/>
-            <xs:maxLength value="36" />
+            <xs:length value="36" />
         </xs:restriction>
     </xs:simpleType>
 </xs:schema>
