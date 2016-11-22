@@ -21,8 +21,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [clj-time.core :as t]
             [clojure.string :as str])
-  (:use [slingshot.slingshot :only [try+ throw+]])
-  (:import (java.text SimpleDateFormat)))
+  (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn- muunna-tietolajin-arvot-stringiksi [tietolajin-kuvaus arvot-map]
   (tr-tietolaji/tietolajin-arvot-map->merkkijono
