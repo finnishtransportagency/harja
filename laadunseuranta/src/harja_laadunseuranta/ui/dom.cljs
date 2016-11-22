@@ -20,10 +20,28 @@
   (.addEventListener js/window "resize" #(do (paivita-leveys!)
                                              (paivita-korkeus!)
                                              (tapahtumat/julkaise! {:aihe :window-resize}))))
+(defn kuuntele-body-klikkauksia []
+  (set! (.-onclick js/document.body)
+        (fn [e]
+          (tapahtumat/julkaise! {:aihe :body-click
+                                 :tapahtuma e}))))
 
 (defn elementin-etaisyys-viewportin-alareunaan [solmu]
   (let [r (.getBoundingClientRect solmu)
         etaisyys (- @korkeus (.-bottom r))]
     etaisyys))
 
+(defn sisalla?
+  "Tarkistaa onko annettu tapahtuma tämän React komponentin sisällä."
+  [dom-node tapahtuma]
+  (let [elt (.-target tapahtuma)]
+    (loop [ylempi (.-parentNode elt)]
+      (if (or (nil? ylempi)
+              (= ylempi js/document.body))
+        false
+        (if (= dom-node ylempi)
+          true
+          (recur (.-parentNode ylempi)))))))
+
 (kuuntele-leveyksia)
+(kuuntele-body-klikkauksia)

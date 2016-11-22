@@ -66,7 +66,7 @@
 
 (defn- paanavigointi-header [{:keys [valilehdet valittu-valilehti
                                      hampurilaisvalikon-lista-nakyvissa?
-                                     hampurilaisvalikko-painettu
+                                     hampurilaisvalikko-painettu body-click
                                      hampurilaisvalikon-lista-item-painettu
                                      valittu-valilehtiryhma valilehtiryhmat] :as tiedot}]
   (let [dom-node (atom nil)
@@ -93,11 +93,18 @@
                                     :oikea (when (< @valittu-valilehtiryhma 3)
                                              (reset! valittu-valilehtiryhma (+ @valittu-valilehtiryhma 1)))
                                     :vasen (when (> @valittu-valilehtiryhma 0)
-                                             (reset! valittu-valilehtiryhma (- @valittu-valilehtiryhma 1)))))]
+                                             (reset! valittu-valilehtiryhma (- @valittu-valilehtiryhma 1)))))
+        body-click-kuuntelija (atom nil)]
 
     (r/create-class
       {:component-did-mount (fn [this]
-                              (reset! dom-node (reagent/dom-node this)))
+                              (reset! dom-node (reagent/dom-node this))
+                              (reset! body-click-kuuntelija
+                                      (tapahtumat/kuuntele! :body-click
+                                                            #(when-not (dom/sisalla? @dom-node (:tapahtuma %))
+                                                              (body-click %)))))
+       :component-will-unmount (fn [_]
+                                 (@body-click-kuuntelija))
        :reagent-render
        (fn [{:keys [kayta-hampurilaisvalikkoa?
                     valilehdet-nakyvissa? valilehdet jatkuvat-havainnot
@@ -217,7 +224,7 @@
 
 (defn- paanavigointikomponentti [{:keys [valilehdet paanavigointi-nakyvissa?
                                          hampurilaisvalikon-lista-nakyvissa?
-                                         hampurilaisvalikko-painettu
+                                         body-click
                                          hampurilaisvalikon-lista-item-painettu
                                          valittu-valilehtiryhma valilehdet-nakyvissa?
                                          valittu-valilehti] :as tiedot}]
@@ -264,6 +271,7 @@
                                   :valilehtiryhmat valilehtiryhmat
                                   :valilehdet-nakyvissa? valilehdet-nakyvissa?
                                   :valilehdet valilehdet
+                                  :body-click body-click
                                   :hampurilaisvalikon-lista-nakyvissa? hampurilaisvalikon-lista-nakyvissa?
                                   :valittu-valilehtiryhma valittu-valilehtiryhma
                                   :jatkuvat-havainnot jatkuvat-havainnot
@@ -285,6 +293,7 @@
   [paanavigointikomponentti {:valilehdet tiedot/oletusvalilehdet
                              :hampurilaisvalikon-lista-nakyvissa? s/paanavigoinnin-hampurilaisvalikon-lista-nakyvissa?
                              :hampurilaisvalikko-painettu tiedot/hampurilaisvalikko-painettu!
+                             :body-click tiedot/body-click
                              :hampurilaisvalikon-lista-item-painettu tiedot/hampurilaisvalikon-lista-item-valittu!
                              :valilehtiryhmat s/paanavigoinnin-valilehtiryhmat
                              :paanavigointi-nakyvissa? s/nayta-paanavigointi?

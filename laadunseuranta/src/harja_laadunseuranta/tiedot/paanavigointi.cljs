@@ -338,3 +338,6 @@
 (defn hampurilaisvalikon-lista-item-valittu! [avain]
   (reset! s/paanavigoinnin-hampurilaisvalikon-lista-nakyvissa? false)
   (reset! s/paanavigoinnin-valittu-valilehti avain))
+
+(defn body-click []
+  (reset! s/paanavigoinnin-hampurilaisvalikon-lista-nakyvissa? false))
