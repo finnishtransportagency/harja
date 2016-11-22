@@ -8,7 +8,7 @@
             [harja-laadunseuranta.ui.napit :refer [nappi]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [clojure.set :as set]
-            [harja-laadunseuranta.tiedot.dom :as dom]
+            [harja-laadunseuranta.ui.dom :as dom]
             [harja-laadunseuranta.utils :as utils]
             [reagent.core :as r]
             [harja-laadunseuranta.asiakas.tapahtumat :as tapahtumat])
@@ -82,6 +82,12 @@
                 (reset! valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))))))
         valitse-valilehti! (fn [uusi-valinta]
                              (reset! valittu-valilehti uusi-valinta))
+        hampurilaisvalikon-listan-max-korkeus (atom 200)
+        maarita-hampurilaisvalikon-listan-max-korkeus!
+        (fn [this]
+          (when this
+            (reset! hampurilaisvalikon-listan-max-korkeus
+                   (dom/elementin-etaisyys-viewportin-alareunaan this))))
         selauspainike-painettu! (fn [suunta]
                                   (case suunta
                                     :oikea (when (< @valittu-valilehtiryhma 3)
@@ -96,7 +102,10 @@
        (fn [{:keys [kayta-hampurilaisvalikkoa?
                     valilehdet-nakyvissa? valilehdet jatkuvat-havainnot
                     valittu-valilehti valittu-valilehtiryhma]}]
+         ;; Muutama tärkeä lasku ennen renderiä
          (ryhmittele-valilehdet! @dom-node)
+         (maarita-hampurilaisvalikon-listan-max-korkeus! @dom-node)
+
          (let [valitun-valilehtiryhman-valilehdet (when-not (empty? @valilehtiryhmat)
                                                     (nth @valilehtiryhmat @valittu-valilehtiryhma))]
            [:header {:class (when-not kayta-hampurilaisvalikkoa? "hampurilaisvalikko-ei-kaytossa")}
@@ -121,10 +130,10 @@
                  :on-click hampurilaisvalikko-painettu}]
                (when @hampurilaisvalikon-lista-nakyvissa?
                  [:div.lista.hampurilaisvalikon-lista
-                  [:ul
+                  [:ul {:style {:max-height @hampurilaisvalikon-listan-max-korkeus}}
                    (doall
                      (for [{:keys [avain nimi] :as valilehti} valilehdet]
-                       ^{:key (:nimi nimi)}
+                       ^{:key avain}
                        [:li {:class (when (= avain @valittu-valilehti)
                                       "aktiivinen-valinta")
                              :on-click (partial hampurilaisvalikon-lista-item-painettu avain)}

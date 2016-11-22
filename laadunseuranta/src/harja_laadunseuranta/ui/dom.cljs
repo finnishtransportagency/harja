@@ -1,4 +1,4 @@
-(ns harja-laadunseuranta.tiedot.dom
+(ns harja-laadunseuranta.ui.dom
   (:require
     [harja-laadunseuranta.asiakas.tapahtumat :as tapahtumat]
     [reagent.core :as reagent :refer [atom]]
@@ -20,5 +20,10 @@
   (.addEventListener js/window "resize" #(do (paivita-leveys!)
                                              (paivita-korkeus!)
                                              (tapahtumat/julkaise! {:aihe :window-resize}))))
+
+(defn elementin-etaisyys-viewportin-alareunaan [solmu]
+  (let [r (.getBoundingClientRect solmu)
+        etaisyys (- @korkeus (.-bottom r))]
+    etaisyys))
 
 (kuuntele-leveyksia)
