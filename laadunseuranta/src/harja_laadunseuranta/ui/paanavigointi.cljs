@@ -29,22 +29,24 @@
   ;; välilehtien määrä / ryhmä on mahdollisimman suuri niin, ettei välilehtien
   ;; leveys ylitä containerin leveyttä.
   ;; HUOMAA, että tämä ei ole pikselintarkka lasku, mutta selkeästi riittävä
-  (let [valilehtien-nimet (map #(utils/ilman-tavutusta (:nimi %)) valilehdet)
-        valilehtien-leveydet (map
-                               #(+ +valilehti-perusleveys+ (* +kirjain-leveys+ (count %)))
-                               valilehtien-nimet)]
+  (if (= header-leveys 0)
+    (count valilehdet)
+    (let [valilehtien-nimet (map #(utils/ilman-tavutusta (:nimi %)) valilehdet)
+          valilehtien-leveydet (map
+                                 #(+ +valilehti-perusleveys+ (* +kirjain-leveys+ (count %)))
+                                 valilehtien-nimet)]
 
-    (loop [jako 1]
-      (let [ryhmat (partition-all jako valilehtien-leveydet)
-            ryhmien-yhteysleveys (map #(reduce + 0 %) ryhmat)
-            ryhmat-mahtuvat-containeriin? (every?
-                                            #(< % (- header-leveys +header-reuna-padding+))
-                                            ryhmien-yhteysleveys)]
-        (if ryhmat-mahtuvat-containeriin?
-          ;; Voidaan kasvattaa jakoa edelleen
-          (recur (+ jako 1))
-          ;; Edellinen jako mahtui eli se on vastaus
-          (- jako 1))))))
+      (loop [jako 1]
+        (let [ryhmat (partition-all jako valilehtien-leveydet)
+              ryhmien-yhteysleveys (map #(reduce + 0 %) ryhmat)
+              ryhmat-mahtuvat-containeriin? (every?
+                                              #(< % (- header-leveys +header-reuna-padding+))
+                                              ryhmien-yhteysleveys)]
+          (if ryhmat-mahtuvat-containeriin?
+            ;; Voidaan kasvattaa jakoa edelleen
+            (recur (+ jako 1))
+            ;; Edellinen jako mahtui eli se on vastaus
+            (- jako 1)))))))
 
 (defn- toggle-painike [_]
   (fn [{:keys [nimi ikoni avain tyyppi click-fn jatkuvat-havainnot disabloitu?] :as tiedot}]
@@ -117,8 +119,8 @@
                                 ;; kun headerin leveys muuttuu mistä tahansa syystä, niin tämän voi
                                 ;; poistaa. Toistaiseksi nyt näin.
                                 (when @tarkkaile-leveytta?
-                                  (<! (timeout 1000))
                                   (ryhmittele-valilehdet-uudelleen-tarvittaessa! @dom-node)
+                                  (<! (timeout 1000))
                                   (recur))))
        :component-will-unmount (fn [_]
                                  (@body-click-kuuntelija)
