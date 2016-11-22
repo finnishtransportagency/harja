@@ -22,10 +22,10 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def aikavalit [{:nimi "1 tunti sitten" :tunteja 1}
-                {:nimi "12 tuntia sitten" :tunteja 12}
-                {:nimi "1 päivä sitten" :tunteja 24}
-                {:nimi "1 viikko sitten" :tunteja 168}
+(def aikavalit [{:nimi "1 tunnin ajalta" :tunteja 1}
+                {:nimi "12 tunnin ajalta" :tunteja 12}
+                {:nimi "1 päivän ajalta" :tunteja 24}
+                {:nimi "1 viikon ajalta" :tunteja 168}
                 {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
 
 ;; Valinnat jotka riippuvat ulkoisista atomeista
