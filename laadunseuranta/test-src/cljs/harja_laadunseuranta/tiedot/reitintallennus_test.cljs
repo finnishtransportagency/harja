@@ -83,28 +83,28 @@
              (testing "Reittipisteet ovat ilmestyneet IndexedDB:hen"
                (let [ajo (cljs.core/atom nil)]
                  (with-transaction-to-store @db asetukset/+reittimerkinta-store+ :readwrite store
-                                            (with-all-items store tapahtumat
-                     (is (= 6 (count tapahtumat)))
+                                            (with-all-items store reittimerkinnat
+                     (is (= 6 (count reittimerkinnat)))
                      
-                     (is (= 10000 (get-in tapahtumat [0 "tarkastusajo"])))
-                     (is (get-in tapahtumat [0 "aikaleima"]))
-                     (is (= {"lat" 1 "lon" 2} (get-in tapahtumat [0 "sijainti"])))                     
-                     (is (not (get-in tapahtumat [0 "havainnot" "liukkaus"])))
+                     (is (= 10000 (get-in reittimerkinnat [0 "tarkastusajo"])))
+                     (is (get-in reittimerkinnat [0 "aikaleima"]))
+                     (is (= {"lat" 1 "lon" 2} (get-in reittimerkinnat [0 "sijainti"])))
+                     (is (not (get-in reittimerkinnat [0 "havainnot" "liukkaus"])))
 
-                     (is (= {"lat" 1 "lon" 2} (get-in tapahtumat [1 "sijainti"])))                     
-                     (is (not (get-in tapahtumat [1 "havainnot" "liukkaus"])))
+                     (is (= {"lat" 1 "lon" 2} (get-in reittimerkinnat [1 "sijainti"])))
+                     (is (not (get-in reittimerkinnat [1 "havainnot" "liukkaus"])))
  
-                     (is (= {"lat" 1 "lon" 1} (get-in tapahtumat [2 "sijainti"])))                     
-                     (is (= (get-in tapahtumat [2 "havainnot"]) ["liukkaus"]))
+                     (is (= {"lat" 1 "lon" 1} (get-in reittimerkinnat [2 "sijainti"])))
+                     (is (= (get-in reittimerkinnat [2 "havainnot"]) ["liukkaus"]))
                      
-                     (is (= {"lat" 2 "lon" 2} (get-in tapahtumat [3 "sijainti"])))                     
-                     (is (= (get-in tapahtumat [3 "havainnot"]) ["liukkaus"]))
+                     (is (= {"lat" 2 "lon" 2} (get-in reittimerkinnat [3 "sijainti"])))
+                     (is (= (get-in reittimerkinnat [3 "havainnot"]) ["liukkaus"]))
                      
-                     (is (= {"lat" 3 "lon" 3} (get-in tapahtumat [4 "sijainti"])))                     
-                     (is (= (get-in tapahtumat [4 "havainnot"]) ["liukkaus"]))
+                     (is (= {"lat" 3 "lon" 3} (get-in reittimerkinnat [4 "sijainti"])))
+                     (is (= (get-in reittimerkinnat [4 "havainnot"]) ["liukkaus"]))
                      
-                     (is (= {"lat" 4 "lon" 4} (get-in tapahtumat [5 "sijainti"])))                     
-                     (is (= (get-in tapahtumat [5 "havainnot"]) ["liukkaus"]))
+                     (is (= {"lat" 4 "lon" 4} (get-in reittimerkinnat [5 "sijainti"])))
+                     (is (= (get-in reittimerkinnat [5 "havainnot"]) ["liukkaus"]))
 
                      (with-transaction-to-store @db asetukset/+tarkastusajo-store+ :readwrite store
                                                 (with-cursor store cursor v
@@ -143,7 +143,7 @@
   (async test-ok
          (go
            (let [db (atom (<! (idb/create-indexed-db +testikannan-nimi+ r/db-spec)))
-                 lahetin (r/kaynnista-reitinlahetys 500 @db (fn [tapahtumat]
+                 lahetin (r/kaynnista-reitinlahetys 500 @db (fn [reittimerkinnat]
                                                               (go [1 2 3])))]
              (with-transaction-to-store @db asetukset/+reittimerkinta-store+ :readwrite store
                                         (doseq [viesti +testiviestit+]
@@ -152,8 +152,8 @@
                                         :on-complete
                                         (after-delay 1000
                             (with-transaction-to-store @db asetukset/+reittimerkinta-store+ :readonly store
-                                                       (with-all-items store tapahtumat
-                                (is (= 0 (count tapahtumat)))
+                                                       (with-all-items store reittimerkinnat
+                                (is (= 0 (count reittimerkinnat)))
                                 (close! lahetin)
                                 (sulje-tietokanta @db)
                                 (reset! db nil)
@@ -163,7 +163,7 @@
   (async test-ok
          (go
            (let [db (atom (<! (idb/create-indexed-db +testikannan-nimi+ r/db-spec)))
-                 lahetin (r/kaynnista-reitinlahetys 500 @db (fn [tapahtumat]
+                 lahetin (r/kaynnista-reitinlahetys 500 @db (fn [reittimerkinnat]
                                                               (go [1])))] ;; simuloi lähetysvirhettä
              (with-transaction-to-store @db asetukset/+reittimerkinta-store+ :readwrite store
                                         (doseq [viesti +testiviestit+]
@@ -172,11 +172,11 @@
                                         :on-complete
                                         (after-delay 1000
                             (with-transaction-to-store @db asetukset/+reittimerkinta-store+ :readonly store
-                                                       (with-all-items store tapahtumat
-                                (is (= 2 (count tapahtumat)))
+                                                       (with-all-items store reittimerkinnat
+                                (is (= 2 (count reittimerkinnat)))
                                 (is (= [{"id" 2, "sijainti" [2 2]}
                                         {"id" 3, "sijainti" [5 5]}]
-                                       tapahtumat))
+                                       reittimerkinnat))
                                 (close! lahetin)
                                 (sulje-tietokanta @db)
                                 (reset! db nil)
