@@ -13,7 +13,8 @@
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
             [clojure.string :as str]
             [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset]
-            [harja-laadunseuranta.ui.dom :as dom])
+            [harja-laadunseuranta.ui.dom :as dom]
+            [harja-laadunseuranta.asiakas.tapahtumat :as tapahtumat])
   (:require-macros [reagent.ratom :refer [run!]]
                    [cljs.core.async.macros :refer [go]]
                    [harja-laadunseuranta.macros :refer [after-delay]]))
@@ -46,12 +47,18 @@
                                (set! (.-src source) dataURI)
                                (set! (.-type source) (str "video/" type))
                                (.appendChild element source)))
-                video (.createElement js/document "video")]
+                video-paalla (atom false)
+                video (.createElement js/document "video")
+                soita-video (fn [elementti]
+                              (when-not @video-paalla
+                                (.log js/console "Soitetaan video")
+                                (.play elementti)
+                                (reset! video-paalla true)))]
             (.setAttribute video "loop" "")
             (add-source video "webm" media-webm)
             (add-source video "mp4" media-mp4)
             (.appendChild js/document.body video)
-            (.play video)))]
+            (tapahtumat/kuuntele! :body-click #(soita-video video))))]
     (pollaa-tyhjaa-sivua)
     (soita-tyhja-video)))
 
