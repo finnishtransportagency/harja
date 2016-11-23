@@ -32,7 +32,9 @@
   (let [pollaa-tyhjaa-sivua
         (fn [] (.setInterval js/window
                              (fn []
-                               (set! (-> js/window .-location .-href) "/prevent/sleep")
+                               (when-not js/document.hidden
+                                 ;; Jos dokumentti on piilossa, sivu vaihtuu, mitä ei haluta
+                                 (set! (-> js/window .-location .-href) "/prevent/sleep"))
                                (.setTimeout js/window
                                             (fn []
                                               (.stop js/window))
