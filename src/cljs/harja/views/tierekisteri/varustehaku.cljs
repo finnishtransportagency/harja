@@ -41,7 +41,9 @@
 
 (defn varustehaku-varusteet [e! tietolajin-listaus-skeema varusteet]
   [grid/grid
-   {:otsikko "Tierekisteristä löytyneet varusteet"}
+   {:otsikko "Tierekisteristä löytyneet varusteet"
+    :tunniste (fn [varuste]
+                (comp :tunniste :varuste))}
    tietolajin-listaus-skeema
    varusteet])
 
