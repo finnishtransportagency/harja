@@ -19,12 +19,12 @@
 (defn- paivita-reittipisteelliset-toteumat
   "Hakee toteumat joille on reittipisteitä, mutta ei reittiä, ja yrittää muodostaa reitin uusiksi."
   [db]
-  (log/debug "Aloitetaan reittien luonti reittipisteellisille toteumille.")
+  (log/info "Aloitetaan reittien luonti reittipisteellisille toteumille.")
   (lukko/yrita-ajaa-lukon-kanssa db "reittipiste-reitti-paivitys"
     #(loop [etaisyys reittitoteuma/maksimi-linnuntien-etaisyys]
      (let [toteumat (toteumat-q/hae-reitittomat-mutta-reittipisteelliset-toteumat db)]
        (when-not (empty? toteumat)
-         (log/debug (format "Löydettiin %s reittipisteellistä toteumaa, jolta reitti puuttuu. Yritetään laskea reitti uusiksi."
+         (log/info (format "Löydettiin %s reittipisteellistä toteumaa, jolta reitti puuttuu. Yritetään laskea reitti uusiksi."
                             (count toteumat)))
          (jdbc/with-db-transaction
            [db db]
@@ -36,11 +36,11 @@
 (defn- paivita-osoitteelliset-toteumat
   "Hakee toteumat, joille on tr-osoite, mutta ei reittiä, ja yrittää muodostaa reitin uusiksi."
   [db]
-  (log/debug "Aloitetaan reittien luonti tr-osoitteellisille toteumille.")
+  (log/info "Aloitetaan reittien luonti tr-osoitteellisille toteumille.")
   (lukko/yrita-ajaa-lukon-kanssa db "tr-reitti-paivitys"
     #(let [toteumat (toteumat-q/hae-reitittomat-mutta-osoitteelliset-toteumat db)]
      (when-not (empty? toteumat)
-       (log/debug (format "Löydettiin %s toteumaa jolla on tr-osoite, mutta ei reittigeometriaa. Yritetään laskea reitti." (count toteumat)))
+       (log/info (format "Löydettiin %s toteumaa jolla on tr-osoite, mutta ei reittigeometriaa. Yritetään laskea reitti." (count toteumat)))
        (jdbc/with-db-transaction
          [db db]
          ;; {:id, :numero, :alkuosa; :alkuetaisyys, :loppuosa, :loppuetaisyys}
