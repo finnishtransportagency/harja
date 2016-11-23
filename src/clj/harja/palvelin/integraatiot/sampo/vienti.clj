@@ -14,8 +14,8 @@
 (defn kasittele-kuittaus [integraatioloki db viesti jono]
   (log/debug "Vastaanotettiin Sampon kuittausjonosta viesti: " viesti)
   (let [kuittaus-xml (.getText viesti)]
-    ;todo: kytke päälle
-    ;(if (xml/validi-xml? +xsd-polku+ "status.xsd" kuittaus-xml)
+    ;; Validointia ei tehdä, koska jostain syystä Sampon itsensä lähettämät kuittaukset eivät mene läpi validoinnista
+    ;; (if (xml/validi-xml? +xsd-polku+ "status.xsd" kuittaus-xml)
     (let [kuittaus (kuittaus-sampoon-sanoma/lue-kuittaus kuittaus-xml)
           onnistunut (not (contains? kuittaus :virhe))]
       (log/debug "Luettiin kuittaus: " kuittaus)
@@ -38,9 +38,12 @@
 (defn aja-paivittainen-lahetys [sonja integraatioloki db lahetysjono-ulos]
   (log/debug "Maksuerien päivittäinen lähetys käynnistetty: " (t/now))
   (let [maksuerat (qm/hae-likaiset-maksuerat db)
-        kustannussuunnitelmat (qk/hae-likaiset-kustannussuunnitelmat db)]
+        kustannussuunnitelmat (qk/hae-likaiset-kustannussuunnitelmat db)
+        urakkaidt (distinct (map :urakkaid maksuerat))
+        maksuerien-summat (flatten (map #(qm/hae-urakan-maksuerien-summat db %) (distinct (map :urakkaid urakkaidt))))
+        maksuerat (map (fn [m] (assoc m :summat (first (filter #(= (:tpi_id %) (:tpi_id m) maksuerien-summat))))) maksuerat)]
     (log/debug "Lähetetään " (count maksuerat) " maksuerää ja " (count kustannussuunnitelmat) " kustannussuunnitelmaa.")
     (doseq [maksuera maksuerat]
-      (maksuera/laheta-maksuera sonja integraatioloki db lahetysjono-ulos (:numero maksuera)))
+      (maksuera/laheta-maksuera sonja integraatioloki db lahetysjono-ulos (:numero maksuera) (:summat maksuerat)))
     (doseq [kustannussuunnitelma kustannussuunnitelmat]
       (kustannussuunnitelma/laheta-kustannussuunitelma sonja integraatioloki db lahetysjono-ulos (:maksuera kustannussuunnitelma)))))

@@ -7,11 +7,11 @@
             [harja.pvm :as pvm]
             [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]
             [harja.palvelin.integraatiot.sampo.sanomat.kustannussuunnitelma-sanoma :as kustannussuunitelma-sanoma]
-            [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.kyselyt.konversio :as konversio])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (java.util UUID Calendar TimeZone)))
 
@@ -101,7 +101,7 @@
                                 :viesti viesti}]})))))))
 
 (defn hae-maksueran-tiedot [db numero]
-  (let [maksueran-tiedot (maksuera/hae-maksuera db numero)
+  (let [maksueran-tiedot (konversio/alaviiva->rakenne (first (qm/hae-lahetettava-maksuera db numero)))
         vuosittaiset-summat (tee-vuosittaiset-summat db numero maksueran-tiedot)
         lkp-tilinnumero (valitse-lkp-tilinumero numero (:toimenpidekoodi maksueran-tiedot) (:tuotenumero maksueran-tiedot))
         maksueran-tiedot (assoc maksueran-tiedot :vuosittaiset-summat vuosittaiset-summat :lkp-tilinumero lkp-tilinnumero)]

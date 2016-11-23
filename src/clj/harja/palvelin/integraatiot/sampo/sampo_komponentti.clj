@@ -57,12 +57,13 @@
     this)
 
   Maksueralahetys
-  (laheta-maksuera-sampoon [this numero]
-    (let [maksueran-lahetys (maksuerat/laheta-maksuera (:sonja this) (:integraatioloki this)
-                                                       (:db this) lahetysjono-ulos numero)
-          kustannussuunnitelman-lahetys (kustannussuunnitelmat/laheta-kustannussuunitelma (:sonja this)
-                                                                                          (:integraatioloki this)
-                                                                                          (:db this)
+  (laheta-maksuera-sampoon [{:keys [sonja db integraatioloki]} numero]
+    (let [urakkaid (maksuerat/hae-maksueran-urakka db numero)
+          summat  (maksuerat/hae-urakan-maksuerien-summat db urakkaid)
+          maksueran-lahetys (maksuerat/laheta-maksuera sonja integraatioloki db lahetysjono-ulos numero summat)
+          kustannussuunnitelman-lahetys (kustannussuunnitelmat/laheta-kustannussuunitelma sonja
+                                                                                          integraatioloki
+                                                                                          db
                                                                                           lahetysjono-ulos
                                                                                           numero)]
       {:maksuera             maksueran-lahetys

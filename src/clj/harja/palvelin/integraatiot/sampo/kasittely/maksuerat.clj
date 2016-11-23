@@ -17,14 +17,11 @@
 
 (def maksueratyypit ["kokonaishintainen" "yksikkohintainen" "lisatyo" "indeksi" "bonus" "sakko" "akillinen-hoitotyo" "muu"])
 
-(defn hae-maksuera [db numero]
-  (let [{urakka-id :urakka-id :as maksuera} (konversio/alaviiva->rakenne (first (qm/hae-lahetettava-maksuera db numero)))
+(defn hae-maksuera [db numero summat]
+  (let [maksuera (konversio/alaviiva->rakenne (first (qm/hae-lahetettava-maksuera db numero)))
         tpi (get-in maksuera [:toimenpideinstanssi :id])
         tyyppi (keyword (get-in maksuera [:maksuera :tyyppi]))
-
-        ;; Haetaan maksuerätiedot ja valitaan niistä tämän toimenpideinstanssin rivi
-        summat (first (filter #(= (:tpi_id %) tpi)
-                              (qm/hae-urakan-maksueratiedot db urakka-id)))]
+        summat (first (filter #(= (:tpi_id %) tpi) summat))]
     (assoc-in maksuera
               [:maksuera :summa]
               (get summat tyyppi))))
@@ -83,8 +80,8 @@
       (throw+ {:type virheet/+viallinen-kutsu+
                :virheet [{:koodi :puuttuva-tuotepolku :viesti virheviesti}]}))))
 
-(defn hae-maksueran-tiedot [db numero]
-  (let [maksueran-tiedot (hae-maksuera db numero)
+(defn hae-maksueran-tiedot [db numero summat ]
+  (let [maksueran-tiedot (hae-maksuera db numero summat)
         ;; Sakot lähetetään Sampoon negatiivisena
         maksueran-tiedot (if (= (:tyyppi (:maksuera maksueran-tiedot)) "sakko")
                            (update-in maksueran-tiedot [:maksuera :summa] -)
@@ -94,12 +91,12 @@
 (defn tee-maksuera-jms-lahettaja [sonja integraatioloki db jono]
   (jms/jonolahettaja (integraatioloki/lokittaja integraatioloki db "sampo" "maksuera-lahetys") sonja jono))
 
-(defn laheta-maksuera [sonja integraatioloki db lahetysjono-ulos numero]
+(defn laheta-maksuera [sonja integraatioloki db lahetysjono-ulos numero summat]
   (log/debug (format "Lähetetään maksuera (numero: %s) Sampoon." numero))
   (if (maksuerat/onko-olemassa? db numero)
     (if (lukitse-maksuera db numero)
       (let [jms-lahettaja (tee-maksuera-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
-            maksuera (hae-maksueran-tiedot db numero)
+            maksuera (hae-maksueran-tiedot db numero summat)
             muodosta-xml (fn []
                            (tarkista-maksueran-tiedot maksuera)
                            (maksuera-sanoma/maksuera-xml maksuera))]
