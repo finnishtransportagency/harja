@@ -24,7 +24,7 @@
                                             (lopeta-jatkuva-havainto avain))
                                 :luokat-str "nappi-kielteinen nappi-peruuta"}])
 
-(defn- kitkamittaustiedot [mittaukset keskiarvo]
+(defn- mittaustiedot-keskiarvo [mittaukset keskiarvo]
   [:div.mittaustiedot
    [:div.mittaustieto (str "Mittauksia: " mittaukset)]
    [:div.mittaustieto (str "Keskiarvo: " (if (pos? mittaukset)
@@ -33,7 +33,9 @@
 
 (defn- mittaustiedot [mittaustyyppi mittaukset keskiarvo]
   (case mittaustyyppi
-    :kitkamittaus [kitkamittaustiedot mittaukset keskiarvo]
+    :kitkamittaus [mittaustiedot-keskiarvo mittaukset keskiarvo]
+    :lumisuus [mittaustiedot-keskiarvo mittaukset keskiarvo]
+    :talvihoito-tasaisuus [mittaustiedot-keskiarvo mittaukset keskiarvo]
     [:div.mittaustiedot]))
 
 (defn- syottokentta [syotto-atom yksikko]
