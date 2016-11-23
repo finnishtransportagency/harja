@@ -560,3 +560,22 @@
   [:span.livicon-check])
 (defn livicon-kommentti []
   [:span.livicon-comment])
+
+
+;; Ikoni + jotain muuta -tyyppiset apurit
+
+(defn ikoni-ja-teksti [ikoni teksti]
+  [:span
+   ikoni
+   [:span (str " " teksti)]])
+
+(defn ikoni-ja-elementti [ikoni elementti]
+  [:span
+   ikoni
+   [:span " "]
+   elementti])
+
+(defn teksti-ja-ikoni [teksti ikoni]
+  [:span
+   [:span (str teksti " ")]
+   ikoni])

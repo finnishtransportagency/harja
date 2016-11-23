@@ -2,7 +2,8 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [harja-laadunseuranta.tiedot.sovellus :as sovellus]
             [harja-laadunseuranta.utils :as utils]
-            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]))
+            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
+            [harja-laadunseuranta.ui.ikonit :as ikonit]))
 
 (defn- checkmark [flag]
   [:img {:src (if flag kuvat/+check+ kuvat/+cross+)
@@ -20,4 +21,7 @@
     [:div [checkmark @gps-tuettu] "GPS-tuki"]
     [:div [checkmark @ensimmainen-sijainti] "Laite paikannettu"]
     [:div [checkmark @idxdb-tuettu] "Selaintietokanta-tuki"]
-    [:div [checkmark @kayttaja] "Käyttäjä tunnistettu"]]])
+    [:div [checkmark @kayttaja] "Käyttäjä tunnistettu"]
+    [:div.screenlock-muistutus (ikonit/ikoni-ja-teksti
+                                 (ikonit/livicon-info-circle)
+                                 "Muista asettaa näytön automaattilukitus pois päältä.")]]])
