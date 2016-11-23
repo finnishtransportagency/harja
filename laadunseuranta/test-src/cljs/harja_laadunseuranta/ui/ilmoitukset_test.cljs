@@ -15,13 +15,13 @@
       
         (is (= 0 (.-length (sel [:div.ilmoitus]))))
         
-        (i/lisaa-ajastettu-ilmoitus ilmoitukset 500 "testi-ilmoitus")
+        (i/ilmoita "Testi-ilmoitus")
         (reagent/flush)
         
         (is (= 1 (.-length (sel [:div.ilmoitus]))))
         
         (async ilmoitus-poistunut
-               (after-delay 1000
+               (after-delay (+ i/+ilmoituksen-nakymisaika-ms+ 500)
                             (is (= 0 (.-length (sel [:div.ilmoitus]))))
                             (ilmoitus-poistunut)))))))
 

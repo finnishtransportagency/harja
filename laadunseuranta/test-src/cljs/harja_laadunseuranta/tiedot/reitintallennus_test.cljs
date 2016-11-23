@@ -38,11 +38,17 @@
                  reittipisteet (atom [])
                  tallennus-kaynnissa (atom false)
                  havainnot (atom {:liukkaus false})
-                 tarkastusajo (atom 10000)
-                 tarkastustyyppi (atom :kelitarkastus)
+                 tarkastusajo-id (atom 10000)
                  sijainti (atom {:nykyinen {:lat 1 :lon 2} :edellinen nil})
+                 sijainin-tallennus-mahdollinen (atom true)
                  tarkastuspisteet (atom [])
-                 tallennin (r/kaynnista-reitintallennus db sijainti @db segmentti reittipisteet tallennus-kaynnissa tarkastustyyppi tarkastusajo
+                 tallennin (r/kaynnista-reitintallennus sijainin-tallennus-mahdollinen
+                                                        sijainti
+                                                        @db
+                                                        segmentti
+                                                        reittipisteet
+                                                        tallennus-kaynnissa
+                                                        tarkastusajo-id
                                                         tarkastuspisteet)]
               
              (testing "Jos tallennus ei käynnissä, segmentin muutos ei mene reittipisteisiin"
@@ -113,7 +119,7 @@
                                    "tarkastuspisteet" []}
                                   @ajo))
 
-                           (reset! tarkastusajo nil)
+                           (reset! tarkastusajo-id nil)
 
                            (let [ajoja (cljs.core/atom false)]
                              (with-transaction-to-store @db asetukset/+tarkastusajo-store+ :readwrite store

@@ -7,7 +7,7 @@
             [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
-(def +ilmoituksen-nakymisaika-ms 4000)
+(def +ilmoituksen-nakymisaika-ms+ 4000)
 (def ilmoitus-naytetty-aika (atom nil))
 
 (defn- lisaa-ajastettu-ilmoitus [ilmoitukset-atom teksti]
@@ -20,7 +20,7 @@
   (when (and (not @ilmoitus-naytetty-aika)
              (not (empty? @ilmoitukset-atom)))
     (reset! ilmoitus-naytetty-aika (l/local-now))
-    (go (<! (timeout +ilmoituksen-nakymisaika-ms))
+    (go (<! (timeout +ilmoituksen-nakymisaika-ms+))
         (reset! ilmoitukset-atom (vec (rest @ilmoitukset-atom)))
         (reset! ilmoitus-naytetty-aika nil)))
 
