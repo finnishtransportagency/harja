@@ -28,19 +28,38 @@
   ;; Toimii niin, että laitteen sleep timer resetoituu kun pyydetään uutta sivua:
   ;; http://stackoverflow.com/questions/18905413/how-can-i-prevent-iphone-including-ios-7-from-going-to-sleep-in-html-or-js
   ;; Kannattaa pitää silmällä Wake Lock APIa: http://boiler23.github.io/screen-wake/
-  (.setInterval js/window (fn []
-                            (set! (-> js/window .-location .-href) "/prevent/sleep")
-                            (.setTimeout js/window
-                                          (fn []
-                                            (.stop js/window))
-                                          0))
-                5000))
+  (let [pollaa-tyhjaa-sivua
+        (fn [] (.setInterval js/window
+                             (fn []
+                               (set! (-> js/window .-location .-href) "/prevent/sleep")
+                               (.setTimeout js/window
+                                            (fn []
+                                              (.stop js/window))
+                                            0))
+                             5000))
+        soita-tyhja-video
+        (fn []
+          (let [media-webm "data:video/webm;base64,GkXfo0AgQoaBAUL3gQFC8oEEQvOBCEKCQAR3ZWJtQoeBAkKFgQIYU4BnQI0VSalmQCgq17FAAw9CQE2AQAZ3aGFtbXlXQUAGd2hhbW15RIlACECPQAAAAAAAFlSua0AxrkAu14EBY8WBAZyBACK1nEADdW5khkAFVl9WUDglhohAA1ZQOIOBAeBABrCBCLqBCB9DtnVAIueBAKNAHIEAAIAwAQCdASoIAAgAAUAmJaQAA3AA/vz0AAA="
+                media-mp4 "data:video/mp4;base64,AAAAHGZ0eXBpc29tAAACAGlzb21pc28ybXA0MQAAAAhmcmVlAAAAG21kYXQAAAGzABAHAAABthADAowdbb9/AAAC6W1vb3YAAABsbXZoZAAAAAB8JbCAfCWwgAAAA+gAAAAAAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAIVdHJhawAAAFx0a2hkAAAAD3wlsIB8JbCAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAIAAAACAAAAAABsW1kaWEAAAAgbWRoZAAAAAB8JbCAfCWwgAAAA+gAAAAAVcQAAAAAAC1oZGxyAAAAAAAAAAB2aWRlAAAAAAAAAAAAAAAAVmlkZW9IYW5kbGVyAAAAAVxtaW5mAAAAFHZtaGQAAAABAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAEcc3RibAAAALhzdHNkAAAAAAAAAAEAAACobXA0dgAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAIAAgASAAAAEgAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABj//wAAAFJlc2RzAAAAAANEAAEABDwgEQAAAAADDUAAAAAABS0AAAGwAQAAAbWJEwAAAQAAAAEgAMSNiB9FAEQBFGMAAAGyTGF2YzUyLjg3LjQGAQIAAAAYc3R0cwAAAAAAAAABAAAAAQAAAAAAAAAcc3RzYwAAAAAAAAABAAAAAQAAAAEAAAABAAAAFHN0c3oAAAAAAAAAEwAAAAEAAAAUc3RjbwAAAAAAAAABAAAALAAAAGB1ZHRhAAAAWG1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAAK2lsc3QAAAAjqXRvbwAAABtkYXRhAAAAAQAAAABMYXZmNTIuNzguMw=="
+                add-source (fn [element type dataURI]
+                             (let [source (.createElement js/document "source")]
+                               (set! (.-src source) dataURI)
+                               (set! (.-type source) (str "video/" type))
+                               (.appendChild element source)))
+                video (.createElement js/document "video")]
+            (.setAttribute video "loop" "")
+            (add-source video "webm" media-webm)
+            (add-source video "mp4" media-mp4)
+            (.appendChild js/document.body video)
+            (.play video)))]
+    (pollaa-tyhjaa-sivua)
+    (soita-tyhja-video)))
 
 (defn- sovelluksen-alustusviive []
   (run!
-   (when (and (not @sovellus/sovellus-alustettu) @sovellus/alustus-valmis)
-     (after-delay 1000
-       (reset! sovellus/sovellus-alustettu true)))))
+    (when (and (not @sovellus/sovellus-alustettu) @sovellus/alustus-valmis)
+      (after-delay 1000
+                   (reset! sovellus/sovellus-alustettu true)))))
 
 (defonce paikannus-id (cljs.core/atom nil))
 
@@ -67,9 +86,9 @@
     (reset! sovellus/idxdb (<! (reitintallennus/tietokannan-alustus)))
 
     (reitintallennus/palauta-tarkastusajo @sovellus/idxdb #(do
-                                                            (reset! sovellus/palautettava-tarkastusajo %)
-                                                            (when (= "?relogin=true" js/window.location.search)
-                                                              (tarkastusajon-luonti/jatka-ajoa!))))
+                                                             (reset! sovellus/palautettava-tarkastusajo %)
+                                                             (when (= "?relogin=true" js/window.location.search)
+                                                               (tarkastusajon-luonti/jatka-ajoa!))))
 
     (reitintallennus/paivita-lahettamattomien-merkintojen-maara @sovellus/idxdb asetukset/+pollausvali+ sovellus/lahettamattomia-merkintoja)
 
