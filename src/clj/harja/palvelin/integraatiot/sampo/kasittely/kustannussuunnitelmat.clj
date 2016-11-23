@@ -6,6 +6,7 @@
             [clj-time.core :as time]
             [harja.pvm :as pvm]
             [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]
+            [harja.kyselyt.maksuerat :as maksuerat]
             [harja.palvelin.integraatiot.sampo.sanomat.kustannussuunnitelma-sanoma :as kustannussuunitelma-sanoma]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.kyselyt.konversio :as konv]
@@ -101,7 +102,7 @@
                                 :viesti viesti}]})))))))
 
 (defn hae-maksueran-tiedot [db numero]
-  (let [maksueran-tiedot (konversio/alaviiva->rakenne (first (qm/hae-lahetettava-maksuera db numero)))
+  (let [maksueran-tiedot (konversio/alaviiva->rakenne (first (maksuerat/hae-lahetettava-maksuera db numero)))
         vuosittaiset-summat (tee-vuosittaiset-summat db numero maksueran-tiedot)
         lkp-tilinnumero (valitse-lkp-tilinumero numero (:toimenpidekoodi maksueran-tiedot) (:tuotenumero maksueran-tiedot))
         maksueran-tiedot (assoc maksueran-tiedot :vuosittaiset-summat vuosittaiset-summat :lkp-tilinumero lkp-tilinnumero)]

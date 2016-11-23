@@ -6,6 +6,7 @@
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.sampo.tuonti :as tuonti]
             [harja.palvelin.integraatiot.sampo.vienti :as vienti]
+            [harja.kyselyt.maksuerat :as q-maksuerat]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]
             [harja.palvelin.integraatiot.sampo.kasittely.kustannussuunnitelmat :as kustannussuunnitelmat]))
 
@@ -53,8 +54,8 @@
 
   Maksueralahetys
   (laheta-maksuera-sampoon [{:keys [sonja db integraatioloki]} numero]
-    (let [urakkaid (maksuerat/hae-maksueran-urakka db numero)
-          summat  (maksuerat/hae-urakan-maksuerien-summat db urakkaid)
+    (let [urakkaid (q-maksuerat/hae-maksueran-urakka db numero)
+          summat  (q-maksuerat/hae-urakan-maksuerien-summat db urakkaid)
           maksueran-lahetys (maksuerat/laheta-maksuera sonja integraatioloki db lahetysjono-ulos numero summat)
           kustannussuunnitelman-lahetys (kustannussuunnitelmat/laheta-kustannussuunitelma sonja
                                                                                           integraatioloki
