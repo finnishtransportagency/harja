@@ -44,8 +44,7 @@
     ;; Jatkuvat havainnot pysyvät samana myös seuraavassa pisteessä
     (= (:jatkuvat-havainnot nykyinen-reittimerkinta) (:jatkuvat-havainnot seuraava-reittimerkinta))
     ;; Seuraava piste on osa samaa tietä ja tieosaa. Jos seuraavalle pistelle ei ole pystytty määrittelemään tietä,
-    ;; niin oletetaan kuitenkin, että se on osa samaa tarkastusta
-    (not (:laadunalitus seuraava-reittimerkinta))
+    ;; niin oletetaan kuitenkin, että se on osa samaa tarkastusta niin kauan kuin osoite oikeasti vaihtuu
     (or (nil? (:tr-osoite seuraava-reittimerkinta))
         (= (get-in nykyinen-reittimerkinta [:tr-osoite :tie]) (get-in seuraava-reittimerkinta [:tr-osoite :tie])))
     ;; Seuraava piste ei aiheuta reitin kääntymistä ympäri
@@ -168,6 +167,14 @@
       (assoc reittimerkinta :sijainnit (conj (:sijainnit reittimerkinta) {:sijainti (:sijainti seuraava-reittimerkinta)
                                                                           :tr-osoite (:tr-osoite seuraava-reittimerkinta)})))))
 
+(defn- keraa-seuraavan-pisteen-laadunalitus
+  "Ottaa reittimerkinnän ja järjestyksessä seuraavan reittimerkinnän.
+   Asettaa laadunalituksen trueksi, jos seuraavalla merkinnällä on laadunalitus."
+  [reittimerkinta seuraava-reittimerkinta]
+  (if (true? (:laadunalitus seuraava-reittimerkinta))
+    (assoc reittimerkinta :laadunalitus true)
+    reittimerkinta))
+
 (defn- keraa-reittimerkintojen-kuvaukset
   "Yhdistää samalla jatkuvalla havainnolla olevat kuvauskentät yhteen"
   [reittimerkinta seuraava-reittimerkinta]
@@ -191,6 +198,7 @@
               (viimeinen-indeksi reittimerkinnat)
               (-> viimeisin-yhdistetty-reittimerkinta
                   (keraa-seuraavan-pisteen-sijainti seuraava-merkinta)
+                  (keraa-seuraavan-pisteen-laadunalitus seuraava-merkinta)
                   (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :talvihoito-tasaisuus)
                   (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :lumisuus)
                   (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :kitkamittaus)
