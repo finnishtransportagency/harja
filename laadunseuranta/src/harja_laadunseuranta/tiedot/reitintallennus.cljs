@@ -115,22 +115,23 @@
    (esim. sijainti tai jatkuvat havainnot vaihtuu).
    Ei ole syytä kutsua pistemäisille muutoksille (pistemäiset havainnot, mittausarvot jne.),
    vaan niistä tulee kirjata erikseen oma merkintä."
-  []
-  (kirjaa-kertakirjaus @s/idxdb
-                       {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
+  [{:keys [idxdb sijainti tarkastusajo-id jatkuvat-havainnot mittaustyyppi
+           soratiemittaussyotto]}]
+  (kirjaa-kertakirjaus idxdb
+                       {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon])
                         :aikaleima (tc/to-long (lt/local-now))
-                        :tarkastusajo @s/tarkastusajo-id
+                        :tarkastusajo @tarkastusajo-id
                         ;; Nauhoituksessa havaintoihin tallentuvat vain jatkuvat mittaukset
                         ;; Pistemäisen havainnot kirjataan erikseen heti kun sellainen syötetään.
-                        :havainnot @s/jatkuvat-havainnot
+                        :havainnot @jatkuvat-havainnot
                         ;; Nauhoituksessa mittauksiin tallentuvat vain jatkuvat mittaukset
                         ;; Kertamittaukset tallennetaan erikseen heti kun sellainen syötetään.
                         ;; HUOM: Tärkeää ottaa arvot ylös vain jos mittaus on päällä!
                         :mittaukset (merge {}
-                                           (when (= @s/mittaustyyppi :soratie)
-                                             {:soratie-tasaisuus (:tasaisuus @s/soratiemittaussyotto)
-                                              :kiinteys (:kiinteys @s/soratiemittaussyotto)
-                                              :polyavyys (:polyavyys @s/soratiemittaussyotto)}))}))
+                                           (when (= @mittaustyyppi :soratie)
+                                             {:soratie-tasaisuus (:tasaisuus @soratiemittaussyotto)
+                                              :kiinteys (:kiinteys @soratiemittaussyotto)
+                                              :polyavyys (:polyavyys @soratiemittaussyotto)}))}))
 
 (defn- kaynnista-tarkastusajon-lokaali-tallennus [db tarkastusajo-atom]
   (let [ajo-id (cljs.core/atom nil)]
@@ -142,14 +143,10 @@
           (persistoi-tarkastusajo db @tarkastusajo-atom)
           (reset! ajo-id @tarkastusajo-atom))))))
 
-(defn kaynnista-reitintallennus [sijainnin-tallennus-mahdollinen-atom
-                                 sijainti-atom
-                                 db
-                                 segmentti-atom
-                                 reittipisteet-atom
-                                 tallennus-kaynnissa-atom
-                                 tarkastusajo-atom
-                                 tarkastuspisteet-atom]
+(defn kaynnista-reitintallennus [{:keys [sijainnin-tallennus-mahdollinen-atom sijainti-atom
+                                         db segmentti-atom jatkuvat-havainnot mittaustyyppi
+                                         reittipisteet-atom tallennus-kaynnissa-atom
+                                         tarkastusajo-atom tarkastuspisteet-atom soratiemittaussyotto]}]
   (.log js/console "Reitintallennus käynnistetty")
   (kaynnista-tarkastusajon-lokaali-tallennus db tarkastusajo-atom)
 
@@ -166,7 +163,13 @@
     (when (and @sijainnin-tallennus-mahdollinen-atom
                @tallennus-kaynnissa-atom
                (:nykyinen @sijainti-atom))
-      (tallenna-sovelluksen-tilasta-merkinta-indexeddbn!))))
+      (tallenna-sovelluksen-tilasta-merkinta-indexeddbn!
+        {:idxdb db
+         :sijainti sijainti-atom
+         :tarkastusajo-id tarkastusajo-atom
+         :jatkuvat-havainnot jatkuvat-havainnot
+         :mittaustyyppi mittaustyyppi
+         :soratiemittaussyotto soratiemittaussyotto}))))
 
 (defn tietokannan-alustus []
   (idb/create-indexed-db "harja2" db-spec))

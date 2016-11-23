@@ -102,14 +102,18 @@
     (reitintallennus/kaynnista-reitinlahetys asetukset/+pollausvali+
                                              @sovellus/idxdb
                                              comms/laheta-reittimerkinnat!)
-    (reitintallennus/kaynnista-reitintallennus sovellus/sijainnin-tallennus-mahdollinen
-                                               sovellus/sijainti
-                                               @sovellus/idxdb
-                                               sovellus/reittisegmentti
-                                               sovellus/reittipisteet
-                                               sovellus/tallennus-kaynnissa
-                                               sovellus/tarkastusajo-id
-                                               sovellus/kirjauspisteet)
+    (reitintallennus/kaynnista-reitintallennus
+      {:sijainnin-tallennus-mahdollinen-atom sovellus/sijainnin-tallennus-mahdollinen
+       :sijainti-atom sovellus/sijainti
+       :db @sovellus/idxdb
+       :segmentti-atom sovellus/reittisegmentti
+       :reittipisteet-atom sovellus/reittipisteet
+       :tallennus-kaynnissa-atom sovellus/tallennus-kaynnissa
+       :tarkastusajo-atom sovellus/tarkastusajo-id
+       :tarkastuspisteet-atom sovellus/kirjauspisteet
+       :soratiemittaussyotto sovellus/soratiemittaussyotto
+       :mittaustyyppi sovellus/mittaustyyppi
+       :jatkuvat-havainnot sovellus/jatkuvat-havainnot})
     (tr-haku/alusta-tr-haku sovellus/sijainti sovellus/tr-tiedot)))
 
 (defn main []

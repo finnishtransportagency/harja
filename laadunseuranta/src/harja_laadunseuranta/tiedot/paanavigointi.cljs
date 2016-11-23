@@ -344,7 +344,13 @@
     (s/aseta-mittaus-pois!))
 
   ;; Tee merkintä
-  (reitintallennus/tallenna-sovelluksen-tilasta-merkinta-indexeddbn!))
+  (reitintallennus/tallenna-sovelluksen-tilasta-merkinta-indexeddbn!
+    {:idxdb @s/idxdb
+     :sijainti s/sijainti
+     :tarkastusajo-id s/tarkastusajo-id
+     :jatkuvat-havainnot s/jatkuvat-havainnot
+     :mittaustyyppi s/mittaustyyppi
+     :soratiemittaussyotto s/soratiemittaussyotto}))
 
 (defn avaa-havaintolomake! []
   (.log js/console "Avataan havaintolomake!")

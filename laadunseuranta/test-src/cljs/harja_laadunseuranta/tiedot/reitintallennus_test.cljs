@@ -29,8 +29,9 @@
               :lat lat}
    :edellinen {:lon old-lon
                :lat old-lat}})
-#_ ;; FIXME Ei toimi
-(deftest reitintallennus-test
+
+;; FIXME EI TOIMI
+#_(deftest reitintallennus-test
   (async test-ok
     (go
       (let [db (atom (<! (idb/create-indexed-db +testikannan-nimi+ r/db-spec)))
@@ -42,14 +43,21 @@
             sijainti (atom {:nykyinen {:lat 1 :lon 2} :edellinen nil})
             sijainin-tallennus-mahdollinen (atom true)
             tarkastuspisteet (atom [])
-            tallennin (r/kaynnista-reitintallennus sijainin-tallennus-mahdollinen
-                                                   sijainti
-                                                   @db
-                                                   segmentti
-                                                   reittipisteet
-                                                   tallennus-kaynnissa
-                                                   tarkastusajo-id
-                                                   tarkastuspisteet)]
+            jatkuvat-havainnot (atom #{})
+            mittaustyyppi (atom nil)
+            soratiemittaussyotto (atom nil)
+            tallennin (r/kaynnista-reitintallennus
+                        {:sijainnin-tallennus-mahdollinen-atom sijainin-tallennus-mahdollinen
+                         :sijainti-atom sijainti
+                         :db @db
+                         :segmentti-atom segmentti
+                         :reittipisteet-atom reittipisteet
+                         :tallennus-kaynnissa-atom tallennus-kaynnissa
+                         :tarkastusajo-atom tarkastusajo-id
+                         :tarkastuspisteet-atom tarkastuspisteet
+                         :soratiemittaussyotto soratiemittaussyotto
+                         :mittaustyyppi mittaustyyppi
+                         :jatkuvat-havainnot jatkuvat-havainnot})]
 
         (testing "Jos tallennus ei käynnissä, segmentin muutos ei mene reittipisteisiin"
           (reset! segmentti [[1 1] [2 2]])
