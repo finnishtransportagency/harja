@@ -77,8 +77,8 @@
     nil
 
     :default
-    (with-precision 3
-      (/ (apply + numerot) (count numerot)))))
+    (float (with-precision 3
+             (/ (apply + numerot) (count numerot))))))
 
 (defn- paattele-tarkastustyyppi [reittimerkinta]
   (cond
@@ -290,6 +290,7 @@
                   :tr_loppuetaisyys (if viiva? loppuet alkuet)}))))))
 
 (defn- tallenna-tarkastus! [db tarkastus kayttaja]
+  (log/debug "Aloitetaan tarkastuksen tallennus")
   (let [tarkastus (luo-tallennettava-tarkastus tarkastus kayttaja)
         geometria (hae-tallennettavan-tarkastuksen-sijainti db tarkastus)
         tarkastus (as-> tarkastus tarkastus
@@ -300,25 +301,33 @@
         tarkastus-id (tark-q/luodun-tarkastuksen-id db)
         sisaltaa-talvihoitomittauksen? (not (empty? (remove nil? (vals (:talvihoitomittaus tarkastus)))))
         sisaltaa-soratiemittauksen? (not (empty? (remove nil? (vals (:soratiemittaus tarkastus)))))]
+
+
     (doseq [vakiohavainto-id (:vakiohavainnot tarkastus)]
+      (log/debug "Tallennetaan vakiohavainnot: " (pr-str (:vakiohavainnot tarkastus)))
       (q/luo-uusi-tarkastuksen-vakiohavainto<! db
                                                {:tarkastus tarkastus-id
                                                 :vakiohavainto vakiohavainto-id}))
     (when sisaltaa-talvihoitomittauksen?
+      (log/debug "Tallennetaan talvihoitomittaus: " (pr-str (:talvihoitomittaus tarkastus)))
       (q/luo-uusi-talvihoitomittaus<! db
                                       (merge (:talvihoitomittaus tarkastus)
                                              {:tarkastus tarkastus-id})))
     (when sisaltaa-soratiemittauksen?
+      (log/debug "Tallennetaan soratiemittaus: " (pr-str (:soratiemittaus tarkastus)))
       (q/luo-uusi-soratiemittaus<! db
                                    (merge (:soratiemittaus tarkastus)
                                           {:tarkastus tarkastus-id})))
     (cond (number? (:liite tarkastus))
-          (q/luo-uusi-tarkastus-liite<! db
-                                     {:tarkastus tarkastus-id
-                                      :liite (:liite tarkastus)})
+          (do
+            (log/debug "Tallennetaan liite: " (pr-str (:liite tarkastus)))
+            (q/luo-uusi-tarkastus-liite<! db
+                                         {:tarkastus tarkastus-id
+                                          :liite (:liite tarkastus)}))
 
           (vector? (:liite tarkastus))
           (doseq [liite (:liite tarkastus)]
+            (log/debug "Tallennetaan liite (yksi monesta): " (pr-str liite))
             (q/luo-uusi-tarkastus-liite<! db
                                           {:tarkastus tarkastus-id
                                            :liite liite}))
