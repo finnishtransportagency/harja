@@ -181,3 +181,14 @@
     (is (= 4924 (:tr_alkuetaisyys tallennettava)))
     (is (= 11 (:tr_loppuosa tallennettava)))
     (is (= 6349 (:tr_loppuetaisyys tallennettava)))))
+
+(deftest tarkastus-jossa-jatkuva-laadunalitus
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-jatkuva-laadunalitus))]
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))
+
+    ;; Koko tarkastus on merkitty laadunalitukseksi, koska sellainen löytyi osasta tarkastuspisteitä
+    (is (= (-> tarkastukset :reitilliset-tarkastukset first :laadunalitus) true))))

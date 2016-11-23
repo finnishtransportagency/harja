@@ -383,3 +383,19 @@
    {:id 4 :sijainti [467009.5999816895 7231180.000024414]
     :jatkuvat-havainnot [1]
     :pistemainen-havainto nil}])
+
+(def tarkastus-jossa-jatkuva-laadunalitus
+  "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
+  [{:id 0 :sijainti [464681.5999816895 7230492.000024414]
+    :jatkuvat-havainnot [17]
+    :kitkamittaus 0.2}
+   {:id 1 :sijainti [465321.5999816895 7230676.000024414]
+    :jatkuvat-havainnot [17]}
+   {:id 2 :sijainti [465641.5999816895 7230780.000024414]
+    :jatkuvat-havainnot [17]}
+   {:id 3 :sijainti [466089.5999816895 7230916.000024414]
+    :jatkuvat-havainnot [17]
+    :laadunalitus true}
+   {:id 4 :sijainti [466409.5999816895 7230996.000024414]
+    :jatkuvat-havainnot [17]
+    :laadunalitus true}])
