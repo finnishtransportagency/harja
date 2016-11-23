@@ -43,7 +43,11 @@
   [grid/grid
    {:otsikko "Tierekisteristä löytyneet varusteet"
     :tunniste (fn [varuste]
-                (comp :tunniste :varuste))}
+                ;; Valitettavasti varusteiden tunnisteet eivät ole uniikkeja, vaan
+                ;; sama varuste voi olla pätkitty useiksi TR osoitteiksi, joten yhdistetään
+                ;; niiden avaimeksi tunniste ja osoite.
+                (str (get-in varuste [:varuste :tunniste])
+                     "_" (pr-str (get-in varuste [:varuste :tietue :sijainti :tie]))))}
    tietolajin-listaus-skeema
    varusteet])
 
