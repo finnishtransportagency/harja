@@ -22,6 +22,19 @@
 (defn render []
   (reagent/render-component [main/main] (.getElementById js/document "app")))
 
+(defn- esta-mobiililaitteen-nayton-lukitus []
+  ;; FIXME Dirty hack kunnes on parempi tapa tehdä tämä.
+  ;; Toimii niin, että laitteen sleep timer resetoituu kun pyydetään uutta sivua:
+  ;; http://stackoverflow.com/questions/18905413/how-can-i-prevent-iphone-including-ios-7-from-going-to-sleep-in-html-or-js
+  ;; Kannattaa pitää silmällä Wake Lock APIa: http://boiler23.github.io/screen-wake/
+  (.setInterval js/window (fn []
+                            (set! (-> js/window .-location .-href) "/prevent/sleep")
+                            (.setTimeout js/window
+                                          (fn []
+                                            (.stop js/window))
+                                          0))
+                5000))
+
 (defn- sovelluksen-alustusviive []
   (run!
    (when (and (not @sovellus/sovellus-alustettu) @sovellus/alustus-valmis)
@@ -69,6 +82,7 @@
     (tr-haku/alusta-tr-haku sovellus/sijainti sovellus/tr-tiedot)))
 
 (defn main []
+  (esta-mobiililaitteen-nayton-lukitus)
   (sovelluksen-alustusviive)
   (alusta-paikannus-id)
   (alusta-geolokaatio-api)
