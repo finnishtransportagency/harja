@@ -1,7 +1,8 @@
 (ns harja.domain.tierekisteri.varusteet
   "Tierekisterin Varusteet ja laitteet -teeman tietojen käsittelyä"
   (:require [clojure.string :as str]
-            #?@(:cljs [[harja.loki :refer [log]]])))
+            #?@(:cljs [[harja.loki :refer [log]]])
+            [harja.domain.tierekisteri :as tr]))
 
 (def varuste-toimenpide->string {nil         "Kaikki"
                                  :lisatty    "Lisätty"
@@ -41,8 +42,15 @@
 (defn kiinnostaa-listauksessa?
   [ominaisuus]
   (let [tunniste (:kenttatunniste (:ominaisuus ominaisuus))]
-    (and (not (#{"x" "y" "z"} tunniste))
+    (and (not (#{"x" "y" "z" "urakka"} tunniste))
          (not (re-matches #".*tunn" tunniste)))))
+
+(def varusteen-osoite-skeema
+  {:otsikko "Tieosoite"
+   :tyyppi :tierekisteriosoite
+   :hae (comp :tie :sijainti :tietue :varuste)
+   :fmt tr/tierekisteriosoite-tekstina
+   :leveys 1})
 
 (defmulti varusteominaisuus->skeema
   "Muodostaa lomake/grid tyyppisen kentän skeeman varusteen ominaisuuden kuvauksen perusteella.
@@ -64,6 +72,7 @@
            {:tyyppi :valinta
             :valinnat koodisto
             :valinta-nayta :selite
+            :leveys 3
             :fmt (fn [arvo]
                    (let [koodi (first (filter #(= arvo (str (:koodi %))) koodisto))]
                      (if koodi
@@ -74,9 +83,13 @@
   [{ominaisuus :ominaisuus}]
   (merge (varusteominaisuus-skeema-perus ominaisuus)
          {:tyyppi :numero
-          :kokonaisluku? true}))
+          :kokonaisluku? true
+          :leveys 1}))
 
 (defmethod varusteominaisuus->skeema :default
   [{ominaisuus :ominaisuus}]
   (merge (varusteominaisuus-skeema-perus ominaisuus)
-         {:tyyppi :string}))
+         {:tyyppi :string
+          :leveys (if (= "tunniste" (:kenttatunniste ominaisuus))
+                    1
+                    3)}))
