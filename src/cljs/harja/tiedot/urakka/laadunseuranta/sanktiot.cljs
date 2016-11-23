@@ -17,9 +17,10 @@
 (defn uusi-sanktio []
   {:suorasanktio true
    :laji :A
+   :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
+                          (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
    :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
-                    :paatos {:paatos "sanktio"}
-                    :aika (pvm/nyt)}})
+                    :paatos {:paatos "sanktio"}}})
 
 (defonce valittu-sanktio (atom nil))
 
@@ -48,6 +49,7 @@
 
 (defn tallenna-sanktio
   [sanktio]
+  (log "tallenna sanktio " (pr-str sanktio))
   (go
     (let [sanktiot-tallennuksen-jalkeen (<! (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio)))]
      (reset! haetut-sanktiot sanktiot-tallennuksen-jalkeen))))

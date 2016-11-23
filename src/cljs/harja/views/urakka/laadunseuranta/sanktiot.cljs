@@ -1,7 +1,7 @@
 (ns harja.views.urakka.laadunseuranta.sanktiot
   "Sanktioiden listaus"
   (:require [reagent.core :refer [atom]]
-
+            [harja.pvm :as pvm]
             [harja.views.urakka.valinnat :as urakka-valinnat]
 
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
@@ -12,19 +12,17 @@
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :refer [ajax-loader]]
-            [harja.pvm :as pvm]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.yleiset :as yleiset]
 
             [harja.loki :refer [log]]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.views.kartta :as kartta]
-            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.laadunseuranta.sanktiot :as sanktio-domain]
-            [harja.ui.yleiset :as yleiset])
+            [harja.domain.laadunseuranta.sanktiot :as sanktio-domain])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -36,6 +34,7 @@
         yllapito? (or (= :paallystys (:nakyma optiot))
                       (= :paikkaus (:nakyma optiot))
                       (= :tiemerkinta (:nakyma optiot)))]
+
     (fn []
       [:div
        [napit/takaisin "Takaisin sanktioluetteloon" #(reset! tiedot/valittu-sanktio nil)]
@@ -105,6 +104,15 @@
                                   nil) "- valitse käsittelytapa -")
           :palstoja      1}
 
+         (when yllapito?
+           {:otsikko       "Vakiofraasi"
+            :nimi          :vakiofraasi
+            :tyyppi        :valinta
+            :valinta-arvo  first
+            :valinta-nayta second
+            :valinnat      sanktio-domain/+yllapidon-sanktiofraasit+
+            :palstoja      2}
+           )
          {:otsikko     "Perustelu" :nimi :perustelu
           :pakollinen? true
           :hae         (comp :perustelu :paatos :laatupoikkeama)
@@ -171,7 +179,7 @@
             :valinta-nayta #(or % "Ei sidota indeksiin")
             :palstoja      1})
 
-         (when (and (sanktio-domain/sakko? @muokattu) (not yllapito?))
+         (when (and (sanktio-domain/sakko? @muokattu))
            {:otsikko       "Toimenpide"
             :pakollinen?   true
             :nimi          :toimenpideinstanssi
@@ -184,8 +192,11 @@
         @muokattu]])))
 
 (defn sanktiolistaus
-  []
-  (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot))]
+  [optiot]
+  (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot))
+        yllapito? (or (= :paallystys (:nakyma optiot))
+                      (= :paikkaus (:nakyma optiot))
+                      (= :tiemerkinta (:nakyma optiot)))]
     [:div.sanktiot
      [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
      (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
@@ -206,7 +217,10 @@
       [{:otsikko "Päivä\u00ADmäärä" :nimi :perintapvm :fmt pvm/pvm-aika :leveys 1}
        {:otsikko "Kohde" :nimi :kohde :hae (comp :kohde :laatupoikkeama) :leveys 1}
        {:otsikko "Perus\u00ADtelu" :nimi :kuvaus :hae (comp :perustelu :paatos :laatupoikkeama) :leveys 3}
-       {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi) :leveys 3}
+       (if yllapito?
+         {:otsikko "Vakiofraasi" :nimi :vakiofraasi
+          :hae #(sanktio-domain/yllapidon-sanktiofraasin-nimi (:vakiofraasi %)) :leveys 3}
+         {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi) :leveys 3})
        {:otsikko "Tekijä" :nimi :tekija :hae (comp :tekijanimi :laatupoikkeama) :leveys 1}
        {:otsikko "Summa €" :nimi :summa :leveys 1 :tyyppi :numero :tasaa :oikea
         :hae     #(or (:summa %) "Muistutus")}]
@@ -224,4 +238,4 @@
        [kartta/kartan-paikka]
        (if @tiedot/valittu-sanktio
          [sanktion-tiedot optiot]
-         [sanktiolistaus])])))
+         [sanktiolistaus optiot])])))

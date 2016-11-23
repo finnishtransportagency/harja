@@ -2,7 +2,7 @@
 -- Luo uuden sanktion annetulle laatupoikkeamalle
 INSERT
 INTO sanktio
-(perintapvm, sakkoryhma, tyyppi, toimenpideinstanssi, maara, indeksi, laatupoikkeama, suorasanktio, luoja, luotu)
+(perintapvm, sakkoryhma, tyyppi, toimenpideinstanssi, vakiofraasi, maara, indeksi, laatupoikkeama, suorasanktio, luoja, luotu)
 VALUES (:perintapvm, :ryhma :: sanktiolaji, :tyyppi,
         COALESCE(
 	  (SELECT t.id -- suoraan annettu tpi
@@ -12,6 +12,7 @@ VALUES (:perintapvm, :ryhma :: sanktiolaji, :tyyppi,
 	     FROM toimenpideinstanssi t -- sanktiotyyppiin linkattu tpi
             JOIN sanktiotyyppi s ON s.toimenpidekoodi = t.toimenpide
            WHERE s.id = :tyyppi AND t.urakka = :urakka)),
+        :vakiofraasi,
         :summa, :indeksi, :laatupoikkeama, :suorasanktio, :luoja, NOW());
 
 -- name: paivita-sanktio!
@@ -26,6 +27,7 @@ SET perintapvm        = :perintapvm,
        FROM toimenpideinstanssi t
        JOIN sanktiotyyppi s ON s.toimenpidekoodi = t.toimenpide
       WHERE s.id = :tyyppi AND t.urakka = :urakka)),
+  vakiofraasi         = :vakiofraasi,
   maara               = :summa,
   indeksi             = :indeksi,
   laatupoikkeama            = :laatupoikkeama,
@@ -62,6 +64,7 @@ SELECT
   s.indeksi,
   s.suorasanktio,
   s.toimenpideinstanssi,
+  s.vakiofraasi,
 
   h.id                               AS laatupoikkeama_id,
   h.kohde                            AS laatupoikkeama_kohde,
@@ -92,7 +95,7 @@ SELECT
 FROM sanktio s
   JOIN laatupoikkeama h ON s.laatupoikkeama = h.id
   JOIN kayttaja k ON h.luoja = k.id
-  JOIN sanktiotyyppi t ON s.tyyppi = t.id
+  LEFT JOIN sanktiotyyppi t ON s.tyyppi = t.id
 WHERE
   h.urakka = :urakka
   AND s.perintapvm >= :alku AND s.perintapvm <= :loppu;
