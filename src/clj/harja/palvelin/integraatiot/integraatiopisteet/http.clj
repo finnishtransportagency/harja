@@ -8,7 +8,7 @@
   (:import (java.net ConnectException)
            (org.httpkit.client TimeoutException)))
 
-(def timeout-aika-ms 10000)
+(def timeout-aika-ms 60000)
 
 (defn rakenna-http-kutsu [{:keys [metodi otsikot parametrit kayttajatunnus salasana kutsudata timeout]}]
   (let [kutsu {}]
