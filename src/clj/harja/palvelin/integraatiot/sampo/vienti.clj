@@ -40,8 +40,8 @@
   (let [maksuerat (qm/hae-likaiset-maksuerat db)
         kustannussuunnitelmat (qk/hae-likaiset-kustannussuunnitelmat db)
         urakkaidt (distinct (map :urakkaid maksuerat))
-        maksuerien-summat (flatten (map #(qm/hae-urakan-maksuerien-summat db %) (distinct (map :urakkaid urakkaidt))))
-        maksuerat (map (fn [m] (assoc m :summat (first (filter #(= (:tpi_id %) (:tpi_id m) maksuerien-summat))))) maksuerat)]
+        maksuerien-summat (flatten (map #(qm/hae-urakan-maksuerien-summat db %) urakkaidt))
+        maksuerat (map (fn [m] (assoc m :summat (first (filter #(= (:tpi_id %) (:tpi_id m)) maksuerien-summat)))) maksuerat)]
     (log/debug "Lähetetään " (count maksuerat) " maksuerää ja " (count kustannussuunnitelmat) " kustannussuunnitelmaa.")
     (doseq [maksuera maksuerat]
       (maksuera/laheta-maksuera sonja integraatioloki db lahetysjono-ulos (:numero maksuera) (:summat maksuerat)))
