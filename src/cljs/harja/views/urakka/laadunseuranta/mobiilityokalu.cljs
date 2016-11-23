@@ -18,8 +18,8 @@
     [:li "Selain: Chrome, Androidin ja iPadin oma selain"]]
 
    [:p "Parhaan käyttökokemuksen takaamiseksi on suositeltavaa asettaa laitteen automaattilukitus pois päältä tai viive mahdollisimman suureksi:"
-    [:br] "iPadissa Asetukset -> Yleiset -> Automaattilukitus -> Pois"
-    [:br] "Androidissa Asetukset -> Näyttö -> Näytön aikakatkaisu -> Pois"]
+    [:br] "- iPadissa Asetukset -> Yleiset -> Automaattilukitus -> Pois"
+    [:br] "- Androidissa Asetukset -> Näyttö -> Näytön aikakatkaisu -> Pois"]
 
    [:h3 "Käyttö"]
    [:a {:href "https://extranet.liikennevirasto.fi/harja/laadunseuranta/"}
