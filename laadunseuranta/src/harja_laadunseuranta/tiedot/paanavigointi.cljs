@@ -307,7 +307,8 @@
 (defn pistemainen-havainto-painettu! [{:keys [nimi avain] :as havainto}]
   (.log js/console "Kirjataan pistemäinen havainto: " (pr-str avain))
   (ilmoitukset/ilmoita
-    (str "Pistemäinen havainto kirjattu: " nimi))
+    (str "Pistemäinen havainto kirjattu: " nimi)
+    s/ilmoitukset)
   (reitintallennus/kirjaa-kertakirjaus
     @s/idxdb
     {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
@@ -326,9 +327,11 @@
   ;; Ilmoitus
   (if (@s/jatkuvat-havainnot avain)
     (ilmoitukset/ilmoita
-      (str (or (:nimi mittaus) nimi) " alkaa"))
+      (str (or (:nimi mittaus) nimi) " alkaa")
+      s/ilmoitukset)
     (ilmoitukset/ilmoita
-      (str (or (:nimi mittaus) nimi) " päättyy")))
+      (str (or (:nimi mittaus) nimi) " päättyy")
+      s/ilmoitukset))
 
   ;; Mittaus päälle jos tarvii
   (when (and vaatii-nappaimiston?

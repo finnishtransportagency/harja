@@ -13,8 +13,8 @@
 (defn- lisaa-ajastettu-ilmoitus [ilmoitukset-atom teksti]
   (swap! ilmoitukset-atom #(conj % {:ilmoitus teksti})))
 
-(defn ilmoita [teksti]
-  (lisaa-ajastettu-ilmoitus sovellus/ilmoitukset teksti))
+(defn ilmoita [teksti ilmoitukset-atom]
+  (lisaa-ajastettu-ilmoitus ilmoitukset-atom teksti))
 
 (defn ilmoituskomponentti [ilmoitukset-atom]
   (when (and (not @ilmoitus-naytetty-aika)
