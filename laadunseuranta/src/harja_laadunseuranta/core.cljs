@@ -12,7 +12,8 @@
             [cljs.core.async :as async :refer [<!]]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
             [clojure.string :as str]
-            [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset])
+            [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset]
+            [harja-laadunseuranta.ui.dom :as dom])
   (:require-macros [reagent.ratom :refer [run!]]
                    [cljs.core.async.macros :refer [go]]
                    [harja-laadunseuranta.macros :refer [after-delay]]))
@@ -52,6 +53,10 @@
   (if (paikannus/geolokaatio-tuettu?)
     (reset! sovellus/gps-tuettu true)))
 
+(defn- kuuntele-eventteja []
+  (dom/kuuntele-leveyksia)
+  (dom/kuuntele-body-klikkauksia))
+
 (defn- alusta-sovellus []
   (go
     (let [kayttajatiedot (<! (comms/hae-kayttajatiedot))]
@@ -86,6 +91,7 @@
   (sovelluksen-alustusviive)
   (alusta-paikannus-id)
   (alusta-geolokaatio-api)
+  (kuuntele-eventteja)
   (alusta-sovellus))
 
 (defn ^:export aja-testireitti [url]

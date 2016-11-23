@@ -42,6 +42,3 @@
         (if (= dom-node ylempi)
           true
           (recur (.-parentNode ylempi)))))))
-
-(kuuntele-leveyksia)
-(kuuntele-body-klikkauksia)
