@@ -127,7 +127,7 @@ SELECT
    WHERE emo.id = tpk.emo) AS tuotenumero,
 
   -- Kustannussuunnitelman summa
-  CASE WHEN m.tyyppi = 'kokonaishintainen'§
+  CASE WHEN m.tyyppi = 'kokonaishintainen'
        THEN (SELECT SUM(kht.summa)
                FROM kokonaishintainen_tyo kht
               WHERE kht.sopimus = s.id AND kht.toimenpideinstanssi = tpi.id)
