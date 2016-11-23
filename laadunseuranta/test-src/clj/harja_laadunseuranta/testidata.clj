@@ -87,41 +87,115 @@
 (def tarkastus-jossa-lumisuus
   "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
   [{:id 2 :sijainti [465641.5999816895 7230780.000024414]
-    :jatkuvat-havainnot [17]
-    :kitkamittaus 0.2}
+    :jatkuvat-havainnot [3]
+    :lumisuus 1}
    {:id 3 :sijainti [466089.5999816895 7230916.000024414]
-    :jatkuvat-havainnot [17]}
+    :jatkuvat-havainnot [3]}
    {:id 4 :sijainti [466409.5999816895 7230996.000024414]
-    :jatkuvat-havainnot [17]}
+    :jatkuvat-havainnot [3]}
    {:id 5 :sijainti [467009.5999816895 7231180.000024414]
-    :jatkuvat-havainnot [17]}
+    :jatkuvat-havainnot [3]
+    :lumisuus 2}
    {:id 6 :sijainti [467257.5999816895 7231252.000024414]
-    :jatkuvat-havainnot [17]}
+    :jatkuvat-havainnot [3]}
    {:id 7 :sijainti [467545.5999816895 7231332.000024414]
-    :jatkuvat-havainnot [17]
-    :kitkamittaus 0.3}])
+    :jatkuvat-havainnot [3]
+    :kitkamittaus 0.3
+    :lumisuus 3}])
 
-(def soratiehavainnon-mittaukset
+(def tarkastus-jossa-talvihoito-tasaisuus
+  "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
   [{:id 2 :sijainti [465641.5999816895 7230780.000024414]
-    :jatkuvat-havainnot [19]}
+    :jatkuvat-havainnot [3]
+    :talvihoito-tasaisuus 10}
    {:id 3 :sijainti [466089.5999816895 7230916.000024414]
-    :jatkuvat-havainnot [19]}
+    :jatkuvat-havainnot [3]}
    {:id 4 :sijainti [466409.5999816895 7230996.000024414]
-    :jatkuvat-havainnot [19]
-    :kuvaus "foo"}
+    :jatkuvat-havainnot [3]}
    {:id 5 :sijainti [467009.5999816895 7231180.000024414]
-    :jatkuvat-havainnot [19]}
+    :jatkuvat-havainnot [3]}
    {:id 6 :sijainti [467257.5999816895 7231252.000024414]
-    :jatkuvat-havainnot [19]
-    :kuvaus "bar"}
+    :jatkuvat-havainnot [3]}
    {:id 7 :sijainti [467545.5999816895 7231332.000024414]
-    :jatkuvat-havainnot [19]
-    :tasaisuus 3
-    :kiinteys 4
-    :polyavyys 5}
-   {:id 8 :sijainti [467545.5999816895 7231332.000024414]
-    :jatkuvat-havainnot [19]
-    :tasaisuus nil}])
+    :jatkuvat-havainnot [3]
+    :talvihoito-tasaisuus 100}])
+
+(def tarkastus-jossa-soratie-tasaisuus
+  "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
+  [{:id 2 :sijainti [465641.5999816895 7230780.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1
+    :kiinteys 3}
+   {:id 3 :sijainti [466089.5999816895 7230916.000024414]
+    :jatkuvat-havainnot [3]}
+   {:id 4 :sijainti [466409.5999816895 7230996.000024414]
+    :jatkuvat-havainnot [3]}
+   {:id 5 :sijainti [467009.5999816895 7231180.000024414]
+    :jatkuvat-havainnot [3]}
+   {:id 6 :sijainti [467257.5999816895 7231252.000024414]
+    :jatkuvat-havainnot [3]}
+   {:id 7 :sijainti [467545.5999816895 7231332.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 3}])
+
+(def tarkastus-jossa-soratie-kiinteys
+  "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
+  [{:id 2 :sijainti [465641.5999816895 7230780.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1
+    :kiinteys 3}
+   {:id 3 :sijainti [466089.5999816895 7230916.000024414]
+    :jatkuvat-havainnot [3]}
+   {:id 4 :sijainti [466409.5999816895 7230996.000024414]
+    :jatkuvat-havainnot [3]}
+   {:id 5 :sijainti [467009.5999816895 7231180.000024414]
+    :jatkuvat-havainnot [3]}
+   {:id 6 :sijainti [467257.5999816895 7231252.000024414]
+    :jatkuvat-havainnot [3]}
+   {:id 7 :sijainti [467545.5999816895 7231332.000024414]
+    :jatkuvat-havainnot [3]
+    :kiinteys 3
+    :soratie-tasaisuus 3}])
+
+(def tarkastus-jossa-soratie-polyavyys
+  "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
+  [{:id 2 :sijainti [465641.5999816895 7230780.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1
+    :polyavyys 1
+    :kiinteys 3}
+   {:id 3 :sijainti [466089.5999816895 7230916.000024414]
+    :jatkuvat-havainnot [3]
+    :polyavyys 3}
+   {:id 4 :sijainti [466409.5999816895 7230996.000024414]
+    :jatkuvat-havainnot [3]}
+   {:id 5 :sijainti [467009.5999816895 7231180.000024414]
+    :jatkuvat-havainnot [3]}
+   {:id 6 :sijainti [467257.5999816895 7231252.000024414]
+    :jatkuvat-havainnot [3]}
+   {:id 7 :sijainti [467545.5999816895 7231332.000024414]
+    :jatkuvat-havainnot [3]
+    :kiinteys 3
+    :soratie-tasaisuus 3}])
+
+(def tarkastus-jossa-soratie-sivukaltevuus
+  "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
+  [{:id 2 :sijainti [465641.5999816895 7230780.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1
+    :sivukaltevuus 3}
+   {:id 3 :sijainti [466089.5999816895 7230916.000024414]
+    :jatkuvat-havainnot [3]}
+   {:id 4 :sijainti [466409.5999816895 7230996.000024414]
+    :jatkuvat-havainnot [3]}
+   {:id 5 :sijainti [467009.5999816895 7231180.000024414]
+    :jatkuvat-havainnot [3]}
+   {:id 6 :sijainti [467257.5999816895 7231252.000024414]
+    :jatkuvat-havainnot [3]}
+   {:id 7 :sijainti [467545.5999816895 7231332.000024414]
+    :jatkuvat-havainnot [3]
+    :sivukaltevuus 3
+    :soratie-tasaisuus 3}])
 
 (def tarkastukset-joissa-jatkuvat-havainnot-muuttuu-ja-kommentteja
   "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
