@@ -27,7 +27,6 @@
   (process-event [_ {hakuehdot :hakuehdot :as app}]
     (let [tulos! (t/send-async! map->VarusteHakuTulos)
           virhe! (t/send-async! ->VarusteHakuEpaonnistui)]
-      (log "HAETAAN EHDOILLA: " (pr-str hakuehdot))
       (go
         (let [vastaus (<! (k/post! :hae-varusteita hakuehdot))]
           (log "VASTAUS: " (pr-str vastaus))
@@ -41,15 +40,14 @@
 
   VarusteHakuTulos
   (process-event [{tietolaji :tietolaji varusteet :varusteet} app]
-    (log "VarusteHakuTulos: " (pr-str varusteet) ", app: " (pr-str app))
-
     (-> app
         (assoc-in [:varusteet] varusteet)
         (assoc-in [:tietolaji] tietolaji)
         (assoc-in [:listaus-skeema]
-                  (mapv varusteet/varusteominaisuus->skeema
-                        (filter varusteet/kiinnostaa-listauksessa?
-                                (:ominaisuudet tietolaji))))
+                  (into [varusteet/varusteen-osoite-skeema]
+                        (comp (filter varusteet/kiinnostaa-listauksessa?)
+                              (map varusteet/varusteominaisuus->skeema))
+                        (:ominaisuudet tietolaji)))
         (assoc-in [:hakuehdot :haku-kaynnissa?] false)))
 
   VarusteHakuEpaonnistui
