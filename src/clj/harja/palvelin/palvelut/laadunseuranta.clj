@@ -296,7 +296,6 @@
   ;; riittäisi varmaan vain roolit/urakanvalvoja?
   (log/debug "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama)
             ", urakassa " urakka)
-  (log/debug "tallennettava sanktio kokonaisuudessaan: " sanktio)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka)
 
   (jdbc/with-db-transaction [c db]

@@ -49,7 +49,6 @@
 
 (defn tallenna-sanktio
   [sanktio]
-  (log "tallenna sanktio " (pr-str sanktio))
   (go
     (let [sanktiot-tallennuksen-jalkeen (<! (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio)))]
      (reset! haetut-sanktiot sanktiot-tallennuksen-jalkeen))))
