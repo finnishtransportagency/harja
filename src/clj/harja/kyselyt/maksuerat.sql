@@ -138,17 +138,15 @@ SELECT
 
   -- Kustannussuunnitelman summa
   CASE WHEN m.tyyppi = 'kokonaishintainen'
-    THEN (SELECT SUM(kht.summa)
-          FROM kokonaishintainen_tyo kht
-          WHERE kht.toimenpideinstanssi = tpi.id)
-  WHEN m.tyyppi = 'yksikkohintainen'
-    THEN (SELECT SUM(yht.maara * yht.yksikkohinta)
-          FROM yksikkohintainen_tyo yht
-          WHERE yht.tehtava IN (SELECT id
-                                FROM toimenpidekoodi
-                                WHERE emo = tpk.id))
-  ELSE 1
-  END                      AS kustannussuunnitelma_summa
+       THEN (SELECT SUM(kht.summa)
+               FROM kokonaishintainen_tyo kht
+              WHERE kht.sopimus = s.id AND kht.toimenpideinstanssi = tpi.id)
+       WHEN m.tyyppi = 'yksikkohintainen'
+       THEN (SELECT SUM(yht.maara * yht.yksikkohinta)
+               FROM yksikkohintainen_tyo yht
+              WHERE yht.urakka = u.id AND yht.tehtava IN (SELECT id FROM toimenpidekoodi WHERE emo = tpk.id))
+       ELSE 1
+  END AS kustannussuunnitelma_summa
 FROM maksuera m
   JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
   JOIN urakka u ON u.id = tpi.urakka
