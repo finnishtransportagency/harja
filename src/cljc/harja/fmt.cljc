@@ -412,10 +412,13 @@
   (pvm/pvm pvm))
 
 (defn pvm-opt
-  "Formatoi päivämäärän tai tyhjä, jos nil."
+  "Formatoi päivämäärän tai tyhjä, jos nil.
+  Jos formatoitava arvo ei ole pvm, palauttaa itse arvon."
   [p]
   (if p
-    (pvm p)
+    (try (pvm p)
+         #?(:clj (catch Exception _ p))
+         #?(:cljs (catch js/Object _ p)))
     ""))
 
 (defn pvm-vali [[alku loppu]]
