@@ -13,6 +13,7 @@
             [harja.palvelin.komponentit.tapahtumat :as tapahtumat]))
 
 (def sonja-kanava "sonjaping")
+(def lukon-vanhenemisaika 300)
 
 (defn odota-viestin-saapumista [integraatioloki tapahtuma-id ehto-fn max-aika]
   (loop [max-ts (+ max-aika (System/currentTimeMillis))]
@@ -47,7 +48,8 @@
                 (log/error virheviesti)
                 (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki lokiviesti virheviesti tapahtuma-id nil)))))
 
-        (tapahtumat/kuuroudu! klusterin-tapahtumat sonja-kanava)))))
+        (tapahtumat/kuuroudu! klusterin-tapahtumat sonja-kanava)))
+    lukon-vanhenemisaika))
 
 (defn tee-jms-yhteysvarmistus-tehtava [{:keys [klusterin-tapahtumat db integraatioloki sonja]} minuutit jono]
   (when (and minuutit jono)
