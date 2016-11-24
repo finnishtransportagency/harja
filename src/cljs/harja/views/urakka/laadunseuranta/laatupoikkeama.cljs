@@ -83,8 +83,12 @@
 (defn laatupoikkeaman-sanktiot
   "Näyttää muokkaus-gridin laatupoikkeaman sanktioista. Ottaa kaksi parametria, sanktiot (muokkaus-grid muodossa)
 sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (id avaimena)"
-  [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama]
-  (let [g (grid/grid-ohjaus)]
+  [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama optiot]
+  (let [g (grid/grid-ohjaus)
+        yllapito? (or (= :paallystys (:nakyma optiot))
+                      (= :paikkaus (:nakyma optiot))
+                      (= :tiemerkinta (:nakyma optiot)))
+        urakan-tpit @tiedot-urakka/urakan-toimenpideinstanssit]
     (fn [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama]
       (let [lp-kasittelyn-pvm (get-in @laatupoikkeama [:paatos :kasittelyaika])]
         [:div.sanktiot
@@ -94,46 +98,60 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
           :ohjaus       g
           :voi-muokata? paatosoikeus?
           :uusi-rivi    (fn [rivi]
-                          (assoc rivi :laji :A))}
+                          (assoc rivi :laji :A
+                                      :toimenpideinstanssi (when (= 1 (count urakan-tpit))
+                                                             (:tpi_id (first urakan-tpit)))))}
 
          [{:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 1.5
            :validoi [[:ei-tyhja "Anna sanktion päivämäärä"]
                      [:pvm-toisen-pvmn-jalkeen lp-kasittelyn-pvm "Perintäpvm oltava käsittelyn jälkeen"]]}
-          {:otsikko       "Laji" :tyyppi :valinta :leveys 0.85
+
+          {:otsikko       "Laji" :tyyppi :valinta :leveys 1.25
            :nimi          :laji
            :aseta         (fn [rivi arvo]
                             (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
                               (if-not (sanktio-domain/sakko? paivitetty)
                                 (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
                                 paivitetty)))
-           :valinnat      [:A :B :C :muistutus]
+           :valinnat      (if yllapito?
+                            [:A :muistutus]
+                            [:A :B :C :muistutus])
            :valinta-nayta #(case %
-                            :A "A"
+                            ;;toistaiseksi ylläpidossa vain sakko ja muistutus, default A ryhmä
+                            :A (if yllapito? "Sakko" "A")
                             :B "B"
                             :C "C"
                             :muistutus "Muistutus"
                             "- valitse -")
            :validoi       [[:ei-tyhja "Valitse laji"]]}
-          {:otsikko       "Tyyppi" :nimi :tyyppi :leveys 3
-           :tyyppi        :valinta
-           :aseta         (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
-                            ;; Asetetaan uusi sanktiotyyppi sekä toimenpideinstanssi, joka tähän kuuluu
-                            (let [paivitetty (assoc sanktio :tyyppi tyyppi)]
-                              (if (sanktio-domain/sakko? paivitetty)
-                                (assoc paivitetty :toimenpideinstanssi
-                                                  (when tpk
-                                                    (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
-                                (assoc paivitetty :toimenpideinstanssi nil))))
-           :valinnat-fn   #(sanktiot/lajin-sanktiotyypit (:laji %))
-           :valinta-nayta :nimi
-           :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]}
+
+          (if yllapito?
+            {:otsikko       "Puute tai laiminlyönti" :nimi :vakiofraasi :leveys 3
+             :tyyppi        :valinta
+             :valinta-arvo  first
+             :valinta-nayta second
+             :valinnat      sanktio-domain/+yllapidon-sanktiofraasit+}
+            ;; hoidossa sanktiotyyppi
+            {:otsikko       "Tyyppi" :nimi :tyyppi :leveys 3
+             :tyyppi        :valinta
+             :aseta         (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
+                              ;; Asetetaan uusi sanktiotyyppi sekä toimenpideinstanssi, joka tähän kuuluu
+                              (let [paivitetty (assoc sanktio :tyyppi tyyppi)]
+                                (if (sanktio-domain/sakko? paivitetty)
+                                  (assoc paivitetty :toimenpideinstanssi
+                                                    (when tpk
+                                                      (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
+                                  (assoc paivitetty :toimenpideinstanssi nil))))
+             :valinnat-fn   #(sanktiot/lajin-sanktiotyypit (:laji %))
+             :valinta-nayta :nimi
+             :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]})
 
           {:otsikko       "Toimenpide"
            :nimi          :toimenpideinstanssi
            :tyyppi        :valinta
            :valinta-arvo  :tpi_id
            :valinta-nayta :tpi_nimi
-           :valinnat-fn   #(when (sanktio-domain/sakko? %) @tiedot-urakka/urakan-toimenpideinstanssit)
+           :valinnat-fn   #(when (sanktio-domain/sakko? %) urakan-tpit)
            :leveys        3
            :validoi       [[:ei-tyhja "Valitse toimenpide, johon sakko liittyy"]]
            :muokattava?   sanktio-domain/sakko?}
@@ -141,7 +159,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
           {:otsikko     "Sakko (€)"
            :tyyppi      :numero
            :nimi        :summa
-           :leveys      1.5
+           :leveys      1
            :validoi     [[:ei-tyhja "Anna sakon summa euroina"]]
            :muokattava? sanktio-domain/sakko?}
 
@@ -167,14 +185,26 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 (defn- sanktiotaulukko-tyhja? [laatupoikkeama]
   (empty? (sanktiotaulukon-rivit laatupoikkeama)))
 
-(defn- tarkasta-sanktiorivi [sanktiorivi]
+(defn- pakolliset-kentat
+  [yllapito? sakko?]
+  (let [pakolliset-yllapito-sakko [[:perintapvm] [:laji] [:summa] [:toimenpideinstanssi]]
+        pakolliset-yllapito-muistutus [[:perintapvm] [:laji]]
+        pakolliset-hoito-sakko [[:perintapvm] [:laji] [:summa] [:toimenpideinstanssi] [:tyyppi]]
+        pakolliset-hoito-muistutus [[:laji] [:tyyppi] [:perintapvm]]]
+    (if yllapito?
+      (if sakko?
+        pakolliset-yllapito-sakko
+        pakolliset-yllapito-muistutus)
+      (if sakko?
+        pakolliset-hoito-sakko
+        pakolliset-hoito-muistutus))))
+
+(defn- tarkasta-sanktiorivi [sanktiorivi yllapito?]
   (let [kentat (map #(get-in sanktiorivi %)
-                    (if (sanktio-domain/sakko? sanktiorivi)
-                      [[:perintapvm] [:laji] [:summa] [:toimenpideinstanssi] [:tyyppi]]
-                      [[:laji] [:tyyppi] [:perintapvm]]))]
+                    (pakolliset-kentat yllapito? (sanktio-domain/sakko? sanktiorivi)))]
     (every? some? kentat)))
 
-(defn- sanktiorivit-ok? [laatupoikkeama]
+(defn- sanktiorivit-ok? [laatupoikkeama yllapito?]
   (cond
     (and (not (sanktio-domain/paatos-on-sanktio? laatupoikkeama))
          (sanktiotaulukko-tyhja? laatupoikkeama))
@@ -187,7 +217,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
     ;; muokkausgridiltä tulee [{id {rivi}} ..]
     ;; Tarkasta että jokaiselle riville muokkausgridissä on jokainen vaadittava arvo
     :default
-    (every? true? (map tarkasta-sanktiorivi (sanktiotaulukon-rivit laatupoikkeama)))))
+    (every? true? (map #(tarkasta-sanktiorivi % yllapito?) (sanktiotaulukon-rivit laatupoikkeama)))))
 
 (defn- tarkasta-sanktiotiedot [vertailu-fn laatupoikkeama]
   (vertailu-fn #(not (nil? %)) (map #(get-in laatupoikkeama %)
@@ -253,7 +283,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                                   urakka-id)
         paatosoikeus? (oikeudet/on-muu-oikeus? "päätös"
                                                oikeudet/urakat-laadunseuranta-sanktiot
-                                               urakka-id @istunto/kayttaja)]
+                                               urakka-id @istunto/kayttaja)
+        yllapito? (or (= :paallystys (:nakyma optiot))
+                      (= :paikkaus (:nakyma optiot))
+                      (= :tiemerkinta (:nakyma optiot)))]
     (komp/luo
       (fn [laatupoikkeama optiot]
         (let [uusi? (not (:id @laatupoikkeama))
@@ -268,21 +301,20 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
             [:div.laatupoikkeama
              [napit/takaisin "Takaisin laatupoikkeamaluetteloon" #(reset! laatupoikkeamat/valittu-laatupoikkeama-id nil)]
              [lomake/lomake
-             {:otsikko      "Laatupoikkeaman tiedot"
-              :muokkaa!     #(let [uusi-lp
-                                   (if (kohde-muuttui? (get-in @laatupoikkeama [:yllapitokohde :id])
-                                                       (get-in % [:yllapitokohde :id]))
-                                     (laatupoikkeamat/paivita-yllapitokohteen-tr-tiedot % yllapitokohteet)
-                                     %)]
-                              (log "muokkaa")
-                              (reset! laatupoikkeama uusi-lp))
-              :voi-muokata? @laatupoikkeamat/voi-kirjata?
-              :footer-fn    (fn [sisalto]
-                              (when voi-kirjoittaa?
-                                [napit/palvelinkutsu-nappi
-                                 (cond
-                                   (paatos? sisalto)
-                                   "Tallenna ja lukitse laatupoikkeama"
+              {:otsikko      "Laatupoikkeaman tiedot"
+               :muokkaa!     #(let [uusi-lp
+                                    (if (kohde-muuttui? (get-in @laatupoikkeama [:yllapitokohde :id])
+                                                        (get-in % [:yllapitokohde :id]))
+                                      (laatupoikkeamat/paivita-yllapitokohteen-tr-tiedot % yllapitokohteet)
+                                      %)]
+                               (reset! laatupoikkeama uusi-lp))
+               :voi-muokata? @laatupoikkeamat/voi-kirjata?
+               :footer-fn    (fn [sisalto]
+                               (when voi-kirjoittaa?
+                                 [napit/palvelinkutsu-nappi
+                                  (cond
+                                    (paatos? sisalto)
+                                    "Tallenna ja lukitse laatupoikkeama"
 
                                    :default
                                    "Tallenna laatupoikkeama")
@@ -290,7 +322,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                  {:ikoni    (ikonit/tallenna)
                                   :disabled (or
                                               (not (validoi-sanktiotiedot sisalto))
-                                              (not (sanktiorivit-ok? sisalto))
+                                              (not (sanktiorivit-ok? sisalto yllapito?))
                                               (not (lomake/voi-tallentaa? sisalto)))
                                   :virheviesti  "Laatupoikkeaman tallennus epäonnistui"
                                   :kun-onnistuu (fn [_] (reset! laatupoikkeamat/valittu-laatupoikkeama-id nil))}]))}
@@ -468,7 +500,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                              #(swap! laatupoikkeama assoc :sanktiot %))
                                      sanktio-virheet
                                      paatosoikeus?
-                                     laatupoikkeama])})
+                                     laatupoikkeama optiot])})
                   (when (nayta-siirtymisnappi? @laatupoikkeama)
                     {:rivi? true
                      :uusi-rivi? true

@@ -105,7 +105,7 @@
           :palstoja      1}
 
          (when yllapito?
-           {:otsikko       "Vakiofraasi"
+           {:otsikko       "Puute tai laiminlyönti"
             :nimi          :vakiofraasi
             :tyyppi        :valinta
             :valinta-arvo  first
@@ -218,7 +218,7 @@
        {:otsikko "Kohde" :nimi :kohde :hae (comp :kohde :laatupoikkeama) :leveys 1}
        {:otsikko "Perus\u00ADtelu" :nimi :kuvaus :hae (comp :perustelu :paatos :laatupoikkeama) :leveys 3}
        (if yllapito?
-         {:otsikko "Vakiofraasi" :nimi :vakiofraasi
+         {:otsikko "Puute tai laiminlyönti" :nimi :vakiofraasi
           :hae #(sanktio-domain/yllapidon-sanktiofraasin-nimi (:vakiofraasi %)) :leveys 3}
          {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi) :leveys 3})
        {:otsikko "Tekijä" :nimi :tekija :hae (comp :tekijanimi :laatupoikkeama) :leveys 1}

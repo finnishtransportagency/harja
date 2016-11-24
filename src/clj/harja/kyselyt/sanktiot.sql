@@ -45,12 +45,13 @@ SELECT
   s.sakkoryhma      AS laji,
   s.toimenpideinstanssi,
   s.indeksi,
+  s.vakiofraasi,
   t.id              AS tyyppi_id,
   t.nimi            AS tyyppi_nimi,
   t.toimenpidekoodi AS tyyppi_toimenpidekoodi,
   t.sanktiolaji     AS tyyppi_laji
 FROM sanktio s
-  JOIN sanktiotyyppi t ON s.tyyppi = t.id
+  LEFT JOIN sanktiotyyppi t ON s.tyyppi = t.id
 WHERE laatupoikkeama = :laatupoikkeama;
 
 -- name: hae-urakan-sanktiot

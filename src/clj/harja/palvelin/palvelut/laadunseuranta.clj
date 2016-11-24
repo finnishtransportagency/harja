@@ -96,7 +96,7 @@
         :sanktiot (into []
                         (comp (map #(konv/array->set % :tyyppi_laji keyword))
                               (map konv/alaviiva->rakenne)
-                              (map #(konv/string->keyword % :laji))
+                              (map #(konv/string->keyword % :laji :vakiofraasi))
                               (map #(assoc %
                                      :sakko? (sanktiot-domain/sakko? %)
                                      :summa (some-> % :summa double))))
@@ -111,7 +111,7 @@
   (log/debug "Hae sanktiot (" urakka-id alku loppu ")")
   (into []
         (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
-              (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa))
+              (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
               (map konv/alaviiva->rakenne)
               (map #(konv/decimal->double % :summa))
               (map #(assoc % :laji (keyword (:laji %)))))
