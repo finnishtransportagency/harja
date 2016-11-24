@@ -99,12 +99,12 @@
 (def havaintolomakedata (reagent/cursor sovellus [:havaintolomakedata]))
 
 (def alustus-valmis (reaction (let [sovellus @sovellus]
-                                (and (get-in sovellus [:alustus :gps-tuettu])
-                                     (get-in sovellus [:alustus :ensimmainen-sijainti])
-                                     (get-in sovellus [:alustus :verkkoyhteys])
-                                     (get-in sovellus [:alustus :selain-tuettu])
-                                     (:idxdb sovellus)
-                                     (get-in sovellus [:kayttaja :kayttajanimi])))))
+                                (boolean (and (get-in sovellus [:alustus :gps-tuettu])
+                                              (get-in sovellus [:alustus :ensimmainen-sijainti])
+                                              (get-in sovellus [:alustus :verkkoyhteys])
+                                              (get-in sovellus [:alustus :selain-tuettu])
+                                              (:idxdb sovellus)
+                                              (get-in sovellus [:kayttaja :kayttajanimi]))))))
 
 (def sovellus-alustettu (reagent/cursor sovellus [:alustus :alustettu]))
 (def verkkoyhteys (reagent/cursor sovellus [:alustus :verkkoyhteys]))
