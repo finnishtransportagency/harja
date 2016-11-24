@@ -8,9 +8,33 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja-laadunseuranta.macros :refer [after-delay]]))
 
-(defn- tuettu-selain? []
+(defn ipad? []
   (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-                 [#".*android.*" #".*chrome.*" #".*ipad.*" #".*iphone.*"])))
+                 [#".*ipad.*"])))
+
+(defn iphone? []
+  (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+                 [#".*iphone.*"])))
+
+(defn chrome? []
+  (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+                 [#".*chrome.*"])))
+
+(def +tuettu-chrome-versio+ 54)
+
+(defn maarita-chrome-versio-user-agentista [user-agent-text-lowercase]
+  (let [chrome-alku-index (.indexOf user-agent-text-lowercase "chrome/")
+        chrome-versio-teksti (subs user-agent-text-lowercase chrome-alku-index (+ chrome-alku-index 14))
+        chrome-versonumero (re-find (re-pattern "\\d+") chrome-versio-teksti)]
+    (js/parseInt chrome-versonumero)))
+
+(defn- tuettu-selain? []
+  (boolean (or (ipad?)
+               (iphone?)
+               (and (chrome?)
+                    (>= (maarita-chrome-versio-user-agentista
+                          (clojure.string/lower-case js/window.navigator.userAgent))
+                        +tuettu-chrome-versio+)))))
 
 (defn- flip [atomi]
   (swap! atomi not))
@@ -32,14 +56,6 @@
 
 (defn- timestamp []
   (.getTime (js/Date.)))
-
-(defn ipad? []
-  (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-                 [#".*ipad.*"])))
-
-(defn iphone? []
-  (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-                 [#".*iphone.*"])))
 
 (defn ilman-tavutusta [teksti]
   (str/replace teksti #"\u00AD" ""))
