@@ -16,8 +16,8 @@
    [:div.alustuskomponentti
     [:div.liikenneturvallisuusmuistutus "Muista aina liikenne\u00ADturvallisuus tarkastuksia tehdessäsi."]
     [:p "Tarkistetaan..."]
-    [:div [checkmark selain-tuettu] "Selain tuettu"]
-    [:div [checkmark verkkoyhteys] "Verkkoyhteys"]
+    [:div [checkmark @selain-tuettu] "Selain tuettu"]
+    [:div [checkmark @verkkoyhteys] "Verkkoyhteys"]
     [:div [checkmark @gps-tuettu] "GPS-tuki"]
     [:div [checkmark @ensimmainen-sijainti] "Laite paikannettu"]
     [:div [checkmark @idxdb-tuettu] "Selaintietokanta-tuki"]
