@@ -15,7 +15,7 @@
     [:li "Android-tabletti tai iPad"]
     [:li "GPS-yhteys"]
     [:li "Internet-yhteys (ainoastaan tarkastusajon aloittamista ja päättämistä varten)"]
-    [:li "Selain: Chrome (54 tai uudempi), Android Browser, iPad Safari (9.3 tai uudempi)"]]
+    [:li "Selain: Chrome (54 tai uudempi), iPad Safari (9.3 tai uudempi)"]]
 
    [:p "Parhaan käyttökokemuksen takaamiseksi on suositeltavaa asettaa laitteen automaattilukitus pois päältä tai viive mahdollisimman suureksi tarkastusajon ajaksi:"
     [:br] "- iPadissa Asetukset -> Yleiset -> Automaattilukitus -> Pois"
