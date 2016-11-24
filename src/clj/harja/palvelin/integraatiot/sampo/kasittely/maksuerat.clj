@@ -21,10 +21,7 @@
   (let [maksuera (konversio/alaviiva->rakenne (first (qm/hae-lahetettava-maksuera db numero)))
         tpi (get-in maksuera [:toimenpideinstanssi :id])
         tyyppi (keyword (get-in maksuera [:maksuera :tyyppi]))
-        _ tpi
-        _ (println "----> summat:" summat)
-        maksueran-summat (first (filter #(= (:tpi_id %) tpi) summat))
-        _ (println "----> " maksueran-summat)]
+        maksueran-summat (first (filter #(= (:tpi_id %) tpi) summat))]
     (assoc-in maksuera [:maksuera :summa] (get maksueran-summat tyyppi))))
 
 (defn hae-maksueranumero [db lahetys-id]
