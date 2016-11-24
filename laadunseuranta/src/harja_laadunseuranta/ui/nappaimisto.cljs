@@ -59,73 +59,75 @@
                          (str "nappaimiston-painike "
                               (when (= (painike-tyyppi syotto) arvo)
                                 "nappaimiston-painike-painettu")))]
+    ;; NOTE Oikeaoppisesti nappien kuuluisi olla <button> elementtejä, mutta jostain
+    ;; syystä iPadin safari piirtää tällöin vain kaksi nappia samalle riville.
     (fn []
       [:div.soratienappaimisto
        [:div.soratienappaimiston-sarake.soratienappaimiston-tasaisuus
         [:div.soratienappaimiston-sarake-otsikko "Tasaisuus"]
-        [:button
+        [:div
          {:class (painike-luokka @syotto-atom :tasaisuus 5)
           :id "soratienappaimiston-painike-tasaisuus-5"
           :on-click #(numeronappain-painettu 5 :tasaisuus syotto-atom)} "5"]
-        [:button
+        [:div
          {:class (painike-luokka @syotto-atom :tasaisuus 4)
           :id "soratienappaimiston-painike-tasaisuus-4"
           :on-click #(numeronappain-painettu 4 :tasaisuus syotto-atom)} "4"]
-        [:button
+        [:div
          {:class (painike-luokka @syotto-atom :tasaisuus 3)
           :id "soratienappaimiston-painike-tasaisuus-3"
           :on-click #(numeronappain-painettu 3 :tasaisuus syotto-atom)} "3"]
-        [:button
+        [:div
          {:class (painike-luokka @syotto-atom :tasaisuus 2)
           :id "soratienappaimiston-painike-tasaisuus-2"
           :on-click #(numeronappain-painettu 2 :tasaisuus syotto-atom)} "2"]
-        [:button
+        [:div
          {:class (painike-luokka @syotto-atom :tasaisuus 1)
           :id "soratienappaimiston-painike-tasaisuus-1"
           :on-click #(numeronappain-painettu 1 :tasaisuus syotto-atom)} "1"]]
 
        [:div.soratienappaimiston-sarake.soratienappaimiston-kiinteys
         [:div.soratienappaimiston-sarake-otsikko "Kiinteys"]
-        [:button
+        [:div
          {:class (painike-luokka @syotto-atom :kiinteys 5)
           :id "soratienappaimiston-painike-kiinteys-5"
           :on-click #(numeronappain-painettu 5 :kiinteys syotto-atom)} "5"]
-        [:button
+        [:div
          {:class (painike-luokka @syotto-atom :kiinteys 4)
           :id "soratienappaimiston-painike-kiinteys-4"
           :on-click #(numeronappain-painettu 4 :kiinteys syotto-atom)} "4"]
-        [:button
+        [:div
          {:class (painike-luokka @syotto-atom :kiinteys 3)
           :id "soratienappaimiston-painike-kiinteys-3"
           :on-click #(numeronappain-painettu 3 :kiinteys syotto-atom)} "3"]
-        [:button
+        [:div
          {:class (painike-luokka @syotto-atom :kiinteys 2)
           :id "soratienappaimiston-painike-kiinteys-2"
           :on-click #(numeronappain-painettu 2 :kiinteys syotto-atom)} "2"]
-        [:button
+        [:div
          {:class (painike-luokka @syotto-atom :kiinteys 1)
           :id "soratienappaimiston-painike-kiinteys-1"
           :on-click #(numeronappain-painettu 1 :kiinteys syotto-atom)} "1"]]
 
        [:div.soratienappaimiston-sarake.soratienappaimiston-polyavyys
         [:div.soratienappaimiston-sarake-otsikko "Pölyävyys"]
-        [:button
+        [:div
          {:class (painike-luokka @syotto-atom :polyavyys 5)
           :id "soratienappaimiston-painike-polyavyys-5"
           :on-click #(numeronappain-painettu 5 :polyavyys syotto-atom)} "5"]
-        [:button
+        [:div
          {:class (painike-luokka @syotto-atom :polyavyys 4)
           :id "soratienappaimiston-painike-polyavyys-4"
           :on-click #(numeronappain-painettu 4 :polyavyys syotto-atom)} "4"]
-        [:button
+        [:div
          {:class (painike-luokka @syotto-atom :polyavyys 3)
           :id "soratienappaimiston-painike-polyavyys-3"
           :on-click #(numeronappain-painettu 3 :polyavyys syotto-atom)} "3"]
-        [:button
+        [:div
          {:class (painike-luokka @syotto-atom :polyavyys 2)
           :id "soratienappaimiston-painike-polyavyys-2"
           :on-click #(numeronappain-painettu 2 :polyavyys syotto-atom)} "2"]
-        [:button
+        [:div
          {:class (painike-luokka @syotto-atom :polyavyys 1)
           :id "soratienappaimiston-painike-polyavyys-1"
           :on-click #(numeronappain-painettu 1 :polyavyys syotto-atom)} "1"]]])))
@@ -133,56 +135,58 @@
 (defn- numeronappaimisto [{:keys [syotto-atom kirjaa-arvo mittaustyyppi
                                   numeronappain-painettu syotto-validi? syotto-valmis]
                            :as tiedot}]
+  ;; NOTE Oikeaoppisesti nappien kuuluisi olla <button> elementtejä, mutta jostain
+  ;; syystä iPadin safari piirtää tällöin vain kaksi nappia samalle riville.
   [:div.numeronappaimisto
    [:div.nappaimiston-painikekentat
-    [:button
+    [:div
      {:class "nappaimiston-painike"
       :id "nappaimiston-painike7"
       :on-click #(numeronappain-painettu 7 mittaustyyppi syotto-atom)} "7"]
-    [:button
+    [:div
      {:class "nappaimiston-painike"
       :id "nappaimiston-painike8"
       :on-click #(numeronappain-painettu 8 mittaustyyppi syotto-atom)} "8"]
-    [:button
+    [:div
      {:class "nappaimiston-painike"
       :id "nappaimiston-painike9"
       :on-click #(numeronappain-painettu 9 mittaustyyppi syotto-atom)} "9"]
 
-    [:button
+    [:div
      {:class "nappaimiston-painike"
       :id "nappaimiston-painike4"
       :on-click #(numeronappain-painettu 4 mittaustyyppi syotto-atom)} "4"]
-    [:button
+    [:div
      {:class "nappaimiston-painike"
       :id "nappaimiston-painike5"
       :on-click #(numeronappain-painettu 5 mittaustyyppi syotto-atom)} "5"]
-    [:button
+    [:div
      {:class "nappaimiston-painike"
       :id "nappaimiston-painike6"
       :on-click #(numeronappain-painettu 6 mittaustyyppi syotto-atom)} "6"]
 
-    [:button
+    [:div
      {:class "nappaimiston-painike"
       :id "nappaimiston-painike1"
       :on-click #(numeronappain-painettu 1 mittaustyyppi syotto-atom)} "1"]
-    [:button
+    [:div
      {:class "nappaimiston-painike"
       :id "nappaimiston-painike2"
       :on-click #(numeronappain-painettu 2 mittaustyyppi syotto-atom)} "2"]
-    [:button
+    [:div
      {:class "nappaimiston-painike"
       :id "nappaimiston-painike3"
       :on-click #(numeronappain-painettu 3 mittaustyyppi syotto-atom)} "3"]
 
-    [:button
+    [:div
      {:class "nappaimiston-painike"
       :id "nappaimiston-painike-delete"
       :on-click #(tyhjennyspainike-painettu! mittaustyyppi syotto-atom)} [:span.livicon-undo]]
-    [:button
+    [:div
      {:class "nappaimiston-painike"
       :id "nappaimiston-painike0"
       :on-click #(numeronappain-painettu! 0 mittaustyyppi syotto-atom)} "0"]
-    [:button
+    [:div
      {:disabled (not (syotto-validi? mittaustyyppi (:nykyinen-syotto @syotto-atom)))
       :class "nappaimiston-painike"
       :id "nappaimiston-painike-ok"
