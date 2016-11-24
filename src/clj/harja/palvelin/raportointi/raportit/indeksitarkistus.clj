@@ -31,7 +31,6 @@
                                             :tyyli (when indekseja-puuttuu? :virhe)}]))
         summa-solun-arvo (fn [solu]
                            (:arvo (second solu)))
-        _ (log/debug (pr-str laskutusyhteenvedot-kk))
         suola? (#{"Kaikki yhteensä" "Talvihoito"} nimi)
         kentat raportin-kentat
         kentat (if suola?
@@ -58,10 +57,9 @@
        (concat
          (for [[alku _ :as kk] kuukaudet
                :let [kentan-arvot (map #(summa-solu kk %) kentat)]]
-           (do (log/debug (pr-str kentan-arvot))
-               (into [(pvm/kuukauden-lyhyt-nimi (pvm/kuukausi alku))]
-                     (concat kentan-arvot
-                             [(reduce + (map summa-solun-arvo kentan-arvot))]))))
+           (into [(pvm/kuukauden-lyhyt-nimi (pvm/kuukausi alku))]
+                 (concat kentan-arvot
+                         [(reduce + (map summa-solun-arvo kentan-arvot))])))
          (let [summat (for [kentta kentat]
                         (reduce + (map #(summa-kk % kentta) kuukaudet)))]
            [(into ["Yhteensä"]
@@ -119,6 +117,6 @@
     (into []
           (concat [:raportti {:nimi (str "Indeksitarkistusraportti " alueen-nimi " " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))}
                    varoitus-puuttuvista-indekseista]
-             [(indeksitaulukko "Kaikki yhteensä" kuukaudet laskutusyhteenvedot-kk)]
-             (for [tuote tuotteet]
-               (indeksitaulukko tuote kuukaudet (get tuotteen-laskutusyhteenvedot-kk tuote)))))))
+                  [(indeksitaulukko "Kaikki yhteensä" kuukaudet laskutusyhteenvedot-kk)]
+                  (for [tuote tuotteet]
+                    (indeksitaulukko tuote kuukaudet (get tuotteen-laskutusyhteenvedot-kk tuote)))))))
