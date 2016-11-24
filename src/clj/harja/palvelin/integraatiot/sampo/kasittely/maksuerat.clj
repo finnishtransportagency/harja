@@ -19,10 +19,13 @@
 
 (defn hae-maksuera [db numero summat]
   (let [maksuera (konversio/alaviiva->rakenne (first (qm/hae-lahetettava-maksuera db numero)))
-        tyyppi (keyword (get-in maksuera [:maksuera :tyyppi]))]
-    (assoc-in maksuera
-              [:maksuera :summa]
-              (get summat tyyppi))))
+        tpi (get-in maksuera [:toimenpideinstanssi :id])
+        tyyppi (keyword (get-in maksuera [:maksuera :tyyppi]))
+        _ tpi
+        _ (println "----> summat:" summat)
+        maksueran-summat (first (filter #(= (:tpi_id %) tpi) summat))
+        _ (println "----> " maksueran-summat)]
+    (assoc-in maksuera [:maksuera :summa] (get maksueran-summat tyyppi))))
 
 (defn hae-maksueranumero [db lahetys-id]
   (:numero (first (qm/hae-maksueranumero-lahetys-idlla db lahetys-id))))
@@ -80,6 +83,7 @@
 
 (defn hae-maksueran-tiedot [db numero summat]
   (let [maksueran-tiedot (hae-maksuera db numero summat)
+        _ (println "---> maksueran-tiedot: " maksueran-tiedot)
         ;; Sakot lähetetään Sampoon negatiivisena
         maksueran-tiedot (if (= (:tyyppi (:maksuera maksueran-tiedot)) "sakko")
                            (update-in maksueran-tiedot [:maksuera :summa] -)

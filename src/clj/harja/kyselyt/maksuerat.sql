@@ -4,6 +4,7 @@
 -- eri maksuerätyypeille.
 SELECT
   tpi_id,
+  :urakka_id as urakka_id,
   SUM(kokonaishintaisten_summa)  AS kokonaishintainen,
   SUM(yksikkohintaisten_summa)   AS yksikkohintainen,
   SUM(sakot_summa)               AS sakko,
