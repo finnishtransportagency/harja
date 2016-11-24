@@ -6,6 +6,7 @@
             [harja-laadunseuranta.tiedot.comms :as comms]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.ui.tr-haku :as tr-haku]
+            [harja-laadunseuranta.utils :as utils]
             [harja-laadunseuranta.tiedot.puhe :as puhe]
             [harja-laadunseuranta.tiedot.tarkastusajon-luonti :as tarkastusajon-luonti]
             [cljs.core.async :as async :refer [<!]]
@@ -58,6 +59,14 @@
             (tapahtumat/kuuntele! :body-click #(soita-video video))))]
     (pollaa-tyhjaa-sivua)
     (soita-tyhja-video)))
+
+(defn- esta-zoomaus []
+  ;; "user-scaleable=no is disabled in Safari for iOS 10.
+  ;; The reason is that Apple is trying to improve accessibility by allowing people to zoom on web pages."
+  ;; FIXME Edelleen sallii zoomauksen yhden sormen tuplakosketuksella, ei voi mitään.
+  #_(when (or (utils/iphone?)
+            (utils/ipad?))
+    (.addEventListener js/document "gesturestart" #(.preventDefault %))))
 
 (defn- sovelluksen-alustusviive []
   (run!
@@ -115,6 +124,7 @@
 
 (defn main []
   (esta-mobiililaitteen-nayton-lukitus)
+  (esta-zoomaus)
   (sovelluksen-alustusviive)
   (alusta-paikannus-id)
   (alusta-geolokaatio-api)
