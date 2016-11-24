@@ -30,20 +30,18 @@
    :edellinen {:lon old-lon
                :lat old-lat}})
 
-;; FIXME EI TOIMI
-#_(deftest reitintallennus-test
+(deftest reitintallennus-test
   (async test-ok
     (go
       (let [db (atom (<! (idb/create-indexed-db +testikannan-nimi+ r/db-spec)))
             segmentti (atom nil)
             reittipisteet (atom [])
             tallennus-kaynnissa (atom false)
-            havainnot (atom {:liukkaus false})
+            jatkuvat-havainnot (atom #{})
             tarkastusajo-id (atom 10000)
             sijainti (atom {:nykyinen {:lat 1 :lon 2} :edellinen nil})
             sijainin-tallennus-mahdollinen (atom true)
             tarkastuspisteet (atom [])
-            jatkuvat-havainnot (atom #{})
             mittaustyyppi (atom nil)
             soratiemittaussyotto (atom nil)
             tallennin (r/kaynnista-reitintallennus
@@ -70,7 +68,7 @@
                   [[2 2] [3 3]]] @reittipisteet)))
 
         (testing "Havaintojen tilan muuttuminen ei aiheuta reittipisteen lisäämistä"
-          (reset! havainnot {:liukkaus true}) ; aiheuttaa toisen tallennuksen josta lähtien liukkaus päällä
+          (reset! jatkuvat-havainnot #{:liukkaus}) ; Seuraavasta reittipisteestä lähtien liukkaus päällä
           (is (= [[[1 1] [2 2]]
                   [[2 2] [3 3]]] @reittipisteet)))
 
@@ -79,7 +77,6 @@
         (reset! sijainti (tee-sijainti [1 1] [2 2]))
         (reset! sijainti (tee-sijainti [2 2] [3 3]))
         (reset! sijainti (tee-sijainti [3 3] [4 4]))
-
 
         ;; päätä tallennus
         (reset! tallennus-kaynnissa false)
@@ -94,6 +91,8 @@
               (with-all-items
                 store reittimerkinnat
                 (is (= 6 (count reittimerkinnat)))
+
+                (.log js/console "No reittimerkinnät: " (pr-str reittimerkinnat))
 
                 (is (= 10000 (get-in reittimerkinnat [0 "tarkastusajo"])))
                 (is (get-in reittimerkinnat [0 "aikaleima"]))
@@ -125,7 +124,6 @@
                     :finally
                     (do
                       (is (= {"tarkastusajo" 10000
-                              "tarkastustyyppi" "kelitarkastus"
                               "reittipisteet" [[[1 1] [2 2]] [[2 2] [3 3]]]
                               "tarkastuspisteet" []}
                              @ajo))
