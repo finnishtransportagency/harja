@@ -226,7 +226,7 @@ SELECT exists(SELECT numero
 
 -- name: hae-maksueran-urakka
 -- single?: true
-SELECT id
+SELECT u.id
 FROM urakka u
   JOIN toimenpideinstanssi tpi ON u.id = tpi.urakka
   JOIN maksuera m ON tpi.id = m.toimenpideinstanssi
