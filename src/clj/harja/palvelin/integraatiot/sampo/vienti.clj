@@ -38,12 +38,12 @@
 (defn aja-paivittainen-lahetys [sonja integraatioloki db lahetysjono-ulos]
   (log/debug "Maksuerien päivittäinen lähetys käynnistetty: " (t/now))
   (let [maksuerat (qm/hae-likaiset-maksuerat db)
-        kustannussuunnitelmat (qk/hae-likaiset-kustannussuunnitelmat db)
+        lahetettavat-kustannussuunnitelmat (qk/hae-likaiset-kustannussuunnitelmat db)
         urakkaidt (distinct (map :urakkaid maksuerat))
         maksuerien-summat (flatten (map #(qm/hae-urakan-maksuerien-summat db %) urakkaidt))
-        maksuerat (map (fn [m] (assoc m :summat (first (filter #(= (:tpi_id %) (:tpi_id m)) maksuerien-summat)))) maksuerat)]
-    (log/debug "Lähetetään " (count maksuerat) " maksuerää ja " (count kustannussuunnitelmat) " kustannussuunnitelmaa.")
-    (doseq [maksuera maksuerat]
-      (maksuera/laheta-maksuera sonja integraatioloki db lahetysjono-ulos (:numero maksuera) (:summat maksuerat)))
-    (doseq [kustannussuunnitelma kustannussuunnitelmat]
+        lahetettavat-maksuerat (map (fn [m] (assoc m :summat (first (filter #(= (:tpi_id %) (:tpi_id m)) maksuerien-summat)))) maksuerat)]
+    (log/debug "Lähetetään " (count lahetettavat-maksuerat) " maksuerää ja " (count lahetettavat-kustannussuunnitelmat) " kustannussuunnitelmaa.")
+    (doseq [maksuera lahetettavat-maksuerat]
+      (maksuera/laheta-maksuera sonja integraatioloki db lahetysjono-ulos (:numero maksuera) (:summat maksuera)))
+    (doseq [kustannussuunnitelma lahetettavat-kustannussuunnitelmat]
       (kustannussuunnitelma/laheta-kustannussuunitelma sonja integraatioloki db lahetysjono-ulos (:maksuera kustannussuunnitelma)))))

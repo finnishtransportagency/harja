@@ -19,9 +19,7 @@
 
 (defn hae-maksuera [db numero summat]
   (let [maksuera (konversio/alaviiva->rakenne (first (qm/hae-lahetettava-maksuera db numero)))
-        tpi (get-in maksuera [:toimenpideinstanssi :id])
-        tyyppi (keyword (get-in maksuera [:maksuera :tyyppi]))
-        summat (first (filter #(= (:tpi_id %) tpi) summat))]
+        tyyppi (keyword (get-in maksuera [:maksuera :tyyppi]))]
     (assoc-in maksuera
               [:maksuera :summa]
               (get summat tyyppi))))
@@ -80,7 +78,7 @@
       (throw+ {:type virheet/+viallinen-kutsu+
                :virheet [{:koodi :puuttuva-tuotepolku :viesti virheviesti}]}))))
 
-(defn hae-maksueran-tiedot [db numero summat ]
+(defn hae-maksueran-tiedot [db numero summat]
   (let [maksueran-tiedot (hae-maksuera db numero summat)
         ;; Sakot lähetetään Sampoon negatiivisena
         maksueran-tiedot (if (= (:tyyppi (:maksuera maksueran-tiedot)) "sakko")
