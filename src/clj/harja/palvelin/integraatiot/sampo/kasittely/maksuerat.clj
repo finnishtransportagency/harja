@@ -80,7 +80,6 @@
 
 (defn hae-maksueran-tiedot [db numero summat]
   (let [maksueran-tiedot (hae-maksuera db numero summat)
-        _ (println "---> maksueran-tiedot: " maksueran-tiedot)
         ;; Sakot lähetetään Sampoon negatiivisena
         maksueran-tiedot (if (= (:tyyppi (:maksuera maksueran-tiedot)) "sakko")
                            (update-in maksueran-tiedot [:maksuera :summa] -)
