@@ -31,7 +31,9 @@ FROM (SELECT
         SUM((laskutusyhteenveto).kaikki_laskutettu_ind_korotus +
             (laskutusyhteenveto).kaikki_laskutetaan_ind_korotus)  AS indeksit_summa,
         SUM((laskutusyhteenveto).erilliskustannukset_laskutettu +
-            (laskutusyhteenveto).erilliskustannukset_laskutetaan) AS muut_summa,
+            (laskutusyhteenveto).erilliskustannukset_laskutetaan +
+            (laskutusyhteenveto).vahinkojen_korjaukset_laskutettu +
+            (laskutusyhteenveto).vahinkojen_korjaukset_laskutetaan) AS muut_summa,
         (laskutusyhteenveto).tpi                                  AS tpi_id,
         lyht.alkupvm,
         lyht.loppupvm
