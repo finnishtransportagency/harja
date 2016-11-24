@@ -21,7 +21,7 @@
                                                                          with-cursor
                                                                          with-count]]))
 
-(def db-spec {:version 2
+(def db-spec {:version 3
               :on-error #(js/console.log (str "Tietokantavirhe " (pr-str %)))
               :objectstores [{:name asetukset/+reittimerkinta-store+
                               :key-path :id
