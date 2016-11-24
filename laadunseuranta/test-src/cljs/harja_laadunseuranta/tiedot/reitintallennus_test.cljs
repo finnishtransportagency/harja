@@ -43,11 +43,13 @@
             sijainin-tallennus-mahdollinen (atom true)
             tarkastuspisteet (atom [])
             mittaustyyppi (atom nil)
+            paattymassa (atom false)
             soratiemittaussyotto (atom nil)
             tallennin (r/kaynnista-reitintallennus
                         {:sijainnin-tallennus-mahdollinen-atom sijainin-tallennus-mahdollinen
                          :sijainti-atom sijainti
                          :db @db
+                         :tarkastusajo-paattymassa paattymassa
                          :segmentti-atom segmentti
                          :reittipisteet-atom reittipisteet
                          :tallennus-kaynnissa-atom tallennus-kaynnissa

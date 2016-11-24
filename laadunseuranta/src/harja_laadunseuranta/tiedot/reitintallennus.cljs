@@ -146,6 +146,7 @@
 (defn kaynnista-reitintallennus [{:keys [sijainnin-tallennus-mahdollinen-atom sijainti-atom
                                          db segmentti-atom jatkuvat-havainnot mittaustyyppi
                                          reittipisteet-atom tallennus-kaynnissa-atom
+                                         tarkastusajo-paattymassa
                                          tarkastusajo-atom tarkastuspisteet-atom soratiemittaussyotto]}]
   (.log js/console "Reitintallennus käynnistetty")
   (kaynnista-tarkastusajon-lokaali-tallennus db tarkastusajo-atom)
@@ -162,6 +163,7 @@
   (run!
     (when (and @sijainnin-tallennus-mahdollinen-atom
                @tallennus-kaynnissa-atom
+               (not @tarkastusajo-paattymassa)
                (:nykyinen @sijainti-atom))
       (tallenna-sovelluksen-tilasta-merkinta-indexeddbn!
         {:idxdb db
