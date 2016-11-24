@@ -78,7 +78,6 @@
         (fn [this]
           (when this
             (let [header-leveys (.-width (.getBoundingClientRect this))]
-              (.log js/console "Tarkistetaan ryhmittely, header leveys nyt: " (pr-str header-leveys) " ja vanha: " (pr-str @edellinen-header-leveys))
               (when (not= header-leveys @edellinen-header-leveys)
                 (.log js/console "Header leveys muuttui, ryhmitellään tabit uudelleen.")
                 (let [valilehtia-per-ryhma
