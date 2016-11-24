@@ -8,8 +8,8 @@
   [:div.mobiilityokalu-container
    [:img.mobiilityokalu {:src "images/mobiilityokalu.png"}]
    [:h3 "Esittely"]
-   [:p "Tarkastuksien ja havaintojen tekemistä helpottamaan on olemassa erillinen Mobiili laadunseurantatyökalu. Työkalu on tarkoitettu käytettäväksi tien päällä. Sovellus on tehty ensisijaisesti Android-tableteille, mutta se toimii myös iPadilla. Myös puhelinkäyttö on mahdollista Android-puhelimilla ja iPhonella."]
-   [:p "Työkalua käytetään kirjaamaan havaintoja, mittauksia ja valokuvia tarkastusajon aikana. Havaintoja voi kirjata joko pikahavaintonapeilla tai omin sanoin lomakkeella. Kun tarkastusajo on valmis, tulokset siirtyvät siihen urakkaan, jonka alueella tarkastus tehtiin. Tarkastusten tietoja voi myöhemmin täydentää Harjassa."]
+   [:p "Tarkastuksien ja havaintojen tekemistä helpottamaan on olemassa erillinen Mobiili laadunseurantatyökalu. Työkalua käytetään kirjaamaan havaintoja, mittauksia ja valokuvia suoraan tien päällä tarkastusajon aikana. Havaintoja voi kirjata joko pikahavaintonapeilla tai omin sanoin lomakkeella. Kun tarkastusajo on valmis, tulokset siirtyvät siihen urakkaan, jonka alueella tarkastus tehtiin. Tarkastusten tietoja voi myöhemmin täydentää Harjassa."]
+   [:p "Sovellus on tehty ensisijaisesti Android-tableteille, mutta se toimii myös iPadilla. Myös puhelinkäyttö on mahdollista Android-puhelimilla ja iPhonella."]
    [:p [:strong "Laitevaatimukset:"]]
    [:ul
     [:li "Android-tabletti tai iPad"]
