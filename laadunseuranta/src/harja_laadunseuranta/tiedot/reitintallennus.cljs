@@ -105,6 +105,7 @@
                              (idb/delete-object store tarkastusajo-id)))
 
 (defn- kirjaa-kertakirjaus [db kirjaus]
+  (.log js/console "Tehdään kertakirjaus")
   (with-transaction-to-store db asetukset/+reittimerkinta-store+ :readwrite store
                              (idb/add-object store kirjaus)))
 
