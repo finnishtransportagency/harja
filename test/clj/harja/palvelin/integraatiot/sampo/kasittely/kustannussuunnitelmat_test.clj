@@ -13,7 +13,7 @@
                   {:alkupvm "2017-01-01T00:00:00.0", :loppupvm "2017-12-31T00:00:00.0", :summa 0}
                   {:alkupvm "2018-01-01T00:00:00.0", :loppupvm "2018-12-31T00:00:00.0", :summa 0}
                   {:alkupvm "2019-01-01T00:00:00.0", :loppupvm "2019-12-31T00:00:00.0", :summa 0}]
-        maksuera (maksuera/hae-maksuera db 17)
+        maksuera (hae-maksueran-tiedot db 17)
         vuosittaiset-summat (tee-vuosittaiset-summat db 17 maksuera)]
 
     (is (= 6 (count vuosittaiset-summat)))
@@ -27,7 +27,7 @@
                   {:alkupvm "2017-01-01T00:00:00.0", :loppupvm "2017-12-31T00:00:00.0", :summa 0}
                   {:alkupvm "2018-01-01T00:00:00.0", :loppupvm "2018-12-31T00:00:00.0", :summa 0}
                   {:alkupvm "2019-01-01T00:00:00.0", :loppupvm "2019-12-31T00:00:00.0", :summa 0}]
-        maksuera (maksuera/hae-maksuera db 18)
+        maksuera (hae-maksueran-tiedot db 18)
         vuosittaiset-summat (tee-vuosittaiset-summat db 18 maksuera)]
 
     (is (= 6 (count vuosittaiset-summat)))
@@ -54,7 +54,7 @@
                   {:alkupvm "2019-01-01T00:00:00.0"
                    :loppupvm "2019-12-31T00:00:00.0"
                    :summa 1}]
-        maksuera (maksuera/hae-maksuera db 48)
+        maksuera (hae-maksueran-tiedot db 48)
         vuosittaiset-summat (tee-vuosittaiset-summat db 48 maksuera)]
 
     (is (= 6 (count vuosittaiset-summat)))
