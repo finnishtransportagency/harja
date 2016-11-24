@@ -64,22 +64,23 @@
 
 (defn- create-objectstores [db stores]
   (doseq [store stores]
-    (.log js/console "create object store: " (pr-str store) ". db is: " (pr-str db))
-    (create-objectstore db
-                        (:name store)
-                        (:key-path store)
-                        (or (:auto-increment store) false)
-                        (fn [os]
-                          (doseq [idx (:indexes store)] 
-                            (create-index os (:name idx) (:key idx) (:unique idx))))
-                        (fn [event]
-                          (.log js/console "objectstoret alustettu")))))
+    (try
+      (create-objectstore db
+                         (:name store)
+                         (:key-path store)
+                         (or (:auto-increment store) false)
+                         (fn [os]
+                           (doseq [idx (:indexes store)]
+                             (create-index os (:name idx) (:key idx) (:unique idx))))
+                         (fn [event]
+                           (.log js/console "objectstoret alustettu")))
+      (catch js/Error e
+        (.log js/console "Object storen luomisessa virhe: " e)))))
 
 (defn create-indexed-db
   "Luo tai avaa IndexedDB -tietokannan ja rakentaa/päivittää scheman"
   [nimi options]
   (let [channel (chan)]
-    (.log js/console "create indexed db")
     (open-indexed-db nimi (:version options)
                      #(do
                         (when-let [error-handler (:on-error options)]

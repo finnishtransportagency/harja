@@ -105,7 +105,6 @@
                              (idb/delete-object store tarkastusajo-id)))
 
 (defn- kirjaa-kertakirjaus [db kirjaus]
-  (.log js/console "Tehdään kertakirjaus")
   (with-transaction-to-store db asetukset/+reittimerkinta-store+ :readwrite store
                              (idb/add-object store kirjaus)))
 
@@ -164,7 +163,6 @@
     (when (and @sijainnin-tallennus-mahdollinen-atom
                @tallennus-kaynnissa-atom
                (:nykyinen @sijainti-atom))
-      (.log js/console "Tallennetaan reittipiste")
       (tallenna-sovelluksen-tilasta-merkinta-indexeddbn!
         {:idxdb db
          :sijainti sijainti-atom
