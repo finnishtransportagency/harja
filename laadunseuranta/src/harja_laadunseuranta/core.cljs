@@ -3,7 +3,6 @@
             [harja-laadunseuranta.tiedot.paikannus :as paikannus]
             [harja-laadunseuranta.main :as main]
             [harja-laadunseuranta.tiedot.sovellus :as sovellus]
-            [harja-laadunseuranta.utils :as utils]
             [harja-laadunseuranta.tiedot.comms :as comms]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.ui.tr-haku :as tr-haku]
@@ -12,9 +11,7 @@
             [cljs.core.async :as async :refer [<!]]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
             [clojure.string :as str]
-            [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset]
-            [harja-laadunseuranta.ui.dom :as dom]
-            [harja-laadunseuranta.asiakas.tapahtumat :as tapahtumat])
+            [harja-laadunseuranta.ui.dom :as dom])
   (:require-macros [reagent.ratom :refer [run!]]
                    [cljs.core.async.macros :refer [go]]
                    [harja-laadunseuranta.macros :refer [after-delay]]))

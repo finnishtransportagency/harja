@@ -87,12 +87,10 @@
       (do
         ;; tallenna kaikki kuvat ensin, tulee nil jos ei onnistunut
         (if-let [reittimerkinnat (<! (tallenna-kuvat reittimerkinnat))]
-          (do #_(js/console.log (str "Lähetetään tapahtumat: " (pr-str tapahtumat)))
-              (if (<! (post! asetukset/+tallennus-url+ {:kirjaukset reittimerkinnat}))
-                (let [poistetut (mapv #(get % "id") reittimerkinnat)]
-                  #_(js/console.log (str "Poistetut id:t " (pr-str poistetut)))
-                  poistetut)
-                []))
+          (if (<! (post! asetukset/+tallennus-url+ {:kirjaukset reittimerkinnat}))
+            (let [poistetut (mapv #(get % "id") reittimerkinnat)]
+              poistetut)
+            [])
           []))
       [])))
 
