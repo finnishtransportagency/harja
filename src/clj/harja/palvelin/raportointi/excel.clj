@@ -11,12 +11,9 @@
   "Muodostaa Excel data annetulle raporttielementille.
   Dispatch tyypin mukaan (vektorin 1. elementti)."
   (fn [elementti workbook]
-    (assert (and (vector? elementti)
-                 (> (count elementti) 1)
-                 (keyword? (first elementti)))
-            (str "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi "
-                 "ja muut sen sisältöä, sain: " (pr-str elementti)))
-    (first elementti)))
+    (if (raportti-domain/raporttielementti? elementti)
+      (first elementti)
+      :vain-arvo)))
 
 
 (defn solu [rivi-nro sarake-nro]
@@ -40,23 +37,17 @@
     (.replace data "\u00AD" "")
     data))
 
-(defmulti erikoiskentta
-  (fn [elementti]
-    (assert (and (vector? elementti)
-                 (> (count elementti) 1)
-                 (keyword? (first elementti)))
-            (str "Erikoiskentän on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä, sain: "
-                 (pr-str elementti)))
-    (first elementti)))
+(defmethod muodosta-excel :vain-arvo [arvo _] arvo)
 
-(defmethod erikoiskentta :liitteet [liitteet]
-  (count (second liitteet)))
+(defmethod muodosta-excel :liitteet [[_ liitteet] tyyli-atom]
+  (count liitteet))
 
-(defmethod erikoiskentta :arvo-ja-osuus [arvo-ja-osuus]
-  (:arvo (second arvo-ja-osuus)))
+(defmethod muodosta-excel :arvo-ja-osuus [[_ {:keys [arvo osuus]}] tyyli-atom]
+  arvo)
 
-(defmethod erikoiskentta :varillinen-teksti [arvo-ja-vari]
-  (:arvo (second arvo-ja-vari)))
+(defmethod muodosta-excel :varillinen-teksti [[_ {:keys [arvo tyyli]}] tyyli-atom]
+  (swap! tyyli-atom merge (when tyyli (tyyli raportti-domain/virhetyylit-excel)))
+  arvo)
 
 (defn- taulukko-otsikkorivi [otsikko-rivi sarakkeet sarake-tyyli]
   (dorun
@@ -66,6 +57,9 @@
           (excel/set-cell! cell (ilman-soft-hyphenia otsikko))
           (excel/set-cell-style! cell sarake-tyyli)))
       sarakkeet)))
+
+(defn luo-data-formaatti [workbook format-str]
+  (.. (.getCreationHelper workbook) createDataFormat (getFormat format-str)))
 
 (defmethod muodosta-excel :taulukko [[_ optiot sarakkeet data] workbook]
   (try
@@ -118,20 +112,34 @@
                 row (.createRow sheet rivi-nro)]
             (dorun
              (map-indexed
-              (fn [sarake-nro sarake]
-                (let [cell (.createCell row sarake-nro)
-                      lihavoi? (:lihavoi? optiot)
-                      tyyli (excel/create-cell-style! workbook
-                                                      {:font {:bold lihavoi?}})
-                      arvo-datassa (nth data sarake-nro)
-                      naytettava-arvo (if (vector? arvo-datassa)
-                                        (erikoiskentta arvo-datassa)
-                                        arvo-datassa)]
+               (fn [sarake-nro sarake]
+                 (let [cell (.createCell row sarake-nro)
+                       lihavoi? (:lihavoi? optiot)
+                       formaatti-fn (fn [tyyli]
+                                      (case (:fmt sarake)
+                                        ;; .setDataFormat hakee indeksillä tyylejä.
+                                        ;; Tyylejä voi määritellä itse (https://poi.apache.org/apidocs/org/apache/poi/xssf/usermodel/XSSFDataFormat.html)
+                                        ;; tai voimme käyttää valmiita, sisäänrakennettuja tyylejä.
+                                        ;; http://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/BuiltinFormats.html
+                                        :raha (.setDataFormat tyyli 8)
+                                        :prosentti (.setDataFormat tyyli 10)
+                                        :numero (.setDataFormat tyyli 2)
+                                        :pvm (.setDataFormat tyyli 14)
+                                        :pvm-aika (.setDataFormat tyyli 22)
+                                        nil))
+                       tyyli-atom (atom {:font {:bold lihavoi?}})
+                       arvo-datassa (nth data sarake-nro)
+                       naytettava-arvo (if (raportti-domain/raporttielementti? arvo-datassa)
+                                         (muodosta-excel arvo-datassa tyyli-atom)
+                                         arvo-datassa)
+                       tyyli (doto (excel/create-cell-style! workbook
+                                                             @tyyli-atom)
+                               formaatti-fn)]
 
-                  (if-let [kaava (:excel sarake)]
-                    (aseta-kaava! kaava cell rivi-nro sarake-nro)
-                    (excel/set-cell! cell (ilman-soft-hyphenia naytettava-arvo)))
-                  (excel/set-cell-style! cell tyyli)))
+                   (if-let [kaava (:excel sarake)]
+                     (aseta-kaava! kaava cell rivi-nro sarake-nro)
+                     (excel/set-cell! cell (ilman-soft-hyphenia naytettava-arvo)))
+                   (excel/set-cell-style! cell tyyli)))
               sarakkeet))))
         data))
 
