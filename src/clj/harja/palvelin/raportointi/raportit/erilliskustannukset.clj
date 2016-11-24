@@ -5,6 +5,7 @@
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet
                                                                  pylvaat-kuukausittain ei-osumia-aikavalilla-teksti rivi]]
             [harja.domain.roolit :as roolit]
+            [harja.domain.raportointi :refer [info-solu]]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.pvm :as pvm]
@@ -90,8 +91,10 @@
                                (get-in % [:sopimus :sampoid])
                                (:tpinimi %)
                                (erilliskustannuksen-nimi (:tyyppi %))
-                               (or (:rahasumma %) [:info "Ei rahasummaa"])
-                               (or (:indeksikorotus %) [:info "Ei indeksikorotusta"]))
+                               (or (:rahasumma %)
+                                   (info-solu "Ei rahasummaa"))
+                               (or (:indeksikorotus %)
+                                   (info-solu "Ei indeksikorotusta")))
                         erilliskustannukset)
                   (when (not (empty? erilliskustannukset))
                     (keep identity (flatten [(if (not= konteksti :urakka) ["Yhteensä" ""]

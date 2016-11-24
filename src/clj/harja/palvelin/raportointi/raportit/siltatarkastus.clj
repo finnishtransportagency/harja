@@ -9,13 +9,14 @@
     [taoensso.timbre :as log]
     [harja.kyselyt.konversio :as konv]
     [harja.domain.siltatarkastus :as siltadomain]
+    [harja.domain.raportointi :refer [info-solu]]
     [harja.math :as math]
     [clj-time.coerce :as c]))
 
 (defqueries "harja/palvelin/raportointi/raportit/siltatarkastus.sql")
 
 (def ^{:private true} korosta-kun-arvoa-d-vahintaan 1)
-(def tarkastamatta-info [:info "Tarkastamatta"])
+(def tarkastamatta-info (info-solu "Tarkastamatta"))
 
 (defn- muodosta-sillan-datarivit [db urakka-id silta-id vuosi]
   (let [kohderivit (into []
@@ -258,9 +259,11 @@
                            (liita rivi :tarkastamaton? false)))
 
         lihavoi (fn [rivi]
-                  (if (:tarkastamaton? rivi) (liita rivi :lihavoi? true) (liita rivi :lihavoi? false)))
+                  rivi
+                  #_(if (:tarkastamaton? rivi) (liita rivi :lihavoi? true) (liita rivi :lihavoi? false)))
         korosta (fn [rivi]
-                  (if (:virhe? rivi) (liita rivi :korosta? true) (liita rivi :korosta? false)))
+                  rivi
+                  #_(if (:virhe? rivi) (liita rivi :korosta? true) (liita rivi :korosta? false)))
         jarjesta (fn [rivit]
                    (let [indeksi (fn [i] #(nth (:rivi %) i))]
                      (vec (sort-by
