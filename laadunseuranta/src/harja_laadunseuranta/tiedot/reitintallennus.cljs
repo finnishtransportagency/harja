@@ -163,6 +163,7 @@
     (when (and @sijainnin-tallennus-mahdollinen-atom
                @tallennus-kaynnissa-atom
                (:nykyinen @sijainti-atom))
+      (.log js/console "Tallennetaan reittipiste")
       (tallenna-sovelluksen-tilasta-merkinta-indexeddbn!
         {:idxdb db
          :sijainti sijainti-atom
