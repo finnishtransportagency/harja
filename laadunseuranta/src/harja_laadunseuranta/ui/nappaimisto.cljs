@@ -4,8 +4,7 @@
             [harja-laadunseuranta.tiedot.math :as math]
             [harja-laadunseuranta.tiedot.fmt :as fmt]
             [harja-laadunseuranta.tiedot.nappaimisto
-             :refer [alusta-mittaussyotto! alusta-soratiemittaussyotto!
-                     numeronappain-painettu!
+             :refer [numeronappain-painettu!
                      tyhjennyspainike-painettu! syotto-valmis!
                      kirjaa-kitkamittaus! kirjaa-lumisuus!
                      kirjaa-talvihoito-tasaisuus!
@@ -191,18 +190,15 @@
       :class "nappaimiston-painike"
       :id "nappaimiston-painike-ok"
       :on-click #(when (syotto-validi? mittaustyyppi (:nykyinen-syotto @syotto-atom))
-                  (kirjaa-arvo (fmt/string->numero (:nykyinen-syotto @syotto-atom)))
-                  (syotto-valmis mittaustyyppi syotto-atom))}
+                   (kirjaa-arvo (fmt/string->numero (:nykyinen-syotto @syotto-atom)))
+                   (syotto-valmis mittaustyyppi syotto-atom))}
      [:span.livicon-check]]]])
 
-(defn- nappaimistokomponentti [{:keys [mittausyksikko mittaustyyppi
-                                       mittaussyotto-atom soratiemittaussyotto-atom] :as tiedot}]
+(defn- nappaimistokomponentti [{:keys [mittaustyyppi] :as tiedot}]
   (let [nayta-syottokentta? (not= mittaustyyppi :soratie)
         nayta-syottovihje? (not= mittaustyyppi :soratie)]
-    (alusta-mittaussyotto! mittaustyyppi mittaussyotto-atom)
-    (alusta-soratiemittaussyotto! soratiemittaussyotto-atom)
-    (fn [{:keys [nimi avain lopeta-jatkuva-havainto
-                 mittaustyyppi mittaussyotto-atom] :as tiedot}]
+    (fn [{:keys [nimi avain mittausyksikko mittaustyyppi mittaussyotto-atom
+                 soratiemittaussyotto-atom lopeta-jatkuva-havainto] :as tiedot}]
       [:div.nappaimisto-container
        [:div.nappaimisto
         [:div.nappaimisto-vasen
@@ -244,10 +240,11 @@
                             :talvihoito-tasaisuus kirjaa-talvihoito-tasaisuus!)}])]]])))
 
 (defn nappaimisto [havainto]
-  [nappaimistokomponentti {:mittaussyotto-atom s/mittaussyotto
-                           :soratiemittaussyotto-atom s/soratiemittaussyotto
-                           :mittaustyyppi (get-in havainto [:mittaus :tyyppi])
-                           :mittausyksikko (get-in havainto [:mittaus :yksikko])
-                           :nimi (get-in havainto [:mittaus :nimi])
-                           :avain (:avain havainto)
-                           :lopeta-jatkuva-havainto s/lopeta-jatkuvan-havainnon-mittaus!}])
+  [nappaimistokomponentti
+   {:mittaussyotto-atom s/mittaussyotto
+    :soratiemittaussyotto-atom s/soratiemittaussyotto
+    :mittaustyyppi (get-in havainto [:mittaus :tyyppi])
+    :mittausyksikko (get-in havainto [:mittaus :yksikko])
+    :nimi (get-in havainto [:mittaus :nimi])
+    :avain (:avain havainto)
+    :lopeta-jatkuva-havainto s/lopeta-jatkuvan-havainnon-mittaus!}])

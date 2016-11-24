@@ -2,6 +2,7 @@
   (:require [harja-laadunseuranta.tiedot.sovellus :as s]
             [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
+            [harja-laadunseuranta.tiedot.nappaimisto :as nappaimisto]
             [cljs-time.local :as l]
             [harja-laadunseuranta.utils :as utils]
             [cljs-time.coerce :as tc]
@@ -336,6 +337,8 @@
   ;; Mittaus päälle jos tarvii
   (when (and vaatii-nappaimiston?
              (avain @s/jatkuvat-havainnot))
+    (nappaimisto/alusta-mittaussyotto! (:tyyppi mittaus) s/mittaussyotto)
+    (nappaimisto/alusta-soratiemittaussyotto! s/soratiemittaussyotto)
     (s/aseta-mittaus-paalle! (:tyyppi mittaus)))
 
   ;; Mittaus pois jos tarvii
