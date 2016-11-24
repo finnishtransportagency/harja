@@ -18,12 +18,9 @@
           "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
           Dispatch tyypin mukaan (vektorin 1. elementti)."
           (fn [elementti]
-            (assert (and (vector? elementti)
-                         (> (count elementti) 1)
-                         (keyword? (first elementti)))
-                    (str "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä, sain: "
-                         (pr-str elementti)))
-            (first elementti)))
+            (if (raportti-domain/raporttielementti? elementti)
+              (first elementti)
+              :vain-arvo)))
 
 (def ^:const +max-rivimaara+ 1000)
 
@@ -40,20 +37,21 @@
 
 (def reunan-tyyli (str "solid 0.1mm " raportin-tehostevari))
 
+(defmethod muodosta-pdf :vain-arvo [arvo] arvo)
+
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
 
-(defmethod muodosta-pdf :arvo-ja-osuus [arvo-ja-osuus]
-  (let [tiedot (second arvo-ja-osuus)]
-    [:fo:inline
-     [:fo:inline (:arvo tiedot)]
-     [:fo:inline " "]
-     [:fo:inline {:font-size (str (- taulukon-fonttikoko 2) taulukon-fonttikoko-yksikko)} (str "( " (:osuus tiedot) "%)")]]))
-
-(defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari]}]]
+(defmethod muodosta-pdf :arvo-ja-osuus [[_ {:keys [arvo osuus fmt]}]]
   [:fo:inline
-   [:fo:inline {:color (or (raportti-domain/virhetyylit tyyli) itsepaisesti-maaritelty-oma-vari "black")}
-    arvo]])
+   [:fo:inline (if fmt (fmt arvo) arvo)]
+   [:fo:inline " "]
+   [:fo:inline {:font-size (str (- taulukon-fonttikoko 2) taulukon-fonttikoko-yksikko)} (str "( " osuus "%)")]])
+
+(defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt]}]]
+  [:fo:inline
+   [:fo:inline {:color (or itsepaisesti-maaritelty-oma-vari (raportti-domain/virhetyylit tyyli) "black")}
+    (if fmt (fmt arvo) arvo)]])
 
 
 (def alareuna
@@ -129,8 +127,10 @@
                              str)
                        naytettava-arvo (or
                                          (cond
-                                           (vector? arvo-datassa)
-                                           (muodosta-pdf arvo-datassa)
+                                           (raportti-domain/raporttielementti? arvo-datassa)
+                                           (muodosta-pdf
+                                             (raportti-domain/raporttielementti-formatterilla
+                                               arvo-datassa fmt))
 
                                            :else (fmt arvo-datassa))
                                          "")]]
@@ -296,3 +296,7 @@
                                    [(muodosta-pdf %)]))
                                sisalto))
                  #_[[:fo:block {:id "raportti-loppu"}]])))
+
+(defmethod muodosta-pdf :default [elementti]
+  (log/debug "PDF-raportti ei tue elementtiä " elementti)
+  nil)
