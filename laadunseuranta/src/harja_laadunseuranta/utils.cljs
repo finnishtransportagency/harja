@@ -9,15 +9,15 @@
                    [harja-laadunseuranta.macros :refer [after-delay]]))
 
 (defn- tuettu-selain? []
-  (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-        [#".*android.*" #".*chrome.*" #".*ipad.*" #".*iphone.*"]))
+  (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+                 [#".*android.*" #".*chrome.*" #".*ipad.*" #".*iphone.*"])))
 
 (defn- flip [atomi]
   (swap! atomi not))
 
 (defn timed-swap! [delay atom swap-fn]
   (after-delay delay
-     (swap! atom swap-fn)))
+               (swap! atom swap-fn)))
 
 (defn parsi-kaynnistysparametrit [params]
   (let [params (if (str/starts-with? params "?")
@@ -27,14 +27,19 @@
         keys-values (keep #(let [[nimi arvo] (str/split % "=")]
                              (when-not (str/blank? nimi)
                                [nimi arvo]))
-                         params)]
+                          params)]
     (into {} keys-values)))
 
 (defn- timestamp []
   (.getTime (js/Date.)))
 
 (defn ipad? []
-  (re-matches #".*iPad.*" (.-platform js/navigator)))
+  (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+                 [#".*ipad.*"])))
+
+(defn iphone? []
+  (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+                 [#".*iphone.*"])))
 
 (defn ilman-tavutusta [teksti]
   (str/replace teksti #"\u00AD" ""))
