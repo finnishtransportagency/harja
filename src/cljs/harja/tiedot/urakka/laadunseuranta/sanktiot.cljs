@@ -17,9 +17,10 @@
 (defn uusi-sanktio []
   {:suorasanktio true
    :laji :A
+   :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
+                          (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
    :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
-                    :paatos {:paatos "sanktio"}
-                    :aika (pvm/nyt)}})
+                    :paatos {:paatos "sanktio"}}})
 
 (defonce valittu-sanktio (atom nil))
 
