@@ -11,11 +11,14 @@
                      syoton-rajat syotto-validi?
                      soratienappaimiston-numeronappain-painettu!]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
-            [harja-laadunseuranta.ui.napit :refer [nappi]])
+            [harja-laadunseuranta.ui.napit :refer [nappi]]
+            [harja-laadunseuranta.ui.dom :as dom])
   (:require-macros
     [harja-laadunseuranta.macros :as m]
     [cljs.core.async.macros :refer [go go-loop]]
     [devcards.core :as dc :refer [defcard deftest]]))
+
+(def +lyhenna-teksteja-leveydessa+ 530)
 
 (defn- lopeta-mittaus [{:keys [nimi avain lopeta-jatkuva-havainto] :as tiedot}]
   [nappi (str nimi " päättyy") {:on-click (fn [_]
@@ -23,19 +26,41 @@
                                             (lopeta-jatkuva-havainto avain))
                                 :luokat-str "nappi-kielteinen nappi-peruuta"}])
 
-(defn- mittaustiedot-keskiarvo [mittaukset keskiarvo]
-  [:div.mittaustiedot
-   [:div.mittaustieto (str "Mittauksia: " mittaukset)]
-   [:div.mittaustieto (str "Keskiarvo: " (if (pos? mittaukset)
-                                           keskiarvo
-                                           "-"))]])
+(defn- mittaustiedot-keskiarvo [{:keys [mittaukset keskiarvo
+                                        syotetty-arvo yksikko rajat]}]
+  (let [arvo-liian-suuri? (if syotetty-arvo
+                            (> syotetty-arvo (second rajat))
+                            false)]
+    [:div.mittaustiedot
+     (if arvo-liian-suuri?
+       [:div.nappaimiston-syottovaroitus
+        [:span (str "Liian suuri!")
+         [:br] "Max: " (second rajat) yksikko]]
+       [:div
+        [:div.mittaustieto (str "Mittauksia: " mittaukset)]
+        [:div.mittaustieto (str "Keskiarvo: " (if (pos? mittaukset)
+                                                keskiarvo
+                                                "-"))]])]))
 
-(defn- mittaustiedot [mittaustyyppi mittaukset keskiarvo]
+(defn- mittaustiedot [{:keys [mittaustyyppi mittaukset keskiarvo
+                              syotetty-arvo yksikko rajat]}]
   (case mittaustyyppi
-    :kitkamittaus [mittaustiedot-keskiarvo mittaukset keskiarvo]
-    :lumisuus [mittaustiedot-keskiarvo mittaukset keskiarvo]
-    :talvihoito-tasaisuus [mittaustiedot-keskiarvo mittaukset keskiarvo]
-    [:div.mittaustiedot]))
+    :kitkamittaus [mittaustiedot-keskiarvo {:mittaukset mittaukset
+                                            :keskiarvo keskiarvo
+                                            :syotetty-arvo syotetty-arvo
+                                            :yksikko yksikko
+                                            :rajat rajat}]
+    :lumisuus [mittaustiedot-keskiarvo {:mittaukset mittaukset
+                                        :keskiarvo keskiarvo
+                                        :syotetty-arvo syotetty-arvo
+                                        :yksikko yksikko
+                                        :rajat rajat}]
+    :talvihoito-tasaisuus [mittaustiedot-keskiarvo {:mittaukset mittaukset
+                                                    :keskiarvo keskiarvo
+                                                    :syotetty-arvo syotetty-arvo
+                                                    :yksikko yksikko
+                                                    :rajat rajat}]
+    [:div]))
 
 (defn- syottokentta [syotto-atom yksikko]
   [:div.nappaimiston-syottokentta
@@ -43,15 +68,6 @@
    [:span.nappaimiston-kursori]
    (when yksikko
      [:span.nappaimiston-syottoyksikko yksikko])])
-
-(defn- syottovihje [syotetty-arvo yksikko rajat]
-  (let [arvo-liian-suuri? (if syotetty-arvo
-                            (> syotetty-arvo (second rajat))
-                            false)]
-    [:div.nappaimiston-syottovaroitus
-     (cond arvo-liian-suuri?
-           (str "Liian suuri (max " (second rajat) yksikko ")")
-           :default "")]))
 
 (defn- soratienappaimisto [{:keys [syotto-atom numeronappain-painettu] :as tiedot}]
   (let [painike-luokka (fn [syotto painike-tyyppi arvo]
@@ -63,7 +79,9 @@
     (fn []
       [:div.soratienappaimisto
        [:div.soratienappaimiston-sarake.soratienappaimiston-tasaisuus
-        [:div.soratienappaimiston-sarake-otsikko "Tasaisuus"]
+        [:div.soratienappaimiston-sarake-otsikko (if (< @dom/leveys +lyhenna-teksteja-leveydessa+)
+                                                   "Tas."
+                                                   "Tasaisuus")]
         [:div
          {:class (painike-luokka @syotto-atom :tasaisuus 5)
           :id "soratienappaimiston-painike-tasaisuus-5"
@@ -86,7 +104,9 @@
           :on-click #(numeronappain-painettu 1 :tasaisuus syotto-atom)} "1"]]
 
        [:div.soratienappaimiston-sarake.soratienappaimiston-kiinteys
-        [:div.soratienappaimiston-sarake-otsikko "Kiinteys"]
+        [:div.soratienappaimiston-sarake-otsikko (if (< @dom/leveys +lyhenna-teksteja-leveydessa+)
+                                                   "Kiint."
+                                                   "Kiinteys")]
         [:div
          {:class (painike-luokka @syotto-atom :kiinteys 5)
           :id "soratienappaimiston-painike-kiinteys-5"
@@ -109,7 +129,9 @@
           :on-click #(numeronappain-painettu 1 :kiinteys syotto-atom)} "1"]]
 
        [:div.soratienappaimiston-sarake.soratienappaimiston-polyavyys
-        [:div.soratienappaimiston-sarake-otsikko "Pölyävyys"]
+        [:div.soratienappaimiston-sarake-otsikko (if (< @dom/leveys +lyhenna-teksteja-leveydessa+)
+                                                   "Pöl."
+                                                   "Pölyävyys")]
         [:div
          {:class (painike-luokka @syotto-atom :polyavyys 5)
           :id "soratienappaimiston-painike-polyavyys-5"
@@ -195,8 +217,7 @@
      [:span.livicon-check]]]])
 
 (defn- nappaimistokomponentti [{:keys [mittaustyyppi] :as tiedot}]
-  (let [nayta-syottokentta? (not= mittaustyyppi :soratie)
-        nayta-syottovihje? (not= mittaustyyppi :soratie)]
+  (let [nayta-syottokentta? (not= mittaustyyppi :soratie)]
     (fn [{:keys [nimi avain mittausyksikko mittaustyyppi mittaussyotto-atom
                  soratiemittaussyotto-atom lopeta-jatkuva-havainto] :as tiedot}]
       [:div.nappaimisto-container
@@ -208,15 +229,14 @@
                           :syottoarvot (:syotot @mittaussyotto-atom)
                           :lopeta-jatkuva-havainto lopeta-jatkuva-havainto}]
          [mittaustiedot
-          mittaustyyppi
-          (count (:syotot @mittaussyotto-atom))
-          (fmt/n-desimaalia
-            (math/avg (map fmt/string->numero (:syotot @mittaussyotto-atom)))
-            2)]
-         (when nayta-syottovihje?
-           [syottovihje (:nykyinen-syotto @mittaussyotto-atom)
-            mittausyksikko
-            (mittaustyyppi syoton-rajat)])
+          {:mittaustyyppi mittaustyyppi
+           :mittaukset (count (:syotot @mittaussyotto-atom))
+           :keskiarvo (fmt/n-desimaalia
+                        (math/avg (map fmt/string->numero (:syotot @mittaussyotto-atom)))
+                        2)
+           :syotetty-arvo (:nykyinen-syotto @mittaussyotto-atom)
+           :yksikko mittausyksikko
+           :rajat (mittaustyyppi syoton-rajat)}]
          (when nayta-syottokentta?
            [syottokentta mittaussyotto-atom mittausyksikko])]
         [:div.nappaimisto-oikea
