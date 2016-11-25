@@ -56,22 +56,28 @@
         (tallenna-merkinta! tx vakiohavainto-idt merkinta)))))
 
 (defn merkitse-ajo-paattyneeksi! [tx tarkastusajo-id kayttaja]
+  (log/debug "Merkitään ajo päättyneeksi")
   (q/paata-tarkastusajo! tx {:id tarkastusajo-id
                              :kayttaja (:id kayttaja)}))
 
+(defn- muunna-tarkastusajon-reittipisteet-tarkastuksiksi [tx tarkastusajo kayttaja]
+  (log/debug "Muutetaan reittipisteet tarkastuksiksi")
+  (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)
+        urakka-id (or
+                    (:urakka tarkastusajo)
+                    (:id (first (q/paattele-urakka tx {:tarkastusajo tarkastusajo-id}))))
+        merkinnat (q/hae-reitin-merkinnat tx {:tarkastusajo tarkastusajo-id
+                                              :treshold 100})
+        merkinnat-tr-osoitteilla (tarkastukset/lisaa-reittimerkinnoille-tieosoite merkinnat)
+        tarkastukset (-> (tarkastukset/reittimerkinnat-tarkastuksiksi merkinnat-tr-osoitteilla)
+                         (tarkastukset/lisaa-tarkastuksille-urakka-id urakka-id))]
+    (log/debug "Tallennetaan tarkastus urakkaan " urakka-id)
+    (tarkastukset/tallenna-tarkastukset! tx tarkastukset kayttaja)))
+
 (defn- paata-tarkastusajo! [db tarkastusajo kayttaja]
   (jdbc/with-db-transaction [tx db]
-    (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)
-          urakka-id (or
-                      (:urakka tarkastusajo)
-                      (:id (first (q/paattele-urakka tx {:tarkastusajo tarkastusajo-id}))))
-          merkinnat (q/hae-reitin-merkinnat tx {:tarkastusajo tarkastusajo-id
-                                                :treshold 100})
-          merkinnat-tr-osoitteilla (tarkastukset/lisaa-reittimerkinnoille-tieosoite merkinnat)
-          tarkastukset (-> (tarkastukset/reittimerkinnat-tarkastuksiksi merkinnat-tr-osoitteilla)
-                           (tarkastukset/lisaa-tarkastuksille-urakka-id urakka-id))]
-      (log/debug "Tallennetaan tarkastus urakkaan " urakka-id)
-      (tarkastukset/tallenna-tarkastukset! tx tarkastukset kayttaja)
+    (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)]
+      (muunna-tarkastusajon-reittipisteet-tarkastuksiksi tx tarkastusajo kayttaja)
       (merkitse-ajo-paattyneeksi! tx tarkastusajo-id kayttaja))))
 
 (defn- luo-uusi-tarkastusajo! [db tiedot kayttaja]
