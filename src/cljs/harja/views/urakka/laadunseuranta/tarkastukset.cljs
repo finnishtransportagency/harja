@@ -135,20 +135,24 @@
           :nimi :tr
           :leveys 2
           :fmt tierekisteri/tierekisteriosoite-tekstina}
-         {:otsikko "Havainnot"
-          :nimi :havainnot
-          :leveys 4
-          :tyyppi :komponentti
+         {:otsikko     "Havainnot"
+          :nimi        :havainnot
+          :leveys      4
+          :tyyppi      :komponentti
           :komponentti (fn [rivi]
                          (let [havainnot (:havainnot rivi)
                                havainnot-max-pituus 50
                                havainnot-rajattu (if (> (count havainnot) havainnot-max-pituus)
                                                    (str (.substring havainnot 0 havainnot-max-pituus) "...")
                                                    havainnot)
-                               vakiohavainnot (str/join ", " (:vakiohavainnot rivi))]
+                               vakiohavainnot (str/join ", " (:vakiohavainnot rivi))
+                               talvihoitomittaukset (keep #(if (some? %) % nil) (:talvihoitomittaus rivi))
+                               _ (log "talvihoitomittaukmset" (pr-str talvihoitomittaukset))]
                            [:ul.tarkastuksen-havaintolista
                             (when (not (str/blank? vakiohavainnot))
                               [:li.tarkastuksen-vakiohavainnot vakiohavainnot])
+                            (when-not (str/blank? talvihoitomittaukset)
+                              [:li.tarkastuksen-talvihoitomittaukset talvihoitomittaukset])
                             (when (not (str/blank? havainnot-rajattu))
                               [:li.tarkastuksen-havainnot havainnot-rajattu])]))}]
         tarkastukset]]))))

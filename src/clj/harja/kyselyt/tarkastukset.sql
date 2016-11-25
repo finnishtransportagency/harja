@@ -15,6 +15,14 @@ SELECT
   t.tarkastaja,
   t.tyyppi,
   t.nayta_urakoitsijalle AS "nayta-urakoitsijalle",
+  thm.talvihoitoluokka   AS talvihoitomittaus_hoitoluokka,
+  thm.lumimaara          AS talvihoitomittaus_lumimaara,
+  thm.tasaisuus          AS talvihoitomittaus_tasaisuus,
+  thm.kitka              AS talvihoitomittaus_kitka,
+  thm.lampotila_tie      AS talvihoitomittaus_lampotila_tie,
+  thm.lampotila_ilma     AS talvihoitomittaus_lampotila_ilma,
+  thm.ajosuunta          AS talvihoitomittaus_ajosuunta,
+  thm.tarkastus          AS talvihoitomittaus_tarkastus,
   ypk.tr_numero          AS yllapitokohde_tr_numero,
   ypk.tr_alkuosa         AS yllapitokohde_tr_alkuosa,
   ypk.tr_alkuetaisyys    AS yllapitokohde_tr_alkuetaisyys,
@@ -30,6 +38,7 @@ SELECT
     JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
   WHERE tarkastus = t.id) as vakiohavainnot
 FROM tarkastus t
+  LEFT JOIN talvihoitomittaus thm ON thm.tarkastus = t.id
   LEFT JOIN kayttaja k ON t.luoja = k.id
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
   LEFT JOIN yllapitokohde ypk ON t.yllapitokohde = ypk.id
