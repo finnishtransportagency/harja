@@ -74,24 +74,26 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
 (defn- viesti [vastausosoite otsikko ilmoitus google-static-maps-key]
   (html
 
-   [:div
-    [:table
-     (html-tyokalut/taulukko
-       [["Urakka" (:urakkanimi ilmoitus)]
-        ["Ilmoitettu" (:ilmoitettu ilmoitus)]
-        ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
-        ["Otsikko" (:otsikko ilmoitus)]
-        ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
-        ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
-        ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]])]
-    [:blockquote (:lisatieto ilmoitus)]
-    (when-let [sijainti (:sijainti ilmoitus)]
-      (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
-        [:img {:src (format goole-static-map-url-template
-                            lat lon google-static-maps-key)}]))
-    (for [teksti (map first kuittaustyypit)]
-      [:div {:style "padding-top: 10px;"}
-       (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "] " +vastausohje+))])]))
+    [:div
+     [:table
+      (html-tyokalut/taulukko
+        [["Urakka" (:urakkanimi ilmoitus)]
+         ["Ilmoitettu" (:ilmoitettu ilmoitus)]
+         ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
+         ["Otsikko" (:otsikko ilmoitus)]
+         ["Tierekisteriosoite" (tierekisteri/tierekisteriosoite-tekstina (:sijainti ilmoitus) {:teksti-tie? false})]
+         ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
+         ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
+         ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]
+         ["Lähettäjä" (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))]])]
+     [:blockquote (:lisatieto ilmoitus)]
+     (when-let [sijainti (:sijainti ilmoitus)]
+       (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
+         [:img {:src (format goole-static-map-url-template
+                             lat lon google-static-maps-key)}]))
+     (for [teksti (map first kuittaustyypit)]
+       [:div {:style "padding-top: 10px;"}
+        (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "] " +vastausohje+))])]))
 
 (defn otsikko-ja-viesti [vastausosoite ilmoitus google-static-maps-key]
   (let [otsikko (otsikko ilmoitus)
