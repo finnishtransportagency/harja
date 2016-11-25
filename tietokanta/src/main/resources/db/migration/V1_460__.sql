@@ -9,7 +9,7 @@ BEGIN
   IF NEW.reitti IS NULL THEN
     NEW.reitti = ST_MakeLine(ARRAY[NEW.sijainti]::GEOMETRY[]);
   ELSE
-    NEW.reitti = ST_AddPoint(NEW.reitti, NEW.sijainti);
+    NEW.reitti = ST_AddPoint(NEW.reitti, NEW.sijainti::GEOMETRY);
  END IF;
  RETURN NEW;
 END;
