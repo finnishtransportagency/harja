@@ -7,8 +7,10 @@ ALTER TABLE tyokonehavainto
 CREATE OR REPLACE FUNCTION paivita_tyokoneen_reitti() RETURNS trigger AS $$
 BEGIN
   IF NEW.reitti IS NULL THEN
+    -- Uusi tyokonehavainto luodaan
     NEW.reitti = ST_MakeLine(ARRAY[NEW.sijainti]::GEOMETRY[]);
   ELSE
+    -- Olemassaolevaa työkonehavaintoa päivitetään
     NEW.reitti = ST_AddPoint(NEW.reitti, NEW.sijainti::GEOMETRY);
  END IF;
  RETURN NEW;
