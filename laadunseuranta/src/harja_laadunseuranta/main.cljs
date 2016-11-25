@@ -35,11 +35,11 @@
       [havaintolomake])
 
     (when @s/tarkastusajo-paattymassa
-      [:div.tarkastusajon-luonti-dialog-container
+      [:div.tarkastusajon-paattaminen-dialog-container
        [tarkastusajon-luonti/tarkastusajon-paattamisdialogi s/lahettamattomia-merkintoja]])
 
     (when (and @s/palautettava-tarkastusajo (not (= "?relogin=true" js/window.location.search)))
-      [:div.tarkastusajon-luonti-dialog-container
+      [:div.tarkastusajon-paattaminen-dialog-container
        [tarkastusajon-luonti/tarkastusajon-jatkamisdialogi]])
 
     [spinneri s/lahettamattomia-merkintoja]

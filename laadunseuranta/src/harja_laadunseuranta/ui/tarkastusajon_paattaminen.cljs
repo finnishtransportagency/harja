@@ -13,28 +13,31 @@
   (let [kylla-klikattu (atom false)]
     (fn [_ _ _]
       (if @kylla-klikattu
-        [:div.tarkastusajon-luonti-dialog
+        [:div.tarkastusajon-paattaminen-dialog
          [:div.ohjeteksti "Päätetään, älä sulje selainta..."]
          [:div [:img.centered {:src kuvat/+spinner+
                                :height "32px"}]]]
-        [:div.tarkastusajon-luonti-dialog
+        [:div.tarkastusajon-paattaminen-dialog
          [:div.ohjeteksti "Päätetäänkö tarkastusajo?"]
          [nappi [:div
                  (when (> @paattamattomia 0)
-                  [:img.odotusspinneri {:src kuvat/+spinner+}])
+                   [:img.odotusspinneri {:src kuvat/+spinner+}])
                  (if (> @paattamattomia 0)
                    "Odota..."
                    "Kyllä")]
           {:luokat-str "nappi-ensisijainen nappi-paata-tarkastusajo"
            :on-click #(when (= 0 @paattamattomia)
-                       (reset! kylla-klikattu true)
-                       (tiedot/paata-ajo!))}]
+                        (reset! kylla-klikattu true)
+                        (tiedot/paata-ajo!))}]
          [nappi "Ei"
           {:luokat-str "nappi-toissijainen"
-           :on-click #(tiedot/paattaminen-peruttu!)}]]))))
+           :on-click #(tiedot/paattaminen-peruttu!)}]
+         [:div.lahettamattomia
+          (when (> @paattamattomia 0)
+            (str "Lähetetään merkintöjä... (" @paattamattomia ")"))]]))))
 
 (defn tarkastusajon-jatkamisdialogi []
-  [:div.tarkastusajon-luonti-dialog
+  [:div.tarkastusajon-paattaminen-dialog
    [:div.ohjeteksti "Jatketaanko tarkastusajoa?"]
    [nappi "Jatka" {:luokat-str "nappi-ensisijainen"
                    :on-click #(tiedot/jatka-ajoa!)}]
