@@ -77,9 +77,13 @@
 
 (defn paata-tarkastusajo! [db tarkastusajo kayttaja]
   (jdbc/with-db-transaction [tx db]
-    (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)]
-      (muunna-tarkastusajon-reittipisteet-tarkastuksiksi tx tarkastusajo kayttaja)
-      (merkitse-ajo-paattyneeksi! tx tarkastusajo-id kayttaja))))
+    (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)
+          ajo-paatetty (:paatetty (first (q/ajo-paatetty tx {:id tarkastusajo-id})))]
+      (if-not ajo-paatetty
+        (do
+          (muunna-tarkastusajon-reittipisteet-tarkastuksiksi tx tarkastusajo kayttaja)
+          (merkitse-ajo-paattyneeksi! tx tarkastusajo-id kayttaja))
+        (log/warn (format "Yritettiin päättää ajo %s, joka on jo päätetty!" tarkastusajo-id))))))
 
 (defn- luo-uusi-tarkastusajo! [db tiedot kayttaja]
   (q/luo-uusi-tarkastusajo<! db {:ulkoinen_id 0

@@ -178,3 +178,6 @@ SELECT
   tyyppi
 FROM urakka
 WHERE tyyppi IN (:tyyppi :: urakkatyyppi);
+
+-- name: ajo-paatetty
+SELECT paatetty FROM tarkastusajo WHERE id = :id;
