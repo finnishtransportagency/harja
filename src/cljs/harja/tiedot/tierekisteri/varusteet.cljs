@@ -36,7 +36,7 @@
             (tulos! vastaus))))
       (-> app
           (assoc-in [:varusteet] nil)
-          (assoc-in [:hakuehdot :haku-kaynnissa?] false))))
+          (assoc-in [:hakuehdot :haku-kaynnissa?] true))))
 
   VarusteHakuTulos
   (process-event [{tietolaji :tietolaji varusteet :varusteet} app]

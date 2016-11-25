@@ -227,30 +227,32 @@
   [user tierekisteri {:keys [tunniste tierekisteriosoite tietolaji] :as tiedot}]
   (log/debug "Haetaan varusteita Tierekisteristä: " (pr-str tiedot))
 
-  (cond
-    (not (str/blank? tunniste))
-    (hae-varuste tierekisteri {"tunniste" tunniste} user)
+  (let [nyt (t/now)
+        tulos
+        (cond
+          (not (str/blank? tunniste))
+          (tierekisteri/hae-tietue tierekisteri tunniste tietolaji nyt)
 
-    (and tierekisteriosoite
-         (not (str/blank? tietolaji)))
-    (let [nyt (t/now)
-          tulos (tierekisteri/hae-tietueet
-                  tierekisteri
-                  {:numero (:numero tierekisteriosoite)
-                   :aet (:alkuetaisyys tierekisteriosoite)
-                   :aosa (:alkuosa tierekisteriosoite)
-                   :let (:loppuetaisyys tierekisteriosoite)
-                   :losa (:loppuosa tierekisteriosoite)}
-                  tietolaji
-                  nyt nyt)]
-      (if (:onnistunut tulos)
-        (merge {:onnistunut true}
-               (hae-tietolaji-tunnisteella tierekisteri tietolaji)
-               (muodosta-tietueiden-hakuvastaus tierekisteri tulos))
-        tulos))
+          (and tierekisteriosoite
+               (not (str/blank? tietolaji)))
+          (tierekisteri/hae-tietueet
+           tierekisteri
+           {:numero (:numero tierekisteriosoite)
+            :aet (:alkuetaisyys tierekisteriosoite)
+            :aosa (:alkuosa tierekisteriosoite)
+            :let (:loppuetaisyys tierekisteriosoite)
+            :losa (:loppuosa tierekisteriosoite)}
+           tietolaji
+           nyt nyt)
 
-    :default
-    {:error "Ei hakuehtoja"}))
+          :default
+          {:error "Ei hakuehtoja"})]
+
+    (if (:onnistunut tulos)
+      (merge {:onnistunut true}
+             (hae-tietolaji-tunnisteella tierekisteri tietolaji)
+             (muodosta-tietueiden-hakuvastaus tierekisteri tulos))
+      tulos)))
 
 (defrecord Varusteet []
   component/Lifecycle
