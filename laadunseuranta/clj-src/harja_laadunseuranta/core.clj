@@ -71,10 +71,11 @@
         merkinnat-tr-osoitteilla (tarkastukset/lisaa-reittimerkinnoille-tieosoite merkinnat)
         tarkastukset (-> (tarkastukset/reittimerkinnat-tarkastuksiksi merkinnat-tr-osoitteilla)
                          (tarkastukset/lisaa-tarkastuksille-urakka-id urakka-id))]
-    (log/debug "Tallennetaan tarkastus urakkaan " urakka-id)
-    (tarkastukset/tallenna-tarkastukset! tx tarkastukset kayttaja)))
+    (log/debug "Reittipisteet muunnettu tarkastuksiksi. Tallennetaan tarkastukset urakkaan " urakka-id)
+    (tarkastukset/tallenna-tarkastukset! tx tarkastukset kayttaja)
+    (log/debug "Reittimerkitöjen muunto tarkastuksiksi suoritettu!")))
 
-(defn- paata-tarkastusajo! [db tarkastusajo kayttaja]
+(defn paata-tarkastusajo! [db tarkastusajo kayttaja]
   (jdbc/with-db-transaction [tx db]
     (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)]
       (muunna-tarkastusajon-reittipisteet-tarkastuksiksi tx tarkastusajo kayttaja)

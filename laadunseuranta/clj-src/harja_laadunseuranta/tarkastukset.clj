@@ -298,6 +298,7 @@
         _ (q/luo-uusi-tarkastus<! db
                                   (merge tarkastus
                                          {:luoja (:id kayttaja)}))
+        _ (log/debug "Uusi tarkastus luotu!")
         tarkastus-id (tark-q/luodun-tarkastuksen-id db)
         sisaltaa-talvihoitomittauksen? (not (empty? (remove nil? (vals (:talvihoitomittaus tarkastus)))))
         sisaltaa-soratiemittauksen? (not (empty? (remove nil? (vals (:soratiemittaus tarkastus)))))]
@@ -332,7 +333,8 @@
                                           {:tarkastus tarkastus-id
                                            :liite liite}))
 
-          :default nil)))
+          :default nil)
+    (log/debug "Tarkastuksen tallennus suoritettu")))
 
 (defn tallenna-tarkastukset! [db tarkastukset kayttaja]
   (let [kaikki-tarkastukset (reduce conj
