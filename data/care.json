@@ -1,5 +1,11 @@
 [
   {
+    "date": "2016-11-25",
+    "title": "Laajennoksia ilmoituksista lähtevien tekstiviestien ja sähköpostien sisältöihin",
+    "short": "",
+    "body": "Jatkossa ilmoituksista lähetettävissä tekstiviesteissä ja sähköposteissa tullaan näyttämään sekä ilmoittajan että lähettäjän (tieliikennekeskuspäivystäjän) nimi, puhelinnumero & sähköpostiosoite. Samoin molemmissa viesteissä lähetetään paikan tierekisteriosoite, jos sellainen löytyy."
+  },
+  {
     "date": "2016-11-22",
     "title": "Ilmoitushaun aikarajaukset muuttuneet",
     "short": "",
