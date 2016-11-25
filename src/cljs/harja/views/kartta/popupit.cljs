@@ -138,14 +138,16 @@
   (reset! klikattu-tyokone (:tyokoneid tapahtuma))
   (kartta/keskita-kartta-pisteeseen (:sijainti tapahtuma))
 
-  (kartta/nayta-popup! (:sijainti tapahtuma)
-                       (tee-arvolistaus-popup "Työkone"
-                                              [["Tyyppi" (:tyokonetyyppi tapahtuma)]
-                                               ["Viimeisin paikka\u00ADtieto" (pvm/pvm-aika-sek (:lahetysaika tapahtuma))]
-                                               ["Organisaatio" (or (:organisaationimi tapahtuma) "Ei organisaatiotietoja")]
-                                               ["Urakka" (or (:urakkanimi tapahtuma) "Ei urakkatietoja")]
-                                               ["Tehtävät" (let [tehtavat (str/join ", " (:tehtavat tapahtuma))]
-                                                             [:span tehtavat])]])))
+  (kartta/nayta-popup!
+   (:sijainti tapahtuma)
+   (tee-arvolistaus-popup "Työkone"
+                          [["Työ aloitettu" (pvm/pvm-aika-sek (:alkanut tapahtuma))]
+                           ["Viimeisin havainto" (pvm/pvm-aika-sek (:lahetysaika tapahtuma))]
+                           ["Tyyppi" (:tyokonetyyppi tapahtuma)]
+                           ["Organisaatio" (or (:organisaationimi tapahtuma) "Ei organisaatiotietoja")]
+                           ["Urakka" (or (:urakkanimi tapahtuma) "Ei urakkatietoja")]
+                           ["Tehtävät" (let [tehtavat (str/join ", " (:tehtavat tapahtuma))]
+                                         [:span tehtavat])]])))
 
 (defmethod nayta-popup :uusi-tyokonedata [data]
   (when-let [tk @klikattu-tyokone]
@@ -271,4 +273,3 @@
                                               {:linkki {:nimi   "Avaa varustekortti"
                                                         :href   (:varustekortti-url tapahtuma)
                                                         :target "_blank"}})))
-
