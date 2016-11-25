@@ -14,6 +14,7 @@
              :selain-vanhentunut (utils/vanhentunut-selain?)}
 
    ;; Tarkastusajon perustiedot
+   :aloitetaan-tarkastusajo false
    :valittu-urakka nil ; Urakka valitaan tietyntyyppisiin ajoihin, muuten päätellään automaattisesti kun tarkastus päättyy
    :tarkastusajo-id nil
    :tallennus-kaynnissa false
@@ -119,6 +120,7 @@
 (def sijainti (reagent/cursor sovellus [:sijainti]))
 (def valittu-urakka (reagent/cursor sovellus [:valittu-urakka]))
 (def tarkastusajo-id (reagent/cursor sovellus [:tarkastusajo-id]))
+(def aloitetaan-tarkastusajo (reagent/cursor sovellus [:aloitetaan-tarkastusajo]))
 
 (def tyhja-sijainti
   {:lat 0

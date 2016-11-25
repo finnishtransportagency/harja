@@ -56,10 +56,13 @@
   (swap! s/sovellus resetoi-tarkastusajo-sovelluksen-tilaan))
 
 (defn luo-ajo! []
+  (reset! s/aloitetaan-tarkastusajo true)
   (go-loop []
     (if-let [id (-> (<! (comms/luo-ajo!)) :ok :id)]
-      (kaynnista-tarkastusajo id)
-      ;; yritä uudleleen kunnes onnistuu
+      (do
+        (kaynnista-tarkastusajo id)
+        (reset! s/aloitetaan-tarkastusajo false))
+      ;; yritä uudelleleen kunnes onnistuu
       (do (<! (timeout 1000))
           (recur)))))
 

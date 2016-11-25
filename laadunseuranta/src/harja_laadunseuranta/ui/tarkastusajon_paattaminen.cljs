@@ -1,4 +1,4 @@
-(ns harja-laadunseuranta.ui.tarkastusajon-luonti
+(ns harja-laadunseuranta.ui.tarkastusajon-paattaminen
   (:require [reagent.core :as reagent :refer [atom]]
             [harja-laadunseuranta.tiedot.comms :as comms]
             [harja-laadunseuranta.tiedot.tarkastusajon-luonti :as tiedot]
