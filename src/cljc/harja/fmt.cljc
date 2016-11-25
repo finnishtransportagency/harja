@@ -22,6 +22,12 @@
                              (.setMinimumFractionDigits 2)
                              (.setMaximumFractionDigits 2))))
 
+(defn yrita [fn arvo & args]
+  (try
+    (apply (partial fn arvo) args)
+    #?(:cljs (catch js/Object _ arvo))
+    #?(:clj (catch Exception _ arvo))))
+
 (defn euro
   "Formatoi summan euroina näyttämistä varten. Tuhaterottimien ja valinnaisen euromerkin kanssa."
   ([eur] (euro true eur))
@@ -416,9 +422,7 @@
   Jos formatoitava arvo ei ole pvm, palauttaa itse arvon."
   [p]
   (if p
-    (try (pvm p)
-         #?(:clj (catch Exception _ p))
-         #?(:cljs (catch js/Object _ p)))
+    (yrita pvm p)
     ""))
 
 (defn pvm-vali [[alku loppu]]
@@ -472,7 +476,7 @@
   ([luku tarkkuus] (desimaaliluku-opt luku tarkkuus false))
   ([luku tarkkuus ryhmitelty?]
    (if luku
-     (desimaaliluku luku tarkkuus ryhmitelty?)
+     (yrita desimaaliluku luku tarkkuus ryhmitelty?)
      "")))
 
 (defn prosentti
@@ -496,7 +500,7 @@
   ([luku] (prosentti-opt luku 1))
   ([luku tarkkuus]
    (if luku
-     (prosentti luku tarkkuus)
+     (yrita prosentti luku tarkkuus)
      "")))
 
 (defn trimmaa-puhelinnumero
