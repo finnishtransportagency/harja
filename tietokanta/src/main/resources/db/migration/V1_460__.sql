@@ -21,3 +21,6 @@ CREATE TRIGGER tg_paivita_tyokoneen_reitti
 BEFORE INSERT OR UPDATE ON tyokonehavainto
 FOR EACH ROW
 EXECUTE PROCEDURE paivita_tyokoneen_reitti();
+
+-- Päivitä kaikki, jotta trigger tekee reitin
+UPDATE tyokonehavainto SET tyokoneid = tyokoneid;
