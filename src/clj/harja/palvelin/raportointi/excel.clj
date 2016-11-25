@@ -11,6 +11,11 @@
   "Muodostaa Excel data annetulle raporttielementille.
   Dispatch tyypin mukaan (vektorin 1. elementti)."
   (fn [elementti workbook]
+    (assert (raportti-domain/raporttielementti? elementti))
+    (first elementti)))
+
+(defmulti muodosta-solu
+  (fn [elementti tyyli]
     (if (raportti-domain/raporttielementti? elementti)
       (first elementti)
       :vain-arvo)))
@@ -37,17 +42,16 @@
     (.replace data "\u00AD" "")
     data))
 
-(defmethod muodosta-excel :vain-arvo [arvo _] arvo)
+(defmethod muodosta-solu :vain-arvo [arvo _] arvo)
 
-(defmethod muodosta-excel :liitteet [[_ liitteet] tyyli-atom]
+(defmethod muodosta-solu :liitteet [[_ liitteet] solun-tyyli]
   (count liitteet))
 
-(defmethod muodosta-excel :arvo-ja-osuus [[_ {:keys [arvo osuus]}] tyyli-atom]
+(defmethod muodosta-solu :arvo-ja-osuus [[_ {:keys [arvo osuus]}] solun-tyyli]
   arvo)
 
-(defmethod muodosta-excel :varillinen-teksti [[_ {:keys [arvo tyyli]}] tyyli-atom]
-  (swap! tyyli-atom merge (when tyyli (tyyli raportti-domain/virhetyylit-excel)))
-  arvo)
+(defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli]}] solun-tyyli]
+  [arvo (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))])
 
 (defn- taulukko-otsikkorivi [otsikko-rivi sarakkeet sarake-tyyli]
   (dorun
@@ -115,6 +119,7 @@
                (fn [sarake-nro sarake]
                  (let [cell (.createCell row sarake-nro)
                        lihavoi? (:lihavoi? optiot)
+                       korosta? (:korosta? optiot)
                        formaatti-fn (fn [tyyli]
                                       (case (:fmt sarake)
                                         ;; .setDataFormat hakee indeksillä tyylejä.
@@ -127,13 +132,12 @@
                                         :pvm (.setDataFormat tyyli 14)
                                         :pvm-aika (.setDataFormat tyyli 22)
                                         nil))
-                       tyyli-atom (atom {:font {:bold lihavoi?}})
+                       oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta?)
                        arvo-datassa (nth data sarake-nro)
-                       naytettava-arvo (if (raportti-domain/raporttielementti? arvo-datassa)
-                                         (muodosta-excel arvo-datassa tyyli-atom)
-                                         arvo-datassa)
-                       tyyli (doto (excel/create-cell-style! workbook
-                                                             @tyyli-atom)
+                       [naytettava-arvo solun-tyyli] (if (raportti-domain/raporttielementti? arvo-datassa)
+                                         (muodosta-solu arvo-datassa oletustyyli)
+                                         [arvo-datassa oletustyyli])
+                       tyyli (doto (excel/create-cell-style! workbook solun-tyyli)
                                formaatti-fn)]
 
                    (if-let [kaava (:excel sarake)]

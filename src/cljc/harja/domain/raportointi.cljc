@@ -7,21 +7,38 @@
    :info "rgb(0,136,204)"})
 
 
+;; rajat-excel, virhetyylit-excel, ja solun-oletustyyli-excel ovat exceliin sidottuja,
+;; ja täten niiden ei välttämättä tarvitsisi olla domain-namespacessa. On kuitenkin
+;; perusteltua pitää ne täällä sen takia, että se helpottaa virhetyylit ja virhetyylit-
+;; excel pitämistä synkassa. Haluamme tietenkin, että huomiovärit ovat kaikissa kolmessa
+;; formaatissa edes melkein samat.
+
+(def rajat-excel {:border-left :thin
+                  :border-right :thin
+                  :border-bottom :thin
+                  :border-top :thin})
+
 ;; https://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/IndexedColors.html
 (def virhetyylit-excel
-  (let [rajat {:border-left :thin
-               :border-right :thin
-               :border-bottom :thin
-               :border-top :thin}]
-    {:virhe    (merge rajat
-                      {:background :dark_red
-                       :font       {:color :white}})
-     :varoitus (merge rajat
-                      {:background :orange
-                       :font       {:color :black}})
-     :info     (merge rajat
-                      {:background :light_turquoise
-                       :font       {:color :black}})}))
+  {:virhe    (merge rajat-excel
+                    {:background :dark_red
+                     :font       {:color :white}})
+   :varoitus (merge rajat-excel
+                    {:background :orange
+                     :font       {:color :black}})
+   :info     (merge rajat-excel
+                    {:background :light_turquoise
+                     :font       {:color :black}})})
+
+(defn solun-oletustyyli-excel [lihavoi? korosta?]
+  (let [deep-merge (partial merge-with merge)]
+    (cond-> {}
+           lihavoi?
+           (merge {:font {:bold true}})
+
+           korosta?
+           (deep-merge (merge rajat-excel {:background :yellow
+                                                 :font       {:color :black}})))))
 
 (defn varillinen-teksti [tyyli teksti]
   [:varillinen-teksti {:arvo teksti :tyyli tyyli}])
