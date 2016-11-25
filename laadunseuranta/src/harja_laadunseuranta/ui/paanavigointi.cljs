@@ -19,6 +19,7 @@
     [devcards.core :as dc :refer [defcard deftest]]))
 
 (def +hampurilaisvalikko-kaytossa-leveydessa+ 700)
+(def +lyhenna-teksteja-leveydessa+ 530)
 
 (def edellinen-header-leveys (atom nil))
 (def +header-reuna-padding+ 80)
@@ -44,7 +45,9 @@
                                               ryhmien-yhteysleveys)]
           (if ryhmat-mahtuvat-containeriin?
             ;; Voidaan kasvattaa jakoa edelleen
-            (recur (+ jako 1))
+            (if (< jako (count valilehdet))
+              (recur (+ jako 1))
+              (count valilehdet))
             ;; Edellinen jako mahtui eli se on vastaus
             (- jako 1)))))))
 
@@ -238,8 +241,11 @@
                              :ikoni (ikonit/livicon-arrow-up)
                              :luokat-str "nappi-toissijainen"}]]
    [:div.footer-oikea
-    [nappi "Avaa lomake" {:on-click havaintolomake-painettu
-                          :ikoni (ikonit/livicon-pen)
+    [nappi (if (< @dom/leveys +lyhenna-teksteja-leveydessa+)
+             "Lomake"
+             "Avaa lomake")
+     {:on-click havaintolomake-painettu
+      :ikoni (ikonit/livicon-pen)
                           :luokat-str "nappi-ensisijainen"}]]])
 
 (defn- paanavigointikomponentti [{:keys [valilehdet paanavigointi-nakyvissa?
