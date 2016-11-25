@@ -494,9 +494,11 @@
                                 (ulkoasu/tyokoneen-ikoni nuolen-vari (muunna-tyokoneen-suunta (:suunta tyokone)))
                                 viivat))))
 
-(defmethod asia-kartalle :default [asia _]
-  (warn "Kartalla esitettävillä asioilla pitää olla :tyyppi-kartalla avain!, "
-        "sain: " (pr-str asia))
+(defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
+  (if tyyppi
+    (warn "Kartan :tyyppi-kartalla ei ole tuettu: " (str tyyppi))
+    (warn "Kartalla esitettävillä asioilla pitää olla :tyyppi-kartalla avain!, "
+          "sain: " (pr-str asia)))
   nil)
 
 (defn- valittu-fn? [valittu tunniste asia]
