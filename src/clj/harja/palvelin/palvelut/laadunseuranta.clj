@@ -96,7 +96,7 @@
         :sanktiot (into []
                         (comp (map #(konv/array->set % :tyyppi_laji keyword))
                               (map konv/alaviiva->rakenne)
-                              (map #(konv/string->keyword % :laji))
+                              (map #(konv/string->keyword % :laji :vakiofraasi))
                               (map #(assoc %
                                      :sakko? (sanktiot-domain/sakko? %)
                                      :summa (some-> % :summa double))))
@@ -111,19 +111,21 @@
   (log/debug "Hae sanktiot (" urakka-id alku loppu ")")
   (into []
         (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
-              (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa))
+              (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
               (map konv/alaviiva->rakenne)
               (map #(konv/decimal->double % :summa))
               (map #(assoc % :laji (keyword (:laji %)))))
         (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu))))
 
 (defn tallenna-laatupoikkeaman-sanktio
-  [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio toimenpideinstanssi] :as sanktio} laatupoikkeama urakka]
+  [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio
+                   toimenpideinstanssi vakiofraasi] :as sanktio} laatupoikkeama urakka]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaon " laatupoikkeama)
   (log/debug "LAJI ON: " (pr-str laji))
   (let [params {:perintapvm (konv/sql-timestamp perintapvm)
                 :ryhma (when laji (name laji))
                 :tyyppi (:id tyyppi)
+                :vakiofraasi (when vakiofraasi (name vakiofraasi))
                 :tpi_id toimenpideinstanssi
                 :urakka urakka
                 :summa summa
@@ -297,14 +299,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka)
 
   (jdbc/with-db-transaction [c db]
-    (let [;; FIXME: Suorasanktiolle pyydetty/annettu flagit?
-          #_osapuoli #_(roolit/osapuoli user urakka)
-          #_laatupoikkeama #_(assoc laatupoikkeama
-                         :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
-                                                 (:selvitys-pyydetty laatupoikkeama))
-                         :selvitys-annettu (and (:uusi-kommentti laatupoikkeama)
-                                                (= :urakoitsija osapuoli)))
-          id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"))]
+    (let [id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"))]
 
       (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
         (laatupoikkeamat/kirjaa-laatupoikkeaman-paatos! c

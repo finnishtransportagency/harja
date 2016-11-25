@@ -1,0 +1,1 @@
+ALTER TABLE sanktio ADD COLUMN vakiofraasi VARCHAR(256);
