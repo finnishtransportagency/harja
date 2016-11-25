@@ -21,8 +21,8 @@
    :tarkastusajo-paattymassa false ; Jos true, näytetään päättämisdialogi
 
    ;; Käyttäjätiedot
-   :kayttaja {:kayttajanimi "Seppo"
-              :kayttajatunnus "seppo"}
+   :kayttaja {:kayttajanimi nil
+              :kayttajatunnus nil}
 
    ;; Ajonaikaiset tiedot
    :lahettamattomia-merkintoja 0
