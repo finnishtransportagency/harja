@@ -312,6 +312,7 @@ SELECT
   t.vastaanotettu,
   t.tyokonetyyppi,
   t.sijainti,
+  ST_Simplify(t.reitti, :toleranssi) AS reitti,
   t.suunta,
   t.edellinensijainti,
   t.urakkaid,
