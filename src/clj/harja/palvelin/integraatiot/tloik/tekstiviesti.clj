@@ -19,6 +19,7 @@
        "Urakka: %s\n\n"
        "Yhteydenottopyyntö: %s\n\n"
        "Ilmoittaja: %s\n\n"
+       "Lähettäjä: %s\n\n"
        "Paikka: %s\n\n"
        "TR-osoite: %s\n\n"
        "Selitteet: %s.\n\n"
@@ -146,6 +147,7 @@
               (:urakkanimi ilmoitus)
               (fmt/totuus (:yhteydenottopyynto ilmoitus))
               (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))
+              (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))
               paikankuvaus
               tr-osoite
               selitteet
