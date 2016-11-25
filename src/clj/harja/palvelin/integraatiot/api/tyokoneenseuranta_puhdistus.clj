@@ -5,30 +5,22 @@
             [clj-time.core :as t]
             [clojure.core.async :as a :refer [<! go-loop]]
             [clj-time.periodic :refer [periodic-seq]]
-            [taoensso.timbre :as log]))
-
-(def vanhojen-poisto-ajat (chime-ch (periodic-seq (t/now) (t/minutes 15))))
+            [taoensso.timbre :as log]
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]))
 
 (defn poista-vanhat-tyokonesijainnit [db]
   (log/debug "poistetaan vanhentuneet työkonehavainnot")
   (tks/poista-vanhentuneet-havainnot! db))
 
-(defn pysayta-vanhojen-poisto []
-  (a/close! vanhojen-poisto-ajat))
-
-(defn aloita-vanhojen-poisto [db]
-  (go-loop []
-    (when-let [aika (<! vanhojen-poisto-ajat)]
-      (try
-        (poista-vanhat-tyokonesijainnit db)
-        (catch Throwable e nil))  ; ignoraa poikkeukset että periodinen timer pysyy aina päällä
-      (recur))))
-
 (defrecord TyokoneenseurantaPuhdistus []
   component/Lifecycle
   (start [this]
-    (aloita-vanhojen-poisto (:db this))
+    (assoc this
+           ::poista-ajastus
+           (ajastettu-tehtava/ajasta-paivittain
+            [0 0 5]
+            (partial poista-vanhat-tyokonesijainnit (:db this))))
     this)
   (stop [this]
-    (pysayta-vanhojen-poisto)
+    ((::poista-ajastus this))
     this))
