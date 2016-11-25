@@ -304,6 +304,7 @@ SELECT
   t.tyokoneid,
   t.jarjestelma,
   t.organisaatio,
+  t.alkanut,
   (SELECT nimi
    FROM organisaatio
    WHERE id = t.organisaatio) AS organisaationimi,
