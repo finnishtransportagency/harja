@@ -10,7 +10,8 @@
              :gps-tuettu false
              :ensimmainen-sijainti nil ; alustusta varten
              :verkkoyhteys (.-onLine js/navigator)
-             :selain-tuettu (utils/tuettu-selain?)}
+             :selain-tuettu (utils/tuettu-selain?)
+             :selain-vanhentunut (utils/vanhentunut-selain?)}
 
    ;; Tarkastusajon perustiedot
    :valittu-urakka nil ; Urakka valitaan tietyntyyppisiin ajoihin, muuten päätellään automaattisesti kun tarkastus päättyy
@@ -109,6 +110,7 @@
 (def sovellus-alustettu (reagent/cursor sovellus [:alustus :alustettu]))
 (def verkkoyhteys (reagent/cursor sovellus [:alustus :verkkoyhteys]))
 (def selain-tuettu (reagent/cursor sovellus [:alustus :selain-tuettu]))
+(def selain-vanhentunut (reagent/cursor sovellus [:alustus :selain-vanhentunut]))
 (def gps-tuettu (reagent/cursor sovellus [:alustus :gps-tuettu]))
 (def ensimmainen-sijainti (reagent/cursor sovellus [:alustus :ensimmainen-sijainti]))
 

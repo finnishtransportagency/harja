@@ -1,39 +1,39 @@
-.alustuskomponenttic-ontainer {
-    position: absolute;
-    height: 100%;
-    width: 100%;
-}
+.alustuskomponentti-container {
+    & .alustuskomponentti {
+        position: absolute;
+        width: 100%;
+        max-width: 350px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        -webkit-transform: translate(-50%, -50%);
+    }
 
-.alustuskomponentti {
-    position: absolute;
-    width: 100%;
-    max-width: 350px;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    -webkit-transform: translate(-50%, -50%);
-}
+    & .alustuskomponentti p {
+        text-align: center;
+        font-weight: bold;
+    }
 
-.alustuskomponentti p {
-    text-align: center;
-    font-weight: bold;
-}
+    & .alustuskomponentti img {
+        vertical-align: middle;
+        margin-right: 10px;
+        padding-left: 40px;
+    }
 
-.alustuskomponentti img {
-    vertical-align: middle;
-    margin-right: 10px;
-    padding-left: 40px;
-}
+    & .liikenneturvallisuusmuistutus {
+        border: 2px solid black;
+        color: red;
+        font-weight: bold;
+        padding: 2px;
+        margin-bottom: 5px;
+    }
 
-.liikenneturvallisuusmuistutus {
-    border: 2px solid black;
-    color: red;
-    font-weight: bold;
-    padding: 2px;
-    margin-bottom: 5px;
-}
+    & .screenlock-muistutus {
+        margin-top: 10px;
+        padding: 5px;
+    }
 
-.screenlock-muistutus {
-    margin-top: 10px;
-    padding: 5px;
+    & .alustus-varoitus {
+        color: @varoitus;
+    }
 }

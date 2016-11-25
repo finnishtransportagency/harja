@@ -49,7 +49,8 @@
   (if @s/sovellus-alustettu
     [paanakyma]
     [alustus/alustuskomponentti
-     {:gps-tuettu s/gps-tuettu
+     {:selain-vanhentunut s/selain-vanhentunut
+      :gps-tuettu s/gps-tuettu
       :ensimmainen-sijainti s/ensimmainen-sijainti
       :idxdb-tuettu s/idxdb
       :kayttaja s/kayttajanimi

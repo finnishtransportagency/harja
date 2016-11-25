@@ -28,13 +28,19 @@
         chrome-versonumero (re-find (re-pattern "\\d+") chrome-versio-teksti)]
     (js/parseInt chrome-versonumero)))
 
-(defn- tuettu-selain? []
+(defn tuettu-selain? []
   (boolean (or (ipad?)
                (iphone?)
                (and (chrome?)
                     (>= (maarita-chrome-versio-user-agentista
                           (clojure.string/lower-case js/window.navigator.userAgent))
                         +tuettu-chrome-versio+)))))
+
+(defn vanhentunut-selain? []
+  (boolean (and (chrome?)
+                (< (maarita-chrome-versio-user-agentista
+                     (clojure.string/lower-case js/window.navigator.userAgent))
+                   +tuettu-chrome-versio+))))
 
 (defn- flip [atomi]
   (swap! atomi not))

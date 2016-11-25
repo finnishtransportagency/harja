@@ -11,12 +11,16 @@
          :height 36}])
 
 (defn alustuskomponentti [{:keys [gps-tuettu ensimmainen-sijainti idxdb-tuettu
-                                  kayttaja selain-tuettu verkkoyhteys]}]
+                                  kayttaja selain-tuettu verkkoyhteys selain-vanhentunut]}]
   [:div.alustuskomponentti-container
    [:div.alustuskomponentti
     [:div.liikenneturvallisuusmuistutus "Muista aina liikenne\u00ADturvallisuus tarkastuksia tehdessäsi."]
     [:p "Tarkistetaan..."]
-    [:div [checkmark @selain-tuettu] "Selain tuettu"]
+    [:div {:class (when @selain-vanhentunut
+                    "alustus-varoitus")}
+           [checkmark @selain-tuettu] (if @selain-vanhentunut
+                                        "Selain vanhentunut"
+                                        "Selain tuettu")]
     [:div [checkmark @verkkoyhteys] "Verkkoyhteys"]
     [:div [checkmark @gps-tuettu] "GPS-tuki"]
     [:div [checkmark @ensimmainen-sijainti] "Laite paikannettu"]
