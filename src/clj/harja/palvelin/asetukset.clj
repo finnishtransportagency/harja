@@ -25,7 +25,8 @@
    (s/optional-key :testikayttajat)       [{:kayttajanimi s/Str :kuvaus s/Str}]
    :tietokanta                            Tietokanta
    :tietokanta-replica                    Tietokanta
-   :fim                                   {:url s/Str}
+   :fim                                   {:url s/Str
+                                           :tiedosto s/Str}
    :log                                   {(s/optional-key :gelf)    {:palvelin s/Str
                                                                       :taso     s/Keyword}
                                            (s/optional-key :hipchat) {:huone-id s/Int :token s/Str :taso s/Keyword}

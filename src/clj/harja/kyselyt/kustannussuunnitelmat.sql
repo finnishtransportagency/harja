@@ -13,9 +13,15 @@ WHERE lahetysid = :lahetysid;
 
 -- name: hae-likaiset-kustannussuunnitelmat
 -- Hakee maksuerät, jotka täytyy lähettää
-SELECT maksuera
-FROM kustannussuunnitelma
-WHERE likainen = TRUE;
+SELECT
+  k.maksuera,
+  u.id   AS urakkaid,
+  tpi.id AS tpi_id
+FROM kustannussuunnitelma k
+  JOIN maksuera m ON k.maksuera = m.numero
+  JOIN toimenpideinstanssi tpi ON m.toimenpideinstanssi = tpi.id
+  JOIN urakka u ON tpi.urakka = u.id
+WHERE k.likainen = TRUE;
 
 -- name: merkitse-kustannussuunnitelma-odottamaan-vastausta!
 -- Merkitsee kustannussuunnitelma lähetetyksi, kirjaa lähetyksen id:n, avaa lukon ja merkitsee puhtaaksi
@@ -32,7 +38,7 @@ WHERE maksuera = :numero;
 -- name: merkitse-kustannussuunnitelmalle-lahetysvirhe!
 -- Merkitsee kustannussuunnitelman lähetetyksi, kirjaa lähetyksen id:n ja avaa lukon
 UPDATE kustannussuunnitelma
-SET tila = 'virhe', lukko = null, lukittu = null
+SET tila = 'virhe', lukko = NULL, lukittu = NULL
 WHERE maksuera = :numero;
 
 -- name: luo-kustannussuunnitelma<!

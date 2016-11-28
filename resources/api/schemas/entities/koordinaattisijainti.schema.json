@@ -13,8 +13,8 @@
      "y": {
 	 "id": "urn:harja/sijainti/koordinaatit/y",
 	 "type": "number",
-	 "minimum": 6613000,
-	 "maximum": 7780300,
+	 "minimum": 6500000,
+	 "maximum": 7800000,
 	 "required": true
      },
      "z": {

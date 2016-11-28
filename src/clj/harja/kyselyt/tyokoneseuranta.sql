@@ -65,4 +65,4 @@ WHERE urakkaid = :urakkaid
 -- name: poista-vanhentuneet-havainnot!
 -- Poistaa vanhentuneet havainnot työkoneseurannasta
 DELETE FROM tyokonehavainto
-WHERE vastaanotettu < NOW() - INTERVAL '2 hours'
+ WHERE date_trunc('day',alkanut) < current_date;

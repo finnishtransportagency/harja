@@ -20,13 +20,13 @@
   (q/lokita-lahetys<! db true harja-turpo-id)
   (try
     (let [turi-id (Integer. (re-find #"\d+" body))
-         status (:status body)]
-     (if (and (= status 200)
-              (integer? turi-id))
-       (q/tallenna-turvallisuuspoikkeaman-turi-id db turi-id harja-turpo-id)
-       (log/error "TURI:in lähettämälle turvallisuuspoikkeamalle ei saatu id:tä.")))
+          status (:status body)]
+      (if (and (= status 200)
+               (integer? turi-id))
+        (q/tallenna-turvallisuuspoikkeaman-turi-id db turi-id harja-turpo-id)
+        (log/error "TURI:in lähettämälle turvallisuuspoikkeamalle ei saatu id:tä.")))
     (catch Exception e
-      (log/error e "Poikkeus TURI:n palauttaman id:n parsinnassa" ))))
+      (log/error e "Poikkeus TURI:n palauttaman id:n parsinnassa"))))
 
 (defn hae-liitteiden-sisallot [liitteiden-hallinta turvallisuuspoikkeama]
   (let [liitteet (:liitteet turvallisuuspoikkeama)]
@@ -38,6 +38,12 @@
             (liitteet/lataa-liite liitteiden-hallinta (:id liite)))))
       liitteet)))
 
+(defn hae-liitteet [liitteiden-hallinta turvallisuuspoikkeama]
+  (let [liitteet (concat (:liitteet turvallisuuspoikkeama)
+                         (filter #(not (nil? (:id %))) (mapv :liite (:kommentit turvallisuuspoikkeama))))
+        turvallisuuspoikkeama (assoc turvallisuuspoikkeama :liitteet liitteet)]
+    (hae-liitteiden-sisallot liitteiden-hallinta turvallisuuspoikkeama)))
+
 (defn hae-turvallisuuspoikkeama [liitteiden-hallinta db id]
   (let [turvallisuuspoikkeama (first (konv/sarakkeet-vektoriin
                                        (into []
@@ -47,13 +53,7 @@
                                         :liite :liitteet
                                         :kommentti :kommentit}))]
     (if turvallisuuspoikkeama
-      (let [turvallisuuspoikkeama (assoc turvallisuuspoikkeama
-                                    :liitteet
-                                    (concat (:liitteet turvallisuuspoikkeama)
-                                            (mapv :liite (:kommentit turvallisuuspoikkeama))))
-            liitteet (hae-liitteiden-sisallot liitteiden-hallinta turvallisuuspoikkeama)]
-        (assoc turvallisuuspoikkeama
-          :liitteet liitteet))
+      (assoc turvallisuuspoikkeama :liitteet (hae-liitteet liitteiden-hallinta turvallisuuspoikkeama))
       (let [virhe (format "Id:llä %s ei löydy turvallisuuspoikkeamaa" id)]
         (log/error virhe)
         (throw+ {:type :tuntematon-turvallisuuspoikkeama

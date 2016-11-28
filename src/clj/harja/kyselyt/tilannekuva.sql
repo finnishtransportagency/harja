@@ -304,6 +304,7 @@ SELECT
   t.tyokoneid,
   t.jarjestelma,
   t.organisaatio,
+  t.alkanut,
   (SELECT nimi
    FROM organisaatio
    WHERE id = t.organisaatio) AS organisaationimi,
@@ -312,6 +313,7 @@ SELECT
   t.vastaanotettu,
   t.tyokonetyyppi,
   t.sijainti,
+  ST_Simplify(t.reitti, :toleranssi) AS reitti,
   t.suunta,
   t.edellinensijainti,
   t.urakkaid,
