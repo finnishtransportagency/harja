@@ -32,8 +32,6 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(def vetolaatikot-auki (atom #{}))
-
 (defn- rivi-tehtavaksi [rivi]
   {:toimenpidekoodi (:tehtava rivi)
    :maara (:maara rivi)
@@ -63,7 +61,7 @@
                      (fn [tehtava]
                        (let [[_ _ emo tehtava-urakassa]
                              (urakan-toimenpiteet/tehtava-urakassa
-                              (:tpk-id tehtava) @u/urakan-toimenpiteet-ja-tehtavat)
+                               (:tpk-id tehtava) @u/urakan-toimenpiteet-ja-tehtavat)
                              tpi (some #(when (= (:t3_koodi %) (:koodi emo)) %)
                                        @u/urakan-toimenpideinstanssit)]
                          (log "Tehtava urakassa: " (pr-str tehtava-urakassa))
@@ -110,9 +108,9 @@
 
 (defn- valintakasittelija [vain-suunnitellut? t]
   (let [urakan-tpi-tehtavat (urakan-toimenpiteet/toimenpideinstanssin-tehtavat
-                             (:toimenpideinstanssi t)
-                             @u/urakan-toimenpideinstanssit
-                             @u/urakan-toimenpiteet-ja-tehtavat)
+                              (:toimenpideinstanssi t)
+                              @u/urakan-toimenpideinstanssit
+                              @u/urakan-toimenpiteet-ja-tehtavat)
         urakan-hoitokauden-yks-hint-tyot (filter tyo-hoitokaudella? @u/urakan-yks-hint-tyot)
         suunnitellut-tehtavat (filter
                                 (fn [tehtava]
@@ -141,8 +139,8 @@
        :leveys 30
        :validoi [[:ei-tyhja "Valitse työ"]]
        :aseta #(assoc %1
-                :toimenpideinstanssi %2
-                :tehtava nil)}
+                 :toimenpideinstanssi %2
+                 :tehtava nil)}
       {:otsikko "Tehtävä"
        :nimi :tehtava
        :tyyppi :valinta
@@ -366,16 +364,16 @@
        [valinnat/urakan-yksikkohintainen-tehtava+kaikki]
 
        (let [oikeus? (oikeudet/voi-kirjoittaa?
-                      oikeudet/urakat-toteumat-yksikkohintaisettyot
-                      (:id @nav/valittu-urakka))]
+                       oikeudet/urakat-toteumat-yksikkohintaisettyot
+                       (:id @nav/valittu-urakka))]
          (yleiset/wrap-if
-          (not oikeus?)
-          [yleiset/tooltip {} :%
-           (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                           oikeudet/urakat-toteumat-yksikkohintaisettyot)]
-          [napit/uusi "Lisää toteuma" #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma
-                                               (yksikkohintaiset-tyot/uusi-yksikkohintainen-toteuma))
-           {:disabled (not oikeus?)}]))
+           (not oikeus?)
+           [yleiset/tooltip {} :%
+            (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                            oikeudet/urakat-toteumat-yksikkohintaisettyot)]
+           [napit/uusi "Lisää toteuma" #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma
+                                                (yksikkohintaiset-tyot/uusi-yksikkohintainen-toteuma))
+            {:disabled (not oikeus?)}]))
 
        [grid/grid
         {:otsikko (str "Yksikköhintaisten töiden toteumat")
@@ -384,7 +382,6 @@
                   [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."]
                   "Ei yksikköhintaisten töiden toteumia")
          :luokat ["toteumat-paasisalto"]
-         :vetolaatikot-auki vetolaatikot-auki
          :vetolaatikot (into {} (map (juxt :tpk_id (fn [rivi] [yksiloidyt-tehtavat rivi yksikkohintaiset-tyot/yks-hint-tehtavien-summat]))
                                      @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain))}
         [{:tyyppi :vetolaatikon-tila :leveys 5}
@@ -408,7 +405,6 @@
 
 (defn yksikkohintaisten-toteumat []
   (komp/luo
-    (komp/ulos #(reset! vetolaatikot-auki #{}))
     (komp/lippu yksikkohintaiset-tyot/yksikkohintaiset-tyot-nakymassa? yksikkohintaiset-tyot/karttataso-yksikkohintainen-toteuma)
     (fn []
       [:span
