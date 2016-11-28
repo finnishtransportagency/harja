@@ -19,7 +19,7 @@
     [:div {:class (when @selain-vanhentunut
                     "alustus-varoitus")}
            [checkmark @selain-tuettu] (if @selain-vanhentunut
-                                        "Selain vanhentunut"
+                                        "Selain vaatii päivityksen"
                                         "Selain tuettu")]
     [:div [checkmark @verkkoyhteys] "Verkkoyhteys"]
     [:div [checkmark @gps-tuettu] "GPS-tuki"]

@@ -20,7 +20,7 @@
   (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
                  [#".*chrome.*"])))
 
-(def +tuettu-chrome-versio+ 54)
+(def +tuettu-chrome-versio+ 53)
 
 (defn maarita-chrome-versio-user-agentista [user-agent-text-lowercase]
   (let [chrome-alku-index (.indexOf user-agent-text-lowercase "chrome/")
