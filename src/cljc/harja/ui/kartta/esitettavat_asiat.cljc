@@ -479,20 +479,18 @@
 (defmethod asia-kartalle :tyokone [tyokone valittu-fn?]
   (let [selite-teksti (tehtavan-nimi (:tehtavat tyokone))
         [viivat nuolen-vari] (tehtavan-viivat-ja-nuolitiedosto
-                               (:tehtavat tyokone) (valittu-fn? tyokone))
-        paikka {:sijainti {:type (if (:reitti tyokone) :line :point)}}
-        paikka (if (:reitti tyokone)
-                 (assoc-in paikka [:sijainti :points] (:reitti tyokone))
-                 (assoc-in paikka [:sijainti :coordinates]
-                           (:sijainti tyokone)))]
+                              (:tehtavat tyokone) (valittu-fn? tyokone))
+        paikka (or (:reitti tyokone)
+                   {:type :point
+                    :coordinates (:sijainti tyokone)})]
     (assoc tyokone
-      :type :tyokone
-      :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
-      :selite {:teksti selite-teksti
-               :vari   (viivojen-varit-leveimmasta-kapeimpaan viivat)}
-      :alue (maarittele-feature paikka (valittu-fn? tyokone)
-                                (ulkoasu/tyokoneen-ikoni nuolen-vari (muunna-tyokoneen-suunta (:suunta tyokone)))
-                                viivat))))
+           :type :tyokone
+           :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
+           :selite {:teksti selite-teksti
+                    :vari   (viivojen-varit-leveimmasta-kapeimpaan viivat)}
+           :alue (maarittele-feature paikka (valittu-fn? tyokone)
+                                     (ulkoasu/tyokoneen-ikoni nuolen-vari (muunna-tyokoneen-suunta (:suunta tyokone)))
+                                     viivat))))
 
 (defmethod asia-kartalle :default [asia _]
   (warn "Kartalla esitettävillä asioilla pitää olla :tyyppi-kartalla avain!, "

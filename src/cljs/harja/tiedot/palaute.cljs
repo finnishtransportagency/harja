@@ -15,6 +15,10 @@
 (defn- mailto-kehitystiimi []
   (str "mailto:" sahkoposti-kehitystiimi))
 
+(def rivinvaihto "%0A")
+(def koodiblokki "%7Bcode%7D")
+(def valilyonti "%20")
+
 (defn- mailto-paakayttaja []
   (str "mailto:" sahkoposti-paakayttaja))
 
@@ -57,8 +61,8 @@
 
 (defn- ilman-valimerkkeja [str]
   (-> str
-      (string/replace " " "%20")
-      (string/replace "\n" "%0A")))
+      (string/replace " " valilyonti)
+      (string/replace "\n" rivinvaihto)))
 
 (defn- lisaa-kentta
   ([kentta pohja lisays] (lisaa-kentta kentta pohja lisays "&"))
@@ -80,10 +84,15 @@
    (-> vastaanottaja
        (subject palaute-otsikko "?")
        (body (str
+               ;; {code} blokit JIRAa varten
+               koodiblokki
+               rivinvaihto
                sisalto
                (tekniset-tiedot
                  @istunto/kayttaja
                  (-> js/window .-location .-href)
                  (-> js/window .-navigator .-userAgent)
-                 palautetyyppi))
+                 palautetyyppi)
+               rivinvaihto
+               koodiblokki)
              (if-not (empty? palaute-otsikko) "&" "?")))))
