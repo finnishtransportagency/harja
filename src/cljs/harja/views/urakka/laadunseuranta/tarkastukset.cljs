@@ -66,6 +66,28 @@
     (reset! tarkastukset/valittu-tarkastus
             (<! (tarkastukset/hae-tarkastus (:id @nav/valittu-urakka) tarkastus-id)))))
 
+(defn- formatoi-talvihoitomittaukset
+  [thm]
+  (let [{kitka :kitka lumimaara :lumimaara epatasaisuus :epatasaisuus
+         {tie :tie ilma :ilma} :lampotila} thm]
+    (when (or kitka lumimaara epatasaisuus)
+      (str "Mittaukset: "
+           (str/replace
+             (str/join ", "
+                       (keep #(if (and (some? (val %))
+                                       (not= "" (val %))) ;; tyhjä hoitoluokka pois
+                               (if (= :lampotila (key %))
+                                 (when (or tie ilma)
+                                   (str (when tie (str "tie: " tie  "°C"))
+                                        (when (and tie ilma) ", ")
+                                        (when ilma (str "ilma: " ilma "°C"))))
+                                 (str (name (key %)) ": " (val %)))
+                               nil)
+                             (select-keys
+                               thm
+                               [:hoitoluokka :kitka :lumimaara :tasaisuus :lampotila])))
+             "lumimaara" "lumimäärä")))))
+
 (defn tarkastuslistaus
   "Tarkastuksien listauskomponentti"
   ([] (tarkastuslistaus {}))
@@ -146,14 +168,13 @@
                                                    (str (.substring havainnot 0 havainnot-max-pituus) "...")
                                                    havainnot)
                                vakiohavainnot (str/join ", " (:vakiohavainnot rivi))
-                               talvihoitomittaukset (keep #(if (some? %) % nil) (:talvihoitomittaus rivi))
-                               _ (log "talvihoitomittaukmset" (pr-str talvihoitomittaukset))]
+                               talvihoitomittaukset (formatoi-talvihoitomittaukset (:talvihoitomittaus rivi))]
                            [:ul.tarkastuksen-havaintolista
-                            (when (not (str/blank? vakiohavainnot))
+                            (when-not (str/blank? vakiohavainnot)
                               [:li.tarkastuksen-vakiohavainnot vakiohavainnot])
                             (when-not (str/blank? talvihoitomittaukset)
                               [:li.tarkastuksen-talvihoitomittaukset talvihoitomittaukset])
-                            (when (not (str/blank? havainnot-rajattu))
+                            (when-not (str/blank? havainnot-rajattu)
                               [:li.tarkastuksen-havainnot havainnot-rajattu])]))}]
         tarkastukset]]))))
 
@@ -322,13 +343,11 @@
 
          (when (and
                  (= :hoito urakkatyyppi)
-                 (:talvihoitomittaus tarkastus)
                  (= :laatu (:tyyppi tarkastus)))
            (talvihoitomittaus))
 
          (when (and
                  (= :hoito urakkatyyppi)
-                 (:soratiemittaus tarkastus)
                  (= :laatu (:tyyppi tarkastus)))
            (soratiemittaus))
 
