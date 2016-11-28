@@ -18,3 +18,18 @@
             {:otsikko "Työkoneen tiedot FIXME: huono esimerkki" :tyyppi :linkki
              :tapahtuma (merge {:aihe :tyokone-tiedot-linkki} tyokone)}]
    :data tyokone})
+
+(defmethod tiedot :ilmoitus [ilmoitus]
+  {:otsikko (condp = (:ilmoitustyyppi ilmoitus)
+         :toimenpidepyynto "Toimenpidepyyntö"
+         :tiedoitus "Tiedotus"
+         (str/capitalize (name (:ilmoitustyyppi ilmoitus))))
+   :tiedot [
+            {:otsikko "Id" :tyyppi :string :nimi :ilmoitusid}
+            {:otsikko "Ilmoitettu" :tyyppi :pvm-aika :nimi :ilmoitettu}
+            {:otsikko "Otsikko" :tyyppi :string :nimi :otsikko}
+            {:otsikko "Paikan kuvaus" :tyyppi :string :nimi :paikankuvaus}
+            {:otsikko "Lisätietoja" :tyyppi :string :nimi :lisatieto}
+            {:otsikko "Kuittaukset" :tyyppi :positiivinen-numero
+             :hae #(count (:kuittaukset ilmoitus))}]
+   :data ilmoitus})

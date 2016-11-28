@@ -19,6 +19,7 @@
             [harja.ui.openlayers :refer [openlayers] :as openlayers]
             [harja.ui.dom :as dom]
             [harja.views.kartta.tasot :as tasot]
+            [harja.views.kartta.infopaneeli :as infopaneeli]
             [reagent.core :refer [atom] :as reagent]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kartta.varit.alpha :as varit]
@@ -387,17 +388,6 @@
 (defn aseta-yleiset-kontrollit! [uusi-sisalto]
   (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
 
-(def kartan-infopaneeli-sisalto (atom nil))
-
-(defn aseta-infopaneeli! [uusi-sisalto]
-  (reset! kartan-infopaneeli-sisalto uusi-sisalto))
-
-(defn- kartan-infopaneeli
-  "Komponentti luo kartan oikeaan reunaan paneelin, sisältö luetaan atomista"
-  []
-  (when-let [sisalto @kartan-infopaneeli-sisalto]
-    [:div#kartan-infopaneeli sisalto]))
-
 (defn tyhjenna-yleiset-kontrollit! []
   (reset! kartan-yleiset-kontrollit-sisalto nil))
 
@@ -676,7 +666,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
    [kartan-koko-kontrollit]
    [kartan-yleiset-kontrollit]
    [kartan-ohjelaatikko]
-   [kartan-infopaneeli]
+   [infopaneeli/infopaneeli asiat-pisteessa]
    [kartan-ikonien-selitykset]
    [kartta-openlayers]
    [kartan-edistyminen @kuvatason-lataus @geometriatason-lataus]])
