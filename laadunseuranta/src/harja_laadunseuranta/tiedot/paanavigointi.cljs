@@ -1,6 +1,6 @@
 (ns harja-laadunseuranta.tiedot.paanavigointi
   (:require [harja-laadunseuranta.tiedot.sovellus :as s]
-            [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset]
+            [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
             [harja-laadunseuranta.tiedot.nappaimisto :as nappaimisto]
             [cljs-time.local :as l]
@@ -309,7 +309,7 @@
   (.log js/console "Kirjataan pistemäinen havainto: " (pr-str avain))
   (ilmoitukset/ilmoita
     (str "Pistemäinen havainto kirjattu: " nimi)
-    s/ilmoitukset)
+    s/ilmoitus)
   (reitintallennus/kirjaa-kertakirjaus
     @s/idxdb
     {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
@@ -329,10 +329,10 @@
   (if (@s/jatkuvat-havainnot avain)
     (ilmoitukset/ilmoita
       (str (or (:nimi mittaus) nimi) " alkaa")
-      s/ilmoitukset)
+      s/ilmoitus)
     (ilmoitukset/ilmoita
       (str (or (:nimi mittaus) nimi) " päättyy")
-      s/ilmoitukset))
+      s/ilmoitus))
 
   ;; Mittaus päälle jos tarvii
   (when (and vaatii-nappaimiston?

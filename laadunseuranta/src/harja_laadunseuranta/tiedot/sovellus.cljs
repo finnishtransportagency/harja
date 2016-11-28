@@ -75,7 +75,8 @@
    ;; Muut
    :vakiohavaintojen-kuvaukset nil ; Serveriltä saadut tiedot vakiohavainnoista
 
-   :ilmoitukset [] ;; Sisältää jonossa olevat ajastetut ilmoitukset
+   :ilmoitus nil ;; Nykyinen näytettävä ilmoitus (jos ei käytetä ilmoitusjonoa)
+   :ilmoitukset [] ;; Sisältää jonossa olevat ajastetut ilmoitukset, ensimmäinen on aina näkyvissä
    :idxdb nil
    :palvelinvirhe nil})
 
@@ -136,6 +137,7 @@
 
 (def tallennus-kaynnissa (reagent/cursor sovellus [:tallennus-kaynnissa]))
 (def ilmoitukset (reagent/cursor sovellus [:ilmoitukset]))
+(def ilmoitus (reagent/cursor sovellus [:ilmoitus]))
 
 (def nayta-kiinteistorajat (reagent/cursor sovellus [:kartta :nayta-kiinteistorajat]))
 (def nayta-ortokuva (reagent/cursor sovellus [:kartta :nayta-ortokuva]))

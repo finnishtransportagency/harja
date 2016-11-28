@@ -29,7 +29,7 @@
     (when @s/piirra-paanavigointi?
       [paanavigointi])
 
-    [ilmoitukset/ilmoituskomponentti s/ilmoitukset]
+    [ilmoitukset/ilmoituskomponentti s/ilmoitus]
 
     (when @s/havaintolomake-auki
       [havaintolomake])
