@@ -38,6 +38,7 @@
     [harja.palvelin.palvelut.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
     [harja.palvelin.palvelut.muut-tyot :as muut-tyot]
     [harja.palvelin.palvelut.toteumat :as toteumat]
+    [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-toteumat]
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
     [harja.palvelin.palvelut.yhteyshenkilot]
     [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
@@ -121,7 +122,7 @@
         (log/error e "Validointivirhe asetuksissa!")))
 
     (component/system-map
-     :metriikka (metriikka/luo-jmx-metriikka)
+      :metriikka (metriikka/luo-jmx-metriikka)
       :db (tietokanta/luo-tietokanta tietokanta kehitysmoodi)
       :db-replica (tietokanta/luo-tietokanta tietokanta-replica kehitysmoodi)
       :klusterin-tapahtumat (component/using
@@ -169,9 +170,9 @@
 
       ;; FIM REST rajapinta
       :fim (component/using
-            (if kehitysmoodi
-              (fim/->FakeFIM (:tiedosto (:fim asetukset)))
-              (fim/->FIM (:url (:fim asetukset))))
+             (if kehitysmoodi
+               (fim/->FakeFIM (:tiedosto (:fim asetukset)))
+               (fim/->FIM (:url (:fim asetukset))))
              [:db :integraatioloki])
 
       ;; Sampo
@@ -260,6 +261,9 @@
       :toteumat (component/using
                   (toteumat/->Toteumat)
                   [:http-palvelin :db :karttakuvat])
+      :yllapitototeumat (component/using
+                  (yllapito-toteumat/->YllapitoToteumat)
+                  [:http-palvelin :db])
       :paallystys (component/using
                     (paallystys/->Paallystys)
                     [:http-palvelin :db])

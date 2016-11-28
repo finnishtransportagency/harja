@@ -22,7 +22,7 @@
   ;; TODO
   )
 
-(defrecord Yllapitokohteet []
+(defrecord YllapitoToteumat []
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
