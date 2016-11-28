@@ -2,13 +2,15 @@
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.domain.skeema :refer [Toteuma validoi]]
+            [harja.kyselyt.yllapito-toteumat :as q]
             [harja.palvelin.komponentit.http-palvelin
              :refer
-             [julkaise-palvelu poista-palvelut]]))
+             [julkaise-palvelu poista-palvelut]]
+            [clojure.java.jdbc :as jdbc]))
 
-(defn hae-yllapito-toteumat [db user tiedot]
-  ;; TODO
-  )
+(defn hae-yllapito-toteumat [db user {:keys [urakka] :as tiedot}]
+  (jdbc/with-db-transaction [db db]
+    (q/hae-muut-tyot db {:urakka urakka})))
 
 (defn hae-yllapito-toteuma [db user tiedot]
   ;; TODO
