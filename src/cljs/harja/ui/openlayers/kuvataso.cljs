@@ -9,7 +9,9 @@
             [harja.ui.openlayers.edistymispalkki :as palkki]
             [harja.ui.openlayers.taso :refer [Taso]]
             [cljs-time.core :as t]
-            [harja.asiakas.tapahtumat :as tapahtumat]))
+            [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.asiakas.kommunikaatio :as k]
+            [cljs.core.async :as async]))
 
 (defn hae-url [source parametrit coord pixel-ratio projection]
   (let [tile-grid (.getTileGridForProjection source projection)
@@ -57,7 +59,19 @@
         ;; Jos ei luoda ja parametrit eivät ole samat
         ;; asetetaan uusi source ol layeriiin
         (.setSource ol-layer source))
-      [ol-layer ::kuvataso])))
+      [ol-layer ::kuvataso]))
+
+  (hae-asiat-pisteessa [this koordinaatti]
+    (let [ch (async/chan)]
+      (go
+        (let [asiat (k/post! :kuvataso-klikkaus
+                             {:nimi :fixme
+                              :parametrit parametrit
+                              :koordinaatti koordinaatti})]
+          (doseq [asia asiat]
+            (>! ch asia))
+          (async/close! ch)))
+      ch)))
 
 
 (defn luo-kuvataso [projection extent selitteet parametrit]

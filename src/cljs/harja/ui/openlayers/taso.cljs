@@ -16,4 +16,9 @@
 ol3 Layer objekti ja tälle tasolle spesifinen päivitystieto. Palautettu
 päivitystieto annettaan seuraavalla kerralla aiempi-paivitystieto
 parametrina takaisin. Jos päivitys luo uuden ol layerin, tulee
-sen lisätä se itse ol3 karttaan (addLayer)"))
+sen lisätä se itse ol3 karttaan (addLayer)")
+
+  (hae-asiat-pisteessa [this koordinaatti]
+    "Hakee asiat annetulle klikkauspisteelle. Palauttaa kanavan, josta löytyneet
+    asiat voi lukea. Koordinaatti annetaan [x y] vektorina.")
+  )

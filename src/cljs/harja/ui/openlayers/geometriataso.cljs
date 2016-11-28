@@ -2,7 +2,8 @@
   "Geometriataso, joka muodostaa tason vektorista mäppejä."
   (:require [harja.ui.openlayers.featuret :as featuret]
             [harja.ui.openlayers.taso :as taso :refer [Taso]]
-            [harja.loki :refer [log]]))
+            [harja.loki :refer [log]]
+            [cljs.core.async :as async]))
 
 (defn- luo-feature [geom]
   (try
@@ -90,4 +91,13 @@
   (selitteet [this]
     (-> this meta :selitteet))
   (paivita [items ol3 ol-layer aiempi-paivitystieto]
-    (update-ol3-layer-geometries ol3 ol-layer aiempi-paivitystieto items)))
+    (update-ol3-layer-geometries ol3 ol-layer aiempi-paivitystieto items))
+  (hae-asiat-pisteessa [this koordinaatti]
+    (let [ch (async/chan)]
+      (if-let [hae-asiat (-> this meta :hae-asiat)]
+        (go
+          (doseq [asia (hae-asiat koordinaatti)]
+            (>! ch asia))
+          (async/close! ch))
+        (async/close! ch))
+      ch)))

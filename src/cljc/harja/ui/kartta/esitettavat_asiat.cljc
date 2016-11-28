@@ -556,4 +556,6 @@
                    (tallenna-selitteet-xf selitteet))
              asiat)
        {:extent    @extent
-        :selitteet @selitteet}))))
+        :selitteet @selitteet
+        ;:hae-asiat funktiotähän
+        }))))
