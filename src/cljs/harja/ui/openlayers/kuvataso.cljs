@@ -63,11 +63,12 @@
       [ol-layer ::kuvataso]))
 
   (hae-asiat-pisteessa [this koordinaatti]
-    (log "HAE KUVATASON ASIAT PISTEESSÄ: " (pr-str koordinaatti))
     (let [ch (async/chan)]
       (go
-        (let [asiat (<! (k/post! :kuvataso-klikkaus
-                                 {:parametrit parametrit
+        (let [asiat (<! (k/post! :karttakuva-klikkaus
+                                 {:parametrit (into {}
+                                                    (map vec)
+                                                    (partition 2 parametrit))
                                   :koordinaatti koordinaatti}))]
           (doseq [asia asiat]
             (async/>! ch asia))
