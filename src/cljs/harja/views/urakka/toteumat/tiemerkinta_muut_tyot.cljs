@@ -15,30 +15,59 @@
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-xf]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.ui.valinnat :as valinnat]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as u])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction-writable]]))
 
-(defn- muut-tyot-lista [e! {:keys [muut-tyot] :as tila}]
-  [grid/grid
-   {:otsikko (str "Muut työt")
-    :tyhja (if (nil? muut-tyot)
-             [ajax-loader "Toteumia haetaan..."]
-             "Ei toteumia.")}
+(defn- valinnat [{:keys [valittu-urakka valittu-sopimusnumero
+                         valitse-sopimusnumero valitun-urakan-hoitokaudet
+                         valittu-hoitokausi valitse-hoitokausi]}]
+  (valinnat/urakan-sopimus-ja-hoitokausi
+    valittu-urakka
+    valittu-sopimusnumero valitse-sopimusnumero
+    valitun-urakan-hoitokaudet valittu-hoitokausi valitse-hoitokausi))
+
+(defn- muut-tyot-lista [e!
+                        {:keys [muut-tyot] :as tila}
+                        {:keys [valittu-urakka valittu-sopimusnumero
+                                valitse-sopimusnumero valitun-urakan-hoitokaudet
+                                valittu-hoitokausi valitse-hoitokausi]
+                         :as riippuvuudet}]
+  [:div
+   [valinnat {:valittu-urakka valittu-urakka
+              :valittu-sopimusnumero valittu-sopimusnumero
+              :valitse-sopimusnumero valitse-sopimusnumero
+              :valitun-urakan-hoitokaudet valitun-urakan-hoitokaudet
+              :valittu-hoitokausi valittu-hoitokausi
+              :valitse-hoitokausi valitse-hoitokausi}]
+   [grid/grid
+    {:otsikko (str "Muut työt")
+     :tyhja (if (nil? muut-tyot)
+              [ajax-loader "Toteumia haetaan..."]
+              "Ei toteumia.")}
     [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys 10}
      {:otsikko "Selite" :tyyppi :string :nimi :selite :leveys 20}
      {:otsikko "Hinta" :tyyppi :numero :nimi :hinta :fmt (partial fmt/euro-opt true) :leveys 10}
      {:otsikko "Ylläpitoluokka" :tyyppi :numero :nimi :yllapitoluokka :leveys 10}
      {:otsikko "Laskentakohde" :tyyppi :string :nimi :laskentakohde :leveys 10}]
-    muut-tyot])
+    muut-tyot]])
 
 (defn- muut-tyot-paakomponentti []
   (fn [e! {:keys [valittu-tyo] :as tila}]
     [:span
      (if valittu-tyo
        [:span "TODO Lomake tähän..."]
-       [muut-tyot-lista e! tila])]))
+       [muut-tyot-lista e! tila
+        {:valittu-urakka @nav/valittu-urakka
+         :valittu-sopimusnumero u/valittu-sopimusnumero
+         :valitse-sopimusnumero u/valitse-sopimusnumero!
+         :valitun-urakan-hoitokaudet u/valitun-urakan-hoitokaudet
+         :valittu-hoitokausi u/valittu-hoitokausi
+         :valitse-hoitokausi u/valitse-hoitokausi!}])]))
 
 (defn muut-tyot []
   (komp/luo
