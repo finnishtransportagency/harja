@@ -387,6 +387,17 @@
 (defn aseta-yleiset-kontrollit! [uusi-sisalto]
   (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
 
+(def kartan-infopaneeli-sisalto (atom nil))
+
+(defn aseta-infopaneeli! [uusi-sisalto]
+  (reset! kartan-infopaneeli-sisalto uusi-sisalto))
+
+(defn- kartan-infopaneeli
+  "Komponentti luo kartan oikeaan reunaan paneelin, sisältö luetaan atomista"
+  []
+  (when-let [sisalto @kartan-infopaneeli-sisalto]
+    [:div#kartan-infopaneeli sisalto]))
+
 (defn tyhjenna-yleiset-kontrollit! []
   (reset! kartan-yleiset-kontrollit-sisalto nil))
 
@@ -665,6 +676,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
    [kartan-koko-kontrollit]
    [kartan-yleiset-kontrollit]
    [kartan-ohjelaatikko]
+   [kartan-infopaneeli]
    [kartan-ikonien-selitykset]
    [kartta-openlayers]
    [kartan-edistyminen @kuvatason-lataus @geometriatason-lataus]])
