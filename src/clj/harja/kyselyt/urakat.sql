@@ -477,9 +477,9 @@ VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :elynumero);
 
 -- name: paivita-alueurakka!
 UPDATE alueurakka
-SET alueurakkanro = :alueurakkanro,
-  alue            = ST_GeomFromText(:alue) :: GEOMETRY,
-  elynumero       = :elynumero;
+SET alue    = ST_GeomFromText(:alue) :: GEOMETRY,
+    elynumero = :elynumero
+WHERE alueurakkanro = :alueurakkanro;
 
 -- name: hae-alueurakka-numerolla
 SELECT *
