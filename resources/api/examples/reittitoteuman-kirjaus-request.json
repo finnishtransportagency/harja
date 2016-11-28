@@ -10,7 +10,7 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-01-30T12:00:00Z"
+    "lahetysaika": "2016-01-30T12:00:00+02:00"
   },
   "reittitoteuma": {
     "toteuma": {
@@ -22,8 +22,8 @@
         "ytunnus": "8765432-1"
       },
       "sopimusId": 1,
-      "alkanut": "2016-01-30T12:00:00Z",
-      "paattynyt": "2016-02-01T12:00:00Z",
+      "alkanut": "2016-01-30T12:00:00+02:00",
+      "paattynyt": "2016-02-01T12:00:00+02:00",
       "toteumatyyppi": "kokonaishintainen",
       "tehtavat": [
         {
@@ -58,7 +58,7 @@
     "reitti": [
       {
         "reittipiste": {
-          "aika": "2016-01-30T12:00:00Z",
+          "aika": "2016-01-30T12:00:00+02:00",
           "koordinaatit": {
             "x": 448353,
             "y": 7225182
@@ -88,7 +88,7 @@
       },
       {
         "reittipiste": {
-          "aika": "2016-01-30T13:00:00Z",
+          "aika": "2016-01-30T13:00:00+02:00",
           "koordinaatit": {
             "x": 455574,
             "y": 7227716
@@ -118,7 +118,7 @@
       },
       {
         "reittipiste": {
-          "aika": "2016-01-30T13:00:00Z",
+          "aika": "2016-01-30T13:00:00+02:00",
           "koordinaatit": {
             "x": 459628,
             "y": 7223852
@@ -160,8 +160,8 @@
             "ytunnus": "8765432-1"
           },
           "sopimusId": 1,
-          "alkanut": "2016-01-30T12:00:00Z",
-          "paattynyt": "2016-02-01T12:00:00Z",
+          "alkanut": "2016-01-30T12:00:00+02:00",
+          "paattynyt": "2016-02-01T12:00:00+02:00",
           "toteumatyyppi": "kokonaishintainen",
           "tehtavat": [
             {
@@ -196,7 +196,7 @@
         "reitti": [
           {
             "reittipiste": {
-              "aika": "2016-01-30T12:00:00Z",
+              "aika": "2016-01-30T12:00:00+02:00",
               "koordinaatit": {
                 "x": 448353,
                 "y": 7225182
@@ -226,7 +226,7 @@
           },
           {
             "reittipiste": {
-              "aika": "2016-01-30T13:00:00Z",
+              "aika": "2016-01-30T13:00:00+02:00",
               "koordinaatit": {
                 "x": 455574,
                 "y": 7227716
@@ -256,7 +256,7 @@
           },
           {
             "reittipiste": {
-              "aika": "2016-01-30T13:00:00Z",
+              "aika": "2016-01-30T13:00:00+02:00",
               "koordinaatit": {
                 "x": 459628,
                 "y": 7223852
