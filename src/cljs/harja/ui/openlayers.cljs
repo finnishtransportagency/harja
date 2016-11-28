@@ -273,7 +273,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
            (kasittelija (tapahtuman-kuvaus e))
            (do
              (hae-asiat-pisteessa (:geometries (reagent/state this))
-                                  ((juxt :x :y) (tapahtuman-kuvaus e))
+                                  (:sijainti (tapahtuman-kuvaus e))
                                   asiat-pisteessa-atom)
              (comment
                ;; FIXME: miten yhdistetään vanhaan on-click/on-select toimintoon?
