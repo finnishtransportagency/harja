@@ -24,10 +24,10 @@
 ;; Tapahtumat
 
 (defrecord YhdistaValinnat [valinnat])
-(defrecord ToidenHaku [tulokset])
+(defrecord TyotHaettu [tulokset])
 
 (defn hae-tyot [{:keys [urakka] :as hakuparametrit}]
-  (let [tulos! (t/send-async! ToidenHaku)]
+  (let [tulos! (t/send-async! TyotHaettu)]
     (go (let [tyot (<! (k/post! :hae-yllapito-toteumat {:urakka urakka}))]
           (when-not (k/virhe? tyot)
             (tulos! tyot))))))
@@ -41,7 +41,7 @@
     (hae-tyot {:urakka (:urakka valinnat)})
     (update-in tila [:valinnat] merge valinnat))
 
-  ToidenHaku
+  TyotHaettu
   (process-event [{:keys [tulokset] :as e} tila]
     (update-in tila [:muut-tyot] merge tulokset)))
 
