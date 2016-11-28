@@ -246,13 +246,20 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                              (on-move e (laske-kartan-alue ol3))))))
 
 (defn- hae-asiat-pisteessa [tasot koordinaatti asiat-pisteessa-atom]
+  (comment
+    ;; FIXME: poista ennen mergeä
+    (doseq [[key taso] tasot
+            :when taso]
+      (log "TASO: " (pr-str key) " => kuvataso? " (instance? kuvataso/Kuvataso taso)
+           " taso: " (pr-str taso))))
   (swap! asiat-pisteessa-atom assoc
          :koordinaatti koordinaatti
          :haetaan? true
          :asiat [])
   (go
-    (let [in-ch (apply async/merge
-                       (map #(taso/hae-asiat-pisteessa % koordinaatti)))]
+    (let [in-ch (async/merge
+                 (map #(taso/hae-asiat-pisteessa % koordinaatti)
+                      (remove nil? (vals tasot))))]
       (loop [asia (<! in-ch)]
         (when asia
           (swap! asiat-pisteessa-atom update :asiat conj asia)
@@ -262,18 +269,20 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 (defn- aseta-klik-kasittelija [this ol3 on-click on-select asiat-pisteessa-atom]
   (.on ol3 "singleclick"
        (fn [e]
-         (log "THIS: " (pr-str ))
          (if-let [kasittelija @klik-kasittelija]
            (kasittelija (tapahtuman-kuvaus e))
            (do
-             (hae-asiat-pisteessa (:geometry-layers (reagent/state this))
+             (hae-asiat-pisteessa (:geometries (reagent/state this))
                                   ((juxt :x :y) (tapahtuman-kuvaus e))
                                   asiat-pisteessa-atom)
-             (comment (when on-click
-                        (on-click e))
-                      (when on-select
-                        (when-let [g (tapahtuman-geometria this e)]
-                          (on-select g e)))))))))
+             (comment
+               ;; FIXME: miten yhdistetään vanhaan on-click/on-select toimintoon?
+               ;; mietittävä ennen mergeä
+               (when on-click
+                 (on-click e))
+               (when on-select
+                 (when-let [g (tapahtuman-geometria this e)]
+                   (on-select g e)))))))))
 
 ;; dblclick on-clickille ei vielä tarvetta - zoomaus tulee muualta.
 (defn- aseta-dblclick-kasittelija [this ol3 on-click on-select]
@@ -442,7 +451,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
     (aseta-klik-kasittelija this ol3
                             (:on-click mapspec)
                             (:on-select mapspec)
-                            (:asiat-pisteessa mapspec ))
+                            (:asiat-pisteessa mapspec))
     (aseta-dblclick-kasittelija this ol3
                                 (:on-dblclick mapspec)
                                 (:on-dblclick-select mapspec))
@@ -514,7 +523,8 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                                         "N/A"))
                                     " " (name (first %)))
                               (seq new-geometry-layers))))
-          (reagent/set-state component {:geometry-layers new-geometry-layers}))
+          (reagent/set-state component {:geometry-layers new-geometry-layers
+                                        :geometries geometries}))
         (if-let [taso (get geometries layer)]
           (recur (assoc new-geometry-layers
                         layer (apply taso/paivita
