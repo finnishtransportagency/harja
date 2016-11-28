@@ -318,27 +318,6 @@ hakutiheys-historiakuva 1200000)
   (reaction
     (kasaa-parametrit @valittu-tila @nav/kartalla-nakyva-alue @suodattimet)))
 
-(defn yhdista-tyokonedata [uusi]
-  (let [vanhat (:tyokoneet @tilannekuva-kartalla/haetut-asiat)
-        uudet (:tyokoneet uusi)
-        uudet-idt (into #{} (keys uudet))]
-    (assoc uusi :tyokoneet
-                (into {}
-                      (filter
-                        (fn [[id _]]
-                          (uudet-idt id))
-                        (merge-with
-                          (fn [vanha uusi]
-                            (let [vanha-reitti (:reitti vanha)]
-                              (assoc uusi
-                                :reitti (if (= (:sijainti vanha) (:sijainti uusi))
-                                          vanha-reitti
-                                          (conj
-                                            (or vanha-reitti
-                                                [(:sijainti vanha)])
-                                            (:sijainti uusi))))))
-                          vanhat uudet))))))
-
 (def edellisen-haun-kayttajan-suodattimet
   (atom {:tila @valittu-tila
          :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
@@ -370,6 +349,7 @@ hakutiheys-historiakuva 1200000)
                          :tyokoneet (vals (:tyokoneet tulos))})
   tulos)
 
+
 (defn hae-asiat [hakuparametrit]
   (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ") " (pr-str hakuparametrit))
   (go
@@ -390,7 +370,6 @@ hakutiheys-historiakuva 1200000)
 
     (let [tulos (-> (<! (k/post! :hae-tilannekuvaan (aikaparametrilla hakuparametrit)))
                     (assoc :tarkastukset (:tarkastukset hakuparametrit))
-                    (yhdista-tyokonedata)
                     (julkaise-tyokonedata!))]
       (when @nakymassa?
         (reset! tilannekuva-kartalla/haetut-asiat tulos))
