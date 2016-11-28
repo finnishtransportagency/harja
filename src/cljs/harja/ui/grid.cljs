@@ -393,8 +393,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   :piilota-toiminnot?                   Boolean, piilotetaan toiminnot sarake jos true
   :nayta-toimintosarake?                Näyttää oikealla tyhjän sarakkeen vaikka ei oltaisi muokkaustilassa. Syy: usean taulukon alignointi
   :rivin-luokka                         Funktio joka palauttaa rivin luokan
-  :vetolaatikot-auki                    Ulkoa annettu atom setti, jossa auki olevat vetolaatikot (id ja komponentti)
-                                        Jos ei anneta ulkoa, komponentti käyttää sisäistä tilaa.
+  :vetolaatikot-auki                    Ulkoa annettu atom setti, jossa auki olevat vetolaatikot
+                                        Jos ei anneta ulkoa, määritetään auki olevien tila sisäisesti
   :uusi-rivi                            Jos annettu uuden rivin tiedot käsitellään tällä funktiolla
   :vetolaatikot                         {id komponentti} lisäriveistä, jotka näytetään normaalirivien välissä
                                         Jos rivin id:llä on avain tässä mäpissä, näytetään arvona oleva komponentti
