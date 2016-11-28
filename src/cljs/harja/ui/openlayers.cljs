@@ -245,16 +245,35 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                            (when on-move
                              (on-move e (laske-kartan-alue ol3))))))
 
-(defn- aseta-klik-kasittelija [this ol3 on-click on-select]
+(defn- hae-asiat-pisteessa [tasot koordinaatti asiat-pisteessa-atom]
+  (swap! asiat-pisteessa-atom assoc
+         :koordinaatti koordinaatti
+         :haetaan? true
+         :asiat [])
+  (go
+    (let [in-ch (apply async/merge
+                       (map #(taso/hae-asiat-pisteessa % koordinaatti)))]
+      (loop [asia (<! in-ch)]
+        (when asia
+          (swap! asiat-pisteessa-atom update :asiat conj asia)
+          (recur (<! in-ch))))
+      (swap! asiat-pisteessa-atom assoc :haetaan? false))))
+
+(defn- aseta-klik-kasittelija [this ol3 on-click on-select asiat-pisteessa-atom]
   (.on ol3 "singleclick"
        (fn [e]
+         (log "THIS: " (pr-str ))
          (if-let [kasittelija @klik-kasittelija]
            (kasittelija (tapahtuman-kuvaus e))
-           (do (when on-click
-                 (on-click e))
-               (when on-select
-                 (when-let [g (tapahtuman-geometria this e)]
-                   (on-select g e))))))))
+           (do
+             (hae-asiat-pisteessa (:geometry-layers (reagent/state this))
+                                  ((juxt :x :y) (tapahtuman-kuvaus e))
+                                  asiat-pisteessa-atom)
+             (comment (when on-click
+                        (on-click e))
+                      (when on-select
+                        (when-let [g (tapahtuman-geometria this e)]
+                          (on-select g e)))))))))
 
 ;; dblclick on-clickille ei vielä tarvetta - zoomaus tulee muualta.
 (defn- aseta-dblclick-kasittelija [this ol3 on-click on-select]
@@ -420,7 +439,10 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                              :unmount-ch      unmount-ch})
 
     ;; If mapspec defines callbacks, bind them to ol3
-    (aseta-klik-kasittelija this ol3 (:on-click mapspec) (:on-select mapspec))
+    (aseta-klik-kasittelija this ol3
+                            (:on-click mapspec)
+                            (:on-select mapspec)
+                            (:asiat-pisteessa mapspec ))
     (aseta-dblclick-kasittelija this ol3
                                 (:on-dblclick mapspec)
                                 (:on-dblclick-select mapspec))

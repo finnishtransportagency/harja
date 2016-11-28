@@ -357,6 +357,15 @@
 (defonce kuvatason-lataus (atom nil))
 (defonce geometriatason-lataus (atom nil))
 
+;; Määrittelee asiat, jotka ovat nykyisessä pisteessä.
+;; Avaimet:
+;; :koordinaatti  klikatun pisteen koordinatti (tai nil, jos ei valintaa)
+;; :asiat         sekvenssi asioita, joita pisteestä löytyy
+;; :haetaan?      true kun haku vielä kesken
+(defonce asiat-pisteessa (atom {:koordinaatti nil
+                                :haetaan? false
+                                :asiat nil}))
+
 (defn paivitetaan-karttaa
   []
   (when @paivitetaan-karttaa-tila
@@ -604,6 +613,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                 (edistymispalkki/geometriataso-pakota-valmistuminen!))
           :on-mount           (fn [initialextent]
                                 (paivita-extent nil initialextent))
+          :asiat-pisteess asiat-pisteessa
           :on-click           (fn [at]
                                 (t/julkaise! {:aihe :tyhja-click :klikkaus-koordinaatit at})
                                 (poista-popup!))

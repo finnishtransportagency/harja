@@ -11,7 +11,8 @@
             [cljs-time.core :as t]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.asiakas.kommunikaatio :as k]
-            [cljs.core.async :as async]))
+            [cljs.core.async :as async])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn hae-url [source parametrit coord pixel-ratio projection]
   (let [tile-grid (.getTileGridForProjection source projection)
@@ -69,7 +70,7 @@
                               :parametrit parametrit
                               :koordinaatti koordinaatti})]
           (doseq [asia asiat]
-            (>! ch asia))
+            (async/>! ch asia))
           (async/close! ch)))
       ch)))
 

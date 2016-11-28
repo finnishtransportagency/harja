@@ -3,7 +3,8 @@
   (:require [harja.ui.openlayers.featuret :as featuret]
             [harja.ui.openlayers.taso :as taso :refer [Taso]]
             [harja.loki :refer [log]]
-            [cljs.core.async :as async]))
+            [cljs.core.async :as async])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- luo-feature [geom]
   (try
