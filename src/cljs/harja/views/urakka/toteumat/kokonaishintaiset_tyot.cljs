@@ -33,6 +33,8 @@
 (defn kokonaishintainen-reitti-klikattu [_ toteuma]
   (popupit/nayta-popup (assoc toteuma :aihe :toteuma-klikattu)))
 
+(def vetolaatikot-auki (atom {}))
+
 (defn tehtavan-paivakohtaiset-tiedot [pvm toimenpidekoodi]
   (let [tiedot (atom nil)]
     (go (reset! tiedot
@@ -63,11 +65,14 @@
 
 (defn- tee-taulukko []
   (let [toteumat @tiedot/haetut-toteumat
-        tunniste (juxt :pvm :toimenpidekoodi :jarjestelmanlisaama)]
+        tunniste (juxt :pvm :toimenpidekoodi :jarjestelmanlisaama :maara)]
+
+    (reset! vetolaatikot-auki #{(tunniste (first toteumat))})
+
     [:span
      [grid/grid
       {:otsikko "Kokonaishintaisten töiden toteumat"
-       :tyhja (if @tiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])
+       :tyhja (if toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])
        :rivi-klikattu #(do
                          (nav/vaihda-kartan-koko! :L)
                          (reset! tiedot/valittu-paivakohtainen-tehtava %))
@@ -76,6 +81,7 @@
        :max-rivimaara 500
        :max-rivimaaran-ylitys-viesti "Toteumia löytyi yli 500. Tarkenna hakurajausta."
        :tunniste tunniste
+       :vetolaatikot-auki vetolaatikot-auki
        :vetolaatikot (into {}
                            (map (juxt
                                   tunniste

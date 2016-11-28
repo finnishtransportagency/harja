@@ -184,6 +184,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 (defn- vetolaatikko-rivi
   "Funktio, joka palauttaa vetolaatikkorivin tai nil. Huom: kutsu tätä funktiona, koska voi palauttaa nil."
   [vetolaatikot vetolaatikot-auki id colspan]
+
   (when-let [vetolaatikko (get vetolaatikot id)]
     (let [auki (@vetolaatikot-auki id)]
       ^{:key (str "vetolaatikko" id)}
@@ -374,39 +375,41 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   Tyypin mukaan voi olla lisäavaimia, jotka määrittelevät tarkemmin kentän validoinnin.
 
   Optiot on mappi optioita:
-  :tallenna                             funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä
+  :tallenna                             Funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä
                                         jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita eikä nappia näytetään
                                         jos tallenna arvo on :ei-mahdollinen, näytetään Muokkaa-nappi himmennettynä
-  :tallenna-vain-muokatut               boolean jos päällä, tallennetaan vain muokatut. Oletuksena true
-  :peruuta                              funktio jota kutsutaan kun käyttäjä klikkaa Peruuta-nappia muokkausmoodissa
-  :rivi-klikattu                        funktio jota kutsutaan kun käyttäjä klikkaa riviä näyttömoodissa (parametrinä rivin tiedot)
-  :mahdollista-rivin-valinta            jos true, käyttäjä voi valita rivin gridistä. Valittu rivi korostetaan.
-  :rivi-valinta-peruttu                 funktio, joka suoritetaan kun valittua riviä klikataan uudelleen eli valinta perutaan
-  :muokkaa-footer                       optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
-  :muokkaa-aina                         jos true, grid on aina muokkaustilassa, eikä tallenna/peruuta nappeja ole
-  :muutos                               jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
+  :tallenna-vain-muokatut               Boolean jos päällä, tallennetaan vain muokatut. Oletuksena true
+  :peruuta                              Funktio jota kutsutaan kun käyttäjä klikkaa Peruuta-nappia muokkausmoodissa
+  :rivi-klikattu                        Funktio jota kutsutaan kun käyttäjä klikkaa riviä näyttömoodissa (parametrinä rivin tiedot)
+  :mahdollista-rivin-valinta            Jos true, käyttäjä voi valita rivin gridistä. Valittu rivi korostetaan.
+  :rivi-valinta-peruttu                 Funktio, joka suoritetaan kun valittua riviä klikataan uudelleen eli valinta perutaan
+  :muokkaa-footer                       Optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
+  :muokkaa-aina                         Jos true, grid on aina muokkaustilassa, eikä tallenna/peruuta nappeja ole
+  :muutos                               Jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
                                         Parametrina Grid ohjauskahva
-  :prosessoi-muutos                     funktio, jolla voi prosessoida muutoksenjälkeisen datan, esim. päivittää laskettuja kenttiä.
+  :prosessoi-muutos                     Funktio, jolla voi prosessoida muutoksenjälkeisen datan, esim. päivittää laskettuja kenttiä.
                                         Parametrina muokkausdata, palauttaa uuden muokkausdatan
-  :aloita-muokkaus-fn                   kutsutaan kun muokkaus alkaa. Kutsuva pää voi tällöin esim. muokata datasisällön eriksi muokkausta varten
-  :piilota-toiminnot?                   boolean, piilotetaan toiminnot sarake jos true
+  :aloita-muokkaus-fn                   Kutsutaan kun muokkaus alkaa. Kutsuva pää voi tällöin esim. muokata datasisällön eriksi muokkausta varten
+  :piilota-toiminnot?                   Boolean, piilotetaan toiminnot sarake jos true
   :nayta-toimintosarake?                Näyttää oikealla tyhjän sarakkeen vaikka ei oltaisi muokkaustilassa. Syy: usean taulukon alignointi
-  :rivin-luokka                         funktio joka palauttaa rivin luokan
-  :uusi-rivi                            jos annettu uuden rivin tiedot käsitellään tällä funktiolla
+  :rivin-luokka                         Funktio joka palauttaa rivin luokan
+  :vetolaatikot-auki                    Ulkoa annettu atom setti, jossa auki olevat vetolaatikot (id ja komponentti)
+                                        Jos ei anneta ulkoa, komponentti käyttää sisäistä tilaa.
+  :uusi-rivi                            Jos annettu uuden rivin tiedot käsitellään tällä funktiolla
   :vetolaatikot                         {id komponentti} lisäriveistä, jotka näytetään normaalirivien välissä
-                                        jos rivin id:llä on avain tässä mäpissä, näytetään arvona oleva komponentti
+                                        Jos rivin id:llä on avain tässä mäpissä, näytetään arvona oleva komponentti
                                         rivin alla
   :luokat                               Päätason div-elementille annettavat lisäluokat (vectori stringejä)
-  :rivi-ennen                           table rivi ennen headeria, sekvenssi mäppejä, joissa avaimet
+  :rivi-ennen                           Table rivi ennen headeria, sekvenssi mäppejä, joissa avaimet
                                          :teksti (näytettävä teksti) ja :sarakkeita (colspan)
-  :id                                   mahdollinen DOM noden id, gridin pääelementille
+  :id                                   Mahdollinen DOM noden id, gridin pääelementille
 
   "
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata?
            rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta max-rivimaara
-           max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip] :as opts} skeema tiedot]
+           max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip vetolaatikot-auki] :as opts} skeema tiedot]
   (let [muokatut (atom nil) ;; muokattu datajoukko
         jarjestys (atom nil) ;; id:t indekseissä (tai otsikko)
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
@@ -426,8 +429,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                  tallenna-vain-muokatut)
 
         fokus (atom nil) ;; nyt fokusoitu item [id :sarake]
-        vetolaatikot-auki (atom (into #{}
-                                      (:vetolaatikot-auki opts)))
+        vetolaatikot-auki (or vetolaatikot-auki (atom #{}))
         validoi-ja-anna-virheet (fn [virheet uudet-tiedot tyyppi]
                                   (into {}
                                         (keep (fn [rivi]
@@ -664,6 +666,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot
                     mahdollista-rivin-valinta rivi-valinta-peruttu
                     korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts} skeema alkup-tiedot]
+        (log "[GRID] Vetolaatikot auki: " (pr-str @vetolaatikot-auki))
         (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
               colspan (if (or piilota-toiminnot? (nil? tallenna))
                         (count skeema)
