@@ -2,7 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [ring.middleware.params :refer [wrap-params]]
             [harja.palvelin.komponentit.http-palvelin
-             :refer [julkaise-palvelu poista-palvelu]]
+             :refer [julkaise-palvelu poista-palvelut]]
             [harja.ui.kartta.esitettavat-asiat
              :refer [kartalla-esitettavaan-muotoon]]
             [taoensso.timbre :as log]
@@ -115,6 +115,14 @@
                "Access-Control-Allow-Origin" "*"}
      :body    (java.io.ByteArrayInputStream. kuva)}))
 
+(defn karttakuva-asiat [lahteet user {:keys [parametrit koordinaatti]}]
+  (let [lahteen-nimi (keyword (get parametrit "_"))]
+    (if-let [lahde (:asiat (get lahteet lahteen-nimi))]
+      (lahde user (assoc parametrit :x (first koordinaatti) :y (second koordinaatti)))
+      (do
+        (log/info "Yritettiin hakea karttakuvan asioita tuntemattomalle lähteelle: " lahteen-nimi)
+        []))))
+
 (defrecord Karttakuvat [lahteet]
   component/Lifecycle
   (start [{db :db
@@ -125,11 +133,14 @@
      (wrap-params (fn [req]
                     (karttakuva @lahteet (:kayttaja req) (:params req))))
      {:ring-kasittelija? true})
+    (julkaise-palvelu http :karttakuva-klikkaus
+                      (fn [user payload]
+                        (karttakuva-asiat @lahteet user payload)))
     this)
 
   (stop [{http :http-palvelin
           :as this}]
-    (poista-palvelu http :karttakuva)
+    (poista-palvelut http :karttakuva :karttakuva-klikkaus)
     this)
 
   KarttakuvaLahteet
