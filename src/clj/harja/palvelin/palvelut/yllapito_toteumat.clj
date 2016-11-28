@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.yllapito-toteumat
+(ns harja.palvelin.palvelut.yllapito_toteumat
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.domain.skeema :refer [Toteuma validoi]]
