@@ -11,7 +11,8 @@
   [ilmoitukset-atom]
   (let [ilmoitus-nakyvissa? (atom false)]
 
-    ;; Näytetään jonon ensimmäinen ilmoitus ellei ole jo näkyvissä
+    ;; Poista ilmoitus näkyvistä asynkronisesti tietyn ajan päästä,
+    ;; ellei ole jo pyydetty poistamaan
     (when (and (not @ilmoitus-nakyvissa?)
                (not (empty? @ilmoitukset-atom)))
       (reset! ilmoitus-nakyvissa? true)
