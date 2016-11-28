@@ -13,6 +13,7 @@ CREATE TABLE yllapito_toteuma (
   id serial primary key NOT NULL,
   urakka integer references urakka (id) NOT NULL,
   selite VARCHAR(512) NOT NULL,
+  pvm DATE NULL,
   hinta NUMERIC NOT NULL,
   yllapitoluokka INTEGER,
   laskentakohde integer references urakka_laskentakohde (id) NOT NULL
