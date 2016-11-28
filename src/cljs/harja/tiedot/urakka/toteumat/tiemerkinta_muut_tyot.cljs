@@ -21,7 +21,10 @@
      :sopimus (first @u/valittu-sopimusnumero)
      :sopimuskausi @u/valittu-hoitokausi}))
 
-(declare ToidenHaku)
+;; Tapahtumat
+
+(defrecord YhdistaValinnat [valinnat])
+(defrecord ToidenHaku [tulokset])
 
 (defn hae-tyot [{:keys [urakka] :as hakuparametrit}]
   (let [tulos! (t/send-async! ToidenHaku)]
@@ -29,18 +32,13 @@
           (when-not (k/virhe? tyot)
             (tulos! tyot))))))
 
-;; Tapahtumat
-
-(defrecord YhdistaValinnat [valinnat])
-(defrecord ToidenHaku [tulokset])
-
 ;; Tapahtumien käsittely
 
 (extend-protocol t/Event
 
   YhdistaValinnat
   (process-event [{:keys [valinnat] :as e} tila]
-    (hae-tyot (:urakka valinnat))
+    (hae-tyot {:urakka (:urakka valinnat)})
     (update-in tila [:valinnat] merge valinnat))
 
   ToidenHaku

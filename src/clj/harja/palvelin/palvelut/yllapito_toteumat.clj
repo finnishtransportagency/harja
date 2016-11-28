@@ -12,7 +12,7 @@
 (defn hae-yllapito-toteumat [db user {:keys [urakka] :as tiedot}]
   (log/debug "Hae ylläpidon toteumat parametreilla: " (pr-str tiedot))
   (jdbc/with-db-transaction [db db]
-    (q/hae-muut-tyot db {:urakka urakka})))
+    (into [] (q/hae-muut-tyot db {:urakka urakka}))))
 
 (defn hae-yllapito-toteuma [db user tiedot]
   ;; TODO
