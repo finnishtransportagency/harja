@@ -22,6 +22,7 @@
                         :hoitoluokka (atom "Ia")
                         :soratiehoitoluokka (atom "5")
                         :tr-osoite tr-osoite
+                        :aloitetaan-tarkastusajo (atom false)
                         :kiinteistorajat (atom false)
                         :ortokuva (atom false)
                         :tallennus-kaynnissa (atom false)
