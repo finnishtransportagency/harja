@@ -56,18 +56,24 @@
      {:otsikko "Laskentakohde" :tyyppi :string :nimi :laskentakohde :leveys 10}]
     muut-tyot]])
 
-(defn- muut-tyot-paakomponentti []
-  (fn [e! {:keys [valittu-tyo] :as tila}]
-    [:span
-     (if valittu-tyo
-       [:span "TODO Lomake tähän..."]
-       [muut-tyot-lista e! tila
-        {:valittu-urakka @nav/valittu-urakka
-         :valittu-sopimusnumero u/valittu-sopimusnumero
-         :valitse-sopimusnumero u/valitse-sopimusnumero!
-         :valitun-urakan-hoitokaudet u/valitun-urakan-hoitokaudet
-         :valittu-hoitokausi u/valittu-hoitokausi
-         :valitse-hoitokausi u/valitse-hoitokausi!}])]))
+(defn- muut-tyot-paakomponentti [e! tila]
+  ;; Kun näkymään tullaan, yhdistetään navigaatiosta tulevat valinnat
+  (e! (tiedot/->YhdistaValinnat @tiedot/valinnat))
+
+  (komp/luo
+    (komp/watcher tiedot/valinnat (fn [_ _ uusi]
+                                    (e! (tiedot/->YhdistaValinnat uusi))))
+    (fn [e! {:keys [valittu-tyo] :as tila}]
+     [:span
+      (if valittu-tyo
+        [:span "TODO Lomake tähän..."]
+        [muut-tyot-lista e! tila
+         {:valittu-urakka @nav/valittu-urakka
+          :valittu-sopimusnumero u/valittu-sopimusnumero
+          :valitse-sopimusnumero u/valitse-sopimusnumero!
+          :valitun-urakan-hoitokaudet u/valitun-urakan-hoitokaudet
+          :valittu-hoitokausi u/valittu-hoitokausi
+          :valitse-hoitokausi u/valitse-hoitokausi!}])])))
 
 (defn muut-tyot []
   (komp/luo

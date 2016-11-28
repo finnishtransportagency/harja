@@ -3,12 +3,14 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.domain.skeema :refer [Toteuma validoi]]
             [harja.kyselyt.yllapito-toteumat :as q]
+            [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin
              :refer
              [julkaise-palvelu poista-palvelut]]
             [clojure.java.jdbc :as jdbc]))
 
 (defn hae-yllapito-toteumat [db user {:keys [urakka] :as tiedot}]
+  (log/debug "Hae ylläpidon toteumat parametreilla: " (pr-str tiedot))
   (jdbc/with-db-transaction [db db]
     (q/hae-muut-tyot db {:urakka urakka})))
 
