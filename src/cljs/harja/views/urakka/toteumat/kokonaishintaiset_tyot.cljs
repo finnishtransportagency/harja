@@ -33,7 +33,7 @@
 (defn kokonaishintainen-reitti-klikattu [_ toteuma]
   (popupit/nayta-popup (assoc toteuma :aihe :toteuma-klikattu)))
 
-(def vetolaatikot-auki (atom {}))
+(def vetolaatikot-auki (atom #{}))
 
 (defn tehtavan-paivakohtaiset-tiedot [pvm toimenpidekoodi]
   (let [tiedot (atom nil)]
@@ -66,8 +66,6 @@
 (defn- tee-taulukko []
   (let [toteumat @tiedot/haetut-toteumat
         tunniste (juxt :pvm :toimenpidekoodi :jarjestelmanlisaama :maara)]
-
-    (reset! vetolaatikot-auki #{(tunniste (first toteumat))})
 
     [:span
      [grid/grid

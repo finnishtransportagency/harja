@@ -666,7 +666,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot
                     mahdollista-rivin-valinta rivi-valinta-peruttu
                     korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts} skeema alkup-tiedot]
-        (log "[GRID] Vetolaatikot auki: " (pr-str @vetolaatikot-auki))
         (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
               colspan (if (or piilota-toiminnot? (nil? tallenna))
                         (count skeema)
