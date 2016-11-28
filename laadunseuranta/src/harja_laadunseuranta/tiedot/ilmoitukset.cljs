@@ -17,6 +17,7 @@
 
 (defn tyhjenna-ilmoitus-nakymisajan-jalkeen [ilmoitus ilmoitus-atom]
   (go (<! (timeout +ilmoituksen-nakymisaika-ms+))
-      ;; Nillaa ilmoitus jos se on edelleen sama kuin se, jonka tämän go-blockin oli tyhjennettävä
+      ;; Tyhjennä nykyinen näytettävä ilmoitus jos se on edelleen sama kuin se,
+      ;; jonka tämän go-blockin oli tyhjennettävä
       (when (= ilmoitus @ilmoitus-atom)
         (reset! ilmoitus-atom nil))))
