@@ -278,6 +278,7 @@
 (defn kokonaishintaiset-toteumat []
   (komp/luo
     (komp/kuuntelija :toteuma-klikattu kokonaishintainen-reitti-klikattu)
+    (komp/ulos #(reset! vetolaatikot-auki #{}))
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-kokonaishintainen-toteuma)
 
     (fn []

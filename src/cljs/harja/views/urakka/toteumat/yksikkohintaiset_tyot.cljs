@@ -32,6 +32,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(def vetolaatikot-auki (atom #{}))
+
 (defn- rivi-tehtavaksi [rivi]
   {:toimenpidekoodi (:tehtava rivi)
    :maara (:maara rivi)
@@ -382,6 +384,7 @@
                   [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."]
                   "Ei yksikköhintaisten töiden toteumia")
          :luokat ["toteumat-paasisalto"]
+         :vetolaatikot-auki vetolaatikot-auki
          :vetolaatikot (into {} (map (juxt :tpk_id (fn [rivi] [yksiloidyt-tehtavat rivi yksikkohintaiset-tyot/yks-hint-tehtavien-summat]))
                                      @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain))}
         [{:tyyppi :vetolaatikon-tila :leveys 5}
@@ -405,6 +408,7 @@
 
 (defn yksikkohintaisten-toteumat []
   (komp/luo
+    (komp/ulos #(reset! vetolaatikot-auki #{}))
     (komp/lippu yksikkohintaiset-tyot/yksikkohintaiset-tyot-nakymassa? yksikkohintaiset-tyot/karttataso-yksikkohintainen-toteuma)
     (fn []
       [:span
