@@ -21,8 +21,6 @@ SELECT
   thm.kitka              AS talvihoitomittaus_kitka,
   thm.lampotila_tie      AS talvihoitomittaus_lampotila_tie,
   thm.lampotila_ilma     AS talvihoitomittaus_lampotila_ilma,
-  thm.ajosuunta          AS talvihoitomittaus_ajosuunta,
-  thm.tarkastus          AS talvihoitomittaus_tarkastus,
   ypk.tr_numero          AS yllapitokohde_tr_numero,
   ypk.tr_alkuosa         AS yllapitokohde_tr_alkuosa,
   ypk.tr_alkuetaisyys    AS yllapitokohde_tr_alkuetaisyys,
