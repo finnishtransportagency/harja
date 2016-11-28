@@ -1,6 +1,7 @@
 (ns harja.ui.kartta.asioiden-tiedot
   "Määrittelee erilaisten kartalle piirrettävien asioiden tiedot, jotka tulevat kartta
-  overlay näkymään.")
+  overlay näkymään."
+  (:require [clojure.string :as str]))
 
 
 (defmulti tiedot :tyyppi-kartalla)
