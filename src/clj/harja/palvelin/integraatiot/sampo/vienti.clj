@@ -44,8 +44,7 @@
                                    (mapcat #(qm/hae-urakan-maksuerien-summat db %) urakkaidt))]
     (log/debug "Lähetetään " (count maksuerat) " maksuerää ja " (count kustannussuunnitelmat) " kustannussuunnitelmaa.")
     (doseq [{maksuera-numero :numero urakkaid :urakkaid} maksuerat]
-      (let [summat (urakoiden-summat urakkaid)
-            _ (log/debug " ---> summat: " (pr-str summat))]
+      (let [summat (urakoiden-summat urakkaid)]
         (maksuera/laheta-maksuera sonja integraatioloki db lahetysjono-ulos maksuera-numero summat)))
     (doseq [kustannussuunnitelma kustannussuunnitelmat]
       (kustannussuunnitelma/laheta-kustannussuunitelma sonja integraatioloki db lahetysjono-ulos (:maksuera kustannussuunnitelma)))))
