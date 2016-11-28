@@ -364,7 +364,7 @@
 ;; :asiat         sekvenssi asioita, joita pisteestä löytyy
 ;; :haetaan?      true kun haku vielä kesken
 (defonce asiat-pisteessa (atom {:koordinaatti nil
-                                :haetaan? false
+                                :haetaan? true
                                 :asiat nil}))
 
 (defn paivitetaan-karttaa

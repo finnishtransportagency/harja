@@ -3,7 +3,8 @@
   olevien asioiden tiedot."
   (:require [harja.ui.komponentti :as komp]
             [cljs.core.async :as async]
-            [harja.loki :refer [log tarkkaile!]])
+            [harja.loki :refer [log tarkkaile!]]
+            [harja.ui.yleiset :refer [ajax-loader]])
   (:require-macros
    [cljs.core.async.macros :as async-macros]))
 
@@ -11,10 +12,16 @@
   ;; 2. per tulos: jos kanavista luetaan monta asiaa, näytetään asioista pelkät otsikkotiedot. jos luetaan yksi, niin näytetään tarkat tiedot.
   ;; 3. otsikon valitseminen: otsikon klikkaaminen vaihtaa alaosan sisältöpaneen tarkemman sisällön näkyviin
 
+(defn esita-otsikko [asia])
+
+(defn esita-yksityiskohdat [asia])
+
 (defn infopaneeli [asiat-pisteessa]
   (when-let [sisalto @asiat-pisteessa]
     [:div#kartan-infopaneeli
      [:div
+      (when (:haetaan? sisalto)
+        [ajax-loader])
       [:button.close {:on-click #(reset! asiat-pisteessa nil)
                       :type "button"}
        [:span "×"]]]]))
