@@ -15,10 +15,12 @@
 
 (defprotocol KarttakuvaLahteet
   (rekisteroi-karttakuvan-lahde!
-   [this nimi lahde-fn]
-   "Rekisteröi karttakuvadatan lähteen. Funktio ottaa parametriksi käyttäjän
-sekä HTTP request parametrit mäppinä ja palauttaa karttakuvaan piirrettävän
-datan kartalla esitettävässä muodossa.")
+    [this nimi lahde-fn asiat-fn]
+    "Rekisteröi karttakuvadatan sekä siihen liittyvien asioiden lähteen.
+    Funktio ottaa parametriksi käyttäjän sekä HTTP request parametrit mäppinä ja
+    palauttaa karttakuvaan piirrettävän datan kartalla esitettävässä muodossa.
+    Toinen funktio ottaa samat parametrit ja lisäksi klikatun pisteen ja palauttaa
+    kuvauksen kartalla löytyneistä asioista.")
   (poista-karttakuvan-lahde! [this nimi]))
 
 (defn- kirjoita-kuva [kuva]
@@ -91,7 +93,7 @@ datan kartalla esitettävässä muodossa.")
   "Hakee karttakuvadatan oikeasti lähteestä"
   [lahteet user parametrit]
   (let [lahteen-nimi (keyword (get-in parametrit [:parametrit "_"]))
-        lahde (get lahteet lahteen-nimi)
+        lahde (:kuva (get lahteet lahteen-nimi))
         parametrit (assoc parametrit
                           ;; Käännä yla/ala extentissä, koska ol taso ilmoittaa sen
                           ;; sen toisin päin kuin meillä
@@ -131,8 +133,9 @@ datan kartalla esitettävässä muodossa.")
     this)
 
   KarttakuvaLahteet
-  (rekisteroi-karttakuvan-lahde! [this nimi lahde-fn]
-    (swap! lahteet assoc nimi lahde-fn))
+  (rekisteroi-karttakuvan-lahde! [this nimi lahde-fn asiat-fn]
+    (swap! lahteet assoc nimi {:kuva lahde-fn
+                               :asiat asiat-fn}))
   (poista-karttakuvan-lahde! [this nimi]
     (swap! lahteet dissoc nimi)))
 

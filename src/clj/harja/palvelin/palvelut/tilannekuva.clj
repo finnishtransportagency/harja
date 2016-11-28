@@ -401,10 +401,12 @@
                         (hae-urakat db user tiedot)))
     (karttakuvat/rekisteroi-karttakuvan-lahde!
       karttakuvat :tilannekuva-toteumat
-      (partial hae-toteumat-kartalle db))
+      (partial hae-toteumat-kartalle db)
+      #(do (log/info "FIXME: implementoi hae-asiat tilannekuvan toteumien karttatasolle!") []))
     (karttakuvat/rekisteroi-karttakuvan-lahde!
      karttakuvat :tilannekuva-tarkastukset
-     (partial hae-tarkastukset-kartalle db))
+     (partial hae-tarkastukset-kartalle db)
+     #(do (log/info "FIXME: implementoi hae-asiat tilannekuvan tarkastuksien karttatasolle!") []))
     this)
 
   (stop [{karttakuvat :karttakuvat :as this}]

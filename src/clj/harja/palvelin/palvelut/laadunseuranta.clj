@@ -372,7 +372,8 @@
 
     (karttakuvat/rekisteroi-karttakuvan-lahde!
      karttakuvat :tarkastusreitit
-     (partial #'hae-tarkastusreitit-kartalle db))
+     (partial #'hae-tarkastusreitit-kartalle db)
+     #(do (log/info "FIXME: implementoi hae-ast laadunseurannan karttatasolle!") []))
 
     (julkaise-palvelut
       http-palvelin

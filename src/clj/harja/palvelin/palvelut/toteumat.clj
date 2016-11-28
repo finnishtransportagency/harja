@@ -606,10 +606,12 @@
     (when karttakuvat
       (karttakuvat/rekisteroi-karttakuvan-lahde!
        karttakuvat :kokonaishintainen-toteuma
-       (partial #'hae-kokonaishintainen-toteuma-kartalle db))
+       (partial #'hae-kokonaishintainen-toteuma-kartalle db)
+       #(do (log/info "FIXME: implementoi hae-asiat kok.hint. toteuman karttatasolle!") []))
       (karttakuvat/rekisteroi-karttakuvan-lahde!
        karttakuvat :yksikkohintaiset-toteumat
-       (partial #'hae-yksikkohintaiset-toteumat-kartalle db)))
+       (partial #'hae-yksikkohintaiset-toteumat-kartalle db)
+       #(do (log/info "FIXME: implementoi hae-asiat yks.hint. toteuman karttatasolle!") [])))
 
     (julkaise-palvelut
      http

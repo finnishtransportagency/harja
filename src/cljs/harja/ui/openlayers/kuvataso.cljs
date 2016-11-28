@@ -67,8 +67,7 @@
     (let [ch (async/chan)]
       (go
         (let [asiat (<! (k/post! :kuvataso-klikkaus
-                                 {:nimi :fixme
-                                  :parametrit parametrit
+                                 {:parametrit parametrit
                                   :koordinaatti koordinaatti}))]
           (doseq [asia asiat]
             (async/>! ch asia))
