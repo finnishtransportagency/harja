@@ -298,6 +298,25 @@ WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
 GROUP BY tt.toimenpidekoodi;
 
+-- name: hae-toteumien-asiat
+-- Hakee karttaa klikattaessa toteuma-ajat valituille tehtäville
+SELECT
+  t.alkanut AS alkanut,
+  tt.toimenpidekoodi AS toimenpidekoodi,
+  tpk.nimi AS toimenpide
+FROM toteuma_tehtava tt
+  JOIN toteuma t ON tt.toteuma = t.id
+                    AND t.alkanut >= :alku
+                    AND t.paattynyt <= :loppu
+                    AND tt.toimenpidekoodi IN (:toimenpidekoodit)
+                    AND tt.poistettu IS NOT TRUE
+                    AND t.poistettu IS NOT TRUE
+  JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
+      (t.alkanut BETWEEN :alku AND :loppu) AND
+      (t.paattynyt BETWEEN :alku AND :loppu) AND
+      ST_Distance(t.reitti, ST_MakePoint(:x,:y)) < 50;
+
 
 -- name: hae-tyokoneet
 SELECT

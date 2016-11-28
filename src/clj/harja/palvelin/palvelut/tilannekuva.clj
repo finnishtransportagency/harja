@@ -350,6 +350,12 @@
                          :xmax x2 :ymax y2}})
           (assoc p :toleranssi (geo/karkeistustoleranssi (:alue p))))))
 
+(defn- luettavat-urakat [user tiedot]
+  (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
+                                  oikeudet/tilannekuva-nykytilanne
+                                  oikeudet/tilannekuva-historia) % user)
+          (:urakat tiedot)))
+
 (defn- hae-karttakuvan-tiedot [db user parametrit haku-fn xf ]
   (let [tiedot (karttakuvan-suodattimet parametrit)
         kartalle-xf (kartalla-esitettavaan-muotoon-xf)
@@ -358,10 +364,7 @@
                          (map konv/alaviiva->rakenne)
                          xf
                          kartalle-xf))
-        urakat (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
-                                               oikeudet/tilannekuva-nykytilanne
-                                               oikeudet/tilannekuva-historia) % user)
-                       (:urakat tiedot))]
+        urakat (luettavat-urakat user tiedot)]
     (async/thread
       (jdbc/with-db-transaction [db db
                                  :read-only? true]
@@ -377,6 +380,17 @@
                                        :tyyppi :toteuma
                                        :tyyppi-kartalla :toteuma
                                        :tehtavat [(:tehtava %)]))))
+
+
+(defn- hae-toteumat-asiat-kartalle [db user {tk "tk" :as params}]
+  (q/hae-toteumien-asiat db
+                         (as-> tk p
+                           (java.net.URLDecoder/decode p)
+                           (transit/lue-transit-string p)
+                           (assoc p :urakat (luettavat-urakat user p))
+                           (assoc p :toimenpidekoodit (toteumien-toimenpidekoodit db p))
+                           (aikavalinta p)
+                           (merge p (select-keys params [:x :y])))))
 
 (defn- hae-tarkastukset-kartalle [db user parametrit]
   (hae-karttakuvan-tiedot db user parametrit hae-tarkastusten-reitit
@@ -402,7 +416,7 @@
     (karttakuvat/rekisteroi-karttakuvan-lahde!
       karttakuvat :tilannekuva-toteumat
       (partial hae-toteumat-kartalle db)
-      #(do (log/info "FIXME: implementoi hae-asiat tilannekuvan toteumien karttatasolle!") []))
+      (partial #'hae-toteumat-asiat-kartalle db))
     (karttakuvat/rekisteroi-karttakuvan-lahde!
      karttakuvat :tilannekuva-tarkastukset
      (partial hae-tarkastukset-kartalle db)
