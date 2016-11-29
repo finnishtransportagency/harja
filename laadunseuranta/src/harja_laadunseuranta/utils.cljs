@@ -67,7 +67,7 @@
   (boolean (or (and (chrome?)
                     (chrome-vanhentunut?)
                (and (firefox?)
-                    (firefox-vanhentunut?)))))
+                    (firefox-vanhentunut?))))))
 
 (defn- flip [atomi]
   (swap! atomi not))
