@@ -33,7 +33,9 @@
 
 (defn maarita-selainversio-user-agentista [user-agent-text-lowercase selain-nimi]
   (let [selain-alku-index (.indexOf user-agent-text-lowercase (str selain-nimi "/"))
-        selain-versio-teksti (subs user-agent-text-lowercase selain-alku-index (+ selain-alku-index 14))
+        selain-versio-teksti (subs user-agent-text-lowercase selain-alku-index (+ selain-alku-index
+                                                                                  (count selain-nimi)
+                                                                                  5))
         selain-versonumero (re-find (re-pattern "\\d+") selain-versio-teksti)]
     (js/parseInt selain-versonumero)))
 
