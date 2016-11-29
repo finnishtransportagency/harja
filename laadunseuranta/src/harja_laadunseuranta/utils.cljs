@@ -32,10 +32,10 @@
 (def +tuettu-firefox-versio+ 49) ;; mm. Flexbox & IndexedDB-tuki
 
 (defn maarita-selainversio-user-agentista [user-agent-text-lowercase selain-nimi]
-  (let [chrome-alku-index (.indexOf user-agent-text-lowercase (str selain-nimi "/"))
-        chrome-versio-teksti (subs user-agent-text-lowercase chrome-alku-index (+ chrome-alku-index 14))
-        chrome-versonumero (re-find (re-pattern "\\d+") chrome-versio-teksti)]
-    (js/parseInt chrome-versonumero)))
+  (let [selain-alku-index (.indexOf user-agent-text-lowercase (str selain-nimi "/"))
+        selain-versio-teksti (subs user-agent-text-lowercase selain-alku-index (+ selain-alku-index 14))
+        selain-versonumero (re-find (re-pattern "\\d+") selain-versio-teksti)]
+    (js/parseInt selain-versonumero)))
 
 (defn maarita-chrome-versio-user-agentista [user-agent-text-lowercase]
   (maarita-selainversio-user-agentista user-agent-text-lowercase "chrome"))
