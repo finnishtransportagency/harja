@@ -27,15 +27,14 @@
 ;; kun asiat-pisteessä :haetaan = true, täämän pitisi resetoitua
 (defonce valittu-asia (atom nil))
 
-(defn esita-otsikko [asia]
-  [:div {:on-click #(reset! valittu-asia asia)} (:otsikko asia)
-   ])
+(defn esita-otsikko [{:keys [otsikko] :as asia}]
+  [:div
+   {:on-click #(reset! valittu-asia asia)}
+   [:span otsikko]])
 
 (defn- kentan-arvo [skeema data]
   (let [arvo-fn (or (:hae skeema) (:nimi skeema))]
     ;; Kentat namespace olettaa, että kentän arvo tulee atomissa
-    (log (pr-str skeema))
-    (log (pr-str data))
     (when arvo-fn (atom (arvo-fn data)))))
 
 (defn esita-yksityiskohdat [{:keys [otsikko tiedot data]}]
@@ -70,6 +69,7 @@
                         :type "button"}
          [:span "×"]
          ]]
+       [:div "Koordinaatti: " (str koordinaatti)]
        (when-not (empty? asiat)
          (if esita-yksityiskohdat?
            [esita-yksityiskohdat (or @valittu-asia ainoa-asia)]
