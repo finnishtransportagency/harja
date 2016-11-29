@@ -6,26 +6,51 @@
             [cljs.core.async :as async]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :refer [ajax-loader]]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.ui.kentat :as kentat])
   (:require-macros
    [cljs.core.async.macros :as async-macros]))
+
+(def testidata
+  {:haetaan? true
+   :koordinaatti [20 20]
+   :asiat [{:otsikko "Toimenpidepyyntö 20.12.2016 15:55:15"
+            :tiedot [{:otsikko "Ilmoitettu" :tyyppi :pvm-aika :nimi :ilmoitettu}
+                     {:otsikko "Kuittaukset" :tyyppi :positiivinen-numero :hae #(constantly 5)}]
+            :data {:ilmoitettu (harja.pvm/nyt)}}
+           {:otsikko "Auraus 15km"
+            :tiedot [{:otsikko "Hyvää työtä" :tyyppi :radio :nimi :hyvaa-tyota?}
+                     {:otsikko "Toimenpide" :tyyppi :tierekisteriosoite :nimi :tr }]
+            :data {:hyvaa-tyota? true
+                   :tr {:numero 20 :alkuosa 1 :alkuetaisyys 1 :loppuosa 2 :loppuetaisyys 200}}}]})
 
 ;; kun asiat-pisteessä :haetaan = true, täämän pitisi resetoitua
 (defonce valittu-asia (atom nil))
 
 (defn esita-otsikko [asia]
-  (log "esita-otsikko" (pr-str asia))
   [:div {:on-click #(reset! valittu-asia asia)} (:otsikko asia)
    ])
 
-(defn esita-yksityiskohdat [asia]
-  (let []
-    [:div
-     [:div (:otsikko asia)]
-     [:div (-> asia :tiedot count)]]))
+(defn- kentan-arvo [skeema data]
+  (let [arvo-fn (or (:hae skeema) (:nimi skeema))]
+    ;; Kentat namespace olettaa, että kentän arvo tulee atomissa
+    (log (pr-str skeema))
+    (log (pr-str data))
+    (when arvo-fn (atom (arvo-fn data)))))
+
+(defn esita-yksityiskohdat [{:keys [otsikko tiedot data]}]
+  [:div
+   [:span otsikko]
+   (for [[idx kentan-skeema] (map-indexed #(do [%1 %2]) tiedot)]
+     ^{:key idx}
+     [:div
+      [:label.control-label
+       [:span
+        [:span.kentan-label (:otsikko kentan-skeema)]]]
+      [kentat/nayta-arvo kentan-skeema (kentan-arvo kentan-skeema data)]])])
 
 (defn infopaneeli [asiat-pisteessa-atomi]
-  (when-let [{:keys [asiat haetaan? koordinaatti]} sisalto @asiat-pisteessa-atomi]
+  (when-let [{:keys [asiat haetaan? koordinaatti]} @asiat-pisteessa-atomi]
     (let [
           vain-yksi-asia? (-> asiat count (= 1))
           useampi-asia? (not vain-yksi-asia?)
@@ -41,7 +66,7 @@
            [napit/takaisin "" #(reset! valittu-asia nil)])
         (when haetaan?
           [ajax-loader])
-        [:button.close {:on-click #(reset! asiat-pisteessa nil)
+        [:button.close {:on-click #(reset! asiat-pisteessa-atomi nil)
                         :type "button"}
          [:span "×"]
          ]]
