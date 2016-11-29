@@ -8,39 +8,66 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja-laadunseuranta.macros :refer [after-delay]]))
 
-(defn ipad? []
+(defn user-agent-lower-match? [string]
   (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-                 [#".*ipad.*"])))
+                 [regex])))
+
+;; Lähtökohtaisesti pitäisi tutkia selainten ominaisuuksia eikä selaimia.
+;; Kyseessä on kuitenkin tiettyyn tarkoitukseen toteutettu mobiilisovellus, joka on käsin
+;; testattu toimivaksi eri selaimilla
+
+(defn ipad? []
+  (user-agent-lower-match? #".*ipad.*"))
 
 (defn iphone? []
-  (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-                 [#".*iphone.*"])))
+  (user-agent-lower-match? #".*iphone.*"))
 
 (defn chrome? []
-  (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-                 [#".*chrome.*"])))
+  (user-agent-lower-match? #".*chrome.*"))
 
-(def +tuettu-chrome-versio+ 53)
+(defn firefox? []
+  (user-agent-lower-match? #".*firefox.*"))
 
-(defn maarita-chrome-versio-user-agentista [user-agent-text-lowercase]
+(def +tuettu-chrome-versio+ 44)
+(def +tuettu-firefox-versio+ 49) ;; mm. Flexbox & IndexedDB-tuki
+
+(defn maarita-selainversio-user-agentista [user-agent-text-lowercase selain-nimi]
   (let [chrome-alku-index (.indexOf user-agent-text-lowercase "chrome/")
         chrome-versio-teksti (subs user-agent-text-lowercase chrome-alku-index (+ chrome-alku-index 14))
         chrome-versonumero (re-find (re-pattern "\\d+") chrome-versio-teksti)]
     (js/parseInt chrome-versonumero)))
 
+(defn maarita-chrome-versio-user-agentista [user-agent-text-lowercase]
+  (maarita-selainversio-user-agentista user-agent-text-lowercase "chrome"))
+
+(defn maarita-firefox-versio-user-agentista [user-agent-text-lowercase]
+  (maarita-selainversio-user-agentista user-agent-text-lowercase "firefox"))
+
+(defn chrome-vanhentunut? []
+  (and (chrome?)
+       (>= (maarita-chrome-versio-user-agentista
+             (clojure.string/lower-case js/window.navigator.userAgent))
+           +tuettu-chrome-versio+)))
+
+(defn firefox-vanhentunut? []
+  (and (firefox?)
+       (>= (maarita-firefox-versio-user-agentista
+             (clojure.string/lower-case js/window.navigator.userAgent))
+           +tuettu-firefox-versio+)))
+
 (defn tuettu-selain? []
   (boolean (or (ipad?)
                (iphone?)
                (and (chrome?)
-                    (>= (maarita-chrome-versio-user-agentista
-                          (clojure.string/lower-case js/window.navigator.userAgent))
-                        +tuettu-chrome-versio+)))))
+                    (not (chrome-vanhentunut?)))
+               (and (firefox?)
+                    (not (firefox-vanhentunut?))))))
 
 (defn vanhentunut-selain? []
-  (boolean (and (chrome?)
-                (< (maarita-chrome-versio-user-agentista
-                     (clojure.string/lower-case js/window.navigator.userAgent))
-                   +tuettu-chrome-versio+))))
+  (boolean (or (and (chrome?)
+                    (chrome-vanhentunut?)
+               (and (firefox?)
+                    (firefox-vanhentunut?)))))
 
 (defn- flip [atomi]
   (swap! atomi not))
