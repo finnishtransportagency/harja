@@ -124,7 +124,8 @@
      [harja.ui.valinnat/varustetoteuman-tyyppi
       (r/wrap (:tyyppi valinnat)
               #(e! (v/->ValitseVarusteToteumanTyyppi %)))]
-     (when oikeus?
+     ;; todo: jatkuu...
+     #_(when oikeus?
        [napit/uusi "Lisää toteuma"
         #(e! (v/->UusiVarusteToteuma))])]))
 
@@ -188,12 +189,17 @@
             varustehaun-tiedot :varustehaku}]
      [:span
       [kartta/kartan-paikka]
-      (if toteuma
-        [varustetoteumalomake e! toteuma]
-        [:span
-         [valinnat e! nykyiset-valinnat]
-         [toteumataulukko e! (:tyyppi nykyiset-valinnat) toteumat]
-         #_[varustehaku (t/wrap-path e! :varustehaku) varustehaun-tiedot]])])))
+      [:span
+       [valinnat e! nykyiset-valinnat]
+       [toteumataulukko e! (:tyyppi nykyiset-valinnat) toteumat]]
+      ;; todo: jatkuu...
+      (comment
+        (if toteuma
+         [varustetoteumalomake e! toteuma]
+         [:span
+          [valinnat e! nykyiset-valinnat]
+          [toteumataulukko e! (:tyyppi nykyiset-valinnat) toteumat]
+          [varustehaku (t/wrap-path e! :varustehaku) varustehaun-tiedot]]))])))
 
 (defn varusteet []
   [tuck varustetiedot/varusteet varusteet*])
