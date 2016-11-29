@@ -40,9 +40,15 @@
     (doseq [sopimus-id sopimus-idt]
       (validointi/tarkista-urakka-sopimus-ja-kayttaja db urakka-id sopimus-id kirjaaja)))
   (when (:pistetoteuma data)
-    (toteuman-validointi/tarkista-tehtavat db (get-in data [:pistetoteuma :toteuma :tehtavat])))
+    (toteuman-validointi/tarkista-tehtavat
+      db
+      (get-in data [:pistetoteuma :toteuma :tehtavat])
+      (get-in data [:pistetoteuma :toteuma :toteumatyyppi])))
   (doseq [pistetoteuma (:pistetoteumat data)]
-    (toteuman-validointi/tarkista-tehtavat db (get-in pistetoteuma [:pistetoteuma :toteuma :tehtavat]))))
+    (toteuman-validointi/tarkista-tehtavat
+      db
+      (get-in pistetoteuma [:pistetoteuma :toteuma :tehtavat])
+      (get-in pistetoteuma [:pistetoteuma :toteuma :toteumatyyppi]))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]

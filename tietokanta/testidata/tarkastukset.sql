@@ -2,9 +2,10 @@
 
 INSERT INTO tarkastus (lahde, urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, havainnot, luotu, luoja, tr_alkuetaisyys) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE nimi = 'Oulun alueurakka pääsopimus' AND urakka = 1), '2005-10-01 10:00.00', 1 ,2, 3, 4, point(430768.8350704433, 7203153.238678749)::GEOMETRY, 'Ismo', 'laatu'::tarkastustyyppi, 'jotain havaintoja siellä oli', NOW(), 1, 3);
 INSERT INTO tarkastus (lahde, urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, havainnot, luotu, luoja, tr_alkuetaisyys) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), (SELECT id FROM sopimus WHERE nimi = 'Oulun alueurakka pääsopimus' AND urakka = 1), '2005-10-03 10:00.00', 1 ,2, 3, 4, point(438885, 7220740)::GEOMETRY, 'Matti', 'laatu'::tarkastustyyppi, 'havaittiin kaikenlaista', NOW(), 1, 3);
+INSERT INTO tarkastus (lahde, urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, havainnot, luotu, luoja) VALUES ('harja-api'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE nimi = 'Oulun alueurakka pääsopimus' AND urakka = 4), '2016-11-25 10:00.00', 20 ,1, 1, 2, 2, point(438885, 7220740)::GEOMETRY, 'Matti', 'laatu'::tarkastustyyppi, 'havaittiin liukkautta kovasti', NOW(), 1);
 INSERT INTO tarkastus_vakiohavainto (tarkastus, vakiohavainto) VALUES (1, 17);
 INSERT INTO tarkastus_vakiohavainto (tarkastus, vakiohavainto) VALUES (1, 1);
-
+INSERT INTO tarkastus_vakiohavainto (tarkastus, vakiohavainto) VALUES ((SELECT id from tarkastus where havainnot = 'havaittiin liukkautta kovasti'), 1);
 -- Talvihoito
 
 INSERT INTO tarkastus (lahde, urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, havainnot, luotu, luoja) VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS NULL), '2015-12-28 10:00:02', 4 ,364, 8012, null, null, point(429000, 7202314)::GEOMETRY, 'Matti', 'talvihoito'::tarkastustyyppi, 'järjestelmän raportoima testitarkastus 1', NOW(), (SELECT id from kayttaja WHERE kayttajanimi = 'destia'));
@@ -27,6 +28,7 @@ INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, lumimaara, tasaisuus
 INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, lumimaara, tasaisuus, kitka, lampotila_ilma, lampotila_tie, ajosuunta) VALUES ((SELECT id FROM tarkastus WHERE havainnot = 'Ok'), 'B', 6, 6, 0.5, -15, -5, 1);INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, lumimaara, tasaisuus, kitka, lampotila_ilma, lampotila_tie, ajosuunta) VALUES ((SELECT id FROM tarkastus WHERE havainnot = 'järjestelmän raportoima testitarkastus 4'), 'B', 6, 6, 0.5, -15, -5, 1);
 INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, lumimaara, tasaisuus, kitka, lampotila_ilma, lampotila_tie, ajosuunta) VALUES ((SELECT id FROM tarkastus WHERE havainnot = ''), 'B', 6, 6, 0.5, -15, -5, 1);
 INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, lumimaara, tasaisuus, kitka, lampotila_ilma, lampotila_tie, ajosuunta) VALUES ((SELECT id FROM tarkastus WHERE havainnot = 'Urakoitsija on kirjannut tämän tarkastuksen Harjaan käsin'), 'A', 10, 5, 1, -16, -3, 1);
+INSERT INTO talvihoitomittaus (tarkastus, talvihoitoluokka, kitka, lampotila_ilma, lampotila_tie, ajosuunta) VALUES ((SELECT id FROM tarkastus WHERE havainnot = 'havaittiin liukkautta kovasti'), 'B', 0.34, -14, -6, 1);
 
 -- Tiestö
 

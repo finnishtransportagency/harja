@@ -57,21 +57,26 @@
                 ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneseuranta_uusi.json"
                                                               slurp
                                                               (.replace "__TEHTAVA__" "suolaus")))]
-    (let [sijainti (ffirst (q "SELECT sijainti FROM tyokonehavainto WHERE tyokoneid=666"))
+    (let [[sijainti line] (first (q "SELECT sijainti,ST_AsText(reitti) FROM tyokonehavainto WHERE tyokoneid=666"))
           tehtavat (-> (ffirst (q "SELECT tehtavat FROM tyokonehavainto WHERE tyokoneid=666"))
                        (konv/array->set))]
       (log/debug "TEHTÄVÄT:" (pr-str tehtavat))
       (is (= 200 (:status kutsu)))
       (is (= (str sijainti) "(429015.0,7198161.0)"))
+      (is (= line "LINESTRING(429015 7198161)"))
       (is (= tehtavat #{"suolaus"})))))
 
 (deftest tallenna-tyokoneen-seurantakirjaus-olemassaoleva
   (let [kutsu (api-tyokalut/post-kutsu
                 ;; tyokone 31337 on jo kannassa, katsotaan muuttuuko raportoidut koordinaatit esimerkin mukaiseksi
                 ["/api/seuranta/tyokone"] kayttaja portti (slurp "test/resurssit/api/tyokoneseuranta.json"))]
-    (let [s (ffirst (q "SELECT sijainti FROM tyokonehavainto WHERE tyokoneid=31337"))]
+    (let [[s line]
+          (first
+           (q "SELECT sijainti,ST_AsText(reitti) FROM tyokonehavainto WHERE tyokoneid=31337"))]
+
       (is (= 200 (:status kutsu)))
-      (is (= (str s) "(429005.0,7198151.0)")))))
+      (is (= (str s) "(429005.0,7198151.0)"))
+      (is (= (str line) "LINESTRING(429493 7207739,429005 7198151)")))))
 
 (deftest kaikkien-tehtavien-kirjaus-toimii
   (doseq [tehtava skeeman-tehtavat]

@@ -45,9 +45,7 @@
        (str +testi-tierekisteri-url+ "/paivitatietue") paivita-tietue-xml
        (str +testi-tierekisteri-url+ "/poistatietue") poista-tietue-xml
        #"http?://localhost" :allow]
-      (let [vastaus-lisays (api-tyokalut/post-kutsu varustetoteuma-api-url kayttaja portti
-                                                    payload)]
-
+      (let [vastaus-lisays (api-tyokalut/post-kutsu varustetoteuma-api-url kayttaja portti payload)]
         (is (= 200 (:status vastaus-lisays)))
         (let [varustetoteumat-pyynnon-jalkeen (ffirst (q
                                                         (str "SELECT count(*)

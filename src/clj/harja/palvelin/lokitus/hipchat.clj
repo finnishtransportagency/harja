@@ -6,14 +6,6 @@
 
 (def kone (.getHostName (java.net.InetAddress/getLocalHost)))
 
-(defn laheta-html [teksti]
-  @(http/post (str "https://api.hipchat.com/v2/room/" 1396730 "/notification")
-              {:headers {"Content-Type" "application/x-www-form-urlencoded"
-                         "Authorization" (str "Bearer " "h4egJmxnIjE1EiApo70VQZlJOl29g6Hzo5dcFGnD")}
-               :form-params {"message_format" "html"
-                             "color" "purple"
-                             "message" teksti}}))
-
 (defn luo-hipchat-appender [huone-id token taso]
   {:doc "HipChat appender"
    :min-level taso
