@@ -7,7 +7,7 @@
             [harja.loki :refer [log]]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [livi-pudotusvalikko]]
-            [harja.tiedot.urakka.toteumat.varusteet :as varusteet]
+            [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.fmt :as fmt]
             [clojure.string :as str]
             [cljs-time.core :as t]))
