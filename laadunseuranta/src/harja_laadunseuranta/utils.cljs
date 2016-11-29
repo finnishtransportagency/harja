@@ -18,17 +18,17 @@
 
 (defn iphone? []
   (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-                 [#".*iphone.*"])))
+                   [#".*iphone.*"])))
 
 (defn chrome? []
   (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-                 [#".*chrome.*"])))
+                   [#".*chrome.*"])))
 
 (defn firefox? []
   (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-                 [#".*firefox.*"])))
+                   [#".*firefox.*"])))
 
-(def +tuettu-chrome-versio+ 53)
+(def +tuettu-chrome-versio+ 44)
 (def +tuettu-firefox-versio+ 49) ;; mm. Flexbox & IndexedDB-tuki
 
 (defn maarita-selainversio-user-agentista [user-agent-text-lowercase selain-nimi]
@@ -48,28 +48,28 @@
 (defn chrome-vanhentunut? []
   (and (chrome?)
        (< (maarita-chrome-versio-user-agentista
-            (clojure.string/lower-case js/window.navigator.userAgent))
-          +tuettu-chrome-versio+)))
+             (clojure.string/lower-case js/window.navigator.userAgent))
+           +tuettu-chrome-versio+)))
 
 (defn firefox-vanhentunut? []
   (and (firefox?)
        (< (maarita-firefox-versio-user-agentista
-            (clojure.string/lower-case js/window.navigator.userAgent))
-          +tuettu-firefox-versio+)))
+             (clojure.string/lower-case js/window.navigator.userAgent))
+           +tuettu-firefox-versio+)))
 
 (defn tuettu-selain? []
   (boolean (or (ipad?)
                (iphone?)
                (and (chrome?)
                     (not (chrome-vanhentunut?)))
-               #_(and (firefox?)
-                      (not (firefox-vanhentunut?))))))
+               (and (firefox?)
+                    (not (firefox-vanhentunut?))))))
 
 (defn vanhentunut-selain? []
   (boolean (or (and (chrome?)
                     (chrome-vanhentunut?)
-                    #_(and (firefox?)
-                           (firefox-vanhentunut?))))))
+               (and (firefox?)
+                    (firefox-vanhentunut?))))))
 
 (defn- flip [atomi]
   (swap! atomi not))

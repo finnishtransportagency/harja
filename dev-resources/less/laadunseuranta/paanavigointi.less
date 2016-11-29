@@ -26,13 +26,14 @@
   z-index: @z-index-navigointilaatikko;
   align-self: center;
   width: 100%;
+  height: 100%; // Ilman tätä ei sisältö kapene kaikilla selaimilla automaattisesti jos korkeus ei riitä
   max-width: 1024px;
   position: relative;
-  background-color: @sisaltolaatikoiden-taustavari;
 
   > header {
     position: relative;
     border: @sisaltolaatikoiden-reunaviiva;
+    background-color: @sisaltolaatikoiden-taustavari;
     padding-top: 3px;
 
     > .hampurilaisvalikko {
@@ -125,13 +126,13 @@
        olevat nappulat mahtuvat. Tätä ei voitane laskea dynaamisesti, joten
        pitää päivittää tätä lukua jos välilehtien sisältö muuttuu */
     height: 510px;
-    max-height: 100%;
     border: @sisaltolaatikoiden-reunaviiva;
-    border-top: 0;
-    border-bottom: 0;
-    padding: 3%;
+    background-color: @sisaltolaatikoiden-taustavari;
+    border-top: none;
+    border-bottom: none;
 
     > .valintapainikkeet {
+      margin: 3%;
       display: flex;
       flex-wrap: wrap;
     }
@@ -139,7 +140,29 @@
 
   > footer {
     padding: 5px;
+    position: relative;
     border: @sisaltolaatikoiden-reunaviiva;
+    background-color: @sisaltolaatikoiden-taustavari;
+
+    > .piilotusnappi {
+      width: @piilotusnappi-koko;
+      height: (@piilotusnappi-koko / 2);
+      border: @sisaltolaatikoiden-reunaviiva;
+      border-radius: 90px 90px 0 0;
+      background-color: @piilotusnappi-taustavari;
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+
+      > img {
+        width: 32px;
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%) rotate(180deg);
+      }
+    }
 
     .footer-vasen {
       float: left;
@@ -260,26 +283,6 @@
 
 .navigointilaatikko {
   transition: 0.2s top ease;
-}
-
-.navigointilaatikko > .piilotusnappi {
-  width: @piilotusnappi-koko;
-  height: (@piilotusnappi-koko / 2);
-  border: @sisaltolaatikoiden-reunaviiva;
-  border-radius: 90px 90px 0 0;
-  background-color: @piilotusnappi-taustavari;
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  transform: translateX(-50%);
-
-  > img {
-    width: 32px;
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%) rotate(180deg);
-  }
 }
 
 .paanavigointi-container > .nayttonappi {
