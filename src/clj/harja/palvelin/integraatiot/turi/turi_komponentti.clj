@@ -7,7 +7,8 @@
             [harja.palvelin.komponentit.liitteet :as liitteet]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-            [harja.kyselyt.konversio :as konv])
+            [harja.kyselyt.konversio :as konv]
+            [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defprotocol TurvallisuusPoikkeamanLahetys
@@ -19,11 +20,9 @@
 (defn kasittele-turin-vastaus [db harja-turpo-id headers body]
   (q/lokita-lahetys<! db true harja-turpo-id)
   (try
-    (let [turi-id (Integer. (re-find #"\d+" body))
-          status (:status body)]
-      (if (and (= status 200)
-               (integer? turi-id))
-        (q/tallenna-turvallisuuspoikkeaman-turi-id db turi-id harja-turpo-id)
+    (let [turi-id (Integer. (re-find #"\d+" (str/replace body #"[\n]" "")))]
+      (if (integer? turi-id)
+        (q/tallenna-turvallisuuspoikkeaman-turi-id! db turi-id harja-turpo-id)
         (log/error "TURI:in lähettämälle turvallisuuspoikkeamalle ei saatu id:tä.")))
     (catch Exception e
       (log/error e "Poikkeus TURI:n palauttaman id:n parsinnassa"))))
