@@ -15,6 +15,7 @@
             [harja.ui.kommentit :as kommentit]
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta]
+            [harja.tiedot.kartta :as kartta-tiedot]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.modal :as modal]
@@ -455,7 +456,7 @@
                         (nav/vaihda-kartan-koko! :M))
                       #(do
                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
-    (komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-turvallisuuspoikkeama))
+    (komp/ulos (kartta-tiedot/kuuntele-valittua! tiedot/valittu-turvallisuuspoikkeama))
     (fn []
       [:span
        [:h3 "Turvallisuuspoikkeamat"]

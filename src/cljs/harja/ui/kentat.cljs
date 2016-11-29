@@ -18,7 +18,7 @@
 
             [harja.ui.dom :as dom]
             [harja.ui.kartta.ikonit :as kartta-ikonit]
-            [harja.views.kartta :as kartta]
+            [harja.tiedot.kartta :as kartta]
             [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
             [harja.views.kartta.tasot :as tasot]
             [harja.geo :as geo]

@@ -20,7 +20,8 @@
             [harja.domain.tilannekuva :as tk]
             [harja.ui.modal :as modal]
             [harja.tiedot.navigaatio :as nav]
-            [harja.domain.tilannekuva :as domain])
+            [harja.domain.tilannekuva :as domain]
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction-writable]]))
 
@@ -304,12 +305,12 @@
 (defn tilannekuva []
   (komp/luo
     (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva istunto/ajastin-taukotilassa?)
-    (komp/sisaan-ulos #(do (reset! kartta/pida-geometriat-nakyvilla? false)
+    (komp/sisaan-ulos #(do (reset! kartta-tiedot/pida-geometriat-nakyvilla? false)
                            (kartta/aseta-paivitetaan-karttaa-tila! true)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa @nav/valittu-urakka)
                            (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa @nav/valittu-hallintayksikko)
                            (tiedot/seuraa-alueita!))
-                      #(do (reset! kartta/pida-geometriat-nakyvilla? true)
+                      #(do (reset! kartta-tiedot/pida-geometriat-nakyvilla? true)
                            (kartta/aseta-paivitetaan-karttaa-tila! false)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa nil)
                            (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa nil)
@@ -325,12 +326,12 @@
                      (fn [_ ilmoitus]
                        (modal/piilota!)
                        (tiedot/paivita-ilmoituksen-tiedot (:id ilmoitus))))
-    {:component-will-mount (fn [_]
-                             (kartta/aseta-yleiset-kontrollit!
-                               [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? false
-                                                                 :luokka "haitari-tilannekuva"}]))
+    {:component-will-mount   (fn [_]
+                               (kartta-tiedot/aseta-yleiset-kontrollit!
+                                 [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? false
+                                                                   :luokka               "haitari-tilannekuva"}]))
      :component-will-unmount (fn [_]
-                               (kartta/tyhjenna-yleiset-kontrollit!)
+                               (kartta-tiedot/tyhjenna-yleiset-kontrollit!)
                                (kartta/poista-popup!))}
     (fn []
       [:span.tilannekuva

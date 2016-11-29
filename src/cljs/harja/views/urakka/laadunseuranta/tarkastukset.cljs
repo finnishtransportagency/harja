@@ -28,7 +28,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.fmt :as fmt]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.roolit :as roolit]
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -406,7 +407,7 @@
   (komp/luo
     (komp/lippu tarkastukset-kartalla/karttataso-tarkastukset)
     (komp/kuuntelija :tarkastus-klikattu #(reset! tarkastukset/valittu-tarkastus %2))
-    (komp/ulos (kartta/kuuntele-valittua! tarkastukset/valittu-tarkastus))
+    (komp/ulos (kartta-tiedot/kuuntele-valittua! tarkastukset/valittu-tarkastus))
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :M))
