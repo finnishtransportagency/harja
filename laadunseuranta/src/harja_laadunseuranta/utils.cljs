@@ -47,13 +47,13 @@
 
 (defn chrome-vanhentunut? []
   (and (chrome?)
-       (>= (maarita-chrome-versio-user-agentista
+       (< (maarita-chrome-versio-user-agentista
              (clojure.string/lower-case js/window.navigator.userAgent))
            +tuettu-chrome-versio+)))
 
 (defn firefox-vanhentunut? []
   (and (firefox?)
-       (>= (maarita-firefox-versio-user-agentista
+       (< (maarita-firefox-versio-user-agentista
              (clojure.string/lower-case js/window.navigator.userAgent))
            +tuettu-firefox-versio+)))
 
