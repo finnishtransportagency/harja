@@ -17,19 +17,16 @@
                  [#".*ipad.*"])))
 
 (defn iphone? []
-  (defn ipad? []
-    (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-                   [#".*iphone.*"]))))
+  (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+                   [#".*iphone.*"])))
 
 (defn chrome? []
-  (defn ipad? []
-    (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-                   [#".*chrome.*"]))))
+  (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+                   [#".*chrome.*"])))
 
 (defn firefox? []
-  (defn ipad? []
-    (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-                   [#".*firefox.*"]))))
+  (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+                   [#".*firefox.*"])))
 
 (def +tuettu-chrome-versio+ 44)
 (def +tuettu-firefox-versio+ 49) ;; mm. Flexbox & IndexedDB-tuki
