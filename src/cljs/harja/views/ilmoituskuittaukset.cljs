@@ -7,7 +7,6 @@
             [harja.domain.ilmoitukset :as apurit]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
-            [harja.ui.kentat :refer [tee-kentta]]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.napit :refer [palvelinkutsu-nappi] :as napit]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]

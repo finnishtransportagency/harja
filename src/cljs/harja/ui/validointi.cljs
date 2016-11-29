@@ -4,7 +4,6 @@
             [harja.loki :refer [log]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :refer [tee-kentta]]
             [harja.pvm :as pvm]
 
             [cljs.core.async :refer [<! put! chan]]

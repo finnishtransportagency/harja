@@ -6,7 +6,6 @@
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.protokollat :refer [Haku hae]]
-            [harja.ui.kentat :refer [tee-kentta]]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.toteumat.varusteet :as varustetiedot]
             [harja.loki :refer [log logt tarkkaile!]]
