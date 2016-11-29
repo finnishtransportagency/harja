@@ -8,25 +8,28 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja-laadunseuranta.macros :refer [after-delay]]))
 
-(defn user-agent-lower-match? [string]
-  (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-                 [regex])))
-
 ;; Lähtökohtaisesti pitäisi tutkia selainten ominaisuuksia eikä selaimia.
 ;; Kyseessä on kuitenkin tiettyyn tarkoitukseen toteutettu mobiilisovellus, joka on käsin
 ;; testattu toimivaksi eri selaimilla
 
 (defn ipad? []
-  (user-agent-lower-match? #".*ipad.*"))
+  (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+                 [#".*ipad.*"])))
 
 (defn iphone? []
-  (user-agent-lower-match? #".*iphone.*"))
+  (defn ipad? []
+    (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+                   [#".*iphone.*"]))))
 
 (defn chrome? []
-  (user-agent-lower-match? #".*chrome.*"))
+  (defn ipad? []
+    (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+                   [#".*chrome.*"]))))
 
 (defn firefox? []
-  (user-agent-lower-match? #".*firefox.*"))
+  (defn ipad? []
+    (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+                   [#".*firefox.*"]))))
 
 (def +tuettu-chrome-versio+ 44)
 (def +tuettu-firefox-versio+ 49) ;; mm. Flexbox & IndexedDB-tuki
