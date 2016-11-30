@@ -124,7 +124,7 @@
 (defn merkinta-epaonnistui []
   (ilmoitukset/ilmoita (:viesti %)
                        s/ilmoitus
-                       {:tyyppi (:tyyppi %)})
+                       {:tyyppi (:tyyppi %)}))
 
 (defn tallenna-sovelluksen-tilasta-merkinta-indexeddbn!
   "'Nauhoitusfunktio', joka lukee sovelluksen tilan ja muodostaa
