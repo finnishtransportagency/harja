@@ -10,7 +10,7 @@
     "viestintunniste": {
       "id": 124
     },
-    "lahetysaika": "2016-01-30T12:00:00Z"
+    "lahetysaika": "2016-01-30T12:00:00+02:00"
   },
   "reittitoteuma": {
     "toteuma": {
@@ -22,8 +22,8 @@
         "ytunnus": "8765432-1"
       },
       "sopimusId": 2,
-      "alkanut": "2015-01-30T13:00:00Z",
-      "paattynyt": "2015-01-30T15:05:00Z",
+      "alkanut": "2015-01-30T13:00:00+02:00",
+      "paattynyt": "2015-01-30T15:05:00+02:00",
       "toteumatyyppi": "kokonaishintainen",
       "tehtavat": [
         {
@@ -47,31 +47,31 @@
       ]
     },
     "reitti": [
-          {"reittipiste": {"aika": "2015-01-30T13:00:00Z", "koordinaatit": {"x": 442978.5616720633, "y": 7223379.143039763}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.4}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T13:05:00Z", "koordinaatit": {"x": 441832.00624778564, "y": 7223799.546695332}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T13:10:00Z", "koordinaatit": {"x": 440914.76190836355, "y": 7223875.983723617}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T13:15:00Z", "koordinaatit": {"x": 440379.70271036733, "y": 7223761.3281811895}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T13:20:00Z", "koordinaatit": {"x": 439653.55094165815, "y": 7223493.798582191}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T13:25:00Z", "koordinaatit": {"x": 439271.3658002323, "y": 7223493.798582191}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T13:30:00Z", "koordinaatit": {"x": 438965.6176870916, "y": 7223799.546695332}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T13:35:00Z", "koordinaatit": {"x": 438583.43254566565, "y": 7224219.9503509}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T13:40:00Z", "koordinaatit": {"x": 438163.0288900972, "y": 7224487.479949898}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T13:45:00Z", "koordinaatit": {"x": 437742.62523452874, "y": 7224907.883605467}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T13:50:00Z", "koordinaatit": {"x": 437436.87712138804, "y": 7225290.068746893}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T13:55:00Z", "koordinaatit": {"x": 436596.0698102511, "y": 7225595.816860033}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T14:00:00Z", "koordinaatit": {"x": 436061.01061225485, "y": 7225710.472402461}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T14:05:00Z", "koordinaatit": {"x": 435411.29587183084, "y": 7226207.313086315}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T14:10:00Z", "koordinaatit": {"x": 434761.5811314069, "y": 7226742.372284311}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T14:15:00Z", "koordinaatit": {"x": 434379.395989981, "y": 7227200.994454022}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T14:20:00Z", "koordinaatit": {"x": 434302.9589616958, "y": 7227888.927708589}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T14:25:00Z", "koordinaatit": {"x": 434035.4293626977, "y": 7228309.331364157}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T14:30:00Z", "koordinaatit": {"x": 433691.4627354144, "y": 7228615.079477298}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T14:35:00Z", "koordinaatit": {"x": 432965.3109667052, "y": 7228691.516505583}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T14:40:00Z", "koordinaatit": {"x": 432200.94068385346, "y": 7228806.172048011}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T14:45:00Z", "koordinaatit": {"x": 431780.537028285, "y": 7229111.920161151}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T14:50:00Z", "koordinaatit": {"x": 431436.5704010017, "y": 7229303.012731864}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T14:55:00Z", "koordinaatit": {"x": 430710.41863229254, "y": 7229379.449760149}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
-	  {"reittipiste": {"aika": "2015-01-30T15:00:00Z", "koordinaatit": {"x": 430022.4853777259, "y": 7229570.542330862}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}}
+          {"reittipiste": {"aika": "2015-01-30T13:00:00+02:00", "koordinaatit": {"x": 442978.5616720633, "y": 7223379.143039763}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.4}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T13:05:00+02:00", "koordinaatit": {"x": 441832.00624778564, "y": 7223799.546695332}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T13:10:00+02:00", "koordinaatit": {"x": 440914.76190836355, "y": 7223875.983723617}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T13:15:00+02:00", "koordinaatit": {"x": 440379.70271036733, "y": 7223761.3281811895}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T13:20:00+02:00", "koordinaatit": {"x": 439653.55094165815, "y": 7223493.798582191}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T13:25:00+02:00", "koordinaatit": {"x": 439271.3658002323, "y": 7223493.798582191}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T13:30:00+02:00", "koordinaatit": {"x": 438965.6176870916, "y": 7223799.546695332}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T13:35:00+02:00", "koordinaatit": {"x": 438583.43254566565, "y": 7224219.9503509}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T13:40:00+02:00", "koordinaatit": {"x": 438163.0288900972, "y": 7224487.479949898}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T13:45:00+02:00", "koordinaatit": {"x": 437742.62523452874, "y": 7224907.883605467}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T13:50:00+02:00", "koordinaatit": {"x": 437436.87712138804, "y": 7225290.068746893}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T13:55:00+02:00", "koordinaatit": {"x": 436596.0698102511, "y": 7225595.816860033}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T14:00:00+02:00", "koordinaatit": {"x": 436061.01061225485, "y": 7225710.472402461}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T14:05:00+02:00", "koordinaatit": {"x": 435411.29587183084, "y": 7226207.313086315}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T14:10:00+02:00", "koordinaatit": {"x": 434761.5811314069, "y": 7226742.372284311}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T14:15:00+02:00", "koordinaatit": {"x": 434379.395989981, "y": 7227200.994454022}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T14:20:00+02:00", "koordinaatit": {"x": 434302.9589616958, "y": 7227888.927708589}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T14:25:00+02:00", "koordinaatit": {"x": 434035.4293626977, "y": 7228309.331364157}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T14:30:00+02:00", "koordinaatit": {"x": 433691.4627354144, "y": 7228615.079477298}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T14:35:00+02:00", "koordinaatit": {"x": 432965.3109667052, "y": 7228691.516505583}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T14:40:00+02:00", "koordinaatit": {"x": 432200.94068385346, "y": 7228806.172048011}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T14:45:00+02:00", "koordinaatit": {"x": 431780.537028285, "y": 7229111.920161151}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T14:50:00+02:00", "koordinaatit": {"x": 431436.5704010017, "y": 7229303.012731864}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T14:55:00+02:00", "koordinaatit": {"x": 430710.41863229254, "y": 7229379.449760149}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}},
+	  {"reittipiste": {"aika": "2015-01-30T15:00:00+02:00", "koordinaatit": {"x": 430022.4853777259, "y": 7229570.542330862}, "tehtavat": [{"tehtava": {"id":1370}}], "materiaalit": [{"materiaali": "Talvisuolaliuos NaCl", "maara": {"yksikko": "kg", "maara": 1.5}}]}}
 	  
   	]
 	

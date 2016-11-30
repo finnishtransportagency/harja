@@ -19,7 +19,9 @@
 
 (defn iso-8601-paivamaara? [arvo]
   (try
-    (.parse (SimpleDateFormat. "yyyy-MM-dd") arvo)
-    true
+    (let [fmt (SimpleDateFormat. "yyyy-MM-dd")
+          pvm (.parse fmt arvo)]
+      (SimpleDateFormat. "yyyy-MM-dd")
+      (= arvo (.format fmt pvm)))
     (catch ParseException e
       false)))

@@ -15,6 +15,12 @@ SELECT
   t.tarkastaja,
   t.tyyppi,
   t.nayta_urakoitsijalle AS "nayta-urakoitsijalle",
+  thm.talvihoitoluokka   AS talvihoitomittaus_hoitoluokka,
+  thm.lumimaara          AS talvihoitomittaus_lumimaara,
+  thm.tasaisuus          AS talvihoitomittaus_tasaisuus,
+  thm.kitka              AS talvihoitomittaus_kitka,
+  thm.lampotila_tie      AS talvihoitomittaus_lampotila_tie,
+  thm.lampotila_ilma     AS talvihoitomittaus_lampotila_ilma,
   ypk.tr_numero          AS yllapitokohde_tr_numero,
   ypk.tr_alkuosa         AS yllapitokohde_tr_alkuosa,
   ypk.tr_alkuetaisyys    AS yllapitokohde_tr_alkuetaisyys,
@@ -30,6 +36,7 @@ SELECT
     JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
   WHERE tarkastus = t.id) as vakiohavainnot
 FROM tarkastus t
+  LEFT JOIN talvihoitomittaus thm ON thm.tarkastus = t.id
   LEFT JOIN kayttaja k ON t.luoja = k.id
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
   LEFT JOIN yllapitokohde ypk ON t.yllapitokohde = ypk.id
@@ -38,6 +45,9 @@ WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
+      AND (:havaintoja_sisaltavat = FALSE
+           OR ((char_length(t.havainnot) > 0 AND lower(t.havainnot) != 'ok')
+               OR EXISTS(SELECT tarkastus FROM tarkastus_vakiohavainto WHERE tarkastus = t.id)))
       AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE)
   ORDER BY t.aika DESC
 LIMIT :maxrivimaara;
@@ -62,6 +72,9 @@ SELECT ST_Simplify(t.sijainti, :toleranssi) as reitti,
    AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
    AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
    AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
+       AND (:havaintoja_sisaltavat = FALSE
+            OR ((char_length(t.havainnot) > 0 AND lower(t.havainnot) != 'ok')
+                OR EXISTS(SELECT tarkastus FROM tarkastus_vakiohavainto WHERE tarkastus = t.id)))
    AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE);
 
 -- name: hae-tarkastus
