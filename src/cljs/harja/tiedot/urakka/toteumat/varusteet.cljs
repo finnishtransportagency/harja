@@ -139,13 +139,15 @@
                    (assoc tiedot :tietolajin-kuvaus nil)
                    tiedot)
           uusi-toteuma (merge toteuma tiedot)]
+
+      #_(log "---> UUSI TOTEUMA" (pr-str (:ominaisuudet (:tietolajin-kuvaus uusi-toteuma))))
       ;; Jos tietolajin kuvaus muuttui ja se ei ole tyhjä, haetaan uudet tiedot
       (when (and tietolaji-muuttui? (:tietolaji tiedot))
         (let [tulos! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
           (go
             (tulos! (<! (hae-tietolajin-kuvaus (:tietolaji tiedot)))))))
 
-      (assoc app :varustetoteuma (merge toteuma tiedot))))
+      (assoc app :varustetoteuma uusi-toteuma)))
 
   v/TietolajinKuvaus
   (process-event [{:keys [tietolaji kuvaus]} {toteuma :varustetoteuma :as app}]

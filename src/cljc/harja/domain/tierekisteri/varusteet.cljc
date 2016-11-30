@@ -1,14 +1,14 @@
 (ns harja.domain.tierekisteri.varusteet
   "Tierekisterin Varusteet ja laitteet -teeman tietojen käsittelyä"
   (:require [clojure.string :as str]
-            #?@(:cljs [[harja.loki :refer [log]]])
+    #?@(:cljs [[harja.loki :refer [log]]])
             [harja.domain.tierekisteri :as tr]))
 
-(def varuste-toimenpide->string {nil         "Kaikki"
-                                 :lisatty    "Lisätty"
+(def varuste-toimenpide->string {nil "Kaikki"
+                                 :lisatty "Lisätty"
                                  :paivitetty "Päivitetty"
-                                 :poistettu  "Poistettu"
-                                 :tarkastus  "Tarkastus"})
+                                 :poistettu "Poistettu"
+                                 :tarkastus "Tarkastus"})
 
 (def varustetoteumatyypit
   (vec varuste-toimenpide->string))
@@ -52,22 +52,18 @@
    :fmt tr/tierekisteriosoite-tekstina
    :leveys 1})
 
-(defn- kentan-arvo-avain [ominaisuus]
-  (keyword (str "arvo-" (:kenttatunniste ominaisuus))))
-
 (defmulti varusteominaisuus->skeema
-  "Muodostaa lomake/grid tyyppisen kentän skeeman varusteen ominaisuuden kuvauksen perusteella.
-  Dispatch tapahtuu ominaisuuden tietotyypin perusteella."
-  (comp :tietotyyppi :ominaisuus))
+          "Muodostaa lomake/grid tyyppisen kentän skeeman varusteen ominaisuuden kuvauksen perusteella.
+          Dispatch tapahtuu ominaisuuden tietotyypin perusteella."
+          (comp :tietotyyppi :ominaisuus))
 
 (defn- varusteominaisuus-skeema-perus [ominaisuus]
   {:otsikko (str/capitalize (:selite ominaisuus))
    :pakollinen? (:pakollinen ominaisuus)
-   :nimi (kentan-arvo-avain ominaisuus)
-   :hae #(get-in % [:varuste :tietue :tietolaji :arvot (:kenttatunniste ominaisuus)])
+   :nimi (keyword (:kenttatunniste ominaisuus))
+   :hae #(get-in % [:arvot (:kenttatunniste ominaisuus)])
    :aseta (fn [rivi arvo]
-            (log "---> " (pr-str rivi) " " (pr-str arvo))
-            (assoc rivi (kentan-arvo-avain ominaisuus) arvo))})
+            (assoc-in rivi [:arvot (:kenttatunniste ominaisuus)] arvo))})
 
 (defmethod varusteominaisuus->skeema :koodisto
   [{ominaisuus :ominaisuus}]
@@ -78,7 +74,6 @@
             :valinta-nayta :selite
             :leveys 3
             :fmt (fn [arvo]
-                   (log "---> "(pr-str arvo))
                    (let [koodi (first (filter #(= arvo (str (:koodi %))) koodisto))]
                      (if koodi
                        (:selite koodi)

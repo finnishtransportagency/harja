@@ -125,8 +125,6 @@
             #(e! (v/->ValitseVarusteToteumanTyyppi %)))]])
 
 (defn varustetoteumalomake [e! varustetoteuma]
-  (log "----> " (pr-str (:tietolajin-kuvaus varustetoteuma)))
-  (log "----> " (pr-str (:toiminto varustetoteuma)))
   [:span.varustetoteumalomake
    [napit/takaisin "Takaisin varusteluetteloon"
     #(e! (v/->TyhjennaValittuToteuma))]
