@@ -2,6 +2,11 @@
                      (.getHostName (java.net.InetAddress/getLocalHost))))
 
 (defproject harja "0.0.1-SNAPSHOT"
+  ;; :jvm-opts ["-Dcom.sun.management.jmxremote"
+  ;;          "-Dcom.sun.management.jmxremote.ssl=false"
+  ;;          "-Dcom.sun.management.jmxremote.authenticate=false"
+  ;;          "-Dcom.sun.management.jmxremote.port=43210"]
+
   :description "Liikenneviraston Harja"
 
   :dependencies [[org.clojure/clojure "1.8.0"]
@@ -74,7 +79,7 @@
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
                  [cljs-ajax "0.5.3"]
-                 [figwheel "0.5.3"]
+                 [figwheel "0.5.8"]
 
                  [reagent "0.6.0-rc" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "15.2.1-1"]
@@ -121,7 +126,7 @@
                  [dk.ative/docjure "1.10.0"]
 
                  [com.cemerick/piggieback "0.2.1"]
-                 [figwheel-sidecar "0.5.3"]
+                 [figwheel-sidecar "0.5.8"]
 
                  ;; Performance metriikat
                  [yleisradio/new-reliquary "1.0.0"]
@@ -144,6 +149,9 @@
                     :test2junit-run-ant ~(not jenkinsissa?)
                     ;; Sonic MQ:n kirjastot voi tarvittaessa lisätä paikallista testausta varten:
                     ;; :resource-paths ["opt/sonic/7.6.2/*"]
+                    :repl-options {; for nREPL dev you really need to limit output
+                                  ;;:init (set! *print-length* 50)
+                                  :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
                     }
              :test {:dependencies [[clj-webdriver "0.6.0"]
                                    [org.seleniumhq.selenium/selenium-java "2.44.0"]
@@ -167,6 +175,7 @@
   ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds
               [{:id           "dev"
+                :figwheel     {:websocket-host "harja-dev2.lxd"}
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-dev"]
                 :compiler     {:optimizations :none
                                :source-map    true
@@ -193,7 +202,7 @@
                ;;:warning-handlers [utils.cljs-warning-handler/handle]}
 
 
-               {:id           "prod"
+               #_{:id           "prod"
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-prod"]
                 :compiler     {:optimizations :advanced
                                ;; korjaa pitkän buildiajan http://dev.clojure.org/jira/browse/CLJS-1228
@@ -212,10 +221,11 @@
                                }}
 
                ;; Laadunseurannan buildit
-               {:id "laadunseuranta-dev"
+               #_{:id "laadunseuranta-dev"
                 :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
 
-                :figwheel {:on-jsload "harja-laadunseuranta.dev-core/on-js-reload"}
+                :figwheel {:on-jsload "harja-laadunseuranta.dev-core/on-js-reload"
+                           :websocket-url "ws://harja-dev2.lxd:3449/figwheel-ws"}
 
                 :compiler {:main harja-laadunseuranta.dev-core
                            :asset-path "js/compiled/out"
@@ -227,6 +237,7 @@
                 :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
 
                 :figwheel {:devcards true
+                           :websocket-url "ws://harja-dev2.lxd:3449/figwheel-ws"
                                         ;:nrepl-port 7889
                                         ;:server-port 3450
                            }
@@ -255,7 +266,7 @@
                ;; This next build is an compressed minified build for
                ;; production. You can build this with:
                ;; lein cljsbuild once min
-               {:id "laadunseuranta-min"
+               #_{:id "laadunseuranta-min"
                 :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
                 :jar true
                 :compiler {:output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta.js"
@@ -284,7 +295,6 @@
   :aot :all
   :main harja.palvelin.main
   :auto-clean false                                         ;; for uberjar
-
   :test-refresh {:notify-command ["terminal-notifier" "-title" "Harja tests" "-message"]}
 
   ;; REPL kehitys
@@ -297,6 +307,7 @@
 
   ;; Clientin reload ja REPL
   :figwheel {:server-port 3449
+             :server-ip "0.0.0.0"
              :reload-clj-files false
              :css-dirs ["resources/public/laadunseuranta/css"]}
 
