@@ -197,4 +197,3 @@
 
 (defn kasaa-tiedot [data]
   (validoi-tiedot (map tiedot data)))
-
