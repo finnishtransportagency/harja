@@ -13,9 +13,21 @@
 (defonce pida-geometriat-nakyvilla? (atom pida-geometria-nakyvilla-oletusarvo))
 
 (defonce infopaneeli-nakyvissa? (atom true))
+(defonce infopanelin-linkkifunktiot (atom nil))
 
 (defn keskita-kartta-alueeseen! [alue]
   (reset! nav/kartan-extent alue))
+
+(defn kasittele-infopaneliin-linkit!
+  "Infopaneelin skeemat saattavat sisältää 'linkkejä', jotka käsitellään
+  (tai ei käsitellä) näkymäkohtaisesti. Esimerkiksi toteumanäkymässä voidaan haluta
+  mahdollistaa toteuman avaaminen lomakkeeseen infopaneelin kautta.
+  Funktio ottaa parametriksi mäpin, jossa avaimet ovat :tyyppejä-kartalla
+  (katso harja.ui.kartta.asioiden-tiedot), ja arvot ovat funktioita, jotka
+  saavat parametrinaan valitun asian datan."
+  [asetukset]
+  (assert (or (nil? asetukset) (map? asetukset)) "Infopaneelin linkkiasetusten pitää olla mäppi")
+  (reset! infopanelin-linkkifunktiot asetukset))
 
 (defn zoomaa-valittuun-hallintayksikkoon-tai-urakkaan
   []

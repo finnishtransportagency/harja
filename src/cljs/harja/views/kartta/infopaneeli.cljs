@@ -38,9 +38,11 @@
     ;; Kentat namespace olettaa, että kentän arvo tulee atomissa
     (when arvo-fn (atom (arvo-fn data)))))
 
-(defn esita-yksityiskohdat [{:keys [otsikko tiedot data]}]
+(defn esita-yksityiskohdat [{:keys [otsikko tiedot data tyyppi]} linkin-kasittely-fn]
   [:div
    [:span.ip-otsikko otsikko]
+   (when-let [{:keys [teksti toiminto]} (tyyppi linkin-kasittely-fn)]
+     [:span [napit/yleinen teksti #(toiminto data)]])
    (for [[idx kentan-skeema] (map-indexed #(do [%1 %2]) tiedot)]
      ^{:key (str "infopaneliin_yksityiskohta_" idx)}
      [:div
@@ -49,7 +51,7 @@
         [:span.kentan-label (:otsikko kentan-skeema)]]]
       [kentat/nayta-arvo kentan-skeema (kentan-arvo kentan-skeema data)]])])
 
-(defn infopaneeli [asiat-pisteessa nakyvissa?]
+(defn infopaneeli [asiat-pisteessa nakyvissa? linkkifunktiot]
   (when @nakyvissa?
     (let [{:keys [asiat haetaan? koordinaatti]} asiat-pisteessa
           asiat (asioiden-tiedot/kasaa-tiedot asiat)
@@ -74,7 +76,7 @@
        [:div "Koordinaatti: " (str koordinaatti)]
        (when-not (empty? asiat)
          (if esita-yksityiskohdat?
-           [esita-yksityiskohdat (or @valittu-asia ainoa-asia)]
+           [esita-yksityiskohdat (or @valittu-asia ainoa-asia) @linkkifunktiot]
            [:div (doall (for [[idx asia] (map-indexed #(do [%1 %2]) asiat)]
                           ^{:key (str "infopaneelin_otsikko_" idx)}
                           [esita-otsikko asia]))]))])))
