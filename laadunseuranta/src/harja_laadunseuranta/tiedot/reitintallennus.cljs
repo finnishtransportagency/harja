@@ -36,7 +36,7 @@
   (if-let [tarkkuus (:accuracy nykyinen-sijainti)]
     (<= tarkkuus sallittu-tarkkuus)
     (do (.log js/console "Nykyisellä sijainnilla ei ole tarkkuutta!")
-        true))
+        true)))
 
 ;; Jos muutat tätä, kasvata versionumeroa ja varmista, että migraatio toimii niillä laitteilla,
 ;; jossa on vanha versio.
