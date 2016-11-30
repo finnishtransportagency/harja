@@ -480,6 +480,7 @@
   (let [selite-teksti (tehtavan-nimi (:tehtavat tyokone))
         [viivat nuolen-vari] (tehtavan-viivat-ja-nuolitiedosto
                               (:tehtavat tyokone) (valittu-fn? tyokone))
+        viivat (ulkoasu/tehtavan-viivat-tyokoneelle viivat)
         paikka (or (:reitti tyokone)
                    {:type :point
                     :coordinates (:sijainti tyokone)})]
