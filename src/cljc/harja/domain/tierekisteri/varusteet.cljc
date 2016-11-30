@@ -58,7 +58,7 @@
   (comp :tietotyyppi :ominaisuus))
 
 (defn- varusteominaisuus-skeema-perus [ominaisuus]
-  {:otsikko (:selite ominaisuus)
+  {:otsikko (str/capitalize (:selite ominaisuus))
    :pakollinen? (:pakollinen ominaisuus)
    :nimi (keyword (:kenttatunniste ominaisuus))
    :hae #(get-in % [:varuste :tietue :tietolaji :arvot (:kenttatunniste ominaisuus)])

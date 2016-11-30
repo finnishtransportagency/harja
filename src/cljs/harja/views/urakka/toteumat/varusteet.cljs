@@ -112,9 +112,6 @@
        [:div.alert-warning
         (str "Toteumia löytyi yli " nayta-max-toteumaa ". Tarkenna hakurajausta.")])]))
 
-
-
-
 (defn valinnat [e! valinnat]
   [:span
    ;; Nämä käyttävät suoraan atomeita valintoihin
@@ -129,16 +126,21 @@
 
 (defn varustetoteumalomake [e! varustetoteuma]
   (log "----> " (pr-str (:tietolajin-kuvaus varustetoteuma)))
+  (log "----> " (pr-str (:toiminto varustetoteuma)))
   [:span.varustetoteumalomake
    [napit/takaisin "Takaisin varusteluetteloon"
     #(e! (v/->TyhjennaValittuToteuma))]
 
    [lomake/lomake
-    {:otsikko "Varustetoteuma"
+    {:otsikko (case (:toiminto varustetoteuma)
+                :lisaa "Uusi varuste"
+                "Varustetoteuma")
      :muokkaa! #(e! (v/->AsetaToteumanTiedot %))
      :footer-fn (fn [data]
                   (log "DATA: " (pr-str data))
                   [napit/tallenna "Tallenna"
+
+
                    #(log "FIXME: implement")
                    {:disabled (not (lomake/voi-tallentaa? data))}])}
 
@@ -160,15 +162,12 @@
         :otsikko "Lisätietoja"
         :tyyppi :string})
 
-
-
-
      (apply lomake/ryhma "Varusteen ominaisuudet"
             (map varusteominaisuus->skeema
                  (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))))]
     varustetoteuma]
-   #_[:span (pr-str (distinct (map (comp :tietotyyppi :ominaisuus) (:ominaisuudet (:tietolajin-kuvaus varustetoteuma)))))]
-   #_ [debug (:tietolajin-kuvaus varustetoteuma)]])
+   [:span (pr-str (distinct (map (comp :tietotyyppi :ominaisuus) (:ominaisuudet (:tietolajin-kuvaus varustetoteuma)))))]
+   [debug (:tietolajin-kuvaus varustetoteuma)]])
 
 (defn- varusteet* [e! varusteet]
   (e! (v/->YhdistaValinnat @varustetiedot/valinnat))
