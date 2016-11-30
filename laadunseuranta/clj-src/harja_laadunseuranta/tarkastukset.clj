@@ -4,7 +4,8 @@
             [harja-laadunseuranta.kyselyt :as q]
             [harja-laadunseuranta.utils :as utils]
             [harja.kyselyt.tarkastukset :as tark-q]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clj-time.core :as t]))
 
 (def db tietokanta/db)
 
@@ -36,6 +37,8 @@
         (not= etenemissuunta-piste1-piste2 etenemissuunta-piste2-piste3)))
     false))
 
+(def +kahden-pisteen-valinen-sallittu-aikaero-s+ 120)
+
 (defn- tarkastus-jatkuu?
   "Ottaa reittimerkinnän ja järjestyksesä seuraavan reittimerkinnän ja kertoo muodostavatko ne loogisen jatkumon,
    toisin sanoen tulkitaanko seuraavan pisteen olevan osa samaa tarkastusta vai ei."
@@ -43,10 +46,17 @@
   (and
     ;; Jatkuvat havainnot pysyvät samana myös seuraavassa pisteessä
     (= (:jatkuvat-havainnot nykyinen-reittimerkinta) (:jatkuvat-havainnot seuraava-reittimerkinta))
-    ;; Seuraava piste on osa samaa tietä ja tieosaa. Jos seuraavalle pistelle ei ole pystytty määrittelemään tietä,
+    ;; Seuraava piste on osa samaa tietä. Jos seuraavalle pistelle ei ole pystytty määrittelemään tietä,
     ;; niin oletetaan kuitenkin, että se on osa samaa tarkastusta niin kauan kuin osoite oikeasti vaihtuu
     (or (nil? (:tr-osoite seuraava-reittimerkinta))
         (= (get-in nykyinen-reittimerkinta [:tr-osoite :tie]) (get-in seuraava-reittimerkinta [:tr-osoite :tie])))
+    ;; Edellisen pisteen kirjauksesta ei ole kulunut ajallisesti liian kauan
+    ;; Jos on kulunut, emme tiedä, mitä näiden pisteiden välillä on tapahtunut, joten on turvallista
+    ;; päättää edellinen tarkastus ja aloittaa uusi.
+    (<= (t/in-seconds (t/interval (:aikaleima nykyinen-reittimerkinta)
+                                  (:aikaleima seuraava-reittimerkinta)))
+        +kahden-pisteen-valinen-sallittu-aikaero-s+)
+
     ;; Seuraava piste ei aiheuta reitin kääntymistä ympäri
     ;; PENDING GPS:n epätarkkuudesta johtuen aiheuttaa liikaa ympärikääntymisiä eikä toimi oikein, siksi kommentoitu
     #_(not (tr-osoitteet-sisaltavat-ymparikaantymisen? [; Edellinen sijainti
