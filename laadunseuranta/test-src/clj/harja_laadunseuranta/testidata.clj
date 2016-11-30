@@ -255,6 +255,7 @@
    {:id 1 :sijainti [465321.5999816895 7230676.000024414]
     :jatkuvat-havainnot []
     :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 3)))}
+   ;; GPS-signaali katkeaa tässä joksikin aikaa
    {:id 2 :sijainti [465641.5999816895 7230780.000024414]
     :jatkuvat-havainnot []
     :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 190)))}
