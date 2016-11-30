@@ -7,7 +7,8 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.napit :as napit]
-            [harja.ui.kentat :as kentat])
+            [harja.ui.kentat :as kentat]
+            [harja.ui.kartta.asioiden-tiedot :as asioiden-tiedot])
   (:require-macros
    [cljs.core.async.macros :as async-macros]))
 
@@ -41,7 +42,7 @@
   [:div
    [:span otsikko]
    (for [[idx kentan-skeema] (map-indexed #(do [%1 %2]) tiedot)]
-     ^{:key idx}
+     ^{:key (str "infopaneliin_yksityiskohta_" idx)}
      [:div
       [:label.control-label
        [:span
@@ -50,7 +51,7 @@
 
 (defn infopaneeli [asiat-pisteessa-atomi]
   (when-let [{:keys [asiat haetaan? koordinaatti]} @asiat-pisteessa-atomi]
-    (let [
+    (let [asiat (asioiden-tiedot/kasaa-tiedot asiat)
           vain-yksi-asia? (-> asiat count (= 1))
           useampi-asia? (not vain-yksi-asia?)
           esita-yksityiskohdat? (or @valittu-asia vain-yksi-asia?)
@@ -74,5 +75,5 @@
          (if esita-yksityiskohdat?
            [esita-yksityiskohdat (or @valittu-asia ainoa-asia)]
            [:div (doall (for [[idx asia] (map-indexed #(do [%1 %2]) asiat)]
-                          ^{:key idx}
+                          ^{:key (str "infopaneelin_otsikko_" idx)}
                           [esita-otsikko asia]))]))])))
