@@ -16,76 +16,76 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce valinnat
-  (reaction {:urakka-id (:id @nav/valittu-urakka)
-             :sopimus-id (first @urakka/valittu-sopimusnumero)
-             :hoitokausi @urakka/valittu-hoitokausi
-             :kuukausi @urakka/valittu-hoitokauden-kuukausi}))
+         (reaction {:urakka-id (:id @nav/valittu-urakka)
+                    :sopimus-id (first @urakka/valittu-sopimusnumero)
+                    :hoitokausi @urakka/valittu-hoitokausi
+                    :kuukausi @urakka/valittu-hoitokauden-kuukausi}))
 
 (defonce varusteet
-  (atom {:nakymassa? false
+         (atom {:nakymassa? false
 
-         :tienumero nil
+                :tienumero nil
 
-         ;; Valinnat (urakka, sopimus, hk, kuukausi)
-         :valinnat nil
+                ;; Valinnat (urakka, sopimus, hk, kuukausi)
+                :valinnat nil
 
-         ;; Ajastetun toteumahaun id
-         :toteumahaku-id nil
+                ;; Ajastetun toteumahaun id
+                :toteumahaku-id nil
 
-         ;; Toteumat, jotka on haettu nykyisten valintojen perusteella
-         :toteumat nil
+                ;; Toteumat, jotka on haettu nykyisten valintojen perusteella
+                :toteumat nil
 
-         ;; Karttataso varustetoteumille
-         :karttataso-nakyvissa? false
-         :karttataso nil
+                ;; Karttataso varustetoteumille
+                :karttataso-nakyvissa? false
+                :karttataso nil
 
-         ;; Valittu varustetoteuma
-         :varustetoteuma nil
+                ;; Valittu varustetoteuma
+                :varustetoteuma nil
 
-         ;; Varustehaun hakuehdot ja tulokset
-         :varustehaku {:hakuehdot {:haku-kaynnissa? false}
+                ;; Varustehaun hakuehdot ja tulokset
+                :varustehaku {:hakuehdot {:haku-kaynnissa? false}
 
-                       ;; Tällä hetkellä näytettävä tietolaji
-                       ;; ja varusteet
-                       :tietolaji nil
-                       :varusteet nil}}))
+                              ;; Tällä hetkellä näytettävä tietolaji
+                              ;; ja varusteet
+                              :tietolaji nil
+                              :varusteet nil}}))
 
 (defn- hae [{valinnat :valinnat toteumahaku-id :toteumahaku-id :as app}]
   (when toteumahaku-id
     (.clearTimeout js/window toteumahaku-id))
   (assoc app
-         :toteumahaku-id (.setTimeout js/window
-                                      (t/send-async! v/->HaeVarusteToteumat)
-                                      500)
-         :toteumat nil))
+    :toteumahaku-id (.setTimeout js/window
+                                 (t/send-async! v/->HaeVarusteToteumat)
+                                 500)
+    :toteumat nil))
 
 
 
 (defn- selite [{:keys [toimenpide tietolaji alkupvm]}]
   (str
-   (pvm/pvm alkupvm) " "
-   (varusteet/varuste-toimenpide->string toimenpide)
-   " "
-   (varusteet/tietolaji->selitys tietolaji)))
+    (pvm/pvm alkupvm) " "
+    (varusteet/varuste-toimenpide->string toimenpide)
+    " "
+    (varusteet/tietolaji->selitys tietolaji)))
 
 (defn- varustetoteumat-karttataso [toteumat]
   (kartalla-esitettavaan-muotoon
-   toteumat
-   nil nil
-   (keep (fn [toteuma]
-           (when-let [sijainti (some-> toteuma :sijainti geo/pisteet first)]
-             (assoc toteuma
-                    :tyyppi-kartalla :varustetoteuma
-                    :selitys-kartalla (selite toteuma)
-                    :sijainti {:type :point
-                               :coordinates sijainti}))))))
+    toteumat
+    nil nil
+    (keep (fn [toteuma]
+            (when-let [sijainti (some-> toteuma :sijainti geo/pisteet first)]
+              (assoc toteuma
+                :tyyppi-kartalla :varustetoteuma
+                :selitys-kartalla (selite toteuma)
+                :sijainti {:type :point
+                           :coordinates sijainti}))))))
 
 (defn- hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm] tienumero]
   (k/post! :urakan-varustetoteumat
-           {:urakka-id  urakka-id
+           {:urakka-id urakka-id
             :sopimus-id sopimus-id
-            :alkupvm    alkupvm
-            :loppupvm   loppupvm
+            :alkupvm alkupvm
+            :loppupvm loppupvm
             :tienumero tienumero}))
 
 (defn- hae-tietolajin-kuvaus [tietolaji]
@@ -111,19 +111,19 @@
                                     (or kuukausi hoitokausi)
                                     tienumero)))))
       (assoc app
-             :toteumahaku-id nil)))
+        :toteumahaku-id nil)))
 
   v/VarusteToteumatHaettu
   (process-event [{toteumat :toteumat} app]
     (assoc app
-           :karttataso (varustetoteumat-karttataso toteumat)
-           :karttataso-nakyvissa? true
-           :toteumat toteumat))
+      :karttataso (varustetoteumat-karttataso toteumat)
+      :karttataso-nakyvissa? true
+      :toteumat toteumat))
 
   v/ValitseToteuma
   (process-event [{toteuma :toteuma} app]
     (assoc app
-           :varustetoteuma toteuma))
+      :varustetoteuma toteuma))
   v/TyhjennaValittuToteuma
   (process-event [_ app]
     (assoc app :varustetoteuma nil))

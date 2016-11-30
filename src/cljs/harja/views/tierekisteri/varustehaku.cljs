@@ -12,7 +12,8 @@
 
 (defn varustehaku-ehdot [e! {haku? :haku-kaynnissa? :as hakuehdot}]
   [lomake/lomake
-   {:muokkaa! #(e! (v/->AsetaVarusteidenHakuehdot %))
+   {:otsikko "Hae varusteita Tierekisteristä"
+    :muokkaa! #(e! (v/->AsetaVarusteidenHakuehdot %))
     :footer-fn (fn [rivi]
                  [:div
                   [napit/yleinen "Hae Tierekisteristä"
@@ -22,7 +23,7 @@
                   (when haku?
                     [yleiset/ajax-loader "Varusteita haetaan tierekisteristä"])])
     :tunniste (comp :tunniste :varuste)
-    :ei-borderia? true}
+    :ei-borderia? false}
 
    [{:nimi :tietolaji
      :otsikko "Varusteen tyyppi"

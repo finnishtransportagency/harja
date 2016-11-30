@@ -35,6 +35,8 @@
 
 (def nayta-max-toteumaa 500)
 
+(defn oikeus-varusteen-lisaamiseen? [] (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
+
 (defn varustetoteuman-tehtavat [toteumat toteuma]
   (let [toteumatehtavat (:toteumatehtavat toteuma)]
     [grid/grid
@@ -111,27 +113,24 @@
         (str "Toteumia löytyi yli " nayta-max-toteumaa ". Tarkenna hakurajausta.")])]))
 
 
-(defn valinnat [e! valinnat]
-  (let [oikeus? (oikeudet/voi-kirjoittaa?
-                  oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka))]
-    [:span
-     ;; Nämä käyttävät suoraan atomeita valintoihin
-     [urakka-valinnat/urakan-sopimus]
-     [urakka-valinnat/urakan-hoitokausi-ja-kuukausi @nav/valittu-urakka]
-     [urakka-valinnat/tienumero (r/wrap (:tienumero valinnat)
-                                        #(e! (v/->YhdistaValinnat {:tienumero %})))]
 
-     [harja.ui.valinnat/varustetoteuman-tyyppi
-      (r/wrap (:tyyppi valinnat)
-              #(e! (v/->ValitseVarusteToteumanTyyppi %)))]
-     (when oikeus?
-       [napit/uusi "Lisää varuste"
-        #(e! (v/->LisaaVaruste))])]))
+
+(defn valinnat [e! valinnat]
+  [:span
+   ;; Nämä käyttävät suoraan atomeita valintoihin
+   [urakka-valinnat/urakan-sopimus]
+   [urakka-valinnat/urakan-hoitokausi-ja-kuukausi @nav/valittu-urakka]
+   [urakka-valinnat/tienumero (r/wrap (:tienumero valinnat)
+                                      #(e! (v/->YhdistaValinnat {:tienumero %})))]
+
+   [harja.ui.valinnat/varustetoteuman-tyyppi
+    (r/wrap (:tyyppi valinnat)
+            #(e! (v/->ValitseVarusteToteumanTyyppi %)))]])
 
 (defn varustetoteumalomake [e! varustetoteuma]
-  (log "----> " (pr-str varustetoteuma))
+  (log "----> " (pr-str (:tietolajin-kuvaus varustetoteuma)))
   [:span.varustetoteumalomake
-   [napit/takaisin "Takaisin toteumaluetteloon"
+   [napit/takaisin "Takaisin varusteluetteloon"
     #(e! (v/->TyhjennaValittuToteuma))]
 
    [lomake/lomake
@@ -143,12 +142,8 @@
                    #(log "FIXME: implement")
                    {:disabled (not (lomake/voi-tallentaa? data))}])}
 
-    [#_(lomake/ryhma
-         "Toteuman tiedot")
-
-     (lomake/ryhma
+    [(lomake/ryhma
        "Varusteen tunnistetiedot"
-       ;; FIXME: lisää toteuman perustiedot...
        {:nimi :tietolaji
         :otsikko "Varusteen tyyppi"
         :tyyppi :valinta
@@ -165,13 +160,15 @@
         :otsikko "Lisätietoja"
         :tyyppi :string})
 
+
+
+
      (apply lomake/ryhma "Varusteen ominaisuudet"
             (map varusteominaisuus->skeema
                  (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))))]
     varustetoteuma]
-   [:span (pr-str (distinct (map (comp :tietotyyppi :ominaisuus)
-                                 (:ominaisuudet (:tietolajin-kuvaus varustetoteuma)))))]
-   [debug (:tietolajin-kuvaus varustetoteuma)]])
+   #_[:span (pr-str (distinct (map (comp :tietotyyppi :ominaisuus) (:ominaisuudet (:tietolajin-kuvaus varustetoteuma)))))]
+   #_ [debug (:tietolajin-kuvaus varustetoteuma)]])
 
 (defn- varusteet* [e! varusteet]
   (e! (v/->YhdistaValinnat @varustetiedot/valinnat))
@@ -196,6 +193,9 @@
            [toteumataulukko e! (:tyyppi nykyiset-valinnat) toteumat]]
           [:div.sisalto-container
            [:h1 "Varusteet Tierekisterissä"]
+           (when oikeus-varusteen-lisaamiseen?
+             [napit/uusi "Lisää uusi varuste"
+              #(e! (v/->LisaaVaruste))])
            [varustehaku (t/wrap-path e! :varustehaku) varustehaun-tiedot]]])])))
 
 (defn varusteet []
