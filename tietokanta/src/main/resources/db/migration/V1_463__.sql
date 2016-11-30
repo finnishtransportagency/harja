@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-
 -- Ylläpito-urakoille muut työt
 
 CREATE TABLE urakka_laskentakohde (
@@ -19,6 +17,3 @@ CREATE TABLE yllapito_toteuma (
   yllapitoluokka INTEGER,
   laskentakohde integer references urakka_laskentakohde (id) NOT NULL
 );
-=======
-CREATE INDEX talvihoitomittaus_tarkastus_idx ON talvihoitomittaus (tarkastus);
->>>>>>> develop
