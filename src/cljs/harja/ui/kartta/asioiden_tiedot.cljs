@@ -10,7 +10,6 @@
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]))
 
-
 (defmulti tiedot :tyyppi-kartalla)
 
 (defmethod tiedot :tyokone [tyokone]
@@ -180,7 +179,7 @@
 
 (defn validoi-tieto [tieto]
   (let [otsikko (:otsikko tieto)
-        skeema (:tiedot tieto)
+        skeema (remove empty? (:tiedot tieto))
         data (:data tieto)
         kenttien-arvot (map
                          (fn [rivin-skeema]
