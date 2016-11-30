@@ -128,6 +128,7 @@
                              (idb/add-object store kirjaus)))
 
 (defn merkinta-epaonnistui [virheen-tiedot]
+  (.log js/console "Epätarkka sijainti, tarkkuus: " (pr-str (:accuracy virheen-tiedot)))
   (ilmoitukset/ilmoita (:viesti virheen-tiedot)
                        s/ilmoitus
                        {:tyyppi :virhe}))
@@ -158,7 +159,8 @@
                                                 :kiinteys (:kiinteys @soratiemittaussyotto)
                                                 :polyavyys (:polyavyys @soratiemittaussyotto)}))})
     (when epaonnistui-fn
-      (epaonnistui-fn {:viesti "Epätarkka sijainti, reittimerkintää ei tehty!"}))))
+      (epaonnistui-fn {:viesti "Epätarkka sijainti, reittimerkintää ei tehty!"
+                       :accuracy (:accuracy (:nykyinen @sijainti))}))))
 
 (defn- kaynnista-tarkastusajon-lokaali-tallennus [db tarkastusajo-atom]
   (let [ajo-id (cljs.core/atom nil)]
