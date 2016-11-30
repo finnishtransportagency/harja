@@ -31,7 +31,7 @@
 (defn esita-otsikko [{:keys [otsikko] :as asia}]
   [:div
    {:on-click #(reset! valittu-asia asia)}
-   [:span otsikko]])
+   [:span.ip-otsikko otsikko]])
 
 (defn- kentan-arvo [skeema data]
   (let [arvo-fn (or (:hae skeema) (:nimi skeema))]
@@ -40,7 +40,7 @@
 
 (defn esita-yksityiskohdat [{:keys [otsikko tiedot data]}]
   [:div
-   [:span otsikko]
+   [:span.ip-otsikko otsikko]
    (for [[idx kentan-skeema] (map-indexed #(do [%1 %2]) tiedot)]
      ^{:key (str "infopaneliin_yksityiskohta_" idx)}
      [:div
@@ -77,3 +77,5 @@
            [:div (doall (for [[idx asia] (map-indexed #(do [%1 %2]) asiat)]
                           ^{:key (str "infopaneelin_otsikko_" idx)}
                           [esita-otsikko asia]))]))])))
+
+(def seppo 42)
