@@ -54,9 +54,12 @@
     ;; Edellisen pisteen kirjauksesta ei ole kulunut ajallisesti liian kauan
     ;; Jos on kulunut, emme tiedä, mitä näiden pisteiden välillä on tapahtunut, joten on turvallista
     ;; päättää edellinen tarkastus ja aloittaa uusi.
-    (<= (t/in-seconds (t/interval (c/from-sql-time (:aikaleima nykyinen-reittimerkinta))
-                                  (c/from-sql-time (:aikaleima seuraava-reittimerkinta))))
-        +kahden-pisteen-valinen-sallittu-aikaero-s+)
+    (or
+      (nil? (:aikaleima nykyinen-reittimerkinta))
+      (nil? (:aikaleima seuraava-reittimerkinta))
+      (<= (t/in-seconds (t/interval (c/from-sql-time (:aikaleima nykyinen-reittimerkinta))
+                                    (c/from-sql-time (:aikaleima seuraava-reittimerkinta))))
+          +kahden-pisteen-valinen-sallittu-aikaero-s+))
 
     ;; Seuraava piste ei aiheuta reitin kääntymistä ympäri
     ;; PENDING GPS:n epätarkkuudesta johtuen aiheuttaa liikaa ympärikääntymisiä eikä toimi oikein, siksi kommentoitu
