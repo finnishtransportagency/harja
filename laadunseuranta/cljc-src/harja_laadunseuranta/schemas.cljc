@@ -33,7 +33,7 @@
 
 (def Sijainti {:lon s/Num
                :lat s/Num
-               :accuracy s/Num})
+               :accuracy (s/maybe s/Num)})
 
 (def Kuva {:data s/Str
            :mime-type s/Str})
