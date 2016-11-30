@@ -128,8 +128,9 @@
   (process-event [_ app]
     (assoc app :varustetoteuma nil))
   v/LisaaVaruste
-  (process-event [_ app]
-    (assoc app :varustetoteuma (uusi-varuste)))
+  (process-event [_ _]
+    (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (uusi-varuste)))]
+      (tulos!)))
 
   v/AsetaToteumanTiedot
   (process-event [{tiedot :tiedot} {toteuma :varustetoteuma :as app}]
