@@ -1,8 +1,9 @@
 (ns harja-laadunseuranta.testidata
   "Testidataa yksikkötestejä varten"
-  (:require [clojure.test :as t]
-            [harja.testi :refer [db]]
-            [harja-laadunseuranta.tietokanta :as tietokanta]))
+  (:require [harja.testi :refer [db]]
+            [harja-laadunseuranta.tietokanta :as tietokanta]
+            [clj-time.coerce :as c]
+            [clj-time.core :as time]))
 
 (tietokanta/aseta-tietokanta! db)
 
@@ -247,6 +248,22 @@
     :jatkuvat-havainnot [17]
     :kitkamittaus 0.3}])
 
+(def tarkastus-jossa-ajallinen-aukko
+  [{:id 0 :sijainti [464681.5999816895 7230492.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/now))}
+   {:id 1 :sijainti [465321.5999816895 7230676.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 3)))}
+   {:id 2 :sijainti [465641.5999816895 7230780.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 190)))}
+   {:id 3 :sijainti [466089.5999816895 7230916.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 250)))}
+   {:id 4 :sijainti [466409.5999816895 7230996.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 290)))}])
 
 (def tarkastus-jossa-tie-vaihtuu
   [{:id 0 :sijainti [455421.19997024536 7227742.400009155]
