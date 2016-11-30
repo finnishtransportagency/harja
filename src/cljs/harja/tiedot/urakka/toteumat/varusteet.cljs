@@ -94,8 +94,8 @@
 (defn uusi-varuste
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
   []
-  {:toiminto :lisaa})
-
+  {:toiminto :lisaa
+   :tietolaji (ffirst varusteet/tietolaji->selitys)})
 
 (extend-protocol t/Event
   v/YhdistaValinnat

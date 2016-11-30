@@ -158,6 +158,7 @@
        {:nimi :tierekisteriosoite
         :otsikko "Tierekisteriosoite"
         :tyyppi :tierekisteriosoite
+        :pakollinen? true
         :sijainti (r/wrap (:sijainti varustetoteuma)
                           #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))}
        {:nimi :lisatieto
