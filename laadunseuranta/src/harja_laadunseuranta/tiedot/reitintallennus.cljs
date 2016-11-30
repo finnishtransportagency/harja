@@ -30,7 +30,7 @@
 (def +suurin-sallittu-tarkkuus+ 80) ;; Metreinä, mitä pienempi, sitä tarkempi
 
 (defn nykyinen-sijainti-riittavan-tarkka?
-  "Palauttaa true tai false sen mukaan onko nykyinen sijainti riittävän tarkka
+  "Palauttaa true tai false sen mukaan onko nykyinen sijainti riittävän tarkka.
    Mikäli tarkkuutta ei ole voitu määrittää, palauttaa true"
   [nykyinen-sijainti sallittu-tarkkuus]
   (if-let [tarkkuus (:accuracy nykyinen-sijainti)]
