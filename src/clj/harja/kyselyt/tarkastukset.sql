@@ -45,6 +45,9 @@ WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
+      AND (:havaintoja_sisaltavat = FALSE
+           OR ((char_length(t.havainnot) > 0 AND lower(t.havainnot) != 'ok')
+               OR EXISTS(SELECT tarkastus FROM tarkastus_vakiohavainto WHERE tarkastus = t.id)))
       AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE)
   ORDER BY t.aika DESC
 LIMIT :maxrivimaara;
@@ -69,6 +72,9 @@ SELECT ST_Simplify(t.sijainti, :toleranssi) as reitti,
    AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
    AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
    AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
+       AND (:havaintoja_sisaltavat = FALSE
+            OR ((char_length(t.havainnot) > 0 AND lower(t.havainnot) != 'ok')
+                OR EXISTS(SELECT tarkastus FROM tarkastus_vakiohavainto WHERE tarkastus = t.id)))
    AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE);
 
 -- name: hae-tarkastus
