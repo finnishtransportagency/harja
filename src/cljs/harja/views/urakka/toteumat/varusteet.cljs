@@ -190,9 +190,13 @@
        (if toteuma
          [varustetoteumalomake e! toteuma]
          [:span
-          [valinnat e! nykyiset-valinnat]
-          [toteumataulukko e! (:tyyppi nykyiset-valinnat) toteumat]
-          [varustehaku (t/wrap-path e! :varustehaku) varustehaun-tiedot]])])))
+          [:div.sisalto-container
+           [:h1 "Varustekirjaukset Harjassa"]
+           [valinnat e! nykyiset-valinnat]
+           [toteumataulukko e! (:tyyppi nykyiset-valinnat) toteumat]]
+          [:div.sisalto-container
+           [:h1 "Varusteet Tierekisterissä"]
+           [varustehaku (t/wrap-path e! :varustehaku) varustehaun-tiedot]]])])))
 
 (defn varusteet []
   [tuck varustetiedot/varusteet varusteet*])
