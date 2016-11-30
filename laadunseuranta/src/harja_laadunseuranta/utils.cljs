@@ -10,7 +10,7 @@
 
 ;; Lähtökohtaisesti pitäisi tutkia selainten ominaisuuksia eikä selaimia.
 ;; Kyseessä on kuitenkin tiettyyn tarkoitukseen toteutettu mobiilisovellus, joka on käsin
-;; testattu toimivaksi eri selaimilla
+;; testattu toimivaksi eri selaimilla.
 
 (defn ipad? []
   (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
@@ -28,8 +28,10 @@
   (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
                    [#".*firefox.*"])))
 
-(def +tuettu-chrome-versio+ 44)
-(def +tuettu-firefox-versio+ 49) ;; mm. Flexbox & IndexedDB-tuki
+(def +tuettu-chrome-versio+ 53) ;; Testattu toimivaksi ja toivottavasti estää useimmat Android Browserit,
+                                ;; joissa on usein vanha Chrome-versio user agentissa.
+                                ;; Android Browsereille ei voi tarjota luotettavaa tukea
+(def +tuettu-firefox-versio+ 49) ;; Testattu toimivaksi, tässä mm. Flexbox & IndexedDB mukana
 
 (defn maarita-selainversio-user-agentista [user-agent-text-lowercase selain-nimi]
   (let [selain-alku-index (.indexOf user-agent-text-lowercase (str selain-nimi "/"))
