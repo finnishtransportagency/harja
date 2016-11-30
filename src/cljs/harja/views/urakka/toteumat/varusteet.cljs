@@ -124,15 +124,12 @@
      [harja.ui.valinnat/varustetoteuman-tyyppi
       (r/wrap (:tyyppi valinnat)
               #(e! (v/->ValitseVarusteToteumanTyyppi %)))]
-     ;; todo: jatkuu...
-     #_(when oikeus?
-       [napit/uusi "Lisää toteuma"
-        #(e! (v/->UusiVarusteToteuma))])]))
-
-
-
+     (when oikeus?
+       [napit/uusi "Lisää varuste"
+        #(e! (v/->LisaaVaruste))])]))
 
 (defn varustetoteumalomake [e! varustetoteuma]
+  (log "----> " (pr-str varustetoteuma))
   [:span.varustetoteumalomake
    [napit/takaisin "Takaisin toteumaluetteloon"
     #(e! (v/->TyhjennaValittuToteuma))]
@@ -144,8 +141,7 @@
                   (log "DATA: " (pr-str data))
                   [napit/tallenna "Tallenna"
                    #(log "FIXME: implement")
-                   {:disabled (not (lomake/voi-tallentaa? data))}]
-                  )}
+                   {:disabled (not (lomake/voi-tallentaa? data))}])}
 
     [#_(lomake/ryhma
       "Toteuman tiedot")
@@ -192,14 +188,12 @@
       [:span
        [valinnat e! nykyiset-valinnat]
        [toteumataulukko e! (:tyyppi nykyiset-valinnat) toteumat]]
-      ;; todo: jatkuu...
-      (comment
-        (if toteuma
-         [varustetoteumalomake e! toteuma]
-         [:span
-          [valinnat e! nykyiset-valinnat]
-          [toteumataulukko e! (:tyyppi nykyiset-valinnat) toteumat]
-          [varustehaku (t/wrap-path e! :varustehaku) varustehaun-tiedot]]))])))
+      (if toteuma
+        [varustetoteumalomake e! toteuma]
+        [:span
+         [valinnat e! nykyiset-valinnat]
+         [toteumataulukko e! (:tyyppi nykyiset-valinnat) toteumat]
+         [varustehaku (t/wrap-path e! :varustehaku) varustehaun-tiedot]])])))
 
 (defn varusteet []
   [tuck varustetiedot/varusteet varusteet*])

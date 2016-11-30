@@ -91,10 +91,10 @@
 (defn- hae-tietolajin-kuvaus [tietolaji]
   (k/post! :hae-tietolajin-kuvaus tietolaji))
 
-(defn uusi-varustetoteuma
+(defn uusi-varuste
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
   []
-  {})
+  {:toiminto :lisaa})
 
 
 (extend-protocol t/Event
@@ -127,9 +127,9 @@
   v/TyhjennaValittuToteuma
   (process-event [_ app]
     (assoc app :varustetoteuma nil))
-  v/UusiVarusteToteuma
+  v/LisaaVaruste
   (process-event [_ app]
-    (assoc app :varustetoteuma (uusi-varustetoteuma)))
+    (assoc app :varustetoteuma (uusi-varuste)))
 
   v/AsetaToteumanTiedot
   (process-event [{tiedot :tiedot} {toteuma :varustetoteuma :as app}]

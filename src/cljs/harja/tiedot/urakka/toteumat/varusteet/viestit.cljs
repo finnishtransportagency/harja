@@ -19,7 +19,7 @@
 (defrecord ValitseVarusteToteumanTyyppi [tyyppi])
 
 ;; Ala luomaan uutta varustetoteumaa käyttöliittymästä
-(defrecord UusiVarusteToteuma [])
+(defrecord LisaaVaruste [])
 
 ;; Aseta uudet varustetoteuman tiedot lomakkeelta muokattaessa
 (defrecord AsetaToteumanTiedot [tiedot])
