@@ -600,7 +600,7 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
    [kartan-koko-kontrollit]
    [kartan-yleiset-kontrollit]
    [kartan-ohjelaatikko]
-   [infopaneeli/infopaneeli asiat-pisteessa]
+   [infopaneeli/infopaneeli @asiat-pisteessa tiedot/infopaneeli-nakyvissa?]
    [kartan-ikonien-selitykset]
    [kartta-openlayers]
    [kartan-edistyminen @kuvatason-lataus @geometriatason-lataus]])

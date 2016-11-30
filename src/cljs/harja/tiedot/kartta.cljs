@@ -1,6 +1,7 @@
 (ns harja.tiedot.kartta
   (:require [harja.geo :as geo]
             [cljs.core.async :refer [timeout <! >! chan] :as async]
+            [reagent.core :refer [atom]]
             [harja.tiedot.navigaatio :as nav]
             [harja.views.kartta.tasot :as tasot]
             [harja.loki :refer [log]]
@@ -10,6 +11,8 @@
 
 (def pida-geometria-nakyvilla-oletusarvo true)
 (defonce pida-geometriat-nakyvilla? (atom pida-geometria-nakyvilla-oletusarvo))
+
+(defonce infopaneeli-nakyvissa? (atom true))
 
 (defn keskita-kartta-alueeseen! [alue]
   (reset! nav/kartan-extent alue))

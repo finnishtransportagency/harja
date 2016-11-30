@@ -49,9 +49,10 @@
         [:span.kentan-label (:otsikko kentan-skeema)]]]
       [kentat/nayta-arvo kentan-skeema (kentan-arvo kentan-skeema data)]])])
 
-(defn infopaneeli [asiat-pisteessa-atomi]
-  (when-let [{:keys [asiat haetaan? koordinaatti]} @asiat-pisteessa-atomi]
-    (let [asiat (asioiden-tiedot/kasaa-tiedot asiat)
+(defn infopaneeli [asiat-pisteessa nakyvissa?]
+  (when @nakyvissa?
+    (let [{:keys [asiat haetaan? koordinaatti]} asiat-pisteessa
+          asiat (asioiden-tiedot/kasaa-tiedot asiat)
           vain-yksi-asia? (-> asiat count (= 1))
           useampi-asia? (not vain-yksi-asia?)
           esita-yksityiskohdat? (or @valittu-asia vain-yksi-asia?)
@@ -63,11 +64,11 @@
       [:div#kartan-infopaneeli
        [:div
         (when (and @valittu-asia useampi-asia?)
-           [napit/takaisin "" #(reset! valittu-asia nil)])
+          [napit/takaisin "" #(reset! valittu-asia nil)])
         (when haetaan?
           [ajax-loader])
-        [:button.close {:on-click #(reset! asiat-pisteessa-atomi nil)
-                        :type "button"}
+        [:button.close {:on-click #(reset! nakyvissa? false)
+                        :type     "button"}
          [:span "×"]
          ]]
        [:div "Koordinaatti: " (str koordinaatti)]
