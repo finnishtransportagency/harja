@@ -38,16 +38,16 @@
 (defn varustetoteuman-tehtavat [toteumat toteuma]
   (let [toteumatehtavat (:toteumatehtavat toteuma)]
     [grid/grid
-     {:otsikko  "Tehtävät"
-      :tyhja    (if (nil? toteumat)
-                  [ajax-loader "Haetaan tehtäviä..."]
-                  "Tehtäviä  ei löytynyt")
+     {:otsikko "Tehtävät"
+      :tyhja (if (nil? toteumat)
+               [ajax-loader "Haetaan tehtäviä..."]
+               "Tehtäviä  ei löytynyt")
       :tunniste :id}
      [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :leveys 1}
       {:otsikko "Tyyppi" :nimi :toteumatyyppi :tyyppi :string :leveys 1 :hae (fn [_] (name (:toteumatyyppi toteuma)))}
       {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys 1}
       (when (= (:toteumatyyppi toteuma) :yksikkohintainen)
-        {:otsikko     "Toteuma" :nimi :linkki-toteumaan :tyyppi :komponentti :leveys 1
+        {:otsikko "Toteuma" :nimi :linkki-toteumaan :tyyppi :komponentti :leveys 1
          :komponentti (fn []
                         [:button.nappi-toissijainen.nappi-grid
                          {:on-click #(yksikkohintaiset-tyot/nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteumaid toteuma))}
@@ -70,15 +70,15 @@
 
 (defn toteumataulukko [e! valittu-tyyppi toteumat]
   (let [valitut-toteumat (filter
-                          #(if-not valittu-tyyppi
-                             toteumat
-                             (= (:toimenpide %) valittu-tyyppi))
-                          toteumat)]
+                           #(if-not valittu-tyyppi
+                              toteumat
+                              (= (:toimenpide %) valittu-tyyppi))
+                           toteumat)]
     [:span
      [grid/grid
-      {:otsikko      "Varustetoteumat"
-       :tyhja        (if (nil? toteumat) [ajax-loader "Haetaan toteumia..."] "Toteumia ei löytynyt")
-       :tunniste     :id
+      {:otsikko "Varustetoteumat"
+       :tyhja (if (nil? toteumat) [ajax-loader "Haetaan toteumia..."] "Toteumia ei löytynyt")
+       :tunniste :id
        :rivi-klikattu #(e! (v/->ValitseToteuma %))
        :vetolaatikot (zipmap
                        (range)
@@ -91,19 +91,19 @@
        {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkupvm :leveys 10}
        {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys 15}
        {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :string :leveys 15
-        :hae     (fn [rivi]
-                   (or (tierekisteri-varusteet/tietolaji->selitys (:tietolaji rivi))
-                       (:tietolaji rivi)))}
+        :hae (fn [rivi]
+               (or (tierekisteri-varusteet/tietolaji->selitys (:tietolaji rivi))
+                   (:tietolaji rivi)))}
        {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys 15
-        :hae     (fn [rivi]
-                   (tierekisteri-varusteet/varuste-toimenpide->string (:toimenpide rivi)))}
+        :hae (fn [rivi]
+               (tierekisteri-varusteet/varuste-toimenpide->string (:toimenpide rivi)))}
        {:otsikko "Tie" :nimi :tie :tyyppi :positiivinen-numero :leveys 10 :tasaa :oikea}
        {:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea}
        {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea}
        {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea}
        {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea}
        {:otsikko "Kuntoluokka" :nimi :kuntoluokka :tyyppi :positiivinen-numero :leveys 10}
-       {:otsikko     "Varustekortti" :nimi :varustekortti :tyyppi :komponentti
+       {:otsikko "Varustekortti" :nimi :varustekortti :tyyppi :komponentti
         :komponentti (fn [rivi] (varustekortti-linkki rivi)) :leveys 10}]
       (take nayta-max-toteumaa valitut-toteumat)]
      (when (> (count valitut-toteumat) nayta-max-toteumaa)
@@ -113,7 +113,7 @@
 
 (defn valinnat [e! valinnat]
   (let [oikeus? (oikeudet/voi-kirjoittaa?
-                 oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka))]
+                  oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka))]
     [:span
      ;; Nämä käyttävät suoraan atomeita valintoihin
      [urakka-valinnat/urakan-sopimus]
@@ -144,23 +144,25 @@
                    {:disabled (not (lomake/voi-tallentaa? data))}])}
 
     [#_(lomake/ryhma
-      "Toteuman tiedot")
+         "Toteuman tiedot")
 
      (lomake/ryhma
-      "Varusteen tunnistetiedot"
-      ;; FIXME: lisää toteuman perustiedot...
-      {:nimi :tietolaji
-       :otsikko "Varusteen tyyppi"
-       :tyyppi :valinta
-       :valinnat (vec tierekisteri-varusteet/tietolaji->selitys)
-       :valinta-nayta second
-       :valinta-arvo first}
-      {:nimi :tierekisteriosoite
-       :otsikko "Tierekisteriosoite"
-       :tyyppi :tierekisteriosoite
-       :sijainti (r/wrap (:sijainti varustetoteuma)
-                         #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma
-                                                              :sijainti %))))})
+       "Varusteen tunnistetiedot"
+       ;; FIXME: lisää toteuman perustiedot...
+       {:nimi :tietolaji
+        :otsikko "Varusteen tyyppi"
+        :tyyppi :valinta
+        :valinnat (vec tierekisteri-varusteet/tietolaji->selitys)
+        :valinta-nayta second
+        :valinta-arvo first}
+       {:nimi :tierekisteriosoite
+        :otsikko "Tierekisteriosoite"
+        :tyyppi :tierekisteriosoite
+        :sijainti (r/wrap (:sijainti varustetoteuma)
+                          #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))}
+       {:nimi :lisatieto
+        :otsikko "Lisätietoja"
+        :tyyppi :string})
 
      (apply lomake/ryhma "Varusteen ominaisuudet"
             (map varusteominaisuus->skeema
@@ -168,32 +170,28 @@
     varustetoteuma]
    [:span (pr-str (distinct (map (comp :tietotyyppi :ominaisuus)
                                  (:ominaisuudet (:tietolajin-kuvaus varustetoteuma)))))]
-   [debug (:tietolajin-kuvaus varustetoteuma)]
-   ])
+   [debug (:tietolajin-kuvaus varustetoteuma)]])
 
 (defn- varusteet* [e! varusteet]
   (e! (v/->YhdistaValinnat @varustetiedot/valinnat))
   (komp/luo
-   (komp/watcher varustetiedot/valinnat
-                 (fn [_ _ uusi]
-                   (e! (v/->YhdistaValinnat uusi))))
-   (komp/kuuntelija :varustetoteuma-klikattu
-                    (fn [_ i] (e! (v/->ValitseToteuma i))))
-   (fn [e! {nykyiset-valinnat :valinnat
-            toteumat :toteumat
-            toteuma :varustetoteuma
-            varustehaun-tiedot :varustehaku}]
-     [:span
-      [kartta/kartan-paikka]
+    (komp/watcher varustetiedot/valinnat
+                  (fn [_ _ uusi]
+                    (e! (v/->YhdistaValinnat uusi))))
+    (komp/kuuntelija :varustetoteuma-klikattu
+                     (fn [_ i] (e! (v/->ValitseToteuma i))))
+    (fn [e! {nykyiset-valinnat :valinnat
+             toteumat :toteumat
+             toteuma :varustetoteuma
+             varustehaun-tiedot :varustehaku}]
       [:span
-       [valinnat e! nykyiset-valinnat]
-       [toteumataulukko e! (:tyyppi nykyiset-valinnat) toteumat]]
-      (if toteuma
-        [varustetoteumalomake e! toteuma]
-        [:span
-         [valinnat e! nykyiset-valinnat]
-         [toteumataulukko e! (:tyyppi nykyiset-valinnat) toteumat]
-         [varustehaku (t/wrap-path e! :varustehaku) varustehaun-tiedot]])])))
+       [kartta/kartan-paikka]
+       (if toteuma
+         [varustetoteumalomake e! toteuma]
+         [:span
+          [valinnat e! nykyiset-valinnat]
+          [toteumataulukko e! (:tyyppi nykyiset-valinnat) toteumat]
+          [varustehaku (t/wrap-path e! :varustehaku) varustehaun-tiedot]])])))
 
 (defn varusteet []
   [tuck varustetiedot/varusteet varusteet*])
