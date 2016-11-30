@@ -121,6 +121,11 @@
   (with-transaction-to-store db asetukset/+reittimerkinta-store+ :readwrite store
                              (idb/add-object store kirjaus)))
 
+(defn merkinta-epaonnistui []
+  (ilmoitukset/ilmoita (:viesti %)
+                       s/ilmoitus
+                       {:tyyppi (:tyyppi %)})
+
 (defn tallenna-sovelluksen-tilasta-merkinta-indexeddbn!
   "'Nauhoitusfunktio', joka lukee sovelluksen tilan ja muodostaa
    siitä reittimerkinnän IndexedDB:n.
@@ -130,7 +135,6 @@
    vaan niistä tulee kirjata erikseen oma merkintä."
   [{:keys [idxdb sijainti tarkastusajo-id jatkuvat-havainnot mittaustyyppi
            soratiemittaussyotto epaonnistui-fn] :as tiedot}]
-  (.log js/console "PARAMS :" (pr-str tiedot))
   (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti) +suurin-sallittu-tarkkuus+)
     (kirjaa-kertakirjaus idxdb
                          {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
@@ -190,9 +194,7 @@
          :jatkuvat-havainnot jatkuvat-havainnot
          :mittaustyyppi mittaustyyppi
          :soratiemittaussyotto soratiemittaussyotto
-         :epaonnistui-fn #(ilmoitukset/ilmoita (:viesti %)
-                                               s/ilmoitus
-                                               {:tyyppi (:tyyppi %)})}))))
+         :epaonnistui-fn merkinta-epaonnistui}))))
 
 (defn tietokannan-alustus []
   (idb/create-indexed-db "harja2" db-spec))

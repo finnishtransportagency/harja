@@ -312,7 +312,8 @@
     s/ilmoitus)
   (reitintallennus/kirjaa-kertakirjaus
     @s/idxdb
-    {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
+    {;; Sijainti voi olla epätarkka, mutta voidaaan silti tallentaa pistemäinen havainto
+     :sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
      :aikaleima (tc/to-long (lt/local-now))
      :tarkastusajo @s/tarkastusajo-id
      :havainnot (into #{} (remove nil? (conj @s/jatkuvat-havainnot avain)))
@@ -353,7 +354,8 @@
      :tarkastusajo-id s/tarkastusajo-id
      :jatkuvat-havainnot s/jatkuvat-havainnot
      :mittaustyyppi s/mittaustyyppi
-     :soratiemittaussyotto s/soratiemittaussyotto}))
+     :soratiemittaussyotto s/soratiemittaussyotto
+     :epaonnistui-fn reitintallennus/merkinta-epaonnistui}))
 
 (defn avaa-havaintolomake! []
   (.log js/console "Avataan havaintolomake!")
