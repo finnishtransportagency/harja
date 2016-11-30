@@ -133,6 +133,20 @@
                        s/ilmoitus
                        {:tyyppi :virhe}))
 
+(defn kirjaa-pistemainen-havainto! [{:keys [idxdb sijainti tarkastusajo-id
+                                            epaonnistui-fn jatkuvat-havainnot havainto-avain] :as tiedot}]
+  (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti)
+                                           +suurin-sallittu-tarkkuus+)
+    (kirjaa-kertakirjaus idxdb
+                         {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon])
+                          :aikaleima (tc/to-long (lt/local-now))
+                          :tarkastusajo @tarkastusajo-id
+                          :havainnot (into #{} (remove nil? (conj @jatkuvat-havainnot havainto-avain)))
+                          :mittaukset {}})
+    (when epaonnistui-fn
+      (epaonnistui-fn {:viesti "Epätarkka sijainti, merkintää ei tehty!"
+                       :accuracy (:accuracy (:nykyinen @sijainti))}))))
+
 (defn tallenna-sovelluksen-tilasta-merkinta-indexeddbn!
   "'Nauhoitusfunktio', joka lukee sovelluksen tilan ja muodostaa
    siitä reittimerkinnän IndexedDB:n.
@@ -142,7 +156,8 @@
    vaan niistä tulee kirjata erikseen oma merkintä."
   [{:keys [idxdb sijainti tarkastusajo-id jatkuvat-havainnot mittaustyyppi
            soratiemittaussyotto epaonnistui-fn] :as tiedot}]
-  (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti) +suurin-sallittu-tarkkuus+)
+  (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti)
+                                           +suurin-sallittu-tarkkuus+)
     (kirjaa-kertakirjaus idxdb
                          {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
                           :aikaleima (tc/to-long (lt/local-now))

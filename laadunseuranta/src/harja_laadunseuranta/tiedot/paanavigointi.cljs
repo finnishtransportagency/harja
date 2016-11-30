@@ -310,14 +310,13 @@
   (ilmoitukset/ilmoita
     (str "Pistemäinen havainto kirjattu: " nimi)
     s/ilmoitus)
-  (reitintallennus/kirjaa-kertakirjaus
-    @s/idxdb
-    {;; Sijainti voi olla epätarkka, mutta voidaaan silti tallentaa pistemäinen havainto
-     :sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
-     :aikaleima (tc/to-long (lt/local-now))
-     :tarkastusajo @s/tarkastusajo-id
-     :havainnot (into #{} (remove nil? (conj @s/jatkuvat-havainnot avain)))
-     :mittaukset {}}))
+  (reitintallennus/kirjaa-pistemainen-havainto!
+    {:idxdb @s/idxdb
+     :sijainti s/sijainti
+     :tarkastusajo-id s/tarkastusajo-id
+     :jatkuvat-havainnot s/jatkuvat-havainnot
+     :havainto-avain avain
+     :epaonnistui-fn reitintallennus/merkinta-epaonnistui}))
 
 (defn valikohtainen-havainto-painettu!
   "Asettaa välikohtaisen havainnon päälle tai pois päältä."
