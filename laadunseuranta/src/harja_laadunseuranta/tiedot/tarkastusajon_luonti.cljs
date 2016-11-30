@@ -7,7 +7,7 @@
             [harja-laadunseuranta.utils :as utils])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
-(defn- resetoi-tarkastusajo-sovelluksen-tilaan [sovellus]
+(defn- alusta-uusi-tarkastusajo [sovellus]
   (assoc sovellus
     ;; Tarkastusajon perustiedot
     :valittu-urakka nil
@@ -20,6 +20,8 @@
                             :aosa nil
                             :aet nil}
                 :talvihoitoluokka nil}
+    ;; UI
+    :ui {:paanavigointi {:nakyvissa? true}}
     ;; Havainnot
     :jatkuvat-havainnot #{}
     ;; Mittaukset
@@ -53,7 +55,7 @@
   (swap! s/sovellus #(aseta-tarkastusajo-sovelluksen-tilaan % ajo-id)))
 
 (defn- pysayta-tarkastusajo! []
-  (swap! s/sovellus resetoi-tarkastusajo-sovelluksen-tilaan))
+  (swap! s/sovellus alusta-uusi-tarkastusajo))
 
 (defn luo-ajo! []
   (reset! s/aloitetaan-tarkastusajo true)

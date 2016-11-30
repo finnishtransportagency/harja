@@ -137,7 +137,7 @@
    siitä reittimerkinnän IndexedDB:n.
    Tätä on tarkoitus kutsua aina kun tila muuttuu oleellisesti
    (esim. sijainti tai jatkuvat havainnot vaihtuu).
-   Ei ole syytä kutsua pistemäisille muutoksille (pistemäiset havainnot, mittausarvot jne.),
+   Ei ole syytä kutsua pistemäisille muutoksille (pistemäiset havainnot),
    vaan niistä tulee kirjata erikseen oma merkintä."
   [{:keys [idxdb sijainti tarkastusajo-id jatkuvat-havainnot mittaustyyppi
            soratiemittaussyotto epaonnistui-fn] :as tiedot}]
@@ -158,7 +158,7 @@
                                                 :kiinteys (:kiinteys @soratiemittaussyotto)
                                                 :polyavyys (:polyavyys @soratiemittaussyotto)}))})
     (when epaonnistui-fn
-      (epaonnistui-fn {:viesti "Liian epätarkka sijainti, reittimerkintää ei tehty!"}))))
+      (epaonnistui-fn {:viesti "Epätarkka sijainti, reittimerkintää ei tehty!"}))))
 
 (defn- kaynnista-tarkastusajon-lokaali-tallennus [db tarkastusajo-atom]
   (let [ajo-id (cljs.core/atom nil)]
