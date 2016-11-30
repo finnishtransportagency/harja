@@ -3,8 +3,7 @@
   overlay näkymään."
   (:require [clojure.string :as string]
             [harja.pvm :as pvm]
-            #?@(:cljs [harja.loki :as log])
-            #?@(:clj [taoensso.timbre :as log])
+            [harja.loki :as log]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
@@ -86,7 +85,7 @@
                :hae #(get-in % [:kohdeosa :nimi])}
               {:otsikko "Osoite" :tyyppi :tierekisteriosoite :nimi :tr}
               {:otsikko "Nykyinen päällyste" :tyyppi :string
-               :hae %(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
+               :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
               {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
               {:otsikko "Tila" :tyyppi :string
                :hae #(yllapitokohteet/kuvaile-kohteen-tila (get-in % [:paallystysilmoitus :tila]))}
@@ -108,7 +107,7 @@
                  {:otsikko "Tapahtunut" :tyyppi :pvm-aika :nimi tapahtunut})
                (when (kasitelty turpo)
                  {:otsikko "Käsitelty" :tyyppi :pvm-aika :nimi kasitelty})
-               {:otsikko "Työn\u00ADtekijä" :hae (turpodomain/kuvaile-tyontekijan-ammatti %)}
+               {:otsikko "Työn\u00ADtekijä" :hae #(turpodomain/kuvaile-tyontekijan-ammatti %)}
                {:otsikko "Vammat" :hae #(string/join ", " (map turpodomain/vammat (:vammat %)))}
                {:otsikko "Sairaala\u00ADvuorokaudet" :hae #(:sairaalavuorokaudet %)}
                {:otsikko "Sairaus\u00ADpoissaolo\u00ADpäivät" :tyyppi :positiivinen-numero :nimi :sairauspoissaolopaivat}
@@ -144,7 +143,7 @@
         kasittelyaika #(get-in % [:paatos :kasittelyaika])]
     {:tyyppi  :laatupoikkeama
      :otsikko "Laatupoikkeama"
-     :tiedot  [{:otsikko "Aika" :pvm-aika :nimi :aika}
+     :tiedot  [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
                {:otsikko "Tekijä" :hae #(str (:tekijanimi %) ", " (name (:tekija %)))}
                (when (and (paatos laatupoikkeama) (kasittelyaika laatupoikkeama))
                  {:otsikko "Päätös"
@@ -185,17 +184,17 @@
         data (:data tieto)
         kenttien-arvot (map
                          (fn [rivin-skeema]
-                           [(:otsikko rivin-skeema)
+                           [rivin-skeema
                             ((or (:nimi rivin-skeema) (:hae rivin-skeema)) data)])
                          skeema)
-        tyhjat-arvot (map first (filter (comp second nil?) kenttien-arvot))]
+        tyhjat-arvot (map (comp :otsikko first) (filter (comp nil? second) kenttien-arvot))]
     (when-not (empty? tyhjat-arvot)
-      (log/error "Yritettiin muodostaa overlayn tietoja asialle " otsikko ", mutta seuraavat tiedot puuttuivat: " (pr-str tyhjat-arvot))))
-  tieto)
+      (log/error "Yritettiin muodostaa overlayn tietoja asialle " otsikko ", mutta seuraavat tiedot puuttuivat: " (pr-str tyhjat-arvot)))
+    (assoc tieto :tiedot (mapv first (remove (comp nil? second) kenttien-arvot)))))
 
 (defn validoi-tiedot [tiedot]
   (map validoi-tieto tiedot))
 
 (defn kasaa-tiedot [data]
-  (map tiedot data))
+  (validoi-tiedot (map tiedot data)))
 
