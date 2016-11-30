@@ -49,6 +49,7 @@
      :nykyinen (assoc uusi-nykyinen
                       :speed (:speed uusi-sijainti)
                       :heading (:heading uusi-sijainti)
+                      :accuracy (:accuracy uusi-sijainti)
                       :timestamp ts)}))
 
 (defn kaynnista-paikannus

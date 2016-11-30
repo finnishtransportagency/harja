@@ -21,6 +21,19 @@
                                                                          with-cursor
                                                                          with-count]]))
 
+;; Asetettu mielekkääksi tutkimalla seuraavien laitteiden keskimääräiset GPS-tarkkuudet
+;; pikaisella testillä:
+;; - Samsung Galaxy S4: 10
+;; - Samsung Galaxy Tab A: 23
+;; - Apple iPad Air:
+;; - Apple iPhone: 60
+(def suurin-sallittu-tarkkuus 80) ;; Metreinä, mitä pienempi, sitä tarkempi
+
+(defn nykyinen-sijainti-riittavan-tarkka? [nykyinen-sijainti sallittu-tarkkuus]
+  (<= (:accuracy nykyinen-sijainti) sallittu-tarkkuus))
+
+;; Jos muutat tätä, kasvata versionumeroa ja varmista, että migraatio toimii niillä laitteilla,
+;; jossa on vanha versio.
 (def db-spec {:version 3
               :on-error #(js/console.log (str "Tietokantavirhe " (pr-str %)))
               :objectstores [{:name asetukset/+reittimerkinta-store+
@@ -117,21 +130,23 @@
    vaan niistä tulee kirjata erikseen oma merkintä."
   [{:keys [idxdb sijainti tarkastusajo-id jatkuvat-havainnot mittaustyyppi
            soratiemittaussyotto]}]
-  (kirjaa-kertakirjaus idxdb
-                       {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon])
-                        :aikaleima (tc/to-long (lt/local-now))
-                        :tarkastusajo @tarkastusajo-id
-                        ;; Nauhoituksessa havaintoihin tallentuvat vain jatkuvat mittaukset
-                        ;; Pistemäisen havainnot kirjataan erikseen heti kun sellainen syötetään.
-                        :havainnot @jatkuvat-havainnot
-                        ;; Nauhoituksessa mittauksiin tallentuvat vain jatkuvat mittaukset
-                        ;; Kertamittaukset tallennetaan erikseen heti kun sellainen syötetään.
-                        ;; HUOM: Tärkeää ottaa arvot ylös vain jos mittaus on päällä!
-                        :mittaukset (merge {}
-                                           (when (= @mittaustyyppi :soratie)
-                                             {:soratie-tasaisuus (:tasaisuus @soratiemittaussyotto)
-                                              :kiinteys (:kiinteys @soratiemittaussyotto)
-                                              :polyavyys (:polyavyys @soratiemittaussyotto)}))}))
+  (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti) suurin-sallittu-tarkkuus)
+    (kirjaa-kertakirjaus idxdb
+                         {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon])
+                          :aikaleima (tc/to-long (lt/local-now))
+                          :tarkastusajo @tarkastusajo-id
+                          ;; Nauhoituksessa havaintoihin tallentuvat vain jatkuvat mittaukset
+                          ;; Pistemäisen havainnot kirjataan erikseen heti kun sellainen syötetään.
+                          :havainnot @jatkuvat-havainnot
+                          ;; Nauhoituksessa mittauksiin tallentuvat vain jatkuvat mittaukset
+                          ;; Kertamittaukset tallennetaan erikseen heti kun sellainen syötetään.
+                          ;; HUOM: Tärkeää ottaa arvot ylös vain jos mittaus on päällä!
+                          :mittaukset (merge {}
+                                             (when (= @mittaustyyppi :soratie)
+                                               {:soratie-tasaisuus (:tasaisuus @soratiemittaussyotto)
+                                                :kiinteys (:kiinteys @soratiemittaussyotto)
+                                                :polyavyys (:polyavyys @soratiemittaussyotto)}))})
+    (.log js/console "Liian epätarkka sijainti, ei tehdä merkintää!")))
 
 (defn- kaynnista-tarkastusajon-lokaali-tallennus [db tarkastusajo-atom]
   (let [ajo-id (cljs.core/atom nil)]
