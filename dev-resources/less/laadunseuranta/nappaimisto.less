@@ -65,7 +65,7 @@
   margin-bottom: 3px;
 }
 
-.nappaimiston-painike:active {
+.nappaimiston-painike:active:not(.nappaimiston-painike-disabloitu) {
   background-color: @nappi-aktiivinen;
 }
 
@@ -73,8 +73,12 @@
   background-color: @nappi-aktiivinen;
 }
 
-#nappaimiston-painike-ok {
+.nappaimiston-painike-ok {
   background-color: @vihrea4;
+}
+
+.nappaimiston-painike-disabloitu {
+  background-color: @harmaa5;
 }
 
 .nappaimiston-syottovaroitus {

@@ -18,7 +18,7 @@
                              :lumisuus 3
                              :talvihoito-tasaisuus 3})
 
-(def syoton-rajat {:kitkamittaus [0 1]
+(def syoton-rajat {:kitkamittaus [0.01 0.99]
                    :lumisuus [0 100]
                    :talvihoito-tasaisuus [0 100]})
 
@@ -55,12 +55,12 @@
 
 (defn- syotto-validi? [mittaustyyppi nykyinen-syotto]
   (let [suurin-sallittu-tarkkuus (mittaustyyppi syoton-max-merkkimaara)
-        syotto-sallittu? (and (<= (count nykyinen-syotto)
-                                  suurin-sallittu-tarkkuus)
-                              (>= (fmt/string->numero nykyinen-syotto)
-                                  (first (mittaustyyppi syoton-rajat)))
-                              (<= (fmt/string->numero nykyinen-syotto)
-                                  (second (mittaustyyppi syoton-rajat))))]
+        syotto-sallittu? (boolean (and (<= (count nykyinen-syotto)
+                                           suurin-sallittu-tarkkuus)
+                                       (>= (fmt/string->numero nykyinen-syotto)
+                                           (first (mittaustyyppi syoton-rajat)))
+                                       (<= (fmt/string->numero nykyinen-syotto)
+                                           (second (mittaustyyppi syoton-rajat)))))]
     (.log js/console "Syöttö sallittu? " (pr-str syotto-sallittu?))
     syotto-sallittu?))
 

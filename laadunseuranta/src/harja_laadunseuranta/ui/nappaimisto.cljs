@@ -158,63 +158,66 @@
                            :as tiedot}]
   ;; NOTE Oikeaoppisesti nappien kuuluisi olla <button> elementtejä, mutta jostain
   ;; syystä iPadin safari piirtää tällöin vain kaksi nappia samalle riville.
-  [:div.numeronappaimisto
-   [:div.nappaimiston-painikekentat
-    [:div
-     {:class "nappaimiston-painike"
-      :id "nappaimiston-painike7"
-      :on-click #(numeronappain-painettu 7 mittaustyyppi syotto-atom)} "7"]
-    [:div
-     {:class "nappaimiston-painike"
-      :id "nappaimiston-painike8"
-      :on-click #(numeronappain-painettu 8 mittaustyyppi syotto-atom)} "8"]
-    [:div
-     {:class "nappaimiston-painike"
-      :id "nappaimiston-painike9"
-      :on-click #(numeronappain-painettu 9 mittaustyyppi syotto-atom)} "9"]
+  (let [syotto-validi? (syotto-validi? mittaustyyppi (:nykyinen-syotto @syotto-atom))]
+    [:div.numeronappaimisto
+     [:div.nappaimiston-painikekentat
+      [:div
+       {:class "nappaimiston-painike"
+        :id "nappaimiston-painike7"
+        :on-click #(numeronappain-painettu 7 mittaustyyppi syotto-atom)} "7"]
+      [:div
+       {:class "nappaimiston-painike"
+        :id "nappaimiston-painike8"
+        :on-click #(numeronappain-painettu 8 mittaustyyppi syotto-atom)} "8"]
+      [:div
+       {:class "nappaimiston-painike"
+        :id "nappaimiston-painike9"
+        :on-click #(numeronappain-painettu 9 mittaustyyppi syotto-atom)} "9"]
 
-    [:div
-     {:class "nappaimiston-painike"
-      :id "nappaimiston-painike4"
-      :on-click #(numeronappain-painettu 4 mittaustyyppi syotto-atom)} "4"]
-    [:div
-     {:class "nappaimiston-painike"
-      :id "nappaimiston-painike5"
-      :on-click #(numeronappain-painettu 5 mittaustyyppi syotto-atom)} "5"]
-    [:div
-     {:class "nappaimiston-painike"
-      :id "nappaimiston-painike6"
-      :on-click #(numeronappain-painettu 6 mittaustyyppi syotto-atom)} "6"]
+      [:div
+       {:class "nappaimiston-painike"
+        :id "nappaimiston-painike4"
+        :on-click #(numeronappain-painettu 4 mittaustyyppi syotto-atom)} "4"]
+      [:div
+       {:class "nappaimiston-painike"
+        :id "nappaimiston-painike5"
+        :on-click #(numeronappain-painettu 5 mittaustyyppi syotto-atom)} "5"]
+      [:div
+       {:class "nappaimiston-painike"
+        :id "nappaimiston-painike6"
+        :on-click #(numeronappain-painettu 6 mittaustyyppi syotto-atom)} "6"]
 
-    [:div
-     {:class "nappaimiston-painike"
-      :id "nappaimiston-painike1"
-      :on-click #(numeronappain-painettu 1 mittaustyyppi syotto-atom)} "1"]
-    [:div
-     {:class "nappaimiston-painike"
-      :id "nappaimiston-painike2"
-      :on-click #(numeronappain-painettu 2 mittaustyyppi syotto-atom)} "2"]
-    [:div
-     {:class "nappaimiston-painike"
-      :id "nappaimiston-painike3"
-      :on-click #(numeronappain-painettu 3 mittaustyyppi syotto-atom)} "3"]
+      [:div
+       {:class "nappaimiston-painike"
+        :id "nappaimiston-painike1"
+        :on-click #(numeronappain-painettu 1 mittaustyyppi syotto-atom)} "1"]
+      [:div
+       {:class "nappaimiston-painike"
+        :id "nappaimiston-painike2"
+        :on-click #(numeronappain-painettu 2 mittaustyyppi syotto-atom)} "2"]
+      [:div
+       {:class "nappaimiston-painike"
+        :id "nappaimiston-painike3"
+        :on-click #(numeronappain-painettu 3 mittaustyyppi syotto-atom)} "3"]
 
-    [:div
-     {:class "nappaimiston-painike"
-      :id "nappaimiston-painike-delete"
-      :on-click #(tyhjennyspainike-painettu! mittaustyyppi syotto-atom)} [:span.livicon-undo]]
-    [:div
-     {:class "nappaimiston-painike"
-      :id "nappaimiston-painike0"
-      :on-click #(numeronappain-painettu! 0 mittaustyyppi syotto-atom)} "0"]
-    [:div
-     {:disabled (not (syotto-validi? mittaustyyppi (:nykyinen-syotto @syotto-atom)))
-      :class "nappaimiston-painike"
-      :id "nappaimiston-painike-ok"
-      :on-click #(when (syotto-validi? mittaustyyppi (:nykyinen-syotto @syotto-atom))
-                   (kirjaa-arvo (fmt/string->numero (:nykyinen-syotto @syotto-atom)))
-                   (syotto-valmis mittaustyyppi syotto-atom))}
-     [:span.livicon-check]]]])
+      [:div
+       {:class "nappaimiston-painike"
+        :id "nappaimiston-painike-delete"
+        :on-click #(tyhjennyspainike-painettu! mittaustyyppi syotto-atom)} [:span.livicon-undo]]
+      [:div
+       {:class "nappaimiston-painike"
+        :id "nappaimiston-painike0"
+        :on-click #(numeronappain-painettu! 0 mittaustyyppi syotto-atom)} "0"]
+      [:div
+       {:disabled (not syotto-validi?)
+        :class (str "nappaimiston-painike nappaimiston-painike-ok "
+                    (when-not syotto-validi?
+                      "nappaimiston-painike-disabloitu"))
+        :id "nappaimiston-painike-ok"
+        :on-click #(when syotto-validi?
+                     (kirjaa-arvo (fmt/string->numero (:nykyinen-syotto @syotto-atom)))
+                     (syotto-valmis mittaustyyppi syotto-atom))}
+       [:span.livicon-check]]]]))
 
 (defn- nappaimistokomponentti [{:keys [mittaustyyppi] :as tiedot}]
   (let [nayta-syottokentta? (not= mittaustyyppi :soratie)]
