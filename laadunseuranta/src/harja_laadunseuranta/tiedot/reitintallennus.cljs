@@ -121,10 +121,10 @@
   (with-transaction-to-store db asetukset/+reittimerkinta-store+ :readwrite store
                              (idb/add-object store kirjaus)))
 
-(defn merkinta-epaonnistui []
-  (ilmoitukset/ilmoita (:viesti %)
+(defn merkinta-epaonnistui [virheen-tiedot]
+  (ilmoitukset/ilmoita (:viesti virheen-tiedot)
                        s/ilmoitus
-                       {:tyyppi (:tyyppi %)}))
+                       {:tyyppi :virhe}))
 
 (defn tallenna-sovelluksen-tilasta-merkinta-indexeddbn!
   "'Nauhoitusfunktio', joka lukee sovelluksen tilan ja muodostaa
@@ -152,8 +152,7 @@
                                                 :kiinteys (:kiinteys @soratiemittaussyotto)
                                                 :polyavyys (:polyavyys @soratiemittaussyotto)}))})
     (when epaonnistui-fn
-      (epaonnistui-fn {:viesti "Liian epätarkka sijainti, reittimerkintää ei tehty!"
-                       :tyyppi :virhe}))))
+      (epaonnistui-fn {:viesti "Liian epätarkka sijainti, reittimerkintää ei tehty!"}))))
 
 (defn- kaynnista-tarkastusajon-lokaali-tallennus [db tarkastusajo-atom]
   (let [ajo-id (cljs.core/atom nil)]
