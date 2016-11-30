@@ -33,4 +33,7 @@
 
   (when @ilmoitus-atom
     [:div.ilmoitukset
-     [:div.ilmoitus (:ilmoitus @ilmoitus-atom)]]))
+     [:div {:class (str "ilmoitus "
+                        (when-let [tyyppi (:tyyppi @ilmoitus-atom)]
+                          (str "ilmoitus-tyyppi-" (name tyyppi))))}
+      (:ilmoitus @ilmoitus-atom)]]))

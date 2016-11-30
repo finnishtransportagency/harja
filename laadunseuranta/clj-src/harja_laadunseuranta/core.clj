@@ -27,6 +27,7 @@
                                   :aikaleima (:aikaleima merkinta)
                                   :x (:lon (:sijainti merkinta))
                                   :y (:lat (:sijainti merkinta))
+                                  :sijainti_tarkkuus (:accuracy (:sijainti merkinta))
                                   :lampotila (get-in merkinta [:mittaukset :lampotila])
                                   :lumisuus (get-in merkinta [:mittaukset :lumisuus])
                                   :talvihoito_tasaisuus (get-in merkinta [:mittaukset :talvihoito-tasaisuus])
@@ -50,6 +51,7 @@
                                 :luoja kayttaja-id}))))
 
 (defn- tallenna-merkinnat! [db kirjaukset kayttaja-id]
+  (log/debug "Vastaanotettu merkintä: " (pr-str kirjaukset))
   (jdbc/with-db-transaction [tx db]
     (let [vakiohavainto-idt (q/hae-vakiohavaintoavaimet tx)]
       (doseq [merkinta (:kirjaukset kirjaukset)]

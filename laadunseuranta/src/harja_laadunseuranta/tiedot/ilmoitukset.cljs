@@ -11,9 +11,12 @@
 (defn lisaa-ilmoitus-jonoon [teksti ilmoitukset-atom]
   (swap! ilmoitukset-atom #(conj % {:ilmoitus teksti})))
 
-(defn ilmoita [teksti ilmoitus-atom]
+(defn ilmoita
+  ([teksti ilmoitus-atom] (ilmoita teksti ilmoitus-atom {}))
+  ([teksti ilmoitus-atom {:keys [tyyppi] :as optiot}]
   (reset! ilmoitus-atom {:id (l/local-now)
-                         :ilmoitus teksti}))
+                         :ilmoitus teksti
+                         :tyyppi tyyppi})))
 
 (defn tyhjenna-ilmoitus-nakymisajan-jalkeen [ilmoitus ilmoitus-atom]
   (go (<! (timeout +ilmoituksen-nakymisaika-ms+))

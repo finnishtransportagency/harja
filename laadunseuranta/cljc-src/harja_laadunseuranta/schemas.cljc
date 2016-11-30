@@ -32,7 +32,8 @@
 (def Sivukaltevuus (s/pred validi-sivukaltevuus?))
 
 (def Sijainti {:lon s/Num
-               :lat s/Num})
+               :lat s/Num
+               :accuracy s/Num})
 
 (def Kuva {:data s/Str
            :mime-type s/Str})

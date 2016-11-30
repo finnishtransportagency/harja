@@ -3,6 +3,7 @@ ALTER TABLE tarkastusajo ALTER COLUMN tyyppi DROP NOT NULL;
 
 -- Reittimerkinälle tasauspuute (oli aiemmin virheellisesti sama kuin soratien tasaisuus)
 ALTER TABLE tarkastusreitti ADD COLUMN soratie_tasaisuus INTEGER;
+ALTER TABLE tarkastusreitti ADD COLUMN sijainti_tarkkuus INTEGER;
 ALTER TABLE tarkastusreitti RENAME COLUMN tasaisuus TO talvihoito_tasaisuus;
 
 -- Lisää puuttuvat vakiohavainnot

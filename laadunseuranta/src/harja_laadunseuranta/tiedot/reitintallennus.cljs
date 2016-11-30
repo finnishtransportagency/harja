@@ -8,7 +8,8 @@
             [cljs.core.match]
             [cljs-time.coerce :as tc]
             [cljs-time.local :as lt]
-            [harja-laadunseuranta.tiedot.sovellus :as s])
+            [harja-laadunseuranta.tiedot.sovellus :as s]
+            [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [reagent.ratom :refer [run!]]
                    [harja-laadunseuranta.macros :refer [with-delay-loop after-delay]]
@@ -25,9 +26,8 @@
 ;; pikaisella testillä:
 ;; - Samsung Galaxy S4: 10
 ;; - Samsung Galaxy Tab A: 23
-;; - Apple iPad Air:
 ;; - Apple iPhone: 60
-(def suurin-sallittu-tarkkuus 80) ;; Metreinä, mitä pienempi, sitä tarkempi
+(def +suurin-sallittu-tarkkuus+ 80) ;; Metreinä, mitä pienempi, sitä tarkempi
 
 (defn nykyinen-sijainti-riittavan-tarkka? [nykyinen-sijainti sallittu-tarkkuus]
   (<= (:accuracy nykyinen-sijainti) sallittu-tarkkuus))
@@ -129,10 +129,11 @@
    Ei ole syytä kutsua pistemäisille muutoksille (pistemäiset havainnot, mittausarvot jne.),
    vaan niistä tulee kirjata erikseen oma merkintä."
   [{:keys [idxdb sijainti tarkastusajo-id jatkuvat-havainnot mittaustyyppi
-           soratiemittaussyotto]}]
-  (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti) suurin-sallittu-tarkkuus)
+           soratiemittaussyotto epaonnistui-fn] :as tiedot}]
+  (.log js/console "PARAMS :" (pr-str tiedot))
+  (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti) +suurin-sallittu-tarkkuus+)
     (kirjaa-kertakirjaus idxdb
-                         {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon])
+                         {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
                           :aikaleima (tc/to-long (lt/local-now))
                           :tarkastusajo @tarkastusajo-id
                           ;; Nauhoituksessa havaintoihin tallentuvat vain jatkuvat mittaukset
@@ -146,7 +147,9 @@
                                                {:soratie-tasaisuus (:tasaisuus @soratiemittaussyotto)
                                                 :kiinteys (:kiinteys @soratiemittaussyotto)
                                                 :polyavyys (:polyavyys @soratiemittaussyotto)}))})
-    (.log js/console "Liian epätarkka sijainti, ei tehdä merkintää!")))
+    (when epaonnistui-fn
+      (epaonnistui-fn {:viesti "Liian epätarkka sijainti, reittimerkintää ei tehty!"
+                       :tyyppi :virhe}))))
 
 (defn- kaynnista-tarkastusajon-lokaali-tallennus [db tarkastusajo-atom]
   (let [ajo-id (cljs.core/atom nil)]
@@ -186,7 +189,10 @@
          :tarkastusajo-id tarkastusajo-atom
          :jatkuvat-havainnot jatkuvat-havainnot
          :mittaustyyppi mittaustyyppi
-         :soratiemittaussyotto soratiemittaussyotto}))))
+         :soratiemittaussyotto soratiemittaussyotto
+         :epaonnistui-fn #(ilmoitukset/ilmoita (:viesti %)
+                                               s/ilmoitus
+                                               {:tyyppi (:tyyppi %)})}))))
 
 (defn tietokannan-alustus []
   (idb/create-indexed-db "harja2" db-spec))
