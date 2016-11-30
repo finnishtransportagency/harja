@@ -52,6 +52,9 @@
    :fmt tr/tierekisteriosoite-tekstina
    :leveys 1})
 
+(defn- kentan-arvo-avain [ominaisuus]
+  (keyword (str "arvo-" (:kenttatunniste ominaisuus))))
+
 (defmulti varusteominaisuus->skeema
   "Muodostaa lomake/grid tyyppisen kentän skeeman varusteen ominaisuuden kuvauksen perusteella.
   Dispatch tapahtuu ominaisuuden tietotyypin perusteella."
@@ -60,10 +63,11 @@
 (defn- varusteominaisuus-skeema-perus [ominaisuus]
   {:otsikko (str/capitalize (:selite ominaisuus))
    :pakollinen? (:pakollinen ominaisuus)
-   :nimi (keyword (:kenttatunniste ominaisuus))
+   :nimi (kentan-arvo-avain ominaisuus)
    :hae #(get-in % [:varuste :tietue :tietolaji :arvot (:kenttatunniste ominaisuus)])
    :aseta (fn [rivi arvo]
-            (assoc rivi (:kenttatunniste ominaisuus) arvo))})
+            (log "---> " (pr-str rivi) " " (pr-str arvo))
+            (assoc rivi (kentan-arvo-avain ominaisuus) arvo))})
 
 (defmethod varusteominaisuus->skeema :koodisto
   [{ominaisuus :ominaisuus}]
@@ -74,6 +78,7 @@
             :valinta-nayta :selite
             :leveys 3
             :fmt (fn [arvo]
+                   (log "---> "(pr-str arvo))
                    (let [koodi (first (filter #(= arvo (str (:koodi %))) koodisto))]
                      (if koodi
                        (:selite koodi)
