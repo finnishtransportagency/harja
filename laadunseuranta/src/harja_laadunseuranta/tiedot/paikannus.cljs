@@ -3,6 +3,8 @@
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.kalman :as kalman]
             [harja-laadunseuranta.utils :as utils]
+            [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset]
+            [harja-laadunseuranta.tiedot.sovellus :as sovellus]
             [harja-laadunseuranta.utils :refer [timestamp ipad?]]
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]))
 
@@ -25,10 +27,12 @@
   "Muuntaa geolocation-apin antaman objektin cljs-otukseksi ja tekee
   WGS84 -> ETRS-TM35FIN -muunnoksen"
   [position]
+
   (let [coords (.-coords position)
         wgs84-lat (.-latitude coords)
         wgs84-lon (.-longitude coords)
         latlon (projektiot/wgs84->etrsfin [wgs84-lon wgs84-lat])]
+    (ilmoitukset/ilmoita (pr-str (.-accuracy coords)) sovellus/ilmoitus)
     {:lat (aget latlon 1)
      :lon (aget latlon 0)
      :heading (or (.-heading coords) 0)
