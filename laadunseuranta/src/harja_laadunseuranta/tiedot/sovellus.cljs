@@ -151,6 +151,7 @@
 (def mittaussyotto (reagent/cursor sovellus [:mittaussyotto]))
 (def soratiemittaussyotto (reagent/cursor sovellus [:soratiemittaussyotto]))
 
+;; Kartalle piirtoa varten
 (def reittisegmentti (reaction
                        (let [{:keys [nykyinen edellinen]} @sijainti]
                          (when (and nykyinen edellinen)
@@ -159,12 +160,16 @@
                             :vari (let [s @jatkuvat-havainnot]
                                     (cond
                                       (:liukasta s) "blue"
-                                      (:lumista s) "blue" ;; TODO Onko tämä oikein?
+                                      (:lumista s) "blue"
+                                      (:tasauspuute s) "blue"
+
                                       (:soratie s) "brown"
-                                      (:tasauspuute s) "green"
+
+                                      (:vesakko-raivaamatta s) "green"
+                                      (:niittamatta s) "green"
+
                                       (:yleishavainto s) "red"
                                       :default "black"))}))))
-
 (def reittipisteet (reagent/cursor sovellus [:reittipisteet]))
 
 (def idxdb (reagent/cursor sovellus [:idxdb]))
