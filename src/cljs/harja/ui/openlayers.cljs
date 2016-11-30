@@ -275,11 +275,14 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
              (hae-asiat-pisteessa (:geometries (reagent/state this))
                                   (:sijainti (tapahtuman-kuvaus e))
                                   asiat-pisteessa-atom)
+             (reset! harja.tiedot.kartta/infopaneeli-nakyvissa? true)
+
              (comment
                ;; FIXME: miten yhdistetään vanhaan on-click/on-select toimintoon?
                ;; mietittävä ennen mergeä
                (when on-click
                  (on-click e))
+
                (when on-select
                  (when-let [g (tapahtuman-geometria this e)]
                    (on-select g e)))))))))
