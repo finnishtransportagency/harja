@@ -6,7 +6,8 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
             [tuck.core :as t]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -25,6 +26,7 @@
 
 (defrecord YhdistaValinnat [valinnat])
 (defrecord TyotHaettu [tulokset])
+(defrecord UusiTyo [])
 (defrecord HaeTyo [hakuehdot])
 (defrecord ValitseTyo [tyo])
 (defrecord MuokkaaTyota [uusi-tyo])
@@ -55,6 +57,10 @@
   TyotHaettu
   (process-event [{:keys [tulokset] :as e} tila]
     (assoc-in tila [:muut-tyot] tulokset))
+
+  UusiTyo
+  (process-event [_ tila]
+    (assoc-in tila [:valittu-tyo] {:paivamaara (pvm/nyt)}))
 
   HaeTyo
   (process-event [{:keys [hakuehdot] :as e} tila]

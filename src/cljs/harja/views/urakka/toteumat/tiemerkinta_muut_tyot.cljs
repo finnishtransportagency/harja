@@ -25,13 +25,17 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction-writable]]))
 
-(defn- valinnat [{:keys [valittu-urakka valittu-sopimusnumero
-                         valitse-sopimusnumero valitun-urakan-hoitokaudet
-                         valittu-hoitokausi valitse-hoitokausi]}]
-  (valinnat/urakan-sopimus-ja-hoitokausi
-    valittu-urakka
-    valittu-sopimusnumero valitse-sopimusnumero
-    valitun-urakan-hoitokaudet valittu-hoitokausi valitse-hoitokausi))
+(defn- valinnat [e! {:keys [valittu-urakka valittu-sopimusnumero
+                            valitse-sopimusnumero valitun-urakan-hoitokaudet
+                            valittu-hoitokausi valitse-hoitokausi]}]
+  (let [muokkausoikeus? true] ;; TODO OIKEUSTARKISTUS
+    [:span
+     (valinnat/urakan-sopimus-ja-hoitokausi
+       valittu-urakka
+       valittu-sopimusnumero valitse-sopimusnumero
+       valitun-urakan-hoitokaudet valittu-hoitokausi valitse-hoitokausi)
+     [napit/uusi "Lisää toteuma" #(e! (tiedot/->UusiTyo))
+      {:disabled (not muokkausoikeus?)}]]))
 
 (defn muu-tyo-lomake [e! tila riippuvuudet]
   (let [vanha-toteuma? (get-in tila [:valittu-tyo :id])]
@@ -71,12 +75,12 @@
                                 valittu-hoitokausi valitse-hoitokausi]
                          :as riippuvuudet}]
   [:div
-   [valinnat {:valittu-urakka valittu-urakka
-              :valittu-sopimusnumero valittu-sopimusnumero
-              :valitse-sopimusnumero valitse-sopimusnumero
-              :valitun-urakan-hoitokaudet valitun-urakan-hoitokaudet
-              :valittu-hoitokausi valittu-hoitokausi
-              :valitse-hoitokausi valitse-hoitokausi}]
+   [valinnat e! {:valittu-urakka valittu-urakka
+                 :valittu-sopimusnumero valittu-sopimusnumero
+                 :valitse-sopimusnumero valitse-sopimusnumero
+                 :valitun-urakan-hoitokaudet valitun-urakan-hoitokaudet
+                 :valittu-hoitokausi valittu-hoitokausi
+                 :valitse-hoitokausi valitse-hoitokausi}]
    [grid/grid
     {:otsikko (str "Muut työt")
      :tyhja (if (nil? muut-tyot)
