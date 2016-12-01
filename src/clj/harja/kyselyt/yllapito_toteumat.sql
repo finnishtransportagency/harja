@@ -31,8 +31,8 @@ WHERE yt.urakka = :urakka
 
 -- name: luo-uusi-muu-tyo<!
 INSERT INTO yllapito_toteuma
-(urakka, selite, pvm, hinta, yllapitoluokka)
-VALUES (:urakka, :selite, :pvm, :hinta, :yllapitoluokka);
+(urakka, selite, pvm, hinta, yllapitoluokka, laskentakohde)
+VALUES (:urakka, :selite, :pvm, :hinta, :yllapitoluokka, :laskentakohde);
 
 -- name: paivita-muu-tyo<!
 UPDATE yllapito_toteuma
@@ -40,7 +40,8 @@ SET
 selite = :selite,
 pvm = :pvm,
 hinta = :hinta,
-yllapitoluokka = :yllapitoluokka
+yllapitoluokka = :yllapitoluokka,
+laskentakohde = :laskentakohde
 WHERE id = :id
         AND urakka = :urakka;
 

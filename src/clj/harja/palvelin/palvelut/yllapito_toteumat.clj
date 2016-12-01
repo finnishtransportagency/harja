@@ -29,7 +29,7 @@
   (jdbc/with-db-transaction [db db]
     (into [] (q/hae-urakan-laskentakohteet db {:urakka urakka}))))
 
-(defn tallenna-yllapito-toteuma [db user {:keys [id urakka selite
+(defn tallenna-yllapito-toteuma [db user {:keys [id urakka selite laskentakohde
                                                  pvm hinta yllapitoluokka] :as toteuma}]
   ;; TODO OIKEUSTARKISTUS, hoidon mallilla vai oma rivi?
 
@@ -42,12 +42,14 @@
                                :selite selite
                                :pvm pvm
                                :hinta hinta
-                               :yllapitoluokka yllapitoluokka})
+                               :yllapitoluokka yllapitoluokka
+                               :laskentakohde (first laskentakohde)})
       (q/luo-uusi-muu-tyo<! db {:urakka urakka
                                 :selite selite
                                 :pvm pvm
                                 :hinta hinta
-                                :yllapitoluokka yllapitoluokka})))
+                                :yllapitoluokka yllapitoluokka
+                                :laskentakohde (first laskentakohde)})))
 
   (hae-yllapito-toteumat db user {:urakka urakka}))
 
