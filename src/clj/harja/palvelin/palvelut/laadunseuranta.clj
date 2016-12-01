@@ -316,16 +316,25 @@
       (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka)
       (hae-urakan-sanktiot c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
 
-(defn- tarkastusreittien-parametrit [parametrit]
+(defn- tarkastusreittien-parametrit [user parametrit]
   (let [{:keys [havaintoja-sisaltavat? vain-laadunalitukset? tienumero
                 alkupvm loppupvm tyyppi urakka-id]}
         (some-> parametrit (get "tr") transit/lue-transit-string)]
-    []))
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset
+                               user :urakka-id)
+    {:urakka urakka-id
+     :alku alkupvm :loppu loppupvm
+     :rajaa_tienumerolla (some? tienumero) :tienumero tienumero
+     :rajaa_tyypilla (some? tyyppi) :tyyppi (and tyyppi (name tyyppi))
+     :havaintoja_sisaltavat havaintoja-sisaltavat?
+     :vain_laadunalitukset vain-laadunalitukset?
+     :kayttaja_on_urakoitsija (roolit/urakoitsija? user)}))
+
 (defn hae-tarkastusreitit-kartalle [db user {:keys [extent parametrit]}]
-  (let [
+  (let [parametrit (tarkastusreittien-parametrit user parametrit)
         [x1 y1 x2 y2] extent
         alue {:xmin x1 :ymin y1 :xmax x2 :ymax y2}
-        toleranssi (geo/karkeistustoleranssi alue)
+        alue (assoc alue :toleranssi (geo/karkeistustoleranssi alue))
         ch (async/chan 32
                        (comp (map laadunseuranta/tarkastus-tiedolla-onko-ok)
                              (map #(konv/string->keyword % :tyyppi :tekija))
@@ -340,28 +349,17 @@
           (tarkastukset/hae-urakan-tarkastukset-kartalle
            db ch
            (merge alue
-                  {:urakka urakka-id
-                   :toleranssi toleranssi
-                   :alku alkupvm :loppu loppupvm
-                   :rajaa_tienumerolla (some? tienumero) :tienumero tienumero
-                   :rajaa_tyypilla (some? tyyppi) :tyyppi (and tyyppi (name tyyppi))
-                   :havaintoja_sisaltavat havaintoja-sisaltavat?
-                   :vain_laadunalitukset vain-laadunalitukset?
-                   :kayttaja_on_urakoitsija (roolit/urakoitsija? user)})))
+                  parametrit)))
         (catch Throwable t
           (log/warn t "Virhe haettaessa tarkastuksia kartalle"))))
 
     ch))
 
-(defn hae-tarkastusreittien-asiat-kartalle [db user {params "tr" x :x y :y}]
-  (let [hakuehdot (as-> params p
-                    (java.net.URLDecoder/decode p)
-                    (transit/lue-transit-string p)
-                    (assoc p :x x :y y :toleranssi 150 ;; FIXME: toleranssi suoraan frontilta!
-                           ))]
-    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset
-                               user (:urakka-id hakuehdot))
-    (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle db hakuehdot)))
+(defn hae-tarkastusreittien-asiat-kartalle [db user {x :x y :y :as params}]
+  (let [parametrit (tarkastusreittien-parametrit user params)]
+    (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle db
+                                                         (assoc parametrit
+                                                                :x x :y y))))
 
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
