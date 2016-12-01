@@ -406,6 +406,10 @@
                                              :tyyppi-kartalla :tarkastus
                                              :sijainti (:reitti %))))))
 
+(defn- hae-tarkastuksien-asiat-kartalle [db user parametrit]
+  (log/info "PARAMETRIT: " (pr-str parametrit))
+  [])
+
 
 (defrecord Tilannekuva []
   component/Lifecycle
@@ -426,7 +430,7 @@
     (karttakuvat/rekisteroi-karttakuvan-lahde!
      karttakuvat :tilannekuva-tarkastukset
      (partial hae-tarkastukset-kartalle db)
-     #(do (log/info "FIXME: implementoi hae-asiat tilannekuvan tarkastuksien karttatasolle!") []))
+     (partial hae-tarkastuksien-asiat-kartalle db))
     this)
 
   (stop [{karttakuvat :karttakuvat :as this}]
