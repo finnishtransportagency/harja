@@ -232,15 +232,8 @@
             :uusi-rivi? true
             :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
             :aseta (fn [rivi arvo]
-                     (assoc
-                       (if
-                         (or
-                           (not (:paattynyt rivi))
-                           (pvm/jalkeen? arvo (:paattynyt rivi)))
-                         (assoc rivi :paattynyt arvo)
-                         rivi)
-                       :alkanut
-                       arvo))
+                     (assoc rivi :alkanut arvo
+                                 :paattynyt arvo))
             :validoi [[:ei-tyhja "Valitse päivämäärä"]]
             :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
 
