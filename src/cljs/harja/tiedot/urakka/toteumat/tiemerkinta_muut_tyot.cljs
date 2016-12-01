@@ -25,7 +25,7 @@
 
 (defrecord YhdistaValinnat [valinnat])
 (defrecord TyotHaettu [tulokset])
-(defrecord HaeTyo [tyo])
+(defrecord HaeTyo [hakuehdot])
 (defrecord ValitseTyo [tyo])
 (defrecord MuokkaaTyota [uusi-tyo])
 (defrecord TallennaTyo [tyo])
@@ -41,7 +41,6 @@
     (go (let [tyo (<! (k/post! :hae-yllapito-toteuma {:urakka urakka
                                                        :id id}))]
           (when-not (k/virhe? tyo)
-
             (tulos! tyo))))))
 
 ;; Tapahtumien käsittely
@@ -58,8 +57,8 @@
     (assoc-in tila [:muut-tyot] tulokset))
 
   HaeTyo
-  (process-event [{:keys [id urakka] :as e} tila]
-    (hae-tyo id urakka)
+  (process-event [{:keys [hakuehdot] :as e} tila]
+    (hae-tyo (:id hakuehdot) (:urakka hakuehdot))
     tila)
 
   ValitseTyo

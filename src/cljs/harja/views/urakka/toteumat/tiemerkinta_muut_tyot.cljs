@@ -83,7 +83,7 @@
               [ajax-loader "Toteumia haetaan..."]
               "Ei toteumia.")
      :rivi-klikattu #(e! (tiedot/->HaeTyo {:id (:id %)
-                                           :urakka valittu-urakka}))}
+                                           :urakka (:id valittu-urakka)}))}
     [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm-opt :nimi :pvm :leveys 10}
      {:otsikko "Selite" :tyyppi :string :nimi :selite :leveys 20}
      {:otsikko "Hinta" :tyyppi :numero :nimi :hinta :fmt (partial fmt/euro-opt true) :leveys 10}

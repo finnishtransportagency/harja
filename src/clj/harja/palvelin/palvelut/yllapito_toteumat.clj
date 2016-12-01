@@ -17,6 +17,7 @@
 
 (defn hae-yllapito-toteuma [db user {:keys [urakka id ] :as tiedot}]
   ;; TODO OIKEUSTARKISTUS, hoidon mallilla vai oma rivi?
+  (log/debug "Hae ylläpidon toteuma parametreilla: " (pr-str tiedot))
   (jdbc/with-db-transaction [db db]
     (first (q/hae-muu-tyo db {:urakka urakka
                               :id id}))))
