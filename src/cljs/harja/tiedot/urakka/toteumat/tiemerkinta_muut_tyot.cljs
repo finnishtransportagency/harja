@@ -80,7 +80,7 @@
   YhdistaValinnat
   (process-event [{:keys [valinnat] :as e} tila]
     (hae-toteumat {:urakka (:urakka valinnat)})
-    (hae-laskentakohteet {:urakka (:urakka valinnat)})
+    #_(hae-laskentakohteet {:urakka (:urakka valinnat)}) ;; TODO EI TOIMI
     (update-in tila [:valinnat] merge valinnat))
 
   LaskentakohteetHaettu

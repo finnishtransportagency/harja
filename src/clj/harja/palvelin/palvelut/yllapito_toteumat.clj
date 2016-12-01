@@ -11,6 +11,7 @@
 
 (defn hae-yllapito-toteumat [db user {:keys [urakka] :as tiedot}]
   ;; TODO OIKEUSTARKISTUS
+  ;; TODO HUOMIOI AIKA JA SOPPARI!
   (log/debug "Hae ylläpidon toteumat parametreilla: " (pr-str tiedot))
   (jdbc/with-db-transaction [db db]
     (into [] (q/hae-muut-tyot db {:urakka urakka}))))
