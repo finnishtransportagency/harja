@@ -86,8 +86,8 @@
     ;;; TÄMÄN viivan pitäisi menna vasen ala nurkasta oikea ylä nurkkaan
                                         ;(.drawLine g (nth extent 0) (nth extent 1) (nth extent 2) (nth extent 3))
       img)
-    (catch Exception e
-      (log/debug "Karttakuvan luonnissa poikkeus" e))))
+    (catch Throwable t
+      (log/error t "Karttakuvan luonnissa poikkeus"))))
 
 (defn- hae-karttakuvadata
   "Hakee karttakuvadatan oikeasti lähteestä"

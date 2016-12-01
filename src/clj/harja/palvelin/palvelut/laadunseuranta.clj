@@ -319,7 +319,7 @@
 (defn- tarkastusreittien-parametrit [user parametrit]
   (let [{:keys [havaintoja-sisaltavat? vain-laadunalitukset? tienumero
                 alkupvm loppupvm tyyppi urakka-id]}
-        (some-> parametrit (get "tr") transit/lue-transit-string)]
+        (transit/lue-transit-string parametrit)]
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset
                                user :urakka-id)
     {:urakka urakka-id
@@ -331,12 +331,13 @@
      :kayttaja_on_urakoitsija (roolit/urakoitsija? user)}))
 
 (defn hae-tarkastusreitit-kartalle [db user {:keys [extent parametrit]}]
-  (let [parametrit (tarkastusreittien-parametrit user parametrit)
+  (let [parametrit (tarkastusreittien-parametrit user (get parametrit "tr"))
         [x1 y1 x2 y2] extent
         alue {:xmin x1 :ymin y1 :xmax x2 :ymax y2}
         alue (assoc alue :toleranssi (geo/karkeistustoleranssi alue))
         ch (async/chan 32
-                       (comp (map laadunseuranta/tarkastus-tiedolla-onko-ok)
+                       (comp
+                        (map laadunseuranta/tarkastus-tiedolla-onko-ok)
                              (map #(konv/string->keyword % :tyyppi :tekija))
                              (map #(assoc %
                                           :tyyppi-kartalla :tarkastus
@@ -355,11 +356,15 @@
 
     ch))
 
-(defn hae-tarkastusreittien-asiat-kartalle [db user {x :x y :y :as params}]
-  (let [parametrit (tarkastusreittien-parametrit user params)]
-    (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle db
-                                                         (assoc parametrit
-                                                                :x x :y y))))
+(defn hae-tarkastusreittien-asiat-kartalle [db user {x :x y :y params "tr"}]
+  (let [parametrit (tarkastusreittien-parametrit user (java.net.URLDecoder/decode params))]
+    (into []
+          (map #(assoc % :tyyppi-kartalla :tarkastus))
+          (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
+              db
+              (assoc parametrit
+                     :x x :y y
+                     :toleranssi 150)))))
 
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))

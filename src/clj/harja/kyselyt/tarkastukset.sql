@@ -83,7 +83,10 @@ SELECT t.tyyppi, t.laadunalitus,
               CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
         THEN 'urakoitsija' :: osapuoli
         ELSE 'tilaaja' :: osapuoli
-       END AS tekija
+       END AS tekija,
+       t.aika,
+       t.tarkastaja,
+       t.havainnot
   FROM tarkastus t
        LEFT JOIN kayttaja k ON t.luoja = k.id
        LEFT JOIN organisaatio o ON k.organisaatio = o.id
