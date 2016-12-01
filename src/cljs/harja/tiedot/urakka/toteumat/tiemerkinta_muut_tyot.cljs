@@ -25,10 +25,19 @@
 
 (defrecord YhdistaValinnat [valinnat])
 (defrecord TyotHaettu [tulokset])
+(defrecord HaeTyo [tyo])
+(defrecord ValitseTyo [tyo])
 
 (defn hae-tyot [{:keys [urakka] :as hakuparametrit}]
   (let [tulos! (t/send-async! ->TyotHaettu)]
     (go (let [tyot (<! (k/post! :hae-yllapito-toteumat {:urakka urakka}))]
+          (when-not (k/virhe? tyot)
+            (tulos! tyot))))))
+
+(defn hae-tyo [id urakka]
+  (let [tulos! (t/send-async! ->ValitseTyo)]
+    (go (let [tyot (<! (k/post! :hae-yllapito-toteuma {:urakka urakka
+                                                       :id id}))]
           (when-not (k/virhe? tyot)
             (tulos! tyot))))))
 
@@ -43,6 +52,15 @@
 
   TyotHaettu
   (process-event [{:keys [tulokset] :as e} tila]
-    (assoc-in tila [:muut-tyot] tulokset)))
+    (assoc-in tila [:muut-tyot] tulokset))
+
+  HaeTyo
+  (process-event [{:keys [tyo] :as e} tila]
+    (hae-tyo (:id tyo))
+    tila)
+
+  ValitseTyo
+  (process-event [{:keys [tyo] :as e} tila]
+    (assoc-in tila [:valittu-tyo] tyo)))
 
 
