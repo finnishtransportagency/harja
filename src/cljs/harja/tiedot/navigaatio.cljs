@@ -132,7 +132,10 @@
         (some #(when (= id (:id %)) %) urakat)))))
 
 
-(defonce valittu-urakkatyyppi (atom nil))
+;; Käyttäjän asettama urakkatyyppi. Todellinen UI:lla näkyvästi valittu urakkatyyppi
+;; ei kuitenkaan ole tämä, vaan alla oleva reaction (lue sitä, älä tätä)
+;; Älä myöskään aseta suoraan, käytä vaihda-urakkatyyppi!
+(defonce ^{:private true} valittu-urakkatyyppi (atom nil))
 
 ;; Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi
 ;; Jos käyttäjällä urakkarooleja, valitaan urakoista yleisin urakkatyyppi
@@ -142,6 +145,25 @@
           valittu-urakkatyyppi @valittu-urakkatyyppi
           urakan-urakkatyyppi (urakkatyyppi-arvolle (:tyyppi @valittu-urakka))]
       (or urakan-urakkatyyppi valittu-urakkatyyppi oletus-urakkatyyppi))))
+
+(defn vaihda-urakkatyyppi!
+  "Vaihtaa urakkatyypin ja resetoi valitun urakoitsijan, jos kyseinen urakoitsija ei
+   löydy valitun tyyppisten urakoitsijain listasta."
+  [ut]
+  (when (= @valittu-vaylamuoto :tie)
+    (reset! valittu-urakkatyyppi ut)
+    (swap! valittu-urakoitsija
+           #(let [nykyisen-urakkatyypin-urakoitsijat (case (:arvo ut)
+                                                       :hoito @urk/urakoitsijat-hoito
+                                                       :paallystys @urk/urakoitsijat-paallystys
+                                                       :paikkaus @urk/urakoitsijat-paikkaus
+                                                       :tiemerkinta @urk/urakoitsijat-tiemerkinta
+                                                       :valaistus @urk/urakoitsijat-valaistus
+                                                       :siltakorjaus @urk/urakoitsijat-siltakorjaus
+                                                       :tekniset-laitteet @urk/urakoitsijat-tekniset-laitteet)]
+              (if (nykyisen-urakkatyypin-urakoitsijat (:id %))
+                %
+                nil)))))
 
 (def tarvitsen-isoa-karttaa "Set käyttöliittymänäkymiä (keyword), jotka haluavat pakottaa kartan näkyviin.
   Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin :L kokoisena vaikka se ei olisikaan muuten näkyvissä."
@@ -192,25 +214,6 @@
 
 (defn valitse-urakoitsija! [u]
   (reset! valittu-urakoitsija u))
-
-(defn vaihda-urakkatyyppi!
-  "Vaihtaa urakkatyypin ja resetoi valitun urakoitsijan, jos kyseinen urakoitsija ei
-   löydy valitun tyyppisten urakoitsijain listasta."
-  [ut]
-  (when (= @valittu-vaylamuoto :tie)
-    (reset! valittu-urakkatyyppi ut)
-    (swap! valittu-urakoitsija
-           #(let [nykyisen-urakkatyypin-urakoitsijat (case (:arvo ut)
-                                                       :hoito @urk/urakoitsijat-hoito
-                                                       :paallystys @urk/urakoitsijat-paallystys
-                                                       :paikkaus @urk/urakoitsijat-paikkaus
-                                                       :tiemerkinta @urk/urakoitsijat-tiemerkinta
-                                                       :valaistus @urk/urakoitsijat-valaistus
-                                                       :siltakorjaus @urk/urakoitsijat-siltakorjaus
-                                                       :tekniset-laitteet @urk/urakoitsijat-tekniset-laitteet)]
-             (if (nykyisen-urakkatyypin-urakoitsijat (:id %))
-               %
-               nil)))))
 
 ;; Rajapinta hallintayksikön valitsemiseen, jota viewit voivat kutsua
 (defn valitse-hallintayksikko [yks]

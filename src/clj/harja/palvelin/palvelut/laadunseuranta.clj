@@ -316,9 +316,13 @@
       (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka)
       (hae-urakan-sanktiot c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
 
+(defn- tarkastusreittien-parametrit [parametrit]
+  (let [{:keys [havaintoja-sisaltavat? vain-laadunalitukset? tienumero
+                alkupvm loppupvm tyyppi urakka-id]}
+        (some-> parametrit (get "tr") transit/lue-transit-string)]
+    []))
 (defn hae-tarkastusreitit-kartalle [db user {:keys [extent parametrit]}]
-  (let [{:keys [havaintoja-sisaltavat? vain-laadunalitukset? tienumero alkupvm loppupvm tyyppi urakka-id]}
-        (some-> parametrit (get "tr") transit/lue-transit-string)
+  (let [
         [x1 y1 x2 y2] extent
         alue {:xmin x1 :ymin y1 :xmax x2 :ymax y2}
         toleranssi (geo/karkeistustoleranssi alue)
@@ -348,6 +352,16 @@
           (log/warn t "Virhe haettaessa tarkastuksia kartalle"))))
 
     ch))
+
+(defn hae-tarkastusreittien-asiat-kartalle [db user {params "tr" x :x y :y}]
+  (let [hakuehdot (as-> params p
+                    (java.net.URLDecoder/decode p)
+                    (transit/lue-transit-string p)
+                    (assoc p :x x :y y :toleranssi 150 ;; FIXME: toleranssi suoraan frontilta!
+                           ))]
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset
+                               user (:urakka-id hakuehdot))
+    (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle db hakuehdot)))
 
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
@@ -379,7 +393,7 @@
     (karttakuvat/rekisteroi-karttakuvan-lahde!
      karttakuvat :tarkastusreitit
      (partial #'hae-tarkastusreitit-kartalle db)
-     #(do (log/info "FIXME: implementoi hae-ast laadunseurannan karttatasolle!") []))
+     (partial #'hae-tarkastusreittien-asiat-kartalle db))
 
     (julkaise-palvelut
       http-palvelin
