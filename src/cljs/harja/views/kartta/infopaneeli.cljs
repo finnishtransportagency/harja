@@ -54,7 +54,7 @@
 (defn infopaneeli [asiat-pisteessa nakyvissa? linkkifunktiot]
   (when @nakyvissa?
     (let [{:keys [asiat haetaan? koordinaatti]} asiat-pisteessa
-          asiat (asioiden-tiedot/kasaa-tiedot asiat)
+          asiat (asioiden-tiedot/asioiden-pisteessa-skeemamuoto asiat)
           vain-yksi-asia? (-> asiat count (= 1))
           useampi-asia? (not vain-yksi-asia?)
           esita-yksityiskohdat? (or @valittu-asia vain-yksi-asia?)
