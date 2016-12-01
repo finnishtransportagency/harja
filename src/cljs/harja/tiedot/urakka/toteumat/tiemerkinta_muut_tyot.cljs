@@ -27,7 +27,7 @@
 (defrecord TyotHaettu [tulokset])
 
 (defn hae-tyot [{:keys [urakka] :as hakuparametrit}]
-  (let [tulos! (t/send-async! TyotHaettu)]
+  (let [tulos! (t/send-async! ->TyotHaettu)]
     (go (let [tyot (<! (k/post! :hae-yllapito-toteumat {:urakka urakka}))]
           (when-not (k/virhe? tyot)
             (tulos! tyot))))))
