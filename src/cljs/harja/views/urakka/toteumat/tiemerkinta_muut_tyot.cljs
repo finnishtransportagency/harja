@@ -62,10 +62,10 @@
               }
 
       [{:otsikko "Päivämäärä" :nimi :paivamaara :tyyppi :pvm}
-       {:otsikko "Selite" :nimi :selite :tyyppi :string}
        {:otsikko "Hinta" :nimi :hinta :tyyppi :positiivinen-numero}
        {:otsikko "Ylläpitokohde" :nimi :yllapitokohde :tyyppi :positiivinen-numero}
-       #_{:otsikko "Laskentakohde" :nimi :selite :tyyppi :selite}]
+       {:otsikko "Laskentakohde" :nimi :laskentakohde :tyyppi :string}
+       {:otsikko "Selite" :nimi :selite :tyyppi :text}]
       (:valittu-tyo tila)]]))
 
 (defn- muut-tyot-lista [e!
