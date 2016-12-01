@@ -63,7 +63,7 @@
       ;; (esim latauksen aikana)
       (when-not (some #(= @valittu-asia %) asiat)
         (reset! valittu-asia nil))
-      [:div#kartan-infopaneeli
+      [:div#kartan-infopaneeli.kartan-infopaneeli
        [:div
         (when (and @valittu-asia useampi-asia?)
           [napit/takaisin "" #(reset! valittu-asia nil)])
