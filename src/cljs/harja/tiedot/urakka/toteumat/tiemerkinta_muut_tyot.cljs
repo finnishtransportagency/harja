@@ -61,16 +61,18 @@
 (defn tallenna-toteuma [toteuma urakka-id]
   (k/post! :tallenna-yllapito-toteuma (assoc toteuma :urakka urakka-id)))
 
-#_(def laskentakohdehaku
+(def laskentakohdehaku
     (reify protokollat/Haku
       (hae [_ teksti]
+        (log "Params: " (pr-str _) " ja " (pr-str teksti))
+
         (go (let [haku second
-                  selitteet +ilmoitusten-selitteet+
+                  laskentakohteet []
                   itemit (if (< (count teksti) 1)
-                           selitteet
+                           laskentakohteet
                            (filter #(not= (.indexOf (.toLowerCase (haku %))
                                                     (.toLowerCase teksti)) -1)
-                                   selitteet))]
+                                   laskentakohteet))]
               (vec (sort itemit)))))))
 
 (extend-protocol t/Event
@@ -82,7 +84,7 @@
     (update-in tila [:valinnat] merge valinnat))
 
   LaskentakohteetHaettu
-  (process-event [{:keys [tyo] :as e} tila]
+  (process-event [{:keys [laskentakohteet] :as e} tila]
     (assoc-in tila [:laskentakohteet] laskentakohteet))
 
   ToteumatHaettu

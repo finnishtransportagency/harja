@@ -61,6 +61,13 @@
       [{:otsikko "Päivämäärä" :nimi :paivamaara :tyyppi :pvm :pakollinen? true}
        {:otsikko "Hinta" :nimi :hinta :tyyppi :positiivinen-numero :pakollinen? true}
        {:otsikko "Ylläpitoluokka" :nimi :yllapitoluokka :tyyppi :positiivinen-numero}
+       {:otsikko "Laskentakohde"
+        :nimi :laskentakohde
+        :placeholder "Hae ja valitse laskentakohde"
+        :tyyppi :haku
+        :hae-kun-yli-n-merkkia 0
+        :nayta second :fmt second
+        :lahde tiedot/laskentakohdehaku}
        #_{:otsikko "Laskentakohde" :nimi :laskentakohde :tyyppi :string}
        {:otsikko "Selite" :nimi :selite :tyyppi :text :pakollinen? true}]
       (:valittu-toteuma tila)]]))
