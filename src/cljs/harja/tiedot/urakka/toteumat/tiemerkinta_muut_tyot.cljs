@@ -18,7 +18,7 @@
                       :toteumat nil
                       :valinnat {:urakka nil
                                  :sopimus nil}
-                      :laskentakohteet []}))
+                      :laskentakohteet {}}))
 
 (defonce valinnat
   (reaction
@@ -65,7 +65,7 @@
     (reify protokollat/Haku
       (hae [_ teksti]
         (go (let [haku second
-                  laskentakohteet {nil "Kaikki"}
+                  laskentakohteet (:laskentakohteet @muut-tyot)
                   itemit (if (< (count teksti) 1)
                            laskentakohteet
                            (filter #(not= (.indexOf (.toLowerCase (haku %))
@@ -83,7 +83,11 @@
 
   LaskentakohteetHaettu
   (process-event [{:keys [laskentakohteet] :as e} tila]
-    (assoc-in tila [:laskentakohteet] laskentakohteet))
+    (assoc-in tila [:laskentakohteet] (reduce merge
+                                              {nil "Ei laskentakohdetta"}
+                                              (mapv
+                                                      #(-> {(:id %) (:nimi %)})
+                                                      laskentakohteet))))
 
   ToteumatHaettu
   (process-event [{:keys [tulokset] :as e} tila]
