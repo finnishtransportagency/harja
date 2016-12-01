@@ -359,7 +359,8 @@
 (defn hae-tarkastusreittien-asiat-kartalle [db user {x :x y :y params "tr"}]
   (let [parametrit (tarkastusreittien-parametrit user (java.net.URLDecoder/decode params))]
     (into []
-          (map #(assoc % :tyyppi-kartalla :tarkastus))
+          (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
+                (map #(konv/string->keyword % :tyyppi)))
           (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
               db
               (assoc parametrit
