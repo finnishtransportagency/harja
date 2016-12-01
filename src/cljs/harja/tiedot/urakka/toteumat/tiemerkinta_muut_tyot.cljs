@@ -46,7 +46,7 @@
             (tulos! tyot))))))
 
 (defn hae-laskentakohteet [{:keys [urakka] :as hakuparametrit}]
-  (let [tulos! (t/send-async! ->ToteumatHaettu)]
+  (let [tulos! (t/send-async! ->LaskentakohteetHaettu)]
     (go (let [laskentakohteet (<! (k/post! :hae-laskentakohteet {:urakka urakka}))]
           (when-not (k/virhe? laskentakohteet)
             (tulos! laskentakohteet))))))
@@ -64,10 +64,8 @@
 (def laskentakohdehaku
     (reify protokollat/Haku
       (hae [_ teksti]
-        (log "Params: " (pr-str _) " ja " (pr-str teksti))
-
         (go (let [haku second
-                  laskentakohteet []
+                  laskentakohteet {nil "Kaikki"}
                   itemit (if (< (count teksti) 1)
                            laskentakohteet
                            (filter #(not= (.indexOf (.toLowerCase (haku %))
@@ -80,7 +78,7 @@
   YhdistaValinnat
   (process-event [{:keys [valinnat] :as e} tila]
     (hae-toteumat {:urakka (:urakka valinnat)})
-    #_(hae-laskentakohteet {:urakka (:urakka valinnat)}) ;; TODO EI TOIMI
+    (hae-laskentakohteet {:urakka (:urakka valinnat)})
     (update-in tila [:valinnat] merge valinnat))
 
   LaskentakohteetHaettu
