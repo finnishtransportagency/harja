@@ -28,3 +28,18 @@ JOIN urakka_laskentakohde lk ON lk.id = yt.laskentakohde
                                 AND lk.urakka = yt.urakka
 WHERE yt.urakka = :urakka
       AND yt.id = :id;
+
+-- name: luo-uusi-muu-tyo<!
+INSERT INTO yllapito_toteuma yt
+(urakka, selite, pvm, hinta, yllapitoluokka)
+VALUES (:urakka, :selite, :pvm, :hina, :yllapitoluokka);
+
+-- name: paivita-muu-tyo<!
+UPDATE yllapito_toteuma
+SET
+selite = :selite,
+pvm = :pvm,
+hinta = :hinta,
+yllapitoluokka = :yllapitoluokka
+WHERE id = :id
+        AND urakka = :urakka;

@@ -15,7 +15,7 @@
   (jdbc/with-db-transaction [db db]
     (into [] (q/hae-muut-tyot db {:urakka urakka}))))
 
-(defn hae-yllapito-toteuma [db user {:keys [urakka id ] :as tiedot}]
+(defn hae-yllapito-toteuma [db user {:keys [urakka id] :as tiedot}]
   ;; TODO OIKEUSTARKISTUS, hoidon mallilla vai oma rivi?
   (log/debug "Hae ylläpidon toteuma parametreilla: " (pr-str tiedot))
   (jdbc/with-db-transaction [db db]
@@ -27,10 +27,27 @@
   ;; TODO
   )
 
-(defn tallenna-yllapito-toteuma [db user tiedot]
+(defn tallenna-yllapito-toteuma [db user {:keys [id urakka selite
+                                                 pvm hinta yllapitoluokka] :as toteuma}]
   ;; TODO OIKEUSTARKISTUS, hoidon mallilla vai oma rivi?
-  ;; TODO
-  )
+
+  ;; TODO VAADI TOTEUMA KUULUU URAKKAAN!
+
+  (jdbc/with-db-transaction [db db]
+    (if (:id toteuma)
+      (q/paivita-muu-tyo<! db {:id id
+                               :urakka urakka
+                               :selite selite
+                               :pvm pvm
+                               :hinta hinta
+                               :yllapitoluokka yllapitoluokka})
+      (q/luo-uusi-muu-tyo<! db {:urakka urakka
+                                :selite selite
+                                :pvm pvm
+                                :hinta hinta
+                                :yllapitoluokka yllapitoluokka})))
+
+  (hae-yllapito-toteumat db user {:urakka urakka}))
 
 (defrecord YllapitoToteumat []
   component/Lifecycle
