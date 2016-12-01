@@ -63,6 +63,6 @@ WHERE urakkaid = :urakkaid
       AND ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), CAST(sijainti AS GEOMETRY));
 
 -- name: poista-vanhentuneet-havainnot!
--- Poistaa vanhentuneet havainnot työkoneseurannasta
+-- Poistaa vanhentuneet havainnot työkoneseurannasta, jos edellinen havainto > 5h vanha
 DELETE FROM tyokonehavainto
- WHERE date_trunc('day',alkanut) < current_date;
+ WHERE vastaanotettu < NOW() - INTERVAL '5 hours';

@@ -10,7 +10,7 @@
 (def +valitun-leveys+ 8)
 (def +normaali-vari+ "black")
 (def +valitun-vari+ "blue")
-
+(def +tyokoneviivan-dash+ [4 15])
 
 
 (defn monivarinen-viiva-leveyksilla-ja-asetuksilla
@@ -349,3 +349,5 @@ tr-ikoni {:img    (pinni-ikoni "musta")
     :dash [3 9]
     :width 3}])
 
+(defn tehtavan-viivat-tyokoneelle [viivat]
+  (map #(assoc % :dash +tyokoneviivan-dash+) viivat))

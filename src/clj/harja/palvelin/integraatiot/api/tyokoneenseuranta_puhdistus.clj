@@ -17,9 +17,11 @@
   (start [this]
     (assoc this
            ::poista-ajastus
-           (ajastettu-tehtava/ajasta-paivittain
-            [0 0 5]
-            (partial poista-vanhat-tyokonesijainnit (:db this)))))
+           (ajastettu-tehtava/ajasta-minuutin-valein
+            15
+            (partial poista-vanhat-tyokonesijainnit (:db this))))
+    this)
+
   (stop [this]
     ((::poista-ajastus this))
     this))

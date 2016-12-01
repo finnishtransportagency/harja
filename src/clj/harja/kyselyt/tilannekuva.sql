@@ -348,8 +348,8 @@ SELECT
    WHERE id = t.urakkaid)     AS urakkanimi,
   t.tehtavat
 FROM tyokonehavainto t
-WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax),
-                  CAST(sijainti AS GEOMETRY)) AND
+WHERE ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax),
+                  reitti) AND
       (t.urakkaid IN (:urakat) OR
       -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
        (t.urakkaid IS NULL AND
