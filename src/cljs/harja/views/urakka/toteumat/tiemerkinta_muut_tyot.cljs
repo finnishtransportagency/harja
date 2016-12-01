@@ -56,8 +56,7 @@
                         :ikoni (ikonit/tallenna)
                         :kun-onnistuu #(e! (tiedot/->ToteumaTallennettu %))
                         :disabled (or (not (lomake/voi-tallentaa? (:valittu-toteuma tila)))
-                                      (not muokkausoikeus?))}]
-              }
+                                      (not muokkausoikeus?))}]}
 
       [{:otsikko "Päivämäärä" :nimi :paivamaara :tyyppi :pvm :pakollinen? true}
        {:otsikko "Hinta" :nimi :hinta :tyyppi :positiivinen-numero :pakollinen? true}
@@ -67,7 +66,7 @@
       (:valittu-toteuma tila)]]))
 
 (defn- muut-tyot-lista [e!
-                        {:keys [muut-tyot] :as tila}
+                        {:keys [toteumat] :as tila}
                         {:keys [valittu-urakka valittu-sopimusnumero
                                 valitse-sopimusnumero valitun-urakan-hoitokaudet
                                 valittu-hoitokausi valitse-hoitokausi]
@@ -81,7 +80,7 @@
                  :valitse-hoitokausi valitse-hoitokausi}]
    [grid/grid
     {:otsikko (str "Muut työt")
-     :tyhja (if (nil? muut-tyot)
+     :tyhja (if (nil? toteumat)
               [ajax-loader "Toteumia haetaan..."]
               "Ei toteumia.")
      :rivi-klikattu #(e! (tiedot/->HaeToteuma {:id (:id %)
@@ -91,7 +90,7 @@
      {:otsikko "Hinta" :tyyppi :numero :nimi :hinta :fmt (partial fmt/euro-opt true) :leveys 10}
      {:otsikko "Ylläpitoluokka" :tyyppi :numero :nimi :yllapitoluokka :leveys 10}
      {:otsikko "Laskentakohde" :tyyppi :string :nimi :laskentakohde :leveys 10}]
-    muut-tyot]])
+    toteumat]])
 
 (defn- muut-tyot-paakomponentti [e! tila]
   ;; Kun näkymään tullaan, yhdistetään navigaatiosta tulevat valinnat
