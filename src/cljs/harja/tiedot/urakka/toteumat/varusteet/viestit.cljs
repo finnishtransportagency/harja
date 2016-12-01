@@ -26,3 +26,6 @@
 
 ;; Tietolajin vaihtaminen aiheuttaa sen skeeman hakemisen palvelimelta
 (defrecord TietolajinKuvaus [tietolaji kuvaus])
+
+;; Tallentaa uuden varustetoteuman
+(defrecord TallennaVarustetoteuma [data])

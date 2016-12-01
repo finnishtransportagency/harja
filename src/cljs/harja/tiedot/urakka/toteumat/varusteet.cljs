@@ -124,9 +124,11 @@
   (process-event [{toteuma :toteuma} app]
     (assoc app
       :varustetoteuma toteuma))
+
   v/TyhjennaValittuToteuma
   (process-event [_ app]
     (assoc app :varustetoteuma nil))
+
   v/LisaaVaruste
   (process-event [_ _]
     (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (uusi-varuste)))]
@@ -139,8 +141,6 @@
                    (assoc tiedot :tietolajin-kuvaus nil)
                    tiedot)
           uusi-toteuma (merge toteuma tiedot)]
-
-      #_(log "---> UUSI TOTEUMA" (pr-str (:ominaisuudet (:tietolajin-kuvaus uusi-toteuma))))
       ;; Jos tietolajin kuvaus muuttui ja se ei ole tyhjä, haetaan uudet tiedot
       (when (and tietolaji-muuttui? (:tietolaji tiedot))
         (let [tulos! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
@@ -155,8 +155,10 @@
     ;; toteuman tietolaji on sama kuin toteumassa.
     (if (= tietolaji (:tietolaji toteuma))
       (assoc-in app [:varustetoteuma :tietolajin-kuvaus] kuvaus)
-      app)))
-
+      app))
+  v/TallennaVarustetoteuma
+  (process-event [data]
+    (log "-----> DATA: " (pr-str data))))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))

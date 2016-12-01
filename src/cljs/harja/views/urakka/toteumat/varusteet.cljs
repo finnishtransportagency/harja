@@ -137,9 +137,7 @@
      :footer-fn (fn [data]
                   (log "DATA: " (pr-str data))
                   [napit/tallenna "Tallenna"
-
-
-                   #(log "FIXME: implement")
+                   #(v/->TallennaVarustetoteuma %)
                    {:disabled (not (lomake/voi-tallentaa? data))}])}
 
     [(lomake/ryhma

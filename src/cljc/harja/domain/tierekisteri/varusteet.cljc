@@ -61,9 +61,9 @@
   {:otsikko (str/capitalize (:selite ominaisuus))
    :pakollinen? (:pakollinen ominaisuus)
    :nimi (keyword (:kenttatunniste ominaisuus))
-   :hae #(get-in % [:arvot (:kenttatunniste ominaisuus)])
+   :hae #(get-in % [:arvot (keyword (:kenttatunniste ominaisuus))])
    :aseta (fn [rivi arvo]
-            (assoc-in rivi [:arvot (:kenttatunniste ominaisuus)] arvo))})
+            (assoc-in rivi [:arvot (keyword (:kenttatunniste ominaisuus))] arvo))})
 
 (defmethod varusteominaisuus->skeema :koodisto
   [{ominaisuus :ominaisuus}]
