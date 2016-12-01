@@ -43,3 +43,7 @@ hinta = :hinta,
 yllapitoluokka = :yllapitoluokka
 WHERE id = :id
         AND urakka = :urakka;
+
+-- name: hae-urakan-laskentakohteet
+SELECT id, urakka, nimi FROM urakka_laskentakohde
+WHERE urakka = :urakka;

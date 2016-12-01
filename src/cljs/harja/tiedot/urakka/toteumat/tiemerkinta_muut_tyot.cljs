@@ -7,7 +7,8 @@
             [harja.tiedot.navigaatio :as nav]
             [tuck.core :as t]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.ui.protokollat :as protokollat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -16,7 +17,8 @@
 (def muut-tyot (atom {:valittu-toteuma nil
                       :toteumat nil
                       :valinnat {:urakka nil
-                                 :sopimus nil}}))
+                                 :sopimus nil}
+                      :laskentakohteet []}))
 
 (defonce valinnat
   (reaction
@@ -27,12 +29,12 @@
 ;; Tapahtumat
 
 (defrecord YhdistaValinnat [valinnat])
+(defrecord LaskentakohteetHaettu [laskentakohteet])
 (defrecord ToteumatHaettu [tulokset])
 (defrecord UusiToteuma [])
 (defrecord HaeToteuma [hakuehdot])
 (defrecord ValitseToteuma [tyo])
 (defrecord MuokkaaToteumaa [uusi-tyo])
-(defrecord TallennaToteuma [tyo])
 (defrecord ToteumaTallennettu [toteumat])
 
 ;; Tapahtumien käsittely
@@ -42,6 +44,12 @@
     (go (let [tyot (<! (k/post! :hae-yllapito-toteumat {:urakka urakka}))]
           (when-not (k/virhe? tyot)
             (tulos! tyot))))))
+
+(defn hae-laskentakohteet [{:keys [urakka] :as hakuparametrit}]
+  (let [tulos! (t/send-async! ->ToteumatHaettu)]
+    (go (let [laskentakohteet (<! (k/post! :hae-laskentakohteet {:urakka urakka}))]
+          (when-not (k/virhe? laskentakohteet)
+            (tulos! laskentakohteet))))))
 
 (defn hae-toteuma [id urakka]
   (let [tulos! (t/send-async! ->ValitseToteuma)]
@@ -53,12 +61,29 @@
 (defn tallenna-toteuma [toteuma urakka-id]
   (k/post! :tallenna-yllapito-toteuma (assoc toteuma :urakka urakka-id)))
 
+#_(def laskentakohdehaku
+    (reify protokollat/Haku
+      (hae [_ teksti]
+        (go (let [haku second
+                  selitteet +ilmoitusten-selitteet+
+                  itemit (if (< (count teksti) 1)
+                           selitteet
+                           (filter #(not= (.indexOf (.toLowerCase (haku %))
+                                                    (.toLowerCase teksti)) -1)
+                                   selitteet))]
+              (vec (sort itemit)))))))
+
 (extend-protocol t/Event
 
   YhdistaValinnat
   (process-event [{:keys [valinnat] :as e} tila]
     (hae-toteumat {:urakka (:urakka valinnat)})
+    (hae-laskentakohteet {:urakka (:urakka valinnat)})
     (update-in tila [:valinnat] merge valinnat))
+
+  LaskentakohteetHaettu
+  (process-event [{:keys [tyo] :as e} tila]
+    (assoc-in tila [:laskentakohteet] laskentakohteet))
 
   ToteumatHaettu
   (process-event [{:keys [tulokset] :as e} tila]
@@ -80,11 +105,6 @@
   MuokkaaToteumaa
   (process-event [{:keys [uusi-tyo] :as e} tila]
     (assoc-in tila [:valittu-toteuma] uusi-tyo))
-
-  TallennaToteuma
-  (process-event [{:keys [tyo] :as e} tila]
-    ;; TODO
-    (assoc-in tila [:valittu-toteuma] tyo))
 
   ToteumaTallennettu
   (process-event [{:keys [toteumat] :as e} tila]
