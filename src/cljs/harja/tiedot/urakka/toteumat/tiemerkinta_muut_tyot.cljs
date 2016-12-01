@@ -95,7 +95,8 @@
 
   UusiToteuma
   (process-event [_ tila]
-    (assoc-in tila [:valittu-toteuma] {:paivamaara (pvm/nyt)}))
+    (assoc-in tila [:valittu-toteuma] {:paivamaara (pvm/nyt)
+                                       :laskentakohde [nil "Ei laskentakohdetta"]}))
 
   HaeToteuma
   (process-event [{:keys [hakuehdot] :as e} tila]

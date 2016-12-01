@@ -68,7 +68,6 @@
         :hae-kun-yli-n-merkkia 0
         :nayta second :fmt second
         :lahde tiedot/laskentakohdehaku}
-       #_{:otsikko "Laskentakohde" :nimi :laskentakohde :tyyppi :string}
        {:otsikko "Selite" :nimi :selite :tyyppi :text :pakollinen? true}]
       (:valittu-toteuma tila)]]))
 
