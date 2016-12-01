@@ -10,22 +10,23 @@
             [clojure.java.jdbc :as jdbc]))
 
 (defn hae-yllapito-toteumat [db user {:keys [urakka] :as tiedot}]
-  ;; TODO OIKEUSTARKISTUS, hoidon mallilla vai oma rivi?
+  ;; TODO OIKEUSTARKISTUS
   (log/debug "Hae ylläpidon toteumat parametreilla: " (pr-str tiedot))
   (jdbc/with-db-transaction [db db]
     (into [] (q/hae-muut-tyot db {:urakka urakka}))))
 
 (defn hae-yllapito-toteuma [db user {:keys [urakka id] :as tiedot}]
-  ;; TODO OIKEUSTARKISTUS, hoidon mallilla vai oma rivi?
+  ;; TODO OIKEUSTARKISTUS
   (log/debug "Hae ylläpidon toteuma parametreilla: " (pr-str tiedot))
   (jdbc/with-db-transaction [db db]
     (first (q/hae-muu-tyo db {:urakka urakka
                               :id id}))))
 
-(defn hae-laskentakohteet [db user tiedot]
+(defn hae-laskentakohteet [db user {:keys [urakka] :as tiedot}]
   ;; TODO OIKEUSTARKISTUS
-  ;; TODO
-  )
+  (log/debug "Hae laskentakohteet urakalle: " (pr-str urakka))
+  (jdbc/with-db-transaction [db db]
+    (into [] (q/hae-urakan-laskentakohteet db {:urakka urakka}))))
 
 (defn tallenna-yllapito-toteuma [db user {:keys [id urakka selite
                                                  pvm hinta yllapitoluokka] :as toteuma}]
