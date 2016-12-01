@@ -458,14 +458,31 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
 
 (defn- kun-geometriaa-klikattu
   "Event handler geometrioiden yksi- ja tuplaklikkauksille"
-  [item event]
+  [item event asiat-pisteessa]
   (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))]
     (condp = (:type item)
       :hy (when-not (= (:id item) (:id @nav/valittu-hallintayksikko))
             (nav/valitse-hallintayksikko item))
       :ur (when-not (= (:id item) (:id @nav/valittu-urakka))
             (t/julkaise! (assoc item :aihe :urakka-klikattu)))
-      (t/julkaise! (assoc item :aihe (keyword (str (name (:type item)) "-klikattu")))))))
+      (swap! asiat-pisteessa update :asiat conj item))))
+
+(defn- hae-asiat-pisteessa [tasot event atomi]
+  (let [koordinaatti (js->clj (.-coordinate event))]
+    (swap! atomi assoc
+           :koordinaatti koordinaatti
+           :haetaan? true
+           :asiat [])
+
+    (go
+      (let [in-ch (async/merge
+                    (map #(taso/hae-asiat-pisteessa % koordinaatti)
+                         (remove nil? (vals tasot))))]
+        (loop [asia (<! in-ch)]
+          (when asia
+            (swap! atomi update :asiat conj asia)
+            (recur (<! in-ch))))
+        (swap! atomi assoc :haetaan? false)))))
 
 (defn- geometria-maarat [geometriat]
   (reduce-kv (fn [m k v]
@@ -487,6 +504,30 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
       (and
         (= (:type geom) :hy)
         (= (:id geom) (:id @nav/valittu-hallintayksikko)))))
+
+
+(defn hae-asiat? [item]
+  ;; Haetaan koordinaatin asiat ja aukaistaan infopaneeli, jos
+  ;; Klikattu asia ei ole hallintayksikkö tai urakka
+  ;; Ollaan tilannekuvassa tai ilmoituksissa
+  ;;  - Ilmoituksissa ja tilannekuvassa kartan käyttäytyminen ei sinällään
+  ;;    riipu siitä, mikä hy/urakka on valittuna. Näkymiä voi käyttää aina kuitenkin
+  ;; Klikattu asia on valittu urakka
+  ;;  - Jos asia on ei-valittu urakka, ollaan Urakat-näkymän etusivulla (tai ilmoituksissa/tilannekuassa).
+  ;;  - Muussa tapauksessa ollaan "muualla Harjassa", jolloin tietenkin halutaan tehdä haku
+  (cond
+    (not (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item))
+    true
+
+    (#{:tilannekuva :ilmoitukset} @nav/valittu-sivu)
+    true
+
+    (= (:id item) (:id @nav/valittu-urakka))
+    true))
+
+(defn kaynnista-asioiden-haku-pisteesta! [tasot event asiat-pisteessa]
+  (hae-asiat-pisteessa tasot event asiat-pisteessa)
+  (reset! tiedot/infopaneeli-nakyvissa? true))
 
 (defn kartta-openlayers []
   (komp/luo
@@ -552,14 +593,21 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
                                 (edistymispalkki/geometriataso-pakota-valmistuminen!))
           :on-mount           (fn [initialextent]
                                 (paivita-extent nil initialextent))
-          :asiat-pisteessa asiat-pisteessa
-          :on-click           (fn [at]
+          :asiat-pisteessa    asiat-pisteessa
+          :on-click           (fn [event]
                                 #_(t/julkaise! {:aihe :tyhja-click :klikkaus-koordinaatit at})
-                                (poista-popup!)
-
-                                (reset! tiedot/infopaneeli-nakyvissa? true))
+                                #_(poista-popup!)
+                                (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
+                                                                    event
+                                                                    asiat-pisteessa)
+                                (.stopPropagation event)
+                                (.preventDefault event))
           :on-select          (fn [item event]
-                                (kun-geometriaa-klikattu item event)
+                                (when (hae-asiat? item)
+                                  (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
+                                                                      event
+                                                                      asiat-pisteessa))
+                                (kun-geometriaa-klikattu item event asiat-pisteessa)
                                 (.stopPropagation event)
                                 (.preventDefault event))
 
@@ -575,7 +623,10 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
                                   ;; Jos tuplaklikattu asia oli jotain muuta kuin HY/urakka, niin keskitetään
                                   ;; kartta siihen.
                                   (when-not (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item)
-                                    (kun-geometriaa-klikattu item event)
+                                    (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
+                                                                        event
+                                                                        asiat-pisteessa)
+                                    (kun-geometriaa-klikattu item event asiat-pisteessa)
                                     (tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))))
 
           :tooltip-fn         (fn [geom]
