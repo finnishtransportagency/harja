@@ -675,7 +675,7 @@ BEGIN
     INTO laskutusyhteenveto_cache (urakka, alkupvm, loppupvm, rivit)
   VALUES (ur, aikavali_alkupvm, aikavali_loppupvm, cache)
       ON CONFLICT ON CONSTRAINT uniikki_urakka_aika
-      DO UPDATE SET rivit = cache;
+      DO UPDATE SET rivit = cache, tallennettu = NOW();
 END;
 $$ LANGUAGE plpgsql;
 
