@@ -64,7 +64,7 @@
       [{:otsikko "Päivämäärä" :nimi :paivamaara :tyyppi :pvm :pakollinen? true}
        {:otsikko "Hinta" :nimi :hinta :tyyppi :positiivinen-numero :pakollinen? true}
        {:otsikko "Ylläpitoluokka" :nimi :yllapitoluokka :tyyppi :positiivinen-numero}
-       {:otsikko "Laskentakohde" :nimi :laskentakohde :tyyppi :string}
+       #_{:otsikko "Laskentakohde" :nimi :laskentakohde :tyyppi :string}
        {:otsikko "Selite" :nimi :selite :tyyppi :text :pakollinen? true}]
       (:valittu-tyo tila)]]))
 

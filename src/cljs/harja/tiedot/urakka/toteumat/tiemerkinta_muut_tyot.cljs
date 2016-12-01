@@ -25,12 +25,12 @@
 ;; Tapahtumat
 
 (defrecord YhdistaValinnat [valinnat])
-(defrecord TyotHaettu [tulokset])
-(defrecord UusiTyo [])
-(defrecord HaeTyo [hakuehdot])
-(defrecord ValitseTyo [tyo])
-(defrecord MuokkaaTyota [uusi-tyo])
-(defrecord TallennaTyo [tyo])
+(defrecord ToteumatHaettu [tulokset])
+(defrecord UusiToteuma [])
+(defrecord HaeToteuma [hakuehdot])
+(defrecord ValitseToteuma [tyo])
+(defrecord MuokkaaToteumaa [uusi-tyo])
+(defrecord TallennaToteuma [tyo])
 
 (defn hae-tyot [{:keys [urakka] :as hakuparametrit}]
   (let [tulos! (t/send-async! ->TyotHaettu)]
@@ -54,28 +54,28 @@
     (hae-tyot {:urakka (:urakka valinnat)})
     (update-in tila [:valinnat] merge valinnat))
 
-  TyotHaettu
+  ToteumatHaettu
   (process-event [{:keys [tulokset] :as e} tila]
     (assoc-in tila [:muut-tyot] tulokset))
 
-  UusiTyo
+  UusiToteuma
   (process-event [_ tila]
     (assoc-in tila [:valittu-tyo] {:paivamaara (pvm/nyt)}))
 
-  HaeTyo
+  HaeToteuma
   (process-event [{:keys [hakuehdot] :as e} tila]
     (hae-tyo (:id hakuehdot) (:urakka hakuehdot))
     tila)
 
-  ValitseTyo
+  ValitseToteuma
   (process-event [{:keys [tyo] :as e} tila]
     (assoc-in tila [:valittu-tyo] tyo))
 
-  MuokkaaTyota
+  MuokkaaToteumaa
   (process-event [{:keys [uusi-tyo] :as e} tila]
     (assoc-in tila [:valittu-tyo] uusi-tyo))
 
-  TallennaTyo
+  TallennaToteuma
   (process-event [{:keys [tyo] :as e} tila]
     ;; TODO
     (assoc-in tila [:valittu-tyo] tyo)))
