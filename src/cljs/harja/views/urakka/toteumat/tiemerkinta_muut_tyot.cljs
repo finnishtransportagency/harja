@@ -101,7 +101,7 @@
                                     (e! (tiedot/->YhdistaValinnat uusi))))
     (fn [e! {:keys [valittu-toteuma] :as tila}]
       [:span
-       (if valittu-tyo
+       (if valittu-toteuma
          [muu-tyo-lomake e! tila {}]
          [muut-tyot-lista e! tila
           {:valittu-urakka @nav/valittu-urakka
