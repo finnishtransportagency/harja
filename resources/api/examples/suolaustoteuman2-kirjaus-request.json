@@ -10,7 +10,7 @@
     "viestintunniste": {
       "id": 126
     },
-    "lahetysaika": "2016-01-30T12:00:00Z"
+    "lahetysaika": "2016-01-30T12:00:00+02:00"
   },
   "reittitoteuma": {
     "toteuma": {
@@ -22,8 +22,8 @@
         "ytunnus": "8765432-1"
       },
       "sopimusId": 2,
-      "alkanut": "2015-02-01T15:00:00Z",
-      "paattynyt": "2015-02-01T16:05:00Z",
+      "alkanut": "2015-02-01T15:00:00+02:00",
+      "paattynyt": "2015-02-01T16:05:00+02:00",
       "toteumatyyppi": "kokonaishintainen",
       "tehtavat": [
         {
@@ -47,27 +47,27 @@
       ]
     },
       "reitti": [
-      {"reittipiste": {"aika": "2015-02-01T15:01:00Z", "koordinaatit": {"x": 430595.76308986434, "y": 7198842.856960223}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:02:00Z", "koordinaatit": {"x": 430672.2001181495, "y": 7199683.66427136}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:03:00Z", "koordinaatit": {"x": 430748.6371464347, "y": 7200524.4715824975}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:04:00Z", "koordinaatit": {"x": 430977.9482312902, "y": 7201441.715921919}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:05:00Z", "koordinaatit": {"x": 430977.9482312902, "y": 7202129.649176486}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:06:00Z", "koordinaatit": {"x": 430825.07417471986, "y": 7202894.019459338}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:07:00Z", "koordinaatit": {"x": 430060.7038918681, "y": 7204652.0711098965}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:08:00Z", "koordinaatit": {"x": 429907.8298352977, "y": 7205569.315449319}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:09:00Z", "koordinaatit": {"x": 429678.5187504422, "y": 7206562.996817026}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:10:00Z", "koordinaatit": {"x": 429525.64469387184, "y": 7207403.804128163}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:11:00Z", "koordinaatit": {"x": 429525.64469387184, "y": 7207785.989269589}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:12:00Z", "koordinaatit": {"x": 429525.64469387184, "y": 7208703.233609011}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:13:00Z", "koordinaatit": {"x": 429602.081722157, "y": 7209544.040920148}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:14:00Z", "koordinaatit": {"x": 429678.5187504422, "y": 7210690.596344425}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:15:00Z", "koordinaatit": {"x": 429754.95577872737, "y": 7211760.714740418}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:16:00Z", "koordinaatit": {"x": 428531.9633261646, "y": 7213442.329362692}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:17:00Z", "koordinaatit": {"x": 427996.90412816836, "y": 7213977.388560688}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:18:00Z", "koordinaatit": {"x": 427614.71898674243, "y": 7214588.88478697}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:19:00Z", "koordinaatit": {"x": 427156.0968170314, "y": 7215276.818041536}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:20:00Z", "koordinaatit": {"x": 426850.3487038907, "y": 7215964.751296103}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
-      {"reittipiste": {"aika": "2015-02-01T15:21:00Z", "koordinaatit": {"x": 426773.9116756055, "y": 7216270.499409243}, "tehtavat": [{"tehtava":{"id":1369}}], "materiaalit": []}}
+      {"reittipiste": {"aika": "2015-02-01T15:01:00+02:00", "koordinaatit": {"x": 430595.76308986434, "y": 7198842.856960223}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:02:00+02:00", "koordinaatit": {"x": 430672.2001181495, "y": 7199683.66427136}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:03:00+02:00", "koordinaatit": {"x": 430748.6371464347, "y": 7200524.4715824975}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:04:00+02:00", "koordinaatit": {"x": 430977.9482312902, "y": 7201441.715921919}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:05:00+02:00", "koordinaatit": {"x": 430977.9482312902, "y": 7202129.649176486}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:06:00+02:00", "koordinaatit": {"x": 430825.07417471986, "y": 7202894.019459338}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:07:00+02:00", "koordinaatit": {"x": 430060.7038918681, "y": 7204652.0711098965}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:08:00+02:00", "koordinaatit": {"x": 429907.8298352977, "y": 7205569.315449319}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:09:00+02:00", "koordinaatit": {"x": 429678.5187504422, "y": 7206562.996817026}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:10:00+02:00", "koordinaatit": {"x": 429525.64469387184, "y": 7207403.804128163}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:11:00+02:00", "koordinaatit": {"x": 429525.64469387184, "y": 7207785.989269589}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:12:00+02:00", "koordinaatit": {"x": 429525.64469387184, "y": 7208703.233609011}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:13:00+02:00", "koordinaatit": {"x": 429602.081722157, "y": 7209544.040920148}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:14:00+02:00", "koordinaatit": {"x": 429678.5187504422, "y": 7210690.596344425}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:15:00+02:00", "koordinaatit": {"x": 429754.95577872737, "y": 7211760.714740418}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:16:00+02:00", "koordinaatit": {"x": 428531.9633261646, "y": 7213442.329362692}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:17:00+02:00", "koordinaatit": {"x": 427996.90412816836, "y": 7213977.388560688}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:18:00+02:00", "koordinaatit": {"x": 427614.71898674243, "y": 7214588.88478697}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:19:00+02:00", "koordinaatit": {"x": 427156.0968170314, "y": 7215276.818041536}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:20:00+02:00", "koordinaatit": {"x": 426850.3487038907, "y": 7215964.751296103}, "tehtavat": [{"tehtava": {"id":1369}}], "materiaalit": []}},
+      {"reittipiste": {"aika": "2015-02-01T15:21:00+02:00", "koordinaatit": {"x": 426773.9116756055, "y": 7216270.499409243}, "tehtavat": [{"tehtava":{"id":1369}}], "materiaalit": []}}
   	]
   }
 }

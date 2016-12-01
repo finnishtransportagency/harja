@@ -27,11 +27,11 @@
 (def ^{:const true
        :doc "Etäisyys, jota lähempänä toisiaan olevat reittipisteet yhdistetään linnuntietä,
 jos niille ei löydy yhteistä tietä tieverkolta."}
-  maksimi-linnuntien-etaisyys 200)
+maksimi-linnuntien-etaisyys 200)
 
 (defn- yhdista-viivat [viivat]
   (if-not (empty? viivat)
-    {:type  :multiline
+    {:type :multiline
      :lines (mapcat
               (fn [viiva]
                 (if (= :line (:type viiva))
@@ -56,7 +56,7 @@ jos niille ei löydy yhteistä tietä tieverkolta."}
                          " (x1:" x1 " y1: " y1
                          " & x2: " x2 " y2: " y2 " )"
                          " ei ole yhteistä tietä. Tehdään linnuntie, etäisyys: " etaisyys ", max: " maksimi-etaisyys)
-               {:type   :line
+               {:type :line
                 :points [[x1 y1]
                          [x2 y2]]})
            (do (log/warn "EI TEHDÄ linnuntietä, etäisyys: " etaisyys ", max: " maksimi-etaisyys)
@@ -65,7 +65,7 @@ jos niille ei löydy yhteistä tietä tieverkolta."}
 (defn- hae-reitti
   ([db pisteet] (hae-reitti db maksimi-linnuntien-etaisyys pisteet))
   ([db maksimi-etaisyys pisteet]
-    (as-> pisteet p
+   (as-> pisteet p
          (map (fn [[x y]]
                 (str "POINT(" x " " y ")")) p)
          (str/join "," p)
@@ -101,7 +101,7 @@ jos niille ei löydy yhteistä tietä tieverkolta."}
        (do
          (log/debug "Tallennetaan reitti toteumalle " toteuma-id)
          (toteumat/paivita-toteuman-reitti! db {:reitti geometria
-                                                :id     toteuma-id}))
+                                                :id toteuma-id}))
 
        (log/debug "Reittiä ei saatu kasattua toteumalle " toteuma-id)))))
 
@@ -112,10 +112,10 @@ jos niille ei löydy yhteistä tietä tieverkolta."}
   (log/debug "Luodaan reitin tehtävät")
   (doseq [tehtava (get-in reittipiste [:reittipiste :tehtavat])]
     (toteumat/luo-reitti_tehtava<!
-     db
-     reittipiste-id
-     (get-in tehtava [:tehtava :id])
-     (get-in tehtava [:tehtava :maara :maara]))))
+      db
+      reittipiste-id
+      (get-in tehtava [:tehtava :id])
+      (get-in tehtava [:tehtava :maara :maara]))))
 
 (defn luo-reitin-materiaalit [db reittipiste reittipiste-id]
   (log/debug "Luodaan reitin materiaalit")
@@ -123,8 +123,8 @@ jos niille ei löydy yhteistä tietä tieverkolta."}
     (let [materiaali-nimi (:materiaali materiaali)
           materiaalikoodi-id (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi)))]
       (if (nil? materiaalikoodi-id)
-        (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
-                 :virheet [{:koodi  virheet/+tuntematon-materiaali+
+        (throw+ {:type virheet/+sisainen-kasittelyvirhe+
+                 :virheet [{:koodi virheet/+tuntematon-materiaali+
                             :viesti (format "Tuntematon materiaali: %s." materiaali-nimi)}]}))
       (toteumat/luo-reitti_materiaali<! db reittipiste-id materiaalikoodi-id (get-in materiaali [:maara :maara])))))
 
@@ -132,11 +132,11 @@ jos niille ei löydy yhteistä tietä tieverkolta."}
   (log/debug "Luodaan uusi reittipiste")
   (doseq [reittipiste reitti]
     (let [reittipiste-id (:id (toteumat/luo-reittipiste<!
-                               db
-                               toteuma-id
-                               (aika-string->java-sql-date (get-in reittipiste [:reittipiste :aika]))
-                               (get-in reittipiste [:reittipiste :koordinaatit :x])
-                               (get-in reittipiste [:reittipiste :koordinaatit :y])))]
+                                db
+                                toteuma-id
+                                (aika-string->java-sql-date (get-in reittipiste [:reittipiste :aika]))
+                                (get-in reittipiste [:reittipiste :koordinaatit :x])
+                                (get-in reittipiste [:reittipiste :koordinaatit :y])))]
       (log/debug "Reittipiste tallennettu, id: " reittipiste-id)
       (log/debug "Aloitetaan reittipisteen tehtävien tallennus.")
       (luo-reitin-tehtavat db reittipiste reittipiste-id)
@@ -152,8 +152,8 @@ jos niille ei löydy yhteistä tietä tieverkolta."}
 (defn tallenna-yksittainen-reittitoteuma [db db-replica urakka-id kirjaaja reittitoteuma]
   (let [reitti (:reitti reittitoteuma)
         toteuma (assoc (:toteuma reittitoteuma)
-                       ;; Reitti liitetään lopuksi
-                       :reitti nil)
+                  ;; Reitti liitetään lopuksi
+                  :reitti nil)
         toteuman-reitti (async/thread (luo-reitti-geometria db-replica reitti))]
     (jdbc/with-db-transaction [db db]
       (let [toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)]
@@ -173,7 +173,7 @@ jos niille ei löydy yhteistä tietä tieverkolta."}
                                kirjaaja
                                (pr-str (:alkanut toteuma))
                                (pr-str (:paattynyt toteuma)))))
-            (api-toteuma/paivita-toteuman-reitti db toteuma-id (if (= reitti +yhdistamis-virhe+) nil reitti)))))))
+          (api-toteuma/paivita-toteuman-reitti db toteuma-id (if (= reitti +yhdistamis-virhe+) nil reitti)))))))
 
 (defn tallenna-kaikki-pyynnon-reittitoteumat [db db-replica urakka-id kirjaaja data]
   (when (:reittitoteuma data)
@@ -189,10 +189,16 @@ jos niille ei löydy yhteistä tietä tieverkolta."}
       (validointi/tarkista-urakka-sopimus-ja-kayttaja db urakka-id sopimus-id kirjaaja)))
   (when (:reittitoteuma data)
     (toteuman-validointi/tarkista-reittipisteet data)
-    (toteuman-validointi/tarkista-tehtavat db (get-in data [:reittitoteuma :toteuma :tehtavat])))
+    (toteuman-validointi/tarkista-tehtavat
+      db
+      (get-in data [:reittitoteuma :toteuma :tehtavat])
+      (get-in data [:reittitoteuma :toteuma :toteumatyyppi])))
   (doseq [reittitoteuma (:reittitoteumat data)]
     (toteuman-validointi/tarkista-reittipisteet reittitoteuma)
-    (toteuman-validointi/tarkista-tehtavat db (get-in reittitoteuma [:reittitoteuma :toteuma :tehtavat]))))
+    (toteuman-validointi/tarkista-tehtavat
+      db
+      (get-in reittitoteuma [:reittitoteuma :toteuma :tehtavat])
+      (get-in reittitoteuma [:reittitoteuma :toteuma :toteumatyyppi]))))
 
 (defn kirjaa-toteuma [db db-replica {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
@@ -220,7 +226,7 @@ jos niille ei löydy yhteistä tietä tieverkolta."}
                          json-skeemat/kirjausvastaus
                          (fn [parametit data kayttaja db]
                            (#'kirjaa-toteuma db db-replica
-                                             parametit data kayttaja)))))
+                             parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-reittitoteuma)

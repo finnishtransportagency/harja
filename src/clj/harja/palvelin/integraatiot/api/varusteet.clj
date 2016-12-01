@@ -3,7 +3,8 @@
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET DELETE PUT]]
             [taoensso.timbre :as log]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
+            [harja.palvelin.komponentit.http-palvelin
+             :refer [julkaise-reitti julkaise-palvelu poista-palvelut async]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-sisainen-kasittelyvirhevastaus
                                                                              tee-viallinen-kutsu-virhevastaus
                                                                              tee-vastaus
@@ -17,9 +18,10 @@
             [harja.tyokalut.merkkijono :as merkkijono]
             [harja.palvelin.integraatiot.tierekisteri.tietolajin-kuvauksen-kasittely :as tr-tietolaji]
             [harja.pvm :as pvm]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
-  (:use [slingshot.slingshot :only [try+ throw+]])
-  (:import (java.text SimpleDateFormat)))
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [clj-time.core :as t]
+            [clojure.string :as str])
+  (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn- muunna-tietolajin-arvot-stringiksi [tietolajin-kuvaus arvot-map]
   (tr-tietolaji/tietolajin-arvot-map->merkkijono
@@ -94,15 +96,22 @@
      {:parametri "tilannepvm"
       :tyyppi :date}]))
 
+(defn hae-tietolaji-tunnisteella
+  "Hakee tietolajion tierekisteristä tunnisteen perusteella. Optionaalisesti
+  ottaa sisään myös muutospäivämäärän hakuehdoksi."
+  ([tierekisteri tunniste] (hae-tietolaji-tunnisteella tierekisteri tunniste nil))
+  ([tierekisteri tunniste muutospaivamaara]
+   (let [vastausdata (tierekisteri/hae-tietolajit tierekisteri tunniste muutospaivamaara)
+         ominaisuudet (get-in vastausdata [:tietolaji :ominaisuudet])]
+     (tierekisteri-sanomat/muunna-tietolajin-hakuvastaus
+       vastausdata ominaisuudet))))
+
 (defn hae-tietolaji [tierekisteri parametrit kayttaja]
   (tarkista-tietolajihaun-parametrit parametrit)
   (let [tunniste (get parametrit "tunniste")
         muutospaivamaara (get parametrit "muutospaivamaara")]
     (log/debug "Haetaan tietolajin: " tunniste " kuvaus muutospäivämäärällä: " muutospaivamaara " käyttäjälle: " kayttaja)
-    (let [vastausdata (tierekisteri/hae-tietolajit tierekisteri tunniste muutospaivamaara)
-          ominaisuudet (get-in vastausdata [:tietolaji :ominaisuudet])
-          muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietolajin-hakuvastaus vastausdata ominaisuudet)]
-      muunnettu-vastausdata)))
+    (hae-tietolaji-tunnisteella tierekisteri tunniste muutospaivamaara)))
 
 (defn- muodosta-tietueiden-hakuvastaus [tierekisteri vastausdata]
   {:varusteet
@@ -132,6 +141,7 @@
             :tietolaji {:tunniste tietolaji,
                         :arvot arvot-mappina}}}}))
      (:tietueet vastausdata))})
+
 
 (defn hae-varusteet [tierekisteri parametrit kayttaja]
   (tarkista-tietueiden-haun-parametrit parametrit)
@@ -165,7 +175,7 @@
         {}))))
 
 (defn lisaa-varuste [tierekisteri db {:keys [otsikko] :as data} kayttaja]
-  (log/debug "Lisätään varuste käyttäjän " kayttaja " pyynnöstä.")
+  (log/debug (format "Lisätään varuste käyttäjän: %s pyynnöstä. Data: %s" kayttaja data))
   (let [livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
         toimenpiteen-tiedot (:varusteen-lisays data)
         tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
@@ -186,14 +196,15 @@
        :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)})))
 
 (defn paivita-varuste [tierekisteri {:keys [otsikko] :as data} kayttaja]
-  (log/debug "Päivitetään varuste käyttäjän " kayttaja " pyynnöstä.")
+  (log/debug (format "Päivitetään varuste käyttäjän: %s pyynnöstä. Data: %s" kayttaja data))
   (let [toimenpiteen-tiedot (:varusteen-paivitys data)
         tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-        tietolajin-arvot (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot])
-        arvot-string (when tietolajin-arvot
+        tietueen-tunniste (get-in toimenpiteen-tiedot [:varuste :tunniste])
+        tietueen-arvot (assoc (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]) :tunniste tietueen-tunniste)
+        arvot-string (when tietueen-arvot
                        (validoi-ja-muunna-arvot-merkkijonoksi
                          tierekisteri
-                         tietolajin-arvot
+                         tietueen-arvot
                          tietolaji))
         paivityssanoma (tierekisteri-sanomat/luo-tietueen-paivityssanoma
                          otsikko
@@ -203,12 +214,45 @@
   (tee-kirjausvastauksen-body {:ilmoitukset "Varuste päivitetty onnistuneesti"}))
 
 (defn poista-varuste [tierekisteri {:keys [otsikko] :as data} kayttaja]
-  (log/debug "Poistetaan varuste käyttäjän " kayttaja " pyynnöstä.")
+  (log/debug (format "Poistetaan varuste käyttäjän: %s pyynnöstä. Data: %s " kayttaja data))
   (let [poistosanoma (tierekisteri-sanomat/luo-tietueen-poistosanoma
                        otsikko
                        (:varusteen-poisto data))]
     (tierekisteri/poista-tietue tierekisteri poistosanoma))
   (tee-kirjausvastauksen-body {:ilmoitukset "Varuste poistettu onnistuneesti"}))
+
+(defn hae-varusteita
+  "Käsittelee UI:lta tulleen varustehaun: hakee joko tunnisteen tai tietolajin ja
+  tierekisteriosoitteen perusteella"
+  [user tierekisteri {:keys [tunniste tierekisteriosoite tietolaji] :as tiedot}]
+  (log/debug "Haetaan varusteita Tierekisteristä: " (pr-str tiedot))
+
+  (let [nyt (t/now)
+        tulos
+        (cond
+          (not (str/blank? tunniste))
+          (tierekisteri/hae-tietue tierekisteri tunniste tietolaji nyt)
+
+          (and tierekisteriosoite
+               (not (str/blank? tietolaji)))
+          (tierekisteri/hae-tietueet
+           tierekisteri
+           {:numero (:numero tierekisteriosoite)
+            :aet (:alkuetaisyys tierekisteriosoite)
+            :aosa (:alkuosa tierekisteriosoite)
+            :let (:loppuetaisyys tierekisteriosoite)
+            :losa (:loppuosa tierekisteriosoite)}
+           tietolaji
+           nyt nyt)
+
+          :default
+          {:error "Ei hakuehtoja"})]
+
+    (if (:onnistunut tulos)
+      (merge {:onnistunut true}
+             (hae-tietolaji-tunnisteella tierekisteri tietolaji)
+             (muodosta-tietueiden-hakuvastaus tierekisteri tulos))
+      tulos)))
 
 (defrecord Varusteet []
   component/Lifecycle
@@ -254,6 +298,15 @@
         (kasittele-kutsu-async db integraatioloki :poista-tietue request json-skeemat/varusteen-poisto json-skeemat/kirjausvastaus
                                (fn [_ data kayttaja _]
                                  (poista-varuste tierekisteri data kayttaja)))))
+
+    (julkaise-palvelu http :hae-tietolajin-kuvaus
+                      (fn [user tietolaji]
+                        (:tietolaji (hae-tietolaji tierekisteri {"tunniste" tietolaji} user))))
+
+    (julkaise-palvelu http :hae-varusteita
+                      (fn [user tiedot]
+                        (async
+                          (hae-varusteita user tierekisteri tiedot))))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -263,5 +316,7 @@
                      :hae-tietue
                      :lisaa-tietue
                      :paivita-tietue
-                     :poista-tietue)
+                     :poista-tietue
+                     :hae-tietolajin-kuvaus
+                     :hae-varusteita)
     this))

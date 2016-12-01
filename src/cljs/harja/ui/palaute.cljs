@@ -29,11 +29,16 @@
    [:span " kertoaksesi kehitysideasi Harjan kehitystiimille."]])
 
 (defn- palauteohje-tekninen-ongelma [palaute-tyyppi]
-  [:p "Klikkaa "
-   [modal/modal-linkki
-    "tästä"
-    (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body-tekninen-ongelma) palaute-tyyppi)]
-   [:span " raportoidaksesi teknisen ongelman Harjan kehitystiimille."]])
+  [:span
+   [:p "Klikkaa "
+    [modal/modal-linkki
+     "tästä"
+     (tiedot/mailto-linkki (tiedot/mailto-kehitystiimi) (tiedot/palaute-body-tekninen-ongelma) palaute-tyyppi)]
+    [:span " raportoidaksesi teknisen ongelman Harjan kehitystiimille."]]
+   [:p
+    [yleiset/vihje-elementti "Huomioithan raportoidessasi ongelmasta seuraavat asiat:"]
+    [:ul
+     [:li "Jos raportoit ilmoituksiin liittyvästä ongelmasta, lähetäthän ongelmaa koskevien ilmoitusten id:t viestin mukana."]]]])
 
 (defn- palauteohje-kayttooikeus [palaute-tyyppi]
   [:div
@@ -47,10 +52,10 @@
 
 (defn- palauteohje-tehtavalista [palaute-tyyppi]
   [:p "Harjan pääkäyttäjä vastaa Harjan tehtävälistasta. Klikkaa "
-    [modal/modal-linkki
-     "tästä"
-     (tiedot/mailto-linkki (tiedot/mailto-paakayttaja) (tiedot/palaute-body-tekninen-ongelma) palaute-tyyppi)]
-    [:span " lähettääksesi palautetta tehtävälistaa ylläpitävälle pääkäyttäjälle."]])
+   [modal/modal-linkki
+    "tästä"
+    (tiedot/mailto-linkki (tiedot/mailto-paakayttaja) (tiedot/palaute-body-tekninen-ongelma) palaute-tyyppi)]
+   [:span " lähettääksesi palautetta tehtävälistaa ylläpitävälle pääkäyttäjälle."]])
 
 (defn- palauteohje [palautetyyppi]
   [:div.palauteohje
@@ -72,8 +77,8 @@
          :valinta @valinta-atom
          :class "livi-alasveto-250"
          :format-fn #(if %
-                      (:nimi %)
-                      "- valitse -")}
+                       (:nimi %)
+                       "- valitse -")}
         palautetyypit]
 
        [palauteohje @valinta-atom]

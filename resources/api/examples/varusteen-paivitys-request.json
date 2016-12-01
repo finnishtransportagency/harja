@@ -10,7 +10,7 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-04-12T23:20Z"
+    "lahetysaika": "2016-04-12T23:20+02:00"
   },
   "varusteen-paivitys": {
     "paivittaja": {
@@ -21,12 +21,12 @@
         "sukunimi": "Käsittelijä"
       }
     },
-    "paivitetty": "2016-04-12T23:20:50Z",
+    "paivitetty": "2016-04-12T23:20:50+02:00",
     "varuste": {
       "tunniste": "HARJ951547",
-      "tilannepvm": "2016-04-12T23:20:50Z",
+      "tilannepvm": "2016-04-12T23:20:50+02:00",
       "tietue": {
-        "alkupvm": "2016-04-12T23:20:50Z",
+        "alkupvm": "2016-04-12T23:20:50+02:00",
         "sijainti": {
           "tie": {
             "numero": 89,

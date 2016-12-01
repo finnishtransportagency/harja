@@ -5,8 +5,8 @@
     "elynimi": "Uusimaa",
     "nimi": "testiurakka",
     "sampoid": "1121",
-    "alkupvm": "2016-10-1T12:00:00Z",
-    "loppupvm": "2017-09-30T12:00:00Z",
+    "alkupvm": "2016-10-1T12:00:00+02:00",
+    "loppupvm": "2017-09-30T12:00:00+02:00",
     "urakoitsija": {
       "nimi": "Yritys OY",
       "ytunnus": "1234567-8",

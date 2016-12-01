@@ -210,7 +210,8 @@
   "Palauttaa urakan tarkastukset annetulle aikavälille."
   ([db user parametrit]
    (hae-urakan-tarkastukset db user parametrit false 501))
-  ([db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi vain-laadunalitukset?]}
+  ([db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi
+                    havaintoja-sisaltavat? vain-laadunalitukset?]}
     palauta-reitti? max-rivimaara]
    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
    (let [urakoitsija? (roolit/urakoitsija? user)
@@ -220,14 +221,18 @@
                                     identity
                                     (map #(dissoc % :sijainti))))
                             (tarkastukset/hae-urakan-tarkastukset
-                              db urakka-id
-                              urakoitsija?
-                              (konv/sql-timestamp alkupvm)
-                              (konv/sql-timestamp loppupvm)
-                              (boolean tienumero) tienumero
-                              (boolean tyyppi) (and tyyppi (name tyyppi))
-                              vain-laadunalitukset?
-                              max-rivimaara))]
+                              db
+                              {:urakka urakka-id
+                               :kayttaja_on_urakoitsija urakoitsija?
+                               :alku (konv/sql-timestamp alkupvm)
+                               :loppu (konv/sql-timestamp loppupvm)
+                               :rajaa_tienumerolla (boolean tienumero)
+                               :tienumero tienumero
+                               :rajaa_tyypilla (boolean tyyppi)
+                               :tyyppi (and tyyppi (name tyyppi))
+                               :havaintoja_sisaltavat havaintoja-sisaltavat?
+                               :vain_laadunalitukset vain-laadunalitukset?
+                               :maxrivimaara max-rivimaara}))]
      tarkastukset)))
 
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
@@ -312,7 +317,7 @@
       (hae-urakan-sanktiot c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
 
 (defn hae-tarkastusreitit-kartalle [db user {:keys [extent parametrit]}]
-  (let [{:keys [vain-laadunalitukset? tienumero alkupvm loppupvm tyyppi urakka-id]}
+  (let [{:keys [havaintoja-sisaltavat? vain-laadunalitukset? tienumero alkupvm loppupvm tyyppi urakka-id]}
         (some-> parametrit (get "tr") transit/lue-transit-string)
         [x1 y1 x2 y2] extent
         alue {:xmin x1 :ymin y1 :xmax x2 :ymax y2}
@@ -336,6 +341,7 @@
                    :alku alkupvm :loppu loppupvm
                    :rajaa_tienumerolla (some? tienumero) :tienumero tienumero
                    :rajaa_tyypilla (some? tyyppi) :tyyppi (and tyyppi (name tyyppi))
+                   :havaintoja_sisaltavat havaintoja-sisaltavat?
                    :vain_laadunalitukset vain-laadunalitukset?
                    :kayttaja_on_urakoitsija (roolit/urakoitsija? user)})))
         (catch Throwable t
