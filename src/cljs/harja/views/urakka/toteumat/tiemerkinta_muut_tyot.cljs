@@ -37,7 +37,7 @@
      [napit/uusi "Lisää toteuma" #(e! (tiedot/->UusiToteuma))
       {:disabled (not muokkausoikeus?)}]]))
 
-(defn muu-tyo-lomake [e! tila riippuvuudet]
+(defn muu-tyo-lomake [e! tila {:keys [valittu-urakka] :as riippuvuudet}]
   (let [vanha-toteuma? (get-in tila [:valittu-toteuma :id])
         muokkausoikeus? true] ;; TODO OIKEISTARKISTUS
     [:div
@@ -51,7 +51,7 @@
               :muokkaa! #(e! (tiedot/->MuokkaaToteumaa %))
               :footer [napit/palvelinkutsu-nappi
                        "Tallenna toteuma"
-                       #(tiedot/tallenna-toteuma (:valittu-toteuma tila))
+                       #(tiedot/tallenna-toteuma (:valittu-toteuma tila) (:id valittu-urakka))
                        {:luokka "nappi-ensisijainen"
                         :ikoni (ikonit/tallenna)
                         :kun-onnistuu #(e! (tiedot/->ToteumaTallennettu %))
@@ -102,7 +102,7 @@
     (fn [e! {:keys [valittu-toteuma] :as tila}]
       [:span
        (if valittu-toteuma
-         [muu-tyo-lomake e! tila {}]
+         [muu-tyo-lomake e! tila {:valittu-urakka @nav/valittu-urakka}]
          [muut-tyot-lista e! tila
           {:valittu-urakka @nav/valittu-urakka
            :valittu-sopimusnumero u/valittu-sopimusnumero

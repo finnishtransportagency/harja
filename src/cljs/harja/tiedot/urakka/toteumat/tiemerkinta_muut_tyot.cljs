@@ -50,8 +50,8 @@
           (when-not (k/virhe? tyo)
             (tulos! tyo))))))
 
-(defn tallenna-toteuma [toteuma]
-  (k/post! :tallenna-yllapito-toteuma toteuma))
+(defn tallenna-toteuma [toteuma urakka-id]
+  (k/post! :tallenna-yllapito-toteuma (assoc toteuma :urakka urakka-id)))
 
 (extend-protocol t/Event
 
