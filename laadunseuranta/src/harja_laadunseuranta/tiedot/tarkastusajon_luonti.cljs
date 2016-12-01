@@ -21,7 +21,13 @@
                             :aet nil}
                 :talvihoitoluokka nil}
     ;; UI
-    :ui {:paanavigointi {:nakyvissa? true}}
+    :ui {:tr-tiedot-nakyvissa? false
+         :paanavigointi {:nakyvissa? true
+                         :valilehdet-nakyvissa? true
+                         :valilehtiryhmat []
+                         :valittu-valilehtiryhma 0
+                         :valittu-valilehti nil
+                         :hampurilaisvalikon-lista-nakyvissa? false}}
     ;; Havainnot
     :jatkuvat-havainnot #{}
     ;; Mittaukset
