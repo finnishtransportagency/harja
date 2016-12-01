@@ -38,8 +38,8 @@ schemas:
  - paallystysilmoituksen-kirjaus-request: !include schemas/paallystysilmoituksen-kirjaus-request.schema.json
  - paallystyksen-aikataulun-kirjaus-request: !include schemas/tiemerkinnan-aikataulun-kirjaus-request.schema.json
  - tiemerkinnan-aikataulun-kirjaus-request: !include schemas/paallystyksen-aikataulun-kirjaus-request.schema.json
- - suljetun-tieosuuden-kirjaus-request: !include schemas/suljetun-tieosuuden-kirjaus-request.schema.json
- - suljetun-tieosuuden-poisto-request: !include schemas/suljetun-tieosuuden-poisto-request.schema.json
+ - tietyomaan-kirjaus-request: !include schemas/tietyomaan-kirjaus-request.schema.json
+ - tietyomaan-poisto-request: !include schemas/tietyomaan-poisto-request.schema.json
  - urakan-yhteystietojen-haku-response: !include schemas/urakan-yhteystietojen-haku-response.schema.json
 
 securitySchemes:
@@ -558,14 +558,14 @@ documentation:
                     application/json:
                       example: !include examples/virhe-response.json
                       schema: virhe-response
-          /suljettu-tieosuus:
+          /tietyomaa:
             post:
               is: [secured]
-              description: Suljetun tieosuuden kirjaaminen. Uusi kirjaus tehdään aina, kun tieosuus suljetaan tai kun sen sijainti muuttuu. Osuuden sijanti määräytyy kohteen alkuun ja loppuun asetettujen liikenneohjausaitojen sijaintien perusteella.
+              description: Tietyömaan kirjaaminen. Uusi kirjaus tehdään aina, kun tietyömaa alkaa tai kun sen sijainti muuttuu. Osuuden sijanti määräytyy kohteen alkuun ja loppuun asetettujen liikenneohjausaitojen sijaintien perusteella.
               body:
                 application/json:
-                  example: !include examples/suljetun-tieosuuden-kirjaus-request.json
-                  schema: suljetun-tieosuuden-kirjaus-request
+                  example: !include examples/tietyomaan-kirjaus-request.json
+                  schema: tietyomaan-kirjaus-request
               responses:
                 200:
                   body:
@@ -584,11 +584,11 @@ documentation:
                      schema: virhe-response
             delete:
               is: [secured]
-              description: Suljetun tieosuuden poistaminen. Poisto tehdään, kun liikenteenohjausaidat on poistettu.
+              description: Tietyömaan poistaminen. Poisto tehdään, kun liikenteenohjausaidat on poistettu.
               body:
                 application/json:
-                  example: !include examples/suljetun-tieosuuden-poisto-request.json
-                  schema: suljetun-tieosuuden-poisto-request
+                  example: !include examples/tietyomaan-poisto-request.json
+                  schema: tietyomaan-poisto-request
               responses:
                 200:
                   body:

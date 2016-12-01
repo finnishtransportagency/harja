@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.api.suljetut-tieosat-test
+(ns harja.palvelin.integraatiot.api.tietyomaa-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
@@ -15,32 +15,32 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(defn hae-suljettu-tieosuus []
+(defn hae-tietyomaa []
   (first (q (str
-              "SELECT id, muokattu, poistettu FROM suljettu_tieosuus
+              "SELECT id, muokattu, poistettu FROM tietyomaa
                WHERE osuus_id = 1 AND jarjestelma = 'Urakoitsijan järjestelmä' AND yllapitokohde = 5;"))))
 
-(deftest tarkista-suljetun-tieosan-kasittely
-  (let [lisays-kutsu (slurp "test/resurssit/api/suljetun-tieosuuden-kirjaus.json")
-        poisto-kutsu (slurp "test/resurssit/api/suljetun-tieosuuden-poisto.json")]
-    (api-tyokalut/post-kutsu ["/api/urakat/5/yllapitokohteet/5/suljettu-tieosuus"] kayttaja portti lisays-kutsu)
-    (let [uusi-suljettu-tieosuus (hae-suljettu-tieosuus)
-          id (first uusi-suljettu-tieosuus)
-          muokattu (second uusi-suljettu-tieosuus)]
+(deftest tarkista-tietyomaan-kasittely
+  (let [lisays-kutsu (slurp "test/resurssit/api/tietyomaan-kirjaus.json")
+        poisto-kutsu (slurp "test/resurssit/api/tietyomaan-poisto.json")]
+    (api-tyokalut/post-kutsu ["/api/urakat/5/yllapitokohteet/5/tietyomaa"] kayttaja portti lisays-kutsu)
+    (let [uusi-tietyomaa (hae-tietyomaa)
+          id (first uusi-tietyomaa)
+          muokattu (second uusi-tietyomaa)]
       (is (not (nil? id)) "Kannasta löytyy uusi suljettu tieosuus")
       (is (nil? muokattu)) "Muokkauspäivämäärä on tyhjä")
 
-    (api-tyokalut/post-kutsu ["/api/urakat/5/yllapitokohteet/5/suljettu-tieosuus"] kayttaja portti lisays-kutsu)
-    (let [muokattu-suljettu-tieosuus (hae-suljettu-tieosuus)
-          id (first muokattu-suljettu-tieosuus)
-          muokattu (second muokattu-suljettu-tieosuus)]
+    (api-tyokalut/post-kutsu ["/api/urakat/5/yllapitokohteet/5/tietyomaa"] kayttaja portti lisays-kutsu)
+    (let [muokattu-tietyomaa (hae-tietyomaa)
+          id (first muokattu-tietyomaa)
+          muokattu (second muokattu-tietyomaa)]
       (is (not (nil? id)) "Kannasta löytyy yha sama suljettu tieosuus")
       (is (not (nil? muokattu))) "Tieosuus on merkitty muuttuneeksi")
 
-    (api-tyokalut/delete-kutsu ["/api/urakat/5/yllapitokohteet/5/suljettu-tieosuus"] kayttaja portti poisto-kutsu)
-    (let [muokattu-suljettu-tieosuus (hae-suljettu-tieosuus)
-          id (first muokattu-suljettu-tieosuus)
-          muokattu (nth muokattu-suljettu-tieosuus 2)]
+    (api-tyokalut/delete-kutsu ["/api/urakat/5/yllapitokohteet/5/tietyomaa"] kayttaja portti poisto-kutsu)
+    (let [muokattu-tietyomaa (hae-tietyomaa)
+          id (first muokattu-tietyomaa)
+          muokattu (nth muokattu-tietyomaa 2)]
       (is (not (nil? id)) "Kannasta löytyy yha sama suljettu tieosuus")
       (is (not (nil? muokattu))) "Tieosuus on merkitty poistetuksi")))
 

@@ -80,10 +80,10 @@
 (def +tiemerkinnan-aikataulun-kirjaus+ "api/schemas/tiemerkinnan-aikataulun-kirjaus-request.schema.json")
 (def tiemerkinnan-aikataulun-kirjaus (tee-validaattori +tiemerkinnan-aikataulun-kirjaus+))
 
-(def +suljetun-tieosuuden-kirjaus+ "api/schemas/suljetun-tieosuuden-kirjaus-request.schema.json")
-(def suljetun-tieosuuden-kirjaus (tee-validaattori +suljetun-tieosuuden-kirjaus+))
-(def +suljetun-tieosuuden-poisto+ "api/schemas/suljetun-tieosuuden-poisto-request.schema.json")
-(def suljetun-tieosuuden-poisto (tee-validaattori +suljetun-tieosuuden-poisto+))
+(def +tietyomaan-kirjaus+ "api/schemas/tietyomaan-kirjaus-request.schema.json")
+(def tietyomaan-kirjaus (tee-validaattori +tietyomaan-kirjaus+))
+(def +tietyomaan-poisto+ "api/schemas/tietyomaan-poisto-request.schema.json")
+(def tietyomaan-poisto (tee-validaattori +tietyomaan-poisto+))
 
 (def +urakan-yhteystietojen-haku-vastaus+ "api/schemas/urakan-yhteystietojen-haku-response.schema.json")
 (def urakan-yhteystietojen-haku-vastaus (tee-validaattori +urakan-yhteystietojen-haku-vastaus+))

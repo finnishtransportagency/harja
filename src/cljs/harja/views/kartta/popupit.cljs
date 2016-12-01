@@ -125,7 +125,7 @@
                                           "Takaisin tilannekuvaan"]}
                                [ilmoituksen-tiedot/ilmoitus nil (dissoc tapahtuma :type :alue)]))}}))))
 
-(defmethod nayta-popup :suljettu-tieosuus-klikattu [tapahtuma]
+(defmethod nayta-popup :tietyomaa-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
                        (tee-arvolistaus-popup "Suljettu tieosuus"
                                               [["Ylläpitokohde" (str (:yllapitokohteen-nimi tapahtuma) " (" (:yllapitokohteen-numero tapahtuma) ")")]

@@ -337,7 +337,7 @@ tr-viiva {:color  puhtaat/tummanharmaa
 tr-ikoni {:img    (pinni-ikoni "musta")
           :zindex 21})
 
-(def suljettu-tieosuus
+(def tietyomaa
   [{:color puhtaat/musta
     :width 8}
    {:color puhtaat/punainen

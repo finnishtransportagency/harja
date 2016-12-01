@@ -38,7 +38,7 @@
                              (assoc tyokone :tyyppi-kartalla :tyokone))
 
    :toteumat               #(assoc % :tyyppi-kartalla :toteuma)
-   :suljetut-tieosuudet    #(assoc % :tyyppi-kartalla :suljettu-tieosuus)})
+   :suljetut-tieosuudet    #(assoc % :tyyppi-kartalla :tietyomaa)})
 
 (def ^{:doc "Mäpätään tilannekuvan tasojen nimet :tilannekuva- etuliitteelle,
 etteivät ne mene päällekkäin muiden tasojen kanssa."}

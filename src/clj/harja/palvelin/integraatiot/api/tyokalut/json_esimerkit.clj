@@ -49,8 +49,8 @@
 (def +paallystyksen-aikataulun-kirjaus+ "api/examples/paallystyksen-aikataulun-kirjaus-request.json")
 (def +tiemerkinnan-aikataulun-kirjaus+ "api/examples/tiemerkinnan-aikataulun-kirjaus-request.json")
 
-(def +suljetun-tieosuuden-kirjaus+ "api/examples/suljetun-tieosuuden-kirjaus-request.json")
-(def +suljetun-tieosuuden-poisto+ "api/examples/suljetun-tieosuuden-poisto-request.json")
+(def +tietyomaan-kirjaus+ "api/examples/tietyomaan-kirjaus-request.json")
+(def +tietyomaan-poisto+ "api/examples/tietyomaan-poisto-request.json")
 
 (def +urakan-yhteystietoje-hakuvastaus+ "api/examples/urakan-yhteystietojen-haku-response.json")
 
