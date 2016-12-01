@@ -8,7 +8,8 @@
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.napit :as napit]
             [harja.ui.kentat :as kentat]
-            [harja.ui.kartta.asioiden-tiedot :as asioiden-tiedot])
+            [harja.ui.kartta.asioiden-tiedot :as asioiden-tiedot]
+            [harja.ui.ikonit :as ikonit])
   (:require-macros
    [cljs.core.async.macros :as async-macros]))
 
@@ -71,8 +72,7 @@
           [ajax-loader])
         [:button.close {:on-click #(reset! nakyvissa? false)
                         :type     "button"}
-         [:span "×"]
-         ]]
+         [ikonit/remove]]]
        [:div "Koordinaatti: " (str koordinaatti)]
        (when-not (empty? asiat)
          (if esita-yksityiskohdat?
