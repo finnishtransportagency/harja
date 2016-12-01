@@ -12,7 +12,7 @@
 (def pida-geometria-nakyvilla-oletusarvo true)
 (defonce pida-geometriat-nakyvilla? (atom pida-geometria-nakyvilla-oletusarvo))
 
-(defonce infopaneeli-nakyvissa? (atom true))
+(defonce infopaneeli-nakyvissa? (atom false))
 (defonce infopanelin-linkkifunktiot (atom nil))
 
 (defn keskita-kartta-alueeseen! [alue]
