@@ -10,7 +10,7 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-04-12T23:20:50Z"
+    "lahetysaika": "2016-04-12T23:20:50+02:00"
   },
   "varusteen-poisto": {
     "poistaja": {
@@ -21,7 +21,7 @@
         "sukunimi": "Käsittelijä"
       }
     },
-    "poistettu": "2016-04-12T23:20:50Z",
+    "poistettu": "2016-04-12T23:20:50+02:00",
     "tunniste": "HARJ951547",
     "tietolajitunniste": "tl505"
   }

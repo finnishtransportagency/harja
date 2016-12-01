@@ -10,12 +10,12 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-01-30T12:00:00Z"
+    "lahetysaika": "2016-01-30T12:00:00+02:00"
   },
   "tunniste": {
     "id": 123
   },
-  "viimeksipaivitetty": "2016-01-30T12:00:00Z",
+  "viimeksipaivitetty": "2016-01-30T12:00:00+02:00",
   "turvallisuuspoikkeamat": [
     {
       "tunniste": {
@@ -54,8 +54,8 @@
         "sukunimi": "Meikäläinen"
       },
       "otsikko": "Aura-auto suistui tieltä",
-      "tapahtumapaivamaara": "2016-01-30T12:00:00Z",
-      "kasitelty": "2016-01-30T12:00:00Z",
+      "tapahtumapaivamaara": "2016-01-30T12:00:00+02:00",
+      "kasitelty": "2016-01-30T12:00:00+02:00",
       "kuvaus": "Aura-auto suistui tieltä väistäessä jalankulkijaa.",
       "paikan_kuvaus": "Liukas tie keskellä metsää.",
       "vaarallisten_aineiden_kuljetus": true,
@@ -77,7 +77,7 @@
           "otsikko": "Kaadetaan pensaikko",
           "toteuttaja": "Erkki Esimerkki",
           "kuvaus": "Kaadetaan risteystä pimentävä pensaikko",
-          "suoritettu": "2016-01-30T12:00:00Z",
+          "suoritettu": "2016-01-30T12:00:00+02:00",
           "vastaavahenkilo": {
             "etunimi": "Henri",
             "sukunimi": "Hakkuri"

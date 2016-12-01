@@ -10,7 +10,7 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-01-30T12:00:00Z"
+    "lahetysaika": "2016-01-30T12:00:00+02:00"
   },
   "pistetoteuma": {
     "toteuma": {
@@ -22,8 +22,8 @@
         "nimi": "Tehotekijät Oy",
         "ytunnus": "8765432-1"
       },
-      "alkanut": "2016-01-30T12:00:00Z",
-      "paattynyt": "2016-01-30T12:00:00Z",
+      "alkanut": "2016-01-30T12:00:00+02:00",
+      "paattynyt": "2016-01-30T12:00:00+02:00",
       "toteumatyyppi": "yksikkohintainen",
       "tehtavat": [
         {
@@ -52,8 +52,8 @@
             "nimi": "Tehotekijät Oy",
             "ytunnus": "8765432-1"
           },
-          "alkanut": "2016-01-30T12:00:00Z",
-          "paattynyt": "2016-01-30T12:00:00Z",
+          "alkanut": "2016-01-30T12:00:00+02:00",
+          "paattynyt": "2016-01-30T12:00:00+02:00",
           "toteumatyyppi": "yksikkohintainen",
           "tehtavat": [
             {

@@ -110,7 +110,7 @@
 (defn- muodosta-kentta [tietolaji arvot-map {:keys [pituus kenttatunniste] :as kentan-kuvaus}]
   (let [arvo (get arvot-map kenttatunniste)]
     (validoi-arvo arvo kentan-kuvaus tietolaji)
-    (merkkijono/tayta-oikealle pituus arvo)))
+    (merkkijono/tayta-oikealle pituus (if arvo arvo ""))))
 
 (defn tietolajin-arvot-map->merkkijono
   "Ottaa arvot-mapin ja purkaa sen stringiksi käyttäen apuna annettua tietolajin kuvausta.

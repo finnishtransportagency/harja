@@ -1,5 +1,5 @@
 (ns harja.tiedot.urakka.toteumat.varusteet
-  (:require [reagent.core :refer [atom]]
+  (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<!]]
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.urakka :as urakka]
@@ -7,12 +7,80 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon kartalla-xf]]
             [harja.pvm :as pvm]
-            [harja.geo :as geo])
-  (:require-macros [harja.atom :refer [reaction<!]]
-                   [reagent.ratom :refer [reaction]]
+            [harja.geo :as geo]
+            [tuck.core :as t]
+            [harja.tiedot.urakka.toteumat.varusteet.viestit :as v]
+            [reagent.core :as r]
+            [harja.domain.tierekisteri.varusteet :as varusteet])
+  (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm] tienumero]
+(defonce valinnat
+  (reaction {:urakka-id (:id @nav/valittu-urakka)
+             :sopimus-id (first @urakka/valittu-sopimusnumero)
+             :hoitokausi @urakka/valittu-hoitokausi
+             :kuukausi @urakka/valittu-hoitokauden-kuukausi}))
+
+(defonce varusteet
+  (atom {:nakymassa? false
+
+         :tienumero nil
+
+         ;; Valinnat (urakka, sopimus, hk, kuukausi)
+         :valinnat nil
+
+         ;; Ajastetun toteumahaun id
+         :toteumahaku-id nil
+
+         ;; Toteumat, jotka on haettu nykyisten valintojen perusteella
+         :toteumat nil
+
+         ;; Karttataso varustetoteumille
+         :karttataso-nakyvissa? false
+         :karttataso nil
+
+         ;; Valittu varustetoteuma
+         :varustetoteuma nil
+
+         ;; Varustehaun hakuehdot ja tulokset
+         :varustehaku {:hakuehdot {:haku-kaynnissa? false}
+
+                       ;; Tällä hetkellä näytettävä tietolaji
+                       ;; ja varusteet
+                       :tietolaji nil
+                       :varusteet nil}}))
+
+(defn- hae [{valinnat :valinnat toteumahaku-id :toteumahaku-id :as app}]
+  (when toteumahaku-id
+    (.clearTimeout js/window toteumahaku-id))
+  (assoc app
+         :toteumahaku-id (.setTimeout js/window
+                                      (t/send-async! v/->HaeVarusteToteumat)
+                                      500)
+         :toteumat nil))
+
+
+
+(defn- selite [{:keys [toimenpide tietolaji alkupvm]}]
+  (str
+   (pvm/pvm alkupvm) " "
+   (varusteet/varuste-toimenpide->string toimenpide)
+   " "
+   (varusteet/tietolaji->selitys tietolaji)))
+
+(defn- varustetoteumat-karttataso [toteumat]
+  (kartalla-esitettavaan-muotoon
+   toteumat
+   nil nil
+   (keep (fn [toteuma]
+           (when-let [sijainti (some-> toteuma :sijainti geo/pisteet first)]
+             (assoc toteuma
+                    :tyyppi-kartalla :varustetoteuma
+                    :selitys-kartalla (selite toteuma)
+                    :sijainti {:type :point
+                               :coordinates sijainti}))))))
+
+(defn- hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm] tienumero]
   (k/post! :urakan-varustetoteumat
            {:urakka-id  urakka-id
             :sopimus-id sopimus-id
@@ -20,76 +88,72 @@
             :loppupvm   loppupvm
             :tienumero tienumero}))
 
-(defonce tienumero (atom nil))
+(defn- hae-tietolajin-kuvaus [tietolaji]
+  (k/post! :hae-tietolajin-kuvaus tietolaji))
 
-(def nakymassa? (atom false))
+(defn uusi-varustetoteuma
+  "Luo uuden tyhjän varustetoteuman lomaketta varten."
+  []
+  {})
 
-(def haetut-toteumat
-  (reaction<! [urakka-id (:id @nav/valittu-urakka)
-               sopimus-id (first @urakka/valittu-sopimusnumero)
-               hoitokausi @urakka/valittu-hoitokausi
-               kuukausi @urakka/valittu-hoitokauden-kuukausi
-               tienumero @tienumero
-               nakymassa? @nakymassa?]
-              {:odota 500
-               :nil-kun-haku-kaynnissa? true}
-              (when nakymassa?
-                (hae-toteumat urakka-id sopimus-id (or kuukausi hoitokausi) tienumero))))
 
-(def varuste-toimenpide->string {nil         "Kaikki"
-                                 :lisatty    "Lisätty"
-                                 :paivitetty "Päivitetty"
-                                 :poistettu  "Poistettu"
-                                 :tarkastus  "Tarkastus"})
+(extend-protocol t/Event
+  v/YhdistaValinnat
+  (process-event [{valinnat :valinnat} app]
+    (hae (update app :valinnat merge valinnat)))
 
-(def varustetoteumatyypit
-  (vec varuste-toimenpide->string))
+  v/HaeVarusteToteumat
+  (process-event [_ {valinnat :valinnat :as app}]
+    (let [tulos! (t/send-async! v/->VarusteToteumatHaettu)]
+      (go
+        (let [{:keys [urakka-id sopimus-id kuukausi hoitokausi tienumero]} valinnat]
+          (tulos! (<! (hae-toteumat urakka-id sopimus-id
+                                    (or kuukausi hoitokausi)
+                                    tienumero)))))
+      (assoc app
+             :toteumahaku-id nil)))
 
-(def tietolaji->selitys
-  {"tl523" "Tekninen piste"
-   "tl501" "Kaiteet"
-   "tl517" "Portaat"
-   "tl507" "Bussipysäkin varusteet"
-   "tl508" "Bussipysäkin katos"
-   "tl506" "Liikennemerkki"
-   "tl522" "Reunakivet"
-   "tl513" "Reunapaalut"
-   "tl196" "Bussipysäkit"
-   "tl519" "Puomit ja kulkuaukot"
-   "tl505" "Jätehuolto"
-   "tl195" "Tienkäyttäjien palvelualueet"
-   "tl504" "WC"
-   "tl198" "Kohtaamispaikat ja levikkeet"
-   "tl518" "Kivetyt alueet"
-   "tl514" "Melurakenteet"
-   "tl509" "Rummut"
-   "tl515" "Aidat"
-   "tl503" "Levähdysalueiden varusteet"
-   "tl510" "Viheralueet"
-   "tl512" "Viemärit"
-   "tl165" "Välikaistat"
-   "tl516" "Hiekkalaatikot"
-   "tl511" "Viherkuviot"})
+  v/VarusteToteumatHaettu
+  (process-event [{toteumat :toteumat} app]
+    (assoc app
+           :karttataso (varustetoteumat-karttataso toteumat)
+           :karttataso-nakyvissa? true
+           :toteumat toteumat))
 
-(def karttataso-varustetoteuma (atom false))
+  v/ValitseToteuma
+  (process-event [{toteuma :toteuma} app]
+    (assoc app
+           :varustetoteuma toteuma))
+  v/TyhjennaValittuToteuma
+  (process-event [_ app]
+    (assoc app :varustetoteuma nil))
+  v/UusiVarusteToteuma
+  (process-event [_ app]
+    (assoc app :varustetoteuma (uusi-varustetoteuma)))
 
-(defn- selite [{:keys [toimenpide tietolaji alkupvm]}]
-  (str
-   (pvm/pvm alkupvm) " "
-   (varuste-toimenpide->string toimenpide)
-   " "
-   (tietolaji->selitys tietolaji)))
+  v/AsetaToteumanTiedot
+  (process-event [{tiedot :tiedot} {toteuma :varustetoteuma :as app}]
+    (let [tietolaji-muuttui? (not= (:tietolaji tiedot) (:tietolaji toteuma))
+          tiedot (if tietolaji-muuttui?
+                   (assoc tiedot :tietolajin-kuvaus nil)
+                   tiedot)
+          uusi-toteuma (merge toteuma tiedot)]
+      ;; Jos tietolajin kuvaus muuttui ja se ei ole tyhjä, haetaan uudet tiedot
+      (when (and tietolaji-muuttui? (:tietolaji tiedot))
+        (let [tulos! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
+          (go
+            (tulos! (<! (hae-tietolajin-kuvaus (:tietolaji tiedot)))))))
 
-(def varusteet-kartalla
-  (reaction
-    (when karttataso-varustetoteuma
-      (kartalla-esitettavaan-muotoon
-       @haetut-toteumat
-       nil nil
-       (keep (fn [toteuma]
-               (when-let [sijainti (some-> toteuma :sijainti geo/pisteet first)]
-                 (assoc toteuma
-                        :tyyppi-kartalla :varustetoteuma
-                        :selitys-kartalla (selite toteuma)
-                        :sijainti {:type :point
-                                   :coordinates sijainti}))))))))
+      (assoc app :varustetoteuma (merge toteuma tiedot))))
+
+  v/TietolajinKuvaus
+  (process-event [{:keys [tietolaji kuvaus]} {toteuma :varustetoteuma :as app}]
+    ;; Uusi tietolajin kuvaus haettu palvelimelta, aseta se paikoilleen, jos
+    ;; toteuman tietolaji on sama kuin toteumassa.
+    (if (= tietolaji (:tietolaji toteuma))
+      (assoc-in app [:varustetoteuma :tietolajin-kuvaus] kuvaus)
+      app)))
+
+
+(defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
+(defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))
