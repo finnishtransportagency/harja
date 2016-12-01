@@ -475,6 +475,10 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
              {}
              geometriat))
 
+(defn- tapahtuman-geometria-on-hallintayksikko-tai-urakka? [geom]
+  (or (= :ur (:type geom))
+      (= :hy (:type geom))))
+
 (defn- tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka?
   [geom]
   (or (and
@@ -550,8 +554,10 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
                                 (paivita-extent nil initialextent))
           :asiat-pisteessa asiat-pisteessa
           :on-click           (fn [at]
-                                (t/julkaise! {:aihe :tyhja-click :klikkaus-koordinaatit at})
-                                (poista-popup!))
+                                #_(t/julkaise! {:aihe :tyhja-click :klikkaus-koordinaatit at})
+                                (poista-popup!)
+
+                                (reset! tiedot/infopaneeli-nakyvissa? true))
           :on-select          (fn [item event]
                                 (kun-geometriaa-klikattu item event)
                                 (.stopPropagation event)
@@ -568,8 +574,7 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
 
                                   ;; Jos tuplaklikattu asia oli jotain muuta kuin HY/urakka, niin keskitetään
                                   ;; kartta siihen.
-                                  (when-not (or (= :ur (:type item))
-                                                (= :hy (:type item)))
+                                  (when-not (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item)
                                     (kun-geometriaa-klikattu item event)
                                     (tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))))
 
