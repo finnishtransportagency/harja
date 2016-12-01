@@ -383,16 +383,20 @@
 
 
 (defn- hae-toteumat-asiat-kartalle [db user {tk "tk" :as params}]
-  (into []
-        (map #(assoc % :tyyppi-kartalla :toteuma))
-        (q/hae-toteumien-asiat db
-                               (as-> tk p
-                                 (java.net.URLDecoder/decode p)
-                                 (transit/lue-transit-string p)
-                                 (assoc p :urakat (luettavat-urakat user p))
-                                 (assoc p :toimenpidekoodit (toteumien-toimenpidekoodit db p))
-                                 (aikavalinta p)
-                                 (merge p (select-keys params [:x :y]))))))
+  (konv/sarakkeet-vektoriin
+   (into []
+         (comp
+          (map konv/alaviiva->rakenne)
+          (map #(assoc % :tyyppi-kartalla :toteuma)))
+         (q/hae-toteumien-asiat db
+                                (as-> tk p
+                                  (java.net.URLDecoder/decode p)
+                                  (transit/lue-transit-string p)
+                                  (assoc p :urakat (luettavat-urakat user p))
+                                  (assoc p :toimenpidekoodit (toteumien-toimenpidekoodit db p))
+                                  (aikavalinta p)
+                                  (merge p (select-keys params [:x :y])))))
+   {:tehtava :tehtavat}))
 
 (defn- hae-tarkastukset-kartalle [db user parametrit]
   (hae-karttakuvan-tiedot db user parametrit hae-tarkastusten-reitit

@@ -301,8 +301,14 @@ GROUP BY tt.toimenpidekoodi;
 -- name: hae-toteumien-asiat
 -- Hakee karttaa klikattaessa toteuma-ajat valituille tehtäville
 SELECT
+  t.id,
   t.alkanut AS alkanut,
-  tt.toimenpidekoodi AS toimenpidekoodi,
+  t.paattynyt AS paattynyt,
+  t.suorittajan_nimi AS suorittaja_nimi,
+  tpk.nimi           AS tehtava_toimenpide,
+  tt.maara           AS tehtava_maara,
+  tpk.yksikko        AS tehtava_yksikko,
+  tt.toteuma         AS tehtava_id,
   tpk.nimi AS toimenpide
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
