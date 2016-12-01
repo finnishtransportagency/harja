@@ -99,7 +99,7 @@
   (komp/luo
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->YhdistaValinnat uusi))))
-    (fn [e! {:keys [valittu-tyo] :as tila}]
+    (fn [e! {:keys [valittu-toteuma] :as tila}]
       [:span
        (if valittu-tyo
          [muu-tyo-lomake e! tila {}]
