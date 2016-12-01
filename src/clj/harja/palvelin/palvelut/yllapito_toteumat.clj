@@ -65,7 +65,7 @@
                           (hae-laskentakohteet db user tiedot)))
       (julkaise-palvelu http :tallenna-yllapito-toteuma
                         (fn [user tiedot]
-                          (tallenna-yllapito-toteuma db user toteuma)))
+                          (tallenna-yllapito-toteuma db user tiedot)))
       this))
 
   (stop [this]
