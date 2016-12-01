@@ -90,10 +90,7 @@
                   (reset! edellinen-header-leveys header-leveys)
                   ;; Ryhmittely päivitetty, varmistetaan, että nykyinen valinta on edelleen taulukon sisällä
                   (when (> @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))
-                    (reset! valittu-valilehtiryhma (- (count @valilehtiryhmat) 1)))
-
-                  (.log js/console "Ryhmittely tehty, ryhmät: " (pr-str @valilehtiryhmat))
-                  (.log js/console "Valittu ryhmä: " (pr-str @valittu-valilehtiryhma)))))))
+                    (reset! valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))))))))
         valitse-valilehti! (fn [uusi-valinta]
                              (reset! valittu-valilehti uusi-valinta))
         hampurilaisvalikon-listan-max-korkeus (atom 200)
