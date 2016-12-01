@@ -15,5 +15,5 @@ CREATE TABLE yllapito_toteuma (
   pvm DATE NULL,
   hinta NUMERIC NOT NULL,
   yllapitoluokka INTEGER,
-  laskentakohde integer references urakka_laskentakohde (id) NOT NULL
+  laskentakohde integer references urakka_laskentakohde (id)
 );
