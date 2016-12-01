@@ -11,8 +11,10 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
-(def muut-tyot (atom {:valittu-tyo nil
-                      :muut-tyot nil
+;; Tila
+
+(def muut-tyot (atom {:valittu-toteuma nil
+                      :toteumat nil
                       :valinnat {:urakka nil
                                  :sopimus nil}}))
 
@@ -31,51 +33,59 @@
 (defrecord ValitseToteuma [tyo])
 (defrecord MuokkaaToteumaa [uusi-tyo])
 (defrecord TallennaToteuma [tyo])
+(defrecord ToteumaTallennettu [toteumat])
 
-(defn hae-tyot [{:keys [urakka] :as hakuparametrit}]
-  (let [tulos! (t/send-async! ->TyotHaettu)]
+;; Tapahtumien käsittely
+
+(defn hae-toteumat [{:keys [urakka] :as hakuparametrit}]
+  (let [tulos! (t/send-async! ->ToteumatHaettu)]
     (go (let [tyot (<! (k/post! :hae-yllapito-toteumat {:urakka urakka}))]
           (when-not (k/virhe? tyot)
             (tulos! tyot))))))
 
-(defn hae-tyo [id urakka]
-  (let [tulos! (t/send-async! ->ValitseTyo)]
+(defn hae-toteuma [id urakka]
+  (let [tulos! (t/send-async! ->ValitseToteuma)]
     (go (let [tyo (<! (k/post! :hae-yllapito-toteuma {:urakka urakka
-                                                       :id id}))]
+                                                      :id id}))]
           (when-not (k/virhe? tyo)
             (tulos! tyo))))))
 
-;; Tapahtumien käsittely
+(defn tallenna-toteuma [toteuma]
+  (k/post! :tallenna-yllapito-toteuma toteuma))
 
 (extend-protocol t/Event
 
   YhdistaValinnat
   (process-event [{:keys [valinnat] :as e} tila]
-    (hae-tyot {:urakka (:urakka valinnat)})
+    (hae-toteumat {:urakka (:urakka valinnat)})
     (update-in tila [:valinnat] merge valinnat))
 
   ToteumatHaettu
   (process-event [{:keys [tulokset] :as e} tila]
-    (assoc-in tila [:muut-tyot] tulokset))
+    (assoc-in tila [:toteumat] tulokset))
 
   UusiToteuma
   (process-event [_ tila]
-    (assoc-in tila [:valittu-tyo] {:paivamaara (pvm/nyt)}))
+    (assoc-in tila [:valittu-toteuma] {:paivamaara (pvm/nyt)}))
 
   HaeToteuma
   (process-event [{:keys [hakuehdot] :as e} tila]
-    (hae-tyo (:id hakuehdot) (:urakka hakuehdot))
+    (hae-toteuma (:id hakuehdot) (:urakka hakuehdot))
     tila)
 
   ValitseToteuma
   (process-event [{:keys [tyo] :as e} tila]
-    (assoc-in tila [:valittu-tyo] tyo))
+    (assoc-in tila [:valittu-toteuma] tyo))
 
   MuokkaaToteumaa
   (process-event [{:keys [uusi-tyo] :as e} tila]
-    (assoc-in tila [:valittu-tyo] uusi-tyo))
+    (assoc-in tila [:valittu-toteuma] uusi-tyo))
 
   TallennaToteuma
   (process-event [{:keys [tyo] :as e} tila]
     ;; TODO
-    (assoc-in tila [:valittu-tyo] tyo)))
+    (assoc-in tila [:valittu-toteuma] tyo))
+
+  ToteumaTallennettu
+  (process-event [{:keys [toteumat] :as e} tila]
+    (assoc-in tila [:toteumat] toteumat)))

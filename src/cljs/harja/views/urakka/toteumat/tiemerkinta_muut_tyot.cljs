@@ -34,31 +34,29 @@
        valittu-urakka
        valittu-sopimusnumero valitse-sopimusnumero
        valitun-urakan-hoitokaudet valittu-hoitokausi valitse-hoitokausi)
-     [napit/uusi "Lisää toteuma" #(e! (tiedot/->UusiTyo))
+     [napit/uusi "Lisää toteuma" #(e! (tiedot/->UusiToteuma))
       {:disabled (not muokkausoikeus?)}]]))
 
 (defn muu-tyo-lomake [e! tila riippuvuudet]
-  (let [vanha-toteuma? (get-in tila [:valittu-tyo :id])]
+  (let [vanha-toteuma? (get-in tila [:valittu-toteuma :id])
+        muokkausoikeus? true] ;; TODO OIKEISTARKISTUS
     [:div
      [napit/takaisin "Takaisin toteumaluetteloon"
-      #(e! (tiedot/->ValitseTyo nil))]
+      #(e! (tiedot/->ValitseToteuma nil))]
      [lomake {:otsikko (if vanha-toteuma?
                          "Muokkaa toteumaa"
                          "Luo uusi toteuma")
               :luokka :horizontal
-              :voi-muokata? true ;; TODO OIKEUSTARKISTUS
-              :muokkaa! #(e! (tiedot/->MuokkaaTyota %))
-              ;:footer [napit/palvelinkutsu-nappi
-              ;:"Tallenna toteuma"
-              ;:#(e! (tiedot/->TallennaTyo %))
-              ;:{:luokka "nappi-ensisijainen"
-              ;: :ikoni (ikonit/tallenna)
-              ;: :kun-onnistuu
-              ;: #(do
-              ;:    (reset! urakan-materiaalin-kaytot %)
-              ;:    (reset! valittu-materiaalin-kaytto nil))
-              ;: :disabled (or (not voi-tallentaa?)
-              ;:              (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))))}]
+              :voi-muokata? muokkausoikeus?
+              :muokkaa! #(e! (tiedot/->MuokkaaToteumaa %))
+              :footer [napit/palvelinkutsu-nappi
+                       "Tallenna toteuma"
+                       #(tiedot/tallenna-toteuma (:valittu-toteuma tila))
+                       {:luokka "nappi-ensisijainen"
+                        :ikoni (ikonit/tallenna)
+                        :kun-onnistuu #(e! (tiedot/->ToteumaTallennettu %))
+                        :disabled (or (not (lomake/voi-tallentaa? (:valittu-toteuma tila)))
+                                      (not muokkausoikeus?))}]
               }
 
       [{:otsikko "Päivämäärä" :nimi :paivamaara :tyyppi :pvm :pakollinen? true}
@@ -66,7 +64,7 @@
        {:otsikko "Ylläpitoluokka" :nimi :yllapitoluokka :tyyppi :positiivinen-numero}
        #_{:otsikko "Laskentakohde" :nimi :laskentakohde :tyyppi :string}
        {:otsikko "Selite" :nimi :selite :tyyppi :text :pakollinen? true}]
-      (:valittu-tyo tila)]]))
+      (:valittu-toteuma tila)]]))
 
 (defn- muut-tyot-lista [e!
                         {:keys [muut-tyot] :as tila}
@@ -86,8 +84,8 @@
      :tyhja (if (nil? muut-tyot)
               [ajax-loader "Toteumia haetaan..."]
               "Ei toteumia.")
-     :rivi-klikattu #(e! (tiedot/->HaeTyo {:id (:id %)
-                                           :urakka (:id valittu-urakka)}))}
+     :rivi-klikattu #(e! (tiedot/->HaeToteuma {:id (:id %)
+                                               :urakka (:id valittu-urakka)}))}
     [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm-opt :nimi :pvm :leveys 10}
      {:otsikko "Selite" :tyyppi :string :nimi :selite :leveys 20}
      {:otsikko "Hinta" :tyyppi :numero :nimi :hinta :fmt (partial fmt/euro-opt true) :leveys 10}
