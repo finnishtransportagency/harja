@@ -5,10 +5,10 @@
         "diaarinumero": 123456789,
         "tielupatyyppi": "kaapelien-johtojen-ja-putkien-sijoituslupa",
         "otsikko": "Lupa kaapelien sijoittamiseen Nelostielle Kempeleeseen",
-        "myonnetty": "2016-01-30T12:00:00Z",
+        "myonnetty": "2016-01-30T12:00:00+02:00",
         "voimassa": {
-          "alkaen": "2016-01-30T12:00:00Z",
-          "paattyen": "2016-01-30T12:00:00Z"
+          "alkaen": "2016-01-30T12:00:00+02:00",
+          "paattyen": "2016-01-30T12:00:00+02:00"
         },
         "sijainti": {
           "tie": {

@@ -133,17 +133,17 @@
                     (:let tr-osoite))
         geometria (when tr-osoite
                     (:sijainti
-                     (first
-                      (toteumat-q/varustetoteuman-toimenpiteelle-sijainti
-                       db {:tie (:numero tr-osoite)
-                           :aosa (:aosa tr-osoite)
-                           :aet (:aet tr-osoite)
-                           :losa (if viiva?
-                                   (:losa tr-osoite)
-                                   (:aosa tr-osoite))
-                           :let (if viiva?
-                                  (:let tr-osoite)
-                                  (:aet tr-osoite))}))))]
+                      (first
+                        (toteumat-q/varustetoteuman-toimenpiteelle-sijainti
+                          db {:tie (:numero tr-osoite)
+                              :aosa (:aosa tr-osoite)
+                              :aet (:aet tr-osoite)
+                              :losa (if viiva?
+                                      (:losa tr-osoite)
+                                      (:aosa tr-osoite))
+                              :let (if viiva?
+                                     (:let tr-osoite)
+                                     (:aet tr-osoite))}))))]
     geometria))
 
 (defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma toimenpiteen-tiedot tietolaji
@@ -279,7 +279,7 @@
                   (hae-toimenpiteen-geometria db toimenpiteen-tiedot)))
               (get-in varustetoteuma [:varustetoteuma :toimenpiteet]))
         geometry-collection (GeometryCollection.
-                             (into-array Geometry (map #(.getGeometry %) geometriat)))
+                              (into-array Geometry (map #(.getGeometry %) geometriat)))
         pg-geometry (PGgeometry. geometry-collection)]
     (toteumat-q/paivita-toteuman-reitti<! db {:reitti pg-geometry
                                               :id toteuma-id})))
@@ -324,7 +324,10 @@
 
 (defn- validoi-tehtavat [db varustetoteumat]
   (doseq [varustetoteuma varustetoteumat]
-    (toteuman-validointi/tarkista-tehtavat db (get-in varustetoteuma [:varustetoteuma :toteuma :tehtavat]))))
+    (toteuman-validointi/tarkista-tehtavat
+      db
+      (get-in varustetoteuma [:varustetoteuma :toteuma :tehtavat])
+      (get-in varustetoteuma [:varustetoteuma :toteuma :toteumatyyppi]))))
 
 (defn kirjaa-toteuma
   "Varustetoteuman kirjauksessa kirjataan yksi tai useampi toteuma.

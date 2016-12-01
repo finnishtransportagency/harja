@@ -22,6 +22,9 @@
     {:lahetetty (first tila)
      :lahetys_onnistunut (second tila)}))
 
+(defn hae-turi-id [id]
+  (ffirst (q (format "select turi_id from turvallisuuspoikkeama where id = %s" id))))
+
 (defn tyhjenna-turvallisuuspoikkeaman-lahetystiedot [id]
   (u (format "update turvallisuuspoikkeama set lahetetty = null, lahetys_onnistunut = null where id = %s" id)))
 
@@ -32,11 +35,12 @@
                        (is (= +turi-url+ (:url opts)) "Kutsu tehdään oikeaan osoitteeseen")
                        (is (= (first (:basic-auth opts)) "kayttajatunnus") "Autentikaatiossa käytetään oikeaa käyttäjätunnusta")
                        (is (= (second (:basic-auth opts)) "salasana") "Autentikaatiossa käytetään oikeaa salasanaa")
-                       {:status 200 :body "id: 1"})]
+                       {:status 200 :body "id: 666\n"})]
       (turi/laheta-turvallisuuspoikkeama (:turi jarjestelma) turpo-id)
       (let [tila (hae-turvallisuuspoikkeaman-tila turpo-id)]
         (is (not (nil? (:lahetetty tila))) "Lähetysaika on merkitty")
         (is (true? (:lahetys_onnistunut tila))) "Lähetys on merkitty onnistuneeksi")
+      (is (= 666 (hae-turi-id turpo-id)))
       (tyhjenna-turvallisuuspoikkeaman-lahetystiedot turpo-id))))
 
 (deftest tarkista-turvallisuuspoikkeaman-epaonnistunut-lahetys

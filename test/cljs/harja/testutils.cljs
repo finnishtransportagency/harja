@@ -149,3 +149,6 @@
 
 (defn ilman-tavutusta [teksti]
   (str/replace teksti #"\u00AD" ""))
+
+(defn blur [path]
+  (sim/blur (->elt path) nil))
