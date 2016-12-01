@@ -68,6 +68,7 @@
          "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");\n
           proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
        [:body
+        [:video {:src "video/keep_alive.mp4" :id "keep-alive-hack" :loop "true"}]
         [:div#app]
         [:script {:type "text/javascript" :src "js/compiled/harja_laadunseuranta.js"}]]]
 
@@ -86,5 +87,6 @@
          "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");\n
           proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
        [:body
+        [:video {:src "video/keep_alive.mp4" :id "keep-alive-hack" :loop "true"}]
         [:div#app]
         [:script {:type "text/javascript" :src "js/compiled/harja_laadunseuranta.js"}]]])))

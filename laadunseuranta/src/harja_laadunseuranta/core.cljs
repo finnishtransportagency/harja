@@ -12,7 +12,8 @@
             [cljs.core.async :as async :refer [<!]]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
             [clojure.string :as str]
-            [harja-laadunseuranta.ui.dom :as dom])
+            [harja-laadunseuranta.ui.dom :as dom]
+            [harja-laadunseuranta.asiakas.tapahtumat :as tapahtumat])
   (:require-macros [reagent.ratom :refer [run!]]
                    [cljs.core.async.macros :refer [go]]
                    [harja-laadunseuranta.macros :refer [after-delay]]))
@@ -23,42 +24,16 @@
   (reagent/render-component [main/main] (.getElementById js/document "app")))
 
 (defn- esta-mobiililaitteen-nayton-lukitus []
-  ;; FIXME Dirty hack joka ei edes toimi luotettavasti.
+  ;; PENDING Dirty hack
   ;; Kannattaa pitää silmällä Wake Lock APIa: http://boiler23.github.io/screen-wake/
-  #_(let [pollaa-tyhjaa-sivua
-        (fn [] (.setInterval js/window
-                             (fn []
-                               (when-not js/document.hidden
-                                 ;; Jos dokumentti on piilossa, sivu vaihtuu, mitä ei haluta
-                                 (set! (-> js/window .-location .-href) "/prevent/sleep"))
-                               (.setTimeout js/window
-                                            (fn []
-                                              (.stop js/window))
-                                            0))
-                             5000))
-        soita-tyhja-video
-        (fn []
-          (let [media-webm "data:video/webm;base64,GkXfo0AgQoaBAUL3gQFC8oEEQvOBCEKCQAR3ZWJtQoeBAkKFgQIYU4BnQI0VSalmQCgq17FAAw9CQE2AQAZ3aGFtbXlXQUAGd2hhbW15RIlACECPQAAAAAAAFlSua0AxrkAu14EBY8WBAZyBACK1nEADdW5khkAFVl9WUDglhohAA1ZQOIOBAeBABrCBCLqBCB9DtnVAIueBAKNAHIEAAIAwAQCdASoIAAgAAUAmJaQAA3AA/vz0AAA="
-                media-mp4 "data:video/mp4;base64,AAAAHGZ0eXBpc29tAAACAGlzb21pc28ybXA0MQAAAAhmcmVlAAAAG21kYXQAAAGzABAHAAABthADAowdbb9/AAAC6W1vb3YAAABsbXZoZAAAAAB8JbCAfCWwgAAAA+gAAAAAAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAIVdHJhawAAAFx0a2hkAAAAD3wlsIB8JbCAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAIAAAACAAAAAABsW1kaWEAAAAgbWRoZAAAAAB8JbCAfCWwgAAAA+gAAAAAVcQAAAAAAC1oZGxyAAAAAAAAAAB2aWRlAAAAAAAAAAAAAAAAVmlkZW9IYW5kbGVyAAAAAVxtaW5mAAAAFHZtaGQAAAABAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAEcc3RibAAAALhzdHNkAAAAAAAAAAEAAACobXA0dgAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAIAAgASAAAAEgAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABj//wAAAFJlc2RzAAAAAANEAAEABDwgEQAAAAADDUAAAAAABS0AAAGwAQAAAbWJEwAAAQAAAAEgAMSNiB9FAEQBFGMAAAGyTGF2YzUyLjg3LjQGAQIAAAAYc3R0cwAAAAAAAAABAAAAAQAAAAAAAAAcc3RzYwAAAAAAAAABAAAAAQAAAAEAAAABAAAAFHN0c3oAAAAAAAAAEwAAAAEAAAAUc3RjbwAAAAAAAAABAAAALAAAAGB1ZHRhAAAAWG1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAAK2lsc3QAAAAjqXRvbwAAABtkYXRhAAAAAQAAAABMYXZmNTIuNzguMw=="
-                add-source (fn [element type dataURI]
-                             (let [source (.createElement js/document "source")]
-                               (set! (.-src source) dataURI)
-                               (set! (.-type source) (str "video/" type))
-                               (.appendChild element source)))
-                video-paalla (atom false)
-                video (.createElement js/document "video")
-                soita-video (fn [elementti]
-                              (when-not @video-paalla
-                                (.log js/console "Soitetaan video")
-                                (.play elementti)
-                                (reset! video-paalla true)))]
-            (.setAttribute video "loop" "")
-            (add-source video "webm" media-webm)
-            (add-source video "mp4" media-mp4)
-            (.appendChild js/document.body video)
-            (tapahtumat/kuuntele! :body-click #(soita-video video))))]
-    (pollaa-tyhjaa-sivua)
-    (soita-tyhja-video)))
+  (let [video-paalla (atom false)]
+    (let [video (.getElementById js/document "keep-alive-hack")
+          soita-video (fn [elementti]
+                        (when-not @video-paalla
+                          (.log js/console "Estetään näytön lukko")
+                          (.play elementti)
+                          (reset! video-paalla true)))]
+      (tapahtumat/kuuntele! :body-click #(soita-video video)))))
 
 (defn- esta-zoomaus []
   ;; "user-scaleable=no is disabled in Safari for iOS 10.
