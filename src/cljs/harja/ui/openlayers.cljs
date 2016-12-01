@@ -270,23 +270,12 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
   (.on ol3 "singleclick"
        (fn [e]
          (if-let [kasittelija @klik-kasittelija]
+           ;; Lähinnä REPL tunkkausta varten
            (kasittelija (tapahtuman-kuvaus e))
-           (do
-             (hae-asiat-pisteessa (:geometries (reagent/state this))
-                                  (:sijainti (tapahtuman-kuvaus e))
-                                  asiat-pisteessa-atom)
-             (when on-click
-               (on-click e))
 
-             (comment
-               ;; FIXME: miten yhdistetään vanhaan on-click/on-select toimintoon?
-               ;; mietittävä ennen mergeä
-               (when on-click
-                 (on-click e))
-
-               (when on-select
-                 (when-let [g (tapahtuman-geometria this e)]
-                   (on-select g e)))))))))
+           (if-let [g (tapahtuman-geometria this e)]
+             (when on-select (on-select g e))
+             (when on-click (on-click e)))))))
 
 ;; dblclick on-clickille ei vielä tarvetta - zoomaus tulee muualta.
 (defn- aseta-dblclick-kasittelija [this ol3 on-click on-select]
