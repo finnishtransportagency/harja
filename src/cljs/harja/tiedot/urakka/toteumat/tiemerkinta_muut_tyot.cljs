@@ -27,6 +27,8 @@
 (defrecord TyotHaettu [tulokset])
 (defrecord HaeTyo [tyo])
 (defrecord ValitseTyo [tyo])
+(defrecord MuokkaaTyota [uusi-tyo])
+(defrecord TallennaTyo [tyo])
 
 (defn hae-tyot [{:keys [urakka] :as hakuparametrit}]
   (let [tulos! (t/send-async! ->TyotHaettu)]
@@ -36,10 +38,11 @@
 
 (defn hae-tyo [id urakka]
   (let [tulos! (t/send-async! ->ValitseTyo)]
-    (go (let [tyot (<! (k/post! :hae-yllapito-toteuma {:urakka urakka
+    (go (let [tyo (<! (k/post! :hae-yllapito-toteuma {:urakka urakka
                                                        :id id}))]
-          (when-not (k/virhe? tyot)
-            (tulos! tyot))))))
+          (when-not (k/virhe? tyo)
+
+            (tulos! tyo))))))
 
 ;; Tapahtumien käsittely
 
@@ -55,12 +58,19 @@
     (assoc-in tila [:muut-tyot] tulokset))
 
   HaeTyo
-  (process-event [{:keys [tyo] :as e} tila]
-    (hae-tyo (:id tyo))
+  (process-event [{:keys [id urakka] :as e} tila]
+    (hae-tyo id urakka)
     tila)
 
   ValitseTyo
   (process-event [{:keys [tyo] :as e} tila]
+    (assoc-in tila [:valittu-tyo] tyo))
+
+  MuokkaaTyota
+  (process-event [{:keys [uusi-tyo] :as e} tila]
+    (assoc-in tila [:valittu-tyo] uusi-tyo))
+
+  TallennaTyo
+  (process-event [{:keys [tyo] :as e} tila]
+    ;; TODO
     (assoc-in tila [:valittu-tyo] tyo)))
-
-
