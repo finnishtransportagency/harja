@@ -8,47 +8,43 @@
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn- alusta-uusi-tarkastusajo [sovellus]
-  (assoc sovellus
-    ;; Tarkastusajon perustiedot
-    :valittu-urakka nil
-    :tarkastusajo-id nil
-    :tallennus-kaynnissa false
-    :tarkastusajo-paattymassa false
-    ;; Ajonaikaiset tiedot
-    :reittipisteet []
-    :tr-tiedot {:tr-osoite {:tie nil
-                            :aosa nil
-                            :aet nil}
-                :talvihoitoluokka nil}
-    ;; UI
-    :ui {:tr-tiedot-nakyvissa? false
-         :paanavigointi {:nakyvissa? true
-                         :valilehdet-nakyvissa? true
-                         :valilehtiryhmat []
-                         :valittu-valilehtiryhma 0
-                         :valittu-valilehti nil
-                         :hampurilaisvalikon-lista-nakyvissa? false}}
-    ;; Havainnot
-    :jatkuvat-havainnot #{}
-    ;; Mittaukset
-    :mittaussyotto {:nykyinen-syotto nil
-                    :syotot []}
-    :soratiemittaussyotto {:tasaisuus 5
-                           :kiinteys 5
-                           :polyavyys 5}
-    :mittaustyyppi nil
-    ;; Lomake
-    :havaintolomake-auki? false
-    :havaintolomakedata {:kayttajanimi nil
-                         :tr-osoite nil
-                         :aikaleima nil
-                         :laadunalitus? false
-                         :kuvaus ""
-                         :kuva nil}
-    ;; Kartta
-    :kirjauspisteet []
-    ;; Muut
-    :ilmoitukset []))
+  (-> sovellus
+      (assoc
+        ;; Tarkastusajon perustiedot
+        :valittu-urakka nil
+        :tarkastusajo-id nil
+        :tallennus-kaynnissa false
+        :tarkastusajo-paattymassa false
+        ;; Ajonaikaiset tiedot
+        :reittipisteet []
+        :tr-tiedot {:tr-osoite {:tie nil
+                                :aosa nil
+                                :aet nil}
+                    :talvihoitoluokka nil}
+        ;; Havainnot
+        :jatkuvat-havainnot #{}
+        ;; Mittaukset
+        :mittaussyotto {:nykyinen-syotto nil
+                        :syotot []}
+        :soratiemittaussyotto {:tasaisuus 5
+                               :kiinteys 5
+                               :polyavyys 5}
+        :mittaustyyppi nil
+        ;; Lomake
+        :havaintolomake-auki? false
+        :havaintolomakedata {:kayttajanimi nil
+                             :tr-osoite nil
+                             :aikaleima nil
+                             :laadunalitus? false
+                             :kuvaus ""
+                             :kuva nil}
+        ;; Kartta
+        :kirjauspisteet []
+        ;; Muut
+        :ilmoitukset [])
+
+      ;; UI:sta resetoidaan vain näkyvyys
+      (assoc-in [:ui :paanavigointi :nakyvissa?] true)))
 
 (defn- aseta-tarkastusajo-sovelluksen-tilaan [sovellus ajo-id]
   (assoc sovellus
