@@ -43,6 +43,6 @@
 
   TyotHaettu
   (process-event [{:keys [tulokset] :as e} tila]
-    (update-in tila [:muut-tyot] merge tulokset)))
+    (assoc-in tila [:muut-tyot] tulokset)))
 
 

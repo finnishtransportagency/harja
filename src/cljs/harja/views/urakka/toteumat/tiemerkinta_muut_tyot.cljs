@@ -49,7 +49,7 @@
      :tyhja (if (nil? muut-tyot)
               [ajax-loader "Toteumia haetaan..."]
               "Ei toteumia.")}
-    [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys 10}
+    [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm-opt :nimi :pvm :leveys 10}
      {:otsikko "Selite" :tyyppi :string :nimi :selite :leveys 20}
      {:otsikko "Hinta" :tyyppi :numero :nimi :hinta :fmt (partial fmt/euro-opt true) :leveys 10}
      {:otsikko "Ylläpitoluokka" :tyyppi :numero :nimi :yllapitoluokka :leveys 10}
