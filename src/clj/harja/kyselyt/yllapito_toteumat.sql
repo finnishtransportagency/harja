@@ -30,7 +30,7 @@ WHERE yt.urakka = :urakka
       AND yt.id = :id;
 
 -- name: luo-uusi-muu-tyo<!
-INSERT INTO yllapito_toteuma yt
+INSERT INTO yllapito_toteuma
 (urakka, selite, pvm, hinta, yllapitoluokka)
 VALUES (:urakka, :selite, :pvm, :hinta, :yllapitoluokka);
 
