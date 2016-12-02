@@ -285,7 +285,8 @@
                            optiot)}))
 
 (defn kartta []
-  [karttakomponentti
+  [:div
+   [karttakomponentti
    {:wmts-url asetukset/+wmts-url+
     :wmts-url-kiinteistorajat asetukset/+wmts-url-kiinteistojaotus+
     :wmts-url-ortokuva asetukset/+wmts-url-ortokuva+
@@ -293,7 +294,16 @@
     :ajoneuvon-sijainti-atomi s/ajoneuvon-sijainti
     :reittipisteet-atomi s/reittipisteet
     :kirjauspisteet-atomi s/kirjauspisteet
-    :optiot s/karttaoptiot}])
+    :optiot s/karttaoptiot}]
+   ;; Klikkaukset ei mene, jos z-indeksiä ei nosta
+   [:div.kartan-kontrollit (when-not @s/nayta-paanavigointi?
+                             {:style {:z-index 10000}})
+    [:div#karttakontrollit]
+    [:div.kontrollinappi.keskityspainike.livicon-crosshairs {:on-click #(do (swap! s/keskita-ajoneuvoon not)
+                                                                            (swap! s/keskita-ajoneuvoon not))}]
+    [:div.kontrollinappi.kiinteistorajat.livicon-home {:on-click #(swap! s/nayta-kiinteistorajat not)}]
+    [:div.kontrollinappi.ortokuva.livicon-eye {:on-click #(swap! s/nayta-ortokuva not)}]
+    [:div.kontrollinappi.infonappi.livicon-circle-info {:on-click #(swap! s/tr-tiedot-nakyvissa? not)}]]])
 
 ;; devcards
 

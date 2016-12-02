@@ -38,27 +38,16 @@
         "Käynnistetään..."
         "Käynnistä tarkastus"))]])
 
-(defn- keskityspainike [keskita-ajoneuvoon]
-  [:div.ylapalkki-button.keskityspainike.livicon-crosshairs {:on-click #(do (swap! keskita-ajoneuvoon not)
-                                                                            (swap! keskita-ajoneuvoon not))}])
-
-(defn- ylapalkkikomponentti [{:keys [tiedot-nakyvissa hoitoluokka soratiehoitoluokka
-                                     tr-osoite kiinteistorajat ortokuva
-                                     tallennus-kaynnissa aloitetaan-tarkastusajo
+(defn- ylapalkkikomponentti [{:keys [ hoitoluokka soratiehoitoluokka
+                                     tr-osoite tallennus-kaynnissa aloitetaan-tarkastusajo
                                      kaynnista-tarkastus-fn pysayta-tarkastusajo-fn
-                                     keskita-ajoneuvoon disabloi-kaynnistys? valittu-urakka
+                                     disabloi-kaynnistys? valittu-urakka
                                      palvelinvirhe]}]
   [:div
    [:div.ylapalkki {:class (when (or (utils/kehitysymparistossa?)
                                      (utils/stg-ymparistossa?)) "testiharja")}
     [:div.ylapalkki-vasen
      [logo]
-     [:div#karttakontrollit]
-     (when-not @tallennus-kaynnissa
-       [keskityspainike keskita-ajoneuvoon])
-     [:div.ylapalkki-button.kiinteistorajat.livicon-home {:on-click #(swap! kiinteistorajat not)}]
-     [:div.ylapalkki-button.ortokuva.livicon-eye {:on-click #(swap! ortokuva not)}]
-     [:div.ylapalkki-button.infonappi.livicon-circle-info {:on-click #(swap! tiedot-nakyvissa not)}]
      [:div.tr-osoite (formatoi-tr-osoite @tr-osoite)]
      [:div.ylapalkin-metatiedot
       [:div.ylapalkin-metatieto.urakkanimi {:on-click #(println "TODO: tästäkin vaihtuu urakka")}
@@ -79,17 +68,13 @@
 
 (defn ylapalkki []
   [ylapalkkikomponentti
-   {:tiedot-nakyvissa s/tr-tiedot-nakyvissa?
-    :hoitoluokka s/hoitoluokka
+   {:hoitoluokka s/hoitoluokka
     :aloitetaan-tarkastusajo s/aloitetaan-tarkastusajo
     :soratiehoitoluokka s/soratiehoitoluokka
     :kaynnista-tarkastus-fn tarkastusajon-luonti/luo-ajo!
     :pysayta-tarkastusajo-fn tarkastusajon-luonti/aseta-ajo-paattymaan!
     :tr-osoite s/tr-osoite
-    :kiinteistorajat s/nayta-kiinteistorajat
-    :ortokuva s/nayta-ortokuva
     :tallennus-kaynnissa s/tallennus-kaynnissa
-    :keskita-ajoneuvoon s/keskita-ajoneuvoon
     :disabloi-kaynnistys? (or @s/havaintolomake-auki
                               @s/palautettava-tarkastusajo)
     :valittu-urakka s/valittu-urakka
