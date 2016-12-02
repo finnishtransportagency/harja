@@ -173,7 +173,8 @@
   }
 }
 
-@valilehden-korkeus: 38px;
+@valilehden-korkeus: 60px;
+@valilehden-korkeus-pienempi: 38px;
 
 .valilehtilista {
   overflow: hidden;
@@ -187,7 +188,7 @@
   > .valilehti {
     box-sizing: border-box;
     height: @valilehden-korkeus;
-    padding: 5px;
+    padding: 16px;
     margin-left: 5px;
     margin-right: 5px;
     display: inline-block;
@@ -346,6 +347,14 @@
     > .toggle-valintapainike-ikoni {
       width: 100%;
       height: @toggle-valintapainike-leveys-pienempi;
+    }
+  }
+
+  & .valilehtilista {
+    height: @valilehden-korkeus-pienempi;
+
+    > .valilehti {
+      padding: 5px;
     }
   }
 }
