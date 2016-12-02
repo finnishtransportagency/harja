@@ -182,9 +182,12 @@
         skeema (remove empty? (:tiedot tieto))
         data (:data tieto)
         kenttien-arvot (map
-                         (fn [rivin-skeema]
-                           [rivin-skeema
-                            ((or (:nimi rivin-skeema) (:hae rivin-skeema)) data)])
+                         (fn [{:keys [nimi hae] :as rivin-skeema}]
+                           (if-let [get-fn (or nimi hae)]
+                             [rivin-skeema (get-fn data)]
+                             ;; else
+                             (do (log/error "skeemasta puuttuu :nimi tai :hae - " (pr-str rivin-skeema))
+                                 [])))
                          skeema)
         tyhjat-arvot (map (comp :otsikko first) (filter (comp nil? second) kenttien-arvot))]
     (when-not (empty? tyhjat-arvot)
