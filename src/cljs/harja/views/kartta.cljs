@@ -527,7 +527,7 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
 
 (defn kaynnista-asioiden-haku-pisteesta! [tasot event asiat-pisteessa]
   (hae-asiat-pisteessa tasot event asiat-pisteessa)
-  (reset! tiedot/infopaneeli-nakyvissa? true))
+  (reset! tiedot/nayta-infopaneeli? true))
 
 (defn kartta-openlayers []
   (komp/luo
@@ -656,8 +656,9 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
    [kartan-koko-kontrollit]
    [kartan-yleiset-kontrollit]
    [kartan-ohjelaatikko]
-   [infopaneeli/infopaneeli @asiat-pisteessa tiedot/infopaneeli-nakyvissa?
-    tiedot/infopanelin-linkkifunktiot]
+   (when @tiedot/infopaneeli-nakyvissa?
+     [infopaneeli/infopaneeli @asiat-pisteessa #(reset! tiedot/nayta-infopaneeli? false)
+      tiedot/infopanelin-linkkifunktiot])
    [kartan-ikonien-selitykset]
    [kartta-openlayers]
    [kartan-edistyminen @kuvatason-lataus @geometriatason-lataus]])

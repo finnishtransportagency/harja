@@ -7,12 +7,14 @@
             [harja.loki :refer [log]]
             [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
             [harja.ui.openlayers :as openlayers])
-  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]
+                   [reagent.ratom :refer [reaction]]))
 
 (def pida-geometria-nakyvilla-oletusarvo true)
 (defonce pida-geometriat-nakyvilla? (atom pida-geometria-nakyvilla-oletusarvo))
 
-(defonce infopaneeli-nakyvissa? (atom false))
+(defonce nayta-infopaneeli? (atom false))
+(defonce infopaneeli-nakyvissa? (reaction (and @nayta-infopaneeli? @nav/kartta-nakyvissa?)))
 (defonce infopanelin-linkkifunktiot (atom nil))
 
 (defn keskita-kartta-alueeseen! [alue]

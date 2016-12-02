@@ -53,36 +53,32 @@
         [:span.kentan-label (:otsikko kentan-skeema)]]]
       [kentat/nayta-arvo kentan-skeema (kentan-arvo kentan-skeema data)]])])
 
-(defn infopaneeli [asiat-pisteessa nakyvissa? linkkifunktiot]
-  (log "asiat-pisteessa asiat keys:" (-> asiat-pisteessa :asiat pr-str))
-  (when @nakyvissa?
-    (let [{:keys [asiat haetaan? koordinaatti]} asiat-pisteessa
-          asiat (asioiden-tiedot/asioiden-pisteessa-skeemamuoto asiat)
-          vain-yksi-asia? (-> asiat count (= 1))
-          useampi-asia? (not vain-yksi-asia?)
-          esita-yksityiskohdat? (or @valittu-asia vain-yksi-asia?)
-          ainoa-asia (when vain-yksi-asia? (first asiat))]
-      ;; tyhjennetään valinta kun valinnassa on asia joka ei esiinny @asiat-pisteessa
-      ;; (esim latauksen aikana)
-      (when-not (some #(= @valittu-asia %) asiat)
-        (reset! valittu-asia nil))
-      [:div#kartan-infopaneeli.kartan-infopaneeli
-       ;; [debug asiat-pisteessa]
-       [:div
-        (when (and @valittu-asia useampi-asia?)
-          [napit/takaisin "" #(reset! valittu-asia nil)])
-        (when haetaan?
-          [ajax-loader])
-        [:button.close {:on-click #(reset! nakyvissa? false)
-                        :type     "button"}
-         [ikonit/remove]]]
-       (when-let [[k1 k2] (map str koordinaatti)]
-         [:div [:div.ip-otsikko "Koordinaatit"] [:div.ip-koordinaatit k1 " " k2]])
-       (when-not (empty? asiat)
-         (if esita-yksityiskohdat?
-           [esita-yksityiskohdat (or @valittu-asia ainoa-asia) @linkkifunktiot]
-           [:div (doall (for [[idx asia] (map-indexed #(do [%1 %2]) [(get asiat 0) (get asiat 0)])]
-                          ^{:key (str "infopaneelin_otsikko_" idx)}
-                          [esita-otsikko asia]))]))])))
-
-(def seppo 42)
+(defn infopaneeli [asiat-pisteessa piilota-fn! linkkifunktiot]
+  (let [{:keys [asiat haetaan? koordinaatti]} asiat-pisteessa
+        asiat (asioiden-tiedot/asioiden-pisteessa-skeemamuoto asiat)
+        vain-yksi-asia? (-> asiat count (= 1))
+        useampi-asia? (not vain-yksi-asia?)
+        esita-yksityiskohdat? (or @valittu-asia vain-yksi-asia?)
+        ainoa-asia (when vain-yksi-asia? (first asiat))]
+    ;; tyhjennetään valinta kun valinnassa on asia joka ei esiinny @asiat-pisteessa
+    ;; (esim latauksen aikana)
+    (when-not (some #(= @valittu-asia %) asiat)
+      (reset! valittu-asia nil))
+    [:div#kartan-infopaneeli.kartan-infopaneeli
+     ;; [debug asiat-pisteessa]
+     [:div
+      (when (and @valittu-asia useampi-asia?)
+        [napit/takaisin "" #(reset! valittu-asia nil)])
+      (when haetaan?
+        [ajax-loader])
+      [:button.close {:on-click piilota-fn!
+                      :type     "button"}
+       [ikonit/remove]]]
+     (when-let [[k1 k2] (map str koordinaatti)]
+       [:div [:div.ip-otsikko "Koordinaatit"] [:div.ip-koordinaatit k1 " " k2]])
+     (when-not (empty? asiat)
+       (if esita-yksityiskohdat?
+         [esita-yksityiskohdat (or @valittu-asia ainoa-asia) @linkkifunktiot]
+         [:div (doall (for [[idx asia] (map-indexed #(do [%1 %2]) [(get asiat 0) (get asiat 0)])]
+                        ^{:key (str "infopaneelin_otsikko_" idx)}
+                        [esita-otsikko asia]))]))]))
