@@ -197,5 +197,5 @@
 (defn validoi-tiedot [tiedot]
   (map validoi-tieto tiedot))
 
-(defn asioiden-pisteessa-skeemamuoto [data]
-  (validoi-tiedot (map kenttaskeema data)))
+(defn skeemamuodossa [asiat]
+  (validoi-tiedot (map kenttaskeema asiat)))
