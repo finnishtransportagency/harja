@@ -548,11 +548,15 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
         ;; tasossa, joten ne eivät tarvitse erillistä kuuntelijaa.
         (add-watch tasot/geometriat-kartalle :muuttuvien-geometrioiden-kuuntelija
                    (fn [_ _ vanha uusi]
+                     ;; Kun karttatasot muuttuvat, piilotetaan infopaneeli
+                     (reset! tiedot/nayta-infopaneeli? false)
+
                      ;; Jos vanhoissa ja uusissa geometrioissa ei ole samat määrät asioita,
                      ;; niin voidaan olettaa että nyt geometriat ovat muuttuneet.
                      ;; Tällainen workaround piti tehdä, koska asian valitseminen muuttaa
                      ;; geometriat atomia, mutta silloin ei haluta triggeröidä zoomaamista.
                      ;; Myös jos :organisaatio karttatason tiedot ovat muuttuneet, tehdään zoomaus (urakka/hallintayksikkö muutos)
+
                      (when @tiedot/pida-geometriat-nakyvilla?
                        (when (or (not= (geometria-maarat vanha) (geometria-maarat uusi))
                                  (not= (:organisaatio vanha) (:organisaatio uusi)))
