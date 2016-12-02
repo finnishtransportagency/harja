@@ -26,7 +26,8 @@
             [harja.ui.openlayers.taso :as taso]
             [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
             [harja.ui.openlayers.edistymispalkki :as edistymispalkki]
-            [harja.tiedot.kartta :as tiedot])
+            [harja.tiedot.kartta :as tiedot]
+            [harja.ui.kartta.ikonit :as kartta-ikonit])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -473,6 +474,10 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
            :koordinaatti koordinaatti
            :haetaan? true
            :asiat [])
+    (tasot/nayta-geometria! :klikattu-karttapiste
+                            {:alue {:type :icon
+                                    :coordinates koordinaatti
+                                    :img (kartta-ikonit/sijainti-ikoni "syaani")}})
 
     (go
       (let [in-ch (async/merge
@@ -527,7 +532,11 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
 
 (defn kaynnista-asioiden-haku-pisteesta! [tasot event asiat-pisteessa]
   (hae-asiat-pisteessa tasot event asiat-pisteessa)
-  (reset! tiedot/nayta-infopaneeli? true))
+  (go
+    ;; PENDING: Tämä go olisi turha, jos tunnistetaan että vain klikattu-karttapiste
+    ;; neula on muuttunut. Infopaneeli piilotetaan kun tasot muuttuvat.
+
+    (reset! tiedot/nayta-infopaneeli? true)))
 
 (defn kartta-openlayers []
   (komp/luo
