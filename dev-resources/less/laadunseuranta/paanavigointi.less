@@ -32,7 +32,7 @@
   > header {
     position: relative;
     border: @sisaltolaatikoiden-reunaviiva;
-    background-color: @sisaltolaatikoiden-taustavari;
+    background-color: @harmaa13;
     padding-top: 3px;
 
     > .hampurilaisvalikko {
@@ -181,6 +181,8 @@
   list-style-type: none;
   padding: 0;
   margin: 0;
+  position: relative;
+  top: 1px;
 
   > .valilehti {
     box-sizing: border-box;
@@ -189,10 +191,10 @@
     margin-left: 5px;
     margin-right: 5px;
     display: inline-block;
-    color: @valilehden-teksti;
-    border: 1px solid black;
-    border-bottom: none;
-    background-color: @napin-taustavari;
+    color: @primaari-sininen;
+    border: 1px solid @primaari-sininen;
+    border-bottom: @sisaltolaatikoiden-reunaviiva;
+    background-color: @harmaa13;
 
     > .valilehti-havainnot {
       display: inline-block;
@@ -202,8 +204,10 @@
   }
 
   > .valilehti-valittu {
-    color: @valilehti-valittu-teksti;
-    background-color: @valilehti-valittu-taustavari;
+    color: @musta;
+    border: 1px solid @harmaa7;
+    border-bottom-color: transparent;
+    background-color: @sisaltolaatikoiden-taustavari;
   }
 }
 
