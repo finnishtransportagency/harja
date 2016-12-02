@@ -28,4 +28,4 @@
 (defrecord TietolajinKuvaus [tietolaji kuvaus])
 
 ;; Tallentaa uuden varustetoteuman
-(defrecord TallennaVarustetoteuma [data])
+(defrecord TallennaVarustetoteuma [])

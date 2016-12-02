@@ -156,9 +156,14 @@
     (if (= tietolaji (:tietolaji toteuma))
       (assoc-in app [:varustetoteuma :tietolajin-kuvaus] kuvaus)
       app))
+
   v/TallennaVarustetoteuma
-  (process-event [data]
-    (log "-----> DATA: " (pr-str data))))
+  (process-event [_ {toteuma :varustetoteuma :as a≤pp}]
+    (log "-----> arvot: " (pr-str (:arvot toteuma)))
+    (log "-----> sijainti: " (pr-str (:sijainti toteuma)))
+    (log "-----> lisatieto: " (pr-str (:lisatieto toteuma)))
+    (log "-----> tietolaji: " (pr-str (:tietolaji toteuma)))
+    ))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))

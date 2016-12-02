@@ -135,9 +135,8 @@
                 "Varustetoteuma")
      :muokkaa! #(e! (v/->AsetaToteumanTiedot %))
      :footer-fn (fn [data]
-                  (log "DATA: " (pr-str data))
                   [napit/tallenna "Tallenna"
-                   #(v/->TallennaVarustetoteuma %)
+                   #(e! (v/->TallennaVarustetoteuma))
                    {:disabled (not (lomake/voi-tallentaa? data))}])}
 
     [(lomake/ryhma
