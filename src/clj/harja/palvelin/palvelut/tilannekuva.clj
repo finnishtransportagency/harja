@@ -406,9 +406,21 @@
                                              :tyyppi-kartalla :tarkastus
                                              :sijainti (:reitti %))))))
 
-(defn- hae-tarkastuksien-asiat-kartalle [db user parametrit]
-  (log/info "PARAMETRIT: " (pr-str parametrit))
-  [])
+(defn- hae-tarkastuksien-asiat-kartalle [db user {x :x y :y parametrit "tk"}]
+  (into []
+        (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
+              (map #(konv/string->keyword % :tyyppi)))
+        (q/hae-tarkastusten-asiat db
+                                  (as-> parametrit p
+                                    (java.net.URLDecoder/decode parametrit)
+                                    (transit/lue-transit-string p)
+
+                                    (aikavalinta p)
+                                    (assoc p
+                                           :urakat (luettavat-urakat user p)
+                                           :tyypit (map name (haettavat (:tarkastukset p)))
+                                           :kayttaja_on_urakoitsija (roolit/urakoitsija? user)
+                                           :x x :y y :toleranssi 150)))))
 
 
 (defrecord Tilannekuva []
@@ -430,7 +442,7 @@
     (karttakuvat/rekisteroi-karttakuvan-lahde!
      karttakuvat :tilannekuva-tarkastukset
      (partial hae-tarkastukset-kartalle db)
-     (partial hae-tarkastuksien-asiat-kartalle db))
+     (partial #'hae-tarkastuksien-asiat-kartalle db))
     this)
 
   (stop [{karttakuvat :karttakuvat :as this}]

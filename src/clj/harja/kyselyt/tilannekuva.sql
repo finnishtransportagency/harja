@@ -119,6 +119,27 @@ WHERE sijainti IS NOT NULL AND
       t.tyyppi :: TEXT IN (:tyypit) AND
       (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
+-- name: hae-tarkastusten-asiat
+-- Hakee tarkastusten asiat pisteessä
+SELECT
+  t.aika,
+  t.tyyppi,
+  t.tarkastaja,
+  t.havainnot,
+  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+       THEN 'urakoitsija' :: osapuoli
+       ELSE 'tilaaja' :: osapuoli
+       END AS tekija
+FROM tarkastus t
+     JOIN kayttaja k ON t.luoja = k.id
+     JOIN organisaatio o ON o.id = k.organisaatio
+WHERE sijainti IS NOT NULL AND
+      (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
+      (t.aika BETWEEN :alku AND :loppu) AND
+      ST_Distance(t.sijainti, ST_MakePoint(:x, :y)) < :toleranssi AND
+      t.tyyppi :: TEXT IN (:tyypit) AND
+      (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
+
 -- name: hae-turvallisuuspoikkeamat
 SELECT
   t.id,
