@@ -128,7 +128,6 @@
                              (idb/add-object store kirjaus)))
 
 (defn merkinta-epaonnistui [virheen-tiedot]
-  (.log js/console "Epätarkka sijainti, tarkkuus: " (pr-str (:accuracy virheen-tiedot)))
   (ilmoitukset/ilmoita (:viesti virheen-tiedot)
                        s/ilmoitus
                        {:tyyppi :virhe}))
@@ -144,8 +143,9 @@
                           :havainnot (into #{} (remove nil? (conj @jatkuvat-havainnot havainto-avain)))
                           :mittaukset {}})
     (when epaonnistui-fn
-      (epaonnistui-fn {:viesti "Epätarkka sijainti, merkintää ei tehty!"
-                       :accuracy (:accuracy (:nykyinen @sijainti))}))))
+      (epaonnistui-fn {:viesti (str "Epätarkka sijainti ("
+                                    (:accuracy (:nykyinen @sijainti))
+                                    "m), merkintää ei tehty!")}))))
 
 (defn tallenna-sovelluksen-tilasta-merkinta-indexeddbn!
   "'Nauhoitusfunktio', joka lukee sovelluksen tilan ja muodostaa
@@ -174,8 +174,9 @@
                                                 :kiinteys (:kiinteys @soratiemittaussyotto)
                                                 :polyavyys (:polyavyys @soratiemittaussyotto)}))})
     (when epaonnistui-fn
-      (epaonnistui-fn {:viesti "Epätarkka sijainti, reittimerkintää ei tehty!"
-                       :accuracy (:accuracy (:nykyinen @sijainti))}))))
+      (epaonnistui-fn {:viesti (str "Epätarkka sijainti ("
+                                    (:accuracy (:nykyinen @sijainti))
+                                    "m), merkintää ei tehty!")}))))
 
 (defn- kaynnista-tarkastusajon-lokaali-tallennus [db tarkastusajo-atom]
   (let [ajo-id (cljs.core/atom nil)]
