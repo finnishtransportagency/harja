@@ -33,7 +33,8 @@
                           (.log js/console "Estetään näytön lukko")
                           (.play elementti)
                           (reset! video-paalla true)))]
-      (.addEventListener js/body.document "click" soita-video))))
+      ;; Soiton täytyy alkaa suoraan user eventistä
+      (.addEventListener js/document.body "click" #(soita-video video)))))
 
 (defn- esta-zoomaus []
   ;; "user-scaleable=no is disabled in Safari for iOS 10.
