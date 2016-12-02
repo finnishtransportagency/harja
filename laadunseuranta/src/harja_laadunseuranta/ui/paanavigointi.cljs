@@ -236,22 +236,18 @@
 
 (defn- paanavigointi-footer [{:keys [vapauta-kaikki-painettu havaintolomake-painettu
                                      paanavigointi-nakyvissa?] :as tiedot}]
-  (let [piilotusnappi-painettu! (fn []
-                                  (swap! paanavigointi-nakyvissa? not))]
-    [:footer
-     [:div.piilotusnappi {:on-click piilotusnappi-painettu!}
-      [:img {:src kuvat/+avausnuoli+}]]
-     [:div.footer-vasen
-      [nappi "Vapauta kaikki" {:on-click vapauta-kaikki-painettu
-                               :ikoni (ikonit/livicon-arrow-up)
-                               :luokat-str "nappi-toissijainen"}]]
-     [:div.footer-oikea
-      [nappi (if (< @dom/leveys +lyhenna-teksteja-leveydessa+)
-               "Lomake"
-               "Avaa lomake")
-       {:on-click havaintolomake-painettu
-        :ikoni (ikonit/livicon-pen)
-        :luokat-str "nappi-ensisijainen"}]]]))
+  [:footer
+   [:div.footer-vasen
+    [nappi "Vapauta kaikki" {:on-click vapauta-kaikki-painettu
+                             :ikoni (ikonit/livicon-arrow-up)
+                             :luokat-str "nappi-toissijainen"}]]
+   [:div.footer-oikea
+    [nappi (if (< @dom/leveys +lyhenna-teksteja-leveydessa+)
+             "Lomake"
+             "Avaa lomake")
+     {:on-click havaintolomake-painettu
+      :ikoni (ikonit/livicon-pen)
+      :luokat-str "nappi-ensisijainen"}]]])
 
 (defn- paanavigointikomponentti [{:keys [valilehdet paanavigointi-nakyvissa?
                                          hampurilaisvalikon-lista-nakyvissa?
@@ -259,9 +255,7 @@
                                          hampurilaisvalikon-lista-item-painettu
                                          valittu-valilehtiryhma valilehdet-nakyvissa?
                                          valittu-valilehti] :as tiedot}]
-  (let [nayttonappi-painettu! (fn []
-                                (swap! paanavigointi-nakyvissa? not))
-        togglaa-valilehtien-nakyvyys! (fn []
+  (let [togglaa-valilehtien-nakyvyys! (fn []
                                         (swap! valilehdet-nakyvissa? not))]
 
     (reset! valittu-valilehti (:avain (first valilehdet)))
@@ -289,8 +283,6 @@
                            (if @paanavigointi-nakyvissa?
                              "paanavigointi-container-nakyvissa"
                              "paanavigointi-container-piilossa"))}
-         [:div.nayttonappi {:on-click nayttonappi-painettu!}
-          [:img {:src kuvat/+avausnuoli+}]]
          [:div.navigointilaatikko-container
           [:div.navigointilaatikko
 

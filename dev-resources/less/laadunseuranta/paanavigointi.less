@@ -8,7 +8,7 @@
   left: 0;
   top: 0;
   display: flex;
-  overflow: hidden; // Piilotusnappi on viewportin ulkopuolella, ei saa aiheuttaa scrollausta
+  overflow: hidden;
   justify-content: space-between;
 }
 
@@ -139,26 +139,6 @@
     border: @sisaltolaatikoiden-reunaviiva;
     background-color: @sisaltolaatikoiden-taustavari;
 
-    > .piilotusnappi {
-      width: @piilotusnappi-koko;
-      height: (@piilotusnappi-koko / 2);
-      border: @sisaltolaatikoiden-reunaviiva;
-      border-radius: 90px 90px 0 0;
-      background-color: @piilotusnappi-taustavari;
-      position: absolute;
-      left: 50%;
-      bottom: 0;
-      transform: translateX(-50%);
-
-      > img {
-        width: 32px;
-        position: absolute;
-        top: 10px;
-        left: 50%;
-        transform: translateX(-50%) rotate(180deg);
-      }
-    }
-
     .footer-vasen {
       float: left;
     }
@@ -279,54 +259,20 @@
 
 // Piilotus ja näyttäminen
 
-@piilotusnappi-koko: 60px;
-@piilotusnappi-taustavari: #c1c1bd;
-
 .navigointilaatikko {
   transition: 0.2s top ease;
 }
 
-.paanavigointi-container > .nayttonappi {
-  width: @piilotusnappi-koko;
-  height: (@piilotusnappi-koko / 2);
-  border: @sisaltolaatikoiden-reunaviiva;
-  border-radius: 90px 90px 0 0;
-  background-color: @piilotusnappi-taustavari;
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-
-  > img {
-    width: 32px;
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-}
-
-.nayttonappi {
-  transition: 0.2s top linear;
-}
-
 .paanavigointi-container-nakyvissa {
-  & .nayttonappi {
-    bottom: (-@piilotusnappi-koko - 15px);
-  }
-
   & .navigointilaatikko {
     top: 0;
   }
 }
 
 .paanavigointi-container-piilossa {
-  & .nayttonappi {
-    bottom: 0;
-  }
 
   & .navigointilaatikko {
-    top: 2000px; // Mieluummin pitäisi olla 110%, jotta menisi aina piiloon korkeudesta riippumatta, mutta ei jostain syystä toimi iPad Safarilla
+    top: -2000px;
   }
 }
 

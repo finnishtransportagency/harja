@@ -1,7 +1,6 @@
 @ylapalkin-korkeus: 65px;
 @ylapalkin-korkeus-pienempi: 50px;
 @ylapalkin-ikonin-koko: 30px;
-@ylapalkin-ikonin-koko-pienempi: 25px;
 @ylapalkin-nappien-valinen-tyhja-tila: 8px;
 @ylapalkin-nappien-valinen-tyhja-tila-pienempi: 6px;
 @viiva-nappien-valissa: 1px solid rgb(40, 40, 40);
@@ -78,14 +77,23 @@
 }
 
 .ylapalkki-button {
+  box-sizing: border-box;
   border-left: @viiva-nappien-valissa;
   text-align: center;
   padding-left: @ylapalkin-nappien-valinen-tyhja-tila;
   padding-right: @ylapalkin-nappien-valinen-tyhja-tila;
-  box-sizing: border-box;
   color: white;
+  height: @ylapalkin-korkeus;
   font-size: @ylapalkin-ikonin-koko;
   line-height: @ylapalkin-korkeus;
+}
+
+.ylapalkki-button-nayta-paanavigointi {
+  width: 65px;
+}
+
+.ylapalkki-button-aktiivinen {
+  background-color: @harmaa3;
 }
 
 .ylapalkki .tr-osoite {
@@ -99,6 +107,7 @@
 }
 
 .ylapalkin-metatiedot {
+  padding-top: 8px;
   border-left: @viiva-nappien-valissa;
   top: 0;
   padding-left: @ylapalkin-nappien-valinen-tyhja-tila;
@@ -172,24 +181,31 @@
 */
 
 @media (max-width: 700px) {
-  .ylapalkki .logo {
-    // Jos selain ei tue <picture> elementtiä, näytetään aina default img
-    // Varmista aina, että näyttää hyvältä (esim. kommentoimalla <source> testiksi)
-    & img {
-      padding: 4px;
-      padding-top: 6px;
-      width: auto;
-      height: 36px;
-    }
+  .ylapalkki {
+    min-height: @ylapalkin-korkeus-pienempi;
 
-    & #testiharja {
-      top: 5px;
-      left: 8px;
+    & .logo {
+      // Jos selain ei tue <picture> elementtiä, näytetään aina default img
+      // Varmista aina, että näyttää hyvältä (esim. kommentoimalla <source> testiksi)
+      & img {
+        padding: 4px;
+        padding-top: 6px;
+        width: auto;
+        height: 36px;
+      }
+
+      & #testiharja {
+        top: 5px;
+        left: 8px;
+      }
     }
+  }
+  & .ylapalkin-metatiedot {
+    padding-top: 0;
   }
 
   .ylapalkki-button {
-    font-size: @ylapalkin-ikonin-koko-pienempi;
+    height: @ylapalkin-korkeus-pienempi;
     padding-left: @ylapalkin-nappien-valinen-tyhja-tila-pienempi;
     padding-right: @ylapalkin-nappien-valinen-tyhja-tila-pienempi;
     line-height: @ylapalkin-korkeus-pienempi;
@@ -202,7 +218,7 @@
 
   .kaynnistyspainike {
     width: 170px;
-    height: @ylapalkin-korkeus-pienempi;
+    height: (@ylapalkin-korkeus-pienempi + 2px);
     line-height: @ylapalkin-korkeus-pienempi;
 
     & .kaynnispainike-nuoli {
@@ -215,7 +231,6 @@
 @media (max-width: 570px) {
   .kaynnistyspainike {
     width: 50px;
-    height: @ylapalkin-korkeus-pienempi;
     line-height: @ylapalkin-korkeus-pienempi;
   }
 

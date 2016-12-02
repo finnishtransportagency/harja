@@ -38,7 +38,7 @@
         "Käynnistetään..."
         "Käynnistä tarkastus"))]])
 
-(defn- ylapalkkikomponentti [{:keys [ hoitoluokka soratiehoitoluokka
+(defn- ylapalkkikomponentti [{:keys [hoitoluokka soratiehoitoluokka
                                      tr-osoite tallennus-kaynnissa aloitetaan-tarkastusajo
                                      kaynnista-tarkastus-fn pysayta-tarkastusajo-fn
                                      disabloi-kaynnistys? valittu-urakka
@@ -48,6 +48,11 @@
                                      (utils/stg-ymparistossa?)) "testiharja")}
     [:div.ylapalkki-vasen
      [logo]
+     [:div {:class (str "ylapalkki-button ylapalkki-button-nayta-paanavigointi livicon-eye "
+                        (when (and @s/nayta-paanavigointi?
+                                   @s/piirra-paanavigointi?)
+                          "ylapalkki-button-aktiivinen"))
+            :on-click #(swap! s/nayta-paanavigointi? not)}]
      [:div.tr-osoite (formatoi-tr-osoite @tr-osoite)]
      [:div.ylapalkin-metatiedot
       [:div.ylapalkin-metatieto.soratiehoitoluokka (str "SHL: " (or @soratiehoitoluokka "-"))]
