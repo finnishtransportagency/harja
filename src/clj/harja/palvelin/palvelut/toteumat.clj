@@ -546,6 +546,10 @@
     (log/debug "Palautetaan " (count kasitellyt-toteumarivit) " varustetoteuma(a)")
     kasitellyt-toteumarivit))
 
+(defn tallenna-varustetoteuma [tierekisteri db user {:keys urakka-id}]
+  (oikeudet/vaadi-kirjoitusoikeus  oikeudet/urakat-toteumat-varusteet user urakka-id)
+  (log/debug "Tallennetaan uusi varustetoteuma"))
+
 (defn hae-kokonaishintaisen-toteuman-tiedot [db user urakka-id pvm toimenpidekoodi]
   (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
   (into []
@@ -601,6 +605,7 @@
   (start [{http :http-palvelin
            db :db
            karttakuvat :karttakuvat
+           tierekisteri :tierekisteri
            :as this}]
 
     (when karttakuvat
@@ -667,6 +672,9 @@
      :urakan-varustetoteumat
      (fn [user tiedot]
        (hae-urakan-varustetoteumat db user tiedot))
+     :tallenna-varustetoteuma
+     (fn [user tiedot]
+       (tallenna-varustetoteuma tierekisteri db user tiedot))
      :hae-toteuman-reitti-ja-tr-osoite
      (fn [user tiedot]
        (hae-toteuman-reitti-ja-tr-osoite db user tiedot)))

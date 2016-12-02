@@ -259,7 +259,7 @@
                    [:http-palvelin :db])
       :toteumat (component/using
                   (toteumat/->Toteumat)
-                  [:http-palvelin :db :karttakuvat])
+                  [:http-palvelin :db :karttakuvat :tierekisteri])
       :paallystys (component/using
                     (paallystys/->Paallystys)
                     [:http-palvelin :db])
