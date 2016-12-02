@@ -245,27 +245,6 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                            (when on-move
                              (on-move e (laske-kartan-alue ol3))))))
 
-(defn- hae-asiat-pisteessa [tasot koordinaatti asiat-pisteessa-atom]
-  (comment
-    ;; FIXME: poista ennen mergeä
-    (doseq [[key taso] tasot
-            :when taso]
-      (log "TASO: " (pr-str key) " => kuvataso? " (instance? kuvataso/Kuvataso taso)
-           " taso: " (pr-str taso))))
-  (swap! asiat-pisteessa-atom assoc
-         :koordinaatti koordinaatti
-         :haetaan? true
-         :asiat [])
-  (go
-    (let [in-ch (async/merge
-                 (map #(taso/hae-asiat-pisteessa % koordinaatti)
-                      (remove nil? (vals tasot))))]
-      (loop [asia (<! in-ch)]
-        (when asia
-          (swap! asiat-pisteessa-atom update :asiat conj asia)
-          (recur (<! in-ch))))
-      (swap! asiat-pisteessa-atom assoc :haetaan? false))))
-
 (defn- aseta-klik-kasittelija [this ol3 on-click on-select asiat-pisteessa-atom]
   (.on ol3 "singleclick"
        (fn [e]
