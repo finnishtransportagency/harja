@@ -29,7 +29,7 @@
   (let [video-paalla (atom false)]
     (let [video (.getElementById js/document "keep-alive-hack")
           soita-video (fn [elementti]
-                        (when-not @video-paalla
+                        (when (and (not @video-paalla) elementti)
                           (.log js/console "Estetään näytön lukko")
                           (.play elementti)
                           (reset! video-paalla true)))]
