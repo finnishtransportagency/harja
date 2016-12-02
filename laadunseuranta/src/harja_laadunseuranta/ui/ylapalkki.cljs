@@ -51,7 +51,9 @@
      [:div {:class (str "ylapalkki-button ylapalkki-button-nayta-paanavigointi livicon-eye "
                         (when (and @s/nayta-paanavigointi?
                                    @s/piirra-paanavigointi?)
-                          "ylapalkki-button-aktiivinen"))
+                          "ylapalkki-button-aktiivinen ")
+                        (when-not @s/tallennus-kaynnissa
+                          "ylapalkki-button-disabloitu "))
             :on-click #(swap! s/nayta-paanavigointi? not)}]
      [:div.tr-osoite (formatoi-tr-osoite @tr-osoite)]
      [:div.ylapalkin-metatiedot
