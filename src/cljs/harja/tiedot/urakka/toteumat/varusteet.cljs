@@ -162,13 +162,15 @@
       app))
 
   v/TallennaVarustetoteuma
-  (process-event [_ {{:keys [arvot sijainti lisatieto tietolaji] :as toteuma} :varustetoteuma :as app}]
+  (process-event [_ {{:keys [arvot sijainti lisatieto tietolaji toiminto] :as toteuma} :varustetoteuma :as app}]
     ;; Tietolajin arvoista pitää purkaa koodiarvot ominaisuuden kuvauksen seasta
     (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
           toteuma {:arvot arvot
                    :sijainti sijainti
                    :lisatieto lisatieto
-                   :tietolaji tietolaji}]
+                   :tietolaji tietolaji
+                   :toiminto toiminto
+                   :urakka-id @nav/valittu-urakka-id}]
       (tallenna-varustetoteuma toteuma))))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
