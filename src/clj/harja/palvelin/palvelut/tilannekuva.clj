@@ -374,7 +374,9 @@
                (throw t)))))
     ch))
 
-(defn- hae-toteumat-kartalle [db user parametrit]
+(defn- hae-toteumien-sijainnit-kartalle
+  "Hakee toteumien reitit karttakuvaan piirrettäväksi."
+  [db user parametrit]
   (hae-karttakuvan-tiedot db user parametrit hae-toteumien-reitit
                           (map #(assoc %
                                        :tyyppi :toteuma
@@ -382,7 +384,9 @@
                                        :tehtavat [(:tehtava %)]))))
 
 
-(defn- hae-toteumat-asiat-kartalle [db user {tk "tk" :as params}]
+(defn- hae-toteumien-tiedot-kartalle
+  "Hakee toteumien tiedot pisteessä infopaneelia varten."
+  [db user {tk "tk" :as params}]
   (konv/sarakkeet-vektoriin
    (into []
          (comp
@@ -398,7 +402,9 @@
                                   (merge p (select-keys params [:x :y])))))
    {:tehtava :tehtavat}))
 
-(defn- hae-tarkastukset-kartalle [db user parametrit]
+(defn- hae-tarkastuksien-sijainnit-kartalle
+  "Hakee tarkastuksien sijainnit karttakuvaan piirrettäväksi."
+  [db user parametrit]
   (hae-karttakuvan-tiedot db user parametrit hae-tarkastusten-reitit
                           (comp (map laadunseuranta/tarkastus-tiedolla-onko-ok)
                                 (map #(konv/string->keyword % :tyyppi :tekija))
@@ -406,7 +412,9 @@
                                              :tyyppi-kartalla :tarkastus
                                              :sijainti (:reitti %))))))
 
-(defn- hae-tarkastuksien-asiat-kartalle [db user {x :x y :y parametrit "tk"}]
+(defn- hae-tarkastuksien-tiedot-kartalle
+  "Hakee tarkastuksien tiedot pisteessä infopaneelia varten."
+  [db user {x :x y :y parametrit "tk"}]
   (into []
         (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
               (map #(konv/string->keyword % :tyyppi)))
@@ -437,12 +445,12 @@
                         (hae-urakat db user tiedot)))
     (karttakuvat/rekisteroi-karttakuvan-lahde!
       karttakuvat :tilannekuva-toteumat
-      (partial hae-toteumat-kartalle db)
-      (partial #'hae-toteumat-asiat-kartalle db))
+      (partial hae-toteumien-sijainnit-kartalle db)
+      (partial #'hae-toteumien-tiedot-kartalle db))
     (karttakuvat/rekisteroi-karttakuvan-lahde!
      karttakuvat :tilannekuva-tarkastukset
-     (partial hae-tarkastukset-kartalle db)
-     (partial #'hae-tarkastuksien-asiat-kartalle db))
+     (partial hae-tarkastuksien-sijainnit-kartalle db)
+     (partial #'hae-tarkastuksien-tiedot-kartalle db))
     this)
 
   (stop [{karttakuvat :karttakuvat :as this}]
