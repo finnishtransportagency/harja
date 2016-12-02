@@ -11,7 +11,8 @@
             [tuck.core :as t]
             [harja.tiedot.urakka.toteumat.varusteet.viestit :as v]
             [reagent.core :as r]
-            [harja.domain.tierekisteri.varusteet :as varusteet])
+            [harja.domain.tierekisteri.varusteet :as varusteet]
+            [harja.tyokalut.functor :as functor])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -91,6 +92,9 @@
 (defn- hae-tietolajin-kuvaus [tietolaji]
   (k/post! :hae-tietolajin-kuvaus tietolaji))
 
+(defn- tallenna-varustetoteuma [toteuma]
+  (k/post! :tallenna-varustetoteuma toteuma))
+
 (defn uusi-varuste
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
   []
@@ -158,11 +162,14 @@
       app))
 
   v/TallennaVarustetoteuma
-  (process-event [_ {toteuma :varustetoteuma :as app}]
-    (log "-----> arvot: " (pr-str (:arvot toteuma)))
-    (log "-----> sijainti: " (pr-str (:sijainti toteuma)))
-    (log "-----> lisatieto: " (pr-str (:lisatieto toteuma)))
-    (log "-----> tietolaji: " (pr-str (:tietolaji toteuma)))))
+  (process-event [_ {{:keys [arvot sijainti lisatieto tietolaji] :as toteuma} :varustetoteuma :as app}]
+    ;; Tietolajin arvoista pitää purkaa koodiarvot ominaisuuden kuvauksen seasta
+    (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
+          toteuma {:arvot arvot
+                   :sijainti sijainti
+                   :lisatieto lisatieto
+                   :tietolaji tietolaji}]
+      (tallenna-varustetoteuma toteuma))))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))
