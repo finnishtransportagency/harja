@@ -15,12 +15,7 @@
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
-            [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi]
-            [harja.palvelin.integraatiot.tierekisteri.tietolajin-kuvauksen-kasittely :as tr-tietolaji]
-            [clj-time.core :as t]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [clojure.string :as str]
-            [harja.geo :as geo])
+            [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (org.postgis GeometryCollection Geometry PGgeometry)))
 

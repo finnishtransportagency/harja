@@ -157,6 +157,7 @@
         :otsikko "Lisätietoja"
         :tyyppi :string})
 
+     ;; todo: tunniste pitäisi muodostaa automaattisesti HARJA nimiavaruudesta
      (apply lomake/ryhma "Varusteen ominaisuudet"
             (map varusteominaisuus->skeema
                  (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))))]

@@ -146,6 +146,7 @@
                    tiedot)
           uusi-toteuma (merge toteuma tiedot)]
       ;; Jos tietolajin kuvaus muuttui ja se ei ole tyhjä, haetaan uudet tiedot
+      ;; todo: vastauksen käsittelyyn (k/virhe)
       (when (and tietolaji-muuttui? (:tietolaji tiedot))
         (let [tulos! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
           (go
