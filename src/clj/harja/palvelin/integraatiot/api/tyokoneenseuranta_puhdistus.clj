@@ -18,8 +18,8 @@
     (assoc this
            ::poista-ajastus
            (ajastettu-tehtava/ajasta-minuutin-valein
-            15
-            (partial poista-vanhat-tyokonesijainnit (:db this)))))
+             15
+             #(poista-vanhat-tyokonesijainnit (:db this)))))
 
   (stop [this]
     ((::poista-ajastus this))
