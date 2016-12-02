@@ -183,6 +183,7 @@
                                                    @tallennus-kaynnissa
                                                    (not @tarkastusajo-paattymassa)
                                                    (not @havaintolomake-auki)))))
+
 (def nayta-paanavigointi? (reagent/cursor sovellus [:ui :paanavigointi :nakyvissa?]))
 (def nayta-paanavigointi-valilehdet? (reagent/cursor sovellus [:ui :paanavigointi :valilehdet-nakyvissa?]))
 (def paanavigoinnin-valilehtiryhmat (reagent/cursor sovellus [:ui :paanavigointi :valilehtiryhmat]))

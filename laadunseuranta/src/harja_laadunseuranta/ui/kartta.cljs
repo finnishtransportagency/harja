@@ -274,30 +274,33 @@
   (reagent/create-class {:reagent-render kartta-render
                          :component-did-mount
                          #(kartta-did-mount
-                           %
-                           wmts-url
-                           wmts-url-kiinteistorajat
-                           wmts-url-ortokuva
-                           sijainti-atomi
-                           ajoneuvon-sijainti-atomi
-                           reittipisteet-atomi
-                           kirjauspisteet-atomi
-                           optiot)}))
+                            %
+                            wmts-url
+                            wmts-url-kiinteistorajat
+                            wmts-url-ortokuva
+                            sijainti-atomi
+                            ajoneuvon-sijainti-atomi
+                            reittipisteet-atomi
+                            kirjauspisteet-atomi
+                            optiot)}))
 
 (defn kartta []
   [:div
    [karttakomponentti
-   {:wmts-url asetukset/+wmts-url+
-    :wmts-url-kiinteistorajat asetukset/+wmts-url-kiinteistojaotus+
-    :wmts-url-ortokuva asetukset/+wmts-url-ortokuva+
-    :sijainti-atomi s/kartan-keskipiste
-    :ajoneuvon-sijainti-atomi s/ajoneuvon-sijainti
-    :reittipisteet-atomi s/reittipisteet
-    :kirjauspisteet-atomi s/kirjauspisteet
-    :optiot s/karttaoptiot}]
-   ;; Klikkaukset ei mene, jos z-indeksiä ei nosta
-   [:div.kartan-kontrollit (when-not @s/nayta-paanavigointi?
-                             {:style {:z-index 10000}})
+    {:wmts-url asetukset/+wmts-url+
+     :wmts-url-kiinteistorajat asetukset/+wmts-url-kiinteistojaotus+
+     :wmts-url-ortokuva asetukset/+wmts-url-ortokuva+
+     :sijainti-atomi s/kartan-keskipiste
+     :ajoneuvon-sijainti-atomi s/ajoneuvon-sijainti
+     :reittipisteet-atomi s/reittipisteet
+     :kirjauspisteet-atomi s/kirjauspisteet
+     :optiot s/karttaoptiot}]
+   [:div.kartan-kontrollit {:style (merge
+                                     (when-not @s/nayta-paanavigointi?
+                                       ;; Halutaan ottaa klikit vastaan
+                                       {:z-index 10000})
+                                     (when @s/havaintolomake-auki
+                                       {:display "none"}))}
     [:div#karttakontrollit]
     [:div.kontrollinappi.ortokuva.livicon-eye {:on-click #(swap! s/nayta-ortokuva not)}]
     [:div.kontrollinappi.kiinteistorajat.livicon-home {:on-click #(swap! s/nayta-kiinteistorajat not)}]
