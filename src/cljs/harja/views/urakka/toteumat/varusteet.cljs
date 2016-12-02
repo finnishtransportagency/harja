@@ -161,9 +161,7 @@
      (apply lomake/ryhma "Varusteen ominaisuudet"
             (map varusteominaisuus->skeema
                  (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))))]
-    varustetoteuma]
-   [:span (pr-str (distinct (map (comp :tietotyyppi :ominaisuus) (:ominaisuudet (:tietolajin-kuvaus varustetoteuma)))))]
-   [debug (:tietolajin-kuvaus varustetoteuma)]])
+    varustetoteuma]])
 
 (defn- varusteet* [e! varusteet]
   (e! (v/->YhdistaValinnat @varustetiedot/valinnat))
