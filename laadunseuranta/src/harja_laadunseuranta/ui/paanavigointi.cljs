@@ -208,7 +208,7 @@
                            :on-click #(valitse-valilehti! avain)}
                       [:span.valilehti-nimi (:nimi valilehti)]
                       [:span.valilehti-havainnot (when-not (empty? valilehden-jatkuvat-havainnot)
-                                                   (str "(" (count valilehden-jatkuvat-havainnot) ")"))]])))])]))})))
+                                                   (count valilehden-jatkuvat-havainnot))]])))])]))})))
 
 (defn- paanavigointi-sisalto [{:keys [valilehdet kirjaa-pistemainen-havainto-fn
                                       kirjaa-valikohtainen-havainto-fn valittu-valilehti
