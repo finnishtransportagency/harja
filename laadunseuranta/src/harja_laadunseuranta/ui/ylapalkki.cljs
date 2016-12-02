@@ -50,10 +50,6 @@
      [logo]
      [:div.tr-osoite (formatoi-tr-osoite @tr-osoite)]
      [:div.ylapalkin-metatiedot
-      [:div.ylapalkin-metatieto.urakkanimi {:on-click #(println "TODO: tästäkin vaihtuu urakka")}
-       (if @valittu-urakka
-         (utils/lyhennetty-urakan-nimi (:nimi @valittu-urakka))
-         "")]
       [:div.ylapalkin-metatieto.soratiehoitoluokka (str "SHL: " (or @soratiehoitoluokka "-"))]
       [:div.ylapalkin-metatieto.talvihoitoluokka (str "THL: " (or @hoitoluokka "-"))]]]
     [:div.ylapalkki-oikea
