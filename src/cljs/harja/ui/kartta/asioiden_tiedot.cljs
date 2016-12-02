@@ -1,4 +1,4 @@
-(ns harja.ui.kartta.asioiden-tiedot
+(ns harja.ui.kartta.infopaneelin-sisalto
   "Määrittelee erilaisten kartalle piirrettävien asioiden tiedot, jotka tulevat kartta
   overlay näkymään."
   (:require [clojure.string :as string]
@@ -10,9 +10,9 @@
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]))
 
-(defmulti kenttaskeema :tyyppi-kartalla)
+(defmulti infopaneeli-skeema :tyyppi-kartalla)
 
-(defmethod kenttaskeema :tyokone [tyokone]
+(defmethod infopaneeli-skeema :tyokone [tyokone]
   {:tyyppi :tyokone
    :otsikko "Työkone"
    :tiedot [{:otsikko "Työ aloitettu" :tyyppi :pvm-aika :nimi :alkanut}
@@ -24,7 +24,7 @@
              :hae #(string/join ", " (:tehtavat %))}]
    :data tyokone})
 
-(defmethod kenttaskeema :ilmoitus [ilmoitus]
+(defmethod infopaneeli-skeema :ilmoitus [ilmoitus]
   {:tyyppi :ilmoitus
    :otsikko (condp = (:ilmoitustyyppi ilmoitus)
               :toimenpidepyynto "Toimenpidepyyntö"
@@ -40,7 +40,7 @@
              :hae #(count (:kuittaukset ilmoitus))}]
    :data ilmoitus})
 
-(defmethod kenttaskeema :varustetoteuma [toteuma]
+(defmethod infopaneeli-skeema :varustetoteuma [toteuma]
   {:tyyppi :varustetoteuma
    :otsikko "Varustetoteuma"
    :tiedot [{:otsikko "Päivämäärä" :tyyppi :pvm :nimi :alkupvm}
@@ -51,7 +51,7 @@
             {:otsikko "Avaa varustekortti" :tyyppi :linkki :nimi :varustekortti-url}]
    :data toteuma})
 
-(defmethod kenttaskeema :paikkaus [paikkaus]
+(defmethod infopaneeli-skeema :paikkaus [paikkaus]
   (let [aloitus :aloituspvm
         paikkaus-valmis :paikkausvalmispvm
         kohde-valmis :kohdevalmispvm]
@@ -73,7 +73,7 @@
                 {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika :nimi kohde-valmis})]
      :data paikkaus}))
 
-(defmethod kenttaskeema :paallystys [paallystys]
+(defmethod infopaneeli-skeema :paallystys [paallystys]
   (let [aloitus :aloituspvm
         paallystys-valmis :paallystysvalmispvm
         kohde-valmis :kohdevalmispvm]
@@ -96,7 +96,7 @@
                 {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika :nimi kohde-valmis})]
      :data paallystys}))
 
-(defmethod kenttaskeema :turvallisuspoikkeama [turpo]
+(defmethod infopaneeli-skeema :turvallisuspoikkeama [turpo]
   (let [tapahtunut :tapahtunut
         paattynyt :paattynyt
         kasitelty :kasitelty]
@@ -118,7 +118,7 @@
                            (count (:korjaavattoimenpiteet %)))}]
      :data    turpo}))
 
-(defmethod kenttaskeema :tarkastus [tarkastus]
+(defmethod infopaneeli-skeema :tarkastus [tarkastus]
   (let [havainnot-fn #(cond
                         (and (:havainnot %) (not-empty (:vakiohavainnot %)))
                         (str (:havainnot %) " & " (string/join ", " (:vakiohavainnot %)))
@@ -137,7 +137,7 @@
                {:otsikko "Havainnot" :hae havainnot-fn}]
      :data    tarkastus}))
 
-(defmethod kenttaskeema :laatupoikkeama [laatupoikkeama]
+(defmethod infopaneeli-skeema :laatupoikkeama [laatupoikkeama]
   (let [paatos #(get-in % [:paatos :paatos])
         kasittelyaika #(get-in % [:paatos :kasittelyaika])]
     {:tyyppi  :laatupoikkeama
@@ -150,7 +150,7 @@
                                  " (" (pvm/pvm-aika (kasittelyaika %)) ")")})]
      :data    laatupoikkeama}))
 
-(defmethod kenttaskeema :suljettu-tieosuus [osuus]
+(defmethod infopaneeli-skeema :suljettu-tieosuus [osuus]
   {:tyyppi :suljettu-tieosuus
    :otsikko "Suljettu tieosuus"
    :tiedot [{:otsikko "Ylläpitokohde" :hae #(str (:yllapitokohteen-nimi %) " (" (:yllapitokohteen-numero %) ")")}
@@ -160,7 +160,7 @@
             {:otsikko "Ajoradat" :hae #(string/join ", " (map str (:ajoradat %)))}]
    :data osuus})
 
-(defmethod kenttaskeema :toteuma [toteuma]
+(defmethod infopaneeli-skeema :toteuma [toteuma]
   {:tyyppi :toteuma
    :otsikko "Toteuma"
    :tiedot [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
@@ -198,4 +198,4 @@
   (map validoi-tieto tiedot))
 
 (defn skeemamuodossa [asiat]
-  (validoi-tiedot (map kenttaskeema asiat)))
+  (validoi-tiedot (map infopaneeli-skeema asiat)))
