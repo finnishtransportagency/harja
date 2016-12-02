@@ -105,11 +105,9 @@
         tarkastukset/tarkastustyyppi]
 
        [tee-otsikollinen-kentta "Näytä"
-        {:tyyppi :valinta :valinnat [false true]
-         :valinta-nayta {false "Kaikki tarkastukset"
-                         true "Vain laadunalitukset"}}
-        tarkastukset/vain-laadunalitukset?]
-
+        {:tyyppi :valinta :valinnat tarkastukset/+naytettevat-tarkastukset-valinnat+
+         :valinta-nayta second}
+        tarkastukset/naytettavat-tarkastukset]
        [valinnat/tienumero tarkastukset/tienumero]
 
        (let [oikeus? (oikeudet/voi-kirjoittaa?
