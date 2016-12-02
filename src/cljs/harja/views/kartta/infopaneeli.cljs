@@ -9,7 +9,7 @@
             [harja.ui.napit :as napit]
             [harja.ui.debug :refer [debug]]
             [harja.ui.kentat :as kentat]
-            [harja.ui.kartta.asioiden-tiedot :as asioiden-tiedot]
+            [harja.ui.kartta.infopaneelin-sisalto :as infopaneelin-sisalto]
             [harja.ui.ikonit :as ikonit])
   (:require-macros
    [cljs.core.async.macros :as async-macros]))
@@ -55,7 +55,7 @@
 
 (defn infopaneeli [asiat-pisteessa piilota-fn! linkkifunktiot]
   (let [{:keys [asiat haetaan? koordinaatti]} asiat-pisteessa
-        asiat (asioiden-tiedot/skeemamuodossa asiat)
+        asiat (infopaneelin-sisalto/skeemamuodossa asiat)
         vain-yksi-asia? (-> asiat count (= 1))
         useampi-asia? (not vain-yksi-asia?)
         esita-yksityiskohdat? (or @valittu-asia vain-yksi-asia?)
