@@ -39,9 +39,11 @@
 
 ;; Tapahtumien käsittely
 
-(defn hae-toteumat [{:keys [urakka] :as hakuparametrit}]
+(defn hae-toteumat [{:keys [urakka alkupvm loppupvm] :as hakuparametrit}]
   (let [tulos! (t/send-async! ->ToteumatHaettu)]
-    (go (let [tyot (<! (k/post! :hae-yllapito-toteumat {:urakka urakka}))]
+    (go (let [tyot (<! (k/post! :hae-yllapito-toteumat {:urakka urakka
+                                                        :alkupvm alkupvm
+                                                        :loppupvm loppupvm}))]
           (when-not (k/virhe? tyot)
             (tulos! tyot))))))
 
@@ -77,7 +79,9 @@
 
   YhdistaValinnat
   (process-event [{:keys [valinnat] :as e} tila]
-    (hae-toteumat {:urakka (:urakka valinnat)})
+    (hae-toteumat {:urakka (:urakka valinnat)
+                   :alkupvm (first (:sopimuskausi valinnat))
+                   :loppupvm (second (:sopimuskausi valinnat))})
     (hae-laskentakohteet {:urakka (:urakka valinnat)})
     (update-in tila [:valinnat] merge valinnat))
 

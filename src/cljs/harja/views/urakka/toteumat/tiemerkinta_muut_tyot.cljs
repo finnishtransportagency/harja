@@ -40,6 +40,7 @@
 (defn muu-tyo-lomake [e! tila {:keys [valittu-urakka] :as riippuvuudet}]
   (let [vanha-toteuma? (get-in tila [:valittu-toteuma :id])
         muokkausoikeus? true] ;; TODO OIKEISTARKISTUS
+    (log "muu työ" (pr-str (:valittu-toteuma tila)))
     [:div
      [napit/takaisin "Takaisin toteumaluetteloon"
       #(e! (tiedot/->ValitseToteuma nil))]
@@ -60,7 +61,8 @@
 
       [{:otsikko "Päivämäärä" :nimi :paivamaara :tyyppi :pvm :pakollinen? true}
        {:otsikko "Hinta" :nimi :hinta :tyyppi :positiivinen-numero :pakollinen? true}
-       {:otsikko "Ylläpitoluokka" :nimi :yllapitoluokka :tyyppi :positiivinen-numero}
+       {:otsikko "Ylläpitoluokka" :nimi :yllapitoluokka :tyyppi :positiivinen-numero
+        :huomauta [[:yllapitoluokka]]}
        {:otsikko "Laskentakohde"
         :nimi :laskentakohde
         :placeholder "Hae ja valitse laskentakohde"

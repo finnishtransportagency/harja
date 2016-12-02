@@ -148,6 +148,10 @@
             (nil? (avain rivi)))
     viesti))
 
+(defmethod validoi-saanto :yllapitoluokka [_ _ data rivi _ _ & [viesti]]
+  (when-not (<= 1 data 3)
+    (or viesti "Anna ylläpitoluokka välillä 1 \u2014 3")))
+
 (defmethod validoi-saanto :lampotila [_ _ data rivi _ _ & [viesti]]
   (when-not (<= -55 data 55)
     (or viesti "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")))
