@@ -26,7 +26,6 @@
   align-self: center;
   width: 100%;
   max-height: 100%;
-  position: relative; // Jotta piilotus toimii
 
   > header {
     position: relative;
@@ -259,21 +258,16 @@
 
 // Piilotus ja näyttäminen
 
-.navigointilaatikko {
+.paanavigointi-container {
   transition: 0.2s top ease;
 }
 
 .paanavigointi-container-nakyvissa {
-  & .navigointilaatikko {
-    top: 0;
-  }
+  top: 0;
 }
 
 .paanavigointi-container-piilossa {
-
-  & .navigointilaatikko {
-    top: -2000px;
-  }
+  top: -2000px;
 }
 
 // Responsiivisuus
