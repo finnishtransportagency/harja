@@ -137,7 +137,7 @@
   (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti)
                                            +suurin-sallittu-tarkkuus+)
     (do (kirjaa-kertakirjaus idxdb
-                             {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon])
+                             {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
                               :aikaleima (tc/to-long (lt/local-now))
                               :tarkastusajo @tarkastusajo-id
                               :havainnot (into #{} (remove nil? (conj @jatkuvat-havainnot havainto-avain)))
@@ -156,7 +156,7 @@
                                            +suurin-sallittu-tarkkuus+)
     (do (kirjaa-kertakirjaus
           idxdb
-          {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon])
+          {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
            :aikaleima (tc/to-long (lt/local-now))
            :tarkastusajo @tarkastusajo-id
            :havainnot @jatkuvat-havainnot
