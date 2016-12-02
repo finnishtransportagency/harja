@@ -1,16 +1,20 @@
+@napin-leveys: 60px;
+
 .kartan-kontrollit {
   position: absolute;
   left: 0;
-  bottom: 0;
+  top: 0;
   background-color: @musta;
   font-size: 2em;
+  width: @napin-leveys;
 
   > .kontrollinappi {
-    display: inline-block;
+    width: @napin-leveys;
+    height: @napin-leveys;
+    display: block;
     border-left: @viiva-nappien-valissa;
+    background-color: @harmaa2;
     text-align: center;
-    padding-left: @ylapalkin-nappien-valinen-tyhja-tila;
-    padding-right: @ylapalkin-nappien-valinen-tyhja-tila;
     box-sizing: border-box;
     color: white;
     padding: 10px;
@@ -21,11 +25,16 @@
   }
 
   .ol-zoom {
-    height: 30px;
+    width: @napin-leveys;
+    height: @napin-leveys;
+    display: block;
   }
 
   .ol-zoom button {
-    height: 30px;
+    display: block;
+    width: @napin-leveys;
+    height: @napin-leveys;
     font-size: 1.5em;
+    background-color: @harmaa2;
   }
 }

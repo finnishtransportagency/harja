@@ -23,7 +23,7 @@
     display: flex;
     justify-content: space-between;
     min-height: @ylapalkin-korkeus;
-    background-color: rgb(19,19,20);
+    background-color: @harmaa1;
     z-index: @z-index-ylapalkki;
 }
 
@@ -160,6 +160,16 @@
     max-height: 40px;
     z-index: @z-index-palvelinvirhe;
 }
+
+/*
+.ylapalkki.testiharja {
+    background: red;
+
+    & .ol-zoom-in, .ol-zoom-out {
+        background: red;
+    }
+}
+*/
 
 @media (max-width: 700px) {
     .ylapalkki .logo {
