@@ -48,7 +48,7 @@
 (defn tyhjennyspainike-painettu! [mittaustyyppi syotto-atom]
   (alusta-mittaussyotto! mittaustyyppi syotto-atom))
 
-(defn syotto-valmis! [mittaustyyppi syotto-atom]
+(defn syotto-onnistui! [mittaustyyppi syotto-atom]
   (swap! syotto-atom assoc :syotot (conj (:syotot @syotto-atom) (:nykyinen-syotto @syotto-atom)))
   (swap! syotto-atom assoc :nykyinen-syotto (mittaustyyppi mittaustyypin-lahtoarvo))
   (.log js/console "Syötöt nyt: " (pr-str (:syotot @syotto-atom))))
@@ -77,32 +77,11 @@
 
 ;; Arvojen kirjaaminen
 
-(defn kirjaa-kitkamittaus! [arvo]
-  (.log js/console "Kirjataan uusi kitkamittaus: " (pr-str arvo))
-  (reitintallennus/kirjaa-kertakirjaus
-    @s/idxdb
-    {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
-     :aikaleima (tc/to-long (lt/local-now))
-     :tarkastusajo @s/tarkastusajo-id
-     :havainnot @s/jatkuvat-havainnot
-     :mittaukset {:kitkamittaus arvo}}))
-
-(defn kirjaa-lumisuus! [arvo]
-  (.log js/console "Kirjataan uusi lumisuus: " (pr-str arvo))
-  (reitintallennus/kirjaa-kertakirjaus
-    @s/idxdb
-    {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
-     :aikaleima (tc/to-long (lt/local-now))
-     :tarkastusajo @s/tarkastusajo-id
-     :havainnot @s/jatkuvat-havainnot
-     :mittaukset {:lumisuus arvo}}))
-
-(defn kirjaa-talvihoito-tasaisuus! [arvo]
-  (.log js/console "Kirjataan uusi talvihoidon tasaisuus: " (pr-str arvo))
-  (reitintallennus/kirjaa-kertakirjaus
-    @s/idxdb
-    {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
-     :aikaleima (tc/to-long (lt/local-now))
-     :tarkastusajo @s/tarkastusajo-id
-     :havainnot @s/jatkuvat-havainnot
-     :mittaukset {:talvihoito-tasaisuus arvo}}))
+(defn kirjaa-mittaus! [arvo]
+  (reitintallennus/kirjaa-mittausarvo! {:idxdb @s/idxdb
+                                        :sijainti s/sijainti
+                                        :tarkastusajo-id s/tarkastusajo-id
+                                        :jatkuvat-havainnot s/jatkuvat-havainnot
+                                        :mittaustyyppi s/mittaustyyppi
+                                        :mittausarvo arvo
+                                        :epaonnistui-fn reitintallennus/merkinta-epaonnistui}))
