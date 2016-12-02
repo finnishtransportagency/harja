@@ -73,7 +73,7 @@
     & .selaa-valilehtiryhmia {
       position: absolute;
       width: 32px;
-      height: 32px;
+      height: @valilehden-korkeus;
       border: 1px solid @musta;
       background-color: @harmaa7;
 
@@ -339,22 +339,26 @@
 @media (max-width: 700px) {
   .navigointilaatikko {
     font-size: @navigointilaatikon-fonttikoko-pienempi;
-  }
 
-  .toggle-valintapainike {
-    width: @toggle-valintapainike-leveys-pienempi;
-
-    > .toggle-valintapainike-ikoni {
-      width: 100%;
-      height: @toggle-valintapainike-leveys-pienempi;
+    & .selaa-valilehtiryhmia {
+      height: @valilehden-korkeus-pienempi;
     }
-  }
 
-  & .valilehtilista {
-    height: @valilehden-korkeus-pienempi;
+    .toggle-valintapainike {
+      width: @toggle-valintapainike-leveys-pienempi;
 
-    > .valilehti {
-      padding: 5px;
+      > .toggle-valintapainike-ikoni {
+        width: 100%;
+        height: @toggle-valintapainike-leveys-pienempi;
+      }
+    }
+
+    & .valilehtilista {
+      height: @valilehden-korkeus-pienempi;
+
+      > .valilehti {
+        padding: 5px;
+      }
     }
   }
 }
