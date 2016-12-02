@@ -5,10 +5,8 @@
             [harja-laadunseuranta.tiedot.fmt :as fmt]
             [harja-laadunseuranta.tiedot.nappaimisto
              :refer [numeronappain-painettu!
-                     tyhjennyspainike-painettu! syotto-valmis!
-                     kirjaa-kitkamittaus! kirjaa-lumisuus!
-                     kirjaa-talvihoito-tasaisuus!
-                     syoton-rajat syotto-validi?
+                     tyhjennyspainike-painettu! syotto-onnistui!
+                     kirjaa-mittaus! syoton-rajat syotto-validi?
                      soratienappaimiston-numeronappain-painettu!]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [harja-laadunseuranta.ui.napit :refer [nappi]]
@@ -154,7 +152,7 @@
           :on-click #(numeronappain-painettu 1 :polyavyys syotto-atom)} "1"]]])))
 
 (defn- numeronappaimisto [{:keys [syotto-atom kirjaa-arvo mittaustyyppi
-                                  numeronappain-painettu syotto-validi? syotto-valmis]
+                                  numeronappain-painettu syotto-validi? syotto-onnistui]
                            :as tiedot}]
   ;; NOTE Oikeaoppisesti nappien kuuluisi olla <button> elementtejä, mutta jostain
   ;; syystä iPadin safari piirtää tällöin vain kaksi nappia samalle riville.
@@ -215,8 +213,8 @@
                       "nappaimiston-painike-disabloitu"))
         :id "nappaimiston-painike-ok"
         :on-click #(when syotto-validi?
-                     (kirjaa-arvo (fmt/string->numero (:nykyinen-syotto @syotto-atom)))
-                     (syotto-valmis mittaustyyppi syotto-atom))}
+                     (when (kirjaa-arvo (fmt/string->numero (:nykyinen-syotto @syotto-atom)))
+                       (syotto-onnistui mittaustyyppi syotto-atom)))}
        [:span.livicon-check]]]]))
 
 (defn- nappaimistokomponentti [{:keys [mittaustyyppi] :as tiedot}]
@@ -256,11 +254,8 @@
              :mittausyksikko mittausyksikko
              :numeronappain-painettu numeronappain-painettu!
              :syotto-validi? syotto-validi?
-             :syotto-valmis syotto-valmis!
-             :kirjaa-arvo (case mittaustyyppi
-                            :kitkamittaus kirjaa-kitkamittaus!
-                            :lumisuus kirjaa-lumisuus!
-                            :talvihoito-tasaisuus kirjaa-talvihoito-tasaisuus!)}])]]])))
+             :syotto-onnistui syotto-onnistui!
+             :kirjaa-arvo kirjaa-mittaus!}])]]])))
 
 (defn nappaimisto [havainto]
   [nappaimistokomponentti
