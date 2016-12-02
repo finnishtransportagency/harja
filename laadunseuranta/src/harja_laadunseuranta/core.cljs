@@ -24,7 +24,7 @@
   (reagent/render-component [main/main] (.getElementById js/document "app")))
 
 (defn- esta-mobiililaitteen-nayton-lukitus []
-  ;; PENDING Dirty hack
+  ;; PENDING Dirty hack, joka toimii vain Android-laitteissa
   ;; Kannattaa pitää silmällä Wake Lock APIa: http://boiler23.github.io/screen-wake/
   (let [video-paalla (atom false)]
     (let [video (.getElementById js/document "keep-alive-hack")
