@@ -158,12 +158,11 @@
       app))
 
   v/TallennaVarustetoteuma
-  (process-event [_ {toteuma :varustetoteuma :as a≤pp}]
+  (process-event [_ {toteuma :varustetoteuma :as app}]
     (log "-----> arvot: " (pr-str (:arvot toteuma)))
     (log "-----> sijainti: " (pr-str (:sijainti toteuma)))
     (log "-----> lisatieto: " (pr-str (:lisatieto toteuma)))
-    (log "-----> tietolaji: " (pr-str (:tietolaji toteuma)))
-    ))
+    (log "-----> tietolaji: " (pr-str (:tietolaji toteuma)))))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))
