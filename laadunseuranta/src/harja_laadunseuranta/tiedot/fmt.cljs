@@ -8,7 +8,7 @@
   (js/parseFloat (str/replace arvo "," ".")))
 
 (defn n-desimaalia [arvo n]
-  (string->numero (.toFixed arvo 2)))
+  (string->numero (.toFixed arvo n)))
 
 (def pvm-fmt (time-fmt/formatter "dd.MM.yyyy"))
 (def klo-fmt (time-fmt/formatter "HH:mm"))

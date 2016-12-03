@@ -9,7 +9,8 @@
             [cljs-time.coerce :as tc]
             [cljs-time.local :as lt]
             [harja-laadunseuranta.tiedot.sovellus :as s]
-            [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset])
+            [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset]
+            [harja-laadunseuranta.tiedot.fmt :as fmt])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [reagent.ratom :refer [run!]]
                    [harja-laadunseuranta.macros :refer [with-delay-loop after-delay]]
@@ -145,7 +146,7 @@
         true)
     (when epaonnistui-fn
       (epaonnistui-fn {:viesti (str "Epätarkka sijainti ("
-                                    (:accuracy (:nykyinen @sijainti))
+                                    (fmt/n-desimaalia (:accuracy (:nykyinen @sijainti)) 0)
                                     "m), merkintää ei tehty!")})
       false)))
 
@@ -164,7 +165,7 @@
         true)
     (when epaonnistui-fn
       (epaonnistui-fn {:viesti (str "Epätarkka sijainti ("
-                                    (:accuracy (:nykyinen @sijainti))
+                                    (fmt/n-desimaalia (:accuracy (:nykyinen @sijainti)) 0)
                                     "m), arvoa ei kirjattu!")})
       false)))
 
@@ -197,7 +198,7 @@
         true)
     (when epaonnistui-fn
       (epaonnistui-fn {:viesti (str "Epätarkka sijainti ("
-                                    (:accuracy (:nykyinen @sijainti))
+                                    (fmt/n-desimaalia (:accuracy (:nykyinen @sijainti)) 0)
                                     "m), merkintää ei tehty!")})
       false)))
 
