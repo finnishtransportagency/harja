@@ -21,19 +21,17 @@
 
 (defn tallenna-lomake! []
   (.log js/console "Tallenna lomake!")
-  (reitintallennus/kirjaa-kertakirjaus
-    @s/idxdb
-    {:sijainti (select-keys (:nykyinen @s/sijainti) [:lat :lon])
-     :aikaleima (tc/to-long (lt/local-now))
-     :tarkastusajo @s/tarkastusajo-id
-     :havainnot (into #{} (remove nil? (conj @s/jatkuvat-havainnot :yleishavainto)))
-     :mittaukset {}
-     :kuvaus (:kuvaus @s/havaintolomakedata)
-     :laadunalitus (:laadunalitus? @s/havaintolomakedata)
-     :kuva (:kuva @s/havaintolomakedata)})
-  (kartta/lisaa-kirjausikoni "!")
-  (tyhjenna-lomake!)
-  (sulje-lomake!))
+  (when (reitintallennus/kirjaa-lomake!
+          {:idxdb @s/idxdb
+           :sijainti s/sijainti
+           :tarkastusajo-id s/tarkastusajo-id
+           :havainnot s/jatkuvat-havainnot
+           :kuvaus (:kuvaus @s/havaintolomakedata)
+           :laadunalitus (:laadunalitus? @s/havaintolomakedata)
+           :kuva (:kuva @s/havaintolomakedata)})
+    (kartta/lisaa-kirjausikoni "!")
+    (tyhjenna-lomake!)
+    (sulje-lomake!)))
 
 (defn alusta-uusi-lomake! []
   (tyhjenna-lomake!)

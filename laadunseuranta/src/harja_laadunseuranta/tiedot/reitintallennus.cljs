@@ -124,7 +124,11 @@
   (with-transaction-to-store db asetukset/+tarkastusajo-store+ :readwrite store
                              (idb/delete-object store tarkastusajo-id)))
 
-(defn- kirjaa-kertakirjaus [db kirjaus]
+(defn- kirjaa-kertakirjaus
+  "Kirjaa merkinnän tiedot Indexed DB:n.
+   Älä käytä suoraan, vaan kutsu erillisiä funktioita
+   eri asioiden kirjaamiseen."
+  [db kirjaus]
   (with-transaction-to-store db asetukset/+reittimerkinta-store+ :readwrite store
                              (idb/add-object store kirjaus)))
 
@@ -150,6 +154,27 @@
                                     "m), merkintää ei tehty!")})
       false)))
 
+(defn kirjaa-lomake! [{:keys [idxdb sijainti tarkastusajo-id
+                              epaonnistui-fn jatkuvat-havainnot
+                              kuvaus laadunalitus kuva] :as tiedot}]
+  (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti)
+                                           +suurin-sallittu-tarkkuus+)
+    (do (kirjaa-kertakirjaus idxdb
+                             {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
+                              :aikaleima (tc/to-long (lt/local-now))
+                              :tarkastusajo @tarkastusajo-id
+                              :havainnot (into #{} (remove nil? (conj @jatkuvat-havainnot havainto-avain)))
+                              :mittaukset {}
+                              :kuvaus kuvaus
+                              :laadunalitus laadunalitus
+                              :kuva kuva})
+        true)
+    (when epaonnistui-fn
+      (epaonnistui-fn {:viesti (str "Epätarkka sijainti ("
+                                    (fmt/n-desimaalia (:accuracy (:nykyinen @sijainti)) 0)
+                                    "m), lomaketta ei tallennettu!")})
+      false)))
+
 (defn kirjaa-mittausarvo! [{:keys [idxdb sijainti tarkastusajo-id jatkuvat-havainnot
                                    mittaustyyppi mittausarvo epaonnistui-fn] :as tiedot}]
   (.log js/console (str "Kirjataan mittaus " @mittaustyyppi ", arvo: " (pr-str mittausarvo)))
@@ -169,7 +194,7 @@
                                     "m), arvoa ei kirjattu!")})
       false)))
 
-(defn tallenna-sovelluksen-tilasta-merkinta-indexeddbn!
+(defn kirjaa-yksittainen-reittimerkinta!
   "'Nauhoitusfunktio', joka lukee sovelluksen tilan ja muodostaa
    siitä reittimerkinnän IndexedDB:n.
    Tätä on tarkoitus kutsua aina kun tila muuttuu oleellisesti
@@ -234,7 +259,7 @@
                @tallennus-kaynnissa-atom
                (not @tarkastusajo-paattymassa)
                (:nykyinen @sijainti-atom))
-      (tallenna-sovelluksen-tilasta-merkinta-indexeddbn!
+      (kirjaa-yksittainen-reittimerkinta!
         {:idxdb db
          :sijainti sijainti-atom
          :tarkastusajo-id tarkastusajo-atom

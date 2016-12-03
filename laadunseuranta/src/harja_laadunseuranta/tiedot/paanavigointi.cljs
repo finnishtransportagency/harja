@@ -347,7 +347,7 @@
     (s/aseta-mittaus-pois!))
 
   ;; Tee merkintä
-  (reitintallennus/tallenna-sovelluksen-tilasta-merkinta-indexeddbn!
+  (reitintallennus/kirjaa-yksittainen-reittimerkinta!
     {:idxdb @s/idxdb
      :sijainti s/sijainti
      :tarkastusajo-id s/tarkastusajo-id
