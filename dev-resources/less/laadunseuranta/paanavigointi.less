@@ -189,24 +189,25 @@
 }
 
 @toggle-valintapainike-leveys: 150px;
-@toggle-valintapainike-leveys-pienempi: 80px;
+@toggle-valintapainike-leveys-pienempi: 140px;
 
 .toggle-valintapainike {
   width: @toggle-valintapainike-leveys;
   margin-left: 5px;
   margin-right: 5px;
+  background-color: @napin-taustavari;
+  color: white;
+  margin-bottom: 10px;
+  display: flex;
+  flex-flow: column;
 
   > .toggle-valintapainike-ikoni {
-    width: 100%;
+    height: (@toggle-valintapainike-leveys - 60px);
     box-sizing: border-box;
     padding: 5px;
     position: relative;
-    height: @toggle-valintapainike-leveys;
-    background-color: @napin-taustavari;
 
     > .toggle-piste, .toggle-vali {
-      width: 32px;
-      height: 32px;
       position: absolute;
     }
 
@@ -231,9 +232,12 @@
   }
 
   > .toggle-valintapainike-otsikko {
+    box-sizing: border-box;
+    font-size: 0.9em;
     text-align: center;
     padding: 5px;
     padding-bottom: 15px;
+    height: 60px;
   }
 }
 
@@ -281,11 +285,30 @@
     }
 
     .toggle-valintapainike {
+      flex-flow: row;
+      height: 80px;
       width: @toggle-valintapainike-leveys-pienempi;
 
       > .toggle-valintapainike-ikoni {
-        width: 100%;
-        height: @toggle-valintapainike-leveys-pienempi;
+        width: 80px;
+
+        > .toggle-piste {
+          width: 18px;
+          height: 18px;
+          left: 3px;
+          top: 3px;
+        }
+
+        > .toggle-vali {
+          width: 26px;
+          height: 26px;
+          right: 2px;
+          top: 2px;
+        }
+      }
+
+      > .toggle-valintapainike-otsikko {
+        height: auto;
       }
     }
 
