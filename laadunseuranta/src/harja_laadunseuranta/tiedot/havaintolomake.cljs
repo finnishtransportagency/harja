@@ -20,15 +20,16 @@
                                 :kuva nil}))
 
 (defn tallenna-lomake! []
-  (.log js/console "Tallenna lomake!")
   (when (reitintallennus/kirjaa-lomake!
           {:idxdb @s/idxdb
            :sijainti s/sijainti
            :tarkastusajo-id s/tarkastusajo-id
-           :havainnot s/jatkuvat-havainnot
+           :jatkuvat-havainnot s/jatkuvat-havainnot
            :kuvaus (:kuvaus @s/havaintolomakedata)
+           :epaonnistui-fn reitintallennus/merkinta-epaonnistui
            :laadunalitus (:laadunalitus? @s/havaintolomakedata)
            :kuva (:kuva @s/havaintolomakedata)})
+    (.log js/console "Lomake tallennettu")
     (kartta/lisaa-kirjausikoni "!")
     (tyhjenna-lomake!)
     (sulje-lomake!)))
