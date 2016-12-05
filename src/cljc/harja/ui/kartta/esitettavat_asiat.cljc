@@ -463,13 +463,13 @@
      (* (/ Math/PI 180)
         kulma)))
 
-(defmethod asia-kartalle :suljettu-tieosuus [aita valittu-fn?]
-  (log "Asia kartalle: suljettu tieosuus: " (pr-str aita))
-  (let [viivat ulkoasu/suljettu-tieosuus]
+(defmethod asia-kartalle :tietyomaa [aita valittu-fn?]
+  (log "Asia kartalle: tietyömaa: " (pr-str aita))
+  (let [viivat ulkoasu/tietyomaa]
     (assoc aita
-     :type :suljettu-tieosuus
-     :nimi "Suljettu tieosuus"
-     :selite {:teksti "Suljettu tieosuus"
+     :type :tietyomaa
+     :nimi "Tietyömaa"
+     :selite {:teksti "Tietyömaa"
               :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}
      :alue (maarittele-feature {:sijainti (:geometria aita)}
                                (valittu-fn? aita)
@@ -479,24 +479,25 @@
 (defmethod asia-kartalle :tyokone [tyokone valittu-fn?]
   (let [selite-teksti (tehtavan-nimi (:tehtavat tyokone))
         [viivat nuolen-vari] (tehtavan-viivat-ja-nuolitiedosto
-                               (:tehtavat tyokone) (valittu-fn? tyokone))
-        paikka {:sijainti {:type (if (:reitti tyokone) :line :point)}}
-        paikka (if (:reitti tyokone)
-                 (assoc-in paikka [:sijainti :points] (:reitti tyokone))
-                 (assoc-in paikka [:sijainti :coordinates]
-                           (:sijainti tyokone)))]
+                              (:tehtavat tyokone) (valittu-fn? tyokone))
+        viivat (ulkoasu/tehtavan-viivat-tyokoneelle viivat)
+        paikka (or (:reitti tyokone)
+                   {:type :point
+                    :coordinates (:sijainti tyokone)})]
     (assoc tyokone
-      :type :tyokone
-      :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
-      :selite {:teksti selite-teksti
-               :vari   (viivojen-varit-leveimmasta-kapeimpaan viivat)}
-      :alue (maarittele-feature paikka (valittu-fn? tyokone)
-                                (ulkoasu/tyokoneen-ikoni nuolen-vari (muunna-tyokoneen-suunta (:suunta tyokone)))
-                                viivat))))
+           :type :tyokone
+           :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
+           :selite {:teksti selite-teksti
+                    :vari   (viivojen-varit-leveimmasta-kapeimpaan viivat)}
+           :alue (maarittele-feature paikka (valittu-fn? tyokone)
+                                     (ulkoasu/tyokoneen-ikoni nuolen-vari (muunna-tyokoneen-suunta (:suunta tyokone)))
+                                     viivat))))
 
-(defmethod asia-kartalle :default [asia _]
-  (warn "Kartalla esitettävillä asioilla pitää olla :tyyppi-kartalla avain!, "
-        "sain: " (pr-str asia))
+(defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
+  (if tyyppi
+    (warn "Kartan :tyyppi-kartalla ei ole tuettu: " (str tyyppi))
+    (warn "Kartalla esitettävillä asioilla pitää olla :tyyppi-kartalla avain!, "
+          "sain: " (pr-str asia)))
   nil)
 
 (defn- valittu-fn? [valittu tunniste asia]

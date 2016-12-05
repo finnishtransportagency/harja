@@ -8,7 +8,7 @@
     [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
     [harja.kyselyt.tieverkko :as q-tieverkko]
     [harja.kyselyt.kayttajat :as kayttajat]
-    [harja.kyselyt.suljetut-tieosuudet :as q-suljetut-tieosuudet]
+    [harja.kyselyt.tietyomaat :as q-tietyomaat]
     [harja.domain.roolit :as roolit]
     [harja.domain.yllapitokohteet :as kohteet])
   (:use [slingshot.slingshot :only [throw+ try+]]))
@@ -136,8 +136,8 @@
   (tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
   (tarkista-alustatoimenpiteet db kohde-id kohteen-tienumero kohteen-sijainti alustatoimenpiteet))
 
-(defn tarkista-suljettu-tieosuus [db id jarjestelma]
-  (when (not (q-suljetut-tieosuudet/onko-olemassa? db {:id id :jarjestelma jarjestelma}))
+(defn tarkista-tietyomaa [db id jarjestelma]
+  (when (not (q-tietyomaat/onko-olemassa? db {:id id :jarjestelma jarjestelma}))
     (do
       (let [viesti (format "Suljettua tieosuutta (id: %s) ei löydy" id)]
         (log/warn viesti)

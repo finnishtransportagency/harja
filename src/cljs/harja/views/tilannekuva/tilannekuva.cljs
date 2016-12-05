@@ -317,7 +317,7 @@
     (komp/kuuntelija [:toteuma-klikattu :ilmoitus-klikattu
                       :laatupoikkeama-klikattu :tarkastus-klikattu :turvallisuuspoikkeama-klikattu
                       :paallystys-klikattu :paikkaus-klikattu :tyokone-klikattu
-                      :uusi-tyokonedata :suljettu-tieosuus-klikattu]
+                      :uusi-tyokonedata :tietyomaa-klikattu]
                      (fn [_ tapahtuma] (popupit/nayta-popup tapahtuma))
                      :popup-suljettu
                      #(reset! popupit/klikattu-tyokone nil)

@@ -1,3 +1,29 @@
+-- Laskee hoidon alueurakan laskutusyhteenvedon
+
+-- Kysely laskee käytännössä kaikki hoitourakan kustannukset toimenpideinstanssi
+-- kerrallaan valitulla aikavälillä.
+
+-- Mukana mm. kokonaishintaiset, yksikköhintaiset ja muutostyöt, sanktiot, talvisuolasakot,
+-- erilliskustannukset ja eri kustannusten indeksikorotukset. Paluuarvo on tyypiltään
+-- laskutusyhteenveto_rivi, jonka yksittäiset arvokentät on nimetty 'systemaattisesti',
+-- jotta niitä voidaan tehokkaasti iteroida palveluissa ja frontilla.
+
+-- Laskutusyhteenvetoa kutsutaan tyypillisesti antamalla sisään hoitokauden alku- ja loppupvm,
+-- sekä yleensä kuukauden aikavälin alku- ja loppupvm sekä urakan id. Esim. urakka 4 heinäkuu 2015:
+-- SELECT * FROM laskutusyhteenveto('2014-10-01', '2015-09-30', '2015-07-01', '2015-07-31', 4);
+-- kht_laskutettu  --> kokonaishintaiset työt annetulla hoitokaudella ennen valittua aikaväliä (1.10.2014. - 30.6.2015)
+-- kht_laskutettu_ind_korotus  --> kokonaishintaisten töiden indeksikorotus annetulla hoitokaudella ennen valittua aikaväliä (1.10.2014. - 30.6.2015)
+-- kht_laskutetaan  --> kokonaishintaiset työt valitulla aikavälillä (1.7.2015 - 31.7.2015)
+-- kht_laskutetaan_ind_korotus  --> kokonaishintaisten töiden indeksikorotus valitulla aikavälillä (1.7.2015 - 31.7.2015)
+
+-- Laskutusyhteenveto voidaan tallentaa parametrien perusteella cacheen ja sieltä palauttaa se käyttäjälle
+-- nopeasti jos raportin sisältö ei ole muuttunut ja pyyntö tehdään samoilla parametreilla.
+-- Cachessa oleva laskutusyhteenveto pidetään ajan tasalla triggereiden avulla.
+
+-- Laskutusyhteenveto-sprocia käyttää ainakin Laskutusyhteenveto-raportti, Maskuerän laskenta ja Indeksitarkistusraportti.
+-- Laskutusyhteenveto puolestaan käyttää monia alisproceja, kuten hoitokauden_suolasakko ja laske_kuukauden_indeksikorotus.
+
+
 CREATE OR REPLACE FUNCTION laskutusyhteenveto(
   hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE, aikavali_loppupvm DATE,
   ur         INTEGER)
@@ -649,7 +675,7 @@ BEGIN
     INTO laskutusyhteenveto_cache (urakka, alkupvm, loppupvm, rivit)
   VALUES (ur, aikavali_alkupvm, aikavali_loppupvm, cache)
       ON CONFLICT ON CONSTRAINT uniikki_urakka_aika
-      DO UPDATE SET rivit = cache;
+      DO UPDATE SET rivit = cache, tallennettu = NOW();
 END;
 $$ LANGUAGE plpgsql;
 

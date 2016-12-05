@@ -4,6 +4,7 @@
             [harja.kyselyt.konversio :as konv]
             [harja.geo :as geo]
             [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]
+            [harja.domain.laadunseuranta :as laadunseuranta]
             [harja.domain.roolit :as roolit])
   (:import (org.postgis PGgeometry)))
 
@@ -47,31 +48,27 @@
 
 (defn luo-tai-paivita-talvihoitomittaus [db tarkastus uusi?
                                          {:keys [hoitoluokka lumimaara tasaisuus
-                                                 kitka lampotila-ilma lampotila-tie ajosuunta] :as talvihoitomittaus}]
-  (if uusi?
-    (do (log/info "PARAMS:" db
-                  (or hoitoluokka "") lumimaara tasaisuus
-                  kitka lampotila-ilma lampotila-tie (or ajosuunta 0)
-                  tarkastus)
-        (luo-talvihoitomittaus<! db
-                                 (or hoitoluokka "") lumimaara tasaisuus
-                                 kitka lampotila-ilma lampotila-tie (or ajosuunta 0)
-                                 tarkastus))
-    (paivita-talvihoitomittaus! db
-                                (or hoitoluokka "") lumimaara tasaisuus
-                                kitka lampotila-ilma lampotila-tie (or ajosuunta 0)
-                                tarkastus)))
+                                                 kitka lampotila-ilma lampotila-tie ajosuunta] :as mittaukset}]
+  (let [params {:tarkastus tarkastus
+                :talvihoitoluokka (or hoitoluokka "") :lumimaara lumimaara :tasaisuus tasaisuus :kitka kitka
+                :lampotila_ilma lampotila-ilma :lampotila_tie lampotila-tie :ajosuunta (or ajosuunta 0)}
+        poista-rivi? (not-any? #(get-in mittaukset %) laadunseuranta/talvihoitomittauksen-lomakekentat)]
+
+    (if poista-rivi?
+      (poista-talvihoitomittaus! db tarkastus)
+      (if uusi?
+        (luo-talvihoitomittaus<! db params)
+        (paivita-talvihoitomittaus! db params)))))
 
 (defn luo-tai-paivita-soratiemittaus [db tarkastus uusi?
-                                      {:keys [hoitoluokka tasaisuus kiinteys polyavyys sivukaltevuus]}]
-  (if uusi?
-    (luo-soratiemittaus<! db
-                          hoitoluokka tasaisuus
-                          kiinteys polyavyys
-                          sivukaltevuus
-                          tarkastus)
-    (paivita-soratiemittaus! db
-                             hoitoluokka tasaisuus
-                             kiinteys polyavyys
-                             sivukaltevuus
-                             tarkastus)))
+                                      {:keys [hoitoluokka tasaisuus kiinteys polyavyys sivukaltevuus] :as mittaukset}]
+  (let [params {:hoitoluokka   hoitoluokka
+                :tasaisuus     tasaisuus :kiinteys kiinteys :polyavyys polyavyys
+                :sivukaltevuus sivukaltevuus :tarkastus tarkastus}
+        poista-rivi? (not-any? #(get-in (dissoc mittaukset :tarkastus) %)
+                               laadunseuranta/soratiemittauksen-kentat)]
+    (if poista-rivi?
+      (poista-soratiemittaus! db tarkastus)
+      (if uusi?
+        (luo-soratiemittaus<! db params)
+        (paivita-soratiemittaus! db params)))))

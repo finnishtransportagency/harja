@@ -66,6 +66,45 @@
     (reset! tarkastukset/valittu-tarkastus
             (<! (tarkastukset/hae-tarkastus (:id @nav/valittu-urakka) tarkastus-id)))))
 
+(defn- formatoi-talvihoitomittaukset
+  [thm]
+  (let [{kitka :kitka lumimaara :lumimaara tasaisuus :tasaisuus
+         {tie :tie ilma :ilma} :lampotila} thm]
+    (when (or kitka lumimaara tasaisuus)
+      (str "Talvihoitomittaukset: "
+           (str/replace
+             (str/join ", "
+                       (keep #(if (and (some? (val %))
+                                       (not= "" (val %))) ;; tyhjä hoitoluokka pois
+                               (if (= :lampotila (key %))
+                                 (when (or tie ilma)
+                                   (str (when tie (str "tie: " tie  "°C"))
+                                        (when (and tie ilma) ", ")
+                                        (when ilma (str "ilma: " ilma "°C"))))
+                                 (str (name (key %)) ": " (val %)))
+                               nil)
+                             (select-keys
+                               thm
+                               [:hoitoluokka :kitka :lumimaara :tasaisuus :lampotila])))
+             "lumimaara" "lumimäärä")))))
+
+(defn- formatoi-soratiemittaukset
+  [stm]
+  (let [{tasaisuus :tasaisuus kiinteys :kiinteys polyavyys :polyavyys
+         sivukaltevuus :sivukaltevuus hoitoluokka :hoitoluokka} stm]
+    (when (or tasaisuus kiinteys polyavyys sivukaltevuus hoitoluokka)
+      (str "Soratiemittaukset: "
+           (str/replace
+             (str/join ", "
+                       (keep #(if (and (some? (val %))
+                                       (not= "" (val %)))   ;; tyhjä hoitoluokka pois
+                                (str (name (key %)) ": " (val %))
+                                nil)
+                             (select-keys
+                               stm
+                               [:hoitoluokka :tasaisuus :kiinteys :polyavyys :sivukaltevuus])))
+             "polyavyys" "pölyävyys")))))
+
 (defn tarkastuslistaus
   "Tarkastuksien listauskomponentti"
   ([] (tarkastuslistaus {}))
@@ -83,11 +122,9 @@
         tarkastukset/tarkastustyyppi]
 
        [tee-otsikollinen-kentta "Näytä"
-        {:tyyppi :valinta :valinnat [false true]
-         :valinta-nayta {false "Kaikki tarkastukset"
-                         true "Vain laadunalitukset"}}
-        tarkastukset/vain-laadunalitukset?]
-
+        {:tyyppi :valinta :valinnat tarkastukset/+naytettevat-tarkastukset-valinnat+
+         :valinta-nayta second}
+        tarkastukset/naytettavat-tarkastukset]
        [valinnat/tienumero tarkastukset/tienumero]
 
        (let [oikeus? (oikeudet/voi-kirjoittaa?
@@ -135,21 +172,27 @@
           :nimi :tr
           :leveys 2
           :fmt tierekisteri/tierekisteriosoite-tekstina}
-         {:otsikko "Havainnot"
-          :nimi :havainnot
-          :leveys 4
-          :tyyppi :komponentti
+         {:otsikko     "Havainnot"
+          :nimi        :havainnot
+          :leveys      4
+          :tyyppi      :komponentti
           :komponentti (fn [rivi]
                          (let [havainnot (:havainnot rivi)
                                havainnot-max-pituus 50
                                havainnot-rajattu (if (> (count havainnot) havainnot-max-pituus)
                                                    (str (.substring havainnot 0 havainnot-max-pituus) "...")
                                                    havainnot)
-                               vakiohavainnot (str/join ", " (:vakiohavainnot rivi))]
+                               vakiohavainnot (str/join ", " (:vakiohavainnot rivi))
+                               talvihoitomittaukset (formatoi-talvihoitomittaukset (:talvihoitomittaus rivi))
+                               soratiemittaukset (formatoi-soratiemittaukset (:soratiemittaus rivi))]
                            [:ul.tarkastuksen-havaintolista
-                            (when (not (str/blank? vakiohavainnot))
+                            (when-not (str/blank? vakiohavainnot)
                               [:li.tarkastuksen-vakiohavainnot vakiohavainnot])
-                            (when (not (str/blank? havainnot-rajattu))
+                            (when-not (str/blank? talvihoitomittaukset)
+                              [:li.tarkastuksen-talvihoitomittaukset talvihoitomittaukset])
+                            (when-not (str/blank? soratiemittaukset)
+                              [:li.tarkastuksen-soratiemittaukset soratiemittaukset])
+                            (when-not (str/blank? havainnot-rajattu)
                               [:li.tarkastuksen-havainnot havainnot-rajattu])]))}]
         tarkastukset]]))))
 
@@ -182,7 +225,10 @@
 (defn soratiemittaus []
   (let [kuntoluokka (fn [arvo _]
                       (when (and arvo (not (<= 1 arvo 5)))
-                        "Anna arvo 1 - 5"))]
+                        "Anna arvo 1 - 5"))
+        prosentti (fn [arvo _]
+                    (when (and arvo (not (<= 0 arvo 100)))
+                      "Anna arvo 0 - 100"))]
     (lomake/ryhma {:otsikko "Soratiemittaus"
                    :rivi? true}
                   {:otsikko "Tasaisuus" :tyyppi :numero
@@ -201,7 +247,7 @@
                    :validoi [kuntoluokka]}
 
                   {:otsikko "Sivukalt." :tyyppi :numero :yksikko "%"
-                   :nimi :sivukaltevuus :palstoja 1
+                   :nimi :sivukaltevuus :palstoja 1 :validoi [prosentti]
                    :hae (comp :sivukaltevuus :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :sivukaltevuus] %2)}
 
                   {:otsikko "Soratiehoitoluokka" :tyyppi :valinta
@@ -318,13 +364,11 @@
 
          (when (and
                  (= :hoito urakkatyyppi)
-                 (:talvihoitomittaus tarkastus)
                  (= :laatu (:tyyppi tarkastus)))
            (talvihoitomittaus))
 
          (when (and
                  (= :hoito urakkatyyppi)
-                 (:soratiemittaus tarkastus)
                  (= :laatu (:tyyppi tarkastus)))
            (soratiemittaus))
 

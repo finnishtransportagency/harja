@@ -36,7 +36,7 @@
            :urakka (:id @nav/valittu-urakka)
            :valitun-urakan-hoitokaudet @u/valitun-urakan-hoitokaudet
            :urakoitsija (:id @nav/valittu-urakoitsija)
-           :urakkatyyppi (:arvo @nav/valittu-urakkatyyppi)
+           :urakkatyyppi (:arvo @nav/urakkatyyppi)
            :hoitokausi @u/valittu-hoitokausi}))
 
 

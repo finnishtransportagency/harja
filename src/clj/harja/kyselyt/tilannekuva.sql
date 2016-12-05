@@ -304,6 +304,7 @@ SELECT
   t.tyokoneid,
   t.jarjestelma,
   t.organisaatio,
+  t.alkanut,
   (SELECT nimi
    FROM organisaatio
    WHERE id = t.organisaatio) AS organisaationimi,
@@ -312,6 +313,7 @@ SELECT
   t.vastaanotettu,
   t.tyokonetyyppi,
   t.sijainti,
+  ST_Simplify(t.reitti, :toleranssi) AS reitti,
   t.suunta,
   t.edellinensijainti,
   t.urakkaid,
@@ -320,8 +322,8 @@ SELECT
    WHERE id = t.urakkaid)     AS urakkanimi,
   t.tehtavat
 FROM tyokonehavainto t
-WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax),
-                  CAST(sijainti AS GEOMETRY)) AND
+WHERE ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax),
+                  reitti) AND
       (t.urakkaid IN (:urakat) OR
       -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
        (t.urakkaid IS NULL AND
@@ -335,7 +337,7 @@ SELECT
 FROM toimenpidekoodi
 WHERE suoritettavatehtava :: TEXT IN (:toimenpiteet);
 
--- name: hae-suljetut-tieosuudet
+-- name: hae-tietyomaat
 -- hakee liikenneohjausaidoilla suljettujen tieosuuksien geometriat
 SELECT st.geometria AS "geometria",
   ypk.nimi                                                       AS "yllapitokohteen-nimi",
@@ -348,7 +350,7 @@ SELECT st.geometria AS "geometria",
   st.tr_aet                                                      AS "aet",
   st.tr_losa                                                     AS "losa",
   st.tr_let                                                      AS "let"
-FROM suljettu_tieosuus st
+FROM tietyomaa st
   LEFT JOIN yllapitokohde ypk ON ypk.id = st.yllapitokohde
 WHERE st.poistettu IS NULL
       AND ST_Intersects(ST_MakeEnvelope(:x1, :y1, :x2, :y2), st.envelope);
