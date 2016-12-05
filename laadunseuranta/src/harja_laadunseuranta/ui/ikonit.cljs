@@ -546,6 +546,9 @@
 (defn livicon-wrench []
   [:span.livicon-wrench])
 
+(defn livicon-terrain []
+  [:span.livicon-terrain])
+
 ;; Tiettyjen toimintojen vakioikonit
 
 (defn muokkaa []

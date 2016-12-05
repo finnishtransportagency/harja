@@ -298,8 +298,8 @@
    [:div.kartan-kontrollit {:style (when @s/havaintolomake-auki
                                      {:display "none"})}
     [:div#karttakontrollit]
-    [:div.kontrollinappi.ortokuva.livicon-eye {:on-click #(swap! s/nayta-ortokuva not)}]
-    [:div.kontrollinappi.kiinteistorajat.livicon-home {:on-click #(swap! s/nayta-kiinteistorajat not)}]
+    [:div.kontrollinappi.ortokuva.livicon-terrain {:on-click #(swap! s/nayta-ortokuva not)}]
+    [:div.kontrollinappi.kiinteistorajat.livicon-property-boundary {:on-click #(swap! s/nayta-kiinteistorajat not)}]
     [:div.kontrollinappi.keskityspainike.livicon-crosshairs {:on-click #(do (swap! s/keskita-ajoneuvoon not)
                                                                             (swap! s/keskita-ajoneuvoon not))}]]])
 
