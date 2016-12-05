@@ -13,6 +13,7 @@
             [harja.kyselyt.materiaalit :as materiaalit-q]
             [harja.kyselyt.muutoshintaiset-tyot :as mht-q]
             [harja.kyselyt.sopimukset :as sopimukset-q]
+            [harja.kyselyt.urakat :as urakat-q]
 
             [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
             [clj-time.coerce :as c]
@@ -569,7 +570,7 @@
           tunniste (if (= toiminto "lisatty")
                      (livitunnisteet/hae-seuraava-livitunniste db)
                      (:tunniste arvot))
-          (println "---> tunniste: " tunniste)
+          elynro (:elynumero (first (urakat-q/hae-urakan-ely db urakka-id)))
           sopimus-id (:id (first (sopimukset-q/hae-urakan-paasopimus db urakka-id)))
           toteuma-id (:id (q/luo-toteuma<!
                             db
@@ -595,7 +596,7 @@
                                :karttapvm nyt ;; todo: karttapvm: pitäisikö hakea viimeisimmän tieverkon päivämäärä
                                :alkupvm nyt
                                :loppupvm nyt
-                               :piiri nil ;; todo piiri: pitäisi ilmeisesti hakea urakan ELY
+                               :piiri elynro
                                :kuntoluokka (:kuntoluokka arvot)
                                :tierekisteriurakkakoodi (:tierekisteriurakkakoodi arvot)
                                :luoja (:id user)
