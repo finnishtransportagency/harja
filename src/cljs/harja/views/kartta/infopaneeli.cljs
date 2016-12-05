@@ -42,8 +42,10 @@
 
 (defn esita-yksityiskohdat [{:keys [otsikko tiedot data tyyppi]} linkin-kasittely-fn]
   (if-not (or (keyword? tyyppi) (fn? tyyppi))
-    (do (error "esita-yksityiskohdat: kasittely-fn huono:" (clj->js linkin-kasittely-fn))
-        [])
+    (do
+      (error "esita-yksityiskohdat: kasittely-fn huono:" (clj->js linkin-kasittely-fn))
+      nil)
+    ;; else
     [:div.ip-osio
      [:span.ip-otsikko otsikko]
      (when-let [{:keys [teksti toiminto]} (tyyppi linkin-kasittely-fn)]
