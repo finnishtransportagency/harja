@@ -163,18 +163,18 @@
 (defmethod infopaneeli-skeema :toteuma [toteuma]
   {:tyyppi :toteuma
    :otsikko "Toteuma"
-   :tiedot (vec (flatten [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
-                          {:otsikko "Päättynyt" :tyyppi :pvm-aika :nimi :paattynyt}
-                          {:otsikko "Suorittaja" :hae #(get-in % [:suorittaja :nimi])}
-                          (for [tehtava (:tehtavat toteuma)]
-                            {:otsikko (:toimenpide tehtava) :hae #(str (get-in % [:tehtavat tehtava :maara]) " "
-                                                                       (get-in % [:tehtavat tehtava :yksikko]))})
-                          (for [materiaalitoteuma (:materiaalit toteuma)]
-                            {:otsikko (get-in materiaalitoteuma [:materiaali :nimi])
-                             :hae #(str (get-in % [:materiaalit materiaalitoteuma :maara]) " "
-                                        (get-in % [:materiaalit materiaalitoteuma :materiaali :yksikko]))})
-                          (when (:lisatieto toteuma)
-                            {:otsikko "Lisätieto" :nimi :lisatieto})]))
+   :tiedot (vec (concat [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
+                         {:otsikko "Päättynyt" :tyyppi :pvm-aika :nimi :paattynyt}
+                         {:otsikko "Suorittaja" :hae #(get-in % [:suorittaja :nimi])}]
+                        (for [tehtava (:tehtavat toteuma)]
+                          {:otsikko (:toimenpide tehtava) :hae #(str (get-in % [:tehtavat tehtava :maara]) " "
+                                                                     (get-in % [:tehtavat tehtava :yksikko]))})
+                        (for [materiaalitoteuma (:materiaalit toteuma)]
+                          {:otsikko (get-in materiaalitoteuma [:materiaali :nimi])
+                           :hae #(str (get-in % [:materiaalit materiaalitoteuma :maara]) " "
+                                      (get-in % [:materiaalit materiaalitoteuma :materiaali :yksikko]))})
+                        (when (:lisatieto toteuma)
+                          [{:otsikko "Lisätieto" :nimi :lisatieto}])))
    :data toteuma})
 
 (defn validoi-tieto [tieto]
