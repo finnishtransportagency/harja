@@ -245,7 +245,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                            (when on-move
                              (on-move e (laske-kartan-alue ol3))))))
 
-(defn- aseta-klik-kasittelija [this ol3 on-click on-select asiat-pisteessa-atom]
+(defn- aseta-klik-kasittelija [this ol3 on-click on-select]
   (.on ol3 "singleclick"
        (fn [e]
          (if-let [kasittelija @klik-kasittelija]
@@ -422,8 +422,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
     ;; If mapspec defines callbacks, bind them to ol3
     (aseta-klik-kasittelija this ol3
                             (:on-click mapspec)
-                            (:on-select mapspec)
-                            (:asiat-pisteessa mapspec))
+                            (:on-select mapspec))
     (aseta-dblclick-kasittelija this ol3
                                 (:on-dblclick mapspec)
                                 (:on-dblclick-select mapspec))

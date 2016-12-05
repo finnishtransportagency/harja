@@ -606,7 +606,6 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
                                 (edistymispalkki/geometriataso-pakota-valmistuminen!))
           :on-mount           (fn [initialextent]
                                 (paivita-extent nil initialextent))
-          :asiat-pisteessa    asiat-pisteessa
           :on-click           (fn [event]
                                 #_(t/julkaise! {:aihe :tyhja-click :klikkaus-koordinaatit at})
                                 #_(poista-popup!)
