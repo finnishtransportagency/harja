@@ -23,7 +23,8 @@
             [clojure.core.async :as async]
             [harja.pvm :as pvm]
             [harja.domain.tierekisteri.tietolajit :as tietolajit]
-            [harja.tyokalut.functor :as functor]))
+            [harja.tyokalut.functor :as functor]
+            [harja.kyselyt.livitunnisteet :as livitunnisteet]))
 
 (defn geometriaksi [reitti]
   (when reitti (geo/geometry (geo/clj->pg reitti))))
@@ -565,6 +566,10 @@
           toiminto (name toiminto)
           arvot (functor/fmap str arvot)
           arvot (tietolajit/validoi-ja-muunna-arvot-merkkijonoksi tierekisteri arvot tietolaji)
+          tunniste (if (= toiminto "lisatty")
+                     (livitunnisteet/hae-seuraava-livitunniste db)
+                     (:tunniste arvot))
+          (println "---> tunniste: " tunniste)
           sopimus-id (:id (first (sopimukset-q/hae-urakan-paasopimus db urakka-id)))
           toteuma-id (:id (q/luo-toteuma<!
                             db
@@ -582,7 +587,7 @@
                             nil nil nil nil nil
                             "harja-ui"))]
       (q/luo-varustetoteuma<! db
-                              {:tunniste (:tunniste arvot)
+                              {:tunniste tunniste
                                :toteuma toteuma-id
                                :toimenpide toiminto
                                :tietolaji tietolaji
