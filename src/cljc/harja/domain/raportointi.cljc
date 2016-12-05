@@ -64,7 +64,9 @@
               identity
               (map-indexed
                 (fn [solun-indeksi solu] (when (= solun-indeksi sarakkeen-indeksi) solu))
-                rivi)))
+                ;; Rivi voi olla mäppi, jossa optioita ja :rivi avaimen alla vektori,
+                ;; tai pelkkä vektori
+                (or (:rivi rivi) rivi))))
           taulukko-riveja)]
     (some raporttielementti? sarakkeen-solut)))
 
