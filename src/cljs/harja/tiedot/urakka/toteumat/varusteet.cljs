@@ -147,7 +147,7 @@
           uusi-toteuma (merge toteuma tiedot)
           koordinaattiarvot (or (get-in tiedot [:sijainti :coordinates])
                                 (first (:points (first (:lines tiedot)))))
-          ;; todo: pitää kysyä millä tarkkuudella koordinaatit lähetetään
+          ;; todo: pitää varmistaa millä tarkkuudella koordinaatit lähetetään
           koordinaatit (when koordinaattiarvot {:x (Math/round (first koordinaattiarvot))
                                                 :y (Math/round (second koordinaattiarvot))})
           uusi-toteuma (assoc uusi-toteuma :arvot (merge (:arvot tiedot) koordinaatit))]
