@@ -163,30 +163,30 @@
 (defmethod infopaneeli-skeema :toteuma [toteuma]
   {:tyyppi :toteuma
    :otsikko "Toteuma"
-   :tiedot [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
-            {:otsikko "Päättynyt" :tyyppi :pvm-aika :nimi :paattynyt}
-            {:otsikko "Suorittaja" :hae #(get-in % [:suorittaja :nimi])}
-            (for [tehtava (:tehtavat toteuma)]
-              {:otsikko (:toimenpide tehtava) :hae #(str (get-in % [:tehtavat tehtava :maara]) " "
-                                                         (get-in % [:tehtavat tehtava :yksikko]))})
-            (for [materiaalitoteuma (:materiaalit toteuma)]
-              {:otsikko (get-in materiaalitoteuma [:materiaali :nimi])
-               :hae #(str (get-in % [:materiaalit materiaalitoteuma :maara]) " "
-                          (get-in % [:materiaalit materiaalitoteuma :materiaali :yksikko]))})
-            (when (:lisatieto toteuma)
-              {:otsikko "Lisätieto" :nimi :lisatieto})]
+   :tiedot (vec (flatten [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
+                          {:otsikko "Päättynyt" :tyyppi :pvm-aika :nimi :paattynyt}
+                          {:otsikko "Suorittaja" :hae #(get-in % [:suorittaja :nimi])}
+                          (for [tehtava (:tehtavat toteuma)]
+                            {:otsikko (:toimenpide tehtava) :hae #(str (get-in % [:tehtavat tehtava :maara]) " "
+                                                                       (get-in % [:tehtavat tehtava :yksikko]))})
+                          (for [materiaalitoteuma (:materiaalit toteuma)]
+                            {:otsikko (get-in materiaalitoteuma [:materiaali :nimi])
+                             :hae #(str (get-in % [:materiaalit materiaalitoteuma :maara]) " "
+                                        (get-in % [:materiaalit materiaalitoteuma :materiaali :yksikko]))})
+                          (when (:lisatieto toteuma)
+                            {:otsikko "Lisätieto" :nimi :lisatieto})]))
    :data toteuma})
 
 (defn validoi-tieto [tieto]
   (let [otsikko (:otsikko tieto)
         skeema (remove empty? (:tiedot tieto))
         data (:data tieto)
-        kenttien-arvot (map
+        kenttien-arvot (mapv
                          (fn [{:keys [nimi hae] :as rivin-skeema}]
                            (if-let [get-fn (or nimi hae)]
                              [rivin-skeema (get-fn data)]
                              ;; else
-                             (do (log/error "skeemasta puuttuu :nimi tai :hae - " (pr-str rivin-skeema))
+                             (do (log/error "skeemasta puuttuu :nimi tai :hae - skeema:" (clj->js skeema) "tieto:" (clj->js tieto) )
                                  [])))
                          skeema)
         tyhjat-arvot (keep (comp :otsikko first) (filter (comp nil? second) kenttien-arvot))]
