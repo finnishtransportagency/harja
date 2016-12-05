@@ -92,7 +92,7 @@
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")
                  :sheet-nimi raportin-nimi}
-      [{:leveys 10 :otsikko "Päivämäärä"}
+      [{:leveys 10 :otsikko "Päivämäärä" :fmt :pvm}
        {:leveys 5 :otsikko "Klo"}
        {:leveys 5 :otsikko "Tie"}
        {:leveys 5 :otsikko "Aosa"}
@@ -122,7 +122,7 @@
            (get-in rivi [:tr :alkuosa])
            (get-in rivi [:tr :alkuetaisyys])
            (get-in rivi [:tr :loppuosa])
-           (get-in rivi [:tr :loppyetaisyys])
+           (get-in rivi [:tr :loppuetaisyys])
            (:ajosuunta rivi)
            (:talvihoitoluokka rivi)
            (:lumimaara rivi)
