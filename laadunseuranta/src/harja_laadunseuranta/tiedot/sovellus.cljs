@@ -192,6 +192,7 @@
 (def paanavigoinnin-hampurilaisvalikon-lista-nakyvissa? (reagent/cursor sovellus [:ui :paanavigointi :hampurilaisvalikon-lista-nakyvissa?]))
 
 ;; Yleiset apufunktiot helpottamaan tilan muokkausta
+;; Tänne mielellään vain sellaiset, joita tarvitsee käyttää useasta paikasta
 
 (defn aseta-mittaus-paalle! [uusi-mittaustyyppi]
   (reset! mittaustyyppi uusi-mittaustyyppi))

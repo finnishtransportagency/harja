@@ -6,7 +6,8 @@
             [cljs-time.coerce :as tc]
             [harja-laadunseuranta.tiedot.math :as math]
             [harja-laadunseuranta.tiedot.fmt :as fmt]
-            [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]))
+            [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
+            [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset]))
 
 ;; Syöttöjen validiusehdot
 
@@ -52,6 +53,13 @@
   (swap! syotto-atom assoc :syotot (conj (:syotot @syotto-atom) (:nykyinen-syotto @syotto-atom)))
   (swap! syotto-atom assoc :nykyinen-syotto (mittaustyyppi mittaustyypin-lahtoarvo))
   (.log js/console "Syötöt nyt: " (pr-str (:syotot @syotto-atom))))
+
+(defn lopeta-mittaus-painettu! [nimi avain]
+  (s/poista-jatkuva-havainto! avain)
+  (s/aseta-mittaus-pois!)
+  (ilmoitukset/ilmoita
+    (str nimi " päättyy")
+    s/ilmoitus))
 
 (defn- syotto-validi? [mittaustyyppi nykyinen-syotto]
   (let [suurin-sallittu-tarkkuus (mittaustyyppi syoton-max-merkkimaara)

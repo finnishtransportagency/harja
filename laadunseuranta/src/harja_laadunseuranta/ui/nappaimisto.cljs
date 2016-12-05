@@ -6,6 +6,7 @@
             [harja-laadunseuranta.tiedot.nappaimisto
              :refer [numeronappain-painettu!
                      tyhjennyspainike-painettu! syotto-onnistui!
+                     lopeta-mittaus-painettu!
                      kirjaa-mittaus! syoton-rajat syotto-validi?
                      soratienappaimiston-numeronappain-painettu!]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
@@ -21,7 +22,7 @@
 (defn- lopeta-mittaus [{:keys [nimi avain lopeta-jatkuva-havainto] :as tiedot}]
   [nappi (str nimi " päättyy") {:on-click (fn [_]
                                             (.log js/console "Mittaus päättyy!")
-                                            (lopeta-jatkuva-havainto avain))
+                                            (lopeta-jatkuva-havainto nimi avain))
                                 :luokat-str "nappi-kielteinen nappi-peruuta"}])
 
 (defn- mittaustiedot-keskiarvo [{:keys [mittaukset keskiarvo mittauksia-sana
@@ -268,4 +269,4 @@
     :mittausyksikko (get-in havainto [:mittaus :yksikko])
     :nimi (get-in havainto [:mittaus :nimi])
     :avain (:avain havainto)
-    :lopeta-jatkuva-havainto s/lopeta-jatkuvan-havainnon-mittaus!}])
+    :lopeta-jatkuva-havainto lopeta-mittaus-painettu!}])
