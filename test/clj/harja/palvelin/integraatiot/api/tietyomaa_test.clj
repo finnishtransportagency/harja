@@ -27,21 +27,21 @@
     (let [uusi-tietyomaa (hae-tietyomaa)
           id (first uusi-tietyomaa)
           muokattu (second uusi-tietyomaa)]
-      (is (not (nil? id)) "Kannasta löytyy uusi suljettu tieosuus")
+      (is (not (nil? id)) "Kannasta löytyy uusi tietyömaa")
       (is (nil? muokattu)) "Muokkauspäivämäärä on tyhjä")
 
     (api-tyokalut/post-kutsu ["/api/urakat/5/yllapitokohteet/5/tietyomaa"] kayttaja portti lisays-kutsu)
     (let [muokattu-tietyomaa (hae-tietyomaa)
           id (first muokattu-tietyomaa)
           muokattu (second muokattu-tietyomaa)]
-      (is (not (nil? id)) "Kannasta löytyy yha sama suljettu tieosuus")
+      (is (not (nil? id)) "Kannasta löytyy yha sama tietyömaa")
       (is (not (nil? muokattu))) "Tieosuus on merkitty muuttuneeksi")
 
     (api-tyokalut/delete-kutsu ["/api/urakat/5/yllapitokohteet/5/tietyomaa"] kayttaja portti poisto-kutsu)
     (let [muokattu-tietyomaa (hae-tietyomaa)
           id (first muokattu-tietyomaa)
           muokattu (nth muokattu-tietyomaa 2)]
-      (is (not (nil? id)) "Kannasta löytyy yha sama suljettu tieosuus")
+      (is (not (nil? id)) "Kannasta löytyy yha sama tietyömaa")
       (is (not (nil? muokattu))) "Tieosuus on merkitty poistetuksi")))
 
 

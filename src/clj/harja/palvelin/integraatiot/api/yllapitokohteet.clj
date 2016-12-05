@@ -149,7 +149,7 @@
       (log/error e "Virhe hakiessa tierekisteriosoitetta suljetulle tieosuudelle"))))
 
 (defn kirjaa-tietyomaa [db kayttaja {:keys [urakka-id kohde-id]} {:keys [otsikko tietyomaa]}]
-  (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) suljettu tieosuus käyttäjän: %s toimesta"
+  (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) tietyömaa käyttäjän: %s toimesta"
                      urakka-id
                      kohde-id
                      kayttaja))
@@ -189,7 +189,7 @@
         (tee-kirjausvastauksen-body vastaus)))))
 
 (defn poista-tietyomaa [db kayttaja {:keys [urakka-id kohde-id]} {:keys [otsikko tietyomaa]}]
-  (log/debug (format "Poistetaan urakan (id: %s) kohteelta (id: %s) suljettu tieosuus käyttäjän: %s toimesta"
+  (log/debug (format "Poistetaan urakan (id: %s) kohteelta (id: %s) tietyömaa käyttäjän: %s toimesta"
                      urakka-id
                      kohde-id
                      kayttaja))

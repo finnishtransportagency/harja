@@ -464,12 +464,12 @@
         kulma)))
 
 (defmethod asia-kartalle :tietyomaa [aita valittu-fn?]
-  (log "Asia kartalle: suljettu tieosuus: " (pr-str aita))
+  (log "Asia kartalle: tietyömaa: " (pr-str aita))
   (let [viivat ulkoasu/tietyomaa]
     (assoc aita
      :type :tietyomaa
-     :nimi "Suljettu tieosuus"
-     :selite {:teksti "Suljettu tieosuus"
+     :nimi "Tietyömaa"
+     :selite {:teksti "Tietyömaa"
               :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}
      :alue (maarittele-feature {:sijainti (:geometria aita)}
                                (valittu-fn? aita)
