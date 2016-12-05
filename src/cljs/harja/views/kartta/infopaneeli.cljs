@@ -79,6 +79,6 @@
      (when-not (empty? asiat)
        (if esita-yksityiskohdat?
          [esita-yksityiskohdat (or @valittu-asia ainoa-asia) @linkkifunktiot]
-         [:div (doall (for [[idx asia] (map-indexed #(do [%1 %2]) [(get asiat 0) (get asiat 0)])]
+         [:div (doall (for [[idx asia] (map-indexed #(do [%1 %2]) asiat)]
                         ^{:key (str "infopaneelin_otsikko_" idx)}
                         [esita-otsikko asia]))]))]))
