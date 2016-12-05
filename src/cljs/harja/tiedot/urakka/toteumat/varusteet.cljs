@@ -144,10 +144,13 @@
           tiedot (if tietolaji-muuttui?
                    (assoc tiedot :tietolajin-kuvaus nil)
                    tiedot)
-          uusi-toteuma (merge toteuma tiedot)]
+          uusi-toteuma (merge toteuma tiedot)
+          koordinaattiarvot (or (get-in tiedot [:sijainti :coordinates])
+                                (first (:points (first (:lines tiedot)))))
+          koordinaatit (when koordinaattiarvot {:x (first koordinaattiarvot) :y (second koordinaattiarvot)})
+          uusi-toteuma (assoc uusi-toteuma :arvot (merge (:arvot tiedot) koordinaatit))]
       ;; Jos tietolajin kuvaus muuttui ja se ei ole tyhjä, haetaan uudet tiedot
       ;; todo: vastauksen käsittelyyn (k/virhe)
-      (log "---> tiedot:" (pr-str tiedot))
       (when (and tietolaji-muuttui? (:tietolaji tiedot))
         (let [tulos! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
           (go
