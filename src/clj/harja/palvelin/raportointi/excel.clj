@@ -42,13 +42,13 @@
     (.replace data "\u00AD" "")
     data))
 
-(defmethod muodosta-solu :vain-arvo [arvo _] arvo)
+(defmethod muodosta-solu :vain-arvo [arvo solun-tyyli] [arvo solun-tyyli])
 
 (defmethod muodosta-solu :liitteet [[_ liitteet] solun-tyyli]
-  (count liitteet))
+  [(count liitteet) solun-tyyli])
 
 (defmethod muodosta-solu :arvo-ja-osuus [[_ {:keys [arvo osuus]}] solun-tyyli]
-  arvo)
+  [arvo solun-tyyli])
 
 (defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli]}] solun-tyyli]
   [arvo (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))])
