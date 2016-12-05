@@ -91,8 +91,8 @@
 (defn- formatoi-soratiemittaukset
   [stm]
   (let [{tasaisuus :tasaisuus kiinteys :kiinteys polyavyys :polyavyys
-         sivukaltevuus :sivukaltevuus} stm]
-    (when (or tasaisuus kiinteys polyavyys sivukaltevuus)
+         sivukaltevuus :sivukaltevuus hoitoluokka :hoitoluokka} stm]
+    (when (or tasaisuus kiinteys polyavyys sivukaltevuus hoitoluokka)
       (str "Soratiemittaukset: "
            (str/replace
              (str/join ", "
