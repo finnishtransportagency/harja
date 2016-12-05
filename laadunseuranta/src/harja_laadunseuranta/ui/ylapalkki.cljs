@@ -26,7 +26,7 @@
               :media "(max-width: 700px)"}]
     [:img {:src kuvat/+harja-logo+ :alt ""}]]])
 
-(defn- havaintosilma [{:keys [havaintonappi-painettu]}]
+(defn- havaintosilma [havaintonappi-painettu]
   [:div {:class (str "ylapalkki-button ylapalkki-button-nayta-paanavigointi livicon-eye "
                      (when (and @s/nayta-paanavigointi?
                                 @s/piirra-paanavigointi?)
@@ -72,7 +72,7 @@
     [:div.ylapalkki-vasen
      [logo]
      [havaintosilma havaintonappi-painettu]
-     [kamera]
+     #_[kamera]
      [tieosoite tr-osoite]
      [metatiedot soratiehoitoluokka hoitoluokka]]
     [:div.ylapalkki-oikea
