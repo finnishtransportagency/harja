@@ -183,7 +183,7 @@
       (if (q-suljetut-tieosuudet/onko-olemassa? db {:id (:id tietyomaa) :jarjestelma jarjestelma})
         (q-suljetut-tieosuudet/paivita-tietyomaa! db parametrit)
         (q-suljetut-tieosuudet/luo-tietyomaa<! db parametrit))
-      (let [vastaus (cond-> {:ilmoitukset (str "Suljettu tieosuus kirjattu onnistuneesti.")}
+      (let [vastaus (cond-> {:ilmoitukset (str "Tietyömaa kirjattu onnistuneesti.")}
                             (nil? tr-osoite)
                             (assoc :varoitukset "Annetulle tieosuudelle ei saatu haettua tierekisteriosoitetta."))]
         (tee-kirjausvastauksen-body vastaus)))))
@@ -207,7 +207,7 @@
     (validointi/tarkista-tietyomaa db id jarjestelma)
     (q-suljetut-tieosuudet/merkitse-tietyomaa-poistetuksi! db parametrit)
     (tee-kirjausvastauksen-body
-      {:ilmoitukset (str "Suljettu tieosuus poistettu onnistuneesti.")})))
+      {:ilmoitukset (str "Tietyömaa poistettu onnistuneesti.")})))
 
 (def palvelut
   [{:palvelu        :hae-yllapitokohteet
