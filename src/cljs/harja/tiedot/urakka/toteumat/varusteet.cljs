@@ -98,7 +98,7 @@
 (defn uusi-varuste
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
   []
-  {:toiminto :lisaa
+  {:toiminto :lisatty
    :tietolaji (ffirst varusteet/tietolaji->selitys)})
 
 (extend-protocol t/Event
@@ -147,6 +147,7 @@
           uusi-toteuma (merge toteuma tiedot)]
       ;; Jos tietolajin kuvaus muuttui ja se ei ole tyhjä, haetaan uudet tiedot
       ;; todo: vastauksen käsittelyyn (k/virhe)
+      (log "---> tiedot:" (pr-str tiedot))
       (when (and tietolaji-muuttui? (:tietolaji tiedot))
         (let [tulos! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
           (go
@@ -163,11 +164,13 @@
       app))
 
   v/TallennaVarustetoteuma
-  (process-event [_ {{:keys [arvot sijainti lisatieto tietolaji toiminto] :as toteuma} :varustetoteuma :as app}]
+  (process-event [_ {{:keys [arvot sijainti lisatieto tietolaji toiminto tierekisteriosoite] :as toteuma}
+                     :varustetoteuma :as app}]
     ;; Tietolajin arvoista pitää purkaa koodiarvot ominaisuuden kuvauksen seasta
     (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
           toteuma {:arvot arvot
                    :sijainti sijainti
+                   :tierekisteriosoite tierekisteriosoite
                    :lisatieto lisatieto
                    :tietolaji tietolaji
                    :toiminto toiminto

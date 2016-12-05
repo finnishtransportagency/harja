@@ -93,3 +93,5 @@
           :leveys (if (= "tunniste" (:kenttatunniste ominaisuus))
                     1
                     3)}))
+
+

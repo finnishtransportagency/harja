@@ -18,35 +18,10 @@
             [harja.tyokalut.merkkijono :as merkkijono]
             [harja.palvelin.integraatiot.tierekisteri.tietolajin-kuvauksen-kasittely :as tr-tietolaji]
             [harja.pvm :as pvm]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [clj-time.core :as t]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.domain.tierekisteri.tietolajit :as tietolajit])
   (:use [slingshot.slingshot :only [try+ throw+]]))
-
-(defn- muunna-tietolajin-arvot-stringiksi [tietolajin-kuvaus arvot-map]
-  (tr-tietolaji/tietolajin-arvot-map->merkkijono
-    (clojure.walk/stringify-keys arvot-map)
-    tietolajin-kuvaus))
-
-(defn validoi-ja-muunna-arvot-merkkijonoksi
-  "Hakee tietolajin kuvauksen, validoi arvot sen pohjalta ja muuntaa arvot merkkijonoksi"
-  [tierekisteri arvot tietolaji]
-  (let [vastaus (tierekisteri/hae-tietolajit
-                  tierekisteri
-                  tietolaji
-                  nil)
-        tietolajin-kuvaus (:tietolaji vastaus)]
-    (try
-      (tr-tietolaji/validoi-tietolajin-arvot
-        tietolaji
-        (clojure.walk/stringify-keys arvot)
-        tietolajin-kuvaus)
-      (catch Exception e
-        (throw+ {:type virheet/+viallinen-kutsu+
-                 :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti (.getMessage e)}]})))
-    (muunna-tietolajin-arvot-stringiksi
-      tietolajin-kuvaus
-      arvot)))
 
 (defn tarkista-parametrit [saadut vaaditut]
   (doseq [{:keys [parametri tyyppi]} vaaditut]
@@ -181,7 +156,7 @@
         tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
         tietolajin-arvot (assoc (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]) :tunniste livitunniste)
         arvot-string (when tietolajin-arvot
-                       (validoi-ja-muunna-arvot-merkkijonoksi
+                       (tietolajit/validoi-ja-muunna-arvot-merkkijonoksi
                          tierekisteri
                          tietolajin-arvot
                          tietolaji))
@@ -202,7 +177,7 @@
         tietueen-tunniste (get-in toimenpiteen-tiedot [:varuste :tunniste])
         tietueen-arvot (assoc (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]) :tunniste tietueen-tunniste)
         arvot-string (when tietueen-arvot
-                       (validoi-ja-muunna-arvot-merkkijonoksi
+                       (tietolajit/validoi-ja-muunna-arvot-merkkijonoksi
                          tierekisteri
                          tietueen-arvot
                          tietolaji))
