@@ -92,7 +92,7 @@
 (defn- hae-tietolajin-kuvaus [tietolaji]
   (k/post! :hae-tietolajin-kuvaus tietolaji))
 
-(defn tallenna-varustetoteuma [{:keys [arvot sijainti lisatieto tietolaji toiminto tierekisteriosoite]}]
+(defn tallenna-varustetoteuma [valinnat {:keys [arvot sijainti lisatieto tietolaji toiminto tierekisteriosoite]}]
   ;; todo: passaa hakuehdot, jotta serveri voi tallennuksen jälkeen tehdä uuden haun
   (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
         toteuma {:arvot arvot
@@ -177,16 +177,11 @@
       (assoc-in app [:varustetoteuma :tietolajin-kuvaus] kuvaus)
       app))
 
-  v/TallennaVarustetoteuma
-  (process-event [{:keys [toteuma]} app]
-    (tallenna-varustetoteuma toteuma)
-    app)
-
   v/VarustetoteumaTallennettu
   (process-event [hakutulos app]
     ;; assokkaa appiin uudet tiedot, jota server palauttaa
-    (log "----> TOIMI!")
-    app
+    (log "----> HAKUTULOS:" (pr-str))
+    (dissoc app :varustetoteuma)
     ))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
