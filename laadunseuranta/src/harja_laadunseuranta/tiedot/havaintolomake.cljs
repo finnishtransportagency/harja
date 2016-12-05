@@ -12,12 +12,25 @@
   (reset! s/havaintolomake-auki false))
 
 (defn tyhjenna-lomake! []
-  (reset! s/havaintolomakedata {:kayttajanimi @s/kayttajanimi
-                                :tr-osoite @s/tr-osoite
-                                :aikaleima (l/local-now)
-                                :laadunalitus? false
-                                :kuvaus ""
-                                :kuva nil}))
+  (reset! s/havaintolomakedata
+          {:kayttajanimi @s/kayttajanimi
+           :tr-osoite @s/tr-osoite
+           :aikaleima (l/local-now)
+           :laadunalitus? false
+           :kuvaus ""
+           :kuva nil
+           :esikatselukuva nil})
+  s/havaintolomakedata)
+
+
+(defn alusta-uusi-lomake! []
+  (reset! s/havaintolomakedata
+          {:kayttajanimi @s/kayttajanimi
+           :tr-osoite @s/tr-osoite
+           :aikaleima (l/local-now)
+           :laadunalitus? false
+           :kuvaus ""})
+  s/havaintolomakedata)
 
 (defn tallenna-lomake! []
   (when (reitintallennus/kirjaa-lomake!
@@ -34,9 +47,6 @@
     (tyhjenna-lomake!)
     (sulje-lomake!)))
 
-(defn alusta-uusi-lomake! []
-  (tyhjenna-lomake!)
-  s/havaintolomakedata)
 
 (defn peruuta-lomake! []
   (.log js/console "Peru lomake!")

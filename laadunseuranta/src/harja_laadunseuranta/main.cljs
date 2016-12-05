@@ -1,9 +1,11 @@
 (ns harja-laadunseuranta.main
   (:require [reagent.core :as reagent :refer [atom]]
             [cljs-time.local :as l]
+            [harja-laadunseuranta.ui.kamera :as kamera]
             [harja-laadunseuranta.ui.kartta :as kartta]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.tiedot.sovellus :as s]
+            [harja-laadunseuranta.tiedot.kamera :as kamera-tiedot]
             [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset]
             [harja-laadunseuranta.ui.alustus :as alustus]
             [harja-laadunseuranta.ui.ylapalkki :as ylapalkki]
@@ -21,6 +23,7 @@
 
 (defn- paanakyma []
   [:div.toplevel
+   [kamera/file-input kamera-tiedot/kuva-otettu]
    [ylapalkki/ylapalkki]
 
    [:div.paasisalto-container

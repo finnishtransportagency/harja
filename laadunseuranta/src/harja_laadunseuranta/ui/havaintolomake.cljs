@@ -18,7 +18,7 @@
   (let [kuvaus (reagent/cursor lomakedata [:kuvaus])
         aikaleima (reagent/cursor lomakedata [:aikaleima])
         tr-os (reagent/cursor lomakedata [:tr-osoite])
-        kuva (reagent/cursor lomakedata [:kuva])
+        esikatselukuva (reagent/cursor lomakedata [:esikatselukuva])
         kayttajanimi (reagent/cursor lomakedata [:kayttajanimi])
         laadunalitus? (reagent/cursor lomakedata [:laadunalitus?])
         lomake-virheet (atom #{})]
@@ -53,7 +53,7 @@
           [:label {:for "laadunalitus"} "Laadun alitus"]]
          [:div.title "Lisätietoja"]
          [tekstialue kuvaus]
-         [kamera/kamerakomponentti kuva]]
+         [kamera/kamerakomponentti esikatselukuva]]
 
         [:div.lomake-painikkeet
          [nappi "Tallenna" {:on-click (fn []

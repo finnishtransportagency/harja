@@ -4,6 +4,7 @@
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.utils :as utils]
             [harja-laadunseuranta.tiedot.ylapalkki :as tiedot]
+            [harja-laadunseuranta.tiedot.kamera :as kamera]
             [harja-laadunseuranta.tiedot.tarkastusajon-luonti :as tarkastusajon-luonti]
             [harja-laadunseuranta.tiedot.sovellus :as s]))
 
@@ -57,7 +58,7 @@
         "Käynnistä tarkastus"))]])
 
 (defn- kamera []
-  [:div.ylapalkki-button
+  [:div.ylapalkki-button {:on-click kamera/ota-kuva}
    [:span.glyphicon.glyphicon-camera]])
 
 (defn- ylapalkkikomponentti [{:keys [hoitoluokka soratiehoitoluokka

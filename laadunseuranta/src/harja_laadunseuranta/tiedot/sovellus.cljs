@@ -64,7 +64,8 @@
                         :aikaleima nil
                         :laadunalitus? false
                         :kuvaus ""
-                        :kuva nil}
+                        :kuva nil
+                        :esikatselukuva nil}
 
    ;; Kartta
    :kirjauspisteet [] ; Kartalla näytettäviä ikoneita varten
@@ -100,6 +101,8 @@
 
 (def havaintolomake-auki (reagent/cursor sovellus [:havaintolomake-auki?]))
 (def havaintolomakedata (reagent/cursor sovellus [:havaintolomakedata]))
+(def havaintolomake-kuva (reagent/cursor sovellus [:havaintolomakedata :kuva]))
+(def havaintolomake-esikatselukuva (reagent/cursor sovellus [:havaintolomakedata :esikatselukuva]))
 
 (def alustus-valmis (reaction (let [sovellus @sovellus]
                                 (boolean (and (get-in sovellus [:alustus :gps-tuettu])
