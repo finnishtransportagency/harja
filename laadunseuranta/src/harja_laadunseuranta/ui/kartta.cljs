@@ -295,12 +295,8 @@
      :reittipisteet-atomi s/reittipisteet
      :kirjauspisteet-atomi s/kirjauspisteet
      :optiot s/karttaoptiot}]
-   [:div.kartan-kontrollit {:style (merge
-                                     (when-not @s/nayta-paanavigointi?
-                                       ;; Halutaan ottaa klikit vastaan
-                                       {:z-index 10000})
-                                     (when @s/havaintolomake-auki
-                                       {:display "none"}))}
+   [:div.kartan-kontrollit {:style (when @s/havaintolomake-auki
+                                     {:display "none"})}
     [:div#karttakontrollit]
     [:div.kontrollinappi.ortokuva.livicon-eye {:on-click #(swap! s/nayta-ortokuva not)}]
     [:div.kontrollinappi.kiinteistorajat.livicon-home {:on-click #(swap! s/nayta-kiinteistorajat not)}]
