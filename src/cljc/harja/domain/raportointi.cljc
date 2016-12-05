@@ -88,3 +88,12 @@
 #?(:cljs
    (defn nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit? []
      (voi-nahda-laajemman-kontekstin-raportit? @harja.tiedot.istunto/kayttaja)))
+
+(defn yrita
+  "Yrittää tehdä ajaa funktion parametreineen. Jos heitetään poikkeus,
+  palautetaan ensimmäinen parametri. Käytetään erityisesti formattereiden kanssa."
+  [fn arvo & args]
+  (try
+    (apply (partial fn arvo) args)
+    #?(:cljs (catch js/Object _ arvo))
+    #?(:clj (catch Exception _ arvo))))

@@ -48,10 +48,10 @@
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})
         formatter (fn [{fmt :fmt}]
                     (case fmt
-                      :numero #(fmt/desimaaliluku-opt % 2 true)
-                      :prosentti #(fmt/prosentti-opt % 1)
-                      :raha #(fmt/desimaaliluku-opt % 2 true)
-                      :pvm #(fmt/pvm-opt %)
+                      :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 2 true)
+                      :prosentti #(raportti-domain/yrita fmt/prosentti-opt % 1)
+                      :raha #(raportti-domain/yrita fmt/desimaaliluku-opt % 2 true)
+                      :pvm #(raportti-domain/yrita fmt/pvm-opt %)
                       str))]
     [grid/grid {:otsikko            (or otsikko "")
                 :tunniste           (fn [rivi] (str "raportti_rivi_"

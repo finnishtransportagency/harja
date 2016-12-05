@@ -120,10 +120,10 @@
                  :let [arvo-datassa (nth rivi i)
                        sarake (nth sarakkeet i)
                        fmt (case (:fmt sarake)
-                             :numero #(fmt/desimaaliluku-opt % 1 true)
-                             :prosentti #(fmt/prosentti-opt %)
-                             :raha #(fmt/desimaaliluku-opt % 2 true)
-                             :pvm #(fmt/pvm-opt %)
+                             :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 1 true)
+                             :prosentti #(raportti-domain/yrita fmt/prosentti-opt %)
+                             :raha #(raportti-domain/yrita fmt/desimaaliluku-opt % 2 true)
+                             :pvm #(raportti-domain/yrita fmt/pvm-opt %)
                              str)
                        naytettava-arvo (or
                                          (cond
