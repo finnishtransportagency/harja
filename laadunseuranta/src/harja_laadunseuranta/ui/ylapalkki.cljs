@@ -3,6 +3,7 @@
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.utils :as utils]
+            [harja-laadunseuranta.tiedot.ylapalkki :as tiedot]
             [harja-laadunseuranta.tiedot.tarkastusajon-luonti :as tarkastusajon-luonti]
             [harja-laadunseuranta.tiedot.sovellus :as s]))
 
@@ -24,14 +25,14 @@
               :media "(max-width: 700px)"}]
     [:img {:src kuvat/+harja-logo+ :alt ""}]]])
 
-(defn- havaintosilma []
+(defn- havaintosilma [{:keys [havaintonappi-painettu]}]
   [:div {:class (str "ylapalkki-button ylapalkki-button-nayta-paanavigointi livicon-eye "
                      (when (and @s/nayta-paanavigointi?
                                 @s/piirra-paanavigointi?)
                        "ylapalkki-button-aktiivinen ")
                      (when-not @s/tallennus-kaynnissa
                        "ylapalkki-button-disabloitu "))
-         :on-click #(swap! s/nayta-paanavigointi? not)}])
+         :on-click havaintonappi-painettu}])
 
 (defn- tieosoite [tr-osoite]
   [:div.tr-osoite (formatoi-tr-osoite @tr-osoite)])
@@ -62,14 +63,14 @@
 (defn- ylapalkkikomponentti [{:keys [hoitoluokka soratiehoitoluokka
                                      tr-osoite tallennus-kaynnissa aloitetaan-tarkastusajo
                                      kaynnista-tarkastus-fn pysayta-tarkastusajo-fn
-                                     disabloi-kaynnistys?
+                                     disabloi-kaynnistys? havaintonappi-painettu
                                      palvelinvirhe]}]
   [:div
    [:div.ylapalkki {:class (when (or (utils/kehitysymparistossa?)
                                      (utils/stg-ymparistossa?)) "testiharja")}
     [:div.ylapalkki-vasen
      [logo]
-     [havaintosilma]
+     [havaintosilma havaintonappi-painettu]
      [kamera]
      [tieosoite tr-osoite]
      [metatiedot soratiehoitoluokka hoitoluokka]]
@@ -86,6 +87,7 @@
 (defn ylapalkki []
   [ylapalkkikomponentti
    {:hoitoluokka s/hoitoluokka
+    :havaintonappi-painettu tiedot/havaintonappi-painettu!
     :aloitetaan-tarkastusajo s/aloitetaan-tarkastusajo
     :soratiehoitoluokka s/soratiehoitoluokka
     :kaynnista-tarkastus-fn tarkastusajon-luonti/luo-ajo!
