@@ -247,12 +247,42 @@
       (assoc tarkastus
        :liitteet (into [] (tarkastukset/hae-tarkastuksen-liitteet db tarkastus-id))))))
 
+(def talvihoitomittauksen-lomakekentat
+  [[:lumimaara] [:tasaisuus] [:kitka] [:lampotila :tie] [:lampotila :ilma]])
+
 (def talvihoitomittauksen-kentat
-  [[:lumimaara] [:hoitoluokka] [:tasaisuus] [:kitka] [:ajosuunta]
+  [[:tarkastus] [:lumimaara] [:hoitoluokka] [:tasaisuus] [:kitka] [:ajosuunta]
     [:lampotila :tie] [:lampotila :ilma]])
 
 (def soratiemittauksen-kentat
-  [[:tasaisuus] [:polyavyys] [:kiinteys] [:sivukaltevuus] [:hoitoluokka]])
+  [[:tarkastus] [:tasaisuus] [:polyavyys] [:kiinteys] [:sivukaltevuus] [:hoitoluokka]])
+
+(defn luo-tai-paivita-talvihoitomittaus [db tarkastus uusi?
+                                         {:keys [hoitoluokka lumimaara tasaisuus
+                                                 kitka lampotila-ilma lampotila-tie ajosuunta] :as mittaukset}]
+  (let [params {:tarkastus tarkastus
+                :talvihoitoluokka (or hoitoluokka "") :lumimaara lumimaara :tasaisuus tasaisuus :kitka kitka
+                :lampotila_ilma lampotila-ilma :lampotila_tie lampotila-tie :ajosuunta (or ajosuunta 0)}
+        poista-rivi? (not-any? #(get-in mittaukset %) talvihoitomittauksen-lomakekentat)]
+
+    (if poista-rivi?
+      (tarkastukset/poista-talvihoitomittaus! db tarkastus)
+      (if uusi?
+        (tarkastukset/luo-talvihoitomittaus<! db params)
+        (tarkastukset/paivita-talvihoitomittaus! db params)))))
+
+(defn luo-tai-paivita-soratiemittaus [db tarkastus uusi?
+                                      {:keys [hoitoluokka tasaisuus kiinteys polyavyys sivukaltevuus] :as mittaukset}]
+  (let [params {:hoitoluokka   hoitoluokka
+                :tasaisuus     tasaisuus :kiinteys kiinteys :polyavyys polyavyys
+                :sivukaltevuus sivukaltevuus :tarkastus tarkastus}
+        poista-rivi? (not-any? #(get-in (dissoc mittaukset :tarkastus) %)
+                           soratiemittauksen-kentat)]
+    (if poista-rivi?
+      (tarkastukset/poista-soratiemittaus! db tarkastus)
+      (if uusi?
+       (tarkastukset/luo-soratiemittaus<! db params)
+       (tarkastukset/paivita-soratiemittaus! db params)))))
 
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
@@ -271,7 +301,7 @@
                      (= :talvihoito tarkastustyyppi)
                      (= :laatu tarkastustyyppi))
                    talvihoitomittaus?)
-          (tarkastukset/luo-tai-paivita-talvihoitomittaus
+          (luo-tai-paivita-talvihoitomittaus
            c id (or uusi-tarkastus? (not (:tarkastus (:talvihoitomittaus tarkastus))))
            (-> (:talvihoitomittaus tarkastus)
                (assoc :lampotila-tie
@@ -279,13 +309,14 @@
                (assoc :lampotila-ilma
                       (get-in (:talvihoitomittaus tarkastus) [:lampotila :ilma])))))
 
-        (when (or
-                (= :soratie tarkastustyyppi)
-                (= :laatu tarkastustyyppi)
-                soratiemittaus?)
-          (tarkastukset/luo-tai-paivita-soratiemittaus c id
-                                                       (or uusi-tarkastus? (not (:tarkastus (:soratiemittaus tarkastus))))
-                                                       (:soratiemittaus tarkastus)))
+        (when (and (or
+                     (= :soratie tarkastustyyppi)
+                     (= :laatu tarkastustyyppi))
+                   soratiemittaus?)
+          (luo-tai-paivita-soratiemittaus
+            c id
+            (or uusi-tarkastus? (not (:tarkastus (:soratiemittaus tarkastus))))
+            (:soratiemittaus tarkastus)))
 
         (when-let [uusi-liite (:uusi-liite tarkastus)]
           (log/info "UUSI LIITE: " uusi-liite)

@@ -44,34 +44,3 @@
                               (if urakoitsija? true (boolean nayta-urakoitsijalle))
                               urakka-id id)
           id))))
-
-(defn luo-tai-paivita-talvihoitomittaus [db tarkastus uusi?
-                                         {:keys [hoitoluokka lumimaara tasaisuus
-                                                 kitka lampotila-ilma lampotila-tie ajosuunta] :as talvihoitomittaus}]
-  (if uusi?
-    (do (log/info "PARAMS:" db
-                  (or hoitoluokka "") lumimaara tasaisuus
-                  kitka lampotila-ilma lampotila-tie (or ajosuunta 0)
-                  tarkastus)
-        (luo-talvihoitomittaus<! db
-                                 (or hoitoluokka "") lumimaara tasaisuus
-                                 kitka lampotila-ilma lampotila-tie (or ajosuunta 0)
-                                 tarkastus))
-    (paivita-talvihoitomittaus! db
-                                (or hoitoluokka "") lumimaara tasaisuus
-                                kitka lampotila-ilma lampotila-tie (or ajosuunta 0)
-                                tarkastus)))
-
-(defn luo-tai-paivita-soratiemittaus [db tarkastus uusi?
-                                      {:keys [hoitoluokka tasaisuus kiinteys polyavyys sivukaltevuus]}]
-  (if uusi?
-    (luo-soratiemittaus<! db
-                          hoitoluokka tasaisuus
-                          kiinteys polyavyys
-                          sivukaltevuus
-                          tarkastus)
-    (paivita-soratiemittaus! db
-                             hoitoluokka tasaisuus
-                             kiinteys polyavyys
-                             sivukaltevuus
-                             tarkastus)))

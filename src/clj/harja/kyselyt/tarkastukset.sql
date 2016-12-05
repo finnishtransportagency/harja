@@ -214,12 +214,17 @@ SET talvihoitoluokka = :talvihoitoluokka,
   ajosuunta          = :ajosuunta
 WHERE tarkastus = :tarkastus
 
+--name: poista-talvihoitomittaus!
+DELETE
+FROM talvihoitomittaus
+WHERE tarkastus = :tarkastus;
+
 -- name: luo-soratiemittaus<!
 -- Luo uuden soratiemittauksen annetulle tarkastukselle.
 INSERT
 INTO soratiemittaus
 (hoitoluokka, tasaisuus, kiinteys, polyavyys, sivukaltevuus, tarkastus)
-VALUES (:hoitoluokka, :tasaisuus, :kiinteys, :polyavyys, :sivukaltevuus, :tarkastus)
+VALUES (:hoitoluokka, :tasaisuus, :kiinteys, :polyavyys, :sivukaltevuus, :tarkastus);
 
 -- name: paivita-soratiemittaus!
 -- Päivittää tarkastuksen aiemmin luodun soratiemittauksen
@@ -230,6 +235,11 @@ SET hoitoluokka = :hoitoluokka,
   polyavyys     = :polyavyys,
   sivukaltevuus = :sivukaltevuus
 WHERE tarkastus = :tarkastus;
+
+--name: poista-soratiemittaus!
+DELETE
+  FROM soratiemittaus
+ WHERE tarkastus = :tarkastus;
 
 -- name: hae-tarkastus-ulkoisella-idlla-ja-tyypilla
 -- Hakee tarkastuksen ja sen havainnon id:t ulkoisella id:lla ja luojalla.
