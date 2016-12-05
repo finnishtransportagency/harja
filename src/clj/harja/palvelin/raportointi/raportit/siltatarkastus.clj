@@ -259,11 +259,9 @@
                            (liita rivi :tarkastamaton? false)))
 
         lihavoi (fn [rivi]
-                  rivi
-                  #_(if (:tarkastamaton? rivi) (liita rivi :lihavoi? true) (liita rivi :lihavoi? false)))
+                  (if (:tarkastamaton? rivi) (liita rivi :lihavoi? true) (liita rivi :lihavoi? false)))
         korosta (fn [rivi]
-                  rivi
-                  #_(if (:virhe? rivi) (liita rivi :korosta? true) (liita rivi :korosta? false)))
+                  (if (:virhe? rivi) (liita rivi :korosta? true) (liita rivi :korosta? false)))
         jarjesta (fn [rivit]
                    (let [indeksi (fn [i] #(nth (:rivi %) i))]
                      (vec (sort-by
