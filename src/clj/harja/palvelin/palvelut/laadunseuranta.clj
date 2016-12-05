@@ -247,43 +247,6 @@
       (assoc tarkastus
        :liitteet (into [] (tarkastukset/hae-tarkastuksen-liitteet db tarkastus-id))))))
 
-(def talvihoitomittauksen-lomakekentat
-  [[:lumimaara] [:tasaisuus] [:kitka] [:lampotila :tie] [:lampotila :ilma]])
-
-(def talvihoitomittauksen-kentat
-  [[:tarkastus] [:lumimaara] [:hoitoluokka] [:tasaisuus] [:kitka] [:ajosuunta]
-    [:lampotila :tie] [:lampotila :ilma]])
-
-(def soratiemittauksen-kentat
-  [[:tarkastus] [:tasaisuus] [:polyavyys] [:kiinteys] [:sivukaltevuus] [:hoitoluokka]])
-
-(defn luo-tai-paivita-talvihoitomittaus [db tarkastus uusi?
-                                         {:keys [hoitoluokka lumimaara tasaisuus
-                                                 kitka lampotila-ilma lampotila-tie ajosuunta] :as mittaukset}]
-  (let [params {:tarkastus tarkastus
-                :talvihoitoluokka (or hoitoluokka "") :lumimaara lumimaara :tasaisuus tasaisuus :kitka kitka
-                :lampotila_ilma lampotila-ilma :lampotila_tie lampotila-tie :ajosuunta (or ajosuunta 0)}
-        poista-rivi? (not-any? #(get-in mittaukset %) talvihoitomittauksen-lomakekentat)]
-
-    (if poista-rivi?
-      (tarkastukset/poista-talvihoitomittaus! db tarkastus)
-      (if uusi?
-        (tarkastukset/luo-talvihoitomittaus<! db params)
-        (tarkastukset/paivita-talvihoitomittaus! db params)))))
-
-(defn luo-tai-paivita-soratiemittaus [db tarkastus uusi?
-                                      {:keys [hoitoluokka tasaisuus kiinteys polyavyys sivukaltevuus] :as mittaukset}]
-  (let [params {:hoitoluokka   hoitoluokka
-                :tasaisuus     tasaisuus :kiinteys kiinteys :polyavyys polyavyys
-                :sivukaltevuus sivukaltevuus :tarkastus tarkastus}
-        poista-rivi? (not-any? #(get-in (dissoc mittaukset :tarkastus) %)
-                           soratiemittauksen-kentat)]
-    (if poista-rivi?
-      (tarkastukset/poista-soratiemittaus! db tarkastus)
-      (if uusi?
-       (tarkastukset/luo-soratiemittaus<! db params)
-       (tarkastukset/paivita-soratiemittaus! db params)))))
-
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
   (try
@@ -291,9 +254,9 @@
       (let [uusi-tarkastus? (nil? (:id tarkastus))
             tarkastustyyppi (:tyyppi tarkastus)
             talvihoitomittaus? (some #(get-in (:talvihoitomittaus tarkastus) %)
-                                     talvihoitomittauksen-kentat)
+                                     laadunseuranta/talvihoitomittauksen-kentat)
             soratiemittaus? (some #(get-in (:soratiemittaus tarkastus) %)
-                                     soratiemittauksen-kentat)
+                                     laadunseuranta/soratiemittauksen-kentat)
             tarkastus (assoc tarkastus :lahde "harja-ui")
             id (tarkastukset/luo-tai-paivita-tarkastus c user urakka-id tarkastus)]
 
@@ -301,7 +264,7 @@
                      (= :talvihoito tarkastustyyppi)
                      (= :laatu tarkastustyyppi))
                    talvihoitomittaus?)
-          (luo-tai-paivita-talvihoitomittaus
+          (tarkastukset/luo-tai-paivita-talvihoitomittaus
            c id (or uusi-tarkastus? (not (:tarkastus (:talvihoitomittaus tarkastus))))
            (-> (:talvihoitomittaus tarkastus)
                (assoc :lampotila-tie
@@ -313,7 +276,7 @@
                      (= :soratie tarkastustyyppi)
                      (= :laatu tarkastustyyppi))
                    soratiemittaus?)
-          (luo-tai-paivita-soratiemittaus
+          (tarkastukset/luo-tai-paivita-soratiemittaus
             c id
             (or uusi-tarkastus? (not (:tarkastus (:soratiemittaus tarkastus))))
             (:soratiemittaus tarkastus)))
@@ -322,7 +285,6 @@
           (log/info "UUSI LIITE: " uusi-liite)
           (tarkastukset/luo-liite<! c id (:id uusi-liite)))
 
-        (log/info "SAATIINPA urakalle " urakka-id " tarkastus: " tarkastus)
         (hae-tarkastus c user urakka-id id)))
     (catch Exception e
       (log/info e "Tarkastuksen tallennuksessa poikkeus!"))))
