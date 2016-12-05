@@ -122,7 +122,7 @@
                        fmt (case (:fmt sarake)
                              :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 1 true)
                              :prosentti #(raportti-domain/yrita fmt/prosentti-opt %)
-                             :raha #(raportti-domain/yrita fmt/desimaaliluku-opt % 2 true)
+                             :raha #(raportti-domain/yrita fmt/euro-opt %)
                              :pvm #(raportti-domain/yrita fmt/pvm-opt %)
                              str)
                        naytettava-arvo (or
