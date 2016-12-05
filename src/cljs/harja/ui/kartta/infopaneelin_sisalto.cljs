@@ -194,7 +194,7 @@
                          skeema)
         tyhjat-arvot (keep (comp :otsikko first) (filter (comp nil? second) kenttien-arvot))]
     (when-not (empty? tyhjat-arvot)
-      (log/error "Yritettiin muodostaa overlayn tietoja asialle " otsikko ", mutta seuraavat tiedot puuttuivat: " (pr-str tyhjat-arvot)))
+      (log/error "Yritettiin muodostaa overlayn tietoja asialle " otsikko ", mutta seuraavat tiedot puuttuivat: " (pr-str tyhjat-arvot)) "\nkenttien-arvot:" (clj->js kenttien-arvot))
     (assoc tieto :tiedot (mapv first (remove (comp nil? second) kenttien-arvot)))))
 
 (defn validoi-tiedot [tiedot]
