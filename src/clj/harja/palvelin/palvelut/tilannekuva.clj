@@ -237,16 +237,16 @@
                          :tyypit (map name (haettavat tarkastukset))
                          :kayttaja_on_urakoitsija (roolit/urakoitsija? user)})))
 
-(defn- hae-suljetut-tieosuudet
+(defn- hae-tietyomaat
   [db user {:keys [yllapito alue nykytilanne?]} urakat]
   (when (or (not-empty urakat) (oikeudet/voi-lukea? (if nykytilanne?
                                                       oikeudet/tilannekuva-nykytilanne
                                                       oikeudet/tilannekuva-historia)
                                                     nil user))
-    (when (tk/valittu? yllapito tk/suljetut-tiet)
+    (when (tk/valittu? yllapito tk/tietyomaat)
       (vec (map (comp #(konv/array->vec % :kaistat)
                       #(konv/array->vec % :ajoradat))
-                (q/hae-suljetut-tieosuudet db {:x1 (:xmin alue)
+                (q/hae-tietyomaat db {:x1 (:xmin alue)
                                                :y1 (:ymin alue)
                                                :x2 (:xmax alue)
                                                :y2 (:ymax alue)}))))))
@@ -263,7 +263,7 @@
 
 (def tilannekuvan-osiot
   #{:toteumat :tyokoneet :turvallisuuspoikkeamat
-    :laatupoikkeamat :paikkaus :paallystys :ilmoitukset :suljetut-tieosuudet})
+    :laatupoikkeamat :paikkaus :paallystys :ilmoitukset :tietyomaat})
 
 (defmulti hae-osio (fn [db user tiedot urakat osio] osio))
 (defmethod hae-osio :toteumat [db user tiedot urakat _]
@@ -294,9 +294,9 @@
   (tulosta-tulos! "ilmoitusta"
                   (hae-ilmoitukset db user tiedot urakat)))
 
-(defmethod hae-osio :suljetut-tieosuudet [db user tiedot urakat _]
+(defmethod hae-osio :tietyomaat [db user tiedot urakat _]
   (tulosta-tulos! "suljettua tieosuutta"
-                  (hae-suljetut-tieosuudet db user tiedot urakat)))
+                  (hae-tietyomaat db user tiedot urakat)))
 
 (defn yrita-hakea-osio [db user tiedot urakat osio]
   (try
