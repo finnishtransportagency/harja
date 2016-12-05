@@ -297,7 +297,7 @@
      :optiot s/karttaoptiot}]
    [:div.kartan-kontrollit {:style (when @s/havaintolomake-auki
                                      {:display "none"})}
-    [:div#karttakontrollit]
+    [:div#karttakontrollit] ;; OpenLayersin ikonit asetetaan tähän elementtiin erikseen
     [:div.kontrollinappi.ortokuva.livicon-terrain {:on-click #(swap! s/nayta-ortokuva not)}]
     [:div.kontrollinappi.kiinteistorajat.livicon-property-boundary {:on-click #(swap! s/nayta-kiinteistorajat not)}]
     [:div.kontrollinappi.keskityspainike.livicon-crosshairs {:on-click #(do (swap! s/keskita-ajoneuvoon not)

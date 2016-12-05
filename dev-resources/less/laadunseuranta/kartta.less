@@ -4,7 +4,7 @@
   position: absolute;
   left: 0;
   top: 0;
-  background-color: @musta;
+  background-color: @harmaa2;
   font-size: 2em;
   width: @napin-leveys;
 
@@ -22,6 +22,7 @@
 
   > #karttakontrollit {
     display: inline-block;
+    height: 120px; // "auto" ei toimi Firefoxissa jostain syystä.
   }
 
   .ol-zoom {
