@@ -189,7 +189,7 @@
                              (do (log/error "skeemasta puuttuu :nimi tai :hae - " (pr-str rivin-skeema))
                                  [])))
                          skeema)
-        tyhjat-arvot (map (comp :otsikko first) (filter (comp nil? second) kenttien-arvot))]
+        tyhjat-arvot (keep (comp :otsikko first) (filter (comp nil? second) kenttien-arvot))]
     (when-not (empty? tyhjat-arvot)
       (log/error "Yritettiin muodostaa overlayn tietoja asialle " otsikko ", mutta seuraavat tiedot puuttuivat: " (pr-str tyhjat-arvot)))
     (assoc tieto :tiedot (mapv first (remove (comp nil? second) kenttien-arvot)))))
