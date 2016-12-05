@@ -141,7 +141,9 @@
                    #(varustetiedot/tallenna-varustetoteuma nykyiset-valinnat toteuma)
                    {:luokka "nappi-ensisijainen"
                     :ikoni (ikonit/tallenna)
-                    :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
+                    :kun-onnistuu #(do
+                                     (log "---> ONNISTUI" %)
+                                     (e! (v/->VarustetoteumaTallennettu %)))
                     :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
                     :disabled (not (lomake/voi-tallentaa? toteuma))}])}
     [(lomake/ryhma

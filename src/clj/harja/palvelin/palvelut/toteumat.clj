@@ -528,7 +528,7 @@
 
     (q/poista-tehtava! db (:id user) (:id tiedot))))
 
-(defn hae-urakan-varustetoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero]}]
+(defn hae-urakan-varustetoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero] :as hakuehdot}]
   (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-varusteet user urakka-id)
   (log/debug "Haetaan varustetoteumat: " urakka-id sopimus-id alkupvm loppupvm tienumero)
   (let [toteumat (into []
@@ -552,13 +552,15 @@
     (log/debug "Palautetaan " (count kasitellyt-toteumarivit) " varustetoteuma(a)")
     kasitellyt-toteumarivit))
 
-(defn tallenna-varustetoteuma [tierekisteri db user {:keys [urakka-id
-                                                            arvot
-                                                            sijainti
-                                                            tierekisteriosoite
-                                                            lisatieto
-                                                            tietolaji
-                                                            toiminto]}]
+(defn tallenna-varustetoteuma [tierekisteri db user
+                               hakuehdot
+                               {:keys [urakka-id
+                                       arvot
+                                       sijainti
+                                       tierekisteriosoite
+                                       lisatieto
+                                       tietolaji
+                                       toiminto] :as toteuma}]
   (oikeudet/vaadi-kirjoitusoikeus  oikeudet/urakat-toteumat-varusteet user urakka-id)
   (log/debug "Tallennetaan uusi varustetoteuma")
   (jdbc/with-db-transaction [db db]
@@ -610,7 +612,9 @@
                                :sijainti sijainti})
 
       ;; todo: lähetä tierekisteriin
-      )))
+      (let [toteumat (hae-urakan-varustetoteumat db user hakuehdot)]
+        (println "----> toteumat:" toteumat)
+        toteumat))))
 
 (defn hae-kokonaishintaisen-toteuman-tiedot [db user urakka-id pvm toimenpidekoodi]
   (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
@@ -735,8 +739,8 @@
       (fn [user tiedot]
         (hae-urakan-varustetoteumat db user tiedot))
       :tallenna-varustetoteuma
-      (fn [user tiedot]
-        (tallenna-varustetoteuma tierekisteri db user tiedot))
+      (fn [user {:keys [hakuehdot toteuma]}]
+        (tallenna-varustetoteuma tierekisteri db user hakuehdot toteuma))
       :hae-toteuman-reitti-ja-tr-osoite
       (fn [user tiedot]
         (hae-toteuman-reitti-ja-tr-osoite db user tiedot)))

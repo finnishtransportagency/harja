@@ -92,8 +92,8 @@
 (defn- hae-tietolajin-kuvaus [tietolaji]
   (k/post! :hae-tietolajin-kuvaus tietolaji))
 
-(defn tallenna-varustetoteuma [valinnat {:keys [arvot sijainti lisatieto tietolaji toiminto tierekisteriosoite]}]
-  ;; todo: passaa hakuehdot, jotta serveri voi tallennuksen jälkeen tehdä uuden haun
+(defn tallenna-varustetoteuma [{:keys [urakka-id sopimus-id kuukausi hoitokausi tienumero] :as hakuehdot}
+                               {:keys [arvot sijainti lisatieto tietolaji toiminto tierekisteriosoite] :as toteuma}]
   (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
         toteuma {:arvot arvot
                  :sijainti sijainti
@@ -101,8 +101,14 @@
                  :lisatieto lisatieto
                  :tietolaji tietolaji
                  :toiminto toiminto
-                 :urakka-id @nav/valittu-urakka-id}]
-    (k/post! :tallenna-varustetoteuma toteuma)))
+                 :urakka-id @nav/valittu-urakka-id}
+        aikarajaus (or kuukausi hoitokausi)
+        hakuehdot {:urakka-id urakka-id
+                   :sopimus-id sopimus-id
+                   :alkupvm (first aikarajaus)
+                   :loppupvm (second aikarajaus)
+                   :tienumero tienumero}]
+    (k/post! :tallenna-varustetoteuma {:hakuehdot hakuehdot :toteuma toteuma})))
 
 (defn uusi-varuste
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
@@ -161,7 +167,6 @@
                                                 :y (Math/round (second koordinaattiarvot))})
           uusi-toteuma (assoc uusi-toteuma :arvot (merge (:arvot tiedot) koordinaatit))]
       ;; Jos tietolajin kuvaus muuttui ja se ei ole tyhjä, haetaan uudet tiedot
-      ;; todo: vastauksen käsittelyyn (k/virhe)
       (when (and tietolaji-muuttui? (:tietolaji tiedot))
         (let [tulos! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
           (go
@@ -178,11 +183,15 @@
       app))
 
   v/VarustetoteumaTallennettu
-  (process-event [hakutulos app]
+  (process-event [{toteumat :hakutulos} app]
     ;; assokkaa appiin uudet tiedot, jota server palauttaa
-    (log "----> HAKUTULOS:" (pr-str))
-    (dissoc app :varustetoteuma)
-    ))
+    (let [toteumat (if toteumat toteumat [])]
+      (log "----> toteumat:" (pr-str toteumat))
+      (assoc (dissoc app :varustetoteuma)
+        :karttataso (varustetoteumat-karttataso toteumat)
+        :karttataso-nakyvissa? true
+        :toteumat toteumat
+        :toteumahaku-id nil))))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))
