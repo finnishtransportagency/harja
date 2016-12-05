@@ -21,6 +21,11 @@ SELECT
   thm.kitka              AS talvihoitomittaus_kitka,
   thm.lampotila_tie      AS talvihoitomittaus_lampotila_tie,
   thm.lampotila_ilma     AS talvihoitomittaus_lampotila_ilma,
+  stm.hoitoluokka        AS soratiemittaus_hoitoluokka,
+  stm.tasaisuus          AS soratiemittaus_tasaisuus,
+  stm.kiinteys           AS soratiemittaus_kiinteys,
+  stm.polyavyys          AS soratiemittaus_polyavyys,
+  stm.sivukaltevuus      AS soratiemittaus_sivukaltevuus,
   ypk.tr_numero          AS yllapitokohde_tr_numero,
   ypk.tr_alkuosa         AS yllapitokohde_tr_alkuosa,
   ypk.tr_alkuetaisyys    AS yllapitokohde_tr_alkuetaisyys,
@@ -37,6 +42,7 @@ SELECT
   WHERE tarkastus = t.id) as vakiohavainnot
 FROM tarkastus t
   LEFT JOIN talvihoitomittaus thm ON thm.tarkastus = t.id
+  LEFT JOIN soratiemittaus stm ON stm.tarkastus = t.id
   LEFT JOIN kayttaja k ON t.luoja = k.id
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
   LEFT JOIN yllapitokohde ypk ON t.yllapitokohde = ypk.id
@@ -47,7 +53,9 @@ WHERE t.urakka = :urakka
       AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
       AND (:havaintoja_sisaltavat = FALSE
            OR ((char_length(t.havainnot) > 0 AND lower(t.havainnot) != 'ok')
-               OR EXISTS(SELECT tarkastus FROM tarkastus_vakiohavainto WHERE tarkastus = t.id)))
+               OR EXISTS(SELECT tarkastus FROM tarkastus_vakiohavainto WHERE tarkastus = t.id)
+               OR EXISTS(SELECT tarkastus FROM talvihoitomittaus WHERE tarkastus = t.id)
+               OR EXISTS(SELECT tarkastus FROM soratiemittaus WHERE tarkastus = t.id)))
       AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE)
   ORDER BY t.aika DESC
 LIMIT :maxrivimaara;
@@ -74,7 +82,9 @@ SELECT ST_Simplify(t.sijainti, :toleranssi) as reitti,
    AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
        AND (:havaintoja_sisaltavat = FALSE
             OR ((char_length(t.havainnot) > 0 AND lower(t.havainnot) != 'ok')
-                OR EXISTS(SELECT tarkastus FROM tarkastus_vakiohavainto WHERE tarkastus = t.id)))
+                OR EXISTS(SELECT tarkastus FROM tarkastus_vakiohavainto WHERE tarkastus = t.id)
+                OR EXISTS(SELECT tarkastus FROM talvihoitomittaus WHERE tarkastus = t.id)
+                OR EXISTS(SELECT tarkastus FROM soratiemittaus WHERE tarkastus = t.id)))
    AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE);
 
 -- name: hae-tarkastus
