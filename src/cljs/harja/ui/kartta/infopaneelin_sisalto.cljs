@@ -177,6 +177,9 @@
                           [{:otsikko "Lisätieto" :nimi :lisatieto}])))
    :data toteuma})
 
+(defmethod infopaneeli-skeema :default [x]
+  nil)
+
 (defn validoi-tieto [tieto]
   (let [otsikko (:otsikko tieto)
         skeema (remove empty? (:tiedot tieto))
@@ -198,4 +201,4 @@
   (map validoi-tieto tiedot))
 
 (defn skeemamuodossa [asiat]
-  (validoi-tiedot (map infopaneeli-skeema asiat)))
+  (validoi-tiedot (keep infopaneeli-skeema asiat)))
