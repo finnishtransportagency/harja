@@ -72,7 +72,7 @@
     [:div.ylapalkki-vasen
      [logo]
      [havaintosilma havaintonappi-painettu]
-     #_[kamera]
+     [kamera]
      [tieosoite tr-osoite]
      [metatiedot soratiehoitoluokka hoitoluokka]]
     [:div.ylapalkki-oikea
