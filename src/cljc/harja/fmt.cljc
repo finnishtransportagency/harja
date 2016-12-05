@@ -10,6 +10,8 @@
      (:import (java.text NumberFormat)
               (java.util Locale))))
 
+#?(:cljs (def frontin-formatointivirheviestit #{"epäluku"}))
+
 #?(:clj
    (Locale/setDefault (Locale. "fi" "FI")))
 
@@ -30,7 +32,10 @@
        ;; NOTE: lisätään itse perään euro symboli, koska googlella oli jotain ihan sotkua.
        ;; Käytetään googlen formatointia, koska toLocaleString tukee tarvittavia optioita, mutta
        ;; vasta IE11 versiosta lähtien.
-       (str (.format euro-number-format eur) " \u20AC")
+       (let [tulos (.format euro-number-format eur)]
+         (if (frontin-formatointivirheviestit tulos)
+           (throw (js/Error. (str "Arvoa ei voi formatoida euroksi: " (pr-str eur))))
+           (str tulos " \u20AC")))
 
        :clj
        (.format (doto
@@ -453,9 +458,15 @@
        (if (= tarkkuus 0)
          (.toFixed luku 0)
          (let [formatoitu (.format (desimaali-fmt tarkkuus) luku)]
-           (if-not ryhmitelty?
-             (str/replace formatoitu #" " "")
-             formatoitu)))
+           (cond
+             (frontin-formatointivirheviestit formatoitu)
+             (throw (js/Error. (str "Arvoa ei voi formatoida desimaaliluvuksi:" (pr-str luku))))
+
+             ryhmitelty?
+             formatoitu
+
+             :default
+             (str/replace formatoitu #" " ""))))
        :clj
        (.format (doto (java.text.DecimalFormat.)
                   (.setDecimalFormatSymbols desimaali-symbolit)
