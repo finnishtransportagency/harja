@@ -14,6 +14,7 @@
         data-url (.createObjectURL js/URL file)
         reader (js/FileReader.)]
     (reset! s/havaintolomake-esikatselukuva data-url)
+    (reset! s/havaintolomake-auki true)
     (set! (.-onload reader)
           (fn [e]
             (reset! s/havaintolomake-kuva

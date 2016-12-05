@@ -27,13 +27,16 @@
     [:img {:src kuvat/+harja-logo+ :alt ""}]]])
 
 (defn- havaintosilma [havaintonappi-painettu]
-  [:div {:class (str "ylapalkki-button ylapalkki-button-nayta-paanavigointi livicon-eye "
-                     (when (and @s/nayta-paanavigointi?
-                                @s/piirra-paanavigointi?)
-                       "ylapalkki-button-aktiivinen ")
-                     (when-not @s/tallennus-kaynnissa
-                       "ylapalkki-button-disabloitu "))
-         :on-click havaintonappi-painettu}])
+  (let [aktiivinen? (and @s/nayta-paanavigointi?
+                         @s/piirra-paanavigointi?)
+        disabloitu? (not @s/tallennus-kaynnissa)]
+    [:div {:class (str "ylapalkki-button ylapalkki-button-nayta-paanavigointi livicon-eye "
+                       (when aktiivinen?
+                         "ylapalkki-button-aktiivinen ")
+                       (when disabloitu?
+                         "ylapalkki-button-disabloitu "))
+           :on-click #(when-not disabloitu?
+                        (havaintonappi-painettu %))}]))
 
 (defn- tieosoite [tr-osoite]
   [:div.tr-osoite (formatoi-tr-osoite @tr-osoite)])
@@ -58,8 +61,13 @@
         "Käynnistä tarkastus"))]])
 
 (defn- kamera []
-  [:div.ylapalkki-button {:on-click kamera/ota-kuva}
-   [:span.glyphicon.glyphicon-camera]])
+  (let [disabloitu? (not @s/tallennus-kaynnissa)]
+    [:div {:class (str "ylapalkki-button "
+                       (when disabloitu?
+                         "ylapalkki-button-disabloitu "))
+           :on-click #(when-not disabloitu?
+                        (kamera/ota-kuva))}
+     [:span.glyphicon.glyphicon-camera]]))
 
 (defn- ylapalkkikomponentti [{:keys [hoitoluokka soratiehoitoluokka
                                      tr-osoite tallennus-kaynnissa aloitetaan-tarkastusajo
