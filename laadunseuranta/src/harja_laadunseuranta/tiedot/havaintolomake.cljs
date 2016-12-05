@@ -25,11 +25,13 @@
 
 (defn alusta-uusi-lomake! []
   (reset! s/havaintolomakedata
-          {:kayttajanimi @s/kayttajanimi
-           :tr-osoite @s/tr-osoite
-           :aikaleima (l/local-now)
-           :laadunalitus? false
-           :kuvaus ""})
+          (merge-with merge
+                      @s/havaintolomakedata
+                      {:kayttajanimi @s/kayttajanimi
+                       :tr-osoite @s/tr-osoite
+                       :aikaleima (l/local-now)
+                       :laadunalitus? false
+                       :kuvaus ""}))
   s/havaintolomakedata)
 
 (defn tallenna-lomake! []
