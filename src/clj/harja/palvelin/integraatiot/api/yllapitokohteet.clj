@@ -9,7 +9,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat :as yllapitokohdesanomat]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
-            [harja.kyselyt.tietyomaat :as q-suljetut-tieosuudet]
+            [harja.kyselyt.tietyomaat :as q-tietyomaat]
             [harja.kyselyt.tieverkko :as q-tieverkko]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as q-urakat]
@@ -180,9 +180,9 @@
                       :tr_losa       (:losa tr-osoite)
                       :tr_let        (:let tr-osoite)}]
 
-      (if (q-suljetut-tieosuudet/onko-olemassa? db {:id (:id tietyomaa) :jarjestelma jarjestelma})
-        (q-suljetut-tieosuudet/paivita-tietyomaa! db parametrit)
-        (q-suljetut-tieosuudet/luo-tietyomaa<! db parametrit))
+      (if (q-tietyomaat/onko-olemassa? db {:id (:id tietyomaa) :jarjestelma jarjestelma})
+        (q-tietyomaat/paivita-tietyomaa! db parametrit)
+        (q-tietyomaat/luo-tietyomaa<! db parametrit))
       (let [vastaus (cond-> {:ilmoitukset (str "Tietyömaa kirjattu onnistuneesti.")}
                             (nil? tr-osoite)
                             (assoc :varoitukset "Annetulle tieosuudelle ei saatu haettua tierekisteriosoitetta."))]
@@ -205,7 +205,7 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
     (validointi/tarkista-tietyomaa db id jarjestelma)
-    (q-suljetut-tieosuudet/merkitse-tietyomaa-poistetuksi! db parametrit)
+    (q-tietyomaat/merkitse-tietyomaa-poistetuksi! db parametrit)
     (tee-kirjausvastauksen-body
       {:ilmoitukset (str "Tietyömaa poistettu onnistuneesti.")})))
 

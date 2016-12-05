@@ -337,7 +337,7 @@ SELECT
 FROM toimenpidekoodi
 WHERE suoritettavatehtava :: TEXT IN (:toimenpiteet);
 
--- name: hae-suljetut-tieosuudet
+-- name: hae-tietyomaat
 -- hakee liikenneohjausaidoilla suljettujen tieosuuksien geometriat
 SELECT st.geometria AS "geometria",
   ypk.nimi                                                       AS "yllapitokohteen-nimi",
