@@ -2,13 +2,18 @@
 
 @font-face {
 	font-family: 'livicons';
-	src: url('@{livicons-polku}/livicons.woff') format('woff');
+	src:  url('@{livicons-polku}/livicons.eot?o44pbb');
+	src:  url('@{livicons-polku}/livicons.eot?o44pbb#iefix') format('embedded-opentype'),
+	url('@{livicons-polku}/livicons.ttf?o44pbb') format('truetype'),
+	url('@{livicons-polku}/livicons.woff?o44pbb') format('woff'),
+	url('@{livicons-polku}/livicons.svg?o44pbb#livicons') format('svg');
 	font-weight: normal;
 	font-style: normal;
 }
 
 [class^="livicon-"], [class*=" livicon-"] {
-	font-family: 'livicons';
+	/* use !important to prevent issues with browser extensions that change fonts */
+	font-family: 'livicons' !important;
 	speak: none;
 	font-style: normal;
 	font-weight: normal;
