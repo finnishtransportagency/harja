@@ -28,4 +28,7 @@
 (defrecord TietolajinKuvaus [tietolaji kuvaus])
 
 ;; Tallentaa uuden varustetoteuman
-(defrecord TallennaVarustetoteuma [])
+(defrecord TallennaVarustetoteuma[toteuma])
+
+;; Uuden varustetoteuman tallennus päättynyt
+(defrecord VarustetoteumaTallennettu [hakutulos])

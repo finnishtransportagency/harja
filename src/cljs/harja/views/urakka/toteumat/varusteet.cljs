@@ -7,7 +7,6 @@
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.ui.kentat :refer [tee-kentta]]
-            [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.toteumat.varusteet :as varustetiedot]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.domain.skeema :refer [+tyotyypit+]]
@@ -29,7 +28,8 @@
             [harja.views.tierekisteri.varustehaku :refer [varustehaku]]
             [harja.domain.tierekisteri.varusteet
              :refer [varusteominaisuus->skeema]
-             :as tierekisteri-varusteet])
+             :as tierekisteri-varusteet]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -132,13 +132,18 @@
    [lomake/lomake
     {:otsikko (case (:toiminto varustetoteuma)
                 :lisaa "Uusi varuste"
+                ;; todo: lisää uudet toiminnot tänne
                 "Varustetoteuma")
      :muokkaa! #(e! (v/->AsetaToteumanTiedot %))
-     :footer-fn (fn [data]
-                  [napit/tallenna "Tallenna"
-                   #(e! (v/->TallennaVarustetoteuma))
-                   {:disabled (not (lomake/voi-tallentaa? data))}])}
-
+     :footer-fn (fn [toteuma]
+                  [napit/palvelinkutsu-nappi
+                   "Tallenna"
+                   #(varustetiedot/tallenna-varustetoteuma toteuma)
+                   {:luokka "nappi-ensisijainen"
+                    :ikoni (ikonit/tallenna)
+                    :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
+                    :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
+                    :disabled (not (lomake/voi-tallentaa? toteuma))}])}
     [(lomake/ryhma
        "Varusteen tunnistetiedot"
        {:nimi :tietolaji

@@ -92,8 +92,17 @@
 (defn- hae-tietolajin-kuvaus [tietolaji]
   (k/post! :hae-tietolajin-kuvaus tietolaji))
 
-(defn- tallenna-varustetoteuma [toteuma]
-  (k/post! :tallenna-varustetoteuma toteuma))
+(defn tallenna-varustetoteuma [{:keys [arvot sijainti lisatieto tietolaji toiminto tierekisteriosoite]}]
+  ;; todo: passaa hakuehdot, jotta serveri voi tallennuksen jälkeen tehdä uuden haun
+  (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
+        toteuma {:arvot arvot
+                 :sijainti sijainti
+                 :tierekisteriosoite tierekisteriosoite
+                 :lisatieto lisatieto
+                 :tietolaji tietolaji
+                 :toiminto toiminto
+                 :urakka-id @nav/valittu-urakka-id}]
+    (k/post! :tallenna-varustetoteuma toteuma)))
 
 (defn uusi-varuste
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
@@ -169,18 +178,16 @@
       app))
 
   v/TallennaVarustetoteuma
-  (process-event [_ {{:keys [arvot sijainti lisatieto tietolaji toiminto tierekisteriosoite] :as toteuma}
-                     :varustetoteuma :as app}]
-    ;; Tietolajin arvoista pitää purkaa koodiarvot ominaisuuden kuvauksen seasta
-    (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
-          toteuma {:arvot arvot
-                   :sijainti sijainti
-                   :tierekisteriosoite tierekisteriosoite
-                   :lisatieto lisatieto
-                   :tietolaji tietolaji
-                   :toiminto toiminto
-                   :urakka-id @nav/valittu-urakka-id}]
-      (tallenna-varustetoteuma toteuma))))
+  (process-event [{:keys [toteuma]} app]
+    (tallenna-varustetoteuma toteuma)
+    app)
+
+  v/VarustetoteumaTallennettu
+  (process-event [hakutulos app]
+    ;; assokkaa appiin uudet tiedot, jota server palauttaa
+    (log "----> TOIMI!")
+    app
+    ))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))
