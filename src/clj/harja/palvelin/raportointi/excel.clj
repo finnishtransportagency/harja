@@ -68,6 +68,8 @@
 (defmethod muodosta-excel :taulukko [[_ optiot sarakkeet data] workbook]
   (try
     (let [nimi (:otsikko optiot)
+          viimeinen-rivi-yhteenveto? (:viimeinen-rivi-yhteenveto? optiot)
+          viimeinen-rivi (last data)
           aiempi-sheet (last (excel/sheet-seq workbook))
           [sheet nolla] (if (and (nil? (:sheet-nimi optiot))
                                  (nil? nimi)
@@ -118,7 +120,9 @@
              (map-indexed
                (fn [sarake-nro sarake]
                  (let [cell (.createCell row sarake-nro)
-                       lihavoi? (:lihavoi? optiot)
+                       lihavoi? (or (:lihavoi? optiot)
+                                    (and viimeinen-rivi-yhteenveto?
+                                         (= rivi viimeinen-rivi)))
                        korosta? (:korosta? optiot)
                        formaatti-fn (fn [tyyli]
                                       (case (:fmt sarake)
