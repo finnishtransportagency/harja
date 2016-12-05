@@ -1,11 +1,11 @@
 -- name: onko-olemassa?
 -- single?: true
 SELECT exists(SELECT *
-              FROM suljettu_tieosuus
+              FROM tietyomaa
               WHERE osuus_id = :id AND jarjestelma = :jarjestelma);
 
--- name: luo-suljettu-tieosuus<!
-INSERT INTO suljettu_tieosuus (jarjestelma,
+-- name: luo-tietyomaa<!
+INSERT INTO tietyomaa (jarjestelma,
                                osuus_id,
                                alkuaidan_sijainti,
                                loppuaidan_sijainti,
@@ -42,8 +42,8 @@ VALUES (
                             CAST(10000 AS INTEGER))
      AS vali(alku GEOMETRY, loppu GEOMETRY, geometria GEOMETRY)));
 
--- name: paivita-suljettu-tieosuus!
-UPDATE suljettu_tieosuus
+-- name: paivita-tietyomaa!
+UPDATE tietyomaa
 SET
   alkuaidan_sijainti  = ST_MakePoint(:alkux, :alkuy) :: POINT,
   loppuaidan_sijainti = ST_MakePoint(:loppux, :loppuy) :: POINT,
@@ -65,7 +65,7 @@ SET
                            AS vali(alku GEOMETRY, loppu GEOMETRY, geometria GEOMETRY))
 WHERE osuus_id = :osuusid AND jarjestelma = :jarjestelma;
 
--- name: merkitse-suljettu-tieosuus-poistetuksi!
-UPDATE suljettu_tieosuus
+-- name: merkitse-tietyomaa-poistetuksi!
+UPDATE tietyomaa
 SET poistettu = :poistettu, poistaja = :poistaja
 WHERE osuus_id = :osuusid AND jarjestelma = :jarjestelma;

@@ -51,7 +51,7 @@ hakutiheys-historiakuva 1200000)
   (atom
     {:yllapito {tk/paallystys false
                 tk/paikkaus false
-                tk/suljetut-tiet false
+                tk/tietyomaat false
                 tk/paaasfalttilevitin false
                 tk/tiemerkintakone false
                 tk/kuumennuslaite false

@@ -54,7 +54,7 @@
   (is (nil? (validoi json-skeemat/paallystyksen-aikataulun-kirjaus json-esimerkit/+paallystyksen-aikataulun-kirjaus+)))
   (is (nil? (validoi json-skeemat/tiemerkinnan-aikataulun-kirjaus json-esimerkit/+tiemerkinnan-aikataulun-kirjaus+)))
 
-  (is (nil? (validoi json-skeemat/suljetun-tieosuuden-kirjaus json-esimerkit/+suljetun-tieosuuden-kirjaus+)))
-  (is (nil? (validoi json-skeemat/suljetun-tieosuuden-poisto json-esimerkit/+suljetun-tieosuuden-poisto+)))
+  (is (nil? (validoi json-skeemat/tietyomaan-kirjaus json-esimerkit/+tietyomaan-kirjaus+)))
+  (is (nil? (validoi json-skeemat/tietyomaan-poisto json-esimerkit/+tietyomaan-poisto+)))
 
   (is (nil? (validoi json-skeemat/urakan-yhteystietojen-haku-vastaus json-esimerkit/+urakan-yhteystietoje-hakuvastaus+))))
