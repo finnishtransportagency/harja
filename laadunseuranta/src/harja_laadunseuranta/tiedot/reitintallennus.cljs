@@ -163,7 +163,7 @@
                              {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
                               :aikaleima (tc/to-long (lt/local-now))
                               :tarkastusajo @tarkastusajo-id
-                              :havainnot (into #{} (remove nil? (conj @jatkuvat-havainnot havainto-avain)))
+                              :havainnot @jatkuvat-havainnot
                               :mittaukset {}
                               :kuvaus kuvaus
                               :laadunalitus laadunalitus
