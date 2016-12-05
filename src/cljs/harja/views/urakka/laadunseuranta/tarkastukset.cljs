@@ -68,9 +68,9 @@
 
 (defn- formatoi-talvihoitomittaukset
   [thm]
-  (let [{kitka :kitka lumimaara :lumimaara epatasaisuus :epatasaisuus
+  (let [{kitka :kitka lumimaara :lumimaara tasaisuus :tasaisuus
          {tie :tie ilma :ilma} :lampotila} thm]
-    (when (or kitka lumimaara epatasaisuus)
+    (when (or kitka lumimaara tasaisuus)
       (str "Talvihoitomittaukset: "
            (str/replace
              (str/join ", "
