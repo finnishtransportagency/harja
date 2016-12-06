@@ -6,7 +6,8 @@
     [harja.palvelin.integraatiot.tierekisteri.tietueet :as tietueet]
     [harja.palvelin.integraatiot.tierekisteri.tietue :as tietue]
     [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-    [harja.kyselyt.urakat :as urakat-q])
+    [harja.kyselyt.urakat :as urakat-q]
+    [harja.kyselyt.toteumat :as toteumat-q])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def tietolajitunnisteet #{"tl523" "tl501" "tl517" "tl507" "tl508" "tl506"
@@ -22,6 +23,13 @@
              [{:koodi :tuntematon-tietolaji
                :viesti (str "Tietolajia ei voida hakea. Tuntematon tietolaji: " tunniste)}]})))
 
+(defn varusteen-tiedot [{:keys []}]
+  {:tietue
+   {:tietolaji
+    {:tietolajitunniste ()}}}
+
+  )
+
 (defprotocol TierekisteriPalvelut
   (hae-tietolajit [this tietolajitunniste muutospvm])
   (hae-tietueet [this tierekisteriosoitevali tietolajitunniste voimassaolopvm tilannepvm])
@@ -29,7 +37,8 @@
   (hae-tietue [this tietueen-tunniste tietolajitunniste tilannepvm])
   (paivita-tietue [this tiedot])
   (poista-tietue [this tiedot])
-  (lisaa-tietue [this tiedot]))
+  (lisaa-tietue [this tiedot])
+  (laheta-varusteoteuma [this varusteoteuma-id]))
 
 (defrecord Tierekisteri [tierekisteri-api-url]
   component/Lifecycle
@@ -82,5 +91,18 @@
     (validoi-tietolajitunniste (:tietolajitunniste tiedot))
     (when-not (empty? tierekisteri-api-url)
       (tietue/poista-tietue
-        (:db this) (:integraatioloki this) tierekisteri-api-url tiedot))))
+        (:db this) (:integraatioloki this) tierekisteri-api-url tiedot)))
+
+  (laheta-varusteoteuma [this varustetoteuma-id]
+    (when-not (empty? tierekisteri-api-url)
+      (if-let [varustetoteuma (toteumat-q/hae-varustetoteuma (:db this) varustetoteuma-id)]
+        (let [toimenpide (:toimenpide varustetoteuma)
+              tiedot (varusteen-tiedot varustetoteuma)]
+          (case toimenpide
+            "lisatty" (lisaa-tietue this tiedot)
+            "paivitetty" (paivita-tietue this tiedot)
+            "poistettu" (poista-tietue this tiedot)
+            "tarkastus" (paivita-tietue this tiedot)
+            (log/warn (format "Ei voida lähettää varustetoteumaa (id: %s) Tierekisteriin. Tuntematon toimenpide." varustetoteuma-id (:toimenpide varustetoteuma)))))
+        (log/warn (format "Ei voida lähettää varustetoteumaa (id: %s) Tierekisteriin. Toteumaa ei löydy." varustetoteuma-id))))))
 

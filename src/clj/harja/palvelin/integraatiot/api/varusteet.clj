@@ -151,6 +151,7 @@
 
 (defn lisaa-varuste [tierekisteri db {:keys [otsikko] :as data} kayttaja]
   (log/debug (format "Lisätään varuste käyttäjän: %s pyynnöstä. Data: %s" kayttaja data))
+  (println "----> DATA")
   (let [livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
         toimenpiteen-tiedot (:varusteen-lisays data)
         tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])

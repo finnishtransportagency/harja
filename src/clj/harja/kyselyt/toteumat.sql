@@ -51,10 +51,10 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
 
-  tt.id    AS "tehtava_tehtava-id",
-  tpk.id   AS "tehtava_tpk-id",
-  tpk.nimi AS tehtava_nimi,
-  tt.maara AS tehtava_maara
+  tt.id                 AS "tehtava_tehtava-id",
+  tpk.id                AS "tehtava_tpk-id",
+  tpk.nimi              AS tehtava_nimi,
+  tt.maara              AS tehtava_maara
 
 FROM toteuma t
   LEFT JOIN kayttaja k ON k.id = t.luoja
@@ -231,7 +231,11 @@ SELECT
   (SELECT nimi
    FROM toimenpidekoodi tpk
    WHERE id = tt.toimenpidekoodi) AS toimenpide,
-  t.tr_numero, t.tr_alkuosa, t.tr_alkuetaisyys, t.tr_loppuosa, t.tr_loppuetaisyys
+  t.tr_numero,
+  t.tr_alkuosa,
+  t.tr_alkuetaisyys,
+  t.tr_loppuosa,
+  t.tr_loppuetaisyys
 
 FROM toteuma_tehtava tt
   INNER JOIN toteuma t ON tt.toteuma = t.id
@@ -244,7 +248,7 @@ FROM toteuma_tehtava tt
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE
   LEFT JOIN kayttaja k ON k.id = t.luoja
-  ORDER BY t.alkanut DESC
+ORDER BY t.alkanut DESC
 LIMIT 301;
 
 -- name: paivita-toteuma!
@@ -296,13 +300,13 @@ WHERE id IN (:id) AND poistettu IS NOT TRUE;
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle
 INSERT
-  INTO toteuma_tehtava
-       (toteuma, toimenpidekoodi, maara, luotu, luoja, poistettu, paivan_hinta, indeksi)
+INTO toteuma_tehtava
+(toteuma, toimenpidekoodi, maara, luotu, luoja, poistettu, paivan_hinta, indeksi)
 VALUES (:toteuma, :toimenpidekoodi, :maara, NOW(), :kayttaja, FALSE, :paivanhinta,
-        (CASE WHEN :paivanhinta::NUMERIC IS NULL
-	      THEN TRUE
-	      ELSE FALSE
-	 END));
+        (CASE WHEN :paivanhinta :: NUMERIC IS NULL
+          THEN TRUE
+         ELSE FALSE
+         END));
 
 -- name: poista-toteuman-tehtavat!
 UPDATE toteuma_tehtava
@@ -365,13 +369,13 @@ WHERE id = :id;
 -- name: paivita-toteuman-tehtava!
 -- Päivittää toteuman tehtävän id:llä.
 UPDATE toteuma_tehtava
-   SET toimenpidekoodi = :toimenpidekoodi, maara = :maara, poistettu = :poistettu,
-       paivan_hinta = :paivanhinta,
-       indeksi = (CASE WHEN :paivanhinta::NUMERIC IS NULL
-                       THEN TRUE
-		       ELSE FALSE
-		  END)
- WHERE id = :id;
+SET toimenpidekoodi = :toimenpidekoodi, maara = :maara, poistettu = :poistettu,
+  paivan_hinta      = :paivanhinta,
+  indeksi           = (CASE WHEN :paivanhinta :: NUMERIC IS NULL
+    THEN TRUE
+                       ELSE FALSE
+                       END)
+WHERE id = :id;
 
 -- name: poista-toteuman-tehtava!
 -- Poistaa toteuman tehtävän
@@ -434,10 +438,10 @@ WHERE toteuma = :id;
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, luoja, paivan_hinta,
                              lisatieto, indeksi)
 VALUES (:toteuma, NOW(), :toimenpidekoodi, :maara, :luoja, :paivan_hinta, :lisatieto,
-        (CASE WHEN :paivan_hinta::NUMERIC IS NULL
-	      THEN TRUE
-	      ELSE FALSE
-	 END));
+        (CASE WHEN :paivan_hinta :: NUMERIC IS NULL
+          THEN TRUE
+         ELSE FALSE
+         END));
 
 -- name: poista-toteuma_tehtava-toteuma-idlla!
 -- Poistaa toteuman kaikki tehtävät
@@ -553,9 +557,9 @@ FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
   JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
 WHERE
-  t.urakka = :urakka-id
-  AND (:toteuma-id :: INTEGER IS NULL OR t.id = :toteuma-id)
-  AND t.sopimus = :sopimus-id
+  t.urakka = :urakka - id
+  AND (:toteuma - id :: INTEGER IS NULL OR t.id = :toteuma - id)
+  AND t.sopimus = :sopimus - id
   AND t.alkanut >= :alkupvm
   AND t.alkanut <= :loppupvm
   AND ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
@@ -577,9 +581,9 @@ FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
   JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
 WHERE
-  t.urakka = :urakka-id
-  AND (:toteuma-id :: INTEGER IS NULL OR t.id = :toteuma-id)
-  AND t.sopimus = :sopimus-id
+  t.urakka = :urakka - id
+  AND (:toteuma - id :: INTEGER IS NULL OR t.id = :toteuma - id)
+  AND t.sopimus = :sopimus - id
   AND t.alkanut >= :alkupvm
   AND t.alkanut <= :loppupvm
   AND ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
@@ -615,13 +619,13 @@ WHERE
 
 -- name: hae-urakan-kokonaishintaiset-toteumat-paivakohtaisina-summina
 SELECT
-  CAST(t.alkanut AS DATE) AS pvm,
-  tt.toimenpidekoodi      AS toimenpidekoodi,
-  tk.nimi                 AS nimi,
-  SUM(tt.maara)           AS maara,
-  SUM(ST_Length(t.reitti))AS pituus,
-  tk.yksikko              AS yksikko,
-  k.jarjestelma           AS jarjestelmanlisaama
+  CAST(t.alkanut AS DATE)  AS pvm,
+  tt.toimenpidekoodi       AS toimenpidekoodi,
+  tk.nimi                  AS nimi,
+  SUM(tt.maara)            AS maara,
+  SUM(ST_Length(t.reitti)) AS pituus,
+  tk.yksikko               AS yksikko,
+  k.jarjestelma            AS jarjestelmanlisaama
 FROM toteuma_tehtava tt
   LEFT JOIN toteuma t
     ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
@@ -767,6 +771,15 @@ WHERE
 
 -- name: hae-varustetoteuma
 SELECT
+  toimenpide,
+  karttapvm,
+  tietolaji,
+  arvot
+FROM varustetoteuma
+WHERE id = :id;
+
+-- name: hae-varustetoteuma-toteumalla
+SELECT
   id,
   tunniste
 FROM varustetoteuma
@@ -811,7 +824,6 @@ UPDATE toteuma
 SET reitti = :reitti
 WHERE id = :id;
 
-
 -- AJASTETTUJA TEHTÄVIÄ VARTEN
 
 -- name: hae-reitittomat-mutta-reittipisteelliset-toteumat
@@ -819,7 +831,7 @@ WHERE id = :id;
 -- Käytetään ajastetussa tehtävässä
 SELECT DISTINCT t.id
 FROM toteuma t
-JOIN reittipiste rp ON t.id = rp.toteuma
+  JOIN reittipiste rp ON t.id = rp.toteuma
 WHERE t.reitti IS NULL;
 
 -- name: hae-reitittomat-mutta-osoitteelliset-toteumat
@@ -827,13 +839,13 @@ WHERE t.reitti IS NULL;
 -- Käytetään ajastetussa tehtävässä
 SELECT
   id,
-  tr_numero AS numero,
-  tr_alkuosa AS alkuosa ,
-  tr_alkuetaisyys AS alkuetaisyys,
-  tr_loppuosa AS loppuosa ,
+  tr_numero        AS numero,
+  tr_alkuosa       AS alkuosa,
+  tr_alkuetaisyys  AS alkuetaisyys,
+  tr_loppuosa      AS loppuosa,
   tr_loppuetaisyys AS loppuetaisyys
 FROM toteuma t
 WHERE reitti IS NULL
-AND t.tr_numero IS NOT NULL
-AND t.tr_alkuosa IS NOT NULL
-AND t.tr_alkuetaisyys IS NOT NULL;
+      AND t.tr_numero IS NOT NULL
+      AND t.tr_alkuosa IS NOT NULL
+      AND t.tr_alkuetaisyys IS NOT NULL;
