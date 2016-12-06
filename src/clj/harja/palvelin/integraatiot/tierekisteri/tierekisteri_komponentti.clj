@@ -7,7 +7,8 @@
     [harja.palvelin.integraatiot.tierekisteri.tietue :as tietue]
     [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
     [harja.kyselyt.urakat :as urakat-q]
-    [harja.kyselyt.toteumat :as toteumat-q])
+    [harja.kyselyt.toteumat :as toteumat-q]
+    [harja.kyselyt.konversio :as konversio])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def tietolajitunnisteet #{"tl523" "tl501" "tl517" "tl507" "tl508" "tl506"
@@ -23,12 +24,34 @@
              [{:koodi :tuntematon-tietolaji
                :viesti (str "Tietolajia ei voida hakea. Tuntematon tietolaji: " tunniste)}]})))
 
-(defn varusteen-tiedot [{:keys []}]
-  {:tietue
-   {:tietolaji
-    {:tietolajitunniste ()}}}
-
-  )
+(defn varusteen-tiedot [{:keys [henkilo
+                                organisaatio
+                                ytunnus
+                                tunniste
+                                alkupvm
+                                loppupvm
+                                tr
+                                luotu
+                                tietolaji
+                                arvot
+                                toimenpide]}]
+  {:lisaaja {:henkilo henkilo
+             :jarjestelma "Harja"
+             :organisaatio organisaatio
+             :yTunnus ytunnus}
+   :tietue {:tunniste tunniste
+            :alkupvm alkupvm
+            :loppupvm loppupvm
+            :sijainti {:tie
+                       {:numero (:numero tr)
+                        :aet (:alkuetaisyys tr)
+                        :aosa (:alkuosa tr)
+                        :ajr (:ajorata tr)
+                        :puoli (:puoli tr)
+                        :tilannepvm luotu}}
+            :tietolaji {:tietolajitunniste tietolaji
+                        :arvot arvot}}
+   (keyword toimenpide) luotu})
 
 (defprotocol TierekisteriPalvelut
   (hae-tietolajit [this tietolajitunniste muutospvm])
@@ -95,7 +118,7 @@
 
   (laheta-varusteoteuma [this varustetoteuma-id]
     (when-not (empty? tierekisteri-api-url)
-      (if-let [varustetoteuma (toteumat-q/hae-varustetoteuma (:db this) varustetoteuma-id)]
+      (if-let [varustetoteuma (konversio/alaviiva->rakenne (first (toteumat-q/hae-varustetoteuma (:db this) varustetoteuma-id)))]
         (let [toimenpide (:toimenpide varustetoteuma)
               tiedot (varusteen-tiedot varustetoteuma)]
           (case toimenpide

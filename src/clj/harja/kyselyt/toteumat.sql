@@ -771,12 +771,28 @@ WHERE
 
 -- name: hae-varustetoteuma
 SELECT
-  toimenpide,
-  karttapvm,
-  tietolaji,
-  arvot
-FROM varustetoteuma
-WHERE id = :id;
+  vt.toimenpide,
+  vt.karttapvm,
+  vt.tunniste,
+  vt.alkupvm,
+  vt.loppupvm,
+  vt.tietolaji,
+  vt.arvot,
+  vt.tr_numero,
+  vt.tr_alkuosa,
+  vt.tr_alkuetaisyys,
+  vt.tr_loppuosa,
+  vt.tr_loppuetaisyys,
+  vt.tr_ajorata,
+  vt.tr_puoli,
+  vt.luotu,
+  yh.etunimi || ' ' || yh.sukunimi AS henkilo,
+  o.nimi                           AS organisaatio,
+  o.ytunnus                        AS yTunnus
+FROM varustetoteuma vt
+  JOIN yhteyshenkilo yh ON vt.luoja = yh.id
+  JOIN organisaatio o ON yh.organisaatio = o.id
+WHERE vt.id = :id;
 
 -- name: hae-varustetoteuma-toteumalla
 SELECT
