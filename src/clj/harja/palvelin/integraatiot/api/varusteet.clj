@@ -16,7 +16,6 @@
             [harja.palvelin.integraatiot.api.validointi.parametrit :as validointi]
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
             [harja.tyokalut.merkkijono :as merkkijono]
-            [harja.palvelin.integraatiot.tierekisteri.tietolajin-kuvauksen-kasittely :as tr-tietolaji]
             [harja.pvm :as pvm]
             [clj-time.core :as t]
             [clojure.string :as str]
@@ -96,7 +95,7 @@
              vastaus (tierekisteri/hae-tietolajit tierekisteri tietolaji nil)
              tietolajin-kuvaus (:tietolaji vastaus)
              arvot (first (get-in tietue [:tietue :tietolaji :arvot]))
-             arvot-mappina (tr-tietolaji/tietolajin-arvot-merkkijono->map arvot tietolajin-kuvaus)]
+             arvot-mappina (tietolajit/tietolajin-arvot-merkkijono->map arvot tietolajin-kuvaus)]
          {:varuste
           {:tunniste (get-in tietue [:tietue :tunniste])
            :tietue

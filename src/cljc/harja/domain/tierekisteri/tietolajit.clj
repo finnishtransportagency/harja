@@ -89,7 +89,7 @@
                     (pvm/iso-8601->pvm arvo-tekstina))
     :koodisto arvo-tekstina))
 
-(defn- hae-arvo
+(defn hae-arvo
   "Ottaa arvot-stringin ja etsii sieltä halutun arvon käyttäen apuna kenttien-kuvaukset -mappia."
   [arvot-merkkijono kenttien-kuvaukset jarjestysnumero]
   (let [jarjestysnumeron-kentta (first (filter #(= (:jarjestysnumero %) jarjestysnumero)
