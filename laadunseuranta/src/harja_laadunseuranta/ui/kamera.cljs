@@ -18,12 +18,12 @@
 
 (defn kamerakomponentti [esikatselukuva-atom]
   [:div.kameranappi {:on-click tiedot/ota-kuva}
-   [:label.kuvan-otto
+   [:div.kameranappi-sisalto
     (if @esikatselukuva-atom
-      [:img {:width "100px" :src @esikatselukuva-atom}]
-      [:div.kamera-eikuvaa
-       [:p.livicon-upload]
-       "Lisää kuva"])]])
+     [:img {:width "100px" :src @esikatselukuva-atom}]
+     [:div.kamera-eikuvaa
+      [kuvat/svg-sprite "kamera-24"]
+      "Lisää kuva"])]])
 
 (defonce testikuva (atom nil))
 

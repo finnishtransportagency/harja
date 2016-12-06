@@ -143,23 +143,40 @@
     padding-top: 10px;
     margin-left: 10px;
     box-sizing: border-box;
-  }
+    position: relative;
 
-  & .kameranappi .kamera-eikuvaa {
-    color: blue;
-    text-align: center;
-  }
+    > .kameranappi-sisalto {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translateX(-50%) translateY(-50%);
 
-  & .kameranappi img {
-    float: left;
-    display: inline-block;
-    height: 90px;
-  }
+      & svg {
+        width: 28px;
+        height: 20px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      }
 
-  & .kameranappi img:nth-of-type(2) {
-    margin-left: 20px;
-    height: 110px;
-    image-orientation: from-image;
+      & .kamera-eikuvaa {
+        color: blue;
+        text-align: center;
+        width: 110px;
+      }
+
+      & img {
+        float: left;
+        display: inline-block;
+        height: 90px;
+      }
+
+      & img:nth-of-type(2) {
+        margin-left: 20px;
+        height: 110px;
+        image-orientation: from-image;
+      }
+    }
   }
 
   .lomake-painikkeet {
