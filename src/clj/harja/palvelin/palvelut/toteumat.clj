@@ -614,7 +614,7 @@
                                                   :tr_puoli puoli
                                                   :tr_ajorata ajorata
                                                   :sijainti sijainti}]
-                              (toteumat-q/luo-varustetoteuma<! db varustetoteuma)))]
+                              (:id (toteumat-q/luo-varustetoteuma<! db varustetoteuma))))]
     (tierekisteri/laheta-varusteoteuma tierekisteri varustetoteuma-id))
   (hae-urakan-varustetoteumat db user hakuehdot))
 

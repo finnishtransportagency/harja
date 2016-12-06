@@ -124,9 +124,7 @@
         (:db this) (:integraatioloki this) tierekisteri-api-url tiedot)))
 
   (laheta-varusteoteuma [this varustetoteuma-id]
-    (println "---> koitetaan lähettää:" tierekisteri-api-url varustetoteuma-id )
     (when-not (empty? tierekisteri-api-url)
-      (println "---> lähetetään varustetoteuma tierekisteriin")
       (if-let [varustetoteuma (konversio/alaviiva->rakenne (first (toteumat-q/hae-varustetoteuma (:db this) varustetoteuma-id)))]
         (let [toimenpide (:toimenpide varustetoteuma)
               tiedot (varusteen-tiedot varustetoteuma)]
