@@ -32,7 +32,7 @@
 
   [paallystys :paallystys "Päällystystyöt"]
   [paikkaus :paikkaus "Paikkaustyöt"]
-  [suljetut-tiet :suljetut-tieosuudet "Suljetut tieosuudet"]
+  [tietyomaat :tietyomaat "Tietyömaat"]
   [paaasfalttilevitin "asfaltointi" "Pääasfalttilevittimet"]
   [tiemerkintakone "tiemerkinta" "Tiemerkintäkoneet"]
   [kuumennuslaite "kuumennus" "Kuumennuslaitteet"]
@@ -88,7 +88,7 @@
   {:ilmoitukset {:tyypit [tpp tur urk]}
    :yllapito [paallystys
               paikkaus
-              suljetut-tiet
+              tietyomaat
               paaasfalttilevitin
               tiemerkintakone
               kuumennuslaite

@@ -11,18 +11,18 @@
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
-    "suljettu-tieosuus": {
-      "id": "urn:harja/suljettu-tieosuus",
+    "tietyomaa": {
+      "id": "urn:harja/tietyomaa",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "id": {
-          "id": "urn:harja/suljettu-tieosuus/id",
+          "id": "urn:harja/tietyomaa/id",
           "type": "integer",
           "required": true
         },
         "aika": {
-          "id": "urn:harja/suljettu-tieosuus/aika",
+          "id": "urn:harja/tietyomaa/aika",
           "type": "string",
           "format": "date-time",
           "required": true

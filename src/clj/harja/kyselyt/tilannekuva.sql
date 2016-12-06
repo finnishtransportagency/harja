@@ -337,7 +337,7 @@ SELECT
 FROM toimenpidekoodi
 WHERE suoritettavatehtava :: TEXT IN (:toimenpiteet);
 
--- name: hae-suljetut-tieosuudet
+-- name: hae-tietyomaat
 -- hakee liikenneohjausaidoilla suljettujen tieosuuksien geometriat
 SELECT st.geometria AS "geometria",
   ypk.nimi                                                       AS "yllapitokohteen-nimi",
@@ -350,7 +350,7 @@ SELECT st.geometria AS "geometria",
   st.tr_aet                                                      AS "aet",
   st.tr_losa                                                     AS "losa",
   st.tr_let                                                      AS "let"
-FROM suljettu_tieosuus st
+FROM tietyomaa st
   LEFT JOIN yllapitokohde ypk ON ypk.id = st.yllapitokohde
 WHERE st.poistettu IS NULL
       AND ST_Intersects(ST_MakeEnvelope(:x1, :y1, :x2, :y2), st.envelope);

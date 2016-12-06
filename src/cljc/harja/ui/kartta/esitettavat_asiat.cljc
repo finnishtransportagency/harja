@@ -463,13 +463,13 @@
      (* (/ Math/PI 180)
         kulma)))
 
-(defmethod asia-kartalle :suljettu-tieosuus [aita valittu-fn?]
-  (log "Asia kartalle: suljettu tieosuus: " (pr-str aita))
-  (let [viivat ulkoasu/suljettu-tieosuus]
+(defmethod asia-kartalle :tietyomaa [aita valittu-fn?]
+  (log "Asia kartalle: tietyömaa: " (pr-str aita))
+  (let [viivat ulkoasu/tietyomaa]
     (assoc aita
-     :type :suljettu-tieosuus
-     :nimi "Suljettu tieosuus"
-     :selite {:teksti "Suljettu tieosuus"
+     :type :tietyomaa
+     :nimi "Tietyömaa"
+     :selite {:teksti "Tietyömaa"
               :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}
      :alue (maarittele-feature {:sijainti (:geometria aita)}
                                (valittu-fn? aita)

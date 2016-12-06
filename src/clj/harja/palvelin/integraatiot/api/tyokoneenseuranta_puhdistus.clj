@@ -19,7 +19,7 @@
            ::poista-ajastus
            (ajastettu-tehtava/ajasta-minuutin-valein
              15
-             (partial poista-vanhat-tyokonesijainnit (:db this))))
+             #(poista-vanhat-tyokonesijainnit (:db this))))
     this)
   (stop [this]
     ((::poista-ajastus this))
