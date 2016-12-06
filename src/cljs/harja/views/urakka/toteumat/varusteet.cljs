@@ -140,7 +140,21 @@
                                        (e! (v/->VarustetoteumaTallennettu %)))
                       :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
                       :disabled (not (lomake/voi-tallentaa? toteuma))}])}
-      [(lomake/ryhma
+      [(when (not muokattava?)
+         (lomake/ryhma
+           ""
+           {:nimi :toimenpide
+            :otsikko "Toimenpide"
+            :tyyppi :valinta
+            :valinnat (vec tierekisteri-varusteet/varuste-toimenpide->string)
+            :valinta-nayta second
+            :valinta-arvo first
+            :muokattava? (constantly false)}
+           {:nimi :alkanut
+            :otsikko "Kirjattu"
+            :tyyppi :pvm
+            :muokattava? (constantly false)}))
+       (lomake/ryhma
          "Varusteen tunnistetiedot"
          {:nimi :tietolaji
           :otsikko "Varusteen tyyppi"
