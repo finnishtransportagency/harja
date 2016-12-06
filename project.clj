@@ -37,6 +37,7 @@
                  [compojure "1.5.0"]
                  [javax.servlet/servlet-api "2.5"]
                  [hiccup "1.0.5"]
+                 [clj-tagsoup/clj-tagsoup "0.3.0"]
 
 
                  [org.clojure/core.cache "0.6.5"]

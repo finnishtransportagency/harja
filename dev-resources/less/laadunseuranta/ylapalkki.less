@@ -77,16 +77,23 @@
 }
 
 .ylapalkki-button {
+  position: relative;
   width: 65px;
+  color: @valkoinen;
   box-sizing: border-box;
   border-left: @viiva-nappien-valissa;
-  text-align: center;
   padding-left: @ylapalkin-nappien-valinen-tyhja-tila;
   padding-right: @ylapalkin-nappien-valinen-tyhja-tila;
-  color: white;
   height: @ylapalkin-korkeus;
-  font-size: @ylapalkin-ikonin-koko;
-  line-height: @ylapalkin-korkeus;
+
+  > svg {
+    width: 36px;
+    height: 36px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+  }
 }
 
 .ylapalkki-button-disabloitu {

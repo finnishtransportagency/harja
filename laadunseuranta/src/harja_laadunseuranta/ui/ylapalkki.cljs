@@ -30,13 +30,14 @@
   (let [aktiivinen? (and @s/nayta-paanavigointi?
                          @s/piirra-paanavigointi?)
         disabloitu? (not @s/tallennus-kaynnissa)]
-    [:div {:class (str "ylapalkki-button ylapalkki-button-nayta-paanavigointi livicon-eye "
+    [:div {:class (str "ylapalkki-button ylapalkki-button-nayta-paanavigointi "
                        (when aktiivinen?
                          "ylapalkki-button-aktiivinen ")
                        (when disabloitu?
                          "ylapalkki-button-disabloitu "))
            :on-click #(when-not disabloitu?
-                        (havaintonappi-painettu %))}]))
+                        (havaintonappi-painettu %))}
+     [kuvat/svg-sprite "silma-36"]]))
 
 (defn- tieosoite [tr-osoite]
   [:div.tr-osoite (formatoi-tr-osoite @tr-osoite)])
@@ -67,7 +68,7 @@
                          "ylapalkki-button-disabloitu "))
            :on-click #(when-not disabloitu?
                         (kamera/ota-kuva))}
-     [:span.glyphicon.glyphicon-camera]]))
+     [kuvat/svg-sprite "kamera-24"]]))
 
 (defn- ylapalkkikomponentti [{:keys [hoitoluokka soratiehoitoluokka
                                      tr-osoite tallennus-kaynnissa aloitetaan-tarkastusajo

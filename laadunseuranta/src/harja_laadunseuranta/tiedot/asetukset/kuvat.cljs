@@ -18,3 +18,8 @@
 (def +avattu+ (ikoni "avattu.png"))
 (def +havaintopiste+ (ikoni "havaintopiste.png"))
 (def +avausnuoli+ (ikoni "avausnuoli.svg"))
+
+(defn svg-sprite
+  [nimi]
+  [:svg
+   [:use {:href (str "#" nimi)}]])
