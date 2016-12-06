@@ -577,7 +577,7 @@
                                   tunniste (if (= toiminto "lisatty")
                                              (livitunnisteet/hae-seuraava-livitunniste db)
                                              (:tunniste arvot))
-                                  arvot (functor/fmap str (assoc arvot :tunniste tunniste ))
+                                  arvot (functor/fmap str (assoc arvot :tunniste tunniste))
                                   arvot (tietolajit/validoi-ja-muunna-arvot-merkkijonoksi tierekisteri arvot tietolaji)
 
                                   elynro (:elynumero (first (urakat-q/hae-urakan-ely db urakka-id)))

@@ -7,7 +7,8 @@
             [harja.pvm :as pvm]
             [clj-time.format :as df]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [clojure.walk :as walk])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn- jarjesta-ja-suodata-tietolajin-kuvaus [tietolajin-kuvaus]
@@ -169,13 +170,9 @@
 (defn valido-ja-muunna-merkkijono-arvoiksi
   "Hakee tietolajin kuvauksen, muuntaa merkkijonon arvoiksi ja validoi ne"
   [tierekisteri merkkijono tietolaji]
-  (println "----> tierekisteri " tierekisteri )
-  (println "----> merkkijono >" merkkijono "<")
-  (println "----> tietolaji" tietolaji)
-
   (let [vastaus (tierekisteri/hae-tietolajit tierekisteri tietolaji nil)
         tietolajin-kuvaus (:tietolaji vastaus)
-        arvot (tietolajin-arvot-merkkijono->map merkkijono tietolajin-kuvaus)]
+        arvot (walk/keywordize-keys (tietolajin-arvot-merkkijono->map merkkijono tietolajin-kuvaus))]
     (try
       (validoi-tietolajin-arvot
         tietolaji

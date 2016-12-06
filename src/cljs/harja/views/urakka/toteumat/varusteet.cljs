@@ -117,9 +117,7 @@
             #(e! (v/->ValitseVarusteToteumanTyyppi %)))]])
 
 (defn varustetoteumalomake [e! nykyiset-valinnat varustetoteuma]
-  #_(log "----> varustetoteuma:" (pr-str varustetoteuma))
   (let [muokattava? (:muokattava? varustetoteuma)]
-    (log "----> muokattava?:" (pr-str muokattava?))
     [:span.varustetoteumalomake
      [napit/takaisin "Takaisin varusteluetteloon"
       #(e! (v/->TyhjennaValittuToteuma))]

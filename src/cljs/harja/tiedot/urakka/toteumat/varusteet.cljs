@@ -211,6 +211,8 @@
   (process-event [{:keys [tietolaji kuvaus]} {toteuma :varustetoteuma :as app}]
     ;; Uusi tietolajin kuvaus haettu palvelimelta, aseta se paikoilleen, jos
     ;; toteuman tietolaji on sama kuin toteumassa.
+    (log "---> kuvaus " (pr-str kuvaus))
+    (log "---> toteuma" (pr-str toteuma))
     (if (= tietolaji (:tietolaji toteuma))
       (assoc-in app [:varustetoteuma :tietolajin-kuvaus] kuvaus)
       app))
