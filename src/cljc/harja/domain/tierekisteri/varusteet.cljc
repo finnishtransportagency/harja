@@ -66,7 +66,7 @@
           Dispatch tapahtuu ominaisuuden tietotyypin perusteella."
           (comp :tietotyyppi :ominaisuus))
 
-(defn- varusteominaisuus-skeema-perus [ominaisuus]
+(defn- varusteominaisuus-skeema-perus [ominaisuus muokattava?]
   {:otsikko (str/capitalize (:selite ominaisuus))
    :pakollinen? (:pakollinen ominaisuus)
    :nimi (keyword (:kenttatunniste ominaisuus))
@@ -74,12 +74,12 @@
    :aseta (fn [rivi arvo]
             (assoc-in rivi [:arvot (keyword (:kenttatunniste ominaisuus))] arvo))
    ;; Varusteen tunnistetta ei saa muokata koskaan
-   :muokattava? #(not (= "tunniste" (:kenttatunniste ominaisuus)))})
+   :muokattava? #(and (not (= "tunniste" (:kenttatunniste ominaisuus))) muokattava?)})
 
 (defmethod varusteominaisuus->skeema :koodisto
-  [{ominaisuus :ominaisuus}]
+  [{ominaisuus :ominaisuus} muokattava?]
   (let [koodisto (map #(assoc % :selite (str/capitalize (:selite %)))(:koodisto ominaisuus))]
-    (merge (varusteominaisuus-skeema-perus ominaisuus)
+    (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
            {:tyyppi :valinta
             :valinnat koodisto
             :valinta-nayta :selite
@@ -91,15 +91,15 @@
                        arvo)))})))
 
 (defmethod varusteominaisuus->skeema :numeerinen
-  [{ominaisuus :ominaisuus}]
-  (merge (varusteominaisuus-skeema-perus ominaisuus)
+  [{ominaisuus :ominaisuus} muokattava?]
+  (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
          {:tyyppi :numero
           :kokonaisluku? true
           :leveys 1}))
 
 (defmethod varusteominaisuus->skeema :default
-  [{ominaisuus :ominaisuus}]
-  (merge (varusteominaisuus-skeema-perus ominaisuus)
+  [{ominaisuus :ominaisuus} muokattava?]
+  (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
          {:tyyppi :string
           :leveys (if (= "tunniste" (:kenttatunniste ominaisuus))
                     1

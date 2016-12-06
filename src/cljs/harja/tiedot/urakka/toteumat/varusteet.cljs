@@ -125,12 +125,13 @@
                    :tienumero tienumero}]
     (k/post! :tallenna-varustetoteuma {:hakuehdot hakuehdot :toteuma toteuma})))
 
-(defn uusi-varuste
+(defn uusi-varustetoteuma
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
   []
   {:toiminto :lisatty
    :tietolaji (ffirst varusteet/tietolaji->selitys)
-   :alkupvm (pvm/nyt)})
+   :alkupvm (pvm/nyt)
+   :muokattava? true})
 
 (extend-protocol t/Event
   v/YhdistaValinnat
@@ -162,7 +163,7 @@
   v/ValitseToteuma
   (process-event [{toteuma :toteuma} _]
     (log "---> TOTEUMA: " (pr-str toteuma))
-    (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot toteuma))]
+    (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (assoc toteuma :muokattava? false)))]
       (tulos!)))
 
   v/TyhjennaValittuToteuma
@@ -171,7 +172,7 @@
 
   v/LisaaVaruste
   (process-event [_ _]
-    (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (uusi-varuste)))]
+    (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (uusi-varustetoteuma)))]
       (tulos!)))
 
   v/ValitseVarusteToteumanTyyppi
