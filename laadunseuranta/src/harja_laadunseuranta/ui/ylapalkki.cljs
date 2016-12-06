@@ -53,7 +53,8 @@
                            :on-click (if @tallennus-kaynnissa
                                        pysayta-fn
                                        kaynnista-fn)}
-   (when-not @aloitetaan-tarkastusajo [:span.kaynnistyspainike-nuoli.livicon-arrow-start])
+   (when-not @aloitetaan-tarkastusajo
+     [kuvat/svg-sprite "nuoli-ylos-alaviiva-24"])
    [:span.kaynnistyspainike-teksti
     (if @tallennus-kaynnissa
       "Pysäytä tarkastus"
