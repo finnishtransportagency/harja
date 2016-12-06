@@ -150,10 +150,14 @@
 
   v/VarusteToteumatHaettu
   (process-event [{toteumat :toteumat} app]
-    (assoc app
-      :karttataso (varustetoteumat-karttataso toteumat)
-      :karttataso-nakyvissa? true
-      :toteumat toteumat))
+    (let [valittu-toimenpide (:valittu-toimenpide app)]
+      (assoc app
+        :karttataso (varustetoteumat-karttataso toteumat)
+        :karttataso-nakyvissa? true
+        :toteumat toteumat
+        :naytettavat-toteumat (if (and valittu-toimenpide (not valittu-toimenpide))
+                                (filter #(= (:valittu-toimenpide app) (:toimenpide %)) toteumat)
+                                toteumat))))
 
   v/ValitseToteuma
   (process-event [{toteuma :toteuma} app]
@@ -168,6 +172,19 @@
   (process-event [_ _]
     (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (uusi-varuste)))]
       (tulos!)))
+
+  v/ValitseVarusteToteumanTyyppi
+  (process-event [{tyyppi :tyyppi} app]
+    (let [toteumat (:toteumat app)
+          valittu-toimenpide (first tyyppi)]
+      (log "---> valittu toimenpide" (pr-str valittu-toimenpide))
+      (assoc app
+        :karttataso (varustetoteumat-karttataso toteumat)
+        :karttataso-nakyvissa? true
+        :valittu-toimenpide valittu-toimenpide
+        :naytettavat-toteumat (if valittu-toimenpide
+                                (filter #(= valittu-toimenpide (:toimenpide %)) toteumat)
+                                toteumat))))
 
   v/AsetaToteumanTiedot
   (process-event [{tiedot :tiedot} {toteuma :varustetoteuma :as app}]

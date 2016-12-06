@@ -199,7 +199,7 @@
     (komp/kuuntelija :varustetoteuma-klikattu
                      (fn [_ i] (e! (v/->ValitseToteuma i))))
     (fn [e! {nykyiset-valinnat :valinnat
-             toteumat :toteumat
+             naytettavat-toteumat :naytettavat-toteumat
              toteuma :varustetoteuma
              varustehaun-tiedot :varustehaku}]
       [:span
@@ -210,7 +210,7 @@
           [:div.sisalto-container
            [:h1 "Varustekirjaukset Harjassa"]
            [valinnat e! nykyiset-valinnat]
-           [toteumataulukko e! (:tyyppi nykyiset-valinnat) toteumat]]
+           [toteumataulukko e! (:tyyppi nykyiset-valinnat) naytettavat-toteumat]]
           [:div.sisalto-container
            [:h1 "Varusteet Tierekisterissä"]
            (when oikeus-varusteen-lisaamiseen?
