@@ -10,7 +10,8 @@
                                                                 peruuta-lomake!]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [harja-laadunseuranta.ui.lomake :refer [kentta tekstialue
-                                                    pvm-aika tr-osoite]])
+                                                    pvm-aika tr-osoite]]
+            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat])
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
 
@@ -62,7 +63,7 @@
                                           (tallenna-fn @lomakedata)))
                             :disabled (not (empty? @lomake-virheet))
                             :luokat-str "nappi-myonteinen"
-                            :ikoni (ikonit/livicon-save)}]
+                            :ikoni (kuvat/svg-sprite "tallenna-18")}]
          [nappi "Peruuta" {:luokat-str "nappi-kielteinen"
                            :on-click peruuta-fn}]]]])))
 
