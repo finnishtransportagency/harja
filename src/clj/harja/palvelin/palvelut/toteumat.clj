@@ -527,7 +527,7 @@
 
     (toteumat-q/poista-tehtava! db (:id user) (:id tiedot))))
 
-(defn hae-urakan-varustetoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero] :as hakuehdot}]
+(defn hae-urakan-varustetoteumat [tierekisteri db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero] :as hakuehdot}]
   (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-varusteet user urakka-id)
   (log/debug "Haetaan varustetoteumat: " urakka-id sopimus-id alkupvm loppupvm tienumero)
   (let [toteumat (into []
@@ -535,14 +535,22 @@
                          (map #(konv/string->keyword % :toimenpide))
                          (map #(konv/string->keyword % :toteumatyyppi))
                          (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+                         (map #(do
+                                 (println "----> ASDF" %)
+                                 (assoc % :arvot
+                                          (tietolajit/valido-ja-muunna-merkkijono-arvoiksi
+                                            tierekisteri
+                                            (:arvot %)
+                                            (:tietolaji %)))))
                          (map konv/alaviiva->rakenne))
-                       (toteumat-q/hae-urakan-varustetoteumat db
-                                                              urakka-id
-                                                              sopimus-id
-                                                              (konv/sql-date alkupvm)
-                                                              (konv/sql-date loppupvm)
-                                                              (boolean tienumero)
-                                                              tienumero))
+                       (toteumat-q/hae-urakan-varustetoteumat
+                         db
+                         urakka-id
+                         sopimus-id
+                         (konv/sql-date alkupvm)
+                         (konv/sql-date loppupvm)
+                         (boolean tienumero)
+                         tienumero))
         kasitellyt-toteumarivit (konv/sarakkeet-vektoriin
                                   toteumat
                                   {:reittipiste :reittipisteet
@@ -616,7 +624,7 @@
                                                   :sijainti sijainti}]
                               (:id (toteumat-q/luo-varustetoteuma<! db varustetoteuma))))]
     (tierekisteri/laheta-varusteoteuma tierekisteri varustetoteuma-id))
-  (hae-urakan-varustetoteumat db user hakuehdot))
+  (hae-urakan-varustetoteumat tierekisteri db user hakuehdot))
 
 (defn hae-kokonaishintaisen-toteuman-tiedot [db user urakka-id pvm toimenpidekoodi]
   (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
@@ -739,7 +747,7 @@
         (hae-kokonaishintaisen-toteuman-tiedot db user urakka-id pvm toimenpidekoodi))
       :urakan-varustetoteumat
       (fn [user tiedot]
-        (hae-urakan-varustetoteumat db user tiedot))
+        (hae-urakan-varustetoteumat tierekisteri db user tiedot))
       :tallenna-varustetoteuma
       (fn [user {:keys [hakuehdot toteuma]}]
         (tallenna-varustetoteuma tierekisteri db user hakuehdot toteuma))

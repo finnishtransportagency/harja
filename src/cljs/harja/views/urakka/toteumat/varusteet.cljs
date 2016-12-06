@@ -56,19 +56,10 @@
                          (ikonit/eye-open) " Toteuma"])})]
      toteumatehtavat]))
 
-(def valittu-varustetoteuman-tyyppi (atom nil))
-
 (defn varustekortti-linkki [{:keys [alkupvm tietolaji tunniste]}]
   (when (and tietolaji tunniste)
     (let [url (kommunikaatio/varustekortti-url alkupvm tietolaji tunniste)]
       [:a {:href url :target "_blank"} "Avaa"])))
-
-(defn varustetoteuma-klikattu [_ toteuma]
-  (popupit/nayta-popup
-    (assoc toteuma
-      :toimenpide (tierekisteri-varusteet/varuste-toimenpide->string (keyword (:toimenpide toteuma)))
-      :aihe :varustetoteuma-klikattu
-      :varustekortti-url (kommunikaatio/varustekortti-url (:alkupvm toteuma) (:tietolaji toteuma) (:tunniste toteuma)))))
 
 (defn toteumataulukko [e! valittu-tyyppi toteumat]
   (let [valitut-toteumat (filter
@@ -121,10 +112,12 @@
                                       #(e! (v/->YhdistaValinnat {:tienumero %})))]
 
    [harja.ui.valinnat/varustetoteuman-tyyppi
+    ;; todo: jostain syystä frontti ei muista tätä valintaa. ilmeisesti sidonta atomiin ei toimi.
     (r/wrap (:tyyppi valinnat)
             #(e! (v/->ValitseVarusteToteumanTyyppi %)))]])
 
 (defn varustetoteumalomake [e! nykyiset-valinnat varustetoteuma]
+  (log "----> varustetoteuma:" (pr-str varustetoteuma))
   [:span.varustetoteumalomake
    [napit/takaisin "Takaisin varusteluetteloon"
     #(e! (v/->TyhjennaValittuToteuma))]
@@ -143,7 +136,7 @@
                     :ikoni (ikonit/tallenna)
                     :kun-onnistuu #(do
                                      (viesti/nayta! "Varusteen tiedot lähetetty onnistuneesti Tierekisteriin."
-                                                    :success viesti/viestin-nayttoaika-keskipitka )
+                                                    :success viesti/viestin-nayttoaika-keskipitka)
                                      (e! (v/->VarustetoteumaTallennettu %)))
                     :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
                     :disabled (not (lomake/voi-tallentaa? toteuma))}])}

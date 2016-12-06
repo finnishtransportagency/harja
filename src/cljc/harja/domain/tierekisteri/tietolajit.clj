@@ -165,3 +165,19 @@
     (muunna-tietolajin-arvot-stringiksi
       tietolajin-kuvaus
       arvot)))
+
+(defn valido-ja-muunna-merkkijono-arvoiksi
+  "Hakee tietolajin kuvauksen, muuntaa merkkijonon arvoiksi ja validoi ne"
+  [tierekisteri merkkijono tietolaji]
+  (let [vastaus (tierekisteri/hae-tietolajit tierekisteri tietolaji nil)
+        tietolajin-kuvaus (:tietolaji vastaus)
+        arvot (tietolajin-arvot-merkkijono->map merkkijono tietolajin-kuvaus)]
+    (try
+      (validoi-tietolajin-arvot
+        tietolaji
+        (clojure.walk/stringify-keys arvot)
+        tietolajin-kuvaus)
+      (catch Exception e
+        (throw+ {:type virheet/+viallinen-kutsu+
+                 :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti (.getMessage e)}]})))
+    arvot))

@@ -160,9 +160,10 @@
                                 toteumat))))
 
   v/ValitseToteuma
-  (process-event [{toteuma :toteuma} app]
-    (assoc app
-      :varustetoteuma toteuma))
+  (process-event [{toteuma :toteuma} _]
+    (log "---> TOTEUMA: " (pr-str toteuma))
+    (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot toteuma))]
+      (tulos!)))
 
   v/TyhjennaValittuToteuma
   (process-event [_ app]
@@ -177,7 +178,6 @@
   (process-event [{tyyppi :tyyppi} app]
     (let [toteumat (:toteumat app)
           valittu-toimenpide (first tyyppi)]
-      (log "---> valittu toimenpide" (pr-str valittu-toimenpide))
       (assoc app
         :karttataso (varustetoteumat-karttataso toteumat)
         :karttataso-nakyvissa? true
@@ -188,6 +188,7 @@
 
   v/AsetaToteumanTiedot
   (process-event [{tiedot :tiedot} {toteuma :varustetoteuma :as app}]
+    (log "----> TIEDOT: " (pr-str tiedot))
     (let [tietolaji-muuttui? (not= (:tietolaji tiedot) (:tietolaji toteuma))
           tiedot (if tietolaji-muuttui?
                    (assoc tiedot :tietolajin-kuvaus nil)
@@ -199,6 +200,11 @@
           koordinaatit (when koordinaattiarvot {:x (Math/round (first koordinaattiarvot))
                                                 :y (Math/round (second koordinaattiarvot))})
           uusi-toteuma (assoc uusi-toteuma :arvot (merge (:arvot tiedot) koordinaatit))]
+
+
+
+      (log "----> tietolaji-muuttui?: " (pr-str tietolaji-muuttui?))
+
       ;; Jos tietolajin kuvaus muuttui ja se ei ole tyhjä, haetaan uudet tiedot
       (when (and tietolaji-muuttui? (:tietolaji tiedot))
         (let [tulos! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
