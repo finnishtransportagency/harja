@@ -449,12 +449,14 @@
   ([luku tarkkuus ryhmitelty?]
     #?(:cljs
        ; Jostain syystä ei voi formatoida desimaalilukua nollalla desimaalilla. Aiheuttaa poikkeuksen.
-       (if (= tarkkuus 0)
-         (.toFixed luku 0)
-         (let [formatoitu (.format (desimaali-fmt tarkkuus) luku)]
-           (if-not ryhmitelty?
-             (str/replace formatoitu #" " "")
-             formatoitu)))
+       (if (nil? luku)
+         (if (= tarkkuus 0)
+          (.toFixed luku 0)
+          (let [formatoitu (.format (desimaali-fmt tarkkuus) luku)]
+            (if-not ryhmitelty?
+              (str/replace formatoitu #" " "")
+              formatoitu)))
+         "")
        :clj
        (.format (doto (java.text.DecimalFormat.)
                   (.setDecimalFormatSymbols desimaali-symbolit)
