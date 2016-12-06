@@ -4,7 +4,6 @@
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.ui.kamera :as kamera]
             [harja-laadunseuranta.ui.napit :refer [nappi]]
-            [harja-laadunseuranta.ui.ikonit :as ikonit]
             [harja-laadunseuranta.tiedot.havaintolomake :refer [alusta-uusi-lomake!
                                                                 tallenna-lomake!
                                                                 peruuta-lomake!]]

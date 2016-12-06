@@ -5,7 +5,6 @@
             [harja-laadunseuranta.ui.nappaimisto :as nappaimisto]
             [harja-laadunseuranta.tiedot.paanavigointi :as tiedot]
             [cljs-time.local :as l]
-            [harja-laadunseuranta.ui.ikonit :as ikonit]
             [harja-laadunseuranta.ui.napit :refer [nappi]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [clojure.set :as set]
