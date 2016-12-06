@@ -559,7 +559,9 @@
                                        tierekisteriosoite
                                        lisatieto
                                        tietolaji
-                                       toiminto] :as toteuma}]
+                                       toiminto
+                                       alkupvm
+                                       loppupvm] :as toteuma}]
   (oikeudet/vaadi-kirjoitusoikeus  oikeudet/urakat-toteumat-varusteet user urakka-id)
   (log/debug "Tallennetaan uusi varustetoteuma")
   (jdbc/with-db-transaction [db db]
@@ -595,8 +597,8 @@
                          :tietolaji tietolaji
                          :arvot arvot
                          :karttapvm karttapvm
-                         :alkupvm nyt
-                         :loppupvm nyt
+                         :alkupvm alkupvm
+                         :loppupvm loppupvm
                          :piiri elynro
                          :kuntoluokka (:kuntoluokka arvot)
                          :tierekisteriurakkakoodi (:tierekisteriurakkakoodi arvot)

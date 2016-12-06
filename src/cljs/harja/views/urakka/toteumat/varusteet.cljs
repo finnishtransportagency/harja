@@ -159,7 +159,14 @@
         :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))}
        {:nimi :lisatieto
         :otsikko "Lisätietoja"
-        :tyyppi :string})
+        :tyyppi :string}
+       {:nimi :alkupvm
+        :otsikko "Alkupäivämäärä"
+        :tyyppi :pvm
+        :pakollinen? true}
+       {:nimi :loppupvm
+        :otsikko "Loppupäivämäärä"
+        :tyyppi :pvm})
 
      ;; Muodostetaan varusteen tiedoille kentät tietolajin skeeman perusteella
      (apply lomake/ryhma "Varusteen ominaisuudet"

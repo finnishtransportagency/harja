@@ -92,8 +92,19 @@
 (defn- hae-tietolajin-kuvaus [tietolaji]
   (k/post! :hae-tietolajin-kuvaus tietolaji))
 
-(defn tallenna-varustetoteuma [{:keys [urakka-id sopimus-id kuukausi hoitokausi tienumero] :as hakuehdot}
-                               {:keys [arvot sijainti lisatieto tietolaji toiminto tierekisteriosoite] :as toteuma}]
+(defn tallenna-varustetoteuma [{:keys [urakka-id
+                                       sopimus-id
+                                       kuukausi
+                                       hoitokausi
+                                       tienumero] :as hakuehdot}
+                               {:keys [arvot
+                                       sijainti
+                                       lisatieto
+                                       tietolaji
+                                       toiminto
+                                       tierekisteriosoite
+                                       alkupvm
+                                       loppupvm] :as toteuma}]
   (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
         toteuma {:arvot arvot
                  :sijainti sijainti
@@ -101,7 +112,9 @@
                  :lisatieto lisatieto
                  :tietolaji tietolaji
                  :toiminto toiminto
-                 :urakka-id @nav/valittu-urakka-id}
+                 :urakka-id @nav/valittu-urakka-id
+                 :alkupvm alkupvm
+                 :loppupvm loppupvm}
         aikarajaus (or kuukausi hoitokausi)
         hakuehdot {:urakka-id urakka-id
                    :sopimus-id sopimus-id
@@ -114,7 +127,8 @@
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
   []
   {:toiminto :lisatty
-   :tietolaji (ffirst varusteet/tietolaji->selitys)})
+   :tietolaji (ffirst varusteet/tietolaji->selitys)
+   :alkupvm (pvm/nyt)})
 
 (extend-protocol t/Event
   v/YhdistaValinnat
