@@ -11,7 +11,8 @@
                      soratienappaimiston-numeronappain-painettu!]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [harja-laadunseuranta.ui.napit :refer [nappi]]
-            [harja-laadunseuranta.ui.dom :as dom])
+            [harja-laadunseuranta.ui.dom :as dom]
+            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat])
   (:require-macros
     [harja-laadunseuranta.macros :as m]
     [cljs.core.async.macros :refer [go go-loop]]
@@ -201,11 +202,11 @@
        {:class "nappaimiston-painike"
         :id "nappaimiston-painike3"
         :on-click #(numeronappain-painettu 3 mittaustyyppi syotto-atom)} "3"]
-
       [:div
        {:class "nappaimiston-painike"
         :id "nappaimiston-painike-delete"
-        :on-click #(tyhjennyspainike-painettu! mittaustyyppi syotto-atom)} [:span.livicon-undo]]
+        :on-click #(tyhjennyspainike-painettu! mittaustyyppi syotto-atom)}
+       [kuvat/svg-sprite "askelpalautin-24"]]
       [:div
        {:class "nappaimiston-painike"
         :id "nappaimiston-painike0"
@@ -219,7 +220,7 @@
         :on-click #(when syotto-validi?
                      (when (kirjaa-arvo (fmt/string->numero (:nykyinen-syotto @syotto-atom)))
                        (syotto-onnistui mittaustyyppi syotto-atom)))}
-       [:span.livicon-check]]]]))
+       [kuvat/svg-sprite "tarkistus-24"]]]]))
 
 (defn- nappaimistokomponentti [{:keys [mittaustyyppi] :as tiedot}]
   (let [nayta-syottokentta? (not= mittaustyyppi :soratie)]

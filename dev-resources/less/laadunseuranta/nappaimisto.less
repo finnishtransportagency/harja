@@ -50,6 +50,8 @@
 }
 
 .nappaimiston-painike {
+  @painike-teksti-koko: 38px;
+
   display: inline-block;
   box-sizing: border-box;
   width: 75px;
@@ -63,6 +65,13 @@
   border-color: @sininen4;
   margin-right: 3px;
   margin-bottom: 3px;
+
+  > svg {
+    width: @painike-teksti-koko;
+    height: @painike-teksti-koko;
+    position: relative;
+    top: 8px;
+  }
 }
 
 .nappaimiston-painike:active:not(.nappaimiston-painike-disabloitu) {
