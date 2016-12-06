@@ -298,10 +298,13 @@
    [:div.kartan-kontrollit {:style (when @s/havaintolomake-auki
                                      {:display "none"})}
     [:div#karttakontrollit] ;; OpenLayersin ikonit asetetaan tähän elementtiin erikseen
-    [:div.kontrollinappi.ortokuva.livicon-terrain {:on-click #(swap! s/nayta-ortokuva not)}]
-    [:div.kontrollinappi.kiinteistorajat.livicon-property-boundary {:on-click #(swap! s/nayta-kiinteistorajat not)}]
-    [:div.kontrollinappi.keskityspainike.livicon-crosshairs {:on-click #(do (swap! s/keskita-ajoneuvoon not)
-                                                                            (swap! s/keskita-ajoneuvoon not))}]]])
+    [:div.kontrollinappi.ortokuva {:on-click #(swap! s/nayta-ortokuva not)}
+     [kuvat/svg-sprite "maasto-36"]]
+    [:div.kontrollinappi.kiinteistorajat {:on-click #(swap! s/nayta-kiinteistorajat not)}
+     [kuvat/svg-sprite "kiinteisto-36"]]
+    [:div.kontrollinappi.keskityspainike {:on-click #(do (swap! s/keskita-ajoneuvoon not)
+                                                                            (swap! s/keskita-ajoneuvoon not))}
+     [kuvat/svg-sprite "tahtain-24"]]]])
 
 ;; devcards
 
