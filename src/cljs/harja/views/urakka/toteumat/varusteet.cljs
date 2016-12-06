@@ -199,9 +199,11 @@
           :muokattava? (constantly muokattava?)})
 
        ;; Muodostetaan varusteen tiedoille kentät tietolajin skeeman perusteella
-       (apply lomake/ryhma "Varusteen ominaisuudet"
-              (map #(varusteominaisuus->skeema % muokattava?)
-                   (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))))]
+       (let [ominaisuudet (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))
+             ominaisuudet (if muokattava?
+                            (filter #(not (= "tunniste" (get-in % [:ominaisuus :kenttatunniste]))) ominaisuudet)
+                            ominaisuudet)]
+         (apply lomake/ryhma "Varusteen ominaisuudet" (map #(varusteominaisuus->skeema % muokattava?) ominaisuudet)))]
       varustetoteuma]]))
 
 (defn- varusteet* [e! varusteet]
