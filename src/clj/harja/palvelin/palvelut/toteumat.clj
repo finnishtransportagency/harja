@@ -535,11 +535,9 @@
                          (map #(konv/string->keyword % :toimenpide))
                          (map #(konv/string->keyword % :toteumatyyppi))
                          (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
-                         (map #(assoc % :arvot
-                                        (tietolajit/valido-ja-muunna-merkkijono-arvoiksi
-                                          tierekisteri
-                                          (:arvot %)
-                                          (:tietolaji %))))
+                         (map #(assoc % :arvot (tietolajit/valido-ja-muunna-merkkijono-arvoiksi tierekisteri
+                                                 (:arvot %)
+                                                 (:tietolaji %))))
                          (map konv/alaviiva->rakenne))
                        (toteumat-q/hae-urakan-varustetoteumat
                          db
@@ -572,7 +570,6 @@
                                        loppupvm] :as toteuma}]
   (oikeudet/vaadi-kirjoitusoikeus  oikeudet/urakat-toteumat-varusteet user urakka-id)
   (log/debug "Tallennetaan uusi varustetoteuma")
-
   (let [varustetoteuma-id (jdbc/with-db-transaction [db db]
                             (let [nyt (pvm/nyt)
                                   sijainti (geo/geometry (geo/clj->pg sijainti))
