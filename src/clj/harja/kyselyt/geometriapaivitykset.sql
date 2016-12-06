@@ -8,3 +8,9 @@ WHERE nimi = :nimi;
 UPDATE geometriapaivitys
 SET viimeisin_paivitys = :viimeisin_paivitys
 WHERE nimi = :nimi;
+
+-- name: hae-karttapvm
+-- single?: true
+SELECT viimeisin_paivitys
+FROM geometriapaivitys
+WHERE nimi = 'tieverkko';
