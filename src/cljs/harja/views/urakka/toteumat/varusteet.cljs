@@ -18,7 +18,6 @@
             [harja.ui.ikonit :as ikonit]
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.asiakas.kommunikaatio :as kommunikaatio]
-            [harja.views.kartta.popupit :as popupit]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.napit :as napit]
             [harja.tiedot.urakka.toteumat.varusteet.viestit :as v]
@@ -138,6 +137,7 @@
                                        (viesti/nayta! "Varusteen tiedot lähetetty onnistuneesti Tierekisteriin."
                                                       :success viesti/viestin-nayttoaika-keskipitka)
                                        (e! (v/->VarustetoteumaTallennettu %)))
+                      ;; todo: pitää miettiä, miten toimitaan, jos tallennus onnistuu, mutta tr-lähetys epäonnistuu
                       :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
                       :disabled (not (lomake/voi-tallentaa? toteuma))}])}
       [(when (not muokattava?)
