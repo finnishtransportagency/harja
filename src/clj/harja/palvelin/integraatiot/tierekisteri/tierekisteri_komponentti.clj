@@ -106,6 +106,7 @@
         tierekisteri-api-url tietueen-tunniste tietolajitunniste tilannepvm)))
 
   (lisaa-tietue [this tiedot]
+    (println "---> lisätään uusi tietue")
     (validoi-tietolajitunniste (get-in tiedot [:tietue :tietolaji :tietolajitunniste] tiedot))
     (when-not (empty? tierekisteri-api-url)
       (tietue/lisaa-tietue
@@ -125,6 +126,7 @@
 
   (laheta-varusteoteuma [this varustetoteuma-id]
     (when-not (empty? tierekisteri-api-url)
+      (println "---> lähetetään varustetoteuma tierekisteriin")
       (if-let [varustetoteuma (konversio/alaviiva->rakenne (first (toteumat-q/hae-varustetoteuma (:db this) varustetoteuma-id)))]
         (let [toimenpide (:toimenpide varustetoteuma)
               tiedot (varusteen-tiedot varustetoteuma)]

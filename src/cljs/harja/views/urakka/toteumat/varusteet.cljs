@@ -141,7 +141,10 @@
                    #(varustetiedot/tallenna-varustetoteuma nykyiset-valinnat toteuma)
                    {:luokka "nappi-ensisijainen"
                     :ikoni (ikonit/tallenna)
-                    :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
+                    :kun-onnistuu #(do
+                                     (viesti/nayta! "Varusteen tiedot lähetetty onnistuneesti Tierekisteriin."
+                                                    :success viesti/viestin-nayttoaika-keskipitka )
+                                     (e! (v/->VarustetoteumaTallennettu %)))
                     :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
                     :disabled (not (lomake/voi-tallentaa? toteuma))}])}
     [(lomake/ryhma
@@ -167,7 +170,7 @@
        {:nimi :puoli
         :otsikko "Tien puoli"
         :tyyppi :valinta
-        :valinnat  tierekisteri-varusteet/tien-puolet
+        :valinnat tierekisteri-varusteet/tien-puolet
         :pituus 1
         :pakollinen? true}
        {:nimi :alkupvm
