@@ -162,7 +162,6 @@
 
   v/ValitseToteuma
   (process-event [{toteuma :toteuma} _]
-    (log "---> TOTEUMA: " (pr-str toteuma))
     (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (assoc toteuma :muokattava? false)))]
       (tulos!)))
 
@@ -189,7 +188,6 @@
 
   v/AsetaToteumanTiedot
   (process-event [{tiedot :tiedot} {toteuma :varustetoteuma :as app}]
-    (log "----> TIEDOT: " (pr-str tiedot))
     (let [tietolaji-muuttui? (not= (:tietolaji tiedot) (:tietolaji toteuma))
           tiedot (if tietolaji-muuttui?
                    (assoc tiedot :tietolajin-kuvaus nil)
@@ -201,11 +199,6 @@
           koordinaatit (when koordinaattiarvot {:x (Math/round (first koordinaattiarvot))
                                                 :y (Math/round (second koordinaattiarvot))})
           uusi-toteuma (assoc uusi-toteuma :arvot (merge (:arvot tiedot) koordinaatit))]
-
-
-
-      (log "----> tietolaji-muuttui?: " (pr-str tietolaji-muuttui?))
-
       ;; Jos tietolajin kuvaus muuttui ja se ei ole tyhjä, haetaan uudet tiedot
       (when (and tietolaji-muuttui? (:tietolaji tiedot))
         (let [tulos! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]

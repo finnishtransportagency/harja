@@ -170,7 +170,7 @@
   "Hakee tietolajin kuvauksen, muuntaa merkkijonon arvoiksi ja validoi ne"
   [tierekisteri merkkijono tietolaji]
   (println "----> tierekisteri " tierekisteri )
-  (println "----> merkkijono " merkkijono )
+  (println "----> merkkijono >" merkkijono "<")
   (println "----> tietolaji" tietolaji)
 
   (let [vastaus (tierekisteri/hae-tietolajit tierekisteri tietolaji nil)
