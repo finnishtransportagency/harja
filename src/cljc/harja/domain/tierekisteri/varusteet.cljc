@@ -69,7 +69,7 @@
 
 (defmethod varusteominaisuus->skeema :koodisto
   [{ominaisuus :ominaisuus}]
-  (let [koodisto (:koodisto ominaisuus)]
+  (let [koodisto (map #(assoc % :selite (str/capitalize (:selite %)))(:koodisto ominaisuus))]
     (merge (varusteominaisuus-skeema-perus ominaisuus)
            {:tyyppi :valinta
             :valinnat koodisto

@@ -141,9 +141,7 @@
                    #(varustetiedot/tallenna-varustetoteuma nykyiset-valinnat toteuma)
                    {:luokka "nappi-ensisijainen"
                     :ikoni (ikonit/tallenna)
-                    :kun-onnistuu #(do
-                                     (log "---> ONNISTUI" %)
-                                     (e! (v/->VarustetoteumaTallennettu %)))
+                    :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
                     :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
                     :disabled (not (lomake/voi-tallentaa? toteuma))}])}
     [(lomake/ryhma
@@ -163,7 +161,7 @@
         :otsikko "Lisätietoja"
         :tyyppi :string})
 
-     ;; todo: tunniste pitäisi muodostaa automaattisesti HARJA nimiavaruudesta
+     ;; Muodostetaan varusteen tiedoille kentät tietolajin skeeman perusteella
      (apply lomake/ryhma "Varusteen ominaisuudet"
             (map varusteominaisuus->skeema
                  (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))))]

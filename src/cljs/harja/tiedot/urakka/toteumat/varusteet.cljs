@@ -184,9 +184,7 @@
 
   v/VarustetoteumaTallennettu
   (process-event [{toteumat :hakutulos} app]
-    ;; assokkaa appiin uudet tiedot, jota server palauttaa
     (let [toteumat (if toteumat toteumat [])]
-      (log "----> toteumat:" (pr-str toteumat))
       (assoc (dissoc app :varustetoteuma)
         :karttataso (varustetoteumat-karttataso toteumat)
         :karttataso-nakyvissa? true
