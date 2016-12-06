@@ -128,9 +128,6 @@
       (if-let [varustetoteuma (konversio/alaviiva->rakenne (first (toteumat-q/hae-varustetoteuma (:db this) varustetoteuma-id)))]
         (let [toimenpide (:toimenpide varustetoteuma)
               tiedot (varusteen-tiedot varustetoteuma)]
-
-
-          (println "---> tiedot" tiedot)
           (case toimenpide
             "lisatty" (lisaa-tietue this tiedot)
             "paivitetty" (paivita-tietue this tiedot)

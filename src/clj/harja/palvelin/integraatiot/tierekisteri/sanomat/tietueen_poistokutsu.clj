@@ -22,8 +22,6 @@
 (defn muodosta-kutsu [tietue]
   (let [sisalto (muodosta-xml-sisalto tietue)
         xml (xml/tee-xml-sanoma sisalto)]
-
-    (println "---> MXLVSGKAgnjadfnbjahdrugharughausdrg ;: " xml)
     (if (xml/validi-xml? +xsd-polku+ "poistaTietue.xsd" xml)
       xml
       (do

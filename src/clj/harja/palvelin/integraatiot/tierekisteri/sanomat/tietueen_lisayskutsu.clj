@@ -22,7 +22,6 @@
 (defn muodosta-kutsu [tietue]
   (let [sisalto (muodosta-xml-sisalto tietue)
         xml (xml/tee-xml-sanoma sisalto)]
-    (println "---> XML: " xml)
     (if (xml/validi-xml? +xsd-polku+ "lisaaTietue.xsd" xml)
       xml
       (do
