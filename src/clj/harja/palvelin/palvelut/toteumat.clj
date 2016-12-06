@@ -535,13 +535,11 @@
                          (map #(konv/string->keyword % :toimenpide))
                          (map #(konv/string->keyword % :toteumatyyppi))
                          (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
-                         (map #(do
-                                 (println "----> ASDF" %)
-                                 (assoc % :arvot
-                                          (tietolajit/valido-ja-muunna-merkkijono-arvoiksi
-                                            tierekisteri
-                                            (:arvot %)
-                                            (:tietolaji %)))))
+                         (map #(assoc % :arvot
+                                        (tietolajit/valido-ja-muunna-merkkijono-arvoiksi
+                                          tierekisteri
+                                          (:arvot %)
+                                          (:tietolaji %))))
                          (map konv/alaviiva->rakenne))
                        (toteumat-q/hae-urakan-varustetoteumat
                          db

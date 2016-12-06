@@ -710,8 +710,8 @@ SELECT
   tr_puoli,
   tr_ajorata,
   t.id                AS toteumaid,
-  t.alkanut           AS alkupvm,
-  t.paattynyt         AS loppupvm,
+  t.alkanut,
+  t.paattynyt,
   t.tyyppi            AS toteumatyyppi,
   arvot,
   tierekisteriurakkakoodi,
@@ -721,7 +721,10 @@ SELECT
   tt.id               AS toteumatehtava_id,
   tt.toimenpidekoodi  AS toteumatehtava_toimenpidekoodi,
   tt.maara            AS toteumatehtava_maara,
-  tpk.nimi            AS toteumatehtava_nimi
+  tpk.nimi            AS toteumatehtava_nimi,
+  t.lisatieto,
+  alkupvm,
+  loppupvm
 FROM varustetoteuma vt
   JOIN toteuma t ON vt.toteuma = t.id
   LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id

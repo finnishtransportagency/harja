@@ -169,6 +169,10 @@
 (defn valido-ja-muunna-merkkijono-arvoiksi
   "Hakee tietolajin kuvauksen, muuntaa merkkijonon arvoiksi ja validoi ne"
   [tierekisteri merkkijono tietolaji]
+  (println "----> tierekisteri " tierekisteri )
+  (println "----> merkkijono " merkkijono )
+  (println "----> tietolaji" tietolaji)
+
   (let [vastaus (tierekisteri/hae-tietolajit tierekisteri tietolaji nil)
         tietolajin-kuvaus (:tietolaji vastaus)
         arvot (tietolajin-arvot-merkkijono->map merkkijono tietolajin-kuvaus)]
