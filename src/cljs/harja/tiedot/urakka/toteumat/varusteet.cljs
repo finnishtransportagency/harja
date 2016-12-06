@@ -60,8 +60,6 @@
                                  500)
     :toteumat nil))
 
-
-
 (defn- selite [{:keys [toimenpide tietolaji alkupvm]}]
   (str
     (pvm/pvm alkupvm) " "
@@ -99,6 +97,8 @@
                                        tienumero] :as hakuehdot}
                                {:keys [arvot
                                        sijainti
+                                       puoli
+                                       ajorata
                                        lisatieto
                                        tietolaji
                                        toiminto
@@ -108,6 +108,8 @@
   (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
         toteuma {:arvot arvot
                  :sijainti sijainti
+                 :puoli puoli
+                 :ajorata ajorata
                  :tierekisteriosoite tierekisteriosoite
                  :lisatieto lisatieto
                  :tietolaji tietolaji

@@ -157,16 +157,29 @@
         :tyyppi :tierekisteriosoite
         :pakollinen? true
         :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))}
-       {:nimi :lisatieto
-        :otsikko "Lisätietoja"
-        :tyyppi :string}
+       {:nimi :ajorata
+        :otsikko "Ajorata"
+        :tyyppi :numero
+        :vaadi-ei-negatiivinen? true
+        :kokonaisluku? true
+        :pakollinen? true
+        :leveys 1}
+       {:nimi :puoli
+        :otsikko "Tien puoli"
+        :tyyppi :valinta
+        :valinnat  tierekisteri-varusteet/tien-puolet
+        :pituus 1
+        :pakollinen? true}
        {:nimi :alkupvm
         :otsikko "Alkupäivämäärä"
         :tyyppi :pvm
         :pakollinen? true}
        {:nimi :loppupvm
         :otsikko "Loppupäivämäärä"
-        :tyyppi :pvm})
+        :tyyppi :pvm}
+       {:nimi :lisatieto
+        :otsikko "Lisätietoja"
+        :tyyppi :string})
 
      ;; Muodostetaan varusteen tiedoille kentät tietolajin skeeman perusteella
      (apply lomake/ryhma "Varusteen ominaisuudet"

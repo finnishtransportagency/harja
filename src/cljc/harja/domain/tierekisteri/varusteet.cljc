@@ -39,6 +39,15 @@
    "tl516" "Hiekkalaatikot"
    "tl511" "Viherkuviot"})
 
+(def tien-puolet
+  [0
+   1
+   2
+   3
+   7
+   8
+   9])
+
 (defn kiinnostaa-listauksessa?
   [ominaisuus]
   (let [tunniste (:kenttatunniste (:ominaisuus ominaisuus))]

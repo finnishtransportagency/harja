@@ -556,6 +556,8 @@
                                {:keys [urakka-id
                                        arvot
                                        sijainti
+                                       puoli
+                                       ajorata
                                        tierekisteriosoite
                                        lisatieto
                                        tietolaji
@@ -608,8 +610,8 @@
                          :tr_alkuetaisyys (:alkuetaisyys tierekisteriosoite)
                          :tr_loppuosa (:loppuosa tierekisteriosoite)
                          :tr_loppuetaisyys (:loppuetaisyys tierekisteriosoite)
-                         :tr_puoli nil
-                         :tr_ajorata nil
+                         :tr_puoli puoli
+                         :tr_ajorata ajorata
                          :sijainti sijainti}
           varustetoteuma-id (toteumat-q/luo-varustetoteuma<! db varustetoteuma)]
       (tierekisteri/laheta-varusteoteuma tierekisteri varustetoteuma-id)
