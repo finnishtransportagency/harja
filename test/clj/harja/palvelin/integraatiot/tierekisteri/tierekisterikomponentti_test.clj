@@ -238,6 +238,26 @@
             vastausdata (tierekisteri/poista-tietue (:tierekisteri jarjestelma) tiedot)]
         (is (true? (:onnistunut vastausdata)))))))
 
+(deftest tarkista-varustetoteuman-lahettaminen
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))]
+    (with-fake-http
+      [(str +testi-tierekisteri-url+ "/lisaatietue") vastaus-xml]
+      (let [lisays-varustetoteuma (first (q "SELECT id FROM varustetoteuma WHERE toimenpide = 'lisatty' LIMIT 1;"))
+            vastausdata (tierekisteri/laheta-varusteoteuma (:tierekisteri jarjestelma) lisays-varustetoteuma)]
+        (is (true? (:onnistunut vastausdata)))))
+
+    (with-fake-http
+      [(str +testi-tierekisteri-url+ "/paivitatietue") vastaus-xml]
+      (let [muokkaus-varustetoteuma (first (q "SELECT id FROM varustetoteuma WHERE toimenpide = 'paivitetty' LIMIT 1;"))
+            vastausdata (tierekisteri/laheta-varusteoteuma (:tierekisteri jarjestelma) muokkaus-varustetoteuma)]
+        (is (true? (:onnistunut vastausdata)))))
+
+    (with-fake-http
+      [(str +testi-tierekisteri-url+ "/poistatietue") vastaus-xml]
+      (let [poisto-varustetoteuma (first (q "SELECT id FROM varustetoteuma WHERE toimenpide = 'poistettu' LIMIT 1;"))
+            vastausdata (tierekisteri/laheta-varusteoteuma (:tierekisteri jarjestelma) poisto-varustetoteuma)]
+        (is (true? (:onnistunut vastausdata)))))))
+
 (deftest tarkista-virhevastauksen-kasittely
   (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/virhe-vastaus-tietolajia-ei-loydy-response.xml"))]

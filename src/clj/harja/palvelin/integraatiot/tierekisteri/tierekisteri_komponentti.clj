@@ -9,7 +9,8 @@
     [harja.kyselyt.urakat :as urakat-q]
     [harja.kyselyt.toteumat :as toteumat-q]
     [harja.kyselyt.konversio :as konversio])
-  (:use [slingshot.slingshot :only [try+ throw+]]))
+  (:use [slingshot.slingshot :only [try+ throw+]])
+  (:import (java.text SimpleDateFormat)))
 
 (def tietolajitunnisteet #{"tl523" "tl501" "tl517" "tl507" "tl508" "tl506"
                            "tl522" "tl513" "tl196" "tl519" "tl505" "tl195"
@@ -35,23 +36,29 @@
                                 tietolaji
                                 arvot
                                 toimenpide]}]
-  {:lisaaja {:henkilo henkilo
-             :jarjestelma "Harja"
-             :organisaatio organisaatio
-             :yTunnus ytunnus}
-   :tietue {:tunniste tunniste
-            :alkupvm alkupvm
-            :loppupvm loppupvm
-            :sijainti {:tie
-                       {:numero (:numero tr)
-                        :aet (:alkuetaisyys tr)
-                        :aosa (:alkuosa tr)
-                        :ajr (:ajorata tr)
-                        :puoli (:puoli tr)
-                        :tilannepvm luotu}}
-            :tietolaji {:tietolajitunniste tietolaji
-                        :arvot arvot}}
-   (keyword toimenpide) luotu})
+  (let [formatoi-pvm #(when % (.format (SimpleDateFormat. "yyyy-MM-dd") %))
+        tekija {:henkilo henkilo
+                 :jarjestelma "Harja"
+                 :organisaatio organisaatio
+                 :yTunnus ytunnus}]
+    {:lisaaja tekija
+     :poistaja tekija
+     :tarkastaja tekija
+     :tietue {:tunniste tunniste
+              :alkupvm (formatoi-pvm alkupvm)
+              :loppupvm (formatoi-pvm loppupvm)
+              :sijainti {:tie
+                         {:numero (:numero tr)
+                          :aet (:alkuetaisyys tr)
+                          :aosa (:alkuosa tr)
+                          :ajr (:ajorata tr)
+                          :puoli (:puoli tr)
+                          :tilannepvm (formatoi-pvm luotu)}}
+              :tietolaji {:tietolajitunniste tietolaji
+                          :arvot arvot}}
+     :tietolajitunniste tietolaji
+     :tunniste  tunniste
+     (keyword toimenpide) (formatoi-pvm luotu)}))
 
 (defprotocol TierekisteriPalvelut
   (hae-tietolajit [this tietolajitunniste muutospvm])
@@ -121,6 +128,9 @@
       (if-let [varustetoteuma (konversio/alaviiva->rakenne (first (toteumat-q/hae-varustetoteuma (:db this) varustetoteuma-id)))]
         (let [toimenpide (:toimenpide varustetoteuma)
               tiedot (varusteen-tiedot varustetoteuma)]
+
+
+          (println "---> tiedot" tiedot)
           (case toimenpide
             "lisatty" (lisaa-tietue this tiedot)
             "paivitetty" (paivita-tietue this tiedot)
