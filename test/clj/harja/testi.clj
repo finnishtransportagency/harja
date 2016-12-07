@@ -27,6 +27,15 @@
 (defn travis? []
   (= "true" (System/getenv "TRAVIS")))
 
+(def raporttisolu? harja.domain.raportointi/raporttielementti?)
+
+(defn raporttisolun-arvo [solu]
+  (if (raporttisolu? solu)
+    (let [solun-asetukset (second solu)]
+      (or (:arvo solun-asetukset) solun-asetukset))
+
+    solu))
+
 ;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
 ;; eikä tehdä traviksen logeista turhan pitkiä
 (log/set-config! [:appenders :standard-out :min-level]
