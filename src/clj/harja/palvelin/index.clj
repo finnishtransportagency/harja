@@ -1,6 +1,7 @@
 (ns harja.palvelin.index
   (:require [hiccup.core :refer [html]]
-            [harja.palvelin.tyokalut.svg :as svg])
+            [harja.palvelin.tyokalut.svg :as svg]
+            [clojure.java.io :as io])
   (:import [javax.crypto Mac]
            [javax.crypto.spec SecretKeySpec]
            [java.util Base64]))
@@ -50,7 +51,7 @@
         [:div#app]]])))
 
 (defn tee-ls-paasivu [devmode]
-  (let [inline-svg (svg/inline-svg "resources/public/laadunseuranta/img/sprite_svg/")]
+  (let [inline-svg (svg/inline-svg "resources/public/laadunseuranta/img/livicons.svg")]
     (html
       "<!DOCTYPE html>\n"
       (if devmode

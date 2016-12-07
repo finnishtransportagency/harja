@@ -4,21 +4,11 @@
             [clojure.string :as str])
   (:import (hiccup.compiler HtmlRenderer)))
 
-(defn- list-svgs [path]
-  (let [files (file-seq (clojure.java.io/file path))
-        files (map #(-> {:name (.getName %)
-                         :path (.getAbsolutePath %)})
-                   files)
-        svg-files (filter #(str/ends-with? (:name %) ".svg") files)
-        svg-files (map #(assoc % :contents (slurp (:path %))) svg-files)]
-    (into [] svg-files)))
-
 (defn create-inline-svg [path]
-  (let [svgs (list-svgs path)]
-    (apply conj [:div {:style "display: none;" :debug (pr-str (file-seq (clojure.java.io/file path)))}]
-           (into [] (map #(reify HtmlRenderer
-                            (render-html [_] (:contents %)))
-                         svgs)))))
+  (let [svg (slurp path)]
+    [:div {:style "display: none;"}
+     (reify HtmlRenderer
+       (render-html [_] svg))]))
 
 (defmacro inline-svg [path]
   `(let [svg# (create-inline-svg ~path)]
