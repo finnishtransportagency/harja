@@ -10,7 +10,9 @@
                                                                 peruuta-lomake!]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [harja-laadunseuranta.ui.lomake :refer [kentta tekstialue
-                                                    pvm-aika tr-osoite]])
+                                                    pvm-aika tr-osoite]]
+            [cljs-time.format :as time-fmt]
+            [harja-laadunseuranta.tiedot.fmt :as fmt])
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
 
@@ -28,22 +30,16 @@
         [:div.lomake-title "Uuden havainnon perustiedot"]
 
         [:div.pvm-kellonaika-tarkastaja
-         [kentta "Päivämäärä" [pvm-aika aikaleima]]
+         ;; Päivämäärä-kenttää ei ole koskaan voinut muokata, vaikka on input-tyyppinen
+         ;; Näytetään toistaiseksi vain tekstinä.
+         ;; TODO Jatkossa olisi hyvä, jos voi muokata. Tässä voinee käyttää
+         ;; HTML5:n natiivia date ja time tyyppiä, on hyvn tuettu mobiilissa.
+         [kentta "Päivämäärä" (time-fmt/unparse fmt/pvm-fmt @aikaleima)]
+         #_[kentta "Päivämäärä" [pvm-aika aikaleima]]
          [kentta "Tarkastaja" [:span.tarkastaja @kayttajanimi]]]
 
         [:div.tieosuus
-         ;; Tieosoitetta ei tällä hetkellä oteta vastaan palvelimella, vaan osoite päätellään
-         ;; sijainnin perusteella. Tästä syystä TR-osoitetteen muokkauskomponentti on kommentoitu.
-         ;; Toistaiseksi näytetään tässä vain nykyinen osoite. Myöhemmin tehdään tuki
-         ;; antaa osoite itse ja palvelimella käytetään sitä, jos annettu, muuten päätellään sijainnista edelleen.
-         #_[kentta "Tieosuus" [tr-osoite @tr-os]]
-         [kentta "Tieosuus" [:span (str (:tie @tr-os) ;; FIXME Base-projektissa olisi tähän suora funktio, mutta ei voi requirettaa suoraan :(
-                                        " / " (:aosa @tr-os)
-                                        " / " (:aet @tr-os)
-                                        (when (and (:losa @tr-os)
-                                                   (:let @tr-os))
-                                          " / " (:losa @tr-os)
-                                          " / " (:let @tr-os)))]]]
+         [kentta "Tieosuus" [tr-osoite @tr-os]]]
 
         [:div.lisatietoja
          [:div.laatupoikkeama-check
@@ -86,10 +82,10 @@
                                   :heading 45}}))
 
 (defcard havaintolomake-card
-         (fn [_ _]
-           (reagent/as-element [havaintolomake (str "http://localhost:8000" asetukset/+wmts-url+)
-                                (str "http://localhost:8000" asetukset/+wmts-url-kiinteistojaotus+)
-                                (str "http://localhost:8000" asetukset/+wmts-url-ortokuva+) test-model #() #()]))
-         test-model
-         {:watch-atom true
-          :inspect-data true})
+  (fn [_ _]
+    (reagent/as-element [havaintolomake (str "http://localhost:8000" asetukset/+wmts-url+)
+                         (str "http://localhost:8000" asetukset/+wmts-url-kiinteistojaotus+)
+                         (str "http://localhost:8000" asetukset/+wmts-url-ortokuva+) test-model #() #()]))
+  test-model
+  {:watch-atom true
+   :inspect-data true})

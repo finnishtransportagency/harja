@@ -60,12 +60,16 @@
    ;; Lomake
    :havaintolomake-auki? false
    :havaintolomakedata {:kayttajanimi nil
-                        :tr-osoite nil
                         :aikaleima nil
                         :laadunalitus? false
                         :kuvaus ""
                         :kuva nil
-                        :esikatselukuva nil}
+                        :esikatselukuva nil
+                        :tr-osoite {:tie nil
+                                    :aosa nil
+                                    :aet nil
+                                    :losa nil
+                                    :let nil}}
 
    ;; Kartta
    :kirjauspisteet [] ; Kartalla näytettäviä ikoneita varten

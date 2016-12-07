@@ -16,20 +16,22 @@
         val))))
 
 (defn tr-osoite [{:keys [tie aosa aet losa let] :as osoite}]
-  [:div.tr-osoite
-   [:input {:type "text" :value tie :on-change #() :placeholder "Tie#"}] [:span.valiviiva " / "]
-   [:input {:type "text" :value aosa :on-change #() :placeholder "aosa"}] [:span.valiviiva " / "]
-   [:input {:type "text" :value aet :on-change #() :placeholder "aet"}] [:span.valiviiva " / "]
-   [:input {:type "text" :value losa :on-change #() :placeholder "losa"}] [:span.valiviiva " / "]
-   [:input {:type "text" :value let :on-change #() :placeholder "let"}]])
+  (clojure.core/let [on-change (fn [uusi]
+                                 (.log js/console "Kirjasit: " (.-value (.-target uusi))))]
+    [:div.tr-osoite
+     [:input {:type "text" :value tie :on-change on-change :placeholder "Tie#"}] [:span.valiviiva " / "]
+     [:input {:type "text" :value aosa :on-change on-change :placeholder "aosa"}] [:span.valiviiva " / "]
+     [:input {:type "text" :value aet :on-change on-change :placeholder "aet"}] [:span.valiviiva " / "]
+     [:input {:type "text" :value losa :on-change on-change :placeholder "losa"}] [:span.valiviiva " / "]
+     [:input {:type "text" :value let :on-change on-change :placeholder "let"}]]))
 
 (defn pvm-aika [aika]
   [:div.pvm-aika
-   [:input {:type "text"
+   [:input {:type "date"
             :value (time-fmt/unparse fmt/pvm-fmt @aika)
             :on-change #()
             :name "pvm"}]
-   [:input {:type "text"
+   [:input {:type "time"
             :value (time-fmt/unparse fmt/klo-fmt @aika)
             :on-change #()
             :name "klo"}]])
@@ -48,13 +50,13 @@
                 :value @arvo
                 :on-blur #(when @validi (reset! model (parse-and-check-value @arvo min max)))
                 :on-change #(let [v (-> % .-target .-value)]
-                             (reset! arvo v)
-                             (if-not (empty? v)
-                               (let [x (not (nil? (parse-and-check-value v min max)))]
-                                 (reset! validi x)
-                                 (swap! validointivirheita (if x disj conj) nimi))
-                               (do (reset! validi true)
-                                   (swap! validointivirheita disj nimi))))}]
+                              (reset! arvo v)
+                              (if-not (empty? v)
+                                (let [x (not (nil? (parse-and-check-value v min max)))]
+                                  (reset! validi x)
+                                  (swap! validointivirheita (if x disj conj) nimi))
+                                (do (reset! validi true)
+                                    (swap! validointivirheita disj nimi))))}]
        (when-not @validi [:div.validointivirhe "Arvo ei validi"])])))
 
 (defn kentta [label komponentti]

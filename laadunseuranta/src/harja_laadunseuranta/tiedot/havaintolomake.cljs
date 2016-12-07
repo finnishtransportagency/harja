@@ -13,8 +13,12 @@
 
 (defn tyhjenna-lomake! []
   (reset! s/havaintolomakedata
-          {:kayttajanimi @s/kayttajanimi
-           :tr-osoite @s/tr-osoite
+          {:kayttajanimi nil
+           :tr-osoite {:tie nil
+                       :aosa nil
+                       :aet nil
+                       :losa nil
+                       :let nil}
            :aikaleima (l/local-now)
            :laadunalitus? false
            :kuvaus ""
