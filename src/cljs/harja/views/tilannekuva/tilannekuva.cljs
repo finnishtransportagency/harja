@@ -307,8 +307,6 @@
     (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva istunto/ajastin-taukotilassa?)
     (komp/sisaan-ulos #(do (reset! kartta-tiedot/pida-geometriat-nakyvilla? false)
                            (kartta/aseta-paivitetaan-karttaa-tila! true)
-                           (kartta-tiedot/kasittele-infopaneliin-linkit! {:toteuma {:teksti   "Impress me!"
-                                                                                :toiminto (fn [toteuma] (log (pr-str toteuma)))}})
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa @nav/valittu-urakka)
                            (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa @nav/valittu-hallintayksikko)
                            (tiedot/seuraa-alueita!))
