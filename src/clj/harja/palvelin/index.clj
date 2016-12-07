@@ -1,10 +1,10 @@
 (ns harja.palvelin.index
   (:require [hiccup.core :refer [html]]
-            [harja.palvelin.tyokalut.svg :as svg]
-            [clojure.java.io :as io])
+            [harja.palvelin.tyokalut.svg :as svg])
   (:import [javax.crypto Mac]
            [javax.crypto.spec SecretKeySpec]
-           [java.util Base64]))
+           [java.util Base64]
+           (hiccup.compiler HtmlRenderer)))
 
 (def anti-forgery-secret-key "d387gcsb8137hd9h192hdijsha9hd91hdiubisab98f7g7812g8dfheiqufhsaiud8713")
 
@@ -51,53 +51,55 @@
         [:div#app]]])))
 
 (defn tee-ls-paasivu [devmode]
-  (let [inline-svg (svg/inline-svg "resources/public/laadunseuranta/img/livicons.svg")]
+  (let [inline-svg (svg/svg-spritet "resources/public/laadunseuranta/img/livicons.svg")]
     (html
-      "<!DOCTYPE html>\n"
-      (if devmode
-        [:html
-         [:head
-          [:meta {:charset "utf-8"}]
-          [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}]
-          [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
-          [:meta {:name "mobile-web-app-capable" :content "yes"}]
-          [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,700" :rel "stylesheet" :type "text/css"}]
-          [:link {:href "../less/laadunseuranta/application/laadunseuranta.less" :rel "stylesheet/less" :type "text/css"}]
-          [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
-          [:script {:type "text/javascript" :src "js/json3.min.js"}]
-          [:script {:type "text/javascript" :src "js/proj4.js"}]
-          [:script {:type "text/javascript" :src "js/less-2.7.1-9.js"}]
-          [:script {:type "text/javascript"}
-           "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");\n
-            proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
-         [:body
-          inline-svg
-          [:video {:preload "true" :id "keep-alive-hack" :loop "true"}
-           [:source {:src "video/keep_alive.mp4" :type "video/mp4"}]
-           [:source {:src "video/keep_alive.webm" :type "video/webm"}]
-           [:source {:src "video/keep_alive.ogv" :type "video/ogv"}]]
-          [:div#app]
-          [:script {:type "text/javascript" :src "js/compiled/harja_laadunseuranta.js"}]]]
+     "<!DOCTYPE html>\n"
+     (if devmode
+       [:html
+        [:head
+         [:meta {:charset "utf-8"}]
+         [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}]
+         [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
+         [:meta {:name "mobile-web-app-capable" :content "yes"}]
+         [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,700" :rel "stylesheet" :type "text/css"}]
+         [:link {:href "../less/laadunseuranta/application/laadunseuranta.less" :rel "stylesheet/less" :type "text/css"}]
+         [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
+         [:script {:type "text/javascript" :src "js/json3.min.js"}]
+         [:script {:type "text/javascript" :src "js/proj4.js"}]
+         [:script {:type "text/javascript" :src "js/less-2.7.1-9.js"}]
+         [:script {:type "text/javascript"}
+          "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");\n
+           proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
+        [:body
+         [:div {:style "display: none;"}
+          inline-svg]
+         [:video {:preload "true" :id "keep-alive-hack" :loop "true"}
+          [:source {:src "video/keep_alive.mp4" :type "video/mp4"}]
+          [:source {:src "video/keep_alive.webm" :type "video/webm"}]
+          [:source {:src "video/keep_alive.ogv" :type "video/ogv"}]]
+         [:div#app]
+         [:script {:type "text/javascript" :src "js/compiled/harja_laadunseuranta.js"}]]]
 
-        [:html
-         [:head
-          [:meta {:charset "utf-8"}]
-          [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}]
-          [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
-          [:meta {:name "mobile-web-app-capable" :content "yes"}]
-          [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,700" :rel "stylesheet" :type "text/css"}]
-          [:link {:href "../css/laadunseuranta.css" :rel "stylesheet" :type "text/css"}]
-          [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
-          [:script {:type "text/javascript" :src "js/json3.min.js"}]
-          [:script {:type "text/javascript" :src "js/proj4.js"}]
-          [:script {:type "text/javascript"}
-           "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");\n
-            proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
-         [:body
-          inline-svg
-          [:video {:preload "true" :id "keep-alive-hack" :loop "true"}
-           [:source {:src "video/keep_alive.mp4" :type "video/mp4"}]
-           [:source {:src "video/keep_alive.webm" :type "video/webm"}]
-           [:source {:src "video/keep_alive.ogv" :type "video/ogv"}]]
-          [:div#app]
-          [:script {:type "text/javascript" :src "js/compiled/harja_laadunseuranta.js"}]]]))))
+       [:html
+        [:head
+         [:meta {:charset "utf-8"}]
+         [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}]
+         [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
+         [:meta {:name "mobile-web-app-capable" :content "yes"}]
+         [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,700" :rel "stylesheet" :type "text/css"}]
+         [:link {:href "../css/laadunseuranta.css" :rel "stylesheet" :type "text/css"}]
+         [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
+         [:script {:type "text/javascript" :src "js/json3.min.js"}]
+         [:script {:type "text/javascript" :src "js/proj4.js"}]
+         [:script {:type "text/javascript"}
+          "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");\n
+           proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
+        [:body
+         [:div {:style "display: none;"}
+          inline-svg]
+         [:video {:preload "true" :id "keep-alive-hack" :loop "true"}
+          [:source {:src "video/keep_alive.mp4" :type "video/mp4"}]
+          [:source {:src "video/keep_alive.webm" :type "video/webm"}]
+          [:source {:src "video/keep_alive.ogv" :type "video/ogv"}]]
+         [:div#app]
+         [:script {:type "text/javascript" :src "js/compiled/harja_laadunseuranta.js"}]]]))))
