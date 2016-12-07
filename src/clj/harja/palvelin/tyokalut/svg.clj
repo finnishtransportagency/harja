@@ -23,7 +23,7 @@
 
 (defn create-inline-svg [path]
   (let [svgs (get-svgs path)]
-    (apply conj [:div {:style "display: none;"}]
+    (apply conj [:div {:style "display: none;" :comment (pr-str svgs)}]
            (into [] (map :contents svgs)))))
 
 (defmacro inline-svg [path]
