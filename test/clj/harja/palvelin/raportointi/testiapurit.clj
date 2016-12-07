@@ -2,6 +2,15 @@
   (:require  [clojure.test :as t :refer [is]]
              [clojure.core.match :refer [match]]))
 
+(def raporttisolu? harja.domain.raportointi/raporttielementti?)
+
+(defn raporttisolun-arvo [solu]
+  (if (raporttisolu? solu)
+    (let [solun-asetukset (second solu)]
+      (or (:arvo solun-asetukset) solun-asetukset))
+
+    solu))
+
 (defn tarkista-raportti [vastaus nimi]
   (match vastaus
          ([:raportti {:nimi nimi}

@@ -69,16 +69,16 @@
             akilliset-hoitotyot sanktiot suolabonus-ja-sakko
             yhteensa & _ ]]
         (and (= kuukausi "elo")
-             (=marginaalissa? kokhint 228.38M)
-             (=marginaalissa? ykshint 50.75M)
-             (=marginaalissa? erilliskust 16.92M)
-             (=marginaalissa? bonus 4.07)
-             (=marginaalissa? muutos-ja-lisatyot 33.83M)
-             (=marginaalissa? vahinkojen-korjaukset 16.92M)
-             (=marginaalissa? akilliset-hoitotyot 16.92M)
-             (=marginaalissa? sanktiot -30.45M)
-             (=marginaalissa? suolabonus-ja-sakko -94.99M)
-             (=marginaalissa? yhteensa 242.34M)
+             (=marginaalissa? (apurit/raporttisolun-arvo kokhint) 228.38M)
+             (=marginaalissa? (apurit/raporttisolun-arvo ykshint) 50.75M)
+             (=marginaalissa? (apurit/raporttisolun-arvo erilliskust) 16.92M)
+             (=marginaalissa? (apurit/raporttisolun-arvo bonus) 4.07)
+             (=marginaalissa? (apurit/raporttisolun-arvo muutos-ja-lisatyot) 33.83M)
+             (=marginaalissa? (apurit/raporttisolun-arvo vahinkojen-korjaukset) 16.92M)
+             (=marginaalissa? (apurit/raporttisolun-arvo akilliset-hoitotyot) 16.92M)
+             (=marginaalissa? (apurit/raporttisolun-arvo sanktiot) -30.45M)
+             (=marginaalissa? (apurit/raporttisolun-arvo suolabonus-ja-sakko) -94.99M)
+             (=marginaalissa? (apurit/raporttisolun-arvo yhteensa) 242.34M)
 
              (=marginaalissa? yhteensa laskutusyhteenveto-indeksien-nurkkasumma)))
       (fn [[yht & _]]

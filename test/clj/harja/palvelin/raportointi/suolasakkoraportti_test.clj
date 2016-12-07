@@ -132,7 +132,7 @@
                (testi/=marginaalissa? sallittu 1100)
                (testi/=marginaalissa? bonusraja 1045)
                (testi/=marginaalissa? sakkoraja 1155)
-               (testi/=marginaalissa? (raporttisolun-arvo kerroin) 1.1)
+               (testi/=marginaalissa? (apurit/raporttisolun-arvo kerroin) 1.1)
                (testi/=marginaalissa? kohtuullistarkistettu-sakkoraja 1270.50)
                (testi/=marginaalissa? kaytetty-talvisuolaa 842.6)
                (testi/=marginaalissa? erotus 202.4)
