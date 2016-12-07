@@ -37,7 +37,7 @@
                          "ylapalkki-button-disabloitu "))
            :on-click #(when-not disabloitu?
                         (havaintonappi-painettu %))}
-     [kuvat/svg-sprite "silma-36"]]))
+     [kuvat/svg-sprite "silma-24"]]))
 
 (defn- tieosoite [tr-osoite]
   [:div.tr-osoite (formatoi-tr-osoite @tr-osoite)])

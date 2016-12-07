@@ -2,9 +2,10 @@
 
 ;; Käytä SVG-spriteä aina kun mahdollista
 (defn svg-sprite
-  [nimi]
-  [:svg
-   [:use {:href (str "#" nimi)}]])
+  ([nimi] (svg-sprite nimi nil))
+  ([nimi luokka]
+  [:svg (when luokka {:class luokka})
+   [:use {:href (str "#" nimi)}]]))
 
 (defn- ikoni-uri [nimi]
   (str "img/" nimi))
