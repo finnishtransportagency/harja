@@ -1,7 +1,8 @@
 (ns harja.palvelin.tyokalut.svg
-  (:require [pl.danieljanus.tagsoup :refer :all]
-            [taoensso.timbre :as log]
-            [clojure.string :as str]))
+  (:require
+    [taoensso.timbre :as log]
+            [clojure.string :as str])
+  (:import (hiccup.compiler HtmlRenderer)))
 
 (defn- list-svgs [path]
   (let [files (file-seq (clojure.java.io/file path))
@@ -12,19 +13,12 @@
         svg-files (map #(assoc % :contents (slurp (:path %))) svg-files)]
     (into [] svg-files)))
 
-(defn- svg-to-hiccup [file]
-  (assoc file :contents (parse-string (:contents file))))
-
-(defn- svgs-to-hiccup [files]
-  (map svg-to-hiccup files))
-
-(defn get-svgs [path]
-  (svgs-to-hiccup (list-svgs path)))
-
 (defn create-inline-svg [path]
-  (let [svgs (get-svgs path)]
-    (apply conj [:div {:style "display: none;" :filut (pr-str (file-seq (clojure.java.io/file path)))}]
-           (into [] (map :contents svgs)))))
+  (let [svgs (list-svgs path)]
+    (apply conj [:div {:style "display: none;"}]
+           (into [] (map #(reify HtmlRenderer
+                            (render-html [_] (:contents %)))
+                         svgs)))))
 
 (defmacro inline-svg [path]
   `(let [svg# (create-inline-svg ~path)]
