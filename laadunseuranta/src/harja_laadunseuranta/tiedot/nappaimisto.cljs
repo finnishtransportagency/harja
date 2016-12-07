@@ -47,7 +47,13 @@
   (swap! syotto-atom assoc :nykyinen-syotto (mittaustyyppi mittaustyypin-lahtoarvo)))
 
 (defn tyhjennyspainike-painettu! [mittaustyyppi syotto-atom]
-  (alusta-mittaussyotto! mittaustyyppi syotto-atom))
+  (let [poista-viimeinen-merkki #(apply str (butlast %))
+        poiston-jalkeen (poista-viimeinen-merkki (:nykyinen-syotto @syotto-atom))
+        mittaustyypin-alustusarvo (mittaustyyppi mittaustyypin-lahtoarvo)
+        uusi-syotto (if (< (count poiston-jalkeen) (count mittaustyypin-alustusarvo))
+                      mittaustyypin-alustusarvo
+                      poiston-jalkeen)]
+    (swap! syotto-atom assoc :nykyinen-syotto uusi-syotto)))
 
 (defn syotto-onnistui! [mittaustyyppi syotto-atom]
   (swap! syotto-atom assoc :syotot (conj (:syotot @syotto-atom) (:nykyinen-syotto @syotto-atom)))

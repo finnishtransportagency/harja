@@ -67,15 +67,15 @@
 (defn- tallenna-kuvat
   "Tallentaa lähetettävien reittimerkintöjen kuvat palvelimelle ja korvaa kuvadatan kuvan id:llä"
   [reittimerkinnat]
-  (go-loop [tp reittimerkinnat
+  (go-loop [merkinnat reittimerkinnat
             result []]
-    (if-let [t (first tp)]
-      (if (get t "kuva")
+    (if-let [eka (first merkinnat)]
+      (if (get eka "kuva")
         (when-let [kuvaid (<! (send-file! asetukset/+liitteen-tallennus-url+
-                                          (get-in t ["kuva" "data"])
-                                          (get-in t ["kuva" "mime-type"])))]
-          (recur (rest tp) (conj result (assoc t "kuva" kuvaid))))
-        (recur (rest tp) (conj result t)))
+                                          (get-in eka ["kuva" "data"])
+                                          (get-in eka ["kuva" "mime-type"])))]
+          (recur (rest merkinnat) (conj result (assoc eka "kuva" kuvaid))))
+        (recur (rest merkinnat) (conj result eka)))
       result)))
 
 (defn laheta-reittimerkinnat!

@@ -5,7 +5,6 @@
             [harja-laadunseuranta.ui.nappaimisto :as nappaimisto]
             [harja-laadunseuranta.tiedot.paanavigointi :as tiedot]
             [cljs-time.local :as l]
-            [harja-laadunseuranta.ui.ikonit :as ikonit]
             [harja-laadunseuranta.ui.napit :refer [nappi]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [clojure.set :as set]
@@ -64,10 +63,10 @@
                          "toggle-valintapainike-disabloitu "))}
      [:div.toggle-valintapainike-ikoni
       (case tyyppi
-        :piste [:img.toggle-piste {:src (kuvat/havainto-ikoni "ikoni_pistemainen")}]
-        :vali [:img.toggle-vali {:src (kuvat/havainto-ikoni "ikoni_alue")}])
+        :piste [:img.toggle-piste {:src (kuvat/havainto-ikoni-uri "ikoni_pistemainen")}]
+        :vali [:img.toggle-vali {:src (kuvat/havainto-ikoni-uri "ikoni_alue")}])
       (when ikoni
-        [:img.toggle-ikoni {:src (kuvat/havainto-ikoni ikoni)}])]
+        [:img.toggle-ikoni {:src (kuvat/havainto-ikoni-uri ikoni)}])]
      [:div.toggle-valintapainike-otsikko
       nimi]]))
 
@@ -239,14 +238,14 @@
   [:footer
    [:div.footer-vasen
     [nappi "Vapauta kaikki" {:on-click vapauta-kaikki-painettu
-                             :ikoni (ikonit/livicon-arrow-up)
+                             :ikoni (kuvat/svg-sprite "nuoli-ylos-24")
                              :luokat-str "nappi-toissijainen"}]]
    [:div.footer-oikea
     [nappi (if (< @dom/leveys +lyhenna-teksteja-leveydessa+)
              "Lomake"
              "Avaa lomake")
      {:on-click havaintolomake-painettu
-      :ikoni (ikonit/livicon-pen)
+      :ikoni (kuvat/svg-sprite "kyna-24")
       :luokat-str "nappi-ensisijainen"}]]])
 
 (defn- paanavigointikomponentti [{:keys [valilehdet paanavigointi-nakyvissa?
