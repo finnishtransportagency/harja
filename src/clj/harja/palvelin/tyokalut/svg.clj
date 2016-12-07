@@ -15,7 +15,7 @@
 
 (defn create-inline-svg [path]
   (let [svgs (list-svgs path)]
-    (apply conj [:div {:style "display: none;"}]
+    (apply conj [:div {:style "display: none;" :debug (pr-str (file-seq (clojure.java.io/file path)))}]
            (into [] (map #(reify HtmlRenderer
                             (render-html [_] (:contents %)))
                          svgs)))))
