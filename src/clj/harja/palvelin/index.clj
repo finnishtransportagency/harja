@@ -51,7 +51,7 @@
         [:div#app]]])))
 
 (defn tee-ls-paasivu [devmode]
-  (let [inline-svg (svg/inline-svg "resources/public/laadunseuranta/img/livicons.svg")]
+  (let [inline-svg (svg/inline-svg (io/resource "resources/public/laadunseuranta/img/livicons.svg"))]
     (html
       "<!DOCTYPE html>\n"
       (if devmode
