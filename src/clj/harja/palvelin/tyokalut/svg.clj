@@ -23,7 +23,7 @@
 
 (defn create-inline-svg [path]
   (let [svgs (get-svgs path)]
-    (apply conj [:div {:style "display: none;"}]
+    (apply conj [:div {:style "display: none;" :filut (pr-str (file-seq (clojure.java.io/file path)))}]
            (into [] (map :contents svgs)))))
 
 (defmacro inline-svg [path]
