@@ -141,6 +141,14 @@
                        [naytettava-arvo solun-tyyli] (if (raportti-domain/raporttielementti? arvo-datassa)
                                          (muodosta-solu arvo-datassa oletustyyli)
                                          [arvo-datassa oletustyyli])
+                       naytettava-arvo (if (and (number? naytettava-arvo) (= :prosentti (:fmt sarake)))
+                                         ;; Jos excelissä formatoidaan luku prosentiksi,
+                                         ;; excel olettaa, että kyseessä on sadasosia.
+                                         ;; Eli kokonaisluku 25 -> 2500%
+                                         ;; Muualla Harjassa prosenttilukuformatointi
+                                         ;; lisää lähinnä % merkin kokonaisluvun loppuun.
+                                         (/ naytettava-arvo 100)
+                                         naytettava-arvo)
                        tyyli (doto (excel/create-cell-style! workbook solun-tyyli)
                                formaatti-fn)]
 
