@@ -185,26 +185,26 @@
                {:leveys 10 :otsikko "Silta"}
                {:leveys 5 :otsikko "Tarkastettu" :fmt :pvm}
                {:leveys 5 :otsikko "Tarkastaja"}
-               {:leveys 5 :otsikko "A" :tyyppi :arvo-ja-osuus}
-               {:leveys 5 :otsikko "B" :tyyppi :arvo-ja-osuus}
-               {:leveys 5 :otsikko "C" :tyyppi :arvo-ja-osuus}
-               {:leveys 5 :otsikko "D" :tyyppi :arvo-ja-osuus}
-               {:leveys 5 :otsikko "Liitteet" :tyyppi :liite}]
+               {:leveys 5 :otsikko "A"}
+               {:leveys 5 :otsikko "B"}
+               {:leveys 5 :otsikko "C"}
+               {:leveys 5 :otsikko "D"}
+               {:leveys 5 :otsikko "Liitteet"}]
               [{:leveys 2 :otsikko "#"}
                {:leveys 15 :otsikko "Kohde"}
                {:leveys 2 :otsikko "Tulos"}
                {:leveys 10 :otsikko "Lisätieto"}
-               {:leveys 5 :otsikko "Liitteet" :tyyppi :liite}])
+               {:leveys 5 :otsikko "Liitteet"}])
     :hallintayksikko [{:leveys 10 :otsikko "Urakka"}
-                      {:leveys 5 :otsikko "A" :tyyppi :arvo-ja-osuus}
-                      {:leveys 5 :otsikko "B" :tyyppi :arvo-ja-osuus}
-                      {:leveys 5 :otsikko "C" :tyyppi :arvo-ja-osuus}
-                      {:leveys 5 :otsikko "D" :tyyppi :arvo-ja-osuus}]
+                      {:leveys 5 :otsikko "A"}
+                      {:leveys 5 :otsikko "B"}
+                      {:leveys 5 :otsikko "C"}
+                      {:leveys 5 :otsikko "D"}]
     :koko-maa [{:leveys 10 :otsikko "Hallintayksikkö"}
-               {:leveys 5 :otsikko "A" :tyyppi :arvo-ja-osuus}
-               {:leveys 5 :otsikko "B" :tyyppi :arvo-ja-osuus}
-               {:leveys 5 :otsikko "C" :tyyppi :arvo-ja-osuus}
-               {:leveys 5 :otsikko "D" :tyyppi :arvo-ja-osuus}]))
+               {:leveys 5 :otsikko "A"}
+               {:leveys 5 :otsikko "B"}
+               {:leveys 5 :otsikko "C"}
+               {:leveys 5 :otsikko "D"}]))
 
 (defn- muodosta-raportin-datarivit [db urakka-id hallintayksikko-id konteksti silta-id vuosi]
   (case konteksti
