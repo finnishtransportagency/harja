@@ -5,7 +5,7 @@
   ([nimi] (svg-sprite nimi nil))
   ([nimi luokka]
   [:svg (when luokka {:class luokka})
-   [:use {:href (str "#" nimi)}]]))
+   [:use {:xlinkHref (str "#" nimi)}]]))
 
 (defn- ikoni-uri [nimi]
   (str "img/" nimi))
