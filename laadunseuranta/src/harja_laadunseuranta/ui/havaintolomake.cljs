@@ -68,10 +68,11 @@
 
 (defn havaintolomake []
   (let [lomakedata (alusta-uusi-lomake!)]
-    [havaintolomakekomponentti
-     {:lomakedata lomakedata
-      :tallenna-fn tallenna-lomake!
-      :peruuta-fn peruuta-lomake!}]))
+    (fn []
+      [havaintolomakekomponentti
+       {:lomakedata lomakedata
+        :tallenna-fn tallenna-lomake!
+        :peruuta-fn peruuta-lomake!}])))
 
 (def test-model (atom {:kayttajanimi "Jalmari Järjestelmävastuuhenkilö"
                        :tr-osoite {:tie 20 :aosa 3 :aet 3746}
@@ -86,10 +87,10 @@
                                   :heading 45}}))
 
 (defcard havaintolomake-card
-         (fn [_ _]
-           (reagent/as-element [havaintolomake (str "http://localhost:8000" asetukset/+wmts-url+)
-                                (str "http://localhost:8000" asetukset/+wmts-url-kiinteistojaotus+)
-                                (str "http://localhost:8000" asetukset/+wmts-url-ortokuva+) test-model #() #()]))
-         test-model
-         {:watch-atom true
-          :inspect-data true})
+  (fn [_ _]
+    (reagent/as-element [havaintolomake (str "http://localhost:8000" asetukset/+wmts-url+)
+                         (str "http://localhost:8000" asetukset/+wmts-url-kiinteistojaotus+)
+                         (str "http://localhost:8000" asetukset/+wmts-url-ortokuva+) test-model #() #()]))
+  test-model
+  {:watch-atom true
+   :inspect-data true})
