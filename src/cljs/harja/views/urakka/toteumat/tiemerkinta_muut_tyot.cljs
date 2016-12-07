@@ -39,37 +39,44 @@
 
 (defn muu-tyo-lomake [e! tila {:keys [valittu-urakka] :as riippuvuudet}]
   (let [vanha-toteuma? (get-in tila [:valittu-toteuma :id])
+        valinnat (:valinnat tila)
         muokkausoikeus? true] ;; TODO OIKEISTARKISTUS
-    (log "muu työ" (pr-str (:valittu-toteuma tila)))
+    (log "TILA:" (pr-str tila))
     [:div
      [napit/takaisin "Takaisin toteumaluetteloon"
       #(e! (tiedot/->ValitseToteuma nil))]
-     [lomake {:otsikko (if vanha-toteuma?
-                         "Muokkaa toteumaa"
-                         "Luo uusi toteuma")
-              :luokka :horizontal
+     [lomake {:otsikko      (if vanha-toteuma?
+                              "Muokkaa toteumaa"
+                              "Luo uusi toteuma")
+              :luokka       :horizontal
               :voi-muokata? muokkausoikeus?
-              :muokkaa! #(e! (tiedot/->MuokkaaToteumaa %))
-              :footer [napit/palvelinkutsu-nappi
-                       "Tallenna toteuma"
-                       #(tiedot/tallenna-toteuma (:valittu-toteuma tila) (:id valittu-urakka))
-                       {:luokka "nappi-ensisijainen"
-                        :ikoni (ikonit/tallenna)
-                        :kun-onnistuu #(e! (tiedot/->ToteumaTallennettu %))
-                        :disabled (or (not (lomake/voi-tallentaa? (:valittu-toteuma tila)))
-                                      (not muokkausoikeus?))}]}
+              :muokkaa!     #(e! (tiedot/->MuokkaaToteumaa %))
+              :footer       [napit/palvelinkutsu-nappi
+                             "Tallenna toteuma"
+                             #(tiedot/tallenna-toteuma {:toteuma              (:valittu-toteuma tila)
+                                                        :urakka               (:id valittu-urakka)
+                                                        :alkupvm              (first (:sopimuskausi valinnat))
+                                                        :loppupvm             (second (:sopimuskausi valinnat))
+                                                        :uusi-laskentakohde   (:uusi-laskentakohde tila)}
+                                                       (:laskentakohteet tila))
+                             {:luokka       "nappi-ensisijainen"
+                              :ikoni        (ikonit/tallenna)
+                              :kun-onnistuu #(e! (tiedot/->ToteumaTallennettu %))
+                              :disabled     (or (not (lomake/voi-tallentaa? (:valittu-toteuma tila)))
+                                                (not muokkausoikeus?))}]}
 
-      [{:otsikko "Päivämäärä" :nimi :paivamaara :tyyppi :pvm :pakollinen? true}
+      [{:otsikko "Päivämäärä" :nimi :pvm :tyyppi :pvm :pakollinen? true}
        {:otsikko "Hinta" :nimi :hinta :tyyppi :positiivinen-numero :pakollinen? true}
        {:otsikko "Ylläpitoluokka" :nimi :yllapitoluokka :tyyppi :positiivinen-numero
         :huomauta [[:yllapitoluokka]]}
-       {:otsikko "Laskentakohde"
-        :nimi :laskentakohde
-        :placeholder "Hae ja valitse laskentakohde"
-        :tyyppi :haku
+       {:otsikko               "Laskentakohde"
+        :nimi                  :laskentakohde
+        :placeholder           "Hae ja valitse laskentakohde"
+        :tyyppi                :haku
+        :kun-muuttuu           #(e! (tiedot/->LaskentakohdeMuuttui %))
         :hae-kun-yli-n-merkkia 0
-        :nayta second :fmt second
-        :lahde tiedot/laskentakohdehaku}
+        :nayta                 second
+        :lahde                 tiedot/laskentakohdehaku}
        {:otsikko "Selite" :nimi :selite :tyyppi :text :pakollinen? true}]
       (:valittu-toteuma tila)]]))
 
@@ -97,7 +104,7 @@
      {:otsikko "Selite" :tyyppi :string :nimi :selite :leveys 20}
      {:otsikko "Hinta" :tyyppi :numero :nimi :hinta :fmt (partial fmt/euro-opt true) :leveys 10}
      {:otsikko "Ylläpitoluokka" :tyyppi :numero :nimi :yllapitoluokka :leveys 10}
-     {:otsikko "Laskentakohde" :tyyppi :string :nimi :laskentakohde :leveys 10}]
+     {:otsikko "Laskentakohde" :tyyppi :string :nimi :laskentakohde :fmt second :leveys 10}]
     toteumat]])
 
 (defn- muut-tyot-paakomponentti [e! tila]

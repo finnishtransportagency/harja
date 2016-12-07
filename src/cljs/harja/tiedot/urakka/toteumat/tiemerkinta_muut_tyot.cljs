@@ -18,7 +18,10 @@
                       :toteumat nil
                       :valinnat {:urakka nil
                                  :sopimus nil}
-                      :laskentakohteet {}}))
+                      :laskentakohteet {}
+                      ;; uusi-laskentakohde sisältää käyttäjän käsin kirjoittaman laskentakohteen
+                      ;; nimen. Sitä käytetään, jos ei lomakkeessa ei ole laskentakohdetta valittuna vaan halutaan luoda uusi
+                      :uusi-laskentakohde nil}))
 
 (defonce valinnat
   (reaction
@@ -36,6 +39,7 @@
 (defrecord ValitseToteuma [tyo])
 (defrecord MuokkaaToteumaa [uusi-tyo])
 (defrecord ToteumaTallennettu [toteumat])
+(defrecord LaskentakohdeMuuttui [nimi])
 
 ;; Tapahtumien käsittely
 
@@ -60,8 +64,19 @@
           (when-not (k/virhe? tyo)
             (tulos! tyo))))))
 
-(defn tallenna-toteuma [toteuma urakka-id]
-  (k/post! :tallenna-yllapito-toteuma (assoc toteuma :urakka urakka-id)))
+(defn tallenna-toteuma [{:keys [toteuma urakka alkupvm loppupvm
+                                uusi-laskentakohde]} laskentakohteet]
+  (log "tallennta toteuma " (pr-str uusi-laskentakohde))
+
+  (let [laskentakohde-luettelossa? (first (filter #(= (second %) uusi-laskentakohde) laskentakohteet))
+        laskentakohde (or laskentakohde-luettelossa? (:laskentakohde toteuma))]
+    (k/post! :tallenna-yllapito-toteuma (assoc toteuma :urakka urakka
+                                                       :alkupvm alkupvm
+                                                       :loppupvm loppupvm
+                                                       :laskentakohde laskentakohde
+                                                       :uusi-laskentakohde (when (and (not laskentakohde-luettelossa?)
+                                                                                      (not (empty? uusi-laskentakohde)))
+                                                                            uusi-laskentakohde)))))
 
 (def laskentakohdehaku
     (reify protokollat/Haku
@@ -113,8 +128,15 @@
 
   MuokkaaToteumaa
   (process-event [{:keys [uusi-tyo] :as e} tila]
+    (log "muokattu toteuma " (assoc-in tila [:valittu-toteuma] uusi-tyo))
     (assoc-in tila [:valittu-toteuma] uusi-tyo))
 
   ToteumaTallennettu
   (process-event [{:keys [toteumat] :as e} tila]
-    (assoc-in tila [:toteumat] toteumat)))
+    (assoc tila :toteumat toteumat
+                :valittu-toteuma nil))
+
+  LaskentakohdeMuuttui
+  (process-event [{:keys [nimi] :as e} tila]
+    (log "laskentakohde muuttui " (pr-str nimi))
+    (assoc-in tila [:uusi-laskentakohde] nimi)))

@@ -72,7 +72,8 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 (defmethod nayta-arvo :default [_ data]
   [:span (str @data)])
 
-(defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake? hae-kun-yli-n-merkkia]} data]
+(defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake?
+                                     kun-muuttuu hae-kun-yli-n-merkkia]} data]
   (let [nyt-valittu @data
         teksti (atom (if nyt-valittu
                        ((or nayta str) nyt-valittu) ""))
@@ -107,6 +108,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                  (let [v (-> % .-target .-value str/triml)]
                                    (reset! data nil)
                                    (reset! teksti v)
+                                   (when kun-muuttuu (kun-muuttuu v))
                                    (if (> (count v) hae-kun-yli-n-merkkia)
                                      (do (reset! tulokset :haetaan)
                                          (go (let [tul (<! (hae lahde v))]

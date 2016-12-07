@@ -8,23 +8,37 @@
              :refer
              [julkaise-palvelu poista-palvelut]]
             [clojure.java.jdbc :as jdbc]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.kyselyt.konversio :as konv]))
+
+(def muutyo-xf
+  (comp
+    (map #(assoc % :laskentakohde [(get-in % [:laskentakohde-id])
+                                  (get-in % [:laskentakohde-nimi])]))
+    (map #(dissoc % :laskentakohde-id :laskentakohde-nimi))))
 
 (defn hae-yllapito-toteumat [db user {:keys [urakka alkupvm loppupvm] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-muutos-ja-lisatyot user urakka)
   ;; TODO HUOMIOI AIKA JA SOPPARI!
   (log/debug "Hae ylläpidon toteumat parametreilla: " (pr-str tiedot))
   (jdbc/with-db-transaction [db db]
-    (into [] (q/hae-muut-tyot db {:urakka urakka
-                                  :alkupvm alkupvm
-                                  :loppupvm loppupvm}))))
+    (into []
+          muutyo-xf
+          (q/hae-muut-tyot db {:urakka urakka
+                               :alkupvm alkupvm
+                               :loppupvm loppupvm}))))
+
+
+
 
 (defn hae-yllapito-toteuma [db user {:keys [urakka id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-muutos-ja-lisatyot user urakka)
   (log/debug "Hae ylläpidon toteuma parametreilla: " (pr-str tiedot))
   (jdbc/with-db-transaction [db db]
-    (first (q/hae-muu-tyo db {:urakka urakka
-                              :id id}))))
+    (first (into []
+                 muutyo-xf
+                 (q/hae-muu-tyo db {:urakka urakka
+                                    :id     id})))))
 
 (defn hae-laskentakohteet [db user {:keys [urakka] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-muutos-ja-lisatyot user urakka)
@@ -33,15 +47,22 @@
     (into [] (q/hae-urakan-laskentakohteet db {:urakka urakka}))))
 
 (defn tallenna-yllapito-toteuma [db user {:keys [id urakka selite pvm hinta yllapitoluokka
-                                                 laskentakohde] :as toteuma}]
+                                                 laskentakohde alkupvm loppupvm uusi-laskentakohde] :as toteuma }]
   (log/debug "tallenna ylläpito toteuma:" toteuma)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-muutos-ja-lisatyot user urakka)
 
   ;; TODO VAADI TOTEUMA KUULUU URAKKAAN! Ja laskentakohde kuuluu urakkaan. Molemmille oma vaadi-funktio, muuten heitä.
   (jdbc/with-db-transaction [db db]
-                            (let [lask-kohde {:nimi     (second laskentakohde)
-                                              :urakka   urakka
-                                              :kayttaja (:id user)}
+                            (let [uusi-tallennettava-laskentakohde {:nimi     uusi-laskentakohde
+                                                                    :urakka   urakka
+                                                                    :kayttaja (:id user)}
+                                  ;; FIXME: miksi toimii oikein? ;)
+                                  laskentakohde-id (if (first laskentakohde)
+                                                     (first laskentakohde)
+                                                     (when uusi-laskentakohde
+                                                       (:id (q/luo-uusi-urakan_laskentakohde<!
+                                                              db
+                                                              uusi-tallennettava-laskentakohde))))
                                   muu-tyo {:id             id
                                            :urakka         urakka
                                            :selite         selite
@@ -50,13 +71,12 @@
                                            :yllapitoluokka yllapitoluokka
                                            :laskentakohde  laskentakohde-id
                                            :kayttaja       (:id user)}]
-                              (when (and (nil? (first laskentakohde))
-                                         (not= "Ei laskentakohdetta" (second laskentakohde)))
-                                (q/luo-uusi-urakan_laskentakohde<! db lask-kohde))
+
                               (if (:id toteuma)
                                 (q/paivita-muu-tyo<! db muu-tyo)
                                 (q/luo-uusi-muu-tyo<! db muu-tyo)))
-    (hae-yllapito-toteumat db user {:urakka urakka})))
+    (hae-yllapito-toteumat db user {:urakka urakka
+                                    :alkupvm alkupvm :loppupvm loppupvm})))
 
 (defrecord YllapitoToteumat []
   component/Lifecycle
