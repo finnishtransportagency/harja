@@ -40,10 +40,10 @@
     ;; Kentat namespace olettaa, että kentän arvo tulee atomissa
     (when arvo-fn (atom (arvo-fn data)))))
 
-(defn esita-yksityiskohdat [{:keys [otsikko tiedot data tyyppi]} linkin-kasittely-fn]
+(defn esita-yksityiskohdat [{:keys [otsikko tiedot data tyyppi] :as asia} linkin-kasittely-fn]
   (if-not (or (keyword? tyyppi) (fn? tyyppi))
     (do
-      (error "esita-yksityiskohdat: kasittely-fn huono:" (clj->js linkin-kasittely-fn))
+      (error "esita-yksityiskohdat: asian tyyppi huono, asia: " (clj->js asia))
       nil)
     ;; else
     [:div.ip-osio
@@ -58,17 +58,29 @@
           [:span.kentan-label (:otsikko kentan-skeema)]]]
         [kentat/nayta-arvo kentan-skeema (kentan-arvo kentan-skeema data)]])]))
 
+(defn- map-ilman-funktioita [m]
+  (select-keys m (for [[k v] m :when (not (fn? v))] k)))
+
+(defn- sama-asia? [a b]
+  (let [vertailumuoto (fn [v] (assoc v :tiedot (map map-ilman-funktioita (:tiedot v))))]
+    (= (vertailumuoto a) (vertailumuoto b))))
+
 (defn infopaneeli [asiat-pisteessa piilota-fn! linkkifunktiot]
   (let [{:keys [asiat haetaan? koordinaatti]} asiat-pisteessa
         asiat (infopaneelin-sisalto/skeemamuodossa asiat)
         vain-yksi-asia? (-> asiat count (= 1))
         useampi-asia? (not vain-yksi-asia?)
         esita-yksityiskohdat? (or @valittu-asia vain-yksi-asia?)
-        ainoa-asia (when vain-yksi-asia? (first asiat))]
+        ainoa-asia (when vain-yksi-asia? (first asiat))
+        valittu-asia-ok? (some #(sama-asia? @valittu-asia %) asiat)]
     ;; tyhjennetään valinta kun valinnassa on asia joka ei esiinny @asiat-pisteessa
     ;; (esim latauksen aikana)
-    (when-not (some #(= @valittu-asia %) asiat)
-      (reset! valittu-asia nil))
+    (when-not valittu-asia-ok?
+      (do
+        (when (and @valittu-asia asiat)
+          (log "@valittu-asia sisältää" (clj->js @valittu-asia))
+          (log "tyhjennetään @valittu-asia koska ei esiinny atomissa @asiat-pisteessa, esim" (clj->js (first asiat))))
+        (reset! valittu-asia nil)))
     [:div#kartan-infopaneeli.kartan-infopaneeli
      ;; [debug asiat-pisteessa]
      [:div
