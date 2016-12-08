@@ -18,20 +18,24 @@
 (defn tr-osoite [tr-osoite-atom]
   (let [max-merkkeja 7
         arvo-validi? (fn [arvo-tekstina]
-                       (boolean (and (<= (count arvo-tekstina) max-merkkeja)
-                                     (>= (js/parseInt arvo-tekstina) 0))))
+                       (boolean (or (empty? arvo-tekstina)
+                                    (and (<= (count arvo-tekstina) max-merkkeja)
+                                         (>= (js/parseInt arvo-tekstina) 0)))))
         on-change (fn [syote avain]
-                    (let [arvo-tekstina (-> syote .-target .-value)]
+                    (let [arvo-tekstina (-> syote .-target .-value)
+                          arvo-tyhja? (empty? arvo-tekstina)]
                       (when (arvo-validi? arvo-tekstina)
-                       (swap! tr-osoite-atom assoc avain (js/parseInt arvo-tekstina)))))]
+                        (if arvo-tyhja?
+                          (swap! tr-osoite-atom assoc avain nil)
+                          (swap! tr-osoite-atom assoc avain (js/parseInt arvo-tekstina))))))]
     (fn [tr-osoite-atom]
       (let [{:keys [tie aosa aet losa let]} @tr-osoite-atom]
         [:div.tr-osoite
-         [:input {:type "text"  :value tie :on-change #(on-change % :tie) :placeholder "Tie#"}]
+         [:input {:type "text" :value tie :on-change #(on-change % :tie) :placeholder "Tie#"}]
          [:span.valiviiva " / "]
-         [:input {:type "text"  :value aosa :on-change #(on-change % :aosa) :placeholder "aosa"}]
+         [:input {:type "text" :value aosa :on-change #(on-change % :aosa) :placeholder "aosa"}]
          [:span.valiviiva " / "]
-         [:input {:type "text"  :value aet :on-change #(on-change % :aet) :placeholder "aet"}]
+         [:input {:type "text" :value aet :on-change #(on-change % :aet) :placeholder "aet"}]
          [:span.valiviiva " / "]
          [:input {:type "text" :value losa :on-change #(on-change % :losa) :placeholder "losa"}]
          [:span.valiviiva " / "]
