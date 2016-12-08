@@ -344,11 +344,6 @@ hakutiheys-historiakuva 1200000)
       (not= @suodattimet
             (:suodattimet @edellisen-haun-kayttajan-suodattimet))))
 
-(defn- julkaise-tyokonedata! [tulos]
-  (tapahtumat/julkaise! {:aihe :uusi-tyokonedata
-                         :tyokoneet (vals (:tyokoneet tulos))})
-  tulos)
-
 
 (defn hae-asiat [hakuparametrit]
   (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ") " (pr-str hakuparametrit))
@@ -369,8 +364,7 @@ hakutiheys-historiakuva 1200000)
             (k/url-parametri (aikaparametrilla-kuva (dissoc hakuparametrit :alue))))
 
     (let [tulos (-> (<! (k/post! :hae-tilannekuvaan (aikaparametrilla hakuparametrit)))
-                    (assoc :tarkastukset (:tarkastukset hakuparametrit))
-                    (julkaise-tyokonedata!))]
+                    (assoc :tarkastukset (:tarkastukset hakuparametrit)))]
       (when @nakymassa?
         (reset! tilannekuva-kartalla/haetut-asiat tulos))
       (kartta/aseta-paivitetaan-karttaa-tila! false))))
