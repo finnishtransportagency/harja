@@ -1,5 +1,5 @@
 (ns harja-laadunseuranta.schemas
-  (:require #?(:clj  [schema.core :as s]
+  (:require #?(:clj [schema.core :as s]
                :cljs [schema.core :as s :include-macros true])))
 
 (defn validi-lumisuus? [arvo]
@@ -35,6 +35,12 @@
                :lat s/Num
                (s/optional-key :accuracy) (s/maybe s/Num)})
 
+(def TrOsoite {(s/optional-key :tie) (s/maybe s/Num)
+               (s/optional-key :aosa) (s/maybe s/Num)
+               (s/optional-key :aet) (s/maybe s/Num)
+               (s/optional-key :losa) (s/maybe s/Num)
+               (s/optional-key :let) (s/maybe s/Num)})
+
 (def Kuva {:data s/Str
            :mime-type s/Str})
 
@@ -45,6 +51,8 @@
    :tarkastusajo s/Int
    :aikaleima s/Int
    :sijainti Sijainti
+   ;; Lomakkeelta kirjattu tr-osoite.
+   (s/optional-key :tr-osoite) TrOsoite
    :mittaukset {(s/optional-key :lampotila) (s/maybe s/Num)
                 (s/optional-key :lumisuus) (s/maybe Lumisuus)
                 (s/optional-key :talvihoito-tasaisuus) (s/maybe Tasaisuus)
@@ -143,5 +151,5 @@
 
 (defn api-vastaus [ok-tyyppi]
   (s/conditional
-   #(contains? % :error) {:error s/Str}
-   :else {:ok ok-tyyppi}))
+    #(contains? % :error) {:error s/Str}
+    :else {:ok ok-tyyppi}))
