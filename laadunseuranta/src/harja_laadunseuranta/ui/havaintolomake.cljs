@@ -4,7 +4,6 @@
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.ui.kamera :as kamera]
             [harja-laadunseuranta.ui.napit :refer [nappi]]
-            [harja-laadunseuranta.ui.ikonit :as ikonit]
             [harja-laadunseuranta.tiedot.havaintolomake :refer [alusta-uusi-lomake!
                                                                 tallenna-lomake!
                                                                 peruuta-lomake!]]
@@ -12,7 +11,9 @@
             [harja-laadunseuranta.ui.lomake :refer [kentta tekstialue
                                                     pvm-aika tr-osoite]]
             [cljs-time.format :as time-fmt]
-            [harja-laadunseuranta.tiedot.fmt :as fmt])
+            [harja-laadunseuranta.tiedot.fmt :as fmt]
+            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat])
+
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
 
@@ -58,16 +59,17 @@
                                           (tallenna-fn @lomakedata)))
                             :disabled (not (empty? @lomake-virheet))
                             :luokat-str "nappi-myonteinen"
-                            :ikoni (ikonit/livicon-save)}]
+                            :ikoni (kuvat/svg-sprite "tallenna-18")}]
          [nappi "Peruuta" {:luokat-str "nappi-kielteinen"
                            :on-click peruuta-fn}]]]])))
 
 (defn havaintolomake []
   (let [lomakedata (alusta-uusi-lomake!)]
-    [havaintolomakekomponentti
-     {:lomakedata lomakedata
-      :tallenna-fn tallenna-lomake!
-      :peruuta-fn peruuta-lomake!}]))
+    (fn []
+      [havaintolomakekomponentti
+       {:lomakedata lomakedata
+        :tallenna-fn tallenna-lomake!
+        :peruuta-fn peruuta-lomake!}])))
 
 (def test-model (atom {:kayttajanimi "Jalmari Järjestelmävastuuhenkilö"
                        :tr-osoite {:tie 20 :aosa 3 :aet 3746}
