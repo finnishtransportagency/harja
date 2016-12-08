@@ -59,7 +59,6 @@
     [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
     [harja.palvelin.palvelut.integraatioloki :as integraatioloki-palvelu]
     [harja.palvelin.palvelut.raportit :as raportit]
-    [harja.palvelin.palvelut.tyokoneenseuranta :as tyokoneenseuranta]
     [harja.palvelin.palvelut.tilannekuva :as tilannekuva]
     [harja.palvelin.palvelut.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
     [harja.palvelin.palvelut.status :as status]
@@ -323,10 +322,6 @@
       :raportit (component/using
                   (raportit/->Raportit)
                   [:http-palvelin :db :raportointi :pdf-vienti])
-
-      :tyokoneenseuranta (component/using
-                           (tyokoneenseuranta/->TyokoneseurantaHaku)
-                           [:http-palvelin :db])
 
       :yha (component/using
              (yha/->Yha)
