@@ -280,7 +280,9 @@
        alkuosa :tr_alkuosa alkuet :tr_alkuetaisyys
        loppuosa :tr_loppuosa loppuet :tr_loppuetaisyys}]
   (when (and tie alkuosa alkuet)
-    (let [viiva? (and loppuosa loppuet)]
+    (let [viiva? (and loppuosa loppuet
+                      (not= loppuosa alkuosa)
+                      (not= loppuet alkuet))]
       (:geom
         (first (q/tr-osoitteelle-viiva
                  db
