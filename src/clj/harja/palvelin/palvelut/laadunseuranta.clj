@@ -247,13 +247,6 @@
       (assoc tarkastus
        :liitteet (into [] (tarkastukset/hae-tarkastuksen-liitteet db tarkastus-id))))))
 
-(def talvihoitomittauksen-kentat
-  [[:lumimaara] [:hoitoluokka] [:tasaisuus] [:kitka] [:ajosuunta]
-    [:lampotila :tie] [:lampotila :ilma]])
-
-(def soratiemittauksen-kentat
-  [[:tasaisuus] [:polyavyys] [:kiinteys] [:sivukaltevuus] [:hoitoluokka]])
-
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
   (try
@@ -261,9 +254,9 @@
       (let [uusi-tarkastus? (nil? (:id tarkastus))
             tarkastustyyppi (:tyyppi tarkastus)
             talvihoitomittaus? (some #(get-in (:talvihoitomittaus tarkastus) %)
-                                     talvihoitomittauksen-kentat)
+                                     laadunseuranta/talvihoitomittauksen-kentat)
             soratiemittaus? (some #(get-in (:soratiemittaus tarkastus) %)
-                                     soratiemittauksen-kentat)
+                                     laadunseuranta/soratiemittauksen-kentat)
             tarkastus (assoc tarkastus :lahde "harja-ui")
             id (tarkastukset/luo-tai-paivita-tarkastus c user urakka-id tarkastus)]
 
@@ -279,19 +272,19 @@
                (assoc :lampotila-ilma
                       (get-in (:talvihoitomittaus tarkastus) [:lampotila :ilma])))))
 
-        (when (or
-                (= :soratie tarkastustyyppi)
-                (= :laatu tarkastustyyppi)
-                soratiemittaus?)
-          (tarkastukset/luo-tai-paivita-soratiemittaus c id
-                                                       (or uusi-tarkastus? (not (:tarkastus (:soratiemittaus tarkastus))))
-                                                       (:soratiemittaus tarkastus)))
+        (when (and (or
+                     (= :soratie tarkastustyyppi)
+                     (= :laatu tarkastustyyppi))
+                   soratiemittaus?)
+          (tarkastukset/luo-tai-paivita-soratiemittaus
+            c id
+            (or uusi-tarkastus? (not (:tarkastus (:soratiemittaus tarkastus))))
+            (:soratiemittaus tarkastus)))
 
         (when-let [uusi-liite (:uusi-liite tarkastus)]
           (log/info "UUSI LIITE: " uusi-liite)
           (tarkastukset/luo-liite<! c id (:id uusi-liite)))
 
-        (log/info "SAATIINPA urakalle " urakka-id " tarkastus: " tarkastus)
         (hae-tarkastus c user urakka-id id)))
     (catch Exception e
       (log/info e "Tarkastuksen tallennuksessa poikkeus!"))))

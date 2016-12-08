@@ -166,7 +166,10 @@
         :hallinta [hallinta/hallinta]
         :tilannekuva [tilannekuva/tilannekuva]
         :about [about/about]
-        :tr [tierekisteri/tierekisteri])]]]
+        :tr [tierekisteri/tierekisteri]
+
+        ;; jos käyttäjä kirjoittaa selaimeen invalidin urlin, estetään räsähdys
+        [urakat/urakat])]]]
    [modal/modal-container]
    [viesti-container]
 

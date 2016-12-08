@@ -29,7 +29,7 @@
         yksi-kone (kutsu 427800 7211200 427961 7211340)
         ei-koneita (kutsu 0 0 50 50)]
     (testing "tyokoneita pitäisi löytyä envelopen sisältä"
-      (is (= (count tyokoneet) 3)))
+      (is (= (count tyokoneet) 4)))
     (testing "yhden tyokoneen palautetut tiedot about oikein"
       (is (= (count yksi-kone) 1))
       (let [kone (first yksi-kone)]

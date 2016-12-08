@@ -10,7 +10,7 @@
 (def +valitun-leveys+ 8)
 (def +normaali-vari+ "black")
 (def +valitun-vari+ "blue")
-
+(def +tyokoneviivan-dash+ [4 15])
 
 
 (defn monivarinen-viiva-leveyksilla-ja-asetuksilla
@@ -337,7 +337,7 @@ tr-viiva {:color  puhtaat/tummanharmaa
 tr-ikoni {:img    (pinni-ikoni "musta")
           :zindex 21})
 
-(def suljettu-tieosuus
+(def tietyomaa
   [{:color puhtaat/musta
     :width 8}
    {:color puhtaat/punainen
@@ -349,3 +349,5 @@ tr-ikoni {:img    (pinni-ikoni "musta")
     :dash [3 9]
     :width 3}])
 
+(defn tehtavan-viivat-tyokoneelle [viivat]
+  (map #(assoc % :dash +tyokoneviivan-dash+) viivat))
