@@ -27,15 +27,15 @@
     (fn [tr-osoite-atom]
       (let [{:keys [tie aosa aet losa let]} @tr-osoite-atom]
         [:div.tr-osoite
-         [:input {:type "text" :number max-merkkeja :value tie :on-change #(on-change % :tie) :placeholder "Tie#"}]
+         [:input {:type "text"  :value tie :on-change #(on-change % :tie) :placeholder "Tie#"}]
          [:span.valiviiva " / "]
-         [:input {:type "text" :number max-merkkeja :value aosa :on-change #(on-change % :aosa) :placeholder "aosa"}]
+         [:input {:type "text"  :value aosa :on-change #(on-change % :aosa) :placeholder "aosa"}]
          [:span.valiviiva " / "]
-         [:input {:type "text" :number max-merkkeja :value aet :on-change #(on-change % :aet) :placeholder "aet"}]
+         [:input {:type "text"  :value aet :on-change #(on-change % :aet) :placeholder "aet"}]
          [:span.valiviiva " / "]
-         [:input {:type "text" :number max-merkkeja :value losa :on-change #(on-change % :losa) :placeholder "losa"}]
+         [:input {:type "text" :value losa :on-change #(on-change % :losa) :placeholder "losa"}]
          [:span.valiviiva " / "]
-         [:input {:type "text" :number max-merkkeja :value let :on-change #(on-change % :let) :placeholder "let"}]]))))
+         [:input {:type "text" :value let :on-change #(on-change % :let) :placeholder "let"}]]))))
 
 (defn pvm-aika [aika]
   [:div.pvm-aika
