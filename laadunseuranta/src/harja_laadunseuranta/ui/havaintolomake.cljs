@@ -19,17 +19,17 @@
 
 (defn- havaintolomakekomponentti [{:keys [lomakedata tallenna-fn peruuta-fn
                                           tr-osoite-lomakkeen-avauksessa]}]
-  (let [kuvaus (reagent/cursor lomakedata [:kuvaus])
-        aikaleima (reagent/cursor lomakedata [:aikaleima])
-        tr-os (reagent/cursor lomakedata [:tr-osoite])
-        esikatselukuva (reagent/cursor lomakedata [:esikatselukuva])
-        kayttajanimi (reagent/cursor lomakedata [:kayttajanimi])
-        laadunalitus? (reagent/cursor lomakedata [:laadunalitus?])
-        lomake-virheet (atom #{})
+  (let [kuvaus-atom (reagent/cursor lomakedata [:kuvaus])
+        aikaleima-atom (reagent/cursor lomakedata [:aikaleima])
+        tr-osoite-atom (reagent/cursor lomakedata [:tr-osoite])
+        esikatselukuva-atom (reagent/cursor lomakedata [:esikatselukuva])
+        kayttajanimi-atom (reagent/cursor lomakedata [:kayttajanimi])
+        laadunalitus-atom (reagent/cursor lomakedata [:laadunalitus?])
+        lomake-virheet-atom (atom #{})
         alusta-tr-osoite! (fn [tr-osoite-atom]
                             (when (:tie tr-osoite-lomakkeen-avauksessa)
                               (reset! tr-osoite-atom tr-osoite-lomakkeen-avauksessa)))]
-    (alusta-tr-osoite! tr-os)
+    (alusta-tr-osoite! tr-osoite-atom)
     (fn []
       [:div.lomake-container
        [:div.havaintolomake
@@ -40,32 +40,34 @@
          ;; Näytetään siis toistaiseksi vain tekstinä.
          ;; TODO Jatkossa olisi hyvä, jos voi muokata. Tässä voinee käyttää
          ;; HTML5:n natiivia date ja time tyyppiä, on hyvn tuettu mobiilissa.
-         [kentta "Päivämäärä" (str (time-fmt/unparse fmt/pvm-fmt @aikaleima)
+         [kentta "Päivämäärä" (str (time-fmt/unparse fmt/pvm-fmt @aikaleima-atom)
                                    " "
-                                   (time-fmt/unparse fmt/klo-fmt @aikaleima))]
-         #_[kentta "Päivämäärä" [pvm-aika aikaleima]]
-         [kentta "Tarkastaja" [:span.tarkastaja @kayttajanimi]]]
+                                   (time-fmt/unparse fmt/klo-fmt @aikaleima-atom))]
+         #_[kentta "Päivämäärä" [pvm-aika aikaleima-atom]]
+         [kentta "Tarkastaja" [:span.tarkastaja @kayttajanimi-atom]]]
 
         [:div.tieosuus
-         [kentta "Tieosuus" [tr-osoite tr-os]]]
+         [kentta "Tieosuus" [tr-osoite tr-osoite-atom lomake-virheet-atom]]]
 
         [:div.lisatietoja
          [:div.laatupoikkeama-check
           [:input {:id "laadunalitus"
                    :type "checkbox"
-                   :on-change #(swap! laadunalitus? not)}]
+                   :on-change #(swap! laadunalitus-atom not)}]
           [:label {:for "laadunalitus"} "Laadun alitus"]]
          [:div.title "Lisätietoja"]
-         [tekstialue kuvaus]
-         [kamera/kamerakomponentti esikatselukuva]]
+         [tekstialue kuvaus-atom]
+         [kamera/kamerakomponentti esikatselukuva-atom]]
 
         [:div.lomake-painikkeet
          [nappi "Tallenna" {:on-click (fn []
-                                        (.log js/console. "Tallenna. Virheet: " (pr-str @lomake-virheet))
-                                        (when (empty? @lomake-virheet)
+                                        (.log js/console. "Tallenna. Virheet: " (pr-str @lomake-virheet-atom))
+                                        (when (empty? @lomake-virheet-atom)
                                           (tallenna-fn @lomakedata)))
-                            :disabled (not (empty? @lomake-virheet))
-                            :luokat-str "nappi-myonteinen"
+                            :disabled (not (empty? @lomake-virheet-atom))
+                            :luokat-str (str "nappi-myonteinen "
+                                             (when-not (empty? @lomake-virheet-atom)
+                                               "nappi-disabloitu"))
                             :ikoni (kuvat/svg-sprite "tallenna-18")}]
          [nappi "Peruuta" {:luokat-str "nappi-kielteinen"
                            :on-click peruuta-fn}]]]])))

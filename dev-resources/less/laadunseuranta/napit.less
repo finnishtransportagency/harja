@@ -25,7 +25,8 @@ button, button:focus { outline: 0; } // Selaimen defaulttityyli tästä pois
     border-color: @sininen4;
 }
 
-.nappi-ensisijainen:active {
+
+.nappi-ensisijainen:active:not(.nappi-disabloitu) {
     background-color: @sininen5;
 }
 
@@ -35,7 +36,7 @@ button, button:focus { outline: 0; } // Selaimen defaulttityyli tästä pois
     border: 1px solid @sininen4;
 }
 
-.nappi-toissijainen:active {
+.nappi-toissijainen:active:not(.nappi-disabloitu) {
     background-color: @harmaa13;
 }
 
@@ -46,7 +47,7 @@ button, button:focus { outline: 0; } // Selaimen defaulttityyli tästä pois
     font-weight: normal;
 }
 
-.nappi-myonteinen:active {
+.nappi-myonteinen:active:not(.nappi-disabloitu) {
     background-color: @vihrea6;
 }
 
@@ -57,6 +58,10 @@ button, button:focus { outline: 0; } // Selaimen defaulttityyli tästä pois
     font-weight: normal;
 }
 
-.nappi-kielteinen:active {
+.nappi-kielteinen:active:not(.nappi-disabloitu) {
     background-color: @punainen7;
+}
+
+.nappi-disabloitu {
+    background-color: @harmaa6;
 }

@@ -15,7 +15,7 @@
       (when (<= min val max)
         val))))
 
-(defn tr-osoite [tr-osoite-atom]
+(defn tr-osoite [tr-osoite-atom virheet-atom]
   (let [max-merkkeja 7
         arvo-validi? (fn [arvo-tekstina]
                        (boolean (or (empty? arvo-tekstina)
@@ -27,8 +27,33 @@
                       (when (arvo-validi? arvo-tekstina)
                         (if arvo-tyhja?
                           (swap! tr-osoite-atom assoc avain nil)
-                          (swap! tr-osoite-atom assoc avain (js/parseInt arvo-tekstina))))))]
+                          (swap! tr-osoite-atom assoc avain (js/parseInt arvo-tekstina))))))
+        tarkista-virheet! (fn [tr-osoite-atom virheet-atom]
+                            (cond (and (nil? (:tie @tr-osoite-atom))
+                                       (nil? (:aosa @tr-osoite-atom))
+                                       (nil? (:aet @tr-osoite-atom))
+                                       (nil? (:losa @tr-osoite-atom))
+                                       (nil? (:let @tr-osoite-atom)))
+                                  (swap! virheet-atom disj :tr-osoite-virheellinen)
+
+                                  (and (some? (:tie @tr-osoite-atom))
+                                       (some? (:aosa @tr-osoite-atom))
+                                       (some? (:aet @tr-osoite-atom))
+                                       (nil? (:losa @tr-osoite-atom))
+                                       (nil? (:let @tr-osoite-atom)))
+                                  (swap! virheet-atom disj :tr-osoite-virheellinen)
+
+                                  (and (some? (:tie @tr-osoite-atom))
+                                       (some? (:aosa @tr-osoite-atom))
+                                       (some? (:aet @tr-osoite-atom))
+                                       (some? (:losa @tr-osoite-atom))
+                                       (some? (:let @tr-osoite-atom)))
+                                  (swap! virheet-atom disj :tr-osoite-virheellinen)
+
+                                  :default
+                                  (swap! virheet-atom conj :tr-osoite-virheellinen)))]
     (fn [tr-osoite-atom]
+      (tarkista-virheet! tr-osoite-atom virheet-atom)
       (let [{:keys [tie aosa aet losa let]} @tr-osoite-atom]
         [:div.tr-osoite
          [:input {:type "number" :value tie :on-change #(on-change % :tie) :placeholder "Tie#"}]
