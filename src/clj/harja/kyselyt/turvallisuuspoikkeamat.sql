@@ -57,7 +57,7 @@ SELECT
   t.ilmoitukset_lahetetty  AS ilmoituksetlahetetty,
   k.id                     AS korjaavatoimenpide_id,
   k.kuvaus                 AS korjaavatoimenpide_kuvaus,
-  k.suoritettu             AS korjaavatoimenpide_suoritettu,
+  k.suoritettu             AS korjaavatoimenpide_suoritettu
 FROM turvallisuuspoikkeama t
   LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama AND k.poistettu IS NOT TRUE
 WHERE t.tapahtunut :: DATE BETWEEN :alku AND :loppu
@@ -204,6 +204,9 @@ SELECT
   u.urakkanro                           AS alueurakkanro,
 
   u.sampoid                             AS "urakka-sampoid",
+  u.tyyppi                              AS "urakka-tyyppi",
+  u.hallintayksikko                     AS "urakka-ely-numero",
+  u.loppupvm                            AS "urakka-loppupvm",
   (SELECT (etunimi || ' ' || sukunimi)
    FROM yhteyshenkilo
    WHERE id =
