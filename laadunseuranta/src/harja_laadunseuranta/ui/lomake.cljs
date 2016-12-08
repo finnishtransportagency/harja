@@ -31,7 +31,7 @@
     (fn [tr-osoite-atom]
       (let [{:keys [tie aosa aet losa let]} @tr-osoite-atom]
         [:div.tr-osoite
-         [:input {:type "text" :value tie :on-change #(on-change % :tie) :placeholder "Tie#"}]
+         [:input {:type "number" :value tie :on-change #(on-change % :tie) :placeholder "Tie#"}]
          [:span.valiviiva " / "]
          [:input {:type "text" :value aosa :on-change #(on-change % :aosa) :placeholder "aosa"}]
          [:span.valiviiva " / "]
