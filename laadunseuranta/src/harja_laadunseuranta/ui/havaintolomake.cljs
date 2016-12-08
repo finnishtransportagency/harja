@@ -17,14 +17,19 @@
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
 
-(defn- havaintolomakekomponentti [{:keys [lomakedata tallenna-fn peruuta-fn]}]
+(defn- havaintolomakekomponentti [{:keys [lomakedata tallenna-fn peruuta-fn
+                                          tr-osoite-lomakkeen-avauksessa]}]
   (let [kuvaus (reagent/cursor lomakedata [:kuvaus])
         aikaleima (reagent/cursor lomakedata [:aikaleima])
         tr-os (reagent/cursor lomakedata [:tr-osoite])
         esikatselukuva (reagent/cursor lomakedata [:esikatselukuva])
         kayttajanimi (reagent/cursor lomakedata [:kayttajanimi])
         laadunalitus? (reagent/cursor lomakedata [:laadunalitus?])
-        lomake-virheet (atom #{})]
+        lomake-virheet (atom #{})
+        alusta-tr-osoite! (fn [tr-osoite-atom]
+                            (when (:tie tr-osoite-lomakkeen-avauksessa)
+                              (reset! tr-osoite-atom tr-osoite-lomakkeen-avauksessa)))]
+    (alusta-tr-osoite! tr-os)
     (fn []
       [:div.lomake-container
        [:div.havaintolomake
@@ -42,7 +47,7 @@
          [kentta "Tarkastaja" [:span.tarkastaja @kayttajanimi]]]
 
         [:div.tieosuus
-         [kentta "Tieosuus" [tr-osoite @tr-os]]]
+         [kentta "Tieosuus" [tr-osoite tr-os]]]
 
         [:div.lisatietoja
          [:div.laatupoikkeama-check
@@ -66,10 +71,12 @@
                            :on-click peruuta-fn}]]]])))
 
 (defn havaintolomake []
-  (let [lomakedata (alusta-uusi-lomake!)]
+  (let [lomakedata (alusta-uusi-lomake!)
+        tr-osoite-lomakkeen-avauksessa @s/tr-osoite]
     (fn []
       [havaintolomakekomponentti
        {:lomakedata lomakedata
+        :tr-osoite-lomakkeen-avauksessa tr-osoite-lomakkeen-avauksessa
         :tallenna-fn tallenna-lomake!
         :peruuta-fn peruuta-lomake!}])))
 

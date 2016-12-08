@@ -15,15 +15,27 @@
       (when (<= min val max)
         val))))
 
-(defn tr-osoite [{:keys [tie aosa aet losa let] :as osoite}]
-  (clojure.core/let [on-change (fn [uusi]
-                                 (.log js/console "Kirjasit: " (.-value (.-target uusi))))]
-    [:div.tr-osoite
-     [:input {:type "text" :value tie :on-change on-change :placeholder "Tie#"}] [:span.valiviiva " / "]
-     [:input {:type "text" :value aosa :on-change on-change :placeholder "aosa"}] [:span.valiviiva " / "]
-     [:input {:type "text" :value aet :on-change on-change :placeholder "aet"}] [:span.valiviiva " / "]
-     [:input {:type "text" :value losa :on-change on-change :placeholder "losa"}] [:span.valiviiva " / "]
-     [:input {:type "text" :value let :on-change on-change :placeholder "let"}]]))
+(defn tr-osoite [tr-osoite-atom]
+  (let [max-merkkeja 7
+        arvo-validi? (fn [arvo-tekstina]
+                       (boolean (and (<= (count arvo-tekstina) max-merkkeja)
+                                     (>= (js/parseInt arvo-tekstina) 0))))
+        on-change (fn [syote avain]
+                    (let [arvo-tekstina (-> syote .-target .-value)]
+                      (when (arvo-validi? arvo-tekstina)
+                       (swap! tr-osoite-atom assoc avain (js/parseInt arvo-tekstina)))))]
+    (fn [tr-osoite-atom]
+      (let [{:keys [tie aosa aet losa let]} @tr-osoite-atom]
+        [:div.tr-osoite
+         [:input {:type "text" :number max-merkkeja :value tie :on-change #(on-change % :tie) :placeholder "Tie#"}]
+         [:span.valiviiva " / "]
+         [:input {:type "text" :number max-merkkeja :value aosa :on-change #(on-change % :aosa) :placeholder "aosa"}]
+         [:span.valiviiva " / "]
+         [:input {:type "text" :number max-merkkeja :value aet :on-change #(on-change % :aet) :placeholder "aet"}]
+         [:span.valiviiva " / "]
+         [:input {:type "text" :number max-merkkeja :value losa :on-change #(on-change % :losa) :placeholder "losa"}]
+         [:span.valiviiva " / "]
+         [:input {:type "text" :number max-merkkeja :value let :on-change #(on-change % :let) :placeholder "let"}]]))))
 
 (defn pvm-aika [aika]
   [:div.pvm-aika
