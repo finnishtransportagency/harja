@@ -75,7 +75,9 @@
   [reittimerkinta]
   (if (:tie reittimerkinta)
     (-> reittimerkinta
-        (assoc :tr-osoite (if (:kayttaja-syottama-tie reittimerkinta)
+        (assoc :tr-osoite (if (and (:kayttaja-syottama-tie reittimerkinta)
+                                   (:kayttaja-syottama-aosa reittimerkinta)
+                                   (:kayttaja-syottama-aet reittimerkinta))
                             (select-keys reittimerkinta [:kayttajan-syottama-tie
                                                          :kayttajan-syottama-aosa
                                                          :kayttajan-syottama-aet
