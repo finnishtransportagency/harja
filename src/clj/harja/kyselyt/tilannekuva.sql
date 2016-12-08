@@ -299,37 +299,44 @@ WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
 GROUP BY tt.toimenpidekoodi;
 
 
--- name: hae-tyokoneet
+-- name: hae-tyokoneselitteet
+-- Hakee työkoneiden selitteet
 SELECT
-  t.tyokoneid,
-  t.jarjestelma,
-  t.organisaatio,
-  t.alkanut,
-  (SELECT nimi
-   FROM organisaatio
-   WHERE id = t.organisaatio) AS organisaationimi,
-  t.viestitunniste,
-  t.lahetysaika,
-  t.vastaanotettu,
-  t.tyokonetyyppi,
-  t.sijainti,
-  ST_Simplify(t.reitti, :toleranssi) AS reitti,
-  t.suunta,
-  t.edellinensijainti,
-  t.urakkaid,
-  (SELECT nimi
-   FROM urakka
-   WHERE id = t.urakkaid)     AS urakkanimi,
-  t.tehtavat
+  t.tehtavat,
+  MAX(t.lahetysaika) AS viimeisin
 FROM tyokonehavainto t
-WHERE ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax),
-                  reitti) AND
+WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), sijainti::GEOMETRY) AND
       (t.urakkaid IN (:urakat) OR
       -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
        (t.urakkaid IS NULL AND
        (:nayta-kaikki OR t.organisaatio = :organisaatio))) AND
       -- Rajaa toimenpiteellä
-      (t.tehtavat && :toimenpiteet :: suoritettavatehtava []);
+      (t.tehtavat && :toimenpiteet :: suoritettavatehtava []) AND
+      -- Rajaa ajalla
+      (t.lahetysaika BETWEEN :alku AND :loppu)
+GROUP BY t.tehtavat;
+
+-- name: hae-tyokonereitit-kartalle
+-- fetch-size: 64
+-- hae myös suunta!
+SELECT
+  t.tyokoneid,
+  t.jarjestelma,
+  t.tehtavat,
+  t.tyokonetyyppi,
+  ST_MakeLine(array_agg(t.sijainti ORDER BY t.lahetysaika ASC)::GEOMETRY[]) AS reitti
+FROM tyokonehavainto t
+WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), sijainti::GEOMETRY) AND
+      (t.urakkaid IN (:urakat) OR
+      -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
+       (t.urakkaid IS NULL AND
+       (:nayta-kaikki OR t.organisaatio = :organisaatio))) AND
+      -- Rajaa toimenpiteellä
+      (t.tehtavat && :toimenpiteet :: suoritettavatehtava []) AND
+      -- Rajaa ajalla
+      (t.lahetysaika BETWEEN :alku AND :loppu)
+GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi;
+
 
 -- name: hae-toimenpidekoodit
 SELECT
