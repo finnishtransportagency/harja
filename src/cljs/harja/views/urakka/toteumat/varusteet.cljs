@@ -84,17 +84,24 @@
        {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys 15}
        {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :string :leveys 15
         :hae (fn [rivi]
+               (log "---> RIVI" (pr-str rivi))
                (or (tierekisteri-varusteet/tietolaji->selitys (:tietolaji rivi))
                    (:tietolaji rivi)))}
        {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys 15
         :hae (fn [rivi]
                (tierekisteri-varusteet/varuste-toimenpide->string (:toimenpide rivi)))}
-       {:otsikko "Tie" :nimi :tie :tyyppi :positiivinen-numero :leveys 10 :tasaa :oikea}
-       {:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea}
-       {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea}
-       {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea}
-       {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea}
+       {:otsikko "Tie" :nimi :tie :tyyppi :positiivinen-numero :leveys 10 :tasaa :oikea
+        :hae #(get-in % [:tierekisteriosoite :numero])}
+       {:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
+        :hae #(get-in % [:tierekisteriosoite :alkuosa])}
+       {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
+        :hae #(get-in % [:tierekisteriosoite :alkuetaisyys])}
+       {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
+        :hae #(get-in % [:tierekisteriosoite :loppuosa])}
+       {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
+        :hae #(get-in % [:tierekisteriosoite :loppuetaisyys])}
        {:otsikko "Kuntoluokka" :nimi :kuntoluokka :tyyppi :positiivinen-numero :leveys 10}
+       {:otsikko "Lähetetty Tierekisteriin" :nimi :lahetetty :tyyppi :positiivinen-numero :leveys 10}
        {:otsikko "Varustekortti" :nimi :varustekortti :tyyppi :komponentti
         :komponentti (fn [rivi] (varustekortti-linkki rivi)) :leveys 10}]
       (take nayta-max-toteumaa valitut-toteumat)]

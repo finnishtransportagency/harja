@@ -724,7 +724,9 @@ SELECT
   tpk.nimi            AS toteumatehtava_nimi,
   t.lisatieto,
   alkupvm,
-  loppupvm
+  loppupvm,
+  lahetetty,
+  tila
 FROM varustetoteuma vt
   JOIN toteuma t ON vt.toteuma = t.id
   LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
