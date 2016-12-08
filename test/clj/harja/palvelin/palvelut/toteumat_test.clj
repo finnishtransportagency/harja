@@ -9,10 +9,7 @@
             [harja.palvelin.palvelut.toteumat :refer :all]
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
-            [clojure.java.io :as io]
             [org.httpkit.fake :refer [with-fake-http]]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.palvelut.toteumat :as toteumat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]))
 
