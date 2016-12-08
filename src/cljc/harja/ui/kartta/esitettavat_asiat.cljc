@@ -495,8 +495,7 @@
            :selite {:teksti selite-teksti
                     :vari   (viivojen-varit-leveimmasta-kapeimpaan viivat)}
            :alue (maarittele-feature paikka (valittu-fn? tyokone)
-                                     ;; FIXME: laita suunta kyselyyn tai tämä cräsh
-                                     nil #_(ulkoasu/tyokoneen-ikoni nuolen-vari (muunna-tyokoneen-suunta (:suunta tyokone)))
+                                     (ulkoasu/tyokoneen-nuoli nuolen-vari)
                                      viivat))))
 
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
