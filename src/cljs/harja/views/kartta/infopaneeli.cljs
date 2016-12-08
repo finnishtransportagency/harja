@@ -32,8 +32,9 @@
 
 (defn esita-otsikko [{:keys [otsikko] :as asia}]
   [:div.ip-osio
-   {:on-click #(reset! valittu-asia asia)}
-   [:span.ip-haitari-otsikko otsikko]])
+   [:div.ip-otsikko
+    {:on-click #(reset! valittu-asia asia)}
+    [:span.ip-haitari-otsikko otsikko]]])
 
 (defn- kentan-arvo [skeema data]
   (let [arvo-fn (or (:hae skeema) (:nimi skeema))]
