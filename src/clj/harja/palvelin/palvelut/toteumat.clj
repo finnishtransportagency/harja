@@ -535,9 +535,9 @@
                          (map #(konv/string->keyword % :toimenpide))
                          (map #(konv/string->keyword % :toteumatyyppi))
                          (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
-                         (map #(assoc % :arvot (tietolajit/valido-ja-muunna-merkkijono-arvoiksi tierekisteri
-                                                 (:arvot %)
-                                                 (:tietolaji %))))
+                         (map #(assoc % :arvot (tietolajit/validoi-ja-muunna-merkkijono-arvoiksi tierekisteri
+                                                                                                (:arvot %)
+                                                                                                (:tietolaji %))))
                          (map konv/alaviiva->rakenne))
                        (toteumat-q/hae-urakan-varustetoteumat
                          db
@@ -619,7 +619,6 @@
                                                   :tr_ajorata ajorata
                                                   :sijainti sijainti}]
                               (:id (toteumat-q/luo-varustetoteuma<! db varustetoteuma))))]
-    ;; todo: send async
     (async/thread (tierekisteri/laheta-varusteoteuma tierekisteri varustetoteuma-id)))
   (hae-urakan-varustetoteumat tierekisteri db user hakuehdot))
 

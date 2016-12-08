@@ -168,7 +168,7 @@
        tietolajin-kuvaus
        arvot))))
 
-(defn valido-ja-muunna-merkkijono-arvoiksi
+(defn validoi-ja-muunna-merkkijono-arvoiksi
   "Hakee tietolajin kuvauksen, muuntaa merkkijonon arvoiksi ja validoi ne"
   [tierekisteri merkkijono tietolaji]
   (when tierekisteri

@@ -125,14 +125,19 @@
 
   (laheta-varusteoteuma [this varustetoteuma-id]
     (when-not (empty? tierekisteri-api-url)
-      (if-let [varustetoteuma (konversio/alaviiva->rakenne (first (toteumat-q/hae-varustetoteuma (:db this) varustetoteuma-id)))]
-        (let [toimenpide (:toimenpide varustetoteuma)
-              tiedot (varusteen-tiedot varustetoteuma)]
-          (case toimenpide
-            "lisatty" (lisaa-tietue this tiedot)
-            "paivitetty" (paivita-tietue this tiedot)
-            "poistettu" (poista-tietue this tiedot)
-            "tarkastus" (paivita-tietue this tiedot)
-            (log/warn (format "Ei voida lähettää varustetoteumaa (id: %s) Tierekisteriin. Tuntematon toimenpide." varustetoteuma-id (:toimenpide varustetoteuma)))))
-        (log/warn (format "Ei voida lähettää varustetoteumaa (id: %s) Tierekisteriin. Toteumaa ei löydy." varustetoteuma-id))))))
+      (try
+        (if-let [varustetoteuma (konversio/alaviiva->rakenne (first (toteumat-q/hae-varustetoteuma (:db this) varustetoteuma-id)))]
+         (let [toimenpide (:toimenpide varustetoteuma)
+               tiedot (varusteen-tiedot varustetoteuma)]
+           (case toimenpide
+             "lisatty" (lisaa-tietue this tiedot)
+             "paivitetty" (paivita-tietue this tiedot)
+             "poistettu" (poista-tietue this tiedot)
+             "tarkastus" (paivita-tietue this tiedot)
+             (log/warn (format "Ei voida lähettää varustetoteumaa (id: %s) Tierekisteriin. Tuntematon toimenpide." varustetoteuma-id (:toimenpide varustetoteuma)))))
+         (log/warn (format "Ei voida lähettää varustetoteumaa (id: %s) Tierekisteriin. Toteumaa ei löydy." varustetoteuma-id)))
+        (catch Exception e
+          (println "---> NY LÄHETYSVIRHETTÄ")
+          (log/error e (format "Varustetoteuman (id :%s) lähetys Tierekisteriin epäonnistui.") varustetoteuma-id)
+          )))))
 
