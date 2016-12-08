@@ -44,10 +44,8 @@
            :sijainti s/sijainti
            :tarkastusajo-id s/tarkastusajo-id
            :jatkuvat-havainnot s/jatkuvat-havainnot
-           :kuvaus (:kuvaus @s/havaintolomakedata)
-           :epaonnistui-fn reitintallennus/merkinta-epaonnistui
-           :laadunalitus (:laadunalitus? @s/havaintolomakedata)
-           :kuva (:kuva @s/havaintolomakedata)})
+           :lomakedata s/havaintolomakedata
+           :epaonnistui-fn reitintallennus/merkinta-epaonnistui})
     (.log js/console "Lomake tallennettu")
     (kartta/lisaa-kirjausikoni "!")
     (tyhjenna-lomake!)
