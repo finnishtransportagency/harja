@@ -62,7 +62,15 @@
           (excel/set-cell-style! cell sarake-tyyli)))
       sarakkeet)))
 
-(defn luo-data-formaatti [workbook format-str]
+;; http://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/BuiltinFormats.html
+;; Yllä olevasta linkistä voi katsoa mallia, missä muodossa format-str voi antaa.
+;; Älä poista tätä funktiota, vaikkei käytettäisikään. Voi hyvin olla, että jossain
+;; vaiheessa sisäänrakennetut formaatit eivät riitä, ja haluamme luoda omiamme.
+;; Olisi ikävää jos se työ pitäisi aloittaa tutkimalla POIn kryptistä dokumentaatiota.
+(defn luo-data-formaatti
+  "POI sisältää sisäänrakennenttuja tyylejä, tais sitten voimme luoda omiamme tätä funktiota käyttäen.
+  Format-str on esim '\"$#,##0_);[Red]($#,##0)\"'"
+  [workbook format-str]
   (.. (.getCreationHelper workbook) createDataFormat (getFormat format-str)))
 
 (defmethod muodosta-excel :taulukko [[_ optiot sarakkeet data] workbook]
