@@ -122,6 +122,9 @@
      [napit/takaisin "Takaisin varusteluetteloon"
       #(e! (v/->TyhjennaValittuToteuma))]
 
+     (when (empty? ominaisuudet)
+       (lomake/yleinen-varoitus "Ei yhteyttä Tierekisteriin. Varustetoteumaa ei voida kirjata."))
+
      [lomake/lomake
       {:otsikko (case (:toiminto varustetoteuma)
                   :lisaa "Uusi varuste"
@@ -134,10 +137,7 @@
                      #(varustetiedot/tallenna-varustetoteuma nykyiset-valinnat toteuma)
                      {:luokka "nappi-ensisijainen"
                       :ikoni (ikonit/tallenna)
-                      :kun-onnistuu #(do
-                                       (viesti/nayta! "Varusteen tiedot lähetetty onnistuneesti Tierekisteriin."
-                                                      :success viesti/viestin-nayttoaika-keskipitka)
-                                       (e! (v/->VarustetoteumaTallennettu %)))
+                      :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
                       ;; todo: pitää miettiä, miten toimitaan, jos tallennus onnistuu, mutta tr-lähetys epäonnistuu
                       :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
                       :disabled (not (lomake/voi-tallentaa? toteuma))}])}
@@ -203,7 +203,7 @@
        (let [ominaisuudet (if muokattava?
                             (filter #(not (= "tunniste" (get-in % [:ominaisuus :kenttatunniste]))) ominaisuudet)
                             ominaisuudet)]
-         (apply lomake/ryhma "Varusteen ominaisuudet" (map #(varusteominaisuus->skeema % muokattava?) ominaisuudet)))]
+           (apply lomake/ryhma "Varusteen ominaisuudet" (map #(varusteominaisuus->skeema % muokattava?) ominaisuudet)))]
       varustetoteuma]]))
 
 (defn- varusteet* [e! varusteet]
