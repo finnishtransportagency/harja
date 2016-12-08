@@ -40,11 +40,11 @@
                                   :kuvaus (get-in merkinta [:kuvaus])
                                   :laadunalitus (true? (get-in merkinta [:laadunalitus]))
                                   :kuva (get-in merkinta [:kuva])
-                                  :tr_numero (get-in merkinta [:tr-osoite :tie])
-                                  :tr_alkuosa (get-in merkinta [:tr-osoite :aosa])
-                                  :tr_alkuetaisyys (get-in merkinta [:tr-osoite :aet])
-                                  :tr_loppuosa (get-in merkinta [:tr-osoite :losa])
-                                  :tr_loppuetaisyys (get-in merkinta [:tr-osoite :let])}))
+                                  :tr_numero (get-in merkinta [:kayttajan-syottama-tr-osoite :tie])
+                                  :tr_alkuosa (get-in merkinta [:kayttajan-syottama-tr-osoite :aosa])
+                                  :tr_alkuetaisyys (get-in merkinta [:kayttajan-syottama-tr-osoite :aet])
+                                  :tr_loppuosa (get-in merkinta [:kayttajan-syottama-tr-osoite :losa])
+                                  :tr_loppuetaisyys (get-in merkinta [:kayttajan-syottama-tr-osoite :let])}))
 
 (defn- tallenna-multipart-kuva! [db {:keys [tempfile content-type size]} kayttaja-id]
   (let [oid (tietokanta/tallenna-lob db (io/input-stream tempfile))]
