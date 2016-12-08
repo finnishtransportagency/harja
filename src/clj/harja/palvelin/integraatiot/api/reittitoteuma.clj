@@ -169,7 +169,7 @@ maksimi-linnuntien-etaisyys 200)
         (log/debug "Liitetään toteuman reitti")
         (let [reitti (async/<!! toteuman-reitti)]
           (when (= reitti +yhdistamis-virhe+)
-            (log/error (format "Reittitoteuman reitin geometriaa ei saatu luotua. Ping @JarnoVayrynen @TeemuKaukoranta. Kirjaaja oli %s, ja toteuman aikaleimat olivat %s %s"
+            (log/warn (format "Reittitoteuman reitin geometriaa ei saatu luotua. Kirjaaja oli %s, ja toteuman aikaleimat olivat %s %s"
                                kirjaaja
                                (pr-str (:alkanut toteuma))
                                (pr-str (:paattynyt toteuma)))))
