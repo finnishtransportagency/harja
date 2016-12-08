@@ -267,10 +267,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
 (defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara] :as kentta} data]
   (let [desimaalien-maara (or (when kokonaisluku? 0) desimaalien-maara +desimaalin-oletus-tarkkuus+)
-        fmt (or
-              ;; Kentälle voi antaa :fmt option, mutta lienee turvallista olla välittämättä siitä täällä
-              #(fmt/desimaaliluku-opt % desimaalien-maara)
-              str)]
+        fmt #(fmt/desimaaliluku-opt % desimaalien-maara)]
     [:span (normalisoi-numero (fmt @data))]))
 
 (defmethod tee-kentta :positiivinen-numero [kentta data]

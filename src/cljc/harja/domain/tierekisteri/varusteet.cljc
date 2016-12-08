@@ -70,7 +70,8 @@
   {:otsikko (str/capitalize (:selite ominaisuus))
    :pakollinen? (:pakollinen ominaisuus)
    :nimi (keyword (:kenttatunniste ominaisuus))
-   :hae #(get-in % [:arvot (keyword (:kenttatunniste ominaisuus))])
+   :hae #(let [arvo (get-in % [:arvot (keyword (:kenttatunniste ominaisuus))])]
+           (if (= "" arvo) nil arvo))
    :aseta (fn [rivi arvo]
             (assoc-in rivi [:arvot (keyword (:kenttatunniste ominaisuus))] arvo))
    ;; Varusteen tunnistetta ei saa muokata koskaan
@@ -78,7 +79,7 @@
 
 (defmethod varusteominaisuus->skeema :koodisto
   [{ominaisuus :ominaisuus} muokattava?]
-  (let [koodisto (map #(assoc % :selite (str/capitalize (:selite %)))(:koodisto ominaisuus))]
+  (let [koodisto (map #(assoc % :selite (str/capitalize (:selite %))) (:koodisto ominaisuus))]
     (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
            {:tyyppi :valinta
             :valinnat koodisto
