@@ -5,6 +5,7 @@
              [harja.tiedot.urakka.suunnittelu-test]
              [harja.tiedot.urakka.yhatuonti-test]
              [harja.tiedot.muokkauslukko-test]
+             [harja.views.kartta.infopaneeli-test]
              [harja.views.urakka.siltatarkastukset-test]
              [harja.views.urakka.paallystysilmoitukset-test]
              [harja.views.urakka.paikkausilmoitukset-test]
@@ -31,5 +32,6 @@
            'harja.ui.kentat-test
            'harja.ui.grid-test
            'harja.ui.edistymispalkki-testi
+           'harja.views.kartta.infopaneeli-test
            ;; uusi testi tähän
            )
