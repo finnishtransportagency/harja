@@ -28,7 +28,8 @@
             [harja.domain.tierekisteri.varusteet
              :refer [varusteominaisuus->skeema]
              :as tierekisteri-varusteet]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -60,6 +61,12 @@
     (let [url (kommunikaatio/varustekortti-url alkupvm tietolaji tunniste)]
       [:a {:href url :target "_blank"} "Avaa"])))
 
+(defn nayta-varustetoteuman-lahetyksen-tila [{tila :tila lahetetty :lahetetty}]
+  (case tila
+    "lahetetty" [:span.tila-lahetetty (str "Onnistunut: " (pvm/pvm-aika lahetetty))]
+    "virhe" [:span.tila-virhe (str "Epäonnistunut: " (pvm/pvm-aika lahetetty))]
+    [:span "Ei lähetetty"]))
+
 (defn toteumataulukko [e! valittu-tyyppi toteumat]
   (let [valitut-toteumat (filter
                            #(if-not valittu-tyyppi
@@ -84,7 +91,6 @@
        {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys 15}
        {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :string :leveys 15
         :hae (fn [rivi]
-               (log "---> RIVI" (pr-str rivi))
                (or (tierekisteri-varusteet/tietolaji->selitys (:tietolaji rivi))
                    (:tietolaji rivi)))}
        {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys 15
@@ -101,7 +107,9 @@
        {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
         :hae #(get-in % [:tierekisteriosoite :loppuetaisyys])}
        {:otsikko "Kuntoluokka" :nimi :kuntoluokka :tyyppi :positiivinen-numero :leveys 10}
-       {:otsikko "Lähetetty Tierekisteriin" :nimi :lahetetty :tyyppi :aikaleima :leveys 10 :fmt pvm/pvm-aika }
+       {:otsikko "Lähetys Tierekisteriin" :nimi :lahetyksen-tila :tyyppi :komponentti :leveys 10
+        :komponentti #(nayta-varustetoteuman-lahetyksen-tila %)
+        :fmt pvm/pvm-aika}
        {:otsikko "Varustekortti" :nimi :varustekortti :tyyppi :komponentti
         :komponentti (fn [rivi] (varustekortti-linkki rivi)) :leveys 10}]
       (take nayta-max-toteumaa valitut-toteumat)]
@@ -132,6 +140,8 @@
      (when (empty? ominaisuudet)
        (lomake/yleinen-varoitus "Ei yhteyttä Tierekisteriin. Varustetoteumaa ei voida kirjata."))
 
+     ;; todo: lisää linkki varustekorttiin
+
      [lomake/lomake
       {:otsikko (case (:toiminto varustetoteuma)
                   :lisaa "Uusi varuste"
@@ -161,7 +171,13 @@
            {:nimi :alkanut
             :otsikko "Kirjattu"
             :tyyppi :pvm
-            :muokattava? (constantly false)}))
+            :muokattava? (constantly false)}
+           (when (:lahetetty varustetoteuma)
+             {:nimi :lahetetty
+              :otsikko "Lähetetty Tierekisteriin"
+              :tyyppi :komponentti
+              :muokattava? (constantly false)
+              :komponentti #(nayta-varustetoteuman-lahetyksen-tila (:data %))})))
        (lomake/ryhma
          "Varusteen tunnistetiedot"
          {:nimi :tietolaji
@@ -210,7 +226,7 @@
        (let [ominaisuudet (if muokattava?
                             (filter #(not (= "tunniste" (get-in % [:ominaisuus :kenttatunniste]))) ominaisuudet)
                             ominaisuudet)]
-           (apply lomake/ryhma "Varusteen ominaisuudet" (map #(varusteominaisuus->skeema % muokattava?) ominaisuudet)))]
+         (apply lomake/ryhma "Varusteen ominaisuudet" (map #(varusteominaisuus->skeema % muokattava?) ominaisuudet)))]
       varustetoteuma]]))
 
 (defn- varusteet* [e! varusteet]

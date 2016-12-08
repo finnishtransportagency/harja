@@ -870,3 +870,8 @@ WHERE reitti IS NULL
       AND t.tr_numero IS NOT NULL
       AND t.tr_alkuosa IS NOT NULL
       AND t.tr_alkuetaisyys IS NOT NULL;
+
+-- name: merkitse-varustetoteuma-lahetetyksi!
+UPDATE varustetoteuma
+SET lahetetty = now(), tila = :tila :: lahetyksen_tila
+WHERE id = :id;
