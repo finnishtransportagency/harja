@@ -28,8 +28,7 @@
             [harja.domain.tierekisteri.varusteet
              :refer [varusteominaisuus->skeema]
              :as tierekisteri-varusteet]
-            [harja.ui.viesti :as viesti]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -140,8 +139,6 @@
      (when (empty? ominaisuudet)
        (lomake/yleinen-varoitus "Ei yhteyttä Tierekisteriin. Varustetoteumaa ei voida kirjata."))
 
-     ;; todo: lisää linkki varustekorttiin
-
      [lomake/lomake
       {:otsikko (case (:toiminto varustetoteuma)
                   :lisaa "Uusi varuste"
@@ -177,7 +174,12 @@
               :otsikko "Lähetetty Tierekisteriin"
               :tyyppi :komponentti
               :muokattava? (constantly false)
-              :komponentti #(nayta-varustetoteuman-lahetyksen-tila (:data %))})))
+              :komponentti #(nayta-varustetoteuman-lahetyksen-tila (:data %))})
+           (when (and (not muokattava?) (= "lahetetty" (:tila varustetoteuma)))
+             {:nimi :varustekortti
+              :otsikko "Varustekortti"
+              :tyyppi :komponentti
+              :komponentti #(varustekortti-linkki (:data %))})))
        (lomake/ryhma
          "Varusteen tunnistetiedot"
          {:nimi :tietolaji
