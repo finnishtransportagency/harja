@@ -301,7 +301,7 @@
     [:div.kontrollinappi.ortokuva {:on-click #(swap! s/nayta-ortokuva not)}
      [kuvat/svg-sprite "maasto-36"]]
     [:div.kontrollinappi.kiinteistorajat {:on-click #(swap! s/nayta-kiinteistorajat not)}
-     [kuvat/svg-sprite "kiinteisto-36"]]
+     [kuvat/svg-sprite "kiinteistoraja-36"]]
     [:div.kontrollinappi.keskityspainike {:on-click #(do (swap! s/keskita-ajoneuvoon not)
                                                                             (swap! s/keskita-ajoneuvoon not))}
      [kuvat/svg-sprite "tahtain-24"]]]])
