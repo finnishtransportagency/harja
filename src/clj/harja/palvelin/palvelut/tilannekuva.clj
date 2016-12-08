@@ -515,16 +515,13 @@
       (partial #'hae-toteumien-tiedot-kartalle db))
     (karttakuvat/rekisteroi-karttakuvan-lahde!
      karttakuvat :tilannekuva-tarkastukset
-<<<<<<< HEAD
      (partial hae-tarkastuksien-sijainnit-kartalle db)
      (partial #'hae-tarkastuksien-tiedot-kartalle db))
-=======
-     (partial hae-tarkastukset-kartalle db))
     (karttakuvat/rekisteroi-karttakuvan-lahde!
      karttakuvat :tilannekuva-tyokoneet
-     (partial #'hae-tyokoneet-kartalle db))
-
->>>>>>> dc5f20fc1e4856474309d23cf852e98f091bccd5
+     (partial #'hae-tyokoneet-kartalle db)
+     #(do (log/info "FIXME: työkoneen karttaklikkaus")
+          []))
     this)
 
   (stop [{karttakuvat :karttakuvat :as this}]
