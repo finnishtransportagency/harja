@@ -32,10 +32,12 @@
 
         [:div.pvm-kellonaika-tarkastaja
          ;; Päivämäärä-kenttää ei ole koskaan voinut muokata, vaikka on input-tyyppinen
-         ;; Näytetään toistaiseksi vain tekstinä.
+         ;; Näytetään siis toistaiseksi vain tekstinä.
          ;; TODO Jatkossa olisi hyvä, jos voi muokata. Tässä voinee käyttää
          ;; HTML5:n natiivia date ja time tyyppiä, on hyvn tuettu mobiilissa.
-         [kentta "Päivämäärä" (time-fmt/unparse fmt/pvm-fmt @aikaleima)]
+         [kentta "Päivämäärä" (str (time-fmt/unparse fmt/pvm-fmt @aikaleima)
+                                   " "
+                                   (time-fmt/unparse fmt/klo-fmt @aikaleima))]
          #_[kentta "Päivämäärä" [pvm-aika aikaleima]]
          [kentta "Tarkastaja" [:span.tarkastaja @kayttajanimi]]]
 
