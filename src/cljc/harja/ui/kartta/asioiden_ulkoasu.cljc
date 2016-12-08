@@ -10,7 +10,7 @@
 (def +valitun-leveys+ 8)
 (def +normaali-vari+ "black")
 (def +valitun-vari+ "blue")
-(def +tyokoneviivan-dash+ [4 15])
+(def +tyokoneviivan-dash+ [5 10])
 
 
 (defn monivarinen-viiva-leveyksilla-ja-asetuksilla
@@ -212,11 +212,10 @@
    :tyyppi :nuoli
    :img    (nuoli-ikoni nuolen-vari)})
 
-(defn tyokoneen-ikoni [nuolen-vari rotaatio]
-  {:paikka   [:loppu]
-   :tyyppi   :nuoli
-   :img      (nuoli-ikoni nuolen-vari)
-   :rotation rotaatio})
+(defn tyokoneen-nuoli [nuolen-vari]
+  {:paikka [:loppu :taitokset]
+   :tyyppi :nuoli
+   :img (nuoli-ikoni nuolen-vari)})
 
 (defn yllapidon-ikoni []
   {:paikka [:loppu]
@@ -337,7 +336,7 @@ tr-viiva {:color  puhtaat/tummanharmaa
 tr-ikoni {:img    (pinni-ikoni "musta")
           :zindex 21})
 
-(def suljettu-tieosuus
+(def tietyomaa
   [{:color puhtaat/musta
     :width 8}
    {:color puhtaat/punainen

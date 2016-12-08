@@ -463,18 +463,23 @@
      (* (/ Math/PI 180)
         kulma)))
 
-(defmethod asia-kartalle :suljettu-tieosuus [aita valittu-fn?]
-  (log "Asia kartalle: suljettu tieosuus: " (pr-str aita))
-  (let [viivat ulkoasu/suljettu-tieosuus]
+(defmethod asia-kartalle :tietyomaa [aita valittu-fn?]
+  (log "Asia kartalle: tietyömaa: " (pr-str aita))
+  (let [viivat ulkoasu/tietyomaa]
     (assoc aita
-     :type :suljettu-tieosuus
-     :nimi "Suljettu tieosuus"
-     :selite {:teksti "Suljettu tieosuus"
+     :type :tietyomaa
+     :nimi "Tietyömaa"
+     :selite {:teksti "Tietyömaa"
               :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}
      :alue (maarittele-feature {:sijainti (:geometria aita)}
                                (valittu-fn? aita)
                                nil
                                viivat))))
+
+(defn tyokoneen-selite [tehtavat]
+  {:teksti (tehtavan-nimi tehtavat)
+   :vari (viivojen-varit-leveimmasta-kapeimpaan
+          (first (tehtavan-viivat-ja-nuolitiedosto tehtavat false)))})
 
 (defmethod asia-kartalle :tyokone [tyokone valittu-fn?]
   (let [selite-teksti (tehtavan-nimi (:tehtavat tyokone))
@@ -490,7 +495,7 @@
            :selite {:teksti selite-teksti
                     :vari   (viivojen-varit-leveimmasta-kapeimpaan viivat)}
            :alue (maarittele-feature paikka (valittu-fn? tyokone)
-                                     (ulkoasu/tyokoneen-ikoni nuolen-vari (muunna-tyokoneen-suunta (:suunta tyokone)))
+                                     (ulkoasu/tyokoneen-nuoli nuolen-vari)
                                      viivat))))
 
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
