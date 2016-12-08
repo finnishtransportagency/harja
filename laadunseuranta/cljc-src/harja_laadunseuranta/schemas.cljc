@@ -51,8 +51,7 @@
    :tarkastusajo s/Int
    :aikaleima s/Int
    :sijainti Sijainti
-   ;; Lomakkeelta kirjattu tr-osoite.
-   (s/optional-key :tr-osoite) TrOsoite
+   (s/optional-key :kayttajan-syottama-tr-osoite) TrOsoite
    :mittaukset {(s/optional-key :lampotila) (s/maybe s/Num)
                 (s/optional-key :lumisuus) (s/maybe Lumisuus)
                 (s/optional-key :talvihoito-tasaisuus) (s/maybe Tasaisuus)
@@ -139,11 +138,6 @@
 
 (def Havaintokirjaukset
   {:kirjaukset [HavaintoKirjaus]})
-
-(def TROsoite
-  {:tie s/Int
-   :aosa s/Int
-   :aet s/Int})
 
 (def TarkastuksenPaattaminen
   {:urakka (s/maybe s/Int)

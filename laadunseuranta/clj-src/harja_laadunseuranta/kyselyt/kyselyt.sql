@@ -2,12 +2,14 @@
 INSERT INTO tarkastusreitti
 (id, pistetyyppi, tarkastusajo, aikaleima, sijainti, sijainti_tarkkuus, kitkamittaus, havainnot, lampotila,
  talvihoito_tasaisuus, soratie_tasaisuus, lumisuus, kuvaus, kuva,
- polyavyys, sivukaltevuus, kiinteys, laadunalitus)
+ polyavyys, sivukaltevuus, kiinteys, laadunalitus,
+tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys)
 VALUES
   (:id, 0, :tarkastusajo, to_timestamp(:aikaleima / 1000), ST_MakePoint(:x, :y), :sijainti_tarkkuus,
         :kitkamittaus, ARRAY [:havainnot] :: INTEGER [], :lampotila, :talvihoito_tasaisuus,
         :soratie_tasaisuus, :lumisuus, :kuvaus, :kuva, :polyavyys,
-   :sivukaltevuus, :kiinteys, :laadunalitus)
+   :sivukaltevuus, :kiinteys, :laadunalitus,
+  :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys)
 ON CONFLICT DO NOTHING;
 
 -- name: hae-tarkastusajon-reittimerkinnat
@@ -50,7 +52,7 @@ FROM tierekisteriosoite_pisteille(ST_MakePoint(:x1, :y1) :: GEOMETRY,
 INSERT INTO liite (lahde, tyyppi, koko, liite_oid, pikkukuva, luoja, luotu)
 VALUES (:lahde :: lahde, :tyyppi, :koko, :oid, :pikkukuva, :luoja, now());
 
--- name: hae-reitin-merkinnat-raw
+-- name: hae-reitin-merkinnat-tieosoitteilla-raw
 SELECT
   x.id,
   x.sijainti,
@@ -70,7 +72,12 @@ SELECT
   (x.trosoite).tie,
   (x.trosoite).aosa,
   (x.trosoite).aet,
-  x.laadunalitus
+  x.laadunalitus,
+  x."kayttaja-syottama-tie",
+  x."kayttaja-syottama-aosa",
+  x."kayttaja-syottama-aet",
+  x."kayttaja-syottama-losa",
+  x."kayttaja-syottama-let"
 FROM (SELECT
         t.id,
         t.sijainti,
@@ -87,6 +94,11 @@ FROM (SELECT
         t.polyavyys,
         t.sivukaltevuus,
         t.kiinteys,
+        t.tr_numero as "kayttaja-syottama-tie",
+        t.tr_alkuosa as "kayttaja-syottama-aosa",
+        t.tr_alkuetaisyys as "kayttaja-syottama-aet",
+        t.tr_loppuosa as "kayttaja-syottama-losa",
+        t.tr_loppuetaisyys as "kayttaja-syottama-let",
         CAST(yrita_tierekisteriosoite_pisteelle2(t.sijainti, CAST(:treshold AS INTEGER)) AS tr_osoite) AS trosoite,
         t.laadunalitus
       FROM tarkastusreitti t

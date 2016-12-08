@@ -39,7 +39,12 @@
                                   :havainnot (mapv vakiohavainto-idt (:havainnot merkinta))
                                   :kuvaus (get-in merkinta [:kuvaus])
                                   :laadunalitus (true? (get-in merkinta [:laadunalitus]))
-                                  :kuva (get-in merkinta [:kuva])}))
+                                  :kuva (get-in merkinta [:kuva])
+                                  :tr_numero (get-in merkinta [:tr-osoite :tie])
+                                  :tr_alkuosa (get-in merkinta [:tr-osoite :aosa])
+                                  :tr_alkuetaisyys (get-in merkinta [:tr-osoite :aet])
+                                  :tr_loppuosa (get-in merkinta [:tr-osoite :losa])
+                                  :tr_loppuetaisyys (get-in merkinta [:tr-osoite :let])}))
 
 (defn- tallenna-multipart-kuva! [db {:keys [tempfile content-type size]} kayttaja-id]
   (let [oid (tietokanta/tallenna-lob db (io/input-stream tempfile))]
@@ -57,10 +62,35 @@
       (doseq [merkinta (:kirjaukset kirjaukset)]
         (tallenna-merkinta! tx vakiohavainto-idt merkinta)))))
 
-(defn merkitse-ajo-paattyneeksi! [tx tarkastusajo-id kayttaja]
+(defn- merkitse-ajo-paattyneeksi! [tx tarkastusajo-id kayttaja]
   (log/debug "Merkitään ajo päättyneeksi")
   (q/paata-tarkastusajo! tx {:id tarkastusajo-id
                              :kayttaja (:id kayttaja)}))
+
+
+(defn- lisaa-reittimerkinnalle-lopullinen-tieosoite
+  "Lisää reittimerkintään ns. 'lopullisen tieosoitteen'.
+   Jos käyttäjä on itse syöttänyt merkintään tieosoitteen, katsotaan sen olevan oikea osoite.
+   Muussa tapauksessa käytetään sijainnin perusteella tieverkolle projisoitua osoitetta."
+  [reittimerkinta]
+  (if (:tie reittimerkinta)
+    (-> reittimerkinta
+        (assoc :tr-osoite (if (:kayttaja-syottama-tie reittimerkinta)
+                            (select-keys reittimerkinta [:kayttajan-syottama-tie
+                                                         :kayttajan-syottama-aosa
+                                                         :kayttajan-syottama-aet
+                                                         :kayttajan-syottama-losa
+                                                         :kayttajan-syottama-let])
+                            (select-keys reittimerkinta [:tie :aosa :aet])))
+        (dissoc :tie :aosa :aet))
+    reittimerkinta))
+
+(defn lisaa-reittimerkinnoille-lopullinen-tieosoite [reittimerkinnat]
+  (mapv lisaa-reittimerkinnalle-lopullinen-tieosoite reittimerkinnat))
+
+(defn lisaa-tarkastuksille-urakka-id [{:keys [reitilliset-tarkastukset pistemaiset-tarkastukset]} urakka-id]
+  {:reitilliset-tarkastukset (mapv #(assoc % :urakka urakka-id) reitilliset-tarkastukset)
+   :pistemaiset-tarkastukset (mapv #(assoc % :urakka urakka-id) pistemaiset-tarkastukset)})
 
 (defn- muunna-tarkastusajon-reittipisteet-tarkastuksiksi [tx tarkastusajo kayttaja]
   (log/debug "Muutetaan reittipisteet tarkastuksiksi")
@@ -68,11 +98,12 @@
         urakka-id (or
                     (:urakka tarkastusajo)
                     (:id (first (q/paattele-urakka tx {:tarkastusajo tarkastusajo-id}))))
-        merkinnat (q/hae-reitin-merkinnat tx {:tarkastusajo tarkastusajo-id
-                                              :treshold 100})
-        merkinnat-tr-osoitteilla (tarkastukset/lisaa-reittimerkinnoille-tieosoite merkinnat)
+        merkinnat-tieosoitteilla (q/hae-reitin-merkinnat-tieosoitteilla
+                                   tx {:tarkastusajo tarkastusajo-id
+                                       :treshold 100})
+        merkinnat-tr-osoitteilla (lisaa-reittimerkinnoille-lopullinen-tieosoite merkinnat-tieosoitteilla)
         tarkastukset (-> (tarkastukset/reittimerkinnat-tarkastuksiksi merkinnat-tr-osoitteilla)
-                         (tarkastukset/lisaa-tarkastuksille-urakka-id urakka-id))]
+                         (lisaa-tarkastuksille-urakka-id urakka-id))]
     (log/debug "Reittipisteet muunnettu tarkastuksiksi. Tallennetaan tarkastukset urakkaan " urakka-id)
     (tarkastukset/tallenna-tarkastukset! tx tarkastukset kayttaja)
     (log/debug "Reittimerkitöjen muunto tarkastuksiksi suoritettu!")))

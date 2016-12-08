@@ -171,7 +171,7 @@
                               :kuvaus (:kuvaus @lomakedata)
                               :laadunalitus (:laadunalitus? @lomakedata)
                               :kuva (:kuva @lomakedata)
-                              :tr-osoite (:tr-osoite @lomakedata)})
+                              :kayttajan-syottama-tr-osoite (:tr-osoite @lomakedata)})
         true)
     (when epaonnistui-fn
       (epaonnistui-fn {:viesti (str "Epätarkka sijainti ("

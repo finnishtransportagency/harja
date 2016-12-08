@@ -248,20 +248,6 @@
   (let [pistemaiset-reittimerkinnat (filter pistemainen-havainto? reittimerkinnat)]
     (mapv reittimerkinta-tarkastukseksi pistemaiset-reittimerkinnat)))
 
-(defn lisaa-reittimerkinnalle-tieosoite [reittimerkinta]
-  (if (:tie reittimerkinta)
-    (-> reittimerkinta
-        (assoc :tr-osoite (select-keys reittimerkinta [:tie :aosa :aet]))
-        (dissoc :tie :aosa :aet))
-    reittimerkinta))
-
-(defn lisaa-tarkastuksille-urakka-id [{:keys [reitilliset-tarkastukset pistemaiset-tarkastukset]} urakka-id]
-  {:reitilliset-tarkastukset (mapv #(assoc % :urakka urakka-id) reitilliset-tarkastukset)
-   :pistemaiset-tarkastukset (mapv #(assoc % :urakka urakka-id) pistemaiset-tarkastukset)})
-
-(defn lisaa-reittimerkinnoille-tieosoite [reittimerkinnat]
-  (mapv lisaa-reittimerkinnalle-tieosoite reittimerkinnat))
-
 (defn reittimerkinnat-tarkastuksiksi
   "Käy reittimerkinnät läpi ja palauttaa mapin, jossa reittimerkinnät muutettu
    reitillisiksi ja pistemäisiksi tarkastuksiksi"
@@ -279,7 +265,6 @@
                                      :losa (:aosa paatepiste)
                                      :let (:aet paatepiste)}]
     (assoc tarkastus
-      ;:sijainti (:geometria koko-tarkastuksen-tr-osoite)
       :tarkastaja (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
       :tr_numero (:tie koko-tarkastuksen-tr-osoite)
       :tr_alkuosa (:aosa koko-tarkastuksen-tr-osoite)

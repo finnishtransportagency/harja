@@ -6,6 +6,13 @@ ALTER TABLE tarkastusreitti ADD COLUMN soratie_tasaisuus INTEGER;
 ALTER TABLE tarkastusreitti ADD COLUMN sijainti_tarkkuus INTEGER;
 ALTER TABLE tarkastusreitti RENAME COLUMN tasaisuus TO talvihoito_tasaisuus;
 
+-- Reittimerkinnän lomakkeesta kirjattu TR-osoite
+ALTER TABLE tarkastusreitti ADD COLUMN tr_numero INTEGER;
+ALTER TABLE tarkastusreitti ADD COLUMN tr_alkuosa INTEGER;
+ALTER TABLE tarkastusreitti ADD COLUMN tr_alkuetaisyys INTEGER;
+ALTER TABLE tarkastusreitti ADD COLUMN tr_loppuosa INTEGER;
+ALTER TABLE tarkastusreitti ADD COLUMN tr_loppuetaisyys INTEGER;
+
 -- Lisää puuttuvat vakiohavainnot
 INSERT INTO vakiohavainto (nimi, jatkuva, avain)
 VALUES ('Liikennemerkki likainen', false, 'liikennemerkki-likainen'),
