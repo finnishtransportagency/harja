@@ -73,19 +73,22 @@
    Jos käyttäjä on itse syöttänyt merkintään tieosoitteen, katsotaan sen olevan oikea osoite.
    Muussa tapauksessa käytetään sijainnin perusteella tieverkolle projisoitua osoitetta."
   [reittimerkinta]
-  (if (:tie reittimerkinta)
-    (-> reittimerkinta
-        (assoc :tr-osoite (if (and (:kayttajan-syottama-tie reittimerkinta)
-                                   (:kayttajan-syottama-aosa reittimerkinta)
-                                   (:kayttajan-syottama-aet reittimerkinta))
-                            (select-keys reittimerkinta [:kayttajan-syottama-tie
-                                                         :kayttajan-syottama-aosa
-                                                         :kayttajan-syottama-aet
-                                                         :kayttajan-syottama-losa
-                                                         :kayttajan-syottama-let])
-                            (select-keys reittimerkinta [:tie :aosa :aet])))
-        (dissoc :tie :aosa :aet))
-    reittimerkinta))
+  (let [tieverkolta-projisoitu-tieosoite? (boolean (:tie reittimerkinta))
+        kayttajan-syottama-tieosoite? (boolean (and (:kayttajan-syottama-tie reittimerkinta)
+                                                    (:kayttajan-syottama-aosa reittimerkinta)
+                                                    (:kayttajan-syottama-aet reittimerkinta)))]
+    (if (or tieverkolta-projisoitu-tieosoite?
+            kayttajan-syottama-tieosoite?)
+      (-> reittimerkinta
+          (assoc :tr-osoite (if kayttajan-syottama-tieosoite?
+                              (select-keys reittimerkinta [:kayttajan-syottama-tie
+                                                           :kayttajan-syottama-aosa
+                                                           :kayttajan-syottama-aet
+                                                           :kayttajan-syottama-losa
+                                                           :kayttajan-syottama-let])
+                              (select-keys reittimerkinta [:tie :aosa :aet])))
+          (dissoc :tie :aosa :aet))
+      reittimerkinta)))
 
 (defn lisaa-reittimerkinnoille-lopullinen-tieosoite [reittimerkinnat]
   (mapv lisaa-reittimerkinnalle-lopullinen-tieosoite reittimerkinnat))
