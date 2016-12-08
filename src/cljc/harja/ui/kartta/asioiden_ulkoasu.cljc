@@ -10,7 +10,7 @@
 (def +valitun-leveys+ 8)
 (def +normaali-vari+ "black")
 (def +valitun-vari+ "blue")
-(def +tyokoneviivan-dash+ [4 15])
+(def +tyokoneviivan-dash+ [5 10])
 
 
 (defn monivarinen-viiva-leveyksilla-ja-asetuksilla
