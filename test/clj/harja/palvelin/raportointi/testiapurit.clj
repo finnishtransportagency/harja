@@ -11,6 +11,11 @@
 
     solu))
 
+(defn tyhja-raporttisolu? [solu]
+  (and (raporttisolu? solu)
+       (empty? (raporttisolun-arvo solu))
+       (string? (raporttisolun-arvo solu))))
+
 (defn tarkista-raportti [vastaus nimi]
   (match vastaus
          ([:raportti {:nimi nimi}
