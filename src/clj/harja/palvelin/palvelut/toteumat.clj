@@ -619,7 +619,8 @@
                                                   :tr_ajorata ajorata
                                                   :sijainti sijainti}]
                               (:id (toteumat-q/luo-varustetoteuma<! db varustetoteuma))))]
-    (tierekisteri/laheta-varusteoteuma tierekisteri varustetoteuma-id))
+    ;; todo: send async
+    (async/thread (tierekisteri/laheta-varusteoteuma tierekisteri varustetoteuma-id)))
   (hae-urakan-varustetoteumat tierekisteri db user hakuehdot))
 
 (defn hae-kokonaishintaisen-toteuman-tiedot [db user urakka-id pvm toimenpidekoodi]
@@ -679,7 +680,6 @@
            karttakuvat :karttakuvat
            tierekisteri :tierekisteri
            :as this}]
-
     (when karttakuvat
       (karttakuvat/rekisteroi-karttakuvan-lahde!
         karttakuvat :kokonaishintainen-toteuma

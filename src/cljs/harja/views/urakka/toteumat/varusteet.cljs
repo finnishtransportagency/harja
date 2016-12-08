@@ -116,7 +116,8 @@
             #(e! (v/->ValitseVarusteToteumanTyyppi %)))]])
 
 (defn varustetoteumalomake [e! nykyiset-valinnat varustetoteuma]
-  (let [muokattava? (:muokattava? varustetoteuma)]
+  (let [muokattava? (:muokattava? varustetoteuma)
+        ominaisuudet (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))]
     [:span.varustetoteumalomake
      [napit/takaisin "Takaisin varusteluetteloon"
       #(e! (v/->TyhjennaValittuToteuma))]
@@ -199,8 +200,7 @@
           :muokattava? (constantly muokattava?)})
 
        ;; Muodostetaan varusteen tiedoille kentät tietolajin skeeman perusteella
-       (let [ominaisuudet (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))
-             ominaisuudet (if muokattava?
+       (let [ominaisuudet (if muokattava?
                             (filter #(not (= "tunniste" (get-in % [:ominaisuus :kenttatunniste]))) ominaisuudet)
                             ominaisuudet)]
          (apply lomake/ryhma "Varusteen ominaisuudet" (map #(varusteominaisuus->skeema % muokattava?) ominaisuudet)))]

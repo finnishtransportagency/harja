@@ -23,7 +23,7 @@
   [arvo tietolaji kenttatunniste tietotyyppi koodisto pakollinen]
   (case tietotyyppi
     :merkkijono nil ;; Kaikki kentät ovat pohjimmiltaan merkkijonoja
-    :numeerinen (when-not (merkkijono/kokonaisluku? arvo)
+    :numeerinen (when (and arvo (not (merkkijono/kokonaisluku? arvo)))
                   (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole kokonaisluku.")))
     :paivamaara (when (or pakollinen arvo)
                   (try
@@ -150,35 +150,37 @@
 (defn validoi-ja-muunna-arvot-merkkijonoksi
   "Hakee tietolajin kuvauksen, validoi arvot sen pohjalta ja muuntaa arvot merkkijonoksi"
   [tierekisteri arvot tietolaji]
-  (let [vastaus (tierekisteri/hae-tietolajit
-                  tierekisteri
-                  tietolaji
-                  nil)
-        tietolajin-kuvaus (:tietolaji vastaus)]
-    (try
-      (validoi-tietolajin-arvot
-        tietolaji
-        (clojure.walk/stringify-keys arvot)
-        tietolajin-kuvaus)
-      (catch Exception e
-        (throw+ {:type virheet/+viallinen-kutsu+
-                 :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti (.getMessage e)}]})))
-    (muunna-tietolajin-arvot-stringiksi
-      tietolajin-kuvaus
-      arvot)))
+  (when tierekisteri
+    (let [vastaus (tierekisteri/hae-tietolajit
+                   tierekisteri
+                   tietolaji
+                   nil)
+         tietolajin-kuvaus (:tietolaji vastaus)]
+     (try
+       (validoi-tietolajin-arvot
+         tietolaji
+         (clojure.walk/stringify-keys arvot)
+         tietolajin-kuvaus)
+       (catch Exception e
+         (throw+ {:type virheet/+viallinen-kutsu+
+                  :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti (.getMessage e)}]})))
+     (muunna-tietolajin-arvot-stringiksi
+       tietolajin-kuvaus
+       arvot))))
 
 (defn valido-ja-muunna-merkkijono-arvoiksi
   "Hakee tietolajin kuvauksen, muuntaa merkkijonon arvoiksi ja validoi ne"
   [tierekisteri merkkijono tietolaji]
-  (let [vastaus (tierekisteri/hae-tietolajit tierekisteri tietolaji nil)
-        tietolajin-kuvaus (:tietolaji vastaus)
-        arvot (walk/keywordize-keys (tietolajin-arvot-merkkijono->map merkkijono tietolajin-kuvaus))]
-    (try
-      (validoi-tietolajin-arvot
-        tietolaji
-        (clojure.walk/stringify-keys arvot)
-        tietolajin-kuvaus)
-      (catch Exception e
-        (throw+ {:type virheet/+viallinen-kutsu+
-                 :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti (.getMessage e)}]})))
-    arvot))
+  (when tierekisteri
+    (let [vastaus (tierekisteri/hae-tietolajit tierekisteri tietolaji nil)
+         tietolajin-kuvaus (:tietolaji vastaus)
+         arvot (walk/keywordize-keys (tietolajin-arvot-merkkijono->map merkkijono tietolajin-kuvaus))]
+     (try
+       (validoi-tietolajin-arvot
+         tietolaji
+         (clojure.walk/stringify-keys arvot)
+         tietolajin-kuvaus)
+       (catch Exception e
+         (throw+ {:type virheet/+viallinen-kutsu+
+                  :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti (.getMessage e)}]})))
+     arvot)))
