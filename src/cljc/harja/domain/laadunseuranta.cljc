@@ -103,3 +103,13 @@
   (let [virheet (validoi-laatupoikkeama data)]
     #?(:cljs (log "laatupoikkeama virheet: " (pr-str virheet)))
     (nil? virheet)))
+
+(def talvihoitomittauksen-lomakekentat
+  [[:lumimaara] [:tasaisuus] [:kitka] [:lampotila :tie] [:lampotila :ilma]])
+
+(def talvihoitomittauksen-kentat
+  [[:tarkastus] [:lumimaara] [:hoitoluokka] [:tasaisuus] [:kitka] [:ajosuunta]
+   [:lampotila :tie] [:lampotila :ilma]])
+
+(def soratiemittauksen-kentat
+  [[:tarkastus] [:tasaisuus] [:polyavyys] [:kiinteys] [:sivukaltevuus] [:hoitoluokka]])

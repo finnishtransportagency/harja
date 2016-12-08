@@ -51,7 +51,9 @@
     :turvallisuuspoikkeamat (oikeudet/urakat-turvallisuus id)
     :laskutus (and (oikeudet/urakat-laskutus id)
                    (not= tyyppi :paallystys)
-                   (not= tyyppi :tiemerkinta))))
+                   (not= tyyppi :tiemerkinta))
+
+    false))
 
 (defn urakka
   "Urakkanäkymä"

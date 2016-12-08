@@ -11,52 +11,52 @@
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
-    "suljettu-tieosuus": {
-      "id": "urn:harja/suljettu-tieosuus",
+    "tietyomaa": {
+      "id": "urn:harja/tietyomaa",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "id": {
-          "id": "urn:harja/suljettu-tieosuus/id",
+          "id": "urn:harja/tietyomaa/id",
           "type": "integer",
           "required": true
         },
         "alkuaidan-sijainti": {
-          "id": "urn:harja/suljettu-tieosuus/alkuaidan-sijainti",
+          "id": "urn:harja/tietyomaa/alkuaidan-sijainti",
           "type": "object",
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
           "required": true
         },
         "loppuaidan-sijainti": {
-          "id": "urn:harja/suljettu-tieosuus/loppuaidan-sijainti",
+          "id": "urn:harja/tietyomaa/loppuaidan-sijainti",
           "type": "object",
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
           "required": true
         },
         "aika": {
-          "id": "urn:harja/suljettu-tieosuus/aika",
+          "id": "urn:harja/tietyomaa/aika",
           "type": "string",
           "format": "date-time",
           "required": true
         },
         "ajoradat": {
-          "id": "urn:harja/suljettu-tieosuus/ajoradat",
+          "id": "urn:harja/tietyomaa/ajoradat",
           "type": "array",
           "maxItems": 10,
           "items": {
-            "id": "urn:harja/suljettu-tieosuus/ajoradat/0",
+            "id": "urn:harja/tietyomaa/ajoradat/0",
             "type": "integer",
             "minimum": 0
           }
         },
         "kaistat": {
-          "id": "urn:harja/suljettu-tieosuus/kaistat",
+          "id": "urn:harja/tietyomaa/kaistat",
           "type": "array",
           "maxItems": 10,
           "items": {
-            "id": "urn:harja/suljettu-tieosuus/kaistat/0",
+            "id": "urn:harja/tietyomaa/kaistat/0",
             "enum": [
               1,
               11,
