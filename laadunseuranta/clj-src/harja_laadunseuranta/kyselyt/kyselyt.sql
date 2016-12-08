@@ -73,11 +73,11 @@ SELECT
   (x.trosoite).aosa,
   (x.trosoite).aet,
   x.laadunalitus,
-  x."kayttaja-syottama-tie",
-  x."kayttaja-syottama-aosa",
-  x."kayttaja-syottama-aet",
-  x."kayttaja-syottama-losa",
-  x."kayttaja-syottama-let"
+  x."kayttajan-syottama-tie",
+  x."kayttajan-syottama-aosa",
+  x."kayttajan-syottama-aet",
+  x."kayttajan-syottama-losa",
+  x."kayttajan-syottama-let"
 FROM (SELECT
         t.id,
         t.sijainti,
@@ -94,11 +94,11 @@ FROM (SELECT
         t.polyavyys,
         t.sivukaltevuus,
         t.kiinteys,
-        t.tr_numero as "kayttaja-syottama-tie",
-        t.tr_alkuosa as "kayttaja-syottama-aosa",
-        t.tr_alkuetaisyys as "kayttaja-syottama-aet",
-        t.tr_loppuosa as "kayttaja-syottama-losa",
-        t.tr_loppuetaisyys as "kayttaja-syottama-let",
+        t.tr_numero as "kayttajan-syottama-tie",
+        t.tr_alkuosa as "kayttajan-syottama-aosa",
+        t.tr_alkuetaisyys as "kayttajan-syottama-aet",
+        t.tr_loppuosa as "kayttajan-syottama-losa",
+        t.tr_loppuetaisyys as "kayttajan-syottama-let",
         CAST(yrita_tierekisteriosoite_pisteelle2(t.sijainti, CAST(:treshold AS INTEGER)) AS tr_osoite) AS trosoite,
         t.laadunalitus
       FROM tarkastusreitti t
