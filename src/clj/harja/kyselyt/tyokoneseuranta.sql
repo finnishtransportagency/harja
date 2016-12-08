@@ -1,13 +1,13 @@
--- name: tallenna-tyokonehavainto
+-- name: tallenna-tyokonehavainto<!
 -- Luo tai päivittää työkonehavainnon tietokantaan
 INSERT INTO tyokonehavainto
        (jarjestelma, organisaatio, viestitunniste, lahetysaika,
         tyokoneid, tyokonetyyppi, sijainti, urakkaid, tehtavat, suunta)
 VALUES (:jarjestelma,
         (SELECT id FROM organisaatio WHERE nimi=:organisaationimi AND ytunnus=:ytunnus),
-        :viestitunniste, :lahetysaika, :tyokoneid, :tyokonetyyppi,
-	ST_MakePoint(:xkoordinaatti, :ykoordinaatti),
-	:urakkaid, :tehtavat::suoritettavatehtava[], suunta);
+        :viestitunniste, CAST(:lahetysaika AS TIMESTAMP), :tyokoneid, :tyokonetyyppi,
+	ST_MakePoint(:xkoordinaatti, :ykoordinaatti)::POINT,
+	:urakkaid, :tehtavat::suoritettavatehtava[], :suunta);
 
 
 -- name: tyokoneet-alueella
