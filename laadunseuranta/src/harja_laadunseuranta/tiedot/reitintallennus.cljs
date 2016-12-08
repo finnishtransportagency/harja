@@ -157,8 +157,11 @@
 (defn kirjaa-lomake! [{:keys [idxdb sijainti tarkastusajo-id
                               epaonnistui-fn jatkuvat-havainnot
                               lomakedata] :as tiedot}]
-  (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti)
-                                           +suurin-sallittu-tarkkuus+)
+  (if (or (and (get-in @lomakedata [:tr-osoite :tie])
+               (get-in @lomakedata [:tr-osoite :aosa])
+               (get-in @lomakedata [:tr-osoite :aet]))
+          (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti)
+                                               +suurin-sallittu-tarkkuus+))
     (do (kirjaa-kertakirjaus idxdb
                              {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
                               :aikaleima (tc/to-long (lt/local-now))
@@ -167,7 +170,8 @@
                               :mittaukset {}
                               :kuvaus (:kuvaus @lomakedata)
                               :laadunalitus (:laadunalitus? @lomakedata)
-                              :kuva (:kuva @lomakedata)})
+                              :kuva (:kuva @lomakedata)
+                              :tr-osoite (:tr-osoite @lomakedata)})
         true)
     (when epaonnistui-fn
       (epaonnistui-fn {:viesti (str "Epätarkka sijainti ("
