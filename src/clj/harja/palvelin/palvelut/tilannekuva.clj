@@ -448,8 +448,7 @@
                           (comp (geo/muunna-pg-tulokset :reitti)
                                 (map #(konv/array->set % :tehtavat))
                                 (map #(assoc %
-                                             :tyyppi-kartalla :tyokone))
-                                #_(map #(do (log/info "TYÖKONE: " (pr-str %)) %)))))
+                                             :tyyppi-kartalla :tyokone)))))
 
 (defrecord Tilannekuva []
   component/Lifecycle
