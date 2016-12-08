@@ -101,7 +101,7 @@
        {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
         :hae #(get-in % [:tierekisteriosoite :loppuetaisyys])}
        {:otsikko "Kuntoluokka" :nimi :kuntoluokka :tyyppi :positiivinen-numero :leveys 10}
-       {:otsikko "Lähetetty Tierekisteriin" :nimi :lahetetty :tyyppi :positiivinen-numero :leveys 10}
+       {:otsikko "Lähetetty Tierekisteriin" :nimi :lahetetty :tyyppi :aikaleima :leveys 10 :fmt pvm/pvm-aika }
        {:otsikko "Varustekortti" :nimi :varustekortti :tyyppi :komponentti
         :komponentti (fn [rivi] (varustekortti-linkki rivi)) :leveys 10}]
       (take nayta-max-toteumaa valitut-toteumat)]
