@@ -875,3 +875,8 @@ WHERE reitti IS NULL
 UPDATE varustetoteuma
 SET lahetetty = now(), tila = :tila :: lahetyksen_tila
 WHERE id = :id;
+
+-- name: hae-epaonnistuneet-varustetoteuman-lahetykset
+SELECT id
+FROM varustetoteuma
+WHERE tila = 'virhe';

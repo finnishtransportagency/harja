@@ -619,7 +619,7 @@
                                                   :tr_ajorata ajorata
                                                   :sijainti sijainti}]
                               (:id (toteumat-q/luo-varustetoteuma<! db varustetoteuma))))]
-    (async/thread (tierekisteri/laheta-varusteoteuma tierekisteri varustetoteuma-id)))
+    (async/thread (tierekisteri/laheta-varustetoteuma tierekisteri varustetoteuma-id)))
   (hae-urakan-varustetoteumat tierekisteri db user hakuehdot))
 
 (defn hae-kokonaishintaisen-toteuman-tiedot [db user urakka-id pvm toimenpidekoodi]
