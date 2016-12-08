@@ -33,13 +33,13 @@
         [:div.tr-osoite
          [:input {:type "number" :value tie :on-change #(on-change % :tie) :placeholder "Tie#"}]
          [:span.valiviiva " / "]
-         [:input {:type "text" :value aosa :on-change #(on-change % :aosa) :placeholder "aosa"}]
+         [:input {:type "number" :value aosa :on-change #(on-change % :aosa) :placeholder "aosa"}]
          [:span.valiviiva " / "]
-         [:input {:type "text" :value aet :on-change #(on-change % :aet) :placeholder "aet"}]
+         [:input {:type "number" :value aet :on-change #(on-change % :aet) :placeholder "aet"}]
          [:span.valiviiva " / "]
-         [:input {:type "text" :value losa :on-change #(on-change % :losa) :placeholder "losa"}]
+         [:input {:type "number" :value losa :on-change #(on-change % :losa) :placeholder "losa"}]
          [:span.valiviiva " / "]
-         [:input {:type "text" :value let :on-change #(on-change % :let) :placeholder "let"}]]))))
+         [:input {:type "number" :value let :on-change #(on-change % :let) :placeholder "let"}]]))))
 
 (defn pvm-aika [aika]
   [:div.pvm-aika
@@ -51,29 +51,6 @@
             :value (time-fmt/unparse fmt/klo-fmt @aika)
             :on-change #()
             :name "klo"}]])
-
-(defn input-kentta [nimi validointivirheita model {:keys [step min max]}]
-  (let [arvo (atom (str @model))
-        validi (atom true)]
-    (fn [_ _]
-      [:div
-       [:input {:type "number"
-                :step step
-                :min min
-                :max max
-                :style {:width "105px"
-                        :display "block"}
-                :value @arvo
-                :on-blur #(when @validi (reset! model (parse-and-check-value @arvo min max)))
-                :on-change #(let [v (-> % .-target .-value)]
-                              (reset! arvo v)
-                              (if-not (empty? v)
-                                (let [x (not (nil? (parse-and-check-value v min max)))]
-                                  (reset! validi x)
-                                  (swap! validointivirheita (if x disj conj) nimi))
-                                (do (reset! validi true)
-                                    (swap! validointivirheita disj nimi))))}]
-       (when-not @validi [:div.validointivirhe "Arvo ei validi"])])))
 
 (defn kentta [label komponentti]
   [:div.lomake-kentta
