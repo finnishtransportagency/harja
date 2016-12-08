@@ -6,6 +6,8 @@ DROP FUNCTION tallenna_tai_paivita_tyokonehavainto(
      character varying, character varying, character varying, integer, timestamp,
      integer, character varying, point, real, integer, suoritettavatehtava[]);
 
+-- Puretaan vanha primary key, koska havaintoja on nyt monta per työkone
+ALTER TABLE tyokonehavainto DROP CONSTRAINT tyokonehavainto_pkey;
 
 ALTER TABLE tyokonehavainto
  DROP COLUMN reitti,
