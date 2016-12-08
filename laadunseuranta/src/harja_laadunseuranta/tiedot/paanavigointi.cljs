@@ -10,7 +10,8 @@
 
 (def valilehti-talviset-pinnat
   [{:nimi "Liu\u00ADkas\u00ADta"
-    :ikoni "talvi_liukasta"
+    :ikoni "liukas-36"
+    :ikoni-lahde "livicons"
     :tyyppi :vali
     :avain :liukasta
     :mittaus {:nimi "Liukkaus"
@@ -18,7 +19,8 @@
               :yksikko nil}
     :vaatii-nappaimiston? true}
    {:nimi "Lu\u00ADmis\u00ADta"
-    :ikoni "talvi_lumista"
+    :ikoni "lumi-36"
+    :ikoni-lahde "livicons"
     :tyyppi :vali
     :avain :lumista
     :mittaus {:nimi "Lumisuus"
@@ -28,7 +30,8 @@
    {:nimi "Tasaus\u00ADpuute"
     :avain :tasauspuute
     :tyyppi :vali
-    :ikoni "talvi_tasauspuute"
+    :ikoni "epatasa-36"
+    :ikoni-lahde "livicons"
     :mittaus {:nimi "Tasauspuute"
               :tyyppi :talvihoito-tasaisuus
               :yksikko "cm"}
@@ -36,27 +39,32 @@
    {:nimi "P: epä\u00ADtasainen polanne"
     :tyyppi :piste
     :avain :pysakilla-epatasainen-polanne
-    :ikoni "pysakki_epatasainen_polanne"
+    :ikoni "polanne-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "P: auraa\u00ADmatta"
     :tyyppi :piste
     :avain :pysakki-auraamatta
-    :ikoni "pysakki_auraamatta"
+    :ikoni "pinta-lumi-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "P: hiekoit\u00ADtamatta"
     :tyyppi :piste
     :avain :pysakki-hiekoittamatta
-    :ikoni "pysakki_hiekoittamatta"
+    :ikoni "pinta-hiekka-kielto-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}])
 
 (def valilehti-liikennemerkit
   [{:nimi "Liikenne\u00ADmerkki likai\u00ADnen"
-    :ikoni "liikennemerkki_likainen"
+    :ikoni "liikennemerkki-lika-36"
+    :ikoni-lahde "livicons"
     :tyyppi :piste
     :avain :liikennemerkki-likainen
     :vaatii-nappaimiston? false}
    {:nimi "Liikenne\u00ADmerkki vino\u00ADssa"
-    :ikoni "liikennemerkki_vinossa"
+    :ikoni "liikennemerkki-vino-36"
+    :ikoni-lahde "livicons"
     :tyyppi :piste
     :avain :liikennemerkki-vinossa
     :vaatii-nappaimiston? false}
@@ -66,7 +74,8 @@
     :avain :liikennemerkki-vaurioitunut
     :vaatii-nappaimiston? false}
    {:nimi "Liikenne\u00ADmerkki lumi\u00ADnen"
-    :ikoni "liikennemerkki_luminen"
+    :ikoni "liikennemerkki-lumi-36"
+    :ikoni-lahde "livicons"
     :tyyppi :piste
     :avain :liikennemerkki-luminen
     :vaatii-nappaimiston? false}])
@@ -74,23 +83,27 @@
 (def valilehti-viherhoito
   [{:nimi "Vesakko raivaa\u00ADmatta"
     :tyyppi :vali
-    :ikoni "viheralue_raivaamatta"
+    :ikoni "vesakko-leikkaus-36"
+    :ikoni-lahde "livicons"
     :avain :vesakko-raivaamatta
     :vaatii-nappaimiston? false}
    {:nimi "Niit\u00ADtämättä"
     :tyyppi :vali
     :avain :niittamatta
-    :ikoni "viheralue_niittamatta"
+    :ikoni "heina-leikkaus-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "Näkemä\u00ADalue raivaa\u00ADmatta"
     :tyyppi :piste
     :avain :nakemaalue-raivaamatta
-    :ikoni "viheralue_nakemaalue_raivaamatta"
+    :ikoni "heina-silma-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "Liiken\u00ADnetila hoita\u00ADmatta"
     :tyyppi :piste
     :avain :liikennetila-hoitamatta
-    :ikoni "viheralue_liikennetila_hoitamatta"
+    :ikoni "kukka-kuihtunut-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "Istu\u00ADtukset hoita\u00ADmatta"
     :tyyppi :piste

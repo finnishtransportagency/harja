@@ -51,7 +51,8 @@
             (- jako 1)))))))
 
 (defn- toggle-painike [_]
-  (fn [{:keys [nimi ikoni avain tyyppi click-fn jatkuvat-havainnot disabloitu?] :as tiedot}]
+  (fn [{:keys [nimi ikoni avain tyyppi ikoni-lahde
+               click-fn jatkuvat-havainnot disabloitu?] :as tiedot}]
     [:div {:on-click #(when-not disabloitu?
                         (click-fn tiedot))
            :class (str "toggle-valintapainike "
@@ -66,7 +67,9 @@
         :piste [:img.toggle-piste {:src (kuvat/havainto-ikoni-uri "ikoni_pistemainen")}]
         :vali [:img.toggle-vali {:src (kuvat/havainto-ikoni-uri "ikoni_alue")}])
       (when ikoni
-        [:img.toggle-ikoni {:src (kuvat/havainto-ikoni-uri ikoni)}])]
+        (if (= ikoni-lahde "livicons")
+          [kuvat/svg-sprite ikoni "toggle-ikoni"]
+          [:img.toggle-ikoni {:src (kuvat/havainto-ikoni-uri ikoni)}]))]
      [:div.toggle-valintapainike-otsikko
       nimi]]))
 
