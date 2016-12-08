@@ -76,19 +76,25 @@
   (let [tieverkolta-projisoitu-tieosoite? (boolean (:tie reittimerkinta))
         kayttajan-syottama-tieosoite? (boolean (and (:kayttajan-syottama-tie reittimerkinta)
                                                     (:kayttajan-syottama-aosa reittimerkinta)
-                                                    (:kayttajan-syottama-aet reittimerkinta)))]
-    (if (or tieverkolta-projisoitu-tieosoite?
-            kayttajan-syottama-tieosoite?)
-      (-> reittimerkinta
-          (assoc :tr-osoite (if kayttajan-syottama-tieosoite?
-                              (select-keys reittimerkinta [:kayttajan-syottama-tie
-                                                           :kayttajan-syottama-aosa
-                                                           :kayttajan-syottama-aet
-                                                           :kayttajan-syottama-losa
-                                                           :kayttajan-syottama-let])
-                              (select-keys reittimerkinta [:tie :aosa :aet])))
-          (dissoc :tie :aosa :aet))
-      reittimerkinta)))
+                                                    (:kayttajan-syottama-aet reittimerkinta)))
+        reittimerkinta-lopullisella-osoitteella
+        (if (or tieverkolta-projisoitu-tieosoite?
+                kayttajan-syottama-tieosoite?)
+          (assoc reittimerkinta :tr-osoite (if kayttajan-syottama-tieosoite?
+                                             {:tie (:kayttajan-syottama-tie reittimerkinta)
+                                              :aosa (:kayttajan-syottama-aosa reittimerkinta)
+                                              :aet (:kayttajan-syottama-aet reittimerkinta)
+                                              :losa (:kayttajan-syottama-losa reittimerkinta)
+                                              :let (:kayttajan-syottama-let reittimerkinta)}
+                                             (select-keys reittimerkinta [:tie :aosa :aet])))
+          reittimerkinta)]
+    (dissoc reittimerkinta-lopullisella-osoitteella
+            :tie :aosa :aet
+            :kayttajan-syottama-tie
+            :kayttajan-syottama-aosa
+            :kayttajan-syottama-aet
+            :kayttajan-syottama-losa
+            :kayttajan-syottama-let)))
 
 (defn lisaa-reittimerkinnoille-lopullinen-tieosoite [reittimerkinnat]
   (mapv lisaa-reittimerkinnalle-lopullinen-tieosoite reittimerkinnat))
@@ -103,10 +109,11 @@
         urakka-id (or
                     (:urakka tarkastusajo)
                     (:id (first (q/paattele-urakka tx {:tarkastusajo tarkastusajo-id}))))
-        merkinnat-tieosoitteilla (q/hae-reitin-merkinnat-tieosoitteilla
+        merkinnat-tr-osoitteilla (q/hae-reitin-merkinnat-tieosoitteilla
                                    tx {:tarkastusajo tarkastusajo-id
                                        :treshold 100})
-        merkinnat-tr-osoitteilla (lisaa-reittimerkinnoille-lopullinen-tieosoite merkinnat-tieosoitteilla)
+        merkinnat-tr-osoitteilla (lisaa-reittimerkinnoille-lopullinen-tieosoite merkinnat-tr-osoitteilla)
+        _ (log/debug "Lopulliset merkinnät: " (pr-str merkinnat-tr-osoitteilla))
         tarkastukset (-> (tarkastukset/reittimerkinnat-tarkastuksiksi merkinnat-tr-osoitteilla)
                          (lisaa-tarkastuksille-urakka-id urakka-id))]
     (log/debug "Reittipisteet muunnettu tarkastuksiksi. Tallennetaan tarkastukset urakkaan " urakka-id)

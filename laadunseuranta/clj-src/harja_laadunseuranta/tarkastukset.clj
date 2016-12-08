@@ -262,8 +262,10 @@
         koko-tarkastuksen-tr-osoite {:tie (:tie lahtopiste)
                                      :aosa (:aosa lahtopiste)
                                      :aet (:aet lahtopiste)
-                                     :losa (:aosa paatepiste)
-                                     :let (:aet paatepiste)}]
+                                     ;; Loppuosa on pistemäisessä osoitteessa sama kuin alku,
+                                     ;; muuten normaali loppuosa
+                                     :losa (or (:losa paatepiste) (:aet paatepiste))
+                                     :let (or (:aosa paatepiste) (:let paatepiste))}]
     (assoc tarkastus
       :tarkastaja (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
       :tr_numero (:tie koko-tarkastuksen-tr-osoite)
