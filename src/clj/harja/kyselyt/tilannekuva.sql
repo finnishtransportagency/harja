@@ -148,9 +148,18 @@ SELECT
   t.urakkaid,
   t.lahetysaika,
   t.tehtavat,
-  t.vastaanotettu
-FROM tyokonehavainto t
+  t.vastaanotettu,
+  x.alkanut
+FROM
+  tyokonehavainto t,
+  (SELECT
+        tyokoneid,
+        min(lahetysaika) AS alkanut
+   FROM tyokonehavainto
+   WHERE lahetysaika >= 'today'
+   GROUP BY tyokoneid) x
 WHERE sijainti IS NOT NULL AND
+  t.tyokoneid = x.tyokoneid AND
   (t.lahetysaika BETWEEN :alku AND :loppu) AND
   ST_Distance(t.sijainti :: GEOMETRY, ST_MakePoint(:x, :y)::geometry) < :toleranssi;
 
