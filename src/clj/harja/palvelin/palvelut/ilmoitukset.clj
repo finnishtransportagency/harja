@@ -14,7 +14,8 @@
             [clj-time.coerce :as c]
             [harja.domain.oikeudet :as oikeudet]
             [clojure.java.jdbc :as jdbc]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot])
   (:import (java.util Date)))
 
 (def ilmoitus-xf
@@ -120,7 +121,7 @@
                          (konv/sql-timestamp (first aikavali)))
          aikavali-loppu (when (second aikavali)
                           (konv/sql-timestamp (second aikavali)))
-         urakat (urakat/kayttajan-urakka-idt-aikavalilta
+         urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
                   db user oikeudet/ilmoitukset-ilmoitukset
                   urakka urakoitsija urakkatyyppi hallintayksikko
                   (first aikavali) (second aikavali))
@@ -297,7 +298,7 @@
 (defn hae-ilmoituksia-idlla [db user {:keys [id]}]
   (log/debug "Haetaan päivitetyt tiedot ilmoituksille " (pr-str id))
   (let [id-vektori (if (vector? id) id [id])
-        kayttajan-urakat (urakat/kayttajan-urakka-idt-aikavalilta db user oikeudet/ilmoitukset-ilmoitukset)
+        kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta db user oikeudet/ilmoitukset-ilmoitukset)
         tiedot (q/hae-ilmoitukset-idlla db id-vektori)
         tulos (konv/sarakkeet-vektoriin
                 (into []

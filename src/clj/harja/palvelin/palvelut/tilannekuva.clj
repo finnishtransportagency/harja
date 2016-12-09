@@ -25,7 +25,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [clojure.core.async :as async]
             [clojure.java.jdbc :as jdbc]
-            [harja.domain.roolit :as roolit]))
+            [harja.domain.roolit :as roolit]
+            [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]))
 
 (defn tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
@@ -306,7 +307,7 @@
       nil)))
 
 (defn hae-urakat [db user tiedot]
-  (urakat/kayttajan-urakat-aikavalilta-alueineen
+  (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
    db user (if (:nykytilanne? tiedot)
              oikeudet/tilannekuva-nykytilanne
              oikeudet/tilannekuva-historia)
