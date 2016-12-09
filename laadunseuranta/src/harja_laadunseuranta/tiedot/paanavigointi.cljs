@@ -196,7 +196,7 @@
     :vaatii-nappaimiston? false}
    {:nimi "Puhdis\u00ADtet\u00ADtava"
     :tyyppi :piste
-    :ikoni "harja-18" ;; TODO Pitäisi olla harja-36, mutta puuttuu
+    :ikoni "harja-36"
     :ikoni-lahde "livicons"
     :avain :pl-alue-puhdistettava
     :vaatii-nappaimiston? false}
@@ -209,7 +209,7 @@
 
 (def valilehti-sillat
   [{:nimi "Puhdista\u00ADmatta"
-    :ikoni "harja-18" ;; TODO Pitäisi olla harja-36, mutta puuttuu
+    :ikoni "harja-36"
     :ikoni-lahde "livicons"
     :tyyppi :piste
     :avain :silta-puhdistamatta
