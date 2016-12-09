@@ -122,7 +122,10 @@
          aikavali-loppu (when (second aikavali)
                           (konv/sql-timestamp (second aikavali)))
          urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
-                  db user oikeudet/ilmoitukset-ilmoitukset
+                  db user (fn [urakka-id kayttaja]
+                            (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset
+                                                 urakka-id
+                                                 kayttaja))
                   urakka urakoitsija urakkatyyppi hallintayksikko
                   (first aikavali) (second aikavali))
          tyypit (mapv name tyypit)
@@ -298,7 +301,13 @@
 (defn hae-ilmoituksia-idlla [db user {:keys [id]}]
   (log/debug "Haetaan päivitetyt tiedot ilmoituksille " (pr-str id))
   (let [id-vektori (if (vector? id) id [id])
-        kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta db user oikeudet/ilmoitukset-ilmoitukset)
+        kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
+                           db
+                           user
+                           (fn [urakka-id kayttaja]
+                             (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset
+                                                  urakka-id
+                                                  kayttaja)))
         tiedot (q/hae-ilmoitukset-idlla db id-vektori)
         tulos (konv/sarakkeet-vektoriin
                 (into []

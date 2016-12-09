@@ -9,6 +9,7 @@
             [harja-laadunseuranta.tarkastukset :as tarkastukset]
             [harja-laadunseuranta.schemas :as schemas]
             [harja-laadunseuranta.utils :as utils]
+            [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
             [schema.core :as s]
             [clojure.core.match :refer [match]]
             [clojure.java.jdbc :as jdbc]
@@ -227,6 +228,13 @@
       (log/debug "Käyttäjän tietojen haku")
       {:kayttajanimi (:kayttajanimi kayttaja)
        :nimi (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
+       :urakat (kayttajatiedot/kayttajan-urakat-aikavalilta
+                 db
+                 kayttaja
+                 (fn [urakka-id kayttaja]
+                   (oikeudet/voi-kirjoittaa?
+                   oikeudet/urakat-laadunseuranta-tarkastukset
+                   urakka-id kayttaja)))
        :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset db)})))
 
 

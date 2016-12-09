@@ -309,8 +309,14 @@
 (defn hae-urakat [db user tiedot]
   (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
    db user (if (:nykytilanne? tiedot)
-             oikeudet/tilannekuva-nykytilanne
-             oikeudet/tilannekuva-historia)
+             (fn [urakka-id kayttaja]
+               (oikeudet/voi-lukea? oikeudet/tilannekuva-nykytilanne
+                                    urakka-id
+                                    kayttaja))
+             (fn [urakka-id kayttaja]
+               (oikeudet/voi-lukea? oikeudet/tilannekuva-historia
+                                    urakka-id
+                                    kayttaja)))
    nil (:urakoitsija tiedot) nil
    nil (:alku tiedot) (:loppu tiedot)))
 

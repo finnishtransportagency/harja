@@ -19,15 +19,16 @@
 (defn kayttajan-urakat-aikavalilta
   "Palauttaa vektorin mäppejä.
   Mäpit ovat muotoa {:tyyppi x :hallintayksikko {:id .. :nimi ..} :urakat [{:nimi .. :id ..}]}
-  Tarkastaa, että käyttäjä voi lukea urakkaa annetulla oikeudella."
-  ([db user oikeus]
-   (kayttajan-urakat-aikavalilta db user oikeus nil nil nil nil (pvm/nyt) (pvm/nyt)))
-  ([db user oikeus urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu]
+  Oikeustarkistus on 2-arity funktio (urakka-id ja käyttäjä),
+  joka tarkistaa, että käyttäjä voi lukea urakkaa annetulla oikeudella."
+  ([db user oikeustarkistus-fn]
+   (kayttajan-urakat-aikavalilta db user oikeustarkistus-fn nil nil nil nil (pvm/nyt) (pvm/nyt)))
+  ([db user oikeustarkistus-fn urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu]
    (konv/sarakkeet-vektoriin
      (into []
            (comp
              (filter (fn [{:keys [urakka_id]}]
-                       (oikeudet/voi-lukea? oikeus urakka_id user)))
+                       (oikeustarkistus-fn urakka_id user)))
              (map #(assoc % :tyyppi (keyword (:tyyppi %))))
              (map konv/alaviiva->rakenne))
 
@@ -50,24 +51,24 @@
      (juxt :tyyppi (comp :id :hallintayksikko)))))
 
 (defn kayttajan-urakka-idt-aikavalilta
-  ([db user oikeus]
-   (kayttajan-urakka-idt-aikavalilta db user oikeus nil nil nil nil (pvm/nyt) (pvm/nyt)))
-  ([db user oikeus urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu]
+  ([db user oikeustarkistus-fn]
+   (kayttajan-urakka-idt-aikavalilta db user oikeustarkistus-fn nil nil nil nil (pvm/nyt) (pvm/nyt)))
+  ([db user oikeustarkistus-fn urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu]
    (into #{}
          (comp (mapcat :urakat)
                (map :id))
-         (kayttajan-urakat-aikavalilta db user oikeus urakka-id urakoitsija urakkatyyppi
+         (kayttajan-urakat-aikavalilta db user oikeustarkistus-fn urakka-id urakoitsija urakkatyyppi
                                        hallintayksikot alku loppu))))
 
 (defn kayttajan-urakat-aikavalilta-alueineen
   "Tekee saman kuin kayttajan-urakat-aikavalilta, mutta liittää urakoihin mukaan niiden geometriat."
-  ([db user oikeus]
-   (kayttajan-urakat-aikavalilta-alueineen db user oikeus nil nil nil nil (pvm/nyt) (pvm/nyt)))
-  ([db user oikeus urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu]
-   (kayttajan-urakat-aikavalilta-alueineen db user oikeus urakka-id urakoitsija urakkatyyppi
+  ([db user oikeustarkistus-fn]
+   (kayttajan-urakat-aikavalilta-alueineen db user oikeustarkistus-fn nil nil nil nil (pvm/nyt) (pvm/nyt)))
+  ([db user oikeustarkistus-fn urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu]
+   (kayttajan-urakat-aikavalilta-alueineen db user oikeustarkistus-fn urakka-id urakoitsija urakkatyyppi
                                            hallintayksikot alku loppu urakat/oletus-toleranssi))
-  ([db user oikeus urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu toleranssi]
-   (let [aluekokonaisuudet (kayttajan-urakat-aikavalilta db user oikeus urakka-id
+  ([db user oikeustarkistus-fn urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu toleranssi]
+   (let [aluekokonaisuudet (kayttajan-urakat-aikavalilta db user oikeustarkistus-fn urakka-id
                                                          urakoitsija urakkatyyppi
                                                          hallintayksikot alku loppu)
          urakka-idt (mapcat
@@ -78,7 +79,12 @@
                                      (fn [ur]
                                        [(get-in ur [:urakka :id]) (or (get-in ur [:urakka :alue])
                                                                       (get-in ur [:alueurakka :alue]))])
-                                     (urakat/urakoiden-alueet db user oikeus urakka-idt toleranssi)))]
+                                     (urakat/urakoiden-alueet
+                                       db
+                                       user
+                                       oikeustarkistus-fn
+                                       urakka-idt
+                                       toleranssi)))]
      (mapv
        (fn [au]
          (assoc au :urakat (mapv
