@@ -64,12 +64,10 @@
                          "toggle-valintapainike-disabloitu "))}
      [:div.toggle-valintapainike-ikoni
       (case tyyppi
-        :piste [:img.toggle-piste {:src (kuvat/havainto-ikoni-uri "ikoni_pistemainen")}]
-        :vali [:img.toggle-vali {:src (kuvat/havainto-ikoni-uri "ikoni_alue")}])
+        :piste [:img.toggle-piste {:src kuvat/+havainto-piste+}]
+        :vali [:img.toggle-vali {:src kuvat/+havainto-vali+}])
       (when ikoni
-        (if (= ikoni-lahde "livicons")
-          [kuvat/svg-sprite ikoni "toggle-ikoni"]
-          [:img.toggle-ikoni {:src (kuvat/havainto-ikoni-uri ikoni)}]))]
+        [kuvat/svg-sprite ikoni "toggle-ikoni"])]
      [:div.toggle-valintapainike-otsikko
       nimi]]))
 
