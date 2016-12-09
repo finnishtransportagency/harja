@@ -6,7 +6,8 @@
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
             [harja-laadunseuranta.ui.kartta :as kartta]
             [cljs-time.local :as lt]
-            [cljs-time.coerce :as tc]))
+            [cljs-time.coerce :as tc]
+            [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset]))
 
 (defn sulje-lomake! []
   (reset! s/havaintolomake-auki false))
@@ -46,7 +47,7 @@
            :jatkuvat-havainnot s/jatkuvat-havainnot
            :lomakedata s/havaintolomakedata
            :epaonnistui-fn reitintallennus/merkinta-epaonnistui})
-    (.log js/console "Lomake tallennettu")
+    (ilmoitukset/ilmoita "Lomake tallennettu!" s/ilmoitus)
     (kartta/lisaa-kirjausikoni "!")
     (tyhjenna-lomake!)
     (sulje-lomake!)))
