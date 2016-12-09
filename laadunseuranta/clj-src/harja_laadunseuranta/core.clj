@@ -233,9 +233,9 @@
     :ls-hae-kayttajatiedot
     (fn [kayttaja]
       (log/debug "Käyttäjän tietojen haku")
-      {:ok {:kayttajanimi (:kayttajanimi kayttaja)
-            :nimi (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
-            :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset db)}})))
+      {:kayttajanimi (:kayttajanimi kayttaja)
+       :nimi (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
+       :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset db)})))
 
 
 (defn- tallenna-liite [db req]
