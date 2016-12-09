@@ -7,7 +7,7 @@ SELECT -- haetaan käytetyt määrät per materiaali ja kk
       JOIN toteuma_materiaali tm ON tm.toteuma=t.id
       JOIN urakka u ON t.urakka=u.id AND u.urakkanro IS NOT NULL
       JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
- WHERE (t.alkanut BETWEEN :alkupvm AND :loppupvm)
+ WHERE (t.alkanut :: DATE BETWEEN :alkupvm AND :loppupvm)
    AND t.poistettu IS NOT TRUE
    AND (:urakka::integer IS NULL OR u.id = :urakka)
    AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
@@ -23,7 +23,7 @@ SELECT -- Haetaan reittipisteiden toteumat hoitoluokittain
        JOIN reittipiste rp ON rm.reittipiste=rp.id
        JOIN toteuma t ON rp.toteuma=t.id
        JOIN urakka u ON t.urakka = u.id AND u.urakkanro IS NOT NULL
- WHERE (t.alkanut BETWEEN :alkupvm AND :loppupvm)
+ WHERE (t.alkanut :: DATE BETWEEN :alkupvm AND :loppupvm)
    AND t.poistettu IS NOT TRUE
    AND rp.talvihoitoluokka IS NOT NULL
    AND (:urakka::integer IS NULL OR t.urakka = :urakka)
