@@ -29,13 +29,14 @@ WHERE yt.urakka = :urakka
 
 -- name: luo-uusi-muu-tyo<!
 INSERT INTO yllapito_toteuma
-(urakka, selite, pvm, hinta, yllapitoluokka, laskentakohde, luotu, luoja)
-VALUES (:urakka, :selite, :pvm, :hinta, :yllapitoluokka, :laskentakohde, NOW(), :kayttaja);
+(urakka, sopimus, selite, pvm, hinta, yllapitoluokka, laskentakohde, luotu, luoja)
+VALUES (:urakka, :sopimus, :selite, :pvm, :hinta, :yllapitoluokka, :laskentakohde, NOW(), :kayttaja);
 
 -- name: paivita-muu-tyo<!
 UPDATE yllapito_toteuma
 SET
   selite = :selite,
+  sopimus = :sopimus,
   pvm = :pvm,
   hinta = :hinta,
   yllapitoluokka = :yllapitoluokka,

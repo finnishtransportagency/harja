@@ -46,7 +46,7 @@
   (jdbc/with-db-transaction [db db]
     (into [] (q/hae-urakan-laskentakohteet db {:urakka urakka}))))
 
-(defn tallenna-yllapito-toteuma [db user {:keys [id urakka selite pvm hinta yllapitoluokka
+(defn tallenna-yllapito-toteuma [db user {:keys [id urakka sopimus selite pvm hinta yllapitoluokka
                                                  laskentakohde alkupvm loppupvm uusi-laskentakohde] :as toteuma }]
   (log/debug "tallenna ylläpito toteuma:" toteuma)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-muutos-ja-lisatyot user urakka)
@@ -65,6 +65,7 @@
                                                               uusi-tallennettava-laskentakohde))))
                                   muu-tyo {:id             id
                                            :urakka         urakka
+                                           :sopimus        sopimus
                                            :selite         selite
                                            :pvm            pvm
                                            :hinta          hinta

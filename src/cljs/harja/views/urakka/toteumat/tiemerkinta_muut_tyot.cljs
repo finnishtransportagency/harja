@@ -37,7 +37,7 @@
      [napit/uusi "Lisää toteuma" #(e! (tiedot/->UusiToteuma))
       {:disabled (not muokkausoikeus?)}]]))
 
-(defn muu-tyo-lomake [e! tila {:keys [valittu-urakka] :as riippuvuudet}]
+(defn muu-tyo-lomake [e! tila {:keys [valittu-urakka valittu-sopimusnumero] :as riippuvuudet}]
   (let [vanha-toteuma? (get-in tila [:valittu-toteuma :id])
         valinnat (:valinnat tila)
         muokkausoikeus? true] ;; TODO OIKEISTARKISTUS
@@ -55,6 +55,7 @@
                              "Tallenna toteuma"
                              #(tiedot/tallenna-toteuma {:toteuma              (:valittu-toteuma tila)
                                                         :urakka               (:id valittu-urakka)
+                                                        :sopimus              (first valittu-sopimusnumero)
                                                         :alkupvm              (first (:sopimuskausi valinnat))
                                                         :loppupvm             (second (:sopimuskausi valinnat))
                                                         :uusi-laskentakohde   (:uusi-laskentakohde tila)}
@@ -71,7 +72,7 @@
         :huomauta [[:yllapitoluokka]]}
        {:otsikko               "Laskentakohde"
         :nimi                  :laskentakohde
-        :placeholder           "Hae ja valitse laskentakohde"
+        :placeholder           "Hae kohde tai luo uusi"
         :tyyppi                :haku
         :kun-muuttuu           #(e! (tiedot/->LaskentakohdeMuuttui %))
         :hae-kun-yli-n-merkkia 0
@@ -117,7 +118,8 @@
     (fn [e! {:keys [valittu-toteuma] :as tila}]
       [:span
        (if valittu-toteuma
-         [muu-tyo-lomake e! tila {:valittu-urakka @nav/valittu-urakka}]
+         [muu-tyo-lomake e! tila {:valittu-urakka @nav/valittu-urakka
+                                  :valittu-sopimusnumero @u/valittu-sopimusnumero}]
          [muut-tyot-lista e! tila
           {:valittu-urakka @nav/valittu-urakka
            :valittu-sopimusnumero u/valittu-sopimusnumero

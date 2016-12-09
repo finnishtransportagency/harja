@@ -64,13 +64,12 @@
           (when-not (k/virhe? tyo)
             (tulos! tyo))))))
 
-(defn tallenna-toteuma [{:keys [toteuma urakka alkupvm loppupvm
+(defn tallenna-toteuma [{:keys [toteuma urakka sopimus alkupvm loppupvm
                                 uusi-laskentakohde]} laskentakohteet]
-  (log "tallennta toteuma " (pr-str uusi-laskentakohde))
-
   (let [laskentakohde-luettelossa? (first (filter #(= (second %) uusi-laskentakohde) laskentakohteet))
         laskentakohde (or laskentakohde-luettelossa? (:laskentakohde toteuma))]
     (k/post! :tallenna-yllapito-toteuma (assoc toteuma :urakka urakka
+                                                       :sopimus sopimus
                                                        :alkupvm alkupvm
                                                        :loppupvm loppupvm
                                                        :laskentakohde laskentakohde
@@ -115,7 +114,7 @@
   UusiToteuma
   (process-event [_ tila]
     (assoc-in tila [:valittu-toteuma] {:paivamaara (pvm/nyt)
-                                       :laskentakohde [nil "Ei laskentakohdetta"]}))
+                                       :laskentakohde [nil ""]}))
 
   HaeToteuma
   (process-event [{:keys [hakuehdot] :as e} tila]
