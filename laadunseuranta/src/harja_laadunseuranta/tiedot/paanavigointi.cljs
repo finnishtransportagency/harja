@@ -69,7 +69,8 @@
     :avain :liikennemerkki-vinossa
     :vaatii-nappaimiston? false}
    {:nimi "Liikenne\u00ADmerkki vauri\u00ADoitunut"
-    :ikoni "liikennemerkki_vaurioitunut"
+    :ikoni "liikennemerkki-rikki-36"
+    :ikoni-lahde "livicons"
     :tyyppi :piste
     :avain :liikennemerkki-vaurioitunut
     :vaatii-nappaimiston? false}
@@ -102,123 +103,147 @@
    {:nimi "Liiken\u00ADnetila hoita\u00ADmatta"
     :tyyppi :piste
     :avain :liikennetila-hoitamatta
-    :ikoni "kukka-kuihtunut-36"
+    :ikoni "tie-rikki-36"
     :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "Istu\u00ADtukset hoita\u00ADmatta"
     :tyyppi :piste
     :avain :istutukset-hoitamatta
-    :ikoni "viheralue_istutukset_hoitamatta"
+    :ikoni "kukka-kuihtunut-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "P- tai L-alueet hoitamatta"
     :tyyppi :piste
     :avain :pl-alue-hoitamatta
-    :ikoni "p_tai_l_alue_hoitamatta"
+    :ikoni "pysakointi-rikki-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}])
 
 (def valilehti-reunat
   [{:nimi "Reuna\u00ADpaalu likai\u00ADnen"
     :tyyppi :piste
-    :ikoni "reunapaalu_likainen"
+    :ikoni "reunapaalu-lika-36"
+    :ikoni-lahde "livicons"
     :avain :reunapaalut-likaisia
     :vaatii-nappaimiston? false}
    {:nimi "Reuna\u00ADpaalu vino\u00ADssa"
     :tyyppi :piste
     :avain :reunapaalut-vinossa
-    :ikoni "reunapaalu_vinossa"
+    :ikoni "reunapaalu-vino-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "Reuna\u00ADpaalu vauri\u00ADoitunut"
     :tyyppi :piste
     :avain :reunapaalut-vaurioitunut
-    :ikoni "reunapaalu_vaurioitunut"
+    :ikoni "reunapaalu-rikki-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "Rumpu tukossa"
     :tyyppi :piste
     :avain :rumpu-tukossa
-    :ikoni "rumpu_tukossa"
+    :ikoni "rumpu-tukossa-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "Oja tukossa"
     :tyyppi :piste
     :avain :oja-tukossa
-    :ikoni "oja_tukossa"
+    :ikoni "oja-tukossa-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "Kaide\u00ADvaurio"
     :tyyppi :piste
     :avain :kaidevaurio
-    :ikoni "kaidevaurio"
+    :ikoni "kaidevaurio-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "Kiveys\u00ADvaurio"
     :tyyppi :piste
     :avain :kiveysvaurio
-    :ikoni "kiveysvaurio"
+    :ikoni "kiveysvaurio-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "Reuna\u00ADpalletta"
     :tyyppi :vali
     :avain :reunapalletta
-    :ikoni "soratie_reunapalletta"
+    :ikoni "reunapalle-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "Reuna\u00ADtäyttö puutteel\u00ADlinen"
     :tyyppi :vali
     :avain :reunataytto-puutteellinen
     :vaatii-nappaimiston? false
-    :ikoni "soratie_reunataytto_puutteellinen"}])
+    :ikoni "reunapuute-36"
+    :ikoni-lahde "livicons"}])
 
 (def valilehti-p-ja-l-alueet
   [{:nimi "Auraa\u00ADmatta"
     :tyyppi :piste
     :avain :pl-alue-auraamatta
-    :ikoni "p_alue_auraamatta"
+    :ikoni "pinta-lumi-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "Hiekoit\u00ADtamatta"
     :tyyppi :piste
     :avain :pl-alue-hiekoittamatta
-    :ikoni "p_alue_hiekoittamatta"
+    :ikoni "pinta-hiekka-kielto-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "Epä\u00ADtasainen polanne"
     :tyyppi :piste
     :avain :pl-epatasainen-polanne
-    :ikoni "p_alue_epatasainen_polanne"
+    :ikoni "polanne-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "Puhdis\u00ADtet\u00ADtava"
     :tyyppi :piste
-    :ikoni "p_alue_puhdistettava"
+    :ikoni "harja-18" ;; TODO Pitäisi olla harja-36, mutta puuttuu
+    :ikoni-lahde "livicons"
     :avain :pl-alue-puhdistettava
     :vaatii-nappaimiston? false}
    {:nimi "Korjat\u00ADtavaa"
     :tyyppi :piste
-    :ikoni "p_alue_korjattavaa"
+    :ikoni "jakoavain-36"
+    :ikoni-lahde "livicons"
     :avain :pl-alue-korjattavaa
     :vaatii-nappaimiston? false}])
 
 (def valilehti-sillat
   [{:nimi "Puhdista\u00ADmatta"
-    :ikoni "silta_puhdistamatta"
+    :ikoni "harja-18" ;; TODO Pitäisi olla harja-36, mutta puuttuu
+    :ikoni-lahde "livicons"
     :tyyppi :piste
     :avain :silta-puhdistamatta
     :vaatii-nappaimiston? false}
    {:nimi "Sau\u00ADmoissa puut\u00ADteita"
     :tyyppi :piste
     :avain :siltasaumoissa-puutteita
-    :ikoni "silta_saumoissa_puutteita"
+    :ikoni "saumavirhe-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "Pääl\u00ADlys\u00ADtees\u00ADsä vaurioita"
     :tyyppi :piste
     :avain :sillan-paallysteessa-vaurioita
-    :vaatii-nappaimiston? false}
+    :vaatii-nappaimiston? false
+    :ikoni "halkeama-36"
+    :ikoni-lahde "livicons"}
    {:nimi "Kaide\u00ADvauri\u00ADoita"
     :tyyppi :piste
     :avain :sillassa-kaidevaurioita
-    :ikoni "silta_vaurioita"
+    :ikoni "kaidevaurio-36"
+    :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
    {:nimi "Reuna\u00ADpalkki\u00ADvauri\u00ADoita"
     :tyyppi :piste
     :avain :sillassa-reunapalkkivaurioita
-    :vaatii-nappaimiston? false}])
+    :vaatii-nappaimiston? false
+    :ikoni "kaidevaurio-36"
+    :ikoni-lahde "livicons"}])
 
 (def valilehti-soratiet
   [{:nimi "Sora\u00ADtie\u00ADtarkas\u00ADtus"
     :tyyppi :vali
-    :ikoni "soratie_alkaa"
+    :ikoni "suurennuslasi-36"
+    :ikoni-lahde "livicons"
     :avain :soratie
     :mittaus {:nimi "Soratie"
               :tyyppi :soratie
@@ -226,69 +251,82 @@
     :vaatii-nappaimiston? true}
    {:nimi "Maa\u00ADkivi"
     :tyyppi :piste
-    :ikoni "maakivi"
+    :ikoni "maakivi-36"
+    :ikoni-lahde "livicons"
     :avain :maakivi
     :vaatii-nappaimiston? false}])
 
 (def valilehti-paallystys
   [{:nimi "Sauma\u00ADvirhe"
     :tyyppi :vali
-    :ikoni "paallystys_saumavirhe"
+    :ikoni "saumavirhe-36"
+    :ikoni-lahde "livicons"
     :avain :saumavirhe
     :vaatii-nappaimiston? false}
    {:nimi "Lajit\u00ADtuma"
     :tyyppi :vali
-    :ikoni "paallystys_lajittuma"
+    :ikoni "lajittuma-36"
+    :ikoni-lahde "livicons"
     :avain :lajittuma
     :vaatii-nappaimiston? false}
    {:nimi "Epä\u00ADtasai\u00ADsuus"
     :tyyppi :vali
-    :ikoni "paallystys_epatasaisuus"
+    :ikoni "epatasa-36"
+    :ikoni-lahde "livicons"
     :avain :epatasaisuus
     :vaatii-nappaimiston? false}
    {:nimi "Hal\u00ADkeamat"
     :tyyppi :vali
-    :ikoni "paallystys_halkeama"
+    :ikoni "halkeama-36"
+    :ikoni-lahde "livicons"
     :avain :halkeamat
     :vaatii-nappaimiston? false}
    {:nimi "Vesi\u00ADlammi\u00ADkot"
     :tyyppi :vali
-    :ikoni "paallystys_vesilammikko"
+    :ikoni "vesilammikko-36"
+    :ikoni-lahde "livicons"
     :avain :vesilammikot
     :vaatii-nappaimiston? false}
    {:nimi "Epä\u00ADtasai\u00ADset reunat"
     :tyyppi :vali
-    :ikoni "paallystys_epatasaiset_reunat"
+    :ikoni "epatasaiset-reunat-36"
+    :ikoni-lahde "livicons"
     :avain :epatasaisetreunat
     :vaatii-nappaimiston? false}
    {:nimi "Jyrän jälkiä"
     :tyyppi :vali
-    :ikoni "paallystys_jyran_jalki"
+    :ikoni "jyran-jalki-36"
+    :ikoni-lahde "livicons"
     :avain :jyranjalkia
     :vaatii-nappaimiston? false}
    {:nimi "Side\u00ADaine\u00ADläikkiä"
     :tyyppi :vali
-    :ikoni "paallystys_laikka"
+    :ikoni "laikka-36"
+    :ikoni-lahde "livicons"
     :avain :sideainelaikkia
     :vaatii-nappaimiston? false}
    {:nimi "Vää\u00ADrä korkeu\u00ADsasema"
     :tyyppi :vali
-    :ikoni "paallystys_vaara_korkeus"
+    :ikoni "vaara-korkeus-36"
+    :ikoni-lahde "livicons"
     :avain :vaarakorkeusasema
     :vaatii-nappaimiston? false}
    {:nimi "Pinta harva"
     :tyyppi :vali
-    :ikoni "paallystys_harva_pinta"
+    :ikoni "harva-pinta-36"
+    :ikoni-lahde "livicons"
     :avain :pintaharva
     :vaatii-nappaimiston? false}
    {:nimi "Pinta\u00ADkuivatus puut\u00ADteel\u00ADlinen"
     :tyyppi :vali
-    :ikoni "paallystys_pintakuivatus_puute"
+    :ikoni "pintakuivatus-puute-36"
+    :ikoni-lahde "livicons"
     :avain :pintakuivatuspuute
     :vaatii-nappaimiston? false}
    {:nimi "Kai\u00ADvojen korkeu\u00ADsasema"
     :tyyppi :vali
-    :ikoni "paallystys_kaivon_korkeus"
+    :ikoni "kaivon-korkeus-36"
+    :ikoni-lahde "livicons"
     :avain :kaivojenkorkeusasema
     :vaatii-nappaimiston? false}])
 

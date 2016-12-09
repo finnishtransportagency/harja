@@ -94,8 +94,6 @@
                 store reittimerkinnat
                 (is (= 6 (count reittimerkinnat)))
 
-                (.log js/console "No reittimerkinnät: " (pr-str reittimerkinnat))
-
                 (is (= 10000 (get-in reittimerkinnat [0 "tarkastusajo"])))
                 (is (get-in reittimerkinnat [0 "aikaleima"]))
                 (is (= {"lat" 1 "lon" 2} (get-in reittimerkinnat [0 "sijainti"])))
