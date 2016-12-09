@@ -397,14 +397,19 @@
              :loppu loppu))))
 
 (defn- suodattimet-parametreista [parametrit]
-  (some-> parametrit (get "tk") transit/lue-transit-string aikavalinta) )
+  {:pre [(map? parametrit)]}
+  (some-> parametrit
+          (get "tk")
+          java.net.URLDecoder/decode
+          transit/lue-transit-string
+          aikavalinta))
 
 (defn- karttakuvan-suodattimet
   "Tekee karttakuvan URL parametreistä suodattimet"
-  [{:keys [extent parametrit]}]
-  (let [[x1 y1 x2 y2] extent
-        hakuparametrit (suodattimet-parametreista parametrit)]
-    (as-> hakuparametrit p
+  [{:keys [extent parametrit] :as arg}]
+  (let [[x1 y1 x2 y2] extent]
+    (as-> parametrit p
+          (suodattimet-parametreista p)
           (merge p
                  {:alue {:xmin x1 :ymin y1
                          :xmax x2 :ymax y2}})
@@ -457,7 +462,7 @@
                                   (suodattimet-parametreista p)
                                   (assoc p :urakat (luettavat-urakat user p))
                                   (assoc p :toimenpidekoodit (toteumien-toimenpidekoodit db p))
-                                  (merge p (select-keys params [:x :y])))))
+                                  (merge p (select-keys parametrit [:x :y])))))
    {:tehtava :tehtavat}))
 
 (defn- hae-tarkastuksien-sijainnit-kartalle
@@ -496,13 +501,14 @@
 
 (defn- hae-tyokoneiden-tiedot-kartalle
   "Hakee työkoneiden tiedot pisteessä infopaneelia varten."
-  [db user {x :x y :y parametrit "tk"}]
+  [db user {x :x y :y :as parametrit}]
   (into []
         (comp (map #(assoc % :tyyppi-kartalla :tyokone))
+              (map #(konv/array->set % :tehtavat))
               (map #(konv/string->keyword % :tyyppi)))
         (q/hae-tyokoneiden-asiat db
                                  (-> parametrit
-                                   karttakuvan-suodattimet
+                                   suodattimet-parametreista
                                    (assoc :x x
                                           :y y
                                           :toleranssi 150)))))

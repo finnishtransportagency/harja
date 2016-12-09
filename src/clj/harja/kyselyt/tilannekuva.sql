@@ -147,7 +147,7 @@ SELECT
   t.suunta,
   t.urakkaid,
   t.lahetysaika,
-  array_to_string(t.tehtavat, ', ') as tehtavat,
+  t.tehtavat,
   t.vastaanotettu
 FROM tyokonehavainto t
 WHERE sijainti IS NOT NULL AND

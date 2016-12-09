@@ -20,7 +20,8 @@
             {:otsikko "Tyyppi" :tyyppi :string :nimi :tyokonetyyppi}
             {:otsikko "Organisaatio" :tyyppi :string :hae #(or (:organisaationimi %) "Ei organisaatiotietoja")}
             {:otsikko "Urakka" :tyyppi :string :hae #(or (:urakkanimi %) "Ei urakkatietoja")}
-            {:otsikko "Tehtävät" :tyyppi :string :nimi :tehtavat}]
+            {:otsikko "Tehtävät" :tyyppi :string
+             :hae #(string/join ", " (:tehtavat %))}]
    :data tyokone})
 
 (defmethod infopaneeli-skeema :ilmoitus [ilmoitus]
