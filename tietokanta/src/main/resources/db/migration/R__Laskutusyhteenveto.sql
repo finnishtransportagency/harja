@@ -251,13 +251,13 @@ BEGIN
                   JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                   JOIN yksikkohintainen_tyo yht
 		       ON (tt.toimenpidekoodi = yht.tehtava AND
-		           yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut AND
+		           yht.alkupvm <= tot.alkanut::DATE AND yht.loppupvm >= tot.alkanut::DATE AND
  			   yht.yksikkohinta IS NOT NULL AND
 			   tpk3.id = t.tpk3_id)
                  WHERE yht.urakka = ur AND
 		       tt.poistettu IS NOT TRUE AND
 		       tot.urakka = ur AND
-		       tot.alkanut >= hk_alkupvm AND tot.alkanut <= aikavali_loppupvm
+		       tot.alkanut::DATE >= hk_alkupvm AND tot.alkanut::DATE <= aikavali_loppupvm
     LOOP
       IF yhti.indeksi THEN
         -- Indeksi käytössä, lasketaan korotus
@@ -403,7 +403,7 @@ BEGIN
 			   mht.sopimus = tot.sopimus)
                  WHERE tot.urakka = ur AND
 		       tpk3.id = t.tpk3_id AND
-		       tot.alkanut >= hk_alkupvm AND tot.alkanut <= aikavali_loppupvm
+		       tot.alkanut::DATE >= hk_alkupvm AND tot.alkanut::DATE <= aikavali_loppupvm
     LOOP
       IF mhti.indeksi = TRUE THEN
         SELECT *
