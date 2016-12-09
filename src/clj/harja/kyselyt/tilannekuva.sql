@@ -140,6 +140,20 @@ WHERE sijainti IS NOT NULL AND
       t.tyyppi :: TEXT IN (:tyypit) AND
       (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
+-- name: hae-tyokoneiden-asiat
+SELECT
+  t.jarjestelma,
+  t.tyokonetyyppi,
+  t.suunta,
+  t.urakkaid,
+  t.lahetysaika,
+  array_to_string(t.tehtavat, ', ') as tehtavat,
+  t.vastaanotettu
+FROM tyokonehavainto t
+WHERE sijainti IS NOT NULL AND
+  (t.lahetysaika BETWEEN :alku AND :loppu) AND
+  ST_Distance(t.sijainti :: GEOMETRY, ST_MakePoint(:x, :y)::geometry) < :toleranssi;
+
 -- name: hae-turvallisuuspoikkeamat
 SELECT
   t.id,

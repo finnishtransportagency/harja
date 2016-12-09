@@ -489,13 +489,25 @@
                                            :x x :y y :toleranssi 150)))))
 
 
-(defn- hae-tyokoneet-kartalle [db user parametrit]
+(defn- hae-tyokoneiden-sijainnit-kartalle [db user parametrit]
   (hae-karttakuvan-tiedot db user parametrit hae-tyokoneiden-reitit
                           (comp (geo/muunna-pg-tulokset :reitti)
                                 (map #(konv/array->set % :tehtavat))
                                 (map #(assoc %
                                              :tyyppi-kartalla :tyokone)))))
 
+(defn- hae-tyokoneiden-tiedot-kartalle
+  "Hakee työkoneiden tiedot pisteessä infopaneelia varten."
+  [db user {x :x y :y parametrit "tk"}]
+  (into []
+        (comp (map #(assoc % :tyyppi-kartalla :tyokone))
+              (map #(konv/string->keyword % :tyyppi)))
+        (q/hae-tyokoneiden-asiat db
+                                 (-> parametrit
+                                   parsi-suodatinten-parametrit
+                                   (assoc :x x
+                                          :y y
+                                          :toleranssi 150)))))
 
 (defrecord Tilannekuva []
   component/Lifecycle
@@ -519,9 +531,8 @@
      (partial #'hae-tarkastuksien-tiedot-kartalle db))
     (karttakuvat/rekisteroi-karttakuvan-lahde!
      karttakuvat :tilannekuva-tyokoneet
-     (partial #'hae-tyokoneet-kartalle db)
-     #(do (log/info "FIXME: työkoneen karttaklikkaus")
-          []))
+     (partial #'hae-tyokoneiden-sijainnit-kartalle db)
+     (partial #'hae-tyokoneiden-tiedot-kartalle db))
     this)
 
   (stop [{karttakuvat :karttakuvat :as this}]
