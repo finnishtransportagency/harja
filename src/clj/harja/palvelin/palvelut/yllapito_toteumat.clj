@@ -17,14 +17,14 @@
                                   (get-in % [:laskentakohde-nimi])]))
     (map #(dissoc % :laskentakohde-id :laskentakohde-nimi))))
 
-(defn hae-yllapito-toteumat [db user {:keys [urakka alkupvm loppupvm] :as tiedot}]
+(defn hae-yllapito-toteumat [db user {:keys [urakka sopimus alkupvm loppupvm] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-muutos-ja-lisatyot user urakka)
-  ;; TODO HUOMIOI AIKA JA SOPPARI!
   (log/debug "Hae ylläpidon toteumat parametreilla: " (pr-str tiedot))
   (jdbc/with-db-transaction [db db]
     (into []
           muutyo-xf
           (q/hae-muut-tyot db {:urakka urakka
+                               :sopimus sopimus
                                :alkupvm alkupvm
                                :loppupvm loppupvm}))))
 
@@ -48,10 +48,8 @@
 
 (defn tallenna-yllapito-toteuma [db user {:keys [id urakka sopimus selite pvm hinta yllapitoluokka
                                                  laskentakohde alkupvm loppupvm uusi-laskentakohde] :as toteuma }]
-  (log/debug "tallenna ylläpito toteuma:" toteuma)
+  (log/debug "tallenna ylläpito_toteuma:" toteuma)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-muutos-ja-lisatyot user urakka)
-
-  ;; TODO VAADI TOTEUMA KUULUU URAKKAAN! Ja laskentakohde kuuluu urakkaan. Molemmille oma vaadi-funktio, muuten heitä.
   (jdbc/with-db-transaction [db db]
                             (let [uusi-tallennettava-laskentakohde {:nimi     uusi-laskentakohde
                                                                     :urakka   urakka
@@ -75,7 +73,7 @@
                               (if (:id toteuma)
                                 (q/paivita-muu-tyo<! db muu-tyo)
                                 (q/luo-uusi-muu-tyo<! db muu-tyo)))
-    (let [vastaus {:toteumat        (hae-yllapito-toteumat db user {:urakka  urakka
+    (let [vastaus {:toteumat        (hae-yllapito-toteumat db user {:urakka  urakka :sopimus sopimus
                                                                     :alkupvm alkupvm :loppupvm loppupvm})
                    :laskentakohteet (hae-laskentakohteet db user {:urakka urakka})}]
       vastaus)))

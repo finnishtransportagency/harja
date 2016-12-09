@@ -10,7 +10,8 @@ SELECT
   lk.nimi as "laskentakohde-nimi"
 FROM yllapito_toteuma yt
   LEFT JOIN urakka_laskentakohde lk ON lk.id = yt.laskentakohde
-WHERE yt.urakka = :urakka AND yt.pvm BETWEEN :alkupvm and :loppupvm;
+WHERE yt.urakka = :urakka AND yt.sopimus = :sopimus
+      AND yt.pvm::DATE BETWEEN :alkupvm and :loppupvm;
 
 -- name: hae-muu-tyo
 SELECT

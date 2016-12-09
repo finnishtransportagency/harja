@@ -48,9 +48,10 @@
             #(-> {(:id %) (:nimi %)})
             laskentakohteet)))
 
-(defn hae-toteumat [{:keys [urakka alkupvm loppupvm] :as hakuparametrit}]
+(defn hae-toteumat [{:keys [urakka sopimus alkupvm loppupvm] :as hakuparametrit}]
   (let [tulos! (t/send-async! ->ToteumatHaettu)]
     (go (let [tyot (<! (k/post! :hae-yllapito-toteumat {:urakka urakka
+                                                        :sopimus sopimus
                                                         :alkupvm alkupvm
                                                         :loppupvm loppupvm}))]
           (when-not (k/virhe? tyot)
@@ -100,6 +101,7 @@
   YhdistaValinnat
   (process-event [{:keys [valinnat] :as e} tila]
     (hae-toteumat {:urakka (:urakka valinnat)
+                   :sopimus (:sopimus valinnat)
                    :alkupvm (first (:sopimuskausi valinnat))
                    :loppupvm (second (:sopimuskausi valinnat))})
     (hae-laskentakohteet {:urakka (:urakka valinnat)})
