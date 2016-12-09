@@ -13,7 +13,6 @@
                    [reagent.ratom :refer [reaction]]))
 
 ;; Tila
-
 (def muut-tyot (atom {:valittu-toteuma nil
                       :toteumat nil
                       :valinnat {:urakka nil
@@ -38,10 +37,17 @@
 (defrecord HaeToteuma [hakuehdot])
 (defrecord ValitseToteuma [tyo])
 (defrecord MuokkaaToteumaa [uusi-tyo])
-(defrecord ToteumaTallennettu [toteumat])
+(defrecord ToteumaTallennettu [vastaus])
 (defrecord LaskentakohdeMuuttui [nimi])
 
 ;; Tapahtumien käsittely
+
+(defn- muunna-laskentakohteet [laskentakohteet]
+  (reduce merge
+          {nil "Ei laskentakohdetta"}
+          (mapv
+            #(-> {(:id %) (:nimi %)})
+            laskentakohteet)))
 
 (defn hae-toteumat [{:keys [urakka alkupvm loppupvm] :as hakuparametrit}]
   (let [tulos! (t/send-async! ->ToteumatHaettu)]
@@ -65,17 +71,18 @@
             (tulos! tyo))))))
 
 (defn tallenna-toteuma [{:keys [toteuma urakka sopimus alkupvm loppupvm
-                                uusi-laskentakohde]} laskentakohteet]
+                                uusi-laskentakohde] :as mappi} laskentakohteet]
   (let [laskentakohde-luettelossa? (first (filter #(= (second %) uusi-laskentakohde) laskentakohteet))
-        laskentakohde (or laskentakohde-luettelossa? (:laskentakohde toteuma))]
-    (k/post! :tallenna-yllapito-toteuma (assoc toteuma :urakka urakka
-                                                       :sopimus sopimus
-                                                       :alkupvm alkupvm
-                                                       :loppupvm loppupvm
-                                                       :laskentakohde laskentakohde
-                                                       :uusi-laskentakohde (when (and (not laskentakohde-luettelossa?)
-                                                                                      (not (empty? uusi-laskentakohde)))
-                                                                            uusi-laskentakohde)))))
+        laskentakohde (or laskentakohde-luettelossa? (:laskentakohde toteuma))
+        hyotykuorma (assoc toteuma :urakka urakka
+                                   :sopimus sopimus
+                                   :alkupvm alkupvm
+                                   :loppupvm loppupvm
+                                   :laskentakohde laskentakohde
+                                   :uusi-laskentakohde (when (and (not laskentakohde-luettelossa?)
+                                                                  (not (empty? uusi-laskentakohde)))
+                                                         uusi-laskentakohde))]
+    (k/post! :tallenna-yllapito-toteuma hyotykuorma)))
 
 (def laskentakohdehaku
     (reify protokollat/Haku
@@ -101,11 +108,7 @@
 
   LaskentakohteetHaettu
   (process-event [{:keys [laskentakohteet] :as e} tila]
-    (assoc-in tila [:laskentakohteet] (reduce merge
-                                              {nil "Ei laskentakohdetta"}
-                                              (mapv
-                                                      #(-> {(:id %) (:nimi %)})
-                                                      laskentakohteet))))
+    (assoc-in tila [:laskentakohteet] (muunna-laskentakohteet laskentakohteet)))
 
   ToteumatHaettu
   (process-event [{:keys [tulokset] :as e} tila]
@@ -127,15 +130,14 @@
 
   MuokkaaToteumaa
   (process-event [{:keys [uusi-tyo] :as e} tila]
-    (log "muokattu toteuma " (assoc-in tila [:valittu-toteuma] uusi-tyo))
     (assoc-in tila [:valittu-toteuma] uusi-tyo))
 
   ToteumaTallennettu
-  (process-event [{:keys [toteumat] :as e} tila]
-    (assoc tila :toteumat toteumat
+  (process-event [{:keys [vastaus] :as e} tila]
+    (assoc tila :toteumat (:toteumat vastaus)
+                :laskentakohteet (muunna-laskentakohteet (:laskentakohteet vastaus))
                 :valittu-toteuma nil))
 
   LaskentakohdeMuuttui
   (process-event [{:keys [nimi] :as e} tila]
-    (log "laskentakohde muuttui " (pr-str nimi))
     (assoc-in tila [:uusi-laskentakohde] nimi)))

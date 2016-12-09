@@ -139,6 +139,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                                  (let [v (nth t idx)]
                                                    (reset! data v)
                                                    (reset! teksti ((or nayta str) v))
+                                                   (when kun-muuttuu (kun-muuttuu nil))
                                                    (reset! tulokset nil)))))}]
          (when (zero? hae-kun-yli-n-merkkia)
            [:button.nappi-hakualasveto
@@ -161,6 +162,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                        [linkki ((or nayta str) t) #(do
                                                                     (reset! data t)
                                                                     (reset! teksti ((or nayta str) t))
+                                                                    (when kun-muuttuu (kun-muuttuu nil))
                                                                     (reset! tulokset nil))]])
                                     nykyiset-tulokset)))))]]))))
 

@@ -56,7 +56,6 @@
                             (let [uusi-tallennettava-laskentakohde {:nimi     uusi-laskentakohde
                                                                     :urakka   urakka
                                                                     :kayttaja (:id user)}
-                                  ;; FIXME: miksi toimii oikein? ;)
                                   laskentakohde-id (if (first laskentakohde)
                                                      (first laskentakohde)
                                                      (when uusi-laskentakohde
@@ -76,8 +75,10 @@
                               (if (:id toteuma)
                                 (q/paivita-muu-tyo<! db muu-tyo)
                                 (q/luo-uusi-muu-tyo<! db muu-tyo)))
-    (hae-yllapito-toteumat db user {:urakka urakka
-                                    :alkupvm alkupvm :loppupvm loppupvm})))
+    (let [vastaus {:toteumat        (hae-yllapito-toteumat db user {:urakka  urakka
+                                                                    :alkupvm alkupvm :loppupvm loppupvm})
+                   :laskentakohteet (hae-laskentakohteet db user {:urakka urakka})}]
+      vastaus)))
 
 (defrecord YllapitoToteumat []
   component/Lifecycle
