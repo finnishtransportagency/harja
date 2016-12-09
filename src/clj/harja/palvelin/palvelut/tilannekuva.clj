@@ -396,11 +396,14 @@
              :alku alku
              :loppu loppu))))
 
+(defn- suodattimet-parametreista [parametrit]
+  (some-> parametrit (get "tk") transit/lue-transit-string aikavalinta) )
+
 (defn- karttakuvan-suodattimet
   "Tekee karttakuvan URL parametreistä suodattimet"
   [{:keys [extent parametrit]}]
   (let [[x1 y1 x2 y2] extent
-        hakuparametrit (some-> parametrit (get "tk") transit/lue-transit-string aikavalinta)]
+        hakuparametrit (suodattimet-parametreista parametrit)]
     (as-> hakuparametrit p
           (merge p
                  {:alue {:xmin x1 :ymin y1
@@ -443,19 +446,17 @@
 
 (defn- hae-toteumien-tiedot-kartalle
   "Hakee toteumien tiedot pisteessä infopaneelia varten."
-  [db user {tk "tk" :as params}]
+  [db user parametrit]
   (konv/sarakkeet-vektoriin
    (into []
          (comp
           (map konv/alaviiva->rakenne)
           (map #(assoc % :tyyppi-kartalla :toteuma)))
          (q/hae-toteumien-asiat db
-                                (as-> tk p
-                                  (java.net.URLDecoder/decode p)
-                                  (transit/lue-transit-string p)
+                                (as-> parametrit p
+                                  (suodattimet-parametreista p)
                                   (assoc p :urakat (luettavat-urakat user p))
                                   (assoc p :toimenpidekoodit (toteumien-toimenpidekoodit db p))
-                                  (aikavalinta p)
                                   (merge p (select-keys params [:x :y])))))
    {:tehtava :tehtavat}))
 
@@ -472,16 +473,13 @@
 
 (defn- hae-tarkastuksien-tiedot-kartalle
   "Hakee tarkastuksien tiedot pisteessä infopaneelia varten."
-  [db user {x :x y :y parametrit "tk"}]
+  [db user {x :x y :y :as parametrit}]
   (into []
         (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
               (map #(konv/string->keyword % :tyyppi)))
         (q/hae-tarkastusten-asiat db
                                   (as-> parametrit p
-                                    (java.net.URLDecoder/decode parametrit)
-                                    (transit/lue-transit-string p)
-
-                                    (aikavalinta p)
+                                    (suodattimet-parametreista p)
                                     (assoc p
                                            :urakat (luettavat-urakat user p)
                                            :tyypit (map name (haettavat (:tarkastukset p)))
@@ -504,7 +502,7 @@
               (map #(konv/string->keyword % :tyyppi)))
         (q/hae-tyokoneiden-asiat db
                                  (-> parametrit
-                                   parsi-suodatinten-parametrit
+                                   karttakuvan-suodattimet
                                    (assoc :x x
                                           :y y
                                           :toleranssi 150)))))
