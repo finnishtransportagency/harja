@@ -317,6 +317,7 @@
             <xs:enumeration value="lopetus" />
             <xs:enumeration value="vastaus" />
             <xs:enumeration value="muutos" />
+            <xs:enumeration value="vaara-urakka" />
         </xs:restriction>
     </xs:simpleType>
     <xs:complexType name="kasittelija">
