@@ -18,6 +18,7 @@
     [cljs.core.async.macros :refer [go go-loop]]
     [devcards.core :as dc :refer [defcard deftest]]))
 
+;; TODO REFACTOR sama constnat on paanavigointi ns:ssä
 (def +lyhenna-teksteja-leveydessa+ 530)
 
 (defn- lopeta-mittaus [{:keys [nimi avain lopeta-jatkuva-havainto] :as tiedot}]
@@ -135,6 +136,8 @@
         [:div.soratienappaimiston-sarake-otsikko (if (< @dom/leveys +lyhenna-teksteja-leveydessa+)
                                                    "Pöl."
                                                    "Pölyävyys")]
+
+        ;; TODO REFACTOR Tämä div rakenne toistuu (yllä myös), tee funktio siitä
         [:div
          {:class (painike-luokka @syotto-atom :polyavyys 5)
           :id "soratienappaimiston-painike-polyavyys-5"
