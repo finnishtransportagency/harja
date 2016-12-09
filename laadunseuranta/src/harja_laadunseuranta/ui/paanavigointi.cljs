@@ -50,6 +50,10 @@
             ;; Edellinen jako mahtui eli se on vastaus
             (- jako 1)))))))
 
+;; TODO REFACTOR, yllä olevassa voisi ehkä formuloida
+;; somella alaspäin laskevasta sarjasta
+;; (some mahtuuko-fn (range (count homma) 1))
+
 (defn- toggle-painike [_]
   (fn [{:keys [nimi ikoni avain tyyppi ikoni-lahde
                click-fn jatkuvat-havainnot disabloitu?] :as tiedot}]
@@ -78,6 +82,8 @@
                                      valittu-valilehtiryhma valilehtiryhmat] :as tiedot}]
   (let [dom-node (atom nil)
         ryhmittele-valilehdet-uudelleen-tarvittaessa!
+        ;; TODO REFACTOR siirrä ns tasolle nimetyksi funktioksi?
+        ;; muutenkin voisi pilkkoa paloiksi
         (fn [this]
           (when this
             (let [header-leveys (.-width (.getBoundingClientRect this))]
