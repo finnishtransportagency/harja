@@ -299,19 +299,22 @@
     :ikoni-lahde "livicons"
     :avain :jyranjalkia
     :vaatii-nappaimiston? false}
-   {:nimi "Side\u00ADaine\u00ADläikkiä" ;; TODO Mikä tähän?
+   {:nimi "Side\u00ADaine\u00ADläikkiä"
     :tyyppi :vali
-    :ikoni "paallystys_laikka"
+    :ikoni "laikka-36"
+    :ikoni-lahde "livicons"
     :avain :sideainelaikkia
     :vaatii-nappaimiston? false}
-   {:nimi "Vää\u00ADrä korkeu\u00ADsasema" ;; TODO Mikä tähän?
+   {:nimi "Vää\u00ADrä korkeu\u00ADsasema"
     :tyyppi :vali
-    :ikoni "paallystys_vaara_korkeus"
+    :ikoni "vaara-korkeus-36"
+    :ikoni-lahde "livicons"
     :avain :vaarakorkeusasema
     :vaatii-nappaimiston? false}
-   {:nimi "Pinta harva" ;; TODO Mikä tähän?
+   {:nimi "Pinta harva"
     :tyyppi :vali
-    :ikoni "paallystys_harva_pinta"
+    :ikoni "harva-pinta-36"
+    :ikoni-lahde "livicons"
     :avain :pintaharva
     :vaatii-nappaimiston? false}
    {:nimi "Pinta\u00ADkuivatus puut\u00ADteel\u00ADlinen"
