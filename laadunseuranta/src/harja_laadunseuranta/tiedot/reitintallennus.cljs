@@ -228,7 +228,7 @@
     (when epaonnistui-fn
       (epaonnistui-fn {:viesti (str "Epätarkka sijainti ("
                                     (fmt/n-desimaalia (:accuracy (:nykyinen @sijainti)) 0)
-                                    "m), merkintää ei tehty!")})
+                                    "m), reittimerkintää ei tehty!")})
       false)))
 
 (defn- kaynnista-tarkastusajon-lokaali-tallennus [db tarkastusajo-atom]
