@@ -113,7 +113,6 @@
                                    tx {:tarkastusajo tarkastusajo-id
                                        :treshold 100})
         merkinnat-tr-osoitteilla (lisaa-reittimerkinnoille-lopullinen-tieosoite merkinnat-tr-osoitteilla)
-        _ (log/debug "Lopulliset merkinnät: " (pr-str merkinnat-tr-osoitteilla))
         tarkastukset (-> (tarkastukset/reittimerkinnat-tarkastuksiksi merkinnat-tr-osoitteilla)
                          (lisaa-tarkastuksille-urakka-id urakka-id))]
     (log/debug "Reittipisteet muunnettu tarkastuksiksi. Tallennetaan tarkastukset urakkaan " urakka-id)
