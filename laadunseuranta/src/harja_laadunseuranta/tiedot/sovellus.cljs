@@ -164,24 +164,28 @@
 (def soratiemittaussyotto (reagent/cursor sovellus [:soratiemittaussyotto]))
 
 ;; Kartalle piirtoa varten
-(def reittisegmentti (reaction
-                       (let [{:keys [nykyinen edellinen]} @sijainti]
-                         (when (and nykyinen edellinen)
-                           {:segmentti [(p/latlon-vektoriksi edellinen)
-                                        (p/latlon-vektoriksi nykyinen)]
-                            :vari (let [s @jatkuvat-havainnot]
-                                    (cond
-                                      (:liukasta s) "blue"
-                                      (:lumista s) "blue"
-                                      (:tasauspuute s) "blue"
+(def reittisegmentti
+  ;; TODO REFACTOR, tee tästä run! blokki joka suoraan lisää segmentin
+  ;; ja poista reitintallennus komponentista
+  (reaction
+   (let [{:keys [nykyinen edellinen]} @sijainti]
+     (when (and nykyinen edellinen)
+       {:segmentti [(p/latlon-vektoriksi edellinen)
+                    (p/latlon-vektoriksi nykyinen)]
+        :vari (let [s @jatkuvat-havainnot]
+                (cond
+                  (:liukasta s) "blue"
+                  (:lumista s) "blue"
+                  (:tasauspuute s) "blue"
 
-                                      (:soratie s) "brown"
+                  (:soratie s) "brown"
 
-                                      (:vesakko-raivaamatta s) "green"
-                                      (:niittamatta s) "green"
+                  (:vesakko-raivaamatta s) "green"
+                  (:niittamatta s) "green"
 
-                                      (:yleishavainto s) "red"
-                                      :default "black"))}))))
+                  (:yleishavainto s) "red"
+                  :default "black"))}))))
+
 (def reittipisteet (reagent/cursor sovellus [:reittipisteet]))
 
 (def idxdb (reagent/cursor sovellus [:idxdb]))
@@ -191,10 +195,11 @@
 
 (def tarkastusajo-paattymassa (reagent/cursor sovellus [:tarkastusajo-paattymassa]))
 
-(def piirra-paanavigointi? (reaction (boolean (and @tarkastusajo-id
-                                                   @tallennus-kaynnissa
-                                                   (not @tarkastusajo-paattymassa)
-                                                   (not @havaintolomake-auki)))))
+(def piirra-paanavigointi?
+  (reaction (boolean (and @tarkastusajo-id
+                          @tallennus-kaynnissa
+                          (not @tarkastusajo-paattymassa)
+                          (not @havaintolomake-auki)))))
 
 (def nayta-paanavigointi? (reagent/cursor sovellus [:ui :paanavigointi :nakyvissa?]))
 (def nayta-paanavigointi-valilehdet? (reagent/cursor sovellus [:ui :paanavigointi :valilehdet-nakyvissa?]))
