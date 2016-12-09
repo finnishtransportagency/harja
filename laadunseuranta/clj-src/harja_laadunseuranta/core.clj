@@ -199,7 +199,6 @@
         (tallenna-merkinnat! db kirjaukset (:id user))
         "Reittimerkinta tallennettu"))
 
-
     :ls-paata-tarkastusajo
     (kasittele-api-kutsu
       schemas/TarkastuksenPaattaminen s/Str
@@ -222,13 +221,6 @@
         (log/debug "Haetaan tierekisteritietoja pisteelle " koordinaatit)
         (let [{:keys [lat lon treshold]} koordinaatit]
           (hae-tr-tiedot db lat lon treshold))))
-
-    :ls-urakkatyypin-urakat
-    (kasittele-api-kutsu
-      s/Str s/Any
-      (fn [kayttaja urakkatyyppi]
-        (log/debug "Haetaan urakkatyypin urakat " urakkatyyppi)
-        (hae-urakkatyypin-urakat db urakkatyyppi kayttaja)))
 
     :ls-hae-kayttajatiedot
     (fn [kayttaja]
@@ -276,6 +268,5 @@
                                    :ls-paata-tarkastusajo
                                    :ls-uusi-tarkastusajo
                                    :ls-hae-tr-tiedot
-                                   :ls-urakkatyypin-urakat
                                    :ls-hae-kayttajatiedot)
     this))

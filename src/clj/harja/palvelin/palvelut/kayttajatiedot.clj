@@ -41,9 +41,6 @@
                (not (nil? urakka-id))
                (urakat-q/hae-urakoiden-organisaatiotiedot db urakka-id)
 
-               #_(roolit/lukuoikeus-kaikkiin-urakoihin? user)
-               ;; Haetaan vaan kaikki urakat, näistä filtteröidään joka tapauksessa
-               ;; pois sellaiset, johon käyttäjällä ei ole oikeutta
                :else
                (urakat-q/hae-kaikki-urakat-aikavalilla
                  db (konv/sql-date alku) (konv/sql-date loppu)
