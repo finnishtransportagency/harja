@@ -150,7 +150,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
          [:ul.hakukentan-lista.dropdown-menu {:role  "menu"
                                               :style (avautumissuunta-ja-korkeus-tyylit
                                                        @max-korkeus @avautumissuunta)}
-          (let [nykyiset-tulokset (if sort-fn
+          (let [nykyiset-tulokset (if (and sort-fn (vector? @tulokset))
                                     (sort-by sort-fn @tulokset)
                                     @tulokset)
                 idx @valittu-idx]
