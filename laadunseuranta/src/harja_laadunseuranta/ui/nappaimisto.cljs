@@ -18,9 +18,6 @@
     [cljs.core.async.macros :refer [go go-loop]]
     [devcards.core :as dc :refer [defcard deftest]]))
 
-;; TODO REFACTOR sama constnat on paanavigointi ns:ssä
-(def +lyhenna-teksteja-leveydessa+ 530)
-
 (defn- lopeta-mittaus [{:keys [nimi avain lopeta-jatkuva-havainto] :as tiedot}]
   [nappi (str nimi " päättyy") {:on-click (fn [_]
                                             (.log js/console "Mittaus päättyy!")
@@ -83,7 +80,7 @@
     (fn []
       [:div.soratienappaimisto
        [:div.soratienappaimiston-sarake.soratienappaimiston-tasaisuus
-        [:div.soratienappaimiston-sarake-otsikko (if (< @dom/leveys +lyhenna-teksteja-leveydessa+)
+        [:div.soratienappaimiston-sarake-otsikko (if (< @dom/leveys dom/+leveys-tabletti+)
                                                    "Tas."
                                                    "Tasaisuus")]
         [:div
@@ -108,7 +105,7 @@
           :on-click #(numeronappain-painettu 1 :tasaisuus syotto-atom)} "1"]]
 
        [:div.soratienappaimiston-sarake.soratienappaimiston-kiinteys
-        [:div.soratienappaimiston-sarake-otsikko (if (< @dom/leveys +lyhenna-teksteja-leveydessa+)
+        [:div.soratienappaimiston-sarake-otsikko (if (< @dom/leveys dom/+leveys-tabletti+)
                                                    "Kiint."
                                                    "Kiinteys")]
         [:div
@@ -133,7 +130,7 @@
           :on-click #(numeronappain-painettu 1 :kiinteys syotto-atom)} "1"]]
 
        [:div.soratienappaimiston-sarake.soratienappaimiston-polyavyys
-        [:div.soratienappaimiston-sarake-otsikko (if (< @dom/leveys +lyhenna-teksteja-leveydessa+)
+        [:div.soratienappaimiston-sarake-otsikko (if (< @dom/leveys dom/+leveys-tabletti+)
                                                    "Pöl."
                                                    "Pölyävyys")]
 
