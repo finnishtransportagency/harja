@@ -187,7 +187,10 @@
                           [{:otsikko "Lisätieto" :nimi :lisatieto}])))
    :data toteuma})
 
+
 (defmethod infopaneeli-skeema :default [x]
+  (log/warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))
+            ", palautetaan tyhjä itemille " (pr-str x))
   nil)
 
 (defn validoi-tieto [tieto]
