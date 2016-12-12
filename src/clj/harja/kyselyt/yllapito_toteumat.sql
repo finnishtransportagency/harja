@@ -44,7 +44,7 @@ SET
   laskentakohde = :laskentakohde,
   muokattu = NOW(),
   muokkaaja = :kayttaja
-WHERE id = :id;
+WHERE id = :id and urakka = :urakka;
 
 -- name: hae-urakan-laskentakohteet
 SELECT id, urakka, nimi FROM urakka_laskentakohde
