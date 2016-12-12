@@ -213,7 +213,9 @@
 (deftest vain-tilaaja-ja-urakoitsija-itse-nakee-urakattomat-tyokoneet []
   (let [parametrit (assoc parametrit-laaja-historia :nykytilanne? true)
         urakoitsija (hae-oulun-alueurakan-2005-2012-urakoitsija)
-        hae #(get-in (hae-tk % parametrit) [:tyokoneet 666])]
+        hae #(let [vastaus (hae-tk % parametrit)
+                   tehtavat (:tehtavat (:tyokoneet vastaus))]
+               (tehtavat #{"harjaus"}))]
     ;; Insert menee ok
     (is (= 1 (insert-tyokone nil urakoitsija)) "Urakattoman työkonehavainnon voi insertoida")
 
@@ -228,4 +230,4 @@
 
 
     ;; eri urakoitsijaorganisaation käyttä ei näe työkonetta
-    (is (nil? (hae +kayttaja-ulle+)) "Eri urakoitsijan käyttäjä ei näe työkonetta")))
+    (is (not (hae +kayttaja-ulle+)) "Eri urakoitsijan käyttäjä ei näe työkonetta")))
