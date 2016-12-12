@@ -36,14 +36,6 @@
       ;; Soiton täytyy alkaa suoraan user eventistä
       (.addEventListener js/document.body "click" #(soita-video video)))))
 
-(defn- esta-zoomaus []
-  ;; "user-scaleable=no is disabled in Safari for iOS 10.
-  ;; The reason is that Apple is trying to improve accessibility by allowing people to zoom on web pages."
-  ;; FIXME Edelleen sallii zoomauksen yhden sormen tuplakosketuksella, ei voi mitään.
-  #_(when (or (utils/iphone?)
-            (utils/ipad?))
-    (.addEventListener js/document "gesturestart" #(.preventDefault %))))
-
 (defn- sovelluksen-alustusviive []
   (run!
     (when (and (not @sovellus/sovellus-alustettu) @sovellus/alustus-valmis)
@@ -101,7 +93,6 @@
 
 (defn main []
   (esta-mobiililaitteen-nayton-lukitus)
-  (esta-zoomaus)
   (sovelluksen-alustusviive)
   (alusta-paikannus-id)
   (alusta-geolokaatio-api)
