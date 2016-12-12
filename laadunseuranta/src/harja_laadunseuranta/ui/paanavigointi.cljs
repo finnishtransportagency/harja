@@ -75,28 +75,28 @@
      [:div.toggle-valintapainike-otsikko
       nimi]]))
 
+(defn- ryhmittele-valilehdet-uudelleen-tarvittaessa! [{:keys [header-komponentti
+                                                              valilehdet valilehtiryhmat
+                                                              valittu-valilehtiryhma]}]
+  (when header-komponentti
+    (let [header-leveys (.-width (.getBoundingClientRect header-komponentti))]
+      (when (not= header-leveys @edellinen-header-leveys)
+        (.log js/console "Header leveys muuttui, ryhmitellään tabit uudelleen.")
+        (let [valilehtia-per-ryhma
+              (maarittele-valilehtien-maara-per-ryhma header-leveys
+                                                      valilehdet)]
+          (reset! valilehtiryhmat (partition-all valilehtia-per-ryhma valilehdet))
+          (reset! edellinen-header-leveys header-leveys)
+          ;; Ryhmittely päivitetty, varmistetaan, että nykyinen valinta on edelleen taulukon sisällä
+          (when (> @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))
+            (reset! valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))))))))
+
 (defn- paanavigointi-header [{:keys [valilehdet valittu-valilehti
                                      hampurilaisvalikon-lista-nakyvissa?
                                      hampurilaisvalikko-painettu body-click
                                      hampurilaisvalikon-lista-item-painettu
                                      valittu-valilehtiryhma valilehtiryhmat] :as tiedot}]
   (let [dom-node (atom nil)
-        ryhmittele-valilehdet-uudelleen-tarvittaessa!
-        ;; TODO REFACTOR siirrä ns tasolle nimetyksi funktioksi?
-        ;; muutenkin voisi pilkkoa paloiksi
-        (fn [this]
-          (when this
-            (let [header-leveys (.-width (.getBoundingClientRect this))]
-              (when (not= header-leveys @edellinen-header-leveys)
-                (.log js/console "Header leveys muuttui, ryhmitellään tabit uudelleen.")
-                (let [valilehtia-per-ryhma
-                      (maarittele-valilehtien-maara-per-ryhma header-leveys
-                                                              valilehdet)]
-                  (reset! valilehtiryhmat (partition-all valilehtia-per-ryhma valilehdet))
-                  (reset! edellinen-header-leveys header-leveys)
-                  ;; Ryhmittely päivitetty, varmistetaan, että nykyinen valinta on edelleen taulukon sisällä
-                  (when (> @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))
-                    (reset! valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))))))))
         valitse-valilehti! (fn [uusi-valinta]
                              (reset! valittu-valilehti uusi-valinta))
         hampurilaisvalikon-listan-max-korkeus (atom 200)
@@ -139,8 +139,14 @@
                     valilehdet-nakyvissa? valilehdet jatkuvat-havainnot
                     valittu-valilehti valittu-valilehtiryhma]}]
          ;; Muutama tärkeä lasku ennen renderiä
-         (ryhmittele-valilehdet-uudelleen-tarvittaessa! @dom-node)
-         (maarita-hampurilaisvalikon-listan-max-korkeus! @dom-node)
+         (ryhmittele-valilehdet-uudelleen-tarvittaessa! {:header-komponentti @dom-node
+                                                         :valilehdet valilehdet
+                                                         :valilehtiryhmat valilehtiryhmat
+                                                         :valittu-valilehtiryhma valittu-valilehtiryhma})
+         (maarita-hampurilaisvalikon-listan-max-korkeus! {:header-komponentti @dom-node
+                                                          :valilehdet valilehdet
+                                                          :valilehtiryhmat valilehtiryhmat
+                                                          :valittu-valilehtiryhma valittu-valilehtiryhma})
 
          (let [valitun-valilehtiryhman-valilehdet (when-not (empty? @valilehtiryhmat)
                                                     (nth @valilehtiryhmat @valittu-valilehtiryhma))]
