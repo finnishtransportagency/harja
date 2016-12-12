@@ -7,7 +7,6 @@
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.views.kartta.popupit :as popupit]
-            [harja.tiedot.navigaatio :as navigaatio]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as tiedot]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.domain.skeema :refer [+tyotyypit+]]
@@ -92,8 +91,8 @@
       toteumat]]))
 
 (defn tee-valinnat []
-  [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @navigaatio/valittu-urakka]
-  (let [urakka @navigaatio/valittu-urakka]
+  [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @nav/valittu-urakka]
+  (let [urakka @nav/valittu-urakka]
     [:span
      (urakka-valinnat/urakan-sopimus urakka)
      (urakka-valinnat/urakan-hoitokausi urakka)
