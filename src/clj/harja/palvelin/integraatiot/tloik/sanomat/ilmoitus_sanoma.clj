@@ -25,6 +25,11 @@
     "tienkayttaja"
     tyyppi))
 
+(defn urakkatyyppi [tyyppi]
+  (if (= "tekniset laitteet")
+    "tekniset-laitteet"
+    tyyppi))
+
 (defn lue-ilmoittaja [ilmoittaja]
   {:etunimi (z/xml1-> ilmoittaja :etunimi z/text)
    :matkapuhelin (z/xml1-> ilmoittaja :matkapuhelin z/text)
@@ -61,7 +66,7 @@
                   :ilmoitus-id (Integer/parseInt (z/xml1-> data :ilmoitusId z/text))
                   :ilmoitustyyppi (z/xml1-> data :ilmoitustyyppi z/text)
                   :valitetty (parsi-paivamaara (z/xml1-> data :valitetty z/text))
-                  :urakkatyyppi (z/xml1-> data :urakkatyyppi z/text)
+                  :urakkatyyppi (urakkatyyppi (z/xml1-> data :urakkatyyppi z/text))
                   :otsikko (z/xml1-> data :otsikko z/text)
                   :paikankuvaus (z/xml1-> data :paikanKuvaus z/text)
                   :lisatieto (z/xml1-> data :lisatieto z/text)
