@@ -6,6 +6,7 @@
             [harja-laadunseuranta.tiedot.ylapalkki :as tiedot]
             [harja-laadunseuranta.tiedot.kamera :as kamera]
             [harja-laadunseuranta.tiedot.tarkastusajon-luonti :as tarkastusajon-luonti]
+            [harja-laadunseuranta.tiedot.tarkastusajon-paattaminen :as tarkastusajon-paattaminen]
             [harja-laadunseuranta.tiedot.sovellus :as s]))
 
 (defn- formatoi-tr-osoite [tr-osoite]
@@ -102,7 +103,7 @@
     :tarkastusajo-alkamassa? s/tarkastusajo-alkamassa?
     :soratiehoitoluokka s/soratiehoitoluokka
     :kaynnista-tarkastus-fn tarkastusajon-luonti/luo-ajo!
-    :pysayta-tarkastusajo-fn tarkastusajon-luonti/aseta-ajo-paattymaan!
+    :pysayta-tarkastusajo-fn tarkastusajon-paattaminen/aseta-ajo-paattymaan!
     :tr-osoite s/tr-osoite
     :tarkastusajo-kaynnissa? s/tarkastusajo-kaynnissa?
     :disabloi-kaynnistys? (or @s/havaintolomake-auki

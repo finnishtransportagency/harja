@@ -12,7 +12,7 @@
             [harja-laadunseuranta.ui.paanavigointi :refer [paanavigointi]]
             [harja-laadunseuranta.tiedot.tr-haku :as tr-haku]
             [harja-laadunseuranta.ui.havaintolomake :refer [havaintolomake]]
-            [harja-laadunseuranta.ui.tarkastusajon-paattaminen :as tarkastusajon-luonti]
+            [harja-laadunseuranta.ui.tarkastusajon-paattaminen :as tarkastusajon-paattaminen]
             [harja-laadunseuranta.utils :refer [flip erota-havainnot]]
             [cljs.core.async :refer [<! timeout]])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
@@ -38,12 +38,10 @@
       [havaintolomake])
 
     (when @s/tarkastusajo-paattymassa?
-      [:div.tarkastusajon-paattaminen-dialog-container
-       [tarkastusajon-luonti/tarkastusajon-paattamisdialogi s/lahettamattomia-merkintoja]])
+      [tarkastusajon-paattaminen/tarkastusajon-paattamiskomponentti])
 
     (when (and @s/palautettava-tarkastusajo (not (= "?relogin=true" js/window.location.search)))
-      [:div.tarkastusajon-paattaminen-dialog-container
-       [tarkastusajon-luonti/tarkastusajon-jatkamisdialogi]])
+      [tarkastusajon-paattaminen/tarkastusajon-jatkamiskomponentti])
 
     [spinneri s/lahettamattomia-merkintoja]]])
 
