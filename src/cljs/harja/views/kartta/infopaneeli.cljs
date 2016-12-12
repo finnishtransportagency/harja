@@ -2,9 +2,9 @@
   "Muodostaa kartalle overlayn, joka sisältää klikatussa koordinaatissa
   olevien asioiden tiedot."
   (:require [harja.ui.komponentti :as komp]
-            [reagent.core :refer [atom] :as reagent]
+            [reagent.core :refer [atom] :as r]
             [cljs.core.async :as async]
-            [harja.loki :refer [log tarkkaile! error]]
+            [harja.loki :refer [log tarkkaile! error] :as log]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.napit :as napit]
             [harja.ui.debug :refer [debug]]
@@ -39,7 +39,9 @@
 (defn- kentan-arvo [skeema data]
   (let [arvo-fn (or (:hae skeema) (:nimi skeema))]
     ;; Kentat namespace olettaa, että kentän arvo tulee atomissa
-    (when arvo-fn (atom (arvo-fn data)))))
+    (when arvo-fn
+      (r/wrap (arvo-fn data)
+              #(log/error "Infopaneelissa ei voi muokata tietoja: " %)))))
 
 (defn esita-yksityiskohdat [{:keys [otsikko tiedot data tyyppi] :as asia} linkin-kasittely-fn]
   (if-not (or (keyword? tyyppi) (fn? tyyppi))
