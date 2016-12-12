@@ -11,7 +11,8 @@ SELECT
 FROM yllapito_toteuma yt
   LEFT JOIN urakka_laskentakohde lk ON lk.id = yt.laskentakohde
 WHERE yt.urakka = :urakka AND yt.sopimus = :sopimus
-      AND yt.pvm::DATE BETWEEN :alkupvm and :loppupvm;
+      AND yt.pvm::DATE BETWEEN :alkupvm and :loppupvm
+ORDER BY yt.pvm DESC;
 
 -- name: hae-muu-tyo
 SELECT
