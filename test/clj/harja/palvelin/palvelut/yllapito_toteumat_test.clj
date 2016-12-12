@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.yllapito_toteumat-test
+(ns harja.palvelin.palvelut.yllapito-toteumat-test
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [harja
@@ -6,7 +6,7 @@
              [testi :refer :all]]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.yllapito_toteumat :refer :all]
+            [harja.palvelin.palvelut.yllapito-toteumat :refer :all]
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]))
 

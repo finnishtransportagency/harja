@@ -38,7 +38,7 @@
     [harja.palvelin.palvelut.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
     [harja.palvelin.palvelut.muut-tyot :as muut-tyot]
     [harja.palvelin.palvelut.toteumat :as toteumat]
-    [harja.palvelin.palvelut.yllapito_toteumat :as yllapito-toteumat]
+    [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-toteumat]
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
     [harja.palvelin.palvelut.yhteyshenkilot]
     [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
