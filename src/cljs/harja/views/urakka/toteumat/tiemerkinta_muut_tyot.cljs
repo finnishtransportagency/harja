@@ -28,7 +28,7 @@
 
 (defn voi-kirjoittaa? [urakka]
   (oikeudet/voi-kirjoittaa?
-    oikeudet/urakat-toteutus-kokonaishintaisettyot
+    oikeudet/urakat-toteutus-muuttyot
     urakka))
 
 (defn- valinnat [e! {:keys [valittu-urakka valittu-sopimusnumero
