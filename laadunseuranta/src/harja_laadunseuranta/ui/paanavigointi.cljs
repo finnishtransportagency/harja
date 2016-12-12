@@ -194,7 +194,7 @@
                       :on-click (partial hampurilaisvalikon-lista-item-painettu avain)}
                  nimi]))]])]
 
-       [valilehtielementit {:valilehet valilehdet
+       [valilehtielementit {:valilehdet valilehdet
                             :kayta-hampurilaisvalikkoa? true
                             :valilehdet-nakyvissa? valilehdet-nakyvissa?
                             :valitun-valilehtiryhman-valilehdet valitun-valilehtiryhman-valilehdet
