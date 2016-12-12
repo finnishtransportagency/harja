@@ -50,10 +50,12 @@
 
 (defn hae-toteumat [{:keys [urakka sopimus alkupvm loppupvm] :as hakuparametrit}]
   (let [tulos! (t/send-async! ->ToteumatHaettu)]
-    (go (let [tyot (<! (k/post! :hae-yllapito-toteumat {:urakka urakka
-                                                        :sopimus sopimus
-                                                        :alkupvm alkupvm
-                                                        :loppupvm loppupvm}))]
+    (go (let [tyot (reverse
+                     (sort-by :pvm
+                              (<! (k/post! :hae-yllapito-toteumat {:urakka   urakka
+                                                                   :sopimus  sopimus
+                                                                   :alkupvm  alkupvm
+                                                                   :loppupvm loppupvm}))))]
           (when-not (k/virhe? tyot)
             (tulos! tyot))))))
 
