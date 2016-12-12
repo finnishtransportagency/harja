@@ -532,11 +532,7 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
 
 (defn kaynnista-asioiden-haku-pisteesta! [tasot event asiat-pisteessa]
   (hae-asiat-pisteessa tasot event asiat-pisteessa)
-  (go
-    ;; PENDING: Tämä go olisi turha, jos tunnistetaan että vain klikattu-karttapiste
-    ;; neula on muuttunut. Infopaneeli piilotetaan kun tasot muuttuvat.
-
-    (reset! tiedot/nayta-infopaneeli? true)))
+  (reset! tiedot/nayta-infopaneeli? true))
 
 (defn kartta-openlayers []
   (komp/luo
@@ -557,8 +553,16 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
         ;; tasossa, joten ne eivät tarvitse erillistä kuuntelijaa.
         (add-watch tasot/geometriat-kartalle :muuttuvien-geometrioiden-kuuntelija
                    (fn [_ _ vanha uusi]
-                     ;; Kun karttatasot muuttuvat, piilotetaan infopaneeli
-                     (reset! tiedot/nayta-infopaneeli? false)
+                     (when (not= (dissoc vanha :nakyman-geometriat)
+                                 (dissoc uusi :nakyman-geometriat))
+                       ;; Kun karttatasoissa muuttuu jotain muuta kuin :nakyman-geometriat
+                       ;; (klikattu piste), piilotetaan infopaneeli ja poistetaan
+                       ;; klikattu piste näkymän geometrioista.
+                       (reset! tiedot/nayta-infopaneeli? false)
+                       (tasot/poista-geometria! :klikattu-karttapiste))
+
+
+
 
                      ;; Jos vanhoissa ja uusissa geometrioissa ei ole samat määrät asioita,
                      ;; niin voidaan olettaa että nyt geometriat ovat muuttuneet.
