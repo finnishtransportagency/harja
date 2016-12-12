@@ -445,6 +445,12 @@
         tarkastus]])))
 
 
+(defn- vastaava-tarkastus [klikattu-tarkastus]
+  ;; oletetaan että kartalla näkyvät tarkastukset ovat myös gridissä
+  (some (fn [urakan-tarkastus]
+          (= (:id urakan-tarkastus) (:id klikattu-tarkastus)))
+        @tarkastukset/urakan-tarkastukset))
+
 (defn tarkastukset
   "Tarkastuksien pääkomponentti"
   [optiot]
@@ -453,9 +459,15 @@
     (komp/kuuntelija :tarkastus-klikattu #(reset! tarkastukset/valittu-tarkastus %2))
     (komp/ulos (kartta-tiedot/kuuntele-valittua! tarkastukset/valittu-tarkastus))
     (komp/sisaan-ulos #(do
-                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                        (nav/vaihda-kartan-koko! :M))
-                      #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
+                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                         (kartta-tiedot/kasittele-infopaneelin-linkit!
+                          {:tarkastus {:toiminto (fn [klikattu-tarkastus] ;; asiat-pisteessa -asia joka on tyypiltään tarkastus
+                                                   (reset! tarkastukset/valittu-tarkastus (vastaava-tarkastus klikattu-tarkastus)))
+                                       :teksti "Valitse tarkastus"}
+                          })
+                         (nav/vaihda-kartan-koko! :M))
+                      #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+                           (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
     (fn [optiot]
       [:span.tarkastukset
        [kartta/kartan-paikka]

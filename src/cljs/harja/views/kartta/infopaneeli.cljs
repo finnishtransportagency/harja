@@ -52,7 +52,7 @@
      (when-let [{:keys [teksti toiminto]} (tyyppi linkin-kasittely-fn)]
        [:span [napit/yleinen teksti #(toiminto data)]])
      (for [[idx kentan-skeema] (map-indexed #(do [%1 %2]) tiedot)]
-       ^{:key (str "infopaneliin_yksityiskohta_" idx)}
+       ^{:key (str "infopaneelin_yksityiskohta_" idx)}
        [:div
         [:label.control-label
          [:span
@@ -67,6 +67,7 @@
     (= (vertailumuoto a) (vertailumuoto b))))
 
 (defn infopaneeli [asiat-pisteessa piilota-fn! linkkifunktiot]
+
   (let [{:keys [asiat haetaan? koordinaatti]} asiat-pisteessa
         asiat (infopaneelin-sisalto/skeemamuodossa asiat)
         vain-yksi-asia? (-> asiat count (= 1))
