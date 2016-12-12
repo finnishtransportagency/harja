@@ -115,7 +115,7 @@
                (when (kasitelty turpo)
                  {:otsikko "Käsitelty" :tyyppi :pvm-aika :nimi kasitelty})
                {:otsikko "Työn\u00ADtekijä" :hae #(turpodomain/kuvaile-tyontekijan-ammatti %)}
-               {:otsikko "Vammat" :hae #(string/join ", " (map turpodomain/vammat (:vammat %)))}
+               {:otsikko "Vammat" :hae #(turpodomain/vammat (:vammat %))}
                {:otsikko "Sairaala\u00ADvuorokaudet" :hae #(:sairaalavuorokaudet %)}
                {:otsikko "Sairaus\u00ADpoissaolo\u00ADpäivät" :tyyppi :positiivinen-numero :nimi :sairauspoissaolopaivat}
                {:otsikko "Vakavuus\u00ADaste" :hae #(turpodomain/turpo-vakavuusasteet (:vakavuusaste %))}
