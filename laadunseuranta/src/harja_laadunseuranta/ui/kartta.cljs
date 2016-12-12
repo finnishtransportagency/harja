@@ -17,9 +17,15 @@
             [ol.interaction :as ol-interaction]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
-            [harja-laadunseuranta.tiedot.projektiot :as projektiot])
+            [harja-laadunseuranta.tiedot.projektiot :as projektiot]
+            [harja-laadunseuranta.tiedot.sovellus :as s])
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
+
+(defn- lisaa-kirjausikoni [teksti]
+  (swap! s/kirjauspisteet
+         conj (assoc (select-keys (:nykyinen @s/sijainti) [:lat :lon])
+                :label teksti)))
 
 (defn- wmts-source [url layer]
   (ol.source.WMTS. #js {:attributions [(ol.Attribution. #js {:html "MML"})]
@@ -268,15 +274,37 @@
   (reagent/create-class {:reagent-render kartta-render
                          :component-did-mount
                          #(kartta-did-mount
-                           %
-                           wmts-url
-                           wmts-url-kiinteistorajat
-                           wmts-url-ortokuva
-                           sijainti-atomi
-                           ajoneuvon-sijainti-atomi
-                           reittipisteet-atomi
-                           kirjauspisteet-atomi
-                           optiot)}))
+                            %
+                            wmts-url
+                            wmts-url-kiinteistorajat
+                            wmts-url-ortokuva
+                            sijainti-atomi
+                            ajoneuvon-sijainti-atomi
+                            reittipisteet-atomi
+                            kirjauspisteet-atomi
+                            optiot)}))
+
+(defn kartta []
+  [:div
+   [karttakomponentti
+    {:wmts-url asetukset/+wmts-url+
+     :wmts-url-kiinteistorajat asetukset/+wmts-url-kiinteistojaotus+
+     :wmts-url-ortokuva asetukset/+wmts-url-ortokuva+
+     :sijainti-atomi s/kartan-keskipiste
+     :ajoneuvon-sijainti-atomi s/ajoneuvon-sijainti
+     :reittipisteet-atomi s/reittipisteet
+     :kirjauspisteet-atomi s/kirjauspisteet
+     :optiot s/karttaoptiot}]
+   [:div.kartan-kontrollit {:style (when @s/havaintolomake-auki
+                                     {:display "none"})}
+    [:div#karttakontrollit] ;; OpenLayersin ikonit asetetaan tähän elementtiin erikseen
+    [:div.kontrollinappi.ortokuva {:on-click #(swap! s/nayta-ortokuva not)}
+     [kuvat/svg-sprite "maasto-24"]]
+    [:div.kontrollinappi.kiinteistorajat {:on-click #(swap! s/nayta-kiinteistorajat not)}
+     [kuvat/svg-sprite "kiinteistoraja-24"]]
+    [:div.kontrollinappi.keskityspainike {:on-click #(do (swap! s/keskita-ajoneuvoon not)
+                                                                            (swap! s/keskita-ajoneuvoon not))}
+     [kuvat/svg-sprite "tahtain-24"]]]])
 
 ;; devcards
 

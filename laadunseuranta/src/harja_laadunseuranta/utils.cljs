@@ -8,20 +8,77 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja-laadunseuranta.macros :refer [after-delay]]))
 
-(defn- tuettu-selain? []
-  (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-        [#".*android.*" #".*chrome.*" #".*ipad.*" #".*iphone.*"]))
+;; Lähtökohtaisesti pitäisi tutkia selainten ominaisuuksia eikä selaimia.
+;; Kyseessä on kuitenkin tiettyyn tarkoitukseen toteutettu mobiilisovellus, joka on käsin
+;; testattu toimivaksi eri selaimilla.
+
+(defn ipad? []
+  (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+                 [#".*ipad.*"])))
+
+(defn iphone? []
+  (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+                   [#".*iphone.*"])))
+
+(defn chrome? []
+  (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+                   [#".*chrome.*"])))
+
+(defn firefox? []
+  (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+                   [#".*firefox.*"])))
+
+(def +tuettu-chrome-versio+ 53) ;; Testattu toimivaksi ja toivottavasti estää useimmat Android Browserit,
+                                ;; joissa on usein vanha Chrome-versio user agentissa.
+                                ;; Android Browsereille ei voi tarjota luotettavaa tukea
+(def +tuettu-firefox-versio+ 49) ;; Testattu toimivaksi, tässä mm. Flexbox & IndexedDB mukana
+
+(defn maarita-selainversio-user-agentista [user-agent-text-lowercase selain-nimi]
+  (let [selain-alku-index (.indexOf user-agent-text-lowercase (str selain-nimi "/"))
+        selain-versio-teksti (subs user-agent-text-lowercase selain-alku-index (+ selain-alku-index
+                                                                                  (count selain-nimi)
+                                                                                  5))
+        selain-versonumero (re-find (re-pattern "\\d+") selain-versio-teksti)]
+    (js/parseInt selain-versonumero)))
+
+(defn maarita-chrome-versio-user-agentista [user-agent-text-lowercase]
+  (maarita-selainversio-user-agentista user-agent-text-lowercase "chrome"))
+
+(defn maarita-firefox-versio-user-agentista [user-agent-text-lowercase]
+  (maarita-selainversio-user-agentista user-agent-text-lowercase "firefox"))
+
+(defn chrome-vanhentunut? []
+  (and (chrome?)
+       (< (maarita-chrome-versio-user-agentista
+             (clojure.string/lower-case js/window.navigator.userAgent))
+           +tuettu-chrome-versio+)))
+
+(defn firefox-vanhentunut? []
+  (and (firefox?)
+       (< (maarita-firefox-versio-user-agentista
+             (clojure.string/lower-case js/window.navigator.userAgent))
+           +tuettu-firefox-versio+)))
+
+(defn tuettu-selain? []
+  (boolean (or (ipad?)
+               (iphone?)
+               (and (chrome?)
+                    (not (chrome-vanhentunut?)))
+               (and (firefox?)
+                    (not (firefox-vanhentunut?))))))
+
+(defn vanhentunut-selain? []
+  (boolean (or (and (chrome?)
+                    (chrome-vanhentunut?)
+               (and (firefox?)
+                    (firefox-vanhentunut?))))))
 
 (defn- flip [atomi]
   (swap! atomi not))
 
 (defn timed-swap! [delay atom swap-fn]
   (after-delay delay
-     (swap! atom swap-fn)))
-
-(defn unreactive-deref [atom]
-  (binding [ratom/*ratom-context* nil]
-    @atom))
+               (swap! atom swap-fn)))
 
 (defn parsi-kaynnistysparametrit [params]
   (let [params (if (str/starts-with? params "?")
@@ -31,22 +88,22 @@
         keys-values (keep #(let [[nimi arvo] (str/split % "=")]
                              (when-not (str/blank? nimi)
                                [nimi arvo]))
-                         params)]
+                          params)]
     (into {} keys-values)))
 
 (defn- timestamp []
   (.getTime (js/Date.)))
 
-(defn ipad? []
-  (re-matches #".*iPad.*" (.-platform js/navigator)))
+(defn ilman-tavutusta [teksti]
+  (str/replace teksti #"\u00AD" ""))
 
 (defn erota-mittaukset [havainnot]
-  (select-keys havainnot [:lampotila :lumisuus :tasaisuus :kitkamittaus
+  (select-keys havainnot [:lampotila :lumisuus :talvihoito-tasaisuus :soratie-tasaisuus :kitkamittaus
                           :polyavyys :kiinteys :sivukaltevuus]))
 
 (defn erota-havainnot [havainnot]
   (let [h (dissoc havainnot
-                  :lampotila :lumisuus :tasaisuus :kitkamittaus
+                  :lampotila :lumisuus :talvihoito-tasaisuus :soratie-tasaisuus :kitkamittaus
                   :polyavyys :kiinteys :sivukaltevuus)]
     (filterv h (keys h))))
 
@@ -161,6 +218,11 @@
   "Tarkistaa ollaanko stg-ympäristössä"
   (let [host (.-host js/location)]
     (#{"testiextranet.liikennevirasto.fi"} host)))
+
+(defn- ms->sec
+  "Muuntaa millisekunnit sekunneiksi"
+  [s]
+  (/ s 1000))
 
 (defn kehitysymparistossa? []
   "Tarkistaa ollaanko kehitysympäristössä"
