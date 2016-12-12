@@ -69,7 +69,7 @@
       [{:otsikko "Päivämäärä" :nimi :pvm :tyyppi :pvm :pakollinen? true}
        {:otsikko "Hinta" :nimi :hinta :tyyppi :positiivinen-numero :pakollinen? true}
        {:otsikko "Ylläpitoluokka" :nimi :yllapitoluokka :tyyppi :positiivinen-numero
-        :huomauta [[:yllapitoluokka]]}
+        :kokonaisluku? true :validoi [[:yllapitoluokka]]}
        {:otsikko               "Laskentakohde"
         :nimi                  :laskentakohde
         :placeholder           "Hae kohde tai luo uusi"
