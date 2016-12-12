@@ -5,7 +5,7 @@
             [harja-laadunseuranta.tiedot.sovellus :as sovellus]
             [harja-laadunseuranta.tiedot.comms :as comms]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
-            [harja-laadunseuranta.ui.tr-haku :as tr-haku]
+            [harja-laadunseuranta.tiedot.tr-haku :as tr-haku]
             [harja-laadunseuranta.utils :as utils]
             [harja-laadunseuranta.tiedot.puhe :as puhe]
             [harja-laadunseuranta.tiedot.tarkastusajon-luonti :as tarkastusajon-luonti]

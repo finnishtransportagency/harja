@@ -10,7 +10,7 @@
             [harja-laadunseuranta.ui.alustus :as alustus]
             [harja-laadunseuranta.ui.ylapalkki :as ylapalkki]
             [harja-laadunseuranta.ui.paanavigointi :refer [paanavigointi]]
-            [harja-laadunseuranta.ui.tr-haku :as tr-haku]
+            [harja-laadunseuranta.tiedot.tr-haku :as tr-haku]
             [harja-laadunseuranta.ui.havaintolomake :refer [havaintolomake]]
             [harja-laadunseuranta.ui.tarkastusajon-paattaminen :as tarkastusajon-luonti]
             [harja-laadunseuranta.utils :refer [flip erota-havainnot]]
@@ -45,8 +45,7 @@
       [:div.tarkastusajon-paattaminen-dialog-container
        [tarkastusajon-luonti/tarkastusajon-jatkamisdialogi]])
 
-    [spinneri s/lahettamattomia-merkintoja]
-    [tr-haku/tr-selailukomponentti s/tr-tiedot-nakyvissa? s/tr-tiedot]]])
+    [spinneri s/lahettamattomia-merkintoja]]])
 
 (defn main []
   (if @s/sovellus-alustettu
