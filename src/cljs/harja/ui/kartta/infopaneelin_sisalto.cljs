@@ -188,6 +188,16 @@
    :data toteuma})
 
 
+(defmethod infopaneeli-skeema :silta [silta]
+  {:tyyppi :silta
+   :otsikko "Silta"
+   :tiedot [{:otsikko "Nimi" :hae :siltanimi}
+            {:otsikko "Sillan tunnus" :hae :siltatunnus}
+            {:otsikko "Edellinen tarkastus" :tyyppi :pvm :hae :tarkastusaika}
+            {:otsikko "Edellinen tarkastaja" :hae :tarkastaja}
+            {:otsikko "Avaa valittu silta" :tyyppi :linkki :nimi :avaa-silta}]
+   :data silta})
+
 (defmethod infopaneeli-skeema :default [x]
   (log/warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))
             ", palautetaan tyhjä itemille " (pr-str x))
