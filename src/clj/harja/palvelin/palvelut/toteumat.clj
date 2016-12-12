@@ -585,52 +585,44 @@
              (log/warn t "Toteumareittien haku epäonnistui"))))
     ch))
 
-(defn- lue-karttakuvan-parametrit [parametrit nimi]
-  (some-> parametrit (get nimi) transit/lue-transit-string))
-
 (defn- hae-kokonaishintainen-toteuma-kartalle [db user {:keys [extent parametrit]}]
-  (let [{urakka-id :urakka-id :as p} (lue-karttakuvan-parametrit parametrit "kht")
+  (let [{urakka-id :urakka-id :as p} parametrit
         _ (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)]
     (hae-toteumareitit-kartalle db user extent p q/hae-kokonaishintaisten-toiden-reitit)))
 
 (defn- hae-kokonaishintaisen-toteuman-tiedot-kartalle [db user {:keys [x y] :as parametrit}]
 
-  (let [parametrit (some-> parametrit (get "kht")
-                           java.net.URLDecoder/decode
-                           transit/lue-transit-string)]
-    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user
-                               (:urakka-id parametrit))
-    (konv/sarakkeet-vektoriin
-     (into []
-           (comp (map #(assoc % :tyyppi-kartalla :toteuma))
-                 (map konv/alaviiva->rakenne))
-           (q/hae-toteumien-tiedot-pisteessa
-            db
-            (merge {:x x :y y :toleranssi 150 :tyyppi "kokonaishintainen"}
-                   parametrit)))
-     {:tehtava :tehtavat})))
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user
+                             (:urakka-id parametrit))
+  (konv/sarakkeet-vektoriin
+   (into []
+         (comp (map #(assoc % :tyyppi-kartalla :toteuma))
+               (map konv/alaviiva->rakenne))
+         (q/hae-toteumien-tiedot-pisteessa
+          db
+          (merge {:x x :y y :toleranssi 150 :tyyppi "kokonaishintainen"}
+                 parametrit)))
+   {:tehtava :tehtavat}))
 
 (defn- hae-yksikkohintaiset-toteumat-kartalle [db user {:keys [extent parametrit]}]
-  (let [{urakka-id :urakka-id :as p} (some-> parametrit (get "yht") transit/lue-transit-string)
+  (let [{urakka-id :urakka-id :as p} parametrit
         _ (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-yksikkohintaisettyot
                                      user urakka-id)]
     (hae-toteumareitit-kartalle db user extent p q/hae-yksikkohintaisten-toiden-reitit)))
 
 (defn- hae-yksikkohintaisen-toteuman-tiedot-kartalle [db user {:keys [x y] :as parametrit}]
-  (let [parametrit (some-> parametrit (get "yht") java.net.URLDecoder/decode
-                           transit/lue-transit-string)]
-    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-yksikkohintaisettyot user
-                               (:urakka-id parametrit))
-    (konv/sarakkeet-vektoriin
-     (into []
-           (comp (map #(assoc % :tyyppi-kartalla :toteuma))
-                 (map konv/alaviiva->rakenne))
-           (q/hae-toteumien-tiedot-pisteessa
-            db
-            (merge {:x x :y y :toleranssi 150 :tyyppi "yksikkohintainen"
-                    :toimenpidekoodi nil}
-                   parametrit)))
-     {:tehtava :tehtavat})))
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-yksikkohintaisettyot user
+                             (:urakka-id parametrit))
+  (konv/sarakkeet-vektoriin
+   (into []
+         (comp (map #(assoc % :tyyppi-kartalla :toteuma))
+               (map konv/alaviiva->rakenne))
+         (q/hae-toteumien-tiedot-pisteessa
+          db
+          (merge {:x x :y y :toleranssi 150 :tyyppi "yksikkohintainen"
+                  :toimenpidekoodi nil}
+                 parametrit)))
+   {:tehtava :tehtavat}))
 
 (defrecord Toteumat []
   component/Lifecycle
@@ -643,11 +635,13 @@
       (karttakuvat/rekisteroi-karttakuvan-lahde!
        karttakuvat :kokonaishintainen-toteuma
        (partial #'hae-kokonaishintainen-toteuma-kartalle db)
-       (partial #'hae-kokonaishintaisen-toteuman-tiedot-kartalle db))
+       (partial #'hae-kokonaishintaisen-toteuman-tiedot-kartalle db)
+       "kht")
       (karttakuvat/rekisteroi-karttakuvan-lahde!
        karttakuvat :yksikkohintaiset-toteumat
        (partial #'hae-yksikkohintaiset-toteumat-kartalle db)
-       (partial #'hae-yksikkohintaisen-toteuman-tiedot-kartalle db)))
+       (partial #'hae-yksikkohintaisen-toteuman-tiedot-kartalle db)
+       "yht"))
 
     (julkaise-palvelut
      http

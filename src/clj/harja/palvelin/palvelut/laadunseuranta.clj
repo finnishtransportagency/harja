@@ -309,22 +309,21 @@
       (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka)
       (hae-urakan-sanktiot c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
 
-(defn- tarkastusreittien-parametrit [user parametrit]
-  (let [{:keys [havaintoja-sisaltavat? vain-laadunalitukset? tienumero
-                alkupvm loppupvm tyyppi urakka-id]}
-        (transit/lue-transit-string parametrit)]
-    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset
-                               user :urakka-id)
-    {:urakka urakka-id
-     :alku alkupvm :loppu loppupvm
-     :rajaa_tienumerolla (some? tienumero) :tienumero tienumero
-     :rajaa_tyypilla (some? tyyppi) :tyyppi (and tyyppi (name tyyppi))
-     :havaintoja_sisaltavat havaintoja-sisaltavat?
-     :vain_laadunalitukset vain-laadunalitukset?
-     :kayttaja_on_urakoitsija (roolit/urakoitsija? user)}))
+(defn- tarkastusreittien-parametrit
+  [user {:keys [havaintoja-sisaltavat? vain-laadunalitukset? tienumero
+                alkupvm loppupvm tyyppi urakka-id] :as parametrit}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset
+                             user :urakka-id)
+  {:urakka urakka-id
+   :alku alkupvm :loppu loppupvm
+   :rajaa_tienumerolla (some? tienumero) :tienumero tienumero
+   :rajaa_tyypilla (some? tyyppi) :tyyppi (and tyyppi (name tyyppi))
+   :havaintoja_sisaltavat havaintoja-sisaltavat?
+   :vain_laadunalitukset vain-laadunalitukset?
+   :kayttaja_on_urakoitsija (roolit/urakoitsija? user)})
 
 (defn hae-tarkastusreitit-kartalle [db user {:keys [extent parametrit]}]
-  (let [parametrit (tarkastusreittien-parametrit user (get parametrit "tr"))
+  (let [parametrit (tarkastusreittien-parametrit user parametrit)
         [x1 y1 x2 y2] extent
         alue {:xmin x1 :ymin y1 :xmax x2 :ymax y2}
         alue (assoc alue :toleranssi (geo/karkeistustoleranssi alue))
@@ -349,16 +348,15 @@
 
     ch))
 
-(defn hae-tarkastusreittien-asiat-kartalle [db user {x :x y :y params "tr"}]
-  (let [parametrit (tarkastusreittien-parametrit user (java.net.URLDecoder/decode params))]
-    (into []
-          (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
-                (map #(konv/string->keyword % :tyyppi)))
-          (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
-              db
-              (assoc parametrit
-                     :x x :y y
-                     :toleranssi 150)))))
+(defn hae-tarkastusreittien-asiat-kartalle [db user {x :x y :y :as parametrit}]
+  (into []
+        (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
+              (map #(konv/string->keyword % :tyyppi)))
+        (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
+         db
+         (assoc parametrit
+                :x x :y y
+                :toleranssi 150))))
 
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
@@ -390,7 +388,8 @@
     (karttakuvat/rekisteroi-karttakuvan-lahde!
      karttakuvat :tarkastusreitit
      (partial #'hae-tarkastusreitit-kartalle db)
-     (partial #'hae-tarkastusreittien-asiat-kartalle db))
+     (partial #'hae-tarkastusreittien-asiat-kartalle db)
+     "tr")
 
     (julkaise-palvelut
       http-palvelin

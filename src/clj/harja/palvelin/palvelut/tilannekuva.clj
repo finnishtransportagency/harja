@@ -400,11 +400,7 @@
 
 (defn- suodattimet-parametreista [parametrit]
   {:pre [(map? parametrit)]}
-  (some-> parametrit
-          (get "tk")
-          java.net.URLDecoder/decode
-          transit/lue-transit-string
-          aikavalinta))
+  (aikavalinta parametrit))
 
 (defn- karttakuvan-suodattimet
   "Tekee karttakuvan URL parametreistä suodattimet"
@@ -530,15 +526,18 @@
     (karttakuvat/rekisteroi-karttakuvan-lahde!
       karttakuvat :tilannekuva-toteumat
       (partial hae-toteumien-sijainnit-kartalle db)
-      (partial #'hae-toteumien-tiedot-kartalle db))
+      (partial #'hae-toteumien-tiedot-kartalle db)
+      "tk")
     (karttakuvat/rekisteroi-karttakuvan-lahde!
      karttakuvat :tilannekuva-tarkastukset
      (partial hae-tarkastuksien-sijainnit-kartalle db)
-     (partial #'hae-tarkastuksien-tiedot-kartalle db))
+     (partial #'hae-tarkastuksien-tiedot-kartalle db)
+     "tk")
     (karttakuvat/rekisteroi-karttakuvan-lahde!
      karttakuvat :tilannekuva-tyokoneet
      (partial #'hae-tyokoneiden-sijainnit-kartalle db)
-     (partial #'hae-tyokoneiden-tiedot-kartalle db))
+     (partial #'hae-tyokoneiden-tiedot-kartalle db)
+     "tk")
     this)
 
   (stop [{karttakuvat :karttakuvat :as this}]
