@@ -312,7 +312,7 @@
                            (tiedot/seuraa-alueita!))
                       #(do (reset! kartta-tiedot/pida-geometriat-nakyvilla? true)
                            (kartta/aseta-paivitetaan-karttaa-tila! false)
-                           (kartta-tiedot/kasittele-infopaneliin-linkit! nil)
+                           (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa nil)
                            (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa nil)
                            (tiedot/lopeta-alueiden-seuraus!)))

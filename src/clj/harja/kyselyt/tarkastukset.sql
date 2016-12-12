@@ -89,7 +89,7 @@ SELECT ST_Simplify(t.sijainti, :toleranssi) as reitti,
 
 -- name: hae-urakan-tarkastusten-asiat-kartalle
 -- Hakee pisteessä löytyneet tarkastukset karttaa klikattaessa
-SELECT t.tyyppi, t.laadunalitus,
+SELECT t.id, t.tyyppi, t.laadunalitus,
               CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
         THEN 'urakoitsija' :: osapuoli
         ELSE 'tilaaja' :: osapuoli

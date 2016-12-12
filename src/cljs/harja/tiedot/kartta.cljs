@@ -15,21 +15,22 @@
 
 (defonce nayta-infopaneeli? (atom false))
 (defonce infopaneeli-nakyvissa? (reaction (and @nayta-infopaneeli? @nav/kartta-nakyvissa?)))
-(defonce infopanelin-linkkifunktiot (atom nil))
+(defonce infopaneelin-linkkifunktiot (atom nil))
 
 (defn keskita-kartta-alueeseen! [alue]
   (reset! nav/kartan-extent alue))
 
-(defn kasittele-infopaneliin-linkit!
+(defn kasittele-infopaneelin-linkit!
   "Infopaneelin skeemat saattavat sisältää 'linkkejä', jotka käsitellään
   (tai ei käsitellä) näkymäkohtaisesti. Esimerkiksi toteumanäkymässä voidaan haluta
   mahdollistaa toteuman avaaminen lomakkeeseen infopaneelin kautta.
   Funktio ottaa parametriksi mäpin, jossa avaimet ovat :tyyppejä-kartalla
-  (katso harja.ui.kartta.asioiden-tiedot), ja arvot ovat funktioita, jotka
-  saavat parametrinaan valitun asian datan."
+  (katso harja.ui.kartta.asioiden-tiedot), ja arvot ovat mappejä, jotka
+  sisältävät avaimet :toiminto ja :teksti. :toiminto -avaimen arvo on
+  funktio, joka saa parametrinaan valitun asian datan."
   [asetukset]
-  (assert (or (nil? asetukset) (map? asetukset)) "Infopaneelin linkkiasetusten pitää olla mäppi")
-  (reset! infopanelin-linkkifunktiot asetukset))
+  (assert (or (nil? asetukset) (map? asetukset)) "Infopaneelin linkkiasetusten pitää olla mäppi tai nil")
+  (reset! infopaneelin-linkkifunktiot asetukset))
 
 (defn zoomaa-valittuun-hallintayksikkoon-tai-urakkaan
   []

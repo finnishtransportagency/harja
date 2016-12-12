@@ -122,6 +122,7 @@ WHERE sijainti IS NOT NULL AND
 -- name: hae-tarkastusten-asiat
 -- Hakee tarkastusten asiat pisteessä
 SELECT
+  t.id,
   t.aika,
   t.tyyppi,
   t.tarkastaja,
