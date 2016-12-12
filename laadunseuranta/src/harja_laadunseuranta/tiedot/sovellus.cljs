@@ -8,13 +8,13 @@
   {;; Sovelluksen alustustiedot
    :alustus {:alustettu false
              :gps-tuettu false
-             :ensimmainen-sijainti nil ; alustusta varten
+             :ensimmainen-sijainti nil ; Estää sovelluksen käytön jos GPS ei toimi oikein
              :verkkoyhteys (.-onLine js/navigator)
              :selain-tuettu (utils/tuettu-selain?)
              :selain-vanhentunut (utils/vanhentunut-selain?)}
 
    ;; Tarkastusajon perustiedot
-   :aloitetaan-tarkastusajo false ; TODO REFACTOR :tarkastusajo-alkamassa? Tarkastusajo alkamassa (nappia painettu UI:sta)
+   :tarkastusajo-alkamassa? false ; Käynnistysnappia painettu UI:sta
    :valittu-urakka nil ; Urakka valitaan tietyntyyppisiin ajoihin, muuten päätellään automaattisesti kun tarkastus päättyy
    :tarkastusajo-id nil ; Palvelinpään id tarkastusajo taulussa
    :tallennus-kaynnissa false ; TODO REFACTOR :tarkastusajo-kaynnissa?
@@ -133,7 +133,7 @@
 (def sijainti (reagent/cursor sovellus [:sijainti]))
 (def valittu-urakka (reagent/cursor sovellus [:valittu-urakka]))
 (def tarkastusajo-id (reagent/cursor sovellus [:tarkastusajo-id]))
-(def aloitetaan-tarkastusajo (reagent/cursor sovellus [:aloitetaan-tarkastusajo]))
+(def tarkastusajo-alkamassa? (reagent/cursor sovellus [:tarkastusajo-alkamassa?]))
 
 (def tyhja-sijainti
   {:lat 0

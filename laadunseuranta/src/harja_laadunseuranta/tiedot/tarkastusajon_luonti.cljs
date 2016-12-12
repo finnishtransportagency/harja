@@ -60,12 +60,12 @@
   (swap! s/sovellus alusta-uusi-tarkastusajo))
 
 (defn luo-ajo! []
-  (reset! s/aloitetaan-tarkastusajo true)
+  (reset! s/tarkastusajo-alkamassa? true)
   (go-loop []
     (if-let [id (-> (<! (comms/luo-ajo!)) :ok :id)]
       (do
         (kaynnista-tarkastusajo id)
-        (reset! s/aloitetaan-tarkastusajo false))
+        (reset! s/tarkastusajo-alkamassa? false))
       ;; yritä uudelleleen kunnes onnistuu
       (do (<! (timeout 1000))
           (recur)))))
