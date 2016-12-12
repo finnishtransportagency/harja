@@ -15,8 +15,8 @@
 
    ;; Tarkastusajon perustiedot
    :tarkastusajo-alkamassa? false ; Käynnistysnappia painettu UI:sta
-   :valittu-urakka nil ; Urakka valitaan tietyntyyppisiin ajoihin, muuten päätellään automaattisesti kun tarkastus päättyy
-   :tarkastusajo-id nil ; Palvelinpään id tarkastusajo taulussa
+   :valittu-urakka nil ; Päättämisdialogissa valittu urakka-id
+   :tarkastusajo-id nil ; Palvelinpään id tarkastusajo-taulussa
    :tarkastusajo-kaynnissa? false
    :palautettava-tarkastusajo nil ; TODO REFACTOR dokumentoi tämä
    :tarkastusajo-paattymassa? false ; Jos true, näytetään päättämisdialogi
@@ -43,11 +43,12 @@
                         :valilehdet-nakyvissa? true
                         :valilehtiryhmat [] ; Näkyvien välilehtien määritykset {:avain ..., :nimi ... , :sisalto ...}
                         :valittu-valilehtiryhma 0 ;; Indeksi taulukossa valilehtiryhmat
-                        :valittu-valilehti nil ;; Välilehden avain
+                        :valittu-valilehti nil ; Välilehden avain
                         :hampurilaisvalikon-lista-nakyvissa? false}}
 
    ;; Havainnot
-   :jatkuvat-havainnot #{} ; Tähän tallentuu välikohtaiset havainnot (esim. liukasta, lumista jne.) Tällä hetkellä alas painetut havaintonapit.
+   :jatkuvat-havainnot #{} ; Tähän tallentuu välikohtaiset havainnot (esim. liukasta, lumista jne.).
+                           ; Sama kuin UI:ssa alas painetut havaintonapit.
 
    ;; Mittaukset
    ;; Mittaustiedot kun kyseessä on "perusnäppäimistö"
@@ -77,9 +78,9 @@
    :kirjauspisteet [] ; Kartalla näytettäviä ikoneita varten
    :reittipisteet [] ; Kartalle piirrettävä häntä mäppejä {:segmentti [[x1 y1] [x2 y2]] :vari html-vari}
 
-   :kartta {:keskita-ajoneuvoon false ;; TODO REFACTOR +? kaikkiin
-            :nayta-kiinteistorajat false
-            :nayta-ortokuva false}
+   :kartta {:keskita-ajoneuvoon? false
+            :nayta-kiinteistorajat? false
+            :nayta-ortokuva? false}
 
    ;; Muut
    :vakiohavaintojen-kuvaukset nil ; Serveriltä saadut tiedot vakiohavainnoista
@@ -151,12 +152,12 @@
 (def ilmoitukset (reagent/cursor sovellus [:ilmoitukset]))
 (def ilmoitus (reagent/cursor sovellus [:ilmoitus]))
 
-(def nayta-kiinteistorajat (reagent/cursor sovellus [:kartta :nayta-kiinteistorajat]))
-(def nayta-ortokuva (reagent/cursor sovellus [:kartta :nayta-ortokuva]))
-(def keskita-ajoneuvoon (reagent/cursor sovellus [:kartta :keskita-ajoneuvoon]))
-(def karttaoptiot (reaction {:seuraa-sijaintia (or @tarkastusajo-kaynnissa? @keskita-ajoneuvoon)
-                             :nayta-kiinteistorajat @nayta-kiinteistorajat
-                             :nayta-ortokuva @nayta-ortokuva}))
+(def nayta-kiinteistorajat? (reagent/cursor sovellus [:kartta :nayta-kiinteistorajat?]))
+(def nayta-ortokuva? (reagent/cursor sovellus [:kartta :nayta-ortokuva?]))
+(def keskita-ajoneuvoon? (reagent/cursor sovellus [:kartta :keskita-ajoneuvoon?]))
+(def karttaoptiot (reaction {:seuraa-sijaintia? (or @tarkastusajo-kaynnissa? @keskita-ajoneuvoon?)
+                             :nayta-kiinteistorajat? @nayta-kiinteistorajat?
+                             :nayta-ortokuva? @nayta-ortokuva?}))
 
 (def jatkuvat-havainnot (reagent/cursor sovellus [:jatkuvat-havainnot]))
 (def mittaustyyppi (reagent/cursor sovellus [:mittaustyyppi]))
