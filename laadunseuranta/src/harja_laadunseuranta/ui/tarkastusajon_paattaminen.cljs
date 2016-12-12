@@ -16,6 +16,18 @@
    [:div [:img.centered {:src kuvat/+spinner+
                          :height "32px"}]]])
 
+(defn- urakkavarmistusdialogi
+  [{:keys [urakka-varmistettu! paattaminen-peruttu!]}]
+  [:div.tarkastusajon-paattaminen-dialog
+   [:div.ohjeteksti "Tarkastusajosi liitetää urakkaan"]
+   #_[urakka] ;; TODO Tähän joku input-komponentti
+   [nappi "OK"
+    {:luokat-str "nappi-ensisijainen"
+     :on-click urakka-varmistettu!}]
+   [nappi "Peruuta"
+    {:luokat-str "nappi-toissijainen"
+     :on-click paattaminen-peruttu!}]])
+
 (defn- paattasmisvarmistusdialogi
   [{:keys [paattamattomia-merkintoja paattaminen-peruttu! lopetuspaatos-varmistettu!]}]
   [:div.tarkastusajon-paattaminen-dialog
@@ -45,9 +57,10 @@
       :lopetuspaatos-varmistettu! paattaminen/lopetuspaatos-varmistettu!
       :paattaminen-peruttu! paattaminen/paattaminen-peruttu!}]
 
-     ;; TODO
-     ;:urakkavarmistus
-     ;[urakkavarmistus]
+     :urakkavarmistus
+     [urakkavarmistusdialogi
+      {:urakka-varmistettu! paattaminen/urakka-varmistettu!
+       :paattaminen-peruttu! paattaminen/paattaminen-peruttu!}]
 
      :paatetaan
      [ajo-paatetaan-dialogi])])

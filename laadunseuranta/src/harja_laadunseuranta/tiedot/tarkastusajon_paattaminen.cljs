@@ -6,7 +6,7 @@
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
-(defn- alusta-uusi-tarkastusajo [sovellus]
+(defn- aseta-uusi-tarkastusajo-sovelluksen-tilaan [sovellus]
   (-> sovellus
       (assoc
         ;; Tarkastusajon perustiedot
@@ -46,11 +46,12 @@
       ;; UI:sta resetoidaan vain näkyvyys
       (assoc-in [:ui :paanavigointi :nakyvissa?] true)))
 
-(defn- pysayta-tarkastusajo! []
-  (swap! s/sovellus alusta-uusi-tarkastusajo))
+(defn- alusta-uusi-tarkastusajo! []
+  (swap! s/sovellus aseta-uusi-tarkastusajo-sovelluksen-tilaan))
 
 (defn paattaminen-peruttu! []
-  (reset! s/tarkastusajo-paattymassa? false))
+  (reset! s/tarkastusajo-paattymassa? false)
+  (reset! s/tarkastusajon-paattamisvaihe nil))
 
 (defn aseta-ajo-paattymaan! []
   (reset! s/tarkastusajo-paattymassa? true)
@@ -59,7 +60,7 @@
 (defn paata-ajo! []
   (go-loop []
            (if (<! (comms/paata-ajo! @s/tarkastusajo-id @s/valittu-urakka))
-             (pysayta-tarkastusajo!)
+             (alusta-uusi-tarkastusajo!)
 
              ;; yritä uudelleen kunnes onnistuu, spinneri pyörii
              (do (<! (timeout 1000))
@@ -72,10 +73,7 @@
   (reset! s/palautettava-tarkastusajo nil))
 
 (defn lopetuspaatos-varmistettu! []
-  ;; TODO Käytä tätä, älä päätä ajoa vielä
-  #_(reset! s/tarkastusajon-paattamisvaihe :urakkavarmistus)
-  (reset! s/tarkastusajon-paattamisvaihe :paatetaan)
-  (paata-ajo!))
+  (reset! s/tarkastusajon-paattamisvaihe :urakkavarmistus))
 
 (defn urakka-varmistettu! []
   (reset! s/tarkastusajon-paattamisvaihe :paatetaan)
