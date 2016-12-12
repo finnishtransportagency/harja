@@ -587,6 +587,33 @@ WHERE
   AND t.poistettu IS NOT TRUE
   AND (:toimenpidekoodi :: INTEGER IS NULL OR tk.id = :toimenpidekoodi);
 
+-- name: hae-kokonaishintaisten-toiden-tiedot
+-- Hakee klikkauspisteessä olevien (valitun toimenpiteen) toteumien
+-- tiedot infopaneelissa näytettäväksi.
+SELECT
+  t.id,
+  t.alkanut, t.paattynyt,
+  t.suorittajan_nimi AS suorittaja_nimi,
+  tk.nimi AS tehtava_toimenpide,
+  tt.maara AS tehtava_maara,
+  tk.yksikko AS tehtava_yksikko,
+  tt.toteuma AS tehtava_id,
+  tk.nimi AS toimenpide
+FROM toteuma_tehtava tt
+  JOIN toteuma t ON tt.toteuma = t.id
+  JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
+WHERE
+  t.urakka = :urakka-id
+  AND (:toteuma-id :: INTEGER IS NULL OR t.id = :toteuma-id)
+  AND t.sopimus = :sopimus-id
+  AND t.alkanut >= :alkupvm
+  AND t.alkanut <= :loppupvm
+  AND ST_Distance(t.reitti, ST_MakePoint(:x, :y)) < :toleranssi
+  AND t.tyyppi = 'kokonaishintainen' :: toteumatyyppi
+  AND t.poistettu IS NOT TRUE
+  AND (:toimenpidekoodi :: INTEGER IS NULL OR tk.id = :toimenpidekoodi);
+
+
 -- name: hae-kokonaishintaisen-toteuman-reitti
 SELECT
   mk.nimi            AS materiaali_nimi,
