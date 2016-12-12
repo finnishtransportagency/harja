@@ -13,7 +13,7 @@
         ;; Tarkastusajon perustiedot
         :valittu-urakka nil
         :tarkastusajo-id nil
-        :tallennus-kaynnissa false
+        :tarkastusajo-kaynnissa? false
         :tarkastusajo-paattymassa false
         ;; Ajonaikaiset tiedot
         :reittipisteet []
@@ -51,7 +51,7 @@
     :tarkastusajo-id ajo-id
     :reittipisteet []
     :kirjauspisteet []
-    :tallennus-kaynnissa true))
+    :tarkastusajo-kaynnissa? true))
 
 (defn- kaynnista-tarkastusajo [ajo-id]
   (swap! s/sovellus #(aseta-tarkastusajo-sovelluksen-tilaan % ajo-id)))
@@ -90,7 +90,7 @@
     (reset! s/reittipisteet (mapv utils/keywordize-map (js->clj (get ajo "reittipisteet"))))
     (reset! s/kirjauspisteet (mapv utils/keywordize-map (js->clj (get ajo "tarkastuspisteet"))))
     (reset! s/tarkastusajo-id (get ajo "tarkastusajo"))
-    (reset! s/tallennus-kaynnissa true))
+    (reset! s/tarkastusajo-kaynnissa? true))
   (reset! s/palautettava-tarkastusajo nil))
 
 (defn pakota-ajon-lopetus! []

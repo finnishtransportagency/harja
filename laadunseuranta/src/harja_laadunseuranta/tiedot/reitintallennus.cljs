@@ -236,7 +236,7 @@
 
 (defn kaynnista-reitintallennus [{:keys [sijainnin-tallennus-mahdollinen-atom sijainti-atom
                                          db segmentti-atom jatkuvat-havainnot mittaustyyppi
-                                         reittipisteet-atom tallennus-kaynnissa-atom
+                                         reittipisteet-atom tarkastusajo-kaynnissa-atom
                                          tarkastusajo-paattymassa
                                          tarkastusajo-atom tarkastuspisteet-atom soratiemittaussyotto]}]
   (.log js/console "Reitintallennus käynnistetty")
@@ -247,13 +247,13 @@
       (tallenna-tarkastusajon-geometria db @tarkastusajo-atom @reittipisteet-atom @tarkastuspisteet-atom)))
 
   (run!
-    (when (and @tallennus-kaynnissa-atom
+    (when (and @tarkastusajo-kaynnissa-atom
                @segmentti-atom)
       (swap! reittipisteet-atom #(lisaa-piirrettava-reittipiste % @segmentti-atom))))
 
   (run!
     (when (and @sijainnin-tallennus-mahdollinen-atom
-               @tallennus-kaynnissa-atom
+               @tarkastusajo-kaynnissa-atom
                (not @tarkastusajo-paattymassa)
                (:nykyinen @sijainti-atom))
       (kirjaa-yksittainen-reittimerkinta!

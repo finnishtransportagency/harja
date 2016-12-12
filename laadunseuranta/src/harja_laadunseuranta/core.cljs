@@ -91,7 +91,7 @@
        :tarkastusajo-paattymassa sovellus/tarkastusajo-paattymassa
        :segmentti-atom sovellus/reittisegmentti
        :reittipisteet-atom sovellus/reittipisteet
-       :tallennus-kaynnissa-atom sovellus/tallennus-kaynnissa
+       :tarkastusajo-kaynnissa-atom sovellus/tarkastusajo-kaynnissa?
        :tarkastusajo-atom sovellus/tarkastusajo-id
        :tarkastuspisteet-atom sovellus/kirjauspisteet
        :soratiemittaussyotto sovellus/soratiemittaussyotto

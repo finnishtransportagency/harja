@@ -17,7 +17,7 @@
    :tarkastusajo-alkamassa? false ; Käynnistysnappia painettu UI:sta
    :valittu-urakka nil ; Urakka valitaan tietyntyyppisiin ajoihin, muuten päätellään automaattisesti kun tarkastus päättyy
    :tarkastusajo-id nil ; Palvelinpään id tarkastusajo taulussa
-   :tallennus-kaynnissa false ; TODO REFACTOR :tarkastusajo-kaynnissa?
+   :tarkastusajo-kaynnissa? false
    :palautettava-tarkastusajo nil ; TODO REFACTOR dokumentoi tämä
    :tarkastusajo-paattymassa false ; TODO REFACTOR +? Jos true, näytetään päättämisdialogi
 
@@ -147,14 +147,14 @@
 
 (def kartan-keskipiste (reaction @ajoneuvon-sijainti))
 
-(def tallennus-kaynnissa (reagent/cursor sovellus [:tallennus-kaynnissa]))
+(def tarkastusajo-kaynnissa? (reagent/cursor sovellus [:tarkastusajo-kaynnissa?]))
 (def ilmoitukset (reagent/cursor sovellus [:ilmoitukset]))
 (def ilmoitus (reagent/cursor sovellus [:ilmoitus]))
 
 (def nayta-kiinteistorajat (reagent/cursor sovellus [:kartta :nayta-kiinteistorajat]))
 (def nayta-ortokuva (reagent/cursor sovellus [:kartta :nayta-ortokuva]))
 (def keskita-ajoneuvoon (reagent/cursor sovellus [:kartta :keskita-ajoneuvoon]))
-(def karttaoptiot (reaction {:seuraa-sijaintia (or @tallennus-kaynnissa @keskita-ajoneuvoon)
+(def karttaoptiot (reaction {:seuraa-sijaintia (or @tarkastusajo-kaynnissa? @keskita-ajoneuvoon)
                              :nayta-kiinteistorajat @nayta-kiinteistorajat
                              :nayta-ortokuva @nayta-ortokuva}))
 
@@ -197,7 +197,7 @@
 
 (def piirra-paanavigointi?
   (reaction (boolean (and @tarkastusajo-id
-                          @tallennus-kaynnissa
+                          @tarkastusajo-kaynnissa?
                           (not @tarkastusajo-paattymassa)
                           (not @havaintolomake-auki)))))
 

@@ -13,7 +13,7 @@
     (str (or tie "-") " / " (or aosa "-") " / " (or aet "-"))))
 
 (defn- logo-klikattu []
-  (when-not @s/tallennus-kaynnissa
+  (when-not @s/tarkastusajo-kaynnissa?
     (set! (.-location js/window) asetukset/+harja-url+)))
 
 (defn- logo []
@@ -29,7 +29,7 @@
 (defn- havaintosilma [havaintonappi-painettu]
   (let [aktiivinen? (and @s/nayta-paanavigointi?
                          @s/piirra-paanavigointi?)
-        disabloitu? (not @s/tallennus-kaynnissa)]
+        disabloitu? (not @s/tarkastusajo-kaynnissa?)]
     [:div {:class (str "ylapalkki-button ylapalkki-button-nayta-paanavigointi "
                        (when aktiivinen?
                          "ylapalkki-button-aktiivinen ")
@@ -47,23 +47,23 @@
    [:div.ylapalkin-metatieto.soratiehoitoluokka (str "SHL: " (or @soratiehoitoluokka "-"))]
    [:div.ylapalkin-metatieto.talvihoitoluokka (str "THL: " (or @hoitoluokka "-"))]])
 
-(defn- kaynnistyspainike [{:keys [tallennus-kaynnissa kaynnista-fn
+(defn- kaynnistyspainike [{:keys [tarkastusajo-kaynnissa? kaynnista-fn
                                   pysayta-fn tarkastusajo-alkamassa?]}]
-  [:div.kaynnistyspainike {:class (when @tallennus-kaynnissa "kaynnissa")
-                           :on-click (if @tallennus-kaynnissa
+  [:div.kaynnistyspainike {:class (when @tarkastusajo-kaynnissa? "kaynnissa")
+                           :on-click (if @tarkastusajo-kaynnissa?
                                        pysayta-fn
                                        kaynnista-fn)}
    (when-not @tarkastusajo-alkamassa?
      [kuvat/svg-sprite "nuoli-ylos-alaviiva-24"])
    [:span.kaynnistyspainike-teksti
-    (if @tallennus-kaynnissa
+    (if @tarkastusajo-kaynnissa?
       "Pysäytä tarkastus"
       (if @tarkastusajo-alkamassa?
         "Käynnistetään..."
         "Käynnistä tarkastus"))]])
 
 (defn- kamera []
-  (let [disabloitu? (not @s/tallennus-kaynnissa)]
+  (let [disabloitu? (not @s/tarkastusajo-kaynnissa?)]
     [:div {:class (str "ylapalkki-button "
                        (when disabloitu?
                          "ylapalkki-button-disabloitu "))
@@ -72,7 +72,7 @@
      [kuvat/svg-sprite "kamera-24"]]))
 
 (defn- ylapalkkikomponentti [{:keys [hoitoluokka soratiehoitoluokka
-                                     tr-osoite tallennus-kaynnissa tarkastusajo-alkamassa?
+                                     tr-osoite tarkastusajo-kaynnissa? tarkastusajo-alkamassa?
                                      kaynnista-tarkastus-fn pysayta-tarkastusajo-fn
                                      disabloi-kaynnistys? havaintonappi-painettu
                                      palvelinvirhe]}]
@@ -86,7 +86,7 @@
      [tieosoite tr-osoite]
      [metatiedot soratiehoitoluokka hoitoluokka]]
     [:div.ylapalkki-oikea
-     [kaynnistyspainike {:tallennus-kaynnissa tallennus-kaynnissa
+     [kaynnistyspainike {:tarkastusajo-kaynnissa? tarkastusajo-kaynnissa?
                          :kaynnista-fn #(when (and (not disabloi-kaynnistys?)
                                                    (not @tarkastusajo-alkamassa?))
                                           (kaynnista-tarkastus-fn))
@@ -104,7 +104,7 @@
     :kaynnista-tarkastus-fn tarkastusajon-luonti/luo-ajo!
     :pysayta-tarkastusajo-fn tarkastusajon-luonti/aseta-ajo-paattymaan!
     :tr-osoite s/tr-osoite
-    :tallennus-kaynnissa s/tallennus-kaynnissa
+    :tarkastusajo-kaynnissa? s/tarkastusajo-kaynnissa?
     :disabloi-kaynnistys? (or @s/havaintolomake-auki
                               @s/palautettava-tarkastusajo)
     :palvelinvirhe s/palvelinvirhe}])
