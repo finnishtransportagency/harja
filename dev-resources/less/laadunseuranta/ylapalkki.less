@@ -235,24 +235,16 @@
   }
 
   .kaynnistyspainike {
-    width: 170px;
     height: (@ylapalkin-korkeus-pienempi + 2px);
+    width: 50px;
     line-height: @ylapalkin-korkeus-pienempi;
 
     .kaynnispainike-nuoli {
       margin-right: 5px;
-
     }
-  }
-}
 
-@media (max-width: @leveys-puhelin) {
-  .kaynnistyspainike {
-    width: 50px;
-    line-height: @ylapalkin-korkeus-pienempi;
-  }
-
-  .kaynnistyspainike > .kaynnistyspainike-teksti {
-    display: none;
+    > .kaynnistyspainike-teksti {
+      display: none;
+    }
   }
 }

@@ -17,9 +17,6 @@
     [cljs.core.async.macros :refer [go go-loop]]
     [devcards.core :as dc :refer [defcard deftest]]))
 
-(def +hampurilaisvalikko-kaytossa-leveydessa+ 700)
-(def +lyhenna-teksteja-leveydessa+ 530)
-
 (def edellinen-header-leveys (atom nil))
 (def +header-reuna-padding+ 80)
 (def +valilehti-perusleveys+ 50) ;; Kun välilehti on tyhjä
@@ -28,7 +25,7 @@
   ;; Jaetaan välilehdet ryhmiin. Tarkoituksena etsiä sellainen jako, jossa
   ;; välilehtien määrä / ryhmä on mahdollisimman suuri niin, ettei välilehtien
   ;; leveys ylitä containerin leveyttä.
-  ;; HUOMAA, että tämä ei ole pikselintarkka lasku, mutta selkeästi riittävä
+  ;; HUOMAA että tämä ei ole pikselintarkka lasku, vaan "close enough" ratkaisu, joka toimii
   (if (= header-leveys 0)
     (count valilehdet)
     (let [valilehtien-nimet (map #(utils/ilman-tavutusta (:nimi %)) valilehdet)
@@ -91,7 +88,7 @@
           (when (> @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))
             (reset! valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))))))))
 
-(defn- paanavigointi-header [{:keys [valilehdet valittu-valilehti
+(defn- paanavigointi-header [{:keys [valittu-valilehti valilehdet
                                      hampurilaisvalikon-lista-nakyvissa?
                                      hampurilaisvalikko-painettu body-click
                                      hampurilaisvalikon-lista-item-painettu
@@ -127,7 +124,10 @@
                                 ;; kun headerin leveys muuttuu mistä tahansa syystä, niin tämän voi
                                 ;; poistaa. Toistaiseksi nyt näin.
                                 (when @tarkkaile-leveytta?
-                                  (ryhmittele-valilehdet-uudelleen-tarvittaessa! @dom-node)
+                                  (ryhmittele-valilehdet-uudelleen-tarvittaessa! {:header-komponentti @dom-node
+                                                                                  :valilehdet valilehdet
+                                                                                  :valilehtiryhmat valilehtiryhmat
+                                                                                  :valittu-valilehtiryhma valittu-valilehtiryhma})
                                   (<! (timeout 1000))
                                   (recur))))
        :component-will-unmount (fn [_]
@@ -143,10 +143,7 @@
                                                          :valilehdet valilehdet
                                                          :valilehtiryhmat valilehtiryhmat
                                                          :valittu-valilehtiryhma valittu-valilehtiryhma})
-         (maarita-hampurilaisvalikon-listan-max-korkeus! {:header-komponentti @dom-node
-                                                          :valilehdet valilehdet
-                                                          :valilehtiryhmat valilehtiryhmat
-                                                          :valittu-valilehtiryhma valittu-valilehtiryhma})
+         (maarita-hampurilaisvalikon-listan-max-korkeus! @dom-node)
 
          (let [valitun-valilehtiryhman-valilehdet (when-not (empty? @valilehtiryhmat)
                                                     (nth @valilehtiryhmat @valittu-valilehtiryhma))]
@@ -246,15 +243,14 @@
                                                      mittaus-paalla?
                                                      (:vaatii-nappaimiston? havainto)))})])))]]))
 
-(defn- paanavigointi-footer [{:keys [vapauta-kaikki-painettu havaintolomake-painettu
-                                     paanavigointi-nakyvissa?] :as tiedot}]
+(defn- paanavigointi-footer [{:keys [vapauta-kaikki-painettu havaintolomake-painettu] :as tiedot}]
   [:footer
    [:div.footer-vasen
     [nappi "Vapauta kaikki" {:on-click vapauta-kaikki-painettu
                              :ikoni (kuvat/svg-sprite "nuoli-ylos-24")
                              :luokat-str "nappi-toissijainen"}]]
    [:div.footer-oikea
-    [nappi (if (< @dom/leveys +lyhenna-teksteja-leveydessa+)
+    [nappi (if (< @dom/leveys dom/+leveys-tabletti+)
              "Lomake"
              "Avaa lomake")
      {:on-click havaintolomake-painettu
@@ -277,7 +273,7 @@
                  jatkuvat-havainnot nykyinen-mittaustyyppi hampurilaisvalikko-painettu
                  vapauta-kaikki-painettu havaintolomake-painettu] :as tiedot}]
       (let [mittaus-paalla? (some? nykyinen-mittaustyyppi)
-            kayta-hampurilaisvalikkoa? (< @dom/leveys +hampurilaisvalikko-kaytossa-leveydessa+)
+            kayta-hampurilaisvalikkoa? (< @dom/leveys dom/+leveys-tabletti+)
             mitattava-havainto (when mittaus-paalla?
                                  (first (filter #(= (get-in % [:mittaus :tyyppi])
                                                     nykyinen-mittaustyyppi)

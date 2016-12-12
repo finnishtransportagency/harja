@@ -43,4 +43,7 @@
           true
           (recur (.-parentNode ylempi)))))))
 
-;; Responsiivisen UI:n vakiot (tulisi pääosin vastata CSS:n media-queryissä käytettyjä arvoja)
+;; Responsiivisen UI:n vakiot
+;; (Jos muutat näitä, tarkista myös vakiot.less)
+
+(def +leveys-tabletti+ 760) ; Tätä suurempi laite on tabletti, pienempi puhelin
