@@ -25,10 +25,15 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction-writable]]))
 
+(defn voi-kirjoittaa? [urakka]
+  (oikeudet/voi-kirjoittaa?
+    oikeudet/urakat-toteutus-kokonaishintaisettyot
+    urakka))
+
 (defn- valinnat [e! {:keys [valittu-urakka valittu-sopimusnumero
                             valitse-sopimusnumero valitun-urakan-hoitokaudet
                             valittu-hoitokausi valitse-hoitokausi]}]
-  (let [muokkausoikeus? true] ;; TODO OIKEUSTARKISTUS
+  (let [muokkausoikeus? (voi-kirjoittaa? valittu-urakka)]
     [:span
      (valinnat/urakan-sopimus-ja-hoitokausi
        valittu-urakka
@@ -40,7 +45,7 @@
 (defn muu-tyo-lomake [e! tila {:keys [valittu-urakka valittu-sopimusnumero] :as riippuvuudet}]
   (let [vanha-toteuma? (get-in tila [:valittu-toteuma :id])
         valinnat (:valinnat tila)
-        muokkausoikeus? true] ;; TODO OIKEISTARKISTUS
+        muokkausoikeus? (voi-kirjoittaa? valittu-urakka)]
     (log "TILA:" (pr-str tila))
     [:div
      [napit/takaisin "Takaisin toteumaluetteloon"
