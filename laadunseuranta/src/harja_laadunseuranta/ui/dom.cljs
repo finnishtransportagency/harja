@@ -42,3 +42,5 @@
         (if (= dom-node ylempi)
           true
           (recur (.-parentNode ylempi)))))))
+
+;; Responsiivisen UI:n vakiot (tulisi pääosin vastata CSS:n media-queryissä käytettyjä arvoja)
