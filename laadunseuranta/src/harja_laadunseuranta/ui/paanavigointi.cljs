@@ -19,7 +19,7 @@
 
 (def edellinen-header-leveys (atom nil))
 (def +header-reuna-padding+ 80)
-(def +valilehti-perusleveys+ 50) ;; Kun välilehti on tyhjä
+(def +valilehti-perusleveys+ 60) ;; Kun välilehti on tyhjä
 (def +kirjain-leveys+ 9.3) ;; kirjaimen leveys keskimäärin
 (defn- maarittele-valilehtien-maara-per-ryhma [header-leveys valilehdet]
   ;; Jaetaan välilehdet ryhmiin. Tarkoituksena etsiä sellainen jako, jossa
