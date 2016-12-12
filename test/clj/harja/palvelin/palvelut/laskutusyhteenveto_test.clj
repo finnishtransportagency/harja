@@ -307,3 +307,18 @@
       (is (=marginaalissa? (:suolasakot_laskutetaan haetut-tiedot-oulu-talvihoito) -29760.0M) "suolasakko laskutusyhteenvedossa")
       (is (=marginaalissa? (:suolasakot_laskutetaan_ind_korotettuna haetut-tiedot-oulu-talvihoito) -29854.989M) "suolasakko laskutusyhteenvedossa")
       (is (=marginaalissa? (:suolasakot_laskutetaan_ind_korotus haetut-tiedot-oulu-talvihoito) -94.99M) "suolasakko laskutusyhteenvedossa"))))
+
+
+(deftest kuun-viimeisen-paivan-yht-oikein-laskutusyhteenvedossa ;HAR-3965
+  (testing "kuun-viimeisen-paivan-yht-oikein-laskutusyhteenvedossa"
+    (let [haetut-tiedot-oulu (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+                               (:db jarjestelma)
+                               +kayttaja-jvh+
+                               {:urakka-id @oulun-alueurakan-2014-2019-id
+                                :alkupvm   (pvm/->pvm "1.11.2016")
+                                :loppupvm (pvm/->pvm "30.11.2016")})
+          haetut-tiedot-oulu-liikenneympariston-hoito (first (filter #(= (:tuotekoodi %) "23110") haetut-tiedot-oulu))]
+
+      (is (= (:yht_laskutetaan haetut-tiedot-oulu-liikenneympariston-hoito) 7882.5M) ":yht_laskutetaan laskutusyhteenvedossa")
+      (is (= (:yht_laskutetaan_ind_korotus haetut-tiedot-oulu-liikenneympariston-hoito) nil) ":yht_laskutetaan laskutusyhteenvedossa")
+      (is (= (:yht_laskutetaan_ind_korotettuna haetut-tiedot-oulu-liikenneympariston-hoito) nil) ":yht_laskutetaan laskutusyhteenvedossa"))))

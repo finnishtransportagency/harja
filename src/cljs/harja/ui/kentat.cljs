@@ -866,7 +866,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
     [:span.tierekisteriosoite
      [:span.tie "Tie " numero] " / "
      [:span.alkuosa alkuosa] " / "
-     [:span.alkuetaisyys alkuetaisyys]
+     [:span.alkuetaisyys alkuetaisyys] " / "
      [:span.loppuosa loppuosa] " / "
      [:span.loppuetaisyys loppuetaisyys]]))
 

@@ -81,7 +81,6 @@
     [harja.palvelin.integraatiot.api.siltatarkastukset :as api-siltatarkastukset]
     [harja.palvelin.integraatiot.api.tarkastukset :as api-tarkastukset]
     [harja.palvelin.integraatiot.api.tyokoneenseuranta :as api-tyokoneenseuranta]
-    [harja.palvelin.integraatiot.api.tyokoneenseuranta-puhdistus :as tks-putsaus]
     [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
     [harja.palvelin.integraatiot.api.varusteet :as api-varusteet]
     [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
@@ -97,6 +96,7 @@
     [harja.palvelin.ajastetut-tehtavat.laskutusyhteenvedot :as laskutusyhteenvedot]
     [harja.palvelin.ajastetut-tehtavat.api-yhteysvarmistus :as api-yhteysvarmistus]
     [harja.palvelin.ajastetut-tehtavat.sonja-jms-yhteysvarmistus :as sonja-jms-yhteysvarmistus]
+    [harja.palvelin.ajastetut-tehtavat.tyokoneenseuranta-puhdistus :as tks-putsaus]
 
 
     ;; Harja mobiili Laadunseuranta
