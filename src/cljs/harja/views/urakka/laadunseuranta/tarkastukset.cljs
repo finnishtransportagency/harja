@@ -448,7 +448,8 @@
 (defn- vastaava-tarkastus [klikattu-tarkastus]
   ;; oletetaan että kartalla näkyvät tarkastukset ovat myös gridissä
   (some (fn [urakan-tarkastus]
-          (= (:id urakan-tarkastus) (:id klikattu-tarkastus)))
+          (when (= (:id urakan-tarkastus) (:id klikattu-tarkastus))
+            urakan-tarkastus))
         @tarkastukset/urakan-tarkastukset))
 
 (defn tarkastukset
