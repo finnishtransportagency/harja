@@ -11,6 +11,7 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.views.kartta :as kartta]
+            [harja.tiedot.kartta :as kartta-tiedot]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.komponentti :as komp]
             [harja.pvm :as pvm]
@@ -270,11 +271,28 @@
              :palstoja 2}]
            @muokattu]])))
 
+(defn- vastaava-toteuma [klikattu-toteuma]
+  ;; oletetaan että kartalla näkyvät toteumat ovat myös gridissä
+  (some (fn [urakan-toteuma]
+          (when (= (:id (:toteuma urakan-toteuma)) (:id klikattu-toteuma))
+            urakan-toteuma))
+        @tiedot/haetut-toteumat))
+
+(def debug-toteuma (atom {}))
+
 (defn kokonaishintaiset-toteumat []
   (komp/luo
     (komp/kuuntelija :toteuma-klikattu kokonaishintainen-reitti-klikattu)
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-kokonaishintainen-toteuma)
-
+    (komp/sisaan-ulos #(do
+                         (kartta-tiedot/kasittele-infopaneelin-linkit!
+                          {:toteuma {:toiminto (fn [klikattu-toteuma] ;; asiat-pisteessa -asia joka on tyypiltään toteuma
+                                                 (log "klikattu toteuma:" (pr-str klikattu-toteuma))
+                                                 (log "vastaava toteuma:" (pr-str (vastaava-toteuma klikattu-toteuma)))
+                                                 (reset! tiedot/valittu-kokonaishintainen-toteuma (vastaava-toteuma klikattu-toteuma)))
+                                       :teksti "Valitse toteuma"}
+                           }))
+                      #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
     (fn []
       [:span
        [kartta/kartan-paikka]
