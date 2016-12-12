@@ -21,6 +21,11 @@ SELECT
   thm.kitka              AS talvihoitomittaus_kitka,
   thm.lampotila_tie      AS talvihoitomittaus_lampotila_tie,
   thm.lampotila_ilma     AS talvihoitomittaus_lampotila_ilma,
+  stm.hoitoluokka        AS soratiemittaus_hoitoluokka,
+  stm.tasaisuus          AS soratiemittaus_tasaisuus,
+  stm.kiinteys           AS soratiemittaus_kiinteys,
+  stm.polyavyys          AS soratiemittaus_polyavyys,
+  stm.sivukaltevuus      AS soratiemittaus_sivukaltevuus,
   ypk.tr_numero          AS yllapitokohde_tr_numero,
   ypk.tr_alkuosa         AS yllapitokohde_tr_alkuosa,
   ypk.tr_alkuetaisyys    AS yllapitokohde_tr_alkuetaisyys,
@@ -37,17 +42,20 @@ SELECT
   WHERE tarkastus = t.id) as vakiohavainnot
 FROM tarkastus t
   LEFT JOIN talvihoitomittaus thm ON thm.tarkastus = t.id
+  LEFT JOIN soratiemittaus stm ON stm.tarkastus = t.id
   LEFT JOIN kayttaja k ON t.luoja = k.id
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
   LEFT JOIN yllapitokohde ypk ON t.yllapitokohde = ypk.id
 WHERE t.urakka = :urakka
       AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
-      AND (t.aika >= :alku AND t.aika <= :loppu)
+      AND (t.aika :: DATE >= :alku AND t.aika :: DATE <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
       AND (:havaintoja_sisaltavat = FALSE
            OR ((char_length(t.havainnot) > 0 AND lower(t.havainnot) != 'ok')
-               OR EXISTS(SELECT tarkastus FROM tarkastus_vakiohavainto WHERE tarkastus = t.id)))
+               OR EXISTS(SELECT tarkastus FROM tarkastus_vakiohavainto WHERE tarkastus = t.id)
+               OR EXISTS(SELECT tarkastus FROM talvihoitomittaus WHERE tarkastus = t.id)
+               OR EXISTS(SELECT tarkastus FROM soratiemittaus WHERE tarkastus = t.id)))
       AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE)
   ORDER BY t.aika DESC
 LIMIT :maxrivimaara;
@@ -74,7 +82,9 @@ SELECT ST_Simplify(t.sijainti, :toleranssi) as reitti,
    AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
        AND (:havaintoja_sisaltavat = FALSE
             OR ((char_length(t.havainnot) > 0 AND lower(t.havainnot) != 'ok')
-                OR EXISTS(SELECT tarkastus FROM tarkastus_vakiohavainto WHERE tarkastus = t.id)))
+                OR EXISTS(SELECT tarkastus FROM tarkastus_vakiohavainto WHERE tarkastus = t.id)
+                OR EXISTS(SELECT tarkastus FROM talvihoitomittaus WHERE tarkastus = t.id)
+                OR EXISTS(SELECT tarkastus FROM soratiemittaus WHERE tarkastus = t.id)))
    AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE);
 
 -- name: hae-tarkastus
@@ -204,12 +214,17 @@ SET talvihoitoluokka = :talvihoitoluokka,
   ajosuunta          = :ajosuunta
 WHERE tarkastus = :tarkastus
 
+--name: poista-talvihoitomittaus!
+DELETE
+FROM talvihoitomittaus
+WHERE tarkastus = :tarkastus;
+
 -- name: luo-soratiemittaus<!
 -- Luo uuden soratiemittauksen annetulle tarkastukselle.
 INSERT
 INTO soratiemittaus
 (hoitoluokka, tasaisuus, kiinteys, polyavyys, sivukaltevuus, tarkastus)
-VALUES (:hoitoluokka, :tasaisuus, :kiinteys, :polyavyys, :sivukaltevuus, :tarkastus)
+VALUES (:hoitoluokka, :tasaisuus, :kiinteys, :polyavyys, :sivukaltevuus, :tarkastus);
 
 -- name: paivita-soratiemittaus!
 -- Päivittää tarkastuksen aiemmin luodun soratiemittauksen
@@ -220,6 +235,11 @@ SET hoitoluokka = :hoitoluokka,
   polyavyys     = :polyavyys,
   sivukaltevuus = :sivukaltevuus
 WHERE tarkastus = :tarkastus;
+
+--name: poista-soratiemittaus!
+DELETE
+  FROM soratiemittaus
+ WHERE tarkastus = :tarkastus;
 
 -- name: hae-tarkastus-ulkoisella-idlla-ja-tyypilla
 -- Hakee tarkastuksen ja sen havainnon id:t ulkoisella id:lla ja luojalla.

@@ -108,14 +108,10 @@
            (get-in rivi [:tr :loppuosa])
            (get-in rivi [:tr :loppuetaisyys])
            (:tarkastaja rivi)
-           (str (cond
-                  (:id (:talvihoitomittaus rivi))
-                  (talvihoitomittaus (:talvihoitomittaus rivi))
-
-                  (:id (:soratiemittaus rivi))
-                  (soratiemittaus (:soratiemittaus rivi))
-
-                  :default ""))
+           (str (when (:id (:talvihoitomittaus rivi))
+                  (talvihoitomittaus (:talvihoitomittaus rivi)))
+                (when (:id (:soratiemittaus rivi))
+                  (soratiemittaus (:soratiemittaus rivi))))
            (let [vakiohavainnot (:vakiohavainnot (konv/array->vec rivi :vakiohavainnot))]
              (str (formatoi-vakiohavainnot vakiohavainnot)
                   (:havainnot rivi)))

@@ -26,8 +26,10 @@
             :pistemainen-havainto (pistemainen-havainto havainnot))
      (dissoc :havainnot))))
 
-(defn hae-reitin-merkinnat [db args]
-  (mapv muunna-merkinta (hae-reitin-merkinnat-raw db args)))
+(defn hae-reitin-merkinnat-tieosoitteilla
+  "Hakee reittimerkinnät ja niiden projisoidun tieverkon osoitteet."
+  [db args]
+  (mapv muunna-merkinta (hae-reitin-merkinnat-tieosoitteilla-raw db args)))
 
 (defn hae-vakiohavaintojen-kuvaukset [db]
   (into {} (mapv (fn [r] [(keyword (:avain r)) (:nimi r)])
