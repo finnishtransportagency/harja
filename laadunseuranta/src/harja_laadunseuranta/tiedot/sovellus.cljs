@@ -19,7 +19,7 @@
    :tarkastusajo-id nil ; Palvelinpään id tarkastusajo taulussa
    :tarkastusajo-kaynnissa? false
    :palautettava-tarkastusajo nil ; TODO REFACTOR dokumentoi tämä
-   :tarkastusajo-paattymassa false ; TODO REFACTOR +? Jos true, näytetään päättämisdialogi
+   :tarkastusajo-paattymassa? false ; Jos true, näytetään päättämisdialogi
 
    ;; Käyttäjätiedot
    :kayttaja {:kayttajanimi nil
@@ -193,12 +193,12 @@
 
 (def sijainnin-tallennus-mahdollinen (reaction (and @idxdb @tarkastusajo-id)))
 
-(def tarkastusajo-paattymassa (reagent/cursor sovellus [:tarkastusajo-paattymassa]))
+(def tarkastusajo-paattymassa? (reagent/cursor sovellus [:tarkastusajo-paattymassa?]))
 
 (def piirra-paanavigointi?
   (reaction (boolean (and @tarkastusajo-id
                           @tarkastusajo-kaynnissa?
-                          (not @tarkastusajo-paattymassa)
+                          (not @tarkastusajo-paattymassa?)
                           (not @havaintolomake-auki)))))
 
 (def nayta-paanavigointi? (reagent/cursor sovellus [:ui :paanavigointi :nakyvissa?]))

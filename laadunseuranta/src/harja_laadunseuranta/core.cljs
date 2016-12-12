@@ -88,7 +88,7 @@
       {:sijainnin-tallennus-mahdollinen-atom sovellus/sijainnin-tallennus-mahdollinen
        :sijainti-atom sovellus/sijainti
        :db @sovellus/idxdb
-       :tarkastusajo-paattymassa sovellus/tarkastusajo-paattymassa
+       :tarkastusajo-paattymassa-atom sovellus/tarkastusajo-paattymassa?
        :segmentti-atom sovellus/reittisegmentti
        :reittipisteet-atom sovellus/reittipisteet
        :tarkastusajo-kaynnissa-atom sovellus/tarkastusajo-kaynnissa?

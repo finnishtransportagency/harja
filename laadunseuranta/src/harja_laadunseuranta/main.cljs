@@ -37,7 +37,7 @@
     (when @s/havaintolomake-auki
       [havaintolomake])
 
-    (when @s/tarkastusajo-paattymassa
+    (when @s/tarkastusajo-paattymassa?
       [:div.tarkastusajon-paattaminen-dialog-container
        [tarkastusajon-luonti/tarkastusajon-paattamisdialogi s/lahettamattomia-merkintoja]])
 

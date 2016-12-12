@@ -14,7 +14,7 @@
         :valittu-urakka nil
         :tarkastusajo-id nil
         :tarkastusajo-kaynnissa? false
-        :tarkastusajo-paattymassa false
+        :tarkastusajo-paattymassa? false
         ;; Ajonaikaiset tiedot
         :reittipisteet []
         :tr-tiedot {:tr-osoite {:tie nil
@@ -71,10 +71,10 @@
           (recur)))))
 
 (defn paattaminen-peruttu! []
-  (reset! s/tarkastusajo-paattymassa false))
+  (reset! s/tarkastusajo-paattymassa? false))
 
 (defn aseta-ajo-paattymaan! []
-  (reset! s/tarkastusajo-paattymassa true))
+  (reset! s/tarkastusajo-paattymassa? true))
 
 (defn paata-ajo! []
   (go-loop []
