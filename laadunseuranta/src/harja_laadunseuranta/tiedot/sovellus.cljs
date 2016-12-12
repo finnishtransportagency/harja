@@ -6,12 +6,13 @@
 
 (def sovelluksen-alkutila
   {;; Sovelluksen alustustiedot
-   :alustus {:alustettu false
-             :gps-tuettu false
+   :alustus {:alustettu? false
+             :gps-tuettu? false
              :ensimmainen-sijainti nil ; Estää sovelluksen käytön jos GPS ei toimi oikein
-             :verkkoyhteys (.-onLine js/navigator)
-             :selain-tuettu (utils/tuettu-selain?)
-             :selain-vanhentunut (utils/vanhentunut-selain?)}
+             :verkkoyhteys? (.-onLine js/navigator)
+             :selain-tuettu? (utils/tuettu-selain?)
+             :oikeus-urakoihin []
+             :selain-vanhentunut? (utils/vanhentunut-selain?)}
 
    ;; Tarkastusajon perustiedot
    :tarkastusajo-alkamassa? false ; Käynnistysnappia painettu UI:sta
@@ -99,7 +100,6 @@
 (def palautettava-tarkastusajo (reagent/cursor sovellus [:palautettava-tarkastusajo]))
 
 (def tr-tiedot (reagent/cursor sovellus [:tr-tiedot]))
-(def tr-tiedot-nakyvissa? (reagent/cursor sovellus [:ui :tr-tiedot-nakyvissa?]))
 (def tr-osoite (reagent/cursor sovellus [:tr-tiedot :tr-osoite]))
 (def hoitoluokka (reagent/cursor sovellus [:tr-tiedot :talvihoitoluokka]))
 (def soratiehoitoluokka (reagent/cursor sovellus [:tr-tiedot :soratiehoitoluokka]))
@@ -115,19 +115,21 @@
 (def havaintolomake-esikatselukuva (reagent/cursor sovellus [:havaintolomakedata :esikatselukuva]))
 
 (def alustus-valmis (reaction (let [sovellus @sovellus]
-                                (boolean (and (get-in sovellus [:alustus :gps-tuettu])
+                                (boolean (and (get-in sovellus [:alustus :gps-tuettu?])
                                               (get-in sovellus [:alustus :ensimmainen-sijainti])
-                                              (get-in sovellus [:alustus :verkkoyhteys])
-                                              (get-in sovellus [:alustus :selain-tuettu])
+                                              (get-in sovellus [:alustus :verkkoyhteys?])
+                                              (get-in sovellus [:alustus :selain-tuettu?])
+                                              (not (empty? (get-in sovellus [:alustus :oikeus-urakoihin])))
                                               (:idxdb sovellus)
                                               (get-in sovellus [:kayttaja :kayttajanimi]))))))
 
-(def sovellus-alustettu (reagent/cursor sovellus [:alustus :alustettu]))
-(def verkkoyhteys (reagent/cursor sovellus [:alustus :verkkoyhteys]))
-(def selain-tuettu (reagent/cursor sovellus [:alustus :selain-tuettu]))
-(def selain-vanhentunut (reagent/cursor sovellus [:alustus :selain-vanhentunut]))
-(def gps-tuettu (reagent/cursor sovellus [:alustus :gps-tuettu]))
+(def sovellus-alustettu (reagent/cursor sovellus [:alustus :alustettu?]))
+(def verkkoyhteys (reagent/cursor sovellus [:alustus :verkkoyhteys?]))
+(def selain-tuettu (reagent/cursor sovellus [:alustus :selain-tuettu?]))
+(def selain-vanhentunut (reagent/cursor sovellus [:alustus :selain-vanhentunut?]))
+(def gps-tuettu (reagent/cursor sovellus [:alustus :gps-tuettu?]))
 (def ensimmainen-sijainti (reagent/cursor sovellus [:alustus :ensimmainen-sijainti]))
+(def oikeus-urakoihin (reagent/cursor sovellus [:alustus :oikeus-urakoihin]))
 
 (def kirjauspisteet (reagent/cursor sovellus [:kirjauspisteet]))
 

@@ -51,10 +51,11 @@
   (if @s/sovellus-alustettu
     [paanakyma]
     [alustus/alustuskomponentti
-     {:selain-vanhentunut s/selain-vanhentunut
-      :gps-tuettu s/gps-tuettu
-      :ensimmainen-sijainti s/ensimmainen-sijainti
-      :idxdb-tuettu s/idxdb
-      :kayttaja s/kayttajanimi
-      :verkkoyhteys s/verkkoyhteys
-      :selain-tuettu s/selain-tuettu}]))
+     {:selain-vanhentunut @s/selain-vanhentunut
+      :gps-tuettu @s/gps-tuettu
+      :ensimmainen-sijainti @s/ensimmainen-sijainti
+      :oikeus-urakoihin @s/oikeus-urakoihin
+      :idxdb-tuettu @s/idxdb
+      :kayttaja @s/kayttajanimi
+      :verkkoyhteys @s/verkkoyhteys
+      :selain-tuettu @s/selain-tuettu}]))

@@ -62,7 +62,8 @@
     (let [kayttajatiedot (<! (comms/hae-kayttajatiedot))]
       (reset! sovellus/kayttajanimi (-> kayttajatiedot :nimi))
       (reset! sovellus/kayttajatunnus (-> kayttajatiedot :kayttajanimi))
-      (reset! sovellus/vakiohavaintojen-kuvaukset (-> kayttajatiedot :vakiohavaintojen-kuvaukset)))
+      (reset! sovellus/vakiohavaintojen-kuvaukset (-> kayttajatiedot :vakiohavaintojen-kuvaukset))
+      (reset! sovellus/oikeus-urakoihin (-> kayttajatiedot :urakat)))
 
     (reset! sovellus/idxdb (<! (reitintallennus/tietokannan-alustus)))
 
