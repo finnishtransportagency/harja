@@ -79,7 +79,7 @@
                             <xs:element name="sampohankeyhteyshenkilo" minOccurs="1" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
-                                        Hankkeen yhteyshenkilö.
+                                        Hankkeen yhteyshenkilö (Liikenneviraston käyttäjätunnus).
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -110,6 +110,54 @@
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
                                         <xs:maxLength value="32"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="urakanpaattymispvm" type="xs:date" minOccurs="0" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Urakan päättymisajankohta.
+                                    </xs:documentation>
+                                </xs:annotation>
+                            </xs:element>
+                            <xs:element name="urakkavaylamuoto" minOccurs="0" maxOccurs="unbounded">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Urakan väylämuoto: tie/rautatie/vesi.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="tie"/>
+                                        <xs:enumeration value="rautatie"/>
+                                        <xs:enumeration value="vesi"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="urakkatyyppi" minOccurs="0" maxOccurs="unbounded">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Urakan tyyppi: hoito/ylläpito/investoinnit/muut.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="hoito"/>
+                                        <xs:enumeration value="ylläpito"/>
+                                        <xs:enumeration value="investoinnit"/>
+                                        <xs:enumeration value="muut"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="elynumero" minOccurs="0" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        ELY-numero.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:int">
+                                        <xs:minInclusive value="1"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -835,6 +883,18 @@
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
                                         <xs:maxLength value="5000"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="vastuuhenkilo" minOccurs="0">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Vastuuhenkilö (Liikenneviraston käyttäjätunnus)
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:maxLength value="256"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
