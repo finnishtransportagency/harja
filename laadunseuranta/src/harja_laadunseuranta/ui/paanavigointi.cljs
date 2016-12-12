@@ -88,6 +88,64 @@
           (when (> @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))
             (reset! valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))))))))
 
+(defn- paanavigointi-header-valilehtiryhmilla
+  [{:keys [valittu-valilehtiryhma]}]
+  (let [selauspainike-painettu! (fn [suunta]
+                                  (case suunta
+                                    :oikea (when (< @valittu-valilehtiryhma 3)
+                                             (reset! valittu-valilehtiryhma (+ @valittu-valilehtiryhma 1)))
+                                    :vasen (when (> @valittu-valilehtiryhma 0)
+                                             (reset! valittu-valilehtiryhma (- @valittu-valilehtiryhma 1)))))]
+    (fn [{:keys [valittu-valilehtiryhma valilehtiryhmat]}]
+      [:div
+       ;; Välilehtiryhmien pallerot
+       [:div.valilehtiryhmien-pallerot
+        (doall
+          (map-indexed
+            (fn [index _]
+              ^{:key index}
+              [:div {:class (str "valilehtiryhma-pallero "
+                                 (when (= index @valittu-valilehtiryhma)
+                                   "valilehtiryhma-pallero-aktiivinen"))}])
+            @valilehtiryhmat))]
+
+
+       ;; Välilehtien selaamiseen tarkoitetut nuolinapit
+       [:div
+        (let [disabloitu? (>= @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))]
+          [:div
+           {:class (str "selaa-valilehtiryhmia selaa-valilehtiryhmia-oikealle "
+                        (when disabloitu? "selaa-valilehtiryhmia-disabled"))
+            :on-click #(when-not disabloitu?
+                         (selauspainike-painettu! :oikea))}
+           [:img {:src kuvat/+avausnuoli+}]])
+        (let [disabloitu? (<= @valittu-valilehtiryhma 0)]
+          [:div
+           {:class (str "selaa-valilehtiryhmia selaa-valilehtiryhmia-vasemmalle "
+                        (when disabloitu? "selaa-valilehtiryhmia-disabled"))
+            :on-click #(when-not disabloitu?
+                         (selauspainike-painettu! :vasen))}
+           [:img {:src kuvat/+avausnuoli+}]])]])))
+
+(defn- paanavigointi-header-hampurilaisvalikolla
+  [{:keys [hampurilaisvalikko-painettu hampurilaisvalikon-lista-nakyvissa?
+           hampurilaisvalikon-listan-max-korkeus valilehdet
+           valittu-valilehti hampurilaisvalikon-lista-item-painettu]}]
+  [:div.hampurilaisvalikko
+   [:img.hampurilaisvalikko-ikoni
+    {:src kuvat/+hampurilaisvalikko+
+     :on-click hampurilaisvalikko-painettu}]
+   (when @hampurilaisvalikon-lista-nakyvissa?
+     [:div.lista.hampurilaisvalikon-lista
+      [:ul {:style {:max-height @hampurilaisvalikon-listan-max-korkeus}}
+       (doall
+         (for [{:keys [avain nimi] :as valilehti} valilehdet]
+           ^{:key avain}
+           [:li {:class (when (= avain @valittu-valilehti)
+                          "aktiivinen-valinta")
+                 :on-click (partial hampurilaisvalikon-lista-item-painettu avain)}
+            nimi]))]])])
+
 (defn- paanavigointi-header [{:keys [valittu-valilehti valilehdet
                                      hampurilaisvalikon-lista-nakyvissa?
                                      hampurilaisvalikko-painettu body-click
@@ -102,12 +160,6 @@
           (when this
             (reset! hampurilaisvalikon-listan-max-korkeus
                     (dom/elementin-etaisyys-viewportin-alareunaan this))))
-        selauspainike-painettu! (fn [suunta]
-                                  (case suunta
-                                    :oikea (when (< @valittu-valilehtiryhma 3)
-                                             (reset! valittu-valilehtiryhma (+ @valittu-valilehtiryhma 1)))
-                                    :vasen (when (> @valittu-valilehtiryhma 0)
-                                             (reset! valittu-valilehtiryhma (- @valittu-valilehtiryhma 1)))))
         body-click-kuuntelija (atom nil)
         tarkkaile-leveytta? (atom false)]
 
@@ -149,52 +201,17 @@
                                                     (nth @valilehtiryhmat @valittu-valilehtiryhma))]
            [:header {:class (when-not kayta-hampurilaisvalikkoa? "hampurilaisvalikko-ei-kaytossa")}
 
-            ;; Näytä välilehtiryhmiä ilmaisevat pallerot jos hampurilaisvalikko ei käytössä
-            (when-not kayta-hampurilaisvalikkoa?
-              [:div.valilehtiryhmien-pallerot
-               (doall
-                 (map-indexed
-                   (fn [index _]
-                     ^{:key index}
-                     [:div {:class (str "valilehtiryhma-pallero "
-                                        (when (= index @valittu-valilehtiryhma)
-                                          "valilehtiryhma-pallero-aktiivinen"))}])
-                   @valilehtiryhmat))])
-
-            ;; Näytä hampurilaisvalikko jos käytössä
-            (when kayta-hampurilaisvalikkoa?
-              [:div.hampurilaisvalikko
-               [:img.hampurilaisvalikko-ikoni
-                {:src kuvat/+hampurilaisvalikko+
-                 :on-click hampurilaisvalikko-painettu}]
-               (when @hampurilaisvalikon-lista-nakyvissa?
-                 [:div.lista.hampurilaisvalikon-lista
-                  [:ul {:style {:max-height @hampurilaisvalikon-listan-max-korkeus}}
-                   (doall
-                     (for [{:keys [avain nimi] :as valilehti} valilehdet]
-                       ^{:key avain}
-                       [:li {:class (when (= avain @valittu-valilehti)
-                                      "aktiivinen-valinta")
-                             :on-click (partial hampurilaisvalikon-lista-item-painettu avain)}
-                        nimi]))]])])
-
-            ;; Näytä välilehtien selaamiseen tarkoitetut nuolinapit, jos hampurilaisvalikko ei käytössä
-            (when-not kayta-hampurilaisvalikkoa?
-              [:div
-               (let [disabloitu? (>= @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))]
-                 [:div
-                  {:class (str "selaa-valilehtiryhmia selaa-valilehtiryhmia-oikealle "
-                               (when disabloitu? "selaa-valilehtiryhmia-disabled"))
-                   :on-click #(when-not disabloitu?
-                                (selauspainike-painettu! :oikea))}
-                  [:img {:src kuvat/+avausnuoli+}]])
-               (let [disabloitu? (<= @valittu-valilehtiryhma 0)]
-                 [:div
-                  {:class (str "selaa-valilehtiryhmia selaa-valilehtiryhmia-vasemmalle "
-                               (when disabloitu? "selaa-valilehtiryhmia-disabled"))
-                   :on-click #(when-not disabloitu?
-                                (selauspainike-painettu! :vasen))}
-                  [:img {:src kuvat/+avausnuoli+}]])])
+            (if kayta-hampurilaisvalikkoa?
+              [paanavigointi-header-hampurilaisvalikolla
+               {:hampurilaisvalikko-painettu hampurilaisvalikko-painettu
+                :hampurilaisvalikon-lista-nakyvissa? hampurilaisvalikon-lista-nakyvissa?
+                :hampurilaisvalikon-listan-max-korkeus hampurilaisvalikon-listan-max-korkeus
+                :valilehdet valilehdet
+                :valittu-valilehti valittu-valilehti
+                :hampurilaisvalikon-lista-item-painettu hampurilaisvalikon-lista-item-painettu}]
+              [paanavigointi-header-valilehtiryhmilla
+               {:valittu-valilehtiryhma valittu-valilehtiryhma
+                :valilehtiryhmat valilehtiryhmat}])
 
             ;; Näytä välilehdet. Hampurilaisvalikon kanssa näytetään aina vain aktiivinen välilehti
             ;; Muuten näytetään valitun välilehtiryhmän välilehdet
