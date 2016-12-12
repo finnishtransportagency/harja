@@ -79,7 +79,7 @@
                             <xs:element name="sampohankeyhteyshenkilo" minOccurs="1" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
-                                        Hankkeen yhteyshenkilö.
+                                        Hankkeen yhteyshenkilö (Liikenneviraston käyttäjätunnus).
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -128,9 +128,9 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:enumeration value="tie" />
-                                        <xs:enumeration value="rautatie" />
-                                        <xs:enumeration value="vesi" />
+                                        <xs:enumeration value="tie"/>
+                                        <xs:enumeration value="rautatie"/>
+                                        <xs:enumeration value="vesi"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -142,10 +142,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:enumeration value="hoito" />
-                                        <xs:enumeration value="ylläpito" />
-                                        <xs:enumeration value="investoinnit" />
-                                        <xs:enumeration value="muut" />
+                                        <xs:enumeration value="hoito"/>
+                                        <xs:enumeration value="ylläpito"/>
+                                        <xs:enumeration value="investoinnit"/>
+                                        <xs:enumeration value="muut"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -157,7 +157,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="1" />
+                                        <xs:minInclusive value="1"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -883,6 +883,18 @@
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
                                         <xs:maxLength value="5000"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="vastuuhenkilo" minOccurs="0">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Vastuuhenkilö (Liikenneviraston käyttäjätunnus)
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:maxLength value="256"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
