@@ -24,7 +24,7 @@
              :hae #(string/join ", " (:tehtavat %))}]
    :data tyokone})
 
-(defmethod infopaneeli-skeema :ilmoitus [ilmoitus]
+(defn ilmoituksen-tiedot [ilmoitus]
   {:tyyppi :ilmoitus
    :otsikko (condp = (:ilmoitustyyppi ilmoitus)
               :toimenpidepyynto "Toimenpidepyyntö"
@@ -39,6 +39,14 @@
             {:otsikko "Kuittaukset" :tyyppi :positiivinen-numero
              :hae #(count (:kuittaukset ilmoitus))}]
    :data ilmoitus})
+
+(defmethod infopaneeli-skeema :toimenpidepyynto [ilmoitus]
+  (ilmoituksen-tiedot ilmoitus))
+(defmethod infopaneeli-skeema :tiedoitus [ilmoitus]
+  (ilmoituksen-tiedot ilmoitus))
+(defmethod infopaneeli-skeema :kysely [ilmoitus]
+  (ilmoituksen-tiedot ilmoitus))
+
 
 (defmethod infopaneeli-skeema :varustetoteuma [toteuma]
   {:tyyppi :varustetoteuma
