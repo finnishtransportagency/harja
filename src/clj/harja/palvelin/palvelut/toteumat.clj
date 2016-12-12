@@ -594,16 +594,19 @@
     (hae-toteumareitit-kartalle db user extent p q/hae-kokonaishintaisten-toiden-reitit)))
 
 (defn- hae-kokonaishintaisen-toteuman-tiedot-kartalle [db user {:keys [x y] :as parametrit}]
+
   (let [parametrit (some-> parametrit (get "kht")
                            java.net.URLDecoder/decode
                            transit/lue-transit-string)]
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user
+                               (:urakka-id parametrit))
     (konv/sarakkeet-vektoriin
      (into []
            (comp (map #(assoc % :tyyppi-kartalla :toteuma))
                  (map konv/alaviiva->rakenne))
-           (q/hae-kokonaishintaisten-toiden-tiedot
+           (q/hae-toteumien-tiedot-pisteessa
             db
-            (merge {:x x :y y :toleranssi 150}
+            (merge {:x x :y y :toleranssi 150 :tyyppi "kokonaishintainen"}
                    parametrit)))
      {:tehtava :tehtavat})))
 
@@ -613,9 +616,19 @@
                                      user urakka-id)]
     (hae-toteumareitit-kartalle db user extent p q/hae-yksikkohintaisten-toiden-reitit)))
 
-(defn- hae-yksikkohintaisen-toteuman-tiedot-kartalle [db user parametrit]
-  (println "YKS HINT PARAMETRIT: " (pr-str parametrit))
-  [])
+(defn- hae-yksikkohintaisen-toteuman-tiedot-kartalle [db user {:keys [x y] :as parametrit}]
+  (let [parametrit (some-> parametrit (get "yht") java.net.URLDecoder/decode
+                           transit/lue-transit-string)]
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-yksikkohintaisettyot user
+                               (:urakka-id parametrit))
+    (konv/sarakkeet-vektoriin
+     (into []
+           (comp (map #(assoc % :tyyppi-kartalla :toteuma))
+                 (map konv/alaviiva->rakenne))
+           (q/hae-toteumien-tiedot-pisteessa
+            db
+            (merge {:x x :y y :toleranssi 150 :tyyppi "yksikkohintainen"}
+                   parametrit))))))
 
 (defrecord Toteumat []
   component/Lifecycle

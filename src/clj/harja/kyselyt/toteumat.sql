@@ -587,7 +587,7 @@ WHERE
   AND t.poistettu IS NOT TRUE
   AND (:toimenpidekoodi :: INTEGER IS NULL OR tk.id = :toimenpidekoodi);
 
--- name: hae-kokonaishintaisten-toiden-tiedot
+-- name: hae-toteumien-tiedot-pisteessa
 -- Hakee klikkauspisteessä olevien (valitun toimenpiteen) toteumien
 -- tiedot infopaneelissa näytettäväksi.
 SELECT
@@ -609,7 +609,7 @@ WHERE
   AND t.alkanut >= :alkupvm
   AND t.alkanut <= :loppupvm
   AND ST_Distance(t.reitti, ST_MakePoint(:x, :y)) < :toleranssi
-  AND t.tyyppi = 'kokonaishintainen' :: toteumatyyppi
+  AND t.tyyppi = :tyyppi::toteumatyyppi
   AND t.poistettu IS NOT TRUE
   AND (:toimenpidekoodi :: INTEGER IS NULL OR tk.id = :toimenpidekoodi);
 
