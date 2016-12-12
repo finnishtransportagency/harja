@@ -104,7 +104,7 @@
                 {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika :nimi kohde-valmis})]
      :data paallystys}))
 
-(defmethod infopaneeli-skeema :turvallisuspoikkeama [turpo]
+(defmethod infopaneeli-skeema :turvallisuuspoikkeama [turpo]
   (let [tapahtunut :tapahtunut
         paattynyt :paattynyt
         kasitelty :kasitelty]
