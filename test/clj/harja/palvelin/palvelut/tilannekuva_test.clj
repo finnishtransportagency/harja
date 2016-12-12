@@ -177,7 +177,8 @@
 (deftest hae-tyokoneet-nykytilaan
   (let [parametrit (assoc parametrit-laaja-historia :nykytilanne? true)
         vastaus (hae-tk parametrit)]
-    (is (>= (count (vals (:tyokoneet vastaus))) 1))))
+    ;; Työkonetehtäviä löytyi
+    (is (not (empty? (:tehtavat (:tyokoneet vastaus)))))))
 
 (deftest ala-hae-toteumia-liian-lahelle-zoomatussa-historianakymassa
   (let [parametrit (assoc parametrit-laaja-historia :alue {:xmin 0,
