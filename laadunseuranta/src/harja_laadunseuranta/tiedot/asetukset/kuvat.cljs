@@ -1,33 +1,23 @@
-(ns harja-laadunseuranta.tiedot.asetukset.kuvat
-  (:require-macros [harja-laadunseuranta.ui.inline-kuva :refer [inline-svg]]))
+(ns harja-laadunseuranta.tiedot.asetukset.kuvat)
 
-(defn- ikoni [nimi]
+;; Käytä SVG-spriteä aina kun mahdollista
+(defn svg-sprite
+  ([nimi] (svg-sprite nimi nil))
+  ([nimi luokka]
+  [:svg (when luokka {:class luokka})
+   [:use {:xlinkHref (str "#" nimi)}]]))
+
+(defn- ikoni-uri [nimi]
   (str "img/" nimi))
 
-(def +autonuoli+ (ikoni "nuoli.svg"))
-(def +harja-logo+ (ikoni "harja_logo_soft.svg"))
-(def +harja-logo-ilman-tekstia+ (ikoni "harja_logo_soft_ilman_tekstia.svg"))
-(def +kamera+ (ikoni "kamera.png"))
-(def +info+ (ikoni "info.svg"))
-(def +check+ (ikoni "check.svg"))
-(def +cross+ (ikoni "cross.svg"))
-(def +kiinteisto+ (ikoni "mokki.svg"))
-(def +spinner+ (ikoni "ajax-loader.gif"))
-(def +avattu+ (ikoni "avattu.png"))
-(def +keskityspainike+ (ikoni "keskitys.png"))
-(def +havaintopiste+ (ikoni "havaintopiste.png"))
-
-
-(def paallystys-tyovirheet
-  {:saumavirhe (inline-svg "resources/public/laadunseuranta/img/tyovirheet/saumavirhe-24.svg")
-   :lajittuma (inline-svg "resources/public/laadunseuranta/img/tyovirheet/lajittuma-24.svg")
-   :epatasaisuus (inline-svg "resources/public/laadunseuranta/img/tyovirheet/epatasa-24.svg")
-   :halkeamat (inline-svg "resources/public/laadunseuranta/img/tyovirheet/halkeama-24.svg")
-   :vesilammikot (inline-svg "resources/public/laadunseuranta/img/tyovirheet/vesilammikko-24.svg")
-   :epatasaisetreunat (inline-svg "resources/public/laadunseuranta/img/tyovirheet/epatasaiset-reunat-24.svg")
-   :jyranjalkia (inline-svg "resources/public/laadunseuranta/img/tyovirheet/jyran-jalki-24.svg")
-   :sideainelaikkia (inline-svg "resources/public/laadunseuranta/img/tyovirheet/laikka-24.svg")
-   :vaarakorkeusasema (inline-svg "resources/public/laadunseuranta/img/tyovirheet/vaara-korkeus-24.svg")
-   :pintaharva (inline-svg "resources/public/laadunseuranta/img/tyovirheet/harva-pinta-24.svg")
-   :pintakuivatuspuute (inline-svg "resources/public/laadunseuranta/img/tyovirheet/pintakuivatus-puute-24.svg")
-   :kaivojenkorkeusasema (inline-svg "resources/public/laadunseuranta/img/tyovirheet/kaivon-korkeus-24.svg")})
+(def +autonuoli+ (ikoni-uri "autonuoli.svg"))
+(def +harja-logo+ (ikoni-uri "harja_logo_soft.svg"))
+(def +harja-logo-ilman-tekstia+ (ikoni-uri "harja_logo_soft_ilman_tekstia.svg"))
+(def +check+ (ikoni-uri "check.svg"))
+(def +cross+ (ikoni-uri "cross.svg"))
+(def +spinner+ (ikoni-uri "ajax-loader.gif"))
+(def +hampurilaisvalikko+ (ikoni-uri "hampurilaisvalikko.svg"))
+(def +havaintopiste+ (ikoni-uri "havaintopiste.png"))
+(def +avausnuoli+ (ikoni-uri "avausnuoli.svg"))
+(def +havainto-vali+ (ikoni-uri "havainto_vali.svg"))
+(def +havainto-piste+ (ikoni-uri "havainto_piste.svg"))
