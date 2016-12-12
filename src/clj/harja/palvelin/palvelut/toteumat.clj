@@ -627,8 +627,10 @@
                  (map konv/alaviiva->rakenne))
            (q/hae-toteumien-tiedot-pisteessa
             db
-            (merge {:x x :y y :toleranssi 150 :tyyppi "yksikkohintainen"}
-                   parametrit))))))
+            (merge {:x x :y y :toleranssi 150 :tyyppi "yksikkohintainen"
+                    :toimenpidekoodi nil}
+                   parametrit)))
+     {:tehtava :tehtavat})))
 
 (defrecord Toteumat []
   component/Lifecycle
