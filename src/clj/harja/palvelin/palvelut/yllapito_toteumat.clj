@@ -41,7 +41,7 @@
                                     :id     id})))))
 
 (defn hae-laskentakohteet [db user {:keys [urakka] :as tiedot}]
-§  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-muuttyot user urakka)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-muuttyot user urakka)
   (log/debug "Hae laskentakohteet urakalle: " (pr-str urakka))
   (jdbc/with-db-transaction [db db]
     (into [] (q/hae-urakan-laskentakohteet db {:urakka urakka}))))
