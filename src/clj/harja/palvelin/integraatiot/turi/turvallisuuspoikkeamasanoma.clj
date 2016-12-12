@@ -183,6 +183,7 @@
           [:poikkeamatoimenpide
            [:otsikko (:otsikko toimenpide)]
            [:kuvaus (:kuvaus toimenpide)]
+           [:vastuuhenkilo (:vastuuhenkilo toimenpide)]
            [:toteuttaja (:toteuttaja toimenpide)]
            [:tila (korjaava-toimenpide-tila->numero (:tila toimenpide))]])
         (:korjaavattoimenpiteet data)))
