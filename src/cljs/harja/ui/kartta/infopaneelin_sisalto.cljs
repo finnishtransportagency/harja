@@ -3,7 +3,7 @@
   overlay näkymään."
   (:require [clojure.string :as string]
             [harja.pvm :as pvm]
-            [harja.loki :as log]
+            [harja.loki :as log :refer [log]]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
@@ -166,9 +166,11 @@
    :tiedot (vec (concat [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
                          {:otsikko "Päättynyt" :tyyppi :pvm-aika :nimi :paattynyt}
                          {:otsikko "Suorittaja" :hae #(get-in % [:suorittaja :nimi])}]
-                        (for [tehtava (:tehtavat toteuma)]
-                          {:otsikko (:toimenpide tehtava) :hae #(str (get-in % [:tehtavat tehtava :maara]) " "
-                                                                     (get-in % [:tehtavat tehtava :yksikko]))})
+
+                        (for [{:keys [toimenpide maara yksikko]} (:tehtavat toteuma)]
+                          {:otsikko toimenpide
+                           :hae (constantly (str maara " " yksikko))})
+
                         (for [materiaalitoteuma (:materiaalit toteuma)]
                           {:otsikko (get-in materiaalitoteuma [:materiaali :nimi])
                            :hae #(str (get-in % [:materiaalit materiaalitoteuma :maara]) " "
