@@ -1,23 +1,39 @@
 (ns harja-laadunseuranta.ui.ilmoitukset
   (:require [reagent.core :as reagent :refer [atom]]
             [cljs.core.async :as async :refer [timeout <!]]
-            [harja-laadunseuranta.utils :as utils]
-            [harja-laadunseuranta.tiedot.sovellus :as sovellus])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja-laadunseuranta.tiedot.ilmoitukset :as tiedot]
+            [cljs-time.local :as l]
+            [cljs-time.core :as t])
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
-(def +ilmoituksen-nakymisaika+ 4000)
+(defn ilmoitusjonokomponentti
+  "Piirtää jonossa olevat ilmoitukset yksi kerrallaan"
+  [ilmoitukset-atom]
+  (let [ilmoitus-nakyvissa? (atom false)]
 
-(defn lisaa-ajastettu-ilmoitus [atomi aika teksti]
-  (swap! atomi #(conj % teksti))
-  (utils/timed-swap! aika atomi #(vec (rest %))))
+    ;; Poista ilmoitus näkyvistä asynkronisesti tietyn ajan päästä,
+    ;; ellei ole jo pyydetty poistamaan
+    (when (and (not @ilmoitus-nakyvissa?)
+               (not (empty? @ilmoitukset-atom)))
+      (reset! ilmoitus-nakyvissa? true)
+      (go (<! (timeout tiedot/+ilmoituksen-nakymisaika-ms+))
+          ;; Tyhjennetään jonosta näytetty ilmoitus pois
+          (reset! ilmoitukset-atom (vec (rest @ilmoitukset-atom)))
+          (reset! ilmoitus-nakyvissa? nil)))
 
-(defn ilmoita [teksti]
-  (lisaa-ajastettu-ilmoitus sovellus/ilmoitukset +ilmoituksen-nakymisaika+ teksti))
+    (when (first @ilmoitukset-atom)
+      [:div.ilmoitukset
+       [:div.ilmoitus (:ilmoitus (first @ilmoitukset-atom))]])))
 
-(defn ilmoituskomponentti [atomi]
-  (when-not (empty? @atomi)
+(defn ilmoituskomponentti
+  "Piirtää nykyisen ilmoituksen"
+  [ilmoitus-atom]
+  (when @ilmoitus-atom
+    (tiedot/tyhjenna-ilmoitus-nakymisajan-jalkeen @ilmoitus-atom ilmoitus-atom))
+
+  (when @ilmoitus-atom
     [:div.ilmoitukset
-     (for [ilmoitus @atomi]
-       ^{:key (hash ilmoitus)}
-       [:div.ilmoitus ilmoitus])]))
-
+     [:div {:class (str "ilmoitus "
+                        (when-let [tyyppi (:tyyppi @ilmoitus-atom)]
+                          (str "ilmoitus-tyyppi-" (name tyyppi))))}
+      (:ilmoitus @ilmoitus-atom)]]))
