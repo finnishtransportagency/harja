@@ -72,7 +72,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 (defmethod nayta-arvo :default [_ data]
   [:span (str @data)])
 
-(defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake?
+(defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake? sort-fn
                                      kun-muuttuu hae-kun-yli-n-merkkia]} data]
   (let [nyt-valittu @data
         teksti (atom (if nyt-valittu
@@ -150,7 +150,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
          [:ul.hakukentan-lista.dropdown-menu {:role  "menu"
                                               :style (avautumissuunta-ja-korkeus-tyylit
                                                        @max-korkeus @avautumissuunta)}
-          (let [nykyiset-tulokset @tulokset
+          (let [nykyiset-tulokset (if sort-fn
+                                    (sort-by sort-fn @tulokset)
+                                    @tulokset)
                 idx @valittu-idx]
             (if (= :haetaan nykyiset-tulokset)
               [:li {:role "presentation"} (ajax-loader) " haetaan: " @teksti]

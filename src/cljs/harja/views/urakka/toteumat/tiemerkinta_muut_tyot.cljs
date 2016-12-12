@@ -20,7 +20,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction-writable]]))
@@ -82,7 +83,11 @@
         :kun-muuttuu           #(e! (tiedot/->LaskentakohdeMuuttui %))
         :hae-kun-yli-n-merkkia 0
         :nayta                 second
-        :lahde                 tiedot/laskentakohdehaku}
+        :lahde                 tiedot/laskentakohdehaku
+        :sort-fn               #(let [termi (str/lower-case (second %))]
+                                  (if (nil? (first %))
+                                    "000" ;; verrattava samaa tyyppiä, siksi nil castattu stringiksi joka sorttautuu ensimmäiseksi
+                                    termi))}
        {:otsikko "Selite" :nimi :selite :tyyppi :text :pakollinen? true}]
       (:valittu-toteuma tila)]]))
 
