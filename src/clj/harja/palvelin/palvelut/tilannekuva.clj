@@ -215,7 +215,8 @@
 (defn- tyokoneiden-toimenpiteet
   "Palauttaa haettavat tehtävä työkonekyselyille"
   [talvi kesa yllapito]
-  (let [haettavat-toimenpiteet (haettavat (union talvi kesa yllapito))]
+  (let [yllapito (filter #(tk/yllapidon-reaaliaikaseurattava? (:id %)) yllapito)
+        haettavat-toimenpiteet (haettavat (union talvi kesa yllapito))]
     (konv/seq->array haettavat-toimenpiteet)))
 
 (defn- hae-tyokoneiden-selitteet
@@ -223,22 +224,23 @@
    {:keys [alue alku loppu talvi kesa urakka-id hallintayksikko nykytilanne?
            yllapito toleranssi] :as optiot}
    urakat]
-  (let [rivit (q/hae-tyokoneselitteet
-               db
-               (merge
-                (laajenna-tyokone-extent alue)
-                {:nayta-kaikki (roolit/tilaajan-kayttaja? user)
-                 :organisaatio (:id (:organisaatio user))
-                 :urakat urakat
-                 :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito)
-                 :alku alku
-                 :loppu loppu}))
-        tehtavat (into #{}
-                       (map (comp :tehtavat #(konv/array->set % :tehtavat)))
-                       rivit)
-        viimeisin (apply max (map (comp #(.getTime %) :viimeisin) rivit))]
-    {:tehtavat tehtavat
-     :viimeisin viimeisin}))
+  (when nykytilanne?
+    (let [rivit (q/hae-tyokoneselitteet
+                 db
+                 (merge
+                  (laajenna-tyokone-extent alue)
+                  {:nayta-kaikki (roolit/tilaajan-kayttaja? user)
+                   :organisaatio (:id (:organisaatio user))
+                   :urakat urakat
+                   :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito)
+                   :alku alku
+                   :loppu loppu}))
+          tehtavat (into #{}
+                         (map (comp :tehtavat #(konv/array->set % :tehtavat)))
+                         rivit)
+          viimeisin (apply max (map (comp #(.getTime %) :viimeisin) rivit))]
+      {:tehtavat tehtavat
+       :viimeisin viimeisin})))
 
 (defn- toteumien-toimenpidekoodit [db {:keys [talvi kesa]}]
   (let [koodit (some->> (union talvi kesa)
