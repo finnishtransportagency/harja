@@ -21,6 +21,10 @@
    :tarkastusajo-kaynnissa? false
    :palautettava-tarkastusajo nil ; TODO REFACTOR dokumentoi tämä
    :tarkastusajo-paattymassa? false ; Jos true, näytetään päättämisdialogi
+   :tarkastusajon-paattamisvaihe nil ;; Mikä dialogi näytetään: :paattamisvarmistus
+                                     ;;                         :urakkavarmistus
+                                     ;;                         :paatetaan
+                                     ;;                         nil
 
    ;; Käyttäjätiedot
    :kayttaja {:kayttajanimi nil
@@ -197,6 +201,7 @@
 (def sijainnin-tallennus-mahdollinen (reaction (and @idxdb @tarkastusajo-id)))
 
 (def tarkastusajo-paattymassa? (reagent/cursor sovellus [:tarkastusajo-paattymassa?]))
+(def tarkastusajon-paattamisvaihe (reagent/cursor sovellus [:tarkastusajon-paattamisvaihe]))
 
 (def piirra-paanavigointi?
   (reaction (boolean (and @tarkastusajo-id

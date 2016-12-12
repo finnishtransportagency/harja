@@ -38,7 +38,8 @@
       [havaintolomake])
 
     (when @s/tarkastusajo-paattymassa?
-      [tarkastusajon-paattaminen/tarkastusajon-paattamiskomponentti])
+      [tarkastusajon-paattaminen/tarkastusajon-paattamiskomponentti
+       @s/tarkastusajon-paattamisvaihe])
 
     (when (and @s/palautettava-tarkastusajo (not (= "?relogin=true" js/window.location.search)))
       [tarkastusajon-paattaminen/tarkastusajon-jatkamiskomponentti])

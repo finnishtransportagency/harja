@@ -10,40 +10,47 @@
                    [cljs.core.async.macros :refer [go]]
                    [devcards.core :refer [defcard]]))
 
-(defn- tarkastusajon-paattamisdialogi [_]
-  (let [kylla-klikattu (atom false)]
-    (fn [{:keys [paattamattomia-merkintoja paata-ajo!
-                 paattaminen-peruttu!]}]
-      (if @kylla-klikattu
-        [:div.tarkastusajon-paattaminen-dialog
-         [:div.ohjeteksti "Päätetään, älä sulje selainta..."]
-         [:div [:img.centered {:src kuvat/+spinner+
-                               :height "32px"}]]]
-        [:div.tarkastusajon-paattaminen-dialog
-         [:div.ohjeteksti "Päätetäänkö tarkastusajo?"]
-         [nappi [:div
-                 (when (> paattamattomia-merkintoja 0)
-                   [:img.odotusspinneri {:src kuvat/+spinner+}])
-                 (if (> paattamattomia-merkintoja 0)
-                   "Odota..."
-                   "Kyllä")]
-          {:luokat-str "nappi-ensisijainen nappi-paata-tarkastusajo"
-           :on-click #(when (= 0 paattamattomia-merkintoja)
-                        (reset! kylla-klikattu true)
-                        (paata-ajo!))}]
-         [nappi "Ei"
-          {:luokat-str "nappi-toissijainen"
-           :on-click paattaminen-peruttu!}]
-         [:div.lahettamattomia
-          (when (> paattamattomia-merkintoja 0)
-            (str "Lähetetään merkintöjä... (" paattamattomia-merkintoja ")"))]]))))
+(defn ajo-paatetaan-dialogi []
+  [:div.tarkastusajon-paattaminen-dialog
+   [:div.ohjeteksti "Päätetään, älä sulje selainta..."]
+   [:div [:img.centered {:src kuvat/+spinner+
+                         :height "32px"}]]])
 
-(defn tarkastusajon-paattamiskomponentti []
+(defn- paattasmisvarmistusdialogi
+  [{:keys [paattamattomia-merkintoja paattaminen-peruttu! lopetuspaatos-varmistettu!]}]
+  [:div.tarkastusajon-paattaminen-dialog
+   [:div.ohjeteksti "Päätetäänkö tarkastusajo?"]
+   [nappi [:div
+           (when (> paattamattomia-merkintoja 0)
+             [:img.odotusspinneri {:src kuvat/+spinner+}])
+           (if (> paattamattomia-merkintoja 0)
+             "Odota..."
+             "Kyllä")]
+    {:luokat-str "nappi-ensisijainen nappi-paata-tarkastusajo"
+     :on-click #(when (= 0 paattamattomia-merkintoja)
+                  (lopetuspaatos-varmistettu!))}]
+   [nappi "Ei"
+    {:luokat-str "nappi-toissijainen"
+     :on-click paattaminen-peruttu!}]
+   [:div.lahettamattomia
+    (when (> paattamattomia-merkintoja 0)
+      (str "Lähetetään merkintöjä... (" paattamattomia-merkintoja ")"))]])
+
+(defn tarkastusajon-paattamiskomponentti [paattamisvaihe]
   [:div.tarkastusajon-paattaminen-dialog-container
-   [tarkastusajon-paattamisdialogi
-    {:paattamattomia-merkintoja @s/lahettamattomia-merkintoja
-     :paata-ajo! paattaminen/paata-ajo!
-     :paattaminen-peruttu! paattaminen/paattaminen-peruttu!}]])
+   (case paattamisvaihe
+     :paattamisvarmistus
+     [paattasmisvarmistusdialogi
+     {:paattamattomia-merkintoja @s/lahettamattomia-merkintoja
+      :lopetuspaatos-varmistettu! paattaminen/lopetuspaatos-varmistettu!
+      :paattaminen-peruttu! paattaminen/paattaminen-peruttu!}]
+
+     ;; TODO
+     ;:urakkavarmistus
+     ;[urakkavarmistus]
+
+     :paatetaan
+     [ajo-paatetaan-dialogi])])
 
 (defn- tarkastusajon-jatkamisdialogi [{:keys [jatka-ajoa! pakota-ajon-lopetus!]}]
   [:div.tarkastusajon-paattaminen-dialog

@@ -14,6 +14,7 @@
         :tarkastusajo-id nil
         :tarkastusajo-kaynnissa? false
         :tarkastusajo-paattymassa? false
+        :tarkastusajon-paattamisvaihe nil
         ;; Ajonaikaiset tiedot
         :reittipisteet []
         :tr-tiedot {:tr-osoite {:tie nil
@@ -52,7 +53,8 @@
   (reset! s/tarkastusajo-paattymassa? false))
 
 (defn aseta-ajo-paattymaan! []
-  (reset! s/tarkastusajo-paattymassa? true))
+  (reset! s/tarkastusajo-paattymassa? true)
+  (reset! s/tarkastusajon-paattamisvaihe :paattamisvarmistus))
 
 (defn paata-ajo! []
   (go-loop []
@@ -68,3 +70,13 @@
     (reitintallennus/poista-tarkastusajo @s/idxdb (get ajo "tarkastusajo"))
     (reitintallennus/tyhjenna-reittipisteet @s/idxdb))
   (reset! s/palautettava-tarkastusajo nil))
+
+(defn lopetuspaatos-varmistettu! []
+  ;; TODO Käytä tätä, älä päätä ajoa vielä
+  #_(reset! s/tarkastusajon-paattamisvaihe :urakkavarmistus)
+  (reset! s/tarkastusajon-paattamisvaihe :paatetaan)
+  (paata-ajo!))
+
+(defn urakka-varmistettu! []
+  (reset! s/tarkastusajon-paattamisvaihe :paatetaan)
+  (paata-ajo!))
