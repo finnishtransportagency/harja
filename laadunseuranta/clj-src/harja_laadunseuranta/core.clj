@@ -227,13 +227,13 @@
       (log/debug "Käyttäjän tietojen haku")
       {:kayttajanimi (:kayttajanimi kayttaja)
        :nimi (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
-       :urakat (kayttajatiedot/kayttajan-urakat-aikavalilta
-                 db
-                 kayttaja
-                 (fn [urakka-id kayttaja]
-                   (oikeudet/voi-kirjoittaa?
-                   oikeudet/urakat-laadunseuranta-tarkastukset
-                   urakka-id kayttaja)))
+       :urakat (into [] (mapcat :urakat (kayttajatiedot/kayttajan-urakat-aikavalilta
+                                          db
+                                          kayttaja
+                                          (fn [urakka-id kayttaja]
+                                            (oikeudet/voi-kirjoittaa?
+                                              oikeudet/urakat-laadunseuranta-tarkastukset
+                                              urakka-id kayttaja)))))
        :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset db)})))
 
 
