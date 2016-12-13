@@ -25,7 +25,6 @@
     urakat
     {:luokka "urakkavalitsin"
      :valittu (fn [e]
-                (.log js/console "Valittu: " (pr-str (.-value (.-target e))))
                 (reset! valittu-urakka-atom (js/parseInt (.-value (.-target e)))))}]
    ;; TODO Palvelimen tarvinnee palauttaa nämä järjestyksessä (lähin ensin)
    [nappi "OK"
