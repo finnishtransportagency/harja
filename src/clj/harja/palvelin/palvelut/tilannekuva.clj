@@ -254,16 +254,14 @@
   [db ch user {:keys [toleranssi alue alku loppu toimenpiteet talvi kesa yllapito] :as tiedot} urakat]
   (q/hae-tyokonereitit-kartalle
    db ch
-   (let [p (merge
-            (laajenna-tyokone-extent alue)
-            {:urakat urakat
-             :nayta-kaikki (roolit/tilaajan-kayttaja? user)
-             :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito)
-             :alku alku
-             :loppu loppu
-             :organisaatio (get-in user [:organisaatio :id])})]
-     (println "P: " (pr-str p))
-     p)))
+   (merge
+    (laajenna-tyokone-extent alue)
+    {:urakat urakat
+     :nayta-kaikki (roolit/tilaajan-kayttaja? user)
+     :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito)
+     :alku alku
+     :loppu loppu
+     :organisaatio (get-in user [:organisaatio :id])})))
 
 (defn- hae-tietyomaat
   [db user {:keys [yllapito alue nykytilanne?]} urakat]
