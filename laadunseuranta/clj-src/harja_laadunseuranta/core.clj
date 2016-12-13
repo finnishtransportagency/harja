@@ -28,13 +28,10 @@
 
 (defn kayttajan-tarkastusurakat
   [db user]
-  (filter (fn [{:keys [urakka_id]}]
-            (oikeudet/voi-kirjoittaa?
-                oikeudet/urakat-laadunseuranta-tarkastukset
-                urakka_id user)))
-  (q/hae-urakat-tarkastukseen db
-                              {:alku (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))
-                               :loppu (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))}))
+  (kayttajatiedot/kayttajan-urakat db user (fn [urakka kayttaja]
+                                             (oikeudet/voi-kirjoittaa?
+                                             oikeudet/urakat-laadunseuranta-tarkastukset
+                                             urakka kayttaja))))
 
 (defn- tallenna-merkinta! [tx vakiohavainto-idt merkinta]
   (q/tallenna-reittimerkinta! tx {:id (:id merkinta)

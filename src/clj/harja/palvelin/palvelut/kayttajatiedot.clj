@@ -7,7 +7,9 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.urakat :as urakat]
             [harja.kyselyt.konversio :as konv]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [clj-time.coerce :as c]
+            [clj-time.core :as t]))
 
 (defn oletusurakkatyyppi
   [db user]
@@ -15,6 +17,17 @@
     (if (empty? kayttajan-urakat)
       :hoito
       (keyword (q/hae-kayttajan-yleisin-urakkatyyppi db kayttajan-urakat)))))
+
+(defn kayttajan-urakat
+  [db user oikeustarkistus-fn]
+  "Palauttaa yksinkertaisen vectorin urakoita, joihn käyttäjällä on annettu oikeus.
+  Oikeustarkistus on 2-arity funktio (urakka-id ja käyttäjä),
+  joka tarkistaa, että käyttäjä voi lukea urakkaa annetulla oikeudella."
+  (filter (fn [{:keys [urakka_id]}]
+            (oikeustarkistus-fn urakka_id user)))
+  (urakat-q/hae-urakat-aikavalilta db
+                                   {:alku (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))
+                                    :loppu (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))}))
 
 (defn kayttajan-urakat-aikavalilta
   "Palauttaa vektorin mäppejä.
