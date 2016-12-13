@@ -650,9 +650,7 @@ SELECT
   SUM(tt.maara)           AS maara,
   SUM(ST_Length(t.reitti))AS pituus,
   tk.yksikko              AS yksikko,
-  k.jarjestelma           AS jarjestelmanlisaama,
-  t.id                    AS toteuma_id
-
+  k.jarjestelma           AS jarjestelmanlisaama
 FROM toteuma_tehtava tt
   LEFT JOIN toteuma t
     ON tt.toteuma = t.id AND tt.poistettu IS NOT TRUE
@@ -670,7 +668,7 @@ WHERE t.urakka = :urakkaid
                                                        FROM toimenpideinstanssi
                                                        WHERE id = :toimenpide))
       AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
-GROUP BY pvm, toimenpidekoodi, tk.yksikko, tk.nimi, k.jarjestelma, t.id
+GROUP BY pvm, toimenpidekoodi, tk.yksikko, tk.nimi, k.jarjestelma
 ORDER BY pvm DESC
 LIMIT 501;
 
