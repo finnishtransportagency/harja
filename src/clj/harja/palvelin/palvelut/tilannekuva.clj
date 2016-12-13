@@ -174,37 +174,6 @@
                    {:korjaavatoimenpide :korjaavattoimenpiteet})]
        tulos))))
 
-#_(defn- hae-tyokoneet
-  [db user
-   {:keys [alue alku loppu talvi kesa urakka-id hallintayksikko nykytilanne?
-           yllapito toleranssi] :as optiot}
-   urakat]
-  (when-not (empty? urakat)
-    (when nykytilanne?
-      (let [yllapito (filter tk/yllapidon-reaaliaikaseurattava? yllapito)
-            haettavat-toimenpiteet (haettavat (union talvi kesa yllapito))
-            urakoitsija? (= :urakoitsija (roolit/osapuoli user))]
-        (when (not (empty? haettavat-toimenpiteet))
-          (let [tpi-haku-str (konv/seq->array haettavat-toimenpiteet)
-                parametrit (merge alue
-                                  {:urakat urakat
-                                   :toleranssi toleranssi
-                                   :nayta-kaikki (not urakoitsija?)
-                                   :organisaatio (get-in user [:organisaatio :id])
-                                   :toimenpiteet tpi-haku-str
-                                   :alku alku
-                                   :loppu loppu})]
-            (log/info "PARAMS: " (pr-str parametrit))
-            (fmap
-             (fn [havainnot])
-             (group-by (juxt :tyokoneid :jarjestelma)
-                       (into []
-                             (comp
-                              (map #(update-in % [:sijainti] (comp geo/piste-koordinaatit)))
-                              (map #(assoc % :tyyppi :tyokone))
-                              (map #(konv/array->set % :tehtavat)))
-                             (q/hae-tyokoneet db parametrit))))))))))
-
 (defn- laajenna-tyokone-extent [alue]
   (let [{:keys [xmin xmax ymin ymax]} alue
         hypotenuusa (geo/alueen-hypotenuusa alue)
