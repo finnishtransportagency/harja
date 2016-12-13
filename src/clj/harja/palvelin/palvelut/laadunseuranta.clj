@@ -349,14 +349,15 @@
     ch))
 
 (defn hae-tarkastusreittien-asiat-kartalle [db user {x :x y :y :as parametrit}]
-  (into []
-        (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
-              (map #(konv/string->keyword % :tyyppi)))
-        (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
-         db
-         (assoc parametrit
-                :x x :y y
-                :toleranssi 150))))
+  (let [parametrit (tarkastusreittien-parametrit user parametrit)]
+    (into []
+          (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
+                (map #(konv/string->keyword % :tyyppi)))
+          (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
+           db
+           (assoc parametrit
+                  :x x :y y
+                  :toleranssi 150)))))
 
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
