@@ -21,8 +21,7 @@
 (defonce valinnat
          (reaction {:urakka-id (:id @nav/valittu-urakka)
                     :sopimus-id (first @urakka/valittu-sopimusnumero)
-                    :hoitokausi @urakka/valittu-hoitokausi
-                    :kuukausi @urakka/valittu-hoitokauden-kuukausi}))
+                    :aikavali @urakka/valittu-aikavali}))
 
 (defonce varusteet
          (atom {:nakymassa? false
@@ -94,9 +93,8 @@
 
 (defn tallenna-varustetoteuma [{:keys [urakka-id
                                        sopimus-id
-                                       kuukausi
-                                       hoitokausi
-                                       tienumero] :as hakuehdot}
+                                       aikavali
+                                       tienumero]}
                                {:keys [arvot
                                        sijainti
                                        puoli
@@ -106,7 +104,7 @@
                                        toiminto
                                        tierekisteriosoite
                                        alkupvm
-                                       loppupvm] :as toteuma}]
+                                       loppupvm]}]
   (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
         toteuma {:arvot arvot
                  :sijainti sijainti
@@ -119,7 +117,7 @@
                  :urakka-id @nav/valittu-urakka-id
                  :alkupvm alkupvm
                  :loppupvm loppupvm}
-        aikarajaus (or kuukausi hoitokausi)
+        aikarajaus aikavali
         hakuehdot {:urakka-id urakka-id
                    :sopimus-id sopimus-id
                    :alkupvm (first aikarajaus)
@@ -155,10 +153,8 @@
   (process-event [_ {valinnat :valinnat :as app}]
     (let [tulos! (t/send-async! v/->VarusteToteumatHaettu)]
       (go
-        (let [{:keys [urakka-id sopimus-id kuukausi hoitokausi tienumero]} valinnat]
-          (tulos! (<! (hae-toteumat urakka-id sopimus-id
-                                    (or kuukausi hoitokausi)
-                                    tienumero)))))
+        (let [{:keys [urakka-id sopimus-id aikavali tienumero]} valinnat]
+          (tulos! (<! (hae-toteumat urakka-id sopimus-id aikavali tienumero)))))
       (assoc app
         :toteumahaku-id nil)))
 

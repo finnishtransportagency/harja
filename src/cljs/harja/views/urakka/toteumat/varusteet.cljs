@@ -115,7 +115,7 @@
   [:span
    ;; Nämä käyttävät suoraan atomeita valintoihin
    [urakka-valinnat/urakan-sopimus]
-   [urakka-valinnat/urakan-hoitokausi-ja-kuukausi @nav/valittu-urakka]
+   [urakka-valinnat/aikavali]
    [urakka-valinnat/tienumero (r/wrap (:tienumero valinnat)
                                       #(e! (v/->YhdistaValinnat {:tienumero %})))]
 
