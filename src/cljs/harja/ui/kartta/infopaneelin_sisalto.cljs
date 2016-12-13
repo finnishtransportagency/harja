@@ -104,7 +104,7 @@
                 {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika :nimi kohde-valmis})]
      :data paallystys}))
 
-(defmethod infopaneeli-skeema :turvallisuspoikkeama [turpo]
+(defmethod infopaneeli-skeema :turvallisuuspoikkeama [turpo]
   (let [tapahtunut :tapahtunut
         paattynyt :paattynyt
         kasitelty :kasitelty]
@@ -115,7 +115,7 @@
                (when (kasitelty turpo)
                  {:otsikko "Käsitelty" :tyyppi :pvm-aika :nimi kasitelty})
                {:otsikko "Työn\u00ADtekijä" :hae #(turpodomain/kuvaile-tyontekijan-ammatti %)}
-               {:otsikko "Vammat" :hae #(string/join ", " (map turpodomain/vammat (:vammat %)))}
+               {:otsikko "Vammat" :hae #(turpodomain/vammat (:vammat %))}
                {:otsikko "Sairaala\u00ADvuorokaudet" :hae #(:sairaalavuorokaudet %)}
                {:otsikko "Sairaus\u00ADpoissaolo\u00ADpäivät" :tyyppi :positiivinen-numero :nimi :sairauspoissaolopaivat}
                {:otsikko "Vakavuus\u00ADaste" :hae #(turpodomain/turpo-vakavuusasteet (:vakavuusaste %))}
@@ -187,6 +187,16 @@
                           [{:otsikko "Lisätieto" :nimi :lisatieto}])))
    :data toteuma})
 
+
+(defmethod infopaneeli-skeema :silta [silta]
+  {:tyyppi :silta
+   :otsikko "Silta"
+   :tiedot [{:otsikko "Nimi" :hae :siltanimi}
+            {:otsikko "Sillan tunnus" :hae :siltatunnus}
+            {:otsikko "Edellinen tarkastus" :tyyppi :pvm :hae :tarkastusaika}
+            {:otsikko "Edellinen tarkastaja" :hae :tarkastaja}
+            {:otsikko "Avaa valittu silta" :tyyppi :linkki :nimi :avaa-silta}]
+   :data silta})
 
 (defmethod infopaneeli-skeema :default [x]
   (log/warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))

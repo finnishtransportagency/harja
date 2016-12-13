@@ -24,7 +24,8 @@
             [harja.domain.siltatarkastus :as siltadomain]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.ui.liitteet :as liitteet])
+            [harja.ui.liitteet :as liitteet]
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -129,6 +130,12 @@
 (defn sillat []
   (let [urakan-sillat sillat/sillat-kartalla]
     (komp/luo
+     (komp/sisaan-ulos
+      #(kartta-tiedot/kasittele-infopaneelin-linkit!
+        {:silta {:toiminto (fn [silta]
+                             (reset! st/valittu-silta silta))
+                 :teksti "Avaa valittu silta"}})
+      #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
       (fn []
         [:div.sillat
          [kartta/kartan-paikka]
