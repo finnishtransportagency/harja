@@ -21,10 +21,12 @@
   [{:keys [urakat valittu-urakka-atom urakka-varmistettu! paattaminen-peruttu!]}]
   [:div.tarkastusajon-paattaminen-dialog
    [:div.ohjeteksti "Tarkastusajo liitetää urakkaan"]
-    [combobox (mapv #(-> {:nimi (:nimi %)
-                           :avain (:id %)})
-                     urakat)
-     valittu-urakka-atom]
+   [combobox
+    (mapv #(-> {:nimi (:nimi %)
+                :avain (:id %)})
+          urakat)
+    valittu-urakka-atom
+    {:luokka "urakkavalitsin"}]
    ;; TODO Palvelimen tarvinnee palauttaa nämä järjestyksessä (lähin ensin)
    [nappi "OK"
     {:luokat-str "nappi-ensisijainen"
@@ -58,9 +60,9 @@
    (case paattamisvaihe
      :paattamisvarmistus
      [paattasmisvarmistusdialogi
-     {:paattamattomia-merkintoja @s/lahettamattomia-merkintoja
-      :lopetuspaatos-varmistettu! paattaminen/lopetuspaatos-varmistettu!
-      :paattaminen-peruttu! paattaminen/paattaminen-peruttu!}]
+      {:paattamattomia-merkintoja @s/lahettamattomia-merkintoja
+       :lopetuspaatos-varmistettu! paattaminen/lopetuspaatos-varmistettu!
+       :paattaminen-peruttu! paattaminen/paattaminen-peruttu!}]
 
      :urakkavarmistus
      [urakkavarmistusdialogi
