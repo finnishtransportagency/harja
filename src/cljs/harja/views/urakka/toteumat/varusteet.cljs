@@ -141,7 +141,7 @@
 
      [lomake/lomake
       {:otsikko (case (:toiminto varustetoteuma)
-                  :lisaa "Uusi varuste"
+                  :lisatty "Uusi varuste"
                   ;; todo: lisää uudet toiminnot tänne
                   "Varustetoteuma")
        :muokkaa! #(e! (v/->AsetaToteumanTiedot %))
@@ -218,10 +218,11 @@
           :tyyppi :pvm
           :pakollinen? true
           :muokattava? (constantly muokattava?)}
-         {:nimi :loppupvm
-          :otsikko "Loppupäivämäärä"
-          :tyyppi :pvm
-          :muokattava? (constantly muokattava?)}
+         (when (not= (:toiminto varustetoteuma) :lisatty)
+           {:nimi :loppupvm
+            :otsikko "Loppupäivämäärä"
+            :tyyppi :pvm
+            :muokattava? (constantly muokattava?)})
          {:nimi :lisatieto
           :otsikko "Lisätietoja"
           :tyyppi :string
