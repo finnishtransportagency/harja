@@ -546,11 +546,25 @@
     (log/debug "Palautetaan " (count kasitellyt-toteumarivit) " varustetoteuma(a)")
     kasitellyt-toteumarivit))
 
-(defn hae-kokonaishintaisen-toteuman-tiedot [db user urakka-id pvm toimenpidekoodi]
-  (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
-  (into []
-        (map konv/alaviiva->rakenne)
-        (q/hae-kokonaishintaisen-toteuman-tiedot db urakka-id pvm toimenpidekoodi)))
+(defn hae-kokonaishintaisen-toteuman-tiedot
+  ([db user urakka-id pvm toimenpidekoodi]
+   (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
+   (into []
+         (map konv/alaviiva->rakenne)
+         (q/hae-kokonaishintaisen-toteuman-tiedot
+          db {:urakka urakka-id
+              :pvm pvm
+              :toimenpidekoodi toimenpidekoodi
+              :toteuma nil})))
+  ([db user urakka-id toteuma-id]
+   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
+   (into []
+         (map konv/alaviiva->rakenne)
+         (q/hae-kokonaishintaisen-toteuman-tiedot
+          db {:urakka urakka-id
+              :toteuma toteuma-id
+              :pvm nil
+              :toimenpidekoodi nil}))))
 
 (defn hae-toteuman-reitti-ja-tr-osoite [db user {:keys [id urakka-id]}]
   (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
@@ -696,8 +710,10 @@
      (fn [user tiedot]
        (hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat db user tiedot))
      :hae-kokonaishintaisen-toteuman-tiedot
-     (fn [user {:keys [urakka-id pvm toimenpidekoodi]}]
-       (hae-kokonaishintaisen-toteuman-tiedot db user urakka-id pvm toimenpidekoodi))
+     (fn [user {:keys [urakka-id pvm toimenpidekoodi toteuma-id]}]
+       (if toteuma-id
+         (hae-kokonaishintaisen-toteuman-tiedot db user urakka-id toteuma-id)
+         (hae-kokonaishintaisen-toteuman-tiedot db user urakka-id pvm toimenpidekoodi)))
      :urakan-varustetoteumat
      (fn [user tiedot]
        (hae-urakan-varustetoteumat db user tiedot))

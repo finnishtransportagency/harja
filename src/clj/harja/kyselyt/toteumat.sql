@@ -763,6 +763,7 @@ LIMIT 501;
 
 -- name: hae-kokonaishintaisen-toteuman-tiedot
 -- Hakee urakan kokonaishintaiset toteumat annetun päivän ja toimenpidekoodin perusteella
+-- tai suoraan toteuman id:lla.
 SELECT
   t.id,
   t.luotu,
@@ -791,8 +792,9 @@ FROM toteuma t
                                        AND tpi.urakka = t.urakka
 WHERE
   t.urakka = :urakka
-  AND t.alkanut :: DATE = :pvm :: DATE
-  AND tt.toimenpidekoodi = :toimenpidekoodi;
+  AND (:toteuma::INTEGER IS NULL OR t.id = :toteuma)
+  AND (:pvm::DATE IS NULL OR t.alkanut :: DATE = :pvm :: DATE)
+  AND (:toimenpidekoodi::INTEGER IS NULL OR tt.toimenpidekoodi = :toimenpidekoodi);
 
 -- name: hae-varustetoteuma
 SELECT
