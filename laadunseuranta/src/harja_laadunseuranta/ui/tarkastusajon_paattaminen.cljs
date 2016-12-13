@@ -5,6 +5,7 @@
             [harja-laadunseuranta.tiedot.tarkastusajon-paattaminen :as paattaminen]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.ui.yleiset.napit :refer [nappi]]
+            [harja-laadunseuranta.ui.yleiset.combobox :refer [combobox]]
             [harja-laadunseuranta.tiedot.sovellus :as s])
   (:require-macros [reagent.ratom :refer [run!]]
                    [cljs.core.async.macros :refer [go]]
@@ -17,10 +18,13 @@
                          :height "32px"}]]])
 
 (defn- urakkavarmistusdialogi
-  [{:keys [urakka-varmistettu! paattaminen-peruttu!]}]
+  [{:keys [urakat valittu-urakka-atom urakka-varmistettu! paattaminen-peruttu!]}]
   [:div.tarkastusajon-paattaminen-dialog
-   [:div.ohjeteksti "Tarkastusajosi liitetää urakkaan"]
-   #_[urakka] ;; TODO Tähän joku input-komponentti
+   [:div.ohjeteksti "Tarkastusajo liitetää urakkaan"]
+    [combobox (mapv #(-> {:nimi (:nimi %)
+                           :avain (:id %)})
+                     urakat)
+     valittu-urakka-atom]
    ;; TODO Palvelimen tarvinnee palauttaa nämä järjestyksessä (lähin ensin)
    [nappi "OK"
     {:luokat-str "nappi-ensisijainen"
@@ -61,7 +65,9 @@
      :urakkavarmistus
      [urakkavarmistusdialogi
       {:urakka-varmistettu! paattaminen/urakka-varmistettu!
-       :paattaminen-peruttu! paattaminen/paattaminen-peruttu!}]
+       :paattaminen-peruttu! paattaminen/paattaminen-peruttu!
+       :urakat @s/oikeus-urakoihin
+       :valittu-urakka-atom s/valittu-urakka}]
 
      :paatetaan
      [ajo-paatetaan-dialogi])])
