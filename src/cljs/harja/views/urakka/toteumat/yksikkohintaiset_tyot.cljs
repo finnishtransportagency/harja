@@ -21,6 +21,7 @@
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.tiedot.urakka.toteumat.yksikkohintaiset-tyot :as tiedot]
             [harja.views.kartta :as kartta]
+            [harja.tiedot.kartta :as kartta-tiedot]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.urakka :as u]
             [harja.ui.napit :as napit]
@@ -396,9 +397,26 @@
                                     [:span.kustannuserotus.kustannuserotus-negatiivinen (fmt/euro-opt (:kustannuserotus rivi))])) :leveys 10}]
         @tiedot/yks-hint-tyot-tehtavittain]])))
 
+(defn- vastaava-toteuma [klikattu-toteuma]
+  ;; oletetaan että kartalla näkyvät toteumat ovat myös gridissä
+  (some (fn [urakan-toteuma]
+          (when (= (:id (:toteuma urakan-toteuma)) (:id klikattu-toteuma))
+            urakan-toteuma))
+        @tiedot/yks-hint-tehtavien-summat))
+
 (defn yksikkohintaisten-toteumat []
   (komp/luo
     (komp/lippu tiedot/yksikkohintaiset-tyot-nakymassa? tiedot/karttataso-yksikkohintainen-toteuma)
+    (komp/sisaan-ulos #(do
+                         (kartta-tiedot/kasittele-infopaneelin-linkit!
+                          {:toteuma
+                           {:toiminto (fn [klikattu-toteuma] ;; asiat-pisteessa -asia joka on tyypiltään toteuma
+                                        (log "klikattu toteuma:" (pr-str klikattu-toteuma))
+                                        (log "vastaava toteuma:" (pr-str (vastaava-toteuma klikattu-toteuma)))
+                                        (reset! tiedot/valittu-yksikkohintainen-toteuma
+                                                (vastaava-toteuma klikattu-toteuma)))
+                            :teksti "Valitse toteuma"}}))
+                      #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
     (fn []
       [:span
        [kartta/kartan-paikka]
