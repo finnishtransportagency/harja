@@ -173,6 +173,18 @@
                                 (filter #(= (:valittu-toimenpide app) (:toimenpide %)) toteumat)
                                 toteumat))))
 
+  v/ValitseVarusteToteumanTyyppi
+  (process-event [{tyyppi :tyyppi} {valinnat :valinnat toteumat :toteumat :as app}]
+    (let [valittu-toimenpide (first tyyppi)
+          naytettavat-toteumat (if valittu-toimenpide
+                                 (filter #(= valittu-toimenpide (:toimenpide %)) toteumat)
+                                 toteumat)]
+      (assoc app
+        :karttataso (varustetoteumat-karttataso toteumat)
+        :karttataso-nakyvissa? true
+        :valinnat (assoc valinnat :tyyppi tyyppi)
+        :naytettavat-toteumat naytettavat-toteumat)))
+
   v/ValitseToteuma
   (process-event [{toteuma :toteuma} _]
     (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (assoc toteuma :muokattava? false)))]
@@ -186,18 +198,6 @@
   (process-event [_ _]
     (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (uusi-varustetoteuma)))]
       (tulos!)))
-
-  v/ValitseVarusteToteumanTyyppi
-  (process-event [{tyyppi :tyyppi} app]
-    (let [toteumat (:toteumat app)
-          valittu-toimenpide (first tyyppi)]
-      (assoc app
-        :karttataso (varustetoteumat-karttataso toteumat)
-        :karttataso-nakyvissa? true
-        :valittu-toimenpide valittu-toimenpide
-        :naytettavat-toteumat (if valittu-toimenpide
-                                (filter #(= valittu-toimenpide (:toimenpide %)) toteumat)
-                                toteumat))))
 
   v/AsetaToteumanTiedot
   (process-event [{tiedot :tiedot} {nykyinen-toteuma :varustetoteuma :as app}]

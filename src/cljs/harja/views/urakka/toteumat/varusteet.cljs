@@ -66,55 +66,50 @@
     "virhe" [:span.tila-virhe (str "Epäonnistunut: " (pvm/pvm-aika lahetetty))]
     [:span "Ei lähetetty"]))
 
-(defn toteumataulukko [e! valittu-tyyppi toteumat]
-  (let [valitut-toteumat (filter
-                           #(if-not valittu-tyyppi
-                              toteumat
-                              (= (:toimenpide %) valittu-tyyppi))
-                           toteumat)]
-    [:span
-     [grid/grid
-      {:otsikko "Varustetoteumat"
-       :tyhja (if (nil? toteumat) [ajax-loader "Haetaan toteumia..."] "Toteumia ei löytynyt")
-       :tunniste :id
-       :rivi-klikattu #(e! (v/->ValitseToteuma %))
-       :vetolaatikot (zipmap
-                       (range)
-                       (map
-                         (fn [toteuma]
-                           (when (:toteumatehtavat toteuma)
-                             [varustetoteuman-tehtavat toteumat toteuma]))
-                         toteumat))}
-      [{:tyyppi :vetolaatikon-tila :leveys 5}
-       {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkupvm :leveys 10}
-       {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys 15}
-       {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :string :leveys 15
-        :hae (fn [rivi]
-               (or (tierekisteri-varusteet/tietolaji->selitys (:tietolaji rivi))
-                   (:tietolaji rivi)))}
-       {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys 15
-        :hae (fn [rivi]
-               (tierekisteri-varusteet/varuste-toimenpide->string (:toimenpide rivi)))}
-       {:otsikko "Tie" :nimi :tie :tyyppi :positiivinen-numero :leveys 10 :tasaa :oikea
-        :hae #(get-in % [:tierekisteriosoite :numero])}
-       {:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
-        :hae #(get-in % [:tierekisteriosoite :alkuosa])}
-       {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
-        :hae #(get-in % [:tierekisteriosoite :alkuetaisyys])}
-       {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
-        :hae #(get-in % [:tierekisteriosoite :loppuosa])}
-       {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
-        :hae #(get-in % [:tierekisteriosoite :loppuetaisyys])}
-       {:otsikko "Kuntoluokka" :nimi :kuntoluokka :tyyppi :positiivinen-numero :leveys 10}
-       {:otsikko "Lähetys Tierekisteriin" :nimi :lahetyksen-tila :tyyppi :komponentti :leveys 9
-        :komponentti #(nayta-varustetoteuman-lahetyksen-tila %)
-        :fmt pvm/pvm-aika}
-       {:otsikko "Varustekortti" :nimi :varustekortti :tyyppi :komponentti
-        :komponentti (fn [rivi] (varustekortti-linkki rivi)) :leveys 10}]
-      (take nayta-max-toteumaa valitut-toteumat)]
-     (when (> (count valitut-toteumat) nayta-max-toteumaa)
-       [:div.alert-warning
-        (str "Toteumia löytyi yli " nayta-max-toteumaa ". Tarkenna hakurajausta.")])]))
+(defn toteumataulukko [e! toteumat]
+  [:span
+   [grid/grid
+    {:otsikko "Varustetoteumat"
+     :tyhja (if (nil? toteumat) [ajax-loader "Haetaan toteumia..."] "Toteumia ei löytynyt")
+     :tunniste :id
+     :rivi-klikattu #(e! (v/->ValitseToteuma %))
+     :vetolaatikot (zipmap
+                     (range)
+                     (map
+                       (fn [toteuma]
+                         (when (:toteumatehtavat toteuma)
+                           [varustetoteuman-tehtavat toteumat toteuma]))
+                       toteumat))}
+    [{:tyyppi :vetolaatikon-tila :leveys 5}
+     {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :alkupvm :leveys 10}
+     {:otsikko "Tunniste" :nimi :tunniste :tyyppi :string :leveys 15}
+     {:otsikko "Tietolaji" :nimi :tietolaji :tyyppi :string :leveys 15
+      :hae (fn [rivi]
+             (or (tierekisteri-varusteet/tietolaji->selitys (:tietolaji rivi))
+                 (:tietolaji rivi)))}
+     {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys 15
+      :hae (fn [rivi]
+             (tierekisteri-varusteet/varuste-toimenpide->string (:toimenpide rivi)))}
+     {:otsikko "Tie" :nimi :tie :tyyppi :positiivinen-numero :leveys 10 :tasaa :oikea
+      :hae #(get-in % [:tierekisteriosoite :numero])}
+     {:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
+      :hae #(get-in % [:tierekisteriosoite :alkuosa])}
+     {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
+      :hae #(get-in % [:tierekisteriosoite :alkuetaisyys])}
+     {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
+      :hae #(get-in % [:tierekisteriosoite :loppuosa])}
+     {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
+      :hae #(get-in % [:tierekisteriosoite :loppuetaisyys])}
+     {:otsikko "Kuntoluokka" :nimi :kuntoluokka :tyyppi :positiivinen-numero :leveys 10}
+     {:otsikko "Lähetys Tierekisteriin" :nimi :lahetyksen-tila :tyyppi :komponentti :leveys 9
+      :komponentti #(nayta-varustetoteuman-lahetyksen-tila %)
+      :fmt pvm/pvm-aika}
+     {:otsikko "Varustekortti" :nimi :varustekortti :tyyppi :komponentti
+      :komponentti (fn [rivi] (varustekortti-linkki rivi)) :leveys 10}]
+    (take nayta-max-toteumaa toteumat)]
+   (when (> (count toteumat) nayta-max-toteumaa)
+     [:div.alert-warning
+      (str "Toteumia löytyi yli " nayta-max-toteumaa ". Tarkenna hakurajausta.")])])
 
 (defn valinnat [e! valinnat]
   [:span
@@ -255,7 +250,7 @@
           [:div.sisalto-container
            [:h1 "Varustekirjaukset Harjassa"]
            [valinnat e! nykyiset-valinnat]
-           [toteumataulukko e! (:tyyppi nykyiset-valinnat) naytettavat-toteumat]]
+           [toteumataulukko e! naytettavat-toteumat]]
           [:div.sisalto-container
            [:h1 "Varusteet Tierekisterissä"]
            (when oikeus-varusteen-lisaamiseen?
