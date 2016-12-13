@@ -148,13 +148,13 @@
        :footer-fn (fn [toteuma]
                     (when muokattava?
                       [napit/palvelinkutsu-nappi
-                      "Tallenna"
-                      #(varustetiedot/tallenna-varustetoteuma nykyiset-valinnat toteuma)
-                      {:luokka "nappi-ensisijainen"
-                       :ikoni (ikonit/tallenna)
-                       :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
-                       :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
-                       :disabled (not (lomake/voi-tallentaa? toteuma))}]))}
+                       "Tallenna"
+                       #(varustetiedot/tallenna-varustetoteuma nykyiset-valinnat toteuma)
+                       {:luokka "nappi-ensisijainen"
+                        :ikoni (ikonit/tallenna)
+                        :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
+                        :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
+                        :disabled (not (lomake/voi-tallentaa? toteuma))}]))}
       [(when (not muokattava?)
          (lomake/ryhma
            ""
@@ -175,10 +175,11 @@
               :tyyppi :komponentti
               :muokattava? (constantly false)
               :komponentti #(nayta-varustetoteuman-lahetyksen-tila (:data %))})
-           {:nimi :varustekortti
-            :otsikko "Varustekortti"
-            :tyyppi :komponentti
-            :komponentti #(varustekortti-linkki (:data %))}))
+           (when (and (not muokattava?) (= "lahetetty" (:tila varustetoteuma)))
+             {:nimi :varustekortti
+              :otsikko "Varustekortti"
+              :tyyppi :komponentti
+              :komponentti #(varustekortti-linkki (:data %))})))
        (lomake/ryhma
          "Varusteen tunnistetiedot"
          {:nimi :tietolaji
@@ -196,9 +197,12 @@
           :muokattava? (constantly muokattava?)}
          {:nimi :ajorata
           :otsikko "Ajorata"
-          :tyyppi :numero
-          :vaadi-ei-negatiivinen? true
-          :kokonaisluku? true
+          :tyyppi :valinta
+          :valinnat (if muokattava?
+                      (if (:ajoradat varustetoteuma)
+                        (:ajoradat varustetoteuma)
+                        [0])
+                      [0 1 2])
           :pakollinen? true
           :leveys 1
           :muokattava? (constantly muokattava?)}

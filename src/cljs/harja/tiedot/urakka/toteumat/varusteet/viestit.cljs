@@ -29,3 +29,6 @@
 
 ;; Uuden varustetoteuman tallennus päättynyt
 (defrecord VarustetoteumaTallennettu [hakutulos])
+
+;; Tieosan ajoradat haettu
+(defrecord TieosanAjoradatHaettu [ajoradat])

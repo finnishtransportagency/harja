@@ -12,7 +12,9 @@
             [harja.tiedot.urakka.toteumat.varusteet.viestit :as v]
             [reagent.core :as r]
             [harja.domain.tierekisteri.varusteet :as varusteet]
-            [harja.tyokalut.functor :as functor])
+            [harja.tyokalut.functor :as functor]
+            [harja.tyokalut.vkm :as vkm]
+            [harja.domain.tierekisteri.varusteet :as tierekisteri-varusteet])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -131,7 +133,18 @@
   {:toiminto :lisatty
    :tietolaji (ffirst varusteet/tietolaji->selitys)
    :alkupvm (pvm/nyt)
-   :muokattava? true})
+   :muokattava? true
+   :ajoradat [0]
+   :ajorata 0
+   :puoli (first tierekisteri-varusteet/tien-puolet)})
+
+(defn hae-rajoradat [{vanha-tr :tierekisteriosoite}
+                     {uusi-tr :tierekisteriosoite}
+                     haku-valmis!]
+  (when (and uusi-tr
+             (or (not (= (:numero uusi-tr) (:numero vanha-tr)))
+                 (not (= (:alkuosa uusi-tr) (:alkuosa vanha-tr)))))
+    (go (haku-valmis! (<! (vkm/tieosan-ajoradat (:numero uusi-tr) (:alkuosa uusi-tr)))))))
 
 (extend-protocol t/Event
   v/YhdistaValinnat
@@ -187,18 +200,20 @@
                                 toteumat))))
 
   v/AsetaToteumanTiedot
-  (process-event [{tiedot :tiedot} {toteuma :varustetoteuma :as app}]
-    (let [tietolaji-muuttui? (not= (:tietolaji tiedot) (:tietolaji toteuma))
+  (process-event [{tiedot :tiedot} {nykyinen-toteuma :varustetoteuma :as app}]
+    (let [tietolaji-muuttui? (not= (:tietolaji tiedot) (:tietolaji nykyinen-toteuma))
           tiedot (if tietolaji-muuttui?
                    (assoc tiedot :tietolajin-kuvaus nil)
                    tiedot)
-          uusi-toteuma (merge toteuma tiedot)
           koordinaattiarvot (or (get-in tiedot [:sijainti :coordinates])
                                 (first (:points (first (:lines tiedot)))))
-          ;; todo: pitää varmistaa millä tarkkuudella koordinaatit lähetetään
           koordinaatit (when koordinaattiarvot {:x (Math/round (first koordinaattiarvot))
                                                 :y (Math/round (second koordinaattiarvot))})
-          uusi-toteuma (assoc uusi-toteuma :arvot (merge (:arvot tiedot) koordinaatit))]
+          uusi-toteuma (assoc (merge nykyinen-toteuma tiedot)
+                         :arvot (merge (:arvot tiedot) koordinaatit))]
+
+      (hae-rajoradat nykyinen-toteuma uusi-toteuma (t/send-async! v/->TieosanAjoradatHaettu))
+
       ;; Jos tietolajin kuvaus muuttui ja se ei ole tyhjä, haetaan uudet tiedot
       (when (and tietolaji-muuttui? (:tietolaji tiedot))
         (let [tulos! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
@@ -222,7 +237,17 @@
         :karttataso (varustetoteumat-karttataso toteumat)
         :karttataso-nakyvissa? true
         :toteumat toteumat
-        :toteumahaku-id nil))))
+        :toteumahaku-id nil)))
+
+  v/TieosanAjoradatHaettu
+  (process-event [{ajoradat :ajoradat} app]
+    (let [nykyinen-ajorata (get-in app [:varustetoteuma :ajorata])
+          ajorata (if (or (not nykyinen-ajorata) (not (some #(= nykyinen-ajorata %) ajoradat)))
+                    (first ajoradat)
+                    nykyinen-ajorata)]
+      (-> app
+          (assoc-in [:varustetoteuma :ajoradat] ajoradat)
+          (assoc-in [:varustetoteuma :ajorata] ajorata)))))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))
