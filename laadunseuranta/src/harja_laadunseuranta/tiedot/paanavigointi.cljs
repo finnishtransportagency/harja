@@ -245,7 +245,7 @@
     :ikoni "suurennuslasi-36"
     :ikoni-lahde "livicons"
     :avain :soratie
-    :mittaus {:nimi "Soratie"
+    :mittaus {:nimi "Soratietarkastus"
               :tyyppi :soratie
               :yksikko nil}
     :vaatii-nappaimiston? true}
