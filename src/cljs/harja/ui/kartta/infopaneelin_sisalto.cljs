@@ -197,8 +197,7 @@
    :tiedot [{:otsikko "Nimi" :hae :siltanimi}
             {:otsikko "Sillan tunnus" :hae :siltatunnus}
             {:otsikko "Edellinen tarkastus" :tyyppi :pvm :hae :tarkastusaika}
-            {:otsikko "Edellinen tarkastaja" :hae :tarkastaja}
-            {:otsikko "Avaa valittu silta" :tyyppi :linkki :nimi :avaa-silta}]
+            {:otsikko "Edellinen tarkastaja" :hae :tarkastaja}]
    :data silta})
 
 (defmethod infopaneeli-skeema :default [x]
