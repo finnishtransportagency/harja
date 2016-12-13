@@ -117,11 +117,10 @@
                  :urakka-id @nav/valittu-urakka-id
                  :alkupvm alkupvm
                  :loppupvm loppupvm}
-        aikarajaus aikavali
         hakuehdot {:urakka-id urakka-id
                    :sopimus-id sopimus-id
-                   :alkupvm (first aikarajaus)
-                   :loppupvm (second aikarajaus)
+                   :alkupvm (first aikavali)
+                   :loppupvm (second aikavali)
                    :tienumero tienumero}]
     (k/post! :tallenna-varustetoteuma {:hakuehdot hakuehdot :toteuma toteuma})))
 

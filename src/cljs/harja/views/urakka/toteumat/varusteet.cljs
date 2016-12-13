@@ -124,7 +124,7 @@
     (r/wrap (:tyyppi valinnat)
             #(e! (v/->ValitseVarusteToteumanTyyppi %)))]])
 
-(defn varustetoteumalomake [e! nykyiset-valinnat varustetoteuma]
+(defn varustetoteumalomake [e! valinnat varustetoteuma]
   (let [muokattava? (:muokattava? varustetoteuma)
         ominaisuudet (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))]
     [:span.varustetoteumalomake
@@ -144,7 +144,7 @@
                     (when muokattava?
                       [napit/palvelinkutsu-nappi
                        "Tallenna"
-                       #(varustetiedot/tallenna-varustetoteuma nykyiset-valinnat toteuma)
+                       #(varustetiedot/tallenna-varustetoteuma @valinnat toteuma)
                        {:luokka "nappi-ensisijainen"
                         :ikoni (ikonit/tallenna)
                         :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
@@ -245,7 +245,7 @@
       [:span
        [kartta/kartan-paikka]
        (if toteuma
-         [varustetoteumalomake e! nykyiset-valinnat toteuma]
+         [varustetoteumalomake e! varustetiedot/valinnat toteuma]
          [:span
           [:div.sisalto-container
            [:h1 "Varustekirjaukset Harjassa"]
