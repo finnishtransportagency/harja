@@ -60,7 +60,7 @@
 
 (defn paata-ajo! []
   (go-loop []
-           (if (<! (comms/paata-ajo! @s/tarkastusajo-id @s/valittu-urakka))
+           (if (<! (comms/paata-ajo! @s/tarkastusajo-id @s/valittu-urakka-id))
              (alusta-uusi-tarkastusajo!)
 
              ;; yritä uudelleen kunnes onnistuu, spinneri pyörii
@@ -74,7 +74,7 @@
   (reset! s/palautettava-tarkastusajo nil))
 
 (defn lopetuspaatos-varmistettu! []
-  (reset! s/valittu-urakka (:id (first @s/oikeus-urakoihin)))
+  (reset! s/valittu-urakka-id (:id (first @s/oikeus-urakoihin)))
   (reset! s/tarkastusajon-paattamisvaihe :urakkavarmistus))
 
 (defn urakka-varmistettu! []

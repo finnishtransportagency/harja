@@ -68,7 +68,7 @@
       {:urakka-varmistettu! paattaminen/urakka-varmistettu!
        :paattaminen-peruttu! paattaminen/paattaminen-peruttu!
        :urakat @s/oikeus-urakoihin
-       :valittu-urakka-atom s/valittu-urakka}]
+       :valittu-urakka-atom s/valittu-urakka-id}]
 
      :paatetaan
      [ajo-paatetaan-dialogi])])

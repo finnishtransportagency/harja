@@ -16,7 +16,7 @@
 
    ;; Tarkastusajon perustiedot
    :tarkastusajo-alkamassa? false ; Käynnistysnappia painettu UI:sta
-   :valittu-urakka nil ; Päättämisdialogissa valittu urakka-id
+   :valittu-urakka-id nil ; Päättämisdialogissa valittu urakka-id
    :tarkastusajo-id nil ; Palvelinpään id tarkastusajo-taulussa
    :tarkastusajo-kaynnissa? false
    :palautettava-tarkastusajo nil ; TODO REFACTOR dokumentoi tämä
@@ -138,7 +138,7 @@
 (def kirjauspisteet (reagent/cursor sovellus [:kirjauspisteet]))
 
 (def sijainti (reagent/cursor sovellus [:sijainti]))
-(def valittu-urakka (reagent/cursor sovellus [:valittu-urakka]))
+(def valittu-urakka-id (reagent/cursor sovellus [:valittu-urakka-id]))
 (def tarkastusajo-id (reagent/cursor sovellus [:tarkastusajo-id]))
 (def tarkastusajo-alkamassa? (reagent/cursor sovellus [:tarkastusajo-alkamassa?]))
 

@@ -55,7 +55,7 @@
   (post! asetukset/+urakkatyypin-urakat-url+ urakkatyyppi))
 
 (defn paata-ajo! [tarkastusajo-id urakka]
-  (post! asetukset/+paatos-url+ {:urakka (:id urakka)
+  (post! asetukset/+paatos-url+ {:urakka urakka
                                  :tarkastusajo {:id tarkastusajo-id}}))
 
 (defn luo-ajo! []
