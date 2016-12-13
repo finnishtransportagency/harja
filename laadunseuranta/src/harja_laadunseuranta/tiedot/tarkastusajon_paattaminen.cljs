@@ -1,7 +1,7 @@
 (ns harja-laadunseuranta.tiedot.tarkastusajon-paattaminen
   (:require [reagent.core :as reagent :refer [atom]]
             [harja-laadunseuranta.tiedot.comms :as comms]
-            [harja-laadunseuranta.ui.napit :refer [nappi]]
+            [harja-laadunseuranta.ui.yleiset.napit :refer [nappi]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))

@@ -1,4 +1,4 @@
-(ns harja-laadunseuranta.ui.dom
+(ns harja-laadunseuranta.ui.yleiset.dom
   (:require
     [harja-laadunseuranta.asiakas.tapahtumat :as tapahtumat]
     [reagent.core :as reagent :refer [atom]]

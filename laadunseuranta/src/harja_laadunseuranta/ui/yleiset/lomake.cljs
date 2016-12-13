@@ -1,4 +1,4 @@
-(ns harja-laadunseuranta.ui.lomake
+(ns harja-laadunseuranta.ui.yleiset.lomake
   "Yleisiä lomake-apureita"
   (:require [reagent.core :as reagent :refer [atom]]
             [harja-laadunseuranta.tiedot.havaintolomake :refer [tallenna-lomake!

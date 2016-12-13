@@ -5,10 +5,10 @@
             [harja-laadunseuranta.ui.nappaimisto :as nappaimisto]
             [harja-laadunseuranta.tiedot.paanavigointi :as tiedot]
             [cljs-time.local :as l]
-            [harja-laadunseuranta.ui.napit :refer [nappi]]
+            [harja-laadunseuranta.ui.yleiset.napit :refer [nappi]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [clojure.set :as set]
-            [harja-laadunseuranta.ui.dom :as dom]
+            [harja-laadunseuranta.ui.yleiset.dom :as dom]
             [harja-laadunseuranta.utils :as utils]
             [reagent.core :as r]
             [harja-laadunseuranta.asiakas.tapahtumat :as tapahtumat])

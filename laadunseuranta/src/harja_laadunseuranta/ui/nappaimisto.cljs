@@ -10,8 +10,8 @@
                      kirjaa-mittaus! syoton-rajat syotto-validi?
                      soratienappaimiston-numeronappain-painettu!]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
-            [harja-laadunseuranta.ui.napit :refer [nappi]]
-            [harja-laadunseuranta.ui.dom :as dom]
+            [harja-laadunseuranta.ui.yleiset.napit :refer [nappi]]
+            [harja-laadunseuranta.ui.yleiset.dom :as dom]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat])
   (:require-macros
     [harja-laadunseuranta.macros :as m]

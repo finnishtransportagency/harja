@@ -1,4 +1,4 @@
-(ns harja-laadunseuranta.ui.napit
+(ns harja-laadunseuranta.ui.yleiset.napit
   (:require [reagent.core :as reagent :refer [atom]]))
 
 (defn- nappi [nimi {:keys [on-click luokat-str disabled ikoni] :as optiot}]

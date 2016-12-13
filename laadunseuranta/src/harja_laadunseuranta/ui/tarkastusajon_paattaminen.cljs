@@ -4,7 +4,7 @@
             [harja-laadunseuranta.tiedot.tarkastusajon-luonti :as luonti]
             [harja-laadunseuranta.tiedot.tarkastusajon-paattaminen :as paattaminen]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
-            [harja-laadunseuranta.ui.napit :refer [nappi]]
+            [harja-laadunseuranta.ui.yleiset.napit :refer [nappi]]
             [harja-laadunseuranta.tiedot.sovellus :as s])
   (:require-macros [reagent.ratom :refer [run!]]
                    [cljs.core.async.macros :refer [go]]
@@ -21,6 +21,7 @@
   [:div.tarkastusajon-paattaminen-dialog
    [:div.ohjeteksti "Tarkastusajosi liitetää urakkaan"]
    #_[urakka] ;; TODO Tähän joku input-komponentti
+   ;; TODO Palvelimen tarvinnee palauttaa nämä järjestyksessä (lähin ensin)
    [nappi "OK"
     {:luokat-str "nappi-ensisijainen"
      :on-click urakka-varmistettu!}]

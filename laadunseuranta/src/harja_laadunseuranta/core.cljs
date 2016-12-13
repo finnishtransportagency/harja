@@ -12,7 +12,7 @@
             [cljs.core.async :as async :refer [<!]]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
             [clojure.string :as str]
-            [harja-laadunseuranta.ui.dom :as dom]
+            [harja-laadunseuranta.ui.yleiset.dom :as dom]
             [harja-laadunseuranta.asiakas.tapahtumat :as tapahtumat])
   (:require-macros [reagent.ratom :refer [run!]]
                    [cljs.core.async.macros :refer [go]]
