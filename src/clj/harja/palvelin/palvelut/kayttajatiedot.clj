@@ -20,14 +20,15 @@
 
 (defn kayttajan-urakat
   [db user oikeustarkistus-fn]
-  "Palauttaa yksinkertaisen vectorin urakoita, joihn käyttäjällä on annettu oikeus.
+  "Palauttaa yksinkertaisen vectorin urakoita, joihin käyttäjällä on annettu oikeus.
   Oikeustarkistus on 2-arity funktio (urakka-id ja käyttäjä),
   joka tarkistaa, että käyttäjä voi lukea urakkaa annetulla oikeudella."
-  (filter (fn [{:keys [urakka_id]}]
-            (oikeustarkistus-fn urakka_id user)))
-  (urakat-q/hae-urakat-aikavalilta db
-                                   {:alku (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))
-                                    :loppu (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))}))
+  (into []
+        (filter (fn [{:keys [urakka_id]}]
+                  (oikeustarkistus-fn urakka_id user)))
+        (urakat-q/hae-urakat-aikavalilta db
+                                         {:alku (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))
+                                          :loppu (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))})))
 
 (defn kayttajan-urakat-aikavalilta
   "Palauttaa vektorin mäppejä.
