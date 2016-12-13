@@ -106,7 +106,7 @@
        {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
         :hae #(get-in % [:tierekisteriosoite :loppuetaisyys])}
        {:otsikko "Kuntoluokka" :nimi :kuntoluokka :tyyppi :positiivinen-numero :leveys 10}
-       {:otsikko "Lähetys Tierekisteriin" :nimi :lahetyksen-tila :tyyppi :komponentti :leveys 10
+       {:otsikko "Lähetys Tierekisteriin" :nimi :lahetyksen-tila :tyyppi :komponentti :leveys 9
         :komponentti #(nayta-varustetoteuman-lahetyksen-tila %)
         :fmt pvm/pvm-aika}
        {:otsikko "Varustekortti" :nimi :varustekortti :tyyppi :komponentti
@@ -146,15 +146,15 @@
                   "Varustetoteuma")
        :muokkaa! #(e! (v/->AsetaToteumanTiedot %))
        :footer-fn (fn [toteuma]
-                    [napit/palvelinkutsu-nappi
-                     "Tallenna"
-                     #(varustetiedot/tallenna-varustetoteuma nykyiset-valinnat toteuma)
-                     {:luokka "nappi-ensisijainen"
-                      :ikoni (ikonit/tallenna)
-                      :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
-                      ;; todo: pitää miettiä, miten toimitaan, jos tallennus onnistuu, mutta tr-lähetys epäonnistuu
-                      :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
-                      :disabled (not (lomake/voi-tallentaa? toteuma))}])}
+                    (when muokattava?
+                      [napit/palvelinkutsu-nappi
+                      "Tallenna"
+                      #(varustetiedot/tallenna-varustetoteuma nykyiset-valinnat toteuma)
+                      {:luokka "nappi-ensisijainen"
+                       :ikoni (ikonit/tallenna)
+                       :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
+                       :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
+                       :disabled (not (lomake/voi-tallentaa? toteuma))}]))}
       [(when (not muokattava?)
          (lomake/ryhma
            ""
@@ -175,11 +175,10 @@
               :tyyppi :komponentti
               :muokattava? (constantly false)
               :komponentti #(nayta-varustetoteuman-lahetyksen-tila (:data %))})
-           (when (and (not muokattava?) (= "lahetetty" (:tila varustetoteuma)))
-             {:nimi :varustekortti
-              :otsikko "Varustekortti"
-              :tyyppi :komponentti
-              :komponentti #(varustekortti-linkki (:data %))})))
+           {:nimi :varustekortti
+            :otsikko "Varustekortti"
+            :tyyppi :komponentti
+            :komponentti #(varustekortti-linkki (:data %))}))
        (lomake/ryhma
          "Varusteen tunnistetiedot"
          {:nimi :tietolaji
