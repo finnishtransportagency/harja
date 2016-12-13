@@ -478,7 +478,9 @@
                                    suodattimet-parametreista
                                    (assoc :x x
                                           :y y
-                                          :toleranssi 150)))))
+                                          :toleranssi 150
+                                          :nayta-kaikki (roolit/tilaajan-kayttaja? user)
+                                          :organisaatio (-> user :organisaatio :id))))))
 
 (defrecord Tilannekuva []
   component/Lifecycle

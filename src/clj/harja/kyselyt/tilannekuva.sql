@@ -143,28 +143,25 @@ WHERE sijainti IS NOT NULL AND
       t.tyyppi :: TEXT IN (:tyypit) AND
       (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
+
+-- jarjestelma & tyokoneid perusteella uniikit tehtävät
 -- name: hae-tyokoneiden-asiat
 SELECT
   t.jarjestelma,
   t.tyokonetyyppi,
-  t.suunta,
   t.urakkaid,
-  t.lahetysaika,
   t.tehtavat,
-  t.vastaanotettu,
-  x.alkanut
+  MIN(t.lahetysaika) FILTER (WHERE t.lahetysaika BETWEEN :alku AND :loppu) AS alkanut
 FROM
-  tyokonehavainto t,
-  (SELECT
-        tyokoneid,
-        min(lahetysaika) AS alkanut
-   FROM tyokonehavainto
-   WHERE lahetysaika >= 'today'
-   GROUP BY tyokoneid) x
+  tyokonehavainto t
 WHERE sijainti IS NOT NULL AND
-  t.tyokoneid = x.tyokoneid AND
+      (t.urakkaid IN (:urakat) OR
+      -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
+       (t.urakkaid IS NULL AND
+       (:nayta-kaikki OR t.organisaatio = :organisaatio))) AND
   (t.lahetysaika BETWEEN :alku AND :loppu) AND
-  ST_Distance(t.sijainti :: GEOMETRY, ST_MakePoint(:x, :y)::geometry) < :toleranssi;
+  ST_Distance(t.sijainti :: GEOMETRY, ST_MakePoint(:x, :y)::geometry) < :toleranssi
+GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi, t.urakkaid;
 
 -- name: hae-turvallisuuspoikkeamat
 SELECT
