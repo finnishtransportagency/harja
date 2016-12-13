@@ -5,7 +5,7 @@
             [harja-laadunseuranta.tiedot.tarkastusajon-paattaminen :as paattaminen]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.ui.yleiset.napit :refer [nappi]]
-            [harja-laadunseuranta.ui.yleiset.combobox :refer [combobox]]
+            [harja-laadunseuranta.ui.yleiset.dropdown :refer [dropdown]]
             [harja-laadunseuranta.tiedot.sovellus :as s])
   (:require-macros [reagent.ratom :refer [run!]]
                    [cljs.core.async.macros :refer [go]]
@@ -21,7 +21,7 @@
   [{:keys [urakat valittu-urakka-atom urakka-varmistettu! paattaminen-peruttu!]}]
   [:div.tarkastusajon-paattaminen-dialog
    [:div.ohjeteksti "Tarkastusajo liitetää urakkaan"]
-   [combobox
+   [dropdown
     (mapv #(-> {:nimi (:nimi %)
                 :avain (:id %)})
           urakat)

@@ -1,0 +1,38 @@
+@combobox-vakioleveys: 300px;
+
+.dropdown-container {
+  position: relative;
+
+  > .dropdown {
+    border: 1px solid @primaari-sininen;
+    background-color: @valkoinen;
+    border-radius: 0%;
+    width: @combobox-vakioleveys;
+    max-width: 100%;
+    height: @komponentin-vakiokorkeus;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    font-size: 1em;
+    padding: 5px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+
+  > .dropdown-nuoli {
+    width: 28px;
+    height: (@komponentin-vakiokorkeus - 2px);
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    background-color: @valkoinen;
+
+    > img {
+      position: relative;
+      left: 50%;
+      top: 50%;
+      width: 80%;
+      transform: translateX(-50%) translateY(-75%) rotate(180deg);
+    }
+  }
+}
