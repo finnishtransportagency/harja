@@ -22,11 +22,11 @@
   [:div.tarkastusajon-paattaminen-dialog
    [:div.ohjeteksti "Tarkastusajo liitetää urakkaan"]
    [dropdown
-    (mapv #(-> {:nimi (:nimi %)
-                :avain (:id %)})
-          urakat)
-    valittu-urakka-atom
-    {:luokka "urakkavalitsin"}]
+    urakat
+    {:luokka "urakkavalitsin"
+     :valittu (fn [e]
+                (.log js/console "Valittu: " (pr-str (.-value (.-target e))))
+                (reset! valittu-urakka-atom (js/parseInt (.-value (.-target e)))))}]
    ;; TODO Palvelimen tarvinnee palauttaa nämä järjestyksessä (lähin ensin)
    [nappi "OK"
     {:luokat-str "nappi-ensisijainen"

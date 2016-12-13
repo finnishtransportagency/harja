@@ -1,10 +1,11 @@
 @combobox-vakioleveys: 300px;
+@reuna: 1px solid @primaari-sininen;
 
 .dropdown-container {
   position: relative;
 
   > .dropdown {
-    border: 1px solid @primaari-sininen;
+    border: @reuna;
     background-color: @valkoinen;
     border-radius: 0%;
     width: @combobox-vakioleveys;
@@ -25,14 +26,16 @@
     position: absolute;
     top: 1px;
     right: 1px;
-    background-color: @valkoinen;
+    background: linear-gradient(to right, rgba(255,255,255,0) 0%,rgba(255,255,255,1) 100%);       }
+    color: @primaari-sininen;
 
-    > img {
+    > svg {
       position: relative;
       left: 50%;
       top: 50%;
-      width: 80%;
-      transform: translateX(-50%) translateY(-75%) rotate(180deg);
+      width: 24px;
+      height: 24px;
+      transform: translateX(-50%) translateY(-50%);
     }
   }
 }

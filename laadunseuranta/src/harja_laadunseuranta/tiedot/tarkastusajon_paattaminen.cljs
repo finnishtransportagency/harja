@@ -3,6 +3,7 @@
             [harja-laadunseuranta.tiedot.comms :as comms]
             [harja-laadunseuranta.ui.yleiset.napit :refer [nappi]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
+            [cljs.core.async :refer [<! timeout]]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
@@ -73,6 +74,7 @@
   (reset! s/palautettava-tarkastusajo nil))
 
 (defn lopetuspaatos-varmistettu! []
+  (reset! s/valittu-urakka (:id (first @s/oikeus-urakoihin)))
   (reset! s/tarkastusajon-paattamisvaihe :urakkavarmistus))
 
 (defn urakka-varmistettu! []
