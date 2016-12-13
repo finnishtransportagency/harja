@@ -1,3 +1,11 @@
+-- name: hae-urakat-tarkastukseen
+SELECT
+  u.id,
+  u.nimi
+FROM urakka u
+  JOIN organisaatio o ON u.hallintayksikko = o.id
+WHERE ((u.loppupvm >= :alku AND u.alkupvm <= :loppu) OR (u.loppupvm IS NULL AND u.alkupvm <= :loppu));
+
 -- name: tallenna-reittimerkinta!
 INSERT INTO tarkastusreitti
 (id, pistetyyppi, tarkastusajo, aikaleima, sijainti, sijainti_tarkkuus, kitkamittaus, havainnot, lampotila,

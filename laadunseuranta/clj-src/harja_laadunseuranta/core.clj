@@ -18,9 +18,23 @@
             [clojure.data.codec.base64 :as b64]
             [com.stuartsierra.component :as component]
             [clojure.walk :as walk]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.kyselyt.konversio :as konv]
+            [harja.pvm :as pvm]
+            [clj-time.core :as t]
+            [clj-time.coerce :as c])
   (:import (org.postgis PGgeometry))
   (:gen-class))
+
+(defn kayttajan-tarkastusurakat
+  [db user]
+  (filter (fn [{:keys [urakka_id]}]
+            (oikeudet/voi-kirjoittaa?
+                oikeudet/urakat-laadunseuranta-tarkastukset
+                urakka_id user)))
+  (q/hae-urakat-tarkastukseen db
+                              {:alku (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))
+                               :loppu (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))}))
 
 (defn- tallenna-merkinta! [tx vakiohavainto-idt merkinta]
   (q/tallenna-reittimerkinta! tx {:id (:id merkinta)
@@ -227,13 +241,7 @@
       (log/debug "Käyttäjän tietojen haku")
       {:kayttajanimi (:kayttajanimi kayttaja)
        :nimi (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
-       :urakat (into [] (mapcat :urakat (kayttajatiedot/kayttajan-urakat-aikavalilta
-                                          db
-                                          kayttaja
-                                          (fn [urakka-id kayttaja]
-                                            (oikeudet/voi-kirjoittaa?
-                                              oikeudet/urakat-laadunseuranta-tarkastukset
-                                              urakka-id kayttaja)))))
+       :urakat (kayttajan-tarkastusurakat db kayttaja)
        :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset db)})))
 
 
