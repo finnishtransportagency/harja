@@ -27,7 +27,8 @@
             [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
             [harja.ui.openlayers.edistymispalkki :as edistymispalkki]
             [harja.tiedot.kartta :as tiedot]
-            [harja.ui.kartta.ikonit :as kartta-ikonit])
+            [harja.ui.kartta.ikonit :as kartta-ikonit]
+            [harja.tyokalut.vkm :as vkm])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -469,20 +470,21 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
       (swap! asiat-pisteessa update :asiat conj item))))
 
 (defn- hae-asiat-pisteessa [tasot event atomi]
-  (let [koordinaatti (js->clj (.-coordinate event))]
+  (let [koordinaatti (js->clj (.-coordinate event))
+        nayta-neula! #(tasot/nayta-geometria! :klikattu-karttapiste
+                                {:alue {:type :icon
+                                        :coordinates %
+                                        :img (kartta-ikonit/sijainti-ikoni "syaani")}})]
+    (nayta-neula! koordinaatti)
     (swap! atomi assoc
            :koordinaatti koordinaatti
            :haetaan? true
            :asiat [])
-    (tasot/nayta-geometria! :klikattu-karttapiste
-                            {:alue {:type :icon
-                                    :coordinates koordinaatti
-                                    :img (kartta-ikonit/sijainti-ikoni "syaani")}})
 
     (go
       (let [in-ch (async/merge
-                    (map #(taso/hae-asiat-pisteessa % koordinaatti)
-                         (remove nil? (vals tasot))))]
+                   (map #(taso/hae-asiat-pisteessa % koordinaatti)
+                        (remove nil? (vals tasot))))]
         (loop [asia (<! in-ch)]
           (when asia
             (swap! atomi update :asiat conj asia)

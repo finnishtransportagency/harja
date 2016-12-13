@@ -141,6 +141,7 @@
     {:tyyppi  :tarkastus
      :otsikko (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus))
      :tiedot  [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
+               {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite :nimi :tierekisteriosoite}
                {:otsikko "Tarkastaja" :nimi :tarkastaja}
                {:otsikko "Havainnot" :hae havainnot-fn}]
      :data    tarkastus}))
@@ -173,6 +174,8 @@
    :otsikko "Toteuma"
    :tiedot (vec (concat [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
                          {:otsikko "Päättynyt" :tyyppi :pvm-aika :nimi :paattynyt}
+                         {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite
+                          :nimi :tierekisteriosoite}
                          {:otsikko "Suorittaja" :hae #(get-in % [:suorittaja :nimi])}]
 
                         (for [{:keys [toimenpide maara yksikko]} (:tehtavat toteuma)]

@@ -86,7 +86,7 @@
           (log "tyhjennetään @valittu-asia koska ei esiinny atomissa @asiat-pisteessa, esim" (clj->js (first asiat))))
         (reset! valittu-asia nil)))
     [:div#kartan-infopaneeli.kartan-infopaneeli
-     ;; [debug asiat-pisteessa]
+     #_[debug asiat-pisteessa]
      [:div
       (when (and @valittu-asia useampi-asia?)
         [napit/takaisin "" #(reset! valittu-asia nil)])
@@ -95,8 +95,7 @@
       [:button.close {:on-click piilota-fn!
                       :type     "button"}
        [ikonit/remove]]]
-     (when-let [[k1 k2] (map str koordinaatti)]
-       [:div [:div.ip-otsikko "Koordinaatit"] [:div.ip-koordinaatit k1 " " k2]])
+
      (when-not (empty? asiat)
        (if esita-yksityiskohdat?
          [esita-yksityiskohdat (or @valittu-asia ainoa-asia) @linkkifunktiot]

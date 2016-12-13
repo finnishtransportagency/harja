@@ -352,7 +352,8 @@
   (let [parametrit (tarkastusreittien-parametrit user parametrit)]
     (into []
           (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
-                (map #(konv/string->keyword % :tyyppi)))
+                (map #(konv/string->keyword % :tyyppi))
+                (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
           (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
            db
            (assoc parametrit

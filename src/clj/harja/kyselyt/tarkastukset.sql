@@ -96,7 +96,9 @@ SELECT t.id, t.tyyppi, t.laadunalitus,
        END AS tekija,
        t.aika,
        t.tarkastaja,
-       t.havainnot
+       t.havainnot,
+       yrita_tierekisteriosoite_pisteille2
+          (alkupiste(t.sijainti), loppupiste(t.sijainti), 1)::TEXT AS tierekisteriosoite
   FROM tarkastus t
        LEFT JOIN kayttaja k ON t.luoja = k.id
        LEFT JOIN organisaatio o ON k.organisaatio = o.id

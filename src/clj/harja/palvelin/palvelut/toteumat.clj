@@ -597,7 +597,8 @@
   (konv/sarakkeet-vektoriin
    (into []
          (comp (map #(assoc % :tyyppi-kartalla :toteuma))
-               (map konv/alaviiva->rakenne))
+               (map konv/alaviiva->rakenne)
+               (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
          (q/hae-toteumien-tiedot-pisteessa
           db
           (merge {:x x :y y :toleranssi 150 :tyyppi "kokonaishintainen"}
@@ -616,7 +617,8 @@
   (konv/sarakkeet-vektoriin
    (into []
          (comp (map #(assoc % :tyyppi-kartalla :toteuma))
-               (map konv/alaviiva->rakenne))
+               (map konv/alaviiva->rakenne)
+               (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
          (q/hae-toteumien-tiedot-pisteessa
           db
           (merge {:x x :y y :toleranssi 150 :tyyppi "yksikkohintainen"

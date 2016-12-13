@@ -421,7 +421,8 @@
    (into []
          (comp
           (map konv/alaviiva->rakenne)
-          (map #(assoc % :tyyppi-kartalla :toteuma)))
+          (map #(assoc % :tyyppi-kartalla :toteuma))
+          (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
          (q/hae-toteumien-asiat db
                                 (as-> parametrit p
                                   (suodattimet-parametreista p)
@@ -446,7 +447,8 @@
   [db user {x :x y :y :as parametrit}]
   (into []
         (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
-              (map #(konv/string->keyword % :tyyppi)))
+              (map #(konv/string->keyword % :tyyppi))
+              (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
         (q/hae-tarkastusten-asiat db
                                   (as-> parametrit p
                                     (suodattimet-parametreista p)

@@ -130,7 +130,9 @@ SELECT
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
        THEN 'urakoitsija' :: osapuoli
        ELSE 'tilaaja' :: osapuoli
-       END AS tekija
+       END AS tekija,
+  yrita_tierekisteriosoite_pisteille2(
+     alkupiste(t.sijainti), loppupiste(t.sijainti), 1)::TEXT AS tierekisteriosoite
 FROM tarkastus t
      JOIN kayttaja k ON t.luoja = k.id
      JOIN organisaatio o ON o.id = k.organisaatio
@@ -354,7 +356,9 @@ SELECT
   tt.maara           AS tehtava_maara,
   tpk.yksikko        AS tehtava_yksikko,
   tt.toteuma         AS tehtava_id,
-  tpk.nimi AS toimenpide
+  tpk.nimi AS toimenpide,
+  yrita_tierekisteriosoite_pisteille2(
+      alkupiste(t.reitti), loppupiste(t.reitti), 1)::TEXT AS tierekisteriosoite
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
                     AND t.alkanut >= :alku

@@ -598,7 +598,9 @@ SELECT
   tt.maara AS tehtava_maara,
   tk.yksikko AS tehtava_yksikko,
   tt.toteuma AS tehtava_id,
-  tk.nimi AS toimenpide
+  tk.nimi AS toimenpide,
+  yrita_tierekisteriosoite_pisteille2(
+     alkupiste(t.reitti), loppupiste(t.reitti), 1)::TEXT AS tierekisteriosoite
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
   JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
