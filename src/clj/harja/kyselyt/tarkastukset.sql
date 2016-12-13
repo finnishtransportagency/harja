@@ -48,7 +48,7 @@ FROM tarkastus t
   LEFT JOIN yllapitokohde ypk ON t.yllapitokohde = ypk.id
 WHERE t.urakka = :urakka
       AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
-      AND (t.aika >= :alku AND t.aika <= :loppu)
+      AND (t.aika :: DATE >= :alku AND t.aika :: DATE <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
       AND (:havaintoja_sisaltavat = FALSE

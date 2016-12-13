@@ -31,7 +31,6 @@
             "id": "urn:harja/mittaustulokset/talvihoito",
             "type": "object",
             "additionalProperties": false,
-            "required": true,
             "properties": {
               "hoitoluokka": {
                 "id": "urn:harja/mittaustulokset/talvihoito/hoitoluokka",
