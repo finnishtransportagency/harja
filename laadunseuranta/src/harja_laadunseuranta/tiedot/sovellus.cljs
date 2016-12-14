@@ -112,6 +112,8 @@
 
 (def kayttajanimi (reagent/cursor sovellus [:kayttaja :kayttajanimi]))
 (def kayttajatunnus (reagent/cursor sovellus [:kayttaja :kayttajatunnus]))
+(def roolit (reagent/cursor sovellus [:kayttaja :roolit]))
+(def organisaatio (reagent/cursor sovellus [:kayttaja :organisaatio]))
 
 (def havaintolomake-auki (reagent/cursor sovellus [:havaintolomake-auki?]))
 (def havaintolomakedata (reagent/cursor sovellus [:havaintolomakedata]))

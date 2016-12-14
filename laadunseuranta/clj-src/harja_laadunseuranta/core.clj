@@ -250,10 +250,15 @@
       s/Any s/Any
       (fn [kayttaja tiedot]
         (log/debug "Käyttäjän tietojen haku")
-        {:kayttajanimi (:kayttajanimi kayttaja)
-         :nimi (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
-         :urakat (kayttajan-tarkastusurakat db kayttaja (:sijainti tiedot))
-         :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset db)}))))
+        (let [kayttajatiedot-kannassa (kayttajatiedot/hae-kayttaja db (:id kayttaja))]
+          {:kayttajanimi (:kayttajanimi kayttajatiedot-kannassa)
+           :nimi (str (:etunimi kayttajatiedot-kannassa)
+                      " "
+                      (:sukunimi kayttajatiedot-kannassa))
+           :urakat (kayttajan-tarkastusurakat db kayttaja (:sijainti tiedot))
+           :roolit (:roolit kayttajatiedot-kannassa)
+           :organisaatio (:organisaatio kayttajatiedot-kannassa)
+           :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset db)})))))
 
 
 (defn- tallenna-liite [db req]
