@@ -88,5 +88,6 @@
                      :hae-tr-pisteilla
                      :hae-tr-pisteella
                      :hae-tr-viivaksi
-                     :hae-osien-pituudet)
+                     :hae-osien-pituudet
+                     :hae-tr-osan-ajoradat)
     this))
