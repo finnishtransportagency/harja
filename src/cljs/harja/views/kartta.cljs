@@ -530,19 +530,21 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
         (= (:type geom) :hy)
         (= (:id geom) (:id @nav/valittu-hallintayksikko)))))
 
-(defn hae-asiat? [item]
-  ;; Haetaan koordinaatin asiat ja aukaistaan infopaneeli, jos
-  ;; Klikattu asia ei ole hallintayksikkö tai urakka
-  ;; Ollaan tilannekuvassa tai ilmoituksissa
-  ;;  - Ilmoituksissa ja tilannekuvassa kartan käyttäytyminen ei sinällään
-  ;;    riipu siitä, mikä hy/urakka on valittuna. Näkymiä voi käyttää aina kuitenkin
-  ;; Klikattu asia on valittu urakka
-  ;;  - Jos asia on ei-valittu urakka, ollaan Urakat-näkymän etusivulla (tai ilmoituksissa/tilannekuassa).
-  ;;  - Muussa tapauksessa ollaan "muualla Harjassa", jolloin tietenkin halutaan tehdä haku
+(defn hae-asiat?
+  "Päättele tarviiko annetulle klikatulle geometrialle avata
+  infopaneeli ja hakea palvelimelta pisteessä olevat asiat."
+  [item]
 
-  (or (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
-      (not (contains? kasittele-geometrian-klikkaus (:type item)))
-      (and (= :tilannekuva @nav/valittu-sivu) (= :ilmoitus (:type item)))))
+  (or
+   ;; Jos klikkaus osuu valittuun urakkaan tai hallintayksikköön,
+   ;; klikattiin sen alueelle (ei olla valitsemassa hallintayksikköä tai urakka)
+   (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
+
+   ;; Tälle tyypille ei ole erikoiskäsittelyä klikkaukselle
+   (not (contains? kasittele-geometrian-klikkaus (:type item)))
+
+   ;; Ollaan tilannekuvassa
+   (= :tilannekuva @nav/valittu-sivu)))
 
 (defn kaynnista-asioiden-haku-pisteesta! [tasot event asiat-pisteessa]
   (hae-asiat-pisteessa tasot event asiat-pisteessa)
