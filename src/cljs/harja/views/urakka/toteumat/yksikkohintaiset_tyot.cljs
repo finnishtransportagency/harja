@@ -397,24 +397,14 @@
                                     [:span.kustannuserotus.kustannuserotus-negatiivinen (fmt/euro-opt (:kustannuserotus rivi))])) :leveys 10}]
         @tiedot/yks-hint-tyot-tehtavittain]])))
 
-(defn- vastaava-toteuma [klikattu-toteuma]
-  ;; oletetaan että kartalla näkyvät toteumat ovat myös gridissä
-  (some (fn [urakan-toteuma]
-          (when (= (:id (:toteuma urakan-toteuma)) (:id klikattu-toteuma))
-            urakan-toteuma))
-        @tiedot/yks-hint-tehtavien-summat))
-
 (defn yksikkohintaisten-toteumat []
   (komp/luo
     (komp/lippu tiedot/yksikkohintaiset-tyot-nakymassa? tiedot/karttataso-yksikkohintainen-toteuma)
     (komp/sisaan-ulos #(do
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
                           {:toteuma
-                           {:toiminto (fn [klikattu-toteuma] ;; asiat-pisteessa -asia joka on tyypiltään toteuma
-                                        (log "klikattu toteuma:" (pr-str klikattu-toteuma))
-                                        (log "vastaava toteuma:" (pr-str (vastaava-toteuma klikattu-toteuma)))
-                                        (reset! tiedot/valittu-yksikkohintainen-toteuma
-                                                (vastaava-toteuma klikattu-toteuma)))
+                           {:toiminto (fn [{id :id :as klikattu-toteuma}]
+                                        (nayta-toteuma-lomakkeessa @nav/valittu-urakka-id id))
                             :teksti "Valitse toteuma"}}))
                       #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
     (fn []
