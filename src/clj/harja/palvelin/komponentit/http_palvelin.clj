@@ -145,22 +145,22 @@
     [this nimi palvelu-fn]
     [this nimi palvelu-fn optiot]
     "Julkaise uusi palvelu HTTP palvelimeen. Nimi on keyword, ja palvelu-fn on funktio joka ottaa
-sisään käyttäjätiedot sekä sisään tulevan datan (POST body transit muodossa parsittu) ja palauttaa Clojure
-tietorakenteen, joka muunnetaan transit muotoon asiakkaalle lähetettäväksi.
-Jos funktio tukee yhden parametrin aritya, voidaan sitä kutsua myös GET metodilla. Palvelu julkaistaan
-  polkuun /edn/nimi (ilman keywordin kaksoispistettä).
+     sisään käyttäjätiedot sekä sisään tulevan datan (POST body transit muodossa parsittu) ja palauttaa Clojure
+     tietorakenteen, joka muunnetaan transit muotoon asiakkaalle lähetettäväksi.
+     Jos funktio tukee yhden parametrin aritya, voidaan sitä kutsua myös GET metodilla. Palvelu julkaistaan
+     polkuun /edn/nimi (ilman keywordin kaksoispistettä).
 
-Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit:
+     Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit:
 
-  :last-modified    fn (user -> date), palauttaa viimeisen muokkauspäivän käyttäjälle, jolla GET pyynnölle
-                    voidaan tarkistaa onko muutoksia. Jos tätä ei anneta, ei selaimen cachetusta sallita.
+     :last-modified       fn (user -> date), palauttaa viimeisen muokkauspäivän käyttäjälle, jolla GET pyynnölle
+                          voidaan tarkistaa onko muutoksia. Jos tätä ei anneta, ei selaimen cachetusta sallita.
 
-  :ring-kasittelija?  Jos true, ei transit käsittelyä tehdä vaan anneta Ring request mäp suoraan palvelulle.
-                      Palvelun tulee palauttaa Ring response mäppi.
+     :ring-kasittelija?   Jos true, ei transit käsittelyä tehdä vaan anneta Ring request mäp suoraan palvelulle.
+                          Palvelun tulee palauttaa Ring response mäppi.
 
-  :tarkista-polku?    Ring käsittelijän julkaisussa voidaan antaa :tarkista-polku? false, jolloin käsittelijää
-                      ei sidota normaaliin palvelupolkuun keyword nimen perusteella. Tässä tapauksessa
-                      käsittelijän vastuulla on tarkistaa itse polku. Käytetään compojure reittien julkaisuun.")
+     :tarkista-polku?     Ring käsittelijän julkaisussa voidaan antaa :tarkista-polku? false, jolloin käsittelijää
+                          ei sidota normaaliin palvelupolkuun keyword nimen perusteella. Tässä tapauksessa
+                          käsittelijän vastuulla on tarkistaa itse polku. Käytetään compojure reittien julkaisuun.")
 
   (poista-palvelu [this nimi]
     "Poistaa nimetyn palvelun käsittelijän."))

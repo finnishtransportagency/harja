@@ -23,13 +23,6 @@
                                                                          with-cursor
                                                                          with-count]]))
 
-;; Asetettu mielekkääksi tutkimalla seuraavien laitteiden keskimääräiset GPS-tarkkuudet
-;; pikaisella testillä:
-;; - Samsung Galaxy S4: 10
-;; - Samsung Galaxy Tab A: 23
-;; - Apple iPhone: 60
-(def +suurin-sallittu-tarkkuus+ 80) ;; Metreinä, mitä pienempi, sitä tarkempi
-
 (defn nykyinen-sijainti-riittavan-tarkka?
   "Palauttaa true tai false sen mukaan onko nykyinen sijainti riittävän tarkka.
    Mikäli tarkkuutta ei ole voitu määrittää, palauttaa true"
@@ -140,7 +133,7 @@
 (defn kirjaa-pistemainen-havainto! [{:keys [idxdb sijainti tarkastusajo-id
                                             epaonnistui-fn jatkuvat-havainnot havainto-avain] :as tiedot}]
   (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti)
-                                           +suurin-sallittu-tarkkuus+)
+                                           asetukset/+suurin-sallittu-tarkkuus+)
     (do (kirjaa-kertakirjaus idxdb
                              {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
                               :aikaleima (tc/to-long (lt/local-now))
@@ -161,7 +154,7 @@
                (get-in @lomakedata [:tr-osoite :aosa])
                (get-in @lomakedata [:tr-osoite :aet]))
           (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti)
-                                               +suurin-sallittu-tarkkuus+))
+                                               asetukset/+suurin-sallittu-tarkkuus+))
     (do (kirjaa-kertakirjaus idxdb
                              {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
                               :aikaleima (tc/to-long (lt/local-now))
@@ -183,7 +176,7 @@
                                    mittaustyyppi mittausarvo epaonnistui-fn] :as tiedot}]
   (.log js/console (str "Kirjataan mittaus " @mittaustyyppi ", arvo: " (pr-str mittausarvo)))
   (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti)
-                                           +suurin-sallittu-tarkkuus+)
+                                           asetukset/+suurin-sallittu-tarkkuus+)
     (do (kirjaa-kertakirjaus
           idxdb
           {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
@@ -208,7 +201,7 @@
   [{:keys [idxdb sijainti tarkastusajo-id jatkuvat-havainnot mittaustyyppi
            soratiemittaussyotto epaonnistui-fn] :as tiedot}]
   (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti)
-                                           +suurin-sallittu-tarkkuus+)
+                                           asetukset/+suurin-sallittu-tarkkuus+)
     (do (kirjaa-kertakirjaus idxdb
                              {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
                               :aikaleima (tc/to-long (lt/local-now))
@@ -243,8 +236,8 @@
 
 (defn kaynnista-reitintallennus [{:keys [sijainnin-tallennus-mahdollinen-atom sijainti-atom
                                          db segmentti-atom jatkuvat-havainnot mittaustyyppi
-                                         reittipisteet-atom tallennus-kaynnissa-atom
-                                         tarkastusajo-paattymassa
+                                         reittipisteet-atom tarkastusajo-kaynnissa-atom
+                                         tarkastusajo-paattymassa-atom
                                          tarkastusajo-atom tarkastuspisteet-atom soratiemittaussyotto]}]
   (.log js/console "Reitintallennus käynnistetty")
   (kaynnista-tarkastusajon-lokaali-tallennus db tarkastusajo-atom)
@@ -254,14 +247,14 @@
       (tallenna-tarkastusajon-geometria db @tarkastusajo-atom @reittipisteet-atom @tarkastuspisteet-atom)))
 
   (run!
-    (when (and @tallennus-kaynnissa-atom
+    (when (and @tarkastusajo-kaynnissa-atom
                @segmentti-atom)
       (swap! reittipisteet-atom #(lisaa-piirrettava-reittipiste % @segmentti-atom))))
 
   (run!
     (when (and @sijainnin-tallennus-mahdollinen-atom
-               @tallennus-kaynnissa-atom
-               (not @tarkastusajo-paattymassa)
+               @tarkastusajo-kaynnissa-atom
+               (not @tarkastusajo-paattymassa-atom)
                (:nykyinen @sijainti-atom))
       (kirjaa-yksittainen-reittimerkinta!
         {:idxdb db
