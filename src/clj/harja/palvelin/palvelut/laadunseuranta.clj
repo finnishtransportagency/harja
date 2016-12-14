@@ -348,7 +348,8 @@
 
     ch))
 
-(defn hae-tarkastusreittien-asiat-kartalle [db user {x :x y :y :as parametrit}]
+(defn hae-tarkastusreittien-asiat-kartalle
+  [db user {x :x y :y toleranssi :toleranssi :as parametrit}]
   (let [parametrit (tarkastusreittien-parametrit user parametrit)]
     (into []
           (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
@@ -357,7 +358,8 @@
           (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
            db
            (assoc parametrit
-                  :x x :y y)))))
+                  :x x :y y
+                  :toleranssi toleranssi)))))
 
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
