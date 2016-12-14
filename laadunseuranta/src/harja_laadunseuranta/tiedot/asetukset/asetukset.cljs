@@ -12,8 +12,8 @@
 (def +wmts-url-ortokuva+ (str "/" (prefix) "wmts/maasto/wmts"))
 
 ;; reitintallennus
-(def +tapahtumastore+ "tapahtumat")
-(def +tarkastusajostore+ "tarkastusajo")
+(def +reittimerkinta-store+ "reittimerkinnat")
+(def +tarkastusajo-store+ "tarkastusajo")
 (def +pollausvali+ 2000)
 (def +tallennus-url+ (str "/" (prefix) "_/ls-reittimerkinta"))
 (def +paatos-url+ (str "/" (prefix) "_/ls-paata-tarkastusajo"))
@@ -33,9 +33,6 @@
 (def +preload-taso+ 1000)
 (def +heading-ikonikorjaus+ -90)
 (def +reittiviivan-leveys+ 4)
-
-;; sivupaneeli
-(def +sivupaneelin-leveys+ 240)
 
 ;; jos geolokaatio-apin antaman paikkatiedon tarkkuus on heikompi kun tämä luku, paikkatietoa ei rekisteröidä
 (def +tarkkuusraja+ 50)
