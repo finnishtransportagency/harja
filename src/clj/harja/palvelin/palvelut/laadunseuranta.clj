@@ -357,8 +357,7 @@
           (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
            db
            (assoc parametrit
-                  :x x :y y
-                  :toleranssi 150)))))
+                  :x x :y y)))))
 
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))

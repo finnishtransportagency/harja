@@ -615,7 +615,7 @@
                (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
          (q/hae-toteumien-tiedot-pisteessa
           db
-          (merge {:x x :y y :toleranssi 150 :tyyppi "kokonaishintainen"}
+          (merge {:x x :y y :tyyppi "kokonaishintainen"}
                  parametrit)))
    {:tehtava :tehtavat}))
 
@@ -635,7 +635,7 @@
                (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
          (q/hae-toteumien-tiedot-pisteessa
           db
-          (merge {:x x :y y :toleranssi 150 :tyyppi "yksikkohintainen"
+          (merge {:x x :y y :tyyppi "yksikkohintainen"
                   :toimenpidekoodi nil}
                  parametrit)))
    {:tehtava :tehtavat}))
