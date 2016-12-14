@@ -27,11 +27,12 @@
   (:gen-class))
 
 (defn kayttajan-tarkastusurakat
-  [db user]
-  (kayttajatiedot/kayttajan-urakat db user (fn [urakka kayttaja]
-                                             (oikeudet/voi-kirjoittaa?
-                                             oikeudet/urakat-laadunseuranta-tarkastukset
-                                             urakka kayttaja))))
+  [db user sijainti]
+  (log/debug "Urakat kun sijainti on: " (pr-str sijainti))
+  (kayttajatiedot/kayttajan-lahimmat-urakat db user (fn [urakka kayttaja]
+                                                      (oikeudet/voi-kirjoittaa?
+                                                        oikeudet/urakat-laadunseuranta-tarkastukset
+                                                        urakka kayttaja))))
 
 (defn- tallenna-merkinta! [tx vakiohavainto-idt merkinta]
   (q/tallenna-reittimerkinta! tx {:id (:id merkinta)
@@ -115,12 +116,9 @@
   {:reitilliset-tarkastukset (mapv #(assoc % :urakka urakka-id) reitilliset-tarkastukset)
    :pistemaiset-tarkastukset (mapv #(assoc % :urakka urakka-id) pistemaiset-tarkastukset)})
 
-(defn- muunna-tarkastusajon-reittipisteet-tarkastuksiksi [tx tarkastusajo kayttaja]
+(defn- muunna-tarkastusajon-reittipisteet-tarkastuksiksi [tx tarkastusajo kayttaja urakka-id]
   (log/debug "Muutetaan reittipisteet tarkastuksiksi")
   (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)
-        urakka-id (or
-                    (:urakka tarkastusajo)
-                    (:id (first (q/paattele-urakka tx {:tarkastusajo tarkastusajo-id}))))
         merkinnat-tr-osoitteilla (q/hae-reitin-merkinnat-tieosoitteilla
                                    tx {:tarkastusajo tarkastusajo-id
                                        :treshold 100})
@@ -134,10 +132,14 @@
 (defn paata-tarkastusajo! [db tarkastusajo kayttaja]
   (jdbc/with-db-transaction [tx db]
     (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)
+          urakka-id (:urakka tarkastusajo)
+          _ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset
+                                            kayttaja
+                                            urakka-id)
           ajo-paatetty (:paatetty (first (q/ajo-paatetty tx {:id tarkastusajo-id})))]
       (if-not ajo-paatetty
         (do
-          (muunna-tarkastusajon-reittipisteet-tarkastuksiksi tx tarkastusajo kayttaja)
+          (muunna-tarkastusajon-reittipisteet-tarkastuksiksi tx tarkastusajo kayttaja urakka-id)
           (merkitse-ajo-paattyneeksi! tx tarkastusajo-id kayttaja))
         (log/warn (format "Yritettiin päättää ajo %s, joka on jo päätetty!" tarkastusajo-id))))))
 
@@ -234,12 +236,14 @@
           (hae-tr-tiedot db lat lon treshold))))
 
     :ls-hae-kayttajatiedot
-    (fn [kayttaja]
-      (log/debug "Käyttäjän tietojen haku")
-      {:kayttajanimi (:kayttajanimi kayttaja)
-       :nimi (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
-       :urakat (kayttajan-tarkastusurakat db kayttaja)
-       :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset db)})))
+    (kasittele-api-kutsu
+      s/Any s/Any
+      (fn [kayttaja tiedot]
+        (log/debug "Käyttäjän tietojen haku")
+        {:kayttajanimi (:kayttajanimi kayttaja)
+         :nimi (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
+         :urakat (kayttajan-tarkastusurakat db kayttaja (:sijainti tiedot))
+         :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset db)}))))
 
 
 (defn- tallenna-liite [db req]

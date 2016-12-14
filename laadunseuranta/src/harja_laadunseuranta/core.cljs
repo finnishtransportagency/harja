@@ -59,11 +59,11 @@
 
 (defn- alusta-sovellus []
   (go
-    (let [kayttajatiedot (<! (comms/hae-kayttajatiedot))]
-      (reset! sovellus/kayttajanimi (-> kayttajatiedot :nimi))
-      (reset! sovellus/kayttajatunnus (-> kayttajatiedot :kayttajanimi))
-      (reset! sovellus/vakiohavaintojen-kuvaukset (-> kayttajatiedot :vakiohavaintojen-kuvaukset))
-      (reset! sovellus/oikeus-urakoihin (-> kayttajatiedot :urakat)))
+    (let [kayttajatiedot (<! (comms/hae-kayttajatiedot (:nykyinen @sovellus/sijainti)))]
+      (reset! sovellus/kayttajanimi (-> kayttajatiedot :ok :nimi))
+      (reset! sovellus/kayttajatunnus (-> kayttajatiedot :ok :kayttajanimi))
+      (reset! sovellus/vakiohavaintojen-kuvaukset (-> kayttajatiedot :ok :vakiohavaintojen-kuvaukset))
+      (reset! sovellus/oikeus-urakoihin (-> kayttajatiedot :ok :urakat)))
 
     (reset! sovellus/idxdb (<! (reitintallennus/tietokannan-alustus)))
 

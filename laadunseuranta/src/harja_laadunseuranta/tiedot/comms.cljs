@@ -61,8 +61,8 @@
 (defn luo-ajo! []
   (post! asetukset/+luonti-url+ nil))
 
-(defn hae-kayttajatiedot []
-  (get! asetukset/+kayttajatiedot-url+))
+(defn hae-kayttajatiedot [sijainti]
+  (post! asetukset/+kayttajatiedot-url+ {:sijainti sijainti}))
 
 (defn- tallenna-kuvat
   "Tallentaa lähetettävien reittimerkintöjen kuvat palvelimelle ja korvaa kuvadatan kuvan id:llä"

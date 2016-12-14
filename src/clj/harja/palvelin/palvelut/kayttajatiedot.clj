@@ -18,9 +18,10 @@
       :hoito
       (keyword (q/hae-kayttajan-yleisin-urakkatyyppi db kayttajan-urakat)))))
 
-(defn kayttajan-urakat
+(defn kayttajan-lahimmat-urakat
   [db user oikeustarkistus-fn]
   "Palauttaa yksinkertaisen vectorin urakoita, joihin käyttäjällä on annettu oikeus.
+  Urakat ovat järjestyksessä, lähin ensimmäisenä.
   Oikeustarkistus on 2-arity funktio (urakka-id ja käyttäjä),
   joka tarkistaa, että käyttäjä voi lukea urakkaa annetulla oikeudella."
   (into []
