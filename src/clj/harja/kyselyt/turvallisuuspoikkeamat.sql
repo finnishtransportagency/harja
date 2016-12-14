@@ -269,7 +269,7 @@ FROM turvallisuuspoikkeama t
   LEFT JOIN liite koml
     ON kom.liite = koml.id
   LEFT JOIN organisaatio o
-    ON u.hallintayksikko = o.elynumero
+    ON u.hallintayksikko = o.id
 WHERE t.id = :id;
 
 -- name: onko-olemassa-ulkoisella-idlla
