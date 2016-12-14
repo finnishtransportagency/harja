@@ -34,7 +34,7 @@
     background-color: @harmaa13;
     padding-top: 3px;
 
-    > .hampurilaisvalikko {
+    .hampurilaisvalikko {
       width: 32px;
       height: 32px;
       float: right;
@@ -50,7 +50,7 @@
       }
     }
 
-    > .valilehtiryhmien-pallerot {
+    .valilehtiryhmien-pallerot {
       text-align: center;
       height: 18px;
 
@@ -69,7 +69,7 @@
       }
     }
 
-    & .selaa-valilehtiryhmia {
+    .selaa-valilehtiryhmia {
       position: absolute;
       width: 32px;
       height: @valilehden-korkeus;
@@ -84,15 +84,15 @@
       }
     }
 
-    & .selaa-valilehtiryhmia-disabled {
+    .selaa-valilehtiryhmia-disabled {
       background-color: @harmaa4;
     }
 
-    & .selaa-valilehtiryhmia:active:not(.selaa-valilehtiryhmia-disabled) {
+    .selaa-valilehtiryhmia:active:not(.selaa-valilehtiryhmia-disabled) {
       background-color: @harmaa10;
     }
 
-    & .selaa-valilehtiryhmia-vasemmalle {
+    .selaa-valilehtiryhmia-vasemmalle {
       bottom: 0;
       left: 0;
 
@@ -101,7 +101,7 @@
       }
     }
 
-    & .selaa-valilehtiryhmia-oikealle {
+    .selaa-valilehtiryhmia-oikealle {
       bottom: 0;
       right: 0;
 
@@ -271,11 +271,11 @@
 
 // Responsiivisuus
 
-@media (max-width: 700px) {
+@media (max-width: @leveys-tabletti) {
   .navigointilaatikko {
     font-size: @navigointilaatikon-fonttikoko-pienempi;
 
-    & .selaa-valilehtiryhmia {
+    .selaa-valilehtiryhmia {
       height: @valilehden-korkeus-pienempi;
     }
 
@@ -308,7 +308,7 @@
       }
     }
 
-    & .valilehtilista {
+    .valilehtilista {
       height: @valilehden-korkeus-pienempi;
 
       > .valilehti {
@@ -316,9 +316,7 @@
       }
     }
   }
-}
 
-@media (max-width: 530px) {
   .paanavigointi-container {
     flex-flow: column;
 
@@ -328,7 +326,7 @@
 
     .navigointilaatikko {
       > footer {
-        & .nappi {
+        .nappi {
           width: auto;
           height: 30px;
         }

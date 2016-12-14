@@ -15,20 +15,14 @@
   (testing "Yläpalkki näyttää tierekisteriosoitteen oikein"
     (let [tr-osoite (atom {:tie 20
                            :aosa 4
-                           :aet 3000})
-          kuva (atom nil)]
+                           :aet 3000})]
       (with-component [ylapalkki/ylapalkkikomponentti
-                       {:tiedot-nakyvissa (atom false)
-                        :hoitoluokka (atom "Ia")
+                       {:hoitoluokka (atom "Ia")
                         :soratiehoitoluokka (atom "5")
                         :tr-osoite tr-osoite
-                        :aloitetaan-tarkastusajo (atom false)
-                        :kiinteistorajat (atom false)
-                        :ortokuva (atom false)
-                        :tallennus-kaynnissa (atom false)
-                        :keskita-ajoneuvoon (atom false)
+                        :tarkastusajo-alkamassa? (atom false)
+                        :tarkastusajo-kaynnissa? (atom false)
                         :disabloi-kaynnistys? (atom false)
-                        :valittu-urakka (atom {:nimi "Foo" :id 666})
                         :palvelinvirhe (atom nil)}]
         (let [palkki-div (sel1 [:div.tr-osoite])
               hoitoluokka-div (sel1 [:div.soratiehoitoluokka])

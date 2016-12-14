@@ -3,12 +3,12 @@
             [cljs-time.local :as l]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.ui.kamera :as kamera]
-            [harja-laadunseuranta.ui.napit :refer [nappi]]
+            [harja-laadunseuranta.ui.yleiset.napit :refer [nappi]]
             [harja-laadunseuranta.tiedot.havaintolomake :refer [alusta-uusi-lomake!
                                                                 tallenna-lomake!
                                                                 peruuta-lomake!]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
-            [harja-laadunseuranta.ui.lomake :refer [kentta tekstialue
+            [harja-laadunseuranta.ui.yleiset.lomake :refer [kentta tekstialue
                                                     pvm-aika tr-osoite]]
             [cljs-time.format :as time-fmt]
             [harja-laadunseuranta.tiedot.fmt :as fmt]
