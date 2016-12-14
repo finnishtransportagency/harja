@@ -369,7 +369,7 @@
 (defn paanavigointi []
   [paanavigointikomponentti {:valilehdet (tiedot/kayttajaroolin-mukaiset-valilehdet
                                            tiedot/oletusvalilehdet
-                                           s/kayttaja)
+                                           @s/kayttaja)
                              :hampurilaisvalikon-lista-nakyvissa? s/paanavigoinnin-hampurilaisvalikon-lista-nakyvissa?
                              :hampurilaisvalikko-painettu tiedot/hampurilaisvalikko-painettu!
                              :body-click tiedot/body-click
