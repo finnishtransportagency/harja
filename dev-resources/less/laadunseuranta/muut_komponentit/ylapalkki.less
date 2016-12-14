@@ -35,14 +35,14 @@
   box-sizing: border-box;
   position: relative;
 
-  & img {
+  img {
     padding: @ylapalkin-nappien-valinen-tyhja-tila;
     padding-top: 15px;
     width: 130px;
     height: auto;
   }
 
-  & #testiharja {
+  #testiharja {
     background-color: white;
     color: #dd0000;
     font-size: 10px;
@@ -157,7 +157,7 @@
   padding-right: 10px;
   text-align: center;
 
-  & .kaynnispainike-nuoli {
+  .kaynnispainike-nuoli {
     margin-right: 10px;
   }
 
@@ -189,34 +189,37 @@
 }
 
 .ylapalkki.testiharja {
-    background: #56090a;
+  background-color: @testiharjan-taustavari;
 
-    & .ol-zoom-in, .ol-zoom-out {
-        background: #56090a;
-    }
+  .ol-zoom-in, .ol-zoom-out {
+    background-color: @testiharjan-taustavari;
+  }
 }
 
-@media (max-width: 700px) {
+// Responsiivisuus
+
+@media (max-width: @leveys-tabletti) {
   .ylapalkki {
     min-height: @ylapalkin-korkeus-pienempi;
 
-    & .logo {
+    .logo {
       // Jos selain ei tue <picture> elementtiä, näytetään aina default img
       // Varmista aina, että näyttää hyvältä (esim. kommentoimalla <source> testiksi)
-      & img {
+      img {
         padding: 4px;
         padding-top: 6px;
         width: auto;
         height: 36px;
       }
 
-      & #testiharja {
+      #testiharja {
         top: 5px;
         left: 8px;
       }
     }
   }
-  & .ylapalkin-metatiedot {
+
+  .ylapalkin-metatiedot {
     padding-top: 0;
   }
 
@@ -234,24 +237,16 @@
   }
 
   .kaynnistyspainike {
-    width: 170px;
     height: (@ylapalkin-korkeus-pienempi + 2px);
-    line-height: @ylapalkin-korkeus-pienempi;
-
-    & .kaynnispainike-nuoli {
-      margin-right: 5px;
-
-    }
-  }
-}
-
-@media (max-width: 570px) {
-  .kaynnistyspainike {
     width: 50px;
     line-height: @ylapalkin-korkeus-pienempi;
-  }
 
-  .kaynnistyspainike > .kaynnistyspainike-teksti {
-    display: none;
+    .kaynnispainike-nuoli {
+      margin-right: 5px;
+    }
+
+    > .kaynnistyspainike-teksti {
+      display: none;
+    }
   }
 }

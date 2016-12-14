@@ -55,14 +55,14 @@
   (post! asetukset/+urakkatyypin-urakat-url+ urakkatyyppi))
 
 (defn paata-ajo! [tarkastusajo-id urakka]
-  (post! asetukset/+paatos-url+ {:urakka (:id urakka)
+  (post! asetukset/+paatos-url+ {:urakka urakka
                                  :tarkastusajo {:id tarkastusajo-id}}))
 
 (defn luo-ajo! []
   (post! asetukset/+luonti-url+ nil))
 
-(defn hae-kayttajatiedot []
-  (get! asetukset/+kayttajatiedot-url+))
+(defn hae-kayttajatiedot [sijainti]
+  (post! asetukset/+kayttajatiedot-url+ {:sijainti sijainti}))
 
 (defn- tallenna-kuvat
   "Tallentaa lähetettävien reittimerkintöjen kuvat palvelimelle ja korvaa kuvadatan kuvan id:llä"

@@ -1,3 +1,4 @@
+
 -- name: tallenna-reittimerkinta!
 INSERT INTO tarkastusreitti
 (id, pistetyyppi, tarkastusajo, aikaleima, sijainti, sijainti_tarkkuus, kitkamittaus, havainnot, lampotila,

@@ -1,4 +1,4 @@
-(ns harja-laadunseuranta.ui.dom
+(ns harja-laadunseuranta.ui.yleiset.dom
   (:require
     [harja-laadunseuranta.asiakas.tapahtumat :as tapahtumat]
     [reagent.core :as reagent :refer [atom]]
@@ -42,3 +42,8 @@
         (if (= dom-node ylempi)
           true
           (recur (.-parentNode ylempi)))))))
+
+;; Responsiivisen UI:n vakiot
+;; (Jos muutat näitä, tarkista myös vakiot.less)
+
+(def +leveys-tabletti+ 760) ; Tätä suurempi laite on tabletti, pienempi puhelin

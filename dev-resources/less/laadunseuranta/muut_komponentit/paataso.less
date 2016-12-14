@@ -1,0 +1,42 @@
+#app {
+  height: 100%;
+}
+
+.toplevel {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+
+.paasisalto-container {
+  flex: 1;
+  position: relative;
+  overflow: auto;
+}
+
+.map {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: @z-index-kartta;
+}
+
+.spinner {
+  z-index: @z-index-spinner;
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  color: black;
+}
+
+@media (max-width: @leveys-tabletti) {
+  & .spinner {
+    width: 35px;
+  }
+}
+
+.file-input-container {
+  position: absolute;
+  top: -500px;
+
+}
