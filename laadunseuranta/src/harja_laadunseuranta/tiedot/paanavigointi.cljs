@@ -330,6 +330,9 @@
     :avain :kaivojenkorkeusasema
     :vaatii-nappaimiston? false}])
 
+(defn jarjesta-valilehdet [valilehdet]
+  (into [] (sort-by :jarjestys valilehdet)))
+
 (defn kayttajaroolin-mukaiset-valilehdet
   "Palauttaa vain ne välilehdet, jotka ovat kyseiselle käyttäjäroolille tarpeelliset.
    Säätää myös järjestyksen kohdalleen."
@@ -345,10 +348,11 @@
 
       ;; Päällystyksen muille henkilöille siirreään vain päällystys-välilehti kärkeen
       oikeus-vain-paallystykseen?
-      (mapv #(if (= (:avain %) :paallystys)
-               (assoc % :jarjestys 0)
-               %)
-            oletusvalilehdet)
+      (let [muokatut-valilehdet (mapv #(if (= (:avain %) :paallystys)
+                (assoc % :jarjestys 0)
+                %)
+             oletusvalilehdet)]
+        (jarjesta-valilehdet muokatut-valilehdet))
 
       ;; Ei roolin mukaisia sääntöjä
       :default
