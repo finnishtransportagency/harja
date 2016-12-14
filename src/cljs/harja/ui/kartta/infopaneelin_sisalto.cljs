@@ -214,7 +214,7 @@
                            (if-let [get-fn (or nimi hae)]
                              [rivin-skeema (get-fn data)]
                              ;; else
-                             (do (log/error "skeemasta puuttuu :nimi tai :hae - skeema:" (clj->js skeema) "tieto:" (clj->js tieto) )
+                             (do (log "skeemasta puuttuu :nimi tai :hae - skeema:" (clj->js skeema) "tieto:" (clj->js tieto) )
                                  [])))
                          skeema)
         tyhjat-arvot (keep (comp :otsikko first) (filter (comp nil? second) kenttien-arvot))]
