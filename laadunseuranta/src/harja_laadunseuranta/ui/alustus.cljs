@@ -19,10 +19,10 @@
                                         "Selain vaatii päivityksen"
                                         "Selain tuettu")]
     [:div [checkmark verkkoyhteys] "Verkkoyhteys"]
-    [:div [checkmark (not (empty? oikeus-urakoihin))] "Oikeus tehdä tarkastuksia"]
+    [:div [checkmark idxdb-tuettu] "Selaintietokanta-tuki"]
     [:div [checkmark gps-tuettu] "GPS-tuki"]
     [:div [checkmark ensimmainen-sijainti] "Laite paikannettu"]
-    [:div [checkmark idxdb-tuettu] "Selaintietokanta-tuki"]
     [:div [checkmark kayttaja] "Käyttäjä tunnistettu"]
+    [:div [checkmark (not (empty? oikeus-urakoihin))] "Oikeus tehdä tarkastuksia"]
     [:div.screenlock-muistutus
      "Muista asettaa näytön automaattilukitus pois päältä."]]])

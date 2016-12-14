@@ -57,13 +57,20 @@
   (dom/kuuntele-leveyksia)
   (dom/kuuntele-body-klikkauksia))
 
+(defn kaynnista-kayttajatietojen-haku []
+  ;; Haetaan käyttäjätiedot kun laite on paikannettu
+  ;; Sijainti tarvitaan urakoiden lajitteluun, jotta defaulttina on valittuna lähin
+  (run!
+    (when (and @sovellus/ensimmainen-sijainti
+               (not @sovellus/kayttajanimi))
+      (go (let [kayttajatiedot (<! (comms/hae-kayttajatiedot (:nykyinen @sovellus/sijainti)))]
+            (reset! sovellus/kayttajanimi (-> kayttajatiedot :ok :nimi))
+            (reset! sovellus/kayttajatunnus (-> kayttajatiedot :ok :kayttajanimi))
+            (reset! sovellus/vakiohavaintojen-kuvaukset (-> kayttajatiedot :ok :vakiohavaintojen-kuvaukset))
+            (reset! sovellus/oikeus-urakoihin (-> kayttajatiedot :ok :urakat)))))))
+
 (defn- alusta-sovellus []
   (go
-    (let [kayttajatiedot (<! (comms/hae-kayttajatiedot (:nykyinen @sovellus/sijainti)))]
-      (reset! sovellus/kayttajanimi (-> kayttajatiedot :ok :nimi))
-      (reset! sovellus/kayttajatunnus (-> kayttajatiedot :ok :kayttajanimi))
-      (reset! sovellus/vakiohavaintojen-kuvaukset (-> kayttajatiedot :ok :vakiohavaintojen-kuvaukset))
-      (reset! sovellus/oikeus-urakoihin (-> kayttajatiedot :ok :urakat)))
 
     (reset! sovellus/idxdb (<! (reitintallennus/tietokannan-alustus)))
 
@@ -73,6 +80,8 @@
                                                                (tarkastusajon-luonti/jatka-ajoa!))))
 
     (reitintallennus/paivita-lahettamattomien-merkintojen-maara @sovellus/idxdb asetukset/+pollausvali+ sovellus/lahettamattomia-merkintoja)
+
+    (kaynnista-kayttajatietojen-haku)
 
     (reitintallennus/kaynnista-reitinlahetys asetukset/+pollausvali+
                                              @sovellus/idxdb
