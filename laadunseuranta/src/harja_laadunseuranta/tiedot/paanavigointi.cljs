@@ -36,19 +36,19 @@
               :tyyppi :talvihoito-tasaisuus
               :yksikko "cm"}
     :vaatii-nappaimiston? true}
-   {:nimi "P: epä\u00ADtasainen polanne"
+   {:nimi "Pysäkki: epä\u00ADtas. polanne"
     :tyyppi :piste
     :avain :pysakilla-epatasainen-polanne
     :ikoni "polanne-36"
     :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
-   {:nimi "P: auraa\u00ADmatta"
+   {:nimi "Pysäkki: auraa\u00ADmatta"
     :tyyppi :piste
     :avain :pysakki-auraamatta
     :ikoni "pinta-lumi-36"
     :ikoni-lahde "livicons"
     :vaatii-nappaimiston? false}
-   {:nimi "P: hiekoit\u00ADtamatta"
+   {:nimi "Pysäkki: hiekoit\u00ADtamatta"
     :tyyppi :piste
     :avain :pysakki-hiekoittamatta
     :ikoni "pinta-hiekka-kielto-36"
@@ -245,7 +245,7 @@
     :ikoni "suurennuslasi-36"
     :ikoni-lahde "livicons"
     :avain :soratie
-    :mittaus {:nimi "Soratie"
+    :mittaus {:nimi "Soratietarkastus"
               :tyyppi :soratie
               :yksikko nil}
     :vaatii-nappaimiston? true}
