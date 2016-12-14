@@ -14,7 +14,7 @@
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.tyokalut.functor :as functor]
             [harja.tyokalut.vkm :as vkm]
-            [harja.domain.tierekisteri.varusteet :as tierekisteri-varusteet])
+            )
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -131,9 +131,9 @@
    :tietolaji (ffirst varusteet/tietolaji->selitys)
    :alkupvm (pvm/nyt)
    :muokattava? true
-   :ajoradat [0]
-   :ajorata 0
-   :puoli (first tierekisteri-varusteet/tien-puolet)})
+   :ajoradat varusteet/oletus-ajoradat
+   :ajorata (first varusteet/oletus-ajoradat)
+   :puoli (first varusteet/tien-puolet)})
 
 (defn hae-rajoradat [{vanha-tr :tierekisteriosoite}
                      {uusi-tr :tierekisteriosoite}

@@ -48,6 +48,12 @@
    8
    9])
 
+(def oletus-ajoradat
+  [0])
+
+(def kaikki-ajoradat
+  [0 1 2])
+
 (defn kiinnostaa-listauksessa?
   [ominaisuus]
   (let [tunniste (:kenttatunniste (:ominaisuus ominaisuus))]

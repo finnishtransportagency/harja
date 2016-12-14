@@ -32,6 +32,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(def tr-kaytossa? false)
+
 (def nayta-max-toteumaa 500)
 
 (defn oikeus-varusteen-lisaamiseen? [] (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
@@ -120,9 +122,92 @@
                                       #(e! (v/->YhdistaValinnat {:tienumero %})))]
 
    [harja.ui.valinnat/varustetoteuman-tyyppi
-    ;; todo: jostain syystä frontti ei muista tätä valintaa. ilmeisesti sidonta atomiin ei toimi.
     (r/wrap (:tyyppi valinnat)
             #(e! (v/->ValitseVarusteToteumanTyyppi %)))]])
+
+(defn varustetoteuman-tiedot [muokattava? varustetoteuma]
+  (when (not muokattava?)
+    (lomake/ryhma
+      ""
+      {:nimi :toimenpide
+       :otsikko "Toimenpide"
+       :tyyppi :valinta
+       :valinnat (vec tierekisteri-varusteet/varuste-toimenpide->string)
+       :valinta-nayta second
+       :valinta-arvo first
+       :muokattava? (constantly false)}
+      {:nimi :alkanut
+       :otsikko "Kirjattu"
+       :tyyppi :pvm
+       :muokattava? (constantly false)}
+      (when (:lahetetty varustetoteuma)
+        {:nimi :lahetetty
+         :otsikko "Lähetetty Tierekisteriin"
+         :tyyppi :komponentti
+         :muokattava? (constantly false)
+         :komponentti #(nayta-varustetoteuman-lahetyksen-tila (:data %))})
+      (when (and (not muokattava?) (= "lahetetty" (:tila varustetoteuma)))
+        {:nimi :varustekortti
+         :otsikko "Varustekortti"
+         :tyyppi :komponentti
+         :komponentti #(varustekortti-linkki (:data %))}))))
+
+(defn varusteen-tunnistetiedot [e! muokattava? varustetoteuma]
+  (lomake/ryhma
+    "Varusteen tunnistetiedot"
+    {:nimi :tietolaji
+     :otsikko "Varusteen tyyppi"
+     :tyyppi :valinta
+     :valinnat (vec tierekisteri-varusteet/tietolaji->selitys)
+     :valinta-nayta second
+     :valinta-arvo first
+     :muokattava? (constantly muokattava?)}
+    {:nimi :tierekisteriosoite
+     :otsikko "Tierekisteriosoite"
+     :tyyppi :tierekisteriosoite
+     :pakollinen? true
+     :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))
+     :muokattava? (constantly muokattava?)}
+    {:nimi :ajorata
+     :otsikko "Ajorata"
+     :tyyppi :valinta
+     :valinnat (if muokattava?
+                 (if (:ajoradat varustetoteuma)
+                   (:ajoradat varustetoteuma)
+                   tierekisteri-varusteet/oletus-ajoradat)
+                 tierekisteri-varusteet/kaikki-ajoradat)
+     :pakollinen? true
+     :leveys 1
+     :muokattava? (constantly muokattava?)}
+    {:nimi :puoli
+     :otsikko "Tien puoli"
+     :tyyppi :valinta
+     :valinnat tierekisteri-varusteet/tien-puolet
+     :pituus 1
+     :pakollinen? true
+     :muokattava? (constantly muokattava?)}
+    {:nimi :alkupvm
+     :otsikko "Alkupäivämäärä"
+     :tyyppi :pvm
+     :pakollinen? true
+     :muokattava? (constantly muokattava?)}
+    (when (not= (:toiminto varustetoteuma) :lisatty)
+      {:nimi :loppupvm
+       :otsikko "Loppupäivämäärä"
+       :tyyppi :pvm
+       :muokattava? (constantly muokattava?)})
+    {:nimi :lisatieto
+     :otsikko "Lisätietoja"
+     :tyyppi :string
+     :muokattava? (constantly muokattava?)}))
+
+(defn varusteen-ominaisuudet [muokattava? ominaisuudet]
+  (when tr-kaytossa?
+    (let [poista-tunniste-fn (fn [o] (filter #(not (= "tunniste" (get-in % [:ominaisuus :kenttatunniste]))) o))
+          ominaisuudet (if muokattava?
+                         (poista-tunniste-fn ominaisuudet)
+                         ominaisuudet)]
+      (apply lomake/ryhma "Varusteen ominaisuudet" (map #(varusteominaisuus->skeema % muokattava?) ominaisuudet)))))
 
 (defn varustetoteumalomake [e! valinnat varustetoteuma]
   (let [muokattava? (:muokattava? varustetoteuma)
@@ -131,13 +216,13 @@
      [napit/takaisin "Takaisin varusteluetteloon"
       #(e! (v/->TyhjennaValittuToteuma))]
 
-     (when (empty? ominaisuudet)
+     (when (and tr-kaytossa? (empty? ominaisuudet))
        (lomake/yleinen-varoitus "Ei yhteyttä Tierekisteriin. Varustetoteumaa ei voida kirjata."))
 
      [lomake/lomake
       {:otsikko (case (:toiminto varustetoteuma)
                   :lisatty "Uusi varuste"
-                  ;; todo: lisää uudet toiminnot tänne
+                  ;; todo: Lisää uudet toiminnot tänne
                   "Varustetoteuma")
        :muokkaa! #(e! (v/->AsetaToteumanTiedot %))
        :footer-fn (fn [toteuma]
@@ -150,84 +235,9 @@
                         :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
                         :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
                         :disabled (not (lomake/voi-tallentaa? toteuma))}]))}
-      [(when (not muokattava?)
-         (lomake/ryhma
-           ""
-           {:nimi :toimenpide
-            :otsikko "Toimenpide"
-            :tyyppi :valinta
-            :valinnat (vec tierekisteri-varusteet/varuste-toimenpide->string)
-            :valinta-nayta second
-            :valinta-arvo first
-            :muokattava? (constantly false)}
-           {:nimi :alkanut
-            :otsikko "Kirjattu"
-            :tyyppi :pvm
-            :muokattava? (constantly false)}
-           (when (:lahetetty varustetoteuma)
-             {:nimi :lahetetty
-              :otsikko "Lähetetty Tierekisteriin"
-              :tyyppi :komponentti
-              :muokattava? (constantly false)
-              :komponentti #(nayta-varustetoteuman-lahetyksen-tila (:data %))})
-           (when (and (not muokattava?) (= "lahetetty" (:tila varustetoteuma)))
-             {:nimi :varustekortti
-              :otsikko "Varustekortti"
-              :tyyppi :komponentti
-              :komponentti #(varustekortti-linkki (:data %))})))
-       (lomake/ryhma
-         "Varusteen tunnistetiedot"
-         {:nimi :tietolaji
-          :otsikko "Varusteen tyyppi"
-          :tyyppi :valinta
-          :valinnat (vec tierekisteri-varusteet/tietolaji->selitys)
-          :valinta-nayta second
-          :valinta-arvo first
-          :muokattava? (constantly muokattava?)}
-         {:nimi :tierekisteriosoite
-          :otsikko "Tierekisteriosoite"
-          :tyyppi :tierekisteriosoite
-          :pakollinen? true
-          :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))
-          :muokattava? (constantly muokattava?)}
-         {:nimi :ajorata
-          :otsikko "Ajorata"
-          :tyyppi :valinta
-          :valinnat (if muokattava?
-                      (if (:ajoradat varustetoteuma)
-                        (:ajoradat varustetoteuma)
-                        [0])
-                      [0 1 2])
-          :pakollinen? true
-          :leveys 1
-          :muokattava? (constantly muokattava?)}
-         {:nimi :puoli
-          :otsikko "Tien puoli"
-          :tyyppi :valinta
-          :valinnat tierekisteri-varusteet/tien-puolet
-          :pituus 1
-          :pakollinen? true
-          :muokattava? (constantly muokattava?)}
-         {:nimi :alkupvm
-          :otsikko "Alkupäivämäärä"
-          :tyyppi :pvm
-          :pakollinen? true
-          :muokattava? (constantly muokattava?)}
-         (when (not= (:toiminto varustetoteuma) :lisatty)
-           {:nimi :loppupvm
-            :otsikko "Loppupäivämäärä"
-            :tyyppi :pvm
-            :muokattava? (constantly muokattava?)})
-         {:nimi :lisatieto
-          :otsikko "Lisätietoja"
-          :tyyppi :string
-          :muokattava? (constantly muokattava?)})
-
-       ;; Muodostetaan varusteen tiedoille kentät tietolajin skeeman perusteella
-       (let [ominaisuudet (if muokattava?
-                            (filter #(not (= "tunniste" (get-in % [:ominaisuus :kenttatunniste]))) ominaisuudet)
-                            ominaisuudet)]
-         (apply lomake/ryhma "Varusteen ominaisuudet" (map #(varusteominaisuus->skeema % muokattava?) ominaisuudet)))]
+      [(varustetoteuman-tiedot muokattava? varustetoteuma)
+       (varusteen-tunnistetiedot e! muokattava? varustetoteuma)
+       (varusteen-ominaisuudet muokattava? ominaisuudet)]
       varustetoteuma]]))
 
 (defn- varusteet* [e! varusteet]
@@ -251,12 +261,13 @@
            [:h1 "Varustekirjaukset Harjassa"]
            [valinnat e! nykyiset-valinnat]
            [toteumataulukko e! naytettavat-toteumat]]
-          [:div.sisalto-container
-           [:h1 "Varusteet Tierekisterissä"]
-           (when oikeus-varusteen-lisaamiseen?
-             [napit/uusi "Lisää uusi varuste"
-              #(e! (v/->LisaaVaruste))])
-           [varustehaku (t/wrap-path e! :varustehaku) varustehaun-tiedot]]])])))
+          (when tr-kaytossa?
+            [:div.sisalto-container
+             [:h1 "Varusteet Tierekisterissä"]
+             (when oikeus-varusteen-lisaamiseen?
+               [napit/uusi "Lisää uusi varuste"
+                #(e! (v/->LisaaVaruste))])
+             [varustehaku (t/wrap-path e! :varustehaku) varustehaun-tiedot]])])])))
 
 (defn varusteet []
   [tuck varustetiedot/varusteet varusteet*])
