@@ -8,10 +8,10 @@
 (def +xsd-polku+ "xsd/turi/")
 
 (def poikkeamatyyppi->numero
-  {:tyotapaturma         8
-   :vaaratilanne         32
+  {:tyotapaturma 8
+   :vaaratilanne 32
    :turvallisuushavainto 64
-   :muu                  16})
+   :muu 16})
 
 (defn poikkeamatyypit->numerot [tyypit]
   (mapv
@@ -19,52 +19,52 @@
     tyypit))
 
 (def ammatti->numero
-  {:aluksen_paallikko                        1
-   :asentaja                                 2
-   :asfalttityontekija                       3
-   :harjoittelija                            4
-   :hitsaaja                                 5
-   :kunnossapitotyontekija                   6
-   :kansimies                                7
+  {:aluksen_paallikko 1
+   :asentaja 2
+   :asfalttityontekija 3
+   :harjoittelija 4
+   :hitsaaja 5
+   :kunnossapitotyontekija 6
+   :kansimies 7
    :kiskoilla_liikkuvan_tyokoneen_kuljettaja 8
-   :konemies                                 9
-   :kuorma-autonkuljettaja                   10
-   :liikenteenohjaaja                        11
-   :mittamies                                12
-   :panostaja                                13
-   :peramies                                 14
-   :porari                                   15
-   :rakennustyontekija                       16
-   :ratatyontekija                           17
-   :ratatyosta_vastaava                      18
-   :sukeltaja                                19
-   :sahkotoiden_ammattihenkilo               20
-   :tilaajan_edustaja                        21
-   :turvalaiteasentaja                       22
-   :turvamies                                23
-   :tyokoneen_kuljettaja                     24
-   :tyonjohtaja                              25
-   :valvoja                                  26
-   :veneenkuljettaja                         27
-   :vaylanhoitaja                            28
-   :muu_tyontekija                           29
-   :tyomaan_ulkopuolinen                     30})
+   :konemies 9
+   :kuorma-autonkuljettaja 10
+   :liikenteenohjaaja 11
+   :mittamies 12
+   :panostaja 13
+   :peramies 14
+   :porari 15
+   :rakennustyontekija 16
+   :ratatyontekija 17
+   :ratatyosta_vastaava 18
+   :sukeltaja 19
+   :sahkotoiden_ammattihenkilo 20
+   :tilaajan_edustaja 21
+   :turvalaiteasentaja 22
+   :turvamies 23
+   :tyokoneen_kuljettaja 24
+   :tyonjohtaja 25
+   :valvoja 26
+   :veneenkuljettaja 27
+   :vaylanhoitaja 28
+   :muu_tyontekija 29
+   :tyomaan_ulkopuolinen 30})
 
 (def vamma->numero
-  {:haavat_ja_pinnalliset_vammat                   1
-   :luunmurtumat                                   2
-   :sijoiltaan_menot_nyrjahdykset_ja_venahdykset   3
-   :amputoitumiset_ja_irti_repeamiset              4
-   :tarahdykset_ja_sisaiset_vammat_ruhjevammat     5
-   :palovammat_syopymat_ja_paleltumat              6
-   :myrkytykset_ja_tulehdukset                     7
-   :hukkuminen_ja_tukehtuminen                     8
-   :aanen_ja_varahtelyn_vaikutukset                9
+  {:haavat_ja_pinnalliset_vammat 1
+   :luunmurtumat 2
+   :sijoiltaan_menot_nyrjahdykset_ja_venahdykset 3
+   :amputoitumiset_ja_irti_repeamiset 4
+   :tarahdykset_ja_sisaiset_vammat_ruhjevammat 5
+   :palovammat_syopymat_ja_paleltumat 6
+   :myrkytykset_ja_tulehdukset 7
+   :hukkuminen_ja_tukehtuminen 8
+   :aanen_ja_varahtelyn_vaikutukset 9
    :aarilampotilojen_valon_ja_sateilyn_vaikutukset 10
-   :sokki                                          11
-   :useita_samantasoisia_vammoja                   12
-   :muut                                           13
-   :ei_tietoa                                      14})
+   :sokki 11
+   :useita_samantasoisia_vammoja 12
+   :muut 13
+   :ei_tietoa 14})
 
 (defn vammat->numerot [vammat]
   ;; PENDING Turi tukee tällä hetkellä vain yhtä arvoa tässä.
@@ -77,19 +77,19 @@
       vammat))
 
 (def vahingoittunut-ruumiinosa->numero
-  {:paan_alue           1
-   :silmat              2
-   :niska_ja_kaula      3
-   :selka               4
-   :vartalo             5
-   :sormi_kammen        6
-   :ranne               7
-   :muu_kasi            8
-   :nilkka              9
+  {:paan_alue 1
+   :silmat 2
+   :niska_ja_kaula 3
+   :selka 4
+   :vartalo 5
+   :sormi_kammen 6
+   :ranne 7
+   :muu_kasi 8
+   :nilkka 9
    :jalkatera_ja_varvas 10
-   :muu_jalka           11
-   :koko_keho           12
-   :ei_tietoa           13})
+   :muu_jalka 11
+   :koko_keho 12
+   :ei_tietoa 13})
 
 (defn vahingoittuneet-ruumiinosat->numerot [vahingoittuneet-ruumiinosat]
   ;; PENDING Turi tukee tällä hetkellä vain yhtä arvoa tässä.
@@ -102,25 +102,26 @@
       vahingoittuneet-ruumiinosat))
 
 (def korjaava-toimenpide-tila->numero
-  {:avoin      0
-   :siirretty  1
-   :suljettu   2
+  {:avoin 0
+   :siirretty 1
+   :suljettu 2
    :toteutettu 2})
 
 (def turvallisuuspoikkeaman-tila
-  {:avoin       "Avoin"
-   :kasitelty   "Käsitelty"
+  {:avoin "Avoin"
+   :kasitelty "Käsitelty"
    :taydennetty "Täydennetty"
-   :suljettu    "Suljettu"})
+   :suljettu "Suljettu"})
 
 (def urakan-vaylamuoto
-  {:tie      "tie"
+  {:tie "tie"
    :rautatie "rautatie"
-   :vesi     "vesi"})
+   :vesi "vesi"})
 
 (defn urakan-tyyppi [tyyppi]
-  (if (= tyyppi :hoito) "hoito" "ylläpito")
-  )
+  (if (= tyyppi "hoito")
+    "hoito"
+    "ylläpito"))
 
 (defn rakenna-lahde [data]
   [:lahde
@@ -138,14 +139,14 @@
           [[:sampourakkanimi (:hanke-nimi data)]]
           [[:sampourakkaid (:urakka-sampoid data)]]
           [[:urakanpaattymispvm (xml/formatoi-paivamaara (:urakka-loppupvm data))]]
-           [[:urakkavaylamuoto (urakan-vaylamuoto (:vaylamuoto data))]]
-           [[:urakkatyyppi (urakan-tyyppi (:urakka-tyyppi data))]]
-           [[:elynumero (:urakka-ely-numero data)]]
-           [[:alueurakkanro (:alueurakkanro data)]]
-           (poikkeamatyypit->numerot (:tyyppi data))
-           [[:tapahtumapvm (xml/formatoi-paivamaara (:tapahtunut data))]
-            [:tapahtumaaika (xml/formatoi-kellonaika (:tapahtunut data))]
-            [:kuvaus (:kuvaus data)]])))
+          [[:urakkavaylamuoto (urakan-vaylamuoto (:vaylamuoto data))]]
+          [[:urakkatyyppi (urakan-tyyppi (:urakka-tyyppi data))]]
+          [[:elynumero (:urakka-ely-numero data)]]
+          [[:alueurakkanro (:alueurakkanro data)]]
+          (poikkeamatyypit->numerot (:tyyppi data))
+          [[:tapahtumapvm (xml/formatoi-paivamaara (:tapahtunut data))]
+           [:tapahtumaaika (xml/formatoi-kellonaika (:tapahtunut data))]
+           [:kuvaus (:kuvaus data)]])))
 
 (defn rakenna-tapahtumapaikka [data]
   (let [[x y] (first (geo/pisteet (:sijainti data)))]
@@ -215,6 +216,6 @@
                                  Muodostettu sanoma:\n
                                  %s" virheet xml)]
         (log/error virheviesti)
-        (throw+ {:type  :invalidi-turvallisuuspoikkeama-xml
+        (throw+ {:type :invalidi-turvallisuuspoikkeama-xml
                  :error virheviesti}))
       xml)))
