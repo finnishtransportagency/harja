@@ -28,7 +28,6 @@
 
 (defn kayttajan-tarkastusurakat
   [db user sijainti]
-  (log/debug "Urakat kun sijainti on: " (pr-str sijainti))
   (kayttajatiedot/kayttajan-lahimmat-urakat db
                                             user
                                             (fn [urakka kayttaja]
