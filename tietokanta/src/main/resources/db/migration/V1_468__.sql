@@ -12,7 +12,10 @@ ALTER TABLE urakka
   ADD COLUMN tyyppi urakkatyyppi;
 
 UPDATE urakka
-SET tyyppi = tyyppi_ :: TEXT :: urakkatyyppi;
+SET tyyppi = CASE
+             WHEN tyyppi_ = 'tekniset laitteet'
+               THEN 'tekniset-laitteet' :: urakkatyyppi
+             ELSE tyyppi_ :: TEXT :: urakkatyyppi END;
 
 -- 2. Ilmoitustaulu
 ALTER TABLE ilmoitus
@@ -21,7 +24,10 @@ ALTER TABLE ilmoitus
   ADD COLUMN urakkatyyppi urakkatyyppi;
 
 UPDATE ilmoitus
-SET urakkatyyppi = urakkatyyppi_ :: TEXT :: urakkatyyppi;
+SET urakkatyyppi = CASE
+                   WHEN urakkatyyppi_ = 'tekniset laitteet'
+                     THEN 'tekniset-laitteet' :: urakkatyyppi
+                   ELSE urakkatyyppi_ :: TEXT :: urakkatyyppi END;
 
 ALTER TABLE ilmoitus
   DROP COLUMN urakkatyyppi_;
@@ -33,7 +39,10 @@ ALTER TABLE materiaalikoodi
   ADD COLUMN urakkatyyppi urakkatyyppi;
 
 UPDATE materiaalikoodi
-SET urakkatyyppi = urakkatyyppi_ :: TEXT :: urakkatyyppi;
+SET urakkatyyppi = CASE
+                   WHEN urakkatyyppi_ = 'tekniset laitteet'
+                     THEN 'tekniset-laitteet' :: urakkatyyppi
+                   ELSE urakkatyyppi_ :: TEXT :: urakkatyyppi END;
 
 ALTER TABLE materiaalikoodi
   DROP COLUMN urakkatyyppi_;
@@ -45,7 +54,10 @@ ALTER TABLE raportti
   ADD COLUMN urakkatyyppi urakkatyyppi;
 
 UPDATE raportti
-SET urakkatyyppi = urakkatyyppi_ :: TEXT :: urakkatyyppi;
+SET urakkatyyppi = CASE
+                   WHEN urakkatyyppi_ = 'tekniset laitteet'
+                     THEN 'tekniset-laitteet' :: urakkatyyppi
+                   ELSE urakkatyyppi_ :: TEXT :: urakkatyyppi END;
 
 ALTER TABLE raportti
   DROP COLUMN urakkatyyppi_;
@@ -57,7 +69,10 @@ ALTER TABLE valitavoite
   ADD COLUMN urakkatyyppi urakkatyyppi;
 
 UPDATE valitavoite
-SET urakkatyyppi = urakkatyyppi_ :: TEXT :: urakkatyyppi;
+SET urakkatyyppi = CASE
+                   WHEN urakkatyyppi_ = 'tekniset laitteet'
+                     THEN 'tekniset-laitteet' :: urakkatyyppi
+                   ELSE urakkatyyppi_ :: TEXT :: urakkatyyppi END;
 
 ALTER TABLE valitavoite
   DROP COLUMN urakkatyyppi_;
