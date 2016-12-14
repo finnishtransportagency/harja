@@ -36,7 +36,8 @@
             [clojure.core.async :as async]
             [clojure.java.jdbc :as jdbc]
             [harja.domain.roolit :as roolit]
-            [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]))
+            [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
+            [taoensso.timbre :as log]))
 
 (defn tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
