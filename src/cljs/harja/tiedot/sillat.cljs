@@ -43,7 +43,8 @@
   (let [sillan-koko (* 0.003 koko)]
     (when sillat
       (into []
-            (map #(assoc-in % [:alue :radius] sillan-koko))
+            (comp (map #(assoc-in % [:alue :radius] sillan-koko))
+                  (map #(assoc % :tyyppi-kartalla :silta)))
             sillat))))
 
 (def sillat-kartalla

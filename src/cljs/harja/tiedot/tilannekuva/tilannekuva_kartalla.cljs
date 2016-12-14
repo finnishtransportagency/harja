@@ -12,7 +12,8 @@
             [clojure.string :as str]
             [harja.geo :as geo]
             [harja.tiedot.navigaatio :as nav]
-            [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]])
+            [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
+            [harja.tyokalut.functor :refer [fmap]])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -32,11 +33,6 @@
    :laatupoikkeamat        #(assoc % :tyyppi-kartalla :laatupoikkeama)
    :paikkaus               #(assoc % :tyyppi-kartalla :paikkaus)
    :paallystys             #(assoc % :tyyppi-kartalla :paallystys)
-
-   ;; Tyokoneet on mäp, id -> työkone
-   :tyokoneet              (fn [[_ tyokone]]
-                             (assoc tyokone :tyyppi-kartalla :tyokone))
-
    :toteumat               #(assoc % :tyyppi-kartalla :toteuma)
    :tietyomaat    #(assoc % :tyyppi-kartalla :tietyomaa)})
 
@@ -84,6 +80,12 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
   (muodosta-kuva-karttataso
    :tilannekuva-tarkastukset esitettavat-asiat/tarkastus-selitteet
    @url-hakuparametrit))
+
+(defmethod muodosta-karttataso :tyokoneet [taso {:keys [tehtavat viimeisin]}]
+  (muodosta-kuva-karttataso
+   :tilannekuva-tyokoneet (fmap esitettavat-asiat/tyokoneen-selite tehtavat)
+   @url-hakuparametrit
+   viimeisin))
 
 (def kuvataso? #{:tarkastukset :toteumat})
 

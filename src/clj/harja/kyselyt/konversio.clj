@@ -6,7 +6,8 @@
             [clj-time.coerce :as coerce]
             [taoensso.timbre :as log]
             [clj-time.format :as format]
-            [clojure.java.jdbc :as jdbc])
+            [clojure.java.jdbc :as jdbc]
+            [clojure.string :as str])
   (:import (clojure.lang Keyword)))
 
 
@@ -235,6 +236,25 @@
             :loppuosa (:tr_loppuosa rivi)
             :loppuetaisyys (:tr_loppuetaisyys rivi)})
       (dissoc :tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys)))
+
+(defn lue-tr-osoite
+  "Lukee yrita_tierekisteriosoite_pisteelle2 sprocin palauttaman arvon tekstimuodosta
+  Tierekisteriosoite mäpiksi. Esim. \"(20,1,0,5,100,102012010220)\"."
+  [osoite]
+  (and osoite
+       (str/starts-with? osoite "(")
+       (str/ends-with? osoite ")")
+       (zipmap [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]
+               (mapv (fn [arvo]
+                       (when arvo
+                         (Integer/parseInt arvo)))
+                     (take 5
+                           (str/split (str/replace osoite #"\(|\)" "") #","))))))
+
+(defn lue-tr-piste
+  [osoite]
+  (select-keys (lue-tr-osoite osoite)
+               [:numero :alkuosa :alkuetaisyys]))
 
 (extend-protocol jdbc/ISQLValue
   java.util.Date

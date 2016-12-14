@@ -11,7 +11,8 @@
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
             [cljs.core.async :refer [<! >! chan timeout]]
             [harja.ui.tierekisteri :as tr]
-            [harja.loki :refer [log]])
+            [harja.loki :refer [log]]
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce tr (r/atom {}))
@@ -126,7 +127,7 @@
 
 (defn tierekisteri []
   (komp/luo
-   (komp/lippu-arvo false @kartta/pida-geometriat-nakyvilla? kartta/pida-geometriat-nakyvilla?)
+   (komp/lippu-arvo false @kartta-tiedot/pida-geometriat-nakyvilla? kartta-tiedot/pida-geometriat-nakyvilla?)
    (komp/avain-lippu nav/tarvitsen-isoa-karttaa :tierekisteri)
    (fn []
      [:span.tr-debug
