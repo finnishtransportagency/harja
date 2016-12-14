@@ -8,6 +8,7 @@
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
+            [harja.domain.laadunseuranta :as ls-domain]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
 
@@ -124,7 +125,7 @@
            (get-in rivi [:tr :loppuosa])
            (get-in rivi [:tr :loppyetaisyys])
            (:ajosuunta rivi)
-           (:talvihoitoluokka rivi)
+           (ls-domain/talvihoitoluokka-fmt (:talvihoitoluokka rivi))
            (:lumimaara rivi)
            (:tasaisuus rivi)
            (:kitka rivi)
