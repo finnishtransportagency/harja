@@ -458,15 +458,28 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
   (openlayers/extent-sisaltaa-extent? +koko-suomi-extent+ (geo/extent alue)))
 
 
+(def kasittele-geometrian-klikkaus
+  {:hy
+   (fn [item]
+     (when-not (= (:id item) (:id @nav/valittu-hallintayksikko))
+       (nav/valitse-hallintayksikko item)))
+
+   :ur
+   (fn [item]
+     (when-not (= (:id item) (:id @nav/valittu-urakka))
+       (t/julkaise! (assoc item :aihe :urakka-klikattu))))
+
+   :ilmoitus
+   (fn [item]
+     (t/julkaise! (assoc item :aihe :ilmoitus-klikattu)))})
+
 (defn- kun-geometriaa-klikattu
   "Event handler geometrioiden yksi- ja tuplaklikkauksille"
   [item event asiat-pisteessa]
-  (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))]
-    (condp = (:type item)
-      :hy (when-not (= (:id item) (:id @nav/valittu-hallintayksikko))
-            (nav/valitse-hallintayksikko item))
-      :ur (when-not (= (:id item) (:id @nav/valittu-urakka))
-            (t/julkaise! (assoc item :aihe :urakka-klikattu)))
+  (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))
+        kasittelija (kasittele-geometrian-klikkaus (:type item))]
+    (if kasittelija
+      (kasittelija item)
       (swap! asiat-pisteessa update :asiat conj item))))
 
 (defn- hae-asiat-pisteessa [tasot event atomi]
@@ -512,8 +525,8 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
         (= (:type geom) :hy)
         (= (:id geom) (:id @nav/valittu-hallintayksikko)))))
 
-
 (defn hae-asiat? [item]
+  (log "HAE-ASIAT? " (str (:type item)) " => " (pr-str item))
   ;; Haetaan koordinaatin asiat ja aukaistaan infopaneeli, jos
   ;; Klikattu asia ei ole hallintayksikkö tai urakka
   ;; Ollaan tilannekuvassa tai ilmoituksissa
@@ -522,15 +535,9 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
   ;; Klikattu asia on valittu urakka
   ;;  - Jos asia on ei-valittu urakka, ollaan Urakat-näkymän etusivulla (tai ilmoituksissa/tilannekuassa).
   ;;  - Muussa tapauksessa ollaan "muualla Harjassa", jolloin tietenkin halutaan tehdä haku
-  (cond
-    (not (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item))
-    true
 
-    (#{:tilannekuva :ilmoitukset} @nav/valittu-sivu)
-    true
-
-    (= (:id item) (:id @nav/valittu-urakka))
-    true))
+  (or (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
+      (not (contains? kasittele-geometrian-klikkaus (:type item)))))
 
 (defn kaynnista-asioiden-haku-pisteesta! [tasot event asiat-pisteessa]
   (hae-asiat-pisteessa tasot event asiat-pisteessa)
