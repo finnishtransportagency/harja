@@ -18,7 +18,7 @@
 
             [harja.ui.dom :as dom]
             [harja.ui.kartta.ikonit :as kartta-ikonit]
-            [harja.views.kartta :as kartta]
+            [harja.tiedot.kartta :as kartta]
             [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
             [harja.views.kartta.tasot :as tasot]
             [harja.geo :as geo]
@@ -868,13 +868,17 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                   [:td [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]]))]]]])))))
 
 (defmethod nayta-arvo :tierekisteriosoite [_ data]
-  (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data]
+  (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data
+        loppu? (or loppuosa loppuetaisyys)]
     [:span.tierekisteriosoite
      [:span.tie "Tie " numero] " / "
      [:span.alkuosa alkuosa] " / "
-     [:span.alkuetaisyys alkuetaisyys] " / "
-     [:span.loppuosa loppuosa] " / "
-     [:span.loppuetaisyys loppuetaisyys]]))
+     [:span.alkuetaisyys alkuetaisyys]
+     (when loppu?
+       [:span
+        " / "
+        [:span.loppuosa loppuosa] " / "
+        [:span.loppuetaisyys loppuetaisyys]])]))
 
 (defn tee-otsikollinen-kentta [otsikko kentta-params arvo-atom]
   [:span.label-ja-kentta

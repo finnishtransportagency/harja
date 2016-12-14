@@ -380,3 +380,10 @@ pisteen [px py]."
   [alue]
   (let [pit (alueen-hypotenuusa alue)]
     (/ pit 200)))
+
+(defn klikkaustoleranssi
+  "Määrittelee klikattavan pisteen tarkkuustoleranssin extent koolle"
+  [extent]
+  (let [pit (extent-hypotenuusa extent)
+        toleranssi (/ pit 200)]
+    toleranssi))

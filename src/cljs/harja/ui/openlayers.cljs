@@ -249,12 +249,12 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
   (.on ol3 "singleclick"
        (fn [e]
          (if-let [kasittelija @klik-kasittelija]
+           ;; Lähinnä REPL tunkkausta varten
            (kasittelija (tapahtuman-kuvaus e))
-           (do (when on-click
-                 (on-click e))
-               (when on-select
-                 (when-let [g (tapahtuman-geometria this e)]
-                   (on-select g e))))))))
+
+           (if-let [g (tapahtuman-geometria this e)]
+             (when on-select (on-select g e))
+             (when on-click (on-click e)))))))
 
 ;; dblclick on-clickille ei vielä tarvetta - zoomaus tulee muualta.
 (defn- aseta-dblclick-kasittelija [this ol3 on-click on-select]
@@ -420,7 +420,9 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                              :unmount-ch      unmount-ch})
 
     ;; If mapspec defines callbacks, bind them to ol3
-    (aseta-klik-kasittelija this ol3 (:on-click mapspec) (:on-select mapspec))
+    (aseta-klik-kasittelija this ol3
+                            (:on-click mapspec)
+                            (:on-select mapspec))
     (aseta-dblclick-kasittelija this ol3
                                 (:on-dblclick mapspec)
                                 (:on-dblclick-select mapspec))
@@ -492,7 +494,8 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                                         "N/A"))
                                     " " (name (first %)))
                               (seq new-geometry-layers))))
-          (reagent/set-state component {:geometry-layers new-geometry-layers}))
+          (reagent/set-state component {:geometry-layers new-geometry-layers
+                                        :geometries geometries}))
         (if-let [taso (get geometries layer)]
           (recur (assoc new-geometry-layers
                         layer (apply taso/paivita
