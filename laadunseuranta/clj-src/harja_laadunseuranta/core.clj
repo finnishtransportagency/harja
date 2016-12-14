@@ -26,15 +26,23 @@
   (:import (org.postgis PGgeometry))
   (:gen-class))
 
-(defn kayttajan-tarkastusurakat
+(defn- kayttajan-tarkastusurakat
   [db user sijainti]
-  (kayttajatiedot/kayttajan-lahimmat-urakat db
-                                            user
-                                            (fn [urakka kayttaja]
-                                              (oikeudet/voi-kirjoittaa?
-                                                oikeudet/urakat-laadunseuranta-tarkastukset
-                                                urakka kayttaja))
-                                            sijainti))
+  (let [urakat (kayttajatiedot/kayttajan-lahimmat-urakat db
+                                                         user
+                                                         (fn [urakka kayttaja]
+                                                           (oikeudet/voi-kirjoittaa?
+                                                             oikeudet/urakat-laadunseuranta-tarkastukset
+                                                             urakka kayttaja))
+                                                         sijainti)
+        ;; Nostetaan lähin hoidon urakka kärkeen, jos sellainen löytyy
+        lahdin-hoidon-urakka (first (filter #(= (:tyyppi %) "hoito") urakat))
+        urakat (if lahdin-hoidon-urakka
+                 (apply conj [lahdin-hoidon-urakka]
+                        (remove #(= % lahdin-hoidon-urakka)
+                                urakat))
+                 urakat)]
+    urakat))
 
 (defn- tallenna-merkinta! [tx vakiohavainto-idt merkinta]
   (q/tallenna-reittimerkinta! tx {:id (:id merkinta)
