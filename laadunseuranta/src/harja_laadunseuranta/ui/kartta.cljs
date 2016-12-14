@@ -254,10 +254,10 @@
         (kytke-dragpan kartta true)))
 
     (run!
-      (kytke-kiinteistorajat kartta (:nayta-kiinteistorajat @optiot)))
+      (kytke-kiinteistorajat kartta (:nayta-kiinteistorajat? @optiot)))
 
     (run!
-      (kytke-ortokuva kartta (:nayta-ortokuva @optiot)))
+      (kytke-ortokuva kartta (:nayta-ortokuva? @optiot)))
 
     ;; reagoidaan ajoneuvon sijainnin muutokseen
     (run! (paivita-ajoneuvon-sijainti kartta ajoneuvo ajoneuvokerros @ajoneuvon-sijainti-atomi))
@@ -298,12 +298,12 @@
    [:div.kartan-kontrollit {:style (when @s/havaintolomake-auki
                                      {:display "none"})}
     [:div#karttakontrollit] ;; OpenLayersin ikonit asetetaan tähän elementtiin erikseen
-    [:div.kontrollinappi.ortokuva {:on-click #(swap! s/nayta-ortokuva not)}
+    [:div.kontrollinappi.ortokuva {:on-click #(swap! s/nayta-ortokuva? not)}
      [kuvat/svg-sprite "maasto-24"]]
-    [:div.kontrollinappi.kiinteistorajat {:on-click #(swap! s/nayta-kiinteistorajat not)}
+    [:div.kontrollinappi.kiinteistorajat {:on-click #(swap! s/nayta-kiinteistorajat? not)}
      [kuvat/svg-sprite "kiinteistoraja-24"]]
-    [:div.kontrollinappi.keskityspainike {:on-click #(do (swap! s/keskita-ajoneuvoon not)
-                                                                            (swap! s/keskita-ajoneuvoon not))}
+    [:div.kontrollinappi.keskityspainike {:on-click #(do (swap! s/keskita-ajoneuvoon? not)
+                                                         (swap! s/keskita-ajoneuvoon? not))}
      [kuvat/svg-sprite "tahtain-24"]]]])
 
 ;; devcards

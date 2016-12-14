@@ -102,16 +102,16 @@
 .soratienappaimisto {
   display: flex;
 
-  & .soratienappaimiston-sarake-otsikko {
+  .soratienappaimiston-sarake-otsikko {
     text-align: center;
   }
 
-  & .nappaimiston-painike {
+  .nappaimiston-painike {
     width: 65px;
     height: 55px;
   }
 
-  & .soratienappaimiston-sarake {
+  .soratienappaimiston-sarake {
     flex: 1;
 
     > .nappaimiston-painike {
@@ -124,7 +124,7 @@
 
 // Responsiivisuus
 
-@media (max-width: 530px) {
+@media (max-width: @leveys-tabletti) {
   .nappaimisto {
     width: 100%;
     flex-flow: row;
@@ -164,13 +164,12 @@
   }
 
   // Erikoisnäppäimistöt
-
   .soratienappaimisto {
     > .soratienappaimiston-sarake {
       padding-left: 2px;
       padding-right: 2px;
 
-      & .nappaimiston-painike {
+      .nappaimiston-painike {
         width: 50px;
         height: 40px;
       }

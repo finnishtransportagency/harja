@@ -5,6 +5,7 @@
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.laadunseuranta :as ls-domain]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.tiedot.istunto :as istunto]
@@ -82,7 +83,10 @@
                                    (str (when tie (str "tie: " tie  "°C"))
                                         (when (and tie ilma) ", ")
                                         (when ilma (str "ilma: " ilma "°C"))))
-                                 (str (name (key %)) ": " (val %)))
+                                 (str (name (key %)) ": "
+                                      (if (= :hoitoluokka (key %))
+                                        (ls-domain/talvihoitoluokka-fmt (val %))
+                                        (val %))))
                                nil)
                              (select-keys
                                thm

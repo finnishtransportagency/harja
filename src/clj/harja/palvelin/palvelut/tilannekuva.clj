@@ -26,12 +26,17 @@
              [karttakuvat :as karttakuvat]
              [urakat :as urakat]]
             [harja.ui.kartta.esitettavat-asiat
-             :as
-             esitettavat-asiat
-             :refer
-             [kartalla-esitettavaan-muotoon-xf]]
-            [taoensso.timbre :as log]
-            [harja.tyokalut.functor :refer [fmap]]))
+             :as esitettavat-asiat
+             :refer [kartalla-esitettavaan-muotoon-xf]]
+            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
+            [clojure.set :refer [union]]
+            [harja.transit :as transit]
+            [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
+            [harja.domain.oikeudet :as oikeudet]
+            [clojure.core.async :as async]
+            [clojure.java.jdbc :as jdbc]
+            [harja.domain.roolit :as roolit]
+            [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]))
 
 (defn tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
@@ -332,10 +337,16 @@
       nil)))
 
 (defn hae-urakat [db user tiedot]
-  (urakat/kayttajan-urakat-aikavalilta-alueineen
+  (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
    db user (if (:nykytilanne? tiedot)
-             oikeudet/tilannekuva-nykytilanne
-             oikeudet/tilannekuva-historia)
+             (fn [urakka-id kayttaja]
+               (oikeudet/voi-lukea? oikeudet/tilannekuva-nykytilanne
+                                    urakka-id
+                                    kayttaja))
+             (fn [urakka-id kayttaja]
+               (oikeudet/voi-lukea? oikeudet/tilannekuva-historia
+                                    urakka-id
+                                    kayttaja)))
    nil (:urakoitsija tiedot) nil
    nil (:alku tiedot) (:loppu tiedot)))
 

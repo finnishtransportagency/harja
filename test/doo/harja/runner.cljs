@@ -2,6 +2,7 @@
   (:require  [doo.runner :refer-macros [doo-tests]]
              [harja.pvm-test]
              [harja.ui.dom-test]
+             [harja.tiedot.urakka.toteumat.tiemerkinta-muut-tyot-test]
              [harja.tiedot.urakka.suunnittelu-test]
              [harja.tiedot.urakka.yhatuonti-test]
              [harja.tiedot.muokkauslukko-test]
@@ -20,6 +21,7 @@
 
 (doo-tests 'harja.pvm-test
            'harja.ui.dom-test
+           'harja.tiedot.urakka.toteumat.tiemerkinta-muut-tyot-test
            'harja.tiedot.urakka.suunnittelu-test
            'harja.tiedot.urakka.yhatuonti-test
            'harja.tiedot.muokkauslukko-test
