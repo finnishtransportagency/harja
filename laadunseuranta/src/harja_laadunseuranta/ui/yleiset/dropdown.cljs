@@ -6,7 +6,6 @@
   (let [valinta-avain (or valinta-avain :id)
         valinta-teksti (or valinta-teksti :nimi)]
     (fn [valinnat {:keys [luokka valittu] :as optiot}]
-      (.log js/console "Valinnat" (pr-str valinnat))
       [:div.dropdown-container
        [:select {:name "valinnat" :class (str "dropdown " (when luokka
                                                             luokka))
