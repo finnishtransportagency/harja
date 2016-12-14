@@ -367,7 +367,9 @@
            [nappaimisto/nappaimisto mitattava-havainto])]))))
 
 (defn paanavigointi []
-  [paanavigointikomponentti {:valilehdet tiedot/oletusvalilehdet
+  [paanavigointikomponentti {:valilehdet (tiedot/kayttajaroolin-mukaiset-valilehdet
+                                           tiedot/oletusvalilehdet
+                                           s/kayttaja)
                              :hampurilaisvalikon-lista-nakyvissa? s/paanavigoinnin-hampurilaisvalikon-lista-nakyvissa?
                              :hampurilaisvalikko-painettu tiedot/hampurilaisvalikko-painettu!
                              :body-click tiedot/body-click
