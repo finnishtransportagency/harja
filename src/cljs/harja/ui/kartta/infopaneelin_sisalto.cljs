@@ -14,7 +14,7 @@
 
 (defmethod infopaneeli-skeema :tyokone [tyokone]
   {:tyyppi :tyokone
-   :otsikko "Työkone"
+   :otsikko (str "Työkone: " (:tyokonetyyppi tyokone))
    :tiedot [{:otsikko "Työ aloitettu" :tyyppi :pvm-aika :nimi :alkanut}
             {:otsikko "Viimeisin havainto" :tyyppi :pvm-aika :nimi :lahetysaika}
             {:otsikko "Tyyppi" :tyyppi :string :nimi :tyokonetyyppi}
@@ -171,7 +171,10 @@
 
 (defmethod infopaneeli-skeema :toteuma [toteuma]
   {:tyyppi :toteuma
-   :otsikko "Toteuma"
+   :otsikko  (let [toimenpiteet (map :toimenpide (:tehtavat toteuma))]
+               (if (empty? toimenpiteet)
+                 "Toteuma"
+                 (string/join ", " toimenpiteet)))
    :tiedot (vec (concat [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
                          {:otsikko "Päättynyt" :tyyppi :pvm-aika :nimi :paattynyt}
                          {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite
