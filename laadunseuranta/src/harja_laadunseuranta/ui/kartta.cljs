@@ -257,7 +257,7 @@
       (kytke-kiinteistorajat kartta (:nayta-kiinteistorajat? @optiot)))
 
     (run!
-      (kytke-ortokuva kartta (:nayta-ortokuva @optiot)))
+      (kytke-ortokuva kartta (:nayta-ortokuva? @optiot)))
 
     ;; reagoidaan ajoneuvon sijainnin muutokseen
     (run! (paivita-ajoneuvon-sijainti kartta ajoneuvo ajoneuvokerros @ajoneuvon-sijainti-atomi))
