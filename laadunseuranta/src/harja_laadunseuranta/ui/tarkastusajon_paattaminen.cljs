@@ -20,7 +20,7 @@
 (defn- urakkavarmistusdialogi
   [{:keys [urakat valittu-urakka-atom urakka-varmistettu! paattaminen-peruttu!]}]
   [:div.tarkastusajon-paattaminen-dialog
-   [:div.ohjeteksti "Tarkastusajo liitetää urakkaan"]
+   [:div.ohjeteksti "Tarkastusajo liitetään urakkaan"]
    [dropdown
     urakat
     {:luokka "urakkavalitsin"
