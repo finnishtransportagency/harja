@@ -26,7 +26,6 @@
     {:luokka "urakkavalitsin"
      :valittu (fn [e]
                 (reset! valittu-urakka-atom (js/parseInt (.-value (.-target e)))))}]
-   ;; TODO Palvelimen tarvinnee palauttaa nämä järjestyksessä (lähin ensin)
    [nappi "OK"
     {:luokat-str "nappi-ensisijainen"
      :on-click urakka-varmistettu!}]
