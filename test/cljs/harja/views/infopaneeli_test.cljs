@@ -25,6 +25,7 @@
    :toimenpide "Auraus ja sohjonpoisto",
    :suorittaja {:nimi "ZYX Tekeminen Oy"},
    :tyyppi-kartalla :toteuma,
+   :tierekisteriosoite {:numero 20 :alkuosa 5 :alkuetaisyys 0 :loppuosa 6 :loppuetaisyys 100}
    :tehtavat
    [{:toimenpide "Auraus ja sohjonpoisto",
      :maara 23,
@@ -36,6 +37,7 @@
    :toimenpide "Auraus ja sohjonpoisto",
    :suorittaja {:nimi "ZYX Tekeminen Oy"},
    :tyyppi-kartalla :toteuma,
+   :tierekisteriosoite {:numero 20 :alkuosa 1 :alkuetaisyys 0 :loppuosa 5 :loppuetaisyys 100}
    :tehtavat
    [{:toimenpide "Auraus ja sohjonpoisto",
      :maara 32,
@@ -47,6 +49,7 @@
    :toimenpide "Suolaus",
    :suorittaja {:nimi "ZYX Tekeminen Oy"},
    :tyyppi-kartalla :toteuma,
+   :tierekisteriosoite {:numero 20 :alkuosa 6 :alkuetaisyys 0 :loppuosa 7 :loppuetaisyys 100}
    :tehtavat
    [{:toimenpide "Suolaus", :maara 35, :yksikko "tiekm",
       :id 106}]}]})
@@ -67,14 +70,13 @@
     (komponenttitesti
      [sut/infopaneeli @asiat-atomi piilota-fn! linkkifunktiot]
      (is (not (empty? (infopaneelin-sisalto/skeemamuodossa (:asiat @asiat-atomi)))))
-     "infopaneelin koordinaatit, sulkunappi ja otsikot, ei tietojen kenttiä"
+     "infopaneelin sulkunappi ja otsikot, ei tietojen kenttiä"
      (is (= 1 (count (u/sel [:.kartan-infopaneeli :button]))))
-     (is (= "Koordinaatit" (-> [:.kartan-infopaneeli :.ip-otsikko] u/sel first u/text)))
-     (is (= 4 (count (u/sel [:.kartan-infopaneeli :.ip-otsikko]))))
+     ;(is (= "Koordinaatit" (-> [:.kartan-infopaneeli :.ip-otsikko] u/sel first u/text)))
+     (is (= 3 (count (u/sel [:.kartan-infopaneeli :.ip-otsikko]))))
      (is (= 0 (count (u/sel [:.kartan-infopaneeli :.kentan-label]))))
      (u/click (u/sel1 [:.kartan-infopaneeli :span.ip-haitari-otsikko]))
      --
-     "yhden asian 4 tietoa esillä klikkauksen jälkeen"
-     (is (= 4 (count (u/sel [:.kartan-infopaneeli :.kentan-label]))))
-     (is (= 1 (count (u/sel [:.kartan-infopaneeli :.nappi-toissijainen]))))))
-  )
+     "yhden asian tiedot esillä klikkauksen jälkeen"
+     (is (= 5 (count (u/sel [:.kartan-infopaneeli :.kentan-label]))))
+     (is (= 1 (count (u/sel [:.kartan-infopaneeli :.nappi-toissijainen])))))))
