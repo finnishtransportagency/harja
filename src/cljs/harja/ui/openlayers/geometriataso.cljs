@@ -93,7 +93,7 @@
     (-> this meta :selitteet))
   (paivita [items ol3 ol-layer aiempi-paivitystieto]
     (update-ol3-layer-geometries ol3 ol-layer aiempi-paivitystieto items))
-  (hae-asiat-pisteessa [this koordinaatti]
+  (hae-asiat-pisteessa [this koordinaatti extent]
     (let [ch (async/chan)]
       (if-let [hae-asiat (-> this meta :hae-asiat)]
         (go

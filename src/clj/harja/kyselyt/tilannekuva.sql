@@ -367,8 +367,7 @@ FROM toteuma_tehtava tt
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.alkanut BETWEEN :alku AND :loppu) AND
       (t.paattynyt BETWEEN :alku AND :loppu) AND
-      -- FIXME: toleranssin mukaan etäisyysraja?
-      ST_Distance(t.reitti, ST_MakePoint(:x,:y)) < 150;
+      ST_Distance(t.reitti, ST_MakePoint(:x,:y)) < :toleranssi;
 
 
 -- name: hae-tyokoneselitteet

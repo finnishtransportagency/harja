@@ -456,7 +456,7 @@
                                            :urakat (luettavat-urakat user p)
                                            :tyypit (map name (haettavat (:tarkastukset p)))
                                            :kayttaja_on_urakoitsija (roolit/urakoitsija? user)
-                                           :x x :y y :toleranssi 150)))))
+                                           :x x :y y)))))
 
 
 (defn- hae-tyokoneiden-sijainnit-kartalle [db user parametrit]
@@ -478,7 +478,6 @@
                                    suodattimet-parametreista
                                    (assoc :x x
                                           :y y
-                                          :toleranssi 150
                                           :nayta-kaikki (roolit/tilaajan-kayttaja? user)
                                           :organisaatio (-> user :organisaatio :id))))))
 

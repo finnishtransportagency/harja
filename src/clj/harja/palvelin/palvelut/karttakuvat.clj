@@ -8,7 +8,8 @@
             [taoensso.timbre :as log]
             [harja.palvelin.palvelut.karttakuvat.piirto
              :refer [piirra-karttakuvaan]]
-            [harja.transit :as transit])
+            [harja.transit :as transit]
+            [harja.geo :as geo])
   (:import (java.awt.image BufferedImage)
            (java.awt Color BasicStroke RenderingHints)
            (java.awt.geom AffineTransform Line2D$Double)
@@ -130,13 +131,14 @@
                "Access-Control-Allow-Origin" "*"}
      :body    (java.io.ByteArrayInputStream. kuva)}))
 
-(defn karttakuva-asiat [lahteet user {:keys [parametrit koordinaatti]}]
+(defn karttakuva-asiat [lahteet user {:keys [parametrit koordinaatti extent]}]
   (let [lahteen-nimi (keyword (get parametrit "_"))
         {lahde :asiat transit-parametri :transit-parametri} (get lahteet lahteen-nimi)]
     (if lahde
       (lahde user
              (as-> parametrit p
                (assoc p :x (first koordinaatti) :y (second koordinaatti))
+               (assoc p :toleranssi (geo/klikkaustoleranssi extent))
                (dissoc p transit-parametri)
                (merge p
                       (when transit-parametri

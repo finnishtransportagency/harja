@@ -14,6 +14,7 @@
             [cljs.core.async :as async])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+
 (defn hae-url [source parametrit coord pixel-ratio projection]
   (let [tile-grid (.getTileGridForProjection source projection)
         extent (.getTileCoordExtent tile-grid coord
@@ -62,14 +63,15 @@
         (.setSource ol-layer source))
       [ol-layer ::kuvataso]))
 
-  (hae-asiat-pisteessa [this koordinaatti]
+  (hae-asiat-pisteessa [this koordinaatti extent]
     (let [ch (async/chan)]
       (go
         (let [asiat (<! (k/post! :karttakuva-klikkaus
                                  {:parametrit (into {}
                                                     (map vec)
                                                     (partition 2 parametrit))
-                                  :koordinaatti koordinaatti}))]
+                                  :koordinaatti koordinaatti
+                                  :extent extent}))]
           (doseq [asia asiat]
             (async/>! ch asia))
           (async/close! ch)))

@@ -484,6 +484,7 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
 
 (defn- hae-asiat-pisteessa [tasot event atomi]
   (let [koordinaatti (js->clj (.-coordinate event))
+        extent ((juxt :xmin :ymin :xmax :ymax) @nav/kartalla-nakyva-alue)
         nayta-neula! #(tasot/nayta-geometria! :klikattu-karttapiste
                                 {:alue {:type :icon
                                         :coordinates %
@@ -496,7 +497,7 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
 
     (go
       (let [in-ch (async/merge
-                   (map #(taso/hae-asiat-pisteessa % koordinaatti)
+                   (map #(taso/hae-asiat-pisteessa % koordinaatti extent)
                         (remove nil? (vals tasot))))]
         (loop [asia (<! in-ch)]
           (when asia
