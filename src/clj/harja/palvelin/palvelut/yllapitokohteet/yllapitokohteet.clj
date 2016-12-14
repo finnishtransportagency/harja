@@ -163,7 +163,7 @@
 
 (defn hae-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id]}]
   (assert urakka-id "anna urakka-id")
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-yksikkohintaisettyot user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
   (log/debug "Haetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [kohteet (into []
@@ -177,7 +177,7 @@
 
 (defn tallenna-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id kohteet]}]
   (assert urakka-id "anna urakka-id")
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-yksikkohintaisettyot user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
   (log/debug "Tallennetaan yksikköhintaiset työt " kohteet " tiemerkintäurakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
     (doseq [{:keys [hinta hintatyyppi muutospvm id] :as kohde} kohteet]
