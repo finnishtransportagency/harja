@@ -29,10 +29,13 @@
 (defn kayttajan-tarkastusurakat
   [db user sijainti]
   (log/debug "Urakat kun sijainti on: " (pr-str sijainti))
-  (kayttajatiedot/kayttajan-lahimmat-urakat db user (fn [urakka kayttaja]
-                                                      (oikeudet/voi-kirjoittaa?
-                                                        oikeudet/urakat-laadunseuranta-tarkastukset
-                                                        urakka kayttaja))))
+  (kayttajatiedot/kayttajan-lahimmat-urakat db
+                                            user
+                                            (fn [urakka kayttaja]
+                                              (oikeudet/voi-kirjoittaa?
+                                                oikeudet/urakat-laadunseuranta-tarkastukset
+                                                urakka kayttaja))
+                                            sijainti))
 
 (defn- tallenna-merkinta! [tx vakiohavainto-idt merkinta]
   (q/tallenna-reittimerkinta! tx {:id (:id merkinta)

@@ -1,10 +1,13 @@
--- name: hae-urakat-aikavalilta
+-- name: hae-lahimmat-urakat-aikavalilta
 SELECT
   u.id,
-  u.nimi
+  u.nimi,
+  COALESCE(st_distance(u.alue, st_makepoint(:x, :y)),
+           st_distance(au.alue, st_makepoint(:x, :y))) AS etaisyys
 FROM urakka u
-  JOIN organisaatio o ON u.hallintayksikko = o.id
-WHERE ((u.loppupvm >= :alku AND u.alkupvm <= :loppu) OR (u.loppupvm IS NULL AND u.alkupvm <= :loppu));
+  LEFT JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
+  WHERE ((u.loppupvm >= :alku AND u.alkupvm <= :loppu) OR (u.loppupvm IS NULL AND u.alkupvm <= :loppu))
+ORDER BY etaisyys;
 
 -- name: hae-kaikki-urakat-aikavalilla
 SELECT

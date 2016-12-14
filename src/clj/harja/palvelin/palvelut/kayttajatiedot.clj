@@ -19,7 +19,7 @@
       (keyword (q/hae-kayttajan-yleisin-urakkatyyppi db kayttajan-urakat)))))
 
 (defn kayttajan-lahimmat-urakat
-  [db user oikeustarkistus-fn]
+  [db user oikeustarkistus-fn sijainti]
   "Palauttaa yksinkertaisen vectorin urakoita, joihin käyttäjällä on annettu oikeus.
   Urakat ovat järjestyksessä, lähin ensimmäisenä.
   Oikeustarkistus on 2-arity funktio (urakka-id ja käyttäjä),
@@ -27,9 +27,12 @@
   (into []
         (filter (fn [{:keys [urakka_id]}]
                   (oikeustarkistus-fn urakka_id user)))
-        (urakat-q/hae-urakat-aikavalilta db
-                                         {:alku (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))
-                                          :loppu (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))})))
+        (urakat-q/hae-lahimmat-urakat-aikavalilta
+          db
+          {:alku (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))
+           :loppu (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))
+           :x (:lon sijainti)
+           :y (:lat sijainti)})))
 
 (defn kayttajan-urakat-aikavalilta
   "Palauttaa vektorin mäppejä.
