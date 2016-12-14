@@ -205,12 +205,13 @@ SELECT
 
   u.sampoid                             AS "urakka-sampoid",
   u.tyyppi                              AS "urakka-tyyppi",
-  u.hallintayksikko                     AS "urakka-ely-numero",
+  o.lyhenne                             AS "urakka-ely",
   u.loppupvm                            AS "urakka-loppupvm",
   (SELECT kayttajatunnus
    FROM urakanvastuuhenkilo
-   WHERE urakka = t.urakka and rooli = 'ELY_Urakanvalvoja' and ensisijainen = TRUE
-         )                              AS "sampo-yhteyshenkilo",
+   WHERE urakka = t.urakka AND
+         rooli = 'ELY_Urakanvalvoja' AND
+         ensisijainen = TRUE)           AS "sampo-yhteyshenkilo",
   u.nimi                                AS "urakka-nimi",
   h.nimi                                AS "hanke-nimi",
 
@@ -251,27 +252,24 @@ SELECT
 FROM turvallisuuspoikkeama t
   LEFT JOIN urakka u
     ON t.urakka = u.id
-
   LEFT JOIN hanke h
     ON u.hanke = h.id
-
   LEFT JOIN korjaavatoimenpide k
     ON t.id = k.turvallisuuspoikkeama
        AND k.poistettu IS NOT TRUE
-
   LEFT JOIN turvallisuuspoikkeama_liite tl
     ON t.id = tl.turvallisuuspoikkeama
   LEFT JOIN liite l
     ON l.id = tl.liite
-
   LEFT JOIN turvallisuuspoikkeama_kommentti tpk
     ON t.id = tpk.turvallisuuspoikkeama
   LEFT JOIN kommentti kom
     ON tpk.kommentti = kom.id
        AND kom.poistettu IS NOT TRUE
-
-  LEFT JOIN liite koml ON kom.liite = koml.id
-
+  LEFT JOIN liite koml
+    ON kom.liite = koml.id
+  LEFT JOIN organisaatio o
+    ON u.hallintayksikko = o.elynumero
 WHERE t.id = :id;
 
 -- name: onko-olemassa-ulkoisella-idlla

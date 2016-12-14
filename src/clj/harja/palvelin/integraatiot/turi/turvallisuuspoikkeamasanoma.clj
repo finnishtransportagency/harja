@@ -114,9 +114,9 @@
    :suljettu "Suljettu"})
 
 (def urakan-vaylamuoto
-  {:tie "tie"
-   :rautatie "rautatie"
-   :vesi "vesi"})
+  {:tie "Tie"
+   :rautatie "Rautatie"
+   :vesi "Vesiväylä"})
 
 (defn urakan-tyyppi [tyyppi]
   (if (= tyyppi "hoito")
@@ -141,7 +141,7 @@
           [[:urakanpaattymispvm (xml/formatoi-paivamaara (:urakka-loppupvm data))]]
           [[:urakkavaylamuoto (urakan-vaylamuoto (:vaylamuoto data))]]
           [[:urakkatyyppi (urakan-tyyppi (:urakka-tyyppi data))]]
-          [[:elynumero (:urakka-ely-numero data)]]
+          [[:elyalue (str (:urakka-ely data) " ELY")]]
           [[:alueurakkanro (:alueurakkanro data)]]
           (poikkeamatyypit->numerot (:tyyppi data))
           [[:tapahtumapvm (xml/formatoi-paivamaara (:tapahtunut data))]
