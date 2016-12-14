@@ -204,3 +204,9 @@
          (str "\"" oikeustyyppi "\" oikeutta"))
        ": "
        (:kuvaus oikeus)))
+
+(defn tarkistettava-oikeus-kok-hint-tyot
+  [urakkatyyppi]
+  (if (= urakkatyyppi :tiemerkinta)
+    urakat-toteutus-kokonaishintaisettyot
+    urakat-suunnittelu-kokonaishintaisettyot))
