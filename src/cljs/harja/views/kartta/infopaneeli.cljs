@@ -34,7 +34,7 @@
   [:div.ip-osio
    [:div.ip-otsikko
     {:on-click #(reset! valittu-asia asia)}
-    [:span.ip-haitari-otsikko otsikko]]])
+    [:span.ip-haitari-otsikko.klikattava otsikko]]])
 
 (defn- kentan-arvo [skeema data]
   (let [arvo-fn (or (:hae skeema) (:nimi skeema))]
