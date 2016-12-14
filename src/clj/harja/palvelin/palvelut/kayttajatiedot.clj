@@ -31,8 +31,8 @@
   Oikeustarkistus on 2-arity funktio (urakka-id ja käyttäjä),
   joka tarkistaa, että käyttäjä voi lukea urakkaa annetulla oikeudella."
   (into []
-        (filter (fn [{:keys [urakka_id]}]
-                  (oikeustarkistus-fn urakka_id user)))
+        (filter (fn [{:keys [id] :as urakka}]
+                  (oikeustarkistus-fn id user)))
         (urakat-q/hae-lahimmat-urakat-aikavalilta
           db
           {:alku (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))
