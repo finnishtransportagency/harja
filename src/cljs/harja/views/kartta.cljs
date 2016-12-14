@@ -457,6 +457,8 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
 (defn suomen-sisalla? [alue]
   (openlayers/extent-sisaltaa-extent? +koko-suomi-extent+ (geo/extent alue)))
 
+(defn- nayta-infopaneelissa! [item]
+  (swap! asiat-pisteessa update :asiat conj item))
 
 (def kasittele-geometrian-klikkaus
   {:hy
@@ -471,7 +473,9 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
 
    :ilmoitus
    (fn [item]
-     (t/julkaise! (assoc item :aihe :ilmoitus-klikattu)))})
+     (if (= :tilannekuva @nav/valittu-sivu)
+       (nayta-infopaneelissa! item)
+       (t/julkaise! (assoc item :aihe :ilmoitus-klikattu))))})
 
 (defn- kun-geometriaa-klikattu
   "Event handler geometrioiden yksi- ja tuplaklikkauksille"
@@ -480,7 +484,7 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
         kasittelija (kasittele-geometrian-klikkaus (:type item))]
     (if kasittelija
       (kasittelija item)
-      (swap! asiat-pisteessa update :asiat conj item))))
+      (nayta-infopaneelissa! item))))
 
 (defn- hae-asiat-pisteessa [tasot event atomi]
   (let [koordinaatti (js->clj (.-coordinate event))
@@ -527,7 +531,6 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
         (= (:id geom) (:id @nav/valittu-hallintayksikko)))))
 
 (defn hae-asiat? [item]
-  (log "HAE-ASIAT? " (str (:type item)) " => " (pr-str item))
   ;; Haetaan koordinaatin asiat ja aukaistaan infopaneeli, jos
   ;; Klikattu asia ei ole hallintayksikkö tai urakka
   ;; Ollaan tilannekuvassa tai ilmoituksissa
@@ -538,7 +541,8 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
   ;;  - Muussa tapauksessa ollaan "muualla Harjassa", jolloin tietenkin halutaan tehdä haku
 
   (or (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
-      (not (contains? kasittele-geometrian-klikkaus (:type item)))))
+      (not (contains? kasittele-geometrian-klikkaus (:type item)))
+      (and (= :tilannekuva @nav/valittu-sivu) (= :ilmoitus (:type item)))))
 
 (defn kaynnista-asioiden-haku-pisteesta! [tasot event asiat-pisteessa]
   (hae-asiat-pisteessa tasot event asiat-pisteessa)
