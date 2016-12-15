@@ -18,7 +18,8 @@
                    [devcards.core :refer [defcard]]))
 
 (defn- havaintolomakekomponentti [{:keys [lomakedata tallenna-fn peruuta-fn
-                                          tr-osoite-lomakkeen-avauksessa]}]
+                                          tr-osoite-lomakkeen-avauksessa
+                                          liittyvat-havainnot]}]
   (let [kuvaus-atom (reagent/cursor lomakedata [:kuvaus])
         aikaleima-atom (reagent/cursor lomakedata [:aikaleima])
         tr-osoite-atom (reagent/cursor lomakedata [:tr-osoite])
@@ -48,6 +49,12 @@
 
         [:div.tieosuus
          [kentta "Tieosuus" [tr-osoite tr-osoite-atom lomake-virheet-atom]]]
+
+        [:div.liittyvat-havainnot
+         [:ul]
+         (doall (for [liittyva-havainto liittyvat-havainnot]
+                  ^{:key (:id liittyva-havainto)}
+                  [:li (:havainto-avain liittyva-havainto)]))]
 
         [:div.lisatietoja
          [:div.laatupoikkeama-check
@@ -80,7 +87,8 @@
        {:lomakedata lomakedata
         :tr-osoite-lomakkeen-avauksessa tr-osoite-lomakkeen-avauksessa
         :tallenna-fn tallenna-lomake!
-        :peruuta-fn peruuta-lomake!}])))
+        :peruuta-fn peruuta-lomake!
+        :liittyvat-havainnot @s/liittyvat-havainnot}])))
 
 (def test-model (atom {:kayttajanimi "Jalmari Järjestelmävastuuhenkilö"
                        :tr-osoite {:tie 20 :aosa 3 :aet 3746}
