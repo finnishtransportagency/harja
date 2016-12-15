@@ -270,7 +270,9 @@
                (assoc :lampotila-tie
                       (get-in (:talvihoitomittaus tarkastus) [:lampotila :tie]))
                (assoc :lampotila-ilma
-                      (get-in (:talvihoitomittaus tarkastus) [:lampotila :ilma])))))
+                      (get-in (:talvihoitomittaus tarkastus) [:lampotila :ilma]))
+               (assoc :tr
+                      (:tr tarkastus)))))
 
         (when (and (or
                      (= :soratie tarkastustyyppi)

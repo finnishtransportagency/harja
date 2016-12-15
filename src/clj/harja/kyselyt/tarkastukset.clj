@@ -2,6 +2,7 @@
   (:require [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.hoitoluokat :as hoitoluokat-q]
             [harja.geo :as geo]
             [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]
             [harja.domain.laadunseuranta :as laadunseuranta]
@@ -47,10 +48,24 @@
           id))))
 
 (defn luo-tai-paivita-talvihoitomittaus [db tarkastus uusi?
-                                         {:keys [hoitoluokka lumimaara tasaisuus
+                                         {:keys [hoitoluokka lumimaara tasaisuus tr
                                                  kitka lampotila-ilma lampotila-tie ajosuunta] :as mittaukset}]
-  (let [params {:tarkastus tarkastus
-                :talvihoitoluokka (or hoitoluokka "") :lumimaara lumimaara :tasaisuus tasaisuus :kitka kitka
+  (let [talvihoitoluokka (or hoitoluokka
+                             (when tr
+                               (let [hoitoluokka-kannasta
+                                     (into #{}
+                                           (map :hoitoluokka
+                                                (hoitoluokat-q/hae-hoitoluokka-tr-pisteelle db {:tie               (:numero tr)
+                                                                                                :aosa              (:alkuosa tr)
+                                                                                                :aet               (:alkuetaisyys tr)
+                                                                                                :losa              (:loppuosa tr)
+                                                                                                :let               (:loppuetaisyys tr)
+                                                                                                :tietolajitunniste "talvihoito"})))]
+                                 (if (= 1 (count hoitoluokka-kannasta))
+                                   (first hoitoluokka-kannasta)
+                                   nil))))
+        params {:tarkastus tarkastus
+                :talvihoitoluokka talvihoitoluokka :lumimaara lumimaara :tasaisuus tasaisuus :kitka kitka
                 :lampotila_ilma lampotila-ilma :lampotila_tie lampotila-tie :ajosuunta (or ajosuunta 0)}
         poista-rivi? (not-any? #(get-in mittaukset %) laadunseuranta/talvihoitomittauksen-lomakekentat)]
 
