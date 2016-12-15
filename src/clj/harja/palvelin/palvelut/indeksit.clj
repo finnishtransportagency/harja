@@ -3,11 +3,8 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [taoensso.timbre :as log]
             [clojure.set :refer [intersection difference]]
-            [clojure.string :as str]
             [clojure.java.jdbc :as jdbc]
-
             [harja.kyselyt.indeksit :as q]
-            [harja.kyselyt.laskutusyhteenveto :as laskutusyhteenveto-q]
             [harja.pvm :as pvm]))
 
 (defn hae-indeksien-nimet
@@ -15,6 +12,13 @@
   [db user]
   (into #{}
         (map :nimi (q/hae-indeksien-nimet db))))
+
+(defn hae-urakan-kuukauden-indeksiarvo
+  "Palvelu, joka palauttaa indeksin arvon urakalle"
+  [db urakka-id vuosi kuukausi]
+  (:arvo (first (q/hae-urakan-kuukauden-indeksiarvo db {:urakka_id urakka-id
+                                                        :vuosi     vuosi
+                                                        :kuukausi  kuukausi}))))
 
 (defn- ryhmittele-indeksit [indeksit]
   (seq (group-by (fn [rivi]
