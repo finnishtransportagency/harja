@@ -17,7 +17,8 @@
             [harja.views.kartta :as kartta]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.domain.tierekisteri :as tierekisteri]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -87,7 +88,7 @@
   (komp/luo
     (komp/lippu lp-kartalla/karttataso-laatupoikkeamat)
     (komp/kuuntelija :laatupoikkeama-klikattu #(reset! laatupoikkeamat/valittu-laatupoikkeama-id (:id %2)))
-    (komp/ulos (kartta/kuuntele-valittua! laatupoikkeamat/valittu-laatupoikkeama))
+    (komp/ulos (kartta-tiedot/kuuntele-valittua! laatupoikkeamat/valittu-laatupoikkeama))
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :M))

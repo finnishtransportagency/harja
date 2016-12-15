@@ -1,20 +1,30 @@
 (ns harja.palvelin.palvelut.tilannekuva
-  (:require [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
+  (:require [clojure.core.async :as async]
+            [clojure.java.jdbc :as jdbc]
+            [clojure.set :refer [union]]
+            [com.stuartsierra.component :as component]
+            [harja
+             [geo :as geo]
+             [pvm :as pvm]
+             [transit :as transit]]
+            [harja.domain
+             [ilmoitukset :as ilmoitukset-domain]
+             [laadunseuranta :as laadunseuranta]
+             [oikeudet :as oikeudet]
+             [roolit :as roolit]
+             [tilannekuva :as tk]]
+            [harja.kyselyt
+             [hallintayksikot :as hal-q]
+             [konversio :as konv]
+             [tilannekuva :as q]
+             [turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
+             [urakat :as urakat-q]]
             [harja.palvelin.komponentit.http-palvelin
-             :refer [julkaise-palvelu poista-palvelut]]
-
-            [harja.domain.ilmoitukset :as ilmoitukset-domain]
-            [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.hallintayksikot :as hal-q]
-            [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.tilannekuva :as q]
-            [harja.palvelin.palvelut.urakat :as urakat]
-
-            [harja.domain.laadunseuranta :as laadunseuranta]
-            [harja.geo :as geo]
-            [harja.pvm :as pvm]
-            [harja.domain.tilannekuva :as tk]
+             :refer
+             [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.palvelut
+             [karttakuvat :as karttakuvat]
+             [urakat :as urakat]]
             [harja.ui.kartta.esitettavat-asiat
              :as esitettavat-asiat
              :refer [kartalla-esitettavaan-muotoon-xf]]
@@ -26,7 +36,8 @@
             [clojure.core.async :as async]
             [clojure.java.jdbc :as jdbc]
             [harja.domain.roolit :as roolit]
-            [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]))
+            [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
+            [taoensso.timbre :as log]))
 
 (defn tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
@@ -169,35 +180,44 @@
                    {:korjaavatoimenpide :korjaavattoimenpiteet})]
        tulos))))
 
-(defn- hae-tyokoneet
+(defn- laajenna-tyokone-extent [alue]
+  (let [{:keys [xmin xmax ymin ymax]} alue
+        hypotenuusa (geo/alueen-hypotenuusa alue)
+        laajennettu-alue (geo/laajenna-extent [xmin ymin xmax ymax]
+                                              hypotenuusa)]
+    (zipmap [:xmin :ymin :xmax :ymax] laajennettu-alue)))
+
+(defn- tyokoneiden-toimenpiteet
+  "Palauttaa haettavat tehtävä työkonekyselyille"
+  [talvi kesa yllapito]
+  (let [yllapito (filter #(tk/yllapidon-reaaliaikaseurattava? (:id %)) yllapito)
+        haettavat-toimenpiteet (haettavat (union talvi kesa yllapito))]
+    (konv/seq->array haettavat-toimenpiteet)))
+
+(defn- hae-tyokoneiden-selitteet
   [db user
    {:keys [alue alku loppu talvi kesa urakka-id hallintayksikko nykytilanne?
            yllapito toleranssi] :as optiot}
    urakat]
-  (when-not (empty? urakat)
-    (when nykytilanne?
-      (let [yllapito (filter tk/yllapidon-reaaliaikaseurattava? yllapito)
-            haettavat-toimenpiteet (haettavat (union talvi kesa yllapito))
-            urakoitsija? (= :urakoitsija (roolit/osapuoli user))]
-        (when (not (empty? haettavat-toimenpiteet))
-          (let [tpi-haku-str (konv/seq->array haettavat-toimenpiteet)
-                parametrit (merge alue
-                                  {:urakat urakat
-                                   :toleranssi toleranssi
-                                   :nayta-kaikki (not urakoitsija?)
-                                   :organisaatio (get-in user [:organisaatio :id])
-                                   :toimenpiteet tpi-haku-str})]
-            (into {}
-                  (comp
-                   (map #(update-in % [:sijainti] (comp geo/piste-koordinaatit)))
-                   (geo/muunna-pg-tulokset :reitti)
-                   (map #(update-in % [:edellinensijainti]
-                                    (fn [pos] (when pos
-                                                (geo/piste-koordinaatit pos)))))
-                   (map #(assoc % :tyyppi :tyokone))
-                   (map #(konv/array->set % :tehtavat))
-                   (map (juxt :tyokoneid identity)))
-                  (q/hae-tyokoneet db parametrit))))))))
+  (when nykytilanne?
+    (let [rivit (q/hae-tyokoneselitteet
+                 db
+                 (merge
+                  (laajenna-tyokone-extent alue)
+                  {:nayta-kaikki (roolit/tilaajan-kayttaja? user)
+                   :organisaatio (:id (:organisaatio user))
+                   :urakat urakat
+                   :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito)
+                   :alku alku
+                   :loppu loppu}))
+          tehtavat (into #{}
+                         (map (comp :tehtavat #(konv/array->set % :tehtavat)))
+                         rivit)
+          viimeisin (if (empty? rivit)
+                      0
+                      (apply max (map (comp #(.getTime %) :viimeisin) rivit)))]
+      {:tehtavat tehtavat
+       :viimeisin viimeisin})))
 
 (defn- toteumien-toimenpidekoodit [db {:keys [talvi kesa]}]
   (let [koodit (some->> (union talvi kesa)
@@ -238,6 +258,19 @@
                          :tyypit (map name (haettavat tarkastukset))
                          :kayttaja_on_urakoitsija (roolit/urakoitsija? user)})))
 
+(defn- hae-tyokoneiden-reitit
+  [db ch user {:keys [toleranssi alue alku loppu toimenpiteet talvi kesa yllapito] :as tiedot} urakat]
+  (q/hae-tyokonereitit-kartalle
+   db ch
+   (merge
+    (laajenna-tyokone-extent alue)
+    {:urakat urakat
+     :nayta-kaikki (roolit/tilaajan-kayttaja? user)
+     :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito)
+     :alku alku
+     :loppu loppu
+     :organisaatio (get-in user [:organisaatio :id])})))
+
 (defn- hae-tietyomaat
   [db user {:keys [yllapito alue nykytilanne?]} urakat]
   (when (or (not-empty urakat) (oikeudet/voi-lukea? (if nykytilanne?
@@ -273,7 +306,7 @@
 
 (defmethod hae-osio :tyokoneet [db user tiedot urakat _]
   (tulosta-tulos! "tyokonetta"
-                  (hae-tyokoneet db user tiedot urakat)))
+                  (hae-tyokoneiden-selitteet db user tiedot urakat)))
 
 (defmethod hae-osio :turvallisuuspoikkeamat [db user tiedot urakat _]
   (tulosta-tulos! "turvallisuuspoikkeamaa"
@@ -328,7 +361,7 @@
                                                 oikeudet/tilannekuva-nykytilanne
                                                 oikeudet/tilannekuva-historia) % user)
                         (:urakat tiedot))]
-     (log/debug "Haetaan tilannekuvaan asioita urakoista " (pr-str urakat))
+     ;(log/debug "Haetaan tilannekuvaan asioita urakoista " (pr-str urakat))
      (let [tiedot (assoc tiedot :toleranssi (geo/karkeistustoleranssi (:alue tiedot)))]
        (into {}
              (map (juxt identity (partial yrita-hakea-osio db user tiedot urakat)))
@@ -346,16 +379,26 @@
              :alku alku
              :loppu loppu))))
 
+(defn- suodattimet-parametreista [parametrit]
+  {:pre [(map? parametrit)]}
+  (aikavalinta parametrit))
+
 (defn- karttakuvan-suodattimet
   "Tekee karttakuvan URL parametreistä suodattimet"
-  [{:keys [extent parametrit]}]
-  (let [[x1 y1 x2 y2] extent
-        hakuparametrit (some-> parametrit (get "tk") transit/lue-transit-string aikavalinta)]
-    (as-> hakuparametrit p
+  [{:keys [extent parametrit] :as arg}]
+  (let [[x1 y1 x2 y2] extent]
+    (as-> parametrit p
+          (suodattimet-parametreista p)
           (merge p
                  {:alue {:xmin x1 :ymin y1
                          :xmax x2 :ymax y2}})
           (assoc p :toleranssi (geo/karkeistustoleranssi (:alue p))))))
+
+(defn- luettavat-urakat [user tiedot]
+  (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
+                                  oikeudet/tilannekuva-nykytilanne
+                                  oikeudet/tilannekuva-historia) % user)
+          (:urakat tiedot)))
 
 (defn- hae-karttakuvan-tiedot [db user parametrit haku-fn xf ]
   (let [tiedot (karttakuvan-suodattimet parametrit)
@@ -365,10 +408,7 @@
                          (map konv/alaviiva->rakenne)
                          xf
                          kartalle-xf))
-        urakat (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
-                                               oikeudet/tilannekuva-nykytilanne
-                                               oikeudet/tilannekuva-historia) % user)
-                       (:urakat tiedot))]
+        urakat (luettavat-urakat user tiedot)]
     (async/thread
       (jdbc/with-db-transaction [db db
                                  :read-only? true]
@@ -378,14 +418,36 @@
                (throw t)))))
     ch))
 
-(defn- hae-toteumat-kartalle [db user parametrit]
+(defn- hae-toteumien-sijainnit-kartalle
+  "Hakee toteumien reitit karttakuvaan piirrettäväksi."
+  [db user parametrit]
   (hae-karttakuvan-tiedot db user parametrit hae-toteumien-reitit
                           (map #(assoc %
                                        :tyyppi :toteuma
                                        :tyyppi-kartalla :toteuma
                                        :tehtavat [(:tehtava %)]))))
 
-(defn- hae-tarkastukset-kartalle [db user parametrit]
+
+(defn- hae-toteumien-tiedot-kartalle
+  "Hakee toteumien tiedot pisteessä infopaneelia varten."
+  [db user parametrit]
+  (konv/sarakkeet-vektoriin
+   (into []
+         (comp
+          (map konv/alaviiva->rakenne)
+          (map #(assoc % :tyyppi-kartalla :toteuma))
+          (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
+         (q/hae-toteumien-asiat db
+                                (as-> parametrit p
+                                  (suodattimet-parametreista p)
+                                  (assoc p :urakat (luettavat-urakat user p))
+                                  (assoc p :toimenpidekoodit (toteumien-toimenpidekoodit db p))
+                                  (merge p (select-keys parametrit [:x :y])))))
+   {:tehtava :tehtavat}))
+
+(defn- hae-tarkastuksien-sijainnit-kartalle
+  "Hakee tarkastuksien sijainnit karttakuvaan piirrettäväksi."
+  [db user parametrit]
   (hae-karttakuvan-tiedot db user parametrit hae-tarkastusten-reitit
                           (comp (map laadunseuranta/tarkastus-tiedolla-onko-ok)
                                 (map #(konv/string->keyword % :tyyppi :tekija))
@@ -393,6 +455,45 @@
                                              :tyyppi-kartalla :tarkastus
                                              :sijainti (:reitti %))))))
 
+
+(defn- hae-tarkastuksien-tiedot-kartalle
+  "Hakee tarkastuksien tiedot pisteessä infopaneelia varten."
+  [db user {x :x y :y :as parametrit}]
+  (into []
+        (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
+              (map #(konv/string->keyword % :tyyppi))
+              (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
+        (q/hae-tarkastusten-asiat db
+                                  (as-> parametrit p
+                                    (suodattimet-parametreista p)
+                                    (assoc p
+                                           :urakat (luettavat-urakat user p)
+                                           :tyypit (map name (haettavat (:tarkastukset p)))
+                                           :kayttaja_on_urakoitsija (roolit/urakoitsija? user)
+                                           :x x :y y)))))
+
+
+(defn- hae-tyokoneiden-sijainnit-kartalle [db user parametrit]
+  (hae-karttakuvan-tiedot db user parametrit hae-tyokoneiden-reitit
+                          (comp (geo/muunna-pg-tulokset :reitti)
+                                (map #(konv/array->set % :tehtavat))
+                                (map #(assoc %
+                                             :tyyppi-kartalla :tyokone)))))
+
+(defn- hae-tyokoneiden-tiedot-kartalle
+  "Hakee työkoneiden tiedot pisteessä infopaneelia varten."
+  [db user {x :x y :y :as parametrit}]
+  (into []
+        (comp (map #(assoc % :tyyppi-kartalla :tyokone))
+              (map #(konv/array->set % :tehtavat))
+              (map #(konv/string->keyword % :tyyppi)))
+        (q/hae-tyokoneiden-asiat db
+                                 (-> parametrit
+                                   suodattimet-parametreista
+                                   (assoc :x x
+                                          :y y
+                                          :nayta-kaikki (roolit/tilaajan-kayttaja? user)
+                                          :organisaatio (-> user :organisaatio :id))))))
 
 (defrecord Tilannekuva []
   component/Lifecycle
@@ -408,10 +509,19 @@
                         (hae-urakat db user tiedot)))
     (karttakuvat/rekisteroi-karttakuvan-lahde!
       karttakuvat :tilannekuva-toteumat
-      (partial hae-toteumat-kartalle db))
+      (partial hae-toteumien-sijainnit-kartalle db)
+      (partial #'hae-toteumien-tiedot-kartalle db)
+      "tk")
     (karttakuvat/rekisteroi-karttakuvan-lahde!
      karttakuvat :tilannekuva-tarkastukset
-     (partial hae-tarkastukset-kartalle db))
+     (partial hae-tarkastuksien-sijainnit-kartalle db)
+     (partial #'hae-tarkastuksien-tiedot-kartalle db)
+     "tk")
+    (karttakuvat/rekisteroi-karttakuvan-lahde!
+     karttakuvat :tilannekuva-tyokoneet
+     (partial #'hae-tyokoneiden-sijainnit-kartalle db)
+     (partial #'hae-tyokoneiden-tiedot-kartalle db)
+     "tk")
     this)
 
   (stop [{karttakuvat :karttakuvat :as this}]

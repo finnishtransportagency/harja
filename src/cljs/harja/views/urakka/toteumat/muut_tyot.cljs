@@ -27,7 +27,8 @@
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.views.kartta :as kartta]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-xf]]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction-writable]]))
@@ -467,7 +468,7 @@
   (komp/luo
     (komp/lippu muut-tyot-kartalla/karttataso-muut-tyot)
     (komp/kuuntelija :toteuma-klikattu #(reset! muut-tyot/valittu-toteuma %2))
-    (komp/ulos (kartta/kuuntele-valittua! muut-tyot/valittu-toteuma)) ;;Palauttaa funktion jolla kuuntelu lopetetaan
+    (komp/ulos (kartta-tiedot/kuuntele-valittua! muut-tyot/valittu-toteuma)) ;;Palauttaa funktion jolla kuuntelu lopetetaan
     (fn []
       [:span
        [kartta/kartan-paikka]

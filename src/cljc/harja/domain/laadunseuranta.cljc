@@ -113,18 +113,3 @@
 
 (def soratiemittauksen-kentat
   [[:tarkastus] [:tasaisuus] [:polyavyys] [:kiinteys] [:sivukaltevuus] [:hoitoluokka]])
-
-(defn talvihoitoluokka-fmt
-  [avain]
-  (case avain
-    "1" "Is"
-    "2" "I"
-    "3" "Ib"
-    "4" "TIb"
-    "5" "II"
-    "6" "III"
-    "7" "K1"
-    "8" "K2"
-    "9" "ei talvih." ;;kevari jolla ei talvihoitoa
-    nil ""
-    avain))
