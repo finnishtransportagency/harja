@@ -3,13 +3,11 @@
             [cljs-time.local :as l]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.ui.kamera :as kamera]
-            [harja-laadunseuranta.ui.yleiset.napit :refer [nappi]]
             [harja-laadunseuranta.tiedot.havaintolomake :refer [alusta-uusi-lomake!
                                                                 tallenna-lomake!
                                                                 peruuta-lomake!]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
-            [harja-laadunseuranta.ui.yleiset.lomake :refer [kentta tekstialue
-                                                            pvm-aika tr-osoite]]
+            [harja-laadunseuranta.ui.yleiset.lomake :as lomake]
             [cljs-time.format :as time-fmt]
             [harja-laadunseuranta.tiedot.fmt :as fmt]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
@@ -33,55 +31,39 @@
                               (reset! tr-osoite-atom tr-osoite-lomakkeen-avauksessa)))]
     (alusta-tr-osoite! tr-osoite-atom)
     (fn []
-      [:div.lomake-container
-       [:div.havaintolomake
-        [:div.lomake-title "Uuden havainnon perustiedot"]
+      [lomake/lomake
+       {:otsikko "Uuden havainnon perustiedot"
+        :peruuta-fn peruuta-fn
+        :tallenna-fn tallenna-fn
+        :lomakedata-atom lomakedata
+        :lomake-virheet-atom lomake-virheet-atom}
 
+       (when-not (empty? liittyvat-havainnot)
+         [lomake/rivi
+          [lomake/kentta "Lomake liittyy havaintoon"
+           [lomake/liittyvat-havainnot liittyvat-havainnot]]])
 
-        [:div.title "Lomake liittyy havaintoon"]
-        [:div.liittyvat-havainnot
-         [:ul]
-         (doall (for [liittyva-havainto liittyvat-havainnot]
-                  ^{:key (:id liittyva-havainto)}
-                  [:li (:havainto-avain liittyva-havainto)]))]
-        [yleiset/vihje "Jos et valitse mitään, kirjaus tehdään yleisenä havaintona."]
+       [lomake/rivi
+        [lomake/kentta "Päivämäärä"
+         (str (time-fmt/unparse fmt/pvm-fmt @aikaleima-atom)
+              " "
+              (time-fmt/unparse fmt/klo-fmt @aikaleima-atom))]
+        [lomake/kentta "Tarkastaja"
+         [:span @kayttajanimi-atom]]]
 
-        [:div.pvm-kellonaika-tarkastaja
-         ;; Päivämäärä-kenttää ei ole koskaan voinut muokata, vaikka on input-tyyppinen
-         ;; Näytetään siis toistaiseksi vain tekstinä.
-         ;; TODO Jatkossa olisi hyvä, jos voi muokata. Tässä voinee käyttää
-         ;; HTML5:n natiivia date ja time tyyppiä, on hyvn tuettu mobiilissa.
-         [kentta "Päivämäärä" (str (time-fmt/unparse fmt/pvm-fmt @aikaleima-atom)
-                                   " "
-                                   (time-fmt/unparse fmt/klo-fmt @aikaleima-atom))]
-         #_[kentta "Päivämäärä" [pvm-aika aikaleima-atom]]
-         [kentta "Tarkastaja" [:span.tarkastaja @kayttajanimi-atom]]]
+       [lomake/rivi
+        [lomake/kentta "Tieosuus"
+         [lomake/tr-osoite tr-osoite-atom lomake-virheet-atom]]]
 
-        [:div.tieosuus
-         [kentta "Tieosuus" [tr-osoite tr-osoite-atom lomake-virheet-atom]]]
+       [lomake/rivi
+        [lomake/kentta ""
+         [lomake/checkbox "Laadunalitus" laadunalitus-atom]]]
 
-        [:div.lisatietoja
-         [:div.laatupoikkeama-check
-          [:input {:id "laadunalitus"
-                   :type "checkbox"
-                   :on-change #(swap! laadunalitus-atom not)}]
-          [:label {:for "laadunalitus"} "Laadun alitus"]]
-         [:div.title "Lisätietoja"]
-         [tekstialue kuvaus-atom]
-         [kamera/kamerakomponentti esikatselukuva-atom]]
-
-        [:div.lomake-painikkeet
-         [nappi "Tallenna" {:on-click (fn []
-                                        (.log js/console. "Tallenna. Virheet: " (pr-str @lomake-virheet-atom))
-                                        (when (empty? @lomake-virheet-atom)
-                                          (tallenna-fn @lomakedata)))
-                            :disabled (not (empty? @lomake-virheet-atom))
-                            :luokat-str (str "nappi-myonteinen "
-                                             (when-not (empty? @lomake-virheet-atom)
-                                               "nappi-disabloitu"))
-                            :ikoni (kuvat/svg-sprite "tallenna-18")}]
-         [nappi "Peruuta" {:luokat-str "nappi-kielteinen"
-                           :on-click peruuta-fn}]]]])))
+       [lomake/rivi
+        [lomake/kentta "Lisätietoja"
+         [lomake/tekstialue kuvaus-atom]]
+        [lomake/kentta ""
+         [kamera/kamerakomponentti esikatselukuva-atom]]]])))
 
 (defn havaintolomake []
   (let [lomakedata (alusta-uusi-lomake!)

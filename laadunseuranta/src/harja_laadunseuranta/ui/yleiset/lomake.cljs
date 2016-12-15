@@ -4,7 +4,10 @@
             [harja-laadunseuranta.tiedot.havaintolomake :refer [tallenna-lomake!
                                                                 peruuta-lomake!]]
             [harja-laadunseuranta.tiedot.fmt :as fmt]
-            [cljs-time.format :as time-fmt])
+            [harja-laadunseuranta.ui.yleiset.napit :refer [nappi]]
+            [cljs-time.format :as time-fmt]
+            [harja-laadunseuranta.ui.yleiset.yleiset :as yleiset]
+            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat])
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
 
@@ -77,13 +80,55 @@
             :on-change #()
             :name "klo"}]])
 
+(defn tekstialue [teksti]
+  [:textarea {:rows 5
+              :on-change #(reset! teksti (-> % .-target .-value))
+              :defaultValue ""
+              :style {:resize "none"}}])
+
+(defn checkbox [nimi arvo-atom]
+  [:div
+   [:input {:id nimi
+            :type "checkbox"
+            :on-change #(swap! arvo-atom not)}]
+   [:label {:for nimi} nimi]])
+
+(defn liittyvat-havainnot [liittyvat-havainnot]
+  [:div.liittyvat-havainnot
+   [:ul]
+   (doall (for [liittyva-havainto liittyvat-havainnot]
+            ^{:key (:id liittyva-havainto)}
+            [:li (:havainto-avain liittyva-havainto)]))
+   [yleiset/vihje "Jos et valitse mitään, kirjaus tehdään yleisenä havaintona."]])
+
+;; Lomakkeen osat
+
+(defn lomake [{:keys [tallenna-fn peruuta-fn otsikko
+                      lomakedata-atom lomake-virheet-atom]} & sisalto]
+  [:div.lomake-container
+   [:div.lomake-title otsikko]
+   (doall (for [elementti sisalto]
+            elementti))
+   [:footer.lomake-footer
+    [nappi "Tallenna" {:on-click (fn []
+                                   (.log js/console. "Tallenna. Virheet: " (pr-str @lomake-virheet-atom))
+                                   (when (empty? @lomake-virheet-atom)
+                                     (tallenna-fn @lomakedata-atom)))
+                       :disabled (not (empty? @lomake-virheet-atom))
+                       :luokat-str (str "nappi-myonteinen "
+                                        (when-not (empty? @lomake-virheet-atom)
+                                          "nappi-disabloitu"))
+                       :ikoni (kuvat/svg-sprite "tallenna-18")}]
+    [nappi "Peruuta" {:luokat-str "nappi-kielteinen"
+                      :on-click peruuta-fn}]]])
+
+(defn rivi [& elementit]
+  [:div.lomake-rivi
+   (doall (for [elementti elementit]
+            elementti))])
+
 (defn kentta [label komponentti]
   [:div.lomake-kentta
    [:div.label label]
    komponentti])
 
-(defn- tekstialue [teksti]
-  [:textarea {:rows 5
-              :on-change #(reset! teksti (-> % .-target .-value))
-              :defaultValue ""
-              :style {:resize "none"}}])
