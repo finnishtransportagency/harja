@@ -351,7 +351,7 @@
    Varmistaa, ettei listalla ole koskaan liikaa ehdotuksia."
   [liittyvat-havainnot-atom uusi-havainto]
   (let [max-maara-ehdotuksia 5
-        uudet-liittyvat-havainnot (concat @liittyvat-havainnot-atom uusi-havainto)
+        uudet-liittyvat-havainnot (concat @liittyvat-havainnot-atom [uusi-havainto])
         uudet-liittyvat-havainnot (take max-maara-ehdotuksia uudet-liittyvat-havainnot)]
     (reset! liittyvat-havainnot-atom (into [] uudet-liittyvat-havainnot))))
 
