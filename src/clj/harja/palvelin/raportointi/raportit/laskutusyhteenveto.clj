@@ -2,7 +2,8 @@
   "Laskutusyhteenveto"
   (:require [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
             [taoensso.timbre :as log]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi +erheen-vari+]]
+            [harja.palvelin.palvelut.indeksit :as indeksipalvelu]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.pvm :as pvm]
@@ -213,8 +214,9 @@
                                                            (not (re-find #"suolasakot_laskutetaan_ind_korotus" %))) avaimet))
         indeksiarvo-puuttuu-jo-laskutetulta-ajalta? (first (keep #(some nil? (vals (select-keys % laskutettu-korotus-kentat))) tiedot))
         indeksiarvo-puuttuu-valitulta-kklta? (first (keep #(some nil? (vals (select-keys % laskutetaan-korotus-kentat))) tiedot))
-
-        perusluku-puuttuu? (not (:perusluku (first tiedot)))
+        perusluku (:perusluku (first tiedot))
+        kkn-indeksiarvo (when kyseessa-kk-vali?
+                          (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id (pvm/vuosi alkupvm) (pvm/kuukausi alkupvm)))
         talvisuolasakko-kaytossa? (some :suolasakko_kaytossa tiedot)
         _ (log/debug "talvisuolasakko käytössä?" talvisuolasakko-kaytossa?)
         suolasakkojen-laskenta-epaonnistui? (some
@@ -230,7 +232,7 @@
                                               " ")
         varoitus-indeksitietojen-puuttumisesta
         (when indeksi-kaytossa?
-          (if perusluku-puuttuu?
+          (if (not perusluku)
             " Huom! Laskutusyhteenvedon laskennassa tarvittava urakan indeksiarvojen perusluku puuttuu tältä urakalta puutteellisten indeksitietojen vuoksi. "
             (if (and indeksiarvo-puuttuu-jo-laskutetulta-ajalta? indeksiarvo-puuttuu-valitulta-kklta?)
               " Huom! Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu sekä valitulta kuukaudelta että ajalta ennen sitä. "
@@ -344,6 +346,15 @@
     (vec (keep identity
                [:raportti {:nimi "Laskutusyhteenveto"}
                 [:otsikko (str (or (str urakan-nimi ", ") "") (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))]
+                (when (and indeksi-kaytossa? perusluku)
+                  [:teksti (str (str "Indeksilaskennan perusluku: " (fmt/desimaaliluku perusluku))
+                                (when kyseessa-kk-vali?
+                                  (str ". Kuukauden " (pvm/kuukausi-ja-vuosi alkupvm)
+                                       " " (:nimi kkn-indeksiarvo)
+                                       " indeksiarvo"
+                                       (if kkn-indeksiarvo
+                                         (str ": " (fmt/desimaaliluku (:arvo kkn-indeksiarvo) 1))
+                                         " puuttuu."))))])
                 varoitus-tietojen-puuttumisesta
                 (if (empty? taulukot)
                   [:teksti " Ei laskutettavaa"]

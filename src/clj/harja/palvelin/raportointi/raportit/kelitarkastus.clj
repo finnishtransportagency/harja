@@ -9,7 +9,8 @@
             [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.konversio :as konv]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+            [harja.domain.hoitoluokat :as hoitoluokat]))
 
 (defn hae-tarkastukset-urakalle [db user {:keys [urakka-id alkupvm loppupvm tienumero]}]
   (tarkastukset-q/hae-urakan-kelitarkastukset-liitteineen-raportille db
@@ -124,7 +125,7 @@
            (get-in rivi [:tr :loppuosa])
            (get-in rivi [:tr :loppuetaisyys])
            (:ajosuunta rivi)
-           (:talvihoitoluokka rivi)
+           (hoitoluokat/talvihoitoluokan-nimi-str (:talvihoitoluokka rivi))
            (:lumimaara rivi)
            (:tasaisuus rivi)
            (:kitka rivi)
