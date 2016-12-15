@@ -33,7 +33,7 @@
     (alusta-tr-osoite! tr-osoite-atom)
     (fn []
       [lomake/lomake
-       {:otsikko "Uuden havainnon perustiedot"
+       {:otsikko "Havainnon perustiedot"
         :peruuta-fn peruuta-fn
         :tallenna-fn tallenna-fn
         :lomakedata-atom lomakedata

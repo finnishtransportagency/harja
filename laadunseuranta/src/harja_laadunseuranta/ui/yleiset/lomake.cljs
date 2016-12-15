@@ -108,6 +108,7 @@
               (str (:nimi (havainnon-tiedot-avaimella
                             (:havainto-avain liittyva-havainto)))
                    " "
+                   ;; TODO Lisää TR-osoite?
                    (fmt/klo (:aikaleima liittyva-havainto)))]]))]
        [:div.jatkuvat-havainnot-vihje
         [yleiset/vihje "Jos et valitse mitään, lomake kirjataan yleisenä havaintona."]]])))
