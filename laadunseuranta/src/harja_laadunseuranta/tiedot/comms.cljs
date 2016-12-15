@@ -55,43 +55,42 @@
   (post! asetukset/+urakkatyypin-urakat-url+ urakkatyyppi))
 
 (defn paata-ajo! [tarkastusajo-id urakka]
-  (post! asetukset/+paatos-url+ {:urakka (:id urakka)
+  (post! asetukset/+paatos-url+ {:urakka urakka
                                  :tarkastusajo {:id tarkastusajo-id}}))
 
-(defn luo-ajo! [tarkastustyyppi]
-  (post! asetukset/+luonti-url+ {:tyyppi tarkastustyyppi}))
+(defn luo-ajo! []
+  (post! asetukset/+luonti-url+ nil))
 
-(defn hae-kayttajatiedot []
-  (get! asetukset/+kayttajatiedot-url+))
+(defn hae-kayttajatiedot [sijainti]
+  (post! asetukset/+kayttajatiedot-url+ {:sijainti sijainti}))
 
 (defn- tallenna-kuvat
-  "Tallentaa lähetettävien tapahtumien kuvat palvelimelle ja korvaa kuvadatan kuvan id:llä"
-  [tapahtumat]
-  (go-loop [tp tapahtumat
+  "Tallentaa lähetettävien reittimerkintöjen kuvat palvelimelle ja korvaa kuvadatan kuvan id:llä"
+  [reittimerkinnat]
+  (go-loop [merkinnat reittimerkinnat
             result []]
-    (if-let [t (first tp)]
-      (if (get t "kuva")
+    (if-let [eka (first merkinnat)]
+      (if (get eka "kuva")
         (when-let [kuvaid (<! (send-file! asetukset/+liitteen-tallennus-url+
-                                          (get-in t ["kuva" "data"])
-                                          (get-in t ["kuva" "mime-type"])))]
-          (recur (rest tp) (conj result (assoc t "kuva" kuvaid))))
-        (recur (rest tp) (conj result t)))
+                                          (get-in eka ["kuva" "data"])
+                                          (get-in eka ["kuva" "mime-type"])))]
+          (recur (rest merkinnat) (conj result (assoc eka "kuva" kuvaid))))
+        (recur (rest merkinnat) (conj result eka)))
       result)))
 
-(defn laheta-tapahtumat!
-  "Lähettää joukon tapahtumia, palauttaa kanavan josta voi lukea vektorina lähetettyjen viestien id:t"
-  [tapahtumat]
+(defn laheta-reittimerkinnat!
+  "Lähettää joukon reittimerkintöjä,
+   palauttaa kanavan josta voi lukea vektorina lähetettyjen viestien id:t"
+  [reittimerkinnat]
   (go
-    (if-not (empty? tapahtumat)
+    (if-not (empty? reittimerkinnat)
       (do
         ;; tallenna kaikki kuvat ensin, tulee nil jos ei onnistunut
-        (if-let [tapahtumat (<! (tallenna-kuvat tapahtumat))]
-          (do #_(js/console.log (str "Lähetetään tapahtumat: " (pr-str tapahtumat)))
-              (if (<! (post! asetukset/+tallennus-url+ {:kirjaukset tapahtumat}))
-                (let [poistetut (mapv #(get % "id") tapahtumat)]
-                  #_(js/console.log (str "Poistetut id:t " (pr-str poistetut)))
-                  poistetut)
-                []))
+        (if-let [reittimerkinnat (<! (tallenna-kuvat reittimerkinnat))]
+          (if (<! (post! asetukset/+tallennus-url+ {:kirjaukset reittimerkinnat}))
+            (let [poistetut (mapv #(get % "id") reittimerkinnat)]
+              poistetut)
+            [])
           []))
       [])))
 

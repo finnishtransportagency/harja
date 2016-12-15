@@ -38,6 +38,7 @@
     [harja.palvelin.palvelut.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
     [harja.palvelin.palvelut.muut-tyot :as muut-tyot]
     [harja.palvelin.palvelut.toteumat :as toteumat]
+    [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-toteumat]
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
     [harja.palvelin.palvelut.yhteyshenkilot]
     [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
@@ -59,7 +60,6 @@
     [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
     [harja.palvelin.palvelut.integraatioloki :as integraatioloki-palvelu]
     [harja.palvelin.palvelut.raportit :as raportit]
-    [harja.palvelin.palvelut.tyokoneenseuranta :as tyokoneenseuranta]
     [harja.palvelin.palvelut.tilannekuva :as tilannekuva]
     [harja.palvelin.palvelut.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
     [harja.palvelin.palvelut.status :as status]
@@ -82,7 +82,6 @@
     [harja.palvelin.integraatiot.api.siltatarkastukset :as api-siltatarkastukset]
     [harja.palvelin.integraatiot.api.tarkastukset :as api-tarkastukset]
     [harja.palvelin.integraatiot.api.tyokoneenseuranta :as api-tyokoneenseuranta]
-    [harja.palvelin.integraatiot.api.tyokoneenseuranta-puhdistus :as tks-putsaus]
     [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
     [harja.palvelin.integraatiot.api.varusteet :as api-varusteet]
     [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
@@ -98,6 +97,7 @@
     [harja.palvelin.ajastetut-tehtavat.laskutusyhteenvedot :as laskutusyhteenvedot]
     [harja.palvelin.ajastetut-tehtavat.api-yhteysvarmistus :as api-yhteysvarmistus]
     [harja.palvelin.ajastetut-tehtavat.sonja-jms-yhteysvarmistus :as sonja-jms-yhteysvarmistus]
+    [harja.palvelin.ajastetut-tehtavat.tyokoneenseuranta-puhdistus :as tks-putsaus]
 
 
     ;; Harja mobiili Laadunseuranta
@@ -121,7 +121,7 @@
         (log/error e "Validointivirhe asetuksissa!")))
 
     (component/system-map
-     :metriikka (metriikka/luo-jmx-metriikka)
+      :metriikka (metriikka/luo-jmx-metriikka)
       :db (tietokanta/luo-tietokanta tietokanta kehitysmoodi)
       :db-replica (tietokanta/luo-tietokanta tietokanta-replica kehitysmoodi)
       :klusterin-tapahtumat (component/using
@@ -169,9 +169,9 @@
 
       ;; FIM REST rajapinta
       :fim (component/using
-            (if kehitysmoodi
-              (fim/->FakeFIM (:tiedosto (:fim asetukset)))
-              (fim/->FIM (:url (:fim asetukset))))
+             (if kehitysmoodi
+               (fim/->FakeFIM (:tiedosto (:fim asetukset)))
+               (fim/->FIM (:url (:fim asetukset))))
              [:db :integraatioloki])
 
       ;; Sampo
@@ -260,6 +260,9 @@
       :toteumat (component/using
                   (toteumat/->Toteumat)
                   [:http-palvelin :db :karttakuvat])
+      :yllapitototeumat (component/using
+                  (yllapito-toteumat/->YllapitoToteumat)
+                  [:http-palvelin :db])
       :paallystys (component/using
                     (paallystys/->Paallystys)
                     [:http-palvelin :db])
@@ -323,10 +326,6 @@
       :raportit (component/using
                   (raportit/->Raportit)
                   [:http-palvelin :db :raportointi :pdf-vienti])
-
-      :tyokoneenseuranta (component/using
-                           (tyokoneenseuranta/->TyokoneseurantaHaku)
-                           [:http-palvelin :db])
 
       :yha (component/using
              (yha/->Yha)

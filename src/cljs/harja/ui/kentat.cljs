@@ -18,7 +18,7 @@
 
             [harja.ui.dom :as dom]
             [harja.ui.kartta.ikonit :as kartta-ikonit]
-            [harja.views.kartta :as kartta]
+            [harja.tiedot.kartta :as kartta]
             [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
             [harja.views.kartta.tasot :as tasot]
             [harja.geo :as geo]
@@ -72,7 +72,8 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 (defmethod nayta-arvo :default [_ data]
   [:span (str @data)])
 
-(defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake? hae-kun-yli-n-merkkia]} data]
+(defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake? sort-fn
+                                     kun-muuttuu hae-kun-yli-n-merkkia]} data]
   (let [nyt-valittu @data
         teksti (atom (if nyt-valittu
                        ((or nayta str) nyt-valittu) ""))
@@ -107,6 +108,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                  (let [v (-> % .-target .-value str/triml)]
                                    (reset! data nil)
                                    (reset! teksti v)
+                                   (when kun-muuttuu (kun-muuttuu v))
                                    (if (> (count v) hae-kun-yli-n-merkkia)
                                      (do (reset! tulokset :haetaan)
                                          (go (let [tul (<! (hae lahde v))]
@@ -137,6 +139,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                                  (let [v (nth t idx)]
                                                    (reset! data v)
                                                    (reset! teksti ((or nayta str) v))
+                                                   (when kun-muuttuu (kun-muuttuu nil))
                                                    (reset! tulokset nil)))))}]
          (when (zero? hae-kun-yli-n-merkkia)
            [:button.nappi-hakualasveto
@@ -147,7 +150,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
          [:ul.hakukentan-lista.dropdown-menu {:role  "menu"
                                               :style (avautumissuunta-ja-korkeus-tyylit
                                                        @max-korkeus @avautumissuunta)}
-          (let [nykyiset-tulokset @tulokset
+          (let [nykyiset-tulokset (if (and sort-fn (vector? @tulokset))
+                                    (sort-by sort-fn @tulokset)
+                                    @tulokset)
                 idx @valittu-idx]
             (if (= :haetaan nykyiset-tulokset)
               [:li {:role "presentation"} (ajax-loader) " haetaan: " @teksti]
@@ -159,6 +164,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                        [linkki ((or nayta str) t) #(do
                                                                     (reset! data t)
                                                                     (reset! teksti ((or nayta str) t))
+                                                                    (when kun-muuttuu (kun-muuttuu nil))
                                                                     (reset! tulokset nil))]])
                                     nykyiset-tulokset)))))]]))))
 
@@ -862,13 +868,17 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                   [:td [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]]))]]]])))))
 
 (defmethod nayta-arvo :tierekisteriosoite [_ data]
-  (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data]
+  (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data
+        loppu? (or loppuosa loppuetaisyys)]
     [:span.tierekisteriosoite
      [:span.tie "Tie " numero] " / "
      [:span.alkuosa alkuosa] " / "
      [:span.alkuetaisyys alkuetaisyys]
-     [:span.loppuosa loppuosa] " / "
-     [:span.loppuetaisyys loppuetaisyys]]))
+     (when loppu?
+       [:span
+        " / "
+        [:span.loppuosa loppuosa] " / "
+        [:span.loppuetaisyys loppuetaisyys]])]))
 
 (defn tee-otsikollinen-kentta [otsikko kentta-params arvo-atom]
   [:span.label-ja-kentta

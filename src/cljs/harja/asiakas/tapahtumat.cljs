@@ -11,8 +11,8 @@
 
 (defn kuuntele!
   "Aloita tietyn aiheen kuuntelu. Aiheen viestit kirjoitetaan annettuun kanavaan tai
-annetaan parametrina kutsuna funktiolle. Palauttaa 0-arity funktion, jolla kuuntelun
-voi lopettaa."
+  annetaan parametrina kutsuna funktiolle. Palauttaa 0-arity funktion, jolla kuuntelun
+  voi lopettaa."
   [aihe kanava-tai-funktio]
   (if (fn? kanava-tai-funktio)
     ;; Kuuntelija on funktio, tehdään go-luuppi joka kutsuu sitä

@@ -2,6 +2,7 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.kalman :as kalman]
+            [harja-laadunseuranta.utils :as utils]
             [harja-laadunseuranta.utils :refer [timestamp ipad?]]
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]))
 
@@ -36,24 +37,19 @@
 
 (def paikannusoptiot #js {:enableHighAccuracy true
                           :maximumAge 1000
-                          :timeout +paikan-raportointivali+
-                          })
-
-(defn- ms->sec
-  "Muuntaa millisekunnit sekunneiksi"
-  [s]
-  (/ s 1000))
+                          :timeout +paikan-raportointivali+})
 
 (defn paivita-sijainti [{:keys [nykyinen]} sijainti ts]
   (let [uusi-sijainti (assoc sijainti :timestamp ts)
         uusi-nykyinen (if (ipad?)
                         uusi-sijainti
                         (kalman/kalman nykyinen uusi-sijainti
-                                       (ms->sec (- ts (or (:timestamp nykyinen) ts)))))]
+                                       (utils/ms->sec (- ts (or (:timestamp nykyinen) ts)))))]
     {:edellinen nykyinen
      :nykyinen (assoc uusi-nykyinen
                       :speed (:speed uusi-sijainti)
                       :heading (:heading uusi-sijainti)
+                      :accuracy (:accuracy uusi-sijainti)
                       :timestamp ts)}))
 
 (defn kaynnista-paikannus

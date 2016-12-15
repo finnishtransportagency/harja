@@ -8,7 +8,6 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
-            [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.kommentit :as kommentit]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.historia :as historia]
