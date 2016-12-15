@@ -196,7 +196,7 @@
                                      :ymax 1})
                        (assoc :nykytilanne? true))
         vastaus (hae-tk parametrit)]
-    (is (= (count (vals (:tyokoneet vastaus))) 0))))
+    (is (empty? (:tehtavat (:tyokoneet vastaus))))))
 
 (defn- insert-tyokone [urakka organisaatio]
   (let [x 523892
