@@ -2,7 +2,7 @@
   "Laskutusyhteenveto"
   (:require [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
             [taoensso.timbre :as log]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi +erheen-vari+]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi]]
             [harja.palvelin.palvelut.indeksit :as indeksipalvelu]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
