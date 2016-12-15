@@ -71,16 +71,9 @@
 (defn extranet-virhe? [vastaus]
   (= 0 (:status vastaus)))
 
-(defn simu-virhe? []
-  (let [v (< (js/Math.random) 0.2)]
-    (log "kuy: arvotaan onko virhe:" v)
-    v))
-
 (defn- kysely [palvelu metodi parametrit transducer paasta-virhe-lapi? chan-tai-nil yritysten-maara]
-  (log "kuy: yritysten-maara" yritysten-maara "metodi:" (pr-str metodi))
   (let [chan (or chan-tai-nil (chan))
         cb (fn [[_ vastaus]]
-             (log "cb: vastaus status:" (pr-str (:status vastaus)) "nil?" (nil? vastaus))
              (when-not (nil? vastaus)
                (cond
                  (= (:status vastaus) 302)
@@ -89,10 +82,8 @@
                  (and (virhe? vastaus) (not paasta-virhe-lapi?))
                  (kasittele-palvelinvirhe palvelu vastaus)
 
-                 (and #_(extranet-virhe? vastaus) (= :get metodi) (simu-virhe?) (< yritysten-maara 4))
-                 (do
-                   (log "kuy: kyselyn uudelleenyritys #" (+ 1 yritysten-maara))
-                   (kysely palvelu metodi parametrit transducer paasta-virhe-lapi? chan (+ yritysten-maara 1)))
+                 (and (extranet-virhe? vastaus) (= :get metodi) (< yritysten-maara 4))
+                 (kysely palvelu metodi parametrit transducer paasta-virhe-lapi? chan (+ yritysten-maara 1))
 
                  :default
                  (put! chan (if transducer (into [] transducer vastaus) vastaus))))
