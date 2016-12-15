@@ -33,7 +33,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(def tr-kaytossa? true)
+(def tr-kaytossa? false)
 
 (def nayta-max-toteumaa 500)
 
