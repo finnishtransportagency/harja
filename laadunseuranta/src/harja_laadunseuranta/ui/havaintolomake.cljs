@@ -3,6 +3,7 @@
             [cljs-time.local :as l]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.ui.kamera :as kamera]
+            [harja-laadunseuranta.tiedot.paanavigointi :as paanavigointi]
             [harja-laadunseuranta.tiedot.havaintolomake :refer [alusta-uusi-lomake!
                                                                 tallenna-lomake!
                                                                 peruuta-lomake!]]
@@ -18,7 +19,7 @@
 
 (defn- havaintolomakekomponentti [{:keys [lomakedata tallenna-fn peruuta-fn
                                           tr-osoite-lomakkeen-avauksessa
-                                          liittyvat-havainnot]}]
+                                          liittyvat-havainnot havainnot-ryhmittain]}]
   (let [kuvaus-atom (reagent/cursor lomakedata [:kuvaus])
         aikaleima-atom (reagent/cursor lomakedata [:aikaleima])
         tr-osoite-atom (reagent/cursor lomakedata [:tr-osoite])
@@ -41,7 +42,9 @@
        (when-not (empty? liittyvat-havainnot)
          [lomake/rivi
           [lomake/kentta "Lomake liittyy havaintoon"
-           [lomake/liittyvat-havainnot liittyvat-havainnot]]])
+           [lomake/liittyvat-havainnot
+            liittyvat-havainnot
+            havainnot-ryhmittain]]])
 
        [lomake/rivi
         [lomake/kentta "Päivämäärä"
@@ -73,6 +76,7 @@
        {:lomakedata lomakedata
         :tr-osoite-lomakkeen-avauksessa tr-osoite-lomakkeen-avauksessa
         :tallenna-fn tallenna-lomake!
+        :havainnot-ryhmittain paanavigointi/havainnot-ryhmittain
         :peruuta-fn peruuta-lomake!
         :liittyvat-havainnot @s/liittyvat-havainnot}])))
 

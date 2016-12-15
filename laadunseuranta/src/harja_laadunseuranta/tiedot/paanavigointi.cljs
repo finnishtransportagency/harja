@@ -10,7 +10,7 @@
 
 ;; Havainnot ja välilehdet
 
-(def havainnot
+(def havainnot-ryhmittain
   {:talviset-pinnat [{:nimi "Liu\u00ADkas\u00ADta"
                       :ikoni "liukas-36"
                       :ikoni-lahde "livicons"
@@ -321,28 +321,28 @@
 (def oletusvalilehdet
   [{:avain :talvihoito
     :nimi "Talviset pinnat"
-    :sisalto (:talviset-pinnat havainnot)}
+    :sisalto (:talviset-pinnat havainnot-ryhmittain)}
    {:avain :liikennemerkit
     :nimi "Liikennemerkit"
-    :sisalto (:liikennemerkit havainnot)}
+    :sisalto (:liikennemerkit havainnot-ryhmittain)}
    {:avain :viherhoito
     :nimi "Viherhoito"
-    :sisalto (:viherhoito havainnot)}
+    :sisalto (:viherhoito havainnot-ryhmittain)}
    {:avain :reunat
     :nimi "Reunat"
-    :sisalto (:reunat havainnot)}
+    :sisalto (:reunat havainnot-ryhmittain)}
    {:avain :p-ja-l-alueet
     :nimi "P- ja L-alueet"
-    :sisalto (:p-ja-l-alueet havainnot)}
+    :sisalto (:p-ja-l-alueet havainnot-ryhmittain)}
    {:avain :soratiet
     :nimi "Soratiet"
-    :sisalto (:soratiet havainnot)}
+    :sisalto (:soratiet havainnot-ryhmittain)}
    {:avain :muut
     :nimi "Sillat"
-    :sisalto (:sillat havainnot)}
+    :sisalto (:sillat havainnot-ryhmittain)}
    {:avain :paallystys
     :nimi "Päällystys"
-    :sisalto (:paallystys havainnot)}])
+    :sisalto (:paallystys havainnot-ryhmittain)}])
 
 ;; Käsittelylogiikka
 

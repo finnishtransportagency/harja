@@ -93,13 +93,20 @@
             :on-change #(swap! arvo-atom not)}]
    [:label {:for nimi} nimi]])
 
-(defn liittyvat-havainnot [liittyvat-havainnot]
-  [:div.liittyvat-havainnot
-   [:ul]
-   (doall (for [liittyva-havainto liittyvat-havainnot]
-            ^{:key (:id liittyva-havainto)}
-            [:li (:havainto-avain liittyva-havainto)]))
-   [yleiset/vihje "Jos et valitse mitään, lomake kirjataan yleisenä havaintona."]])
+(defn liittyvat-havainnot [liittyvat-havainnot havainnot-ryhmittain]
+  (let [kaikki-havainnot (into [] (apply concat (vals havainnot-ryhmittain)))
+        havainnon-nimi-avaimella (fn [avain]
+                                   (:nimi (first
+                                            (filter
+                                              #(= (:avain %) avain)
+                                              kaikki-havainnot))))]
+    (fn [liittyvat-havainnot havainnot-ryhmittain]
+      [:div.liittyvat-havainnot
+       [:ul]
+       (doall (for [liittyva-havainto liittyvat-havainnot]
+                ^{:key (:id liittyva-havainto)}
+                [:li (havainnon-nimi-avaimella (:havainto-avain liittyva-havainto))]))
+       [yleiset/vihje "Jos et valitse mitään, lomake kirjataan yleisenä havaintona."]])))
 
 ;; Lomakkeen osat
 
