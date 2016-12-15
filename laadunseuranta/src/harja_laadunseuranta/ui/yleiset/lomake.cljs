@@ -11,12 +11,7 @@
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
 
-(defn- parse-and-check-value [s min max]
-  (let [val (js/parseFloat s)]
-    (if (js/isNaN val)
-      nil
-      (when (<= min val max)
-        val))))
+;; Lomakkeessa käytettävät kentät
 
 (defn tr-osoite [tr-osoite-atom virheet-atom]
   (let [max-merkkeja 7
