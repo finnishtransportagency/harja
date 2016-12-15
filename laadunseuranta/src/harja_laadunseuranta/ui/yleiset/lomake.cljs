@@ -90,17 +90,18 @@
 
 (defn liittyvat-havainnot [liittyvat-havainnot havainnot-ryhmittain]
   (let [kaikki-havainnot (into [] (apply concat (vals havainnot-ryhmittain)))
-        havainnon-nimi-avaimella (fn [avain]
-                                   (:nimi (first
-                                            (filter
-                                              #(= (:avain %) avain)
-                                              kaikki-havainnot))))]
+        havainnon-tiedot-avaimella (fn [avain]
+                                     (first
+                                       (filter
+                                         #(= (:avain %) avain)
+                                         kaikki-havainnot)))]
     (fn [liittyvat-havainnot havainnot-ryhmittain]
       [:div.liittyvat-havainnot
        [:ul]
        (doall (for [liittyva-havainto liittyvat-havainnot]
                 ^{:key (:id liittyva-havainto)}
-                [:li (havainnon-nimi-avaimella (:havainto-avain liittyva-havainto))]))
+                [:li (:nimi (havainnon-tiedot-avaimella
+                              (:havainto-avain liittyva-havainto)))]))
        [yleiset/vihje "Jos et valitse mitään, lomake kirjataan yleisenä havaintona."]])))
 
 ;; Lomakkeen osat
