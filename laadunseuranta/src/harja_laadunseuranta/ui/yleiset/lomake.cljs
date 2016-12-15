@@ -127,31 +127,32 @@
                      ;; TODO Lisää TR-osoite?
                      ;; TODO Disabloi TR-osoitteen muokkaus kun valittu liittyvä havainto
                      (fmt/klo (:aikaleima liittyva-havainto)))]])))]
-        [:div.jatkuvat-havainnot-vihje
-         [yleiset/vihje "Jos et valitse mitään, lomake kirjataan yleisenä havaintona."]]])))
+       [:div.jatkuvat-havainnot-vihje
+        [yleiset/vihje "Jos et valitse mitään, lomake kirjataan yleisenä havaintona."]]])))
 
 ;; Lomakkeen osat
 
 (defn lomake [{:keys [tallenna-fn peruuta-fn otsikko
                       lomakedata-atom lomake-virheet-atom]} & sisalto]
   [:div.lomake-container
-   [:div.lomake-title otsikko]
-   ;; FIXME Miksi tulee unique key error?
-   (doall (for [elementti sisalto]
-            ^{:key (hash elementti)}
-            elementti))
-   [:footer.lomake-footer
-    [nappi "Tallenna" {:on-click (fn []
-                                   (.log js/console. "Tallenna. Virheet: " (pr-str @lomake-virheet-atom))
-                                   (when (empty? @lomake-virheet-atom)
-                                     (tallenna-fn @lomakedata-atom)))
-                       :disabled (not (empty? @lomake-virheet-atom))
-                       :luokat-str (str "nappi-myonteinen "
-                                        (when-not (empty? @lomake-virheet-atom)
-                                          "nappi-disabloitu"))
-                       :ikoni (kuvat/svg-sprite "tallenna-18")}]
-    [nappi "Peruuta" {:luokat-str "nappi-kielteinen"
-                      :on-click peruuta-fn}]]])
+   [:div.lomake-sisalto-container
+    [:div.lomake-title otsikko]
+    ;; FIXME Miksi tulee unique key error?
+    (doall (for [elementti sisalto]
+             ^{:key (hash elementti)}
+             elementti))
+    [:footer.lomake-footer
+     [nappi "Tallenna" {:on-click (fn []
+                                    (.log js/console. "Tallenna. Virheet: " (pr-str @lomake-virheet-atom))
+                                    (when (empty? @lomake-virheet-atom)
+                                      (tallenna-fn @lomakedata-atom)))
+                        :disabled (not (empty? @lomake-virheet-atom))
+                        :luokat-str (str "nappi-myonteinen "
+                                         (when-not (empty? @lomake-virheet-atom)
+                                           "nappi-disabloitu"))
+                        :ikoni (kuvat/svg-sprite "tallenna-18")}]
+     [nappi "Peruuta" {:luokat-str "nappi-kielteinen"
+                       :on-click peruuta-fn}]]]])
 
 (defn rivi [& elementit]
   [:div.lomake-rivi
