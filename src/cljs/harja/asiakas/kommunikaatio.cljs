@@ -68,15 +68,32 @@
 
 (declare kasittele-istunto-vanhentunut)
 
-(defn- kysely [palvelu metodi parametrit transducer paasta-virhe-lapi?]
-  (let [chan (chan)
+(defn extranet-virhe? [vastaus]
+  (= 0 (:status vastaus)))
+
+(defn simu-virhe? []
+  (let [v (< (js/Math.random) 0.2)]
+    (log "kuy: arvotaan onko virhe:" v)
+    v))
+
+(defn- kysely [palvelu metodi parametrit transducer paasta-virhe-lapi? chan-tai-nil yritysten-maara]
+  (log "kuy: yritysten-maara" yritysten-maara "metodi:" (pr-str metodi))
+  (let [chan (or chan-tai-nil (chan))
         cb (fn [[_ vastaus]]
+             (log "cb: vastaus status:" (pr-str (:status vastaus)) "nil?" (nil? vastaus))
              (when-not (nil? vastaus)
                (cond
                  (= (:status vastaus) 302)
                  (kasittele-istunto-vanhentunut)
+
                  (and (virhe? vastaus) (not paasta-virhe-lapi?))
                  (kasittele-palvelinvirhe palvelu vastaus)
+
+                 (and #_(extranet-virhe? vastaus) (= :get metodi) (simu-virhe?) (< yritysten-maara 4))
+                 (do
+                   (log "kuy: kyselyn uudelleenyritys #" (+ 1 yritysten-maara))
+                   (kysely palvelu metodi parametrit transducer paasta-virhe-lapi? chan (+ yritysten-maara 1)))
+
                  :default
                  (put! chan (if transducer (into [] transducer vastaus) vastaus))))
              (close! chan))]
@@ -95,6 +112,7 @@
                        :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
                                                                   :raw    true})
                        :handler         cb
+
                        :error-handler   (fn [[resp error]]
                                           (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
                                           (close! chan))})))
@@ -106,7 +124,7 @@ Kolmen parametrin versio ottaa lisäksi transducerin, jolla tulosdata vektori mu
   ([service payload] (post! service payload nil false))
   ([service payload transducer] (post! service payload transducer false))
   ([service payload transducer paasta-virhe-lapi?]
-   (kysely service :post payload transducer paasta-virhe-lapi?)))
+   (kysely service :post payload transducer paasta-virhe-lapi? nil 0)))
 
 (defn get!
   "Lähetä HTTP GET -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea.
@@ -114,7 +132,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   ([service] (get! service nil false))
   ([service transducer] (get! service transducer false))
   ([service transducer paasta-virhe-lapi?]
-   (kysely service :get nil transducer paasta-virhe-lapi?)))
+   (kysely service :get nil transducer paasta-virhe-lapi? nil 0)))
 
 (defn laheta-liite!
   "Lähettää liitetiedoston palvelimen liitepolkuun. Palauttaa kanavan, josta voi lukea edistymisen.
@@ -254,7 +272,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   "Tarkistaa ollaanko kehitysympäristössä"
   (let [host (.-host js/location)]
     (or (gstr/startsWith host "10.10.")
-        (#{"localhost" "localhost:3000" "localhost:8000"
+        (#{"localhost" "localhost:3000" "localhost:8000" "harja-c7-dev.lxd:8000"
            "harja-test.solitaservices.fi"
            "harja-dev1" "harja-dev2" "harja-dev3" "harja-dev4" "harja-dev5" "harja-dev6"
            "testiextranet.liikennevirasto.fi"} host))))
