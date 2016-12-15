@@ -8,6 +8,8 @@
             [cljs-time.coerce :as tc]
             [cljs-time.local :as lt]))
 
+;; Havainnot ja välilehdet
+
 (def havainnot
   {:talviset-pinnat [{:nimi "Liu\u00ADkas\u00ADta"
                       :ikoni "liukas-36"
@@ -342,6 +344,17 @@
     :nimi "Päällystys"
     :sisalto (:paallystys havainnot)}])
 
+;; Käsittelylogiikka
+
+(defn- lisaa-liittyva-havainto!
+  "Lisää havainnon ehdolle valittavaksi lomakkeella liittyväksi havainnoksi.
+   Varmistaa, ettei listalla ole koskaan liikaa ehdotuksia."
+  [liittyvat-havainnot-atom uusi-havainto]
+  (let [max-maara-ehdotuksia 5
+        uudet-liittyvat-havainnot (concat @liittyvat-havainnot-atom uusi-havainto)
+        uudet-liittyvat-havainnot (take max-maara-ehdotuksia uudet-liittyvat-havainnot)]
+    (reset! liittyvat-havainnot-atom (into [] uudet-liittyvat-havainnot))))
+
 (defn pistemainen-havainto-painettu! [{:keys [nimi avain] :as havainto}]
   (.log js/console "Kirjataan pistemäinen havainto: " (pr-str avain))
   (ilmoitukset/ilmoita
@@ -354,8 +367,7 @@
      :jatkuvat-havainnot s/jatkuvat-havainnot
      :havainto-avain avain
      :epaonnistui-fn reitintallennus/merkinta-epaonnistui
-     :lisaa-liittyva-havainto (fn [havainto]
-                                (swap! s/liittyvat-havainnot conj havainto))}))
+     :lisaa-liittyva-havainto (partial lisaa-liittyva-havainto! s/liittyvat-havainnot)}))
 
 (defn valikohtainen-havainto-painettu!
   "Asettaa välikohtaisen havainnon päälle tai pois päältä."

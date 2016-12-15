@@ -9,10 +9,11 @@
                                                                 peruuta-lomake!]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [harja-laadunseuranta.ui.yleiset.lomake :refer [kentta tekstialue
-                                                    pvm-aika tr-osoite]]
+                                                            pvm-aika tr-osoite]]
             [cljs-time.format :as time-fmt]
             [harja-laadunseuranta.tiedot.fmt :as fmt]
-            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat])
+            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
+            [harja-laadunseuranta.ui.yleiset.yleiset :as yleiset])
 
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
@@ -36,6 +37,15 @@
        [:div.havaintolomake
         [:div.lomake-title "Uuden havainnon perustiedot"]
 
+
+        [:div.title "Lomake liittyy havaintoon"]
+        [:div.liittyvat-havainnot
+         [:ul]
+         (doall (for [liittyva-havainto liittyvat-havainnot]
+                  ^{:key (:id liittyva-havainto)}
+                  [:li (:havainto-avain liittyva-havainto)]))]
+        [yleiset/vihje "Jos et valitse mitään, kirjaus tehdään yleisenä havaintona."]
+
         [:div.pvm-kellonaika-tarkastaja
          ;; Päivämäärä-kenttää ei ole koskaan voinut muokata, vaikka on input-tyyppinen
          ;; Näytetään siis toistaiseksi vain tekstinä.
@@ -49,12 +59,6 @@
 
         [:div.tieosuus
          [kentta "Tieosuus" [tr-osoite tr-osoite-atom lomake-virheet-atom]]]
-
-        [:div.liittyvat-havainnot
-         [:ul]
-         (doall (for [liittyva-havainto liittyvat-havainnot]
-                  ^{:key (:id liittyva-havainto)}
-                  [:li (:havainto-avain liittyva-havainto)]))]
 
         [:div.lisatietoja
          [:div.laatupoikkeama-check
