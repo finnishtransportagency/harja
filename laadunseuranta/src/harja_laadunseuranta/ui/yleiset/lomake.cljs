@@ -107,7 +107,9 @@
                       lomakedata-atom lomake-virheet-atom]} & sisalto]
   [:div.lomake-container
    [:div.lomake-title otsikko]
+   ;; FIXME Miksi tulee unique key error?
    (doall (for [elementti sisalto]
+            ^{:key (hash elementti)}
             elementti))
    [:footer.lomake-footer
     [nappi "Tallenna" {:on-click (fn []
@@ -125,6 +127,7 @@
 (defn rivi [& elementit]
   [:div.lomake-rivi
    (doall (for [elementti elementit]
+            ^{:key (hash elementti)}
             elementti))])
 
 (defn kentta [label komponentti]
