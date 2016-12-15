@@ -213,7 +213,9 @@
           tehtavat (into #{}
                          (map (comp :tehtavat #(konv/array->set % :tehtavat)))
                          rivit)
-          viimeisin (apply max (map (comp #(.getTime %) :viimeisin) rivit))]
+          viimeisin (if (empty? rivit)
+                      0
+                      (apply max (map (comp #(.getTime %) :viimeisin) rivit)))]
       {:tehtavat tehtavat
        :viimeisin viimeisin})))
 

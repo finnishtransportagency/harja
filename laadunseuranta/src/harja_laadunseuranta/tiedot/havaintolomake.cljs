@@ -33,7 +33,12 @@
           (merge
             @s/havaintolomakedata
             {:kayttajanimi @s/kayttajanimi
-             :tr-osoite @s/tr-osoite
+             :tr-osoite (or @s/tr-osoite
+                            {:tie nil
+                             :aosa nil
+                             :aet nil
+                             :losa nil
+                             :let nil})
              :aikaleima (l/local-now)
              :laadunalitus? false
              :kuvaus ""}))
