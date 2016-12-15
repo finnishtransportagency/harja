@@ -5,7 +5,6 @@
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.laadunseuranta :as ls-domain]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.tiedot.istunto :as istunto]
@@ -30,7 +29,8 @@
             [harja.fmt :as fmt]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.domain.roolit :as roolit]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.domain.hoitoluokat :as hoitoluokat])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -85,8 +85,12 @@
                                         (when ilma (str "ilma: " ilma "°C"))))
                                  (str (name (key %)) ": "
                                       (if (= :hoitoluokka (key %))
-                                        (ls-domain/talvihoitoluokka-fmt (val %))
-                                        (val %))))
+                                        (hoitoluokat/talvihoitoluokan-nimi-str (val %))
+                                        (if (or
+                                              (= :lumimaara (key %))
+                                              (= :tasaisuus (key %)))
+                                          (str (val %) "cm")
+                                          (val %)))))
                                nil)
                              (select-keys
                                thm

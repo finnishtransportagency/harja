@@ -29,9 +29,7 @@
                   (oikeustarkistus-fn id user)))
         (urakat-q/hae-lahimmat-urakat-aikavalilta
           db
-          {:alku (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))
-           :loppu (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))
-           :x (:lon sijainti)
+          {:x (:lon sijainti)
            :y (:lat sijainti)})))
 
 (defn kayttajan-urakat-aikavalilta

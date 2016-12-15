@@ -3,11 +3,23 @@ SELECT
   u.id,
   u.nimi,
   u.tyyppi,
+  u.urakkanro,
   COALESCE(st_distance(u.alue, st_makepoint(:x, :y)),
            st_distance(au.alue, st_makepoint(:x, :y))) AS etaisyys
 FROM urakka u
   LEFT JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
-  WHERE ((u.loppupvm >= :alku AND u.alkupvm <= :loppu) OR (u.loppupvm IS NULL AND u.alkupvm <= :loppu))
+  WHERE
+          -- Urakka on käynnissä
+          (u.alkupvm <= now() AND
+          u.loppupvm > now())
+          OR
+          -- Urakka on käynnissä (loppua ei tiedossa)
+          (u.alkupvm <= now() AND
+          u.loppupvm IS NULL)
+          OR
+          -- Urakan takuuaika on voimassa
+          (u.alkupvm <= now() AND
+          u.takuu_loppupvm > now())
 ORDER BY etaisyys;
 
 -- name: hae-kaikki-urakat-aikavalilla
