@@ -101,10 +101,14 @@
         (doall
           (for [liittyva-havainto liittyvat-havainnot]
             ^{:key (:id liittyva-havainto)}
-            [:li (str (:nimi (havainnon-tiedot-avaimella
-                               (:havainto-avain liittyva-havainto)))
-                      " "
-                      (fmt/klo (:aikaleima liittyva-havainto)))]))]
+            [:li.liittyva-havainto
+             [kuvat/svg-sprite (:ikoni (havainnon-tiedot-avaimella
+                                         (:havainto-avain liittyva-havainto)))]
+             [:div.liittyva-havainto-tiedot
+              (str (:nimi (havainnon-tiedot-avaimella
+                            (:havainto-avain liittyva-havainto)))
+                   " "
+                   (fmt/klo (:aikaleima liittyva-havainto)))]]))]
        [:div.jatkuvat-havainnot-vihje
         [yleiset/vihje "Jos et valitse mitään, lomake kirjataan yleisenä havaintona."]]])))
 

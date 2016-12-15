@@ -116,14 +116,31 @@
   }
 
   .liittyvat-havainnot {
+    padding-top: 0.5em;
 
     > ul {
       list-style-type: none;
       padding: 0;
       margin: 0;
 
-      > li {
+      > li.liittyva-havainto {
+        margin-bottom: 0.3em;
 
+        > .liittyva-havainto-tiedot {
+          display: inline-block;
+          vertical-align: middle;
+        }
+
+        > svg {
+          color: @valkoinen;
+          vertical-align: middle;
+          display: inline-block;
+          width: 32px;
+          height: 32px;
+          background-color: @napin-taustavari;
+          margin-right: 1em;
+          padding: 3px;
+        }
       }
     }
 
