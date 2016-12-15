@@ -122,7 +122,7 @@
       padding: 0;
       margin: 0;
 
-      > li.liittyva-havainto {
+      > .liittyva-havainto {
         margin-bottom: 0.3em;
 
         > .liittyva-havainto-tiedot {
@@ -139,6 +139,15 @@
           background-color: @napin-taustavari;
           margin-right: 1em;
           padding: 3px;
+        }
+      }
+
+      > .liittyva-havainto-aktiivinen {
+        > .liittyva-havainto-tiedot {
+          color: @primaari-sininen-valittuna;
+        }
+        > svg {
+          background-color: @nappi-aktiivinen;
         }
       }
     }

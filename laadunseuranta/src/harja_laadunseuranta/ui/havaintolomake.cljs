@@ -26,6 +26,7 @@
         esikatselukuva-atom (reagent/cursor lomakedata [:esikatselukuva])
         kayttajanimi-atom (reagent/cursor lomakedata [:kayttajanimi])
         laadunalitus-atom (reagent/cursor lomakedata [:laadunalitus?])
+        lomake-liittyy-havaintoon-atom (reagent/cursor lomakedata [:liittyy-havaintoon])
         lomake-virheet-atom (atom #{})
         alusta-tr-osoite! (fn [tr-osoite-atom]
                             (when (:tie tr-osoite-lomakkeen-avauksessa)
@@ -43,8 +44,9 @@
          [lomake/rivi
           [lomake/kentta "Lomake liittyy havaintoon"
            [lomake/liittyvat-havainnot
-            liittyvat-havainnot
-            havainnot-ryhmittain]]])
+            {:liittyvat-havainnot liittyvat-havainnot
+             :lomake-liittyy-havaintoon-atom lomake-liittyy-havaintoon-atom
+             :havainnot-ryhmittain havainnot-ryhmittain}]]])
 
        [lomake/rivi
         [lomake/kentta "Päivämäärä"

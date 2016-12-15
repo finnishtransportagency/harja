@@ -88,28 +88,35 @@
             :on-change #(swap! arvo-atom not)}]
    [:label {:for nimi} nimi]])
 
-(defn liittyvat-havainnot [liittyvat-havainnot havainnot-ryhmittain]
+(defn liittyvat-havainnot [{:keys [havainnot-ryhmittain]}]
   (let [kaikki-havainnot (into [] (apply concat (vals havainnot-ryhmittain)))
         havainnon-tiedot-avaimella (fn [avain]
                                      (first
                                        (filter
                                          #(= (:avain %) avain)
                                          kaikki-havainnot)))]
-    (fn [liittyvat-havainnot havainnot-ryhmittain]
+    (fn [{:keys [liittyvat-havainnot
+                 lomake-liittyy-havaintoon-atom]}]
       [:div.liittyvat-havainnot
        [:ul
         (doall
           (for [liittyva-havainto liittyvat-havainnot]
             ^{:key (:id liittyva-havainto)}
-            [:li.liittyva-havainto
-             [kuvat/svg-sprite (:ikoni (havainnon-tiedot-avaimella
-                                         (:havainto-avain liittyva-havainto)))]
-             [:div.liittyva-havainto-tiedot
-              (str (:nimi (havainnon-tiedot-avaimella
-                            (:havainto-avain liittyva-havainto)))
-                   " "
-                   ;; TODO Lisää TR-osoite?
-                   (fmt/klo (:aikaleima liittyva-havainto)))]]))]
+            (let [aktiivinen-havainto? (= (:id liittyva-havainto)
+                                          @lomake-liittyy-havaintoon-atom)]
+              [:li {:class (str "liittyva-havainto "
+                                (when aktiivinen-havainto?
+                                  "liittyva-havainto-aktiivinen"))
+                    :on-click #(reset! lomake-liittyy-havaintoon-atom
+                                       (:id liittyva-havainto))}
+               [kuvat/svg-sprite (:ikoni (havainnon-tiedot-avaimella
+                                           (:havainto-avain liittyva-havainto)))]
+               [:div.liittyva-havainto-tiedot
+                (str (:nimi (havainnon-tiedot-avaimella
+                              (:havainto-avain liittyva-havainto)))
+                     " "
+                     ;; TODO Lisää TR-osoite?
+                     (fmt/klo (:aikaleima liittyva-havainto)))]])))]
        [:div.jatkuvat-havainnot-vihje
         [yleiset/vihje "Jos et valitse mitään, lomake kirjataan yleisenä havaintona."]]])))
 

@@ -74,6 +74,7 @@
                         :kuvaus ""
                         :kuva nil
                         :esikatselukuva nil
+                        :liittyy-havaintoon nil ;; Jos liittyy johonkin aiempaan havaintoon, tässä on havainnon indexed db id.
                         :tr-osoite {:tie nil
                                     :aosa nil
                                     :aet nil
