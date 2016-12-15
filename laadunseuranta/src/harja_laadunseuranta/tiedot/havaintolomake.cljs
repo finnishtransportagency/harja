@@ -35,6 +35,7 @@
             {:kayttajanimi @s/kayttajanimi
              :tr-osoite @s/tr-osoite
              :aikaleima (l/local-now)
+             :liittyy-havaintoon nil
              :laadunalitus? false
              :kuvaus ""}))
   s/havaintolomakedata)
