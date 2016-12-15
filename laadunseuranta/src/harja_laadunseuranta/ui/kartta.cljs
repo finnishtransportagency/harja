@@ -295,7 +295,7 @@
      :reittipisteet-atomi s/reittipisteet
      :kirjauspisteet-atomi s/kirjauspisteet
      :optiot s/karttaoptiot}]
-   [:div.kartan-kontrollit {:style (when @s/havaintolomake-auki
+   [:div.kartan-kontrollit {:style (when @s/havaintolomake-auki?
                                      {:display "none"})}
     [:div#karttakontrollit] ;; OpenLayersin ikonit asetetaan tähän elementtiin erikseen
     [:div.kontrollinappi.ortokuva {:on-click #(swap! s/nayta-ortokuva? not)}

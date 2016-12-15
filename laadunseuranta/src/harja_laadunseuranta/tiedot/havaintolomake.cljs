@@ -10,7 +10,7 @@
             [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset]))
 
 (defn sulje-lomake! []
-  (reset! s/havaintolomake-auki false))
+  (reset! s/havaintolomake-auki? false))
 
 (defn tyhjenna-lomake! []
   (reset! s/havaintolomakedata

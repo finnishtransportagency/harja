@@ -409,7 +409,7 @@
 
 (defn avaa-havaintolomake! []
   (.log js/console "Avataan havaintolomake!")
-  (reset! s/havaintolomake-auki true))
+  (reset! s/havaintolomake-auki? true))
 
 (defn hampurilaisvalikko-painettu! []
   (swap! s/paanavigoinnin-hampurilaisvalikon-lista-nakyvissa? not))

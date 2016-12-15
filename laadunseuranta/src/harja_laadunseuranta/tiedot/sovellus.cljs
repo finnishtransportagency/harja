@@ -118,7 +118,7 @@
 (def kayttajanimi (reagent/cursor sovellus [:kayttaja :kayttajanimi]))
 (def kayttajatunnus (reagent/cursor sovellus [:kayttaja :kayttajatunnus]))
 
-(def havaintolomake-auki (reagent/cursor sovellus [:havaintolomake-auki?]))
+(def havaintolomake-auki? (reagent/cursor sovellus [:havaintolomake-auki?]))
 (def havaintolomakedata (reagent/cursor sovellus [:havaintolomakedata]))
 (def liittyvat-havainnot (reagent/cursor sovellus [:liittyvat-havainnot]))
 (def havaintolomake-kuva (reagent/cursor sovellus [:havaintolomakedata :kuva]))
@@ -213,7 +213,7 @@
   (reaction (boolean (and @tarkastusajo-id
                           @tarkastusajo-kaynnissa?
                           (not @tarkastusajo-paattymassa?)
-                          (not @havaintolomake-auki)))))
+                          (not @havaintolomake-auki?)))))
 
 (def nayta-paanavigointi? (reagent/cursor sovellus [:ui :paanavigointi :nakyvissa?]))
 (def nayta-paanavigointi-valilehdet? (reagent/cursor sovellus [:ui :paanavigointi :valilehdet-nakyvissa?]))

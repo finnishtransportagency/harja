@@ -28,9 +28,11 @@
     [:img {:src kuvat/+harja-logo+ :alt ""}]]])
 
 (defn- havaintosilma [havaintonappi-painettu]
+  ;; FIXME Passaa dereffatut atomit tänne
   (let [aktiivinen? (and @s/nayta-paanavigointi?
                          @s/piirra-paanavigointi?)
-        disabloitu? (not @s/tarkastusajo-kaynnissa?)]
+        disabloitu? (or (not @s/tarkastusajo-kaynnissa?)
+                        @s/havaintolomake-auki?)]
     [:div {:class (str "ylapalkki-button ylapalkki-button-nayta-paanavigointi "
                        (when aktiivinen?
                          "ylapalkki-button-aktiivinen ")
@@ -41,12 +43,12 @@
      [kuvat/svg-sprite "silma-24"]]))
 
 (defn- tieosoite [tr-osoite]
-  [:div.tr-osoite (formatoi-tr-osoite @tr-osoite)])
+  [:div.tr-osoite (formatoi-tr-osoite tr-osoite)])
 
 (defn- metatiedot [soratiehoitoluokka hoitoluokka]
   [:div.ylapalkin-metatiedot
-   [:div.ylapalkin-metatieto.soratiehoitoluokka (str "SHL: " (or @soratiehoitoluokka "-"))]
-   [:div.ylapalkin-metatieto.talvihoitoluokka (str "THL: " (or @hoitoluokka "-"))]])
+   [:div.ylapalkin-metatieto.soratiehoitoluokka (str "SHL: " (or soratiehoitoluokka "-"))]
+   [:div.ylapalkin-metatieto.talvihoitoluokka (str "THL: " (or hoitoluokka "-"))]])
 
 (defn- kaynnistyspainike [{:keys [tarkastusajo-kaynnissa? kaynnista-fn
                                   pysayta-fn tarkastusajo-alkamassa?]}]
@@ -64,7 +66,9 @@
         "Käynnistä tarkastus"))]])
 
 (defn- kamera []
-  (let [disabloitu? (not @s/tarkastusajo-kaynnissa?)]
+  ;; FIXME Passaa dereffatut atomit tänne
+  (let [disabloitu? (or (not @s/tarkastusajo-kaynnissa?)
+                        @s/havaintolomake-auki?)]
     [:div {:class (str "ylapalkki-button "
                        (when disabloitu?
                          "ylapalkki-button-disabloitu "))
@@ -72,8 +76,8 @@
                         (kamera/ota-kuva))}
      [kuvat/svg-sprite "kamera-24"]]))
 
-(defn- ylapalkkikomponentti [{:keys [hoitoluokka soratiehoitoluokka
-                                     tr-osoite tarkastusajo-kaynnissa? tarkastusajo-alkamassa?
+(defn- ylapalkkikomponentti [{:keys [hoitoluokka-atom soratiehoitoluokka-atom
+                                     tr-osoite-atom tarkastusajo-kaynnissa? tarkastusajo-alkamassa?
                                      kaynnista-tarkastus-fn pysayta-tarkastusajo-fn
                                      disabloi-kaynnistys? havaintonappi-painettu
                                      palvelinvirhe]}]
@@ -84,8 +88,8 @@
      [logo]
      [havaintosilma havaintonappi-painettu]
      [kamera]
-     [tieosoite tr-osoite]
-     [metatiedot soratiehoitoluokka hoitoluokka]]
+     [tieosoite @tr-osoite-atom]
+     [metatiedot @soratiehoitoluokka-atom @hoitoluokka-atom]]
     [:div.ylapalkki-oikea
      [kaynnistyspainike {:tarkastusajo-kaynnissa? tarkastusajo-kaynnissa?
                          :kaynnista-fn #(when (and (not disabloi-kaynnistys?)
@@ -98,14 +102,14 @@
 
 (defn ylapalkki []
   [ylapalkkikomponentti
-   {:hoitoluokka s/hoitoluokka
+   {:hoitoluokka-atom s/hoitoluokka
     :havaintonappi-painettu tiedot/havaintonappi-painettu!
     :tarkastusajo-alkamassa? s/tarkastusajo-alkamassa?
-    :soratiehoitoluokka s/soratiehoitoluokka
+    :soratiehoitoluokka-atom s/soratiehoitoluokka
     :kaynnista-tarkastus-fn tarkastusajon-luonti/luo-ajo!
     :pysayta-tarkastusajo-fn tarkastusajon-paattaminen/aseta-ajo-paattymaan!
-    :tr-osoite s/tr-osoite
+    :tr-osoite-atom s/tr-osoite
     :tarkastusajo-kaynnissa? s/tarkastusajo-kaynnissa?
-    :disabloi-kaynnistys? (or @s/havaintolomake-auki
+    :disabloi-kaynnistys? (or @s/havaintolomake-auki?
                               @s/palautettava-tarkastusajo)
     :palvelinvirhe s/palvelinvirhe}])
