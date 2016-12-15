@@ -13,7 +13,7 @@
 
 ;; Lomakkeessa käytettävät kentät
 
-(defn tr-osoite [tr-osoite-atom virheet-atom]
+(defn tr-osoite [{:keys [tr-osoite-atom virheet-atom muokattava?]}]
   (let [max-merkkeja 7
         arvo-validi? (fn [arvo-tekstina]
                        (boolean (or (empty? arvo-tekstina)
@@ -50,19 +50,24 @@
 
                                   :default
                                   (swap! virheet-atom conj :tr-osoite-virheellinen)))]
-    (fn [tr-osoite-atom]
+    (fn [{:keys [tr-osoite-atom virheet-atom muokattava?]}]
       (tarkista-virheet! tr-osoite-atom virheet-atom)
       (let [{:keys [tie aosa aet losa let]} @tr-osoite-atom]
         [:div.tr-osoite
-         [:input {:type "number" :value tie :on-change #(on-change % :tie) :placeholder "Tie#"}]
+         [:input {:type "number" :value tie :on-change #(on-change % :tie) :placeholder "Tie#"
+                  :disabled muokattava?}]
          [:span.valiviiva " / "]
-         [:input {:type "number" :value aosa :on-change #(on-change % :aosa) :placeholder "aosa"}]
+         [:input {:type "number" :value aosa :on-change #(on-change % :aosa) :placeholder "aosa"
+                  :disabled muokattava?}]
          [:span.valiviiva " / "]
-         [:input {:type "number" :value aet :on-change #(on-change % :aet) :placeholder "aet"}]
+         [:input {:type "number" :value aet :on-change #(on-change % :aet) :placeholder "aet"
+                  :disabled muokattava?}]
          [:span.valiviiva " / "]
-         [:input {:type "number" :value losa :on-change #(on-change % :losa) :placeholder "losa"}]
+         [:input {:type "number" :value losa :on-change #(on-change % :losa) :placeholder "losa"
+                  :disabled muokattava?}]
          [:span.valiviiva " / "]
-         [:input {:type "number" :value let :on-change #(on-change % :let) :placeholder "let"}]]))))
+         [:input {:type "number" :value let :on-change #(on-change % :let) :placeholder "let"
+                  :disabled muokattava?}]]))))
 
 (defn pvm-aika [aika]
   [:div.pvm-aika

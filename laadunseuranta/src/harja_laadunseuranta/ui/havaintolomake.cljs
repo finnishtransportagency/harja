@@ -26,7 +26,7 @@
         esikatselukuva-atom (reagent/cursor lomakedata [:esikatselukuva])
         kayttajanimi-atom (reagent/cursor lomakedata [:kayttajanimi])
         laadunalitus-atom (reagent/cursor lomakedata [:laadunalitus?])
-        lomake-liittyy-havaintoon (reagent/cursor lomakedata [:liittyy-havaintoon])
+        lomake-liittyy-havaintoon-atom (reagent/cursor lomakedata [:liittyy-havaintoon])
         lomake-virheet-atom (atom #{})
         alusta-tr-osoite! (fn [tr-osoite-atom]
                             (when (:tie tr-osoite-lomakkeen-avauksessa)
@@ -45,7 +45,7 @@
           [lomake/kentta "Lomake liittyy havaintoon"
            [lomake/liittyvat-havainnot
             {:liittyvat-havainnot liittyvat-havainnot
-             :lomake-liittyy-havaintoon-atom lomake-liittyy-havaintoon
+             :lomake-liittyy-havaintoon-atom lomake-liittyy-havaintoon-atom
              :havainnot-ryhmittain havainnot-ryhmittain}]]])
 
        [lomake/rivi
@@ -56,7 +56,10 @@
 
        [lomake/rivi
         [lomake/kentta "Tieosuus"
-         [lomake/tr-osoite tr-osoite-atom lomake-virheet-atom]]]
+         [lomake/tr-osoite
+          {:tr-osoite-atom tr-osoite-atom
+           :virheet-atom lomake-virheet-atom
+           :muokattava? (some? @lomake-liittyy-havaintoon-atom)}]]]
 
        [lomake/rivi
         [lomake/kentta ""
