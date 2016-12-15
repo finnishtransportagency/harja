@@ -99,7 +99,7 @@
    (doall (for [liittyva-havainto liittyvat-havainnot]
             ^{:key (:id liittyva-havainto)}
             [:li (:havainto-avain liittyva-havainto)]))
-   [yleiset/vihje "Jos et valitse mitään, kirjaus tehdään yleisenä havaintona."]])
+   [yleiset/vihje "Jos et valitse mitään, lomake kirjataan yleisenä havaintona."]])
 
 ;; Lomakkeen osat
 
