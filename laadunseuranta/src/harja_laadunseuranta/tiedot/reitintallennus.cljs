@@ -134,10 +134,10 @@
                                             epaonnistui-fn jatkuvat-havainnot havainto-avain] :as tiedot}]
   (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti)
                                            asetukset/+suurin-sallittu-tarkkuus+)
-    (let [aikaleima (tc/to-long (lt/local-now))
+    (let [aikaleima-nyt (lt/local-now)
           kirjaus (kirjaa-kertakirjaus idxdb
                                        {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
-                                        :aikaleima aikaleima
+                                        :aikaleima (tc/to-long aikaleima-nyt)
                                         :tarkastusajo @tarkastusajo-id
                                         :havainnot (into #{} (remove nil? (conj @jatkuvat-havainnot havainto-avain)))
                                         :mittaukset {}})]
@@ -146,7 +146,7 @@
               (let [indexed-db-id (-> e .-target .-result)]
                 (when lisaa-liittyva-havainto
                   (lisaa-liittyva-havainto {:id indexed-db-id
-                                            :aikaleima aikaleima
+                                            :aikaleima aikaleima-nyt
                                             :havainto-avain havainto-avain})))))
       true)
     (when epaonnistui-fn

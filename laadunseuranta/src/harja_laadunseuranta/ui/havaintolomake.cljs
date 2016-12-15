@@ -48,10 +48,7 @@
 
        [lomake/rivi
         [lomake/kentta "Päivämäärä"
-         [:span
-          (str (time-fmt/unparse fmt/pvm-fmt @aikaleima-atom)
-               " "
-               (time-fmt/unparse fmt/klo-fmt @aikaleima-atom))]]
+         [:span (fmt/pvm-klo @aikaleima-atom)]]
         [lomake/kentta "Tarkastaja"
          [:span @kayttajanimi-atom]]]
 

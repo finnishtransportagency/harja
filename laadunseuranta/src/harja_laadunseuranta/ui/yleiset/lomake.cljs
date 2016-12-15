@@ -67,11 +67,11 @@
 (defn pvm-aika [aika]
   [:div.pvm-aika
    [:input {:type "date"
-            :value (time-fmt/unparse fmt/pvm-fmt @aika)
+            :value (fmt/pvm @aika)
             :on-change #()
             :name "pvm"}]
    [:input {:type "time"
-            :value (time-fmt/unparse fmt/klo-fmt @aika)
+            :value (fmt/klo @aika)
             :on-change #()
             :name "klo"}]])
 
@@ -98,11 +98,15 @@
     (fn [liittyvat-havainnot havainnot-ryhmittain]
       [:div.liittyvat-havainnot
        [:ul
-        (doall (for [liittyva-havainto liittyvat-havainnot]
-                 ^{:key (:id liittyva-havainto)}
-                 [:li (:nimi (havainnon-tiedot-avaimella
-                               (:havainto-avain liittyva-havainto)))]))]
-       [yleiset/vihje "Jos et valitse mitään, lomake kirjataan yleisenä havaintona."]])))
+        (doall
+          (for [liittyva-havainto liittyvat-havainnot]
+            ^{:key (:id liittyva-havainto)}
+            [:li (str (:nimi (havainnon-tiedot-avaimella
+                               (:havainto-avain liittyva-havainto)))
+                      " "
+                      (fmt/klo (:aikaleima liittyva-havainto)))]))]
+       [:div.jatkuvat-havainnot-vihje
+        [yleiset/vihje "Jos et valitse mitään, lomake kirjataan yleisenä havaintona."]]])))
 
 ;; Lomakkeen osat
 
