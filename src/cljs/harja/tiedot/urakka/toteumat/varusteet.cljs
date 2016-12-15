@@ -13,8 +13,7 @@
             [reagent.core :as r]
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.tyokalut.functor :as functor]
-            [harja.tyokalut.vkm :as vkm]
-            )
+            [harja.tyokalut.vkm :as vkm])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -94,7 +93,7 @@
 (defn tallenna-varustetoteuma [{:keys [urakka-id
                                        sopimus-id
                                        aikavali
-                                       tienumero]}
+                                       tienumero] :as hakuehdot}
                                {:keys [arvot
                                        sijainti
                                        puoli
@@ -104,7 +103,7 @@
                                        toiminto
                                        tierekisteriosoite
                                        alkupvm
-                                       loppupvm]}]
+                                       loppupvm] :as toteuma}]
   (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
         toteuma {:arvot arvot
                  :sijainti sijainti

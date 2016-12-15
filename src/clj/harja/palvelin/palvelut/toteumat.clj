@@ -560,7 +560,7 @@
    (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
    (into []
          (map konv/alaviiva->rakenne)
-         (q/hae-kokonaishintaisen-toteuman-tiedot
+         (toteumat-q/hae-kokonaishintaisen-toteuman-tiedot
           db {:urakka urakka-id
               :pvm pvm
               :toimenpidekoodi toimenpidekoodi
@@ -569,7 +569,7 @@
    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
    (into []
          (map konv/alaviiva->rakenne)
-         (q/hae-kokonaishintaisen-toteuman-tiedot
+         (toteumat-q/hae-kokonaishintaisen-toteuman-tiedot
           db {:urakka urakka-id
               :toteuma toteuma-id
               :pvm nil
@@ -689,7 +689,7 @@
          (comp (map #(assoc % :tyyppi-kartalla :toteuma))
                (map konv/alaviiva->rakenne)
                (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
-         (q/hae-toteumien-tiedot-pisteessa
+         (toteumat-q/hae-toteumien-tiedot-pisteessa
           db
           (merge {:x x :y y :tyyppi "kokonaishintainen"}
                  parametrit)))
@@ -709,7 +709,7 @@
          (comp (map #(assoc % :tyyppi-kartalla :toteuma))
                (map konv/alaviiva->rakenne)
                (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
-         (q/hae-toteumien-tiedot-pisteessa
+         (toteumat-q/hae-toteumien-tiedot-pisteessa
           db
           (merge {:x x :y y :tyyppi "yksikkohintainen"
                   :toimenpidekoodi nil}
