@@ -62,7 +62,6 @@
           :leveys      1 :tyyppi :string
           :muokattava? (constantly false)}
 
-         ;; TODO Mitkä päivämäärät tarvitaan?
          (lomake/ryhma {:rivi? true}
                        {:otsikko     "Havaittu" :nimi :laatupoikkeamaaika
                         :pakollinen? true
@@ -77,13 +76,13 @@
                         :aseta       (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :kasittelyaika] arvo))
                         :fmt         pvm/pvm-aika :leveys 1 :tyyppi :pvm
                         :validoi     [[:ei-tyhja "Valitse päivämäärä"]
-                                      [:pvm-kentan-jalkeen (comp :aika :laatupoikkeama) "Ei voida käsitellä laatupoikkeamaa ennen"]]}
+                                      [:pvm-kentan-jalkeen (comp :aika :laatupoikkeama) "Ei voida käsitellä ennen havaintoa"]]}
                        {:otsikko     "Perintäpvm" :nimi :perintapvm
                         :pakollinen? true
                         :fmt         pvm/pvm-aika :leveys 1 :tyyppi :pvm
                         :validoi     [[:ei-tyhja "Valitse päivämäärä"]
-                                      [:pvm-kentan-jalkeen (comp :kasittelyaika :paatos :laatupoikkeama)
-                                       "Ei voida periä käsittelyä ennen"]]})
+                                      [:pvm-kentan-jalkeen (comp :aika :laatupoikkeama)
+                                       "Ei voida käsitellä ennen havaintoa"]]})
 
          {:otsikko  "Kohde" :nimi :kohde
           :hae      (comp :kohde :laatupoikkeama)
