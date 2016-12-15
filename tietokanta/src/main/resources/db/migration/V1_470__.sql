@@ -89,6 +89,40 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER tg_urakkastats_tarkastus
-AFTER INSERT OR UPDATE ON tarkastus
-FOR EACH ROW EXECUTE PROCEDURE urakkastats_tarkastus();
+-- Valitettavasti triggeriä ei voi laittaa päätauluun, koska insert ohjataan triggerillä johonkin
+-- alitauluista.
+-- Joten lisätään trigger nykyiseen ja kaikkiin tuleviin alitauluihin.
+CREATE TRIGGER tg_urakkastats_tarkastus_2016_4 AFTER INSERT OR UPDATE
+ON tarkastus_2016_q4 FOR EACH ROW EXECUTE PROCEDURE urakkastats_tarkastus();
+CREATE TRIGGER tg_urakkastats_tarkastus_2017_1 AFTER INSERT OR UPDATE
+ON tarkastus_2017_q4 FOR EACH ROW EXECUTE PROCEDURE urakkastats_tarkastus();
+CREATE TRIGGER tg_urakkastats_tarkastus_2017_2 AFTER INSERT OR UPDATE
+ON tarkastus_2017_q4 FOR EACH ROW EXECUTE PROCEDURE urakkastats_tarkastus();
+CREATE TRIGGER tg_urakkastats_tarkastus_2017_3 AFTER INSERT OR UPDATE
+ON tarkastus_2017_q4 FOR EACH ROW EXECUTE PROCEDURE urakkastats_tarkastus();
+CREATE TRIGGER tg_urakkastats_tarkastus_2017_4 AFTER INSERT OR UPDATE
+ON tarkastus_2017_q4 FOR EACH ROW EXECUTE PROCEDURE urakkastats_tarkastus();
+CREATE TRIGGER tg_urakkastats_tarkastus_2018_1 AFTER INSERT OR UPDATE
+ON tarkastus_2018_q4 FOR EACH ROW EXECUTE PROCEDURE urakkastats_tarkastus();
+CREATE TRIGGER tg_urakkastats_tarkastus_2018_2 AFTER INSERT OR UPDATE
+ON tarkastus_2018_q4 FOR EACH ROW EXECUTE PROCEDURE urakkastats_tarkastus();
+CREATE TRIGGER tg_urakkastats_tarkastus_2018_3 AFTER INSERT OR UPDATE
+ON tarkastus_2018_q4 FOR EACH ROW EXECUTE PROCEDURE urakkastats_tarkastus();
+CREATE TRIGGER tg_urakkastats_tarkastus_2018_4 AFTER INSERT OR UPDATE
+ON tarkastus_2018_q4 FOR EACH ROW EXECUTE PROCEDURE urakkastats_tarkastus();
+CREATE TRIGGER tg_urakkastats_tarkastus_2019_1 AFTER INSERT OR UPDATE
+ON tarkastus_2019_q4 FOR EACH ROW EXECUTE PROCEDURE urakkastats_tarkastus();
+CREATE TRIGGER tg_urakkastats_tarkastus_2019_2 AFTER INSERT OR UPDATE
+ON tarkastus_2019_q4 FOR EACH ROW EXECUTE PROCEDURE urakkastats_tarkastus();
+CREATE TRIGGER tg_urakkastats_tarkastus_2019_3 AFTER INSERT OR UPDATE
+ON tarkastus_2019_q4 FOR EACH ROW EXECUTE PROCEDURE urakkastats_tarkastus();
+CREATE TRIGGER tg_urakkastats_tarkastus_2019_4 AFTER INSERT OR UPDATE
+ON tarkastus_2019_q4 FOR EACH ROW EXECUTE PROCEDURE urakkastats_tarkastus();
+CREATE TRIGGER tg_urakkastats_tarkastus_2020_1 AFTER INSERT OR UPDATE
+ON tarkastus_2020_q4 FOR EACH ROW EXECUTE PROCEDURE urakkastats_tarkastus();
+CREATE TRIGGER tg_urakkastats_tarkastus_2020_2 AFTER INSERT OR UPDATE
+ON tarkastus_2020_q4 FOR EACH ROW EXECUTE PROCEDURE urakkastats_tarkastus();
+CREATE TRIGGER tg_urakkastats_tarkastus_2020_3 AFTER INSERT OR UPDATE
+ON tarkastus_2020_q4 FOR EACH ROW EXECUTE PROCEDURE urakkastats_tarkastus();
+CREATE TRIGGER tg_urakkastats_tarkastus_2020_4 AFTER INSERT OR UPDATE
+ON tarkastus_2020_q4 FOR EACH ROW EXECUTE PROCEDURE urakkastats_tarkastus();
