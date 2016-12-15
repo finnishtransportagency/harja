@@ -63,7 +63,7 @@ CREATE OR REPLACE FUNCTION urakkastats_ilmoitustoimenpide () RETURNS TRIGGER AS 
 DECLARE
   ilmoituksen_urakka INTEGER;
 BEGIN
-  ilmoituksen_urakka := SELECT urakka FROM ilmoitus WHERE id = NEW.ilmoitus;
+  SELECT INTO ilmoituksen_urakka urakka FROM ilmoitus WHERE id = NEW.ilmoitus;
   IF ilmoituksen_urakka IS NOT NULL THEN
    INSERT INTO urakkastats (urakka, ilmoitustoimenpide) VALUES (ilmoituksen_urakka, current_timestamp)
           ON CONFLICT ON CONSTRAINT urakkastats_pkey
