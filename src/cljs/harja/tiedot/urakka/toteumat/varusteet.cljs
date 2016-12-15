@@ -220,7 +220,7 @@
   v/TietolajinKuvaus
   (process-event [{:keys [tietolaji kuvaus]} {toteuma :varustetoteuma :as app}]
     ;; Uusi tietolajin kuvaus haettu palvelimelta, aseta se paikoilleen, jos
-    ;; toteuman tietolaji on sama kuin toteumassa.)
+    ;; toteuman tietolaji on sama kuin toteumassa.
     (if (= tietolaji (:tietolaji toteuma))
       (assoc-in app [:varustetoteuma :tietolajin-kuvaus] kuvaus)
       app))
