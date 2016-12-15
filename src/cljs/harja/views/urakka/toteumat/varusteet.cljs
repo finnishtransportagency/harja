@@ -28,11 +28,12 @@
             [harja.domain.tierekisteri.varusteet
              :refer [varusteominaisuus->skeema]
              :as tierekisteri-varusteet]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(def tr-kaytossa? false)
+(def tr-kaytossa? true)
 
 (def nayta-max-toteumaa 500)
 
@@ -251,8 +252,11 @@
     (fn [e! {nykyiset-valinnat :valinnat
              naytettavat-toteumat :naytettavat-toteumat
              toteuma :varustetoteuma
-             varustehaun-tiedot :varustehaku}]
+             varustehaun-tiedot :varustehaku
+             virhe :virhe}]
       [:span
+       (when virhe
+         (yleiset/virheviesti-sailio virhe (fn [_] (e! (v/->VirheKasitelty)))))
        [kartta/kartan-paikka]
        (if toteuma
          [varustetoteumalomake e! varustetiedot/valinnat toteuma]

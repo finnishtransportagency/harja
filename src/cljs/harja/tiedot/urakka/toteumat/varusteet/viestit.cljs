@@ -32,3 +32,7 @@
 
 ;; Tieosan ajoradat haettu
 (defrecord TieosanAjoradatHaettu [ajoradat])
+
+(defrecord VirheTapahtui [virhe])
+
+(defrecord VirheKasitelty [])

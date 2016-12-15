@@ -134,13 +134,23 @@
    :ajorata (first varusteet/oletus-ajoradat)
    :puoli (first varusteet/tien-puolet)})
 
-(defn hae-rajoradat [{vanha-tr :tierekisteriosoite}
+(defn naytettavat-toteumat [valittu-toimenpide toteumat]
+  (if (and valittu-toimenpide (not valittu-toimenpide))
+    (filter #(= valittu-toimenpide (:toimenpide %)) toteumat)
+    toteumat))
+
+
+(defn hae-ajoradat [{vanha-tr :tierekisteriosoite}
                      {uusi-tr :tierekisteriosoite}
-                     haku-valmis!]
+                     haku-valmis!
+                     virhe!]
   (when (and uusi-tr
              (or (not (= (:numero uusi-tr) (:numero vanha-tr)))
                  (not (= (:alkuosa uusi-tr) (:alkuosa vanha-tr)))))
-    (go (haku-valmis! (<! (vkm/tieosan-ajoradat (:numero uusi-tr) (:alkuosa uusi-tr)))))))
+    (go (let [vastaus (<! (vkm/tieosan-ajoradat (:numero uusi-tr) (:alkuosa uusi-tr)))]
+          (if (k/virhe? vastaus)
+            (virhe!)
+            (haku-valmis! vastaus))))))
 
 (extend-protocol t/Event
   v/YhdistaValinnat
@@ -149,10 +159,13 @@
 
   v/HaeVarusteToteumat
   (process-event [_ {valinnat :valinnat :as app}]
-    (let [tulos! (t/send-async! v/->VarusteToteumatHaettu)]
+    (let [haku-valmis! (t/send-async! v/->VarusteToteumatHaettu)]
       (go
-        (let [{:keys [urakka-id sopimus-id aikavali tienumero]} valinnat]
-          (tulos! (<! (hae-toteumat urakka-id sopimus-id aikavali tienumero)))))
+        (let [{:keys [urakka-id sopimus-id aikavali tienumero]} valinnat
+              vastaus (<! (hae-toteumat urakka-id sopimus-id aikavali tienumero))]
+          (if (k/virhe? vastaus)
+            (t/send-async! (partial v/->VirheTapahtui "Varustetoteumien haussa tapahtui virhe"))
+            (haku-valmis! vastaus))))
       (assoc app
         :toteumahaku-id nil)))
 
@@ -163,16 +176,12 @@
         :karttataso (varustetoteumat-karttataso toteumat)
         :karttataso-nakyvissa? true
         :toteumat toteumat
-        :naytettavat-toteumat (if (and valittu-toimenpide (not valittu-toimenpide))
-                                (filter #(= (:valittu-toimenpide app) (:toimenpide %)) toteumat)
-                                toteumat))))
+        :naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat))))
 
   v/ValitseVarusteToteumanTyyppi
   (process-event [{tyyppi :tyyppi} {valinnat :valinnat toteumat :toteumat :as app}]
     (let [valittu-toimenpide (first tyyppi)
-          naytettavat-toteumat (if valittu-toimenpide
-                                 (filter #(= valittu-toimenpide (:toimenpide %)) toteumat)
-                                 toteumat)]
+          naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat)]
       (assoc app
         :karttataso (varustetoteumat-karttataso toteumat)
         :karttataso-nakyvissa? true
@@ -206,13 +215,19 @@
           uusi-toteuma (assoc (merge nykyinen-toteuma tiedot)
                          :arvot (merge (:arvot tiedot) koordinaatit))]
 
-      (hae-rajoradat nykyinen-toteuma uusi-toteuma (t/send-async! v/->TieosanAjoradatHaettu))
+      (hae-ajoradat nykyinen-toteuma
+                    uusi-toteuma
+                    (t/send-async! v/->TieosanAjoradatHaettu)
+                    (t/send-async! (partial v/->VirheTapahtui "Ajoratojen haku epäonnistui")))
 
       ;; Jos tietolajin kuvaus muuttui ja se ei ole tyhjä, haetaan uudet tiedot
       (when (and tietolaji-muuttui? (:tietolaji tiedot))
-        (let [tulos! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
+        (let [valmis! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
           (go
-            (tulos! (<! (hae-tietolajin-kuvaus (:tietolaji tiedot)))))))
+            (let [vastaus (<! (hae-tietolajin-kuvaus (:tietolaji tiedot)))]
+              (if (k/virhe? vastaus)
+                (t/send-async! (partial v/->VirheTapahtui "Tietolajin hakemisessa tapahtui virhe"))
+                (valmis! vastaus))))))
 
       (assoc app :varustetoteuma uusi-toteuma)))
 
@@ -241,7 +256,15 @@
                     nykyinen-ajorata)]
       (-> app
           (assoc-in [:varustetoteuma :ajoradat] ajoradat)
-          (assoc-in [:varustetoteuma :ajorata] ajorata)))))
+          (assoc-in [:varustetoteuma :ajorata] ajorata))))
+
+  v/VirheTapahtui
+  (process-event [{virhe :virhe} app]
+    (assoc app :virhe virhe))
+
+  v/VirheKasitelty
+  (process-event [_ app]
+    (dissoc app :virhe)))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))
