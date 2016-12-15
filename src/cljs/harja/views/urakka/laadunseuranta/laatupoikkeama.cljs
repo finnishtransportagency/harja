@@ -90,90 +90,89 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                       (= :tiemerkinta (:nakyma optiot)))
         urakan-tpit @tiedot-urakka/urakan-toimenpideinstanssit]
     (fn [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama]
-      (let [lp-kasittelyn-pvm (get-in @laatupoikkeama [:paatos :kasittelyaika])]
-        [:div.sanktiot
-        [grid/muokkaus-grid
-         {:tyhja        "Ei kirjattuja sanktioita."
-          :lisaa-rivi   " Lisää sanktio"
-          :ohjaus       g
-          :voi-muokata? paatosoikeus?
-          :uusi-rivi    (fn [rivi]
-                          (assoc rivi :laji :A
-                                      :toimenpideinstanssi (when (= 1 (count urakan-tpit))
-                                                             (:tpi_id (first urakan-tpit)))))}
+      [:div.sanktiot
+       [grid/muokkaus-grid
+        {:tyhja        "Ei kirjattuja sanktioita."
+         :lisaa-rivi   " Lisää sanktio"
+         :ohjaus       g
+         :voi-muokata? paatosoikeus?
+         :uusi-rivi    (fn [rivi]
+                         (assoc rivi :laji :A
+                                     :toimenpideinstanssi (when (= 1 (count urakan-tpit))
+                                                            (:tpi_id (first urakan-tpit)))))}
 
-         [{:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 1.5
-           :validoi [[:ei-tyhja "Anna sanktion päivämäärä"]
-                     [:pvm-toisen-pvmn-jalkeen lp-kasittelyn-pvm "Perintäpvm oltava käsittelyn jälkeen"]]}
+        [{:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 1.5
+          :validoi [[:ei-tyhja "Anna sanktion päivämäärä"]
+                    [:pvm-toisen-pvmn-jalkeen (:aika @laatupoikkeama) "Ei voi olla ennen havaintoa"]]}
 
-          {:otsikko       "Laji" :tyyppi :valinta :leveys 1.25
-           :nimi          :laji
-           :aseta         (fn [rivi arvo]
-                            (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
-                              (if-not (sanktio-domain/sakko? paivitetty)
-                                (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
-                                paivitetty)))
-           :valinnat      (if yllapito?
-                            [:A :muistutus]
-                            [:A :B :C :muistutus])
-           :valinta-nayta #(case %
+         {:otsikko       "Laji" :tyyppi :valinta :leveys 1.25
+          :nimi          :laji
+          :aseta         (fn [rivi arvo]
+                           (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
+                             (if-not (sanktio-domain/sakko? paivitetty)
+                               (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
+                               paivitetty)))
+          :valinnat      (if yllapito?
+                           [:A :muistutus]
+                           [:A :B :C :muistutus])
+          :valinta-nayta #(case %
                             ;;toistaiseksi ylläpidossa vain sakko ja muistutus, default A ryhmä
                             :A (if yllapito? "Sakko" "A")
                             :B "B"
                             :C "C"
                             :muistutus "Muistutus"
                             "- valitse -")
-           :validoi       [[:ei-tyhja "Valitse laji"]]}
+          :validoi       [[:ei-tyhja "Valitse laji"]]}
 
-          (if yllapito?
-            {:otsikko       "Puute tai laiminlyönti" :nimi :vakiofraasi :leveys 3
-             :tyyppi        :valinta
-             :valinta-arvo  first
-             :valinta-nayta second
-             :valinnat      sanktio-domain/+yllapidon-sanktiofraasit+}
-            ;; hoidossa sanktiotyyppi
-            {:otsikko       "Tyyppi" :nimi :tyyppi :leveys 3
-             :tyyppi        :valinta
-             :aseta         (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
-                              ;; Asetetaan uusi sanktiotyyppi sekä toimenpideinstanssi, joka tähän kuuluu
-                              (let [paivitetty (assoc sanktio :tyyppi tyyppi)]
-                                (if (sanktio-domain/sakko? paivitetty)
-                                  (assoc paivitetty :toimenpideinstanssi
-                                                    (when tpk
-                                                      (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
-                                  (assoc paivitetty :toimenpideinstanssi nil))))
-             :valinnat-fn   #(sanktiot/lajin-sanktiotyypit (:laji %))
-             :valinta-nayta :nimi
-             :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]})
+         (if yllapito?
+           {:otsikko       "Puute tai laiminlyönti" :nimi :vakiofraasi :leveys 3
+            :tyyppi        :valinta
+            :valinta-arvo  first
+            :valinta-nayta second
+            :valinnat      sanktio-domain/+yllapidon-sanktiofraasit+}
+           ;; hoidossa sanktiotyyppi
+           {:otsikko       "Tyyppi" :nimi :tyyppi :leveys 3
+            :tyyppi        :valinta
+            :aseta         (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
+                             ;; Asetetaan uusi sanktiotyyppi sekä toimenpideinstanssi, joka tähän kuuluu
+                             (let [paivitetty (assoc sanktio :tyyppi tyyppi)]
+                               (if (sanktio-domain/sakko? paivitetty)
+                                 (assoc paivitetty :toimenpideinstanssi
+                                                   (when tpk
+                                                     (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
+                                 (assoc paivitetty :toimenpideinstanssi nil))))
+            :valinnat-fn   #(sanktiot/lajin-sanktiotyypit (:laji %))
+            :valinta-nayta :nimi
+            :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]})
 
-          {:otsikko       "Toimenpide"
-           :nimi          :toimenpideinstanssi
-           :tyyppi        :valinta
-           :valinta-arvo  :tpi_id
-           :valinta-nayta :tpi_nimi
-           :valinnat-fn   #(when (sanktio-domain/sakko? %) urakan-tpit)
-           :leveys        3
-           :validoi       [[:ei-tyhja "Valitse toimenpide, johon sakko liittyy"]]
-           :muokattava?   sanktio-domain/sakko?}
+         {:otsikko       "Toimenpide"
+          :nimi          :toimenpideinstanssi
+          :tyyppi        :valinta
+          :valinta-arvo  :tpi_id
+          :valinta-nayta :tpi_nimi
+          :valinnat-fn   #(when (sanktio-domain/sakko? %) urakan-tpit)
+          :leveys        3
+          :validoi       [[:ei-tyhja "Valitse toimenpide, johon sakko liittyy"]]
+          :muokattava?   sanktio-domain/sakko?}
 
-          {:otsikko     "Sakko (€)"
-           :tyyppi      :numero
-           :nimi        :summa
-           :leveys      1
-           :validoi     [[:ei-tyhja "Anna sakon summa euroina"]]
-           :muokattava? sanktio-domain/sakko?}
+         {:otsikko     "Sakko (€)"
+          :tyyppi      :numero
+          :nimi        :summa
+          :leveys      1
+          :validoi     [[:ei-tyhja "Anna sakon summa euroina"]]
+          :muokattava? sanktio-domain/sakko?}
 
-          (when (urakka/indeksi-kaytossa?)
-            {:otsikko       "Indeksi"
-             :nimi          :indeksi
-             :leveys        1.5
-             :tyyppi        :valinta
-             :valinnat      ["MAKU 2005" "MAKU 2010"]       ;; FIXME: haetaanko indeksit tiedoista?
-             :valinta-nayta #(or % "Ei sidota indeksiin")
-             :palstoja      1
-             :muokattava?   sanktio-domain/sakko?})]
+         (when (urakka/indeksi-kaytossa?)
+           {:otsikko       "Indeksi"
+            :nimi          :indeksi
+            :leveys        1.5
+            :tyyppi        :valinta
+            :valinnat      ["MAKU 2005" "MAKU 2010"]        ;; FIXME: haetaanko indeksit tiedoista?
+            :valinta-nayta #(or % "Ei sidota indeksiin")
+            :palstoja      1
+            :muokattava?   sanktio-domain/sakko?})]
 
-         sanktiot-atom]]))))
+        sanktiot-atom]])))
 
 (defn avaa-tarkastus [tarkastus-id]
   (tarkastukset-nakyma/valitse-tarkastus tarkastus-id)
