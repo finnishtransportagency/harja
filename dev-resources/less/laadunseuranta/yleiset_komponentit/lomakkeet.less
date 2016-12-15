@@ -116,39 +116,32 @@
 
   .liittyvat-havainnot {
     padding-top: 0.5em;
+    display: flex;
+    flex-wrap: wrap;
 
-    > ul {
-      list-style-type: none;
-      padding: 0;
-      margin: 0;
+    > .liittyva-havainto {
+      width: 50%;
+      padding-bottom: 0.3em;
+      padding-right: 0.3em;
+      box-sizing: border-box;
 
-      > .liittyva-havainto {
-        margin-bottom: 0.3em;
-
-        > .liittyva-havainto-tiedot {
-          display: inline-block;
-          vertical-align: middle;
-        }
-
-        > svg {
-          color: @valkoinen;
-          vertical-align: middle;
-          display: inline-block;
-          width: 32px;
-          height: 32px;
-          background-color: @napin-taustavari;
-          margin-right: 1em;
-          padding: 3px;
-        }
+      > svg {
+        color: @valkoinen;
+        float: left;
+        width: 32px;
+        height: 32px;
+        background-color: @napin-taustavari;
+        margin-right: 0.5em;
+        padding: 3px;
       }
+    }
 
-      > .liittyva-havainto-aktiivinen {
-        > .liittyva-havainto-tiedot {
-          color: @primaari-sininen-valittuna;
-        }
-        > svg {
-          background-color: @nappi-aktiivinen;
-        }
+    > .liittyva-havainto-aktiivinen {
+      > .liittyva-havainto-tiedot {
+        color: @primaari-sininen-valittuna;
+      }
+      > svg {
+        background-color: @nappi-aktiivinen;
       }
     }
 

@@ -350,7 +350,7 @@
   "Lisää havainnon ehdolle valittavaksi lomakkeella liittyväksi havainnoksi.
    Varmistaa, ettei listalla ole koskaan liikaa ehdotuksia."
   [liittyvat-havainnot-atom uusi-havainto]
-  (let [max-maara-ehdotuksia 5
+  (let [max-maara-ehdotuksia 6
         uudet-liittyvat-havainnot (concat [uusi-havainto] @liittyvat-havainnot-atom)
         uudet-liittyvat-havainnot (take max-maara-ehdotuksia uudet-liittyvat-havainnot)]
     (reset! liittyvat-havainnot-atom (into [] uudet-liittyvat-havainnot))))

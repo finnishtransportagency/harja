@@ -97,33 +97,33 @@
                                          kaikki-havainnot)))]
     (fn [{:keys [liittyvat-havainnot
                  lomake-liittyy-havaintoon-atom]}]
-      [:div.liittyvat-havainnot
-       [:ul
+      [:div.liittyvat-havainnot-container
+       [:div.liittyvat-havainnot
         (doall
           (for [liittyva-havainto liittyvat-havainnot]
             ^{:key (:id liittyva-havainto)}
             (let [aktiivinen-havainto? (= (:id liittyva-havainto)
                                           @lomake-liittyy-havaintoon-atom)]
-              [:li {:class (str "liittyva-havainto "
-                                (when aktiivinen-havainto?
-                                  "liittyva-havainto-aktiivinen"))
-                    :on-click (fn []
-                                (if (= (:id liittyva-havainto)
-                                       @lomake-liittyy-havaintoon-atom)
-                                  (reset! lomake-liittyy-havaintoon-atom nil)
-                                  (reset! lomake-liittyy-havaintoon-atom
-                                         (:id liittyva-havainto))))}
+              [:div {:class (str "liittyva-havainto "
+                                 (when aktiivinen-havainto?
+                                   "liittyva-havainto-aktiivinen"))
+                     :on-click (fn []
+                                 (if (= (:id liittyva-havainto)
+                                        @lomake-liittyy-havaintoon-atom)
+                                   (reset! lomake-liittyy-havaintoon-atom nil)
+                                   (reset! lomake-liittyy-havaintoon-atom
+                                           (:id liittyva-havainto))))}
                [kuvat/svg-sprite (:ikoni (havainnon-tiedot-avaimella
                                            (:havainto-avain liittyva-havainto)))]
-               [:div.liittyva-havainto-tiedot
+               [:span.liittyva-havainto-tiedot
                 (str (:nimi (havainnon-tiedot-avaimella
                               (:havainto-avain liittyva-havainto)))
                      " "
                      ;; TODO Lisää TR-osoite?
                      ;; TODO Disabloi TR-osoitteen muokkaus kun valittu liittyvä havainto
                      (fmt/klo (:aikaleima liittyva-havainto)))]])))]
-       [:div.jatkuvat-havainnot-vihje
-        [yleiset/vihje "Jos et valitse mitään, lomake kirjataan yleisenä havaintona."]]])))
+        [:div.jatkuvat-havainnot-vihje
+         [yleiset/vihje "Jos et valitse mitään, lomake kirjataan yleisenä havaintona."]]])))
 
 ;; Lomakkeen osat
 
