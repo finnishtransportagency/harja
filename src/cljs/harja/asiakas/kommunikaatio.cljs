@@ -123,16 +123,18 @@
 Kolmen parametrin versio ottaa lisäksi transducerin, jolla tulosdata vektori muunnetaan ennen kanavaan kirjoittamista."
   ([service payload] (post! service payload nil false))
   ([service payload transducer] (post! service payload transducer false))
-  ([service payload transducer paasta-virhe-lapi?]
-   (kysely service :post payload transducer paasta-virhe-lapi? nil 0)))
+  ([service payload transducer paasta-virhe-lapi?] (post! service payload transducer paasta-virhe-lapi? (chan) 0))
+  ([service payload transducer paasta-virhe-lapi? kanava yritysten-maara]
+   (kysely service :post payload transducer paasta-virhe-lapi? kanava yritysten-maara)))
 
 (defn get!
   "Lähetä HTTP GET -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea.
 Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muunnetaan ennen kanavaan kirjoittamista."
   ([service] (get! service nil false))
   ([service transducer] (get! service transducer false))
-  ([service transducer paasta-virhe-lapi?]
-   (kysely service :get nil transducer paasta-virhe-lapi? nil 0)))
+  ([service transducer paasta-virhe-lapi?] (get! service transducer paasta-virhe-lapi? (chan) 0))
+  ([service transducer paasta-virhe-lapi? kanava yritysten-maara]
+   (kysely service :get nil transducer paasta-virhe-lapi? kanava yritysten-maara)))
 
 (defn laheta-liite!
   "Lähettää liitetiedoston palvelimen liitepolkuun. Palauttaa kanavan, josta voi lukea edistymisen.
