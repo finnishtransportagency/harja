@@ -11,7 +11,6 @@
              :ensimmainen-sijainti nil ; Estää sovelluksen käytön jos GPS ei toimi oikein
              :verkkoyhteys? (.-onLine js/navigator)
              :selain-tuettu? (utils/tuettu-selain?)
-             :oikeus-urakoihin []
              :selain-vanhentunut? (utils/vanhentunut-selain?)}
 
    ;; Tarkastusajon perustiedot
@@ -28,7 +27,9 @@
 
    ;; Käyttäjätiedot
    :kayttaja {:kayttajanimi nil
-              :kayttajatunnus nil}
+              :kayttajatunnus nil
+              :oikeus-urakoihin [] ;; Urakat, joihin tarkastusoikeus, "sopivimmat" ensimmäisenä
+              }
 
    ;; Ajonaikaiset tiedot
    :lahettamattomia-merkintoja 0 ; Montako riviä idxdb:ssä on lähettämättä palvelimelle
@@ -123,7 +124,7 @@
                                               (get-in sovellus [:alustus :ensimmainen-sijainti])
                                               (get-in sovellus [:alustus :verkkoyhteys?])
                                               (get-in sovellus [:alustus :selain-tuettu?])
-                                              (not (empty? (get-in sovellus [:alustus :oikeus-urakoihin])))
+                                              (not (empty? (get-in sovellus [:kayttaja :oikeus-urakoihin])))
                                               (:idxdb sovellus)
                                               (get-in sovellus [:kayttaja :kayttajanimi]))))))
 
@@ -133,7 +134,7 @@
 (def selain-vanhentunut (reagent/cursor sovellus [:alustus :selain-vanhentunut?]))
 (def gps-tuettu (reagent/cursor sovellus [:alustus :gps-tuettu?]))
 (def ensimmainen-sijainti (reagent/cursor sovellus [:alustus :ensimmainen-sijainti]))
-(def oikeus-urakoihin (reagent/cursor sovellus [:alustus :oikeus-urakoihin]))
+(def oikeus-urakoihin (reagent/cursor sovellus [:kayttaja :oikeus-urakoihin]))
 
 (def kirjauspisteet (reagent/cursor sovellus [:kirjauspisteet]))
 
