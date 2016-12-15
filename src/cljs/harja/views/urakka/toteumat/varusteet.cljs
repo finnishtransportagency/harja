@@ -33,7 +33,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(def tr-kaytossa? false)
+(def tr-kaytossa? true)
 
 (def nayta-max-toteumaa 500)
 
@@ -270,7 +270,7 @@
              [:h1 "Varusteet Tierekisterissä"]
              (when oikeus-varusteen-lisaamiseen?
                [napit/uusi "Lisää uusi varuste"
-                #(e! (v/->LisaaVaruste))])
+                #(e! (v/->UusiVarusteToteuma))])
              [varustehaku (t/wrap-path e! :varustehaku) varustehaun-tiedot]])])])))
 
 (defn varusteet []

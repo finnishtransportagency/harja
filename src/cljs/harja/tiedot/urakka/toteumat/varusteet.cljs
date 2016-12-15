@@ -197,7 +197,7 @@
   (process-event [_ app]
     (assoc app :varustetoteuma nil))
 
-  v/LisaaVaruste
+  v/UusiVarusteToteuma
   (process-event [_ _]
     (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (uusi-varustetoteuma)))]
       (tulos!)))

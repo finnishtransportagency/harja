@@ -89,7 +89,12 @@
     (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
            {:tyyppi :valinta
             :valinnat koodisto
-            :valinta-nayta :selite
+            :valinta-nayta (fn [arvo muokattava?]
+                             (if arvo
+                               (:selite arvo)
+                               (if muokattava?
+                                 "- Valitse -"
+                                 "")))
             :leveys 3
             :fmt (fn [arvo]
                    (let [koodi (first (filter #(= arvo (str (:koodi %))) koodisto))]
