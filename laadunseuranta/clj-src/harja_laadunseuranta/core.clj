@@ -39,16 +39,15 @@
         ;; Nostetaan lähin hoidon urakka kärkeen, jos sellainen löytyy
         lahdin-hoidon-urakka (first (filter #(= (:tyyppi %) "hoito") urakat))
         urakat (if lahdin-hoidon-urakka
-                 (apply conj [lahdin-hoidon-urakka]
-                        (remove #(= % lahdin-hoidon-urakka)
-                                urakat))
+                 (into [] (concat [lahdin-hoidon-urakka]
+                                  (remove #(= % lahdin-hoidon-urakka)
+                                          urakat)))
                  urakat)
         ;; Siirretään testiurakat hännille
-        testiurakat (filter #(nil? (:urakkanro %)) urakat)
-        urakat (as-> urakat urakat
-                     (remove #(nil? (:urakkanro %)) urakat)
-                     (apply conj urakat testiurakat))]
-    (into [] urakat)))
+        testiurakat (filterv #(nil? (:urakkanro %)) urakat)
+        urakat (into [] (concat (remove #(nil? (:urakkanro %)) urakat)
+                                testiurakat))]
+    urakat))
 
 (defn- tallenna-merkinta! [tx vakiohavainto-idt merkinta]
   (q/tallenna-reittimerkinta! tx {:id (:id merkinta)
