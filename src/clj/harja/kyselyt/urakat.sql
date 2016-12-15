@@ -3,6 +3,7 @@ SELECT
   u.id,
   u.nimi,
   u.tyyppi,
+  u.urakkanro,
   COALESCE(st_distance(u.alue, st_makepoint(:x, :y)),
            st_distance(au.alue, st_makepoint(:x, :y))) AS etaisyys
 FROM urakka u
