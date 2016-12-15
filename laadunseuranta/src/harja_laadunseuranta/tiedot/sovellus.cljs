@@ -80,6 +80,9 @@
                                     :losa nil
                                     :let nil}}
 
+   :liittyvat-havainnot [] ;; Lista viimeisiä havaintoja, joihin lomake voidaan liittää
+                           ;; Item on map: {:id <indexeddb-id> :havainto-avain :lumista :aikaleima <aika>}
+
    ;; Kartta
    :kirjauspisteet [] ; Kartalla näytettäviä ikoneita varten
    :reittipisteet [] ; Kartalle piirrettävä häntä mäppejä {:segmentti [[x1 y1] [x2 y2]] :vari html-vari}
@@ -116,6 +119,7 @@
 
 (def havaintolomake-auki (reagent/cursor sovellus [:havaintolomake-auki?]))
 (def havaintolomakedata (reagent/cursor sovellus [:havaintolomakedata]))
+(def liittyvat-havainnot (reagent/cursor sovellus [:liittyvat-havainnot]))
 (def havaintolomake-kuva (reagent/cursor sovellus [:havaintolomakedata :kuva]))
 (def havaintolomake-esikatselukuva (reagent/cursor sovellus [:havaintolomakedata :esikatselukuva]))
 

@@ -130,17 +130,25 @@
                        s/ilmoitus
                        {:tyyppi :virhe}))
 
-(defn kirjaa-pistemainen-havainto! [{:keys [idxdb sijainti tarkastusajo-id
+(defn kirjaa-pistemainen-havainto! [{:keys [idxdb sijainti tarkastusajo-id lisaa-liittyva-havainto
                                             epaonnistui-fn jatkuvat-havainnot havainto-avain] :as tiedot}]
   (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti)
                                            asetukset/+suurin-sallittu-tarkkuus+)
-    (do (kirjaa-kertakirjaus idxdb
-                             {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
-                              :aikaleima (tc/to-long (lt/local-now))
-                              :tarkastusajo @tarkastusajo-id
-                              :havainnot (into #{} (remove nil? (conj @jatkuvat-havainnot havainto-avain)))
-                              :mittaukset {}})
-        true)
+    (let [aikaleima (tc/to-long (lt/local-now))
+          kirjaus (kirjaa-kertakirjaus idxdb
+                                       {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
+                                        :aikaleima aikaleima
+                                        :tarkastusajo @tarkastusajo-id
+                                        :havainnot (into #{} (remove nil? (conj @jatkuvat-havainnot havainto-avain)))
+                                        :mittaukset {}})]
+      (set! (.-onsuccess kirjaus)
+            (fn [e]
+              (let [indexed-db-id (-> e .-target .-result)]
+                (when lisaa-liittyva-havainto
+                  (lisaa-liittyva-havainto {:id indexed-db-id
+                                            :aikaleima aikaleima
+                                            :havainto-avain havainto-avain})))))
+      true)
     (when epaonnistui-fn
       (epaonnistui-fn {:viesti (str "Epätarkka sijainti ("
                                     (fmt/n-desimaalia (:accuracy (:nykyinen @sijainti)) 0)
