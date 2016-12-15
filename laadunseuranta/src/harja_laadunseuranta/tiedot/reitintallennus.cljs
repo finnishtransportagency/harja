@@ -169,6 +169,7 @@
                               :tarkastusajo @tarkastusajo-id
                               :havainnot @jatkuvat-havainnot
                               :mittaukset {}
+                              :liittyy-havaintoon (:liittyy-havaintoon @lomakedata)
                               :kuvaus (:kuvaus @lomakedata)
                               :laadunalitus (:laadunalitus? @lomakedata)
                               :kuva (:kuva @lomakedata)

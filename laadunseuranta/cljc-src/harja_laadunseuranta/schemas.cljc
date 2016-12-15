@@ -133,6 +133,7 @@
                   :reunapaalut-vaurioitunut)}
 
    (s/optional-key :kuvaus) (s/maybe s/Str)
+   (s/optional-key :liittyy-havaintoon) (s/maybe s/Int)
    (s/optional-key :laadunalitus) (s/maybe s/Bool)
    (s/optional-key :kuva) (s/maybe s/Int)})
 

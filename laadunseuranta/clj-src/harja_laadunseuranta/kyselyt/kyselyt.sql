@@ -3,13 +3,13 @@
 INSERT INTO tarkastusreitti
 (id, pistetyyppi, tarkastusajo, aikaleima, sijainti, sijainti_tarkkuus, kitkamittaus, havainnot, lampotila,
  talvihoito_tasaisuus, soratie_tasaisuus, lumisuus, kuvaus, kuva,
- polyavyys, sivukaltevuus, kiinteys, laadunalitus,
+ polyavyys, sivukaltevuus, kiinteys, laadunalitus, liittyy_tarkastuspisteeseen,
 tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys)
 VALUES
   (:id, 0, :tarkastusajo, to_timestamp(:aikaleima / 1000), ST_MakePoint(:x, :y), :sijainti_tarkkuus,
         :kitkamittaus, ARRAY [:havainnot] :: INTEGER [], :lampotila, :talvihoito_tasaisuus,
         :soratie_tasaisuus, :lumisuus, :kuvaus, :kuva, :polyavyys,
-   :sivukaltevuus, :kiinteys, :laadunalitus,
+   :sivukaltevuus, :kiinteys, :laadunalitus, :liittyy_tarkastuspisteeseen,
   :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys)
 ON CONFLICT DO NOTHING;
 
