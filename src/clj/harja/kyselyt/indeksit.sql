@@ -12,7 +12,8 @@ SELECT nimi, vuosi, kuukausi, arvo
 ORDER BY nimi, vuosi, kuukausi
 
 --name: hae-urakan-kuukauden-indeksiarvo
-SELECT arvo FROM indeksi
+SELECT arvo, nimi
+  FROM indeksi
  WHERE nimi = (SELECT indeksi FROM urakka where id = :urakka_id)
        AND vuosi = :vuosi AND kuukausi = :kuukausi ;
 

@@ -347,9 +347,11 @@
                 (when (and indeksi-kaytossa? perusluku)
                   [:teksti (str (str "Indeksilaskennan perusluku: " (fmt/desimaaliluku perusluku))
                                 (when kyseessa-kk-vali?
-                                  (str ". Kuukauden " (pvm/kuukausi-ja-vuosi alkupvm) " indeksiarvo"
+                                  (str ". Kuukauden " (pvm/kuukausi-ja-vuosi alkupvm)
+                                       " " (:nimi kkn-indeksiarvo)
+                                       " indeksiarvo"
                                        (if kkn-indeksiarvo
-                                         (str ": " (fmt/desimaaliluku kkn-indeksiarvo 1))
+                                         (str ": " (fmt/desimaaliluku (:arvo kkn-indeksiarvo) 1))
                                          " puuttuu."))))])
                 varoitus-tietojen-puuttumisesta
                 (if (empty? taulukot)

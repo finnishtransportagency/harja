@@ -14,11 +14,11 @@
         (map :nimi (q/hae-indeksien-nimet db))))
 
 (defn hae-urakan-kuukauden-indeksiarvo
-  "Palvelu, joka palauttaa indeksin arvon urakalle"
+  "Palvelu, joka palauttaa tietyn kuukauden indeksin arvon ja nimen urakalle"
   [db urakka-id vuosi kuukausi]
-  (:arvo (first (q/hae-urakan-kuukauden-indeksiarvo db {:urakka_id urakka-id
-                                                        :vuosi     vuosi
-                                                        :kuukausi  kuukausi}))))
+  (first (q/hae-urakan-kuukauden-indeksiarvo db {:urakka_id urakka-id
+                                                 :vuosi     vuosi
+                                                 :kuukausi  kuukausi})))
 
 (defn- ryhmittele-indeksit [indeksit]
   (seq (group-by (fn [rivi]
