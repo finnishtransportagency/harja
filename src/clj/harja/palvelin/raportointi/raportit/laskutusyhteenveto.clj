@@ -345,11 +345,12 @@
                [:raportti {:nimi "Laskutusyhteenveto"}
                 [:otsikko (str (or (str urakan-nimi ", ") "") (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))]
                 (when (and indeksi-kaytossa? perusluku)
-                  [:teksti (str "Indeksilaskennan perusluku: " (fmt/desimaaliluku perusluku)
-                                "; kuukauden indeksiarvo"
-                                (if kkn-indeksiarvo
-                                  (str  ": " kkn-indeksiarvo)
-                                  " puuttuu."))])
+                  [:teksti (str (str "Indeksilaskennan perusluku: " (fmt/desimaaliluku perusluku))
+                                (when kyseessa-kk-vali?
+                                  (str ". Kuukauden " (pvm/kuukausi-ja-vuosi alkupvm) " indeksiarvo"
+                                       (if kkn-indeksiarvo
+                                         (str ": " (fmt/desimaaliluku kkn-indeksiarvo 1))
+                                         " puuttuu."))))])
                 varoitus-tietojen-puuttumisesta
                 (if (empty? taulukot)
                   [:teksti " Ei laskutettavaa"]
