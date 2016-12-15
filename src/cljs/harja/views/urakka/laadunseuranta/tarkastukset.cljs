@@ -86,7 +86,11 @@
                                  (str (name (key %)) ": "
                                       (if (= :hoitoluokka (key %))
                                         (hoitoluokat/talvihoitoluokan-nimi-str (val %))
-                                        (val %))))
+                                        (if (or
+                                              (= :lumimaara (key %))
+                                              (= :tasaisuus (key %)))
+                                          (str (val %) "cm")
+                                          (val %)))))
                                nil)
                              (select-keys
                                thm
