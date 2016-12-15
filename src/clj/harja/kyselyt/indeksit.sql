@@ -11,6 +11,12 @@ SELECT nimi, vuosi, kuukausi, arvo
    WHERE nimi = :nimi
 ORDER BY nimi, vuosi, kuukausi
 
+--name: hae-urakan-kuukauden-indeksiarvo
+SELECT arvo, nimi
+  FROM indeksi
+ WHERE nimi = (SELECT indeksi FROM urakka where id = :urakka_id)
+       AND vuosi = :vuosi AND kuukausi = :kuukausi ;
+
 -- name: luo-indeksi<!
 -- Tekee uuden indeksin
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo)
