@@ -350,3 +350,32 @@ BEGIN
   END LOOP;
 END;
 $$ LANGUAGE plpgsql;
+
+
+-- Hakee alkupisteen tiegeometriasta, joka on linestring tai multilinestring
+CREATE OR REPLACE FUNCTION alkupiste(g geometry) RETURNS geometry AS $$
+DECLARE
+  line geometry;
+BEGIN
+  IF ST_GeometryType(g)='ST_MultiLineString' THEN
+    line := ST_GeometryN(g, 1);
+  ELSE
+    line := g;
+  END IF;
+  RETURN ST_StartPoint(line);
+END;
+$$ LANGUAGE plpgsql;
+
+-- Hakee loppupisteen tiegeometriasta
+CREATE OR REPLACE FUNCTION loppupiste(g geometry) RETURNS geometry AS $$
+DECLARE
+  line geometry;
+BEGIN
+  IF ST_GeometryType(g)='ST_MultiLineString' THEN
+    line := ST_GeometryN(g, ST_NumGeometries(g));
+  ELSE
+    line := g;
+  END IF;
+  RETURN ST_EndPoint(line);
+END;
+$$ LANGUAGE plpgsql;

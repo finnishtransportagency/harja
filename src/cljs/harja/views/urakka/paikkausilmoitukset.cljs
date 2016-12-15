@@ -10,7 +10,6 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.fmt :as fmt]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.ui.kentat :refer [tee-kentta]]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
             [harja.tiedot.urakka :as u]

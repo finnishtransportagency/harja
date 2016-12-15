@@ -87,6 +87,33 @@ SELECT ST_Simplify(t.sijainti, :toleranssi) as reitti,
                 OR EXISTS(SELECT tarkastus FROM soratiemittaus WHERE tarkastus = t.id)))
    AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE);
 
+-- name: hae-urakan-tarkastusten-asiat-kartalle
+-- Hakee pisteessä löytyneet tarkastukset karttaa klikattaessa
+SELECT t.id, t.tyyppi, t.laadunalitus,
+              CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+        THEN 'urakoitsija' :: osapuoli
+        ELSE 'tilaaja' :: osapuoli
+       END AS tekija,
+       t.aika,
+       t.tarkastaja,
+       t.havainnot,
+       yrita_tierekisteriosoite_pisteille2
+          (alkupiste(t.sijainti), loppupiste(t.sijainti), 1)::TEXT AS tierekisteriosoite
+  FROM tarkastus t
+       LEFT JOIN kayttaja k ON t.luoja = k.id
+       LEFT JOIN organisaatio o ON k.organisaatio = o.id
+ WHERE t.urakka = :urakka
+   AND t.sijainti IS NOT NULL
+   AND ST_Distance(t.sijainti, ST_MakePoint(:x, :y)) < :toleranssi
+   AND (t.aika >= :alku AND t.aika <= :loppu)
+   AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
+   AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
+   AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
+       AND (:havaintoja_sisaltavat = FALSE
+            OR ((char_length(t.havainnot) > 0 AND lower(t.havainnot) != 'ok')
+                OR EXISTS(SELECT tarkastus FROM tarkastus_vakiohavainto WHERE tarkastus = t.id)))
+   AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE);
+
 -- name: hae-tarkastus
 -- Hakee yhden urakan tarkastuksen tiedot id:llä.
 SELECT

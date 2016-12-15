@@ -10,7 +10,7 @@
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.komponentti :as komp]
-            [harja.views.urakka.toteumat.muut-tyot :as muut-tyot]))
+            [harja.views.urakka.toteumat.tiemerkinta-muut-tyot :as muut-tyot]))
 
 
 (defn toteutus [ur]
@@ -38,4 +38,4 @@
           :muut
           (when (oikeudet/urakat-toteutus-muuttyot id)
             ^{:key "muut-tyot"}
-            [muut-tyot/muut-tyot-toteumat ur])]]))))
+            [muut-tyot/muut-tyot ur])]]))))

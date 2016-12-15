@@ -591,6 +591,35 @@ WHERE
   AND t.poistettu IS NOT TRUE
   AND (:toimenpidekoodi :: INTEGER IS NULL OR tk.id = :toimenpidekoodi);
 
+-- name: hae-toteumien-tiedot-pisteessa
+-- Hakee klikkauspisteessä olevien (valitun toimenpiteen) toteumien
+-- tiedot infopaneelissa näytettäväksi.
+SELECT
+  t.id,
+  t.alkanut, t.paattynyt,
+  t.suorittajan_nimi AS suorittaja_nimi,
+  tk.nimi AS tehtava_toimenpide,
+  tt.maara AS tehtava_maara,
+  tk.yksikko AS tehtava_yksikko,
+  tt.toteuma AS tehtava_id,
+  tk.nimi AS toimenpide,
+  yrita_tierekisteriosoite_pisteille2(
+     alkupiste(t.reitti), loppupiste(t.reitti), 1)::TEXT AS tierekisteriosoite
+FROM toteuma_tehtava tt
+  JOIN toteuma t ON tt.toteuma = t.id
+  JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
+WHERE
+  t.urakka = :urakka-id
+  AND (:toteuma-id :: INTEGER IS NULL OR t.id = :toteuma-id)
+  AND t.sopimus = :sopimus-id
+  AND t.alkanut >= :alkupvm
+  AND t.alkanut <= :loppupvm
+  AND ST_Distance(t.reitti, ST_MakePoint(:x, :y)) < :toleranssi
+  AND t.tyyppi = :tyyppi::toteumatyyppi
+  AND t.poistettu IS NOT TRUE
+  AND (:toimenpidekoodi :: INTEGER IS NULL OR tk.id = :toimenpidekoodi);
+
+
 -- name: hae-kokonaishintaisen-toteuman-reitti
 SELECT
   mk.nimi            AS materiaali_nimi,
@@ -743,6 +772,7 @@ LIMIT 501;
 
 -- name: hae-kokonaishintaisen-toteuman-tiedot
 -- Hakee urakan kokonaishintaiset toteumat annetun päivän ja toimenpidekoodin perusteella
+-- tai suoraan toteuman id:lla.
 SELECT
   t.id,
   t.luotu,
@@ -771,8 +801,9 @@ FROM toteuma t
                                        AND tpi.urakka = t.urakka
 WHERE
   t.urakka = :urakka
-  AND t.alkanut :: DATE = :pvm :: DATE
-  AND tt.toimenpidekoodi = :toimenpidekoodi;
+  AND (:toteuma::INTEGER IS NULL OR t.id = :toteuma)
+  AND (:pvm::DATE IS NULL OR t.alkanut :: DATE = :pvm :: DATE)
+  AND (:toimenpidekoodi::INTEGER IS NULL OR tt.toimenpidekoodi = :toimenpidekoodi);
 
 -- name: hae-varustetoteuma
 SELECT
@@ -867,9 +898,9 @@ SELECT
   tr_loppuetaisyys AS loppuetaisyys
 FROM toteuma t
 WHERE reitti IS NULL
-      AND t.tr_numero IS NOT NULL
-      AND t.tr_alkuosa IS NOT NULL
-      AND t.tr_alkuetaisyys IS NOT NULL;
+AND t.tr_numero IS NOT NULL
+AND t.tr_alkuosa IS NOT NULL
+AND t.tr_alkuetaisyys IS NOT NULL;
 
 -- name: merkitse-varustetoteuma-lahetetyksi!
 UPDATE varustetoteuma

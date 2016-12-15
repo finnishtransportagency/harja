@@ -4,7 +4,6 @@
             [harja.loki :refer [log]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :refer [tee-kentta]]
             [harja.pvm :as pvm]
 
             [cljs.core.async :refer [<! put! chan]]
@@ -147,6 +146,10 @@
             data
             (nil? (avain rivi)))
     viesti))
+
+(defmethod validoi-saanto :yllapitoluokka [_ _ data rivi _ _ & [viesti]]
+  (when-not (or (nil? data) (= data 1) (= data 2) (= data 3))
+    (or viesti "Anna ylläpitoluokka välillä 1 \u2014 3")))
 
 (defmethod validoi-saanto :lampotila [_ _ data rivi _ _ & [viesti]]
   (when-not (<= -55 data 55)

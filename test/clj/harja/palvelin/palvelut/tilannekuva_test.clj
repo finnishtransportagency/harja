@@ -177,7 +177,8 @@
 (deftest hae-tyokoneet-nykytilaan
   (let [parametrit (assoc parametrit-laaja-historia :nykytilanne? true)
         vastaus (hae-tk parametrit)]
-    (is (>= (count (vals (:tyokoneet vastaus))) 1))))
+    ;; Työkonetehtäviä löytyi
+    (is (not (empty? (:tehtavat (:tyokoneet vastaus)))))))
 
 (deftest ala-hae-toteumia-liian-lahelle-zoomatussa-historianakymassa
   (let [parametrit (assoc parametrit-laaja-historia :alue {:xmin 0,
@@ -195,7 +196,7 @@
                                      :ymax 1})
                        (assoc :nykytilanne? true))
         vastaus (hae-tk parametrit)]
-    (is (= (count (vals (:tyokoneet vastaus))) 0))))
+    (is (empty? (:tehtavat (:tyokoneet vastaus))))))
 
 (defn- insert-tyokone [urakka organisaatio]
   (let [x 523892
@@ -212,7 +213,9 @@
 (deftest vain-tilaaja-ja-urakoitsija-itse-nakee-urakattomat-tyokoneet []
   (let [parametrit (assoc parametrit-laaja-historia :nykytilanne? true)
         urakoitsija (hae-oulun-alueurakan-2005-2012-urakoitsija)
-        hae #(get-in (hae-tk % parametrit) [:tyokoneet 666])]
+        hae #(let [vastaus (hae-tk % parametrit)
+                   tehtavat (:tehtavat (:tyokoneet vastaus))]
+               (tehtavat #{"harjaus"}))]
     ;; Insert menee ok
     (is (= 1 (insert-tyokone nil urakoitsija)) "Urakattoman työkonehavainnon voi insertoida")
 
@@ -227,4 +230,4 @@
 
 
     ;; eri urakoitsijaorganisaation käyttä ei näe työkonetta
-    (is (nil? (hae +kayttaja-ulle+)) "Eri urakoitsijan käyttäjä ei näe työkonetta")))
+    (is (not (hae +kayttaja-ulle+)) "Eri urakoitsijan käyttäjä ei näe työkonetta")))

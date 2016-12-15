@@ -120,6 +120,50 @@ WHERE sijainti IS NOT NULL AND
       (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
 ORDER BY t.laadunalitus ASC;
 
+-- name: hae-tarkastusten-asiat
+-- Hakee tarkastusten asiat pisteessä
+SELECT
+  t.id,
+  t.aika,
+  t.tyyppi,
+  t.tarkastaja,
+  t.havainnot,
+  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+       THEN 'urakoitsija' :: osapuoli
+       ELSE 'tilaaja' :: osapuoli
+       END AS tekija,
+  yrita_tierekisteriosoite_pisteille2(
+     alkupiste(t.sijainti), loppupiste(t.sijainti), 1)::TEXT AS tierekisteriosoite
+FROM tarkastus t
+     JOIN kayttaja k ON t.luoja = k.id
+     JOIN organisaatio o ON o.id = k.organisaatio
+WHERE sijainti IS NOT NULL AND
+      (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
+      (t.aika BETWEEN :alku AND :loppu) AND
+      ST_Distance(t.sijainti, ST_MakePoint(:x, :y)) < :toleranssi AND
+      t.tyyppi :: TEXT IN (:tyypit) AND
+      (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
+
+
+-- jarjestelma & tyokoneid perusteella uniikit tehtävät
+-- name: hae-tyokoneiden-asiat
+SELECT
+  t.jarjestelma,
+  t.tyokonetyyppi,
+  t.urakkaid,
+  t.tehtavat,
+  MIN(t.lahetysaika) FILTER (WHERE t.lahetysaika BETWEEN :alku AND :loppu) AS alkanut
+FROM
+  tyokonehavainto t
+WHERE sijainti IS NOT NULL AND
+      (t.urakkaid IN (:urakat) OR
+      -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
+       (t.urakkaid IS NULL AND
+       (:nayta-kaikki OR t.organisaatio = :organisaatio))) AND
+  (t.lahetysaika BETWEEN :alku AND :loppu) AND
+  ST_Distance(t.sijainti :: GEOMETRY, ST_MakePoint(:x, :y)::geometry) < :toleranssi
+GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi, t.urakkaid;
+
 -- name: hae-turvallisuuspoikkeamat
 SELECT
   t.id,
@@ -299,38 +343,72 @@ WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
 GROUP BY tt.toimenpidekoodi;
 
-
--- name: hae-tyokoneet
+-- name: hae-toteumien-asiat
+-- Hakee karttaa klikattaessa toteuma-ajat valituille tehtäville
 SELECT
-  t.tyokoneid,
-  t.jarjestelma,
-  t.organisaatio,
-  t.alkanut,
-  (SELECT nimi
-   FROM organisaatio
-   WHERE id = t.organisaatio) AS organisaationimi,
-  t.viestitunniste,
-  t.lahetysaika,
-  t.vastaanotettu,
-  t.tyokonetyyppi,
-  t.sijainti,
-  ST_Simplify(t.reitti, :toleranssi) AS reitti,
-  t.suunta,
-  t.edellinensijainti,
-  t.urakkaid,
-  (SELECT nimi
-   FROM urakka
-   WHERE id = t.urakkaid)     AS urakkanimi,
-  t.tehtavat
+  t.id,
+  t.alkanut AS alkanut,
+  t.paattynyt AS paattynyt,
+  t.suorittajan_nimi AS suorittaja_nimi,
+  tpk.nimi           AS tehtava_toimenpide,
+  tt.maara           AS tehtava_maara,
+  tpk.yksikko        AS tehtava_yksikko,
+  tt.toteuma         AS tehtava_id,
+  tpk.nimi AS toimenpide,
+  yrita_tierekisteriosoite_pisteille2(
+      alkupiste(t.reitti), loppupiste(t.reitti), 1)::TEXT AS tierekisteriosoite
+FROM toteuma_tehtava tt
+  JOIN toteuma t ON tt.toteuma = t.id
+                    AND t.alkanut >= :alku
+                    AND t.paattynyt <= :loppu
+                    AND tt.toimenpidekoodi IN (:toimenpidekoodit)
+                    AND tt.poistettu IS NOT TRUE
+                    AND t.poistettu IS NOT TRUE
+  JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
+      (t.alkanut BETWEEN :alku AND :loppu) AND
+      (t.paattynyt BETWEEN :alku AND :loppu) AND
+      ST_Distance(t.reitti, ST_MakePoint(:x,:y)) < :toleranssi;
+
+
+-- name: hae-tyokoneselitteet
+-- Hakee työkoneiden selitteet
+SELECT
+  t.tehtavat,
+  MAX(t.lahetysaika) AS viimeisin
 FROM tyokonehavainto t
-WHERE ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax),
-                  reitti) AND
+WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), sijainti::GEOMETRY) AND
       (t.urakkaid IN (:urakat) OR
       -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
        (t.urakkaid IS NULL AND
        (:nayta-kaikki OR t.organisaatio = :organisaatio))) AND
       -- Rajaa toimenpiteellä
-      (t.tehtavat && :toimenpiteet :: suoritettavatehtava []);
+      (t.tehtavat && :toimenpiteet :: suoritettavatehtava []) AND
+      -- Rajaa ajalla
+      (t.lahetysaika BETWEEN :alku AND :loppu)
+GROUP BY t.tehtavat;
+
+-- name: hae-tyokonereitit-kartalle
+-- fetch-size: 64
+-- hae myös suunta!
+SELECT
+  t.tyokoneid,
+  t.jarjestelma,
+  t.tehtavat,
+  t.tyokonetyyppi,
+  ST_MakeLine(array_agg(t.sijainti ORDER BY t.lahetysaika ASC)::GEOMETRY[]) AS reitti
+FROM tyokonehavainto t
+WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), sijainti::GEOMETRY) AND
+      (t.urakkaid IN (:urakat) OR
+      -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
+       (t.urakkaid IS NULL AND
+       (:nayta-kaikki OR t.organisaatio = :organisaatio))) AND
+      -- Rajaa toimenpiteellä
+      (t.tehtavat && :toimenpiteet :: suoritettavatehtava []) AND
+      -- Rajaa ajalla
+      (t.lahetysaika BETWEEN :alku AND :loppu)
+GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi;
+
 
 -- name: hae-toimenpidekoodit
 SELECT

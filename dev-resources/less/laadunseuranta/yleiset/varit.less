@@ -1,0 +1,96 @@
+/* Sovelluksen käytössä olevat LIVI-värit */
+
+
+/** Harmaat */
+@musta:    rgb(0,0,0);
+@harmaa1: rgb(25,25,25);
+@harmaa2: rgb(50,50,50);
+@harmaa3: rgb(75,75,75);
+@harmaa4: rgb(100,100,100);
+@harmaa5: rgb(125,125,125);
+@harmaa6: rgb(150,150,150);
+@harmaa7: rgb(175,175,175);
+@harmaa8: rgb(200,200,200);
+@harmaa9: rgb(220,220,220);
+@harmaa10: rgb(225,225,225);
+@harmaa11: rgb(230,230,230);
+@harmaa12: rgb(235,235,235);
+@harmaa13: rgb(240,240,240);
+@harmaa14: rgb(245,245,245);
+@harmaa15: rgb(250,250,250);
+@valkoinen: rgb(255,255,255);
+
+/** Harmaat gradientit */
+.harmaa-gradientti1() { #gradient > .vertical(@start-color:  @harmaa3; @end-color: @harmaa1); }
+.harmaa-gradientti2() { #gradient > .vertical(@start-color:  @harmaa4; @end-color: @harmaa2); }
+.harmaa-gradientti3() { #gradient > .vertical(@start-color:  @harmaa5; @end-color: @harmaa3); }
+.harmaa-gradientti4() { #gradient > .vertical(@start-color:  @harmaa6; @end-color: @harmaa4); }
+.harmaa-gradientti5() { #gradient > .vertical(@start-color:  @harmaa7; @end-color: @harmaa5); }
+.harmaa-gradientti6() { #gradient > .vertical(@start-color:  @harmaa8; @end-color: @harmaa6); }
+.harmaa-gradientti7() { #gradient > .vertical(@start-color:  @harmaa10; @end-color: @harmaa7); }
+.harmaa-gradientti8() { #gradient > .vertical(@start-color: @harmaa15; @end-color: @harmaa8); }
+
+/** Siniset */
+@sininen1: #0000cc;
+@sininen2: #0022cc;
+@sininen3: #0044cc;
+@sininen4: #0066cc;
+@sininen5: #0088cc;
+@sininen6: #00aacc;
+@primaari-sininen: @sininen4;
+@primaari-sininen-valittuna: @sininen5;
+
+/** Siniset gradientit */
+.sininen-gradientti1() { #gradient > .vertical(@start-color:  @sininen4; @end-color: @sininen2); }
+.sininen-gradientti2() { #gradient > .vertical(@start-color:  @sininen5; @end-color: @sininen3); }
+
+/** Vihreät */
+@vihrea1: #003300;
+@vihrea2: #005500;
+@vihrea3: #007700;
+@vihrea4: #009900;
+@vihrea5: #00bb00;
+@vihrea6: #00dd00;
+
+/** Vihreät gradientit */
+.vihrea-gradientti1() { #gradient > .vertical(@start-color:  @vihrea4; @end-color: @vihrea2); }
+.vihrea-gradientti2() { #gradient > .vertical(@start-color:  @vihrea5; @end-color: @vihrea3); }
+
+/** Punaiset */
+@punainen1: #770000;
+@punainen2: #990000;
+@punainen3: #bb0000;
+@punainen4: #dd0000;
+@punainen5: #ff0000;
+@punainen6: #ff2200;
+@punainen7: #ff4400;
+
+/** Punaiset gradientit */
+.punainen-gradientti1() { #gradient > .vertical(@start-color:  @punainen4; @end-color: @punainen2); }
+.punainen-gradientti2() { #gradient > .vertical(@start-color:  @punainen5; @end-color: @punainen3); }
+
+/** Keltaiset */
+@keltainen1: #ff9900;
+
+/** Huomiovärit */
+@onnistuminen: @vihrea4;
+@varoitus:     @keltainen1;
+@vaara:        @punainen4;
+@muu:          #660099;
+@huomautus:    @sininen5;
+
+/* Globaalisti käytössä olevat sisältökohtaiset värit*/
+
+@testiharjan-taustavari: #56090a;
+
+@sisaltolaatikoiden-reunaviiva: 1px solid @musta;
+@sisaltolaatikoiden-taustavari: @harmaa15;
+
+@valilehden-taustavari: @sininen4;
+@valilehden-teksti: @valkoinen;
+
+@valilehti-valittu-taustavari: unset;
+@valilehti-valittu-teksti: @musta;
+
+@napin-taustavari: @sininen4;
+@nappi-aktiivinen: @keltainen1;
