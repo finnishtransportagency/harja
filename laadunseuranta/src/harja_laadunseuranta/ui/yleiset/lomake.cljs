@@ -97,11 +97,11 @@
                                          kaikki-havainnot)))]
     (fn [liittyvat-havainnot havainnot-ryhmittain]
       [:div.liittyvat-havainnot
-       [:ul]
-       (doall (for [liittyva-havainto liittyvat-havainnot]
-                ^{:key (:id liittyva-havainto)}
-                [:li (:nimi (havainnon-tiedot-avaimella
-                              (:havainto-avain liittyva-havainto)))]))
+       [:ul
+        (doall (for [liittyva-havainto liittyvat-havainnot]
+                 ^{:key (:id liittyva-havainto)}
+                 [:li (:nimi (havainnon-tiedot-avaimella
+                               (:havainto-avain liittyva-havainto)))]))]
        [yleiset/vihje "Jos et valitse mitään, lomake kirjataan yleisenä havaintona."]])))
 
 ;; Lomakkeen osat
