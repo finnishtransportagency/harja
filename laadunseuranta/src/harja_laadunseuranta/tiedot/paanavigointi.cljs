@@ -353,9 +353,7 @@
      :tarkastusajo-id s/tarkastusajo-id
      :jatkuvat-havainnot s/jatkuvat-havainnot
      :havainto-avain avain
-     :epaonnistui-fn reitintallennus/merkinta-epaonnistui
-     :lisaa-liittyva-havainto (fn [havainto]
-                                (swap! s/liittyvat-havainnot conj havainto))}))
+     :epaonnistui-fn reitintallennus/merkinta-epaonnistui}))
 
 (defn valikohtainen-havainto-painettu!
   "Asettaa välikohtaisen havainnon päälle tai pois päältä."
