@@ -67,7 +67,7 @@
      :y "Koordinaatti Y puuttuu"
      :urakkatyyppi "Urakkatyyppi puuttuu"})
   (when (not (some #(= % (:urakkatyyppi parametrit))
-                   ["hoito" "paallystys" "paikkaus" "tiemerkinta" "valaistus" "siltakorjaus" "tekniset laitteet"]))
+                   ["hoito" "paallystys" "paikkaus" "tiemerkinta" "valaistus" "siltakorjaus" "tekniset-laitteet"]))
 
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+puutteelliset-parametrit+
