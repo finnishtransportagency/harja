@@ -59,7 +59,7 @@
                            :on-click (if tarkastusajo-kaynnissa?
                                        pysayta-fn
                                        kaynnista-fn)}
-   (when-not @tarkastusajo-alkamassa?
+   (when-not tarkastusajo-alkamassa?
      [kuvat/svg-sprite "nuoli-ylos-alaviiva-24"])
    [:span.kaynnistyspainike-teksti
     (if tarkastusajo-kaynnissa?
