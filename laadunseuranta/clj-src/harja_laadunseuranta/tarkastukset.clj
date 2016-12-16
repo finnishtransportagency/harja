@@ -231,7 +231,8 @@
 
 (defn- pistemainen-havainto?
   [reittimerkinta]
-  (boolean (:pistemainen-havainto reittimerkinta)))
+  (boolean (and (:pistemainen-havainto reittimerkinta)
+                )))
 
 (defn- reittimerkinnat-reitillisiksi-tarkastuksiksi
   "Käy annetut reittimerkinnät läpi ja muodostaa niistä reitilliset tarkastukset"

@@ -76,7 +76,7 @@
                                   :kuvaus (get-in merkinta [:kuvaus])
                                   :laadunalitus (true? (get-in merkinta [:laadunalitus]))
                                   :kuva (get-in merkinta [:kuva])
-                                  :liittyy_tarkastuspisteeseen (get-in merkinta [:liittyy-havaintoon])
+                                  :liittyy_merkintaan (get-in merkinta [:liittyy-havaintoon])
                                   :tr_numero (get-in merkinta [:kayttajan-syottama-tr-osoite :tie])
                                   :tr_alkuosa (get-in merkinta [:kayttajan-syottama-tr-osoite :aosa])
                                   :tr_alkuetaisyys (get-in merkinta [:kayttajan-syottama-tr-osoite :aet])
