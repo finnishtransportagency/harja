@@ -274,8 +274,8 @@
 (defn- liita-tarkastukseen-liittyvat-merkinnat [tarkastus liittyvat-merkinnat]
   (let [tarkastukseen-liittyvat-merkinnat (filter
                                             #((:reittimerkinta-idt tarkastus)
-                                               (:liittyy-havaintoon %)
-                                               liittyvat-merkinnat))]
+                                               (:liittyy-havaintoon %))
+                                               liittyvat-merkinnat)]
     (if (empty? tarkastukseen-liittyvat-merkinnat)
       tarkastus
       (merge tarkastus
@@ -290,7 +290,7 @@
                           (if (empty? kuvat)
                             (:liitteet tarkastus)
                             (apply conj (:liitteet tarkastus) kuvat)))
-              ;; Merkitään tarkastukseen laadunalitus jos se, tai mikä tahansa liittyvistä merkinnöistä
+              ;; Merkitään tarkastukseen laadunalitus jos se, tai mikä tahansa liittyvistä merkinnöistä,
               ;; sisältää laadunalituksen
               :laadunalitus (let [laadunalitukset (map :laadunalitus tarkastukseen-liittyvat-merkinnat)]
                               (if (empty? laadunalitukset)
