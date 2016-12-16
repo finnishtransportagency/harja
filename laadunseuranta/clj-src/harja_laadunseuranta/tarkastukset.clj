@@ -277,7 +277,7 @@
   [tarkastus liittyvat-merkinnat]
   (let [tarkastukseen-liittyvat-merkinnat (filter
                                             #((:reittimerkinta-idt tarkastus)
-                                               (:liittyy-havaintoon %))
+                                               (:liittyy-merkintaan %))
                                                liittyvat-merkinnat)]
     (if (empty? tarkastukseen-liittyvat-merkinnat)
       tarkastus

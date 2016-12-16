@@ -435,10 +435,10 @@
    {:id 5 :sijainti [467009.5999816895 7231180.000024414]}
    ;; Kirjataan lisätietoja aiemmin tehtyyn pistemäiseen havaintoon
    {:id 6 :sijainti [467257.5999816895 7231252.000024414]
-    :liittyy-havaintoon 1
+    :liittyy-merkintaan 1
     :kuvaus "Tässä on nyt jotain mätää"
     :kuva 1}
    {:id 7 :sijainti [467257.5999816896 7231252.000024413]
-    :liittyy-havaintoon 1
+    :liittyy-merkintaan 1
     :kuvaus "Tässä vielä toinen kuva"
     :kuva 2}])
