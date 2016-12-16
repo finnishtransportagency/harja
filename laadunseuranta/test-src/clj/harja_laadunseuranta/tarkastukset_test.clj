@@ -31,14 +31,6 @@
            [17]))
     (is (empty? (-> tarkastukset :reitilliset-tarkastukset (get 2) :vakiohavainnot)))))
 
-(deftest reittimerkinnat-tarkastuksiksi-kommentit-keraytyvat
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
-                       (lisaa-reittimerkinnoille-mockattu-tieosoite
-                         testidata/tarkastukset-joissa-jatkuvat-havainnot-muuttuu-ja-kommentteja))]
-    (testing "Kommentit kerääntyvät oikein"
-      (is (= (-> tarkastukset :pistemaiset-tarkastukset) []))
-      (is (= (-> tarkastukset :reitilliset-tarkastukset (get 2) :havainnot) nil)))))
-
 (deftest pistemaiset-reittimerkinnat-tarkastuksiksi
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
@@ -216,7 +208,7 @@
                          testidata/tarkastus-jossa-liittyvia-pistemaisia-havaintoja))]
     ;; Yksi pistemäinen havainto, johon liitetty lisätietoja
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 1))
-    (is (= (:kuvaus (first (:pistemaiset-tarkastukset tarkastukset)))
+    (is (= (:havainnot (first (:pistemaiset-tarkastukset tarkastukset)))
            "Tässä on nyt jotain mätää\nTässä vielä toinen kuva"))
     (is (true? (:laadunalitus (first (:pistemaiset-tarkastukset tarkastukset)))))
     (is (= (:liitteet (first (:pistemaiset-tarkastukset tarkastukset)))

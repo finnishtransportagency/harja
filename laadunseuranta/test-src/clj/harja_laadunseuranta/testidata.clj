@@ -198,34 +198,6 @@
     :sivukaltevuus 3
     :soratie-tasaisuus 3}])
 
-(def tarkastukset-joissa-jatkuvat-havainnot-muuttuu-ja-kommentteja
-  "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
-  [; tarkastus 1
-   {:id 0 :sijainti [464681.5999816895 7230492.000024414]
-    :jatkuvat-havainnot []}
-   {:id 1 :sijainti [465321.5999816895 7230676.000024414]
-    :jatkuvat-havainnot []}
-
-   ;; tarkastus 2
-   {:id 2 :sijainti [465641.5999816895 7230780.000024414]
-    :jatkuvat-havainnot [17]
-    :kitkamittaus 0.2}
-   {:id 3 :sijainti [466089.5999816895 7230916.000024414]
-    :jatkuvat-havainnot [17]}
-   {:id 4 :sijainti [466409.5999816895 7230996.000024414]
-    :jatkuvat-havainnot [17]}
-   {:id 5 :sijainti [467009.5999816895 7231180.000024414]
-    :jatkuvat-havainnot [17]}
-   {:id 6 :sijainti [467257.5999816895 7231252.000024414]
-    :jatkuvat-havainnot [17]}
-   {:id 7 :sijainti [467545.5999816895 7231332.000024414]
-    :jatkuvat-havainnot [17]
-    :kitkamittaus 0.3}
-
-   ;; tarkastus 3
-   {:id 8 :sijainti [467753.5999816895 7231404.000024414]
-    :jatkuvat-havainnot []}])
-
 (def tarkastus-jossa-piste-ei-osu-tielle
   [{:id 0 :sijainti [464681.5999816895 7230492.000024414]
     :jatkuvat-havainnot [17]
