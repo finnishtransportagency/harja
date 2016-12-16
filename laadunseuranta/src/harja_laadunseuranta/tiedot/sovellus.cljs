@@ -56,7 +56,7 @@
 
    ;; Havainnot
    :jatkuvat-havainnot #{} ; Tähän tallentuu välikohtaiset havainnot (esim. liukasta, lumista jne.).
-   ; Sama kuin UI:ssa alas painetut havaintonapit.
+                           ; Sama kuin UI:ssa alas painetut havaintonapit.
 
    ;; Mittaukset
    ;; Mittaustiedot kun kyseessä on "perusnäppäimistö"
