@@ -31,9 +31,14 @@
 (defn hae-urakan-yhteystiedot [db fim {urakkanro :urakkanro} kayttaja]
   (log/debug (format "Haetaan urakan (urakkanro: %s) tiedot käyttäjälle: %s." urakkanro kayttaja))
   (tarkista-kutsu db kayttaja urakkanro)
-  (let [urakan-tiedot (first (urakat/hae-kaynnissaoleva-urakka-urakkanumerolla db urakkanro))
-        fim-yhteyshenkilot (fim/hae-urakan-kayttajat fim (:sampoid urakan-tiedot))
-        harja-yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db (:id urakan-tiedot))]
+  (let [urakka-id (:id urakan-tiedot)
+        urakan-tiedot (first (urakat/hae-kaynnissaoleva-urakka-urakkanumerolla db urakkanro))
+        harja-yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db urakka-id)
+        harja-vastuuhenkilot (yhteyshenkilot/hae-urakan-vastuuhenkilot db urakka-id)
+        fim-yhteyshenkilot (filter (fn [h] (not-any? (fn [f] (= (:kayttajatunnus f)
+                                                                (:kayttajatunnus h)))
+                                                     harja-vastuuhenkilot))
+                                   (fim/hae-urakan-kayttajat fim (:sampoid urakan-tiedot)))]
     (yhteyshenkilot-vastaus/urakan-yhteystiedot urakan-tiedot fim-yhteyshenkilot harja-yhteyshenkilot)))
 
 (defrecord Yhteystiedot []
