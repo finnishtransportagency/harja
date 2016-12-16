@@ -190,9 +190,11 @@
                 :sonja-sahkoposti :labyrintti])
 
       ;; Tierekisteri
-      :tierekisteri (component/using
-                      (tierekisteri/->Tierekisteri (:url (:tierekisteri asetukset)))
-                      [:db :integraatioloki])
+      :tierekisteri (let [asetukset (:tierekisteri asetukset)]
+                      (component/using
+                        (tierekisteri/->Tierekisteri (:url asetukset)
+                                                     (:uudelleenlahetys-aikavali-minuutteina asetukset))
+                        [:db :integraatioloki]))
 
       ;; Labyrintti SMS Gateway
       :labyrintti (component/using
@@ -259,7 +261,7 @@
                    [:http-palvelin :db])
       :toteumat (component/using
                   (toteumat/->Toteumat)
-                  [:http-palvelin :db :karttakuvat])
+                  [:http-palvelin :db :karttakuvat :tierekisteri])
       :yllapitototeumat (component/using
                   (yllapito-toteumat/->YllapitoToteumat)
                   [:http-palvelin :db])

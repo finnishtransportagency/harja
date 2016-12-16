@@ -26,3 +26,13 @@
 
 ;; Tietolajin vaihtaminen aiheuttaa sen skeeman hakemisen palvelimelta
 (defrecord TietolajinKuvaus [tietolaji kuvaus])
+
+;; Uuden varustetoteuman tallennus päättynyt
+(defrecord VarustetoteumaTallennettu [hakutulos])
+
+;; Tieosan ajoradat haettu
+(defrecord TieosanAjoradatHaettu [ajoradat])
+
+(defrecord VirheTapahtui [virhe])
+
+(defrecord VirheKasitelty [])

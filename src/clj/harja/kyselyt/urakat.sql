@@ -648,3 +648,12 @@ VALUES (:urakkanro, ST_GeomFromText(:alue) :: GEOMETRY);
 -- name: hae-urakan-alkuvuosi
 -- single?: true
 SELECT EXTRACT(YEAR FROM alkupvm)::INTEGER FROM urakka WHERE id = :urakka;
+
+-- name: hae-urakan-ely
+SELECT
+  o.nimi,
+  o.elynumero,
+  o.lyhenne
+FROM organisaatio o
+  JOIN urakka u ON o.id = u.hallintayksikko
+WHERE u.id = :urakkaid;
