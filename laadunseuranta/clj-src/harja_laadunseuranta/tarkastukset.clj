@@ -230,7 +230,6 @@
     reittimerkinnat))
 
 (defn- pistemainen-havainto?
-  "Onko havainto pistemäinen?"
   [reittimerkinta]
   (boolean (:pistemainen-havainto reittimerkinta)))
 
