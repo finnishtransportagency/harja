@@ -158,7 +158,7 @@
       false)))
 
 (defn kirjaa-lomake! [{:keys [idxdb sijainti tarkastusajo-id
-                              epaonnistui-fn jatkuvat-havainnot
+                              epaonnistui-fn
                               lomakedata] :as tiedot}]
   ;; Hyväksytään lomake, jos sijainti on riittävän tarkka tai käyttäjä
   ;; on itse kirjannut tieosoitteen.
@@ -172,7 +172,10 @@
                              {:sijainti (select-keys (:nykyinen sijainti) [:lat :lon :accuracy])
                               :aikaleima (tc/to-long (lt/local-now))
                               :tarkastusajo tarkastusajo-id
-                              :havainnot jatkuvat-havainnot
+                              ;; Lomakkeelta kirjattu havainto on aina pistemäinen yleishavainto
+                              ;; Jos havainto liittyy johonkin toiseen havaintoon, ei havainnon tyypillä
+                              ;; ole merkitystä, sillä tiedot ainoastaan lisätään valittuun liittyvään havaintoon
+                              :havainnot #{:yleishavainto}
                               :mittaukset {}
                               :liittyy-havaintoon (:liittyy-havaintoon lomakedata)
                               :kuvaus (:kuvaus lomakedata)

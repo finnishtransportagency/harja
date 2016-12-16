@@ -11,6 +11,8 @@
 ;; Havainnot ja välilehdet
 
 (def havainnot-ryhmittain
+  ;; Jos muutat näitä, varmista, että tiedot ovat yhteneväiset kannassa olevien vakiohavaintojen kanssa
+  ;; Erityisesti avain ja jatkuvuus!
   {:talviset-pinnat [{:nimi "Liu\u00ADkas\u00ADta"
                       :ikoni "liukas-36"
                       :ikoni-lahde "livicons"

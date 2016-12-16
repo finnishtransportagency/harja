@@ -208,3 +208,12 @@
 
     ;; Koko tarkastus on merkitty laadunalitukseksi, koska sellainen löytyi osasta tarkastuspisteitä
     (is (= (-> tarkastukset :reitilliset-tarkastukset first :laadunalitus) true))))
+
+(deftest tarkastus-jossa-liittyva-havainto
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-liittyvia-havaintoja))]
+    ;; Yksi pistemäinen havainto, johon liitetty lisätietoja)
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 1))
+    ;; Muu osa (ei pistemäinen havainto eikö siihen liittyvät merkinnät) on yksi jatkuva havainto
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))))

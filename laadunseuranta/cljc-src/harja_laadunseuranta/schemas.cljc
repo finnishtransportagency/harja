@@ -73,6 +73,19 @@
                   :reunapalletta
                   :reunataytto-puutteellinen
 
+                  :saumavirhe
+                  :lajittuma
+                  :epatasaisuus
+                  :halkeamat
+                  :vesilammikot
+                  :epatasaisetreunat
+                  :jyranjalkia
+                  :sideainelaikkia
+                  :vaarakorkeusasema
+                  :pintaharva
+                  :pintakuivatuspuute
+                  :kaivojenkorkeusasema
+
                   ;; Pistekohtaiset
 
                   :liikennemerkki-likainen
@@ -116,18 +129,6 @@
                   :kaidevaurio
                   :kiveysvaurio
                   :yleishavainto
-                  :saumavirhe
-                  :lajittuma
-                  :epatasaisuus
-                  :halkeamat
-                  :vesilammikot
-                  :epatasaisetreunat
-                  :jyranjalkia
-                  :sideainelaikkia
-                  :vaarakorkeusasema
-                  :pintaharva
-                  :pintakuivatuspuute
-                  :kaivojenkorkeusasema
                   :maakivi
                   :liikennemerkki-vaurioitunut
                   :reunapaalut-vaurioitunut)}

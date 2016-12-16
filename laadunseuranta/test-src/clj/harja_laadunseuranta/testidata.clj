@@ -426,3 +426,21 @@
    {:id 4 :sijainti [466409.5999816895 7230996.000024414]
     :jatkuvat-havainnot [17]
     :laadunalitus true}])
+
+(def tarkastus-jossa-liittyvia-havaintoja
+  "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
+  [;; Tehdään pistemäinen havainto
+   {:id 2 :sijainti [465641.5999816895 7230780.000024414]
+    :pistemainen-havainto [1]}
+   {:id 3 :sijainti [466089.5999816895 7230916.000024414]}
+   {:id 4 :sijainti [466409.5999816895 7230996.000024414]}
+   {:id 5 :sijainti [467009.5999816895 7231180.000024414]}
+   ;; Kirjataan lisätietoja aiemmin tehtyyn pistemäiseen havaintoon
+   {:id 6 :sijainti [467257.5999816895 7231252.000024414]
+    :liittyy-havaintoon 1
+    :kuvaus "Tässä on nyt jotain mätää"
+    :kuva 1}
+   {:id 7 :sijainti [467257.5999816896 7231252.000024413]
+    :liittyy-havaintoon 1
+    :kuvaus "Tässä vielä toinen kuva"
+    :kuva 2}])
