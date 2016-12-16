@@ -283,12 +283,12 @@
       tarkastus
       (merge tarkastus
              ;; Lisätään mahdolliset kuvat perään rivinvaihdoilla erotettuna
-             {:kuvaus (let [kuvaukset (map :kuvaus tarkastukseen-liittyvat-merkinnat)]
-                        (if (empty? kuvaukset)
-                          (:kuvaus tarkastus)
-                          (str (when-let [olemassaoleva-kuvaus (:kuvaus tarkastus)]
-                                 (str olemassaoleva-kuvaus) "\n")
-                               (str/join "\n" (map :kuvaus tarkastukseen-liittyvat-merkinnat)))))
+             {:havainnot (let [kuvaukset (map :kuvaus tarkastukseen-liittyvat-merkinnat)]
+                           (if (empty? kuvaukset)
+                             (:havainnot tarkastus)
+                             (str (when-let [olemassaoleva-kuvaus (:havainnot tarkastus)]
+                                    (str olemassaoleva-kuvaus) "\n")
+                                  (str/join "\n" (map :kuvaus tarkastukseen-liittyvat-merkinnat)))))
               ;; Lisätään mahdolliset kuvaliitteet tarkastukseen
               :liitteet (let [kuvat (map :kuva tarkastukseen-liittyvat-merkinnat)]
                           (if (empty? kuvat)
