@@ -141,7 +141,7 @@
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 3))
 
     ;; Liitteet lisätty oikein
-    (is (= (-> tarkastukset :pistemaiset-tarkastukset last :liite) 1))))
+    (is (= (-> tarkastukset :pistemaiset-tarkastukset last :liitteet first) 1))))
 
 (deftest tarkastus-jossa-piste-ei-osu-tielle
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
