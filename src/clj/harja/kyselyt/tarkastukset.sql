@@ -32,6 +32,11 @@ SELECT
   ypk.tr_loppuosa        AS yllapitokohde_tr_loppuosa,
   ypk.tr_loppuetaisyys   AS yllapitokohde_tr_loppuetaisyys,
   ypk.kohdenumero        AS yllapitokohde_numero,
+  liite.id               as liite_id,
+  liite.nimi             as liite_nimi,
+  liite.tyyppi           as liite_tyyppi,
+  liite.koko             as liite_koko,
+  liite.liite_oid        as liite_oid,
   k.jarjestelma,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
     THEN 'urakoitsija' :: osapuoli
@@ -46,6 +51,8 @@ FROM tarkastus t
   LEFT JOIN kayttaja k ON t.luoja = k.id
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
   LEFT JOIN yllapitokohde ypk ON t.yllapitokohde = ypk.id
+  LEFT JOIN tarkastus_liite tl ON tl.tarkastus = t.id
+  LEFT JOIN liite ON tl.liite = liite.id
 WHERE t.urakka = :urakka
       AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
       AND (t.aika :: DATE >= :alku AND t.aika :: DATE <= :loppu)

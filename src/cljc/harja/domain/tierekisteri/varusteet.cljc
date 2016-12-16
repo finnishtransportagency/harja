@@ -1,14 +1,14 @@
 (ns harja.domain.tierekisteri.varusteet
   "Tierekisterin Varusteet ja laitteet -teeman tietojen käsittelyä"
   (:require [clojure.string :as str]
-            #?@(:cljs [[harja.loki :refer [log]]])
+    #?@(:cljs [[harja.loki :refer [log]]])
             [harja.domain.tierekisteri :as tr]))
 
-(def varuste-toimenpide->string {nil         "Kaikki"
-                                 :lisatty    "Lisätty"
+(def varuste-toimenpide->string {nil "Kaikki"
+                                 :lisatty "Lisätty"
                                  :paivitetty "Päivitetty"
-                                 :poistettu  "Poistettu"
-                                 :tarkastus  "Tarkastus"})
+                                 :poistettu "Poistettu"
+                                 :tarkastus "Tarkastus"})
 
 (def varustetoteumatyypit
   (vec varuste-toimenpide->string))
@@ -39,6 +39,21 @@
    "tl516" "Hiekkalaatikot"
    "tl511" "Viherkuviot"})
 
+(def tien-puolet
+  [0
+   1
+   2
+   3
+   7
+   8
+   9])
+
+(def oletus-ajoradat
+  [0])
+
+(def kaikki-ajoradat
+  [0 1 2])
+
 (defn kiinnostaa-listauksessa?
   [ominaisuus]
   (let [tunniste (:kenttatunniste (:ominaisuus ominaisuus))]
@@ -53,25 +68,33 @@
    :leveys 1})
 
 (defmulti varusteominaisuus->skeema
-  "Muodostaa lomake/grid tyyppisen kentän skeeman varusteen ominaisuuden kuvauksen perusteella.
-  Dispatch tapahtuu ominaisuuden tietotyypin perusteella."
-  (comp :tietotyyppi :ominaisuus))
+          "Muodostaa lomake/grid tyyppisen kentän skeeman varusteen ominaisuuden kuvauksen perusteella.
+          Dispatch tapahtuu ominaisuuden tietotyypin perusteella."
+          (comp :tietotyyppi :ominaisuus))
 
-(defn- varusteominaisuus-skeema-perus [ominaisuus]
-  {:otsikko (:selite ominaisuus)
+(defn- varusteominaisuus-skeema-perus [ominaisuus muokattava?]
+  {:otsikko (str/capitalize (:selite ominaisuus))
    :pakollinen? (:pakollinen ominaisuus)
    :nimi (keyword (:kenttatunniste ominaisuus))
-   :hae #(get-in % [:varuste :tietue :tietolaji :arvot (:kenttatunniste ominaisuus)])
+   :hae #(let [arvo (get-in % [:arvot (keyword (:kenttatunniste ominaisuus))])]
+           (if (= "" arvo) nil arvo))
    :aseta (fn [rivi arvo]
-            (assoc rivi (:kenttatunniste ominaisuus) arvo))})
+            (assoc-in rivi [:arvot (keyword (:kenttatunniste ominaisuus))] arvo))
+   ;; Varusteen tunnistetta ei saa muokata koskaan
+   :muokattava? #(and (not (= "tunniste" (:kenttatunniste ominaisuus))) muokattava?)})
 
 (defmethod varusteominaisuus->skeema :koodisto
-  [{ominaisuus :ominaisuus}]
-  (let [koodisto (:koodisto ominaisuus)]
-    (merge (varusteominaisuus-skeema-perus ominaisuus)
+  [{ominaisuus :ominaisuus} muokattava?]
+  (let [koodisto (map #(assoc % :selite (str/capitalize (:selite %))) (:koodisto ominaisuus))]
+    (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
            {:tyyppi :valinta
             :valinnat koodisto
-            :valinta-nayta :selite
+            :valinta-nayta (fn [arvo muokattava?]
+                             (if arvo
+                               (:selite arvo)
+                               (if muokattava?
+                                 "- Valitse -"
+                                 "")))
             :leveys 3
             :fmt (fn [arvo]
                    (let [koodi (first (filter #(= arvo (str (:koodi %))) koodisto))]
@@ -80,16 +103,18 @@
                        arvo)))})))
 
 (defmethod varusteominaisuus->skeema :numeerinen
-  [{ominaisuus :ominaisuus}]
-  (merge (varusteominaisuus-skeema-perus ominaisuus)
+  [{ominaisuus :ominaisuus} muokattava?]
+  (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
          {:tyyppi :numero
           :kokonaisluku? true
           :leveys 1}))
 
 (defmethod varusteominaisuus->skeema :default
-  [{ominaisuus :ominaisuus}]
-  (merge (varusteominaisuus-skeema-perus ominaisuus)
+  [{ominaisuus :ominaisuus} muokattava?]
+  (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
          {:tyyppi :string
           :leveys (if (= "tunniste" (:kenttatunniste ominaisuus))
                     1
                     3)}))
+
+

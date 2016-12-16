@@ -1,13 +1,15 @@
-(ns harja.palvelin.integraatiot.tierekisteri.tietolajin-kuvauksen-kasittely
-  "Muntaa tierekisterin tietolajin arvot merkkijonosta
-   Clojure-mapiksi ja päinvastoin."
+(ns harja.domain.tierekisteri.tietolajit
   (:require [clojure.string :as str]
             [taoensso.timbre :as log]
             [harja.tyokalut.merkkijono :as merkkijono]
             [clojure.string :as str]
             [clojure.set :as set]
             [harja.pvm :as pvm]
-            [clj-time.format :as df]))
+            [clj-time.format :as df]
+            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [clojure.walk :as walk])
+  (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn- jarjesta-ja-suodata-tietolajin-kuvaus [tietolajin-kuvaus]
   (sort-by :jarjestysnumero (filter :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))))
@@ -21,7 +23,7 @@
   [arvo tietolaji kenttatunniste tietotyyppi koodisto pakollinen]
   (case tietotyyppi
     :merkkijono nil ;; Kaikki kentät ovat pohjimmiltaan merkkijonoja
-    :numeerinen (when-not (merkkijono/kokonaisluku? arvo)
+    :numeerinen (when (and arvo (not (merkkijono/kokonaisluku? arvo)))
                   (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole kokonaisluku.")))
     :paivamaara (when (or pakollinen arvo)
                   (try
@@ -139,3 +141,46 @@
                    (partial pura-kentta arvot-merkkijono tietolaji kenttien-kuvaukset)
                    kenttien-kuvaukset)]
     (reduce merge map-osat)))
+
+(defn- muunna-tietolajin-arvot-stringiksi [tietolajin-kuvaus arvot-map]
+  (tietolajin-arvot-map->merkkijono
+    (clojure.walk/stringify-keys arvot-map)
+    tietolajin-kuvaus))
+
+(defn validoi-ja-muunna-arvot-merkkijonoksi
+  "Hakee tietolajin kuvauksen, validoi arvot sen pohjalta ja muuntaa arvot merkkijonoksi"
+  [tierekisteri arvot tietolaji]
+  (when tierekisteri
+    (let [vastaus (tierekisteri/hae-tietolajit
+                   tierekisteri
+                   tietolaji
+                   nil)
+         tietolajin-kuvaus (:tietolaji vastaus)]
+     (try
+       (validoi-tietolajin-arvot
+         tietolaji
+         (clojure.walk/stringify-keys arvot)
+         tietolajin-kuvaus)
+       (catch Exception e
+         (throw+ {:type virheet/+viallinen-kutsu+
+                  :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti (.getMessage e)}]})))
+     (muunna-tietolajin-arvot-stringiksi
+       tietolajin-kuvaus
+       arvot))))
+
+(defn validoi-ja-muunna-merkkijono-arvoiksi
+  "Hakee tietolajin kuvauksen, muuntaa merkkijonon arvoiksi ja validoi ne"
+  [tierekisteri merkkijono tietolaji]
+  (when tierekisteri
+    (let [vastaus (tierekisteri/hae-tietolajit tierekisteri tietolaji nil)
+         tietolajin-kuvaus (:tietolaji vastaus)
+         arvot (walk/keywordize-keys (tietolajin-arvot-merkkijono->map merkkijono tietolajin-kuvaus))]
+     (try
+       (validoi-tietolajin-arvot
+         tietolaji
+         (clojure.walk/stringify-keys arvot)
+         tietolajin-kuvaus)
+       (catch Exception e
+         (throw+ {:type virheet/+viallinen-kutsu+
+                  :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti (.getMessage e)}]})))
+     arvot)))

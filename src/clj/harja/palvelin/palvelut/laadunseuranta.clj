@@ -215,24 +215,26 @@
     palauta-reitti? max-rivimaara]
    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
    (let [urakoitsija? (roolit/urakoitsija? user)
+         tarkastukset-raakana (tarkastukset/hae-urakan-tarkastukset
+                                db
+                                {:urakka                  urakka-id
+                                 :kayttaja_on_urakoitsija urakoitsija?
+                                 :alku                    (konv/sql-timestamp alkupvm)
+                                 :loppu                   (konv/sql-timestamp loppupvm)
+                                 :rajaa_tienumerolla      (boolean tienumero)
+                                 :tienumero               tienumero
+                                 :rajaa_tyypilla          (boolean tyyppi)
+                                 :tyyppi                  (and tyyppi (name tyyppi))
+                                 :havaintoja_sisaltavat   havaintoja-sisaltavat?
+                                 :vain_laadunalitukset    vain-laadunalitukset?
+                                 :maxrivimaara            max-rivimaara})
          tarkastukset (into []
                             (comp tarkastus-xf
                                   (if palauta-reitti?
                                     identity
                                     (map #(dissoc % :sijainti))))
-                            (tarkastukset/hae-urakan-tarkastukset
-                              db
-                              {:urakka urakka-id
-                               :kayttaja_on_urakoitsija urakoitsija?
-                               :alku (konv/sql-timestamp alkupvm)
-                               :loppu (konv/sql-timestamp loppupvm)
-                               :rajaa_tienumerolla (boolean tienumero)
-                               :tienumero tienumero
-                               :rajaa_tyypilla (boolean tyyppi)
-                               :tyyppi (and tyyppi (name tyyppi))
-                               :havaintoja_sisaltavat havaintoja-sisaltavat?
-                               :vain_laadunalitukset vain-laadunalitukset?
-                               :maxrivimaara max-rivimaara}))]
+                            tarkastukset-raakana)
+         tarkastukset (konv/sarakkeet-vektoriin tarkastukset {:liite :liitteet})]
      tarkastukset)))
 
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
@@ -270,7 +272,9 @@
                (assoc :lampotila-tie
                       (get-in (:talvihoitomittaus tarkastus) [:lampotila :tie]))
                (assoc :lampotila-ilma
-                      (get-in (:talvihoitomittaus tarkastus) [:lampotila :ilma])))))
+                      (get-in (:talvihoitomittaus tarkastus) [:lampotila :ilma]))
+               (assoc :tr
+                      (:tr tarkastus)))))
 
         (when (and (or
                      (= :soratie tarkastustyyppi)

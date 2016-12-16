@@ -247,7 +247,7 @@
 
     ;; reagoidaan kartan ja ajoneuvon sijainnin muutokseen
     (run!
-      (if (:seuraa-sijaintia @optiot)
+      (if (:seuraa-sijaintia? @optiot)
         (do
           (kytke-dragpan kartta false)
           (paivita-kartan-keskipiste kartta @keskipiste-atomi))

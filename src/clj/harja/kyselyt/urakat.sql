@@ -3,11 +3,23 @@ SELECT
   u.id,
   u.nimi,
   u.tyyppi,
+  u.urakkanro,
   COALESCE(st_distance(u.alue, st_makepoint(:x, :y)),
            st_distance(au.alue, st_makepoint(:x, :y))) AS etaisyys
 FROM urakka u
   LEFT JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
-  WHERE ((u.loppupvm >= :alku AND u.alkupvm <= :loppu) OR (u.loppupvm IS NULL AND u.alkupvm <= :loppu))
+  WHERE
+          -- Urakka on käynnissä
+          (u.alkupvm <= now() AND
+          u.loppupvm > now())
+          OR
+          -- Urakka on käynnissä (loppua ei tiedossa)
+          (u.alkupvm <= now() AND
+          u.loppupvm IS NULL)
+          OR
+          -- Urakan takuuaika on voimassa
+          (u.alkupvm <= now() AND
+          u.takuu_loppupvm > now())
 ORDER BY etaisyys;
 
 -- name: hae-kaikki-urakat-aikavalilla
@@ -92,7 +104,7 @@ SELECT
   CASE
   WHEN u.tyyppi = 'siltakorjaus' :: urakkatyyppi
     THEN ST_Simplify(sps.alue, 50)
-  WHEN u.tyyppi = 'tekniset laitteet' :: urakkatyyppi
+  WHEN u.tyyppi = 'tekniset-laitteet' :: urakkatyyppi
     THEN ST_Simplify(tlu.alue, 50)
   ELSE
     ST_Simplify(au.alue, 50)
@@ -470,7 +482,7 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
                WHERE pps.paallystyspalvelusopimusnro = u.urakkanro AND
                      st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold)))
        OR
-       ((:urakkatyyppi = 'tekniset laitteet') AND
+       ((:urakkatyyppi = 'tekniset-laitteet') AND
         exists(SELECT id
                FROM tekniset_laitteet_urakka tlu
                WHERE tlu.urakkanro = u.urakkanro AND
@@ -636,3 +648,12 @@ VALUES (:urakkanro, ST_GeomFromText(:alue) :: GEOMETRY);
 -- name: hae-urakan-alkuvuosi
 -- single?: true
 SELECT EXTRACT(YEAR FROM alkupvm)::INTEGER FROM urakka WHERE id = :urakka;
+
+-- name: hae-urakan-ely
+SELECT
+  o.nimi,
+  o.elynumero,
+  o.lyhenne
+FROM organisaatio o
+  JOIN urakka u ON o.id = u.hallintayksikko
+WHERE u.id = :urakkaid;

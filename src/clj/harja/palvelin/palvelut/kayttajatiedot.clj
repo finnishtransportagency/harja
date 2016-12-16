@@ -18,6 +18,12 @@
       :hoito
       (keyword (q/hae-kayttajan-yleisin-urakkatyyppi db kayttajan-urakat)))))
 
+(defn hae-kayttaja
+  "Hakee käyttäjän tiedot id:llä."
+  [db kayttaja-id]
+  (when-let [k (first (q/hae-kayttaja db kayttaja-id))]
+    (konv/array->set (konv/organisaatio k) :roolit)))
+
 (defn kayttajan-lahimmat-urakat
   [db user oikeustarkistus-fn sijainti]
   "Palauttaa yksinkertaisen vectorin urakoita, joihin käyttäjällä on annettu oikeus.
@@ -29,9 +35,7 @@
                   (oikeustarkistus-fn id user)))
         (urakat-q/hae-lahimmat-urakat-aikavalilta
           db
-          {:alku (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))
-           :loppu (c/to-timestamp (pvm/suomen-aikavyohykkeeseen (t/now)))
-           :x (:lon sijainti)
+          {:x (:lon sijainti)
            :y (:lat sijainti)})))
 
 (defn kayttajan-urakat-aikavalilta

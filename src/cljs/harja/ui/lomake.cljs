@@ -306,7 +306,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   [_ _ _]
   (let [fokus (atom nil)]
     (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset
-                 voi-muokata?] :as opts} skeema
+                 voi-muokata? ei-borderia?] :as opts} skeema
          {muokatut ::muokatut
           :as data}]
       (let [{virheet ::virheet
@@ -324,7 +324,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                                                        #{}) nimi))
                                            muokkaa!)))]
             ;(lovg "RENDER! fokus = " (pr-str @fokus))
-            [:div.lomake
+            [:div
+             {:class (str "lomake " (when ei-borderia? "lomake-ilman-borderia") )}
              (when otsikko
                [:h3.lomake-otsikko otsikko])
              (doall
