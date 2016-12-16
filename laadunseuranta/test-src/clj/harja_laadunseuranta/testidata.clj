@@ -424,7 +424,7 @@
     :jatkuvat-havainnot [17]
     :laadunalitus true}])
 
-(def tarkastus-jossa-liittyvia-havaintoja
+(def tarkastus-jossa-liittyvia-pistemaisia-havaintoja
   "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
   [;; Tehdään pistemäinen havainto
    {:id 1 :sijainti [465641.5999816895 7230780.000024414]

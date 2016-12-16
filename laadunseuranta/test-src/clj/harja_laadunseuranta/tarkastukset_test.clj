@@ -213,7 +213,7 @@
 (deftest tarkastus-jossa-liittyva-havainto
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
-                         testidata/tarkastus-jossa-liittyvia-havaintoja))]
+                         testidata/tarkastus-jossa-liittyvia-pistemaisia-havaintoja))]
     ;; Yksi pistemäinen havainto, johon liitetty lisätietoja
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 1))
     (is (= (:kuvaus (first (:pistemaiset-tarkastukset tarkastukset)))
