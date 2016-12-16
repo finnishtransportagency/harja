@@ -1,0 +1,1 @@
+CREATE INDEX tarkastus_liite_tarkastus_idx ON tarkastus_liite (tarkastus);
