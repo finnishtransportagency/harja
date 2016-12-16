@@ -14,7 +14,8 @@
 ;; Lomakkeessa käytettävät kentät
 
 (defn tr-osoite [{:keys [tr-osoite-atom virheet-atom liittyva-havainto]}]
-  ;; TODO Disabloi TR-osoitteen muokkaus kun valittu liittyvä havainto, aseta tr-osoitteeksi havainnon osoite
+  ;; FIXME Jos liittyvä havainto otetaan pois, pitäisi lomakkeella olla jälleen ehdolla
+  ;; nykyinen tieosoite. Nyt osoitteeksi jää liittyvän havainnon osoite
   (let [max-merkkeja 7
         arvo-validi? (fn [arvo-tekstina]
                        (boolean (or (empty? arvo-tekstina)
