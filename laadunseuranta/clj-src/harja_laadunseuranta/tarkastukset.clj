@@ -112,7 +112,17 @@
    Reittimerkintä voi olla joko yksittäinen (pistemäinen) reittimerkintä tai
    jatkuvista havainnoista kasattu, yhdistetty reittimerkintä."
   [reittimerkinta]
-  (let [yhdista-mittausarvot (fn [reittimerkinta mittaus-avain]
+  (let [yhdista-reittimerkintojen-idt (fn [reittimerkinta]
+                                        (cond
+                                          (nil? (:id reittimerkinta))
+                                          []
+
+                                          (number? (:id reittimerkinta))
+                                          [(:id reittimerkinta)]
+
+                                          (vector? (:id reittimerkinta))
+                                          (:id reittimerkinta)))
+        yhdista-mittausarvot (fn [reittimerkinta mittaus-avain]
                                (cond
                                  (nil? (mittaus-avain reittimerkinta))
                                  nil
@@ -125,6 +135,7 @@
     {:aika (:aikaleima reittimerkinta)
      :tyyppi (paattele-tarkastustyyppi reittimerkinta)
      :tarkastusajo (:tarkastusajo reittimerkinta)
+     :reittimerkinta-idt (yhdista-reittimerkintojen-idt reittimerkinta) ;; Reittimerkintöjen id:t, joista tämä tarkastus muodostuu
      :sijainnit (or (:sijainnit reittimerkinta) [{:sijainti (:sijainti reittimerkinta)
                                                   :tr-osoite (:tr-osoite reittimerkinta)}])
      :liite (:kuva reittimerkinta) ;; Liitteen id tai vector jos monta
@@ -147,23 +158,23 @@
 (defn viimeinen-indeksi [sekvenssi]
   (- (count sekvenssi) 1))
 
-(defn- keraa-seuraavan-pisteen-mittaus
+(defn- keraa-seuraavan-pisteen-arvot
   "Ottaa reittimerkinnän ja järjestyksessä seuraavan reittimerkinnän.
-   Lisää seuraavan mittauksen tiedot edelliseen."
-  [reittimerkinta seuraava-reittimerkinta mittaus-avain]
-  (if (nil? (mittaus-avain seuraava-reittimerkinta))
+   Lisää seuraavan mittauksen tiedot edelliseen (numero tai vector)"
+  [reittimerkinta seuraava-reittimerkinta arvo-avain]
+  (if (nil? (arvo-avain seuraava-reittimerkinta))
     reittimerkinta
 
-    (cond (nil? (mittaus-avain reittimerkinta)) ;; Aseta arvoksi seuraava mittaus
-          (assoc reittimerkinta mittaus-avain (mittaus-avain seuraava-reittimerkinta))
+    (cond (nil? (arvo-avain reittimerkinta)) ;; Aseta arvoksi seuraava mittaus
+          (assoc reittimerkinta arvo-avain (arvo-avain seuraava-reittimerkinta))
 
-          (number? (mittaus-avain reittimerkinta)) ;; Muunna vectoriksi
-          (assoc reittimerkinta mittaus-avain [(mittaus-avain reittimerkinta)
-                                               (mittaus-avain seuraava-reittimerkinta)])
+          (number? (arvo-avain reittimerkinta)) ;; Muunna vectoriksi
+          (assoc reittimerkinta arvo-avain [(arvo-avain reittimerkinta)
+                                               (arvo-avain seuraava-reittimerkinta)])
 
-          (vector? (mittaus-avain reittimerkinta)) ;; Lisää seuraava arvo vectoriin
-          (assoc reittimerkinta mittaus-avain (conj (mittaus-avain reittimerkinta)
-                                                    (mittaus-avain seuraava-reittimerkinta))))))
+          (vector? (arvo-avain reittimerkinta)) ;; Lisää seuraava arvo vectoriin
+          (assoc reittimerkinta arvo-avain (conj (arvo-avain reittimerkinta)
+                                                    (arvo-avain seuraava-reittimerkinta))))))
 
 (defn- keraa-seuraavan-pisteen-sijainti
   "Ottaa reittimerkinnän ja järjestyksessä seuraavan reittimerkinnän.
@@ -210,20 +221,20 @@
             ;; ja lisää ne viimeisimpään reittimerkintään
             (assoc reittimerkinnat
               (viimeinen-indeksi reittimerkinnat)
-              (-> viimeisin-yhdistetty-reittimerkinta
-                  (keraa-seuraavan-pisteen-sijainti seuraava-merkinta)
-                  (keraa-seuraavan-pisteen-laadunalitus seuraava-merkinta)
-                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :talvihoito-tasaisuus)
-                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :lumisuus)
-                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :kitkamittaus)
-                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :soratie-tasaisuus)
-                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :kiinteys)
-                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :polyavyys)
-                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :sivukaltevuus)
-                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :lampotila)
-                  ;; Okei, kuva ei ole mittaus, mutta kerääminen toimii samalla logiikalla :-)
-                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :kuva)
-                  (keraa-reittimerkintojen-kuvaukset seuraava-merkinta)))
+              (as-> viimeisin-yhdistetty-reittimerkinta edellinen
+                    (keraa-seuraavan-pisteen-sijainti edellinen seuraava-merkinta)
+                    (keraa-seuraavan-pisteen-laadunalitus edellinen seuraava-merkinta)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :talvihoito-tasaisuus)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :lumisuus)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :kitkamittaus)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :soratie-tasaisuus)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :kiinteys)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :polyavyys)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :sivukaltevuus)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :lampotila)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :kuva)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :id)
+                    (keraa-reittimerkintojen-kuvaukset edellinen seuraava-merkinta)))
             ;; Uusi tarkastus alkaa
             (conj reittimerkinnat seuraava-merkinta)))))
     []
@@ -303,6 +314,7 @@
 
 (defn- tallenna-tarkastus! [db tarkastus kayttaja]
   (log/debug "Aloitetaan tarkastuksen tallennus")
+  (log/debug (pr-str tarkastus))
   (let [tarkastus (luo-tallennettava-tarkastus tarkastus kayttaja)
         geometria (hae-tallennettavan-tarkastuksen-sijainti db tarkastus)
         tarkastus (as-> tarkastus tarkastus
