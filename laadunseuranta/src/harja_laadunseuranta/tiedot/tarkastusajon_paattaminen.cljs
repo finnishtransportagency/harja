@@ -39,6 +39,7 @@
                              :laadunalitus? false
                              :kuvaus ""
                              :kuva nil}
+        :liittyvat-havainnot []
         ;; Kartta
         :kirjauspisteet []
         ;; Muut
