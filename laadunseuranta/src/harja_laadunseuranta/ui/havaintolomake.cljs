@@ -59,7 +59,8 @@
          [lomake/tr-osoite
           {:tr-osoite-atom tr-osoite-atom
            :virheet-atom lomake-virheet-atom
-           :muokattava? (some? @lomake-liittyy-havaintoon-atom)}]]]
+           :liittyva-havainto (first (filter #(= (:id %) @lomake-liittyy-havaintoon-atom)
+                                             liittyvat-havainnot))}]]]
 
        [lomake/rivi
         [lomake/kentta ""

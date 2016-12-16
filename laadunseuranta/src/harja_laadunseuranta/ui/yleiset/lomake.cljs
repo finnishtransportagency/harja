@@ -13,7 +13,7 @@
 
 ;; Lomakkeessa käytettävät kentät
 
-(defn tr-osoite [{:keys [tr-osoite-atom virheet-atom muokattava?]}]
+(defn tr-osoite [{:keys [tr-osoite-atom virheet-atom liittyva-havainto]}]
   ;; TODO Disabloi TR-osoitteen muokkaus kun valittu liittyvä havainto, aseta tr-osoitteeksi havainnon osoite
   (let [max-merkkeja 7
         arvo-validi? (fn [arvo-tekstina]
@@ -50,10 +50,15 @@
                                   (swap! virheet-atom disj :tr-osoite-virheellinen)
 
                                   :default
-                                  (swap! virheet-atom conj :tr-osoite-virheellinen)))]
-    (fn [{:keys [tr-osoite-atom virheet-atom muokattava?]}]
+                                  (swap! virheet-atom conj :tr-osoite-virheellinen)))
+        tarkista-liittyva-havainto! (fn [tr-osoite-atom liittyva-havainto]
+                                      (when liittyva-havainto
+                                        (reset! tr-osoite-atom (:tr-osoite liittyva-havainto))))]
+    (fn [{:keys [tr-osoite-atom virheet-atom liittyva-havainto]}]
       (tarkista-virheet! tr-osoite-atom virheet-atom)
-      (let [{:keys [tie aosa aet losa let]} @tr-osoite-atom]
+      (tarkista-liittyva-havainto! tr-osoite-atom liittyva-havainto)
+      (let [{:keys [tie aosa aet losa let]} @tr-osoite-atom
+            muokattava? (some? liittyva-havainto)]
         [:div.tr-osoite
          [:input {:type "number" :value tie :on-change #(on-change % :tie) :placeholder "Tie#"
                   :disabled muokattava?}]
