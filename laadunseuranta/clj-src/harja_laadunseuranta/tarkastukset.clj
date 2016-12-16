@@ -231,25 +231,29 @@
 
 (defn- pistemainen-havainto?
   [reittimerkinta]
-  (boolean (and (:pistemainen-havainto reittimerkinta)
-                (nil? (:liittyy-merkintaan reittimerkinta)))))
+  (boolean (and (or (:pistemainen-havainto reittimerkinta)
+                    ;; Kuvan tai tekstiä sisältävän merkinnän pitäisi olla aina pistemäinen yleishavainto,
+                    ;; mutta varmistetaan nyt kuitenkin
+                    (:kuva reittimerkinta)
+                    (:kuvaus reittimerkinta)))))
 
-(defn- jatkuva-havainto?
+(defn liittyva-havainto?
   [reittimerkinta]
-  (boolean (and (nil? (:pistemainen-havainto reittimerkinta))
-                (nil? (:liittyy-merkintaan reittimerkinta)))))
+  (some? (:liittyy-merkintaan reittimerkinta)))
 
 (defn- reittimerkinnat-reitillisiksi-tarkastuksiksi
   "Käy annetut reittimerkinnät läpi ja muodostaa niistä reitilliset tarkastukset"
   [reittimerkinnat]
-  (let [jatkuvat-reittimerkinnat (filter jatkuva-havainto? reittimerkinnat)
+  (let [jatkuvat-reittimerkinnat (filter #(and (not (pistemainen-havainto? %))
+                                               (not (liittyva-havainto? %))) reittimerkinnat)
         yhdistetyt-reittimerkinnat (yhdista-jatkuvat-reittimerkinnat jatkuvat-reittimerkinnat)]
     (mapv reittimerkinta-tarkastukseksi yhdistetyt-reittimerkinnat)))
 
 (defn- reittimerkinnat-pistemaisiksi-tarkastuksiksi
   "Käy annetut reittimerkinnät läpi ja muodostaa niistä pistemäiset tarkastukset"
   [reittimerkinnat]
-  (let [pistemaiset-reittimerkinnat (filter pistemainen-havainto? reittimerkinnat)]
+  (let [pistemaiset-reittimerkinnat (filter #(and (pistemainen-havainto? %)
+                                                 (not (liittyva-havainto? %))) reittimerkinnat)]
     (mapv reittimerkinta-tarkastukseksi pistemaiset-reittimerkinnat)))
 
 (defn reittimerkinnat-tarkastuksiksi

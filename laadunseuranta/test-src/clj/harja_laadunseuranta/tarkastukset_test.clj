@@ -37,7 +37,6 @@
                          testidata/tarkastukset-joissa-jatkuvat-havainnot-muuttuu-ja-kommentteja))]
     (testing "Kommentit kerääntyvät oikein"
       (is (= (-> tarkastukset :pistemaiset-tarkastukset) []))
-      (is (= (-> tarkastukset :reitilliset-tarkastukset second :havainnot) "foo\nbar"))
       (is (= (-> tarkastukset :reitilliset-tarkastukset (get 2) :havainnot) nil)))))
 
 (deftest pistemaiset-reittimerkinnat-tarkastuksiksi
