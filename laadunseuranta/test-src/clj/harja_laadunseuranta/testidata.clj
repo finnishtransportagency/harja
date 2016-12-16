@@ -432,6 +432,7 @@
   [;; Tehdään pistemäinen havainto
    {:id 2 :sijainti [465641.5999816895 7230780.000024414]
     :pistemainen-havainto [1]}
+   ;; Normaali tarkastus jatkuu
    {:id 3 :sijainti [466089.5999816895 7230916.000024414]}
    {:id 4 :sijainti [466409.5999816895 7230996.000024414]}
    {:id 5 :sijainti [467009.5999816895 7231180.000024414]}
