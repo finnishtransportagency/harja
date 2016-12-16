@@ -271,7 +271,10 @@
                                             reittimerkinnat)]
     (mapv reittimerkinta-tarkastukseksi pistemaiset-reittimerkinnat)))
 
-(defn- liita-tarkastukseen-liittyvat-merkinnat [tarkastus liittyvat-merkinnat]
+(defn- liita-tarkastukseen-liittyvat-merkinnat
+  "Etsii ja lisää tarkastukseen siihen liittyvät tiedot.
+   Jos liittyviä tietoja ei ole, tarkastus palautuu sellaisenaan."
+  [tarkastus liittyvat-merkinnat]
   (let [tarkastukseen-liittyvat-merkinnat (filter
                                             #((:reittimerkinta-idt tarkastus)
                                                (:liittyy-havaintoon %))
@@ -299,7 +302,7 @@
 
 (defn- liita-tarkastuksiin-lomakkeelta-kirjatut-tiedot
   "Ottaa mapin, jossa on reittimerkinnöistä muunnetut Harja-tarkastukset (pistemäiset ja reitilliset),
-   sekä toisiin merkintöihin liittyvät merkinnät. Etsii ja liittää tarkastuksiin niihin kirjatut
+   sekä toisiin merkintöihin liittyvät merkinnät. Etsii ja lisää tarkastuksiin niihin kirjatut
    liittyvät tiedot."
   [tarkastukset liittyvat-merkinnat]
   {:reitilliset-tarkastukset (mapv #(liita-tarkastukseen-liittyvat-merkinnat % liittyvat-merkinnat)
