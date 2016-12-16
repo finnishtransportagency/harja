@@ -276,9 +276,9 @@
    Jos liittyviä tietoja ei ole, tarkastus palautuu sellaisenaan."
   [tarkastus liittyvat-merkinnat]
   (let [tarkastukseen-liittyvat-merkinnat (filter
-                                            #((:reittimerkinta-idt tarkastus)
+                                            #((into #{} (:reittimerkinta-idt tarkastus))
                                                (:liittyy-merkintaan %))
-                                               liittyvat-merkinnat)]
+                                            liittyvat-merkinnat)]
     (if (empty? tarkastukseen-liittyvat-merkinnat)
       tarkastus
       (merge tarkastus
