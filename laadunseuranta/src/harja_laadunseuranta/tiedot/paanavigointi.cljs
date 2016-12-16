@@ -318,30 +318,66 @@
                  :avain :kaivojenkorkeusasema
                  :vaatii-nappaimiston? false}]})
 
+(defn jarjesta-valilehdet [valilehdet]
+  (into [] (sort-by :jarjestys valilehdet)))
+
+(defn kayttajaroolin-mukaiset-valilehdet
+  "Palauttaa vain ne välilehdet, jotka ovat kyseiselle käyttäjäroolille tarpeelliset.
+   Säätää myös järjestyksen kohdalleen."
+  [oletusvalilehdet kayttajatiedot]
+  (let [oikeus-vain-paallystykseen? (every? #(= (:tyyppi %) "paallystys")
+                                            (:oikeus-urakoihin kayttajatiedot))
+        urakoitsija? (= (get-in kayttajatiedot [:organisaatio :tyyppi]) :urakoitsija)]
+    (cond
+      ;; Päällystysurakoitsijalle näytetään vain päällystys-välilehti
+      (and urakoitsija?
+           oikeus-vain-paallystykseen?)
+      (filterv #(= (:avain %) :paallystys) oletusvalilehdet)
+
+      ;; Päällystyksen muille henkilöille siirreään vain päällystys-välilehti kärkeen
+      oikeus-vain-paallystykseen?
+      (let [muokatut-valilehdet (mapv #(if (= (:avain %) :paallystys)
+                                         (assoc % :jarjestys 0)
+                                         %)
+                                      oletusvalilehdet)]
+        (jarjesta-valilehdet muokatut-valilehdet))
+
+      ;; Ei roolin mukaisia sääntöjä
+      :default
+      oletusvalilehdet)))
+
 (def oletusvalilehdet
   [{:avain :talvihoito
     :nimi "Talviset pinnat"
+    :jarjestys 1
     :sisalto (:talviset-pinnat havainnot-ryhmittain)}
    {:avain :liikennemerkit
     :nimi "Liikennemerkit"
+    :jarjestys 1
     :sisalto (:liikennemerkit havainnot-ryhmittain)}
    {:avain :viherhoito
     :nimi "Viherhoito"
+    :jarjestys 1
     :sisalto (:viherhoito havainnot-ryhmittain)}
    {:avain :reunat
     :nimi "Reunat"
+    :jarjestys 1
     :sisalto (:reunat havainnot-ryhmittain)}
    {:avain :p-ja-l-alueet
     :nimi "P- ja L-alueet"
+    :jarjestys 1
     :sisalto (:p-ja-l-alueet havainnot-ryhmittain)}
    {:avain :soratiet
     :nimi "Soratiet"
+    :jarjestys 1
     :sisalto (:soratiet havainnot-ryhmittain)}
    {:avain :muut
     :nimi "Sillat"
+    :jarjestys 1
     :sisalto (:sillat havainnot-ryhmittain)}
    {:avain :paallystys
     :nimi "Päällystys"
+    :jarjestys 1
     :sisalto (:paallystys havainnot-ryhmittain)}])
 
 ;; Käsittelylogiikka
