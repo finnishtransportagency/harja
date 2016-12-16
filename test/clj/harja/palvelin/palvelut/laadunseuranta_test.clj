@@ -171,8 +171,8 @@
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))
     (let [tarkastus (first vastaus)]
-      (is (= #{:ok? :jarjestelma :havainnot :laadunalitus :vakiohavainnot :aika :soratiemittaus
-               :tr :tekija :id :tyyppi :tarkastaja :yllapitokohde :nayta-urakoitsijalle}
+      (is (= #{:ok? :jarjestelma :havainnot :laadunalitus :vakiohavainnot :aika :soratiemittaus :talvihoitomittaus
+               :tr :tekija :id :tyyppi :tarkastaja :yllapitokohde :nayta-urakoitsijalle :liitteet}
              (into #{} (keys tarkastus)))))))
 
 (deftest hae-urakan-tarkastukset-urakoitsijalle
