@@ -170,11 +170,11 @@
 
           (number? (arvo-avain reittimerkinta)) ;; Muunna vectoriksi
           (assoc reittimerkinta arvo-avain [(arvo-avain reittimerkinta)
-                                               (arvo-avain seuraava-reittimerkinta)])
+                                            (arvo-avain seuraava-reittimerkinta)])
 
           (vector? (arvo-avain reittimerkinta)) ;; Lisää seuraava arvo vectoriin
           (assoc reittimerkinta arvo-avain (conj (arvo-avain reittimerkinta)
-                                                    (arvo-avain seuraava-reittimerkinta))))))
+                                                 (arvo-avain seuraava-reittimerkinta))))))
 
 (defn- keraa-seuraavan-pisteen-sijainti
   "Ottaa reittimerkinnän ja järjestyksessä seuraavan reittimerkinnän.
@@ -249,7 +249,7 @@
                     (:kuva reittimerkinta)
                     (:kuvaus reittimerkinta)))))
 
-(defn liittyva-havainto?
+(defn- toiseen-merkintaan-liittyva-merkinta?
   [reittimerkinta]
   (some? (:liittyy-merkintaan reittimerkinta)))
 
@@ -257,7 +257,8 @@
   "Käy annetut reittimerkinnät läpi ja muodostaa niistä reitilliset tarkastukset"
   [reittimerkinnat]
   (let [jatkuvat-reittimerkinnat (filter #(and (not (pistemainen-havainto? %))
-                                               (not (liittyva-havainto? %))) reittimerkinnat)
+                                               (not (toiseen-merkintaan-liittyva-merkinta? %)))
+                                         reittimerkinnat)
         yhdistetyt-reittimerkinnat (yhdista-jatkuvat-reittimerkinnat jatkuvat-reittimerkinnat)]
     (mapv reittimerkinta-tarkastukseksi yhdistetyt-reittimerkinnat)))
 
@@ -265,15 +266,35 @@
   "Käy annetut reittimerkinnät läpi ja muodostaa niistä pistemäiset tarkastukset"
   [reittimerkinnat]
   (let [pistemaiset-reittimerkinnat (filter #(and (pistemainen-havainto? %)
-                                                  (not (liittyva-havainto? %))) reittimerkinnat)]
+                                                  (not (toiseen-merkintaan-liittyva-merkinta? %)))
+                                            reittimerkinnat)]
     (mapv reittimerkinta-tarkastukseksi pistemaiset-reittimerkinnat)))
+
+(defn- liita-tarkastukseen-liittyvat-merkinnat [tarkastukset liittyvat-merkinnat]
+  ;; TODO Teeppäs tämä
+  tarkastukset)
+
+(defn- liita-tarkastuksiin-lomakkeelta-kirjatut-tiedot
+  "Ottaa mapin, jossa on reittimerkinnöistä muunnetut Harja-tarkastukset (pistemäiset ja reitilliset),
+   sekä toisiin merkintöihin liittyvät merkinnät. Etsii ja liittää tarkastuksiin niihin kirjatut
+   liittyvät tiedot."
+  [tarkastukset liittyvat-merkinnat]
+  {:reitilliset-tarkastukset (mapv #(liita-tarkastukseen-liittyvat-merkinnat % liittyvat-merkinnat)
+                                   (:reitilliset-tarkastukset tarkastukset))
+   :pistemaiset-tarkastukset (mapv #(liita-tarkastukseen-liittyvat-merkinnat % liittyvat-merkinnat)
+                                   (:pistemainen-havainto tarkastukset))})
 
 (defn reittimerkinnat-tarkastuksiksi
   "Käy reittimerkinnät läpi ja palauttaa mapin, jossa reittimerkinnät muutettu
-   reitillisiksi ja pistemäisiksi tarkastuksiksi"
+   reitillisiksi ja pistemäisiksi Harja-tarkastuksiksi."
   [tr-osoitteelliset-reittimerkinnat]
-  {:reitilliset-tarkastukset (reittimerkinnat-reitillisiksi-tarkastuksiksi tr-osoitteelliset-reittimerkinnat)
-   :pistemaiset-tarkastukset (reittimerkinnat-pistemaisiksi-tarkastuksiksi tr-osoitteelliset-reittimerkinnat)})
+  (let [tarkastukset {:reitilliset-tarkastukset (reittimerkinnat-reitillisiksi-tarkastuksiksi tr-osoitteelliset-reittimerkinnat)
+                      :pistemaiset-tarkastukset (reittimerkinnat-pistemaisiksi-tarkastuksiksi tr-osoitteelliset-reittimerkinnat)}
+        liittyvat-merkinnat (filterv toiseen-merkintaan-liittyva-merkinta?
+                                     tr-osoitteelliset-reittimerkinnat)
+        tarkastukset-lomaketiedoilla (liita-tarkastuksiin-lomakkeelta-kirjatut-tiedot tarkastukset
+                                                                                      liittyvat-merkinnat)]
+    tarkastukset-lomaketiedoilla))
 
 (defn luo-tallennettava-tarkastus [tarkastus kayttaja]
   (let [tarkastuksen-reitti (:sijainnit tarkastus)

@@ -204,6 +204,9 @@
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))
 
+    ;; Kitka huomioitu
+    (is (= (-> tarkastukset :reitilliset-tarkastukset first :talvihoitomittaus :kitka) 0.2))
+
     ;; Koko tarkastus on merkitty laadunalitukseksi, koska sellainen löytyi osasta tarkastuspisteitä
     (is (= (-> tarkastukset :reitilliset-tarkastukset first :laadunalitus) true))))
 
