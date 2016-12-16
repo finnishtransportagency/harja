@@ -232,12 +232,17 @@
 (defn- pistemainen-havainto?
   [reittimerkinta]
   (boolean (and (:pistemainen-havainto reittimerkinta)
-                )))
+                (nil? (:liittyy-merkintaan reittimerkinta)))))
+
+(defn- jatkuva-havainto?
+  [reittimerkinta]
+  (boolean (and (nil? (:pistemainen-havainto reittimerkinta))
+                (nil? (:liittyy-merkintaan reittimerkinta)))))
 
 (defn- reittimerkinnat-reitillisiksi-tarkastuksiksi
   "Käy annetut reittimerkinnät läpi ja muodostaa niistä reitilliset tarkastukset"
   [reittimerkinnat]
-  (let [jatkuvat-reittimerkinnat (filter (comp not pistemainen-havainto?) reittimerkinnat)
+  (let [jatkuvat-reittimerkinnat (filter jatkuva-havainto? reittimerkinnat)
         yhdistetyt-reittimerkinnat (yhdista-jatkuvat-reittimerkinnat jatkuvat-reittimerkinnat)]
     (mapv reittimerkinta-tarkastukseksi yhdistetyt-reittimerkinnat)))
 
