@@ -308,7 +308,7 @@
   {:reitilliset-tarkastukset (mapv #(liita-tarkastukseen-liittyvat-merkinnat % liittyvat-merkinnat)
                                    (:reitilliset-tarkastukset tarkastukset))
    :pistemaiset-tarkastukset (mapv #(liita-tarkastukseen-liittyvat-merkinnat % liittyvat-merkinnat)
-                                   (:pistemainen-havainto tarkastukset))})
+                                   (:pistemaiset-tarkastukset tarkastukset))})
 
 (defn reittimerkinnat-tarkastuksiksi
   "Käy reittimerkinnät läpi ja palauttaa mapin, jossa reittimerkinnät muutettu
