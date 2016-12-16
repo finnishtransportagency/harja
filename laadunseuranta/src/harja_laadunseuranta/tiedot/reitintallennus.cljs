@@ -130,26 +130,34 @@
                        s/ilmoitus
                        {:tyyppi :virhe}))
 
-(defn kirjaa-pistemainen-havainto! [{:keys [idxdb sijainti tarkastusajo-id lisaa-liittyva-havainto tr-osoite
+(defn lisaa-merkinta-ehdolle-liitettavaksi-havainnoksi [{:keys [kirjaustulos lisaa-liittyva-havainto-fn
+                                                                aikaleima tr-osoite havainto-avain]}]
+  (set! (.-onsuccess kirjaustulos)
+        (fn [e]
+          (let [indexed-db-id (-> e .-target .-result)]
+            (lisaa-liittyva-havainto-fn {:id indexed-db-id
+                                         :aikaleima aikaleima
+                                         :tr-osoite tr-osoite
+                                         :havainto-avain havainto-avain})))))
+
+(defn kirjaa-pistemainen-havainto! [{:keys [idxdb sijainti tarkastusajo-id lisaa-liittyva-havainto-fn tr-osoite
                                             epaonnistui-fn jatkuvat-havainnot havainto-avain] :as tiedot}]
   (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen sijainti)
                                            asetukset/+suurin-sallittu-tarkkuus+)
     (let [aikaleima-nyt (lt/local-now)
-          kirjaus (kirjaa-kertakirjaus idxdb
-                                       {:sijainti (select-keys (:nykyinen sijainti) [:lat :lon :accuracy])
-                                        :aikaleima (tc/to-long aikaleima-nyt)
-                                        :tarkastusajo tarkastusajo-id
-                                        :havainnot (into #{} (remove nil? (conj jatkuvat-havainnot
-                                                                                havainto-avain)))
-                                        :mittaukset {}})]
-      (set! (.-onsuccess kirjaus)
-            (fn [e]
-              (let [indexed-db-id (-> e .-target .-result)]
-                (when lisaa-liittyva-havainto
-                  (lisaa-liittyva-havainto {:id indexed-db-id
-                                            :aikaleima aikaleima-nyt
-                                            :tr-osoite tr-osoite
-                                            :havainto-avain havainto-avain})))))
+          kirjaustulos (kirjaa-kertakirjaus idxdb
+                                            {:sijainti (select-keys (:nykyinen sijainti) [:lat :lon :accuracy])
+                                             :aikaleima (tc/to-long aikaleima-nyt)
+                                             :tarkastusajo tarkastusajo-id
+                                             :havainnot (into #{} (remove nil? (conj jatkuvat-havainnot
+                                                                                     havainto-avain)))
+                                             :mittaukset {}})]
+      (when lisaa-liittyva-havainto-fn
+        (lisaa-merkinta-ehdolle-liitettavaksi-havainnoksi {:kirjaustulos kirjaustulos
+                                                           :lisaa-liittyva-havainto-fn lisaa-liittyva-havainto-fn
+                                                           :aikaleima aikaleima-nyt
+                                                           :tr-osoite tr-osoite
+                                                           :havainto-avain havainto-avain}))
       true)
     (when epaonnistui-fn
       (epaonnistui-fn {:viesti (str "Epätarkka sijainti ("
@@ -215,26 +223,33 @@
    (esim. sijainti tai jatkuvat havainnot vaihtuu).
    Ei ole syytä kutsua pistemäisille muutoksille (pistemäiset havainnot),
    vaan niistä tulee kirjata erikseen oma merkintä."
-  [{:keys [idxdb sijainti tarkastusajo-id jatkuvat-havainnot mittaustyyppi
-           soratiemittaussyotto epaonnistui-fn] :as tiedot}]
+  [{:keys [idxdb sijainti tarkastusajo-id jatkuvat-havainnot mittaustyyppi tr-osoite havainto-avain
+           soratiemittaussyotto epaonnistui-fn lisaa-liittyva-havainto-fn] :as tiedot}]
   (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen sijainti)
                                            asetukset/+suurin-sallittu-tarkkuus+)
-    (do (kirjaa-kertakirjaus idxdb
-                             {:sijainti (select-keys (:nykyinen sijainti) [:lat :lon :accuracy])
-                              :aikaleima (tc/to-long (lt/local-now))
-                              :tarkastusajo tarkastusajo-id
-                              ;; Nauhoituksessa havaintoihin tallentuvat vain jatkuvat mittaukset
-                              ;; Pistemäisen havainnot kirjataan erikseen heti kun sellainen syötetään.
-                              :havainnot jatkuvat-havainnot
-                              ;; Nauhoituksessa mittauksiin tallentuvat vain jatkuvat mittaukset
-                              ;; Kertamittaukset tallennetaan erikseen heti kun sellainen syötetään.
-                              ;; HUOM: Tärkeää ottaa arvot ylös vain jos mittaus on päällä!
-                              :mittaukset (merge {}
-                                                 (when (= mittaustyyppi :soratie)
-                                                   {:soratie-tasaisuus (:tasaisuus soratiemittaussyotto)
-                                                    :kiinteys (:kiinteys soratiemittaussyotto)
-                                                    :polyavyys (:polyavyys soratiemittaussyotto)}))})
-        true)
+    (let [aikaleima-nyt (lt/local-now)
+          kirjaustulos (kirjaa-kertakirjaus idxdb
+                                            {:sijainti (select-keys (:nykyinen sijainti) [:lat :lon :accuracy])
+                                             :aikaleima (tc/to-long aikaleima-nyt)
+                                             :tarkastusajo tarkastusajo-id
+                                             ;; Nauhoituksessa havaintoihin tallentuvat vain jatkuvat mittaukset
+                                             ;; Pistemäisen havainnot kirjataan erikseen heti kun sellainen syötetään.
+                                             :havainnot jatkuvat-havainnot
+                                             ;; Nauhoituksessa mittauksiin tallentuvat vain jatkuvat mittaukset
+                                             ;; Kertamittaukset tallennetaan erikseen heti kun sellainen syötetään.
+                                             ;; HUOM: Tärkeää ottaa arvot ylös vain jos mittaus on päällä!
+                                             :mittaukset (merge {}
+                                                                (when (= mittaustyyppi :soratie)
+                                                                  {:soratie-tasaisuus (:tasaisuus soratiemittaussyotto)
+                                                                   :kiinteys (:kiinteys soratiemittaussyotto)
+                                                                   :polyavyys (:polyavyys soratiemittaussyotto)}))})]
+          (when lisaa-liittyva-havainto-fn
+            (lisaa-merkinta-ehdolle-liitettavaksi-havainnoksi {:kirjaustulos kirjaustulos
+                                                               :lisaa-liittyva-havainto-fn lisaa-liittyva-havainto-fn
+                                                               :aikaleima aikaleima-nyt
+                                                               :tr-osoite tr-osoite
+                                                               :havainto-avain havainto-avain}))
+          true)
     (when epaonnistui-fn
       (epaonnistui-fn {:viesti (str "Epätarkka sijainti ("
                                     (fmt/n-desimaalia (:accuracy (:nykyinen sijainti)) 0)

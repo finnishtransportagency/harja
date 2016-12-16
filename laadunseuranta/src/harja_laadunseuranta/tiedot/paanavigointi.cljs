@@ -406,7 +406,7 @@
      :jatkuvat-havainnot @s/jatkuvat-havainnot
      :havainto-avain avain
      :epaonnistui-fn reitintallennus/merkinta-epaonnistui
-     :lisaa-liittyva-havainto (partial lisaa-liittyva-havainto! s/liittyvat-havainnot)}))
+     :lisaa-liittyva-havainto-fn (partial lisaa-liittyva-havainto! s/liittyvat-havainnot)}))
 
 (defn valikohtainen-havainto-painettu!
   "Asettaa välikohtaisen havainnon päälle tai pois päältä."
@@ -436,15 +436,19 @@
              (not (avain @s/jatkuvat-havainnot)))
     (s/aseta-mittaus-pois!))
 
-  ;; Tee merkintä
-  (reitintallennus/kirjaa-yksittainen-reittimerkinta!
-    {:idxdb @s/idxdb
-     :sijainti @s/sijainti
-     :tarkastusajo-id @s/tarkastusajo-id
-     :jatkuvat-havainnot @s/jatkuvat-havainnot
-     :mittaustyyppi @s/mittaustyyppi
-     :soratiemittaussyotto @s/soratiemittaussyotto
-     :epaonnistui-fn reitintallennus/merkinta-epaonnistui}))
+  ;; Tee merkintä, jos havainto laitettiin päälle
+  (when (@s/jatkuvat-havainnot avain)
+    (reitintallennus/kirjaa-yksittainen-reittimerkinta!
+     {:idxdb @s/idxdb
+      :sijainti @s/sijainti
+      :tarkastusajo-id @s/tarkastusajo-id
+      :jatkuvat-havainnot @s/jatkuvat-havainnot
+      :mittaustyyppi @s/mittaustyyppi
+      :soratiemittaussyotto @s/soratiemittaussyotto
+      :epaonnistui-fn reitintallennus/merkinta-epaonnistui
+      :tr-osoite @s/tr-osoite
+      :havainto-avain avain
+      :lisaa-liittyva-havainto-fn (partial lisaa-liittyva-havainto! s/liittyvat-havainnot)})))
 
 (defn avaa-havaintolomake! []
   (.log js/console "Avataan havaintolomake!")
