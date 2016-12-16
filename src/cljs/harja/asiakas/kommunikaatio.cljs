@@ -71,23 +71,24 @@
 (defn extranet-virhe? [vastaus]
   (= 0 (:status vastaus)))
 
-(defn- kysely [palvelu metodi parametrit transducer paasta-virhe-lapi? chan-tai-nil yritysten-maara]
-  (let [chan (or chan-tai-nil (chan))
-        cb (fn [[_ vastaus]]
+(defn- kysely [palvelu metodi parametrit transducer paasta-virhe-lapi? chan yritysten-maara]
+  (let [cb (fn [[_ vastaus]]
              (when-not (nil? vastaus)
                (cond
                  (= (:status vastaus) 302)
-                 (kasittele-istunto-vanhentunut)
+                 (do (kasittele-istunto-vanhentunut)
+                     (close! chan))
 
                  (and (virhe? vastaus) (not paasta-virhe-lapi?))
-                 (kasittele-palvelinvirhe palvelu vastaus)
+                 (do (kasittele-palvelinvirhe palvelu vastaus)
+                     (close! chan))
 
-                 (and (extranet-virhe? vastaus) (= :get metodi) (< yritysten-maara 4))
+                 (and (extranet-virhe? vastaus) (contains? #{:post :get} metodi) (< yritysten-maara 4))
                  (kysely palvelu metodi parametrit transducer paasta-virhe-lapi? chan (+ yritysten-maara 1))
 
                  :default
-                 (put! chan (if transducer (into [] transducer vastaus) vastaus))))
-             (close! chan))]
+                 (do (put! chan (if transducer (into [] transducer vastaus) vastaus))
+                     (close! chan)))))]
     (go
       (if-let [testipalvelu @testmode]
         (do
