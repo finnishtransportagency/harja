@@ -295,7 +295,7 @@
               :laadunalitus (let [laadunalitukset (map :laadunalitus tarkastukseen-liittyvat-merkinnat)]
                               (if (empty? laadunalitukset)
                                 (:laadunalitus tarkastus)
-                                (some true? [laadunalitukset (:laadunalitus tarkastus)])))}))))
+                                (boolean (some true? [laadunalitukset (:laadunalitus tarkastus)]))))}))))
 
 (defn- liita-tarkastuksiin-lomakkeelta-kirjatut-tiedot
   "Ottaa mapin, jossa on reittimerkinnöistä muunnetut Harja-tarkastukset (pistemäiset ja reitilliset),
