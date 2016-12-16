@@ -296,10 +296,11 @@
                             (apply conj (:liitteet tarkastus) kuvat)))
               ;; Merkitään tarkastukseen laadunalitus jos se, tai mikä tahansa liittyvistä merkinnöistä,
               ;; sisältää laadunalituksen
-              :laadunalitus (let [laadunalitukset (map :laadunalitus tarkastukseen-liittyvat-merkinnat)]
+              :laadunalitus (let [laadunalitukset (map :laadunalitus tarkastukseen-liittyvat-merkinnat)
+                                  _ (log/debug "Laadunalitukset: " (pr-str laadunalitukset))]
                               (if (empty? laadunalitukset)
                                 (:laadunalitus tarkastus)
-                                (boolean (some true? [laadunalitukset (:laadunalitus tarkastus)]))))}))))
+                                (boolean (some true? (conj laadunalitukset (:laadunalitus tarkastus))))))}))))
 
 (defn- liita-tarkastuksiin-lomakkeelta-kirjatut-tiedot
   "Ottaa mapin, jossa on reittimerkinnöistä muunnetut Harja-tarkastukset (pistemäiset ja reitilliset),
