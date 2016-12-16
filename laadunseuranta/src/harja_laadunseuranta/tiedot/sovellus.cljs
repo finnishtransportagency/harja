@@ -84,7 +84,7 @@
                                     :let nil}}
 
    :liittyvat-havainnot [] ;; Lista viimeisiä havaintoja, joihin lomake voidaan liittää
-   ;; Item on map: {:id <indexeddb-id> :havainto-avain :lumista :aikaleima <aika>}
+   ;; Item on map: {:id <indexeddb-id> :havainto-avain :lumista :aikaleima <aika> :tr-osoite <tr-osoite-mappi>}
 
    ;; Kartta
    :kirjauspisteet [] ; Kartalla näytettäviä ikoneita varten

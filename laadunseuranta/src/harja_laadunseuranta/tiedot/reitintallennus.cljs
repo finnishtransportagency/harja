@@ -130,7 +130,7 @@
                        s/ilmoitus
                        {:tyyppi :virhe}))
 
-(defn kirjaa-pistemainen-havainto! [{:keys [idxdb sijainti tarkastusajo-id lisaa-liittyva-havainto
+(defn kirjaa-pistemainen-havainto! [{:keys [idxdb sijainti tarkastusajo-id lisaa-liittyva-havainto tr-osoite
                                             epaonnistui-fn jatkuvat-havainnot havainto-avain] :as tiedot}]
   (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen sijainti)
                                            asetukset/+suurin-sallittu-tarkkuus+)
@@ -148,6 +148,7 @@
                 (when lisaa-liittyva-havainto
                   (lisaa-liittyva-havainto {:id indexed-db-id
                                             :aikaleima aikaleima-nyt
+                                            :tr-osoite tr-osoite
                                             :havainto-avain havainto-avain})))))
       true)
     (when epaonnistui-fn

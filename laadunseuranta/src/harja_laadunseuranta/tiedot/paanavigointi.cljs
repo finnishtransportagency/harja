@@ -399,6 +399,7 @@
   (reitintallennus/kirjaa-pistemainen-havainto!
     {:idxdb @s/idxdb
      :sijainti @s/sijainti
+     :tr-osoite @s/tr-osoite
      :tarkastusajo-id @s/tarkastusajo-id
      :jatkuvat-havainnot @s/jatkuvat-havainnot
      :havainto-avain avain

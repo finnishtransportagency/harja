@@ -14,6 +14,7 @@
 ;; Lomakkeessa käytettävät kentät
 
 (defn tr-osoite [{:keys [tr-osoite-atom virheet-atom muokattava?]}]
+  ;; TODO Disabloi TR-osoitteen muokkaus kun valittu liittyvä havainto, aseta tr-osoitteeksi havainnon osoite
   (let [max-merkkeja 7
         arvo-validi? (fn [arvo-tekstina]
                        (boolean (or (empty? arvo-tekstina)
@@ -120,13 +121,17 @@
                                            (:id liittyva-havainto))))}
                [kuvat/svg-sprite (:ikoni (havainnon-tiedot-avaimella
                                            (:havainto-avain liittyva-havainto)))]
-               [:span.liittyva-havainto-tiedot
-                (str (:nimi (havainnon-tiedot-avaimella
-                              (:havainto-avain liittyva-havainto)))
-                     " "
-                     ;; TODO Lisää TR-osoite?
-                     ;; TODO Disabloi TR-osoitteen muokkaus kun valittu liittyvä havainto
-                     (fmt/klo (:aikaleima liittyva-havainto)))]])))]
+               [:div.liittyva-havainto-tiedot
+                [:div
+                 [:span.nimi (:nimi (havainnon-tiedot-avaimella
+                                      (:havainto-avain liittyva-havainto)))]]
+                [:div
+                 [:span.aika (fmt/klo (:aikaleima liittyva-havainto))]
+                 [:span " "]
+                 [:span.tr-osoite (str "(" (fmt/tierekisteriosoite-tekstina
+                                             (:tr-osoite liittyva-havainto)
+                                             {:teksti-tie? false
+                                              :teksti-ei-tr-osoitetta? false}) ")")]]]])))]
        [:div.jatkuvat-havainnot-vihje
         [yleiset/vihje "Jos et valitse mitään, lomake kirjataan yleisenä havaintona."]]])))
 
