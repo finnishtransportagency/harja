@@ -48,10 +48,10 @@
 (defn tallenna-lomake! []
   (when (reitintallennus/kirjaa-lomake!
           {:idxdb @s/idxdb
-           :sijainti s/sijainti
-           :tarkastusajo-id s/tarkastusajo-id
-           :jatkuvat-havainnot s/jatkuvat-havainnot
-           :lomakedata s/havaintolomakedata
+           :sijainti @s/sijainti
+           :tarkastusajo-id @s/tarkastusajo-id
+           :jatkuvat-havainnot @s/jatkuvat-havainnot
+           :lomakedata @s/havaintolomakedata
            :epaonnistui-fn reitintallennus/merkinta-epaonnistui})
     (ilmoitukset/ilmoita "Lomake tallennettu!" s/ilmoitus)
     (kartta/lisaa-kirjausikoni "!")

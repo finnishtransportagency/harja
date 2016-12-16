@@ -32,8 +32,8 @@
     (do (.log js/console "Nykyisellä sijainnilla ei ole tarkkuutta!")
         true)))
 
-;; Jos muutat tätä, kasvata versionumeroa ja varmista, että migraatio toimii niillä laitteilla,
-;; jossa on vanha versio.
+;; Jos muutat tätä, kasvata versionumeroa. Tällöin selaimen tekee migraation
+;; uuteen versioon automaattisesti. Kannattaa toki testata, että migraatio onnistuu.
 (def db-spec {:version 3
               :on-error #(js/console.log (str "Tietokantavirhe " (pr-str %)))
               :objectstores [{:name asetukset/+reittimerkinta-store+
@@ -81,7 +81,7 @@
       (conj reittipisteet sijainti)
       reittipisteet)))
 
-(defn paivita-lahettamattomien-merkintojen-maara [db pollausvali lahettamattomat-atom]
+(defn paivita-lahettamattomien-merkintojen-maara! [db pollausvali lahettamattomat-atom]
   (with-delay-loop pollausvali
                    (with-transaction-to-store db asetukset/+reittimerkinta-store+ :readonly store
                                               (with-count store lahettamattomia
@@ -100,7 +100,7 @@
                                                 (idb/put-object store {:tarkastusajo tarkastusajo-id
                                                                        :reittipisteet []})))))
 
-(defn tyhjenna-reittipisteet [db]
+(defn tyhjenna-reittipisteet! [db]
   (with-transaction-to-store db asetukset/+reittimerkinta-store+ :readwrite store
                              (.clear store)))
 
@@ -118,7 +118,7 @@
                              (idb/delete-object store tarkastusajo-id)))
 
 (defn- kirjaa-kertakirjaus
-  "Kirjaa merkinnän tiedot Indexed DB:n.
+  "Kirjaa merkinnän tiedot Indexed DB:n ja palauttaa tietoja suorituksesta.
    Älä käytä suoraan, vaan kutsu erillisiä funktioita
    eri asioiden kirjaamiseen."
   [db kirjaus]
@@ -132,14 +132,15 @@
 
 (defn kirjaa-pistemainen-havainto! [{:keys [idxdb sijainti tarkastusajo-id lisaa-liittyva-havainto
                                             epaonnistui-fn jatkuvat-havainnot havainto-avain] :as tiedot}]
-  (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti)
+  (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen sijainti)
                                            asetukset/+suurin-sallittu-tarkkuus+)
     (let [aikaleima-nyt (lt/local-now)
           kirjaus (kirjaa-kertakirjaus idxdb
-                                       {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
+                                       {:sijainti (select-keys (:nykyinen sijainti) [:lat :lon :accuracy])
                                         :aikaleima (tc/to-long aikaleima-nyt)
-                                        :tarkastusajo @tarkastusajo-id
-                                        :havainnot (into #{} (remove nil? (conj @jatkuvat-havainnot havainto-avain)))
+                                        :tarkastusajo tarkastusajo-id
+                                        :havainnot (into #{} (remove nil? (conj jatkuvat-havainnot
+                                                                                havainto-avain)))
                                         :mittaukset {}})]
       (set! (.-onsuccess kirjaus)
             (fn [e]
@@ -151,52 +152,55 @@
       true)
     (when epaonnistui-fn
       (epaonnistui-fn {:viesti (str "Epätarkka sijainti ("
-                                    (fmt/n-desimaalia (:accuracy (:nykyinen @sijainti)) 0)
+                                    (fmt/n-desimaalia (:accuracy (:nykyinen sijainti)) 0)
                                     "m), merkintää ei tehty!")})
       false)))
 
 (defn kirjaa-lomake! [{:keys [idxdb sijainti tarkastusajo-id
                               epaonnistui-fn jatkuvat-havainnot
                               lomakedata] :as tiedot}]
-  (if (or (and (get-in @lomakedata [:tr-osoite :tie])
-               (get-in @lomakedata [:tr-osoite :aosa])
-               (get-in @lomakedata [:tr-osoite :aet]))
-          (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti)
-                                               asetukset/+suurin-sallittu-tarkkuus+))
+  ;; Hyväksytään lomake, jos sijainti on riittävän tarkka tai käyttäjä
+  ;; on itse kirjannut tieosoitteen.
+  (if (or
+        (nykyinen-sijainti-riittavan-tarkka? (:nykyinen sijainti)
+                                             asetukset/+suurin-sallittu-tarkkuus+)
+        (and (get-in lomakedata [:tr-osoite :tie])
+             (get-in lomakedata [:tr-osoite :aosa])
+             (get-in lomakedata [:tr-osoite :aet])))
     (do (kirjaa-kertakirjaus idxdb
-                             {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
+                             {:sijainti (select-keys (:nykyinen sijainti) [:lat :lon :accuracy])
                               :aikaleima (tc/to-long (lt/local-now))
-                              :tarkastusajo @tarkastusajo-id
-                              :havainnot @jatkuvat-havainnot
+                              :tarkastusajo tarkastusajo-id
+                              :havainnot jatkuvat-havainnot
                               :mittaukset {}
-                              :liittyy-havaintoon (:liittyy-havaintoon @lomakedata)
-                              :kuvaus (:kuvaus @lomakedata)
-                              :laadunalitus (:laadunalitus? @lomakedata)
-                              :kuva (:kuva @lomakedata)
-                              :kayttajan-syottama-tr-osoite (:tr-osoite @lomakedata)})
+                              :liittyy-havaintoon (:liittyy-havaintoon lomakedata)
+                              :kuvaus (:kuvaus lomakedata)
+                              :laadunalitus (:laadunalitus? lomakedata)
+                              :kuva (:kuva lomakedata)
+                              :kayttajan-syottama-tr-osoite (:tr-osoite lomakedata)})
         true)
     (when epaonnistui-fn
       (epaonnistui-fn {:viesti (str "Epätarkka sijainti ("
-                                    (fmt/n-desimaalia (:accuracy (:nykyinen @sijainti)) 0)
+                                    (fmt/n-desimaalia (:accuracy (:nykyinen sijainti)) 0)
                                     "m), lomaketta ei tallennettu!")})
       false)))
 
 (defn kirjaa-mittausarvo! [{:keys [idxdb sijainti tarkastusajo-id jatkuvat-havainnot
                                    mittaustyyppi mittausarvo epaonnistui-fn] :as tiedot}]
-  (.log js/console (str "Kirjataan mittaus " @mittaustyyppi ", arvo: " (pr-str mittausarvo)))
-  (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti)
+  (.log js/console (str "Kirjataan mittaus " mittaustyyppi ", arvo: " (pr-str mittausarvo)))
+  (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen sijainti)
                                            asetukset/+suurin-sallittu-tarkkuus+)
     (do (kirjaa-kertakirjaus
           idxdb
-          {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
+          {:sijainti (select-keys (:nykyinen sijainti) [:lat :lon :accuracy])
            :aikaleima (tc/to-long (lt/local-now))
-           :tarkastusajo @tarkastusajo-id
-           :havainnot @jatkuvat-havainnot
-           :mittaukset {@mittaustyyppi mittausarvo}})
+           :tarkastusajo tarkastusajo-id
+           :havainnot jatkuvat-havainnot
+           :mittaukset {mittaustyyppi mittausarvo}})
         true)
     (when epaonnistui-fn
       (epaonnistui-fn {:viesti (str "Epätarkka sijainti ("
-                                    (fmt/n-desimaalia (:accuracy (:nykyinen @sijainti)) 0)
+                                    (fmt/n-desimaalia (:accuracy (:nykyinen sijainti)) 0)
                                     "m), arvoa ei kirjattu!")})
       false)))
 
@@ -209,27 +213,27 @@
    vaan niistä tulee kirjata erikseen oma merkintä."
   [{:keys [idxdb sijainti tarkastusajo-id jatkuvat-havainnot mittaustyyppi
            soratiemittaussyotto epaonnistui-fn] :as tiedot}]
-  (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen @sijainti)
+  (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen sijainti)
                                            asetukset/+suurin-sallittu-tarkkuus+)
     (do (kirjaa-kertakirjaus idxdb
-                             {:sijainti (select-keys (:nykyinen @sijainti) [:lat :lon :accuracy])
+                             {:sijainti (select-keys (:nykyinen sijainti) [:lat :lon :accuracy])
                               :aikaleima (tc/to-long (lt/local-now))
-                              :tarkastusajo @tarkastusajo-id
+                              :tarkastusajo tarkastusajo-id
                               ;; Nauhoituksessa havaintoihin tallentuvat vain jatkuvat mittaukset
                               ;; Pistemäisen havainnot kirjataan erikseen heti kun sellainen syötetään.
-                              :havainnot @jatkuvat-havainnot
+                              :havainnot jatkuvat-havainnot
                               ;; Nauhoituksessa mittauksiin tallentuvat vain jatkuvat mittaukset
                               ;; Kertamittaukset tallennetaan erikseen heti kun sellainen syötetään.
                               ;; HUOM: Tärkeää ottaa arvot ylös vain jos mittaus on päällä!
                               :mittaukset (merge {}
-                                                 (when (= @mittaustyyppi :soratie)
-                                                   {:soratie-tasaisuus (:tasaisuus @soratiemittaussyotto)
-                                                    :kiinteys (:kiinteys @soratiemittaussyotto)
-                                                    :polyavyys (:polyavyys @soratiemittaussyotto)}))})
+                                                 (when (= mittaustyyppi :soratie)
+                                                   {:soratie-tasaisuus (:tasaisuus soratiemittaussyotto)
+                                                    :kiinteys (:kiinteys soratiemittaussyotto)
+                                                    :polyavyys (:polyavyys soratiemittaussyotto)}))})
         true)
     (when epaonnistui-fn
       (epaonnistui-fn {:viesti (str "Epätarkka sijainti ("
-                                    (fmt/n-desimaalia (:accuracy (:nykyinen @sijainti)) 0)
+                                    (fmt/n-desimaalia (:accuracy (:nykyinen sijainti)) 0)
                                     "m), reittimerkintää ei tehty!")})
       false)))
 
@@ -244,10 +248,10 @@
           (reset! ajo-id @tarkastusajo-atom))))))
 
 (defn kaynnista-reitintallennus [{:keys [sijainnin-tallennus-mahdollinen-atom sijainti-atom
-                                         db segmentti-atom jatkuvat-havainnot mittaustyyppi
+                                         db segmentti-atom jatkuvat-havainnot-atom mittaustyyppi-atom
                                          reittipisteet-atom tarkastusajo-kaynnissa-atom
                                          tarkastusajo-paattymassa-atom
-                                         tarkastusajo-atom tarkastuspisteet-atom soratiemittaussyotto]}]
+                                         tarkastusajo-atom tarkastuspisteet-atom soratiemittaussyotto-atom]}]
   (.log js/console "Reitintallennus käynnistetty")
   (kaynnista-tarkastusajon-lokaali-tallennus db tarkastusajo-atom)
 
@@ -267,11 +271,11 @@
                (:nykyinen @sijainti-atom))
       (kirjaa-yksittainen-reittimerkinta!
         {:idxdb db
-         :sijainti sijainti-atom
-         :tarkastusajo-id tarkastusajo-atom
-         :jatkuvat-havainnot jatkuvat-havainnot
-         :mittaustyyppi mittaustyyppi
-         :soratiemittaussyotto soratiemittaussyotto
+         :sijainti @sijainti-atom
+         :tarkastusajo-id @tarkastusajo-atom
+         :jatkuvat-havainnot @jatkuvat-havainnot-atom
+         :mittaustyyppi @mittaustyyppi-atom
+         :soratiemittaussyotto @soratiemittaussyotto-atom
          :epaonnistui-fn merkinta-epaonnistui}))))
 
 (defn tietokannan-alustus []

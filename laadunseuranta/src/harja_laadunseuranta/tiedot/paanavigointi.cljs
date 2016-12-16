@@ -398,9 +398,9 @@
     s/ilmoitus)
   (reitintallennus/kirjaa-pistemainen-havainto!
     {:idxdb @s/idxdb
-     :sijainti s/sijainti
-     :tarkastusajo-id s/tarkastusajo-id
-     :jatkuvat-havainnot s/jatkuvat-havainnot
+     :sijainti @s/sijainti
+     :tarkastusajo-id @s/tarkastusajo-id
+     :jatkuvat-havainnot @s/jatkuvat-havainnot
      :havainto-avain avain
      :epaonnistui-fn reitintallennus/merkinta-epaonnistui
      :lisaa-liittyva-havainto (partial lisaa-liittyva-havainto! s/liittyvat-havainnot)}))
@@ -436,11 +436,11 @@
   ;; Tee merkintä
   (reitintallennus/kirjaa-yksittainen-reittimerkinta!
     {:idxdb @s/idxdb
-     :sijainti s/sijainti
-     :tarkastusajo-id s/tarkastusajo-id
-     :jatkuvat-havainnot s/jatkuvat-havainnot
-     :mittaustyyppi s/mittaustyyppi
-     :soratiemittaussyotto s/soratiemittaussyotto
+     :sijainti @s/sijainti
+     :tarkastusajo-id @s/tarkastusajo-id
+     :jatkuvat-havainnot @s/jatkuvat-havainnot
+     :mittaustyyppi @s/mittaustyyppi
+     :soratiemittaussyotto @s/soratiemittaussyotto
      :epaonnistui-fn reitintallennus/merkinta-epaonnistui}))
 
 (defn avaa-havaintolomake! []
