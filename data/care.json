@@ -1,5 +1,11 @@
 [
   {
+    "date": "2016-12-26",
+    "title": "Harjan mobiili laadunseurantatyökalu - kuulumisia",
+    "short": "",
+    "body": "<p>Harjan mobiililaadunseurantaan on viimeisen kahden kuukauden aikana tehty paljon kehitystä.</p> <p>Työkokalun kautta voidaan kirjata erilaisia havaintoja tien päältä joko nopeasti pikanäppäimillä tai vapaatekstilomakkeella. Samoin voidaan ottaa kameralla valokuvia ja liittää niihin tekstiä. Työkalulla kerätty tieto tallennetaan Harjaan, jossa kertyneitä tarkastuksia voidaan vielä tutkia, muokata ja niiden perusteella voidaan myöhemmin kirjata myös laatupoikkeamia ja/tai sanktioita.</p> <p>Käyttöliittymä toimii tablettitietokoneilla ja älypuhelimilla. Sovellus on selainpohjainen, joten on hyvä laittaa automaattinen virransäästötila pois päältä jotta näyttö ei mene lukkoon kesken ajon. Se saattaa lopettaa tiedonkeruun, ainakin Applen laitteilla.</p> <p>Palautetta työkalun toiminnasta voi laittaa joko osoitteen <a href=\"mailto:harjapalaute@solita.fi\" target=\"_top\">harjapalaute@solita.fi</a> tai suoraan kehitystiimin henkilöille.</p>"
+  },
+  {
     "date": "2016-11-25",
     "title": "Laajennoksia ilmoituksista lähtevien tekstiviestien ja sähköpostien sisältöihin",
     "short": "",
