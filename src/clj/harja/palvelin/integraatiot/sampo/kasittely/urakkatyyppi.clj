@@ -10,7 +10,7 @@
         "P" "paallystys"
         "T" "tiemerkinta"
         "S" "siltakorjaus"
-        "L" "tekniset laitteet"
+        "L" "tekniset-laitteet"
         (default-fn)))
     (default-fn)))
 

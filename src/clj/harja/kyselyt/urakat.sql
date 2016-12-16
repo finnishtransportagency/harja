@@ -104,7 +104,7 @@ SELECT
   CASE
   WHEN u.tyyppi = 'siltakorjaus' :: urakkatyyppi
     THEN ST_Simplify(sps.alue, 50)
-  WHEN u.tyyppi = 'tekniset laitteet' :: urakkatyyppi
+  WHEN u.tyyppi = 'tekniset-laitteet' :: urakkatyyppi
     THEN ST_Simplify(tlu.alue, 50)
   ELSE
     ST_Simplify(au.alue, 50)
@@ -482,7 +482,7 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
                WHERE pps.paallystyspalvelusopimusnro = u.urakkanro AND
                      st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold)))
        OR
-       ((:urakkatyyppi = 'tekniset laitteet') AND
+       ((:urakkatyyppi = 'tekniset-laitteet') AND
         exists(SELECT id
                FROM tekniset_laitteet_urakka tlu
                WHERE tlu.urakkanro = u.urakkanro AND
@@ -648,3 +648,12 @@ VALUES (:urakkanro, ST_GeomFromText(:alue) :: GEOMETRY);
 -- name: hae-urakan-alkuvuosi
 -- single?: true
 SELECT EXTRACT(YEAR FROM alkupvm)::INTEGER FROM urakka WHERE id = :urakka;
+
+-- name: hae-urakan-ely
+SELECT
+  o.nimi,
+  o.elynumero,
+  o.lyhenne
+FROM organisaatio o
+  JOIN urakka u ON o.id = u.hallintayksikko
+WHERE u.id = :urakkaid;
