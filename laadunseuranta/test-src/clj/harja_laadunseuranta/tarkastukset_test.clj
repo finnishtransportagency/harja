@@ -218,6 +218,7 @@
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 1))
     (is (= (:kuvaus (first (:pistemaiset-tarkastukset tarkastukset)))
            "Tässä on nyt jotain mätää\nTässä vielä toinen kuva"))
+    (is (true? (:laadunalitus (first (:pistemaiset-tarkastukset tarkastukset)))))
     (is (= (:liitteet (first (:pistemaiset-tarkastukset tarkastukset)))
            [1 2]))
     ;; Muu osa (ei pistemäinen havainto eikö siihen liittyvät merkinnät) on yksi jatkuva havainto

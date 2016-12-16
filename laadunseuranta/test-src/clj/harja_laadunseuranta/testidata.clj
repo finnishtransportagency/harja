@@ -441,4 +441,5 @@
    {:id 6 :sijainti [467257.5999816896 7231252.000024413]
     :liittyy-merkintaan 1
     :kuvaus "Tässä vielä toinen kuva"
+    :laadunalitus true
     :kuva 2}])
