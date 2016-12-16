@@ -232,7 +232,8 @@
 (defn- pistemainen-havainto?
   [reittimerkinta]
   (boolean (and (or (:pistemainen-havainto reittimerkinta)
-                    ;; Kuvan tai tekstiä sisältävän merkinnän pitäisi olla aina pistemäinen yleishavainto,
+                    ;; Kuvan tai tekstiä sisältävän merkinnän pitäisi olla aina
+                    ;; lomakkeelta kirjattu pistemäinen yleishavainto,
                     ;; mutta varmistetaan nyt kuitenkin
                     (:kuva reittimerkinta)
                     (:kuvaus reittimerkinta)))))
@@ -253,7 +254,7 @@
   "Käy annetut reittimerkinnät läpi ja muodostaa niistä pistemäiset tarkastukset"
   [reittimerkinnat]
   (let [pistemaiset-reittimerkinnat (filter #(and (pistemainen-havainto? %)
-                                                 (not (liittyva-havainto? %))) reittimerkinnat)]
+                                                  (not (liittyva-havainto? %))) reittimerkinnat)]
     (mapv reittimerkinta-tarkastukseksi pistemaiset-reittimerkinnat)))
 
 (defn reittimerkinnat-tarkastuksiksi

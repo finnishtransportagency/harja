@@ -347,7 +347,6 @@
     :kitkamittaus 0.4}
    {:id 6 :sijainti [467257.5999816895 7231252.000024414]
     :jatkuvat-havainnot [17]
-    :kuva 1
     :pistemainen-havainto nil}
    {:id 7 :sijainti [467545.5999816895 7231332.000024414]
     :jatkuvat-havainnot [17]
