@@ -117,7 +117,8 @@ WHERE sijainti IS NOT NULL AND
       (t.aika BETWEEN :alku AND :loppu) AND
       ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax)) AND
       t.tyyppi :: TEXT IN (:tyypit) AND
-      (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
+      (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
+ORDER BY t.laadunalitus ASC;
 
 -- name: hae-tarkastusten-asiat
 -- Hakee tarkastusten asiat pisteessä

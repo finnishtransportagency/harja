@@ -13,6 +13,7 @@
 (defn urakkatyyppi [urakkatyyppi]
   (case (str/lower-case urakkatyyppi)
     "siltakorjaus" "silta"
+    "tekniset-laitteet" "tekniset laitteet"
     urakkatyyppi))
 
 (defn rakenna-urakka [urakka]
