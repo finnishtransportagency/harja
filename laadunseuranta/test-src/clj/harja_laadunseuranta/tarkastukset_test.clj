@@ -205,7 +205,7 @@
 (deftest tarkastus-jossa-liittyva-havainto
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
-                         testidata/tarkastus-jossa-liittyvia-pistemaisia-havaintoja))]
+                         testidata/tarkastus-jossa-liittyvia-pistemaisia-merkintoja))]
     ;; Yksi pistemäinen havainto, johon liitetty lisätietoja
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 1))
     (is (= (:havainnot (first (:pistemaiset-tarkastukset tarkastukset)))
@@ -215,3 +215,9 @@
            [1 2]))
     ;; Muu osa (ei pistemäinen havainto eikö siihen liittyvät merkinnät) on yksi jatkuva havainto
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))))
+
+(deftest tarkastus-jossa-laadunalitus
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-laadunalitus-ja-liittyva-merkinta))]
+    (is (true? (:laadunalitus (first (:pistemaiset-tarkastukset tarkastukset)))))))

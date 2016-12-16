@@ -396,7 +396,7 @@
     :jatkuvat-havainnot [17]
     :laadunalitus true}])
 
-(def tarkastus-jossa-liittyvia-pistemaisia-havaintoja
+(def tarkastus-jossa-liittyvia-pistemaisia-merkintoja
   "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
   [;; Tehdään pistemäinen havainto
    {:id 1 :sijainti [465641.5999816895 7230780.000024414]
@@ -409,9 +409,30 @@
    {:id 5 :sijainti [467257.5999816895 7231252.000024414]
     :liittyy-merkintaan 1
     :kuvaus "Tässä on nyt jotain mätää"
+    :laadunalitus true
     :kuva 1}
+   ;; Kirjataan lisää lisätietoja
+   ;; Tässä ei ole laadunalitusta, mutta koko pisteessä kuuluisi olla, koska
+   ;; edellisessä liittyvässä merkinnässä sellainen havaittiin.
    {:id 6 :sijainti [467257.5999816896 7231252.000024413]
     :liittyy-merkintaan 1
     :kuvaus "Tässä vielä toinen kuva"
-    :laadunalitus true
     :kuva 2}])
+
+(def tarkastus-jossa-laadunalitus-ja-liittyva-merkinta
+  "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
+  [;; Tehdään pistemäinen havainto, jossa laadunalitus
+   {:id 1 :sijainti [465641.5999816895 7230780.000024414]
+    :pistemainen-havainto 20
+    :laadunalitus true}
+   ;; Normaali tarkastus jatkuu
+   {:id 2 :sijainti [466089.5999816895 7230916.000024414]}
+   {:id 3 :sijainti [466409.5999816895 7230996.000024414]}
+   {:id 4 :sijainti [467009.5999816895 7231180.000024414]}
+   ;; Kirjataan lisätietoja aiemmin tehtyyn pistemäiseen havaintoon
+   ;; Tässä ei ole laadunalitusta, mutta koko pisteessä tulisi olla, koska
+   ;; sellainen siihen oli alkujaan merkitty
+   {:id 5 :sijainti [467257.5999816895 7231252.000024414]
+    :liittyy-merkintaan 1
+    :kuvaus "Tässä on nyt jotain mätää"
+    :kuva 1}])
