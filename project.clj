@@ -79,7 +79,7 @@
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
                  [cljs-ajax "0.5.3"]
-                 [figwheel "0.5.8"]
+                 [figwheel "0.5.3"]
 
                  [reagent "0.6.0-rc" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "15.2.1-1"]
@@ -126,7 +126,7 @@
                  [dk.ative/docjure "1.10.0"]
 
                  [com.cemerick/piggieback "0.2.1"]
-                 [figwheel-sidecar "0.5.8"]
+                 [figwheel-sidecar "0.5.3"]
 
                  ;; Performance metriikat
                  [yleisradio/new-reliquary "1.0.0"]
