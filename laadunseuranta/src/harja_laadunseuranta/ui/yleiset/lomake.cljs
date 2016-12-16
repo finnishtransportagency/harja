@@ -134,10 +134,11 @@
                 [:div
                  [:span.aika (fmt/klo (:aikaleima liittyva-havainto))]
                  [:span " "]
-                 [:span.tr-osoite (str "(" (fmt/tierekisteriosoite-tekstina
-                                             (:tr-osoite liittyva-havainto)
-                                             {:teksti-tie? false
-                                              :teksti-ei-tr-osoitetta? false}) ")")]]]])))]
+                 [:span.tr-osoite (when (:tr-osoite liittyva-havainto)
+                                    (str "(" (fmt/tierekisteriosoite-tekstina
+                                              (:tr-osoite liittyva-havainto)
+                                              {:teksti-tie? false
+                                               :teksti-ei-tr-osoitetta? false}) ")"))]]]])))]
        [:div.jatkuvat-havainnot-vihje
         [yleiset/vihje "Jos et valitse mitään, lomake kirjataan yleisenä havaintona."]]])))
 
