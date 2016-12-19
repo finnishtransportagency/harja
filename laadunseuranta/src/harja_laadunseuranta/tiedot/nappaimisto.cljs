@@ -93,9 +93,9 @@
 
 (defn kirjaa-mittaus! [arvo]
   (reitintallennus/kirjaa-mittausarvo! {:idxdb @s/idxdb
-                                        :sijainti s/sijainti
-                                        :tarkastusajo-id s/tarkastusajo-id
-                                        :jatkuvat-havainnot s/jatkuvat-havainnot
-                                        :mittaustyyppi s/mittaustyyppi
+                                        :sijainti @s/sijainti
+                                        :tarkastusajo-id @s/tarkastusajo-id
+                                        :jatkuvat-havainnot @s/jatkuvat-havainnot
+                                        :mittaustyyppi @s/mittaustyyppi
                                         :mittausarvo arvo
                                         :epaonnistui-fn reitintallennus/merkinta-epaonnistui}))
