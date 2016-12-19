@@ -330,30 +330,66 @@
     :avain :kaivojenkorkeusasema
     :vaatii-nappaimiston? false}])
 
+(defn jarjesta-valilehdet [valilehdet]
+  (into [] (sort-by :jarjestys valilehdet)))
+
+(defn kayttajaroolin-mukaiset-valilehdet
+  "Palauttaa vain ne välilehdet, jotka ovat kyseiselle käyttäjäroolille tarpeelliset.
+   Säätää myös järjestyksen kohdalleen."
+  [oletusvalilehdet kayttajatiedot]
+  (let [oikeus-vain-paallystykseen? (every? #(= (:tyyppi %) "paallystys")
+                                            (:oikeus-urakoihin kayttajatiedot))
+        urakoitsija? (= (get-in kayttajatiedot [:organisaatio :tyyppi]) :urakoitsija)]
+    (cond
+      ;; Päällystysurakoitsijalle näytetään vain päällystys-välilehti
+      (and urakoitsija?
+           oikeus-vain-paallystykseen?)
+      (filterv #(= (:avain %) :paallystys) oletusvalilehdet)
+
+      ;; Päällystyksen muille henkilöille siirreään vain päällystys-välilehti kärkeen
+      oikeus-vain-paallystykseen?
+      (let [muokatut-valilehdet (mapv #(if (= (:avain %) :paallystys)
+                (assoc % :jarjestys 0)
+                %)
+             oletusvalilehdet)]
+        (jarjesta-valilehdet muokatut-valilehdet))
+
+      ;; Ei roolin mukaisia sääntöjä
+      :default
+      oletusvalilehdet)))
+
 (def oletusvalilehdet
   [{:avain :talvihoito
     :nimi "Talviset pinnat"
+    :jarjestys 1
     :sisalto valilehti-talviset-pinnat}
    {:avain :liikennemerkit
     :nimi "Liikennemerkit"
+    :jarjestys 2
     :sisalto valilehti-liikennemerkit}
    {:avain :viherhoito
     :nimi "Viherhoito"
+    :jarjestys 3
     :sisalto valilehti-viherhoito}
    {:avain :reunat
     :nimi "Reunat"
+    :jarjestys 4
     :sisalto valilehti-reunat}
    {:avain :p-ja-l-alueet
     :nimi "P- ja L-alueet"
+    :jarjestys 5
     :sisalto valilehti-p-ja-l-alueet}
    {:avain :soratiet
     :nimi "Soratiet"
+    :jarjestys 6
     :sisalto valilehti-soratiet}
    {:avain :muut
     :nimi "Sillat"
+    :jarjestys 7
     :sisalto valilehti-sillat}
    {:avain :paallystys
     :nimi "Päällystys"
+    :jarjestys 8
     :sisalto valilehti-paallystys}])
 
 (defn pistemainen-havainto-painettu! [{:keys [nimi avain] :as havainto}]

@@ -35,17 +35,17 @@
         viiva? (and (:loppuosa korjattu-osoite)
                     (:loppuetaisyys korjattu-osoite))
         geom (geo/pg->clj
-              (if viiva?
-                (tv/tierekisteriosoite-viivaksi db
-                                                (:numero korjattu-osoite)
-                                                (:alkuosa korjattu-osoite)
-                                                (:alkuetaisyys korjattu-osoite)
-                                                (:loppuosa korjattu-osoite)
-                                                (:loppuetaisyys korjattu-osoite))
-                (tv/tierekisteriosoite-pisteeksi db
+               (if viiva?
+                 (tv/tierekisteriosoite-viivaksi db
                                                  (:numero korjattu-osoite)
                                                  (:alkuosa korjattu-osoite)
-                                                 (:alkuetaisyys korjattu-osoite))))]
+                                                 (:alkuetaisyys korjattu-osoite)
+                                                 (:loppuosa korjattu-osoite)
+                                                 (:loppuetaisyys korjattu-osoite))
+                 (tv/tierekisteriosoite-pisteeksi db
+                                                  (:numero korjattu-osoite)
+                                                  (:alkuosa korjattu-osoite)
+                                                  (:alkuetaisyys korjattu-osoite))))]
     (if geom
       [geom]
       {:virhe "Tierekisteriosoitetta ei löydy"})))
@@ -58,22 +58,29 @@
         (map (juxt :osa :pituus))
         (tv/hae-osien-pituudet db params)))
 
+(defn hae-tieosan-ajoradat [db params]
+  "Hakee annetun tien osan ajoradat. Parametri-mapissa täytyy olla :tie ja :osa"
+  (mapv :ajorata (tv/hae-tieosan-ajoradat db params)))
+
 (defrecord TierekisteriHaku []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
     (julkaise-palvelut
-     http-palvelin
-     :hae-tr-pisteilla (fn [_ params]
-                         (hae-tr-pisteilla db params))
+      http-palvelin
+      :hae-tr-pisteilla (fn [_ params]
+                          (hae-tr-pisteilla db params))
 
-     :hae-tr-pisteella (fn [_ params]
-                         (hae-tr-pisteella db params))
+      :hae-tr-pisteella (fn [_ params]
+                          (hae-tr-pisteella db params))
 
-     :hae-tr-viivaksi (fn [_ params]
-                        (hae-tr-viiva db params))
+      :hae-tr-viivaksi (fn [_ params]
+                         (hae-tr-viiva db params))
 
-     :hae-tr-osien-pituudet (fn [_ params]
-                              (hae-osien-pituudet db params)))
+      :hae-tr-osien-pituudet (fn [_ params]
+                               (hae-osien-pituudet db params))
+
+      :hae-tr-osan-ajoradat (fn [_ params]
+                              (hae-tieosan-ajoradat db params)))
 
     this)
   (stop [{http :http-palvelin :as this}]
@@ -81,5 +88,6 @@
                      :hae-tr-pisteilla
                      :hae-tr-pisteella
                      :hae-tr-viivaksi
-                     :hae-osien-pituudet)
+                     :hae-osien-pituudet
+                     :hae-tr-osan-ajoradat)
     this))

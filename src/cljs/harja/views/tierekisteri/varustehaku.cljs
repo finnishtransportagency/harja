@@ -22,7 +22,8 @@
                     :ikoni (ikonit/livicon-search)}]
                   (when haku?
                     [yleiset/ajax-loader "Varusteita haetaan tierekisteristä"])])
-    :tunniste (comp :tunniste :varuste)}
+    :tunniste (comp :tunniste :varuste)
+    :ei-borderia? false}
 
    [{:nimi :tietolaji
      :otsikko "Varusteen tyyppi"

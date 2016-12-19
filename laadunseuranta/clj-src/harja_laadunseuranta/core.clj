@@ -27,14 +27,20 @@
   (:gen-class))
 
 (defn- kayttajan-tarkastusurakat
-  [db user sijainti]
+  [db kayttaja sijainti]
   (let [urakat (kayttajatiedot/kayttajan-lahimmat-urakat db
-                                                         user
+                                                         kayttaja
                                                          (fn [urakka kayttaja]
                                                            (oikeudet/voi-kirjoittaa?
                                                              oikeudet/urakat-laadunseuranta-tarkastukset
                                                              urakka kayttaja))
                                                          sijainti)
+        urakat (map
+                 #(assoc % :oma-urakka?
+                           (boolean ((set
+                                       (keys (:urakkaroolit kayttaja)))
+                                      (:id %))))
+                 urakat)
         ;; Nostetaan lähin hoidon urakka kärkeen, jos sellainen löytyy
         lahdin-hoidon-urakka (first (filter #(= (:tyyppi %) "hoito") urakat))
         urakat (if lahdin-hoidon-urakka
@@ -45,7 +51,10 @@
         ;; Siirretään testiurakat hännille
         testiurakat (filter #(nil? (:urakkanro %)) urakat)
         urakat (concat (remove #(nil? (:urakkanro %)) urakat)
-                       testiurakat)]
+                       testiurakat)
+        ;; Siirretään mahdolliset omat urakat (ne joissa käyttäjällä urakkarooli) jonon kärkeen
+        omat-urakat (filter #(:oma-urakka? %) urakat)
+        urakat (concat omat-urakat (remove #(:oma-urakka? %) urakat))]
     (into [] urakat)))
 
 (defn- tallenna-merkinta! [tx vakiohavainto-idt merkinta]
@@ -253,11 +262,15 @@
     (kasittele-api-kutsu
       s/Any s/Any
       (fn [kayttaja tiedot]
-        (log/debug "Käyttäjän tietojen haku")
-        {:kayttajanimi (:kayttajanimi kayttaja)
-         :nimi (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
-         :urakat (kayttajan-tarkastusurakat db kayttaja (:sijainti tiedot))
-         :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset db)}))))
+        (let [kayttajatiedot-kannassa (kayttajatiedot/hae-kayttaja db (:id kayttaja))
+              kayttajan-tarkastusurakat (kayttajan-tarkastusurakat db kayttaja (:sijainti tiedot))]
+          {:kayttajanimi (:kayttajanimi kayttajatiedot-kannassa)
+           :nimi (str (:etunimi kayttajatiedot-kannassa)
+                      " "
+                      (:sukunimi kayttajatiedot-kannassa))
+           :urakat kayttajan-tarkastusurakat
+           :organisaatio (:organisaatio kayttajatiedot-kannassa)
+           :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset db)})))))
 
 
 (defn- tallenna-liite [db req]
