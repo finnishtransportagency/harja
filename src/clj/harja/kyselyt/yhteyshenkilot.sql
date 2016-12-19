@@ -353,3 +353,14 @@ DELETE FROM urakanvastuuhenkilo
 INSERT INTO urakanvastuuhenkilo
        (urakka, rooli, nimi, puhelin, sahkoposti, kayttajatunnus, ensisijainen)
 VALUES (:urakka, :rooli, :nimi, :puhelin, :sahkoposti, :kayttajatunnus, :ensisijainen);
+
+-- name: hae-urakan-vastuuhenkilot
+SELECT
+  kayttajatunnus,
+  nimi,
+  sahkoposti,
+  puhelin,
+  rooli,
+  ensisijainen
+FROM urakanvastuuhenkilo
+WHERE urakka = :id;
