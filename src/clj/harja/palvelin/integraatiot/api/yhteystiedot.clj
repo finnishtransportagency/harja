@@ -31,19 +31,23 @@
 (defn hae-urakan-yhteystiedot [db fim {urakkanro :urakkanro} kayttaja]
   (log/debug (format "Haetaan urakan (urakkanro: %s) tiedot käyttäjälle: %s." urakkanro kayttaja))
   (tarkista-kutsu db kayttaja urakkanro)
-  (let [urakka-id (:id urakan-tiedot)
-        urakan-tiedot (first (urakat/hae-kaynnissaoleva-urakka-urakkanumerolla db urakkanro))
+  (let [urakan-tiedot (first (urakat/hae-kaynnissaoleva-urakka-urakkanumerolla db urakkanro))
+        urakka-id (:id urakan-tiedot)
         harja-yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db urakka-id)
-        harja-vastuuhenkilot (map #(dissoc (if (:ensisijainen %)
+        harja-vastuuhenkilot (map #(if (:ensisijainen %)
                                      (assoc % :vastuuhenkilo true)
-                                     (assoc % :varahenkilo true)) :ensisijainen)
-                               (yhteyshenkilot/hae-urakan-vastuuhenkilot db urakka-id))
-        ;; todo: tee ennemmin niin, että assokkaa fimin yhteyshenkilöihin tieto siitä, onko henkilo vara tai vastuuhenkilo
-        fim-yhteyshenkilot (filter (fn [h] (not-any? (fn [f] (= (:kayttajatunnus f)
-                                                                (:kayttajatunnus h)))
-                                                     harja-vastuuhenkilot))
-                                   (fim/hae-urakan-kayttajat fim (:sampoid urakan-tiedot)))]
-    (yhteyshenkilot-vastaus/urakan-yhteystiedot urakan-tiedot fim-yhteyshenkilot harja-yhteyshenkilot harjan-vastuuhenkilot)))
+                                     (assoc % :varahenkilo true))
+                                  (yhteyshenkilot/hae-urakan-vastuuhenkilot db urakka-id))
+
+        fim-yhteyshenkilot (fim/hae-urakan-kayttajat fim (:sampoid urakan-tiedot))
+        fim-yhteyshenkilot (map
+                             (fn [fy]
+                               (let [hy (first (filter (fn [hy] (= (:kayttajatunnus hy) (:kayttajatunnus fy)))
+                                                       harja-vastuuhenkilot))]
+                                 (assoc fy :vastuuhenkilo (:vastuuhenkilo hy)
+                                           :varahenkilo (:varahenkilo hy))))
+                             fim-yhteyshenkilot)]
+    (yhteyshenkilot-vastaus/urakan-yhteystiedot urakan-tiedot fim-yhteyshenkilot harja-yhteyshenkilot)))
 
 (defrecord Yhteystiedot []
   component/Lifecycle

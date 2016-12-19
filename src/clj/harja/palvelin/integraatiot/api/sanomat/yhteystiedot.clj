@@ -21,13 +21,15 @@
     "Kelikeskus"
     "Tieliikennekeskus"})
 
-(defn tee-yhteyshenkilo [rooli etunimi sukunimi puhelin sahkoposti organisaatio]
+(defn tee-yhteyshenkilo [rooli etunimi sukunimi puhelin sahkoposti organisaatio vastuuhenkilo varahenkilo]
   {:yhteyshenkilo
    {:rooli rooli
     :nimi (str etunimi " " sukunimi)
     :puhelinnumero puhelin
     :email sahkoposti
-    :organisaatio organisaatio}})
+    :organisaatio organisaatio
+    :vastuuhenkilo (true? vastuuhenkilo)
+    :varahenkilo (true? varahenkilo)}})
 
 (defn yhteyshenkilot-fimissa [yhteyshenkilot]
   (let [yhteyshenkilot (filter (fn [k] some #(contains? fim-roolit %) (:roolit k)) yhteyshenkilot)]
@@ -35,8 +37,8 @@
            (map
              (fn [rooli]
                (map
-                 (fn [{:keys [etunimi sukunimi puhelin sahkoposti organisaatio]}]
-                   (tee-yhteyshenkilo rooli etunimi sukunimi puhelin sahkoposti organisaatio))
+                 (fn [{:keys [etunimi sukunimi puhelin sahkoposti organisaatio vastuuhenkilo varahenkilo]}]
+                   (tee-yhteyshenkilo rooli etunimi sukunimi puhelin sahkoposti organisaatio vastuuhenkilo varahenkilo))
                  (filter (fn [y] (some #(= % rooli) (:roolit y))) yhteyshenkilot)))
              fim-roolit))))
 
@@ -45,21 +47,12 @@
     (map
       (fn [{:keys [rooli etunimi sukunimi matkapuhelin tyopuhelin sahkoposti organisaatio_nimi]}]
         (let [puhelin (or matkapuhelin tyopuhelin)]
-          (tee-yhteyshenkilo rooli etunimi sukunimi puhelin sahkoposti organisaatio_nimi)))
+          (tee-yhteyshenkilo rooli etunimi sukunimi puhelin sahkoposti organisaatio_nimi false false)))
       yhteyshenkilot)))
 
-(defn vastuuhenkilot-harjassa [yhteyshenkilot]
-  (let [yhteyshenkilot (filter #(contains? harja-roolit (:rooli %)) yhteyshenkilot)]
-    (map
-      (fn [{:keys [rooli nimi puhelin sahkoposti organisaatio_nimi]}]
-        (let [puhelin (or matkapuhelin tyopuhelin)]
-          (tee-yhteyshenkilo rooli etunimi sukunimi puhelin sahkoposti organisaatio_nimi)))
-      yhteyshenkilot)))
-
-(defn yhteyshenkilot [fim-yhteyshenkilot harja-yhteyshenkilot harjan-vastuuhenkilot]
+(defn yhteyshenkilot [fim-yhteyshenkilot harja-yhteyshenkilot]
   (vec (concat (yhteyshenkilot-fimissa fim-yhteyshenkilot)
-               (yhteyshenkilot-harjassa harja-yhteyshenkilot)
-               (vastuuhenkilot-harjassa harjan-vastuuhenkilot))))
+               (yhteyshenkilot-harjassa harja-yhteyshenkilot))))
 
 (defn urakan-yhteystiedot [{:keys [urakkanro
                                    elynumero
@@ -73,10 +66,9 @@
                                    urakoitsija-postinumero
                                    urakoitsija-nimi]}
                            fim-yhteyshenkilot
-                           harja-yhteyshenkilot
-                           harjan-vastuuhenkilot]
+                           harja-yhteyshenkilot]
 
-  (let [yhteyshenkilot (yhteyshenkilot fim-yhteyshenkilot harja-yhteyshenkilot harjan-vastuuhenkilot)]
+  (let [yhteyshenkilot (yhteyshenkilot fim-yhteyshenkilot harja-yhteyshenkilot)]
     {:urakka {
               :alueurakkanro urakkanro
               :elynro elynumero
