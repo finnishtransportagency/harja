@@ -488,9 +488,11 @@
               (map #(konv/array->set % :tehtavat))
               (map #(konv/string->keyword % :tyyppi)))
         (q/hae-tyokoneiden-asiat db
-                                 (-> parametrit
-                                   suodattimet-parametreista
-                                   (assoc :x x
+                                 (as-> parametrit p
+                                   (suodattimet-parametreista p)
+                                   (assoc p
+                                          :urakat (luettavat-urakat user p)
+                                          :x x
                                           :y y
                                           :nayta-kaikki (roolit/tilaajan-kayttaja? user)
                                           :organisaatio (-> user :organisaatio :id))))))
