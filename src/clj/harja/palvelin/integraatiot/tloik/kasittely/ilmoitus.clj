@@ -9,6 +9,7 @@
 (defn urakkatyyppi [urakkatyyppi]
   (case (str/lower-case urakkatyyppi)
     "silta" "siltakorjaus"
+    "tekniset laitteet" "tekniset-laitteet"
     urakkatyyppi))
 
 (defn paivita-ilmoittaja [db id ilmoittaja]

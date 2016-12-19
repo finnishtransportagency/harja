@@ -10,7 +10,6 @@
             [harja.ui.valinnat :as valinnat]
             [harja.ui.viesti :as viesti]
             [harja.ui.komponentti :as komp]
-            [harja.ui.kentat :refer [tee-kentta]]
 
             [harja.tiedot.urakka.toteumat.suola :as tiedot]
             [harja.loki :refer [log tarkkaile!]]

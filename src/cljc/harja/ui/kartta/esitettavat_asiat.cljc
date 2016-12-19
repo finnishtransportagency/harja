@@ -476,6 +476,11 @@
                                nil
                                viivat))))
 
+(defn tyokoneen-selite [tehtavat]
+  {:teksti (tehtavan-nimi tehtavat)
+   :vari (viivojen-varit-leveimmasta-kapeimpaan
+          (first (tehtavan-viivat-ja-nuolitiedosto tehtavat false)))})
+
 (defmethod asia-kartalle :tyokone [tyokone valittu-fn?]
   (let [selite-teksti (tehtavan-nimi (:tehtavat tyokone))
         [viivat nuolen-vari] (tehtavan-viivat-ja-nuolitiedosto
@@ -490,7 +495,7 @@
            :selite {:teksti selite-teksti
                     :vari   (viivojen-varit-leveimmasta-kapeimpaan viivat)}
            :alue (maarittele-feature paikka (valittu-fn? tyokone)
-                                     (ulkoasu/tyokoneen-ikoni nuolen-vari (muunna-tyokoneen-suunta (:suunta tyokone)))
+                                     (ulkoasu/tyokoneen-nuoli nuolen-vari)
                                      viivat))))
 
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
@@ -559,4 +564,6 @@
                    (tallenna-selitteet-xf selitteet))
              asiat)
        {:extent    @extent
-        :selitteet @selitteet}))))
+        :selitteet @selitteet
+        ;:hae-asiat funktiotähän
+        }))))

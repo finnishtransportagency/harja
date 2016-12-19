@@ -51,7 +51,7 @@
    :tarkastusajo s/Int
    :aikaleima s/Int
    :sijainti Sijainti
-   (s/optional-key :kayttajan-syottama-tr-osoite) TrOsoite
+   (s/optional-key :kayttajan-syottama-tr-osoite) (s/maybe TrOsoite)
    :mittaukset {(s/optional-key :lampotila) (s/maybe s/Num)
                 (s/optional-key :lumisuus) (s/maybe Lumisuus)
                 (s/optional-key :talvihoito-tasaisuus) (s/maybe Tasaisuus)
@@ -140,7 +140,7 @@
   {:kirjaukset [HavaintoKirjaus]})
 
 (def TarkastuksenPaattaminen
-  {:urakka (s/maybe s/Int)
+  {:urakka s/Int
    :tarkastusajo {:id s/Int}})
 
 (defn api-vastaus [ok-tyyppi]

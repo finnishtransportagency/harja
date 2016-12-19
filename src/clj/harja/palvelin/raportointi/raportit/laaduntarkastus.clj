@@ -29,7 +29,7 @@
   (str/join
    " | "
    (remove nil?
-           [(when talvihoitoluokka (str "Thlk: " (hoitoluokat/talvihoitoluokan-nimi talvihoitoluokka)))
+           [(when talvihoitoluokka (str "Thlk: " (hoitoluokat/talvihoitoluokan-nimi-str talvihoitoluokka)))
             (when lumimaara (str "Lumi: " (fmt/desimaaliluku lumimaara 1)))
             (when tasaisuus (str "Tasaisuus: " (fmt/desimaaliluku tasaisuus 1)))
             (when kitka (str "Kitka: " (fmt/desimaaliluku kitka)))

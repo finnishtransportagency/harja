@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.komponentti :as komp]
-            [harja.views.kartta :as kartta]
+            [harja.tiedot.kartta :as kartta]
             [harja.views.kartta.tasot :as karttatasot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.vkm :as vkm]

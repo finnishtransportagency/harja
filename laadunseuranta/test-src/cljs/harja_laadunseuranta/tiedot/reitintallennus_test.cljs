@@ -49,10 +49,10 @@
                         {:sijainnin-tallennus-mahdollinen-atom sijainin-tallennus-mahdollinen
                          :sijainti-atom sijainti
                          :db @db
-                         :tarkastusajo-paattymassa paattymassa
+                         :tarkastusajo-paattymassa-atom paattymassa
                          :segmentti-atom segmentti
                          :reittipisteet-atom reittipisteet
-                         :tallennus-kaynnissa-atom tallennus-kaynnissa
+                         :tarkastusajo-kaynnissa-atom tallennus-kaynnissa
                          :tarkastusajo-atom tarkastusajo-id
                          :tarkastuspisteet-atom tarkastuspisteet
                          :soratiemittaussyotto soratiemittaussyotto

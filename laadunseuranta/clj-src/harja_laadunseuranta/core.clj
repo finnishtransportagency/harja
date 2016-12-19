@@ -9,6 +9,7 @@
             [harja-laadunseuranta.tarkastukset :as tarkastukset]
             [harja-laadunseuranta.schemas :as schemas]
             [harja-laadunseuranta.utils :as utils]
+            [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
             [schema.core :as s]
             [clojure.core.match :refer [match]]
             [clojure.java.jdbc :as jdbc]
@@ -17,9 +18,44 @@
             [clojure.data.codec.base64 :as b64]
             [com.stuartsierra.component :as component]
             [clojure.walk :as walk]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.kyselyt.konversio :as konv]
+            [harja.pvm :as pvm]
+            [clj-time.core :as t]
+            [clj-time.coerce :as c])
   (:import (org.postgis PGgeometry))
   (:gen-class))
+
+(defn- kayttajan-tarkastusurakat
+  [db kayttaja sijainti]
+  (let [urakat (kayttajatiedot/kayttajan-lahimmat-urakat db
+                                                         kayttaja
+                                                         (fn [urakka kayttaja]
+                                                           (oikeudet/voi-kirjoittaa?
+                                                             oikeudet/urakat-laadunseuranta-tarkastukset
+                                                             urakka kayttaja))
+                                                         sijainti)
+        urakat (map
+                 #(assoc % :oma-urakka?
+                           (boolean ((set
+                                       (keys (:urakkaroolit kayttaja)))
+                                      (:id %))))
+                 urakat)
+        ;; Nostetaan lähin hoidon urakka kärkeen, jos sellainen löytyy
+        lahdin-hoidon-urakka (first (filter #(= (:tyyppi %) "hoito") urakat))
+        urakat (if lahdin-hoidon-urakka
+                 (concat [lahdin-hoidon-urakka]
+                         (remove #(= % lahdin-hoidon-urakka)
+                                 urakat))
+                 urakat)
+        ;; Siirretään testiurakat hännille
+        testiurakat (filter #(nil? (:urakkanro %)) urakat)
+        urakat (concat (remove #(nil? (:urakkanro %)) urakat)
+                       testiurakat)
+        ;; Siirretään mahdolliset omat urakat (ne joissa käyttäjällä urakkarooli) jonon kärkeen
+        omat-urakat (filter #(:oma-urakka? %) urakat)
+        urakat (concat omat-urakat (remove #(:oma-urakka? %) urakat))]
+    (into [] urakat)))
 
 (defn- tallenna-merkinta! [tx vakiohavainto-idt merkinta]
   (q/tallenna-reittimerkinta! tx {:id (:id merkinta)
@@ -103,12 +139,9 @@
   {:reitilliset-tarkastukset (mapv #(assoc % :urakka urakka-id) reitilliset-tarkastukset)
    :pistemaiset-tarkastukset (mapv #(assoc % :urakka urakka-id) pistemaiset-tarkastukset)})
 
-(defn- muunna-tarkastusajon-reittipisteet-tarkastuksiksi [tx tarkastusajo kayttaja]
+(defn- muunna-tarkastusajon-reittipisteet-tarkastuksiksi [tx tarkastusajo kayttaja urakka-id]
   (log/debug "Muutetaan reittipisteet tarkastuksiksi")
   (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)
-        urakka-id (or
-                    (:urakka tarkastusajo)
-                    (:id (first (q/paattele-urakka tx {:tarkastusajo tarkastusajo-id}))))
         merkinnat-tr-osoitteilla (q/hae-reitin-merkinnat-tieosoitteilla
                                    tx {:tarkastusajo tarkastusajo-id
                                        :treshold 100})
@@ -122,10 +155,14 @@
 (defn paata-tarkastusajo! [db tarkastusajo kayttaja]
   (jdbc/with-db-transaction [tx db]
     (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)
+          urakka-id (:urakka tarkastusajo)
+          _ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset
+                                            kayttaja
+                                            urakka-id)
           ajo-paatetty (:paatetty (first (q/ajo-paatetty tx {:id tarkastusajo-id})))]
       (if-not ajo-paatetty
         (do
-          (muunna-tarkastusajon-reittipisteet-tarkastuksiksi tx tarkastusajo kayttaja)
+          (muunna-tarkastusajon-reittipisteet-tarkastuksiksi tx tarkastusajo kayttaja urakka-id)
           (merkitse-ajo-paattyneeksi! tx tarkastusajo-id kayttaja))
         (log/warn (format "Yritettiin päättää ajo %s, joka on jo päätetty!" tarkastusajo-id))))))
 
@@ -198,7 +235,6 @@
         (tallenna-merkinnat! db kirjaukset (:id user))
         "Reittimerkinta tallennettu"))
 
-
     :ls-paata-tarkastusajo
     (kasittele-api-kutsu
       schemas/TarkastuksenPaattaminen s/Str
@@ -222,19 +258,19 @@
         (let [{:keys [lat lon treshold]} koordinaatit]
           (hae-tr-tiedot db lat lon treshold))))
 
-    :ls-urakkatyypin-urakat
-    (kasittele-api-kutsu
-      s/Str s/Any
-      (fn [kayttaja urakkatyyppi]
-        (log/debug "Haetaan urakkatyypin urakat " urakkatyyppi)
-        (hae-urakkatyypin-urakat db urakkatyyppi kayttaja)))
-
     :ls-hae-kayttajatiedot
-    (fn [kayttaja]
-      (log/debug "Käyttäjän tietojen haku")
-      {:ok {:kayttajanimi (:kayttajanimi kayttaja)
-            :nimi (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
-            :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset db)}})))
+    (kasittele-api-kutsu
+      s/Any s/Any
+      (fn [kayttaja tiedot]
+        (let [kayttajatiedot-kannassa (kayttajatiedot/hae-kayttaja db (:id kayttaja))
+              kayttajan-tarkastusurakat (kayttajan-tarkastusurakat db kayttaja (:sijainti tiedot))]
+          {:kayttajanimi (:kayttajanimi kayttajatiedot-kannassa)
+           :nimi (str (:etunimi kayttajatiedot-kannassa)
+                      " "
+                      (:sukunimi kayttajatiedot-kannassa))
+           :urakat kayttajan-tarkastusurakat
+           :organisaatio (:organisaatio kayttajatiedot-kannassa)
+           :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset db)})))))
 
 
 (defn- tallenna-liite [db req]
@@ -275,6 +311,5 @@
                                    :ls-paata-tarkastusajo
                                    :ls-uusi-tarkastusajo
                                    :ls-hae-tr-tiedot
-                                   :ls-urakkatyypin-urakat
                                    :ls-hae-kayttajatiedot)
     this))

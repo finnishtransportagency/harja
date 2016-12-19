@@ -10,15 +10,14 @@
 (def +xsd-polku+ "xsd/tierekisteri/skeemat/")
 
 (defn muodosta-xml-sisalto [{:keys [lisaaja tietue lisatty]}]
-  (let [tie (get-in tietue [:sijainti :tie])]
-    [:ns2:lisaaTietue {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/lisaaTietue"}
-     [:lisaaja
-      [:henkilo (:henkilo lisaaja)]
-      [:jarjestelma (:jarjestelma lisaaja)]
-      [:organisaatio (:organisaatio lisaaja)]
-      [:yTunnus (:yTunnus lisaaja)]]
-     (elementit/muodosta-tietue tietue)
-     [:lisatty lisatty]]))
+  [:ns2:lisaaTietue {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/lisaaTietue"}
+   [:lisaaja
+    [:henkilo (:henkilo lisaaja)]
+    [:jarjestelma (:jarjestelma lisaaja)]
+    [:organisaatio (:organisaatio lisaaja)]
+    [:yTunnus (:yTunnus lisaaja)]]
+   (elementit/muodosta-tietue tietue)
+   [:lisatty lisatty]])
 
 (defn muodosta-kutsu [tietue]
   (let [sisalto (muodosta-xml-sisalto tietue)
