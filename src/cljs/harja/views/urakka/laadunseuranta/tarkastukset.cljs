@@ -202,7 +202,10 @@
                             (when-not (str/blank? soratiemittaukset)
                               [:li.tarkastuksen-soratiemittaukset soratiemittaukset])
                             (when-not (str/blank? havainnot-rajattu)
-                              [:li.tarkastuksen-havainnot havainnot-rajattu])]))}]
+                              [:li.tarkastuksen-havainnot havainnot-rajattu])]))}
+         {:otsikko     "Liit\u00ADteet" :nimi :liitteet :leveys 1 :tyyppi :komponentti
+          :komponentti (fn [rivi]
+                         (liitteet/liitteet-numeroina (:liitteet rivi)))}]
         tarkastukset]]))))
 
 

@@ -220,7 +220,7 @@ BEGIN
     RETURN NULL;
   ELSE
     kohta := laske_tr_osan_kohta(osa_.geom, piste);
-    RETURN ROW(osa_.tie, osa_.osa, kohta.etaisyys, 0, 0, kohta.piste::GEOMETRY);
+    RETURN ROW(osa_.tie, osa_.osa, kohta.etaisyys, null::INTEGER, null::INTEGER, kohta.piste::GEOMETRY);
   END IF;
 END;
 $$ LANGUAGE plpgsql;
