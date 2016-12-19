@@ -34,12 +34,16 @@
   (let [urakka-id (:id urakan-tiedot)
         urakan-tiedot (first (urakat/hae-kaynnissaoleva-urakka-urakkanumerolla db urakkanro))
         harja-yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db urakka-id)
-        harja-vastuuhenkilot (yhteyshenkilot/hae-urakan-vastuuhenkilot db urakka-id)
+        harja-vastuuhenkilot (map #(dissoc (if (:ensisijainen %)
+                                     (assoc % :vastuuhenkilo true)
+                                     (assoc % :varahenkilo true)) :ensisijainen)
+                               (yhteyshenkilot/hae-urakan-vastuuhenkilot db urakka-id))
+        ;; todo: tee ennemmin niin, että assokkaa fimin yhteyshenkilöihin tieto siitä, onko henkilo vara tai vastuuhenkilo
         fim-yhteyshenkilot (filter (fn [h] (not-any? (fn [f] (= (:kayttajatunnus f)
                                                                 (:kayttajatunnus h)))
                                                      harja-vastuuhenkilot))
                                    (fim/hae-urakan-kayttajat fim (:sampoid urakan-tiedot)))]
-    (yhteyshenkilot-vastaus/urakan-yhteystiedot urakan-tiedot fim-yhteyshenkilot harja-yhteyshenkilot)))
+    (yhteyshenkilot-vastaus/urakan-yhteystiedot urakan-tiedot fim-yhteyshenkilot harja-yhteyshenkilot harjan-vastuuhenkilot)))
 
 (defrecord Yhteystiedot []
   component/Lifecycle
