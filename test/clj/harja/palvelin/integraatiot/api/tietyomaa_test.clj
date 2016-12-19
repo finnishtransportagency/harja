@@ -17,7 +17,7 @@
 
 (defn hae-tietyomaa []
   (first (q (str
-              "SELECT id, muokattu, poistettu FROM tietyomaa
+              "SELECT id, muokattu, poistettu, nopeusrajoitus FROM tietyomaa
                WHERE osuus_id = 1 AND jarjestelma = 'Urakoitsijan järjestelmä' AND yllapitokohde = 5;"))))
 
 (deftest tarkista-tietyomaan-kasittely
@@ -26,16 +26,18 @@
     (api-tyokalut/post-kutsu ["/api/urakat/5/yllapitokohteet/5/tietyomaa"] kayttaja portti lisays-kutsu)
     (let [uusi-tietyomaa (hae-tietyomaa)
           id (first uusi-tietyomaa)
-          muokattu (second uusi-tietyomaa)]
+          muokattu (second uusi-tietyomaa)
+          nopeusrajoitus (nth 2 uusi-tietyomaa)]
       (is (not (nil? id)) "Kannasta löytyy uusi tietyömaa")
-      (is (nil? muokattu)) "Muokkauspäivämäärä on tyhjä")
+      (is (nil? muokattu) "Muokkauspäivämäärä on tyhjä")
+      (is (= 20 nopeusrajoitus "Nopeusrajoitus on kirjattu oikein")))
 
     (api-tyokalut/post-kutsu ["/api/urakat/5/yllapitokohteet/5/tietyomaa"] kayttaja portti lisays-kutsu)
     (let [muokattu-tietyomaa (hae-tietyomaa)
           id (first muokattu-tietyomaa)
           muokattu (second muokattu-tietyomaa)]
       (is (not (nil? id)) "Kannasta löytyy yha sama tietyömaa")
-      (is (not (nil? muokattu))) "Tieosuus on merkitty muuttuneeksi")
+      (is (not (nil? muokattu)) "Tieosuus on merkitty muuttuneeksi"))
 
     (api-tyokalut/delete-kutsu ["/api/urakat/5/yllapitokohteet/5/tietyomaa"] kayttaja portti poisto-kutsu)
     (let [muokattu-tietyomaa (hae-tietyomaa)

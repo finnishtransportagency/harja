@@ -178,7 +178,8 @@
                       :tr_aosa       (:aosa tr-osoite)
                       :tr_aet        (:aet tr-osoite)
                       :tr_losa       (:losa tr-osoite)
-                      :tr_let        (:let tr-osoite)}]
+                      :tr_let        (:let tr-osoite)
+                      :nopeusrajoitus (:nopeusrajoitus tietyomaa)}]
 
       (if (q-tietyomaat/onko-olemassa? db {:id (:id tietyomaa) :jarjestelma jarjestelma})
         (q-tietyomaat/paivita-tietyomaa! db parametrit)
