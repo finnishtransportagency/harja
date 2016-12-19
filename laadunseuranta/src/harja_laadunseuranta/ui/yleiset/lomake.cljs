@@ -113,9 +113,9 @@
        [:div.liittyvat-havainnot
         (doall
           (for [liittyva-havainto liittyvat-havainnot]
-            ^{:key (:id liittyva-havainto)}
             (let [aktiivinen-havainto? (= (:id liittyva-havainto)
                                           @lomake-liittyy-havaintoon-atom)]
+              ^{:key (:id liittyva-havainto)}
               [:div {:class (str "liittyva-havainto "
                                  (when aktiivinen-havainto?
                                    "liittyva-havainto-aktiivinen"))
@@ -127,6 +127,7 @@
                                            (:id liittyva-havainto))))}
                [kuvat/svg-sprite (:ikoni (havainnon-tiedot-avaimella
                                            (:havainto-avain liittyva-havainto)))]
+               ^{:key (hash liittyva-havainto)}
                [:div.liittyva-havainto-tiedot
                 [:div
                  [:span.nimi (:nimi (havainnon-tiedot-avaimella
@@ -149,7 +150,6 @@
   [:div.lomake-container
    [:div.lomake-sisalto-container
     [:div.lomake-title otsikko]
-    ;; FIXME Miksi tulee unique key error?
     (doall (for [elementti sisalto]
              ^{:key (hash elementti)}
              elementti))
@@ -167,12 +167,14 @@
                        :on-click peruuta-fn}]]]])
 
 (defn rivi [& elementit]
+  ^{:key (hash elementit)}
   [:div.lomake-rivi
    (doall (for [elementti elementit]
             ^{:key (hash elementti)}
             elementti))])
 
 (defn kentta [label komponentti]
+  ^{:key label}
   [:div.lomake-kentta
    [:div.label label]
    komponentti])

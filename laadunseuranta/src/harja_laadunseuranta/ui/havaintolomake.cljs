@@ -33,6 +33,7 @@
                               (reset! tr-osoite-atom tr-osoite-lomakkeen-avauksessa)))]
     (alusta-tr-osoite! tr-osoite-atom)
     (fn []
+      ^{:key "Havaintolomake"}
       [lomake/lomake
        {:otsikko "Havainnon perustiedot"
         :peruuta-fn peruuta-fn
@@ -41,20 +42,27 @@
         :lomake-virheet-atom lomake-virheet-atom}
 
        (when-not (empty? liittyvat-havainnot)
+         ^{:key "Lomake liittyy havaintoon rivi"}
          [lomake/rivi
+          ^{:key "Lomake liittyy havaintoon"}
           [lomake/kentta "Lomake liittyy havaintoon"
            [lomake/liittyvat-havainnot
             {:liittyvat-havainnot liittyvat-havainnot
              :lomake-liittyy-havaintoon-atom lomake-liittyy-havaintoon-atom
              :havainnot-ryhmittain havainnot-ryhmittain}]]])
 
+       ^{:key "pvm-rivi"}
        [lomake/rivi
+        ^{:key "Päivämäärä"}
         [lomake/kentta "Päivämäärä"
          [:span (fmt/pvm-klo @aikaleima-atom)]]
+        ^{:key "Tarkastaja"}
         [lomake/kentta "Tarkastaja"
          [:span @kayttajanimi-atom]]]
 
+       ^{:key "Tieosuusrivi"}
        [lomake/rivi
+        ^{:key "Tieosuus"}
         [lomake/kentta "Tieosuus"
          [lomake/tr-osoite
           {:tr-osoite-atom tr-osoite-atom
@@ -62,13 +70,18 @@
            :liittyva-havainto (first (filter #(= (:id %) @lomake-liittyy-havaintoon-atom)
                                              liittyvat-havainnot))}]]]
 
+       ^{:key "Laadunalitusrivi"}
        [lomake/rivi
+        ^{:key "Laadunalitus"}
         [lomake/kentta ""
          [lomake/checkbox "Laadunalitus" laadunalitus-atom]]]
 
+       ^{:key "Lisätietorivi"}
        [lomake/rivi
+        ^{:key "Lisätietokenttä"}
         [lomake/kentta "Lisätietoja"
          [lomake/tekstialue kuvaus-atom]]
+        ^{:key "Kamera"}
         [lomake/kentta ""
          [kamera/kamerakomponentti esikatselukuva-atom]]]])))
 
