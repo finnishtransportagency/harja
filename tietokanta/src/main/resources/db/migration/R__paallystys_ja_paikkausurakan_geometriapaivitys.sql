@@ -29,7 +29,7 @@ BEGIN
         FROM yllapitokohdeosa osa
           JOIN yllapitokohde ypk ON osa.yllapitokohde = ypk.id
           JOIN urakka u ON ypk.urakka = u.id
-        WHERE urakka.id = urakkaid;
+        WHERE urakka.id = urakkaid
   GROUP BY u.id, u.nimi) AS geometriat
   WHERE urakka.id = urakkaid;
 RETURN;
