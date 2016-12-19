@@ -295,6 +295,7 @@
             :koko [80 :auto]
             :palstoja 1
             :pakollinen? true
+            :pituus-max 2000
             :validoi [[:ei-tyhja "Anna kuvaus"]]}
            {:otsikko "Aiheutuneet seuraukset"
             :nimi :seuraukset
