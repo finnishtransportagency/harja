@@ -206,7 +206,7 @@
                   (laajenna-tyokone-extent alue)
                   {:nayta-kaikki (roolit/tilaajan-kayttaja? user)
                    :organisaatio (:id (:organisaatio user))
-                   :urakat urakat
+                   :urakat (seq urakat)
                    :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito)
                    :alku alku
                    :loppu loppu}))
@@ -237,7 +237,7 @@
                        :alku (konv/sql-date alku)
                        :loppu (konv/sql-date loppu)
                        :toimenpidekoodit toimenpidekoodit
-                       :urakat urakat
+                       :urakat (seq urakat)
                        :xmin (:xmin alue)
                        :ymin (:ymin alue)
                        :xmax (:xmax alue)
@@ -250,7 +250,7 @@
                         {:toleranssi toleranssi
                          :alku (konv/sql-date alku)
                          :loppu (konv/sql-date loppu)
-                         :urakat urakat
+                         :urakat (seq urakat)
                          :xmin (:xmin alue)
                          :ymin (:ymin alue)
                          :xmax (:xmax alue)
@@ -264,7 +264,7 @@
    db ch
    (merge
     (laajenna-tyokone-extent alue)
-    {:urakat urakat
+    {:urakat (seq urakat)
      :nayta-kaikki (roolit/tilaajan-kayttaja? user)
      :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito)
      :alku alku
@@ -398,7 +398,7 @@
   (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
                                   oikeudet/tilannekuva-nykytilanne
                                   oikeudet/tilannekuva-historia) % user)
-          (:urakat tiedot)))
+          (seq (:urakat tiedot))))
 
 (defn- hae-karttakuvan-tiedot [db user parametrit haku-fn xf ]
   (let [tiedot (karttakuvan-suodattimet parametrit)
