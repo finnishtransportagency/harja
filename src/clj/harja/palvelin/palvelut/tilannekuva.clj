@@ -206,7 +206,7 @@
                   (laajenna-tyokone-extent alue)
                   {:nayta-kaikki (roolit/tilaajan-kayttaja? user)
                    :organisaatio (:id (:organisaatio user))
-                   :urakat (seq urakat)
+                   :urakat urakat
                    :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito)
                    :alku alku
                    :loppu loppu}))
@@ -237,7 +237,7 @@
                        :alku (konv/sql-date alku)
                        :loppu (konv/sql-date loppu)
                        :toimenpidekoodit toimenpidekoodit
-                       :urakat (seq urakat)
+                       :urakat urakat
                        :xmin (:xmin alue)
                        :ymin (:ymin alue)
                        :xmax (:xmax alue)
@@ -250,7 +250,7 @@
                         {:toleranssi toleranssi
                          :alku (konv/sql-date alku)
                          :loppu (konv/sql-date loppu)
-                         :urakat (seq urakat)
+                         :urakat urakat
                          :xmin (:xmin alue)
                          :ymin (:ymin alue)
                          :xmax (:xmax alue)
@@ -264,7 +264,7 @@
    db ch
    (merge
     (laajenna-tyokone-extent alue)
-    {:urakat (seq urakat)
+    {:urakat urakat
      :nayta-kaikki (roolit/tilaajan-kayttaja? user)
      :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito)
      :alku alku
