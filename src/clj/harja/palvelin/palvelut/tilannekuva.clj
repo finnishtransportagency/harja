@@ -398,7 +398,7 @@
   (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
                                   oikeudet/tilannekuva-nykytilanne
                                   oikeudet/tilannekuva-historia) % user)
-          (seq (:urakat tiedot))))
+          (:urakat tiedot)))
 
 (defn- hae-karttakuvan-tiedot [db user parametrit haku-fn xf ]
   (let [tiedot (karttakuvan-suodattimet parametrit)
