@@ -21,13 +21,15 @@
     "Kelikeskus"
     "Tieliikennekeskus"})
 
-(defn tee-yhteyshenkilo [rooli etunimi sukunimi puhelin sahkoposti organisaatio]
+(defn tee-yhteyshenkilo [rooli etunimi sukunimi puhelin sahkoposti organisaatio vastuuhenkilo varahenkilo]
   {:yhteyshenkilo
    {:rooli rooli
     :nimi (str etunimi " " sukunimi)
     :puhelinnumero puhelin
     :email sahkoposti
-    :organisaatio organisaatio}})
+    :organisaatio organisaatio
+    :vastuuhenkilo (true? vastuuhenkilo)
+    :varahenkilo (true? varahenkilo)}})
 
 (defn yhteyshenkilot-fimissa [yhteyshenkilot]
   (let [yhteyshenkilot (filter (fn [k] some #(contains? fim-roolit %) (:roolit k)) yhteyshenkilot)]
@@ -35,8 +37,8 @@
            (map
              (fn [rooli]
                (map
-                 (fn [{:keys [etunimi sukunimi puhelin sahkoposti organisaatio]}]
-                   (tee-yhteyshenkilo rooli etunimi sukunimi puhelin sahkoposti organisaatio))
+                 (fn [{:keys [etunimi sukunimi puhelin sahkoposti organisaatio vastuuhenkilo varahenkilo]}]
+                   (tee-yhteyshenkilo rooli etunimi sukunimi puhelin sahkoposti organisaatio vastuuhenkilo varahenkilo))
                  (filter (fn [y] (some #(= % rooli) (:roolit y))) yhteyshenkilot)))
              fim-roolit))))
 
@@ -45,7 +47,7 @@
     (map
       (fn [{:keys [rooli etunimi sukunimi matkapuhelin tyopuhelin sahkoposti organisaatio_nimi]}]
         (let [puhelin (or matkapuhelin tyopuhelin)]
-          (tee-yhteyshenkilo rooli etunimi sukunimi puhelin sahkoposti organisaatio_nimi)))
+          (tee-yhteyshenkilo rooli etunimi sukunimi puhelin sahkoposti organisaatio_nimi false false)))
       yhteyshenkilot)))
 
 (defn yhteyshenkilot [fim-yhteyshenkilot harja-yhteyshenkilot]

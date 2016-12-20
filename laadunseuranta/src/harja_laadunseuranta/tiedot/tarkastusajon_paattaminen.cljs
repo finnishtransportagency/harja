@@ -39,6 +39,7 @@
                              :laadunalitus? false
                              :kuvaus ""
                              :kuva nil}
+        :liittyvat-havainnot []
         ;; Kartta
         :kirjauspisteet []
         ;; Muut
@@ -70,7 +71,7 @@
 (defn pakota-ajon-lopetus! []
   (let [ajo @s/palautettava-tarkastusajo]
     (reitintallennus/poista-tarkastusajo @s/idxdb (get ajo "tarkastusajo"))
-    (reitintallennus/tyhjenna-reittipisteet @s/idxdb))
+    (reitintallennus/tyhjenna-reittipisteet! @s/idxdb))
   (reset! s/palautettava-tarkastusajo nil))
 
 (defn lopetuspaatos-varmistettu! []

@@ -198,36 +198,6 @@
     :sivukaltevuus 3
     :soratie-tasaisuus 3}])
 
-(def tarkastukset-joissa-jatkuvat-havainnot-muuttuu-ja-kommentteja
-  "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
-  [; tarkastus 1
-   {:id 0 :sijainti [464681.5999816895 7230492.000024414]
-    :jatkuvat-havainnot []}
-   {:id 1 :sijainti [465321.5999816895 7230676.000024414]
-    :jatkuvat-havainnot []}
-
-   ;; tarkastus 2
-   {:id 2 :sijainti [465641.5999816895 7230780.000024414]
-    :jatkuvat-havainnot [17]
-    :kitkamittaus 0.2}
-   {:id 3 :sijainti [466089.5999816895 7230916.000024414]
-    :jatkuvat-havainnot [17]}
-   {:id 4 :sijainti [466409.5999816895 7230996.000024414]
-    :jatkuvat-havainnot [17]
-    :kuvaus "foo"}
-   {:id 5 :sijainti [467009.5999816895 7231180.000024414]
-    :jatkuvat-havainnot [17]}
-   {:id 6 :sijainti [467257.5999816895 7231252.000024414]
-    :jatkuvat-havainnot [17]
-    :kuvaus "bar"}
-   {:id 7 :sijainti [467545.5999816895 7231332.000024414]
-    :jatkuvat-havainnot [17]
-    :kitkamittaus 0.3}
-
-   ;; tarkastus 3
-   {:id 8 :sijainti [467753.5999816895 7231404.000024414]
-    :jatkuvat-havainnot []}])
-
 (def tarkastus-jossa-piste-ei-osu-tielle
   [{:id 0 :sijainti [464681.5999816895 7230492.000024414]
     :jatkuvat-havainnot [17]
@@ -349,7 +319,6 @@
     :kitkamittaus 0.4}
    {:id 6 :sijainti [467257.5999816895 7231252.000024414]
     :jatkuvat-havainnot [17]
-    :kuva 1
     :pistemainen-havainto nil}
    {:id 7 :sijainti [467545.5999816895 7231332.000024414]
     :jatkuvat-havainnot [17]
@@ -426,3 +395,44 @@
    {:id 4 :sijainti [466409.5999816895 7230996.000024414]
     :jatkuvat-havainnot [17]
     :laadunalitus true}])
+
+(def tarkastus-jossa-liittyvia-pistemaisia-merkintoja
+  "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
+  [;; Tehdään pistemäinen havainto
+   {:id 1 :sijainti [465641.5999816895 7230780.000024414]
+    :pistemainen-havainto 20}
+   ;; Normaali tarkastus jatkuu
+   {:id 2 :sijainti [466089.5999816895 7230916.000024414]}
+   {:id 3 :sijainti [466409.5999816895 7230996.000024414]}
+   {:id 4 :sijainti [467009.5999816895 7231180.000024414]}
+   ;; Kirjataan lisätietoja aiemmin tehtyyn pistemäiseen havaintoon
+   {:id 5 :sijainti [467257.5999816895 7231252.000024414]
+    :liittyy-merkintaan 1
+    :kuvaus "Tässä on nyt jotain mätää"
+    :laadunalitus true
+    :kuva 1}
+   ;; Kirjataan lisää lisätietoja
+   ;; Tässä ei ole laadunalitusta, mutta koko pisteessä kuuluisi olla, koska
+   ;; edellisessä liittyvässä merkinnässä sellainen havaittiin.
+   {:id 6 :sijainti [467257.5999816896 7231252.000024413]
+    :liittyy-merkintaan 1
+    :kuvaus "Tässä vielä toinen kuva"
+    :kuva 2}])
+
+(def tarkastus-jossa-laadunalitus-ja-liittyva-merkinta
+  "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
+  [;; Tehdään pistemäinen havainto, jossa laadunalitus
+   {:id 1 :sijainti [465641.5999816895 7230780.000024414]
+    :pistemainen-havainto 20
+    :laadunalitus true}
+   ;; Normaali tarkastus jatkuu
+   {:id 2 :sijainti [466089.5999816895 7230916.000024414]}
+   {:id 3 :sijainti [466409.5999816895 7230996.000024414]}
+   {:id 4 :sijainti [467009.5999816895 7231180.000024414]}
+   ;; Kirjataan lisätietoja aiemmin tehtyyn pistemäiseen havaintoon
+   ;; Tässä ei ole laadunalitusta, mutta koko pisteessä tulisi olla, koska
+   ;; sellainen siihen oli alkujaan merkitty
+   {:id 5 :sijainti [467257.5999816895 7231252.000024414]
+    :liittyy-merkintaan 1
+    :kuvaus "Tässä on nyt jotain mätää"
+    :kuva 1}])
