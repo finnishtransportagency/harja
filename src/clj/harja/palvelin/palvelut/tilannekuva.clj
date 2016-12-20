@@ -1,4 +1,40 @@
 (ns harja.palvelin.palvelut.tilannekuva
+  "Tilannekuva-näkymän palvelinkomponentti.
+
+  Tilannekuva-näkymässä voidaan hakea useita eri kartalla näkyviä
+  asioita kartalle tarkasteltavaksi. Kartalle haku tehdään kaikkien
+  tietojen osalta yhdellä palvelukutsulla, jolle kaikki hakuparametrit
+  välitetään. Tilannekuva palauttaa mäpin, jossa avaimena on osion
+  nimi keyword ja arvona hakuehdoilla löytyneet asiat.
+
+  Löytyneet asiat voivat olla suoraan frontilla renderöitäviä asioita
+  tai muuta metatietoa kuten karttaselitteitä, tasosta riippuen.
+
+  ks. hae-osio multimetodi, joka on toteutettu jokaiselle osiolle.
+
+  PALVELUT
+
+  :hae-tilannekuvaan tekee yllä kuvatun haun tilannekuvan parametrien
+  perusteella.
+
+  :hae-urakat-tilannekuvaan hakee urakat, joiden katselu tilannekuvassa
+  on mahdollista käyttäjän oikeuksilla.
+
+  KYSELYT
+
+  Tilannekuvan kyselyt ovat harja.kyselyt.tilannekuva nimiavaruudessa.
+  Tilannekuvaa varten on tehty omat kyselyt koska filtterit ja
+  palautettavien kenttien määrät ovat erit kuin yleisesti listausnäkymissä.
+
+  KARTTAKUVAT JA INFOPANEELI
+
+  Tilannekuva-komponentti rekisteröi karttakuvan lähteen kaikille
+  palvelimella renderöitäville tilannekuvan karttatasoille.
+
+  Karttakuvien lisäksi rekisteröidään jokaiselle palvelimella
+  renderöintävälle karttatasolle funktio, joka hakee klikkauspisteessä
+  löytyvät asiat ja palauttaa niiden tiedot infopaneelissa näyttämistä
+  varten."
   (:require [clojure.core.async :as async]
             [clojure.java.jdbc :as jdbc]
             [clojure.set :refer [union]]
