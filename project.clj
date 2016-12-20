@@ -47,7 +47,7 @@
                  [webjure/postgis-jdbc "2.1.7"]
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5.2"]
-                 [webjure/jeesql "0.4.4"]
+                 [webjure/jeesql "0.4.5"]
 
 
                  ;; GeoTools

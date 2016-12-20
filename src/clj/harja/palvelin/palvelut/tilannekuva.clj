@@ -447,11 +447,12 @@
         urakat (luettavat-urakat user tiedot)]
     (async/thread
       (jdbc/with-db-transaction [db db
-                                 :read-only? true]
-        (try (haku-fn db ch user tiedot urakat)
-             (catch Throwable t
-               (println t "Virhe haettaessa tilannekuvan karttatietoja")
-               (throw t)))))
+                                 {:read-only? true}]
+        (try
+          (haku-fn db ch user tiedot urakat)
+          (catch Throwable t
+            (log/error t "Virhe haettaessa tilannekuvan karttatietoja")
+            (async/close! ch)))))
     ch))
 
 (defn- hae-toteumien-sijainnit-kartalle
