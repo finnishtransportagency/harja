@@ -34,7 +34,7 @@
 
     [ilmoitukset/ilmoituskomponentti s/ilmoitus]
 
-    (when @s/havaintolomake-auki
+    (when @s/havaintolomake-auki?
       [havaintolomake])
 
     (when @s/tarkastusajo-paattymassa?

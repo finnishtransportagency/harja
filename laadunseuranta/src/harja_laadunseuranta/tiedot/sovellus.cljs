@@ -20,10 +20,11 @@
    :tarkastusajo-kaynnissa? false
    :palautettava-tarkastusajo nil ; TODO REFACTOR dokumentoi tämä
    :tarkastusajo-paattymassa? false ; Jos true, näytetään päättämisdialogi
-   :tarkastusajon-paattamisvaihe nil ;; Mikä dialogi näytetään: :paattamisvarmistus
-                                     ;;                         :urakkavarmistus
-                                     ;;                         :paatetaan
-                                     ;;                         nil
+   :tarkastusajon-paattamisvaihe nil ;; Mikä dialogi näytetään:
+                                     ;; :paattamisvarmistus
+                                     ;; :urakkavarmistus
+                                     ;; :paatetaan
+                                     ;; nil
 
    ;; Käyttäjätiedot
    :kayttaja {:kayttajanimi nil
@@ -75,11 +76,15 @@
                         :kuvaus ""
                         :kuva nil
                         :esikatselukuva nil
+                        :liittyy-havaintoon nil ;; Jos liittyy johonkin aiempaan havaintoon, tässä on havainnon indexed db id.
                         :tr-osoite {:tie nil
                                     :aosa nil
                                     :aet nil
                                     :losa nil
                                     :let nil}}
+
+   :liittyvat-havainnot [] ;; Lista viimeisiä havaintoja, joihin lomake voidaan liittää
+   ;; Item on map: {:id <indexeddb-id> :havainto-avain :lumista :aikaleima <aika> :tr-osoite <tr-osoite-mappi>}
 
    ;; Kartta
    :kirjauspisteet [] ; Kartalla näytettäviä ikoneita varten
@@ -118,8 +123,9 @@
 (def roolit (reagent/cursor sovellus [:kayttaja :roolit]))
 (def organisaatio (reagent/cursor sovellus [:kayttaja :organisaatio]))
 
-(def havaintolomake-auki (reagent/cursor sovellus [:havaintolomake-auki?]))
+(def havaintolomake-auki? (reagent/cursor sovellus [:havaintolomake-auki?]))
 (def havaintolomakedata (reagent/cursor sovellus [:havaintolomakedata]))
+(def liittyvat-havainnot (reagent/cursor sovellus [:liittyvat-havainnot]))
 (def havaintolomake-kuva (reagent/cursor sovellus [:havaintolomakedata :kuva]))
 (def havaintolomake-esikatselukuva (reagent/cursor sovellus [:havaintolomakedata :esikatselukuva]))
 
@@ -180,23 +186,23 @@
   ;; TODO REFACTOR, tee tästä run! blokki joka suoraan lisää segmentin
   ;; ja poista reitintallennus komponentista
   (reaction
-   (let [{:keys [nykyinen edellinen]} @sijainti]
-     (when (and nykyinen edellinen)
-       {:segmentti [(p/latlon-vektoriksi edellinen)
-                    (p/latlon-vektoriksi nykyinen)]
-        :vari (let [s @jatkuvat-havainnot]
-                (cond
-                  (:liukasta s) "blue"
-                  (:lumista s) "blue"
-                  (:tasauspuute s) "blue"
+    (let [{:keys [nykyinen edellinen]} @sijainti]
+      (when (and nykyinen edellinen)
+        {:segmentti [(p/latlon-vektoriksi edellinen)
+                     (p/latlon-vektoriksi nykyinen)]
+         :vari (let [s @jatkuvat-havainnot]
+                 (cond
+                   (:liukasta s) "blue"
+                   (:lumista s) "blue"
+                   (:tasauspuute s) "blue"
 
-                  (:soratie s) "brown"
+                   (:soratie s) "brown"
 
-                  (:vesakko-raivaamatta s) "green"
-                  (:niittamatta s) "green"
+                   (:vesakko-raivaamatta s) "green"
+                   (:niittamatta s) "green"
 
-                  (:yleishavainto s) "red"
-                  :default "black"))}))))
+                   (:yleishavainto s) "red"
+                   :default "black"))}))))
 
 (def reittipisteet (reagent/cursor sovellus [:reittipisteet]))
 
@@ -212,7 +218,7 @@
   (reaction (boolean (and @tarkastusajo-id
                           @tarkastusajo-kaynnissa?
                           (not @tarkastusajo-paattymassa?)
-                          (not @havaintolomake-auki)))))
+                          (not @havaintolomake-auki?)))))
 
 (def nayta-paanavigointi? (reagent/cursor sovellus [:ui :paanavigointi :nakyvissa?]))
 (def nayta-paanavigointi-valilehdet? (reagent/cursor sovellus [:ui :paanavigointi :valilehdet-nakyvissa?]))

@@ -1,6 +1,7 @@
 (ns harja-laadunseuranta.ui.alustus
   (:require [reagent.core :as reagent :refer [atom]]
-            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]))
+            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
+            [harja-laadunseuranta.ui.yleiset.yleiset :as yleiset]))
 
 (defn- checkmark [flag]
   [:img {:src (if flag kuvat/+check+ kuvat/+cross+)
@@ -25,4 +26,4 @@
     [:div [checkmark kayttaja] "Käyttäjä tunnistettu"]
     [:div [checkmark (not (empty? oikeus-urakoihin))] "Oikeus tehdä tarkastuksia"]
     [:div.screenlock-muistutus
-     "Muista asettaa näytön automaattilukitus pois päältä."]]])
+     [yleiset/vihje "Muista asettaa näytön automaattilukitus pois päältä."]]]])
