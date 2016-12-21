@@ -8,10 +8,11 @@
 (def kayttaja "skanska")
 
 (def jarjestelma-fixture
-  (laajenna-integraatiojarjestelmafixturea kayttaja
-                                           :api-yllapitokohteet (component/using
-                                                                  (api-yllapitokohteet/->Yllapitokohteet)
-                                                                  [:http-palvelin :db :integraatioloki])))
+  (laajenna-integraatiojarjestelmafixturea
+    kayttaja
+    :api-yllapitokohteet (component/using
+                           (api-yllapitokohteet/->Yllapitokohteet)
+                           [:http-palvelin :db :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 
@@ -24,26 +25,20 @@
   (let [lisays-kutsu (slurp "test/resurssit/api/tietyomaan-kirjaus.json")
         poisto-kutsu (slurp "test/resurssit/api/tietyomaan-poisto.json")]
     (api-tyokalut/post-kutsu ["/api/urakat/5/yllapitokohteet/5/tietyomaa"] kayttaja portti lisays-kutsu)
-    (let [uusi-tietyomaa (hae-tietyomaa)
-          id (first uusi-tietyomaa)
-          muokattu (second uusi-tietyomaa)
-          nopeusrajoitus (nth 2 uusi-tietyomaa)]
+    (let [[id muokattu poistettu nopeusrajoitus] (hae-tietyomaa)]
       (is (not (nil? id)) "Kannasta löytyy uusi tietyömaa")
       (is (nil? muokattu) "Muokkauspäivämäärä on tyhjä")
-      (is (= 20 nopeusrajoitus "Nopeusrajoitus on kirjattu oikein")))
+      (is (nil? poistettu) "Tietyomaata ei ole poistettu")
+      (is (= 20 nopeusrajoitus) "Nopeusrajoitus on kirjattu oikein"))
 
     (api-tyokalut/post-kutsu ["/api/urakat/5/yllapitokohteet/5/tietyomaa"] kayttaja portti lisays-kutsu)
-    (let [muokattu-tietyomaa (hae-tietyomaa)
-          id (first muokattu-tietyomaa)
-          muokattu (second muokattu-tietyomaa)]
+    (let [[id muokattu _ _] (hae-tietyomaa)]
       (is (not (nil? id)) "Kannasta löytyy yha sama tietyömaa")
       (is (not (nil? muokattu)) "Tieosuus on merkitty muuttuneeksi"))
 
     (api-tyokalut/delete-kutsu ["/api/urakat/5/yllapitokohteet/5/tietyomaa"] kayttaja portti poisto-kutsu)
-    (let [muokattu-tietyomaa (hae-tietyomaa)
-          id (first muokattu-tietyomaa)
-          muokattu (nth muokattu-tietyomaa 2)]
+    (let [[id _ poistettu _] (hae-tietyomaa)]
       (is (not (nil? id)) "Kannasta löytyy yha sama tietyömaa")
-      (is (not (nil? muokattu))) "Tieosuus on merkitty poistetuksi")))
+      (is (not (nil? poistettu))) "Tieosuus on merkitty poistetuksi")))
 
 
