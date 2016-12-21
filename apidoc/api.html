@@ -5909,36 +5909,84 @@
     },
     "lahetysaika": "2016-01-30T12:00:00+02:00"
   },
-  "ilmoitustoimenpide": {
-    "aika": "2016-01-30T12:00:00+02:00",
-    "tyyppi": "vastaanotto",
-    "ilmoittaja": {
-      "henkilo": {
-        "etunimi": "Urho",
-        "sukunimi": "Urakoitsija",
-        "matkapuhelin": "923458973",
-        "tyopuhelin": "94438973",
-        "email": "urho.urakoitsija@puulaaki.fi"
-      },
-      "organisaatio": {
-        "nimi": "Puulaaki Oy",
-        "ytunnus": "1234567-8"
-      }
+
+  "paallystysilmoitus": {
+    "perustiedot": {
+      "takuupvm": "2015-02-15T12:00:00+02:00"
     },
-    "kasittelija": {
-      "henkilo": {
-        "etunimi": "Antti",
-        "sukunimi": "Auraaja",
-        "matkapuhelin": "923458973",
-        "tyopuhelin": "94438973",
-        "email": "antti.auraaja@antinauraus.fi"
+    "yllapitokohde": {
+      "sijainti": {
+        "aosa": 1,
+        "aet": 1,
+        "losa": 5,
+        "let": 16
       },
-      "organisaatio": {
-        "nimi": "Antin Auraus Oy",
-        "ytunnus": "8765432-1"
-      }
+      "alikohteet": [
+        {
+          "alikohde": {
+            "nimi": "1. testialikohde",
+            "tunnus": "A",
+            "sijainti": {
+              "aosa": 1,
+              "aet": 1,
+              "losa": 5,
+              "let": 16
+            },
+            "paallystetyyppi": "avoin asfaltti",
+            "raekoko": 12,
+            "massamenekki": 22,
+            "rc-prosentti": 54,
+            "tyomenetelma": "Uraremix",
+            "leveys": 1.2,
+            "kokonaismassamaara": 12.3,
+            "pinta-ala": 2.2,
+            "kuulamylly": "N14",
+            "kivi-ja-sideaineet": [
+              {
+                "kivi-ja-sideaine": {
+                  "esiintyma": "testi",
+                  "km-arvo": "testi",
+                  "muotoarvo": "testi",
+                  "sideainetyyppi": "20/30",
+                  "pitoisuus": 1.2,
+                  "lisa-aineet": "lisäaineet"
+                }
+              }
+            ]
+          }
+        }
+      ]
     },
-    "vapaateksti": "Antin Auraus Oy hoitaa auraustyön."
+    "alustatoimenpiteet": [
+      {
+        "alustatoimenpide": {
+          "sijainti": {
+            "aosa": 1,
+            "aet": 1,
+            "losa": 5,
+            "let": 15
+          },
+          "kasittelymenetelma": "Massanvaihto",
+          "paksuus": 1.2,
+          "verkkotyyppi": "Teräsverkko",
+          "verkon-tarkoitus": "Moniongelmaisen tukeminen",
+          "verkon-sijainti": "Päällysteessä",
+          "tekninen-toimenpide": "Rakentaminen"
+        }
+      }
+    ],
+    "tyot": [
+      {
+        "tyo": {
+          "tyyppi": "Tasaukset",
+          "tyotehtava": "työtehtävä",
+          "tilattu-maara": 1.2,
+          "toteutunut-maara": 1.2,
+          "yksikko": "kpl",
+          "yksikkohinta": 55.4
+        }
+      }
+    ]
   }
 }</code></pre></div><div class="tab-pane" id="urakat__id__yllapitokohteet__kohdeid__paallystysilmoitus_post_response"><h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
   "$schema": "http://json-schema.org/draft-03/schema#",
