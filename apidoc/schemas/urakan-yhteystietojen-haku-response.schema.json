@@ -124,6 +124,14 @@
                       "Tieliikennekeskus"
                     ]
                   },
+                  "vastuuhenkilo": {
+                    "type": "boolean",
+                    "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/vastuuhenkilo"
+                  },
+                  "varahenkilo": {
+                    "type": "boolean",
+                    "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/varahenkilo"
+                  },
                   "organisaatio": {
                     "type": "string",
                     "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/rooli",
