@@ -5,7 +5,8 @@
             [harja.kyselyt.yhteyshenkilot :as q]
             [harja.kyselyt.urakat :as uq]
 
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
+            [harja.palvelin.komponentit.http-palvelin
+             :refer [julkaise-palvelut poista-palvelut async]]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
 
@@ -59,7 +60,8 @@
 
      :hae-urakan-kayttajat
      (fn [user urakka-id]
-       (hae-urakan-kayttajat (:db this) (:fim this) user urakka-id))
+       (async
+        (hae-urakan-kayttajat (:db this) (:fim this) user urakka-id)))
 
      :hae-urakan-vastuuhenkilot
      (fn [user urakka-id]
