@@ -196,5 +196,3 @@
                  (inc lkm))
                (assoc! nahdyt avain true)
                rivit)))))
-
-(def +erheen-vari+ "#dd0000")

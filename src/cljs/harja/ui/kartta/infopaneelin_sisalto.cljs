@@ -205,7 +205,7 @@
    :data silta})
 
 (defmethod infopaneeli-skeema :tietyomaa [silta]
-  {:tyyppi :silta
+  {:tyyppi :tietyomaa
    :otsikko "Tietyomaa"
    :tiedot [{:otsikko "Ylläpitokohde" :hae #(str (:yllapitokohteen-nimi %) " (" (:yllapitokohteen-numero %) ")")}
             {:otsikko "Aika" :hae #(pvm/pvm-aika (:aika %))}

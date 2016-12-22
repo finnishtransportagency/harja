@@ -15,25 +15,29 @@
 (defmulti muodosta-html
   "Muodostaa Reagent komponentin annetulle raporttielementille."
   (fn [elementti]
-    (assert (and (vector? elementti)
-                 (> (count elementti) 1)
-                 (keyword? (first elementti)))
-            (str "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä. Raporttielementti oli: " (pr-str elementti)))
-    (first elementti)))
+    (if (raportti-domain/raporttielementti? elementti)
+      (first elementti)
+      :vain-arvo)))
+
+(defmethod muodosta-html :vain-arvo [arvo] arvo)
 
 (defmethod muodosta-html :liitteet [[_ liitteet]]
   (liitteet/liitteet-numeroina liitteet))
 
-(defmethod muodosta-html :arvo-ja-osuus [[_ arvo-ja-osuus]]
+(defmethod muodosta-html :arvo-ja-osuus [[_ {:keys [arvo osuus fmt]}]]
   [:span.arvo-ja-osuus
-   [:span.arvo (:arvo arvo-ja-osuus)]
+   [:span.arvo (if fmt (fmt arvo) arvo)]
    [:span " "]
-   [:span.osuus (str "(" (:osuus arvo-ja-osuus) "%)")]])
+   [:span.osuus (str "(" osuus "%)")]])
 
-(defmethod muodosta-html :varillinen-teksti [[_ arvo-ja-vari]]
+(defmethod muodosta-html :varillinen-teksti
+  ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
+  ;; ennaltamääriteltyjä tyylejä, mutta jos on erikoistapaus missä halutaan käyttää itsemääriteltyä väriä,
+  ;; voidaan käyttää avainta :itsepaisesti-maaritelty-oma-vari
+  [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt]}]]
   [:span.varillinen-teksti
-   [:span.arvo {:style {:color (or (:vari arvo-ja-vari) "rgb(25,25,25)")}}
-    (:arvo arvo-ja-vari)]])
+   [:span.arvo {:style {:color (or itsepaisesti-maaritelty-oma-vari (raportti-domain/virhetyylit tyyli) "rgb(25,25,25)")}}
+    (if fmt (fmt arvo) arvo)]])
 
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                rivi-ennen
@@ -43,13 +47,12 @@
                                      sarakkeet data]]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})
         formatter (fn [{fmt :fmt}]
-                    (let [format-fn (case fmt
-                                      :numero #(fmt/desimaaliluku-opt % 2 true)
-                                      :prosentti #(fmt/prosentti-opt % 1)
-                                      :raha #(fmt/desimaaliluku-opt % 2 true)
-                                      :pvm #(fmt/pvm-opt %)
-                                      str)]
-                      #(if-not (raportti-domain/virhe? %) (format-fn %) (raportti-domain/virheen-viesti %))))]
+                    (case fmt
+                      :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 2 true)
+                      :prosentti #(raportti-domain/yrita fmt/prosentti-opt % 1)
+                      :raha #(raportti-domain/yrita fmt/euro-opt % )
+                      :pvm #(raportti-domain/yrita fmt/pvm-opt %)
+                      str))]
     [grid/grid {:otsikko            (or otsikko "")
                 :tunniste           (fn [rivi] (str "raportti_rivi_"
                                                     (or (::rivin-indeksi rivi)
@@ -58,30 +61,32 @@
                 :piilota-toiminnot? true}
      (into []
            (map-indexed (fn [i sarake]
-                          (merge
-                            {:hae                #(get % i)
-                             :leveys             (:leveys sarake)
-                             :otsikko            (:otsikko sarake)
-                             :reunus             (:reunus sarake)
-                             :pakota-rivitys?    (:pakota-rivitys? sarake)
-                             :otsikkorivi-luokka (str (:otsikkorivi-luokka sarake)
-                                                      (case (:tasaa-otsikko sarake)
-                                                        :keskita " grid-header-keskita"
-                                                        :oikea " grid-header-oikea"
-                                                        ""))
-                             :nimi               (str "sarake" i)
-                             :fmt                (formatter sarake)
-                             ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
-                             :tyyppi             (if (:tyyppi sarake)
-                                                   :komponentti
-                                                   :string)
-                             :tasaa              (if (oikealle-tasattavat-kentat i)
-                                                   :oikea
-                                                   (:tasaa sarake))}
-                            (when (:tyyppi sarake)
-                              {:komponentti (fn [rivi]
-                                              (let [elementti (get rivi i)]
-                                                (muodosta-html elementti)))})))
+                          (let [raporttielementteja? (raportti-domain/sarakkeessa-raporttielementteja? i data)
+                                format-fn (formatter sarake)]
+                            (merge
+                             {:hae                #(get % i)
+                              :leveys             (:leveys sarake)
+                              :otsikko            (:otsikko sarake)
+                              :reunus             (:reunus sarake)
+                              :pakota-rivitys?    (:pakota-rivitys? sarake)
+                              :otsikkorivi-luokka (str (:otsikkorivi-luokka sarake)
+                                                       (case (:tasaa-otsikko sarake)
+                                                         :keskita " grid-header-keskita"
+                                                         :oikea " grid-header-oikea"
+                                                         ""))
+                              :nimi               (str "sarake" i)
+                              :fmt                format-fn
+                              ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
+                              :tyyppi             (if raporttielementteja?
+                                                    :komponentti
+                                                    :string)
+                              :tasaa              (if (oikealle-tasattavat-kentat i)
+                                                    :oikea
+                                                    (:tasaa sarake))}
+                             (when raporttielementteja?
+                               {:komponentti (fn [rivi]
+                                               (let [elementti (get rivi i)]
+                                                 (muodosta-html (raportti-domain/raporttielementti-formatterilla elementti format-fn))))}))))
                         sarakkeet))
      (if (empty? data)
        [(grid/otsikko (or tyhja "Ei tietoja"))]
@@ -164,3 +169,7 @@
                              sisalto
                              [sisalto]))
                          sisalto))])
+
+(defmethod muodosta-html :default [elementti]
+  (log "HTML-raportti ei tue elementtiä: " elementti)
+  nil)
