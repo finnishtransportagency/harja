@@ -407,7 +407,8 @@ hakutiheys-historiakuva 1200000)
           (paivita-periodisesti asioiden-haku
                                 (case @valittu-tila
                                   :nykytilanne hakutiheys-nykytilanne
-                                  :historiakuva hakutiheys-historiakuva))))
+                                  :historiakuva hakutiheys-historiakuva
+                                  :tienakyma hakutiheys-historiakuva))))
 
 (defn lopeta-periodinen-haku-jos-kaynnissa []
   (when @lopeta-haku
