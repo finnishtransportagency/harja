@@ -41,6 +41,7 @@ schemas:
  - tietyomaan-kirjaus-request: !include schemas/tietyomaan-kirjaus-request.schema.json
  - tietyomaan-poisto-request: !include schemas/tietyomaan-poisto-request.schema.json
  - urakan-yhteystietojen-haku-response: !include schemas/urakan-yhteystietojen-haku-response.schema.json
+ - urakan-yllapitokohteen-paivitys-request: !include schemas/urakan-yllapitokohteen-paivitys-request.schema.json
 
 securitySchemes:
  - basic:
@@ -486,6 +487,29 @@ documentation:
                   schema: virhe-response
         /{kohdeid}:
           description: Yksittäisen ylläpitokohteen hallinta
+          put:
+            is: [secured]
+            description: Ylläpitokohteen tietojen päivitys
+            body:
+              application/json:
+                example: !include examples/urakan-yllapitokohteen-paivitys-request.json
+                schema: urakan-yllapitokohteen-paivitys-request
+            responses:
+               200:
+                 body:
+                   application/json:
+                    example: !include examples/onnistunut-kirjaus-response.json
+                    schema: kirjaus-response
+               500:
+                 body:
+                   application/json:
+                     example: !include examples/virhe-response.json
+                     schema: virhe-response
+               400:
+                 body:
+                  application/json:
+                    example: !include examples/virhe-response.json
+                    schema: virhe-response
           /paallystysilmoitus:
             post:
               is: [secured]

@@ -2,6 +2,8 @@
 <b>Julkaistu: 16.11.2016</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.6 Julkaistu: 22.12.2016:
+    - Lisätty uusi rajapinta ylläpitokohteen tietojen päivittämiselle
 - Versionumero: 1.0.5 Julkaistu: 21.12.2016:
     - Urakan yhteystietorajapintaan lisätty tieto urakan vastuu- ja varahenkilöistä 
 - Versionumero: 1.0.4 Julkaistu: 16.11.2016:
