@@ -3,21 +3,42 @@
   "id": "urn:harja",
   "type": "object",
   "properties": {
-    "yllapitokohteet": {
-      "id": "urn:harja/yllapitokohteet",
-      "type": "array",
-      "maxItems": 1000,
-      "items": {
-        "id": "urn:harja/yllapitokohteet/0",
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "yllapitokohde": {
-            "id": "urn:harja/yllapitokohteet/0/yllapitokohde",
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "yllapitokohde": {
+      "id": "urn:harja/yllapitokohde",
+      "type": "object",
+      "required": true,
+      "additionalProperties": false,
+      "properties": {
+        "sijainti": {
+          "id": "urn:harja/yllapitokohde/tiesijainti",
+          "type": "object",
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+        },
+        "alikohteet": {
+          "id": "urn:harja/yllapitokohde/alikohteet",
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "id": "urn:harja/yllapitokohde/alikohteet/0/alikohde",
             "type": "object",
             "additionalProperties": false,
-            "$ref": "file:resources/api/schemas/entities/yllapitokohde.schema.json",
-            "required": true
+            "properties": {
+              "alikohde": {
+                "id": "urn:harja/urakka/yllapitokohteet/0/yllapitokohde",
+                "type": "object",
+                "additionalProperties": false,
+                "$ref": "file:resources/api/schemas/entities/yllapitoalikohde.schema.json",
+                "required": true
+              }
+            }
           }
         }
       }
