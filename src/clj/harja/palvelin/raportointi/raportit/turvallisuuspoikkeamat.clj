@@ -3,6 +3,7 @@
             [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
+            [harja.domain.raportointi :refer [info-solu]]
             [harja.palvelin.raportointi.raportit.yleinen :refer [rivi raportin-otsikko vuosi-ja-kk
                                                                  vuosi-ja-kk-fmt kuukaudet
                                                                  pylvaat-kuukausittain
@@ -165,8 +166,8 @@
                            (str/join ", " (map turvallisuuspoikkeama-tyyppi (:tyyppi %)))
                            (or (turpodomain/turpo-vakavuusasteet (:vakavuusaste %)) "")
                            (or (turpodomain/kuvaile-tyontekijan-ammatti %) "")
-                           (or (:sairaalavuorokaudet %) [:info ""])
-                           (or (:sairauspoissaolopaivat %) [:info ""]))
+                           (or (:sairaalavuorokaudet %) (info-solu ""))
+                           (or (:sairauspoissaolopaivat %) (info-solu "")))
 
                     (sort-by :tapahtunut #(t/after? (c/from-sql-time %1)
                                                     (c/from-sql-time %2)) turpot))

@@ -3,6 +3,7 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.yksikkohintaiset-tyot :as q]
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
+            [harja.domain.raportointi :refer [info-solu]]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot :as yks-hint-tyot]
@@ -194,13 +195,13 @@
                                                        (and (or (string? formatoitu) (coll? formatoitu))
                                                             (empty? formatoitu))))
                                             formatoitu
-                                            [:info "-"]))
+                                            (info-solu "-")))
                                         (let [formatoitu (:suunniteltu_maara rivi)]
                                           (if (not (or (nil? formatoitu)
                                                        (and (or (string? formatoitu) (coll? formatoitu))
                                                             (empty? formatoitu))))
                                             formatoitu
-                                            [:info "Ei suunnitelmaa"]))]))))
+                                            (info-solu "Ei suunnitelmaa")))]))))
             naytettavat-rivit)]
      (yks-hint-tyot/suunnitelutietojen-nayttamisilmoitus konteksti alkupvm loppupvm suunnittelutiedot)]))
 
