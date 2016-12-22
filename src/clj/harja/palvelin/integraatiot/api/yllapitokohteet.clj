@@ -48,7 +48,8 @@
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json])
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json]
+            [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as yllapitokohteet])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -78,6 +79,27 @@
       (virheet/heita-poikkeus virheet/+viallinen-kutsu+
                               {:koodi virheet/+urakkaan-kuulumaton-yllapitokohde+
                                :viesti "Ylläpitokohde ei kuulu urakkaan."}))))
+
+
+(defn paivita-yllapitokohde [db kayttaja {:keys [urakka-id kohde-id]} data]
+  (log/debug (format "Päivitetään urakan (id: %s) kohteelle (id: %s) tiedot käyttäjän: %s toimesta"
+                     urakka-id
+                     kohde-id
+                     kayttaja))
+  (let [urakka-id (Integer/parseInt urakka-id)
+        kohde-id (Integer/parseInt kohde-id)
+        urakan-tyyppi (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id))))
+        kohde (:yllapitokohde data)
+        kohteen-sijainti (:sijainti kohde)
+        alikohteet (:alikohteet kohde)
+        kohteen-tienumero (:tr-numero kohteen-sijainti)]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (vaadi-kohde-kuuluu-urakkaan db urakka-id urakan-tyyppi kohde-id)
+    (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
+    (yllapitokohteet/paivita-kohde db kohde-id kohteen-sijainti)
+    (yllapitokohteet/paivita-alikohteet db kohde alikohteet)
+    (tee-kirjausvastauksen-body
+      {:ilmoitukset (str "Ylläpitokohde päivitetty onnistuneesti")})))
 
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
@@ -240,11 +262,6 @@
     (q-tietyomaat/merkitse-tietyomaa-poistetuksi! db parametrit)
     (tee-kirjausvastauksen-body
       {:ilmoitukset (str "Tietyömaa poistettu onnistuneesti.")})))
-
-(defn paivita-yllapitokohde [db kayttaja parametrit data]
-  (tee-kirjausvastauksen-body
-    {:ilmoitukset (str "Ylläpitokohde päivitetty onnistuneesti")})
-  )
 
 (def palvelut
   [{:palvelu :hae-yllapitokohteet
