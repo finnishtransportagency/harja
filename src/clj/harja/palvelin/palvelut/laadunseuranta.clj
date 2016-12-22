@@ -344,7 +344,7 @@
     (async/thread
       (try
         (jdbc/with-db-transaction [db db
-                                   :read-only? true]
+                                   {:read-only? true}]
           (tarkastukset/hae-urakan-tarkastukset-kartalle
            db ch
            (merge alue
