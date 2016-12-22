@@ -210,6 +210,11 @@
     (tee-kirjausvastauksen-body
       {:ilmoitukset (str "Tietyömaa poistettu onnistuneesti.")})))
 
+(defn paivita-yllapitokohde [db kayttaja parametrit data]
+  (tee-kirjausvastauksen-body
+    {:ilmoitukset (str "Ylläpitokohde päivitetty onnistuneesti")})
+  )
+
 (def palvelut
   [{:palvelu :hae-yllapitokohteet
     :polku "/api/urakat/:id/yllapitokohteet"
@@ -217,6 +222,13 @@
     :vastaus-skeema json-skeemat/urakan-yllapitokohteiden-haku-vastaus
     :kasittely-fn (fn [parametit _ kayttaja db]
                     (hae-yllapitokohteet db parametit kayttaja))}
+   {:palvelu :paivita-yllapitokohde
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id"
+    :tyyppi :PUT
+    :kutsu-skeema json-skeemat/urakan-yllapitokohteen-paivitys-request
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db]
+                    (paivita-yllapitokohde db kayttaja parametrit data))}
    {:palvelu :kirjaa-paallystysilmoitus
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/paallystysilmoitus"
     :tyyppi :POST
