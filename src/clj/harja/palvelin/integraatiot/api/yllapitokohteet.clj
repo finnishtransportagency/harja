@@ -1,5 +1,36 @@
 (ns harja.palvelin.integraatiot.api.yllapitokohteet
-  "Ylläpitokohteiden hallinta"
+  "
+  YLLÄPITOKOHTEIDEN HALLINNAN RAJAPINTAKOMPONENTTI:
+
+  Tarjoaa seuraavat palvelut Harjan urakoitsija API:n
+
+  YLLÄPITOKOHTEIDEN HAKU
+  - Palauttaa listan YHA:sta saatuja ylläpitokohteita, joiden id:ten perusteella voidaan tehdä kirjauksia.
+
+  YLLÄPITOKOHTEEN PÄIVITYS
+  - Mahdollistaa ylläpitokohteen sijainnin ja sen alikohteiden päivittämisen. Alikohteet poistetaan aina kutsun
+    yhteydessä ja uudet kohteet vedetään vanhojen päälle.
+
+  PÄÄLLYSTYSILMOITUKSEN KIRJAUS KOHTEELLE
+  - Kirjaa kohteelle päällystysilmoituksen tekniset tiedot. Samanaikaisesti päivittää kohteen ja sen alikohteiden
+    sijainnit.
+
+  KOHTEEN PÄÄLLYSTYSAIKATAULUN KIRJAUS
+  - Kirjaa päällystyksen aikataulun tarkemmat tiedot, kuten esim. milloin työt on aloitettu ja milloin kohde on valmis
+    tiemerkintään
+
+  KOHTEEN TIEMERKINTÄAIKATAULUN KIRJAUS
+  - Kirjaa tiemerkinnän aikataulun tarkemmat tiedot, kuten esim. milloin työt on aloitettu ja milloin kohde on valmis.
+
+  TIETYÖMAAN KIRJAUS KOHTEELLE
+  - Kirjaa uuden tietyömaan urakalle. Tietyömaalla tarkoitetaan aluetta, jonka sulkuaidat rajaavat. Tietyömaalle
+    ilmoitetaan alku- & loppuaidan koordinaatit, kellonaika milloin sijainti on kirjattu sekä lisätietoja kuten esim.
+    alueella vallitseva nopeusrajoitus. Samalla kutsulla voidaan päivittää tietyömaan sijaintia sijainnin muuttuessa
+
+  TIETYÖMAAN POISTO KOHTEELTA
+  - Kun tietyömaa on valmistunut ja aidat on poistettu kentältä, voidaan tällä kutsulla poistaa tietyömaa Harjasta.
+  "
+
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
