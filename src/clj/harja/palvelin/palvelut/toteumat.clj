@@ -666,7 +666,7 @@
     (async/thread
       (try
         (jdbc/with-db-connection [db db
-                                  :read-only? true]
+                                  {:read-only? true}]
                                  (kysely-fn db ch
                                             (merge p
                                                    alue
