@@ -38,6 +38,7 @@
   [kuumennuslaite "kuumennus" "Kuumennuslaitteet"]
   [sekoitus-ja-stabilointijyrsin "sekoitus tai stabilointi" "Sekoitus- ja stabilointijyrsimet"]
   [tma-laite "turvalaite" "TMA-laitteet"]
+  [jyra "jyrä" "Jyrät"]
 
   [auraus-ja-sohjonpoisto "auraus ja sohjonpoisto" "Auraus ja sohjonpoisto"]
   [suolaus "suolaus" "Suolaus"]
@@ -92,6 +93,7 @@
               paaasfalttilevitin
               tiemerkintakone
               kuumennuslaite
+              jyra
               sekoitus-ja-stabilointijyrsin
               tma-laite]
    :yllapidon-reaaliaikaseuranta []
@@ -136,6 +138,7 @@
 (def yllapidon-reaaliaikaseurattavat
   #{(:id paaasfalttilevitin)
     (:id tiemerkintakone)
+    (:id jyra)
     (:id kuumennuslaite)
     (:id sekoitus-ja-stabilointijyrsin)
     (:id tma-laite)})
