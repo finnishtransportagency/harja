@@ -1,19 +1,4 @@
--- Lisää ylläpidon ajoneuvojen tehtävät suoritettaviin tehtäviin
-
--- Pudota funktio, joka käyttää vanhoja tehtäviä
-DROP FUNCTION tallenna_tai_paivita_tyokonehavainto(
-jarjestelma_ character varying,
-organisaationimi_ character varying,
-ytunnus_ character varying,
-viestitunniste_ integer,
-lahetysaika_ timestamp,
-tyokoneid_ integer,
-tyokonetyyppi_ character varying,
-sijainti_ point,
-suunta_ real,
-urakkaid_ integer,
-tehtavat_ suoritettavatehtava[]
-);
+-- Lisää jyra suoritettaviin tehtäviin
 
 ALTER TYPE suoritettavatehtava RENAME TO _st;
 
