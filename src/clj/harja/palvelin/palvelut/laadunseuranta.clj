@@ -337,7 +337,6 @@
                          (map #(konv/array->set % :vakiohavainnot))
                          (map laadunseuranta/tarkastus-tiedolla-onko-ok)
                          (map #(konv/string->keyword % :tyyppi :tekija))
-
                          (map #(assoc %
                                  :tyyppi-kartalla :tarkastus
                                  :sijainti (:reitti %)))
@@ -355,28 +354,20 @@
 
     ch))
 
-(defn yhdista-havainnot-ja-vakiohavainnot [tarkastus]
-  (str (:havainnot tarkastus)
-       (when-not (empty? (:vakiohavainnot tarkastus))
-         ", " (str/join ", " (:vakiohavainnot tarkastus)))))
-
 (defn hae-tarkastusreittien-asiat-kartalle
   [db user {x :x y :y toleranssi :toleranssi :as parametrit}]
-  (let [parametrit (tarkastusreittien-parametrit user parametrit)
-        vastaus (into []
-                      (comp
-                        (map #(yhdista-havainnot-ja-vakiohavainnot %))
-                        (map #(konv/array->set % :vakiohavainnot))
-                        (map #(assoc % :tyyppi-kartalla :tarkastus))
-                        (map #(konv/string->keyword % :tyyppi))
-                        (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
-                      (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
-                        db
-                        (assoc parametrit
-                          :x x :y y
-                          :toleranssi toleranssi)))]
-    (log/debug "HATTU vastaus" vastaus)
-    vastaus))
+  (let [parametrit (tarkastusreittien-parametrit user parametrit)]
+    (into []
+          (comp
+            (map #(konv/array->set % :vakiohavainnot))
+            (map #(assoc % :tyyppi-kartalla :tarkastus))
+            (map #(konv/string->keyword % :tyyppi))
+            (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
+          (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
+            db
+            (assoc parametrit
+              :x x :y y
+              :toleranssi toleranssi)))))
 
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
