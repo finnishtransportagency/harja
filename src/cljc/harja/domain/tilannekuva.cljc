@@ -38,7 +38,7 @@
   [kuumennuslaite "kuumennus" "Kuumennuslaitteet"]
   [sekoitus-ja-stabilointijyrsin "sekoitus tai stabilointi" "Sekoitus- ja stabilointijyrsimet"]
   [tma-laite "turvalaite" "TMA-laitteet"]
-  [jyra "jyrä" "Jyrät"]
+  [jyra "jyrays" "Jyrät"]
 
   [auraus-ja-sohjonpoisto "auraus ja sohjonpoisto" "Auraus ja sohjonpoisto"]
   [suolaus "suolaus" "Suolaus"]
