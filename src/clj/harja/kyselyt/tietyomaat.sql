@@ -6,20 +6,21 @@ SELECT exists(SELECT *
 
 -- name: luo-tietyomaa<!
 INSERT INTO tietyomaa (jarjestelma,
-                               osuus_id,
-                               alkuaidan_sijainti,
-                               loppuaidan_sijainti,
-                               asetettu,
-                               kaistat,
-                               ajoradat,
-                               yllapitokohde,
-                               kirjaaja,
-                               tr_tie,
-                               tr_aosa,
-                               tr_aet,
-                               tr_losa,
-                               tr_let,
-                               geometria)
+                       osuus_id,
+                       alkuaidan_sijainti,
+                       loppuaidan_sijainti,
+                       asetettu,
+                       kaistat,
+                       ajoradat,
+                       yllapitokohde,
+                       kirjaaja,
+                       tr_tie,
+                       tr_aosa,
+                       tr_aet,
+                       tr_losa,
+                       tr_let,
+                       nopeusrajoitus,
+                       geometria)
 VALUES (
   :jarjestelma,
   :osuusid,
@@ -35,6 +36,7 @@ VALUES (
   :tr_aet,
   :tr_losa,
   :tr_let,
+  :nopeusrajoitus,
   (SELECT geometria
    FROM tieviivat_pisteille(ST_Collect
                             (ST_MakePoint(:alkux, :alkuy),
@@ -57,6 +59,7 @@ SET
   tr_aet              = :tr_aet,
   tr_losa             = :tr_losa,
   tr_let              = :tr_let,
+  nopeusrajoitus      = :nopeusrajoitus,
   geometria           = (SELECT geometria
                          FROM tieviivat_pisteille(ST_Collect
                                                   (ST_MakePoint(:alkux, :alkuy),
