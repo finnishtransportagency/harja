@@ -91,8 +91,7 @@
    (s/optional-key :soratiemittaus)    Soratiemittaus})
 
 (defn tarkastus-tiedolla-onko-ok
-  "Tarkastus on OK jos havaintoja ei ole tai havainnon teksti on OK
-  eikä tarkastuksella ole vakiohavaintoja"
+  "Tämä kertoo onko laadunalitus"
   [{laadunalitus :laadunalitus :as tarkastus}]
   (assoc tarkastus :ok? (not laadunalitus)))
 

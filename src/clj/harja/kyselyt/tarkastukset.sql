@@ -70,13 +70,16 @@ LIMIT :maxrivimaara;
 -- name: hae-urakan-tarkastukset-kartalle
 -- fetch-size: 64
 -- row-fn: geo/muunna-reitti
-SELECT ST_Simplify(t.sijainti, :toleranssi) as reitti,
+SELECT t.id, ST_Simplify(t.sijainti, :toleranssi) as reitti,
        t.tyyppi,
        t.laadunalitus,
        CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
         THEN 'urakoitsija' :: osapuoli
         ELSE 'tilaaja' :: osapuoli
-       END AS tekija
+       END AS tekija,
+  (SELECT array_agg(nimi) FROM tarkastus_vakiohavainto t_vh
+    JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
+  WHERE tarkastus = t.id) as vakiohavainnot
   FROM tarkastus t
        LEFT JOIN kayttaja k ON t.luoja = k.id
        LEFT JOIN organisaatio o ON k.organisaatio = o.id
@@ -104,6 +107,9 @@ SELECT t.id, t.tyyppi, t.laadunalitus,
        t.aika,
        t.tarkastaja,
        t.havainnot,
+  (SELECT array_agg(nimi) FROM tarkastus_vakiohavainto t_vh
+    JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
+  WHERE tarkastus = t.id) as vakiohavainnot,
        yrita_tierekisteriosoite_pisteille2
           (alkupiste(t.sijainti), loppupiste(t.sijainti), 1)::TEXT AS tierekisteriosoite
   FROM tarkastus t

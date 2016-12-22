@@ -22,7 +22,8 @@
             [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.domain.oikeudet :as oikeudet]
-            [clojure.core.async :as async]))
+            [clojure.core.async :as async]
+            [clojure.string :as str]))
 
 (def laatupoikkeama-xf
   (comp
@@ -333,12 +334,14 @@
         alue (assoc alue :toleranssi (geo/karkeistustoleranssi alue))
         ch (async/chan 32
                        (comp
-                        (map laadunseuranta/tarkastus-tiedolla-onko-ok)
-                             (map #(konv/string->keyword % :tyyppi :tekija))
-                             (map #(assoc %
-                                          :tyyppi-kartalla :tarkastus
-                                          :sijainti (:reitti %)))
-                             (esitettavat-asiat/kartalla-esitettavaan-muotoon-xf)))]
+                         (map #(konv/array->set % :vakiohavainnot))
+                         (map laadunseuranta/tarkastus-tiedolla-onko-ok)
+                         (map #(konv/string->keyword % :tyyppi :tekija))
+
+                         (map #(assoc %
+                                 :tyyppi-kartalla :tarkastus
+                                 :sijainti (:reitti %)))
+                         (esitettavat-asiat/kartalla-esitettavaan-muotoon-xf)))]
     (async/thread
       (try
         (jdbc/with-db-transaction [db db
@@ -352,18 +355,28 @@
 
     ch))
 
+(defn yhdista-havainnot-ja-vakiohavainnot [tarkastus]
+  (str (:havainnot tarkastus)
+       (when-not (empty? (:vakiohavainnot tarkastus))
+         ", " (str/join ", " (:vakiohavainnot tarkastus)))))
+
 (defn hae-tarkastusreittien-asiat-kartalle
   [db user {x :x y :y toleranssi :toleranssi :as parametrit}]
-  (let [parametrit (tarkastusreittien-parametrit user parametrit)]
-    (into []
-          (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
-                (map #(konv/string->keyword % :tyyppi))
-                (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
-          (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
-           db
-           (assoc parametrit
-                  :x x :y y
-                  :toleranssi toleranssi)))))
+  (let [parametrit (tarkastusreittien-parametrit user parametrit)
+        vastaus (into []
+                      (comp
+                        (map #(yhdista-havainnot-ja-vakiohavainnot %))
+                        (map #(konv/array->set % :vakiohavainnot))
+                        (map #(assoc % :tyyppi-kartalla :tarkastus))
+                        (map #(konv/string->keyword % :tyyppi))
+                        (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
+                      (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
+                        db
+                        (assoc parametrit
+                          :x x :y y
+                          :toleranssi toleranssi)))]
+    (log/debug "HATTU vastaus" vastaus)
+    vastaus))
 
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
