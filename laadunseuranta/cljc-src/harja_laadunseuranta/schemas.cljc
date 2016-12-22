@@ -51,7 +51,7 @@
    :tarkastusajo s/Int
    :aikaleima s/Int
    :sijainti Sijainti
-   (s/optional-key :kayttajan-syottama-tr-osoite) TrOsoite
+   (s/optional-key :kayttajan-syottama-tr-osoite) (s/maybe TrOsoite)
    :mittaukset {(s/optional-key :lampotila) (s/maybe s/Num)
                 (s/optional-key :lumisuus) (s/maybe Lumisuus)
                 (s/optional-key :talvihoito-tasaisuus) (s/maybe Tasaisuus)
@@ -72,6 +72,19 @@
                   :niittamatta
                   :reunapalletta
                   :reunataytto-puutteellinen
+
+                  :saumavirhe
+                  :lajittuma
+                  :epatasaisuus
+                  :halkeamat
+                  :vesilammikot
+                  :epatasaisetreunat
+                  :jyranjalkia
+                  :sideainelaikkia
+                  :vaarakorkeusasema
+                  :pintaharva
+                  :pintakuivatuspuute
+                  :kaivojenkorkeusasema
 
                   ;; Pistekohtaiset
 
@@ -116,23 +129,12 @@
                   :kaidevaurio
                   :kiveysvaurio
                   :yleishavainto
-                  :saumavirhe
-                  :lajittuma
-                  :epatasaisuus
-                  :halkeamat
-                  :vesilammikot
-                  :epatasaisetreunat
-                  :jyranjalkia
-                  :sideainelaikkia
-                  :vaarakorkeusasema
-                  :pintaharva
-                  :pintakuivatuspuute
-                  :kaivojenkorkeusasema
                   :maakivi
                   :liikennemerkki-vaurioitunut
                   :reunapaalut-vaurioitunut)}
 
    (s/optional-key :kuvaus) (s/maybe s/Str)
+   (s/optional-key :liittyy-havaintoon) (s/maybe s/Int)
    (s/optional-key :laadunalitus) (s/maybe s/Bool)
    (s/optional-key :kuva) (s/maybe s/Int)})
 

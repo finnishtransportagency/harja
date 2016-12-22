@@ -67,7 +67,9 @@
             (reset! sovellus/kayttajanimi (-> kayttajatiedot :ok :nimi))
             (reset! sovellus/kayttajatunnus (-> kayttajatiedot :ok :kayttajanimi))
             (reset! sovellus/vakiohavaintojen-kuvaukset (-> kayttajatiedot :ok :vakiohavaintojen-kuvaukset))
-            (reset! sovellus/oikeus-urakoihin (-> kayttajatiedot :ok :urakat)))))))
+            (reset! sovellus/oikeus-urakoihin (-> kayttajatiedot :ok :urakat))
+            (reset! sovellus/roolit (-> kayttajatiedot :ok :roolit))
+            (reset! sovellus/organisaatio (-> kayttajatiedot :ok :organisaatio)))))))
 
 (defn- alusta-sovellus []
   (go
@@ -79,7 +81,10 @@
                                                              (when (= "?relogin=true" js/window.location.search)
                                                                (tarkastusajon-luonti/jatka-ajoa!))))
 
-    (reitintallennus/paivita-lahettamattomien-merkintojen-maara @sovellus/idxdb asetukset/+pollausvali+ sovellus/lahettamattomia-merkintoja)
+    (reitintallennus/paivita-lahettamattomien-merkintojen-maara!
+      @sovellus/idxdb
+      asetukset/+pollausvali+
+      sovellus/lahettamattomia-merkintoja)
 
     (kaynnista-kayttajatietojen-haku)
 
@@ -96,9 +101,9 @@
        :tarkastusajo-kaynnissa-atom sovellus/tarkastusajo-kaynnissa?
        :tarkastusajo-atom sovellus/tarkastusajo-id
        :tarkastuspisteet-atom sovellus/kirjauspisteet
-       :soratiemittaussyotto sovellus/soratiemittaussyotto
-       :mittaustyyppi sovellus/mittaustyyppi
-       :jatkuvat-havainnot sovellus/jatkuvat-havainnot})
+       :soratiemittaussyotto-atom sovellus/soratiemittaussyotto
+       :mittaustyyppi-atom sovellus/mittaustyyppi
+       :jatkuvat-havainnot-atom sovellus/jatkuvat-havainnot})
     (tr-haku/alusta-tr-haku sovellus/sijainti sovellus/tr-tiedot)))
 
 (defn main []

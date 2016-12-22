@@ -247,7 +247,7 @@
 
     ;; reagoidaan kartan ja ajoneuvon sijainnin muutokseen
     (run!
-      (if (:seuraa-sijaintia @optiot)
+      (if (:seuraa-sijaintia? @optiot)
         (do
           (kytke-dragpan kartta false)
           (paivita-kartan-keskipiste kartta @keskipiste-atomi))
@@ -295,7 +295,7 @@
      :reittipisteet-atomi s/reittipisteet
      :kirjauspisteet-atomi s/kirjauspisteet
      :optiot s/karttaoptiot}]
-   [:div.kartan-kontrollit {:style (when @s/havaintolomake-auki
+   [:div.kartan-kontrollit {:style (when @s/havaintolomake-auki?
                                      {:display "none"})}
     [:div#karttakontrollit] ;; OpenLayersin ikonit asetetaan tähän elementtiin erikseen
     [:div.kontrollinappi.ortokuva {:on-click #(swap! s/nayta-ortokuva? not)}
@@ -314,7 +314,7 @@
 
 (def test-ikonit (atom [{:lat 7208942 :lon 428131
                          :label "0.45"}]))
-(def testioptiot (atom {:seuraa-sijaintia true}))
+(def testioptiot (atom {:seuraa-sijaintia? true}))
 
 (def test-reittipisteet (atom [[[428131 7208942] [428131 7208942]]
                                [[428141 7208952] [428147 7208956]]]))
