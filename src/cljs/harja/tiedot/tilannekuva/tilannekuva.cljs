@@ -56,7 +56,8 @@ hakutiheys-historiakuva 1200000)
                 tk/tiemerkintakone false
                 tk/kuumennuslaite false
                 tk/sekoitus-ja-stabilointijyrsin false
-                tk/tma-laite false}
+                tk/tma-laite false
+                tk/jyra false}
      :ilmoitukset {:tyypit {tk/tpp false
                             tk/tur false
                             tk/urk false}}
