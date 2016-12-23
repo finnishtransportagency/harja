@@ -70,8 +70,7 @@ LIMIT :maxrivimaara;
 -- name: hae-urakan-tarkastukset-kartalle
 -- fetch-size: 64
 -- row-fn: geo/muunna-reitti
-SELECT t.id,
-       ST_Simplify(t.sijainti, :toleranssi) as reitti,
+SELECT ST_Simplify(t.sijainti, :toleranssi) as reitti,
        t.tyyppi,
        t.laadunalitus,
        CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
