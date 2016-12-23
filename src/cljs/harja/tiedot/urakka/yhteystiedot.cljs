@@ -24,6 +24,12 @@
                          ["Aluevastaava" "Päällystysurakan tilaaja"
                           "Turvallisuuskoordinaattori"]))))
 
+(defn urakkatyypin-mukaiset-yhteyshenkilotyypit [urakkatyyppi]
+  (case urakkatyyppi
+    :paallystys yhteyshenkilotyypit-paallystys
+    :tiemerkinta yhteyshenkilotyypit-tiemerkinta
+    yhteyshenkilotyypit-oletus))
+
 (defn tallenna-urakan-yhteyshenkilot
   "Tallentaa urakan yhteyshenkilöt, palauttaa kanavan, josta vastauksen voi lukea."
   [urakka-id yhteyshenkilot poistettavat]

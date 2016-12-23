@@ -469,14 +469,13 @@
 
 (defn yhteyshenkilot [ur]
   (let [yhteyshenkilot (atom nil)
-        yhteyshenkilotyypit (atom nil)
+        yhteyshenkilotyypit (yht/urakkatyypin-mukaiset-yhteyshenkilotyypit (:tyyppi ur))
         hae! (fn [ur]
                (reset! yhteyshenkilot nil)
                (go (reset! yhteyshenkilot
                            (filter
                              #(not= "urakoitsijan paivystaja" (:rooli %))
                              (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))))))]
-    (reset! yhteyshenkilotyypit yht/yhteyshenkilotyypit-oletus)
     (hae! ur)
     (komp/luo
       (komp/kun-muuttuu hae!)
@@ -491,7 +490,7 @@
                        (str/capitalize (:rooli %))))
            :valinta-nayta #(if (nil? %) "- valitse -" (str/capitalize %))
 
-           :valinnat (vec (concat [nil] @yhteyshenkilotyypit))
+           :valinnat (vec (concat [nil] yhteyshenkilotyypit))
 
            :validoi [[:ei-tyhja "Anna yhteyshenkilön rooli"]]}
           {:otsikko "Organisaatio"
