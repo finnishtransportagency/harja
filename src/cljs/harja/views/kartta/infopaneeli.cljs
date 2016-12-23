@@ -52,7 +52,7 @@
     [:div.ip-osio
      [:span.ip-otsikko otsikko]
      (when-let [{:keys [teksti toiminto]} (tyyppi linkin-kasittely-fn)]
-       [:span [napit/yleinen teksti #(toiminto data)]])
+       [:div [napit/yleinen teksti #(toiminto data) {:luokka "ip-toiminto btn-xs"}]])
      (for [[idx kentan-skeema] (map-indexed #(do [%1 %2]) tiedot)]
        ^{:key (str "infopaneelin_yksityiskohta_" idx)}
        [:div
