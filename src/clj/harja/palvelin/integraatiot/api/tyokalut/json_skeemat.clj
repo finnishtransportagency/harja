@@ -58,6 +58,8 @@
 (def soratietarkastuksen-kirjaus (tee-validaattori "api/schemas/soratietarkastuksen-kirjaus-request.schema.json"))
 (def +talvihoitotarkastuksen-kirjaus+ "api/schemas/talvihoitotarkastuksen-kirjaus-request.schema.json")
 (def talvihoitotarkastuksen-kirjaus (tee-validaattori "api/schemas/talvihoitotarkastuksen-kirjaus-request.schema.json"))
+(def +talvihoitotarkastuksen-poisto+ "api/schemas/tarkastuksen-poisto-request.schema.json")
+(def talvihoitotarkastuksen-poisto (tee-validaattori "api/schemas/tarkastuksen-poisto-request.schema.json"))
 
 (def +paivystajatietojen-kirjaus+ "api/schemas/paivystajatietojen-kirjaus-request.schema.json")
 (def paivystajatietojen-kirjaus (tee-validaattori "api/schemas/paivystajatietojen-kirjaus-request.schema.json"))
@@ -87,5 +89,3 @@
 
 (def +urakan-yhteystietojen-haku-vastaus+ "api/schemas/urakan-yhteystietojen-haku-response.schema.json")
 (def urakan-yhteystietojen-haku-vastaus (tee-validaattori +urakan-yhteystietojen-haku-vastaus+))
-
-

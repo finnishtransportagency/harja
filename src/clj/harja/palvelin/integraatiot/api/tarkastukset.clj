@@ -86,6 +86,14 @@
     (let [varoitukset (kasittele-tarkastukset db liitteiden-hallinta kayttaja tyyppi urakka-id data)]
       (tee-onnistunut-vastaus (join ", " varoitukset)))))
 
+(defn poista-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} data]
+  (let [urakka-id (Long/parseLong id)]
+    (log/debug (format "Poistetaan tarkastus tyyppiä: %s käyttäjän: %s toimesta. Data: %s" tyyppi (:kayttajanimi kayttaja) data))
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (println "poista-tarkastus: data" data)
+    (println "poista-tarkastus: id" id)
+    (tee-kirjausvastauksen-body {:ilmoitukset "Tarkastus poistettu onnistuneesti"})))
+
 (def palvelut
   [{:palvelu       :lisaa-tiestotarkastus
     :polku         "/api/urakat/:id/tarkastus/tiestotarkastus"
@@ -97,6 +105,11 @@
     :pyynto-skeema json-skeemat/talvihoitotarkastuksen-kirjaus
     :tyyppi        :talvihoito
     :metodi        :post}
+   {:palvelu       :poista-talvihoitotarkastus
+    :polku         "/api/urakat/:id/tarkastus/talvihoitotarkastus"
+    :pyynto-skeema json-skeemat/talvihoitotarkastuksen-poisto
+    :tyyppi        :talvihoito
+    :metodi        :delete}
    {:palvelu       :lisaa-soratietarkastus
     :polku         "/api/urakat/:id/tarkastus/soratietarkastus"
     :pyynto-skeema json-skeemat/soratietarkastuksen-kirjaus
@@ -107,12 +120,16 @@
   component/Lifecycle
   (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta integraatioloki :integraatioloki :as this}]
     (doseq [{:keys [palvelu polku pyynto-skeema tyyppi metodi]} palvelut]
-      (let [kasittele #(kasittele-kutsu db integraatioloki palvelu request
+      (let [kasittele (fn [kasittele-tarkastus-fn] kasittele-kutsu db integraatioloki palvelu request
                                         pyynto-skeema json-skeemat/kirjausvastaus
                                         (fn [parametrit data kayttaja db]
-                                          (kirjaa-tarkastus db liitteiden-hallinta kayttaja tyyppi parametrit data)))]
-        (julkaise-reitti http palvelu
-         (POST polku request (kasittele)))))
+                                          (kasittele-tarkastus-fn db liitteiden-hallinta kayttaja tyyppi parametrit data)))]
+        (if (= metodi :post)
+          (julkaise-reitti http palvelu
+                           (POST polku request (kasittele kirjaa-tarkastus))))
+        (if (= metodi :delete)
+          (julkaise-reitti http palvelu
+                           (DELETE polku request (kasittele poista-tarkastus))))))
 
     this)
 
