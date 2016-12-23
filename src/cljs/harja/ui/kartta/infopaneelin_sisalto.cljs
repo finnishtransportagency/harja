@@ -262,4 +262,5 @@
   (map validoi-tieto tiedot))
 
 (defn skeemamuodossa [asiat]
-  (->> (keep infopaneeli-skeema asiat) validoi-tiedot (sort-by :jarjesta-fn)))
+  ;; FIXME: tänne tehtävä toimimaan (sort-by :jarjesta-fn)
+  (->> (keep infopaneeli-skeema asiat) validoi-tiedot))
