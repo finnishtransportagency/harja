@@ -533,9 +533,6 @@
                (not palvelusopimus?))
       (yha/nayta-tuontidialogi ur))))
 
-
-
-
 (defn yleiset [ur]
   (let [kayttajat (atom nil)
         vastuuhenkilot (atom nil)
@@ -546,12 +543,21 @@
                (go (reset! vastuuhenkilot (<! (yht/hae-urakan-vastuuhenkilot (:id urakka))))))]
     (hae! ur)
     (komp/luo
-     (komp/kun-muuttuu hae!)
-     (komp/sisaan (fn [_]
-                    (nayta-yha-tuontidialogi-tarvittaessa ur)))
-     (fn [ur]
-       [:div
-        [yleiset-tiedot #(reset! vastuuhenkilot %) ur @kayttajat @vastuuhenkilot]
-        [urakkaan-liitetyt-kayttajat @kayttajat]
-        [yhteyshenkilot ur]
-        [paivystajat ur]]))))
+      (komp/kun-muuttuu hae!)
+      (komp/sisaan (fn [_]
+                     (nayta-yha-tuontidialogi-tarvittaessa ur)))
+      (fn [ur]
+        (let [paivystys-ei-kaytossa? (and
+                                       ;; Ylläpidon urakka
+                                       (not= (:tyyppi ur) :hoito)
+                                       ;; joka ei ole päällystyksen palvelusopimus
+                                       (or (not= (:tyyppi ur) :paallystys)
+                                           (and (= (:tyyppi ur) :paallystys)
+                                                (not= (:sopimustyyppi ur) :palvelusopimus))))
+              paivystys-kaytossa? (not paivystys-ei-kaytossa?)]
+          [:div
+           [yleiset-tiedot #(reset! vastuuhenkilot %) ur @kayttajat @vastuuhenkilot]
+           [urakkaan-liitetyt-kayttajat @kayttajat]
+           [yhteyshenkilot ur]
+           (when paivystys-kaytossa?
+             [paivystajat ur])])))))
