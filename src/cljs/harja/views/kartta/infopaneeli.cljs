@@ -43,16 +43,6 @@
       (r/wrap (arvo-fn data)
               #(log/error "Infopaneelissa ei voi muokata tietoja: " %)))))
 
-(defn- lyhenna-kentan-otsikko [otsikko]
-  (case otsikko
-    "Tierekisteriosoite"
-    "TR-osoite"
-
-    "Tie\u00ADrekisteri\u00ADkohde"
-    "TR-kohde"
-
-    otsikko))
-
 (defn esita-yksityiskohdat [{:keys [otsikko tiedot data tyyppi] :as asia} linkin-kasittely-fn]
   (if-not (or (keyword? tyyppi) (fn? tyyppi))
     (do
@@ -63,13 +53,12 @@
      [:span.ip-otsikko otsikko]
      (when-let [{:keys [teksti toiminto]} (tyyppi linkin-kasittely-fn)]
        [:div [napit/yleinen teksti #(toiminto data) {:luokka "ip-toiminto btn-xs"}]])
-     (for [[idx kentan-skeema] (map-indexed #(do [%1 %2]) tiedot)
-           :let [otsikko (lyhenna-kentan-otsikko (:otsikko kentan-skeema))]]
-       ^{:key (str "ip-" idx)}
+     (for [[idx kentan-skeema] (map-indexed #(do [%1 %2]) tiedot)]
+       ^{:key (str "infopaneelin_yksityiskohta_" idx)}
        [:div
         [:label.control-label
          [:span
-          [:span.kentan-label otsikko]]]
+          [:span.kentan-label (:otsikko kentan-skeema)]]]
         [kentat/nayta-arvo kentan-skeema (kentan-arvo kentan-skeema data)]])]))
 
 (defn- map-ilman-funktioita [m]

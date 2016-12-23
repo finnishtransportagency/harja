@@ -12,7 +12,6 @@
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
             [harja.domain.laadunseuranta.sanktiot :as sanktiot-domain]
-            [harja.transit :as transit]
             [harja.geo :as geo]
 
             [taoensso.timbre :as log]
@@ -22,8 +21,7 @@
             [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.domain.oikeudet :as oikeudet]
-            [clojure.core.async :as async]
-            [clojure.string :as str]))
+            [clojure.core.async :as async]))
 
 (def laatupoikkeama-xf
   (comp
