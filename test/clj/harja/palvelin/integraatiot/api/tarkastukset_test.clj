@@ -81,5 +81,5 @@
                                              (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
                                              (.replace "__ID__" (str id))))
           tark (tarkista-kannasta)]
-      (is (-> tallenna-vastaus :status (= 200)))
+      (is (-> poista-vastaus :status (= 200)))
       (is (empty? tark)))))
