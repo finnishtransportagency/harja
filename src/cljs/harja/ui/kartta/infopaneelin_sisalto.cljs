@@ -213,8 +213,9 @@
 
 (defmethod infopaneeli-skeema :silta [silta]
   {:tyyppi :silta
-   :jarjesta-fn :aika
-   :otsikko "Silta"
+   :jarjesta-fn :tarkastusaika
+   :otsikko (str "Silta " (when (:tarkastusaika silta)
+                            (pvm/pvm-aika (:tarkastusaika silta))))
    :tiedot [{:otsikko "Nimi" :hae :siltanimi}
             {:otsikko "Sillan tunnus" :hae :siltatunnus}
             {:otsikko "Edellinen tarkastus" :tyyppi :pvm :hae :tarkastusaika}
@@ -224,7 +225,8 @@
 (defmethod infopaneeli-skeema :tietyomaa [tietyomaa]
   {:tyyppi :tietyomaa
    :jarjesta-fn :aika
-   :otsikko "Tietyömaa"
+   :otsikko (str "Tietyömaa " (when (:aika tietyomaa)
+                                (pvm/pvm-aika (:aika tietyomaa))))
    :tiedot [{:otsikko "Ylläpitokohde" :hae #(str (:yllapitokohteen-nimi %) " (" (:yllapitokohteen-numero %) ")")}
             {:otsikko "Aika" :hae #(pvm/pvm-aika (:aika %))}
             {:otsikko "Osoite" :hae #(tierekisteri/tierekisteriosoite-tekstina % {:teksti-tie? false})}
@@ -251,6 +253,7 @@
                                  [])))
                          skeema)
         tyhjat-arvot (keep (comp :otsikko first) (filter (comp nil? second) kenttien-arvot))]
+    (assert (some? (:jarjesta-fn tieto)) (str "jarjesta-fn puuttuu tiedolta " (pr-str tieto)))
     (when-not (empty? tyhjat-arvot)
       (log "Yritettiin muodostaa overlayn tietoja asialle " otsikko ", mutta seuraavat tiedot puuttuivat: " (pr-str tyhjat-arvot)) "\nkenttien-arvot:" (clj->js kenttien-arvot))
     (assoc tieto :tiedot (mapv first (remove (comp nil? second) kenttien-arvot)))))
@@ -259,5 +262,4 @@
   (map validoi-tieto tiedot))
 
 (defn skeemamuodossa [asiat]
-  ;; järjestäminen tähän?
-  (-> (keep infopaneeli-skeema asiat) validoi-tiedot))
+  (->> (keep infopaneeli-skeema asiat) validoi-tiedot (sort-by :jarjesta-fn)))
