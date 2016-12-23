@@ -11,20 +11,14 @@
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
-    "tarkastus": {
-      "id": "urn:harja/tarkastus",
+    "poistettava-tarkastus": {
+      "id": "urn:harja/poistettava-tarkastus",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "id": {
           "id": "urn:harja/tarkastus/id",
           "type": "integer",
-          "required": true
-        },
-        "aika": {
-          "id": "urn:harja/tarkastus/aika",
-          "type": "string",
-          "format": "date-time",
           "required": true
         }
       }
