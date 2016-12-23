@@ -21,6 +21,11 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
+(def json-sapluunasta [polku pvm id]
+  (-> polku
+      slurp
+      (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
+      (.replace "__ID__" (str id))))
 
 (defn hae-vapaa-tarkastus-ulkoinen-id []
   (let [id (rand-int 10000)
@@ -31,10 +36,7 @@
   (let [pvm (Date.)
         id (hae-vapaa-tarkastus-ulkoinen-id)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"] kayttaja portti
-                                         (-> "test/resurssit/api/soratietarkastus.json"
-                                             slurp
-                                             (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
-                                             (.replace "__ID__" (str id))))]
+                                         (json-sapluunasta "test/resurssit/api/soratietarkastus.json" pvm id))]
 
     (is (= 200 (:status vastaus)))
     (let [tarkastus (first (q (str "SELECT t.tyyppi, t.havainnot, stm.kiinteys, l.nimi "
@@ -64,10 +66,8 @@
                                           " WHERE t.ulkoinen_id = " id
                                           "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))
         tallenna-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
-                                         (-> "test/resurssit/api/talvihoitotarkastus.json"
-                                             slurp
-                                             (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
-                                             (.replace "__ID__" (str id))))]
+                                         (json-sapluunasta "test/resurssit/api/talvihoitotarkastus.json" pvm id))]
+
 
     (is (= 200 (:status tallenna-vastaus)))
     (let [tark (tarkista-kannasta)]
@@ -76,10 +76,7 @@
     (let [poista-vastaus (api-tyokalut/delete-kutsu
                           ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
                           kayttaja portti
-                                         (-> "test/resurssit/api/talvihoitotarkastus-poisto.json"
-                                             slurp
-                                             (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
-                                             (.replace "__ID__" (str id))))
+                          (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-poisto.json" pvm id))
           tark (tarkista-kannasta)]
       (is (-> poista-vastaus :status (= 200)))
       (is (empty? tark)))))
