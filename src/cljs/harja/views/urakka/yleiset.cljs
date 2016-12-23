@@ -476,7 +476,7 @@
                            (filter
                              #(not= "urakoitsijan paivystaja" (:rooli %))
                              (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))))))]
-    (reset! yhteyshenkilotyypit yht/yhteyshenkilotyypit)
+    (reset! yhteyshenkilotyypit yht/yhteyshenkilotyypit-oletus)
     (hae! ur)
     (komp/luo
       (komp/kun-muuttuu hae!)
