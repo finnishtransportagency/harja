@@ -43,17 +43,17 @@
                   ;; Kaikki tiedon mankelointi ennen lähetystä tähän
                   (comp (filter #(not (:poistettu %)))
                         (map #(if-let [nimi (:nimi %)]
-                               (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
-                                 (assoc %
-                                   :etunimi (str/trim etu)
-                                   :sukunimi (str/trim suku)))
-                               %)))
+                                (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
+                                  (assoc %
+                                    :etunimi (str/trim etu)
+                                    :sukunimi (str/trim suku)))
+                                %)))
                   uudet-yhteyshenkilot)
             poistettavat
             (into []
                   (keep #(when (and (:poistettu %)
                                     (> (:id %) 0))
-                          (:id %)))
+                           (:id %)))
                   uudet-yhteyshenkilot)
             res (<! (yht/tallenna-urakan-yhteyshenkilot (:id ur) tallennettavat poistettavat))]
         (reset! yhteyshenkilot res)
@@ -66,17 +66,17 @@
                   ;; Kaikki tiedon mankelointi ennen lähetystä tähän
                   (comp (filter #(not (:poistettu %)))
                         (map #(if-let [nimi (:nimi %)]
-                               (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
-                                 (assoc %
-                                   :etunimi (str/trim etu)
-                                   :sukunimi (str/trim suku)))
-                               %)))
+                                (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
+                                  (assoc %
+                                    :etunimi (str/trim etu)
+                                    :sukunimi (str/trim suku)))
+                                %)))
                   uudet-paivystajat)
             poistettavat
             (into []
                   (keep #(when (and (:poistettu %)
                                     (> (:id %) 0))
-                          (:id %)))
+                           (:id %)))
                   uudet-paivystajat)
             vastaus (<! (yht/tallenna-urakan-paivystajat (:id ur) tallennettavat poistettavat))]
         (if (k/virhe? vastaus)
@@ -150,12 +150,12 @@
      :tallenna tallenna!
      :rivin-luokka #(when (and (< (:alku %) (pvm/nyt))
                                (< (pvm/nyt) (:loppu %)))
-                     " bold")}
+                      " bold")}
     [{:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
-                             nimi
-                             (str (:etunimi %)
-                                  (when-let [suku (:sukunimi %)]
-                                    (str " " suku))))
+                              nimi
+                              (str (:etunimi %)
+                                   (when-let [suku (:sukunimi %)]
+                                     (str " " suku))))
       :aseta (fn [yht arvo]
                (assoc yht :nimi arvo))
 
@@ -250,8 +250,8 @@
       [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
                                     :valinta sopimustyyppi
                                     :format-fn #(if %
-                                                 (str/capitalize (name %))
-                                                 "Ei sopimustyyppiä")
+                                                  (str/capitalize (name %))
+                                                  "Ei sopimustyyppiä")
                                     :valitse-fn #(tallenna-sopimustyyppi ur %)
                                     :disabled (not kirjoitusoikeus?)}
        sopimus/+sopimustyypit+])))
@@ -356,13 +356,13 @@
                                      #(let [{uusi-ensisijainen :ensisijainen
                                              uusi-varalla :varalla} @henkilot]
                                         (yht/tallenna-urakan-vastuuhenkilot-roolille
-                                         urakka-id rooli
-                                         (if (= :ei-muutosta uusi-ensisijainen)
-                                           ensisijainen
-                                           uusi-ensisijainen)
-                                         (if (= :ei-muutosta uusi-varalla)
-                                           varalla
-                                           uusi-varalla)))
+                                          urakka-id rooli
+                                          (if (= :ei-muutosta uusi-ensisijainen)
+                                            ensisijainen
+                                            uusi-ensisijainen)
+                                          (if (= :ei-muutosta uusi-varalla)
+                                            varalla
+                                            uusi-varalla)))
                                      {:kun-onnistuu #(do
                                                        (paivita-vastuuhenkilot! %)
                                                        (modal/piilota!))}])}
@@ -392,7 +392,7 @@
 (defn- nayta-vastuuhenkilo [paivita-vastuuhenkilot!
                             urakka-id kayttaja kayttajat vastuuhenkilot rooli]
   (let [roolin-henkilot (filter #(= rooli (:rooli %)) vastuuhenkilot)
-        ensisijainen (first (filter  :ensisijainen roolin-henkilot))
+        ensisijainen (first (filter :ensisijainen roolin-henkilot))
         varalla (first (filter (comp not :ensisijainen) roolin-henkilot))
         voi-muokata? (and (not (k/virhe? kayttajat))
                           (not (empty? kayttajat))
@@ -413,15 +413,15 @@
          [vastuuhenkilo-tooltip varalla]])
       (when voi-muokata?
         [:span.klikattava {:on-click #(modal/nayta!
-                                       {:otsikko (str "Urakan ensisijainen "
-                                                      (case rooli
-                                                        "ELY_Urakanvalvoja" "urakanvalvoja"
-                                                        "vastuuhenkilo" "vastuuhenkilö"))}
-                                       [aseta-vastuuhenkilo
-                                        paivita-vastuuhenkilot!
-                                        urakka-id kayttaja kayttajat
-                                        vastuuhenkilot rooli
-                                        ensisijainen varalla])}
+                                        {:otsikko (str "Urakan ensisijainen "
+                                                       (case rooli
+                                                         "ELY_Urakanvalvoja" "urakanvalvoja"
+                                                         "vastuuhenkilo" "vastuuhenkilö"))}
+                                        [aseta-vastuuhenkilo
+                                         paivita-vastuuhenkilot!
+                                         urakka-id kayttaja kayttajat
+                                         vastuuhenkilot rooli
+                                         ensisijainen varalla])}
          " "
          (ikonit/livicon-wrench)
          " "])]]))
@@ -474,8 +474,8 @@
                (reset! yhteyshenkilot nil)
                (go (reset! yhteyshenkilot
                            (filter
-                            #(not= "urakoitsijan paivystaja" (:rooli %))
-                            (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))))))]
+                             #(not= "urakoitsijan paivystaja" (:rooli %))
+                             (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))))))]
     (go (reset! yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))))
     (hae! ur)
     (komp/luo
@@ -503,10 +503,10 @@
            :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
 
           {:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
-                                  nimi
-                                  (str (:etunimi %)
-                                       (when-let [suku (:sukunimi %)]
-                                         (str " " suku))))
+                                   nimi
+                                   (str (:etunimi %)
+                                        (when-let [suku (:sukunimi %)]
+                                          (str " " suku))))
            :pituus-max 64
            :aseta (fn [yht arvo]
                     (assoc yht :nimi arvo))
@@ -547,18 +547,9 @@
       (komp/sisaan (fn [_]
                      (nayta-yha-tuontidialogi-tarvittaessa ur)))
       (fn [ur]
-        (let [paivystys-ei-kaytossa? (boolean
-                                       (and
-                                         ;; Ylläpidon urakka
-                                         (not= (:tyyppi ur) :hoito)
-                                         ;; joka ei ole päällystyksen palvelusopimus
-                                         (or (not= (:tyyppi ur) :paallystys)
-                                             (and (= (:tyyppi ur) :paallystys)
-                                                  (not= (:sopimustyyppi ur) :palvelusopimus)))))
-              paivystys-kaytossa? (not paivystys-ei-kaytossa?)]
-          [:div
-           [yleiset-tiedot #(reset! vastuuhenkilot %) ur @kayttajat @vastuuhenkilot]
-           [urakkaan-liitetyt-kayttajat @kayttajat]
-           [yhteyshenkilot ur]
-           (when paivystys-kaytossa?
-             [paivystajat ur])])))))
+        [:div
+         [yleiset-tiedot #(reset! vastuuhenkilot %) ur @kayttajat @vastuuhenkilot]
+         [urakkaan-liitetyt-kayttajat @kayttajat]
+         [yhteyshenkilot ur]
+         (when (urakka/paivystys-kaytossa? ur)
+           [paivystajat ur])]))))
