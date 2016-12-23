@@ -7,8 +7,8 @@
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-
-
+(def yhteyshenkilotyypit ["Kunnossapitopäällikkö"
+                          "Sillanvalvoja" "Kelikeskus" "Tieliikennekeskus"])
 
 (defn tallenna-urakan-yhteyshenkilot
   "Tallentaa urakan yhteyshenkilöt, palauttaa kanavan, josta vastauksen voi lukea."
@@ -19,14 +19,6 @@
            {:urakka-id urakka-id
             :yhteyshenkilot yhteyshenkilot
             :poistettu poistettavat}))
-
-(defn hae-yhteyshenkilotyypit []
-  (comment
-    (k/post! :hae-yhteyshenkilotyypit nil))
-  (let [ch (chan)]
-    (go (>! ch ["Kunnossapitopäällikkö"
-                "Sillanvalvoja" "Kelikeskus" "Tieliikennekeskus"]))
-    ch))
 
 (defn hae-urakan-kayttajat [urakka-id]
   (k/post! :hae-urakan-kayttajat urakka-id nil true))
