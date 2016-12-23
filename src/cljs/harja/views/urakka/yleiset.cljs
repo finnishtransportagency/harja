@@ -547,13 +547,14 @@
       (komp/sisaan (fn [_]
                      (nayta-yha-tuontidialogi-tarvittaessa ur)))
       (fn [ur]
-        (let [paivystys-ei-kaytossa? (and
-                                       ;; Ylläpidon urakka
-                                       (not= (:tyyppi ur) :hoito)
-                                       ;; joka ei ole päällystyksen palvelusopimus
-                                       (or (not= (:tyyppi ur) :paallystys)
-                                           (and (= (:tyyppi ur) :paallystys)
-                                                (not= (:sopimustyyppi ur) :palvelusopimus))))
+        (let [paivystys-ei-kaytossa? (boolean
+                                       (and
+                                         ;; Ylläpidon urakka
+                                         (not= (:tyyppi ur) :hoito)
+                                         ;; joka ei ole päällystyksen palvelusopimus
+                                         (or (not= (:tyyppi ur) :paallystys)
+                                             (and (= (:tyyppi ur) :paallystys)
+                                                  (not= (:sopimustyyppi ur) :palvelusopimus)))))
               paivystys-kaytossa? (not paivystys-ei-kaytossa?)]
           [:div
            [yleiset-tiedot #(reset! vastuuhenkilot %) ur @kayttajat @vastuuhenkilot]
