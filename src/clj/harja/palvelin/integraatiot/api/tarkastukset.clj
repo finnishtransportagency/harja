@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.api.tarkastukset
   "Tarkastusten kirjaaminen urakalle"
   (:require [com.stuartsierra.component :as component]
-            [compojure.core :refer [POST GET]]
+            [compojure.core :refer [POST GET DELETE]]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :refer [join]]
@@ -120,16 +120,17 @@
   component/Lifecycle
   (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta integraatioloki :integraatioloki :as this}]
     (doseq [{:keys [palvelu polku pyynto-skeema tyyppi metodi]} palvelut]
-      (let [kasittele (fn [kasittele-tarkastus-fn] kasittele-kutsu db integraatioloki palvelu request
-                                        pyynto-skeema json-skeemat/kirjausvastaus
-                                        (fn [parametrit data kayttaja db]
-                                          (kasittele-tarkastus-fn db liitteiden-hallinta kayttaja tyyppi parametrit data)))]
-        (if (= metodi :post)
-          (julkaise-reitti http palvelu
-                           (POST polku request (kasittele kirjaa-tarkastus))))
-        (if (= metodi :delete)
-          (julkaise-reitti http palvelu
-                           (DELETE polku request (kasittele poista-tarkastus))))))
+      (let [kasittele (fn [kasittele-tarkastus-fn request]
+                        (kasittele-kutsu db integraatioloki palvelu request
+                                         pyynto-skeema json-skeemat/kirjausvastaus
+                                         (fn [parametrit data kayttaja db]
+                                           (kasittele-tarkastus-fn db liitteiden-hallinta kayttaja tyyppi parametrit data))))]
+        (julkaise-reitti http palvelu
+                         (condp = metodi
+                           :post
+                           (POST polku request (kasittele kirjaa-tarkastus request))
+                           :delete
+                           (DELETE polku request (kasittele poista-tarkastus request))))))
 
     this)
 
