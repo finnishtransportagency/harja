@@ -12,7 +12,6 @@
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
             [harja.domain.laadunseuranta.sanktiot :as sanktiot-domain]
-            [harja.transit :as transit]
             [harja.geo :as geo]
 
             [taoensso.timbre :as log]
@@ -333,12 +332,13 @@
         alue (assoc alue :toleranssi (geo/karkeistustoleranssi alue))
         ch (async/chan 32
                        (comp
-                        (map laadunseuranta/tarkastus-tiedolla-onko-ok)
-                             (map #(konv/string->keyword % :tyyppi :tekija))
-                             (map #(assoc %
-                                          :tyyppi-kartalla :tarkastus
-                                          :sijainti (:reitti %)))
-                             (esitettavat-asiat/kartalla-esitettavaan-muotoon-xf)))]
+                         (map #(konv/array->set % :vakiohavainnot))
+                         (map laadunseuranta/tarkastus-tiedolla-onko-ok)
+                         (map #(konv/string->keyword % :tyyppi :tekija))
+                         (map #(assoc %
+                                 :tyyppi-kartalla :tarkastus
+                                 :sijainti (:reitti %)))
+                         (esitettavat-asiat/kartalla-esitettavaan-muotoon-xf)))]
     (async/thread
       (try
         (jdbc/with-db-transaction [db db
@@ -356,14 +356,16 @@
   [db user {x :x y :y toleranssi :toleranssi :as parametrit}]
   (let [parametrit (tarkastusreittien-parametrit user parametrit)]
     (into []
-          (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
-                (map #(konv/string->keyword % :tyyppi))
-                (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
+          (comp
+            (map #(konv/array->set % :vakiohavainnot))
+            (map #(assoc % :tyyppi-kartalla :tarkastus))
+            (map #(konv/string->keyword % :tyyppi))
+            (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
           (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
-           db
-           (assoc parametrit
-                  :x x :y y
-                  :toleranssi toleranssi)))))
+            db
+            (assoc parametrit
+              :x x :y y
+              :toleranssi toleranssi)))))
 
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
