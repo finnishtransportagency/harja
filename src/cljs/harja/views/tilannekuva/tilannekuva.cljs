@@ -313,7 +313,7 @@
         [:div#tk-suodattimet {:style {:max-height @hallintapaneeli-max-korkeus
                                       :overflow-x "hidden"
                                       :overflow-y "auto"}}
-         [bs/tabs {:active tiedot/valittu-tila}
+         [bs/tabs {:active (nav/valittu-valilehti-atom :tilannekuva)}
           "Nykytilanne"
           :nykytilanne
           [nykytilanne-valinnat]

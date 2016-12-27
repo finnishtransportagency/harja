@@ -19,7 +19,7 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce nakymassa? (atom false))
-(defonce valittu-tila (atom :nykytilanne))
+(defonce valittu-tila (reaction (nav/valittu-valilehti :tilannekuva)))
 
 (def
   ^{:doc "Kuinka pitkä urakan nimi hyväksytään pudotusvalikkoon"
