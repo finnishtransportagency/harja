@@ -95,6 +95,7 @@
         kohteen-tienumero (:numero kohteen-sijainti)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (vaadi-kohde-kuuluu-urakkaan db urakka-id urakan-tyyppi kohde-id)
+    (validointi/tarkista-saako-kohteen-paivittaa db kohde-id)
     (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
     (yllapitokohteet/paivita-kohde db kohde-id kohteen-sijainti)
     (yllapitokohteet/paivita-alikohteet db kohde alikohteet)
