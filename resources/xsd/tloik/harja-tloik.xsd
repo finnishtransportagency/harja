@@ -251,6 +251,8 @@
             <xs:enumeration value="kevyenLiikenteenVaylatOvatjaatymassa" />
             <xs:enumeration value="tietOvatjaisiaJamarkia" />
             <xs:enumeration value="kiertotienKunnossapito" />
+            <xs:enumeration value="jarjestelmanTilanTarkistus" />
+            <xs:enumeration value="jarjestelmanVikaTila" />
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="urakkatyyppi">
@@ -332,7 +334,8 @@
     </xs:complexType>
     <xs:simpleType name="uuid">
         <xs:restriction base="xs:string">
-            <xs:length value="36" />
+            <xs:minLength value="32"/>
+            <xs:maxLength value="36" />
         </xs:restriction>
     </xs:simpleType>
 </xs:schema>
