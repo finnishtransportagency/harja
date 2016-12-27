@@ -15,23 +15,39 @@
   (:require [harja.tiedot.tilannekuva.tienakyma :as tiedot]
             [harja.ui.lomake :as lomake]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.napit :as napit]))
+            [harja.ui.napit :as napit]
+            [harja.ui.yleiset :as yleiset]
+            [tuck.core :as tuck]
+            [reagent.core :as r]
+            [harja.loki :refer [log]]))
 
-(defn valinnat
+(defn valinnat*
   "Valintalomake tienäkymälle."
-  []
+  [e! {:keys [valinnat sijainti haku-kaynnissa?] :as app}]
+  (log "valinnat* rendataan: " (clj->js app))
   [lomake/lomake
    {:otsikko "Tarkastele tien tietoja"
-    :muokkaa! tiedot/paivita-valinnat
-    :footer [napit/yleinen "Hae" {:ikoni (ikonit/livicon-search)}]
+    :muokkaa! #(e! (tiedot/->PaivitaValinnat %))
+    :footer [:div.inline
+             [napit/yleinen
+              "Hae"
+              #(e! (tiedot/->Hae))
+              {:ikoni (ikonit/livicon-search)}]
+             (when haku-kaynnissa?
+               [yleiset/ajax-loader "Haetaan tietoja..."])]
     :ei-borderia? true}
    [{:nimi :tierekisteriosoite :tyyppi :tierekisteriosoite
      :tyyli :rivitetty
-     :sijainti tiedot/sijainti
+     :sijainti (r/wrap sijainti
+                       #(e! (tiedot/->PaivitaSijainti %)))
      :otsikko "Tierekisteriosoite"
      :palstoja 3}
     {:nimi :alku :tyyppi :pvm-aika
      :otsikko "Alkaen" :palstoja 3}
     {:nimi :loppu :tyyppi :pvm-aika
      :otsikko "Loppuen" :palstoja 3}]
-   @tiedot/valinnat])
+   valinnat])
+
+(defn valinnat
+  []
+  [tuck/tuck tiedot/tienakyma valinnat*])
