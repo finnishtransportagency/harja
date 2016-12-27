@@ -85,8 +85,7 @@
           (log "@valittu-asia sisältää" (clj->js @valittu-asia))
           (log "tyhjennetään @valittu-asia koska ei esiinny atomissa @asiat-pisteessa, esim" (clj->js (first asiat))))
         (reset! valittu-asia nil)))
-    [:div#kartan-infopaneeli.kartan-infopaneeli
-     #_[debug asiat-pisteessa]
+    [:span
      [:div
       (when (and @valittu-asia useampi-asia?)
         [napit/takaisin "" #(reset! valittu-asia nil)])

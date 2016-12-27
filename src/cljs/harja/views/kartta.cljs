@@ -694,8 +694,9 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
    [kartan-yleiset-kontrollit]
    [kartan-ohjelaatikko]
    (when @tiedot/infopaneeli-nakyvissa?
-     [infopaneeli/infopaneeli @asiat-pisteessa #(reset! tiedot/nayta-infopaneeli? false)
-      tiedot/infopaneelin-linkkifunktiot])
+     [:div.kartan-infopaneeli
+      [infopaneeli/infopaneeli @asiat-pisteessa #(reset! tiedot/nayta-infopaneeli? false)
+       tiedot/infopaneelin-linkkifunktiot]])
    [kartan-ikonien-selitykset]
    [kartta-openlayers]
    [kartan-edistyminen @kuvatason-lataus @geometriatason-lataus]])
