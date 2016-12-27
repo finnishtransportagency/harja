@@ -263,12 +263,17 @@
 (defn- validoi-rivin-skeema
   "Validoi rivin skeeman annetulle tiedolle. Palauttaa skeeman, jos se on validi.
   Jos skeema ei ole validi tiedolle, logittaa virheen ja palauttaa nil."
-  [tieto {:keys [nimi hae] :as rivin-skeema}]
+  [tieto {:keys [nimi hae otsikko] :as rivin-skeema}]
   (let [data (:data tieto)
         get-fn (or nimi hae)
         arvo (when get-fn
                (get-fn data))]
     (cond
+      ;; Ei ole otsikkoa
+      (nil? otsikko)
+      (kentan-skeemavirhe "Rivin skeemasta puuttuu otsikko"
+                          rivin-skeema tieto)
+
       ;; Hakutapa puuttuu kokonaan
       (nil? get-fn)
       (kentan-skeemavirhe "skeemasta puuttuu :nimi tai :hae"
@@ -295,9 +300,8 @@
   Jos skeema on validi, palauttaa skeeman sen valideilla kentillä.
   Jos skeema ei ole validi, logittaa virheen ja palauttaa nil."
   [{:keys [otsikko tiedot data jarjesta-fn] :as infopaneeli-skeema}]
-  (let [rivien-skeemat (remove empty? tiedot)
-        validit-skeemat (vec (keep (partial validoi-rivin-skeema infopaneeli-skeema)
-                                   rivien-skeemat))]
+  (let [validit-skeemat (vec (keep (partial validoi-rivin-skeema infopaneeli-skeema)
+                                   tiedot))]
     (cond
       (nil? jarjesta-fn)
       (do (log (str "jarjesta-fn puuttuu tiedolta " (pr-str infopaneeli-skeema)))
