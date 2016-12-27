@@ -92,7 +92,7 @@
         kohde (:yllapitokohde data)
         kohteen-sijainti (:sijainti kohde)
         alikohteet (mapv :alikohde (:alikohteet kohde))
-        kohteen-tienumero (:tr-numero kohteen-sijainti)]
+        kohteen-tienumero (:numero kohteen-sijainti)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (vaadi-kohde-kuuluu-urakkaan db urakka-id urakan-tyyppi kohde-id)
     (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)

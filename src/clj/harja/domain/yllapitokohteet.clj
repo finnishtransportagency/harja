@@ -83,7 +83,7 @@
       (tarkista-alikohteet-tayttavat-kohteen kohde-id kohteen-sijainti alikohteet)
       (tarkista-alikohteet-muodostavat-yhtenaisen-osuuden alikohteet))))
 
-(defn tarkista-kohteen-ja-alikohteiden-sijannit
+(defn tarkista-kohteen-ja-alikohteiden-§sijannit
   "Tekee yksinkertaisen tarkastuksen, jolloin kohde on validi ja alikohteet ovat sen sisällä ja muodostavat yhteinäisen
   kokonaisuuden. Varsinainen validius tieverkon kannalta täytyy tarkistaa erikseen tietokantaa vasten."
   [kohde-id kohteen-sijainti alikohteet]
