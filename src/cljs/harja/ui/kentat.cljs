@@ -763,32 +763,33 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
   Rivittää tierekisterivalinnan usealle riville."
   [pakollinen? tie aosa aet losa loppuet karttavalinta virhe]
   [:table
-   [:tr
-    [:td {:colSpan 2}
-     [:label.control-label [:span.kentan-label "Tie"]]
-     (when pakollinen? [:span.required-tahti " *"])]]
-   [:tr
-    [:td {:colSpan 2}
-     tie]]
-   [:tr
-    [:td
-     [:label.control-label [:span.kentan-label "Alkuosa"]]
-     (when pakollinen? [:span.required-tahti " *"])]
-    [:td
-     [:label.control-label [:span.kentan-label "Alkuetäisyys"]]
-     (when pakollinen? [:span.required-tahti " *"])]]
-   [:tr
-    [:td aosa] [:td aet]]
-   [:tr
-    [:td [:label.control-label [:span.kentan-label "Loppuosa"]]]
-    [:td [:label.control-label [:span.kentan-label "Loppuetäisyys"]]]]
-   [:tr
-    [:td losa] [:td loppuet]]
-   [:tr
-    [:td {:colSpan 2} karttavalinta]]
-   (when virhe
-     [:tr
-      [:td {:colSpan 2} virhe]])])
+   [:tbody
+    [:tr
+     [:td {:colSpan 2}
+      [:label.control-label [:span.kentan-label "Tie"]]
+      (when pakollinen? [:span.required-tahti " *"])]]
+    [:tr
+     [:td {:colSpan 2}
+      tie]]
+    [:tr
+     [:td
+      [:label.control-label [:span.kentan-label "Alkuosa"]]
+      (when pakollinen? [:span.required-tahti " *"])]
+     [:td
+      [:label.control-label [:span.kentan-label "Alkuetäisyys"]]
+      (when pakollinen? [:span.required-tahti " *"])]]
+    [:tr
+     [:td aosa] [:td aet]]
+    [:tr
+     [:td [:label.control-label [:span.kentan-label "Loppuosa"]]]
+     [:td [:label.control-label [:span.kentan-label "Loppuetäisyys"]]]]
+    [:tr
+     [:td losa] [:td loppuet]]
+    [:tr
+     [:td {:colSpan 2} karttavalinta]]
+    (when virhe
+      [:tr
+       [:td {:colSpan 2} virhe]])]])
 
 
 (defmethod tee-kentta :tierekisteriosoite [{:keys [tyyli lomake? ala-nayta-virhetta-komponentissa? sijainti pakollinen?]} data]
