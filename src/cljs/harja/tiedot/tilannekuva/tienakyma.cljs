@@ -23,7 +23,7 @@
 (extend-protocol tuck/Event
   PaivitaSijainti
   (process-event [{s :sijainti} tienakyma]
-    (assoc tienakyma :sijainti s))
+    (assoc-in tienakyma [:valinnat :sijainti] s))
 
   PaivitaValinnat
   (process-event [{uusi :valinnat} tienakyma]
