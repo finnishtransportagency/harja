@@ -271,7 +271,7 @@
 ;; Eri näkymät voivat tarpeen mukaan asettaa ikonien selitykset päälle/pois komponenttiin tultaessa.
 ;; Komponentista poistuttaessa tulisi arvo asettaa takaisin oletukseksi
 (def ikonien-selitykset-nakyvissa? (atom true))
-(def ikonien-selitykset-auki (atom false))
+(def ikonien-selitykset-auki (atom true))
 
 (defn kartan-ikonien-selitykset []
   (let [selitteet (reduce set/union
