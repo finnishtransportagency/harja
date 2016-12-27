@@ -89,9 +89,9 @@
   (let [urakka-id (Integer/parseInt urakka-id)
         kohde-id (Integer/parseInt kohde-id)
         urakan-tyyppi (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id))))
-        kohde (:yllapitokohde data)
+        kohde (assoc (:yllapitokohde data) :id kohde-id)
         kohteen-sijainti (:sijainti kohde)
-        alikohteet (mapv :alikohde (:alikohteet kohde))
+        alikohteet (mapv #(assoc (:alikohde %) :ulkoinen-id (get-in % [:alikohde :tunniste :id])) (:alikohteet kohde))
         kohteen-tienumero (:numero kohteen-sijainti)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (vaadi-kohde-kuuluu-urakkaan db urakka-id urakan-tyyppi kohde-id)
