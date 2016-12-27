@@ -3,7 +3,7 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.tilannekuva.tilannekuva :as tiedot]
             [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva-kartalla]
-            [harja.tiedot.tilannekuva.tienakyma :as tienakyma]
+            [harja.views.tilannekuva.tienakyma :as tienakyma]
             [harja.views.kartta :as kartta]
             [harja.ui.valinnat :as ui-valinnat]
             [harja.loki :refer [log tarkkaile!]]
@@ -285,23 +285,6 @@
    [aikasuodattimet]
    [aluesuodattimet]])
 
-(defn tienakyma-valinnat []
-  [lomake/lomake
-   {:otsikko "Tarkastele tien tietoja"
-    :muokkaa! tienakyma/paivita-valinnat
-    :footer [napit/yleinen "Hae" {:ikoni (ikonit/livicon-search)}]
-    :ei-borderia? true}
-   [{:nimi :tierekisteriosoite :tyyppi :tierekisteriosoite
-     :tyyli :rivitetty
-     :sijainti tienakyma/sijainti
-     :otsikko "Tierekisteriosoite"
-     :palstoja 3}
-    {:nimi :alku :tyyppi :pvm-aika
-     :otsikko "Alkaen" :palstoja 3}
-    {:nimi :loppu :tyyppi :pvm-aika
-     :otsikko "Loppuen" :palstoja 3}]
-   @tienakyma/valinnat])
-
 (defn suodattimet []
   (let [resize-kuuntelija (fn [this _]
                             (aseta-hallintapaneelin-max-korkeus (r/dom-node this)))]
@@ -324,7 +307,7 @@
 
           "Tienäkymä"
           :tienakyma
-          [tienakyma-valinnat]]]))))
+          [tienakyma/valinnat]]]))))
 
 (defonce hallintapaneeli-auki (atom {:hallintapaneeli true}))
 
