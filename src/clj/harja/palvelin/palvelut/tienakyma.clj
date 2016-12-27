@@ -54,10 +54,25 @@
               (map #(assoc % :tyyppi-kartalla :toteuma)))
         (q/hae-toteumat db parametrit)))
 
+(defn- hae-tyokoneet [db parametrit]
+  ;; FIXME: implement
+  [])
+
+(defn- hae-tarkastukset [db parametrit]
+  ;; FIXME: implement
+  [])
+
+(defn- hae-turvallisuuspoikkeamat [db parametrit]
+  ;; FIXME: implement
+  [])
+
 (def ^{:private true
        :doc "Määrittelee kaikki kyselyt mitä tienäkymään voi hakea"}
   tienakyma-haut
-  {:toteumat #'hae-toteumat})
+  {:toteumat #'hae-toteumat
+   :tyokoneet #'hae-tyokoneet
+   :tarkastukset #'hae-tarkastukset
+   :turvallisuuspoikkeamat #'hae-turvallisuuspoikkeamat})
 
 
 (defn- hae-tienakymaan [db user valinnat]
