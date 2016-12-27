@@ -25,7 +25,8 @@
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.ui.bootstrap :as bs]
             [harja.ui.lomake :as lomake]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.domain.roolit :as roolit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction-writable]]))
 
@@ -307,7 +308,8 @@
 
           "Tienäkymä"
           :tienakyma
-          [tienakyma/valinnat]]]))))
+          (when (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+            [tienakyma/valinnat])]]))))
 
 (defonce hallintapaneeli-auki (atom {:hallintapaneeli true}))
 
