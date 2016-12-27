@@ -1,6 +1,19 @@
 (ns harja.ui.kartta.infopaneelin-sisalto
-  "Määrittelee erilaisten kartalle piirrettävien asioiden tiedot, jotka tulevat kartta
-  overlay näkymään."
+  "Määrittelee erilaisten kartalle piirrettävien asioiden tiedot, jotka tulevat kartan
+  infopaneeliin.
+  Infopaneelissa voidaan näyttää erityyppisiä asioita, samalla tavalla kuin kartalle
+  piirtämisessäkin. Jokaiselle eri tyyppiselle asialle täytyy määritellä toteutus
+  infopaneli-skeema multimetodiin.
+
+  Infopaneeli-skeema palauttaa mäp muotoisen kuvauksen näytettävästä asiasta, jossa
+  on seuraavat avaimet:
+
+  :tyyppi       näytettävän asian tyyppi keyword
+  :jarjesta-fn  funktio joka palauttaa datasta sort avaimen (pvm)
+  :otsikko      asialle näytettävä otsikko
+  :tiedot       asialle näytettävien tietokenttien skeemat
+  :data         itse näytettävä asia, josta tietokenttien arvot saadaan
+  "
   (:require [clojure.string :as string]
             [harja.pvm :as pvm]
             [harja.loki :as log :refer [log]]
@@ -240,27 +253,67 @@
             ", palautetaan tyhjä itemille " (pr-str x))
   nil)
 
-(defn validoi-tieto [tieto]
-  (let [otsikko (:otsikko tieto)
-        skeema (remove empty? (:tiedot tieto))
-        data (:data tieto)
-        kenttien-arvot (mapv
-                         (fn [{:keys [nimi hae] :as rivin-skeema}]
-                           (if-let [get-fn (or nimi hae)]
-                             [rivin-skeema (get-fn data)]
-                             ;; else
-                             (do (log "skeemasta puuttuu :nimi tai :hae - skeema:" (clj->js skeema) "tieto:" (clj->js tieto))
-                                 [])))
-                         skeema)
-        tyhjat-arvot (keep (comp :otsikko first) (filter (comp nil? second) kenttien-arvot))]
-    (assert (some? (:jarjesta-fn tieto)) (str "jarjesta-fn puuttuu tiedolta " (pr-str tieto)))
-    (when-not (empty? tyhjat-arvot)
-      (log "Yritettiin muodostaa overlayn tietoja asialle " otsikko ", mutta seuraavat tiedot puuttuivat: " (pr-str tyhjat-arvot)) "\nkenttien-arvot:" (clj->js kenttien-arvot))
-    (assoc tieto :tiedot (mapv first (remove (comp nil? second) kenttien-arvot)))))
+(defn- kentan-skeemavirhe [viesti skeema tieto]
+  (do
+    (log viesti
+         ", skeema: " (clj->js skeema)
+         ", tieto: " (clj->js tieto))
+    nil))
 
-(defn validoi-tiedot [tiedot]
-  (map validoi-tieto tiedot))
+(defn- validoi-rivin-skeema
+  "Validoi rivin skeeman annetulle tiedolle. Palauttaa skeeman, jos se on validi.
+  Jos skeema ei ole validi tiedolle, logittaa virheen ja palauttaa nil."
+  [tieto {:keys [nimi hae] :as rivin-skeema}]
+  (let [data (:data tieto)
+        get-fn (or nimi hae)
+        arvo (when get-fn
+               (get-fn data))]
+    (cond
+      ;; Hakutapa puuttuu kokonaan
+      (nil? get-fn)
+      (kentan-skeemavirhe "skeemasta puuttuu :nimi tai :hae"
+             rivin-skeema tieto)
+
+      ;; Hakutapa on nimi, mutta datassa ei ole kyseistä avainta
+      (and nimi (not (contains? data nimi)))
+      (kentan-skeemavirhe
+       (str "Tiedossa ei ole nimen mukaista avainta, nimi: "
+            (str nimi))
+       rivin-skeema tieto)
+
+      ;; Hakutapa on funktio, joka palautti nil arvon
+      (nil? arvo)
+      (kentan-skeemavirhe (str "Puuttuva tieto otsikolla " (:otsikko rivin-skeema))
+             rivin-skeema tieto)
+
+      ;; Kaikki kunnossa
+      :default
+      rivin-skeema)))
+
+(defn validoi-infopaneeli-skeema
+  "Validoi infopaneeli-skeema metodin muodostaman skeeman ja kaikki sen kentät.
+  Jos skeema on validi, palauttaa skeeman sen valideilla kentillä.
+  Jos skeema ei ole validi, logittaa virheen ja palauttaa nil."
+  [{:keys [otsikko tiedot data jarjesta-fn] :as infopaneeli-skeema}]
+  (let [rivien-skeemat (remove empty? tiedot)
+        validit-skeemat (vec (keep (partial validoi-rivin-skeema infopaneeli-skeema)
+                                   rivien-skeemat))]
+    (cond
+      (nil? jarjesta-fn)
+      (do (log (str "jarjesta-fn puuttuu tiedolta " (pr-str infopaneeli-skeema)))
+          nil)
+
+      (empty? validit-skeemat)
+      (do (log (str "Tiedolla ei ole yhtään validia skeemaa: " (pr-str infopaneeli-skeema)))
+          nil)
+
+      :default
+      (assoc infopaneeli-skeema :tiedot validit-skeemat))))
 
 (defn skeemamuodossa [asiat]
-  ;; FIXME: tänne tehtävä toimimaan (sort-by :jarjesta-fn)
-  (->> (keep infopaneeli-skeema asiat) validoi-tiedot))
+  (->> asiat
+       (keep infopaneeli-skeema)
+       (keep validoi-infopaneeli-skeema)
+       (sort-by (fn [{jarjesta-fn :jarjesta-fn data :data}]
+                  (jarjesta-fn data)))
+       vec))
