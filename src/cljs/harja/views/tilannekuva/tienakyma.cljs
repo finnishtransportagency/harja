@@ -17,7 +17,9 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]))
 
-(defn valinnat []
+(defn valinnat
+  "Valintalomake tienäkymälle."
+  []
   [lomake/lomake
    {:otsikko "Tarkastele tien tietoja"
     :muokkaa! tiedot/paivita-valinnat
