@@ -253,43 +253,43 @@
             ", palautetaan tyhjä itemille " (pr-str x))
   nil)
 
-(defn- kentan-skeemavirhe [viesti skeema tieto]
+(defn- rivin-skeemavirhe [viesti rivin-skeema infopaneeli-skeema]
   (do
     (log viesti
-         ", skeema: " (clj->js skeema)
-         ", tieto: " (clj->js tieto))
+         ", rivin-skeema: " (clj->js rivin-skeema)
+         ", infopaneeli-skeema: " (clj->js infopaneeli-skeema))
     nil))
 
 (defn- validoi-rivin-skeema
-  "Validoi rivin skeeman annetulle tiedolle. Palauttaa skeeman, jos se on validi.
+  "Validoi rivin skeeman annetulle infopaneeli skeemalle. Palauttaa skeeman, jos se on validi.
   Jos skeema ei ole validi tiedolle, logittaa virheen ja palauttaa nil."
-  [tieto {:keys [nimi hae otsikko] :as rivin-skeema}]
-  (let [data (:data tieto)
+  [infopaneeli-skeema {:keys [nimi hae otsikko] :as rivin-skeema}]
+  (let [data (:data infopaneeli-skeema)
         get-fn (or nimi hae)
         arvo (when get-fn
                (get-fn data))]
     (cond
       ;; Ei ole otsikkoa
       (nil? otsikko)
-      (kentan-skeemavirhe "Rivin skeemasta puuttuu otsikko"
-                          rivin-skeema tieto)
+      (rivin-skeemavirhe "Rivin skeemasta puuttuu otsikko"
+                          rivin-skeema infopaneeli-skeema)
 
       ;; Hakutapa puuttuu kokonaan
       (nil? get-fn)
-      (kentan-skeemavirhe "skeemasta puuttuu :nimi tai :hae"
-             rivin-skeema tieto)
+      (rivin-skeemavirhe "skeemasta puuttuu :nimi tai :hae"
+             rivin-skeema infopaneeli-skeema)
 
       ;; Hakutapa on nimi, mutta datassa ei ole kyseistä avainta
       (and nimi (not (contains? data nimi)))
-      (kentan-skeemavirhe
+      (rivin-skeemavirhe
        (str "Tiedossa ei ole nimen mukaista avainta, nimi: "
             (str nimi))
-       rivin-skeema tieto)
+       rivin-skeema infopaneeli-skeema)
 
       ;; Hakutapa on funktio, joka palautti nil arvon
       (nil? arvo)
-      (kentan-skeemavirhe (str "Puuttuva tieto otsikolla " (:otsikko rivin-skeema))
-             rivin-skeema tieto)
+      (rivin-skeemavirhe (str "Puuttuva tieto otsikolla " (:otsikko rivin-skeema))
+             rivin-skeema infopaneeli-skeema)
 
       ;; Kaikki kunnossa
       :default
