@@ -23,7 +23,7 @@
 
 (defn valinnat*
   "Valintalomake tienäkymälle."
-  [e! {:keys [valinnat sijainti haku-kaynnissa?] :as app}]
+  [e! {:keys [valinnat haku-kaynnissa?] :as app}]
   (log "valinnat* rendataan: " (clj->js app))
   [lomake/lomake
    {:otsikko "Tarkastele tien tietoja"
@@ -38,7 +38,7 @@
     :ei-borderia? true}
    [{:nimi :tierekisteriosoite :tyyppi :tierekisteriosoite
      :tyyli :rivitetty
-     :sijainti (r/wrap sijainti
+     :sijainti (r/wrap (:sijainti valinnat)
                        #(e! (tiedot/->PaivitaSijainti %)))
      :otsikko "Tierekisteriosoite"
      :palstoja 3}
