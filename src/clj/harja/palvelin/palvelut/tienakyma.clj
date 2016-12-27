@@ -5,14 +5,69 @@
   asioita. Palvelu on vain tilaajan käyttäjille, eikä hauissa ole mitään
   urakkarajauksia näkyvyyteen.
 
-  Tienäkymän kaikki löydökset renderöidään frontilla."
+  Tienäkymän kaikki löydökset renderöidään frontilla.
+
+  Kaikki hakufunktiot ottavat samat parametrit: tietokantayhteyden
+  ja parametrimäpin, jossa on seuraavat tiedot:
+  - hakualueen extent: :x1, :y1, :x2 ja :y2
+  - tierekisteriosoitteen geometria: :sijainti
+  - tierekisteriosoite: :numero, :alkuosa, :alkuetaisyys, :loppuosa ja :loppuetaisyys
+  - haettava aikaväli: :alku ja :loppu
+
+  Hakufunktiot ovat tienakyma-haut mäpissä määritelty.
+  "
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin
-             :refer [julkaise-palvelut poista-palvelut]]))
+             :refer [julkaise-palvelut poista-palvelut]]
+            [harja.geo :as geo]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.roolit :as roolit]
+            [slingshot.slingshot :refer [throw+]]
+            [harja.tyokalut.functor :refer [fmap]]
+            [taoensso.timbre :as log]
+            [harja.kyselyt.tienakyma :as q]
+            [harja.kyselyt.konversio :as konv]))
 
-(defn- hae-tienakymaan [db user {:keys [tr alku loppu]}]
-  ;; FIXME: dummy service
-  [{:foo :bar}])
+(defonce debug-hakuparametrit (atom nil))
+
+(defn- hakuparametrit
+  "Tekee käyttäjän antamista hakuehdoista jeesql hakuparametrit"
+  [{:keys [sijainti alku loppu tierekisteriosoite] :as valinnat}]
+  (let [extent (geo/extent sijainti)]
+    (merge
+     ;; TR-osoitteen geometrinen alue envelope
+     (zipmap extent [:x1 :y1 :x2 :y2])
+
+     ;; Tierekisteriosoitteen geometria
+     {:sijainti (geo/geometry (geo/clj->pg sijainti))}
+
+     ;; Tierekisteriosoite
+     tierekisteriosoite
+
+     ;; Aikarajaus, jonka sisällä tarkastellaan
+     {:alku alku
+      :loppu loppu})))
+
+(defn- hae-toteumat [db parametrit]
+  (into []
+        (comp (geo/muunna-pg-tulokset :reitti)
+              (map #(assoc % :tyyppi-kartalla :toteuma)))
+        (q/hae-toteumat db parametrit)))
+
+(def ^{:private true
+       :doc "Määrittelee kaikki kyselyt mitä tienäkymään voi hakea"}
+  tienakyma-haut
+  {:toteumat #'hae-toteumat})
+
+
+(defn- hae-tienakymaan [db user valinnat]
+  (when-not (roolit/tilaajan-kayttaja? user)
+    (throw+ (roolit/->EiOikeutta "vain tilaajan käyttäjille")))
+  (let [parametrit (hakuparametrit valinnat)]
+    (reset! debug-hakuparametrit parametrit)
+    (fmap (fn [haku-fn]
+            (haku-fn db parametrit))
+          tienakyma-haut)))
 
 (defrecord Tienakyma []
   component/Lifecycle
