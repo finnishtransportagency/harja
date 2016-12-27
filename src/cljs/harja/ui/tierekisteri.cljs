@@ -161,20 +161,24 @@
         (fn [_ _ uudet-optiot]
           (reset! optiot uudet-optiot))}
 
+       (komp/karttakontrollit
+        :tr-karttavalitsin
+        (with-meta [tr-kontrollit valinta-peruttu valinta-hyvaksytty tila]
+          {:class "kartan-tr-kontrollit"}))
+
        (komp/sisaan-ulos #(do
+                            (log "TR karttavalitsin - sisään!")
                             (reset! kartta/pida-geometriat-nakyvilla? false) ; Emme halua, että zoom-taso muuttuu kun TR:ää valitaan
                             (reset! nav/kartan-edellinen-koko kartan-koko)
                             (when-not (= :XL kartan-koko) ;;ei syytä pienentää karttaa
                               (nav/vaihda-kartan-koko! :L))
                             (kartta/aseta-kursori! :crosshair)
-                            (kartta/aseta-yleiset-kontrollit!
-                              (with-meta [tr-kontrollit valinta-peruttu valinta-hyvaksytty tila] {:class "kartan-tr-kontrollit"}))
                             (nayta-ohjeet-ohjelaatikossa!))
                          #(do
+                            (log "TR karttavalitsin - ulos!")
                             (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                             (reset! nav/kartan-edellinen-koko nil)
                             (poistu-tr-valinnasta!)
-                            (kartta/tyhjenna-yleiset-kontrollit!)
                             (kartta/aseta-kursori! nil)))
        (komp/ulos (kartta/kaappaa-hiiri tapahtumat))
        (komp/kuuntelija :esc-painettu

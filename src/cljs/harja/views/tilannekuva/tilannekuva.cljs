@@ -361,12 +361,8 @@
                      (fn [_ ilmoitus]
                        (modal/piilota!)
                        (tiedot/paivita-ilmoituksen-tiedot (:id ilmoitus))))
-    {:component-will-mount   (fn [_]
-                               (kartta-tiedot/aseta-yleiset-kontrollit!
-                                [hallintapaneeli]))
-     :component-will-unmount (fn [_]
-                               (kartta-tiedot/tyhjenna-yleiset-kontrollit!)
-                               (kartta/poista-popup!))}
+    (komp/karttakontrollit :tilannekuva
+                           [hallintapaneeli])
     (fn []
       [:span.tilannekuva
        [kartta/kartan-paikka]])))
