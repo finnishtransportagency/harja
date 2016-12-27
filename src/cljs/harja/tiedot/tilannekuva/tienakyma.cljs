@@ -13,14 +13,20 @@
 (defonce tienakyma (atom {:valinnat {}
                           :sijainti nil
                           :haku-kaynnissa? nil
-                          :tulokset nil}))
+                          :tulokset nil
+                          :nakymassa? false}))
 
 (defrecord PaivitaSijainti [sijainti])
 (defrecord PaivitaValinnat [valinnat])
 (defrecord Hae [])
 (defrecord HakuValmis [tulokset])
+(defrecord Nakymassa [nakymassa?])
 
 (extend-protocol tuck/Event
+  Nakymassa
+  (process-event [{nakymassa? :nakymassa?} tienakyma]
+    (assoc tienakyma :nakymassa? nakymassa?))
+
   PaivitaSijainti
   (process-event [{s :sijainti} tienakyma]
     (assoc-in tienakyma [:valinnat :sijainti] s))
