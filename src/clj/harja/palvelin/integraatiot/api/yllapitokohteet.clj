@@ -91,7 +91,7 @@
         urakan-tyyppi (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id))))
         kohde (:yllapitokohde data)
         kohteen-sijainti (:sijainti kohde)
-        alikohteet (:alikohteet kohde)
+        alikohteet (mapv :alikohde (:alikohteet kohde))
         kohteen-tienumero (:tr-numero kohteen-sijainti)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (vaadi-kohde-kuuluu-urakkaan db urakka-id urakan-tyyppi kohde-id)
