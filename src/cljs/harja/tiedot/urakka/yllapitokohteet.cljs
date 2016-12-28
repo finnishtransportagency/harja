@@ -166,7 +166,7 @@
                 _ (log "[YLLÄPITOKOHTEET] Tallennetaan kohteet: " (pr-str kohteet))
                 vastaus (<! (tallenna-yllapitokohteet!
                               urakka-id sopimus-id
-                              (mapv #(assoc % :tyyppi kohdetyyppi)
+                              (mapv #(assoc % :yllapitokohdetyotyyppi kohdetyyppi)
                                     kohteet)))]
             (if (k/virhe? vastaus)
               (viesti/nayta! "Kohteiden tallentaminen epännistui" :warning viesti/viestin-nayttoaika-keskipitka)
