@@ -102,6 +102,11 @@
     :pyynto-skeema json-skeemat/tiestotarkastuksen-kirjaus
     :tyyppi        :tiesto
     :metodi        :post}
+   {:palvelu       :poista-tiestotarkastus
+    :polku         "/api/urakat/:id/tarkastus/tiestotarkastus"
+    :pyynto-skeema json-skeemat/tiestotarkastuksen-poisto
+    :tyyppi        :tiesto
+    :metodi        :delete}
    {:palvelu       :lisaa-talvihoitotarkastus
     :polku         "/api/urakat/:id/tarkastus/talvihoitotarkastus"
     :pyynto-skeema json-skeemat/talvihoitotarkastuksen-kirjaus
@@ -116,7 +121,12 @@
     :polku         "/api/urakat/:id/tarkastus/soratietarkastus"
     :pyynto-skeema json-skeemat/soratietarkastuksen-kirjaus
     :tyyppi        :soratie
-    :metodi        :post}])
+    :metodi        :post}
+   {:palvelu       :poista-soratietarkastus
+    :polku         "/api/urakat/:id/tarkastus/soratietarkastus"
+    :pyynto-skeema json-skeemat/soratietarkastuksen-poisto
+    :tyyppi        :soratie
+    :metodi        :delete}])
 
 (defrecord Tarkastukset []
   component/Lifecycle
