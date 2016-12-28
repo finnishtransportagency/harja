@@ -45,6 +45,16 @@
                 <xs:element name="urakoitsijan-yhteyshenkilo" type="henkilo" minOccurs="0"/>
                 <xs:element name="tilaaja" type="organisaatio" minOccurs="0"/>
                 <xs:element name="tilaajan-yhteyshenkilo" type="henkilo" minOccurs="0"/>
+                <xs:element name="toimenpide" minOccurs="0">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element type="xs:boolean" name="uusi"/>
+                            <xs:element type="xs:boolean" name="tyovaiheenMuutos"/>
+                            <xs:element type="xs:boolean" name="muutos"/>
+                            <xs:element type="xs:boolean" name="lopetus"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
                 <xs:element name="sijainti" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
@@ -53,6 +63,14 @@
                             <xs:element name="loppukoordinaatit" type="koordinaattit"/>
                             <xs:element type="xs:string" name="alkusijainninKuvaus"/>
                             <xs:element type="xs:string" name="loppusijainninKuvaus"/>
+                            <xs:element name="kunnat">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="kunta" type="xs:string" minOccurs="1" maxOccurs="unbounded" nillable="true"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+
                             <xs:element type="xs:decimal" name="pituus"/>
                         </xs:sequence>
                     </xs:complexType>
@@ -94,8 +112,72 @@
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
-
-
+                <xs:element name="vaikutukset" minOccurs="0">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="kaistajarjestelyt">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element type="xs:boolean" name="yksiAjokaistaSuljettu"/>
+                                        <xs:element type="xs:boolean" name="yksiAjoratasuljettu"/>
+                                        <xs:element type="xs:string" name="muuto"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element type="xs:integer" name="nopeusrajoitus"/>
+                            <xs:element name="kiertotie">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element type="xs:integer" name="pituus"/>
+                                        <xs:element type="xs:boolean" name="loivatMutkat"/>
+                                        <xs:element type="xs:boolean" name="jyrkatMutkat"/>
+                                        <xs:element type="xs:boolean" name="paallystetty"/>
+                                        <xs:element type="xs:boolean" name="murske"/>
+                                        <xs:element type="xs:integer" name="kantavuusrajoitus"/>
+                                        <xs:element type="xs:integer" name="painorajoitus"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="pysaytykset">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element type="xs:boolean" name="liikennevalot"/>
+                                        <xs:element type="xs:boolean" name="liikenteenohjaaja"/>
+                                        <xs:element name="aikataulu">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element type="xs:dateTime" name="alkaen"/>
+                                                    <xs:element type="xs:dateTime" name="paattyen"/>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="arvioituViivastys">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element type="xs:integer" name="normaaliLiikenteessa"/>
+                                        <xs:element type="xs:integer" name="ruuhka-aikana"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="kulkurajoitukset">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element type="xs:integer" name="ajoneuvonMaxKorkeus"/>
+                                        <xs:element type="xs:integer" name="ajoneuvonMaxLeveys"/>
+                                        <xs:element type="xs:integer" name="ajoneuvonMaxPituus"/>
+                                        <xs:element type="xs:integer" name="painorajoitus"/>
+                                        <xs:element type="xs:boolean" name="kuumenninKaytossa"/>
+                                        <xs:element type="xs:boolean" name="tyokoneitaLiikenteenSeassa"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element type="xs:string" name="lisatietoja"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
