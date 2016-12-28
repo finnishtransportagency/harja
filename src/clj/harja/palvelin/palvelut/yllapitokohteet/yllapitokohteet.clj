@@ -1,5 +1,15 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet
-  "Ylläpitokohteiden palvelut"
+  "Ylläpitokohte kuvaa tienosaa, jolle tehdään ylläpitoluonteista työtä (päällystys, paikkaus, tiemerkintä).
+
+  Kohteet ovat joko päällystys- tai paikkaustyyppisiä (kannassa yllopitokohdetyotyyppi).
+  Kohteen tyyppi kuvaa sitä, millaista työtä kohteella on tarkoitus ensisijaisesti tehdä.
+  Kohteen tyyppiä ei pidä sekoittaa sarakkeeseen yllapitokohdetyyppi, joka kuvaa sitä,
+  millaista tietä ollaan työstämässä (päällystetty tie, soratie, kevytliikenne)
+
+  Ylläpitokohte on sidottu urakkaan urakka-sarakkeen kautta. Tämä sarake kuvaa kohteen 'ensisijaista' urakkkaa.
+  Lisäksi on olemassa sarake suorittava_tiemerkintaurakka, joka kuvaa kohteen suorittavaa tiemerkintäurakkaa.
+  Tiemerkinnässä kohde siis edelleen kuuluu ensisijaisesti päällystysurakkaan urakka-sarakkeen kautta, mutta linkittyy
+  tiemerkintäurakkaan suorittava_tiemerkintaurakka -sarakkeen kautta."
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.set :as set]
             [com.stuartsierra.component :as component]
@@ -84,6 +94,7 @@
     (let [vastaus (into []
                         (comp (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
                               (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
+                              (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
                               (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
                               (map #(assoc % :kohdeosat
                                              (into []
@@ -99,8 +110,6 @@
                           :pituus
                           (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))
                         vastaus)]
-
-      (log/debug "Ylläpitokohteet saatu: " (count vastaus) " kpl")
       vastaus)))
 
 (defn hae-urakan-yllapitokohteet-lomakkeelle [db user {:keys [urakka-id sopimus-id]}]

@@ -151,7 +151,8 @@ SELECT
   ypk.tr_ajorata                        AS "tr-ajorata",
   ypk.tr_kaista                         AS "tr-kaista",
   ypk.yhaid,
-  ypk.yllapitokohdetyyppi
+  ypk.yllapitokohdetyyppi,
+  ypk.yllapitokohdetyotyyppi
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
