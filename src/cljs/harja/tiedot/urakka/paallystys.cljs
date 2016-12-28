@@ -59,20 +59,22 @@
 (def yhan-paallystyskohteet
   (reaction-writable
     (let [kohteet @yllapitokohteet
-          yha-kohteet (when kohteet
-                        (filter
-                         yllapitokohteet/yha-kohde?
-                         kohteet))]
-      (tr-domain/jarjesta-kohteiden-kohdeosat yha-kohteet))))
+          yhan-paallystyskohteet (when kohteet
+                                   (filter
+                                     #(and (yllapitokohteet/yha-kohde? %)
+                                           (= (:yllapitokohdetyotyyppi %) :paallystys))
+                                     kohteet))]
+      (tr-domain/jarjesta-kohteiden-kohdeosat yhan-paallystyskohteet))))
 
 (def harjan-paikkauskohteet
   (reaction-writable
     (let [kohteet @yllapitokohteet
-          ei-yha-kohteet (when kohteet
-                           (filter
-                            (comp not yllapitokohteet/yha-kohde?)
-                            kohteet))]
-      (tr-domain/jarjesta-kohteiden-kohdeosat ei-yha-kohteet))))
+          harjan-paikkauskohteet (when kohteet
+                                   (filter
+                                     #(and (not (yllapitokohteet/yha-kohde? %))
+                                           (= (:yllapitokohdetyotyyppi %) :paikkaus))
+                                     kohteet))]
+      (tr-domain/jarjesta-kohteiden-kohdeosat harjan-paikkauskohteet))))
 
 (def kohteet-yhteensa
   (reaction (concat @yhan-paallystyskohteet @harjan-paikkauskohteet)))
