@@ -64,6 +64,7 @@
                                           "       JOIN tarkastus_liite hl ON t.id = hl.tarkastus "
                                           "       JOIN liite l ON hl.liite = l.id"
                                           " WHERE t.ulkoinen_id = " id
+                                          "   AND t.poistettu IS NOT TRUE"
                                           "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))
         tallenna-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
                                          (json-sapluunasta "test/resurssit/api/talvihoitotarkastus.json" pvm id))]
@@ -77,6 +78,6 @@
                           ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
                           kayttaja portti
                           (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-poisto.json" pvm id))
-          tark (tarkista-kannasta)]
+          poista-tark (tarkista-kannasta)]
       (is (-> poista-vastaus :status (= 200)))
-      (is (empty? tark)))))
+      (is (empty? poista-tark)))))
