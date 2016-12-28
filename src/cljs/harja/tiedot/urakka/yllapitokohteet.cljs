@@ -14,9 +14,10 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(defn hae-yllapitokohteet [urakka-id sopimus-id]
+(defn hae-yllapitokohteet [urakka-id sopimus-id vuosi]
   (k/post! :urakan-yllapitokohteet {:urakka-id urakka-id
-                                    :sopimus-id sopimus-id}))
+                                    :sopimus-id sopimus-id
+                                    :vuosi vuosi}))
 
 (defn tallenna-yllapitokohteet! [urakka-id sopimus-id kohteet]
   (k/post! :tallenna-yllapitokohteet {:urakka-id urakka-id

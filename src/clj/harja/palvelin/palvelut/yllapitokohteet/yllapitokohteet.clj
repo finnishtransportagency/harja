@@ -87,7 +87,7 @@
               (tieverkko/hae-osien-pituudet db tie min-osa max-osa))))
     (group-by :tr-numero yllapitokohteet)))
 
-(defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id]}]
+(defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
   (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (log/debug "Haetaan urakan ylläpitokohteet.")
   (jdbc/with-db-transaction [db db]
@@ -104,7 +104,8 @@
                                                          :sopimus sopimus-id
                                                          :yllapitokohde (:id %)})))))
                         (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
-                                                                     :sopimus sopimus-id}))
+                                                                     :sopimus sopimus-id
+                                                                     :vuosi vuosi}))
           osien-pituudet-tielle (laske-osien-pituudet db vastaus)
           vastaus (mapv #(assoc %
                           :pituus
@@ -335,7 +336,8 @@
                             :kaasuindeksi kaasuindeksi
                             :yllapitokohdetyyppi (when yllapitokohdetyyppi (name yllapitokohdetyyppi))
                             :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))
-                            :vuodet vuodet})))
+                            ;:vuodet vuodet TODO Teepäs tämä
+                            })))
 
 (defn- paivita-yllapitokohde [db user urakka-id
                               {:keys [id kohdenumero nimi

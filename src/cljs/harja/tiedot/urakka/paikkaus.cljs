@@ -50,11 +50,12 @@
 
 (def yllapitokohteet
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+               vuosi @urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
                nakymassa? @paikkauskohteet-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id))))
+                (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id vuosi))))
 
 (def paikkauskohteet (reaction-writable (let [kohteet @yllapitokohteet]
                                           (when kohteet
