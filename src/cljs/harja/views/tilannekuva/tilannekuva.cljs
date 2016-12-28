@@ -25,8 +25,6 @@
             [harja.domain.tilannekuva :as domain]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.ui.bootstrap :as bs]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.napit :as napit]
             [harja.domain.roolit :as roolit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction-writable]]))
