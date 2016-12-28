@@ -29,9 +29,12 @@
 
 (defn alikohde-kohteen-sisalla? [kohteen-sijainti alikohteen-sijainti]
   (and (<= (:aosa kohteen-sijainti) (:aosa alikohteen-sijainti))
-       (<= (:aet kohteen-sijainti) (:aet alikohteen-sijainti))
+       (or
+         (not= (:aosa kohteen-sijainti) (:aosa alikohteen-sijainti))
+         (<= (:aet kohteen-sijainti) (:aet alikohteen-sijainti)))
        (>= (:losa kohteen-sijainti) (:losa alikohteen-sijainti))
-       (>= (:let kohteen-sijainti) (:let alikohteen-sijainti))))
+       (or (not= (:losa kohteen-sijainti) (:losa alikohteen-sijainti))
+           (>= (:let kohteen-sijainti) (:let alikohteen-sijainti)))))
 
 (defn tarkista-alikohteet-sisaltyvat-kohteeseen [kohde-id kohteen-sijainti alikohteet]
   (mapv (fn [{:keys [tunnus sijainti]}]
@@ -83,7 +86,7 @@
       (tarkista-alikohteet-tayttavat-kohteen kohde-id kohteen-sijainti alikohteet)
       (tarkista-alikohteet-muodostavat-yhtenaisen-osuuden alikohteet))))
 
-(defn tarkista-kohteen-ja-alikohteiden-§sijannit
+(defn tarkista-kohteen-ja-alikohteiden-sijannit
   "Tekee yksinkertaisen tarkastuksen, jolloin kohde on validi ja alikohteet ovat sen sisällä ja muodostavat yhteinäisen
   kokonaisuuden. Varsinainen validius tieverkon kannalta täytyy tarkistaa erikseen tietokantaa vasten."
   [kohde-id kohteen-sijainti alikohteet]
