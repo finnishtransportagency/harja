@@ -78,20 +78,20 @@
              (str/join ", "
                        (keep #(if (and (some? (val %))
                                        (not= "" (val %))) ;; tyhjä hoitoluokka pois
-                               (if (= :lampotila (key %))
-                                 (when (or tie ilma)
-                                   (str (when tie (str "tie: " tie  "°C"))
-                                        (when (and tie ilma) ", ")
-                                        (when ilma (str "ilma: " ilma "°C"))))
-                                 (str (name (key %)) ": "
-                                      (if (= :hoitoluokka (key %))
-                                        (hoitoluokat/talvihoitoluokan-nimi-str (val %))
-                                        (if (or
-                                              (= :lumimaara (key %))
-                                              (= :tasaisuus (key %)))
-                                          (str (val %) "cm")
-                                          (val %)))))
-                               nil)
+                                (if (= :lampotila (key %))
+                                  (when (or tie ilma)
+                                    (str (when tie (str "tie: " tie "°C"))
+                                         (when (and tie ilma) ", ")
+                                         (when ilma (str "ilma: " ilma "°C"))))
+                                  (str (name (key %)) ": "
+                                       (if (= :hoitoluokka (key %))
+                                         (hoitoluokat/talvihoitoluokan-nimi-str (val %))
+                                         (if (or
+                                               (= :lumimaara (key %))
+                                               (= :tasaisuus (key %)))
+                                           (str (val %) "cm")
+                                           (val %)))))
+                                nil)
                              (select-keys
                                thm
                                [:hoitoluokka :kitka :lumimaara :tasaisuus :lampotila])))
@@ -106,7 +106,7 @@
            (str/replace
              (str/join ", "
                        (keep #(if (and (some? (val %))
-                                       (not= "" (val %)))   ;; tyhjä hoitoluokka pois
+                                       (not= "" (val %))) ;; tyhjä hoitoluokka pois
                                 (str (name (key %)) ": " (val %))
                                 nil)
                              (select-keys
@@ -118,95 +118,95 @@
   "Tarkastuksien listauskomponentti"
   ([] (tarkastuslistaus {}))
   ([optiot]
-  (fn [optiot]
-    (let [urakka @nav/valittu-urakka
-          tarkastukset (reverse (sort-by :aika @tarkastukset/urakan-tarkastukset))]
-      [:div.tarkastukset
+   (fn [optiot]
+     (let [urakka @nav/valittu-urakka
+           tarkastukset (reverse (sort-by :aika @tarkastukset/urakan-tarkastukset))]
+       [:div.tarkastukset
 
-       [valinnat/aikavali-nykypvm-taakse urakka tarkastukset/valittu-aikavali]
+        [valinnat/aikavali-nykypvm-taakse urakka tarkastukset/valittu-aikavali]
 
-       [tee-otsikollinen-kentta "Tyyppi"
-        {:tyyppi :valinta :valinnat (conj (tarkastustyypit-urakkatyypille (:tyyppi urakka)) nil)
-         :valinta-nayta #(or (tarkastukset/+tarkastustyyppi->nimi+ %) "Kaikki")}
-        tarkastukset/tarkastustyyppi]
+        [tee-otsikollinen-kentta "Tyyppi"
+         {:tyyppi :valinta :valinnat (conj (tarkastustyypit-urakkatyypille (:tyyppi urakka)) nil)
+          :valinta-nayta #(or (tarkastukset/+tarkastustyyppi->nimi+ %) "Kaikki")}
+         tarkastukset/tarkastustyyppi]
 
-       [tee-otsikollinen-kentta "Näytä"
-        {:tyyppi :valinta :valinnat tarkastukset/+naytettevat-tarkastukset-valinnat+
-         :valinta-nayta second}
-        tarkastukset/naytettavat-tarkastukset]
-       [valinnat/tienumero tarkastukset/tienumero]
+        [tee-otsikollinen-kentta "Näytä"
+         {:tyyppi :valinta :valinnat tarkastukset/+naytettevat-tarkastukset-valinnat+
+          :valinta-nayta second}
+         tarkastukset/naytettavat-tarkastukset]
+        [valinnat/tienumero tarkastukset/tienumero]
 
-       (let [oikeus? (oikeudet/voi-kirjoittaa?
-                      oikeudet/urakat-laadunseuranta-tarkastukset
-                      (:id @nav/valittu-urakka))]
-         (yleiset/wrap-if
-          (not oikeus?)
-          [yleiset/tooltip {} :%
-           (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                           oikeudet/urakat-laadunseuranta-tarkastukset)]
-          [napit/uusi "Uusi tarkastus"
-           #(reset! tarkastukset/valittu-tarkastus (uusi-tarkastus))
-           {:disabled (not oikeus?)
-            :luokka "alle-marginia"}]))
+        (let [oikeus? (oikeudet/voi-kirjoittaa?
+                        oikeudet/urakat-laadunseuranta-tarkastukset
+                        (:id @nav/valittu-urakka))]
+          (yleiset/wrap-if
+            (not oikeus?)
+            [yleiset/tooltip {} :%
+             (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                             oikeudet/urakat-laadunseuranta-tarkastukset)]
+            [napit/uusi "Uusi tarkastus"
+             #(reset! tarkastukset/valittu-tarkastus (uusi-tarkastus))
+             {:disabled (not oikeus?)
+              :luokka "alle-marginia"}]))
 
-       [grid/grid
-        {:otsikko "Tarkastukset"
-         :tyhja (if (nil? @tarkastukset/urakan-tarkastukset)
-                  [yleiset/ajax-loader "Tarkastuksia ladataan"]
-                  "Ei tarkastuksia")
-         :rivi-klikattu #(valitse-tarkastus (:id %))
-         :jarjesta :aika
-         :max-rivimaara 500
-         :max-rivimaaran-ylitys-viesti
-         "Tarkastuksia yli 500, tarkenna aikaväliä tai muita hakuehtoja."}
+        [grid/grid
+         {:otsikko "Tarkastukset"
+          :tyhja (if (nil? @tarkastukset/urakan-tarkastukset)
+                   [yleiset/ajax-loader "Tarkastuksia ladataan"]
+                   "Ei tarkastuksia")
+          :rivi-klikattu #(valitse-tarkastus (:id %))
+          :jarjesta :aika
+          :max-rivimaara 500
+          :max-rivimaaran-ylitys-viesti
+          "Tarkastuksia yli 500, tarkenna aikaväliä tai muita hakuehtoja."}
 
-        [{:otsikko "Pvm ja aika"
-          :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 1
-          :nimi :aika}
+         [{:otsikko "Pvm ja aika"
+           :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 1
+           :nimi :aika}
 
-         {:otsikko "Tyyppi"
-          :nimi :tyyppi :fmt tarkastukset/+tarkastustyyppi->nimi+ :leveys 1}
+          {:otsikko "Tyyppi"
+           :nimi :tyyppi :fmt tarkastukset/+tarkastustyyppi->nimi+ :leveys 1}
 
-         (when (or (= :paallystys (:nakyma optiot))
-                 (= :paikkaus (:nakyma optiot))
-                 (= :tiemerkinta (:nakyma optiot)))
-           {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 2
-            :hae (fn [rivi]
-                   (tierekisteri/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
-                                                         :nimi (get-in rivi [:yllapitokohde :nimi])}
-                                                        {:osoite (get-in rivi [:yllapitokohde :tr])
-                                                         :nayta-teksti-tie? false
-                                                         :nayta-teksti-ei-tr-osoitetta? false}))})
-         {:otsikko "TR-osoite"
-          :nimi :tr
-          :leveys 2
-          :fmt tierekisteri/tierekisteriosoite-tekstina}
-         {:otsikko     "Havainnot"
-          :nimi        :havainnot
-          :leveys      4
-          :tyyppi      :komponentti
-          :komponentti (fn [rivi]
-                         (let [havainnot (:havainnot rivi)
-                               havainnot-max-pituus 50
-                               havainnot-rajattu (if (> (count havainnot) havainnot-max-pituus)
-                                                   (str (.substring havainnot 0 havainnot-max-pituus) "...")
-                                                   havainnot)
-                               vakiohavainnot (str/join ", " (:vakiohavainnot rivi))
-                               talvihoitomittaukset (formatoi-talvihoitomittaukset (:talvihoitomittaus rivi))
-                               soratiemittaukset (formatoi-soratiemittaukset (:soratiemittaus rivi))]
-                           [:ul.tarkastuksen-havaintolista
-                            (when-not (str/blank? vakiohavainnot)
-                              [:li.tarkastuksen-vakiohavainnot vakiohavainnot])
-                            (when-not (str/blank? talvihoitomittaukset)
-                              [:li.tarkastuksen-talvihoitomittaukset talvihoitomittaukset])
-                            (when-not (str/blank? soratiemittaukset)
-                              [:li.tarkastuksen-soratiemittaukset soratiemittaukset])
-                            (when-not (str/blank? havainnot-rajattu)
-                              [:li.tarkastuksen-havainnot havainnot-rajattu])]))}
-         {:otsikko     "Liit\u00ADteet" :nimi :liitteet :leveys 1 :tyyppi :komponentti
-          :komponentti (fn [rivi]
-                         (liitteet/liitteet-numeroina (:liitteet rivi)))}]
-        tarkastukset]]))))
+          (when (or (= :paallystys (:nakyma optiot))
+                    (= :paikkaus (:nakyma optiot))
+                    (= :tiemerkinta (:nakyma optiot)))
+            {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 2
+             :hae (fn [rivi]
+                    (tierekisteri/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
+                                                          :nimi (get-in rivi [:yllapitokohde :nimi])}
+                                                         {:osoite (get-in rivi [:yllapitokohde :tr])
+                                                          :nayta-teksti-tie? false
+                                                          :nayta-teksti-ei-tr-osoitetta? false}))})
+          {:otsikko "TR-osoite"
+           :nimi :tr
+           :leveys 2
+           :fmt tierekisteri/tierekisteriosoite-tekstina}
+          {:otsikko "Havainnot"
+           :nimi :havainnot
+           :leveys 4
+           :tyyppi :komponentti
+           :komponentti (fn [rivi]
+                          (let [havainnot (:havainnot rivi)
+                                havainnot-max-pituus 50
+                                havainnot-rajattu (if (> (count havainnot) havainnot-max-pituus)
+                                                    (str (.substring havainnot 0 havainnot-max-pituus) "...")
+                                                    havainnot)
+                                vakiohavainnot (str/join ", " (:vakiohavainnot rivi))
+                                talvihoitomittaukset (formatoi-talvihoitomittaukset (:talvihoitomittaus rivi))
+                                soratiemittaukset (formatoi-soratiemittaukset (:soratiemittaus rivi))]
+                            [:ul.tarkastuksen-havaintolista
+                             (when-not (str/blank? vakiohavainnot)
+                               [:li.tarkastuksen-vakiohavainnot vakiohavainnot])
+                             (when-not (str/blank? talvihoitomittaukset)
+                               [:li.tarkastuksen-talvihoitomittaukset talvihoitomittaukset])
+                             (when-not (str/blank? soratiemittaukset)
+                               [:li.tarkastuksen-soratiemittaukset soratiemittaukset])
+                             (when-not (str/blank? havainnot-rajattu)
+                               [:li.tarkastuksen-havainnot havainnot-rajattu])]))}
+          {:otsikko "Liit\u00ADteet" :nimi :liitteet :leveys 1 :tyyppi :komponentti
+           :komponentti (fn [rivi]
+                          (liitteet/liitteet-numeroina (:liitteet rivi)))}]
+         tarkastukset]]))))
 
 
 (defn talvihoitomittaus []
@@ -225,12 +225,12 @@
      :hae (comp :kitka :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :kitka] %2)}
     {:otsikko "Ilma" :tyyppi :numero :yksikko "\u2103"
      :validoi [#(when-not (<= -55 %1 55)
-                 "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")]
+                  "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")]
      :nimi :lampotila_ilma
      :hae (comp :ilma :lampotila :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lampotila :ilma] %2)}
     {:otsikko "Tie" :tyyppi :numero :yksikko "\u2103"
      :validoi [#(when-not (<= -55 %1 55)
-                 "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")]
+                  "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")]
      :nimi :lampotila_tie
      :hae (comp :tie :lampotila :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lampotila :tie] %2)}))
 
@@ -301,25 +301,25 @@
        [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
 
        [lomake/lomake
-        {:otsikko      (if (:id tarkastus) "Muokkaa tarkastuksen tietoja" "Uusi tarkastus")
-         :muokkaa!     #(let [uusi-tarkastus
-                               (if (kohde-muuttui? (:yllapitokohde @tarkastus-atom) (:yllapitokohde %))
-                                 (tiedot-laatupoikkeamat/paivita-yllapitokohteen-tr-tiedot % yllapitokohteet)
-                                 %)]
-                          (reset! tarkastus-atom uusi-tarkastus))
+        {:otsikko (if (:id tarkastus) "Muokkaa tarkastuksen tietoja" "Uusi tarkastus")
+         :muokkaa! #(let [uusi-tarkastus
+                          (if (kohde-muuttui? (:yllapitokohde @tarkastus-atom) (:yllapitokohde %))
+                            (tiedot-laatupoikkeamat/paivita-yllapitokohteen-tr-tiedot % yllapitokohteet)
+                            %)]
+                      (reset! tarkastus-atom uusi-tarkastus))
          :voi-muokata? voi-muokata?
-         :footer-fn    (fn [tarkastus]
-                         (when voi-kirjoittaa?
-                           [napit/palvelinkutsu-nappi
-                            "Tallenna tarkastus"
-                            (fn []
-                              (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus (:nakyma optiot)))
-                            {:disabled     (not (lomake/voi-tallentaa? tarkastus))
-                             :kun-onnistuu (fn [tarkastus]
-                                             (reset! tarkastukset/valittu-tarkastus nil)
-                                             (tarkastukset/paivita-tarkastus-listaan! tarkastus))
-                             :virheviesti  "Tarkastuksen tallennus epäonnistui."
-                             :ikoni        (ikonit/tallenna)}]))}
+         :footer-fn (fn [tarkastus]
+                      (when voi-kirjoittaa?
+                        [napit/palvelinkutsu-nappi
+                         "Tallenna tarkastus"
+                         (fn []
+                           (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus (:nakyma optiot)))
+                         {:disabled (not (lomake/voi-tallentaa? tarkastus))
+                          :kun-onnistuu (fn [tarkastus]
+                                          (reset! tarkastukset/valittu-tarkastus nil)
+                                          (tarkastukset/paivita-tarkastus-listaan! tarkastus))
+                          :virheviesti "Tarkastuksen tallennus epäonnistui."
+                          :ikoni (ikonit/tallenna)}]))}
 
         [(when jarjestelmasta?
            {:otsikko "Lähde" :nimi :luoja :tyyppi :string
@@ -340,10 +340,16 @@
             :jos-tyhja "Ei valittavia kohteita"
             :valinta-arvo :id
             :valinta-nayta (fn [arvo muokattava?]
-                             (if arvo (tierekisteri/yllapitokohde-tekstina arvo {:osoite arvo})
-                                      (if muokattava?
-                                        "- Valitse kohde -"
-                                        "")))
+                             (if arvo
+                               (tierekisteri/yllapitokohde-tekstina
+                                 arvo {:osoite {:tr-numero (:tr-numero arvo)
+                                                :tr-alkuosa (:tr-alkuosa arvo)
+                                                :tr-alkuetaisyys (:tr-alkuetaisyys arvo)
+                                                :tr-loppuosa (:tr-loppuosa arvo)
+                                                :tr-loppuetaisyys (:tr-loppuetaisyys arvo)}})
+                               (if muokattava?
+                                 "- Valitse kohde -"
+                                 "")))
             :validoi [[:ei-tyhja "Anna laatupoikkeaman kohde"]]})
 
          {:otsikko "Tar\u00ADkastus" :nimi :tyyppi
@@ -427,15 +433,15 @@
             :tyyppi :komponentti
             :komponentti (fn [_]
                            [liitteet/liitteet urakka-id (:liitteet tarkastus)
-                           {:uusi-liite-atom (r/wrap (:uusi-liite tarkastus)
-                                                     #(swap! tarkastus-atom assoc :uusi-liite %))
-                            :uusi-liite-teksti "Lisää liite tarkastukseen"}])})
+                            {:uusi-liite-atom (r/wrap (:uusi-liite tarkastus)
+                                                      #(swap! tarkastus-atom assoc :uusi-liite %))
+                             :uusi-liite-teksti "Lisää liite tarkastukseen"}])})
          (when voi-kirjoittaa?
-           {:rivi?       true
-            :uusi-rivi?  true
-            :nimi        :laatupoikkeama
-            :tyyppi      :komponentti
-            :vihje       (siirtymanapin-vihjeteksti tarkastus)
+           {:rivi? true
+            :uusi-rivi? true
+            :nimi :laatupoikkeama
+            :tyyppi :komponentti
+            :vihje (siirtymanapin-vihjeteksti tarkastus)
             :komponentti (fn [{tarkastus :data}]
                            [napit/palvelinkutsu-nappi
                             (if (:laatupoikkeamaid tarkastus) "Tallenna ja avaa laatupoikkeama" "Tallenna ja lisää laatupoikkeama")
@@ -446,13 +452,13 @@
                                                                     tarkastus
                                                                     (<! (tarkastukset/lisaa-laatupoikkeama tarkastus)))]
                                   tarkastus-ja-laatupoikkeama)))
-                            {:disabled     (not (lomake/voi-tallentaa? tarkastus))
+                            {:disabled (not (lomake/voi-tallentaa? tarkastus))
                              :kun-onnistuu (fn [tarkastus]
                                              (reset! tarkastus-atom tarkastus)
                                              (avaa-tarkastuksen-laatupoikkeama (:laatupoikkeamaid tarkastus)))
-                             :virheviesti  "Tarkastuksen tallennus epäonnistui."
-                             :ikoni        (ikonit/livicon-arrow-right)
-                             :luokka       :nappi-toissijainen}])})]
+                             :virheviesti "Tarkastuksen tallennus epäonnistui."
+                             :ikoni (ikonit/livicon-arrow-right)
+                             :luokka :nappi-toissijainen}])})]
         tarkastus]])))
 
 
@@ -473,10 +479,10 @@
     (komp/sisaan-ulos #(do
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
-                          {:tarkastus {:toiminto (fn [klikattu-tarkastus] ;; asiat-pisteessa -asia joka on tyypiltään tarkastus
-                                                   (reset! tarkastukset/valittu-tarkastus (vastaava-tarkastus klikattu-tarkastus)))
-                                       :teksti "Valitse tarkastus"}
-                          })
+                           {:tarkastus {:toiminto (fn [klikattu-tarkastus] ;; asiat-pisteessa -asia joka on tyypiltään tarkastus
+                                                    (reset! tarkastukset/valittu-tarkastus (vastaava-tarkastus klikattu-tarkastus)))
+                                        :teksti "Valitse tarkastus"}
+                            })
                          (nav/vaihda-kartan-koko! :M))
                       #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                            (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
