@@ -63,8 +63,10 @@
   [])
 
 (defn- hae-tarkastukset [db parametrit]
-  ;; FIXME: implement
-  [])
+  (into []
+        (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
+              (map #(konv/string->keyword % :tyyppi)))
+        (q/hae-tarkastukset db parametrit)))
 
 (defn- hae-turvallisuuspoikkeamat [db parametrit]
   ;; FIXME: implement
