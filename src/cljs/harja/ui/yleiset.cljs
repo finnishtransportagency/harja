@@ -440,6 +440,43 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
     (number? asetus) (str asetus "px")
     (string? asetus) asetus))
 
+(defn haitari-paneelit
+  "Näyttää haitarin, jossa paneelit määritellään antamalla otsikko, avain ja komponentti.
+  Ensimmäisenä paramametrina on optiot mäp, jossa seuraavat arvot:
+
+  :toggle-osio!  funktio, jota kutsutaan paneelin avaimella, kun paneeli halutaan auki/kiinni
+
+  :auki          avain -> truthy funktio, joka kertoo onko paneeli auki (esim #{} avaimia)
+
+  :luokka        lisäluokka joka annetaan haitarikomponentin päätasolle
+
+  :leijuva?      jos true, haitari leijuu parent komponentin päällä
+
+  :otsikko       mahdollinen otsikko koko haitarille"
+
+  [{:keys [toggle-osio! auki luokka leijuva? otsikko]} & otsikko-avain-ja-komponentti]
+  [:div.harja-haitari (when luokka {:class luokka})
+   [:div.haitari
+    (doall
+     (for [[otsikko avain komponentti] (partition 3 otsikko-avain-ja-komponentti)
+           :let [auki? (auki avain)]]
+       ^{:key (str avain)}
+       [:div.haitari-rivi
+        [:div.haitari-heading.klikattava
+         {:on-click #(do
+                       (toggle-osio! avain)
+                       (.preventDefault %))}
+         [:span.haitarin-tila
+          (if auki?
+            (ikonit/livicon-chevron-down)
+            (ikonit/livicon-chevron-right))]
+         [:div.haitari-title
+          (when-not auki? {:class "haitari-piilossa"})
+          otsikko]]
+        [:div.haitari-sisalto
+         {:class (if auki? "haitari-auki" "haitari-kiinni")}
+         komponentti]]))]])
+
 (defn haitari
   ([rivit] (haitari rivit {}))
   ([rivit {:keys [vain-yksi-auki? otsikko aina-joku-auki? piiloita-kun-kiinni? leijuva? luokka]}]

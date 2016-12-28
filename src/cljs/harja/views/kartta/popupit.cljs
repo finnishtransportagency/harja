@@ -132,7 +132,8 @@
                                                ["Aika" (pvm/pvm-aika(:aika tapahtuma))]
                                                ["Osoite" (tierekisteri/tierekisteriosoite-tekstina tapahtuma {:teksti-tie? false})]
                                                ["Kaistat" (clojure.string/join ", " (map str (:kaistat tapahtuma)))]
-                                               ["Ajoradat" (clojure.string/join ", " (map str (:ajoradat tapahtuma)))]])))
+                                               ["Ajoradat" (clojure.string/join ", " (map str (:ajoradat tapahtuma)))]
+                                               ["Nopeusrajoitus" (:nopeusrajoitus tapahtuma)]])))
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
   (reset! klikattu-tyokone (:tyokoneid tapahtuma))

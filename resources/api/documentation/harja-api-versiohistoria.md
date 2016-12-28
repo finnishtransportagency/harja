@@ -1,8 +1,11 @@
-<b>Nykyinen versio: 1.0.4</b>
-<b>Julkaistu: 16.11.2016</b>
+<b>Nykyinen versio: 1.0.6/b>
+<b>Julkaistu: FIXME.12.2016</b>
 
 <b>Versiohistoria:</b>
-
+- Versionumero: 1.0.6 Julkaistu: FIXME.12.2016:
+    - Työkoneiden reaaliaikaseurannan rajapintaan lisätty jyrät uutena työkonetyyppinä.
+- Versionumero: 1.0.5 Julkaistu: 21.12.2016:
+    - Urakan yhteystietorajapintaan lisätty tieto urakan vastuu- ja varahenkilöistä 
 - Versionumero: 1.0.4 Julkaistu: 16.11.2016:
     - Poistettu päällystysilmoitukselta omat aikataulutiedot. Jatkossa päällystysilmoituksen aloituspvm, kohteen valmistumispvm ja päällystyksen valmistumispvm ovat sama asia kuin ilmoitukseen kuuluvan ylläpitokohteen vastaavat tiedot.
     - Lisätty päällystysilmoituksen kirjaukseen uusi kenttä "valmis-kasiteltavaksi" (true/false/null). Jos tässä kentässä on arvona true, asetetaan päällystysilmoitus valmiiksi tilaajan käsiteltäväksi (ellei jo ole käsiteltävänä tai käsitelty).

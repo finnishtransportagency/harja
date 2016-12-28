@@ -64,6 +64,7 @@
     [harja.palvelin.palvelut.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
     [harja.palvelin.palvelut.status :as status]
     [harja.palvelin.palvelut.organisaatiot :as organisaatiot]
+    [harja.palvelin.palvelut.tienakyma :as tienakyma]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -365,6 +366,10 @@
                      {:db :db-replica
                       :http-palvelin :http-palvelin
                       :karttakuvat :karttakuvat})
+      :tienakyma (component/using
+                  (tienakyma/->Tienakyma)
+                  {:db :db-replica
+                   :http-palvelin :http-palvelin})
       :karttakuvat (component/using
                      (karttakuvat/luo-karttakuvat)
                      [:http-palvelin :db])

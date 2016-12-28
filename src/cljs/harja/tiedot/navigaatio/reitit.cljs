@@ -16,7 +16,8 @@
          :laadunseuranta :tarkastukset
          :kohdeluettelo-paallystys :paallystyskohteet
          :kohdeluettelo-paikkaus :paikkauskohteet
-         :raportit nil}))
+         :raportit nil
+         :tilannekuva :nykytilanne}))
 
 (defn aseta-valittu-valilehti!
   [osio valilehti]

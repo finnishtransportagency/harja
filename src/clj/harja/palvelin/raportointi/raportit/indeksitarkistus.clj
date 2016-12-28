@@ -8,6 +8,15 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.tyokalut.functor :refer [fmap]]))
 
+(def raportin-kentat [:kht_laskutetaan_ind_korotus
+                      :yht_laskutetaan_ind_korotus
+                      :erilliskustannukset_laskutetaan_ind_korotus
+                      :bonukset_laskutetaan_ind_korotus
+                      :muutostyot_laskutetaan_ind_korotus
+                      :vahinkojen_korjaukset_laskutetaan_ind_korotus
+                      :akilliset_hoitotyot_laskutetaan_ind_korotus
+                      :sakot_laskutetaan_ind_korotus])
+
 (defn summa [laskutusyhteenvedot avain]
   (reduce + 0
           (keep avain laskutusyhteenvedot)))
@@ -15,15 +24,15 @@
 (defn indeksitaulukko [nimi kuukaudet laskutusyhteenvedot-kk]
   (let [summa-kk (memoize (fn [kk kentta]
                             (summa (laskutusyhteenvedot-kk kk) kentta)))
+        summa-solu (fn [kk kentta]
+                     (let [arvo (summa-kk kk kentta)
+                           indekseja-puuttuu? (some nil? (map kentta (laskutusyhteenvedot-kk kk)))]
+                       [:varillinen-teksti {:arvo arvo
+                                            :tyyli (when indekseja-puuttuu? :virhe)}]))
+        summa-solun-arvo (fn [solu]
+                           (:arvo (second solu)))
         suola? (#{"Kaikki yhteensä" "Talvihoito"} nimi)
-        kentat [:kht_laskutetaan_ind_korotus
-                :yht_laskutetaan_ind_korotus
-                :erilliskustannukset_laskutetaan_ind_korotus
-                :bonukset_laskutetaan_ind_korotus
-                :muutostyot_laskutetaan_ind_korotus
-                :vahinkojen_korjaukset_laskutetaan_ind_korotus
-                :akilliset_hoitotyot_laskutetaan_ind_korotus
-                :sakot_laskutetaan_ind_korotus]
+        kentat raportin-kentat
         kentat (if suola?
                  (conj kentat :suolasakot_laskutetaan_ind_korotus)
                  kentat)]
@@ -47,10 +56,10 @@
        []
        (concat
          (for [[alku _ :as kk] kuukaudet
-               :let [kentan-arvot (map #(summa-kk kk %) kentat)]]
+               :let [kentan-arvot (map #(summa-solu kk %) kentat)]]
            (into [(pvm/kuukauden-lyhyt-nimi (pvm/kuukausi alku))]
                  (concat kentan-arvot
-                         [(reduce + kentan-arvot)])))
+                         [(reduce + (map summa-solun-arvo kentan-arvot))])))
          (let [summat (for [kentta kentat]
                         (reduce + (map #(summa-kk % kentta) kuukaudet)))]
            [(into ["Yhteensä"]
@@ -84,6 +93,17 @@
                        (if hallintayksikko-id
                          (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                          "KOKO MAA"))
+        indekseja-puuttuu? (some
+                             (fn [kuukauden-tiedot]
+                               (some
+                                 (fn [[_ arvo]] (nil? arvo))
+                                 (filter
+                                   (fn [[kentta _]] (some #(= kentta %) raportin-kentat))
+                                   kuukauden-tiedot)))
+                             (flatten (vals laskutusyhteenvedot-kk)))
+        ;; Laskutusyhteenvedossa samankaltainen varoitus, mutta huomattavasti monipuolisempi..
+        varoitus-puuttuvista-indekseista (when indekseja-puuttuu?
+                                           [:varoitusteksti " Huom! Indeksejä puuttuu. Vain järjestelmän vastuuhenkilö voi syöttää indeksiarvoja Harjaan."])
         ;; Tehdään jokaiselle tuottelle omat kk-rivit tarkempia
         ;; taulukoita varten
         tuotteen-laskutusyhteenvedot-kk
@@ -95,7 +115,8 @@
                      tuotteet))]
 
     (into []
-          (concat [:raportti {:nimi (str "Indeksitarkistusraportti " alueen-nimi " " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))}]
-             [(indeksitaulukko "Kaikki yhteensä" kuukaudet laskutusyhteenvedot-kk)]
-             (for [tuote tuotteet]
-               (indeksitaulukko tuote kuukaudet (get tuotteen-laskutusyhteenvedot-kk tuote)))))))
+          (concat [:raportti {:nimi (str "Indeksitarkistusraportti " alueen-nimi " " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))}
+                   varoitus-puuttuvista-indekseista]
+                  [(indeksitaulukko "Kaikki yhteensä" kuukaudet laskutusyhteenvedot-kk)]
+                  (for [tuote tuotteet]
+                    (indeksitaulukko tuote kuukaudet (get tuotteen-laskutusyhteenvedot-kk tuote)))))))

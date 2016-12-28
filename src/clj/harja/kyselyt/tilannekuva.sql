@@ -418,17 +418,19 @@ WHERE suoritettavatehtava :: TEXT IN (:toimenpiteet);
 
 -- name: hae-tietyomaat
 -- hakee liikenneohjausaidoilla suljettujen tieosuuksien geometriat
-SELECT st.geometria AS "geometria",
-  ypk.nimi                                                       AS "yllapitokohteen-nimi",
-  ypk.kohdenumero                                                AS "yllapitokohteen-numero",
-  st.kaistat                                                     AS "kaistat",
-  st.ajoradat                                                    AS "ajoradat",
-  st.asetettu                                                    AS "aika",
-  st.tr_tie                                                      AS "tie",
-  st.tr_aosa                                                     AS "aosa",
-  st.tr_aet                                                      AS "aet",
-  st.tr_losa                                                     AS "losa",
-  st.tr_let                                                      AS "let"
+SELECT
+  st.geometria      AS "geometria",
+  ypk.nimi          AS "yllapitokohteen-nimi",
+  ypk.kohdenumero   AS "yllapitokohteen-numero",
+  st.kaistat        AS "kaistat",
+  st.ajoradat       AS "ajoradat",
+  st.asetettu       AS "aika",
+  st.tr_tie         AS "tie",
+  st.tr_aosa        AS "aosa",
+  st.tr_aet         AS "aet",
+  st.tr_losa        AS "losa",
+  st.tr_let         AS "let",
+  st.nopeusrajoitus AS "nopeusrajoitus"
 FROM tietyomaa st
   LEFT JOIN yllapitokohde ypk ON ypk.id = st.yllapitokohde
 WHERE st.poistettu IS NULL
