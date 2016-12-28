@@ -236,14 +236,13 @@ SET aika               = :aika,
   havainnot            = :havainnot,
   laadunalitus         = :laadunalitus,
   yllapitokohde        = :yllapitokohde,
-  nayta_urakoitsijalle = :nayta_urakoitsijalle,
-  poistettu = :poistettu
+  nayta_urakoitsijalle = :nayta_urakoitsijalle
 WHERE urakka = :urakka AND id = :id;
 
 -- name: poista-tarkastus!
 UPDATE tarkastus
-  SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
-  WHERE id IN (:id) AND poistettu IS NOT TRUE;
+  SET muokattu = NOW(), muokkaaja = :kayttajanimi, poistettu = TRUE
+  WHERE ulkoinen_id = :ulkoinen-tarkastus-id AND poistettu IS NOT TRUE;
 
 -- name: luo-talvihoitomittaus<!
 -- Luo uuden talvihoitomittauksen annetulle tarkastukselle.
@@ -663,7 +662,7 @@ SELECT
   thm.lampotila_ilma as talvihoitomittaus_lampotila_ilma,
   array(SELECT vh.nimi
           FROM vakiohavainto vh,tarkastus_vakiohavainto tvh
-	 WHERE vh.id=tvh.vakiohavainto AND tvh.tarkastus=t.id) AS vakiohavainnot
+        WHERE vh.id=tvh.vakiohavainto AND tvh.tarkastus=t.id) AS vakiohavainnot
 FROM tarkastus t
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id

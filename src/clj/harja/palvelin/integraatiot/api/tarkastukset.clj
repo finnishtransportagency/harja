@@ -87,11 +87,13 @@
       (tee-onnistunut-vastaus (join ", " varoitukset)))))
 
 (defn poista-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} data]
-  (let [urakka-id (Long/parseLong id)]
-    (log/debug (format "Poistetaan tarkastus tyyppiä: %s käyttäjän: %s toimesta. Data: %s" tyyppi (:kayttajanimi kayttaja) data))
+  (let [urakka-id (Long/parseLong id)
+        ulkoinen-tarkastus-id (-> data :poistettava-tarkastus :id)
+        kayttaja-id (:id kayttaja)
+        kayttajanimi (:kayttajanimi kayttaja)]
+    (log/debug (format "Poistetaan tarkastus ulk.id %s tyyppiä: %s käyttäjän: %s toimesta. Data: %s" ulkoinen-tarkastus-id tyyppi kayttajanimi data))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (println "poista-tarkastus: data" data)
-    (println "poista-tarkastus: id" id)
+    (kyselyt/poista-tarkastus! db kayttaja-id ulkoinen-tarkastus-id)
     (tee-kirjausvastauksen-body {:ilmoitukset "Tarkastus poistettu onnistuneesti"})))
 
 (def palvelut
