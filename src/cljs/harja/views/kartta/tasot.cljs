@@ -27,7 +27,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.ui.openlayers.taso :as taso]
-            [harja.ui.kartta.varit.puhtaat :as varit])
+            [harja.ui.kartta.varit.puhtaat :as varit]
+            [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -49,7 +50,8 @@
     :tr-valitsin
     :nakyman-geometriat
     :tilannekuva
-    :tilannekuva-organisaatiot})
+    :tilannekuva-organisaatiot
+    :tienakyma})
 
 (defn kartan-asioiden-z-indeksit [taso]
   (case taso
@@ -171,7 +173,8 @@
    :tr-valitsin tierekisteri/tr-alkupiste-kartalla
    :nakyman-geometriat nakyman-geometriat
    :tilannekuva tilannekuva/tilannekuvan-asiat-kartalla
-   :tilannekuva-organisaatiot tilannekuva/tilannekuvan-organisaatiot})
+   :tilannekuva-organisaatiot tilannekuva/tilannekuvan-organisaatiot
+   :tienakyma tienakyma-tiedot/tulokset-kartalla})
 
 (defn nakyvat-geometriat-z-indeksilla
   "Palauttaa valitun aiheen geometriat z-indeksilla jos geometrian taso on päällä."
@@ -212,12 +215,13 @@
       :paallystyskohteet (taso :paallystyskohteet)
       :paikkauskohteet (taso :paikkauskohteet)
       :tr-valitsin (taso :tr-valitsin (inc oletus-zindex))
+      :tienakyma (taso :tienakyma)
       ;; Yksittäisen näkymän omat mahdolliset geometriat
       :nakyman-geometriat
       (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
                      (inc oletus-zindex))}
       ;; Tilannekuvan geometriat muodostetaan hieman eri tavalla
-      (when (true? @(tasojen-nakyvyys-atomit :tilannekuva))
+     (when (true? @(tasojen-nakyvyys-atomit :tilannekuva))
         (into {}
               (map (fn [[tason-nimi tason-sisalto]]
                      {tason-nimi (aseta-z-index tason-sisalto oletus-zindex)})
@@ -240,6 +244,7 @@
    :tr-valitsin tierekisteri/karttataso-tr-alkuosoite
    :tilannekuva tilannekuva/karttataso-tilannekuva
    :tilannekuva-organisaatiot tilannekuva/karttataso-tilannekuva
+   :tienakyma tienakyma-tiedot/karttataso-tienakyma
    :nakyman-geometriat (atom true)})
 
 (defonce nykyiset-karttatasot

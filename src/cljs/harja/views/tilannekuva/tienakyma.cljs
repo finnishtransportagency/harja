@@ -26,7 +26,7 @@
 
 (defn- valinnat
   "Valintalomake tienäkymälle."
-  [e! {:keys [valinnat haku-kaynnissa?] :as app}]
+  [e! {:keys [valinnat haku-kaynnissa? tulokset] :as app}]
   [lomake/lomake
    {:otsikko "Tarkastele tien tietoja"
     :muokkaa! #(e! (tiedot/->PaivitaValinnat %))
@@ -40,8 +40,9 @@
     :ei-borderia? true}
    [{:nimi :tierekisteriosoite :tyyppi :tierekisteriosoite
      :tyyli :rivitetty
-     :sijainti (r/wrap (:sijainti valinnat)
-                       #(e! (tiedot/->PaivitaSijainti %)))
+     :sijainti (when-not tulokset
+                 (r/wrap (:sijainti valinnat)
+                         #(e! (tiedot/->PaivitaSijainti %))))
      :otsikko "Tierekisteriosoite"
      :palstoja 3}
     {:nimi :alku :tyyppi :pvm-aika

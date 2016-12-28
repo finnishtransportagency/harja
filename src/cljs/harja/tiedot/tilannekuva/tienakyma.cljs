@@ -1,13 +1,13 @@
 (ns harja.tiedot.tilannekuva.tienakyma
   "Tien 'supernäkymän' tiedot."
   (:require [reagent.core :refer [atom] :as r]
-            [harja.tiedot.kartta :as kartta]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<!] :as async]
             [tuck.core :as tuck]
-            [harja.ui.kartta.infopaneelin-sisalto :as infopaneelin-sisalto])
+            [harja.ui.kartta.infopaneelin-sisalto :as infopaneelin-sisalto]
+            [harja.tyokalut.functor :refer [fmap]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -67,12 +67,13 @@
 
   HakuValmis
   (process-event [{tulokset :tulokset} tienakyma]
-    (assoc tienakyma
-           :tulokset (infopaneelin-sisalto/skeemamuodossa
-                      (mapcat val tulokset))
-           :avatut-tulokset #{}
-           :tulokset-kartalla "FIXME: tulokset kartalla esitettävään muotoon"
-           :haku-kaynnissa? false))
+    (let [kaikki-tulokset (mapcat val tulokset)]
+      (log "Tienäkymän haku löysi: " (pr-str (fmap count tulokset)))
+      (assoc tienakyma
+             :tulokset (infopaneelin-sisalto/skeemamuodossa kaikki-tulokset)
+             :avatut-tulokset #{}
+             :tulokset-kartalla (esitettavat-asiat/kartalla-esitettavaan-muotoon kaikki-tulokset)
+             :haku-kaynnissa? false)))
 
   AvaaTaiSuljeTulos
   (process-event [{idx :idx} tienakyma]
@@ -83,4 +84,12 @@
 
   SuljeInfopaneeli
   (process-event [_ tienakyma]
-    (assoc tienakyma :tulokset nil)))
+    (assoc tienakyma
+           :tulokset nil
+           :tulokset-kartalla nil)))
+
+(defonce tulokset-kartalla
+  (r/cursor tienakyma [:tulokset-kartalla]))
+
+(defonce karttataso-tienakyma
+  (r/cursor tienakyma [:nakymassa?]))
