@@ -128,3 +128,17 @@
     (let [siltatarkastus-kannassa (first (q (str "SELECT id, ulkoinen_id, tarkastaja, tarkastusaika FROM siltatarkastus WHERE ulkoinen_id = '" ulkoinen-id "';")))]
       (is (not (nil? siltatarkastus-kannassa)))
       (is (= (nth siltatarkastus-kannassa 2) (str tarkastaja-etunimi " " tarkastaja-sukunimi)))))))
+
+
+(deftest poista-siltatarkastus
+  (let [ulkoinen-id 787878
+        tarkastusaika "2016-01-30T12:00:00Z"
+        vastaus-lisays (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
+                                                (-> "test/resurssit/api/siltatarkastus-poisto.json"
+                                                    slurp
+                                                    (.replace "__ID__" (str ulkoinen-id))
+                                                    (.replace "__PVM__" tarkastusaika)))]
+    (is (= 200 (:status vastaus-lisays)))
+    (let [siltatarkastus-kannassa (first (q (str "SELECT id, ulkoinen_id, tarkastaja, tarkastusaika FROM siltatarkastus WHERE poistettu IS NOT TRUE AND ulkoinen_id = '" ulkoinen-id "';")))]
+      (println "poiston jalkeen result:" siltatarkastus-kannassa)
+      (is (nil? siltatarkastus-kannassa)))))
