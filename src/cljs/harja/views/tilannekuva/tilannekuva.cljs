@@ -4,6 +4,7 @@
             [harja.tiedot.tilannekuva.tilannekuva :as tiedot]
             [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva-kartalla]
             [harja.views.tilannekuva.tienakyma :as tienakyma]
+            [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot]
             [harja.views.kartta :as kartta]
             [harja.ui.valinnat :as ui-valinnat]
             [harja.loki :refer [log tarkkaile!]]
@@ -308,7 +309,8 @@
 
           "Tienäkymä"
           :tienakyma
-          (when (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+          (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+                     @tienakyma-tiedot/tienakyma-kaytossa?)
             [tienakyma/tienakyma])]]))))
 
 (defonce hallintapaneeli-auki (atom {:hallintapaneeli true}))
