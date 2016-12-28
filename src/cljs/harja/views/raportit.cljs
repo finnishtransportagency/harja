@@ -56,7 +56,7 @@
 
                                            #{"urakka"})
                   urakkatyypin-raportit (filter
-                                          #(= (:urakkatyyppi %) (:arvo @nav/urakkatyyppi))
+                                          #((:urakkatyyppi %) (:arvo @nav/urakkatyyppi))
                                           (vals @raporttityypit))]
 
               (if (and (not salli-laaja-konteksti?) (nil? v-ur))
