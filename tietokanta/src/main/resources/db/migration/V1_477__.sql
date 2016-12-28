@@ -13,3 +13,6 @@ SET yllapitokohdetyotyyppi = 'paallystys'
 WHERE yllapitokohdetyotyyppi IS NULL AND yhaid IS NOT NULL;
 
 ALTER TABLE yllapitokohde ALTER COLUMN yllapitokohdetyotyyppi SET NOT NULL;
+
+-- Nykyisille YHA-kohteille asetetaan vuodeksi 2016
+UPDATE yllapitokohde SET vuodet = '{2016}' WHERE yhaid IS NOT NULL;
