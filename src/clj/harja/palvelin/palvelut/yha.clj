@@ -1,5 +1,8 @@
 (ns harja.palvelin.palvelut.yha
-  "Paikallisen kannan YHA-tietojenkäsittelyn logiikka"
+  "Paikallisen kannan YHA-tietojenkäsittelyn logiikka.
+
+  YHA on päällystysurakoiden master-järjestelmä, josta haetaan Harjaan päällystyskohteet
+  ja johon ne lähetetään myöhemmin takaisin."
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [taoensso.timbre :as log]
