@@ -34,8 +34,6 @@
                    [cljs.core.async.macros :refer [go go-loop]]))
 
 
-(def kartta-kontentin-vieressa? (atom false))
-
 (def +kartan-napit-padding+ 26)
 (def +kartan-korkeus-s+ 0)
 
@@ -251,15 +249,14 @@
          {:on-click #(nav/vaihda-kartan-koko! :L)}
          (ikonit/expand) " Näytä kartta"]
         [:span
-         (when-not @kartta-kontentin-vieressa?              ;ei pointtia muuttaa korkeutta jos ollaan kontentin vieressä
-           [:button.btn-xs.nappi-toissijainen {:on-click #(nav/vaihda-kartan-koko!
-                                                           (case koko
-                                                             :M :L
-                                                             :L :M
-                                                             ;; jos tulee tarve, voimme hanskata kokoja kolmella napilla
-                                                             ;; suurenna | pienennä | piilota
-                                                             :XL :M))}
-            ikoni muuta-kokoa-teksti])
+         [:button.btn-xs.nappi-toissijainen {:on-click #(nav/vaihda-kartan-koko!
+                                                         (case koko
+                                                           :M :L
+                                                           :L :M
+                                                           ;; jos tulee tarve, voimme hanskata kokoja kolmella napilla
+                                                           ;; suurenna | pienennä | piilota
+                                                           :XL :M))}
+          ikoni muuta-kokoa-teksti]
 
          [:button.btn-xs.nappi-ensisijainen {:on-click #(nav/vaihda-kartan-koko! :S)}
           (ikonit/compress) " Piilota kartta"]])]]))
