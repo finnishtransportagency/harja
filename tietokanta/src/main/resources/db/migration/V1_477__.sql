@@ -1,2 +1,3 @@
 -- Lisää ylläpitokohteelle tieto siitä, minä vuosina ko. kohde on työn alla
-ALTER TABLE yllapitokohde ADD COLUMN vuodet int[];
+
+ALTER TABLE yllapitokohde ADD COLUMN vuodet int[] NOT NULL DEFAULT ARRAY[]::integer[];
