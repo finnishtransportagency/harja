@@ -665,9 +665,7 @@
                           (nil? @raporttityypit)
                           [:span "Raportteja haetaan..."]
                           (empty? @mahdolliset-raporttityypit)
-                          (do
-                            (log "Raporttityypit: " (pr-str @raporttityypit))
-                            [:span (ei-raportteja-saatavilla-viesti (str/lower-case (:nimi v-ur-tyyppi)))])
+                          [:span (ei-raportteja-saatavilla-viesti (str/lower-case (:nimi v-ur-tyyppi)))]
                           :default
                           [livi-pudotusvalikko {:valinta @valittu-raporttityyppi
                                                 ;;\u2014 on väliviivan unikoodi
