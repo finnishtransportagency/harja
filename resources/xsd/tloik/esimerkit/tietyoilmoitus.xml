@@ -1,147 +1,114 @@
 <har:tietyoilmoitus xmlns:har="http://www.liikennevirasto.fi/xsd/harja">
-    <viestiId>stringstringstringstringstringstring</viestiId>
-    <tietyoilmoitusId>3</tietyoilmoitusId>
-    <ilmoitettu>2008-09-29T04:49:45</ilmoitettu>
-    <!--Optional:-->
+    <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
+    <tietyoilmoitusId>234908234</tietyoilmoitusId>
+    <ilmoitettu>2016-12-24T04:49:45</ilmoitettu>
     <ilmoittaja>
-        <!--Optional:-->
-        <etunimi>string</etunimi>
-        <!--Optional:-->
-        <sukunimi>string</sukunimi>
-        <!--Optional:-->
-        <matkapuhelin>string</matkapuhelin>
-        <!--Optional:-->
-        <tyopuhelin>string</tyopuhelin>
-        <!--Optional:-->
-        <sahkoposti>string</sahkoposti>
+        <etunimi>Irma</etunimi>
+        <sukunimi>Ilmoittaja</sukunimi>
+        <matkapuhelin>+34592349342</matkapuhelin>
+        <tyopuhelin>+34592349342</tyopuhelin>
+        <sahkoposti>irma@example.com</sahkoposti>
     </ilmoittaja>
     <urakka>
-        <!--Optional:-->
-        <id>3</id>
-        <!--Optional:-->
-        <nimi>string</nimi>
-        <tyyppi>tiemerkinta</tyyppi>
+        <id>15</id>
+        <nimi>Pieksämäki alueurakka 2013-2014, P</nimi>
+        <tyyppi>hoito</tyyppi>
     </urakka>
-    <!--Optional:-->
     <urakoitsija>
-        <!--Optional:-->
-        <nimi>string</nimi>
-        <!--Optional:-->
-        <ytunnus>string</ytunnus>
+        <nimi>Destia Oy</nimi>
+        <ytunnus>2163026-3</ytunnus>
     </urakoitsija>
-    <!--Optional:-->
     <urakoitsijan-yhteyshenkilo>
-        <!--Optional:-->
-        <etunimi>string</etunimi>
-        <!--Optional:-->
-        <sukunimi>string</sukunimi>
-        <!--Optional:-->
-        <matkapuhelin>string</matkapuhelin>
-        <!--Optional:-->
-        <tyopuhelin>string</tyopuhelin>
-        <!--Optional:-->
-        <sahkoposti>string</sahkoposti>
+        <etunimi>Urho</etunimi>
+        <sukunimi>Urakoitsija</sukunimi>
+        <matkapuhelin>+34592349342</matkapuhelin>
+        <tyopuhelin>+34592349342</tyopuhelin>
+        <sahkoposti>urho@example.com</sahkoposti>
     </urakoitsijan-yhteyshenkilo>
-    <!--Optional:-->
     <tilaaja>
-        <!--Optional:-->
-        <nimi>string</nimi>
-        <!--Optional:-->
-        <ytunnus>string</ytunnus>
+        <nimi>Pohjois-Savo</nimi>
     </tilaaja>
-    <!--Optional:-->
     <tilaajan-yhteyshenkilo>
-        <!--Optional:-->
-        <etunimi>string</etunimi>
-        <!--Optional:-->
-        <sukunimi>string</sukunimi>
-        <!--Optional:-->
-        <matkapuhelin>string</matkapuhelin>
-        <!--Optional:-->
-        <tyopuhelin>string</tyopuhelin>
-        <!--Optional:-->
-        <sahkoposti>string</sahkoposti>
+        <etunimi>Eija</etunimi>
+        <sukunimi>Elyläinen</sukunimi>
+        <matkapuhelin>+34592349342</matkapuhelin>
+        <tyopuhelin>+34592349342</tyopuhelin>
+        <sahkoposti>eija@example.com</sahkoposti>
     </tilaajan-yhteyshenkilo>
-    <!--Optional:-->
     <toimenpide>
         <uusi>true</uusi>
         <tyovaiheenMuutos>true</tyovaiheenMuutos>
         <muutos>true</muutos>
         <lopetus>false</lopetus>
     </toimenpide>
-    <!--Optional:-->
     <sijainti>
         <tierekisteriosoitevali>
-            <tienumero>100</tienumero>
-            <alkuosa>100</alkuosa>
-            <alkuetaisyys>100</alkuetaisyys>
-            <loppuosa>100</loppuosa>
-            <loppuetaisyys>100</loppuetaisyys>
+            <tienumero>23</tienumero>
+            <alkuosa>313</alkuosa>
+            <alkuetaisyys>1216</alkuetaisyys>
+            <loppuosa>313</loppuosa>
+            <loppuetaisyys>3780</loppuetaisyys>
         </tierekisteriosoitevali>
         <alkukoordinaatit>
-            <x>1000.00</x>
-            <y>1000.00</y>
+            <x>512980.1296580813 </x>
+            <y>6908379.5465487875</y>
         </alkukoordinaatit>
         <loppukoordinaatit>
-            <x>1000.00</x>
-            <y>1000.00</y>
+            <x>515497.44830392423</x>
+            <y>6908053.366497267</y>
         </loppukoordinaatit>
-        <alkusijainninKuvaus>string</alkusijainninKuvaus>
-        <loppusijainninKuvaus>string</loppusijainninKuvaus>
+        <alkusijainninKuvaus>Kaakinmäessä</alkusijainninKuvaus>
+        <loppusijainninKuvaus>Rummukanmäessä</loppusijainninKuvaus>
         <kunnat>
-            <!--1 or more repetitions:-->
-            <kunta>string</kunta>
+            <kunta>Pieksämäki</kunta>
         </kunnat>
         <pituus>1000.00</pituus>
     </sijainti>
-    <!--Optional:-->
     <ajankohta>
-        <alku>2008-11-15T18:52:58</alku>
-        <loppu>2017-05-15T09:41:13</loppu>
+        <alku>2016-01-01T07:49:45+02:00</alku>
+        <loppu>2017-01-15T18:41:13+02:00</loppu>
     </ajankohta>
-    <!--Optional:-->
     <tyyppi>
         <tyotyypit>
-            <!--1 or more repetitions:-->
             <tyotyyppi>Viimeistely</tyotyyppi>
         </tyotyypit>
-        <tyypinKuvaus>string</tyypinKuvaus>
+        <tyypinKuvaus>Viimeistellään töitä</tyypinKuvaus>
     </tyyppi>
-    <!--Optional:-->
     <tyoajat>
-        <!--1 or more repetitions:-->
         <tyoaika>
-            <alku>2012-09-13T16:00:34+03:00</alku>
-            <loppu>2009-10-14T10:16:36</loppu>
+            <alku>07:00:00+02:00</alku>
+            <loppu>18:00:00+02:00</loppu>
             <paivat>
-                <!--1 or more repetitions:-->
-                <paiva>sunnuntai</paiva>
+                <paiva>maanantai</paiva>
+                <paiva>tiistai</paiva>
+                <paiva>keskiviikko</paiva>
+                <paiva>torstai</paiva>
+                <paiva>perjantai</paiva>
             </paivat>
         </tyoaika>
     </tyoajat>
-    <!--Optional:-->
     <vaikutukset>
         <kaistajarjestelyt>
             <yksiAjokaistaSuljettu>true</yksiAjokaistaSuljettu>
             <yksiAjoratasuljettu>true</yksiAjoratasuljettu>
-            <muuto>string</muuto>
+            <muu>Joku ajorata</muu>
         </kaistajarjestelyt>
-        <nopeusrajoitus>100</nopeusrajoitus>
+        <nopeusrajoitus>20</nopeusrajoitus>
         <kiertotie>
-            <pituus>100</pituus>
+            <pituus>1000</pituus>
             <loivatMutkat>true</loivatMutkat>
             <jyrkatMutkat>true</jyrkatMutkat>
             <paallystetty>false</paallystetty>
             <murske>false</murske>
-            <kantavuusrajoitus>100</kantavuusrajoitus>
-            <painorajoitus>100</painorajoitus>
+            <kantavuusrajoitus>5000</kantavuusrajoitus>
+            <painorajoitus>5000</painorajoitus>
         </kiertotie>
         <pysaytykset>
             <liikennevalot>true</liikennevalot>
             <liikenteenohjaaja>false</liikenteenohjaaja>
             <aikataulu>
-                <alkaen>2014-06-10T21:33:25+03:00</alkaen>
-                <paattyen>2003-11-10T09:56:46+02:00</paattyen>
+                <alkaen>2016-01-01T07:49:45+02:00</alkaen>
+                <paattyen>2017-01-15T18:41:13+02:00</paattyen>
             </aikataulu>
         </pysaytykset>
         <arvioituViivastys>
@@ -149,13 +116,13 @@
             <ruuhka-aikana>100</ruuhka-aikana>
         </arvioituViivastys>
         <kulkurajoitukset>
-            <ajoneuvonMaxKorkeus>100</ajoneuvonMaxKorkeus>
-            <ajoneuvonMaxLeveys>100</ajoneuvonMaxLeveys>
-            <ajoneuvonMaxPituus>100</ajoneuvonMaxPituus>
-            <painorajoitus>100</painorajoitus>
+            <ajoneuvonMaxKorkeus>4</ajoneuvonMaxKorkeus>
+            <ajoneuvonMaxLeveys>3</ajoneuvonMaxLeveys>
+            <ajoneuvonMaxPituus>10</ajoneuvonMaxPituus>
+            <painorajoitus>5000</painorajoitus>
             <kuumenninKaytossa>true</kuumenninKaytossa>
             <tyokoneitaLiikenteenSeassa>false</tyokoneitaLiikenteenSeassa>
         </kulkurajoitukset>
     </vaikutukset>
-    <lisatietoja>string</lisatietoja>
+    <lisatietoja>Lisätietoja</lisatietoja>
 </har:tietyoilmoitus>
