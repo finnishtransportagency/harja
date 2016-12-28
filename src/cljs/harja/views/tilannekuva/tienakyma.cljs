@@ -21,12 +21,12 @@
             [reagent.core :as r]
             [harja.loki :refer [log]]
             [harja.ui.komponentti :as komp]
-            [harja.views.kartta.infopaneeli :as infopaneeli]))
+            [harja.views.kartta.infopaneeli :as infopaneeli]
+            [harja.tiedot.kartta :as kartta-tiedot]))
 
 (defn- valinnat
   "Valintalomake tienäkymälle."
   [e! {:keys [valinnat haku-kaynnissa?] :as app}]
-  (log "e! " e!)
   [lomake/lomake
    {:otsikko "Tarkastele tien tietoja"
     :muokkaa! #(e! (tiedot/->PaivitaValinnat %))
@@ -50,26 +50,32 @@
      :otsikko "Loppuen" :palstoja 3}]
    valinnat])
 
-(defn- tulospaneeli [e! tulokset]
+(defn- nayta-tulospaneeli! [e! tulokset avatut-tulokset]
+  (kartta-tiedot/nayta-kartan-kontrollit!
+   :tienakyma-tulokset
+   ^{:class "kartan-infopaneeli"}
+   [infopaneeli/infopaneeli-komponentti
+    tulokset avatut-tulokset
+    #(e! (tiedot/->AvaaTaiSuljeTulos %))
+    #(e! (tiedot/->SuljeInfopaneeli)) {}]))
+
+(defn- tulospaneeli [e! tulokset avatut-tulokset]
   (komp/luo
-   (komp/karttakontrollit
-    :tienakyma-tulokset
-    ^{:class "kartan-infopaneeli"}
-    [infopaneeli/infopaneeli [] #(log "infopaneeli pois")
-     {}])
-   (fn [e! tulokset]
+   (komp/sisaan-ulos #(nayta-tulospaneeli! e! tulokset avatut-tulokset)
+                     #(kartta-tiedot/poista-kartan-kontrollit! :tienakyma-tulokset))
+   (komp/kun-muuttuu nayta-tulospaneeli!)
+   (fn [_ _ _]
      [:span.tienakyma-tulokset])))
 
 (defn- tienakyma* [e! app]
   (komp/luo
    (komp/sisaan-ulos #(e! (tiedot/->Nakymassa true))
                      #(e! (tiedot/->Nakymassa false)))
-   (fn [e! {:keys [tulokset] :as app}]
-     (log "1. e! " e!)
+   (fn [e! {:keys [tulokset avatut-tulokset] :as app}]
      [:span
       [valinnat e! app]
       (when tulokset
-        [tulospaneeli e! tulokset])])))
+        [tulospaneeli e! tulokset avatut-tulokset])])))
 
 (defn tienakyma
   []

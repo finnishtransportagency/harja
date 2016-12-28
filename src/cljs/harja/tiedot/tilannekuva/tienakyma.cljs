@@ -6,7 +6,8 @@
             [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
             [harja.loki :refer [log]]
             [cljs.core.async :refer [<!] :as async]
-            [tuck.core :as tuck])
+            [tuck.core :as tuck]
+            [harja.ui.kartta.infopaneelin-sisalto :as infopaneelin-sisalto])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -21,6 +22,8 @@
 (defrecord Hae [])
 (defrecord HakuValmis [tulokset])
 (defrecord Nakymassa [nakymassa?])
+(defrecord SuljeInfopaneeli [])
+(defrecord AvaaTaiSuljeTulos [idx])
 
 (extend-protocol tuck/Event
   Nakymassa
@@ -58,6 +61,19 @@
   HakuValmis
   (process-event [{tulokset :tulokset} tienakyma]
     (assoc tienakyma
-           :tulokset tulokset
+           :tulokset (infopaneelin-sisalto/skeemamuodossa
+                      (mapcat val tulokset))
+           :avatut-tulokset #{}
            :tulokset-kartalla "FIXME: tulokset kartalla esitettävään muotoon"
-           :haku-kaynnissa? false)))
+           :haku-kaynnissa? false))
+
+  AvaaTaiSuljeTulos
+  (process-event [{idx :idx} tienakyma]
+    (update tienakyma :avatut-tulokset
+            #(if (% idx)
+               (disj % idx)
+               (conj % idx))))
+
+  SuljeInfopaneeli
+  (process-event [_ tienakyma]
+    (assoc tienakyma :tulokset nil)))
