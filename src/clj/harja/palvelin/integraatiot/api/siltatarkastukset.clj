@@ -140,7 +140,7 @@
         ulkoinen-tarkastus-id (get-in data [:poistettava-tarkastus :id])
         kayttaja-id (:id kayttaja)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (silta-q/poista-siltatarkastus! kayttaja-id ulkoinen-tarkastus-id urakka-id)
+    (silta-q/poista-siltatarkastus! db kayttaja-id ulkoinen-tarkastus-id urakka-id)
     (tee-kirjausvastauksen-body {:ilmoitukset "Tarkastus poistettu onnistuneesti"})))
 
 (defrecord Siltatarkastukset []

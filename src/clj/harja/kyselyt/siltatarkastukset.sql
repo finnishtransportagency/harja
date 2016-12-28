@@ -301,8 +301,8 @@ UPDATE siltatarkastus
   SET poistettu = TRUE,
   muokattu = NOW(),
   muokkaaja = :kayttaja-id
-WHERE ulkoinen_id = :ulkoinen-tarkastus-id
-      AND urakka = :urakka-id;
+WHERE ulkoinen_id::integer = :ulkoinen-tarkastus-id
+  AND urakka = :urakka-id;
 
 -- name: poista-siltatarkastuskohteet!
 -- Poistaa siltatarkastuksen kohteet siltatarkastuksen
