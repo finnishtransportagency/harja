@@ -11,7 +11,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
-            [harja.kyselyt.tarkastukset :as tarkastukset]
+            [harja.kyselyt.tarkastukset :as kyselyt]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
             [clojure.string :as str]))
@@ -22,11 +22,11 @@
 
 (defn tallenna-mittaustulokset-tarkastukselle [db id tyyppi uusi? mittaus]
   (case tyyppi
-    :talvihoito (tarkastukset/luo-tai-paivita-talvihoitomittaus db id uusi?
+    :talvihoito (kyselyt/luo-tai-paivita-talvihoitomittaus db id uusi?
                                                                 (-> mittaus
                                                                     (assoc :lampotila-tie (:lampotilaTie mittaus))
                                                                     (assoc :lampotila-ilma (:lampotilaIlma mittaus))))
-    :soratie (tarkastukset/luo-tai-paivita-soratiemittaus db id uusi? mittaus)
+    :soratie (kyselyt/luo-tai-paivita-soratiemittaus db id uusi? mittaus)
     nil))
 
 (defn kasittele-tarkastukset
@@ -40,14 +40,14 @@
          (jdbc/with-db-transaction [db db]
            (let [{tarkastus-id :id}
                  (first
-                  (tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id (name tyyppi) (:id kayttaja)))
+                  (kyselyt/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id (name tyyppi) (:id kayttaja)))
                  uusi? (nil? tarkastus-id)]
 
              (let [aika (json/aika-string->java-sql-date (:aika tarkastus))
                    tr-osoite (sijainnit/hae-tierekisteriosoite db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
                    geometria (if tr-osoite (:geometria tr-osoite)
                                  (sijainnit/tee-geometria (:alkusijainti tarkastus) (:loppusijainti tarkastus)))
-                   id (tarkastukset/luo-tai-paivita-tarkastus
+                   id (kyselyt/luo-tai-paivita-tarkastus
                        db kayttaja urakka-id
                        {:id          tarkastus-id
                         :lahde       "harja-api"
