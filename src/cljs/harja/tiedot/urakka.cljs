@@ -130,6 +130,11 @@
 
 (def aseta-kuluva-kk-jos-hoitokaudella? (atom false))
 
+(def valittu-urakan-vuosi (reaction-writable
+                            (let [ur @nav/valittu-urakka]
+                              (min (t/year (:loppupvm ur))
+                                   (t/year (pvm/nyt))))))
+
 (defonce valittu-hoitokauden-kuukausi
          (reaction-writable
            (let [hk @valittu-hoitokausi
