@@ -32,6 +32,18 @@
 (defrecord SuljeInfopaneeli [])
 (defrecord AvaaTaiSuljeTulos [idx])
 
+(defn- kartalle
+  "Muodosta tuloksista karttataso.
+  Kaikki, jotka ovat infopaneelissa avattuina, renderöidään valittuina."
+  [{:keys [avatut-tulokset kaikki-tulokset] :as tienakyma}]
+  (let [valittu? (into #{}
+                       (map kaikki-tulokset)
+                       avatut-tulokset)]
+    (assoc tienakyma
+           :tulokset-kartalla (esitettavat-asiat/kartalla-esitettavaan-muotoon
+                               kaikki-tulokset
+                               valittu?))))
+
 (extend-protocol tuck/Event
   Nakymassa
   (process-event [{nakymassa? :nakymassa?} tienakyma]
@@ -67,20 +79,22 @@
 
   HakuValmis
   (process-event [{tulokset :tulokset} tienakyma]
-    (let [kaikki-tulokset (mapcat val tulokset)]
+    (let [kaikki-tulokset (into [] (mapcat val) tulokset)]
       (log "Tienäkymän haku löysi: " (pr-str (fmap count tulokset)))
-      (assoc tienakyma
-             :tulokset (infopaneelin-sisalto/skeemamuodossa kaikki-tulokset)
-             :avatut-tulokset #{}
-             :tulokset-kartalla (esitettavat-asiat/kartalla-esitettavaan-muotoon kaikki-tulokset)
-             :haku-kaynnissa? false)))
+      (kartalle
+       (assoc tienakyma
+              :kaikki-tulokset kaikki-tulokset
+              :tulokset (infopaneelin-sisalto/skeemamuodossa kaikki-tulokset)
+              :avatut-tulokset #{}
+              :haku-kaynnissa? false))))
 
   AvaaTaiSuljeTulos
   (process-event [{idx :idx} tienakyma]
-    (update tienakyma :avatut-tulokset
-            #(if (% idx)
-               (disj % idx)
-               (conj % idx))))
+    (kartalle
+     (update tienakyma :avatut-tulokset
+             #(if (% idx)
+                (disj % idx)
+                (conj % idx)))))
 
   SuljeInfopaneeli
   (process-event [_ tienakyma]
