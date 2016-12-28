@@ -78,5 +78,4 @@
      (u/click (u/sel1 [:.kartan-infopaneeli :span.ip-haitari-otsikko]))
      --
      "yhden asian tiedot esillä klikkauksen jälkeen"
-     (is (= 5 (count (u/sel [:.kartan-infopaneeli :.kentan-label]))))
-     (is (= 1 (count (u/sel [:.kartan-infopaneeli :.nappi-toissijainen])))))))
+     (is (= 5 (count (u/sel [:.kartan-infopaneeli :.tietorivi])))))))
