@@ -136,16 +136,18 @@
 (defn- hae-urakkatyyppi [db urakka-id]
   (keyword (:tyyppi (first (q/hae-urakan-tyyppi db {:urakka urakka-id})))))
 
-(defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id]}]
+(defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id vuosi]}]
   (assert (and urakka-id sopimus-id) "anna urakka-id ja sopimus-id")
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Haetaan aikataulutiedot urakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
+    ;; Urakkatyypin mukaan näytetään vain tietyt asiat, joten erilliset kyselyt
     (case (hae-urakkatyyppi db urakka-id)
       :paallystys
-      (q/hae-paallystysurakan-aikataulu db {:urakka urakka-id :sopimus sopimus-id})
+      (q/hae-paallystysurakan-aikataulu db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi})
       :tiemerkinta
-      (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id}))))
+      (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
+                                             :vuosi vuosi}))))
 
 (defn hae-tiemerkinnan-suorittavat-urakat [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-aikataulu user urakka-id)

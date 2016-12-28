@@ -161,7 +161,6 @@ FROM yllapitokohde ypk
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
-  -- Ylläpitokohteen vuodet on tyhjä tai sisältää valitun vuoden
   AND (:vuosi::INTEGER IS NULL OR (array_upper(vuodet, 1) IS NULL
        OR vuodet @> ARRAY[:vuosi]::int[]))
   AND ypk.poistettu IS NOT TRUE;
@@ -354,6 +353,8 @@ FROM yllapitokohde
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
+  AND (:vuosi::INTEGER IS NULL OR (array_upper(vuodet, 1) IS NULL
+     OR vuodet @> ARRAY[:vuosi]::int[]))
   AND poistettu IS NOT TRUE;
 
 -- name: hae-tiemerkintaurakan-aikataulu
@@ -384,6 +385,8 @@ SELECT
 FROM yllapitokohde
 WHERE
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
+  AND (:vuosi::INTEGER IS NULL OR (array_upper(vuodet, 1) IS NULL
+     OR vuodet @> ARRAY[:vuosi]::int[]))
   AND poistettu IS NOT TRUE;
 
 -- name: hae-urakan-tyyppi
