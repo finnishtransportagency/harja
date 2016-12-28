@@ -9,7 +9,8 @@
             [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.skeema :as skeema]
-            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]))
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
+            [clojure.walk :as walk]))
 
 (def kayttaja-paallystys "skanska")
 (def kayttaja-tiemerkinta "tiemies")
@@ -371,9 +372,15 @@
       (is (= oletettu-ensimmaisen-alikohteen-tr-osoite (first alikohteiden-tr-osoitteet))
           "Ensimmäisen alikohteen tierekisteriosite on päivittynyt oikein")
       (is (= oletettu-toisen-alikohteen-tr-osoite (second alikohteiden-tr-osoitteet))
-          "Toisen alikohteen tierekisteriosite on päivittynyt oikein")
+          "Toisen alikohteen tierekisteriosite on päivittynyt oikein"))))
 
-      (println "--> alikohteet" alikohteiden-tr-osoitteet)
-      )
-
-    ))
+(deftest paallystysilmoituksellisen-kohteen-paivitys-ei-onnistu
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-request.json")
+        {status :status body :body} (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
+                                                            kayttaja-paallystys portti
+                                                            payload)]
+    (is (= 400 status))
+    (is (= "lukittu-yllapitokohde" (:koodi (:virhe (first (:virheet (cheshire/decode body true))))))
+        "Virheelliselle kirjaukselle palautetaan oikea virhekoodi.")))
