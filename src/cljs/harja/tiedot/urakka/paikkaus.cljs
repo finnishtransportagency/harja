@@ -66,8 +66,7 @@
                          (concat (map #(assoc % :paikkauskohde-id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
                                       kohderivit)
                                  toteumarivit)
-                         @paikkausilmoitus-lomakedata
-                         [:paikkauskohde-id]
+                         #(= avoin-paikkausilmoitus (:paikkauskohde-id %))
                          (comp
                            (mapcat (fn [kohde]
                                      (keep (fn [kohdeosa]

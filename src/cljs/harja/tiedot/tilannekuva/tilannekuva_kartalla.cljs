@@ -54,7 +54,6 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
 (defmethod muodosta-karttataso :default [taso uudet-asiat]
   (kartalla-esitettavaan-muotoon
    uudet-asiat
-   nil nil
    (map (lisaa-karttatyyppi-fn taso))))
 
 (defn- muodosta-kuva-karttataso

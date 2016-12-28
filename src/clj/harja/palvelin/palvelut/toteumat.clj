@@ -656,7 +656,7 @@
         alue {:xmin x1 :ymin y1
               :xmax x2 :ymax y2}
         toleranssi (geo/karkeistustoleranssi alue)
-        kartalle-xf (esitettavat-asiat/kartalla-esitettavaan-muotoon-xf nil :id)
+        kartalle-xf (esitettavat-asiat/kartalla-esitettavaan-muotoon-xf)
 
         ch (async/chan 32 (comp
                             (map konv/alaviiva->rakenne)

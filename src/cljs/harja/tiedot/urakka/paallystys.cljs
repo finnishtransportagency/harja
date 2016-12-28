@@ -87,8 +87,7 @@
                          (concat (map #(assoc % :paallystyskohde-id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
                                       kohderivit)
                                  ilmoitukset)
-                         @paallystysilmoitus-lomakedata
-                         [:paallystyskohde-id]
+                         #(= avoin-paallystysilmoitus (:paallystyskohde-id %))
                          (comp
                            (mapcat (fn [kohde]
                                      (keep (fn [kohdeosa]
