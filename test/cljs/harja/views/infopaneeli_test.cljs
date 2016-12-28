@@ -68,7 +68,7 @@
         linkkifunktiot (r/atom {})]
     (tarkkaile! "mock-asiat-pisteessä" asiat-atomi)
     (komponenttitesti
-     [sut/infopaneeli @asiat-atomi piilota-fn! linkkifunktiot]
+     [:div.kartan-infopaneeli [sut/infopaneeli @asiat-atomi piilota-fn! linkkifunktiot]]
      (is (not (empty? (infopaneelin-sisalto/skeemamuodossa (:asiat @asiat-atomi)))))
      "infopaneelin sulkunappi ja otsikot, ei tietojen kenttiä"
      (is (= 1 (count (u/sel [:.kartan-infopaneeli :button]))))
