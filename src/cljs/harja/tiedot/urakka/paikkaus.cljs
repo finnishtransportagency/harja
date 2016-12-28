@@ -2,7 +2,6 @@
   "Paikkauksen tiedot"
   (:require
     [reagent.core :refer [atom] :as r]
-    [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
     [harja.tiedot.muokkauslukko :as lukko]
     [harja.loki :refer [log tarkkaile!]]
     [cljs.core.async :refer [<!]]
