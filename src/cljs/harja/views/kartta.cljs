@@ -79,20 +79,6 @@
         (set! (.-right tyyli) (fmt/pikseleina 20))
         (set! (.-width tyyli) (fmt/pikseleina 100))))))
 
-;; Kun kartan paikkavaraus poistuu, aseta flägi, joka pakottaa seuraavalla
-;; kerralla paikan asetuksen... läheta false kanavaan
-
-(defn- elementti-idlla-odota
-  "Pollaa DOMia 10ms välein kunnes annettu elementti löytyy. Palauttaa kanavan, josta
-  elementin voi lukea."
-  [id]
-  (go (loop [elt (.getElementById js/document id)]
-        (if elt
-          elt
-          (do #_(log "odotellaan elementtiä " id)
-            (<! (timeout 10))
-            (recur (.getElementById js/document id)))))))
-
 (defn odota-mount-tai-timeout
   "Odottaa, että paivita-kartan-sijainti kanavaan tulee :mount tapahtuma tai 150ms timeout.
   Paluttaa kanavan, josta voi :mount tai :timeout arvon."
@@ -129,7 +115,7 @@
                           (do                        ;; (log "KARTTA LÄHTI OIKEASTI")
                             (aseta-kartan-sijainti x (- @dom/korkeus) w h false)
                             (recur nil nil nil w h nil))))
-                paikka-elt (<! (elementti-idlla-odota "kartan-paikka"))
+                paikka-elt (<! (dom/elementti-idlla-odota "kartan-paikka"))
                 [uusi-x uusi-y uusi-w uusi-h] (dom/sijainti paikka-elt)
                 uusi-offset-y (dom/offset-korkeus paikka-elt)]
 
