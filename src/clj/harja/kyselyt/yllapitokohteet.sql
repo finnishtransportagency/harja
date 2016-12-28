@@ -161,6 +161,9 @@ FROM yllapitokohde ypk
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
+  -- Ylläpitokohteen vuodet on tyhjä tai sisältää valitun vuoden
+  AND (:vuosi::INTEGER IS NULL OR (array_upper(vuodet, 1) IS NULL
+       OR vuodet @> ARRAY[:vuosi]::int[]))
   AND ypk.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-yllapitokohteet-lomakkeelle
