@@ -61,16 +61,14 @@
                                       :urakkatyyppi urakkatyyppi})))
 
 (defn- kasittele-laatupoikkeaman-kohde [laatupoikkeama]
-  (let [yllapitokohde-tekstina (fn [yllapitokohde]
-                                 (str
-                                   (:kohdenumero yllapitokohde) " "
-                                   (:nimi yllapitokohde) " ("
-                                   (tr-domain/tierekisteriosoite-tekstina yllapitokohde
-                                                                          {:teksti-tie? false})
-                                   ")"))
-        laatupoikkeama-paivitetylla-kohteella
+  (let [laatupoikkeama-paivitetylla-kohteella
         (if (get-in laatupoikkeama [:yllapitokohde :tie])
-          (assoc laatupoikkeama :kohde (yllapitokohde-tekstina (:yllapitokohde laatupoikkeama)))
+          (assoc laatupoikkeama :kohde (tr-domain/yllapitokohde-tekstina (:yllapitokohde laatupoikkeama)
+                                                                         {:osoite {:tr-numero (get-in laatupoikkeama [:yllapitokohde :tie])
+                                                                                   :tr-alkuosa (get-in laatupoikkeama [:yllapitokohde :aosa])
+                                                                                   :tr-alkuetaisyys (get-in laatupoikkeama [:yllapitokohde :aet])
+                                                                                   :tr-loppuosa (get-in laatupoikkeama [:yllapitokohde :losa])
+                                                                                   :tr-loppuetaisyys (get-in laatupoikkeama [:yllapitokohde :let])}}))
           laatupoikkeama)]
     (dissoc laatupoikkeama-paivitetylla-kohteella :yllapitokohde)))
 
