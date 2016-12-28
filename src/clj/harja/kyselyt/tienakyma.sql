@@ -1,6 +1,7 @@
 -- name: hae-toteumat
 -- Hakee kaikki toteumat
-SELECT t.tyyppi,
+SELECT t.id,
+       t.tyyppi,
        t.reitti,
        t.alkanut, t.paattynyt,
        tt.toimenpidekoodi AS tehtava_toimenpidekoodi,

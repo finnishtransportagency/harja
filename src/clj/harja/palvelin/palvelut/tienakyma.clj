@@ -49,10 +49,14 @@
       :loppu loppu})))
 
 (defn- hae-toteumat [db parametrit]
-  (into []
-        (comp (geo/muunna-pg-tulokset :reitti)
-              (map #(assoc % :tyyppi-kartalla :toteuma)))
-        (q/hae-toteumat db parametrit)))
+  (konv/sarakkeet-vektoriin
+   (into []
+         (comp (map konv/alaviiva->rakenne)
+               (geo/muunna-pg-tulokset :reitti)
+               (map #(assoc % :tyyppi-kartalla :toteuma)))
+         (q/hae-toteumat db parametrit))
+   {:tehtava :tehtavat}
+   :id :toimenpide))
 
 (defn- hae-tyokoneet [db parametrit]
   ;; FIXME: implement
