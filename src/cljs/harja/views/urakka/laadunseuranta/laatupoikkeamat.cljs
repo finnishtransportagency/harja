@@ -65,10 +65,7 @@
          {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 2
           :hae (fn [rivi]
                  (tierekisteri/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
-                                                       :nimi (get-in rivi [:yllapitokohde :nimi])}
-                                                      {:osoite (get-in rivi [:yllapitokohde :tr])
-                                                       :nayta-teksti-tie? false
-                                                       :nayta-teksti-ei-tr-osoitetta? false}))}
+                                                       :nimi (get-in rivi [:yllapitokohde :nimi])}))}
          {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1})
        {:otsikko "TR-osoite"
         :nimi :tr
