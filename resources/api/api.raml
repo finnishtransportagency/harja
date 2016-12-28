@@ -207,6 +207,28 @@ documentation:
               application/json:
                 example: !include examples/virhe-response.json
                 schema: virhe-response
+        delete:
+          is: [secured]
+          description: Tiestötarkastuksen poisto.
+          body:
+            application/json:
+              schema: tarkastuksen-poisto-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: kirjaus-response
       /talvihoitotarkastus:
         post:
           is: [secured]
@@ -278,6 +300,28 @@ documentation:
               application/json:
                 example: !include examples/virhe-response.json
                 schema: virhe-response
+        delete:
+          is: [secured]
+          description: Soratietarkastuksen poisto.
+          body:
+            application/json:
+              schema: tarkastuksen-poisto-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: kirjaus-response
       /siltatarkastus:
         post:
           is: [secured]
@@ -302,6 +346,28 @@ documentation:
               application/json:
                 example: !include examples/virhe-response.json
                 schema: virhe-response
+        delete:
+          is: [secured]
+          description: Siltatarkastuksen poisto.
+          body:
+            application/json:
+              schema: tarkastuksen-poisto-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: kirjaus-response
     /laatupoikkeama:
       post:
         is: [secured]
