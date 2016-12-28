@@ -38,7 +38,9 @@
             [harja.tyokalut.vkm :as vkm]
 
             [harja.ui.debug :refer [debug]]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.ui.valinnat :as valinnat]
+            [cljs-time.core :as t])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -716,14 +718,18 @@
            (reset! paallystys/paallystysilmoitukset vastaus)
            (reset! ilmoituslomake nil))]))))
 
-(defn paallystysilmoitukset []
+(defn paallystysilmoitukset [urakka]
   (komp/luo
     (komp/ulos #(kartta/poista-popup!))
     (komp/lippu paallystys/paallystysilmoitukset-nakymassa?)
 
-    (fn []
+    (fn [urakka]
       [:div.paallystysilmoitukset
        [kartta/kartan-paikka]
+       [valinnat/vuosi
+        (t/year (:alkupvm urakka))
+        (t/year (:loppupvm urakka))
+        urakka/valittu-urakan-vuosi]
        (if @paallystys/paallystysilmoitus-lomakedata
          [paallystysilmoituslomake-historia paallystys/paallystysilmoitus-lomakedata]
          [ilmoitusluettelo])])))

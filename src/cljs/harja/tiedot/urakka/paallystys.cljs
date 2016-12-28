@@ -20,9 +20,10 @@
 (def paallystyskohteet-nakymassa? (atom false))
 (def paallystysilmoitukset-nakymassa? (atom false))
 
-(defn hae-paallystysilmoitukset [urakka-id sopimus-id]
+(defn hae-paallystysilmoitukset [urakka-id sopimus-id vuosi]
   (k/post! :urakan-paallystysilmoitukset {:urakka-id urakka-id
-                                          :sopimus-id sopimus-id}))
+                                          :sopimus-id sopimus-id
+                                          :vuosi vuosi}))
 
 (defn hae-paallystysilmoitus-paallystyskohteella [urakka-id paallystyskohde-id]
   (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:urakka-id urakka-id
@@ -35,11 +36,12 @@
 
 (def paallystysilmoitukset
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+               vuosi @urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
                nakymassa? @paallystysilmoitukset-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                (hae-paallystysilmoitukset valittu-urakka-id valittu-sopimus-id))))
+                (hae-paallystysilmoitukset valittu-urakka-id valittu-sopimus-id vuosi))))
 
 (defonce paallystysilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 
