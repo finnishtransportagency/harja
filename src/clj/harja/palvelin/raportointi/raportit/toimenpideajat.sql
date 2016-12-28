@@ -26,12 +26,7 @@ GROUP BY u.nimi, tpk.nimi, tunti, rp.talvihoitoluokka;
 SELECT
   u.id as urakka,
   o.id as hallintayksikko,
-  CASE
-  WHEN rt.toimenpidekoodi IS NOT NULL THEN
-    rt.toimenpidekoodi
-  ELSE
-    tt.toimenpidekoodi
-  END AS tpk,
+  toimkood.id AS tpk,
   rp.talvihoitoluokka as luokka,
   COUNT(DISTINCT t.alkanut::date) as lkm
 FROM toteuma t
@@ -40,6 +35,8 @@ FROM toteuma t
   JOIN organisaatio o ON u.hallintayksikko = o.id
   LEFT JOIN reitti_tehtava rt ON rt.reittipiste = rp.id
   LEFT JOIN toteuma_tehtava tt ON t.id = tt.toteuma
+  JOIN toimenpidekoodi toimkood ON rt.toimenpidekoodi = toimkood.id
+                              OR tt.toimenpidekoodi = toimkood.id
 WHERE (rp.talvihoitoluokka IN (:hoitoluokat) OR rp.talvihoitoluokka IS NULL)
       AND (t.alkanut BETWEEN :alku AND :loppu)
       AND t.poistettu IS NOT TRUE
