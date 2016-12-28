@@ -339,7 +339,8 @@ SELECT
   ypk.tr_alkuosa as yllapitokohde_aosa,
   ypk.tr_alkuetaisyys as yllapitokohde_aet,
   ypk.tr_loppuosa as yllapitokohde_losa,
-  ypk.tr_loppuetaisyys as yllapitokohde_let
+  ypk.tr_loppuetaisyys as yllapitokohde_let,
+  ypk.kohdenumero as yllapitokohde_kohdenumero
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
@@ -370,7 +371,8 @@ SELECT
   ypk.tr_alkuosa as yllapitokohde_aosa,
   ypk.tr_alkuetaisyys as yllapitokohde_aet,
   ypk.tr_loppuosa as yllapitokohde_losa,
-  ypk.tr_loppuetaisyys as yllapitokohde_let
+  ypk.tr_loppuetaisyys as yllapitokohde_let,
+  ypk.kohdenumero as yllapitokohde_kohdenumero
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
@@ -403,7 +405,8 @@ SELECT
   ypk.tr_alkuosa as yllapitokohde_aosa,
   ypk.tr_alkuetaisyys as yllapitokohde_aet,
   ypk.tr_loppuosa as yllapitokohde_losa,
-  ypk.tr_loppuetaisyys as yllapitokohde_let
+  ypk.tr_loppuetaisyys as yllapitokohde_let,
+  ypk.kohdenumero as yllapitokohde_kohdenumero
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id

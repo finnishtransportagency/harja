@@ -62,11 +62,12 @@
 
 (defn- kasittele-laatupoikkeaman-kohde [laatupoikkeama]
   (let [yllapitokohde-tekstina (fn [yllapitokohde]
-                                 (str (:nimi yllapitokohde)
-                                      " ("
-                                      (tr-domain/tierekisteriosoite-tekstina yllapitokohde
-                                                                             {:teksti-tie? false})
-                                      ")"))
+                                 (str
+                                   (:kohdenumero yllapitokohde) " "
+                                   (:nimi yllapitokohde) " ("
+                                   (tr-domain/tierekisteriosoite-tekstina yllapitokohde
+                                                                          {:teksti-tie? false})
+                                   ")"))
         laatupoikkeama-paivitetylla-kohteella
         (if (get-in laatupoikkeama [:yllapitokohde :tie])
           (assoc laatupoikkeama :kohde (yllapitokohde-tekstina (:yllapitokohde laatupoikkeama)))
