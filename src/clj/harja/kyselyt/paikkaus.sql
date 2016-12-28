@@ -13,6 +13,8 @@ FROM yllapitokohde
 WHERE urakka = :urakka
       AND sopimus = :sopimus
       AND yllapitokohdetyotyyppi = 'paikkaus'::yllapitokohdetyotyyppi
+      AND (:vuosi::INTEGER IS NULL OR (array_upper(vuodet, 1) IS NULL
+           OR vuodet @> ARRAY[:vuosi]::int[]))
       AND yllapitokohde.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paikkausilmoitus-paikkauskohteella

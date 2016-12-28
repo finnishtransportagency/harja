@@ -19,9 +19,10 @@
 (defonce paikkauskohteet-nakymassa? (atom false))
 (defonce paikkausilmoitukset-nakymassa? (atom false))
 
-(defn hae-paikkausilmoitukset [urakka-id sopimus-id]
+(defn hae-paikkausilmoitukset [urakka-id sopimus-id vuosi]
   (k/post! :urakan-paikkausilmoitukset {:urakka-id urakka-id
-                                        :sopimus-id sopimus-id}))
+                                        :sopimus-id sopimus-id
+                                        :vuosi vuosi}))
 
 (defn hae-paikkausilmoitus-paikkauskohteella [urakka-id sopimus-id paikkauskohde-id]
   (k/post! :urakan-paikkausilmoitus-paikkauskohteella {:urakka-id urakka-id
@@ -38,13 +39,14 @@
 
 (defonce karttataso-paikkauskohteet (atom false))
 
-(defonce paikkaustoteumat
+(defonce paikkausilmoitukset
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+               vuosi @urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
                nakymassa? @paikkausilmoitukset-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                (hae-paikkausilmoitukset valittu-urakka-id valittu-sopimus-id))))
+                (hae-paikkausilmoitukset valittu-urakka-id valittu-sopimus-id vuosi))))
 
 (defonce paikkausilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan paikkausilmoitus-taulun sisältöä
 
@@ -66,7 +68,7 @@
 (defonce paikkauskohteet-kartalla
   (reaction (let [taso @karttataso-paikkauskohteet
                   kohderivit @paikkauskohteet
-                  toteumarivit @paikkaustoteumat
+                  toteumarivit @paikkausilmoitukset
                   avoin-paikkausilmoitus (:paikkauskohde-id @paikkausilmoitus-lomakedata)]
               (when (and taso
                          (or kohderivit toteumarivit))
