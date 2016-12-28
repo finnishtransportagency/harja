@@ -131,9 +131,9 @@
     - name: Start ActiveMQ
       async: 10
       poll: 0
-      command: /opt/activemq/apache-activemq-5.14.1/bin/activemq restart
+      command: /opt/activemq/apache-activemq-5.14.3/bin/activemq restart
       args:
-        chdir: "/opt/activemq/apache-activemq-5.14.1"
+        chdir: "/opt/activemq/apache-activemq-5.14.3"
     - name: start nginx
       service: name=nginx state=started
     - name: add HTTPS to iptables IN_public_allow chain
