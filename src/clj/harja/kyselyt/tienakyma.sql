@@ -2,6 +2,7 @@
 -- Hakee kaikki toteumat
 SELECT t.tyyppi,
        t.reitti,
+       t.alkanut, t.paattynyt,
        tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
        tpk.nimi AS tehtava_toimenpide
   FROM toteuma t
