@@ -21,7 +21,7 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(def json-sapluunasta [polku pvm id]
+(defn json-sapluunasta [polku pvm id]
   (-> polku
       slurp
       (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
