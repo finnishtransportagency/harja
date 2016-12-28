@@ -555,131 +555,138 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
   (hae-asiat-pisteessa tasot event asiat-pisteessa)
   (reset! tiedot/nayta-infopaneeli? true))
 
+
+(defn- piilota-infopaneeli-jos-muuttunut
+  "Jos annetut geometriat ovat muuttuneet (pl. näkymän geometriat), piilota infopaneeli."
+  [vanha uusi]
+  (when (not= (dissoc vanha :nakyman-geometriat)
+              (dissoc uusi :nakyman-geometriat))
+    ;; Kun karttatasoissa muuttuu jotain muuta kuin :nakyman-geometriat
+    ;; (klikattu piste), piilotetaan infopaneeli ja poistetaan
+    ;; klikattu piste näkymän geometrioista.
+    (reset! tiedot/nayta-infopaneeli? false)
+    (tasot/poista-geometria! :klikattu-karttapiste)))
+
+(defn- zoomaa-geometrioihin-jos-muuttunut
+  "Zoomaa geometrioihin uudelleen, jos ne ovat muuttuneet."
+  [vanha uusi]
+  ;; Jos vanhoissa ja uusissa geometrioissa ei ole samat määrät asioita,
+  ;; niin voidaan olettaa että nyt geometriat ovat muuttuneet.
+  ;; Tällainen workaround piti tehdä, koska asian valitseminen muuttaa
+  ;; geometriat atomia, mutta silloin ei haluta triggeröidä zoomaamista.
+  ;; Myös jos :organisaatio karttatason tiedot ovat muuttuneet, tehdään
+  ;; zoomaus (urakka/hallintayksikkö muutos)
+  (when @tiedot/pida-geometriat-nakyvilla?
+    (when (or (not= (geometria-maarat vanha) (geometria-maarat uusi))
+              (not= (:organisaatio vanha) (:organisaatio uusi)))
+      (tiedot/zoomaa-geometrioihin))))
+
+(defn- geometriat-muuttuneet
+  "Käsittelee geometrioiden muutoksen. Parametrina vanhat ja uudet geometriat."
+  [vanha uusi]
+  (piilota-infopaneeli-jos-muuttunut vanha uusi)
+  (zoomaa-geometrioihin-jos-muuttunut vanha uusi))
+
 (defn kartta-openlayers []
   (komp/luo
 
-    {:component-did-mount
-     #(tiedot/zoomaa-geometrioihin)}
-    (komp/sisaan
-      (fn [_]
-        (tiedot/zoomaa-geometrioihin)
+   (komp/sisaan tiedot/zoomaa-geometrioihin)
 
-        (add-watch nav/kartan-koko :muuttuvan-kartan-koon-kuuntelija
-                   (fn [_ _ _ _]
-                     (when @tiedot/pida-geometriat-nakyvilla?
-                       (log "Kartan koko muuttui, zoomataan!")
-                       (tiedot/zoomaa-geometrioihin))))
+   (komp/watcher nav/kartan-koko
+                 (fn [_ _ _]
+                   (when @tiedot/pida-geometriat-nakyvilla?
+                     (log "Kartan koko muuttui, zoomataan!")
+                     (tiedot/zoomaa-geometrioihin)))
 
-        ;; Hallintayksiköt ja valittu urakka ovat nykyään :organisaatio
-        ;; tasossa, joten ne eivät tarvitse erillistä kuuntelijaa.
-        (add-watch tasot/geometriat-kartalle :muuttuvien-geometrioiden-kuuntelija
-                   (fn [_ _ vanha uusi]
-                     (when (not= (dissoc vanha :nakyman-geometriat)
-                                 (dissoc uusi :nakyman-geometriat))
-                       ;; Kun karttatasoissa muuttuu jotain muuta kuin :nakyman-geometriat
-                       ;; (klikattu piste), piilotetaan infopaneeli ja poistetaan
-                       ;; klikattu piste näkymän geometrioista.
-                       (reset! tiedot/nayta-infopaneeli? false)
-                       (tasot/poista-geometria! :klikattu-karttapiste))
+                 tasot/geometriat-kartalle
+                 (fn [_ vanha uusi]
+                   (geometriat-muuttuneet vanha uusi)))
 
+   (fn []
+     (let [koko (if-not (empty? @nav/tarvitsen-isoa-karttaa)
+                  :L
+                  @nav/kartan-koko)]
 
+       [openlayers
+        {:id                 "kartta"
+         :width              "100%"
+         ;; set width/height as CSS units, must set height as pixels!
+         :height             (fmt/pikseleina @kartan-korkeus)
+         :style              (when (= koko :S)
+                               ;; display none estää kartan korkeuden
+                               ;; animoinnin suljettaessa
+                               {:display "none"})
+         :class              (when (or
+                                    (= :hidden koko)
+                                    (= :S koko))
+                               "piilossa")
 
+         ;; :extent-key muuttuessa zoomataan aina uudelleen, vaikka itse alue ei olisi muuttunut
 
-                     ;; Jos vanhoissa ja uusissa geometrioissa ei ole samat määrät asioita,
-                     ;; niin voidaan olettaa että nyt geometriat ovat muuttuneet.
-                     ;; Tällainen workaround piti tehdä, koska asian valitseminen muuttaa
-                     ;; geometriat atomia, mutta silloin ei haluta triggeröidä zoomaamista.
-                     ;; Myös jos :organisaatio karttatason tiedot ovat muuttuneet, tehdään zoomaus (urakka/hallintayksikkö muutos)
+         :extent-key         (str (if (or (= :hidden koko) (= :S koko)) "piilossa" "auki") "_" (name @nav/valittu-sivu))
+         :extent             @nav/kartan-extent
 
-                     (when @tiedot/pida-geometriat-nakyvilla?
-                       (when (or (not= (geometria-maarat vanha) (geometria-maarat uusi))
-                                 (not= (:organisaatio vanha) (:organisaatio uusi)))
-                         (tiedot/zoomaa-geometrioihin)))))))
-    (fn []
-      (let [koko (if-not (empty? @nav/tarvitsen-isoa-karttaa)
-                   :L
-                   @nav/kartan-koko)]
+         :selection          nav/valittu-hallintayksikko
+         :on-zoom            paivita-extent
+         :on-drag            (fn [item event]
+                               (paivita-extent item event)
+                               (t/julkaise! {:aihe :karttaa-vedetty}))
+         :on-postrender      (fn [_]
+                               ;; Geometriatason pakottaminen valmiiksi postrenderissä
+                               ;; tuntuu toimivan hyvin, mutta kuvatason pakottaminen ei.
+                               ;; Postrender triggeröityy monta kertaa, kun kuvatasoja piirretään.
+                               (edistymispalkki/geometriataso-pakota-valmistuminen!))
+         :on-mount           (fn [initialextent]
+                               (paivita-extent nil initialextent))
+         :on-click           (fn [event]
+                               #_(t/julkaise! {:aihe :tyhja-click :klikkaus-koordinaatit at})
+                               #_(poista-popup!)
+                               (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
+                                                                   event
+                                                                   asiat-pisteessa)
+                               (.stopPropagation event)
+                               (.preventDefault event))
+         :on-select          (fn [item event]
+                               (when (hae-asiat? item)
+                                 (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
+                                                                     event
+                                                                     asiat-pisteessa))
+                               (kun-geometriaa-klikattu item event asiat-pisteessa)
+                               (.stopPropagation event)
+                               (.preventDefault event))
 
-        [openlayers
-         {:id                 "kartta"
-          :width              "100%"
-          ;; set width/height as CSS units, must set height as pixels!
-          :height             (fmt/pikseleina @kartan-korkeus)
-          :style              (when (= koko :S)
-                                ;; display none estää kartan korkeuden
-                                ;; animoinnin suljettaessa
-                                {:display "none"})
-          :class              (when (or
-                                      (= :hidden koko)
-                                      (= :S koko))
-                                "piilossa")
+         :on-dblclick        nil
 
-          ;; :extent-key muuttuessa zoomataan aina uudelleen, vaikka itse alue ei olisi muuttunut
+         :on-dblclick-select (fn [item event]
+                               ;; jos tuplaklikattiin valittua hallintayksikköä tai urakkaa (eli "tyhjää"),
+                               ;; niin silloin ei pysäytetä eventtiä, eli zoomataan sisään
+                               (when-not (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
+                                 (.stopPropagation event)
+                                 (.preventDefault event)
 
-          :extent-key         (str (if (or (= :hidden koko) (= :S koko)) "piilossa" "auki") "_" (name @nav/valittu-sivu))
-          :extent             @nav/kartan-extent
+                                 ;; Jos tuplaklikattu asia oli jotain muuta kuin HY/urakka, niin keskitetään
+                                 ;; kartta siihen.
+                                 (when-not (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item)
+                                   (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
+                                                                       event
+                                                                       asiat-pisteessa)
+                                   (kun-geometriaa-klikattu item event asiat-pisteessa)
+                                   (tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))))
 
-          :selection          nav/valittu-hallintayksikko
-          :on-zoom            paivita-extent
-          :on-drag            (fn [item event]
-                                (paivita-extent item event)
-                                (t/julkaise! {:aihe :karttaa-vedetty}))
-          :on-postrender      (fn [_]
-                                ;; Geometriatason pakottaminen valmiiksi postrenderissä
-                                ;; tuntuu toimivan hyvin, mutta kuvatason pakottaminen ei.
-                                ;; Postrender triggeröityy monta kertaa, kun kuvatasoja piirretään.
-                                (edistymispalkki/geometriataso-pakota-valmistuminen!))
-          :on-mount           (fn [initialextent]
-                                (paivita-extent nil initialextent))
-          :on-click           (fn [event]
-                                #_(t/julkaise! {:aihe :tyhja-click :klikkaus-koordinaatit at})
-                                #_(poista-popup!)
-                                (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
-                                                                    event
-                                                                    asiat-pisteessa)
-                                (.stopPropagation event)
-                                (.preventDefault event))
-          :on-select          (fn [item event]
-                                (when (hae-asiat? item)
-                                  (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
-                                                                      event
-                                                                      asiat-pisteessa))
-                                (kun-geometriaa-klikattu item event asiat-pisteessa)
-                                (.stopPropagation event)
-                                (.preventDefault event))
+         :tooltip-fn         (fn [geom]
+                                        ; Palauttaa funktion joka palauttaa tooltipin sisällön, tai nil jos hoverattu asia
+                                        ; on valittu hallintayksikkö tai urakka.
+                               (if (or (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? geom)
+                                       (and (empty? (:nimi geom)) (empty? (:siltanimi geom))))
+                                 nil
+                                 (fn []
+                                   (and geom
+                                        [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))))
 
-          :on-dblclick        nil
-
-          :on-dblclick-select (fn [item event]
-                                ;; jos tuplaklikattiin valittua hallintayksikköä tai urakkaa (eli "tyhjää"),
-                                ;; niin silloin ei pysäytetä eventtiä, eli zoomataan sisään
-                                (when-not (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
-                                  (.stopPropagation event)
-                                  (.preventDefault event)
-
-                                  ;; Jos tuplaklikattu asia oli jotain muuta kuin HY/urakka, niin keskitetään
-                                  ;; kartta siihen.
-                                  (when-not (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item)
-                                    (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
-                                                                        event
-                                                                        asiat-pisteessa)
-                                    (kun-geometriaa-klikattu item event asiat-pisteessa)
-                                    (tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))))
-
-          :tooltip-fn         (fn [geom]
-                                ; Palauttaa funktion joka palauttaa tooltipin sisällön, tai nil jos hoverattu asia
-                                ; on valittu hallintayksikkö tai urakka.
-                                (if (or (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? geom)
-                                        (and (empty? (:nimi geom)) (empty? (:siltanimi geom))))
-                                  nil
-                                  (fn []
-                                    (and geom
-                                         [:div {:class (name (:type geom))} (or (:nimi geom) (:siltanimi geom))]))))
-
-          :geometries         @tasot/geometriat-kartalle
-          :layers             [{:type  :mml
-                                :url   (str (k/wmts-polku) "maasto/wmts")
-                                :layer "taustakartta"}]}]))))
+         :geometries         @tasot/geometriat-kartalle
+         :layers             [{:type  :mml
+                               :url   (str (k/wmts-polku) "maasto/wmts")
+                               :layer "taustakartta"}]}]))))
 
 (defn kartan-edistyminen [kuvataso geometriataso]
   (let [ladattu (+ (:ladattu kuvataso) (:ladattu geometriataso))
