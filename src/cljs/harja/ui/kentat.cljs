@@ -792,7 +792,8 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
        [:td {:colSpan 2} virhe]])]])
 
 
-(defmethod tee-kentta :tierekisteriosoite [{:keys [tyyli lomake? ala-nayta-virhetta-komponentissa? sijainti pakollinen?]} data]
+(defmethod tee-kentta :tierekisteriosoite [{:keys [tyyli lomake? ala-nayta-virhetta-komponentissa?
+                                                   sijainti pakollinen?]} data]
   (let [osoite-alussa @data
 
         hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
@@ -842,12 +843,13 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                  (recur))))
 
     (komp/luo
-      {:component-will-update
-       (fn [_ _ {sijainti :sijainti}]
-         (when sijainti
-           (reset! alkuperainen-sijainti @sijainti)
-           (vreset! sijainti-atom sijainti)
-           (nayta-kartalla @sijainti)))}
+     (komp/kun-muuttuu
+      (fn [{sijainti :sijainti} _]
+        (if-not sijainti
+          (tasot/poista-geometria! :tr-valittu-osoite)
+          (do (reset! alkuperainen-sijainti @sijainti)
+              (vreset! sijainti-atom sijainti)
+              (nayta-kartalla @sijainti)))))
 
       (komp/kuuntelija :kartan-koko-vaihdettu #(keskita-kartta! @(deref sijainti-atom)))
 
@@ -909,7 +911,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                                   (reset! karttavalinta-kaynnissa false)
                                                   (log "Saatiin tr-osoite! " (pr-str %))
                                                   (go (>! tr-osoite-ch %)))}])
-            (when-let [sijainti (and hae-sijainti @sijainti)]
+            (when-let [sijainti (and hae-sijainti sijainti @sijainti)]
               (when (vkm/virhe? sijainti)
                 [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]))]])))))
 
