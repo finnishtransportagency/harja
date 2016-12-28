@@ -19,7 +19,7 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce nakymassa? (atom false))
-(defonce valittu-tila (atom :nykytilanne))
+(defonce valittu-tila (reaction (nav/valittu-valilehti :tilannekuva)))
 
 (def
   ^{:doc "Kuinka pitkä urakan nimi hyväksytään pudotusvalikkoon"
@@ -408,7 +408,8 @@ hakutiheys-historiakuva 1200000)
           (paivita-periodisesti asioiden-haku
                                 (case @valittu-tila
                                   :nykytilanne hakutiheys-nykytilanne
-                                  :historiakuva hakutiheys-historiakuva))))
+                                  :historiakuva hakutiheys-historiakuva
+                                  :tienakyma hakutiheys-historiakuva))))
 
 (defn lopeta-periodinen-haku-jos-kaynnissa []
   (when @lopeta-haku
