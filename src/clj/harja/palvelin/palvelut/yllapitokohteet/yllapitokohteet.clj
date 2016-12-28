@@ -334,7 +334,8 @@
                             :bitumi_indeksi bitumi-indeksi
                             :kaasuindeksi kaasuindeksi
                             :yllapitokohdetyyppi (when yllapitokohdetyyppi (name yllapitokohdetyyppi))
-                            :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))})))
+                            :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))
+                            :vuodet vuodet})))
 
 (defn- paivita-yllapitokohde [db user urakka-id
                               {:keys [id kohdenumero nimi

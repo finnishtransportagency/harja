@@ -213,7 +213,7 @@ INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi,
                            tr_ajorata, tr_kaista, keskimaarainen_vuorokausiliikenne,
                            yllapitoluokka, sopimuksen_mukaiset_tyot,
                            arvonvahennykset, bitumi_indeksi, kaasuindeksi, yllapitokohdetyyppi,
-                           yllapitokohdetyotyyppi)
+                           yllapitokohdetyotyyppi, vuodet)
 VALUES (:urakka,
   :sopimus,
   :kohdenumero,
@@ -232,7 +232,8 @@ VALUES (:urakka,
   :bitumi_indeksi,
   :kaasuindeksi,
   :yllapitokohdetyyppi :: yllapitokohdetyyppi,
-  :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi);
+  :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi,
+  :vuodet);
 
 -- name: paivita-yllapitokohde!
 -- Päivittää ylläpitokohteen

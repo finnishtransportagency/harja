@@ -77,9 +77,6 @@
                @valmis-tiemerkintaan-lomake]]))}
        "Aseta päivä\u00ADmäärä"]])))
 
-(defn aikataulu-valinnat [ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom]
-  [valinnat/vuosi ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom])
-
 (defn aikataulu
   [urakka optiot]
   (komp/luo
@@ -106,7 +103,7 @@
                                                      "Päällystystä ei voi merkitä alkaneeksi ennen kohteen aloitusta."])
                                               paallystys-aloitettu-validointi)]
         [:div.aikataulu
-         [aikataulu-valinnat
+         [valinnat/vuosi
           (t/year (:alkupvm ur))
           (t/year (:loppupvm ur))
           urakka/valittu-urakan-vuosi]
