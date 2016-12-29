@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "poistettava-toteuma": {
+      "id": "urn:harja/poistettava-toteuma",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "id": "urn:harja/toteuma/id",
+          "type": "integer",
+          "required": true
+        }
+      }
+    }
+  }
+}

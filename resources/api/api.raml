@@ -112,7 +112,7 @@ documentation:
       /reitti:
         post:
           is: [secured]
-          description: Reittimuotoisten toteumien kirjaaminen urakalle. Yksittäinen reittipiste toteumalle tulisi kirjata aina, kun 1. ajettava tie muuttuu, 2. ajettava tieosa muuttuu, 3. ajettava suunta muuttuu, 4. suoritettava tehtävä muuttuu tai 5. materiaaliannostelijan (esim. suolasirottimen) asetukset muuttuuvat. Toteumien tehtävät raportoidaan aina Harjan urakkahaun palauttamassa yksikössä. Harja ei tee yksikkö muunnoksia vaan olettaa, että määrät on annettu halutussa yksikössä. Sama koskee myös raportoituja materiaalien käyttöjä.
+          description: Reittimuotoisten toteumien kirjaaminen urakalle. Yksittäinen reittipiste toteumalle tulisi kirjata aina, kun 1. ajettava tie muuttuu, 2. ajettava tieosa muuttuu, 3. ajettava suunta muuttuu, 4. suoritettava tehtävä muuttuu tai 5. materiaaliannostelijan (esim. suolasirottimen) asetukset muuttuuvat. Toteumien tehtävät raportoidaan aina Harjan urakkahaun palauttamassa yksikössä. Harja ei tee yksikkömuunnoksia vaan olettaa, että määrät on annettu halutussa yksikössä. Sama koskee myös raportoituja materiaalien käyttöjä.
           body:
             application/json:
               example: !include examples/reittitoteuman-kirjaus-request.json
@@ -133,14 +133,59 @@ documentation:
               application/json:
                 example: !include examples/epaonnistunut-kirjaus-response.json
                 schema: virhe-response
+        delete:
+          is: [secured]
+          description: Poista reittitoteuma tunnisteella.
+          body:
+            application/json:
+              example: !include examples/reittitoteuman-poisto-request.json
+              schema: toteuman-poisto-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: virhe-response
       /piste:
         post:
           is: [secured]
-          description: Pistemäisten toteumien kirjaaminen urakalle. Toteumien tehtävät raportoidaan aina Harjan urakkahaun palauttamassa yksikössä. Harja ei tee yksikkö muunnoksia vaan olettaa, että määrät on annettu halutussa yksikössä. Sama koskee myös raportoituja materiaalien käyttöjä.
+          description: Pistemäisten toteumien kirjaaminen urakalle. Toteumien tehtävät raportoidaan aina Harjan urakkahaun palauttamassa yksikössä. Harja ei tee yksikkömuunnoksia vaan olettaa, että määrät on annettu halutussa yksikössä. Sama koskee myös raportoituja materiaalien käyttöjä.
           body:
             application/json:
               example: !include examples/pistetoteuman-kirjaus-request.json
               schema: pistetoteuman-kirjaus-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: virhe-response
+        delete:
+          is: [secured]
+          description: Poista pistetoteuma tunnisteella.
+          body:
+            application/json:
+              schema: toteuman-poisto-request
           responses:
            200:
             body:
@@ -181,6 +226,28 @@ documentation:
               application/json:
                 example: !include examples/epaonnistunut-kirjaus-response.json
                 schema: kirjaus-response
+        delete:
+          is: [secured]
+          description: Poista varustetoteuma tunnisteella.
+          body:
+            application/json:
+              schema: toteuman-poisto-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: virhe-response
     /tarkastus:
       description: Tarkastusten kirjaaminen
       /tiestotarkastus:
