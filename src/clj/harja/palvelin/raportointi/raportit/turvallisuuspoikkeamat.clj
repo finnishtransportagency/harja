@@ -206,6 +206,14 @@
                               :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
                               :alku alkupvm
                               :loppu loppupvm})
+        _ (log/debug "HAE TURPOT: ")
+        _ (log/debug (pr-str {:urakka_annettu (some? urakka-id)
+                              :urakka urakka-id
+                              :hallintayksikko_annettu (some? hallintayksikko-id)
+                              :hallintayksikko hallintayksikko-id
+                              :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                              :alku alkupvm
+                              :loppu loppupvm}))
         turpot (into []
                      (comp
                        (map #(konv/array->vec % :tyyppi))
@@ -213,10 +221,13 @@
                        (map #(konv/string->keyword % :tyontekijanammatti))
                        (map konv/alaviiva->rakenne))
                      (hae-turvallisuuspoikkeamat db
-                                                 (some? urakka-id) urakka-id
-                                                 (some? hallintayksikko-id) hallintayksikko-id
-                                                 (when urakkatyyppi (name urakkatyyppi))
-                                                 alkupvm loppupvm))
+                                                 {:urakka_annettu (some? urakka-id)
+                                                  :urakka urakka-id
+                                                  :hallintayksikko_annettu (some? hallintayksikko-id)
+                                                  :hallintayksikko hallintayksikko-id
+                                                  :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                  :alku alkupvm
+                                                  :loppu loppupvm}))
         raportin-nimi "Turvallisuusraportti"
         otsikko (raportin-otsikko
                   (case konteksti
