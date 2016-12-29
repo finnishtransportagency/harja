@@ -295,6 +295,12 @@ INTO siltatarkastuskohde
 (tulos, lisatieto, siltatarkastus, kohde)
 VALUES (:tulos, :lisatieto, :siltatarkastus, :kohde);
 
+-- name: poista-siltatarkastus!
+-- Merkitsee annetun siltatarkastuksen poistetuksi
+SET poistettu = TRUE
+WHERE id = :id
+      AND urakka = :urakka;
+
 -- name: poista-siltatarkastus-ulkoisella-idlla!
 -- Merkitsee annetun siltatarkastuksen poistetuksi
 UPDATE siltatarkastus
