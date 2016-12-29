@@ -64,5 +64,5 @@
           "Päällystysilmoitukset"
           :paallystysilmoitukset
           (when (oikeudet/urakat-kohdeluettelo-paallystysilmoitukset (:id ur))
-            [paallystysilmoitukset/paallystysilmoitukset])]]
+            [paallystysilmoitukset/paallystysilmoitukset ur])]]
         [vihje "Päällystysurakka täytyy sitoa YHA-urakkaan ennen kuin sen kohteita voi hallita."]))))

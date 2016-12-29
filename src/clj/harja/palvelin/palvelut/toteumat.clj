@@ -88,14 +88,15 @@
                              user urakka-id)
   (into []
         muunna-desimaaliluvut-xf
-        (toteumat-q/hae-toteumien-tehtavien-summat db
-                                                   urakka-id
-                                                   sopimus-id
-                                                   (konv/sql-date alkupvm)
-                                                   (konv/sql-date loppupvm)
-                                                   (name tyyppi)
-                                                   toimenpide-id
-                                                   tehtava-id)))
+        (toteumat-q/hae-toteumien-tehtavien-summat
+         db
+         {:urakka  urakka-id
+          :sopimus sopimus-id
+          :alkanut (konv/sql-date alkupvm)
+          :paattynyt (konv/sql-date loppupvm)
+          :tyyppi (name tyyppi)
+          :toimenpide toimenpide-id
+          :tehtava tehtava-id})))
 
 (defn hae-urakan-toteutuneet-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
   (log/debug "Haetaan urakan toteutuneet tehtävät: " urakka-id sopimus-id alkupvm loppupvm tyyppi)

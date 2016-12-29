@@ -17,7 +17,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]))
 
-(defn hae-urakan-paikkausilmoitukset [db user {:keys [urakka-id sopimus-id]}]
+(defn hae-urakan-paikkausilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
   (let [vastaus (into []
                       (comp
@@ -29,7 +29,7 @@
                                                db {:urakka urakka-id
                                                    :sopimus sopimus-id
                                                    :yllapitokohde (:paikkauskohde-id %)})))))
-                      (q/hae-urakan-paikkausilmoitukset db urakka-id sopimus-id))]
+                      (q/hae-urakan-paikkausilmoitukset db urakka-id sopimus-id vuosi))]
     (log/debug "Paikkaustoteumat saatu: " (pr-str (map :nimi vastaus)))
     vastaus))
 
