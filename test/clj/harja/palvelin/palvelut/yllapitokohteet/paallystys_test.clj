@@ -147,6 +147,35 @@
       (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
                           (konv/jsonb->clojuremap ilmoitusosa))))))
 
+(deftest hae-paallystysilmoitukset
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+        paallystysilmoitukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                              :urakan-paallystysilmoitukset +kayttaja-jvh+
+                                              {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id})]
+    (is (= (count paallystysilmoitukset) 5) "Päällystysilmoituksia löytyi")))
+
+(deftest hae-paallystysilmoitukset
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+        paallystysilmoitukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                              :urakan-paallystysilmoitukset +kayttaja-jvh+
+                                              {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id
+                                               :vuosi 2015})]
+    (is (= (count paallystysilmoitukset) 0) "Päällystysilmoituksia ei löydy vuodelle 2015")))
+
+(deftest hae-paallystysilmoitukset
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+        paallystysilmoitukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                              :urakan-paallystysilmoitukset +kayttaja-jvh+
+                                              {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id
+                                               :vuosi 2017})]
+    (is (= (count paallystysilmoitukset) 5) "Päällystysilmoituksia löytyi vuodelle 2017")))
+
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
   (let [paallystyskohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)]
     (is (not (nil? paallystyskohde-id)))
