@@ -70,7 +70,7 @@ WHERE
 -- Listaa urakan toteumien tehtävien määrien summat toimenpidekoodilla ryhmiteltynä.
 SELECT x.tpk_id, x.maara, tk.nimi
   FROM (SELECT toimenpidekoodi AS tpk_id,
-               SUM(tt.maara)   AS maara -- FIXME: nimi ulommalla kyselyllä
+               SUM(tt.maara)   AS maara
           FROM toteuma_tehtava tt
          WHERE tt.toteuma IN (SELECT id FROM toteuma t
                                WHERE t.urakka = :urakka
