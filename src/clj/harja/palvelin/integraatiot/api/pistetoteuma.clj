@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.api.pistetoteuma
   "Pistetoteuman kirjaaminen urakalle"
   (:require [com.stuartsierra.component :as component]
-            [compojure.core :refer [POST GET]]
+            [compojure.core :refer [POST GET DELETE]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
@@ -57,6 +57,15 @@
     (tallenna-kaikki-pyynnon-pistetoteumat db urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
 
+(defn poista-toteuma [db {id :id} data kirjaaja]
+  (let [urakka-id (Integer/parseInt id)
+        ulkoinen-id (-> data :poistettava-toteuma :id)]
+    (log/debug "Poistetaan pistetoteuma id:" ulkoinen-id "urakalta id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja)
+               " (id:" (:id kirjaaja) " tekemänä")
+    (tarkista-pyynto db urakka-id kirjaaja data)
+    (api-toteuma/poista-toteuma db urakka-id kirjaaja ulkoinen-id)
+    (tee-onnistunut-vastaus)))
+
 (defrecord Pistetoteuma []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
@@ -65,6 +74,11 @@
       (POST "/api/urakat/:id/toteumat/piste" request
         (kasittele-kutsu db integraatioloki :lisaa-pistetoteuma request json-skeemat/pistetoteuman-kirjaus json-skeemat/kirjausvastaus
                          (fn [parametit data kayttaja db] (kirjaa-toteuma db parametit data kayttaja)))))
+    (julkaise-reitti
+      http :poista-pistetoteuma
+      (DELETE "/api/urakat/:id/toteumat/piste" request
+        (kasittele-kutsu db integraatioloki :poista-pistetoteuma request json-skeemat/pistetoteuman-poisto json-skeemat/kirjausvastaus
+                         (fn [parametit data kayttaja db] (poista-toteuma db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-pistetoteuma)
