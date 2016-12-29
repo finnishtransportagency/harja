@@ -61,6 +61,6 @@
           "Paikkausilmoitukset"
           :paikkausilmoitukset
           (when (oikeudet/urakat-kohdeluettelo-paikkausilmoitukset (:id ur))
-            [paikkausilmoitukset/paikkausilmoitukset])]]
+            [paikkausilmoitukset/paikkausilmoitukset ur])]]
         [vihje "Paikkausurakka täytyy sitoa YHA-urakkaan ennen kuin sen kohteita voi hallita."]))))
 
