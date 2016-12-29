@@ -33,8 +33,17 @@
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.ui.kentat :as kentat]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.bootstrap :as bs])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+(def aikavalit [{:nimi "1 tunnin ajalta" :tunteja 1}
+                {:nimi "12 tunnin ajalta" :tunteja 12}
+                {:nimi "1 päivän ajalta" :tunteja 24}
+                {:nimi "1 viikon ajalta" :tunteja 168}
+                {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
+
+(def valittu-atom (atom :tietyoilmoitukset))
 
 (def selitehaku
   (reify protokollat/Haku
@@ -265,8 +274,8 @@
 
         {:otsikko "Tila" :nimi :tila :leveys 7 :hae #(tilan-selite (:tila %))}]
        (mapv #(if (:yhteydenottopyynto %)
-               (assoc % :lihavoi true)
-               %)
+                (assoc % :lihavoi true)
+                %)
              haetut-ilmoitukset)]]]))
 
 (defn- ilmoitukset* [e! ilmoitukset]
@@ -283,14 +292,74 @@
        [kartta/kartan-paikka]
        (if valittu-ilmoitus
          [ilmoituksen-tiedot e! valittu-ilmoitus]
-         [ilmoitusten-paanakyma e! ilmoitukset])])))
+
+         [bs/tabs {:style :tabs :classes "tabs-taso1"
+                   :active valittu-atom}
+
+          "Tieliikennekeskus"
+          :tieliikennekeskus
+          ^{:key "tieliikennekeskus"}
+          [ilmoitusten-paanakyma e! ilmoitukset]
+
+
+          "Tietyöilmoitukset"
+          :tietyoilmoitukset
+          ^{:key "tietyoilmoitukset"}
+          [:span.ilmoitukset
+
+           [:br]
+           [napit/uusi "Kirjaa uusi tietyöilmoitus"
+            #()
+            {}]
+           [:br]
+
+           [lomake/lomake
+            {:luokka :horizontal
+             :otsikko "Hae tietyöilmoituksia"}
+            [(lomake/ryhma
+               {:rivi? true
+                :otsikko "Ilmoitettu"}
+               {:nimi :alkuaika
+                :otsikko "Alkaen"
+                :tyyppi :pvm-aika
+                :validoi [[:ei-tyhja "Anna alkuaika"]]}
+               {:nimi :loppuaika
+                :otsikko "Päättyen"
+                :tyyppi :pvm-aika
+                :validoi [[:ei-tyhja "Anna loppuaika"]]})
+             {:otsikko "Tierekisteriosoite"
+              :nimi :tr
+              :pakollinen? true
+              :tyyppi :tierekisteriosoite
+              :ala-nayta-virhetta-komponentissa? true
+              :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
+              }]]
+           [grid
+            {:piilota-toiminnot true
+             :max-rivimaara 500
+             :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
+
+            [{:otsikko "Tierekisteriosoite" :nimi :tierekisteriosoite :leveys 3}
+             {:otsikko "Ilmoitettu" :nimi :ilmoitettu :leveys 3}
+             {:otsikko "Urakka" :nimi :urakka :leveys 3}
+             {:otsikko "Ilmoittaja" :nimi :ilmoittaja :leveys 3}
+             {:otsikko "Kunnat" :nimi :kunnat :leveys 3}
+             {:otsikko "Ilmoitus koskee" :nimi :ilmoituskoskee :leveys 3}
+             {:otsikko "Tyotyypit" :nimi :tyotyypit :leveys 3}]
+            [{:tierekisteriosoite "20 / 1 / 1 / 3 / 2000"
+              :ilmoitettu "29.12.2016"
+              :urakka "Oulun alueurakka 2014-2019"
+              :ilmoittaja "Ilpo Ilmoittaja"
+              :kunnat "Oulu"
+              :ilmoituskoskee "Ensimmäinen ilmoitus työstä"
+              :tyotyypit "Tienrakennus, Päällystystyö"}]]]])])))
 
 (defn ilmoitukset []
   (komp/luo
     (komp/sisaan #(notifikaatiot/pyyda-notifikaatiolupa))
     (komp/sisaan-ulos #(do
-                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                        (nav/vaihda-kartan-koko! :M))
+                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                         (nav/vaihda-kartan-koko! :M))
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (komp/lippu tiedot/karttataso-ilmoitukset)
 
