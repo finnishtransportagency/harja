@@ -29,9 +29,12 @@
 
 (defn alikohde-kohteen-sisalla? [kohteen-sijainti alikohteen-sijainti]
   (and (<= (:aosa kohteen-sijainti) (:aosa alikohteen-sijainti))
-       (<= (:aet kohteen-sijainti) (:aet alikohteen-sijainti))
+       (or
+         (not= (:aosa kohteen-sijainti) (:aosa alikohteen-sijainti))
+         (<= (:aet kohteen-sijainti) (:aet alikohteen-sijainti)))
        (>= (:losa kohteen-sijainti) (:losa alikohteen-sijainti))
-       (>= (:let kohteen-sijainti) (:let alikohteen-sijainti))))
+       (or (not= (:losa kohteen-sijainti) (:losa alikohteen-sijainti))
+           (>= (:let kohteen-sijainti) (:let alikohteen-sijainti)))))
 
 (defn tarkista-alikohteet-sisaltyvat-kohteeseen [kohde-id kohteen-sijainti alikohteet]
   (mapv (fn [{:keys [tunnus sijainti]}]

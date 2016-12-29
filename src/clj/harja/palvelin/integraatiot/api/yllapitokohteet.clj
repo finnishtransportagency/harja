@@ -1,5 +1,36 @@
 (ns harja.palvelin.integraatiot.api.yllapitokohteet
-  "Ylläpitokohteiden hallinta"
+  "
+  YLLÄPITOKOHTEIDEN HALLINNAN RAJAPINTAKOMPONENTTI:
+
+  Tarjoaa seuraavat palvelut Harjan urakoitsija API:n
+
+  YLLÄPITOKOHTEIDEN HAKU
+  - Palauttaa listan YHA:sta saatuja ylläpitokohteita, joiden id:ten perusteella voidaan tehdä kirjauksia.
+
+  YLLÄPITOKOHTEEN PÄIVITYS
+  - Mahdollistaa ylläpitokohteen sijainnin ja sen alikohteiden päivittämisen. Alikohteet poistetaan aina kutsun
+    yhteydessä ja uudet kohteet vedetään vanhojen päälle.
+
+  PÄÄLLYSTYSILMOITUKSEN KIRJAUS KOHTEELLE
+  - Kirjaa kohteelle päällystysilmoituksen tekniset tiedot. Samanaikaisesti päivittää kohteen ja sen alikohteiden
+    sijainnit.
+
+  KOHTEEN PÄÄLLYSTYSAIKATAULUN KIRJAUS
+  - Kirjaa päällystyksen aikataulun tarkemmat tiedot, kuten esim. milloin työt on aloitettu ja milloin kohde on valmis
+    tiemerkintään
+
+  KOHTEEN TIEMERKINTÄAIKATAULUN KIRJAUS
+  - Kirjaa tiemerkinnän aikataulun tarkemmat tiedot, kuten esim. milloin työt on aloitettu ja milloin kohde on valmis.
+
+  TIETYÖMAAN KIRJAUS KOHTEELLE
+  - Kirjaa uuden tietyömaan urakalle. Tietyömaalla tarkoitetaan aluetta, jonka sulkuaidat rajaavat. Tietyömaalle
+    ilmoitetaan alku- & loppuaidan koordinaatit, kellonaika milloin sijainti on kirjattu sekä lisätietoja kuten esim.
+    alueella vallitseva nopeusrajoitus. Samalla kutsulla voidaan päivittää tietyömaan sijaintia sijainnin muuttuessa
+
+  TIETYÖMAAN POISTO KOHTEELTA
+  - Kun tietyömaa on valmistunut ja aidat on poistettu kentältä, voidaan tällä kutsulla poistaa tietyömaa Harjasta.
+  "
+
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
@@ -17,7 +48,8 @@
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json])
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json]
+            [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as yllapitokohteet])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -47,6 +79,28 @@
       (virheet/heita-poikkeus virheet/+viallinen-kutsu+
                               {:koodi virheet/+urakkaan-kuulumaton-yllapitokohde+
                                :viesti "Ylläpitokohde ei kuulu urakkaan."}))))
+
+
+(defn paivita-yllapitokohde [db kayttaja {:keys [urakka-id kohde-id]} data]
+  (log/debug (format "Päivitetään urakan (id: %s) kohteelle (id: %s) tiedot käyttäjän: %s toimesta"
+                     urakka-id
+                     kohde-id
+                     kayttaja))
+  (let [urakka-id (Integer/parseInt urakka-id)
+        kohde-id (Integer/parseInt kohde-id)
+        urakan-tyyppi (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id))))
+        kohde (assoc (:yllapitokohde data) :id kohde-id)
+        kohteen-sijainti (:sijainti kohde)
+        alikohteet (mapv #(assoc (:alikohde %) :ulkoinen-id (get-in % [:alikohde :tunniste :id])) (:alikohteet kohde))
+        kohteen-tienumero (:numero kohteen-sijainti)]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (vaadi-kohde-kuuluu-urakkaan db urakka-id urakan-tyyppi kohde-id)
+    (validointi/tarkista-saako-kohteen-paivittaa db kohde-id)
+    (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
+    (yllapitokohteet/paivita-kohde db kohde-id kohteen-sijainti)
+    (yllapitokohteet/paivita-alikohteet db kohde alikohteet)
+    (tee-kirjausvastauksen-body
+      {:ilmoitukset (str "Ylläpitokohde päivitetty onnistuneesti")})))
 
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
@@ -217,6 +271,13 @@
     :vastaus-skeema json-skeemat/urakan-yllapitokohteiden-haku-vastaus
     :kasittely-fn (fn [parametit _ kayttaja db]
                     (hae-yllapitokohteet db parametit kayttaja))}
+   {:palvelu :paivita-yllapitokohde
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id"
+    :tyyppi :PUT
+    :kutsu-skeema json-skeemat/urakan-yllapitokohteen-paivitys-request
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db]
+                    (paivita-yllapitokohde db kayttaja parametrit data))}
    {:palvelu :kirjaa-paallystysilmoitus
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/paallystysilmoitus"
     :tyyppi :POST
