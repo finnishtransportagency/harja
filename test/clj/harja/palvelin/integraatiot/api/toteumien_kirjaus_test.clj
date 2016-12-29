@@ -112,13 +112,12 @@
           (u (str "DELETE FROM toteuma_materiaali WHERE toteuma = " toteuma-id))
           (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
           (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))))
-    #_(let [vastaus-poisto (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
-                                                  (-> "test/resurssit/api/poista-reittitoteuma.json"
+    (let [vastaus-poisto (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+                                                  (-> "test/resurssit/api/toteuman-poisto.json"
                                                       slurp
                                                       (.replace "__ID__" (str ulkoinen-id))
                                                       (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
                                                       (.replace "__PVM__" (json-tyokalut/json-pvm (Date.)))))
-          toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE poistetu IS NOT TRUE AND ulkoinen_id = " ulkoinen-id)))]
+          toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE poistettu IS NOT TRUE AND ulkoinen_id = " ulkoinen-id)))]
       (is (= 200 (:status vastaus-poisto)))
-      (is (empty? toteuma-id)))
-    ))
+      (is (empty? toteuma-id)))))
