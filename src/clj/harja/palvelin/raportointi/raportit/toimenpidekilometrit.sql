@@ -24,7 +24,7 @@ WHERE (:urakka::INTEGER IS NULL OR t.urakka = :urakka)
                                           u.tyyppi = :urakkatyyppi :: urakkatyyppi)
                                           AND urakkanro IS NOT NULL)))
       AND t.alkanut :: DATE BETWEEN :alku AND :loppu
-      AND tpk.yksikko = 'tiekm'
+      AND tpk.yksikko IN ('tiekm', 'jkm')
 AND t.tyyppi = 'kokonaishintainen'
 AND t.poistettu IS NOT TRUE
 GROUP BY urakka, hallintayksikko, tpk.id, talvihoitoluokka;
