@@ -354,10 +354,11 @@
     (fn [urakka]
       [:span.paikkausilmoitukset
        [kartta/kartan-paikka]
-       [valinnat/vuosi
+       [valinnat/vuosi {:kaanteinen-jarjestys? true}
         (t/year (:alkupvm urakka))
         (t/year (:loppupvm urakka))
-        urakka/valittu-urakan-vuosi]
+        urakka/valittu-urakan-vuosi
+        urakka/valitse-urakan-vuosi!]
        (if @paikkaus/paikkausilmoitus-lomakedata
          [paikkausilmoituslomake]
          [ilmoitusluettelo])])))

@@ -135,6 +135,9 @@
                               (when ur (min (t/year (:loppupvm ur))
                                             (t/year (pvm/nyt)))))))
 
+(defn valitse-urakan-vuosi! [uusi-vuosi]
+  (reset! valittu-urakan-vuosi uusi-vuosi))
+
 (defonce valittu-hoitokauden-kuukausi
   (reaction-writable
     (let [hk @valittu-hoitokausi

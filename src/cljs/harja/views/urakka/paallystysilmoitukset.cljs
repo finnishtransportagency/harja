@@ -726,10 +726,11 @@
     (fn [urakka]
       [:div.paallystysilmoitukset
        [kartta/kartan-paikka]
-       [valinnat/vuosi
+       [valinnat/vuosi {:kaanteinen-jarjestys? true}
         (t/year (:alkupvm urakka))
         (t/year (:loppupvm urakka))
-        urakka/valittu-urakan-vuosi]
+        urakka/valittu-urakan-vuosi
+        urakka/valitse-urakan-vuosi!]
        (if @paallystys/paallystysilmoitus-lomakedata
          [paallystysilmoituslomake-historia paallystys/paallystysilmoitus-lomakedata]
          [ilmoitusluettelo])])))

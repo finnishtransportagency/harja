@@ -104,10 +104,11 @@
                                                      "Päällystystä ei voi merkitä alkaneeksi ennen kohteen aloitusta."])
                                               paallystys-aloitettu-validointi)]
         [:div.aikataulu
-         [valinnat/vuosi
+         [valinnat/vuosi {:kaanteinen-jarjestys? true}
           (t/year (:alkupvm ur))
           (t/year (:loppupvm ur))
-          urakka/valittu-urakan-vuosi]
+          urakka/valittu-urakan-vuosi
+          urakka/valitse-urakan-vuosi!]
          [grid/grid
           {:otsikko "Kohteiden aikataulu"
            :voi-poistaa? (constantly false)
