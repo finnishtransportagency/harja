@@ -1,8 +1,8 @@
 <b>Nykyinen versio: 1.0.6/b>
-<b>Julkaistu: FIXME.12.2016</b>
+<b>Julkaistu: 29.12.2016</b>
 
 <b>Versiohistoria:</b>
-- Versionumero: 1.0.6 Julkaistu: FIXME.12.2016:
+- Versionumero: 1.0.6 Julkaistu: 29.12.2016:
     - Työkoneiden reaaliaikaseurannan rajapintaan lisätty jyrät uutena työkonetyyppinä.
 - Versionumero: 1.0.5 Julkaistu: 21.12.2016:
     - Urakan yhteystietorajapintaan lisätty tieto urakan vastuu- ja varahenkilöistä 
