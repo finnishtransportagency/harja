@@ -19,9 +19,10 @@
 (def paallystyskohteet-nakymassa? (atom false))
 (def paallystysilmoitukset-nakymassa? (atom false))
 
-(defn hae-paallystysilmoitukset [urakka-id sopimus-id]
+(defn hae-paallystysilmoitukset [urakka-id sopimus-id vuosi]
   (k/post! :urakan-paallystysilmoitukset {:urakka-id urakka-id
-                                          :sopimus-id sopimus-id}))
+                                          :sopimus-id sopimus-id
+                                          :vuosi vuosi}))
 
 (defn hae-paallystysilmoitus-paallystyskohteella [urakka-id paallystyskohde-id]
   (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:urakka-id urakka-id
@@ -34,11 +35,12 @@
 
 (def paallystysilmoitukset
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+               vuosi @urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
                nakymassa? @paallystysilmoitukset-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                (hae-paallystysilmoitukset valittu-urakka-id valittu-sopimus-id))))
+                (hae-paallystysilmoitukset valittu-urakka-id valittu-sopimus-id vuosi))))
 
 (defonce paallystysilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 
@@ -49,29 +51,32 @@
 
 (def yllapitokohteet
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+               vuosi @urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
                nakymassa? @paallystyskohteet-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id))))
+                (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id vuosi))))
 
 (def yhan-paallystyskohteet
   (reaction-writable
     (let [kohteet @yllapitokohteet
-          yha-kohteet (when kohteet
-                        (filter
-                         yllapitokohteet/yha-kohde?
-                         kohteet))]
-      (tr-domain/jarjesta-kohteiden-kohdeosat yha-kohteet))))
+          yhan-paallystyskohteet (when kohteet
+                                   (filter
+                                     #(and (yllapitokohteet/yha-kohde? %)
+                                           (= (:yllapitokohdetyotyyppi %) :paallystys))
+                                     kohteet))]
+      (tr-domain/jarjesta-kohteiden-kohdeosat yhan-paallystyskohteet))))
 
 (def harjan-paikkauskohteet
   (reaction-writable
     (let [kohteet @yllapitokohteet
-          ei-yha-kohteet (when kohteet
-                           (filter
-                            (comp not yllapitokohteet/yha-kohde?)
-                            kohteet))]
-      (tr-domain/jarjesta-kohteiden-kohdeosat ei-yha-kohteet))))
+          harjan-paikkauskohteet (when kohteet
+                                   (filter
+                                     #(and (not (yllapitokohteet/yha-kohde? %))
+                                           (= (:yllapitokohdetyotyyppi %) :paikkaus))
+                                     kohteet))]
+      (tr-domain/jarjesta-kohteiden-kohdeosat harjan-paikkauskohteet))))
 
 (def kohteet-yhteensa
   (reaction (concat @yhan-paallystyskohteet @harjan-paikkauskohteet)))

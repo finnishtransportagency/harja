@@ -87,6 +87,9 @@
           (or viesti
               (ei-kuukauden-aikana-str (pvm/pvm valittu-kk-alkupvm) (pvm/pvm valittu-kk-loppupvm))))))))
 
+(defmethod validoi-saanto :vakiohuomautus [_ _ data _ _ & [viesti]]
+  viesti)
+
 (defmethod validoi-saanto :validi-tr [_ _ data taulukko _ & [viesti reittipolku]]
   (when
     (and (:numero data) (:alkuosa data) (:alkuetaisyys data)
