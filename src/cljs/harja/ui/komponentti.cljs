@@ -8,7 +8,8 @@
             [harja.loki :refer [log error]]
             [goog.events :as events]
             [harja.virhekasittely :as virhekasittely]
-            [goog.events.EventType :as EventType]))
+            [goog.events.EventType :as EventType]
+            [harja.tiedot.kartta :as kartta-tiedot]))
 
 (defn luo
   "Luo uuden komponentin instanssin annetuista toteutuksista.
@@ -201,3 +202,9 @@
                                (let [atomit (-> this r/state ::atomien-watcherit)]
                                  (doseq [a atomit]
                                    (remove-watch a key))))}))
+
+(defn karttakontrollit
+  "Näyttää karttakontrollit karttanäkymässä kun tämä komponentti on näkyvissä."
+  [nimi kontrollit]
+  (sisaan-ulos #(kartta-tiedot/nayta-kartan-kontrollit! nimi kontrollit)
+               #(kartta-tiedot/poista-kartan-kontrollit! nimi)))

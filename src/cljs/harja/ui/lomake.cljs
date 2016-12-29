@@ -195,7 +195,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
     [:div.form-group {:class (str (or col-luokka
                                       (case (or palstoja 1)
                                         1 "col-xs-12 col-sm-6 col-md-5 col-lg-4"
-                                        2 "col-xs-12 col-sm-12 col-md-10 col-lg-8"))
+                                        2 "col-xs-12 col-sm-12 col-md-10 col-lg-8"
+                                        3 "col-xs-12 col-sm-12 col-md-12 col-lg-12"))
                                   (when pakollinen?
                                     " required")
                                   (when-not (empty? virheet)

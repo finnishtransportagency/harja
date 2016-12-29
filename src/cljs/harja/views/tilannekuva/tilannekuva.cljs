@@ -3,6 +3,8 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.tilannekuva.tilannekuva :as tiedot]
             [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva-kartalla]
+            [harja.views.tilannekuva.tienakyma :as tienakyma]
+            [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot]
             [harja.views.kartta :as kartta]
             [harja.ui.valinnat :as ui-valinnat]
             [harja.loki :refer [log tarkkaile!]]
@@ -21,7 +23,11 @@
             [harja.ui.modal :as modal]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.tilannekuva :as domain]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.ui.bootstrap :as bs]
+            [harja.ui.lomake :as lomake]
+            [harja.ui.napit :as napit]
+            [harja.domain.roolit :as roolit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction-writable]]))
 
@@ -43,20 +49,6 @@
      (or (hae-arvo)
          (do (swap! paneelien-tila-atomit assoc paneeli (atom luotavan-arvo))
              (hae-arvo))))))
-
-(defn tilan-vaihtaja []
-  (let [on-off-tila (atom (not= :nykytilanne @tiedot/valittu-tila))]
-    (fn []
-      [:div#tk-tilan-vaihto
-       [:div.tk-tilan-vaihto-nykytilanne "Nykytilanne"]
-       [:div.tk-tilan-vaihto-historia "Historia"]
-       [on-off/on-off-valinta on-off-tila {:luokka "on-off-tilannekuva"
-                                           :on-change (fn []
-                                                        ;; Päivitä valittu tila
-                                                        (reset! tiedot/valittu-tila
-                                                                (if (false? @on-off-tila)
-                                                                  :nykytilanne
-                                                                  :historiakuva)))}]])))
 
 (defn nykytilanteen-aikavalinnat []
   [:div#tk-nykytilanteen-aikavalit
@@ -285,6 +277,16 @@
        (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:tarkastukset]) false)
                                  :luokka "taustavari-taso3 yla-ja-alaraja"})]]]]))
 
+(defn nykytilanne-valinnat []
+  [:span.tilannekuva-nykytilanne-valinnat
+   [aikasuodattimet]
+   [aluesuodattimet]])
+
+(defn historiakuva-valinnat []
+  [:span.tilannekuva-historiakuva-valinnat
+   [aikasuodattimet]
+   [aluesuodattimet]])
+
 (defn suodattimet []
   (let [resize-kuuntelija (fn [this _]
                             (aseta-hallintapaneelin-max-korkeus (r/dom-node this)))]
@@ -296,11 +298,30 @@
         [:div#tk-suodattimet {:style {:max-height @hallintapaneeli-max-korkeus
                                       :overflow-x "hidden"
                                       :overflow-y "auto"}}
-         [tilan-vaihtaja]
-         [aikasuodattimet]
-         [aluesuodattimet]]))))
+         [bs/tabs {:active (nav/valittu-valilehti-atom :tilannekuva)}
+          "Nykytilanne"
+          :nykytilanne
+          [nykytilanne-valinnat]
 
-(def hallintapaneeli (atom {1 {:auki true :otsikko "Hallintapaneeli" :sisalto [suodattimet]}}))
+          "Historiakuva"
+          :historiakuva
+          [historiakuva-valinnat]
+
+          "Tienäkymä"
+          :tienakyma
+          (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+                     @tienakyma-tiedot/tienakyma-kaytossa?)
+            [tienakyma/tienakyma])]]))))
+
+(defonce hallintapaneeli-auki (atom {:hallintapaneeli true}))
+
+(defn hallintapaneeli []
+  [yleiset/haitari-paneelit
+   {:auki @hallintapaneeli-auki
+    :luokka "haitari-tilannekuva"
+    :toggle-osio! #(swap! hallintapaneeli-auki update % not)}
+
+   "Hallintapaneeli" :hallintapaneeli [suodattimet]])
 
 (defn tilannekuva []
   (komp/luo
@@ -327,13 +348,8 @@
                      (fn [_ ilmoitus]
                        (modal/piilota!)
                        (tiedot/paivita-ilmoituksen-tiedot (:id ilmoitus))))
-    {:component-will-mount   (fn [_]
-                               (kartta-tiedot/aseta-yleiset-kontrollit!
-                                 [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? false
-                                                                   :luokka               "haitari-tilannekuva"}]))
-     :component-will-unmount (fn [_]
-                               (kartta-tiedot/tyhjenna-yleiset-kontrollit!)
-                               (kartta/poista-popup!))}
+    (komp/karttakontrollit :tilannekuva
+                           [hallintapaneeli])
     (fn []
       [:span.tilannekuva
        [kartta/kartan-paikka]])))
