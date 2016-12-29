@@ -225,7 +225,7 @@ maksimi-linnuntien-etaisyys 200)
            integraatioloki :integraatioloki
            :as this}]
     (julkaise-reitti
-      http :lisaa-reittitoteuma
+     http :lisaa-reittitoteuma
       (POST "/api/urakat/:id/toteumat/reitti" request
         (kasittele-kutsu db
                          integraatioloki
@@ -235,8 +235,11 @@ maksimi-linnuntien-etaisyys 200)
                          json-skeemat/kirjausvastaus
                          (fn [parametit data kayttaja db]
                            (#'kirjaa-toteuma db db-replica
-                                             parametit data kayttaja))))
-      (DELETE "/api/urakat/:id/toteumat/reitti" request
+                                             parametit data kayttaja)))))
+
+    (julkaise-reitti
+     http :lisaa-reittitoteuma
+    (DELETE "/api/urakat/:id/toteumat/reitti" request
         (kasittele-kutsu db
                          integraatioloki
                          :poista-reittitoteuma
@@ -245,7 +248,8 @@ maksimi-linnuntien-etaisyys 200)
                          json-skeemat/kirjausvastaus
                          (fn [parametit data kayttaja db]
                            (#'poista-toteuma db db-replica
-                             parametit data kayttaja)))))
+                                             parametit data kayttaja)))))
+
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-reittitoteuma)
