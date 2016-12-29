@@ -68,26 +68,26 @@ WHERE
 
 -- name: hae-toteumien-tehtavien-summat
 -- Listaa urakan toteumien tehtävien määrien summat toimenpidekoodilla ryhmiteltynä.
-SELECT
-  toimenpidekoodi AS tpk_id,
-  SUM(tt.maara)   AS maara,
-  nimi
-FROM toteuma_tehtava tt
-  LEFT JOIN toimenpidekoodi tk
-    ON tk.id = tt.toimenpidekoodi
-  JOIN toteuma t ON tt.toteuma = t.id
-                    AND t.urakka = :urakka
-                    AND sopimus = :sopimus
-                    AND alkanut >= :alkanut
-                    AND alkanut <= :paattynyt
-                    AND tyyppi = :tyyppi :: toteumatyyppi
-                    AND tt.poistettu IS NOT TRUE
-                    AND t.poistettu IS NOT TRUE
-                    AND (:toimenpide :: INTEGER IS NULL OR tk.emo = (SELECT toimenpide
-                                                                     FROM toimenpideinstanssi
-                                                                     WHERE id = :toimenpide))
-                    AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
-GROUP BY toimenpidekoodi, nimi;
+SELECT x.tpk_id, x.maara, tk.nimi
+  FROM (SELECT toimenpidekoodi AS tpk_id,
+               SUM(tt.maara)   AS maara -- FIXME: nimi ulommalla kyselyllä
+          FROM toteuma_tehtava tt
+         WHERE tt.toteuma IN (SELECT id FROM toteuma t
+                               WHERE t.urakka = :urakka
+		                 AND t.sopimus = :sopimus
+			         AND t.alkanut >= :alkanut
+			         AND t.alkanut <= :paattynyt
+ 			         AND t.tyyppi = :tyyppi :: toteumatyyppi
+ 			         AND t.poistettu IS NOT TRUE)
+           AND tt.toimenpidekoodi IN (SELECT id FROM toimenpidekoodi tk
+                                       WHERE (:toimenpide :: INTEGER IS NULL
+		                              OR tk.emo = (SELECT toimenpide
+                                                             FROM toimenpideinstanssi
+                                                            WHERE id = :toimenpide))
+ 					 AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava))
+           AND tt.poistettu IS NOT TRUE
+      GROUP BY toimenpidekoodi) x
+   JOIN toimenpidekoodi tk ON x.tpk_id = tk.id;
 
 -- name: hae-toteuman-toteuma-materiaalit-ja-tehtavat
 -- Hakee toteuma_materiaalien ja tehtävien id:t. Hyödyllinen kun poistetaan toteuma.
