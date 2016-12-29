@@ -233,7 +233,7 @@
 (defn siltatarkastuksen-sarakkeet [muut-tarkastukset]
   (into []
         (concat
-          [{:otsikko "#" :nimi :kohdenro  :tyyppi :string :muokattava? (constantly false) :leveys 3} 
+          [{:otsikko "#" :nimi :kohdenro  :tyyppi :string :muokattava? (constantly false) :leveys 3}
            {:otsikko "Kohde" :nimi :kohde  :tyyppi :string :muokattava? (constantly false) :leveys 15}
            {:otsikko "Tulos " :nimi :tulos :leveys 10 :fmt kohdetuloksen-teksti
             :tyyppi :string}
