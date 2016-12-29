@@ -34,7 +34,7 @@
       [:div.paallystyskohteet
        [kartta/kartan-paikka]
 
-       [valinnat/vuosi {:kaanteinen-jarjestys? true}
+       [valinnat/vuosi {}
         (t/year (:alkupvm ur))
         (t/year (:loppupvm ur))
         urakka/valittu-urakan-vuosi

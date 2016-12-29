@@ -104,7 +104,7 @@
                                                      "Päällystystä ei voi merkitä alkaneeksi ennen kohteen aloitusta."])
                                               paallystys-aloitettu-validointi)]
         [:div.aikataulu
-         [valinnat/vuosi {:kaanteinen-jarjestys? true}
+         [valinnat/vuosi {}
           (t/year (:alkupvm ur))
           (t/year (:loppupvm ur))
           urakka/valittu-urakan-vuosi

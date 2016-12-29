@@ -354,7 +354,7 @@
     (fn [urakka]
       [:span.paikkausilmoitukset
        [kartta/kartan-paikka]
-       [valinnat/vuosi {:kaanteinen-jarjestys? true}
+       [valinnat/vuosi {}
         (t/year (:alkupvm urakka))
         (t/year (:loppupvm urakka))
         urakka/valittu-urakan-vuosi
