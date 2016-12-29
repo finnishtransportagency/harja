@@ -57,4 +57,6 @@
   (is (nil? (validoi json-skeemat/tietyomaan-kirjaus json-esimerkit/+tietyomaan-kirjaus+)))
   (is (nil? (validoi json-skeemat/tietyomaan-poisto json-esimerkit/+tietyomaan-poisto+)))
 
-  (is (nil? (validoi json-skeemat/urakan-yhteystietojen-haku-vastaus json-esimerkit/+urakan-yhteystietoje-hakuvastaus+))))
+  (is (nil? (validoi json-skeemat/urakan-yhteystietojen-haku-vastaus json-esimerkit/+urakan-yhteystietoje-hakuvastaus+)))
+
+  (is (nil? (validoi json-skeemat/urakan-yllapitokohteen-paivitys-request json-esimerkit/+urakan-yllapitokohteen-paivitys-request+))))
