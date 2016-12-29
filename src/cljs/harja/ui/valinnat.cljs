@@ -251,18 +251,24 @@
    (vuosi {}
           ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom
           #(reset! valittu-vuosi-atom %)))
-  ([{:keys [disabled kaanteinen-jarjestys?] :as optiot}
+  ([{:keys [disabled kaanteinen-jarjestys? kaikki-valinta?] :as optiot}
     ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom valitse-fn]
    [:span.label-ja-aikavali-lyhyt
     [:span.alasvedon-otsikko "Vuosi"]
     [livi-pudotusvalikko {:valinta @valittu-vuosi-atom
                           :disabled disabled
                           :valitse-fn valitse-fn
-                          :format-fn #(if % (str %) "Valitse")
+                          :format-fn #(if % (if (= % :kaikki)
+                                              "Kaikki"
+                                              (str %))
+                                            "Valitse")
                           :class "alasveto-vuosi"}
      (let [vuodet (range ensimmainen-vuosi (inc viimeinen-vuosi))
            vuodet (if kaanteinen-jarjestys?
                     (reverse vuodet)
+                    vuodet)
+           vuodet (if kaikki-valinta?
+                    (concat [:kaikki] vuodet)
                     vuodet)]
        vuodet)]]))
 
