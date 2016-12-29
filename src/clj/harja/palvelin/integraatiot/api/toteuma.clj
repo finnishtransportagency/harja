@@ -48,6 +48,11 @@
             :id (get-in toteuma [:tunniste :id])
             :urakka urakka-id}))))
 
+(defn poista-toteuma [db urakka-id kirjaaja ulkoinen-id]
+  (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " ulkoinen-id)
+  (let [kayttaja-id (:id kirjaaja)]
+    (toteumat/poista-toteuma-ulkoisella-idlla! ulkoinen-id kayttaja-id)))
+
 (defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Luodaan uusi toteuma.")
   (validointi/validoi-toteuman-pvm-vali (:alkanut toteuma) (:paattynyt toteuma))

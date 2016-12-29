@@ -297,6 +297,11 @@ UPDATE toteuma
 SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
 WHERE id IN (:id) AND poistettu IS NOT TRUE;
 
+-- name: poista-toteuma-ulkoisella-idlla!
+UPDATE toteuma
+SET muokattu = NOW(), muokkaaja = :kayttaja-id, poistettu = TRUE
+WHERE ulkoinen_id = :ulkoinen-id AND poistettu IS NOT TRUE;
+
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle
 INSERT
