@@ -161,7 +161,7 @@ FROM yllapitokohde ypk
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
-  AND (:vuosi::INTEGER IS NULL OR (array_upper(vuodet, 1) IS NULL
+  AND (:vuosi::INTEGER IS NULL OR (cardinality(vuodet) = 0
        OR vuodet @> ARRAY[:vuosi]::int[]))
   AND ypk.poistettu IS NOT TRUE;
 
@@ -353,7 +353,7 @@ FROM yllapitokohde
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
-  AND (:vuosi::INTEGER IS NULL OR (array_upper(vuodet, 1) IS NULL
+  AND (:vuosi::INTEGER IS NULL OR (cardinality(vuodet) = 0
      OR vuodet @> ARRAY[:vuosi]::int[]))
   AND poistettu IS NOT TRUE;
 
@@ -385,7 +385,7 @@ SELECT
 FROM yllapitokohde
 WHERE
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
-  AND (:vuosi::INTEGER IS NULL OR (array_upper(vuodet, 1) IS NULL
+  AND (:vuosi::INTEGER IS NULL OR (cardinality(vuodet) = 0
      OR vuodet @> ARRAY[:vuosi]::int[]))
   AND poistettu IS NOT TRUE;
 

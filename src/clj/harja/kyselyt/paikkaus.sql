@@ -13,7 +13,7 @@ FROM yllapitokohde
 WHERE urakka = :urakka
       AND sopimus = :sopimus
       AND yllapitokohdetyotyyppi = 'paikkaus'::yllapitokohdetyotyyppi
-      AND (:vuosi::INTEGER IS NULL OR (array_upper(vuodet, 1) IS NULL
+      AND (:vuosi::INTEGER IS NULL OR (cardinality(vuodet) = 0
            OR vuodet @> ARRAY[:vuosi]::int[]))
       AND yllapitokohde.poistettu IS NOT TRUE;
 
