@@ -75,6 +75,14 @@
                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")")))]
     (is (= (count res) kohteiden-lkm) "Päällystyskohteiden määrä")))
 
+(deftest paallystyskohteet-haettu-oikein-vuodelle-2016
+  (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :urakan-yllapitokohteet +kayttaja-jvh+
+                            {:urakka-id @muhoksen-paallystysurakan-id
+                             :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                             :vuosi 2016})]
+    (is (= (count res) 0) "Ei päällystyskohteita vuodelle 2016")))
+
 (deftest tallenna-paallystyskohde-kantaan
   (let [urakka-id @muhoksen-paallystysurakan-id
         sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
