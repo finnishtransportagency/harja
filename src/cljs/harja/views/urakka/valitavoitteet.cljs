@@ -15,7 +15,9 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.hallinta.valtakunnalliset-valitavoitteet :as vvt-tiedot])
+            [harja.tiedot.hallinta.valtakunnalliset-valitavoitteet :as vvt-tiedot]
+            [harja.ui.valinnat :as valinnat]
+            [harja.tiedot.urakka :as urakka])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -80,8 +82,8 @@
        :nimi :merkitsija :hae (fn [rivi]
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
      (filterv #(or
-                (nil? @tiedot/valittu-vuosi)
-                (= (t/year (:takaraja %)) @tiedot/valittu-vuosi))
+                 (= @urakka/valittu-urakan-vuosi :kaikki)
+                 (= (t/year (:takaraja %)) @urakka/valittu-urakan-vuosi))
               @urakan-valitavoitteet-atom)]))
 
 (defn- urakan-omat-ja-valtakunnalliset-valitavoitteet
@@ -126,8 +128,8 @@
        :nimi :merkitsija :hae (fn [rivi]
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
      (filterv #(or
-                (nil? @tiedot/valittu-vuosi)
-                (= (t/year (:takaraja %)) @tiedot/valittu-vuosi))
+                (= @urakka/valittu-urakan-vuosi :kaikki)
+                (= (t/year (:takaraja %)) @urakka/valittu-urakan-vuosi))
               @kaikki-valitavoitteet-atom)]))
 
 (defn ainakin-yksi-tavoite-muutettu-urakkaan [rivit]
@@ -238,8 +240,8 @@
         :nimi :merkitsija :hae (fn [rivi]
                                  (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
       (filterv #(or
-                 (nil? @tiedot/valittu-vuosi)
-                 (= (t/year (:takaraja %)) @tiedot/valittu-vuosi))
+                  (= @urakka/valittu-urakan-vuosi :kaikki)
+                  (= (t/year (:takaraja %)) @urakka/valittu-urakan-vuosi))
                @valtakunnalliset-valitavoitteet-atom)]
 
      (when (ainakin-yksi-tavoite-muutettu-urakkaan @valtakunnalliset-valitavoitteet-atom)
@@ -249,13 +251,11 @@
                                  [:span "."]]])]))
 
 (defn- valinnat [urakka]
-  [tee-otsikollinen-kentta "Vuosi"
-   {:tyyppi :valinta
-    :valinnat (into [] (conj (reverse (map #(t/year (first %))
-                                           (pvm/urakan-vuodet (:alkupvm urakka) (:loppupvm urakka))))
-                             nil))
-    :valinta-nayta #(or % "Kaikki")}
-   tiedot/valittu-vuosi])
+  [valinnat/vuosi {:kaikki-valinta? true}
+   (t/year (:alkupvm urakka))
+   (t/year (:loppupvm urakka))
+   urakka/valittu-urakan-vuosi
+   urakka/valitse-urakan-vuosi!])
 
 (defn valitavoitteet
   "Urakan välitavoitteet näkymä. Ottaa parametrinä urakan ja hakee välitavoitteet sille."
@@ -267,9 +267,11 @@
                                           (vvt-tiedot/valtakunnalliset-valitavoitteet-kaytossa? (:tyyppi ur)))
         nayta-urakkakohtaiset-grid? (not nayta-yhdistetty-grid?)]
     (komp/luo
-      (komp/sisaan #(reset! tiedot/valittu-vuosi (min (t/year (:loppupvm ur))
-                                                      (t/year (pvm/nyt)))))
       (komp/lippu tiedot/nakymassa?)
+      (komp/ulos #(when (= @urakka/valittu-urakan-vuosi :kaikki)
+                    ;; Muut näkymät eivät tue vuosivalintaa "Kaikki",
+                    ;; joten resetoidaan valinta
+                    (urakka/valitse-urakan-oletusvuosi! ur)))
       (fn [ur]
         [:div.valitavoitteet
          [valinnat ur]

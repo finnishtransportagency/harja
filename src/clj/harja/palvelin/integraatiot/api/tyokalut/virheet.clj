@@ -23,6 +23,7 @@
 (def +tietokanta-yhteys-poikki+ "tietokanta-yhteys-poikki")
 (def +tuntematon-kustannussuunnitelma+ "tuntematon-kustannussuunnitelma")
 (def +tuntematon-maksuera+ "tuntematon-maksuera")
+(def +lukittu-yllapitokohde+ "lukittu-yllapitokohde")
 
 ;; Virhetyypit
 (def +virheellinen-liite+ "virheellinen-liite")

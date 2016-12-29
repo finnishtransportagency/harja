@@ -19,7 +19,9 @@
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as urakka]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.ui.valinnat :as valinnat]
+            [cljs-time.core :as t])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -31,6 +33,12 @@
     (fn [ur]
       [:div.paallystyskohteet
        [kartta/kartan-paikka]
+
+       [valinnat/vuosi {}
+        (t/year (:alkupvm ur))
+        (t/year (:loppupvm ur))
+        urakka/valittu-urakan-vuosi
+        urakka/valitse-urakan-vuosi!]
 
        [yllapitokohteet-view/yllapitokohteet
         ur

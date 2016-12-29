@@ -130,36 +130,51 @@
 
 (def aseta-kuluva-kk-jos-hoitokaudella? (atom false))
 
+(defn- urakan-oletusvuosi [urakka]
+  (when urakka
+    (min (t/year (:loppupvm urakka))
+         (t/year (pvm/nyt)))))
+
+(def valittu-urakan-vuosi (reaction-writable
+                            (let [ur @nav/valittu-urakka]
+                              (urakan-oletusvuosi ur))))
+
+(defn valitse-urakan-vuosi! [uusi-vuosi]
+  (reset! valittu-urakan-vuosi uusi-vuosi))
+
+(defn valitse-urakan-oletusvuosi! [urakka]
+  (reset! valittu-urakan-vuosi (urakan-oletusvuosi urakka)))
+
 (defonce valittu-hoitokauden-kuukausi
-         (reaction-writable
-           (let [hk @valittu-hoitokausi
-                 ur @nav/valittu-urakka
-                 kuuluu-hoitokauteen? #(pvm/valissa? (second %) (first hk) (second hk))
-                 nykyinen-kk (pvm/kuukauden-aikavali (pvm/nyt))
-                 edellinen-kk (pvm/ed-kk-aikavalina (pvm/nyt))]
-             (when (and hk ur)
-               (cond
-                 ;; mm. toteumanäkymissä halutaan käynnissä oleva kuukausi,
-                 ;; heidän liputettava anna-kuluva-kk-jos-hoitokaudella
-                 (and @aseta-kuluva-kk-jos-hoitokaudella? (kuuluu-hoitokauteen? nykyinen-kk))
-                 nykyinen-kk
-                 ;; raportointinäkymissä halutaan edellinen kuukausi
-                 ;; Jos nykyhetkeä edeltävä kuukausi kuuluu valittuun hoitokauteen,
-                 ;; valitaan se. (yleensä raportoidaan aiempaa kuukautta)
-                 (kuuluu-hoitokauteen? edellinen-kk)
-                 edellinen-kk
+  (reaction-writable
+    (let [hk @valittu-hoitokausi
+          ur @nav/valittu-urakka
+          kuuluu-hoitokauteen? #(pvm/valissa? (second %) (first hk) (second hk))
+          nykyinen-kk (pvm/kuukauden-aikavali (pvm/nyt))
+          edellinen-kk (pvm/ed-kk-aikavalina (pvm/nyt))]
+      (when (and hk ur)
+        (cond
+          ;; mm. toteumanäkymissä halutaan käynnissä oleva kuukausi,
+          ;; heidän liputettava anna-kuluva-kk-jos-hoitokaudella
+          (and @aseta-kuluva-kk-jos-hoitokaudella? (kuuluu-hoitokauteen? nykyinen-kk))
+          nykyinen-kk
+          ;; raportointinäkymissä halutaan edellinen kuukausi
+          ;; Jos nykyhetkeä edeltävä kuukausi kuuluu valittuun hoitokauteen,
+          ;; valitaan se. (yleensä raportoidaan aiempaa kuukautta)
+          (kuuluu-hoitokauteen? edellinen-kk)
+          edellinen-kk
 
-                 ;; Valitaan tämä kuukausi, jos se kuuluu hoitokauteen
-                 (kuuluu-hoitokauteen? nykyinen-kk)
-                 nykyinen-kk
+          ;; Valitaan tämä kuukausi, jos se kuuluu hoitokauteen
+          (kuuluu-hoitokauteen? nykyinen-kk)
+          nykyinen-kk
 
-                 ;; Jos hoitokausi ei vielä ole alkanut, valitaan ensimmäinen
-                 (pvm/ennen? (pvm/nyt) (first hk))
-                 (first (pvm/hoitokauden-kuukausivalit hk))
+          ;; Jos hoitokausi ei vielä ole alkanut, valitaan ensimmäinen
+          (pvm/ennen? (pvm/nyt) (first hk))
+          (first (pvm/hoitokauden-kuukausivalit hk))
 
-                 ;; fallback on hoitokauden viimeinen kuukausi
-                 :default
-                 (last (pvm/hoitokauden-kuukausivalit hk)))))))
+          ;; fallback on hoitokauden viimeinen kuukausi
+          :default
+          (last (pvm/hoitokauden-kuukausivalit hk)))))))
 
 (defn valitse-hoitokauden-kuukausi! [hk-kk]
   (reset! valittu-hoitokauden-kuukausi hk-kk))

@@ -29,10 +29,10 @@
                 (when-let [tyot (some-> json (get-in avainpolku))]
                   (map #(assoc % :tyyppi (name (:tyyppi %))) tyot)))))
 
-(defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id]}]
+(defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
-  (let [vastaus (q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id)]
+  (let [vastaus (q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi)]
     (log/debug "Päällystysilmoitukset saatu: " (count vastaus) "kpl")
     vastaus))
 

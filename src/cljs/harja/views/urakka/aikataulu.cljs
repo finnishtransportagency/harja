@@ -20,7 +20,10 @@
             [harja.ui.napit :as napit]
             [harja.fmt :as fmt]
             [harja.tiedot.istunto :as istunto]
-            [harja.domain.paallystysilmoitus :as pot])
+            [harja.domain.paallystysilmoitus :as pot]
+            [harja.ui.valinnat :as valinnat]
+            [harja.tiedot.urakka :as urakka]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -101,11 +104,18 @@
                                                      "Päällystystä ei voi merkitä alkaneeksi ennen kohteen aloitusta."])
                                               paallystys-aloitettu-validointi)]
         [:div.aikataulu
+         [valinnat/vuosi {}
+          (t/year (:alkupvm ur))
+          (t/year (:loppupvm ur))
+          urakka/valittu-urakan-vuosi
+          urakka/valitse-urakan-vuosi!]
          [grid/grid
           {:otsikko "Kohteiden aikataulu"
            :voi-poistaa? (constantly false)
            :voi-lisata? false
            :piilota-toiminnot? true
+           :tyhja (if (nil? @tiedot/aikataulurivit)
+                    [yleiset/ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :tallenna (if voi-tallentaa?
                        #(tiedot/tallenna-yllapitokohteiden-aikataulu urakka-id
                                                                      sopimus-id
