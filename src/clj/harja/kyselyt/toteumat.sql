@@ -87,7 +87,8 @@ SELECT x.tpk_id, x.maara, tk.nimi
  					 AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava))
            AND tt.poistettu IS NOT TRUE
       GROUP BY toimenpidekoodi) x
-   JOIN toimenpidekoodi tk ON x.tpk_id = tk.id;
+   JOIN toimenpidekoodi tk ON x.tpk_id = tk.id
+ORDER BY nimi;
 
 -- name: hae-toteuman-toteuma-materiaalit-ja-tehtavat
 -- Hakee toteuma_materiaalien ja tehtävien id:t. Hyödyllinen kun poistetaan toteuma.
