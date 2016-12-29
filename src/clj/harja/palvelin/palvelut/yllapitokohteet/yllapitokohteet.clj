@@ -309,7 +309,7 @@
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id})))
 
-(defn- luo-uusi-yllapitokohde [db user urakka-id sopimus-id
+(defn- luo-uusi-yllapitokohde [db user urakka-id sopimus-id vuosi
                                {:keys [kohdenumero nimi
                                        tr-numero tr-alkuosa tr-alkuetaisyys
                                        tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
@@ -338,8 +338,7 @@
                             :kaasuindeksi kaasuindeksi
                             :yllapitokohdetyyppi (when yllapitokohdetyyppi (name yllapitokohdetyyppi))
                             :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))
-                            ;:vuodet vuodet TODO Teepäs tämä
-                            })))
+                            :vuodet (konv/seq->array [vuosi])})))
 
 (defn- paivita-yllapitokohde [db user urakka-id
                               {:keys [id kohdenumero nimi
@@ -379,7 +378,7 @@
                                    :id id
                                    :urakka urakka-id}))))
 
-(defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id kohteet]}]
+(defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (jdbc/with-db-transaction [c db]
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
@@ -388,7 +387,7 @@
       (log/debug (str "Käsitellään saapunut ylläpitokohde: " kohde))
       (if (and (:id kohde) (not (neg? (:id kohde))))
         (paivita-yllapitokohde c user urakka-id kohde)
-        (luo-uusi-yllapitokohde c user urakka-id sopimus-id kohde)))
+        (luo-uusi-yllapitokohde c user urakka-id sopimus-id vuosi kohde)))
     (let [paallystyskohteet (hae-urakan-yllapitokohteet c user {:urakka-id urakka-id
                                                                 :sopimus-id sopimus-id})]
       (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str paallystyskohteet))

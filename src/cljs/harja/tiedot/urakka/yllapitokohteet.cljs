@@ -19,9 +19,10 @@
                                     :sopimus-id sopimus-id
                                     :vuosi vuosi}))
 
-(defn tallenna-yllapitokohteet! [urakka-id sopimus-id kohteet]
+(defn tallenna-yllapitokohteet! [urakka-id sopimus-id vuosi kohteet]
   (k/post! :tallenna-yllapitokohteet {:urakka-id urakka-id
                                       :sopimus-id sopimus-id
+                                      :vuosi vuosi
                                       :kohteet kohteet}))
 
 (defn tallenna-yllapitokohdeosat! [urakka-id sopimus-id yllapitokohde-id osat]
@@ -163,10 +164,11 @@
   (when (oikeustarkistus-fn)
     (fn [kohteet]
       (go (let [urakka-id (:id @nav/valittu-urakka)
+                vuosi @u/valittu-urakan-vuosi
                 [sopimus-id _] @u/valittu-sopimusnumero
                 _ (log "[YLLÄPITOKOHTEET] Tallennetaan kohteet: " (pr-str kohteet))
                 vastaus (<! (tallenna-yllapitokohteet!
-                              urakka-id sopimus-id
+                              urakka-id sopimus-id vuosi
                               (mapv #(assoc % :yllapitokohdetyotyyppi kohdetyyppi)
                                     kohteet)))]
             (if (k/virhe? vastaus)

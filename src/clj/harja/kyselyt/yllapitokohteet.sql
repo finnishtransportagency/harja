@@ -235,7 +235,7 @@ VALUES (:urakka,
   :kaasuindeksi,
   :yllapitokohdetyyppi :: yllapitokohdetyyppi,
   :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi,
-  :vuodet);
+  :vuodet::integer[]);
 
 -- name: paivita-yllapitokohde!
 -- Päivittää ylläpitokohteen
