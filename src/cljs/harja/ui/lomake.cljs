@@ -195,7 +195,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
     [:div.form-group {:class (str (or col-luokka
                                       (case (or palstoja 1)
                                         1 "col-xs-12 col-sm-6 col-md-5 col-lg-4"
-                                        2 "col-xs-12 col-sm-12 col-md-10 col-lg-8"))
+                                        2 "col-xs-12 col-sm-12 col-md-10 col-lg-8"
+                                        3 "col-xs-12 col-sm-12 col-md-12 col-lg-12"))
                                   (when pakollinen?
                                     " required")
                                   (when-not (empty? virheet)
@@ -306,7 +307,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   [_ _ _]
   (let [fokus (atom nil)]
     (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset
-                 voi-muokata?] :as opts} skeema
+                 voi-muokata? ei-borderia?] :as opts} skeema
          {muokatut ::muokatut
           :as data}]
       (let [{virheet ::virheet
@@ -324,7 +325,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                                                        #{}) nimi))
                                            muokkaa!)))]
             ;(lovg "RENDER! fokus = " (pr-str @fokus))
-            [:div.lomake
+            [:div
+             {:class (str "lomake " (when ei-borderia? "lomake-ilman-borderia") )}
              (when otsikko
                [:h3.lomake-otsikko otsikko])
              (doall

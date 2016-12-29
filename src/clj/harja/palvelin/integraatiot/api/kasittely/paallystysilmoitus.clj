@@ -11,44 +11,9 @@
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
-            [harja.domain.skeema :as skeema]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as yllapitokohteet])
   (:use [slingshot.slingshot :only [throw+ try+]]))
-
-(defn paivita-alikohteet [db kohde alikohteet]
-  (q-yllapitokohteet/poista-yllapitokohteen-kohdeosat! db {:id (:id kohde)})
-  (mapv
-    (fn [alikohde]
-      (let [sijainti (:sijainti alikohde)
-            osoite {:tie (:tr-numero kohde)
-                    :aosa (:aosa sijainti)
-                    :aet (:aet sijainti)
-                    :losa (:losa sijainti)
-                    :loppuet (:let sijainti)}
-            parametrit {:yllapitokohde (:id kohde)
-                        :nimi (:nimi alikohde)
-                        :tunnus (:tunnus alikohde)
-                        :tr_numero (:tr-numero kohde)
-                        :tr_alkuosa (:aosa sijainti)
-                        :tr_alkuetaisyys (:aet sijainti)
-                        :tr_loppuosa (:losa sijainti)
-                        :tr_loppuetaisyys (:let sijainti)
-                        :tr_ajorata (:tr-ajorata kohde)
-                        :tr_kaista (:tr-kaista kohde)
-                        :toimenpide (:toimenpide alikohde)}]
-        (assoc alikohde :id (:id (q-yllapitokohteet/luo-yllapitokohdeosa<! db parametrit)))))
-    alikohteet))
-
-(defn paivita-kohde [db kohde-id kohteen-sijainti]
-  (q-yllapitokohteet/paivita-yllapitokohteen-sijainti!
-    db (assoc (clojure.set/rename-keys
-                kohteen-sijainti
-                {:aosa :tr_alkuosa
-                 :aet :tr_alkuetaisyys
-                 :losa :tr_loppuosa
-                 :let :tr_loppuetaisyys})
-         :id
-         kohde-id)))
 
 (defn- luo-paallystysilmoitus [db kayttaja kohde-id
                                {:keys [perustiedot] :as paallystysilmoitus}
@@ -121,8 +86,8 @@
 (defn tallenna-paallystysilmoitus [db kayttaja urakka-id kohde paallystysilmoitus valmis-kasiteltavaksi]
   (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
         alikohteet (:alikohteet paallystysilmoitus)]
-    (paivita-kohde db (:id kohde) kohteen-sijainti)
-    (let [paivitetyt-alikohteet (paivita-alikohteet db kohde alikohteet)
+    (yllapitokohteet/paivita-kohde db (:id kohde) kohteen-sijainti)
+    (let [paivitetyt-alikohteet (yllapitokohteet/paivita-alikohteet db kohde alikohteet)
           ;; Päivittyneiden alikohteiden id:t pitää päivittää päällystysilmoituksille
           paallystysilmoitus (assoc-in paallystysilmoitus [:yllapitokohde :alikohteet] paivitetyt-alikohteet)]
       (luo-tai-paivita-paallystysilmoitus db kayttaja urakka-id (:id kohde) paallystysilmoitus valmis-kasiteltavaksi))))

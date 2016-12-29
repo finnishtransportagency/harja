@@ -54,7 +54,7 @@
                                           {:otsikko "Kohde"}
                                           {:otsikko "Tulos"}
                                           {:otsikko "Lisätieto"}
-                                          {:otsikko "Liitteet" :tyyppi :liite})
+                                          {:otsikko "Liitteet"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko
                                              (fn [rivi]
                                                (let [[numero kohde tulos lisatieto [_ liitteet] :as rivi]
@@ -99,10 +99,10 @@
       (apurit/tarkista-taulukko-otsikko taulukko otsikko)
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Urakka"}
-                                          {:otsikko "A" :tyyppi :arvo-ja-osuus}
-                                          {:otsikko "B" :tyyppi :arvo-ja-osuus}
-                                          {:otsikko "C" :tyyppi :arvo-ja-osuus}
-                                          {:otsikko "D" :tyyppi :arvo-ja-osuus})
+                                          {:otsikko "A"}
+                                          {:otsikko "B"}
+                                          {:otsikko "C"}
+                                          {:otsikko "D"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko
                                              (fn [rivi]
                                                (let [[yhteensa a b c d :as rivi]

@@ -88,4 +88,5 @@
 (def +urakan-yhteystietojen-haku-vastaus+ "api/schemas/urakan-yhteystietojen-haku-response.schema.json")
 (def urakan-yhteystietojen-haku-vastaus (tee-validaattori +urakan-yhteystietojen-haku-vastaus+))
 
-
+(def +urakan-yllapitokohteen-paivitys-request+ "api/schemas/urakan-yllapitokohteen-paivitys-request.schema.json")
+(def urakan-yllapitokohteen-paivitys-request (tee-validaattori +urakan-yllapitokohteen-paivitys-request+))

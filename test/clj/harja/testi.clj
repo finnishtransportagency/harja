@@ -1,19 +1,19 @@
 (ns harja.testi
   "Harjan testauksen apukoodia."
   (:require
-   [clojure.test :refer :all]
-   [taoensso.timbre :as log]
-   [harja.kyselyt.urakat :as urk-q]
-   [harja.palvelin.komponentit.todennus :as todennus]
-   [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
-   [harja.palvelin.komponentit.http-palvelin :as http]
-   [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-   [harja.palvelin.komponentit.tietokanta :as tietokanta]
-   [harja.palvelin.komponentit.liitteet :as liitteet]
-   [com.stuartsierra.component :as component]
-   [clj-time.core :as t]
-   [clj-time.coerce :as tc]
-   [clojure.core.async :as async])
+    [clojure.test :refer :all]
+    [taoensso.timbre :as log]
+    [harja.kyselyt.urakat :as urk-q]
+    [harja.palvelin.komponentit.todennus :as todennus]
+    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+    [harja.palvelin.komponentit.http-palvelin :as http]
+    [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+    [harja.palvelin.komponentit.tietokanta :as tietokanta]
+    [harja.palvelin.komponentit.liitteet :as liitteet]
+    [com.stuartsierra.component :as component]
+    [clj-time.core :as t]
+    [clj-time.coerce :as tc]
+    [clojure.core.async :as async])
   (:import (java.util Locale)))
 
 (def jarjestelma nil)
@@ -347,6 +347,23 @@
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE suorittava_tiemerkintaurakka = " tiemerkintaurakka-id ";"))))
 
+(defn pura-tr-osoite [[numero aosa aet losa loppuet]]
+  {:numero numero
+   :aosa aosa
+   :aet aet
+   :losa losa
+   :loppuet loppuet})
+
+(defn hae-yllapitokohteen-tr-osoite [kohde-id]
+  (pura-tr-osoite (first (q (str "SELECT tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys
+                                  FROM yllapitokohde WHERE id = " kohde-id ";")))))
+
+(defn hae-yllapitokohteen-kohdeosien-tr-osoitteet [kohde-id]
+  (map
+    pura-tr-osoite
+    (q (str "SELECT tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys
+             FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id ";"))))
+
 ;; Määritellään käyttäjiä, joita testeissä voi käyttää
 ;; HUOM: näiden pitää täsmätä siihen mitä testidata.sql tiedostossa luodaan.
 
@@ -459,14 +476,14 @@
                  tulos
                  (first tulos))]
      (every?
-      #(let [loytyi? (not= ::ei-loydy
-                           (get-in tulos (if (vector? %)
-                                                   %
-                                                   [%]) ::ei-loydy))]
-         (when assertoi-kaikki?
-           (assert loytyi? (str "Polku " (pr-str %) " EI löydy tuloksesta! " (pr-str (first tulos)))))
-         loytyi?)
-      sarakkeet))))
+       #(let [loytyi? (not= ::ei-loydy
+                            (get-in tulos (if (vector? %)
+                                            %
+                                            [%]) ::ei-loydy))]
+          (when assertoi-kaikki?
+            (assert loytyi? (str "Polku " (pr-str %) " EI löydy tuloksesta! " (pr-str (first tulos)))))
+          loytyi?)
+       sarakkeet))))
 
 (defn oikeat-sarakkeet-palvelussa?
   "Tarkastaa sisältääkö palvelun palauttama tietorakenne ainakin annetut avaimet.
@@ -508,13 +525,13 @@
                      (first vastaus))]
          (log/error "Vastaus poikkeaa annetusta mallista. Vastaus: " (pr-str vastaus)
                     "\nPuuttuvat polut: " (pr-str
-                                           (keep (fn [sarake]
-                                                   (let [sarake (if (vector? sarake)
-                                                                  sarake
-                                                                  [sarake])]
-                                                     (when (= ::ei-loydy
-                                                              (get-in tulos sarake ::ei-loydy))
-                                                       sarake))) sarakkeet)))
+                                            (keep (fn [sarake]
+                                                    (let [sarake (if (vector? sarake)
+                                                                   sarake
+                                                                   [sarake])]
+                                                      (when (= ::ei-loydy
+                                                               (get-in tulos sarake ::ei-loydy))
+                                                        sarake))) sarakkeet)))
          false)))))
 
 (def portti nil)
@@ -530,28 +547,28 @@
      (alter-var-root #'jarjestelma
                      (fn [_#]
                        (component/start
-                        (component/system-map
-                         :db (tietokanta/luo-tietokanta testitietokanta)
-                         :db-replica (tietokanta/luo-tietokanta testitietokanta)
-                         :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat)
-                                                [:db])
+                         (component/system-map
+                           :db (tietokanta/luo-tietokanta testitietokanta)
+                           :db-replica (tietokanta/luo-tietokanta testitietokanta)
+                           :klusterin-tapahtumat (component/using
+                                                   (tapahtumat/luo-tapahtumat)
+                                                   [:db])
 
-                         :todennus (component/using
-                                    (todennus/http-todennus)
-                                    [:db :klusterin-tapahtumat])
-                         :http-palvelin (component/using
-                                         (http/luo-http-palvelin portti true)
-                                         [:todennus])
-                         :integraatioloki (component/using
-                                           (integraatioloki/->Integraatioloki nil)
-                                           [:db])
+                           :todennus (component/using
+                                       (todennus/http-todennus)
+                                       [:db :klusterin-tapahtumat])
+                           :http-palvelin (component/using
+                                            (http/luo-http-palvelin portti true)
+                                            [:todennus])
+                           :integraatioloki (component/using
+                                              (integraatioloki/->Integraatioloki nil)
+                                              [:db])
 
-                         :liitteiden-hallinta (component/using
-                                               (liitteet/->Liitteet)
-                                               [:db])
+                           :liitteiden-hallinta (component/using
+                                                  (liitteet/->Liitteet)
+                                                  [:db])
 
-                         ~@omat))))
+                           ~@omat))))
 
      (alter-var-root #'urakka
                      (fn [_#]

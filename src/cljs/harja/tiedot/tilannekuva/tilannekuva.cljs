@@ -19,7 +19,7 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce nakymassa? (atom false))
-(defonce valittu-tila (atom :nykytilanne))
+(defonce valittu-tila (reaction (nav/valittu-valilehti :tilannekuva)))
 
 (def
   ^{:doc "Kuinka pitkä urakan nimi hyväksytään pudotusvalikkoon"
@@ -56,7 +56,8 @@ hakutiheys-historiakuva 1200000)
                 tk/tiemerkintakone false
                 tk/kuumennuslaite false
                 tk/sekoitus-ja-stabilointijyrsin false
-                tk/tma-laite false}
+                tk/tma-laite false
+                tk/jyra false}
      :ilmoitukset {:tyypit {tk/tpp false
                             tk/tur false
                             tk/urk false}}
@@ -344,11 +345,6 @@ hakutiheys-historiakuva 1200000)
       (not= @suodattimet
             (:suodattimet @edellisen-haun-kayttajan-suodattimet))))
 
-(defn- julkaise-tyokonedata! [tulos]
-  (tapahtumat/julkaise! {:aihe :uusi-tyokonedata
-                         :tyokoneet (vals (:tyokoneet tulos))})
-  tulos)
-
 
 (defn hae-asiat [hakuparametrit]
   (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ") " (pr-str hakuparametrit))
@@ -369,8 +365,7 @@ hakutiheys-historiakuva 1200000)
             (k/url-parametri (aikaparametrilla-kuva (dissoc hakuparametrit :alue))))
 
     (let [tulos (-> (<! (k/post! :hae-tilannekuvaan (aikaparametrilla hakuparametrit)))
-                    (assoc :tarkastukset (:tarkastukset hakuparametrit))
-                    (julkaise-tyokonedata!))]
+                    (assoc :tarkastukset (:tarkastukset hakuparametrit)))]
       (when @nakymassa?
         (reset! tilannekuva-kartalla/haetut-asiat tulos))
       (kartta/aseta-paivitetaan-karttaa-tila! false))))
@@ -413,7 +408,8 @@ hakutiheys-historiakuva 1200000)
           (paivita-periodisesti asioiden-haku
                                 (case @valittu-tila
                                   :nykytilanne hakutiheys-nykytilanne
-                                  :historiakuva hakutiheys-historiakuva))))
+                                  :historiakuva hakutiheys-historiakuva
+                                  :tienakyma hakutiheys-historiakuva))))
 
 (defn lopeta-periodinen-haku-jos-kaynnissa []
   (when @lopeta-haku

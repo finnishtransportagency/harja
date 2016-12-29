@@ -79,6 +79,11 @@
               29
             ]
           }
+        },
+        "nopeusrajoitus": {
+          "id": "urn:harja/tietyomaa/nopeusrajoitus",
+          "type": "integer",
+          "required": false
         }
       }
     }

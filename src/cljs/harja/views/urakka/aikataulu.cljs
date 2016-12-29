@@ -5,7 +5,6 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka.aikataulu :as tiedot]
             [harja.ui.grid :as grid]
-            [harja.ui.kentat :refer [tee-kentta]]
             [cljs.core.async :refer [<!]]
             [harja.domain.roolit :as roolit]
             [harja.tiedot.urakka :as u]

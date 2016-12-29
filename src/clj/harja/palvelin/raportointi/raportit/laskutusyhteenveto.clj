@@ -2,7 +2,8 @@
   "Laskutusyhteenveto"
   (:require [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
             [taoensso.timbre :as log]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi +erheen-vari+]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi]]
+            [harja.palvelin.palvelut.indeksit :as indeksipalvelu]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.pvm :as pvm]
@@ -23,15 +24,17 @@
                                    [alkupvm loppupvm])]
     (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
 
-    (vec
-     (sort-by (juxt (comp toimenpidekoodit/tuotteen-jarjestys :tuotekoodi) :nimi)
-              (into []
-                    (laskutus-q/hae-laskutusyhteenvedon-tiedot db
-                                                               (konv/sql-date hk-alkupvm)
-                                                               (konv/sql-date hk-loppupvm)
-                                                               (konv/sql-date alkupvm)
-                                                               (konv/sql-date loppupvm)
-                                                               urakka-id))))))
+    (let [tulos (vec
+            (sort-by (juxt (comp toimenpidekoodit/tuotteen-jarjestys :tuotekoodi) :nimi)
+                     (into []
+                           (laskutus-q/hae-laskutusyhteenvedon-tiedot db
+                                                                      (konv/sql-date hk-alkupvm)
+                                                                      (konv/sql-date hk-loppupvm)
+                                                                      (konv/sql-date alkupvm)
+                                                                      (konv/sql-date loppupvm)
+                                                                      urakka-id))))]
+      #_(log/debug (pr-str tulos))
+      tulos)))
 
 (defn laske-asiakastyytyvaisyysbonus
   [db {:keys [urakka-id maksupvm indeksinimi summa] :as tiedot}]
@@ -77,15 +80,15 @@
                  (rivi
                    nimi
                    (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutettu)
-                                                                :vari (when laskutettu-ind-puuttui? +erheen-vari+)}])
+                                                                :tyyli (when laskutettu-ind-puuttui? :virhe)}])
                    (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutetaan)
-                                                                :vari (when laskutetaan-ind-puuttui? +erheen-vari+)}])
+                                                                :tyyli (when laskutetaan-ind-puuttui? :virhe)}])
                    (if (and laskutettu laskutetaan)
                      [:varillinen-teksti {:arvo (summa-fmt (+ laskutettu laskutetaan))
-                                          :vari (when (or laskutettu-ind-puuttui? laskutetaan-ind-puuttui?)
-                                                  +erheen-vari+)}]
+                                          :tyyli (when (or laskutettu-ind-puuttui? laskutetaan-ind-puuttui?)
+                                                  :virhe)}]
                      [:varillinen-teksti {:arvo (summa-fmt nil)
-                                          :vari +erheen-vari+}]))) taulukon-tiedot)
+                                          :tyyli :virhe}]))) taulukon-tiedot)
           [yhteenveto]))])
 
 (defn- summaa-korotetut
@@ -128,12 +131,12 @@
         yhteensa (summaa-korotetut [laskutettu-yht laskutetaan-yht])
         yhteenveto (rivi "Toimenpiteet yhteensä"
                         (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt (:tulos laskutettu-yht))
-                                                                     :vari (when (:indeksi-puuttui? laskutettu-yht) +erheen-vari+)}])
+                                                                     :tyyli (when (:indeksi-puuttui? laskutettu-yht) :virhe)}])
                         (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt (:tulos laskutetaan-yht))
-                                                                     :vari (when (:indeksi-puuttui? laskutetaan-yht) +erheen-vari+)}])
+                                                                     :tyyli (when (:indeksi-puuttui? laskutetaan-yht) :virhe)}])
 
                          [:varillinen-teksti {:arvo (summa-fmt (:tulos yhteensa))
-                                              :vari (when (:indeksi-puuttui? yhteensa) +erheen-vari+)}])]
+                                              :tyyli (when (:indeksi-puuttui? yhteensa) :virhe)}])]
     (when-not (empty? taulukon-rivit)
       (taulukko-elementti otsikko taulukon-rivit kyseessa-kk-vali?
                           laskutettu-teksti laskutetaan-teksti
@@ -155,13 +158,13 @@
         laskutetaan-summasta-puuttuu-indeksi? (some nil? laskutetaan-kentat)
         yhteenveto (rivi "Toimenpiteet yhteensä"
                          (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutettu-yht)
-                                                                      :vari (when laskutettu-summasta-puuttuu-indeksi? +erheen-vari+)}])
+                                                                      :tyyli (when laskutettu-summasta-puuttuu-indeksi? :virhe)}])
                          (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutetaan-yht)
-                                                                      :vari (when laskutetaan-summasta-puuttuu-indeksi? +erheen-vari+)}])
+                                                                      :tyyli (when laskutetaan-summasta-puuttuu-indeksi? :virhe)}])
                          (if (and laskutettu-yht laskutetaan-yht)
                            [:varillinen-teksti {:arvo (summa-fmt (+ laskutettu-yht laskutetaan-yht))
-                                                :vari (when (or laskutettu-summasta-puuttuu-indeksi?
-                                                                laskutetaan-summasta-puuttuu-indeksi?) +erheen-vari+)}]
+                                                :tyyli (when (or laskutettu-summasta-puuttuu-indeksi?
+                                                                laskutetaan-summasta-puuttuu-indeksi?) :virhe)}]
                            nil))
         taulukon-tiedot (filter (fn [[_ laskutettu laskutetaan]]
                                   (not (and (= 0.0M (:tulos laskutettu))
@@ -211,8 +214,9 @@
                                                            (not (re-find #"suolasakot_laskutetaan_ind_korotus" %))) avaimet))
         indeksiarvo-puuttuu-jo-laskutetulta-ajalta? (first (keep #(some nil? (vals (select-keys % laskutettu-korotus-kentat))) tiedot))
         indeksiarvo-puuttuu-valitulta-kklta? (first (keep #(some nil? (vals (select-keys % laskutetaan-korotus-kentat))) tiedot))
-
-        perusluku-puuttuu? (not (:perusluku (first tiedot)))
+        perusluku (:perusluku (first tiedot))
+        kkn-indeksiarvo (when kyseessa-kk-vali?
+                          (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id (pvm/vuosi alkupvm) (pvm/kuukausi alkupvm)))
         talvisuolasakko-kaytossa? (some :suolasakko_kaytossa tiedot)
         _ (log/debug "talvisuolasakko käytössä?" talvisuolasakko-kaytossa?)
         suolasakkojen-laskenta-epaonnistui? (some
@@ -228,7 +232,7 @@
                                               " ")
         varoitus-indeksitietojen-puuttumisesta
         (when indeksi-kaytossa?
-          (if perusluku-puuttuu?
+          (if (not perusluku)
             " Huom! Laskutusyhteenvedon laskennassa tarvittava urakan indeksiarvojen perusluku puuttuu tältä urakalta puutteellisten indeksitietojen vuoksi. "
             (if (and indeksiarvo-puuttuu-jo-laskutetulta-ajalta? indeksiarvo-puuttuu-valitulta-kklta?)
               " Huom! Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu sekä valitulta kuukaudelta että ajalta ennen sitä. "
@@ -342,6 +346,15 @@
     (vec (keep identity
                [:raportti {:nimi "Laskutusyhteenveto"}
                 [:otsikko (str (or (str urakan-nimi ", ") "") (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))]
+                (when (and indeksi-kaytossa? perusluku)
+                  [:teksti (str (str "Indeksilaskennan perusluku: " (fmt/desimaaliluku perusluku))
+                                (when kyseessa-kk-vali?
+                                  (str ". Kuukauden " (pvm/kuukausi-ja-vuosi alkupvm)
+                                       " " (:nimi kkn-indeksiarvo)
+                                       " indeksiarvo"
+                                       (if kkn-indeksiarvo
+                                         (str ": " (fmt/desimaaliluku (:arvo kkn-indeksiarvo) 1))
+                                         " puuttuu."))))])
                 varoitus-tietojen-puuttumisesta
                 (if (empty? taulukot)
                   [:teksti " Ei laskutettavaa"]

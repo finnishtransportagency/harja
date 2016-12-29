@@ -112,7 +112,17 @@
    Reittimerkintä voi olla joko yksittäinen (pistemäinen) reittimerkintä tai
    jatkuvista havainnoista kasattu, yhdistetty reittimerkintä."
   [reittimerkinta]
-  (let [yhdista-mittausarvot (fn [reittimerkinta mittaus-avain]
+  (let [yhdista-arvot-vectoriin (fn [reittimerkinta avain]
+                                  (cond
+                                    (nil? (avain reittimerkinta))
+                                    []
+
+                                    (number? (avain reittimerkinta))
+                                    [(avain reittimerkinta)]
+
+                                    (vector? (avain reittimerkinta))
+                                    (avain reittimerkinta)))
+        yhdista-mittausarvot (fn [reittimerkinta mittaus-avain]
                                (cond
                                  (nil? (mittaus-avain reittimerkinta))
                                  nil
@@ -125,9 +135,11 @@
     {:aika (:aikaleima reittimerkinta)
      :tyyppi (paattele-tarkastustyyppi reittimerkinta)
      :tarkastusajo (:tarkastusajo reittimerkinta)
+     ;; Reittimerkintöjen id:t, joista tämä tarkastus muodostuu
+     :reittimerkinta-idt (yhdista-arvot-vectoriin reittimerkinta :id)
      :sijainnit (or (:sijainnit reittimerkinta) [{:sijainti (:sijainti reittimerkinta)
                                                   :tr-osoite (:tr-osoite reittimerkinta)}])
-     :liite (:kuva reittimerkinta) ;; Liitteen id tai vector jos monta
+     :liitteet (yhdista-arvot-vectoriin reittimerkinta :kuva)
      :vakiohavainnot (yhdista-reittimerkinnan-kaikki-havainnot reittimerkinta)
      :havainnot (:kuvaus reittimerkinta)
      :talvihoitomittaus {:talvihoitoluokka nil
@@ -142,28 +154,28 @@
                       :kiinteys (yhdista-mittausarvot reittimerkinta :kiinteys)
                       :polyavyys (yhdista-mittausarvot reittimerkinta :polyavyys)
                       :sivukaltevuus (yhdista-mittausarvot reittimerkinta :sivukaltevuus)}
-     :laadunalitus (or (boolean (:laadunalitus reittimerkinta)) false)}))
+     :laadunalitus (boolean (:laadunalitus reittimerkinta))}))
 
 (defn viimeinen-indeksi [sekvenssi]
   (- (count sekvenssi) 1))
 
-(defn- keraa-seuraavan-pisteen-mittaus
+(defn- keraa-seuraavan-pisteen-arvot
   "Ottaa reittimerkinnän ja järjestyksessä seuraavan reittimerkinnän.
-   Lisää seuraavan mittauksen tiedot edelliseen."
-  [reittimerkinta seuraava-reittimerkinta mittaus-avain]
-  (if (nil? (mittaus-avain seuraava-reittimerkinta))
+   Lisää seuraavan mittauksen tiedot edelliseen (numero tai vector)"
+  [reittimerkinta seuraava-reittimerkinta arvo-avain]
+  (if (nil? (arvo-avain seuraava-reittimerkinta))
     reittimerkinta
 
-    (cond (nil? (mittaus-avain reittimerkinta)) ;; Aseta arvoksi seuraava mittaus
-          (assoc reittimerkinta mittaus-avain (mittaus-avain seuraava-reittimerkinta))
+    (cond (nil? (arvo-avain reittimerkinta)) ;; Aseta arvoksi seuraava mittaus
+          (assoc reittimerkinta arvo-avain (arvo-avain seuraava-reittimerkinta))
 
-          (number? (mittaus-avain reittimerkinta)) ;; Muunna vectoriksi
-          (assoc reittimerkinta mittaus-avain [(mittaus-avain reittimerkinta)
-                                               (mittaus-avain seuraava-reittimerkinta)])
+          (number? (arvo-avain reittimerkinta)) ;; Muunna vectoriksi
+          (assoc reittimerkinta arvo-avain [(arvo-avain reittimerkinta)
+                                            (arvo-avain seuraava-reittimerkinta)])
 
-          (vector? (mittaus-avain reittimerkinta)) ;; Lisää seuraava arvo vectoriin
-          (assoc reittimerkinta mittaus-avain (conj (mittaus-avain reittimerkinta)
-                                                    (mittaus-avain seuraava-reittimerkinta))))))
+          (vector? (arvo-avain reittimerkinta)) ;; Lisää seuraava arvo vectoriin
+          (assoc reittimerkinta arvo-avain (conj (arvo-avain reittimerkinta)
+                                                 (arvo-avain seuraava-reittimerkinta))))))
 
 (defn- keraa-seuraavan-pisteen-sijainti
   "Ottaa reittimerkinnän ja järjestyksessä seuraavan reittimerkinnän.
@@ -210,50 +222,107 @@
             ;; ja lisää ne viimeisimpään reittimerkintään
             (assoc reittimerkinnat
               (viimeinen-indeksi reittimerkinnat)
-              (-> viimeisin-yhdistetty-reittimerkinta
-                  (keraa-seuraavan-pisteen-sijainti seuraava-merkinta)
-                  (keraa-seuraavan-pisteen-laadunalitus seuraava-merkinta)
-                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :talvihoito-tasaisuus)
-                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :lumisuus)
-                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :kitkamittaus)
-                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :soratie-tasaisuus)
-                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :kiinteys)
-                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :polyavyys)
-                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :sivukaltevuus)
-                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :lampotila)
-                  ;; Okei, kuva ei ole mittaus, mutta kerääminen toimii samalla logiikalla :-)
-                  (keraa-seuraavan-pisteen-mittaus seuraava-merkinta :kuva)
-                  (keraa-reittimerkintojen-kuvaukset seuraava-merkinta)))
+              (as-> viimeisin-yhdistetty-reittimerkinta edellinen
+                    (keraa-seuraavan-pisteen-sijainti edellinen seuraava-merkinta)
+                    (keraa-seuraavan-pisteen-laadunalitus edellinen seuraava-merkinta)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :talvihoito-tasaisuus)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :lumisuus)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :kitkamittaus)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :soratie-tasaisuus)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :kiinteys)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :polyavyys)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :sivukaltevuus)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :lampotila)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :kuva)
+                    (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :id)
+                    (keraa-reittimerkintojen-kuvaukset edellinen seuraava-merkinta)))
             ;; Uusi tarkastus alkaa
             (conj reittimerkinnat seuraava-merkinta)))))
     []
     reittimerkinnat))
 
 (defn- pistemainen-havainto?
-  "Onko havainto pistemäinen?"
   [reittimerkinta]
-  (or (:pistemainen-havainto reittimerkinta)
-      (and (:kuva reittimerkinta) (empty? (:jatkuvat-havainnot reittimerkinta)))))
+  (boolean (and (or (:pistemainen-havainto reittimerkinta)
+                    ;; Kuvan tai tekstiä sisältävän merkinnän pitäisi olla aina
+                    ;; lomakkeelta kirjattu pistemäinen yleishavainto,
+                    ;; mutta varmistetaan nyt kuitenkin
+                    (:kuva reittimerkinta)
+                    (:kuvaus reittimerkinta)))))
+
+(defn- toiseen-merkintaan-liittyva-merkinta?
+  [reittimerkinta]
+  (some? (:liittyy-merkintaan reittimerkinta)))
 
 (defn- reittimerkinnat-reitillisiksi-tarkastuksiksi
   "Käy annetut reittimerkinnät läpi ja muodostaa niistä reitilliset tarkastukset"
   [reittimerkinnat]
-  (let [jatkuvat-reittimerkinnat (filter (comp not pistemainen-havainto?) reittimerkinnat)
+  (let [jatkuvat-reittimerkinnat (filter #(and (not (pistemainen-havainto? %))
+                                               (not (toiseen-merkintaan-liittyva-merkinta? %)))
+                                         reittimerkinnat)
         yhdistetyt-reittimerkinnat (yhdista-jatkuvat-reittimerkinnat jatkuvat-reittimerkinnat)]
     (mapv reittimerkinta-tarkastukseksi yhdistetyt-reittimerkinnat)))
 
 (defn- reittimerkinnat-pistemaisiksi-tarkastuksiksi
   "Käy annetut reittimerkinnät läpi ja muodostaa niistä pistemäiset tarkastukset"
   [reittimerkinnat]
-  (let [pistemaiset-reittimerkinnat (filter pistemainen-havainto? reittimerkinnat)]
+  (let [pistemaiset-reittimerkinnat (filter #(and (pistemainen-havainto? %)
+                                                  (not (toiseen-merkintaan-liittyva-merkinta? %)))
+                                            reittimerkinnat)]
     (mapv reittimerkinta-tarkastukseksi pistemaiset-reittimerkinnat)))
+
+(defn- liita-tarkastukseen-liittyvat-merkinnat
+  "Etsii ja lisää tarkastukseen siihen liittyvät tiedot.
+   Jos liittyviä tietoja ei ole, tarkastus palautuu sellaisenaan."
+  [tarkastus liittyvat-merkinnat]
+  (let [tarkastukseen-liittyvat-merkinnat (filter
+                                            #((into #{} (:reittimerkinta-idt tarkastus))
+                                               (:liittyy-merkintaan %))
+                                            liittyvat-merkinnat)]
+    (if (empty? tarkastukseen-liittyvat-merkinnat)
+      tarkastus
+      (merge tarkastus
+             ;; Lisätään mahdolliset kuvat perään rivinvaihdoilla erotettuna
+             {:havainnot (let [kuvaukset (map :kuvaus tarkastukseen-liittyvat-merkinnat)]
+                           (if (empty? kuvaukset)
+                             (:havainnot tarkastus)
+                             (str (when-let [olemassaoleva-kuvaus (:havainnot tarkastus)]
+                                    (str olemassaoleva-kuvaus) "\n")
+                                  (str/join "\n" (map :kuvaus tarkastukseen-liittyvat-merkinnat)))))
+              ;; Lisätään mahdolliset kuvaliitteet tarkastukseen
+              :liitteet (let [kuvat (map :kuva tarkastukseen-liittyvat-merkinnat)]
+                          (if (empty? kuvat)
+                            (:liitteet tarkastus)
+                            (apply conj (:liitteet tarkastus) kuvat)))
+              ;; Merkitään tarkastukseen laadunalitus jos se, tai mikä tahansa liittyvistä merkinnöistä,
+              ;; sisältää laadunalituksen
+              :laadunalitus (let [laadunalitukset (map :laadunalitus tarkastukseen-liittyvat-merkinnat)
+                                  _ (log/debug "Laadunalitukset: " (pr-str laadunalitukset))]
+                              (if (empty? laadunalitukset)
+                                (:laadunalitus tarkastus)
+                                (boolean (some true? (conj laadunalitukset (:laadunalitus tarkastus))))))}))))
+
+(defn- liita-tarkastuksiin-lomakkeelta-kirjatut-tiedot
+  "Ottaa mapin, jossa on reittimerkinnöistä muunnetut Harja-tarkastukset (pistemäiset ja reitilliset),
+   sekä toisiin merkintöihin liittyvät merkinnät. Etsii ja lisää tarkastuksiin niihin kirjatut
+   liittyvät tiedot."
+  [tarkastukset liittyvat-merkinnat]
+  {:reitilliset-tarkastukset (mapv #(liita-tarkastukseen-liittyvat-merkinnat % liittyvat-merkinnat)
+                                   (:reitilliset-tarkastukset tarkastukset))
+   :pistemaiset-tarkastukset (mapv #(liita-tarkastukseen-liittyvat-merkinnat % liittyvat-merkinnat)
+                                   (:pistemaiset-tarkastukset tarkastukset))})
 
 (defn reittimerkinnat-tarkastuksiksi
   "Käy reittimerkinnät läpi ja palauttaa mapin, jossa reittimerkinnät muutettu
-   reitillisiksi ja pistemäisiksi tarkastuksiksi"
+   reitillisiksi ja pistemäisiksi Harja-tarkastuksiksi."
   [tr-osoitteelliset-reittimerkinnat]
-  {:reitilliset-tarkastukset (reittimerkinnat-reitillisiksi-tarkastuksiksi tr-osoitteelliset-reittimerkinnat)
-   :pistemaiset-tarkastukset (reittimerkinnat-pistemaisiksi-tarkastuksiksi tr-osoitteelliset-reittimerkinnat)})
+  (let [tarkastukset {:reitilliset-tarkastukset (reittimerkinnat-reitillisiksi-tarkastuksiksi tr-osoitteelliset-reittimerkinnat)
+                      :pistemaiset-tarkastukset (reittimerkinnat-pistemaisiksi-tarkastuksiksi tr-osoitteelliset-reittimerkinnat)}
+        liittyvat-merkinnat (filterv toiseen-merkintaan-liittyva-merkinta?
+                                     tr-osoitteelliset-reittimerkinnat)
+        tarkastukset-lomaketiedoilla (liita-tarkastuksiin-lomakkeelta-kirjatut-tiedot tarkastukset
+                                                                                      liittyvat-merkinnat)]
+    tarkastukset-lomaketiedoilla))
 
 (defn luo-tallennettava-tarkastus [tarkastus kayttaja]
   (let [tarkastuksen-reitti (:sijainnit tarkastus)
@@ -294,6 +363,7 @@
 
 (defn- tallenna-tarkastus! [db tarkastus kayttaja]
   (log/debug "Aloitetaan tarkastuksen tallennus")
+  (log/debug (pr-str tarkastus))
   (let [tarkastus (luo-tallennettava-tarkastus tarkastus kayttaja)
         geometria (hae-tallennettavan-tarkastuksen-sijainti db tarkastus)
         tarkastus (as-> tarkastus tarkastus
@@ -322,21 +392,11 @@
       (q/luo-uusi-soratiemittaus<! db
                                    (merge (:soratiemittaus tarkastus)
                                           {:tarkastus tarkastus-id})))
-    (cond (number? (:liite tarkastus))
-          (do
-            (log/debug "Tallennetaan liite: " (pr-str (:liite tarkastus)))
-            (q/luo-uusi-tarkastus-liite<! db
-                                          {:tarkastus tarkastus-id
-                                           :liite (:liite tarkastus)}))
-
-          (vector? (:liite tarkastus))
-          (doseq [liite (:liite tarkastus)]
-            (log/debug "Tallennetaan liite (yksi monesta): " (pr-str liite))
-            (q/luo-uusi-tarkastus-liite<! db
-                                          {:tarkastus tarkastus-id
-                                           :liite liite}))
-
-          :default nil)
+    (doseq [liite (:liitteet tarkastus)]
+      (log/debug "Tallennetaan liite (yksi monesta): " (pr-str liite))
+      (q/luo-uusi-tarkastus-liite<! db
+                                    {:tarkastus tarkastus-id
+                                     :liite liite}))
     (log/debug "Tarkastuksen tallennus suoritettu")))
 
 (defn tallenna-tarkastukset! [db tarkastukset kayttaja]

@@ -270,3 +270,39 @@
   width: 0;
   transition: width 250ms;
  }
+
+.kartan-infopaneeli {
+ position: absolute;
+ z-index: 901;
+ top: 0;
+ right: 0;
+ height: 100%;
+ width: 20%;
+ min-width: 200px;
+ max-width: 1000px;
+ background-color: fade(white, 90%);
+ padding: 0.5rem;
+ padding-top: 1rem;
+
+ .ip-otsikko {
+   font-weight: bold;
+   font-size: @fontin-koko-h3;
+ }
+
+ .ip-haitari-otsikko {
+   .ip-otsikko();
+   color: #0088cc;
+}
+
+ .ip-osio {
+   padding-top: 0.5rem;
+ }
+
+ .kentan-label {
+   display: inline-block;
+   min-width: 100px;
+ }
+    .ip-toiminto {
+        margin: 5px 0;
+    }
+}

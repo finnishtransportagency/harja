@@ -396,7 +396,8 @@
                                :tr_loppuetaisyys tr-loppuetaisyys
                                :tr_ajorata tr-ajorata
                                :tr_kaista tr-kaista
-                               :toimenpide toimenpide})))
+                               :toimenpide toimenpide
+                               :ulkoinen-id nil})))
 
 (defn- paivita-yllapitokohdeosa [db user urakka-id
                                  {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys

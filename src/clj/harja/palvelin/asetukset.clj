@@ -61,7 +61,8 @@
                                            :kayttajatunnus s/Str
                                            :salasana s/Str
                                            :paivittainen-lahetysaika [s/Num]}
-   (s/optional-key :tierekisteri)         {:url s/Str}
+   (s/optional-key :tierekisteri)         {:url s/Str
+                                           :uudelleenlahetys-aikavali-minuutteina s/Num}
 
    :ilmatieteenlaitos                     {:lampotilat-url s/Str}
 

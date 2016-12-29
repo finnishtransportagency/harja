@@ -57,26 +57,24 @@
                 ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneseuranta_uusi.json"
                                                               slurp
                                                               (.replace "__TEHTAVA__" "suolaus")))]
-    (let [[sijainti line] (first (q "SELECT sijainti,ST_AsText(reitti) FROM tyokonehavainto WHERE tyokoneid=666"))
+    (let [[sijainti] (first (q "SELECT sijainti FROM tyokonehavainto WHERE tyokoneid=666"))
           tehtavat (-> (ffirst (q "SELECT tehtavat FROM tyokonehavainto WHERE tyokoneid=666"))
                        (konv/array->set))]
-      (log/debug "TEHTÄVÄT:" (pr-str tehtavat))
       (is (= 200 (:status kutsu)))
       (is (= (str sijainti) "(429015.0,7198161.0)"))
-      (is (= line "LINESTRING(429015 7198161)"))
       (is (= tehtavat #{"suolaus"})))))
 
 (deftest tallenna-tyokoneen-seurantakirjaus-olemassaoleva
   (let [kutsu (api-tyokalut/post-kutsu
-                ;; tyokone 31337 on jo kannassa, katsotaan muuttuuko raportoidut koordinaatit esimerkin mukaiseksi
+                ;; tyokone 31337 on jo kannassa, katsotaan tuleeko uusi rivi
                 ["/api/seuranta/tyokone"] kayttaja portti (slurp "test/resurssit/api/tyokoneseuranta.json"))]
-    (let [[s line]
-          (first
-           (q "SELECT sijainti,ST_AsText(reitti) FROM tyokonehavainto WHERE tyokoneid=31337"))]
+    (let [rivit
+          (mapv first
+                (q "SELECT st_astext(sijainti::GEOMETRY) FROM tyokonehavainto WHERE tyokoneid=31337 ORDER BY vastaanotettu ASC"))]
 
       (is (= 200 (:status kutsu)))
-      (is (= (str s) "(429005.0,7198151.0)"))
-      (is (= (str line) "LINESTRING(429493 7207739,429005 7198151)")))))
+      (is (= 2 (count rivit)))
+      (is (= (str (second rivit)) "POINT(429005 7198151)")))))
 
 (deftest kaikkien-tehtavien-kirjaus-toimii
   (doseq [tehtava skeeman-tehtavat]
@@ -84,7 +82,7 @@
                   ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneseuranta_uusi.json"
                                                                 slurp
                                                                 (.replace "__TEHTAVA__" tehtava)))]
-      (let [tehtavat-kannassa (-> (ffirst (q "SELECT tehtavat FROM tyokonehavainto WHERE tyokoneid=666"))
+      (let [tehtavat-kannassa (-> (ffirst (q "SELECT tehtavat FROM tyokonehavainto WHERE tyokoneid=666 ORDER BY vastaanotettu DESC LIMIT 1"))
                          (konv/array->set))
             tehtava-kannassa (first tehtavat-kannassa)]
         (is (= 200 (:status kutsu)))

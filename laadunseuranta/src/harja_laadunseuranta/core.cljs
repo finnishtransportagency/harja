@@ -5,14 +5,14 @@
             [harja-laadunseuranta.tiedot.sovellus :as sovellus]
             [harja-laadunseuranta.tiedot.comms :as comms]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
-            [harja-laadunseuranta.ui.tr-haku :as tr-haku]
+            [harja-laadunseuranta.tiedot.tr-haku :as tr-haku]
             [harja-laadunseuranta.utils :as utils]
             [harja-laadunseuranta.tiedot.puhe :as puhe]
             [harja-laadunseuranta.tiedot.tarkastusajon-luonti :as tarkastusajon-luonti]
             [cljs.core.async :as async :refer [<!]]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
             [clojure.string :as str]
-            [harja-laadunseuranta.ui.dom :as dom]
+            [harja-laadunseuranta.ui.yleiset.dom :as dom]
             [harja-laadunseuranta.asiakas.tapahtumat :as tapahtumat])
   (:require-macros [reagent.ratom :refer [run!]]
                    [cljs.core.async.macros :refer [go]]
@@ -36,14 +36,6 @@
       ;; Soiton täytyy alkaa suoraan user eventistä
       (.addEventListener js/document.body "click" #(soita-video video)))))
 
-(defn- esta-zoomaus []
-  ;; "user-scaleable=no is disabled in Safari for iOS 10.
-  ;; The reason is that Apple is trying to improve accessibility by allowing people to zoom on web pages."
-  ;; FIXME Edelleen sallii zoomauksen yhden sormen tuplakosketuksella, ei voi mitään.
-  #_(when (or (utils/iphone?)
-            (utils/ipad?))
-    (.addEventListener js/document "gesturestart" #(.preventDefault %))))
-
 (defn- sovelluksen-alustusviive []
   (run!
     (when (and (not @sovellus/sovellus-alustettu) @sovellus/alustus-valmis)
@@ -65,12 +57,22 @@
   (dom/kuuntele-leveyksia)
   (dom/kuuntele-body-klikkauksia))
 
+(defn kaynnista-kayttajatietojen-haku []
+  ;; Haetaan käyttäjätiedot kun laite on paikannettu
+  ;; Sijainti tarvitaan urakoiden lajitteluun, jotta defaulttina on valittuna lähin
+  (run!
+    (when (and @sovellus/ensimmainen-sijainti
+               (not @sovellus/kayttajanimi))
+      (go (let [kayttajatiedot (<! (comms/hae-kayttajatiedot (:nykyinen @sovellus/sijainti)))]
+            (reset! sovellus/kayttajanimi (-> kayttajatiedot :ok :nimi))
+            (reset! sovellus/kayttajatunnus (-> kayttajatiedot :ok :kayttajanimi))
+            (reset! sovellus/vakiohavaintojen-kuvaukset (-> kayttajatiedot :ok :vakiohavaintojen-kuvaukset))
+            (reset! sovellus/oikeus-urakoihin (-> kayttajatiedot :ok :urakat))
+            (reset! sovellus/roolit (-> kayttajatiedot :ok :roolit))
+            (reset! sovellus/organisaatio (-> kayttajatiedot :ok :organisaatio)))))))
+
 (defn- alusta-sovellus []
   (go
-    (let [kayttajatiedot (<! (comms/hae-kayttajatiedot))]
-      (reset! sovellus/kayttajanimi (-> kayttajatiedot :ok :nimi))
-      (reset! sovellus/kayttajatunnus (-> kayttajatiedot :ok :kayttajanimi))
-      (reset! sovellus/vakiohavaintojen-kuvaukset (-> kayttajatiedot :ok :vakiohavaintojen-kuvaukset)))
 
     (reset! sovellus/idxdb (<! (reitintallennus/tietokannan-alustus)))
 
@@ -79,7 +81,12 @@
                                                              (when (= "?relogin=true" js/window.location.search)
                                                                (tarkastusajon-luonti/jatka-ajoa!))))
 
-    (reitintallennus/paivita-lahettamattomien-merkintojen-maara @sovellus/idxdb asetukset/+pollausvali+ sovellus/lahettamattomia-merkintoja)
+    (reitintallennus/paivita-lahettamattomien-merkintojen-maara!
+      @sovellus/idxdb
+      asetukset/+pollausvali+
+      sovellus/lahettamattomia-merkintoja)
+
+    (kaynnista-kayttajatietojen-haku)
 
     (reitintallennus/kaynnista-reitinlahetys asetukset/+pollausvali+
                                              @sovellus/idxdb
@@ -88,20 +95,19 @@
       {:sijainnin-tallennus-mahdollinen-atom sovellus/sijainnin-tallennus-mahdollinen
        :sijainti-atom sovellus/sijainti
        :db @sovellus/idxdb
-       :tarkastusajo-paattymassa sovellus/tarkastusajo-paattymassa
+       :tarkastusajo-paattymassa-atom sovellus/tarkastusajo-paattymassa?
        :segmentti-atom sovellus/reittisegmentti
        :reittipisteet-atom sovellus/reittipisteet
-       :tallennus-kaynnissa-atom sovellus/tallennus-kaynnissa
+       :tarkastusajo-kaynnissa-atom sovellus/tarkastusajo-kaynnissa?
        :tarkastusajo-atom sovellus/tarkastusajo-id
        :tarkastuspisteet-atom sovellus/kirjauspisteet
-       :soratiemittaussyotto sovellus/soratiemittaussyotto
-       :mittaustyyppi sovellus/mittaustyyppi
-       :jatkuvat-havainnot sovellus/jatkuvat-havainnot})
+       :soratiemittaussyotto-atom sovellus/soratiemittaussyotto
+       :mittaustyyppi-atom sovellus/mittaustyyppi
+       :jatkuvat-havainnot-atom sovellus/jatkuvat-havainnot})
     (tr-haku/alusta-tr-haku sovellus/sijainti sovellus/tr-tiedot)))
 
 (defn main []
   (esta-mobiililaitteen-nayton-lukitus)
-  (esta-zoomaus)
   (sovelluksen-alustusviive)
   (alusta-paikannus-id)
   (alusta-geolokaatio-api)
