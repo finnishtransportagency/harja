@@ -123,6 +123,23 @@
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
       (u (str "DELETE FROM yllapitokohde WHERE nimi = 'Testiramppi4564ddf';")))))
 
+(deftest tallenna-paallystyskohde-kantaan-vuodelle-2015
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id]
+
+    (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
+                                                              :sopimus-id sopimus-id
+                                                              :vuosi 2015
+                                                              :kohteet [yllapitokohde-testidata]})
+    (let [kohteet-kannassa (ffirst (q
+                                     (str "SELECT COUNT(*)
+                                      FROM yllapitokohde
+                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")
+                                      AND vuodet @> ARRAY[2015]::int[]")))]
+      (is (= kohteet-kannassa 1) "Kohde tallentui oikein")
+      (u (str "DELETE FROM yllapitokohde WHERE nimi = 'Testiramppi4564ddf';")))))
+
 (deftest ala-poista-paallystyskohdetta-jolla-ilmoitus
   (let [urakka-id @muhoksen-paallystysurakan-id
         sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
