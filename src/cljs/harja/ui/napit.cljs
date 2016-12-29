@@ -174,3 +174,10 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
       ikoni)
     (when (or ikoni tallennus-kaynnissa?) " ")
     sisalto]))
+
+(defn sulje
+  "'Sulje' ruksi"
+  [sulje!]
+  [:button.close {:on-click sulje!
+                  :type "button"}
+   [ikonit/remove]])
