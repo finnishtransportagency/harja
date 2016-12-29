@@ -3,7 +3,6 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-q]
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
-            [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [harja.domain.tierekisteri :as tr-domain]
@@ -124,7 +123,7 @@
      [:taulukko {:otsikko otsikko
                  :tyhja (if (empty? laatupoikkeamarivit) "Ei raportoitavia laatupoikkeamia.")
                  :sheet-nimi raportin-nimi}
-      [{:leveys 15 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
+      [{:leveys 15 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä" :fmt :pvm}
        {:leveys 20 :otsikko "Koh\u00ADde"}
        {:leveys 10 :otsikko "Te\u00ADki\u00ADjä"}
        {:leveys 35 :otsikko "Ku\u00ADvaus"}
