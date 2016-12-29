@@ -66,7 +66,7 @@ INSERT INTO yllapitokohde
 (urakka, sopimus, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
  tr_ajorata, tr_kaista,
  yhatunnus, yhaid, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yllapitoluokka, keskimaarainen_vuorokausiliikenne,
- nykyinen_paallyste, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, nimi)
+ nykyinen_paallyste, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, nimi, vuodet)
 VALUES (
   :urakka,
   (SELECT id
@@ -90,7 +90,8 @@ VALUES (
   0,
   0,
   0,
-  :nimi);
+  :nimi,
+  :vuodet::integer[]);
 
 -- name: luo-yllapitokohdeosa<!
 -- Luo uuden yllapitokohdeosan

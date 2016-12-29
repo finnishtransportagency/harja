@@ -12,7 +12,9 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.kyselyt.paallystys :as paallystys-q]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.pvm :as pvm]
+            [clj-time.core :as t]))
 
 (defn lukitse-urakan-yha-sidonta [db urakka-id]
   (log/info "Lukitaan urakan " urakka-id " yha-sidonta.")
@@ -130,7 +132,8 @@
                      :yllapitoluokka yllapitoluokka
                      :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
                      :nykyinen_paallyste nykyinen-paallyste
-                     :nimi nimi})]
+                     :nimi nimi
+                     :vuodet (konv/seq->array [(t/year (pvm/suomen-aikavyohykkeeseen (t/now)))])})]
         (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
           (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
           (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!
