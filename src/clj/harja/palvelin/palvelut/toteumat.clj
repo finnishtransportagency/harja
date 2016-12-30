@@ -82,7 +82,7 @@
 
 (defn hae-urakan-yksikkohintainen-toteuma [db user {:keys [urakka-id toteuma-id]}]
   (log/debug "Haetaan urakan toteuma id:llä: " toteuma-id)
-  (oikeudet/vaadi-lukuoikeus oikeudet/oikeudet/urakat-toteumat-yksikkohintaisettyot   user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-yksikkohintaisettyot   user urakka-id)
   (let [toteuma (konv/sarakkeet-vektoriin
                   (into []
                         (comp
