@@ -109,6 +109,7 @@
 
 
 (defonce hoitourakassa? (reaction (= :hoito (:tyyppi @nav/valittu-urakka))))
+(defonce valittu-urakkatyyppi (reaction (:arvo @nav/urakkatyyppi)))
 
 (defonce valittu-hoitokausi (reaction-writable
                              (if @hoitourakassa?
@@ -186,7 +187,7 @@
 (defmethod raportin-parametri "aikavali" [p arvo]
   ;; Näytetään seuraavat valinnat
   ;; - vuosi (joko urakkavuodet tai generoitu lista)
-  ;; - hoitokaudet (joko urakan hoitokaudet tai generoitu lista)
+  ;; - hoitokaudet (joko urakan hoitokaudet tai generoitu lista, vain jos valittuna hoito-tyyppi)
   ;; - kuukausi (valitun urakan tai hoitokauden kuukaudet, tai kaikki)
   ;; - vapaa tekstisyöttö aikavälille
   ;;
@@ -194,6 +195,7 @@
   ;; ei näytetä hoitokausivalintaa.
   (let [ur @nav/valittu-urakka
         hoitourakassa? @hoitourakassa?
+        urakkatyyppi @valittu-urakkatyyppi
         hal @nav/valittu-hallintayksikko
         vuosi-eka (if ur
                     (pvm/vuosi (:alkupvm ur))
@@ -213,7 +215,8 @@
          (reset! valittu-vuosi %)
          (reset! valittu-hoitokausi nil)
          (reset! valittu-kuukausi nil))]
-      (when (or hoitourakassa? (nil? ur))
+      (when (and (= urakkatyyppi :hoito)
+                 (or hoitourakassa? (nil? ur)))
         [ui-valinnat/hoitokausi
          {:disabled @vapaa-aikavali?}
          (if hoitourakassa?
