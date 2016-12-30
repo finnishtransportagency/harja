@@ -80,9 +80,9 @@
    (get-in toteuma [:tehtava :paivanhinta])])
 
 
-(defn hae-urakan-toteuma [db user {:keys [urakka-id toteuma-id]}]
+(defn hae-urakan-yksikkohintainen-toteuma [db user {:keys [urakka-id toteuma-id]}]
   (log/debug "Haetaan urakan toteuma id:llä: " toteuma-id)
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/oikeudet/urakat-toteumat-yksikkohintaisettyot   user urakka-id)
   (let [toteuma (konv/sarakkeet-vektoriin
                   (into []
                         (comp
@@ -739,9 +739,9 @@
 
     (julkaise-palvelut
       http
-      :urakan-toteuma
+      :urakan-yksikkohintainen-toteuma
       (fn [user tiedot]
-        (hae-urakan-toteuma db user tiedot))
+        (hae-urakan-yksikkohintainen-toteuma db user tiedot))
       :urakan-toteumien-tehtavien-summat
       (fn [user tiedot]
         (hae-urakan-toteumien-tehtavien-summat db user tiedot))
@@ -801,7 +801,7 @@
 
     (poista-palvelut
       (:http-palvelin this)
-      :urakan-toteuma
+      :urakan-yksikkohintainen-toteuma
       :urakan-toteumien-tehtavien-summat
       :urakan-toteutuneet-tehtavat-toimenpidekoodilla
       :hae-urakan-tehtavat

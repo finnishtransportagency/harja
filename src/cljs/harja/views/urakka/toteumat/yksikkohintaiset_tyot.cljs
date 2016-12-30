@@ -50,7 +50,7 @@
     :hoitokausi-lopetuspvm (second @u/valittu-hoitokausi)))
 
 (defn nayta-toteuma-lomakkeessa [urakka-id toteuma-id]
-  (go (let [toteuma (<! (toteumat/hae-urakan-toteuma urakka-id toteuma-id))]
+  (go (let [toteuma (<! (toteumat/hae-urakan-yksikkohintainen-toteuma urakka-id toteuma-id))]
         (log "toteuma: " (pr-str toteuma))
         (if-not (k/virhe? toteuma)
           (let [lomake-tiedot
