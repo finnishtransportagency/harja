@@ -166,6 +166,20 @@
    (fn [& args]
      (apply callback (drop 2 args)))})
 
+(defn vanhat-ja-uudet-parametrit
+  "Mixin, jonka avulla voi verrata komponentin vanhoja ja uusia parametreja. Tekee
+  :component-will-receive-props elinkaaren kuuntelijan. Callbackille annetaan parametrina
+  kaksi vektoria, joista ensimmäinen sisältää vanhat parametrit, ja toinen uuden. Parametrit
+  ovat samat, kuin render-funktiolle annettavat."
+  [callback]
+  {:component-will-receive-props
+   ;; Reagentin dokumentaation mukaan tämän pitäisi olla [this argv].
+   ;; Todellisuudessa [this jotain-häröä param1 param2 ..]
+   (fn [this _ & uudet]
+     ;; Reactissa ensimmäinen parametri on props, ja loput on children
+     (let [vanhat (concat [(r/props this)] (r/children this))]
+       (callback vanhat uudet)))})
+
 (defn klikattu-ulkopuolelle
   "Mixin, joka kutsuu annettua funktiota kun klikataan komponentin ulkopuolelle. Esim. hovereiden sulkemiseen."
   [ulkopuolella-fn]
