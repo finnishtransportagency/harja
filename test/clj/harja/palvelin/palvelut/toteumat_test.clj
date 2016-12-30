@@ -69,28 +69,29 @@
                                                        FROM erilliskustannus
                                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @oulun-alueurakan-2005-2010-id
                                             ") AND pvm >= '2005-10-01' AND pvm <= '2006-09-30'")))
-        res (kutsu-palvelua (:http-palvelin jarjestelma)
-                            :tallenna-erilliskustannus +kayttaja-jvh+ ek)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-erilliskustannus +kayttaja-jvh+ ek)
         lisatty (first (filter #(and
                                   (= (:pvm %) toteuman-pvm)
-                                  (= (:lisatieto %) toteuman-lisatieto)) res))]
+                                  (= (:lisatieto %) toteuman-lisatieto)) vastaus))]
     (is (= (:pvm lisatty) toteuman-pvm) "Tallennetun erilliskustannuksen pvm")
     (is (= (:lisatieto lisatty) toteuman-lisatieto) "Tallennetun erilliskustannuksen lisätieto")
     (is (= (:indeksin_nimi lisatty) "MAKU 2005") "Tallennetun erilliskustannuksen indeksin nimi")
     (is (= (:rahasumma lisatty) 20000.0) "Tallennetun erilliskustannuksen pvm")
     (is (= (:urakka lisatty) @oulun-alueurakan-2005-2010-id) "Oikea urakka")
     (is (= (:toimenpideinstanssi lisatty) 1) "Tallennetun erilliskustannuksen tp")
-    (is (= (count res) (+ 1 maara-ennen-lisaysta)) "Tallennuksen jälkeen erilliskustannusten määrä")
+    (is (= (count vastaus) (+ 1 maara-ennen-lisaysta)) "Tallennuksen jälkeen erilliskustannusten määrä")
 
     ;; Testaa päivittämistä
 
     (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :tallenna-erilliskustannus +kayttaja-jvh+ (assoc ek
-                                                                              :id (:id lisatty)
-                                                                              :indeksin_nimi "MAKU 2010"))
+                                  :tallenna-erilliskustannus +kayttaja-jvh+
+                                  (assoc ek
+                                    :id (:id lisatty)
+                                    :indeksin_nimi "MAKU 2010"))
           paivitetty (first (filter #(and
-                                    (= (:pvm %) toteuman-pvm)
-                                    (= (:lisatieto %) toteuman-lisatieto)) vastaus))]
+                                       (= (:pvm %) toteuman-pvm)
+                                       (= (:lisatieto %) toteuman-lisatieto)) vastaus))]
       (is (= (:indeksin_nimi paivitetty) "MAKU 2010") "Tallennetun erilliskustannuksen indeksin nimi"))
 
     ;; Poista luotu erilliskustannus
@@ -119,11 +120,11 @@
                                                     AND tyyppi IN ('muutostyo', 'lisatyo', 'akillinen-hoitotyo', 'vahinkojen-korjaukset')
                                                     AND alkanut >= to_date('1-10-2005', 'DD-MM-YYYY')
                                                     AND paattynyt <= to_date('30-09-2006', 'DD-MM-YYYY');;")))
-        res (kutsu-palvelua (:http-palvelin jarjestelma)
-                            :tallenna-muiden-toiden-toteuma +kayttaja-jvh+ tyo)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-muiden-toiden-toteuma +kayttaja-jvh+ tyo)
         lisatty (first (filter #(and
-                                  (= (:lisatieto %) toteuman-lisatieto)) res))]
-    (is (= (count res) (+ 1 maara-ennen-lisaysta)) "Tallennuksen jälkeen muiden töiden määrä")
+                                  (= (:lisatieto %) toteuman-lisatieto)) vastaus))]
+    (is (= (count vastaus) (+ 1 maara-ennen-lisaysta)) "Tallennuksen jälkeen muiden töiden määrä")
     (is (= (:alkanut lisatty) tyon-pvm) "Tallennetun muun työn alkanut pvm")
     (is (= (:paattynyt lisatty) tyon-pvm) "Tallennetun muun työn paattynyt pvm")
     (is (= (:tyyppi lisatty) :muutostyo) "Tallennetun muun työn tyyppi")
@@ -131,6 +132,18 @@
     (is (= (get-in lisatty [:tehtava :paivanhinta]) 456.0) "Tallennetun muun työn päivänhinta")
     (is (= (get-in lisatty [:tehtava :maara]) 2.0) "Tallennetun muun työn määrä")
     (is (= (get-in lisatty [:tehtava :toimenpidekoodi]) 1368) "Tallennetun muun työn toimenpidekoodi")
+
+    ;; Testaa päivitys
+
+    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-muiden-toiden-toteuma +kayttaja-jvh+
+                                  (assoc tyo
+                                    :tehtava {:id (get-in lisatty [:tehtava :id])}
+                                    :lisatieto "Testikeissi"))
+          paivitetty (first (filter #(and
+                                       (= (:lisatieto %) toteuman-lisatieto)) vastaus))]
+
+      (is (= (:lisatieto paivitetty) "Testikeissi") "Päivitetyn erilliskustannuksen lisätieto"))
 
     ;; siivotaan lisätyt rivit pois
     (u

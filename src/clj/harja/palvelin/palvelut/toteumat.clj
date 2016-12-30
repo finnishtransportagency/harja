@@ -443,8 +443,8 @@
   [db user toteuma]
   (oikeudet/vaadi-kirjoitusoikeus  oikeudet/urakat-toteumat-muutos-ja-lisatyot   user (:urakka-id toteuma))
   (jdbc/with-db-transaction [db db]
-    (vaadi-toteuma-kuuluu-urakkaan db (get-in toteuma [:toteuma :id]) (:urakka-id toteuma))
-    (vaadi-toteuma-ei-jarjestelman-luoma db (get-in toteuma [:toteuma :id]))
+    (vaadi-toteuma-kuuluu-urakkaan db (get-in toteuma [:tehtava :id]) (:urakka-id toteuma))
+    (vaadi-toteuma-ei-jarjestelman-luoma db (get-in toteuma [:tehtava :id]))
     (if (get-in toteuma [:tehtava :id])
       (paivita-muun-tyon-toteuma db user toteuma)
       (luo-muun-tyon-toteuma db user toteuma))
