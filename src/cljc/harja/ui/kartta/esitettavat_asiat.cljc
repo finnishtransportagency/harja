@@ -71,17 +71,20 @@
 (defn- maarittele-viiva
   [valittu? merkit viivat]
   (let [merkit (validoi-merkkiasetukset merkit)
-        viivat (validoi-viiva-asetukset viivat)]
+        viivat (validoi-viiva-asetukset viivat)
+        zindex (+ ulkoasu/+zindex+ (if valittu? 1 0))]
     {:viivat (mapv (fn [v] (merge
                              ;; Ylikirjoitettavat oletusasetukset
                              {:color (viivan-vari valittu?)
-                              :width (viivan-leveys valittu?)}
+                              :width (viivan-leveys valittu?)
+                              :zindex zindex}
                              v)) viivat)
      :ikonit (mapv (fn [i] (merge
                              ;; Oletusasetukset
                              {:tyyppi :merkki
                               :paikka [:loppu]
-                              :scale  (laske-skaala valittu?)}
+                              :scale  (laske-skaala valittu?)
+                              :zindex zindex}
                              i)) merkit)}))
 
 (defn maarittele-feature
