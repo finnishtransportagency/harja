@@ -520,33 +520,6 @@
                                                               (first hoitokausi) (second hoitokausi)
                                                               sopimus)))))
 
-(defn poista-toteuma!
-  [db user t]
-  (oikeudet/vaadi-kirjoitusoikeus  oikeudet/urakat-toteumat-materiaalit   user (:urakka t))
-  (jdbc/with-db-transaction [c db]
-    (let [mat-ja-teht (toteumat-q/hae-toteuman-toteuma-materiaalit-ja-tehtavat c (:id t))
-          tehtavaidt (filterv #(not (nil? %)) (map :tehtava_id mat-ja-teht))]
-
-      (log/debug "Merkitään tehtavien: " tehtavaidt " maksuerät likaisiksi")
-      (toteumat-q/merkitse-toteumatehtavien-maksuerat-likaisiksi! c tehtavaidt)
-
-      (materiaalit-q/poista-toteuma-materiaali!
-        c (:id user) (filterv #(not (nil? %)) (map :materiaali_id mat-ja-teht)))
-      (toteumat-q/poista-tehtava! c (:id user) tehtavaidt)
-      (toteumat-q/poista-toteuma! c (:id user) (:id t))
-      true)))
-
-(defn poista-tehtava!
-  "Poistaa toteuma-tehtävän id:llä. Vaatii lisäksi urakan id:n oikeuksien tarkastamiseen.
-  {:urakka X, :id [A, B, ..]}"
-  [db user tiedot]
-  (oikeudet/vaadi-kirjoitusoikeus  oikeudet/urakat-toteumat-yksikkohintaisettyot user (:urakka tiedot))
-  (let [tehtavaid (:id tiedot)]
-    (log/debug "Merkitään tehtava: " tehtavaid " maksuerä likaiseksi")
-    (toteumat-q/merkitse-toteumatehtavien-maksuerat-likaisiksi! db tehtavaid)
-
-    (toteumat-q/poista-tehtava! db (:id user) (:id tiedot))))
-
 (defn hae-urakan-varustetoteumat [tierekisteri db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero] :as hakuehdot}]
   (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-varusteet user urakka-id)
   (log/debug "Haetaan varustetoteumat: " urakka-id sopimus-id alkupvm loppupvm tienumero)
@@ -763,12 +736,6 @@
       :urakan-toteumien-tehtavien-summat
       (fn [user tiedot]
         (hae-urakan-toteumien-tehtavien-summat db user tiedot))
-      :poista-toteuma!
-      (fn [user toteuma]
-        (poista-toteuma! db user toteuma))
-      :poista-tehtava!
-      (fn [user tiedot]
-        (poista-tehtava! db user tiedot))
       :urakan-toteutuneet-tehtavat-toimenpidekoodilla
       (fn [user tiedot]
         (hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db user tiedot))
@@ -827,8 +794,6 @@
       (:http-palvelin this)
       :urakan-toteuma
       :urakan-toteumien-tehtavien-summat
-      :poista-toteuma!
-      :poista-tehtava!
       :urakan-toteutuneet-tehtavat-toimenpidekoodilla
       :hae-urakan-tehtavat
       :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
