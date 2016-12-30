@@ -43,11 +43,8 @@
                                             :hoitokausi hoitokausi
                                             :sopimus sopimus-id}))
 
-(defn hae-urakan-materiaalit [urakka-id]
-  (let [ch (chan)]
-    (go (>! ch (into []
-                     (<! (k/post! :hae-urakan-materiaalit urakka-id)))))
-    ch))
+(defn hae-materiaalit [urakka-id]
+  (k/post! :hae-urakan-materiaalit urakka-id))
  
 (defn tallenna [urakka-id sopimus-id hoitokausi hoitokaudet tuleville-valittu materiaalit]
   (log "TALLENNETAAN MATSKUT: " (pr-str materiaalit))
