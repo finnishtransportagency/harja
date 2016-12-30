@@ -84,14 +84,15 @@
 
     ;; Testaa päivittämistä
 
-    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+    (let [toteuma-id (:id lisatty)
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-erilliskustannus +kayttaja-jvh+
                                   (assoc ek
-                                    :id (:id lisatty)
+                                    :id toteuma-id
                                     :indeksin_nimi "MAKU 2010"))
-          paivitetty (first (filter #(and
-                                       (= (:pvm %) toteuman-pvm)
-                                       (= (:lisatieto %) toteuman-lisatieto)) vastaus))]
+          paivitetty (first (filter #(= (:id %)
+                                        toteuma-id)
+                                    vastaus))]
       (is (= (:indeksin_nimi paivitetty) "MAKU 2010") "Tallennetun erilliskustannuksen indeksin nimi"))
 
     ;; Poista luotu erilliskustannus
@@ -134,13 +135,15 @@
     (is (= (get-in lisatty [:tehtava :toimenpidekoodi]) 1368) "Tallennetun muun työn toimenpidekoodi")
 
     ;; Testaa päivitys
-    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+    (let [toteuma-id (get-in lisatty [:toteuma :id])
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-muiden-toiden-toteuma +kayttaja-jvh+
                                   (assoc tyo
-                                    :toteuma {:id (get-in lisatty [:toteuma :id])}
+                                    :toteuma {:id toteuma-id}
                                     :lisatieto "Testikeissi"))
-          paivitetty (first (filter #(and
-                                       (= (:lisatieto %) toteuman-lisatieto)) vastaus))]
+          paivitetty (first (filter #(= (get-in % [:toteuma :id])
+                                        toteuma-id)
+                                    vastaus))]
 
       (is (= (:lisatieto paivitetty) "Testikeissi") "Päivitetyn erilliskustannuksen lisätieto"))
 

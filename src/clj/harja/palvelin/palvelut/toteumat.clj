@@ -400,7 +400,8 @@
       (log/debug "poista toteuma" (get-in toteuma [:toteuma :id]))
       (apply toteumat-q/poista-toteuman-tehtavat! params)
       (apply toteumat-q/poista-toteuma! params))
-    (do (toteumat-q/paivita-toteuma! c {:alkanut (konv/sql-date (:alkanut toteuma))
+    (do
+      (toteumat-q/paivita-toteuma! c {:alkanut (konv/sql-date (:alkanut toteuma))
                                         :paattynyt (konv/sql-date (:paattynyt toteuma))
                                         :tyyppi (name (:tyyppi toteuma))
                                         :kayttaja (:id user)
@@ -445,7 +446,7 @@
   (jdbc/with-db-transaction [db db]
     (vaadi-toteuma-kuuluu-urakkaan db (get-in toteuma [:toteuma :id]) (:urakka-id toteuma))
     (vaadi-toteuma-ei-jarjestelman-luoma db (get-in toteuma [:toteuma :id]))
-    (if (get-in toteuma [:tehtava :id])
+    (if (get-in toteuma [:toteuma :id])
       (paivita-muun-tyon-toteuma db user toteuma)
       (luo-muun-tyon-toteuma db user toteuma))
     ;; lisätään tarvittaessa hinta muutoshintainen_tyo tauluun
