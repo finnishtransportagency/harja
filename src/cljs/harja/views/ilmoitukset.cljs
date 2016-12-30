@@ -611,8 +611,7 @@
                  }
 
                 (lomake/ryhma
-                  {:otsikko "Päivittäinen työaika"
-                   :rivi? false}
+                  {:rivi? false}
                   {:nimi :h21
                    :tyyppi :komponentti
                    :komponentti (fn [_] [napit/uusi "Lisää" #()])

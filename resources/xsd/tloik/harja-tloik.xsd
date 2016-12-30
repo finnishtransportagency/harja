@@ -66,7 +66,15 @@
                 <xs:element name="tyovaiheet">
                     <xs:complexType>
                         <xs:sequence>
-                            <xs:element name="sijainti" type="tietyonSijainti" minOccurs="1" maxOccurs="unbounded" nillable="true"/>
+                            <xs:element name="tyovaihe" minOccurs="1" maxOccurs="unbounded" nillable="true">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="alku" type="xs:dateTime" minOccurs="1"/>
+                                        <xs:element name="loppu" type="xs:dateTime" minOccurs="1"/>
+                                        <xs:element name="sijainti" type="tietyonSijainti" minOccurs="1"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
@@ -102,6 +110,14 @@
                 <xs:element name="vaikutukset" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
+                            <xs:element name="arvioituViivastys">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element type="xs:integer" name="normaaliLiikenteessa"/>
+                                        <xs:element type="xs:integer" name="ruuhka-aikana"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
                             <xs:element name="kaistajarjestelyt">
                                 <xs:complexType>
                                     <xs:sequence>
@@ -113,6 +129,18 @@
                             </xs:element>
                             <xs:element type="xs:integer" name="nopeusrajoitus"/>
                             <xs:element type="xs:integer" name="nopeusrajoituksenPituus"/>
+                            <xs:element name="kulkurajoitukset">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element type="xs:integer" name="ajoneuvonMaxKorkeus"/>
+                                        <xs:element type="xs:integer" name="ajoneuvonMaxLeveys"/>
+                                        <xs:element type="xs:integer" name="ajoneuvonMaxPituus"/>
+                                        <xs:element type="xs:integer" name="ajoneuvonMaxPaino"/>
+                                        <xs:element type="xs:boolean" name="kuumenninKaytossa"/>
+                                        <xs:element type="xs:boolean" name="tyokoneitaLiikenteenSeassa"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
                             <xs:element name="tienPintaTyomaalla">
                                 <xs:complexType>
                                     <xs:sequence>
@@ -149,26 +177,6 @@
                                                 </xs:sequence>
                                             </xs:complexType>
                                         </xs:element>
-                                    </xs:sequence>
-                                </xs:complexType>
-                            </xs:element>
-                            <xs:element name="arvioituViivastys">
-                                <xs:complexType>
-                                    <xs:sequence>
-                                        <xs:element type="xs:integer" name="normaaliLiikenteessa"/>
-                                        <xs:element type="xs:integer" name="ruuhka-aikana"/>
-                                    </xs:sequence>
-                                </xs:complexType>
-                            </xs:element>
-                            <xs:element name="kulkurajoitukset">
-                                <xs:complexType>
-                                    <xs:sequence>
-                                        <xs:element type="xs:integer" name="ajoneuvonMaxKorkeus"/>
-                                        <xs:element type="xs:integer" name="ajoneuvonMaxLeveys"/>
-                                        <xs:element type="xs:integer" name="ajoneuvonMaxPituus"/>
-                                        <xs:element type="xs:integer" name="ajoneuvonMaxPaino"/>
-                                        <xs:element type="xs:boolean" name="kuumenninKaytossa"/>
-                                        <xs:element type="xs:boolean" name="tyokoneitaLiikenteenSeassa"/>
                                     </xs:sequence>
                                 </xs:complexType>
                             </xs:element>
