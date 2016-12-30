@@ -134,11 +134,10 @@
     (is (= (get-in lisatty [:tehtava :toimenpidekoodi]) 1368) "Tallennetun muun työn toimenpidekoodi")
 
     ;; Testaa päivitys
-
     (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-muiden-toiden-toteuma +kayttaja-jvh+
                                   (assoc tyo
-                                    :tehtava {:id (get-in lisatty [:tehtava :id])}
+                                    :toteuma {:id (get-in lisatty [:toteuma :id])}
                                     :lisatieto "Testikeissi"))
           paivitetty (first (filter #(and
                                        (= (:lisatieto %) toteuman-lisatieto)) vastaus))]
