@@ -232,7 +232,8 @@
       (is (= (get-in lisatty [:toteuma :tyyppi]) :yksikkohintainen) "Tallennetun työn toteuman tyyppi")
 
       (is (== 333 (get-in summat-lisayksen-jalkeen [1368 :maara])))
-      (log/debug "LISÄTTY: " lisatty)
+
+      ;; Testaa päivitys
 
       (let [toteuma-id (get-in lisatty [:toteuma :toteuma-id])
             toteuma (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -240,23 +241,34 @@
                                     +kayttaja-jvh+
                                     {:urakka-id urakka-id
                                      :toteuma-id toteuma-id})
-            _ (log/debug "HAETTU TOTEUMA: " toteuma)
             muokattu-tyo (assoc tyo
                            :toteuma-id toteuma-id
                            :tehtavat [{:toimenpidekoodi 1369 :maara 666
                                        :tehtava-id (get-in toteuma
                                                            [:tehtavat 0 :tehtava-id])}])
-            lisatty (kutsu-palvelua (:http-palvelin jarjestelma)
+            muokattu (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
                                     +kayttaja-jvh+ muokattu-tyo)
             summat-muokkauksen-jalkeen (hae-summat)]
 
-        (is (= (get-in lisatty [:toteuma :tehtavat 0 :toimenpidekoodi]) 1369))
-        (is (= (get-in lisatty [:toteuma :tehtavat 0 :maara]) 666))
-        (is (= 1 (count (get-in lisatty [:toteuma :tehtavat]))))
+        (is (= (get-in muokattu [:toteuma :tehtavat 0 :toimenpidekoodi]) 1369))
+        (is (= (get-in muokattu [:toteuma :tehtavat 0 :maara]) 666))
+        (is (= 1 (count (get-in muokattu [:toteuma :tehtavat]))))
 
         (is (not (contains? summat-muokkauksen-jalkeen 1368)))
         (is (== 666 (get-in summat-muokkauksen-jalkeen [1369 :maara])))
+
+        ;; Testaa virheellinen päivitys
+
+        (try
+          (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
+                          +kayttaja-jvh+ (assoc muokattu-tyo :urakka-id @muhoksen-paallystysurakan-id))
+          (is false "Virheellisesti sallittiin päivittää väärällä urakka-id:llä")
+          (catch Exception e
+            (is true "Ei sallittu päivittää väärällä urakka-id:llä")))
+
+        ;; Siivoa roskat
 
         (u
           (str "DELETE FROM toteuma_tehtava
@@ -265,7 +277,6 @@
           (str "DELETE FROM toteuma
                     WHERE id = " toteuma-id))))))
 
-;; TODO implementoi..
 (deftest tallenna-toteuma-ja-toteumamateriaalit-test
   (let [[urakka sopimus] (first (q (str "SELECT urakka, id FROM sopimus WHERE urakka=" @oulun-alueurakan-2005-2010-id)))
         toteuma (atom {:id -5, :urakka urakka :sopimus sopimus :alkanut (pvm/luo-pvm 2005 11 24) :paattynyt (pvm/luo-pvm 2005 11 24)
