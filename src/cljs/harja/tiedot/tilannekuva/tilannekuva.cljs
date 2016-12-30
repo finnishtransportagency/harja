@@ -366,6 +366,7 @@ hakutiheys-historiakuva 1200000)
     (let [tulos (-> (<! (k/post! :hae-tilannekuvaan (aikaparametrilla hakuparametrit)))
                     (assoc :tarkastukset (:tarkastukset hakuparametrit)))]
       (when @nakymassa?
+        (reset! tilannekuva-kartalla/valittu-tila @valittu-tila)
         (reset! tilannekuva-kartalla/haetut-asiat tulos))
       (kartta/aseta-paivitetaan-karttaa-tila! false))))
 

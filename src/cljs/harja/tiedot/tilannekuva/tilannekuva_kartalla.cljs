@@ -20,6 +20,7 @@
 
 (defonce karttataso-tilannekuva (atom false))
 (defonce haetut-asiat (atom nil))
+(defonce valittu-tila (atom nil))
 
 (defonce url-hakuparametrit (atom nil))
 (defonce tilannekuvan-asiat-kartalla (atom {}))
@@ -63,7 +64,9 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
     nimi
     selitteet
     "tk" hakuparametrit
-    "ind" (str indikaattori))))
+    "ind" (when-not (= :historiakuva @valittu-tila)
+            ;; Historiakuvassa ei haluta indikaattoria
+            (str indikaattori)))))
 
 (defmethod muodosta-karttataso :toteumat [taso toimenpiteet]
   (let [yhteensa (reduce + (map :lukumaara toimenpiteet))]
