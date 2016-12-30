@@ -16,9 +16,6 @@
 
 (defonce erilliskustannukset-nakymassa? (atom false))
 
-(defn hae-tehtavat [urakka-id]
-  (k/post! :hae-urakan-tehtavat urakka-id))
-
 (defn hae-materiaalit [urakka-id]
   (k/post! :hae-urakan-materiaalit urakka-id))
 

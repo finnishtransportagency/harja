@@ -163,11 +163,6 @@
           (name tyyppi)
           toimenpidekoodi)))
 
-(defn hae-urakan-tehtavat [db user urakka-id]
-  (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-kokonaishintaisettyot   user urakka-id)
-  (into []
-        (toteumat-q/hae-urakan-tehtavat db urakka-id)))
-
 (defn kasittele-toteumatehtava [c user toteuma tehtava]
   (if (and (:tehtava-id tehtava) (pos? (:tehtava-id tehtava)))
     (do
@@ -764,9 +759,6 @@
       :urakan-toteutuneet-tehtavat-toimenpidekoodilla
       (fn [user tiedot]
         (hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db user tiedot))
-      :hae-urakan-tehtavat
-      (fn [user urakka-id]
-        (hae-urakan-tehtavat db user urakka-id))
       :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
       (fn [user toteuma]
         (tallenna-toteuma-ja-yksikkohintaiset-tehtavat db user toteuma))
@@ -820,7 +812,6 @@
       :urakan-toteuma
       :urakan-toteumien-tehtavien-summat
       :urakan-toteutuneet-tehtavat-toimenpidekoodilla
-      :hae-urakan-tehtavat
       :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
       :tallenna-urakan-toteuma-ja-kokonaishintaiset-tehtavat
       :paivita-yk-hint-toteumien-tehtavat
