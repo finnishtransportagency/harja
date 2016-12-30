@@ -55,7 +55,7 @@
     (log/debug "Kirjataan uusi pistetoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
     (tarkista-pyynto db urakka-id kirjaaja data)
     (tallenna-kaikki-pyynnon-pistetoteumat db urakka-id kirjaaja data)
-    (tee-onnistunut-vastaus)))
+    (tee-kirjausvastauksen-body {:ilmoitukset "Pistetoteuma poistettu onnistuneesti"})))
 
 (defn poista-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)

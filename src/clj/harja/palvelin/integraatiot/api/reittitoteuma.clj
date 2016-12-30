@@ -206,7 +206,7 @@ maksimi-linnuntien-etaisyys 200)
                " (id:" (:id kirjaaja) " tekemänä.")
     (tarkista-pyynto db urakka-id kirjaaja data)
     (tallenna-kaikki-pyynnon-reittitoteumat db db-replica urakka-id kirjaaja data)
-    (tee-onnistunut-vastaus)))
+    (tee-kirjausvastauksen-body {:ilmoitukset "Pistetoteuma poistettu onnistuneesti"})))
 
 (defn poista-toteuma [db db-replica {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)
