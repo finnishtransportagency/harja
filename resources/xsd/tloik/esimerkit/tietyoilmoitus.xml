@@ -1,4 +1,4 @@
-<har:tietyoilmoitus xmlns:har="http://www.liikennevirasto.fi/xsd/harja">
+<harja:tietyoilmoitus xmlns:harja="http://www.liikennevirasto.fi/xsd/harja">
     <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
     <tietyoilmoitusId>234908234</tietyoilmoitusId>
     <ilmoitettu>2016-12-24T04:49:45</ilmoitettu>
@@ -35,12 +35,7 @@
         <tyopuhelin>+34592349342</tyopuhelin>
         <sahkoposti>eija@example.com</sahkoposti>
     </tilaajan-yhteyshenkilo>
-    <toimenpide>
-        <uusi>true</uusi>
-        <tyovaiheenMuutos>true</tyovaiheenMuutos>
-        <muutos>true</muutos>
-        <lopetus>false</lopetus>
-    </toimenpide>
+    <toimenpide>uusi</toimenpide>
     <sijainti>
         <tierekisteriosoitevali>
             <tienumero>23</tienumero>
@@ -50,24 +45,51 @@
             <loppuetaisyys>3780</loppuetaisyys>
         </tierekisteriosoitevali>
         <alkukoordinaatit>
-            <x>512980.1296580813 </x>
+            <x>512980.1296580813</x>
             <y>6908379.5465487875</y>
         </alkukoordinaatit>
         <loppukoordinaatit>
             <x>515497.44830392423</x>
             <y>6908053.366497267</y>
         </loppukoordinaatit>
+        <pituus>1000.00</pituus>
+        <tienNimi>Tie</tienNimi>
+        <kunnat>Pieksämäki</kunnat>
         <alkusijainninKuvaus>Kaakinmäessä</alkusijainninKuvaus>
         <loppusijainninKuvaus>Rummukanmäessä</loppusijainninKuvaus>
-        <kunnat>
-            <kunta>Pieksämäki</kunta>
-        </kunnat>
-        <pituus>1000.00</pituus>
     </sijainti>
     <ajankohta>
         <alku>2016-01-01T07:49:45+02:00</alku>
         <loppu>2017-01-15T18:41:13+02:00</loppu>
     </ajankohta>
+    <tyovaiheet>
+        <tyovaihe>
+            <alku>2016-01-01T07:49:45+02:00</alku>
+            <loppu>2017-01-15T18:41:13+02:00</loppu>
+            <sijainti>
+                <tierekisteriosoitevali>
+                    <tienumero>23</tienumero>
+                    <alkuosa>313</alkuosa>
+                    <alkuetaisyys>1216</alkuetaisyys>
+                    <loppuosa>313</loppuosa>
+                    <loppuetaisyys>3780</loppuetaisyys>
+                </tierekisteriosoitevali>
+                <alkukoordinaatit>
+                    <x>512980.1296580813</x>
+                    <y>6908379.5465487875</y>
+                </alkukoordinaatit>
+                <loppukoordinaatit>
+                    <x>515497.44830392423</x>
+                    <y>6908053.366497267</y>
+                </loppukoordinaatit>
+                <pituus>1000.00</pituus>
+                <tienNimi>Tie</tienNimi>
+                <kunnat>Pieksämäki</kunnat>
+                <alkusijainninKuvaus>Kaakinmäessä</alkusijainninKuvaus>
+                <loppusijainninKuvaus>Rummukanmäessä</loppusijainninKuvaus>
+            </sijainti>
+        </tyovaihe>
+    </tyovaiheet>
     <tyyppi>
         <tyotyypit>
             <tyotyyppi>Viimeistely</tyotyyppi>
@@ -88,12 +110,31 @@
         </tyoaika>
     </tyoajat>
     <vaikutukset>
+        <arvioituViivastys>
+            <normaaliLiikenteessa>100</normaaliLiikenteessa>
+            <ruuhka-aikana>100</ruuhka-aikana>
+        </arvioituViivastys>
         <kaistajarjestelyt>
             <yksiAjokaistaSuljettu>true</yksiAjokaistaSuljettu>
             <yksiAjoratasuljettu>true</yksiAjoratasuljettu>
             <muu>Joku ajorata</muu>
         </kaistajarjestelyt>
         <nopeusrajoitus>20</nopeusrajoitus>
+        <nopeusrajoituksenPituus>500</nopeusrajoituksenPituus>
+        <kulkurajoitukset>
+            <ajoneuvonMaxKorkeus>4</ajoneuvonMaxKorkeus>
+            <ajoneuvonMaxLeveys>3</ajoneuvonMaxLeveys>
+            <ajoneuvonMaxPituus>10</ajoneuvonMaxPituus>
+            <ajoneuvonMaxPaino>5000</ajoneuvonMaxPaino>
+            <kuumenninKaytossa>true</kuumenninKaytossa>
+            <tyokoneitaLiikenteenSeassa>false</tyokoneitaLiikenteenSeassa>
+        </kulkurajoitukset>
+        <tienPintaTyomaalla>
+            <paallystetty>true</paallystetty>
+            <jyrsitty>true</jyrsitty>
+            <murske>true</murske>
+            <murskeenPituus>100</murskeenPituus>
+        </tienPintaTyomaalla>
         <kiertotie>
             <pituus>1000</pituus>
             <loivatMutkat>true</loivatMutkat>
@@ -111,18 +152,6 @@
                 <paattyen>2017-01-15T18:41:13+02:00</paattyen>
             </aikataulu>
         </pysaytykset>
-        <arvioituViivastys>
-            <normaaliLiikenteessa>100</normaaliLiikenteessa>
-            <ruuhka-aikana>100</ruuhka-aikana>
-        </arvioituViivastys>
-        <kulkurajoitukset>
-            <ajoneuvonMaxKorkeus>4</ajoneuvonMaxKorkeus>
-            <ajoneuvonMaxLeveys>3</ajoneuvonMaxLeveys>
-            <ajoneuvonMaxPituus>10</ajoneuvonMaxPituus>
-            <painorajoitus>5000</painorajoitus>
-            <kuumenninKaytossa>true</kuumenninKaytossa>
-            <tyokoneitaLiikenteenSeassa>false</tyokoneitaLiikenteenSeassa>
-        </kulkurajoitukset>
     </vaikutukset>
     <lisatietoja>Lisätietoja</lisatietoja>
-</har:tietyoilmoitus>
+</harja:tietyoilmoitus>

@@ -307,7 +307,7 @@
           ^{:key "tietyoilmoitukset"}
           [:span.ilmoitukset
 
-           (if false
+           (if true
              [:div
               [:br]
               [napit/uusi "Kirjaa uusi tietyöilmoitus"

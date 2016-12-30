@@ -46,13 +46,13 @@
                 <xs:element name="tilaaja" type="organisaatio" minOccurs="0"/>
                 <xs:element name="tilaajan-yhteyshenkilo" type="henkilo" minOccurs="0"/>
                 <xs:element name="toimenpide" minOccurs="0">
-                    <xs:complexType>
-                        <xs:sequence>
-                            <xs:element type="xs:boolean" name="uusi"/>
-                            <xs:element type="xs:boolean" name="muutos"/>
-                            <xs:element type="xs:boolean" name="lopetus"/>
-                        </xs:sequence>
-                    </xs:complexType>
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:enumeration value="uusi"/>
+                            <xs:enumeration value="muokkaus"/>
+                            <xs:enumeration value="lopetus"/>
+                        </xs:restriction>
+                    </xs:simpleType>
                 </xs:element>
                 <xs:element name="sijainti" type="tietyonSijainti" minOccurs="0"/>
                 <xs:element name="ajankohta" minOccurs="0">
