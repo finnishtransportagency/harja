@@ -279,7 +279,7 @@ SET alkanut           = :alkanut,
   tr_alkuetaisyys     = :alkuetaisyys,
   tr_loppuosa         = :loppuosa,
   tr_loppuetaisyys    = :loppuetaisyys
-WHERE id = :id AND urakka = :urakka
+WHERE id = :id AND urakka = :urakka;
 
 -- name: paivita-toteuma-ulkoisella-idlla<!
 UPDATE toteuma
