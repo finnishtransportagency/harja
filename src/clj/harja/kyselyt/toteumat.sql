@@ -66,7 +66,7 @@ WHERE
   AND t.id = :toteuma
   AND t.poistettu IS NOT TRUE;
 
-  -- name: toteuma-jarjestelman-lisaama
+-- name: toteuma-jarjestelman-lisaama
 SELECT
   k.jarjestelma         AS jarjestelmanlisaama
 FROM toteuma t
