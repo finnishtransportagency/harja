@@ -330,6 +330,8 @@
   (oikeudet/vaadi-kirjoitusoikeus  oikeudet/urakat-toteumat-erilliskustannukset user (:urakka-id ek))
   (jdbc/with-db-transaction
     [db db]
+    (vaadi-toteuma-kuuluu-urakkaan db (:id ek) (:urakka-id ek))
+    (vaadi-ei-jarjestelman-luoma db (:id ek))
     (let [parametrit [db (:tyyppi ek) (:urakka-id ek) (:sopimus ek) (:toimenpideinstanssi ek)
                       (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user)]]
       (if (not (:id ek))
