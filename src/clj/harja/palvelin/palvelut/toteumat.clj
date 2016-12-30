@@ -39,7 +39,8 @@
             (assoc :maara
                    (or (some-> % :maara double) 0)))))
 
-(defn vaadi-ei-jarjestelman-luoma [db toteuma-id]
+(defn vaadi-toteuma-ei-jarjestelman-luoma [db toteuma-id]
+  (log/debug "Tarkistetaan, ettei toteuma " toteuma-id " ole järjestelmästä tullut")
   (when toteuma-id
     (let [jarjestelman-lisaama? (:jarjestelmanlisaama (first
                                                         (toteumat-q/toteuma-jarjestelman-lisaama
@@ -48,14 +49,16 @@
         (throw (SecurityException. "Järjestelmän luomaa toteumaa ei voi muokata!"))))))
 
 (defn vaadi-toteuma-kuuluu-urakkaan [db toteuma-id vaitetty-urakka-id]
+  (log/debug "Tarkikistetaan, että toteuma " toteuma-id " kuuluu väitettyyn urakkaan " vaitetty-urakka-id)
   (assert vaitetty-urakka-id "Urakka id puuttuu!")
   (when toteuma-id
-    (let [toteuman-todellinen-urakka (:urakka (first
+    (let [toteuman-todellinen-urakka-id (:urakka (first
                                                 (toteumat-q/toteuman-urakka
                                                   db {:toteuma toteuma-id})))]
-      (when (and (some? toteuman-todellinen-urakka)
-                 (not= toteuman-todellinen-urakka vaitetty-urakka-id))
-        (throw (SecurityException. "Toteuma ei kuulu urakkaan!"))))))
+      (when (and (some? toteuman-todellinen-urakka-id)
+                 (not= toteuman-todellinen-urakka-id vaitetty-urakka-id))
+        (throw (SecurityException. (str "Toteuma ei kuulu väitettyyn urakkaan " vaitetty-urakka-id
+                                        " vaan urakkaan " toteuman-todellinen-urakka-id)))))))
 
 (def tyhja-tr-osoite {:numero nil :alkuosa nil :alkuetaisyys nil :loppuosa nil :loppuetaisyys nil})
 
@@ -240,7 +243,7 @@
   (log/debug "Toteuman tallennus aloitettu. Payload: " (pr-str toteuma))
   (jdbc/with-db-transaction [c db]
     (vaadi-toteuma-kuuluu-urakkaan c (:toteuma-id toteuma) (:urakka-id toteuma))
-    (vaadi-ei-jarjestelman-luoma c (:toteuma-id toteuma))
+    (vaadi-toteuma-ei-jarjestelman-luoma c (:toteuma-id toteuma))
     (let [id (if (:toteuma-id toteuma)
                (paivita-toteuma c user toteuma)
                (luo-toteuma c user toteuma))
@@ -269,7 +272,7 @@
   (jdbc/with-db-transaction
     [db db]
     (vaadi-toteuma-kuuluu-urakkaan db (:toteuma-id toteuma) (:urakka-id toteuma))
-    (vaadi-ei-jarjestelman-luoma db (:toteuma-id toteuma))
+    (vaadi-toteuma-ei-jarjestelman-luoma db (:toteuma-id toteuma))
     (let [tulos (if (:toteuma-id toteuma)
                   (paivita-toteuma db user toteuma)
                   (luo-toteuma db user toteuma))]
@@ -291,7 +294,7 @@
       (doseq [tehtava tehtavat]
         (let [toteuma-id (:toteuma (first (toteumat-q/tehtavan-toteuma db (:tehtava_id tehtava))))]
           (vaadi-toteuma-kuuluu-urakkaan c toteuma-id urakka-id)
-          (vaadi-ei-jarjestelman-luoma c toteuma-id)
+          (vaadi-toteuma-ei-jarjestelman-luoma c toteuma-id)
           (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava)))
           (toteumat-q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava)
                                                 (:paivanhinta tehtava) (:tehtava_id tehtava)))
@@ -344,13 +347,13 @@
   (oikeudet/vaadi-kirjoitusoikeus  oikeudet/urakat-toteumat-erilliskustannukset user (:urakka-id ek))
   (jdbc/with-db-transaction
     [db db]
-    (vaadi-toteuma-kuuluu-urakkaan db (:id ek) (:urakka-id ek))
-    (vaadi-ei-jarjestelman-luoma db (:id ek))
     (let [parametrit [db (:tyyppi ek) (:urakka-id ek) (:sopimus ek) (:toimenpideinstanssi ek)
                       (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user)]]
       (if (not (:id ek))
         (apply toteumat-q/luo-erilliskustannus<! parametrit)
-        (apply toteumat-q/paivita-erilliskustannus! (concat parametrit [(or (:poistettu ek) false) (:id ek)])))
+        (apply toteumat-q/paivita-erilliskustannus! (concat parametrit [(or (:poistettu ek) false)
+                                                                        (:id ek)
+                                                                        (:urakka-id ek)])))
       (toteumat-q/merkitse-toimenpideinstanssin-kustannussuunnitelma-likaiseksi! db (:toimenpideinstanssi ek))
       (hae-urakan-erilliskustannukset db user {:urakka-id (:urakka-id ek)
                                                :alkupvm (:alkupvm ek)
@@ -441,7 +444,7 @@
   (oikeudet/vaadi-kirjoitusoikeus  oikeudet/urakat-toteumat-muutos-ja-lisatyot   user (:urakka-id toteuma))
   (jdbc/with-db-transaction [db db]
     (vaadi-toteuma-kuuluu-urakkaan db (get-in toteuma [:toteuma :id]) (:urakka-id toteuma))
-    (vaadi-ei-jarjestelman-luoma db (get-in toteuma [:toteuma :id]))
+    (vaadi-toteuma-ei-jarjestelman-luoma db (get-in toteuma [:toteuma :id]))
     (if (get-in toteuma [:tehtava :id])
       (paivita-muun-tyon-toteuma db user toteuma)
       (luo-muun-tyon-toteuma db user toteuma))
@@ -471,7 +474,7 @@
   (log/debug "Tallenna toteuma: " (pr-str t) " ja toteumamateriaalit " (pr-str toteumamateriaalit))
   (jdbc/with-db-transaction [c db]
     (vaadi-toteuma-kuuluu-urakkaan c (:id t) (:urakka t))
-    (vaadi-ei-jarjestelman-luoma c (:id t))
+    (vaadi-toteuma-ei-jarjestelman-luoma c (:id t))
     ;; Jos toteumalla on positiivinen id, toteuma on olemassa
     (let [toteuma (if (and (:id t) (pos? (:id t)))
                     ;; Jos poistettu=true, halutaan toteuma poistaa.

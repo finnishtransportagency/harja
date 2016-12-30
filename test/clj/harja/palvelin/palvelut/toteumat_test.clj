@@ -78,8 +78,22 @@
     (is (= (:lisatieto lisatty) toteuman-lisatieto) "Tallennetun erilliskustannuksen lisätieto")
     (is (= (:indeksin_nimi lisatty) "MAKU 2005") "Tallennetun erilliskustannuksen indeksin nimi")
     (is (= (:rahasumma lisatty) 20000.0) "Tallennetun erilliskustannuksen pvm")
+    (is (= (:urakka lisatty) @oulun-alueurakan-2005-2010-id) "Oikea urakka")
     (is (= (:toimenpideinstanssi lisatty) 1) "Tallennetun erilliskustannuksen tp")
     (is (= (count res) (+ 1 maara-ennen-lisaysta)) "Tallennuksen jälkeen erilliskustannusten määrä")
+
+    ;; Testaa päivittämistä
+
+    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-erilliskustannus +kayttaja-jvh+ (assoc ek
+                                                                              :id (:id lisatty)
+                                                                              :indeksin_nimi "MAKU 2010"))
+          paivitetty (first (filter #(and
+                                    (= (:pvm %) toteuman-pvm)
+                                    (= (:lisatieto %) toteuman-lisatieto)) vastaus))]
+      (is (= (:indeksin_nimi paivitetty) "MAKU 2010") "Tallennetun erilliskustannuksen indeksin nimi"))
+
+    ;; Poista luotu erilliskustannus
     (u
       (str "DELETE FROM erilliskustannus
                     WHERE pvm = '2005-12-12' AND lisatieto = '" toteuman-lisatieto "'"))))

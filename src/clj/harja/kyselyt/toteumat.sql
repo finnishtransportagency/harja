@@ -389,7 +389,8 @@ SET tyyppi            = :tyyppi :: erilliskustannustyyppi, urakka = :urakka, sop
   rahasumma           = :rahasumma, indeksin_nimi = :indeksin_nimi, lisatieto = :lisatieto, muokattu = NOW(),
   muokkaaja           = :muokkaaja,
   poistettu           = :poistettu
-WHERE id = :id;
+WHERE id = :id
+AND urakka = :urakka;
 
 -- name: paivita-toteuman-tehtava!
 -- Päivittää toteuman tehtävän id:llä.
