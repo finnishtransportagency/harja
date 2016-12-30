@@ -80,10 +80,15 @@
    (get-in toteuma [:tehtava :paivanhinta])])
 
 
-(defn hae-urakan-yksikkohintainen-toteuma [db user {:keys [urakka-id toteuma-id]}]
+(defn hae-urakan-toteuma [db user {:keys [urakka-id toteuma-id]}]
   (log/debug "Haetaan urakan toteuma id:llä: " toteuma-id)
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-yksikkohintaisettyot   user urakka-id)
-  (let [toteuma (konv/sarakkeet-vektoriin
+  (let [toteuman-tyyppi (:tyyppi (first (toteumat-q/toteuman-tyyppi db toteuma-id)))
+        _ (case toteuman-tyyppi
+            "yksikkohintainen"
+            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-yksikkohintaisettyot   user urakka-id)
+            "kokonaishintainen"
+            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot   user urakka-id))
+        toteuma (konv/sarakkeet-vektoriin
                   (into []
                         (comp
                           toteuma-xf
@@ -149,9 +154,14 @@
   (into []
         (comp (map konv/keraa-tr-kentat)
               muunna-desimaaliluvut-xf)
-        (toteumat-q/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db urakka-id sopimus-id (konv/sql-timestamp alkupvm) (konv/sql-timestamp loppupvm) (name tyyppi) toimenpidekoodi)))
-
-
+        (toteumat-q/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla
+          db
+          urakka-id
+          sopimus-id
+          (konv/sql-timestamp alkupvm)
+          (konv/sql-timestamp loppupvm)
+          (name tyyppi)
+          toimenpidekoodi)))
 
 (defn hae-urakan-tehtavat [db user urakka-id]
   (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-kokonaishintaisettyot   user urakka-id)
@@ -745,9 +755,9 @@
 
     (julkaise-palvelut
       http
-      :urakan-yksikkohintainen-toteuma
+      :urakan-toteuma
       (fn [user tiedot]
-        (hae-urakan-yksikkohintainen-toteuma db user tiedot))
+        (hae-urakan-toteuma db user tiedot))
       :urakan-toteumien-tehtavien-summat
       (fn [user tiedot]
         (hae-urakan-toteumien-tehtavien-summat db user tiedot))
@@ -807,7 +817,7 @@
 
     (poista-palvelut
       (:http-palvelin this)
-      :urakan-yksikkohintainen-toteuma
+      :urakan-toteuma
       :urakan-toteumien-tehtavien-summat
       :urakan-toteutuneet-tehtavat-toimenpidekoodilla
       :hae-urakan-tehtavat

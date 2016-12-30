@@ -22,8 +22,8 @@
 (defn hae-materiaalit [urakka-id]
   (k/post! :hae-urakan-materiaalit urakka-id))
 
-(defn hae-urakan-yksikkohintainen-toteuma [urakka-id toteuma-id]
-  (k/post! :urakan-yksikkohintainen-toteuma
+(defn hae-urakan-toteuma [urakka-id toteuma-id]
+  (k/post! :urakan-toteuma
            {:urakka-id urakka-id
             :toteuma-id toteuma-id}))
 
