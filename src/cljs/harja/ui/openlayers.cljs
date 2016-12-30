@@ -217,13 +217,14 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 
 (defn- tapahtuman-kuvaus
   "Tapahtuman kuvaus ulkoisille käsittelijöille"
-  [e]
+  [this e]
   (let [c (.-coordinate e)
         tyyppi (.-type e)]
     {:tyyppi   (case tyyppi
                  "pointermove" :hover
                  "click" :click
                  "singleclick" :click)
+     :geometria (tapahtuman-geometria this e)
      :sijainti [(aget c 0) (aget c 1)]
      :x        (aget (.-pixel e) 0)
      :y        (aget (.-pixel e) 1)}))
@@ -250,7 +251,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
        (fn [e]
          (if-let [kasittelija @klik-kasittelija]
            ;; Lähinnä REPL tunkkausta varten
-           (kasittelija (tapahtuman-kuvaus e))
+           (kasittelija (tapahtuman-kuvaus this e))
 
            (if-let [g (tapahtuman-geometria this e)]
              (when on-select (on-select g e))
@@ -268,7 +269,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
   (.on ol3 "pointermove"
        (fn [e]
          (if-let [kasittelija @hover-kasittelija]
-           (kasittelija (tapahtuman-kuvaus e))
+           (kasittelija (tapahtuman-kuvaus this e))
 
            (reagent/set-state this
                               (if-let [g (tapahtuman-geometria this e)]
