@@ -53,32 +53,37 @@
 
    (doall
     (for [[i asia] (zipmap (range) asiat)
-          :let [auki? (avatut-asiat i)]]
+          :let [auki? (avatut-asiat asia)]]
       ^{:key i}
       [:div
-       [otsikko asia #(toggle-asia! i)]
+       [otsikko asia #(toggle-asia! asia)]
        (when auki?
          [yksityiskohdat asia linkkifunktiot])]))])
 
 (defn infopaneeli [asiat-pisteessa piilota-fn! linkkifunktiot]
-  (let [avatut-asiat (atom #{})
+  (let [asiat-skeemamuodossa (atom nil)
+        avatut-asiat (atom #{})
         toggle-asia! (fn [asia]
                        (swap! avatut-asiat
                               #(if (% asia)
                                  (disj % asia)
-                                 (conj % asia))))]
+                                 (conj % asia))))
+        paivita-asiat! (fn [{asiat :asiat :as asiat-pisteessa}]
+                         (let [asiat (infopaneelin-sisalto/skeemamuodossa asiat)]
+                           (reset! asiat-skeemamuodossa asiat)
+                           (reset! avatut-asiat
+                                   (if (= 1 (count asiat))
+                                     (into #{} asiat)
+                                     #{}))))]
+    (paivita-asiat! asiat-pisteessa)
     (komp/luo
-     (komp/kun-muuttuu (fn [_ _ _]
-                         (reset! avatut-asiat #{})))
-     (fn [asiat-pisteessa piilota-fn! linkkifunktiot]
-       (let [{:keys [asiat haetaan?]} asiat-pisteessa
-             asiat (infopaneelin-sisalto/skeemamuodossa asiat)
-             avatut (if (= 1 (count asiat))
-                      (constantly true)
-                      @avatut-asiat)]
-         (if haetaan?
-           [:div
-            [ajax-loader]]
-           [infopaneeli-komponentti
-            asiat avatut toggle-asia!
-            piilota-fn! linkkifunktiot]))))))
+     (komp/kun-muuttuu (fn [asiat-pisteessa _ _]
+                         (paivita-asiat! asiat-pisteessa)))
+     (fn [{haetaan? :haetaan? :as asiat-pisteessa} piilota-fn! linkkifunktiot]
+       (log "AVATUT: " (pr-str @avatut-asiat))
+       (if haetaan?
+         [:div
+          [ajax-loader]]
+         [infopaneeli-komponentti
+          @asiat-skeemamuodossa @avatut-asiat toggle-asia!
+          piilota-fn! linkkifunktiot])))))
