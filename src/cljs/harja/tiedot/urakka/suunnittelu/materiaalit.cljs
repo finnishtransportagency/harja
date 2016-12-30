@@ -21,7 +21,7 @@
   materiaalikoodit)
 
 
-(defn hae-materiaalit [urakka-id]
+(defn hae-urakan-materiaalit [urakka-id]
   (k/post! :hae-urakan-materiaalit urakka-id))
 
 (defn hae-urakassa-kaytetyt-materiaalit [urakka-id alku loppu sopimus-id]
@@ -42,9 +42,6 @@
                                             :toteumamateriaalit toteumamateriaalit
                                             :hoitokausi hoitokausi
                                             :sopimus sopimus-id}))
-
-(defn hae-materiaalit [urakka-id]
-  (k/post! :hae-urakan-materiaalit urakka-id))
  
 (defn tallenna [urakka-id sopimus-id hoitokausi hoitokaudet tuleville-valittu materiaalit]
   (log "TALLENNETAAN MATSKUT: " (pr-str materiaalit))
