@@ -48,14 +48,11 @@
  
 (defn tallenna [urakka-id sopimus-id hoitokausi hoitokaudet tuleville-valittu materiaalit]
   (log "TALLENNETAAN MATSKUT: " (pr-str materiaalit))
-  (let [ch (chan)]
-    (go (>! ch (into []
-                     (<! (k/post! :tallenna-urakan-materiaalit
-                                  {:urakka-id   urakka-id
-                                   :sopimus-id  sopimus-id
-                                   :hoitokausi  hoitokausi
-                                   :hoitokaudet hoitokaudet
-                                   :tulevat-hoitokaudet-mukana? tuleville-valittu
-                                   :materiaalit (filter #(or (:pohjavesialue %)
-                                                             (not (nil? (:maara %)))) materiaalit)})))))
-    ch))
+  (k/post! :tallenna-urakan-materiaalit
+           {:urakka-id   urakka-id
+            :sopimus-id  sopimus-id
+            :hoitokausi  hoitokausi
+            :hoitokaudet hoitokaudet
+            :tulevat-hoitokaudet-mukana? tuleville-valittu
+            :materiaalit (filter #(or (:pohjavesialue %)
+                                      (not (nil? (:maara %)))) materiaalit)}))
