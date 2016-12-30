@@ -301,13 +301,14 @@ SET poistettu = TRUE
 WHERE id = :id
       AND urakka = :urakka;
 
--- name: poista-siltatarkastus-ulkoisella-idlla!
+-- name: poista-siltatarkastukset-ulkoisilla-idlla-ja-luojalla!
 -- Merkitsee annetun siltatarkastuksen poistetuksi
 UPDATE siltatarkastus
   SET poistettu = TRUE,
   muokattu = NOW(),
   muokkaaja = :kayttaja-id
-WHERE ulkoinen_id::integer = :ulkoinen-tarkastus-id
+WHERE ulkoinen_id::integer IN (:ulkoiset-idt)
+  AND luoja = :kayttaja-id
   AND urakka = :urakka-id;
 
 -- name: poista-siltatarkastuskohteet!

@@ -137,10 +137,10 @@
 (defn poista-siltatarkastus [{id :id} data kayttaja db]
   (log/info "Kirjataan siltatarkastus käyttäjältä: " kayttaja)
   (let [urakka-id (Integer/parseInt id)
-        ulkoinen-tarkastus-id (get-in data [:poistettava-tarkastus :id])
+        ulkoiset-idt (-> data :tarkastusten-tunnisteet)
         kayttaja-id (:id kayttaja)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (silta-q/poista-siltatarkastus-ulkoisella-idlla! db kayttaja-id ulkoinen-tarkastus-id urakka-id)
+    (silta-q/poista-siltatarkastukset-ulkoisilla-idlla-ja-luojalla! db kayttaja-id ulkoiset-idt urakka-id)
     (tee-kirjausvastauksen-body {:ilmoitukset "Tarkastus poistettu onnistuneesti"})))
 
 (defrecord Siltatarkastukset []

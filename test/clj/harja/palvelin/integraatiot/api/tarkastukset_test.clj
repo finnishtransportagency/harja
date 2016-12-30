@@ -78,6 +78,11 @@
                           ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
                           kayttaja portti
                           (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-poisto.json" pvm id))
+          olemattoman-poista-vastaus (api-tyokalut/delete-kutsu
+                          ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
+                          kayttaja portti
+                          (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-poisto.json" pvm 88888888))
           poista-tark (tarkista-kannasta)]
       (is (-> poista-vastaus :status (= 200)))
+      (is (-> olemattoman-poista-vastaus :status (= 200)))
       (is (empty? poista-tark)))))

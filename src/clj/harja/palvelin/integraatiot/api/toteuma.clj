@@ -3,9 +3,9 @@
   (:require [compojure.core :refer [POST GET]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.kyselyt.materiaalit :as materiaalit]
-            [harja.kyselyt.toteumat :as toteumat]
+            [harja.kyselyt.toteumat :as kyselyt]
             [harja.kyselyt.sopimukset :as sopimukset]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
@@ -35,7 +35,7 @@
   (validointi/validoi-toteuman-pvm-vali (:alkanut toteuma) (:paattynyt toteuma))
   (validointi/tarkista-tehtavat db (:tehtavat toteuma) (:toteumatyyppi toteuma))
   (let [sopimus-id (hae-sopimus-id db urakka-id toteuma)]
-    (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
+    (:id (kyselyt/paivita-toteuma-ulkoisella-idlla<!
            db
            {:alkanut (aika-string->java-sql-date (:alkanut toteuma))
             :paattynyt (aika-string->java-sql-date (:paattynyt toteuma))
@@ -48,17 +48,21 @@
             :id (get-in toteuma [:tunniste :id])
             :urakka urakka-id}))))
 
-(defn poista-toteuma [db urakka-id kirjaaja ulkoinen-id]
-  (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " ulkoinen-id)
-  (let [kayttaja-id (:id kirjaaja)]
-    (toteumat/poista-toteuma-ulkoisella-idlla! db ulkoinen-id kayttaja-id)))
+(defn poista-toteumat [db urakka-id kirjaaja ulkoiset-idt]
+  (log/debug "Poistetaan toteumat, joiden ulkoiset idt ovat " ulkoiset-idt)
+  (let [kayttaja-id (:id kirjaaja)
+        poistettujen-maara (kyselyt/poista-toteumat-ulkoisilla-idlla-ja-luojalla! db ulkoiset-idt kayttaja-id)]
+    (tee-kirjausvastauksen-body {:ilmoitukset (if (pos? poistettujen-maara)
+                                                (str poistettujen-maara "tarkastusta poistettu onnistuneesti")
+                                                "Tunnisteita vastaavia toteumia ei löytynyt")})))
+
 
 (defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Luodaan uusi toteuma.")
   (validointi/validoi-toteuman-pvm-vali (:alkanut toteuma) (:paattynyt toteuma))
   (validointi/tarkista-tehtavat db (:tehtavat toteuma) (:toteumatyyppi toteuma))
   (let [sopimus-id (hae-sopimus-id db urakka-id toteuma)]
-    (:id (toteumat/luo-toteuma<!
+    (:id (kyselyt/luo-toteuma<!
            db
            urakka-id
            sopimus-id
@@ -75,7 +79,7 @@
            "harja-api"))))
 
 (defn paivita-tai-luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
-  (if (toteumat/onko-olemassa-ulkoisella-idlla? db (get-in toteuma [:tunniste :id]) (:id kirjaaja))
+  (if (kyselyt/onko-olemassa-ulkoisella-idlla? db (get-in toteuma [:tunniste :id]) (:id kirjaaja))
     (paivita-toteuma db urakka-id kirjaaja toteuma)
     (luo-uusi-toteuma db urakka-id kirjaaja toteuma)))
 
@@ -84,26 +88,26 @@
   ;; Vaikea saada virheestä kiinni, mutta logitetaan tässä, jos tyhjä reitti tallennetan.
   ;; Pitää huomata, että periaatteessa voimme oikeasti halutakkin tallentaa tyhjän reitin..
   (when-not reitti (log/warn "Toteumalle " toteuma-id " tallennetaan tyhjä reitti!"))
-  (toteumat/paivita-toteuman-reitti! db {:id toteuma-id
+  (kyselyt/paivita-toteuman-reitti! db {:id toteuma-id
                                          :reitti reitti}))
 
 (defn tallenna-sijainti [db sijainti aika toteuma-id]
   (log/debug "Tuhotaan toteuman " toteuma-id " vanha sijainti")
-  (toteumat/poista-reittipiste-toteuma-idlla! db toteuma-id)
+  (kyselyt/poista-reittipiste-toteuma-idlla! db toteuma-id)
   (log/debug "Luodaan toteumalle uusi sijainti reittipisteenä")
-  (toteumat/luo-reittipiste<! db toteuma-id aika
+  (kyselyt/luo-reittipiste<! db toteuma-id aika
                               (get-in sijainti [:koordinaatit :x])
                               (get-in sijainti [:koordinaatit :y])))
 
 (defn tallenna-tehtavat [db kirjaaja toteuma toteuma-id]
   (log/debug "Tuhotaan toteuman vanhat tehtävät")
-  (toteumat/poista-toteuma_tehtava-toteuma-idlla!
+  (kyselyt/poista-toteuma_tehtava-toteuma-idlla!
     db
     toteuma-id)
   (log/debug "Luodaan toteumalle uudet tehtävät")
   (doseq [tehtava (:tehtavat toteuma)]
     (log/debug "Luodaan tehtävä.")
-    (toteumat/luo-toteuma_tehtava<!
+    (kyselyt/luo-toteuma_tehtava<!
       db
       toteuma-id
       (get-in tehtava [:tehtava :id])
@@ -114,7 +118,7 @@
 
 (defn tallenna-materiaalit [db kirjaaja toteuma toteuma-id]
   (log/debug "Tuhotaan toteuman vanhat materiaalit")
-  (toteumat/poista-toteuma-materiaali-toteuma-idlla! db toteuma-id)
+  (kyselyt/poista-toteuma-materiaali-toteuma-idlla! db toteuma-id)
   (log/debug "Luodaan toteumalle uudet materiaalit")
   (doseq [materiaali (:materiaalit toteuma)]
     (log/debug "Etsitään materiaalikoodi kannasta.")
@@ -124,7 +128,7 @@
         (throw+ {:type virheet/+sisainen-kasittelyvirhe+
                  :virheet [{:koodi virheet/+tuntematon-materiaali+
                             :viesti (format "Tuntematon materiaali: %s." materiaali-nimi)}]}))
-      (toteumat/luo-toteuma-materiaali<!
+      (kyselyt/luo-toteuma-materiaali<!
         db
         toteuma-id
         materiaalikoodi-id

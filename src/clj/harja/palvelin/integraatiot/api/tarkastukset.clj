@@ -88,13 +88,15 @@
 
 (defn poista-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} data]
   (let [urakka-id (Long/parseLong id)
-        ulkoinen-tarkastus-id (-> data :poistettava-tarkastus :id)
+        ulkoiset-idt (-> data :tarkastusten-tunnisteet)
         kayttaja-id (:id kayttaja)
         kayttajanimi (:kayttajanimi kayttaja)]
-    (log/debug (format "Poistetaan tarkastus ulk.id %s tyyppiä: %s käyttäjän: %s toimesta. Data: %s" ulkoinen-tarkastus-id tyyppi kayttajanimi data))
+    (log/debug (format "Poistetaan tarkastus ulk.id %s tyyppiä: %s käyttäjän: %s toimesta. Data: %s" ulkoiset-idt tyyppi kayttajanimi data))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (kyselyt/poista-tarkastus! db kayttaja-id ulkoinen-tarkastus-id)
-    (tee-kirjausvastauksen-body {:ilmoitukset "Tarkastus poistettu onnistuneesti"})))
+    (let [poistettujen-maara (kyselyt/poista-tarkastus! db kayttaja-id ulkoiset-idt)]
+      (tee-kirjausvastauksen-body {:ilmoitukset (if (pos? poistettujen-maara)
+                                                  (str poistettujen-maara "tarkastusta poistettu onnistuneesti")
+                                                  "Tunnisteita vastaavia tarkastuksia ei löytynyt")}))))
 
 (def palvelut
   [{:palvelu       :lisaa-tiestotarkastus

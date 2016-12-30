@@ -12,7 +12,5 @@
     },
     "lahetysaika": "__PVM__"
   },
-  "poistettava-tarkastus": {
-    "id": __ID__
-  }
+  "tarkastusten-tunnisteet": [ __ID__ ]
 }
