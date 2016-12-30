@@ -147,7 +147,19 @@
 
       (is (= (:lisatieto paivitetty) "Testikeissi") "Päivitetyn erilliskustannuksen lisätieto"))
 
-    ;; siivotaan lisätyt rivit pois
+    ;; Testaa virheellinen päivitys vaihtamalla urakka
+    (try
+      (let [toteuma-id (get-in lisatty [:toteuma :id])
+           _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :tallenna-muiden-toiden-toteuma +kayttaja-jvh+
+                                   (assoc tyo
+                                     :toteuma {:id toteuma-id}
+                                     :urakka-id @oulun-alueurakan-2014-2019-id))])
+      (is false "Päivitys sallittiin virheellisesti")
+      (catch Exception e
+        (is true "Päivitystä ei sallittu")))
+
+    ;; Siivotaan lisätyt rivit pois
     (u
       (str "DELETE FROM toteuma_tehtava
                     WHERE toteuma = " (get-in lisatty [:toteuma :id])))
