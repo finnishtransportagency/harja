@@ -319,7 +319,7 @@
                {:luokka :horizontal
                 :otsikko "Hae tietyöilmoituksia"}
                [(lomake/ryhma
-                  {:rivi? true
+                  {:rivi? false
                    :otsikko "Ilmoitettu"}
                   {:nimi :alkuaika
                    :otsikko "Alkaen"
@@ -328,7 +328,12 @@
                   {:nimi :loppuaika
                    :otsikko "Päättyen"
                    :tyyppi :pvm
-                   :validoi [[:ei-tyhja "Anna loppuaika"]]})
+                   :validoi [[:ei-tyhja "Anna loppuaika"]]}
+                  {:nimi :tila
+                   :tyyppi :valinta
+                   :otsikko "Tila"
+                   :valinnat ["Kesken"]
+                   :valinta-nayta (constantly "Kesken")})
                 (lomake/ryhma
                   {:otsikko "Tierekisteriosoite"}
                   {:otsikko "Tierekisteriosoite"
@@ -366,29 +371,9 @@
               [lomake/lomake
                {:luokka :horizontal
                 :otsikko "Ilmoitus liikennettä haittaavasta työstä"}
-               [(lomake/ryhma
-                  {}
-                  {:nimi :h21
-                   :tyyppi :komponentti
-                   :komponentti (fn [_] [:div [:h2 "1. Ilmoitus koskee"]])
-                   }
-                  {:nimi :br1
-                   :tyyppi :komponentti
-                   :komponentti (fn [_] [:br])
-                   }
-                  {:nimi :tyyppi
-                   :tyyppi :checkbox-group
-                   :vaihtoehdot [:ensimmainen :korjaus :tyovaihe :paattyminen]
-                   :vaihtoehto-nayta {:ensimmainen "Ensimmäinen ilmoitus työstä" :korjaus "Korjaus/muutos aiempaan tietoon"
-                                      :tyovaihe "Työvaihetta koskeva ilmoitus" :paattyminen "Työn päättymisilmoitus"}})
-
-                {:nimi :br1
+               [{:nimi :h21
                  :tyyppi :komponentti
-                 :komponentti (fn [_] [:br])
-                 }
-                {:nimi :h21
-                 :tyyppi :komponentti
-                 :komponentti (fn [_] [:div [:h2 "2. Tiedot kohteesta"]])
+                 :komponentti (fn [_] [:div [:h2 "1. Tiedot kohteesta"]])
                  }
                 {:nimi :br1
                  :tyyppi :komponentti
@@ -399,7 +384,9 @@
                  :otsikko "Urakka"
                  :valinnat ["Oulun alueurakka 2014-2019"]
                  :valinta-nayta (constantly "Oulun alueurakka 2014-2019")}
-
+                {:nimi :h21
+                 :tyyppi :komponentti
+                 :komponentti (fn [_] [napit/yleinen "Hae urakka" #()])}
 
                 (lomake/ryhma
                   {:otsikko "Urakoitsija"
@@ -438,8 +425,8 @@
                   {:nimi :tilaaja
                    :tyyppi :valinta
                    :otsikko "Urakka"
-                   :valinnat ["Oulun alueurakka 2014-2019"]
-                   :valinta-nayta (constantly "Oulun alueurakka 2014-2019")}
+                   :valinnat ["POP ELY"]
+                   :valinta-nayta (constantly "POP ELY")}
                   {:nimi :br2
                    :tyyppi :komponentti
                    :komponentti (fn [_] [:br])}
@@ -475,65 +462,102 @@
                    :tyyppi :tierekisteriosoite
                    :ala-nayta-virhetta-komponentissa? true
                    :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]}
+                  {:nimi :tyonpituus
+                   :otsikko "Työn pituus"
+                   :tyyppi :string}
                   {:nimi :tien-nimi
                    :otsikko "Tien nimi"
                    :tyyppi :string}
+                  {:nimi :kunnat
+                   :otsikko "Kunnat"
+                   :tyyppi :string}
                   {:nimi :alkupiste
-                   :otsikko "Työn alkupiste (osoite, paikannimi"
+                   :otsikko "Työn alkupiste (osoite, paikannimi)"
                    :tyyppi :string}
                   {:nimi :aloituspvm
                    :otsikko "Aloitus pvm"
                    :tyyppi :pvm}
                   {:nimi :loppupiste
-                   :otsikko "Työn loppupiste (osoite, paikannimi"
+                   :otsikko "Työn loppupiste (osoite, paikannimi)"
                    :tyyppi :string}
                   {:nimi :lopetuspvm
                    :otsikko "Lopetus pvm"
-                   :tyyppi :pvm}
-                  {:nimi :tyonpituus
-                   :otsikko "Työn pituus"
-                   :tyyppi :string})
+                   :tyyppi :pvm})
 
+                {:nimi :br1
+                 :tyyppi :komponentti
+                 :komponentti (fn [_] [:br])
+                 }
                 {:nimi :br1
                  :tyyppi :komponentti
                  :komponentti (fn [_] [:br])
                  }
                 {:nimi :h21
                  :tyyppi :komponentti
-                 :komponentti (fn [_] [:div [:h2 "2B. Työvaihe"]])
-                 }
+                 :komponentti (fn [_] [:div [:h2 "2. Työvaiheet"]])}
                 {:nimi :br1
                  :tyyppi :komponentti
                  :komponentti (fn [_] [:br])}
+                {:nimi :h21231
+                 :tyyppi :komponentti
+                 :komponentti (fn [_]
+                                [grid
+                                 {:voi-poistaa? (constantly true)
+                                  :voi-lisata? true
+                                  :piilota-toiminnot? false}
+
+                                 [{:otsikko "Tierekisteriosoite" :nimi :tierekisteriosoite :leveys 3}
+                                  {:otsikko "Alkupiste" :nimi :ilmoitettu :leveys 3}
+                                  {:otsikko "Aloitus" :nimi :urakka :leveys 3}
+                                  {:otsikko "Lopetuspiste" :nimi :ilmoittaja :leveys 3}
+                                  {:otsikko "Lopetus" :nimi :kunnat :leveys 3}]
+                                 [{:tierekisteriosoite "4 / 363 / 6637 "
+                                   :ilmoitettu "Nelostie Kempeleessä"
+                                   :urakka "29.12.2016"
+                                   :ilmoittaja "Nelostie Kempeleessä"
+                                   :kunnat "29.12.2016"
+                                   :ilmoituskoskee "1.1.2017"}]])}
+                {:nimi :br1
+                 :tyyppi :komponentti
+                 :komponentti (fn [_] [:br])}
+                {:nimi :h2123
+                 :tyyppi :komponentti
+                 :komponentti (fn [_] [napit/uusi "Lisää työvaihe" #()])}
 
                 (lomake/ryhma
-                  {:otsikko "Työn tiedot"
+                  {:otsikko "Uusi työvaihe"
                    :rivi? false}
                   {:otsikko "Tierekisteriosoite"
                    :nimi :tr
                    :pakollinen? true
                    :tyyppi :tierekisteriosoite
                    :ala-nayta-virhetta-komponentissa? true
-                   :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
-                   }
+                   :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]}
+                  {:nimi :tyonpituus
+                   :otsikko "Työn pituus"
+                   :tyyppi :string}
+                  {:nimi :br1
+                   :tyyppi :komponentti
+                   :komponentti (fn [_] [:br])}
                   {:nimi :br2
                    :tyyppi :komponentti
                    :komponentti (fn [_] [:br])}
                   {:nimi :alkupiste
-                   :otsikko "Työn alkupiste (osoite, paikannimi"
+                   :otsikko "Alkupiste (osoite, paikannimi)"
                    :tyyppi :string}
                   {:nimi :aloituspvm
                    :otsikko "Aloitus pvm"
                    :tyyppi :pvm}
                   {:nimi :loppupiste
-                   :otsikko "Työn loppupiste (osoite, paikannimi"
+                   :otsikko "Loppupiste (osoite, paikannimi)"
                    :tyyppi :string}
                   {:nimi :lopetuspvm
                    :otsikko "Lopetus pvm"
                    :tyyppi :pvm}
-                  {:nimi :tyonpituus
-                   :otsikko "Työn pituus"
-                   :tyyppi :string})
+                  )
+                {:nimi :br1
+                 :tyyppi :komponentti
+                 :komponentti (fn [_] [:br])}
 
                 {:nimi :br1
                  :tyyppi :komponentti
@@ -606,7 +630,7 @@
 
                   {:nimi :tyyppi
                    :tyyppi :checkbox-group
-                   :vaihtoehdot [:0 :1 :2 :3 :4 :5 :6  ]
+                   :vaihtoehdot [:0 :1 :2 :3 :4 :5 :6]
                    :vaihtoehto-nayta {:0 "Maanantai", :1 "Tiistai", :2 "Keskiviikko", :3 "Torstai", :4 "Perjantai", :5 "Lauantai", :6 "Sunnuntai"}
                    })
 
@@ -617,14 +641,182 @@
 
                 {:nimi :h21
                  :tyyppi :komponentti
-                 :komponentti (fn [_] [:h2 "5. Vaikutukset liikenteelle"])
-                 }
+                 :komponentti (fn [_] [:h2 "5. Vaikutukset liikenteelle"])}
+                (lomake/ryhma
+                  {:otsikko "Arvioitu viivästys"
+                   :rivi? false}
+                  {:nimi :alkuaika
+                   :otsikko "Normaali liikenne (minuuttia)"
+                   :tyyppi :string}
+                  {:nimi :loppuaika
+                   :otsikko "Ruuhka-aika (minuuttia)"
+                   :tyyppi :string})
+                (lomake/ryhma
+                  {:otsikko "Kaistajärjestelyt"
+                   :rivi? false}
+                  {:nimi :tyyppi
+                   :tyyppi :checkbox-group
+                   :vaihtoehdot [:0 :1 :2]
+                   :vaihtoehto-nayta {:0 "Yksi ajokaista suljettu", :1 "Yksi ajorata suljettu", :2 "Muu, mikä?"}}
+                  {:nimi :br1
+                   :tyyppi :komponentti
+                   :komponentti (fn [_] [:br])}
+                  {:nimi :loppuaika
+                   :otsikko ""
+                   :tyyppi :string})
+                (lomake/ryhma
+                  {:otsikko "Nopeusrajoitus"
+                   :rivi? false}
+                  {:nimi :loppuaika
+                   :otsikko "Km/h"
+                   :tyyppi :string}
+                  {:nimi :asdf
+                   :otsikko "Metriä"
+                   :tyyppi :string})
 
-                ]
-               ]
-              ]
+                (lomake/ryhma
+                  {:otsikko "Kulkurajoitukset"
+                   :rivi? false}
+                  {:nimi :loppuaika
+                   :otsikko "Ajoneuvon maksimikorkeus"
+                   :tyyppi :string}
+                  {:nimi :pituus
+                   :otsikko "Ajoneuvon maksimileveys"
+                   :tyyppi :string}
+                  {:nimi :leveys
+                   :otsikko "Ajoneuvon maksimipituus"
+                   :tyyppi :string}
+                  {:nimi :paino
+                   :otsikko "Ajoneuvon maksimipaino"
+                   :tyyppi :string}
+                  {:nimi :kuumennin
+                   :otsikko "Kuumennin käytössä (avotuli)"
+                   :tyyppi :checkbox}
+                  {:nimi :tyokoneita
+                   :otsikko "Työkoneita liikenteen seassa"
+                   :tyyppi :checkbox}
+                  )
 
-             )]])])))
+                (lomake/ryhma
+                  {:otsikko "Tien pinta työmaalla (muu kuin kiertotie)"
+                   :rivi? false}
+                  {:nimi :tyyppi
+                   :tyyppi :checkbox-group
+                   :otsikko "Päällyste"
+                   :vaihtoehdot [:0 :1 :2]
+                   :vaihtoehto-nayta {:0 "Päällystetty", :1 "Jyrsitty", :2 "Murske"}}
+                  {:nimi :br1
+                   :tyyppi :komponentti
+                   :komponentti (fn [_] [:br])}
+                  {:nimi :paino
+                   :otsikko "Murskeen pituus (metriä)"
+                   :tyyppi :string})
+
+                (lomake/ryhma
+                  {:otsikko "Kiertotie"
+                   :rivi? false}
+                  {:nimi :paino
+                   :otsikko "Pituus (metriä)"
+                   :tyyppi :string}
+                  {:nimi :br1
+                   :tyyppi :komponentti
+                   :komponentti (fn [_] [:br])}
+                  {:nimi :tyyppi
+                   :otsikko "Päällyste"
+                   :tyyppi :checkbox-group
+                   :vaihtoehdot [:0 :1 :2 :3]
+                   :vaihtoehto-nayta {:0 "Loivat mutkat", :1 "Jyrkät mutkat", :2 "Päällystetty" :3 "Murske"}}
+                  {:nimi :br1
+                   :tyyppi :komponentti
+                   :komponentti (fn [_] [:br])}
+                  {:nimi :asdf
+                   :otsikko "Kantavuusrajoitus"
+                   :tyyppi :string}
+                  {:nimi :asdff
+                   :otsikko "Painorajoitus"
+                   :tyyppi :string})
+
+                (lomake/ryhma
+                  {:otsikko "Pysäytykset"
+                   :rivi? false}
+                  {:nimi :tyyppi
+                   :tyyppi :checkbox-group
+                   :vaihtoehdot [:0 :1]
+                   :vaihtoehto-nayta {:0 "Liikennevalot", :1 "Liikenteenohjaaja"}}
+                  {:nimi :br1
+                   :tyyppi :komponentti
+                   :komponentti (fn [_] [:br])}
+                  {:nimi :asdf
+                   :otsikko "Alkaen"
+                   :tyyppi :pvm-aika}
+                  {:nimi :asdff
+                   :otsikko "Päättyen"
+                   :tyyppi :pvm-aika})
+
+                {:nimi :br1
+                 :tyyppi :komponentti
+                 :komponentti (fn [_] [:br])}
+                {:nimi :br1
+                 :tyyppi :komponentti
+                 :komponentti (fn [_] [:br])}
+                {:nimi :h21
+                 :tyyppi :komponentti
+                 :komponentti (fn [_] [:h2 "6. Vaikutussuunta"])}
+                {:nimi :br1
+                 :tyyppi :komponentti
+                 :komponentti (fn [_] [:br])}
+                {:nimi :tyyppi
+                 :tyyppi :checkbox-group
+                 :vaihtoehdot [:0 :1]
+                 :vaihtoehto-nayta {:0 "Haittaa molemmissa ajosuunnissa ", :1 "Haittaa suunnassa (lähin kaupunki)"}}
+                {:nimi :br1
+                 :tyyppi :komponentti
+                 :komponentti (fn [_] [:br])}
+                {:nimi :asdff
+                 :tyyppi :string}
+
+
+                {:nimi :br1
+                 :tyyppi :komponentti
+                 :komponentti (fn [_] [:br])}
+                {:nimi :h21
+                 :tyyppi :komponentti
+                 :komponentti (fn [_] [:h2 "7. Lisätietoja"])}
+                {:nimi :br1
+                 :tyyppi :komponentti
+                 :komponentti (fn [_] [:br])}
+                {:nimi :asdff
+                 :tyyppi :text}
+
+                {:nimi :br1
+                 :tyyppi :komponentti
+                 :komponentti (fn [_] [:br])}
+                {:nimi :h21
+                 :tyyppi :komponentti
+                 :komponentti (fn [_] [:h2 "8. Ilmoittaja"])}
+                (lomake/ryhma
+                  {:rivi? false}
+                  {:nimi :urakoitsijan-yhteyshenkilon-etunimi
+                   :otsikko "Etunimi"
+                   :tyyppi :string}
+                  {:nimi :urakoitsijan-yhteyshenkilon-sukunimi
+                   :otsikko "Sukunimi"
+                   :tyyppi :string}
+                  {:nimi :urakoitsijan-yhteyshenkilon-puhelin
+                   :otsikko "Puhelinnumero"
+                   :tyyppi :string}
+                  {:nimi :urakoitsijan-yhteyshenkilon-sahkoposti
+                   :otsikko "Sähköposti"
+                   :tyyppi :string})
+
+                {:nimi :h21
+                 :tyyppi :komponentti
+                 :komponentti (fn [_] [napit/tallenna "Tallenna" #()])}
+                {:nimi :h2f1
+                 :tyyppi :komponentti
+                 :komponentti (fn [_] [napit/tallenna "Merkitse työ valmistuneeksi" #()])}
+
+                ]]])]])])))
 
 (defn ilmoitukset []
   (komp/luo

@@ -49,37 +49,24 @@
                     <xs:complexType>
                         <xs:sequence>
                             <xs:element type="xs:boolean" name="uusi"/>
-                            <xs:element type="xs:boolean" name="tyovaiheenMuutos"/>
                             <xs:element type="xs:boolean" name="muutos"/>
                             <xs:element type="xs:boolean" name="lopetus"/>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
-                <xs:element name="sijainti" minOccurs="0">
-                    <xs:complexType>
-                        <xs:sequence>
-                            <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali"/>
-                            <xs:element name="alkukoordinaatit" type="koordinaattit"/>
-                            <xs:element name="loppukoordinaatit" type="koordinaattit"/>
-                            <xs:element type="xs:string" name="alkusijainninKuvaus"/>
-                            <xs:element type="xs:string" name="loppusijainninKuvaus"/>
-                            <xs:element name="kunnat">
-                                <xs:complexType>
-                                    <xs:sequence>
-                                        <xs:element name="kunta" type="xs:string" minOccurs="1" maxOccurs="unbounded" nillable="true"/>
-                                    </xs:sequence>
-                                </xs:complexType>
-                            </xs:element>
-
-                            <xs:element type="xs:decimal" name="pituus"/>
-                        </xs:sequence>
-                    </xs:complexType>
-                </xs:element>
+                <xs:element name="sijainti" type="tietyonSijainti" minOccurs="0"/>
                 <xs:element name="ajankohta" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
                             <xs:element name="alku" type="xs:dateTime" minOccurs="1"/>
                             <xs:element name="loppu" type="xs:dateTime" minOccurs="1"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="tyovaiheet">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="sijainti" type="tietyonSijainti" minOccurs="1" maxOccurs="unbounded" nillable="true"/>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
@@ -125,6 +112,17 @@
                                 </xs:complexType>
                             </xs:element>
                             <xs:element type="xs:integer" name="nopeusrajoitus"/>
+                            <xs:element type="xs:integer" name="nopeusrajoituksenPituus"/>
+                            <xs:element name="tienPintaTyomaalla">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element type="xs:boolean" name="paallystetty"/>
+                                        <xs:element type="xs:boolean" name="jyrsitty"/>
+                                        <xs:element type="xs:boolean" name="murske"/>
+                                        <xs:element type="xs:integer" name="murskeenPituus"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
                             <xs:element name="kiertotie">
                                 <xs:complexType>
                                     <xs:sequence>
@@ -168,7 +166,7 @@
                                         <xs:element type="xs:integer" name="ajoneuvonMaxKorkeus"/>
                                         <xs:element type="xs:integer" name="ajoneuvonMaxLeveys"/>
                                         <xs:element type="xs:integer" name="ajoneuvonMaxPituus"/>
-                                        <xs:element type="xs:integer" name="painorajoitus"/>
+                                        <xs:element type="xs:integer" name="ajoneuvonMaxPaino"/>
                                         <xs:element type="xs:boolean" name="kuumenninKaytossa"/>
                                         <xs:element type="xs:boolean" name="tyokoneitaLiikenteenSeassa"/>
                                     </xs:sequence>
@@ -540,6 +538,18 @@
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="tietyonSijainti">
+        <xs:sequence>
+            <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali"/>
+            <xs:element name="alkukoordinaatit" type="koordinaattit"/>
+            <xs:element name="loppukoordinaatit" type="koordinaattit"/>
+            <xs:element type="xs:decimal" name="pituus"/>
+            <xs:element type="xs:string" name="tienNimi"/>
+            <xs:element type="xs:string" name="kunnat"/>
+            <xs:element type="xs:string" name="alkusijainninKuvaus"/>
+            <xs:element type="xs:string" name="loppusijainninKuvaus"/>
         </xs:sequence>
     </xs:complexType>
 </xs:schema>
