@@ -66,6 +66,19 @@ WHERE
   AND t.id = :toteuma
   AND t.poistettu IS NOT TRUE;
 
+  -- name: toteuma-jarjestelman-lisaama
+SELECT
+  k.jarjestelma         AS jarjestelmanlisaama
+FROM toteuma t
+  LEFT JOIN kayttaja k ON k.id = t.luoja
+WHERE t.id = :toteuma;
+
+-- name: toteuman-urakka
+SELECT
+  t.urakka
+FROM toteuma t
+WHERE t.id = :toteuma;
+
 -- name: hae-toteumien-tehtavien-summat
 -- Listaa urakan toteumien tehtävien määrien summat toimenpidekoodilla ryhmiteltynä.
 SELECT
