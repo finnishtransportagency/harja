@@ -252,7 +252,7 @@ ORDER BY t.alkanut DESC
 LIMIT 301;
 
 -- name: paivita-toteuma!
-UPDATE toteuma
+UPDATE toteuma t
 SET alkanut           = :alkanut,
   paattynyt           = :paattynyt,
   tyyppi              = :tyyppi :: toteumatyyppi,
@@ -266,7 +266,9 @@ SET alkanut           = :alkanut,
   tr_alkuetaisyys     = :alkuetaisyys,
   tr_loppuosa         = :loppuosa,
   tr_loppuetaisyys    = :loppuetaisyys
-WHERE id = :id AND urakka = :urakka;
+WHERE id = :id
+AND urakka = :urakka
+AND (SELECT jarjestelma FROM kayttaja WHERE id = t.luoja) IS FALSE
 
 -- name: paivita-toteuma-ulkoisella-idlla<!
 UPDATE toteuma
