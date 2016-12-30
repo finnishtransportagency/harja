@@ -289,12 +289,15 @@
   (let [tehtavatidt (into #{} (map #(:tehtava_id %) tehtavat))]
     (jdbc/with-db-transaction [c db]
       (doseq [tehtava tehtavat]
-        (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava)))
-        (toteumat-q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava)
-                                              (:paivanhinta tehtava) (:tehtava_id tehtava)))
+        (let [toteuma-id (:toteuma (first (toteumat-q/tehtavan-toteuma db (:tehtava_id tehtava))))]
+          (vaadi-toteuma-kuuluu-urakkaan c toteuma-id urakka-id)
+          (vaadi-ei-jarjestelman-luoma c toteuma-id)
+          (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava)))
+          (toteumat-q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava)
+                                                (:paivanhinta tehtava) (:tehtava_id tehtava)))
 
-      (log/debug "Merkitään tehtavien: " tehtavatidt " maksuerät likaisiksi")
-      (toteumat-q/merkitse-toteumatehtavien-maksuerat-likaisiksi! c tehtavatidt)))
+        (log/debug "Merkitään tehtavien: " tehtavatidt " maksuerät likaisiksi")
+        (toteumat-q/merkitse-toteumatehtavien-maksuerat-likaisiksi! c tehtavatidt))))
 
   (let [paivitetyt-tehtavat (hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db user
                                                                                 {:urakka-id urakka-id

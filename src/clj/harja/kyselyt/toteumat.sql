@@ -85,6 +85,12 @@ SELECT
 FROM toteuma t
 WHERE t.id = :toteuma;
 
+-- name: tehtavan-toteuma
+SELECT
+  tt.toteuma
+FROM toteuma_tehtava tt
+WHERE tt.id = :tehtava;
+
 -- name: hae-toteumien-tehtavien-summat
 -- Listaa urakan toteumien tehtävien määrien summat toimenpidekoodilla ryhmiteltynä.
 SELECT
