@@ -16,7 +16,7 @@
 
 (def tilan-selite
   {:kuittaamaton "Kuittaamaton"
-   :vastaanotettu "Vastaanotettu"
+   :vastaanotettu ""
    :aloitettu "Aloitettu"
    :lopetettu "Lopetettu"})
 
@@ -61,7 +61,7 @@
   (case tyyppi
     :kysely "URK"
     :toimenpidepyynto "TPP"
-    :tiedoitus "TUR"))
+    :tiedoitus "Tietyöilmoitus"))
 
 ;; Jos muutat näitä, päivitä myös kuittausvaatimukset-str!
 (def kuittausvaatimukset
