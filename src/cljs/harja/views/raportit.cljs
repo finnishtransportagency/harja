@@ -112,9 +112,10 @@
 (defonce valittu-urakkatyyppi (reaction (:arvo @nav/urakkatyyppi)))
 
 (defonce valittu-hoitokausi (reaction-writable
-                             (if @hoitourakassa?
-                               @u/valittu-hoitokausi
-                               (pvm/paivamaaran-hoitokausi (pvm/nyt)))))
+                              (when (= @valittu-urakkatyyppi :hoito)
+                                (if @hoitourakassa?
+                                  @u/valittu-hoitokausi
+                                  (pvm/paivamaaran-hoitokausi (pvm/nyt))))))
 
 (def valittu-vuosi (atom nil))
 
@@ -239,7 +240,8 @@
                                             :else
                                             "Koko hoitokausi")}
        (cond-> @kuukaudet
-               vain-kuukausivalinta? rest) valittu-kuukausi]]
+               vain-kuukausivalinta? rest)
+       valittu-kuukausi]]
 
      (when-not (or vain-hoitokausivalinta? vain-kuukausivalinta?)
        [:div.raportin-valittu-aikavali
