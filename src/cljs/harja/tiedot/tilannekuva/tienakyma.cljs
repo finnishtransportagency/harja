@@ -36,13 +36,10 @@
   "Muodosta tuloksista karttataso.
   Kaikki, jotka ovat infopaneelissa avattuina, renderöidään valittuina."
   [{:keys [avatut-tulokset kaikki-tulokset] :as tienakyma}]
-  (let [valittu? (into #{}
-                       (map kaikki-tulokset)
-                       avatut-tulokset)]
-    (assoc tienakyma
-           :tulokset-kartalla (esitettavat-asiat/kartalla-esitettavaan-muotoon
-                               kaikki-tulokset
-                               valittu?))))
+  (assoc tienakyma
+         :tulokset-kartalla (esitettavat-asiat/kartalla-esitettavaan-muotoon
+                             kaikki-tulokset
+                             avatut-tulokset)))
 
 (extend-protocol tuck/Event
   Nakymassa
@@ -79,7 +76,11 @@
 
   HakuValmis
   (process-event [{tulokset :tulokset} tienakyma]
-    (let [kaikki-tulokset (into [] (mapcat val) tulokset)]
+    (let [kaikki-tulokset (into []
+                                (comp (mapcat val)
+                                      (map-indexed (fn [i tulos]
+                                                     (assoc tulos :idx i))))
+                                tulokset)]
       (log "Tienäkymän haku löysi: " (pr-str (fmap count tulokset)))
       (kartalle
        (assoc tienakyma
