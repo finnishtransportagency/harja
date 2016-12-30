@@ -177,8 +177,8 @@
    ;; Todellisuudessa [this jotain-häröä param1 param2 ..]
    (fn [this _ & uudet]
      ;; Reactissa ensimmäinen parametri on props, ja loput on children
-     (let [vanhat (concat [(r/props this)] (r/children this))]
-       (callback vanhat uudet)))})
+     (let [vanhat (into [(r/props this)] (r/children this))]
+       (callback vanhat (vec uudet))))})
 
 (defn klikattu-ulkopuolelle
   "Mixin, joka kutsuu annettua funktiota kun klikataan komponentin ulkopuolelle. Esim. hovereiden sulkemiseen."
