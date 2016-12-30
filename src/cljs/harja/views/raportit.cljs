@@ -117,7 +117,12 @@
                                   @u/valittu-hoitokausi
                                   (pvm/paivamaaran-hoitokausi (pvm/nyt))))))
 
-(def valittu-vuosi (atom nil))
+(def valittu-vuosi (reaction-writable
+                     (if (= @valittu-urakkatyyppi :hoito)
+                       nil
+                       ;; Ylläpidossa vuosi-valintaa käytetään kk:n valitsemiseen,
+                       ;; joten valitaan oletukseksi tämä vuosi
+                       (pvm/vuosi (pvm/nyt)))))
 
 (defonce kuukaudet (reaction
                      (let [hk @valittu-hoitokausi
