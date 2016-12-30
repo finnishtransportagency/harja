@@ -208,9 +208,17 @@
         vain-kuukausivalinta? (vain-kuukausivalinta? (:nimi @valittu-raporttityyppi) ur)]
     [:span
      [:div.raportin-vuosi-hk-kk-valinta
-      [ui-valinnat/vuosi {:disabled (or @vapaa-aikavali?
-                                        vain-hoitokausivalinta?
-                                        vain-kuukausivalinta?)}
+      [ui-valinnat/vuosi {:disabled
+                          (or @vapaa-aikavali?
+                              vain-hoitokausivalinta?
+                              (and vain-kuukausivalinta?
+                                   ;; Hoidossa valitaan ensin hoitokausi, ja se määrää minkä vuoden
+                                   ;; kuukauden voi valita.
+                                   ;; Ylläpidossa ei ole hoitokausivalintaa, joten on pakko valita
+                                   ;; ensin vuosi, joka sitten taas määrää minkä vuoden kuukauden voi valita.
+                                   ;; Tästä syystä, jos vain-kuukausivalinta on tosi,
+                                   ;; disabloidaan vuosi-valinta vain hoidon urakoille
+                                   (= urakkatyyppi :hoito)))}
        vuosi-eka vuosi-vika valittu-vuosi
        #(do
          (reset! valittu-vuosi %)
