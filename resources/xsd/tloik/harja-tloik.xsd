@@ -45,6 +45,7 @@
                 <xs:element name="urakoitsijan-yhteyshenkilo" type="henkilo" minOccurs="0"/>
                 <xs:element name="tilaaja" type="organisaatio" minOccurs="0"/>
                 <xs:element name="tilaajan-yhteyshenkilo" type="henkilo" minOccurs="0"/>
+                <xs:element name="luvanDiaarinumero" type="xs:integer" minOccurs="1"/>
                 <xs:element name="toimenpide" minOccurs="0">
                     <xs:simpleType>
                         <xs:restriction base="xs:string">

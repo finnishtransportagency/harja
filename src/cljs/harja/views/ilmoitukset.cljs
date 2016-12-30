@@ -307,7 +307,7 @@
           ^{:key "tietyoilmoitukset"}
           [:span.ilmoitukset
 
-           (if true
+           (if false
              [:div
               [:br]
               [napit/uusi "Kirjaa uusi tietyöilmoitus"
@@ -451,6 +451,14 @@
                    :otsikko "Sähköposti"
                    :tyyppi :string}
                   )
+                (lomake/ryhma
+                  {:otsikko "Lupa"}
+                  {:nimi :luvan-diaarinumero
+                  :otsikko "Diaarinumero"
+                  :tyyppi :string}
+                  {:nimi :h21
+                   :tyyppi :komponentti
+                   :komponentti (fn [_] [napit/yleinen "Hae lupa" #()])})
 
 
                 (lomake/ryhma
