@@ -36,6 +36,7 @@
 
 (defonce urakan-toimenpideinstanssit
          (reaction<! [urakka-id (:id @nav/valittu-urakka)]
+                     {:nil-kun-haku-kaynnissa? true}
                      (when (and urakka-id
                                 (oikeudet/voi-lukea? oikeudet/urakat urakka-id @istunto/kayttaja))
                        (urakan-toimenpiteet/hae-urakan-toimenpiteet urakka-id))))
@@ -373,3 +374,9 @@
   "Onko valitussa urakassa indeksi käytössä?"
   []
   (some? (:indeksi @nav/valittu-urakka)))
+
+(def urakan-tiedot-ladattu?
+  (reaction
+    (let [toimenpideinstanssit @urakan-toimenpideinstanssit
+          tehtavat @urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat]
+      (boolean (and toimenpideinstanssit tehtavat)))))
