@@ -70,19 +70,19 @@
         :default
         :ei-aloitettu))
 
-(defn yllapitokohteen-yksinkertainen-tila [yllapitokohde]
+(defn yllapitokohteen-tila-kartalla [yllapitokohde]
   ;; Järjestys on tärkeä, koska nämä menee yleensä tässä aikajärjestyksessä.
   (cond (:kohde-valmispvm yllapitokohde)
         :valmis
 
         (:tiemerkinta-loppupvm yllapitokohde)
-        :aloitettu
+        :valmis
 
         (:tiemerkinta-alkupvm yllapitokohde)
-        :aloitettu
+        :valmis
 
         (:paallystys-loppupvm yllapitokohde)
-        :aloitettu
+        :valmis
 
         (:paallystys-alkupvm yllapitokohde)
         :aloitettu
