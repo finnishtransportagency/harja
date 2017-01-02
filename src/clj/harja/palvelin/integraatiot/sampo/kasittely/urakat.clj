@@ -1,14 +1,14 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.urakat
   (:require [taoensso.timbre :as log]
-            [harja.kyselyt.urakat :as urakat]
-            [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot-q]
             [harja.kyselyt.sopimukset :as sopimukset]
+            [harja.kyselyt.toimenpideinstanssit :as toimenpiteet-q]
+            [harja.kyselyt.organisaatiot :as organisaatiot-q]
             [harja.palvelin.integraatiot.sampo.kasittely.urakkatyyppi :as urakkatyyppi]
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
             [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
-            [harja.kyselyt.toimenpideinstanssit :as toimenpiteet]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]
-            [harja.kyselyt.organisaatiot :as organisaatiot]
             [harja.tyokalut.merkkijono :as merkkijono]
             [harja.palvelin.integraatiot.sampo.kasittely.valitavoitteet :as valitavoitteet]
             [clojure.string :as str])
@@ -35,22 +35,22 @@
 (defn- paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id urakka-id alueurakkanro urakkatyyppi sopimustyyppi
                        hallintayksikko]
   (log/debug "Päivitetään urakka, jonka id on: " urakka-id ".")
-  (urakat/paivita-urakka! db nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi hallintayksikko sopimustyyppi
-                          alueurakkanro urakka-id))
+  (urakat-q/paivita-urakka! db nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi hallintayksikko sopimustyyppi
+                            alueurakkanro urakka-id))
 
 (defn- luo-urakka [db nimi alkupvm loppupvm hanke-sampo-id sampo-id alueurakkanro urakkatyyppi sopimustyyppi
                    hallintayksikko]
   (log/debug "Luodaan uusi urakka.")
 
-  (let [uusi-id (:id (urakat/luo-urakka<! db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkatyyppi hallintayksikko
-                                          sopimustyyppi alueurakkanro))]
+  (let [uusi-id (:id (urakat-q/luo-urakka<! db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkatyyppi hallintayksikko
+                                            sopimustyyppi alueurakkanro))]
     (log/debug "Uusi urakka id on:" uusi-id)
-    (urakat/paivita-urakka-alueiden-nakyma db)
+    (urakat-q/paivita-urakka-alueiden-nakyma db)
     uusi-id))
 
 (defn- tallenna-urakka [db sampo-id nimi alkupvm loppupvm hanke-sampo-id urakkanro urakkatyyppi sopimustyyppi
                         ely-id]
-  (let [urakka-id (:id (first (urakat/hae-id-sampoidlla db sampo-id)))]
+  (let [urakka-id (:id (first (urakat-q/hae-id-sampoidlla db sampo-id)))]
     (if urakka-id
       (do
         (paivita-urakka db nimi alkupvm loppupvm hanke-sampo-id urakka-id urakkanro urakkatyyppi sopimustyyppi
@@ -61,14 +61,14 @@
                     ely-id)))))
 
 (defn- paivita-yhteyshenkilo [db yhteyshenkilo-sampo-id urakka-id]
-  (yhteyshenkilot/irrota-sampon-yhteyshenkilot-urakalta! db urakka-id)
-  (yhteyshenkilot/liita-sampon-yhteyshenkilo-urakkaan<! db yhteyshenkilo-sampo-id urakka-id))
+  (yhteyshenkilot-q/irrota-sampon-yhteyshenkilot-urakalta! db urakka-id)
+  (yhteyshenkilot-q/liita-sampon-yhteyshenkilo-urakkaan<! db yhteyshenkilo-sampo-id urakka-id))
 
 (defn- paivita-sopimukset [db urakka-sampo-id]
   (sopimukset/paivita-urakka-sampoidlla! db urakka-sampo-id))
 
 (defn- paivita-toimenpiteet [db urakka-sampo-id]
-  (toimenpiteet/paivita-urakka-sampoidlla! db urakka-sampo-id))
+  (toimenpiteet-q/paivita-urakka-sampoidlla! db urakka-sampo-id))
 
 (defn- yllapito-urakka? [urakkatyyppi]
   ;; Samposta ei tuoda paikkausurakoita
@@ -81,12 +81,12 @@
                                               "tiemerkinta" "TIEM_YKSHINT"
                                               "valaistus" "VALA_YKSHINT"}
           toimenpidekoodi (yllapidon-3-tason-toimenpidekoodit urakkatyyppi)]
-      (when (and toimenpidekoodi (not (toimenpiteet/onko-urakalla-toimenpide? db urakka-id toimenpidekoodi)))
-        (toimenpiteet/luo-yllapidon-toimenpideinstanssi<! db
-                                                          toimenpidekoodi
-                                                          alkupvm
-                                                          loppupvm
-                                                          urakka-id)))))
+      (when (and toimenpidekoodi (not (toimenpiteet-q/onko-urakalla-toimenpide? db urakka-id toimenpidekoodi)))
+        (toimenpiteet-q/luo-yllapidon-toimenpideinstanssi<! db
+                                                            toimenpidekoodi
+                                                            alkupvm
+                                                            loppupvm
+                                                            urakka-id)))))
 
 (defn paattele-sopimustyyppi [urakkatyyppi]
   (when (= urakkatyyppi "paallystys")
@@ -101,14 +101,14 @@
           alueurakkanro (pudota-etunollat (:alueurakkanro tyyppi-ja-alueurakkanro))
           urakkatyyppi (urakkatyyppi/paattele-urakkatyyppi tyypit)
           sopimustyyppi (paattele-sopimustyyppi urakkatyyppi)
-          ely-id (:id (first (organisaatiot/hae-ely-id-sampo-hashilla db (merkkijono/leikkaa 5 ely-hash))))
+          ely-id (:id (first (organisaatiot-q/hae-ely-id-sampo-hashilla db (merkkijono/leikkaa 5 ely-hash))))
           urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id alueurakkanro urakkatyyppi
                                      sopimustyyppi ely-id)]
       (log/debug (format "Käsiteltävän urakan id on: %s, tyyppi: %s, alueurakkanro: %s"
                          urakka-id
                          urakkatyyppi
                          alueurakkanro))
-      (urakat/paivita-hankkeen-tiedot-urakalle! db hanke-sampo-id)
+      (urakat-q/paivita-hankkeen-tiedot-urakalle! db hanke-sampo-id)
       (paivita-yhteyshenkilo db yhteyshenkilo-sampo-id urakka-id)
       (paivita-sopimukset db sampo-id)
       (paivita-toimenpiteet db sampo-id)
