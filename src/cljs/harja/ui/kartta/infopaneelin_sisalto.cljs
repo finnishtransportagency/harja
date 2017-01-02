@@ -22,7 +22,8 @@
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
-            [harja.domain.tierekisteri :as tierekisteri]))
+            [harja.domain.tierekisteri :as tierekisteri]
+            [harja.domain.tierekisteri :as tr-domain]))
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
 
@@ -86,14 +87,14 @@
     {:tyyppi  :paikkaus
      :jarjesta-fn :aloituspvm
      :otsikko (str "Paikkauskohde " (when (aloitus paikkaus) (pvm/pvm-aika (aloitus paikkaus))))
-     :tiedot  [{:otsikko "Nimi" :tyyppi :string :hae #(get-in % [:kohde :nimi])}
-               {:otsikko "Tie\u00ADrekisteri\u00ADkohde" :tyyppi :string :hae #(get-in % [:kohdeosa :nimi])}
-               {:osoite "Osoite" :tyyppi :tierekisteriosoite :nimi :tr}
+     :tiedot  [{:otsikko "Nimi" :tyyppi :string :hae #(get-in % [:nimi])}
+               {:otsikko "Tie\u00ADrekisteri\u00ADkohde" :tyyppi :string :hae #(get-in % [:osa :nimi])}
+               {:otsikko "Osoite" :tyyppi :string :hae #(tr-domain/tierekisteriosoite-tekstina (:osa %))}
                {:otsikko "Nykyinen päällyste" :tyyppi :string
-                :hae     #(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
+                :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
                {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
                {:otsikko "Tila" :tyyppi :string
-                :hae     #(yllapitokohteet/kuvaile-kohteen-tila (get-in % [:paikkausilmoitus :tila]))}
+                :hae     #(yllapitokohteet/kuvaile-kohteen-tila (get-in % [:tila]))}
                (when (aloitus paikkaus)
                  {:otsikko "Aloitettu" :tyyppi :pvm-aika :nimi aloitus})
                (when (paikkaus-valmis paikkaus)
@@ -106,18 +107,19 @@
   (let [aloitus :aloituspvm
         paallystys-valmis :paallystysvalmispvm
         kohde-valmis :kohdevalmispvm]
+    (log "Infopaneeli-skeema päällystys: " (pr-str paallystys))
     {:tyyppi :paallystys
      :jarjesta-fn :aloituspvm
      :otsikko "Päällystyskohde"
-     :tiedot [{:otsikko "Nimi" :tyyppi :string :hae #(get-in % [:kohde :nimi])}
+     :tiedot [{:otsikko "Nimi" :tyyppi :string :hae #(get-in % [:nimi])}
               {:otsikko "Tie\u00ADrekisteri\u00ADkohde" :tyyppi :string
-               :hae #(get-in % [:kohdeosa :nimi])}
-              {:otsikko "Osoite" :tyyppi :tierekisteriosoite :nimi :tr}
+               :hae #(get-in % [:osa :nimi])}
+              {:otsikko "Osoite" :tyyppi :string :hae #(tr-domain/tierekisteriosoite-tekstina (:osa %))}
               {:otsikko "Nykyinen päällyste" :tyyppi :string
                :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
               {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
               {:otsikko "Tila" :tyyppi :string
-               :hae #(yllapitokohteet/kuvaile-kohteen-tila (get-in % [:paallystysilmoitus :tila]))}
+               :hae #(yllapitokohteet/kuvaile-kohteen-tila (get-in % [:tila]))}
               (when (aloitus paallystys)
                 {:otsikko "Aloitettu" :tyyppi :pvm-aika :nimi aloitus})
               (when (paallystys-valmis paallystys)
