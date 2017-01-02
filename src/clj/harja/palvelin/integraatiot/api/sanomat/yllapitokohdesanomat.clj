@@ -1,5 +1,5 @@
 (ns harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat
-  (:require [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+  (:require [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.domain.tiemerkinta :as tiemerkinta]
             [clj-time.coerce :as c]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]))
@@ -30,7 +30,7 @@
    :sijainti (rakenna-sijainti kohde)
    :yllapitoluokka (:yllapitoluokka kohde)
    :keskimaarainen-vuorokausiliikenne (:keskimaarainen-vuorokausiliikenne kohde)
-   :nykyinen-paallyste (paallystys-ja-paikkaus/hae-apin-paallyste-koodilla (:nykyinen-paallyste kohde))
+   :nykyinen-paallyste (yllapitokohteet-domain/hae-apin-paallyste-koodilla (:nykyinen-paallyste kohde))
    :alikohteet (mapv (fn [alikohde] (rakenna-alikohde alikohde)) (:alikohteet kohde))
    :aikataulu {:kohde-aloitettu (:kohde-alku kohde)
                :paallystys-aloitettu (:paallystys-alku kohde)

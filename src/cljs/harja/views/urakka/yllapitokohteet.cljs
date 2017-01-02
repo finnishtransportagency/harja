@@ -11,7 +11,7 @@
             [cljs.core.async :refer [<!]]
             [harja.tyokalut.vkm :as vkm]
             [harja.domain.tierekisteri :as tr]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.domain.paallystysilmoitus :as pot]
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.ui.ikonit :as ikonit]
