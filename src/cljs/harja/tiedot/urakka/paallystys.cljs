@@ -101,8 +101,8 @@
                                                            (dissoc kohde :kohdeosat))
                                                :tila (yllapitokohteet/yllapitokohteen-tila kohde)
                                                :avoin? (= (:paallystyskohde-id kohde) avoin-paallystysilmoitus)
-                                               :osa kohdeosa ;; Redundanttia, tarvitaanko tosiaan?
-                                               :nimi (str (:nimi kohde) ": " (:nimi kohdeosa))))
+                                               :kohdeosa kohdeosa
+                                               :nimi (:nimi kohde)))
                                            (:kohdeosat kohde))))
                            (keep #(and (:sijainti %) %))
                            (map #(assoc % :tyyppi-kartalla :paallystys))))))))

@@ -88,8 +88,8 @@
      :jarjesta-fn :kohde-alkupvm
      :otsikko "Paikkauskohde"
      :tiedot  [{:otsikko "Nimi" :tyyppi :string :hae #(get-in % [:nimi])}
-               {:otsikko "Tie\u00ADrekisteri\u00ADkohde" :tyyppi :string :hae #(get-in % [:osa :nimi])}
-               {:otsikko "Osoite" :tyyppi :string :hae #(tr-domain/tierekisteriosoite-tekstina (:osa %))}
+               {:otsikko "Tie\u00ADrekisteri\u00ADkohde" :tyyppi :string :hae #(get-in % [:kohdeosa :nimi])}
+               {:otsikko "Osoite" :tyyppi :string :hae #(tr-domain/tierekisteriosoite-tekstina %)}
                {:otsikko "Nykyinen päällyste" :tyyppi :string
                 :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
                {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
@@ -112,9 +112,8 @@
      :jarjesta-fn :kohde-alkupvm
      :otsikko "Päällystyskohde"
      :tiedot [{:otsikko "Nimi" :tyyppi :string :hae #(get-in % [:nimi])}
-              {:otsikko "Tie\u00ADrekisteri\u00ADkohde" :tyyppi :string
-               :hae #(get-in % [:osa :nimi])}
-              {:otsikko "Osoite" :tyyppi :string :hae #(tr-domain/tierekisteriosoite-tekstina (:osa %))}
+              {:otsikko "Tie\u00ADrekisteri\u00ADkohde" :tyyppi :string :hae #(get-in % [:kohdeosa :nimi])}
+              {:otsikko "Osoite" :tyyppi :string :hae #(tr-domain/tierekisteriosoite-tekstina %)}
               {:otsikko "Nykyinen päällyste" :tyyppi :string
                :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
               {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}

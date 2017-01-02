@@ -84,7 +84,7 @@
                                                     (dissoc kohde :kohdeosat))
                                         :tila (yllapitokohteet/yllapitokohteen-tila kohde)
                                         :avoin? (= (:paikkauskohde-id kohde) avoin-paikkausilmoitus)
-                                        :osa kohdeosa ;; Redundanttia, tarvitaanko tosiaan?
+                                        :kohdeosa kohdeosa
                                         :nimi (str (:nimi kohde) ": " (:nimi kohdeosa))))
                                     (:kohdeosat kohde))))
                     (keep #(and (:sijainti %) %))
