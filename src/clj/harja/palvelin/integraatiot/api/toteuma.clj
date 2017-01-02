@@ -49,11 +49,12 @@
             :urakka urakka-id}))))
 
 (defn poista-toteumat [db urakka-id kirjaaja ulkoiset-idt]
-  (log/debug "Poistetaan toteumat, joiden ulkoiset idt ovat " ulkoiset-idt)
+  (log/debug "Poistetaan luojan"  (:id kirjaaja ) "toteumat, joiden ulkoiset idt ovat"  ulkoiset-idt)
   (let [kayttaja-id (:id kirjaaja)
-        poistettujen-maara (kyselyt/poista-toteumat-ulkoisilla-idlla-ja-luojalla! db ulkoiset-idt kayttaja-id)]
+        poistettujen-maara (kyselyt/poista-toteumat-ulkoisilla-idlla-ja-luojalla! db kayttaja-id ulkoiset-idt)]
+    (log/debug "Poistettujen maara:" poistettujen-maara)
     (tee-kirjausvastauksen-body {:ilmoitukset (if (pos? poistettujen-maara)
-                                                (str poistettujen-maara "tarkastusta poistettu onnistuneesti")
+                                                (str poistettujen-maara " tarkastusta poistettu onnistuneesti")
                                                 "Tunnisteita vastaavia toteumia ei löytynyt")})))
 
 
