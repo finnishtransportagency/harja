@@ -40,16 +40,29 @@
      :tyyppi :string}]
    hakuehdot])
 
+(defn lisaa-toimintopainikkeet [tietolajin-listaus-skeema]
+  (log "--->" (pr-str tietolajin-listaus-skeema))
+  (let [toiminnot {:nimi :toiminnot
+                   :otsikko "Toiminnot"
+                   :tyyppi :komponentti
+                   :leveys-col 1
+                   :komponentti (fn [_] [:div
+                                         [napit/tarkasta "Tarkasta" #()]
+                                         [napit/muokkaa "Muokkaa" #()]
+                                         [napit/poista "Poista" #()]])}]
+    (conj tietolajin-listaus-skeema toiminnot)))
+
 (defn varustehaku-varusteet [e! tietolajin-listaus-skeema varusteet]
   [grid/grid
    {:otsikko "Tierekisteristä löytyneet varusteet"
+
     :tunniste (fn [varuste]
                 ;; Valitettavasti varusteiden tunnisteet eivät ole uniikkeja, vaan
                 ;; sama varuste voi olla pätkitty useiksi TR osoitteiksi, joten yhdistetään
                 ;; niiden avaimeksi tunniste ja osoite.
                 (str (get-in varuste [:varuste :tunniste])
                      "_" (pr-str (get-in varuste [:varuste :tietue :sijainti :tie]))))}
-   tietolajin-listaus-skeema
+   (lisaa-toimintopainikkeet tietolajin-listaus-skeema)
    varusteet])
 
 (defn varustehaku

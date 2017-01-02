@@ -1,5 +1,11 @@
 (ns harja.views.urakka.toteumat.varusteet
-  "Urakan 'Toteumat' välilehden 'Varusteet' osio"
+  "Urakan 'Toteumat' välilehden 'Varusteet' osio
+
+  Näyttä Harjan kautta kirjatut varustetoteumat sekä mahdollistaa haut ja muokkaukset suoraan Tierekisteriin rajapinnan
+  kautta.
+
+  Harjaan tallennettu varustetoteuma sisältää tiedot varsinaisesta työstä. Varusteiden tekniset tiedot päivitetään
+  aina Tierekisteriin"
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<! >! chan timeout]]
             [harja.atom :refer [paivita!] :refer-macros [reaction<!]]
@@ -33,7 +39,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(def tr-kaytossa? false)
+;; todo: Muista laittaa pois päältä ennen mergeämistä!
+(def tr-kaytossa? true)
 
 (def nayta-max-toteumaa 500)
 

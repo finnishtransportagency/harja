@@ -181,3 +181,36 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
   [:button.close {:on-click sulje!
                   :type "button"}
    [ikonit/remove]])
+
+(defn poista
+  ([teksti poista-fn] (poista teksti poista-fn {}))
+  ([teksti poista-fn {:keys [disabled luokka]}]
+   [:button.nappi-kielteinen
+    {:class    (str (when disabled "disabled ") (or luokka ""))
+     :disabled disabled
+     :on-click #(do
+                  (.preventDefault %)
+                  (poista-fn))}
+    [ikonit/ikoni-ja-teksti [ikonit/livicon-trash] teksti]]))
+
+(defn tarkasta
+  ([teksti tarkasta-fn] (tarkasta teksti tarkasta-fn {}))
+  ([teksti tarkasta-fn {:keys [disabled luokka]}]
+   [:button.nappi-toissijainen
+    {:class    (str (when disabled "disabled ") (or luokka ""))
+     :disabled disabled
+     :on-click #(do
+                  (.preventDefault %)
+                  (tarkasta-fn))}
+    [ikonit/ikoni-ja-teksti [ikonit/livicon-eye] teksti]]))
+
+(defn muokkaa
+  ([teksti muokkaa-fn] (muokkaa teksti muokkaa-fn {}))
+  ([teksti muokkaa-fn {:keys [disabled luokka]}]
+   [:button.nappi-toissijainen
+    {:class    (str (when disabled "disabled ") (or luokka ""))
+     :disabled disabled
+     :on-click #(do
+                  (.preventDefault %)
+                  (muokkaa-fn))}
+    [ikonit/ikoni-ja-teksti [ikonit/livicon-pen] teksti]]))
