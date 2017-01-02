@@ -107,7 +107,6 @@
   (let [aloitus :kohde-alkupvm
         paallystys-valmis :paallystys-loppupvm
         kohde-valmis :kohde-valmispvm]
-    (log "Infopaneeli-skeema päällystys: " (pr-str paallystys))
     {:tyyppi :paallystys
      :jarjesta-fn :kohde-alkupvm
      :otsikko "Päällystyskohde"
