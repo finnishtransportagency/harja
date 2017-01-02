@@ -94,7 +94,7 @@
                 :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
                {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
                {:otsikko "Tila" :tyyppi :string
-                :hae     #(yllapitokohteet/kuvaile-kohteen-tila (get-in % [:tila]))}
+                :hae     #(yllapitokohteet/kuvaile-kohteen-tila (get-in % [:tarkka-tila]))}
                (when (aloitus paikkaus)
                  {:otsikko "Aloitettu" :tyyppi :pvm-aika :nimi aloitus})
                (when (paikkaus-valmis paikkaus)
@@ -107,7 +107,6 @@
   (let [aloitus :kohde-alkupvm
         paallystys-valmis :paallystys-loppupvm
         kohde-valmis :kohde-valmispvm]
-    (log "Infopaneeli-skeema päällystys: " (pr-str paallystys))
     {:tyyppi :paallystys
      :jarjesta-fn :kohde-alkupvm
      :otsikko "Päällystyskohde"
@@ -118,7 +117,7 @@
                :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
               {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
               {:otsikko "Tila" :tyyppi :string
-               :hae #(yllapitokohteet/kuvaile-kohteen-tila (get-in % [:tila]))}
+               :hae #(yllapitokohteet/kuvaile-kohteen-tila (get-in % [:tarkka-tila]))}
               (when (aloitus paallystys)
                 {:otsikko "Aloitettu" :tyyppi :pvm-aika :nimi aloitus})
               (when (paallystys-valmis paallystys)

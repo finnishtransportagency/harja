@@ -82,7 +82,8 @@
                               (keep (fn [kohdeosa]
                                       (assoc (merge kohdeosa
                                                     (dissoc kohde :kohdeosat))
-                                        :tila (yllapitokohteet/yllapitokohteen-tila kohde)
+                                        :tila (yllapitokohteet/yllapitokohteen-yksinkertainen-tila kohde)
+                                        :tarkka-tila (yllapitokohteet/yllapitokohteen-tarkka-tila kohde)
                                         :avoin? (= (:paikkauskohde-id kohde) avoin-paikkausilmoitus)
                                         :kohdeosa kohdeosa
                                         :nimi (str (:nimi kohde) ": " (:nimi kohdeosa))))

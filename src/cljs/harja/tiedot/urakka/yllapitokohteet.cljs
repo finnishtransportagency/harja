@@ -41,7 +41,7 @@
     :ei-aloitettu "Ei aloitettu"
     "Ei tiedossa"))
 
-(defn yllapitokohteen-tila [yllapitokohde]
+(defn yllapitokohteen-tarkka-tila [yllapitokohde]
   ;; Järjestys on tärkeä, koska nämä menee yleensä tässä aikajärjestyksessä.
   (cond (:kohde-valmispvm yllapitokohde)
         :kohde-valmis
@@ -58,11 +58,46 @@
         (:paallystys-alkupvm yllapitokohde)
         :paallystys-aloitettu
 
+        (:paikkaus-loppupvm yllapitokohde)
+        :paikkaus-valmis
+
+        (:paikkaus-alkupvm yllapitokohde)
+        :paikkaus-aloitettu
+
         (:kohde-alkupvm yllapitokohde)
         :kohde-aloitettu
 
         :default
         :ei-aloitettu))
+
+(defn yllapitokohteen-yksinkertainen-tila [yllapitokohde]
+  ;; Järjestys on tärkeä, koska nämä menee yleensä tässä aikajärjestyksessä.
+  (cond (:kohde-valmispvm yllapitokohde)
+        :valmis
+
+        (:tiemerkinta-loppupvm yllapitokohde)
+        :aloitettu
+
+        (:tiemerkinta-alkupvm yllapitokohde)
+        :aloitettu
+
+        (:paallystys-loppupvm yllapitokohde)
+        :aloitettu
+
+        (:paallystys-alkupvm yllapitokohde)
+        :aloitettu
+
+        (:paikkaus-loppupvm yllapitokohde)
+        :aloitettu
+
+        (:paikkaus-alkupvm yllapitokohde)
+        :aloitettu
+
+        (:kohde-alkupvm yllapitokohde)
+        :aloitettu
+
+        :default
+        nil))
 
 (defn paivita-yllapitokohde! [kohteet-atom id funktio & argumentit]
   (swap! kohteet-atom
