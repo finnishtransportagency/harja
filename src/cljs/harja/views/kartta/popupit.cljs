@@ -13,7 +13,7 @@
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.ui.modal :as modal]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.tierekisteri :as tierekisteri]))
 
 (def klikattu-tyokone (atom nil))
@@ -221,7 +221,7 @@
                                                               :tr-alkuetaisyys (get-in tapahtuma [:tr :alkuetaisyys])
                                                               :tr-loppuosa (get-in tapahtuma [:tr :loppuosa])
                                                               :tr-loppuetaisyys (get-in tapahtuma [:tr :loppuetaisyys])})]
-                                                 ["Nykyinen päällyste: " (yllapitokohteet-domain/hae-paallyste-koodilla (:nykyinen-paallyste tapahtuma))]
+                                                 ["Nykyinen päällyste: " (paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste tapahtuma))]
                                                  ["Toimenpide" (:toimenpide tapahtuma)]
                                                  ["Tila" (yllapitokohteet/kuvaile-kohteen-tila (get-in tapahtuma [:paallystysilmoitus :tila]))]
                                                  (when aloitettu
@@ -249,7 +249,7 @@
                                                               :tr-alkuetaisyys (get-in tapahtuma [:tr :alkuetaisyys])
                                                               :tr-loppuosa (get-in tapahtuma [:tr :loppuosa])
                                                               :tr-loppuetaisyys (get-in tapahtuma [:tr :loppuetaisyys])})]
-                                                 ["Nykyinen päällyste: " (yllapitokohteet-domain/hae-paallyste-koodilla (:nykyinen-paallyste tapahtuma))]
+                                                 ["Nykyinen päällyste: " (paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste tapahtuma))]
                                                  ["Toimenpide" (:toimenpide tapahtuma)]
                                                  ["Tila" (yllapitokohteet/kuvaile-kohteen-tila (get-in tapahtuma [:paikkausilmoitus :tila]))]
                                                  (when aloitettu

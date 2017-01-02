@@ -1,7 +1,7 @@
 (ns harja.domain.paallystysilmoitus
   "Ylläpidon päällystysurakoissa käytettävän POT-lomakkeen skeemat."
   (:require [schema.core :as s]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]))
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]))
 
 (def +tyomenetelmat+
   "Kaikki työmenetelmät POT-lomake Excelistä"

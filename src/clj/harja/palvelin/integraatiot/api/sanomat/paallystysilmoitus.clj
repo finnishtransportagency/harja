@@ -1,6 +1,6 @@
 (ns harja.palvelin.integraatiot.api.sanomat.paallystysilmoitus
   (:require [cheshire.core :as cheshire]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus]
             [harja.domain.skeema :as skeema]
             [taoensso.timbre :as log]
@@ -23,9 +23,9 @@
              :massamenekki (:massamenekki alikohde)
              :tyomenetelma (paallystysilmoitus/tyomenetelman-koodi-nimella (:tyomenetelma alikohde))
              :sideainetyyppi (paallystysilmoitus/sideainetyypin-koodi-nimella (:sideainetyyppi kivi))
-             :paallystetyyppi (yllapitokohteet-domain/hae-koodi-apin-paallysteella (:paallystetyyppi alikohde))
+             :paallystetyyppi (paallystys-ja-paikkaus/hae-koodi-apin-paallysteella (:paallystetyyppi alikohde))
              :kokonaismassamaara (:kokonaismassamaara alikohde)
-             :edellinen-paallystetyyppi (yllapitokohteet-domain/hae-koodi-apin-paallysteella (:edellinen-paallystetyyppi alikohde))}))
+             :edellinen-paallystetyyppi (paallystys-ja-paikkaus/hae-koodi-apin-paallysteella (:edellinen-paallystetyyppi alikohde))}))
         (get-in paallystysilmoitus [:yllapitokohde :alikohteet])))
 
 (defn rakenna-alustatoimet [paallystysilmoitus]

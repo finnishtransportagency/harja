@@ -17,7 +17,7 @@
             [harja.ui.kommentit :as kommentit]
             [harja.domain.paikkausilmoitus :as minipot]
             [harja.views.kartta :as kartta]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.tierekisteri :as tierekisteri-domain]
             [harja.ui.napit :as napit]
             [harja.domain.oikeudet :as oikeudet]
@@ -90,7 +90,7 @@
           :tyyppi :valinta
           :valinnat [:hyvaksytty :hylatty]
           :validoi [[:ei-tyhja "Anna päätös"]]
-          :valinta-nayta #(if % (yllapitokohteet-domain/kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
+          :valinta-nayta #(if % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
           :palstoja 1}
 
          (when (:paatos @paatostiedot)
@@ -326,9 +326,9 @@
         [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 10}
          {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
          {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20 :hae (fn [rivi]
-                                                                                                        (yllapitokohteet-domain/nayta-tila (:tila rivi)))}
+                                                                                                        (paallystys-ja-paikkaus/nayta-tila (:tila rivi)))}
          {:otsikko "Päätös" :nimi :paatos :muokattava? (constantly false) :tyyppi :komponentti :leveys 20 :komponentti (fn [rivi]
-                                                                                                                         (yllapitokohteet-domain/nayta-paatos (:paatos rivi)))}
+                                                                                                                         (paallystys-ja-paikkaus/nayta-paatos (:paatos rivi)))}
          {:otsikko "Paikkaus\u00ADilmoitus" :nimi :paikkausilmoitus :muokattava? (constantly false) :leveys 25 :tyyppi :komponentti
           :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paikkausilmoitus (:paikkauskohde-id rivi))}
                                                     [:span (ikonit/eye-open) " Paikkausilmoitus"]]
