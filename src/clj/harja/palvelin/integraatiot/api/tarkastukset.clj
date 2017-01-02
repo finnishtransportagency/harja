@@ -95,7 +95,7 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (let [poistettujen-maara (kyselyt/poista-tarkastus! db kayttaja-id ulkoiset-idt)]
       (tee-kirjausvastauksen-body {:ilmoitukset (if (pos? poistettujen-maara)
-                                                  (str poistettujen-maara "tarkastusta poistettu onnistuneesti")
+                                                  (str poistettujen-maara " tarkastusta poistettu onnistuneesti")
                                                   "Tunnisteita vastaavia tarkastuksia ei löytynyt")}))))
 
 (def palvelut
