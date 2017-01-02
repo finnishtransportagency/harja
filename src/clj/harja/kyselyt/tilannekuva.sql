@@ -201,7 +201,7 @@ WHERE
 SELECT
   ypk.id,
   ypk.kohdenumero,
-  ypk.nimi AS kohde_nimi,
+  ypk.nimi,
   ypko.nimi AS kohdeosa_nimi,
   ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti,
   ypko.tr_numero,
@@ -228,7 +228,7 @@ WHERE ypk.poistettu IS NOT TRUE
 SELECT
   ypk.id,
   ypk.kohdenumero,
-  ypk.nimi                                AS kohde_nimi,
+  ypk.nimi,
   ypko.nimi                               AS kohdeosa_nimi,
   ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti,
   ypko.tr_numero,
@@ -255,7 +255,7 @@ WHERE ypk.poistettu IS NOT TRUE AND
 SELECT
   ypk.id,
   ypk.kohdenumero,
-  ypk.nimi AS kohde_nimi,
+  ypk.nimi,
   ypk.nimi AS kohdeosa_nimi,
   ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti,
   ypko.tr_numero,
@@ -282,7 +282,7 @@ WHERE ypk.poistettu IS NOT TRUE
 SELECT
   pk.id,
   pk.kohdenumero,
-  pk.nimi AS kohde_nimi,
+  pk.nimi,
   ypko.nimi AS kohdeosa_nimi,
   ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti,
   ypko.tr_numero,
