@@ -594,8 +594,6 @@
          :on-mount           (fn [initialextent]
                                (paivita-extent nil initialextent))
          :on-click           (fn [event]
-                               #_(t/julkaise! {:aihe :tyhja-click :klikkaus-koordinaatit at})
-                               #_(poista-popup!)
                                (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
                                                                    event
                                                                    asiat-pisteessa)
