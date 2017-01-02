@@ -44,9 +44,6 @@
 
 (defonce paallystysilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 
-(def paallystysilmoituslomake-lukittu? (reaction (let [_ @lukko/nykyinen-lukko]
-                                                   (lukko/nykyinen-nakyma-lukittu?))))
-
 (defonce karttataso-paallystyskohteet (atom false))
 
 (def yllapitokohteet

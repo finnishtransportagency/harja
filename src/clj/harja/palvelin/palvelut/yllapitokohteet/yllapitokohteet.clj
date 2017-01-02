@@ -97,16 +97,16 @@
                           (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
                           (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
                           (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
-                              (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
-                              (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
-                              (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
-                              (map #(assoc % :kohdeosat
-                                             (into []
-                                                   paallystys-q/kohdeosa-xf
-                                                   (q/hae-urakan-yllapitokohteen-yllapitokohdeosat
-                                                     db {:urakka urakka-id
-                                                         :sopimus sopimus-id
-                                                         :yllapitokohde (:id %)})))))
+                          (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
+                          (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
+                          (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
+                          (map #(assoc % :kohdeosat
+                                         (into []
+                                               paallystys-q/kohdeosa-xf
+                                               (q/hae-urakan-yllapitokohteen-yllapitokohdeosat
+                                                 db {:urakka urakka-id
+                                                     :sopimus sopimus-id
+                                                     :yllapitokohde (:id %)})))))
                         (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
                                                                      :sopimus sopimus-id
                                                                      :vuosi vuosi}))
