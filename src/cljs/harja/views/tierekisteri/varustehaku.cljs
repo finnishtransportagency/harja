@@ -40,17 +40,18 @@
      :tyyppi :string}]
    hakuehdot])
 
-(defn lisaa-toimintopainikkeet [tietolajin-listaus-skeema]
-  (log "--->" (pr-str tietolajin-listaus-skeema))
-  (let [toiminnot {:nimi :toiminnot
+(defn sarakkeet [e! tietolajin-listaus-skeema]
+  (let [sarakkeet (mapv #(assoc % :leveys 4) tietolajin-listaus-skeema)
+        toiminnot {:nimi :toiminnot
                    :otsikko "Toiminnot"
                    :tyyppi :komponentti
-                   :leveys-col 1
-                   :komponentti (fn [_] [:div
-                                         [napit/tarkasta "Tarkasta" #()]
-                                         [napit/muokkaa "Muokkaa" #()]
-                                         [napit/poista "Poista" #()]])}]
-    (conj tietolajin-listaus-skeema toiminnot)))
+                   :leveys 9
+                   :komponentti (fn [_]
+                                  [:div
+                                   [napit/tarkasta "Tarkasta" #()]
+                                   [napit/muokkaa "Muokkaa" #()]
+                                   [napit/poista "Poista" #()]])}]
+    (conj sarakkeet toiminnot)))
 
 (defn varustehaku-varusteet [e! tietolajin-listaus-skeema varusteet]
   [grid/grid
@@ -62,7 +63,7 @@
                 ;; niiden avaimeksi tunniste ja osoite.
                 (str (get-in varuste [:varuste :tunniste])
                      "_" (pr-str (get-in varuste [:varuste :tietue :sijainti :tie]))))}
-   (lisaa-toimintopainikkeet tietolajin-listaus-skeema)
+   (sarakkeet e! tietolajin-listaus-skeema)
    varusteet])
 
 (defn varustehaku
