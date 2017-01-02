@@ -13,7 +13,7 @@
             [harja.ui.historia :as historia]
 
             [harja.domain.paallystysilmoitus :as pot]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
 
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.paallystys :as paallystys]
@@ -29,7 +29,7 @@
             [harja.ui.napit :as napit]
             [harja.domain.oikeudet :as oikeudet]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.yhatuonti :as yha]
@@ -142,7 +142,7 @@
        :valinnat [:hyvaksytty :hylatty]
        :validoi [[:ei-tyhja "Anna päätös"]]
        :valinta-nayta #(cond
-                        % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %)
+                        % (yllapitokohteet-domain/kuvaile-paatostyyppi %)
                         muokattava? "- Valitse päätös -"
                         :default "-")
        :palstoja 1}
@@ -628,15 +628,15 @@
     {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
     {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
      :hae (fn [rivi]
-            (paallystys-ja-paikkaus/nayta-tila (:tila rivi)))}
+            (yllapitokohteet-domain/nayta-tila (:tila rivi)))}
     {:otsikko "Päätös, tekninen" :nimi :paatos-tekninen-osa :muokattava? (constantly false) :tyyppi :komponentti
      :leveys 20
      :komponentti (fn [rivi]
-                    (paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)))}
+                    (yllapitokohteet-domain/nayta-paatos (:paatos-tekninen-osa rivi)))}
     {:otsikko "Päätös, taloudel\u00ADlinen" :nimi :paatos-taloudellinen-osa :muokattava? (constantly false) :tyyppi
      :komponentti :leveys 20
      :komponentti (fn [rivi]
-                    (paallystys-ja-paikkaus/nayta-paatos (:paatos-taloudellinen-osa rivi)))}
+                    (yllapitokohteet-domain/nayta-paatos (:paatos-taloudellinen-osa rivi)))}
     {:otsikko "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys 25 :tyyppi
      :komponentti
      :komponentti (fn [rivi]
