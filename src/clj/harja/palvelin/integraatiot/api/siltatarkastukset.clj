@@ -140,8 +140,10 @@
         ulkoiset-idt (-> data :tarkastusten-tunnisteet)
         kayttaja-id (:id kayttaja)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (silta-q/poista-siltatarkastukset-ulkoisilla-idlla-ja-luojalla! db kayttaja-id ulkoiset-idt urakka-id)
-    (tee-kirjausvastauksen-body {:ilmoitukset "Tarkastus poistettu onnistuneesti"})))
+    (let [poistettujen-maara  (silta-q/poista-siltatarkastukset-ulkoisilla-idlla-ja-luojalla! db kayttaja-id ulkoiset-idt urakka-id)]
+      (tee-kirjausvastauksen-body {:ilmoitukset (if (pos? poistettujen-maara)
+                                                  (str poistettujen-maara " tarkastusta poistettu onnistuneesti")
+                                                  "Vastaavia tarkastuksia ei loytynyt")}))))
 
 (defrecord Siltatarkastukset []
   component/Lifecycle
