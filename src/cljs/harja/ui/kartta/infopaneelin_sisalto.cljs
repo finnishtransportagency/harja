@@ -81,12 +81,12 @@
    :data toteuma})
 
 (defmethod infopaneeli-skeema :paikkaus [paikkaus]
-  (let [aloitus :aloituspvm
-        paikkaus-valmis :paikkausvalmispvm
-        kohde-valmis :kohdevalmispvm]
+  (let [aloitus :kohde-alkupvm
+        paikkaus-valmis :paikkaus-loppupvm
+        kohde-valmis :kohde-valmispvm]
     {:tyyppi  :paikkaus
-     :jarjesta-fn :aloituspvm
-     :otsikko (str "Paikkauskohde " (when (aloitus paikkaus) (pvm/pvm-aika (aloitus paikkaus))))
+     :jarjesta-fn :kohde-alkupvm
+     :otsikko "Paikkauskohde"
      :tiedot  [{:otsikko "Nimi" :tyyppi :string :hae #(get-in % [:nimi])}
                {:otsikko "Tie\u00ADrekisteri\u00ADkohde" :tyyppi :string :hae #(get-in % [:osa :nimi])}
                {:otsikko "Osoite" :tyyppi :string :hae #(tr-domain/tierekisteriosoite-tekstina (:osa %))}
@@ -104,12 +104,12 @@
      :data    paikkaus}))
 
 (defmethod infopaneeli-skeema :paallystys [paallystys]
-  (let [aloitus :aloituspvm
-        paallystys-valmis :paallystysvalmispvm
-        kohde-valmis :kohdevalmispvm]
+  (let [aloitus :kohde-alkupvm
+        paallystys-valmis :paallystys-loppupvm
+        kohde-valmis :kohde-valmispvm]
     (log "Infopaneeli-skeema päällystys: " (pr-str paallystys))
     {:tyyppi :paallystys
-     :jarjesta-fn :aloituspvm
+     :jarjesta-fn :kohde-alkupvm
      :otsikko "Päällystyskohde"
      :tiedot [{:otsikko "Nimi" :tyyppi :string :hae #(get-in % [:nimi])}
               {:otsikko "Tie\u00ADrekisteri\u00ADkohde" :tyyppi :string
