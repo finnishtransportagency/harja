@@ -37,12 +37,13 @@
         <xs:complexType>
             <xs:sequence>
                 <xs:element name="viestiId" type="uuid" minOccurs="1" maxOccurs="1"/>
-                <xs:element name="tietyoilmoitusId" type="xs:int" minOccurs="1" maxOccurs="1"/>
+                <xs:element name="harjaTietyoilmoitusId" type="xs:int" minOccurs="1" maxOccurs="1"/>
+                <xs:element name="tloikTietyoilmoitusId" type="xs:int" minOccurs="1" maxOccurs="1"/>
                 <xs:element name="ilmoitettu" type="xs:dateTime" minOccurs="1" maxOccurs="1"/>
-                <xs:element name="ilmoittaja" type="henkilo" minOccurs="0"/>
+                <xs:element name="ilmoittaja" type="henkilo" minOccurs="1" maxOccurs="1"/>
                 <xs:element name="urakka" type="urakka" minOccurs="1" maxOccurs="1"/>
                 <xs:element name="urakoitsija" type="organisaatio" minOccurs="0"/>
-                <xs:element name="urakoitsijan-yhteyshenkilo" type="henkilo" minOccurs="0"/>
+                <xs:element name="urakoitsijanYhteyshenkilo" type="henkilo" minOccurs="0"/>
                 <xs:element name="tilaaja" type="organisaatio" minOccurs="0"/>
                 <xs:element name="tilaajan-yhteyshenkilo" type="henkilo" minOccurs="0"/>
                 <xs:element name="luvanDiaarinumero" type="xs:integer" minOccurs="1"/>
@@ -79,7 +80,7 @@
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
-                <xs:element name="tyyppi" minOccurs="0">
+                <xs:element name="tyyppi" minOccurs="1" maxOccurs="1">
                     <xs:complexType>
                         <xs:sequence>
                             <xs:element name="tyotyypit">
@@ -500,6 +501,7 @@
             <xs:element type="xs:integer" name="alkuetaisyys"/>
             <xs:element type="xs:integer" name="loppuosa"/>
             <xs:element type="xs:integer" name="loppuetaisyys"/>
+            <xs:element type="xs:date" name="karttapvm"/>
         </xs:sequence>
     </xs:complexType>
     <xs:complexType name="koordinaattit">
@@ -551,8 +553,8 @@
     </xs:complexType>
     <xs:complexType name="tietyonSijainti">
         <xs:sequence>
-            <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali"/>
-            <xs:element name="alkukoordinaatit" type="koordinaattit"/>
+            <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="alkukoordinaatit" type="koordinaattit" minOccurs="1" maxOccurs="1"/>
             <xs:element name="loppukoordinaatit" type="koordinaattit"/>
             <xs:element type="xs:decimal" name="pituus"/>
             <xs:element type="xs:string" name="tienNimi"/>

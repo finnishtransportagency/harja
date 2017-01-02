@@ -1,6 +1,7 @@
 <harja:tietyoilmoitus xmlns:harja="http://www.liikennevirasto.fi/xsd/harja">
     <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
-    <tietyoilmoitusId>234908234</tietyoilmoitusId>
+    <harjaTietyoilmoitusId>234908234</harjaTietyoilmoitusId>
+    <tloikTietyoilmoitusId>234908234</tloikTietyoilmoitusId>
     <ilmoitettu>2016-12-24T04:49:45</ilmoitettu>
     <ilmoittaja>
         <etunimi>Irma</etunimi>
@@ -18,13 +19,13 @@
         <nimi>Destia Oy</nimi>
         <ytunnus>2163026-3</ytunnus>
     </urakoitsija>
-    <urakoitsijan-yhteyshenkilo>
+    <urakoitsijanYhteyshenkilo>
         <etunimi>Urho</etunimi>
         <sukunimi>Urakoitsija</sukunimi>
         <matkapuhelin>+34592349342</matkapuhelin>
         <tyopuhelin>+34592349342</tyopuhelin>
         <sahkoposti>urho@example.com</sahkoposti>
-    </urakoitsijan-yhteyshenkilo>
+    </urakoitsijanYhteyshenkilo>
     <tilaaja>
         <nimi>Pohjois-Savo</nimi>
     </tilaaja>
@@ -44,6 +45,7 @@
             <alkuetaisyys>1216</alkuetaisyys>
             <loppuosa>313</loppuosa>
             <loppuetaisyys>3780</loppuetaisyys>
+            <karttapvm>2016-01-01</karttapvm>
         </tierekisteriosoitevali>
         <alkukoordinaatit>
             <x>512980.1296580813</x>
@@ -74,6 +76,7 @@
                     <alkuetaisyys>1216</alkuetaisyys>
                     <loppuosa>313</loppuosa>
                     <loppuetaisyys>3780</loppuetaisyys>
+                    <karttapvm>2016-01-01</karttapvm>
                 </tierekisteriosoitevali>
                 <alkukoordinaatit>
                     <x>512980.1296580813</x>
