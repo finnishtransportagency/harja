@@ -102,8 +102,7 @@
                                                :tila-kartalla (yllapitokohteet/yllapitokohteen-yksinkertainen-tila kohde)
                                                :tarkka-tila (yllapitokohteet/yllapitokohteen-tarkka-tila kohde)
                                                :avoin? (= (:paallystyskohde-id kohde) avoin-paallystysilmoitus)
-                                               :kohdeosa kohdeosa
-                                               :nimi (:nimi kohde)))
+                                               :kohdeosa kohdeosa))
                                            (:kohdeosat kohde))))
                            (keep #(and (:sijainti %) %))
                            (map #(assoc % :tyyppi-kartalla :paallystys))))))))

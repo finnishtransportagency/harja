@@ -85,8 +85,7 @@
                                         :tila (yllapitokohteet/yllapitokohteen-yksinkertainen-tila kohde)
                                         :tarkka-tila (yllapitokohteet/yllapitokohteen-tarkka-tila kohde)
                                         :avoin? (= (:paikkauskohde-id kohde) avoin-paikkausilmoitus)
-                                        :kohdeosa kohdeosa
-                                        :nimi (str (:nimi kohde) ": " (:nimi kohdeosa))))
+                                        :kohdeosa kohdeosa))
                                     (:kohdeosat kohde))))
                     (keep #(and (:sijainti %) %))
                     (map #(assoc % :tyyppi-kartalla :paikkaus))))))))
