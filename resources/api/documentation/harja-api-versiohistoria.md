@@ -1,8 +1,8 @@
 <b>Nykyinen versio: 1.0.7</b>  
-<b>Julkaistu: 29.12.2016</b>
+<b>Julkaistu: 2.1.2016</b>
 
 <b>Versiohistoria:</b>
-- Versionumero: 1.0.7 Julkaistu: 29.12.2016:
+- Versionumero: 1.0.7 Julkaistu: 2.1.2017:
     - Lisätty toteumien ja tarkastusten poisto
 - Versionumero: 1.0.6 Julkaistu: 29.12.2016:
     - Työkoneiden reaaliaikaseurannan rajapintaan lisätty jyrät uutena työkonetyyppinä.
