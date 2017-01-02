@@ -81,7 +81,7 @@
                                               "tiemerkinta" "TIEM_YKSHINT"
                                               "valaistus" "VALA_YKSHINT"}
           toimenpidekoodi (yllapidon-3-tason-toimenpidekoodit urakkatyyppi)]
-      (when toimenpidekoodi
+      (when (and toimenpidekoodi (not (toimenpiteet/onko-urakalla-toimenpide? db urakka-id toimenpidekoodi)))
         (toimenpiteet/luo-yllapidon-toimenpideinstanssi<! db
                                                           toimenpidekoodi
                                                           alkupvm

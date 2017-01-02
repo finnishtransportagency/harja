@@ -7,3 +7,6 @@
 
 (defn onko-tuotu-samposta? [db sampo_toimenpidekoodi sampo-toimenpide-id urakka_sampoid]
   (:exists (first (harja.kyselyt.toimenpideinstanssit/onko-tuotu-samposta db sampo_toimenpidekoodi sampo-toimenpide-id urakka_sampoid))))
+
+(defn onko-urakalla-toimenpide? [db urakkaid toimenpide]
+  (:exists (first (harja.kyselyt.toimenpideinstanssit/onko-urakalla-toimenpide db urakkaid toimenpide))))
