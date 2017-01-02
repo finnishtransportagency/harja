@@ -152,7 +152,10 @@ SELECT
   ypk.tr_kaista                         AS "tr-kaista",
   ypk.yhaid,
   ypk.yllapitokohdetyyppi,
-  ypk.yllapitokohdetyotyyppi
+  ypk.yllapitokohdetyotyyppi,
+  ypk.aikataulu_kohde_alku as "aloituspvm",
+  ypk.aikataulu_kohde_valmis as "kohdevalmispvm",
+  ypk.aikataulu_paallystys_loppu "paallystysvalmispvm"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
