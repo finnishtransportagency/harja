@@ -54,9 +54,8 @@
 
     ;; Oulun urakan jäljellä oleville vuosille luotiin uusi välitavoite
     (is (= (count oulun-urakan-paivitetyt-valitavoitteet)
-           (- (+ (count oulun-urakan-vanhat-valitavoitteet)
-               (count odotetut-toistovuodet))
-              1))) ;; Ei lasketa 1.7.2016 välitavoitetta, koska ennen käyttöönottoa
+           (-> (count oulun-urakan-vanhat-valitavoitteet)
+               (+ (count odotetut-toistovuodet)))))
     (is (not (empty? odotetut-toistovuodet))) ;; Urakka päättynyt, päivitä testi
 
     (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
