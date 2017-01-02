@@ -30,6 +30,7 @@
             [harja.kyselyt.tieverkko :as tieverkko]
             [harja.domain.tiemerkinta :as tm-domain]
             [harja.kyselyt.urakat :as urakat-q]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.kyselyt.paallystys :as paallystys-q]
             [harja.palvelin.palvelut.tierek-haku :as tr-haku]
             [clj-time.coerce :as c]
@@ -92,7 +93,10 @@
   (log/debug "Haetaan urakan ylläpitokohteet.")
   (jdbc/with-db-transaction [db db]
     (let [vastaus (into []
-                        (comp (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
+                        (comp
+                          (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
+                          (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
+                          (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
                               (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
                               (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
                               (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))

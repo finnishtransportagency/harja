@@ -94,7 +94,7 @@
                 :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
                {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
                {:otsikko "Tila" :tyyppi :string
-                :hae     #(yllapitokohteet/kuvaile-kohteen-tila (get-in % [:tarkka-tila]))}
+                :hae     #(yllapitokohteet/kuvaile-kohteen-tila (:tila %))}
                (when (aloitus paikkaus)
                  {:otsikko "Aloitettu" :tyyppi :pvm-aika :nimi aloitus})
                (when (paikkaus-valmis paikkaus)
@@ -118,7 +118,7 @@
                :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
               {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
               {:otsikko "Tila" :tyyppi :string
-               :hae #(yllapitokohteet/kuvaile-kohteen-tila (get-in % [:tarkka-tila]))}
+               :hae #(yllapitokohteet/kuvaile-kohteen-tila (:tila %))}
               (when (aloitus paallystys)
                 {:otsikko "Aloitettu" :tyyppi :pvm-aika :nimi aloitus})
               (when (paallystys-valmis paallystys)
