@@ -36,3 +36,6 @@
 (defrecord VirheTapahtui [virhe])
 
 (defrecord VirheKasitelty [])
+
+;; Poista varuste
+(defrecord PoistaVaruste [tietolaji tunniste])

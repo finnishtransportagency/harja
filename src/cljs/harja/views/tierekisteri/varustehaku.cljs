@@ -8,7 +8,8 @@
             [harja.loki :refer [log]]
             [harja.ui.debug :refer [debug]]
             [harja.ui.grid :as grid]
-            [harja.ui.yleiset :as yleiset]))
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.modal :as modal]))
 
 (defn varustehaku-ehdot [e! {haku? :haku-kaynnissa? :as hakuehdot}]
   [lomake/lomake
@@ -40,17 +41,43 @@
      :tyyppi :string}]
    hakuehdot])
 
+(defn varmista-poistaminen [tietolaji tunniste]
+  (modal/nayta! {:otsikko "Varusteen poistaminen Tierekisteristä"
+                 :footer [:span
+                          [:button.nappi-toissijainen {:type "button"
+                                                       :on-click #(do (.preventDefault %)
+                                                                      (modal/piilota!))}
+                           [:div (ikonit/livicon-ban) " Peruuta"]]
+                          [:button.nappi-kielteinen {:type "button"
+                                                     :on-click #(do (.preventDefault %)
+                                                                    (modal/piilota!))}
+                           [:div (ikonit/livicon-trash) " Poista"]]]}
+                [:div "Haluatko varmasti poistaa tietolajin: "
+                 [:b (str (varusteet/tietolaji->selitys tietolaji) " (" tietolaji ")")]
+                 " varusteen, jonka tunniste on: "
+                 [:b tunniste]
+                 "."]))
+
 (defn sarakkeet [e! tietolajin-listaus-skeema]
   (let [sarakkeet (mapv #(assoc % :leveys 4) tietolajin-listaus-skeema)
         toiminnot {:nimi :toiminnot
                    :otsikko "Toiminnot"
                    :tyyppi :komponentti
                    :leveys 9
-                   :komponentti (fn [_]
-                                  [:div
-                                   [napit/tarkasta "Tarkasta" #()]
-                                   [napit/muokkaa "Muokkaa" #()]
-                                   [napit/poista "Poista" #()]])}]
+                   :komponentti (fn [{varuste :varuste}]
+                                  (log "---> varuste" (pr-str varuste))
+                                  (let [tunniste (:tunniste varuste)
+                                        tietolaji (get-in varuste [:tietue :tietolaji :tunniste])]
+
+                                    (log "---> tunniste" (pr-str tunniste))
+                                    (log "---> tietolaji" (pr-str tietolaji))
+
+                                    [:div
+                                     [napit/tarkasta "Tarkasta" #()]
+                                     [napit/muokkaa "Muokkaa" #()]
+                                     [napit/poista "Poista" #(varmista-poistaminen
+                                                               tietolaji tunniste
+                                                               )]]))}]
     (conj sarakkeet toiminnot)))
 
 (defn varustehaku-varusteet [e! tietolajin-listaus-skeema varusteet]
