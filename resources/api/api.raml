@@ -227,28 +227,6 @@ documentation:
               application/json:
                 example: !include examples/epaonnistunut-kirjaus-response.json
                 schema: kirjaus-response
-        delete:
-          is: [secured]
-          description: Poista varustetoteuma tunnisteella.
-          body:
-            application/json:
-              schema: toteuman-poisto-request
-          responses:
-           200:
-            body:
-              application/json:
-                example: !include examples/onnistunut-kirjaus-response.json
-                schema: kirjaus-response
-           400:
-            body:
-              application/json:
-                example: !include examples/epaonnistunut-kirjaus-response.json
-                schema: virhe-response
-           500:
-            body:
-              application/json:
-                example: !include examples/epaonnistunut-kirjaus-response.json
-                schema: virhe-response
     /tarkastus:
       description: Tarkastusten kirjaaminen
       /tiestotarkastus:
