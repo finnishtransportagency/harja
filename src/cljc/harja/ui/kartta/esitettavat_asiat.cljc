@@ -307,25 +307,25 @@
                  :img    ikoni}
         :alue (maarittele-feature tp (valittu-fn? tp) ikoni)))))
 
-(defn- paikkaus-paallystys [tyyppi pt valittu-fn? teksti]
-  (let [tila (:tila pt)
+(defn- yllapitokohde [tyyppi yllapitokohde valittu-fn? teksti]
+  (let [tila (:tila-kartalla yllapitokohde)
         tila-teksti (str ", " ((fnil name "suunniteltu") tila))
         ikoni (ulkoasu/yllapidon-ikoni)
-        viiva (ulkoasu/yllapidon-viiva (valittu-fn? pt) (:avoin? pt) tila tyyppi)]
-    (assoc pt
-      :nimi (or (:nimi pt) teksti)
+        viiva (ulkoasu/yllapidon-viiva (valittu-fn? yllapitokohde) (:avoin? yllapitokohde) tila tyyppi)]
+    (assoc yllapitokohde
+      :nimi (or (:nimi yllapitokohde) teksti)
       :selite {:teksti (str teksti tila-teksti)
                :vari   (viivojen-varit-leveimmasta-kapeimpaan viiva)}
-      :alue (maarittele-feature pt (valittu-fn? pt)
+      :alue (maarittele-feature yllapitokohde (valittu-fn? yllapitokohde)
                                 ikoni
                                 viiva))))
 
 (defmethod asia-kartalle :paallystys [pt valittu-fn?]
-  (assoc (paikkaus-paallystys :paallystys pt valittu-fn? "Päällystys")
+  (assoc (yllapitokohde :paallystys pt valittu-fn? "Päällystys")
     :type :paallystys))
 
 (defmethod asia-kartalle :paikkaus [pt valittu-fn?]
-  (assoc (paikkaus-paallystys :paikkaus pt valittu-fn? "Paikkaus")
+  (assoc (yllapitokohde :paikkaus pt valittu-fn? "Paikkaus")
     :type :paikkaus))
 
 (let [varien-lkm (count ulkoasu/toteuma-varit-ja-nuolet)]

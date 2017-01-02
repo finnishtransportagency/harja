@@ -99,7 +99,7 @@
                                      (keep (fn [kohdeosa]
                                              (assoc (merge kohdeosa
                                                            (dissoc kohde :kohdeosat))
-                                               :tila (yllapitokohteet/yllapitokohteen-yksinkertainen-tila kohde)
+                                               :tila-kartalla (yllapitokohteet/yllapitokohteen-yksinkertainen-tila kohde)
                                                :tarkka-tila (yllapitokohteet/yllapitokohteen-tarkka-tila kohde)
                                                :avoin? (= (:paallystyskohde-id kohde) avoin-paallystysilmoitus)
                                                :kohdeosa kohdeosa
