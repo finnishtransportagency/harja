@@ -133,15 +133,15 @@
 
 
 (deftest poista-siltatarkastus
-  (let [ulkoinen-id 787878
-        tarkastusaika "2016-02-04T12:00:00Z"
+  (let [ulkoinen-id 787879
+        tarkastusaika "2016-02-01T12:00:00Z"
         siltatunnus (first (second (hae-siltatunnukset)))
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
                                                 (-> "test/resurssit/api/siltatarkastus.json"
                                                     slurp
                                                     (.replace "__ID__" (str ulkoinen-id))
-                                                    (.replace "__ETUNIMI__" "kek")
-                                                    (.replace "__SUKUNIMI__" "kek")
+                                                    (.replace "__ETUNIMI__" "Simo")
+                                                    (.replace "__SUKUNIMI__" "Sillantarkastaja")
                                                     (.replace "__SILTATUNNUS__" (str siltatunnus))
                                                     (.replace "__TARKASTUSAIKA__" tarkastusaika)))
         siltatarkastus-kannassa-ennen-poistoa (first (q (str "SELECT id, ulkoinen_id, tarkastaja, tarkastusaika FROM siltatarkastus WHERE poistettu IS NOT TRUE AND ulkoinen_id = '" ulkoinen-id "';")))
