@@ -211,10 +211,12 @@ SELECT
   ypko.tr_loppuetaisyys,
   pi.id   AS paallystysilmoitus_id,
   pi.tila AS paallystysilmoitus_tila,
-  ypk.aikataulu_kohde_alku as aloituspvm,
-  ypk.aikataulu_paallystys_loppu AS paallystysvalmispvm,
-  ypk.aikataulu_kohde_valmis AS kohdevalmispvm,
-  pi.tila
+  ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
+  ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
+  ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
+  ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppuvpm",
+  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
@@ -238,10 +240,12 @@ SELECT
   ypko.tr_loppuetaisyys,
   pi.id                                   AS paallystysilmoitus_id,
   pi.tila                                 AS paallystysilmoitus_tila,
-  ypk.aikataulu_kohde_alku as aloituspvm,
-  ypk.aikataulu_paallystys_loppu AS paallystysvalmispvm,
-  ypk.aikataulu_kohde_valmis AS kohdevalmispvm,
-  pi.tila
+  ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
+  ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
+  ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
+  ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppuvpm",
+  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
@@ -265,10 +269,12 @@ SELECT
   ypko.tr_loppuetaisyys,
   pi.id   AS paikkausilmoitus_id,
   pi.tila AS paikkausilmoitus_tila,
-  pi.aloituspvm,
-  pi.valmispvm_paikkaus AS paikkausvalmispvm,
-  pi.valmispvm_kohde AS kohdevalmispvm,
-  pi.tila
+  ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
+  ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
+  ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
+  ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppuvpm",
+  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
 FROM yllapitokohdeosa ypko
   LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = ypk.id
@@ -292,10 +298,12 @@ SELECT
   ypko.tr_loppuetaisyys,
   pi.id   AS paikkausilmoitus_id,
   pi.tila AS paikkausilmoitus_tila,
-  pi.aloituspvm,
-  pi.valmispvm_paikkaus AS paikkausvalmispvm,
-  pi.valmispvm_kohde AS kohdevalmispvm,
-  pi.tila
+  ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
+  ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
+  ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
+  ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppuvpm",
+  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
 FROM yllapitokohdeosa ypko
   LEFT JOIN yllapitokohde pk ON ypko.yllapitokohde = pk.id
   LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = pk.id
