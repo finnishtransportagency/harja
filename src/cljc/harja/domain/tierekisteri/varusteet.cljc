@@ -76,8 +76,11 @@
   {:otsikko (str/capitalize (:selite ominaisuus))
    :pakollinen? (:pakollinen ominaisuus)
    :nimi (keyword (:kenttatunniste ominaisuus))
-   :hae #(let [arvo (get-in % [:arvot (keyword (:kenttatunniste ominaisuus))])]
-           (if (= "" arvo) nil arvo))
+   :hae #(let [arvo                                                            (get-in % [:arvot (keyword (:kenttatunniste ominaisuus))])
+
+               #_(or (get-in % [:arvot (keyword (:kenttatunniste ominaisuus))])
+                        (get-in % [:varuste :tietue :tietolaji :arvot (:kenttatunniste ominaisuus)]))]
+           arvo)
    :aseta (fn [rivi arvo]
             (assoc-in rivi [:arvot (keyword (:kenttatunniste ominaisuus))] arvo))
    ;; Varusteen tunnistetta ei saa muokata koskaan

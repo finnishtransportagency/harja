@@ -57,7 +57,7 @@
      :toiminto-fn (fn [] (e! (v/->PoistaVaruste varuste)))}))
 
 (defn sarakkeet [e! tietolajin-listaus-skeema]
-  (when oikeus-varusteiden-muokkaamiseen?
+  (if oikeus-varusteiden-muokkaamiseen?
     (let [toiminnot {:nimi :toiminnot
                      :otsikko "Toiminnot"
                      :tyyppi :komponentti
@@ -75,7 +75,6 @@
 (defn varustehaku-varusteet [e! tietolajin-listaus-skeema varusteet]
   (log "---> tietolajin-listaus-skeema:" (pr-str tietolajin-listaus-skeema))
   (log "---> varusteet:" (pr-str varusteet))
-  ;; todo: jostain syystä ei osaa näyttää gridissä TR:n palauttamia tietoja. Tarkista miksi Tatun kanssa.
   [grid/grid
    {:otsikko "Tierekisteristä löytyneet varusteet"
     :tunniste (fn [varuste]
