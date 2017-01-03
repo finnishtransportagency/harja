@@ -135,7 +135,7 @@
    :puoli (first varusteet/tien-puolet)})
 
 (defn naytettavat-toteumat [valittu-toimenpide toteumat]
-  (if (and valittu-toimenpide (not valittu-toimenpide))
+  (if valittu-toimenpide
     (filter #(= valittu-toimenpide (:toimenpide %)) toteumat)
     toteumat))
 
@@ -159,6 +159,7 @@
 
   v/HaeVarusteToteumat
   (process-event [_ {valinnat :valinnat :as app}]
+    (log "--> VALINNAT" (pr-str valinnat))
     (let [haku-valmis! (t/send-async! v/->VarusteToteumatHaettu)]
       (go
         (let [{:keys [urakka-id sopimus-id aikavali tienumero]} valinnat

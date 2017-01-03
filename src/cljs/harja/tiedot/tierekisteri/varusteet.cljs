@@ -28,7 +28,6 @@
      :loppupvm (:loppupvm tietue)}))
 
 ;; Määritellään varustehaun UI tapahtumat
-;;
 
 ;; Päivittää varustehaun hakuehdot
 (defrecord AsetaVarusteidenHakuehdot [hakuehdot])
@@ -36,6 +35,8 @@
 (defrecord HaeVarusteita [])
 (defrecord VarusteHakuTulos [tietolaji varusteet])
 (defrecord VarusteHakuEpaonnistui [virhe])
+
+;; Toimenpiteet Tierekisteriin
 (defrecord PoistaVaruste [varuste])
 (defrecord MuokkausTierekisteriinOnnistui [toiminto viesti])
 (defrecord MuokkausTierekisteriinEpaonnistui [toiminto virhe])
