@@ -33,6 +33,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+;; todo: muista ottaa pois päältä ennen mergeämistä!
 (def tr-kaytossa? true)
 
 (def nayta-max-toteumaa 500)
