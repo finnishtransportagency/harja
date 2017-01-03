@@ -26,9 +26,6 @@
 (def gridia-muokataan? (reaction (not (empty? @muokkauksessa-olevat-gridit)))) ;; Tarkoitus on, että vain yhtä gridiä muokataan kerralla
 (def +rivimaara-jonka-jalkeen-napit-alaskin+ 20)
 
-(add-watch muokkauksessa-olevat-gridit ::debug (fn [_ _ old new]
-                                                 (log "Muokkauksessa olevat gridit: " (pr-str new))))
-
 ;; Otsikot
 ;; Rivi gridin datassa voi olla Otsikko record, jolloin se näytetään väliotsikkona.
 
