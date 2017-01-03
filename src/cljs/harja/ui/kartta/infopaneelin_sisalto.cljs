@@ -22,7 +22,8 @@
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
-            [harja.domain.tierekisteri :as tierekisteri]))
+            [harja.domain.tierekisteri :as tierekisteri]
+            [harja.domain.tierekisteri :as tierekisteri-domain]))
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
 
@@ -174,16 +175,22 @@
 (defmethod infopaneeli-skeema :laatupoikkeama [laatupoikkeama]
   (let [paatos #(get-in % [:paatos :paatos])
         kasittelyaika #(get-in % [:paatos :kasittelyaika])]
-    {:tyyppi  :laatupoikkeama
+    {:tyyppi :laatupoikkeama
      :jarjesta-fn :aika
      :otsikko (str "Laatupoikkeama " (pvm/pvm-aika (:aika laatupoikkeama)))
-     :tiedot  [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
-               {:otsikko "Tekijä" :hae #(str (:tekijanimi %) ", " (name (:tekija %)))}
-               (when (and (paatos laatupoikkeama) (kasittelyaika laatupoikkeama))
-                 {:otsikko "Päätös"
-                  :hae     #(str (laatupoikkeamat/kuvaile-paatostyyppi (paatos %))
-                                 " (" (pvm/pvm-aika (kasittelyaika %)) ")")})]
-     :data    laatupoikkeama}))
+     :tiedot [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
+              {:otsikko "Tekijä" :hae #(str (:tekijanimi %) ", " (name (:tekija %)))}
+              (when (:yllapitokohde laatupoikkeama)
+                {:otsikko "Tierekisteriosoite" :hae #(if-let [yllapitokohde-tie (get-in % [:yllapitokohde :tr])]
+                                                       (tierekisteri-domain/tierekisteriosoite-tekstina
+                                                         yllapitokohde-tie)
+                                                       (tierekisteri-domain/tierekisteriosoite-tekstina
+                                                         (:tr %)))})
+              (when (and (paatos laatupoikkeama) (kasittelyaika laatupoikkeama))
+                {:otsikko "Päätös"
+                 :hae #(str (laatupoikkeamat/kuvaile-paatostyyppi (paatos %))
+                            " (" (pvm/pvm-aika (kasittelyaika %)) ")")})]
+     :data laatupoikkeama}))
 
 (defmethod infopaneeli-skeema :suljettu-tieosuus [osuus]
   {:tyyppi :suljettu-tieosuus
