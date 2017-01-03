@@ -107,10 +107,6 @@
         :nimi :tekninen-osa
         :tyyppi :checkbox
         :fmt #(if % "Tekninen osa tarkastettu" "Teknistä osaa ei tarkastettu")}
-       {:teksti "Hinnan muutokset tarkastettu"
-        :nimi :taloudellinen-osa
-        :tyyppi :checkbox
-        :fmt #(if % "Hinnan muutokset tarkastettu" "Hinnan muutoksia ei tarkastettu")}
        {:otsikko "Lisätiedot"
         :nimi :lisatiedot
         :tyyppi :text
@@ -160,7 +156,7 @@
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis.
   Tilaaja voi muokata, urakoitsija voi tarkastella."
-  [urakka {:keys [tila tekninen-osa taloudellinen-osa] :as lomakedata-nyt}
+  [urakka {:keys [tila tekninen-osa] :as lomakedata-nyt}
    lukittu? muokkaa!]
   (let [muokattava? (and
                       (oikeudet/on-muu-oikeus? "päätös"
@@ -173,21 +169,15 @@
 
      [:h3 "Käsittely"]
      [kasittelytiedot "Tekninen osa" muokattava? valmistumispvm tekninen-osa
-      #(muokkaa! assoc :tekninen-osa %)]
-
-     [kasittelytiedot "Hinnan muutokset" muokattava? valmistumispvm taloudellinen-osa
-      #(muokkaa! assoc :taloudellinen-osa %)]]))
+      #(muokkaa! assoc :tekninen-osa %)]]))
 
 (defn tallennus
-  [urakka {:keys [valmispvm-kohde tekninen-osa taloudellinen-osa
-                  tila] :as lomake} valmis-tallennettavaksi? tallennus-onnistui]
+  [urakka {:keys [tekninen-osa tila] :as lomake} valmis-tallennettavaksi? tallennus-onnistui]
   (let [paatos-tekninen-osa (:paatos tekninen-osa)
-        paatos-taloudellinen-osa (:paatos taloudellinen-osa)
         huomautusteksti
         (cond (and (not= :lukittu tila)
-                   (= :hyvaksytty paatos-tekninen-osa)
-                   (= :hyvaksytty paatos-taloudellinen-osa))
-              "Ilmoituksen molemmat osat on hyväksytty, ilmoitus lukitaan tallennuksen yhteydessä."
+                   (= :hyvaksytty paatos-tekninen-osa))
+              "Päällystysilmoitus hyväksytty, ilmoitus lukitaan tallennuksen yhteydessä."
               :default nil)
         urakka-id (:id urakka)
         [sopimus-id _] @u/valittu-sopimusnumero]
@@ -285,14 +275,13 @@
                             :uusi-kommentti (r/wrap (:uusi-kommentti lomakedata-nyt)
                                                     #(muokkaa! assoc :uusi-kommentti %))}
                            (:kommentit lomakedata-nyt)])})]
-       lomakedata-nyt]
-      (when nayta-kasittelyosiot?
-        [asiatarkastus urakka lomakedata-nyt lukittu? muokkaa!])]
+       lomakedata-nyt]]
 
      [:div.col-md-6
       (when nayta-kasittelyosiot?
         [:div
-         [kasittely urakka lomakedata-nyt lukittu? muokkaa!]])]]))
+         [kasittely urakka lomakedata-nyt lukittu? muokkaa!]
+         [asiatarkastus urakka lomakedata-nyt lukittu? muokkaa!]])]]))
 
 (defn paallystysilmoitus-tekninen-osa
   [urakka {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa :as lomakedata-nyt}
@@ -491,43 +480,6 @@
                     :leveys "30%"}]
                   alustalle-tehdyt-toimet]])]))))
 
-(defn paallystysilmoitus-taloudellinen-osa [urakka lomakedata-nyt voi-muokata?
-                                            grid-wrap wrap-virheet muokkaa!]
-  (let [toteutuneet-maarat (grid-wrap [:ilmoitustiedot :tyot])]
-    [:fieldset.lomake-osa
-     [:h3 "Muutosten hallinta"]
-
-     [grid/muokkaus-grid
-      {:otsikko "Toteutuneet määrät"
-       :voi-muokata? voi-muokata?
-       :voi-kumota? false
-       :uusi-id (inc (count @toteutuneet-maarat))
-       :virheet (wrap-virheet :toteutuneet-maarat)}
-      [{:otsikko "Päällyste\u00ADtyön tyyppi"
-        :nimi :tyyppi
-        :tyyppi :valinta
-        :valinta-arvo :koodi
-        :valinta-nayta #(if % (:nimi %) "- Valitse työ -")
-        :valinnat pot/+paallystystyon-tyypit-lomakkeella+
-        :leveys "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-       {:otsikko "Työ" :nimi :tyo :tyyppi :string :leveys "30%" :pituus-max 256
-        :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-       {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 20
-        :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-       {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :positiivinen-numero :tasaa :oikea
-        :kokonaisosan-maara 6 :leveys "15%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-       {:otsikko "Toteu\u00ADtunut määrä" :nimi :toteutunut-maara :leveys "15%" :tasaa :oikea
-        :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-       {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false)
-        :hae (fn [rivi] (- (:toteutunut-maara rivi) (:tilattu-maara rivi)))}
-       {:otsikko "Yks.\u00ADhinta" :nimi :yksikkohinta :leveys "10%" :tasaa :oikea
-        :tyyppi :positiivinen-numero :kokonaisosan-maara 4 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-       {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :tasaa :oikea
-        :muokattava? (constantly false) :tyyppi :numero
-        :hae (fn [rivi]
-               (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
-      toteutuneet-maarat]]))
-
 (defn paallystysilmoituslomake [urakka {:keys [yllapitokohde-id yllapitokohdetyyppi] :as lomake}
                                 _ muokkaa! historia tallennus-onnistui]
   (komp/luo
@@ -548,11 +500,6 @@
                                                  (:paatos (:tekninen-osa lomakedata-nyt)))
                                            (false? lukittu?)
                                            kirjoitusoikeus?)
-            taloudellinen-osa-voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
-                                                (not= :hyvaksytty
-                                                      (:paatos (:taloudellinen-osa lomakedata-nyt)))
-                                                (false? lukittu?)
-                                                kirjoitusoikeus?)
             alustatoimet-voi-muokata? (and tekninen-osa-voi-muokata?
                                            (not (= "sora" yllapitokohdetyyppi)))
 
@@ -567,22 +514,14 @@
 
          [:h2 "Päällystysilmoitus"]
 
-         ;; Perustiedot: päivämäärät, asiatarkastus
          [paallystysilmoitus-perustiedot urakka lomakedata-nyt lukittu? kirjoitusoikeus? muokkaa!]
 
          [:div {:style {:float "right"}} [historia/kumoa historia]]
-         ;; Tekninen osa: tierekisteriosoitteet, toimenpiteen tiedot,
-         ;; kiviaines ja sideaine, alustalle tehdyt toimet
          [paallystysilmoitus-tekninen-osa
           urakka lomakedata-nyt tekninen-osa-voi-muokata? alustatoimet-voi-muokata?
           grid-wrap wrap-virheet muokkaa!]
 
-         ;; Taloudellinen osa: toteutuneet määrät hintoineen
-         [paallystysilmoitus-taloudellinen-osa
-          urakka lomakedata-nyt taloudellinen-osa-voi-muokata?
-          grid-wrap wrap-virheet muokkaa!]
-
-         ;; Yhteenveto hinnoista
+         ;; FIXME NÄMÄ TIEDOT PITÄÄ HAKEA UUDESTA TAULUSTAN NYT
          [yhteenveto lomakedata-nyt]
 
          [tallennus urakka lomakedata-nyt valmis-tallennettavaksi? tallennus-onnistui]]))))
@@ -610,10 +549,6 @@
                             :aloitettu 3
                             4))
             (fn [toteuma] (case (:paatos-tekninen-osa toteuma)
-                            :hyvaksytty 0
-                            :hylatty 1
-                            3))
-            (fn [toteuma] (case (:paatos-taloudellinen-osa toteuma)
                             :hyvaksytty 0
                             :hylatty 1
                             3)))
