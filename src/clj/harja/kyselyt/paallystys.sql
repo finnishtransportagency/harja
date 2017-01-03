@@ -6,7 +6,6 @@ SELECT
   nimi,
   kohdenumero,
   pi.paatos_tekninen_osa      AS "paatos-tekninen-osa",
-  pi.paatos_taloudellinen_osa AS "paatos-taloudellinen-osa",
   sopimuksen_mukaiset_tyot    AS "sopimuksen-mukaiset-tyot",
   arvonvahennykset,
   bitumi_indeksi              AS "bitumi-indeksi",
@@ -49,15 +48,11 @@ SELECT
   ypk.yllapitokohdetyyppi,
   ilmoitustiedot,
   paatos_tekninen_osa             AS "tekninen-osa_paatos",
-  paatos_taloudellinen_osa        AS "taloudellinen-osa_paatos",
   perustelu_tekninen_osa          AS "tekninen-osa_perustelu",
-  perustelu_taloudellinen_osa     AS "taloudellinen-osa_perustelu",
   kasittelyaika_tekninen_osa      AS "tekninen-osa_kasittelyaika",
-  kasittelyaika_taloudellinen_osa AS "taloudellinen-osa_kasittelyaika",
   asiatarkastus_pvm               AS "asiatarkastus_tarkastusaika",
   asiatarkastus_tarkastaja        AS "asiatarkastus_tarkastaja",
   asiatarkastus_tekninen_osa      AS "asiatarkastus_tekninen-osa",
-  asiatarkastus_taloudellinen_osa AS "asiatarkastus_taloudellinen-osa",
   asiatarkastus_lisatiedot        AS "asiatarkastus_lisatiedot",
   ypko.id                         AS kohdeosa_id,
   ypko.nimi                       AS kohdeosa_nimi,
@@ -91,15 +86,11 @@ SELECT
   tila,
   ilmoitustiedot,
   paatos_tekninen_osa             AS "tekninen-osa_paatos",
-  paatos_taloudellinen_osa        AS "taloudellinen-osa_paatos",
   perustelu_tekninen_osa          AS "tekninen-osa_perustelu",
-  perustelu_taloudellinen_osa     AS "taloudellinen-osa_perustelu",
   kasittelyaika_tekninen_osa      AS "tekninen-osa_kasittelyaika",
-  kasittelyaika_taloudellinen_osa AS "taloudellinen-osa_kasittelyaika",
   asiatarkastus_pvm               AS "asiatarkastus_tarkastusaika",
   asiatarkastus_tarkastaja        AS "asiatarkastus_tarkastaja",
   asiatarkastus_tekninen_osa      AS "asiatarkastus_tekninen-osa",
-  asiatarkastus_taloudellinen_osa AS "asiatarkastus_taloudellinen-osa",
   asiatarkastus_lisatiedot        AS "asiatarkastus_lisatiedot"
 FROM paallystysilmoitus pi
 WHERE paallystyskohde = :paallystyskohde;
@@ -125,11 +116,8 @@ WHERE paallystyskohde = :id
 UPDATE paallystysilmoitus
 SET
   paatos_tekninen_osa             = :paatos_tekninen_osa :: paallystysilmoituksen_paatostyyppi,
-  paatos_taloudellinen_osa        = :paatos_taloudellinen_osa :: paallystysilmoituksen_paatostyyppi,
   perustelu_tekninen_osa          = :perustelu_tekninen_osa,
-  perustelu_taloudellinen_osa     = :perustelu_taloudellinen_osa,
   kasittelyaika_tekninen_osa      = :kasittelyaika_tekninen_osa,
-  kasittelyaika_taloudellinen_osa = :kasittelyaika_taloudellinen_osa,
   muokattu                        = NOW(),
   muokkaaja                       = :muokkaaja
   WHERE paallystyskohde = :id
@@ -144,7 +132,6 @@ SET
   asiatarkastus_pvm               = :asiatarkastus_pvm,
   asiatarkastus_tarkastaja        = :asiatarkastus_tarkastaja,
   asiatarkastus_tekninen_osa      = :asiatarkastus_tekninen_osa,
-  asiatarkastus_taloudellinen_osa = :asiatarkastus_taloudellinen_osa,
   asiatarkastus_lisatiedot        = :asiatarkastus_lisatiedot,
   muokattu                        = NOW(),
   muokkaaja                       = :muokkaaja
