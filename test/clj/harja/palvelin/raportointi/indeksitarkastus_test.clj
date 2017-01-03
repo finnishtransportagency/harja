@@ -61,7 +61,6 @@
 
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Indeksitarkistusraportti Oulun alueurakka 2014-2019 01.08.2015 - 31.08.2015")
-
     (apurit/tarkista-taulukko-rivit
       taulukko
 
@@ -69,16 +68,16 @@
             akilliset-hoitotyot sanktiot suolabonus-ja-sakko
             yhteensa & _ ]]
         (and (= kuukausi "elo")
-             (=marginaalissa? (apurit/raporttisolun-arvo kokhint) 228.38M)
-             (=marginaalissa? (apurit/raporttisolun-arvo ykshint) 50.75M)
-             (=marginaalissa? (apurit/raporttisolun-arvo erilliskust) 16.92M)
+             (=marginaalissa? (apurit/raporttisolun-arvo kokhint) 232.75M)
+             (=marginaalissa? (apurit/raporttisolun-arvo ykshint) 51.72M)
+             (=marginaalissa? (apurit/raporttisolun-arvo erilliskust) 17.24M)
              (=marginaalissa? (apurit/raporttisolun-arvo bonus) 4.07)
-             (=marginaalissa? (apurit/raporttisolun-arvo muutos-ja-lisatyot) 33.83M)
-             (=marginaalissa? (apurit/raporttisolun-arvo vahinkojen-korjaukset) 16.92M)
-             (=marginaalissa? (apurit/raporttisolun-arvo akilliset-hoitotyot) 16.92M)
-             (=marginaalissa? (apurit/raporttisolun-arvo sanktiot) -30.45M)
-             (=marginaalissa? (apurit/raporttisolun-arvo suolabonus-ja-sakko) -94.99M)
-             (=marginaalissa? (apurit/raporttisolun-arvo yhteensa) 242.34M)
+             (=marginaalissa? (apurit/raporttisolun-arvo muutos-ja-lisatyot) 34.48M)
+             (=marginaalissa? (apurit/raporttisolun-arvo vahinkojen-korjaukset) 17.24M)
+             (=marginaalissa? (apurit/raporttisolun-arvo akilliset-hoitotyot) 17.24M)
+             (=marginaalissa? (apurit/raporttisolun-arvo sanktiot) -31.03M)
+             (=marginaalissa? (apurit/raporttisolun-arvo suolabonus-ja-sakko) -104.52M)
+             (=marginaalissa? (apurit/raporttisolun-arvo yhteensa) 239.20M)
 
              (=marginaalissa? yhteensa laskutusyhteenveto-indeksien-nurkkasumma)))
       (fn [[yht & _]]
