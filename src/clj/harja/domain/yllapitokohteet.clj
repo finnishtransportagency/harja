@@ -118,3 +118,62 @@
                 alustatoimet))]
     (when (not (empty? virheet))
       (virheet/heita-poikkeus +kohteissa-viallisia-sijainteja+ virheet))))
+
+
+(defn yllapitokohteen-tarkka-tila [yllapitokohde]
+  ;; Järjestys on tärkeä, koska nämä menee yleensä tässä aikajärjestyksessä.
+  (cond (:kohde-valmispvm yllapitokohde)
+        :kohde-valmis
+
+        (:tiemerkinta-loppupvm yllapitokohde)
+        :tiemerkinta-valmis
+
+        (:tiemerkinta-alkupvm yllapitokohde)
+        :tiemerkinta-aloitettu
+
+        (:paallystys-loppupvm yllapitokohde)
+        :paallystys-valmis
+
+        (:paallystys-alkupvm yllapitokohde)
+        :paallystys-aloitettu
+
+        (:paikkaus-loppupvm yllapitokohde)
+        :paikkaus-valmis
+
+        (:paikkaus-alkupvm yllapitokohde)
+        :paikkaus-aloitettu
+
+        (:kohde-alkupvm yllapitokohde)
+        :kohde-aloitettu
+
+        :default
+        :ei-aloitettu))
+
+(defn yllapitokohteen-tila-kartalla [yllapitokohde]
+  ;; Järjestys on tärkeä, koska nämä menee yleensä tässä aikajärjestyksessä.
+  (cond (:kohde-valmispvm yllapitokohde)
+        :valmis
+
+        (:tiemerkinta-loppupvm yllapitokohde)
+        :valmis
+
+        (:tiemerkinta-alkupvm yllapitokohde)
+        :valmis
+
+        (:paallystys-loppupvm yllapitokohde)
+        :valmis
+
+        (:paallystys-alkupvm yllapitokohde)
+        :aloitettu
+
+        (:paikkaus-loppupvm yllapitokohde)
+        :aloitettu
+
+        (:paikkaus-alkupvm yllapitokohde)
+        :aloitettu
+
+        (:kohde-alkupvm yllapitokohde)
+        :aloitettu
+
+        :default
+        nil))
