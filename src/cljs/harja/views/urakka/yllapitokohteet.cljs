@@ -462,9 +462,11 @@
        @osan-pituus])))
 
 (defn maaramuutokset [yllapitokohde-id]
-  (let [maaramuutokset (atom {})]
-    [grid/muokkaus-grid
+  (let [maaramuutokset (atom [])]
+    [grid/grid
      {:otsikko "Määrämuutokset"
+      :tyhja "Ei määrämuutoksia"
+      :tallenna #(log "TODO") ;; TODO TALLENNUS
       :voi-muokata? true} ;; TODO OIKEUSTARKISTUS
      [{:otsikko "Päällyste\u00ADtyön tyyppi"
        :nimi :tyyppi
@@ -489,7 +491,7 @@
        :muokattava? (constantly false) :tyyppi :numero
        :hae (fn [rivi]
               (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
-     maaramuutokset])) ;; TODO HAEPPAS DATA
+     @maaramuutokset])) ;; TODO HAEPPAS DATA
 
 (defn kohteen-vetolaatikko [_ _ _]
   (fn [urakka kohteet-atom rivi]
