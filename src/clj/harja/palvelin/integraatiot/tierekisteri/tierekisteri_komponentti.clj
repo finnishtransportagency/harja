@@ -82,7 +82,8 @@
           "paivitetty" (paivita-tietue this tiedot)
           "poistettu" (poista-tietue this tiedot)
           "tarkastus" (paivita-tietue this tiedot)
-          (log/warn (format "Ei voida lähettää varustetoteumaa (id: %s) Tierekisteriin. Tuntematon toimenpide." varustetoteuma-id (:toimenpide varustetoteuma)))))
+          (log/warn (format "Ei voida lähettää varustetoteumaa (id: %s) Tierekisteriin. Tuntematon toimenpide: %s."
+                            varustetoteuma-id (:toimenpide varustetoteuma)))))
       (do
         (toteumat-q/merkitse-varustetoteuma-lahetetyksi! (:db this) "lahetetty" varustetoteuma-id)
         (log/warn (format "Ei voida lähettää varustetoteumaa (id: %s) Tierekisteriin. Toteumaa ei löydy." varustetoteuma-id))))

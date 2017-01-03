@@ -16,6 +16,9 @@
 (defrecord HaeVarusteita [])
 (defrecord VarusteHakuTulos [tietolaji varusteet])
 (defrecord VarusteHakuEpaonnistui [virhe])
+(defrecord PoistaVaruste [varuste])
+(defrecord MuokkausTierekisteriinOnnistui [toiminto viesti])
+(defrecord MuokkausTierekisteriinEpaonnistui [toiminto virhe])
 
 
 (extend-protocol t/Event
@@ -53,4 +56,32 @@
   VarusteHakuEpaonnistui
   (process-event [{virhe :virhe} app]
     (log "VIRHE HAETTAESSA: " (pr-str virhe))
+    app)
+
+  MuokkausTierekisteriinOnnistui
+  (process-event [{toiminto :toiminto viesti :viesti} app]
+    (log "---> toiminto: " (pr-str toiminto) ", viesti: " (pr-str viesti))
+    ;; todo: nayta virhe
+    app)
+
+  MuokkausTierekisteriinEpaonnistui
+  (process-event [{toiminto :toiminto virhe :virhe vastaus :vastaus} app]
+    (log "---> toiminto: " (pr-str toiminto) ", virhe: " (pr-str virhe) ", vastaus: " (pr-str vastaus))
+    ;; todo: nayta viesti
+    ;; todo: laukaise haku uudestaan samoilla parametreillä
+    app)
+
+  PoistaVaruste
+  (process-event [{varuste :varuste} app]
+    (let [tulos! (t/send-async! map->MuokkausTierekisteriinOnnistui)
+          virhe! (t/send-async! ->MuokkausTierekisteriinEpaonnistui)]
+      (go
+        (log "---> varuste: " (pr-str varuste))
+        (let [vastaus (<! (k/post! :poista-varuste varuste))]
+          (log "VASTAUS: " (pr-str vastaus))
+          (if (or (k/virhe? vastaus)
+                  (not (:onnistunut vastaus)))
+            (virhe! vastaus)
+            (tulos! vastaus)))))
+    ;; todo: assoccaa appiin palautetut varusteet ja varustetoteumat näytettäväksi
     app))

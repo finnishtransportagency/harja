@@ -823,5 +823,6 @@
       :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
       :hae-kokonaishintaisen-toteuman-tiedot
       :urakan-varustetoteumat
+      :tallenna-varustetoteuma
       :hae-toteuman-reitti-ja-tr-osoite)
     this))
