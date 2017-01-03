@@ -4,8 +4,28 @@
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
             [harja.loki :refer [log]]
-            [harja.domain.tierekisteri.varusteet :as varusteet])
+            [harja.domain.tierekisteri.varusteet :as varusteet]
+            [harja.tiedot.urakka.toteumat.varusteet :as varuste-tiedot]
+            [harja.tiedot.urakka :as urakka]
+            [harja.tiedot.navigaatio :as nav]
+            [clojure.walk :as walk])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+(defn varustetoteuma [{:keys [tietue]} toiminto]
+  (let [tr-osoite (get-in tietue [:sijainti :tie])]
+    {:arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
+     :puoli (:puoli tr-osoite)
+     :ajorata (:ajr tr-osoite)
+     :tierekisteriosoite {:numero (:numero tr-osoite)
+                          :alkuosa (:aosa tr-osoite)
+                          :alkuetaisyys (:aet tr-osoite)
+                          :loppuosa (:losa tr-osoite)
+                          :loppuetaisyys (:let tr-osoite)}
+     :tietolaji (get-in tietue [:tietolaji :tunniste])
+     :toiminto toiminto
+     :urakka-id @nav/valittu-urakka-id
+     :alkupvm (:alkupvm tietue)
+     :loppupvm (:loppupvm tietue)}))
 
 ;; Määritellään varustehaun UI tapahtumat
 ;;
@@ -19,7 +39,6 @@
 (defrecord PoistaVaruste [varuste])
 (defrecord MuokkausTierekisteriinOnnistui [toiminto viesti])
 (defrecord MuokkausTierekisteriinEpaonnistui [toiminto virhe])
-
 
 (extend-protocol t/Event
   AsetaVarusteidenHakuehdot
@@ -62,13 +81,14 @@
   (process-event [{toiminto :toiminto viesti :viesti} app]
     (log "---> toiminto: " (pr-str toiminto) ", viesti: " (pr-str viesti))
     ;; todo: nayta virhe
+    ;; todo: assoccaa appiin palautetut varusteet ja varustetoteumat näytettäväksi
     app)
 
   MuokkausTierekisteriinEpaonnistui
   (process-event [{toiminto :toiminto virhe :virhe vastaus :vastaus} app]
     (log "---> toiminto: " (pr-str toiminto) ", virhe: " (pr-str virhe) ", vastaus: " (pr-str vastaus))
     ;; todo: nayta viesti
-    ;; todo: laukaise haku uudestaan samoilla parametreillä
+    ;; todo: assoccaa appiin palautetut varusteet ja varustetoteumat näytettäväksi
     app)
 
   PoistaVaruste
@@ -76,12 +96,15 @@
     (let [tulos! (t/send-async! map->MuokkausTierekisteriinOnnistui)
           virhe! (t/send-async! ->MuokkausTierekisteriinEpaonnistui)]
       (go
-        (log "---> varuste: " (pr-str varuste))
-        (let [vastaus (<! (k/post! :poista-varuste varuste))]
+        (let [varustetoteuma (varustetoteuma varuste :poistettu)
+              vastaus (<! (varuste-tiedot/tallenna-varustetoteuma
+                            {:urakka-id (:id @nav/valittu-urakka)
+                             :sopimus-id (first @urakka/valittu-sopimusnumero)
+                             :aikavali @urakka/valittu-aikavali}
+                            varustetoteuma))]
           (log "VASTAUS: " (pr-str vastaus))
           (if (or (k/virhe? vastaus)
                   (not (:onnistunut vastaus)))
-            (virhe! vastaus)
-            (tulos! vastaus)))))
-    ;; todo: assoccaa appiin palautetut varusteet ja varustetoteumat näytettäväksi
+            (virhe! {:toiminto :poisto :vastaus vastaus :viesti "Varusteen poistossa tapahtui virhe."})
+            (tulos! {:toiminto :poisto :viesti "Varuste poistettu onnistuneesti."})))))
     app))

@@ -220,8 +220,6 @@
 (defn varustetoteumalomake [e! valinnat varustetoteuma]
   (let [muokattava? (:muokattava? varustetoteuma)
         ominaisuudet (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))]
-
-    (log "---> [TR]: " (pr-str ominaisuudet))
     [:span.varustetoteumalomake
      [napit/takaisin "Takaisin varusteluetteloon"
       #(e! (v/->TyhjennaValittuToteuma))]

@@ -228,18 +228,6 @@
              (muodosta-tietueiden-hakuvastaus tierekisteri tulos))
       tulos)))
 
-
-(defn poista-varuste
-  "TODO"
-  [user tierekisteri varuste]
-  (println "---> POISTETAAN VARUSTE: " varuste)
-  ;; todo: kirjaa varustetoteuma
-  ;; todo: lähetä tierekisteriin
-  ;; todo: hae varustetoteumat
-  ;; todo: hae varusteet
-  ;; todo: palauta responsessa varustetotuemat & varusteet tierekisteristä
-  {:onnistunut true})
-
 (defrecord Varusteet []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki tierekisteri :tierekisteri :as this}]
@@ -293,11 +281,6 @@
                       (fn [user tiedot]
                         (async
                           (hae-varusteita user tierekisteri tiedot))))
-
-    (julkaise-palvelu http :poista-varuste
-                      (fn [user tiedot]
-                        (async
-                          (poista-varuste user tierekisteri tiedot))))
     this)
 
   (stop [{http :http-palvelin :as this}]

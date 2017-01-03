@@ -104,6 +104,7 @@
                                        tierekisteriosoite
                                        alkupvm
                                        loppupvm] :as toteuma}]
+  (log "---> toteuma:" (pr-str toteuma))
   (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
         toteuma {:arvot arvot
                  :sijainti sijainti
@@ -141,9 +142,9 @@
 
 
 (defn hae-ajoradat [{vanha-tr :tierekisteriosoite}
-                     {uusi-tr :tierekisteriosoite}
-                     haku-valmis!
-                     virhe!]
+                    {uusi-tr :tierekisteriosoite}
+                    haku-valmis!
+                    virhe!]
   (when (and uusi-tr
              (or (not (= (:numero uusi-tr) (:numero vanha-tr)))
                  (not (= (:alkuosa uusi-tr) (:alkuosa vanha-tr)))))
