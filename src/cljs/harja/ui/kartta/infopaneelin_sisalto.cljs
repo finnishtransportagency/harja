@@ -180,12 +180,16 @@
      :otsikko (str "Laatupoikkeama " (pvm/pvm-aika (:aika laatupoikkeama)))
      :tiedot [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
               {:otsikko "Tekijä" :hae #(str (:tekijanimi %) ", " (name (:tekija %)))}
+              {:otsikko "Tierekisteriosoite" :hae #(if-let [yllapitokohde-tie (get-in % [:yllapitokohde :tr])]
+                                                     (tierekisteri-domain/tierekisteriosoite-tekstina
+                                                       yllapitokohde-tie)
+                                                     (tierekisteri-domain/tierekisteriosoite-tekstina
+                                                       (:tr %)))}
               (when (:yllapitokohde laatupoikkeama)
-                {:otsikko "Tierekisteriosoite" :hae #(if-let [yllapitokohde-tie (get-in % [:yllapitokohde :tr])]
-                                                       (tierekisteri-domain/tierekisteriosoite-tekstina
-                                                         yllapitokohde-tie)
-                                                       (tierekisteri-domain/tierekisteriosoite-tekstina
-                                                         (:tr %)))})
+                {:otsikko "Kohde" :hae #(let [yllapitokohde (:yllapitokohde %)]
+                                          (str (:numero yllapitokohde)
+                                               ", "
+                                               (:nimi yllapitokohde)))})
               (when (and (paatos laatupoikkeama) (kasittelyaika laatupoikkeama))
                 {:otsikko "Päätös"
                  :hae #(str (laatupoikkeamat/kuvaile-paatostyyppi (paatos %))
