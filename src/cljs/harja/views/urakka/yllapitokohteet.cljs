@@ -461,17 +461,51 @@
        kohde
        @osan-pituus])))
 
+(defn maaramuutokset [yllapitokohde-id]
+  (let [maaramuutokset (atom {})]
+    [grid/muokkaus-grid
+     {:otsikko "Määrämuutokset"
+      :voi-muokata? true} ;; TODO OIKEUSTARKISTUS
+     [{:otsikko "Päällyste\u00ADtyön tyyppi"
+       :nimi :tyyppi
+       :tyyppi :valinta
+       :valinta-arvo :koodi
+       :valinta-nayta #(if % (:nimi %) "- Valitse työ -")
+       :valinnat pot/+paallystystyon-tyypit-lomakkeella+
+       :leveys "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+      {:otsikko "Työ" :nimi :tyo :tyyppi :string :leveys "30%" :pituus-max 256
+       :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+      {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 20
+       :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+      {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :positiivinen-numero :tasaa :oikea
+       :kokonaisosan-maara 6 :leveys "15%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+      {:otsikko "Toteu\u00ADtunut määrä" :nimi :toteutunut-maara :leveys "15%" :tasaa :oikea
+       :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+      {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false)
+       :hae (fn [rivi] (- (:toteutunut-maara rivi) (:tilattu-maara rivi)))}
+      {:otsikko "Yks.\u00ADhinta" :nimi :yksikkohinta :leveys "10%" :tasaa :oikea
+       :tyyppi :positiivinen-numero :kokonaisosan-maara 4 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+      {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :tasaa :oikea
+       :muokattava? (constantly false) :tyyppi :numero
+       :hae (fn [rivi]
+              (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
+     maaramuutokset])) ;; TODO HAEPPAS DATA
+
 (defn kohteen-vetolaatikko [_ _ _]
   (fn [urakka kohteet-atom rivi]
     (if @grid/gridia-muokataan?
       [:span "Kohteen tierekisterikohteet ovat muokattavissa kohteen tallennuksen jälkeen."]
-      [yllapitokohdeosat-kohteelle urakka kohteet-atom rivi])))
+      [:div
+       [yllapitokohdeosat-kohteelle urakka kohteet-atom rivi]
+       [maaramuutokset (:id rivi)]])))
 
 (defn hae-osan-pituudet [grid osan-pituudet-teille]
   (let [tiet (into #{} (map (comp :tr-numero second)) (grid/hae-muokkaustila grid))]
     (doseq [tie tiet :when (not (contains? @osan-pituudet-teille tie))]
       (go
         (swap! osan-pituudet-teille assoc tie (<!(vkm/tieosien-pituudet tie)))))))
+
+
 
 (defn yllapitokohteet [urakka kohteet-atom optiot]
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
