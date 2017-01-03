@@ -325,8 +325,8 @@ SELECT
   ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
   ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
 FROM yllapitokohdeosa ypko
-  LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = pk.id
-  LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = pk.id
+  LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
+  LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = ypk.id
 WHERE pk.poistettu IS NOT TRUE AND
       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku));
 
