@@ -12,7 +12,6 @@
          (reaction
            @laatupoikkeamat/urakan-laatupoikkeamat
            (when @karttataso-laatupoikkeamat
-             (log "[LP] LP:t " (pr-str @laatupoikkeamat/urakan-laatupoikkeamat))
              (kartalla-esitettavaan-muotoon
                @laatupoikkeamat/urakan-laatupoikkeamat
                @laatupoikkeamat/valittu-laatupoikkeama
