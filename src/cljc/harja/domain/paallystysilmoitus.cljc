@@ -258,14 +258,6 @@
     :verkon-sijainti +verkon-sijainti+
     (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+)}])
 
-(def paallystysilmoitus-tyot
-  [{:tyyppi +paallystystyon-tyyppi+
-    :tyo s/Str
-    :tilattu-maara s/Num
-    :toteutunut-maara s/Num
-    :yksikko s/Str
-    :yksikkohinta s/Num}])
-
 ;; Kantaan tallennettavan päällystysilmoituksen ilmoitustiedot
 (def +paallystysilmoitus+
   {;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
@@ -274,10 +266,7 @@
    ;; Tieosoitteille tehtyjä toimia, mutta ei esitäytetä osoitteita, voi olla monta samalle
    ;; kohdallekin. Vaihtelee alustan laadun mukaan (esim. löytyy kiviä).
    ;; Välien tulee olla kohdeluettelon osoitteiden sisällä.
-   :alustatoimet paallystysilmoitus-alustatoimet
-
-   ;; Työt ovat luokiteltu listaus tehdyistä töistä, valittavana on
-   :tyot paallystysilmoitus-tyot})
+   :alustatoimet paallystysilmoitus-alustatoimet})
 
 (defn laske-muutokset-kokonaishintaan
   "Laskee jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä 'Muutos hintaan') ja summataan yhteen."
