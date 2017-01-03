@@ -32,7 +32,6 @@ WHERE paallystyskohde = :paallystyskohde;
 -- Hakee urakan päällystysilmoituksen päällystyskohteen id:llä
 SELECT
   pi.id,
-  pi.muutoshinta,
   tila,
   ypk.aikataulu_kohde_alku,
   ypk.aikataulu_kohde_valmis      AS "valmispvm-kohde",
