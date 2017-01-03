@@ -49,7 +49,7 @@
                                               :loppupvm (c/to-date (t/local-date 2016 10 1))}})
         nurkkasumma (last (last (last (last vastaus))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 24208.83))
+    (is (=marginaalissa? nurkkasumma 24209.90))
     (let [otsikko "Oulun alueurakka 2014-2019, Sanktioiden yhteenveto ajalta 01.10.2011 - 01.10.2016"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
@@ -69,7 +69,7 @@
                                                       :urakkatyyppi "hoito"}})
         nurkkasumma (last (last (last (last vastaus))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 48417.66))
+    (is (=marginaalissa? nurkkasumma 48419.80))
     (let [otsikko "Pohjois-Pohjanmaa, Sanktioiden yhteenveto ajalta 01.10.2011 - 01.10.2016"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
@@ -92,7 +92,7 @@
                                                       :urakkatyyppi "hoito"}})
         nurkkasumma (last (last (last (last vastaus))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 8097.66))
+    (is (=marginaalissa? nurkkasumma 8099.80))
     (let [otsikko "Pohjois-Pohjanmaa, Sanktioiden yhteenveto ajalta 01.01.2015 - 31.12.2015"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
@@ -113,7 +113,7 @@
                                               :urakkatyyppi "hoito"}})
         nurkkasumma (last (last (last (last vastaus))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 15782.94))
+    (is (=marginaalissa? nurkkasumma 15786.15))
     (let [otsikko "KOKO MAA, Sanktioiden yhteenveto ajalta 01.01.2015 - 31.12.2015"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko

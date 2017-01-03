@@ -347,7 +347,7 @@
                [:raportti {:nimi "Laskutusyhteenveto"}
                 [:otsikko (str (or (str urakan-nimi ", ") "") (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))]
                 (when (and indeksi-kaytossa? perusluku)
-                  [:teksti (str (str "Indeksilaskennan perusluku: " (fmt/desimaaliluku perusluku))
+                  [:teksti (str (str "Indeksilaskennan perusluku: " (fmt/desimaaliluku perusluku 1))
                                 (when kyseessa-kk-vali?
                                   (str ". Kuukauden " (pvm/kuukausi-ja-vuosi alkupvm)
                                        " " (:nimi kkn-indeksiarvo)
