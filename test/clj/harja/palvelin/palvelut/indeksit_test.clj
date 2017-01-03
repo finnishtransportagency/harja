@@ -41,5 +41,10 @@
 
 
 
-
+;; HAR-4035 bugin verifiointi
+(deftest kuukauden-indeksikorotuksen-laskenta
+  (let [korotus
+        (ffirst (q (str "SELECT korotus from laske_kuukauden_indeksikorotus
+ (2016, 10, 'MAKU 2005', 387800, 135.4);")))]
+    (is (=marginaalissa? korotus 1145.64))))
 
