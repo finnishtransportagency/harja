@@ -36,6 +36,7 @@
 
 (defonce urakan-toimenpideinstanssit
   (reaction<! [urakka-id (:id @nav/valittu-urakka)]
+              {:nil-kun-haku-kaynnissa? true}
               (when (and urakka-id
                          (oikeudet/voi-lukea? oikeudet/urakat urakka-id @istunto/kayttaja))
                 (urakan-toimenpiteet/hae-urakan-toimenpiteet urakka-id))))
