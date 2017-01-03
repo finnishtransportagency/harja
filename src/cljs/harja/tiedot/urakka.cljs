@@ -385,3 +385,9 @@
   "Onko valitussa urakassa indeksi käytössä?"
   []
   (some? (:indeksi @nav/valittu-urakka)))
+
+(def urakan-tiedot-ladattu?
+  (reaction
+    (let [toimenpideinstanssit @urakan-toimenpideinstanssit
+          tehtavat @urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat]
+      (boolean (and toimenpideinstanssit tehtavat)))))
