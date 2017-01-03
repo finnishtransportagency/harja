@@ -52,18 +52,20 @@
      :toiminto-fn (fn [] (e! (v/->PoistaVaruste varuste)))}))
 
 (defn sarakkeet [e! tietolajin-listaus-skeema]
-  (let [toiminnot {:nimi :toiminnot
-                   :otsikko "Toiminnot"
-                   :tyyppi :komponentti
-                   :leveys 3.5
-                   :komponentti (fn [{varuste :varuste}]
-                                  (let [tunniste (:tunniste varuste)
-                                        tietolaji (get-in varuste [:tietue :tietolaji :tunniste])]
-                                    [:div
-                                     [napit/tarkasta "Tarkasta" #()]
-                                     [napit/muokkaa "Muokkaa" #()]
-                                     [napit/poista "Poista" #(poista-varuste e! tietolaji tunniste varuste)]]))}]
-    (conj tietolajin-listaus-skeema toiminnot)))
+  (when oikeus-varusteiden-muokkaamiseen?
+    (let [toiminnot {:nimi :toiminnot
+                     :otsikko "Toiminnot"
+                     :tyyppi :komponentti
+                     :leveys 3.5
+                     :komponentti (fn [{varuste :varuste}]
+                                    (let [tunniste (:tunniste varuste)
+                                          tietolaji (get-in varuste [:tietue :tietolaji :tunniste])]
+                                      [:div
+                                       [napit/tarkasta "Tarkasta" #()]
+                                       [napit/muokkaa "Muokkaa" #()]
+                                       [napit/poista "Poista" #(poista-varuste e! tietolaji tunniste varuste)]]))}]
+      (conj tietolajin-listaus-skeema toiminnot))
+    tietolajin-listaus-skeema))
 
 (defn varustehaku-varusteet [e! tietolajin-listaus-skeema varusteet]
   (log "---> tietolajin-listaus-skeema:" (pr-str tietolajin-listaus-skeema))

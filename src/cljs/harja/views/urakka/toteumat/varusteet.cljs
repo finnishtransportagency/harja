@@ -44,7 +44,7 @@
 
 (def nayta-max-toteumaa 500)
 
-(defn oikeus-varusteen-lisaamiseen? [] (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
+(defn oikeus-varusteiden-muokkaamiseen? [] (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
 
 (defn varustetoteuman-tehtavat [toteumat toteuma]
   (let [toteumatehtavat (:toteumatehtavat toteuma)]
@@ -275,7 +275,7 @@
           (when tr-kaytossa?
             [:div.sisalto-container
              [:h1 "Varusteet Tierekisterissä"]
-             (when oikeus-varusteen-lisaamiseen?
+             (when oikeus-varusteiden-muokkaamiseen?
                [napit/uusi "Lisää uusi varuste"
                 #(e! (v/->UusiVarusteToteuma))])
              [varustehaku (t/wrap-path e! :varustehaku) varustehaun-tiedot]])])])))
