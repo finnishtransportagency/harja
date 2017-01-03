@@ -41,22 +41,6 @@
      :tyyppi :string}]
    hakuehdot])
 
-(defn varmista-poistaminen [tietolaji tunniste]
-  (modal/nayta! {:otsikko "Varusteen poistaminen Tierekisteristä"
-                 :footer [:span
-                          [:button.nappi-toissijainen {:type "button"
-                                                       :on-click #(do (.preventDefault %)
-                                                                      (modal/piilota!))}
-                           [:div (ikonit/livicon-ban) " Peruuta"]]
-                          [:button.nappi-kielteinen {:type "button"
-                                                     :on-click #(do (.preventDefault %)
-                                                                    (modal/piilota!))}
-                           [:div (ikonit/livicon-trash) " Poista"]]]}
-                [:div "Haluatko varmasti poistaa tietolajin: "
-                 [:b (str (varusteet/tietolaji->selitys tietolaji) " (" tietolaji ")")]
-                 " varusteen, jonka tunniste on: "
-                 [:b tunniste]
-                 "."]))
 
 (defn sarakkeet [e! tietolajin-listaus-skeema]
   (let [sarakkeet (mapv #(assoc % :leveys 4) tietolajin-listaus-skeema)
@@ -75,9 +59,18 @@
                                     [:div
                                      [napit/tarkasta "Tarkasta" #()]
                                      [napit/muokkaa "Muokkaa" #()]
-                                     [napit/poista "Poista" #(varmista-poistaminen
-                                                               tietolaji tunniste
-                                                               )]]))}]
+                                     [napit/poista "Poista" #(yleiset/varmista-kayttajalta
+                                                               {:otsikko "Varusteen poistaminen Tierekisteristä"
+                                                                :viesti [:div "Haluatko varmasti poistaa tietolajin: "
+                                                                         [:b (str (varusteet/tietolaji->selitys tietolaji) " (" tietolaji ")")]
+                                                                         " varusteen, jonka tunniste on: "
+                                                                         [:b tunniste]
+                                                                         "."]
+                                                                :peruuta [:div (ikonit/livicon-ban) " Peruuta"]
+                                                                :hyvaksy [:div (ikonit/livicon-trash) " Poista"]
+                                                                :toiminto-fn (fn []
+                                                                               ;; todo: lähetä poistokutsu
+                                                                               )})]]))}]
     (conj sarakkeet toiminnot)))
 
 (defn varustehaku-varusteet [e! tietolajin-listaus-skeema varusteet]
