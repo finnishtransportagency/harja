@@ -14,10 +14,10 @@ CREATE TABLE yllapito_maaramuutokset {
   yksikkohinta NUMERIC NOT NULL
 }
 
-ALTER TABLE Paallystysilmoitus DROP COLUMN muutoshinta; -- Lasketaan jatkossa yllä olevasta taulusta
-ALTER TABLE paatos_taloudellinen_osa DROP COLUMN muutoshinta; -- Hinnanmuutosten hyväksyminen jää pois (HAR-4090)
-ALTER TABLE perustelu_taloudellinen_osa DROP COLUMN muutoshinta; -- Hinnanmuutosten hyväksyminen jää pois (HAR-4090)
-ALTER TABLE kasittelyaika_taloudellinen_osa DROP COLUMN muutoshinta; -- Hinnanmuutosten hyväksyminen jää pois (HAR-4090)
+ALTER TABLE paallystysilmoitus DROP COLUMN muutoshinta; -- Lasketaan jatkossa yllä olevasta taulusta
+ALTER TABLE paallystysilmoitus DROP COLUMN paatos_taloudellinen_osa; -- Hinnanmuutosten hyväksyminen jää pois (HAR-4090)
+ALTER TABLE paallystysilmoitus DROP COLUMN perustelu_taloudellinen_osa;
+ALTER TABLE paallystysilmoitus DROP COLUMN kasittelyaika_taloudellinen_osa;
 
 -- FIXME TÄSSÄ VAIHEESSA NYKYISTEN POTTIEN ilmoitustiedot-SARAKKEESEEN JÄÄ VANHANMALLINEN JSON, JOSSA
 -- TALOUSOSA MUKANA. MITEN MIGRATOIDAAN?
