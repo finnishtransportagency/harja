@@ -3,7 +3,7 @@
 CREATE TYPE maaramuutos_tyon_tyyppi AS ENUM ('ajoradan_paallyste', 'pienaluetyot', 'tasaukset', 'jyrsinnat',
                                               'muut');
 
-CREATE TABLE yllapito_maaramuutokset {
+CREATE TABLE yllapito_maaramuutokset (
   id serial PRIMARY KEY,
   yllapitokohde integer REFERENCES yllapitokohde (id) NOT NULL,
   tyon_tyyppi maaramuutos_tyon_tyyppi NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE yllapito_maaramuutokset {
   tilattu_maara NUMERIC NOT NULL,
   toteutunut_maara NUMERIC NOT NULL,
   yksikkohinta NUMERIC NOT NULL
-}
+);
 
 ALTER TABLE paallystysilmoitus DROP COLUMN muutoshinta; -- Lasketaan jatkossa yllä olevasta taulusta
 ALTER TABLE paallystysilmoitus DROP COLUMN paatos_taloudellinen_osa; -- Hinnanmuutosten hyväksyminen jää pois (HAR-4090)
