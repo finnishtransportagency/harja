@@ -437,12 +437,13 @@
       kohteet)))
 
 (defn yllapitokohdeosat-kohteelle [urakka kohteet-atom
-                                   {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa :as kohde}]
+                                   {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa :as kohde}
+                                   {:keys [voi-muokata?] :as optiot}]
   (let [osan-pituus (atom {})
         tiedot (atom {:kohdeosat (:kohdeosat kohde)
                       :virheet {}})]
     (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
-    (fn [urakka kohteet-atom kohde]
+    (fn [urakka kohteet-atom kohde {:keys [voi-muokata?] :as optiot}]
       [yllapitokohdeosat
        {:muokkaa! (fn [kohdeosat virheet]
                     (swap! tiedot
@@ -450,6 +451,7 @@
                            :kohdeosat kohdeosat
                            :virheet virheet))
         :virheet (wrap-vain-luku (:virheet @tiedot))
+        :voi-muokata? voi-muokata?
         :voi-kumota? false
         :kohdeosat-paivitetty-fn
         #(swap! kohteet-atom
@@ -493,13 +495,11 @@
               (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
      @maaramuutokset])) ;; TODO HAEPPAS DATA
 
-(defn kohteen-vetolaatikko [_ _ _]
-  (fn [urakka kohteet-atom rivi]
-    (if @grid/gridia-muokataan?
-      [:span "Kohteen tierekisterikohteet ovat muokattavissa kohteen tallennuksen jälkeen."]
-      [:div
-       [yllapitokohdeosat-kohteelle urakka kohteet-atom rivi]
-       [maaramuutokset (:id rivi)]])))
+(defn kohteen-vetolaatikko [urakka kohteet-atom rivi]
+  [:div
+   [yllapitokohdeosat-kohteelle urakka kohteet-atom rivi
+    {:voi-muokata? (not @grid/gridia-muokataan?)}]
+   [maaramuutokset (:id rivi)]])
 
 (defn hae-osan-pituudet [grid osan-pituudet-teille]
   (let [tiet (into #{} (map (comp :tr-numero second)) (grid/hae-muokkaustila grid))]
