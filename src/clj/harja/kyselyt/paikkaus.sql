@@ -1,21 +1,27 @@
 -- name: hae-urakan-paikkausilmoitukset
 -- Hakee urakan kaikki paikkausilmoitukset
 SELECT
-  yllapitokohde.id AS "paikkauskohde-id",
+  ypk.id AS "paikkauskohde-id",
   pi.id,
   pi.tila,
   nimi,
   kohdenumero,
-  pi.paatos
-FROM yllapitokohde
-  LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = yllapitokohde.id
+  pi.paatos,
+  ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
+  ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
+  ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
+  ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
+  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
+FROM yllapitokohde ypk
+  LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = ypk.id
                                    AND pi.poistettu IS NOT TRUE
 WHERE urakka = :urakka
       AND sopimus = :sopimus
       AND yllapitokohdetyotyyppi = 'paikkaus'::yllapitokohdetyotyyppi
       AND (:vuosi::INTEGER IS NULL OR (cardinality(vuodet) = 0
            OR vuodet @> ARRAY[:vuosi]::int[]))
-      AND yllapitokohde.poistettu IS NOT TRUE;
+      AND ypk.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paikkausilmoitus-paikkauskohteella
 -- Hakee urakan paikkausilmoituksen paikkauskohteen id:llä
