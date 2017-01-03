@@ -1,3 +1,6 @@
+-- Näiden kyselyiden tulisi pääsääntöisesti palauttaa data samassa muodossa kuin asioiden
+-- omissa näkymissä, jotta tiedot saadaan näytettyä oikein kartan infopaneelissa.
+
 -- name: hae-ilmoitukset
 SELECT
   i.id,
