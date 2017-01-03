@@ -21,7 +21,7 @@ WHERE urakka = :urakka
       AND yllapitokohdetyotyyppi = 'paikkaus'::yllapitokohdetyotyyppi
       AND (:vuosi::INTEGER IS NULL OR (cardinality(vuodet) = 0
            OR vuodet @> ARRAY[:vuosi]::int[]))
-      AND yllapitokohde.poistettu IS NOT TRUE;
+      AND ypk.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paikkausilmoitus-paikkauskohteella
 -- Hakee urakan paikkausilmoituksen paikkauskohteen id:llä
