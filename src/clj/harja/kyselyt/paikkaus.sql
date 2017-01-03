@@ -1,7 +1,7 @@
 -- name: hae-urakan-paikkausilmoitukset
 -- Hakee urakan kaikki paikkausilmoitukset
 SELECT
-  yllapitokohde.id AS "paikkauskohde-id",
+  ypk.id AS "paikkauskohde-id",
   pi.id,
   pi.tila,
   nimi,
@@ -14,7 +14,7 @@ SELECT
   ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
   ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
 FROM yllapitokohde ypk
-  LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = yllapitokohde.id
+  LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = ypk.id
                                    AND pi.poistettu IS NOT TRUE
 WHERE urakka = :urakka
       AND sopimus = :sopimus
