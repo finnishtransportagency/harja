@@ -327,7 +327,7 @@ SELECT
 FROM yllapitokohdeosa ypko
   LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = ypk.id
-WHERE pk.poistettu IS NOT TRUE AND
+WHERE ypk.poistettu IS NOT TRUE AND
       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku));
 
 -- name: hae-toteumat
