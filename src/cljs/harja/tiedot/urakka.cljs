@@ -94,17 +94,16 @@
 (defonce valittu-urakka-kaynnissa?
   (reaction (some hoitokausi-kaynnissa? @valitun-urakan-hoitokaudet)))
 
-(defn paivystys-kaytossa? [ur]
-  (let [paivystys-ei-kaytossa? (boolean
-                                 (and
-                                   ;; Ylläpidon urakka
-                                   (not= (:tyyppi ur) :hoito)
-                                   ;; joka ei ole päällystyksen palvelusopimus
-                                   (or (not= (:tyyppi ur) :paallystys)
-                                       (and (= (:tyyppi ur) :paallystys)
-                                            (not= (:sopimustyyppi ur) :palvelusopimus)))))
-        paivystys-kaytossa? (not paivystys-ei-kaytossa?)]
-    paivystys-kaytossa?))
+(defn paivystys-kaytossa?
+  "Kertoo urakkatyypin perusteella onko päivystys käytössä."
+  [ur]
+  (boolean
+    (or
+      (= (:tyyppi ur) :hoito)
+      (= (:tyyppi ur) :valaistus)
+      (or
+        (and (= (:tyyppi ur) :paallystys)
+             (= (:sopimustyyppi ur) :palvelusopimus))))))
 
 (defn paattele-valittu-hoitokausi [hoitokaudet]
   (when-not (empty? hoitokaudet)
