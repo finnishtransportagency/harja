@@ -301,9 +301,9 @@ WHERE ypk.poistettu IS NOT TRUE
 -- Hakee historiakuvaan kaikki paikkauskohteet, jotka ovat olleet aktiivisia
 -- annetulla aikavälillä
 SELECT
-  pk.id,
-  pk.kohdenumero,
-  pk.nimi,
+  ypk.id,
+  ypk.kohdenumero,
+  ypk.nimi,
   ypko.nimi AS kohdeosa_nimi,
   ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti,
   ypk.tr_numero                         AS "tr-numero",
@@ -325,7 +325,7 @@ SELECT
   ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
   ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
 FROM yllapitokohdeosa ypko
-  LEFT JOIN yllapitokohde pk ON ypko.yllapitokohde = pk.id
+  LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = pk.id
   LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = pk.id
 WHERE pk.poistettu IS NOT TRUE AND
       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku));
