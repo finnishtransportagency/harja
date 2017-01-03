@@ -61,7 +61,6 @@
 
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Indeksitarkistusraportti Oulun alueurakka 2014-2019 01.08.2015 - 31.08.2015")
-(log/debug " vastaus" vastaus)
     (apurit/tarkista-taulukko-rivit
       taulukko
 
