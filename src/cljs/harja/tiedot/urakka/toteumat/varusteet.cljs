@@ -104,7 +104,6 @@
                                        tierekisteriosoite
                                        alkupvm
                                        loppupvm] :as toteuma}]
-  (log "---> toteuma:" (pr-str toteuma))
   (let [arvot (functor/fmap #(if (map? %) (:koodi %) %) arvot)
         toteuma {:arvot arvot
                  :sijainti sijainti

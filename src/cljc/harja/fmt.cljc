@@ -480,7 +480,7 @@
   ([luku] (desimaaliluku-opt luku 2 false))
   ([luku tarkkuus] (desimaaliluku-opt luku tarkkuus false))
   ([luku tarkkuus ryhmitelty?]
-   (if luku
+   (if (and luku (not (str/blank? luku)))
      (desimaaliluku luku tarkkuus ryhmitelty?)
      "")))
 
@@ -504,7 +504,7 @@
 (defn prosentti-opt
   ([luku] (prosentti-opt luku 1))
   ([luku tarkkuus]
-   (if luku
+   (if (and luku (not (str/blank? luku)))
      (prosentti luku tarkkuus)
      "")))
 

@@ -592,7 +592,6 @@
                                        loppupvm] :as toteuma}]
   (oikeudet/vaadi-kirjoitusoikeus  oikeudet/urakat-toteumat-varusteet user urakka-id)
   (log/debug "Tallennetaan uusi varustetoteuma")
-  (println "----> TOTEUMA" toteuma)
   (let [varustetoteuma-id (jdbc/with-db-transaction [db db]
                             (let [nyt (pvm/nyt)
                                   sijainti
