@@ -8,7 +8,12 @@
             [harja.loki :refer [log]]
             [harja.ui.debug :refer [debug]]
             [harja.ui.grid :as grid]
-            [harja.ui.yleiset :as yleiset]))
+            [harja.ui.yleiset :as yleiset]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.domain.oikeudet :as oikeudet]))
+
+(defn oikeus-varusteiden-muokkaamiseen? []
+  (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
 
 (defn varustehaku-ehdot [e! {haku? :haku-kaynnissa? :as hakuehdot}]
   [lomake/lomake
@@ -70,6 +75,7 @@
 (defn varustehaku-varusteet [e! tietolajin-listaus-skeema varusteet]
   (log "---> tietolajin-listaus-skeema:" (pr-str tietolajin-listaus-skeema))
   (log "---> varusteet:" (pr-str varusteet))
+  ;; todo: jostain syystä ei osaa näyttää gridissä TR:n palauttamia tietoja. Tarkista miksi Tatun kanssa.
   [grid/grid
    {:otsikko "Tierekisteristä löytyneet varusteet"
     :tunniste (fn [varuste]
