@@ -10,6 +10,7 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.tyokalut.avaimet :as avaimet]
             [harja.kyselyt.kayttajat :as kayttajat]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konv])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import [java.sql SQLException]
@@ -291,13 +292,14 @@
   käsittelyvirhe."
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
 
-  (with-channel request channel
-                (go
-                  (let [vastaus (<! (thread (kasittele-kutsu db
-                                                             integraatioloki
-                                                             resurssi
-                                                             request
-                                                             kutsun-skeema
-                                                             vastauksen-skeema
-                                                             kasittele-kutsu-fn)))]
-                    (send! channel vastaus)))))
+  (binding [oikeudet/*oikeustarkistus-tehty* nil]
+    (with-channel request channel
+      (go
+        (let [vastaus (<! (thread (kasittele-kutsu db
+                                                   integraatioloki
+                                                   resurssi
+                                                   request
+                                                   kutsun-skeema
+                                                   vastauksen-skeema
+                                                   kasittele-kutsu-fn)))]
+          (send! channel vastaus))))))

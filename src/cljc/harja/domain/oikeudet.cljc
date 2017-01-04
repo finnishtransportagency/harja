@@ -12,9 +12,12 @@
 (declare on-oikeus? on-muu-oikeus?)
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
-(def ^:dynamic *oikeustarkistus-tehty* false)
+(def ^:dynamic *oikeustarkistus-tehty* nil)
+
 (defn merkitse-oikeustarkistus-tehdyksi! []
-  (set! *oikeustarkistus-tehty* true))
+  (println "zzzz *oikeustarkistus-tehty* value:" *oikeustarkistus-tehty*)
+  (when (false? *oikeustarkistus-tehty*)
+    (set! *oikeustarkistus-tehty* true)))
 
 #?(:cljs
    (extend-type KayttoOikeus
