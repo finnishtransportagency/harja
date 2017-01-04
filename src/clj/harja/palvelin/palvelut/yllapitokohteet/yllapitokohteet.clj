@@ -72,7 +72,7 @@
                                       ", eikä valittu urakka myöskään ole kohteen suorittava tiemerkintäurakka"))))))
 
 (defn- laske-osien-pituudet
-  "Hakee tieverkosta osien pituudet tielle"
+  "Hakee tieverkosta osien pituudet tielle. Palauttaa pituuden metreina."
   [db yllapitokohteet]
   (fmap
     (fn [osat]
