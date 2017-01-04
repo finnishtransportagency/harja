@@ -12,7 +12,6 @@
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
             [harja.domain.laadunseuranta.sanktiot :as sanktiot-domain]
-            [harja.transit :as transit]
             [harja.geo :as geo]
 
             [taoensso.timbre :as log]
@@ -215,24 +214,26 @@
     palauta-reitti? max-rivimaara]
    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
    (let [urakoitsija? (roolit/urakoitsija? user)
+         tarkastukset-raakana (tarkastukset/hae-urakan-tarkastukset
+                                db
+                                {:urakka                  urakka-id
+                                 :kayttaja_on_urakoitsija urakoitsija?
+                                 :alku                    (konv/sql-timestamp alkupvm)
+                                 :loppu                   (konv/sql-timestamp loppupvm)
+                                 :rajaa_tienumerolla      (boolean tienumero)
+                                 :tienumero               tienumero
+                                 :rajaa_tyypilla          (boolean tyyppi)
+                                 :tyyppi                  (and tyyppi (name tyyppi))
+                                 :havaintoja_sisaltavat   havaintoja-sisaltavat?
+                                 :vain_laadunalitukset    vain-laadunalitukset?
+                                 :maxrivimaara            max-rivimaara})
          tarkastukset (into []
                             (comp tarkastus-xf
                                   (if palauta-reitti?
                                     identity
                                     (map #(dissoc % :sijainti))))
-                            (tarkastukset/hae-urakan-tarkastukset
-                              db
-                              {:urakka urakka-id
-                               :kayttaja_on_urakoitsija urakoitsija?
-                               :alku (konv/sql-timestamp alkupvm)
-                               :loppu (konv/sql-timestamp loppupvm)
-                               :rajaa_tienumerolla (boolean tienumero)
-                               :tienumero tienumero
-                               :rajaa_tyypilla (boolean tyyppi)
-                               :tyyppi (and tyyppi (name tyyppi))
-                               :havaintoja_sisaltavat havaintoja-sisaltavat?
-                               :vain_laadunalitukset vain-laadunalitukset?
-                               :maxrivimaara max-rivimaara}))]
+                            tarkastukset-raakana)
+         tarkastukset (konv/sarakkeet-vektoriin tarkastukset {:liite :liitteet})]
      tarkastukset)))
 
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
@@ -270,7 +271,9 @@
                (assoc :lampotila-tie
                       (get-in (:talvihoitomittaus tarkastus) [:lampotila :tie]))
                (assoc :lampotila-ilma
-                      (get-in (:talvihoitomittaus tarkastus) [:lampotila :ilma])))))
+                      (get-in (:talvihoitomittaus tarkastus) [:lampotila :ilma]))
+               (assoc :tr
+                      (:tr tarkastus)))))
 
         (when (and (or
                      (= :soratie tarkastustyyppi)
@@ -309,38 +312,60 @@
       (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka)
       (hae-urakan-sanktiot c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
 
+(defn- tarkastusreittien-parametrit
+  [user {:keys [havaintoja-sisaltavat? vain-laadunalitukset? tienumero
+                alkupvm loppupvm tyyppi urakka-id] :as parametrit}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset
+                             user :urakka-id)
+  {:urakka urakka-id
+   :alku alkupvm :loppu loppupvm
+   :rajaa_tienumerolla (some? tienumero) :tienumero tienumero
+   :rajaa_tyypilla (some? tyyppi) :tyyppi (and tyyppi (name tyyppi))
+   :havaintoja_sisaltavat havaintoja-sisaltavat?
+   :vain_laadunalitukset vain-laadunalitukset?
+   :kayttaja_on_urakoitsija (roolit/urakoitsija? user)})
+
 (defn hae-tarkastusreitit-kartalle [db user {:keys [extent parametrit]}]
-  (let [{:keys [havaintoja-sisaltavat? vain-laadunalitukset? tienumero alkupvm loppupvm tyyppi urakka-id]}
-        (some-> parametrit (get "tr") transit/lue-transit-string)
+  (let [parametrit (tarkastusreittien-parametrit user parametrit)
         [x1 y1 x2 y2] extent
         alue {:xmin x1 :ymin y1 :xmax x2 :ymax y2}
-        toleranssi (geo/karkeistustoleranssi alue)
+        alue (assoc alue :toleranssi (geo/karkeistustoleranssi alue))
         ch (async/chan 32
-                       (comp (map laadunseuranta/tarkastus-tiedolla-onko-ok)
-                             (map #(konv/string->keyword % :tyyppi :tekija))
-                             (map #(assoc %
-                                          :tyyppi-kartalla :tarkastus
-                                          :sijainti (:reitti %)))
-                             (esitettavat-asiat/kartalla-esitettavaan-muotoon-xf)))]
+                       (comp
+                         (map #(konv/array->set % :vakiohavainnot))
+                         (map laadunseuranta/tarkastus-tiedolla-onko-ok)
+                         (map #(konv/string->keyword % :tyyppi :tekija))
+                         (map #(assoc %
+                                 :tyyppi-kartalla :tarkastus
+                                 :sijainti (:reitti %)))
+                         (esitettavat-asiat/kartalla-esitettavaan-muotoon-xf)))]
     (async/thread
       (try
         (jdbc/with-db-transaction [db db
-                                   :read-only? true]
+                                   {:read-only? true}]
           (tarkastukset/hae-urakan-tarkastukset-kartalle
            db ch
            (merge alue
-                  {:urakka urakka-id
-                   :toleranssi toleranssi
-                   :alku alkupvm :loppu loppupvm
-                   :rajaa_tienumerolla (some? tienumero) :tienumero tienumero
-                   :rajaa_tyypilla (some? tyyppi) :tyyppi (and tyyppi (name tyyppi))
-                   :havaintoja_sisaltavat havaintoja-sisaltavat?
-                   :vain_laadunalitukset vain-laadunalitukset?
-                   :kayttaja_on_urakoitsija (roolit/urakoitsija? user)})))
+                  parametrit)))
         (catch Throwable t
           (log/warn t "Virhe haettaessa tarkastuksia kartalle"))))
 
     ch))
+
+(defn hae-tarkastusreittien-asiat-kartalle
+  [db user {x :x y :y toleranssi :toleranssi :as parametrit}]
+  (let [parametrit (tarkastusreittien-parametrit user parametrit)]
+    (into []
+          (comp
+            (map #(konv/array->set % :vakiohavainnot))
+            (map #(assoc % :tyyppi-kartalla :tarkastus))
+            (map #(konv/string->keyword % :tyyppi))
+            (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
+          (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
+            db
+            (assoc parametrit
+              :x x :y y
+              :toleranssi toleranssi)))))
 
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
@@ -371,7 +396,9 @@
 
     (karttakuvat/rekisteroi-karttakuvan-lahde!
      karttakuvat :tarkastusreitit
-     (partial #'hae-tarkastusreitit-kartalle db))
+     (partial #'hae-tarkastusreitit-kartalle db)
+     (partial #'hae-tarkastusreittien-asiat-kartalle db)
+     "tr")
 
     (julkaise-palvelut
       http-palvelin

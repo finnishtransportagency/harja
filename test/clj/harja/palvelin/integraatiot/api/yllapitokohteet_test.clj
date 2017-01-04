@@ -9,7 +9,8 @@
             [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.skeema :as skeema]
-            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]))
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
+            [clojure.walk :as walk]))
 
 (def kayttaja-paallystys "skanska")
 (def kayttaja-tiemerkinta "tiemies")
@@ -34,9 +35,9 @@
     (is (some? (:paallystys-aloitettu (:aikataulu leppajarven-ramppi))))
     (is (some? (:paallystys-valmis (:aikataulu leppajarven-ramppi))))
     (is (some? (:valmis-tiemerkintaan (:aikataulu leppajarven-ramppi))))
-    (is (nil? (:tiemerkinta-aloitettu (:aikataulu leppajarven-ramppi))))
-    (is (nil? (:tiemerkinta-valmis (:aikataulu leppajarven-ramppi))))
-    (is (nil? (:kohde-valmis (:aikataulu leppajarven-ramppi))))
+    (is (some? (:tiemerkinta-aloitettu (:aikataulu leppajarven-ramppi))))
+    (is (some? (:tiemerkinta-valmis (:aikataulu leppajarven-ramppi))))
+    (is (some? (:kohde-valmis (:aikataulu leppajarven-ramppi))))
     (is (some? (:takuupvm (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))))
 
 (deftest yllapitokohteiden-haku-ei-toimi-ilman-oikeuksia
@@ -351,3 +352,35 @@
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "Ylläpitokohde ei kuulu urakkaan"))))
+
+(deftest avoimen-kohteen-paivittaminen-toimii
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+        payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-request.json")
+        {status :status} (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
+                                                 kayttaja-paallystys portti
+                                                 payload)]
+    (is (= 200 status))
+
+    (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
+          oletettu-tr-osoite {:numero 20, :aosa 14, :aet 1, :losa 17, :loppuet 1}
+          alikohteiden-tr-osoitteet (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id)
+          oletettu-ensimmaisen-alikohteen-tr-osoite {:numero nil, :aosa 14, :aet 1, :losa 14, :loppuet 666}
+          oletettu-toisen-alikohteen-tr-osoite {:aet 666 :aosa 14 :loppuet 1 :losa 17 :numero nil}]
+      (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
+      (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 2 kpl")
+      (is (= oletettu-ensimmaisen-alikohteen-tr-osoite (first alikohteiden-tr-osoitteet))
+          "Ensimmäisen alikohteen tierekisteriosite on päivittynyt oikein")
+      (is (= oletettu-toisen-alikohteen-tr-osoite (second alikohteiden-tr-osoitteet))
+          "Toisen alikohteen tierekisteriosite on päivittynyt oikein"))))
+
+(deftest paallystysilmoituksellisen-kohteen-paivitys-ei-onnistu
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-request.json")
+        {status :status body :body} (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
+                                                            kayttaja-paallystys portti
+                                                            payload)]
+    (is (= 400 status))
+    (is (= "lukittu-yllapitokohde" (:koodi (:virhe (first (:virheet (cheshire/decode body true))))))
+        "Virheelliselle kirjaukselle palautetaan oikea virhekoodi.")))

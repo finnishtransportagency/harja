@@ -23,7 +23,7 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
-    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+) [:db :integraatioloki])))
+    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+ nil) [:db :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
 
@@ -236,6 +236,26 @@
                     :tietolajitunniste "tl505"
                     :poistettu "2015-05-26+03:00"}
             vastausdata (tierekisteri/poista-tietue (:tierekisteri jarjestelma) tiedot)]
+        (is (true? (:onnistunut vastausdata)))))))
+
+(deftest tarkista-varustetoteuman-lahettaminen
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))]
+    (with-fake-http
+      [(str +testi-tierekisteri-url+ "/lisaatietue") vastaus-xml]
+      (let [lisays-varustetoteuma (first (q "SELECT id FROM varustetoteuma WHERE toimenpide = 'lisatty' LIMIT 1;"))
+            vastausdata (tierekisteri/laheta-varustetoteuma (:tierekisteri jarjestelma) lisays-varustetoteuma)]
+        (is (true? (:onnistunut vastausdata)))))
+
+    (with-fake-http
+      [(str +testi-tierekisteri-url+ "/paivitatietue") vastaus-xml]
+      (let [muokkaus-varustetoteuma (first (q "SELECT id FROM varustetoteuma WHERE toimenpide = 'paivitetty' LIMIT 1;"))
+            vastausdata (tierekisteri/laheta-varustetoteuma (:tierekisteri jarjestelma) muokkaus-varustetoteuma)]
+        (is (true? (:onnistunut vastausdata)))))
+
+    (with-fake-http
+      [(str +testi-tierekisteri-url+ "/poistatietue") vastaus-xml]
+      (let [poisto-varustetoteuma (first (q "SELECT id FROM varustetoteuma WHERE toimenpide = 'poistettu' LIMIT 1;"))
+            vastausdata (tierekisteri/laheta-varustetoteuma (:tierekisteri jarjestelma) poisto-varustetoteuma)]
         (is (true? (:onnistunut vastausdata)))))))
 
 (deftest tarkista-virhevastauksen-kasittely

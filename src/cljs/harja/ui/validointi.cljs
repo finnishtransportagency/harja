@@ -4,7 +4,6 @@
             [harja.loki :refer [log]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :refer [tee-kentta]]
             [harja.pvm :as pvm]
 
             [cljs.core.async :refer [<! put! chan]]
@@ -87,6 +86,9 @@
         (when (and valittu-kk-alkupvm (not valitun-kkn-aikana?))
           (or viesti
               (ei-kuukauden-aikana-str (pvm/pvm valittu-kk-alkupvm) (pvm/pvm valittu-kk-loppupvm))))))))
+
+(defmethod validoi-saanto :vakiohuomautus [_ _ data _ _ & [viesti]]
+  viesti)
 
 (defmethod validoi-saanto :validi-tr [_ _ data taulukko _ & [viesti reittipolku]]
   (when

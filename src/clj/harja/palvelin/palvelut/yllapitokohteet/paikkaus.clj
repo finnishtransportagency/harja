@@ -15,13 +15,16 @@
             [cheshire.core :as cheshire]
             [harja.domain.skeema :as skeema]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json]))
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]))
 
-(defn hae-urakan-paikkausilmoitukset [db user {:keys [urakka-id sopimus-id]}]
+(defn hae-urakan-paikkausilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
   (let [vastaus (into []
                       (comp
                         (map #(konv/string-poluista->keyword % [[:tila] [:paatos]]))
+                        (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
+                        (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
                         (map #(assoc % :kohdeosat
                                        (into []
                                              paallystys-q/kohdeosa-xf
@@ -29,7 +32,7 @@
                                                db {:urakka urakka-id
                                                    :sopimus sopimus-id
                                                    :yllapitokohde (:paikkauskohde-id %)})))))
-                      (q/hae-urakan-paikkausilmoitukset db urakka-id sopimus-id))]
+                      (q/hae-urakan-paikkausilmoitukset db urakka-id sopimus-id vuosi))]
     (log/debug "Paikkaustoteumat saatu: " (pr-str (map :nimi vastaus)))
     vastaus))
 

@@ -3,10 +3,8 @@
 CREATE OR REPLACE FUNCTION hoitourakan_indeksilaskennan_perusluku(urakka_id INTEGER)
   RETURNS NUMERIC AS $$
 DECLARE
-  indeksilukujen_lkm           INTEGER;
   kilpailutusta_edeltava_vuosi INTEGER;
   kilpailutusvuosi             INTEGER;
-  perusluku                    NUMERIC;
   tulosrivi                    RECORD;
   indeksinimi TEXT;
 BEGIN
@@ -33,7 +31,7 @@ BEGIN
     -- Jos kaikkia kolmea indeksilukua ei ole, palautetaan NULL
     IF (tulosrivi.indeksilukujen_lkm = 3)
     THEN
-      RETURN tulosrivi.perusluku;
+      RETURN round(tulosrivi.perusluku, 1);
     ELSE
       RAISE NOTICE 'Peruslukua ei voitu laskea koska indeksilukuja indeksillä % joulu-helmikuun aikana %-% löytyi vain : %', indeksinimi, kilpailutusta_edeltava_vuosi, kilpailutusvuosi, tulosrivi.indeksilukujen_lkm;
       RETURN NULL;

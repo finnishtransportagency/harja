@@ -1,14 +1,15 @@
+
 -- name: tallenna-reittimerkinta!
 INSERT INTO tarkastusreitti
 (id, pistetyyppi, tarkastusajo, aikaleima, sijainti, sijainti_tarkkuus, kitkamittaus, havainnot, lampotila,
  talvihoito_tasaisuus, soratie_tasaisuus, lumisuus, kuvaus, kuva,
- polyavyys, sivukaltevuus, kiinteys, laadunalitus,
+ polyavyys, sivukaltevuus, kiinteys, laadunalitus, liittyy_merkintaan,
 tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys)
 VALUES
   (:id, 0, :tarkastusajo, to_timestamp(:aikaleima / 1000), ST_MakePoint(:x, :y), :sijainti_tarkkuus,
         :kitkamittaus, ARRAY [:havainnot] :: INTEGER [], :lampotila, :talvihoito_tasaisuus,
         :soratie_tasaisuus, :lumisuus, :kuvaus, :kuva, :polyavyys,
-   :sivukaltevuus, :kiinteys, :laadunalitus,
+   :sivukaltevuus, :kiinteys, :laadunalitus, :liittyy_merkintaan,
   :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys)
 ON CONFLICT DO NOTHING;
 
@@ -73,6 +74,7 @@ SELECT
   (x.trosoite).aosa,
   (x.trosoite).aet,
   x.laadunalitus,
+  x."liittyy-merkintaan",
   x."kayttajan-syottama-tie",
   x."kayttajan-syottama-aosa",
   x."kayttajan-syottama-aet",
@@ -94,6 +96,7 @@ FROM (SELECT
         t.polyavyys,
         t.sivukaltevuus,
         t.kiinteys,
+        t.liittyy_merkintaan as "liittyy-merkintaan",
         t.tr_numero as "kayttajan-syottama-tie",
         t.tr_alkuosa as "kayttajan-syottama-aosa",
         t.tr_alkuetaisyys as "kayttajan-syottama-aet",

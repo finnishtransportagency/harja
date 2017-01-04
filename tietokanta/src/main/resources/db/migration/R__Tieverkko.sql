@@ -220,7 +220,7 @@ BEGIN
     RETURN NULL;
   ELSE
     kohta := laske_tr_osan_kohta(osa_.geom, piste);
-    RETURN ROW(osa_.tie, osa_.osa, kohta.etaisyys, 0, 0, kohta.piste::GEOMETRY);
+    RETURN ROW(osa_.tie, osa_.osa, kohta.etaisyys, null::INTEGER, null::INTEGER, kohta.piste::GEOMETRY);
   END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -348,5 +348,34 @@ BEGIN
 	            FROM yrita_tierekisteriosoite_pisteille2(alku, loppu, threshold) ytp));
     i := i + 1;
   END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Hakee alkupisteen tiegeometriasta, joka on linestring tai multilinestring
+CREATE OR REPLACE FUNCTION alkupiste(g geometry) RETURNS geometry AS $$
+DECLARE
+  line geometry;
+BEGIN
+  IF ST_GeometryType(g)='ST_MultiLineString' THEN
+    line := ST_GeometryN(g, 1);
+  ELSE
+    line := g;
+  END IF;
+  RETURN ST_StartPoint(line);
+END;
+$$ LANGUAGE plpgsql;
+
+-- Hakee loppupisteen tiegeometriasta
+CREATE OR REPLACE FUNCTION loppupiste(g geometry) RETURNS geometry AS $$
+DECLARE
+  line geometry;
+BEGIN
+  IF ST_GeometryType(g)='ST_MultiLineString' THEN
+    line := ST_GeometryN(g, ST_NumGeometries(g));
+  ELSE
+    line := g;
+  END IF;
+  RETURN ST_EndPoint(line);
 END;
 $$ LANGUAGE plpgsql;

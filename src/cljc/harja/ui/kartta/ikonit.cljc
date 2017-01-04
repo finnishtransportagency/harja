@@ -13,24 +13,28 @@
    (defn karttakuva [perusnimi]
      (str perusnimi ".png")))
 
-(defn assertoi-ikonin-vari [vari]
-  (assert #{"punainen"
-            "oranssi"
-            "keltainen"
-            "lime"
-            "vihrea"
-            "turkoosi"
-            "syaani"
-            "sininen"
-            "tummansininen"
-            "violetti"
-            "magenta"
-            "pinkki"
+(def +sallitut-ikonin-varit+
+  #{"punainen"
+    "oranssi"
+    "keltainen"
+    "lime"
+    "vihrea"
+    "turkoosi"
+    "syaani"
+    "sininen"
+    "tummansininen"
+    "violetti"
+    "magenta"
+    "pinkki"
 
-            "musta"
-            "vaaleanharmaa"
-            "harmaa"
-            "tummanharmaa"} vari))
+    "musta"
+    "vaaleanharmaa"
+    "harmaa"
+    "tummanharmaa"})
+
+(defn assertoi-ikonin-vari [vari]
+  (assert (+sallitut-ikonin-varit+ vari)
+          "Ikonin väri ei ole sallittu"))
 
 (defn sijainti-ikoni
   "Palauttaa sijaintia kuvaavan ikonin, jonka ulko- ja sisäreunan väri voidaan itse asettaa.

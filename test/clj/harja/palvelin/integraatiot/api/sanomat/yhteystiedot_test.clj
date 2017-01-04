@@ -28,7 +28,8 @@
     :sahkoposti "elli@example.com"
     :puhelin "985484"
     :roolit ["ELY urakanvalvoja"]
-    :organisaatio "Destia Oy"}
+    :organisaatio "Destia Oy"
+    :vastuuhenkilo true}
    {:tunniste nil
     :kayttajatunnus "DFGDFE"
     :etunimi "Urho"
@@ -36,7 +37,8 @@
     :sahkoposti "urho@example.com"
     :puhelin "80924098"
     :roolit ["Urakan vastuuhenkilö" "Urakan laadunvalvoja"]
-    :organisaatio "ELY"}])
+    :organisaatio "ELY"
+    :varahenkilo true}])
 
 (def testi-harja-kayttajat
   [{:organisaatio_id 11
@@ -53,38 +55,38 @@
     :organisaatio_nimi "YIT Rakennus Oy"}])
 
 (deftest tarkista-sanoman-muodostus
-  (let [odotettu-data {:urakka
-                       {:elynro 12
-                        :alueurakkanro "1238"
-                        :loppupvm #inst "2019-09-29T21:00:00.000-00:00"
-                        :nimi "Oulun alueurakka 2014-2019"
-                        :sampoid "1242141-OULU2"
-                        :alkupvm #inst "2014-09-30T21:00:00.000-00:00"
-                        :elynimi "Pohjois-Pohjanmaa ja Kainuu"
-                        :urakoitsija
-                        {:nimi "YIT Rakennus Oy"
-                         :ytunnus "1565583-5"
-                         :katuosoite "Panuntie 11 PL 36"
-                         :postinumero "621  "}
-                        :yhteyshenkilot
-                        [{:yhteyshenkilo
-                          {:rooli "ELY urakanvalvoja"
-                           :nimi "Elli Elyvalvoja"
-                           :puhelinnumero "985484"
-                           :email "elli@example.com"
-                           :organisaatio "Destia Oy"}}
-                         {:yhteyshenkilo
-                          {:rooli "Urakan vastuuhenkilö"
-                           :nimi "Urho Urakoitsija"
-                           :puhelinnumero "80924098"
-                           :email "urho@example.com"
-                           :organisaatio "ELY"}}
-                         {:yhteyshenkilo
-                          {:rooli "Sillanvalvoja"
-                           :nimi "Seija Sillanvalvoja"
-                           :puhelinnumero nil
-                           :email nil
-                           :organisaatio "YIT Rakennus Oy"}}]}}
+  (let [odotettu-data {:urakka {:alkupvm #inst "2014-09-30T21:00:00.000-00:00"
+                                :alueurakkanro "1238"
+                                :elynimi "Pohjois-Pohjanmaa ja Kainuu"
+                                :elynro 12
+                                :loppupvm #inst "2019-09-29T21:00:00.000-00:00"
+                                :nimi "Oulun alueurakka 2014-2019"
+                                :sampoid "1242141-OULU2"
+                                :urakoitsija {:katuosoite "Panuntie 11 PL 36"
+                                              :nimi "YIT Rakennus Oy"
+                                              :postinumero "621  "
+                                              :ytunnus "1565583-5"}
+                                :yhteyshenkilot [{:yhteyshenkilo {:email "elli@example.com"
+                                                                  :nimi "Elli Elyvalvoja"
+                                                                  :organisaatio "Destia Oy"
+                                                                  :puhelinnumero "985484"
+                                                                  :rooli "ELY urakanvalvoja"
+                                                                  :varahenkilo false
+                                                                  :vastuuhenkilo true}}
+                                                 {:yhteyshenkilo {:email "urho@example.com"
+                                                                  :nimi "Urho Urakoitsija"
+                                                                  :organisaatio "ELY"
+                                                                  :puhelinnumero "80924098"
+                                                                  :rooli "Urakan vastuuhenkilö"
+                                                                  :varahenkilo true
+                                                                  :vastuuhenkilo false}}
+                                                 {:yhteyshenkilo {:email nil
+                                                                  :nimi "Seija Sillanvalvoja"
+                                                                  :organisaatio "YIT Rakennus Oy"
+                                                                  :puhelinnumero nil
+                                                                  :rooli "Sillanvalvoja"
+                                                                  :varahenkilo false
+                                                                  :vastuuhenkilo false}}]}}
         data (yhteystiedot/urakan-yhteystiedot testiurakan-tiedot testi-fim-kayttajat testi-harja-kayttajat)]
     (is (= odotettu-data data) "Data on muodostettu odotetun mukaisesti")
     (json/validoi json-skeemat/+urakan-yhteystietojen-haku-vastaus+ (cheshire/encode data))))

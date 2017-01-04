@@ -223,7 +223,7 @@
       (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus) resurssi))
     ;; Odottamattomat poikkeustilanteet (virhetietoja ei julkaista):
     (catch SQLException e
-      (log/error e (format "Resurssin kutsun: %s yhteydessä tapahtui SQL-poikkeus: " resurssi))
+      (log/error e (format "Resurssin kutsun: %s yhteydessä tapahtui SQL-poikkeus: %s." resurssi e))
       (let [w (StringWriter.)]
         (loop [ex (.getNextException e)]
           (when (not (nil? ex))
@@ -235,13 +235,13 @@
           :viesti "Sisäinen käsittelyvirhe"}]
         resurssi))
     (catch Exception e
-      (log/error e (format "Resurssin kutsun: %s yhteydessä tapahtui poikkeus: " resurssi))
+      (log/error e (format "Resurssin kutsun: %s yhteydessä tapahtui poikkeus: %s." resurssi e))
       (kasittele-sisainen-kasittelyvirhe
         [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
           :viesti "Sisäinen käsittelyvirhe"}]
         resurssi))
     (catch Object e
-      (log/error (:throwable &throw-context) (format "Resurssin kutsun: %s yhteydessä tapahtui poikkeus: " e))
+      (log/error (:throwable &throw-context) (format "Resurssin kutsun: %s yhteydessä tapahtui poikkeus: %s." resurssi e))
       (kasittele-sisainen-kasittelyvirhe
         [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
           :viesti "Sisäinen käsittelyvirhe"}]

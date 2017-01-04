@@ -54,3 +54,5 @@
 
 (def +urakan-yhteystietoje-hakuvastaus+ "api/examples/urakan-yhteystietojen-haku-response.json")
 
+(def +urakan-yllapitokohteen-paivitys-request+ "api/examples/urakan-yllapitokohteen-paivitys-request.json")
+

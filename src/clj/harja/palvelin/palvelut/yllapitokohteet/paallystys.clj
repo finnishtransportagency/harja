@@ -15,7 +15,8 @@
             [harja.domain.skeema :as skeema]
             [harja.domain.tierekisteri :as tierekisteri-domain]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]))
+            [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]))
 
 (defn tyot-tyyppi-string->avain [json avainpolku]
   (-> json
@@ -29,10 +30,14 @@
                 (when-let [tyot (some-> json (get-in avainpolku))]
                   (map #(assoc % :tyyppi (name (:tyyppi %))) tyot)))))
 
-(defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id]}]
+(defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
-  (let [vastaus (q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id)]
+  (let [vastaus (into []
+                      (comp
+                        (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
+                        (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %))))
+                      (q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi))]
     (log/debug "Päällystysilmoitukset saatu: " (count vastaus) "kpl")
     vastaus))
 

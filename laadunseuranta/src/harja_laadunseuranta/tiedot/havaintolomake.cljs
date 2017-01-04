@@ -10,7 +10,7 @@
             [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset]))
 
 (defn sulje-lomake! []
-  (reset! s/havaintolomake-auki false))
+  (reset! s/havaintolomake-auki? false))
 
 (defn tyhjenna-lomake! []
   (reset! s/havaintolomakedata
@@ -33,8 +33,14 @@
           (merge
             @s/havaintolomakedata
             {:kayttajanimi @s/kayttajanimi
-             :tr-osoite @s/tr-osoite
+             :tr-osoite (or @s/tr-osoite
+                            {:tie nil
+                             :aosa nil
+                             :aet nil
+                             :losa nil
+                             :let nil})
              :aikaleima (l/local-now)
+             :liittyy-havaintoon nil
              :laadunalitus? false
              :kuvaus ""}))
   s/havaintolomakedata)
@@ -42,10 +48,9 @@
 (defn tallenna-lomake! []
   (when (reitintallennus/kirjaa-lomake!
           {:idxdb @s/idxdb
-           :sijainti s/sijainti
-           :tarkastusajo-id s/tarkastusajo-id
-           :jatkuvat-havainnot s/jatkuvat-havainnot
-           :lomakedata s/havaintolomakedata
+           :sijainti @s/sijainti
+           :tarkastusajo-id @s/tarkastusajo-id
+           :lomakedata @s/havaintolomakedata
            :epaonnistui-fn reitintallennus/merkinta-epaonnistui})
     (ilmoitukset/ilmoita "Lomake tallennettu!" s/ilmoitus)
     (kartta/lisaa-kirjausikoni "!")

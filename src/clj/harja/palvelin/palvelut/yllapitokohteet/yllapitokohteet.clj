@@ -1,5 +1,15 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet
-  "Ylläpitokohteiden palvelut"
+  "Ylläpitokohte kuvaa tienosaa, jolle tehdään ylläpitoluonteista työtä (päällystys, paikkaus, tiemerkintä).
+
+  Kohteet ovat joko päällystys- tai paikkaustyyppisiä (kannassa yllopitokohdetyotyyppi).
+  Kohteen tyyppi kuvaa sitä, millaista työtä kohteella on tarkoitus ensisijaisesti tehdä.
+  Kohteen tyyppiä ei pidä sekoittaa sarakkeeseen yllapitokohdetyyppi, joka kuvaa sitä,
+  millaista tietä ollaan työstämässä (päällystetty tie, soratie, kevytliikenne)
+
+  Ylläpitokohte on sidottu urakkaan urakka-sarakkeen kautta. Tämä sarake kuvaa kohteen 'ensisijaista' urakkkaa.
+  Lisäksi on olemassa sarake suorittava_tiemerkintaurakka, joka kuvaa kohteen suorittavaa tiemerkintäurakkaa.
+  Tiemerkinnässä kohde siis edelleen kuuluu ensisijaisesti päällystysurakkaan urakka-sarakkeen kautta, mutta linkittyy
+  tiemerkintäurakkaan suorittava_tiemerkintaurakka -sarakkeen kautta."
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.set :as set]
             [com.stuartsierra.component :as component]
@@ -20,6 +30,7 @@
             [harja.kyselyt.tieverkko :as tieverkko]
             [harja.domain.tiemerkinta :as tm-domain]
             [harja.kyselyt.urakat :as urakat-q]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.kyselyt.paallystys :as paallystys-q]
             [harja.palvelin.palvelut.tierek-haku :as tr-haku]
             [clj-time.coerce :as c]
@@ -77,30 +88,33 @@
               (tieverkko/hae-osien-pituudet db tie min-osa max-osa))))
     (group-by :tr-numero yllapitokohteet)))
 
-(defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id]}]
+(defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
   (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (log/debug "Haetaan urakan ylläpitokohteet.")
   (jdbc/with-db-transaction [db db]
     (let [vastaus (into []
-                        (comp (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
-                              (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
-                              (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
-                              (map #(assoc % :kohdeosat
-                                             (into []
-                                                   paallystys-q/kohdeosa-xf
-                                                   (q/hae-urakan-yllapitokohteen-yllapitokohdeosat
-                                                     db {:urakka urakka-id
-                                                         :sopimus sopimus-id
-                                                         :yllapitokohde (:id %)})))))
+                        (comp
+                          (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
+                          (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
+                          (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
+                          (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
+                          (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
+                          (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
+                          (map #(assoc % :kohdeosat
+                                         (into []
+                                               paallystys-q/kohdeosa-xf
+                                               (q/hae-urakan-yllapitokohteen-yllapitokohdeosat
+                                                 db {:urakka urakka-id
+                                                     :sopimus sopimus-id
+                                                     :yllapitokohde (:id %)})))))
                         (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
-                                                                     :sopimus sopimus-id}))
+                                                                     :sopimus sopimus-id
+                                                                     :vuosi vuosi}))
           osien-pituudet-tielle (laske-osien-pituudet db vastaus)
           vastaus (mapv #(assoc %
                           :pituus
                           (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))
                         vastaus)]
-
-      (log/debug "Ylläpitokohteet saatu: " (count vastaus) " kpl")
       vastaus)))
 
 (defn hae-urakan-yllapitokohteet-lomakkeelle [db user {:keys [urakka-id sopimus-id]}]
@@ -126,16 +140,18 @@
 (defn- hae-urakkatyyppi [db urakka-id]
   (keyword (:tyyppi (first (q/hae-urakan-tyyppi db {:urakka urakka-id})))))
 
-(defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id]}]
+(defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id vuosi]}]
   (assert (and urakka-id sopimus-id) "anna urakka-id ja sopimus-id")
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Haetaan aikataulutiedot urakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
+    ;; Urakkatyypin mukaan näytetään vain tietyt asiat, joten erilliset kyselyt
     (case (hae-urakkatyyppi db urakka-id)
       :paallystys
-      (q/hae-paallystysurakan-aikataulu db {:urakka urakka-id :sopimus sopimus-id})
+      (q/hae-paallystysurakan-aikataulu db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi})
       :tiemerkinta
-      (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id}))))
+      (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
+                                             :vuosi vuosi}))))
 
 (defn hae-tiemerkinnan-suorittavat-urakat [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-aikataulu user urakka-id)
@@ -297,7 +313,7 @@
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id})))
 
-(defn- luo-uusi-yllapitokohde [db user urakka-id sopimus-id
+(defn- luo-uusi-yllapitokohde [db user urakka-id sopimus-id vuosi
                                {:keys [kohdenumero nimi
                                        tr-numero tr-alkuosa tr-alkuetaisyys
                                        tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
@@ -325,7 +341,8 @@
                             :bitumi_indeksi bitumi-indeksi
                             :kaasuindeksi kaasuindeksi
                             :yllapitokohdetyyppi (when yllapitokohdetyyppi (name yllapitokohdetyyppi))
-                            :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))})))
+                            :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))
+                            :vuodet (konv/seq->array [vuosi])})))
 
 (defn- paivita-yllapitokohde [db user urakka-id
                               {:keys [id kohdenumero nimi
@@ -365,7 +382,7 @@
                                    :id id
                                    :urakka urakka-id}))))
 
-(defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id kohteet]}]
+(defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (jdbc/with-db-transaction [c db]
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
@@ -374,7 +391,7 @@
       (log/debug (str "Käsitellään saapunut ylläpitokohde: " kohde))
       (if (and (:id kohde) (not (neg? (:id kohde))))
         (paivita-yllapitokohde c user urakka-id kohde)
-        (luo-uusi-yllapitokohde c user urakka-id sopimus-id kohde)))
+        (luo-uusi-yllapitokohde c user urakka-id sopimus-id vuosi kohde)))
     (let [paallystyskohteet (hae-urakan-yllapitokohteet c user {:urakka-id urakka-id
                                                                 :sopimus-id sopimus-id})]
       (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str paallystyskohteet))
@@ -396,7 +413,8 @@
                                :tr_loppuetaisyys tr-loppuetaisyys
                                :tr_ajorata tr-ajorata
                                :tr_kaista tr-kaista
-                               :toimenpide toimenpide})))
+                               :toimenpide toimenpide
+                               :ulkoinen-id nil})))
 
 (defn- paivita-yllapitokohdeosa [db user urakka-id
                                  {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys

@@ -451,12 +451,20 @@
   (komp/luo
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-turvallisuuspoikkeamat)
     (komp/kuuntelija :turvallisuuspoikkeama-klikattu #(valitse-turvallisuuspoikkeama (:id @nav/valittu-urakka) (:id %2)))
+    (komp/sisaan-ulos
+     #(kartta-tiedot/kasittele-infopaneelin-linkit!
+       {:turvallisuuspoikkeama {:toiminto
+                                (fn [turpo]
+                                  (valitse-turvallisuuspoikkeama
+                                   (:id @nav/valittu-urakka) (:id turpo)))
+                                :teksti "Avaa turvallisuuspoikkeama"}})
+     #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :M))
                       #(do
                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
-    (komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-turvallisuuspoikkeama))
+    (komp/ulos (kartta-tiedot/kuuntele-valittua! tiedot/valittu-turvallisuuspoikkeama))
     (fn []
       [:span
        [:h3 "Turvallisuuspoikkeamat"]

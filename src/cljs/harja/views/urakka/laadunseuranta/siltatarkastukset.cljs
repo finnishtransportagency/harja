@@ -24,7 +24,8 @@
             [harja.domain.siltatarkastus :as siltadomain]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.ui.liitteet :as liitteet])
+            [harja.ui.liitteet :as liitteet]
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -94,19 +95,6 @@
                      (:tr_numero silta) (:tr_alkuosa silta) (:tr_alkuetaisyys silta)
                      (:tr_loppuosa silta) (:tr_loppuetaisyys silta)]]])
 
-(defonce klikatun-sillan-popup
-  (tapahtumat/kuuntele!
-   :silta-klikattu
-   (fn [{:keys [klikkaus-koordinaatit] :as silta}]
-     (kartta/nayta-popup!
-      klikkaus-koordinaatit
-      [:span
-       [sillan-perustiedot silta]
-       [:div.keskita
-        [:a {:href "#" :on-click #(reset! st/valittu-silta
-                                          (dissoc silta :aihe :klikkaus-koordinaatit))}
-         "Avaa valittu silta"]]]))))
-
 (defn kohdesarake [kohteet vika-korjattu]
   [:ul.puutekohdelista {:style {:padding-left "20px"}}
    (for [[kohde [tulos _]] (seq kohteet)]
@@ -129,6 +117,12 @@
 (defn sillat []
   (let [urakan-sillat sillat/sillat-kartalla]
     (komp/luo
+     (komp/sisaan-ulos
+      #(kartta-tiedot/kasittele-infopaneelin-linkit!
+        {:silta {:toiminto (fn [silta]
+                             (reset! st/valittu-silta silta))
+                 :teksti "Avaa valittu silta"}})
+      #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
       (fn []
         [:div.sillat
          [kartta/kartan-paikka]

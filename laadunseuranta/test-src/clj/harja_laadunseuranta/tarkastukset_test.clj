@@ -31,15 +31,6 @@
            [17]))
     (is (empty? (-> tarkastukset :reitilliset-tarkastukset (get 2) :vakiohavainnot)))))
 
-(deftest reittimerkinnat-tarkastuksiksi-kommentit-keraytyvat
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
-                       (lisaa-reittimerkinnoille-mockattu-tieosoite
-                         testidata/tarkastukset-joissa-jatkuvat-havainnot-muuttuu-ja-kommentteja))]
-    (testing "Kommentit kerääntyvät oikein"
-      (is (= (-> tarkastukset :pistemaiset-tarkastukset) []))
-      (is (= (-> tarkastukset :reitilliset-tarkastukset second :havainnot) "foo\nbar"))
-      (is (= (-> tarkastukset :reitilliset-tarkastukset (get 2) :havainnot) nil)))))
-
 (deftest pistemaiset-reittimerkinnat-tarkastuksiksi
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
@@ -142,8 +133,7 @@
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 3))
 
     ;; Liitteet lisätty oikein
-    (is (= (-> tarkastukset :reitilliset-tarkastukset (get 1) :liite) 1))
-    (is (= (-> tarkastukset :pistemaiset-tarkastukset last :liite) 1))))
+    (is (= (-> tarkastukset :pistemaiset-tarkastukset last :liitteet first) 1))))
 
 (deftest tarkastus-jossa-piste-ei-osu-tielle
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
@@ -206,5 +196,28 @@
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))
 
+    ;; Kitka huomioitu
+    (is (= (-> tarkastukset :reitilliset-tarkastukset first :talvihoitomittaus :kitka) 0.2))
+
     ;; Koko tarkastus on merkitty laadunalitukseksi, koska sellainen löytyi osasta tarkastuspisteitä
     (is (= (-> tarkastukset :reitilliset-tarkastukset first :laadunalitus) true))))
+
+(deftest tarkastus-jossa-liittyva-havainto
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-liittyvia-pistemaisia-merkintoja))]
+    ;; Yksi pistemäinen havainto, johon liitetty lisätietoja
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 1))
+    (is (= (:havainnot (first (:pistemaiset-tarkastukset tarkastukset)))
+           "Tässä on nyt jotain mätää\nTässä vielä toinen kuva"))
+    (is (true? (:laadunalitus (first (:pistemaiset-tarkastukset tarkastukset)))))
+    (is (= (:liitteet (first (:pistemaiset-tarkastukset tarkastukset)))
+           [1 2]))
+    ;; Muu osa (ei pistemäinen havainto eikö siihen liittyvät merkinnät) on yksi jatkuva havainto
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))))
+
+(deftest tarkastus-jossa-laadunalitus
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-laadunalitus-ja-liittyva-merkinta))]
+    (is (true? (:laadunalitus (first (:pistemaiset-tarkastukset tarkastukset)))))))

@@ -84,7 +84,8 @@
                                   (:sallittu_suolankaytto rivi)
                                   (:suolankayton_bonusraja rivi)
                                   (:suolankayton_sakkoraja rivi)
-                                  (or (:kerroin rivi) [:virhe "Lämpötila puuttuu"])
+                                  [:varillinen-teksti {:arvo  (or (:kerroin rivi) "Lämpötila puuttuu")
+                                                       :tyyli (when-not (:kerroin rivi) :virhe)}]
                                   (:sakkoraja rivi)
                                   (:suolankaytto rivi)
                                   (:erotus rivi)

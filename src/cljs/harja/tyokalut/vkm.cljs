@@ -35,8 +35,8 @@
         callback (str "vkm_tulos_" kutsu-id)
         kutsu-url (str (vkm-base-url) uri
                        (map->parametrit
-                        (assoc parametrit
-                               :callback callback)))
+                         (assoc parametrit
+                           :callback callback)))
         _ (log "TEHDÄÄN VKM KUTSU: " kutsu-url)
         s (doto (.createElement js/document "script")
             (.setAttribute "type" "text/javascript")
@@ -45,9 +45,9 @@
         tulos #(do
                  (log "VKM VASTAUS: " %)
                  (put! ch (js->clj %))
-                   (close! ch)
-                   (.removeChild (.-head js/document) s)
-                   (aset js/window callback nil))]
+                 (close! ch)
+                 (.removeChild (.-head js/document) s)
+                 (aset js/window callback nil))]
     (aset js/window callback tulos)
     (.appendChild (.-head js/document) s)
     (go (first (alts! [ch (timeout 5000)])))))
@@ -150,3 +150,6 @@
             {:tie tie
              :aosa aosa
              :losa losa})))
+
+(defn tieosan-ajoradat [tie osa]
+  (k/post! :hae-tr-osan-ajoradat {:tie tie :osa osa}))

@@ -1,7 +1,7 @@
 -- name: hae-urakan-paallystysilmoitukset
 -- Hakee urakan kaikki päällystysilmoitukset
 SELECT
-  yllapitokohde.id            AS "paallystyskohde-id",
+  ypk.id            AS "paallystyskohde-id",
   pi.tila,
   nimi,
   kohdenumero,
@@ -13,14 +13,22 @@ SELECT
   kaasuindeksi,
   lahetetty,
   lahetys_onnistunut          AS "lahetys-onnistunut",
-  lahetysvirhe
-FROM yllapitokohde
-  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = yllapitokohde.id
+  lahetysvirhe,
+  ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
+  ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
+  ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
+  ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
+  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
+FROM yllapitokohde ypk
+  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
 WHERE urakka = :urakka
       AND sopimus = :sopimus
       AND yllapitokohdetyotyyppi = 'paallystys' :: yllapitokohdetyotyyppi
-      AND yllapitokohde.poistettu IS NOT TRUE;
+      AND (:vuosi::INTEGER IS NULL OR (cardinality(vuodet) = 0
+           OR vuodet @> ARRAY[:vuosi]::int[]))
+      AND ypk.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paallystysilmoituksen-id-paallystyskohteella
 SELECT id
