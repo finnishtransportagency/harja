@@ -83,6 +83,7 @@
    :data toteuma})
 
 (defn- yllapitokohde-skeema [yllapitokohde]
+  (log "[YLLAPITOKOHDE] " (pr-str yllapitokohde))
   (let [aloitus :kohde-alkupvm
         paallystys-valmis :paallystys-loppupvm
         paikkaus-valmis :paikkaus-loppupvm
@@ -114,7 +115,8 @@
               (when (paikkaus-valmis yllapitokohde)
                 {:otsikko "Paikkaus valmistunut" :tyyppi :pvm-aika :nimi paallystys-valmis})
               (when (kohde-valmis yllapitokohde)
-                {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika :nimi kohde-valmis})]
+                {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika :nimi kohde-valmis})
+              {:otsikko "Urakoitsija" :tyyppi :string :nimi :urakoitsija}]
      :data yllapitokohde}))
 
 (defmethod infopaneeli-skeema :paallystys [paallystys]
