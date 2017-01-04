@@ -62,7 +62,7 @@
     (log/debug "Haetaan urakat y-tunnuksella: " ytunnus)
     (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
     (let [organisaation-urakat (q-urakat/hae-urakat-ytunnuksella db ytunnus)
-          erillisoikeus-urakat (filter (fn [eu] (not-any? (fn [ou] (= (:id ou) (:id eu))) organisaation))
+          erillisoikeus-urakat (filter (fn [eu] (not-any? (fn [ou] (= (:id ou) (:id eu))) organisaation-urakat))
                                        (q-urakat/hae-urakat-joihin-jarjestelmalla-erillisoikeus db kayttajanimi))
           urakat (konv/vector-mappien-alaviiva->rakenne (into organisaation-urakat erillisoikeus-urakat))]
       (muodosta-vastaus-organisaation-urakoiden-haulle urakat))))
