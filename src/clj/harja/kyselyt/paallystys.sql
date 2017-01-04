@@ -201,21 +201,28 @@ AND (SELECT urakka FROM yllapitokohde WHERE id = :id) = :urakka;
 
 -- name: luo-yllapitokohteen-maaramuutos<!
 INSERT INTO yllapitokohteen_maaramuutokset (yllapitokohde, tyon_tyyppi, tyo,
-yksikko, tilattu_maara, toteutunut_maara, yksikkohinta)
+yksikko, tilattu_maara, toteutunut_maara, yksikkohinta, luoja)
 VALUES (:yllapitokohde, :tyon_tyyppi, :tyo,
-:yksikko, :tilattu_maara, :toteutunut_maara, :yksikkohinta);
+:yksikko, :tilattu_maara, :toteutunut_maara, :yksikkohinta, :luoja);
 
 -- name: paivita-yllapitokohteen-maaramuutos<!
 UPDATE yllapitokohteen_maaramuutokset SET
-  yllapitokohde = :yllapitokohde
+  yllapitokohde = :yllapitokohde,
   tyon_tyyppi = :tyon_tyyppi,
   tyo = :tyo,
   yksikko = :yksikko,
   tilattu_maara = :tilattu_maara,
   toteutunut_maara = :toteutunut_maara,
-  yksikkohinta = :yksikkohinta
-FROM yllapitokohteen_maaramuutokset
+  yksikkohinta = :yksikkohinta,
+  muokattu = NOW(),
+  muokkaaja = :kayttaja
 WHERE id = :id
 AND (SELECT urakka FROM yllapitokohde WHERE id = :id) = :urakka;
 
 -- name: poista-yllapitokohteen-maaramuutos<!
+UPDATE yllapitokohteen_maaramuutokset SET
+  poistettu = TRUE,
+  muokattu = NOW(),
+  muokkaaja = :kayttaja
+WHERE id = :id
+AND (SELECT urakka FROM yllapitokohde WHERE id = :id) = :urakka;
