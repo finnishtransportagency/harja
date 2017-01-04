@@ -80,10 +80,8 @@
                   (comp
                     (mapcat (fn [kohde]
                               (keep (fn [kohdeosa]
-                                      (assoc (merge kohdeosa
-                                                    (dissoc kohde :kohdeosat))
-                                        :avoin? (= (:paikkauskohde-id kohde) avoin-paikkausilmoitus)
-                                        :kohdeosa kohdeosa))
+                                      (assoc (merge kohdeosa kohde)
+                                        :avoin? (= (:paikkauskohde-id kohde) avoin-paikkausilmoitus)))
                                     (:kohdeosat kohde))))
                     (keep #(and (:sijainti %) %))
                     (map #(assoc % :tyyppi-kartalla :paikkaus))))))))

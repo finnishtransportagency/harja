@@ -94,10 +94,8 @@
                   (comp
                     (mapcat (fn [kohde]
                               (keep (fn [kohdeosa]
-                                      (assoc (merge kohdeosa
-                                                    (dissoc kohde :kohdeosat))
-                                        :avoin? (= (:paallystyskohde-id kohde) avoin-paallystysilmoitus)
-                                        :kohdeosa kohdeosa))
+                                      (assoc (merge kohdeosa kohde)
+                                        :avoin? (= (:paallystyskohde-id kohde) avoin-paallystysilmoitus)))
                                     (:kohdeosat kohde))))
                     (keep #(and (:sijainti %) %))
                     (map #(assoc % :tyyppi-kartalla :paallystys))))))))

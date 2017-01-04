@@ -24,7 +24,8 @@
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [clojure.string :as str]))
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
 
@@ -94,12 +95,14 @@
                 :default nil)
      :tiedot [{:otsikko "Nimi" :tyyppi :string :nimi :nimi}
               {:otsikko "Kohdenumero" :tyyppi :string :nimi :kohdenumero}
-              {:otsikko "Tie\u00ADrekisteri\u00ADkohde" :tyyppi :string :hae #(get-in % [:kohdeosa :nimi])}
+              {:otsikko "Tie\u00ADrekisteri\u00ADkohteet" :tyyppi :string
+               :hae #(str/join ", " (map :nimi (:kohdeosat %)))}
               {:otsikko "Osoite" :tyyppi :string :hae #(tr-domain/tierekisteriosoite-tekstina %)}
               {:otsikko "Nykyinen päällyste" :tyyppi :string
                :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
               {:otsikko "KVL" :tyyppi :string :hae #(fmt/desimaaliluku (:keskimaarainen-vuorokausiliikenne %) 0)}
-              {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
+              {:otsikko "Toimenpide" :tyyppi :string
+               :hae #(str/join ", " (distinct (map :toimenpide (:kohdeosat %))))}
               {:otsikko "Tila" :tyyppi :string
                :hae #(yllapitokohteet/kuvaile-kohteen-tila (:tila %))}
               (when (aloitus yllapitokohde)
