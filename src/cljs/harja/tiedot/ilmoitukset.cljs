@@ -286,8 +286,6 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                  valittu-ilmoitus)))))
 
 
-;; Kartan popupit käyttää näitä funktioita
-
 (defn avaa-ilmoitus! [ilmoitus]
   ;; Tilannekuvan ilmoitustiedoissa on iso osa ilmoituksen tarkemmista tiedoista.
   ;; Laitetaan valituksi ilmoitukseksi se mitä ilmoituksesta tiedetään, ja täydennetään popupin tietoja
