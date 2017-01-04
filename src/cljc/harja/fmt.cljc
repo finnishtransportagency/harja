@@ -454,6 +454,7 @@
   ([luku tarkkuus] (desimaaliluku luku tarkkuus false))
   ([luku tarkkuus ryhmitelty?]
     #?(:cljs
+       ; Jostain syystä ei voi formatoida desimaalilukua nollalla desimaalilla. Aiheuttaa poikkeuksen.
        (if (= tarkkuus 0)
          (.toFixed luku 0)
          (let [formatoitu (.format (desimaali-fmt tarkkuus) luku)]
@@ -479,9 +480,8 @@
   ([luku] (desimaaliluku-opt luku 2 false))
   ([luku tarkkuus] (desimaaliluku-opt luku tarkkuus false))
   ([luku tarkkuus ryhmitelty?]
-   (if (and luku (not (str/blank? luku)))
-     ;; todo: korjaa tämä!!!
-     "" #_(desimaaliluku luku tarkkuus ryhmitelty?)
+   (if luku
+     (desimaaliluku luku tarkkuus ryhmitelty?)
      "")))
 
 (defn prosentti
@@ -504,7 +504,7 @@
 (defn prosentti-opt
   ([luku] (prosentti-opt luku 1))
   ([luku tarkkuus]
-   (if (and luku (not (str/blank? luku)))
+   (if luku
      (prosentti luku tarkkuus)
      "")))
 

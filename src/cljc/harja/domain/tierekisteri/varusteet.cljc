@@ -82,7 +82,8 @@
    :aseta (fn [rivi arvo]
             (assoc-in rivi [:arvot (keyword (:kenttatunniste ominaisuus))] arvo))
    ;; Varusteen tunnistetta ei saa muokata koskaan
-   :muokattava? #(and (not (= "tunniste" (:kenttatunniste ominaisuus))) muokattava?)})
+   :muokattava? #(and (not (= "tunniste" (:kenttatunniste ominaisuus))) muokattava?)
+   :pituus-max (:pituus ominaisuus)})
 
 (defmethod varusteominaisuus->skeema :koodisto
   [{ominaisuus :ominaisuus} muokattava?]
