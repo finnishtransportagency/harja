@@ -184,3 +184,38 @@ ORDER BY k.luotu ASC;
 -- name: liita-kommentti<!
 -- Liittää päällystysilmoitukseen uuden kommentin
 INSERT INTO paallystysilmoitus_kommentti (paallystysilmoitus, kommentti) VALUES (:paallystysilmoitus, :kommentti);
+
+-- name: hae-yllapitokohteen-maaramuutokset
+SELECT
+  id,
+  yllapitokohde,
+  tyon_tyyppi,
+  tyo,
+  yksikko,
+  tilattu_maara,
+  toteutunut_maara,
+  yksikkohinta
+FROM yllapitokohteen_maaramuutokset
+WHERE id = :id
+AND (SELECT urakka FROM yllapitokohde WHERE id = :id) = :urakka;
+
+-- name: luo-yllapitokohteen-maaramuutos<!
+INSERT INTO yllapitokohteen_maaramuutokset (yllapitokohde, tyon_tyyppi, tyo,
+yksikko, tilattu_maara, toteutunut_maara, yksikkohinta)
+VALUES (:yllapitokohde, :tyon_tyyppi, :tyo,
+:yksikko, :tilattu_maara, :toteutunut_maara, :yksikkohinta);
+
+-- name: paivita-yllapitokohteen-maaramuutos<!
+UPDATE yllapitokohteen_maaramuutokset SET
+  yllapitokohde = :yllapitokohde
+  tyon_tyyppi = :tyon_tyyppi,
+  tyo = :tyo,
+  yksikko = :yksikko,
+  tilattu_maara = :tilattu_maara,
+  toteutunut_maara = :toteutunut_maara,
+  yksikkohinta = :yksikkohinta
+FROM yllapitokohteen_maaramuutokset
+WHERE id = :id
+AND (SELECT urakka FROM yllapitokohde WHERE id = :id) = :urakka;
+
+-- name: poista-yllapitokohteen-maaramuutos<!
