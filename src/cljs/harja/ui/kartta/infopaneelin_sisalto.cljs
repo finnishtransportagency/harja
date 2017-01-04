@@ -80,29 +80,6 @@
             {:otsikko "Avaa varustekortti" :tyyppi :linkki :nimi :varustekortti-url}]
    :data toteuma})
 
-(defmethod infopaneeli-skeema :paikkaus [paikkaus]
-  (let [aloitus :kohde-alkupvm
-        paikkaus-valmis :paikkaus-loppupvm
-        kohde-valmis :kohde-valmispvm]
-    {:tyyppi  :paikkaus
-     :jarjesta-fn :kohde-alkupvm
-     :otsikko "Paikkauskohde"
-     :tiedot  [{:otsikko "Nimi" :tyyppi :string :hae #(get-in % [:nimi])}
-               {:otsikko "Tie\u00ADrekisteri\u00ADkohde" :tyyppi :string :hae #(get-in % [:kohdeosa :nimi])}
-               {:otsikko "Osoite" :tyyppi :string :hae #(tr-domain/tierekisteriosoite-tekstina %)}
-               {:otsikko "Nykyinen päällyste" :tyyppi :string
-                :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
-               {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
-               {:otsikko "Tila" :tyyppi :string
-                :hae     #(yllapitokohteet/kuvaile-kohteen-tila (:tila %))}
-               (when (aloitus paikkaus)
-                 {:otsikko "Aloitettu" :tyyppi :pvm-aika :nimi aloitus})
-               (when (paikkaus-valmis paikkaus)
-                 {:otsikko "Paikkaus valmistunut" :tyyppi :pvm-aika :nimi paikkaus-valmis})
-               (when (kohde-valmis paikkaus)
-                 {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika :nimi kohde-valmis})]
-     :data    paikkaus}))
-
 (defmethod infopaneeli-skeema :paallystys [paallystys]
   (let [aloitus :kohde-alkupvm
         paallystys-valmis :paallystys-loppupvm
@@ -125,6 +102,29 @@
               (when (kohde-valmis paallystys)
                 {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika :nimi kohde-valmis})]
      :data paallystys}))
+
+(defmethod infopaneeli-skeema :paikkaus [paikkaus]
+  (let [aloitus :kohde-alkupvm
+        paikkaus-valmis :paikkaus-loppupvm
+        kohde-valmis :kohde-valmispvm]
+    {:tyyppi :paikkaus
+     :jarjesta-fn :kohde-alkupvm
+     :otsikko "Paikkauskohde"
+     :tiedot [{:otsikko "Nimi" :tyyppi :string :hae #(get-in % [:nimi])}
+              {:otsikko "Tie\u00ADrekisteri\u00ADkohde" :tyyppi :string :hae #(get-in % [:kohdeosa :nimi])}
+              {:otsikko "Osoite" :tyyppi :string :hae #(tr-domain/tierekisteriosoite-tekstina %)}
+              {:otsikko "Nykyinen päällyste" :tyyppi :string
+               :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
+              {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
+              {:otsikko "Tila" :tyyppi :string
+               :hae #(yllapitokohteet/kuvaile-kohteen-tila (:tila %))}
+              (when (aloitus paikkaus)
+                {:otsikko "Aloitettu" :tyyppi :pvm-aika :nimi aloitus})
+              (when (paikkaus-valmis paikkaus)
+                {:otsikko "Paikkaus valmistunut" :tyyppi :pvm-aika :nimi paikkaus-valmis})
+              (when (kohde-valmis paikkaus)
+                {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika :nimi kohde-valmis})]
+     :data paikkaus}))
 
 (defmethod infopaneeli-skeema :turvallisuuspoikkeama [turpo]
   (let [tapahtunut :tapahtunut
