@@ -23,7 +23,8 @@
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.domain.tierekisteri :as tierekisteri]
-            [harja.domain.tierekisteri :as tr-domain]))
+            [harja.domain.tierekisteri :as tr-domain]
+            [harja.fmt :as fmt]))
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
 
@@ -80,53 +81,42 @@
             {:otsikko "Avaa varustekortti" :tyyppi :linkki :nimi :varustekortti-url}]
    :data toteuma})
 
-(defmethod infopaneeli-skeema :paallystys [paallystys]
+(defn- yllapitokohde-skeema [yllapitokohde]
   (let [aloitus :kohde-alkupvm
         paallystys-valmis :paallystys-loppupvm
-        kohde-valmis :kohde-valmispvm]
-    {:tyyppi :paallystys
-     :jarjesta-fn :kohde-alkupvm
-     :otsikko "Päällystyskohde"
-     :tiedot [{:otsikko "Nimi" :tyyppi :string :nimi :nimi}
-              {:otsikko "Kohdenumero" :tyyppi :string :nimi :kohdenumero}
-              {:otsikko "Tie\u00ADrekisteri\u00ADkohde" :tyyppi :string :hae #(get-in % [:kohdeosa :nimi])}
-              {:otsikko "Osoite" :tyyppi :string :hae #(tr-domain/tierekisteriosoite-tekstina %)}
-              {:otsikko "Nykyinen päällyste" :tyyppi :string
-               :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
-              {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
-              {:otsikko "Tila" :tyyppi :string
-               :hae #(yllapitokohteet/kuvaile-kohteen-tila (:tila %))}
-              (when (aloitus paallystys)
-                {:otsikko "Aloitettu" :tyyppi :pvm-aika :nimi aloitus})
-              (when (paallystys-valmis paallystys)
-                {:otsikko "Päällystys valmistunut" :tyyppi :pvm-aika :nimi paallystys-valmis})
-              (when (kohde-valmis paallystys)
-                {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika :nimi kohde-valmis})]
-     :data paallystys}))
-
-(defmethod infopaneeli-skeema :paikkaus [paikkaus]
-  (let [aloitus :kohde-alkupvm
         paikkaus-valmis :paikkaus-loppupvm
         kohde-valmis :kohde-valmispvm]
-    {:tyyppi :paikkaus
+    {:tyyppi (:yllapitokohdetyotyyppi yllapitokohde)
      :jarjesta-fn :kohde-alkupvm
-     :otsikko "Paikkauskohde"
+     :otsikko (case (:yllapitokohdetyotyyppi yllapitokohde)
+                :paallystys "Päällystyskohde"
+                :paikkaus "Paikkauskohde"
+                :default nil)
      :tiedot [{:otsikko "Nimi" :tyyppi :string :nimi :nimi}
               {:otsikko "Kohdenumero" :tyyppi :string :nimi :kohdenumero}
               {:otsikko "Tie\u00ADrekisteri\u00ADkohde" :tyyppi :string :hae #(get-in % [:kohdeosa :nimi])}
               {:otsikko "Osoite" :tyyppi :string :hae #(tr-domain/tierekisteriosoite-tekstina %)}
               {:otsikko "Nykyinen päällyste" :tyyppi :string
                :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
+              {:otsikko "KVL" :tyyppi :string :hae #(fmt/desimaaliluku (:keskimaarainen-vuorokausiliikenne %) 0)}
               {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
               {:otsikko "Tila" :tyyppi :string
                :hae #(yllapitokohteet/kuvaile-kohteen-tila (:tila %))}
-              (when (aloitus paikkaus)
+              (when (aloitus yllapitokohde)
                 {:otsikko "Aloitettu" :tyyppi :pvm-aika :nimi aloitus})
-              (when (paikkaus-valmis paikkaus)
-                {:otsikko "Paikkaus valmistunut" :tyyppi :pvm-aika :nimi paikkaus-valmis})
-              (when (kohde-valmis paikkaus)
+              (when (paallystys-valmis yllapitokohde)
+                {:otsikko "Päällystys valmistunut" :tyyppi :pvm-aika :nimi paallystys-valmis})
+              (when (paikkaus-valmis yllapitokohde)
+                {:otsikko "Paikkaus valmistunut" :tyyppi :pvm-aika :nimi paallystys-valmis})
+              (when (kohde-valmis yllapitokohde)
                 {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika :nimi kohde-valmis})]
-     :data paikkaus}))
+     :data yllapitokohde}))
+
+(defmethod infopaneeli-skeema :paallystys [paallystys]
+  (yllapitokohde-skeema paallystys))
+
+(defmethod infopaneeli-skeema :paikkaus [paikkaus]
+  (yllapitokohde-skeema paikkaus))
 
 (defmethod infopaneeli-skeema :turvallisuuspoikkeama [turpo]
   (let [tapahtunut :tapahtunut
