@@ -330,6 +330,16 @@
                      (count uudet-ilmoitukset) " kpl")
           uudet-ilmoitukset)))))
 
+(defn tallenna-maaramuutokset
+  [db user {:keys [urakka-id yllapitokohde-id maaramuutokset]}]
+  (log/debug "Aloitetaan määrämuutoksien tallennus")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (yllapitokohteet/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
+    (yha/lukitse-urakan-yha-sidonta db urakka-id)
+    ;; TODO
+    ))
+
 (defrecord Paallystys []
   component/Lifecycle
   (start [this]
@@ -344,6 +354,9 @@
       (julkaise-palvelu http :tallenna-paallystysilmoitus
                         (fn [user tiedot]
                           (tallenna-paallystysilmoitus db user tiedot)))
+      (julkaise-palvelu http :tallenna-maaramuutokset
+                        (fn [user tiedot]
+                          (tallenna-maaramuutokset db user tiedot)))
       this))
 
   (stop [this]
@@ -352,5 +365,6 @@
       :urakan-paallystysilmoitukset
       :urakan-paallystysilmoitus-paallystyskohteella
       :tallenna-paallystysilmoitus
-      :tallenna-paallystyskohteet)
+      :tallenna-paallystyskohteet
+      :tallenna-maaramuutokset)
     this))

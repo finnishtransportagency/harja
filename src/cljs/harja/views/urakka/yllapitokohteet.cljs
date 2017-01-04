@@ -463,13 +463,13 @@
        kohde
        @osan-pituus])))
 
-(defn maaramuutokset [yllapitokohde-id]
+(defn maaramuutokset [yllapitokohde-id urakka-id]
   (let [maaramuutokset (atom [])]
     [grid/grid
      {:otsikko "Määrämuutokset"
       :tyhja "Ei määrämuutoksia"
-      :tallenna #(log "TODO") ;; TODO TALLENNUS
-      :voi-muokata? true} ;; TODO OIKEUSTARKISTUS
+      :tallenna #(tiedot/tallenna-maaramuutokset! urakka-id yllapitokohde-id %)
+      :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id)}
      [{:otsikko "Päällyste\u00ADtyön tyyppi"
        :nimi :tyyppi
        :tyyppi :valinta
@@ -499,7 +499,7 @@
   [:div
    [yllapitokohdeosat-kohteelle urakka kohteet-atom rivi
     {:voi-muokata? (not @grid/gridia-muokataan?)}]
-   [maaramuutokset (:id rivi)]])
+   [maaramuutokset (:id rivi) (:id urakka)]])
 
 (defn hae-osan-pituudet [grid osan-pituudet-teille]
   (let [tiet (into #{} (map (comp :tr-numero second)) (grid/hae-muokkaustila grid))]

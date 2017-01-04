@@ -30,6 +30,11 @@
                                         :yllapitokohde-id yllapitokohde-id
                                         :osat osat}))
 
+(defn tallenna-maaramuutokset! [urakka-id yllapitokohde-id maaramuutokset]
+  (k/post! :tallenna-maaramuutokset {:urakka-id urakka-id
+                                     :yllapitokohde-id yllapitokohde-id
+                                     :maaramuutokset maaramuutokset}))
+
 (defn kuvaile-kohteen-tila [tila]
   (case tila
     :kohde-aloitettu "Kohde aloitettu"
