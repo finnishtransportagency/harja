@@ -5,13 +5,16 @@ CREATE TYPE maaramuutos_tyon_tyyppi AS ENUM ('ajoradan_paallyste', 'pienaluetyot
 
 CREATE TABLE yllapitokohteen_maaramuutokset (
   id serial PRIMARY KEY,
-  yllapitokohde integer REFERENCES yllapitokohde (id) NOT NULL,
+  yllapitokohde INTEGER REFERENCES yllapitokohde (id) NOT NULL,
   tyon_tyyppi maaramuutos_tyon_tyyppi NOT NULL,
   tyo VARCHAR(256) NOT NULL,
   yksikko VARCHAR(32) NOT NULL,
   tilattu_maara NUMERIC NOT NULL,
   toteutunut_maara NUMERIC NOT NULL,
-  yksikkohinta NUMERIC NOT NULL
+  yksikkohinta NUMERIC NOT NULL,
+  poistettu boolean DEFAULT FALSE NOT NULL,
+  muokkaaja INTEGER REFERENCES kayttaja (id) NOT NULL,
+  muokattu TIMESTAMP NOT NULL DEFAULT NOW() NOT NULL
 );
 
 ALTER TABLE paallystysilmoitus DROP COLUMN muutoshinta; -- Lasketaan jatkossa yllä olevasta taulusta
