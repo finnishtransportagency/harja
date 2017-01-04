@@ -19,6 +19,7 @@
             [harja.geo :as geo]
             [harja.transit :as transit]
             [harja.domain.roolit]
+            [harja.domain.oikeudet :as oikeudet]
 
             [slingshot.slingshot :refer [try+ throw+]]
 
@@ -69,7 +70,7 @@
         (kasittelija-fn req)))))
 
 (defn- transit-post-kasittelija
-  "Luo transit käsittelijän POST kutsuille annettuun palvelufunktioon."
+  "Luo transit-käsittelijän POST kutsuille annettuun palvelufunktioon."
   [nimi palvelu-fn optiot]
   (let [polku (transit-palvelun-polku nimi)]
     (fn [req]
@@ -211,6 +212,17 @@
       :default
        nil)))
 
+(defn kaari-yksiloiva-tunniste
+  "Antaa pyynnöille yksilöivän tunnisteen"
+  [kasittelija]
+  (fn [pyynto]
+    (kasittelija
+     (if (contains? pyynto :yksiloiva-tunniste)
+       pyynto
+       (do
+         (log/debug "uusi yksiloiva tunniste")
+         (assoc pyynto :yksiloiva-tunniste (str (java.util.UUID/randomUUID))))))))
+
 (defn wrap-anti-forgery
   "Vertaa headerissa lähetettyä tokenia http-only cookiessa tulevaan"
   [f anti-csrf-kaytossa?]
@@ -247,29 +259,34 @@
                           (route/files "" {:root "dev-resources"}))]
       (swap! lopetus-fn
              (constantly
-               (http/run-server
-                 (cookies/wrap-cookies
+              (http/run-server
+                (cookies/wrap-cookies
+                 (kaari-yksiloiva-tunniste
                   (fn [req]
-                    (try+
-                     (metriikka/inc! mittarit :aktiiviset_pyynnot)
-                     (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
-                           ui-kasittelijat (mapv :fn @kasittelijat)
-                           ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
-                                              (wrap-anti-forgery anti-csrf-kaytossa?))]
+                    (binding [oikeudet/*oikeustarkistus-tehty* false]
+                      (try+
+                       (metriikka/inc! mittarit :aktiiviset_pyynnot)
+                       (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
+                             ui-kasittelijat (mapv :fn @kasittelijat)
+                             ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
+                                                (wrap-anti-forgery anti-csrf-kaytossa?))]
 
-                       (or (reitita req (conj (mapv :fn ei-todennettavat)
-                                              dev-resurssit resurssit))
-                           (reitita (todennus/todenna-pyynto todennus req)
-                                    (-> (mapv :fn todennettavat)
-                                        (conj (partial index-kasittelija kehitysmoodi))
-                                        (conj (partial ls-index-kasittelija kehitysmoodi))
-                                        (conj ui-kasittelija)))))
-                     (catch [:virhe :todennusvirhe] _
-                       {:status 403 :body "Todennusvirhe"})
-                     (finally
-                       (metriikka/muuta! mittarit
-                                         :aktiiviset_pyynnot dec
-                                         :pyyntoja_palveltu inc)))))
+                         (or (reitita req (conj (mapv :fn ei-todennettavat)
+                                                dev-resurssit resurssit))
+                             (reitita (todennus/todenna-pyynto todennus req)
+                                      (-> (mapv :fn todennettavat)
+                                          (conj (partial index-kasittelija kehitysmoodi))
+                                          (conj (partial ls-index-kasittelija kehitysmoodi))
+                                          (conj ui-kasittelija)))))
+                       (catch [:virhe :todennusvirhe] _
+                         {:status 403 :body "Todennusvirhe"})
+                       (finally
+                         (if (not oikeudet/*oikeustarkistus-tehty*)
+                           (log/error "virhe: oikeustarkistusta ei tehty - uri:" (:uri req))
+                           (log/debug "oikein: oikeustarkistus tehtiin - uri:" (:uri req)))
+                         (metriikka/muuta! mittarit
+                                           :aktiiviset_pyynnot dec
+                                           :pyyntoja_palveltu inc)))))))
 
                  {:port     (or (:portti asetukset) asetukset)
                   :thread   (or (:threads asetukset) 8)
@@ -291,7 +308,9 @@
                               (or (:kategoria optiot) "Backend palvelut")
                               (str nimi)
                               {}
-                              #(apply palvelu-fn args)))
+                              #(do
+                                 ;; (println "palvelu-fn" palvelu-fn args)
+                                 (apply palvelu-fn args))))
                           palvelu-fn)]
       (if (:ring-kasittelija? optiot)
         (swap! sessiottomat-kasittelijat conj {:nimi nimi
@@ -326,7 +345,7 @@
 (defn julkaise-reitti
   ([http nimi reitti] (julkaise-reitti http nimi reitti true))
   ([http nimi reitti ei-todennettava?]
-   (julkaise-palvelu http nimi (wrap-params reitti)
+   (julkaise-palvelu http nimi (-> reitti wrap-params kaari-yksiloiva-tunniste)
                      {:ring-kasittelija? true
                       :tarkista-polku?   false
                       :ei-todennettava   ei-todennettava?})))
