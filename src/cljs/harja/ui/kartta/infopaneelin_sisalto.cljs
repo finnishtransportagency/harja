@@ -83,7 +83,6 @@
    :data toteuma})
 
 (defn- yllapitokohde-skeema [yllapitokohde]
-  (log "[YLLAPITOKOHDE] " (pr-str yllapitokohde))
   (let [aloitus :kohde-alkupvm
         paallystys-valmis :paallystys-loppupvm
         paikkaus-valmis :paikkaus-loppupvm
