@@ -14,7 +14,7 @@ CREATE TABLE yllapitokohteen_maaramuutokset (
   yksikkohinta NUMERIC NOT NULL,
   poistettu boolean DEFAULT FALSE NOT NULL,
   luoja INTEGER REFERENCES kayttaja (id) NOT NULL,
-  luotu TIMESTAMP NOT NULL DEFAULT NOW()  NOT NULL,
+  luotu TIMESTAMP DEFAULT NOW()  NOT NULL,
   muokkaaja INTEGER REFERENCES kayttaja (id),
   muokattu TIMESTAMP
 );
