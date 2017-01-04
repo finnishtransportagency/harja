@@ -6,7 +6,6 @@
             [harja.views.urakka.paallystyskohteet :as paallystyskohteet]
             [harja.views.urakka.paallystysilmoitukset :as paallystysilmoitukset]
             [harja.views.kartta :as kartta]
-            [harja.views.kartta.popupit :as popupit]
 
             [harja.ui.lomake :refer [lomake]]
             [harja.ui.komponentti :as komp]
@@ -24,31 +23,10 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-(defn kohdeosan-reitti-klikattu [_ kohde]
-  (let [paallystyskohde-id (:paallystyskohde-id kohde)]
-    (popupit/nayta-popup
-      (assoc kohde
-        :aihe :paallystys-klikattu
-        :kohde {:nimi (get-in kohde [:kohde :nimi])}
-        :kohdeosa {:nimi (get-in kohde [:osa :nimi])}
-        :nykyinen-paallyste (get-in kohde [:osa :nykyinen-paallyste])
-        :toimenpide (get-in kohde [:osa :toimenpide])
-        :paallystysilmoitus {:tila (:tila kohde)}
-        :tr {:numero (get-in kohde [:osa :tr-numero])
-             :alkuosa (get-in kohde [:osa :tr-alkuosa])
-             :alkuetaisyys (get-in kohde [:osa :tr-alkuetaisyys])
-             :loppuosa (get-in kohde [:osa :tr-loppuosa])
-             :loppuetaisyys (get-in kohde [:osa :tr-loppuetaisyys])}
-        :kohde-click #(do (kartta/poista-popup!)
-                          (nav/aseta-valittu-valilehti! :kohdeluettelo-paallystys :paallystysilmoitukset)
-                          (tapahtumat/julkaise! {:aihe :avaa-paallystysilmoitus :paallystyskohde-id paallystyskohde-id}))))))
-
 (defn kohdeluettelo
   "Kohdeluettelo-pääkomponentti"
   [ur]
   (komp/luo
-    (komp/ulos #(kartta/poista-popup!))
-    (komp/kuuntelija :paallystys-klikattu kohdeosan-reitti-klikattu)
     (komp/lippu paallystys/karttataso-paallystyskohteet)
     (fn [ur]
       (if (:yhatiedot ur)
@@ -64,5 +42,5 @@
           "Päällystysilmoitukset"
           :paallystysilmoitukset
           (when (oikeudet/urakat-kohdeluettelo-paallystysilmoitukset (:id ur))
-            [paallystysilmoitukset/paallystysilmoitukset])]]
+            [paallystysilmoitukset/paallystysilmoitukset ur])]]
         [vihje "Päällystysurakka täytyy sitoa YHA-urakkaan ennen kuin sen kohteita voi hallita."]))))

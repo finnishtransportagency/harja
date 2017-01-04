@@ -48,7 +48,7 @@
                     (u/rivit-tulevillekin-kausille-kok-hint-tyot ur uudet-tyot valittu-hoitokausi)
                     uudet-tyot
                     ))
-            res (<! (kok-hint-tyot/tallenna-kokonaishintaiset-tyot (:id ur) sopimusnumero muuttuneet))
+            res (<! (kok-hint-tyot/tallenna-kokonaishintaiset-tyot ur sopimusnumero muuttuneet))
             res-jossa-hoitokausitieto (map #(kok-hint-tyot/aseta-hoitokausi hoitokaudet %) res)]
         (reset! tyot res-jossa-hoitokausitieto)
         (reset! tuleville? false)
@@ -148,9 +148,7 @@
   (let [urakan-kok-hint-tyot u/urakan-kok-hint-tyot
         toimenpiteet u/urakan-toimenpideinstanssit
         urakka (atom nil)
-        hae-urakan-tiedot (fn [ur]
-                            (reset! urakka ur))
-
+        aseta-urakka! (fn [ur] (reset! urakka ur))
         ;; ryhmitellään valitun sopimusnumeron mukaan hoitokausittain
         sopimuksen-tyot-hoitokausittain
         (reaction (let [[sopimus-id _] @u/valittu-sopimusnumero
@@ -202,18 +200,14 @@
                                                   #(pvm/sama-pvm?
                                                     (:alkupvm %) hk-alku)
                                                   @kaikki-sopimuksen-ja-tpin-rivit))
-                                               :summa))
-        tarkistettava-oikeus (fn []
-                               (if (= (:tyyppi @urakka) :tiemerkinta)
-                                 oikeudet/urakat-toteutus-kokonaishintaisettyot
-                                 oikeudet/urakat-suunnittelu-kokonaishintaisettyot))]
+                                               :summa))]
 
-      (hae-urakan-tiedot ur)
+    (aseta-urakka! ur)
 
     (komp/luo
      {:component-will-receive-props
       (fn [this & [_ ur]]
-        (hae-urakan-tiedot ur))
+        (aseta-urakka! ur))
 
       :component-will-unmount
       (fn [this]
@@ -240,12 +234,13 @@
              {:otsikko (str "Kokonaishintaiset työt: " (:tpi_nimi @u/valittu-toimenpideinstanssi))
               :piilota-toiminnot? true
               :tyhja (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
-              :tallenna (if (oikeudet/voi-kirjoittaa? (tarkistettava-oikeus) (:id ur))
+              :tallenna (if (oikeudet/voi-kirjoittaa?
+                              (oikeudet/tarkistettava-oikeus-kok-hint-tyot (:tyyppi ur)) (:id ur))
                           #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi urakan-kok-hint-tyot % tuleville?)
                           :ei-mahdollinen)
               :tallennus-ei-mahdollinen-tooltip (oikeudet/oikeuden-puute-kuvaus
                                                  :kirjoitus
-                                                 (tarkistettava-oikeus))
+                                                 (oikeudet/tarkistettava-oikeus-kok-hint-tyot (:tyyppi ur)))
               :tallenna-vain-muokatut false
               :peruuta #(reset! tuleville? false)
               :tunniste #((juxt :vuosi :kuukausi) %)

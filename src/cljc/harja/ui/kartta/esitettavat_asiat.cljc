@@ -249,16 +249,18 @@
                                 ikoni viiva))))
 
 (def tarkastus-selitteet
-  #{{:teksti "Tarkastus (ok)" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true nil))}
-    {:teksti "Tarkastus, urakoitsija (ok)" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true :urakoitsija))}
-    {:teksti "Laadun\u00ADalitus" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti false nil))}
-    {:teksti "Laadun\u00ADalitus, urakoitsija" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti false :urakoitsija))}})
+  #{{:teksti "Tarkastus OK" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true nil nil))}
+    {:teksti "Tarkastus OK, urakoitsija " :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true nil :urakoitsija))}
+    {:teksti "Tarkastus havainnolla" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true "Vesakko raivaamatta" nil))}
+    {:teksti "Tie luminen tai liukas" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true "Lumista" nil))}
+    {:teksti "Laadun\u00ADalitus" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti false nil nil))}
+    {:teksti "Laadun\u00ADalitus, urakoitsija" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti false nil :urakoitsija))}})
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu-fn?]
   (let [ikoni (ulkoasu/tarkastuksen-ikoni
-               (valittu-fn? tarkastus) (:ok? tarkastus) (reitillinen-asia? tarkastus)
+               (valittu-fn? tarkastus) (:ok? tarkastus) (:vakiohavainnot tarkastus) (reitillinen-asia? tarkastus)
                (:tekija tarkastus))
-        viiva (ulkoasu/tarkastuksen-reitti (:ok? tarkastus) (:tekija tarkastus))
+        viiva (ulkoasu/tarkastuksen-reitti (:ok? tarkastus) (:vakiohavainnot tarkastus) (:tekija tarkastus))
         selite-teksti {:teksti (otsikko-tekijalla "Tarkastus" tarkastus)}
         selite (if ikoni
                  (assoc selite-teksti :img ikoni)
@@ -305,25 +307,25 @@
                  :img    ikoni}
         :alue (maarittele-feature tp (valittu-fn? tp) ikoni)))))
 
-(defn- paikkaus-paallystys [tyyppi pt valittu-fn? teksti]
-  (let [tila (:tila pt)
+(defn- yllapitokohde [tyyppi yllapitokohde valittu-fn? teksti]
+  (let [tila (:tila-kartalla yllapitokohde)
         tila-teksti (str ", " ((fnil name "suunniteltu") tila))
         ikoni (ulkoasu/yllapidon-ikoni)
-        viiva (ulkoasu/yllapidon-viiva (valittu-fn? pt) (:avoin? pt) tila tyyppi)]
-    (assoc pt
-      :nimi (or (:nimi pt) teksti)
+        viiva (ulkoasu/yllapidon-viiva (valittu-fn? yllapitokohde) (:avoin? yllapitokohde) tila tyyppi)]
+    (assoc yllapitokohde
+      :nimi (or (:nimi yllapitokohde) teksti)
       :selite {:teksti (str teksti tila-teksti)
                :vari   (viivojen-varit-leveimmasta-kapeimpaan viiva)}
-      :alue (maarittele-feature pt (valittu-fn? pt)
+      :alue (maarittele-feature yllapitokohde (valittu-fn? yllapitokohde)
                                 ikoni
                                 viiva))))
 
 (defmethod asia-kartalle :paallystys [pt valittu-fn?]
-  (assoc (paikkaus-paallystys :paallystys pt valittu-fn? "Päällystys")
+  (assoc (yllapitokohde :paallystys pt valittu-fn? "Päällystys")
     :type :paallystys))
 
 (defmethod asia-kartalle :paikkaus [pt valittu-fn?]
-  (assoc (paikkaus-paallystys :paikkaus pt valittu-fn? "Paikkaus")
+  (assoc (yllapitokohde :paikkaus pt valittu-fn? "Paikkaus")
     :type :paikkaus))
 
 (let [varien-lkm (count ulkoasu/toteuma-varit-ja-nuolet)]
@@ -476,6 +478,11 @@
                                nil
                                viivat))))
 
+(defn tyokoneen-selite [tehtavat]
+  {:teksti (tehtavan-nimi tehtavat)
+   :vari (viivojen-varit-leveimmasta-kapeimpaan
+          (first (tehtavan-viivat-ja-nuolitiedosto tehtavat false)))})
+
 (defmethod asia-kartalle :tyokone [tyokone valittu-fn?]
   (let [selite-teksti (tehtavan-nimi (:tehtavat tyokone))
         [viivat nuolen-vari] (tehtavan-viivat-ja-nuolitiedosto
@@ -490,7 +497,7 @@
            :selite {:teksti selite-teksti
                     :vari   (viivojen-varit-leveimmasta-kapeimpaan viivat)}
            :alue (maarittele-feature paikka (valittu-fn? tyokone)
-                                     (ulkoasu/tyokoneen-ikoni nuolen-vari (muunna-tyokoneen-suunta (:suunta tyokone)))
+                                     (ulkoasu/tyokoneen-nuoli nuolen-vari)
                                      viivat))))
 
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
@@ -559,4 +566,6 @@
                    (tallenna-selitteet-xf selitteet))
              asiat)
        {:extent    @extent
-        :selitteet @selitteet}))))
+        :selitteet @selitteet
+        ;:hae-asiat funktiotähän
+        }))))

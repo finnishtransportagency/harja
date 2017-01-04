@@ -6,12 +6,11 @@
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.protokollat :refer [Haku hae]]
-            [harja.views.kartta.popupit :as popupit]
-            [harja.tiedot.navigaatio :as navigaatio]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as tiedot]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.views.kartta :as kartta]
+            [harja.tiedot.kartta :as kartta-tiedot]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.komponentti :as komp]
             [harja.pvm :as pvm]
@@ -29,9 +28,6 @@
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction-writable]]))
-
-(defn kokonaishintainen-reitti-klikattu [_ toteuma]
-  (popupit/nayta-popup (assoc toteuma :aihe :toteuma-klikattu)))
 
 (defn tehtavan-paivakohtaiset-tiedot [pvm toimenpidekoodi]
   (let [tiedot (atom nil)]
@@ -92,8 +88,8 @@
       toteumat]]))
 
 (defn tee-valinnat []
-  [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @navigaatio/valittu-urakka]
-  (let [urakka @navigaatio/valittu-urakka]
+  [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @nav/valittu-urakka]
+  (let [urakka @nav/valittu-urakka]
     [:span
      (urakka-valinnat/urakan-sopimus urakka)
      (urakka-valinnat/urakan-hoitokausi urakka)
@@ -271,18 +267,25 @@
              :palstoja 2}]
            @muokattu]])))
 
+(def debug-toteuma (atom {}))
+
 (defn kokonaishintaiset-toteumat []
   (komp/luo
-    (komp/kuuntelija :toteuma-klikattu kokonaishintainen-reitti-klikattu)
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-kokonaishintainen-toteuma)
-
+    (komp/sisaan-ulos #(do
+                         (kartta-tiedot/kasittele-infopaneelin-linkit!
+                          {:toteuma {:toiminto (fn [klikattu-toteuma]
+                                                 (log "klikattu toteuma:" (pr-str klikattu-toteuma))
+                                                 (go
+                                                   (tiedot/valitse-toteuma!
+                                                    (<! (tiedot/hae-toteuman-tiedot
+                                                         (:id @nav/valittu-urakka)
+                                                         (:id klikattu-toteuma))))))
+                                       :teksti "Valitse toteuma"}}))
+                      #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
     (fn []
       [:span
        [kartta/kartan-paikka]
        (if @tiedot/valittu-kokonaishintainen-toteuma
          [kokonaishintainen-toteuma-lomake]
          [kokonaishintaisten-toteumien-listaus])])))
-
-(def tyhjenna-popupit-kun-filtterit-muuttuu (run!
-                                              @tiedot/haetut-toteumat
-                                              (kartta/poista-popup!)))

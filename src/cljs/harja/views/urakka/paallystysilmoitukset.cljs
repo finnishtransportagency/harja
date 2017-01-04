@@ -8,7 +8,6 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
-            [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.kommentit :as kommentit]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.historia :as historia]
@@ -39,7 +38,9 @@
             [harja.tyokalut.vkm :as vkm]
 
             [harja.ui.debug :refer [debug]]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.ui.valinnat :as valinnat]
+            [cljs-time.core :as t])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -530,7 +531,6 @@
 (defn paallystysilmoituslomake [urakka {:keys [yllapitokohde-id yllapitokohdetyyppi] :as lomake}
                                 _ muokkaa! historia tallennus-onnistui]
   (komp/luo
-    (komp/ulos #(kartta/poista-popup!))
     (komp/lukko (lukko/muodosta-lukon-id "paallystysilmoitus" yllapitokohde-id))
     (fn [urakka {:keys [virheet tila kirjoitusoikeus?] :as lomakedata-nyt}
          lukko muokkaa! historia tallennus-onnistui]
@@ -680,7 +680,6 @@
 (defn ilmoitusluettelo
   []
   (komp/luo
-    (komp/ulos #(kartta/poista-popup!))
     (komp/kuuntelija :avaa-paallystysilmoitus
                      (fn [_ rivi]
                        (avaa-paallystysilmoitus (:paallystyskohde-id rivi))))
@@ -717,14 +716,19 @@
            (reset! paallystys/paallystysilmoitukset vastaus)
            (reset! ilmoituslomake nil))]))))
 
-(defn paallystysilmoitukset []
+(defn paallystysilmoitukset [urakka]
   (komp/luo
-    (komp/ulos #(kartta/poista-popup!))
     (komp/lippu paallystys/paallystysilmoitukset-nakymassa?)
 
-    (fn []
+    (fn [urakka]
       [:div.paallystysilmoitukset
        [kartta/kartan-paikka]
        (if @paallystys/paallystysilmoitus-lomakedata
          [paallystysilmoituslomake-historia paallystys/paallystysilmoitus-lomakedata]
-         [ilmoitusluettelo])])))
+         [:div
+          [valinnat/vuosi {}
+           (t/year (:alkupvm urakka))
+           (t/year (:loppupvm urakka))
+           urakka/valittu-urakan-vuosi
+           urakka/valitse-urakan-vuosi!]
+          [ilmoitusluettelo]])])))

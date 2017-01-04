@@ -18,7 +18,7 @@
 
             [harja.ui.dom :as dom]
             [harja.ui.kartta.ikonit :as kartta-ikonit]
-            [harja.views.kartta :as kartta]
+            [harja.tiedot.kartta :as kartta]
             [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
             [harja.views.kartta.tasot :as tasot]
             [harja.geo :as geo]
@@ -72,7 +72,8 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 (defmethod nayta-arvo :default [_ data]
   [:span (str @data)])
 
-(defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake? hae-kun-yli-n-merkkia]} data]
+(defmethod tee-kentta :haku [{:keys [lahde nayta placeholder pituus lomake? sort-fn
+                                     kun-muuttuu hae-kun-yli-n-merkkia]} data]
   (let [nyt-valittu @data
         teksti (atom (if nyt-valittu
                        ((or nayta str) nyt-valittu) ""))
@@ -107,6 +108,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                  (let [v (-> % .-target .-value str/triml)]
                                    (reset! data nil)
                                    (reset! teksti v)
+                                   (when kun-muuttuu (kun-muuttuu v))
                                    (if (> (count v) hae-kun-yli-n-merkkia)
                                      (do (reset! tulokset :haetaan)
                                          (go (let [tul (<! (hae lahde v))]
@@ -137,6 +139,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                                  (let [v (nth t idx)]
                                                    (reset! data v)
                                                    (reset! teksti ((or nayta str) v))
+                                                   (when kun-muuttuu (kun-muuttuu nil))
                                                    (reset! tulokset nil)))))}]
          (when (zero? hae-kun-yli-n-merkkia)
            [:button.nappi-hakualasveto
@@ -147,7 +150,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
          [:ul.hakukentan-lista.dropdown-menu {:role  "menu"
                                               :style (avautumissuunta-ja-korkeus-tyylit
                                                        @max-korkeus @avautumissuunta)}
-          (let [nykyiset-tulokset @tulokset
+          (let [nykyiset-tulokset (if (and sort-fn (vector? @tulokset))
+                                    (sort-by sort-fn @tulokset)
+                                    @tulokset)
                 idx @valittu-idx]
             (if (= :haetaan nykyiset-tulokset)
               [:li {:role "presentation"} (ajax-loader) " haetaan: " @teksti]
@@ -159,6 +164,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                        [linkki ((or nayta str) t) #(do
                                                                     (reset! data t)
                                                                     (reset! teksti ((or nayta str) t))
+                                                                    (when kun-muuttuu (kun-muuttuu nil))
                                                                     (reset! tulokset nil))]])
                                     nykyiset-tulokset)))))]]))))
 
@@ -267,10 +273,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
 (defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara] :as kentta} data]
   (let [desimaalien-maara (or (when kokonaisluku? 0) desimaalien-maara +desimaalin-oletus-tarkkuus+)
-        fmt (or
-              ;; Kentälle voi antaa :fmt option, mutta lienee turvallista olla välittämättä siitä täällä
-              #(fmt/desimaaliluku-opt % desimaalien-maara)
-              str)]
+        fmt #(fmt/desimaaliluku-opt % desimaalien-maara)]
     [:span (normalisoi-numero (fmt @data))]))
 
 (defmethod tee-kentta :positiivinen-numero [kentta data]
@@ -704,17 +707,16 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
   (every? #(get osoite %) [:numero :alkuosa :alkuetaisyys]))
 
 (defn tr-kentan-elementti [lomake? kartta? muuta! blur placeholder value key disabled?]
-  [:td
-   [:input.tierekisteri {:class       (str
-                                       "tr-" (name key) " "
-                                       (when lomake? "form-control ")
-                                       (when disabled? "disabled "))
-                         :size        5 :max-length 10
-                         :placeholder placeholder
-                         :value       value
-                         :disabled disabled?
-                         on-change*   (muuta! key)
-                         :on-blur     blur}]])
+  [:input.tierekisteri {:class       (str
+                                      "tr-" (name key) " "
+                                      (when lomake? "form-control ")
+                                      (when disabled? "disabled "))
+                        :size        5 :max-length 10
+                        :placeholder placeholder
+                        :value       value
+                        :disabled disabled?
+                        on-change*   (muuta! key)
+                        :on-blur     blur}])
 
 (defn piste-tai-eka [arvo]
   (if (vector? (:geometria arvo))
@@ -729,7 +731,68 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
       muuttumaton? " Muokkaa reittiä"
       :else " Muuta valintaa")))
 
-(defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? ala-nayta-virhetta-komponentissa? sijainti pakollinen?]} data]
+(defn- tierekisterikentat-table [pakollinen? tie aosa aet losa loppuet karttavalinta virhe]
+  [:table
+   [:thead
+    [:tr
+     [:th
+      [:span "Tie"]
+      (when pakollinen? [:span.required-tahti " *"])]
+     [:th
+      [:span "aosa"]
+      (when pakollinen? [:span.required-tahti " *"])]
+     [:th
+      [:span "aet"]
+      (when pakollinen? [:span.required-tahti " *"])]
+     [:th "losa"]
+     [:th "let"]]]
+   [:tbody
+    [:tr
+     [:td tie]
+     [:td aosa]
+     [:td aet]
+     [:td losa]
+     [:td loppuet]
+     [:td.karttavalinta
+      karttavalinta]
+     (when virhe
+       [:td virhe])]]])
+
+(defn- tierekisterikentat-rivitetty
+  "Erilainen tyyli TR valitsimelle, jos lomake on hyvin kapea.
+  Rivittää tierekisterivalinnan usealle riville."
+  [pakollinen? tie aosa aet losa loppuet karttavalinta virhe]
+  [:table
+   [:tbody
+    [:tr
+     [:td {:colSpan 2}
+      [:label.control-label [:span.kentan-label "Tie"]]
+      (when pakollinen? [:span.required-tahti " *"])]]
+    [:tr
+     [:td {:colSpan 2}
+      tie]]
+    [:tr
+     [:td
+      [:label.control-label [:span.kentan-label "Alkuosa"]]
+      (when pakollinen? [:span.required-tahti " *"])]
+     [:td
+      [:label.control-label [:span.kentan-label "Alkuetäisyys"]]
+      (when pakollinen? [:span.required-tahti " *"])]]
+    [:tr
+     [:td aosa] [:td aet]]
+    [:tr
+     [:td [:label.control-label [:span.kentan-label "Loppuosa"]]]
+     [:td [:label.control-label [:span.kentan-label "Loppuetäisyys"]]]]
+    [:tr
+     [:td losa] [:td loppuet]]
+    [:tr
+     [:td {:colSpan 2} karttavalinta]]
+    (when virhe
+      [:tr
+       [:td {:colSpan 2} virhe]])]])
+
+
+(defmethod tee-kentta :tierekisteriosoite [{:keys [tyyli lomake? ala-nayta-virhetta-komponentissa? sijainti pakollinen?]} data]
   (let [osoite-alussa @data
 
         hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
@@ -795,8 +858,11 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                    (tasot/poista-geometria! :tr-valittu-osoite)
                    (kartta/zoomaa-geometrioihin)))
 
-      (fn [{:keys [lomake? sijainti]} data]
-        (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys] :as osoite} @data
+      (fn [{:keys [tyyli lomake? sijainti]} data]
+        (let [tierekisterikentat (if (= tyyli :rivitetty)
+                                   tierekisterikentat-rivitetty
+                                   tierekisterikentat-table)
+              {:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys] :as osoite} @data
               muuta! (fn [kentta]
                        #(let [v (-> % .-target .-value)
                               tr (swap! data assoc kentta (when (and (not (= "" v))
@@ -820,55 +886,45 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
              [:div {:class "virheet"}
               [:div {:class "virhe"}
                [:span (ikonit/livicon-warning-sign) [:span @virheet]]]])
-           [:table
-            [:thead
-             [:tr
-              [:th
-               [:span "Tie"]
-               (when pakollinen? [:span.required-tahti " *"])]
-              [:th
-               [:span "aosa"]
-               (when pakollinen? [:span.required-tahti " *"])]
-              [:th
-               [:span "aet"]
-               (when pakollinen? [:span.required-tahti " *"])]
-              [:th "losa"]
-              [:th "let"]]]
-            [:tbody
-             [:tr
-              [tr-kentan-elementti lomake? kartta? muuta! blur "Tie" numero :numero @karttavalinta-kaynnissa]
-              [tr-kentan-elementti lomake? kartta? muuta! blur "aosa" alkuosa :alkuosa @karttavalinta-kaynnissa]
-              [tr-kentan-elementti lomake? kartta? muuta! blur "aet" alkuetaisyys :alkuetaisyys @karttavalinta-kaynnissa]
-              [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa :loppuosa @karttavalinta-kaynnissa]
-              [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys :loppuetaisyys @karttavalinta-kaynnissa]
-              (if-not @karttavalinta-kaynnissa
-                [:td.karttavalinta
-                 [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
-                                                             (reset! osoite-ennen-karttavalintaa osoite)
-                                                             (reset! data {})
-                                                             (reset! karttavalinta-kaynnissa true))}
-                  (ikonit/map-marker) (tr-valintanapin-teksti osoite-alussa osoite)]]
-                [tr/karttavalitsin {:kun-peruttu #(do
-                                                   (reset! data @osoite-ennen-karttavalintaa)
-                                                   (reset! karttavalinta-kaynnissa false))
-                                    :paivita     #(swap! data merge %)
-                                    :kun-valmis  #(do
-                                                   (reset! data %)
-                                                   (reset! karttavalinta-kaynnissa false)
-                                                   (log "Saatiin tr-osoite! " (pr-str %))
-                                                   (go (>! tr-osoite-ch %)))}])
-              (when-let [sijainti (and hae-sijainti @sijainti)]
-                (when (vkm/virhe? sijainti)
-                  [:td [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]]))]]]])))))
+
+           [tierekisterikentat
+            pakollinen?
+            [tr-kentan-elementti lomake? kartta? muuta! blur "Tie" numero :numero @karttavalinta-kaynnissa]
+            [tr-kentan-elementti lomake? kartta? muuta! blur "aosa" alkuosa :alkuosa @karttavalinta-kaynnissa]
+            [tr-kentan-elementti lomake? kartta? muuta! blur "aet" alkuetaisyys :alkuetaisyys @karttavalinta-kaynnissa]
+            [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa :loppuosa @karttavalinta-kaynnissa]
+            [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys :loppuetaisyys @karttavalinta-kaynnissa]
+            (if-not @karttavalinta-kaynnissa
+              [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
+                                                          (reset! osoite-ennen-karttavalintaa osoite)
+                                                          (reset! data {})
+                                                          (reset! karttavalinta-kaynnissa true))}
+               (ikonit/map-marker) (tr-valintanapin-teksti osoite-alussa osoite)]
+              [tr/karttavalitsin {:kun-peruttu #(do
+                                                  (reset! data @osoite-ennen-karttavalintaa)
+                                                  (reset! karttavalinta-kaynnissa false))
+                                  :paivita     #(swap! data merge %)
+                                  :kun-valmis  #(do
+                                                  (reset! data %)
+                                                  (reset! karttavalinta-kaynnissa false)
+                                                  (log "Saatiin tr-osoite! " (pr-str %))
+                                                  (go (>! tr-osoite-ch %)))}])
+            (when-let [sijainti (and hae-sijainti @sijainti)]
+              (when (vkm/virhe? sijainti)
+                [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]))]])))))
 
 (defmethod nayta-arvo :tierekisteriosoite [_ data]
-  (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data]
+  (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data
+        loppu? (or loppuosa loppuetaisyys)]
     [:span.tierekisteriosoite
      [:span.tie "Tie " numero] " / "
      [:span.alkuosa alkuosa] " / "
-     [:span.alkuetaisyys alkuetaisyys] " / "
-     [:span.loppuosa loppuosa] " / "
-     [:span.loppuetaisyys loppuetaisyys]]))
+     [:span.alkuetaisyys alkuetaisyys]
+     (when loppu?
+       [:span
+        " / "
+        [:span.loppuosa loppuosa] " / "
+        [:span.loppuetaisyys loppuetaisyys]])]))
 
 (defn tee-otsikollinen-kentta [otsikko kentta-params arvo-atom]
   [:span.label-ja-kentta

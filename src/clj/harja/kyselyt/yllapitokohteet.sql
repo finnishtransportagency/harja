@@ -151,7 +151,14 @@ SELECT
   ypk.tr_ajorata                        AS "tr-ajorata",
   ypk.tr_kaista                         AS "tr-kaista",
   ypk.yhaid,
-  ypk.yllapitokohdetyyppi
+  ypk.yllapitokohdetyyppi,
+  ypk.yllapitokohdetyotyyppi,
+  ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
+  ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
+  ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
+  ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
+  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -160,6 +167,8 @@ FROM yllapitokohde ypk
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
+  AND (:vuosi::INTEGER IS NULL OR (cardinality(vuodet) = 0
+       OR vuodet @> ARRAY[:vuosi]::int[]))
   AND ypk.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-yllapitokohteet-lomakkeelle
@@ -212,7 +221,7 @@ INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi,
                            tr_ajorata, tr_kaista, keskimaarainen_vuorokausiliikenne,
                            yllapitoluokka, sopimuksen_mukaiset_tyot,
                            arvonvahennykset, bitumi_indeksi, kaasuindeksi, yllapitokohdetyyppi,
-                           yllapitokohdetyotyyppi)
+                           yllapitokohdetyotyyppi, vuodet)
 VALUES (:urakka,
   :sopimus,
   :kohdenumero,
@@ -231,7 +240,8 @@ VALUES (:urakka,
   :bitumi_indeksi,
   :kaasuindeksi,
   :yllapitokohdetyyppi :: yllapitokohdetyyppi,
-  :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi);
+  :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi,
+  :vuodet::integer[]);
 
 -- name: paivita-yllapitokohde!
 -- Päivittää ylläpitokohteen
@@ -265,7 +275,7 @@ WHERE id = :id
 -- name: luo-yllapitokohdeosa<!
 -- Luo uuden yllapitokohdeosan
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tunnus, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-                              tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide, sijainti)
+                              tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide, ulkoinen_id, sijainti)
 VALUES (:yllapitokohde,
   :nimi,
   :tunnus,
@@ -277,12 +287,13 @@ VALUES (:yllapitokohde,
   :tr_ajorata,
   :tr_kaista,
   :toimenpide,
-  (SELECT tierekisteriosoitteelle_viiva AS geom
-   FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
-                                      CAST(:tr_alkuosa AS INTEGER),
-                                      CAST(:tr_alkuetaisyys AS INTEGER),
-                                      CAST(:tr_loppuosa AS INTEGER),
-                                      CAST(:tr_loppuetaisyys AS INTEGER))));
+        :ulkoinen-id,
+        (SELECT tierekisteriosoitteelle_viiva AS geom
+         FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
+                                            CAST(:tr_alkuosa AS INTEGER),
+                                            CAST(:tr_alkuetaisyys AS INTEGER),
+                                            CAST(:tr_loppuosa AS INTEGER),
+                                            CAST(:tr_loppuetaisyys AS INTEGER))));
 
 -- name: paivita-yllapitokohdeosa<!
 -- Päivittää yllapitokohdeosan
@@ -349,6 +360,8 @@ FROM yllapitokohde
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
+  AND (:vuosi::INTEGER IS NULL OR (cardinality(vuodet) = 0
+     OR vuodet @> ARRAY[:vuosi]::int[]))
   AND poistettu IS NOT TRUE;
 
 -- name: hae-tiemerkintaurakan-aikataulu
@@ -379,6 +392,8 @@ SELECT
 FROM yllapitokohde
 WHERE
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
+  AND (:vuosi::INTEGER IS NULL OR (cardinality(vuodet) = 0
+     OR vuodet @> ARRAY[:vuosi]::int[]))
   AND poistettu IS NOT TRUE;
 
 -- name: hae-urakan-tyyppi

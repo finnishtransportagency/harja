@@ -16,11 +16,7 @@
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
             [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi]
-            [harja.palvelin.integraatiot.tierekisteri.tietolajin-kuvauksen-kasittely :as tr-tietolaji]
-            [clj-time.core :as t]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [clojure.string :as str]
-            [harja.geo :as geo])
+            [harja.domain.tierekisteri.tietolajit :as tietolajit])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (org.postgis GeometryCollection Geometry PGgeometry)))
 
@@ -183,7 +179,7 @@
 (defn- etsi-varustetoteuma
   "Etsii toimenpiteen varustetoteuman id:n kannasta annettujen tietojen perusteella"
   [db toteuma-id tunniste tietolaji toimenpiteen-tiedot tehty-toimenpide]
-  (first (toteumat-q/hae-varustetoteuma
+  (first (toteumat-q/hae-varustetoteuma-toteumalla
            db
            {:toteumaid toteuma-id
             :tunniste tunniste
@@ -217,7 +213,7 @@
                        (get-in toimenpiteen-tiedot [:varuste :tunniste]))
             tie (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
             tietolajin-arvot-string (when tietolajin-arvot
-                                      (varusteet/validoi-ja-muunna-arvot-merkkijonoksi
+                                      (tietolajit/validoi-ja-muunna-arvot-merkkijonoksi
                                         tierekisteri
                                         tietolajin-arvot
                                         tietolaji))

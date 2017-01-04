@@ -19,7 +19,7 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce nakymassa? (atom false))
-(defonce valittu-tila (atom :nykytilanne))
+(defonce valittu-tila (reaction (nav/valittu-valilehti :tilannekuva)))
 
 (def
   ^{:doc "Kuinka pitkä urakan nimi hyväksytään pudotusvalikkoon"
@@ -56,7 +56,8 @@ hakutiheys-historiakuva 1200000)
                 tk/tiemerkintakone false
                 tk/kuumennuslaite false
                 tk/sekoitus-ja-stabilointijyrsin false
-                tk/tma-laite false}
+                tk/tma-laite false
+                tk/jyra false}
      :ilmoitukset {:tyypit {tk/tpp false
                             tk/tur false
                             tk/urk false}}
@@ -324,14 +325,6 @@ hakutiheys-historiakuva 1200000)
          :aikavali-historia @historiakuvan-aikavali
          :suodattimet @suodattimet}))
 
-(def tyhjenna-popupit-kun-filtterit-muuttuu
-  (run!
-    @valittu-tila
-    @nykytilanteen-aikasuodattimen-arvo
-    @historiakuvan-aikavali
-    @suodattimet
-    (kartta/poista-popup!)))
-
 (defn kartan-tyypiksi [t avain tyyppi]
   (assoc t avain (map #(assoc % :tyyppi-kartalla tyyppi) (avain t))))
 
@@ -343,11 +336,6 @@ hakutiheys-historiakuva 1200000)
             (:aikavali-historia @edellisen-haun-kayttajan-suodattimet))
       (not= @suodattimet
             (:suodattimet @edellisen-haun-kayttajan-suodattimet))))
-
-(defn- julkaise-tyokonedata! [tulos]
-  (tapahtumat/julkaise! {:aihe :uusi-tyokonedata
-                         :tyokoneet (vals (:tyokoneet tulos))})
-  tulos)
 
 
 (defn hae-asiat [hakuparametrit]
@@ -369,8 +357,7 @@ hakutiheys-historiakuva 1200000)
             (k/url-parametri (aikaparametrilla-kuva (dissoc hakuparametrit :alue))))
 
     (let [tulos (-> (<! (k/post! :hae-tilannekuvaan (aikaparametrilla hakuparametrit)))
-                    (assoc :tarkastukset (:tarkastukset hakuparametrit))
-                    (julkaise-tyokonedata!))]
+                    (assoc :tarkastukset (:tarkastukset hakuparametrit)))]
       (when @nakymassa?
         (reset! tilannekuva-kartalla/haetut-asiat tulos))
       (kartta/aseta-paivitetaan-karttaa-tila! false))))
@@ -413,7 +400,8 @@ hakutiheys-historiakuva 1200000)
           (paivita-periodisesti asioiden-haku
                                 (case @valittu-tila
                                   :nykytilanne hakutiheys-nykytilanne
-                                  :historiakuva hakutiheys-historiakuva))))
+                                  :historiakuva hakutiheys-historiakuva
+                                  :tienakyma hakutiheys-historiakuva))))
 
 (defn lopeta-periodinen-haku-jos-kaynnissa []
   (when @lopeta-haku

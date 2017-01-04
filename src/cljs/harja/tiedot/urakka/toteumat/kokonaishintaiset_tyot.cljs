@@ -21,6 +21,15 @@
                 :ytunnus (:ytunnus @u/urakan-organisaatio)}})
 (def haetut-reitit (atom nil))
 
+(defn hae-toteuman-tiedot
+  "Hakee yksittäisen toteuman tiedot lomaketta varten"
+  [urakka-id toteuma-id]
+  (go
+    (first
+     (<! (k/post! :hae-kokonaishintaisen-toteuman-tiedot
+                  {:urakka-id urakka-id
+                   :toteuma-id toteuma-id})))))
+
 (defn hae-kokonaishintaisen-toteuman-tiedot
   "Hakee annetun toimenpidekoodin ja päivämäärän yksityiskohtaiset tiedot."
   [urakka-id pvm toimenpidekoodi]

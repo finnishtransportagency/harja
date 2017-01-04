@@ -1,17 +1,14 @@
--- name: tallenna-tyokonehavainto
+-- name: tallenna-tyokonehavainto<!
 -- Luo tai päivittää työkonehavainnon tietokantaan
-SELECT tallenna_tai_paivita_tyokonehavainto(
-    CAST(:jarjestelma AS CHARACTER VARYING),
-    CAST(:organisaationimi AS CHARACTER VARYING),
-    CAST(:ytunnus AS CHARACTER VARYING),
-    CAST(:viestitunniste AS INTEGER),
-    CAST(:lahetysaika AS TIMESTAMP),
-    CAST(:tyokoneid AS INTEGER),
-    CAST(:tyokonetyyppi AS CHARACTER VARYING),
-    CAST(ST_MakePoint(:xkoordinaatti, :ykoordinaatti) AS POINT),
-    CAST(:suunta AS REAL),
-    CAST(:urakkaid AS INTEGER),
-    CAST(:tehtavat AS suoritettavatehtava []));
+INSERT INTO tyokonehavainto
+       (jarjestelma, organisaatio, viestitunniste, lahetysaika,
+        tyokoneid, tyokonetyyppi, sijainti, urakkaid, tehtavat, suunta)
+VALUES (:jarjestelma,
+        (SELECT id FROM organisaatio WHERE nimi=:organisaationimi AND ytunnus=:ytunnus),
+        :viestitunniste, CAST(:lahetysaika AS TIMESTAMP), :tyokoneid, :tyokonetyyppi,
+	ST_MakePoint(:xkoordinaatti, :ykoordinaatti)::POINT,
+	:urakkaid, :tehtavat::suoritettavatehtava[], :suunta);
+
 
 -- name: tyokoneet-alueella
 -- Etsii kaikki työkoneet annetulta alueelta

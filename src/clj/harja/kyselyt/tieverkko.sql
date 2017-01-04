@@ -74,3 +74,9 @@ WHERE tie = :tie AND
       ((:aosa::integer IS NULL AND :losa::integer IS NULL)
        OR
        (osa BETWEEN :aosa AND :losa));
+
+-- name: hae-tieosan-ajoradat
+SELECT ajorata
+FROM tr_osan_ajorata
+WHERE tie = :tie AND osa = :osa
+ORDER BY ajorata ASC;

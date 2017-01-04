@@ -42,6 +42,7 @@
 
 (def yllapitokohde-testidata {:kohdenumero 999
                               :nimi "Testiramppi4564ddf"
+                              :yllapitokohdetyotyyppi :paallystys
                               :sopimuksen_mukaiset_tyot 400
                               :bitumi_indeksi 123
                               :kaasuindeksi 123})
@@ -74,6 +75,28 @@
                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")")))]
     (is (= (count res) kohteiden-lkm) "Päällystyskohteiden määrä")))
 
+(deftest paallystyskohteet-haettu-oikein-vuodelle-2017
+  (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :urakan-yllapitokohteet +kayttaja-jvh+
+                            {:urakka-id @muhoksen-paallystysurakan-id
+                             :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                             :vuosi 2017})
+        kohteiden-lkm (ffirst (q
+                                (str "SELECT COUNT(*)
+                                      FROM yllapitokohde
+                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")
+                                      AND vuodet @> ARRAY[2017]::int[]")))]
+    (is (> (count res) 0) "Päällystyskohteita löytyi")
+    (is (= (count res) kohteiden-lkm) "Löytyi oikea määrä kohteita")))
+
+(deftest paallystyskohteet-haettu-oikein-vuodelle-2016
+  (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :urakan-yllapitokohteet +kayttaja-jvh+
+                            {:urakka-id @muhoksen-paallystysurakan-id
+                             :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                             :vuosi 2016})]
+    (is (= (count res) 0) "Ei päällystyskohteita vuodelle 2016")))
+
 (deftest tallenna-paallystyskohde-kantaan
   (let [urakka-id @muhoksen-paallystysurakan-id
         sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
@@ -98,6 +121,23 @@
       (is (not (nil? kohteet-kannassa)))
       (is (not= urakan-geometria-ennen-muutosta urakan-geometria-muutoksen-jalkeen "Urakan geometria päivittyi"))
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
+      (u (str "DELETE FROM yllapitokohde WHERE nimi = 'Testiramppi4564ddf';")))))
+
+(deftest tallenna-paallystyskohde-kantaan-vuodelle-2015
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id]
+
+    (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
+                                                              :sopimus-id sopimus-id
+                                                              :vuosi 2015
+                                                              :kohteet [yllapitokohde-testidata]})
+    (let [kohteet-kannassa (ffirst (q
+                                     (str "SELECT COUNT(*)
+                                      FROM yllapitokohde
+                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")
+                                      AND vuodet @> ARRAY[2015]::int[]")))]
+      (is (= kohteet-kannassa 1) "Kohde tallentui oikein")
       (u (str "DELETE FROM yllapitokohde WHERE nimi = 'Testiramppi4564ddf';")))))
 
 (deftest ala-poista-paallystyskohdetta-jolla-ilmoitus
@@ -211,8 +251,8 @@
                   :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2016 12:00")
                   :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2016 12:00")
                   :aikataulu-tiemerkinta-takaraja (pvm/->pvm "1.6.2016")
-                  :aikataulu-tiemerkinta-alku nil
-                  :aikataulu-tiemerkinta-loppu nil
+                  :aikataulu-tiemerkinta-alku (pvm/->pvm-aika "22.5.2016 00:00")
+                  :aikataulu-tiemerkinta-loppu (pvm/->pvm-aika "23.5.2016 00:00")
                   :id 1
                   :kohdenumero "L03"
                   :nimi "Leppäjärven ramppi"

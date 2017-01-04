@@ -68,18 +68,27 @@
 
 (declare kasittele-istunto-vanhentunut)
 
-(defn- kysely [palvelu metodi parametrit transducer paasta-virhe-lapi?]
-  (let [chan (chan)
-        cb (fn [[_ vastaus]]
+(defn extranet-virhe? [vastaus]
+  (= 0 (:status vastaus)))
+
+(defn- kysely [palvelu metodi parametrit transducer paasta-virhe-lapi? chan yritysten-maara]
+  (let [cb (fn [[_ vastaus]]
              (when-not (nil? vastaus)
                (cond
                  (= (:status vastaus) 302)
-                 (kasittele-istunto-vanhentunut)
+                 (do (kasittele-istunto-vanhentunut)
+                     (close! chan))
+
                  (and (virhe? vastaus) (not paasta-virhe-lapi?))
-                 (kasittele-palvelinvirhe palvelu vastaus)
+                 (do (kasittele-palvelinvirhe palvelu vastaus)
+                     (close! chan))
+
+                 (and (extranet-virhe? vastaus) (contains? #{:post :get} metodi) (< yritysten-maara 4))
+                 (kysely palvelu metodi parametrit transducer paasta-virhe-lapi? chan (+ yritysten-maara 1))
+
                  :default
-                 (put! chan (if transducer (into [] transducer vastaus) vastaus))))
-             (close! chan))]
+                 (do (put! chan (if transducer (into [] transducer vastaus) vastaus))
+                     (close! chan)))))]
     (go
       (if-let [testipalvelu @testmode]
         (do
@@ -95,6 +104,7 @@
                        :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
                                                                   :raw    true})
                        :handler         cb
+
                        :error-handler   (fn [[resp error]]
                                           (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
                                           (close! chan))})))
@@ -105,16 +115,18 @@
 Kolmen parametrin versio ottaa lisäksi transducerin, jolla tulosdata vektori muunnetaan ennen kanavaan kirjoittamista."
   ([service payload] (post! service payload nil false))
   ([service payload transducer] (post! service payload transducer false))
-  ([service payload transducer paasta-virhe-lapi?]
-   (kysely service :post payload transducer paasta-virhe-lapi?)))
+  ([service payload transducer paasta-virhe-lapi?] (post! service payload transducer paasta-virhe-lapi? (chan) 0))
+  ([service payload transducer paasta-virhe-lapi? kanava yritysten-maara]
+   (kysely service :post payload transducer paasta-virhe-lapi? kanava yritysten-maara)))
 
 (defn get!
   "Lähetä HTTP GET -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea.
 Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muunnetaan ennen kanavaan kirjoittamista."
   ([service] (get! service nil false))
   ([service transducer] (get! service transducer false))
-  ([service transducer paasta-virhe-lapi?]
-   (kysely service :get nil transducer paasta-virhe-lapi?)))
+  ([service transducer paasta-virhe-lapi?] (get! service transducer paasta-virhe-lapi? (chan) 0))
+  ([service transducer paasta-virhe-lapi? kanava yritysten-maara]
+   (kysely service :get nil transducer paasta-virhe-lapi? kanava yritysten-maara)))
 
 (defn laheta-liite!
   "Lähettää liitetiedoston palvelimen liitepolkuun. Palauttaa kanavan, josta voi lukea edistymisen.
@@ -254,7 +266,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   "Tarkistaa ollaanko kehitysympäristössä"
   (let [host (.-host js/location)]
     (or (gstr/startsWith host "10.10.")
-        (#{"localhost" "localhost:3000" "localhost:8000"
+        (#{"localhost" "localhost:3000" "localhost:8000" "harja-c7-dev.lxd:8000"
            "harja-test.solitaservices.fi"
            "harja-dev1" "harja-dev2" "harja-dev3" "harja-dev4" "harja-dev5" "harja-dev6"
            "testiextranet.liikennevirasto.fi"} host))))

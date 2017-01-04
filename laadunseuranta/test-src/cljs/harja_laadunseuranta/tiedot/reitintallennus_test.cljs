@@ -49,15 +49,15 @@
                         {:sijainnin-tallennus-mahdollinen-atom sijainin-tallennus-mahdollinen
                          :sijainti-atom sijainti
                          :db @db
-                         :tarkastusajo-paattymassa paattymassa
+                         :tarkastusajo-paattymassa-atom paattymassa
                          :segmentti-atom segmentti
                          :reittipisteet-atom reittipisteet
-                         :tallennus-kaynnissa-atom tallennus-kaynnissa
+                         :tarkastusajo-kaynnissa-atom tallennus-kaynnissa
                          :tarkastusajo-atom tarkastusajo-id
                          :tarkastuspisteet-atom tarkastuspisteet
-                         :soratiemittaussyotto soratiemittaussyotto
-                         :mittaustyyppi mittaustyyppi
-                         :jatkuvat-havainnot jatkuvat-havainnot})]
+                         :soratiemittaussyotto-atom soratiemittaussyotto
+                         :mittaustyyppi-atom mittaustyyppi
+                         :jatkuvat-havainnot-atom jatkuvat-havainnot})]
 
         (testing "Jos tallennus ei käynnissä, segmentin muutos ei mene reittipisteisiin"
           (reset! segmentti [[1 1] [2 2]])

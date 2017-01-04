@@ -10,9 +10,9 @@
             [harja-laadunseuranta.ui.alustus :as alustus]
             [harja-laadunseuranta.ui.ylapalkki :as ylapalkki]
             [harja-laadunseuranta.ui.paanavigointi :refer [paanavigointi]]
-            [harja-laadunseuranta.ui.tr-haku :as tr-haku]
+            [harja-laadunseuranta.tiedot.tr-haku :as tr-haku]
             [harja-laadunseuranta.ui.havaintolomake :refer [havaintolomake]]
-            [harja-laadunseuranta.ui.tarkastusajon-paattaminen :as tarkastusajon-luonti]
+            [harja-laadunseuranta.ui.tarkastusajon-paattaminen :as tarkastusajon-paattaminen]
             [harja-laadunseuranta.utils :refer [flip erota-havainnot]]
             [cljs.core.async :refer [<! timeout]])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
@@ -34,28 +34,27 @@
 
     [ilmoitukset/ilmoituskomponentti s/ilmoitus]
 
-    (when @s/havaintolomake-auki
+    (when @s/havaintolomake-auki?
       [havaintolomake])
 
-    (when @s/tarkastusajo-paattymassa
-      [:div.tarkastusajon-paattaminen-dialog-container
-       [tarkastusajon-luonti/tarkastusajon-paattamisdialogi s/lahettamattomia-merkintoja]])
+    (when @s/tarkastusajo-paattymassa?
+      [tarkastusajon-paattaminen/tarkastusajon-paattamiskomponentti
+       @s/tarkastusajon-paattamisvaihe])
 
     (when (and @s/palautettava-tarkastusajo (not (= "?relogin=true" js/window.location.search)))
-      [:div.tarkastusajon-paattaminen-dialog-container
-       [tarkastusajon-luonti/tarkastusajon-jatkamisdialogi]])
+      [tarkastusajon-paattaminen/tarkastusajon-jatkamiskomponentti])
 
-    [spinneri s/lahettamattomia-merkintoja]
-    [tr-haku/tr-selailukomponentti s/tr-tiedot-nakyvissa? s/tr-tiedot]]])
+    [spinneri s/lahettamattomia-merkintoja]]])
 
 (defn main []
   (if @s/sovellus-alustettu
     [paanakyma]
     [alustus/alustuskomponentti
-     {:selain-vanhentunut s/selain-vanhentunut
-      :gps-tuettu s/gps-tuettu
-      :ensimmainen-sijainti s/ensimmainen-sijainti
-      :idxdb-tuettu s/idxdb
-      :kayttaja s/kayttajanimi
-      :verkkoyhteys s/verkkoyhteys
-      :selain-tuettu s/selain-tuettu}]))
+     {:selain-vanhentunut @s/selain-vanhentunut
+      :gps-tuettu @s/gps-tuettu
+      :ensimmainen-sijainti @s/ensimmainen-sijainti
+      :oikeus-urakoihin @s/oikeus-urakoihin
+      :idxdb-tuettu @s/idxdb
+      :kayttaja @s/kayttajanimi
+      :verkkoyhteys @s/verkkoyhteys
+      :selain-tuettu @s/selain-tuettu}]))

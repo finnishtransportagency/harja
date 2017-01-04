@@ -6,24 +6,32 @@
 
 (def sovelluksen-alkutila
   {;; Sovelluksen alustustiedot
-   :alustus {:alustettu false
-             :gps-tuettu false
-             :ensimmainen-sijainti nil ; alustusta varten
-             :verkkoyhteys (.-onLine js/navigator)
-             :selain-tuettu (utils/tuettu-selain?)
-             :selain-vanhentunut (utils/vanhentunut-selain?)}
+   :alustus {:alustettu? false
+             :gps-tuettu? false
+             :ensimmainen-sijainti nil ; Estää sovelluksen käytön jos GPS ei toimi oikein
+             :verkkoyhteys? (.-onLine js/navigator)
+             :selain-tuettu? (utils/tuettu-selain?)
+             :selain-vanhentunut? (utils/vanhentunut-selain?)}
 
    ;; Tarkastusajon perustiedot
-   :aloitetaan-tarkastusajo false ; TODO REFACTOR :tarkastusajo-alkamassa? Tarkastusajo alkamassa (nappia painettu UI:sta)
-   :valittu-urakka nil ; Urakka valitaan tietyntyyppisiin ajoihin, muuten päätellään automaattisesti kun tarkastus päättyy
-   :tarkastusajo-id nil ; Palvelinpään id tarkastusajo taulussa
-   :tallennus-kaynnissa false ; TODO REFACTOR :tarkastusajo-kaynnissa?
+   :tarkastusajo-alkamassa? false ; Käynnistysnappia painettu UI:sta
+   :valittu-urakka-id nil ; Päättämisdialogissa valittu urakka-id
+   :tarkastusajo-id nil ; Palvelinpään id tarkastusajo-taulussa
+   :tarkastusajo-kaynnissa? false
    :palautettava-tarkastusajo nil ; TODO REFACTOR dokumentoi tämä
-   :tarkastusajo-paattymassa false ; TODO REFACTOR +? Jos true, näytetään päättämisdialogi
+   :tarkastusajo-paattymassa? false ; Jos true, näytetään päättämisdialogi
+   :tarkastusajon-paattamisvaihe nil ;; Mikä dialogi näytetään:
+                                     ;; :paattamisvarmistus
+                                     ;; :urakkavarmistus
+                                     ;; :paatetaan
+                                     ;; nil
 
    ;; Käyttäjätiedot
    :kayttaja {:kayttajanimi nil
-              :kayttajatunnus nil}
+              :kayttajatunnus nil
+              :roolit #{}
+              :oikeus-urakoihin [] ;; Urakat, joihin tarkastusoikeus, "sopivimmat" ensimmäisenä
+              :organisaatio nil}
 
    ;; Ajonaikaiset tiedot
    :lahettamattomia-merkintoja 0 ; Montako riviä idxdb:ssä on lähettämättä palvelimelle
@@ -43,11 +51,12 @@
                         :valilehdet-nakyvissa? true
                         :valilehtiryhmat [] ; Näkyvien välilehtien määritykset {:avain ..., :nimi ... , :sisalto ...}
                         :valittu-valilehtiryhma 0 ;; Indeksi taulukossa valilehtiryhmat
-                        :valittu-valilehti nil ;; Välilehden avain
+                        :valittu-valilehti nil ; Välilehden avain
                         :hampurilaisvalikon-lista-nakyvissa? false}}
 
    ;; Havainnot
-   :jatkuvat-havainnot #{} ; Tähän tallentuu välikohtaiset havainnot (esim. liukasta, lumista jne.) Tällä hetkellä alas painetut havaintonapit.
+   :jatkuvat-havainnot #{} ; Tähän tallentuu välikohtaiset havainnot (esim. liukasta, lumista jne.).
+                           ; Sama kuin UI:ssa alas painetut havaintonapit.
 
    ;; Mittaukset
    ;; Mittaustiedot kun kyseessä on "perusnäppäimistö"
@@ -67,19 +76,23 @@
                         :kuvaus ""
                         :kuva nil
                         :esikatselukuva nil
+                        :liittyy-havaintoon nil ;; Jos liittyy johonkin aiempaan havaintoon, tässä on havainnon indexed db id.
                         :tr-osoite {:tie nil
                                     :aosa nil
                                     :aet nil
                                     :losa nil
                                     :let nil}}
 
+   :liittyvat-havainnot [] ;; Lista viimeisiä havaintoja, joihin lomake voidaan liittää
+   ;; Item on map: {:id <indexeddb-id> :havainto-avain :lumista :aikaleima <aika> :tr-osoite <tr-osoite-mappi>}
+
    ;; Kartta
    :kirjauspisteet [] ; Kartalla näytettäviä ikoneita varten
    :reittipisteet [] ; Kartalle piirrettävä häntä mäppejä {:segmentti [[x1 y1] [x2 y2]] :vari html-vari}
 
-   :kartta {:keskita-ajoneuvoon false ;; TODO REFACTOR +? kaikkiin
-            :nayta-kiinteistorajat false
-            :nayta-ortokuva false}
+   :kartta {:keskita-ajoneuvoon? false
+            :nayta-kiinteistorajat? false
+            :nayta-ortokuva? false}
 
    ;; Muut
    :vakiohavaintojen-kuvaukset nil ; Serveriltä saadut tiedot vakiohavainnoista
@@ -98,42 +111,47 @@
 (def palautettava-tarkastusajo (reagent/cursor sovellus [:palautettava-tarkastusajo]))
 
 (def tr-tiedot (reagent/cursor sovellus [:tr-tiedot]))
-(def tr-tiedot-nakyvissa? (reagent/cursor sovellus [:ui :tr-tiedot-nakyvissa?]))
 (def tr-osoite (reagent/cursor sovellus [:tr-tiedot :tr-osoite]))
 (def hoitoluokka (reagent/cursor sovellus [:tr-tiedot :talvihoitoluokka]))
 (def soratiehoitoluokka (reagent/cursor sovellus [:tr-tiedot :soratiehoitoluokka]))
 
 (def lahettamattomia-merkintoja (reagent/cursor sovellus [:lahettamattomia-merkintoja]))
 
+(def kayttaja (reagent/cursor sovellus [:kayttaja]))
 (def kayttajanimi (reagent/cursor sovellus [:kayttaja :kayttajanimi]))
 (def kayttajatunnus (reagent/cursor sovellus [:kayttaja :kayttajatunnus]))
+(def roolit (reagent/cursor sovellus [:kayttaja :roolit]))
+(def organisaatio (reagent/cursor sovellus [:kayttaja :organisaatio]))
 
-(def havaintolomake-auki (reagent/cursor sovellus [:havaintolomake-auki?]))
+(def havaintolomake-auki? (reagent/cursor sovellus [:havaintolomake-auki?]))
 (def havaintolomakedata (reagent/cursor sovellus [:havaintolomakedata]))
+(def liittyvat-havainnot (reagent/cursor sovellus [:liittyvat-havainnot]))
 (def havaintolomake-kuva (reagent/cursor sovellus [:havaintolomakedata :kuva]))
 (def havaintolomake-esikatselukuva (reagent/cursor sovellus [:havaintolomakedata :esikatselukuva]))
 
 (def alustus-valmis (reaction (let [sovellus @sovellus]
-                                (boolean (and (get-in sovellus [:alustus :gps-tuettu])
+                                (boolean (and (get-in sovellus [:alustus :gps-tuettu?])
                                               (get-in sovellus [:alustus :ensimmainen-sijainti])
-                                              (get-in sovellus [:alustus :verkkoyhteys])
-                                              (get-in sovellus [:alustus :selain-tuettu])
+                                              (get-in sovellus [:alustus :verkkoyhteys?])
+                                              (get-in sovellus [:alustus :selain-tuettu?])
+                                              (not (empty? (get-in sovellus [:kayttaja :oikeus-urakoihin])))
                                               (:idxdb sovellus)
                                               (get-in sovellus [:kayttaja :kayttajanimi]))))))
 
-(def sovellus-alustettu (reagent/cursor sovellus [:alustus :alustettu]))
-(def verkkoyhteys (reagent/cursor sovellus [:alustus :verkkoyhteys]))
-(def selain-tuettu (reagent/cursor sovellus [:alustus :selain-tuettu]))
-(def selain-vanhentunut (reagent/cursor sovellus [:alustus :selain-vanhentunut]))
-(def gps-tuettu (reagent/cursor sovellus [:alustus :gps-tuettu]))
+(def sovellus-alustettu (reagent/cursor sovellus [:alustus :alustettu?]))
+(def verkkoyhteys (reagent/cursor sovellus [:alustus :verkkoyhteys?]))
+(def selain-tuettu (reagent/cursor sovellus [:alustus :selain-tuettu?]))
+(def selain-vanhentunut (reagent/cursor sovellus [:alustus :selain-vanhentunut?]))
+(def gps-tuettu (reagent/cursor sovellus [:alustus :gps-tuettu?]))
 (def ensimmainen-sijainti (reagent/cursor sovellus [:alustus :ensimmainen-sijainti]))
+(def oikeus-urakoihin (reagent/cursor sovellus [:kayttaja :oikeus-urakoihin]))
 
 (def kirjauspisteet (reagent/cursor sovellus [:kirjauspisteet]))
 
 (def sijainti (reagent/cursor sovellus [:sijainti]))
-(def valittu-urakka (reagent/cursor sovellus [:valittu-urakka]))
+(def valittu-urakka-id (reagent/cursor sovellus [:valittu-urakka-id]))
 (def tarkastusajo-id (reagent/cursor sovellus [:tarkastusajo-id]))
-(def aloitetaan-tarkastusajo (reagent/cursor sovellus [:aloitetaan-tarkastusajo]))
+(def tarkastusajo-alkamassa? (reagent/cursor sovellus [:tarkastusajo-alkamassa?]))
 
 (def tyhja-sijainti
   {:lat 0
@@ -147,16 +165,16 @@
 
 (def kartan-keskipiste (reaction @ajoneuvon-sijainti))
 
-(def tallennus-kaynnissa (reagent/cursor sovellus [:tallennus-kaynnissa]))
+(def tarkastusajo-kaynnissa? (reagent/cursor sovellus [:tarkastusajo-kaynnissa?]))
 (def ilmoitukset (reagent/cursor sovellus [:ilmoitukset]))
 (def ilmoitus (reagent/cursor sovellus [:ilmoitus]))
 
-(def nayta-kiinteistorajat (reagent/cursor sovellus [:kartta :nayta-kiinteistorajat]))
-(def nayta-ortokuva (reagent/cursor sovellus [:kartta :nayta-ortokuva]))
-(def keskita-ajoneuvoon (reagent/cursor sovellus [:kartta :keskita-ajoneuvoon]))
-(def karttaoptiot (reaction {:seuraa-sijaintia (or @tallennus-kaynnissa @keskita-ajoneuvoon)
-                             :nayta-kiinteistorajat @nayta-kiinteistorajat
-                             :nayta-ortokuva @nayta-ortokuva}))
+(def nayta-kiinteistorajat? (reagent/cursor sovellus [:kartta :nayta-kiinteistorajat?]))
+(def nayta-ortokuva? (reagent/cursor sovellus [:kartta :nayta-ortokuva?]))
+(def keskita-ajoneuvoon? (reagent/cursor sovellus [:kartta :keskita-ajoneuvoon?]))
+(def karttaoptiot (reaction {:seuraa-sijaintia? (or @tarkastusajo-kaynnissa? @keskita-ajoneuvoon?)
+                             :nayta-kiinteistorajat? @nayta-kiinteistorajat?
+                             :nayta-ortokuva? @nayta-ortokuva?}))
 
 (def jatkuvat-havainnot (reagent/cursor sovellus [:jatkuvat-havainnot]))
 (def mittaustyyppi (reagent/cursor sovellus [:mittaustyyppi]))
@@ -168,23 +186,23 @@
   ;; TODO REFACTOR, tee tästä run! blokki joka suoraan lisää segmentin
   ;; ja poista reitintallennus komponentista
   (reaction
-   (let [{:keys [nykyinen edellinen]} @sijainti]
-     (when (and nykyinen edellinen)
-       {:segmentti [(p/latlon-vektoriksi edellinen)
-                    (p/latlon-vektoriksi nykyinen)]
-        :vari (let [s @jatkuvat-havainnot]
-                (cond
-                  (:liukasta s) "blue"
-                  (:lumista s) "blue"
-                  (:tasauspuute s) "blue"
+    (let [{:keys [nykyinen edellinen]} @sijainti]
+      (when (and nykyinen edellinen)
+        {:segmentti [(p/latlon-vektoriksi edellinen)
+                     (p/latlon-vektoriksi nykyinen)]
+         :vari (let [s @jatkuvat-havainnot]
+                 (cond
+                   (:liukasta s) "blue"
+                   (:lumista s) "blue"
+                   (:tasauspuute s) "blue"
 
-                  (:soratie s) "brown"
+                   (:soratie s) "brown"
 
-                  (:vesakko-raivaamatta s) "green"
-                  (:niittamatta s) "green"
+                   (:vesakko-raivaamatta s) "green"
+                   (:niittamatta s) "green"
 
-                  (:yleishavainto s) "red"
-                  :default "black"))}))))
+                   (:yleishavainto s) "red"
+                   :default "black"))}))))
 
 (def reittipisteet (reagent/cursor sovellus [:reittipisteet]))
 
@@ -193,13 +211,14 @@
 
 (def sijainnin-tallennus-mahdollinen (reaction (and @idxdb @tarkastusajo-id)))
 
-(def tarkastusajo-paattymassa (reagent/cursor sovellus [:tarkastusajo-paattymassa]))
+(def tarkastusajo-paattymassa? (reagent/cursor sovellus [:tarkastusajo-paattymassa?]))
+(def tarkastusajon-paattamisvaihe (reagent/cursor sovellus [:tarkastusajon-paattamisvaihe]))
 
 (def piirra-paanavigointi?
   (reaction (boolean (and @tarkastusajo-id
-                          @tallennus-kaynnissa
-                          (not @tarkastusajo-paattymassa)
-                          (not @havaintolomake-auki)))))
+                          @tarkastusajo-kaynnissa?
+                          (not @tarkastusajo-paattymassa?)
+                          (not @havaintolomake-auki?)))))
 
 (def nayta-paanavigointi? (reagent/cursor sovellus [:ui :paanavigointi :nakyvissa?]))
 (def nayta-paanavigointi-valilehdet? (reagent/cursor sovellus [:ui :paanavigointi :valilehdet-nakyvissa?]))

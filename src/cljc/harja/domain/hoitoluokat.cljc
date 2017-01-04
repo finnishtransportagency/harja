@@ -4,19 +4,34 @@
 (def ^{:doc "Mahdolliset talvihoitoluokat. Nimi kertoo käyttöliittymässä käytetyn
 nimen. Numero on tierekisterin koodi luokalle."}
   talvihoitoluokat
-  [{:nimi "Is"  :numero 1}
-   {:nimi "I"   :numero 2}
-   {:nimi "Ib"  :numero 3}
-   {:nimi "TIb" :numero 4}
-   {:nimi "II"  :numero 5}
-   {:nimi "III" :numero 6}
-   {:nimi "K1"  :numero 7}
-   {:nimi "K2"  :numero 8}])
+  [{:nimi "Is"  :numero 1 :numero-str "1"}
+   {:nimi "I"   :numero 2 :numero-str "2"}
+   {:nimi "Ib"  :numero 3 :numero-str "3"}
+   {:nimi "TIb" :numero 4 :numero-str "4"}
+   {:nimi "II"  :numero 5 :numero-str "5"}
+   {:nimi "III" :numero 6 :numero-str "6"}
+   {:nimi "K1"  :numero 7 :numero-str "7"}
+   {:nimi "K2"  :numero 8 :numero-str "8"}])
+
+(def ei-talvihoitoluokkaa-nimi "-")
+
+(defn haluttujen-hoitoluokkien-nimet-ja-numerot [hoitoluokan-numero-set]
+  (conj
+    (vec (filter #(hoitoluokan-numero-set (:numero %)) talvihoitoluokat))
+    {:nimi   ei-talvihoitoluokkaa-nimi
+     :numero nil}
+    ;; Joissain kyselyissä palautetaan toteumille talvihoitoluokat.
+    ;; Jos talvihoitoluokkaa ei ole, :numero on nil. Kun :numero on täälläkin
+    ;; nil, saadaan nämä kaksi liitettyä yhteen.
+    ))
 
 (def ^{:doc "Mäppäys talvihoitoluokan numerosta sen nimeen."}
   talvihoitoluokan-nimi
   (into {} (map (juxt :numero :nimi)) talvihoitoluokat))
 
+(def ^{:doc "Mäppäys talvihoitoluokan numerosta (stringinä) sen nimeen."}
+talvihoitoluokan-nimi-str
+  (into {} (map (juxt :numero-str :nimi)) talvihoitoluokat))
 
 (def ^{:doc "Mäppäys talvihoitoluokan nimestä sen numeroon."}
   talvihoitoluokan-numero

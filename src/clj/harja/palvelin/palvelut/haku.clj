@@ -7,7 +7,8 @@
             [harja.kyselyt.kayttajat :as k-q]
             [harja.kyselyt.hallintayksikot :as org-q]
             [harja.kyselyt.konversio :as konv]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]))
 
 (defn hae-harjasta
   "Palvelu, joka hakee Harjasta hakutermin avulla."
@@ -39,16 +40,10 @@
         _ (log/debug "haun tulokset" tulokset)]
     tulokset))
 
-(defn hae-kayttaja [db kayttaja-id]
-  (when-let [k (first (k-q/hae-kayttaja db kayttaja-id))]
-    (konv/array->set (konv/organisaatio k) :roolit)))
-
-
-
 (defn hae-kayttajan-tiedot
   "Hakee käyttäjän tarkemmat tiedot muokkausnäkymää varten."
   [db user kayttaja-id]
-  (hae-kayttaja db kayttaja-id))
+  (kayttajatiedot/hae-kayttaja db kayttaja-id))
 
 (defrecord Haku []
   component/Lifecycle

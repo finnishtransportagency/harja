@@ -2,12 +2,14 @@
   (:require [com.stuartsierra.component :as component]
             [ring.middleware.params :refer [wrap-params]]
             [harja.palvelin.komponentit.http-palvelin
-             :refer [julkaise-palvelu poista-palvelu]]
+             :refer [julkaise-palvelu poista-palvelut]]
             [harja.ui.kartta.esitettavat-asiat
              :refer [kartalla-esitettavaan-muotoon]]
             [taoensso.timbre :as log]
             [harja.palvelin.palvelut.karttakuvat.piirto
-             :refer [piirra-karttakuvaan]])
+             :refer [piirra-karttakuvaan]]
+            [harja.transit :as transit]
+            [harja.geo :as geo])
   (:import (java.awt.image BufferedImage)
            (java.awt Color BasicStroke RenderingHints)
            (java.awt.geom AffineTransform Line2D$Double)
@@ -15,10 +17,14 @@
 
 (defprotocol KarttakuvaLahteet
   (rekisteroi-karttakuvan-lahde!
-   [this nimi lahde-fn]
-   "Rekisteröi karttakuvadatan lähteen. Funktio ottaa parametriksi käyttäjän
-sekä HTTP request parametrit mäppinä ja palauttaa karttakuvaan piirrettävän
-datan kartalla esitettävässä muodossa.")
+    [this nimi lahde-fn asiat-fn transit-parametri-nimi]
+    "Rekisteröi karttakuvadatan sekä siihen liittyvien asioiden lähteen.
+    Funktio ottaa parametriksi käyttäjän sekä HTTP request parametrit mäppinä ja
+    palauttaa karttakuvaan piirrettävän datan kartalla esitettävässä muodossa.
+    Toinen funktio ottaa samat parametrit ja lisäksi klikatun pisteen ja palauttaa
+    kuvauksen kartalla löytyneistä asioista.
+    Jos rekisteröinnissä on annettu transit parametrin nimi, luetaan se parametri
+    clojure dataksi ja yhdistetään muihin parametreihin ennen funktion kutsua.")
   (poista-karttakuvan-lahde! [this nimi]))
 
 (defn- kirjoita-kuva [kuva]
@@ -84,19 +90,31 @@ datan kartalla esitettävässä muodossa.")
     ;;; TÄMÄN viivan pitäisi menna vasen ala nurkasta oikea ylä nurkkaan
                                         ;(.drawLine g (nth extent 0) (nth extent 1) (nth extent 2) (nth extent 3))
       img)
-    (catch Exception e
-      (log/debug "Karttakuvan luonnissa poikkeus" e))))
+    (catch Throwable t
+      (log/error t "Karttakuvan luonnissa poikkeus"))))
 
 (defn- hae-karttakuvadata
   "Hakee karttakuvadatan oikeasti lähteestä"
   [lahteet user parametrit]
   (let [lahteen-nimi (keyword (get-in parametrit [:parametrit "_"]))
-        lahde (get lahteet lahteen-nimi)
-        parametrit (assoc parametrit
-                          ;; Käännä yla/ala extentissä, koska ol taso ilmoittaa sen
-                          ;; sen toisin päin kuin meillä
-                          :extent (let  [[vasen yla oikea ala] (:extent parametrit)]
-                                    [vasen ala oikea yla]))
+        {lahde :kuva transit-parametri :transit-parametri} (get lahteet lahteen-nimi)
+        parametrit (as-> parametrit p
+
+                     ;; Käännä yla/ala extentissä, koska ol taso ilmoittaa sen
+                     ;; sen toisin päin kuin meillä
+                     (assoc p
+                            :extent (let [[vasen yla oikea ala] (:extent parametrit)]
+                                      [vasen ala oikea yla]))
+
+                     ;; Poistetaan "_" ja transit-parametri
+                     (update p :parametrit dissoc "_" transit-parametri)
+
+                     ;; Yhdistetään transit parametrista luetut arvot
+                     (update p :parametrit merge
+                             (when transit-parametri
+                               (some-> parametrit
+                                       (get-in [:parametrit transit-parametri])
+                                       transit/lue-transit-string))))
         karttakuvadata (when lahde
                          (lahde user parametrit))]
     karttakuvadata))
@@ -113,6 +131,24 @@ datan kartalla esitettävässä muodossa.")
                "Access-Control-Allow-Origin" "*"}
      :body    (java.io.ByteArrayInputStream. kuva)}))
 
+(defn karttakuva-asiat [lahteet user {:keys [parametrit koordinaatti extent]}]
+  (let [lahteen-nimi (keyword (get parametrit "_"))
+        {lahde :asiat transit-parametri :transit-parametri} (get lahteet lahteen-nimi)]
+    (if lahde
+      (lahde user
+             (as-> parametrit p
+               (assoc p :x (first koordinaatti) :y (second koordinaatti))
+               (assoc p :toleranssi (geo/klikkaustoleranssi extent))
+               (dissoc p transit-parametri)
+               (merge p
+                      (when transit-parametri
+                        (some-> parametrit (get transit-parametri)
+                                java.net.URLDecoder/decode
+                                transit/lue-transit-string)))))
+      (do
+        (log/info "Yritettiin hakea karttakuvan asioita tuntemattomalle lähteelle: " lahteen-nimi)
+        []))))
+
 (defrecord Karttakuvat [lahteet]
   component/Lifecycle
   (start [{db :db
@@ -123,16 +159,21 @@ datan kartalla esitettävässä muodossa.")
      (wrap-params (fn [req]
                     (karttakuva @lahteet (:kayttaja req) (:params req))))
      {:ring-kasittelija? true})
+    (julkaise-palvelu http :karttakuva-klikkaus
+                      (fn [user payload]
+                        (karttakuva-asiat @lahteet user payload)))
     this)
 
   (stop [{http :http-palvelin
           :as this}]
-    (poista-palvelu http :karttakuva)
+    (poista-palvelut http :karttakuva :karttakuva-klikkaus)
     this)
 
   KarttakuvaLahteet
-  (rekisteroi-karttakuvan-lahde! [this nimi lahde-fn]
-    (swap! lahteet assoc nimi lahde-fn))
+  (rekisteroi-karttakuvan-lahde! [this nimi lahde-fn asiat-fn transit-parametri-nimi]
+    (swap! lahteet assoc nimi {:kuva lahde-fn
+                               :asiat asiat-fn
+                               :transit-parametri transit-parametri-nimi}))
   (poista-karttakuvan-lahde! [this nimi]
     (swap! lahteet dissoc nimi)))
 

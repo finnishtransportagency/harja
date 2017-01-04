@@ -15,6 +15,7 @@
             [harja.ui.kommentit :as kommentit]
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta]
+            [harja.tiedot.kartta :as kartta-tiedot]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.modal :as modal]
@@ -295,7 +296,8 @@
             :koko [80 :auto]
             :palstoja 1
             :pakollinen? true
-            :validoi [[:ei-tyhja "Anna kuvaus"]]}
+            :validoi [[:ei-tyhja "Anna kuvaus"]]
+            :pituus-max 2000}
            {:otsikko "Aiheutuneet seuraukset"
             :nimi :seuraukset
             :tyyppi :text
@@ -450,12 +452,20 @@
   (komp/luo
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-turvallisuuspoikkeamat)
     (komp/kuuntelija :turvallisuuspoikkeama-klikattu #(valitse-turvallisuuspoikkeama (:id @nav/valittu-urakka) (:id %2)))
+    (komp/sisaan-ulos
+     #(kartta-tiedot/kasittele-infopaneelin-linkit!
+       {:turvallisuuspoikkeama {:toiminto
+                                (fn [turpo]
+                                  (valitse-turvallisuuspoikkeama
+                                   (:id @nav/valittu-urakka) (:id turpo)))
+                                :teksti "Avaa turvallisuuspoikkeama"}})
+     #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :M))
                       #(do
                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
-    (komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-turvallisuuspoikkeama))
+    (komp/ulos (kartta-tiedot/kuuntele-valittua! tiedot/valittu-turvallisuuspoikkeama))
     (fn []
       [:span
        [:h3 "Turvallisuuspoikkeamat"]

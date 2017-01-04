@@ -50,11 +50,13 @@
   ([liite teksti] (liite-linkki liite teksti {}))
   ([liite teksti {:keys [nayta-tooltip?] :as optiot}]
   (if (naytettava-liite? liite)
-    [:a.klikattava {:title (let [tooltip (:nimi liite)]
-                             (if (nil? nayta-tooltip?)
-                              tooltip
-                              (when nayta-tooltip? tooltip)))
-                    :on-click #(nayta-liite-modalissa liite)}
+    [:a.klikattava {:title    (let [tooltip (:nimi liite)]
+                                (if (nil? nayta-tooltip?)
+                                  tooltip
+                                  (when nayta-tooltip? tooltip)))
+                    :on-click #(do
+                                 (.stopPropagation %)
+                                 (nayta-liite-modalissa liite))}
      teksti]
     [:a.klikattava {:title (:nimi liite)
                     :href (k/liite-url (:id liite))

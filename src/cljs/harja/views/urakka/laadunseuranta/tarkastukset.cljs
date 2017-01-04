@@ -28,7 +28,9 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.fmt :as fmt]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.roolit :as roolit]
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.domain.hoitoluokat :as hoitoluokat])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -81,7 +83,14 @@
                                    (str (when tie (str "tie: " tie  "°C"))
                                         (when (and tie ilma) ", ")
                                         (when ilma (str "ilma: " ilma "°C"))))
-                                 (str (name (key %)) ": " (val %)))
+                                 (str (name (key %)) ": "
+                                      (if (= :hoitoluokka (key %))
+                                        (hoitoluokat/talvihoitoluokan-nimi-str (val %))
+                                        (if (or
+                                              (= :lumimaara (key %))
+                                              (= :tasaisuus (key %)))
+                                          (str (val %) "cm")
+                                          (val %)))))
                                nil)
                              (select-keys
                                thm
@@ -193,7 +202,10 @@
                             (when-not (str/blank? soratiemittaukset)
                               [:li.tarkastuksen-soratiemittaukset soratiemittaukset])
                             (when-not (str/blank? havainnot-rajattu)
-                              [:li.tarkastuksen-havainnot havainnot-rajattu])]))}]
+                              [:li.tarkastuksen-havainnot havainnot-rajattu])]))}
+         {:otsikko     "Liit\u00ADteet" :nimi :liitteet :leveys 1 :tyyppi :komponentti
+          :komponentti (fn [rivi]
+                         (liitteet/liitteet-numeroina (:liitteet rivi)))}]
         tarkastukset]]))))
 
 
@@ -444,17 +456,30 @@
         tarkastus]])))
 
 
+(defn- vastaava-tarkastus [klikattu-tarkastus]
+  ;; oletetaan että kartalla näkyvät tarkastukset ovat myös gridissä
+  (some (fn [urakan-tarkastus]
+          (when (= (:id urakan-tarkastus) (:id klikattu-tarkastus))
+            urakan-tarkastus))
+        @tarkastukset/urakan-tarkastukset))
+
 (defn tarkastukset
   "Tarkastuksien pääkomponentti"
   [optiot]
   (komp/luo
     (komp/lippu tarkastukset-kartalla/karttataso-tarkastukset)
     (komp/kuuntelija :tarkastus-klikattu #(reset! tarkastukset/valittu-tarkastus %2))
-    (komp/ulos (kartta/kuuntele-valittua! tarkastukset/valittu-tarkastus))
+    (komp/ulos (kartta-tiedot/kuuntele-valittua! tarkastukset/valittu-tarkastus))
     (komp/sisaan-ulos #(do
-                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                        (nav/vaihda-kartan-koko! :M))
-                      #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
+                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                         (kartta-tiedot/kasittele-infopaneelin-linkit!
+                          {:tarkastus {:toiminto (fn [klikattu-tarkastus] ;; asiat-pisteessa -asia joka on tyypiltään tarkastus
+                                                   (reset! tarkastukset/valittu-tarkastus (vastaava-tarkastus klikattu-tarkastus)))
+                                       :teksti "Valitse tarkastus"}
+                          })
+                         (nav/vaihda-kartan-koko! :M))
+                      #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+                           (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
     (fn [optiot]
       [:span.tarkastukset
        [kartta/kartan-paikka]

@@ -10,6 +10,7 @@
              :refer [raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet
                      pylvaat-kuukausittain ei-osumia-aikavalilla-teksti rivi]]
 
+            [harja.domain.raportointi :refer [info-solu]]
             [taoensso.timbre :as log]
             [jeesql.core :refer [defqueries]]
             [clojure.string :as str]
@@ -17,7 +18,8 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/muutos_ja_lisatyot.sql")
 
-
+(def ei-raha-summaa-info-solu (info-solu "Ei rahasummaa"))
+(def indeksi-puuttuu-info-solu (info-solu "Indeksi puuttuu"))
 
 (defn tyon-tyypin-nimi
   [tyyppi]
@@ -69,16 +71,16 @@
                (if (get-in % [:tehtava :paivanhinta])
                  "Päivän hinta"
                  (get-in % [:tehtava :maara]))
-               (or (get-in % [:tehtava :summa]) [:info "Ei rahasummaa"])
-               (or (:korotus %) [:info "Indeksi puuttuu"]))
+               (or (get-in % [:tehtava :summa]) ei-raha-summaa-info-solu)
+               (or (:korotus %) indeksi-puuttuu-info-solu))
         tyot))
 
 (defn tyyppikohtaiset-rivit
   [tyot]
   (mapv #(rivi
           (tyon-tyypin-nimi (:tyyppi %))
-          (or (get-in % [:tehtava :summa]) [:info "Ei rahasummaa"])
-          (or (:korotus %) [:info "Indeksi puuttuu"]))
+          (or (get-in % [:tehtava :summa]) ei-raha-summaa-info-solu)
+          (or (:korotus %) indeksi-puuttuu-info-solu))
         (sort-by tyypin-sort-avain tyot)))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id toimenpide-id

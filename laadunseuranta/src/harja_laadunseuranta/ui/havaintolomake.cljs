@@ -3,74 +3,87 @@
             [cljs-time.local :as l]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.ui.kamera :as kamera]
-            [harja-laadunseuranta.ui.napit :refer [nappi]]
+            [harja-laadunseuranta.tiedot.paanavigointi :as paanavigointi]
             [harja-laadunseuranta.tiedot.havaintolomake :refer [alusta-uusi-lomake!
                                                                 tallenna-lomake!
                                                                 peruuta-lomake!]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
-            [harja-laadunseuranta.ui.lomake :refer [kentta tekstialue
-                                                    pvm-aika tr-osoite]]
+            [harja-laadunseuranta.ui.yleiset.lomake :as lomake]
             [cljs-time.format :as time-fmt]
             [harja-laadunseuranta.tiedot.fmt :as fmt]
-            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat])
+            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
+            [harja-laadunseuranta.ui.yleiset.yleiset :as yleiset])
 
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
 
 (defn- havaintolomakekomponentti [{:keys [lomakedata tallenna-fn peruuta-fn
-                                          tr-osoite-lomakkeen-avauksessa]}]
+                                          tr-osoite-lomakkeen-avauksessa
+                                          liittyvat-havainnot havainnot-ryhmittain]}]
   (let [kuvaus-atom (reagent/cursor lomakedata [:kuvaus])
         aikaleima-atom (reagent/cursor lomakedata [:aikaleima])
         tr-osoite-atom (reagent/cursor lomakedata [:tr-osoite])
         esikatselukuva-atom (reagent/cursor lomakedata [:esikatselukuva])
         kayttajanimi-atom (reagent/cursor lomakedata [:kayttajanimi])
         laadunalitus-atom (reagent/cursor lomakedata [:laadunalitus?])
+        lomake-liittyy-havaintoon-atom (reagent/cursor lomakedata [:liittyy-havaintoon])
         lomake-virheet-atom (atom #{})
         alusta-tr-osoite! (fn [tr-osoite-atom]
                             (when (:tie tr-osoite-lomakkeen-avauksessa)
                               (reset! tr-osoite-atom tr-osoite-lomakkeen-avauksessa)))]
     (alusta-tr-osoite! tr-osoite-atom)
     (fn []
-      [:div.lomake-container
-       [:div.havaintolomake
-        [:div.lomake-title "Uuden havainnon perustiedot"]
+      ^{:key "Havaintolomake"}
+      [lomake/lomake
+       {:otsikko "Havainnon perustiedot"
+        :peruuta-fn peruuta-fn
+        :tallenna-fn tallenna-fn
+        :lomakedata-atom lomakedata
+        :lomake-virheet-atom lomake-virheet-atom}
 
-        [:div.pvm-kellonaika-tarkastaja
-         ;; Päivämäärä-kenttää ei ole koskaan voinut muokata, vaikka on input-tyyppinen
-         ;; Näytetään siis toistaiseksi vain tekstinä.
-         ;; TODO Jatkossa olisi hyvä, jos voi muokata. Tässä voinee käyttää
-         ;; HTML5:n natiivia date ja time tyyppiä, on hyvn tuettu mobiilissa.
-         [kentta "Päivämäärä" (str (time-fmt/unparse fmt/pvm-fmt @aikaleima-atom)
-                                   " "
-                                   (time-fmt/unparse fmt/klo-fmt @aikaleima-atom))]
-         #_[kentta "Päivämäärä" [pvm-aika aikaleima-atom]]
-         [kentta "Tarkastaja" [:span.tarkastaja @kayttajanimi-atom]]]
+       (when-not (empty? liittyvat-havainnot)
+         ^{:key "Lomake liittyy havaintoon rivi"}
+         [lomake/rivi
+          ^{:key "Lomake liittyy havaintoon"}
+          [lomake/kentta "Lomake liittyy havaintoon"
+           [lomake/liittyvat-havainnot
+            {:liittyvat-havainnot liittyvat-havainnot
+             :lomake-liittyy-havaintoon-atom lomake-liittyy-havaintoon-atom
+             :havainnot-ryhmittain havainnot-ryhmittain}]]])
 
-        [:div.tieosuus
-         [kentta "Tieosuus" [tr-osoite tr-osoite-atom lomake-virheet-atom]]]
+       ^{:key "pvm-rivi"}
+       [lomake/rivi
+        ^{:key "Päivämäärä"}
+        [lomake/kentta "Päivämäärä"
+         [:span (fmt/pvm-klo @aikaleima-atom)]]
+        ^{:key "Tarkastaja"}
+        [lomake/kentta "Tarkastaja"
+         [:span @kayttajanimi-atom]]]
 
-        [:div.lisatietoja
-         [:div.laatupoikkeama-check
-          [:input {:id "laadunalitus"
-                   :type "checkbox"
-                   :on-change #(swap! laadunalitus-atom not)}]
-          [:label {:for "laadunalitus"} "Laadun alitus"]]
-         [:div.title "Lisätietoja"]
-         [tekstialue kuvaus-atom]
-         [kamera/kamerakomponentti esikatselukuva-atom]]
+       ^{:key "Tieosuusrivi"}
+       [lomake/rivi
+        ^{:key "Tieosuus"}
+        [lomake/kentta "Tieosuus"
+         [lomake/tr-osoite
+          {:tr-osoite-atom tr-osoite-atom
+           :virheet-atom lomake-virheet-atom
+           :liittyva-havainto (first (filter #(= (:id %) @lomake-liittyy-havaintoon-atom)
+                                             liittyvat-havainnot))}]]]
 
-        [:div.lomake-painikkeet
-         [nappi "Tallenna" {:on-click (fn []
-                                        (.log js/console. "Tallenna. Virheet: " (pr-str @lomake-virheet-atom))
-                                        (when (empty? @lomake-virheet-atom)
-                                          (tallenna-fn @lomakedata)))
-                            :disabled (not (empty? @lomake-virheet-atom))
-                            :luokat-str (str "nappi-myonteinen "
-                                             (when-not (empty? @lomake-virheet-atom)
-                                               "nappi-disabloitu"))
-                            :ikoni (kuvat/svg-sprite "tallenna-18")}]
-         [nappi "Peruuta" {:luokat-str "nappi-kielteinen"
-                           :on-click peruuta-fn}]]]])))
+       ^{:key "Laadunalitusrivi"}
+       [lomake/rivi
+        ^{:key "Laadunalitus"}
+        [lomake/kentta ""
+         [lomake/checkbox "Laadunalitus" laadunalitus-atom]]]
+
+       ^{:key "Lisätietorivi"}
+       [lomake/rivi
+        ^{:key "Lisätietokenttä"}
+        [lomake/kentta "Lisätietoja"
+         [lomake/tekstialue kuvaus-atom]]
+        ^{:key "Kamera"}
+        [lomake/kentta ""
+         [kamera/kamerakomponentti esikatselukuva-atom]]]])))
 
 (defn havaintolomake []
   (let [lomakedata (alusta-uusi-lomake!)
@@ -80,7 +93,9 @@
        {:lomakedata lomakedata
         :tr-osoite-lomakkeen-avauksessa tr-osoite-lomakkeen-avauksessa
         :tallenna-fn tallenna-lomake!
-        :peruuta-fn peruuta-lomake!}])))
+        :havainnot-ryhmittain paanavigointi/havainnot-ryhmittain
+        :peruuta-fn peruuta-lomake!
+        :liittyvat-havainnot @s/liittyvat-havainnot}])))
 
 (def test-model (atom {:kayttajanimi "Jalmari Järjestelmävastuuhenkilö"
                        :tr-osoite {:tie 20 :aosa 3 :aet 3746}
