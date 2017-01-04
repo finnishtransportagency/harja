@@ -87,7 +87,8 @@
     {:tyyppi :paallystys
      :jarjesta-fn :kohde-alkupvm
      :otsikko "Päällystyskohde"
-     :tiedot [{:otsikko "Nimi" :tyyppi :string :hae #(get-in % [:nimi])}
+     :tiedot [{:otsikko "Nimi" :tyyppi :string :nimi :nimi}
+              {:otsikko "Kohdenumero" :tyyppi :string :nimi :kohdenumero}
               {:otsikko "Tie\u00ADrekisteri\u00ADkohde" :tyyppi :string :hae #(get-in % [:kohdeosa :nimi])}
               {:otsikko "Osoite" :tyyppi :string :hae #(tr-domain/tierekisteriosoite-tekstina %)}
               {:otsikko "Nykyinen päällyste" :tyyppi :string
@@ -110,7 +111,8 @@
     {:tyyppi :paikkaus
      :jarjesta-fn :kohde-alkupvm
      :otsikko "Paikkauskohde"
-     :tiedot [{:otsikko "Nimi" :tyyppi :string :hae #(get-in % [:nimi])}
+     :tiedot [{:otsikko "Nimi" :tyyppi :string :nimi :nimi}
+              {:otsikko "Kohdenumero" :tyyppi :string :nimi :kohdenumero}
               {:otsikko "Tie\u00ADrekisteri\u00ADkohde" :tyyppi :string :hae #(get-in % [:kohdeosa :nimi])}
               {:otsikko "Osoite" :tyyppi :string :hae #(tr-domain/tierekisteriosoite-tekstina %)}
               {:otsikko "Nykyinen päällyste" :tyyppi :string
