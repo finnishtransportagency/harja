@@ -13,8 +13,8 @@ CREATE TABLE yllapitokohteen_maaramuutokset (
   toteutunut_maara NUMERIC NOT NULL,
   yksikkohinta NUMERIC NOT NULL,
   poistettu boolean DEFAULT FALSE NOT NULL,
-  muokkaaja INTEGER REFERENCES kayttaja (id) NOT NULL,
-  muokattu TIMESTAMP NOT NULL DEFAULT NOW() NOT NULL
+  muokkaaja INTEGER REFERENCES kayttaja (id),
+  muokattu TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 ALTER TABLE paallystysilmoitus DROP COLUMN muutoshinta; -- Lasketaan jatkossa yllä olevasta taulusta
