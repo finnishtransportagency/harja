@@ -24,7 +24,7 @@
     db
     {:paallystyskohde kohde-id
      :tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila
-             valmis-kasiteltavaksi false false)
+             valmis-kasiteltavaksi false)
      :ilmoitustiedot ilmoitustiedot-json
      :takuupvm (json/aika-string->java-sql-date
                  (:takuupvm perustiedot))

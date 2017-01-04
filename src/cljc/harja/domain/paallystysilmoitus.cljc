@@ -277,10 +277,9 @@
               (filter #(not= true (:poistettu %)) tyot))))
 
 (defn paattele-ilmoituksen-tila
-  [valmis-kasiteltavaksi tekninen-osa-hyvaksytty taloudellinen-osa-hyvaksytty]
+  [valmis-kasiteltavaksi tekninen-osa-hyvaksytty]
   (cond
-    (and tekninen-osa-hyvaksytty
-         taloudellinen-osa-hyvaksytty)
+    tekninen-osa-hyvaksytty
     "lukittu"
 
     valmis-kasiteltavaksi
