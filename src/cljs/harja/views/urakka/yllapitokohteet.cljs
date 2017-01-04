@@ -430,7 +430,7 @@
   (let [kohteet (vec kohteet)
         rivi (some #(when (= (:id (nth kohteet %))
                              id)
-                     %)
+                      %)
                    (range 0 (count kohteet)))]
     (if rivi
       (assoc-in kohteet [rivi :kohdeosat] kohdeosat)
@@ -466,42 +466,43 @@
 (defn maaramuutokset [yllapitokohde-id urakka-id]
   (let [maaramuutokset (atom nil)
         hae-maara-muutokset! (fn [urakka-id yllapitokohde-id]
-                              (go (let [vastaus (<! (tiedot/hae-maaramuutokset urakka-id yllapitokohde-id))]
-                                    (if (k/virhe? vastaus)
-                                      (viesti/nayta! "Määrämuutoksien haku epäonnistui"
-                                                     :warning
-                                                     viesti/viestin-nayttoaika-keskipitka)
-                                      (reset! maaramuutokset vastaus)))))]
+                               (go (let [vastaus (<! (tiedot/hae-maaramuutokset urakka-id yllapitokohde-id))]
+                                     (if (k/virhe? vastaus)
+                                       (viesti/nayta! "Määrämuutoksien haku epäonnistui"
+                                                      :warning
+                                                      viesti/viestin-nayttoaika-keskipitka)
+                                       (reset! maaramuutokset vastaus)))))]
     (hae-maara-muutokset! urakka-id yllapitokohde-id)
-    [grid/grid
-     {:otsikko "Määrämuutokset"
-      :tyhja "Ei määrämuutoksia"
-      :tallenna #(tiedot/tallenna-maaramuutokset! urakka-id yllapitokohde-id %)
-      :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id)}
-     [{:otsikko "Päällyste\u00ADtyön tyyppi"
-       :nimi :tyyppi
-       :tyyppi :valinta
-       :valinta-arvo :koodi
-       :valinta-nayta #(if % (:nimi %) "- Valitse työ -")
-       :valinnat pot/+paallystystyon-tyypit-lomakkeella+
-       :leveys "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-      {:otsikko "Työ" :nimi :tyo :tyyppi :string :leveys "30%" :pituus-max 256
-       :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-      {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 20
-       :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-      {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :positiivinen-numero :tasaa :oikea
-       :kokonaisosan-maara 6 :leveys "15%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-      {:otsikko "Toteu\u00ADtunut määrä" :nimi :toteutunut-maara :leveys "15%" :tasaa :oikea
-       :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-      {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false)
-       :hae (fn [rivi] (- (:toteutunut-maara rivi) (:tilattu-maara rivi)))}
-      {:otsikko "Yks.\u00ADhinta" :nimi :yksikkohinta :leveys "10%" :tasaa :oikea
-       :tyyppi :positiivinen-numero :kokonaisosan-maara 4 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-      {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :tasaa :oikea
-       :muokattava? (constantly false) :tyyppi :numero
-       :hae (fn [rivi]
-              (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
-     @maaramuutokset])) ;; TODO HAEPPAS DATA
+    (fn [yllapitokohde-id urakka-id]
+      [grid/grid
+       {:otsikko "Määrämuutokset"
+        :tyhja "Ei määrämuutoksia"
+        :tallenna #(tiedot/tallenna-maaramuutokset! urakka-id yllapitokohde-id %)
+        :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id)}
+       [{:otsikko "Päällyste\u00ADtyön tyyppi"
+         :nimi :tyyppi
+         :tyyppi :valinta
+         :valinta-arvo :koodi
+         :valinta-nayta #(if % (:nimi %) "- Valitse työ -")
+         :valinnat pot/+paallystystyon-tyypit-lomakkeella+
+         :leveys "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+        {:otsikko "Työ" :nimi :tyo :tyyppi :string :leveys "30%" :pituus-max 256
+         :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+        {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 20
+         :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+        {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :positiivinen-numero :tasaa :oikea
+         :kokonaisosan-maara 6 :leveys "15%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+        {:otsikko "Toteu\u00ADtunut määrä" :nimi :toteutunut-maara :leveys "15%" :tasaa :oikea
+         :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+        {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false)
+         :hae (fn [rivi] (- (:toteutunut-maara rivi) (:tilattu-maara rivi)))}
+        {:otsikko "Yks.\u00ADhinta" :nimi :yksikkohinta :leveys "10%" :tasaa :oikea
+         :tyyppi :positiivinen-numero :kokonaisosan-maara 4 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+        {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :tasaa :oikea
+         :muokattava? (constantly false) :tyyppi :numero
+         :hae (fn [rivi]
+                (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
+       @maaramuutokset])))
 
 (defn kohteen-vetolaatikko [urakka kohteet-atom rivi]
   [:div
@@ -513,7 +514,7 @@
   (let [tiet (into #{} (map (comp :tr-numero second)) (grid/hae-muokkaustila grid))]
     (doseq [tie tiet :when (not (contains? @osan-pituudet-teille tie))]
       (go
-        (swap! osan-pituudet-teille assoc tie (<!(vkm/tieosien-pituudet tie)))))))
+        (swap! osan-pituudet-teille assoc tie (<! (vkm/tieosien-pituudet tie)))))))
 
 
 
