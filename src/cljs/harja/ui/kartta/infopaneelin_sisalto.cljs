@@ -30,37 +30,37 @@
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
 
 (defmethod infopaneeli-skeema :tyokone [tyokone]
-  {:tyyppi  :tyokone
+  {:tyyppi :tyokone
    :jarjesta-fn :alkanut
    :otsikko (str "Työkone: "
                  (when (:tehtavat tyokone)
                    (string/join ", " (:tehtavat tyokone)))
                  " " (pvm/pvm-aika (:alkanut tyokone)))
-   :tiedot  [{:otsikko "Työ aloitettu" :tyyppi :pvm-aika :nimi :alkanut}
-             {:otsikko "Viimeisin havainto" :tyyppi :pvm-aika :nimi :lahetysaika}
-             {:otsikko "Tyyppi" :tyyppi :string :nimi :tyokonetyyppi}
-             {:otsikko "Organisaatio" :tyyppi :string :hae #(or (:organisaationimi %) "Ei organisaatiotietoja")}
-             {:otsikko "Urakka" :tyyppi :string :hae #(or (:urakkanimi %) "Ei urakkatietoja")}
-             {:otsikko "Tehtävät" :tyyppi :string
-              :hae     #(string/join ", " (:tehtavat %))}]
-   :data    tyokone})
+   :tiedot [{:otsikko "Työ aloitettu" :tyyppi :pvm-aika :nimi :alkanut}
+            {:otsikko "Viimeisin havainto" :tyyppi :pvm-aika :nimi :lahetysaika}
+            {:otsikko "Tyyppi" :tyyppi :string :nimi :tyokonetyyppi}
+            {:otsikko "Organisaatio" :tyyppi :string :hae #(or (:organisaationimi %) "Ei organisaatiotietoja")}
+            {:otsikko "Urakka" :tyyppi :string :hae #(or (:urakkanimi %) "Ei urakkatietoja")}
+            {:otsikko "Tehtävät" :tyyppi :string
+             :hae #(string/join ", " (:tehtavat %))}]
+   :data tyokone})
 
 (defn ilmoituksen-tiedot [ilmoitus]
-  {:tyyppi  :ilmoitus
+  {:tyyppi :ilmoitus
    :jarjesta-fn :ilmoitettu
    :otsikko (str (condp = (:ilmoitustyyppi ilmoitus)
                    :toimenpidepyynto "Toimenpidepyyntö"
                    :tiedoitus "Tiedotus"
                    (string/capitalize (name (:ilmoitustyyppi ilmoitus))))
                  " " (pvm/pvm-aika (:ilmoitettu ilmoitus)))
-   :tiedot  [{:otsikko "Id" :tyyppi :string :nimi :ilmoitusid}
-             {:otsikko "Ilmoitettu" :tyyppi :pvm-aika :nimi :ilmoitettu}
-             {:otsikko "Otsikko" :tyyppi :string :nimi :otsikko}
-             {:otsikko "Paikan kuvaus" :tyyppi :string :nimi :paikankuvaus}
-             {:otsikko "Lisätietoja" :tyyppi :string :nimi :lisatieto}
-             {:otsikko "Kuittaukset" :tyyppi :positiivinen-numero
-              :hae     #(count (:kuittaukset ilmoitus))}]
-   :data    ilmoitus})
+   :tiedot [{:otsikko "Id" :tyyppi :string :nimi :ilmoitusid}
+            {:otsikko "Ilmoitettu" :tyyppi :pvm-aika :nimi :ilmoitettu}
+            {:otsikko "Otsikko" :tyyppi :string :nimi :otsikko}
+            {:otsikko "Paikan kuvaus" :tyyppi :string :nimi :paikankuvaus}
+            {:otsikko "Lisätietoja" :tyyppi :string :nimi :lisatieto}
+            {:otsikko "Kuittaukset" :tyyppi :positiivinen-numero
+             :hae #(count (:kuittaukset ilmoitus))}]
+   :data ilmoitus})
 
 (defmethod infopaneeli-skeema :toimenpidepyynto [ilmoitus]
   (ilmoituksen-tiedot ilmoitus))
@@ -159,29 +159,29 @@
                         (string/join ", " (:vakiohavainnot %))
 
                         :default nil)]
-    {:tyyppi  :tarkastus
+    {:tyyppi :tarkastus
      :jarjesta-fn :aika
      :otsikko (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus))
                    (str " " (pvm/pvm-aika (:aika tarkastus))))
-     :tiedot  [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
-               {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite :nimi :tierekisteriosoite}
-               {:otsikko "Tarkastaja" :nimi :tarkastaja}
-               {:otsikko "Havainnot" :hae havainnot-fn}]
-     :data    tarkastus}))
+     :tiedot [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
+              {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite :nimi :tierekisteriosoite}
+              {:otsikko "Tarkastaja" :nimi :tarkastaja}
+              {:otsikko "Havainnot" :hae havainnot-fn}]
+     :data tarkastus}))
 
 (defmethod infopaneeli-skeema :laatupoikkeama [laatupoikkeama]
   (let [paatos #(get-in % [:paatos :paatos])
         kasittelyaika #(get-in % [:paatos :kasittelyaika])]
-    {:tyyppi  :laatupoikkeama
+    {:tyyppi :laatupoikkeama
      :jarjesta-fn :aika
      :otsikko (str "Laatupoikkeama " (pvm/pvm-aika (:aika laatupoikkeama)))
-     :tiedot  [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
-               {:otsikko "Tekijä" :hae #(str (:tekijanimi %) ", " (name (:tekija %)))}
-               (when (and (paatos laatupoikkeama) (kasittelyaika laatupoikkeama))
-                 {:otsikko "Päätös"
-                  :hae     #(str (laatupoikkeamat/kuvaile-paatostyyppi (paatos %))
-                                 " (" (pvm/pvm-aika (kasittelyaika %)) ")")})]
-     :data    laatupoikkeama}))
+     :tiedot [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
+              {:otsikko "Tekijä" :hae #(str (:tekijanimi %) ", " (name (:tekija %)))}
+              (when (and (paatos laatupoikkeama) (kasittelyaika laatupoikkeama))
+                {:otsikko "Päätös"
+                 :hae #(str (laatupoikkeamat/kuvaile-paatostyyppi (paatos %))
+                            " (" (pvm/pvm-aika (kasittelyaika %)) ")")})]
+     :data laatupoikkeama}))
 
 (defmethod infopaneeli-skeema :suljettu-tieosuus [osuus]
   {:tyyppi :suljettu-tieosuus
@@ -195,7 +195,7 @@
    :data osuus})
 
 (defmethod infopaneeli-skeema :toteuma [toteuma]
-  {:tyyppi  :toteuma
+  {:tyyppi :toteuma
    :jarjesta-fn :alkanut
    :otsikko (let [toimenpiteet (map :toimenpide (:tehtavat toteuma))
                   _ (log "toteuma" (pr-str toteuma))]
@@ -203,23 +203,23 @@
                      "Toteuma"
                      (string/join ", " toimenpiteet))
                    (str " " (pvm/pvm-aika (:alkanut toteuma)))))
-   :tiedot  (vec (concat [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
-                          {:otsikko "Päättynyt" :tyyppi :pvm-aika :nimi :paattynyt}
-                          {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite
-                           :nimi    :tierekisteriosoite}
-                          {:otsikko "Suorittaja" :hae #(get-in % [:suorittaja :nimi])}]
+   :tiedot (vec (concat [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
+                         {:otsikko "Päättynyt" :tyyppi :pvm-aika :nimi :paattynyt}
+                         {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite
+                          :nimi :tierekisteriosoite}
+                         {:otsikko "Suorittaja" :hae #(get-in % [:suorittaja :nimi])}]
 
-                         (for [{:keys [toimenpide maara yksikko]} (:tehtavat toteuma)]
-                           {:otsikko toimenpide
-                            :hae     (constantly (str maara " " yksikko))})
+                        (for [{:keys [toimenpide maara yksikko]} (:tehtavat toteuma)]
+                          {:otsikko toimenpide
+                           :hae (constantly (str maara " " yksikko))})
 
-                         (for [materiaalitoteuma (:materiaalit toteuma)]
-                           {:otsikko (get-in materiaalitoteuma [:materiaali :nimi])
-                            :hae     #(str (get-in % [:materiaalit materiaalitoteuma :maara]) " "
-                                           (get-in % [:materiaalit materiaalitoteuma :materiaali :yksikko]))})
-                         (when (:lisatieto toteuma)
-                           [{:otsikko "Lisätieto" :nimi :lisatieto}])))
-   :data    toteuma})
+                        (for [materiaalitoteuma (:materiaalit toteuma)]
+                          {:otsikko (get-in materiaalitoteuma [:materiaali :nimi])
+                           :hae #(str (get-in % [:materiaalit materiaalitoteuma :maara]) " "
+                                      (get-in % [:materiaalit materiaalitoteuma :materiaali :yksikko]))})
+                        (when (:lisatieto toteuma)
+                          [{:otsikko "Lisätieto" :nimi :lisatieto}])))
+   :data toteuma})
 
 
 (defmethod infopaneeli-skeema :silta [silta]
@@ -270,24 +270,24 @@
       ;; Ei ole otsikkoa
       (nil? otsikko)
       (rivin-skeemavirhe "Rivin skeemasta puuttuu otsikko"
-                          rivin-skeema infopaneeli-skeema)
+                         rivin-skeema infopaneeli-skeema)
 
       ;; Hakutapa puuttuu kokonaan
       (nil? get-fn)
       (rivin-skeemavirhe "skeemasta puuttuu :nimi tai :hae"
-             rivin-skeema infopaneeli-skeema)
+                         rivin-skeema infopaneeli-skeema)
 
       ;; Hakutapa on nimi, mutta datassa ei ole kyseistä avainta
       (and nimi (not (contains? data nimi)))
       (rivin-skeemavirhe
-       (str "Tiedossa ei ole nimen mukaista avainta, nimi: "
-            (str nimi))
-       rivin-skeema infopaneeli-skeema)
+        (str "Tiedossa ei ole nimen mukaista avainta, nimi: "
+             (str nimi))
+        rivin-skeema infopaneeli-skeema)
 
       ;; Hakutapa on funktio, joka palautti nil arvon
       (nil? arvo)
       (rivin-skeemavirhe (str "Puuttuva tieto otsikolla " (:otsikko rivin-skeema))
-             rivin-skeema infopaneeli-skeema)
+                         rivin-skeema infopaneeli-skeema)
 
       ;; Kaikki kunnossa
       :default
