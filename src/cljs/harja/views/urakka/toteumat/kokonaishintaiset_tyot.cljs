@@ -6,7 +6,6 @@
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.protokollat :refer [Haku hae]]
-            [harja.views.kartta.popupit :as popupit]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as tiedot]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.domain.skeema :refer [+tyotyypit+]]
@@ -29,9 +28,6 @@
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction-writable]]))
-
-(defn kokonaishintainen-reitti-klikattu [_ toteuma]
-  (popupit/nayta-popup (assoc toteuma :aihe :toteuma-klikattu)))
 
 (defn tehtavan-paivakohtaiset-tiedot [pvm toimenpidekoodi]
   (let [tiedot (atom nil)]
@@ -275,7 +271,6 @@
 
 (defn kokonaishintaiset-toteumat []
   (komp/luo
-    (komp/kuuntelija :toteuma-klikattu kokonaishintainen-reitti-klikattu)
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-kokonaishintainen-toteuma)
     (komp/sisaan-ulos #(do
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
@@ -294,7 +289,3 @@
        (if @tiedot/valittu-kokonaishintainen-toteuma
          [kokonaishintainen-toteuma-lomake]
          [kokonaishintaisten-toteumien-listaus])])))
-
-(def tyhjenna-popupit-kun-filtterit-muuttuu (run!
-                                              @tiedot/haetut-toteumat
-                                              (kartta/poista-popup!)))
