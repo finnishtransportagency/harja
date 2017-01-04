@@ -390,7 +390,7 @@
   ;; Kertoo, onko ladattu urakasta kaikki sellaiset tiedot, joihin
   ;; viitataan urakan eri näkymistä. Ei tulisi näyttää urakkaa,
   ;; jos nämä tiedot puuttuu, sillä aiheuttaa ongelmia
-  ;; (esim. jos silloin kun tullaan suoraan lomakkeelle
+  ;; (esim. silloin kun tullaan suoraan lomakkeelle
   ;; ja toimenpideinnstanssit puuttuu).
   (reaction
     (let [toimenpideinstanssit @urakan-toimenpideinstanssit
