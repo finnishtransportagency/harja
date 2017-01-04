@@ -98,6 +98,8 @@
               {:otsikko "Tie\u00ADrekisteri\u00ADkohteet" :tyyppi :string
                :hae #(str/join ", " (map :nimi (:kohdeosat %)))}
               {:otsikko "Osoite" :tyyppi :string :hae #(tr-domain/tierekisteriosoite-tekstina %)}
+              {:otsikko "Pituus (m)" :tyyppi :string
+               :hae #(fmt/desimaaliluku (:pituus %) 0)}
               {:otsikko "Nykyinen päällyste" :tyyppi :string
                :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
               {:otsikko "KVL" :tyyppi :string :hae #(fmt/desimaaliluku (:keskimaarainen-vuorokausiliikenne %) 0)}
