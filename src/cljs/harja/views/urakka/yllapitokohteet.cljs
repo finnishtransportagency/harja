@@ -464,7 +464,15 @@
        @osan-pituus])))
 
 (defn maaramuutokset [yllapitokohde-id urakka-id]
-  (let [maaramuutokset (atom [])]
+  (let [maaramuutokset (atom nil)
+        hae-maara-muutokset! (fn [urakka-id yllapitokohde-id]
+                              (go (let [vastaus (<! (tiedot/hae-maaramuutokset urakka-id yllapitokohde-id))]
+                                    (if (k/virhe? vastaus)
+                                      (viesti/nayta! "Määrämuutoksien haku epäonnistui"
+                                                     :warning
+                                                     viesti/viestin-nayttoaika-keskipitka)
+                                      (reset! maaramuutokset vastaus)))))]
+    (hae-maara-muutokset! urakka-id yllapitokohde-id)
     [grid/grid
      {:otsikko "Määrämuutokset"
       :tyhja "Ei määrämuutoksia"

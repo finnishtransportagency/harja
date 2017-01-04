@@ -18,6 +18,7 @@
                                     :sopimus-id sopimus-id
                                     :vuosi vuosi}))
 
+
 (defn tallenna-yllapitokohteet! [urakka-id sopimus-id vuosi kohteet]
   (k/post! :tallenna-yllapitokohteet {:urakka-id urakka-id
                                       :sopimus-id sopimus-id
@@ -29,6 +30,10 @@
                                         :sopimus-id sopimus-id
                                         :yllapitokohde-id yllapitokohde-id
                                         :osat osat}))
+
+(defn hae-maaramuutokset [urakka-id yllapitokohde-id]
+  (k/post! :urakan-yllapitokohteet {:urakka-id urakka-id
+                                    :yllapitokohde-id yllapitokohde-id}))
 
 (defn tallenna-maaramuutokset! [urakka-id yllapitokohde-id maaramuutokset]
   (k/post! :tallenna-maaramuutokset {:urakka-id urakka-id

@@ -340,6 +340,17 @@
     ;; TODO
     ))
 
+(defn hae-maaramuutokset
+  [db user {:keys [yllapitokohde-id urakka-id]}]
+  (log/debug "Aloitetaan määrämuutoksien haku")
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (let [maaramuutokset (into []
+                               (q/hae-yllapitokohteen-maaramuutokset db {:id yllapitokohde-id
+                                                                    :urakka urakka-id}))]
+      (log/debug "Määrämuutokset saatu: " (pr-str maaramuutokset))
+      maaramuutokset)))
+
 (defrecord Paallystys []
   component/Lifecycle
   (start [this]
@@ -354,6 +365,9 @@
       (julkaise-palvelu http :tallenna-paallystysilmoitus
                         (fn [user tiedot]
                           (tallenna-paallystysilmoitus db user tiedot)))
+      (julkaise-palvelu http :hae-maaramuutokset
+                        (fn [user tiedot]
+                          (hae-maaramuutokset db user tiedot)))
       (julkaise-palvelu http :tallenna-maaramuutokset
                         (fn [user tiedot]
                           (tallenna-maaramuutokset db user tiedot)))
