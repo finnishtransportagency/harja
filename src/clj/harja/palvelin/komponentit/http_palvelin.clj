@@ -212,17 +212,6 @@
       :default
        nil)))
 
-(defn kaari-yksiloiva-tunniste
-  "Antaa pyynnöille yksilöivän tunnisteen"
-  [kasittelija]
-  (fn [pyynto]
-    (kasittelija
-     (if (contains? pyynto :yksiloiva-tunniste)
-       pyynto
-       (do
-         (log/debug "uusi yksiloiva tunniste")
-         (assoc pyynto :yksiloiva-tunniste (str (java.util.UUID/randomUUID))))))))
-
 (defn wrap-anti-forgery
   "Vertaa headerissa lähetettyä tokenia http-only cookiessa tulevaan"
   [f anti-csrf-kaytossa?]
@@ -261,32 +250,31 @@
              (constantly
               (http/run-server
                 (cookies/wrap-cookies
-                 (kaari-yksiloiva-tunniste
-                  (fn [req]
-                    (binding [oikeudet/*oikeustarkistus-tehty* false]
-                      (try+
-                       (metriikka/inc! mittarit :aktiiviset_pyynnot)
-                       (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
-                             ui-kasittelijat (mapv :fn @kasittelijat)
-                             ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
-                                                (wrap-anti-forgery anti-csrf-kaytossa?))]
+                 (fn [req]
+                   (binding [oikeudet/*oikeustarkistus-tehty* false]
+                     (try+
+                      (metriikka/inc! mittarit :aktiiviset_pyynnot)
+                      (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
+                            ui-kasittelijat (mapv :fn @kasittelijat)
+                            ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
+                                               (wrap-anti-forgery anti-csrf-kaytossa?))]
 
-                         (or (reitita req (conj (mapv :fn ei-todennettavat)
-                                                dev-resurssit resurssit))
-                             (reitita (todennus/todenna-pyynto todennus req)
-                                      (-> (mapv :fn todennettavat)
-                                          (conj (partial index-kasittelija kehitysmoodi))
-                                          (conj (partial ls-index-kasittelija kehitysmoodi))
-                                          (conj ui-kasittelija)))))
-                       (catch [:virhe :todennusvirhe] _
-                         {:status 403 :body "Todennusvirhe"})
-                       (finally
-                         (if (not oikeudet/*oikeustarkistus-tehty*)
-                           (log/error "virhe: oikeustarkistusta ei tehty - uri:" (:uri req))
-                           (log/debug "oikein: oikeustarkistus tehtiin - uri:" (:uri req)))
-                         (metriikka/muuta! mittarit
-                                           :aktiiviset_pyynnot dec
-                                           :pyyntoja_palveltu inc)))))))
+                        (or (reitita req (conj (mapv :fn ei-todennettavat)
+                                               dev-resurssit resurssit))
+                            (reitita (todennus/todenna-pyynto todennus req)
+                                     (-> (mapv :fn todennettavat)
+                                         (conj (partial index-kasittelija kehitysmoodi))
+                                         (conj (partial ls-index-kasittelija kehitysmoodi))
+                                         (conj ui-kasittelija)))))
+                      (catch [:virhe :todennusvirhe] _
+                        {:status 403 :body "Todennusvirhe"})
+                      (finally
+                        (if (not oikeudet/*oikeustarkistus-tehty*)
+                          (log/error "virhe: oikeustarkistusta ei tehty - uri:" (:uri req))
+                          (log/debug "oikein: oikeustarkistus tehtiin - uri:" (:uri req)))
+                        (metriikka/muuta! mittarit
+                                          :aktiiviset_pyynnot dec
+                                          :pyyntoja_palveltu inc))))))
 
                  {:port     (or (:portti asetukset) asetukset)
                   :thread   (or (:threads asetukset) 8)
@@ -345,7 +333,7 @@
 (defn julkaise-reitti
   ([http nimi reitti] (julkaise-reitti http nimi reitti true))
   ([http nimi reitti ei-todennettava?]
-   (julkaise-palvelu http nimi (-> reitti wrap-params kaari-yksiloiva-tunniste)
+   (julkaise-palvelu http nimi (wrap-params reitti)
                      {:ring-kasittelija? true
                       :tarkista-polku?   false
                       :ei-todennettava   ei-todennettava?})))
