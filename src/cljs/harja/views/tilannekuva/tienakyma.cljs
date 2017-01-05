@@ -30,7 +30,7 @@
   [lomake/lomake
    {:otsikko "Tarkastele tien tietoja"
     :muokkaa! #(e! (tiedot/->PaivitaValinnat %))
-    :footer [:div.inline
+    :footer [:span
              [napit/yleinen
               "Hae"
               #(e! (tiedot/->Hae))
