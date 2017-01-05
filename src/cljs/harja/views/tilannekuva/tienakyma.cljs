@@ -65,7 +65,6 @@
    (komp/sisaan-ulos #(nayta-tulospaneeli! e! tulokset avatut-tulokset)
                      #(kartta-tiedot/poista-kartan-kontrollit! :tienakyma-tulokset))
    (komp/sisaan-ulos #(do
-                        (log "ASETA KARTAN KLIK KASITTELIJA")
                         (kartta-tiedot/aseta-klik-kasittelija!
                          (fn [{t :geometria}]
                            (e! (tiedot/->AvaaTaiSuljeTulos (:idx t))))))
