@@ -396,3 +396,12 @@
     (let [toimenpideinstanssit @urakan-toimenpideinstanssit
           tehtavat @urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat]
       (boolean (and toimenpideinstanssit tehtavat)))))
+
+(def urakkatyypin-sanktiolajit
+  (reaction<! [urakka @nav/valittu-urakka
+               sivu (nav/valittu-valilehti :laadunseuranta)
+               _ (log "sivu? " (pr-str sivu))]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and urakka sopimus-id aikavali (= :sanktiot sivu))
+                (go
+                  (<! (k/post! :hae-urakkatyypin-sanktiolajit {:urakka urakka}))))))

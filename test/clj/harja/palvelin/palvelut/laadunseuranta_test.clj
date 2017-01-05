@@ -232,3 +232,32 @@
          :alku      (pvm/luo-pvm 2015 10 1)
          :loppu    (pvm/luo-pvm 2016 10 30)
          :tpi 1})))
+
+(deftest hae-urakkatyypin-sanktiolajit
+  (let [hoidon (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :hae-urakkatyypin-sanktiolajit +kayttaja-urakan-vastuuhenkilo+
+                               {:urakkatyyppi :hoito})
+        paallystyksen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :hae-tarkastus +kayttaja-urakan-vastuuhenkilo+
+                                      {:urakkatyyppi :paallystys})
+        paikkauksen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :hae-tarkastus +kayttaja-urakan-vastuuhenkilo+
+                                    {:urakkatyyppi :paikkaus})
+        tiemerkinnan (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :hae-tarkastus +kayttaja-urakan-vastuuhenkilo+
+                                     {:urakkatyyppi :tiemerkinta})
+        valaistuksen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :hae-tarkastus +kayttaja-urakan-vastuuhenkilo+
+                                     {:urakkatyyppi :valaistus})]
+    (log/debug "hoidon " hoidon)
+    (log/debug "paallystyksen " paallystyksen)
+    (is (not (empty? hoidon)))
+    (is (= #{:A :B :C :muistutus} (:sanktiolajit hoidon) "Hoidon sanktiolajit"))
+    (is (= #{:yllapidon_sakko :yllapidon_bonus :muistutus}
+           (:sanktiolajit paallystyksen)
+           (:sanktiolajit paikkauksen)
+           (:sanktiolajit tiemerkinnan)
+           (:sanktiolajit valaistuksen)
+           "Ylläpidon sanktiolajit"))))
+
+

@@ -33,7 +33,8 @@
                                                (:id @nav/valittu-urakka))
         yllapito? (or (= :paallystys (:nakyma optiot))
                       (= :paikkaus (:nakyma optiot))
-                      (= :tiemerkinta (:nakyma optiot)))]
+                      (= :tiemerkinta (:nakyma optiot))
+                      (= :valaistus (:nakyma optiot)))]
 
     (fn []
       [:div
@@ -126,27 +127,30 @@
             :leveys  2 :tyyppi :string
             :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
 
-         (when-not yllapito?
-           {:otsikko       "Laji"
-            :tyyppi        :valinta
-            :pakollinen?   true
-            :palstoja      1
-            :uusi-rivi?    true
-            :nimi          :laji
-            :hae           (comp keyword :laji)
-            :aseta         (fn [rivi arvo]
-                             (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
-                               (if-not (sanktio-domain/sakko? paivitetty)
-                                 (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
-                                 paivitetty)))
-            :valinnat      [:A :B :C :muistutus]
-            :valinta-nayta #(case %
-                             :A "Ryhmä A"
-                             :B "Ryhmä B"
-                             :C "Ryhmä C"
-                             :muistutus "Muistutus"
-                             "- valitse laji -")
-            :validoi       [[:ei-tyhja "Valitse laji"]]})
+         {:otsikko       "Laji"
+          :tyyppi        :valinta
+          :pakollinen?   true
+          :palstoja      1
+          :uusi-rivi?    true
+          :nimi          :laji
+          :hae           (comp keyword :laji)
+          :aseta         (fn [rivi arvo]
+                           (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
+                             (if-not (sanktio-domain/sakko? paivitetty)
+                               (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
+                               paivitetty)))
+          :valinnat      (if yllapito?
+                           [:yllapidon_sakko :yllapidon_bonus :muistutus]
+                           [:A :B :C :muistutus])
+          :valinta-nayta #(case %
+                            :A "Ryhmä A"
+                            :B "Ryhmä B"
+                            :C "Ryhmä C"
+                            :muistutus "Muistutus"
+                            :yllapidon_sakko "Sakko"
+                            :yllapidon_bonus "Bonus"
+                            "- valitse laji -")
+          :validoi       [[:ei-tyhja "Valitse laji"]]}
 
          (when-not yllapito?
            {:otsikko       "Tyyppi" :tyyppi :valinta

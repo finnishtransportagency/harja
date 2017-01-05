@@ -390,6 +390,11 @@
            :laatupoikkeama laatupoikkeama-id})
         laatupoikkeama-id))))
 
+(defn hae-urakkatyypin-sanktiolajit
+  [db user urakka]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user (:id urakka))
+  (sanktiot/hae-urakkatyypin-sanktiolajit db (name (:tyyppi urakka))))
+
 (defrecord Laadunseuranta []
   component/Lifecycle
   (start [{:keys [http-palvelin db karttakuvat] :as this}]
@@ -441,6 +446,10 @@
       (fn [user {:keys [urakka-id tarkastus-id]}]
         (hae-tarkastus db user urakka-id tarkastus-id))
 
+      :hae-urakkatyypin-sanktiolajit
+      (fn [user {:keys [urakka]}]
+        (hae-urakkatyypin-sanktiolajit db user urakka))
+
       :lisaa-tarkastukselle-laatupoikkeama
       (fn [user {:keys [urakka-id tarkastus-id]}]
         (lisaa-tarkastukselle-laatupoikkeama db user urakka-id tarkastus-id)))
@@ -457,5 +466,6 @@
                      :tallenna-tarkastus
                      :tallenna-suorasanktio
                      :hae-tarkastus
+                     :hae-urakkatyypin-sanktiolajit
                      :lisaa-tarkastukselle-laatupoikkeama)
     this))
