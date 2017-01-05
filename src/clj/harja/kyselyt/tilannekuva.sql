@@ -214,6 +214,8 @@ SELECT
   ypko.tr_alkuetaisyys,
   ypko.tr_loppuosa,
   ypko.tr_loppuetaisyys,
+  ypk.yllapitokohdetyotyyppi,
+  ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
   pi.id   AS paallystysilmoitus_id,
   pi.tila AS paallystysilmoitus_tila,
   ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
@@ -221,10 +223,14 @@ SELECT
   ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
   ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
   ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
-  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
+  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
+  o.nimi                                AS "urakoitsija",
+  u.nimi AS "urakka"
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
+  LEFT JOIN urakka u ON ypk.urakka = u.id
+  LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE ypk.poistettu IS NOT TRUE
       AND (ypk.aikataulu_kohde_valmis IS NULL OR
            (now() - ypk.aikataulu_kohde_valmis) < INTERVAL '7 days');
@@ -248,6 +254,8 @@ SELECT
   ypko.tr_alkuetaisyys,
   ypko.tr_loppuosa,
   ypko.tr_loppuetaisyys,
+  ypk.yllapitokohdetyotyyppi,
+  ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
   pi.id                                   AS paallystysilmoitus_id,
   pi.tila                                 AS paallystysilmoitus_tila,
   ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
@@ -255,10 +263,14 @@ SELECT
   ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
   ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
   ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
-  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
+  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
+  o.nimi                                AS "urakoitsija",
+  u.nimi AS "urakka"
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
+  LEFT JOIN urakka u ON ypk.urakka = u.id
+  LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE ypk.poistettu IS NOT TRUE AND
       (ypk.aikataulu_kohde_alku < :loppu
       AND (ypk.aikataulu_kohde_valmis IS NULL OR ypk.aikataulu_kohde_valmis > :alku));
@@ -282,6 +294,8 @@ SELECT
   ypko.tr_alkuetaisyys,
   ypko.tr_loppuosa,
   ypko.tr_loppuetaisyys,
+  ypk.yllapitokohdetyotyyppi,
+  ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
   pi.id   AS paikkausilmoitus_id,
   pi.tila AS paikkausilmoitus_tila,
   ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
@@ -289,10 +303,14 @@ SELECT
   ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
   ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
   ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
-  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
+  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
+  o.nimi                                AS "urakoitsija",
+  u.nimi AS "urakka"
 FROM yllapitokohdeosa ypko
   LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = ypk.id
+  LEFT JOIN urakka u ON ypk.urakka = u.id
+  LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE ypk.poistettu IS NOT TRUE
       AND (pi.tila :: TEXT != 'valmis' OR
            (now() - pi.valmispvm_kohde) < INTERVAL '7 days');
@@ -316,6 +334,8 @@ SELECT
   ypko.tr_alkuetaisyys,
   ypko.tr_loppuosa,
   ypko.tr_loppuetaisyys,
+  ypk.yllapitokohdetyotyyppi,
+  ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
   pi.id   AS paikkausilmoitus_id,
   pi.tila AS paikkausilmoitus_tila,
   ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
@@ -323,10 +343,14 @@ SELECT
   ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
   ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
   ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
-  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
+  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
+  o.nimi                                AS "urakoitsija",
+  u.nimi AS "urakka"
 FROM yllapitokohdeosa ypko
   LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = ypk.id
+  LEFT JOIN urakka u ON ypk.urakka = u.id
+  LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE ypk.poistettu IS NOT TRUE AND
       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku));
 

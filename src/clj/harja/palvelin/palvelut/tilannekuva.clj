@@ -144,6 +144,7 @@
               (map konv/alaviiva->rakenne)
               (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
               (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
+              (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
               (map #(konv/string-polusta->keyword % [:paallystysilmoitus :tila])))
             (if nykytilanne?
               (q/hae-paallystykset-nykytilanteeseen db toleranssi)
@@ -171,6 +172,7 @@
              (map konv/alaviiva->rakenne)
              (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
              (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
+             (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
              (map #(konv/string-polusta->keyword % [:paikkausilmoitus :tila])))
            (if nykytilanne?
              (q/hae-paikkaukset-nykytilanteeseen db toleranssi)

@@ -99,10 +99,10 @@
                :hae #(str/join ", " (map :nimi (:kohdeosat %)))}
               {:otsikko "Osoite" :tyyppi :string :hae #(tr-domain/tierekisteriosoite-tekstina %)}
               {:otsikko "Pituus (m)" :tyyppi :string
-               :hae #(fmt/desimaaliluku (:pituus %) 0)}
+               :hae #(fmt/desimaaliluku-opt (:pituus %) 0)}
               {:otsikko "Nykyinen päällyste" :tyyppi :string
                :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
-              {:otsikko "KVL" :tyyppi :string :hae #(fmt/desimaaliluku (:keskimaarainen-vuorokausiliikenne %) 0)}
+              {:otsikko "KVL" :tyyppi :string :hae #(fmt/desimaaliluku-opt (:keskimaarainen-vuorokausiliikenne %) 0)}
               {:otsikko "Toimenpide" :tyyppi :string
                :hae #(str/join ", " (distinct (map :toimenpide (:kohdeosat %))))}
               {:otsikko "Tila" :tyyppi :string
