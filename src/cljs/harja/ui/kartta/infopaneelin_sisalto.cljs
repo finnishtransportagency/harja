@@ -83,41 +83,46 @@
    :data toteuma})
 
 (defn- yllapitokohde-skeema [yllapitokohdeosa]
-  (let [yllapitokohde (:yllapitokohde yllapitokohdeosa)
-        aloitus :kohde-alkupvm
+  (let [aloitus :kohde-alkupvm
         paallystys-valmis :paallystys-loppupvm
         paikkaus-valmis :paikkaus-loppupvm
         kohde-valmis :kohde-valmispvm]
-    {:tyyppi (:yllapitokohdetyotyyppi yllapitokohde)
+    {:tyyppi (:yllapitokohdetyotyyppi (:yllapitokohde yllapitokohdeosa))
      :jarjesta-fn :kohde-alkupvm
-     :otsikko (case (:yllapitokohdetyotyyppi yllapitokohde)
+     :otsikko (case (:yllapitokohdetyotyyppi (:yllapitokohde yllapitokohdeosa))
                 :paallystys "Päällystyskohde"
                 :paikkaus "Paikkauskohde"
                 :default nil)
-     :tiedot [{:otsikko "Nimi" :tyyppi :string :hae #(:nimi yllapitokohde)}
-              {:otsikko "Kohdenumero" :tyyppi :string :hae #(:kohdenumero yllapitokohde)}
+     :tiedot [{:otsikko "Nimi" :tyyppi :string :hae #(get-in % [:yllapitokohde :nimi])}
+              {:otsikko "Kohdenumero" :tyyppi :string :hae #(get-in % [:yllapitokohde :kohdenumero])}
               {:otsikko "Tie\u00ADrekisteri\u00ADkohteet" :tyyppi :string
-               :hae #(str/join ", " (map :nimi (:kohdeosat %)))}
-              {:otsikko "Osoite" :tyyppi :string :hae #(tr-domain/tierekisteriosoite-tekstina %)}
+               :hae #(str/join ", " (map :nimi (get-in % [:yllapitokohde :kohdeosat])))}
+              {:otsikko "Osoite" :tyyppi :string
+               :hae #(tr-domain/tierekisteriosoite-tekstina (:yllapitokohde %))}
               {:otsikko "Pituus (m)" :tyyppi :string
-               :hae #(fmt/desimaaliluku-opt (:pituus %) 0)}
+               :hae #(fmt/desimaaliluku-opt (get-in % [:yllapitokohde :pituus]) 0)}
               {:otsikko "Nykyinen päällyste" :tyyppi :string
-               :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste %))}
-              {:otsikko "KVL" :tyyppi :string :hae #(fmt/desimaaliluku-opt (:keskimaarainen-vuorokausiliikenne %) 0)}
+               :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (get-in % [:yllapitokohde :nykyinen-paallyste]))}
+              {:otsikko "KVL" :tyyppi :string
+               :hae #(fmt/desimaaliluku-opt (get-in % [:yllapitokohde :keskimaarainen-vuorokausiliikenne]) 0)}
               {:otsikko "Toimenpide" :tyyppi :string
-               :hae #(str/join ", " (distinct (map :toimenpide (:kohdeosat %))))}
+               :hae #(str/join ", " (distinct (map :toimenpide (get-in % [:yllapitokohde :kohdeosat]))))}
               {:otsikko "Tila" :tyyppi :string
-               :hae #(yllapitokohteet/kuvaile-kohteen-tila (:tila %))}
-              (when (aloitus yllapitokohdeosa)
-                {:otsikko "Aloitettu" :tyyppi :pvm-aika :nimi aloitus})
-              (when (paallystys-valmis yllapitokohdeosa)
-                {:otsikko "Päällystys valmistunut" :tyyppi :pvm-aika :nimi paallystys-valmis})
-              (when (paikkaus-valmis yllapitokohdeosa)
-                {:otsikko "Paikkaus valmistunut" :tyyppi :pvm-aika :nimi paallystys-valmis})
-              (when (kohde-valmis yllapitokohdeosa)
-                {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika :nimi kohde-valmis})
-              {:otsikko "Urakka" :tyyppi :string :nimi :urakka}
-              {:otsikko "Urakoitsija" :tyyppi :string :nimi :urakoitsija}]
+               :hae #(yllapitokohteet/kuvaile-kohteen-tila (get-in % [:yllapitokohde :tila]))}
+              (when (get-in yllapitokohdeosa [:yllapitokohde aloitus])
+                {:otsikko "Aloitettu" :tyyppi :pvm-aika
+                 :hae #(get-in % [:yllapitokohde aloitus])})
+              (when (get-in yllapitokohdeosa [:yllapitokohde paallystys-valmis])
+                {:otsikko "Päällystys valmistunut" :tyyppi :pvm-aika
+                 :hae #(get-in % [:yllapitokohde paallystys-valmis])})
+              (when (get-in yllapitokohdeosa [:yllapitokohde paikkaus-valmis])
+                {:otsikko "Paikkaus valmistunut" :tyyppi :pvm-aika
+                 :hae #(get-in % [:yllapitokohde paikkaus-valmis])})
+              (when (get-in yllapitokohdeosa [:yllapitokohde kohde-valmis])
+                {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika
+                 :hae #(get-in % [:yllapitokohde kohde-valmis])})
+              {:otsikko "Urakka" :tyyppi :string :hae #(get-in % [:yllapitokohde :urakka])}
+              {:otsikko "Urakoitsija" :tyyppi :string :hae #(get-in % [:yllapitokohde :urakoitsija])}]
      :data yllapitokohdeosa}))
 
 (defmethod infopaneeli-skeema :paallystys [paallystys]
