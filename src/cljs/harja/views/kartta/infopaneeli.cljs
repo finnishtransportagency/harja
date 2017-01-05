@@ -38,7 +38,7 @@
       nil)
     ;; else
     [:div.ip-osio
-     (when-let [{:keys [teksti toiminto]} (tyyppi @linkin-kasittelijat)]
+     (when-let [{:keys [teksti toiminto]} (tyyppi linkin-kasittelijat)]
        [:div [napit/yleinen teksti #(toiminto data) {:luokka "ip-toiminto btn-xs"}]])
      (apply yleiset/tietoja {}
             (mapcat (juxt :otsikko
@@ -80,10 +80,9 @@
      (komp/kun-muuttuu (fn [asiat-pisteessa _ _]
                          (paivita-asiat! asiat-pisteessa)))
      (fn [{haetaan? :haetaan? :as asiat-pisteessa} piilota-fn! linkkifunktiot]
-       (log "AVATUT: " (pr-str @avatut-asiat))
        (if haetaan?
          [:div
           [ajax-loader]]
          [infopaneeli-komponentti
           @asiat-skeemamuodossa @avatut-asiat toggle-asia!
-          piilota-fn! linkkifunktiot])))))
+          piilota-fn! @linkkifunktiot])))))
