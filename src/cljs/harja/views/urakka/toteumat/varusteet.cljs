@@ -256,16 +256,11 @@
     (intercept e!
                ;; todo: destructuroi t tässä, josta saa parametrit uudelle eventille VarustetoteumatMuuttuneet
                (varusteet/VarusteToteumatMuuttuneet
-                 t
+                 {varustetoteumat :varustetoteumat :as t}
                  (do
-                   (log "---> Interceptioitu")
-                   (log "---> t:" (pr-str t))
-                   ;; kaiva t:stä tarpeenllinen data
-                   (e! (v/->VarustetoteumatMuuttuneet t))
+                   (e! (v/->VarustetoteumatMuuttuneet varustetoteumat))
                    (vhe! t)))
-               (:default e (do
-                             (log "---> e" (pr-str e))
-                             (vhe! e))))))
+               (:default e (vhe! e)))))
 
 (defn- varusteet* [e! varusteet]
   (e! (v/->YhdistaValinnat @varustetiedot/valinnat))

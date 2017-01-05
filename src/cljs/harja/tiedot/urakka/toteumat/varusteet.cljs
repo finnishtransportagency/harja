@@ -159,7 +159,6 @@
 
   v/HaeVarusteToteumat
   (process-event [_ {valinnat :valinnat :as app}]
-    (log "--> VALINNAT" (pr-str valinnat))
     (let [haku-valmis! (t/send-async! v/->VarusteToteumatHaettu)]
       (go
         (let [{:keys [urakka-id sopimus-id aikavali tienumero]} valinnat
@@ -172,6 +171,8 @@
 
   v/VarusteToteumatHaettu
   (process-event [{toteumat :toteumat} app]
+
+    (log "---> haetut toteumat:" (pr-str toteumat))
     (let [valittu-toimenpide (:valittu-toimenpide app)]
       (assoc app
         :karttataso (varustetoteumat-karttataso toteumat)
@@ -268,9 +269,14 @@
     (dissoc app :virhe))
 
   v/VarustetoteumatMuuttuneet
-  (process-event [data app]
-    (log "---> VarustetoteumatMuuttuneet. data:" (pr-str data) ", app: " (pr-str app))
-    app))
+  (process-event [{toteumat :varustetoteumat :as data} app]
+    (log "---> toteumat:" (pr-str toteumat))
+
+    (assoc app
+      :karttataso (varustetoteumat-karttataso toteumat)
+      :karttataso-nakyvissa? true
+      :toteumat toteumat
+      :naytettavat-toteumat toteumat #_(naytettavat-toteumat (get-in app [:valinnat :tyyppi]) toteumat))))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))

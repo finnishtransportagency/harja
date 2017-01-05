@@ -58,9 +58,6 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
   (r/wrap arvo
           #(assert false (str "Ei voi kirjoittaa vain luku atomia arvolle: " (pr-str arvo)))))
 
-(defn kokonaisluku-pattern [kokonaisosan-maara]
-  (re-pattern (str "-?\\d{1," kokonaisosan-maara "}")))
-
 (defmulti tee-kentta
           "Tekee muokattavan kentän tyypin perusteella"
           (fn [t _] (:tyyppi t)))
@@ -250,7 +247,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
             nykyinen-teksti (or @teksti
                                 (normalisoi-numero (fmt nykyinen-data))
                                 "")
-            kokonaisluku-re-pattern (kokonaisluku-pattern kokonaisosan-maara)
+            kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
             desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
                                                       (or (:desimaalien-maara kentta) +desimaalin-oletus-tarkkuus+)
                                                       "})?"))]

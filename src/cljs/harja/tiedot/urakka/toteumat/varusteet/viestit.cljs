@@ -37,6 +37,6 @@
 
 (defrecord VirheKasitelty [])
 
-(defrecord VarustetoteumatMuuttuneet [varusteet])
+(defrecord VarustetoteumatMuuttuneet [varustetoteumat])
 
 

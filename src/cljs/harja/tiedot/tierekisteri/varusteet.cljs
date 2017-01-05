@@ -105,7 +105,7 @@
     (hakutulokset app nil nil))
 
   VarusteToteumatMuuttuneet
-  (process-event [_ app]
+  #_(process-event [_ app]
     (log "--> VarusteToteumatMuuttuneet")
     app)
 
