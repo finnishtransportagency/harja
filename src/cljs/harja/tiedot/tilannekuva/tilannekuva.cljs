@@ -325,14 +325,6 @@ hakutiheys-historiakuva 1200000)
          :aikavali-historia @historiakuvan-aikavali
          :suodattimet @suodattimet}))
 
-(def tyhjenna-popupit-kun-filtterit-muuttuu
-  (run!
-    @valittu-tila
-    @nykytilanteen-aikasuodattimen-arvo
-    @historiakuvan-aikavali
-    @suodattimet
-    (kartta/poista-popup!)))
-
 (defn kartan-tyypiksi [t avain tyyppi]
   (assoc t avain (map #(assoc % :tyyppi-kartalla tyyppi) (avain t))))
 
