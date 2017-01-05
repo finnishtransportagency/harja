@@ -71,7 +71,7 @@
                                       urakka-id " vaan urakkaan " kohteen-urakka
                                       ", eikä valittu urakka myöskään ole kohteen suorittava tiemerkintäurakka"))))))
 
-(defn- laske-osien-pituudet
+(defn laske-osien-pituudet
   "Hakee tieverkosta osien pituudet tielle. Palauttaa pituuden metreina."
   [db yllapitokohteet]
   (fmap
@@ -88,6 +88,16 @@
               (tieverkko/hae-osien-pituudet db tie min-osa max-osa))))
     (group-by :tr-numero yllapitokohteet)))
 
+(defn liita-kohdeosat-kohteelle [db yllapitokohde urakka-id sopimus-id]
+  (assoc yllapitokohde
+    :kohdeosat
+    (into []
+          paallystys-q/kohdeosa-xf
+          (q/hae-urakan-yllapitokohteen-yllapitokohdeosat
+            db {:urakka urakka-id
+                :sopimus sopimus-id
+                :yllapitokohde (:id yllapitokohde)}))))
+
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
   (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (log/debug "Haetaan urakan ylläpitokohteet.")
@@ -100,13 +110,7 @@
                           (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
                           (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
                           (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
-                          (map #(assoc % :kohdeosat
-                                         (into []
-                                               paallystys-q/kohdeosa-xf
-                                               (q/hae-urakan-yllapitokohteen-yllapitokohdeosat
-                                                 db {:urakka urakka-id
-                                                     :sopimus sopimus-id
-                                                     :yllapitokohde (:id %)})))))
+                          (map #(liita-kohdeosat-kohteelle db % urakka-id sopimus-id)))
                         (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
                                                                      :sopimus sopimus-id
                                                                      :vuosi vuosi}))
@@ -115,6 +119,7 @@
                           :pituus
                           (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))
                         vastaus)]
+      (log/debug "VASTAUS: " (pr-str vastaus))
       vastaus)))
 
 (defn hae-urakan-yllapitokohteet-lomakkeelle [db user {:keys [urakka-id sopimus-id]}]
