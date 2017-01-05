@@ -388,3 +388,10 @@ pisteen [px py]."
   (let [pit (extent-hypotenuusa extent)
         toleranssi (/ pit 200)]
     toleranssi))
+
+(defn kulma
+  "Palauttaa kahden pisteen välisen kulman radiaaneina"
+  [[x1 y1] [x2 y2]]
+  (let [dx (- x2 x1)
+        dy (- y2 y1)]
+    (Math/atan2 dy dx)))
