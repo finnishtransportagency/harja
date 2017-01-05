@@ -6,20 +6,12 @@
 
 (def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
 
-(defn liita-kohdeosat-kohteelle [db yllapitokohde]
-  (assoc yllapitokohde
+(defn liita-kohdeosat [db map yllapitokohde-id]
+  (assoc map
     :kohdeosat
     (into []
           kohdeosa-xf
-          (harja.kyselyt.paallystys/hae-urakan-yllapitokohteen-yllapitokohdeosat
-            db {:yllapitokohde (:id yllapitokohde)}))))
+          (hae-urakan-yllapitokohteen-yllapitokohdeosat
+            db {:yllapitokohde yllapitokohde-id}))))
 
-(defn onko-olemassa-paallystysilmoitus? [db yllapitokohde-id]
-  (:exists (first (harja.kyselyt.yllapitokohteet/yllapitokohteella-paallystysilmoitus
-                    db
-                    {:yllapitokohde yllapitokohde-id}))))
 
-(defn onko-olemassa-paikkausilmioitus? [db yllapitokohde-id]
-  (:exists (first (harja.kyselyt.yllapitokohteet/yllapitokohteella-paikkausilmoitus
-                    db
-                    {:yllapitokohde yllapitokohde-id}))))

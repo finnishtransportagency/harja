@@ -6,13 +6,18 @@
 
 (defqueries "harja/kyselyt/paallystys.sql")
 
+(defn onko-olemassa-paallystysilmoitus? [db yllapitokohde-id]
+  (:exists (first (harja.kyselyt.yllapitokohteet/yllapitokohteella-paallystysilmoitus
+                    db
+                    {:yllapitokohde yllapitokohde-id}))))
+
 (defn hae-urakan-paallystysilmoitukset-kohteineen [db urakka-id sopimus-id vuosi]
   (into []
         (comp
           (map #(konv/string-poluista->keyword % [[:paatos-taloudellinen-osa]
                                                   [:paatos-tekninen-osa]
                                                   [:tila]]))
-          (map #(yllapitokohteet-q/liita-kohdeosat-kohteelle db %)))
+          (map #(yllapitokohteet-q/liita-kohdeosat db % (:paallystyskohde-id %))))
         (harja.kyselyt.paallystys/hae-urakan-paallystysilmoitukset db {:urakka urakka-id
                                                                        :sopimus sopimus-id
                                                                        :vuosi vuosi})))

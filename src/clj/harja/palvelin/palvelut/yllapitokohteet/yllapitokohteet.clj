@@ -32,6 +32,7 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.kyselyt.paallystys :as paallystys-q]
+            [harja.kyselyt.paikkaus :as paikkaus-q]
             [harja.palvelin.palvelut.tierek-haku :as tr-haku]
             [clj-time.coerce :as c]
             [clj-time.coerce :as c]
@@ -101,7 +102,7 @@
                           (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
                           (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
                           (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
-                          (map #(yllapitokohteet-q/liita-kohdeosat-kohteelle db %)))
+                          (map #(yllapitokohteet-q/liita-kohdeosat db % (:id %))))
                         (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
                                                                      :sopimus sopimus-id
                                                                      :vuosi vuosi}))
@@ -126,7 +127,7 @@
   (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (let [vastaus (into []
-                      paallystys-q/kohdeosa-xf
+                      yllapitokohteet-q/kohdeosa-xf
                       (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db {:yllapitokohde yllapitokohde-id}))]
     (log/debug "Ylläpitokohdeosat saatu: " (pr-str vastaus))
     vastaus))
@@ -347,8 +348,8 @@
                                       keskimaarainen-vuorokausiliikenne poistettu]}]
   (if poistettu
     (do (log/debug "Tarkistetaan onko ylläpitokohteella ilmoituksia")
-        (let [paallystysilmoitus (q/onko-olemassa-paallystysilmoitus? db id)
-              paikkausilmoitus (q/onko-olemassa-paikkausilmioitus? db id)]
+        (let [paallystysilmoitus (paallystys-q/onko-olemassa-paallystysilmoitus? db id)
+              paikkausilmoitus (paikkaus-q/onko-olemassa-paikkausilmioitus? db id)]
           (log/debug "Vastaus päällystysilmoitus: " paallystysilmoitus)
           (log/debug "Vastaus paikkausilmoitus: " paikkausilmoitus)
           (if (or paallystysilmoitus paikkausilmoitus)
