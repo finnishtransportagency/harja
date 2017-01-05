@@ -227,7 +227,8 @@
     :circle [(:coordinates g)]
     :viiva (:points g)
     :moniviiva (mapcat :points (:lines g))
-    :merkki [(:coordinates g)]))
+    :merkki [(:coordinates g)]
+    :geometry-collection (mapcat pisteet (:geometries g))))
 
 (defn laske-extent-xf
   "Luo transducerin, joka laskee extentiä läpi menevistä geometrioista ja
