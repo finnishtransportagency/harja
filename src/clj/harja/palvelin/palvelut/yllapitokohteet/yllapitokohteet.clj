@@ -35,7 +35,8 @@
             [harja.palvelin.palvelut.tierek-haku :as tr-haku]
             [clj-time.coerce :as c]
             [clj-time.coerce :as c]
-            [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta])
+            [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
+            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q])
   (:use org.httpkit.fake))
 
 (defn- tarkista-urakkatyypin-mukainen-kirjoitusoikeus [db user urakka-id]
@@ -100,7 +101,7 @@
                           (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
                           (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
                           (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
-                          (map #(paallystys-q/liita-kohdeosat-kohteelle db %)))
+                          (map #(yllapitokohteet-q/liita-kohdeosat-kohteelle db %)))
                         (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
                                                                      :sopimus sopimus-id
                                                                      :vuosi vuosi}))
