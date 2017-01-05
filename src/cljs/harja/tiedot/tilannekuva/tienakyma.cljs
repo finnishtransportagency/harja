@@ -35,10 +35,11 @@
 (defn- kartalle
   "Muodosta tuloksista karttataso.
   Kaikki, jotka ovat infopaneelissa avattuina, renderöidään valittuina."
-  [{:keys [avatut-tulokset kaikki-tulokset] :as tienakyma}]
+  [{:keys [avatut-tulokset kaikki-tulokset valinnat] :as tienakyma}]
   (assoc tienakyma
          :tulokset-kartalla (esitettavat-asiat/kartalla-esitettavaan-muotoon
-                             kaikki-tulokset
+                             (conj kaikki-tulokset (assoc (:sijainti valinnat)
+                                                          :tyyppi-kartalla :tr-osoite-indikaattori))
                              avatut-tulokset)))
 
 (extend-protocol tuck/Event
