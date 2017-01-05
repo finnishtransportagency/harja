@@ -129,7 +129,7 @@
                       Näytetään sulkeissa kohteen tietojen perässä sulkeissa, jos löytyy."
   ([kohde] (yllapitokohde-tekstina kohde {}))
   ([kohde optiot]
-   (let [kohdenumero (or (:kohdenumero kohde) (:yllapitokohdenumero kohde))
+   (let [kohdenumero (or (:kohdenumero kohde) (:numero kohde) (:yllapitokohdenumero kohde))
          nimi (or (:nimi kohde) (:yllapitokohdenimi kohde))
          osoite (when-let [osoite (:osoite optiot)]
                   (let [tr-osoite (tierekisteriosoite-tekstina osoite {:teksti-ei-tr-osoitetta? false
