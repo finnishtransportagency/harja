@@ -29,9 +29,7 @@
                                        (into []
                                              paallystys-q/kohdeosa-xf
                                              (yllapitokohteet-q/hae-urakan-yllapitokohteen-yllapitokohdeosat
-                                               db {:urakka urakka-id
-                                                   :sopimus sopimus-id
-                                                   :yllapitokohde (:paikkauskohde-id %)})))))
+                                               db {:yllapitokohde (:paikkauskohde-id %)})))))
                       (q/hae-urakan-paikkausilmoitukset db urakka-id sopimus-id vuosi))]
     (log/debug "Paikkaustoteumat saatu: " (pr-str (map :nimi vastaus)))
     vastaus))

@@ -160,8 +160,6 @@ SELECT
   sijainti
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
-                            AND urakka = :urakka
-                            AND sopimus = :sopimus
                             AND ypk.poistettu IS NOT TRUE
 WHERE yllapitokohde = :yllapitokohde
       AND ypko.poistettu IS NOT TRUE;

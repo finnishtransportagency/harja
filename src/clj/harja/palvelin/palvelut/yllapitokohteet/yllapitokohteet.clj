@@ -88,16 +88,6 @@
               (tieverkko/hae-osien-pituudet db tie min-osa max-osa))))
     (group-by :tr-numero yllapitokohteet)))
 
-(defn liita-kohdeosat-kohteelle [db yllapitokohde urakka-id sopimus-id]
-  (assoc yllapitokohde
-    :kohdeosat
-    (into []
-          paallystys-q/kohdeosa-xf
-          (q/hae-urakan-yllapitokohteen-yllapitokohdeosat
-            db {:urakka urakka-id
-                :sopimus sopimus-id
-                :yllapitokohde (:id yllapitokohde)}))))
-
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
   (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (log/debug "Haetaan urakan ylläpitokohteet.")
@@ -110,7 +100,7 @@
                           (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
                           (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
                           (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
-                          (map #(liita-kohdeosat-kohteelle db % urakka-id sopimus-id)))
+                          (map #(paallystys-q/liita-kohdeosat-kohteelle db %)))
                         (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
                                                                      :sopimus sopimus-id
                                                                      :vuosi vuosi}))
@@ -130,14 +120,13 @@
       (log/debug "Ylläpitokohteet saatu: " (count vastaus) " kpl")
       vastaus)))
 
-(defn hae-urakan-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id yllapitokohde-id]}]
+(defn hae-yllapitokohteen-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id yllapitokohde-id]}]
   (log/debug "Haetaan urakan ylläpitokohdeosat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", yllapitokohde-id: " yllapitokohde-id)
   (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
+  (vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (let [vastaus (into []
                       paallystys-q/kohdeosa-xf
-                      (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db {:urakka urakka-id
-                                                                          :sopimus sopimus-id
-                                                                          :yllapitokohde yllapitokohde-id}))]
+                      (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db {:yllapitokohde yllapitokohde-id}))]
     (log/debug "Ylläpitokohdeosat saatu: " (pr-str vastaus))
     vastaus))
 
@@ -450,10 +439,10 @@
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
 
     (log/debug "SAIN OSAT: " osat)
-    (let [hae-osat #(hae-urakan-yllapitokohdeosat c user
-                                                  {:urakka-id urakka-id
-                                                   :sopimus-id sopimus-id
-                                                   :yllapitokohde-id yllapitokohde-id})
+    (let [hae-osat #(hae-yllapitokohteen-yllapitokohdeosat c user
+                                                           {:urakka-id urakka-id
+                                                            :sopimus-id sopimus-id
+                                                            :yllapitokohde-id yllapitokohde-id})
           vanhat-osa-idt (into #{}
                                (map :id)
                                (hae-osat))
@@ -490,9 +479,9 @@
       (julkaise-palvelu http :urakan-yllapitokohteet-lomakkeelle
                         (fn [user tiedot]
                           (hae-urakan-yllapitokohteet-lomakkeelle db user tiedot)))
-      (julkaise-palvelu http :urakan-yllapitokohdeosat
+      (julkaise-palvelu http :yllapitokohteen-yllapitokohdeosat
                         (fn [user tiedot]
-                          (hae-urakan-yllapitokohdeosat db user tiedot)))
+                          (hae-yllapitokohteen-yllapitokohdeosat db user tiedot)))
       (julkaise-palvelu http :tallenna-yllapitokohteet
                         (fn [user tiedot]
                           (tallenna-yllapitokohteet db user tiedot)))
@@ -523,7 +512,7 @@
     (poista-palvelut
       (:http-palvelin this)
       :urakan-yllapitokohteet
-      :urakan-yllapitokohdeosat
+      :yllapitokohteen-yllapitokohdeosat
       :tallenna-yllapitokohteet
       :tallenna-yllapitokohdeosat
       :hae-aikataulut
