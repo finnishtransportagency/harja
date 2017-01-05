@@ -102,6 +102,8 @@
     (or
       (= (:tyyppi ur) :hoito)
       (= (:tyyppi ur) :valaistus)
+      (= (:tyyppi ur) :siltakorjaus)
+      (= (:tyyppi ur) :tekniset-laitteet)
       (or
         (and (= (:tyyppi ur) :paallystys)
              (= (:sopimustyyppi ur) :palvelusopimus))))))
