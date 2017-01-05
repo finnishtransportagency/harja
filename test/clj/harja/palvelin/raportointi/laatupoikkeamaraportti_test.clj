@@ -55,7 +55,8 @@
                      {:otsikko "Oulun alueurakka 2014-2019, Laatupoikkeamaraportti ajalta 01.10.2015 - 01.10.2016"
                       :sheet-nimi "Laatupoikkeamaraportti"
                       :tyhja nil}
-                     [{:leveys 15
+                     [{:fmt :pvm
+                       :leveys 15
                        :otsikko "Päi­vä­mää­rä"}
                       {:leveys 20
                        :otsikko "Koh­de"}
@@ -170,7 +171,8 @@
                      {:otsikko "Pohjois-Pohjanmaa, Laatupoikkeamaraportti ajalta 01.10.2015 - 01.10.2016"
                       :sheet-nimi "Laatupoikkeamaraportti"
                       :tyhja nil}
-                     [{:leveys 15
+                     [{:fmt :pvm
+                       :leveys 15
                        :otsikko "Päi­vä­mää­rä"}
                       {:leveys 20
                        :otsikko "Koh­de"}
@@ -285,7 +287,8 @@
                      {:otsikko "KOKO MAA, Laatupoikkeamaraportti ajalta 01.10.2015 - 01.10.2016"
                       :sheet-nimi "Laatupoikkeamaraportti"
                       :tyhja nil}
-                     [{:leveys 15
+                     [{:fmt :pvm
+                       :leveys 15
                        :otsikko "Päi­vä­mää­rä"}
                       {:leveys 20
                        :otsikko "Koh­de"}

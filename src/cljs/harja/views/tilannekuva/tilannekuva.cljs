@@ -8,7 +8,6 @@
             [harja.views.kartta :as kartta]
             [harja.ui.valinnat :as ui-valinnat]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.views.kartta.popupit :as popupit]
             [harja.views.murupolku :as murupolku]
             [harja.ui.kentat :as kentat]
             [harja.ui.yleiset :as yleiset]
@@ -335,17 +334,6 @@
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa nil)
                            (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa nil)
                            (tiedot/lopeta-alueiden-seuraus!)))
-    (komp/kuuntelija [:toteuma-klikattu :ilmoitus-klikattu
-                      :laatupoikkeama-klikattu :tarkastus-klikattu :turvallisuuspoikkeama-klikattu
-                      :paallystys-klikattu :paikkaus-klikattu :tyokone-klikattu
-                      :uusi-tyokonedata :tietyomaa-klikattu]
-                     (fn [_ tapahtuma] (popupit/nayta-popup tapahtuma))
-                     :popup-suljettu
-                     #(reset! popupit/klikattu-tyokone nil)
-                     :ilmoituksen-kuittaustiedot-päivitetty
-                     (fn [_ ilmoitus]
-                       (modal/piilota!)
-                       (tiedot/paivita-ilmoituksen-tiedot (:id ilmoitus))))
     (komp/karttakontrollit :tilannekuva
                            [hallintapaneeli])
     (fn []

@@ -73,7 +73,8 @@
             [clojure.java.jdbc :as jdbc]
             [harja.domain.roolit :as roolit]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]))
 
 (defn tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
@@ -141,6 +142,8 @@
             (comp
               (geo/muunna-pg-tulokset :sijainti)
               (map konv/alaviiva->rakenne)
+              (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
+              (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
               (map #(konv/string-polusta->keyword % [:paallystysilmoitus :tila])))
             (if nykytilanne?
               (q/hae-paallystykset-nykytilanteeseen db toleranssi)
@@ -166,6 +169,8 @@
            (comp
              (geo/muunna-pg-tulokset :sijainti)
              (map konv/alaviiva->rakenne)
+             (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
+             (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
              (map #(konv/string-polusta->keyword % [:paikkausilmoitus :tila])))
            (if nykytilanne?
              (q/hae-paikkaukset-nykytilanteeseen db toleranssi)
@@ -226,7 +231,7 @@
 (defn- tyokoneiden-toimenpiteet
   "Palauttaa haettavat tehtävä työkonekyselyille"
   [talvi kesa yllapito]
-  (let [yllapito (filter #(tk/yllapidon-reaaliaikaseurattava? (:id %)) yllapito)
+  (let [yllapito (filter tk/yllapidon-reaaliaikaseurattava? yllapito)
         haettavat-toimenpiteet (haettavat (union talvi kesa yllapito))]
     (konv/seq->array haettavat-toimenpiteet)))
 
@@ -509,13 +514,14 @@
                                            :kayttaja_on_urakoitsija (roolit/urakoitsija? user)
                                            :x x :y y)))))
 
-
 (defn- hae-tyokoneiden-sijainnit-kartalle [db user parametrit]
   (hae-karttakuvan-tiedot db user parametrit hae-tyokoneiden-reitit
                           (comp (geo/muunna-pg-tulokset :reitti)
                                 (map #(konv/array->set % :tehtavat))
                                 (map #(assoc %
                                              :tyyppi-kartalla :tyokone)))))
+
+
 
 (defn- hae-tyokoneiden-tiedot-kartalle
   "Hakee työkoneiden tiedot pisteessä infopaneelia varten."

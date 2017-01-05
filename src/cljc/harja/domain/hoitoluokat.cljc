@@ -13,6 +13,18 @@ nimen. Numero on tierekisterin koodi luokalle."}
    {:nimi "K1"  :numero 7 :numero-str "7"}
    {:nimi "K2"  :numero 8 :numero-str "8"}])
 
+(def ei-talvihoitoluokkaa-nimi "-")
+
+(defn haluttujen-hoitoluokkien-nimet-ja-numerot [hoitoluokan-numero-set]
+  (conj
+    (vec (filter #(hoitoluokan-numero-set (:numero %)) talvihoitoluokat))
+    {:nimi   ei-talvihoitoluokkaa-nimi
+     :numero nil}
+    ;; Joissain kyselyissä palautetaan toteumille talvihoitoluokat.
+    ;; Jos talvihoitoluokkaa ei ole, :numero on nil. Kun :numero on täälläkin
+    ;; nil, saadaan nämä kaksi liitettyä yhteen.
+    ))
+
 (def ^{:doc "Mäppäys talvihoitoluokan numerosta sen nimeen."}
   talvihoitoluokan-nimi
   (into {} (map (juxt :numero :nimi)) talvihoitoluokat))

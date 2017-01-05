@@ -31,14 +31,14 @@
 
 (defn yksityiskohdat
   "Näyttää infopaneelin asian yksityiskohdat otsikko/arvo riveinä."
-  [{:keys [otsikko tiedot data tyyppi] :as asia} linkin-kasittely-fn]
+  [{:keys [otsikko tiedot data tyyppi] :as asia} linkin-kasittelijat]
   (if-not (or (keyword? tyyppi) (fn? tyyppi))
     (do
       (error "yksityiskohdat: asian tyyppi huono, asia: " (clj->js asia))
       nil)
     ;; else
     [:div.ip-osio
-     (when-let [{:keys [teksti toiminto]} (tyyppi linkin-kasittely-fn)]
+     (when-let [{:keys [teksti toiminto]} (tyyppi @linkin-kasittelijat)]
        [:div [napit/yleinen teksti #(toiminto data) {:luokka "ip-toiminto btn-xs"}]])
      (apply yleiset/tietoja {}
             (mapcat (juxt :otsikko

@@ -13,13 +13,15 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(defn hae-yllapitokohteet [urakka-id sopimus-id]
+(defn hae-yllapitokohteet [urakka-id sopimus-id vuosi]
   (k/post! :urakan-yllapitokohteet {:urakka-id urakka-id
-                                    :sopimus-id sopimus-id}))
+                                    :sopimus-id sopimus-id
+                                    :vuosi vuosi}))
 
-(defn tallenna-yllapitokohteet! [urakka-id sopimus-id kohteet]
+(defn tallenna-yllapitokohteet! [urakka-id sopimus-id vuosi kohteet]
   (k/post! :tallenna-yllapitokohteet {:urakka-id urakka-id
                                       :sopimus-id sopimus-id
+                                      :vuosi vuosi
                                       :kohteet kohteet}))
 
 (defn tallenna-yllapitokohdeosat! [urakka-id sopimus-id yllapitokohde-id osat]
@@ -30,10 +32,14 @@
 
 (defn kuvaile-kohteen-tila [tila]
   (case tila
-    :valmis "Valmis"
-    :aloitettu "Aloitettu"
-    "Ei aloitettu"))
-
+    :kohde-aloitettu "Kohde aloitettu"
+    :paallystys-aloitettu "Päällystys aloitettu"
+    :paallystys-valmis "Päällystys valmis"
+    :tiemerkinta-aloitettu "Tiemerkintä aloitettu"
+    :tiemerkinta-valmis "Tiemerkintä valmis"
+    :kohde-valmis "Kohde valmis"
+    :ei-aloitettu "Ei aloitettu"
+    "Ei tiedossa"))
 
 (defn paivita-yllapitokohde! [kohteet-atom id funktio & argumentit]
   (swap! kohteet-atom
@@ -81,19 +87,19 @@
           loppu-muutettu? (not= (loppu muokattu-vanha) (loppu muokattu-uusi))]
 
       (as-> uudet rivit
-        (if alku-muutettu?
-          (assoc rivit edellinen-key
-                 (merge edellinen
-                        (zipmap [:tr-loppuosa :tr-loppuetaisyys]
-                                (alku muokattu-uusi))))
-          rivit)
+            (if alku-muutettu?
+              (assoc rivit edellinen-key
+                           (merge edellinen
+                                  (zipmap [:tr-loppuosa :tr-loppuetaisyys]
+                                          (alku muokattu-uusi))))
+              rivit)
 
-        (if loppu-muutettu?
-          (assoc rivit seuraava-key
-                 (merge seuraava
-                        (zipmap [:tr-alkuosa :tr-alkuetaisyys]
-                                (loppu muokattu-uusi))))
-          rivit)))))
+            (if loppu-muutettu?
+              (assoc rivit seuraava-key
+                           (merge seuraava
+                                  (zipmap [:tr-alkuosa :tr-alkuetaisyys]
+                                          (loppu muokattu-uusi))))
+              rivit)))))
 
 (defn lisaa-uusi-kohdeosa
   "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle). Muuttaa kaikkien
@@ -161,11 +167,12 @@
   (when (oikeustarkistus-fn)
     (fn [kohteet]
       (go (let [urakka-id (:id @nav/valittu-urakka)
+                vuosi @u/valittu-urakan-vuosi
                 [sopimus-id _] @u/valittu-sopimusnumero
                 _ (log "[YLLÄPITOKOHTEET] Tallennetaan kohteet: " (pr-str kohteet))
                 vastaus (<! (tallenna-yllapitokohteet!
-                              urakka-id sopimus-id
-                              (mapv #(assoc % :tyyppi kohdetyyppi)
+                              urakka-id sopimus-id vuosi
+                              (mapv #(assoc % :yllapitokohdetyotyyppi kohdetyyppi)
                                     kohteet)))]
             (if (k/virhe? vastaus)
               (viesti/nayta! "Kohteiden tallentaminen epännistui" :warning viesti/viestin-nayttoaika-keskipitka)

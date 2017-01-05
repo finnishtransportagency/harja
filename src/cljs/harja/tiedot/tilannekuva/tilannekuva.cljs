@@ -56,7 +56,8 @@ hakutiheys-historiakuva 1200000)
                 tk/tiemerkintakone false
                 tk/kuumennuslaite false
                 tk/sekoitus-ja-stabilointijyrsin false
-                tk/tma-laite false}
+                tk/tma-laite false
+                tk/jyra false}
      :ilmoitukset {:tyypit {tk/tpp false
                             tk/tur false
                             tk/urk false}}
@@ -323,14 +324,6 @@ hakutiheys-historiakuva 1200000)
          :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
          :aikavali-historia @historiakuvan-aikavali
          :suodattimet @suodattimet}))
-
-(def tyhjenna-popupit-kun-filtterit-muuttuu
-  (run!
-    @valittu-tila
-    @nykytilanteen-aikasuodattimen-arvo
-    @historiakuvan-aikavali
-    @suodattimet
-    (kartta/poista-popup!)))
 
 (defn kartan-tyypiksi [t avain tyyppi]
   (assoc t avain (map #(assoc % :tyyppi-kartalla tyyppi) (avain t))))

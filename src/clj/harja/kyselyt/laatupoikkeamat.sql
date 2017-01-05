@@ -333,12 +333,20 @@ SELECT
   liite.nimi as liite_nimi,
   liite.tyyppi as liite_tyyppi,
   liite.koko as liite_koko,
-  liite.liite_oid as liite_oid
+  liite.liite_oid as liite_oid,
+  ypk.nimi as yllapitokohde_nimi,
+  ypk.tr_numero as yllapitokohde_tie,
+  ypk.tr_alkuosa as yllapitokohde_aosa,
+  ypk.tr_alkuetaisyys as yllapitokohde_aet,
+  ypk.tr_loppuosa as yllapitokohde_losa,
+  ypk.tr_loppuetaisyys as yllapitokohde_let,
+  ypk.kohdenumero as yllapitokohde_kohdenumero
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
   LEFT JOIN laatupoikkeama_liite ON lp.id = laatupoikkeama_liite.laatupoikkeama
   LEFT JOIN liite ON laatupoikkeama_liite.liite = liite.id
+  LEFT JOIN  yllapitokohde ypk ON lp.yllapitokohde = ypk.id
 WHERE lp.urakka = :urakka
       AND lp.poistettu IS NOT TRUE
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
@@ -357,13 +365,21 @@ SELECT
   liite.nimi as liite_nimi,
   liite.tyyppi as liite_tyyppi,
   liite.koko as liite_koko,
-  liite.liite_oid as liite_oid
+  liite.liite_oid as liite_oid,
+  ypk.nimi as yllapitokohde_nimi,
+  ypk.tr_numero as yllapitokohde_tie,
+  ypk.tr_alkuosa as yllapitokohde_aosa,
+  ypk.tr_alkuetaisyys as yllapitokohde_aet,
+  ypk.tr_loppuosa as yllapitokohde_losa,
+  ypk.tr_loppuetaisyys as yllapitokohde_let,
+  ypk.kohdenumero as yllapitokohde_kohdenumero
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
   JOIN urakka u ON (lp.urakka = u.id AND u.urakkanro IS NOT NULL)
   LEFT JOIN laatupoikkeama_liite ON lp.id = laatupoikkeama_liite.laatupoikkeama
   LEFT JOIN liite ON laatupoikkeama_liite.liite = liite.id
+  LEFT JOIN  yllapitokohde ypk ON lp.yllapitokohde = ypk.id
 WHERE lp.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
                     AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
@@ -383,13 +399,21 @@ SELECT
   liite.nimi as liite_nimi,
   liite.tyyppi as liite_tyyppi,
   liite.koko as liite_koko,
-  liite.liite_oid as liite_oid
+  liite.liite_oid as liite_oid,
+  ypk.nimi as yllapitokohde_nimi,
+  ypk.tr_numero as yllapitokohde_tie,
+  ypk.tr_alkuosa as yllapitokohde_aosa,
+  ypk.tr_alkuetaisyys as yllapitokohde_aet,
+  ypk.tr_loppuosa as yllapitokohde_losa,
+  ypk.tr_loppuetaisyys as yllapitokohde_let,
+  ypk.kohdenumero as yllapitokohde_kohdenumero
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
   JOIN urakka u ON (lp.urakka = u.id AND u.urakkanro IS NOT NULL)
   LEFT JOIN laatupoikkeama_liite ON lp.id = laatupoikkeama_liite.laatupoikkeama
   LEFT JOIN liite ON laatupoikkeama_liite.liite = liite.id
+  LEFT JOIN  yllapitokohde ypk ON lp.yllapitokohde = ypk.id
 WHERE lp.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
       AND lp.poistettu IS NOT TRUE
