@@ -119,7 +119,6 @@
                           :pituus
                           (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))
                         vastaus)]
-      (log/debug "VASTAUS: " (pr-str vastaus))
       vastaus)))
 
 (defn hae-urakan-yllapitokohteet-lomakkeelle [db user {:keys [urakka-id sopimus-id]}]
