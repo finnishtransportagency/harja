@@ -82,8 +82,9 @@
             {:otsikko "Avaa varustekortti" :tyyppi :linkki :nimi :varustekortti-url}]
    :data toteuma})
 
-(defn- yllapitokohde-skeema [yllapitokohde]
-  (let [aloitus :kohde-alkupvm
+(defn- yllapitokohde-skeema [yllapitokohdeosa]
+  (let [yllapitokohde (:yllapitokohde yllapitokohdeosa)
+        aloitus :kohde-alkupvm
         paallystys-valmis :paallystys-loppupvm
         paikkaus-valmis :paikkaus-loppupvm
         kohde-valmis :kohde-valmispvm]
@@ -93,8 +94,8 @@
                 :paallystys "Päällystyskohde"
                 :paikkaus "Paikkauskohde"
                 :default nil)
-     :tiedot [{:otsikko "Nimi" :tyyppi :string :nimi :nimi}
-              {:otsikko "Kohdenumero" :tyyppi :string :nimi :kohdenumero}
+     :tiedot [{:otsikko "Nimi" :tyyppi :string :hae #(:nimi yllapitokohde)}
+              {:otsikko "Kohdenumero" :tyyppi :string :hae #(:kohdenumero yllapitokohde)}
               {:otsikko "Tie\u00ADrekisteri\u00ADkohteet" :tyyppi :string
                :hae #(str/join ", " (map :nimi (:kohdeosat %)))}
               {:otsikko "Osoite" :tyyppi :string :hae #(tr-domain/tierekisteriosoite-tekstina %)}
@@ -107,17 +108,17 @@
                :hae #(str/join ", " (distinct (map :toimenpide (:kohdeosat %))))}
               {:otsikko "Tila" :tyyppi :string
                :hae #(yllapitokohteet/kuvaile-kohteen-tila (:tila %))}
-              (when (aloitus yllapitokohde)
+              (when (aloitus yllapitokohdeosa)
                 {:otsikko "Aloitettu" :tyyppi :pvm-aika :nimi aloitus})
-              (when (paallystys-valmis yllapitokohde)
+              (when (paallystys-valmis yllapitokohdeosa)
                 {:otsikko "Päällystys valmistunut" :tyyppi :pvm-aika :nimi paallystys-valmis})
-              (when (paikkaus-valmis yllapitokohde)
+              (when (paikkaus-valmis yllapitokohdeosa)
                 {:otsikko "Paikkaus valmistunut" :tyyppi :pvm-aika :nimi paallystys-valmis})
-              (when (kohde-valmis yllapitokohde)
+              (when (kohde-valmis yllapitokohdeosa)
                 {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika :nimi kohde-valmis})
               {:otsikko "Urakka" :tyyppi :string :nimi :urakka}
               {:otsikko "Urakoitsija" :tyyppi :string :nimi :urakoitsija}]
-     :data yllapitokohde}))
+     :data yllapitokohdeosa}))
 
 (defmethod infopaneeli-skeema :paallystys [paallystys]
   (yllapitokohde-skeema paallystys))

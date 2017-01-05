@@ -67,21 +67,10 @@
 (defonce paikkauskohteet-kartalla
   (reaction (let [taso @karttataso-paikkauskohteet
                   kohderivit @paikkauskohteet
-                  toteumarivit @paikkausilmoitukset
-                  avoin-paikkausilmoitus (:paikkauskohde-id @paikkausilmoitus-lomakedata)]
+                  ilmoitukset @paikkausilmoitukset]
               (when (and taso
-                         (or kohderivit toteumarivit))
-                (kartalla-esitettavaan-muotoon
-                  (concat (map #(assoc % :paikkauskohde-id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
-                               kohderivit)
-                          toteumarivit)
-                  @paikkausilmoitus-lomakedata
-                  [:paikkauskohde-id]
-                  (comp
-                    (mapcat (fn [kohde]
-                              (keep (fn [kohdeosa]
-                                      (assoc (merge kohdeosa kohde)
-                                        :avoin? (= (:paikkauskohde-id kohde) avoin-paikkausilmoitus)))
-                                    (:kohdeosat kohde))))
-                    (keep #(and (:sijainti %) %))
-                    (map #(assoc % :tyyppi-kartalla :paikkaus))))))))
+                         (or kohderivit ilmoitukset))
+                (yllapitokohteet/yllapitokohteet-kartalle
+                  (or kohderivit ilmoitukset)
+                  :paikkaus
+                  @paikkausilmoitus-lomakedata)))))

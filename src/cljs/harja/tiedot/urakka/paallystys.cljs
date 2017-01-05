@@ -24,9 +24,9 @@
                                           :sopimus-id sopimus-id
                                           :vuosi vuosi}))
 
-(defn hae-paallystysilmoitus-paallystyskohteella [urakka-id paallystyskohde-id]
+(defn hae-paallystysilmoitus-paallystyskohteella [urakka-id yllapitokohde-id]
   (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:urakka-id urakka-id
-                                                           :paallystyskohde-id paallystyskohde-id}))
+                                                           :yllapitokohde-id yllapitokohde-id}))
 
 (defn tallenna-paallystysilmoitus! [urakka-id sopimus-id lomakedata]
   (k/post! :tallenna-paallystysilmoitus {:urakka-id urakka-id
@@ -81,23 +81,12 @@
 (defonce paallystyskohteet-kartalla
   (reaction (let [taso @karttataso-paallystyskohteet
                   kohderivit @yhan-paallystyskohteet
-                  ilmoitukset @paallystysilmoitukset
-                  avoin-paallystysilmoitus (:paallystyskohde-id @paallystysilmoitus-lomakedata)]
+                  ilmoitukset @paallystysilmoitukset]
               (when (and taso
                          (or kohderivit ilmoitukset))
-                (kartalla-esitettavaan-muotoon
-                  (concat (map #(assoc % :paallystyskohde-id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
-                               kohderivit)
-                          ilmoitukset)
-                  @paallystysilmoitus-lomakedata
-                  [:paallystyskohde-id]
-                  (comp
-                    (mapcat (fn [kohde]
-                              (keep (fn [kohdeosa]
-                                      (assoc (merge kohdeosa kohde)
-                                        :avoin? (= (:paallystyskohde-id kohde) avoin-paallystysilmoitus)))
-                                    (:kohdeosat kohde))))
-                    (keep #(and (:sijainti %) %))
-                    (map #(assoc % :tyyppi-kartalla :paallystys))))))))
+                (yllapitokohteet/yllapitokohteet-kartalle
+                  (or kohderivit ilmoitukset)
+                  :paallystys
+                  @paallystysilmoitus-lomakedata)))))
 
 (defonce kohteet-yha-lahetyksessa (atom nil))
