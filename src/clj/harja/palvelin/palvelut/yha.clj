@@ -180,13 +180,12 @@
 
 (defn laheta-kohteet-yhaan
   "Lähettää annetut kohteet teknisine tietoineen YHA:n."
-  [db yha user {:keys [urakka-id sopimus-id kohde-idt]}]
+  [db yha user {:keys [urakka-id sopimus-id kohde-idt vuosi]}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (tarkista-lahetettavat-kohteet db kohde-idt)
   (log/debug (format "Lähetetään kohteet: %s YHA:n" kohde-idt))
   (yha/laheta-kohteet yha urakka-id kohde-idt)
-  ;; TODO VUOSI PUUTTUU!!!
-  (let [paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id)]
+  (let [paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi)]
     paivitetyt-ilmoitukset))
 
 (defrecord Yha []
