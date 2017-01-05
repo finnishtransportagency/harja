@@ -82,7 +82,9 @@
             {:otsikko "Avaa varustekortti" :tyyppi :linkki :nimi :varustekortti-url}]
    :data toteuma})
 
-(defn- yllapitokohde-skeema [yllapitokohdeosa]
+(defn- yllapitokohde-skeema
+  "Ottaa ylläpitokohdeosan, jolla on lisäksi tietoa sen 'pääkohteesta' :yllapitokohde avaimen takana."
+  [yllapitokohdeosa]
   (let [aloitus :kohde-alkupvm
         paallystys-valmis :paallystys-loppupvm
         paikkaus-valmis :paikkaus-loppupvm
