@@ -69,6 +69,7 @@
    Huomaa, että vaikka päällystysilmoitusta ei olisi tehty, tämä kysely palauttaa joka tapauksessa
    kohteen tiedot ja esitäytetyn ilmoituksen, jossa kohdeosat on syötetty valmiiksi."
   [db user {:keys [urakka-id paallystyskohde-id]}]
+  (assert (and urakka-id paallystyskohde-id) "Virheelliset hakuparametrit!")
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (let [paallystysilmoitus (into []

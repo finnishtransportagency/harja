@@ -15,7 +15,7 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
 
-(defonce paikkauskohteet-nakymassa? (atom false))
+(defonce kohdeluettelossa? (atom false))
 (defonce paikkausilmoitukset-nakymassa? (atom false))
 
 (defn hae-paikkausilmoitukset [urakka-id sopimus-id vuosi]
@@ -53,7 +53,7 @@
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
-               nakymassa? @paikkauskohteet-nakymassa?]
+               nakymassa? @kohdeluettelossa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id vuosi))))
@@ -66,11 +66,9 @@
 
 (defonce paikkauskohteet-kartalla
   (reaction (let [taso @karttataso-paikkauskohteet
-                  kohderivit @paikkauskohteet
-                  ilmoitukset @paikkausilmoitukset]
-              (when (and taso
-                         (or kohderivit ilmoitukset))
+                  paikkauskohteet @paikkauskohteet
+                  lomakedata @paikkausilmoitus-lomakedata]
+              (when (and taso paikkauskohteet)
                 (yllapitokohteet/yllapitokohteet-kartalle
-                  (or kohderivit ilmoitukset)
-                  :paikkaus
-                  @paikkausilmoitus-lomakedata)))))
+                  paikkauskohteet
+                  lomakedata)))))

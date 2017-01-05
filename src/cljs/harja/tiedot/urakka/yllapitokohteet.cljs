@@ -185,36 +185,27 @@
 (defn yllapitokohteet-kartalle
   "Ylläpitokohde näytetään kartalla 'kohdeosina'.
 
-   rivit            Joko vector ylläpitokohteita (joilla on :id)
-                    tai vector päällystys-/paikkausilmoituksia (joilla on :paallystyskohde-id tai :paikkauskohde-id).
-                    Molemmissa tapauksissa annetuilla riveille täytyy olla mukana ylläpitokohteen kohdeosat (:kohdeosat),
-                    koska ylläpitokohde näytetään kartalla kohdeosien tietojen perusteella.
-                    Valittu ylläpitokohde määritetään sen perusteella onko kohteen päällystys-/paikkausilmoitus auki.
-   tyyppi-kartalla  Joko :paallystys tai :paikkaus
-   lomakedata       Päällystys- tai paikkausilmoituksen lomakkeen tiedot.
+   yllapitokohteet  Vector ylläpitokohteita, joilla on mukana ylläpitokohteen kohdeosat (:kohdeosat avaimessa)
+   lomakedata       Päällystys- tai paikkausilmoituksen lomakkeen tiedot
 
-   Palauttaa rivien kohdeosat valmiina näytettäväksi kartalle, joilla on liitteenä ylläpitokohteen tiedot."
-  [rivit tyyppi-kartalla lomakedata]
+   Palauttaa ylläpitokohteiden kohdeosat valmiina näytettäväksi kartalle,
+   joilla on liitteenä ylläpitokohteen tiedot."
+  [yllapitokohteet lomakedata]
   (let [karttamuodossa (kartalla-esitettavaan-muotoon
                          ;; Yhtenäistä ylläpitokohteen ja päällystys-/paikkausilmoituksen
                          ;; logiikka sen suhteen, mistä löytyy ylläpitokohteen id
-                         (map #(assoc % :yllapitokohde-id (or
-                                                            ;; Päällystys-/paikkauslmoituksessa ylläpitokohde on
-                                                            ;; joko päällystyskohde tai paikkauskohde
-                                                            (:paallystyskohde-id %)
-                                                            (:paikkauskohde-id %)
-                                                            ;; Ylläpitokohteen tapauksessa ylläpitokohde on kohde itse
-                                                            (:id %)))
-                              rivit)
+                         (map #(assoc % :yllapitokohde-id (:id %))
+                              yllapitokohteet)
                          (assoc lomakedata :yllapitokohde-id (or (:paallystyskohde-id lomakedata)
-                                                                 (:paikkauskohde-id lomakedata)))
+                                                                 (:paikkauskohde-id lomakedata)
+                                                                 (:yllapitokohde-id lomakedata)))
                          :yllapitokohde-id
                          (comp
                            (mapcat (fn [kohde]
                                      (keep (fn [kohdeosa]
                                              (assoc kohdeosa :yllapitokohde kohde
+                                                             :tyyppi-kartalla (:yllapitokohdetyotyyppi kohde)
                                                              :tila-kartalla (:tila-kartalla kohde)))
                                            (:kohdeosat kohde))))
-                           (keep #(and (:sijainti %) %))
-                           (map #(assoc % :tyyppi-kartalla tyyppi-kartalla))))]
+                           (keep #(and (:sijainti %) %))))]
     karttamuodossa))
