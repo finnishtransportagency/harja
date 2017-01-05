@@ -510,14 +510,15 @@
   (let [koordinaatit (geo/pisteet tr-osoite)
         [alku-x alku-y] (first koordinaatit)
         [loppu-x loppu-y] (last koordinaatit)
-        dx (- loppu-x alku-x)
-        dy (- loppu-y alku-y)
-        rad (Math/atan2 dy dx)
+
+        alku-ang (apply geo/kulma (take 2 koordinaatit))
+        loppu-ang (apply geo/kulma (take 2 (reverse koordinaatit)))
+
         w 16
-        viiva (fn [x y]
+        viiva (fn [ang x y]
                 (vec
-                 (for [a [(+ rad (/ Math/PI 2))
-                          (- rad (/ Math/PI 2))]]
+                 (for [a [(+ ang (/ Math/PI 2))
+                          (- ang (/ Math/PI 2))]]
                    [(+ x (* w (Math/cos a)))
                     (+ y (* w (Math/sin a)))])))]
     (assoc tr-osoite
@@ -525,9 +526,9 @@
                   :stroke {:color "black"
                            :width 5}
                   :geometries [{:type :line
-                                :points (viiva alku-x alku-y)}
+                                :points (viiva alku-ang alku-x alku-y)}
                                {:type :line
-                                :points (viiva loppu-x loppu-y)}]})))
+                                :points (viiva loppu-ang loppu-x loppu-y)}]})))
 
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
   (if tyyppi
