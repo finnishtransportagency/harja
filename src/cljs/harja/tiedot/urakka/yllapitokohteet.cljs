@@ -196,9 +196,11 @@
                          ;; logiikka sen suhteen, mistä löytyy ylläpitokohteen id
                          (map #(assoc % :yllapitokohde-id (:id %))
                               yllapitokohteet)
-                         (assoc lomakedata :yllapitokohde-id (or (:paallystyskohde-id lomakedata)
-                                                                 (:paikkauskohde-id lomakedata)
-                                                                 (:yllapitokohde-id lomakedata)))
+                         (if lomakedata
+                           (assoc lomakedata :yllapitokohde-id (or (:paallystyskohde-id lomakedata)
+                                                                   (:paikkauskohde-id lomakedata)
+                                                                   (:yllapitokohde-id lomakedata)))
+                           lomakedata)
                          :yllapitokohde-id
                          (comp
                            (mapcat (fn [kohde]

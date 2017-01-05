@@ -140,29 +140,30 @@
     (when (tk/valittu? yllapito (case tyyppi
                                   "paallystys" tk/paallystys
                                   "paikkaus" tk/paikkaus))
-      (into []
-            (comp
-              (geo/muunna-pg-tulokset :sijainti)
-              (map konv/alaviiva->rakenne)
-              (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
-              (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
-              (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
-              (map #(konv/string-polusta->keyword % [(case tyyppi
-                                                       "paallystys" :paallystysilmoitus
-                                                       "paikkaus" :paikkausilmoitus) :tila])))
-            (if nykytilanne?
-              (case tyyppi
-                "paallystys" (q/hae-paallystykset-nykytilanteeseen db toleranssi)
-                "paikkaus" (q/hae-paikkaukset-nykytilanteeseen db toleranssi))
-              (case tyyppi
-                "paallystys" (q/hae-paallystykset-historiakuvaan db
-                                                                 toleranssi
-                                                                 (konv/sql-date loppu)
-                                                                 (konv/sql-date alku))
-                "paikkaus" (q/hae-paikkaukset-historiakuvaan db
-                                                             toleranssi
-                                                             (konv/sql-date loppu)
-                                                             (konv/sql-date alku))))))))
+      (let [kohteet (into []
+             (comp
+               (geo/muunna-pg-tulokset :sijainti)
+               (map konv/alaviiva->rakenne)
+               (map #(assoc-in % [:yllapitokohde :tila]
+                               (yllapitokohteet-domain/yllapitokohteen-tarkka-tila (:yllapitokohde %))))
+               (map #(assoc % :tila-kartalla
+                              (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:yllapitokohde %))))
+               (map #(konv/string-polusta->keyword % [:yllapitokohde :yllapitokohdetyotyyppi])))
+             (if nykytilanne?
+               (case tyyppi
+                 "paallystys" (q/hae-paallystykset-nykytilanteeseen db toleranssi)
+                 "paikkaus" (q/hae-paikkaukset-nykytilanteeseen db toleranssi))
+               (case tyyppi
+                 "paallystys" (q/hae-paallystykset-historiakuvaan db
+                                                                  toleranssi
+                                                                  (konv/sql-date loppu)
+                                                                  (konv/sql-date alku))
+                 "paikkaus" (q/hae-paikkaukset-historiakuvaan db
+                                                              toleranssi
+                                                              (konv/sql-date loppu)
+                                                              (konv/sql-date alku)))))]
+        (log/debug "KOHTEET: " (pr-str kohteet))
+        kohteet))))
 
 (defn- hae-paallystystyot
   [db user suodattimet urakat]
