@@ -202,8 +202,12 @@ pienemmällä zindexillä." :const true}
   (ol.geom.LineString. (clj->js points)))
 
 (defmethod luo-geometria :geometry-collection [{gs :geometries}]
-  (log "LUODAAN GEOMETRY-COLLECTION " (pr-str gs))
   (ol.geom.GeometryCollection. (clj->js (mapv luo-geometria gs))))
+
+(defmethod luo-feature :geometry-collection [gc]
+  (aseta-tyylit
+   (ol.Feature. #js {:geometry (luo-geometria gc)})
+   gc))
 
 (defmethod luo-feature :default [this]
   (ol.Feature. #js {:geometry (luo-geometria this)}))
