@@ -726,7 +726,6 @@
     (fn [urakka]
       [:div.paallystysilmoitukset
        [kartta/kartan-paikka]
-       (log "POT: " (pr-str @paallystys/paallystysilmoitus-lomakedata))
        (if @paallystys/paallystysilmoitus-lomakedata
          [paallystysilmoituslomake-historia paallystys/paallystysilmoitus-lomakedata]
          [:div
