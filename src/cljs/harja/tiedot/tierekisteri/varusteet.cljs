@@ -50,10 +50,10 @@
 
 ;; Toimenpiteet Tierekisteriin
 (defrecord PoistaVaruste [varuste])
-(defrecord MuokkausTierekisteriinOnnistui [toiminto viesti])
-(defrecord MuokkausTierekisteriinEpaonnistui [toiminto virhe])
+(defrecord ToimintoEpaonnistui [toiminto virhe])
+(defrecord ToimintoOnnistui [vastaus])
 
-
+(defrecord VarusteToteumatMuuttuneet [varustetoteumat])
 
 (extend-protocol t/Event
   AsetaVarusteidenHakuehdot
@@ -85,30 +85,41 @@
     (viesti/nayta! "Virhe haettaessa varusteita Tierekisteristä" :error)
     app)
 
-  MuokkausTierekisteriinOnnistui
-  (process-event [{viesti :viesti tietolaji :tietolaji varusteet :varusteet} app]
-    (viesti/nayta! viesti :success)
-    (hakutulokset app tietolaji varusteet))
-
-  MuokkausTierekisteriinEpaonnistui
-  (process-event [{virhe :virhe viesti :viesti vastaus :vastaus} app]
+  ToimintoEpaonnistui
+  (process-event [{{:keys [viesti vastaus]} :toiminto virhe :virhe :as data} app]
+    (log "---> vastaus: " (pr-str vastaus))
     (log "[TR] Virhe suoritettaessa toimintoa. Virhe:" (pr-str virhe) ". Vastaus: " (pr-str vastaus) ".")
-    (viesti/nayta! viesti :error)
-    (hakutulokset app tietolaji varusteet))
+    (viesti/nayta! viesti :warning)
+    ((t/send-async! (partial ->VarusteToteumatMuuttuneet vastaus)))
+
+    ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
+    (hakutulokset app nil nil)
+    #_((t/send-async! ->HaeVarusteita)))
+
+  ToimintoOnnistui
+  (process-event [{{:keys [vastaus]} :toiminto :as data} app]
+    (log "---> data: " (pr-str data))
+    ;; todo: pura varustetoteumat responsesta ja aseta ne eventille
+    ((t/send-async! (partial ->VarusteToteumatMuuttuneet vastaus)))
+    ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
+    (hakutulokset app nil nil))
+
+  VarusteToteumatMuuttuneet
+  (process-event [_ app]
+    (log "--> VarusteToteumatMuuttuneet")
+    app)
 
   PoistaVaruste
   (process-event [{varuste :varuste} app]
-    (let [tulos! (t/send-async! map->MuokkausTierekisteriinOnnistui)
-          virhe! (t/send-async! ->MuokkausTierekisteriinEpaonnistui)]
+    (let [tulos! (t/send-async! map->ToimintoOnnistui)
+          virhe! (t/send-async! ->ToimintoEpaonnistui)]
       (go
         (let [varustetoteuma (varustetoteuma varuste :poistettu)
-              vastaus (<! (varuste-tiedot/tallenna-varustetoteuma
-                            {:urakka-id (:id @nav/valittu-urakka)
-                             :sopimus-id (first @urakka/valittu-sopimusnumero)
-                             :aikavali @urakka/valittu-aikavali}
-                            varustetoteuma))]
-          (if (or (k/virhe? vastaus)
-                  (not (:onnistunut vastaus)))
+              hakuehdot {:urakka-id (:id @nav/valittu-urakka)
+                         :sopimus-id (first @urakka/valittu-sopimusnumero)
+                         :aikavali @urakka/valittu-aikavali}
+              vastaus (<! (varuste-tiedot/tallenna-varustetoteuma hakuehdot varustetoteuma))]
+          (if (or (k/virhe? vastaus) (not (:onnistunut vastaus)))
             (virhe! {:vastaus vastaus :viesti "Varusteen poistossa tapahtui virhe."})
-            (tulos! {:viesti "Varuste poistettu onnistuneesti."})))))
+            (tulos! {:vastaus vastaus :viesti "Varuste poistettu onnistuneesti."})))))
     app))

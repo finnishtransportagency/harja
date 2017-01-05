@@ -108,7 +108,7 @@
   [{ominaisuus :ominaisuus} muokattava?]
   (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
          {:tyyppi :string
-          :regex (harja.ui.kentat/kokonaisluku-pattern 10)
+          :regex (re-pattern (str "-?\\d{1," 10 "}"))
           :leveys 1}))
 
 (defmethod varusteominaisuus->skeema :default

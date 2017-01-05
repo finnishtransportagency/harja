@@ -37,5 +37,6 @@
 
 (defrecord VirheKasitelty [])
 
-;; Poista varuste
-(defrecord PoistaVaruste [tietolaji tunniste])
+(defrecord VarustetoteumatMuuttuneet [varusteet])
+
+

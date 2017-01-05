@@ -265,7 +265,12 @@
 
   v/VirheKasitelty
   (process-event [_ app]
-    (dissoc app :virhe)))
+    (dissoc app :virhe))
+
+  v/VarustetoteumatMuuttuneet
+  (process-event [data app]
+    (log "---> VarustetoteumatMuuttuneet. data:" (pr-str data) ", app: " (pr-str app))
+    app))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))

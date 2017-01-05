@@ -35,9 +35,11 @@
              :refer [varusteominaisuus->skeema]
              :as tierekisteri-varusteet]
             [harja.ui.viesti :as viesti]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.tiedot.tierekisteri.varusteet :as varusteet])
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]))
+                   [reagent.ratom :refer [reaction run!]]
+                   [tuck.intercept :refer [intercept]]))
 
 ;; todo: Muista laittaa pois päältä ennen mergeämistä!
 (def tr-kaytossa? true)
@@ -249,6 +251,22 @@
        (varusteen-ominaisuudet muokattava? ominaisuudet)]
       varustetoteuma]]))
 
+(defn kasittele-varustehaun-event [e!]
+  (let [vhe! (t/wrap-path e! :varustehaku)]
+    (intercept e!
+               ;; todo: destructuroi t tässä, josta saa parametrit uudelle eventille VarustetoteumatMuuttuneet
+               (varusteet/VarusteToteumatMuuttuneet
+                 t
+                 (do
+                   (log "---> Interceptioitu")
+                   (log "---> t:" (pr-str t))
+                   ;; kaiva t:stä tarpeenllinen data
+                   (e! (v/->VarustetoteumatMuuttuneet t))
+                   (vhe! t)))
+               (:default e (do
+                             (log "---> e" (pr-str e))
+                             (vhe! e))))))
+
 (defn- varusteet* [e! varusteet]
   (e! (v/->YhdistaValinnat @varustetiedot/valinnat))
   (komp/luo
@@ -279,7 +297,7 @@
              (when oikeus-varusteiden-muokkaamiseen?
                [napit/uusi "Lisää uusi varuste"
                 #(e! (v/->UusiVarusteToteuma))])
-             [varustehaku (t/wrap-path e! :varustehaku) varustehaun-tiedot]])])])))
+             [varustehaku (kasittele-varustehaun-event e!) varustehaun-tiedot]])])])))
 
 (defn varusteet []
   [tuck varustetiedot/varusteet varusteet*])

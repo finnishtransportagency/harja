@@ -646,8 +646,8 @@
                                                   :sijainti sijainti}]
                               (:id (toteumat-q/luo-varustetoteuma<! db varustetoteuma))))]
     (async/thread (tierekisteri/laheta-varustetoteuma tierekisteri varustetoteuma-id)))
-  (let [varustetoteumat (hae-urakan-varustetoteumat tierekisteri db user hakuehdot)]
-    varustetoteumat))
+
+  (hae-urakan-varustetoteumat tierekisteri db user hakuehdot))
 
 (defn hae-toteuman-reitti-ja-tr-osoite [db user {:keys [id urakka-id]}]
   (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
