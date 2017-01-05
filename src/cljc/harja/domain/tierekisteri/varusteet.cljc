@@ -107,8 +107,8 @@
 (defmethod varusteominaisuus->skeema :numeerinen
   [{ominaisuus :ominaisuus} muokattava?]
   (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
-         {:tyyppi :numero
-          :kokonaisluku? true
+         {:tyyppi :string
+          :regex (harja.ui.kentat/kokonaisluku-pattern 10)
           :leveys 1}))
 
 (defmethod varusteominaisuus->skeema :default

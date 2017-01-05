@@ -58,6 +58,8 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
   (r/wrap arvo
           #(assert false (str "Ei voi kirjoittaa vain luku atomia arvolle: " (pr-str arvo)))))
 
+(defn kokonaisluku-pattern [kokonaisosan-maara]
+  (re-pattern (str "-?\\d{1," kokonaisosan-maara "}")))
 
 (defmulti tee-kentta
           "Tekee muokattavan kentän tyypin perusteella"
@@ -171,12 +173,14 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
 
 (defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex focus on-focus lomake? placeholder]} data]
-  [:input {:class       (when lomake? "form-control")
+  [:input {:class (when lomake? "form-control")
            :placeholder placeholder
-           on-change*   #(reset! data (-> % .-target .-value))
-           :on-focus    on-focus
-           :value       @data
-           :max-length  pituus-max}])
+           on-change* #(let [v (-> % .-target .-value)]
+                         (when (or (not regex) (re-matches regex v))
+                           (reset! data v)))
+           :on-focus on-focus
+           :value @data
+           :max-length pituus-max}])
 
 
 ;; Pitkä tekstikenttä käytettäväksi lomakkeissa, ei sovellu hyvin gridiin
@@ -246,7 +250,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
             nykyinen-teksti (or @teksti
                                 (normalisoi-numero (fmt nykyinen-data))
                                 "")
-            kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
+            kokonaisluku-re-pattern (kokonaisluku-pattern kokonaisosan-maara)
             desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
                                                       (or (:desimaalien-maara kentta) +desimaalin-oletus-tarkkuus+)
                                                       "})?"))]

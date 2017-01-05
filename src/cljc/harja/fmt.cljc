@@ -440,9 +440,9 @@
            (zipmap (range 1 4)
                    (map #(doto (goog.i18n.NumberFormat.
                                  (.-DECIMAL goog.i18n.NumberFormat/Format))
-                          (.setShowTrailingZeros false)
-                          (.setMinimumFractionDigits %)
-                          (.setMaximumFractionDigits %))
+                           (.setShowTrailingZeros false)
+                           (.setMinimumFractionDigits %)
+                           (.setMaximumFractionDigits %))
                         (range 1 4))))))
 
 #?(:clj (def desimaali-symbolit
@@ -481,7 +481,7 @@
   ([luku tarkkuus] (desimaaliluku-opt luku tarkkuus false))
   ([luku tarkkuus ryhmitelty?]
    (if luku
-     (desimaaliluku luku tarkkuus ryhmitelty?)
+     (str "arvo: " (pr-str luku) ", type:" (pr-str (type luku)) ", blank?: " (pr-str (str/blank? luku)))  #_(desimaaliluku luku tarkkuus ryhmitelty?)
      "")))
 
 (defn prosentti
