@@ -706,6 +706,18 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 (defn- onko-tr-osoite-pistemainen? [osoite]
   (every? #(get osoite %) [:numero :alkuosa :alkuetaisyys]))
 
+(defn hae-tr [tr-osoite-ch virheet osoite]
+  (cond
+    (onko-tr-osoite-kokonainen? osoite)
+    (hae-tr-geometria osoite vkm/tieosoite->viiva tr-osoite-ch virheet)
+
+    (onko-tr-osoite-pistemainen? osoite)
+    (hae-tr-geometria osoite vkm/tieosoite->piste tr-osoite-ch virheet)
+    :else
+    (do
+      (tasot/poista-geometria! :tr-valittu-osoite)
+      (reset! virheet nil))))
+
 (defn tr-kentan-elementti [lomake? kartta? muuta! blur placeholder value key disabled?]
   [:input.tierekisteri {:class       (str
                                       "tr-" (name key) " "
@@ -827,7 +839,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                           asioiden-ulkoasu/tr-ikoni
                                           asioiden-ulkoasu/tr-viiva)
                                   :type :tr-valittu-osoite})
-                               (keskita-kartta! arvo)))))]
+                               (keskita-kartta! arvo)))))
+
+        tee-tr-haku (partial hae-tr tr-osoite-ch virheet)]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
       (go-loop []
@@ -843,6 +857,12 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                  (recur))))
 
     (komp/luo
+      (komp/vanhat-ja-uudet-parametrit
+        (fn [[_ vanha-osoite-atom :as vanhat] [_ uusi-osoite-atom :as uudet]]
+          (log (pr-str vanhat))
+          (log (pr-str uudet))
+          (when (not= @vanha-osoite-atom @uusi-osoite-atom)
+            (tee-tr-haku @uusi-osoite-atom))))
      (komp/kun-muuttuu
       (fn [{sijainti :sijainti} _]
         (if-not sijainti
@@ -871,17 +891,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                                                      (re-matches #"\d*" v))
                                                             (js/parseInt (-> % .-target .-value))))]))
               blur (when hae-sijainti
-                     (fn []
-                       (cond
-                         (onko-tr-osoite-kokonainen? osoite)
-                         (hae-tr-geometria osoite vkm/tieosoite->viiva tr-osoite-ch virheet)
-
-                         (onko-tr-osoite-pistemainen? osoite)
-                         (hae-tr-geometria osoite vkm/tieosoite->piste tr-osoite-ch virheet)
-                         :else
-                         (do
-                           (tasot/poista-geometria! :tr-valittu-osoite)
-                           (reset! virheet nil)))))
+                     #(tee-tr-haku osoite))
               kartta? @karttavalinta-kaynnissa]
           [:span.tierekisteriosoite-kentta (when @virheet {:class "sisaltaa-virheen"})
            (when (and @virheet (false? ala-nayta-virhetta-komponentissa?))
