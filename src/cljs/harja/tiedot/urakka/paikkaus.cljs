@@ -65,25 +65,25 @@
                                               kohteet)))))
 
 (defonce paikkauskohteet-kartalla
-  (reaction (let [taso @karttataso-paikkauskohteet
-                  kohderivit @paikkauskohteet
-                  toteumarivit @paikkausilmoitukset
-                  avoin-paikkausilmoitus (:paikkauskohde-id @paikkausilmoitus-lomakedata)]
-              (when (and taso
-                         (or kohderivit toteumarivit))
-                (kartalla-esitettavaan-muotoon
-                  (concat (map #(assoc % :paikkauskohde-id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
-                               kohderivit)
-                          toteumarivit)
-                  @paikkausilmoitus-lomakedata
-                  #(= avoin-paikkausilmoitus (:paikkauskohde-id %))
-                  (comp
-                    (mapcat (fn [kohde]
-                              (keep (fn [kohdeosa]
-                                      (assoc (merge kohdeosa
-                                                    (dissoc kohde :kohdeosat))
-                                        :avoin? (= (:paikkauskohde-id kohde) avoin-paikkausilmoitus)
-                                        :kohdeosa kohdeosa))
-                                    (:kohdeosat kohde))))
-                    (keep #(and (:sijainti %) %))
-                    (map #(assoc % :tyyppi-kartalla :paikkaus))))))))
+  (reaction
+   (let [taso @karttataso-paikkauskohteet
+         kohderivit @paikkauskohteet
+         toteumarivit @paikkausilmoitukset
+         avoin-paikkausilmoitus (:paikkauskohde-id @paikkausilmoitus-lomakedata)]
+     (when (and taso
+                (or kohderivit toteumarivit))
+       (kartalla-esitettavaan-muotoon
+        (concat (map #(assoc % :paikkauskohde-id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
+                     kohderivit)
+                toteumarivit)
+        #(= avoin-paikkausilmoitus (:paikkauskohde-id %))
+        (comp
+         (mapcat (fn [kohde]
+                   (keep (fn [kohdeosa]
+                           (assoc (merge kohdeosa
+                                         (dissoc kohde :kohdeosat))
+                                  :avoin? (= (:paikkauskohde-id kohde) avoin-paikkausilmoitus)
+                                  :kohdeosa kohdeosa))
+                         (:kohdeosat kohde))))
+         (keep #(and (:sijainti %) %))
+         (map #(assoc % :tyyppi-kartalla :paikkaus))))))))

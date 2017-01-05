@@ -79,27 +79,27 @@
   (reaction (concat @yhan-paallystyskohteet @harjan-paikkauskohteet)))
 
 (defonce paallystyskohteet-kartalla
-  (reaction (let [taso @karttataso-paallystyskohteet
-                  kohderivit @yhan-paallystyskohteet
-                  ilmoitukset @paallystysilmoitukset
-                  avoin-paallystysilmoitus (:paallystyskohde-id @paallystysilmoitus-lomakedata)]
-              (when (and taso
-                         (or kohderivit ilmoitukset))
-                (kartalla-esitettavaan-muotoon
-                  (concat (map #(assoc % :paallystyskohde-id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
-                               kohderivit)
-                          ilmoitukset)
-                  @paallystysilmoitus-lomakedata
-                  #(= avoin-paallystysilmoitus (:paallystyskohde-id %))
-                  (comp
-                    (mapcat (fn [kohde]
-                              (keep (fn [kohdeosa]
-                                      (assoc (merge kohdeosa
-                                                    (dissoc kohde :kohdeosat))
-                                        :avoin? (= (:paallystyskohde-id kohde) avoin-paallystysilmoitus)
-                                        :kohdeosa kohdeosa))
-                                    (:kohdeosat kohde))))
-                    (keep #(and (:sijainti %) %))
-                    (map #(assoc % :tyyppi-kartalla :paallystys))))))))
+  (reaction
+   (let [taso @karttataso-paallystyskohteet
+         kohderivit @yhan-paallystyskohteet
+         ilmoitukset @paallystysilmoitukset
+         avoin-paallystysilmoitus (:paallystyskohde-id @paallystysilmoitus-lomakedata)]
+     (when (and taso
+                (or kohderivit ilmoitukset))
+       (kartalla-esitettavaan-muotoon
+        (concat (map #(assoc % :paallystyskohde-id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
+                     kohderivit)
+                ilmoitukset)
+        #(= avoin-paallystysilmoitus (:paallystyskohde-id %))
+        (comp
+         (mapcat (fn [kohde]
+                   (keep (fn [kohdeosa]
+                           (assoc (merge kohdeosa
+                                         (dissoc kohde :kohdeosat))
+                                  :avoin? (= (:paallystyskohde-id kohde) avoin-paallystysilmoitus)
+                                  :kohdeosa kohdeosa))
+                         (:kohdeosat kohde))))
+         (keep #(and (:sijainti %) %))
+         (map #(assoc % :tyyppi-kartalla :paallystys))))))))
 
 (defonce kohteet-yha-lahetyksessa (atom nil))
