@@ -55,6 +55,7 @@ FROM toteuma_tehtava tt
   JOIN organisaatio hy ON hy.id = u.hallintayksikko
 WHERE
   tt.poistettu IS NOT TRUE AND
+  mht.poistettu IS NOT TRUE AND
   ((:urakka_annettu IS FALSE AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
   AND (:urakka_annettu IS TRUE OR (:urakka_annettu IS FALSE AND
                                    (:urakkatyyppi :: urakkatyyppi IS NULL OR
@@ -109,6 +110,7 @@ FROM toteuma_tehtava tt
   JOIN organisaatio hy ON hy.id = u.hallintayksikko
 WHERE
   tt.poistettu IS NOT TRUE AND
+  mht.poistettu IS NOT TRUE AND
   ((:urakka_annettu IS FALSE AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
   AND (:urakka_annettu IS TRUE OR (:urakka_annettu IS FALSE AND
                                    (:urakkatyyppi :: urakkatyyppi IS NULL OR
@@ -160,7 +162,8 @@ FROM toteuma_tehtava tt
   JOIN urakka u ON t.urakka = u.id
   JOIN organisaatio hy ON hy.id = u.hallintayksikko
 WHERE
-  tt.poistettu IS NOT TRUE
+  tt.poistettu IS NOT TRUE AND
+  mht.poistettu IS NOT TRUE
   AND (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi)
   AND u.id IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
   AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
