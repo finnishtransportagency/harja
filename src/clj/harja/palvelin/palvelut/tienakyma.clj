@@ -5,7 +5,9 @@
   asioita. Palvelu on vain tilaajan käyttäjille, eikä hauissa ole mitään
   urakkarajauksia näkyvyyteen.
 
-  Tienäkymän kaikki löydökset renderöidään frontilla.
+  Tienäkymän kaikki löydökset renderöidään frontilla, koska tietomäärä on rajattu
+  yhteen tiehen ja aikaväliin. Tällä mallilla ei tarvitse tehdä erikseen enää
+  karttakuvan klikkauksesta hakua vaan kaikki tienäkymän tieto on jo frontilla.
 
   Kaikki hakufunktiot ottavat samat parametrit: tietokantayhteyden
   ja parametrimäpin, jossa on seuraavat tiedot:
