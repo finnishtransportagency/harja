@@ -40,7 +40,7 @@
          :tulokset-kartalla (esitettavat-asiat/kartalla-esitettavaan-muotoon
                              (conj kaikki-tulokset (assoc (:sijainti valinnat)
                                                           :tyyppi-kartalla :tr-osoite-indikaattori))
-                             avatut-tulokset)))
+                             (comp avatut-tulokset :idx))))
 
 (extend-protocol tuck/Event
   Nakymassa
