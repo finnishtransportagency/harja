@@ -115,6 +115,7 @@
                 {:otsikko "Paikkaus valmistunut" :tyyppi :pvm-aika :nimi paallystys-valmis})
               (when (kohde-valmis yllapitokohde)
                 {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika :nimi kohde-valmis})
+              {:otsikko "Urakka" :tyyppi :string :nimi :urakka}
               {:otsikko "Urakoitsija" :tyyppi :string :nimi :urakoitsija}]
      :data yllapitokohde}))
 

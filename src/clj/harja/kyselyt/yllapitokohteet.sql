@@ -106,12 +106,14 @@ SELECT
   ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
   ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
   ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
-  o.nimi                                AS "urakoitsija"
+  o.nimi                                AS "urakoitsija",
+  u.nimi AS "urakka"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
   LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
                                     AND pai.poistettu IS NOT TRUE
+  JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 
 WHERE
