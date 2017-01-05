@@ -503,6 +503,32 @@
                                      (ulkoasu/tyokoneen-nuoli nuolen-vari)
                                      viivat))))
 
+(defmethod asia-kartalle :tr-osoite-indikaattori [tr-osoite _]
+  ;; TR-osoitteen indikaattori näyttää "raja-aidat" tieosoitevälille
+  ;; molempiin päätyihin. Ensin lasketaan pisteiden välinen kulma, sitten
+  ;; molempiin päihin lyhyt viiva alku/loppu pisteisiin.
+  (let [koordinaatit (geo/pisteet tr-osoite)
+        [alku-x alku-y] (first koordinaatit)
+        [loppu-x loppu-y] (last koordinaatit)
+        dx (- loppu-x alku-x)
+        dy (- loppu-y alku-y)
+        rad (Math/atan2 dy dx)
+        w 16
+        viiva (fn [x y]
+                (vec
+                 (for [a [(+ rad (/ Math/PI 2))
+                          (- rad (/ Math/PI 2))]]
+                   [(+ x (* w (Math/cos a)))
+                    (+ y (* w (Math/sin a)))])))]
+    (assoc tr-osoite
+           :alue {:type :geometry-collection
+                  :stroke {:color "black"
+                           :width 5}
+                  :geometries [{:type :line
+                                :points (viiva alku-x alku-y)}
+                               {:type :line
+                                :points (viiva loppu-x loppu-y)}]})))
+
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
   (if tyyppi
     (warn "Kartan :tyyppi-kartalla ei ole tuettu: " (str tyyppi))
