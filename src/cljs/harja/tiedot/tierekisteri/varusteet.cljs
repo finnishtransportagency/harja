@@ -8,7 +8,8 @@
             [harja.tiedot.urakka.toteumat.varusteet :as varuste-tiedot]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn varustetoteuma [{:keys [tietue]} toiminto]
@@ -27,6 +28,17 @@
      :alkupvm (:alkupvm tietue)
      :loppupvm (:loppupvm tietue)}))
 
+(defn hakutulokset [app tietolaji varusteet]
+  (-> app
+      (assoc-in [:varusteet] varusteet)
+      (assoc-in [:tietolaji] tietolaji)
+      (assoc-in [:listaus-skeema]
+                (into [varusteet/varusteen-osoite-skeema]
+                      (comp (filter varusteet/kiinnostaa-listauksessa?)
+                            (map varusteet/varusteominaisuus->skeema))
+                      (:ominaisuudet tietolaji)))
+      (assoc-in [:hakuehdot :haku-kaynnissa?] false)))
+
 ;; Määritellään varustehaun UI tapahtumat
 
 ;; Päivittää varustehaun hakuehdot
@@ -40,6 +52,8 @@
 (defrecord PoistaVaruste [varuste])
 (defrecord MuokkausTierekisteriinOnnistui [toiminto viesti])
 (defrecord MuokkausTierekisteriinEpaonnistui [toiminto virhe])
+
+
 
 (extend-protocol t/Event
   AsetaVarusteidenHakuehdot
@@ -63,34 +77,24 @@
 
   VarusteHakuTulos
   (process-event [{tietolaji :tietolaji varusteet :varusteet} app]
-    (-> app
-        (assoc-in [:varusteet] varusteet)
-        (assoc-in [:tietolaji] tietolaji)
-        (assoc-in [:listaus-skeema]
-                  (into [varusteet/varusteen-osoite-skeema]
-                        (comp (filter varusteet/kiinnostaa-listauksessa?)
-                              (map varusteet/varusteominaisuus->skeema))
-                        (:ominaisuudet tietolaji)))
-        (assoc-in [:hakuehdot :haku-kaynnissa?] false)))
+    (hakutulokset app tietolaji varusteet))
 
   VarusteHakuEpaonnistui
   (process-event [{virhe :virhe} app]
-    (log "VIRHE HAETTAESSA: " (pr-str virhe))
+    (log "[TR] Virhe haettaessa varusteita: " (pr-str virhe))
+    (viesti/nayta! "Virhe haettaessa varusteita Tierekisteristä" :error)
     app)
 
   MuokkausTierekisteriinOnnistui
-  (process-event [{toiminto :toiminto viesti :viesti} app]
-    (log "---> toiminto: " (pr-str toiminto) ", viesti: " (pr-str viesti))
-    ;; todo: nayta virhe
-    ;; todo: assoccaa appiin palautetut varusteet ja varustetoteumat näytettäväksi
-    app)
+  (process-event [{viesti :viesti tietolaji :tietolaji varusteet :varusteet} app]
+    (viesti/nayta! viesti :success)
+    (hakutulokset app tietolaji varusteet))
 
   MuokkausTierekisteriinEpaonnistui
-  (process-event [{toiminto :toiminto virhe :virhe vastaus :vastaus} app]
-    (log "---> toiminto: " (pr-str toiminto) ", virhe: " (pr-str virhe) ", vastaus: " (pr-str vastaus))
-    ;; todo: nayta viesti
-    ;; todo: assoccaa appiin palautetut varusteet ja varustetoteumat näytettäväksi
-    app)
+  (process-event [{virhe :virhe viesti :viesti vastaus :vastaus} app]
+    (log "[TR] Virhe suoritettaessa toimintoa. Virhe:" (pr-str virhe) ". Vastaus: " (pr-str vastaus) ".")
+    (viesti/nayta! viesti :error)
+    (hakutulokset app tietolaji varusteet))
 
   PoistaVaruste
   (process-event [{varuste :varuste} app]
@@ -103,9 +107,8 @@
                              :sopimus-id (first @urakka/valittu-sopimusnumero)
                              :aikavali @urakka/valittu-aikavali}
                             varustetoteuma))]
-          (log "VASTAUS: " (pr-str vastaus))
           (if (or (k/virhe? vastaus)
                   (not (:onnistunut vastaus)))
-            (virhe! {:toiminto :poisto :vastaus vastaus :viesti "Varusteen poistossa tapahtui virhe."})
-            (tulos! {:toiminto :poisto :viesti "Varuste poistettu onnistuneesti."})))))
+            (virhe! {:vastaus vastaus :viesti "Varusteen poistossa tapahtui virhe."})
+            (tulos! {:viesti "Varuste poistettu onnistuneesti."})))))
     app))

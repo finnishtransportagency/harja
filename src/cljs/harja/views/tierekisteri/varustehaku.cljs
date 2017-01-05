@@ -73,8 +73,6 @@
     tietolajin-listaus-skeema))
 
 (defn varustehaku-varusteet [e! tietolajin-listaus-skeema varusteet]
-  (log "---> tietolajin-listaus-skeema:" (pr-str tietolajin-listaus-skeema))
-  (log "---> varusteet:" (pr-str varusteet))
   [grid/grid
    {:otsikko "Tierekisteristä löytyneet varusteet"
     :tunniste (fn [varuste]
