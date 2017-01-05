@@ -14,6 +14,7 @@ SELECT
   lahetetty,
   lahetys_onnistunut          AS "lahetys-onnistunut",
   lahetysvirhe,
+  ypk.yllapitokohdetyotyyppi,
   ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
   ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
   ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
