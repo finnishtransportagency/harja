@@ -359,15 +359,15 @@
                             {:keys [:urakka-id :yllapitokohde-id]}
                             {:keys [tyyppi tyo yksikko tilattu-maara
                                     toteutunut-maara yksikkohinta] :as maaramuutos}]
-  (q/luo-yllapitokohteen-maaramuutos<! db {:tyon_tyyppi (name tyyppi)
-                                           :tyo tyo
-                                           :yksikko yksikko
-                                           :tilattu_maara tilattu-maara
-                                           :toteutunut_maara toteutunut-maara
-                                           :yksikkohinta yksikkohinta
-                                           :luoja (:id user)
-                                           :id yllapitokohde-id
-                                           :urakka urakka-id}))
+  (q/paivita-yllapitokohteen-maaramuutos<! db {:tyon_tyyppi (name tyyppi)
+                                               :tyo tyo
+                                               :yksikko yksikko
+                                               :tilattu_maara tilattu-maara
+                                               :toteutunut_maara toteutunut-maara
+                                               :yksikkohinta yksikkohinta
+                                               :luoja (:id user)
+                                               :id yllapitokohde-id
+                                               :urakka urakka-id}))
 
 (defn- luo-tai-paivita-maaramuukset [db user urakka-ja-yllapitokohde maaramuutokset]
   (doseq [maaramuutos maaramuutokset]
