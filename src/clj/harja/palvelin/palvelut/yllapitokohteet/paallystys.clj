@@ -74,9 +74,9 @@
                                  (comp (map konv/alaviiva->rakenne)
                                        (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                        (map #(konv/string-poluista->keyword
-                                              %
-                                              [[:tekninen-osa :paatos]
-                                               [:tila]])))
+                                               %
+                                               [[:tekninen-osa :paatos]
+                                                [:tila]])))
                                  (q/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
                                    db
                                    {:paallystyskohde paallystyskohde-id}))
@@ -270,11 +270,11 @@
                           (let [vastaava-kohdeosa
                                 (first
                                   (filter #(and
-                                            (= (:tr-numero %) (:tr-numero osoite))
-                                            (= (:tr-alkuosa %) (:tr-alkuosa osoite))
-                                            (= (:tr-alkuetaisyys %) (:tr-alkuetaisyys osoite))
-                                            (= (:tr-loppuosa %) (:tr-loppuosa osoite))
-                                            (= (:tr-loppuetaisyys %) (:tr-loppuetaisyys osoite)))
+                                             (= (:tr-numero %) (:tr-numero osoite))
+                                             (= (:tr-alkuosa %) (:tr-alkuosa osoite))
+                                             (= (:tr-alkuetaisyys %) (:tr-alkuetaisyys osoite))
+                                             (= (:tr-loppuosa %) (:tr-loppuosa osoite))
+                                             (= (:tr-loppuetaisyys %) (:tr-loppuetaisyys osoite)))
                                           paivitetyt-kohdeosat))]
                             ;; Jos osoitteelle ei ole kohdeosaa, se on poistettu
                             (when vastaava-kohdeosa
@@ -330,16 +330,6 @@
                      (count uudet-ilmoitukset) " kpl")
           uudet-ilmoitukset)))))
 
-(defn tallenna-maaramuutokset
-  [db user {:keys [urakka-id yllapitokohde-id maaramuutokset]}]
-  (log/debug "Aloitetaan määrämuutoksien tallennus")
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (jdbc/with-db-transaction [db db]
-    (yllapitokohteet/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
-    (yha/lukitse-urakan-yha-sidonta db urakka-id)
-    ;; TODO
-    ))
-
 (defn hae-maaramuutokset
   [db user {:keys [yllapitokohde-id urakka-id]}]
   (log/debug "Aloitetaan määrämuutoksien haku")
@@ -347,9 +337,57 @@
   (jdbc/with-db-transaction [db db]
     (let [maaramuutokset (into []
                                (q/hae-yllapitokohteen-maaramuutokset db {:id yllapitokohde-id
-                                                                    :urakka urakka-id}))]
+                                                                         :urakka urakka-id}))]
       (log/debug "Määrämuutokset saatu: " (pr-str maaramuutokset))
       maaramuutokset)))
+
+(defn- luo-maaramuutos [db user yllapitokohde-id
+                        {:keys [tyyppi tyo yksikko tilattu-maara
+                                toteutunut-maara yksikkohinta] :as maaramuutos}]
+  (q/luo-yllapitokohteen-maaramuutos<! db {:yllapitokohde yllapitokohde-id
+                                           :tyon_tyyppi tyyppi
+                                           :tyo tyo
+                                           :yksikko yksikko
+                                           :tilattu_maara tilattu-maara
+                                           :toteutunut_maara toteutunut-maara
+                                           :yksikkohinta yksikkohinta
+                                           :luoja (:id user)}))
+
+(defn- paivita-maaramuutos [db user
+                            {:keys [:urakka-id :yllapitokohde-id]}
+                            {:keys [tyyppi tyo yksikko tilattu-maara
+                                    toteutunut-maara yksikkohinta] :as maaramuutos}]
+  (q/luo-yllapitokohteen-maaramuutos<! db {:tyon_tyyppi tyyppi
+                                           :tyo tyo
+                                           :yksikko yksikko
+                                           :tilattu_maara tilattu-maara
+                                           :toteutunut_maara toteutunut-maara
+                                           :yksikkohinta yksikkohinta
+                                           :luoja (:id user)
+                                           :id yllapitokohde-id
+                                           :urakka urakka-id}))
+
+(defn- luo-tai-paivita-maaramuukset [db user urakka-ja-yllapitokohde maaramuutokset]
+  (doseq [maaramuutos maaramuutokset]
+    (if (or (nil? (:id maaramuutos))
+            (neg? (:id maaramuutos)))
+      (luo-maaramuutos db user (:yllapitokohde-id urakka-ja-yllapitokohde) maaramuutos)
+      (paivita-maaramuutos db user urakka-ja-yllapitokohde maaramuutos))))
+
+(defn tallenna-maaramuutokset
+  [db user {:keys [urakka-id yllapitokohde-id maaramuutokset]}]
+  (log/debug "Aloitetaan määrämuutoksien tallennus")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+  (yllapitokohteet/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
+  (jdbc/with-db-transaction [db db]
+    (yllapitokohteet/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
+    (yha/lukitse-urakan-yha-sidonta db urakka-id)
+    (luo-tai-paivita-maaramuukset db user {:yllapitokohde-id yllapitokohde-id
+                                           :urakka-id urakka-id} maaramuutokset)
+    (hae-maaramuutokset db user {:yllapitokohde-id yllapitokohde-id
+                                 :urakka-id urakka-id})))
+
+
 
 (defrecord Paallystys []
   component/Lifecycle

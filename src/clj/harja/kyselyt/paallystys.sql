@@ -207,7 +207,6 @@ VALUES (:yllapitokohde, :tyon_tyyppi, :tyo,
 
 -- name: paivita-yllapitokohteen-maaramuutos<!
 UPDATE yllapitokohteen_maaramuutokset SET
-  yllapitokohde = :yllapitokohde,
   tyon_tyyppi = :tyon_tyyppi,
   tyo = :tyo,
   yksikko = :yksikko,
