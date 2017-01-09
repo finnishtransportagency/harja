@@ -392,11 +392,13 @@
   (yllapitokohteet/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (doseq [maaramuutos maaramuutokset]
     (vaadi-maaramuutos-kuuluu-urakkaan db urakka-id (:id maaramuutos)))
+
   (jdbc/with-db-transaction [db db]
     (yllapitokohteet/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
     (luo-tai-paivita-maaramuukset db user {:yllapitokohde-id yllapitokohde-id
                                            :urakka-id urakka-id} maaramuutokset)
+
     (hae-maaramuutokset db user {:yllapitokohde-id yllapitokohde-id
                                  :urakka-id urakka-id})))
 
