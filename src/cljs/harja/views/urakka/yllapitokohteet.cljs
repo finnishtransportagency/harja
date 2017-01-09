@@ -543,8 +543,9 @@
                       :muokattava? (constantly false)
                       :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys
                       :tasaa :oikea})
-                   {:otsikko "Ar\u00ADvon muu\u00ADtok\u00ADset" :nimi :arvonvahennykset :fmt fmt/euro-opt
-                    :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea}
+                   {:otsikko "Ar\u00ADvon muu\u00ADtok\u00ADset +/-" :nimi :arvonvahennykset :fmt fmt/euro-opt
+                    :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea
+                    :huomauta [[:vakiohuomautus "Ota huomioon etumerkki"]]}
                    {:otsikko "Bi\u00ADtumi-in\u00ADdek\u00ADsi" :nimi :bitumi-indeksi
                     :fmt fmt/euro-opt
                     :tyyppi :numero :leveys bitumi-indeksi-leveys :tasaa :oikea}

@@ -49,7 +49,7 @@
                                               :loppupvm (c/to-date (t/local-date 2015 9 30))}})
         nurkkasumman-teksti (last (last vastaus))]
     (is (vector? vastaus))
-    (is (= "Summat ja indeksit yhteensä 16 109,80 €" nurkkasumman-teksti) "nurkkasumman teksti")
+    (is (= "Summat ja indeksit yhteensä 16 112,07 €" nurkkasumman-teksti) "nurkkasumman teksti")
     (let [otsikko "Oulun alueurakka 2014-2019, Muutos- ja lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Kaikki toimenpiteet"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
@@ -77,7 +77,7 @@
     (let [otsikko "Pohjois-Pohjanmaa, Muutos- ja lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Kaikki toimenpiteet"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)
           nurkkasumman-teksti (last (last vastaus))]
-      (is (= "Summat ja indeksit yhteensä 32 219,60 €" nurkkasumman-teksti) "nurkkasumman teksti")
+      (is (= "Summat ja indeksit yhteensä 32 224,14 €" nurkkasumman-teksti) "nurkkasumman teksti")
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Tyyppi"}
                                           {:otsikko "Summa €"}
@@ -122,7 +122,7 @@
                                                       :urakoittain? false}})
         nurkkasumman-teksti (last (last vastaus))]
     (is (vector? vastaus))
-    (is (= "Summat ja indeksit yhteensä 63 563,65 €" nurkkasumman-teksti) "nurkkasumman teksti")
+    (is (= "Summat ja indeksit yhteensä 63 570,46 €" nurkkasumman-teksti) "nurkkasumman teksti")
     (let [otsikko "KOKO MAA, Muutos- ja lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Kaikki toimenpiteet"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko

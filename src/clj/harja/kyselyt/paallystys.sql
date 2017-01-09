@@ -13,7 +13,13 @@ SELECT
   kaasuindeksi,
   lahetetty,
   lahetys_onnistunut          AS "lahetys-onnistunut",
-  lahetysvirhe
+  lahetysvirhe,
+  ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
+  ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
+  ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
+  ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
+  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
