@@ -101,7 +101,6 @@
    :arvonvahennykset nil
    :tekninen-osa {:paatos nil :asiatarkastus nil :kasittelyaika nil :perustelu nil}
    :valmispvm-paallystys nil
-   :taloudellinen-osa {:kasittelyaika nil :perustelu nil :paatos nil :asiatarkastus nil}
    :kokonaishinta 0})
 
 (defn tarkista-asiatarkastus [lomake]

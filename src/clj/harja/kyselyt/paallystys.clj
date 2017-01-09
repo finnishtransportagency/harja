@@ -11,8 +11,7 @@
 (defn hae-urakan-paallystysilmoitukset-kohteineen [db urakka-id sopimus-id vuosi]
   (into []
         (comp
-          (map #(konv/string-poluista->keyword % [[:paatos-taloudellinen-osa]
-                                                  [:paatos-tekninen-osa]
+          (map #(konv/string-poluista->keyword % [[:paatos-tekninen-osa]
                                                   [:tila]]))
           (map #(assoc % :kohdeosat
                          (into []

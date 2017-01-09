@@ -166,14 +166,12 @@
                                     (comp (map konv/alaviiva->rakenne)
                                           (map #(konv/string-poluista->keyword
                                                  %
-                                                 [[:taloudellinen-osa :paatos]
-                                                  [:tekninen-osa :paatos]
+                                                 [[:tekninen-osa :paatos]
                                                   [:tila]])))
                                     (paallystys-q/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
                                       db
                                       {:paallystyskohde kohde-id})))]
       (when-not (and (= :hyvaksytty (get-in paallystysilmoitus [:tekninen-osa :paatos]))
-                     (= :hyvaksytty (get-in paallystysilmoitus [:taloudellinen-osa :paatos]))
                      (or (= :valmis (:tila paallystysilmoitus))
                          (= :lukittu (:tila paallystysilmoitus))))
        (throw (SecurityException. (str "Kohteen " kohde-id " päällystysilmoituksen lähetys ei ole sallittu.")))))))

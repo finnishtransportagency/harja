@@ -254,8 +254,8 @@
 
     (let [urakka-id @muhoksen-paallystysurakan-id
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
-          paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
-                                 (assoc-in [:taloudellinen-osa :paatos] :hyvaksytty)
+          paallystysilmoitus (-> (assoc pot-testidata
+                                   :paallystyskohde-id paallystyskohde-id)
                                  (assoc-in [:tekninen-osa :paatos] :hyvaksytty)
                                  (assoc-in [:tekninen-osa :perustelu] "Hyvä ilmoitus!"))]
 
@@ -273,7 +273,6 @@
         (is (not (nil? paallystysilmoitus-kannassa)))
         (is (= (:tila paallystysilmoitus-kannassa) :lukittu))
         (is (= (get-in paallystysilmoitus-kannassa [:tekninen-osa :paatos]) :hyvaksytty))
-        (is (= (get-in paallystysilmoitus-kannassa [:taloudellinen-osa :paatos]) :hyvaksytty))
         (is (= (get-in paallystysilmoitus-kannassa [:tekninen-osa :perustelu])
                (get-in paallystysilmoitus [:tekninen-osa :perustelu])))
 
@@ -401,7 +400,6 @@
     (let [urakka-id @muhoksen-paallystysurakan-id
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
           paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
-                                 (assoc-in [:taloudellinen-osa :paatos] :hyvaksytty)
                                  (assoc-in [:tekninen-osa :paatos] :hyvaksytty)
                                  (assoc-in [:tekninen-osa :perustelu]
                                            "Yritän saada ilmoituksen hyväksytyksi ilman oikeuksia."))]
