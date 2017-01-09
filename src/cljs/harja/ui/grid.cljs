@@ -20,12 +20,11 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.makrot :refer [fnc]]))
 
-(def gridia-muokataan? (atom false))
+(def gridia-muokataan? (atom false)) ;; Tarkoitus on, että vain yhtä gridiä muokataan kerralla
 (def +rivimaara-jonka-jalkeen-napit-alaskin+ 20)
 
 ;; Otsikot
 ;; Rivi gridin datassa voi olla Otsikko record, jolloin se näytetään väliotsikkona.
-;;
 
 (defrecord Otsikko [teksti])
 

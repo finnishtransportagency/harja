@@ -41,7 +41,8 @@
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept]]))
 
-(def tr-kaytossa? false)
+;; todo: muista ottaa pois päältä ennen mergeämistä!
+(def tr-kaytossa? true)
 
 (def nayta-max-toteumaa 500)
 

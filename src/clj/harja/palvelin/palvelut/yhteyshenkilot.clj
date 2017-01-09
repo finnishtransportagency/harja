@@ -42,10 +42,6 @@
      (fn [user urakka-id]
        (hae-urakan-yhteyshenkilot (:db this) user urakka-id))
 
-     :hae-yhteyshenkilotyypit
-     (fn [user _]
-       (hae-yhteyshenkilotyypit (:db this) user))
-
      :hae-urakan-paivystajat
      (fn [user urakka-id]
        (hae-urakan-paivystajat (:db this) user urakka-id))
@@ -76,7 +72,6 @@
   (stop [this]
     (poista-palvelut (:http-palvelin this)
                      :hae-urakan-yhteyshenkilot
-                     :hae-yhteyshenkilotyypit
                      :tallenna-urakan-yhteyshenkilot
                      :hae-urakan-paivystajat
                      :tallenna-urakan-paivystajat
@@ -90,12 +85,6 @@
   (->> urakka-id
        (uq/hae-urakan-sampo-id db)
        (fim/hae-urakan-kayttajat fim)))
-
-
-(defn hae-yhteyshenkilotyypit [db user]
-  (into #{}
-        (map :rooli)
-        (q/hae-yhteyshenkilotyypit db)))
 
 (defn hae-urakan-yhteyshenkilot [db user urakka-id]
   (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
