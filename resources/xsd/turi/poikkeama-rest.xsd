@@ -73,18 +73,6 @@
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
-                            <xs:element name="sampohankeyhteyshenkilo" minOccurs="1" maxOccurs="1">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Hankkeen yhteyshenkilö (Liikenneviraston käyttäjätunnus).
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:string">
-                                        <xs:maxLength value="256" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
                             <xs:element name="sampourakkanimi" minOccurs="1" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
@@ -877,18 +865,6 @@
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
                                         <xs:maxLength value="5000" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="vastuuhenkilo" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Vastuuhenkilö (Liikenneviraston käyttäjätunnus)
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:string">
-                                        <xs:maxLength value="256" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>

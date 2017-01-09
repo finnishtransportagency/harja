@@ -67,7 +67,7 @@
    :ei_tietoa 14})
 
 (defn vammat->numerot [vammat]
-  ;; PENDING Turi tukee tällä hetkellä vain yhtä arvoa tässä.
+  ;; todo: Turi tukee tällä hetkellä vain yhtä arvoa tässä.
   ;; Lähetetään (satunnainen) ensimmäinen arvo ja myöhemmin toivottavasti kaikki.
   (let [vamma (first vammat)]
     [(when vamma
@@ -92,7 +92,7 @@
    :ei_tietoa 13})
 
 (defn vahingoittuneet-ruumiinosat->numerot [vahingoittuneet-ruumiinosat]
-  ;; PENDING Turi tukee tällä hetkellä vain yhtä arvoa tässä.
+  ;; todo: Turi tukee tällä hetkellä vain yhtä arvoa tässä.
   ;; Lähetetään (satunnainen) ensimmäinen arvo ja myöhemmin toivottavasti kaikki.
   (let [vahingoittunut-ruumiinosa (first vahingoittuneet-ruumiinosat)]
     [(when vahingoittunut-ruumiinosa
@@ -135,7 +135,7 @@
             [[:id turi-id]])
           [[:sampohankenimi (:urakka-nimi data)]]
           [[:sampohankeid (:urakka-sampoid data)]]
-          [[:sampohankeyhteyshenkilo (:sampo-yhteyshenkilo data)]]
+          ;; todo: tulee myöhemmin [[:sampohankeyhteyshenkilo (:sampo-yhteyshenkilo data)]]
           [[:sampourakkanimi (:hanke-nimi data)]]
           [[:sampourakkaid (:urakka-sampoid data)]]
           [[:urakanpaattymispvm (xml/formatoi-paivamaara (:urakka-loppupvm data))]]
@@ -184,7 +184,7 @@
           [:poikkeamatoimenpide
            [:otsikko (:otsikko toimenpide)]
            [:kuvaus (:kuvaus toimenpide)]
-           [:vastuuhenkilo (:vastuuhenkilo toimenpide)]
+           ;; todo: tulee myöhemmin [:vastuuhenkilo (:vastuuhenkilo toimenpide)]
            [:toteuttaja (:toteuttaja toimenpide)]
            [:tila (korjaava-toimenpide-tila->numero (:tila toimenpide))]])
         (:korjaavattoimenpiteet data)))
