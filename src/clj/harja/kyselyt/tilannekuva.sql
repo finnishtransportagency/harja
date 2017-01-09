@@ -212,9 +212,14 @@ WHERE
 SELECT
   ypk.id,
   ypk.kohdenumero,
-  ypk.nimi AS kohde_nimi,
+  ypk.nimi,
   ypko.nimi AS kohdeosa_nimi,
   ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti,
+  ypk.tr_numero                         AS "tr-numero",
+  ypk.tr_alkuosa                        AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys                   AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa                       AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
   ypko.tr_numero,
   ypko.tr_alkuosa,
   ypko.tr_alkuetaisyys,
@@ -222,10 +227,12 @@ SELECT
   ypko.tr_loppuetaisyys,
   pi.id   AS paallystysilmoitus_id,
   pi.tila AS paallystysilmoitus_tila,
-  ypk.aikataulu_kohde_alku as aloituspvm,
-  ypk.aikataulu_paallystys_loppu AS paallystysvalmispvm,
-  ypk.aikataulu_kohde_valmis AS kohdevalmispvm,
-  pi.tila
+  ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
+  ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
+  ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
+  ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
+  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
@@ -239,9 +246,14 @@ WHERE ypk.poistettu IS NOT TRUE
 SELECT
   ypk.id,
   ypk.kohdenumero,
-  ypk.nimi                                AS kohde_nimi,
+  ypk.nimi,
   ypko.nimi                               AS kohdeosa_nimi,
   ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti,
+  ypk.tr_numero                         AS "tr-numero",
+  ypk.tr_alkuosa                        AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys                   AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa                       AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
   ypko.tr_numero,
   ypko.tr_alkuosa,
   ypko.tr_alkuetaisyys,
@@ -249,10 +261,12 @@ SELECT
   ypko.tr_loppuetaisyys,
   pi.id                                   AS paallystysilmoitus_id,
   pi.tila                                 AS paallystysilmoitus_tila,
-  ypk.aikataulu_kohde_alku as aloituspvm,
-  ypk.aikataulu_paallystys_loppu AS paallystysvalmispvm,
-  ypk.aikataulu_kohde_valmis AS kohdevalmispvm,
-  pi.tila
+  ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
+  ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
+  ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
+  ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
+  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
@@ -266,9 +280,14 @@ WHERE ypk.poistettu IS NOT TRUE AND
 SELECT
   ypk.id,
   ypk.kohdenumero,
-  ypk.nimi AS kohde_nimi,
+  ypk.nimi,
   ypk.nimi AS kohdeosa_nimi,
   ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti,
+  ypk.tr_numero                         AS "tr-numero",
+  ypk.tr_alkuosa                        AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys                   AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa                       AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
   ypko.tr_numero,
   ypko.tr_alkuosa,
   ypko.tr_alkuetaisyys,
@@ -276,10 +295,12 @@ SELECT
   ypko.tr_loppuetaisyys,
   pi.id   AS paikkausilmoitus_id,
   pi.tila AS paikkausilmoitus_tila,
-  pi.aloituspvm,
-  pi.valmispvm_paikkaus AS paikkausvalmispvm,
-  pi.valmispvm_kohde AS kohdevalmispvm,
-  pi.tila
+  ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
+  ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
+  ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
+  ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
+  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
 FROM yllapitokohdeosa ypko
   LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = ypk.id
@@ -291,11 +312,16 @@ WHERE ypk.poistettu IS NOT TRUE
 -- Hakee historiakuvaan kaikki paikkauskohteet, jotka ovat olleet aktiivisia
 -- annetulla aikavälillä
 SELECT
-  pk.id,
-  pk.kohdenumero,
-  pk.nimi AS kohde_nimi,
+  ypk.id,
+  ypk.kohdenumero,
+  ypk.nimi,
   ypko.nimi AS kohdeosa_nimi,
   ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti,
+  ypk.tr_numero                         AS "tr-numero",
+  ypk.tr_alkuosa                        AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys                   AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa                       AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
   ypko.tr_numero,
   ypko.tr_alkuosa,
   ypko.tr_alkuetaisyys,
@@ -303,14 +329,16 @@ SELECT
   ypko.tr_loppuetaisyys,
   pi.id   AS paikkausilmoitus_id,
   pi.tila AS paikkausilmoitus_tila,
-  pi.aloituspvm,
-  pi.valmispvm_paikkaus AS paikkausvalmispvm,
-  pi.valmispvm_kohde AS kohdevalmispvm,
-  pi.tila
+  ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
+  ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
+  ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
+  ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
+  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
 FROM yllapitokohdeosa ypko
-  LEFT JOIN yllapitokohde pk ON ypko.yllapitokohde = pk.id
-  LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = pk.id
-WHERE pk.poistettu IS NOT TRUE AND
+  LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
+  LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = ypk.id
+WHERE ypk.poistettu IS NOT TRUE AND
       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku));
 
 -- name: hae-toteumat

@@ -166,8 +166,8 @@
                            (str/join ", " (map turvallisuuspoikkeama-tyyppi (:tyyppi %)))
                            (or (turpodomain/turpo-vakavuusasteet (:vakavuusaste %)) "")
                            (or (turpodomain/kuvaile-tyontekijan-ammatti %) "")
-                           (or (:sairaalavuorokaudet %) (info-solu ""))
-                           (or (:sairauspoissaolopaivat %) (info-solu "")))
+                           (or (:sairaalavuorokaudet %) nil)
+                           (or (:sairauspoissaolopaivat %) nil))
 
                     (sort-by :tapahtunut #(t/after? (c/from-sql-time %1)
                                                     (c/from-sql-time %2)) turpot))
@@ -184,12 +184,12 @@
   (into []
         (concat (when urakoittain?
                   [{:otsikko "Urakka" :leveys 14}])
-                [{:otsikko "Pvm" :leveys 14}
+                [{:otsikko "Pvm" :leveys 14 :fmt :pvm-aika}
                  {:otsikko "Tyyppi" :leveys 24}
                  {:otsikko "Vakavuus\u00ADaste" :leveys 15}
                  {:otsikko "Ammatti" :leveys 14}
-                 {:otsikko "Sairaala\u00advuoro\u00ADkaudet" :leveys 9}
-                 {:otsikko "Sairaus\u00adpoissa\u00ADolo\u00adpäivät" :leveys 9}])))
+                 {:otsikko "Sairaala\u00advuoro\u00ADkaudet" :leveys 9 :fmt :numero}
+                 {:otsikko "Sairaus\u00adpoissa\u00ADolo\u00adpäivät" :leveys 9 :fmt :numero}])))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id urakoittain?
                                alkupvm loppupvm urakkatyyppi] :as parametrit}]
@@ -206,6 +206,14 @@
                               :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
                               :alku alkupvm
                               :loppu loppupvm})
+        _ (log/debug "HAE TURPOT: ")
+        _ (log/debug (pr-str {:urakka_annettu (some? urakka-id)
+                              :urakka urakka-id
+                              :hallintayksikko_annettu (some? hallintayksikko-id)
+                              :hallintayksikko hallintayksikko-id
+                              :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                              :alku alkupvm
+                              :loppu loppupvm}))
         turpot (into []
                      (comp
                        (map #(konv/array->vec % :tyyppi))
@@ -213,10 +221,13 @@
                        (map #(konv/string->keyword % :tyontekijanammatti))
                        (map konv/alaviiva->rakenne))
                      (hae-turvallisuuspoikkeamat db
-                                                 (some? urakka-id) urakka-id
-                                                 (some? hallintayksikko-id) hallintayksikko-id
-                                                 (when urakkatyyppi (name urakkatyyppi))
-                                                 alkupvm loppupvm))
+                                                 {:urakka_annettu (some? urakka-id)
+                                                  :urakka urakka-id
+                                                  :hallintayksikko_annettu (some? hallintayksikko-id)
+                                                  :hallintayksikko hallintayksikko-id
+                                                  :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                  :alku alkupvm
+                                                  :loppu loppupvm}))
         raportin-nimi "Turvallisuusraportti"
         otsikko (raportin-otsikko
                   (case konteksti
