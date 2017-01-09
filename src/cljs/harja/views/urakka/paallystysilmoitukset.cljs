@@ -670,7 +670,7 @@
      :komponentti (fn [rivi] [nayta-lahetystiedot rivi])}
     {:otsikko "Lähetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 25 :tyyppi :komponentti
      :komponentti (fn [rivi]
-                    [yha/laheta-kohteet-yhaan
+                    [yha/yha-lahetysnappi
                      oikeudet/urakat-kohdeluettelo-paallystyskohteet
                      urakka-id
                      sopimus-id
@@ -695,7 +695,7 @@
          [:h3 "YHA-lähetykset"]
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHA:n."]
          (yha-lahetykset-taulukko urakka-id sopimus-id urakan-vuosi paallystysilmoitukset)
-         [yha/laheta-kohteet-yhaan
+         [yha/yha-lahetysnappi
           oikeudet/urakat-kohdeluettelo-paallystyskohteet
           urakka-id
           sopimus-id

@@ -262,7 +262,7 @@
                  (pvm/pvm-aika kohdeluettelo-paivitetty)
                  "ei koskaan"))]))
 
-(defn laheta-kohteet-yhaan [oikeus urakka-id sopimus-id vuosi paallystysilmoitukset]
+(defn yha-lahetysnappi [oikeus urakka-id sopimus-id vuosi paallystysilmoitukset]
   (let [ilmoituksen-voi-lahettaa? (fn [paallystysilmoitus]
                                     (and (= :hyvaksytty (:paatos-tekninen-osa paallystysilmoitus))
                                          (= :hyvaksytty (:paatos-taloudellinen-osa paallystysilmoitus))
