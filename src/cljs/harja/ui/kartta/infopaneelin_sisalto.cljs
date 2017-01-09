@@ -97,8 +97,8 @@
                 :default nil)
      :tiedot [{:otsikko "Nimi" :tyyppi :string :hae #(get-in % [:yllapitokohde :nimi])}
               {:otsikko "Kohdenumero" :tyyppi :string :hae #(get-in % [:yllapitokohde :kohdenumero])}
-              {:otsikko "Tie\u00ADrekisteri\u00ADkohteet" :tyyppi :string
-               :hae #(str/join ", " (map :nimi (get-in % [:yllapitokohde :kohdeosat])))}
+              {:otsikko "Tie\u00ADrekisteri\u00ADkohde" :tyyppi :string
+               :hae #(:nimi %)}
               {:otsikko "Osoite" :tyyppi :string
                :hae #(tr-domain/tierekisteriosoite-tekstina (:yllapitokohde %))}
               {:otsikko "Pituus (m)" :tyyppi :string
@@ -108,7 +108,7 @@
               {:otsikko "KVL" :tyyppi :string
                :hae #(fmt/desimaaliluku-opt (get-in % [:yllapitokohde :keskimaarainen-vuorokausiliikenne]) 0)}
               {:otsikko "Toimenpide" :tyyppi :string
-               :hae #(str/join ", " (distinct (map :toimenpide (get-in % [:yllapitokohde :kohdeosat]))))}
+               :hae #(:toimenpide %)}
               {:otsikko "Tila" :tyyppi :string
                :hae #(yllapitokohteet/kuvaile-kohteen-tila (get-in % [:yllapitokohde :tila]))}
               (when (get-in yllapitokohdeosa [:yllapitokohde aloitus])
