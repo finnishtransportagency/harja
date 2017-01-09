@@ -769,18 +769,9 @@
       :urakan-toteumien-tehtavien-summat
       (fn [user tiedot]
         (hae-urakan-toteumien-tehtavien-summat db user tiedot))
-      :poista-toteuma!
-      (fn [user toteuma]
-        (poista-toteuma! db user toteuma))
-      :poista-tehtava!
-      (fn [user tiedot]
-        (poista-tehtava! db user tiedot))
       :urakan-toteutuneet-tehtavat-toimenpidekoodilla
       (fn [user tiedot]
         (hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db user tiedot))
-      :hae-urakan-tehtavat
-      (fn [user urakka-id]
-        (hae-urakan-tehtavat db user urakka-id))
       :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
       (fn [user toteuma]
         (tallenna-toteuma-ja-yksikkohintaiset-tehtavat db user toteuma))
