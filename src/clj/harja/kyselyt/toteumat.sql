@@ -66,6 +66,31 @@ WHERE
   AND t.id = :toteuma
   AND t.poistettu IS NOT TRUE;
 
+-- name: toteuma-jarjestelman-lisaama
+SELECT
+  k.jarjestelma         AS jarjestelmanlisaama
+FROM toteuma t
+  LEFT JOIN kayttaja k ON k.id = t.luoja
+WHERE t.id = :toteuma;
+
+-- name: toteuman-urakka
+SELECT
+  t.urakka
+FROM toteuma t
+WHERE t.id = :toteuma;
+
+-- name: toteuman-tyyppi
+SELECT
+  t.tyyppi
+FROM toteuma t
+WHERE t.id = :toteuma;
+
+-- name: tehtavan-toteuma
+SELECT
+  tt.toteuma
+FROM toteuma_tehtava tt
+WHERE tt.id = :tehtava;
+
 -- name: hae-toteumien-tehtavien-summat
 -- Listaa urakan toteumien tehtävien määrien summat toimenpidekoodilla ryhmiteltynä.
 SELECT x.tpk_id, x.maara, tk.nimi
@@ -370,7 +395,8 @@ SET tyyppi            = :tyyppi :: erilliskustannustyyppi, urakka = :urakka, sop
   rahasumma           = :rahasumma, indeksin_nimi = :indeksin_nimi, lisatieto = :lisatieto, muokattu = NOW(),
   muokkaaja           = :muokkaaja,
   poistettu           = :poistettu
-WHERE id = :id;
+WHERE id = :id
+AND urakka = :urakka;
 
 -- name: paivita-toteuman-tehtava!
 -- Päivittää toteuman tehtävän id:llä.

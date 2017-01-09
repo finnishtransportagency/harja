@@ -32,10 +32,14 @@
 
 (defn kuvaile-kohteen-tila [tila]
   (case tila
-    :valmis "Valmis"
-    :aloitettu "Aloitettu"
-    "Ei aloitettu"))
-
+    :kohde-aloitettu "Kohde aloitettu"
+    :paallystys-aloitettu "Päällystys aloitettu"
+    :paallystys-valmis "Päällystys valmis"
+    :tiemerkinta-aloitettu "Tiemerkintä aloitettu"
+    :tiemerkinta-valmis "Tiemerkintä valmis"
+    :kohde-valmis "Kohde valmis"
+    :ei-aloitettu "Ei aloitettu"
+    "Ei tiedossa"))
 
 (defn paivita-yllapitokohde! [kohteet-atom id funktio & argumentit]
   (swap! kohteet-atom
@@ -83,19 +87,19 @@
           loppu-muutettu? (not= (loppu muokattu-vanha) (loppu muokattu-uusi))]
 
       (as-> uudet rivit
-        (if alku-muutettu?
-          (assoc rivit edellinen-key
-                 (merge edellinen
-                        (zipmap [:tr-loppuosa :tr-loppuetaisyys]
-                                (alku muokattu-uusi))))
-          rivit)
+            (if alku-muutettu?
+              (assoc rivit edellinen-key
+                           (merge edellinen
+                                  (zipmap [:tr-loppuosa :tr-loppuetaisyys]
+                                          (alku muokattu-uusi))))
+              rivit)
 
-        (if loppu-muutettu?
-          (assoc rivit seuraava-key
-                 (merge seuraava
-                        (zipmap [:tr-alkuosa :tr-alkuetaisyys]
-                                (loppu muokattu-uusi))))
-          rivit)))))
+            (if loppu-muutettu?
+              (assoc rivit seuraava-key
+                           (merge seuraava
+                                  (zipmap [:tr-alkuosa :tr-alkuetaisyys]
+                                          (loppu muokattu-uusi))))
+              rivit)))))
 
 (defn lisaa-uusi-kohdeosa
   "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle). Muuttaa kaikkien

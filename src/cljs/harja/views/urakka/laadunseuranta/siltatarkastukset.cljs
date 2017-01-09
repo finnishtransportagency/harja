@@ -95,19 +95,6 @@
                      (:tr_numero silta) (:tr_alkuosa silta) (:tr_alkuetaisyys silta)
                      (:tr_loppuosa silta) (:tr_loppuetaisyys silta)]]])
 
-(defonce klikatun-sillan-popup
-  (tapahtumat/kuuntele!
-   :silta-klikattu
-   (fn [{:keys [klikkaus-koordinaatit] :as silta}]
-     (kartta/nayta-popup!
-      klikkaus-koordinaatit
-      [:span
-       [sillan-perustiedot silta]
-       [:div.keskita
-        [:a {:href "#" :on-click #(reset! st/valittu-silta
-                                          (dissoc silta :aihe :klikkaus-koordinaatit))}
-         "Avaa valittu silta"]]]))))
-
 (defn kohdesarake [kohteet vika-korjattu]
   [:ul.puutekohdelista {:style {:padding-left "20px"}}
    (for [[kohde [tulos _]] (seq kohteet)]

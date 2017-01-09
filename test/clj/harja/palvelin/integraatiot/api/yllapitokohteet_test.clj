@@ -35,9 +35,9 @@
     (is (some? (:paallystys-aloitettu (:aikataulu leppajarven-ramppi))))
     (is (some? (:paallystys-valmis (:aikataulu leppajarven-ramppi))))
     (is (some? (:valmis-tiemerkintaan (:aikataulu leppajarven-ramppi))))
-    (is (nil? (:tiemerkinta-aloitettu (:aikataulu leppajarven-ramppi))))
-    (is (nil? (:tiemerkinta-valmis (:aikataulu leppajarven-ramppi))))
-    (is (nil? (:kohde-valmis (:aikataulu leppajarven-ramppi))))
+    (is (some? (:tiemerkinta-aloitettu (:aikataulu leppajarven-ramppi))))
+    (is (some? (:tiemerkinta-valmis (:aikataulu leppajarven-ramppi))))
+    (is (some? (:kohde-valmis (:aikataulu leppajarven-ramppi))))
     (is (some? (:takuupvm (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))))
 
 (deftest yllapitokohteiden-haku-ei-toimi-ilman-oikeuksia
