@@ -171,8 +171,6 @@
 
   v/VarusteToteumatHaettu
   (process-event [{toteumat :toteumat} app]
-
-    (log "---> haetut toteumat:" (pr-str toteumat))
     (let [valittu-toimenpide (:valittu-toimenpide app)]
       (assoc app
         :karttataso (varustetoteumat-karttataso toteumat)

@@ -254,7 +254,6 @@
 (defn kasittele-varustehaun-event [e!]
   (let [vhe! (t/wrap-path e! :varustehaku)]
     (intercept e!
-               ;; todo: destructuroi t tässä, josta saa parametrit uudelle eventille VarustetoteumatMuuttuneet
                (varusteet/VarusteToteumatMuuttuneet
                  {varustetoteumat :varustetoteumat :as t}
                  (do

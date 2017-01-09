@@ -86,28 +86,22 @@
     app)
 
   ToimintoEpaonnistui
-  (process-event [{{:keys [viesti vastaus]} :toiminto virhe :virhe :as data} app]
-    (log "---> vastaus: " (pr-str vastaus))
+  (process-event [{{:keys [viesti vastaus]} :toiminto virhe :virhe :as tiedot} app]
     (log "[TR] Virhe suoritettaessa toimintoa. Virhe:" (pr-str virhe) ". Vastaus: " (pr-str vastaus) ".")
     (viesti/nayta! viesti :warning)
     ((t/send-async! (partial ->VarusteToteumatMuuttuneet vastaus)))
 
     ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
-    (hakutulokset app nil nil)
-    #_((t/send-async! ->HaeVarusteita)))
+    (hakutulokset app nil nil))
 
   ToimintoOnnistui
-  (process-event [{{:keys [vastaus]} :toiminto :as data} app]
-    (log "---> data: " (pr-str data))
-    ;; todo: pura varustetoteumat responsesta ja aseta ne eventille
+  (process-event [{{:keys [vastaus]} :toiminto :as tiedot} app]
     ((t/send-async! (partial ->VarusteToteumatMuuttuneet vastaus)))
     ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
     (hakutulokset app nil nil))
 
   VarusteToteumatMuuttuneet
-  #_(process-event [_ app]
-    (log "--> VarusteToteumatMuuttuneet")
-    app)
+  ;; Hook-up harja.tiedot.urakka.toteumat.varusteet
 
   PoistaVaruste
   (process-event [{varuste :varuste} app]
