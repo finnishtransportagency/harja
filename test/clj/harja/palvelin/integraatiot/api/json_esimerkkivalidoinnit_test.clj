@@ -20,6 +20,7 @@
   (is (nil? (validoi json-skeemat/tietyoilmoituksen-kirjaus json-esimerkit/+tietyoilmoituksen-kirjaus+)))
 
   (is (nil? (validoi json-skeemat/pistetoteuman-kirjaus json-esimerkit/+pistetoteuman-kirjaus+)))
+  (is (nil? (validoi json-skeemat/pistetoteuman-poisto json-esimerkit/+pistetoteuman-poisto+)))
   (is (nil? (validoi json-skeemat/reittitoteuman-kirjaus json-esimerkit/+reittitoteuman-kirjaus+)))
   (is (nil? (validoi json-skeemat/reittitoteuman-poisto json-esimerkit/+reittitoteuman-poisto+)))
 

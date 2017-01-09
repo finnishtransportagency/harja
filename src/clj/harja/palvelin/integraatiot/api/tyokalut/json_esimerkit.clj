@@ -15,6 +15,7 @@
 (def +tietyoilmoituksen-kirjaus-vastaus+ "api/examples/tietyoilmoituksen-kirjaus-response.json")
 
 (def +pistetoteuman-kirjaus+ "api/examples/pistetoteuman-kirjaus-request.json")
+(def +pistetoteuman-poisto+ "api/examples/pistetoteuman-poisto-request.json")
 (def +reittitoteuman-kirjaus+ "api/examples/reittitoteuman-kirjaus-request.json")
 (def +reittitoteuman-poisto+ "api/examples/reittitoteuman-poisto-request.json")
 
