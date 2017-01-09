@@ -6,6 +6,7 @@
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.urakka :as urakka]
     [harja.tiedot.urakka :as u]
+    [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.navigaatio :as nav]
     [harja.ui.viesti :as viesti])
 
@@ -190,3 +191,31 @@
                   (viesti/nayta! "Tallennus onnistui. Tarkista ja tallenna myös muokkaamiesi tieosoitteiden alikohteet."
                                  :success viesti/viestin-nayttoaika-keskipitka)
                   (valmis-fn vastaus))))))))
+
+(defn yllapitokohteet-kartalle
+  "Ylläpitokohde näytetään kartalla 'kohdeosina'.
+   Ottaa vectorin ylläpitokohteita ja palauttaa ylläpitokohteiden kohdeosat valmiina näytettäväksi kartalle.
+   Palautuneilla kohdeosilla on pääkohteen tiedot :yllapitokohde avaimen takana.
+
+   yllapitokohteet  Vector ylläpitokohteita, joilla on mukana ylläpitokohteen kohdeosat (:kohdeosat avaimessa)
+   lomakedata       Päällystys- tai paikkausilmoituksen lomakkeen tiedot"
+  ([yllapitokohteet] (yllapitokohteet-kartalle yllapitokohteet nil))
+  ([yllapitokohteet lomakedata]
+   (let [karttamuodossa (kartalla-esitettavaan-muotoon
+                         yllapitokohteet
+                         (if lomakedata
+                           (assoc lomakedata :yllapitokohde-id (or (:paallystyskohde-id lomakedata)
+                                                                   (:paikkauskohde-id lomakedata)
+                                                                   (:yllapitokohde-id lomakedata)))
+                           lomakedata)
+                         :yllapitokohde-id
+                         (comp
+                           (mapcat (fn [kohde]
+                                     (keep (fn [kohdeosa]
+                                             (assoc kohdeosa :yllapitokohde kohde
+                                                             :tyyppi-kartalla (:yllapitokohdetyotyyppi kohde)
+                                                             :tila-kartalla (:tila-kartalla kohde)
+                                                             :yllapitokohde-id (:id kohde)))
+                                           (:kohdeosat kohde))))
+                           (keep #(and (:sijainti %) %))))]
+    karttamuodossa)))

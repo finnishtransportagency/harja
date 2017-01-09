@@ -589,7 +589,7 @@
          (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)) ". Virhe: \"" (:lahetysvirhe rivi) "\"")])
       [:span "Ei lähetetty"])))
 
-(defn yha-lahetykset-taulukko [urakka-id sopimus-id paallystysilmoitukset]
+(defn yha-lahetykset-taulukko [urakka-id sopimus-id vuosi paallystysilmoitukset]
   [grid/grid
    {:otsikko ""
     :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
@@ -601,10 +601,11 @@
      :komponentti (fn [rivi] [nayta-lahetystiedot rivi])}
     {:otsikko "Lähetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 25 :tyyppi :komponentti
      :komponentti (fn [rivi]
-                    [yha/laheta-kohteet-yhaan
+                    [yha/yha-lahetysnappi
                      oikeudet/urakat-kohdeluettelo-paallystyskohteet
                      urakka-id
                      sopimus-id
+                     vuosi
                      [rivi]])}]
    paallystysilmoitukset])
 
@@ -617,17 +618,19 @@
     (fn []
       (let [urakka-id (:id @nav/valittu-urakka)
             sopimus-id (first @u/valittu-sopimusnumero)
+            urakan-vuosi @u/valittu-urakan-vuosi
             paallystysilmoitukset (jarjesta-paallystysilmoitukset @paallystys/paallystysilmoitukset)]
         [:div
          [:h3 "Päällystysilmoitukset"]
          (paallystysilmoitukset-taulukko paallystysilmoitukset)
          [:h3 "YHA-lähetykset"]
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHA:n."]
-         (yha-lahetykset-taulukko urakka-id sopimus-id paallystysilmoitukset)
-         [yha/laheta-kohteet-yhaan
+         (yha-lahetykset-taulukko urakka-id sopimus-id urakan-vuosi paallystysilmoitukset)
+         [yha/yha-lahetysnappi
           oikeudet/urakat-kohdeluettelo-paallystyskohteet
           urakka-id
           sopimus-id
+          urakan-vuosi
           @paallystys/paallystysilmoitukset]]))))
 
 (defn paallystysilmoituslomake-historia [ilmoituslomake]
@@ -644,6 +647,7 @@
          (fn [vastaus]
            (log "[PÄÄLLYSTYS] Lomake tallennettu, vastaus: " (pr-str vastaus))
            (urakka/lukitse-urakan-yha-sidonta! (:id @nav/valittu-urakka))
+           (reset! paallystys/paallystysilmoitus-tallennettu-timestamp (t/now))
            (reset! paallystys/paallystysilmoitukset vastaus)
            (reset! ilmoituslomake nil))]))))
 
