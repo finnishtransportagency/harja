@@ -110,3 +110,10 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
   "Poistaa nimetyt kartan kontrollit näkyvistä."
   [nimi]
   (swap! kartan-yleiset-kontrollit-sisalto dissoc nimi))
+
+(def ikonien-selitykset-nakyvissa-oletusarvo true)
+;; Eri näkymät voivat tarpeen mukaan asettaa ikonien selitykset päälle/pois komponenttiin tultaessa.
+;; Komponentista poistuttaessa tulisi arvo asettaa takaisin oletukseksi
+(defonce ikonien-selitykset-nakyvissa? (atom true))
+(defonce ikonien-selitykset-auki (atom true))
+(defonce ikonien-selitykset-sijainti (atom :oikea))
