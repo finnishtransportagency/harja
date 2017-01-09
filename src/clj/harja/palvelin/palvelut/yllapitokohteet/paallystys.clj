@@ -365,7 +365,7 @@
                                                :tilattu_maara tilattu-maara
                                                :toteutunut_maara toteutunut-maara
                                                :yksikkohinta yksikkohinta
-                                               :luoja (:id user)
+                                               :kayttaja (:id user)
                                                :id yllapitokohde-id
                                                :urakka urakka-id}))
 
