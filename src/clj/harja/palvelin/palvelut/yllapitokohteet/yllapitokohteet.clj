@@ -123,7 +123,7 @@
       vastaus)))
 
 (defn hae-yllapitokohteen-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id yllapitokohde-id]}]
-  (log/debug "Haetaan urakan ylläpitokohdeosat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", yllapitokohde-id: " yllapitokohde-id)
+  (log/debug "Haetaan ylläpitokohteen ylläpitokohdeosat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", yllapitokohde-id: " yllapitokohde-id)
   (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (let [vastaus (into []
