@@ -16,6 +16,7 @@
 
 (def +pistetoteuman-kirjaus+ "api/examples/pistetoteuman-kirjaus-request.json")
 (def +reittitoteuman-kirjaus+ "api/examples/reittitoteuman-kirjaus-request.json")
+(def +reittitoteuman-poisto+ "api/examples/reittitoteuman-poisto-request.json")
 
 (def +poikkeamien-kirjaus+ "api/examples/poikkeamien-kirjaus-request.json")
 (def +turvallisuuspoikkeamien-kirjaus+ "api/examples/turvallisuuspoikkeamien-kirjaus-request.json")

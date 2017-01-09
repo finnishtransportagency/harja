@@ -119,8 +119,7 @@
             (u (str "DELETE FROM reitti_tehtava WHERE reittipiste = " reittipiste-id)))
           (u (str "DELETE FROM reittipiste WHERE toteuma = " toteuma-id))
           (u (str "DELETE FROM toteuma_materiaali WHERE toteuma = " toteuma-id))
-          (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
-          )))
+          (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id)))))
     (let [vastaus-poisto (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                                                   (-> "test/resurssit/api/toteuman-poisto.json"
                                                       slurp
