@@ -716,6 +716,7 @@
          (fn [vastaus]
            (log "[PÄÄLLYSTYS] Lomake tallennettu, vastaus: " (pr-str vastaus))
            (urakka/lukitse-urakan-yha-sidonta! (:id @nav/valittu-urakka))
+           (reset! paallystys/paallystysilmoitus-tallennettu-timestamp (t/now))
            (reset! paallystys/paallystysilmoitukset vastaus)
            (reset! ilmoituslomake nil))]))))
 
