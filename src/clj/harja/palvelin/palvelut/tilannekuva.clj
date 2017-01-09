@@ -155,7 +155,7 @@
                           (if nykytilanne?
                             (case tyyppi
                               "paallystys" (q/hae-paallystykset-nykytilanteeseen db)
-                              "paikkaus" (q/hae-paikkaukset-nykytilanteeseen db toleranssi))
+                              "paikkaus" (q/hae-paikkaukset-nykytilanteeseen db))
                             (case tyyppi
                               "paallystys" (q/hae-paallystykset-historiakuvaan db
                                                                                (konv/sql-date loppu)
