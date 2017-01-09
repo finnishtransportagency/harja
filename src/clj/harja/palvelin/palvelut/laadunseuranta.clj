@@ -127,7 +127,10 @@
                 :vakiofraasi (when vakiofraasi (name vakiofraasi))
                 :tpi_id toimenpideinstanssi
                 :urakka urakka
-                :summa (if (= :yllapidon_bonus laji) (- summa) summa)
+                ;; bonukselle miinus etumerkiksi
+                :summa (if (= :yllapidon_bonus laji)
+                         (- (Math/abs summa))
+                         (Math/abs summa))
                 :indeksi indeksi
                 :laatupoikkeama laatupoikkeama
                 :suorasanktio (or suorasanktio false)

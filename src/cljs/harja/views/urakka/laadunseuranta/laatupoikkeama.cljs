@@ -293,7 +293,6 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                             #(sanktiotietoja-annettu? @laatupoikkeama))
                kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
                yllapitokohteet (:yllapitokohteet optiot)]
-           (log "laatupoikkeama" (pr-str @laatupoikkeama))
            (if (and (some #(= (:nakyma optiot) %) [:paallystys :paikkaus :tiemerkinta])
                     (nil? yllapitokohteet)) ;; Pakko olla ylläpitokohteet ennen kuin lomaketta voi näyttää
              [ajax-loader "Ladataan..."]
@@ -339,7 +338,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                       (= (:nakyma optiot) :paallystys)
                       (= (:nakyma optiot) :paikkaus)
                       (= (:nakyma optiot) :tiemerkinta))
-                  {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde
+                  {:otsikko "Yllä\u00ADpito\u00ADkohde" :tyyppi :valinta :nimi :yllapitokohde
                    :palstoja 1
                    :pakollinen? true
                    :muokattava? (constantly muokattava?)

@@ -22,7 +22,8 @@
             [harja.views.kartta :as kartta]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.laadunseuranta.sanktiot :as sanktio-domain])
+            [harja.domain.laadunseuranta.sanktiot :as sanktio-domain]
+            [harja.domain.tierekisteri :as tierekisteri])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -35,8 +36,8 @@
                       (= :paikkaus (:nakyma optiot))
                       (= :tiemerkinta (:nakyma optiot))
                       (= :valaistus (:nakyma optiot)))
-        mahdolliset-sanktiolajit @tiedot-urakka/urakkatyypin-sanktiolajit]
-
+        mahdolliset-sanktiolajit @tiedot-urakka/urakkatyypin-sanktiolajit
+        yllapitokohteet (:yllapitokohteet optiot)]
     (fn []
       [:div
        [napit/takaisin "Takaisin sanktioluetteloon" #(reset! tiedot/valittu-sanktio nil)]
@@ -52,7 +53,7 @@
          :footer-fn    (fn [tarkastus]
                          [napit/palvelinkutsu-nappi
                           "Tallenna sanktio"
-                          #(tiedot/tallenna-sanktio @muokattu)
+                          #(tiedot/tallenna-sanktio @muokattu (:id @nav/valittu-urakka))
                           {:luokka   "nappi-ensisijainen"
                            :ikoni    (ikonit/tallenna)
                            :kun-onnistuu #(reset! tiedot/valittu-sanktio nil)
@@ -86,10 +87,34 @@
                                       [:pvm-kentan-jalkeen (comp :aika :laatupoikkeama)
                                        "Ei voi olla ennen havaintoa"]]})
 
-         {:otsikko  "Kohde" :nimi :kohde
-          :hae      (comp :kohde :laatupoikkeama)
-          :aseta    (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
-          :palstoja 1 :tyyppi :string}
+         (if yllapito?
+           {:otsikko       "Ylläpitokohde" :tyyppi :valinta :nimi :yllapitokohde
+            :palstoja      1
+            :pakollinen?   true
+            :muokattava?   (constantly voi-muokata?)
+            :valinnat      yllapitokohteet
+            :jos-tyhja     "Ei valittavia kohteita"
+            :valinta-nayta (fn [arvo voi-muokata?]
+                             (log "arvo" (pr-str arvo))
+                             (if arvo
+                               (tierekisteri/yllapitokohde-tekstina
+                                 arvo
+                                 {:osoite {:tr-numero        (:tr-numero arvo)
+                                           :tr-alkuosa       (:tr-alkuosa arvo)
+                                           :tr-alkuetaisyys  (:tr-alkuetaisyys arvo)
+                                           :tr-loppuosa      (:tr-loppuosa arvo)
+                                           :tr-loppuetaisyys (:tr-loppuetaisyys arvo)}})
+                               (if voi-muokata?
+                                 "- Valitse kohde -"
+                                 "")))
+            :validoi       [[:ei-tyhja "Anna sanktion kohde"]]}
+           {:otsikko "Kohde" :tyyppi :string :nimi :kohde
+            :hae      (comp :kohde :laatupoikkeama)
+            :aseta    (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
+            :palstoja 1
+            :pakollinen? true
+            :muokattava? (constantly voi-muokata?)
+            :validoi [[:ei-tyhja "Anna sanktion kohde"]]})
 
          {:otsikko       "Käsitelty" :nimi :kasittelytapa
           :pakollinen?   true
@@ -165,9 +190,8 @@
 
          (when (sanktio-domain/sakko? @muokattu)
            {:otsikko     "Summa" :nimi :summa :palstoja 1 :tyyppi :positiivinen-numero
-            :pakollinen? true
-            :uusi-rivi?  true
-            :yksikko     "€"
+            :hae #(Math/abs (:summa %))
+            :pakollinen? true :uusi-rivi?  true :yksikko     "€"
             :validoi     [[:ei-tyhja "Anna summa"]]})
 
          (when (and (sanktio-domain/sakko? @muokattu) (urakka/indeksi-kaytossa?))
@@ -195,6 +219,7 @@
         yllapito? (or (= :paallystys (:nakyma optiot))
                       (= :paikkaus (:nakyma optiot))
                       (= :tiemerkinta (:nakyma optiot)))]
+    (log "sanktiot " (pr-str sanktiot))
     [:div.sanktiot
      [urakka-valinnat/urakan-hoitokausi valittu-urakka]
      (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
@@ -213,7 +238,14 @@
        :tyhja (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
        :rivi-klikattu #(reset! tiedot/valittu-sanktio %)}
       [{:otsikko "Päivä\u00ADmäärä" :nimi :perintapvm :fmt pvm/pvm-aika :leveys 1}
-       {:otsikko "Kohde" :nimi :kohde :hae (comp :kohde :laatupoikkeama) :leveys 1}
+       (if yllapito?
+         {:otsikko "Yllä\u00ADpito\u00ADkoh\u00ADde" :nimi :kohde :leveys 2
+          :hae     (fn [rivi]
+                     (if (get-in rivi [:yllapitokohde :id])
+                       (tierekisteri/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
+                                                             :nimi        (get-in rivi [:yllapitokohde :nimi])})
+                       (get-in rivi [:laatupoikkeama :kohde])))}
+         {:otsikko "Kohde" :nimi :kohde :hae (comp :kohde :laatupoikkeama) :leveys 1})
        {:otsikko "Perus\u00ADtelu" :nimi :kuvaus :hae (comp :perustelu :paatos :laatupoikkeama) :leveys 3}
        (if yllapito?
          {:otsikko "Puute tai laiminlyönti" :nimi :vakiofraasi
@@ -234,6 +266,8 @@
     (fn []
       [:span
        [kartta/kartan-paikka]
-       (if @tiedot/valittu-sanktio
-         [sanktion-tiedot optiot]
-         [sanktiolistaus optiot @nav/valittu-urakka])])))
+       (let [optiot (merge optiot
+                           {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle})]
+         (if @tiedot/valittu-sanktio
+           [sanktion-tiedot optiot]
+          [sanktiolistaus optiot @nav/valittu-urakka]))])))

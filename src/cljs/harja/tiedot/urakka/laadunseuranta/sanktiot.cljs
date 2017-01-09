@@ -42,17 +42,17 @@
                 (hae-urakan-sanktiot urakka hoitokausi))))
 
 (defn kasaa-tallennuksen-parametrit
-  [s]
-  {:sanktio  (dissoc s :laatupoikkeama)
-   :laatupoikkeama (if-not (get-in s [:laatupoikkeama :urakka])
-               (:laatupoikkeama (assoc-in s [:laatupoikkeama :urakka] (:id @nav/valittu-urakka)))
-               (:laatupoikkeama s))
-   :hoitokausi @urakka/valittu-hoitokausi})
+  [s urakka-id]
+  {:sanktio        (dissoc s :laatupoikkeama :yllapitokohde)
+   :laatupoikkeama (assoc (:laatupoikkeama s) :urakka urakka-id
+                                              :yllapitokohde (:id (:yllapitokohde s)))
+   :hoitokausi     @urakka/valittu-hoitokausi})
 
 (defn tallenna-sanktio
-  [sanktio]
+  [sanktio urakka-id]
   (go
-    (let [sanktiot-tallennuksen-jalkeen (<! (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio)))]
+    (let [sanktiot-tallennuksen-jalkeen
+          (<! (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio urakka-id)))]
      (reset! haetut-sanktiot sanktiot-tallennuksen-jalkeen))))
 
 (defn sanktion-tallennus-onnistui
