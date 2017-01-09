@@ -252,7 +252,7 @@
                                 (pvm/pvm-aika (:aika tietyomaa))))
    :tiedot [{:otsikko "Ylläpitokohde" :hae #(str (:yllapitokohteen-nimi %) " (" (:yllapitokohteen-numero %) ")")}
             {:otsikko "Aika" :hae #(pvm/pvm-aika (:aika %))}
-            {:otsikko "Osoite" :hae #(tierekisteri/tierekisteriosoite-tekstina % {:teksti-tie? false})}
+            {:otsikko "Osoite" :hae #(tr-domain/tierekisteriosoite-tekstina % {:teksti-tie? false})}
             {:otsikko "Kaistat" :hae #(clojure.string/join ", " (map str (:kaistat %)))}
             {:otsikko "Ajoradat" :hae #(clojure.string/join ", " (map str (:ajoradat %)))}
             {:otsikko "Nopeusrajoitus" :hae :nopeusrajoitus}]
