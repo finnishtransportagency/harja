@@ -23,6 +23,7 @@
 (def +turvallisuuspoikkeamien-kirjaus+ "api/examples/turvallisuuspoikkeamien-kirjaus-request.json")
 
 (def +siltatarkastuksen-kirjaus+ "api/examples/siltatarkastuksen-kirjaus-request.json")
+(def +siltatarkastuksen-poisto+ "api/examples/siltatarkastuksen-poisto-request.json")
 
 (def +tielupien-haku+ "api/examples/tielupien-haku-request.json")
 (def +tielupien-haku-vastaus+ "api/examples/tielupien-haku-response.json")
