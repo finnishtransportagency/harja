@@ -192,3 +192,8 @@ ORDER BY k.luotu ASC;
 -- name: liita-kommentti<!
 -- Liittää päällystysilmoitukseen uuden kommentin
 INSERT INTO paallystysilmoitus_kommentti (paallystysilmoitus, kommentti) VALUES (:paallystysilmoitus, :kommentti);
+
+-- name: yllapitokohteella-paallystysilmoitus
+SELECT EXISTS(SELECT id
+              FROM paallystysilmoitus
+              WHERE paallystyskohde = :yllapitokohde);

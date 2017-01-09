@@ -7,7 +7,7 @@
 (defqueries "harja/kyselyt/paallystys.sql")
 
 (defn onko-olemassa-paallystysilmoitus? [db yllapitokohde-id]
-  (:exists (first (harja.kyselyt.yllapitokohteet/yllapitokohteella-paallystysilmoitus
+  (:exists (first (harja.kyselyt.paallystys/yllapitokohteella-paallystysilmoitus
                     db
                     {:yllapitokohde yllapitokohde-id}))))
 

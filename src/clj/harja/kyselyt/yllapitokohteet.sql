@@ -449,14 +449,8 @@ SET
 WHERE id = :id
       AND suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka;
 
--- name: yllapitokohteella-paallystysilmoitus
-SELECT EXISTS(SELECT id
-              FROM paallystysilmoitus
-              WHERE paallystyskohde = :yllapitokohde);
--- name: yllapitokohteella-paikkausilmoitus
-SELECT EXISTS(SELECT id
-              FROM paikkausilmoitus
-              WHERE paikkauskohde = :yllapitokohde);
+
+
 
 -- name: hae-yllapitokohteen-urakka-id
 SELECT urakka AS id
