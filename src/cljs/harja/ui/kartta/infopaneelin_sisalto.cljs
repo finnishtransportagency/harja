@@ -95,14 +95,16 @@
                 :paallystys "Päällystyskohde"
                 :paikkaus "Paikkauskohde"
                 :default nil)
-     :tiedot [{:otsikko "Nimi" :tyyppi :string :hae #(get-in % [:yllapitokohde :nimi])}
+     :tiedot [{:otsikko "Kohde" :tyyppi :string :hae #(get-in % [:yllapitokohde :nimi])}
               {:otsikko "Kohdenumero" :tyyppi :string :hae #(get-in % [:yllapitokohde :kohdenumero])}
-              {:otsikko "Tie\u00ADrekisteri\u00ADkohde" :tyyppi :string
-               :hae #(:nimi %)}
-              {:otsikko "Osoite" :tyyppi :string
+              {:otsikko "Kohteen osoite" :tyyppi :string
                :hae #(tr-domain/tierekisteriosoite-tekstina (:yllapitokohde %))}
-              {:otsikko "Pituus (m)" :tyyppi :string
+              {:otsikko "Kohteen pituus (m)" :tyyppi :string
                :hae #(fmt/desimaaliluku-opt (get-in % [:yllapitokohde :pituus]) 0)}
+              {:otsikko "Alikohde" :tyyppi :string
+               :hae #(:nimi %)}
+              {:otsikko "Alikohteen osoite" :tyyppi :string
+               :hae #(tr-domain/tierekisteriosoite-tekstina %)}
               {:otsikko "Nykyinen päällyste" :tyyppi :string
                :hae #(paallystys-ja-paikkaus/hae-paallyste-koodilla (get-in % [:yllapitokohde :nykyinen-paallyste]))}
               {:otsikko "KVL" :tyyppi :string
