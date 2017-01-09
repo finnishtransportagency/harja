@@ -342,8 +342,8 @@ FROM yllapitokohde ypk
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paikkaus'
-      AND (pi.tila :: TEXT != 'valmis' OR
-           (now() - pi.valmispvm_kohde) < INTERVAL '7 days');
+      AND (pai.tila :: TEXT != 'valmis' OR
+           (now() - pai.valmispvm_kohde) < INTERVAL '7 days');
 
 -- name: hae-paikkaukset-historiakuvaan
 -- Hakee historiakuvaan kaikki paikkauskohteet, jotka ovat olleet aktiivisia
@@ -392,7 +392,7 @@ FROM yllapitokohde ypk
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paikkaus'
-      AND (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku));
+      AND (pai.aloituspvm < :loppu AND (pai.valmispvm_kohde IS NULL OR pai.valmispvm_kohde > :alku));
 
 -- name: hae-toteumat
 -- fetch-size: 64

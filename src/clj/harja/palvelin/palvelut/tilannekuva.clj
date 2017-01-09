@@ -158,11 +158,9 @@
                               "paikkaus" (q/hae-paikkaukset-nykytilanteeseen db toleranssi))
                             (case tyyppi
                               "paallystys" (q/hae-paallystykset-historiakuvaan db
-                                                                               toleranssi
                                                                                (konv/sql-date loppu)
                                                                                (konv/sql-date alku))
                               "paikkaus" (q/hae-paikkaukset-historiakuvaan db
-                                                                           toleranssi
                                                                            (konv/sql-date loppu)
                                                                            (konv/sql-date alku)))))
             osien-pituudet-tielle (yllapitokohteet/laske-osien-pituudet db vastaus)
