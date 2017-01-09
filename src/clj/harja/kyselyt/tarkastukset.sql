@@ -32,6 +32,7 @@ SELECT
   ypk.tr_loppuosa        AS yllapitokohde_tr_loppuosa,
   ypk.tr_loppuetaisyys   AS yllapitokohde_tr_loppuetaisyys,
   ypk.kohdenumero        AS yllapitokohde_numero,
+  ypk.nimi               AS yllapitokohde_nimi,
   liite.id               as liite_id,
   liite.nimi             as liite_nimi,
   liite.tyyppi           as liite_tyyppi,

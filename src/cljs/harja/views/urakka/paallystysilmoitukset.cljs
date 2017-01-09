@@ -483,7 +483,6 @@
 (defn paallystysilmoituslomake [urakka {:keys [yllapitokohde-id yllapitokohdetyyppi] :as lomake}
                                 _ muokkaa! historia tallennus-onnistui]
   (komp/luo
-    (komp/ulos #(kartta/poista-popup!))
     (komp/lukko (lukko/muodosta-lukon-id "paallystysilmoitus" yllapitokohde-id))
     (fn [urakka {:keys [virheet tila kirjoitusoikeus?] :as lomakedata-nyt}
          lukko muokkaa! historia tallennus-onnistui]
@@ -612,7 +611,6 @@
 (defn ilmoitusluettelo
   []
   (komp/luo
-    (komp/ulos #(kartta/poista-popup!))
     (komp/kuuntelija :avaa-paallystysilmoitus
                      (fn [_ rivi]
                        (avaa-paallystysilmoitus (:paallystyskohde-id rivi))))
@@ -651,7 +649,6 @@
 
 (defn paallystysilmoitukset [urakka]
   (komp/luo
-    (komp/ulos #(kartta/poista-popup!))
     (komp/lippu paallystys/paallystysilmoitukset-nakymassa?)
 
     (fn [urakka]

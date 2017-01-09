@@ -380,34 +380,6 @@
     (when (and sisalto (not= :S @nav/kartan-koko))
       [:div.kartan-kontrollit.kartan-ohjelaatikko sisalto])))
 
-
-
-
-
-(defn nayta-popup!
-  "Näyttää popup sisällön kartalla tietyssä sijainnissa. Sijainti on vektori [lat lng],
-joka kertoo karttakoordinaatit. Sisältö annetaan sisalto-hiccup muodossa ja se renderöidään
-HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiverinen komponentti)"
-  [sijainti sisalto-hiccup]
-  (openlayers/show-popup! sijainti sisalto-hiccup))
-
-(defn poista-popup! []
-  (openlayers/hide-popup!))
-
-(defn poista-popup-ilman-eventtia!
-  "Poistaa pop-upin ilmoittamatta siitä kuuntelijoille. Kätevä esim. silloin kun pop-up poistetaan
-   ja luodaan uudelleen uuteen sijaintiin."
-  []
-  (openlayers/hide-popup-without-event!))
-
-(defonce poista-popup-kun-tasot-muuttuvat
-         (tapahtumat/kuuntele! :karttatasot-muuttuneet
-                               (fn [_]
-                                 (poista-popup!))))
-
-
-
-
 ;; harja.views.kartta=> (viivan-piirto-aloita)
 ;; klikkaile kartalta pisteitä...
 ;; harja.views.kartta=> (viivan-piirto-lopeta)
@@ -622,8 +594,6 @@ HTML merkkijonoksi reagent render-to-string funktiolla (eikä siis ole täysiver
          :on-mount           (fn [initialextent]
                                (paivita-extent nil initialextent))
          :on-click           (fn [event]
-                               #_(t/julkaise! {:aihe :tyhja-click :klikkaus-koordinaatit at})
-                               #_(poista-popup!)
                                (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
                                                                    event
                                                                    asiat-pisteessa)
