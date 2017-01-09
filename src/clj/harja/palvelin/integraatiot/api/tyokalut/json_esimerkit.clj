@@ -38,6 +38,7 @@
 
 (def +tiestotarkastuksen-kirjaus+ "api/examples/tiestotarkastuksen-kirjaus-request.json")
 (def +soratietarkastuksen-kirjaus+ "api/examples/soratietarkastuksen-kirjaus-request.json")
+(def +soratietarkastuksen-poisto+ "api/examples/soratietarkastuksen-poisto-request.json")
 (def +talvihoitotarkastuksen-kirjaus+ "api/examples/talvihoitotarkastuksen-kirjaus-request.json")
 
 (def +paivystajatietojen-haku-vastaus+ "api/examples/paivystajatietojen-haku-response.json")
