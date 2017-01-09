@@ -32,8 +32,8 @@
                                         :osat osat}))
 
 (defn hae-maaramuutokset [urakka-id yllapitokohde-id]
-  (k/post! :urakan-yllapitokohteet {:urakka-id urakka-id
-                                    :yllapitokohde-id yllapitokohde-id}))
+  (k/post! :hae-maaramuutokset {:urakka-id urakka-id
+                                :yllapitokohde-id yllapitokohde-id}))
 
 (defn tallenna-maaramuutokset! [urakka-id yllapitokohde-id maaramuutokset]
   (k/post! :tallenna-maaramuutokset {:urakka-id urakka-id
