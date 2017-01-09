@@ -101,7 +101,7 @@
     (hakutulokset app nil nil))
 
   VarusteToteumatMuuttuneet
-  ;; Hook-up harja.tiedot.urakka.toteumat.varusteet
+  ;; Hook-up harja.tiedot.urakka.toteumat.varusteet -namespaceen, jossa varsinainen käsittely
 
   PoistaVaruste
   (process-event [{varuste :varuste} app]

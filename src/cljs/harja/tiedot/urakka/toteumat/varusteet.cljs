@@ -139,7 +139,6 @@
     (filter #(= valittu-toimenpide (:toimenpide %)) toteumat)
     toteumat))
 
-
 (defn hae-ajoradat [{vanha-tr :tierekisteriosoite}
                     {uusi-tr :tierekisteriosoite}
                     haku-valmis!
@@ -151,6 +150,11 @@
           (if (k/virhe? vastaus)
             (virhe!)
             (haku-valmis! vastaus))))))
+
+(defn haetut-toteumat [app toteumat]
+  (assoc app
+    :toteumat toteumat
+    :naytettavat-toteumat (naytettavat-toteumat (first (get-in app [:valinnat :tyyppi])) toteumat)))
 
 (extend-protocol t/Event
   v/YhdistaValinnat
@@ -233,8 +237,7 @@
 
   v/TietolajinKuvaus
   (process-event [{:keys [tietolaji kuvaus]} {toteuma :varustetoteuma :as app}]
-    ;; Uusi tietolajin kuvaus haettu palvelimelta, aseta se paikoilleen, jos
-    ;; toteuman tietolaji on sama kuin toteumassa.
+    ;; Uusi tietolajin kuvaus haettu palvelimelta, aseta se paikoilleen, jos toteuman tietolaji on sama kuin toteumassa.
     (if (= tietolaji (:tietolaji toteuma))
       (assoc-in app [:varustetoteuma :tietolajin-kuvaus] kuvaus)
       app))
@@ -242,11 +245,12 @@
   v/VarustetoteumaTallennettu
   (process-event [{toteumat :hakutulos} app]
     (let [toteumat (if toteumat toteumat [])]
-      (assoc (dissoc app :varustetoteuma)
-        :karttataso (varustetoteumat-karttataso toteumat)
-        :karttataso-nakyvissa? true
-        :toteumat toteumat
-        :toteumahaku-id nil)))
+      (-> app
+          (dissoc :varustetoteuma)
+          (assoc :karttataso (varustetoteumat-karttataso toteumat)
+                 :karttataso-nakyvissa? true
+                 :toteumahaku-id nil)
+          (haetut-toteumat toteumat))))
 
   v/TieosanAjoradatHaettu
   (process-event [{ajoradat :ajoradat} app]
@@ -268,13 +272,11 @@
 
   v/VarustetoteumatMuuttuneet
   (process-event [{toteumat :varustetoteumat :as data} app]
-    (log "---> toteumat:" (pr-str toteumat))
-
-    (assoc app
-      :karttataso (varustetoteumat-karttataso toteumat)
-      :karttataso-nakyvissa? true
-      :toteumat toteumat
-      :naytettavat-toteumat toteumat #_(naytettavat-toteumat (get-in app [:valinnat :tyyppi]) toteumat))))
+    (-> app
+        (assoc
+          :karttataso (varustetoteumat-karttataso toteumat)
+          :karttataso-nakyvissa? true)
+        (haetut-toteumat toteumat))))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))
