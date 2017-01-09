@@ -13,7 +13,8 @@
             [cljs-time.core :as t]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.tilannekuva :as tk]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -337,6 +338,11 @@ hakutiheys-historiakuva 1200000)
       (not= @suodattimet
             (:suodattimet @edellisen-haun-kayttajan-suodattimet))))
 
+(defn- kasittele-tilannekuvan-hakutulos [tulos]
+  (let [paallystykset (yllapitokohteet/yllapitokohteet-kartalle (:paallystys tulos))
+        paikkaukset (yllapitokohteet/yllapitokohteet-kartalle (:paikkaus tulos))]
+  (assoc tulos :paallystys paallystykset
+               :paikkaus paikkaukset)))
 
 (defn hae-asiat [hakuparametrit]
   (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ") " (pr-str hakuparametrit))
@@ -357,7 +363,8 @@ hakutiheys-historiakuva 1200000)
             (k/url-parametri (aikaparametrilla-kuva (dissoc hakuparametrit :alue))))
 
     (let [tulos (-> (<! (k/post! :hae-tilannekuvaan (aikaparametrilla hakuparametrit)))
-                    (assoc :tarkastukset (:tarkastukset hakuparametrit)))]
+                    (assoc :tarkastukset (:tarkastukset hakuparametrit)))
+          tulos (kasittele-tilannekuvan-hakutulos tulos)]
       (when @nakymassa?
         (reset! tilannekuva-kartalla/haetut-asiat tulos))
       (kartta/aseta-paivitetaan-karttaa-tila! false))))
