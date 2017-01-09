@@ -330,6 +330,15 @@
                      (count uudet-ilmoitukset) " kpl")
           uudet-ilmoitukset)))))
 
+(defn vaadi-maaramuutos-kuuluu-urakkaan [db urakka-id maaramuutos-id]
+  (assert urakka-id "Urakka pitää olla!")
+  (when (and maaramuutos-id
+             (not (neg? maaramuutos-id)))
+    (let [maaramuutoksen-todellinen-urakka (:urakka (first (q/hae-maaramuutoksen-urakka db {:id maaramuutos-id})))]
+     (when (not= maaramuutoksen-todellinen-urakka urakka-id)
+       (throw (SecurityException. (str "Määrämuutos " maaramuutos-id " ei kuulu valittuun urakkaan "
+                                       urakka-id " vaan urakkaan " maaramuutoksen-todellinen-urakka)))))))
+
 (defn hae-maaramuutokset
   [db user {:keys [yllapitokohde-id urakka-id]}]
   (log/debug "Aloitetaan määrämuutoksien haku")
@@ -381,6 +390,8 @@
   (log/debug "Aloitetaan määrämuutoksien tallennus")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (yllapitokohteet/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
+  (doseq [maaramuutos maaramuutokset]
+    (vaadi-maaramuutos-kuuluu-urakkaan db urakka-id (:id maaramuutos)))
   (jdbc/with-db-transaction [db db]
     (yllapitokohteet/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
     (yha/lukitse-urakan-yha-sidonta db urakka-id)

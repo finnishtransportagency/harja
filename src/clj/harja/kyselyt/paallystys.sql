@@ -185,6 +185,14 @@ ORDER BY k.luotu ASC;
 -- Liittää päällystysilmoitukseen uuden kommentin
 INSERT INTO paallystysilmoitus_kommentti (paallystysilmoitus, kommentti) VALUES (:paallystysilmoitus, :kommentti);
 
+-- name: hae-maaramuutoksen-urakka
+SELECT
+  u.id as urakka
+FROM yllapitokohteen_maaramuutos ym
+  JOIN yllapitokohde ypk ON ym.yllapitokohde = ypk.id
+  JOIN urakka u ON ypk.urakka = u.id
+WHERE ym.id = :id;
+
 -- name: hae-yllapitokohteen-maaramuutokset
 SELECT
   id,
