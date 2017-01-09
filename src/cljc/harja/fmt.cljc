@@ -481,7 +481,7 @@
   ([luku tarkkuus] (desimaaliluku-opt luku tarkkuus false))
   ([luku tarkkuus ryhmitelty?]
    (if luku
-     (str "arvo: " (pr-str luku) ", type:" (pr-str (type luku)) ", blank?: " (pr-str (str/blank? luku)))  #_(desimaaliluku luku tarkkuus ryhmitelty?)
+     (desimaaliluku luku tarkkuus ryhmitelty?)
      "")))
 
 (defn prosentti
