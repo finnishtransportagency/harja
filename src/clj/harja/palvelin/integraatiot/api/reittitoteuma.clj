@@ -208,13 +208,13 @@ maksimi-linnuntien-etaisyys 200)
     (tallenna-kaikki-pyynnon-reittitoteumat db db-replica urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
 
-(defn poista-toteuma [db db-replica {id :id} data kirjaaja]
+(defn poista-toteuma [db _ {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)
         ulkoiset-idt (-> data :toteumien-tunnisteet)]
     (log/debug "Poistetaan reittitoteumat id:lla:" ulkoiset-idt "urakalta id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja)
                " (id:" (:id kirjaaja) " tekemänä")
     (tarkista-pyynto db urakka-id kirjaaja data)
-    (api-toteuma/poista-toteumat db urakka-id kirjaaja ulkoiset-idt)))
+    (api-toteuma/poista-toteumat db kirjaaja ulkoiset-idt)))
 
 (defrecord Reittitoteuma []
   component/Lifecycle
