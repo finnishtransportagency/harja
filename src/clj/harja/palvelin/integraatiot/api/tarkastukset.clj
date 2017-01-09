@@ -11,7 +11,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
-            [harja.kyselyt.tarkastukset :as kyselyt]
+            [harja.kyselyt.tarkastukset :as q-tarkastukset]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
             [clojure.string :as str]))
@@ -22,11 +22,11 @@
 
 (defn tallenna-mittaustulokset-tarkastukselle [db id tyyppi uusi? mittaus]
   (case tyyppi
-    :talvihoito (kyselyt/luo-tai-paivita-talvihoitomittaus db id uusi?
-                                                                (-> mittaus
+    :talvihoito (q-tarkastukset/luo-tai-paivita-talvihoitomittaus db id uusi?
+                                                                  (-> mittaus
                                                                     (assoc :lampotila-tie (:lampotilaTie mittaus))
                                                                     (assoc :lampotila-ilma (:lampotilaIlma mittaus))))
-    :soratie (kyselyt/luo-tai-paivita-soratiemittaus db id uusi? mittaus)
+    :soratie (q-tarkastukset/luo-tai-paivita-soratiemittaus db id uusi? mittaus)
     nil))
 
 (defn kasittele-tarkastukset
@@ -40,14 +40,14 @@
          (jdbc/with-db-transaction [db db]
            (let [{tarkastus-id :id}
                  (first
-                  (kyselyt/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id (name tyyppi) (:id kayttaja)))
+                   (q-tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id (name tyyppi) (:id kayttaja)))
                  uusi? (nil? tarkastus-id)]
 
              (let [aika (json/aika-string->java-sql-date (:aika tarkastus))
                    tr-osoite (sijainnit/hae-tierekisteriosoite db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
                    geometria (if tr-osoite (:geometria tr-osoite)
                                  (sijainnit/tee-geometria (:alkusijainti tarkastus) (:loppusijainti tarkastus)))
-                   id (kyselyt/luo-tai-paivita-tarkastus
+                   id (q-tarkastukset/luo-tai-paivita-tarkastus
                        db kayttaja urakka-id
                        {:id          tarkastus-id
                         :lahde       "harja-api"
@@ -93,7 +93,7 @@
         kayttajanimi (:kayttajanimi kayttaja)]
     (log/debug (format "Poistetaan tarkastus ulk.id %s tyyppiä: %s käyttäjän: %s toimesta. Data: %s" ulkoiset-idt tyyppi kayttajanimi data))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (let [poistettujen-maara (kyselyt/poista-tarkastus! db kayttaja-id ulkoiset-idt)]
+    (let [poistettujen-maara (q-tarkastukset/poista-tarkastus! db kayttaja-id ulkoiset-idt)]
       (tee-kirjausvastauksen-body {:ilmoitukset (if (pos? poistettujen-maara)
                                                   (str poistettujen-maara " tarkastusta poistettu onnistuneesti")
                                                   "Tunnisteita vastaavia tarkastuksia ei löytynyt")}))))
