@@ -36,7 +36,7 @@
               #(e! (tiedot/->Hae))
               {:ikoni (ikonit/livicon-search)}]
              (when haku-kaynnissa?
-               [yleiset/ajax-loader "Haetaan tietoja..."])]
+               [yleiset/ajax-loader "Haetaan tietoja..." {:luokka "inline-block"}])]
     :ei-borderia? true}
    [{:nimi :tierekisteriosoite :tyyppi :tierekisteriosoite
      :tyyli :rivitetty
