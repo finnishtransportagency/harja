@@ -115,7 +115,6 @@ FROM yllapitokohde ypk
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
-
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus

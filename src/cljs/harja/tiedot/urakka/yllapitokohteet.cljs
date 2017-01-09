@@ -184,13 +184,13 @@
 
 (defn yllapitokohteet-kartalle
   "Ylläpitokohde näytetään kartalla 'kohdeosina'.
+   Ottaa vectorin ylläpitokohteita ja palauttaa ylläpitokohteiden kohdeosat valmiina näytettäväksi kartalle,
+   joilla on liitteenä ylläpitokohteen tiedot.
 
    yllapitokohteet  Vector ylläpitokohteita, joilla on mukana ylläpitokohteen kohdeosat (:kohdeosat avaimessa)
-   lomakedata       Päällystys- tai paikkausilmoituksen lomakkeen tiedot
-
-   Palauttaa ylläpitokohteiden kohdeosat valmiina näytettäväksi kartalle,
-   joilla on liitteenä ylläpitokohteen tiedot."
-  [yllapitokohteet lomakedata]
+   lomakedata       Päällystys- tai paikkausilmoituksen lomakkeen tiedot"
+  ([yllapitokohteet] (yllapitokohteet-kartalle yllapitokohteet nil))
+  ([yllapitokohteet lomakedata]
   (let [karttamuodossa (kartalla-esitettavaan-muotoon
                          ;; Yhtenäistä ylläpitokohteen ja päällystys-/paikkausilmoituksen
                          ;; logiikka sen suhteen, mistä löytyy ylläpitokohteen id
@@ -210,4 +210,4 @@
                                                              :tila-kartalla (:tila-kartalla kohde)))
                                            (:kohdeosat kohde))))
                            (keep #(and (:sijainti %) %))))]
-    karttamuodossa))
+    karttamuodossa)))

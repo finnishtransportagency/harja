@@ -74,7 +74,10 @@
             [harja.domain.roolit :as roolit]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
             [taoensso.timbre :as log]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]))
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
+            [harja.domain.tierekisteri :as tr]
+            [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]))
 
 (defn tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
@@ -140,30 +143,34 @@
     (when (tk/valittu? yllapito (case tyyppi
                                   "paallystys" tk/paallystys
                                   "paikkaus" tk/paikkaus))
-      (let [kohteet (into []
-             (comp
-               (geo/muunna-pg-tulokset :sijainti)
-               (map konv/alaviiva->rakenne)
-               (map #(assoc-in % [:yllapitokohde :tila]
-                               (yllapitokohteet-domain/yllapitokohteen-tarkka-tila (:yllapitokohde %))))
-               (map #(assoc % :tila-kartalla
-                              (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:yllapitokohde %))))
-               (map #(konv/string-polusta->keyword % [:yllapitokohde :yllapitokohdetyotyyppi])))
-             (if nykytilanne?
-               (case tyyppi
-                 "paallystys" (q/hae-paallystykset-nykytilanteeseen db toleranssi)
-                 "paikkaus" (q/hae-paikkaukset-nykytilanteeseen db toleranssi))
-               (case tyyppi
-                 "paallystys" (q/hae-paallystykset-historiakuvaan db
-                                                                  toleranssi
-                                                                  (konv/sql-date loppu)
-                                                                  (konv/sql-date alku))
-                 "paikkaus" (q/hae-paikkaukset-historiakuvaan db
-                                                              toleranssi
-                                                              (konv/sql-date loppu)
-                                                              (konv/sql-date alku)))))]
-        (log/debug "KOHTEET: " (pr-str kohteet))
-        kohteet))))
+      (let [vastaus (into []
+                          (comp
+                            (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
+                            (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
+                            (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
+                            (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
+                            (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
+                            (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
+                            (map #(yllapitokohteet-q/liita-kohdeosat db % (:id %))))
+                          (if nykytilanne?
+                            (case tyyppi
+                              "paallystys" (q/hae-paallystykset-nykytilanteeseen db)
+                              "paikkaus" (q/hae-paikkaukset-nykytilanteeseen db toleranssi))
+                            (case tyyppi
+                              "paallystys" (q/hae-paallystykset-historiakuvaan db
+                                                                               toleranssi
+                                                                               (konv/sql-date loppu)
+                                                                               (konv/sql-date alku))
+                              "paikkaus" (q/hae-paikkaukset-historiakuvaan db
+                                                                           toleranssi
+                                                                           (konv/sql-date loppu)
+                                                                           (konv/sql-date alku)))))
+            osien-pituudet-tielle (yllapitokohteet/laske-osien-pituudet db vastaus)
+            vastaus (mapv #(assoc %
+                             :pituus
+                             (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))
+                          vastaus)]
+        vastaus))))
 
 (defn- hae-paallystystyot
   [db user suodattimet urakat]

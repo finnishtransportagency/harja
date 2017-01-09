@@ -199,36 +199,45 @@ WHERE
 -- Hakee nykytilanteeseen kaikki päällystyskohteet, jotka eivät ole valmiita tai ovat
 -- valmistuneet viikon sisällä.
 SELECT
-  ypko.nimi AS kohdeosa_nimi,
-  ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti,
-  ypko.tr_numero,
-  ypko.tr_alkuosa,
-  ypko.tr_alkuetaisyys,
-  ypko.tr_loppuosa,
-  ypko.tr_loppuetaisyys,
-  pi.id   AS paallystysilmoitus_id,
-  pi.tila AS paallystysilmoitus_tila,
-  ypk.id AS yllapitokohde_id,
-  ypk.kohdenumero AS yllapitokohde_kohdenumero,
-  ypk.nimi  AS yllapitokohde_nimi,
-  ypk.aikataulu_kohde_alku AS "yllapitokohde_kohde-alkupvm",
-  ypk.aikataulu_paallystys_alku AS "yllapitokohde_paallystys-alkupvm",
-  ypk.aikataulu_paallystys_loppu AS "yllapitokohde_paallystys-loppupvm",
-  ypk.aikataulu_tiemerkinta_alku AS "yllapitokohde_tiemerkinta-alkupvm",
-  ypk.aikataulu_tiemerkinta_loppu AS "yllapitokohde_tiemerkinta-loppupvm",
-  ypk.aikataulu_kohde_valmis AS "yllapitokohde_kohde-valmispvm",
-  ypk.yllapitokohdetyotyyppi AS yllapitokohde_yllapitokohdetyotyyppi,
-  ypk.tr_numero                         AS "yllapitokohde_tr-numero",
-  ypk.tr_alkuosa                        AS "yllapitokohde_tr-alkuosa",
-  ypk.tr_alkuetaisyys                   AS "yllapitokohde_tr-alkuetaisyys",
-  ypk.tr_loppuosa                       AS "yllapitokohde_tr-loppuosa",
-  ypk.tr_loppuetaisyys                  AS "yllapitokohde_tr-loppuetaisyys",
-  ypk.keskimaarainen_vuorokausiliikenne AS "yllapitokohde_keskimaarainen-vuorokausiliikenne",
-  o.nimi                                AS "yllapitokohde_urakoitsija",
-  u.nimi AS yllapitokohde_urakka
-FROM yllapitokohdeosa ypko
-  JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
+  ypk.id,
+  pi.id                                 AS "paallystysilmoitus-id",
+  pi.tila                               AS "paallystysilmoitus-tila",
+  pi.muutoshinta,
+  pai.id                                AS "paikkausilmoitus-id",
+  pai.tila                              AS "paikkausilmoitus-tila",
+  pai.toteutunut_hinta                  AS "toteutunut-hinta",
+  ypk.kohdenumero,
+  ypk.nimi,
+  ypk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
+  ypk.arvonvahennykset,
+  ypk.bitumi_indeksi                    AS "bitumi-indeksi",
+  ypk.kaasuindeksi,
+  ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
+  ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
+  yllapitoluokka,
+  ypk.tr_numero                         AS "tr-numero",
+  ypk.tr_alkuosa                        AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys                   AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa                       AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
+  ypk.tr_ajorata                        AS "tr-ajorata",
+  ypk.tr_kaista                         AS "tr-kaista",
+  ypk.yhaid,
+  ypk.yllapitokohdetyyppi,
+  ypk.yllapitokohdetyotyyppi,
+  ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
+  ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
+  ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
+  ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
+  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
+  o.nimi                                AS "urakoitsija",
+  u.nimi AS "urakka"
+FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
+                                     AND pi.poistettu IS NOT TRUE
+  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
+                                    AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE ypk.poistettu IS NOT TRUE
@@ -241,24 +250,31 @@ WHERE ypk.poistettu IS NOT TRUE
 -- annetulla aikavälillä
 SELECT
   ypk.id,
+  pi.id                                 AS "paallystysilmoitus-id",
+  pi.tila                               AS "paallystysilmoitus-tila",
+  pi.muutoshinta,
+  pai.id                                AS "paikkausilmoitus-id",
+  pai.tila                              AS "paikkausilmoitus-tila",
+  pai.toteutunut_hinta                  AS "toteutunut-hinta",
   ypk.kohdenumero,
   ypk.nimi,
-  ypko.nimi                               AS kohdeosa_nimi,
-  ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti,
+  ypk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
+  ypk.arvonvahennykset,
+  ypk.bitumi_indeksi                    AS "bitumi-indeksi",
+  ypk.kaasuindeksi,
+  ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
+  ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
+  yllapitoluokka,
   ypk.tr_numero                         AS "tr-numero",
   ypk.tr_alkuosa                        AS "tr-alkuosa",
   ypk.tr_alkuetaisyys                   AS "tr-alkuetaisyys",
   ypk.tr_loppuosa                       AS "tr-loppuosa",
   ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
-  ypko.tr_numero,
-  ypko.tr_alkuosa,
-  ypko.tr_alkuetaisyys,
-  ypko.tr_loppuosa,
-  ypko.tr_loppuetaisyys,
+  ypk.tr_ajorata                        AS "tr-ajorata",
+  ypk.tr_kaista                         AS "tr-kaista",
+  ypk.yhaid,
+  ypk.yllapitokohdetyyppi,
   ypk.yllapitokohdetyotyyppi,
-  ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
-  pi.id                                   AS paallystysilmoitus_id,
-  pi.tila                                 AS paallystysilmoitus_tila,
   ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
   ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
   ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
@@ -267,9 +283,11 @@ SELECT
   ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
   o.nimi                                AS "urakoitsija",
   u.nimi AS "urakka"
-FROM yllapitokohdeosa ypko
-  JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
+FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
+                                     AND pi.poistettu IS NOT TRUE
+  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
+                                    AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE ypk.poistettu IS NOT TRUE
@@ -282,24 +300,31 @@ WHERE ypk.poistettu IS NOT TRUE
 -- valmistuneet viikon sisällä.
 SELECT
   ypk.id,
+  pi.id                                 AS "paallystysilmoitus-id",
+  pi.tila                               AS "paallystysilmoitus-tila",
+  pi.muutoshinta,
+  pai.id                                AS "paikkausilmoitus-id",
+  pai.tila                              AS "paikkausilmoitus-tila",
+  pai.toteutunut_hinta                  AS "toteutunut-hinta",
   ypk.kohdenumero,
   ypk.nimi,
-  ypk.nimi AS kohdeosa_nimi,
-  ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti,
+  ypk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
+  ypk.arvonvahennykset,
+  ypk.bitumi_indeksi                    AS "bitumi-indeksi",
+  ypk.kaasuindeksi,
+  ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
+  ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
+  yllapitoluokka,
   ypk.tr_numero                         AS "tr-numero",
   ypk.tr_alkuosa                        AS "tr-alkuosa",
   ypk.tr_alkuetaisyys                   AS "tr-alkuetaisyys",
   ypk.tr_loppuosa                       AS "tr-loppuosa",
   ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
-  ypko.tr_numero,
-  ypko.tr_alkuosa,
-  ypko.tr_alkuetaisyys,
-  ypko.tr_loppuosa,
-  ypko.tr_loppuetaisyys,
+  ypk.tr_ajorata                        AS "tr-ajorata",
+  ypk.tr_kaista                         AS "tr-kaista",
+  ypk.yhaid,
+  ypk.yllapitokohdetyyppi,
   ypk.yllapitokohdetyotyyppi,
-  ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
-  pi.id   AS paikkausilmoitus_id,
-  pi.tila AS paikkausilmoitus_tila,
   ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
   ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
   ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
@@ -308,9 +333,11 @@ SELECT
   ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
   o.nimi                                AS "urakoitsija",
   u.nimi AS "urakka"
-FROM yllapitokohdeosa ypko
-  LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
-  LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = ypk.id
+FROM yllapitokohde ypk
+  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
+                                     AND pi.poistettu IS NOT TRUE
+  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
+                                    AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE ypk.poistettu IS NOT TRUE
@@ -323,24 +350,31 @@ WHERE ypk.poistettu IS NOT TRUE
 -- annetulla aikavälillä
 SELECT
   ypk.id,
+  pi.id                                 AS "paallystysilmoitus-id",
+  pi.tila                               AS "paallystysilmoitus-tila",
+  pi.muutoshinta,
+  pai.id                                AS "paikkausilmoitus-id",
+  pai.tila                              AS "paikkausilmoitus-tila",
+  pai.toteutunut_hinta                  AS "toteutunut-hinta",
   ypk.kohdenumero,
   ypk.nimi,
-  ypko.nimi AS kohdeosa_nimi,
-  ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti,
+  ypk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
+  ypk.arvonvahennykset,
+  ypk.bitumi_indeksi                    AS "bitumi-indeksi",
+  ypk.kaasuindeksi,
+  ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
+  ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
+  yllapitoluokka,
   ypk.tr_numero                         AS "tr-numero",
   ypk.tr_alkuosa                        AS "tr-alkuosa",
   ypk.tr_alkuetaisyys                   AS "tr-alkuetaisyys",
   ypk.tr_loppuosa                       AS "tr-loppuosa",
   ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
-  ypko.tr_numero,
-  ypko.tr_alkuosa,
-  ypko.tr_alkuetaisyys,
-  ypko.tr_loppuosa,
-  ypko.tr_loppuetaisyys,
+  ypk.tr_ajorata                        AS "tr-ajorata",
+  ypk.tr_kaista                         AS "tr-kaista",
+  ypk.yhaid,
+  ypk.yllapitokohdetyyppi,
   ypk.yllapitokohdetyotyyppi,
-  ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
-  pi.id   AS paikkausilmoitus_id,
-  pi.tila AS paikkausilmoitus_tila,
   ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
   ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
   ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
@@ -349,9 +383,11 @@ SELECT
   ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
   o.nimi                                AS "urakoitsija",
   u.nimi AS "urakka"
-FROM yllapitokohdeosa ypko
-  LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
-  LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = ypk.id
+FROM yllapitokohde ypk
+  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
+                                     AND pi.poistettu IS NOT TRUE
+  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
+                                    AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE ypk.poistettu IS NOT TRUE
