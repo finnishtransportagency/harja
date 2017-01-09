@@ -77,14 +77,15 @@
     (if-let [varustetoteuma (konversio/alaviiva->rakenne (first (toteumat-q/hae-varustetoteuma (:db this) varustetoteuma-id)))]
       (let [toimenpide (:toimenpide varustetoteuma)
             tiedot (varusteen-tiedot varustetoteuma)]
-        (case toimenpide
-          "lisatty" (lisaa-tietue this tiedot)
-          "paivitetty" (paivita-tietue this tiedot)
-          "poistettu" (poista-tietue this tiedot)
-          "tarkastus" (paivita-tietue this tiedot)
-          (log/warn (format "Ei voida lähettää varustetoteumaa (id: %s) Tierekisteriin. Tuntematon toimenpide: %s."
-                            varustetoteuma-id (:toimenpide varustetoteuma))))
-        (toteumat-q/merkitse-varustetoteuma-lahetetyksi! (:db this) "lahetetty" varustetoteuma-id))
+        (let [vastaus (case toimenpide
+                        "lisatty" (lisaa-tietue this tiedot)
+                        "paivitetty" (paivita-tietue this tiedot)
+                        "poistettu" (poista-tietue this tiedot)
+                        "tarkastus" (paivita-tietue this tiedot)
+                        (log/warn (format "Ei voida lähettää varustetoteumaa (id: %s) Tierekisteriin. Tuntematon toimenpide: %s."
+                                          varustetoteuma-id (:toimenpide varustetoteuma))))]
+          (toteumat-q/merkitse-varustetoteuma-lahetetyksi! (:db this) "lahetetty" varustetoteuma-id)
+          vastaus))
       (do
         (log/warn (format "Ei voida lähettää varustetoteumaa (id: %s) Tierekisteriin. Toteumaa ei löydy." varustetoteuma-id))))
     (catch Exception e
