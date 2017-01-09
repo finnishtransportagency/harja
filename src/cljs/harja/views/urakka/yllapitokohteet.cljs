@@ -465,6 +465,7 @@
 
 (defn maaramuutokset [yllapitokohde-id urakka-id]
   (let [maaramuutokset (atom nil)
+        voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id)
         hae-maara-muutokset! (fn [urakka-id yllapitokohde-id]
                                (go (let [vastaus (<! (tiedot/hae-maaramuutokset urakka-id yllapitokohde-id))]
                                      (if (k/virhe? vastaus)
@@ -477,8 +478,14 @@
       [grid/grid
        {:otsikko "Määrämuutokset"
         :tyhja "Ei määrämuutoksia"
-        :tallenna #(tiedot/tallenna-maaramuutokset! urakka-id yllapitokohde-id %)
-        :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id)}
+        :tallenna (when voi-muokata?
+                     #(go (let [vastaus (<! (tiedot/tallenna-maaramuutokset! urakka-id yllapitokohde-id %))]
+                            (if (k/virhe? vastaus)
+                              (viesti/nayta! "Määrämuutoksien tallennusepäonnistui"
+                                             :warning
+                                             viesti/viestin-nayttoaika-keskipitka)
+                              (reset! maaramuutokset vastaus)))))
+        :voi-muokata? voi-muokata?}
        [{:otsikko "Päällyste\u00ADtyön tyyppi"
          :nimi :tyyppi
          :tyyppi :valinta
