@@ -357,7 +357,7 @@
 
 (defn- paivita-maaramuutos [db user
                             {:keys [:urakka-id :yllapitokohde-id]}
-                            {:keys [tyyppi tyo yksikko tilattu-maara
+                            {:keys [id tyyppi tyo yksikko tilattu-maara
                                     toteutunut-maara yksikkohinta] :as maaramuutos}]
   (q/paivita-yllapitokohteen-maaramuutos<! db {:tyon_tyyppi (name tyyppi)
                                                :tyo tyo
@@ -366,7 +366,7 @@
                                                :toteutunut_maara toteutunut-maara
                                                :yksikkohinta yksikkohinta
                                                :kayttaja (:id user)
-                                               :id yllapitokohde-id
+                                               :id id
                                                :urakka urakka-id}))
 
 (defn- luo-tai-paivita-maaramuukset [db user urakka-ja-yllapitokohde maaramuutokset]
