@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 -- Irrota päällystyslomakkeen määrämuutokset omaan tauluun
 
 CREATE TYPE maaramuutos_tyon_tyyppi AS ENUM ('ajoradan_paallyste', 'pienaluetyot', 'tasaukset', 'jyrsinnat',
@@ -28,15 +27,3 @@ ALTER TABLE paallystysilmoitus DROP COLUMN asiatarkastus_taloudellinen_osa;
 
 -- FIXME TÄSSÄ VAIHEESSA NYKYISTEN POTTIEN ilmoitustiedot-SARAKKEESEEN JÄÄ VANHANMALLINEN JSON, JOSSA
 -- TALOUSOSA MUKANA. MITEN MIGRATOIDAAN ilmoitustiedot-JSON->yllapito_maaramuutokset?
-=======
--- Raportin urakkatyyppi enumiksi
-ALTER TABLE raportti ADD COLUMN urakkatyyppi_ urakkatyyppi[];
-UPDATE raportti SET urakkatyyppi_ = ARRAY['hoito']::urakkatyyppi[];
-ALTER TABLE raportti DROP COLUMN urakkatyyppi;
-ALTER TABLE raportti RENAME COLUMN urakkatyyppi_ TO urakkatyyppi;
-
--- Laatu- ja turvallisuuspoikkeamaraportit ylläpidolle
-
-UPDATE raportti SET urakkatyyppi = ARRAY['hoito', 'paallystys', 'paikkaus', 'tiemerkinta']::urakkatyyppi[]
-WHERE nimi = 'laatupoikkeamaraportti' OR nimi = 'turvallisuus';
->>>>>>> develop
