@@ -196,7 +196,7 @@ SELECT
   toteutunut_maara,
   yksikkohinta
 FROM yllapitokohteen_maaramuutos
-WHERE id = :id
+WHERE yllapitokohde = :id
 AND (SELECT urakka FROM yllapitokohde WHERE id = :id) = :urakka;
 
 -- name: luo-yllapitokohteen-maaramuutos<!
