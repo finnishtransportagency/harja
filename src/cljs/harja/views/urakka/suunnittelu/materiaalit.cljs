@@ -167,22 +167,22 @@
              (oikeudet/oikeuden-puute-kuvaus :kirjoitus
                                              oikeudet/urakat-suunnittelu-materiaalit)]
             [:button.nappi-ensisijainen
-                  {:disabled (not voi-tallentaa?)
-                   :on-click #(do (.preventDefault %)
-                                  (go
-                                    (let [rivit (vals @yleiset-materiaalit-muokattu)
-                                          rivit (if @tuleville?
-                                                  (u/rivit-tulevillekin-kausille ur rivit @u/valittu-hoitokausi)
-                                                  rivit)
-                                          _ (logt rivit)
-                                          uudet-materiaalit (<! (t/tallenna (:id ur)
-                                                                            (first @u/valittu-sopimusnumero)
-                                                                            @u/valittu-hoitokausi
-                                                                            @u/valitun-urakan-hoitokaudet
-                                                                            @tuleville?
-                                                                            rivit))]
-                                      (when uudet-materiaalit
-                                        (viesti/nayta! "Materiaalit tallennettu." :success)
-                                        (reset! tuleville? false)
-                                        (reset! urakan-materiaalit uudet-materiaalit)))))}
-                  "Tallenna materiaalit"])]])))))
+             {:disabled (not voi-tallentaa?)
+              :on-click #(do (.preventDefault %)
+                             (go
+                               (let [rivit (vals @yleiset-materiaalit-muokattu)
+                                     rivit (if @tuleville?
+                                             (u/rivit-tulevillekin-kausille ur rivit @u/valittu-hoitokausi)
+                                             rivit)
+                                     _ (logt rivit)
+                                     uudet-materiaalit (<! (t/tallenna (:id ur)
+                                                                       (first @u/valittu-sopimusnumero)
+                                                                       @u/valittu-hoitokausi
+                                                                       @u/valitun-urakan-hoitokaudet
+                                                                       @tuleville?
+                                                                       rivit))]
+                                 (when uudet-materiaalit
+                                   (viesti/nayta! "Materiaalit tallennettu." :success)
+                                   (reset! tuleville? false)
+                                   (reset! urakan-materiaalit uudet-materiaalit)))))}
+             "Tallenna materiaalit"])]])))))
