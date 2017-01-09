@@ -34,7 +34,8 @@
         yllapito? (or (= :paallystys (:nakyma optiot))
                       (= :paikkaus (:nakyma optiot))
                       (= :tiemerkinta (:nakyma optiot))
-                      (= :valaistus (:nakyma optiot)))]
+                      (= :valaistus (:nakyma optiot)))
+        mahdolliset-sanktiolajit @tiedot-urakka/urakkatyypin-sanktiolajit]
 
     (fn []
       [:div
@@ -127,21 +128,15 @@
             :leveys  2 :tyyppi :string
             :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
 
-         {:otsikko       "Laji"
-          :tyyppi        :valinta
-          :pakollinen?   true
-          :palstoja      1
-          :uusi-rivi?    true
-          :nimi          :laji
+         {:otsikko       "Laji" :tyyppi :valinta :pakollinen?   true
+          :palstoja      1 :uusi-rivi? true :nimi :laji
           :hae           (comp keyword :laji)
           :aseta         (fn [rivi arvo]
                            (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
                              (if-not (sanktio-domain/sakko? paivitetty)
                                (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
                                paivitetty)))
-          :valinnat      (if yllapito?
-                           [:yllapidon_sakko :yllapidon_bonus :muistutus]
-                           [:A :B :C :muistutus])
+          :valinnat      mahdolliset-sanktiolajit
           :valinta-nayta #(case %
                             :A "Ryhmä A"
                             :B "Ryhmä B"
@@ -195,22 +190,22 @@
         @muokattu]])))
 
 (defn sanktiolistaus
-  [optiot]
+  [optiot valittu-urakka]
   (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot))
         yllapito? (or (= :paallystys (:nakyma optiot))
                       (= :paikkaus (:nakyma optiot))
                       (= :tiemerkinta (:nakyma optiot)))]
     [:div.sanktiot
-     [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
+     [urakka-valinnat/urakan-hoitokausi valittu-urakka]
      (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
-                                             (:id @nav/valittu-urakka))]
+                                             (:id valittu-urakka))]
        (yleiset/wrap-if
         (not oikeus?)
         [yleiset/tooltip {} :%
          (oikeudet/oikeuden-puute-kuvaus :kirjoitus
                                          oikeudet/urakat-laadunseuranta-sanktiot)]
         [napit/uusi "Lisää sanktio"
-         #(reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio))
+         #(reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi valittu-urakka)))
          {:disabled (not oikeus?)}]))
 
      [grid/grid
@@ -241,4 +236,4 @@
        [kartta/kartan-paikka]
        (if @tiedot/valittu-sanktio
          [sanktion-tiedot optiot]
-         [sanktiolistaus optiot])])))
+         [sanktiolistaus optiot @nav/valittu-urakka])])))

@@ -401,9 +401,8 @@
 
 (def urakkatyypin-sanktiolajit
   (reaction<! [urakka @nav/valittu-urakka
-               sivu (nav/valittu-valilehti :laadunseuranta)
-               _ (log "sivu? " (pr-str sivu))]
-              {:nil-kun-haku-kaynnissa? true}
-              (when (and urakka sopimus-id aikavali (= :sanktiot sivu))
+               sivu (nav/valittu-valilehti :laadunseuranta)]
+              (when (and urakka (= :sanktiot sivu))
                 (go
-                  (<! (k/post! :hae-urakkatyypin-sanktiolajit {:urakka urakka}))))))
+                  (<! (k/post! :hae-urakkatyypin-sanktiolajit {:urakka-id (:id urakka)
+                                                               :urakkatyyppi (:tyyppi urakka)}))))))

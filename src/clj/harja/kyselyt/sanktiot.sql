@@ -119,3 +119,8 @@ SELECT
   toimenpidekoodi,
   sanktiolaji AS laji
 FROM sanktiotyyppi
+
+--name: hae-urakkatyypin-sanktiolajit
+SELECT id, nimi, sanktiolaji, urakkatyyppi
+  FROM sanktiotyyppi
+ WHERE urakkatyyppi @> ARRAY[:urakkatyyppi::urakkatyyppi]

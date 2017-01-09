@@ -127,7 +127,7 @@
                 :vakiofraasi (when vakiofraasi (name vakiofraasi))
                 :tpi_id toimenpideinstanssi
                 :urakka urakka
-                :summa summa
+                :summa (if (= :yllapidon_bonus laji) (- summa) summa)
                 :indeksi indeksi
                 :laatupoikkeama laatupoikkeama
                 :suorasanktio (or suorasanktio false)
@@ -391,9 +391,15 @@
         laatupoikkeama-id))))
 
 (defn hae-urakkatyypin-sanktiolajit
-  [db user urakka]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user (:id urakka))
-  (sanktiot/hae-urakkatyypin-sanktiolajit db (name (:tyyppi urakka))))
+  [db user urakka-id urakkatyyppi]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
+  (let [sanktiotyypit (into []
+                            (map #(konv/array->set % :sanktiolaji keyword))
+                            (sanktiot/hae-urakkatyypin-sanktiolajit
+                              db (name urakkatyyppi)))
+        sanktiolajit (conj (apply clojure.set/union
+                                  (map :sanktiolaji sanktiotyypit)) :muistutus)]
+    sanktiolajit))
 
 (defrecord Laadunseuranta []
   component/Lifecycle
@@ -447,8 +453,8 @@
         (hae-tarkastus db user urakka-id tarkastus-id))
 
       :hae-urakkatyypin-sanktiolajit
-      (fn [user {:keys [urakka]}]
-        (hae-urakkatyypin-sanktiolajit db user urakka))
+      (fn [user {:keys [urakka-id urakkatyyppi]}]
+        (hae-urakkatyypin-sanktiolajit db user urakka-id urakkatyyppi))
 
       :lisaa-tarkastukselle-laatupoikkeama
       (fn [user {:keys [urakka-id tarkastus-id]}]

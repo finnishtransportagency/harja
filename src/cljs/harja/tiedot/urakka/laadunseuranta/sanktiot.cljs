@@ -14,9 +14,11 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (def nakymassa? (atom false))
-(defn uusi-sanktio []
+(defn uusi-sanktio [urakkatyyppi]
   {:suorasanktio true
-   :laji :A
+   :laji (if (= :hoito urakkatyyppi)
+           :A
+           :yllapidon_sakko)
    :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
                           (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
    :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
