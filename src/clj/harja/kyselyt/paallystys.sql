@@ -189,11 +189,11 @@ INSERT INTO paallystysilmoitus_kommentti (paallystysilmoitus, kommentti) VALUES 
 SELECT
   id,
   yllapitokohde,
-  tyon_tyyppi,
+  tyon_tyyppi AS "tyyppi",
   tyo,
   yksikko,
-  tilattu_maara,
-  toteutunut_maara,
+  tilattu_maara AS "tilattu-maara",
+  toteutunut_maara AS "toteutunut-maara",
   yksikkohinta
 FROM yllapitokohteen_maaramuutos
 WHERE yllapitokohde = :id

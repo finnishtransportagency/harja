@@ -8,7 +8,7 @@
             [harja.domain.skeema :refer [Toteuma validoi]]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.kommentit :as kommentit]
-            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
+            [harja.domain.paallystysilmoitus :as pot-domain]
             [harja.kyselyt.paallystys :as q]
             [cheshire.core :as cheshire]
             [harja.palvelin.palvelut.yha :as yha]
@@ -85,7 +85,7 @@
                                     {:kohdeosa :kohdeosat}
                                     :id))
         _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
-            (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+            (skeema/validoi pot-domain/+paallystysilmoitus+
                             ilmoitustiedot))
         paallystysilmoitus (tyot-tyyppi-string->avain paallystysilmoitus [:ilmoitustiedot :tyot])
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
@@ -139,14 +139,14 @@
                                 :as paallystysilmoitus}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (log/debug "Luodaan uusi päällystysilmoitus.")
-  (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
-        tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila
+  (let [muutoshinta (pot-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
+        tila (pot-domain/paattele-ilmoituksen-tila
                (:valmis-kasiteltavaksi paallystysilmoitus)
                (= (get-in paallystysilmoitus [:tekninen-osa :paatos]) :hyvaksytty))
         ilmoitustiedot (-> ilmoitustiedot
                            (poista-ilmoitustiedoista-tieosoitteet)
                            (tyot-tyyppi-avain->string [:tyot]))
-        _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+        _ (skeema/validoi pot-domain/+paallystysilmoitus+
                           ilmoitustiedot)
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
@@ -209,15 +209,15 @@
         urakka-id
         user)
     (do (log/debug "Päivitetään päällystysilmoituksen perustiedot")
-        (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
+        (let [muutoshinta (pot-domain/laske-muutokset-kokonaishintaan
                             (:tyot ilmoitustiedot))
-              tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila
+              tila (pot-domain/paattele-ilmoituksen-tila
                      (:valmis-kasiteltavaksi paallystysilmoitus)
                      (= (get-in paallystysilmoitus [:tekninen-osa :paatos]) :hyvaksytty))
               ilmoitustiedot (-> ilmoitustiedot
                                  (poista-ilmoitustiedoista-tieosoitteet)
                                  (tyot-tyyppi-avain->string [:tyot]))
-              _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+              _ (skeema/validoi pot-domain/+paallystysilmoitus+
                                 ilmoitustiedot)
               encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
           (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
@@ -336,6 +336,8 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [maaramuutokset (into []
+                               (comp
+                                 (map #(konv/string-polusta->keyword % [:tyyppi])))
                                (q/hae-yllapitokohteen-maaramuutokset db {:id yllapitokohde-id
                                                                          :urakka urakka-id}))]
       (log/debug "Määrämuutokset saatu: " (pr-str maaramuutokset))

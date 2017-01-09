@@ -496,10 +496,10 @@
          :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Anna toteutunut määrä"]]}
         {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false)
          :hae (fn [rivi] (- (:toteutunut-maara rivi) (:tilattu-maara rivi)))}
-        {:otsikko "Yks.\u00ADhinta" :nimi :yksikkohinta :leveys "10%" :tasaa :oikea
+        {:otsikko "Yks.\u00ADhinta" :nimi :yksikkohinta :leveys "10%" :tasaa :oikea :fmt fmt/euro-opt
          :tyyppi :positiivinen-numero :kokonaisosan-maara 4 :validoi [[:ei-tyhja "Anna yksikköhinta"]]}
         {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :tasaa :oikea
-         :muokattava? (constantly false) :tyyppi :numero
+         :muokattava? (constantly false) :tyyppi :numero :fmt fmt/euro-opt
          :hae (fn [rivi]
                 (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
        @maaramuutokset])))
