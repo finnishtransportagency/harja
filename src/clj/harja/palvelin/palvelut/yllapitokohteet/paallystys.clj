@@ -345,7 +345,7 @@
                         {:keys [tyyppi tyo yksikko tilattu-maara
                                 toteutunut-maara yksikkohinta] :as maaramuutos}]
   (q/luo-yllapitokohteen-maaramuutos<! db {:yllapitokohde yllapitokohde-id
-                                           :tyon_tyyppi tyyppi
+                                           :tyon_tyyppi (name tyyppi)
                                            :tyo tyo
                                            :yksikko yksikko
                                            :tilattu_maara tilattu-maara
@@ -357,7 +357,7 @@
                             {:keys [:urakka-id :yllapitokohde-id]}
                             {:keys [tyyppi tyo yksikko tilattu-maara
                                     toteutunut-maara yksikkohinta] :as maaramuutos}]
-  (q/luo-yllapitokohteen-maaramuutos<! db {:tyon_tyyppi tyyppi
+  (q/luo-yllapitokohteen-maaramuutos<! db {:tyon_tyyppi (name tyyppi)
                                            :tyo tyo
                                            :yksikko yksikko
                                            :tilattu_maara tilattu-maara

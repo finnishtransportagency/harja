@@ -3,7 +3,7 @@
 CREATE TYPE maaramuutos_tyon_tyyppi AS ENUM ('ajoradan_paallyste', 'pienaluetyot', 'tasaukset', 'jyrsinnat',
                                               'muut');
 
-CREATE TABLE yllapitokohteen_maaramuutokset (
+CREATE TABLE yllapitokohteen_maaramuutos (
   id serial PRIMARY KEY,
   yllapitokohde INTEGER REFERENCES yllapitokohde (id) NOT NULL,
   tyon_tyyppi maaramuutos_tyon_tyyppi NOT NULL,

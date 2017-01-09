@@ -51,7 +51,7 @@ INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alk
 
 -- Määrämuutokset
 
-INSERT INTO yllapitokohteen_maaramuutokset (yllapitokohde, tyon_tyyppi, tyo,
+INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo,
 yksikko, tilattu_maara, toteutunut_maara, yksikkohinta, luoja)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'), 'ajoradan_paallyste'::maaramuutos_tyon_tyyppi,
 'Testityö', 'kg', 100, 120, 2, (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'));

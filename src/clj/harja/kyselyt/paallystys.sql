@@ -195,19 +195,19 @@ SELECT
   tilattu_maara,
   toteutunut_maara,
   yksikkohinta
-FROM yllapitokohteen_maaramuutokset
+FROM yllapitokohteen_maaramuutos
 WHERE id = :id
 AND (SELECT urakka FROM yllapitokohde WHERE id = :id) = :urakka;
 
 -- name: luo-yllapitokohteen-maaramuutos<!
-INSERT INTO yllapitokohteen_maaramuutokset (yllapitokohde, tyon_tyyppi, tyo,
+INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo,
 yksikko, tilattu_maara, toteutunut_maara, yksikkohinta, luoja)
-VALUES (:yllapitokohde, :tyon_tyyppi, :tyo,
+VALUES (:yllapitokohde, :tyon_tyyppi::maaramuutos_tyon_tyyppi, :tyo,
 :yksikko, :tilattu_maara, :toteutunut_maara, :yksikkohinta, :luoja);
 
 -- name: paivita-yllapitokohteen-maaramuutos<!
-UPDATE yllapitokohteen_maaramuutokset SET
-  tyon_tyyppi = :tyon_tyyppi,
+UPDATE yllapitokohteen_maaramuutos SET
+  tyon_tyyppi = :tyon_tyyppi::maaramuutos_tyon_tyyppi,
   tyo = :tyo,
   yksikko = :yksikko,
   tilattu_maara = :tilattu_maara,
@@ -219,7 +219,7 @@ WHERE id = :id
 AND (SELECT urakka FROM yllapitokohde WHERE id = :id) = :urakka;
 
 -- name: poista-yllapitokohteen-maaramuutos<!
-UPDATE yllapitokohteen_maaramuutokset SET
+UPDATE yllapitokohteen_maaramuutos SET
   poistettu = TRUE,
   muokattu = NOW(),
   muokkaaja = :kayttaja
