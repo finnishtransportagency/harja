@@ -1,5 +1,11 @@
 [
   {
+    "date": "2017-01-10",
+    "title": "Harja API: Uudet rajapinnat toteumien & tarkastusten poistamiselle",
+    "short": "",
+    "body": "Harja API:n kautta on jatkossa mahdollista poistaa ulkoisesta järjestelmästä kirjatut toteumat & tarkastukset. Tarkemmat tiedot löytyvät <a href=\"http://finnishtransportagency.github.io/harja/apidoc/api.html\">API-dokumentaatiosta</a>."
+  },
+  {
     "date": "2016-12-26",
     "title": "Harjan mobiili laadunseurantatyökalu - kuulumisia",
     "short": "",
