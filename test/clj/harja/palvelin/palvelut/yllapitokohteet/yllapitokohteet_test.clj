@@ -193,7 +193,7 @@
                                             LEFT JOIN yllapitokohde ON yllapitokohde.id = yllapitokohdeosa.yllapitokohde
                                             AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))
             kohdeosat-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
-                                               :urakan-yllapitokohdeosat
+                                               :yllapitokohteen-yllapitokohdeosat
                                                +kayttaja-jvh+ {:urakka-id urakka-id
                                                                :sopimus-id sopimus-id
                                                                :yllapitokohde-id yllapitokohde-id})

@@ -13,13 +13,7 @@ SELECT
   kaasuindeksi,
   lahetetty,
   lahetys_onnistunut          AS "lahetys-onnistunut",
-  lahetysvirhe,
-  ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
-  ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
-  ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
-  ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
-  ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
-  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
+  lahetysvirhe
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -198,3 +192,8 @@ ORDER BY k.luotu ASC;
 -- name: liita-kommentti<!
 -- Liittää päällystysilmoitukseen uuden kommentin
 INSERT INTO paallystysilmoitus_kommentti (paallystysilmoitus, kommentti) VALUES (:paallystysilmoitus, :kommentti);
+
+-- name: yllapitokohteella-paallystysilmoitus
+SELECT EXISTS(SELECT id
+              FROM paallystysilmoitus
+              WHERE paallystyskohde = :yllapitokohde);

@@ -49,7 +49,8 @@
             [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
-            [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as yllapitokohteet])
+            [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as yllapitokohteet]
+            [harja.kyselyt.paallystys :as paallystys-q])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -121,7 +122,7 @@
            :id (str id)})))))
 
 (defn- paivita-paallystyksen-aikataulu [db kayttaja kohde-id {:keys [aikataulu] :as data}]
-  (let [kohteella-paallystysilmoitus? (q-yllapitokohteet/onko-olemassa-paallystysilmoitus? db kohde-id)]
+  (let [kohteella-paallystysilmoitus? (paallystys-q/onko-olemassa-paallystysilmoitus? db kohde-id)]
     (q-yllapitokohteet/paivita-yllapitokohteen-paallystysaikataulu!
       db
       {:kohde_alku (json/aika-string->java-sql-date (:kohde-aloitettu aikataulu))
