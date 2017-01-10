@@ -335,9 +335,9 @@
   (when (and maaramuutos-id
              (not (neg? maaramuutos-id)))
     (let [maaramuutoksen-todellinen-urakka (:urakka (first (q/hae-maaramuutoksen-urakka db {:id maaramuutos-id})))]
-     (when (not= maaramuutoksen-todellinen-urakka urakka-id)
-       (throw (SecurityException. (str "Määrämuutos " maaramuutos-id " ei kuulu valittuun urakkaan "
-                                       urakka-id " vaan urakkaan " maaramuutoksen-todellinen-urakka)))))))
+      (when (not= maaramuutoksen-todellinen-urakka urakka-id)
+        (throw (SecurityException. (str "Määrämuutos " maaramuutos-id " ei kuulu valittuun urakkaan "
+                                        urakka-id " vaan urakkaan " maaramuutoksen-todellinen-urakka)))))))
 
 (def maaramuutoksen-tyon-tyyppi->kantaenum
   {:ajoradan-paallyste "ajoradan_paallyste"
@@ -360,7 +360,7 @@
   (jdbc/with-db-transaction [db db]
     (let [maaramuutokset (into []
                                (comp
-                                 (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->keyword %)))
+                                 (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->keyword (:tyyppi %))))
                                  (map #(konv/string-polusta->keyword % [:tyyppi])))
                                (q/hae-yllapitokohteen-maaramuutokset db {:id yllapitokohde-id
                                                                          :urakka urakka-id}))]
@@ -411,8 +411,8 @@
     (vaadi-maaramuutos-kuuluu-urakkaan db urakka-id (:id maaramuutos)))
 
   (jdbc/with-db-transaction [db db]
-    (let [maaramuutokset (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->kantaenum %))
-                                        maaramuutokset)]
+    (let [maaramuutokset (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->kantaenum (:tyyppi %)))
+                              maaramuutokset)]
       (yllapitokohteet/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
       (yha/lukitse-urakan-yha-sidonta db urakka-id)
       (luo-tai-paivita-maaramuukset db user {:yllapitokohde-id yllapitokohde-id
