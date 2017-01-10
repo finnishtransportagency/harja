@@ -83,13 +83,37 @@ lein figwheel
 </code>
 
 Harjan pitäisi olla käynnissä ja vastata osoitteesta localhost:8000
-
+  
 ### Kehitystyötä helpottavat työkalut
 
 - **migrate_test.sh** pystyttää testikannan uudelleen
 - **migrate_and_clean.sh** pystyttää molemmat tietokannat uudelleen tyhjästä
 - **unit.sh** ajaa testit ja näyttää tulokset kehittäjäystävällisessä muodossa
 - **deploy2.sh** Deployaa aktiivisen haaran testipalvelimelle testausta varten. Suorittaa testit ennen deployaamista.
+
+## Dokumentaatio
+### Tietokanta
+Tietokantataulut dokumentoimaan antamalla niille kommentti migraatiossa luonnin yhteydessä. Kommenttiin lisätään seuraavat asiat:
+- Mikä on taulun konsepti?
+- Miten asiaks ymmärtää nämä käsitteet?
+- Mikä on taulun olemassaolon syy?
+- Viittaukset käsitteellisellä tasolla muihin konsepteihin. Ei siis viitteiden kuvausta, vaan käsitteellisesti miksi viitteet ovat olemassa.
+- Mikäli tarpeen voi kuvata, mistä data syntyy.
+
+Tässä dokumentaatiossa käytetään domainkieltä eikä teknistä kuvausta. 
+
+Dokumentaatio tauluille lisätään repeatable migraatiossa: R__Dokumentaatio.sql. Tähän migraatioon lisätään kaikki uudet kommentit tauluille.
+
+Dokumentaatio voidaan lisätä kyselyllä: `COMMENT ON TABLE [TAULU] IS E'Rivi 1 \n Rivi 2'`
+ 
+Dokumentaation saa näkyviin esim. kyselyllä: `SELECT obj_description('public.[TAULU]' :: REGCLASS);`
+ 
+### Namespacet
+Jokaisen namespacen alkuun kirjataan seuraavat asiat:
+- Olemassa olon syy?
+- Listaus minkä domain-käsitteiden kanssa toimitaan tässä nimiavaruudessa.
+- Mitkä ovat pääpalvelut, jotka tämä nimiavaruus tarjoaa? Mistä kannattaa lähteä liikenteeseen?
+- Toistuvat käsitteet koodin kannalta, tärkeät keywordit.
 
 ## Tietokanta
 
