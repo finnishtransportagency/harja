@@ -36,11 +36,20 @@
   "Muodosta tuloksista karttataso.
   Kaikki, jotka ovat infopaneelissa avattuina, renderöidään valittuina."
   [{:keys [avatut-tulokset kaikki-tulokset valinnat] :as tienakyma}]
-  (assoc tienakyma
-         :tulokset-kartalla (esitettavat-asiat/kartalla-esitettavaan-muotoon
-                             (conj kaikki-tulokset (assoc (:sijainti valinnat)
-                                                          :tyyppi-kartalla :tr-osoite-indikaattori))
-                             (comp avatut-tulokset :idx))))
+  (let [valittu? (comp boolean avatut-tulokset :idx)
+        {valitut-tulokset true
+         muut-tulokset false} (group-by valittu? kaikki-tulokset)]
+    (assoc tienakyma
+           :valitut-tulokset-kartalla
+           (esitettavat-asiat/kartalla-esitettavaan-muotoon
+            (conj (vec valitut-tulokset) (assoc (:sijainti valinnat)
+                                                :tyyppi-kartalla :tr-osoite-indikaattori))
+            (constantly false))
+
+           :muut-tulokset-kartalla
+           (esitettavat-asiat/kartalla-esitettavaan-muotoon
+            muut-tulokset
+            (constantly false)))))
 
 (extend-protocol tuck/Event
   Nakymassa
@@ -104,8 +113,11 @@
            :tulokset nil
            :tulokset-kartalla nil)))
 
-(defonce tulokset-kartalla
-  (r/cursor tienakyma [:tulokset-kartalla]))
+(defonce muut-tulokset-kartalla
+  (r/cursor tienakyma [:muut-tulokset-kartalla]))
+
+(defonce valitut-tulokset-kartalla
+  (r/cursor tienakyma [:valitut-tulokset-kartalla]))
 
 (defonce karttataso-tienakyma
   (r/cursor tienakyma [:nakymassa?]))

@@ -51,7 +51,8 @@
     :nakyman-geometriat
     :tilannekuva
     :tilannekuva-organisaatiot
-    :tienakyma})
+    :tienakyma-valitut
+    :tienakyma-muut})
 
 (defn kartan-asioiden-z-indeksit [taso]
   (case taso
@@ -59,6 +60,7 @@
     :urakka 1
     :pohjavesialueet 2
     :sillat 3
+    :tienakyma-muut 3
     4))
 
 (def ^{:doc "Kartalle piirrettävien tasojen oletus-zindex. Urakat ja muut
@@ -174,7 +176,8 @@
    :nakyman-geometriat nakyman-geometriat
    :tilannekuva tilannekuva/tilannekuvan-asiat-kartalla
    :tilannekuva-organisaatiot tilannekuva/tilannekuvan-organisaatiot
-   :tienakyma tienakyma-tiedot/tulokset-kartalla})
+   :tienakyma-valitut tienakyma-tiedot/valitut-tulokset-kartalla
+   :tienakyma-muut tienakyma-tiedot/muut-tulokset-kartalla})
 
 (defn nakyvat-geometriat-z-indeksilla
   "Palauttaa valitun aiheen geometriat z-indeksilla jos geometrian taso on päällä."
@@ -215,7 +218,8 @@
       :paallystyskohteet (taso :paallystyskohteet)
       :paikkauskohteet (taso :paikkauskohteet)
       :tr-valitsin (taso :tr-valitsin (inc oletus-zindex))
-      :tienakyma (taso :tienakyma)
+      :tienakyma-valitut (taso :tienakyma-valitut)
+      :tienakyma-muut (taso :tienakyma-muut :tienakyma-muut 0.4)
       ;; Yksittäisen näkymän omat mahdolliset geometriat
       :nakyman-geometriat
       (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
@@ -244,7 +248,8 @@
    :tr-valitsin tierekisteri/karttataso-tr-alkuosoite
    :tilannekuva tilannekuva/karttataso-tilannekuva
    :tilannekuva-organisaatiot tilannekuva/karttataso-tilannekuva
-   :tienakyma tienakyma-tiedot/karttataso-tienakyma
+   :tienakyma-valitut tienakyma-tiedot/karttataso-tienakyma
+   :tienakyma-muut tienakyma-tiedot/karttataso-tienakyma
    :nakyman-geometriat (atom true)})
 
 (defonce nykyiset-karttatasot
