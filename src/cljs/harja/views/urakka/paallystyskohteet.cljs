@@ -28,7 +28,6 @@
 
 (defn paallystyskohteet [ur]
   (komp/luo
-    (komp/lippu paallystys/paallystyskohteet-nakymassa?)
     (fn [ur]
       [:div.paallystyskohteet
        [kartta/kartan-paikka]

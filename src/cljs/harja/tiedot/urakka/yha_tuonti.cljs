@@ -262,7 +262,7 @@
                  (pvm/pvm-aika kohdeluettelo-paivitetty)
                  "ei koskaan"))]))
 
-(defn laheta-kohteet-yhaan [oikeus urakka-id sopimus-id paallystysilmoitukset]
+(defn yha-lahetysnappi [oikeus urakka-id sopimus-id vuosi paallystysilmoitukset]
   (let [ilmoituksen-voi-lahettaa? (fn [paallystysilmoitus]
                                     (and (= :hyvaksytty (:paatos-tekninen-osa paallystysilmoitus))
                                          (= :hyvaksytty (:paatos-taloudellinen-osa paallystysilmoitus))
@@ -278,7 +278,11 @@
        #(do
          (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
          (reset! paallystys/kohteet-yha-lahetyksessa kohde-idt)
-         (k/post! :laheta-kohteet-yhaan {:urakka-id urakka-id :sopimus-id sopimus-id :kohde-idt kohde-idt}))
+         (k/post! :laheta-kohteet-yhaan {:urakka-id urakka-id
+                                         :sopimus-id
+                                         :sopimus-id
+                                         :kohde-idt kohde-idt
+                                         :vuosi vuosi}))
        {:luokka "nappi-grid nappi-ensisijainen"
         :disabled (or (not (empty? @paallystys/kohteet-yha-lahetyksessa))
                       (empty? kohde-idt)
