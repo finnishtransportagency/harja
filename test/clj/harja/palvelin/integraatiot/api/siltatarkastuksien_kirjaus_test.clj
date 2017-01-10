@@ -2,9 +2,11 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.siltatarkastukset :as api-siltatarkastukset]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log])
+  (:import (java.util Date)))
 
 (def kayttaja "destia")
 
@@ -128,3 +130,27 @@
     (let [siltatarkastus-kannassa (first (q (str "SELECT id, ulkoinen_id, tarkastaja, tarkastusaika FROM siltatarkastus WHERE ulkoinen_id = '" ulkoinen-id "';")))]
       (is (not (nil? siltatarkastus-kannassa)))
       (is (= (nth siltatarkastus-kannassa 2) (str tarkastaja-etunimi " " tarkastaja-sukunimi)))))))
+
+
+(deftest poista-siltatarkastus
+  (let [ulkoinen-id 787879
+        tarkastusaika "2016-02-01T12:00:00Z"
+        siltatunnus (first (second (hae-siltatunnukset)))
+        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
+                                                (-> "test/resurssit/api/siltatarkastus.json"
+                                                    slurp
+                                                    (.replace "__ID__" (str ulkoinen-id))
+                                                    (.replace "__ETUNIMI__" "Simo")
+                                                    (.replace "__SUKUNIMI__" "Sillantarkastaja")
+                                                    (.replace "__SILTATUNNUS__" (str siltatunnus))
+                                                    (.replace "__TARKASTUSAIKA__" tarkastusaika)))
+        siltatarkastus-kannassa-ennen-poistoa (first (q (str "SELECT id, ulkoinen_id, tarkastaja, tarkastusaika FROM siltatarkastus WHERE poistettu IS NOT TRUE AND ulkoinen_id = '" ulkoinen-id "';")))
+        vastaus-poisto (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/tarkastus/siltatarkastus"] kayttaja portti
+                                                (-> "test/resurssit/api/siltatarkastus-poisto.json"
+                                                    slurp
+                                                    (.replace "__ID__" (str ulkoinen-id))
+                                                    (.replace "__PVM__" (json-tyokalut/json-pvm (Date.)))))]
+    (is (not (nil? siltatarkastus-kannassa-ennen-poistoa)))
+    (is (= 200 (:status vastaus-poisto)))
+    (let [siltatarkastus-kannassa (first (q (str "SELECT id, ulkoinen_id, tarkastaja, tarkastusaika FROM siltatarkastus WHERE poistettu IS NOT TRUE AND ulkoinen_id = '" ulkoinen-id "';")))]
+      (is (nil? siltatarkastus-kannassa)))))
