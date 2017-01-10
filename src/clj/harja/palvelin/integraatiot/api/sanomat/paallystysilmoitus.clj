@@ -47,7 +47,7 @@
 (defn rakenna-tyot [paallystysilmoitus]
   (mapv (fn [tyo]
           {:tyo (:tyotehtava tyo)
-           :tyyppi (paallystysilmoitus/paallystystyontyyppi-avain-nimella (:tyyppi tyo))
+           :tyyppi (name (paallystysilmoitus/paallystystyon-tyypin-koodi-nimella (:tyyppi tyo)))
            :yksikko (:yksikko tyo)
            :yksikkohinta (:yksikkohinta tyo)
            :tilattu-maara (:tilattu-maara tyo)

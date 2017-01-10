@@ -488,8 +488,9 @@
          :nimi :tyyppi
          :tyyppi :valinta
          :valinta-arvo :koodi
+         :fmt pot/paallystystyon-tyypin-nimi-koodilla
          :valinta-nayta #(if % (:nimi %) "- Valitse työ -")
-         :valinnat pot/+paallystystyon-tyypit-lomakkeella+
+         :valinnat pot/+paallystystyon-tyypit+
          :leveys "30%" :validoi [[:ei-tyhja "Valitse tyyppi"]]}
         {:otsikko "Työ" :nimi :tyo :tyyppi :string :leveys "30%" :pituus-max 256
          :validoi [[:ei-tyhja "Anna työ"]]}

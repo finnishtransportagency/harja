@@ -198,8 +198,7 @@
 (defn verkon-sijainti-koodi-nimella [koodi]
   (:koodi (first (filter #(= koodi (:nimi %)) +verkon-sijainnit+))))
 
-;; Frontissa koodi on avain, kantaan menevässä datassa string
-(def +paallystystyon-tyypit-lomakkeella+
+(def +paallystystyon-tyypit+
   "Päällystystyön tyypit"
   [{:nimi "Ajoradan päällyste" :koodi :ajoradan-paallyste}
    {:nimi "Pienaluetyöt" :koodi :pienaluetyot}
@@ -207,20 +206,15 @@
    {:nimi "Jyrsinnät" :koodi :jyrsinnat}
    {:nimi "Muut" :koodi :muut}])
 
-(def +paallystystyon-tyypit+
-  "Päällystystyön tyypit"
-  [{:nimi "Ajoradan päällyste" :koodi "ajoradan-paallyste"}
-   {:nimi "Pienaluetyöt" :koodi "pienaluetyot"}
-   {:nimi "Tasaukset" :koodi "tasaukset"}
-   {:nimi "Jyrsinnät" :koodi "jyrsinnat"}
-   {:nimi "Muut" :koodi "muut"}])
+(defn paallystystyon-tyypin-koodi-nimella [nimi]
+  (:koodi (first (filter
+                   #(= nimi (:nimi %))
+                   +paallystystyon-tyypit+))))
 
-(def +paallystystyon-tyyppi+
-  "Päällystystyön valinta avaimella"
-  (apply s/enum (map :koodi +paallystystyon-tyypit+)))
-
-(defn paallystystyontyyppi-avain-nimella [koodi]
-  (:koodi (first (filter #(= koodi (:nimi %)) +paallystystyon-tyypit+))))
+(defn paallystystyon-tyypin-nimi-koodilla [koodi]
+  (:nimi (first (filter
+                  #(= koodi (:koodi %))
+                  +paallystystyon-tyypit+))))
 
 (def paallystysilmoitus-osoitteet
   [;; Linkki ylläpitokohdeosaan
