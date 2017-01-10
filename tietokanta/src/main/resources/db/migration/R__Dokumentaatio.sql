@@ -21,12 +21,22 @@ E'Välitavoite kuvaa urakkaan liittyvää tehtävää asiaa, joka pyritään saa
 
 Välitavoite liitetään urakkaan urakka-sarakkeen kautta. Jos urakka-sarakkeessa on tyhjä arvo, välitavoitetta ei ole sidottu tällöin mihinkään urakkaan, vaan kyseessä on ns. valtakunnallinen välitavoite.\n\n
 
-Valtakunnalliset välitavoitteet ovat välitavoitteita, jotka koskevat kaikkia tietyntyyppisiä urakoita ja niistä kopioidaan oma rivi tavoitetta koskeviin urakoihin. Urakkaan kopioidulla välitavoitteella on tieto siitä, mistä valtakunnallisesta välitavoitteesta kyseinen välitavoite on luotu. Valtakunnallinen välitavoite voi olla joko kertaluontoinen tai vuosittain toistuva, jolloin toisto-sarakkeet kertovat, minkä kuukauden päivänä välitavoite toistuu joka vuosi.
+Valtakunnalliset välitavoitteet ovat välitavoitteita, jotka koskevat kaikkia tietyntyyppisiä urakoita ja niistä kopioidaan oma rivi tavoitetta koskeviin urakoihin. Urakkaan kopioidulla välitavoitteella on tieto siitä, mistä valtakunnallisesta välitavoitteesta kyseinen välitavoite on luotu. Valtakunnallinen välitavoite voi olla joko kertaluontoinen tai vuosittain toistuva, jolloin toisto-sarakkeet kertovat, minkä kuukauden päivänä välitavoite toistuu joka vuosi.\n\n
 
 Tiemerkintäurakoissa valtakunnallisia välitavoitteita kutsutaan termillä "välitavoitepohja", mutta tietomallimielessä kyse on samasta asiasta.';
 
-COMMENT ON table muokkauslukko IS
+COMMENT ON TABLE muokkauslukko IS
 E'Muokkauslukko-taulua käytetään lukitsemaan jokin muokattava asia (esim. päällystysilmoitus), jotta useampi käyttäjä voi muokata samaa asiaa samaan aikaan. Muokkauslukolla on:\n
- - id (voi olla mikä tahansa mielivaltainen teksti, mutta nimessä kannattaisi olla muokattavan asian nimi ja sen yksilöivä id)
- - kayttaja (kertoo, kuka asian lukitsi)
+ - id (voi olla mikä tahansa mielivaltainen teksti, mutta nimessä kannattaisi olla muokattavan asian nimi ja sen yksilöivä id)\n
+ - kayttaja (kertoo, kuka asian lukitsi)\n
  - aikaleima (kertoo, milloin lukko on viimeksi virkistetty)';
+
+COMMENT ON TABLE raportti IS
+E'Raportti-taulu sisältää raportit, jotka voidaan suorittaa.\n\n
+
+  nimi                      Raportin keyword nimi, esim "laskutusyhteenveto"\n
+  kuvaus                    Raportin ihmisen luettava nimi, esim, "Laskutusyhteenveto"\n
+  konteksti                 kontekstit, jossa raportin voi suorittaa (ks. raporttiparametri-enum)\n
+  parametrit                Parametrit, joilla raportti voidaan suorittaa (ks. raporttiparametri-enum)\n
+  koodi                     Viittaus Clojure-koodiin, joka suorittaa raportin\n
+  urakkatyyppi              Array urakkatyyppejä, joille raportti voidaan suorittaa'
