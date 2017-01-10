@@ -339,6 +339,20 @@
        (throw (SecurityException. (str "Määrämuutos " maaramuutos-id " ei kuulu valittuun urakkaan "
                                        urakka-id " vaan urakkaan " maaramuutoksen-todellinen-urakka)))))))
 
+(def maaramuutoksen-tyon-tyyppi->kantaenum
+  {:ajoradan-paallyste "ajoradan_paallyste"
+   :pienaluetyot "pienaluetyot"
+   :tasaukset "tasaukset"
+   :jyrsinnat "jyrsinnat"
+   :muut "muut"})
+
+(def maaramuutoksen-tyon-tyyppi->keyword
+  {"ajoradan_paallyste" :ajoradan-paallyste
+   "pienaluetyot" :pienaluetyot
+   "tasaukset" :tasaukset
+   "jyrsinnat" :jyrsinnat
+   "muut" :muut})
+
 (defn hae-maaramuutokset
   [db user {:keys [yllapitokohde-id urakka-id]}]
   (log/debug "Aloitetaan määrämuutoksien haku")
@@ -346,6 +360,7 @@
   (jdbc/with-db-transaction [db db]
     (let [maaramuutokset (into []
                                (comp
+                                 (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->keyword %)))
                                  (map #(konv/string-polusta->keyword % [:tyyppi])))
                                (q/hae-yllapitokohteen-maaramuutokset db {:id yllapitokohde-id
                                                                          :urakka urakka-id}))]
@@ -396,13 +411,15 @@
     (vaadi-maaramuutos-kuuluu-urakkaan db urakka-id (:id maaramuutos)))
 
   (jdbc/with-db-transaction [db db]
-    (yllapitokohteet/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
-    (yha/lukitse-urakan-yha-sidonta db urakka-id)
-    (luo-tai-paivita-maaramuukset db user {:yllapitokohde-id yllapitokohde-id
-                                           :urakka-id urakka-id} maaramuutokset)
+    (let [maaramuutokset (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->kantaenum %))
+                                        maaramuutokset)]
+      (yllapitokohteet/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
+      (yha/lukitse-urakan-yha-sidonta db urakka-id)
+      (luo-tai-paivita-maaramuukset db user {:yllapitokohde-id yllapitokohde-id
+                                             :urakka-id urakka-id} maaramuutokset)
 
-    (hae-maaramuutokset db user {:yllapitokohde-id yllapitokohde-id
-                                 :urakka-id urakka-id})))
+      (hae-maaramuutokset db user {:yllapitokohde-id yllapitokohde-id
+                                   :urakka-id urakka-id}))))
 
 (defrecord Paallystys []
   component/Lifecycle
