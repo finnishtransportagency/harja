@@ -191,14 +191,12 @@
    lomakedata       Päällystys- tai paikkausilmoituksen lomakkeen tiedot"
   ([yllapitokohteet] (yllapitokohteet-kartalle yllapitokohteet nil))
   ([yllapitokohteet lomakedata]
-   (let [karttamuodossa (kartalla-esitettavaan-muotoon
+   (let [id #(or (:paallystyskohde-id %)
+                 (:paikkauskohde-id %)
+                 (:yllapitokohde-id %))
+         karttamuodossa (kartalla-esitettavaan-muotoon
                          yllapitokohteet
-                         (if lomakedata
-                           (assoc lomakedata :yllapitokohde-id (or (:paallystyskohde-id lomakedata)
-                                                                   (:paikkauskohde-id lomakedata)
-                                                                   (:yllapitokohde-id lomakedata)))
-                           lomakedata)
-                         :yllapitokohde-id
+                         #(= (id lomakedata) (id %))
                          (comp
                            (mapcat (fn [kohde]
                                      (keep (fn [kohdeosa]
