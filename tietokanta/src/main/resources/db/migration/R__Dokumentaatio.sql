@@ -13,7 +13,7 @@ E'Ylläpitokohdeosa (käytetään myös nimityksiä alikohde ja tierekisterikohd
 COMMENT ON TABLE tarkastusajo IS
 E'Tarkastusajo-tauluun tallentuu perustiedot Harjan laadunseurannan mobiilityökalulla aloitetusta tarkastusajosta, kuten ajon aloitus- ja lopetusaika.';
 
-COMMENT ON TABLE reittimerkinta IS
+COMMENT ON TABLE tarkastusreitti IS
 E'Reittimerkintä-tauluun tallennetaan Harjan laadunseurannan mobiilityökalulla kerättyä dataa. Jokainen rivi taulussa kuvaa yksittäistä joko työkalun itsensä automaattisesti tekemää merkintää tarkastusajon aikana tai käyttäjän tekemää syötettä. Yhteen ajoon saattaa liittyä tuhansia eri merkintöjä. Reittimerkintä on aina uniikki merkinnän id:n ja siihen liittyvän tarkastusajon id:n kanssa.';
 
 COMMENT ON TABLE valitavoite IS
