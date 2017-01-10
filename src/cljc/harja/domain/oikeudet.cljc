@@ -12,7 +12,9 @@
 (declare on-oikeus? on-muu-oikeus?)
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
-(def ^:dynamic *oikeustarkistus-tehty* nil)
+(def ^:dynamic *oikeustarkistus-tehty*
+  "Onko tämän pyynnön käsittelyssä tehty jokin oikeustarkistus? nil = ei olla kutsussa, false = ei vielä, true = on tehty"
+  nil)
 
 (defn merkitse-oikeustarkistus-tehdyksi! []
   (println "zzzz *oikeustarkistus-tehty* value:" *oikeustarkistus-tehty*)
