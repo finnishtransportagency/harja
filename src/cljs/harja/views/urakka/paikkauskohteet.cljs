@@ -27,7 +27,6 @@
 
 (defn paikkauskohteet [ur]
   (komp/luo
-    (komp/lippu paikkaus/paikkauskohteet-nakymassa?)
     (fn [ur]
       [:div.paikkauskohteet
        [kartta/kartan-paikka]

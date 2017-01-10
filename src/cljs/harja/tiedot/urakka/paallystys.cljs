@@ -16,17 +16,18 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
 
-(def paallystyskohteet-nakymassa? (atom false))
+(def kohdeluettelossa? (atom false))
 (def paallystysilmoitukset-nakymassa? (atom false))
+(def paallystysilmoitus-tallennettu-timestamp (atom nil))
 
 (defn hae-paallystysilmoitukset [urakka-id sopimus-id vuosi]
   (k/post! :urakan-paallystysilmoitukset {:urakka-id urakka-id
                                           :sopimus-id sopimus-id
                                           :vuosi vuosi}))
 
-(defn hae-paallystysilmoitus-paallystyskohteella [urakka-id paallystyskohde-id]
+(defn hae-paallystysilmoitus-paallystyskohteella [urakka-id yllapitokohde-id]
   (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:urakka-id urakka-id
-                                                           :paallystyskohde-id paallystyskohde-id}))
+                                                           :paallystyskohde-id yllapitokohde-id}))
 
 (defn tallenna-paallystysilmoitus! [urakka-id sopimus-id lomakedata]
   (k/post! :tallenna-paallystysilmoitus {:urakka-id urakka-id
@@ -50,7 +51,11 @@
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
-               nakymassa? @paallystyskohteet-nakymassa?]
+               ;; Päällystysilmoitus-lomakkeessa voidaan muokata kohdeosia, joten tarkkaillaan
+               ;; päällystysilmoituksen tallennusta. Jos tallennus tapahtuu, pitää kohteet
+               ;; hakea uudelleen.
+               paallystysilmoitus-tallennettu-timestamp @paallystysilmoitus-tallennettu-timestamp
+               nakymassa? @kohdeluettelossa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id vuosi))))
@@ -80,26 +85,11 @@
 
 (defonce paallystyskohteet-kartalla
   (reaction (let [taso @karttataso-paallystyskohteet
-                  kohderivit @yhan-paallystyskohteet
-                  ilmoitukset @paallystysilmoitukset
-                  avoin-paallystysilmoitus (:paallystyskohde-id @paallystysilmoitus-lomakedata)]
-              (when (and taso
-                         (or kohderivit ilmoitukset))
-                (kartalla-esitettavaan-muotoon
-                  (concat (map #(assoc % :paallystyskohde-id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
-                               kohderivit)
-                          ilmoitukset)
-                  @paallystysilmoitus-lomakedata
-                  [:paallystyskohde-id]
-                  (comp
-                    (mapcat (fn [kohde]
-                              (keep (fn [kohdeosa]
-                                      (assoc (merge kohdeosa
-                                                    (dissoc kohde :kohdeosat))
-                                        :avoin? (= (:paallystyskohde-id kohde) avoin-paallystysilmoitus)
-                                        :kohdeosa kohdeosa))
-                                    (:kohdeosat kohde))))
-                    (keep #(and (:sijainti %) %))
-                    (map #(assoc % :tyyppi-kartalla :paallystys))))))))
+                  paallystyskohteet @yhan-paallystyskohteet
+                  lomakedata @paallystysilmoitus-lomakedata]
+              (when (and taso paallystyskohteet)
+                (yllapitokohteet/yllapitokohteet-kartalle
+                  paallystyskohteet
+                  lomakedata)))))
 
 (defonce kohteet-yha-lahetyksessa (atom nil))

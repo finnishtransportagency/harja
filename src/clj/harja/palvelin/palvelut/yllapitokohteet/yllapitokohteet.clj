@@ -32,10 +32,12 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.kyselyt.paallystys :as paallystys-q]
+            [harja.kyselyt.paikkaus :as paikkaus-q]
             [harja.palvelin.palvelut.tierek-haku :as tr-haku]
             [clj-time.coerce :as c]
             [clj-time.coerce :as c]
-            [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta])
+            [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
+            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q])
   (:use org.httpkit.fake))
 
 (defn- tarkista-urakkatyypin-mukainen-kirjoitusoikeus [db user urakka-id]
@@ -71,8 +73,8 @@
                                       urakka-id " vaan urakkaan " kohteen-urakka
                                       ", eikä valittu urakka myöskään ole kohteen suorittava tiemerkintäurakka"))))))
 
-(defn- laske-osien-pituudet
-  "Hakee tieverkosta osien pituudet tielle"
+(defn laske-osien-pituudet
+  "Hakee tieverkosta osien pituudet tielle. Palauttaa pituuden metreina."
   [db yllapitokohteet]
   (fmap
     (fn [osat]
@@ -100,13 +102,7 @@
                           (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
                           (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
                           (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
-                          (map #(assoc % :kohdeosat
-                                         (into []
-                                               paallystys-q/kohdeosa-xf
-                                               (q/hae-urakan-yllapitokohteen-yllapitokohdeosat
-                                                 db {:urakka urakka-id
-                                                     :sopimus sopimus-id
-                                                     :yllapitokohde (:id %)})))))
+                          (map #(yllapitokohteet-q/liita-kohdeosat db % (:id %))))
                         (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
                                                                      :sopimus sopimus-id
                                                                      :vuosi vuosi}))
@@ -126,14 +122,13 @@
       (log/debug "Ylläpitokohteet saatu: " (count vastaus) " kpl")
       vastaus)))
 
-(defn hae-urakan-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id yllapitokohde-id]}]
-  (log/debug "Haetaan urakan ylläpitokohdeosat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", yllapitokohde-id: " yllapitokohde-id)
+(defn hae-yllapitokohteen-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id yllapitokohde-id]}]
+  (log/debug "Haetaan ylläpitokohteen ylläpitokohdeosat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", yllapitokohde-id: " yllapitokohde-id)
   (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
+  (vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (let [vastaus (into []
-                      paallystys-q/kohdeosa-xf
-                      (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db {:urakka urakka-id
-                                                                          :sopimus sopimus-id
-                                                                          :yllapitokohde yllapitokohde-id}))]
+                      yllapitokohteet-q/kohdeosa-xf
+                      (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db {:yllapitokohde yllapitokohde-id}))]
     (log/debug "Ylläpitokohdeosat saatu: " (pr-str vastaus))
     vastaus))
 
@@ -353,8 +348,8 @@
                                       keskimaarainen-vuorokausiliikenne poistettu]}]
   (if poistettu
     (do (log/debug "Tarkistetaan onko ylläpitokohteella ilmoituksia")
-        (let [paallystysilmoitus (q/onko-olemassa-paallystysilmoitus? db id)
-              paikkausilmoitus (q/onko-olemassa-paikkausilmioitus? db id)]
+        (let [paallystysilmoitus (paallystys-q/onko-olemassa-paallystysilmoitus? db id)
+              paikkausilmoitus (paikkaus-q/onko-olemassa-paikkausilmioitus? db id)]
           (log/debug "Vastaus päällystysilmoitus: " paallystysilmoitus)
           (log/debug "Vastaus paikkausilmoitus: " paikkausilmoitus)
           (if (or paallystysilmoitus paikkausilmoitus)
@@ -446,10 +441,10 @@
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
 
     (log/debug "SAIN OSAT: " osat)
-    (let [hae-osat #(hae-urakan-yllapitokohdeosat c user
-                                                  {:urakka-id urakka-id
-                                                   :sopimus-id sopimus-id
-                                                   :yllapitokohde-id yllapitokohde-id})
+    (let [hae-osat #(hae-yllapitokohteen-yllapitokohdeosat c user
+                                                           {:urakka-id urakka-id
+                                                            :sopimus-id sopimus-id
+                                                            :yllapitokohde-id yllapitokohde-id})
           vanhat-osa-idt (into #{}
                                (map :id)
                                (hae-osat))
@@ -486,9 +481,9 @@
       (julkaise-palvelu http :urakan-yllapitokohteet-lomakkeelle
                         (fn [user tiedot]
                           (hae-urakan-yllapitokohteet-lomakkeelle db user tiedot)))
-      (julkaise-palvelu http :urakan-yllapitokohdeosat
+      (julkaise-palvelu http :yllapitokohteen-yllapitokohdeosat
                         (fn [user tiedot]
-                          (hae-urakan-yllapitokohdeosat db user tiedot)))
+                          (hae-yllapitokohteen-yllapitokohdeosat db user tiedot)))
       (julkaise-palvelu http :tallenna-yllapitokohteet
                         (fn [user tiedot]
                           (tallenna-yllapitokohteet db user tiedot)))
@@ -519,7 +514,7 @@
     (poista-palvelut
       (:http-palvelin this)
       :urakan-yllapitokohteet
-      :urakan-yllapitokohdeosat
+      :yllapitokohteen-yllapitokohdeosat
       :tallenna-yllapitokohteet
       :tallenna-yllapitokohdeosat
       :hae-aikataulut
