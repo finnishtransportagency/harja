@@ -15,7 +15,7 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
 
-(defonce paikkauskohteet-nakymassa? (atom false))
+(defonce kohdeluettelossa? (atom false))
 (defonce paikkausilmoitukset-nakymassa? (atom false))
 
 (defn hae-paikkausilmoitukset [urakka-id sopimus-id vuosi]
@@ -53,7 +53,7 @@
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
-               nakymassa? @paikkauskohteet-nakymassa?]
+               nakymassa? @kohdeluettelossa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id vuosi))))
@@ -65,25 +65,10 @@
                                               kohteet)))))
 
 (defonce paikkauskohteet-kartalla
-  (reaction
-   (let [taso @karttataso-paikkauskohteet
-         kohderivit @paikkauskohteet
-         toteumarivit @paikkausilmoitukset
-         avoin-paikkausilmoitus (:paikkauskohde-id @paikkausilmoitus-lomakedata)]
-     (when (and taso
-                (or kohderivit toteumarivit))
-       (kartalla-esitettavaan-muotoon
-        (concat (map #(assoc % :paikkauskohde-id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
-                     kohderivit)
-                toteumarivit)
-        #(= avoin-paikkausilmoitus (:paikkauskohde-id %))
-        (comp
-         (mapcat (fn [kohde]
-                   (keep (fn [kohdeosa]
-                           (assoc (merge kohdeosa
-                                         (dissoc kohde :kohdeosat))
-                                  :avoin? (= (:paikkauskohde-id kohde) avoin-paikkausilmoitus)
-                                  :kohdeosa kohdeosa))
-                         (:kohdeosat kohde))))
-         (keep #(and (:sijainti %) %))
-         (map #(assoc % :tyyppi-kartalla :paikkaus))))))))
+  (reaction (let [taso @karttataso-paikkauskohteet
+                  paikkauskohteet @paikkauskohteet
+                  lomakedata @paikkausilmoitus-lomakedata]
+              (when (and taso paikkauskohteet)
+                (yllapitokohteet/yllapitokohteet-kartalle
+                  paikkauskohteet
+                  lomakedata)))))

@@ -23,15 +23,12 @@
   (let [vastaus (into []
                       (comp
                         (map #(konv/string-poluista->keyword % [[:tila] [:paatos]]))
-                        (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
-                        (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
+                        (map #(yllapitokohteet-q/liita-kohdeosat db % (:paikkauskohde-id %)))
                         (map #(assoc % :kohdeosat
                                        (into []
-                                             paallystys-q/kohdeosa-xf
+                                             yllapitokohteet-q/kohdeosa-xf
                                              (yllapitokohteet-q/hae-urakan-yllapitokohteen-yllapitokohdeosat
-                                               db {:urakka urakka-id
-                                                   :sopimus sopimus-id
-                                                   :yllapitokohde (:paikkauskohde-id %)})))))
+                                               db {:yllapitokohde (:paikkauskohde-id %)})))))
                       (q/hae-urakan-paikkausilmoitukset db urakka-id sopimus-id vuosi))]
     (log/debug "Paikkaustoteumat saatu: " (pr-str (map :nimi vastaus)))
     vastaus))
