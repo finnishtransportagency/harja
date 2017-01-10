@@ -39,4 +39,4 @@ E'Raportti-taulu sisältää raportit, jotka voidaan suorittaa.\n\n
   konteksti                 kontekstit, jossa raportin voi suorittaa (ks. raporttiparametri-enum)\n
   parametrit                Parametrit, joilla raportti voidaan suorittaa (ks. raporttiparametri-enum)\n
   koodi                     Viittaus Clojure-koodiin, joka suorittaa raportin\n
-  urakkatyyppi              Array urakkatyyppejä, joille raportti voidaan suorittaa'
+  urakkatyyppi              Array urakkatyyppejä, joille raportti voidaan suorittaa';
