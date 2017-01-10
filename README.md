@@ -83,6 +83,13 @@ lein figwheel
 </code>
 
 Harjan pitäisi olla käynnissä ja vastata osoitteesta localhost:8000
+  
+### Kehitystyötä helpottavat työkalut
+
+- **migrate_test.sh** pystyttää testikannan uudelleen
+- **migrate_and_clean.sh** pystyttää molemmat tietokannat uudelleen tyhjästä
+- **unit.sh** ajaa testit ja näyttää tulokset kehittäjäystävällisessä muodossa
+- **deploy2.sh** Deployaa aktiivisen haaran testipalvelimelle testausta varten. Suorittaa testit ennen deployaamista.
 
 ## Dokumentaatio
 ### Tietokanta
@@ -106,17 +113,7 @@ Jokaisen namespacen alkuun kirjataan seuraavat asiat:
 - Olemassa olon syy?
 - Listaus minkä domain-käsitteiden kanssa toimitaan tässä nimiavaruudessa.
 - Mitkä ovat pääpalvelut, jotka tämä nimiavaruus tarjoaa? Mistä kannattaa lähteä liikenteeseen?
-- Toistuvat käsitteet koodin kannalta, tärkeät keywordit,
-
-
-
-  
-### Kehitystyötä helpottavat työkalut
-
-- **migrate_test.sh** pystyttää testikannan uudelleen
-- **migrate_and_clean.sh** pystyttää molemmat tietokannat uudelleen tyhjästä
-- **unit.sh** ajaa testit ja näyttää tulokset kehittäjäystävällisessä muodossa
-- **deploy2.sh** Deployaa aktiivisen haaran testipalvelimelle testausta varten. Suorittaa testit ennen deployaamista.
+- Toistuvat käsitteet koodin kannalta, tärkeät keywordit.
 
 ## Tietokanta
 
