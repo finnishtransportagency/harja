@@ -166,8 +166,8 @@
                            (str/join ", " (map turvallisuuspoikkeama-tyyppi (:tyyppi %)))
                            (or (turpodomain/turpo-vakavuusasteet (:vakavuusaste %)) "")
                            (or (turpodomain/kuvaile-tyontekijan-ammatti %) "")
-                           (or (:sairaalavuorokaudet %) nil)
-                           (or (:sairauspoissaolopaivat %) nil))
+                           (or (:sairaalavuorokaudet %) "")
+                           (or (:sairauspoissaolopaivat %) ""))
 
                     (sort-by :tapahtunut #(t/after? (c/from-sql-time %1)
                                                     (c/from-sql-time %2)) turpot))
