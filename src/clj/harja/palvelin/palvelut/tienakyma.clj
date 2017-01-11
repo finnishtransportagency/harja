@@ -28,7 +28,8 @@
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
             [harja.kyselyt.tienakyma :as q]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.palvelin.palvelut.tilannekuva :as tilannekuva]))
 
 (defonce debug-hakuparametrit (atom nil))
 
@@ -61,9 +62,6 @@
     :reittipiste :reittipisteet}
    :id (constantly true)))
 
-(defn- hae-tyokoneet [db parametrit]
-  ;; FIXME: implement
-  [])
 
 (defn- hae-tarkastukset [db parametrit]
   (into []
@@ -75,11 +73,19 @@
   ;; FIXME: implement
   [])
 
+(defn- hae-ilmoitukset [db parametrit]
+  (konv/sarakkeet-vektoriin
+   (into []
+         (comp tilannekuva/ilmoitus-xf
+               (map #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))))
+         (q/hae-ilmoitukset db parametrit))
+   {:kuittaus :kuittaukset}))
+
 (def ^{:private true
        :doc "Määrittelee kaikki kyselyt mitä tienäkymään voi hakea"}
   tienakyma-haut
   {:toteumat #'hae-toteumat
-   :tyokoneet #'hae-tyokoneet
+   :ilmoitukset #'hae-ilmoitukset
    :tarkastukset #'hae-tarkastukset
    :turvallisuuspoikkeamat #'hae-turvallisuuspoikkeamat})
 
