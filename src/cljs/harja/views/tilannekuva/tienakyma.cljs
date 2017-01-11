@@ -58,7 +58,9 @@
    [infopaneeli/infopaneeli-komponentti
     tulokset (comp avatut-tulokset :idx :data)
     #(e! (tiedot/->AvaaTaiSuljeTulos (:idx (:data %))))
-    #(e! (tiedot/->SuljeInfopaneeli)) {}]))
+    #(e! (tiedot/->SuljeInfopaneeli))
+    {:toteuma {:teksti "Tarkastele toteumanäkymässä"
+               :toiminto #(log "hehe, ei täältä sinne pääse")}}]))
 
 (defn- tulospaneeli [e! tulokset avatut-tulokset]
   (komp/luo
