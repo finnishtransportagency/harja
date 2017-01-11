@@ -71,6 +71,7 @@
                 (hae-toteumatehtavien-paivakohtaiset-summat
                   (kasaa-hakuparametrit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava)))))
 
+(def avatut-toteumat (atom #{}))
 
 (def karttataso-kokonaishintainen-toteuma (atom false))
 
@@ -146,3 +147,9 @@
 
 (defn toteuman-tallennus-onnistui [tulos]
   (reset! haetut-toteumat tulos))
+
+(defn avaa-toteuma! [pvm tpk jarjestelmanlisaama?]
+  (swap! avatut-toteumat conj [pvm tpk jarjestelmanlisaama?]))
+
+(defn sulje-toteuma! [pvm tpk jarjestelmanlisaama?]
+  (swap! avatut-toteumat disj [pvm tpk jarjestelmanlisaama?]))

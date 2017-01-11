@@ -23,7 +23,8 @@
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka.toteumat :as toteumat]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
@@ -57,7 +58,7 @@
                           (ikonit/eye-open) " Toteuma"]])}]
        (sort-by :alkanut @tiedot)])))
 
-(defn tee-taulukko []
+(defn taulukko []
   (let [toteumat @tiedot/haetut-toteumat
         tunniste (juxt :pvm :toimenpidekoodi :jarjestelmanlisaama)]
     [:span
@@ -65,13 +66,14 @@
       {:otsikko                   "Kokonaishintaisten töiden toteumat"
        :tyhja                     (if @tiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])
        :rivi-klikattu             #(do
-                                    (nav/vaihda-kartan-koko! :L)
-                                    (reset! tiedot/valittu-paivakohtainen-tehtava %))
+                                     (nav/vaihda-kartan-koko! :L)
+                                     (reset! tiedot/valittu-paivakohtainen-tehtava %))
        :rivi-valinta-peruttu      #(do (reset! tiedot/valittu-paivakohtainen-tehtava nil))
        :mahdollista-rivin-valinta true
        :max-rivimaara 500
        :max-rivimaaran-ylitys-viesti "Toteumia löytyi yli 500. Tarkenna hakurajausta."
        :tunniste tunniste
+       :vetolaatikot-auki tiedot/avatut-toteumat
        :vetolaatikot (into {}
                            (map (juxt
                                  tunniste
@@ -87,8 +89,7 @@
        {:otsikko "Lähde" :nimi :lahde :hae #(if (:jarjestelmanlisaama %) "Urak. järj." "Harja") :tyyppi :string :leveys 3}]
       toteumat]]))
 
-(defn tee-valinnat []
-  [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide @nav/valittu-urakka]
+(defn valinnat []
   (let [urakka @nav/valittu-urakka]
     [:span
      (urakka-valinnat/urakan-sopimus urakka)
@@ -101,7 +102,7 @@
   "Kokonaishintaisten töiden toteumat"
   []
   [:div
-   (tee-valinnat)
+   [valinnat]
    (let [oikeus? (oikeudet/voi-kirjoittaa?
                   oikeudet/urakat-toteumat-kokonaishintaisettyot
                   (:id @nav/valittu-urakka))]
@@ -113,7 +114,7 @@
       [napit/uusi "Lisää toteuma" #(reset! tiedot/valittu-kokonaishintainen-toteuma
                                            (tiedot/uusi-kokonaishintainen-toteuma))
        {:disabled (not oikeus?)}]))
-   (tee-taulukko)
+   [taulukko]
    [yleiset/vihje "Näet työn kartalla klikkaamalla riviä."]])
 
 (defn kokonaishintainen-toteuma-lomake []
