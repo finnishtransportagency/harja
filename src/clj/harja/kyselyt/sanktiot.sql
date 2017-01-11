@@ -134,3 +134,9 @@ FROM sanktiotyyppi
 SELECT id, nimi, sanktiolaji, urakkatyyppi
   FROM sanktiotyyppi
  WHERE urakkatyyppi @> ARRAY[:urakkatyyppi::urakkatyyppi]
+
+--name: hae-sanktiotyyppi-sanktiolajilla
+-- single?: true
+SELECT id
+  FROM sanktiotyyppi
+ WHERE sanktiolaji @> ARRAY[:sanktiolaji::sanktiolaji]

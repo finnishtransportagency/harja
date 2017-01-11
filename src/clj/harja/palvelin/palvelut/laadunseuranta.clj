@@ -123,14 +123,19 @@
   (log/debug "LAJI ON: " (pr-str laji))
   (let [params {:perintapvm (konv/sql-timestamp perintapvm)
                 :ryhma (when laji (name laji))
-                :tyyppi (:id tyyppi)
+                ;; hoitourakassa sanktiotyyppi valitaan kälistä, ylläpidosta päätellään implisiittisesti
+                :tyyppi (if (:id tyyppi)
+                          (:id tyyppi)
+                          (when laji
+                            (sanktiot/hae-sanktiotyyppi-sanktiolajilla db {:sanktiolaji (name laji)})))
                 :vakiofraasi (when vakiofraasi (name vakiofraasi))
                 :tpi_id toimenpideinstanssi
                 :urakka urakka
-                ;; bonukselle miinus etumerkiksi
-                :summa (if (= :yllapidon_bonus laji)
-                         (- (Math/abs summa))
-                         (Math/abs summa))
+                ;; bonukselle miinus etumerkiksi, muistutuksen summa on kuitenkin nil
+                :summa (when summa
+                         (if (= :yllapidon_bonus laji)
+                           (- (Math/abs summa))
+                           (Math/abs summa)))
                 :indeksi indeksi
                 :laatupoikkeama laatupoikkeama
                 :suorasanktio (or suorasanktio false)
