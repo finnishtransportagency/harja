@@ -98,7 +98,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
          :ohjaus g
          :voi-muokata? paatosoikeus?
          :uusi-rivi (fn [rivi]
-                      (assoc rivi :laji :A
+                      (assoc rivi :laji (if (= :hoito (:nakyma optiot))
+                                          :A
+                                          :yllapidon_sakko)
                                   :toimenpideinstanssi (when (= 1 (count urakan-tpit))
                                                          (:tpi_id (first urakan-tpit)))))}
 

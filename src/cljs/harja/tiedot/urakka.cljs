@@ -402,7 +402,8 @@
 (def urakkatyypin-sanktiolajit
   (reaction<! [urakka @nav/valittu-urakka
                sivu (nav/valittu-valilehti :laadunseuranta)]
-              (when (and urakka (= :sanktiot sivu))
+              (when (and urakka (or (= :laatupoikkeamat sivu)
+                                    (= :sanktiot sivu)))
                 (go
                   (<! (k/post! :hae-urakkatyypin-sanktiolajit {:urakka-id (:id urakka)
                                                                :urakkatyyppi (:tyyppi urakka)}))))))
