@@ -1,29 +1,10 @@
--- Irrota päällystyslomakkeen määrämuutokset omaan tauluun
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'poista-tiestotarkastus');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'poista-talvihoitotarkastus');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'poista-soratietarkastus');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'poista-siltatarkastus');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'poista-reittitoteuma');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'poista-pistetoteuma');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'poista-varustetoteuma');
 
-CREATE TYPE maaramuutos_tyon_tyyppi AS ENUM ('ajoradan_paallyste', 'pienaluetyot', 'tasaukset', 'jyrsinnat',
-                                              'muut');
 
-CREATE TABLE yllapitokohteen_maaramuutos (
-  id serial PRIMARY KEY,
-  yllapitokohde INTEGER REFERENCES yllapitokohde (id) NOT NULL,
-  tyon_tyyppi maaramuutos_tyon_tyyppi NOT NULL,
-  tyo VARCHAR(256) NOT NULL,
-  yksikko VARCHAR(32) NOT NULL,
-  tilattu_maara NUMERIC NOT NULL,
-  toteutunut_maara NUMERIC NOT NULL,
-  yksikkohinta NUMERIC NOT NULL,
-  poistettu boolean DEFAULT FALSE NOT NULL,
-  luoja INTEGER REFERENCES kayttaja (id) NOT NULL,
-  luotu TIMESTAMP DEFAULT NOW()  NOT NULL,
-  muokkaaja INTEGER REFERENCES kayttaja (id),
-  muokattu TIMESTAMP
-);
-
-ALTER TABLE paallystysilmoitus DROP COLUMN muutoshinta; -- Lasketaan jatkossa yllä olevasta taulusta
-ALTER TABLE paallystysilmoitus DROP COLUMN paatos_taloudellinen_osa; -- Hinnanmuutosten hyväksyminen jää pois (HAR-4090)
-ALTER TABLE paallystysilmoitus DROP COLUMN perustelu_taloudellinen_osa;
-ALTER TABLE paallystysilmoitus DROP COLUMN kasittelyaika_taloudellinen_osa;
-ALTER TABLE paallystysilmoitus DROP COLUMN asiatarkastus_taloudellinen_osa;
-
--- FIXME TÄSSÄ VAIHEESSA NYKYISTEN POTTIEN ilmoitustiedot-SARAKKEESEEN JÄÄ VANHANMALLINEN JSON, JOSSA
--- TALOUSOSA MUKANA. MITEN MIGRATOIDAAN ilmoitustiedot-JSON->yllapito_maaramuutokset?
+ALTER TABLE tarkastus ADD COLUMN poistettu boolean default false;
