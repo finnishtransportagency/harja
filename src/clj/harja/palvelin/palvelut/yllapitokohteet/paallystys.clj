@@ -95,26 +95,24 @@
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
         paallystysilmoitus (lisaa-paallystysilmoitukseen-kohdeosien-tiedot paallystysilmoitus)
-
         kokonaishinta (reduce + (keep paallystysilmoitus [:sopimuksen-mukaiset-tyot
                                                           :arvonvahennykset
                                                           :bitumi-indeksi
-                                                          :kaasuindeksi]))]
+                                                          :kaasuindeksi]))
+        kommentit (into []
+                        (comp (map konv/alaviiva->rakenne)
+                              (map (fn [{:keys [liite] :as kommentti}]
+                                     (if (:id
+                                           liite)
+                                       kommentti
+                                       (dissoc kommentti :liite)))))
+                        (q/hae-paallystysilmoituksen-kommentit db {:id (:id paallystysilmoitus)}))
+        paallystysilmoitus (assoc paallystysilmoitus
+                             :kokonaishinta kokonaishinta
+                             :paallystyskohde-id paallystyskohde-id
+                             :kommentit kommentit)]
     (log/debug "Päällystysilmoitus kasattu: " (pr-str paallystysilmoitus))
-    (log/debug "Haetaan kommentit...")
-    (let [kommentit (into []
-                          (comp (map konv/alaviiva->rakenne)
-                                (map (fn [{:keys [liite] :as kommentti}]
-                                       (if (:id
-                                             liite)
-                                         kommentti
-                                         (dissoc kommentti :liite)))))
-                          (q/hae-paallystysilmoituksen-kommentit db {:id (:id paallystysilmoitus)}))]
-      (log/debug "Kommentit saatu: " kommentit)
-      (assoc paallystysilmoitus
-        :kokonaishinta kokonaishinta
-        :paallystyskohde-id paallystyskohde-id
-        :kommentit kommentit))))
+    paallystysilmoitus))
 
 
 (defn- poista-ilmoitustiedoista-tieosoitteet
@@ -264,7 +262,10 @@
       (q/liita-kommentti<! db {:paallystysilmoitus paallystysilmoitus-id
                                :kommentti (:id kommentti)}))))
 
-(defn- lisaa-paallystysilmoitukseen-kohdeosien-idt [paallystysilmoitus paivitetyt-kohdeosat]
+(defn- lisaa-paallystysilmoitukseen-kohdeosien-idt
+  "Liittää päällystysilmoituksen osoitetietoihin vastaavan
+   ylläpitokohdeosan id:n."
+  [paallystysilmoitus paivitetyt-kohdeosat]
   (assert (not (empty? paivitetyt-kohdeosat)) "Ei voida liittää päällystysilmoitukseen tyhjiä kohdeosia")
   (-> paallystysilmoitus
       (assoc-in [:ilmoitustiedot :osoitteet]
@@ -289,7 +290,9 @@
   "Tallentaa päällystysilmoituksen tiedot kantaan.
 
   Päällystysilmoituksen kohdeosien tietoja ei tallenneta itse ilmoitukseen, vaan ne tallennetaan
-  yllapitokohdeosa-tauluun."
+  yllapitokohdeosa-tauluun.
+
+  Lopuksi palauttaa päällystysilmoitukset kannasta."
   [db user {:keys [urakka-id sopimus-id paallystysilmoitus]}]
   (log/debug "Tallennetaan päällystysilmoitus: " paallystysilmoitus
              ". Urakka-id " urakka-id
@@ -327,11 +330,8 @@
 
         (tallenna-paallystysilmoituksen-kommentti db user paallystysilmoitus paallystysilmoitus-id)
 
-        ;; FIXME: haun voisi irrottaa erilleen
         (let [uudet-ilmoitukset (hae-urakan-paallystysilmoitukset c user {:urakka-id urakka-id
                                                                           :sopimus-id sopimus-id})]
-          (log/debug "Tallennus tehty, palautetaan uudet päällystysilmoitukset: "
-                     (count uudet-ilmoitukset) " kpl")
           uudet-ilmoitukset)))))
 
 (defn vaadi-maaramuutos-kuuluu-urakkaan [db urakka-id maaramuutos-id]
