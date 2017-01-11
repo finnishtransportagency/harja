@@ -57,8 +57,9 @@
                (geo/muunna-pg-tulokset :reitti)
                (map #(assoc % :tyyppi-kartalla :toteuma)))
          (q/hae-toteumat db parametrit))
-   {:tehtava :tehtavat}
-   :id :toimenpide))
+   {:tehtava :tehtavat
+    :reittipiste :reittipisteet}
+   :id (constantly true)))
 
 (defn- hae-tyokoneet [db parametrit]
   ;; FIXME: implement

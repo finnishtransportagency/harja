@@ -5,10 +5,13 @@ SELECT t.id,
        t.reitti,
        t.alkanut, t.paattynyt,
        tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
-       tpk.nimi AS tehtava_toimenpide
+       tpk.nimi AS tehtava_toimenpide,
+       rp.sijainti AS reittipiste_sijainti,
+       rp.aika AS reittipiste_aika
   FROM toteuma t
   JOIN toteuma_tehtava tt ON tt.toteuma = t.id
   JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+  JOIN reittipiste rp ON t.id = rp.toteuma
  WHERE ST_Intersects(t.reitti, :sijainti)
    AND ((t.alkanut BETWEEN :alku AND :loppu) OR
         (t.paattynyt BETWEEN :alku AND :loppu))

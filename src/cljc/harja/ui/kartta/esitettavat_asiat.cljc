@@ -530,6 +530,18 @@
                                {:type :line
                                 :points (viiva loppu-ang loppu-x loppu-y)}]})))
 
+(defmethod asia-kartalle :reittipisteet [{pisteet :reittipisteet :as toteuma} valittu?]
+  ;; Näyttää toteuman reittipisteet palloina
+  (let [[viivat _] (tehtavan-viivat-ja-nuolitiedosto
+                    (map :toimenpide (:tehtavat toteuma)) valittu?)
+        vari (last (viivojen-varit-leveimmasta-kapeimpaan viivat))]
+    {:type :reittipisteet
+     :alue {:type :geometry-collection
+            :circle {:fill vari :radius 8
+                     :stroke "black"}
+            :geometries (mapv :sijainti
+                              pisteet)}}))
+
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
   (if tyyppi
     (warn "Kartan :tyyppi-kartalla ei ole tuettu: " (str tyyppi))

@@ -13,7 +13,7 @@
 
 ;; Feature fläg, jolla tienäkymä on pois käytöstä.
 ;; Testailua varten, sen voi kytkeä JS konsolissa päälle.
-(defonce tienakyma-kaytossa? (atom false))
+(defonce tienakyma-kaytossa? (atom true))
 (defn ^:export tienakyma-paalle []
   (reset! tienakyma-kaytossa? true))
 
@@ -42,8 +42,11 @@
     (assoc tienakyma
            :valitut-tulokset-kartalla
            (esitettavat-asiat/kartalla-esitettavaan-muotoon
-            (conj (vec valitut-tulokset) (assoc (:sijainti valinnat)
-                                                :tyyppi-kartalla :tr-osoite-indikaattori))
+            (concat valitut-tulokset
+                    (map #(assoc % :tyyppi-kartalla :reittipisteet)
+                         (filter #(= (:tyyppi-kartalla %) :toteuma) valitut-tulokset))
+                    [(assoc (:sijainti valinnat)
+                            :tyyppi-kartalla :tr-osoite-indikaattori)])
             (constantly false))
 
            :muut-tulokset-kartalla
