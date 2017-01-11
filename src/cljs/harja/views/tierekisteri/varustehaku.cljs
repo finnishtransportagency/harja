@@ -12,7 +12,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.modal :as modal]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [reagent.core :refer [atom]]))
 
 (defn oikeus-varusteiden-muokkaamiseen? []
   (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
@@ -58,20 +59,22 @@
      :hyvaksy [:div (ikonit/livicon-trash) " Poista"]
      :toiminto-fn (fn [] (e! (v/->PoistaVaruste varuste)))}))
 
+(def kuntoluokka->selite {"1" "Ala-arvoinen"
+                          "2" "Merkittäviä puutteita"
+                          "3" "Epäoleellisia puutteita"
+                          "4" "Hyvä"
+                          "5" "Erinomainen"})
+
+(def tarkastuslomakedata (atom {:kuntoluokitus (first (keys kuntoluokka->selite))}))
+
 (defn tarkasta-varuste [e! tietolaji tunniste varuste]
-  (let [kuntoluokat [["1" "Ala-arvoinen"]
-                     ["2" "Merkittäviä puutteita"]
-                     ["3" "Epäoleellisia puutteita"]
-                     ["4" "Hyvä"]
-                     ["5" "Erinomainen"]]
+  (let [
         varusteenkuntoluokitus (get-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"])
-        tarkastus (atom {:kuntoluokitus
-                         (if (str/blank? varusteenkuntoluokitus)
-                           (ffirst kuntoluokat)
-                           varusteenkuntoluokitus)})
+
+        _ (log "--> tarkastus:" (pr-str @tarkastuslomakedata))
         peruuta-fn #(do (.preventDefault %) (modal/piilota!))
         tallenna-fn #(do (.preventDefault %)
-                         (e! (v/->TarkastaVaruste varuste @tarkastus))
+                         (e! (v/->TarkastaVaruste varuste @tarkastuslomakedata))
                          (modal/piilota!))]
     (modal/nayta! {:otsikko (str "Tarkasta varuste (tunniste: " tunniste ", tietolaji: " tietolaji ")")
                    :footer [:span
@@ -80,16 +83,18 @@
                             [:button.nappi-myonteinen {:type "button" :on-click tallenna-fn}
                              [:div (ikonit/livicon-save) " Tallenna"]]]}
                   [lomake/lomake
-                   {:ei-borderia? true}
+                   {:ei-borderia? true
+                    :muokkaa! (fn [uusi] (do
+                                           (log "--> uusi " (pr-str uusi))
+                                           (reset! tarkastuslomakedata uusi)))}
                    [{:otsikko "Yleinen kuntoluokitus"
                      :nimi :kuntoluokitus
                      :tyyppi :valinta
                      :pakollinen? true
-                     :valinnat kuntoluokat
-                     ;; todo: miksi ei toimi?
-                     :valinta-arvo first
-                     :valinta-nayta second}]
-                   @tarkastus])))
+                     :valinnat (vec (keys kuntoluokka->selite))
+                     :fmt (fn [arvo] (if arvo (kuntoluokka->selite arvo) "- Valitse -"))
+                     :valinta-nayta (fn [arvo] (if arvo (kuntoluokka->selite arvo) "- Valitse -"))}]
+                   @tarkastuslomakedata])))
 
 (defn sarakkeet [e! tietolajin-listaus-skeema]
   (if oikeus-varusteiden-muokkaamiseen?
