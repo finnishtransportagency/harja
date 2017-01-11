@@ -75,3 +75,32 @@ SELECT i.id, i.urakka, i.ilmoitusid, i.ilmoitettu,
        LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
  WHERE (i.ilmoitettu BETWEEN :alku AND :loppu)
    AND ST_DWithin(i.sijainti, :sijainti, 25);
+
+
+-- name: hae-turvallisuuspoikkeamat
+SELECT t.id,
+       t.urakka,
+       t.tapahtunut,
+       t.kasitelty,
+       t.tyontekijanammatti,
+       t.kuvaus,
+       t.vammat,
+       t.sairauspoissaolopaivat,
+       t.sairaalavuorokaudet,
+       t.vakavuusaste,
+       t.sijainti,
+       t.tr_numero,
+       t.tr_alkuetaisyys,
+       t.tr_loppuetaisyys,
+       t.tr_alkuosa,
+       t.tr_loppuosa,
+       t.tyyppi,
+       k.id              AS korjaavatoimenpide_id,
+       k.kuvaus          AS korjaavatoimenpide_kuvaus,
+       k.suoritettu      AS korjaavatoimenpide_suoritettu
+  FROM turvallisuuspoikkeama t
+       LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama
+                                    AND k.poistettu IS NOT TRUE
+ WHERE ST_DWithin(t.sijainti, :sijainti, 25) AND
+       (t.tapahtunut :: DATE BETWEEN :alku AND :loppu OR
+        t.kasitelty BETWEEN :alku AND :loppu);

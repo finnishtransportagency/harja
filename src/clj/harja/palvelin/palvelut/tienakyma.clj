@@ -70,8 +70,11 @@
         (q/hae-tarkastukset db parametrit)))
 
 (defn- hae-turvallisuuspoikkeamat [db parametrit]
-  ;; FIXME: implement
-  [])
+  (into []
+        (comp (geo/muunna-pg-tulokset :sijainti)
+              (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama))
+              (map #(konv/array->keyword-set % :tyyppi)))
+        (q/hae-turvallisuuspoikkeamat db parametrit)))
 
 (defn- hae-ilmoitukset [db parametrit]
   (konv/sarakkeet-vektoriin
