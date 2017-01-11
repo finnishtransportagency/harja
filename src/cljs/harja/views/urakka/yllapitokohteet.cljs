@@ -47,7 +47,7 @@
 (def yllapitoluokka-leveys 5)
 (def tr-leveys 8)
 (def tarjoushinta-leveys 10)
-(def muutoshinta-leveys 10)
+(def maaramuutokset-leveys 10)
 (def toteutunut-hinta-leveys 20)
 (def arvonvahennykset-leveys 10)
 (def bitumi-indeksi-leveys 10)
@@ -588,8 +588,8 @@
                       :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :tasaa :oikea})
                    (when (= (:nakyma optiot) :paallystys)
                      {:otsikko "Mää\u00ADrä\u00ADmuu\u00ADtok\u00ADset"
-                      :nimi :muutoshinta :muokattava? (constantly false)
-                      :fmt fmt/euro-opt :tyyppi :numero :leveys muutoshinta-leveys :tasaa :oikea})
+                      :nimi :maaramuutokset :muokattava? (constantly false)
+                      :fmt fmt/euro-opt :tyyppi :numero :leveys maaramuutokset-leveys :tasaa :oikea})
                    (when (= (:nakyma optiot) :paikkaus)
                      {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta
                       :muokattava? (constantly false)
@@ -665,7 +665,7 @@
          :leveys tarjoushinta-leveys :tasaa :oikea})
       (when (= (:nakyma optiot) :paallystys)
         {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :fmt fmt/euro-opt :tyyppi :numero
-         :leveys muutoshinta-leveys :tasaa :oikea})
+         :leveys maaramuutokset-leveys :tasaa :oikea})
       (when (= (:nakyma optiot) :paikkaus)
         {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta :fmt fmt/euro-opt :tyyppi :numero
          :leveys toteutunut-hinta-leveys :tasaa :oikea})

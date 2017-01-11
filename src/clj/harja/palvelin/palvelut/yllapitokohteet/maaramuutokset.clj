@@ -8,6 +8,7 @@
             [harja.domain.skeema :refer [Toteuma validoi]]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.paallystys :as q]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.yha :as yha]))
 
@@ -87,14 +88,14 @@
   [db user {:keys [urakka-id yllapitokohde-id maaramuutokset]}]
   (log/debug "Aloitetaan määrämuutoksien tallennus")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (yllapitokohteet/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
+  (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (doseq [maaramuutos maaramuutokset]
     (vaadi-maaramuutos-kuuluu-urakkaan db urakka-id (:id maaramuutos)))
 
   (jdbc/with-db-transaction [db db]
     (let [maaramuutokset (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->kantaenum (:tyyppi %)))
                               maaramuutokset)]
-      (yllapitokohteet/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
+      (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
       (yha/lukitse-urakan-yha-sidonta db urakka-id)
       (luo-tai-paivita-maaramuukset db user {:yllapitokohde-id yllapitokohde-id
                                              :urakka-id urakka-id} maaramuutokset)

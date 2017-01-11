@@ -1,15 +1,5 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet
-  "Ylläpitokohte kuvaa tienosaa, jolle tehdään ylläpitoluonteista työtä (päällystys, paikkaus, tiemerkintä).
-
-  Kohteet ovat joko päällystys- tai paikkaustyyppisiä (kannassa yllopitokohdetyotyyppi).
-  Kohteen tyyppi kuvaa sitä, millaista työtä kohteella on tarkoitus ensisijaisesti tehdä.
-  Kohteen tyyppiä ei pidä sekoittaa sarakkeeseen yllapitokohdetyyppi, joka kuvaa sitä,
-  millaista tietä ollaan työstämässä (päällystetty tie, soratie, kevytliikenne)
-
-  Ylläpitokohte on sidottu urakkaan urakka-sarakkeen kautta. Tämä sarake kuvaa kohteen 'ensisijaista' urakkkaa.
-  Lisäksi on olemassa sarake suorittava_tiemerkintaurakka, joka kuvaa kohteen suorittavaa tiemerkintäurakkaa.
-  Tiemerkinnässä kohde siis edelleen kuuluu ensisijaisesti päällystysurakkaan urakka-sarakkeen kautta, mutta linkittyy
-  tiemerkintäurakkaan suorittava_tiemerkintaurakka -sarakkeen kautta."
+  "Tässä namespacessa on palvelut ylläpitokohteiden ja -kohdeosien hakuun ja tallentamiseen."
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.set :as set]
             [com.stuartsierra.component :as component]
@@ -37,43 +27,11 @@
             [clj-time.coerce :as c]
             [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
-            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus])
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
+            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q])
   (:use org.httpkit.fake)
   (:import (com.sun.xml.internal.bind.v2 TODO)))
-
-(defn- tarkista-urakkatyypin-mukainen-kirjoitusoikeus [db user urakka-id]
-  (let [urakan-tyyppi (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
-    (case urakan-tyyppi
-      "paallystys"
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-      "paikkaus"
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
-      "tiemerkinta"
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id))))
-
-(defn- tarkista-urakkatyypin-mukainen-lukuoikeus [db user urakka-id]
-  (let [urakan-tyyppi (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
-    (case urakan-tyyppi
-      "paallystys"
-      (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-      "paikkaus"
-      (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
-      "tiemerkinta"
-      (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id))))
-
-(defn vaadi-yllapitokohde-kuuluu-urakkaan [db urakka-id yllapitokohde]
-  "Tarkistaa, että ylläpitokohde kuuluu annettuun urakkaan tai annettu urakka on merkitty
-   suorittavaksi tiemerkintäurakakaksi. Jos kumpikaan ei ole totta, heittää poikkeuksen."
-  (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde})))
-        kohteen-suorittava-tiemerkintaurakka (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
-                                                           db
-                                                           {:id yllapitokohde})))]
-    (when (and (not= kohteen-urakka urakka-id)
-               (not= kohteen-suorittava-tiemerkintaurakka urakka-id))
-      (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde " ei kuulu valittuun urakkaan "
-                                      urakka-id " vaan urakkaan " kohteen-urakka
-                                      ", eikä valittu urakka myöskään ole kohteen suorittava tiemerkintäurakka"))))))
 
 (defn laske-osien-pituudet
   "Hakee tieverkosta osien pituudet tielle. Palauttaa pituuden metreina."
@@ -93,7 +51,7 @@
     (group-by :tr-numero yllapitokohteet)))
 
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
-  (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
+  (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (log/debug "Haetaan urakan ylläpitokohteet.")
   (jdbc/with-db-transaction [db db]
     (let [yllapitokohteet (into []
@@ -125,7 +83,7 @@
       yllapitokohteet)))
 
 (defn hae-urakan-yllapitokohteet-lomakkeelle [db user {:keys [urakka-id sopimus-id]}]
-  (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
+  (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (log/debug "Haetaan urakan ylläpitokohteet laatupoikkeamalomakkeelle")
   (jdbc/with-db-transaction [db db]
     (let [vastaus (q/hae-urakan-yllapitokohteet-lomakkeelle db {:urakka urakka-id
@@ -135,8 +93,8 @@
 
 (defn hae-yllapitokohteen-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id yllapitokohde-id]}]
   (log/debug "Haetaan ylläpitokohteen ylläpitokohdeosat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", yllapitokohde-id: " yllapitokohde-id)
-  (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
-  (vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
+  (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
+  (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (let [vastaus (into []
                       yllapitokohteet-q/kohdeosa-xf
                       (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db {:yllapitokohde yllapitokohde-id}))]
@@ -389,7 +347,7 @@
                                    :urakka urakka-id}))))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi kohteet]}]
-  (tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
+  (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (jdbc/with-db-transaction [c db]
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
     (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))
@@ -447,7 +405,7 @@
    Tarkistaa, tuleeko kohdeosat päivittää, poistaa vai luoda uutena.
    Palauttaa kohteen päivittyneet kohdeosat."
   [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat]}]
-  (tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
+  (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (jdbc/with-db-transaction [c db]
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
 
