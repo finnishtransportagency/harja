@@ -50,6 +50,7 @@
 
 ;; Toimenpiteet Tierekisteriin
 (defrecord PoistaVaruste [varuste])
+(defrecord TarkastaVaruste [varuste tarkastus])
 (defrecord ToimintoEpaonnistui [toiminto virhe])
 (defrecord ToimintoOnnistui [vastaus])
 

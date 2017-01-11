@@ -11,7 +11,8 @@
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.modal :as modal]))
+            [harja.ui.modal :as modal]
+            [clojure.string :as str]))
 
 (defn oikeus-varusteiden-muokkaamiseen? []
   (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
@@ -58,20 +59,37 @@
      :toiminto-fn (fn [] (e! (v/->PoistaVaruste varuste)))}))
 
 (defn tarkasta-varuste [e! tietolaji tunniste varuste]
-  (modal/nayta! {:otsikko "Tarkasta varuste"
-                 :footer [:span
-                          [:button.nappi-toissijainen {:type "button"
-                                                       :on-click #(do (.preventDefault %)
-                                                                      (modal/piilota!))}
-                           [:div (ikonit/livicon-ban) " Peruuta"]]
-                          [:button.nappi-myonteinen {:type "button"
-                                                     :on-click #(do (.preventDefault %)
-                                                                    (modal/piilota!))}
-                           [:div (ikonit/livicon-save) " Tallenna"]]]}
-                [lomake/lomake
-                 {}
-                 [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :leveys 1}]
-                 {}]))
+  (let [kuntoluokat [["1" "Ala-arvoinen"]
+                     ["2" "Merkittäviä puutteita"]
+                     ["3" "Epäoleellisia puutteita"]
+                     ["4" "Hyvä"]
+                     ["5" "Erinomainen"]]
+        varusteenkuntoluokitus (get-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"])
+        tarkastus (atom {:kuntoluokitus
+                         (if (str/blank? varusteenkuntoluokitus)
+                           (ffirst kuntoluokat)
+                           varusteenkuntoluokitus)})
+        peruuta-fn #(do (.preventDefault %) (modal/piilota!))
+        tallenna-fn #(do (.preventDefault %)
+                         (e! (v/->TarkastaVaruste varuste @tarkastus))
+                         (modal/piilota!))]
+    (modal/nayta! {:otsikko (str "Tarkasta varuste (tunniste: " tunniste ", tietolaji: " tietolaji ")")
+                   :footer [:span
+                            [:button.nappi-toissijainen {:type "button" :on-click peruuta-fn}
+                             [:div (ikonit/livicon-ban) " Peruuta"]]
+                            [:button.nappi-myonteinen {:type "button" :on-click tallenna-fn}
+                             [:div (ikonit/livicon-save) " Tallenna"]]]}
+                  [lomake/lomake
+                   {:ei-borderia? true}
+                   [{:otsikko "Yleinen kuntoluokitus"
+                     :nimi :kuntoluokitus
+                     :tyyppi :valinta
+                     :pakollinen? true
+                     :valinnat kuntoluokat
+                     ;; todo: miksi ei toimi?
+                     :valinta-arvo first
+                     :valinta-nayta second}]
+                   @tarkastus])))
 
 (defn sarakkeet [e! tietolajin-listaus-skeema]
   (if oikeus-varusteiden-muokkaamiseen?
