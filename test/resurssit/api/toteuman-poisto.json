@@ -1,0 +1,16 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "__SUORITTAJA_NIMI__",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "__PVM__"
+  },
+  "toteumien-tunnisteet": [__ID__]
+}
