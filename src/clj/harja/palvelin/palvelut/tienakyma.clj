@@ -107,7 +107,8 @@
   (start [{db :db http :http-palvelin :as this}]
     (julkaise-palvelut
      http
-     :hae-tienakymaan (partial #'hae-tienakymaan db))
+     :hae-tienakymaan (fn [user valinnat]
+                        (hae-tienakymaan db user valinnat)))
     this)
 
   (stop [{http :http-palvelin :as this}]
