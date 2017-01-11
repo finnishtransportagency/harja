@@ -298,14 +298,16 @@
   käsittelyvirhe."
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
 
-  (binding [oikeudet/*oikeustarkistus-tehty* false]
-    (with-channel request channel
-      (go
-        (let [vastaus (<! (thread (kasittele-kutsu db
-                                                   integraatioloki
-                                                   resurssi
-                                                   request
-                                                   kutsun-skeema
-                                                   vastauksen-skeema
-                                                   kasittele-kutsu-fn)))]
-          (send! channel vastaus))))))
+  ;; mekanismi ei toimi asyncin kanssa, joten tämän alla oikeustarkistukset jäävät tarkistamatta
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
+
+  (with-channel request channel
+    (go
+      (let [vastaus (<! (thread (kasittele-kutsu db
+                                                 integraatioloki
+                                                 resurssi
+                                                 request
+                                                 kutsun-skeema
+                                                 vastauksen-skeema
+                                                 kasittele-kutsu-fn)))]
+        (send! channel vastaus)))))
