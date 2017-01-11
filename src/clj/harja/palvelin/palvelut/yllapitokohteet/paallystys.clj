@@ -1,5 +1,9 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.paallystys
-  "Päällystyksen palvelut"
+  "Tässä namespacessa on esitelty palvelut, jotka liittyvät erityisesti päällystysurakkaan
+   Tärkeimmät palvelut ovat päällystysilmoituksen haku/tallennus sekä määrämuutosten haku/tallennus
+
+   Päällystysurakka on ylläpidon urakka ja siihen liittyy keskeisenä osana ylläpitokohteet.
+   Ylläpitokohteiden hallintaan on olemassa oma palvelu."
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.konversio :as konv]
