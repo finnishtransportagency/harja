@@ -60,7 +60,7 @@ Valtakunnalliset välitavoitteet ovat välitavoitteita, jotka koskevat kaikkia t
 
 Tiemerkintäurakoissa valtakunnallisia välitavoitteita kutsutaan termillä "välitavoitepohja", mutta tietomallimielessä kyse on samasta asiasta.';
 
--- Muut
+-- Lukot
 
 COMMENT ON TABLE muokkauslukko IS
 E'Muokkauslukko-taulua käytetään lukitsemaan jokin muokattava asia (esim. päällystysilmoitus), jotta useampi käyttäjä ei voi muokata samaa asiaa samaan aikaan. Muokkauslukolla on:\n
