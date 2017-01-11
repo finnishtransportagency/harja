@@ -17,7 +17,6 @@
   nil)
 
 (defn merkitse-oikeustarkistus-tehdyksi! []
-  (println "zzzz *oikeustarkistus-tehty* value:" *oikeustarkistus-tehty*)
   (when (false? *oikeustarkistus-tehty*)
     (set! *oikeustarkistus-tehty* true)))
 
