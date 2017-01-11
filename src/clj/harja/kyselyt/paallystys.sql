@@ -69,7 +69,6 @@ SELECT
   ypk.tr_alkuetaisyys                 AS "tr-alkuetaisyys",
   ypk.tr_loppuosa                     AS "tr-loppuosa",
   ypk.tr_loppuetaisyys                AS "tr-loppuetaisyys"
-
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = :paallystyskohde
                                      AND pi.poistettu IS NOT TRUE
@@ -81,7 +80,6 @@ WHERE ypk.id = :paallystyskohde
 -- name: hae-paallystysilmoitus-paallystyskohteella
 SELECT
   id,
-  muutoshinta,
   tila,
   ilmoitustiedot,
   paatos_tekninen_osa             AS "tekninen-osa_paatos",
