@@ -74,4 +74,4 @@ SELECT i.id, i.urakka, i.ilmoitusid, i.ilmoitettu,
   FROM ilmoitus i
        LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
  WHERE (i.ilmoitettu BETWEEN :alku AND :loppu)
-   AND ST_DWithin(i.sijainti, :sijainti, 250);
+   AND ST_DWithin(i.sijainti, :sijainti, 25);
