@@ -262,14 +262,6 @@
    ;; Välien tulee olla kohdeluettelon osoitteiden sisällä.
    :alustatoimet paallystysilmoitus-alustatoimet})
 
-(defn summaa-maaramuutokset
-  "Laskee ilmoitettujen töiden toteutumien erotuksen tilattuun määrään ja summaa tulokset yhteen."
-  [tyot]
-  (reduce + (mapv
-              (fn [tyo]
-                (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
-              (filter #(not= true (:poistettu %)) tyot))))
-
 (defn paattele-ilmoituksen-tila
   [valmis-kasiteltavaksi tekninen-osa-hyvaksytty]
   (cond

@@ -587,7 +587,8 @@
                      {:otsikko "Tar\u00ADjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
                       :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :tasaa :oikea})
                    (when (= (:nakyma optiot) :paallystys)
-                     {:otsikko "Mää\u00ADrä\u00ADmuu\u00ADtok\u00ADset" :nimi :muutoshinta :muokattava? (constantly false)
+                     {:otsikko "Mää\u00ADrä\u00ADmuu\u00ADtok\u00ADset"
+                      :nimi :muutoshinta :muokattava? (constantly false)
                       :fmt fmt/euro-opt :tyyppi :numero :leveys muutoshinta-leveys :tasaa :oikea})
                    (when (= (:nakyma optiot) :paikkaus)
                      {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta
