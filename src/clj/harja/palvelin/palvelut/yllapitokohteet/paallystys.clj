@@ -113,18 +113,6 @@
       (hae-maaramuutokset db user {:yllapitokohde-id yllapitokohde-id
                                    :urakka-id urakka-id}))))
 
-(defn tyot-tyyppi-string->avain [json avainpolku]
-  (-> json
-      (assoc-in avainpolku
-                (when-let [tyot (some-> json (get-in avainpolku))]
-                  (map #(assoc % :tyyppi (keyword (:tyyppi %))) tyot)))))
-
-(defn tyot-tyyppi-avain->string [json avainpolku]
-  (-> json
-      (assoc-in avainpolku
-                (when-let [tyot (some-> json (get-in avainpolku))]
-                  (map #(assoc % :tyyppi (name (:tyyppi %))) tyot)))))
-
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
@@ -182,7 +170,6 @@
         _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
             (skeema/validoi pot-domain/+paallystysilmoitus+
                             ilmoitustiedot))
-        paallystysilmoitus (tyot-tyyppi-string->avain paallystysilmoitus [:ilmoitustiedot :tyot])
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
         paallystysilmoitus (lisaa-paallystysilmoitukseen-kohdeosien-tiedot paallystysilmoitus)
@@ -240,8 +227,7 @@
                (:valmis-kasiteltavaksi paallystysilmoitus)
                (= (get-in paallystysilmoitus [:tekninen-osa :paatos]) :hyvaksytty))
         ilmoitustiedot (-> ilmoitustiedot
-                           (poista-ilmoitustiedoista-tieosoitteet)
-                           (tyot-tyyppi-avain->string [:tyot]))
+                           (poista-ilmoitustiedoista-tieosoitteet))
         _ (skeema/validoi pot-domain/+paallystysilmoitus+
                           ilmoitustiedot)
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
@@ -307,8 +293,7 @@
                      (:valmis-kasiteltavaksi paallystysilmoitus)
                      (= (get-in paallystysilmoitus [:tekninen-osa :paatos]) :hyvaksytty))
               ilmoitustiedot (-> ilmoitustiedot
-                                 (poista-ilmoitustiedoista-tieosoitteet)
-                                 (tyot-tyyppi-avain->string [:tyot]))
+                                 (poista-ilmoitustiedoista-tieosoitteet))
               _ (skeema/validoi pot-domain/+paallystysilmoitus+
                                 ilmoitustiedot)
               encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
@@ -403,7 +388,6 @@
           paallystysilmoitus-kannassa
           (first (into []
                        (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
-                             (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
                              (map #(konv/string-poluista->keyword %
                                                                   [[:paatos :tekninen-osa]
                                                                    [:tila]])))

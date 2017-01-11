@@ -99,14 +99,7 @@
                                     :verkkotyyppi 1
                                     :verkon-sijainti 1
                                     :verkon-tarkoitus 1
-                                    :tekninen-toimenpide 1}]
-
-                    :tyot [{:tyyppi :ajoradan-paallyste
-                            :tyo "AB 16/100 LTA"
-                            :tilattu-maara 100
-                            :toteutunut-maara 200
-                            :yksikko "km"
-                            :yksikkohinta 5}]}})
+                                    :tekninen-toimenpide 1}]}})
 
 (deftest skeemavalidointi-toimii
   (let [paallystyskohde-id (hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta)]
@@ -238,13 +231,7 @@
                              :tr-loppuosa 4
                              :tr-numero 666
                              :tunnus nil
-                             :tyomenetelma 12}]
-                :tyot [{:tilattu-maara 100
-                        :toteutunut-maara 200
-                        :tyo "AB 16/100 LTA"
-                        :tyyppi :ajoradan-paallyste
-                        :yksikko "km"
-                        :yksikkohinta 5}]}))
+                             :tyomenetelma 12}]}))
         (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))))))
 
 
@@ -317,13 +304,7 @@
                              :tr-loppuosa 4
                              :tr-numero 666
                              :tunnus nil
-                             :tyomenetelma 12}]
-                :tyot [{:tilattu-maara 100
-                        :toteutunut-maara 200
-                        :tyo "AB 16/100 LTA"
-                        :tyyppi :ajoradan-paallyste
-                        :yksikko "km"
-                        :yksikkohinta 5}]}))
+                             :tyomenetelma 12}]}))
 
         ; Lukittu, ei voi enää päivittää
         (log/debug "Tarkistetaan, ettei voi muokata lukittua ilmoitusta.")

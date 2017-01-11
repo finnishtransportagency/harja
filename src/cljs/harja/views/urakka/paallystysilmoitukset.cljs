@@ -190,8 +190,7 @@
       #(let [lahetettava-data (-> lomake
                                   lomake/ilman-lomaketietoja
                                   (grid/poista-idt [:ilmoitustiedot :osoitteet])
-                                  (grid/poista-idt [:ilmoitustiedot :alustatoimet])
-                                  (grid/poista-idt [:ilmoitustiedot :tyot]))]
+                                  (grid/poista-idt [:ilmoitustiedot :alustatoimet]))]
         (log "[PÄÄLLYSTYS] Lomake-data: " (pr-str lomake))
         (log "[PÄÄLLYSTYS] Lähetetään data " (pr-str lahetettava-data))
         (paallystys/tallenna-paallystysilmoitus! urakka-id sopimus-id lahetettava-data))

@@ -68,8 +68,7 @@
 (defn pura-paallystysilmoitus [data]
   (-> (:paallystysilmoitus data)
       (assoc :alikohteet (mapv :alikohde (get-in data [:paallystysilmoitus :yllapitokohde :alikohteet])))
-      (assoc :alustatoimenpiteet (mapv :alustatoimenpide (get-in data [:paallystysilmoitus :alustatoimenpiteet])))
-      (assoc :tyot (mapv :tyo (get-in data [:paallystysilmoitus :tyot])))))
+      (assoc :alustatoimenpiteet (mapv :alustatoimenpide (get-in data [:paallystysilmoitus :alustatoimenpiteet])))))
 
 (defn validoi-paallystysilmoitus [db urakka-id kohde paallystysilmoitus]
   (validointi/tarkista-urakan-kohde db urakka-id (:id kohde))

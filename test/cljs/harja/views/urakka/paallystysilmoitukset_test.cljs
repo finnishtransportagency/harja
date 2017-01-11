@@ -66,11 +66,7 @@
    :bitumi-indeksi nil
    :id 8
    :takuupvm nil
-   :ilmoitustiedot {:tyot [{:tyo "jotain" :tyyppi :ajoradan-paallyste :yksikko "m"
-                            :yksikkohinta 6.66
-                            :tilattu-maara 10
-                            :toteutunut-maara 110}]
-                    :osoitteet [{:tr-numero 20
+   :ilmoitustiedot {:osoitteet [{:tr-numero 20
                                  :tr-alkuosa 1 :tr-alkuetaisyys 1
                                  :tr-loppuosa 3 :tr-loppuetaisyys 42
                                  :kohdeosa-id 30 :tr-kaista 1 :tr-ajorata 0

@@ -77,13 +77,7 @@
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
       (is (match ilmoitustiedot
-                 {:tyot [{:tyo "työtehtävä"
-                          :tyyppi "tasaukset"
-                          :yksikko "kpl"
-                          :yksikkohinta 3
-                          :tilattu-maara 1
-                          :toteutunut-maara 2}],
-                  :osoitteet [{:kohdeosa-id _
+                 {:osoitteet [{:kohdeosa-id _
                                :edellinen-paallystetyyppi nil
                                :lisaaineet "lisäaineet"
                                :leveys 1.2
@@ -161,13 +155,7 @@
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
       (is (match ilmoitustiedot
-                 {:tyot [{:tyo "työtehtävä"
-                          :tyyppi "tasaukset"
-                          :yksikko "kpl"
-                          :yksikkohinta 3
-                          :tilattu-maara 1
-                          :toteutunut-maara 2}],
-                  :osoitteet [{:kohdeosa-id _
+                 {:osoitteet [{:kohdeosa-id _
                                :edellinen-paallystetyyppi nil
                                :lisaaineet "lisäaineet"
                                :leveys 1.2

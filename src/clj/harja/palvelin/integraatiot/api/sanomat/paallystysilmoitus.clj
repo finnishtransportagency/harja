@@ -44,20 +44,9 @@
          :tekninen-toimenpide (paallystysilmoitus/tekninentoimenpide-koodi-nimella (:tekninen-toimenpide alustatoimi))}))
     (:alustatoimenpiteet paallystysilmoitus)))
 
-(defn rakenna-tyot [paallystysilmoitus]
-  (mapv (fn [tyo]
-          {:tyo (:tyotehtava tyo)
-           :tyyppi (name (paallystysilmoitus/paallystystyon-tyypin-koodi-nimella (:tyyppi tyo)))
-           :yksikko (:yksikko tyo)
-           :yksikkohinta (:yksikkohinta tyo)
-           :tilattu-maara (:tilattu-maara tyo)
-           :toteutunut-maara (:toteutunut-maara tyo)})
-        (:tyot paallystysilmoitus)))
-
 (defn rakenna [paallystysilmoitus]
   (let [data {:osoitteet (rakenna-alikohteet paallystysilmoitus)
-              :alustatoimet (rakenna-alustatoimet paallystysilmoitus)
-              :tyot (rakenna-tyot paallystysilmoitus)}
+              :alustatoimet (rakenna-alustatoimet paallystysilmoitus)}
         _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
                           data)
         encoodattu-ilmoitustiedot (cheshire/encode data)]
