@@ -88,7 +88,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
         yllapito? (or (= :paallystys (:nakyma optiot))
                       (= :paikkaus (:nakyma optiot))
                       (= :tiemerkinta (:nakyma optiot)))
-        urakan-tpit @tiedot-urakka/urakan-toimenpideinstanssit]
+        urakan-tpit @tiedot-urakka/urakan-toimenpideinstanssit
+        mahdolliset-sanktiolajit (disj @tiedot-urakka/urakkatyypin-sanktiolajit :yllapidon_bonus)] ; laatupoikkeamasta ei bonusta, kyseessä negatiivinen asia
     (fn [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama]
       [:div.sanktiot
        [grid/muokkaus-grid
@@ -112,16 +113,14 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                      (if-not (sanktio-domain/sakko? paivitetty)
                        (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
                        paivitetty)))
-          :valinnat (if yllapito?
-                      [:A :muistutus]
-                      [:A :B :C :muistutus])
+          :valinnat mahdolliset-sanktiolajit
           :valinta-nayta #(case %
-                            ;;toistaiseksi ylläpidossa vain sakko ja muistutus, default A ryhmä
-                            :A (if yllapito? "Sakko" "A")
-                            :B "B"
-                            :C "C"
+                            :A "Ryhmä A"
+                            :B "Ryhmä B"
+                            :C "Ryhmä C"
                             :muistutus "Muistutus"
-                            "- valitse -")
+                            :yllapidon_sakko "Sakko"
+                            "- valitse laji -")
           :validoi [[:ei-tyhja "Valitse laji"]]}
 
          (if yllapito?
