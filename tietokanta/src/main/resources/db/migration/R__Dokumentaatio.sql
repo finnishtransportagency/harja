@@ -35,7 +35,7 @@ E'Tarkastusajo-tauluun tallentuu perustiedot Harjan laadunseurannan mobiilityök
 COMMENT ON TABLE tarkastusreitti IS
 E'reittimerkinta-tauluun tallennetaan Harjan laadunseurannan mobiilityökalulla kerättyä raakaa dataa. Jokainen rivi taulussa kuvaa yksittäistä joko työkalun itsensä automaattisesti tekemää merkintää tarkastusajon aikana tai käyttäjän tekemää syötettä. Yhteen ajoon saattaa liittyä tuhansia eri merkintöjä. Reittimerkintä on aina uniikki merkinnän id:n ja siihen liittyvän tarkastusajon id:n kanssa.\n\n
 
-Tauluun tallennettua tietoa käytetään luomaan yhteenveto tehdystä ajosta eli datasta muodostetaan tarkastus tarkastus-tauluun. Ajon raakadataa ei ole syytä säiyttää pitkäaikaisesti, vaan tarkoitus on, että datasta luotu tarkastus sisältää kaikki ajosta tarpeelliset tiedot.';
+Tauluun tallennettua tietoa käytetään luomaan yhteenveto tehdystä ajosta eli datasta muodostetaan tarkastus tarkastus-tauluun. Ajon raakadataa ei välttämättä ole syytä säilyttää pitkäaikaisesti, vaan tarkoitus on, että datasta luotu tarkastus sisältää kaikki ajosta tarpeelliset tiedot.';
 
 -- Raportointi
 
