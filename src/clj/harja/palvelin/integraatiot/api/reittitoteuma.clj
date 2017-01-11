@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.api.reittitoteuma
   "Reittitoteuman kirjaaminen urakalle"
   (:require [com.stuartsierra.component :as component]
-            [compojure.core :refer [POST GET]]
+            [compojure.core :refer [POST GET DELETE]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
@@ -208,6 +208,14 @@ maksimi-linnuntien-etaisyys 200)
     (tallenna-kaikki-pyynnon-reittitoteumat db db-replica urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
 
+(defn poista-toteuma [db _ {id :id} data kirjaaja]
+  (let [urakka-id (Integer/parseInt id)
+        ulkoiset-idt (-> data :toteumien-tunnisteet)]
+    (log/debug "Poistetaan reittitoteumat id:lla:" ulkoiset-idt "urakalta id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja)
+               " (id:" (:id kirjaaja) " tekemänä")
+    (tarkista-pyynto db urakka-id kirjaaja data)
+    (api-toteuma/poista-toteumat db kirjaaja ulkoiset-idt)))
+
 (defrecord Reittitoteuma []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -216,7 +224,7 @@ maksimi-linnuntien-etaisyys 200)
            integraatioloki :integraatioloki
            :as this}]
     (julkaise-reitti
-      http :lisaa-reittitoteuma
+     http :lisaa-reittitoteuma
       (POST "/api/urakat/:id/toteumat/reitti" request
         (kasittele-kutsu db
                          integraatioloki
@@ -226,7 +234,21 @@ maksimi-linnuntien-etaisyys 200)
                          json-skeemat/kirjausvastaus
                          (fn [parametit data kayttaja db]
                            (#'kirjaa-toteuma db db-replica
-                             parametit data kayttaja)))))
+                                             parametit data kayttaja)))))
+
+    (julkaise-reitti
+     http :lisaa-reittitoteuma
+    (DELETE "/api/urakat/:id/toteumat/reitti" request
+        (kasittele-kutsu db
+                         integraatioloki
+                         :poista-reittitoteuma
+                         request
+                         json-skeemat/reittitoteuman-poisto
+                         json-skeemat/kirjausvastaus
+                         (fn [parametit data kayttaja db]
+                           (#'poista-toteuma db db-replica
+                                             parametit data kayttaja)))))
+
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-reittitoteuma)

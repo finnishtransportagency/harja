@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
+            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko vihje]]
             [harja.ui.komponentti :as komp]
             [harja.fmt :as fmt]
             [harja.loki :refer [log logt tarkkaile!]]
@@ -11,7 +11,6 @@
             [cljs.core.async :refer [<!]]
             [harja.tyokalut.vkm :as vkm]
             [harja.domain.tierekisteri :as tr]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.paallystysilmoitus :as pot]
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.ui.ikonit :as ikonit]
@@ -22,7 +21,6 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka :as urakka]
-            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.validointi :as validointi]
             [harja.atom :refer [wrap-vain-luku]])
@@ -543,16 +541,15 @@
                       :muokattava? (constantly false)
                       :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys
                       :tasaa :oikea})
-                   {:otsikko "Ar\u00ADvon muu\u00ADtok\u00ADset +/-" :nimi :arvonvahennykset :fmt fmt/euro-opt
-                    :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea
-                    :huomauta [[:vakiohuomautus "Ota huomioon etumerkki"]]}
+                   {:otsikko "Ar\u00ADvon muu\u00ADtok\u00ADset" :nimi :arvonvahennykset :fmt fmt/euro-opt
+                    :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea}
                    {:otsikko "Bi\u00ADtumi-in\u00ADdek\u00ADsi" :nimi :bitumi-indeksi
                     :fmt fmt/euro-opt
                     :tyyppi :numero :leveys bitumi-indeksi-leveys :tasaa :oikea}
                    {:otsikko "Kaa\u00ADsu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt
                     :tyyppi :numero :leveys kaasuindeksi-leveys :tasaa :oikea}
-                   {:otsikko (str "Ko\u00ADko\u00ADnais\u00ADhinta "
-                                  "(ind\u00ADek\u00ADsit mu\u00ADka\u00ADna)")
+                   {:otsikko (str "Ko\u00ADko\u00ADnais\u00ADhinta"
+                                  " (ind\u00ADek\u00ADsit mu\u00ADka\u00ADna)")
                     :muokattava? (constantly false)
                     :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys yhteensa-leveys
                     :tasaa :oikea
@@ -563,6 +560,7 @@
                                        (:bitumi-indeksi rivi)
                                        (:kaasuindeksi rivi)))}]))
           (sort-by tr/tiekohteiden-jarjestys @kohteet-atom)]
+         [vihje "Huomioi etumerkki hinnanmuutoksissa."]
          [tr-virheilmoitus tr-virheet]]))))
 
 (defn yllapitokohteet-yhteensa [kohteet-atom optiot]

@@ -28,6 +28,7 @@
   [ur]
   (komp/luo
     (komp/lippu paallystys/karttataso-paallystyskohteet)
+    (komp/lippu paallystys/kohdeluettelossa?)
     (fn [ur]
       (if (:yhatiedot ur)
         [:span.kohdeluettelo
