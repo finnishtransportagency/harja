@@ -144,26 +144,32 @@
 
 (defn kasittele-invalidi-json [virheet kutsu resurssi]
   (log/error (format "Resurssin: %s kutsun JSON on invalidi: %s. JSON: %s. " resurssi virheet (pr-str kutsu)))
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-viallinen-kutsu-virhevastaus virheet))
 
 (defn kasittele-viallinen-kutsu [virheet kutsu parametrit resurssi]
   (log/error (format "Resurssin: %s kutsu on viallinen: %s. Parametrit: %s. Kutsu: %s." resurssi virheet parametrit (pr-str kutsu)))
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-viallinen-kutsu-virhevastaus virheet))
 
 (defn kasittele-ei-hakutuloksia [virheet resurssi]
   (log/error (format "Resurssin: %s kutsu ei palauttanut hakutuloksia: %s " resurssi virheet))
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-ei-hakutuloksia-virhevastaus virheet))
 
 (defn kasittele-puutteelliset-parametrit [virheet resurssi]
   (log/error (format "Resurssin: %s kutsussa puutteelliset parametrit: %s " resurssi virheet))
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-viallinen-kutsu-virhevastaus virheet))
 
 (defn kasittele-sisainen-kasittelyvirhe [virheet resurssi]
   (log/error (format "Resurssin: %s kutsussa tapahtui sisäinen käsittelyvirhe: %s" resurssi virheet))
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-sisainen-kasittelyvirhevastaus virheet))
 
 (defn kasittele-sisainen-autentikaatio-virhe [virheet resurssi]
   (log/error (format "Resurssin: %s kutsussa tapahtui autentikaatiovirhe: %s" resurssi virheet))
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-sisainen-autentikaatiovirhevastaus virheet))
 
 (defn tarkista-tyhja-kutsu [skeema body]
@@ -292,7 +298,7 @@
   käsittelyvirhe."
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
 
-  (binding [oikeudet/*oikeustarkistus-tehty* nil]
+  (binding [oikeudet/*oikeustarkistus-tehty* false]
     (with-channel request channel
       (go
         (let [vastaus (<! (thread (kasittele-kutsu db
