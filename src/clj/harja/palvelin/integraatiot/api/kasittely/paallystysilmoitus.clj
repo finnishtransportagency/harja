@@ -28,8 +28,6 @@
      :ilmoitustiedot ilmoitustiedot-json
      :takuupvm (json/aika-string->java-sql-date
                  (:takuupvm perustiedot))
-     :muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
-                    (:tyot paallystysilmoitus))
      :kayttaja (:id kayttaja)}))
 
 (defn- paivita-paallystysilmoitus [db kayttaja urakka-id kohde-id
@@ -48,8 +46,6 @@
        :ilmoitustiedot ilmoitustiedot-json
        :takuupvm (json/aika-string->java-sql-date
                    (:takuupvm perustiedot))
-       :muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
-                      (:tyot paallystysilmoitus))
        :muokkaaja (:id kayttaja)
        :id kohde-id
        :urakka urakka-id})

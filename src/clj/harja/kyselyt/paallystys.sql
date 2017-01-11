@@ -99,7 +99,6 @@ SET
   tila                 = :tila :: paallystystila,
   ilmoitustiedot       = :ilmoitustiedot :: JSONB,
   takuupvm             = :takuupvm,
-  muutoshinta          = :muutoshinta,
   muokattu             = NOW(),
   muokkaaja            = :muokkaaja,
   poistettu            = FALSE
@@ -139,12 +138,11 @@ SET
 
 -- name: luo-paallystysilmoitus<!
 -- Luo uuden päällystysilmoituksen
-INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, takuupvm, muutoshinta, luotu, luoja, poistettu)
+INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, takuupvm, luotu, luoja, poistettu)
 VALUES (:paallystyskohde,
   :tila :: paallystystila,
   :ilmoitustiedot :: JSONB,
   :takuupvm,
-  :muutoshinta,
   NOW(),
   :kayttaja, FALSE);
 

@@ -42,8 +42,8 @@
               {:tilattu-maara 15 :toteutunut-maara 15  :yksikkohinta 666}
               {:tilattu-maara 4 :toteutunut-maara 5 :yksikkohinta 8}]
     tyot2 [{:tilattu-maara 4 :toteutunut-maara 2 :yksikkohinta 15}]]
-    (is (= (pot/laske-muutokset-kokonaishintaan tyot) 13))
-    (is (= (pot/laske-muutokset-kokonaishintaan tyot2) -30))))
+    (is (= (pot/summaa-maaramuutokset tyot) 13))
+    (is (= (pot/summaa-maaramuutokset tyot2) -30))))
 
 (def paallystysilmoituslomake-alkutila
   {:tila :aloitettu

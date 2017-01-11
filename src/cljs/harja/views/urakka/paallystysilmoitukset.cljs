@@ -47,8 +47,7 @@
 
 (defn laske-hinta [lomakedata-nyt]
   (let [urakkasopimuksen-mukainen-kokonaishinta (:kokonaishinta lomakedata-nyt)
-        muutokset-kokonaishintaan (pot/laske-muutokset-kokonaishintaan
-                                    (get-in lomakedata-nyt [:ilmoitustiedot :tyot]))
+        muutokset-kokonaishintaan (:maaramuutokset lomakedata-nyt)
         toteuman-kokonaishinta (+ urakkasopimuksen-mukainen-kokonaishinta muutokset-kokonaishintaan)]
     {:urakkasopimuksen-mukainen-kokonaishinta urakkasopimuksen-mukainen-kokonaishinta
      :muutokset-kokonaishintaan muutokset-kokonaishintaan
@@ -520,7 +519,6 @@
           urakka lomakedata-nyt tekninen-osa-voi-muokata? alustatoimet-voi-muokata?
           grid-wrap wrap-virheet muokkaa!]
 
-         ;; FIXME NÄMÄ TIEDOT PITÄÄ HAKEA UUDESTA TAULUSTAN NYT
          [yhteenveto lomakedata-nyt]
 
          [tallennus urakka lomakedata-nyt valmis-tallennettavaksi? tallennus-onnistui]]))))
@@ -553,7 +551,7 @@
                             3)))
       paallystysilmoitukset)))
 
-(defn paallystysilmoitukset-taulukko [paallystysilmoitukset]
+(defn- paallystysilmoitukset-taulukko [paallystysilmoitukset]
   [grid/grid
    {:otsikko ""
     :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
@@ -578,7 +576,7 @@
                        [:span "Aloita päällystysilmoitus"]]))}]
    paallystysilmoitukset])
 
-(defn nayta-lahetystiedot [rivi]
+(defn- nayta-lahetystiedot [rivi]
   (if (some #(= % (:paallystyskohde-id rivi)) @paallystys/kohteet-yha-lahetyksessa)
     [:span.tila-odottaa-vastausta "Lähetys käynnissä " [yleiset/ajax-loader-pisteet]]
     (if (:lahetetty rivi)
@@ -589,7 +587,7 @@
          (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)) ". Virhe: \"" (:lahetysvirhe rivi) "\"")])
       [:span "Ei lähetetty"])))
 
-(defn yha-lahetykset-taulukko [urakka-id sopimus-id vuosi paallystysilmoitukset]
+(defn- yha-lahetykset-taulukko [urakka-id sopimus-id vuosi paallystysilmoitukset]
   [grid/grid
    {:otsikko ""
     :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
@@ -609,7 +607,7 @@
                      [rivi]])}]
    paallystysilmoitukset])
 
-(defn ilmoitusluettelo
+(defn- ilmoitusluettelo
   []
   (komp/luo
     (komp/kuuntelija :avaa-paallystysilmoitus

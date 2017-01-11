@@ -262,8 +262,8 @@
    ;; Välien tulee olla kohdeluettelon osoitteiden sisällä.
    :alustatoimet paallystysilmoitus-alustatoimet})
 
-(defn laske-muutokset-kokonaishintaan
-  "Laskee jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä 'Muutos hintaan') ja summataan yhteen."
+(defn summaa-maaramuutokset
+  "Laskee ilmoitettujen töiden toteutumien erotuksen tilattuun määrään ja summaa tulokset yhteen."
   [tyot]
   (reduce + (mapv
               (fn [tyo]
