@@ -394,6 +394,7 @@
         laatupoikkeama-id))))
 
 (defn hae-urakkatyypin-sanktiolajit
+  "Palauttaa urakkatyypin sanktiolajit settinä"
   [db user urakka-id urakkatyyppi]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
   (let [sanktiotyypit (into []

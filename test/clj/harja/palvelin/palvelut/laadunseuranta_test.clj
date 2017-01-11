@@ -238,26 +238,20 @@
                                :hae-urakkatyypin-sanktiolajit +kayttaja-urakan-vastuuhenkilo+
                                {:urakkatyyppi :hoito})
         paallystyksen (kutsu-palvelua (:http-palvelin jarjestelma)
-                                      :hae-tarkastus +kayttaja-urakan-vastuuhenkilo+
+                                      :hae-urakkatyypin-sanktiolajit +kayttaja-urakan-vastuuhenkilo+
                                       {:urakkatyyppi :paallystys})
         paikkauksen (kutsu-palvelua (:http-palvelin jarjestelma)
-                                    :hae-tarkastus +kayttaja-urakan-vastuuhenkilo+
+                                    :hae-urakkatyypin-sanktiolajit +kayttaja-urakan-vastuuhenkilo+
                                     {:urakkatyyppi :paikkaus})
         tiemerkinnan (kutsu-palvelua (:http-palvelin jarjestelma)
-                                     :hae-tarkastus +kayttaja-urakan-vastuuhenkilo+
+                                     :hae-urakkatyypin-sanktiolajit +kayttaja-urakan-vastuuhenkilo+
                                      {:urakkatyyppi :tiemerkinta})
         valaistuksen (kutsu-palvelua (:http-palvelin jarjestelma)
-                                     :hae-tarkastus +kayttaja-urakan-vastuuhenkilo+
+                                     :hae-urakkatyypin-sanktiolajit +kayttaja-urakan-vastuuhenkilo+
                                      {:urakkatyyppi :valaistus})]
-    (log/debug "hoidon " hoidon)
-    (log/debug "paallystyksen " paallystyksen)
     (is (not (empty? hoidon)))
-    (is (= #{:A :B :C :muistutus} (:sanktiolajit hoidon) "Hoidon sanktiolajit"))
+    (is (= #{:A :B :C :muistutus} hoidon) "Hoidon sanktiolajit")
     (is (= #{:yllapidon_sakko :yllapidon_bonus :muistutus}
-           (:sanktiolajit paallystyksen)
-           (:sanktiolajit paikkauksen)
-           (:sanktiolajit tiemerkinnan)
-           (:sanktiolajit valaistuksen)
-           "Ylläpidon sanktiolajit"))))
+           paallystyksen paikkauksen tiemerkinnan valaistuksen) "Ylläpidon sanktiolajit")))
 
 
