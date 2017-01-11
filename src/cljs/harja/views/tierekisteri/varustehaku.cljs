@@ -10,7 +10,8 @@
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.navigaatio :as nav]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.modal :as modal]))
 
 (defn oikeus-varusteiden-muokkaamiseen? []
   (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
@@ -56,6 +57,22 @@
      :hyvaksy [:div (ikonit/livicon-trash) " Poista"]
      :toiminto-fn (fn [] (e! (v/->PoistaVaruste varuste)))}))
 
+(defn tarkasta-varuste [e! tietolaji tunniste varuste]
+  (modal/nayta! {:otsikko "Tarkasta varuste"
+                 :footer [:span
+                          [:button.nappi-toissijainen {:type "button"
+                                                       :on-click #(do (.preventDefault %)
+                                                                      (modal/piilota!))}
+                           [:div (ikonit/livicon-ban) " Peruuta"]]
+                          [:button.nappi-myonteinen {:type "button"
+                                                     :on-click #(do (.preventDefault %)
+                                                                    (modal/piilota!))}
+                           [:div (ikonit/livicon-save) " Tallenna"]]]}
+                [lomake/lomake
+                 {}
+                 [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :leveys 1}]
+                 {}]))
+
 (defn sarakkeet [e! tietolajin-listaus-skeema]
   (if oikeus-varusteiden-muokkaamiseen?
     (let [toiminnot {:nimi :toiminnot
@@ -66,7 +83,7 @@
                                     (let [tunniste (:tunniste varuste)
                                           tietolaji (get-in varuste [:tietue :tietolaji :tunniste])]
                                       [:div
-                                       [napit/tarkasta "Tarkasta" #()]
+                                       [napit/tarkasta "Tarkasta" #(tarkasta-varuste e! tietolaji tunniste varuste)]
                                        [napit/muokkaa "Muokkaa" #()]
                                        [napit/poista "Poista" #(poista-varuste e! tietolaji tunniste varuste)]]))}]
       (conj tietolajin-listaus-skeema toiminnot))
