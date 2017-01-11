@@ -167,6 +167,7 @@
                             :B "Ryhmä B"
                             :C "Ryhmä C"
                             :muistutus "Muistutus"
+                            :yllapidon_muistutus "Muistutus"
                             :yllapidon_sakko "Sakko"
                             :yllapidon_bonus "Bonus"
                             "- valitse laji -")

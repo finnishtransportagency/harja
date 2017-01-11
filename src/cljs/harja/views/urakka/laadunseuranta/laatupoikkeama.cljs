@@ -121,6 +121,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                             :B "Ryhmä B"
                             :C "Ryhmä C"
                             :muistutus "Muistutus"
+                            :yllapidon_muistutus "Muistutus"
                             :yllapidon_sakko "Sakko"
                             "- valitse laji -")
           :validoi [[:ei-tyhja "Valitse laji"]]}

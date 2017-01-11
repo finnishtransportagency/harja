@@ -344,7 +344,7 @@
                                      {:urakkatyyppi :valaistus})]
     (is (not (empty? hoidon)))
     (is (= #{:A :B :C :muistutus} hoidon) "Hoidon sanktiolajit")
-    (is (= #{:yllapidon_sakko :yllapidon_bonus :muistutus}
+    (is (= #{:yllapidon_sakko :yllapidon_bonus :yllapidon_muistutus}
            paallystyksen paikkauksen tiemerkinnan valaistuksen) "Ylläpidon sanktiolajit")))
 
 

@@ -406,8 +406,8 @@
                             (map #(konv/array->set % :sanktiolaji keyword))
                             (sanktiot/hae-urakkatyypin-sanktiolajit
                               db (name urakkatyyppi)))
-        sanktiolajit (conj (apply clojure.set/union
-                                  (map :sanktiolaji sanktiotyypit)) :muistutus)]
+        sanktiolajit (apply clojure.set/union
+                            (map :sanktiolaji sanktiotyypit))]
     sanktiolajit))
 
 (defrecord Laadunseuranta []
