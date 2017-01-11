@@ -1,4 +1,38 @@
 (ns harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat
+  "Turvallisuusraportti koostuu kolmesta elementistä. Elementtien sisältö riippuu kotekstista.
+
+  URAKAN KONTEKSTI:
+
+  Ensimmäisessä taulukossa on laskettu yhteen eri tyypisten turvallisuuspoikkeamien
+  lukumäärät tietyllä aikavälillä. Taulukossa on kaksi saraketta, Tyyppi (esim. Työtapaturma)
+  ja Määrä. Lopussa on yhteenvetorivi.
+
+  Toinen elemntti on palkki, jolla ilmaistaan, milloin turpot on kirjattu. y-akseli
+  on lukumäärä, x-akseli on päivämäärä.
+
+  Viimeisessä taulukossa on turvallisuuspoikkeamat listana. Sarakkeet ovat
+  Pvm, Tyyppi, Vakavuusaste, Ammatti, Sairaalavuorokaudet, Sairauspoissaolopäivät.
+  Viimeinen rivi on yhteenvetorivi em. vuorokausista ja poissaloista.
+
+  HALLINTAYKSIKÖN KONTEKSTI:
+
+  Sama kuin urakan konteksti, paitsi jos on valittu \"Urakat eriteltynä\".
+
+  Jos on valittu, kahteen taulukkoon lisätään ensimmäiseksi sarakkeeksi urakan nimi.
+
+  KOKO MAAN KONTEKSTI:
+
+  Koko maan konteksissa palkit pysyvät samana. Kaksi taulukkoa eroavat huomattavasti.
+
+  Ensimmäisessä taulukossa on jälleen ilmaistu eri tyyppisten turpojen lukumäärä,
+  mutta tällä kertaa Tyypit ovat sarakkeita. Sarakkeet ovat siis [Alue], Työtapaturmant, Vaaratilanteet,
+  Turvallisuushavainnot, Muut. [Alue] on joko Hallintayksikkö tai Urakka, riippuen, onko
+  erittely valittu. Lopussa on yhteenvetorivi, jossa Alueena on Koko Maa, ja eri tyypit
+  laskettu yhteen.
+
+  Toinen taulukko on \"Turvallisuuspoikkeamat vakavuusasteittain\". Sarakkeet ovat [Alue],
+   Lievät, Vakavat. Lopussa on jälleen koko maan yhteenvetorivi.
+  "
   (:require [clojure.string :as str]
             [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
