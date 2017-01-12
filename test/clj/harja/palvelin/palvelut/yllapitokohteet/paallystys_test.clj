@@ -170,7 +170,7 @@
 
 (deftest hae-yllapitokohteen-puuttuva-paallystysilmoitus
   ;; Testattavalla ylläpitokohteella ei ole päällystysilmoitusta, mutta palvelu lupaa palauttaa
-  ;; silti päällystysilmoituksen, jota käyttäjä voi frontissa lähteä täyttämään
+  ;; silti minimaalisen päällystysilmoituksen, jota käyttäjä voi frontissa lähteä täyttämään
   ;; (erityisesti kohdeosien esitäyttö on tärkeää)
   ;; Testataan, että tällainen "ilmoituspohja" on mahdollista hakea.
   (let [urakka-id @muhoksen-paallystysurakan-id
@@ -185,6 +185,24 @@
     (is (not (nil? paallystysilmoitus-kannassa)))
     (is (nil? (:tila paallystysilmoitus-kannassa)) "Päällystysilmoituksen tila on tyhjä")
     ;; Puuttuvan päällystysilmoituksen kohdeosat esitäytettiin oikein
+    (is (= (count kohdeosat) 1))
+    (is (every? #(number? (:kohdeosa-id %)) kohdeosat))))
+
+(deftest hae-yllapitokohteen-olemassa-oleva-paallystysilmoitus
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+        paallystyskohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                    :urakan-paallystysilmoitus-paallystyskohteella
+                                                    +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                    :sopimus-id sopimus-id
+                                                                    :paallystyskohde-id paallystyskohde-id})
+        kohdeosat (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])]
+    (is (not (nil? paallystysilmoitus-kannassa)))
+    (is (= (:tila paallystysilmoitus-kannassa) :aloitettu) "Päällystysilmoituksen tila on aloitttu")
+    (is (== (:maaramuutokset paallystysilmoitus-kannassa) 160))
+    (is (== (:kokonaishinta paallystysilmoitus-kannassa) 5043.95))
+    ;; Kohdeosat on OK
     (is (= (count kohdeosat) 1))
     (is (every? #(number? (:kohdeosa-id %)) kohdeosat))))
 
