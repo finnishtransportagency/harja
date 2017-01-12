@@ -10,7 +10,8 @@
             [harja.kyselyt.paallystys :as q]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.palvelin.palvelut.yha :as yha]))
+            [harja.palvelin.palvelut.yha :as yha]
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]))
 
 (defn vaadi-maaramuutos-kuuluu-urakkaan [db urakka-id maaramuutos-id]
   (assert urakka-id "Urakka pitää olla!")
@@ -84,8 +85,23 @@
       (luo-maaramuutos db user (:yllapitokohde-id urakka-ja-yllapitokohde) maaramuutos)
       (paivita-maaramuutos db user urakka-ja-yllapitokohde maaramuutos))))
 
+(defn liita-yllapitokohteisiin-maaramuutokset
+  "Laskee ja liittää päällystyskohteisiin määrämuutokset"
+  [db user {:keys [yllapitokohteet urakka-id]}]
+  (mapv #(if (= (:yllapitokohdetyotyyppi %) :paallystys)
+           (let [kohteen-maaramuutokset
+                 (hae-maaramuutokset db user {:yllapitokohde-id (:id %)
+                                              :urakka-id urakka-id})]
+             (assoc % :maaramuutokset
+                      (paallystys-ja-paikkaus/summaa-maaramuutokset kohteen-maaramuutokset)))
+           %)
+        yllapitokohteet))
+
 (defn tallenna-maaramuutokset
-  [db user {:keys [urakka-id yllapitokohde-id maaramuutokset]}]
+  "Suorittaa annetuille määrämuutoksille lisäys-/päivitysoperaation.
+   Palauttaa päivittyneet määrämuutokset sekä ylläpitokohteet."
+  [db user {:keys [urakka-id yllapitokohde-id maaramuutokset
+                   sopimus-id vuosi]}]
   (log/debug "Aloitetaan määrämuutoksien tallennus")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
@@ -100,8 +116,15 @@
       (luo-tai-paivita-maaramuukset db user {:yllapitokohde-id yllapitokohde-id
                                              :urakka-id urakka-id} maaramuutokset)
 
-      (hae-maaramuutokset db user {:yllapitokohde-id yllapitokohde-id
-                                   :urakka-id urakka-id}))))
+      (let [yllapitokohteet (yy/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
+                                                                    :sopimus-id sopimus-id
+                                                                    :vuosi vuosi})
+            yllapitokohteet (liita-yllapitokohteisiin-maaramuutokset
+                              db user {:yllapitokohteet yllapitokohteet
+                                       :urakka-id urakka-id})]
+        {:maaramuutokset (hae-maaramuutokset db user {:yllapitokohde-id yllapitokohde-id
+                                                      :urakka-id urakka-id})
+         :yllapitokohteet yllapitokohteet}))))
 
 (defrecord Maaramuutokset []
   component/Lifecycle

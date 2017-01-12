@@ -41,7 +41,7 @@
         ur
         paikkaus/paikkauskohteet
         {:otsikko "Paikkauskohteet"
-         :nakyma :paikkaus
+         :kohdetyyppi :paikkaus
          :tallenna
          (yllapitokohteet/kasittele-tallennettavat-kohteet!
            #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id ur))

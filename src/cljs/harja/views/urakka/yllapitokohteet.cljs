@@ -461,8 +461,10 @@
        kohde
        @osan-pituus])))
 
-(defn maaramuutokset [yllapitokohde-id urakka-id]
-  (let [maaramuutokset (atom nil)
+(defn maaramuutokset [{:keys [yllapitokohde-id urakka-id yllapitokohteet-atom] :as tiedot}]
+  (let [sopimus-id (first @u/valittu-sopimusnumero)
+        vuosi @u/valittu-urakan-vuosi
+        maaramuutokset (atom nil)
         voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id)
         hae-maara-muutokset! (fn [urakka-id yllapitokohde-id]
                                (go (let [vastaus (<! (tiedot/hae-maaramuutokset urakka-id yllapitokohde-id))]
@@ -470,19 +472,25 @@
                                        (viesti/nayta! "Määrämuutoksien haku epäonnistui"
                                                       :warning
                                                       viesti/viestin-nayttoaika-keskipitka)
-                                       (reset! maaramuutokset vastaus)))))]
+                                       (reset! maaramuutokset (:maaramuutokset vastaus))
+                                       (reset! yllapitokohteet-atom (:yllapitokohteet vastaus))))))]
     (hae-maara-muutokset! urakka-id yllapitokohde-id)
-    (fn [yllapitokohde-id urakka-id]
+    (fn [{:keys [yllapitokohde-id urakka-id] :as tiedot}]
       [grid/grid
        {:otsikko "Määrämuutokset"
         :tyhja "Ei määrämuutoksia"
         :tallenna (when voi-muokata?
-                     #(go (let [vastaus (<! (tiedot/tallenna-maaramuutokset! urakka-id yllapitokohde-id %))]
-                            (if (k/virhe? vastaus)
-                              (viesti/nayta! "Määrämuutoksien tallennusepäonnistui"
-                                             :warning
-                                             viesti/viestin-nayttoaika-keskipitka)
-                              (reset! maaramuutokset vastaus)))))
+                    #(go (let [vastaus (<! (tiedot/tallenna-maaramuutokset!
+                                             {:urakka-id urakka-id
+                                              :sopimus-id sopimus-id
+                                              :vuosi vuosi
+                                              :yllapitokohde-id yllapitokohde-id
+                                              :maaramuutokset %}))]
+                           (if (k/virhe? vastaus)
+                             (viesti/nayta! "Määrämuutoksien tallennusepäonnistui"
+                                            :warning
+                                            viesti/viestin-nayttoaika-keskipitka)
+                             (reset! maaramuutokset vastaus)))))
         :voi-muokata? voi-muokata?}
        [{:otsikko "Päällyste\u00ADtyön tyyppi"
          :nimi :tyyppi
@@ -514,7 +522,9 @@
   [:div
    [yllapitokohdeosat-kohteelle urakka kohteet-atom rivi
     {:voi-muokata? (not @grid/gridia-muokataan?)}]
-   [maaramuutokset (:id rivi) (:id urakka)]])
+   [maaramuutokset {:yllapitokohde-id (:id rivi)
+                    :urakka-id (:id urakka)
+                    :kohteet-atom kohteet-atom}]])
 
 (defn hae-osan-pituudet [grid osan-pituudet-teille]
   (let [tiet (into #{} (map (comp :tr-numero second)) (grid/hae-muokkaustila grid))]
@@ -524,7 +534,16 @@
 
 
 
-(defn yllapitokohteet [urakka kohteet-atom optiot]
+(defn yllapitokohteet
+  "Ottaa urakan, kohteet atomin ja optiot ja luo taulukon, jossa on listattu kohteen tiedot.
+
+  Optiot on map, jossa avaimet:
+  otsikko           Taulukon otsikko
+  kohdetyyppi       Minkä tyyppisiä kohteita tässä taulukossa näytetään (:paallystys tai :paikkaus)
+  yha-sidottu?      Onko taulukon kohteet tulleet kaikki YHA:sta (vaikuttaa mm. kohteiden muokkaamiseen)
+  tallenna          Funktio tallennusnapille
+  kun-onnistuu      Funktio tallennuksen onnistumiselle"
+  [urakka kohteet-atom optiot]
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {}) ;; virheelliset TR sijainnit
         tallenna (reaction
@@ -583,14 +602,14 @@
                     :nimi :yllapitoluokka :tyyppi :numero :leveys yllapitoluokka-leveys
                     :muokattava? (constantly (not (:yha-sidottu? optiot)))}
 
-                   (when (= (:nakyma optiot) :paallystys)
+                   (when (= (:kohdetyyppi optiot) :paallystys)
                      {:otsikko "Tar\u00ADjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
                       :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :tasaa :oikea})
-                   (when (= (:nakyma optiot) :paallystys)
+                   (when (= (:kohdetyyppi optiot) :paallystys)
                      {:otsikko "Mää\u00ADrä\u00ADmuu\u00ADtok\u00ADset"
                       :nimi :maaramuutokset :muokattava? (constantly false)
                       :fmt fmt/euro-opt :tyyppi :numero :leveys maaramuutokset-leveys :tasaa :oikea})
-                   (when (= (:nakyma optiot) :paikkaus)
+                   (when (= (:kohdetyyppi optiot) :paikkaus)
                      {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta
                       :muokattava? (constantly false)
                       :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys
@@ -659,14 +678,14 @@
       {:otsikko "" :nimi :pit :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :yllapitoluokka :tyyppi :string :leveys yllapitoluokka-leveys}
       {:otsikko "" :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :string :leveys kvl-leveys}
-      (when (= (:nakyma optiot) :paallystys)
+      (when (= (:kohdetyyppi optiot) :paallystys)
         {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
          :fmt fmt/euro-opt :tyyppi :numero
          :leveys tarjoushinta-leveys :tasaa :oikea})
-      (when (= (:nakyma optiot) :paallystys)
+      (when (= (:kohdetyyppi optiot) :paallystys)
         {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :fmt fmt/euro-opt :tyyppi :numero
          :leveys maaramuutokset-leveys :tasaa :oikea})
-      (when (= (:nakyma optiot) :paikkaus)
+      (when (= (:kohdetyyppi optiot) :paikkaus)
         {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta :fmt fmt/euro-opt :tyyppi :numero
          :leveys toteutunut-hinta-leveys :tasaa :oikea})
       {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero

@@ -17,7 +17,6 @@
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.kyselyt.tieverkko :as tieverkko]
             [harja.domain.tiemerkinta :as tm-domain]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
@@ -33,53 +32,16 @@
   (:use org.httpkit.fake)
   (:import (com.sun.xml.internal.bind.v2 TODO)))
 
-(defn laske-osien-pituudet
-  "Hakee tieverkosta osien pituudet tielle. Palauttaa pituuden metreina."
-  [db yllapitokohteet]
-  (fmap
-    (fn [osat]
-      (let [tie (:tr-numero (first osat))
-            osat (into #{}
-                       (comp (mapcat (juxt :tr-alkuosa :tr-loppuosa))
-                             (remove nil?))
-                       osat)
-            min-osa (reduce min 1 osat)
-            max-osa (reduce max 1 osat)]
-        (into {}
-              (map (juxt :osa :pituus))
-              (tieverkko/hae-osien-pituudet db tie min-osa max-osa))))
-    (group-by :tr-numero yllapitokohteet)))
-
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (log/debug "Haetaan urakan ylläpitokohteet.")
   (jdbc/with-db-transaction [db db]
-    (let [yllapitokohteet (into []
-                                (comp
-                                  (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
-                                  (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
-                                  (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
-                                  (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
-                                  (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
-                                  (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
-                                  (map #(yllapitokohteet-q/liita-kohdeosat db % (:id %))))
-                                (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
-                                                                             :sopimus sopimus-id
-                                                                             :vuosi vuosi}))
-          ;; Päällystyskohteisiin pitää lisätä tieto määrämuutoksista
-          yllapitokohteet (mapv #(if (= (:yllapitokohdetyotyyppi %) :paallystys)
-                                   (let [kohteen-maaramuutokset
-                                         (maaramuutokset/hae-maaramuutokset db user {:yllapitokohde-id (:id %)
-                                                                                     :urakka-id urakka-id})]
-                                     (assoc % :maaramuutokset
-                                              (paallystys-ja-paikkaus/summaa-maaramuutokset kohteen-maaramuutokset)))
-                                   %)
-                                yllapitokohteet)
-          osien-pituudet-tielle (laske-osien-pituudet db yllapitokohteet)
-          yllapitokohteet (mapv #(assoc %
-                                   :pituus
-                                   (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))
-                                yllapitokohteet)]
+    (let [yllapitokohteet (yy/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
+                                                                  :sopimus-id sopimus-id
+                                                                  :vuosi vuosi})
+          yllapitokohteet (maaramuutokset/liita-yllapitokohteisiin-maaramuutokset
+                            db user {:yllapitokohteet yllapitokohteet
+                                     :urakka-id urakka-id})]
       yllapitokohteet)))
 
 (defn hae-urakan-yllapitokohteet-lomakkeelle [db user {:keys [urakka-id sopimus-id]}]

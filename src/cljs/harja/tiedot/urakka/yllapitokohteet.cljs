@@ -36,8 +36,11 @@
   (k/post! :hae-maaramuutokset {:urakka-id urakka-id
                                 :yllapitokohde-id yllapitokohde-id}))
 
-(defn tallenna-maaramuutokset! [urakka-id yllapitokohde-id maaramuutokset]
+(defn tallenna-maaramuutokset! [{:keys [urakka-id yllapitokohde-id maaramuutokset
+                                        sopimus-id vuosi]}]
   (k/post! :tallenna-maaramuutokset {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi vuosi
                                      :yllapitokohde-id yllapitokohde-id
                                      :maaramuutokset maaramuutokset}))
 
