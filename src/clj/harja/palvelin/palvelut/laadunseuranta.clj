@@ -20,6 +20,7 @@
 
             [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
+            [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]
             [harja.domain.oikeudet :as oikeudet]
             [clojure.core.async :as async]))
 
@@ -306,7 +307,8 @@
   (log/debug "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama)
             ", urakassa " urakka)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka)
-
+  (when (:yllapitokohde laatupoikkeama)
+    (yllapitokohteet/vaadi-yllapitokohde-kuuluu-urakkaan db urakka (:yllapitokohde laatupoikkeama)))
   (jdbc/with-db-transaction [c db]
     (let [id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"))]
 
