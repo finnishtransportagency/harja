@@ -42,3 +42,13 @@
     (is (== (:tilattu-maara maaramuutos) 100) "Tilattu määrä tmsää")
     (is (== (:toteutunut-maara maaramuutos) 120) "Toteutunut määrä täsmää")
     (is (== (:yksikkohinta maaramuutos) 2) "Yksikköhinta täsmää")))
+
+(deftest maaramuutokset-haku-epaonnistuu-ilman-oikeuksia
+  (try (let [yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+         _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :hae-maaramuutokset +kayttaja-ulle+
+                                 {:urakka-id @muhoksen-paallystysurakan-id
+                                  :yllapitokohde-id yllapitokohde-id})]
+     (is false "Kutsu meni virheellisesti läpi"))
+       (catch Exception e
+         (is true "Kutsu heitti virheen odotetusti"))))
