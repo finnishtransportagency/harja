@@ -36,7 +36,7 @@
       (let [yllapitokohteet (:yllapitokohteet optiot)
             mahdolliset-sanktiolajit @tiedot-urakka/urakkatyypin-sanktiolajit
             yllapito? (:yllapito? optiot)
-            yllapitokokohdeurakka? @tiedot-urakka/yllapidokohdeurakka?]
+            yllapitokokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
         [:div
          [napit/takaisin "Takaisin sanktioluetteloon" #(reset! tiedot/valittu-sanktio nil)]
          ;; Vaadi tarvittavat tiedot ennen rendausta

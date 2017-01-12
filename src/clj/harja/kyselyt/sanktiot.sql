@@ -136,7 +136,12 @@ SELECT id, nimi, sanktiolaji, urakkatyyppi
  WHERE urakkatyyppi @> ARRAY[:urakkatyyppi::urakkatyyppi]
 
 --name: hae-sanktiotyyppi-sanktiolajilla
--- single?: true
 SELECT id
   FROM sanktiotyyppi
  WHERE sanktiolaji @> ARRAY[:sanktiolaji::sanktiolaji]
+
+
+--name: hae-sanktion-urakka-id
+SELECT urakka FROM laatupoikkeama lp
+JOIN sanktio s ON lp.id = s.laatupoikkeama
+WHERE s.id = :sanktioid;

@@ -408,7 +408,7 @@
                   (<! (k/post! :hae-urakkatyypin-sanktiolajit {:urakka-id (:id urakka)
                                                                :urakkatyyppi (:tyyppi urakka)}))))))
 
-(def yllapidokohdeurakka?
+(def yllapitokohdeurakka?
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
               (or (= :paallystys urakkatyyppi)
                   (= :paikkaus urakkatyyppi)
