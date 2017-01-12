@@ -50,11 +50,11 @@ BEGIN
                                              luoja)
     VALUES (rivi.paallystyskohde,
             'ajoradan_paallyste'::maaramuutos_tyon_tyyppi, -- TODO rivi.tyo->'tyyppi' JA MUUNTO ENUMIKSI. MITEN?
-            rivi.tyo->'tyo',
-            rivi.tyo->'yksikko',
-            rivi.tyo->'tilattu-maara',
-            rivi.tyo->'toteutunut-maara',
-            rivi.tyo->'yksikkohinta',
+            rivi.tyo->>'tyo',
+            rivi.tyo->>'yksikko',
+            (rivi.tyo->>'tilattu-maara')::INTEGER,
+            (rivi.tyo->>'toteutunut-maara')::INTEGER,
+            (rivi.tyo->>'yksikkohinta')::INTEGER,
             rivi.luoja);
   END LOOP;
   RETURN;
