@@ -67,14 +67,16 @@
                        :tilattu-maara 100
                        :toteutunut-maara 120
                        :yksikkohinta 3}]
-        maaramuutokset-testin-jalkeen (kutsu-palvelua
-                                        (:http-palvelin jarjestelma)
-                                        :tallenna-maaramuutokset +kayttaja-jvh+
-                                        {:urakka-id @muhoksen-paallystysurakan-id
-                                         :yllapitokohde-id yllapitokohde-id
-                                         :maaramuutokset testipayload
-                                         :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
-                                         :vuosi 2017})]
+        maaramuutokset-testin-jalkeen (:maaramuutokset (kutsu-palvelua
+                                                         (:http-palvelin jarjestelma)
+                                                         :tallenna-maaramuutokset +kayttaja-jvh+
+                                                         {:urakka-id @muhoksen-paallystysurakan-id
+                                                          :yllapitokohde-id yllapitokohde-id
+                                                          :maaramuutokset testipayload
+                                                          :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                                                          :vuosi 2017}))]
     (is (= (count maaramuutokset-testin-jalkeen)
            (+ (count maaramuutokset-ennen-testia) 1)) "Tallennuksen jälkeen määrä kasvoi yhdellä")
-    ))
+
+    ;; Siivoa sotkut
+    (u "DELETE FROM yllapitokohteen_maaramuutos WHERE tyo = 'Testissä luotu määrämuutos';")))
