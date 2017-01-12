@@ -67,16 +67,24 @@
                        :tilattu-maara 100
                        :toteutunut-maara 120
                        :yksikkohinta 3}]
-        maaramuutokset-testin-jalkeen (:maaramuutokset (kutsu-palvelua
-                                                         (:http-palvelin jarjestelma)
-                                                         :tallenna-maaramuutokset +kayttaja-jvh+
-                                                         {:urakka-id @muhoksen-paallystysurakan-id
-                                                          :yllapitokohde-id yllapitokohde-id
-                                                          :maaramuutokset testipayload
-                                                          :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
-                                                          :vuosi 2017}))]
-    (is (= (count maaramuutokset-testin-jalkeen)
+        vastaus (kutsu-palvelua
+                  (:http-palvelin jarjestelma)
+                  :tallenna-maaramuutokset +kayttaja-jvh+
+                  {:urakka-id @muhoksen-paallystysurakan-id
+                   :yllapitokohde-id yllapitokohde-id
+                   :maaramuutokset testipayload
+                   :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                   :vuosi 2017})
+        maaramuutokset-tallennuksen-jalkeen (:maaramuutokset vastaus)
+        yllapitokohteet-tallennuksen-jalkeen (:yllapitokohteet vastaus)
+        leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi")
+                                    yllapitokohteet-tallennuksen-jalkeen))]
+    (is (= (count maaramuutokset-tallennuksen-jalkeen)
            (+ (count maaramuutokset-ennen-testia) 1)) "Tallennuksen jälkeen määrä kasvoi yhdellä")
+    (is (== (:maaramuutokset leppajarven-ramppi) 220)
+        "Leppäjärven rampin määrämuutos laskettu oikein eli määrämuutoksien
+        (toteutunut - tilattu) * hinta
+        summattuna yhteen")
 
     ;; Siivoa sotkut
     (u "DELETE FROM yllapitokohteen_maaramuutos WHERE tyo = 'Testissä luotu määrämuutos';")))
