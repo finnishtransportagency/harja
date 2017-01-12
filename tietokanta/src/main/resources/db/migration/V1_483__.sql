@@ -34,7 +34,10 @@ $BODY$
 DECLARE
   rivi paallystysilmoitus%rowtype;
 BEGIN
-  FOR rivi IN SELECT * FROM paallystysilmoitus
+  FOR rivi IN SELECT
+                paallystyskohde,
+                luoja,
+                json_array_elements((ilmoitustiedot->'tyot')::JSON) AS tyo FROM paallystysilmoitus
   LOOP
     INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde,
                                              tyon_tyyppi,
@@ -45,14 +48,15 @@ BEGIN
                                              yksikkohinta,
                                              luoja)
     VALUES (rivi.id,
-            'ajoradan_paallyste'::maaramuutos_tyon_tyyppi,
-            'Testityö',
-            'kg',
-            100,
-            120,
-            2,
+            'ajoradan_paallyste'::maaramuutos_tyon_tyyppi, -- TODO rivi.tyo->'tyyppi' JA MUUNTO ENUMIKSI. MITEN?
+            rivi.tyo->'tyo',
+            rivi.tyo->'yksikkohinta',
+            rivi.tyo->'tilattu-maara',
+            rivi.tyo->'toteutunut-maara',
+            rivi.tyo->'yksikkohinta',
             rivi.luoja);
   END LOOP;
+  RETURN;
   RETURN;
 END
 $BODY$
