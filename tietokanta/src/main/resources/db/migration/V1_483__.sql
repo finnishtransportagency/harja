@@ -28,6 +28,7 @@ ALTER TABLE paallystysilmoitus DROP COLUMN asiatarkastus_taloudellinen_osa;
 -- Migratoi olemassa olevien päällystysilmoitusten ilmoitustiedot-JSONista taloudellisen osan
 -- tiedot uuteen tauluun
 
+-- TODO KESKEN
 CREATE OR REPLACE FUNCTION muunna_paallystysilmoitusten_maaramuutokset() RETURNS VOID AS
 $BODY$
 DECLARE
@@ -50,7 +51,7 @@ BEGIN
             100,
             120,
             2,
-            (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'));
+            rivi.luoja);
   END LOOP;
   RETURN;
 END
