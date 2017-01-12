@@ -472,8 +472,7 @@
                                        (viesti/nayta! "Määrämuutoksien haku epäonnistui"
                                                       :warning
                                                       viesti/viestin-nayttoaika-keskipitka)
-                                       (reset! maaramuutokset (:maaramuutokset vastaus))
-                                       (reset! yllapitokohteet-atom (:yllapitokohteet vastaus))))))]
+                                       (reset! maaramuutokset vastaus)))))]
     (hae-maara-muutokset! urakka-id yllapitokohde-id)
     (fn [{:keys [yllapitokohde-id urakka-id] :as tiedot}]
       [grid/grid
@@ -490,7 +489,8 @@
                              (viesti/nayta! "Määrämuutoksien tallennusepäonnistui"
                                             :warning
                                             viesti/viestin-nayttoaika-keskipitka)
-                             (reset! maaramuutokset vastaus)))))
+                             (reset! maaramuutokset (:maaramuutokset vastaus))
+                             (reset! yllapitokohteet-atom (:yllapitokohteet vastaus))))))
         :voi-muokata? voi-muokata?}
        [{:otsikko "Päällyste\u00ADtyön tyyppi"
          :nimi :tyyppi
