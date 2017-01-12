@@ -13,11 +13,13 @@ SELECT t.id,
        tpk.nimi AS tehtava_toimenpide,
        rp.sijainti AS reittipiste_sijainti,
        rp.aika AS reittipiste_aika,
-       k.jarjestelma AS jarjestelmanlisaama
+       k.jarjestelma AS jarjestelmanlisaama,
+       tpk3.koodi AS tpk3
   FROM toteuma t
        JOIN urakka u ON t.urakka=u.id
        JOIN toteuma_tehtava tt ON tt.toteuma = t.id
        JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+       JOIN toimenpidekoodi tpk3 ON tpk.emo = tpk3.id
        JOIN kayttaja k ON t.luoja = k.id
        LEFT JOIN reittipiste rp ON t.id = rp.toteuma
  WHERE ST_Intersects(t.reitti, :sijainti)

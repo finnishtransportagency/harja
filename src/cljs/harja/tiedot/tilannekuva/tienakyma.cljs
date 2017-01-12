@@ -127,12 +127,15 @@
     (log "tarkastellaanpa toteumaa: " (pr-str toteuma))
 
     ;; FIXME:
-    ;; Tässä pitää vielä valita: sopimus ja toimenpidekoodi
+    ;; Tässä pitää vielä valita: sopimus
 
     ;; Kartta näkyviin
     ;; PENDING: tämä pitää tehdä async? ilmeisesti jossain tehdään unmount/mount
     ;; manipulaatiota kartan kokovalinnalle
     (go (nav/vaihda-kartan-koko! :L))
+
+    ;; Valitse oikea toimenpideinstanssi
+    (urakka/valitse-toimenpideinstanssi-koodilla! (:tpk3 toteuma))
 
     ;; Valitaan sivuksi kok.hint. toteumat
     (nav/aseta-valittu-valilehti! :sivu :urakat)
