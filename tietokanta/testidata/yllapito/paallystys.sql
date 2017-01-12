@@ -55,6 +55,11 @@ INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo,
 yksikko, tilattu_maara, toteutunut_maara, yksikkohinta, luoja)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'), 'ajoradan_paallyste'::maaramuutos_tyon_tyyppi,
 'Testityö', 'kg', 100, 120, 2, (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'));
+INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo,
+yksikko, tilattu_maara, toteutunut_maara, yksikkohinta, luoja)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'), 'ajoradan_paallyste'::maaramuutos_tyon_tyyppi,
+'Testityö 2', 'kg', 90, 130, 3, (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'));
+
 
 -- Päällystysilmoitukset
 
