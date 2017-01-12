@@ -18,7 +18,6 @@
 
 (def kohdeluettelossa? (atom false))
 (def paallystysilmoitukset-nakymassa? (atom false))
-(def paallystysilmoitus-tallennettu-timestamp (atom nil))
 
 (defn hae-paallystysilmoitukset [urakka-id sopimus-id vuosi]
   (k/post! :urakan-paallystysilmoitukset {:urakka-id urakka-id
@@ -29,9 +28,10 @@
   (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:urakka-id urakka-id
                                                            :paallystyskohde-id yllapitokohde-id}))
 
-(defn tallenna-paallystysilmoitus! [urakka-id sopimus-id lomakedata]
+(defn tallenna-paallystysilmoitus! [{:keys [urakka-id sopimus-id vuosi lomakedata]}]
   (k/post! :tallenna-paallystysilmoitus {:urakka-id urakka-id
                                          :sopimus-id sopimus-id
+                                         :vuosi vuosi
                                          :paallystysilmoitus lomakedata}))
 
 (def paallystysilmoitukset
@@ -51,10 +51,6 @@
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
-               ;; Päällystysilmoitus-lomakkeessa voidaan muokata kohdeosia, joten tarkkaillaan
-               ;; päällystysilmoituksen tallennusta. Jos tallennus tapahtuu, pitää kohteet
-               ;; hakea uudelleen.
-               paallystysilmoitus-tallennettu-timestamp @paallystysilmoitus-tallennettu-timestamp
                nakymassa? @kohdeluettelossa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)

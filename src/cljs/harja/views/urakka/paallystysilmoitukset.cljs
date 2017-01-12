@@ -179,7 +179,8 @@
               "Päällystysilmoitus hyväksytty, ilmoitus lukitaan tallennuksen yhteydessä."
               :default nil)
         urakka-id (:id urakka)
-        [sopimus-id _] @u/valittu-sopimusnumero]
+        [sopimus-id _] @u/valittu-sopimusnumero
+        vuosi @u/valittu-urakan-vuosi]
 
     [:div.pot-tallennus
      (when huomautusteksti
@@ -193,7 +194,10 @@
                                   (grid/poista-idt [:ilmoitustiedot :alustatoimet]))]
         (log "[PÄÄLLYSTYS] Lomake-data: " (pr-str lomake))
         (log "[PÄÄLLYSTYS] Lähetetään data " (pr-str lahetettava-data))
-        (paallystys/tallenna-paallystysilmoitus! urakka-id sopimus-id lahetettava-data))
+        (paallystys/tallenna-paallystysilmoitus! {:urakka-id urakka-id
+                                                  :sopimus-id sopimus-id
+                                                  :lomakedata lahetettava-data
+                                                  :vuosi vuosi}))
       {:luokka "nappi-ensisijainen"
        :id "tallenna-paallystysilmoitus"
        :disabled (false? valmis-tallennettavaksi?)
@@ -644,8 +648,8 @@
          (fn [vastaus]
            (log "[PÄÄLLYSTYS] Lomake tallennettu, vastaus: " (pr-str vastaus))
            (urakka/lukitse-urakan-yha-sidonta! (:id @nav/valittu-urakka))
-           (reset! paallystys/paallystysilmoitus-tallennettu-timestamp (t/now))
-           (reset! paallystys/paallystysilmoitukset vastaus)
+           (reset! paallystys/paallystysilmoitukset (:paallystysilmoitukset vastaus))
+           (reset! paallystys/yllapitokohteet (:yllapitokohteet vastaus))
            (reset! ilmoituslomake nil))]))))
 
 (defn paallystysilmoitukset [urakka]

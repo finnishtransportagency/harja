@@ -276,8 +276,8 @@
   Päällystysilmoituksen kohdeosien tietoja ei tallenneta itse ilmoitukseen, vaan ne tallennetaan
   yllapitokohdeosa-tauluun.
 
-  Lopuksi palauttaa päällystysilmoitukset kannasta."
-  [db user {:keys [urakka-id sopimus-id paallystysilmoitus]}]
+  Lopuksi palauttaa päällystysilmoitukset ja ylläpitokohteet kannasta."
+  [db user {:keys [urakka-id sopimus-id vuosi paallystysilmoitus]}]
   (log/debug "Tallennetaan päällystysilmoitus: " paallystysilmoitus
              ". Urakka-id " urakka-id
              ", sopimus-id: " sopimus-id
@@ -313,9 +313,13 @@
 
         (tallenna-paallystysilmoituksen-kommentti db user paallystysilmoitus paallystysilmoitus-id)
 
-        (let [uudet-ilmoitukset (hae-urakan-paallystysilmoitukset c user {:urakka-id urakka-id
+        (let [yllapitokohteet (yllapitokohteet/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
+                                                                                   :sopimus-id sopimus-id
+                                                                                   :vuosi vuosi})
+              uudet-ilmoitukset (hae-urakan-paallystysilmoitukset c user {:urakka-id urakka-id
                                                                           :sopimus-id sopimus-id})]
-          uudet-ilmoitukset)))))
+          {:yllapitokohteet yllapitokohteet
+           :paallystysilmoitukset uudet-ilmoitukset})))))
 
 (defrecord Paallystys []
   component/Lifecycle
