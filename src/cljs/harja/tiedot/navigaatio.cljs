@@ -212,12 +212,16 @@
   (reset! valittu-hallintayksikko-id hy-id)
   (valitse-urakka! ur))
 
+(defn aseta-hallintayksikko-ja-urakka-id! [hy-id ur-id]
+  (reset! valittu-hallintayksikko-id hy-id)
+  (reset! valittu-urakka-id ur-id))
+
 (defn valitse-urakoitsija! [u]
   (reset! valittu-urakoitsija u))
 
 ;; Rajapinta hallintayksikön valitsemiseen, jota viewit voivat kutsua
 (defn valitse-hallintayksikko-id! [id]
-  (reset! valittu-hallintayksikko-id )
+  (reset! valittu-hallintayksikko-id id)
   (reset! valittu-urakka-id nil)
   (paivita-url))
 

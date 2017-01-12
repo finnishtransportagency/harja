@@ -7,7 +7,11 @@
             [cljs.core.async :refer [<!] :as async]
             [tuck.core :as tuck]
             [harja.ui.kartta.infopaneelin-sisalto :as infopaneelin-sisalto]
-            [harja.tyokalut.functor :refer [fmap]])
+            [harja.tyokalut.functor :refer [fmap]]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as urakka]
+            [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -31,6 +35,7 @@
 (defrecord Nakymassa [nakymassa?])
 (defrecord SuljeInfopaneeli [])
 (defrecord AvaaTaiSuljeTulos [idx])
+(defrecord TarkasteleToteumaa [toteuma])
 
 (defn- kartalle
   "Muodosta tuloksista karttataso.
@@ -43,7 +48,7 @@
            :valitut-tulokset-kartalla
            (esitettavat-asiat/kartalla-esitettavaan-muotoon
             (concat valitut-tulokset
-                    (map #(assoc % :tyyppi-kartalla :reittipisteet)
+                    #_(map #(assoc % :tyyppi-kartalla :reittipisteet)
                          (filter #(= (:tyyppi-kartalla %) :toteuma) valitut-tulokset))
                     [(assoc (:sijainti valinnat)
                             :tyyppi-kartalla :tr-osoite-indikaattori)])
@@ -114,7 +119,32 @@
   (process-event [_ tienakyma]
     (assoc tienakyma
            :tulokset nil
-           :tulokset-kartalla nil)))
+           :tulokset-kartalla nil))
+
+  TarkasteleToteumaa
+  (process-event [{{:keys [urakka hallintayksikko id] :as toteuma} :toteuma}
+                  {{:keys [alku loppu]} :valinnat :as app}]
+    (log "tarkastellaanpa toteumaa: " (pr-str toteuma))
+
+    ;; Valitaan sivuksi kok.hint. toteumat
+    (nav/aseta-valittu-valilehti! :sivu :urakat)
+    (nav/aseta-valittu-valilehti! :urakat :toteumat)
+    (nav/aseta-valittu-valilehti! :toteumat :kokonaishintaiset-tyot)
+
+
+    ;; Valitse toteuman urakka ja sen hallintayksikkö
+    (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko urakka)
+
+    ;; Valitse aikaväliksi sama kuin tienäkymän valinnoissa
+    (urakka/valitse-aikavali! alku loppu)
+
+    ;; Aukaistaan vetolaatikko, joka sisältää tämän toteuman, valmiiksi
+    (kokonaishintaiset-tyot/avaa-toteuma! (pvm/pvm (:alkanut toteuma))
+                                          (:toimenpidekoodi (first (:tehtavat toteuma)))
+                                          (:jarjestelmanlisaama toteuma))
+
+    ;; Valitaan
+    app))
 
 (defonce muut-tulokset-kartalla
   (r/cursor tienakyma [:muut-tulokset-kartalla]))

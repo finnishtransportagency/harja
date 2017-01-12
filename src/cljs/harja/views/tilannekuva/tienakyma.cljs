@@ -60,7 +60,7 @@
     #(e! (tiedot/->AvaaTaiSuljeTulos (:idx (:data %))))
     #(e! (tiedot/->SuljeInfopaneeli))
     {:toteuma {:teksti "Tarkastele toteumanäkymässä"
-               :toiminto #(log "hehe, ei täältä sinne pääse")}}]))
+               :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}}]))
 
 (defn- tulospaneeli [e! tulokset avatut-tulokset]
   (komp/luo
