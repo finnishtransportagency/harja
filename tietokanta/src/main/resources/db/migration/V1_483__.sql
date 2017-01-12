@@ -58,7 +58,6 @@ BEGIN
             rivi.luoja);
   END LOOP;
   RETURN;
-  RETURN;
 END
 $BODY$
 LANGUAGE 'plpgsql';
