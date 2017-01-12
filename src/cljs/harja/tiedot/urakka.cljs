@@ -136,6 +136,8 @@
 
 (defonce valittu-aikavali (reaction-writable @valittu-hoitokausi))
 
+(defn valitse-aikavali! [alku loppu]
+  (reset! valittu-aikavali [alku loppu]))
 
 (defn valitse-hoitokausi! [hk]
   (log "------- VALITAAN HOITOKAUSI:" (pr-str hk))
