@@ -41,7 +41,6 @@
    :valmispvm-kohde (pvm/luo-pvm 2005 9 2)
    :valmispvm-paallystys (pvm/luo-pvm 2005 9 2)
    :takuupvm (pvm/luo-pvm 2005 9 3)
-   :muutoshinta 0
    :ilmoitustiedot {:osoitteet [{:nimi "Tie 666"
                                  :tr-numero 666
                                  :tr-alkuosa 2
@@ -184,7 +183,6 @@
                                                                    :sopimus-id sopimus-id
                                                                    :paallystysilmoitus paallystysilmoitus})
       (let [maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
-            muutoshinta (ffirst (q (str "SELECT muutoshinta FROM paallystysilmoitus WHERE paallystyskohde = (SELECT id FROM yllapitokohde WHERE id =" paallystyskohde-id ");")))
             paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :urakan-paallystysilmoitus-paallystyskohteella
                                                         +kayttaja-jvh+ {:urakka-id urakka-id
@@ -194,7 +192,6 @@
         (is (not (nil? paallystysilmoitus-kannassa)))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
         (is (= (:tila paallystysilmoitus-kannassa) :valmis))
-        (is (= (:muutoshinta paallystysilmoitus-kannassa) muutoshinta))
         (is (= (:ilmoitustiedot paallystysilmoitus-kannassa)
                {:alustatoimet [{:kasittelymenetelma 1
                                 :paksuus 1234
@@ -317,7 +314,6 @@
         (u (str "UPDATE paallystysilmoitus SET
                       tila = NULL,
                       paatos_tekninen_osa = NULL,
-                      paatos_taloudellinen_osa = NULL,
                       perustelu_tekninen_osa = NULL
                   WHERE paallystyskohde =" paallystyskohde-id ";"))))))
 
