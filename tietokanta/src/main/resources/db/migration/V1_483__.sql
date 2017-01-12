@@ -35,16 +35,27 @@ DECLARE
 BEGIN
   FOR rivi IN SELECT * FROM paallystysilmoitus
   LOOP
-    -- TODO HAE DATA POTISTA TÄHÄN. MITEN?
-    INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo,
-                                             yksikko, tilattu_maara, toteutunut_maara, yksikkohinta, luoja)
-    VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'), 'ajoradan_paallyste'::maaramuutos_tyon_tyyppi,
-            'Testityö', 'kg', 100, 120, 2, (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'));
+    INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde,
+                                             tyon_tyyppi,
+                                             tyo,
+                                             yksikko,
+                                             tilattu_maara,
+                                             toteutunut_maara,
+                                             yksikkohinta,
+                                             luoja)
+    VALUES (rivi.id,
+            'ajoradan_paallyste'::maaramuutos_tyon_tyyppi,
+            'Testityö',
+            'kg',
+            100,
+            120,
+            2,
+            (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'));
   END LOOP;
   RETURN;
 END
 $BODY$
-LANGUAGE 'plpgsql' ;
+LANGUAGE 'plpgsql';
 
 SELECT * FROM muunna_paallystysilmoitusten_maaramuutokset();
 DROP FUNCTION muunna_paallystysilmoitusten_maaramuutokset(); -- Ei tarvi tehdä kuin kerran
