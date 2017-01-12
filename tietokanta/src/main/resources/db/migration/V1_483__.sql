@@ -51,7 +51,7 @@ BEGIN
     VALUES (rivi.paallystyskohde,
             'ajoradan_paallyste'::maaramuutos_tyon_tyyppi, -- TODO rivi.tyo->'tyyppi' JA MUUNTO ENUMIKSI. MITEN?
             rivi.tyo->'tyo',
-            rivi.tyo->'yksikkohinta',
+            rivi.tyo->'yksikko',
             rivi.tyo->'tilattu-maara',
             rivi.tyo->'toteutunut-maara',
             rivi.tyo->'yksikkohinta',
