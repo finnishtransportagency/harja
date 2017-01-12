@@ -139,7 +139,6 @@
                         :yllapitokohde (hae-muhoksen-paallystysurakan-testikohteen-id)}
         hk-alkupvm (pvm/->pvm "1.1.2017")
         hk-loppupvm (pvm/->pvm "31.12.2017")]
-    ;user sanktiorunko laatupoikkeama urakka [hk-alkupvm hk-loppupvm]
     (testing "Päällystysurakan suorasanktion tallennus"
       (let [sanktiot-sakon-jalkeen (kutsu-http-palvelua
                                           :tallenna-suorasanktio
@@ -203,8 +202,6 @@
                                          :hoitokausi     [hk-alkupvm hk-loppupvm]})
             lisatty-hoidon-sakko (first (filter #(= 665.9 (:summa %)) sanktiot-sakon-jalkeen))
             lisatty-hoidon-muistutus (first (filter #(= nil (:summa %)) sanktiot-muistutuksen-jalkeen))]
-        (log/debug "lisätty hoidon-sakko " lisatty-hoidon-sakko)
-        (log/debug "lisätty hoidon-muistutus " lisatty-hoidon-muistutus)
         (is (number? (:id lisatty-hoidon-sakko)) "Tallennus palauttaa uuden id:n")
         (is (number? (:id lisatty-hoidon-muistutus)) "Tallennus palauttaa uuden id:n")
         (is (= :A (:laji lisatty-hoidon-sakko)) "Hoitourakan bonuksen oikea sanktiolaji")
@@ -221,7 +218,6 @@
         perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
         sanktiorunko {:suorasanktio        true
                       :perintapvm          perintapvm}
-        ;; sakko
         hoidon-sakko (merge sanktiorunko {:laji :yllapidon_sakko :summa 665.9 :tyyppi {:id 2 :nimi "Talvihoito"}})
         paallystys-sakko (merge sanktiorunko {:laji :A :summa 1234 :tyyppi {:id 4 :nimi "Ylläpidon sakko"}})
         laatupoikkeama-hoito {:tekijanimi    "Järjestelmä Vastaava"
