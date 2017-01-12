@@ -1,3 +1,34 @@
+<<<<<<< HEAD
+-- Irrota päällystyslomakkeen määrämuutokset omaan tauluun
+
+CREATE TYPE maaramuutos_tyon_tyyppi AS ENUM ('ajoradan_paallyste', 'pienaluetyot', 'tasaukset', 'jyrsinnat',
+                                              'muut');
+
+CREATE TABLE yllapitokohteen_maaramuutos (
+  id serial PRIMARY KEY,
+  yllapitokohde INTEGER REFERENCES yllapitokohde (id) NOT NULL,
+  tyon_tyyppi maaramuutos_tyon_tyyppi NOT NULL,
+  tyo VARCHAR(256) NOT NULL,
+  yksikko VARCHAR(32) NOT NULL,
+  tilattu_maara NUMERIC NOT NULL,
+  toteutunut_maara NUMERIC NOT NULL,
+  yksikkohinta NUMERIC NOT NULL,
+  poistettu boolean DEFAULT FALSE NOT NULL,
+  luoja INTEGER REFERENCES kayttaja (id) NOT NULL,
+  luotu TIMESTAMP DEFAULT NOW()  NOT NULL,
+  muokkaaja INTEGER REFERENCES kayttaja (id),
+  muokattu TIMESTAMP
+);
+
+ALTER TABLE paallystysilmoitus DROP COLUMN muutoshinta; -- Lasketaan jatkossa yllä olevasta taulusta
+ALTER TABLE paallystysilmoitus DROP COLUMN paatos_taloudellinen_osa; -- Hinnanmuutosten hyväksyminen jää pois (HAR-4090)
+ALTER TABLE paallystysilmoitus DROP COLUMN perustelu_taloudellinen_osa;
+ALTER TABLE paallystysilmoitus DROP COLUMN kasittelyaika_taloudellinen_osa;
+ALTER TABLE paallystysilmoitus DROP COLUMN asiatarkastus_taloudellinen_osa;
+
+-- FIXME TÄSSÄ VAIHEESSA NYKYISTEN POTTIEN ilmoitustiedot-SARAKKEESEEN JÄÄ VANHANMALLINEN JSON, JOSSA
+-- TALOUSOSA MUKANA. MITEN MIGRATOIDAAN ilmoitustiedot-JSON->yllapito_maaramuutokset?
+=======
 -- Urakan kannalta olennaiset sanktiotyypit riippuvat urakkatyypistä
 -- Urakan kannalta olennaiset sanktiotyypit riippuvat urakkatyypistä
 ALTER TABLE sanktiotyyppi
@@ -38,3 +69,4 @@ VALUES
    ARRAY['paallystys', 'paikkaus', 'tiemerkinta', 'valaistus']::urakkatyyppi[]),
   ('Ylläpidon muistutus', ARRAY['yllapidon_muistutus'::sanktiolaji],
    ARRAY['paallystys', 'paikkaus', 'tiemerkinta', 'valaistus']::urakkatyyppi[]);
+>>>>>>> develop

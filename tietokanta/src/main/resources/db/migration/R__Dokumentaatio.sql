@@ -35,7 +35,7 @@ E'Tarkastusajo-tauluun tallentuu perustiedot Harjan laadunseurannan mobiilityök
 COMMENT ON TABLE tarkastusreitti IS
 E'reittimerkinta-tauluun tallennetaan Harjan laadunseurannan mobiilityökalulla kerättyä raakaa dataa. Jokainen rivi taulussa kuvaa yksittäistä joko työkalun itsensä automaattisesti tekemää merkintää tarkastusajon aikana tai käyttäjän tekemää syötettä. Yhteen ajoon saattaa liittyä tuhansia eri merkintöjä. Reittimerkintä on aina uniikki merkinnän id:n ja siihen liittyvän tarkastusajon id:n kanssa.\n\n
 
-Tauluun tallennettua tietoa käytetään luomaan yhteenveto tehdystä ajosta eli datasta muodostetaan tarkastus tarkastus-tauluun. Ajon raakadataa ei ole syytä säiyttää pitkäaikaisesti, vaan tarkoitus on, että datasta luotu tarkastus sisältää kaikki ajosta tarpeelliset tiedot.';
+Tauluun tallennettua tietoa käytetään luomaan yhteenveto tehdystä ajosta eli datasta muodostetaan tarkastus tarkastus-tauluun. Ajon raakadataa ei välttämättä ole syytä säilyttää pitkäaikaisesti, vaan tarkoitus on, että datasta luotu tarkastus sisältää kaikki ajosta tarpeelliset tiedot.';
 
 -- Raportointi
 
@@ -67,3 +67,16 @@ E'Muokkauslukko-taulua käytetään lukitsemaan jokin muokattava asia (esim. pä
  - id (voi olla mikä tahansa mielivaltainen teksti, mutta nimessä kannattaisi olla muokattavan asian nimi ja sen yksilöivä id)\n
  - kayttaja (kertoo, kuka asian lukitsi)\n
  - aikaleima (kertoo, milloin lukko on viimeksi virkistetty)';
+
+COMMENT ON TABLE sanktio IS
+E'Sanktio-tauluun kirjataan urakassa sanktio tai bonus.\n
+ - Sanktion tyyppi määräytyy tarkemmin taulun sanktiotyyppi ja enumit sanktiolaji kautta\n
+ - Sanktio tyypillisesti määrätään laadun alituksesta tai toistuvasta huolimattomuudesta\n
+ - Bonus tyypillisesti myönnetään odotukset ylittävästä toiminnallisesta laadusta\n
+ - Tietomallissa Sanktioon liittyy aina laatupoikkeama, vaikka sanktio olisikin ns. suorasanktio
+ - Ylläpidon urakoissa sanktioihin voi liittyä vakiofraasi ja ylläpitokohde (laatupoikkeaman kautta linkitetty)';
+
+
+COMMENT ON TABLE sanktiotyyppi IS
+E'Sanktiotyyppi-taulussa kerrotaan eri urakkatyyppien kannalta olennaiset sanktiotyypit.\n
+ - Sanktiotyyppi-rivi kertoo tyypin nimen, mahdollisesti siihen liittyvän toimenpidekoodin, urakkatyypin ja sanktiolajin.';
