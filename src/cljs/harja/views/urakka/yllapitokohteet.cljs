@@ -477,7 +477,7 @@
     (fn [{:keys [yllapitokohde-id urakka-id] :as tiedot}]
       [grid/grid
        {:otsikko "Määrämuutokset"
-        :tyhja "Ei määrämuutoksia"
+        :tyhja (if (nil? @maaramuutokset) [ajax-loader "Haetaan määrämuutoksia..."] "Ei määrämuutoksia")
         :tallenna (when voi-muokata?
                     #(go (let [vastaus (<! (tiedot/tallenna-maaramuutokset!
                                              {:urakka-id urakka-id
