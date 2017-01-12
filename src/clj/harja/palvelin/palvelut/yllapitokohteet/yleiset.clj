@@ -42,10 +42,10 @@
   "Tarkistaa, että ylläpitokohde kuuluu annettuun urakkaan tai annettu urakka on merkitty
    suorittavaksi tiemerkintäurakakaksi. Jos kumpikaan ei ole totta, heittää poikkeuksen."
   (assert (and urakka-id yllapitokohde-id) "Ei voida suorittaa tarkastusta")
-  (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db yllapitokohde-id)))
+  (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
         kohteen-suorittava-tiemerkintaurakka (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
                                                            db
-                                                           yllapitokohde-id)))]
+                                                           {:id yllapitokohde-od})))]
     (when (and (not= kohteen-urakka urakka-id)
                (not= kohteen-suorittava-tiemerkintaurakka urakka-id))
       (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei kuulu valittuun urakkaan "
