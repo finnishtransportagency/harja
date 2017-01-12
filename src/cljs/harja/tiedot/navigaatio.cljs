@@ -216,10 +216,13 @@
   (reset! valittu-urakoitsija u))
 
 ;; Rajapinta hallintayksikön valitsemiseen, jota viewit voivat kutsua
-(defn valitse-hallintayksikko [yks]
-  (reset! valittu-hallintayksikko-id (:id yks))
+(defn valitse-hallintayksikko-id! [id]
+  (reset! valittu-hallintayksikko-id )
   (reset! valittu-urakka-id nil)
   (paivita-url))
+
+(defn valitse-hallintayksikko! [yks]
+  (valitse-hallintayksikko-id! (:id yks)))
 
 (defonce ilmoita-hallintayksikkovalinnasta
   (run! (let [yks @valittu-hallintayksikko]
@@ -227,10 +230,13 @@
             (t/julkaise! (assoc yks :aihe :hallintayksikko-valittu))
             (t/julkaise! {:aihe :hallintayksikkovalinta-poistettu})))))
 
-(defn valitse-urakka! [ur]
-  (reset! valittu-urakka-id (:id ur))
-  (log "VALITTIIN URAKKA: " (pr-str (dissoc ur :alue)))
+(defn valitse-urakka-id! [id]
+  (reset! valittu-urakka-id id)
   (paivita-url))
+
+(defn valitse-urakka! [ur]
+  (valitse-urakka-id! (:id ur))
+  (log "VALITTIIN URAKKA: " (pr-str (dissoc ur :alue))))
 
 (defonce ilmoita-urakkavalinnasta
   (run! (let [ur @valittu-urakka]
@@ -347,4 +353,3 @@
                      (apply funktio urakka args)
                      urakka))
                  urakat))))
-

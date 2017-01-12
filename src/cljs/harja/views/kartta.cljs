@@ -419,7 +419,7 @@
   {:hy
    (fn [item]
      (when-not (= (:id item) (:id @nav/valittu-hallintayksikko))
-       (nav/valitse-hallintayksikko item)))
+       (nav/valitse-hallintayksikko! item)))
 
    :ur
    (fn [item]
