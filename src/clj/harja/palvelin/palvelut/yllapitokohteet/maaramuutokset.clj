@@ -116,6 +116,7 @@
       (luo-tai-paivita-maaramuukset db user {:yllapitokohde-id yllapitokohde-id
                                              :urakka-id urakka-id} maaramuutokset)
 
+      ;; Rakennetaan vastaus
       (let [yllapitokohteet (yy/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
                                                                     :sopimus-id sopimus-id
                                                                     :vuosi vuosi})
