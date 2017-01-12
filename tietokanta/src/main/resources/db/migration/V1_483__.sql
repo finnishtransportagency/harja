@@ -48,7 +48,7 @@ BEGIN
                                              toteutunut_maara,
                                              yksikkohinta,
                                              luoja)
-    VALUES (rivi.id,
+    VALUES (rivi.paallystyskohde,
             'ajoradan_paallyste'::maaramuutos_tyon_tyyppi, -- TODO rivi.tyo->'tyyppi' JA MUUNTO ENUMIKSI. MITEN?
             rivi.tyo->'tyo',
             rivi.tyo->'yksikkohinta',
