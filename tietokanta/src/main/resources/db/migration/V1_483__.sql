@@ -25,5 +25,31 @@ ALTER TABLE paallystysilmoitus DROP COLUMN perustelu_taloudellinen_osa;
 ALTER TABLE paallystysilmoitus DROP COLUMN kasittelyaika_taloudellinen_osa;
 ALTER TABLE paallystysilmoitus DROP COLUMN asiatarkastus_taloudellinen_osa;
 
--- FIXME TÄSSÄ VAIHEESSA NYKYISTEN POTTIEN ilmoitustiedot-SARAKKEESEEN JÄÄ VANHANMALLINEN JSON, JOSSA
--- TALOUSOSA MUKANA. MITEN MIGRATOIDAAN ilmoitustiedot-JSON->yllapito_maaramuutokset?
+-- Migratoi olemassa olevien päällystysilmoitusten ilmoitustiedot-JSONista taloudellisen osan
+-- tiedot uuteen tauluun
+
+CREATE OR REPLACE FUNCTION muunna_paallystysilmoitusten_maaramuutokset() RETURNS VOID AS
+$BODY$
+DECLARE
+  rivi paallystysilmoitus%rowtype;
+BEGIN
+  FOR rivi IN SELECT * FROM paallystysilmoitus
+  LOOP
+    -- TODO HAE DATA POTISTA TÄHÄN. MITEN?
+    INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo,
+                                             yksikko, tilattu_maara, toteutunut_maara, yksikkohinta, luoja)
+    VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'), 'ajoradan_paallyste'::maaramuutos_tyon_tyyppi,
+            'Testityö', 'kg', 100, 120, 2, (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'));
+  END LOOP;
+  RETURN;
+END
+$BODY$
+LANGUAGE 'plpgsql' ;
+
+SELECT * FROM muunna_paallystysilmoitusten_maaramuutokset();
+DROP FUNCTION muunna_paallystysilmoitusten_maaramuutokset(); -- Ei tarvi tehdä kuin kerran
+
+-- Poista olemassa olevista päällystysilmoituksista taloustiedot, jotta data
+-- on uuden skeeman mukainen
+
+-- TODO
