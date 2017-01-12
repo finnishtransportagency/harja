@@ -43,6 +43,7 @@
 
 ;; Päivittää varustehaun hakuehdot
 (defrecord AsetaVarusteidenHakuehdot [hakuehdot])
+(defrecord AsetaVarusteTarkastuksenTiedot [tarkastus])
 ;; Suorittaa haun
 (defrecord HaeVarusteita [])
 (defrecord VarusteHakuTulos [tietolaji varusteet])
@@ -50,7 +51,7 @@
 
 ;; Toimenpiteet Tierekisteriin
 (defrecord PoistaVaruste [varuste])
-(defrecord TarkastaVaruste [varuste tarkastus])
+(defrecord KirjaaVarustetarkastus [varuste tarkastus])
 (defrecord ToimintoEpaonnistui [toiminto virhe])
 (defrecord ToimintoOnnistui [vastaus])
 
@@ -117,4 +118,10 @@
           (if (or (k/virhe? vastaus) (not (:onnistunut vastaus)))
             (virhe! {:vastaus vastaus :viesti "Varusteen poistossa tapahtui virhe."})
             (tulos! {:vastaus vastaus :viesti "Varuste poistettu onnistuneesti."})))))
-    app))
+    app)
+
+  AsetaVarusteTarkastuksenTiedot
+  (process-event [{tarkastus :tarkastus} app]
+    (log "--> tarkastus:" (pr-str tarkastus))
+    (log "--> app:" (pr-str app))
+    (assoc-in app [:tarkastus] tarkastus)))

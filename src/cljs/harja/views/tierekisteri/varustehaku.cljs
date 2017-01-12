@@ -65,16 +65,10 @@
                           "4" "Hyvä"
                           "5" "Erinomainen"})
 
-(def tarkastuslomakedata (atom {:kuntoluokitus (first (keys kuntoluokka->selite))}))
-
-(defn tarkasta-varuste [e! tietolaji tunniste varuste]
-  (let [
-        varusteenkuntoluokitus (get-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"])
-
-        _ (log "--> tarkastus:" (pr-str @tarkastuslomakedata))
-        peruuta-fn #(do (.preventDefault %) (modal/piilota!))
+(defn tarkasta-varuste [e! tietolaji tunniste varuste tarkastus]
+  (let [peruuta-fn #(do (.preventDefault %) (modal/piilota!))
         tallenna-fn #(do (.preventDefault %)
-                         (e! (v/->TarkastaVaruste varuste @tarkastuslomakedata))
+                         (e! (v/->KirjaaVarustetarkastus varuste @tarkastuslomakedata))
                          (modal/piilota!))]
     (modal/nayta! {:otsikko (str "Tarkasta varuste (tunniste: " tunniste ", tietolaji: " tietolaji ")")
                    :footer [:span
@@ -84,19 +78,19 @@
                              [:div (ikonit/livicon-save) " Tallenna"]]]}
                   [lomake/lomake
                    {:ei-borderia? true
-                    :muokkaa! (fn [uusi] (do
-                                           (log "--> uusi " (pr-str uusi))
-                                           (reset! tarkastuslomakedata uusi)))}
+                    :muokkaa! #(e! (v/->AsetaVarusteTarkastuksenTiedot %))}
                    [{:otsikko "Yleinen kuntoluokitus"
                      :nimi :kuntoluokitus
                      :tyyppi :valinta
                      :pakollinen? true
                      :valinnat (vec (keys kuntoluokka->selite))
                      :fmt (fn [arvo] (if arvo (kuntoluokka->selite arvo) "- Valitse -"))
-                     :valinta-nayta (fn [arvo] (if arvo (kuntoluokka->selite arvo) "- Valitse -"))}]
-                   @tarkastuslomakedata])))
+                     :valinta-nayta (fn [arvo] (if arvo (kuntoluokka->selite arvo) "- Valitse -"))
+                     :aseta (fn (assoc-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"] %))
+                     :hae (fn [varuste] (get-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"]))}]
+                   tarkastus])))
 
-(defn sarakkeet [e! tietolajin-listaus-skeema]
+(defn sarakkeet [e! tietolajin-listaus-skeema tarkastus]
   (if oikeus-varusteiden-muokkaamiseen?
     (let [toiminnot {:nimi :toiminnot
                      :otsikko "Toiminnot"
@@ -106,13 +100,13 @@
                                     (let [tunniste (:tunniste varuste)
                                           tietolaji (get-in varuste [:tietue :tietolaji :tunniste])]
                                       [:div
-                                       [napit/tarkasta "Tarkasta" #(tarkasta-varuste e! tietolaji tunniste varuste)]
+                                       [napit/tarkasta "Tarkasta" #(tarkasta-varuste e! tietolaji tunniste varuste tarkastus)]
                                        [napit/muokkaa "Muokkaa" #()]
                                        [napit/poista "Poista" #(poista-varuste e! tietolaji tunniste varuste)]]))}]
       (conj tietolajin-listaus-skeema toiminnot))
     tietolajin-listaus-skeema))
 
-(defn varustehaku-varusteet [e! tietolajin-listaus-skeema varusteet]
+(defn varustehaku-varusteet [e! tietolajin-listaus-skeema varusteet tarkastus]
   [grid/grid
    {:otsikko "Tierekisteristä löytyneet varusteet"
     :tunniste (fn [varuste]
@@ -121,14 +115,14 @@
                 ;; niiden avaimeksi tunniste ja osoite.
                 (str (get-in varuste [:varuste :tunniste])
                      "_" (pr-str (get-in varuste [:varuste :tietue :sijainti :tie]))))}
-   (sarakkeet e! tietolajin-listaus-skeema)
+   (sarakkeet e! tietolajin-listaus-skeema tarkastus)
    varusteet])
 
 (defn varustehaku
   "Komponentti, joka näyttää lomakkeen varusteiden hakemiseksi tierekisteristä
   sekä haun tulokset."
-  [e! {:keys [hakuehdot listaus-skeema tietolaji varusteet] :as app}]
+  [e! {:keys [hakuehdot listaus-skeema tietolaji varusteet tarkastus] :as app}]
   [:div.varustehaku
    [varustehaku-ehdot e! (:hakuehdot app)]
    (when (and listaus-skeema varusteet)
-     [varustehaku-varusteet e! listaus-skeema varusteet])])
+     [varustehaku-varusteet e! listaus-skeema varusteet tarkastus])])
