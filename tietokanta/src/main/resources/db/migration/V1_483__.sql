@@ -32,7 +32,7 @@ ALTER TABLE paallystysilmoitus DROP COLUMN asiatarkastus_taloudellinen_osa;
 CREATE OR REPLACE FUNCTION muunna_paallystysilmoitusten_maaramuutokset() RETURNS VOID AS
 $BODY$
 DECLARE
-  rivi paallystysilmoitus%rowtype;
+  rivi RECORD;
 BEGIN
   FOR rivi IN SELECT
                 paallystyskohde,
