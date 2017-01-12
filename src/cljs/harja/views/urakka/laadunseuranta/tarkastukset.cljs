@@ -292,8 +292,8 @@
                           (not jarjestelmasta?))
         kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
         yllapitokohteet (:yllapitokohteet optiot)
-        yllapito? @tiedot-urakka/yllapidon-urakka?]
-    (if (and yllapito? (nil? yllapitokohteet))
+        yllapitokohdeurakka? @tiedot-urakka/yllapidokohdeurakka?]
+    (if (and yllapitokohdeurakka? (nil? yllapitokohteet))
       [yleiset/ajax-loader "Ladataan..."]
       [:div.tarkastus
        [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
@@ -330,7 +330,7 @@
          {:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
           :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
 
-         (when yllapito?
+         (when yllapitokohdeurakka?
            {:otsikko "Ylläpito\u00ADkohde" :tyyppi :valinta :nimi :yllapitokohde
             :palstoja 1
             :pakollinen? true

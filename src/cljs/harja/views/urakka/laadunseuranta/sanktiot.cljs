@@ -35,12 +35,14 @@
     (fn [optiot]
       (let [yllapitokohteet (:yllapitokohteet optiot)
             mahdolliset-sanktiolajit @tiedot-urakka/urakkatyypin-sanktiolajit
-            yllapito? (:yllapito? optiot)]
+            yllapito? (:yllapito? optiot)
+            yllapitokokohdeurakka? @tiedot-urakka/yllapidokohdeurakka?]
         [:div
          [napit/takaisin "Takaisin sanktioluetteloon" #(reset! tiedot/valittu-sanktio nil)]
          ;; Vaadi tarvittavat tiedot ennen rendausta
-         (if (or (not yllapito?)
-                 (and yllapito? mahdolliset-sanktiolajit yllapitokohteet))
+         (if (and mahdolliset-sanktiolajit
+                  (or (not yllapitokokohdeurakka?)
+                      (and yllapitokokohdeurakka? yllapitokohteet)))
            [lomake/lomake
             {:otsikko      (if (:id @muokattu)
                              (if (:suorasanktio @muokattu)

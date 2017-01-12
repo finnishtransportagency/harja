@@ -1,6 +1,4 @@
--- Ylläpidossa sanktiot halutaan linkittää kohteeseen
--- TÄTÄ EI ehkä tarvitakaan, koska laatupoikkeama jo linkittyy yläpitokohteeseen ALTER TABLE sanktio ADD COLUMN yllapitokohde INTEGER REFERENCES yllapitokohde(id);
-
+-- Urakan kannalta olennaiset sanktiotyypit riippuvat urakkatyypistä
 -- Urakan kannalta olennaiset sanktiotyypit riippuvat urakkatyypistä
 ALTER TABLE sanktiotyyppi
   ADD COLUMN urakkatyyppi urakkatyyppi[] NOT NULL DEFAULT ARRAY['hoito']::urakkatyyppi[];
