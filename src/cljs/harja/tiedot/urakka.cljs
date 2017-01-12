@@ -398,3 +398,25 @@
     (let [toimenpideinstanssit @urakan-toimenpideinstanssit
           tehtavat @urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat]
       (boolean (and toimenpideinstanssit tehtavat)))))
+
+(def urakkatyypin-sanktiolajit
+  (reaction<! [urakka @nav/valittu-urakka
+               sivu (nav/valittu-valilehti :laadunseuranta)]
+              (when (and urakka (or (= :laatupoikkeamat sivu)
+                                    (= :sanktiot sivu)))
+                (go
+                  (<! (k/post! :hae-urakkatyypin-sanktiolajit {:urakka-id (:id urakka)
+                                                               :urakkatyyppi (:tyyppi urakka)}))))))
+
+(def yllapidokohdeurakka?
+  (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
+              (or (= :paallystys urakkatyyppi)
+                  (= :paikkaus urakkatyyppi)
+                  (= :tiemerkinta urakkatyyppi)))))
+
+(def yllapidon-urakka?
+  (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
+              (or (= :paallystys urakkatyyppi)
+                  (= :paikkaus urakkatyyppi)
+                  (= :tiemerkinta urakkatyyppi)
+                  (= :valaistus urakkatyyppi)))))

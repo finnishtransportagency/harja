@@ -89,6 +89,15 @@ SELECT
   h.selvitys_pyydetty                AS laatupoikkeama_selvityspyydetty,
   h.selvitys_annettu                 AS laatupoikkeama_selvitysannettu,
 
+  ypk.tr_numero        AS yllapitokohde_tr_numero,
+  ypk.tr_alkuosa       AS yllapitokohde_tr_alkuosa,
+  ypk.tr_alkuetaisyys  AS yllapitokohde_tr_alkuetaisyys,
+  ypk.tr_loppuosa      AS yllapitokohde_tr_loppuosa,
+  ypk.tr_loppuetaisyys AS yllapitokohde_tr_loppuetaisyys,
+  ypk.kohdenumero      AS yllapitokohde_numero,
+  ypk.nimi             AS yllapitokohde_nimi,
+  ypk.id               AS yllapitokohde_id,
+
   t.nimi                             AS tyyppi_nimi,
   t.id                               AS tyyppi_id,
   t.toimenpidekoodi                  AS tyyppi_toimenpidekoodi
@@ -97,6 +106,7 @@ FROM sanktio s
   JOIN laatupoikkeama h ON s.laatupoikkeama = h.id
   JOIN kayttaja k ON h.luoja = k.id
   LEFT JOIN sanktiotyyppi t ON s.tyyppi = t.id
+  LEFT JOIN yllapitokohde ypk ON h.yllapitokohde = ypk.id
 WHERE
   h.urakka = :urakka
   AND s.perintapvm >= :alku AND s.perintapvm <= :loppu;
@@ -119,3 +129,14 @@ SELECT
   toimenpidekoodi,
   sanktiolaji AS laji
 FROM sanktiotyyppi
+
+--name: hae-urakkatyypin-sanktiolajit
+SELECT id, nimi, sanktiolaji, urakkatyyppi
+  FROM sanktiotyyppi
+ WHERE urakkatyyppi @> ARRAY[:urakkatyyppi::urakkatyyppi]
+
+--name: hae-sanktiotyyppi-sanktiolajilla
+-- single?: true
+SELECT id
+  FROM sanktiotyyppi
+ WHERE sanktiolaji @> ARRAY[:sanktiolaji::sanktiolaji]
