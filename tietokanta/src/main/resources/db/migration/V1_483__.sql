@@ -37,7 +37,8 @@ BEGIN
   FOR rivi IN SELECT
                 paallystyskohde,
                 luoja,
-                json_array_elements((ilmoitustiedot->'tyot')::JSON) AS tyo FROM paallystysilmoitus
+                json_array_elements((ilmoitustiedot->'tyot')::JSON) AS tyo
+              FROM paallystysilmoitus
   LOOP
     INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde,
                                              tyon_tyyppi,
