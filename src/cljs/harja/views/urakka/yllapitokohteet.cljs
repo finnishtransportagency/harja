@@ -489,8 +489,9 @@
                              (viesti/nayta! "Määrämuutoksien tallennusepäonnistui"
                                             :warning
                                             viesti/viestin-nayttoaika-keskipitka)
-                             (reset! maaramuutokset (:maaramuutokset vastaus))
-                             (reset! yllapitokohteet-atom (:yllapitokohteet vastaus))))))
+                             (do
+                               (reset! maaramuutokset (:maaramuutokset vastaus))
+                               (reset! yllapitokohteet-atom (:yllapitokohteet vastaus)))))))
         :voi-muokata? voi-muokata?}
        [{:otsikko "Päällyste\u00ADtyön tyyppi"
          :nimi :tyyppi
@@ -524,7 +525,7 @@
     {:voi-muokata? (not @grid/gridia-muokataan?)}]
    [maaramuutokset {:yllapitokohde-id (:id rivi)
                     :urakka-id (:id urakka)
-                    :kohteet-atom kohteet-atom}]])
+                    :yllapitokohteet-atom kohteet-atom}]])
 
 (defn hae-osan-pituudet [grid osan-pituudet-teille]
   (let [tiet (into #{} (map (comp :tr-numero second)) (grid/hae-muokkaustila grid))]
