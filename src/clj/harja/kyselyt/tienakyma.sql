@@ -1,6 +1,8 @@
 -- name: hae-toteumat
 -- Hakee kaikki toteumat
 SELECT t.id,
+       t.urakka as urakka,
+       u.hallintayksikko,
        t.tyyppi,
        t.reitti,
        t.alkanut, t.paattynyt,
@@ -12,9 +14,10 @@ SELECT t.id,
        rp.sijainti AS reittipiste_sijainti,
        rp.aika AS reittipiste_aika
   FROM toteuma t
-  JOIN toteuma_tehtava tt ON tt.toteuma = t.id
-  JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-  JOIN reittipiste rp ON t.id = rp.toteuma
+       JOIN urakka u ON t.urakka=u.id
+       JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+       JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+       LEFT JOIN reittipiste rp ON t.id = rp.toteuma
  WHERE ST_Intersects(t.reitti, :sijainti)
    AND ((t.alkanut BETWEEN :alku AND :loppu) OR
         (t.paattynyt BETWEEN :alku AND :loppu))
