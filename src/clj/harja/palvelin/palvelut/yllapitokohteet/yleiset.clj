@@ -38,16 +38,17 @@
       "tiemerkinta"
       (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id))))
 
-(defn vaadi-yllapitokohde-kuuluu-urakkaan [db urakka-id yllapitokohde]
+(defn vaadi-yllapitokohde-kuuluu-urakkaan [db urakka-id yllapitokohde-id]
   "Tarkistaa, että ylläpitokohde kuuluu annettuun urakkaan tai annettu urakka on merkitty
    suorittavaksi tiemerkintäurakakaksi. Jos kumpikaan ei ole totta, heittää poikkeuksen."
-  (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde})))
+  (assert (and urakka-id yllapitokohde-id) "Ei voida suorittaa tarkastusta")
+  (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db yllapitokohde-id)))
         kohteen-suorittava-tiemerkintaurakka (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
                                                            db
-                                                           {:id yllapitokohde})))]
+                                                           yllapitokohde-id)))]
     (when (and (not= kohteen-urakka urakka-id)
                (not= kohteen-suorittava-tiemerkintaurakka urakka-id))
-      (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde " ei kuulu valittuun urakkaan "
+      (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei kuulu valittuun urakkaan "
                                       urakka-id " vaan urakkaan " kohteen-urakka
                                       ", eikä valittu urakka myöskään ole kohteen suorittava tiemerkintäurakka"))))))
 
