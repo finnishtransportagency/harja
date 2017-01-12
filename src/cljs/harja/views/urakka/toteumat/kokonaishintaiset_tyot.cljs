@@ -31,8 +31,8 @@
                    [harja.atom :refer [reaction-writable]]))
 
 (defn tehtavan-paivakohtaiset-tiedot [urakka-id pvm toimenpidekoodi jarjestelmanlisaama]
-  (let [tiedot (get @tiedot/toteumien-paivakohtaiset-tiedot
-                    [urakka-id pvm toimenpidekoodi jarjestelmanlisaama])]
+  (let [avain [urakka-id pvm toimenpidekoodi jarjestelmanlisaama]
+        tiedot (get @tiedot/toteumien-paivakohtaiset-tiedot avain)]
     [grid/grid {:otsikko  "Päivän toteumat"
                 :tunniste :id
                 :tyhja    (if (nil? tiedot) [ajax-loader "Haetaan tehtävän päiväkohtaisia tietoja..."]
@@ -54,7 +54,7 @@
        :komponentti (fn [rivi]
                       [:div
                        [:button.nappi-toissijainen.nappi-grid
-                        {:on-click #(tiedot/valitse-toteuma! rivi)}
+                        {:on-click #(tiedot/valitse-paivan-toteuma-id! avain (:id rivi))}
                         (ikonit/eye-open) " Toteuma"]])}]
      tiedot]))
 
@@ -71,7 +71,8 @@
        :tyhja                     (if @tiedot/haetut-toteumat "Toteumia ei löytynyt" [ajax-loader "Haetaan toteumia."])
        :rivi-klikattu             #(do
                                      (nav/vaihda-kartan-koko! :L)
-                                     (reset! tiedot/valittu-paivakohtainen-tehtava %))
+                                     (tiedot/valitse-paivakohtainen-tehtava!
+                                      (:pvm %) (:toimenpidekoodi %)))
        :rivi-valinta-peruttu      #(do (reset! tiedot/valittu-paivakohtainen-tehtava nil))
        :mahdollista-rivin-valinta true
        :max-rivimaara 500
@@ -140,7 +141,7 @@
                              (sort-by :nimi tpin-tehtavat)))]
     (fnc []
          [:div
-          [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-kokonaishintainen-toteuma nil)]
+          [napit/takaisin "Takaisin luetteloon" tiedot/poista-toteuman-valinta!]
 
           [lomake/lomake
            {:otsikko      (if (:id @muokattu)

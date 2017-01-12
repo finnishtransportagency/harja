@@ -126,6 +126,11 @@
                   {{:keys [alku loppu]} :valinnat :as app}]
     (log "tarkastellaanpa toteumaa: " (pr-str toteuma))
 
+    ;; Kartta näkyviin
+    ;; PENDING: tämä pitää tehdä async? ilmeisesti jossain tehdään unmount/mount
+    ;; manipulaatiota kartan kokovalinnalle
+    (go (nav/vaihda-kartan-koko! :L))
+
     ;; Valitaan sivuksi kok.hint. toteumat
     (nav/aseta-valittu-valilehti! :sivu :urakat)
     (nav/aseta-valittu-valilehti! :urakat :toteumat)
@@ -138,12 +143,21 @@
     ;; Valitse aikaväliksi sama kuin tienäkymän valinnoissa
     (urakka/valitse-aikavali! alku loppu)
 
-    ;; Aukaistaan vetolaatikko, joka sisältää tämän toteuman, valmiiksi
-    (kokonaishintaiset-tyot/avaa-toteuma! (pvm/pvm (:alkanut toteuma))
-                                          (:toimenpidekoodi (first (:tehtavat toteuma)))
-                                          (:jarjestelmanlisaama toteuma))
 
-    ;; Valitaan
+    (let [pvm (pvm/paivan-alussa (:alkanut toteuma))
+          tpk (:toimenpidekoodi (first (:tehtavat toteuma)))
+          jarj? (:jarjestelmanlisaama toteuma)]
+      ;; Aukaistaan vetolaatikko, joka sisältää tämän toteuman, valmiiksi
+      (kokonaishintaiset-tyot/avaa-toteuma! urakka pvm tpk jarj?)
+
+      ;; Valitaan päiväkohtainen tehtävä kartalle
+      (kokonaishintaiset-tyot/valitse-paivakohtainen-tehtava! pvm tpk)
+
+      ;; Valitaan yksittäinen toteuma katsottavaksi
+      (kokonaishintaiset-tyot/valitse-paivan-toteuma-id! [urakka pvm tpk jarj?] id)
+
+      )
+
     app))
 
 (defonce muut-tulokset-kartalla

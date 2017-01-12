@@ -10,11 +10,35 @@
             [harja.tiedot.urakka :as u]
             [harja.ui.openlayers :as openlayers]
             [clojure.set :as set])
-  (:require-macros [harja.atom :refer [reaction<!]]
+  (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def valittu-kokonaishintainen-toteuma (atom nil))
+
+(defonce
+  ^{:doc "Päiväkohtaiset tehtävät, jotka on avattu (vetolaatikot).
+Arvot ovat [urakka-id pvm tpk jarjestelma?] vektoreita."}
+  avatut-toteumat (atom #{}))
+(defonce
+  ^{:doc "Avattujen toteumien haetut toteumalistat. Avaimena päiväkohtaisen
+tehtävän avain (ks. avatut-toteumat)."}
+  toteumien-paivakohtaiset-tiedot
+  (atom {}))
+
+(defonce
+  ^{:doc "Toteumalomakkeelle avatun yksittäisen toteuman päiväkohtainen avain ja id."}
+  valitun-toteuman-paiva-ja-id (atom nil))
+
+(defonce valittu-kokonaishintainen-toteuma (atom nil))
+
+(defonce ^:private valitse-paivan-toteuma-idlla
+  (run!
+   (let [paivakohtaiset-tiedot @toteumien-paivakohtaiset-tiedot
+         [avain id] @valitun-toteuman-paiva-ja-id]
+     (reset! valittu-kokonaishintainen-toteuma
+             (first (filter #(= id (:id %))
+                            (get paivakohtaiset-tiedot avain)))))))
+
 (defn uusi-kokonaishintainen-toteuma []
   {:alkanut    (-> (pvm/nyt) (pvm/keskipaiva))
    :suorittaja {:nimi    (:nimi @u/urakan-organisaatio)
@@ -57,7 +81,11 @@
     :tehtava    tehtava}))
 
 (def nakymassa? (atom false))
-(def valittu-paivakohtainen-tehtava (atom nil))
+
+(defonce
+  ^{:doc "Jos päiväkohtainen tehtävä valittu, arvo on mäp jossa
+:pvm ja :toimenpidekoodi avaimet."}
+  valittu-paivakohtainen-tehtava (atom nil))
 
 (def haetut-toteumat
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
@@ -72,9 +100,6 @@
                 (hae-toteumatehtavien-paivakohtaiset-summat
                   (kasaa-hakuparametrit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava)))))
 
-(defonce avatut-toteumat (atom #{}))
-
-(defonce toteumien-paivakohtaiset-tiedot (atom {}))
 
 (defonce hae-avattujen-toteumien-paivakohtaiset-tiedot
   ;; Tämä lohko hakee toteumien tiedot aina kun
@@ -135,6 +160,9 @@
                                            @valittu-paivakohtainen-tehtava
                                            @valittu-kokonaishintainen-toteuma)))
 
+(defn valitse-paivakohtainen-tehtava! [pvm toimenpidekoodi]
+  (reset! valittu-paivakohtainen-tehtava {:pvm pvm :toimenpidekoodi toimenpidekoodi}))
+
 (defn hae-toteuman-reitti!
   "Hakee reitin toteumalle, jos toteumalla ei ole vielä reittiä."
   [toteuma]
@@ -151,6 +179,14 @@
 (defn valitse-toteuma! [toteuma]
   (reset! valittu-kokonaishintainen-toteuma toteuma)
   (hae-toteuman-reitti! toteuma))
+
+(defn valitse-paivan-toteuma-id!
+  "Valitse päiväkohtaisen toteumalistauksen toteuma."
+  [paiva-avain toteuma-id]
+  (reset! valitun-toteuman-paiva-ja-id [paiva-avain toteuma-id]))
+
+(defn poista-toteuman-valinta! []
+  (reset! valitun-toteuman-paiva-ja-id nil))
 
 (defn kasaa-toteuman-tiedot-tallennusta-varten [t]
   {:suorittajan-nimi (get-in t [:suorittaja :nimi])
@@ -178,8 +214,8 @@
 (defn toteuman-tallennus-onnistui [tulos]
   (reset! haetut-toteumat tulos))
 
-(defn avaa-toteuma! [pvm tpk jarjestelmanlisaama?]
-  (swap! avatut-toteumat conj [pvm tpk jarjestelmanlisaama?]))
+(defn avaa-toteuma! [urakka-id pvm tpk jarjestelmanlisaama?]
+  (swap! avatut-toteumat conj [urakka-id pvm tpk jarjestelmanlisaama?]))
 
 (defn sulje-toteuma! [pvm tpk jarjestelmanlisaama?]
   (swap! avatut-toteumat disj [pvm tpk jarjestelmanlisaama?]))
