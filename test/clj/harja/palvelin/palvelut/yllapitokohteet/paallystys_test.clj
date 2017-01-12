@@ -168,6 +168,26 @@
                                                :vuosi 2017})]
     (is (= (count paallystysilmoitukset) 5) "Päällystysilmoituksia löytyi vuodelle 2017")))
 
+(deftest hae-yllapitokohteen-puuttuva-paallystysilmoitus
+  ;; Testattavalla ylläpitokohteella ei ole päällystysilmoitusta, mutta palvelu lupaa palauttaa
+  ;; silti päällystysilmoituksen, jota käyttäjä voi frontissa lähteä täyttämään
+  ;; (erityisesti kohdeosien esitäyttö on tärkeää)
+  ;; Testataan, että tällainen "ilmoituspohja" on mahdollista hakea.
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+        paallystyskohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+        paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                    :urakan-paallystysilmoitus-paallystyskohteella
+                                                    +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                    :sopimus-id sopimus-id
+                                                                    :paallystyskohde-id paallystyskohde-id})
+        kohdeosat (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])]
+    (is (not (nil? paallystysilmoitus-kannassa)))
+    (is (nil? (:tila paallystysilmoitus-kannassa)) "Päällystysilmoituksen tila on tyhjä")
+    ;; Puuttuvan päällystysilmoituksen kohdeosat esitäytettiin oikein
+    (is (= (count kohdeosat) 1))
+    (is (every? #(number? (:kohdeosa-id %)) kohdeosat))))
+
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
   (let [paallystyskohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)]
     (is (not (nil? paallystyskohde-id)))
