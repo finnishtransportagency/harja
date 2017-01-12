@@ -45,7 +45,7 @@
   (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
         kohteen-suorittava-tiemerkintaurakka (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
                                                            db
-                                                           {:id yllapitokohde-od})))]
+                                                           {:id yllapitokohde-id})))]
     (when (and (not= kohteen-urakka urakka-id)
                (not= kohteen-suorittava-tiemerkintaurakka urakka-id))
       (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei kuulu valittuun urakkaan "
