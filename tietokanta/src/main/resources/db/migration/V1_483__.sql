@@ -28,7 +28,6 @@ ALTER TABLE paallystysilmoitus DROP COLUMN asiatarkastus_taloudellinen_osa;
 -- Migratoi olemassa olevien päällystysilmoitusten ilmoitustiedot-JSONista taloudellisen osan
 -- tiedot uuteen tauluun
 
--- TODO KESKEN
 CREATE OR REPLACE FUNCTION muunna_paallystysilmoitusten_maaramuutokset() RETURNS VOID AS
 $BODY$
 DECLARE
@@ -49,7 +48,10 @@ BEGIN
                                              yksikkohinta,
                                              luoja)
     VALUES (rivi.paallystyskohde,
-            'ajoradan_paallyste'::maaramuutos_tyon_tyyppi, -- TODO rivi.tyo->'tyyppi' JA MUUNTO ENUMIKSI. MITEN?
+            CASE
+              WHEN (rivi.tyo->>'tyyppi')='ajoradan-paallyste' THEN 'ajoradan_paallyste'::maaramuutos_tyon_tyyppi
+              ELSE (rivi.tyo->>'tyyppi')::maaramuutos_tyon_tyyppi -- Kaikki muut voi käsitellä sellaisenaan
+            END,
             rivi.tyo->>'tyo',
             rivi.tyo->>'yksikko',
             (rivi.tyo->>'tilattu-maara')::INTEGER,
