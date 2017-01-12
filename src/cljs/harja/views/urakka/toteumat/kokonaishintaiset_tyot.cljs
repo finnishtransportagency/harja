@@ -30,37 +30,41 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction-writable]]))
 
-(defn tehtavan-paivakohtaiset-tiedot [pvm toimenpidekoodi]
-  (let [tiedot (atom nil)]
-    (go (reset! tiedot
-                (<! (tiedot/hae-kokonaishintaisen-toteuman-tiedot (:id @nav/valittu-urakka) pvm toimenpidekoodi))))
-    (fn [pvm toimenpidekoodi]
-      [grid/grid {:otsikko  "Päivän toteumat"
-                  :tunniste :id
-                  :tyhja    (if (nil? @tiedot) [ajax-loader "Haetaan tehtävän päiväkohtaisia tietoja..."]
-                                               "Tietoja ei löytynyt")}
-       [{:otsikko "Suorittaja" :nimi :suorittaja :hae (comp :nimi :suorittaja) :leveys 2}
-        {:otsikko "Alkanut" :nimi :alkanut :leveys 1 :fmt pvm/aika}
-        {:otsikko "Päättynyt" :nimi :paattynyt :leveys 1 :fmt pvm/aika}
-        {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys 1 :tasaa :oikea
-         :hae     (fn [{:keys [tehtava]}] (->> (fmt/desimaaliluku-opt (:maara tehtava) 1) (fmt/yksikolla (:yksikko tehtava))))}
-        {:otsikko "Pituus" :nimi :pituus :leveys 1 :fmt fmt/pituus-opt :tasaa :oikea}
-        {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 3}
-        {:otsikko     "Tarkastele koko toteumaa"
-         :nimi        :tarkastele-toteumaa
-         :muokattava? (constantly false)
-         :tyyppi      :komponentti
-         :leveys      1
-         :komponentti (fn [rivi]
-                        [:div
-                         [:button.nappi-toissijainen.nappi-grid
-                          {:on-click #(tiedot/valitse-toteuma! rivi)}
-                          (ikonit/eye-open) " Toteuma"]])}]
-       (sort-by :alkanut @tiedot)])))
+(defn tehtavan-paivakohtaiset-tiedot [urakka-id pvm toimenpidekoodi jarjestelmanlisaama]
+  (let [tiedot (get @tiedot/toteumien-paivakohtaiset-tiedot
+                    [urakka-id pvm toimenpidekoodi jarjestelmanlisaama])]
+    [grid/grid {:otsikko  "Päivän toteumat"
+                :tunniste :id
+                :tyhja    (if (nil? tiedot) [ajax-loader "Haetaan tehtävän päiväkohtaisia tietoja..."]
+                              "Tietoja ei löytynyt")}
+     [{:otsikko "Suorittaja" :nimi :suorittaja :hae (comp :nimi :suorittaja) :leveys 2}
+      {:otsikko "Alkanut" :nimi :alkanut :leveys 1 :fmt pvm/aika}
+      {:otsikko "Päättynyt" :nimi :paattynyt :leveys 1 :fmt pvm/aika}
+      {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys 1 :tasaa :oikea
+       :hae     (fn [{:keys [tehtava]}]
+                  (->> (fmt/desimaaliluku-opt (:maara tehtava) 1)
+                       (fmt/yksikolla (:yksikko tehtava))))}
+      {:otsikko "Pituus" :nimi :pituus :leveys 1 :fmt fmt/pituus-opt :tasaa :oikea}
+      {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 3}
+      {:otsikko     "Tarkastele koko toteumaa"
+       :nimi        :tarkastele-toteumaa
+       :muokattava? (constantly false)
+       :tyyppi      :komponentti
+       :leveys      1
+       :komponentti (fn [rivi]
+                      [:div
+                       [:button.nappi-toissijainen.nappi-grid
+                        {:on-click #(tiedot/valitse-toteuma! rivi)}
+                        (ikonit/eye-open) " Toteuma"]])}]
+     tiedot]))
 
 (defn taulukko []
   (let [toteumat @tiedot/haetut-toteumat
-        tunniste (juxt :pvm :toimenpidekoodi :jarjestelmanlisaama)]
+        urakka-id @nav/valittu-urakka-id
+        tunniste (juxt (constantly urakka-id)
+                       :pvm
+                       :toimenpidekoodi
+                       :jarjestelmanlisaama)]
     [:span
      [grid/grid
       {:otsikko                   "Kokonaishintaisten töiden toteumat"
@@ -77,8 +81,10 @@
        :vetolaatikot (into {}
                            (map (juxt
                                  tunniste
-                                 (fn [{:keys [pvm toimenpidekoodi]}]
-                                   [tehtavan-paivakohtaiset-tiedot pvm toimenpidekoodi])))
+                                 (fn [{:keys [pvm toimenpidekoodi jarjestelmanlisaama]}]
+                                   [tehtavan-paivakohtaiset-tiedot
+                                    urakka-id
+                                    pvm toimenpidekoodi jarjestelmanlisaama])))
                            toteumat)}
       [{:nimi :tarkemmat-tiedot :tyyppi :vetolaatikon-tila :leveys 1}
        {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys 3}

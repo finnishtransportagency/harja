@@ -1,6 +1,6 @@
 (ns harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot
   (:require [reagent.core :refer [atom]]
-            [cljs.core.async :refer [<!]]
+            [cljs.core.async :refer [<!] :as async]
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
@@ -8,9 +8,10 @@
             [harja.pvm :as pvm]
             [harja.tiedot.istunto :refer [kayttaja]]
             [harja.tiedot.urakka :as u]
-            [harja.ui.openlayers :as openlayers])
+            [harja.ui.openlayers :as openlayers]
+            [clojure.set :as set])
   (:require-macros [harja.atom :refer [reaction<!]]
-                   [reagent.ratom :refer [reaction]]
+                   [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def valittu-kokonaishintainen-toteuma (atom nil))
@@ -71,7 +72,36 @@
                 (hae-toteumatehtavien-paivakohtaiset-summat
                   (kasaa-hakuparametrit urakka-id sopimus-id (or aikavali hoitokausi) toimenpide tehtava)))))
 
-(def avatut-toteumat (atom #{}))
+(defonce avatut-toteumat (atom #{}))
+
+(defonce toteumien-paivakohtaiset-tiedot (atom {}))
+
+(defonce hae-avattujen-toteumien-paivakohtaiset-tiedot
+  ;; Tämä lohko hakee toteumien tiedot aina kun
+  ;; avatut-toteumat muuttuvat (vetolaatikko avataan).
+  (run!
+   (let [avatut @avatut-toteumat
+         haetut (into #{} (keys @toteumien-paivakohtaiset-tiedot))
+         haettavat (set/difference avatut haetut)]
+     (when-not (empty? haettavat)
+       (go
+         (let [in-ch (async/merge
+                      (map
+                       (fn [[urakka-id pvm toimenpidekoodi _ :as key]]
+                         (go
+                           {key
+                            (sort-by :alkanut
+                                     (<! (hae-kokonaishintaisen-toteuman-tiedot
+                                          urakka-id pvm toimenpidekoodi)))}))
+                       haettavat))]
+           (loop [in (<! in-ch)]
+             (when in
+               (swap! toteumien-paivakohtaiset-tiedot merge in)
+               (recur (<! in-ch))))))))))
+
+(defonce poista-haetut-toteumat-urakan-muuttuessa
+  (run! @nav/valittu-urakka-id
+        (reset! toteumien-paivakohtaiset-tiedot {})))
 
 (def karttataso-kokonaishintainen-toteuma (atom false))
 
