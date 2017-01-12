@@ -126,6 +126,9 @@
                   {{:keys [alku loppu]} :valinnat :as app}]
     (log "tarkastellaanpa toteumaa: " (pr-str toteuma))
 
+    ;; FIXME:
+    ;; Tässä pitää vielä valita: sopimus ja toimenpidekoodi
+
     ;; Kartta näkyviin
     ;; PENDING: tämä pitää tehdä async? ilmeisesti jossain tehdään unmount/mount
     ;; manipulaatiota kartan kokovalinnalle
