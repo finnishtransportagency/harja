@@ -252,10 +252,23 @@
                     JOIN toimenpideinstanssi tpi ON u.id = tpi.urakka
                   WHERE  u.nimi = 'Oulun alueurakka 2005-2012';")))))
 
+(defn hae-oulun-alueurakan-talvihoito-tpi-id []
+  (ffirst (q (str "SELECT id
+                  FROM   toimenpideinstanssi
+                  WHERE  nimi = 'Oulu Talvihoito TP 2014-2019';"))))
+
 (defn hae-muhoksen-paallystysurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Muhoksen päällystysurakka'"))))
+
+(defn hae-muhoksen-paallystysurakan-tpi-id []
+  (ffirst (q (str "SELECT id
+                   FROM   toimenpideinstanssi
+                   WHERE  urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')"))))
+
+(defn hae-muhoksen-paallystysurakan-testikohteen-id []
+  (ffirst (q (str "SELECT id FROM yllapitokohde WHERE nimi = 'Kuusamontien testi'"))))
 
 (defn hae-oulun-tiemerkintaurakan-id []
   (ffirst (q (str "SELECT id

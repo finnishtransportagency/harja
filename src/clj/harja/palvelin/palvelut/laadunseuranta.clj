@@ -123,11 +123,19 @@
   (log/debug "LAJI ON: " (pr-str laji))
   (let [params {:perintapvm (konv/sql-timestamp perintapvm)
                 :ryhma (when laji (name laji))
-                :tyyppi (:id tyyppi)
+                ;; hoitourakassa sanktiotyyppi valitaan kälistä, ylläpidosta päätellään implisiittisesti
+                :tyyppi (if (:id tyyppi)
+                          (:id tyyppi)
+                          (when laji
+                            (sanktiot/hae-sanktiotyyppi-sanktiolajilla db {:sanktiolaji (name laji)})))
                 :vakiofraasi (when vakiofraasi (name vakiofraasi))
                 :tpi_id toimenpideinstanssi
                 :urakka urakka
-                :summa summa
+                ;; bonukselle miinus etumerkiksi, muistutuksen summa on kuitenkin nil
+                :summa (when summa
+                         (if (= :yllapidon_bonus laji)
+                           (- (Math/abs summa))
+                           (Math/abs summa)))
                 :indeksi indeksi
                 :laatupoikkeama laatupoikkeama
                 :suorasanktio (or suorasanktio false)
@@ -390,6 +398,18 @@
            :laatupoikkeama laatupoikkeama-id})
         laatupoikkeama-id))))
 
+(defn hae-urakkatyypin-sanktiolajit
+  "Palauttaa urakkatyypin sanktiolajit settinä"
+  [db user urakka-id urakkatyyppi]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
+  (let [sanktiotyypit (into []
+                            (map #(konv/array->set % :sanktiolaji keyword))
+                            (sanktiot/hae-urakkatyypin-sanktiolajit
+                              db (name urakkatyyppi)))
+        sanktiolajit (apply clojure.set/union
+                            (map :sanktiolaji sanktiotyypit))]
+    sanktiolajit))
+
 (defrecord Laadunseuranta []
   component/Lifecycle
   (start [{:keys [http-palvelin db karttakuvat] :as this}]
@@ -441,6 +461,10 @@
       (fn [user {:keys [urakka-id tarkastus-id]}]
         (hae-tarkastus db user urakka-id tarkastus-id))
 
+      :hae-urakkatyypin-sanktiolajit
+      (fn [user {:keys [urakka-id urakkatyyppi]}]
+        (hae-urakkatyypin-sanktiolajit db user urakka-id urakkatyyppi))
+
       :lisaa-tarkastukselle-laatupoikkeama
       (fn [user {:keys [urakka-id tarkastus-id]}]
         (lisaa-tarkastukselle-laatupoikkeama db user urakka-id tarkastus-id)))
@@ -457,5 +481,6 @@
                      :tallenna-tarkastus
                      :tallenna-suorasanktio
                      :hae-tarkastus
+                     :hae-urakkatyypin-sanktiolajit
                      :lisaa-tarkastukselle-laatupoikkeama)
     this))
