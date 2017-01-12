@@ -100,8 +100,10 @@
     ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
     (hakutulokset app nil nil))
 
-  VarusteToteumatMuuttuneet
   ;; Hook-up harja.tiedot.urakka.toteumat.varusteet -namespaceen, jossa varsinainen käsittely
+  VarusteToteumatMuuttuneet
+  (process-event [_ app]
+    app)
 
   PoistaVaruste
   (process-event [{varuste :varuste} app]
