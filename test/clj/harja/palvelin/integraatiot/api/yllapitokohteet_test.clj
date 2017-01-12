@@ -64,7 +64,7 @@
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
     ;; Tarkistetaan, että tiedot tallentuivat oikein
-    (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, muutoshinta, tila, id
+    (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, tila, id
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
           ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))
           paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))]
@@ -106,10 +106,9 @@
                                   :verkon-sijainti 1}]}
                  true))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
-      (is (== (get paallystysilmoitus 2) 3) "Muutoshinta laskettiin oikein")
-      (is (= (get paallystysilmoitus 3) "aloitettu") "Ei asetettu käsiteltäväksi, joten tila on aloitettu")
+      (is (= (get paallystysilmoitus 2) "aloitettu") "Ei asetettu käsiteltäväksi, joten tila on aloitettu")
 
-      (u "DELETE FROM paallystysilmoitus WHERE id = " (get paallystysilmoitus 4) ";"))))
+      (u "DELETE FROM paallystysilmoitus WHERE id = " (get paallystysilmoitus 3) ";"))))
 
 (deftest uuden-paallystysilmoituksen-kirjaaminen-kasiteltavaksi-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
