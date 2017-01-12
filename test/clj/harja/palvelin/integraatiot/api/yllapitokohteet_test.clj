@@ -130,7 +130,7 @@
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-tielta-20-jolla-paallystysilmoitus)
         paallystysilmoitusten-maara-kannassa-ennen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
-        vanha-paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, muutoshinta, tila
+        vanha-paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, tila
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
@@ -142,7 +142,7 @@
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
     ;; Tarkistetana, että tiedot tallentuivat oikein
-    (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, muutoshinta, tila
+    (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, tila
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
           ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))
           paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))]
@@ -183,8 +183,7 @@
                                   :verkon-sijainti 1}]}
                  true))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
-      (is (== (get paallystysilmoitus 2) 3) "Muutoshinta laskettiin oikein")
-      (is (= (get paallystysilmoitus 3) (get vanha-paallystysilmoitus 3)) "Tila ei muuttunut miksikään"))))
+      (is (= (get paallystysilmoitus 2) (get vanha-paallystysilmoitus 2)) "Tila ei muuttunut miksikään"))))
 
 (deftest paallystysilmoituksen-paivittaminen-ei-paivita-lukittua-paallystysilmoitusta
   (let [urakka (hae-muhoksen-paallystysurakan-id)
