@@ -11,6 +11,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
@@ -125,45 +126,7 @@
   (process-event [{{:keys [urakka hallintayksikko id] :as toteuma} :toteuma}
                   {{:keys [alku loppu]} :valinnat :as app}]
     (log "tarkastellaanpa toteumaa: " (pr-str toteuma))
-
-    ;; FIXME:
-    ;; Tässä pitää vielä valita: sopimus
-
-    ;; Kartta näkyviin
-    ;; PENDING: tämä pitää tehdä async? ilmeisesti jossain tehdään unmount/mount
-    ;; manipulaatiota kartan kokovalinnalle
-    (go (nav/vaihda-kartan-koko! :L))
-
-    ;; Valitse oikea toimenpideinstanssi
-    (urakka/valitse-toimenpideinstanssi-koodilla! (:tpk3 toteuma))
-
-    ;; Valitaan sivuksi kok.hint. toteumat
-    (nav/aseta-valittu-valilehti! :sivu :urakat)
-    (nav/aseta-valittu-valilehti! :urakat :toteumat)
-    (nav/aseta-valittu-valilehti! :toteumat :kokonaishintaiset-tyot)
-
-
-    ;; Valitse toteuman urakka ja sen hallintayksikkö
-    (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko urakka)
-
-    ;; Valitse aikaväliksi sama kuin tienäkymän valinnoissa
-    (urakka/valitse-aikavali! alku loppu)
-
-
-    (let [pvm (pvm/paivan-alussa (:alkanut toteuma))
-          tpk (:toimenpidekoodi (first (:tehtavat toteuma)))
-          jarj? (:jarjestelmanlisaama toteuma)]
-      ;; Aukaistaan vetolaatikko, joka sisältää tämän toteuman, valmiiksi
-      (kokonaishintaiset-tyot/avaa-toteuma! urakka pvm tpk jarj?)
-
-      ;; Valitaan päiväkohtainen tehtävä kartalle
-      (kokonaishintaiset-tyot/valitse-paivakohtainen-tehtava! pvm tpk)
-
-      ;; Valitaan yksittäinen toteuma katsottavaksi
-      (kokonaishintaiset-tyot/valitse-paivan-toteuma-id! [urakka pvm tpk jarj?] id)
-
-      )
-
+    (siirtymat/nayta-kokonaishintainen-toteuma! id)
     app))
 
 (defonce muut-tulokset-kartalla
