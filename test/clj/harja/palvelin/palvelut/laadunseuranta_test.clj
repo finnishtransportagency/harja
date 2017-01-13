@@ -123,6 +123,150 @@
 
         (is (number? id) "Tallennus palauttaa uuden id:n")))))
 
+(deftest tallenna-suorasanktio-paallystysurakassa-sakko-ja-bonus
+  (let [perustelu "ABC kissa kävelee"
+        perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
+        sanktiorunko {:suorasanktio true
+                      :toimenpideinstanssi (hae-muhoksen-paallystysurakan-tpi-id)
+                      :perintapvm perintapvm
+                      :vakiofraasi :laadunvalvontaan-liittyvien-mittausten-ym-toimien-laiminlyonnit}
+        sakko (merge sanktiorunko {:laji :yllapidon_sakko :summa 1234})
+        bonus (merge sanktiorunko {:laji :yllapidon_bonus :summa -4321})
+        muistutus (merge sanktiorunko {:laji :yllapidon_muistutus :summa nil})
+        laatupoikkeama {:tekijanimi    "Järjestelmä Vastaava"
+                        :paatos        {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
+                        :aika          (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-muhoksen-paallystysurakan-id),
+                        :yllapitokohde (hae-muhoksen-paallystysurakan-testikohteen-id)}
+        hk-alkupvm (pvm/->pvm "1.1.2017")
+        hk-loppupvm (pvm/->pvm "31.12.2017")]
+    (testing "Päällystysurakan suorasanktion tallennus"
+      (let [sanktiot-sakon-jalkeen (kutsu-http-palvelua
+                                          :tallenna-suorasanktio
+                                          +kayttaja-jvh+
+                                          {:sanktio        sakko
+                                           :laatupoikkeama laatupoikkeama
+                                           :hoitokausi     [hk-alkupvm hk-loppupvm]})
+            sanktiot-bonuksen-jalkeen (kutsu-http-palvelua
+                                     :tallenna-suorasanktio
+                                     +kayttaja-jvh+
+                                     {:sanktio        bonus
+                                      :laatupoikkeama laatupoikkeama
+                                      :hoitokausi     [hk-alkupvm hk-loppupvm]})
+            sanktiot-muistutuksen-jalkeen (kutsu-http-palvelua
+                                            :tallenna-suorasanktio
+                                            +kayttaja-jvh+
+                                            {:sanktio        muistutus
+                                             :laatupoikkeama laatupoikkeama
+                                             :hoitokausi     [hk-alkupvm hk-loppupvm]})
+            lisatty-sakko (first (filter #(= 1234.0 (:summa %)) sanktiot-sakon-jalkeen))
+            lisatty-bonus (first (filter #(= -4321.0 (:summa %)) sanktiot-bonuksen-jalkeen))
+            lisatty-muistutus (first (filter #(and (= nil (:summa %))) sanktiot-muistutuksen-jalkeen))]
+        (is (number? (:id lisatty-sakko)) "Tallennus palauttaa uuden id:n")
+        (is (= :yllapidon_sakko (:laji lisatty-sakko)) "Päällystysurakan bonuksen oikea sanktiolaji")
+        (is (= "Ylläpidon sakko" (:nimi (:tyyppi lisatty-sakko))) "Päällystysurakan sakon oikea sanktiotyyppi")
+        (is (= :yllapidon_bonus (:laji lisatty-bonus)) "Päällystysurakan bonuksen oikea sanktiolaji")
+        (is (= "Ylläpidon bonus" (:nimi (:tyyppi lisatty-bonus))) "Päällystysurakan bonuksen oikea sanktiotyyppi")
+        (is (= "Ylläpidon muistutus" (:nimi (:tyyppi lisatty-muistutus))) "Päällystysurakan muistutuksen oikea sanktiotyyppi")
+        (is (= 1234.0 (:summa lisatty-sakko)) "Päällystysurakan sakon oikea summa")
+        (is (= -4321.0 (:summa lisatty-bonus)) "Päällystysurakan bonuksen oikea summa")
+        (is (= nil (:summa lisatty-muistutus)) "Päällystysurakan bonuksen oikea summa")
+        (is (= (hae-muhoksen-paallystysurakan-id) (get-in lisatty-sakko [:laatupoikkeama :urakka])) "Päällystysurakan sanktiorunko oikea summa")
+        (is (= perustelu (get-in lisatty-sakko [:laatupoikkeama :paatos :perustelu])) "Päällystysurakan sanktiorunko oikea summa")))))
+
+(deftest tallenna-suorasanktio-hoidon-urakassa-sakko
+  (let [perustelu "ABC gorilla gävelee"
+        perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
+        sanktiorunko-hoito {:suorasanktio        true
+                            :toimenpideinstanssi (hae-oulun-alueurakan-talvihoito-tpi-id)
+                            :perintapvm          perintapvm}
+        hoidon-sakko (merge sanktiorunko-hoito {:laji :A :summa 665.9 :tyyppi {:id 2 :nimi "Talvihoito"}})
+        hoidon-muistutus (merge sanktiorunko-hoito {:laji :muistutus :summa nil :tyyppi {:id 2 :nimi "Talvihoito"}})
+        laatupoikkeama {:tekijanimi    "Järjestelmä Vastaava"
+                        :paatos        {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
+                        :aika          (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-oulun-alueurakan-2014-2019-id)}
+        hk-alkupvm (pvm/->pvm "1.1.2017")
+        hk-loppupvm (pvm/->pvm "31.12.2017")]
+
+    (testing "Hoitourakan suorasanktion tallennus"
+      (let [sanktiot-sakon-jalkeen (kutsu-http-palvelua
+                                     :tallenna-suorasanktio
+                                     +kayttaja-jvh+
+                                     {:sanktio        hoidon-sakko
+                                      :laatupoikkeama laatupoikkeama
+                                      :hoitokausi     [hk-alkupvm hk-loppupvm]})
+            sanktiot-muistutuksen-jalkeen (kutsu-http-palvelua
+                                        :tallenna-suorasanktio
+                                        +kayttaja-jvh+
+                                        {:sanktio        hoidon-muistutus
+                                         :laatupoikkeama laatupoikkeama
+                                         :hoitokausi     [hk-alkupvm hk-loppupvm]})
+            lisatty-hoidon-sakko (first (filter #(= 665.9 (:summa %)) sanktiot-sakon-jalkeen))
+            lisatty-hoidon-muistutus (first (filter #(= nil (:summa %)) sanktiot-muistutuksen-jalkeen))]
+        (is (number? (:id lisatty-hoidon-sakko)) "Tallennus palauttaa uuden id:n")
+        (is (number? (:id lisatty-hoidon-muistutus)) "Tallennus palauttaa uuden id:n")
+        (is (= :A (:laji lisatty-hoidon-sakko)) "Hoitourakan bonuksen oikea sanktiolaji")
+        (is (= "Talvihoito" (:nimi (:tyyppi lisatty-hoidon-sakko))) "Hoitourakan sakon oikea sanktiotyyppi")
+        (is (= :muistutus (:laji lisatty-hoidon-muistutus)) "Hoitourakan muistutuksen oikea sanktiolaji")
+        (is (= "Talvihoito" (:nimi (:tyyppi lisatty-hoidon-muistutus))) "Hoitourakan bonuksen oikea sanktiotyyppi")
+        (is (= 665.9 (:summa lisatty-hoidon-sakko)) "Hoitourakan sakon oikea summa")
+        (is (= nil (:summa lisatty-hoidon-muistutus)) "Hoitourakan bonuksen oikea summa")
+        (is (= (hae-oulun-alueurakan-2014-2019-id) (get-in lisatty-hoidon-sakko [:laatupoikkeama :urakka])) "Hoitourakan sanktiorunko-hoito oikea summa")
+        (is (= perustelu (get-in lisatty-hoidon-sakko [:laatupoikkeama :paatos :perustelu])) "Hoitourakan sanktiorunko-hoito oikea summa")))))
+
+(deftest tallenna-suorasanktio-ei-salli-vaaran-urakkatyypin-sanktiolajia
+  (let [perustelu "ABC gorilla gävelee"
+        perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
+        sanktiorunko {:suorasanktio        true
+                      :perintapvm          perintapvm}
+        hoidon-sakko (merge sanktiorunko {:laji :yllapidon_sakko :summa 665.9 :tyyppi {:id 2 :nimi "Talvihoito"}})
+        paallystys-sakko (merge sanktiorunko {:laji :A :summa 1234 :tyyppi {:id 4 :nimi "Ylläpidon sakko"}})
+        laatupoikkeama-hoito {:tekijanimi    "Järjestelmä Vastaava"
+                              :paatos        {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
+                              :aika          (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-oulun-alueurakan-2014-2019-id)}
+        laatupoikkeama-paallystys {:tekijanimi    "Järjestelmä Vastaava"
+                        :paatos        {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
+                        :aika          (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-muhoksen-paallystysurakan-id),
+                        :yllapitokohde (hae-muhoksen-paallystysurakan-testikohteen-id)}
+        hk-alkupvm (pvm/->pvm "1.1.2017")
+        hk-loppupvm (pvm/->pvm "31.12.2017")]
+
+    (testing "tallenna-suorasanktio-ei-salli-vaaran-urakkatyypin-sanktiolajia"
+      (is (thrown? Exception (kutsu-http-palvelua
+                               :tallenna-suorasanktio
+                               +kayttaja-jvh+
+                               {:sanktio        hoidon-sakko
+                                :laatupoikkeama laatupoikkeama-hoito
+                                :hoitokausi     [hk-alkupvm hk-loppupvm]})))
+
+      (is (thrown? Exception (kutsu-http-palvelua
+                               :tallenna-suorasanktio
+                               +kayttaja-jvh+
+                               {:sanktio        paallystys-sakko
+                                :laatupoikkeama laatupoikkeama-paallystys
+                                :hoitokausi     [hk-alkupvm hk-loppupvm]}))))))
+
+(deftest paivita-eri-urakan-suorasanktiota
+  (let [perustelu "ABC möhöfantti kävelee"
+        perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
+        sanktiorunko {:suorasanktio        true
+                      :perintapvm          perintapvm
+                      :id                  1}               ;sanktio 1 kuuluu urakkaan 4
+        paallystys-sakko (merge sanktiorunko {:laji :A :summa 1234 :tyyppi {:id 4 :nimi "Ylläpidon sakko"}})
+        laatupoikkeama-paallystys {:tekijanimi    "Järjestelmä Vastaava"
+                                   :paatos        {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
+                                   :aika          (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-muhoksen-paallystysurakan-id),
+                                   :yllapitokohde (hae-muhoksen-paallystysurakan-testikohteen-id)}
+        hk-alkupvm (pvm/->pvm "1.1.2017")
+        hk-loppupvm (pvm/->pvm "31.12.2017")]
+
+    (testing "paivita-eri-urakan-suorasanktiota"
+      (is (thrown? Exception (kutsu-http-palvelua
+                               :tallenna-suorasanktio
+                               +kayttaja-jvh+
+                               {:sanktio        paallystys-sakko
+                                :laatupoikkeama laatupoikkeama-paallystys
+                                :hoitokausi     [hk-alkupvm hk-loppupvm]}))))))
+
 (deftest hae-laatupoikkeaman-tiedot
   (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -232,3 +376,26 @@
          :alku      (pvm/luo-pvm 2015 10 1)
          :loppu    (pvm/luo-pvm 2016 10 30)
          :tpi 1})))
+
+(deftest hae-urakkatyypin-sanktiolajit
+  (let [hoidon (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :hae-urakkatyypin-sanktiolajit +kayttaja-urakan-vastuuhenkilo+
+                               {:urakkatyyppi :hoito})
+        paallystyksen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :hae-urakkatyypin-sanktiolajit +kayttaja-urakan-vastuuhenkilo+
+                                      {:urakkatyyppi :paallystys})
+        paikkauksen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :hae-urakkatyypin-sanktiolajit +kayttaja-urakan-vastuuhenkilo+
+                                    {:urakkatyyppi :paikkaus})
+        tiemerkinnan (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :hae-urakkatyypin-sanktiolajit +kayttaja-urakan-vastuuhenkilo+
+                                     {:urakkatyyppi :tiemerkinta})
+        valaistuksen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :hae-urakkatyypin-sanktiolajit +kayttaja-urakan-vastuuhenkilo+
+                                     {:urakkatyyppi :valaistus})]
+    (is (not (empty? hoidon)))
+    (is (= #{:A :B :C :muistutus} hoidon) "Hoidon sanktiolajit")
+    (is (= #{:yllapidon_sakko :yllapidon_bonus :yllapidon_muistutus}
+           paallystyksen paikkauksen tiemerkinnan valaistuksen) "Ylläpidon sanktiolajit")))
+
+

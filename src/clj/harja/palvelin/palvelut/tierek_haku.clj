@@ -52,7 +52,8 @@
 
 (defn hae-osien-pituudet
   "Hakee tierekisteriosien pituudet annetulle tielle ja osan välille.
-  Params mäpissä tulee olla :tie, :aosa ja :losa"
+   Params mäpissä tulee olla :tie, :aosa ja :losa.
+   Palauttaa pituuden metreinä."
   [db params]
   (into {}
         (map (juxt :osa :pituus))

@@ -77,18 +77,6 @@
           "tekninen-toimenpide": "Rakentaminen"
         }
       }
-    ],
-    "tyot": [
-      {
-        "tyo": {
-          "tyyppi": "Tasaukset",
-          "tyotehtava": "työtehtävä",
-          "tilattu-maara": 1,
-          "toteutunut-maara": 2,
-          "yksikko": "kpl",
-          "yksikkohinta": 3
-        }
-      }
     ]
   },
   "valmis-kasiteltavaksi": __VALMIS__

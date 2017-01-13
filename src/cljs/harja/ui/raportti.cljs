@@ -1,5 +1,16 @@
 (ns harja.ui.raportti
-  "Harjan raporttielementtien HTML näyttäminen."
+  "Harjan raporttielementtien HTML näyttäminen.
+
+  Harjan raportit ovat Clojuren tietorakenteita, joissa käytetään
+  tiettyä rakennetta ja tiettyjä avainsanoja. Nämä raportit annetaan
+  eteenpäin moottoreille, jotka luovat tietorakenteen pohjalta raportin.
+  Tärkeä yksityiskohta on, että raporttien olisi tarkoitus sisältää ns.
+  raakaa dataa, ja antaa raportin formatoida data oikeaan muotoon sarakkeen :fmt
+  tiedon perusteella.
+
+  Tämä moottori luo selaimessa näytettävän raportin. Alla käytetään Harjan gridiä.
+  Kuten muissakin raporteissa, tärkein metodi on :taulukko, jonne mm.
+  voi lisätä tuen eri tavoilla formatoitaville sarakkeille."
   (:require [harja.ui.grid :as grid]
             [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
