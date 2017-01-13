@@ -77,5 +77,5 @@
                (fn [_]
                  (piilota!))))
 
-(defn modal [optiot & sisalto]
-  [modal-container* optiot [:span sisalto]])
+(defn modal [optiot sisalto]
+  [modal-container* optiot sisalto])
