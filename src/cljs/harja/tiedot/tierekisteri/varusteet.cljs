@@ -140,7 +140,7 @@
           virhe! (t/send-async! ->ToimintoEpaonnistui)]
       (go
         (let [varuste (assoc-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"] kuntoluokitus)
-              varustetoteuma (varustetoteuma varuste :tarkastettu kuntoluokitus lisatieto)
+              varustetoteuma (varustetoteuma varuste :tarkastus kuntoluokitus lisatieto)
               hakuehdot {:urakka-id (:id @nav/valittu-urakka)
                          :sopimus-id (first @urakka/valittu-sopimusnumero)
                          :aikavali @urakka/valittu-aikavali}
