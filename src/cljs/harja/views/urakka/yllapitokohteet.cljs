@@ -617,7 +617,7 @@
                       :tasaa :oikea})
                    {:otsikko "Ar\u00ADvon muu\u00ADtok\u00ADset" :nimi :arvonvahennykset :fmt fmt/euro-opt
                     :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea}
-                   {:otsikko "Bo\u00ADnus/sak\u00ADko" :nimi :bonuksetjasakot :fmt fmt/euro-opt
+                   {:otsikko "Bo\u00ADnus/sak\u00ADko" :nimi :bonukset-ja-sakot :fmt fmt/euro-opt
                     :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea
                     :muokattava? (constantly false)}
                    {:otsikko "Bi\u00ADtumi-in\u00ADdek\u00ADsi" :nimi :bitumi-indeksi
@@ -634,7 +634,7 @@
                                        (:muutoshinta rivi)
                                        (:toteutunut-hinta rivi)
                                        (:arvonvahennykset rivi)
-                                       (:bonuksetjasakot rivi)
+                                       (:bonukset-ja-sakot rivi)
                                        (:bitumi-indeksi rivi)
                                        (:kaasuindeksi rivi)))}]))
           (sort-by tr/tiekohteiden-jarjestys @kohteet-atom)]
@@ -650,7 +650,7 @@
                 toteutunut-hinta-yhteensa (laske-sarakkeen-summa :toteutunut-hinta kohteet)
                 muutoshinta-yhteensa (laske-sarakkeen-summa :muutoshinta kohteet)
                 arvonvahennykset-yhteensa (laske-sarakkeen-summa :arvonvahennykset kohteet)
-                bonukset-ja-sakot-yhteensa (laske-sarakkeen-summa :bonuksetjasakot kohteet)
+                bonukset-ja-sakot-yhteensa (laske-sarakkeen-summa :bonukset-ja-sakot kohteet)
                 bitumi-indeksi-yhteensa (laske-sarakkeen-summa :bitumi-indeksi kohteet)
                 kaasuindeksi-yhteensa (laske-sarakkeen-summa :kaasuindeksi kohteet)
                 kokonaishinta (+ sopimuksen-mukaiset-tyot-yhteensa
@@ -665,7 +665,7 @@
               :muutoshinta muutoshinta-yhteensa
               :toteutunut-hinta toteutunut-hinta-yhteensa
               :arvonvahennykset arvonvahennykset-yhteensa
-              :bonuksetjasakot bonukset-ja-sakot-yhteensa
+              :bonukset-ja-sakot bonukset-ja-sakot-yhteensa
               :bitumi-indeksi bitumi-indeksi-yhteensa
               :kaasuindeksi kaasuindeksi-yhteensa
               :kokonaishinta kokonaishinta}]))]
@@ -698,7 +698,7 @@
          :leveys toteutunut-hinta-leveys :tasaa :oikea})
       {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero
        :leveys arvonvahennykset-leveys :tasaa :oikea}
-      {:otsikko "Bo\u00ADnus/sak\u00ADko" :nimi :bonuksetjasakot :fmt fmt/euro-opt
+      {:otsikko "Bo\u00ADnus/sak\u00ADko" :nimi :bonukset-ja-sakot :fmt fmt/euro-opt
        :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea
        :muokattava? (constantly false)}
       {:otsikko "Bitumi-indeksi" :nimi :bitumi-indeksi :fmt fmt/euro-opt :tyyppi :numero

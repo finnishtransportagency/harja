@@ -105,7 +105,7 @@ SELECT
   ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
   ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
   ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
-  sum(s.maara)                               AS bonuksetjasakot,
+  sum(s.maara)                               AS "bonukset-ja-sakot",
   o.nimi                                AS "urakoitsija",
   u.nimi AS "urakka"
 FROM yllapitokohde ypk
