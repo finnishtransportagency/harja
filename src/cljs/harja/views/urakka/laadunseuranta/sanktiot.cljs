@@ -30,6 +30,7 @@
 (defn sanktion-tiedot
   [optiot]
   (let [muokattu (atom @tiedot/valittu-sanktio)
+        _ (log "muokattu sanktio: " (pr-str muokattu))
         voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                                                (:id @nav/valittu-urakka))]
     (fn [optiot]
@@ -192,7 +193,7 @@
 
              (when (sanktio-domain/sakko? @muokattu)
                {:otsikko     "Summa" :nimi :summa :palstoja 1 :tyyppi :positiivinen-numero
-                :hae         #(Math/abs (:summa %))
+                :hae         #(when (:summa %) (Math/abs (:summa %)))
                 :pakollinen? true :uusi-rivi? true :yksikko "€"
                 :validoi     [[:ei-tyhja "Anna summa"]]})
 
