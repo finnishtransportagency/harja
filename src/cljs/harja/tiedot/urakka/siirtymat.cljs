@@ -41,17 +41,17 @@
       (nav/aseta-hallintayksikko-ja-urakka-id! hallintayksikko-id urakka-id)
 
       ;; Valitse aikaväliksi sama kuin tienäkymän valinnoissa
-      (urakka/valitse-aikavali! (first aikavali) (second aikavali))
+      (urakka/valitse-aikavali! (:alku aikavali) (:loppu aikavali))
 
 
       (let [pvm (pvm/paivan-alussa alkanut)
             tpk toimenpidekoodi
             jarj? jarjestelmanlisaama]
-      ;; Aukaistaan vetolaatikko, joka sisältää tämän toteuman, valmiiksi
-      (kokonaishintaiset-tyot/avaa-toteuma! urakka-id pvm tpk jarj?)
+        ;; Aukaistaan vetolaatikko, joka sisältää tämän toteuman, valmiiksi
+        (kokonaishintaiset-tyot/avaa-toteuma! urakka-id pvm tpk jarj?)
 
-      ;; Valitaan päiväkohtainen tehtävä kartalle
-      (kokonaishintaiset-tyot/valitse-paivakohtainen-tehtava! pvm tpk)
+        ;; Valitaan päiväkohtainen tehtävä kartalle
+        (kokonaishintaiset-tyot/valitse-paivakohtainen-tehtava! pvm tpk)
 
-      ;; Valitaan yksittäinen toteuma katsottavaksi
-      (kokonaishintaiset-tyot/valitse-paivan-toteuma-id! [urakka-id pvm tpk jarj?] toteuma-id)))))
+        ;; Valitaan yksittäinen toteuma katsottavaksi
+        (kokonaishintaiset-tyot/valitse-paivan-toteuma-id! [urakka-id pvm tpk jarj?] toteuma-id)))))
