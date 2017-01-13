@@ -12,7 +12,7 @@
             [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn varustetoteuma [{:keys [tietue]} toiminto]
+(defn varustetoteuma [{:keys [tietue]} toiminto kuntoluokitus lisatieto ]
   (let [tr-osoite (get-in tietue [:sijainti :tie])]
     {:arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
      :puoli (:puoli tr-osoite)
@@ -26,7 +26,9 @@
      :toiminto toiminto
      :urakka-id @nav/valittu-urakka-id
      :alkupvm (:alkupvm tietue)
-     :loppupvm (:loppupvm tietue)}))
+     :loppupvm (:loppupvm tietue)
+     :kuntoluokitus kuntoluokitus
+     :lisatieto lisatieto}))
 
 (defn hakutulokset [app tietolaji varusteet]
   (-> app
@@ -114,7 +116,7 @@
     (let [tulos! (t/send-async! map->ToimintoOnnistui)
           virhe! (t/send-async! ->ToimintoEpaonnistui)]
       (go
-        (let [varustetoteuma (varustetoteuma varuste :poistettu)
+        (let [varustetoteuma (varustetoteuma varuste :poistettu nil nil )
               hakuehdot {:urakka-id (:id @nav/valittu-urakka)
                          :sopimus-id (first @urakka/valittu-sopimusnumero)
                          :aikavali @urakka/valittu-aikavali}
@@ -133,14 +135,21 @@
     (dissoc app :tarkastus))
 
   TallennaVarustetarkastus
-  (process-event [{varuste :varuste tarkastus :tarkastus :as data} app]
-    (log "---> varuste:" (pr-str varuste))
-    (log "---> tarkastus:" (pr-str tarkastus))
-    ;; todo: rakenna varustetoteuma ja lähetä backendille
+  (process-event [{varuste :varuste {lisatieto :lisatietoja kuntoluokitus :kuntoluokitus} :tarkastus :as data} app]
+    (let [tulos! (t/send-async! map->ToimintoOnnistui)
+          virhe! (t/send-async! ->ToimintoEpaonnistui)]
+      (go
+        (let [varuste (assoc-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"] kuntoluokitus)
+              varustetoteuma (varustetoteuma varuste :tarkastettu kuntoluokitus lisatieto)
+              hakuehdot {:urakka-id (:id @nav/valittu-urakka)
+                         :sopimus-id (first @urakka/valittu-sopimusnumero)
+                         :aikavali @urakka/valittu-aikavali}
+              vastaus (<! (varuste-tiedot/tallenna-varustetoteuma hakuehdot varustetoteuma))]
+          (if (or (k/virhe? vastaus) (not (:onnistunut vastaus)))
+            (virhe! {:vastaus vastaus :viesti "Varusteen tarkastuksen kirjauksessa tapahtui virhe."})
+            (tulos! {:vastaus vastaus :viesti "Varustetarkastus kirjattu onnistuneesti."})))))
     (dissoc app :tarkastus))
 
   AsetaVarusteTarkastuksenTiedot
   (process-event [{uudet-tiedot :tiedot} {tarkastus :tarkastus :as app}]
-    (log "--> 3. uudet-tiedot tarkastuksen:" (pr-str uudet-tiedot))
-    (log "--> 3. tarkastus :" (pr-str tarkastus))
     (assoc app :tarkastus (assoc tarkastus :tiedot uudet-tiedot))))
