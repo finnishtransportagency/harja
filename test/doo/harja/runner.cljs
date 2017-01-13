@@ -16,6 +16,7 @@
              [harja.ui.kentat-test]
              [harja.ui.grid-test]
              [harja.ui.edistymispalkki-testi]
+             [harja.fmt-test]
              ;; uusi testi tähän
              ))
 
@@ -35,5 +36,7 @@
            'harja.ui.grid-test
            'harja.ui.edistymispalkki-testi
            'harja.views.kartta.infopaneeli-test
-           ;; uusi testi tähän
+           'harja.fmt-test
+            ;; uusi testi tähän
            )
+
