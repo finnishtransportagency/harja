@@ -122,8 +122,15 @@
             (tulos! {:vastaus vastaus :viesti "Varuste poistettu onnistuneesti."})))))
     app)
 
+  KirjaaVarustetarkastus
+  (process-event [{varuste :varuste tarkastus :tarkastus :as data} app]
+    (log "---> eventissä")
+    (log "---> varuste:" (pr-str varuste))
+    (log "---> tarkastus:" (pr-str tarkastus))
+    (log "---> data:" (pr-str data))
+    app)
+
   AsetaVarusteTarkastuksenTiedot
   (process-event [{tarkastus :tarkastus} app]
-    (log "--> tarkastus:" (pr-str tarkastus))
-    (log "--> app:" (pr-str app))
+    (log "--> tarkastus 3:" (pr-str tarkastus))
     (assoc-in app [:tarkastus] tarkastus)))

@@ -66,10 +66,20 @@
                           "5" "Erinomainen"})
 
 (defn tarkasta-varuste [e! tietolaji tunniste varuste tarkastus]
+  (log "---> varuste:" varuste)
+  (log "---> tarkastus 1:" tarkastus)
+
   (let [peruuta-fn #(do (.preventDefault %) (modal/piilota!))
         tallenna-fn #(do (.preventDefault %)
-                         (e! (v/->KirjaaVarustetarkastus varuste @tarkastuslomakedata))
-                         (modal/piilota!))]
+                         (e! (v/->KirjaaVarustetarkastus varuste tarkastus))
+                         (modal/piilota!))
+        varusteen-kuntoluokka (get-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"])
+        valittu-kuntoluokka (cond
+                              (and (nil? tarkastus) (nil? varusteen-kuntoluokka)) (first kuntoluokka->selite)
+                              (nil? tarkastus) varusteen-kuntoluokka
+                              :default (:kuntoluokka tarkastus))
+        tarkastus (assoc tarkastus :kuntoluokitus valittu-kuntoluokka :lisatietoja "asfd")
+        _ (log "---> tarkastus 2:" (pr-str tarkastus))]
     (modal/nayta! {:otsikko (str "Tarkasta varuste (tunniste: " tunniste ", tietolaji: " tietolaji ")")
                    :footer [:span
                             [:button.nappi-toissijainen {:type "button" :on-click peruuta-fn}
@@ -85,9 +95,14 @@
                      :pakollinen? true
                      :valinnat (vec (keys kuntoluokka->selite))
                      :fmt (fn [arvo] (if arvo (kuntoluokka->selite arvo) "- Valitse -"))
-                     :valinta-nayta (fn [arvo] (if arvo (kuntoluokka->selite arvo) "- Valitse -"))
-                     :aseta (fn (assoc-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"] %))
-                     :hae (fn [varuste] (get-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"]))}]
+                     :valinta-nayta (fn [arvo]
+                                      (log "--> arvo:" (pr-str arvo))
+                                      (if arvo (kuntoluokka->selite arvo) "- Valitse -"))}
+                    {:otsikko "Lisätietoja"
+                     :nimi :lisatietoja
+                     :tyyppi :string}]
+
+                   ;; todo: mihin pitäisi bindata? tarkastukseen ei onnistu, koska muutokset eivät näy propagoituvan appista tänne.
                    tarkastus])))
 
 (defn sarakkeet [e! tietolajin-listaus-skeema tarkastus]
