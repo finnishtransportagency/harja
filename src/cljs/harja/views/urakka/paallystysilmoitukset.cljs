@@ -66,7 +66,7 @@
      "Urakkasopimuksen mukainen kokonaishinta: "
      (fmt/euro-opt (or urakkasopimuksen-mukainen-kokonaishinta 0))
 
-     "Muutokset kokonaishintaan ilman kustannustasomuutoksia: "
+     "Määrämuutosten vaikutus kokonaishintaan: "
      (fmt/euro-opt (or muutokset-kokonaishintaan 0))
 
      "Yhteensä: "
