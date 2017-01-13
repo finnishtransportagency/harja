@@ -65,17 +65,13 @@
                           "4" "Hyvä"
                           "5" "Erinomainen"})
 
-(defn varustetarkastuslomake [e! {tietolaji :tietolaji tunniste :tunniste varuste :varuste tarkastus :tarkastus}]
-  (log "---> varuste:" varuste)
-  (log "---> tarkastus 1:" tarkastus)
-
+(defn varustetarkastuslomake [e! {tietolaji :tietolaji tunniste :tunniste varuste :varuste tarkastus :tiedot}]
   (let [varusteen-kuntoluokka (get-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"])
         valittu-kuntoluokka (cond
-                              (and (nil? tarkastus) (nil? varusteen-kuntoluokka)) (first kuntoluokka->selite)
+                              (and (nil? tarkastus) (str/blank? varusteen-kuntoluokka)) (ffirst kuntoluokka->selite)
                               (nil? tarkastus) varusteen-kuntoluokka
-                              :default (:kuntoluokka tarkastus))
-        tarkastus (assoc tarkastus :kuntoluokitus valittu-kuntoluokka)
-        _ (log "---> tarkastus 2:" (pr-str tarkastus))]
+                              :default (:kuntoluokitus tarkastus))
+        tarkastus (assoc tarkastus :kuntoluokitus valittu-kuntoluokka)]
     [modal/modal
      {:otsikko (str "Tarkasta varuste (tunniste: " tunniste ", tietolaji: " tietolaji ")")
       :nakyvissa? true
@@ -95,14 +91,10 @@
         :pakollinen? true
         :valinnat (vec (keys kuntoluokka->selite))
         :fmt (fn [arvo] (if arvo (kuntoluokka->selite arvo) "- Valitse -"))
-        :valinta-nayta (fn [arvo]
-                         (log "--> arvo:" (pr-str arvo))
-                         (if arvo (kuntoluokka->selite arvo) "- Valitse -"))}
+        :valinta-nayta (fn [arvo] (if arvo (kuntoluokka->selite arvo) "- Valitse -"))}
        {:otsikko "Lisätietoja"
         :nimi :lisatietoja
         :tyyppi :string}]
-
-      ;; todo: mihin pitäisi bindata? tarkastukseen ei onnistu, koska muutokset eivät näy propagoituvan appista tänne.
       tarkastus]]))
 
 (defn sarakkeet [e! tietolajin-listaus-skeema]

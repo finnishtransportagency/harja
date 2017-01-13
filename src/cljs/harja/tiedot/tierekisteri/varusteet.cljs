@@ -43,7 +43,6 @@
 
 ;; Päivittää varustehaun hakuehdot
 (defrecord AsetaVarusteidenHakuehdot [hakuehdot])
-(defrecord AsetaVarusteTarkastuksenTiedot [tarkastus])
 ;; Suorittaa haun
 (defrecord HaeVarusteita [])
 (defrecord VarusteHakuTulos [tietolaji varusteet])
@@ -53,7 +52,7 @@
 (defrecord PoistaVaruste [varuste])
 (defrecord AloitaVarusteenTarkastus [varuste tunniste tietolaji])
 (defrecord PeruutaVarusteenTarkastus [])
-(defrecord AsetaVarusteTarkastuksenTiedot [tarkastus])
+(defrecord AsetaVarusteTarkastuksenTiedot [tiedot])
 (defrecord TallennaVarustetarkastus [varuste tarkastus])
 (defrecord ToimintoEpaonnistui [toiminto virhe])
 (defrecord ToimintoOnnistui [vastaus])
@@ -141,6 +140,7 @@
     (dissoc app :tarkastus))
 
   AsetaVarusteTarkastuksenTiedot
-  (process-event [{tarkastus :tarkastus} app]
-    (log "--> tarkastus 3:" (pr-str tarkastus))
-    (assoc app :tarkastus tarkastus)))
+  (process-event [{uudet-tiedot :tiedot} {tarkastus :tarkastus :as app}]
+    (log "--> 3. uudet-tiedot tarkastuksen:" (pr-str uudet-tiedot))
+    (log "--> 3. tarkastus :" (pr-str tarkastus))
+    (assoc app :tarkastus (assoc tarkastus :tiedot uudet-tiedot))))
