@@ -235,7 +235,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
            (on-postrender e)))))
 
 (defn- aseta-zoom-kasittelija [this ol3 on-zoom]
-  (.on (.getView ol3) "change:resolution"
+  (.on ol3 "change:view"
        (fn [e]
          (when on-zoom
            (on-zoom e (laske-kartan-alue ol3))))))
@@ -512,8 +512,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                              :extent     extent})
     (when (or (not (identical? aiempi-extent extent))
               (not= aiempi-extent-key extent-key))
-      (.setTimeout js/window #(keskita-kartta-alueeseen! extent)
-                   animaation-odotusaika)))
+      (keskita-kartta-alueeseen! extent)))
 
   (update-ol3-geometries this geometries))
 
