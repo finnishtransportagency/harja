@@ -293,7 +293,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
                yllapitokohteet (:yllapitokohteet optiot)
                yllapito? @tiedot-urakka/yllapidon-urakka?
-               yllapitokohdeurakka? @tiedot-urakka/yllapidokohdeurakka?]
+               yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
            (if (and yllapitokohdeurakka? (nil? yllapitokohteet)) ;; Pakko olla ylläpitokohteet ennen kuin lomaketta voi näyttää
              [ajax-loader "Ladataan..."]
              [:div.laatupoikkeama

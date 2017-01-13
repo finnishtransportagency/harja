@@ -292,7 +292,7 @@
                           (not jarjestelmasta?))
         kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
         yllapitokohteet (:yllapitokohteet optiot)
-        yllapitokohdeurakka? @tiedot-urakka/yllapidokohdeurakka?]
+        yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
     (if (and yllapitokohdeurakka? (nil? yllapitokohteet))
       [yleiset/ajax-loader "Ladataan..."]
       [:div.tarkastus
