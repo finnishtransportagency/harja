@@ -159,6 +159,29 @@ VALUES ((SELECT id
            sukunimi = 'Frösén'
          LIMIT 1));
 
+INSERT INTO yhteyshenkilo_urakka (urakka, rooli, yhteyshenkilo)
+VALUES ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Muhoksen päällystysurakka'),
+        'Kunnossapitopäällikkö',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Vihtori' AND
+           sukunimi = 'Ollila'
+         LIMIT 1));
+INSERT INTO yhteyshenkilo_urakka (urakka, rooli, yhteyshenkilo)
+VALUES ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Muhoksen päällystysurakka'),
+        'Tieliikennekeskus',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Reijo' AND
+           sukunimi = 'Vänskä'
+         LIMIT 1));
+
 -- Yhteyshenkilöiden organisaatio
 
 UPDATE yhteyshenkilo SET organisaatio=(SELECT id FROM organisaatio WHERE ytunnus='1565583-5');
