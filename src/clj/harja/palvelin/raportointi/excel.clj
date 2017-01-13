@@ -1,6 +1,19 @@
 (ns harja.palvelin.raportointi.excel
   "Harja raporttielementtien vienti Excel muotoon.
 
+  Harjan raportit ovat Clojuren tietorakenteita, joissa käytetään
+  tiettyä rakennetta ja tiettyjä avainsanoja. Nämä raportit annetaan
+  eteenpäin moottoreille, jotka luovat tietorakenteen pohjalta raportin.
+  Tärkeä yksityiskohta on, että raporttien olisi tarkoitus sisältää ns.
+  raakaa dataa, ja antaa raportin formatoida data oikeaan muotoon sarakkeen :fmt
+  tiedon perusteella.
+
+  Excel-moottori koostuu lähinnä muodosta-excel multimetodista. Tärkein
+  näistä on :taulukko tyypin käsittelijä.
+
+  Koska moottori käyttää Apache POI kirjastoa, joudutaan koodissa käyttämään
+  ikäviä oliomaisuuksia. Tämä ilmenee erityisesti solujen tyylittelyssä.
+
   EXCEL TYYLIT
 
   POI sisältää sisäänrakennenttuja tyylejä, joita solulle voi asettaa.
@@ -29,6 +42,11 @@
     (first elementti)))
 
 (defmulti muodosta-solu
+  "Raporttisolujen tyylittely täytyy Apache POI kirjaston takia tehdä niin,
+  että metodit palauttavat solun datan JA tyyliobjektin, jota ne ovat
+  mahdollisesti täydentäneet. Moottorissa on olmessa oletustyyli soluille,
+  jonka solut ottavat vastaan, ja muokkaavat. Solu voi esimerkiksi sisältää
+  virheen, jolloin Tyyliobjektiin asetetaan tieto, että fontin pitää olla punainen."
   (fn [elementti tyyli]
     (if (raportti-domain/raporttielementti? elementti)
       (first elementti)
@@ -137,6 +155,8 @@
                                          (= rivi viimeinen-rivi)))
                        korosta? (:korosta? optiot)
                        formaatti-fn (fn [tyyli]
+                                      ;; Jos halutaan tukea erityyppisiä sarakkeita,
+                                      ;; pitää tänne lisätä formatter.
                                       (case (:fmt sarake)
                                         ;; .setDataFormat hakee indeksillä tyylejä.
                                         ;; Tyylejä voi määritellä itse (https://poi.apache.org/apidocs/org/apache/poi/xssf/usermodel/XSSFDataFormat.html)
