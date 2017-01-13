@@ -37,14 +37,6 @@
     (is (= (tierekisteri-domain/laske-tien-pituus tie5) 1))
     (is (= (tierekisteri-domain/laske-tien-pituus tie6) nil))))
 
-(deftest muutos-kokonaishintaan-laskettu-oikein
-  (let [tyot [{:tilattu-maara 10 :toteutunut-maara 15 :yksikkohinta 1}
-              {:tilattu-maara 15 :toteutunut-maara 15  :yksikkohinta 666}
-              {:tilattu-maara 4 :toteutunut-maara 5 :yksikkohinta 8}]
-    tyot2 [{:tilattu-maara 4 :toteutunut-maara 2 :yksikkohinta 15}]]
-    (is (= (pot/summaa-maaramuutokset tyot) 13))
-    (is (= (pot/summaa-maaramuutokset tyot2) -30))))
-
 (def paallystysilmoituslomake-alkutila
   {:tila :aloitettu
    :muutoshinta 666
