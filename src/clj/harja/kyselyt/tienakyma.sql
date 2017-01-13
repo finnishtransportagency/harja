@@ -1,8 +1,6 @@
 -- name: hae-toteumat
 -- Hakee kaikki toteumat
 SELECT t.id,
-       t.urakka as urakka,
-       u.hallintayksikko,
        t.tyyppi,
        t.reitti,
        t.alkanut, t.paattynyt,
@@ -12,9 +10,7 @@ SELECT t.id,
        tpk.yksikko AS tehtava_yksikko,
        tpk.nimi AS tehtava_toimenpide,
        rp.sijainti AS reittipiste_sijainti,
-       rp.aika AS reittipiste_aika,
-       k.jarjestelma AS jarjestelmanlisaama,
-       tpk3.koodi AS tpk3
+       rp.aika AS reittipiste_aika
   FROM toteuma t
        JOIN urakka u ON t.urakka=u.id
        JOIN toteuma_tehtava tt ON tt.toteuma = t.id
