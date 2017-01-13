@@ -70,4 +70,22 @@ DROP FUNCTION muunna_paallystysilmoitusten_maaramuutokset(); -- Ei tarvi tehdä 
 -- Poista olemassa olevista päällystysilmoituksista taloustiedot, jotta data
 -- on uuden skeeman mukainen
 
--- TODO
+-- Perustuu: http://stackoverflow.com/questions/23490965/postgresql-remove-attribute-from-json-column
+CREATE OR REPLACE FUNCTION "poista_json_avaimet"("json_data" json, VARIADIC "avaimet" TEXT[])
+  RETURNS json
+LANGUAGE sql
+IMMUTABLE
+STRICT
+AS $function$
+SELECT COALESCE(
+    (SELECT ('{' || string_agg(to_json("key") || ':' || "value", ',') || '}')
+     FROM json_each("json_data")
+     WHERE "key" <> ALL ("avaimet")),
+    '{}'
+)::json
+$function$;
+
+UPDATE paallystysilmoitus
+SET ilmoitustiedot = poista_json_avaimet(ilmoitustiedot::JSON, 'tyot');
+
+DROP FUNCTION poista_json_avaimet(json, TEXT[]);
