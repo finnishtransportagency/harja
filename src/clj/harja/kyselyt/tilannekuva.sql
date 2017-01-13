@@ -1,3 +1,6 @@
+-- Näiden kyselyiden tulisi pääsääntöisesti palauttaa data samassa muodossa kuin asioiden
+-- omissa näkymissä, jotta tiedot saadaan näytettyä oikein kartan infopaneelissa.
+
 -- name: hae-ilmoitukset
 SELECT
   i.id,
@@ -89,9 +92,17 @@ SELECT
   l.tr_alkuosa,
   l.tr_alkuetaisyys,
   l.tr_loppuosa,
-  l.tr_loppuetaisyys
+  l.tr_loppuetaisyys,
+  ypk.nimi AS yllapitokohde_nimi,
+  ypk.kohdenumero AS yllapitokohde_numero,
+  ypk.tr_numero AS yllapitokohde_tr_numero,
+  ypk.tr_alkuosa AS yllapitokohde_tr_alkuosa,
+  ypk.tr_alkuetaisyys AS yllapitokohde_tr_alkuetaisyys,
+  ypk.tr_loppuosa AS yllapitokohde_tr_loppuosa,
+  ypk.tr_loppuetaisyys AS yllapitokohde_tr_loppuetaisyys
 FROM laatupoikkeama l
   JOIN kayttaja k ON l.luoja = k.id
+  LEFT JOIN yllapitokohde ypk ON l.yllapitokohde = ypk.id
 WHERE (l.urakka IN (:urakat) OR l.urakka IS NULL)
       AND (l.aika BETWEEN :alku AND :loppu OR
            l.kasittelyaika BETWEEN :alku AND :loppu) AND
