@@ -617,7 +617,7 @@
                       :tasaa :oikea})
                    {:otsikko "Ar\u00ADvon muu\u00ADtok\u00ADset" :nimi :arvonvahennykset :fmt fmt/euro-opt
                     :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea}
-                   {:otsikko "Bo\u00ADnus/sak\u00ADko" :nimi :bonukset-ja-sakot :fmt fmt/euro-opt
+                   {:otsikko "Sak\u00ADko/bo\u00ADnus" :nimi :bonukset-ja-sakot :fmt fmt/euro-opt
                     :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea
                     :muokattava? (constantly false)}
                    {:otsikko "Bi\u00ADtumi-in\u00ADdek\u00ADsi" :nimi :bitumi-indeksi
@@ -684,8 +684,9 @@
       {:otsikko "" :nimi :tr-loppuosa :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :tr-loppuetaisyys :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :pit :tyyppi :string :leveys tr-leveys}
-      {:otsikko "" :nimi :yllapitoluokka :tyyppi :string :leveys yllapitoluokka-leveys}
       {:otsikko "" :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :string :leveys kvl-leveys}
+      {:otsikko "" :nimi :yllapitoluokka :tyyppi :string :leveys yllapitoluokka-leveys}
+      {:otsikko "" :nimi :tyhja :tyyppi :string :leveys toteutunut-hinta-leveys}
       (when (= (:kohdetyyppi optiot) :paallystys)
         {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
          :fmt fmt/euro-opt :tyyppi :numero
@@ -698,7 +699,7 @@
          :leveys toteutunut-hinta-leveys :tasaa :oikea})
       {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero
        :leveys arvonvahennykset-leveys :tasaa :oikea}
-      {:otsikko "Bo\u00ADnus/sak\u00ADko" :nimi :bonukset-ja-sakot :fmt fmt/euro-opt
+      {:otsikko "Sak\u00ADko/bo\u00ADnus" :nimi :bonukset-ja-sakot :fmt fmt/euro-opt
        :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea
        :muokattava? (constantly false)}
       {:otsikko "Bitumi-indeksi" :nimi :bitumi-indeksi :fmt fmt/euro-opt :tyyppi :numero
