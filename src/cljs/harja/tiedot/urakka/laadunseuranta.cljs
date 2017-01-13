@@ -24,10 +24,9 @@
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
                urakka-tyyppi (:tyyppi @nav/valittu-urakka)
                [sopimus-id _] @u/valittu-sopimusnumero
-               laadunseurannassa? @laadunseurannassa?]
+               laadunseurannassa? @laadunseurannassa?
+               yllapitokohdeurakka? @u/yllapitokohdeurakka?]
               {:nil-kun-haku-kaynnissa? true}
-              (when (and (or (= :paallystys urakka-tyyppi)
-                             (= :paikkaus urakka-tyyppi)
-                             (= :tiemerkinta urakka-tyyppi))
+              (when (and yllapitokohdeurakka?
                          laadunseurannassa? urakka-id sopimus-id)
                 (hae-urakan-yllapitokohteet-lomakkeelle urakka-id sopimus-id))))

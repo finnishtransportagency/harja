@@ -11,7 +11,8 @@
     [harja.kyselyt.tietyomaat :as q-tietyomaat]
     [harja.domain.roolit :as roolit]
     [harja.domain.oikeudet :as oikeudet]
-    [harja.domain.yllapitokohteet :as kohteet])
+    [harja.domain.yllapitokohteet :as kohteet]
+    [harja.kyselyt.paallystys :as paallystys-q])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn tarkista-urakka [db urakka-id]
@@ -152,7 +153,7 @@
           [{:koodi virheet/+tuntematon-yllapitokohde+ :viesti viesti}])))))
 
 (defn tarkista-saako-kohteen-paivittaa [db kohde-id]
-  (when (q-yllapitokohteet/onko-olemassa-paallystysilmoitus? db kohde-id)
+  (when (paallystys-q/onko-olemassa-paallystysilmoitus? db kohde-id)
     (do
       (let [viesti (format "Kohteelle (id: %s) on jo kirjattu päällystysilmoitus. Päivitys ei ole sallittu" kohde-id)]
         (log/warn viesti)

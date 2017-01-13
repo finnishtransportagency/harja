@@ -61,7 +61,7 @@
 (defn muistutusten-maara
   ([rivit] (muistutusten-maara rivit {}))
   ([rivit suodattimet]
-   (count (suodata-muistutukset rivit suodattimet))))
+   (str (count (suodata-muistutukset rivit suodattimet)) " kpl")))
 
 (defn- luo-rivi-sakkojen-summa
   ([otsikko rivit alueet]
