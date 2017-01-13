@@ -22,7 +22,6 @@
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
-            [harja.domain.tierekisteri :as tierekisteri]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.fmt :as fmt]
             [clojure.string :as str]))
@@ -188,6 +187,17 @@
      :otsikko (str "Laatupoikkeama " (pvm/pvm-aika (:aika laatupoikkeama)))
      :tiedot [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
               {:otsikko "Tekijä" :hae #(str (:tekijanimi %) ", " (name (:tekija %)))}
+              {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :string}
+              {:otsikko "Tierekisteriosoite" :hae #(if-let [yllapitokohde-tie (get-in % [:yllapitokohde :tr])]
+                                                     (tr-domain/tierekisteriosoite-tekstina
+                                                       yllapitokohde-tie)
+                                                     (tr-domain/tierekisteriosoite-tekstina
+                                                       (:tr %)))}
+              (when (:yllapitokohde laatupoikkeama)
+                {:otsikko "Kohde" :hae #(let [yllapitokohde (:yllapitokohde %)]
+                                          (str (:numero yllapitokohde)
+                                               ", "
+                                               (:nimi yllapitokohde)))})
               (when (and (paatos laatupoikkeama) (kasittelyaika laatupoikkeama))
                 {:otsikko "Päätös"
                  :hae #(str (laatupoikkeamat/kuvaile-paatostyyppi (paatos %))
@@ -251,7 +261,7 @@
                                 (pvm/pvm-aika (:aika tietyomaa))))
    :tiedot [{:otsikko "Ylläpitokohde" :hae #(str (:yllapitokohteen-nimi %) " (" (:yllapitokohteen-numero %) ")")}
             {:otsikko "Aika" :hae #(pvm/pvm-aika (:aika %))}
-            {:otsikko "Osoite" :hae #(tierekisteri/tierekisteriosoite-tekstina % {:teksti-tie? false})}
+            {:otsikko "Osoite" :hae #(tr-domain/tierekisteriosoite-tekstina % {:teksti-tie? false})}
             {:otsikko "Kaistat" :hae #(clojure.string/join ", " (map str (:kaistat %)))}
             {:otsikko "Ajoradat" :hae #(clojure.string/join ", " (map str (:ajoradat %)))}
             {:otsikko "Nopeusrajoitus" :hae :nopeusrajoitus}]

@@ -65,15 +65,19 @@
 
 
 (deftest paallystyskohteet-haettu-oikein
-  (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [kohteet (kutsu-palvelua (:http-palvelin jarjestelma)
                             :urakan-yllapitokohteet +kayttaja-jvh+
                             {:urakka-id @muhoksen-paallystysurakan-id
                              :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id})
         kohteiden-lkm (ffirst (q
                                 (str "SELECT COUNT(*)
                                       FROM yllapitokohde
-                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")")))]
-    (is (= (count res) kohteiden-lkm) "Päällystyskohteiden määrä")))
+                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")")))
+        leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi")
+                                          kohteet))]
+    (is (= (count kohteet) kohteiden-lkm) "Päällystyskohteiden määrä")
+    (is (== (:maaramuutokset leppajarven-ramppi) 160)
+        "Leppäjärven rampin määrämuutos laskettu oikein")))
 
 (deftest paallystyskohteet-haettu-oikein-vuodelle-2017
   (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
