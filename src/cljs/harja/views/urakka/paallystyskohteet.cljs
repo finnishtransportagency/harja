@@ -42,7 +42,7 @@
         ur
         paallystys/yhan-paallystyskohteet
         {:otsikko "YHA:sta tuodut päällystyskohteet"
-         :nakyma :paallystys
+         :kohdetyyppi :paallystys
          :yha-sidottu? true
          :tallenna
          (yllapitokohteet/kasittele-tallennettavat-kohteet!
@@ -56,7 +56,7 @@
         ur
         paallystys/harjan-paikkauskohteet
         {:otsikko "Harjan paikkauskohteet"
-         :nakyma :paikkaus
+         :kohdetyyppi :paikkaus
          :yha-sidottu? false
          :tallenna
          (yllapitokohteet/kasittele-tallennettavat-kohteet!
