@@ -215,7 +215,7 @@
                          (comp
                            (mapcat (fn [kohde]
                                      (keep (fn [kohdeosa]
-                                             (assoc kohdeosa :yllapitokohde kohde
+                                             (assoc kohdeosa :yllapitokohde (dissoc kohde :kohdeosat)
                                                              :tyyppi-kartalla (:yllapitokohdetyotyyppi kohde)
                                                              :tila-kartalla (:tila-kartalla kohde)
                                                              :yllapitokohde-id (:id kohde)))
