@@ -65,47 +65,47 @@
                           "4" "Hyvä"
                           "5" "Erinomainen"})
 
-(defn tarkasta-varuste [e! tietolaji tunniste varuste tarkastus]
+(defn varustetarkastuslomake [e! {tietolaji :tietolaji tunniste :tunniste varuste :varuste tarkastus :tarkastus}]
   (log "---> varuste:" varuste)
   (log "---> tarkastus 1:" tarkastus)
 
-  (let [peruuta-fn #(do (.preventDefault %) (modal/piilota!))
-        tallenna-fn #(do (.preventDefault %)
-                         (e! (v/->KirjaaVarustetarkastus varuste tarkastus))
-                         (modal/piilota!))
-        varusteen-kuntoluokka (get-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"])
+  (let [varusteen-kuntoluokka (get-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"])
         valittu-kuntoluokka (cond
                               (and (nil? tarkastus) (nil? varusteen-kuntoluokka)) (first kuntoluokka->selite)
                               (nil? tarkastus) varusteen-kuntoluokka
                               :default (:kuntoluokka tarkastus))
-        tarkastus (assoc tarkastus :kuntoluokitus valittu-kuntoluokka :lisatietoja "asfd")
+        tarkastus (assoc tarkastus :kuntoluokitus valittu-kuntoluokka)
         _ (log "---> tarkastus 2:" (pr-str tarkastus))]
-    (modal/nayta! {:otsikko (str "Tarkasta varuste (tunniste: " tunniste ", tietolaji: " tietolaji ")")
-                   :footer [:span
-                            [:button.nappi-toissijainen {:type "button" :on-click peruuta-fn}
-                             [:div (ikonit/livicon-ban) " Peruuta"]]
-                            [:button.nappi-myonteinen {:type "button" :on-click tallenna-fn}
-                             [:div (ikonit/livicon-save) " Tallenna"]]]}
-                  [lomake/lomake
-                   {:ei-borderia? true
-                    :muokkaa! #(e! (v/->AsetaVarusteTarkastuksenTiedot %))}
-                   [{:otsikko "Yleinen kuntoluokitus"
-                     :nimi :kuntoluokitus
-                     :tyyppi :valinta
-                     :pakollinen? true
-                     :valinnat (vec (keys kuntoluokka->selite))
-                     :fmt (fn [arvo] (if arvo (kuntoluokka->selite arvo) "- Valitse -"))
-                     :valinta-nayta (fn [arvo]
-                                      (log "--> arvo:" (pr-str arvo))
-                                      (if arvo (kuntoluokka->selite arvo) "- Valitse -"))}
-                    {:otsikko "Lisätietoja"
-                     :nimi :lisatietoja
-                     :tyyppi :string}]
+    [modal/modal
+     {:otsikko (str "Tarkasta varuste (tunniste: " tunniste ", tietolaji: " tietolaji ")")
+      :nakyvissa? true
+      :footer [:span
+               [:button.nappi-toissijainen {:type "button"
+                                            :on-click #(e! (v/->PeruutaVarusteenTarkastus))}
+                [:div (ikonit/livicon-ban) " Peruuta"]]
+               [:button.nappi-myonteinen {:type "button" :on-click
+                                          #(e! (v/->TallennaVarustetarkastus varuste tarkastus))}
+                [:div (ikonit/livicon-save) " Tallenna"]]]}
+     [lomake/lomake
+      {:ei-borderia? true
+       :muokkaa! #(e! (v/->AsetaVarusteTarkastuksenTiedot %))}
+      [{:otsikko "Yleinen kuntoluokitus"
+        :nimi :kuntoluokitus
+        :tyyppi :valinta
+        :pakollinen? true
+        :valinnat (vec (keys kuntoluokka->selite))
+        :fmt (fn [arvo] (if arvo (kuntoluokka->selite arvo) "- Valitse -"))
+        :valinta-nayta (fn [arvo]
+                         (log "--> arvo:" (pr-str arvo))
+                         (if arvo (kuntoluokka->selite arvo) "- Valitse -"))}
+       {:otsikko "Lisätietoja"
+        :nimi :lisatietoja
+        :tyyppi :string}]
 
-                   ;; todo: mihin pitäisi bindata? tarkastukseen ei onnistu, koska muutokset eivät näy propagoituvan appista tänne.
-                   tarkastus])))
+      ;; todo: mihin pitäisi bindata? tarkastukseen ei onnistu, koska muutokset eivät näy propagoituvan appista tänne.
+      tarkastus]]))
 
-(defn sarakkeet [e! tietolajin-listaus-skeema tarkastus]
+(defn sarakkeet [e! tietolajin-listaus-skeema]
   (if oikeus-varusteiden-muokkaamiseen?
     (let [toiminnot {:nimi :toiminnot
                      :otsikko "Toiminnot"
@@ -115,13 +115,13 @@
                                     (let [tunniste (:tunniste varuste)
                                           tietolaji (get-in varuste [:tietue :tietolaji :tunniste])]
                                       [:div
-                                       [napit/tarkasta "Tarkasta" #(tarkasta-varuste e! tietolaji tunniste varuste tarkastus)]
+                                       [napit/tarkasta "Tarkasta" #(e! (v/->AloitaVarusteenTarkastus varuste tunniste tietolaji))]
                                        [napit/muokkaa "Muokkaa" #()]
                                        [napit/poista "Poista" #(poista-varuste e! tietolaji tunniste varuste)]]))}]
       (conj tietolajin-listaus-skeema toiminnot))
     tietolajin-listaus-skeema))
 
-(defn varustehaku-varusteet [e! tietolajin-listaus-skeema varusteet tarkastus]
+(defn varustehaku-varusteet [e! tietolajin-listaus-skeema varusteet]
   [grid/grid
    {:otsikko "Tierekisteristä löytyneet varusteet"
     :tunniste (fn [varuste]
@@ -130,14 +130,18 @@
                 ;; niiden avaimeksi tunniste ja osoite.
                 (str (get-in varuste [:varuste :tunniste])
                      "_" (pr-str (get-in varuste [:varuste :tietue :sijainti :tie]))))}
-   (sarakkeet e! tietolajin-listaus-skeema tarkastus)
+   (sarakkeet e! tietolajin-listaus-skeema)
    varusteet])
 
 (defn varustehaku
   "Komponentti, joka näyttää lomakkeen varusteiden hakemiseksi tierekisteristä
   sekä haun tulokset."
-  [e! {:keys [hakuehdot listaus-skeema tietolaji varusteet tarkastus] :as app}]
+  [e! {:keys [hakuehdot listaus-skeema varusteet tarkastus] :as app}]
   [:div.varustehaku
-   [varustehaku-ehdot e! (:hakuehdot app)]
+   [varustehaku-ehdot e! hakuehdot]
+
+   (when tarkastus
+     [varustetarkastuslomake e! tarkastus])
+
    (when (and listaus-skeema varusteet)
      [varustehaku-varusteet e! listaus-skeema varusteet tarkastus])])

@@ -51,7 +51,10 @@
 
 ;; Toimenpiteet Tierekisteriin
 (defrecord PoistaVaruste [varuste])
-(defrecord KirjaaVarustetarkastus [varuste tarkastus])
+(defrecord AloitaVarusteenTarkastus [varuste tunniste tietolaji])
+(defrecord PeruutaVarusteenTarkastus [])
+(defrecord AsetaVarusteTarkastuksenTiedot [tarkastus])
+(defrecord TallennaVarustetarkastus [varuste tarkastus])
 (defrecord ToimintoEpaonnistui [toiminto virhe])
 (defrecord ToimintoOnnistui [vastaus])
 
@@ -122,15 +125,22 @@
             (tulos! {:vastaus vastaus :viesti "Varuste poistettu onnistuneesti."})))))
     app)
 
-  KirjaaVarustetarkastus
+  AloitaVarusteenTarkastus
+  (process-event [{varuste :varuste tunniste :tunniste tietolaji :tietolaji :as data} app]
+    (assoc app :tarkastus {:varuste varuste :tunniste tunniste :tietolaji tietolaji}))
+
+  PeruutaVarusteenTarkastus
+  (process-event [_ app]
+    (dissoc app :tarkastus))
+
+  TallennaVarustetarkastus
   (process-event [{varuste :varuste tarkastus :tarkastus :as data} app]
-    (log "---> eventissä")
     (log "---> varuste:" (pr-str varuste))
     (log "---> tarkastus:" (pr-str tarkastus))
-    (log "---> data:" (pr-str data))
-    app)
+    ;; todo: rakenna varustetoteuma ja lähetä backendille
+    (dissoc app :tarkastus))
 
   AsetaVarusteTarkastuksenTiedot
   (process-event [{tarkastus :tarkastus} app]
     (log "--> tarkastus 3:" (pr-str tarkastus))
-    (assoc-in app [:tarkastus] tarkastus)))
+    (assoc app :tarkastus tarkastus)))
