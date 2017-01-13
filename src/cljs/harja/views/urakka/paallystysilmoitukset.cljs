@@ -531,7 +531,6 @@
 (defn paallystysilmoituslomake [urakka {:keys [yllapitokohde-id yllapitokohdetyyppi] :as lomake}
                                 _ muokkaa! historia tallennus-onnistui]
   (komp/luo
-    (komp/ulos #(kartta/poista-popup!))
     (komp/lukko (lukko/muodosta-lukon-id "paallystysilmoitus" yllapitokohde-id))
     (fn [urakka {:keys [virheet tila kirjoitusoikeus?] :as lomakedata-nyt}
          lukko muokkaa! historia tallennus-onnistui]
@@ -659,7 +658,7 @@
          (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)) ". Virhe: \"" (:lahetysvirhe rivi) "\"")])
       [:span "Ei lähetetty"])))
 
-(defn yha-lahetykset-taulukko [urakka-id sopimus-id paallystysilmoitukset]
+(defn yha-lahetykset-taulukko [urakka-id sopimus-id vuosi paallystysilmoitukset]
   [grid/grid
    {:otsikko ""
     :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
@@ -671,34 +670,36 @@
      :komponentti (fn [rivi] [nayta-lahetystiedot rivi])}
     {:otsikko "Lähetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 25 :tyyppi :komponentti
      :komponentti (fn [rivi]
-                    [yha/laheta-kohteet-yhaan
+                    [yha/yha-lahetysnappi
                      oikeudet/urakat-kohdeluettelo-paallystyskohteet
                      urakka-id
                      sopimus-id
+                     vuosi
                      [rivi]])}]
    paallystysilmoitukset])
 
 (defn ilmoitusluettelo
   []
   (komp/luo
-    (komp/ulos #(kartta/poista-popup!))
     (komp/kuuntelija :avaa-paallystysilmoitus
                      (fn [_ rivi]
                        (avaa-paallystysilmoitus (:paallystyskohde-id rivi))))
     (fn []
       (let [urakka-id (:id @nav/valittu-urakka)
             sopimus-id (first @u/valittu-sopimusnumero)
+            urakan-vuosi @u/valittu-urakan-vuosi
             paallystysilmoitukset (jarjesta-paallystysilmoitukset @paallystys/paallystysilmoitukset)]
         [:div
          [:h3 "Päällystysilmoitukset"]
          (paallystysilmoitukset-taulukko paallystysilmoitukset)
          [:h3 "YHA-lähetykset"]
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHA:n."]
-         (yha-lahetykset-taulukko urakka-id sopimus-id paallystysilmoitukset)
-         [yha/laheta-kohteet-yhaan
+         (yha-lahetykset-taulukko urakka-id sopimus-id urakan-vuosi paallystysilmoitukset)
+         [yha/yha-lahetysnappi
           oikeudet/urakat-kohdeluettelo-paallystyskohteet
           urakka-id
           sopimus-id
+          urakan-vuosi
           @paallystys/paallystysilmoitukset]]))))
 
 (defn paallystysilmoituslomake-historia [ilmoituslomake]
@@ -715,22 +716,23 @@
          (fn [vastaus]
            (log "[PÄÄLLYSTYS] Lomake tallennettu, vastaus: " (pr-str vastaus))
            (urakka/lukitse-urakan-yha-sidonta! (:id @nav/valittu-urakka))
+           (reset! paallystys/paallystysilmoitus-tallennettu-timestamp (t/now))
            (reset! paallystys/paallystysilmoitukset vastaus)
            (reset! ilmoituslomake nil))]))))
 
 (defn paallystysilmoitukset [urakka]
   (komp/luo
-    (komp/ulos #(kartta/poista-popup!))
     (komp/lippu paallystys/paallystysilmoitukset-nakymassa?)
 
     (fn [urakka]
       [:div.paallystysilmoitukset
        [kartta/kartan-paikka]
-       [valinnat/vuosi {}
-        (t/year (:alkupvm urakka))
-        (t/year (:loppupvm urakka))
-        urakka/valittu-urakan-vuosi
-        urakka/valitse-urakan-vuosi!]
        (if @paallystys/paallystysilmoitus-lomakedata
          [paallystysilmoituslomake-historia paallystys/paallystysilmoitus-lomakedata]
-         [ilmoitusluettelo])])))
+         [:div
+          [valinnat/vuosi {}
+           (t/year (:alkupvm urakka))
+           (t/year (:loppupvm urakka))
+           urakka/valittu-urakan-vuosi
+           urakka/valitse-urakan-vuosi!]
+          [ilmoitusluettelo]])])))

@@ -1,56 +1,3 @@
--- name: hae-urakan-yllapitokohteet
--- Hakee urakan yllapitokohteet sekä niiden päällystysilmoitukset ja alikohteet
-SELECT
-  ypk.id,
-  ypk.urakka,
-  ypk.sopimus,
-  ypk.kohdenumero,
-  ypk.nimi,
-  ypk.yllapitokohdetyyppi,
-  ypk.yllapitokohdetyotyyppi,
-  ypk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
-  ypk.arvonvahennykset,
-  ypk.bitumi_indeksi                    AS "bitumi-indeksi",
-  ypk.kaasuindeksi,
-  ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
-  ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
-  ypk.yllapitoluokka,
-  ypk.tr_numero                         AS "tr-numero",
-  ypk.tr_alkuosa                        AS "tr-alkuosa",
-  ypk.tr_alkuetaisyys                   AS "tr-alkuetaisyys",
-  ypk.tr_loppuosa                       AS "tr-loppuosa",
-  ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
-  ypk.tr_ajorata                        AS "tr-ajorata",
-  ypk.tr_kaista                         AS "tr-kaista",
-  ypk.aikataulu_kohde_alku              AS "kohde-alku",
-  ypk.aikataulu_paallystys_alku         AS "paallystys-alku",
-  ypk.aikataulu_paallystys_loppu        AS "paallystys-loppu",
-  ypk.valmis_tiemerkintaan              AS "valmis-tiemerkintaan",
-  ypk.aikataulu_tiemerkinta_alku        AS "tiemerkinta-alku",
-  ypk.aikataulu_tiemerkinta_loppu       AS "tiemerkinta-loppu",
-  ypk.aikataulu_kohde_valmis            AS "kohde-valmis",
-  ypk.yhaid,
-  ypko.id                               AS "kohdeosa_id",
-  ypko.yllapitokohde                    AS "kohdeosa_yllapitokohde",
-  ypko.nimi                             AS "kohdeosa_nimi",
-  ypko.tunnus                           AS "kohdeosa_tunnus",
-  ypko.tr_numero                        AS "kohdeosa_tr-numero",
-  ypko.tr_alkuosa                       AS "kohdeosa_tr-alkuosa",
-  ypko.tr_alkuetaisyys                  AS "kohdeosa_tr-alkuetaisyys",
-  ypko.tr_loppuosa                      AS "kohdeosa_tr-loppuosa",
-  ypko.tr_loppuetaisyys                 AS "kohdeosa_tr-loppuetaisyys",
-  ypko.tr_ajorata                       AS "kohdeosa_tr-ajorata",
-  ypko.tr_kaista                        AS "kohdeosa_tr-kaista",
-  ypko.poistettu                        AS "kohdeosa_poistettu",
-  ypko.sijainti                         AS "kohdeosa_sijainti",
-  ypko.yhaid                            AS "kohdeosa_yhaid",
-  ypko.toimenpide                       AS "kohdeosa_toimenpide",
-  FROM yllapitokohde ypk
-  LEFT JOIN yllapitokohdeosa ypko ON ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE
-WHERE
-  ypk.urakka = :urakka
-  AND ypk.poistettu IS NOT TRUE;
-
 -- name: hae-kaikki-urakan-yllapitokohteet
 -- Hakee urakan kaikki yllapitokohteet, myös tiemerkinnän kautta suoritettavat,
 -- sekä niiden päällystysilmoitukset ja alikohteet
@@ -152,12 +99,22 @@ SELECT
   ypk.tr_kaista                         AS "tr-kaista",
   ypk.yhaid,
   ypk.yllapitokohdetyyppi,
-  ypk.yllapitokohdetyotyyppi
+  ypk.yllapitokohdetyotyyppi,
+  ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
+  ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
+  ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
+  ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
+  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
+  o.nimi                                AS "urakoitsija",
+  u.nimi AS "urakka"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
   LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
                                     AND pai.poistettu IS NOT TRUE
+  LEFT JOIN urakka u ON ypk.urakka = u.id
+  LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
@@ -202,8 +159,6 @@ SELECT
   sijainti
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
-                            AND urakka = :urakka
-                            AND sopimus = :sopimus
                             AND ypk.poistettu IS NOT TRUE
 WHERE yllapitokohde = :yllapitokohde
       AND ypko.poistettu IS NOT TRUE;
@@ -494,14 +449,8 @@ SET
 WHERE id = :id
       AND suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka;
 
--- name: yllapitokohteella-paallystysilmoitus
-SELECT EXISTS(SELECT id
-              FROM paallystysilmoitus
-              WHERE paallystyskohde = :yllapitokohde);
--- name: yllapitokohteella-paikkausilmoitus
-SELECT EXISTS(SELECT id
-              FROM paikkausilmoitus
-              WHERE paikkauskohde = :yllapitokohde);
+
+
 
 -- name: hae-yllapitokohteen-urakka-id
 SELECT urakka AS id

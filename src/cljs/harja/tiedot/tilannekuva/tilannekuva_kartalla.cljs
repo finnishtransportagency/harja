@@ -105,7 +105,7 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
 ;; muuttuneet.
 (defn paivita-tilannekuvatasot
   "Päivittää tilannekuvan karttatasot kun niiden tiedot haetuissa asioissa
-ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
+  ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
   [vanha uusi]
   (if (nil? uusi)
     ;; Jos tilannekuva poistuu näkyvistä, haetut-asiat on nil

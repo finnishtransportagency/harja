@@ -193,7 +193,7 @@
                                             LEFT JOIN yllapitokohde ON yllapitokohde.id = yllapitokohdeosa.yllapitokohde
                                             AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))
             kohdeosat-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
-                                               :urakan-yllapitokohdeosat
+                                               :yllapitokohteen-yllapitokohdeosat
                                                +kayttaja-jvh+ {:urakka-id urakka-id
                                                                :sopimus-id sopimus-id
                                                                :yllapitokohde-id yllapitokohde-id})
@@ -251,8 +251,8 @@
                   :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2016 12:00")
                   :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2016 12:00")
                   :aikataulu-tiemerkinta-takaraja (pvm/->pvm "1.6.2016")
-                  :aikataulu-tiemerkinta-alku nil
-                  :aikataulu-tiemerkinta-loppu nil
+                  :aikataulu-tiemerkinta-alku (pvm/->pvm-aika "22.5.2016 00:00")
+                  :aikataulu-tiemerkinta-loppu (pvm/->pvm-aika "23.5.2016 00:00")
                   :id 1
                   :kohdenumero "L03"
                   :nimi "Leppäjärven ramppi"
