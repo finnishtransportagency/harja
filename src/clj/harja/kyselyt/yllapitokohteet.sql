@@ -77,7 +77,6 @@ SELECT
   ypk.id,
   pi.id                                 AS "paallystysilmoitus-id",
   pi.tila                               AS "paallystysilmoitus-tila",
-  pi.muutoshinta,
   pai.id                                AS "paikkausilmoitus-id",
   pai.tila                              AS "paikkausilmoitus-tila",
   pai.toteutunut_hinta                  AS "toteutunut-hinta",

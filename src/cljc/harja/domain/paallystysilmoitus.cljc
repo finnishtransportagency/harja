@@ -198,8 +198,7 @@
 (defn verkon-sijainti-koodi-nimella [koodi]
   (:koodi (first (filter #(= koodi (:nimi %)) +verkon-sijainnit+))))
 
-;; Frontissa koodi on avain, kantaan menevässä datassa string
-(def +paallystystyon-tyypit-lomakkeella+
+(def +paallystystyon-tyypit+
   "Päällystystyön tyypit"
   [{:nimi "Ajoradan päällyste" :koodi :ajoradan-paallyste}
    {:nimi "Pienaluetyöt" :koodi :pienaluetyot}
@@ -207,20 +206,15 @@
    {:nimi "Jyrsinnät" :koodi :jyrsinnat}
    {:nimi "Muut" :koodi :muut}])
 
-(def +paallystystyon-tyypit+
-  "Päällystystyön tyypit"
-  [{:nimi "Ajoradan päällyste" :koodi "ajoradan-paallyste"}
-   {:nimi "Pienaluetyöt" :koodi "pienaluetyot"}
-   {:nimi "Tasaukset" :koodi "tasaukset"}
-   {:nimi "Jyrsinnät" :koodi "jyrsinnat"}
-   {:nimi "Muut" :koodi "muut"}])
+(defn paallystystyon-tyypin-koodi-nimella [nimi]
+  (:koodi (first (filter
+                   #(= nimi (:nimi %))
+                   +paallystystyon-tyypit+))))
 
-(def +paallystystyon-tyyppi+
-  "Päällystystyön valinta avaimella"
-  (apply s/enum (map :koodi +paallystystyon-tyypit+)))
-
-(defn paallystystyontyyppi-avain-nimella [koodi]
-  (:koodi (first (filter #(= koodi (:nimi %)) +paallystystyon-tyypit+))))
+(defn paallystystyon-tyypin-nimi-koodilla [koodi]
+  (:nimi (first (filter
+                  #(= koodi (:koodi %))
+                  +paallystystyon-tyypit+))))
 
 (def paallystysilmoitus-osoitteet
   [;; Linkki ylläpitokohdeosaan
@@ -258,14 +252,6 @@
     :verkon-sijainti +verkon-sijainti+
     (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+)}])
 
-(def paallystysilmoitus-tyot
-  [{:tyyppi +paallystystyon-tyyppi+
-    :tyo s/Str
-    :tilattu-maara s/Num
-    :toteutunut-maara s/Num
-    :yksikko s/Str
-    :yksikkohinta s/Num}])
-
 ;; Kantaan tallennettavan päällystysilmoituksen ilmoitustiedot
 (def +paallystysilmoitus+
   {;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
@@ -274,24 +260,12 @@
    ;; Tieosoitteille tehtyjä toimia, mutta ei esitäytetä osoitteita, voi olla monta samalle
    ;; kohdallekin. Vaihtelee alustan laadun mukaan (esim. löytyy kiviä).
    ;; Välien tulee olla kohdeluettelon osoitteiden sisällä.
-   :alustatoimet paallystysilmoitus-alustatoimet
-
-   ;; Työt ovat luokiteltu listaus tehdyistä töistä, valittavana on
-   :tyot paallystysilmoitus-tyot})
-
-(defn laske-muutokset-kokonaishintaan
-  "Laskee jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä 'Muutos hintaan') ja summataan yhteen."
-  [tyot]
-  (reduce + (mapv
-              (fn [tyo]
-                (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
-              (filter #(not= true (:poistettu %)) tyot))))
+   :alustatoimet paallystysilmoitus-alustatoimet})
 
 (defn paattele-ilmoituksen-tila
-  [valmis-kasiteltavaksi tekninen-osa-hyvaksytty taloudellinen-osa-hyvaksytty]
+  [valmis-kasiteltavaksi tekninen-osa-hyvaksytty]
   (cond
-    (and tekninen-osa-hyvaksytty
-         taloudellinen-osa-hyvaksytty)
+    tekninen-osa-hyvaksytty
     "lukittu"
 
     valmis-kasiteltavaksi
