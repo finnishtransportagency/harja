@@ -40,15 +40,14 @@
   [db user {:keys [yllapitokohde-id urakka-id]}]
   (log/debug "Aloitetaan määrämuutoksien haku")
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (jdbc/with-db-transaction [db db]
-    (let [maaramuutokset (into []
-                               (comp
-                                 (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->keyword (:tyyppi %))))
-                                 (map #(konv/string-polusta->keyword % [:tyyppi])))
-                               (q/hae-yllapitokohteen-maaramuutokset db {:id yllapitokohde-id
-                                                                         :urakka urakka-id}))]
-      (log/debug "Määrämuutokset saatu: " (pr-str maaramuutokset))
-      maaramuutokset)))
+  (let [maaramuutokset (into []
+                             (comp
+                               (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->keyword (:tyyppi %))))
+                               (map #(konv/string-polusta->keyword % [:tyyppi])))
+                             (q/hae-yllapitokohteen-maaramuutokset db {:id yllapitokohde-id
+                                                                       :urakka urakka-id}))]
+    (log/debug "Määrämuutokset saatu: " (pr-str maaramuutokset))
+    maaramuutokset))
 
 (defn- luo-maaramuutos [db user yllapitokohde-id
                         {:keys [tyyppi tyo yksikko tilattu-maara
