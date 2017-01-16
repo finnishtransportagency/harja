@@ -317,6 +317,7 @@ FROM yllapitokohde ypk
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
   LEFT JOIN yhteyshenkilo_urakka yh_u ON yh_u.urakka = ypk.urakka
   LEFT JOIN yhteyshenkilo yh ON yh.id = yh_u.yhteyshenkiloWHERE ypk.poistettu IS NOT TRUE
+WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paallystys'
       AND (ypk.aikataulu_kohde_alku < :loppu
       AND (ypk.aikataulu_kohde_valmis IS NULL OR ypk.aikataulu_kohde_valmis > :alku));
@@ -374,6 +375,7 @@ FROM yllapitokohde ypk
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
   LEFT JOIN yhteyshenkilo_urakka yh_u ON yh_u.urakka = ypk.urakka
   LEFT JOIN yhteyshenkilo yh ON yh.id = yh_u.yhteyshenkiloWHERE ypk.poistettu IS NOT TRUE
+WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paikkaus'
       AND (pai.tila :: TEXT != 'valmis' OR
            (now() - pai.valmispvm_kohde) < INTERVAL '7 days');
@@ -431,6 +433,7 @@ FROM yllapitokohde ypk
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
   LEFT JOIN yhteyshenkilo_urakka yh_u ON yh_u.urakka = ypk.urakka
   LEFT JOIN yhteyshenkilo yh ON yh.id = yh_u.yhteyshenkiloWHERE ypk.poistettu IS NOT TRUE
+WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paikkaus'
       AND (pai.aloituspvm < :loppu AND (pai.valmispvm_kohde IS NULL OR pai.valmispvm_kohde > :alku));
 
