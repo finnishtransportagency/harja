@@ -84,9 +84,10 @@
               :tietolaji {:tietolajitunniste tietolaji
                           :arvot arvot}}
      :tietolajitunniste tietolaji
-     :paivitetty (formatoi-pvm alkupvm)
-     :tunniste tunniste
-     (keyword toimenpide) (formatoi-pvm luotu)}))
+     :lisatty (formatoi-pvm luotu)
+     :paivitetty (formatoi-pvm luotu)
+     :poistettu (formatoi-pvm luotu)
+     :tunniste tunniste}))
 
 (defn laheta-varustetoteuma-tierekisteriin [this varustetoteuma-id]
   (log/debug (format "Lähetetään varustetoteuma (id: %s) Tierekisteriin" varustetoteuma-id))
