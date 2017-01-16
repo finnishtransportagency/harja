@@ -338,14 +338,7 @@
       ;; TODO Rooli?
       {:otsikko "Yhteyshenkilöt"
        :tyhja "Ei yhteyshenkilöitä."}
-      [#_{:otsikko "Rooli" :nimi :rooli :tyyppi :valinta :leveys 17
-          :hae #(do (when (:rooli %)
-                      (str/capitalize (:rooli %))))
-          :valinta-nayta (fn [param1] (if (nil? param1) "- valitse -" (str/capitalize param1)))
-
-          :valinnat (vec (concat [nil] yhteyshenkilotyypit))
-
-          :validoi [[:ei-tyhja "Anna yhteyshenkilön rooli"]]}
+      [{:otsikko "Rooli" :nimi :rooli :tyyppi :string}
        {:otsikko "Nimi" :nimi :nimi :tyyppi :string
         :hae #(str (:etunimi %) " " (:sukunimi %))}
        {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin}

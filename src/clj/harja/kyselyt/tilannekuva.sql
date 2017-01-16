@@ -248,7 +248,8 @@ SELECT
   yh.sukunimi AS yhteyshenkilo_sukunimi,
   yh.tyopuhelin AS yhteyshenkilo_tyopuhelin,
   yh.matkapuhelin AS yhteyshenkilo_matkapuhelin,
-  yh.sahkoposti AS yhteyshenkilo_sahkoposti
+  yh.sahkoposti AS yhteyshenkilo_sahkoposti,
+  yh_u.rooli as yhteyshenkilo_rooli
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
