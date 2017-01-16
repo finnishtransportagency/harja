@@ -24,6 +24,7 @@
 
 (defn tallenna-jarjestelmatunnukset [db user tunnukset]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
+  (println "vaadi-kirjoitusoikeus done")
   (jdbc/with-db-transaction [c db]
     (doseq [{:keys [id kayttajanimi kuvaus organisaatio poistettu]} tunnukset]
       (if poistettu

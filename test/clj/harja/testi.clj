@@ -171,7 +171,10 @@
         (binding [oikeudet/*oikeustarkistus-tehty* false]
           (let [vastaus ((get @palvelut nimi) kayttaja payload)]
             (if (http/async-response? vastaus)
-              (async/<!! (:channel vastaus))
+              (do
+                (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
+                (println "async -> merkittiin oikeustarkistus done")
+                (async/<!! (:channel vastaus)))
               (do
                 (assert oikeudet/*oikeustarkistus-tehty*)
                 vastaus))))))))

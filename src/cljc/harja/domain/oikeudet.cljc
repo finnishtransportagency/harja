@@ -17,8 +17,11 @@
   nil)
 
 (defn merkitse-oikeustarkistus-tehdyksi! []
+  (println "oikeustarkistus-tehdyksi vs" *oikeustarkistus-tehty*)
   (when (false? *oikeustarkistus-tehty*)
-    (set! *oikeustarkistus-tehty* true)))
+    (do
+      (println "merkitään oikeustarkistus-tehdyksi")
+      (set! *oikeustarkistus-tehty* true))))
 
 #?(:cljs
    (extend-type KayttoOikeus

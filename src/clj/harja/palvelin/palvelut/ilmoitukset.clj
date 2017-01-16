@@ -335,7 +335,9 @@
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user urakka-id))))
 
 (defn tallenna-ilmoitustoimenpiteet [db tloik user ilmoitustoimenpiteet]
+  (println "tallenna-ilmoitustoimenpiteet sisempi pre-tark2: ott" oikeudet/*oikeustarkistus-tehty*)
   (tarkista-oikeudet db user ilmoitustoimenpiteet)
+  (println "tallenna-ilmoitustoimenpiteet sisempi post-tark: ott" oikeudet/*oikeustarkistus-tehty*)
   (vec
     (for [ilmoitustoimenpide ilmoitustoimenpiteet]
       (tallenna-ilmoitustoimenpide db tloik user ilmoitustoimenpide))))
@@ -354,7 +356,10 @@
                         (hae-ilmoitus db user tiedot)))
     (julkaise-palvelu http :tallenna-ilmoitustoimenpiteet
                       (fn [user ilmoitustoimenpiteet]
+                        (println "tallenna-ilmoitustoimenpiteet ulompi: ott" oikeudet/*oikeustarkistus-tehty*)
+
                         (async
+                         (println "tallenna-ilmoitustoimenpiteet sisempi pre-tark: ott" oikeudet/*oikeustarkistus-tehty*)
                          (tallenna-ilmoitustoimenpiteet db tloik user ilmoitustoimenpiteet))))
     (julkaise-palvelu http :hae-ilmoituksia-idlla
                       (fn [user tiedot]

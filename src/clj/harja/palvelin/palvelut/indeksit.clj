@@ -5,7 +5,8 @@
             [clojure.set :refer [intersection difference]]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.indeksit :as q]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (defn hae-indeksien-nimet
   "Palvelu, joka palauttaa Harjassa olevien indeksien nimet."
@@ -35,6 +36,7 @@
 (defn hae-indeksit
   "Palvelu, joka palauttaa indeksit."
   [db user]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!) ;; ??
   (zippaa (ryhmittele-indeksit (q/listaa-indeksit db))))
 
 (defn hae-indeksi
@@ -45,6 +47,7 @@
 (defn tallenna-indeksi
   "Palvelu joka tallentaa nimellä tunnistetun indeksin tiedot"
   [db user {:keys [nimi indeksit]}]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!) ;; ??
   (assert (vector? indeksit) "indeksit tulee olla vektori")
   (let [nykyiset-arvot (hae-indeksi db nimi)]
     (jdbc/with-db-transaction [c db]
