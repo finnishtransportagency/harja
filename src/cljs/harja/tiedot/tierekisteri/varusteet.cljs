@@ -60,6 +60,7 @@
 (defrecord ToimintoOnnistui [vastaus])
 
 (defrecord VarusteToteumatMuuttuneet [varustetoteumat])
+(defrecord MuokkaaVarustetta [varuste])
 
 (extend-protocol t/Event
   AsetaVarusteidenHakuehdot
@@ -72,7 +73,7 @@
           virhe! (t/send-async! ->VarusteHakuEpaonnistui)]
       (go
         (let [vastaus (<! (k/post! :hae-varusteita hakuehdot))]
-          (log "VASTAUS: " (pr-str vastaus))
+          (log "[TR] Varustehaun vastaus: " (pr-str vastaus))
           (if (or (k/virhe? vastaus)
                   (not (:onnistunut vastaus)))
             (virhe! vastaus)

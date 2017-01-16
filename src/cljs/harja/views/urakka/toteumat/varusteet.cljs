@@ -41,7 +41,8 @@
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept]]))
 
-(def tr-kaytossa? false)
+;; todo: aseta falseksi ennen mergeämistä
+(def tr-kaytossa? true)
 
 (def nayta-max-toteumaa 500)
 
@@ -258,6 +259,10 @@
                  (do
                    (e! (v/->VarustetoteumatMuuttuneet varustetoteumat))
                    (vhe! t)))
+               (varusteet/MuokkaaVarustetta
+                 {varuste :varuste :as t}
+                 (do
+                   (e! (v/->UusiVarusteToteuma :muokkaa varuste))))
                (:default e (vhe! e)))))
 
 (defn- varusteet* [e! varusteet]
@@ -288,8 +293,7 @@
             [:div.sisalto-container
              [:h1 "Varusteet Tierekisterissä"]
              (when oikeus-varusteiden-muokkaamiseen?
-               [napit/uusi "Lisää uusi varuste"
-                #(e! (v/->UusiVarusteToteuma))])
+               [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisaa nil))])
              [varustehaku (kasittele-varustehaun-event e!) varustehaun-tiedot]])])])))
 
 (defn varusteet []
