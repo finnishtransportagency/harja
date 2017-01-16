@@ -314,12 +314,12 @@
   (let [tila (:tila-kartalla yllapitokohde)
         tila-teksti (str ", " ((fnil name "suunniteltu") tila))
         ikoni (ulkoasu/yllapidon-ikoni)
-        viiva (ulkoasu/yllapidon-viiva (valittu? yllapitokohde) (:avoin? yllapitokohde) tila tyyppi)]
+        viiva (ulkoasu/yllapidon-viiva valittu? (:avoin? yllapitokohde) tila tyyppi)]
     (assoc yllapitokohde
       :nimi (or (:nimi yllapitokohde) teksti)
       :selite {:teksti (str teksti tila-teksti)
                :vari   (viivojen-varit-leveimmasta-kapeimpaan viiva)}
-      :alue (maarittele-feature yllapitokohde (valittu? yllapitokohde)
+      :alue (maarittele-feature yllapitokohde valittu?
                                 ikoni
                                 viiva))))
 
