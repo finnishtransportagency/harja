@@ -163,15 +163,18 @@
 
       FeikkiHttpPalveluKutsu
       (kutsu-palvelua [_ nimi kayttaja]
-        (let [vastaus ((get @palvelut nimi) kayttaja)]
-          (assert oikeudet/*oikeustarkistus-tehty*)
-          vastaus))
+        (binding [oikeudet/*oikeustarkistus-tehty* false]
+          (let [vastaus ((get @palvelut nimi) kayttaja)]
+            (assert oikeudet/*oikeustarkistus-tehty*)
+            vastaus)))
       (kutsu-palvelua [_ nimi kayttaja payload]
-        (let [vastaus ((get @palvelut nimi) kayttaja payload)]
-          (assert oikeudet/*oikeustarkistus-tehty*)
-          (if (http/async-response? vastaus)
-            (async/<!! (:channel vastaus))
-            vastaus))))))
+        (binding [oikeudet/*oikeustarkistus-tehty* false]
+          (let [vastaus ((get @palvelut nimi) kayttaja payload)]
+            (if (http/async-response? vastaus)
+              (async/<!! (:channel vastaus))
+              (do
+                (assert oikeudet/*oikeustarkistus-tehty*)
+                vastaus))))))))
 
 (defn kutsu-http-palvelua
   "Lyhyt muoto testijärjestelmän HTTP palveluiden kutsumiseen."
