@@ -329,6 +329,11 @@
                            (kartta/aseta-paivitetaan-karttaa-tila! true)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa @nav/valittu-urakka)
                            (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa @nav/valittu-hallintayksikko)
+                           (kartta-tiedot/kasittele-infopaneelin-linkit!
+                             {:paallystys
+                              {:toiminto (fn [yllapitokohde]
+                                             (log "KLIKKASIT: " (pr-str yllapitokohde)))
+                               :teksti "Näytä yhteyshenkilöt"}})
                            (tiedot/seuraa-alueita!))
                       #(do (reset! kartta-tiedot/pida-geometriat-nakyvilla? true)
                            (kartta/aseta-paivitetaan-karttaa-tila! false)

@@ -242,7 +242,10 @@ SELECT
   ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
   ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
   o.nimi                                AS "urakoitsija",
-  u.nimi AS "urakka"
+  u.nimi AS "urakka",
+  yh.id AS yhteyshenkilo_id,
+  yh.etunimi AS yhteyshenkilo_etunimi,
+  yh.etunimi AS yhteyshenkilo_sukunimi
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -250,6 +253,8 @@ FROM yllapitokohde ypk
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
+  LEFT JOIN yhteyshenkilo_urakka yh_u ON yh_u.urakka = ypk.urakka
+  LEFT JOIN yhteyshenkilo yh ON yh.id = yh_u.yhteyshenkilo
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paallystys'
       AND (ypk.aikataulu_kohde_valmis IS NULL OR
