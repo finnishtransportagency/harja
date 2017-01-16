@@ -120,7 +120,8 @@
   (process-event [_ tienakyma]
     (assoc tienakyma
            :tulokset nil
-           :tulokset-kartalla nil))
+           :valitut-tulokset-kartalla nil
+           :muut-tulokset-kartalla nil))
 
   TarkasteleToteumaa
   (process-event [{{:keys [urakka hallintayksikko id] :as toteuma} :toteuma}
