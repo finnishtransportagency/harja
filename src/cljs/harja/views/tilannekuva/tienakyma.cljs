@@ -75,11 +75,6 @@
                      #(reset! kartta-tiedot/ikonien-selitykset-sijainti :oikea))
    (komp/sisaan-ulos #(nayta-tulospaneeli! e! tulokset avatut-tulokset)
                      #(kartta-tiedot/poista-kartan-kontrollit! :tienakyma-tulokset))
-   (komp/sisaan-ulos #(do
-                        (kartta-tiedot/aseta-klik-kasittelija!
-                         (fn [{t :geometria}]
-                           (e! (tiedot/->AvaaTaiSuljeTulos (:idx t))))))
-                     kartta-tiedot/poista-klik-kasittelija!)
    (komp/kun-muuttuu nayta-tulospaneeli!)
    (fn [_ _ _]
      [:span.tienakyma-tulokset])))
@@ -88,6 +83,12 @@
   (komp/luo
    (komp/sisaan-ulos #(e! (tiedot/->Nakymassa true))
                      #(e! (tiedot/->Nakymassa false)))
+   (komp/sisaan-ulos #(do
+                        (kartta-tiedot/aseta-klik-kasittelija!
+                         (fn [{t :geometria}]
+                           (when-let [idx (:idx t)]
+                             (e! (tiedot/->AvaaTaiSuljeTulos (:idx t)))))))
+                     kartta-tiedot/poista-klik-kasittelija!)
    (fn [e! {:keys [tulokset avatut-tulokset] :as app}]
      [:span
       [valinnat e! app]
