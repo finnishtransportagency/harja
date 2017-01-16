@@ -28,6 +28,7 @@
 
 (defn ilmoitusta-painettu! []
   (reset! s/havaintolomakkeeseen-liittyva-havainto @s/ilmoitukseen-liittyva-havainto-id)
+  (reset! s/liittyy-varmasti-tiettyyn-havaintoon? true)
   (reset! s/ilmoitukseen-liittyva-havainto-id nil)
   (reset! s/ilmoitus nil)
   (reset! s/havaintolomake-auki? true))

@@ -77,6 +77,7 @@
                         :kuva nil
                         :esikatselukuva nil
                         :liittyy-havaintoon nil ;; Jos liittyy johonkin aiempaan havaintoon, tässä on havainnon indexed db id.
+                        :liittyy-varmasti-tiettyyn-havaintoon? false ;; Jos tultu esim Ilmoituksen kautta ja liitetään tiettyyn pikahavaintoon kuva/tekstiä
                         :tr-osoite {:tie nil
                                     :aosa nil
                                     :aet nil
@@ -127,6 +128,7 @@
 (def havaintolomake-auki? (reagent/cursor sovellus [:havaintolomake-auki?]))
 (def havaintolomakedata (reagent/cursor sovellus [:havaintolomakedata]))
 (def havaintolomakkeeseen-liittyva-havainto (reagent/cursor sovellus [:havaintolomakedata :liittyy-havaintoon]))
+(def liittyy-varmasti-tiettyyn-havaintoon? (reagent/cursor sovellus [:havaintolomakedata :liittyy-varmasti-tiettyyn-havaintoon?]))
 (def liittyvat-havainnot (reagent/cursor sovellus [:liittyvat-havainnot]))
 (def havaintolomake-kuva (reagent/cursor sovellus [:havaintolomakedata :kuva]))
 (def havaintolomake-esikatselukuva (reagent/cursor sovellus [:havaintolomakedata :esikatselukuva]))

@@ -23,6 +23,7 @@
            :aikaleima (l/local-now)
            :laadunalitus? false
            :liittyy-havaintoon nil
+           :liittyy-varmasti-tiettyyn-havaintoon? false
            :kuvaus ""
            :kuva nil
            :esikatselukuva nil})
