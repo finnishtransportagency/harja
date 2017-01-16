@@ -77,7 +77,6 @@ SELECT
   ypk.id,
   pi.id                                 AS "paallystysilmoitus-id",
   pi.tila                               AS "paallystysilmoitus-tila",
-  pi.muutoshinta,
   pai.id                                AS "paikkausilmoitus-id",
   pai.tila                              AS "paikkausilmoitus-tila",
   pai.toteutunut_hinta                  AS "toteutunut-hinta",
@@ -106,6 +105,7 @@ SELECT
   ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
   ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
   ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
+  sum(s.maara)                               AS "bonukset-ja-sakot",
   o.nimi                                AS "urakoitsija",
   u.nimi AS "urakka"
 FROM yllapitokohde ypk
@@ -114,13 +114,16 @@ FROM yllapitokohde ypk
   LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
+  LEFT JOIN laatupoikkeama lp  ON lp.yllapitokohde = ypk.id
+  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE
-  urakka = :urakka
+  ypk.urakka = :urakka
   AND sopimus = :sopimus
   AND (:vuosi::INTEGER IS NULL OR (cardinality(vuodet) = 0
        OR vuodet @> ARRAY[:vuosi]::int[]))
-  AND ypk.poistettu IS NOT TRUE;
+  AND ypk.poistettu IS NOT TRUE
+GROUP BY ypk.id, pi.id, pai.id, o.nimi, u.nimi;
 
 -- name: hae-urakan-yllapitokohteet-lomakkeelle
 -- Hakee urakan kaikki yllapitokohteet, listaten vain minimaalisen määrän tietoa

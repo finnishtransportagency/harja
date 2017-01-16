@@ -265,7 +265,6 @@
 (defn yha-lahetysnappi [oikeus urakka-id sopimus-id vuosi paallystysilmoitukset]
   (let [ilmoituksen-voi-lahettaa? (fn [paallystysilmoitus]
                                     (and (= :hyvaksytty (:paatos-tekninen-osa paallystysilmoitus))
-                                         (= :hyvaksytty (:paatos-taloudellinen-osa paallystysilmoitus))
                                          (or (= :valmis (:tila paallystysilmoitus))
                                              (= :lukittu (:tila paallystysilmoitus)))))
         lahetettavat-ilmoitukset (filter ilmoituksen-voi-lahettaa? paallystysilmoitukset)

@@ -16,11 +16,14 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
-            [harja.ui.ikonit :as ikonit])
+            [harja.ui.ikonit :as ikonit]
+            [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction]]
                    [harja.makrot :refer [fnc]]))
 
-(def gridia-muokataan? (atom false)) ;; Tarkoitus on, että vain yhtä gridiä muokataan kerralla
+(def muokkauksessa-olevat-gridit (atom #{}))
+(def gridia-muokataan? (reaction (not (empty? @muokkauksessa-olevat-gridit)))) ;; Tarkoitus on, että vain yhtä gridiä muokataan kerralla
 (def +rivimaara-jonka-jalkeen-napit-alaskin+ 20)
 
 ;; Otsikot
@@ -406,7 +409,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta max-rivimaara
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip] :as opts} skeema tiedot]
-  (let [muokatut (atom nil) ;; muokattu datajoukko
+  (let [komponentti-id (hash (str opts skeema tiedot (t/now)))
+        muokatut (atom nil) ;; muokattu datajoukko
         jarjestys (atom nil) ;; id:t indekseissä (tai otsikko)
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -417,6 +421,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         viimeisin-muokattu-id (atom nil)
         tallennus-kaynnissa (atom false)
         valittu-rivi (atom nil)
+        gridia-muokataan? (atom false)
         rivien-maara (atom (count tiedot))
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
         skeema (keep identity skeema)
@@ -576,6 +581,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
         nollaa-muokkaustiedot! (fn []
                                  (reset! gridia-muokataan? false)
+                                 (swap! muokkauksessa-olevat-gridit disj komponentti-id)
                                  (reset! virheet {})
                                  (reset! varoitukset {})
                                  (reset! huomautukset {})
@@ -591,6 +597,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                            (reset! vetolaatikot-auki #{}) ; sulje vetolaatikot
                            (nollaa-muokkaustiedot!)
                            (reset! gridia-muokataan? true)
+                           (swap! muokkauksessa-olevat-gridit conj komponentti-id)
                            (loop [muok {}
                                   jarj []
                                   [r & rivit] ((or aloita-muokkaus-fn identity) tiedot)]

@@ -40,13 +40,6 @@
                               :verkon-tarkoitus "Muiden routavaurioiden ehkäisy",
                               :verkon-sijainti "Päällysteessä",
                               :tekninen-toimenpide "Rakentaminen"}],
-                            :tyot
-                            [{:tyyppi "Jyrsinnät",
-                              :tyotehtava "työtehtävä",
-                              :tilattu-maara 1.2,
-                              :toteutunut-maara 1.2,
-                              :yksikko "kpl",
-                              :yksikkohinta 55.4}],
                             :alikohteet
                             [{:leveys 1.2,
                               :kokonaismassamaara 12.3,
@@ -95,12 +88,6 @@
                                        :tr-loppuosa 5
                                        :verkkotyyppi 1
                                        :verkon-sijainti 1
-                                       :verkon-tarkoitus 2}],
-                       :tyot [{:tilattu-maara 1.2
-                               :toteutunut-maara 1.2
-                               :tyo "työtehtävä"
-                               :tyyppi "jyrsinnat"
-                               :yksikko "kpl"
-                               :yksikkohinta 55.4}]}]
+                                       :verkon-tarkoitus 2}]}]
     (is (= odotettu-data ilmoitusdata))
     (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitusdata))))
