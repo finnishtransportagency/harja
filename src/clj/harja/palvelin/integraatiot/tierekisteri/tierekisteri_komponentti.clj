@@ -1,7 +1,8 @@
 (ns harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti
   "Tarjoaa yhteydet Tierekisteriin:
-  1. Varusteiden hakeminen
-  2. Varusteiden hallinta: lisäys, poisto, päivitys
+  1. Tietolajien kuvauksen hakeminen
+  2. Varusteiden hakeminen
+  3. Varusteiden hallinta: lisäys, poisto, päivitys
 
   Tarjoaa myös mahdollisuuden lähettää suoraan varustetoteumia. Tiedot lähetetään XML-sanomina Tierekisteriin, jossa
   tietueen arvot tallennettu määrämuotoisena merkkijonona, jossa yksittäiset kentät ovat tietyissä positioissa.
