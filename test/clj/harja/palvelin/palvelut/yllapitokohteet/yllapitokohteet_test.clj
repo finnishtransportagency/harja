@@ -230,18 +230,18 @@
                                        (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
         kohteet [{:kohdenumero "L03"
-                  :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2016 12:00") :aikataulu-muokkaaja 2
+                  :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00") :aikataulu-muokkaaja 2
                   :urakka (hae-muhoksen-paallystysurakan-id),
-                  :aikataulu-kohde-valmis (pvm/->pvm "29.5.2016")
+                  :aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
                   :nimi "Leppäjärven ramppi",
-                  :valmis-tiemerkintaan (pvm/->pvm-aika "23.5.2016 12:00")
-                  :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2016 12:00"),
+                  :valmis-tiemerkintaan (pvm/->pvm-aika "23.5.2017 12:00")
+                  :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00"),
                   :id 1
                   :sopimus (hae-muhoksen-paallystysurakan-paasopimuksen-id)
-                  :aikataulu-muokattu (pvm/->pvm-aika "29.5.2016 12:00")
-                  :aikataulu-tiemerkinta-takaraja (pvm/->pvm "1.6.2016")
+                  :aikataulu-muokattu (pvm/->pvm-aika "29.5.2017 12:00")
+                  :aikataulu-tiemerkinta-takaraja (pvm/->pvm "1.6.2017")
                   :aikataulu-tiemerkinta-alku nil,
-                  :aikataulu-tiemerkinta-loppu (pvm/->pvm "26.5.2016")}]
+                  :aikataulu-tiemerkinta-loppu (pvm/->pvm "26.5.2017")}]
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-yllapitokohteiden-aikataulu +kayttaja-jvh+ {:urakka-id urakka-id
                                                                                       :sopimus-id sopimus-id
@@ -250,11 +250,11 @@
                                             (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
         vastaus-leppajarven-ramppi (first (filter #(= "Leppäjärven ramppi" (:nimi %)) vastaus))
-        odotettu {:aikataulu-kohde-valmis (pvm/->pvm "29.5.2016")
+        odotettu {:aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
                   :aikataulu-muokkaaja 2
-                  :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2016 12:00")
-                  :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2016 12:00")
-                  :aikataulu-tiemerkinta-takaraja (pvm/->pvm "1.6.2016")
+                  :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
+                  :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00")
+                  :aikataulu-tiemerkinta-takaraja (pvm/->pvm "1.6.2017")
                   :aikataulu-tiemerkinta-alku (pvm/->pvm-aika "22.5.2017 00:00")
                   :aikataulu-tiemerkinta-loppu (pvm/->pvm-aika "23.5.2017 00:00")
                   :id 1
@@ -262,7 +262,7 @@
                   :nimi "Leppäjärven ramppi"
                   :sopimus 8
                   :urakka 5
-                  :valmis-tiemerkintaan (pvm/->pvm-aika "23.5.2016 12:00")}]
+                  :valmis-tiemerkintaan (pvm/->pvm-aika "23.5.2017 12:00")}]
     (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
     (is (= (:aikataulu-paallystys-alku odotettu) (:aikataulu-paallystys-alku vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-paallystys-alku")
     (is (= (:aikataulu-paallystys-loppu odotettu) (:aikataulu-paallystys-loppu vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-paallystys-loppu")
