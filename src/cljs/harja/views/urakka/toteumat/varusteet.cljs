@@ -208,7 +208,9 @@
     {:nimi :lisatieto
      :otsikko "Lisätietoja"
      :tyyppi :string
-     :muokattava? (constantly muokattava?)}))
+     :muokattava? (constantly muokattava?)}
+    ;; todo: lisää kuntoluokka & tarkastuspvm
+    ))
 
 (defn varusteen-ominaisuudet [muokattava? ominaisuudet]
   (when tr-kaytossa?

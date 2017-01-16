@@ -55,6 +55,7 @@
     {:lisaaja tekija
      :poistaja tekija
      :tarkastaja tekija
+     :paivittaja tekija
      :tietue {:tunniste tunniste
               :alkupvm (formatoi-pvm alkupvm)
               :loppupvm (formatoi-pvm loppupvm)
@@ -68,6 +69,7 @@
               :tietolaji {:tietolajitunniste tietolaji
                           :arvot arvot}}
      :tietolajitunniste tietolaji
+     :paivitetty (formatoi-pvm alkupvm)
      :tunniste tunniste
      (keyword toimenpide) (formatoi-pvm luotu)}))
 
