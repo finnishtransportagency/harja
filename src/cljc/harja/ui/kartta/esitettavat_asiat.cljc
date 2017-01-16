@@ -337,41 +337,41 @@
     (nth ulkoasu/toteuma-varit-ja-nuolet (Math/abs (rem (hash tehtavan-nimi) varien-lkm)))))
 
 (def tehtavien-nimet
-  {"AURAUS JA SOHJONPOISTO" "Auraus tai sohjonpoisto"
-   "SUOLAUS" "Suolaus"
+  {"AURAUS JA SOHJONPOISTO"          "Auraus tai sohjonpoisto"
+   "SUOLAUS"                         "Suolaus"
    ;; Liuossuolausta ei ymmärtääkseni enää seurata, mutta kesälomien takia tässä on korjauksen
    ;; hetkellä pieni informaatiouupelo. Nämä rivit voi poistaa tulevaisuudessa, jos lukija
    ;; kokee tietävänsä asian varmaksi.
    ;;"LIUOSSUOLAUS"                    "Liuossuolaus"
-   "PISTEHIEKOITUS" "Pistehiekoitus"
-   "LINJAHIEKOITUS" "Linjahiekoitus"
-   "PINNAN TASAUS" "Pinnan tasaus"
-   "LUMIVALLIEN MADALTAMINEN" "Lumivallien madaltaminen"
+   "PISTEHIEKOITUS"                  "Pistehiekoitus"
+   "LINJAHIEKOITUS"                  "Linjahiekoitus"
+   "PINNAN TASAUS"                   "Pinnan tasaus"
+   "LUMIVALLIEN MADALTAMINEN"        "Lumivallien madaltaminen"
    "SULAMISVEDEN HAITTOJEN TORJUNTA" "Sulamisveden haittojen torjunta"
-   "AURAUSVIITOITUS JA KINOSTIMET" "Aurausviitoitus ja kinostimet"
-   "LUMENSIIRTO" "Lumensiirto"
-   "PAANNEJAAN POISTO" "Paannejään poisto"
-   "KELINTARKASTUS" "Talvihoito"
+   "AURAUSVIITOITUS JA KINOSTIMET"   "Aurausviitoitus ja kinostimet"
+   "LUMENSIIRTO"                     "Lumensiirto"
+   "PAANNEJAAN POISTO"               "Paannejään poisto"
+   "KELINTARKASTUS"                  "Talvihoito"
 
-   "TIESTOTARKASTUS" "Tiestötarkastus"
-   "KONEELLINEN NIITTO" "Koneellinen niitto"
-   "KONEELLINEN VESAKONRAIVAUS" "Koneellinen vesakonraivaus"
+   "TIESTOTARKASTUS"                 "Tiestötarkastus"
+   "KONEELLINEN NIITTO"              "Koneellinen niitto"
+   "KONEELLINEN VESAKONRAIVAUS"      "Koneellinen vesakonraivaus"
 
-   "LIIKENNEMERKKIEN PUHDISTUS" "Liikennemerkkien puhdistus"
+   "LIIKENNEMERKKIEN PUHDISTUS"      "Liikennemerkkien puhdistus"
 
-   "SORATEIDEN MUOKKAUSHOYLAYS" "Sorateiden muokkaushöyläys"
-   "SORATEIDEN POLYNSIDONTA" "Sorateiden pölynsidonta"
-   "SORATEIDEN TASAUS" "Sorateiden tasaus"
-   "SORASTUS" "Sorastus"
+   "SORATEIDEN MUOKKAUSHOYLAYS"      "Sorateiden muokkaushöyläys"
+   "SORATEIDEN POLYNSIDONTA"         "Sorateiden pölynsidonta"
+   "SORATEIDEN TASAUS"               "Sorateiden tasaus"
+   "SORASTUS"                        "Sorastus"
 
-   "HARJAUS" "Harjaus"
-   "PAALLYSTEIDEN PAIKKAUS" "Päällysteiden paikkaus"
-   "PAALLYSTEIDEN JUOTOSTYOT" "Päällysteiden juotostyöt"
+   "HARJAUS"                         "Harjaus"
+   "PAALLYSTEIDEN PAIKKAUS"          "Päällysteiden paikkaus"
+   "PAALLYSTEIDEN JUOTOSTYOT"        "Päällysteiden juotostyöt"
 
-   "SILTOJEN PUHDISTUS" "Siltojen puhdistus"
+   "SILTOJEN PUHDISTUS"              "Siltojen puhdistus"
 
-   "L- JA P-ALUEIDEN PUHDISTUS" "L- ja P-alueiden puhdistus"
-   "MUU" "Muu"})
+   "L- JA P-ALUEIDEN PUHDISTUS"      "L- ja P-alueiden puhdistus"
+   "MUU"                             "Muu"})
 
 (defn tehtavan-nimi [tehtavat]
   (str/join ", " (into []
