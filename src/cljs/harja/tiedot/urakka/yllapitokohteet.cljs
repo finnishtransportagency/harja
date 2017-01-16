@@ -55,6 +55,12 @@
     :ei-aloitettu "Ei aloitettu"
     "Ei tiedossa"))
 
+(defn kuvaile-kohteen-tila-kartalla [tila]
+  (case tila
+    :valmis "Valmis"
+    :aloitettu "Aloitettu"
+    "Ei aloitettu"))
+
 (defn paivita-yllapitokohde! [kohteet-atom id funktio & argumentit]
   (swap! kohteet-atom
          (fn [kohderivit]

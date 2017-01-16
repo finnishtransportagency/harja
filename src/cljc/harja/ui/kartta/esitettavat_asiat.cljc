@@ -309,7 +309,7 @@
 
 (defn- yllapitokohde [tyyppi yllapitokohde valittu-fn? teksti]
   (let [tila (:tila-kartalla yllapitokohde)
-        tila-teksti (str ", " ((fnil name "suunniteltu") tila))
+        tila-teksti (kuvaile-kohteen-tila-kartalla (:tila-kartalla yllapitokohde))
         ikoni (ulkoasu/yllapidon-ikoni)
         viiva (ulkoasu/yllapidon-viiva (valittu-fn? yllapitokohde) (:avoin? yllapitokohde) tila tyyppi)]
     (assoc yllapitokohde
