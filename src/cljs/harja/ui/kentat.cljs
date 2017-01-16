@@ -778,18 +778,15 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
    [:tbody
     [:tr
      [:td {:colSpan 2}
-      [:label.control-label [:span.kentan-label "Tie"]]
-      (when pakollinen? [:span.required-tahti " *"])]]
+      [:label.control-label [:span.kentan-label "Tie"]]]]
     [:tr
      [:td {:colSpan 2}
       tie]]
     [:tr
      [:td
-      [:label.control-label [:span.kentan-label "Alkuosa"]]
-      (when pakollinen? [:span.required-tahti " *"])]
+      [:label.control-label [:span.kentan-label "Alkuosa"]]]
      [:td
-      [:label.control-label [:span.kentan-label "Alkuetäisyys"]]
-      (when pakollinen? [:span.required-tahti " *"])]]
+      [:label.control-label [:span.kentan-label "Alkuetäisyys"]]]]
     [:tr
      [:td aosa] [:td aet]]
     [:tr
