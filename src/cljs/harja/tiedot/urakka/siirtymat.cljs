@@ -15,6 +15,20 @@
 (defn- hae-toteuman-siirtymatiedot [toteuma-id]
   (k/post! :siirry-kokonaishintainen-toteuma toteuma-id))
 
+(defn- odota-arvoa
+  "Pollaa annettua atomia 100ms välein kunnes sen arvo on tosi arvo-pred mukaan.
+  Lopettaa odotuksen, jos arvo ei täsmää timeout-ms kuluessa. Palauttaa kanavan,
+  jonka arvo on true jos atomissa on odotettu arvo ja false jos odottaminen lopetettiin."
+  [atomi arvo-pred timeout-ms]
+  (let [lopeta-odotus (async/timeout timeout-ms)]
+    (go
+      (loop [[v ch] (alts! [lopeta-odotus (async/timeout 100)])]
+        (if (= ch lopeta-odotus)
+          false
+          (if (arvo-pred @atomi)
+            true
+            (recur (alts! [lopeta-odotus (async/timeout 100)]))))))))
+
 (defn nayta-kokonaishintainen-toteuma!
   "Navigoi annetun urakan tietoihin ja näyttää kokonaishintaisen toteuman tiedot."
   [toteuma-id]
@@ -26,7 +40,7 @@
           {:keys [toimenpidekoodi toimenpideinstanssi]} (first tehtavat)]
 
       (log "SIIRTYMÄ: " (pr-str siirtyma))
-      (nav/vaihda-kartan-koko! :L)
+
 
       ;; Valitse oikea toimenpideinstanssi
       (urakka/valitse-toimenpideinstanssi-koodilla! toimenpideinstanssi)
@@ -54,4 +68,10 @@
         (kokonaishintaiset-tyot/valitse-paivakohtainen-tehtava! pvm tpk)
 
         ;; Valitaan yksittäinen toteuma katsottavaksi
-        (kokonaishintaiset-tyot/valitse-paivan-toteuma-id! [urakka-id pvm tpk jarj?] toteuma-id)))))
+        (kokonaishintaiset-tyot/valitse-paivan-toteuma-id! [urakka-id pvm tpk jarj?] toteuma-id))
+
+      ;; Tämä joudutaan tekemään valitettavasti odotuksella, koska toteumien
+      ;; pääkomponentti asettaa sisään tullessa kartalle koon :S
+      (go
+        (when (<! (odota-arvoa kokonaishintaiset-tyot/nakymassa? true? 1000))
+          (nav/vaihda-kartan-koko! :L))))))
