@@ -64,7 +64,7 @@
 
 (defn- paivita-maaramuutos [db user
                             {:keys [:urakka-id :yllapitokohde-id]}
-                            {:keys [id tyyppi tyo yksikko tilattu-maara
+                            {:keys [id tyyppi tyo yksikko tilattu-maara poistettu
                                     toteutunut-maara yksikkohinta] :as maaramuutos}]
   (log/debug "Päivitä määrämuutos: " (pr-str maaramuutos))
   (q/paivita-yllapitokohteen-maaramuutos<! db {:tyon_tyyppi (name tyyppi)
@@ -75,7 +75,8 @@
                                                :yksikkohinta yksikkohinta
                                                :kayttaja (:id user)
                                                :id id
-                                               :urakka urakka-id}))
+                                               :urakka urakka-id
+                                               :poistettu poistettu}))
 
 (defn- luo-tai-paivita-maaramuukset [db user urakka-ja-yllapitokohde maaramuutokset]
   (doseq [maaramuutos maaramuutokset]

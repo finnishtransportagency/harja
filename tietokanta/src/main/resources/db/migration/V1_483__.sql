@@ -54,9 +54,9 @@ BEGIN
             END,
             rivi.tyo->>'tyo',
             rivi.tyo->>'yksikko',
-            (rivi.tyo->>'tilattu-maara')::INTEGER,
-            (rivi.tyo->>'toteutunut-maara')::INTEGER,
-            (rivi.tyo->>'yksikkohinta')::INTEGER,
+            (rivi.tyo->>'tilattu-maara')::NUMERIC,
+            (rivi.tyo->>'toteutunut-maara')::NUMERIC,
+            (rivi.tyo->>'yksikkohinta')::NUMERIC,
             rivi.luoja);
   END LOOP;
   RETURN;
