@@ -249,14 +249,14 @@
         maara-paivityksen-jalkeen (ffirst (q
                                             (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
-        vastaus-leppajarven-ramppi (first (filter #(= "L03" (:kohdenumero %)) vastaus))
+        vastaus-leppajarven-ramppi (first (filter #(= "Leppäjärven ramppi" (:nimi %)) vastaus))
         odotettu {:aikataulu-kohde-valmis (pvm/->pvm "29.5.2016")
                   :aikataulu-muokkaaja 2
                   :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2016 12:00")
                   :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2016 12:00")
                   :aikataulu-tiemerkinta-takaraja (pvm/->pvm "1.6.2016")
-                  :aikataulu-tiemerkinta-alku (pvm/->pvm-aika "22.5.2016 00:00")
-                  :aikataulu-tiemerkinta-loppu (pvm/->pvm-aika "23.5.2016 00:00")
+                  :aikataulu-tiemerkinta-alku (pvm/->pvm-aika "22.5.2017 00:00")
+                  :aikataulu-tiemerkinta-loppu (pvm/->pvm-aika "23.5.2017 00:00")
                   :id 1
                   :kohdenumero "L03"
                   :nimi "Leppäjärven ramppi"
