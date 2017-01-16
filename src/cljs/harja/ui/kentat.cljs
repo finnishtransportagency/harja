@@ -604,9 +604,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
        (fn [this _ {:keys [focus] :as s} data]
          (when-not focus
            (reset! auki false))
-         (swap! pvm-teksti #(if-let [p @data]
-                             (pvm/pvm p)
-                             %)))}
+         (when-let [p @data]
+           (reset! pvm-teksti (pvm/pvm p))
+           (reset! aika-teksti (pvm/aika p))))}
 
       (fn [_ data]
         (let [aseta! (fn []
