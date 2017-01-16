@@ -1,4 +1,6 @@
 (ns harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-paivityskutsu
+  "Käytetään muodostamaan tietueen päivityksen XML-sanoma annetusta Clojure-datasta. Validoi muodostetun sanoman
+   Tierekisterin xsd-skeemaa vasten, joten tuotettu XML on aina sen mukaista."
   (:require [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
             [taoensso.timbre :as log]
