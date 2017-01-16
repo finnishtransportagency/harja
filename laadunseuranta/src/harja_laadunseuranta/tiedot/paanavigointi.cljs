@@ -393,20 +393,28 @@
         uudet-liittyvat-havainnot (take max-maara-ehdotuksia uudet-liittyvat-havainnot)]
     (reset! liittyvat-havainnot-atom (into [] uudet-liittyvat-havainnot))))
 
+(defn- lisaa-havainto-ehdolle-ilmoitukseen
+  [havainto ilmoitukseen-liittyva-havainto-id]
+  (reset! ilmoitukseen-liittyva-havainto-id (:id havainto)))
+
 (defn pistemainen-havainto-painettu! [{:keys [nimi avain] :as havainto}]
   (.log js/console "Kirjataan pistemäinen havainto: " (pr-str avain))
-  (ilmoitukset/ilmoita
-    (str "Pistemäinen havainto kirjattu: " nimi)
-    s/ilmoitus)
-  (reitintallennus/kirjaa-pistemainen-havainto!
-    {:idxdb @s/idxdb
-     :sijainti @s/sijainti
-     :tr-osoite @s/tr-osoite
-     :tarkastusajo-id @s/tarkastusajo-id
-     :jatkuvat-havainnot @s/jatkuvat-havainnot
-     :havainto-avain avain
-     :epaonnistui-fn reitintallennus/merkinta-epaonnistui
-     :lisaa-liittyva-havainto-fn (partial lisaa-liittyva-havainto! s/liittyvat-havainnot)}))
+  (let [onnistui? (reitintallennus/kirjaa-pistemainen-havainto!
+                            {:idxdb @s/idxdb
+                             :sijainti @s/sijainti
+                             :tr-osoite @s/tr-osoite
+                             :tarkastusajo-id @s/tarkastusajo-id
+                             :jatkuvat-havainnot @s/jatkuvat-havainnot
+                             :havainto-avain avain
+                             :epaonnistui-fn reitintallennus/merkinta-epaonnistui
+                             :havainto-kirjattu-fn (fn [kirjattu-havainto]
+                                                     (lisaa-havainto-ehdolle-ilmoitukseen kirjattu-havainto s/ilmoitukseen-liittyva-havainto-id)
+                                                     (lisaa-liittyva-havainto! s/liittyvat-havainnot kirjattu-havainto))})]
+    (when onnistui?
+      (ilmoitukset/ilmoita
+       (str "Pistemäinen havainto kirjattu: " nimi)
+       s/ilmoitus
+       {:tyyppi :onnistui}))))
 
 (defn valikohtainen-havainto-painettu!
   "Asettaa välikohtaisen havainnon päälle tai pois päältä."
@@ -448,7 +456,7 @@
       :epaonnistui-fn reitintallennus/merkinta-epaonnistui
       :tr-osoite @s/tr-osoite
       :havainto-avain avain
-      :lisaa-liittyva-havainto-fn (partial lisaa-liittyva-havainto! s/liittyvat-havainnot)})))
+      :havainto-kirjattu-fn (partial lisaa-liittyva-havainto! s/liittyvat-havainnot)})))
 
 (defn avaa-havaintolomake! []
   (.log js/console "Avataan havaintolomake!")

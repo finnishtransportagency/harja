@@ -99,6 +99,7 @@
 
    :ilmoitus nil ; Nykyinen näytettävä ilmoitus (jos ei käytetä ilmoitusjonoa)
    :ilmoitukset [] ;; Sisältää jonossa olevat ajastetut ilmoitukset, ensimmäinen on aina näkyvissä
+   :ilmoitukseen-liittyva-havainto-id nil ; tarjoaa mahdollisuuden avata lomake ko. pikahavaintoon sidottuna
    :idxdb nil ; indexed db kahva
    :palvelinvirhe nil ; kuvaus palvelimen virheestä (string)
    })
@@ -125,6 +126,7 @@
 
 (def havaintolomake-auki? (reagent/cursor sovellus [:havaintolomake-auki?]))
 (def havaintolomakedata (reagent/cursor sovellus [:havaintolomakedata]))
+(def havaintolomakkeeseen-liittyva-havainto (reagent/cursor sovellus [:havaintolomakedata :liittyy-havaintoon]))
 (def liittyvat-havainnot (reagent/cursor sovellus [:liittyvat-havainnot]))
 (def havaintolomake-kuva (reagent/cursor sovellus [:havaintolomakedata :kuva]))
 (def havaintolomake-esikatselukuva (reagent/cursor sovellus [:havaintolomakedata :esikatselukuva]))
@@ -168,6 +170,7 @@
 (def tarkastusajo-kaynnissa? (reagent/cursor sovellus [:tarkastusajo-kaynnissa?]))
 (def ilmoitukset (reagent/cursor sovellus [:ilmoitukset]))
 (def ilmoitus (reagent/cursor sovellus [:ilmoitus]))
+(def ilmoitukseen-liittyva-havainto-id (reagent/cursor sovellus [:ilmoitukseen-liittyva-havainto-id]))
 
 (def nayta-kiinteistorajat? (reagent/cursor sovellus [:kartta :nayta-kiinteistorajat?]))
 (def nayta-ortokuva? (reagent/cursor sovellus [:kartta :nayta-ortokuva?]))

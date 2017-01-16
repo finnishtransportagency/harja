@@ -6,6 +6,7 @@
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [harja-laadunseuranta.tiedot.kamera :as kamera-tiedot]
+            [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset-tiedot]
             [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset]
             [harja-laadunseuranta.ui.alustus :as alustus]
             [harja-laadunseuranta.ui.ylapalkki :as ylapalkki]
@@ -32,7 +33,12 @@
     (when @s/piirra-paanavigointi?
       [paanavigointi])
 
-    [ilmoitukset/ilmoituskomponentti s/ilmoitus]
+    [ilmoitukset/ilmoituskomponentti
+     {:ilmoitus-atom s/ilmoitus
+      :lomakedata @s/havaintolomakedata
+      :havainnon-id @s/ilmoitukseen-liittyva-havainto-id
+      :taydenna-havaintoa-painettu-fn
+      ilmoitukset-tiedot/ilmoitusta-painettu!}]
 
     (when @s/havaintolomake-auki?
       [havaintolomake])
