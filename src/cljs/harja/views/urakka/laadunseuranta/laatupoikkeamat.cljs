@@ -62,7 +62,7 @@
        (if (or (= :paallystys (:nakyma optiot))
                (= :paikkaus (:nakyma optiot))
                (= :tiemerkinta (:nakyma optiot)))
-         {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 2
+         {:otsikko "Yllä\u00ADpito\u00ADkoh\u00ADde" :nimi :kohde :leveys 2
           :hae (fn [rivi]
                  (tierekisteri/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
                                                        :nimi (get-in rivi [:yllapitokohde :nimi])}))}

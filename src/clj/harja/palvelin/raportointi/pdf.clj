@@ -1,5 +1,16 @@
 (ns harja.palvelin.raportointi.pdf
-  "Raportoinnin elementtien renderöinti PDF:ksi"
+  "Raportoinnin elementtien renderöinti PDF:ksi
+
+  Harjan raportit ovat Clojuren tietorakenteita, joissa käytetään
+  tiettyä rakennetta ja tiettyjä avainsanoja. Nämä raportit annetaan
+  eteenpäin moottoreille, jotka luovat tietorakenteen pohjalta raportin.
+  Tärkeä yksityiskohta on, että raporttien olisi tarkoitus sisältää ns.
+  raakaa dataa, ja antaa raportin formatoida data oikeaan muotoon sarakkeen :fmt
+  tiedon perusteella.
+
+  Tärkein muodosta-pdf metodin toteutus on :taulukko. Mm. uusien saraketyyppien
+  tukeminen lisätään sinne.
+  "
   (:require [harja.tyokalut.xsl-fo :as fo]
             [clojure.string :as str]
             [harja.visualisointi :as vis]
@@ -120,6 +131,8 @@
                  :let [arvo-datassa (nth rivi i)
                        sarake (nth sarakkeet i)
                        fmt (case (:fmt sarake)
+                             ;; Jos halutaan tukea erityyppisiä sarakkeita,
+                             ;; pitää tänne lisätä formatter.
                              :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 1 true)
                              :prosentti #(raportti-domain/yrita fmt/prosentti-opt %)
                              :raha #(raportti-domain/yrita fmt/euro-opt %)

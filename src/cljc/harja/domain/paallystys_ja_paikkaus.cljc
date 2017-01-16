@@ -53,3 +53,11 @@
 
 (def +paallystetyyppi+ "Päällystetyypin valinta koodilla"
   (apply s/enum (map :koodi +paallystetyypit+)))
+
+(defn summaa-maaramuutokset
+  "Laskee ilmoitettujen töiden toteutumien erotuksen tilattuun määrään ja summaa tulokset yhteen."
+  [tyot]
+  (reduce + (mapv
+              (fn [tyo]
+                (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
+              (filter #(not= true (:poistettu %)) tyot))))

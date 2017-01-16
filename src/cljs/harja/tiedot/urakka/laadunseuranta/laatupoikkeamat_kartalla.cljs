@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.laadunseuranta.laatupoikkeamat-kartalla
   (:require [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
-            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat])
+            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
+            [harja.loki :as log :refer [log]])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))

@@ -125,7 +125,6 @@
    :paatos-tekninen-osa nil,
    :kohdeosa_nimi "Testi a",
    :kohdeosa_aet 0,
-   :paatos-taloudellinen-osa nil,
    :kohdeosa_losa 41,
    :kohdeosa_ajorata 0,
    :kohdeosa_aosa 36,
@@ -140,19 +139,7 @@
    :id 31,
    :kasittelyaika-tekninen-osa nil,
    :takuupvm (tee-pvm),
-   :ilmoitustiedot {:tyot [{:tyo "Testityö",
-                            :tyyppi "ajoradan-paallyste",
-                            :yksikko "t",
-                            :yksikkohinta 100,
-                            :tilattu-maara 10000,
-                            :toteutunut-maara 12300}
-                           {:tyo "Testityö",
-                            :tyyppi "pienaluetyot",
-                            :yksikko "km",
-                            :yksikkohinta 33,
-                            :tilattu-maara 100,
-                            :toteutunut-maara 245}],
-                    :osoitteet [{:kohdeosa-id 59,
+   :ilmoitustiedot {:osoitteet [{:kohdeosa-id 59,
                                  :edellinen-paallystetyyppi 1,
                                  :lisaaineet "lölöklö",
                                  :leveys 11,
@@ -200,9 +187,7 @@
                                     :verkon-sijainti 2}]},
    :kohdeosa_id 59,
    :arvonvahennykset 0M,
-   :valmispvm-paallystys (tee-pvm),
-   :perustelu-taloudellinen-osa nil,
-   :kasittelyaika-taloudellinen-osa nil})
+   :valmispvm-paallystys (tee-pvm)})
 
 (def testikohteet
   [{:kohde testikohde,
