@@ -46,10 +46,15 @@
                             [kentat/nayta-arvo kentan-skeema (kentan-arvo kentan-skeema data)]))
                     tiedot))]))
 
-(defn infopaneeli-komponentti [asiat avatut-asiat toggle-asia! piilota-fn! linkkifunktiot]
+(defn infopaneeli-komponentti [{:keys [avatut-asiat toggle-asia! piilota-fn! linkkifunktiot
+                                       ei-tuloksia]} asiat]
   [:span
-   [:div
-    [napit/sulje piilota-fn!]]
+   (when piilota-fn!
+     [:div
+      [napit/sulje piilota-fn!]])
+
+   (when (and (empty? asiat) ei-tuloksia)
+     ei-tuloksia)
 
    (doall
     (for [[i asia] (zipmap (range) asiat)
@@ -84,5 +89,8 @@
          [:div
           [ajax-loader]]
          [infopaneeli-komponentti
-          @asiat-skeemamuodossa @avatut-asiat toggle-asia!
-          piilota-fn! @linkkifunktiot])))))
+          {:avatut-asiat @avatut-asiat
+           :toggle-asia! toggle-asia!
+           :piilota-fn! piilota-fn!
+           :linkkifunktiot @linkkifunktiot}
+          @asiat-skeemamuodossa])))))

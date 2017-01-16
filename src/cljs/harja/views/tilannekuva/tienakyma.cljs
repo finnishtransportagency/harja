@@ -56,11 +56,13 @@
    :tienakyma-tulokset
    ^{:class "kartan-infopaneeli"}
    [infopaneeli/infopaneeli-komponentti
-    tulokset (comp avatut-tulokset :idx :data)
-    #(e! (tiedot/->AvaaTaiSuljeTulos (:idx (:data %))))
-    #(e! (tiedot/->SuljeInfopaneeli))
-    {:toteuma {:teksti "Tarkastele toteumanäkymässä"
-               :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}}]))
+    {:avatut-asiat (comp avatut-tulokset :idx :data)
+     :toggle-asia! #(e! (tiedot/->AvaaTaiSuljeTulos (:idx (:data %))))
+     :piilota-fn! #(e! (tiedot/->SuljeInfopaneeli))
+     :linkkifunktiot {:toteuma {:teksti "Tarkastele toteumanäkymässä"
+                                :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}}
+     :ei-tuloksia [:span "Hakuehdoilla ei löytynyt tuloksia"]}
+    tulokset]))
 
 (defn- tulospaneeli [e! tulokset avatut-tulokset]
   (komp/luo
