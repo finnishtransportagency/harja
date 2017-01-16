@@ -38,8 +38,8 @@ VALUES
                                           20, 19, 5, 21, 15, 1, 1, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'), '{2017}', 900),
   ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen päällystysurakka'),
     (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null),
-    666, 'Kuusamontien testi', 500, 3457, 5, 6, '2016-06-02 06:00:00+02',
-    '2016-06-02 06:00:00+02', null, null, null,
+    666, 'Kuusamontien testi', 500, 3457, 5, 6, null,
+    null, null, null, null,
                                           null, (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), NOW(), null, null, 'paallyste' :: yllapitokohdetyyppi,'paallystys'::yllapitokohdetyotyyppi, 456896959,
                                           20, 26, 1, 41, 15, 1 ,1, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'), '{2017}', 66);
 
