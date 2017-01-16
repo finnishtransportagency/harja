@@ -68,7 +68,7 @@
 ;; :S (näkyy Näytä kartta -nappi)
 ;; :M (matalampi täysleveä)
 ;; :L (korkeampi täysleveä)
-(def kartan-kokovalinta "Kartan koko" (atom :S))
+(defonce ^{:doc "Kartan koko"} kartan-kokovalinta (atom :S))
 
 (defn vaihda-kartan-koko! [uusi-koko]
   (let [vanha-koko @kartan-kokovalinta]
