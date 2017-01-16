@@ -96,7 +96,6 @@
     (log "[TR] Virhe suoritettaessa toimintoa. Virhe:" (pr-str virhe) ". Vastaus: " (pr-str vastaus) ".")
     (viesti/nayta! viesti :warning)
     ((t/send-async! (partial ->VarusteToteumatMuuttuneet vastaus)))
-
     ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
     (hakutulokset app nil nil))
 
