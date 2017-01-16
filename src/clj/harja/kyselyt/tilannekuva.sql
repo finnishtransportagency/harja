@@ -245,7 +245,7 @@ SELECT
   u.nimi AS "urakka",
   yh.id AS yhteyshenkilo_id,
   yh.etunimi AS yhteyshenkilo_etunimi,
-  yh.etunimi AS yhteyshenkilo_sukunimi
+  yh.sukunimi AS yhteyshenkilo_sukunimi
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
