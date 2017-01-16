@@ -42,6 +42,7 @@
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
     [harja.palvelin.palvelut.yhteyshenkilot]
     [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
+    [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
     [harja.palvelin.palvelut.yllapitokohteet.paikkaus :as paikkaus]
     [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]
     [harja.palvelin.palvelut.ping :as ping]
@@ -264,11 +265,14 @@
                   (toteumat/->Toteumat)
                   [:http-palvelin :db :karttakuvat :tierekisteri])
       :yllapitototeumat (component/using
-                  (yllapito-toteumat/->YllapitoToteumat)
-                  [:http-palvelin :db])
+                          (yllapito-toteumat/->YllapitoToteumat)
+                          [:http-palvelin :db])
       :paallystys (component/using
                     (paallystys/->Paallystys)
                     [:http-palvelin :db])
+      :maaramuutokset (component/using
+                        (maaramuutokset/->Maaramuutokset)
+                        [:http-palvelin :db])
       :paikkaus (component/using
                   (paikkaus/->Paikkaus)
                   [:http-palvelin :db])
@@ -367,9 +371,9 @@
                       :http-palvelin :http-palvelin
                       :karttakuvat :karttakuvat})
       :tienakyma (component/using
-                  (tienakyma/->Tienakyma)
-                  {:db :db-replica
-                   :http-palvelin :http-palvelin})
+                   (tienakyma/->Tienakyma)
+                   {:db :db-replica
+                    :http-palvelin :http-palvelin})
       :karttakuvat (component/using
                      (karttakuvat/luo-karttakuvat)
                      [:http-palvelin :db])

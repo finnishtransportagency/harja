@@ -9,13 +9,11 @@
 
             [harja.ui.lomake :refer [lomake]]
             [harja.ui.komponentti :as komp]
-            [harja.ui.ikonit :as ikonit]
 
             [harja.loki :refer [log logt]]
             [cljs.core.async :refer [<! >! chan]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka.paallystys :as paallystys])
@@ -28,6 +26,7 @@
   [ur]
   (komp/luo
     (komp/lippu paallystys/karttataso-paallystyskohteet)
+    (komp/lippu paallystys/kohdeluettelossa?)
     (fn [ur]
       (if (:yhatiedot ur)
         [:span.kohdeluettelo

@@ -74,7 +74,10 @@
             [harja.domain.roolit :as roolit]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
             [taoensso.timbre :as log]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]))
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
+            [harja.domain.tierekisteri :as tr]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]))
 
 (defn tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
@@ -125,8 +128,8 @@
                  {:kuittaus :kuittaukset})]
            ilmoitukset))))))
 
-(defn- hae-paallystystyot
-  [db user {:keys [toleranssi alku loppu yllapito nykytilanne?]} urakat]
+(defn- hae-yllapitokohteet
+  [db user {:keys [toleranssi alku loppu yllapito nykytilanne? tyyppi]} urakat]
   ;; Muut haut toimivat siten, että urakat parametrissa on vain urakoita, joihin
   ;; käyttäjällä on oikeudet. Jos lista on tyhjä, urakoita ei ole joko valittuna,
   ;; tai yritettiin hakea urakoilla, joihin käyttäjällä ei ole oikeuksia.
@@ -137,47 +140,43 @@
                                                          oikeudet/tilannekuva-nykytilanne
                                                          oikeudet/tilannekuva-historia)
                                                        nil user))
-    (when (tk/valittu? yllapito tk/paallystys)
-      (into []
-            (comp
-              (geo/muunna-pg-tulokset :sijainti)
-              (map konv/alaviiva->rakenne)
-              (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
-              (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
-              (map #(konv/string-polusta->keyword % [:paallystysilmoitus :tila])))
-            (if nykytilanne?
-              (q/hae-paallystykset-nykytilanteeseen db toleranssi)
-              (q/hae-paallystykset-historiakuvaan db
-                                                  toleranssi
-                                                  (konv/sql-date loppu)
-                                                  (konv/sql-date alku)))))))
+    (when (tk/valittu? yllapito (case tyyppi
+                                  "paallystys" tk/paallystys
+                                  "paikkaus" tk/paikkaus))
+      (let [vastaus (into []
+                          (comp
+                            (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
+                            (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
+                            (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
+                            (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
+                            (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
+                            (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
+                            (map #(yllapitokohteet-q/liita-kohdeosat db % (:id %))))
+                          (if nykytilanne?
+                            (case tyyppi
+                              "paallystys" (q/hae-paallystykset-nykytilanteeseen db)
+                              "paikkaus" (q/hae-paikkaukset-nykytilanteeseen db))
+                            (case tyyppi
+                              "paallystys" (q/hae-paallystykset-historiakuvaan db
+                                                                               (konv/sql-date loppu)
+                                                                               (konv/sql-date alku))
+                              "paikkaus" (q/hae-paikkaukset-historiakuvaan db
+                                                                           (konv/sql-date loppu)
+                                                                           (konv/sql-date alku)))))
+            osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db vastaus)
+            vastaus (mapv #(assoc %
+                             :pituus
+                             (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))
+                          vastaus)]
+        vastaus))))
+
+(defn- hae-paallystystyot
+  [db user suodattimet urakat]
+  (hae-yllapitokohteet db user (assoc suodattimet :tyyppi "paallystys") urakat))
 
 (defn- hae-paikkaustyot
-  [db user {:keys [toleranssi alku loppu yllapito nykytilanne?]} urakat]
-  ;; Muut haut toimivat siten, että urakat parametrissa on vain urakoita, joihin
-  ;; käyttäjällä on oikeudet. Jos lista on tyhjä, urakoita ei ole joko valittuna,
-  ;; tai yritettiin hakea urakoilla, joihin käyttäjällä ei ole oikeuksia.
-  ;; Ylläpidon hommat halutaan hakea, vaikkei valittuna olisikaan yhtään urakkaa.
-  ;; Lista voi siis tulla tänne tyhjänä. Jos näin on, täytyy tarkastaa, onko käyttäjällä
-  ;; yleistä tilannekuvaoikeutta.
-  (when (or (not (empty? urakat)) (oikeudet/voi-lukea? (if nykytilanne?
-                                                         oikeudet/tilannekuva-nykytilanne
-                                                         oikeudet/tilannekuva-historia)
-                                                       nil user))
-    (when (tk/valittu? yllapito tk/paikkaus)
-     (into []
-           (comp
-             (geo/muunna-pg-tulokset :sijainti)
-             (map konv/alaviiva->rakenne)
-             (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
-             (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
-             (map #(konv/string-polusta->keyword % [:paikkausilmoitus :tila])))
-           (if nykytilanne?
-             (q/hae-paikkaukset-nykytilanteeseen db toleranssi)
-             (q/hae-paikkaukset-historiakuvaan db
-                                               toleranssi
-                                               (konv/sql-date loppu)
-                                               (konv/sql-date alku)))))))
+  [db user suodattimet urakat]
+  (hae-yllapitokohteet db user (assoc suodattimet :tyyppi "paikkaus") urakat))
 
 (defn- hae-laatupoikkeamat
   [db user {:keys [toleranssi alku loppu laatupoikkeamat nykytilanne?]} urakat]
