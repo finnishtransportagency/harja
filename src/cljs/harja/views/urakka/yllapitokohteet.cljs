@@ -486,7 +486,7 @@
                                               :yllapitokohde-id yllapitokohde-id
                                               :maaramuutokset %}))]
                            (if (k/virhe? vastaus)
-                             (viesti/nayta! "Määrämuutoksien tallennusepäonnistui"
+                             (viesti/nayta! "Määrämuutoksien tallennus epäonnistui"
                                             :warning
                                             viesti/viestin-nayttoaika-keskipitka)
                              (do
