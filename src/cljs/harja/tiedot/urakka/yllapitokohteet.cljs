@@ -44,22 +44,7 @@
                                      :yllapitokohde-id yllapitokohde-id
                                      :maaramuutokset maaramuutokset}))
 
-(defn kuvaile-kohteen-tila [tila]
-  (case tila
-    :kohde-aloitettu "Kohde aloitettu"
-    :paallystys-aloitettu "Päällystys aloitettu"
-    :paallystys-valmis "Päällystys valmis"
-    :tiemerkinta-aloitettu "Tiemerkintä aloitettu"
-    :tiemerkinta-valmis "Tiemerkintä valmis"
-    :kohde-valmis "Kohde valmis"
-    :ei-aloitettu "Ei aloitettu"
-    "Ei tiedossa"))
 
-(defn kuvaile-kohteen-tila-kartalla [tila]
-  (case tila
-    :valmis "Valmis"
-    :aloitettu "Aloitettu"
-    "Ei aloitettu"))
 
 (defn paivita-yllapitokohde! [kohteet-atom id funktio & argumentit]
   (swap! kohteet-atom
