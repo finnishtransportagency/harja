@@ -30,24 +30,29 @@
   [lomake/lomake
    {:otsikko "Tarkastele tien tietoja"
     :muokkaa! #(e! (tiedot/->PaivitaValinnat %))
-    :footer [:span
-             [napit/yleinen
-              "Hae"
-              #(e! (tiedot/->Hae))
-              {:ikoni (ikonit/livicon-search)}]
-             (when haku-kaynnissa?
-               [yleiset/ajax-loader "Haetaan tietoja..." {:luokka "inline-block"}])]
+    :footer-fn (fn [data]
+                 [:span
+                  [napit/yleinen
+                   "Hae"
+                   #(e! (tiedot/->Hae))
+                   {:ikoni (ikonit/livicon-search)
+                    :disabled (not (lomake/validi? data))}]
+                  (when haku-kaynnissa?
+                    [yleiset/ajax-loader "Haetaan tietoja..." {:luokka "inline-block"}])])
     :ei-borderia? true}
    [{:nimi :tierekisteriosoite :tyyppi :tierekisteriosoite
      :tyyli :rivitetty
+     :pakollinen? true
      :sijainti (when-not tulokset
                  (r/wrap (:sijainti valinnat)
                          #(e! (tiedot/->PaivitaSijainti %))))
      :otsikko "Tierekisteriosoite"
      :palstoja 3}
     {:nimi :alku :tyyppi :pvm-aika
+     :pakollinen? true
      :otsikko "Alkaen" :palstoja 3}
     {:nimi :loppu :tyyppi :pvm-aika
+     :pakollinen? true
      :otsikko "Loppuen" :palstoja 3}]
    valinnat])
 
