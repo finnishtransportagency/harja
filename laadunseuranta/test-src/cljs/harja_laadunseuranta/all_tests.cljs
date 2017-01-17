@@ -2,7 +2,6 @@
   (:require [doo.runner :refer-macros [doo-tests]]
             [harja-laadunseuranta.tiedot.projektiot-test]
             [harja-laadunseuranta.tiedot.paikannus-test]
-            [harja-laadunseuranta.ui.ilmoitukset-test]
             [harja-laadunseuranta.ui.kartta-test]
             [harja-laadunseuranta.tiedot.reitintallennus-test]
             [harja-laadunseuranta.core-test]
@@ -23,7 +22,6 @@
 
 (doo-tests 'harja-laadunseuranta.tiedot.projektiot-test
            'harja-laadunseuranta.tiedot.paikannus-test
-           'harja-laadunseuranta.ui.ilmoitukset-test
            'harja-laadunseuranta.ui.kartta-test
            'harja-laadunseuranta.tiedot.reitintallennus-test
            'harja-laadunseuranta.core-test

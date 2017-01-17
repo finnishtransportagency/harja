@@ -395,9 +395,6 @@
 
 (defn pistemainen-havainto-painettu! [{:keys [nimi avain] :as havainto}]
   (.log js/console "Kirjataan pistemäinen havainto: " (pr-str avain))
-  (ilmoitukset/ilmoita
-    (str "Pistemäinen havainto kirjattu: " nimi)
-    s/ilmoitus)
   (reitintallennus/kirjaa-pistemainen-havainto!
     {:idxdb @s/idxdb
      :sijainti @s/sijainti
@@ -406,7 +403,13 @@
      :jatkuvat-havainnot @s/jatkuvat-havainnot
      :havainto-avain avain
      :epaonnistui-fn reitintallennus/merkinta-epaonnistui
-     :lisaa-liittyva-havainto-fn (partial lisaa-liittyva-havainto! s/liittyvat-havainnot)}))
+     :havainto-kirjattu-fn (fn [kirjattu-havainto]
+                             (lisaa-liittyva-havainto! s/liittyvat-havainnot kirjattu-havainto)
+                             (ilmoitukset/ilmoita
+                               (str "Pistemäinen havainto kirjattu: " nimi)
+                               s/ilmoitus
+                               {:tyyppi :onnistui
+                                :taydennettavan-havainnon-id (:id kirjattu-havainto)}))}))
 
 (defn valikohtainen-havainto-painettu!
   "Asettaa välikohtaisen havainnon päälle tai pois päältä."
@@ -414,15 +417,6 @@
   ;; Jatkuva havainto ensin päälle
   (s/togglaa-jatkuva-havainto! avain)
   (.log js/console (pr-str "Välikohtaiset havainnot nyt : " @s/jatkuvat-havainnot))
-
-  ;; Ilmoitus
-  (if (@s/jatkuvat-havainnot avain)
-    (ilmoitukset/ilmoita
-      (str (or (:nimi mittaus) nimi) " alkaa")
-      s/ilmoitus)
-    (ilmoitukset/ilmoita
-      (str (or (:nimi mittaus) nimi) " päättyy")
-      s/ilmoitus))
 
   ;; Mittaus päälle jos tarvii
   (when (and vaatii-nappaimiston?
@@ -436,19 +430,28 @@
              (not (avain @s/jatkuvat-havainnot)))
     (s/aseta-mittaus-pois!))
 
-  ;; Tee merkintä, jos havainto laitettiin päälle
-  (when (@s/jatkuvat-havainnot avain)
-    (reitintallennus/kirjaa-yksittainen-reittimerkinta!
-     {:idxdb @s/idxdb
-      :sijainti @s/sijainti
-      :tarkastusajo-id @s/tarkastusajo-id
-      :jatkuvat-havainnot @s/jatkuvat-havainnot
-      :mittaustyyppi @s/mittaustyyppi
-      :soratiemittaussyotto @s/soratiemittaussyotto
-      :epaonnistui-fn reitintallennus/merkinta-epaonnistui
-      :tr-osoite @s/tr-osoite
-      :havainto-avain avain
-      :lisaa-liittyva-havainto-fn (partial lisaa-liittyva-havainto! s/liittyvat-havainnot)})))
+  (reitintallennus/kirjaa-yksittainen-reittimerkinta!
+    {:idxdb @s/idxdb
+     :sijainti @s/sijainti
+     :tarkastusajo-id @s/tarkastusajo-id
+     :jatkuvat-havainnot @s/jatkuvat-havainnot
+     :mittaustyyppi @s/mittaustyyppi
+     :soratiemittaussyotto @s/soratiemittaussyotto
+     :epaonnistui-fn reitintallennus/merkinta-epaonnistui
+     :tr-osoite @s/tr-osoite
+     :havainto-avain avain
+     :havainto-kirjattu-fn (fn [kirjattu-havainto]
+                             (if (@s/jatkuvat-havainnot avain)
+                               (ilmoitukset/ilmoita
+                                 (str (or (:nimi mittaus) nimi) " alkaa")
+                                 s/ilmoitus)
+                               (do
+                                 (ilmoitukset/ilmoita
+                                   (str (or (:nimi mittaus) nimi) " päättyy")
+                                   s/ilmoitus
+                                   {:tyyppi :onnistui
+                                    :taydennettavan-havainnon-id (:id kirjattu-havainto)})
+                                 (lisaa-liittyva-havainto! s/liittyvat-havainnot kirjattu-havainto))))}))
 
 (defn avaa-havaintolomake! []
   (.log js/console "Avataan havaintolomake!")
