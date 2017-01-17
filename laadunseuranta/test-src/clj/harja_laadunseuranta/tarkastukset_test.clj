@@ -129,7 +129,7 @@
 
     ;; Tasaisuus laskettu oikein
     (is (== (-> tarkastukset :reitilliset-tarkastukset first :soratiemittaus :kiinteys) 3))
-    (is (== (-> tarkastukset :reitilliset-tarkastukset last :soratiemittaus :kiinteys) 1))))
+    (is (= (-> tarkastukset :reitilliset-tarkastukset last :soratiemittaus :kiinteys) nil))))
 
 (deftest soratie-polyavyys-laskettu-oikein
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
