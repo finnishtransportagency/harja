@@ -386,6 +386,9 @@
    {:id 3 :sijainti [465641.5999816895 7230780.000024414]}
    {:id 4 :sijainti [465641.5999816895 7230780.000024414]}])
 
+(def tarkastus-jossa-yksi-piste
+  [{:id 1 :sijainti [465641.5999816895 7230780.000024414]}])
+
 (def tarkastus-jossa-jatkuva-laadunalitus
   "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
   [{:id 0 :sijainti [464681.5999816895 7230492.000024414]

@@ -203,6 +203,20 @@
     (is (= nil))
     (is (= nil))))
 
+(deftest tarkastus-trvali-jossa-osoitteet-samat
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-yksi-piste))
+        tallennettava (luo-kantaan-tallennettava-tarkastus
+                        (first (:reitilliset-tarkastukset tarkastukset))
+                        {:kayttajanimi "jvh"})]
+    (is (= 1 (count (:reitilliset-tarkastukset tarkastukset))))
+    (is (= 20 (:tr_numero tallennettava)))
+    (is (= 10 (:tr_alkuosa tallennettava)))
+    (is (= 4924 (:tr_alkuetaisyys tallennettava)))
+    (is (= nil))
+    (is (= nil))))
+
 (deftest tarkastus-jossa-jatkuva-laadunalitus
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
