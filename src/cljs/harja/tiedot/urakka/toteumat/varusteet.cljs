@@ -228,12 +228,12 @@
 
       ;; Jos tietolajin kuvaus muuttui ja se ei ole tyhjä, haetaan uudet tiedot
       (when (and tietolaji-muuttui? (:tietolaji tiedot))
-        (let [valmis! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
+        (let [virhe! (t/send-async! (partial v/->VirheTapahtui "Tietolajin hakemisessa tapahtui virhe"))
+              valmis! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
           (go
             (let [vastaus (<! (hae-tietolajin-kuvaus (:tietolaji tiedot)))]
               (if (k/virhe? vastaus)
-                ;; todo: tämä kärähtää ilmeisesti, koska ollaan go blockissa.
-                (t/send-async! (partial v/->VirheTapahtui "Tietolajin hakemisessa tapahtui virhe"))
+                (virhe!)
                 (valmis! vastaus))))))
 
       (assoc app :varustetoteuma uusi-toteuma)))
