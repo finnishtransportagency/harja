@@ -127,6 +127,7 @@
     :jatkuvat-havainnot [3]
     :soratie-tasaisuus 1
     :kiinteys 3}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
    {:id 3 :sijainti [466089.5999816895 7230916.000024414]
     :jatkuvat-havainnot [3]}
    {:id 4 :sijainti [466409.5999816895 7230996.000024414]
@@ -135,6 +136,7 @@
     :jatkuvat-havainnot [3]}
    {:id 6 :sijainti [467257.5999816895 7231252.000024414]
     :jatkuvat-havainnot [3]}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
    {:id 7 :sijainti [467545.5999816895 7231332.000024414]
     :jatkuvat-havainnot [3]
     :soratie-tasaisuus 3}])
@@ -145,6 +147,7 @@
     :jatkuvat-havainnot [3]
     :soratie-tasaisuus 1
     :kiinteys 3}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
    {:id 3 :sijainti [466089.5999816895 7230916.000024414]
     :jatkuvat-havainnot [3]}
    {:id 4 :sijainti [466409.5999816895 7230996.000024414]
@@ -153,6 +156,7 @@
     :jatkuvat-havainnot [3]}
    {:id 6 :sijainti [467257.5999816895 7231252.000024414]
     :jatkuvat-havainnot [3]}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
    {:id 7 :sijainti [467545.5999816895 7231332.000024414]
     :jatkuvat-havainnot [3]
     :kiinteys 3
@@ -165,15 +169,18 @@
     :soratie-tasaisuus 1
     :polyavyys 1
     :kiinteys 3}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
    {:id 3 :sijainti [466089.5999816895 7230916.000024414]
     :jatkuvat-havainnot [3]
     :polyavyys 3}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
    {:id 4 :sijainti [466409.5999816895 7230996.000024414]
     :jatkuvat-havainnot [3]}
    {:id 5 :sijainti [467009.5999816895 7231180.000024414]
     :jatkuvat-havainnot [3]}
    {:id 6 :sijainti [467257.5999816895 7231252.000024414]
     :jatkuvat-havainnot [3]}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
    {:id 7 :sijainti [467545.5999816895 7231332.000024414]
     :jatkuvat-havainnot [3]
     :kiinteys 3
@@ -185,6 +192,7 @@
     :jatkuvat-havainnot [3]
     :soratie-tasaisuus 1
     :sivukaltevuus 3}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
    {:id 3 :sijainti [466089.5999816895 7230916.000024414]
     :jatkuvat-havainnot [3]}
    {:id 4 :sijainti [466409.5999816895 7230996.000024414]
@@ -193,6 +201,7 @@
     :jatkuvat-havainnot [3]}
    {:id 6 :sijainti [467257.5999816895 7231252.000024414]
     :jatkuvat-havainnot [3]}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
    {:id 7 :sijainti [467545.5999816895 7231332.000024414]
     :jatkuvat-havainnot [3]
     :sivukaltevuus 3

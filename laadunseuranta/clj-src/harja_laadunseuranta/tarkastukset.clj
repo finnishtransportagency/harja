@@ -60,6 +60,13 @@
       (<= (t/in-seconds (t/interval (c/from-sql-time (:aikaleima nykyinen-reittimerkinta))
                                     (c/from-sql-time (:aikaleima seuraava-reittimerkinta))))
           +kahden-pisteen-valinen-sallittu-aikaero-s+))
+    ;; Soratiemittauksen mittausarvot pysyvät samana. Soratiemittauksessa mittausarvot voivat olla päällä
+    ;; pitkän aikaa ja mittausarvot tallentuvat tällöin usealle pisteelle. Jos jokin mittausarvoista muuttuu,
+    ;; halutaan tarkastuskin katkaista, jotta samat päällä olevat mittausarvot muodostavat aina oman reitin.
+    (and (= (:soratie-tasaisuus nykyinen-reittimerkinta) (:soratie-tasaisuus seuraava-reittimerkinta))
+         (= (:kiinteys nykyinen-reittimerkinta) (:kiinteys seuraava-reittimerkinta))
+         (= (:polyavyys nykyinen-reittimerkinta) (:polyavyys seuraava-reittimerkinta))
+         (= (:sivukaltevuus nykyinen-reittimerkinta) (:sivukaltevuus seuraava-reittimerkinta)))
 
     ;; Seuraava piste ei aiheuta reitin kääntymistä ympäri
     ;; PENDING GPS:n epätarkkuudesta johtuen aiheuttaa liikaa ympärikääntymisiä eikä toimi oikein, siksi kommentoitu
