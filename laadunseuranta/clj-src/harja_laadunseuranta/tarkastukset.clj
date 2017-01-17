@@ -324,27 +324,9 @@
                                                                                       liittyvat-merkinnat)]
     tarkastukset-lomaketiedoilla))
 
-(defn luo-tallennettava-tarkastus [tarkastus kayttaja]
-  (let [tarkastuksen-reitti (:sijainnit tarkastus)
-        lahtopiste (:tr-osoite (first tarkastuksen-reitti))
-        paatepiste (:tr-osoite (last tarkastuksen-reitti))
-        koko-tarkastuksen-tr-osoite {:tie (:tie lahtopiste)
-                                     :aosa (:aosa lahtopiste)
-                                     :aet (:aet lahtopiste)
-                                     ;; Loppuosa on pistemäisessä osoitteessa sama kuin alku,
-                                     ;; muuten normaali loppuosa
-                                     :losa (or (:losa paatepiste) (:aosa paatepiste))
-                                     :let (or (:let paatepiste) (:aet paatepiste))}]
-    (assoc tarkastus
-      :tarkastaja (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
-      :tr_numero (:tie koko-tarkastuksen-tr-osoite)
-      :tr_alkuosa (:aosa koko-tarkastuksen-tr-osoite)
-      :tr_alkuetaisyys (:aet koko-tarkastuksen-tr-osoite)
-      :tr_loppuosa (:losa koko-tarkastuksen-tr-osoite)
-      :tr_loppuetaisyys (:let koko-tarkastuksen-tr-osoite)
-      :lahde "harja-ls-mobiili")))
+;; -------- Tarkastuksen tallennus kantaan --------
 
-(defn hae-tallennettavan-tarkastuksen-sijainti
+(defn- hae-tallennettavan-tarkastuksen-sijainti
   [db {tie :tr_numero
        alkuosa :tr_alkuosa alkuet :tr_alkuetaisyys
        loppuosa :tr_loppuosa loppuet :tr_loppuetaisyys}]
@@ -361,13 +343,35 @@
                   :tr_loppuosa (if viiva? loppuosa alkuosa)
                   :tr_loppuetaisyys (if viiva? loppuet alkuet)}))))))
 
+(defn luo-kantaan-tallennettava-tarkastus
+  "Ottaa reittimerkintämuuntimen luoman tarkastuksen ja palauttaa mapin,
+   jolla tarkastus voidaan lisätä kantaan."
+  [tarkastus kayttaja]
+  (let [tarkastuksen-reitti (:sijainnit tarkastus)
+        lahtopiste (:tr-osoite (first tarkastuksen-reitti))
+        paatepiste (:tr-osoite (last tarkastuksen-reitti))
+        koko-tarkastuksen-tr-osoite {:tie (:tie lahtopiste)
+                                     :aosa (:aosa lahtopiste)
+                                     :aet (:aet lahtopiste)
+                                     ;; Loppuosa on pistemäisessä osoitteessa sama kuin alku,
+                                     ;; muuten normaali loppuosa
+                                     :losa (or (:losa paatepiste) (:aosa paatepiste))
+                                     :let (or (:let paatepiste) (:aet paatepiste))}
+        geometria (hae-tallennettavan-tarkastuksen-sijainti db tarkastus)]
+    (assoc tarkastus
+      :tarkastaja (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
+      :tr_numero (:tie koko-tarkastuksen-tr-osoite)
+      :tr_alkuosa (:aosa koko-tarkastuksen-tr-osoite)
+      :tr_alkuetaisyys (:aet koko-tarkastuksen-tr-osoite)
+      :tr_loppuosa (:losa koko-tarkastuksen-tr-osoite)
+      :tr_loppuetaisyys (:let koko-tarkastuksen-tr-osoite)
+      :sijainti geometria
+      :lahde "harja-ls-mobiili")))
+
 (defn- tallenna-tarkastus! [db tarkastus kayttaja]
   (log/debug "Aloitetaan tarkastuksen tallennus")
   (log/debug (pr-str tarkastus))
-  (let [tarkastus (luo-tallennettava-tarkastus tarkastus kayttaja)
-        geometria (hae-tallennettavan-tarkastuksen-sijainti db tarkastus)
-        tarkastus (as-> tarkastus tarkastus
-                        (assoc tarkastus :sijainti geometria))
+  (let [tarkastus (luo-kantaan-tallennettava-tarkastus tarkastus kayttaja)
         _ (q/luo-uusi-tarkastus<! db
                                   (merge tarkastus
                                          {:luoja (:id kayttaja)}))

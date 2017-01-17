@@ -1,6 +1,6 @@
 (ns harja-laadunseuranta.tarkastukset-test
   (:require [clojure.test :as t :refer [deftest testing is]]
-            [harja-laadunseuranta.tarkastukset :refer [reittimerkinnat-tarkastuksiksi luo-tallennettava-tarkastus]]
+            [harja-laadunseuranta.tarkastukset :refer [reittimerkinnat-tarkastuksiksi luo-kantaan-tallennettava-tarkastus]]
             [harja-laadunseuranta.testidata :as testidata]
             [taoensso.timbre :as log]
             [harja-laadunseuranta.tarkastukset :as tarkastukset]))
@@ -178,7 +178,7 @@
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
                          testidata/tarkastus-jossa-alkuosa-vaihtuu))
-        tallennettava (luo-tallennettava-tarkastus
+        tallennettava (luo-kantaan-tallennettava-tarkastus
                         (first (:reitilliset-tarkastukset tarkastukset))
                         {:kayttajanimi "jvh"})]
     (is (= 1 (count (:reitilliset-tarkastukset tarkastukset))))

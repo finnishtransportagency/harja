@@ -61,7 +61,7 @@
   [:div#tk-historiakuvan-aikavalit
    [ui-valinnat/aikavali tiedot/historiakuvan-aikavali {:nayta-otsikko? false
                                                         :aikavalin-rajoitus [12 :kuukausi]
-                                                        :aloitusaika-pakota-suunta :alas-oikea
+                                                        :aloitusaika-pakota-suunta :ylos-vasen
                                                         :paattymisaika-pakota-suunta :alas-vasen}]])
 
 (defn yksittainen-suodatincheckbox
