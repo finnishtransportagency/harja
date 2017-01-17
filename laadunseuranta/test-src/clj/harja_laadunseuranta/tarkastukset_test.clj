@@ -188,6 +188,21 @@
     (is (= 11 (:tr_loppuosa tallennettava)))
     (is (= 6349 (:tr_loppuetaisyys tallennettava)))))
 
+(deftest tarkastus-trvali-jossa-osoitteet-samat
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-kaikki-pisteet-samassa-sijainnissa))
+        tallennettava (luo-kantaan-tallennettava-tarkastus
+                        (first (:reitilliset-tarkastukset tarkastukset))
+                        {:kayttajanimi "jvh"})]
+    (is (= 1 (count (:reitilliset-tarkastukset tarkastukset))))
+    (is (= 20 (:tr_numero tallennettava)))
+    (is (= 10 (:tr_alkuosa tallennettava)))
+    (is (= 4924 (:tr_alkuetaisyys tallennettava)))
+    ;; Kaikki osoitteet olivat samat --> tallentuu pistemäisenä
+    (is (= nil))
+    (is (= nil))))
+
 (deftest tarkastus-jossa-jatkuva-laadunalitus
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
