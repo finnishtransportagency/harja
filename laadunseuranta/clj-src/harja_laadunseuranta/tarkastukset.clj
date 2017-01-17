@@ -343,28 +343,36 @@
                   :tr_loppuosa (if viiva? loppuosa alkuosa)
                   :tr_loppuetaisyys (if viiva? loppuet alkuet)}))))))
 
+(defn- kasittele-pistemainen-tarkastusreitti
+  "Asettaa tieosoitteen paatepisteen (losa / let) nilliksi jos sama kuin lahtopiste (aosa / aet)"
+  [osoite]
+  (if (and (= (:aosa osoite)
+              (:losa osoite))
+           (= (:aet osoite)
+              (:let osoite)))
+    (-> osoite
+        (assoc :losa nil :let nil))
+    osoite))
+
 (defn luo-kantaan-tallennettava-tarkastus
   "Ottaa reittimerkintämuuntimen luoman tarkastuksen ja palauttaa mapin,
    jolla tarkastus voidaan lisätä kantaan.
 
    Reittimerkintämuuntimen luoma tarkastus koostuu joko yhdestä tai useammasta
-   sijaintipisteestä sen mukaan onko kyse pistemäisestä vai reitillisestä tarkastuksesta."
+   sijaintipisteestä sen mukaan onko kyse pistemäisestä vai reitillisestä tarkastuksesta
+   On tosin mahdollista, että myös reitillinen tarkastus on tallentunut vain yhdellä sijainnilla."
   [tarkastus kayttaja]
   (let [tarkastuksen-reitti (:sijainnit tarkastus)
         lahtopiste (:tr-osoite (first tarkastuksen-reitti))
         paatepiste (:tr-osoite (last tarkastuksen-reitti))
-        pistemainen-tarkastus? (= (count tarkastuksen-reitti) 1)
-        koko-tarkastuksen-tr-osoite (if pistemainen-tarkastus?
-                                      {:tie (:tie lahtopiste)
-                                      :aosa (:aosa lahtopiste)
-                                      :aet (:aet lahtopiste)
-                                      :losa nil
-                                      :let nil}
-                                      {:tie (:tie lahtopiste)
-                                       :aosa (:aosa lahtopiste)
-                                       :aet (:aet lahtopiste)
-                                       :losa (or (:losa paatepiste) (:aosa paatepiste))
-                                       :let (or (:let paatepiste) (:aet paatepiste))})
+        koko-tarkastuksen-tr-osoite {:tie (:tie lahtopiste)
+                                     :aosa (:aosa lahtopiste)
+                                     :aet (:aet lahtopiste)
+                                     ;; Reitillisessä tarkastuksessa alkupiste ja päätepiste ovat erit,
+                                     ;; pistemäisessä samat
+                                     :losa (or (:losa paatepiste) (:aosa paatepiste))
+                                     :let (or (:let paatepiste) (:aet paatepiste))}
+        koko-tarkastuksen-tr-osoite (kasittele-pistemainen-tarkastusreitti koko-tarkastuksen-tr-osoite)
         geometria (hae-tallennettavan-tarkastuksen-sijainti db tarkastus)]
     (assoc tarkastus
       :tarkastaja (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
