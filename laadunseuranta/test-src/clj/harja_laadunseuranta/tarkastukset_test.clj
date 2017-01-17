@@ -184,7 +184,6 @@
 
 ;; -------- Mittaukset --------
 
-
 (deftest kitka-laskettu-oikein
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
