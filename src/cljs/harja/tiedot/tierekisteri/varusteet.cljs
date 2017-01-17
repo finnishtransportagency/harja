@@ -66,7 +66,7 @@
           virhe! (t/send-async! ->VarusteHakuEpaonnistui)]
       (go
         (let [vastaus (<! (k/post! :hae-varusteita hakuehdot))]
-          (log "VASTAUS: " (pr-str vastaus))
+          (log "[TR] Varustehaun vastaus: " (pr-str vastaus))
           (if (or (k/virhe? vastaus)
                   (not (:onnistunut vastaus)))
             (virhe! vastaus)
@@ -83,7 +83,7 @@
   (process-event [{virhe :virhe} app]
     (log "[TR] Virhe haettaessa varusteita: " (pr-str virhe))
     (viesti/nayta! "Virhe haettaessa varusteita Tierekisteristä" :error)
-    app)
+    (assoc-in app [:hakuehdot :haku-kaynnissa?] false))
 
   ToimintoEpaonnistui
   (process-event [{{:keys [viesti vastaus]} :toiminto virhe :virhe :as tiedot} app]
