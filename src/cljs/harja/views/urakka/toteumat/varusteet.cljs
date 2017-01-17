@@ -274,9 +274,6 @@
              toteuma :varustetoteuma
              varustehaun-tiedot :varustehaku
              virhe :virhe}]
-
-      (log "---> varustehaun-tiedot" (pr-str varustehaun-tiedot))
-
       [:span
        (when virhe
          (yleiset/virheviesti-sailio virhe (fn [_] (e! (v/->VirheKasitelty)))))
