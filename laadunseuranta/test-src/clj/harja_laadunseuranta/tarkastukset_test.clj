@@ -17,6 +17,8 @@
              reittimerkinta)))
        reittimerkinnat))
 
+;; -------- Yleiset testit --------
+
 (deftest reittimerkinnat-tarkastuksiksi-havainnot-muuttuu
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
@@ -48,6 +50,140 @@
     (is (= (-> tarkastukset :reitilliset-tarkastukset first :vakiohavainnot)
            [17]))
     (is (every? #{17 20} (-> tarkastukset :pistemaiset-tarkastukset first :vakiohavainnot)))))
+
+(deftest kaikki-reittimerkinnat-tarkastuksiksi
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/monipuolinen-tarkastus))]
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 5))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 3))
+
+    ;; Liitteet lisätty oikein
+    (is (= (-> tarkastukset :pistemaiset-tarkastukset last :liitteet first) 1))))
+
+(deftest tarkastus-jossa-piste-ei-osu-tielle
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-piste-ei-osu-tielle))]
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+
+(deftest tarkastus-jossa-tie-vaihtuu
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-tie-vaihtuu))]
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+
+(deftest tarkastus-jossa-sijainti-puuttuu
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-sijainti-puuttuu))]
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+
+(deftest tarkastus-jossa-ajallinen-aukko
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-ajallinen-aukko))]
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+
+;; PENDING Ympärikääntymislogiikka disabloitu tällä hetkellä GPS:n epätarkkuudesta johtuen
+#_(deftest tarkastus-jossa-kaannytaan-ympari
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi (lisaa-reittimerkinnoille-mockattu-tieosoite testidata/tarkastus-jossa-kaannytaan-ympari))]
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+
+(deftest tarkastus-trvali-jossa-alkuosa-vaihtuu
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-alkuosa-vaihtuu))
+        tallennettava (luo-kantaan-tallennettava-tarkastus
+                        (first (:reitilliset-tarkastukset tarkastukset))
+                        {:kayttajanimi "jvh"})]
+    (is (= 1 (count (:reitilliset-tarkastukset tarkastukset))))
+    (is (= 20 (:tr_numero tallennettava)))
+    (is (= 10 (:tr_alkuosa tallennettava)))
+    (is (= 4924 (:tr_alkuetaisyys tallennettava)))
+    (is (= 11 (:tr_loppuosa tallennettava)))
+    (is (= 6349 (:tr_loppuetaisyys tallennettava)))))
+
+(deftest tarkastus-trvali-jossa-osoitteet-samat
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-kaikki-pisteet-samassa-sijainnissa))
+        tallennettava (luo-kantaan-tallennettava-tarkastus
+                        (first (:reitilliset-tarkastukset tarkastukset))
+                        {:kayttajanimi "jvh"})]
+    (is (= 1 (count (:reitilliset-tarkastukset tarkastukset))))
+    (is (= 20 (:tr_numero tallennettava)))
+    (is (= 10 (:tr_alkuosa tallennettava)))
+    (is (= 4924 (:tr_alkuetaisyys tallennettava)))
+    ;; Kaikki osoitteet olivat samat --> tallentuu pistemäisenä
+    (is (= nil))
+    (is (= nil))))
+
+(deftest tarkastus-trvali-jossa-osoitteet-samat
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-yksi-piste))
+        tallennettava (luo-kantaan-tallennettava-tarkastus
+                        (first (:reitilliset-tarkastukset tarkastukset))
+                        {:kayttajanimi "jvh"})]
+    (is (= 1 (count (:reitilliset-tarkastukset tarkastukset))))
+    (is (= 20 (:tr_numero tallennettava)))
+    (is (= 10 (:tr_alkuosa tallennettava)))
+    (is (= 4924 (:tr_alkuetaisyys tallennettava)))
+    (is (= nil))
+    (is (= nil))))
+
+;; -------- Laadunalitus --------
+
+(deftest tarkastus-jossa-jatkuva-laadunalitus
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-jatkuva-laadunalitus))]
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))
+
+    ;; Kitka huomioitu
+    (is (= (-> tarkastukset :reitilliset-tarkastukset first :talvihoitomittaus :kitka) 0.2))
+
+    ;; Koko tarkastus on merkitty laadunalitukseksi, koska sellainen löytyi osasta tarkastuspisteitä
+    (is (= (-> tarkastukset :reitilliset-tarkastukset first :laadunalitus) true))))
+
+;; --------Liittyvät havainnot --------
+
+(deftest tarkastus-jossa-liittyva-havainto
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-liittyvia-pistemaisia-merkintoja))]
+    ;; Yksi pistemäinen havainto, johon liitetty lisätietoja
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 1))
+    (is (= (:havainnot (first (:pistemaiset-tarkastukset tarkastukset)))
+           "Tässä on nyt jotain mätää\nTässä vielä toinen kuva"))
+    (is (true? (:laadunalitus (first (:pistemaiset-tarkastukset tarkastukset)))))
+    (is (= (:liitteet (first (:pistemaiset-tarkastukset tarkastukset)))
+           [1 2]))
+    ;; Muu osa (ei pistemäinen havainto eikö siihen liittyvät merkinnät) on yksi jatkuva havainto
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))))
+
+(deftest tarkastus-jossa-laadunalitus-ja-liittyva-merkinta
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-laadunalitus-ja-liittyva-merkinta))]
+    (is (true? (:laadunalitus (first (:pistemaiset-tarkastukset tarkastukset)))))))
+
+;; -------- Mittaukset --------
+
 
 (deftest kitka-laskettu-oikein
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
@@ -156,130 +292,3 @@
     (is (== (-> tarkastukset :reitilliset-tarkastukset first :soratiemittaus :sivukaltevuus) 3))
     (is (= (-> tarkastukset :reitilliset-tarkastukset second :soratiemittaus :sivukaltevuus) nil))
     (is (== (-> tarkastukset :reitilliset-tarkastukset last :soratiemittaus :sivukaltevuus) 3))))
-
-(deftest kaikki-reittimerkinnat-tarkastuksiksi
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
-                       (lisaa-reittimerkinnoille-mockattu-tieosoite
-                         testidata/monipuolinen-tarkastus))]
-    ;; Muunnettu määrällisesti oikein
-    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 5))
-    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 3))
-
-    ;; Liitteet lisätty oikein
-    (is (= (-> tarkastukset :pistemaiset-tarkastukset last :liitteet first) 1))))
-
-(deftest tarkastus-jossa-piste-ei-osu-tielle
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
-                       (lisaa-reittimerkinnoille-mockattu-tieosoite
-                         testidata/tarkastus-jossa-piste-ei-osu-tielle))]
-    ;; Muunnettu määrällisesti oikein
-    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
-    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
-
-(deftest tarkastus-jossa-tie-vaihtuu
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
-                       (lisaa-reittimerkinnoille-mockattu-tieosoite
-                         testidata/tarkastus-jossa-tie-vaihtuu))]
-    ;; Muunnettu määrällisesti oikein
-    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
-    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
-
-(deftest tarkastus-jossa-sijainti-puuttuu
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
-                       (lisaa-reittimerkinnoille-mockattu-tieosoite
-                         testidata/tarkastus-jossa-sijainti-puuttuu))]
-    ;; Muunnettu määrällisesti oikein
-    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
-    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
-
-(deftest tarkastus-jossa-ajallinen-aukko
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
-                       (lisaa-reittimerkinnoille-mockattu-tieosoite
-                         testidata/tarkastus-jossa-ajallinen-aukko))]
-    ;; Muunnettu määrällisesti oikein
-    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
-    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
-
-;; PENDING Ympärikääntymislogiikka disabloitu tällä hetkellä GPS:n epätarkkuudesta johtuen
-#_(deftest tarkastus-jossa-kaannytaan-ympari
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi (lisaa-reittimerkinnoille-mockattu-tieosoite testidata/tarkastus-jossa-kaannytaan-ympari))]
-    ;; Muunnettu määrällisesti oikein
-    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
-    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
-
-(deftest tarkastus-trvali-jossa-alkuosa-vaihtuu
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
-                       (lisaa-reittimerkinnoille-mockattu-tieosoite
-                         testidata/tarkastus-jossa-alkuosa-vaihtuu))
-        tallennettava (luo-kantaan-tallennettava-tarkastus
-                        (first (:reitilliset-tarkastukset tarkastukset))
-                        {:kayttajanimi "jvh"})]
-    (is (= 1 (count (:reitilliset-tarkastukset tarkastukset))))
-    (is (= 20 (:tr_numero tallennettava)))
-    (is (= 10 (:tr_alkuosa tallennettava)))
-    (is (= 4924 (:tr_alkuetaisyys tallennettava)))
-    (is (= 11 (:tr_loppuosa tallennettava)))
-    (is (= 6349 (:tr_loppuetaisyys tallennettava)))))
-
-(deftest tarkastus-trvali-jossa-osoitteet-samat
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
-                       (lisaa-reittimerkinnoille-mockattu-tieosoite
-                         testidata/tarkastus-jossa-kaikki-pisteet-samassa-sijainnissa))
-        tallennettava (luo-kantaan-tallennettava-tarkastus
-                        (first (:reitilliset-tarkastukset tarkastukset))
-                        {:kayttajanimi "jvh"})]
-    (is (= 1 (count (:reitilliset-tarkastukset tarkastukset))))
-    (is (= 20 (:tr_numero tallennettava)))
-    (is (= 10 (:tr_alkuosa tallennettava)))
-    (is (= 4924 (:tr_alkuetaisyys tallennettava)))
-    ;; Kaikki osoitteet olivat samat --> tallentuu pistemäisenä
-    (is (= nil))
-    (is (= nil))))
-
-(deftest tarkastus-trvali-jossa-osoitteet-samat
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
-                       (lisaa-reittimerkinnoille-mockattu-tieosoite
-                         testidata/tarkastus-jossa-yksi-piste))
-        tallennettava (luo-kantaan-tallennettava-tarkastus
-                        (first (:reitilliset-tarkastukset tarkastukset))
-                        {:kayttajanimi "jvh"})]
-    (is (= 1 (count (:reitilliset-tarkastukset tarkastukset))))
-    (is (= 20 (:tr_numero tallennettava)))
-    (is (= 10 (:tr_alkuosa tallennettava)))
-    (is (= 4924 (:tr_alkuetaisyys tallennettava)))
-    (is (= nil))
-    (is (= nil))))
-
-(deftest tarkastus-jossa-jatkuva-laadunalitus
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
-                       (lisaa-reittimerkinnoille-mockattu-tieosoite
-                         testidata/tarkastus-jossa-jatkuva-laadunalitus))]
-    ;; Muunnettu määrällisesti oikein
-    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
-    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))
-
-    ;; Kitka huomioitu
-    (is (= (-> tarkastukset :reitilliset-tarkastukset first :talvihoitomittaus :kitka) 0.2))
-
-    ;; Koko tarkastus on merkitty laadunalitukseksi, koska sellainen löytyi osasta tarkastuspisteitä
-    (is (= (-> tarkastukset :reitilliset-tarkastukset first :laadunalitus) true))))
-
-(deftest tarkastus-jossa-liittyva-havainto
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
-                       (lisaa-reittimerkinnoille-mockattu-tieosoite
-                         testidata/tarkastus-jossa-liittyvia-pistemaisia-merkintoja))]
-    ;; Yksi pistemäinen havainto, johon liitetty lisätietoja
-    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 1))
-    (is (= (:havainnot (first (:pistemaiset-tarkastukset tarkastukset)))
-           "Tässä on nyt jotain mätää\nTässä vielä toinen kuva"))
-    (is (true? (:laadunalitus (first (:pistemaiset-tarkastukset tarkastukset)))))
-    (is (= (:liitteet (first (:pistemaiset-tarkastukset tarkastukset)))
-           [1 2]))
-    ;; Muu osa (ei pistemäinen havainto eikö siihen liittyvät merkinnät) on yksi jatkuva havainto
-    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))))
-
-(deftest tarkastus-jossa-laadunalitus
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
-                       (lisaa-reittimerkinnoille-mockattu-tieosoite
-                         testidata/tarkastus-jossa-laadunalitus-ja-liittyva-merkinta))]
-    (is (true? (:laadunalitus (first (:pistemaiset-tarkastukset tarkastukset)))))))
