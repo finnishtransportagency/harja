@@ -11,8 +11,8 @@
                  [prismatic/schema "1.0.4"]
                  [org.clojure/core.async "0.2.374"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
-                 [com.cognitect/transit-cljs "0.8.237"]
-                 [com.cognitect/transit-clj "0.8.285"]
+                 [com.cognitect/transit-cljs "0.8.239"]
+                 [com.cognitect/transit-clj "0.8.297"]
 
                  ;;;;;;; Palvelin ;;;;;;;
 
