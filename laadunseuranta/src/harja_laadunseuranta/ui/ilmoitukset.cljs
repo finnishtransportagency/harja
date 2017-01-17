@@ -8,10 +8,10 @@
 (defn ilmoituskomponentti
   "Piirtää nykyisen ilmoituksen"
   [{:keys [ilmoitus-atom lomakedata havainnon-id
-           taydenna-havaintoa-painettu-fn] :as tiedot}]
+           taydenna-havaintoa-painettu-fn ilmoitukseen-liittyva-havainto-id-atom] :as tiedot}]
   (let [piirrettava-ilmoitus (atom @ilmoitus-atom)]
     (fn [{:keys [ilmoitus-atom lomakedata havainnon-id
-                 taydenna-havaintoa-painettu-fn] :as tiedot}]
+                 taydenna-havaintoa-painettu-fn ilmoitukseen-liittyva-havainto-id-atom] :as tiedot}]
 
       (let [taydennettava? (boolean
                              (and lomakedata havainnon-id (not= (:tyyppi @ilmoitus-atom) :virhe)))]
@@ -21,7 +21,8 @@
           ;; muuten piirretään aina vanha jotta transitiossa alkaessa sisältö ei katoa
           (reset! piirrettava-ilmoitus @ilmoitus-atom))
         (when @ilmoitus-atom
-          (tiedot/tyhjenna-ilmoitus-nakymisajan-jalkeen @ilmoitus-atom ilmoitus-atom))
+          (tiedot/tyhjenna-ilmoitus-nakymisajan-jalkeen @ilmoitus-atom ilmoitus-atom
+                                                        ilmoitukseen-liittyva-havainto-id-atom))
 
         [:div.ilmoitukset {:class (str (when-let [tyyppi (:tyyppi @piirrettava-ilmoitus)]
                                          (str "ilmoitus-tyyppi-" (name tyyppi)))

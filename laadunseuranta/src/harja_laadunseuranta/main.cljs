@@ -37,8 +37,8 @@
      {:ilmoitus-atom s/ilmoitus
       :lomakedata @s/havaintolomakedata
       :havainnon-id @s/ilmoitukseen-liittyva-havainto-id
-      :taydenna-havaintoa-painettu-fn
-      ilmoitukset-tiedot/ilmoitusta-painettu!}]
+      :taydenna-havaintoa-painettu-fn ilmoitukset-tiedot/ilmoitusta-painettu!
+      :ilmoitukseen-liittyva-havainto-id-atom s/ilmoitukseen-liittyva-havainto-id}]
 
     (when @s/havaintolomake-auki?
       [havaintolomake])
