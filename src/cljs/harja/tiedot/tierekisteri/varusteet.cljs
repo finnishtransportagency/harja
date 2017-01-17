@@ -55,6 +55,10 @@
 
 (defrecord VarusteToteumatMuuttuneet [varustetoteumat])
 
+(defn laheta-viivastyneesti [async-fn]
+  ;; hackish ratkaisu, jolla varmistetaan, että tämän funktion käsittely päättyy ennen kuin send-async menee läpi.
+  (.setTimeout js/window (async-fn) 1))
+
 (extend-protocol t/Event
   AsetaVarusteidenHakuehdot
   (process-event [{ehdot :hakuehdot} app]
@@ -89,13 +93,13 @@
   (process-event [{{:keys [viesti vastaus]} :toiminto virhe :virhe :as tiedot} app]
     (log "[TR] Virhe suoritettaessa toimintoa. Virhe:" (pr-str virhe) ". Vastaus: " (pr-str vastaus) ".")
     (viesti/nayta! viesti :warning)
-    ((t/send-async! (partial ->VarusteToteumatMuuttuneet vastaus)))
+    (laheta-viivastyneesti #(t/send-async! (partial ->VarusteToteumatMuuttuneet vastaus)))
     ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
     (hakutulokset app nil nil))
 
   ToimintoOnnistui
   (process-event [{{:keys [vastaus]} :toiminto :as tiedot} app]
-    ((t/send-async! (partial ->VarusteToteumatMuuttuneet vastaus)))
+    (laheta-viivastyneesti #(t/send-async! (partial ->VarusteToteumatMuuttuneet vastaus)))
     ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
     (hakutulokset app nil nil))
 

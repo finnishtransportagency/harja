@@ -41,7 +41,7 @@
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept]]))
 
-(def tr-kaytossa? false)
+(def tr-kaytossa? true)
 
 (def nayta-max-toteumaa 500)
 
@@ -227,8 +227,6 @@
      [napit/takaisin "Takaisin varusteluetteloon"
       #(e! (v/->TyhjennaValittuToteuma))]
 
-
-
      [lomake/lomake
       {:otsikko (case (:toiminto varustetoteuma)
                   :lisatty "Uusi varuste"
@@ -254,13 +252,12 @@
       varustetoteuma]]))
 
 (defn kasittele-varustehaun-event [e!]
-  (let [vhe! (t/wrap-path e! :varustehaku)]
+  (let [vhe! (t/wrap-path e! :varustehaku)
+        pe! e!]
     (intercept e!
                (varusteet/VarusteToteumatMuuttuneet
                  {varustetoteumat :varustetoteumat :as t}
-                 (do
-                   (e! (v/->VarustetoteumatMuuttuneet varustetoteumat))
-                   (vhe! t)))
+                 (pe! (v/->VarustetoteumatMuuttuneet varustetoteumat)))
                (:default e (vhe! e)))))
 
 (defn- varusteet* [e! varusteet]
@@ -275,7 +272,8 @@
              naytettavat-toteumat :naytettavat-toteumat
              toteuma :varustetoteuma
              varustehaun-tiedot :varustehaku
-             virhe :virhe}]
+             virhe :virhe
+             :as app}]
       [:span
        (when virhe
          (yleiset/virheviesti-sailio virhe (fn [_] (e! (v/->VirheKasitelty)))))
