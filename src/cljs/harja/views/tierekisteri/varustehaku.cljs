@@ -46,12 +46,13 @@
        :valinta-arvo first}
       {:nimi :tierekisteriosoite
        :otsikko "Tierekisteriosoite"
-       :tyyppi :tierekisteriosoite}
+       :tyyppi :tierekisteriosoite
+       :pakollinen? (str/blank? varusteentunniste)}
       {:nimi :tunniste
        :otsikko "Varusteen tunniste"
-       :tyyppi :string}]
+       :tyyppi :string
+       :pakollinen? (not (tr-ok? tr-osoite))}]
      hakuehdot]))
-
 
 (defn poista-varuste [e! tietolaji tunniste varuste]
   (yleiset/varmista-kayttajalta
