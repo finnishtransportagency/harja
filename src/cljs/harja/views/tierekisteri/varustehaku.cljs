@@ -11,7 +11,8 @@
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [reagent.core :as r]))
 
 (defn oikeus-varusteiden-muokkaamiseen? []
   (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
@@ -47,6 +48,7 @@
       {:nimi :tierekisteriosoite
        :otsikko "Tierekisteriosoite"
        :tyyppi :tierekisteriosoite
+       :sijainti (atom nil)
        :pakollinen? (str/blank? varusteentunniste)}
       {:nimi :tunniste
        :otsikko "Varusteen tunniste"
