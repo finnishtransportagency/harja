@@ -44,16 +44,7 @@
                                      :yllapitokohde-id yllapitokohde-id
                                      :maaramuutokset maaramuutokset}))
 
-(defn kuvaile-kohteen-tila [tila]
-  (case tila
-    :kohde-aloitettu "Kohde aloitettu"
-    :paallystys-aloitettu "Päällystys aloitettu"
-    :paallystys-valmis "Päällystys valmis"
-    :tiemerkinta-aloitettu "Tiemerkintä aloitettu"
-    :tiemerkinta-valmis "Tiemerkintä valmis"
-    :kohde-valmis "Kohde valmis"
-    :ei-aloitettu "Ei aloitettu"
-    "Ei tiedossa"))
+
 
 (defn paivita-yllapitokohde! [kohteet-atom id funktio & argumentit]
   (swap! kohteet-atom
@@ -213,7 +204,7 @@
                          (comp
                            (mapcat (fn [kohde]
                                      (keep (fn [kohdeosa]
-                                             (assoc kohdeosa :yllapitokohde kohde
+                                             (assoc kohdeosa :yllapitokohde (dissoc kohde :kohdeosat)
                                                              :tyyppi-kartalla (:yllapitokohdetyotyyppi kohde)
                                                              :tila-kartalla (:tila-kartalla kohde)
                                                              :yllapitokohde-id (:id kohde)))

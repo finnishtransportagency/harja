@@ -17,11 +17,11 @@
   (:require [clojure.string :as string]
             [harja.pvm :as pvm]
             [harja.loki :as log :refer [log]]
-            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.fmt :as fmt]
             [clojure.string :as str]))
@@ -111,7 +111,7 @@
               {:otsikko "Toimenpide" :tyyppi :string
                :hae #(:toimenpide %)}
               {:otsikko "Tila" :tyyppi :string
-               :hae #(yllapitokohteet/kuvaile-kohteen-tila (get-in % [:yllapitokohde :tila]))}
+               :hae #(yllapitokohteet-domain/kuvaile-kohteen-tila (get-in % [:yllapitokohde :tila]))}
               (when (get-in yllapitokohdeosa [:yllapitokohde aloitus])
                 {:otsikko "Aloitettu" :tyyppi :pvm-aika
                  :hae #(get-in % [:yllapitokohde aloitus])})

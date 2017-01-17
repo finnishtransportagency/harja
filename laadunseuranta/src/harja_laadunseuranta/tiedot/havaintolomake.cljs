@@ -22,6 +22,8 @@
                        :let nil}
            :aikaleima (l/local-now)
            :laadunalitus? false
+           :liittyy-havaintoon nil
+           :liittyy-varmasti-tiettyyn-havaintoon? false
            :kuvaus ""
            :kuva nil
            :esikatselukuva nil})
@@ -40,7 +42,6 @@
                              :losa nil
                              :let nil})
              :aikaleima (l/local-now)
-             :liittyy-havaintoon nil
              :laadunalitus? false
              :kuvaus ""}))
   s/havaintolomakedata)
@@ -52,7 +53,7 @@
            :tarkastusajo-id @s/tarkastusajo-id
            :lomakedata @s/havaintolomakedata
            :epaonnistui-fn reitintallennus/merkinta-epaonnistui})
-    (ilmoitukset/ilmoita "Lomake tallennettu!" s/ilmoitus)
+    (ilmoitukset/ilmoita "Lomake tallennettu!" s/ilmoitus {:tyyppi :onnistui})
     (kartta/lisaa-kirjausikoni "!")
     (tyhjenna-lomake!)
     (sulje-lomake!)))

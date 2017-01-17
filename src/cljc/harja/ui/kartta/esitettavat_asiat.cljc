@@ -2,12 +2,14 @@
   (:require [clojure.string :as str]
     #?(:cljs [harja.ui.openlayers.edistymispalkki :as edistymispalkki])
     #?(:cljs [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
-       :clj [taoensso.timbre :as log])
-      [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
-      [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
-      [harja.domain.ilmoitukset :as ilmoitukset]
-      [harja.geo :as geo]
-      [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]))
+       :clj
+            [taoensso.timbre :as log])
+            [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
+            [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.ilmoitukset :as ilmoitukset]
+            [harja.geo :as geo]
+            [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]))
 
 #?(:clj (defn log [& things]
           (log/info things)))
@@ -161,8 +163,8 @@
          koordinaatit (or (:coordinates geo) (:points geo) (mapcat :points (:lines geo)))]
      (if (= :geometry-collection tyyppi)
        (merge
-        (maarittele-viiva valittu? merkit viivat)
-        asia)
+         (maarittele-viiva valittu? merkit viivat)
+         asia)
        (when (not (empty? koordinaatit))
          (cond
            ;; Näyttää siltä että joskus saattaa löytyä LINESTRINGejä, joilla on vain yksi piste
@@ -170,21 +172,21 @@
            (or (= :point tyyppi) (= 1 (count koordinaatit)))
            (when merkit
              (merge
-              (maarittele-piste valittu? (or pisteen-ikoni merkit))
-              {:type        :merkki
-               :coordinates (flatten koordinaatit)}))        ;; [x y] -> [x y] && [[x y]] -> [x y]
+               (maarittele-piste valittu? (or pisteen-ikoni merkit))
+               {:type :merkki
+                :coordinates (flatten koordinaatit)})) ;; [x y] -> [x y] && [[x y]] -> [x y]
 
            (= :line tyyppi)
            (merge
-            (maarittele-viiva valittu? merkit viivat)
-            {:type   :viiva
-             :points koordinaatit})
+             (maarittele-viiva valittu? merkit viivat)
+             {:type :viiva
+              :points koordinaatit})
 
            (= :multiline tyyppi)
            (merge
-            (maarittele-viiva valittu? merkit viivat)
-            {:type   :moniviiva
-             :lines (:lines geo)})))))))
+             (maarittele-viiva valittu? merkit viivat)
+             {:type :moniviiva
+              :lines (:lines geo)})))))))
 
 ;;;;;;
 
@@ -194,10 +196,10 @@
   ;; jokin väri myös jutuille, joille sellaista ei ole (vielä!) määritelty.
   (if (sequential? viivat)
     (->> viivat
-        (mapv #(assoc % :width (or (:width %) ulkoasu/+normaali-leveys+)
-                        :color (or (:color %) ulkoasu/+normaali-vari+)))
-        (sort-by :width >)
-        (mapv :color))
+         (mapv #(assoc % :width (or (:width %) ulkoasu/+normaali-leveys+)
+                         :color (or (:color %) ulkoasu/+normaali-vari+)))
+         (sort-by :width >)
+         (mapv :color))
 
     (:color viivat)))
 
@@ -312,7 +314,8 @@
 
 (defn- yllapitokohde [tyyppi yllapitokohde valittu? teksti]
   (let [tila (:tila-kartalla yllapitokohde)
-        tila-teksti (str ", " ((fnil name "suunniteltu") tila))
+        tila-teksti (str/lower-case (yllapitokohteet-domain/kuvaile-kohteen-tila-kartalla
+                                      (:tila-kartalla yllapitokohde)))
         ikoni (ulkoasu/yllapidon-ikoni)
         viiva (ulkoasu/yllapidon-viiva valittu? (:avoin? yllapitokohde) tila tyyppi)]
     (assoc yllapitokohde
@@ -432,7 +435,7 @@
   "Antaa toimenpiteen nimelle sopivan selitteen"
   [toimenpide]
   (let [[viivat _] (tehtavan-viivat-ja-nuolitiedosto
-                    [toimenpide] false)]
+                     [toimenpide] false)]
     {:nimi toimenpide :teksti toimenpide
      :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}))
 
@@ -484,7 +487,7 @@
 (defn tyokoneen-selite [tehtavat]
   {:teksti (tehtavan-nimi tehtavat)
    :vari (viivojen-varit-leveimmasta-kapeimpaan
-          (first (tehtavan-viivat-ja-nuolitiedosto tehtavat false)))})
+           (first (tehtavan-viivat-ja-nuolitiedosto tehtavat false)))})
 
 (defmethod asia-kartalle :tyokone [tyokone valittu?]
   (let [selite-teksti (tehtavan-nimi (:tehtavat tyokone))

@@ -148,6 +148,7 @@
                                   "paikkaus" tk/paikkaus))
       (let [vastaus (into []
                           (comp
+                            (map konv/alaviiva->rakenne)
                             (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
                             (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
                             (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
@@ -166,6 +167,9 @@
                               "paikkaus" (q/hae-paikkaukset-historiakuvaan db
                                                                            (konv/sql-date loppu)
                                                                            (konv/sql-date alku)))))
+            vastaus (konv/sarakkeet-vektoriin
+                      vastaus
+                      {:yhteyshenkilo :yhteyshenkilot})
             osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db vastaus)
             vastaus (mapv #(assoc %
                              :pituus
