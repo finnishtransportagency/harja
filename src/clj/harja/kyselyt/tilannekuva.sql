@@ -1,3 +1,6 @@
+-- Näiden kyselyiden tulisi pääsääntöisesti palauttaa data samassa muodossa kuin asioiden
+-- omissa näkymissä, jotta tiedot saadaan näytettyä oikein kartan infopaneelissa.
+
 -- name: hae-ilmoitukset
 SELECT
   i.id,
@@ -89,9 +92,17 @@ SELECT
   l.tr_alkuosa,
   l.tr_alkuetaisyys,
   l.tr_loppuosa,
-  l.tr_loppuetaisyys
+  l.tr_loppuetaisyys,
+  ypk.nimi AS yllapitokohde_nimi,
+  ypk.kohdenumero AS yllapitokohde_numero,
+  ypk.tr_numero AS yllapitokohde_tr_numero,
+  ypk.tr_alkuosa AS yllapitokohde_tr_alkuosa,
+  ypk.tr_alkuetaisyys AS yllapitokohde_tr_alkuetaisyys,
+  ypk.tr_loppuosa AS yllapitokohde_tr_loppuosa,
+  ypk.tr_loppuetaisyys AS yllapitokohde_tr_loppuetaisyys
 FROM laatupoikkeama l
   JOIN kayttaja k ON l.luoja = k.id
+  LEFT JOIN yllapitokohde ypk ON l.yllapitokohde = ypk.id
 WHERE (l.urakka IN (:urakat) OR l.urakka IS NULL)
       AND (l.aika BETWEEN :alku AND :loppu OR
            l.kasittelyaika BETWEEN :alku AND :loppu) AND
@@ -202,7 +213,6 @@ SELECT
   ypk.id,
   pi.id                                 AS "paallystysilmoitus-id",
   pi.tila                               AS "paallystysilmoitus-tila",
-  pi.muutoshinta,
   pai.id                                AS "paikkausilmoitus-id",
   pai.tila                              AS "paikkausilmoitus-tila",
   pai.toteutunut_hinta                  AS "toteutunut-hinta",
@@ -232,7 +242,14 @@ SELECT
   ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
   ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
   o.nimi                                AS "urakoitsija",
-  u.nimi AS "urakka"
+  u.nimi AS "urakka",
+  yh.id AS yhteyshenkilo_id,
+  yh.etunimi AS yhteyshenkilo_etunimi,
+  yh.sukunimi AS yhteyshenkilo_sukunimi,
+  yh.tyopuhelin AS yhteyshenkilo_tyopuhelin,
+  yh.matkapuhelin AS yhteyshenkilo_matkapuhelin,
+  yh.sahkoposti AS yhteyshenkilo_sahkoposti,
+  yh_u.rooli as yhteyshenkilo_rooli
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -240,6 +257,8 @@ FROM yllapitokohde ypk
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
+  LEFT JOIN yhteyshenkilo_urakka yh_u ON yh_u.urakka = ypk.urakka
+  LEFT JOIN yhteyshenkilo yh ON yh.id = yh_u.yhteyshenkilo
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paallystys'
       AND (ypk.aikataulu_kohde_valmis IS NULL OR
@@ -252,7 +271,6 @@ SELECT
   ypk.id,
   pi.id                                 AS "paallystysilmoitus-id",
   pi.tila                               AS "paallystysilmoitus-tila",
-  pi.muutoshinta,
   pai.id                                AS "paikkausilmoitus-id",
   pai.tila                              AS "paikkausilmoitus-tila",
   pai.toteutunut_hinta                  AS "toteutunut-hinta",
@@ -282,7 +300,14 @@ SELECT
   ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
   ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
   o.nimi                                AS "urakoitsija",
-  u.nimi AS "urakka"
+  u.nimi AS "urakka",
+  yh.id AS yhteyshenkilo_id,
+  yh.etunimi AS yhteyshenkilo_etunimi,
+  yh.sukunimi AS yhteyshenkilo_sukunimi,
+  yh.tyopuhelin AS yhteyshenkilo_tyopuhelin,
+  yh.matkapuhelin AS yhteyshenkilo_matkapuhelin,
+  yh.sahkoposti AS yhteyshenkilo_sahkoposti,
+  yh_u.rooli as yhteyshenkilo_rooli
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -290,6 +315,8 @@ FROM yllapitokohde ypk
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
+  LEFT JOIN yhteyshenkilo_urakka yh_u ON yh_u.urakka = ypk.urakka
+  LEFT JOIN yhteyshenkilo yh ON yh.id = yh_u.yhteyshenkilo
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paallystys'
       AND (ypk.aikataulu_kohde_alku < :loppu
@@ -302,7 +329,6 @@ SELECT
   ypk.id,
   pi.id                                 AS "paallystysilmoitus-id",
   pi.tila                               AS "paallystysilmoitus-tila",
-  pi.muutoshinta,
   pai.id                                AS "paikkausilmoitus-id",
   pai.tila                              AS "paikkausilmoitus-tila",
   pai.toteutunut_hinta                  AS "toteutunut-hinta",
@@ -332,7 +358,14 @@ SELECT
   ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
   ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
   o.nimi                                AS "urakoitsija",
-  u.nimi AS "urakka"
+  u.nimi AS "urakka",
+  yh.id AS yhteyshenkilo_id,
+  yh.etunimi AS yhteyshenkilo_etunimi,
+  yh.sukunimi AS yhteyshenkilo_sukunimi,
+  yh.tyopuhelin AS yhteyshenkilo_tyopuhelin,
+  yh.matkapuhelin AS yhteyshenkilo_matkapuhelin,
+  yh.sahkoposti AS yhteyshenkilo_sahkoposti,
+  yh_u.rooli as yhteyshenkilo_rooli
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -340,6 +373,8 @@ FROM yllapitokohde ypk
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
+  LEFT JOIN yhteyshenkilo_urakka yh_u ON yh_u.urakka = ypk.urakka
+  LEFT JOIN yhteyshenkilo yh ON yh.id = yh_u.yhteyshenkilo
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paikkaus'
       AND (pai.tila :: TEXT != 'valmis' OR
@@ -352,7 +387,6 @@ SELECT
   ypk.id,
   pi.id                                 AS "paallystysilmoitus-id",
   pi.tila                               AS "paallystysilmoitus-tila",
-  pi.muutoshinta,
   pai.id                                AS "paikkausilmoitus-id",
   pai.tila                              AS "paikkausilmoitus-tila",
   pai.toteutunut_hinta                  AS "toteutunut-hinta",
@@ -382,7 +416,14 @@ SELECT
   ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
   ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
   o.nimi                                AS "urakoitsija",
-  u.nimi AS "urakka"
+  u.nimi AS "urakka",
+  yh.id AS yhteyshenkilo_id,
+  yh.etunimi AS yhteyshenkilo_etunimi,
+  yh.sukunimi AS yhteyshenkilo_sukunimi,
+  yh.tyopuhelin AS yhteyshenkilo_tyopuhelin,
+  yh.matkapuhelin AS yhteyshenkilo_matkapuhelin,
+  yh.sahkoposti AS yhteyshenkilo_sahkoposti,
+  yh_u.rooli as yhteyshenkilo_rooli
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -390,6 +431,8 @@ FROM yllapitokohde ypk
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
+  LEFT JOIN yhteyshenkilo_urakka yh_u ON yh_u.urakka = ypk.urakka
+  LEFT JOIN yhteyshenkilo yh ON yh.id = yh_u.yhteyshenkilo
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paikkaus'
       AND (pai.aloituspvm < :loppu AND (pai.valmispvm_kohde IS NULL OR pai.valmispvm_kohde > :alku));

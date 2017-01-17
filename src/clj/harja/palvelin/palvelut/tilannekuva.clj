@@ -77,7 +77,7 @@
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.domain.tierekisteri :as tr]
-            [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]))
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]))
 
 (defn tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
@@ -145,6 +145,7 @@
                                   "paikkaus" tk/paikkaus))
       (let [vastaus (into []
                           (comp
+                            (map konv/alaviiva->rakenne)
                             (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
                             (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
                             (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
@@ -163,7 +164,10 @@
                               "paikkaus" (q/hae-paikkaukset-historiakuvaan db
                                                                            (konv/sql-date loppu)
                                                                            (konv/sql-date alku)))))
-            osien-pituudet-tielle (yllapitokohteet/laske-osien-pituudet db vastaus)
+            vastaus (konv/sarakkeet-vektoriin
+                      vastaus
+                      {:yhteyshenkilo :yhteyshenkilot})
+            osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db vastaus)
             vastaus (mapv #(assoc %
                              :pituus
                              (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))

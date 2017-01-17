@@ -19,6 +19,7 @@
                                     :sopimus-id sopimus-id
                                     :vuosi vuosi}))
 
+
 (defn tallenna-yllapitokohteet! [urakka-id sopimus-id vuosi kohteet]
   (k/post! :tallenna-yllapitokohteet {:urakka-id urakka-id
                                       :sopimus-id sopimus-id
@@ -31,16 +32,19 @@
                                         :yllapitokohde-id yllapitokohde-id
                                         :osat osat}))
 
-(defn kuvaile-kohteen-tila [tila]
-  (case tila
-    :kohde-aloitettu "Kohde aloitettu"
-    :paallystys-aloitettu "Päällystys aloitettu"
-    :paallystys-valmis "Päällystys valmis"
-    :tiemerkinta-aloitettu "Tiemerkintä aloitettu"
-    :tiemerkinta-valmis "Tiemerkintä valmis"
-    :kohde-valmis "Kohde valmis"
-    :ei-aloitettu "Ei aloitettu"
-    "Ei tiedossa"))
+(defn hae-maaramuutokset [urakka-id yllapitokohde-id]
+  (k/post! :hae-maaramuutokset {:urakka-id urakka-id
+                                :yllapitokohde-id yllapitokohde-id}))
+
+(defn tallenna-maaramuutokset! [{:keys [urakka-id yllapitokohde-id maaramuutokset
+                                        sopimus-id vuosi]}]
+  (k/post! :tallenna-maaramuutokset {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi vuosi
+                                     :yllapitokohde-id yllapitokohde-id
+                                     :maaramuutokset maaramuutokset}))
+
+
 
 (defn paivita-yllapitokohde! [kohteet-atom id funktio & argumentit]
   (swap! kohteet-atom
@@ -202,7 +206,7 @@
                          (comp
                            (mapcat (fn [kohde]
                                      (keep (fn [kohdeosa]
-                                             (assoc kohdeosa :yllapitokohde kohde
+                                             (assoc kohdeosa :yllapitokohde (dissoc kohde :kohdeosat)
                                                              :tyyppi-kartalla (:yllapitokohdetyotyyppi kohde)
                                                              :tila-kartalla (:tila-kartalla kohde)
                                                              :yllapitokohde-id (:id kohde)))

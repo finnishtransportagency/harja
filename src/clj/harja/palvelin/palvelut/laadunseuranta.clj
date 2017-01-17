@@ -20,6 +20,7 @@
 
             [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.domain.oikeudet :as oikeudet]
             [clojure.core.async :as async]))
 
@@ -116,18 +117,37 @@
               (map #(assoc % :laji (keyword (:laji %)))))
         (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu))))
 
+(defn- vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
+  [db sanktiolaji sanktiotyypin-id]
+  (let [mahdolliset-sanktiotyypit (into #{}
+                                        (map :id (sanktiot/hae-sanktiotyyppi-sanktiolajilla
+                                                   db {:sanktiolaji (name sanktiolaji)})))]
+    (when-not (mahdolliset-sanktiotyypit sanktiotyypin-id)
+      (throw (SecurityException. (str "Sanktiolaji" sanktiolaji " ei mahdollinen sanktiotyypille "
+                                      sanktiotyypin-id))))))
+
+(defn vaadi-sanktio-kuuluu-urakkaan [db urakka-id sanktio-id]
+  "Tarkistaa, että sanktio kuuluu annettuun urakkaan"
+  (let [sanktion-urakka (:urakka (first (sanktiot/hae-sanktion-urakka-id db {:sanktioid sanktio-id})))]
+    (when-not (= sanktion-urakka urakka-id)
+      (throw (SecurityException. (str "Sanktio " sanktio-id" ei kuulu valittuun urakkaan "
+                                      urakka-id " vaan urakkaan " sanktion-urakka))))))
+
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio
                    toimenpideinstanssi vakiofraasi] :as sanktio} laatupoikkeama urakka]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaon " laatupoikkeama)
   (log/debug "LAJI ON: " (pr-str laji))
-  (let [params {:perintapvm (konv/sql-timestamp perintapvm)
+  (when id (vaadi-sanktio-kuuluu-urakkaan db urakka id))
+  (let [sanktiotyyppi (if (:id tyyppi)
+                        (:id tyyppi)
+                        (when laji
+                          (:id (first (sanktiot/hae-sanktiotyyppi-sanktiolajilla db {:sanktiolaji (name laji)})))))
+        _ (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi)
+        params {:perintapvm (konv/sql-timestamp perintapvm)
                 :ryhma (when laji (name laji))
                 ;; hoitourakassa sanktiotyyppi valitaan kälistä, ylläpidosta päätellään implisiittisesti
-                :tyyppi (if (:id tyyppi)
-                          (:id tyyppi)
-                          (when laji
-                            (sanktiot/hae-sanktiotyyppi-sanktiolajilla db {:sanktiolaji (name laji)})))
+                :tyyppi sanktiotyyppi
                 :vakiofraasi (when vakiofraasi (name vakiofraasi))
                 :tpi_id toimenpideinstanssi
                 :urakka urakka
@@ -306,7 +326,8 @@
   (log/debug "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama)
             ", urakassa " urakka)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka)
-
+  (when (:yllapitokohde laatupoikkeama)
+    (yllapitokohteet-yleiset/vaadi-yllapitokohde-kuuluu-urakkaan db urakka (:yllapitokohde laatupoikkeama)))
   (jdbc/with-db-transaction [c db]
     (let [id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"))]
 
