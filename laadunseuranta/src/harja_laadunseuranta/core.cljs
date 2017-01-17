@@ -59,7 +59,12 @@
   (dom/kuuntele-body-klikkauksia))
 
 (defn- kasittele-sivun-nakyvyysmuutos []
-  (.log js/console "Näkyvyys muuttui: " (pr-str js/document.hidden)))
+  (let [piilossa? js/document.hidden]
+    (when piilossa?
+      (ilmoitukset/ilmoita
+       "Pidä sovellus näkyvillä, muuten merkinnät eivät tallennu!"
+       sovellus/ilmoitus
+       {:tyyppi :varoitus}))))
 
 (defn- kuuntele-sivun-nakyvyytta []
   (.addEventListener js/document "visibilitychange" kasittele-sivun-nakyvyysmuutos))
