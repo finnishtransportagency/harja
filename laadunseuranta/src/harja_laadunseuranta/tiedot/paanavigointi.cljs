@@ -441,16 +441,17 @@
      :tr-osoite @s/tr-osoite
      :havainto-avain avain
      :havainto-kirjattu-fn (fn [kirjattu-havainto]
-                             (lisaa-liittyva-havainto! s/liittyvat-havainnot kirjattu-havainto)
                              (if (@s/jatkuvat-havainnot avain)
                                (ilmoitukset/ilmoita
                                  (str (or (:nimi mittaus) nimi) " alkaa")
                                  s/ilmoitus)
-                               (ilmoitukset/ilmoita
-                                 (str (or (:nimi mittaus) nimi) " päättyy")
-                                 s/ilmoitus
-                                 {:tyyppi :onnistui
-                                  :taydennettavan-havainnon-id (:id kirjattu-havainto)})))}))
+                               (do
+                                 (ilmoitukset/ilmoita
+                                   (str (or (:nimi mittaus) nimi) " päättyy")
+                                   s/ilmoitus
+                                   {:tyyppi :onnistui
+                                    :taydennettavan-havainnon-id (:id kirjattu-havainto)})
+                                 (lisaa-liittyva-havainto! s/liittyvat-havainnot kirjattu-havainto))))}))
 
 (defn avaa-havaintolomake! []
   (.log js/console "Avataan havaintolomake!")
