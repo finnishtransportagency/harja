@@ -8,7 +8,7 @@
                  [org.clojure/clojurescript "1.9.293"]
 
                  ;;;;;;; Yleiset ;;;;;;;
-                 [prismatic/schema "1.0.4"]
+                 [prismatic/schema "1.1.3"]
                  [org.clojure/core.async "0.2.374"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.239"]
