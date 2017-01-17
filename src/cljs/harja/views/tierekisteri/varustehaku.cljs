@@ -34,6 +34,7 @@
                                     (and (not (tr-ok? tr-osoite))
                                          (str/blank? varusteentunniste)))
                       :ikoni (ikonit/livicon-search)}]
+                    [yleiset/vihje "Hakua tehdessä käytetään joko tyyppiä tai tunnistetta, tai tyyppiä ja tr-osoitetta. Jos kaikki kolme on syötetty, käytetään haussa tyyppiä ja tunnistetta."]
                     (when haku?
                       [yleiset/ajax-loader "Varusteita haetaan tierekisteristä"])])
       :tunniste (comp :tunniste :varuste)
