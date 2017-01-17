@@ -335,7 +335,6 @@
                "Sulje"]]}
     [:div
      [grid/grid
-      ;; TODO Rooli?
       {:otsikko "Yhteyshenkilöt"
        :tyhja "Ei yhteyshenkilöitä."}
       [{:otsikko "Rooli" :nimi :rooli :tyyppi :string}
