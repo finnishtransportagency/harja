@@ -313,7 +313,7 @@
                                    (:pistemaiset-tarkastukset tarkastukset))})
 
 (defn reittimerkinnat-tarkastuksiksi
-  "Käy reittimerkinnät läpi ja palauttaa mapin, jossa reittimerkinnät muutettu
+  "Reittimerkintämuunnin, joka käy reittimerkinnät läpi ja palauttaa mapin, jossa reittimerkinnät muutettu
    reitillisiksi ja pistemäisiksi Harja-tarkastuksiksi."
   [tr-osoitteelliset-reittimerkinnat]
   (let [tarkastukset {:reitilliset-tarkastukset (reittimerkinnat-reitillisiksi-tarkastuksiksi tr-osoitteelliset-reittimerkinnat)
@@ -345,18 +345,26 @@
 
 (defn luo-kantaan-tallennettava-tarkastus
   "Ottaa reittimerkintämuuntimen luoman tarkastuksen ja palauttaa mapin,
-   jolla tarkastus voidaan lisätä kantaan."
+   jolla tarkastus voidaan lisätä kantaan.
+
+   Reittimerkintämuuntimen luoma tarkastus koostuu joko yhdestä tai useammasta
+   sijaintipisteestä sen mukaan onko kyse pistemäisestä vai reitillisestä tarkastuksesta."
   [tarkastus kayttaja]
   (let [tarkastuksen-reitti (:sijainnit tarkastus)
         lahtopiste (:tr-osoite (first tarkastuksen-reitti))
         paatepiste (:tr-osoite (last tarkastuksen-reitti))
-        koko-tarkastuksen-tr-osoite {:tie (:tie lahtopiste)
-                                     :aosa (:aosa lahtopiste)
-                                     :aet (:aet lahtopiste)
-                                     ;; Loppuosa on pistemäisessä osoitteessa sama kuin alku,
-                                     ;; muuten normaali loppuosa
-                                     :losa (or (:losa paatepiste) (:aosa paatepiste))
-                                     :let (or (:let paatepiste) (:aet paatepiste))}
+        pistemainen-tarkastus? (= (count tarkastuksen-reitti) 1)
+        koko-tarkastuksen-tr-osoite (if pistemainen-tarkastus?
+                                      {:tie (:tie lahtopiste)
+                                      :aosa (:aosa lahtopiste)
+                                      :aet (:aet lahtopiste)
+                                      :losa nil
+                                      :let nil}
+                                      {:tie (:tie lahtopiste)
+                                       :aosa (:aosa lahtopiste)
+                                       :aet (:aet lahtopiste)
+                                       :losa (or (:losa paatepiste) (:aosa paatepiste))
+                                       :let (or (:let paatepiste) (:aet paatepiste))})
         geometria (hae-tallennettavan-tarkastuksen-sijainti db tarkastus)]
     (assoc tarkastus
       :tarkastaja (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
@@ -403,7 +411,9 @@
                                      :liite liite}))
     (log/debug "Tarkastuksen tallennus suoritettu")))
 
-(defn tallenna-tarkastukset! [db tarkastukset kayttaja]
+(defn tallenna-tarkastukset!
+  "Tallentaa reittimerkintämuuntimen luomat tarkastukset kantaan"
+  [db tarkastukset kayttaja]
   (let [kaikki-tarkastukset (reduce conj
                                     (:pistemaiset-tarkastukset tarkastukset)
                                     (:reitilliset-tarkastukset tarkastukset))]
