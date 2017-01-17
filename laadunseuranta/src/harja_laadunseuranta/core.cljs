@@ -6,6 +6,7 @@
             [harja-laadunseuranta.tiedot.comms :as comms]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.tr-haku :as tr-haku]
+            [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset]
             [harja-laadunseuranta.utils :as utils]
             [harja-laadunseuranta.tiedot.puhe :as puhe]
             [harja-laadunseuranta.tiedot.tarkastusajon-luonti :as tarkastusajon-luonti]
@@ -53,9 +54,15 @@
   (if (paikannus/geolokaatio-tuettu?)
     (reset! sovellus/gps-tuettu true)))
 
-(defn- kuuntele-eventteja []
+(defn- kuuntele-dom-eventteja []
   (dom/kuuntele-leveyksia)
   (dom/kuuntele-body-klikkauksia))
+
+(defn- kasittele-sivun-nakyvyysmuutos []
+  (.log js/console "Näkyvyys muuttui: " (pr-str js/document.hidden)))
+
+(defn- kuuntele-sivun-nakyvyytta []
+  (.addEventListener js/document "visibilitychange" kasittele-sivun-nakyvyysmuutos))
 
 (defn kaynnista-kayttajatietojen-haku []
   ;; Haetaan käyttäjätiedot kun laite on paikannettu
@@ -111,7 +118,8 @@
   (sovelluksen-alustusviive)
   (alusta-paikannus-id)
   (alusta-geolokaatio-api)
-  (kuuntele-eventteja)
+  (kuuntele-dom-eventteja)
+  (kuuntele-sivun-nakyvyytta)
   (alusta-sovellus))
 
 (defn ^:export aja-testireitti [url]
