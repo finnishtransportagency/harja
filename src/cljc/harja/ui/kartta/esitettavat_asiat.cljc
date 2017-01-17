@@ -2,12 +2,14 @@
   (:require [clojure.string :as str]
     #?(:cljs [harja.ui.openlayers.edistymispalkki :as edistymispalkki])
     #?(:cljs [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
-       :clj [taoensso.timbre :as log])
-      [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
-      [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
-      [harja.domain.ilmoitukset :as ilmoitukset]
-      [harja.geo :as geo]
-      [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]))
+       :clj
+            [taoensso.timbre :as log])
+            [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
+            [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.domain.ilmoitukset :as ilmoitukset]
+            [harja.geo :as geo]
+            [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]))
 
 #?(:clj (defn log [& things]
           (log/info things)))
@@ -81,7 +83,7 @@
                              ;; Oletusasetukset
                              {:tyyppi :merkki
                               :paikka [:loppu]
-                              :scale  (laske-skaala valittu?)}
+                              :scale (laske-skaala valittu?)}
                              i)) merkit)}))
 
 (defn maarittele-feature
@@ -158,8 +160,8 @@
          koordinaatit (or (:coordinates geo) (:points geo) (mapcat :points (:lines geo)))]
      (if (= :geometry-collection tyyppi)
        (merge
-        (maarittele-viiva valittu? merkit viivat)
-        asia)
+         (maarittele-viiva valittu? merkit viivat)
+         asia)
        (when (not (empty? koordinaatit))
          (cond
            ;; Näyttää siltä että joskus saattaa löytyä LINESTRINGejä, joilla on vain yksi piste
@@ -167,21 +169,21 @@
            (or (= :point tyyppi) (= 1 (count koordinaatit)))
            (when merkit
              (merge
-              (maarittele-piste valittu? (or pisteen-ikoni merkit))
-              {:type        :merkki
-               :coordinates (flatten koordinaatit)}))        ;; [x y] -> [x y] && [[x y]] -> [x y]
+               (maarittele-piste valittu? (or pisteen-ikoni merkit))
+               {:type :merkki
+                :coordinates (flatten koordinaatit)})) ;; [x y] -> [x y] && [[x y]] -> [x y]
 
            (= :line tyyppi)
            (merge
-            (maarittele-viiva valittu? merkit viivat)
-            {:type   :viiva
-             :points koordinaatit})
+             (maarittele-viiva valittu? merkit viivat)
+             {:type :viiva
+              :points koordinaatit})
 
            (= :multiline tyyppi)
            (merge
-            (maarittele-viiva valittu? merkit viivat)
-            {:type   :moniviiva
-             :lines (:lines geo)})))))))
+             (maarittele-viiva valittu? merkit viivat)
+             {:type :moniviiva
+              :lines (:lines geo)})))))))
 
 ;;;;;;
 
@@ -191,10 +193,10 @@
   ;; jokin väri myös jutuille, joille sellaista ei ole (vielä!) määritelty.
   (if (sequential? viivat)
     (->> viivat
-        (mapv #(assoc % :width (or (:width %) ulkoasu/+normaali-leveys+)
-                        :color (or (:color %) ulkoasu/+normaali-vari+)))
-        (sort-by :width >)
-        (mapv :color))
+         (mapv #(assoc % :width (or (:width %) ulkoasu/+normaali-leveys+)
+                         :color (or (:color %) ulkoasu/+normaali-vari+)))
+         (sort-by :width >)
+         (mapv :color))
 
     (:color viivat)))
 
@@ -218,7 +220,7 @@
                             " ("
                             (str/lower-case (ilmoitukset/tilan-selite tila))
                             ")")
-               :img    ikoni}
+               :img ikoni}
       :alue (maarittele-feature ilmoitus (valittu-fn? ilmoitus) ikoni))))
 
 (defmethod asia-kartalle :tiedoitus [ilmoitus valittu-fn?]
@@ -244,7 +246,7 @@
       :type :laatupoikkeama
       :nimi (or (:nimi laatupoikkeama) otsikko)
       :selite {:teksti otsikko
-               :img    ikoni}
+               :img ikoni}
       :alue (maarittele-feature laatupoikkeama (valittu-fn? laatupoikkeama)
                                 ikoni viiva))))
 
@@ -258,8 +260,8 @@
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu-fn?]
   (let [ikoni (ulkoasu/tarkastuksen-ikoni
-               (valittu-fn? tarkastus) (:ok? tarkastus) (:vakiohavainnot tarkastus) (reitillinen-asia? tarkastus)
-               (:tekija tarkastus))
+                (valittu-fn? tarkastus) (:ok? tarkastus) (:vakiohavainnot tarkastus) (reitillinen-asia? tarkastus)
+                (:tekija tarkastus))
         viiva (ulkoasu/tarkastuksen-reitti (:ok? tarkastus) (:vakiohavainnot tarkastus) (:tekija tarkastus))
         selite-teksti {:teksti (otsikko-tekijalla "Tarkastus" tarkastus)}
         selite (if ikoni
@@ -280,7 +282,7 @@
       :type :varustetoteuma
       :nimi (or (:selitys-kartalla varustetoteuma) "Varustetoteuma")
       :selite {:teksti "Varustetoteuma"
-               :img    ikoni}
+               :img ikoni}
       :alue (maarittele-feature varustetoteuma (valittu-fn? varustetoteuma)
                                 (ulkoasu/varustetoteuman-ikoni)))))
 
@@ -304,18 +306,19 @@
         :type :turvallisuuspoikkeama
         :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
         :selite {:teksti selite
-                 :img    ikoni}
+                 :img ikoni}
         :alue (maarittele-feature tp (valittu-fn? tp) ikoni)))))
 
 (defn- yllapitokohde [tyyppi yllapitokohde valittu-fn? teksti]
   (let [tila (:tila-kartalla yllapitokohde)
-        tila-teksti (str ", " ((fnil name "suunniteltu") tila))
+        tila-teksti (str/lower-case (yllapitokohteet-domain/kuvaile-kohteen-tila-kartalla
+                                      (:tila-kartalla yllapitokohde)))
         ikoni (ulkoasu/yllapidon-ikoni)
         viiva (ulkoasu/yllapidon-viiva (valittu-fn? yllapitokohde) (:avoin? yllapitokohde) tila tyyppi)]
     (assoc yllapitokohde
       :nimi (or (:nimi yllapitokohde) teksti)
-      :selite {:teksti (str teksti tila-teksti)
-               :vari   (viivojen-varit-leveimmasta-kapeimpaan viiva)}
+      :selite {:teksti (str teksti ", " tila-teksti)
+               :vari (viivojen-varit-leveimmasta-kapeimpaan viiva)}
       :alue (maarittele-feature yllapitokohde (valittu-fn? yllapitokohde)
                                 ikoni
                                 viiva))))
@@ -429,7 +432,7 @@
   "Antaa toimenpiteen nimelle sopivan selitteen"
   [toimenpide]
   (let [[viivat _] (tehtavan-viivat-ja-nuolitiedosto
-                    [toimenpide] false)]
+                     [toimenpide] false)]
     {:nimi toimenpide :teksti toimenpide
      :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}))
 
@@ -454,7 +457,7 @@
         :type :toteuma
         :nimi nimi
         :selite {:teksti nimi
-                 :vari   (viivojen-varit-leveimmasta-kapeimpaan viivat)}
+                 :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}
         :alue (maarittele-feature reitti (valittu-fn? toteuma)
                                   (ulkoasu/toteuman-nuoli nuolen-vari)
                                   viivat
@@ -469,36 +472,36 @@
   (log "Asia kartalle: tietyömaa: " (pr-str aita))
   (let [viivat ulkoasu/tietyomaa]
     (assoc aita
-     :type :tietyomaa
-     :nimi "Tietyömaa"
-     :selite {:teksti "Tietyömaa"
-              :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}
-     :alue (maarittele-feature {:sijainti (:geometria aita)}
-                               (valittu-fn? aita)
-                               nil
-                               viivat))))
+      :type :tietyomaa
+      :nimi "Tietyömaa"
+      :selite {:teksti "Tietyömaa"
+               :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}
+      :alue (maarittele-feature {:sijainti (:geometria aita)}
+                                (valittu-fn? aita)
+                                nil
+                                viivat))))
 
 (defn tyokoneen-selite [tehtavat]
   {:teksti (tehtavan-nimi tehtavat)
    :vari (viivojen-varit-leveimmasta-kapeimpaan
-          (first (tehtavan-viivat-ja-nuolitiedosto tehtavat false)))})
+           (first (tehtavan-viivat-ja-nuolitiedosto tehtavat false)))})
 
 (defmethod asia-kartalle :tyokone [tyokone valittu-fn?]
   (let [selite-teksti (tehtavan-nimi (:tehtavat tyokone))
         [viivat nuolen-vari] (tehtavan-viivat-ja-nuolitiedosto
-                              (:tehtavat tyokone) (valittu-fn? tyokone))
+                               (:tehtavat tyokone) (valittu-fn? tyokone))
         viivat (ulkoasu/tehtavan-viivat-tyokoneelle viivat)
         paikka (or (:reitti tyokone)
                    {:type :point
                     :coordinates (:sijainti tyokone)})]
     (assoc tyokone
-           :type :tyokone
-           :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
-           :selite {:teksti selite-teksti
-                    :vari   (viivojen-varit-leveimmasta-kapeimpaan viivat)}
-           :alue (maarittele-feature paikka (valittu-fn? tyokone)
-                                     (ulkoasu/tyokoneen-nuoli nuolen-vari)
-                                     viivat))))
+      :type :tyokone
+      :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
+      :selite {:teksti selite-teksti
+               :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}
+      :alue (maarittele-feature paikka (valittu-fn? tyokone)
+                                (ulkoasu/tyokoneen-nuoli nuolen-vari)
+                                viivat))))
 
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
   (if tyyppi
@@ -556,7 +559,7 @@
   ([asiat valittu tunniste asia-xf]
     ;; Haluamme näyttää edistymispalkin, mutta 100% valmius ei ole vielä siinä
     ;; vaiheessa, kun koko data on lapioitu.
-   #?(:cljs (edistymispalkki/geometriataso-aloita-lataus! (* 2 (count asiat))))
+    #?(:cljs (edistymispalkki/geometriataso-aloita-lataus! (* 2 (count asiat))))
    (let [extent (volatile! nil)
          selitteet (volatile! #{})]
      (with-meta
@@ -565,7 +568,7 @@
                    (geo/laske-extent-xf extent)
                    (tallenna-selitteet-xf selitteet))
              asiat)
-       {:extent    @extent
+       {:extent @extent
         :selitteet @selitteet
         ;:hae-asiat funktiotähän
         }))))
