@@ -196,11 +196,11 @@
     :jatkuvat-havainnot [3]
     :soratie-tasaisuus 1
     :kiinteys 3}
-   {:id 4 :sijainti [466409.5999816895 7230996.000024414]
+   {:id 4 :sijainti nil ;; GPS sekoaa
     :jatkuvat-havainnot [3]
     :soratie-tasaisuus 1
     :kiinteys 3}
-   {:id 5 :sijainti [467009.5999816895 7231180.000024414]
+   {:id 5 :sijainti nil
     :jatkuvat-havainnot [3]
     :soratie-tasaisuus 1
     :kiinteys 3}

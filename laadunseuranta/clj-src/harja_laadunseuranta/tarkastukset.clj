@@ -40,6 +40,22 @@
 
 (def +kahden-pisteen-valinen-sallittu-aikaero-s+ 180)
 
+(defn- seuraava-mittausarvo-sama? [nykyinen-reittimerkinta
+                                  seuraava-reittimerkinta
+                                  mittaus-avain]
+  (cond
+    (nil? (mittaus-avain nykyinen-reittimerkinta))
+    (= (nil? (mittaus-avain nykyinen-reittimerkinta))
+       (nil? (mittaus-avain seuraava-reittimerkinta)))
+
+    (number? (mittaus-avain nykyinen-reittimerkinta))
+    (= (mittaus-avain nykyinen-reittimerkinta)
+       (mittaus-avain seuraava-reittimerkinta))
+
+    (vector? (mittaus-avain nykyinen-reittimerkinta))
+    (every? #(= (mittaus-avain seuraava-reittimerkinta) %)
+            (mittaus-avain nykyinen-reittimerkinta))))
+
 (defn- tarkastus-jatkuu?
   "Ottaa reittimerkinnän ja järjestyksesä seuraavan reittimerkinnän ja kertoo muodostavatko ne loogisen jatkumon,
    toisin sanoen tulkitaanko seuraavan pisteen olevan osa samaa tarkastusta vai ei."
@@ -63,10 +79,12 @@
     ;; Soratiemittauksen mittausarvot pysyvät samana. Soratiemittauksessa mittausarvot voivat olla päällä
     ;; pitkän aikaa ja mittausarvot tallentuvat tällöin usealle pisteelle. Jos jokin mittausarvoista muuttuu,
     ;; halutaan tarkastuskin katkaista, jotta samat päällä olevat mittausarvot muodostavat aina oman reitin.
-    (and (= (:soratie-tasaisuus nykyinen-reittimerkinta) (:soratie-tasaisuus seuraava-reittimerkinta))
-         (= (:kiinteys nykyinen-reittimerkinta) (:kiinteys seuraava-reittimerkinta))
-         (= (:polyavyys nykyinen-reittimerkinta) (:polyavyys seuraava-reittimerkinta))
-         (= (:sivukaltevuus nykyinen-reittimerkinta) (:sivukaltevuus seuraava-reittimerkinta)))
+    ;; Edellisessä merkinnässä tehty mittaus on joko numero tai vector numeroita, jos kyseessä yhdistetty
+    ;; reittimerkintä9
+    (and (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :soratie-tasaisuus)
+         (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :kiinteys)
+         (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :polyavyys)
+         (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :sivukaltevuus))
 
     ;; Seuraava piste ei aiheuta reitin kääntymistä ympäri
     ;; PENDING GPS:n epätarkkuudesta johtuen aiheuttaa liikaa ympärikääntymisiä eikä toimi oikein, siksi kommentoitu
