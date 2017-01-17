@@ -227,8 +227,7 @@
      [napit/takaisin "Takaisin varusteluetteloon"
       #(e! (v/->TyhjennaValittuToteuma))]
 
-     (when (and tr-kaytossa? (empty? ominaisuudet) muokattava?)
-       (lomake/yleinen-varoitus "Ei yhteyttä Tierekisteriin. Varustetoteumaa ei voida kirjata."))
+
 
      [lomake/lomake
       {:otsikko (case (:toiminto varustetoteuma)
@@ -238,14 +237,17 @@
        :muokkaa! #(e! (v/->AsetaToteumanTiedot %))
        :footer-fn (fn [toteuma]
                     (when muokattava?
-                      [napit/palvelinkutsu-nappi
-                       "Tallenna"
-                       #(varustetiedot/tallenna-varustetoteuma @valinnat toteuma)
-                       {:luokka "nappi-ensisijainen"
-                        :ikoni (ikonit/tallenna)
-                        :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
-                        :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
-                        :disabled (not (lomake/voi-tallentaa? toteuma))}]))}
+                      [:div
+                       (when (and tr-kaytossa? (empty? ominaisuudet))
+                         (lomake/yleinen-varoitus "Ladataan tietolajin kuvausta. Kirjaus voidaan tehdä vasta, kun kuvaus on ladattu"))
+                       [napit/palvelinkutsu-nappi
+                        "Tallenna"
+                        #(varustetiedot/tallenna-varustetoteuma @valinnat toteuma)
+                        {:luokka "nappi-ensisijainen"
+                         :ikoni (ikonit/tallenna)
+                         :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
+                         :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
+                         :disabled (not (lomake/voi-tallentaa? toteuma))}]]))}
       [(varustetoteuman-tiedot muokattava? varustetoteuma)
        (varusteen-tunnistetiedot e! muokattava? varustetoteuma)
        (varusteen-ominaisuudet muokattava? ominaisuudet)]
