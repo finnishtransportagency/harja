@@ -141,6 +141,30 @@
     :jatkuvat-havainnot [3]
     :soratie-tasaisuus 3}])
 
+(def tarkastus-jossa-soratie-tasaisuus-jatkuu
+  "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
+  [{:id 2 :sijainti [465641.5999816895 7230780.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1}
+   {:id 3 :sijainti [466089.5999816895 7230916.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1}
+   {:id 4 :sijainti [466409.5999816895 7230996.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
+   {:id 5 :sijainti [467009.5999816895 7231180.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 2}
+   {:id 6 :sijainti [467257.5999816895 7231252.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 2}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
+   {:id 7 :sijainti [467545.5999816895 7231332.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 3
+    :polyavyys 1}])
+
 (def tarkastus-jossa-soratie-kiinteys
   "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
   [{:id 2 :sijainti [465641.5999816895 7230780.000024414]
@@ -161,6 +185,33 @@
     :jatkuvat-havainnot [3]
     :kiinteys 3
     :soratie-tasaisuus 3}])
+
+(def tarkastus-jossa-soratie-kiinteys-jatkuu
+  "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
+  [{:id 2 :sijainti [465641.5999816895 7230780.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1
+    :kiinteys 3}
+   {:id 3 :sijainti [466089.5999816895 7230916.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1
+    :kiinteys 3}
+   {:id 4 :sijainti [466409.5999816895 7230996.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1
+    :kiinteys 3}
+   {:id 5 :sijainti [467009.5999816895 7231180.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1
+    :kiinteys 3}
+   {:id 6 :sijainti [467257.5999816895 7231252.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1
+    :kiinteys 3}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
+   {:id 7 :sijainti [467545.5999816895 7231332.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1}])
 
 (def tarkastus-jossa-soratie-polyavyys
   "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."

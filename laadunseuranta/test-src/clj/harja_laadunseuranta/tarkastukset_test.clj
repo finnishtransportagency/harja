@@ -93,6 +93,19 @@
     (is (= (-> tarkastukset :reitilliset-tarkastukset second :soratiemittaus :tasaisuus) nil))
     (is (== (-> tarkastukset :reitilliset-tarkastukset last :soratiemittaus :tasaisuus) 3))))
 
+(deftest soratie-jatkuva-tasaisuus-laskettu-oikein
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-soratie-tasaisuus-jatkuu))]
+    ;; Munnetaan määrällisesti okein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 3))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))
+
+    ;; Tasaisuus laskettu oikein
+    (is (== (-> tarkastukset :reitilliset-tarkastukset first :soratiemittaus :tasaisuus) 1))
+    (is (== (-> tarkastukset :reitilliset-tarkastukset second :soratiemittaus :tasaisuus) 2))
+    (is (== (-> tarkastukset :reitilliset-tarkastukset last :soratiemittaus :tasaisuus) 3))))
+
 (deftest soratie-kiinteys-laskettu-oikein
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
@@ -105,6 +118,18 @@
     (is (== (-> tarkastukset :reitilliset-tarkastukset first :soratiemittaus :kiinteys) 3))
     (is (= (-> tarkastukset :reitilliset-tarkastukset second :soratiemittaus :kiinteys) nil))
     (is (== (-> tarkastukset :reitilliset-tarkastukset last :soratiemittaus :kiinteys) 3))))
+
+(deftest soratie-jatkuva-kiinteys-laskettu-oikein
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-soratie-kiinteys-jatkuu))]
+    ;; Munnetaan määrällisesti okein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))
+
+    ;; Tasaisuus laskettu oikein
+    (is (== (-> tarkastukset :reitilliset-tarkastukset first :soratiemittaus :kiinteys) 3))
+    (is (== (-> tarkastukset :reitilliset-tarkastukset last :soratiemittaus :kiinteys) 1))))
 
 (deftest soratie-polyavyys-laskettu-oikein
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
