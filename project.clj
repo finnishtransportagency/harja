@@ -5,7 +5,7 @@
   :description "Liikenneviraston Harja"
 
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.8.51"]
+                 [org.clojure/clojurescript "1.9.293"]
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [prismatic/schema "1.0.4"]
