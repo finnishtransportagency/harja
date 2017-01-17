@@ -48,7 +48,7 @@
       {:nimi :tierekisteriosoite
        :otsikko "Tierekisteriosoite"
        :tyyppi :tierekisteriosoite
-       :sijainti (atom nil)
+       :sijainti (atom nil) ;; sijainti ei kiinnosta, mutta johtuen komponentin toiminnasta, atom täytyy antaa
        :pakollinen? (str/blank? varusteentunniste)}
       {:nimi :tunniste
        :otsikko "Varusteen tunniste"
