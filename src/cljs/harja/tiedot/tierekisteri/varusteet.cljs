@@ -86,7 +86,7 @@
   VarusteHakuEpaonnistui
   (process-event [{virhe :virhe} app]
     (log "[TR] Virhe haettaessa varusteita: " (pr-str virhe))
-    (viesti/nayta! "Virhe haettaessa varusteita Tierekisteristä" :error)
+    (viesti/nayta! "Virhe haettaessa varusteita Tierekisteristä" :warning)
     (assoc-in app [:hakuehdot :haku-kaynnissa?] false))
 
   ToimintoEpaonnistui
