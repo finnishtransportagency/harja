@@ -48,10 +48,10 @@
                          #(e! (tiedot/->PaivitaSijainti %))))
      :otsikko "Tierekisteriosoite"
      :palstoja 3}
-    {:nimi :alku :tyyppi :pvm-aika
+    {:nimi :alku :tyyppi :pvm-aika :pakota-suunta :ylos-vasen
      :pakollinen? true
      :otsikko "Alkaen" :palstoja 3}
-    {:nimi :loppu :tyyppi :pvm-aika
+    {:nimi :loppu :tyyppi :pvm-aika :pakota-suunta :ylos-vasen
      :pakollinen? true
      :otsikko "Loppuen" :palstoja 3}]
    valinnat])
