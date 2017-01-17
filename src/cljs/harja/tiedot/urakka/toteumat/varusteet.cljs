@@ -235,7 +235,6 @@
               (if (k/virhe? vastaus)
                 (virhe!)
                 (valmis! vastaus))))))
-
       (assoc app :varustetoteuma uusi-toteuma)))
 
   v/TietolajinKuvaus
