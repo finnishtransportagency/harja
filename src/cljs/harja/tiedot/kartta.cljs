@@ -77,9 +77,7 @@
 (def aseta-kursori! openlayers/aseta-kursori!)
 
 (def aseta-klik-kasittelija! openlayers/aseta-klik-kasittelija!)
-(def poista-klik-kasittelija! openlayers/poista-klik-kasittelija!)
 (def aseta-hover-kasittelija! openlayers/aseta-hover-kasittelija!)
-(def poista-hover-kasittelija! openlayers/poista-hover-kasittelija!)
 
 (def ^{:doc
        "Kartan kontrollit, jotka näytetään karttanäkymän päällä.
@@ -92,9 +90,9 @@
 Palauttaa funktion, jolla kaappaamisen voi lopettaa. Tapahtumat ovat vektori, jossa on kaksi elementtiä:
 tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava."
   [kanava]
-  (let [kasittelija #(go (>! kanava %))]
-    (aseta-klik-kasittelija! kasittelija)
-    (aseta-hover-kasittelija! kasittelija)
+  (let [kasittelija #(go (>! kanava %))
+        poista-klik-kasittelija! (aseta-klik-kasittelija! kasittelija)
+        poista-hover-kasittelija! (aseta-hover-kasittelija! kasittelija)]
 
     #(do (poista-klik-kasittelija!)
          (poista-hover-kasittelija!)
