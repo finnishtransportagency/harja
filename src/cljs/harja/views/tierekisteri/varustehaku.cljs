@@ -16,6 +16,7 @@
   (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
 
 (defn varustehaku-ehdot [e! {haku? :haku-kaynnissa? :as hakuehdot}]
+  (log "---> " (pr-str hakuehdot))
   [lomake/lomake
    {:otsikko "Hae varusteita Tierekisteristä"
     :muokkaa! #(e! (v/->AsetaVarusteidenHakuehdot %))
@@ -35,7 +36,7 @@
      :tyyppi :valinta
      :pakollinen? true
      :valinnat (vec varusteet/tietolaji->selitys)
-     :valinta-nayta second
+     :valinta-nayta #(if (nil? %) "- valitse -" (second %))
      :valinta-arvo first}
     {:nimi :tierekisteriosoite
      :otsikko "Tierekisteriosoite"

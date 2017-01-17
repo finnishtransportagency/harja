@@ -13,7 +13,8 @@
             [reagent.core :as r]
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.tyokalut.functor :as functor]
-            [harja.tyokalut.vkm :as vkm])
+            [harja.tyokalut.vkm :as vkm]
+            [harja.domain.tierekisteri.varusteet :as tierekisteri-varusteet])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -44,7 +45,8 @@
                 :varustetoteuma nil
 
                 ;; Varustehaun hakuehdot ja tulokset
-                :varustehaku {:hakuehdot {:haku-kaynnissa? false}
+                :varustehaku {:hakuehdot {:haku-kaynnissa? false
+                                          :tietolaji (ffirst (vec tierekisteri-varusteet/tietolaji->selitys))}
 
                               ;; Tällä hetkellä näytettävä tietolaji
                               ;; ja varusteet
