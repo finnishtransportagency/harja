@@ -41,7 +41,7 @@
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept]]))
 
-(def tr-kaytossa? false)
+(def tr-kaytossa? true)
 
 (def nayta-max-toteumaa 500)
 
@@ -69,7 +69,8 @@
 (defn varustekortti-linkki [{:keys [alkupvm tietolaji tunniste]}]
   (when (and tietolaji tunniste)
     (let [url (kommunikaatio/varustekortti-url alkupvm tietolaji tunniste)]
-      [:a {:href url :target "_blank"} "Avaa"])))
+      [:a {:href url :target "_blank"
+           :on-click #(.stopPropagation %)} "Avaa"])))
 
 (defn nayta-varustetoteuman-lahetyksen-tila [{tila :tila lahetetty :lahetetty}]
   (case tila
@@ -226,7 +227,7 @@
      [napit/takaisin "Takaisin varusteluetteloon"
       #(e! (v/->TyhjennaValittuToteuma))]
 
-     (when (and tr-kaytossa? (empty? ominaisuudet))
+     (when (and tr-kaytossa? (empty? ominaisuudet) muokattava?)
        (lomake/yleinen-varoitus "Ei yhteyttä Tierekisteriin. Varustetoteumaa ei voida kirjata."))
 
      [lomake/lomake

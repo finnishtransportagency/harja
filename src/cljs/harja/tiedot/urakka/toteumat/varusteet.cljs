@@ -230,6 +230,7 @@
           (go
             (let [vastaus (<! (hae-tietolajin-kuvaus (:tietolaji tiedot)))]
               (if (k/virhe? vastaus)
+                ;; todo: tämä kärähtää ilmeisesti, koska ollaan go blockissa.
                 (t/send-async! (partial v/->VirheTapahtui "Tietolajin hakemisessa tapahtui virhe"))
                 (valmis! vastaus))))))
 
