@@ -196,7 +196,6 @@
                            :recompile-dependents false
                            ;;:preamble ["reagent/react.min.js"]
                            :output-to "resources/public/js/harja.js"
-                           :closure-extra-annotations #{"api" "observable"}
 
                            ;; Nämä voi ottaa käyttöön, jos advanced compilation buildia pitää debugata
                            :source-map "resources/public/js/harja.js.map"
@@ -215,8 +214,8 @@
 
                 :compiler {:main harja-laadunseuranta.dev-core
                            :asset-path "js/compiled/out"
-                           :output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta.js"
-                           :output-dir "resources/public/laadunseuranta/js/compiled/out"
+                           :output-to "resources/public/laadunseuranta/js/compiled_dev/harja_laadunseuranta.js"
+                           :output-dir "resources/public/laadunseuranta/js/compiled_dev/out"
                            :source-map-timestamp true}}
 
                {:id "laadunseuranta-devcards"
@@ -255,7 +254,7 @@
                 :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
                 :jar true
                 :compiler {:output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta.js"
-                           :closure-extra-annotations #{"api" "observable"}
+                           :output-dir "resources/public/laadunseuranta/js/compiled/out"
                            :main harja-laadunseuranta.prod-core
                            :optimizations :advanced
                            :language-in :ecmascript5
