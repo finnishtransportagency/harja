@@ -12,7 +12,7 @@
             [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn varustetoteuma [{:keys [tietue]} toiminto kuntoluokitus lisatieto ]
+(defn varustetoteuma [{:keys [tietue]} toiminto kuntoluokitus lisatieto]
   (let [tr-osoite (get-in tietue [:sijainti :tie])]
     {:arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
      :puoli (:puoli tr-osoite)
@@ -110,17 +110,12 @@
     ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
     (hakutulokset app nil nil))
 
-  ;; Hook-up harja.tiedot.urakka.toteumat.varusteet -namespaceen, jossa varsinainen käsittely
-  VarusteToteumatMuuttuneet
-  (process-event [_ app]
-    app)
-
   PoistaVaruste
   (process-event [{varuste :varuste} app]
     (let [tulos! (t/send-async! map->ToimintoOnnistui)
           virhe! (t/send-async! ->ToimintoEpaonnistui)]
       (go
-        (let [varustetoteuma (varustetoteuma varuste :poistettu nil nil )
+        (let [varustetoteuma (varustetoteuma varuste :poistettu nil nil)
               hakuehdot {:urakka-id (:id @nav/valittu-urakka)
                          :sopimus-id (first @urakka/valittu-sopimusnumero)
                          :aikavali @urakka/valittu-aikavali}
@@ -156,4 +151,15 @@
 
   AsetaVarusteTarkastuksenTiedot
   (process-event [{uudet-tiedot :tiedot} {tarkastus :tarkastus :as app}]
-    (assoc app :tarkastus (assoc tarkastus :tiedot uudet-tiedot))))
+    (assoc app :tarkastus (assoc tarkastus :tiedot uudet-tiedot)))
+
+
+  ;; Hook-upit päänäkymään (harja.tiedot.urakka.toteumat.varusteet)
+
+  VarusteToteumatMuuttuneet
+  (process-event [_ app]
+    app)
+
+  MuokkaaVarustetta
+  (process-event [_ app]
+    app))

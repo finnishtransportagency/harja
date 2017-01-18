@@ -26,7 +26,7 @@
             [harja.asiakas.kommunikaatio :as kommunikaatio]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.napit :as napit]
-            [harja.tiedot.urakka.toteumat.varusteet.viestit :as v]
+            [harja.tiedot.urakka.toteumat.varusteet.viestit :as viestit]
             [tuck.core :as t :refer [tuck]]
             [harja.ui.lomake :as lomake]
             [harja.ui.debug :refer [debug]]
@@ -85,7 +85,7 @@
     {:otsikko "Varustetoteumat"
      :tyhja (if (nil? toteumat) [ajax-loader "Haetaan toteumia..."] "Toteumia ei löytynyt")
      :tunniste :id
-     :rivi-klikattu #(e! (v/->ValitseToteuma %))
+     :rivi-klikattu #(e! (viestit/->ValitseToteuma %))
      :vetolaatikot (zipmap
                      (range)
                      (map
@@ -130,11 +130,11 @@
    [urakka-valinnat/urakan-sopimus]
    [urakka-valinnat/aikavali]
    [urakka-valinnat/tienumero (r/wrap (:tienumero valinnat)
-                                      #(e! (v/->YhdistaValinnat {:tienumero %})))]
+                                      #(e! (viestit/->YhdistaValinnat {:tienumero %})))]
 
    [harja.ui.valinnat/varustetoteuman-tyyppi
     (r/wrap (:tyyppi valinnat)
-            #(e! (v/->ValitseVarusteToteumanTyyppi %)))]])
+            #(e! (viestit/->ValitseVarusteToteumanTyyppi %)))]])
 
 (defn varustetoteuman-tiedot [muokattava? varustetoteuma]
   (when (not muokattava?)
@@ -177,7 +177,7 @@
      :otsikko "Tierekisteriosoite"
      :tyyppi :tierekisteriosoite
      :pakollinen? true
-     :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))
+     :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (viestit/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))
      :muokattava? (constantly muokattava?)}
     {:nimi :ajorata
      :otsikko "Ajorata"
@@ -226,14 +226,14 @@
 
     [:span.varustetoteumalomake
      [napit/takaisin "Takaisin varusteluetteloon"
-      #(e! (v/->TyhjennaValittuToteuma))]
+      #(e! (viestit/->TyhjennaValittuToteuma))]
 
      [lomake/lomake
       {:otsikko (case (:toiminto varustetoteuma)
                   :lisatty "Uusi varuste"
-                  ;; todo: Lisää uudet toiminnot tänne
+                  :muokattu "Muokkaa varustetta"
                   "Varustetoteuma")
-       :muokkaa! #(e! (v/->AsetaToteumanTiedot %))
+       :muokkaa! #(e! (viestit/->AsetaToteumanTiedot %))
        :footer-fn (fn [toteuma]
                     (when muokattava?
                       [:div
@@ -244,7 +244,7 @@
                         #(varustetiedot/tallenna-varustetoteuma @valinnat toteuma)
                         {:luokka "nappi-ensisijainen"
                          :ikoni (ikonit/tallenna)
-                         :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
+                         :kun-onnistuu #(e! (viestit/->VarustetoteumaTallennettu %))
                          :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
                          :disabled (not (lomake/voi-tallentaa? toteuma))}]]))}
       [(varustetoteuman-tiedot muokattava? varustetoteuma)
@@ -258,45 +258,52 @@
     (intercept e!
                (varusteet/VarusteToteumatMuuttuneet
                  {varustetoteumat :varustetoteumat :as t}
-                 (pe! (v/->VarustetoteumatMuuttuneet varustetoteumat)))
+                 (pe! (viestit/->VarustetoteumatMuuttuneet varustetoteumat)))
 
                (varusteet/MuokkaaVarustetta
                  {varuste :varuste :as t}
-                 (pe! (v/->UusiVarusteToteuma :muokkaa varuste)))
+                 (pe! (viestit/->UusiVarusteToteuma :muokkaa varuste)))
 
                (:default e (vhe! e)))))
 
+
+(defn varustehakulomake [e! nykyiset-valinnat naytettavat-toteumat varustehaun-tiedot]
+  [:span
+   [:div.sisalto-container
+    [:h1 "Varustekirjaukset Harjassa"]
+    [valinnat e! nykyiset-valinnat]
+    [toteumataulukko e! naytettavat-toteumat]]
+   (when tr-kaytossa?
+     [:div.sisalto-container
+      [:h1 "Varusteet Tierekisterissä"]
+      (when oikeus-varusteiden-muokkaamiseen?
+        [napit/uusi "Lisää uusi varuste" #(e! (viestit/->UusiVarusteToteuma :lisaa nil))])
+      [varustehaku (kasittele-varustehaun-event e!) varustehaun-tiedot]])]  )
+
 (defn- varusteet* [e! varusteet]
-  (e! (v/->YhdistaValinnat @varustetiedot/valinnat))
+  (e! (viestit/->YhdistaValinnat @varustetiedot/valinnat))
   (komp/luo
     (komp/watcher varustetiedot/valinnat
                   (fn [_ _ uusi]
-                    (e! (v/->YhdistaValinnat uusi))))
+                    (e! (viestit/->YhdistaValinnat uusi))))
     (komp/kuuntelija :varustetoteuma-klikattu
-                     (fn [_ i] (e! (v/->ValitseToteuma i))))
+                     (fn [_ i] (e! (viestit/->ValitseToteuma i))))
     (fn [e! {nykyiset-valinnat :valinnat
              naytettavat-toteumat :naytettavat-toteumat
-             toteuma :varustetoteuma
+             varustetoteuma :varustetoteuma
              varustehaun-tiedot :varustehaku
              virhe :virhe
              :as app}]
       [:span
        (when virhe
-         (yleiset/virheviesti-sailio virhe (fn [_] (e! (v/->VirheKasitelty)))))
+         (yleiset/virheviesti-sailio virhe (fn [_] (e! (viestit/->VirheKasitelty)))))
        [kartta/kartan-paikka]
-       (if toteuma
-         [varustetoteumalomake e! varustetiedot/valinnat toteuma]
-         [:span
-          [:div.sisalto-container
-           [:h1 "Varustekirjaukset Harjassa"]
-           [valinnat e! nykyiset-valinnat]
-           [toteumataulukko e! naytettavat-toteumat]]
-          (when tr-kaytossa?
-            [:div.sisalto-container
-             [:h1 "Varusteet Tierekisterissä"]
-             (when oikeus-varusteiden-muokkaamiseen?
-               [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisaa nil))])
-             [varustehaku (kasittele-varustehaun-event e!) varustehaun-tiedot]])])])))
+
+       (log "--> toteuma:" (pr-str varustetoteuma))
+
+       (if varustetoteuma
+         [varustetoteumalomake e! valinnat varustetoteuma]
+         [varustehakulomake e! nykyiset-valinnat naytettavat-toteumat varustehaun-tiedot])])))
 
 (defn varusteet []
   [tuck varustetiedot/varusteet varusteet*])
