@@ -46,7 +46,8 @@ Harja repon hakemistorakenne:
 Asenna Leiningen:
 http://leiningen.org/
 
-Asenna tarvittavat kehitystyökalut: vagrant, ansible, virtualbox, Java 8
+Asenna tarvittavat kehitystyökalut: vagrant, ansible, virtualbox, Java 8.
+Vaihtoehtoisesti voit käyttää dockeria.
 
 ### VirtualBox
 
@@ -90,6 +91,16 @@ Harjan pitäisi olla käynnissä ja vastata osoitteesta localhost:8000
 - **migrate_and_clean.sh** pystyttää molemmat tietokannat uudelleen tyhjästä
 - **unit.sh** ajaa testit ja näyttää tulokset kehittäjäystävällisessä muodossa
 - **deploy2.sh** Deployaa aktiivisen haaran testipalvelimelle testausta varten. Suorittaa testit ennen deployaamista.
+
+### Docker paikallinen kehitysympäristö
+
+Paikallisen kehitysympäristön tarvitsemat palvelut voi käynnistää myös dockerilla.
+Tietokanta tarvitaan aina. ActiveMQ ei ole pakollinen, jos ei testaa integraatioita, mutta sovellus
+logittaa virheitä jos JMS brokeriin ei saada yhteyttä.
+
+* Tietokanta: ks. tietokanta/devdb_up.sh ja tietokanta/devdb_down.sh
+* ActiveMQ: docker run -p 61616:61616 -p 8161:8161 rmohr/activemq
+
 
 ## Dokumentaatio
 ### Tietokanta
