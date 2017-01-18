@@ -71,7 +71,9 @@
                  [cljs-ajax "0.5.8"]
                  [figwheel "0.5.8"]
 
-                 [reagent "0.6.0-rc" :exclusions [[cljsjs/react :classifier "*"]]] ; TODO Voisi päivittää, mutta 0.6.0 rikkoo kenttätestit (numero/pvm kentistä .-value palauttaa aina tyhjää)
+                 [reagent "0.6.0-rc" :exclusions [[cljsjs/react :classifier "*"]]]
+                 ; TODO Voisi päivittää, mutta 0.6.0 rikkoo kenttätestit (numero/pvm kentistä .-value palauttaa aina tyhjää).
+                 ; Lisäksi pitäisi ehkä poistaa custom IE11 :on-change eventtikäsittely, koska korjattu suoraan Reagenttiin.
                  [cljsjs/react-with-addons "15.4.2-0"]
                  [cljsjs/react-dom "15.4.2-0" :exclusions [cljsjs/react]]
 
