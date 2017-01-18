@@ -850,7 +850,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
            (vreset! sijainti-atom sijainti)
            (nayta-kartalla @sijainti)))}
 
-      (komp/kuuntelija :kartan-koko-vaihdettu #(keskita-kartta! @(deref sijainti-atom)))
+      (komp/kuuntelija :kartan-koko-vaihdettu #(when sijainti-atom (keskita-kartta! @(deref sijainti-atom))))
 
       (komp/ulos #(do
                    (log "Lopetetaan TR sijaintipäivitys")

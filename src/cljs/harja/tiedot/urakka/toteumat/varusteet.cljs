@@ -11,9 +11,10 @@
             [tuck.core :as t]
             [harja.tiedot.urakka.toteumat.varusteet.viestit :as v]
             [reagent.core :as r]
-            [harja.domain.tierekisteri.varusteet :as varusteet]
+            [harja.domain.tierekisteri.varusteet :as varusteet-domain]
             [harja.tyokalut.functor :as functor]
-            [harja.tyokalut.vkm :as vkm])
+            [harja.tyokalut.vkm :as vkm]
+            [harja.domain.tierekisteri.varusteet :as tierekisteri-varusteet])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -44,7 +45,8 @@
                 :varustetoteuma nil
 
                 ;; Varustehaun hakuehdot ja tulokset
-                :varustehaku {:hakuehdot {:haku-kaynnissa? false}
+                :varustehaku {:hakuehdot {:haku-kaynnissa? false
+                                          :tietolaji (ffirst (vec tierekisteri-varusteet/tietolaji->selitys))}
 
                               ;; Tällä hetkellä näytettävä tietolaji
                               ;; ja varusteet
@@ -63,9 +65,9 @@
 (defn- selite [{:keys [toimenpide tietolaji alkupvm]}]
   (str
     (pvm/pvm alkupvm) " "
-    (varusteet/varuste-toimenpide->string toimenpide)
+    (varusteet-domain/varuste-toimenpide->string toimenpide)
     " "
-    (varusteet/tietolaji->selitys tietolaji)))
+    (varusteet-domain/tietolaji->selitys tietolaji)))
 
 (defn- varustetoteumat-karttataso [toteumat]
   (kartalla-esitettavaan-muotoon
@@ -126,13 +128,13 @@
 (defn uusi-varustetoteuma
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
   []
-  {:toiminto :lisatty
-   :tietolaji (ffirst varusteet/tietolaji->selitys)
-   :alkupvm (pvm/nyt)
+  {:toiminto    :lisatty
+   :tietolaji   (ffirst varusteet-domain/tietolaji->selitys)
+   :alkupvm     (pvm/nyt)
    :muokattava? true
-   :ajoradat varusteet/oletus-ajoradat
-   :ajorata (first varusteet/oletus-ajoradat)
-   :puoli (first varusteet/tien-puolet)})
+   :ajoradat    varusteet-domain/oletus-ajoradat
+   :ajorata     (first varusteet-domain/oletus-ajoradat)
+   :puoli       (first varusteet-domain/tien-puolet)})
 
 (defn naytettavat-toteumat [valittu-toimenpide toteumat]
   (if valittu-toimenpide
@@ -226,13 +228,13 @@
 
       ;; Jos tietolajin kuvaus muuttui ja se ei ole tyhjä, haetaan uudet tiedot
       (when (and tietolaji-muuttui? (:tietolaji tiedot))
-        (let [valmis! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
+        (let [virhe! (t/send-async! (partial v/->VirheTapahtui "Tietolajin hakemisessa tapahtui virhe"))
+              valmis! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
           (go
             (let [vastaus (<! (hae-tietolajin-kuvaus (:tietolaji tiedot)))]
               (if (k/virhe? vastaus)
-                (t/send-async! (partial v/->VirheTapahtui "Tietolajin hakemisessa tapahtui virhe"))
+                (virhe!)
                 (valmis! vastaus))))))
-
       (assoc app :varustetoteuma uusi-toteuma)))
 
   v/TietolajinKuvaus
