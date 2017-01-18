@@ -36,7 +36,6 @@
                  [javax.servlet/servlet-api "2.5"]
                  [hiccup "1.0.5"]
 
-
                  [org.clojure/core.cache "0.6.5"]
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
@@ -46,7 +45,6 @@
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5.2"]
                  [webjure/jeesql "0.4.6"]
-
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "16.1"]
@@ -65,7 +63,6 @@
 
                  [javax.jms/jms-api "1.1-rev-1"]
                  [org.apache.activemq/activemq-client "5.14.3"]
-
 
                  ;; Asiakas
                  [spyscope "0.1.6"]
@@ -131,7 +128,6 @@
                  [org.clojure/data.codec "0.1.0"]
                  [devcards "0.2.2" :exclusions [cljsjs/react]]]
 
-
   :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]
                                   [cljs-react-test "0.1.4-SNAPSHOT"]
                                   [org.clojure/test.check "0.9.0"]]
@@ -148,7 +144,6 @@
   :repositories [["harja-data" "http://185.26.50.104/mvn/"]
                  ["osgeo" "http://download.osgeo.org/webdav/geotools/"]
                  ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]]
-
 
   :plugins [[lein-cljsbuild "1.1.5"]
             [lein-less "1.7.5"]
@@ -188,7 +183,6 @@
                 :notify-command ["./run-karma.sh"]}
                ;;:warning-handlers [utils.cljs-warning-handler/handle]}
 
-
                {:id "prod"
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-prod"]
                 :compiler {:optimizations :advanced
@@ -203,8 +197,7 @@
 
                            :parallel-build true
                            :libs ["src/js/kuvataso.js"]
-                           :closure-output-charset "US-ASCII"
-                           }}
+                           :closure-output-charset "US-ASCII"}}
 
                ;; Laadunseurannan buildit
                {:id "laadunseuranta-dev"
