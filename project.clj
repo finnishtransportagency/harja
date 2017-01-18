@@ -53,7 +53,7 @@
                  [org.geotools/gt-swing "16.1"] ;; just for experimentation, remove when no longer needed
 
                  ;; XML zipper
-                 [org.clojure/data.zip "0.1.1"] ; TODO Voisi päivittää, mutta uudempi 0.1.2 aiheutti parsintaongelmia ja varuste-testit failasi
+                 [org.clojure/data.zip "0.1.1"] ; TODO Voisi päivittää, mutta uudempi 0.1.2 aiheutti parsintaongelmia ja varustetestit failasi
 
                  ;; Match
                  [org.clojure/core.match "0.3.0-alpha4"]
@@ -71,7 +71,7 @@
                  [cljs-ajax "0.5.8"]
                  [figwheel "0.5.8"]
 
-                 [reagent "0.6.0" :exclusions [[cljsjs/react :classifier "*"]]]
+                 [reagent "0.6.0-rc" :exclusions [[cljsjs/react :classifier "*"]]] ; TODO Voisi päivittää, mutta 0.6.0 rikkoo kenttätestit (numero/pvm kentistä .-value palauttaa aina tyhjää)
                  [cljsjs/react-with-addons "15.4.2-0"]
                  [cljsjs/react-dom "15.4.2-0" :exclusions [cljsjs/react]]
 
