@@ -4,10 +4,9 @@
             [harja-laadunseuranta.utils :as utils]
             [cljs-time.local :as l]
             [cljs-time.core :as t]
+            [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.sovellus :as s])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
-
-(def +ilmoituksen-nakymisaika-ms+ 5000)
 
 (defn- lisaa-havainto-ehdolle-ilmoitukseen
   [ilmoitukseen-liittyva-havainto-id-atom havainto-id]
@@ -33,7 +32,7 @@
 
 (defn tyhjenna-ilmoitus-nakymisajan-jalkeen [ilmoitus ilmoitus-atom
                                              ilmoitukseen-liittyva-havainto-id-atom]
-  (go (<! (timeout +ilmoituksen-nakymisaika-ms+))
+  (go (<! (timeout asetukset/+ilmoituksen-nakymisaika-ms+))
       ;; Tyhjennä nykyinen näytettävä ilmoitus jos se on edelleen sama kuin se,
       ;; jonka tämän go-blockin oli tyhjennettävä
       (when (= ilmoitus @ilmoitus-atom)
