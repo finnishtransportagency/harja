@@ -55,7 +55,7 @@
                  [org.geotools/gt-swing "16.1"] ;; just for experimentation, remove when no longer needed
 
                  ;; XML zipper
-                 [org.clojure/data.zip "0.1.1"] ; TODO Voisi päivittää, mutta uudempi 0.1.2 aiheutti parsintaongelmia
+                 [org.clojure/data.zip "0.1.1"] ; TODO Voisi päivittää, mutta uudempi 0.1.2 aiheutti parsintaongelmia ja varuste-testit failasi
 
                  ;; Match
                  [org.clojure/core.match "0.3.0-alpha4"]
