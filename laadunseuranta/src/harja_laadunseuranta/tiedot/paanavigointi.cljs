@@ -378,7 +378,7 @@
     :jarjestys 1
     :sisalto (:sillat havainnot-ryhmittain)}
    {:avain :paallystys
-    :nimi "Päällystys"
+    :nimi "Pääl. työvirh."
     :jarjestys 1
     :sisalto (:paallystys havainnot-ryhmittain)}])
 
