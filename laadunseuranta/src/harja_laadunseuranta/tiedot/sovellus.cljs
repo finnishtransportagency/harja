@@ -99,7 +99,6 @@
    :vakiohavaintojen-kuvaukset nil ; Serveriltä saadut tiedot vakiohavainnoista
 
    :ilmoitus nil ; Nykyinen näytettävä ilmoitus (jos ei käytetä ilmoitusjonoa)
-   :ilmoitukset [] ;; Sisältää jonossa olevat ajastetut ilmoitukset, ensimmäinen on aina näkyvissä
    :ilmoitukseen-liittyva-havainto-id nil ; tarjoaa mahdollisuuden avata lomake ko. pikahavaintoon sidottuna
    :idxdb nil ; indexed db kahva
    :palvelinvirhe nil ; kuvaus palvelimen virheestä (string)
@@ -170,7 +169,6 @@
 (def kartan-keskipiste (reaction @ajoneuvon-sijainti))
 
 (def tarkastusajo-kaynnissa? (reagent/cursor sovellus [:tarkastusajo-kaynnissa?]))
-(def ilmoitukset (reagent/cursor sovellus [:ilmoitukset]))
 (def ilmoitus (reagent/cursor sovellus [:ilmoitus]))
 (def ilmoitukseen-liittyva-havainto-id (reagent/cursor sovellus [:ilmoitukseen-liittyva-havainto-id]))
 

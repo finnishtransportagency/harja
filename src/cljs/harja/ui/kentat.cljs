@@ -58,7 +58,6 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
   (r/wrap arvo
           #(assert false (str "Ei voi kirjoittaa vain luku atomia arvolle: " (pr-str arvo)))))
 
-
 (defmulti tee-kentta
           "Tekee muokattavan kentän tyypin perusteella"
           (fn [t _] (:tyyppi t)))
@@ -171,12 +170,14 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
 
 (defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex focus on-focus lomake? placeholder]} data]
-  [:input {:class       (when lomake? "form-control")
+  [:input {:class (when lomake? "form-control")
            :placeholder placeholder
-           on-change*   #(reset! data (-> % .-target .-value))
-           :on-focus    on-focus
-           :value       @data
-           :max-length  pituus-max}])
+           on-change* #(let [v (-> % .-target .-value)]
+                         (when (or (not regex) (re-matches regex v))
+                           (reset! data v)))
+           :on-focus on-focus
+           :value @data
+           :max-length pituus-max}])
 
 
 ;; Pitkä tekstikenttä käytettäväksi lomakkeissa, ei sovellu hyvin gridiin
@@ -849,7 +850,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
            (vreset! sijainti-atom sijainti)
            (nayta-kartalla @sijainti)))}
 
-      (komp/kuuntelija :kartan-koko-vaihdettu #(keskita-kartta! @(deref sijainti-atom)))
+      (komp/kuuntelija :kartan-koko-vaihdettu #(when sijainti-atom (keskita-kartta! @(deref sijainti-atom))))
 
       (komp/ulos #(do
                    (log "Lopetetaan TR sijaintipäivitys")

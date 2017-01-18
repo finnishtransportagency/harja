@@ -9,15 +9,19 @@
 
 (def +ilmoituksen-nakymisaika-ms+ 5000)
 
-(defn lisaa-ilmoitus-jonoon [teksti ilmoitukset-atom]
-  (swap! ilmoitukset-atom #(conj % {:ilmoitus teksti})))
-
-
 (defn- lisaa-havainto-ehdolle-ilmoitukseen
   [ilmoitukseen-liittyva-havainto-id-atom havainto-id]
   (reset! ilmoitukseen-liittyva-havainto-id-atom havainto-id))
 
 (defn ilmoita
+  "Asettaa ilmoituksen näkyville käyttöliittymään. Parametrit on:
+
+   teksti                               Ilmoituksessa näkyvä teksti
+   ilmoitus-atom                        Atomi (löytyy sovelluksen tilasta)
+
+   Vapaaehtoiset optiot:
+   - taydennettavan-havainnon-id        IndexedDB:n kirjatun reittimerkinnan id, johon ilmoitus liittyy.
+   - Tyyppi                             Jokin näistä: :onnistui, :virhe"
   ([teksti ilmoitus-atom] (ilmoita teksti ilmoitus-atom {}))
   ([teksti ilmoitus-atom {:keys [tyyppi taydennettavan-havainnon-id] :as optiot}]
    (if taydennettavan-havainnon-id
