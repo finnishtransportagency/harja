@@ -13,41 +13,55 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.modal :as modal]
             [clojure.string :as str]
-            [reagent.core :refer [atom]]))
+            [reagent.core :refer [atom] :as r]))
 
 (defn oikeus-varusteiden-muokkaamiseen? []
   (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
 
-(defn varustehaku-ehdot [e! {haku? :haku-kaynnissa? :as hakuehdot}]
-  [lomake/lomake
-   {:otsikko "Hae varusteita Tierekisteristä"
-    :muokkaa! #(e! (v/->AsetaVarusteidenHakuehdot %))
-    :footer-fn (fn [rivi]
-                 [:div
-                  [napit/yleinen "Hae Tierekisteristä"
-                   #(e! (v/->HaeVarusteita))
-                   {:disabled (:haku-kaynnissa? hakuehdot)
-                    :ikoni (ikonit/livicon-search)}]
-                  (when haku?
-                    [yleiset/ajax-loader "Varusteita haetaan tierekisteristä"])])
-    :tunniste (comp :tunniste :varuste)
-    :ei-borderia? false}
-
-   [{:nimi :tietolaji
-     :otsikko "Varusteen tyyppi"
-     :tyyppi :valinta
-     :pakollinen? true
-     :valinnat (vec varusteet/tietolaji->selitys)
-     :valinta-nayta second
-     :valinta-arvo first}
-    {:nimi :tierekisteriosoite
-     :otsikko "Tierekisteriosoite"
-     :tyyppi :tierekisteriosoite}
-    {:nimi :tunniste
-     :otsikko "Varusteen tunniste"
-     :tyyppi :string}]
-   hakuehdot])
-
+(defn varustehaku-ehdot [e! {haku? :haku-kaynnissa?
+                             tr-osoite :tierekisteriosoite
+                             varusteentunniste :tunniste
+                             :as hakuehdot}]
+  (let [tr-ok? (fn [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]}]
+                 (and numero alkuosa alkuetaisyys loppuosa loppuetaisyys))]
+    [lomake/lomake
+     {:otsikko "Hae varusteita Tierekisteristä"
+      :muokkaa! #(e! (v/->AsetaVarusteidenHakuehdot %))
+      :footer-fn (fn [rivi]
+                   [:div
+                    [napit/yleinen "Hae Tierekisteristä"
+                     #(e! (v/->HaeVarusteita))
+                     {:disabled (or (:haku-kaynnissa? hakuehdot)
+                                    (and (not (tr-ok? tr-osoite))
+                                         (str/blank? varusteentunniste)))
+                      :ikoni (ikonit/livicon-search)}]
+                    [yleiset/vihje "Hakua tehdessä käytetään joko tyyppiä ja tunnistetta, tai tyyppiä ja tr-osoitetta. Jos kaikki kolme on syötetty, käytetään haussa tyyppiä ja tunnistetta."]
+                    (when haku?
+                      [yleiset/ajax-loader "Varusteita haetaan tierekisteristä"])])
+      :tunniste (comp :tunniste :varuste)
+      :ei-borderia? false}
+     [{:nimi :tietolaji
+       :otsikko "Varusteen tyyppi"
+       :tyyppi :valinta
+       :pakollinen? true
+       :valinnat (vec varusteet/tietolaji->selitys)
+       :valinta-nayta #(if (nil? %) "- valitse -" (second %))
+       :valinta-arvo first}
+      (lomake/ryhma
+        ""
+        {:nimi        :tierekisteriosoite
+        :otsikko     "Tierekisteriosoite"
+        :tyyppi      :tierekisteriosoite
+        :sijainti    (atom nil)                             ;; sijainti ei kiinnosta, mutta johtuen komponentin toiminnasta, atom täytyy antaa
+         ;; FIXME: Jostain syystä tr-osoitteen pakollinen-merkki ei poistu, kun tunnisteen syöttää.
+         ;:pakollinen? (str/blank? varusteentunniste)
+         }
+        {:nimi        :tunniste
+         :otsikko     "Varusteen tunniste"
+         :tyyppi      :string
+         ;:pakollinen? (not (tr-ok? tr-osoite))
+         })]
+     hakuehdot]))
 
 (defn poista-varuste [e! tietolaji tunniste varuste]
   (yleiset/varmista-kayttajalta

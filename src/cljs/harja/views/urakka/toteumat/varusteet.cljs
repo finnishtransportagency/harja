@@ -69,7 +69,8 @@
 (defn varustekortti-linkki [{:keys [alkupvm tietolaji tunniste]}]
   (when (and tietolaji tunniste)
     (let [url (kommunikaatio/varustekortti-url alkupvm tietolaji tunniste)]
-      [:a {:href url :target "_blank"} "Avaa"])))
+      [:a {:href url :target "_blank"
+           :on-click #(.stopPropagation %)} "Avaa"])))
 
 (defn nayta-varustetoteuman-lahetyksen-tila [{tila :tila lahetetty :lahetetty}]
   (case tila
@@ -226,9 +227,6 @@
      [napit/takaisin "Takaisin varusteluetteloon"
       #(e! (v/->TyhjennaValittuToteuma))]
 
-     (when (and tr-kaytossa? (empty? ominaisuudet))
-       (lomake/yleinen-varoitus "Ei yhteyttä Tierekisteriin. Varustetoteumaa ei voida kirjata."))
-
      [lomake/lomake
       {:otsikko (case (:toiminto varustetoteuma)
                   :lisatty "Uusi varuste"
@@ -237,27 +235,29 @@
        :muokkaa! #(e! (v/->AsetaToteumanTiedot %))
        :footer-fn (fn [toteuma]
                     (when muokattava?
-                      [napit/palvelinkutsu-nappi
-                       "Tallenna"
-                       #(varustetiedot/tallenna-varustetoteuma @valinnat toteuma)
-                       {:luokka "nappi-ensisijainen"
-                        :ikoni (ikonit/tallenna)
-                        :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
-                        :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
-                        :disabled (not (lomake/voi-tallentaa? toteuma))}]))}
+                      [:div
+                       (when (and tr-kaytossa? (empty? ominaisuudet))
+                         (lomake/yleinen-varoitus "Ladataan tietolajin kuvausta. Kirjaus voidaan tehdä vasta, kun kuvaus on ladattu"))
+                       [napit/palvelinkutsu-nappi
+                        "Tallenna"
+                        #(varustetiedot/tallenna-varustetoteuma @valinnat toteuma)
+                        {:luokka "nappi-ensisijainen"
+                         :ikoni (ikonit/tallenna)
+                         :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
+                         :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
+                         :disabled (not (lomake/voi-tallentaa? toteuma))}]]))}
       [(varustetoteuman-tiedot muokattava? varustetoteuma)
        (varusteen-tunnistetiedot e! muokattava? varustetoteuma)
        (varusteen-ominaisuudet muokattava? ominaisuudet)]
       varustetoteuma]]))
 
 (defn kasittele-varustehaun-event [e!]
-  (let [vhe! (t/wrap-path e! :varustehaku)]
+  (let [vhe! (t/wrap-path e! :varustehaku)
+        pe! e!]
     (intercept e!
                (varusteet/VarusteToteumatMuuttuneet
                  {varustetoteumat :varustetoteumat :as t}
-                 (do
-                   (e! (v/->VarustetoteumatMuuttuneet varustetoteumat))
-                   (vhe! t)))
+                 (pe! (v/->VarustetoteumatMuuttuneet varustetoteumat)))
                (:default e (vhe! e)))))
 
 (defn- varusteet* [e! varusteet]
@@ -272,7 +272,8 @@
              naytettavat-toteumat :naytettavat-toteumat
              toteuma :varustetoteuma
              varustehaun-tiedot :varustehaku
-             virhe :virhe}]
+             virhe :virhe
+             :as app}]
       [:span
        (when virhe
          (yleiset/virheviesti-sailio virhe (fn [_] (e! (v/->VirheKasitelty)))))

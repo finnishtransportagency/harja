@@ -202,7 +202,7 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
      :on-click #(do
                   (.preventDefault %)
                   (tarkasta-fn))}
-    [ikonit/ikoni-ja-teksti [ikonit/livicon-eye] teksti]]))
+    [ikonit/ikoni-ja-teksti [ikonit/eye-open] teksti]]))
 
 (defn muokkaa
   ([teksti muokkaa-fn] (muokkaa teksti muokkaa-fn {}))

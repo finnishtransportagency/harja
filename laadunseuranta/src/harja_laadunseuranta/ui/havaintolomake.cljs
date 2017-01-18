@@ -27,6 +27,7 @@
         kayttajanimi-atom (reagent/cursor lomakedata [:kayttajanimi])
         laadunalitus-atom (reagent/cursor lomakedata [:laadunalitus?])
         lomake-liittyy-havaintoon-atom (reagent/cursor lomakedata [:liittyy-havaintoon])
+        liittyy-varmasti-tiettyyn-havaintoon? (reagent/cursor lomakedata [:liittyy-varmasti-tiettyyn-havaintoon?])
         lomake-virheet-atom (atom #{})
         alusta-tr-osoite! (fn [tr-osoite-atom]
                             (when (:tie tr-osoite-lomakkeen-avauksessa)
@@ -49,6 +50,7 @@
            [lomake/liittyvat-havainnot
             {:liittyvat-havainnot liittyvat-havainnot
              :lomake-liittyy-havaintoon-atom lomake-liittyy-havaintoon-atom
+             :liittyy-varmasti-tiettyyn-havaintoon? @liittyy-varmasti-tiettyyn-havaintoon?
              :havainnot-ryhmittain havainnot-ryhmittain}]]])
 
        ^{:key "pvm-rivi"}
