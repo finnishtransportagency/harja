@@ -279,5 +279,6 @@
     [:span.alasvedon-otsikko "Toimenpide"]
     [livi-pudotusvalikko {:valinta @valittu-varustetoteumatyyppi-atom
                           :format-fn #(if % (second %) "Kaikki")
+
                           :valitse-fn #(reset! valittu-varustetoteumatyyppi-atom %)}
      varusteet/varustetoteumatyypit]]])

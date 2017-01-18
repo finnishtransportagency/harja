@@ -11,9 +11,10 @@
             [tuck.core :as t]
             [harja.tiedot.urakka.toteumat.varusteet.viestit :as v]
             [reagent.core :as r]
-            [harja.domain.tierekisteri.varusteet :as varusteet]
+            [harja.domain.tierekisteri.varusteet :as varusteet-domain]
             [harja.tyokalut.functor :as functor]
-            [harja.tyokalut.vkm :as vkm])
+            [harja.tyokalut.vkm :as vkm]
+            [harja.domain.tierekisteri.varusteet :as tierekisteri-varusteet])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -44,7 +45,8 @@
                 :varustetoteuma nil
 
                 ;; Varustehaun hakuehdot ja tulokset
-                :varustehaku {:hakuehdot {:haku-kaynnissa? false}
+                :varustehaku {:hakuehdot {:haku-kaynnissa? false
+                                          :tietolaji (ffirst (vec tierekisteri-varusteet/tietolaji->selitys))}
 
                               ;; Tällä hetkellä näytettävä tietolaji
                               ;; ja varusteet
@@ -63,9 +65,9 @@
 (defn- selite [{:keys [toimenpide tietolaji alkupvm]}]
   (str
     (pvm/pvm alkupvm) " "
-    (varusteet/varuste-toimenpide->string toimenpide)
+    (varusteet-domain/varuste-toimenpide->string toimenpide)
     " "
-    (varusteet/tietolaji->selitys tietolaji)))
+    (varusteet-domain/tietolaji->selitys tietolaji)))
 
 (defn- varustetoteumat-karttataso [toteumat]
   (kartalla-esitettavaan-muotoon
@@ -126,24 +128,23 @@
 (defn uusi-varustetoteuma
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
   []
-  {:toiminto :lisatty
-   :tietolaji (ffirst varusteet/tietolaji->selitys)
-   :alkupvm (pvm/nyt)
+  {:toiminto    :lisatty
+   :tietolaji   (ffirst varusteet-domain/tietolaji->selitys)
+   :alkupvm     (pvm/nyt)
    :muokattava? true
-   :ajoradat varusteet/oletus-ajoradat
-   :ajorata (first varusteet/oletus-ajoradat)
-   :puoli (first varusteet/tien-puolet)})
+   :ajoradat    varusteet-domain/oletus-ajoradat
+   :ajorata     (first varusteet-domain/oletus-ajoradat)
+   :puoli       (first varusteet-domain/tien-puolet)})
 
 (defn naytettavat-toteumat [valittu-toimenpide toteumat]
-  (if (and valittu-toimenpide (not valittu-toimenpide))
+  (if valittu-toimenpide
     (filter #(= valittu-toimenpide (:toimenpide %)) toteumat)
     toteumat))
 
-
 (defn hae-ajoradat [{vanha-tr :tierekisteriosoite}
-                     {uusi-tr :tierekisteriosoite}
-                     haku-valmis!
-                     virhe!]
+                    {uusi-tr :tierekisteriosoite}
+                    haku-valmis!
+                    virhe!]
   (when (and uusi-tr
              (or (not (= (:numero uusi-tr) (:numero vanha-tr)))
                  (not (= (:alkuosa uusi-tr) (:alkuosa vanha-tr)))))
@@ -151,6 +152,11 @@
           (if (k/virhe? vastaus)
             (virhe!)
             (haku-valmis! vastaus))))))
+
+(defn haetut-toteumat [app toteumat]
+  (assoc app
+    :toteumat toteumat
+    :naytettavat-toteumat (naytettavat-toteumat (first (get-in app [:valinnat :tyyppi])) toteumat)))
 
 (extend-protocol t/Event
   v/YhdistaValinnat
@@ -222,19 +228,18 @@
 
       ;; Jos tietolajin kuvaus muuttui ja se ei ole tyhjä, haetaan uudet tiedot
       (when (and tietolaji-muuttui? (:tietolaji tiedot))
-        (let [valmis! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
+        (let [virhe! (t/send-async! (partial v/->VirheTapahtui "Tietolajin hakemisessa tapahtui virhe"))
+              valmis! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
           (go
             (let [vastaus (<! (hae-tietolajin-kuvaus (:tietolaji tiedot)))]
               (if (k/virhe? vastaus)
-                (t/send-async! (partial v/->VirheTapahtui "Tietolajin hakemisessa tapahtui virhe"))
+                (virhe!)
                 (valmis! vastaus))))))
-
       (assoc app :varustetoteuma uusi-toteuma)))
 
   v/TietolajinKuvaus
   (process-event [{:keys [tietolaji kuvaus]} {toteuma :varustetoteuma :as app}]
-    ;; Uusi tietolajin kuvaus haettu palvelimelta, aseta se paikoilleen, jos
-    ;; toteuman tietolaji on sama kuin toteumassa.
+    ;; Uusi tietolajin kuvaus haettu palvelimelta, aseta se paikoilleen, jos toteuman tietolaji on sama kuin toteumassa.
     (if (= tietolaji (:tietolaji toteuma))
       (assoc-in app [:varustetoteuma :tietolajin-kuvaus] kuvaus)
       app))
@@ -242,11 +247,12 @@
   v/VarustetoteumaTallennettu
   (process-event [{toteumat :hakutulos} app]
     (let [toteumat (if toteumat toteumat [])]
-      (assoc (dissoc app :varustetoteuma)
-        :karttataso (varustetoteumat-karttataso toteumat)
-        :karttataso-nakyvissa? true
-        :toteumat toteumat
-        :toteumahaku-id nil)))
+      (-> app
+          (dissoc :varustetoteuma)
+          (assoc :karttataso (varustetoteumat-karttataso toteumat)
+                 :karttataso-nakyvissa? true
+                 :toteumahaku-id nil)
+          (haetut-toteumat toteumat))))
 
   v/TieosanAjoradatHaettu
   (process-event [{ajoradat :ajoradat} app]
@@ -264,7 +270,15 @@
 
   v/VirheKasitelty
   (process-event [_ app]
-    (dissoc app :virhe)))
+    (dissoc app :virhe))
+
+  v/VarustetoteumatMuuttuneet
+  (process-event [{toteumat :varustetoteumat :as data} app]
+    (-> app
+        (assoc
+          :karttataso (varustetoteumat-karttataso toteumat)
+          :karttataso-nakyvissa? true)
+        (haetut-toteumat toteumat))))
 
 (defonce karttataso-varustetoteuma (r/cursor varusteet [:karttataso-nakyvissa?]))
 (defonce varusteet-kartalla (r/cursor varusteet [:karttataso]))

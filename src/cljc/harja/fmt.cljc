@@ -442,9 +442,9 @@
            (zipmap (range 1 4)
                    (map #(doto (goog.i18n.NumberFormat.
                                  (.-DECIMAL goog.i18n.NumberFormat/Format))
-                          (.setShowTrailingZeros false)
-                          (.setMinimumFractionDigits %)
-                          (.setMaximumFractionDigits %))
+                           (.setShowTrailingZeros false)
+                           (.setMinimumFractionDigits %)
+                           (.setMaximumFractionDigits %))
                         (range 1 4))))))
 
 #?(:clj (def desimaali-symbolit
