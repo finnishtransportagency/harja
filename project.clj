@@ -22,7 +22,7 @@
                  ;; Lokitus
                  ;;[org.clojure/tools.logging "0.3.1"]
                  ;;[ch.qos.logback/logback-classic "1.1.3"]
-                 [com.taoensso/timbre "3.4.0"] ;; TODO Voisi päivittää tämän (versiossa 4 on CLJS-tuki), mutta rajapinta muuttuu
+                 [com.taoensso/timbre "3.4.0"] ; TODO Voisi päivittää tämän (versiossa 4 on CLJS-tuki), mutta rajapinta muuttuu
 
                  ;; Metriikkadata
                  [org.clojure/java.jmx "0.3.3"]
@@ -55,7 +55,7 @@
                  [org.geotools/gt-swing "16.1"] ;; just for experimentation, remove when no longer needed
 
                  ;; XML zipper
-                 [org.clojure/data.zip "0.1.2"]
+                 [org.clojure/data.zip "0.1.1"] ; TODO Voisi päivittää, mutta uudempi 0.1.2 aiheutti parsintaongelmia
 
                  ;; Match
                  [org.clojure/core.match "0.3.0-alpha4"]
