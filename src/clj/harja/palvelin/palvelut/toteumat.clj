@@ -14,6 +14,7 @@
             [harja.kyselyt.sopimukset :as sopimukset-q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.geometriapaivitykset :as geometriat-q]
+            [harja.palvelin.palvelut.tierek-haku :as tr-q]
 
             [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
             [harja.geo :as geo]
@@ -114,14 +115,14 @@
   (into []
         muunna-desimaaliluvut-xf
         (toteumat-q/hae-toteumien-tehtavien-summat
-         db
-         {:urakka  urakka-id
-          :sopimus sopimus-id
-          :alkanut (konv/sql-date alkupvm)
-          :paattynyt (konv/sql-date loppupvm)
-          :tyyppi (name tyyppi)
-          :toimenpide toimenpide-id
-          :tehtava tehtava-id})))
+          db
+          {:urakka urakka-id
+           :sopimus sopimus-id
+           :alkanut (konv/sql-date alkupvm)
+           :paattynyt (konv/sql-date loppupvm)
+           :tyyppi (name tyyppi)
+           :toimenpide toimenpide-id
+           :tehtava tehtava-id})))
 
 (defn hae-urakan-toteutuneet-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
   (log/debug "Haetaan urakan toteutuneet tehtävät: " urakka-id sopimus-id alkupvm loppupvm tyyppi)
@@ -642,16 +643,19 @@
                                        loppupvm] :as toteuma}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (log/debug "Tallennetaan uusi varustetoteuma")
-  (let [varustetoteuma-id
-        (jdbc/with-db-transaction [db db]
-          (let [nyt (pvm/nyt)
-                sijainti (geo/geometry (geo/clj->pg sijainti))
-                toiminto (name toiminto)
-                tunniste (if (= toiminto "lisatty")
-                           (livitunnisteet/hae-seuraava-livitunniste db)
-                           (:tunniste arvot))
-                arvot (functor/fmap str (assoc arvot :tunniste tunniste))
-                arvot (tietolajit/validoi-ja-muunna-arvot-merkkijonoksi tierekisteri arvot tietolaji)
+  (let [varustetoteuma-id (jdbc/with-db-transaction [db db]
+                            (let [nyt (pvm/nyt)
+                                  sijainti
+                                  (cond
+                                    (not (nil? sijainti)) (geo/geometry (geo/clj->pg sijainti))
+                                    (not (nil? tierekisteriosoite)) (geo/geometry (geo/clj->pg (tr-q/hae-tr-viiva db tierekisteriosoite)))
+                                    :else nil)
+                                  toiminto (name toiminto)
+                                  tunniste (if (= toiminto "lisatty")
+                                             (livitunnisteet/hae-seuraava-livitunniste db)
+                                             (:tunniste arvot))
+                                  arvot (functor/fmap str (assoc arvot :tunniste tunniste))
+                                  arvot (tietolajit/validoi-ja-muunna-arvot-merkkijonoksi tierekisteri arvot tietolaji)
 
                 elynro (:elynumero (first (urakat-q/hae-urakan-ely db urakka-id)))
                 sopimus-id (:id (first (sopimukset-q/hae-urakan-paasopimus db urakka-id)))
@@ -693,6 +697,7 @@
                                 :sijainti sijainti}]
             (:id (toteumat-q/luo-varustetoteuma<! db varustetoteuma))))]
     (async/thread (tierekisteri/laheta-varustetoteuma tierekisteri varustetoteuma-id)))
+
   (hae-urakan-varustetoteumat tierekisteri db user hakuehdot))
 
 (defn hae-toteuman-reitti-ja-tr-osoite [db user {:keys [id urakka-id]}]
@@ -863,5 +868,6 @@
       :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
       :hae-kokonaishintaisen-toteuman-tiedot
       :urakan-varustetoteumat
+      :tallenna-varustetoteuma
       :hae-toteuman-reitti-ja-tr-osoite)
     this))
