@@ -24,8 +24,6 @@
                  ;;[ch.qos.logback/logback-classic "1.1.3"]
                  [com.taoensso/timbre "3.4.0"] ;; TODO Voisi päivittää tämän (versiossa 4 on CLJS-tuki), mutta rajapinta muuttuu
 
-                 [com.narkisr/gelfino-client "0.8.1"]
-
                  ;; Metriikkadata
                  [org.clojure/java.jmx "0.3.3"]
 
