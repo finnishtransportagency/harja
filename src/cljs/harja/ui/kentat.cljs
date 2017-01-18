@@ -581,7 +581,8 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
             (re-matches re t))
     (reset! atomi t)))
 
-(defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus lomake?]} data]
+(defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus lomake? pakota-suunta]}
+                                 data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
@@ -667,7 +668,8 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                                                   (muuta-pvm! (pvm/pvm %))
                                                                   (koske-pvm!)
                                                                   (aseta!))
-                                                    :pvm     naytettava-pvm}])]
+                                                    :pvm     naytettava-pvm
+                                                    :pakota-suunta pakota-suunta}])]
               [:td
                [:input {:class       (str (when lomake? "form-control")
                                           (when (and (not (re-matches +aika-regex+ nykyinen-aika-teksti))
