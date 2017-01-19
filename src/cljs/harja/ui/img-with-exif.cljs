@@ -28,6 +28,9 @@
    Optiot on mappi, joka annetaan <img> elementille. Kuvalla ei saa olla id:tä, sillä tämä komponentti
    luo kuvalle oman id:n."
   [{:keys [on-load] :as optiot}]
+  ;; PENDING Joku kaunis päivä tätä komponenttia ei enää tarvita, vaan CSS:n
+  ;; image-orientation toimii kaikkialla <3
+  ;; Ks. http://caniuse.com/#feat=css-image-orientation
   (let [komponentti-id (hash (str optiot (t/now)))
         exif-orientaatio (atom nil)
         exif-optiot
