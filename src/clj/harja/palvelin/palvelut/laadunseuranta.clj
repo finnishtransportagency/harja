@@ -22,6 +22,7 @@
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.id :refer [id-olemassa?]]
             [clojure.core.async :as async]))
 
 (def laatupoikkeama-xf
@@ -128,17 +129,18 @@
 
 (defn vaadi-sanktio-kuuluu-urakkaan [db urakka-id sanktio-id]
   "Tarkistaa, että sanktio kuuluu annettuun urakkaan"
-  (let [sanktion-urakka (:urakka (first (sanktiot/hae-sanktion-urakka-id db {:sanktioid sanktio-id})))]
-    (when-not (= sanktion-urakka urakka-id)
-      (throw (SecurityException. (str "Sanktio " sanktio-id" ei kuulu valittuun urakkaan "
-                                      urakka-id " vaan urakkaan " sanktion-urakka))))))
+  (when (id-olemassa? sanktio-id)
+    (let [sanktion-urakka (:urakka (first (sanktiot/hae-sanktion-urakka-id db {:sanktioid sanktio-id})))]
+     (when-not (= sanktion-urakka urakka-id)
+       (throw (SecurityException. (str "Sanktio " sanktio-id " ei kuulu valittuun urakkaan "
+                                       urakka-id " vaan urakkaan " sanktion-urakka)))))))
 
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio
                    toimenpideinstanssi vakiofraasi] :as sanktio} laatupoikkeama urakka]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaon " laatupoikkeama)
   (log/debug "LAJI ON: " (pr-str laji))
-  (when id (vaadi-sanktio-kuuluu-urakkaan db urakka id))
+  (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
   (let [sanktiotyyppi (if (:id tyyppi)
                         (:id tyyppi)
                         (when laji
@@ -162,7 +164,7 @@
                 :id id
                 :muokkaaja (:id user)
                 :luoja (:id user)}]
-    (if (or (nil? id) (neg? id))
+    (if-not (id-olemassa? id)
      (let [uusi-sanktio (sanktiot/luo-sanktio<! db params)]
        (sanktiot/merkitse-maksuera-likaiseksi! db (:id uusi-sanktio))
        (:id uusi-sanktio))
@@ -326,7 +328,7 @@
   (log/debug "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama)
             ", urakassa " urakka)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka)
-  (when (:yllapitokohde laatupoikkeama)
+  (when (id-olemassa? (:yllapitokohde laatupoikkeama))
     (yllapitokohteet-yleiset/vaadi-yllapitokohde-kuuluu-urakkaan db urakka (:yllapitokohde laatupoikkeama)))
   (jdbc/with-db-transaction [c db]
     (let [id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"))]
