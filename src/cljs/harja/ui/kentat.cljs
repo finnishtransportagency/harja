@@ -610,11 +610,11 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
            (reset! aika-teksti (pvm/aika p))))}
 
       (fn [_ data]
-        (let [aseta! (fn []
+        (let [aseta! (fn [force?]
                        (let [pvm @pvm-teksti
                              aika @aika-teksti
                              p (pvm/->pvm-aika (str pvm " " aika))]
-                         (when-not (some false? @pvm-aika-koskettu)
+                         (when (or force? (not (some false? @pvm-aika-koskettu)))
                            (if p
                              (reset! data p)
                              (reset! data nil)))))
@@ -662,12 +662,12 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                             :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
                                            (reset! auki false)
                                            %)
-                            :on-blur     #(do (koske-pvm!) (aseta!) %)}]
+                            :on-blur     #(do (koske-pvm!) (aseta! false) %)}]
                (when @auki
                  [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
                                                                   (muuta-pvm! (pvm/pvm %))
                                                                   (koske-pvm!)
-                                                                  (aseta!))
+                                                                  (aseta! true))
                                                     :pvm     naytettava-pvm
                                                     :pakota-suunta pakota-suunta}])]
               [:td
@@ -679,7 +679,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                         :size        5 :max-length 5
                         :value       nykyinen-aika-teksti
                         on-change*   #(muuta-aika! (-> % .-target .-value))
-                        :on-blur     #(do (koske-aika!) (aseta!))}]]]]]])))))
+                        :on-blur     #(do (koske-aika!) (aseta! false))}]]]]]])))))
 
 (defmethod nayta-arvo :pvm-aika [_ data]
   [:span (if-let [p @data]
