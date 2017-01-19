@@ -186,7 +186,8 @@ tehtävän avain (ks. avatut-toteumat)."}
   (reset! valitun-toteuman-paiva-ja-id [paiva-avain toteuma-id]))
 
 (defn poista-toteuman-valinta! []
-  (reset! valitun-toteuman-paiva-ja-id nil))
+  (reset! valitun-toteuman-paiva-ja-id nil)
+  (reset! valittu-kokonaishintainen-toteuma nil))
 
 (defn kasaa-toteuman-tiedot-tallennusta-varten [t]
   {:suorittajan-nimi (get-in t [:suorittaja :nimi])
