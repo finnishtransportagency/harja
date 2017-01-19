@@ -49,16 +49,16 @@
        :valinta-arvo first}
       (lomake/ryhma
         ""
-        {:nimi        :tierekisteriosoite
-        :otsikko     "Tierekisteriosoite"
-        :tyyppi      :tierekisteriosoite
-        :sijainti    (atom nil)                             ;; sijainti ei kiinnosta, mutta johtuen komponentin toiminnasta, atom täytyy antaa
+        {:nimi :tierekisteriosoite
+         :otsikko "Tierekisteriosoite"
+         :tyyppi :tierekisteriosoite
+         :sijainti (atom nil) ;; sijainti ei kiinnosta, mutta johtuen komponentin toiminnasta, atom täytyy antaa
          ;; FIXME: Jostain syystä tr-osoitteen pakollinen-merkki ei poistu, kun tunnisteen syöttää.
          ;:pakollinen? (str/blank? varusteentunniste)
          }
-        {:nimi        :tunniste
-         :otsikko     "Varusteen tunniste"
-         :tyyppi      :string
+        {:nimi :tunniste
+         :otsikko "Varusteen tunniste"
+         :tyyppi :string
          ;:pakollinen? (not (tr-ok? tr-osoite))
          })]
      hakuehdot]))
@@ -122,9 +122,7 @@
                                           tietolaji (get-in varuste [:tietue :tietolaji :tunniste])]
                                       [:div
                                        [napit/tarkasta "Tarkasta" #(e! (v/->AloitaVarusteenTarkastus varuste tunniste tietolaji))]
-                                       [napit/muokkaa "Muokkaa" #(do
-                                                                   (log "---> muokkaa viesti lähtee")
-                                                                   (e! (v/->MuokkaaVarustetta varuste)))]
+                                       [napit/muokkaa "Muokkaa" #(e! (v/->MuokkaaVarustetta varuste))]
                                        [napit/poista "Poista" #(poista-varuste e! tietolaji tunniste varuste)]]))}]
       (conj tietolajin-listaus-skeema toiminnot))
     tietolajin-listaus-skeema))

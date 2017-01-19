@@ -39,7 +39,7 @@
             [harja.tiedot.tierekisteri.varusteet :as varusteet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
-                   [tuck.intercept :refer [intercept]]))
+                   [tuck.intercept :refer [intercept send-to]]))
 
 ;; todo: aseta falseksi ennen mergeämistä
 (def tr-kaytossa? true)
@@ -255,16 +255,14 @@
 (defn kasittele-varustehaun-event [e!]
   (let [vhe! (t/wrap-path e! :varustehaku)
         pe! e!]
-    (intercept e!
+    (intercept vhe!
                (varusteet/VarusteToteumatMuuttuneet
                  {varustetoteumat :varustetoteumat :as t}
-                 (pe! (v/->VarustetoteumatMuuttuneet varustetoteumat)))
+                 (send-to pe! (v/->VarustetoteumatMuuttuneet varustetoteumat)))
 
                (varusteet/MuokkaaVarustetta
                  {varuste :varuste :as t}
-                 (pe! (v/->UusiVarusteToteuma :muokkaa varuste)))
-
-               (:default e (vhe! e)))))
+                 (send-to pe! (v/->UusiVarusteToteuma :muokkaa varuste))))))
 
 
 (defn varustehakulomake [e! nykyiset-valinnat naytettavat-toteumat varustehaun-tiedot]
@@ -278,7 +276,7 @@
       [:h1 "Varusteet Tierekisterissä"]
       (when oikeus-varusteiden-muokkaamiseen?
         [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisaa nil))])
-      [varustehaku (kasittele-varustehaun-event e!) varustehaun-tiedot]])]  )
+      [varustehaku (kasittele-varustehaun-event e!) varustehaun-tiedot]])])
 
 (defn- varusteet* [e! varusteet]
   (e! (v/->YhdistaValinnat @varustetiedot/valinnat))
@@ -298,8 +296,6 @@
        (when virhe
          (yleiset/virheviesti-sailio virhe (fn [_] (e! (v/->VirheKasitelty)))))
        [kartta/kartan-paikka]
-
-       (log "--> toteuma:" (pr-str varustetoteuma))
 
        (if varustetoteuma
          [varustetoteumalomake e! valinnat varustetoteuma]

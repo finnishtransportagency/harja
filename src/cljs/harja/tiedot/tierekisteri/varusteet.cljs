@@ -86,7 +86,7 @@
             (tulos! vastaus))))
       (-> app
           (assoc-in [:varusteet] nil)
-          (assoc-in [:hakuehdot :haku-kaynnissa?] true))))
+          (assoc-in [:hakuehdot :haku-kaynnissa?] "pallit"))))
 
   VarusteHakuTulos
   (process-event [{tietolaji :tietolaji varusteet :varusteet} app]
@@ -155,9 +155,7 @@
   (process-event [{uudet-tiedot :tiedot} {tarkastus :tarkastus :as app}]
     (assoc app :tarkastus (assoc tarkastus :tiedot uudet-tiedot)))
 
-
   ;; Hook-upit päänäkymään (harja.tiedot.urakka.toteumat.varusteet)
-
   VarusteToteumatMuuttuneet
   (process-event [_ app]
     app)
