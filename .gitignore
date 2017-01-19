@@ -26,6 +26,7 @@ node_modules
 harja.iml
 *~
 .vagrant
+/vagrant/db_provision.retry
 build.xml
 test2junit
 \#*\#
