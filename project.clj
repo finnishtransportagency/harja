@@ -14,6 +14,8 @@
                  [com.cognitect/transit-cljs "0.8.239"]
                  [com.cognitect/transit-clj "0.8.297"]
 
+                 [cljsjs/exif "2.1.1-1"]
+
                  ;;;;;;; Palvelin ;;;;;;;
 
                  ;; Komponenttituki

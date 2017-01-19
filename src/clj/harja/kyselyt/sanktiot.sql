@@ -109,6 +109,7 @@ FROM sanktio s
   LEFT JOIN yllapitokohde ypk ON h.yllapitokohde = ypk.id
 WHERE
   h.urakka = :urakka
+  AND h.poistettu IS NOT TRUE
   AND s.perintapvm >= :alku AND s.perintapvm <= :loppu;
 
 -- name: merkitse-maksuera-likaiseksi!
