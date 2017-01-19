@@ -23,8 +23,7 @@
 
 (defn liitekuva-modalissa [liite]
   [img-with-exif {:class "kuva-modaalissa"
-                  :src (k/liite-url (:id liite))}]
-  #_[:img.kuva-modalissa {:src (k/liite-url (:id liite))}])
+                  :src (k/liite-url (:id liite))}])
 
 (defn- nayta-liite-modalissa [liite]
   (modal/nayta!
