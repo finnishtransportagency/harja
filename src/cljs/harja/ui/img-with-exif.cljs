@@ -1,7 +1,6 @@
 (ns harja.ui.img-with-exif
   (:require [reagent.core :refer [atom]]
             [harja.ui.yleiset :refer [ajax-loader]]
-            [cljsjs.exif]
             [harja.loki :refer [log]]
             [harja.tiedot.exif :as exif]
             [cljs.core.async :refer [<!]]
