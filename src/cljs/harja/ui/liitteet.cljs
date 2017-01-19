@@ -9,6 +9,7 @@
             [harja.domain.liitteet :as t-liitteet]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.img-with-exif :refer [img-with-exif]]
             [harja.fmt :as fmt])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -21,7 +22,8 @@
     false))
 
 (defn liitekuva-modalissa [liite]
-  [:img.kuva-modalissa {:src (k/liite-url (:id liite))}])
+  [img-with-exif {:class "kuva-modaalissa"
+                  :src (k/liite-url (:id liite))}])
 
 (defn- nayta-liite-modalissa [liite]
   (modal/nayta!

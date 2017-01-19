@@ -76,12 +76,14 @@
   {:otsikko (str/capitalize (:selite ominaisuus))
    :pakollinen? (:pakollinen ominaisuus)
    :nimi (keyword (:kenttatunniste ominaisuus))
-   :hae #(let [arvo (get-in % [:arvot (keyword (:kenttatunniste ominaisuus))])]
-           (if (= "" arvo) nil arvo))
+   :hae #(let [arvo (or (get-in % [:arvot (keyword (:kenttatunniste ominaisuus))])
+                        (get-in % [:varuste :tietue :tietolaji :arvot (:kenttatunniste ominaisuus)]))]
+           arvo)
    :aseta (fn [rivi arvo]
             (assoc-in rivi [:arvot (keyword (:kenttatunniste ominaisuus))] arvo))
    ;; Varusteen tunnistetta ei saa muokata koskaan
-   :muokattava? #(and (not (= "tunniste" (:kenttatunniste ominaisuus))) muokattava?)})
+   :muokattava? #(and (not (= "tunniste" (:kenttatunniste ominaisuus))) muokattava?)
+   :pituus-max (:pituus ominaisuus)})
 
 (defmethod varusteominaisuus->skeema :koodisto
   [{ominaisuus :ominaisuus} muokattava?]
@@ -105,8 +107,8 @@
 (defmethod varusteominaisuus->skeema :numeerinen
   [{ominaisuus :ominaisuus} muokattava?]
   (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
-         {:tyyppi :numero
-          :kokonaisluku? true
+         {:tyyppi :string
+          :regex (re-pattern (str "-?\\d{1," 10 "}"))
           :leveys 1}))
 
 (defmethod varusteominaisuus->skeema :default

@@ -14,6 +14,8 @@
                  [com.cognitect/transit-cljs "0.8.237"]
                  [com.cognitect/transit-clj "0.8.285"]
 
+                 [cljsjs/exif "2.1.1-1"]
+
                  ;;;;;;; Palvelin ;;;;;;;
 
                  ;; Komponenttituki
@@ -127,7 +129,7 @@
                  [yleisradio/new-reliquary "1.0.0"]
 
                  ;; Tuck UI apuri
-                 [webjure/tuck "0.2.1"]
+                 [webjure/tuck "0.2.3"]
 
                  ;; Laadunseurantatyökalua varten
                  [org.clojure/data.codec "0.1.0"]
