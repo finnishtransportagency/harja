@@ -9,7 +9,7 @@
             [harja.pvm :as pvm]
             [harja.geo :as geo]
             [tuck.core :as t]
-            [harja.tiedot.urakka.toteumat.varusteet.viestit :as viestit]
+            [harja.tiedot.urakka.toteumat.varusteet.viestit :as v]
             [reagent.core :as r]
             [harja.domain.tierekisteri.varusteet :as varusteet-domain]
             [harja.tyokalut.functor :as functor]
@@ -58,7 +58,7 @@
     (.clearTimeout js/window toteumahaku-id))
   (assoc app
     :toteumahaku-id (.setTimeout js/window
-                                 (t/send-async! viestit/->HaeVarusteToteumat)
+                                 (t/send-async! v/->HaeVarusteToteumat)
                                  500)
     :toteumat nil))
 
@@ -127,15 +127,16 @@
 
 (defn uusi-varustetoteuma
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
-  [toiminto varuste]
-  ;; todo: jos varuste on annettu, aseta sen arvot lomakkeeseen
-  {:toiminto    toiminto
-   :tietolaji   (ffirst varusteet-domain/tietolaji->selitys)
-   :alkupvm     (pvm/nyt)
-   :muokattava? true
-   :ajoradat    varusteet-domain/oletus-ajoradat
-   :ajorata     (first varusteet-domain/oletus-ajoradat)
-   :puoli       (first varusteet-domain/tien-puolet)})
+  ([toiminto] (uusi-varustetoteuma toiminto nil))
+  ([toiminto varuste]
+    ;; todo: jos varuste on annettu, aseta sen arvot lomakkeeseen
+   {:toiminto toiminto
+    :tietolaji (ffirst varusteet-domain/tietolaji->selitys)
+    :alkupvm (pvm/nyt)
+    :muokattava? true
+    :ajoradat varusteet-domain/oletus-ajoradat
+    :ajorata (first varusteet-domain/oletus-ajoradat)
+    :puoli (first varusteet-domain/tien-puolet)}))
 
 (defn naytettavat-toteumat [valittu-toimenpide toteumat]
   (if valittu-toimenpide
@@ -160,23 +161,23 @@
     :naytettavat-toteumat (naytettavat-toteumat (first (get-in app [:valinnat :tyyppi])) toteumat)))
 
 (extend-protocol t/Event
-  viestit/YhdistaValinnat
+  v/YhdistaValinnat
   (process-event [{valinnat :valinnat} app]
     (hae (update app :valinnat merge valinnat)))
 
-  viestit/HaeVarusteToteumat
+  v/HaeVarusteToteumat
   (process-event [_ {valinnat :valinnat :as app}]
-    (let [haku-valmis! (t/send-async! viestit/->VarusteToteumatHaettu)]
+    (let [haku-valmis! (t/send-async! v/->VarusteToteumatHaettu)]
       (go
         (let [{:keys [urakka-id sopimus-id aikavali tienumero]} valinnat
               vastaus (<! (hae-toteumat urakka-id sopimus-id aikavali tienumero))]
           (if (k/virhe? vastaus)
-            (t/send-async! (partial viestit/->VirheTapahtui "Varustetoteumien haussa tapahtui virhe"))
+            (t/send-async! (partial v/->VirheTapahtui "Varustetoteumien haussa tapahtui virhe"))
             (haku-valmis! vastaus))))
       (assoc app
         :toteumahaku-id nil)))
 
-  viestit/VarusteToteumatHaettu
+  v/VarusteToteumatHaettu
   (process-event [{toteumat :toteumat} app]
     (let [valittu-toimenpide (:valittu-toimenpide app)]
       (assoc app
@@ -185,7 +186,7 @@
         :toteumat toteumat
         :naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat))))
 
-  viestit/ValitseVarusteToteumanTyyppi
+  v/ValitseVarusteToteumanTyyppi
   (process-event [{tyyppi :tyyppi} {valinnat :valinnat toteumat :toteumat :as app}]
     (let [valittu-toimenpide (first tyyppi)
           naytettavat-toteumat (naytettavat-toteumat valittu-toimenpide toteumat)]
@@ -195,21 +196,21 @@
         :valinnat (assoc valinnat :tyyppi tyyppi)
         :naytettavat-toteumat naytettavat-toteumat)))
 
-  viestit/ValitseToteuma
+  v/ValitseToteuma
   (process-event [{toteuma :toteuma} _]
-    (let [tulos! (t/send-async! (partial viestit/->AsetaToteumanTiedot (assoc toteuma :muokattava? false)))]
+    (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (assoc toteuma :muokattava? false)))]
       (tulos!)))
 
-  viestit/TyhjennaValittuToteuma
+  v/TyhjennaValittuToteuma
   (process-event [_ app]
     (assoc app :varustetoteuma nil))
 
-  viestit/UusiVarusteToteuma
-  (process-event [{toiminto :toiminto varuste :varuste} _]
-    (let [tulos! (t/send-async! (partial viestit/->AsetaToteumanTiedot (uusi-varustetoteuma toiminto varuste)))]
+  v/UusiVarusteToteuma
+  (process-event [_ _]
+    (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (uusi-varustetoteuma :lisatty)))]
       (tulos!)))
 
-  viestit/AsetaToteumanTiedot
+  v/AsetaToteumanTiedot
   (process-event [{tiedot :tiedot} {nykyinen-toteuma :varustetoteuma :as app}]
     (let [tietolaji-muuttui? (not= (:tietolaji tiedot) (:tietolaji nykyinen-toteuma))
           tiedot (if tietolaji-muuttui?
@@ -224,13 +225,13 @@
 
       (hae-ajoradat nykyinen-toteuma
                     uusi-toteuma
-                    (t/send-async! viestit/->TieosanAjoradatHaettu)
-                    (t/send-async! (partial viestit/->VirheTapahtui "Ajoratojen haku epäonnistui")))
+                    (t/send-async! v/->TieosanAjoradatHaettu)
+                    (t/send-async! (partial v/->VirheTapahtui "Ajoratojen haku epäonnistui")))
 
       ;; Jos tietolajin kuvaus muuttui ja se ei ole tyhjä, haetaan uudet tiedot
       (when (and tietolaji-muuttui? (:tietolaji tiedot))
-        (let [virhe! (t/send-async! (partial viestit/->VirheTapahtui "Tietolajin hakemisessa tapahtui virhe"))
-              valmis! (t/send-async! (partial viestit/->TietolajinKuvaus (:tietolaji tiedot)))]
+        (let [virhe! (t/send-async! (partial v/->VirheTapahtui "Tietolajin hakemisessa tapahtui virhe"))
+              valmis! (t/send-async! (partial v/->TietolajinKuvaus (:tietolaji tiedot)))]
           (go
             (let [vastaus (<! (hae-tietolajin-kuvaus (:tietolaji tiedot)))]
               (if (k/virhe? vastaus)
@@ -238,14 +239,14 @@
                 (valmis! vastaus))))))
       (assoc app :varustetoteuma uusi-toteuma)))
 
-  viestit/TietolajinKuvaus
+  v/TietolajinKuvaus
   (process-event [{:keys [tietolaji kuvaus]} {toteuma :varustetoteuma :as app}]
     ;; Uusi tietolajin kuvaus haettu palvelimelta, aseta se paikoilleen, jos toteuman tietolaji on sama kuin toteumassa.
     (if (= tietolaji (:tietolaji toteuma))
       (assoc-in app [:varustetoteuma :tietolajin-kuvaus] kuvaus)
       app))
 
-  viestit/VarustetoteumaTallennettu
+  v/VarustetoteumaTallennettu
   (process-event [{toteumat :hakutulos} app]
     (let [toteumat (if toteumat toteumat [])]
       (-> app
@@ -255,7 +256,7 @@
                  :toteumahaku-id nil)
           (haetut-toteumat toteumat))))
 
-  viestit/TieosanAjoradatHaettu
+  v/TieosanAjoradatHaettu
   (process-event [{ajoradat :ajoradat} app]
     (let [nykyinen-ajorata (get-in app [:varustetoteuma :ajorata])
           ajorata (if (or (not nykyinen-ajorata) (not (some #(= nykyinen-ajorata %) ajoradat)))
@@ -265,15 +266,15 @@
           (assoc-in [:varustetoteuma :ajoradat] ajoradat)
           (assoc-in [:varustetoteuma :ajorata] ajorata))))
 
-  viestit/VirheTapahtui
+  v/VirheTapahtui
   (process-event [{virhe :virhe} app]
     (assoc app :virhe virhe))
 
-  viestit/VirheKasitelty
+  v/VirheKasitelty
   (process-event [_ app]
     (dissoc app :virhe))
 
-  viestit/VarustetoteumatMuuttuneet
+  v/VarustetoteumatMuuttuneet
   (process-event [{toteumat :varustetoteumat :as data} app]
     (-> app
         (assoc

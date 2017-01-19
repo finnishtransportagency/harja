@@ -1,6 +1,6 @@
 (ns harja.views.tierekisteri.varustehaku
   "Tierekisterin varustehaun käyttöliittymä"
-  (:require [harja.tiedot.tierekisteri.varusteet :as viestit]
+  (:require [harja.tiedot.tierekisteri.varusteet :as v]
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.ui.lomake :as lomake]
             [harja.ui.ikonit :as ikonit]
@@ -26,11 +26,11 @@
                  (and numero alkuosa alkuetaisyys loppuosa loppuetaisyys))]
     [lomake/lomake
      {:otsikko "Hae varusteita Tierekisteristä"
-      :muokkaa! #(e! (viestit/->AsetaVarusteidenHakuehdot %))
+      :muokkaa! #(e! (v/->AsetaVarusteidenHakuehdot %))
       :footer-fn (fn [rivi]
                    [:div
                     [napit/yleinen "Hae Tierekisteristä"
-                     #(e! (viestit/->HaeVarusteita))
+                     #(e! (v/->HaeVarusteita))
                      {:disabled (or (:haku-kaynnissa? hakuehdot)
                                     (and (not (tr-ok? tr-osoite))
                                          (str/blank? varusteentunniste)))
@@ -71,7 +71,7 @@
               [:b tunniste] "."]
      :peruuta [:div (ikonit/livicon-ban) " Peruuta"]
      :hyvaksy [:div (ikonit/livicon-trash) " Poista"]
-     :toiminto-fn (fn [] (e! (viestit/->PoistaVaruste varuste)))}))
+     :toiminto-fn (fn [] (e! (v/->PoistaVaruste varuste)))}))
 
 (def kuntoluokka->selite {"1" "Ala-arvoinen"
                           "2" "Merkittäviä puutteita"
@@ -91,14 +91,14 @@
       :nakyvissa? true
       :footer [:span
                [:button.nappi-toissijainen {:type "button"
-                                            :on-click #(e! (viestit/->PeruutaVarusteenTarkastus))}
+                                            :on-click #(e! (v/->PeruutaVarusteenTarkastus))}
                 [:div (ikonit/livicon-ban) " Peruuta"]]
                [:button.nappi-myonteinen {:type "button" :on-click
-                                          #(e! (viestit/->TallennaVarustetarkastus varuste tarkastus))}
+                                          #(e! (v/->TallennaVarustetarkastus varuste tarkastus))}
                 [:div (ikonit/livicon-save) " Tallenna"]]]}
      [lomake/lomake
       {:ei-borderia? true
-       :muokkaa! #(e! (viestit/->AsetaVarusteTarkastuksenTiedot %))}
+       :muokkaa! #(e! (v/->AsetaVarusteTarkastuksenTiedot %))}
       [{:otsikko "Yleinen kuntoluokitus"
         :nimi :kuntoluokitus
         :tyyppi :valinta
@@ -121,10 +121,10 @@
                                     (let [tunniste (:tunniste varuste)
                                           tietolaji (get-in varuste [:tietue :tietolaji :tunniste])]
                                       [:div
-                                       [napit/tarkasta "Tarkasta" #(e! (viestit/->AloitaVarusteenTarkastus varuste tunniste tietolaji))]
+                                       [napit/tarkasta "Tarkasta" #(e! (v/->AloitaVarusteenTarkastus varuste tunniste tietolaji))]
                                        [napit/muokkaa "Muokkaa" #(do
                                                                    (log "---> muokkaa viesti lähtee")
-                                                                   (e! (viestit/->MuokkaaVarustetta varuste)))]
+                                                                   (e! (v/->MuokkaaVarustetta varuste)))]
                                        [napit/poista "Poista" #(poista-varuste e! tietolaji tunniste varuste)]]))}]
       (conj tietolajin-listaus-skeema toiminnot))
     tietolajin-listaus-skeema))

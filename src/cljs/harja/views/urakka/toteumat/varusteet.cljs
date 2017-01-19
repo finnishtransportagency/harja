@@ -26,7 +26,7 @@
             [harja.asiakas.kommunikaatio :as kommunikaatio]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.napit :as napit]
-            [harja.tiedot.urakka.toteumat.varusteet.viestit :as viestit]
+            [harja.tiedot.urakka.toteumat.varusteet.viestit :as v]
             [tuck.core :as t :refer [tuck]]
             [harja.ui.lomake :as lomake]
             [harja.ui.debug :refer [debug]]
@@ -85,7 +85,7 @@
     {:otsikko "Varustetoteumat"
      :tyhja (if (nil? toteumat) [ajax-loader "Haetaan toteumia..."] "Toteumia ei löytynyt")
      :tunniste :id
-     :rivi-klikattu #(e! (viestit/->ValitseToteuma %))
+     :rivi-klikattu #(e! (v/->ValitseToteuma %))
      :vetolaatikot (zipmap
                      (range)
                      (map
@@ -130,11 +130,11 @@
    [urakka-valinnat/urakan-sopimus]
    [urakka-valinnat/aikavali]
    [urakka-valinnat/tienumero (r/wrap (:tienumero valinnat)
-                                      #(e! (viestit/->YhdistaValinnat {:tienumero %})))]
+                                      #(e! (v/->YhdistaValinnat {:tienumero %})))]
 
    [harja.ui.valinnat/varustetoteuman-tyyppi
     (r/wrap (:tyyppi valinnat)
-            #(e! (viestit/->ValitseVarusteToteumanTyyppi %)))]])
+            #(e! (v/->ValitseVarusteToteumanTyyppi %)))]])
 
 (defn varustetoteuman-tiedot [muokattava? varustetoteuma]
   (when (not muokattava?)
@@ -177,7 +177,7 @@
      :otsikko "Tierekisteriosoite"
      :tyyppi :tierekisteriosoite
      :pakollinen? true
-     :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (viestit/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))
+     :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))
      :muokattava? (constantly muokattava?)}
     {:nimi :ajorata
      :otsikko "Ajorata"
@@ -226,14 +226,14 @@
 
     [:span.varustetoteumalomake
      [napit/takaisin "Takaisin varusteluetteloon"
-      #(e! (viestit/->TyhjennaValittuToteuma))]
+      #(e! (v/->TyhjennaValittuToteuma))]
 
      [lomake/lomake
       {:otsikko (case (:toiminto varustetoteuma)
                   :lisatty "Uusi varuste"
                   :muokattu "Muokkaa varustetta"
                   "Varustetoteuma")
-       :muokkaa! #(e! (viestit/->AsetaToteumanTiedot %))
+       :muokkaa! #(e! (v/->AsetaToteumanTiedot %))
        :footer-fn (fn [toteuma]
                     (when muokattava?
                       [:div
@@ -244,7 +244,7 @@
                         #(varustetiedot/tallenna-varustetoteuma @valinnat toteuma)
                         {:luokka "nappi-ensisijainen"
                          :ikoni (ikonit/tallenna)
-                         :kun-onnistuu #(e! (viestit/->VarustetoteumaTallennettu %))
+                         :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
                          :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
                          :disabled (not (lomake/voi-tallentaa? toteuma))}]]))}
       [(varustetoteuman-tiedot muokattava? varustetoteuma)
@@ -258,11 +258,11 @@
     (intercept e!
                (varusteet/VarusteToteumatMuuttuneet
                  {varustetoteumat :varustetoteumat :as t}
-                 (pe! (viestit/->VarustetoteumatMuuttuneet varustetoteumat)))
+                 (pe! (v/->VarustetoteumatMuuttuneet varustetoteumat)))
 
                (varusteet/MuokkaaVarustetta
                  {varuste :varuste :as t}
-                 (pe! (viestit/->UusiVarusteToteuma :muokkaa varuste)))
+                 (pe! (v/->UusiVarusteToteuma :muokkaa varuste)))
 
                (:default e (vhe! e)))))
 
@@ -277,17 +277,17 @@
      [:div.sisalto-container
       [:h1 "Varusteet Tierekisterissä"]
       (when oikeus-varusteiden-muokkaamiseen?
-        [napit/uusi "Lisää uusi varuste" #(e! (viestit/->UusiVarusteToteuma :lisaa nil))])
+        [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisaa nil))])
       [varustehaku (kasittele-varustehaun-event e!) varustehaun-tiedot]])]  )
 
 (defn- varusteet* [e! varusteet]
-  (e! (viestit/->YhdistaValinnat @varustetiedot/valinnat))
+  (e! (v/->YhdistaValinnat @varustetiedot/valinnat))
   (komp/luo
     (komp/watcher varustetiedot/valinnat
                   (fn [_ _ uusi]
-                    (e! (viestit/->YhdistaValinnat uusi))))
+                    (e! (v/->YhdistaValinnat uusi))))
     (komp/kuuntelija :varustetoteuma-klikattu
-                     (fn [_ i] (e! (viestit/->ValitseToteuma i))))
+                     (fn [_ i] (e! (v/->ValitseToteuma i))))
     (fn [e! {nykyiset-valinnat :valinnat
              naytettavat-toteumat :naytettavat-toteumat
              varustetoteuma :varustetoteuma
@@ -296,7 +296,7 @@
              :as app}]
       [:span
        (when virhe
-         (yleiset/virheviesti-sailio virhe (fn [_] (e! (viestit/->VirheKasitelty)))))
+         (yleiset/virheviesti-sailio virhe (fn [_] (e! (v/->VirheKasitelty)))))
        [kartta/kartan-paikka]
 
        (log "--> toteuma:" (pr-str varustetoteuma))
