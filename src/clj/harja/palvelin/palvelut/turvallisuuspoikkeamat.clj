@@ -10,6 +10,7 @@
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.id :refer [id-olemassa?]]
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
 
@@ -72,7 +73,7 @@
     annettu turvallisuuspoikkeaman id.")
 
   (log/debug "Tallenna korjaava toimenpide " (pr-str korjaavatoimenpide))
-  (if-not (or (nil? id) (neg? id))
+  (if-not (id-olemassa? id)
     (q/paivita-korjaava-toimenpide<!
       db
       {:otsikko otsikko
