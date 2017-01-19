@@ -47,7 +47,9 @@
          ^{:key "Lomake liittyy havaintoon rivi"}
          [lomake/rivi
           ^{:key "Lomake liittyy havaintoon"}
-          [lomake/kentta "Lomake liittyy havaintoon"
+          [lomake/kentta (if @liittyy-varmasti-tiettyyn-havaintoon?
+                           "Lomake liittyy havaintoon"
+                           "Liitä lomake havaintoon?")
            [lomake/liittyvat-havainnot
             {:liittyvat-havainnot liittyvat-havainnot
              :lomake-liittyy-havaintoon-atom lomake-liittyy-havaintoon-atom
