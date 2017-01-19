@@ -29,5 +29,4 @@
   []
   (let [file-input (.getElementById js/document "file-input")]
     (when file-input
-      (.log js/console "Klikataan file inputtia ohjelmallisesti.")
       (.click file-input))))
