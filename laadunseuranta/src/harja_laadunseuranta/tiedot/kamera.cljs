@@ -38,8 +38,8 @@
 (defn- timeouttaa-kuvaa-otetaan-flag
   "Asettaa kuvaa otetaan -flägin falseksi, mikäli
    saman kuvan ottaminen on kestänyt poikkeuksellisen kauan"
-  [tama-kuvanottoprosessi-id
-   kuvanottoprosessi-id-atom
+  [timeoutattava-kuvaprosessi-id
+   nykyinen-kuvanottoprosessi-id-atom
    kuvaa-otetaan-atom]
   ;; Tämä tehdään siksi, että "kuvanotto peruttu" eventtiä ei
   ;; ilmeisesti ole olemassa.
@@ -51,14 +51,14 @@
   (go (<! (timeout +kuvanottoprosessin-timeout-ms+))
       ;; Käyttäjä ei ole aloittanut uutta kuvanottoprosessia,
       ;; aseta kuvaa otetaan - flägi falseksi.
-      (when (= tama-kuvanottoprosessi-id
-               @kuvanottoprosessi-id-atom)
+      (when (= timeoutattava-kuvaprosessi-id
+               @nykyinen-kuvanottoprosessi-id-atom)
         (reset! kuvaa-otetaan-atom false))))
 
 (defn ota-kuva
   "Käynnistää kuvan ottamisen klikkaamalla ohjelmallisesti sivulla piilossa
    olevaa file input -kenttää. Desktop-laitteilla laukaisee yleensä normaalin
-   tiedostonvalintadialogin, mobiilissa tarjoaa lisäksi mahdollisuuden ottaa
+   tiedostonvalintadialogin, mobiilissa tarjoaa mahdollisuuden ottaa
    kuva laitteen kameralla."
   [kuvaa-otetaan-atom]
   (reset! kuvanottoprosessi-id-atom (hash (t/now)))
