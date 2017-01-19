@@ -1,4 +1,19 @@
 (ns harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti
+  "Tarjoaa yhteydet Tierekisteriin:
+  1. Tietolajien kuvauksen hakeminen
+  2. Varusteiden hakeminen
+  3. Varusteiden hallinta: lisäys, poisto, päivitys
+
+  Tarjoaa myös mahdollisuuden lähettää suoraan varustetoteumia. Tiedot lähetetään XML-sanomina Tierekisteriin, jossa
+  tietueen arvot tallennettu määrämuotoisena merkkijonona, jossa yksittäiset kentät ovat tietyissä positioissa.
+  Tietolajin kuvaus kuvaa skeeman näistä.
+
+  Käsitteistöä:
+  - Tietolaji: Yksittäisen tallennetavan asian tietosisällön kuvaus. Esim. liikennemerkit (tl506).
+  - Tietolajin kuvaus: Kenttäkohtainen kuvaus yksittäisen tietolajin kentistä/ominaisuuksista.
+  - Tietue: Rivi Tierekisterissä. Esim. yksi liikennemerkki.
+  - Varustetoteuma: Harjaan tallennettu yksittäinen varusteeseen kohdistunut työsuorite. Esim. liikennemerkin lisäys."
+
   (:require
     [com.stuartsierra.component :as component]
     [taoensso.timbre :as log]
@@ -55,6 +70,7 @@
     {:lisaaja tekija
      :poistaja tekija
      :tarkastaja tekija
+     :paivittaja tekija
      :tietue {:tunniste tunniste
               :alkupvm (formatoi-pvm alkupvm)
               :loppupvm (formatoi-pvm loppupvm)
@@ -68,8 +84,10 @@
               :tietolaji {:tietolajitunniste tietolaji
                           :arvot arvot}}
      :tietolajitunniste tietolaji
-     :tunniste tunniste
-     (keyword toimenpide) (formatoi-pvm luotu)}))
+     :lisatty (formatoi-pvm luotu)
+     :paivitetty (formatoi-pvm luotu)
+     :poistettu (formatoi-pvm luotu)
+     :tunniste tunniste}))
 
 (defn laheta-varustetoteuma-tierekisteriin [this varustetoteuma-id]
   (log/debug (format "Lähetetään varustetoteuma (id: %s) Tierekisteriin" varustetoteuma-id))
