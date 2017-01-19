@@ -3,8 +3,7 @@
             [harja-laadunseuranta.tarkastusreittimuunnin :refer [reittimerkinnat-tarkastuksiksi
                                                                  luo-kantaan-tallennettava-tarkastus]]
             [harja-laadunseuranta.testidata :as testidata]
-            [taoensso.timbre :as log]
-            [harja-laadunseuranta.tarkastusreittimuunnin :as tarkastukset]))
+            [taoensso.timbre :as log]))
 
 (defn lisaa-reittimerkinnoille-mockattu-tieosoite
   "Mock-funktio, joka lisää tiemerkinnöille tierekisteriosoitteet ilman oikeaa kannassa olevaa tieverkkoa.
