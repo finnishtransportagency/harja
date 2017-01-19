@@ -3,7 +3,7 @@
             [harja.ui.yleiset :refer [ajax-loader]]
             [cljsjs.exif]
             [harja.loki :refer [log]]
-
+            [harja.tiedot.exif :as exif]
             [cljs.core.async :refer [<!]]
             [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -14,13 +14,6 @@
                   (str (:class optiot) " " "exif-" exif-orientaatio))
     (assoc optiot :class
                   (str (:class optiot) " " "ladataan-exif-kuvaa"))))
-
-(defn- lue-kuvan-exif-tag [kuva-node exif-tag vastaus-callback]
-  "Lukee kuvan EXIF-tagin käyttäen exif.js-kirjastoa. Vastaus annetaan callback-funktiolle."
-  (.getData js/EXIF kuva-node
-            (fn []
-              (vastaus-callback
-                (.getTag js/EXIF (js-this) exif-tag)))))
 
 (defn img-with-exif
   "Luo <img> kuvan, joka käännetään oikeaan orientaatioon lukemalla orientaatio kuvan EXIF-metadatasta
@@ -40,10 +33,10 @@
          (fn []
            (when on-load
              (on-load)) ;; Kutsu optioissa määriteltyä on-load eventtiä, jos sellainen annettiin
-           (lue-kuvan-exif-tag (.getElementById js/document komponentti-id)
-                               "Orientation"
-                               (fn [orientaatio]
-                                 (reset! exif-orientaatio orientaatio))))}]
+           (exif/lue-kuvan-exif-tag (.getElementById js/document komponentti-id)
+                                    "Orientation"
+                                    (fn [orientaatio]
+                                      (reset! exif-orientaatio orientaatio))))}]
     (fn [optiot]
       (let [lopulliset-optiot (merge optiot exif-optiot)
             lopulliset-optiot (maarita-kuvan-luokat lopulliset-optiot @exif-orientaatio)]
