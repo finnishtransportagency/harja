@@ -33,22 +33,20 @@
   ;; image-orientation toimii kaikkialla <3
   ;; Ks. http://caniuse.com/#feat=css-image-orientation
   (let [exif-orientaatio (atom nil)
-        exif-optiot (atom nil)
-        maarita-exif-optiot (fn [img-node]
-                              {:on-load
-                               (fn []
-                                 (when on-load
-                                   (on-load)) ;; Kutsu optioissa määriteltyä on-load eventtiä, jos sellainen annettiin
-                                 (exif/lue-kuvan-exif-tiedot
-                                   img-node
-                                   (partial kasittele-exif-tietojen-hakuvastaus! exif-orientaatio)))})]
+        img-node (atom nil)
+        exif-optiot {:on-load
+                     (fn []
+                       (when on-load
+                         (on-load)) ;; Kutsu optioissa määriteltyä on-load eventtiä, jos sellainen annettiin
+                       (exif/lue-kuvan-exif-tiedot
+                         @img-node
+                         (partial kasittele-exif-tietojen-hakuvastaus! exif-orientaatio)))}]
     (komp/luo
       (komp/piirretty
         (fn [this]
-          (reset! exif-optiot (maarita-exif-optiot
-                                (.-lastChild (r/dom-node this))))))
+          (reset! img-node (.-lastChild (r/dom-node this)))))
       (fn [optiot]
-        (let [lopulliset-optiot (merge optiot @exif-optiot)
+        (let [lopulliset-optiot (merge optiot exif-optiot)
               lopulliset-optiot (maarita-kuvan-luokat lopulliset-optiot @exif-orientaatio)]
           [:span
            (when-not @exif-orientaatio
