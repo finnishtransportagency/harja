@@ -49,6 +49,9 @@
           ^{:key "Lomake liittyy havaintoon"}
           [lomake/kentta (if @liittyy-varmasti-tiettyyn-havaintoon?
                            "Lomake liittyy havaintoon"
+                           ;; Jos on teksti 'liitty havaintoon' ja lomakkeella on vain yksi vaihtoehto
+                           ;; valittavissa -> voi syntyä käsitys, että lomake liittyy tähän asiaan, vaikka
+                           ;; kyseessä on vain ehdotus. Siksi eri otsikko eri tilanteeseen.
                            "Liitä lomake havaintoon?")
            [lomake/liittyvat-havainnot
             {:liittyvat-havainnot liittyvat-havainnot
