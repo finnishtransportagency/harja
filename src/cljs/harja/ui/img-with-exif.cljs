@@ -22,12 +22,14 @@
         {:id komponentti-id
          :on-load
          (fn []
-           (log "Kuva ladattu")
            (when on-load
              (on-load))
-           (let [kuva-dom (.getElementById js/document komponentti-id)]
-             (log "Kuva domissa: " (pr-str kuva-dom))
-             (log "EXIF: " (pr-str js/EXIF))))}]
+           (let [kuva-node (.getElementById js/document komponentti-id)
+                 kasittele-exif-vastaus
+                 (fn [_] (this-as tama
+                           (let [orientaatio (.getTag js/EXIF tama "Orientation")]
+                            (log "Orientaatio selvitetty: " orientaatio))))]
+             (.getData js/EXIF kuva-node kasittele-exif-vastaus)))}]
     (fn [optiot]
       (let [lopulliset-optiot
             (merge
