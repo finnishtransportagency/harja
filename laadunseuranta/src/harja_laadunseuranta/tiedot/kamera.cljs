@@ -21,7 +21,12 @@
                     (tee-kuva (-> e .-target .-result)))))
     (.readAsDataURL reader file)))
 
-(defn ota-kuva []
+(defn ota-kuva
+  "Käynnistää kuvan ottamisen klikkaamalla ohjelmallisesti sivulla piilossa
+   olevaa file input -kenttää. Desktop-laitteilla laukaisee yleensä normaalin
+   tiedostonvalintadialogin, mobiilissa tarjoaa lisäksi mahdollisuuden ottaa
+   kuva laitteen kameralla."
+  []
   (let [file-input (.getElementById js/document "file-input")]
     (when file-input
       (.log js/console "Klikataan file inputtia ohjelmallisesti.")
