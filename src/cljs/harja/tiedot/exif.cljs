@@ -13,8 +13,7 @@
    Huomaa, että kuvan täytyy olla ladattuna sivulle ennen kuin tätä
    funktiota voi kutsua. Kannattaa kutsua esim <img> elementin
    :on-load eventissä."
-  [kuva-node exif-tag vastaus-callback]
+  [kuva-node exif-tag-nimi vastaus-callback]
   (.getData js/EXIF kuva-node
-            (fn []
-              (vastaus-callback
-                (.getTag js/EXIF (js-this) exif-tag)))))
+            #(vastaus-callback
+              (.getTag js/EXIF (js-this) exif-tag-nimi))))
