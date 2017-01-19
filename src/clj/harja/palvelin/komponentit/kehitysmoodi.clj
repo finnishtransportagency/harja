@@ -14,7 +14,23 @@
 
 (def debug-last-wmts-response (atom nil))
 
-(defn hae-karttakuva [{:keys [uri query-params] :as req}]
+(def +kopioitavat-headerit+
+  {"Cache-Control"  :cache-control
+   "Content-Length" :content-length
+   "Content-Type" :content-type
+   "Date" :date
+   "Expires" :expires
+   "Last-modified" :last-modified})
+
+(defn- headerit [headers]
+  (reduce (fn [h [header keyword]]
+            (if-let [v (get headers keyword)]
+              (assoc h header v)
+              h))
+          {}
+          +kopioitavat-headerit+))
+
+(defn- hae-karttakuva [{:keys [uri query-params] :as req}]
   (let [{:keys [status body headers] :as res}
         @(http/get (str +wmts-url+
                         (str/replace uri #"/wmts/" "/"))
@@ -23,12 +39,7 @@
     (reset! debug-last-wmts-response res)
     {:status status
      :body body
-     :headers {"Cache-Control"  (:cache-control headers)
-               "Content-Length" (:content-length headers)
-               "Content-Type" (:content-type headers)
-               "Date" (:date headers)
-               "Expires" (:expires headers)
-               "Last-modified" (:last-modified headers)}}))
+     :headers (headerit headers)}))
 
 (defrecord Kehitysmoodi []
   component/Lifecycle
