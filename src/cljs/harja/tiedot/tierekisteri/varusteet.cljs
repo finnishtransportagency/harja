@@ -12,21 +12,25 @@
             [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn varustetoteuma [{:keys [tietue]} toiminto]
-  (let [tr-osoite (get-in tietue [:sijainti :tie])]
-    {:arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
-     :puoli (:puoli tr-osoite)
-     :ajorata (:ajr tr-osoite)
-     :tierekisteriosoite {:numero (:numero tr-osoite)
-                          :alkuosa (:aosa tr-osoite)
-                          :alkuetaisyys (:aet tr-osoite)
-                          :loppuosa (:losa tr-osoite)
-                          :loppuetaisyys (:let tr-osoite)}
-     :tietolaji (get-in tietue [:tietolaji :tunniste])
-     :toiminto toiminto
-     :urakka-id @nav/valittu-urakka-id
-     :alkupvm (:alkupvm tietue)
-     :loppupvm (:loppupvm tietue)}))
+(defn varustetoteuma
+  ([tiedot toiminto] (varustetoteuma tiedot toiminto nil nil))
+  ([{:keys [tietue]} toiminto kuntoluokitus lisatieto]
+   (let [tr-osoite (get-in tietue [:sijainti :tie])]
+     {:arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
+      :puoli (:puoli tr-osoite)
+      :ajorata (:ajr tr-osoite)
+      :tierekisteriosoite {:numero (:numero tr-osoite)
+                           :alkuosa (:aosa tr-osoite)
+                           :alkuetaisyys (:aet tr-osoite)
+                           :loppuosa (:losa tr-osoite)
+                           :loppuetaisyys (:let tr-osoite)}
+      :tietolaji (get-in tietue [:tietolaji :tunniste])
+      :toiminto toiminto
+      :urakka-id @nav/valittu-urakka-id
+      :alkupvm (:alkupvm tietue)
+      :loppupvm (:loppupvm tietue)
+      :kuntoluokitus kuntoluokitus
+      :lisatieto lisatieto})))
 
 (defn hakutulokset [app tietolaji varusteet]
   (-> app
@@ -50,6 +54,10 @@
 
 ;; Toimenpiteet Tierekisteriin
 (defrecord PoistaVaruste [varuste])
+(defrecord AloitaVarusteenTarkastus [varuste tunniste tietolaji])
+(defrecord PeruutaVarusteenTarkastus [])
+(defrecord AsetaVarusteTarkastuksenTiedot [tiedot])
+(defrecord TallennaVarustetarkastus [varuste tarkastus])
 (defrecord ToimintoEpaonnistui [toiminto virhe])
 (defrecord ToimintoOnnistui [vastaus])
 
@@ -121,4 +129,32 @@
           (if (or (k/virhe? vastaus) (not (:onnistunut vastaus)))
             (virhe! {:vastaus vastaus :viesti "Varusteen poistossa tapahtui virhe."})
             (tulos! {:vastaus vastaus :viesti "Varuste poistettu onnistuneesti."})))))
-    app))
+    app)
+
+  AloitaVarusteenTarkastus
+  (process-event [{:keys [varuste tunniste tietolaji]} app]
+    (assoc app :tarkastus {:varuste varuste :tunniste tunniste :tietolaji tietolaji}))
+
+  PeruutaVarusteenTarkastus
+  (process-event [_ app]
+    (dissoc app :tarkastus))
+
+  TallennaVarustetarkastus
+  (process-event [{varuste :varuste {lisatieto :lisatietoja kuntoluokitus :kuntoluokitus} :tarkastus :as data} app]
+    (let [tulos! (t/send-async! map->ToimintoOnnistui)
+          virhe! (t/send-async! ->ToimintoEpaonnistui)]
+      (go
+        (let [varuste (assoc-in varuste [:tietue :tietolaji :arvot "kuntoluokitus"] kuntoluokitus)
+              varustetoteuma (varustetoteuma varuste :tarkastus kuntoluokitus lisatieto)
+              hakuehdot {:urakka-id (:id @nav/valittu-urakka)
+                         :sopimus-id (first @urakka/valittu-sopimusnumero)
+                         :aikavali @urakka/valittu-aikavali}
+              vastaus (<! (varuste-tiedot/tallenna-varustetoteuma hakuehdot varustetoteuma))]
+          (if (or (k/virhe? vastaus) (not (:onnistunut vastaus)))
+            (virhe! {:vastaus vastaus :viesti "Varusteen tarkastuksen kirjauksessa tapahtui virhe."})
+            (tulos! {:vastaus vastaus :viesti "Varustetarkastus kirjattu onnistuneesti."})))))
+    (dissoc app :tarkastus))
+
+  AsetaVarusteTarkastuksenTiedot
+  (process-event [{uudet-tiedot :tiedot} {tarkastus :tarkastus :as app}]
+    (assoc app :tarkastus (assoc tarkastus :tiedot uudet-tiedot))))

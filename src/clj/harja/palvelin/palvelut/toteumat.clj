@@ -684,7 +684,7 @@
                                 :alkupvm alkupvm
                                 :loppupvm loppupvm
                                 :piiri elynro
-                                :kuntoluokka (:kuntoluokka arvot)
+                                :kuntoluokka (:kuntoluokitus arvot)
                                 :tierekisteriurakkakoodi (:tierekisteriurakkakoodi arvot)
                                 :luoja (:id user)
                                 :tr_numero (:numero tierekisteriosoite)
