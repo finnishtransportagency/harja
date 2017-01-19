@@ -68,19 +68,20 @@
         "Käynnistetään..."
         "Käynnistä tarkastus"))]])
 
-(defn- kamera [tarkastusajo-kaynnissa?]
+(defn- kamera [tarkastusajo-kaynnissa? kuvaa-otetaan-atom]
   (let [disabloitu? (not tarkastusajo-kaynnissa?)]
     [:div {:class (str "ylapalkki-button "
                        (when disabloitu?
                          "ylapalkki-button-disabloitu "))
            :on-click #(when-not disabloitu?
-                        (kamera/ota-kuva))}
+                        (kamera/ota-kuva kuvaa-otetaan-atom))}
      [kuvat/svg-sprite "kamera-24"]]))
 
 (defn- ylapalkkikomponentti [{:keys [hoitoluokka soratiehoitoluokka nayta-paanavigointi?
                                      tr-osoite tarkastusajo-kaynnissa? tarkastusajo-alkamassa?
                                      kaynnista-tarkastus-fn pysayta-tarkastusajo-fn
                                      disabloi-kaynnistys? havaintonappi-painettu
+                                     kuvaa-otetaan-atom
                                      palvelinvirhe piirra-paanavigointi? havaintolomake-auki?]}]
   [:div
    [:div.ylapalkki {:class (when (or (utils/kehitysymparistossa?)
@@ -92,7 +93,7 @@
                      :piirra-paanavigointi? piirra-paanavigointi?
                      :havaintolomake-auki? havaintolomake-auki?
                      :tarkastusajo-kaynnissa? tarkastusajo-kaynnissa?}]
-     [kamera tarkastusajo-kaynnissa?]
+     [kamera tarkastusajo-kaynnissa? kuvaa-otetaan-atom]
      [tieosoite tr-osoite]
      [metatiedot soratiehoitoluokka hoitoluokka]]
     [:div.ylapalkki-oikea
@@ -112,6 +113,7 @@
     :nayta-paanavigointi? @s/nayta-paanavigointi?
     :piirra-paanavigointi? @s/piirra-paanavigointi?
     :havaintolomake-auki? @s/havaintolomake-auki?
+    :kuvaa-otetaan-atom s/kuvaa-otetaan?
     :tarkastusajo-alkamassa? @s/tarkastusajo-alkamassa?
     :soratiehoitoluokka @s/soratiehoitoluokka
     :kaynnista-tarkastus-fn tarkastusajon-luonti/luo-ajo!
