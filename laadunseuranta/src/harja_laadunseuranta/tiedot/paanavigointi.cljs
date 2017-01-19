@@ -385,7 +385,7 @@
     :jarjestys 1
     :sisalto (:sillat havainnot-ryhmittain)}
    {:avain :paallystyksen-tyovirheluettelo ;; Koskee ylläpitoa
-    :nimi "Pääl. työvirh."
+    :nimi "Pääll. työvirhel."
     :jarjestys 1
     :sisalto (:paallystyksen-tyovirheluettelo havainnot-ryhmittain)}])
 
