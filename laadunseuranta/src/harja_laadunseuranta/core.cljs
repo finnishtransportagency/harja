@@ -58,9 +58,11 @@
   (dom/kuuntele-leveyksia)
   (dom/kuuntele-body-klikkauksia))
 
-(defn- kasittele-sivun-nakyvyysmuutos [kuvaa-otetaan-atom]
+(defn- kasittele-sivun-nakyvyysmuutos [tarkastusajo-kaynnissa-atom
+                                       kuvaa-otetaan-atom]
   (let [piilossa? js/document.hidden]
     (when (and piilossa?
+               @tarkastusajo-kaynnissa-atom
                (not @kuvaa-otetaan-atom))
       ;; Ilmoitus näkyy sitten kun käyttäjä palaa takaisin sovellukseen
       (ilmoitukset/ilmoita
@@ -68,9 +70,11 @@
        sovellus/ilmoitus
        {:tyyppi :varoitus}))))
 
-(defn- kuuntele-sivun-nakyvyytta [kuvaa-otetaan-atom]
+(defn- kuuntele-sivun-nakyvyytta [tarkastusajo-kaynnissa-atom kuvaa-otetaan-atom]
   (.addEventListener js/document "visibilitychange"
-                     (partial kasittele-sivun-nakyvyysmuutos kuvaa-otetaan-atom)))
+                     #(kasittele-sivun-nakyvyysmuutos
+                        tarkastusajo-kaynnissa-atom
+                        kuvaa-otetaan-atom)))
 
 (defn kaynnista-kayttajatietojen-haku []
   ;; Haetaan käyttäjätiedot kun laite on paikannettu
@@ -127,7 +131,8 @@
   (alusta-paikannus-id)
   (alusta-geolokaatio-api)
   (kuuntele-dom-eventteja)
-  (kuuntele-sivun-nakyvyytta sovellus/kuvaa-otetaan?)
+  (kuuntele-sivun-nakyvyytta sovellus/tarkastusajo-kaynnissa?
+                             sovellus/kuvaa-otetaan?)
   (alusta-sovellus))
 
 (defn ^:export aja-testireitti [url]
