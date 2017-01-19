@@ -19,6 +19,7 @@
 
 (defn- havaintolomakekomponentti [{:keys [lomakedata tallenna-fn peruuta-fn
                                           tr-osoite-lomakkeen-avauksessa
+                                          kuvaa-otetaan-atom
                                           liittyvat-havainnot havainnot-ryhmittain]}]
   (let [kuvaus-atom (reagent/cursor lomakedata [:kuvaus])
         aikaleima-atom (reagent/cursor lomakedata [:aikaleima])
@@ -85,7 +86,8 @@
          [lomake/tekstialue kuvaus-atom]]
         ^{:key "Kamera"}
         [lomake/kentta ""
-         [kamera/kamerakomponentti esikatselukuva-atom]]]])))
+         [kamera/kamerakomponentti {:esikatselukuva-atom esikatselukuva-atom
+                                    :kuvaa-otetaan-atom kuvaa-otetaan-atom}]]]])))
 
 (defn havaintolomake []
   (let [lomakedata (alusta-uusi-lomake!)
@@ -95,6 +97,7 @@
        {:lomakedata lomakedata
         :tr-osoite-lomakkeen-avauksessa tr-osoite-lomakkeen-avauksessa
         :tallenna-fn tallenna-lomake!
+        :kuvaa-otetaan-atom s/kuvaa-otetaan?
         :havainnot-ryhmittain paanavigointi/havainnot-ryhmittain
         :peruuta-fn peruuta-lomake!
         :liittyvat-havainnot @s/liittyvat-havainnot}])))
