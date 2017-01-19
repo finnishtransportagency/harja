@@ -61,10 +61,9 @@
 (defn- kasittele-sivun-nakyvyysmuutos [tarkastusajo-kaynnissa-atom
                                        kuvaa-otetaan-atom]
   (let [piilossa? js/document.hidden]
-    (when (and piilossa?
-               @tarkastusajo-kaynnissa-atom
-               (not @kuvaa-otetaan-atom))
-      ;; Ilmoitus näkyy sitten kun käyttäjä palaa takaisin sovellukseen
+    (when (and (not piilossa?) ;; Tultiin piilosta pois
+               (not @kuvaa-otetaan-atom)
+               @tarkastusajo-kaynnissa-atom)
       (ilmoitukset/ilmoita
        "Pidä sovellus näkyvillä, muuten merkinnät eivät tallennu!"
        sovellus/ilmoitus
