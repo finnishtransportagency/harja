@@ -1,9 +1,10 @@
-(ns harja-laadunseuranta.tarkastukset-test
+(ns harja-laadunseuranta.tarkastusreittimuunnin-test
   (:require [clojure.test :as t :refer [deftest testing is]]
-            [harja-laadunseuranta.tarkastukset :refer [reittimerkinnat-tarkastuksiksi luo-kantaan-tallennettava-tarkastus]]
+            [harja-laadunseuranta.tarkastusreittimuunnin :refer [reittimerkinnat-tarkastuksiksi
+                                                                 luo-kantaan-tallennettava-tarkastus]]
             [harja-laadunseuranta.testidata :as testidata]
             [taoensso.timbre :as log]
-            [harja-laadunseuranta.tarkastukset :as tarkastukset]))
+            [harja-laadunseuranta.tarkastusreittimuunnin :as tarkastukset]))
 
 (defn lisaa-reittimerkinnoille-mockattu-tieosoite
   "Mock-funktio, joka lisää tiemerkinnöille tierekisteriosoitteet ilman oikeaa kannassa olevaa tieverkkoa.

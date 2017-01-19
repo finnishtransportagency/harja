@@ -1,4 +1,4 @@
-(ns harja-laadunseuranta.tarkastukset
+(ns harja-laadunseuranta.tarkastusreittimuunnin
   (:require [taoensso.timbre :as log]
             [harja-laadunseuranta.tietokanta :as tietokanta]
             [harja-laadunseuranta.kyselyt :as q]

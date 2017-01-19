@@ -6,7 +6,7 @@
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [harja-laadunseuranta.tietokanta :as tietokanta]
             [harja-laadunseuranta.kyselyt :as q]
-            [harja-laadunseuranta.tarkastukset :as tarkastukset]
+            [harja-laadunseuranta.tarkastusreittimuunnin :as reittimuunnin]
             [harja-laadunseuranta.schemas :as schemas]
             [harja-laadunseuranta.utils :as utils]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
@@ -147,10 +147,10 @@
                                    tx {:tarkastusajo tarkastusajo-id
                                        :treshold 100})
         merkinnat-tr-osoitteilla (lisaa-reittimerkinnoille-lopullinen-tieosoite merkinnat-tr-osoitteilla)
-        tarkastukset (-> (tarkastukset/reittimerkinnat-tarkastuksiksi merkinnat-tr-osoitteilla)
+        tarkastukset (-> (reittimuunnin/reittimerkinnat-tarkastuksiksi merkinnat-tr-osoitteilla)
                          (lisaa-tarkastuksille-urakka-id urakka-id))]
     (log/debug "Reittipisteet muunnettu tarkastuksiksi. Tallennetaan tarkastukset urakkaan " urakka-id)
-    (tarkastukset/tallenna-tarkastukset! tx tarkastukset kayttaja)
+    (reittimuunnin/tallenna-tarkastukset! tx tarkastukset kayttaja)
     (log/debug "Reittimerkitöjen muunto tarkastuksiksi suoritettu!")))
 
 (defn paata-tarkastusajo! [db tarkastusajo kayttaja]
