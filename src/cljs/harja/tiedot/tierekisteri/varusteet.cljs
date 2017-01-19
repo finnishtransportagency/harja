@@ -132,7 +132,7 @@
     app)
 
   AloitaVarusteenTarkastus
-  (process-event [{varuste :varuste tunniste :tunniste tietolaji :tietolaji :as data} app]
+  (process-event [{:keys [varuste tunniste tietolaji]} app]
     (assoc app :tarkastus {:varuste varuste :tunniste tunniste :tietolaji tietolaji}))
 
   PeruutaVarusteenTarkastus
