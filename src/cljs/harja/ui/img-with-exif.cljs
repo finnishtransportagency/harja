@@ -26,9 +26,8 @@
              (on-load))
            (let [kuva-node (.getElementById js/document komponentti-id)
                  kasittele-exif-vastaus
-                 (fn [_] (this-as tama
-                           (let [orientaatio (.getTag js/EXIF tama "Orientation")]
-                            (log "Orientaatio selvitetty: " orientaatio))))]
+                 (fn [_] (let [orientaatio (.getTag js/EXIF (js-this) "Orientation")]
+                           (log "Orientaatio selvitetty: " orientaatio)))]
              (.getData js/EXIF kuva-node kasittele-exif-vastaus)))}]
     (fn [optiot]
       (let [lopulliset-optiot
