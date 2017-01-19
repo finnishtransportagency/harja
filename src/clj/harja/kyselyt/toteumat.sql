@@ -840,7 +840,8 @@ SELECT
   tpk.nimi              AS tehtava_toimenpidekoodi_nimi,
   tpi.id                AS tehtava_toimenpideinstanssi_id,
   tpi.nimi              AS tehtava_toimenpideinstanssi_nimi,
-  ST_Length(reitti)     AS pituus
+  ST_Length(reitti)     AS pituus,
+  t.tr_numero, t.tr_alkuosa, t.tr_alkuetaisyys, t.tr_loppuosa, t.tr_loppuetaisyys
 FROM toteuma t
   JOIN kayttaja k ON t.luoja = k.id
                      AND t.poistettu IS NOT TRUE
