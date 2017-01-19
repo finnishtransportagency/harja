@@ -311,9 +311,14 @@
                                          valittu-valilehtiryhma valilehdet-nakyvissa?
                                          valittu-valilehti] :as tiedot}]
   (let [togglaa-valilehtien-nakyvyys! (fn []
-                                        (swap! valilehdet-nakyvissa? not))]
-
-    (reset! valittu-valilehti (:avain (first valilehdet)))
+                                        (swap! valilehdet-nakyvissa? not))
+        resetoi-valittu-valilehti-tarvittaessa! (fn []
+                                                  ;; Resetoi valittu välilehti jos tyhjä tai ei enää valittavissa
+                                                  (when (or (nil? @valittu-valilehti)
+                                                            (not-any? #(= (:avain %) @valittu-valilehti)
+                                                                      valilehdet))
+                                                    (reset! valittu-valilehti (:avain (first valilehdet)))))]
+    (resetoi-valittu-valilehti-tarvittaessa!)
 
     (fn [{:keys [valilehdet kirjaa-pistemainen-havainto-fn
                  kirjaa-valikohtainen-havainto-fn valilehtiryhmat
