@@ -127,7 +127,7 @@
                  [yleisradio/new-reliquary "1.0.0"]
 
                  ;; Tuck UI apuri
-                 [webjure/tuck "0.2.3"]
+                 [webjure/tuck "0.3"]
 
                  ;; Laadunseurantatyökalua varten
                  [org.clojure/data.codec "0.1.0"]
