@@ -247,78 +247,79 @@
                :ikoni-lahde "livicons"
                :avain :maakivi
                :vaatii-nappaimiston? false}]
-   :paallystys [{:nimi "Sauma\u00ADvirhe"
-                 :tyyppi :vali
-                 :ikoni "saumavirhe-36"
-                 :ikoni-lahde "livicons"
-                 :avain :saumavirhe
-                 :vaatii-nappaimiston? false}
-                {:nimi "Lajit\u00ADtuma"
-                 :tyyppi :vali
-                 :ikoni "lajittuma-36"
-                 :ikoni-lahde "livicons"
-                 :avain :lajittuma
-                 :vaatii-nappaimiston? false}
-                {:nimi "Epä\u00ADtasai\u00ADsuus"
-                 :tyyppi :vali
-                 :ikoni "epatasa-36"
-                 :ikoni-lahde "livicons"
-                 :avain :epatasaisuus
-                 :vaatii-nappaimiston? false}
-                {:nimi "Hal\u00ADkeamat"
-                 :tyyppi :vali
-                 :ikoni "halkeama-36"
-                 :ikoni-lahde "livicons"
-                 :avain :halkeamat
-                 :vaatii-nappaimiston? false}
-                {:nimi "Vesi\u00ADlammi\u00ADkot"
-                 :tyyppi :vali
-                 :ikoni "vesilammikko-36"
-                 :ikoni-lahde "livicons"
-                 :avain :vesilammikot
-                 :vaatii-nappaimiston? false}
-                {:nimi "Epä\u00ADtasai\u00ADset reunat"
-                 :tyyppi :vali
-                 :ikoni "epatasaiset-reunat-36"
-                 :ikoni-lahde "livicons"
-                 :avain :epatasaisetreunat
-                 :vaatii-nappaimiston? false}
-                {:nimi "Jyrän jälkiä"
-                 :tyyppi :vali
-                 :ikoni "jyran-jalki-36"
-                 :ikoni-lahde "livicons"
-                 :avain :jyranjalkia
-                 :vaatii-nappaimiston? false}
-                {:nimi "Side\u00ADaine\u00ADläikkiä"
-                 :tyyppi :vali
-                 :ikoni "laikka-36"
-                 :ikoni-lahde "livicons"
-                 :avain :sideainelaikkia
-                 :vaatii-nappaimiston? false}
-                {:nimi "Vää\u00ADrä korkeu\u00ADsasema"
-                 :tyyppi :vali
-                 :ikoni "vaara-korkeus-36"
-                 :ikoni-lahde "livicons"
-                 :avain :vaarakorkeusasema
-                 :vaatii-nappaimiston? false}
-                {:nimi "Pinta harva"
-                 :tyyppi :vali
-                 :ikoni "harva-pinta-36"
-                 :ikoni-lahde "livicons"
-                 :avain :pintaharva
-                 :vaatii-nappaimiston? false}
-                {:nimi "Pinta\u00ADkuivatus puut\u00ADteel\u00ADlinen"
-                 :tyyppi :vali
-                 :ikoni "pintakuivatus-puute-36"
-                 :ikoni-lahde "livicons"
-                 :avain :pintakuivatuspuute
-                 :vaatii-nappaimiston? false}
-                {:nimi "Kai\u00ADvojen korkeu\u00ADsasema"
-                 :tyyppi :vali
-                 :ikoni "kaivon-korkeus-36"
-                 :ikoni-lahde "livicons"
-                 :avain :kaivojenkorkeusasema
-                 :vaatii-nappaimiston? false}]})
+   :paallystyksen-tyovirheluettelo
+   [{:nimi "Sauma\u00ADvirhe"
+     :tyyppi :vali
+     :ikoni "saumavirhe-36"
+     :ikoni-lahde "livicons"
+     :avain :saumavirhe
+     :vaatii-nappaimiston? false}
+    {:nimi "Lajit\u00ADtuma"
+     :tyyppi :vali
+     :ikoni "lajittuma-36"
+     :ikoni-lahde "livicons"
+     :avain :lajittuma
+     :vaatii-nappaimiston? false}
+    {:nimi "Epä\u00ADtasai\u00ADsuus"
+     :tyyppi :vali
+     :ikoni "epatasa-36"
+     :ikoni-lahde "livicons"
+     :avain :epatasaisuus
+     :vaatii-nappaimiston? false}
+    {:nimi "Hal\u00ADkeamat"
+     :tyyppi :vali
+     :ikoni "halkeama-36"
+     :ikoni-lahde "livicons"
+     :avain :halkeamat
+     :vaatii-nappaimiston? false}
+    {:nimi "Vesi\u00ADlammi\u00ADkot"
+     :tyyppi :vali
+     :ikoni "vesilammikko-36"
+     :ikoni-lahde "livicons"
+     :avain :vesilammikot
+     :vaatii-nappaimiston? false}
+    {:nimi "Epä\u00ADtasai\u00ADset reunat"
+     :tyyppi :vali
+     :ikoni "epatasaiset-reunat-36"
+     :ikoni-lahde "livicons"
+     :avain :epatasaisetreunat
+     :vaatii-nappaimiston? false}
+    {:nimi "Jyrän jälkiä"
+     :tyyppi :vali
+     :ikoni "jyran-jalki-36"
+     :ikoni-lahde "livicons"
+     :avain :jyranjalkia
+     :vaatii-nappaimiston? false}
+    {:nimi "Side\u00ADaine\u00ADläikkiä"
+     :tyyppi :vali
+     :ikoni "laikka-36"
+     :ikoni-lahde "livicons"
+     :avain :sideainelaikkia
+     :vaatii-nappaimiston? false}
+    {:nimi "Vää\u00ADrä korkeu\u00ADsasema"
+     :tyyppi :vali
+     :ikoni "vaara-korkeus-36"
+     :ikoni-lahde "livicons"
+     :avain :vaarakorkeusasema
+     :vaatii-nappaimiston? false}
+    {:nimi "Pinta harva"
+     :tyyppi :vali
+     :ikoni "harva-pinta-36"
+     :ikoni-lahde "livicons"
+     :avain :pintaharva
+     :vaatii-nappaimiston? false}
+    {:nimi "Pinta\u00ADkuivatus puut\u00ADteel\u00ADlinen"
+     :tyyppi :vali
+     :ikoni "pintakuivatus-puute-36"
+     :ikoni-lahde "livicons"
+     :avain :pintakuivatuspuute
+     :vaatii-nappaimiston? false}
+    {:nimi "Kai\u00ADvojen korkeu\u00ADsasema"
+     :tyyppi :vali
+     :ikoni "kaivon-korkeus-36"
+     :ikoni-lahde "livicons"
+     :avain :kaivojenkorkeusasema
+     :vaatii-nappaimiston? false}]})
 
 (defn jarjesta-valilehdet [valilehdet]
   (into [] (sort-by :jarjestys valilehdet)))
@@ -327,22 +328,28 @@
   "Palauttaa vain ne välilehdet, jotka ovat kyseiselle käyttäjäroolille tarpeelliset.
    Säätää myös järjestyksen kohdalleen."
   [oletusvalilehdet kayttajatiedot]
-  (let [oikeus-vain-paallystykseen? (every? #(= (:tyyppi %) "paallystys")
+  (let [oikeus-paallystykseen? (boolean (some #(= (:tyyppi %) "paallystys")
+                                              (:oikeus-urakoihin kayttajatiedot)))
+        oikeus-vain-paallystykseen? (every? #(= (:tyyppi %) "paallystys")
                                             (:oikeus-urakoihin kayttajatiedot))
         urakoitsija? (= (get-in kayttajatiedot [:organisaatio :tyyppi]) :urakoitsija)]
     (cond
-      ;; Päällystysurakoitsijalle näytetään vain päällystys-välilehti
+      ;; Päällystysurakoitsijalle näytetään vain Päällystyksen työvirheluettelo -välilehti
       (and urakoitsija?
            oikeus-vain-paallystykseen?)
-      (filterv #(= (:avain %) :paallystys) oletusvalilehdet)
+      (filterv #(= (:avain %) :paallystyksen-tyovirheluettelo) oletusvalilehdet)
 
       ;; Päällystyksen muille henkilöille siirreään vain päällystys-välilehti kärkeen
       oikeus-vain-paallystykseen?
-      (let [muokatut-valilehdet (mapv #(if (= (:avain %) :paallystys)
+      (let [muokatut-valilehdet (mapv #(if (= (:avain %) :paallystyksen-tyovirheluettelo)
                                          (assoc % :jarjestys 0)
                                          %)
                                       oletusvalilehdet)]
         (jarjesta-valilehdet muokatut-valilehdet))
+
+      ;; Päällystyksen työvirheluettelo näytetään vain jos on oikeus päällystysurakkaan
+      (not oikeus-paallystykseen?)
+      (filterv #(not= (:avain %) :paallystyksen-tyovirheluettelo) oletusvalilehdet)
 
       ;; Ei roolin mukaisia sääntöjä
       :default
@@ -377,10 +384,10 @@
     :nimi "Sillat"
     :jarjestys 1
     :sisalto (:sillat havainnot-ryhmittain)}
-   {:avain :paallystys
-    :nimi "Päällystys"
+   {:avain :paallystyksen-tyovirheluettelo ;; Koskee ylläpitoa
+    :nimi "Pääll. työvirhel."
     :jarjestys 1
-    :sisalto (:paallystys havainnot-ryhmittain)}])
+    :sisalto (:paallystyksen-tyovirheluettelo havainnot-ryhmittain)}])
 
 ;; Käsittelylogiikka
 
