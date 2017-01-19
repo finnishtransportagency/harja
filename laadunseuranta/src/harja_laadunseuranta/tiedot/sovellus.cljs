@@ -70,6 +70,7 @@
 
    ;; Lomake
    :havaintolomake-auki? false
+   :kuvaa-otetaan? false ; Tulisi olla true silloin kun otetaan kuvaa (valitaan tiedostoa tai käytetään laitteen kameraa)
    :havaintolomakedata {:kayttajanimi nil
                         :aikaleima nil
                         :laadunalitus? false
@@ -125,6 +126,7 @@
 (def organisaatio (reagent/cursor sovellus [:kayttaja :organisaatio]))
 
 (def havaintolomake-auki? (reagent/cursor sovellus [:havaintolomake-auki?]))
+(def kuvaa-otetaan? (reagent/cursor sovellus [:kuvaa-otetaan?]))
 (def havaintolomakedata (reagent/cursor sovellus [:havaintolomakedata]))
 (def havaintolomakkeeseen-liittyva-havainto (reagent/cursor sovellus [:havaintolomakedata :liittyy-havaintoon]))
 (def liittyy-varmasti-tiettyyn-havaintoon? (reagent/cursor sovellus [:havaintolomakedata :liittyy-varmasti-tiettyyn-havaintoon?]))
