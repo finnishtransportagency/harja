@@ -20,8 +20,9 @@
    funktiota voi kutsua. Kannattaa kutsua esim <img> elementin
    :on-load eventissä."
   [kuva-node tiedot-luettu-callback]
-  (.getData js/EXIF
-            kuva-node
-            #(tiedot-luettu-callback
-               (fn [exif-tag-nimi]
-                 (.getTag js/EXIF kuva-node exif-tag-nimi)))))
+  (when kuva-node
+    (.getData js/EXIF
+              kuva-node
+              #(tiedot-luettu-callback
+                 (fn [exif-tag-nimi]
+                   (.getTag js/EXIF kuva-node exif-tag-nimi))))))

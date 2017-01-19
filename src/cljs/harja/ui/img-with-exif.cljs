@@ -4,7 +4,9 @@
             [harja.loki :refer [log]]
             [harja.tiedot.exif :as exif]
             [cljs.core.async :refer [<!]]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [harja.ui.komponentti :as komp]
+            [reagent.core :as r])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- maarita-kuvan-luokat [optiot exif-orientaatio]
@@ -25,27 +27,30 @@
    Kuvan latauksen aikana näytetään ajax-loader, jottei latauksessa oleva kuva tule ensin ruudulle
    virheellisellä orientaatiolla.
 
-   Optiot on mappi, joka annetaan <img> elementille. Kuvalla ei saa olla id:tä, sillä tämä komponentti
-   luo kuvalle oman id:n."
+   Optiot on mappi, joka annetaan <img> elementille."
   [{:keys [on-load] :as optiot}]
   ;; PENDING Joku kaunis päivä tätä komponenttia ei enää tarvita, vaan CSS:n
   ;; image-orientation toimii kaikkialla <3
   ;; Ks. http://caniuse.com/#feat=css-image-orientation
-  (let [komponentti-id (hash (str optiot (t/now)))
-        exif-orientaatio (atom nil)
-        exif-optiot
-        {:id komponentti-id
-         :on-load
-         (fn []
-           (when on-load
-             (on-load)) ;; Kutsu optioissa määriteltyä on-load eventtiä, jos sellainen annettiin
-           (exif/lue-kuvan-exif-tiedot
-             (.getElementById js/document komponentti-id)
-             (partial kasittele-exif-tietojen-hakuvastaus! exif-orientaatio)))}]
-    (fn [optiot]
-      (let [lopulliset-optiot (merge optiot exif-optiot)
-            lopulliset-optiot (maarita-kuvan-luokat lopulliset-optiot @exif-orientaatio)]
-        [:span
-         (when-not @exif-orientaatio
-           [ajax-loader])
-         [:img lopulliset-optiot]]))))
+  (let [exif-orientaatio (atom nil)
+        exif-optiot (atom nil)
+        maarita-exif-optiot (fn [img-node]
+                              {:on-load
+                               (fn []
+                                 (when on-load
+                                   (on-load)) ;; Kutsu optioissa määriteltyä on-load eventtiä, jos sellainen annettiin
+                                 (exif/lue-kuvan-exif-tiedot
+                                   img-node
+                                   (partial kasittele-exif-tietojen-hakuvastaus! exif-orientaatio)))})]
+    (komp/luo
+      (komp/piirretty
+        (fn [this]
+          (reset! exif-optiot (maarita-exif-optiot
+                                (.-lastChild (r/dom-node this))))))
+      (fn [optiot]
+        (let [lopulliset-optiot (merge optiot @exif-optiot)
+              lopulliset-optiot (maarita-kuvan-luokat lopulliset-optiot @exif-orientaatio)]
+          [:span
+           (when-not @exif-orientaatio
+             [ajax-loader])
+           [:img lopulliset-optiot]])))))
