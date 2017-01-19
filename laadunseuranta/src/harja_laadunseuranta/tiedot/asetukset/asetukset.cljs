@@ -42,3 +42,6 @@
 
 ;; paluu harjaan
 (def +harja-url+ (str "/" (prefix) "#urakat/laadunseuranta/"))
+
+;; Ilmoitukset
+(def +ilmoituksen-nakymisaika-ms+ 10000)
