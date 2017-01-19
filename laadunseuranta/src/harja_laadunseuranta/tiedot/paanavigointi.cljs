@@ -296,7 +296,7 @@
      :ikoni-lahde "livicons"
      :avain :sideainelaikkia
      :vaatii-nappaimiston? false}
-    {:nimi "Vää\u00ADrä korkeu\u00ADsasema"
+    {:nimi "Vää\u00ADrä korkeus\u00ADasema"
      :tyyppi :vali
      :ikoni "vaara-korkeus-36"
      :ikoni-lahde "livicons"
@@ -314,7 +314,7 @@
      :ikoni-lahde "livicons"
      :avain :pintakuivatuspuute
      :vaatii-nappaimiston? false}
-    {:nimi "Kai\u00ADvojen korkeu\u00ADsasema"
+    {:nimi "Kai\u00ADvojen korkeus\u00ADasema"
      :tyyppi :vali
      :ikoni "kaivon-korkeus-36"
      :ikoni-lahde "livicons"
