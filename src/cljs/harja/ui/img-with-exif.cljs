@@ -15,6 +15,10 @@
     (assoc optiot :class
                   (str (:class optiot) " " "ladataan-exif-kuvaa"))))
 
+(defn- kasittele-exif-tietojen-hakuvastaus! [exif-orientaatio-atom exif-fn]
+  (when-let [orientaatio (exif-fn "Orientation")]
+    (reset! exif-orientaatio-atom orientaatio)))
+
 (defn img-with-exif
   "Luo <img> kuvan, joka käännetään oikeaan orientaatioon lukemalla orientaatio kuvan EXIF-metadatasta
    ja asettamalla sitä vastaava CSS-luokka.
@@ -33,10 +37,9 @@
          (fn []
            (when on-load
              (on-load)) ;; Kutsu optioissa määriteltyä on-load eventtiä, jos sellainen annettiin
-           (exif/lue-kuvan-exif-tag (.getElementById js/document komponentti-id)
-                                    "Orientation"
-                                    (fn [orientaatio]
-                                      (reset! exif-orientaatio orientaatio))))}]
+           (exif/lue-kuvan-exif-tiedot
+             (.getElementById js/document komponentti-id)
+             (partial kasittele-exif-tietojen-hakuvastaus! exif-orientaatio)))}]
     (fn [optiot]
       (let [lopulliset-optiot (merge optiot exif-optiot)
             lopulliset-optiot (maarita-kuvan-luokat lopulliset-optiot @exif-orientaatio)]

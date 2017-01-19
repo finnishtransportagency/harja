@@ -6,15 +6,22 @@
             [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn lue-kuvan-exif-tag
-  "Lukee kuvan EXIF-tagin käyttäen exif.js-kirjastoa.
-   Vastaus annetaan callback-funktiolle.
+(defn lue-kuvan-exif-tiedot
+  "Lukee kuvan EXIF-tiedot käyttäen exif.js-kirjastoa.
+   Kun tiedot on luettu, kutsuu callback-funktiota antaen sille parametriksi
+   funktion, jolta voi kysyä halutun EXIF-tagin tiedot antamalla
+   tagin nimen parametriksi. Callback voi olla esim.
+
+   (fn [exif-fn]
+     (when-let [orientaatio (exif-fn \"Orientation\")]
+       ...))
 
    Huomaa, että kuvan täytyy olla ladattuna sivulle ennen kuin tätä
    funktiota voi kutsua. Kannattaa kutsua esim <img> elementin
    :on-load eventissä."
-  [kuva-node exif-tag-nimi vastaus-callback]
+  [kuva-node tiedot-luettu-callback]
   (.getData js/EXIF
             kuva-node
-            #(vastaus-callback
-               (.getTag js/EXIF (js-this) exif-tag-nimi))))
+            #(tiedot-luettu-callback
+               (fn [exif-tag-nimi]
+                 (.getTag js/EXIF kuva-node exif-tag-nimi)))))
