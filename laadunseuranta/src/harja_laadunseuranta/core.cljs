@@ -58,16 +58,22 @@
   (dom/kuuntele-leveyksia)
   (dom/kuuntele-body-klikkauksia))
 
-(defn- kasittele-sivun-nakyvyysmuutos []
+(defn- kasittele-sivun-nakyvyysmuutos [tarkastusajo-kaynnissa-atom
+                                       kuvaa-otetaan-atom]
   (let [piilossa? js/document.hidden]
-    (when piilossa?
+    (when (and (not piilossa?) ;; Tultiin piilosta pois
+               (not @kuvaa-otetaan-atom)
+               @tarkastusajo-kaynnissa-atom)
       (ilmoitukset/ilmoita
        "Pidä sovellus näkyvillä, muuten merkinnät eivät tallennu!"
        sovellus/ilmoitus
        {:tyyppi :varoitus}))))
 
-(defn- kuuntele-sivun-nakyvyytta []
-  (.addEventListener js/document "visibilitychange" kasittele-sivun-nakyvyysmuutos))
+(defn- kuuntele-sivun-nakyvyytta [tarkastusajo-kaynnissa-atom kuvaa-otetaan-atom]
+  (.addEventListener js/document "visibilitychange"
+                     #(kasittele-sivun-nakyvyysmuutos
+                        tarkastusajo-kaynnissa-atom
+                        kuvaa-otetaan-atom)))
 
 (defn kaynnista-kayttajatietojen-haku []
   ;; Haetaan käyttäjätiedot kun laite on paikannettu
@@ -124,7 +130,8 @@
   (alusta-paikannus-id)
   (alusta-geolokaatio-api)
   (kuuntele-dom-eventteja)
-  (kuuntele-sivun-nakyvyytta)
+  (kuuntele-sivun-nakyvyytta sovellus/tarkastusajo-kaynnissa?
+                             sovellus/kuvaa-otetaan?)
   (alusta-sovellus))
 
 (defn ^:export aja-testireitti [url]

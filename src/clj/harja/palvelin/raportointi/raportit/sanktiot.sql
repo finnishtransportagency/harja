@@ -33,4 +33,5 @@ WHERE ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
       AND (:urakka::INTEGER IS NOT NULL OR
            (:urakka::INTEGER IS NULL AND (:urakkatyyppi :: urakkatyyppi IS NULL OR
                                  u.tyyppi = :urakkatyyppi :: urakkatyyppi)))
+      AND (lp.poistettu IS NOT TRUE OR lp.id IS NULL)
       AND s.perintapvm BETWEEN :alku AND :loppu;
