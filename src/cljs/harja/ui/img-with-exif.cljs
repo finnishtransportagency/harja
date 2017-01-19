@@ -13,10 +13,9 @@
    lukemalla orientaatio kuvan EXIF-metadatasta ja
    asettamalla sitä vastaava CSS-luokka.
 
+   Optiot on mappi, joka annetaan <img> elementille.
    Kuvalla ei saa olla id:tä, sillä tämä komponentti
-   luo kuvalle oman id:n.
-
-   Optiot on mappi, joka annetaan <img> elementille."
+   luo kuvalle oman id:n."
   [{:keys [on-load] :as optiot}]
   (let [komponentti-id (hash (str optiot (t/now)))
         exif-optiot
