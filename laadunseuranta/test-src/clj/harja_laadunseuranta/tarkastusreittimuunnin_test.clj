@@ -23,7 +23,6 @@
                         (component/using
                           (harja-laadunseuranta/->Laadunseuranta nil)
                           [:db :http-palvelin]))))
-
   (testit)
   (alter-var-root #'jarjestelma component/stop)))
 

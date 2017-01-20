@@ -309,11 +309,9 @@
 
   (stop [{http :http-palvelin :as this}]
     (http-palvelin/poista-palvelut http
-                                   :ls-juuri-1 :ls-juuri-2
-                                   :ls-tallenna-liite
                                    :ls-reittimerkinta
                                    :ls-paata-tarkastusajo
                                    :ls-uusi-tarkastusajo
-                                   :ls-hae-tr-tiedot
+                                   :ls-paata-tarkastusajo
                                    :ls-hae-kayttajatiedot)
     this))
