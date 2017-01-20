@@ -313,5 +313,6 @@
                                    :ls-paata-tarkastusajo
                                    :ls-uusi-tarkastusajo
                                    :ls-paata-tarkastusajo
-                                   :ls-hae-kayttajatiedot)
+                                   :ls-hae-kayttajatiedot
+                                   :ls-tallenna-liite)
     this))
