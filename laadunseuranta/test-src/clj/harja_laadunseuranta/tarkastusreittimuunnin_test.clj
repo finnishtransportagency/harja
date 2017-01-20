@@ -1,10 +1,35 @@
 (ns harja-laadunseuranta.tarkastusreittimuunnin-test
-  (:require [clojure.test :as t :refer [deftest testing is]]
+  (:require [clojure.test :refer :all]
+            [harja
+             [pvm :as pvm]
+             [testi :refer :all]]
             [harja-laadunseuranta.core :as ls-core]
             [harja-laadunseuranta.tarkastusreittimuunnin :refer [reittimerkinnat-tarkastuksiksi
                                                                  luo-kantaan-tallennettava-tarkastus]]
             [harja-laadunseuranta.testidata :as testidata]
-            [taoensso.timbre :as log]))
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [taoensso.timbre :as log]
+            [com.stuartsierra.component :as component]
+            [harja-laadunseuranta.core :as harja-laadunseuranta]))
+
+(defn jarjestelma-fixture [testit]
+  (alter-var-root #'jarjestelma
+                  (fn [_]
+                    (component/start
+                      (component/system-map
+                        :db (tietokanta/luo-tietokanta testitietokanta)
+                        :http-palvelin (testi-http-palvelin)
+                        :harja-laadunseuranta
+                        (component/using
+                          (harja-laadunseuranta/->Laadunseuranta nil)
+                          [:db :http-palvelin]))))
+
+  (testit)
+  (alter-var-root #'jarjestelma component/stop)))
+
+(use-fixtures :once (compose-fixtures
+                      jarjestelma-fixture
+                      urakkatieto-fixture))
 
 (defn lisaa-reittimerkinnoille-mockattu-tieosoite
   "Mock-funktio, joka lisää tiemerkinnöille tierekisteriosoitteet ilman oikeaa kannassa olevaa tieverkkoa.
@@ -110,6 +135,7 @@
         tarkastukset (reittimerkinnat-tarkastuksiksi
                        merkinnat-tieosoitteilla)
         tallennettava (luo-kantaan-tallennettava-tarkastus
+                        (:db jarjestelma)
                         (first (:reitilliset-tarkastukset tarkastukset))
                         {:kayttajanimi "jvh"})]
     ;; Tieosoitteet ovat oikein
@@ -119,6 +145,9 @@
     (is (= 4924 (:tr_alkuetaisyys tallennettava)))
     (is (= 11 (:tr_loppuosa tallennettava)))
     (is (= 6349 (:tr_loppuetaisyys tallennettava)))
+
+    ;; Ajolle saatiin muodostettua geometria
+    (is (some? (:sijainti tallennettava)))
 
     ;; Alku on ensimmäisen piste ja loppu on viimeinen piste
     (is (= (:tr_alkuosa tallennettava) (get-in (first merkinnat-tieosoitteilla) [:tr-osoite :aosa])))
@@ -131,6 +160,7 @@
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
                          testidata/tarkastus-jossa-kaikki-pisteet-samassa-sijainnissa))
         tallennettava (luo-kantaan-tallennettava-tarkastus
+                        (:db jarjestelma)
                         (first (:reitilliset-tarkastukset tarkastukset))
                         {:kayttajanimi "jvh"})]
     (is (= 1 (count (:reitilliset-tarkastukset tarkastukset))))
@@ -139,13 +169,17 @@
     (is (= 4924 (:tr_alkuetaisyys tallennettava)))
     ;; Kaikki osoitteet olivat samat --> tallentuu pistemäisenä
     (is (= nil))
-    (is (= nil))))
+    (is (= nil))
 
-(deftest tarkastus-trvali-jossa-osoitteet-samat
+    ;; Ajolle saatiin muodostettua geometria
+    (is (some? (:sijainti tallennettava)))))
+
+(deftest tarkastus-trvali-jossa-yksi-sijainti
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
                          testidata/tarkastus-jossa-yksi-piste))
         tallennettava (luo-kantaan-tallennettava-tarkastus
+                        (:db jarjestelma)
                         (first (:reitilliset-tarkastukset tarkastukset))
                         {:kayttajanimi "jvh"})]
     (is (= 1 (count (:reitilliset-tarkastukset tarkastukset))))
@@ -153,7 +187,10 @@
     (is (= 10 (:tr_alkuosa tallennettava)))
     (is (= 4924 (:tr_alkuetaisyys tallennettava)))
     (is (= nil))
-    (is (= nil))))
+    (is (= nil))
+
+    ;; Ajolle saatiin muodostettua geometria
+    (is (some? (:sijainti tallennettava)))))
 
 ;; -------- Laadunalitus --------
 
@@ -356,6 +393,7 @@
     (log/debug "Lopulliset Harjan kantaan menevät tarkastusten osoitteet:")
     (doseq [tarkastus kaikki-tarkastukset]
       (let [tallennettava (luo-kantaan-tallennettava-tarkastus
+                            (:db jarjestelma)
                             tarkastus
                             {:kayttajanimi "jvh"})]
         (log/debug (tie->str tallennettava))))))
