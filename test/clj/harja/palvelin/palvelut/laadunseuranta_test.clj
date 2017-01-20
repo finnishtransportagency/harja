@@ -169,8 +169,8 @@
         (is (number? (:id vastaus)) "Tallennus palauttaa uuden id:n")
         (is (= 2 (count (:sanktiot vastaus))) "Laatupoikkeamalla pitäisi olla kaksi sanktiota")
 
-        (every? number? (map :id (:sanktiot vastaus)))
-        (some #(= olemassa-olevan-sanktion-id %) (map :id (:sanktiot vastaus)))))
+        (is (every? number? (map :id (:sanktiot vastaus))))
+        (is (some #(= olemassa-olevan-sanktion-id %) (map :id (:sanktiot vastaus))))))
 
     (testing "Laatupoikkeaman luominen epäonnistuu jos sanktio ei kuulu urakkaan"
       (is (thrown? SecurityException
