@@ -32,7 +32,3 @@
 (defn hae-vakiohavaintoavaimet [db]
   (into {} (mapv (fn [r] [(keyword (:avain r)) (:id r)])
                  (hae-vakiohavaintojen-avaimet db))))
-
-(defn hae-vakiohavaintoidt [db]
-  (into {} (mapv (fn [r] [(:id r) (keyword (:avain r))])
-                 (hae-vakiohavaintojen-avaimet db))))
