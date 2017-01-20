@@ -10,7 +10,8 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
-            [harja-laadunseuranta.core :as harja-laadunseuranta])
+            [harja-laadunseuranta.core :as harja-laadunseuranta]
+            [clojure.core :as core])
   (:import (org.postgis PGgeometry MultiLineString Point)))
 
 (defn jarjestelma-fixture [testit]
@@ -345,20 +346,59 @@
 
 ;; -------- Testit oikeille tarkastusajoille alusta loppuun --------
 
+(defn- tarkista-tallennettavan-tarkastuksen-osoite [tarkastus
+                                                    {:keys [tie aosa aet losa let]}]
+  (core/let [tallennettava (luo-kantaan-tallennettava-tarkastus
+                             (:db jarjestelma)
+                             tarkastus
+                             {:kayttajanimi "jvh"})]
+
+    (is (instance? MultiLineString (.getGeometry (:sijainti tallennettava))))
+    (is (= (:tr_numero tallennettava) tie))
+    (is (= (:tr_alkuosa tallennettava) aosa))
+    (is (= (:tr_alkuetaisyys tallennettava) aet))
+    (is (= (:tr_loppuosa tallennettava) losa))
+    (is (= (:tr_loppuetaisyys tallennettava) let))))
+
 (deftest oikean-tarkastusajon-muunto-toimii
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi (:db jarjestelma) 754)
-        tarkastukset (ls-core/lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)]
+        tarkastukset (ls-core/lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)
+        reitilliset (:reitilliset-tarkastukset tarkastukset)
+        pistemaiset (:pistemaiset-tarkastukset tarkastukset)
+        kaikki-tarkastukset (concat reitilliset pistemaiset)]
 
-    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))
-    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 8))
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count pistemaiset) 0))
+    (is (= (count reitilliset) 8))
+
+    ;; Urakka määritetty
+    (is (every? #(= (:urakka %) urakka-id) kaikki-tarkastukset))
+
+    ;; Jokainen tallennettava tarkastus muodostetaan tarkalleen oikein
+    (tarkista-tallennettavan-tarkastuksen-osoite
+      (nth kaikki-tarkastukset 0) {:tie 18637 :aosa 1 :aet 207 :losa 1 :let 187})
+    (tarkista-tallennettavan-tarkastuksen-osoite ;; Jatkuva havainto menee päälle, tulee katkaisu
+      (nth kaikki-tarkastukset 1) {:tie 18637 :aosa 1 :aet 187 :losa 1 :let 11})
+    (tarkista-tallennettavan-tarkastuksen-osoite ;; Tie vaihtuu, tulee katkaisu
+      (nth kaikki-tarkastukset 2) {:tie 28409 :aosa 23 :aet 20 :losa 23 :let 401})
+    (tarkista-tallennettavan-tarkastuksen-osoite ;; Tie vaihtuu, tulee katkaisu
+      (nth kaikki-tarkastukset 3) {:tie 4 :aosa 364 :aet 3586 :losa 364 :let 7520})
+    (tarkista-tallennettavan-tarkastuksen-osoite ;; Tie vaihtuu, tulee katkaisu
+      (nth kaikki-tarkastukset 4) {:tie 28408 :aosa 23 :aet 406 :losa 23 :let 641})
+    (tarkista-tallennettavan-tarkastuksen-osoite ;; Tie vaihtuu, tulee katkaisu
+      (nth kaikki-tarkastukset 5) {:tie 4 :aosa 364 :aet 7892 :losa 364 :let 8810})
+    (tarkista-tallennettavan-tarkastuksen-osoite ;; Tie vaihtuu, tulee katkaisu
+      (nth kaikki-tarkastukset 6) {:tie 28407 :aosa 12 :aet 3 :losa 12 :let 135})
+    (tarkista-tallennettavan-tarkastuksen-osoite ;; Tie vaihtuu, tulee katkaisu
+      (nth kaikki-tarkastukset 7) {:tie 4 :aosa 364 :aet 9039 :losa 367 :let 335})
 
 
     ;; TODO TEE TÄMÄ
     #_(ls-core/tallenna-muunnetut-tarkastukset-kantaan (:db jarjestelma) tarkastukset 1 urakka-id)
     #_(let [tarkastukset-kannassa (q "SELECT id FROM tarkastus WHERE tarkastusajo = 754;")]
 
-      (log/debug "Tulos: " (pr-str tarkastukset-kannassa)))))
+        (log/debug "Tulos: " (pr-str tarkastukset-kannassa)))))
 
 
 ;; -------- Apufunktioita REPL-tunkkaukseen --------
