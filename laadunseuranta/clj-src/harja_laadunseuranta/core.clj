@@ -275,8 +275,7 @@
                       " "
                       (:sukunimi kayttajatiedot-kannassa))
            :urakat kayttajan-tarkastusurakat
-           :organisaatio (:organisaatio kayttajatiedot-kannassa)
-           :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset db)})))))
+           :organisaatio (:organisaatio kayttajatiedot-kannassa)})))))
 
 
 (defn- tallenna-liite [db req]
