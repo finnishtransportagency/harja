@@ -1,5 +1,6 @@
 (ns harja-laadunseuranta.tarkastusreittimuunnin-test
   (:require [clojure.test :as t :refer [deftest testing is]]
+            [harja-laadunseuranta.core :as ls-core]
             [harja-laadunseuranta.tarkastusreittimuunnin :refer [reittimerkinnat-tarkastuksiksi
                                                                  luo-kantaan-tallennettava-tarkastus]]
             [harja-laadunseuranta.testidata :as testidata]
@@ -291,3 +292,11 @@
     (is (== (-> tarkastukset :reitilliset-tarkastukset first :soratiemittaus :sivukaltevuus) 3))
     (is (= (-> tarkastukset :reitilliset-tarkastukset second :soratiemittaus :sivukaltevuus) nil))
     (is (== (-> tarkastukset :reitilliset-tarkastukset last :soratiemittaus :sivukaltevuus) 3))))
+
+;; -------- Apufunktioita REPL-tunkkaukseen --------
+;; Älä poista näitä
+;; Kutsu tässä NS:ssä esim. (harja.palvelin.main/with-db db (debuggaa-tarkastusajon-muunto db 1))
+
+(defn debuggaa-tarkastusajon-muunto [db tarkastusajo-id]
+  (let [tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)]
+    (log/debug "Lopputulos: " (pr-str tarkastukset))))
