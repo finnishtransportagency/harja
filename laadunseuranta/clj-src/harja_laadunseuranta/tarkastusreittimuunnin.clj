@@ -396,8 +396,6 @@
         koko-tarkastuksen-tr-osoite {:tie (:tie lahtopiste)
                                      :aosa (:aosa lahtopiste)
                                      :aet (:aet lahtopiste)
-                                     ;; Reitillisessä tarkastuksessa alkupiste ja päätepiste ovat erit,
-                                     ;; pistemäisessä samat
                                      :losa (or (:losa paatepiste) (:aosa paatepiste))
                                      :let (or (:let paatepiste) (:aet paatepiste))}
         koko-tarkastuksen-tr-osoite (kasittele-pistemainen-tarkastusreitti koko-tarkastuksen-tr-osoite)
