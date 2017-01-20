@@ -6,7 +6,8 @@
             [cljs.core.async :refer [<!]]
             [cljs-time.core :as t]
             [harja.ui.komponentti :as komp]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- maarita-kuvan-luokat [optiot exif-orientaatio]
@@ -32,7 +33,11 @@
   ;; PENDING Joku kaunis päivä tätä komponenttia ei enää tarvita, vaan CSS:n
   ;; image-orientation toimii kaikkialla <3
   ;; Ks. http://caniuse.com/#feat=css-image-orientation
-  (let [exif-orientaatio (atom nil)
+  (let [kuvalahde (:src optiot)
+        tuetut-kuvat #{"jpg" "jpeg" "tiff"}
+        kuvasta-voi-lukea-exif-datan? (boolean (some #(str/includes? kuvalahde (str "." tuetut-kuvat))
+                                                     tuetut-kuvat))
+        exif-orientaatio (atom nil)
         img-node (atom nil)
         exif-optiot {:on-load
                      (fn []
@@ -46,9 +51,11 @@
         (fn [this]
           (reset! img-node (.-lastChild (r/dom-node this)))))
       (fn [optiot]
-        (let [lopulliset-optiot (merge optiot exif-optiot)
-              lopulliset-optiot (maarita-kuvan-luokat lopulliset-optiot @exif-orientaatio)]
-          [:span
-           (when-not @exif-orientaatio
-             [ajax-loader])
-           [:img lopulliset-optiot]])))))
+        (if-not kuvasta-voi-lukea-exif-datan?
+          [:span [:img optiot]]
+          (let [lopulliset-optiot (merge optiot exif-optiot)
+                lopulliset-optiot (maarita-kuvan-luokat lopulliset-optiot @exif-orientaatio)]
+            [:span
+             (when-not @exif-orientaatio
+               [ajax-loader])
+             [:img lopulliset-optiot]]))))))
