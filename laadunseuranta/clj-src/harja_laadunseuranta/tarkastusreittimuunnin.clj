@@ -390,6 +390,7 @@
    sijaintipisteestä sen mukaan onko kyse pistemäisestä vai reitillisestä tarkastuksesta
    On tosin mahdollista, että myös reitillinen tarkastus on tallentunut vain yhdellä sijainnilla."
   [tarkastus kayttaja]
+  (log/debug "TARKASTUS TULEE: " (pr-str tarkastus))
   (let [tarkastuksen-reitti (:sijainnit tarkastus)
         lahtopiste (:tr-osoite (first tarkastuksen-reitti))
         paatepiste (:tr-osoite (last tarkastuksen-reitti))

@@ -307,6 +307,12 @@
 ;; Älä poista näitä
 ;; Kutsu tässä NS:ssä esim. (harja.palvelin.main/with-db db (debuggaa-tarkastusajon-muunto db 1))
 
+(defn muunna-tarkastusajo-kantaan [db tarkastusajo-id urakka-id]
+  ;; HUOMAA: Tämä EI poista mahdollisesti jo kerran tehtyä muunnosta!
+  (let [tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
+        tarkastukset (ls-core/lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)]
+    (ls-core/tallenna-muunnetut-tarkastukset-kantaan db tarkastukset 1 urakka-id)))
+
 (defn debuggaa-tarkastusajon-muunto [db tarkastusajo-id]
   (log/debug "Debugataan tarkastusajo: " (pr-str tarkastusajo-id))
   (let [tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
@@ -352,9 +358,7 @@
       (let [tallennettava (luo-kantaan-tallennettava-tarkastus
                             tarkastus
                             {:kayttajanimi "jvh"})]
-        (log/debug (tie->str tallennettava))))
-
-    ))
+        (log/debug (tie->str tallennettava))))))
 
 (defn debuggaa-tarkastusajojen-muunto [db tarkastusajo-idt]
   (log/debug "Debugataan tarkastusajot: " (pr-str tarkastusajo-idt))

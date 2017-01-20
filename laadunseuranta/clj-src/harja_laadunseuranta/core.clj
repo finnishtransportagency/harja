@@ -140,7 +140,7 @@
   {:reitilliset-tarkastukset (mapv #(assoc % :urakka urakka-id) reitilliset-tarkastukset)
    :pistemaiset-tarkastukset (mapv #(assoc % :urakka urakka-id) pistemaiset-tarkastukset)})
 
-(defn- tallenna-muunnetut-tarkastukset-kantaan [tx tarkastukset kayttaja urakka-id]
+(defn tallenna-muunnetut-tarkastukset-kantaan [tx tarkastukset kayttaja urakka-id]
   (log/debug "Tallennetaan tarkastukset urakkaan " urakka-id)
   (reittimuunnin/tallenna-tarkastukset! tx tarkastukset kayttaja)
   (log/debug "Reittimerkitöjen muunto tarkastuksiksi suoritettu!"))
