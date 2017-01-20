@@ -20,7 +20,9 @@
    funktiota voi kutsua. Kannattaa kutsua esim <img> elementin
    :on-load eventissä.
 
-   Huomaa, että EXIF-datan luku onnistunee vain JPEG/TIFF-kuville."
+   Huomaa, että EXIF-tiedot saadaan vain JPEG/TIFF-kuville.
+   Jos yrität lukea muille kuville, saat callbackin, mutta
+   exif-dataa ei ole."
   [kuva-node tiedot-luettu-callback]
   (when kuva-node
     (.getData js/EXIF
