@@ -18,11 +18,14 @@
 
    Huomaa, että kuvan täytyy olla ladattuna sivulle ennen kuin tätä
    funktiota voi kutsua. Kannattaa kutsua esim <img> elementin
-   :on-load eventissä."
+   :on-load eventissä.
+
+   Huomaa, että EXIF-datan luku onnistunee vain JPEG/TIFF-kuville."
   [kuva-node tiedot-luettu-callback]
   (when kuva-node
     (.getData js/EXIF
               kuva-node
-              #(tiedot-luettu-callback
+              #(do
+                 (tiedot-luettu-callback
                  (fn [exif-tag-nimi]
-                   (.getTag js/EXIF kuva-node exif-tag-nimi))))))
+                   (.getTag js/EXIF kuva-node exif-tag-nimi)))))))
