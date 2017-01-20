@@ -345,20 +345,18 @@
 
 ;; -------- Testit oikeille tarkastusajoille alusta loppuun --------
 
-;; TODO Testaa kun tämän ajon tieverkko lisätty testidataan!
-#_(deftest oikean-tarkastusajon-muunto-toimii
+(deftest oikean-tarkastusajon-muunto-toimii
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi (:db jarjestelma) 754)
         tarkastukset (ls-core/lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)]
 
-    (log/debug "Tarkastukset: " (pr-str tarkastukset))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))
-    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 3))
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 8))
 
 
-
+    ;; TODO TEE TÄMÄ
     #_(ls-core/tallenna-muunnetut-tarkastukset-kantaan (:db jarjestelma) tarkastukset 1 urakka-id)
-    (let [tarkastukset-kannassa (q "SELECT id FROM tarkastus WHERE tarkastusajo = 754;")]
+    #_(let [tarkastukset-kannassa (q "SELECT id FROM tarkastus WHERE tarkastusajo = 754;")]
 
       (log/debug "Tulos: " (pr-str tarkastukset-kannassa)))))
 
