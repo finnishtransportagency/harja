@@ -45,7 +45,7 @@
     ;; Kitkamittaukset laskettu oikein jatkuville pisteille (ei ota huomioon pistemäisiä mittauksia)
     (is (= (-> tarkastukset :reitilliset-tarkastukset first :talvihoitomittaus :kitka) 0.25))
     ;; Kitkamittaus laskettu oikein pistemäiselle tarkastukselle
-    (is (= (-> tarkastukset :pistemaiset-tarkastukset first :talvihoitomittaus :kitka)  0.2))
+    (is (= (-> tarkastukset :pistemaiset-tarkastukset first :talvihoitomittaus :kitka) 0.2))
 
     ;; Havainnot lisätty oikein
     (is (= (-> tarkastukset :reitilliset-tarkastukset first :vakiohavainnot)
@@ -97,10 +97,10 @@
 
 ;; PENDING Ympärikääntymislogiikka disabloitu tällä hetkellä GPS:n epätarkkuudesta johtuen
 #_(deftest tarkastus-jossa-kaannytaan-ympari
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi (lisaa-reittimerkinnoille-mockattu-tieosoite testidata/tarkastus-jossa-kaannytaan-ympari))]
-    ;; Muunnettu määrällisesti oikein
-    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
-    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+    (let [tarkastukset (reittimerkinnat-tarkastuksiksi (lisaa-reittimerkinnoille-mockattu-tieosoite testidata/tarkastus-jossa-kaannytaan-ympari))]
+      ;; Muunnettu määrällisesti oikein
+      (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
+      (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
 
 (deftest tarkastus-trvali-jossa-alkuosa-vaihtuu
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
@@ -300,20 +300,30 @@
 (defn debuggaa-tarkastusajon-muunto [db tarkastusajo-id]
   (log/debug "Debugataan tarkastusajo: " (pr-str tarkastusajo-id))
   (let [lopputulos (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
+        tie->str (fn [tie]
+                   (str (:tie tie) "/" (:aosa tie) "/" (:aet tie) "/" (:losa tie) "/" (:let tie)))
+        reitilliset-tarkastukset (:reitilliset-tarkastukset lopputulos)
+        pistemaiset-tarkastukset (:pistemaiset-tarkastukset lopputulos)
         kaikki-tarkastukset (concat (:reitilliset-tarkastukset lopputulos)
                                     (:pistemaiset-tarkastukset lopputulos))]
     (log/debug "Tarkastus muunnettu. Tässäpä tulos:")
+
     (log/debug "-- Määrät --")
-    (log/debug (format "Reitilliset tarkastukset: %s kpl." (count (:reitilliset-tarkastukset lopputulos))))
-    (log/debug (format "Pistemäiset tarkastukset: %s kpl." (count (:pistemaiset-tarkastukset lopputulos))))
+    (log/debug (format "Reitilliset tarkastukset: %s kpl." (count reitilliset-tarkastukset)))
+    (log/debug (format "Pistemäiset tarkastukset: %s kpl." (count pistemaiset-tarkastukset)))
     (log/debug (format "Yhteensä: %s kpl." (count kaikki-tarkastukset)))
+
     (log/debug "-- Reitit --")
     (log/debug (format "Saatiin muodostettua tieosoite: %s kpl."
                        (count (filter :tr-osoite
-                                (mapcat :sijainnit kaikki-tarkastukset)))))
+                                      (mapcat :sijainnit kaikki-tarkastukset)))))
     (log/debug (format "Tieosoite puuttuu: %s kpl."
                        (count (filter #(nil? (:tr-osoite %))
-                                (mapcat :sijainnit kaikki-tarkastukset)))))))
+                                      (mapcat :sijainnit kaikki-tarkastukset)))))
+    (log/debug "Reitillisten tarkastusten reitti:")
+    (let [sijainnit (mapcat :sijainnit (sort-by :aika reitilliset-tarkastukset))]
+      (doseq [sijainti sijainnit]
+        (log/debug (tie->str (:tr-osoite sijainti)))))))
 
 (defn debuggaa-tarkastusajojen-muunto [db tarkastusajo-idt]
   (log/debug "Debugataan tarkastusajot: " (pr-str tarkastusajo-idt))
