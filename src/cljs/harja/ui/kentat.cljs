@@ -602,6 +602,19 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
     (komp/luo
      (komp/klikattu-ulkopuolelle #(reset! auki false))
+
+     ;; Kuunnellaan data atomia, jos sen arvoa muutetaan muualla
+     ;; päivitetään tekstikenttien sisältö vastaamaan uutta tilaa
+     (komp/watcher data (fn [_ vanha uusi]
+                          (when-not (= vanha uusi)
+                            (if uusi
+                              (do
+                                (reset! pvm-teksti (pvm/pvm uusi))
+                                (reset! aika-teksti (pvm/aika uusi)))
+                              (do
+                                (reset! pvm-teksti "")
+                                (reset! aika-teksti ""))))))
+
       {:component-will-receive-props
        (fn [this _ {:keys [focus] :as s} data]
          (when-not focus
