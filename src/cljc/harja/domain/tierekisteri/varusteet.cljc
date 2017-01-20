@@ -74,7 +74,7 @@
 
 (defn- varusteominaisuus-skeema-perus [ominaisuus muokattava?]
   {:otsikko (str/capitalize (:selite ominaisuus))
-   :pakollinen? (:pakollinen ominaisuus)
+   :pakollinen? (and muokattava? (:pakollinen ominaisuus))
    :nimi (keyword (:kenttatunniste ominaisuus))
    :hae #(let [arvo (or (get-in % [:arvot (keyword (:kenttatunniste ominaisuus))])
                         (get-in % [:varuste :tietue :tietolaji :arvot (:kenttatunniste ominaisuus)]))]

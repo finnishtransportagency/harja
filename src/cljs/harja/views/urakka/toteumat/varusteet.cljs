@@ -176,7 +176,7 @@
     {:nimi :tierekisteriosoite
      :otsikko "Tierekisteriosoite"
      :tyyppi :tierekisteriosoite
-     :pakollinen? true
+     :pakollinen? muokattava?
      :sijainti (r/wrap (:sijainti varustetoteuma) #(e! (v/->AsetaToteumanTiedot (assoc varustetoteuma :sijainti %))))
      :muokattava? (constantly muokattava?)}
     {:nimi :ajorata
@@ -187,7 +187,7 @@
                    (:ajoradat varustetoteuma)
                    tierekisteri-varusteet/oletus-ajoradat)
                  tierekisteri-varusteet/kaikki-ajoradat)
-     :pakollinen? true
+     :pakollinen? muokattava?
      :leveys 1
      :muokattava? (constantly muokattava?)}
     {:nimi :puoli
@@ -195,12 +195,12 @@
      :tyyppi :valinta
      :valinnat tierekisteri-varusteet/tien-puolet
      :pituus 1
-     :pakollinen? true
+     :pakollinen? muokattava?
      :muokattava? (constantly muokattava?)}
     {:nimi :alkupvm
      :otsikko "Alkupäivämäärä"
      :tyyppi :pvm
-     :pakollinen? true
+     :pakollinen? muokattava?
      :muokattava? (constantly muokattava?)}
     (when (not= (:toiminto varustetoteuma) :lisatty)
       {:nimi :loppupvm
