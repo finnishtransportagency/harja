@@ -39,6 +39,12 @@ E'reittimerkinta-tauluun tallennetaan Harjan laadunseurannan mobiilityökalulla 
 
 Tauluun tallennettua tietoa käytetään luomaan yhteenveto tehdystä ajosta eli datasta muodostetaan tarkastus tarkastus-tauluun. Ajon raakadataa ei välttämättä ole syytä säilyttää pitkäaikaisesti, vaan tarkoitus on, että datasta luotu tarkastus sisältää kaikki ajosta tarpeelliset tiedot.';
 
+COMMENT ON TABLE vakiohavainto IS
+E'Vakiohavaintotaulussa esitellään erilaisia usein tehtäviä havaintoja, joita voidaan tehdä Harjan laadunseurannan mobiilityökalulla. Tärkeät sarakkeet:\n
+- nimi: Käyttäjälle näkyvä vakiohavainnon nimi\n
+- jatkuva: Onko tämä välikohtainen havainto (true jos on, false jos pistemäinen)\n
+- avain: Vakiohavainnon tunniste muotoiltuna Clojure-avaiksi ilman kaksoispistettä (sama joka on mobiilityökalun UI:ssa)';
+
 -- Raportointi
 
 COMMENT ON TABLE raportti IS
