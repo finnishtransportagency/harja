@@ -231,7 +231,7 @@
      [lomake/lomake
       {:otsikko (case (:toiminto varustetoteuma)
                   :lisatty "Uusi varuste"
-                  :muokattu "Muokkaa varustetta"
+                  :paivitetty "Muokkaa varustetta"
                   "Varustetoteuma")
        :muokkaa! #(e! (v/->AsetaToteumanTiedot %))
        :footer-fn (fn [toteuma]
@@ -263,7 +263,7 @@
 
                (varusteet/AloitaVarusteenMuokkaus
                  {varuste :varuste :as t}
-                 (send-to pe! (v/->UusiVarusteToteuma :muokkaa varuste))))))
+                 (send-to pe! (v/->UusiVarusteToteuma :paivitetty varuste))))))
 
 (defn varustehakulomake [e! nykyiset-valinnat naytettavat-toteumat varustehaun-tiedot]
   [:span
@@ -275,7 +275,7 @@
      [:div.sisalto-container
       [:h1 "Varusteet Tierekisterissä"]
       (when oikeus-varusteiden-muokkaamiseen?
-        [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisaa nil))])
+        [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisatty nil))])
       [varustehaku (kasittele-varustehaun-event e!) varustehaun-tiedot]])])
 
 (defn- varusteet* [e! varusteet]
