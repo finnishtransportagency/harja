@@ -596,9 +596,20 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
         ;; picker auki?
         auki (atom false)
         pvm-aika-koskettu (atom [(not
-                                   (or (str/blank? @pvm-teksti) (nil? @pvm-teksti)))
+                                  (or (str/blank? @pvm-teksti) (nil? @pvm-teksti)))
                                  (not
-                                  (or (str/blank? @aika-teksti) (nil? @aika-teksti)))])]
+                                  (or (str/blank? @aika-teksti) (nil? @aika-teksti)))])
+
+        aseta-teksti! (fn [p]
+                        (if p
+                          (do
+                            (reset! pvm-teksti (pvm/pvm p))
+                            (reset! aika-teksti (pvm/aika p)))
+                          (do
+                            (reset! pvm-teksti "")
+                            (reset! aika-teksti ""))))
+
+        edellinen-arvo (volatile! @data)]
 
     (komp/luo
      (komp/klikattu-ulkopuolelle #(reset! auki false))
@@ -607,93 +618,98 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
      ;; päivitetään tekstikenttien sisältö vastaamaan uutta tilaa
      (komp/watcher data (fn [_ vanha uusi]
                           (when-not (= vanha uusi)
-                            (if uusi
-                              (do
-                                (reset! pvm-teksti (pvm/pvm uusi))
-                                (reset! aika-teksti (pvm/aika uusi)))
-                              (do
-                                (reset! pvm-teksti "")
-                                (reset! aika-teksti ""))))))
+                            (aseta-teksti! uusi))))
 
-      {:component-will-receive-props
-       (fn [this _ {:keys [focus] :as s} data]
-         (when-not focus
-           (reset! auki false))
-         (when-let [p @data]
-           (reset! pvm-teksti (pvm/pvm p))
-           (reset! aika-teksti (pvm/aika p))))}
 
-      (fn [_ data]
-        (let [aseta! (fn [force?]
-                       (let [pvm @pvm-teksti
-                             aika @aika-teksti
-                             p (pvm/->pvm-aika (str pvm " " aika))]
-                         (when (or force? (not (some false? @pvm-aika-koskettu)))
-                           (if p
-                             (reset! data p)
-                             (reset! data nil)))))
+     ;; Jos data on wrap, verrataan muuttuvaa dataa edellliseen ja päivitetään
+     ;; tekstikentät jos muutoksia havaitaan.
+     (komp/vanhat-ja-uudet-parametrit
+      (fn [[_ vanha-data] [_ uusi-data]]
+        (when (not= vanha-data uusi-data)
+          ;; Data atomi on muuttunut (kyseessä wrap), päivitä jos on muuttunut edellisestä
+          (let [vanha @edellinen-arvo
+                uusi @uusi-data]
+            (when (not= vanha uusi)
+              (vreset! edellinen-arvo uusi)
+              (aseta-teksti! uusi))))))
 
-              muuta-pvm!   #(resetoi-jos-tyhja-tai-matchaa % +pvm-regex+ pvm-teksti)
-              muuta-aika!  #(if (re-matches #"\d{3}" %)
-                              ;; jos yritetään kirjoittaa aika käyttämättä : välimerkkiä,
-                              ;; niin 3 merkin kohdalla lisätään se automaattisesti
-                              (let [alku (js/parseInt (.substring % 0 2))]
-                                (if (< alku 24)
-                                  ;; 123 => 12:3
-                                  (reset! aika-teksti
-                                          (str (.substring % 0 2) ":" (.substring % 2)))
-                                  ;; 645 => 6:45
-                                  (reset! aika-teksti
-                                          (str (.substring % 0 1) ":" (.substring % 1)))))
-                        (resetoi-jos-tyhja-tai-matchaa % +aika-regex+ aika-teksti))
+     ;; Sulje mahdollisesti auki jäänyt datepicker kun focus poistuu
+     {:component-will-receive-props
+      (fn [this _ {:keys [focus] :as s} data]
+        (when-not focus
+          (reset! auki false)))}
 
-              koske-aika! (fn [] (swap! pvm-aika-koskettu assoc 1 true))
-              koske-pvm! (fn [] (swap! pvm-aika-koskettu assoc 0 true))
+     (fn [_ data]
+       (let [aseta! (fn [force?]
+                      (let [pvm @pvm-teksti
+                            aika @aika-teksti
+                            p (pvm/->pvm-aika (str pvm " " aika))]
+                        (when (or force? (not (some false? @pvm-aika-koskettu)))
+                          (if p
+                            (reset! data p)
+                            (reset! data nil)))))
 
-              nykyinen-pvm @data
-              nykyinen-pvm-teksti @pvm-teksti
-              nykyinen-aika-teksti @aika-teksti
-              pvm-tyhjana (or pvm-tyhjana (constantly nil))
-              naytettava-pvm (or
-                               (pvm/->pvm nykyinen-pvm-teksti)
-                               nykyinen-pvm
-                               (pvm-tyhjana rivi))]
-          [:span.pvm-aika-kentta
-           [:table
-            [:tbody
-             [:tr
-              [:td
-               [:input.pvm {:class       (when lomake? "form-control")
-                            :placeholder "pp.kk.vvvv"
-                            :on-click    #(do (.stopPropagation %)
-                                              (.preventDefault %)
-                                              (reset! auki true)
-                                              %)
-                            :value       nykyinen-pvm-teksti
-                            :on-focus    #(do (when on-focus (on-focus)) (reset! auki true) %)
-                            on-change*   #(muuta-pvm! (-> % .-target .-value))
-                            ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
-                            :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
+             muuta-pvm!   #(resetoi-jos-tyhja-tai-matchaa % +pvm-regex+ pvm-teksti)
+             muuta-aika!  #(if (re-matches #"\d{3}" %)
+                             ;; jos yritetään kirjoittaa aika käyttämättä : välimerkkiä,
+                             ;; niin 3 merkin kohdalla lisätään se automaattisesti
+                             (let [alku (js/parseInt (.substring % 0 2))]
+                               (if (< alku 24)
+                                 ;; 123 => 12:3
+                                 (reset! aika-teksti
+                                         (str (.substring % 0 2) ":" (.substring % 2)))
+                                 ;; 645 => 6:45
+                                 (reset! aika-teksti
+                                         (str (.substring % 0 1) ":" (.substring % 1)))))
+                             (resetoi-jos-tyhja-tai-matchaa % +aika-regex+ aika-teksti))
+
+             koske-aika! (fn [] (swap! pvm-aika-koskettu assoc 1 true))
+             koske-pvm! (fn [] (swap! pvm-aika-koskettu assoc 0 true))
+
+             nykyinen-pvm @data
+             nykyinen-pvm-teksti @pvm-teksti
+             nykyinen-aika-teksti @aika-teksti
+             pvm-tyhjana (or pvm-tyhjana (constantly nil))
+             naytettava-pvm (or
+                             (pvm/->pvm nykyinen-pvm-teksti)
+                             nykyinen-pvm
+                             (pvm-tyhjana rivi))]
+         [:span.pvm-aika-kentta
+          [:table
+           [:tbody
+            [:tr
+             [:td
+              [:input.pvm {:class       (when lomake? "form-control")
+                           :placeholder "pp.kk.vvvv"
+                           :on-click    #(do (.stopPropagation %)
+                                             (.preventDefault %)
+                                             (reset! auki true)
+                                             %)
+                           :value       nykyinen-pvm-teksti
+                           :on-focus    #(do (when on-focus (on-focus)) (reset! auki true) %)
+                           on-change*   #(muuta-pvm! (-> % .-target .-value))
+                           ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
+                           :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
                                            (reset! auki false)
                                            %)
-                            :on-blur     #(do (koske-pvm!) (aseta! false) %)}]
-               (when @auki
-                 [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
-                                                                  (muuta-pvm! (pvm/pvm %))
-                                                                  (koske-pvm!)
-                                                                  (aseta! true))
-                                                    :pvm     naytettava-pvm
-                                                    :pakota-suunta pakota-suunta}])]
-              [:td
-               [:input {:class       (str (when lomake? "form-control")
-                                          (when (and (not (re-matches +aika-regex+ nykyinen-aika-teksti))
-                                                     (pvm/->pvm nykyinen-pvm-teksti))
-                                            " puuttuva-arvo"))
-                        :placeholder "tt:mm"
-                        :size        5 :max-length 5
-                        :value       nykyinen-aika-teksti
-                        on-change*   #(muuta-aika! (-> % .-target .-value))
-                        :on-blur     #(do (koske-aika!) (aseta! false))}]]]]]])))))
+                           :on-blur     #(do (koske-pvm!) (aseta! false) %)}]
+              (when @auki
+                [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
+                                                                 (muuta-pvm! (pvm/pvm %))
+                                                                 (koske-pvm!)
+                                                                 (aseta! true))
+                                                   :pvm     naytettava-pvm
+                                                   :pakota-suunta pakota-suunta}])]
+             [:td
+              [:input {:class       (str (when lomake? "form-control")
+                                         (when (and (not (re-matches +aika-regex+ nykyinen-aika-teksti))
+                                                    (pvm/->pvm nykyinen-pvm-teksti))
+                                           " puuttuva-arvo"))
+                       :placeholder "tt:mm"
+                       :size        5 :max-length 5
+                       :value       nykyinen-aika-teksti
+                       on-change*   #(muuta-aika! (-> % .-target .-value))
+                       :on-blur     #(do (koske-aika!) (aseta! false))}]]]]]])))))
 
 (defmethod nayta-arvo :pvm-aika [_ data]
   [:span (if-let [p @data]
