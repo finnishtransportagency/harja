@@ -145,14 +145,13 @@
   (reittimuunnin/tallenna-tarkastukset! tx tarkastukset kayttaja)
   (log/debug "Reittimerkitöjen muunto tarkastuksiksi suoritettu!"))
 
-(defn muunna-tarkastusajon-reittipisteet-tarkastuksiksi [tx tarkastusajo-id urakka-id]
+(defn muunna-tarkastusajon-reittipisteet-tarkastuksiksi [tx tarkastusajo-id]
   (log/debug "Muutetaan reittipisteet tarkastuksiksi")
   (let [merkinnat-tr-osoitteilla (q/hae-reitin-merkinnat-tieosoitteilla
                                    tx {:tarkastusajo tarkastusajo-id
                                        :treshold 100})
         merkinnat-tr-osoitteilla (lisaa-reittimerkinnoille-lopullinen-tieosoite merkinnat-tr-osoitteilla)
-        tarkastukset (-> (reittimuunnin/reittimerkinnat-tarkastuksiksi merkinnat-tr-osoitteilla)
-                         (lisaa-tarkastuksille-urakka-id urakka-id))]
+        tarkastukset (reittimuunnin/reittimerkinnat-tarkastuksiksi merkinnat-tr-osoitteilla)]
     (log/debug "Reittipisteet muunnettu tarkastuksiksi.")
     tarkastukset))
 
@@ -168,7 +167,8 @@
         (let [tarkastukset (muunna-tarkastusajon-reittipisteet-tarkastuksiksi
                              tx
                              (-> tarkastusajo :tarkastusajo :id)
-                             urakka-id)]
+                             urakka-id)
+              tarkastukset (lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)]
           (tallenna-muunnetut-tarkastukset-kantaan tx tarkastukset kayttaja urakka-id)
           (merkitse-ajo-paattyneeksi! tx tarkastusajo-id kayttaja))
         (log/warn (format "Yritettiin päättää ajo %s, joka on jo päätetty!" tarkastusajo-id))))))
