@@ -11,7 +11,7 @@
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [harja-laadunseuranta.core :as harja-laadunseuranta])
-  (:import (org.postgis PGgeometry)))
+  (:import (org.postgis PGgeometry MultiLineString Point)))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -148,6 +148,7 @@
 
     ;; Ajolle saatiin muodostettua geometria
     (is (instance? PGgeometry (:sijainti tallennettava)))
+    (is (instance? MultiLineString (.getGeometry (:sijainti tallennettava))))
 
     ;; Alku on ensimmäisen piste ja loppu on viimeinen piste
     (is (= (:tr_alkuosa tallennettava) (get-in (first merkinnat-tieosoitteilla) [:tr-osoite :aosa])))
@@ -172,7 +173,8 @@
     (is (= nil))
 
     ;; Ajolle saatiin muodostettua geometria
-    (is (instance? PGgeometry (:sijainti tallennettava)))))
+    (is (instance? PGgeometry (:sijainti tallennettava)))
+    (is (instance? Point (.getGeometry (:sijainti tallennettava))))))
 
 (deftest tarkastus-trvali-jossa-yksi-sijainti
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
@@ -190,7 +192,8 @@
     (is (= nil))
 
     ;; Ajolle saatiin muodostettua geometria
-    (is (instance? PGgeometry (:sijainti tallennettava)))))
+    (is (instance? PGgeometry (:sijainti tallennettava)))
+    (is (instance? Point (.getGeometry (:sijainti tallennettava))))))
 
 ;; -------- Laadunalitus --------
 
