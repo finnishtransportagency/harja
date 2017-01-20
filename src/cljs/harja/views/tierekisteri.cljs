@@ -1,18 +1,18 @@
 (ns harja.views.tierekisteri
   "Tierekisterin tarkastelunäkymä. Lähinnä debug käyttöön."
-  (:require [reagent.core :as r]
+  (:require [reagent.core :refer [atom] :as r]
             [harja.tyokalut.vkm :as vkm]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.komponentti :as komp]
             [harja.views.kartta :as kartta]
-            [harja.ui.kentat :as kentat]
             [harja.views.kartta.tasot :as tasot]
             [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
             [cljs.core.async :refer [<! >! chan timeout]]
             [harja.ui.tierekisteri :as tr]
             [harja.loki :refer [log]]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce tr (r/atom {}))
@@ -23,6 +23,9 @@
 
 (defonce valitse-kartalla? (r/atom false))
 (defonce valittu-osoite (r/atom nil))
+
+(defonce tarkastusajon-id (atom nil))
+(defonce piirrettyjen-reittipisteiden-idt (atom nil))
 
 (defn hae! []
   (tasot/poista-geometria! :tierekisteri-haettu-osoite)
@@ -84,6 +87,25 @@
                                               :radius 50)}))
       (reset! koordinaatin-osoite tulos))))
 
+(defn- poista-vanhat-reittipisteet-kartalta
+  [pisteet]
+  (doseq [piste pisteet]
+    (tasot/poista-geometria! (:id piste))))
+
+(defn- piirra-tarkastusajon-reittipisteet
+  [pisteet]
+  (poista-vanhat-reittipisteet-kartalta @piirrettyjen-reittipisteiden-idt)
+  (doseq [piste pisteet]
+    (tasot/nayta-geometria! (:id piste)
+                            {:alue (:sijainti piste)}))
+  (reset! piirrettyjen-reittipisteiden-idt pisteet))
+
+(defn hae-ja-nayta-tarkastusajon-reittipisteet []
+  (go
+    (let [pisteet (<! (k/post! :hae-tarkastusajon-reittipisteet
+                               {:tarkastusajon-id @tarkastusajon-id}))]
+      (piirra-tarkastusajon-reittipisteet pisteet))))
+
 (defn tr-haku []
   [:div.tierekisteri-tr-haku
    [:table
@@ -125,12 +147,26 @@
    (when-let [osoite @koordinaatin-osoite]
      [:div (pr-str osoite)])])
 
+
+(defn tarkastusajon-reittipisteiden-haku
+  "Tarjoaa kälin jolla haetaan tarkastusajoid:llä reitti"
+  []
+  [:div.tierekisteri-tarkastusajon-id
+   [:h5 "Hae tarkastusajon reittipisteet"]
+   [:label.tarkastusajoid-label "Tarkastusajon id"]
+   [:input {:type :text
+            :placeholder "Tietokannasta"
+            :on-change #(reset! tarkastusajon-id (-> % .-target .-value js/parseInt))}]
+   [:button.nappi-ensisijainen.btn-xs {:on-click hae-ja-nayta-tarkastusajon-reittipisteet
+             :disabled (when (nil? @tarkastusajon-id) "disabled")}
+    "Piirrä reitti"]])
+
 (defn tierekisteri []
   (komp/luo
    (komp/lippu-arvo false @kartta-tiedot/pida-geometriat-nakyvilla? kartta-tiedot/pida-geometriat-nakyvilla?)
    (komp/avain-lippu nav/tarvitsen-isoa-karttaa :tierekisteri)
    (fn []
-     [:span.tr-debug
+     [:div.tr-debug
       [kartta/kartan-paikka]
       [:div "Tervetuloa salaiseen TR osioon"]
       [tr-haku]
@@ -151,7 +187,9 @@
         [:button {:on-click #(reset! valitse-kartalla? true)}
          "Valitse kartalla"])
       (when-let [valittu @valittu-osoite]
-        [:div (pr-str valittu)])])))
+        [:div (pr-str valittu)])
+      [:hr]
+      [tarkastusajon-reittipisteiden-haku]])))
 
 ;; eism tie 20
 ;; x: 431418, y: 7213120
