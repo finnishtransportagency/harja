@@ -9,7 +9,8 @@
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
             [clojure.walk :as walk]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [cljs.core.async :as async])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn varustetoteuma
@@ -102,14 +103,21 @@
   (process-event [{{:keys [viesti vastaus]} :toiminto virhe :virhe :as tiedot} app]
     (log "[TR] Virhe suoritettaessa toimintoa. Virhe:" (pr-str virhe) ". Vastaus: " (pr-str vastaus) ".")
     (viesti/nayta! viesti :warning)
-    (laheta-viivastyneesti #(t/send-async! (partial ->VarustetoteumatMuuttuneet vastaus)))
+
+    (let [tulos! (t/send-async! (partial ->VarustetoteumatMuuttuneet vastaus))]
+      (go (<! (async/timeout 1))
+          (tulos!)))
 
     ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
     (hakutulokset app nil nil))
 
   ToimintoOnnistui
   (process-event [{{:keys [vastaus]} :toiminto :as tiedot} app]
-    (laheta-viivastyneesti #(t/send-async! (partial ->VarustetoteumatMuuttuneet vastaus)))
+
+    (let [tulos! (t/send-async! (partial ->VarustetoteumatMuuttuneet vastaus))]
+      (go (<! (async/timeout 1))
+          (tulos!)))
+
     ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
     (hakutulokset app nil nil))
 

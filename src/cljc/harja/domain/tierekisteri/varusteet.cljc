@@ -87,13 +87,17 @@
 
 (defmethod varusteominaisuus->skeema :koodisto
   [{ominaisuus :ominaisuus} muokattava?]
-  (let [koodisto (map #(assoc % :selite (str/capitalize (:selite %))) (:koodisto ominaisuus))]
+  (let [koodisto (map #(assoc % :selite (str/capitalize (:selite %))
+                                :koodi (str (:koodi %)))
+                      (:koodisto ominaisuus))
+        hae-selite (fn [arvo] (:selite (first (filter #(= (:koodi %) arvo) koodisto))))]
     (merge (varusteominaisuus-skeema-perus ominaisuus muokattava?)
            {:tyyppi :valinta
-            :valinnat koodisto
+            :valinnat (map :koodi koodisto)
             :valinta-nayta (fn [arvo muokattava?]
                              (if arvo
-                               (:selite arvo)
+                               (let [selite (hae-selite arvo)]
+                                 selite)
                                (if muokattava?
                                  "- Valitse -"
                                  "")))
@@ -101,7 +105,7 @@
             :fmt (fn [arvo]
                    (let [koodi (first (filter #(= arvo (str (:koodi %))) koodisto))]
                      (if koodi
-                       (:selite koodi)
+                       (hae-selite arvo)
                        arvo)))})))
 
 (defmethod varusteominaisuus->skeema :numeerinen
@@ -118,5 +122,3 @@
           :leveys (if (= "tunniste" (:kenttatunniste ominaisuus))
                     1
                     3)}))
-
-
