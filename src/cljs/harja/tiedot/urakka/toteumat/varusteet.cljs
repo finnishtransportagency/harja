@@ -137,16 +137,16 @@
 (defn uusi-varustetoteuma
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
   ([toiminto] (uusi-varustetoteuma toiminto nil))
-  ([toiminto varuste]
+  ([toiminto {tietue :tietue :as varuste}]
     ;; todo: jos varuste on annettu, aseta sen arvot lomakkeeseen
    (log "---> varuste:" (pr-str varuste))
    {:toiminto toiminto
     :tietolaji (ffirst varusteet-domain/tietolaji->selitys)
-    :alkupvm (pvm/nyt)
+    :alkupvm (or (:alkupvm tietue) (pvm/nyt))
     :muokattava? true
     :ajoradat varusteet-domain/oletus-ajoradat
-    :ajorata (first varusteet-domain/oletus-ajoradat)
-    :puoli (first varusteet-domain/tien-puolet)
+    :ajorata (or (get-in tietue [:sijainti :tie :ajr]) (first varusteet-domain/oletus-ajoradat))
+    :puoli (or (get-in tietue [:sijainti :tie :puoli]) (first varusteet-domain/tien-puolet))
     :varuste varuste
     :tierekisteriosoite (varusteen-osoite varuste)}))
 
