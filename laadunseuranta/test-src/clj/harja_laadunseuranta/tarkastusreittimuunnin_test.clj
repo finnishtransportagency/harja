@@ -361,21 +361,28 @@
     (is (= (:tr_loppuetaisyys tallennettava) let))))
 
 (deftest oikean-tarkastusajon-muunto-toimii
-  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
-        tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi (:db jarjestelma) 754)
+  (let [tarkastusajo-id 754
+        urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi (:db jarjestelma) tarkastusajo-id)
         tarkastukset (ls-core/lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)
         reitilliset (:reitilliset-tarkastukset tarkastukset)
         pistemaiset (:pistemaiset-tarkastukset tarkastukset)
+        odotettu-pistemaisten-maara 0
+        odotettu-reitillisten-maara 8
         kaikki-tarkastukset (concat reitilliset pistemaiset)]
 
     ;; Muunnettu määrällisesti oikein
-    (is (= (count pistemaiset) 0))
-    (is (= (count reitilliset) 8))
+    (is (= (count pistemaiset) odotettu-pistemaisten-maara))
+    (is (= (count reitilliset) odotettu-reitillisten-maara))
 
-    ;; Urakka määritetty
+    ;; Kaikissa pisteissä on tietyt kentät oikein
     (is (every? #(= (:urakka %) urakka-id) kaikki-tarkastukset))
+    (is (every? #(= (:tarkastusajo %) tarkastusajo-id) kaikki-tarkastukset))
+    (is (every? #(some? (:aika %)) kaikki-tarkastukset))
+    (is (every? #(= (:laadunalitus %) false) kaikki-tarkastukset))
+    (is (every? #(empty? (:liitteet %)) kaikki-tarkastukset))
 
-    ;; Jokainen tallennettava tarkastus muodostetaan tarkalleen oikein
+    ;; Jokainen tallennettava tarkastus muodostetaan tieosoitteen osalta tarkalleen oikein
     (tarkista-tallennettavan-tarkastuksen-osoite
       (nth kaikki-tarkastukset 0) {:tie 18637 :aosa 1 :aet 207 :losa 1 :let 187})
     (tarkista-tallennettavan-tarkastuksen-osoite ;; Jatkuva havainto menee päälle, tulee katkaisu
@@ -391,14 +398,7 @@
     (tarkista-tallennettavan-tarkastuksen-osoite ;; Tie vaihtuu, tulee katkaisu
       (nth kaikki-tarkastukset 6) {:tie 28407 :aosa 12 :aet 3 :losa 12 :let 135})
     (tarkista-tallennettavan-tarkastuksen-osoite ;; Tie vaihtuu, tulee katkaisu
-      (nth kaikki-tarkastukset 7) {:tie 4 :aosa 364 :aet 9039 :losa 367 :let 335})
-
-
-    ;; TODO TEE TÄMÄ
-    #_(ls-core/tallenna-muunnetut-tarkastukset-kantaan (:db jarjestelma) tarkastukset 1 urakka-id)
-    #_(let [tarkastukset-kannassa (q "SELECT id FROM tarkastus WHERE tarkastusajo = 754;")]
-
-        (log/debug "Tulos: " (pr-str tarkastukset-kannassa)))))
+      (nth kaikki-tarkastukset 7) {:tie 4 :aosa 364 :aet 9039 :losa 367 :let 335})))
 
 
 ;; -------- Apufunktioita REPL-tunkkaukseen --------
