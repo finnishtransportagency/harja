@@ -98,7 +98,7 @@
   (doseq [piste pisteet]
     (tasot/nayta-geometria! (:id piste)
                             {:alue (assoc (:sijainti piste)
-                                     :fill (not-empty (:havainnot piste))
+                                     :fill (integer? (first (:havainnot piste)))
                                      :color "red")}))
   (reset! piirrettyjen-reittipisteiden-idt pisteet))
 
