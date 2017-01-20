@@ -29,7 +29,7 @@
 
 (use-fixtures :once (compose-fixtures
                       tietokanta-fixture
-                      (compose-fixtures jarjestelma-fixture urakkatieto-fixture)))
+                      jarjestelma-fixture))
 
 (defn lisaa-reittimerkinnoille-mockattu-tieosoite
   "Mock-funktio, joka lisää tiemerkinnöille tierekisteriosoitteet ilman oikeaa kannassa olevaa tieverkkoa.
