@@ -27,7 +27,6 @@
   (when kuva-node
     (.getData js/EXIF
               kuva-node
-              #(do
-                 (tiedot-luettu-callback
+              #(tiedot-luettu-callback
                  (fn [exif-tag-nimi]
-                   (.getTag js/EXIF kuva-node exif-tag-nimi)))))))
+                   (.getTag js/EXIF kuva-node exif-tag-nimi))))))
