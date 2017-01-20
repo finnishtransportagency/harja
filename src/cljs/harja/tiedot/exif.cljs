@@ -18,7 +18,11 @@
 
    Huomaa, että kuvan täytyy olla ladattuna sivulle ennen kuin tätä
    funktiota voi kutsua. Kannattaa kutsua esim <img> elementin
-   :on-load eventissä."
+   :on-load eventissä.
+
+   Huomaa, että EXIF-tiedot saadaan vain JPEG/TIFF-kuville.
+   Jos yrität lukea muille kuville, saat callbackin, mutta
+   exif-dataa ei ole."
   [kuva-node tiedot-luettu-callback]
   (when kuva-node
     (.getData js/EXIF
