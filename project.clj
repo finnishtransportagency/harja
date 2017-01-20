@@ -210,9 +210,9 @@
                 :figwheel {:on-jsload "harja-laadunseuranta.dev-core/on-js-reload"}
 
                 :compiler {:main harja-laadunseuranta.dev-core
-                           :asset-path "js/compiled/out"
-                           :output-to "resources/public/laadunseuranta/js/compiled_dev/harja_laadunseuranta.js"
-                           :output-dir "resources/public/laadunseuranta/js/compiled_dev/out"
+                           :asset-path "js/compiled/dev_out"
+                           :output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta_dev.js"
+                           :output-dir "resources/public/laadunseuranta/js/compiled/dev_out"
                            :source-map-timestamp true}}
 
                {:id "laadunseuranta-devcards"
