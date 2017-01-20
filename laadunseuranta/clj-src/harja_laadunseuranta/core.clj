@@ -166,8 +166,7 @@
       (if-not ajo-paatetty
         (let [tarkastukset (muunna-tarkastusajon-reittipisteet-tarkastuksiksi
                              tx
-                             (-> tarkastusajo :tarkastusajo :id)
-                             urakka-id)
+                             (-> tarkastusajo :tarkastusajo :id))
               tarkastukset (lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)]
           (tallenna-muunnetut-tarkastukset-kantaan tx tarkastukset kayttaja urakka-id)
           (merkitse-ajo-paattyneeksi! tx tarkastusajo-id kayttaja))
@@ -298,7 +297,6 @@
 
   ;; Laadunseurannan API kutsut
   (laadunseuranta-api db http))
-
 
 (defrecord Laadunseuranta [asetukset]
   component/Lifecycle
