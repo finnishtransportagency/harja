@@ -14,7 +14,8 @@
             [harja.domain.tierekisteri.varusteet :as varusteet-domain]
             [harja.tyokalut.functor :as functor]
             [harja.tyokalut.vkm :as vkm]
-            [harja.domain.tierekisteri.varusteet :as tierekisteri-varusteet])
+            [harja.domain.tierekisteri.varusteet :as tierekisteri-varusteet]
+            [clojure.walk :as walk])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -138,16 +139,14 @@
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
   ([toiminto] (uusi-varustetoteuma toiminto nil))
   ([toiminto {tietue :tietue :as varuste}]
-    ;; todo: jos varuste on annettu, aseta sen arvot lomakkeeseen
-   (log "---> varuste:" (pr-str varuste))
    {:toiminto toiminto
-    :tietolaji (ffirst varusteet-domain/tietolaji->selitys)
+    :tietolaji (or (get-in tietue [:tietolaji :tunniste]) (ffirst varusteet-domain/tietolaji->selitys))
     :alkupvm (or (:alkupvm tietue) (pvm/nyt))
     :muokattava? true
     :ajoradat varusteet-domain/oletus-ajoradat
     :ajorata (or (get-in tietue [:sijainti :tie :ajr]) (first varusteet-domain/oletus-ajoradat))
     :puoli (or (get-in tietue [:sijainti :tie :puoli]) (first varusteet-domain/tien-puolet))
-    :varuste varuste
+    :arvot (walk/keywordize-keys (get-in tietue [:tietolaji :arvot]))
     :tierekisteriosoite (varusteen-osoite varuste)}))
 
 (defn naytettavat-toteumat [valittu-toimenpide toteumat]
