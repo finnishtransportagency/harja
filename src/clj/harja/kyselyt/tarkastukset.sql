@@ -714,6 +714,6 @@ WHERE t.tyyppi = 'laatu' :: tarkastustyyppi
       AND t.poistettu IS NOT TRUE;
 
 --name: hae-tarkastusajon-reittipisteet
-SELECT id, sijainti
+SELECT id, sijainti, havainnot
   FROM tarkastusreitti
  WHERE tarkastusajo = :tarkastusajoid;
