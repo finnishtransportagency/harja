@@ -414,7 +414,7 @@
     (log/debug "Lopulliset Harjan kantaan menevät tarkastusten osoitteet:")
     (doseq [tarkastus kaikki-tarkastukset]
       (let [tallennettava (luo-kantaan-tallennettava-tarkastus
-                            (:db jarjestelma)
+                            db
                             tarkastus
                             {:kayttajanimi "jvh"})]
         (log/debug (tie->str tallennettava))))))
