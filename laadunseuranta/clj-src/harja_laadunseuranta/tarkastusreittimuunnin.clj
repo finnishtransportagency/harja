@@ -310,7 +310,7 @@
     (if (empty? tarkastukseen-liittyvat-merkinnat)
       tarkastus
       (merge tarkastus
-             ;; Lisätään mahdolliset kuvat perään rivinvaihdoilla erotettuna
+             ;; Lisätään mahdolliset kuvaukset perään rivinvaihdoilla erotettuna
              {:havainnot (let [kuvaukset (map :kuvaus tarkastukseen-liittyvat-merkinnat)]
                            (if (empty? kuvaukset)
                              (:havainnot tarkastus)
