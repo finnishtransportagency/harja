@@ -299,31 +299,50 @@
 
 (defn debuggaa-tarkastusajon-muunto [db tarkastusajo-id]
   (log/debug "Debugataan tarkastusajo: " (pr-str tarkastusajo-id))
-  (let [lopputulos (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
+  (let [tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
         tie->str (fn [tie]
-                   (str (:tie tie) "/" (:aosa tie) "/" (:aet tie) "/" (:losa tie) "/" (:let tie)))
-        reitilliset-tarkastukset (:reitilliset-tarkastukset lopputulos)
-        pistemaiset-tarkastukset (:pistemaiset-tarkastukset lopputulos)
-        kaikki-tarkastukset (concat (:reitilliset-tarkastukset lopputulos)
-                                    (:pistemaiset-tarkastukset lopputulos))]
+                   (str (or (:tie tie)
+                            (:tr_numero tie))
+                        "/" (or (:aosa tie)
+                                (:tr_alkuosa tie))
+                        "/" (or (:aet tie)
+                                (:tr_alkuetaisyys tie))
+                        "/" (or (:losa tie)
+                                (:tr_loppuosa tie))
+                        "/" (or (:let tie)
+                                (:tr_loppuetaisyys tie))))
+        reitilliset-tarkastukset (:reitilliset-tarkastukset tarkastukset)
+        pistemaiset-tarkastukset (:pistemaiset-tarkastukset tarkastukset)
+        kaikki-tarkastukset (concat (:reitilliset-tarkastukset tarkastukset)
+                                    (:pistemaiset-tarkastukset tarkastukset))]
     (log/debug "Tarkastus muunnettu. Tässäpä tulos:")
 
     (log/debug "-- Määrät --")
     (log/debug (format "Reitilliset tarkastukset: %s kpl." (count reitilliset-tarkastukset)))
     (log/debug (format "Pistemäiset tarkastukset: %s kpl." (count pistemaiset-tarkastukset)))
     (log/debug (format "Yhteensä: %s kpl." (count kaikki-tarkastukset)))
-
-    (log/debug "-- Reitit --")
+    (log/debug "")
     (log/debug (format "Saatiin muodostettua tieosoite: %s kpl."
                        (count (filter :tr-osoite
                                       (mapcat :sijainnit kaikki-tarkastukset)))))
     (log/debug (format "Tieosoite puuttuu: %s kpl."
                        (count (filter #(nil? (:tr-osoite %))
                                       (mapcat :sijainnit kaikki-tarkastukset)))))
-    (log/debug "Reitillisten tarkastusten reitti:")
+    (log/debug "")
+    (log/debug "-- Ajettu reitti --")
+    (log/debug "Reitillisten tarkastusten muodostama ajettu reitti:")
     (let [sijainnit (mapcat :sijainnit (sort-by :aika reitilliset-tarkastukset))]
       (doseq [sijainti sijainnit]
-        (log/debug (tie->str (:tr-osoite sijainti)))))))
+        (log/debug (tie->str (:tr-osoite sijainti)))))
+
+    (log/debug "")
+    (log/debug "-- Lopputulos --")
+    (log/debug "Lopulliset Harjan kantaan menevät tarkastusten osoitteet:")
+    (doseq [tarkastus kaikki-tarkastukset]
+      (let [tallennettava (luo-kantaan-tallennettava-tarkastus
+                            tarkastus
+                            {:kayttajanimi "jvh"})]
+        (log/debug (tie->str tallennettava))))))
 
 (defn debuggaa-tarkastusajojen-muunto [db tarkastusajo-idt]
   (log/debug "Debugataan tarkastusajot: " (pr-str tarkastusajo-idt))
