@@ -310,10 +310,10 @@
     (log/debug "-- Reitit --")
     (log/debug (format "Saatiin muodostettua tieosoite: %s kpl."
                        (count (filter :tr-osoite
-                                (map :sijainnit kaikki-tarkastukset)))))
+                                (mapcat :sijainnit kaikki-tarkastukset)))))
     (log/debug (format "Tieosoite puuttuu: %s kpl."
                        (count (filter #(nil? (:tr-osoite %))
-                                (map :sijainnit kaikki-tarkastukset)))))))
+                                (mapcat :sijainnit kaikki-tarkastukset)))))))
 
 (defn debuggaa-tarkastusajojen-muunto [db tarkastusajo-idt]
   (log/debug "Debugataan tarkastusajot: " (pr-str tarkastusajo-idt))
