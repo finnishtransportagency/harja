@@ -22,7 +22,7 @@
     false))
 
 (defn liitekuva-modalissa [liite]
-  [img-with-exif {:class "kuva-modaalissa"
+  [img-with-exif {:class "kuva-modalissa"
                   :src (k/liite-url (:id liite))}])
 
 (defn- nayta-liite-modalissa [liite]
