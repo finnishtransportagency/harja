@@ -122,7 +122,7 @@
                                           tietolaji (get-in varuste [:tietue :tietolaji :tunniste])]
                                       [:div
                                        [napit/tarkasta "Tarkasta" #(e! (v/->AloitaVarusteenTarkastus varuste tunniste tietolaji))]
-                                       [napit/muokkaa "Muokkaa" #(e! (v/->MuokkaaVarustetta varuste))]
+                                       [napit/muokkaa "Muokkaa" #(e! (v/->AloitaVarusteenMuokkaus varuste))]
                                        [napit/poista "Poista" #(poista-varuste e! tietolaji tunniste varuste)]]))}]
       (conj tietolajin-listaus-skeema toiminnot))
     tietolajin-listaus-skeema))

@@ -61,8 +61,8 @@
 (defrecord ToimintoEpaonnistui [toiminto virhe])
 (defrecord ToimintoOnnistui [vastaus])
 
-(defrecord VarusteToteumatMuuttuneet [varustetoteumat])
-(defrecord MuokkaaVarustetta [varuste])
+(defrecord VarustetoteumatMuuttuneet [varustetoteumat])
+(defrecord AloitaVarusteenMuokkaus [varuste])
 
 (defn laheta-viivastyneesti [async-fn]
   ;; hackish ratkaisu, jolla varmistetaan, että tämän funktion käsittely päättyy ennen kuin send-async menee läpi.
@@ -102,13 +102,14 @@
   (process-event [{{:keys [viesti vastaus]} :toiminto virhe :virhe :as tiedot} app]
     (log "[TR] Virhe suoritettaessa toimintoa. Virhe:" (pr-str virhe) ". Vastaus: " (pr-str vastaus) ".")
     (viesti/nayta! viesti :warning)
-    (laheta-viivastyneesti #(t/send-async! (partial ->VarusteToteumatMuuttuneet vastaus)))
+    (laheta-viivastyneesti #(t/send-async! (partial ->VarustetoteumatMuuttuneet vastaus)))
+
     ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
     (hakutulokset app nil nil))
 
   ToimintoOnnistui
   (process-event [{{:keys [vastaus]} :toiminto :as tiedot} app]
-    (laheta-viivastyneesti #(t/send-async! (partial ->VarusteToteumatMuuttuneet vastaus)))
+    (laheta-viivastyneesti #(t/send-async! (partial ->VarustetoteumatMuuttuneet vastaus)))
     ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
     (hakutulokset app nil nil))
 
@@ -156,10 +157,11 @@
     (assoc app :tarkastus (assoc tarkastus :tiedot uudet-tiedot)))
 
   ;; Hook-upit päänäkymään (harja.tiedot.urakka.toteumat.varusteet)
-  VarusteToteumatMuuttuneet
+  VarustetoteumatMuuttuneet
   (process-event [_ app]
+    ;; todo: tänne ei pitäisi tulla, mutta jostain syystä interceptointi ei enää toimi alinäkymän eventeistä
     app)
 
-  MuokkaaVarustetta
+  AloitaVarusteenMuokkaus
   (process-event [_ app]
     app))

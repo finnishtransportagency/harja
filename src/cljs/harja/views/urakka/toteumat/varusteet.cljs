@@ -256,14 +256,14 @@
   (let [vhe! (t/wrap-path e! :varustehaku)
         pe! e!]
     (intercept vhe!
-               (varusteet/VarusteToteumatMuuttuneet
+               ;; todo: jostain syystä tämän interceptointi ei enää toimi. eventti menee lapsinäkymään.
+               (varusteet/VarustetoteumatMuuttuneet
                  {varustetoteumat :varustetoteumat :as t}
                  (send-to pe! (v/->VarustetoteumatMuuttuneet varustetoteumat)))
 
-               (varusteet/MuokkaaVarustetta
+               (varusteet/AloitaVarusteenMuokkaus
                  {varuste :varuste :as t}
                  (send-to pe! (v/->UusiVarusteToteuma :muokkaa varuste))))))
-
 
 (defn varustehakulomake [e! nykyiset-valinnat naytettavat-toteumat varustehaun-tiedot]
   [:span
@@ -292,7 +292,9 @@
              varustehaun-tiedot :varustehaku
              virhe :virhe
              :as app}]
+
       [:span
+       [debug app]
        (when virhe
          (yleiset/virheviesti-sailio virhe (fn [_] (e! (v/->VirheKasitelty)))))
        [kartta/kartan-paikka]
