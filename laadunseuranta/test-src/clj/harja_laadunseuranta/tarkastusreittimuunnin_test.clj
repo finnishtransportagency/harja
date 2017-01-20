@@ -298,6 +298,7 @@
 ;; Kutsu tässä NS:ssä esim. (harja.palvelin.main/with-db db (debuggaa-tarkastusajon-muunto db 1))
 
 (defn debuggaa-tarkastusajon-muunto [db tarkastusajo-id]
+  (log/debug "Debugataan tarkastusajo: " (pr-str tarkastusajo-id))
   (let [lopputulos (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
         kaikki-tarkastukset (concat (:reitilliset-tarkastukset lopputulos)
                                     (:pistemaiset-tarkastukset lopputulos))]
@@ -307,10 +308,14 @@
     (log/debug (format "Pistemäiset tarkastukset: %s kpl." (count (:pistemaiset-tarkastukset lopputulos))))
     (log/debug (format "Yhteensä: %s kpl." (count kaikki-tarkastukset)))
     (log/debug "-- Reitit --")
-    (log/debug (format "Pistemäiset tarkastukset: %s kpl." (count (:pistemaiset-tarkastukset lopputulos))))
     (log/debug (format "Saatiin muodostettua tieosoite: %s kpl."
                        (count (filter :tr-osoite
                                 (map :sijainnit kaikki-tarkastukset)))))
     (log/debug (format "Tieosoite puuttuu: %s kpl."
                        (count (filter #(nil? (:tr-osoite %))
                                 (map :sijainnit kaikki-tarkastukset)))))))
+
+(defn debuggaa-tarkastusajojen-muunto [db tarkastusajo-idt]
+  (log/debug "Debugataan tarkastusajot: " (pr-str tarkastusajo-idt))
+  (doseq [tarkastusajo-id tarkastusajo-idt]
+    (debuggaa-tarkastusajon-muunto db tarkastusajo-id)))
