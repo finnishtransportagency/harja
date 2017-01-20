@@ -125,18 +125,30 @@
                    :tienumero tienumero}]
     (k/post! :tallenna-varustetoteuma {:hakuehdot hakuehdot :toteuma toteuma})))
 
+(defn varusteen-osoite [varuste]
+  (when varuste
+    (let [osoite (get-in varuste [:tietue :sijainti :tie])]
+      {:numero (:numero osoite)
+       :alkuosa (:aosa osoite)
+       :alkuetaisyys (:aet osoite)
+       :loppuosa (:losa osoite)
+       :loppuetaisyys (:let osoite)})))
+
 (defn uusi-varustetoteuma
   "Luo uuden tyhjän varustetoteuman lomaketta varten."
   ([toiminto] (uusi-varustetoteuma toiminto nil))
   ([toiminto varuste]
     ;; todo: jos varuste on annettu, aseta sen arvot lomakkeeseen
+   (log "---> varuste:" (pr-str varuste))
    {:toiminto toiminto
     :tietolaji (ffirst varusteet-domain/tietolaji->selitys)
     :alkupvm (pvm/nyt)
     :muokattava? true
     :ajoradat varusteet-domain/oletus-ajoradat
     :ajorata (first varusteet-domain/oletus-ajoradat)
-    :puoli (first varusteet-domain/tien-puolet)}))
+    :puoli (first varusteet-domain/tien-puolet)
+    :varuste varuste
+    :tierekisteriosoite (varusteen-osoite varuste)}))
 
 (defn naytettavat-toteumat [valittu-toimenpide toteumat]
   (if valittu-toimenpide
@@ -206,8 +218,8 @@
     (assoc app :varustetoteuma nil))
 
   v/UusiVarusteToteuma
-  (process-event [_ _]
-    (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (uusi-varustetoteuma :lisatty)))]
+  (process-event [{:keys [toiminto varuste]} _]
+    (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (uusi-varustetoteuma toiminto varuste)))]
       (tulos!)))
 
   v/AsetaToteumanTiedot
