@@ -22,9 +22,9 @@
                         :harja-laadunseuranta
                         (component/using
                           (harja-laadunseuranta/->Laadunseuranta nil)
-                          [:db :http-palvelin]))))
+                          [:db :http-palvelin])))))
   (testit)
-  (alter-var-root #'jarjestelma component/stop)))
+  (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :once (compose-fixtures
                       tietokanta-fixture
