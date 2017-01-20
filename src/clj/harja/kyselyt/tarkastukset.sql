@@ -712,3 +712,8 @@ WHERE t.tyyppi = 'laatu' :: tarkastustyyppi
       AND (:laadunalitus :: BOOLEAN IS NULL OR t.laadunalitus = :laadunalitus)
       AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
       AND t.poistettu IS NOT TRUE;
+
+--name: hae-tarkastusajon-reittipisteet
+SELECT id, sijainti
+  FROM tarkastusreitti
+ WHERE tarkastusajo = :tarkastusajoid;
