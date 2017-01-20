@@ -10,7 +10,8 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
-            [harja-laadunseuranta.core :as harja-laadunseuranta]))
+            [harja-laadunseuranta.core :as harja-laadunseuranta])
+  (:import (org.postgis PGgeometry)))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -42,7 +43,7 @@
              reittimerkinta)))
        reittimerkinnat))
 
-;; -------- Yleiset testit --------
+;; -------- Yleiset muunnostestit --------
 
 (deftest reittimerkinnat-tarkastuksiksi-havainnot-muuttuu
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
@@ -146,7 +147,7 @@
     (is (= 6349 (:tr_loppuetaisyys tallennettava)))
 
     ;; Ajolle saatiin muodostettua geometria
-    (is (some? (:sijainti tallennettava)))
+    (is (instance? PGgeometry (:sijainti tallennettava)))
 
     ;; Alku on ensimmäisen piste ja loppu on viimeinen piste
     (is (= (:tr_alkuosa tallennettava) (get-in (first merkinnat-tieosoitteilla) [:tr-osoite :aosa])))
@@ -171,7 +172,7 @@
     (is (= nil))
 
     ;; Ajolle saatiin muodostettua geometria
-    (is (some? (:sijainti tallennettava)))))
+    (is (instance? PGgeometry (:sijainti tallennettava)))))
 
 (deftest tarkastus-trvali-jossa-yksi-sijainti
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
@@ -189,7 +190,7 @@
     (is (= nil))
 
     ;; Ajolle saatiin muodostettua geometria
-    (is (some? (:sijainti tallennettava)))))
+    (is (instance? PGgeometry (:sijainti tallennettava)))))
 
 ;; -------- Laadunalitus --------
 
@@ -339,6 +340,26 @@
     (is (= (-> tarkastukset :reitilliset-tarkastukset second :soratiemittaus :sivukaltevuus) nil))
     (is (== (-> tarkastukset :reitilliset-tarkastukset last :soratiemittaus :sivukaltevuus) 3))))
 
+;; -------- Testit oikeille tarkastusajoille alusta loppuun --------
+
+;; TODO Testaa kun tämän ajon tieverkko lisätty testidataan!
+#_(deftest oikean-tarkastusajon-muunto-toimii
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi (:db jarjestelma) 754)
+        tarkastukset (ls-core/lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)]
+
+    (log/debug "Tarkastukset: " (pr-str tarkastukset))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 3))
+
+
+
+    #_(ls-core/tallenna-muunnetut-tarkastukset-kantaan (:db jarjestelma) tarkastukset 1 urakka-id)
+    (let [tarkastukset-kannassa (q "SELECT id FROM tarkastus WHERE tarkastusajo = 754;")]
+
+      (log/debug "Tulos: " (pr-str tarkastukset-kannassa)))))
+
+
 ;; -------- Apufunktioita REPL-tunkkaukseen --------
 ;; Älä poista näitä
 ;; Kutsu tässä NS:ssä esim. (harja.palvelin.main/with-db db (debuggaa-tarkastusajon-muunto db 1))
@@ -350,6 +371,7 @@
     (ls-core/tallenna-muunnetut-tarkastukset-kantaan db tarkastukset 1 urakka-id)))
 
 (defn debuggaa-tarkastusajon-muunto [db tarkastusajo-id]
+  ;; Muista ajaa tieverkko kantaan, jotta geometrisointi toimii!
   (log/debug "Debugataan tarkastusajo: " (pr-str tarkastusajo-id))
   (let [tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
         tie->str (fn [tie]
