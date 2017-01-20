@@ -105,18 +105,26 @@
 ;; -------- Kantaan tallennettava tarkastus --------
 
 (deftest tarkastus-trvali-jossa-alkuosa-vaihtuu
-  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
-                       (lisaa-reittimerkinnoille-mockattu-tieosoite
-                         testidata/tarkastus-jossa-alkuosa-vaihtuu))
+  (let [merkinnat-tieosoitteilla (lisaa-reittimerkinnoille-mockattu-tieosoite
+                                   testidata/tarkastus-jossa-alkuosa-vaihtuu)
+        tarkastukset (reittimerkinnat-tarkastuksiksi
+                       merkinnat-tieosoitteilla)
         tallennettava (luo-kantaan-tallennettava-tarkastus
                         (first (:reitilliset-tarkastukset tarkastukset))
                         {:kayttajanimi "jvh"})]
+    ;; Tieosoitteet ovat oikein
     (is (= 1 (count (:reitilliset-tarkastukset tarkastukset))))
     (is (= 20 (:tr_numero tallennettava)))
     (is (= 10 (:tr_alkuosa tallennettava)))
     (is (= 4924 (:tr_alkuetaisyys tallennettava)))
     (is (= 11 (:tr_loppuosa tallennettava)))
-    (is (= 6349 (:tr_loppuetaisyys tallennettava)))))
+    (is (= 6349 (:tr_loppuetaisyys tallennettava)))
+
+    ;; Alku on ensimmäisen piste ja loppu on viimeinen piste
+    (is (= (:tr_alkuosa tallennettava) (get-in (first merkinnat-tieosoitteilla) [:tr-osoite :aosa])))
+    (is (= (:tr_alkuetaisyys tallennettava) (get-in (first merkinnat-tieosoitteilla) [:tr-osoite :aet])))
+    (is (= (:tr_loppuosa tallennettava) (get-in (last merkinnat-tieosoitteilla) [:tr-osoite :aosa])))
+    (is (= (:tr_loppuetaisyys tallennettava) (get-in (last merkinnat-tieosoitteilla) [:tr-osoite :aet])))))
 
 (deftest tarkastus-trvali-jossa-osoitteet-samat
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
