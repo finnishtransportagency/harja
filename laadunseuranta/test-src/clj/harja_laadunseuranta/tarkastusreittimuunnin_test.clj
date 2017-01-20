@@ -102,6 +102,8 @@
       (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
       (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
 
+;; -------- Kantaan tallennettava tarkastus --------
+
 (deftest tarkastus-trvali-jossa-alkuosa-vaihtuu
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
@@ -342,7 +344,9 @@
       (let [tallennettava (luo-kantaan-tallennettava-tarkastus
                             tarkastus
                             {:kayttajanimi "jvh"})]
-        (log/debug (tie->str tallennettava))))))
+        (log/debug (tie->str tallennettava))))
+
+    ))
 
 (defn debuggaa-tarkastusajojen-muunto [db tarkastusajo-idt]
   (log/debug "Debugataan tarkastusajot: " (pr-str tarkastusajo-idt))
