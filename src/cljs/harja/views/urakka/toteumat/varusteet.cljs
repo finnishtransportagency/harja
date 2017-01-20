@@ -241,7 +241,7 @@
                          (lomake/yleinen-varoitus "Ladataan tietolajin kuvausta. Kirjaus voidaan tehdä vasta, kun kuvaus on ladattu"))
                        [napit/palvelinkutsu-nappi
                         "Tallenna"
-                        #(varustetiedot/tallenna-varustetoteuma @valinnat toteuma)
+                        #(varustetiedot/tallenna-varustetoteuma valinnat toteuma)
                         {:luokka "nappi-ensisijainen"
                          :ikoni (ikonit/tallenna)
                          :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
@@ -300,7 +300,7 @@
        [kartta/kartan-paikka]
 
        (if varustetoteuma
-         [varustetoteumalomake e! valinnat varustetoteuma]
+         [varustetoteumalomake e! nykyiset-valinnat varustetoteuma]
          [varustehakulomake e! nykyiset-valinnat naytettavat-toteumat varustehaun-tiedot])])))
 
 (defn varusteet []
