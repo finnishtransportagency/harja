@@ -6,6 +6,7 @@
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [harja-laadunseuranta.tiedot.kamera :as kamera-tiedot]
+            [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset-tiedot]
             [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset]
             [harja-laadunseuranta.ui.alustus :as alustus]
             [harja-laadunseuranta.ui.ylapalkki :as ylapalkki]
@@ -23,7 +24,8 @@
 
 (defn- paanakyma []
   [:div.toplevel
-   [kamera/file-input kamera-tiedot/kuva-otettu]
+   [kamera/file-input
+    #(kamera-tiedot/kuva-otettu % s/kuvaa-otetaan?)]
    [ylapalkki/ylapalkki]
 
    [:div.paasisalto-container
@@ -32,7 +34,12 @@
     (when @s/piirra-paanavigointi?
       [paanavigointi])
 
-    [ilmoitukset/ilmoituskomponentti s/ilmoitus]
+    [ilmoitukset/ilmoituskomponentti
+     {:ilmoitus-atom s/ilmoitus
+      :lomakedata @s/havaintolomakedata
+      :havainnon-id @s/ilmoitukseen-liittyva-havainto-id
+      :taydenna-havaintoa-painettu-fn ilmoitukset-tiedot/ilmoitusta-painettu!
+      :ilmoitukseen-liittyva-havainto-id-atom s/ilmoitukseen-liittyva-havainto-id}]
 
     (when @s/havaintolomake-auki?
       [havaintolomake])

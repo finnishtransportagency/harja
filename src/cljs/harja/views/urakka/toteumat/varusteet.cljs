@@ -1,5 +1,11 @@
 (ns harja.views.urakka.toteumat.varusteet
-  "Urakan 'Toteumat' välilehden 'Varusteet' osio"
+  "Urakan 'Toteumat' välilehden 'Varusteet' osio
+
+  Näyttä Harjan kautta kirjatut varustetoteumat sekä mahdollistaa haut ja muokkaukset suoraan Tierekisteriin rajapinnan
+  kautta.
+
+  Harjaan tallennettu varustetoteuma sisältää tiedot varsinaisesta työstä. Varusteiden tekniset tiedot päivitetään
+  aina Tierekisteriin"
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<! >! chan timeout]]
             [harja.atom :refer [paivita!] :refer-macros [reaction<!]]
@@ -29,16 +35,17 @@
              :refer [varusteominaisuus->skeema]
              :as tierekisteri-varusteet]
             [harja.ui.viesti :as viesti]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.tiedot.tierekisteri.varusteet :as varusteet])
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]))
+                   [reagent.ratom :refer [reaction run!]]
+                   [tuck.intercept :refer [intercept]]))
 
-;; todo: muista ottaa pois päältä ennen mergeämistä!
-(def tr-kaytossa? true)
+(def tr-kaytossa? false)
 
 (def nayta-max-toteumaa 500)
 
-(defn oikeus-varusteen-lisaamiseen? [] (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
+(defn oikeus-varusteiden-muokkaamiseen? [] (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
 
 (defn varustetoteuman-tehtavat [toteumat toteuma]
   (let [toteumatehtavat (:toteumatehtavat toteuma)]
@@ -62,7 +69,8 @@
 (defn varustekortti-linkki [{:keys [alkupvm tietolaji tunniste]}]
   (when (and tietolaji tunniste)
     (let [url (kommunikaatio/varustekortti-url alkupvm tietolaji tunniste)]
-      [:a {:href url :target "_blank"} "Avaa"])))
+      [:a {:href url :target "_blank"
+           :on-click #(.stopPropagation %)} "Avaa"])))
 
 (defn nayta-varustetoteuman-lahetyksen-tila [{tila :tila lahetetty :lahetetty}]
   (case tila
@@ -214,12 +222,10 @@
 (defn varustetoteumalomake [e! valinnat varustetoteuma]
   (let [muokattava? (:muokattava? varustetoteuma)
         ominaisuudet (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))]
+
     [:span.varustetoteumalomake
      [napit/takaisin "Takaisin varusteluetteloon"
       #(e! (v/->TyhjennaValittuToteuma))]
-
-     (when (and tr-kaytossa? (empty? ominaisuudet))
-       (lomake/yleinen-varoitus "Ei yhteyttä Tierekisteriin. Varustetoteumaa ei voida kirjata."))
 
      [lomake/lomake
       {:otsikko (case (:toiminto varustetoteuma)
@@ -229,18 +235,30 @@
        :muokkaa! #(e! (v/->AsetaToteumanTiedot %))
        :footer-fn (fn [toteuma]
                     (when muokattava?
-                      [napit/palvelinkutsu-nappi
-                       "Tallenna"
-                       #(varustetiedot/tallenna-varustetoteuma @valinnat toteuma)
-                       {:luokka "nappi-ensisijainen"
-                        :ikoni (ikonit/tallenna)
-                        :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
-                        :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
-                        :disabled (not (lomake/voi-tallentaa? toteuma))}]))}
+                      [:div
+                       (when (and tr-kaytossa? (empty? ominaisuudet))
+                         (lomake/yleinen-varoitus "Ladataan tietolajin kuvausta. Kirjaus voidaan tehdä vasta, kun kuvaus on ladattu"))
+                       [napit/palvelinkutsu-nappi
+                        "Tallenna"
+                        #(varustetiedot/tallenna-varustetoteuma @valinnat toteuma)
+                        {:luokka "nappi-ensisijainen"
+                         :ikoni (ikonit/tallenna)
+                         :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
+                         :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
+                         :disabled (not (lomake/voi-tallentaa? toteuma))}]]))}
       [(varustetoteuman-tiedot muokattava? varustetoteuma)
        (varusteen-tunnistetiedot e! muokattava? varustetoteuma)
        (varusteen-ominaisuudet muokattava? ominaisuudet)]
       varustetoteuma]]))
+
+(defn kasittele-varustehaun-event [e!]
+  (let [vhe! (t/wrap-path e! :varustehaku)
+        pe! e!]
+    (intercept e!
+               (varusteet/VarusteToteumatMuuttuneet
+                 {varustetoteumat :varustetoteumat :as t}
+                 (pe! (v/->VarustetoteumatMuuttuneet varustetoteumat)))
+               (:default e (vhe! e)))))
 
 (defn- varusteet* [e! varusteet]
   (e! (v/->YhdistaValinnat @varustetiedot/valinnat))
@@ -254,7 +272,8 @@
              naytettavat-toteumat :naytettavat-toteumat
              toteuma :varustetoteuma
              varustehaun-tiedot :varustehaku
-             virhe :virhe}]
+             virhe :virhe
+             :as app}]
       [:span
        (when virhe
          (yleiset/virheviesti-sailio virhe (fn [_] (e! (v/->VirheKasitelty)))))
@@ -269,10 +288,10 @@
           (when tr-kaytossa?
             [:div.sisalto-container
              [:h1 "Varusteet Tierekisterissä"]
-             (when oikeus-varusteen-lisaamiseen?
+             (when oikeus-varusteiden-muokkaamiseen?
                [napit/uusi "Lisää uusi varuste"
                 #(e! (v/->UusiVarusteToteuma))])
-             [varustehaku (t/wrap-path e! :varustehaku) varustehaun-tiedot]])])])))
+             [varustehaku (kasittele-varustehaun-event e!) varustehaun-tiedot]])])])))
 
 (defn varusteet []
   [tuck varustetiedot/varusteet varusteet*])
