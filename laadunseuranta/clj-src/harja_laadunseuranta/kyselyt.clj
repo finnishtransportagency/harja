@@ -16,13 +16,13 @@
   (first (filterv (comp not @jatkuvat-vakiohavainto-idt) havainnot)))
 
 (defn- kasittele-kantamerkinta [merkinta]
-  (let [p (when (:sijainti merkinta)
-            (.getGeometry (:sijainti merkinta)))
+  (let [geometria (when (:sijainti merkinta)
+                    (.getGeometry (:sijainti merkinta)))
         havainnot (when (:havainnot merkinta)
                     (seq (.getArray (:havainnot merkinta))))]
     (-> merkinta
         ;; Jaetaan havainnot pistemäisiin ja jatkuviin
-        (assoc :sijainti [(.x p) (.y p)]
+        (assoc :sijainti [(.x geometria) (.y geometria)]
                :jatkuvat-havainnot (suodata-jatkuvat-havainnot havainnot)
                :pistemainen-havainto (suodata-pistemainen-havainto havainnot))
         (dissoc :havainnot))))
