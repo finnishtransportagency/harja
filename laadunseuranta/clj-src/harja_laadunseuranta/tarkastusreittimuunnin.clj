@@ -406,7 +406,6 @@
 
 (defn- tallenna-tarkastus! [db tarkastus kayttaja]
   (log/debug "Aloitetaan tarkastuksen tallennus")
-  (log/debug (pr-str kayttaja))
   (let [tarkastus (luo-kantaan-tallennettava-tarkastus db tarkastus kayttaja)
         _ (q/luo-uusi-tarkastus<! db
                                   (merge tarkastus
