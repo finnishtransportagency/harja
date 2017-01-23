@@ -1,4 +1,7 @@
-(ns harja-laadunseuranta.tarkastukset
+(ns harja-laadunseuranta.tarkastusreittimuunnin
+  "Tämä namespace tarjoaa funktiot Harjan mobiililla laadunseurantatyökalulla tehtyjen reittimerkintöjen
+   muuntamiseksi Harja-tarkastukseksi. Tärkein funktio on reittimerkinnat-tarkastuksiksi, joka
+   hoitaa varsinaisen muunnostyön."
   (:require [taoensso.timbre :as log]
             [harja-laadunseuranta.tietokanta :as tietokanta]
             [harja-laadunseuranta.kyselyt :as q]
@@ -7,8 +10,6 @@
             [clojure.string :as str]
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
-
-(def db tietokanta/db)
 
 (defn etenemissuunta
   "Palauttaa 1 jos tr-osoite2 on suurempi kuin tr-osoite1.
@@ -307,7 +308,7 @@
     (if (empty? tarkastukseen-liittyvat-merkinnat)
       tarkastus
       (merge tarkastus
-             ;; Lisätään mahdolliset kuvat perään rivinvaihdoilla erotettuna
+             ;; Lisätään mahdolliset kuvaukset perään rivinvaihdoilla erotettuna
              {:havainnot (let [kuvaukset (map :kuvaus tarkastukseen-liittyvat-merkinnat)]
                            (if (empty? kuvaukset)
                              (:havainnot tarkastus)
@@ -351,22 +352,16 @@
 
 ;; -------- Tarkastuksen tallennus kantaan --------
 
-(defn- hae-tallennettavan-tarkastuksen-sijainti
-  [db {tie :tr_numero
-       alkuosa :tr_alkuosa alkuet :tr_alkuetaisyys
-       loppuosa :tr_loppuosa loppuet :tr_loppuetaisyys}]
-  (when (and tie alkuosa alkuet)
-    (let [viiva? (and loppuosa loppuet
-                      (not= loppuosa alkuosa)
-                      (not= loppuet alkuet))]
-      (:geom
-        (first (q/tr-osoitteelle-viiva
-                 db
-                 {:tr_numero tie
-                  :tr_alkuosa alkuosa
-                  :tr_alkuetaisyys alkuet
-                  :tr_loppuosa (if viiva? loppuosa alkuosa)
-                  :tr_loppuetaisyys (if viiva? loppuet alkuet)}))))))
+(defn- muodosta-tarkastuksen-geometria
+  [db {:keys [tie aosa aet losa let] :as tieosoite}]
+  (when (and tie aosa aet)
+    (:geom (first (q/tr-osoitteelle-viiva
+              db
+              {:tr_numero tie
+               :tr_alkuosa aosa
+               :tr_alkuetaisyys aet
+               :tr_loppuosa (or losa aosa)
+               :tr_loppuetaisyys (or let aet)})))))
 
 (defn- kasittele-pistemainen-tarkastusreitti
   "Asettaa tieosoitteen paatepisteen (losa / let) nilliksi jos sama kuin lahtopiste (aosa / aet)"
@@ -386,19 +381,19 @@
    Reittimerkintämuuntimen luoma tarkastus koostuu joko yhdestä tai useammasta
    sijaintipisteestä sen mukaan onko kyse pistemäisestä vai reitillisestä tarkastuksesta
    On tosin mahdollista, että myös reitillinen tarkastus on tallentunut vain yhdellä sijainnilla."
-  [tarkastus kayttaja]
+  [db tarkastus kayttaja]
   (let [tarkastuksen-reitti (:sijainnit tarkastus)
         lahtopiste (:tr-osoite (first tarkastuksen-reitti))
         paatepiste (:tr-osoite (last tarkastuksen-reitti))
         koko-tarkastuksen-tr-osoite {:tie (:tie lahtopiste)
                                      :aosa (:aosa lahtopiste)
                                      :aet (:aet lahtopiste)
-                                     ;; Reitillisessä tarkastuksessa alkupiste ja päätepiste ovat erit,
-                                     ;; pistemäisessä samat
                                      :losa (or (:losa paatepiste) (:aosa paatepiste))
                                      :let (or (:let paatepiste) (:aet paatepiste))}
+        ;; Pistemäisessä sekä lähtö- että paatepiste ovat samat, jolloin losa ja let ovat samat. Käsitellään ne:
         koko-tarkastuksen-tr-osoite (kasittele-pistemainen-tarkastusreitti koko-tarkastuksen-tr-osoite)
-        geometria (hae-tallennettavan-tarkastuksen-sijainti db tarkastus)]
+        geometria (muodosta-tarkastuksen-geometria db koko-tarkastuksen-tr-osoite)]
+
     (assoc tarkastus
       :tarkastaja (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
       :tr_numero (:tie koko-tarkastuksen-tr-osoite)
@@ -411,8 +406,7 @@
 
 (defn- tallenna-tarkastus! [db tarkastus kayttaja]
   (log/debug "Aloitetaan tarkastuksen tallennus")
-  (log/debug (pr-str tarkastus))
-  (let [tarkastus (luo-kantaan-tallennettava-tarkastus tarkastus kayttaja)
+  (let [tarkastus (luo-kantaan-tallennettava-tarkastus db tarkastus kayttaja)
         _ (q/luo-uusi-tarkastus<! db
                                   (merge tarkastus
                                          {:luoja (:id kayttaja)}))

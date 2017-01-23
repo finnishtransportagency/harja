@@ -450,6 +450,17 @@
                             (map :sanktiolaji sanktiotyypit))]
     sanktiolajit))
 
+(defn hae-tarkastusajon-reittipisteet
+  "Palauttaa tarkastusajon id:tä vastaan ko. ajon reittipisteet kartalle piirtoa varten.
+  Ajateltu käyttö ainoastaan debug-tarkoituksiin jvh-käyttäjällä ns. salaisessa TR-osiossa."
+  [db user tarkastusajon-id]
+  (roolit/vaadi-rooli user roolit/jarjestelmavastaava)
+  (into []
+        (comp
+          (map #(konv/array->vec % :havainnot))
+          (geo/muunna-pg-tulokset :sijainti))
+        (tarkastukset/hae-tarkastusajon-reittipisteet db {:tarkastusajoid tarkastusajon-id})))
+
 (defrecord Laadunseuranta []
   component/Lifecycle
   (start [{:keys [http-palvelin db karttakuvat] :as this}]
@@ -507,7 +518,11 @@
 
       :lisaa-tarkastukselle-laatupoikkeama
       (fn [user {:keys [urakka-id tarkastus-id]}]
-        (lisaa-tarkastukselle-laatupoikkeama db user urakka-id tarkastus-id)))
+        (lisaa-tarkastukselle-laatupoikkeama db user urakka-id tarkastus-id))
+
+      :hae-tarkastusajon-reittipisteet
+      (fn [user {:keys [tarkastusajon-id]}]
+        (hae-tarkastusajon-reittipisteet db user tarkastusajon-id)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
@@ -522,5 +537,6 @@
                      :tallenna-suorasanktio
                      :hae-tarkastus
                      :hae-urakkatyypin-sanktiolajit
-                     :lisaa-tarkastukselle-laatupoikkeama)
+                     :lisaa-tarkastukselle-laatupoikkeama
+                     :hae-tarkastusajon-reittipisteet)
     this))
