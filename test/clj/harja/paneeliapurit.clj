@@ -20,7 +20,7 @@
 
 (defn skeeman-luonti-onnistuu-kaikille?
   ([tyyppi-kartalla coll]
-    (skeeman-luonti-onnistuu-kaikille?
-      (map #(assoc % :tyyppi-kartalla tyyppi-kartalla) coll)))
+   (skeeman-luonti-onnistuu-kaikille?
+     (map #(assoc % :tyyppi-kartalla tyyppi-kartalla) coll)))
   ([coll]
-    (every? true? (map skeeman-luonti-onnistuu? coll))))
+   (when (not-empty coll) (every? true? (map skeeman-luonti-onnistuu? coll)))))

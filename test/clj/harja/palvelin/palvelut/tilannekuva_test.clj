@@ -40,53 +40,63 @@
 (def urakkatyyppi :hoito)
 
 (def parametrit-laaja-historia
-  {:urakoitsija     urakoitsija
-   :urakkatyyppi    urakkatyyppi
-   :nykytilanne?    nykytilanne
-   :alue            {:xmin -550093.049087613, :ymin 6372322.595126259,
-                     :xmax 1527526.529326106, :ymax 7870243.751025201} ; Koko Suomi
-   :alku            alku
-   :loppu           loppu
-   :yllapito        {tk/paallystys true
-                     tk/paikkaus   true}
-   :ilmoitukset     {:tyypit {tk/tpp true
-                              tk/urk true
-                              tk/tur true}
-                     :tilat  #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus}}
-   :turvallisuus    {tk/turvallisuuspoikkeamat true}
-   :laatupoikkeamat {tk/laatupoikkeama-tilaaja     true
+  {:urakoitsija urakoitsija
+   :urakkatyyppi urakkatyyppi
+   :nykytilanne? nykytilanne
+   :alue {:xmin -550093.049087613, :ymin 6372322.595126259,
+          :xmax 1527526.529326106, :ymax 7870243.751025201} ; Koko Suomi
+   :alku alku
+   :loppu loppu
+   :yllapito {tk/paallystys true
+              tk/paikkaus true
+              tk/tietyomaat true
+              tk/paaasfalttilevitin true
+              tk/tiemerkintakone true
+              tk/kuumennuslaite true
+              tk/sekoitus-ja-stabilointijyrsin true
+              tk/tma-laite true
+              tk/jyra true}
+   :ilmoitukset {:tyypit {tk/tpp true
+                          tk/urk true
+                          tk/tur true}
+                 :tilat #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus}}
+   :turvallisuus {tk/turvallisuuspoikkeamat true}
+   :laatupoikkeamat {tk/laatupoikkeama-tilaaja true
                      tk/laatupoikkeama-urakoitsija true
-                     tk/laatupoikkeama-konsultti   true}
-   :tarkastukset    {tk/tarkastus-tiesto     true
-                     tk/tarkastus-talvihoito true
-                     tk/tarkastus-soratie    true
-                     tk/tarkastus-laatu      true}
-   :talvi           {tk/auraus-ja-sohjonpoisto          true
-                     tk/suolaus                         true
-                     tk/pistehiekoitus                  true
-                     tk/linjahiekoitus                  true
-                     tk/lumivallien-madaltaminen        true
-                     tk/sulamisveden-haittojen-torjunta true
-                     tk/kelintarkastus                  true
-                     tk/aurausviitoitus-ja-kinostimet   true
-                     tk/lumensiirto                     true
-                     tk/paannejaan-poisto               true
-                     tk/muu                             true}
-   :kesa            {tk/tiestotarkastus            true
-                     tk/koneellinen-niitto         true
-                     tk/koneellinen-vesakonraivaus true
-                     tk/liikennemerkkien-puhdistus true
-                     tk/sorateiden-muokkaushoylays true
-                     tk/sorateiden-polynsidonta    true
-                     tk/sorateiden-tasaus          true
-                     tk/sorastus                   true
-                     tk/harjaus                    true
-                     tk/pinnan-tasaus              true
-                     tk/paallysteiden-paikkaus     true
-                     tk/paallysteiden-juotostyot   true
-                     tk/siltojen-puhdistus         true
-                     tk/l-ja-p-alueiden-puhdistus  true
-                     tk/muu                        true}})
+                     tk/laatupoikkeama-konsultti true}
+   :tarkastukset {tk/tarkastus-tiesto true
+                  tk/tarkastus-talvihoito true
+                  tk/tarkastus-soratie true
+                  tk/tarkastus-laatu true}
+   :talvi {tk/auraus-ja-sohjonpoisto true
+           tk/suolaus true
+           tk/pistehiekoitus true
+           tk/linjahiekoitus true
+           tk/lumivallien-madaltaminen true
+           tk/sulamisveden-haittojen-torjunta true
+           tk/aurausviitoitus-ja-kinostimet true
+           tk/lumensiirto true
+           tk/paannejaan-poisto true
+           tk/muu true
+           tk/pinnan-tasaus true}
+   :kesa {tk/koneellinen-niitto true
+          tk/koneellinen-vesakonraivaus true
+          tk/liikennemerkkien-puhdistus true
+          tk/liikennemerkkien-opasteiden-ja-liikenteenohjauslaitteiden-hoito-seka-reunapaalujen-kunnossapito true
+          tk/palteen-poisto true
+          tk/paallystetyn-tien-sorapientareen-taytto true
+          tk/ojitus true
+          tk/sorapientareen-taytto true
+          tk/sorateiden-muokkaushoylays true
+          tk/sorateiden-polynsidonta true
+          tk/sorateiden-tasaus true
+          tk/sorastus true
+          tk/harjaus true
+          tk/paallysteiden-paikkaus true
+          tk/paallysteiden-juotostyot true
+          tk/siltojen-puhdistus true
+          tk/l-ja-p-alueiden-puhdistus true
+          tk/muu true}})
 
 (defn aseta-filtterit-falseksi [parametrit ryhma]
   (assoc parametrit ryhma (reduce
@@ -124,19 +134,7 @@
     (is (>= (count (:laatupoikkeamat vastaus)) 1))
     (is (>= (count (:paikkaus vastaus)) 1))
     (is (>= (count (:paallystys vastaus)) 1))
-    (is (>= (count (:ilmoitukset vastaus)) 1))
-
-    (testing "Tiedot voidaan laittaa paneeliin"
-
-      (println (:paallystys vastaus))
-
-      (is (paneeli/skeeman-luonti-onnistuu-kaikille? (map
-                                                    #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
-                                                    (:ilmoitukset vastaus))))
-      #_(is (paneeli/skeeman-luonti-onnistuu-kaikille? :paallystys (:paallystys vastaus)))
-      #_(is (paneeli/skeeman-luonti-onnistuu-kaikille? :paikkaus (:paikkaus vastaus)))
-      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama (:laatupoikkeamat vastaus)))
-      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :turvallisuuspoikkeama (:turvallisuuspoikkeamat vastaus))))))
+    (is (>= (count (:ilmoitukset vastaus)) 1))))
 
 (deftest ala-hae-laatupoikkeamia
   (let [parametrit (aseta-filtterit-falseksi parametrit-laaja-historia :laatupoikkeamat)
@@ -244,3 +242,18 @@
 
     ;; eri urakoitsijaorganisaation käyttä ei näe työkonetta
     (is (not (hae +kayttaja-ulle+)) "Eri urakoitsijan käyttäjä ei näe työkonetta")))
+
+(deftest infopaneelin-skeemojen-luonti
+  (testing "Frontilla piirrettäville jutuille saadaan tehtyä skeemat."
+    (let [vastaus (hae-tk parametrit-laaja-historia)]
+      #_(is (paneeli/skeeman-luonti-onnistuu-kaikille? :tietyomaa (:tietyomaat vastaus)))
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? (map
+                                                       #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
+                                                       (:ilmoitukset vastaus))))
+      #_(is (paneeli/skeeman-luonti-onnistuu-kaikille? :paallystys (:paallystys vastaus)))
+      #_(is (paneeli/skeeman-luonti-onnistuu-kaikille? :paikkaus (:paikkaus vastaus)))
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama (:laatupoikkeamat vastaus)))
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :turvallisuuspoikkeama (:turvallisuuspoikkeamat vastaus)))))
+
+  (testing "Infopaneeli saadaan luotua myös palvelimella piirretyille asioille."
+    ))
