@@ -32,7 +32,7 @@
     (do (.log js/console "Nykyisellä sijainnilla ei ole tarkkuutta!")
         true)))
 
-;; Jos muutat tätä, kasvata versionumeroa. Tällöin selaimen tekee migraation
+;; Jos muutat tätä, kasvata versionumeroa. Tällöin selain tekee migraation
 ;; uuteen versioon automaattisesti. Kannattaa toki testata, että migraatio onnistuu.
 (def db-spec {:version 3
               :on-error #(js/console.log (str "Tietokantavirhe " (pr-str %)))

@@ -5,6 +5,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [taoensso.timbre :as log]
+            [harja.id :refer [id-olemassa?]]
             [clojure.java.jdbc :as jdbc]))
 
 (defn hae-jarjestelmatunnuksen-lisaoikeudet [db user {:keys [kayttaja-id]}]
@@ -28,7 +29,7 @@
     (doseq [{:keys [id kayttajanimi kuvaus organisaatio poistettu]} tunnukset]
       (if poistettu
         (q/poista-jarjestelmatunnus! c {:id id})
-        (if (or (nil? id) (neg? id))
+        (if-not (id-olemassa? id)
           (q/luo-jarjestelmatunnus<! c {:kayttajanimi kayttajanimi
                                         :kuvaus kuvaus
                                         :organisaatio (:id organisaatio)})
@@ -44,7 +45,7 @@
     (doseq [{:keys [id urakka-id poistettu]} oikeudet]
       (if poistettu
         (q/poista-jarjestelmatunnuksen-lisaoikeus-urakkaan! c {:id id})
-        (if (or (nil? id) (neg? id))
+        (if-not (id-olemassa? id)
           (q/luo-jarjestelmatunnukselle-lisaoikeus-urakkaan<! c {:kayttaja kayttaja-id
                                                                  :urakka urakka-id})
           (q/paivita-jarjestelmatunnuksen-lisaoikeus-urakkaan! c {:urakka urakka-id
