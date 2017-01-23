@@ -402,7 +402,7 @@
 
 
     (let [tarkastusten-maara-ennen (ffirst (q "SELECT COUNT(*) FROM tarkastus"))
-          _ (ls-core/tallenna-muunnetut-tarkastukset-kantaan (:db jarjestelma) tarkastukset 1 urakka-id)
+          _ (ls-core/tallenna-muunnetut-tarkastukset-kantaan (:db jarjestelma) tarkastukset {:id 1} urakka-id)
           tarkastusten-maara-jalkeen (ffirst (q "SELECT COUNT(*) FROM tarkastus"))
           tarkastukset-kannassa (q-map "SELECT * FROM tarkastus WHERE tarkastusajo = " tarkastusajo-id ";")]
 
@@ -415,6 +415,7 @@
       (is (every? #(= (:tarkastusajo %) tarkastusajo-id) tarkastukset-kannassa))
       (is (every? #(some? (:aika %)) tarkastukset-kannassa))
       (is (every? #(some? (:luotu %)) tarkastukset-kannassa))
+      (is (every? #(some? (:luoja %)) tarkastukset-kannassa))
       (is (every? #(= (:poistettu %) false) tarkastukset-kannassa))
       (is (every? #(nil? (:muokattu %)) tarkastukset-kannassa))
       (is (every? #(= (:lahde %) "harja-ls-mobiili") tarkastukset-kannassa))
