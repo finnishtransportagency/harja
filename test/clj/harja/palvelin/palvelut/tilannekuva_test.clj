@@ -4,6 +4,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.tilannekuva :refer :all]
             [harja.testi :refer :all]
+            [harja.paneeliapurit :as paneeli]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
             [clj-time.core :as t]
@@ -123,7 +124,19 @@
     (is (>= (count (:laatupoikkeamat vastaus)) 1))
     (is (>= (count (:paikkaus vastaus)) 1))
     (is (>= (count (:paallystys vastaus)) 1))
-    (is (>= (count (:ilmoitukset vastaus)) 1))))
+    (is (>= (count (:ilmoitukset vastaus)) 1))
+
+    (testing "Tiedot voidaan laittaa paneeliin"
+
+      (println (:paallystys vastaus))
+
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? (map
+                                                    #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
+                                                    (:ilmoitukset vastaus))))
+      #_(is (paneeli/skeeman-luonti-onnistuu-kaikille? :paallystys (:paallystys vastaus)))
+      #_(is (paneeli/skeeman-luonti-onnistuu-kaikille? :paikkaus (:paikkaus vastaus)))
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama (:laatupoikkeamat vastaus)))
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :turvallisuuspoikkeama (:turvallisuuspoikkeamat vastaus))))))
 
 (deftest ala-hae-laatupoikkeamia
   (let [parametrit (aseta-filtterit-falseksi parametrit-laaja-historia :laatupoikkeamat)
@@ -210,7 +223,7 @@
     (u sql)))
 
 
-(deftest vain-tilaaja-ja-urakoitsija-itse-nakee-urakattomat-tyokoneet []
+(deftest vain-tilaaja-ja-urakoitsija-itse-nakee-urakattomat-tyokoneet
   (let [parametrit (assoc parametrit-laaja-historia :nykytilanne? true)
         urakoitsija (hae-oulun-alueurakan-2005-2012-urakoitsija)
         hae #(let [vastaus (hae-tk % parametrit)
