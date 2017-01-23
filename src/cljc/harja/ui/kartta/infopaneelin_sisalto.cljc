@@ -24,7 +24,10 @@
 
   Jos arvoa, jonka mukaan asia halutaan järjestää, ei ole, pitäisi :jarjesta-fn arvon olla
   funktio, joka palauttaa aina falsen, eli (constantly false). Tässä tapauksessa false tulkitaan siten,
-  että arvon puuttuminen on tiedostettu tilanne, eikä testit epäonnistu."
+  että arvon puuttuminen on tiedostettu tilanne, eikä testit epäonnistu.
+
+  Ainoa syy, miksi tämä on .cljc tiedosto, on testattavuus. Näin voimme kirjoittaa testejä,
+  jossa haetaan palvelimelta payload, jolle yritetään luoda onnistuneesti skeema."
   (:require [clojure.string :as string]
             [harja.pvm :as pvm]
     #?(:cljs [harja.loki :as log :refer [log warn]])
