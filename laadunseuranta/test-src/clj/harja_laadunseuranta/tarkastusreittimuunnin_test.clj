@@ -398,7 +398,20 @@
     (tarkista-tallennettavan-tarkastuksen-osoite ;; Tie vaihtuu, tulee katkaisu
       (nth kaikki-tarkastukset 6) {:tie 28407 :aosa 12 :aet 3 :losa 12 :let 135})
     (tarkista-tallennettavan-tarkastuksen-osoite ;; Tie vaihtuu, tulee katkaisu
-      (nth kaikki-tarkastukset 7) {:tie 4 :aosa 364 :aet 9039 :losa 367 :let 335})))
+      (nth kaikki-tarkastukset 7) {:tie 4 :aosa 364 :aet 9039 :losa 367 :let 335})
+
+
+    (let [tarkastusten-maara-ennen (ffirst (q "SELECT COUNT(*) FROM tarkastus"))
+          _ (ls-core/tallenna-muunnetut-tarkastukset-kantaan (:db jarjestelma) tarkastukset 1 urakka-id)
+          tarkastusten-maara-jalkeen (ffirst (q "SELECT COUNT(*) FROM tarkastus"))
+          tarkastukset-kannassa (q "SELECT id FROM tarkastus WHERE tarkastusajo = " tarkastusajo-id ";")]
+
+      ;; Määrä lisääntyi oikein
+      (is (= (+ tarkastusten-maara-ennen odotettu-reitillisten-maara odotettu-pistemaisten-maara)
+             tarkastusten-maara-jalkeen))
+
+    ;; Siivoa sotkut
+    (u "DELETE FROM tarkastus WHERE tarkastusajo = " tarkastusajo-id ";"))))
 
 
 ;; -------- Apufunktioita REPL-tunkkaukseen --------
