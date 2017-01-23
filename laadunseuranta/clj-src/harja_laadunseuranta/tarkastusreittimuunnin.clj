@@ -352,7 +352,7 @@
 
 ;; -------- Tarkastuksen tallennus kantaan --------
 
-(defn- muodostan-tarkastuksen-geometria
+(defn- muodosta-tarkastuksen-geometria
   [db {:keys [tie aosa aet losa let] :as tieosoite}]
   (when (and tie aosa aet)
     (:geom (first (q/tr-osoitteelle-viiva
@@ -392,7 +392,7 @@
                                      :let (or (:let paatepiste) (:aet paatepiste))}
         ;; Pistemäisessä sekä lähtö- että paatepiste ovat samat, jolloin losa ja let ovat samat. Käsitellään ne:
         koko-tarkastuksen-tr-osoite (kasittele-pistemainen-tarkastusreitti koko-tarkastuksen-tr-osoite)
-        geometria (muodostan-tarkastuksen-geometria db koko-tarkastuksen-tr-osoite)]
+        geometria (muodosta-tarkastuksen-geometria db koko-tarkastuksen-tr-osoite)]
 
     (assoc tarkastus
       :tarkastaja (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
@@ -406,7 +406,7 @@
 
 (defn- tallenna-tarkastus! [db tarkastus kayttaja]
   (log/debug "Aloitetaan tarkastuksen tallennus")
-  (log/debug (pr-str tarkastus))
+  (log/debug (pr-str kayttaja))
   (let [tarkastus (luo-kantaan-tallennettava-tarkastus db tarkastus kayttaja)
         _ (q/luo-uusi-tarkastus<! db
                                   (merge tarkastus
