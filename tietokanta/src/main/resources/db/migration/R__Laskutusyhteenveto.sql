@@ -809,3 +809,11 @@ BEGIN
   RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Jos erilliskustannuksia muokataan, poistetaan hoitokauden laskutusyhteenvedot
+CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_erilliskustannus() RETURNS trigger AS $$
+BEGIN
+PERFORM poista_hoitokauden_muistetut_laskutusyht(NEW.urakka, NEW.pvm::DATE);
+RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
