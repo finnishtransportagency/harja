@@ -47,7 +47,7 @@
      :paikankuvaus paikankuvaus
      :lisatieto lisatieto
      :ilmoitustyyppi ilmoitustyyppi
-     :selitteet (str "{" (clojure.string/join "," (map name selitteet)) "}")
+     :selitteet (konv/seq->array (map name selitteet))
      :tloik_tunniste tunniste
      :id id})
   (paivita-ilmoittaja db id ilmoittaja)
