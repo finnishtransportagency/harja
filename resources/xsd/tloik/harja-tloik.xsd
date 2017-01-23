@@ -99,10 +99,10 @@
                 <xs:element name="ilmoittaja" type="henkilo" minOccurs="1" maxOccurs="1"/>
                 <xs:element name="urakka" type="urakka" minOccurs="1" maxOccurs="1"/>
                 <xs:element name="urakoitsija" type="organisaatio" minOccurs="0"/>
-                <xs:element name="urakoitsijanYhteyshenkilo" type="henkilo" minOccurs="0"/>
+                <xs:element name="urakoitsijan-yhteyshenkilo" type="henkilo" minOccurs="0"/>
                 <xs:element name="tilaaja" type="organisaatio" minOccurs="0"/>
                 <xs:element name="tilaajan-yhteyshenkilo" type="henkilo" minOccurs="0"/>
-                <xs:element name="luvan-diaarinumero" type="xs:integer" minOccurs="1"/>
+                <xs:element name="luvan-diaarinumero" type="xs:integer" minOccurs="0"/>
                 <xs:element name="toimenpide" minOccurs="0">
                     <xs:simpleType>
                         <xs:restriction base="xs:string">
@@ -118,21 +118,6 @@
                         <xs:sequence>
                             <xs:element name="alku" type="xs:dateTime" minOccurs="1"/>
                             <xs:element name="loppu" type="xs:dateTime" minOccurs="1"/>
-                        </xs:sequence>
-                    </xs:complexType>
-                </xs:element>
-                <xs:element name="tyovaiheet">
-                    <xs:complexType>
-                        <xs:sequence>
-                            <xs:element name="tyovaihe" minOccurs="1" maxOccurs="unbounded" nillable="true">
-                                <xs:complexType>
-                                    <xs:sequence>
-                                        <xs:element name="alku" type="xs:dateTime" minOccurs="1"/>
-                                        <xs:element name="loppu" type="xs:dateTime" minOccurs="1"/>
-                                        <xs:element name="sijainti" type="tietyonSijainti" minOccurs="1"/>
-                                    </xs:sequence>
-                                </xs:complexType>
-                            </xs:element>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
@@ -193,13 +178,7 @@
                                             <xs:complexType>
                                                 <xs:sequence>
                                                     <xs:element name="rajoitus" type="rajoitustyyppi"/>
-                                                    <xs:element name="matka" type="xs:integer" minOccurs="0">
-                                                        <xs:annotation>
-                                                            <xs:documentation>
-                                                                matka-kentän arvo annetaan metreissä.
-                                                            </xs:documentation>
-                                                        </xs:annotation>
-                                                    </xs:element>
+                                                    <xs:element name="matka" type="xs:integer" minOccurs="0"/>
                                                 </xs:sequence>
                                             </xs:complexType>
                                         </xs:element>
@@ -244,10 +223,10 @@
                                     </xs:sequence>
                                 </xs:complexType>
                             </xs:element>
-                            <xs:element name="arvioituViivastys">
+                            <xs:element name="arvioitu-viivastys">
                                 <xs:complexType>
                                     <xs:sequence>
-                                        <xs:element type="xs:integer" name="normaaliLiikenteessa"/>
+                                        <xs:element type="xs:integer" name="normaali-liikenteessa"/>
                                         <xs:element type="xs:integer" name="ruuhka-aikana"/>
                                     </xs:sequence>
                                 </xs:complexType>
@@ -255,26 +234,32 @@
                             <xs:element name="ajoneuvorajoitukset">
                                 <xs:complexType>
                                     <xs:sequence>
-                                        <xs:element type="xs:integer" name="ajoneuvonMaxKorkeus" minOccurs="0" nillable="true"/>
-                                        <xs:element type="xs:integer" name="ajoneuvonMaxLeveys" minOccurs="0" nillable="true"/>
-                                        <xs:element type="xs:integer" name="ajoneuvonMaxPituus" minOccurs="0" nillable="true"/>
-                                        <xs:element type="xs:integer" name="ajoneuvonMaxPaino" minOccurs="0" nillable="true"/>
+                                        <xs:element type="xs:decimal" name="max-korkeus" minOccurs="0" nillable="true"/>
+                                        <xs:element type="xs:decimal" name="max-leveys" minOccurs="0" nillable="true"/>
+                                        <xs:element type="xs:decimal" name="max-pituus" minOccurs="0" nillable="true"/>
+                                        <xs:element type="xs:decimal" name="max-paino" minOccurs="0" nillable="true"/>
                                     </xs:sequence>
                                 </xs:complexType>
                             </xs:element>
                             <xs:element name="huomautukset" minOccurs="0">
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:string">
-                                        <xs:enumeration value="avotuli"/>
-                                        <xs:enumeration value="tyokoneitaLiikenteenSeassa"/>
-                                    </xs:restriction>
-                                </xs:simpleType>
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="huomautus">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:enumeration value="avotuli"/>
+                                                    <xs:enumeration value="tyokoneitaLiikenteenSeassa"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
                             </xs:element>
                             <xs:element name="pysaytykset">
                                 <xs:complexType>
                                     <xs:sequence>
-                                        <xs:element type="xs:boolean" name="pysaytetaanAjoittain"/>
-                                        <xs:element type="xs:boolean" name="tieAjoittainSuljettu"/>
+                                        <xs:element type="xs:boolean" name="pysaytetaan-ajoittain"/>
+                                        <xs:element type="xs:boolean" name="tie-ajoittain-suljettu"/>
                                         <xs:element name="aikataulu">
                                             <xs:complexType>
                                                 <xs:sequence>
@@ -701,19 +686,13 @@
     </xs:simpleType>
     <xs:complexType name="tienpinnat">
         <xs:sequence>
-            <xs:element name="tienpinta" type="tienpinta" maxOccurs="3"/>
+            <xs:element name="tienpinta" type="tienpinta"/>
         </xs:sequence>
     </xs:complexType>
     <xs:complexType name="tienpinta">
         <xs:sequence>
             <xs:element name="pintamateriaali" type="pintamateriaalityyppi"/>
-            <xs:element name="matka" type="xs:integer" minOccurs="0">
-                <xs:annotation>
-                    <xs:documentation>
-                        matka-kentän arvo annetaan metreissä.
-                    </xs:documentation>
-                </xs:annotation>
-            </xs:element>
+            <xs:element name="matka" type="xs:integer" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
     <xs:simpleType name="pintamateriaalityyppi">

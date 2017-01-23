@@ -20,13 +20,13 @@
         <nimi>Destia Oy</nimi>
         <ytunnus>2163026-3</ytunnus>
     </urakoitsija>
-    <urakoitsijanYhteyshenkilo>
+    <urakoitsijan-yhteyshenkilo>
         <etunimi>Urho</etunimi>
         <sukunimi>Urakoitsija</sukunimi>
         <matkapuhelin>+34592349342</matkapuhelin>
         <tyopuhelin>+34592349342</tyopuhelin>
         <sahkoposti>urho@example.com</sahkoposti>
-    </urakoitsijanYhteyshenkilo>
+    </urakoitsijan-yhteyshenkilo>
     <tilaaja>
         <nimi>Pohjois-Savo</nimi>
     </tilaaja>
@@ -66,35 +66,6 @@
         <alku>2016-01-01T07:49:45+02:00</alku>
         <loppu>2017-01-15T18:41:13+02:00</loppu>
     </ajankohta>
-    <tyovaiheet>
-        <tyovaihe>
-            <alku>2016-01-01T07:49:45+02:00</alku>
-            <loppu>2017-01-15T18:41:13+02:00</loppu>
-            <sijainti>
-                <tierekisteriosoitevali>
-                    <tienumero>23</tienumero>
-                    <alkuosa>313</alkuosa>
-                    <alkuetaisyys>1216</alkuetaisyys>
-                    <loppuosa>313</loppuosa>
-                    <loppuetaisyys>3780</loppuetaisyys>
-                    <karttapvm>2016-01-01</karttapvm>
-                </tierekisteriosoitevali>
-                <alkukoordinaatit>
-                    <x>512980.1296580813</x>
-                    <y>6908379.5465487875</y>
-                </alkukoordinaatit>
-                <loppukoordinaatit>
-                    <x>515497.44830392423</x>
-                    <y>6908053.366497267</y>
-                </loppukoordinaatit>
-                <pituus>1000.00</pituus>
-                <tienNimi>Tie</tienNimi>
-                <kunnat>Pieksämäki</kunnat>
-                <alkusijainninKuvaus>Kaakinmäessä</alkusijainninKuvaus>
-                <loppusijainninKuvaus>Rummukanmäessä</loppusijainninKuvaus>
-            </sijainti>
-        </tyovaihe>
-    </tyovaiheet>
     <tyyppi>
         <tyotyypit>
             <tyotyyppi>Viimeistely</tyotyyppi>
@@ -143,20 +114,22 @@
             <ohjaus>ohjataanVuorotellen</ohjaus>
             <ohjaaja>liikenteenohjaaja</ohjaaja>
         </liikenteenohjaus>
-        <arvioituViivastys>
-            <normaaliLiikenteessa>100</normaaliLiikenteessa>
+        <arvioitu-viivastys>
+            <normaali-liikenteessa>100</normaali-liikenteessa>
             <ruuhka-aikana>100</ruuhka-aikana>
-        </arvioituViivastys>
+        </arvioitu-viivastys>
         <ajoneuvorajoitukset>
-            <ajoneuvonMaxKorkeus>100</ajoneuvonMaxKorkeus>
-            <ajoneuvonMaxLeveys>100</ajoneuvonMaxLeveys>
-            <ajoneuvonMaxPituus>100</ajoneuvonMaxPituus>
-            <ajoneuvonMaxPaino>100</ajoneuvonMaxPaino>
+            <max-korkeus>100</max-korkeus>
+            <max-leveys>100</max-leveys>
+            <max-pituus>100</max-pituus>
+            <max-paino>100</max-paino>
         </ajoneuvorajoitukset>
-        <huomautukset>tyokoneitaLiikenteenSeassa</huomautukset>
+        <huomautukset>
+            <huomautus>avotuli</huomautus>
+        </huomautukset>
         <pysaytykset>
-            <pysaytetaanAjoittain>true</pysaytetaanAjoittain>
-            <tieAjoittainSuljettu>false</tieAjoittainSuljettu>
+            <pysaytetaan-ajoittain>true</pysaytetaan-ajoittain>
+            <tie-ajoittain-suljettu>false</tie-ajoittain-suljettu>
             <aikataulu>
                 <alkaen>2017-04-19T17:38:57+03:00</alkaen>
                 <paattyen>2008-08-06T17:17:00+03:00</paattyen>
