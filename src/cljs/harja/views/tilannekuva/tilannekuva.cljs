@@ -318,8 +318,7 @@
 
           "Tienäkymä"
           :tienakyma
-          (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
-                     @tienakyma-tiedot/tienakyma-kaytossa?)
+          (when (roolit/tilaajan-kayttaja? @istunto/kayttaja)
             [tienakyma])]]))))
 
 (defonce hallintapaneeli-auki (atom {:hallintapaneeli true}))

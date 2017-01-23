@@ -16,13 +16,6 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
-;; Feature fläg, jolla tienäkymä on pois käytöstä.
-;; Testailua varten, sen voi kytkeä JS konsolissa päälle.
-(defonce tienakyma-kaytossa? (atom true))
-(defn ^:export tienakyma-paalle []
-  (reset! tienakyma-kaytossa? true))
-
-
 (defonce tienakyma (atom {:valinnat {}
                           :sijainti nil
                           :haku-kaynnissa? nil
