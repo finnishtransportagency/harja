@@ -1,7 +1,8 @@
 <harja:tietyoilmoitus xmlns:harja="http://www.liikennevirasto.fi/xsd/harja">
     <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
-    <harjaTietyoilmoitusId>234908234</harjaTietyoilmoitusId>
-    <tloikTietyoilmoitusId>234908234</tloikTietyoilmoitusId>
+    <harja-tietyoilmoitus-id>234908234</harja-tietyoilmoitus-id>
+    <tloik-tietyoilmoitus-id>234908234</tloik-tietyoilmoitus-id>
+    <asiatyyppi>liikennettaHaittaavaTyovaihe</asiatyyppi>
     <ilmoitettu>2016-12-24T04:49:45</ilmoitettu>
     <ilmoittaja>
         <etunimi>Irma</etunimi>
@@ -36,7 +37,7 @@
         <tyopuhelin>+34592349342</tyopuhelin>
         <sahkoposti>eija@example.com</sahkoposti>
     </tilaajan-yhteyshenkilo>
-    <luvanDiaarinumero>09864321</luvanDiaarinumero>
+    <luvan-diaarinumero>09864321</luvan-diaarinumero>
     <toimenpide>uusi</toimenpide>
     <sijainti>
         <tierekisteriosoitevali>
@@ -97,6 +98,7 @@
     <tyyppi>
         <tyotyypit>
             <tyotyyppi>Viimeistely</tyotyyppi>
+            <tyotyyppi>Viimeistely</tyotyyppi>
         </tyotyypit>
         <tyypinKuvaus>Viimeistellään töitä</tyypinKuvaus>
     </tyyppi>
@@ -114,46 +116,50 @@
         </tyoaika>
     </tyoajat>
     <vaikutukset>
+        <vaikutussuunta>molemmat</vaikutussuunta>
+        <kaistajarjestelyt>ajorataSuljettu</kaistajarjestelyt>
+        <nopeusrajoitukset>
+            <nopeusrajoitus>
+                <rajoitus>40</rajoitus>
+                <matka>100</matka>
+            </nopeusrajoitus>
+        </nopeusrajoitukset>
+        <tienpinnat>
+            <tienpinta>
+                <pintamateriaali>paallystetty</pintamateriaali>
+                <matka>100</matka>
+            </tienpinta>
+        </tienpinnat>
+        <kiertotie>
+            <mutkaisuus>loivatMutkat</mutkaisuus>
+            <tienpinnat>
+                <tienpinta>
+                    <pintamateriaali>paallystetty</pintamateriaali>
+                    <matka>100</matka>
+                </tienpinta>
+            </tienpinnat>
+        </kiertotie>
+        <liikenteenohjaus>
+            <ohjaus>ohjataanVuorotellen</ohjaus>
+            <ohjaaja>liikenteenohjaaja</ohjaaja>
+        </liikenteenohjaus>
         <arvioituViivastys>
             <normaaliLiikenteessa>100</normaaliLiikenteessa>
             <ruuhka-aikana>100</ruuhka-aikana>
         </arvioituViivastys>
-        <kaistajarjestelyt>
-            <yksiAjokaistaSuljettu>true</yksiAjokaistaSuljettu>
-            <yksiAjoratasuljettu>true</yksiAjoratasuljettu>
-            <muu>Joku ajorata</muu>
-        </kaistajarjestelyt>
-        <nopeusrajoitus>20</nopeusrajoitus>
-        <nopeusrajoituksenPituus>500</nopeusrajoituksenPituus>
-        <kulkurajoitukset>
-            <ajoneuvonMaxKorkeus>4</ajoneuvonMaxKorkeus>
-            <ajoneuvonMaxLeveys>3</ajoneuvonMaxLeveys>
-            <ajoneuvonMaxPituus>10</ajoneuvonMaxPituus>
-            <ajoneuvonMaxPaino>5000</ajoneuvonMaxPaino>
-            <kuumenninKaytossa>true</kuumenninKaytossa>
-            <tyokoneitaLiikenteenSeassa>false</tyokoneitaLiikenteenSeassa>
-        </kulkurajoitukset>
-        <tienPintaTyomaalla>
-            <paallystetty>true</paallystetty>
-            <jyrsitty>true</jyrsitty>
-            <murske>true</murske>
-            <murskeenPituus>100</murskeenPituus>
-        </tienPintaTyomaalla>
-        <kiertotie>
-            <pituus>1000</pituus>
-            <loivatMutkat>true</loivatMutkat>
-            <jyrkatMutkat>true</jyrkatMutkat>
-            <paallystetty>false</paallystetty>
-            <murske>false</murske>
-            <kantavuusrajoitus>5000</kantavuusrajoitus>
-            <painorajoitus>5000</painorajoitus>
-        </kiertotie>
+        <ajoneuvorajoitukset>
+            <ajoneuvonMaxKorkeus>100</ajoneuvonMaxKorkeus>
+            <ajoneuvonMaxLeveys>100</ajoneuvonMaxLeveys>
+            <ajoneuvonMaxPituus>100</ajoneuvonMaxPituus>
+            <ajoneuvonMaxPaino>100</ajoneuvonMaxPaino>
+        </ajoneuvorajoitukset>
+        <huomautukset>tyokoneitaLiikenteenSeassa</huomautukset>
         <pysaytykset>
-            <liikennevalot>true</liikennevalot>
-            <liikenteenohjaaja>false</liikenteenohjaaja>
+            <pysaytetaanAjoittain>true</pysaytetaanAjoittain>
+            <tieAjoittainSuljettu>false</tieAjoittainSuljettu>
             <aikataulu>
-                <alkaen>2016-01-01T07:49:45+02:00</alkaen>
-                <paattyen>2017-01-15T18:41:13+02:00</paattyen>
+                <alkaen>2017-04-19T17:38:57+03:00</alkaen>
+                <paattyen>2008-08-06T17:17:00+03:00</paattyen>
             </aikataulu>
         </pysaytykset>
     </vaikutukset>
