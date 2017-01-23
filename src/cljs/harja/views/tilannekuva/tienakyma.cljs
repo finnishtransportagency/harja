@@ -38,7 +38,8 @@
                    "Hae"
                    #(e! (tiedot/->Hae))
                    {:ikoni (ikonit/livicon-search)
-                    :disabled (not (lomake/validi? data))}]
+                    :disabled (or (= :ei-haettu (:sijainti valinnat))
+                                  (not (lomake/validi? data)))}]
                   (when haku-kaynnissa?
                     [yleiset/ajax-loader "Haetaan tietoja..." {:luokka "inline-block"}])])
     :ei-borderia? true}
