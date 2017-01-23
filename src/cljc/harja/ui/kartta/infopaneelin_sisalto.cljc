@@ -17,20 +17,38 @@
   Infopaneelin skeemat ovat hyvin samankaltaisia lomakkeen skeemojen kanssa. Voisimme aivan hyvin
   ottaa jokaisen rivin arvon datasta suoraan, esim {:otsikko 'Alkanut' :arvo (:alkanut data)}, mutta
   lähinnä yhtenäisyyden vuoksi noudatamme täällä samaa tyyliä, kuin lomakkeen skeemoissa, eli määrittelemme
-  skeemassa vain funktiot, millä data haetaan."
+  skeemassa vain funktiot, millä data haetaan.
+
+  :hae funktioiden ei pidä palauttaa nil, vaan vaikka tyhjä merkkijono. Nil arvo tulkitaan
+  testeissä unohtuneeksi arvoksi, ja testi epäonnistuu.
+
+  Jos arvoa, jonka mukaan asia halutaan järjestää, ei ole, pitäisi :jarjesta-fn arvon olla
+  funktio, joka palauttaa aina falsen, eli (constantly false). Tässä tapauksessa false tulkitaan siten,
+  että arvon puuttuminen on tiedostettu tilanne, eikä testit epäonnistu."
   (:require [clojure.string :as string]
             [harja.pvm :as pvm]
-            [harja.loki :as log :refer [log]]
-            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
+    #?(:cljs [harja.loki :as log :refer [log warn]])
+    #?(:cljs [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :refer [kuvaile-paatostyyppi]])
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.fmt :as fmt]
-            [clojure.string :as str]))
+            [harja.fmt :as fmt]))
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
+
+#?(:clj
+   (defn kuvaile-paatostyyppi [_] "Tämä on olemassa vain testejä varten"))
+
+#?(:clj
+   (def warn println))
+
+#?(:clj
+   (def log println))
+
+#?(:clj
+   (def clj->js identity))
 
 (defmethod infopaneeli-skeema :tyokone [tyokone]
   {:tyyppi :tyokone
@@ -62,7 +80,7 @@
             {:otsikko "Paikan kuvaus" :tyyppi :string :nimi :paikankuvaus}
             {:otsikko "Lisätietoja" :tyyppi :string :nimi :lisatieto}
             {:otsikko "Kuittaukset" :tyyppi :positiivinen-numero
-             :hae #(count (:kuittaukset ilmoitus))}]
+             :hae #(count (:kuittaukset %))}]
    :data ilmoitus})
 
 (defmethod infopaneeli-skeema :toimenpidepyynto [ilmoitus]
@@ -93,11 +111,19 @@
         paikkaus-valmis :paikkaus-loppupvm
         kohde-valmis :kohde-valmispvm]
     {:tyyppi (:yllapitokohdetyotyyppi (:yllapitokohde yllapitokohdeosa))
-     :jarjesta-fn :kohde-alkupvm
+     :jarjesta-fn (if (aloitus yllapitokohdeosa)
+                    aloitus
+                    ;; Ylläpitokohteella ei ole välttämättä alkupäivämäärää.
+                    ;; Tällöin haluamme järjestää kohteen listan alimmaiseksi.
+                    ;; Emme voi sallia, että jarjesta-fn palauttaa nil, koska
+                    ;; tällöin skeeman validointi ei mene läpi - validointi luulee,
+                    ;; että yritetään käyttää avainta, joka on unohtunut palauttaa
+                    ;; palvelimelta.
+                    (constantly false))
      :otsikko (case (:yllapitokohdetyotyyppi (:yllapitokohde yllapitokohdeosa))
                 :paallystys "Päällystyskohde"
                 :paikkaus "Paikkauskohde"
-                :default nil)
+                nil)
      :tiedot [{:otsikko "Kohde" :tyyppi :string :hae #(get-in % [:yllapitokohde :nimi])}
               {:otsikko "Kohdenumero" :tyyppi :string :hae #(get-in % [:yllapitokohde :kohdenumero])}
               {:otsikko "Kohteen osoite" :tyyppi :string
@@ -150,8 +176,8 @@
               (when (kasitelty turpo)
                 {:otsikko "Käsitelty" :tyyppi :pvm-aika :nimi kasitelty})
               {:otsikko "Työn\u00ADtekijä" :hae #(turpodomain/kuvaile-tyontekijan-ammatti %)}
-              {:otsikko "Vammat" :hae #(turpodomain/vammat (:vammat %))}
-              {:otsikko "Sairaala\u00ADvuorokaudet" :hae #(:sairaalavuorokaudet %)}
+              {:otsikko "Vammat" :hae #(or (turpodomain/vammat (:vammat %)) "")}
+              {:otsikko "Sairaala\u00ADvuorokaudet" :nimi :sairaalavuorokaudet}
               {:otsikko "Sairaus\u00ADpoissaolo\u00ADpäivät" :tyyppi :positiivinen-numero :nimi :sairauspoissaolopaivat}
               {:otsikko "Vakavuus\u00ADaste" :hae #(turpodomain/turpo-vakavuusasteet (:vakavuusaste %))}
               {:otsikko "Kuvaus" :nimi :kuvaus}
@@ -204,7 +230,7 @@
                                                (:nimi yllapitokohde)))})
               (when (and (paatos laatupoikkeama) (kasittelyaika laatupoikkeama))
                 {:otsikko "Päätös"
-                 :hae #(str (laatupoikkeamat/kuvaile-paatostyyppi (paatos %))
+                 :hae #(str (kuvaile-paatostyyppi (paatos %))
                             " (" (pvm/pvm-aika (kasittelyaika %)) ")")})]
      :data laatupoikkeama}))
 
@@ -272,8 +298,8 @@
    :data tietyomaa})
 
 (defmethod infopaneeli-skeema :default [x]
-  (log/warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))
-            ", palautetaan tyhjä itemille " (pr-str x))
+  (warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))
+        ", palautetaan tyhjä itemille " (pr-str x))
   nil)
 
 (defn- rivin-skeemavirhe [viesti rivin-skeema infopaneeli-skeema]
@@ -310,7 +336,7 @@
         rivin-skeema infopaneeli-skeema)
 
       ;; Hakutapa on funktio, joka palautti nil arvon
-      (nil? arvo)
+      (and hae (nil? arvo))
       (rivin-skeemavirhe (str "Puuttuva tieto otsikolla " (:otsikko rivin-skeema))
                          rivin-skeema infopaneeli-skeema)
 
@@ -322,27 +348,60 @@
   "Validoi infopaneeli-skeema metodin muodostaman skeeman ja kaikki sen kentät.
   Jos skeema on validi, palauttaa skeeman sen valideilla kentillä.
   Jos skeema ei ole validi, logittaa virheen ja palauttaa nil."
-  [{:keys [otsikko tiedot data jarjesta-fn] :as infopaneeli-skeema}]
-  (let [validit-skeemat (vec (keep (partial validoi-rivin-skeema infopaneeli-skeema)
-                                   tiedot))]
-    (cond
-      (nil? jarjesta-fn)
-      (do (log/warn (str "jarjesta-fn puuttuu tiedolta " (pr-str infopaneeli-skeema)))
-          nil)
+  ([skeema] (validoi-infopaneeli-skeema skeema false))
+  ([{:keys [otsikko tiedot data jarjesta-fn] :as infopaneeli-skeema} vaadi-kaikki-skeemat?]
+   (let [validoidut-skeemat (map (partial validoi-rivin-skeema infopaneeli-skeema)
+                                 tiedot)
+         validit-skeemat (vec (keep identity validoidut-skeemat))
+         epaonnistuneet-skeemat-lkm (count (filter nil? validoidut-skeemat))]
+     (cond
+       (nil? otsikko)
+       (do (warn (str "Otsikko puuttuu " (pr-str infopaneeli-skeema)))
+           nil)
 
-      (nil? (jarjesta-fn data))
-      (do (log/warn (str "jarjesta-fn on määritelty, mutta avaimella ei löydy dataa skeemasta " (pr-str infopaneeli-skeema))))
+       (nil? jarjesta-fn)
+       (do (warn (str "jarjesta-fn puuttuu tiedolta " (pr-str infopaneeli-skeema)))
+           nil)
 
-      (empty? validit-skeemat)
-      (do (log/warn (str "Tiedolla ei ole yhtään validia skeemaa: " (pr-str infopaneeli-skeema)))
-          nil)
+       (empty? validit-skeemat)
+       (do (warn (str "Tiedolla ei ole yhtään validia skeemaa: " (pr-str infopaneeli-skeema)))
+           nil)
 
-      :default
-      (assoc infopaneeli-skeema :tiedot validit-skeemat))))
+       (and vaadi-kaikki-skeemat? (pos? epaonnistuneet-skeemat-lkm))
+       (do
+         (warn
+           (str
+             epaonnistuneet-skeemat-lkm
+             " puutteellista skeemaa, kun yksikään ei saisi epäonnistua "
+             (pr-str data)))
+         nil)
+
+       ;; Järjestäminen yritetään tehdä avaimella, jota ei datasta löydy
+       (nil? (jarjesta-fn data))
+       (do
+         (warn (str "jarjesta-fn on määritelty, mutta avaimella ei löydy dataa skeemasta " (pr-str infopaneeli-skeema)))
+         nil)
+
+       :default
+       (assoc infopaneeli-skeema :tiedot validit-skeemat)))))
+
+(defn jarjesta [eka toka]
+  (cond
+    (false? eka)
+    false
+
+    (false? toka)
+    true
+
+    :default (pvm/jalkeen? eka toka)))
+
+(defn skeema-ilman-tyhjia-riveja [skeema]
+  (assoc skeema :tiedot (keep identity (:tiedot skeema))))
 
 (defn skeemamuodossa [asiat]
   (as-> asiat $
         (keep infopaneeli-skeema $)
+        (map skeema-ilman-tyhjia-riveja $)
         (keep validoi-infopaneeli-skeema $)
-        (sort-by #((:jarjesta-fn %) (:data %)) pvm/jalkeen? $)
+        (sort-by #((:jarjesta-fn %) (:data %)) jarjesta $)
         (vec $)))
