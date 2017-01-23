@@ -20,7 +20,7 @@
 
 (defonce karttataso-tilannekuva (atom false))
 (defonce haetut-asiat (atom nil))
-(defonce valittu-tila (atom nil))
+(defonce valittu-tila (atom nil)) ; :nykytilanne | :historiakuva | :tienakyma
 
 (defonce url-hakuparametrit (atom nil))
 (defonce tilannekuvan-asiat-kartalla (atom {}))
