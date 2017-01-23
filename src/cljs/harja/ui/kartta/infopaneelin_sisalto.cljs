@@ -13,7 +13,11 @@
   :otsikko      asialle näytettävä otsikko
   :tiedot       asialle näytettävien tietokenttien skeemat
   :data         itse näytettävä asia, josta tietokenttien arvot saadaan
-  "
+
+  Infopaneelin skeemat ovat hyvin samankaltaisia lomakkeen skeemojen kanssa. Voisimme aivan hyvin
+  ottaa jokaisen rivin arvon datasta suoraan, esim {:otsikko 'Alkanut' :arvo (:alkanut data)}, mutta
+  lähinnä yhtenäisyyden vuoksi noudatamme täällä samaa tyyliä, kuin lomakkeen skeemoissa, eli määrittelemme
+  skeemassa vain funktiot, millä data haetaan."
   (:require [clojure.string :as string]
             [harja.pvm :as pvm]
             [harja.loki :as log :refer [log]]
@@ -30,7 +34,7 @@
 
 (defmethod infopaneeli-skeema :tyokone [tyokone]
   {:tyyppi :tyokone
-   :jarjesta-fn :alkanut
+   :jarjesta-fn :viimeisin-havainto
    :otsikko (str "Työkone: "
                  (when (:tehtavat tyokone)
                    (string/join ", " (:tehtavat tyokone)))
@@ -323,20 +327,22 @@
                                    tiedot))]
     (cond
       (nil? jarjesta-fn)
-      (do (log (str "jarjesta-fn puuttuu tiedolta " (pr-str infopaneeli-skeema)))
+      (do (log/warn (str "jarjesta-fn puuttuu tiedolta " (pr-str infopaneeli-skeema)))
           nil)
 
+      (nil? (jarjesta-fn data))
+      (do (log/warn (str "jarjesta-fn on määritelty, mutta avaimella ei löydy dataa skeemasta " (pr-str infopaneeli-skeema))))
+
       (empty? validit-skeemat)
-      (do (log (str "Tiedolla ei ole yhtään validia skeemaa: " (pr-str infopaneeli-skeema)))
+      (do (log/warn (str "Tiedolla ei ole yhtään validia skeemaa: " (pr-str infopaneeli-skeema)))
           nil)
 
       :default
       (assoc infopaneeli-skeema :tiedot validit-skeemat))))
 
 (defn skeemamuodossa [asiat]
-  (->> asiat
-       (keep infopaneeli-skeema)
-       (keep validoi-infopaneeli-skeema)
-       (sort-by (fn [{jarjesta-fn :jarjesta-fn data :data}]
-                  (jarjesta-fn data)))
-       vec))
+  (as-> asiat $
+        (keep infopaneeli-skeema $)
+        (keep validoi-infopaneeli-skeema $)
+        (sort-by #((:jarjesta-fn %) (:data %)) pvm/jalkeen? $)
+        (vec $)))
