@@ -414,7 +414,15 @@
       (is (every? #(= (:urakka %) urakka-id) tarkastukset-kannassa))
       (is (every? #(= (:tarkastusajo %) tarkastusajo-id) tarkastukset-kannassa))
       (is (every? #(some? (:aika %)) tarkastukset-kannassa))
+      (is (every? #(some? (:luotu %)) tarkastukset-kannassa))
+      (is (every? #(= (:poistettu %) false) tarkastukset-kannassa))
+      (is (every? #(nil? (:muokattu %)) tarkastukset-kannassa))
+      (is (every? #(= (:lahde %) "harja-ls-mobiili") tarkastukset-kannassa))
+      (is (every? #(= (:tyyppi %) "laatu") tarkastukset-kannassa))
       (is (every? #(= (:laadunalitus %) false) tarkastukset-kannassa))
+      (is (every? #(= (:nayta_urakoitsijalle %) false) tarkastukset-kannassa))
+      (is (every? #(nil? (:havainnot %)) tarkastukset-kannassa))
+      (is (every? #(instance? MultiLineString (.getGeometry (:sijainti %))) tarkastukset-kannassa))
 
     ;; Siivoa sotkut
     (u "DELETE FROM tarkastus WHERE tarkastusajo = " tarkastusajo-id ";"))))
