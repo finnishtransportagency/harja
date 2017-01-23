@@ -111,7 +111,37 @@
                                   i 1]
                              (if (<= i cols)
                                (do
-                                 (recur (conj row (.getObject rs i)) (inc i)))
+                                 (recur (conj row (.getObject rs i))
+                                        (inc i)))
+                               row)))
+                 (.next rs)))))))
+
+(defn q-map
+  "Kysele Harjan kannasta yksikkötestauksen yhteydessä.
+   Palauttaa vectorin, jossa item on map, jonka avaimina
+   ovat kysellyt sarakkeet avaimina
+
+   Esim. SELECT id, nimi FROM urakka
+   palauttaisi
+   [{:id 4 :nimi 'Oulun alueurakka'}
+    {:id 5 :nimi 'Joensuun alueurakka'}]."
+  [& sql]
+  (with-open [c (.getConnection db)
+              ps (.prepareStatement c (reduce str sql))
+              rs (.executeQuery ps)]
+    (let [cols (-> (.getMetaData rs) .getColumnCount)]
+      (loop [res []
+             more? (.next rs)]
+        (if-not more?
+          res
+          (recur (conj res (loop [row {}
+                                  i 1]
+                             (if (<= i cols)
+                               (recur (assoc row
+                                        (keyword (-> (.getMetaData rs)
+                                             (.getColumnName i)))
+                                        (.getObject rs i))
+                                      (inc i))
                                row)))
                  (.next rs)))))))
 
