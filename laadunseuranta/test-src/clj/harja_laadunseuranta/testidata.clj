@@ -440,6 +440,19 @@
     :jatkuvat-havainnot [1]
     :pistemainen-havainto nil}])
 
+(def tarkastus-jossa-kaikki-mittaukset
+  [{:id 1 :sijainti [465641.5999816895 7230780.000024414]
+    :jatkuvat-havainnot []
+    :lumisuus 1
+    :talvihoito-tasaisuus 2
+    :kitkamittaus 3
+    :lampotila 4
+    :soratie-tasaisuus 1
+    :kiinteys 2
+    :polyavyys 3
+    :sivukaltevuus 4
+    :pistemainen-havainto nil}])
+
 (def tarkastus-jossa-kaikki-pisteet-samassa-sijainnissa
   [{:id 1 :sijainti [465641.5999816895 7230780.000024414]}
    {:id 2 :sijainti [465641.5999816895 7230780.000024414]}

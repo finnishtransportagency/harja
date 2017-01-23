@@ -197,6 +197,30 @@
     (is (instance? PGgeometry (:sijainti tallennettava)))
     (is (instance? Point (.getGeometry (:sijainti tallennettava))))))
 
+(deftest tarkastus-jossa-kaikki-mittaukset
+  (let [merkinnat-tieosoitteilla (lisaa-reittimerkinnoille-mockattu-tieosoite
+                                   testidata/tarkastus-jossa-kaikki-mittaukset)
+        tarkastukset (reittimerkinnat-tarkastuksiksi
+                       merkinnat-tieosoitteilla)
+        tallennettava (luo-kantaan-tallennettava-tarkastus
+                        (:db jarjestelma)
+                        (first (:reitilliset-tarkastukset tarkastukset))
+                        {:kayttajanimi "jvh"})]
+
+    ;; Tallennettavassa mapissa on mittaukset oikein
+    (is (= (select-keys (:soratiemittaus tallennettava)
+                        [:tasaisuus :kiinteys :polyavyys :sivukaltevuus])
+           {:tasaisuus 1
+            :kiinteys 2
+            :polyavyys 3
+            :sivukaltevuus 4}))
+    (is (= (select-keys (:talvihoitomittaus tallennettava)
+                        [:lumimaara :tasaisuus :kitka :lampotila_ilma])
+           {:lumimaara 1
+            :tasaisuus 2
+            :kitka 3
+            :lampotila_ilma 4}))))
+
 ;; -------- Laadunalitus --------
 
 (deftest tarkastus-jossa-jatkuva-laadunalitus
