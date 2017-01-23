@@ -12,7 +12,6 @@
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]
             [clojure.string :as str]))
 
-
 (def +xsd-polku+ "xsd/tloik/")
 (def +tloik-ilmoitusviestijono+ "tloik-ilmoitusviestijono")
 (def +tloik-ilmoituskuittausjono+ "tloik-ilmoituskuittausjono")
