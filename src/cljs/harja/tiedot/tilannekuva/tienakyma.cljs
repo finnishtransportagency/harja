@@ -79,8 +79,16 @@
                      (if (and alku-muuttunut?
                               (= (:alku vanha) (:loppu vanha)))
                        (assoc v :loppu (:alku uusi))
-                       v))]
-      (assoc tienakyma :valinnat valinnat)))
+                       v)
+
+                     ;; Jos TR-osoite on muuttunut, nollaa sijainti
+                     (if (not= (:tierekisteriosoite vanha) (:tierekisteriosoite uusi))
+                       (assoc v :sijainti nil)
+                       v)
+
+                     )]
+      (assoc tienakyma
+             :valinnat valinnat)))
 
   Hae
   (process-event [_ tienakyma]
