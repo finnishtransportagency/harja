@@ -67,38 +67,27 @@
                              :disabled (or (not voi-muokata?)
                                            (not (lomake/voi-tallentaa? tarkastus)))}]
                            (when (and voi-muokata? (:id @muokattu))
-
-
                              [:button.nappi-kielteinen
                               {:class (when @tallennus-kaynnissa "disabled")
                                :on-click
                                (fn [e]
                                  (.preventDefault e)
-                                 (modal/nayta! {:otsikko "Sanktion poistaminen"
-                                                :footer [:span
-                                                         [:button.nappi-toissijainen {:type "button"
-                                                                                      :on-click #(do (.preventDefault %)
-                                                                                                     (modal/piilota!))}
-                                                          "Peruuta"]
-                                                         [:button.nappi-kielteinen {:type "button"
-                                                                                    :on-click #(do (.preventDefault %)
-                                                                                                   (modal/piilota!)
-                                                                                                   (reset! tallennus-kaynnissa true)
-                                                                                                   (let [res (tiedot/tallenna-sanktio
-                                                                                                               (assoc @muokattu
-                                                                                                                 :poistettu true)
-                                                                                                               (:id @nav/valittu-urakka))]
-                                                                                                     (if res
-                                                                                                       ;; Tallennus ok
-                                                                                                       (do (viesti/nayta! "Sanktio poistettu")
-                                                                                                           (reset! tallennus-kaynnissa false)
-                                                                                                           (reset! tiedot/valittu-sanktio nil))
-
-                                                                                                       ;; Epäonnistui jostain syystä
-                                                                                                       (reset! tallennus-kaynnissa false))))}
-                                                          "Poista sanktio"]]}
-                                               [:div (str "Haluatko varmasti poistaa sanktion päivämäärällä "
-                                                          (pvm/pvm (:perintapvm @muokattu)) "?")]))}
+                                 (yleiset/varmista-kayttajalta
+                                   {:otsikko "Sanktion poistaminen"
+                                    :sisalto (str "Haluatko varmasti poistaa sanktion "
+                                                  (or (str (:summa @muokattu) "€") "")
+                                                  " päivämäärällä "
+                                                  (pvm/pvm (:perintapvm @muokattu)) "?")
+                                    :hyvaksy "Poista"
+                                    :hyvaksy-ikoni (ikonit/livicon-trash)
+                                    :hyvaksy-napin-luokka "nappi-kielteinen"
+                                    :toiminto-fn #(do
+                                                    (let [res (tiedot/tallenna-sanktio
+                                                                (assoc @muokattu
+                                                                  :poistettu true)
+                                                                (:id @nav/valittu-urakka))]
+                                                      (do (viesti/nayta! "Sanktio poistettu")
+                                                          (reset! tiedot/valittu-sanktio nil))))}))}
                               (ikonit/livicon-trash) " Poista sanktio"])])}
             [{:otsikko     "Tekijä" :nimi :tekijanimi
               :hae         (comp :tekijanimi :laatupoikkeama)
