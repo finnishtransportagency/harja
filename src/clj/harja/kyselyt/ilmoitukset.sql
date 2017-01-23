@@ -273,7 +273,8 @@ INSERT INTO ilmoitus
  lisatieto,
  ilmoitustyyppi,
  selitteet,
- urakkatyyppi)
+ urakkatyyppi,
+ tloik_tunniste)
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -285,7 +286,8 @@ VALUES
     :lisatieto,
     :ilmoitustyyppi :: ilmoitustyyppi,
     :selitteet :: TEXT [],
-    :urakkatyyppi :: urakkatyyppi);
+    :urakkatyyppi :: urakkatyyppi,
+    :tloik_tunniste);
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen
@@ -297,10 +299,11 @@ SET
   valitetty          = :valitetty,
   yhteydenottopyynto = :yhteydenottopyynto,
   otsikko            = :otsikko,
-  paikankuvaus        = :paikankuvaus,
-  lisatieto        = :lisatieto,
+  paikankuvaus       = :paikankuvaus,
+  lisatieto          = :lisatieto,
   ilmoitustyyppi     = :ilmoitustyyppi :: ilmoitustyyppi,
   selitteet          = :selitteet :: TEXT [],
+  tloik_tunniste     = :tloik_tunniste,
   muokattu           = NOW()
 WHERE id = :id;
 
