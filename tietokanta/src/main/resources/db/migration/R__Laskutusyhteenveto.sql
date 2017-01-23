@@ -297,11 +297,13 @@ BEGIN
     sakot_laskutetaan_ind_korotus := 0.0;
 
     FOR sanktiorivi IN SELECT -maara AS maara, perintapvm, indeksi, perintapvm
-                         FROM sanktio s
-                        WHERE s.toimenpideinstanssi = t.tpi AND
-                              s.maara IS NOT NULL AND
-                              s.perintapvm >= hk_alkupvm AND
-                              s.perintapvm <= aikavali_loppupvm
+                       FROM sanktio s
+                         LEFT JOIN laatupoikkeama lp ON lp.id = s.laatupoikkeama
+                       WHERE s.toimenpideinstanssi = t.tpi AND
+                             s.maara IS NOT NULL AND
+                             s.perintapvm >= hk_alkupvm AND
+                             s.perintapvm <= aikavali_loppupvm AND
+                             lp.poistettu IS NOT TRUE
 
     LOOP
       SELECT *

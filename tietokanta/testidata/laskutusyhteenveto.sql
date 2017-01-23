@@ -222,3 +222,16 @@ VALUES ('A'::sanktiolaji, 100, '2015-01-12 06:06.37', 'MAKU 2010', null, (SELECT
   ('A'::sanktiolaji, 800, '2015-08-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019'), 1, true, 2),
   ('A'::sanktiolaji, 900, '2015-09-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019'), 1, true, 2),
   ('A'::sanktiolaji, 20160, '2016-09-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu Sorateiden hoito TP 2014-2019'), 1, true, 2);
+
+-- Varmistetaan testeissä että poistettu sanktio (laatupoikkeaman kautta poistettu) ei vaikuta laskutusyhteenvetoon
+INSERT INTO laatupoikkeama
+(poistettu, lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu,
+ tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu,
+ urakka, kuvaus, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tr_alkuetaisyys)
+VALUES
+  (TRUE, 'harja-ui'::lahde, 'Testikohde', 'tilaaja'::osapuoli, 'puhelin'::laatupoikkeaman_kasittelytapa, '', 'hylatty'::laatupoikkeaman_paatostyyppi, 'Poistettu laatupoikkeama perustelu',
+         123, 1, NOW(), '2015-08-09 06:06.37', '2015-08-10 16:06.37', false, false,
+                        (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 'Poistettu laatupoikkeama 1', 1, 2, 3, 4, point(418237, 7207744)::GEOMETRY, 5);
+INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio, luoja)
+VALUES
+  ('A'::sanktiolaji, 1000000, '2015-08-12 06:06.37', 'MAKU 2010', (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Poistettu laatupoikkeama 1'), (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019'), (SELECT id FROM sanktiotyyppi WHERE nimi = 'Talvihoito, päätiet (talvihoitoluokat Is ja I)'), false, 2);
