@@ -1,5 +1,5 @@
 (ns harja.palvelin.integraatiot.tloik.tloik-komponentti
-  "TLOIKin (Tieliikenteen ohjausjärjestelmä) käyttöön tarvittavat palvelut."
+  "T-LOIKin (Tieliikenteen ohjausjärjestelmä) käyttöön tarvittavat palvelut."
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.sonja :as sonja]
