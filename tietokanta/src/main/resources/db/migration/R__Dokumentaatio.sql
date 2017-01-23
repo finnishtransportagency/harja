@@ -30,12 +30,20 @@ E'Päällystysilmoitus on ylläpitokohteeseen (paallystyskohde-sarake) liittyvä
 -- Mobiili laadunseuranta
 
 COMMENT ON TABLE tarkastusajo IS
-E'Tarkastusajo-tauluun tallentuu perustiedot Harjan laadunseurannan mobiilityökalulla aloitetusta tarkastusajosta, kuten ajon aloitus- ja lopetusaika. Käynnissä olevasta ajosta kerätään raakadataa tarkastusreitti-tauluun.';
+E'Tarkastusajo-tauluun tallentuu perustiedot Harjan laadunseurannan mobiilityökalulla aloitetusta tarkastusajosta, kuten ajon aloitus- ja lopetusaika. Käynnissä olevasta ajosta kerätään raakadataa tarkastusreitti-tauluun\n\n
+
+tyyppi-sarake kertoo ajon tyypin. Nykyään tämä sarake ei ole enää käytössä.';
 
 COMMENT ON TABLE tarkastusreitti IS
 E'reittimerkinta-tauluun tallennetaan Harjan laadunseurannan mobiilityökalulla kerättyä raakaa dataa. Jokainen rivi taulussa kuvaa yksittäistä joko työkalun itsensä automaattisesti tekemää merkintää tarkastusajon aikana tai käyttäjän tekemää syötettä. Yhteen ajoon saattaa liittyä tuhansia eri merkintöjä. Reittimerkintä on aina uniikki merkinnän id:n ja siihen liittyvän tarkastusajon id:n kanssa.\n\n
 
 Tauluun tallennettua tietoa käytetään luomaan yhteenveto tehdystä ajosta eli datasta muodostetaan tarkastus tarkastus-tauluun. Ajon raakadataa ei välttämättä ole syytä säilyttää pitkäaikaisesti, vaan tarkoitus on, että datasta luotu tarkastus sisältää kaikki ajosta tarpeelliset tiedot.';
+
+COMMENT ON TABLE vakiohavainto IS
+E'Vakiohavaintotaulussa esitellään erilaisia usein tehtäviä havaintoja, joita voidaan tehdä Harjan laadunseurannan mobiilityökalulla. Tärkeät sarakkeet:\n
+- nimi: Käyttäjälle näkyvä vakiohavainnon nimi\n
+- jatkuva: Onko tämä välikohtainen havainto (true jos on, false jos pistemäinen)\n
+- avain: Vakiohavainnon tunniste muotoiltuna Clojure-avaiksi ilman kaksoispistettä (sama joka on mobiilityökalun UI:ssa)';
 
 -- Raportointi
 
@@ -73,7 +81,8 @@ E'Sanktio-tauluun kirjataan urakassa sanktio tai bonus.\n
  - Sanktion tyyppi määräytyy tarkemmin taulun sanktiotyyppi ja enumit sanktiolaji kautta\n
  - Sanktio tyypillisesti määrätään laadun alituksesta tai toistuvasta huolimattomuudesta\n
  - Bonus tyypillisesti myönnetään odotukset ylittävästä toiminnallisesta laadusta\n
- - Tietomallissa Sanktioon liittyy aina laatupoikkeama, vaikka sanktio olisikin ns. suorasanktio
+ - Tietomallissa Sanktioon liittyy aina laatupoikkeama, vaikka sanktio olisikin ns. suorasanktio\n
+ -- Suorasanktiot ovat sanktioita, jotka on luotu laatupoikkeamat/sanktiot näkymässä\n
  - Ylläpidon urakoissa sanktioihin voi liittyä vakiofraasi ja ylläpitokohde (laatupoikkeaman kautta linkitetty)';
 
 
