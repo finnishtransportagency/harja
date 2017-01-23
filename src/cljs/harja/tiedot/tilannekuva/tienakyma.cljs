@@ -42,8 +42,6 @@
            :valitut-tulokset-kartalla
            (esitettavat-asiat/kartalla-esitettavaan-muotoon
             (concat valitut-tulokset
-                    #_(map #(assoc % :tyyppi-kartalla :reittipisteet)
-                         (filter #(= (:tyyppi-kartalla %) :toteuma) valitut-tulokset))
                     [(assoc (:sijainti valinnat)
                             :tyyppi-kartalla :tr-osoite-indikaattori)])
             (constantly false))
