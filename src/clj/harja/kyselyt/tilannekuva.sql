@@ -163,7 +163,8 @@ SELECT
   t.tyokonetyyppi,
   t.urakkaid,
   t.tehtavat,
-  MIN(t.lahetysaika) FILTER (WHERE t.lahetysaika BETWEEN :alku AND :loppu) AS alkanut
+  MIN(t.lahetysaika) FILTER (WHERE t.lahetysaika BETWEEN :alku AND :loppu) AS "ensimmainen-havainto",
+  MAX(t.lahetysaika) FILTER (WHERE t.lahetysaika BETWEEN :alku AND :loppu) AS "viimeisin-havainto"
 FROM
   tyokonehavainto t
 WHERE sijainti IS NOT NULL AND

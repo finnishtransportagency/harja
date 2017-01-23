@@ -34,9 +34,9 @@
    :otsikko (str "Työkone: "
                  (when (:tehtavat tyokone)
                    (string/join ", " (:tehtavat tyokone)))
-                 " " (pvm/pvm-aika (:alkanut tyokone)))
-   :tiedot [{:otsikko "Työ aloitettu" :tyyppi :pvm-aika :nimi :alkanut}
-            {:otsikko "Viimeisin havainto" :tyyppi :pvm-aika :nimi :lahetysaika}
+                 " " (pvm/pvm-aika (:viimeisin-havainto tyokone)))
+   :tiedot [{:otsikko "Ensimmäinen havainto" :tyyppi :pvm-aika :nimi :ensimmainen-havainto}
+            {:otsikko "Viimeisin havainto" :tyyppi :pvm-aika :nimi :viimeisin-havainto}
             {:otsikko "Tyyppi" :tyyppi :string :nimi :tyokonetyyppi}
             {:otsikko "Organisaatio" :tyyppi :string :hae #(or (:organisaationimi %) "Ei organisaatiotietoja")}
             {:otsikko "Urakka" :tyyppi :string :hae #(or (:urakkanimi %) "Ei urakkatietoja")}
