@@ -325,14 +325,14 @@
 
 (deftest varustetoteumat-haettu-oikein
   (let [alkupvm (pvm/luo-pvm 2005 9 1)
-        loppupvm (pvm/luo-pvm 2006 10 30)
+        loppupvm (pvm/luo-pvm 2017 10 30)
         varustetoteumat (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :urakan-varustetoteumat +kayttaja-jvh+
                                         {:urakka-id @oulun-alueurakan-2005-2010-id
                                          :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
                                          :alkupvm alkupvm
                                          :loppupvm loppupvm})]
-    (is (>= (count varustetoteumat) 1))
+    (is (>= (count varustetoteumat) 3))
     (is (contains? (first varustetoteumat) :sijainti))))
 
 (deftest kokonaishintaisen-toteuman-siirtymatiedot
