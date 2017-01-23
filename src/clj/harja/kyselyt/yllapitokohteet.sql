@@ -496,6 +496,7 @@ SELECT
   yllapitokohdetyyppi,
   yhatunnus,
   yhaid,
+  yha_kohdenumero            AS "yha-kohdenumero",
   yllapitoluokka,
   lahetysaika,
   keskimaarainen_vuorokausiliikenne,
