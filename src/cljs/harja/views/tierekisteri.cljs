@@ -97,7 +97,9 @@
   (poista-vanhat-reittipisteet-kartalta @piirrettyjen-reittipisteiden-idt)
   (doseq [piste pisteet]
     (tasot/nayta-geometria! (:id piste)
-                            {:alue (:sijainti piste)}))
+                            {:alue (assoc (:sijainti piste)
+                                     :fill (integer? (first (:havainnot piste)))
+                                     :color "red")}))
   (reset! piirrettyjen-reittipisteiden-idt pisteet))
 
 (defn hae-ja-nayta-tarkastusajon-reittipisteet []
