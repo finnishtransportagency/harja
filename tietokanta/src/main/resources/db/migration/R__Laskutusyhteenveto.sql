@@ -298,13 +298,11 @@ BEGIN
 
     FOR sanktiorivi IN SELECT -maara AS maara, perintapvm, indeksi, perintapvm
                        FROM sanktio s
-                         LEFT JOIN laatupoikkeama lp ON lp.id = s.laatupoikkeama
                        WHERE s.toimenpideinstanssi = t.tpi AND
                              s.maara IS NOT NULL AND
                              s.perintapvm >= hk_alkupvm AND
                              s.perintapvm <= aikavali_loppupvm AND
-                             lp.poistettu IS NOT TRUE
-
+                             s.poistettu IS NOT TRUE
     LOOP
       SELECT *
         FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM sanktiorivi.perintapvm) :: INTEGER),

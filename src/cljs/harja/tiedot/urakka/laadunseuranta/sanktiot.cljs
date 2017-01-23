@@ -45,8 +45,7 @@
   [s urakka-id]
   {:sanktio        (dissoc s :laatupoikkeama :yllapitokohde)
    :laatupoikkeama (assoc (:laatupoikkeama s) :urakka urakka-id
-                                              :yllapitokohde (:id (:yllapitokohde s))
-                                              :poistettu (:poistettu s))
+                                              :yllapitokohde (:id (:yllapitokohde s)))
    :hoitokausi     @urakka/valittu-hoitokausi})
 
 (defn tallenna-sanktio

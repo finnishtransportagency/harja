@@ -12,3 +12,6 @@ AFTER INSERT OR UPDATE
         ON erilliskustannus
 FOR EACH ROW
 EXECUTE PROCEDURE poista_muistetut_laskutusyht_erilliskustannus();
+
+
+ALTER TABLE sanktio ADD COLUMN poistettu BOOLEAN DEFAULT FALSE;
