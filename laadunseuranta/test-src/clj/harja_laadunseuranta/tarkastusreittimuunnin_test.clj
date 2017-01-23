@@ -11,7 +11,8 @@
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [harja-laadunseuranta.core :as harja-laadunseuranta]
-            [clojure.core :as core])
+            [clojure.core :as core]
+            [clojure.set :as set])
   (:import (org.postgis PGgeometry MultiLineString Point)))
 
 (defn jarjestelma-fixture [testit]
@@ -369,7 +370,15 @@
         pistemaiset (:pistemaiset-tarkastukset tarkastukset)
         odotettu-pistemaisten-maara 0
         odotettu-reitillisten-maara 8
-        kaikki-tarkastukset (concat reitilliset pistemaiset)]
+        kaikki-tarkastukset (concat reitilliset pistemaiset)
+        odotetut-tarkastetut-tieosat [{:tie 18637 :aosa 1 :aet 207 :losa 1 :let 187}
+                                      {:tie 18637 :aosa 1 :aet 187 :losa 1 :let 11}
+                                      {:tie 28409 :aosa 23 :aet 20 :losa 23 :let 401}
+                                      {:tie 4 :aosa 364 :aet 3586 :losa 364 :let 7520}
+                                      {:tie 28408 :aosa 23 :aet 406 :losa 23 :let 641}
+                                      {:tie 4 :aosa 364 :aet 7892 :losa 364 :let 8810}
+                                      {:tie 28407 :aosa 12 :aet 3 :losa 12 :let 135}
+                                      {:tie 4 :aosa 364 :aet 9039 :losa 367 :let 335}]]
 
     ;; Muunnettu määrällisesti oikein
     (is (= (count pistemaiset) odotettu-pistemaisten-maara))
@@ -383,23 +392,12 @@
     (is (every? #(empty? (:liitteet %)) kaikki-tarkastukset))
 
     ;; Jokainen tallennettava tarkastus muodostetaan tieosoitteen osalta tarkalleen oikein
-    (tarkista-tallennettavan-tarkastuksen-osoite
-      (nth kaikki-tarkastukset 0) {:tie 18637 :aosa 1 :aet 207 :losa 1 :let 187})
-    (tarkista-tallennettavan-tarkastuksen-osoite ;; Jatkuva havainto menee päälle, tulee katkaisu
-      (nth kaikki-tarkastukset 1) {:tie 18637 :aosa 1 :aet 187 :losa 1 :let 11})
-    (tarkista-tallennettavan-tarkastuksen-osoite ;; Tie vaihtuu, tulee katkaisu
-      (nth kaikki-tarkastukset 2) {:tie 28409 :aosa 23 :aet 20 :losa 23 :let 401})
-    (tarkista-tallennettavan-tarkastuksen-osoite ;; Tie vaihtuu, tulee katkaisu
-      (nth kaikki-tarkastukset 3) {:tie 4 :aosa 364 :aet 3586 :losa 364 :let 7520})
-    (tarkista-tallennettavan-tarkastuksen-osoite ;; Tie vaihtuu, tulee katkaisu
-      (nth kaikki-tarkastukset 4) {:tie 28408 :aosa 23 :aet 406 :losa 23 :let 641})
-    (tarkista-tallennettavan-tarkastuksen-osoite ;; Tie vaihtuu, tulee katkaisu
-      (nth kaikki-tarkastukset 5) {:tie 4 :aosa 364 :aet 7892 :losa 364 :let 8810})
-    (tarkista-tallennettavan-tarkastuksen-osoite ;; Tie vaihtuu, tulee katkaisu
-      (nth kaikki-tarkastukset 6) {:tie 28407 :aosa 12 :aet 3 :losa 12 :let 135})
-    (tarkista-tallennettavan-tarkastuksen-osoite ;; Tie vaihtuu, tulee katkaisu
-      (nth kaikki-tarkastukset 7) {:tie 4 :aosa 364 :aet 9039 :losa 367 :let 335})
+    (loop [i 0]
+      (tarkista-tallennettavan-tarkastuksen-osoite
+        (nth kaikki-tarkastukset i) (nth odotetut-tarkastetut-tieosat i))
 
+      (when (< i (- (count odotetut-tarkastetut-tieosat) 1))
+        (recur (inc i))))
 
     (let [tarkastusten-maara-ennen (ffirst (q "SELECT COUNT(*) FROM tarkastus"))
           _ (ls-core/tallenna-muunnetut-tarkastukset-kantaan (:db jarjestelma) tarkastukset {:id 1} urakka-id)
@@ -423,10 +421,25 @@
       (is (every? #(= (:laadunalitus %) false) tarkastukset-kannassa))
       (is (every? #(= (:nayta_urakoitsijalle %) false) tarkastukset-kannassa))
       (is (every? #(nil? (:havainnot %)) tarkastukset-kannassa))
+      ;; Myös tie menee oikein
+      (loop [i 0]
+        (is (= (-> (nth tarkastukset-kannassa i)
+                   (select-keys
+                     [:tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys])
+                   (set/rename-keys {:tr_numero :tie
+                                     :tr_alkuosa :aosa
+                                     :tr_alkuetaisyys :aet
+                                     :tr_loppuosa :losa
+                                     :tr_loppuetaisyys :let})))
+            (nth odotetut-tarkastetut-tieosat i))
+
+        (when (< i (- (count odotetut-tarkastetut-tieosat) 1))
+          (recur (inc i))))
+      ;; Ja geometria
       (is (every? #(instance? MultiLineString (.getGeometry (:sijainti %))) tarkastukset-kannassa))
 
-    ;; Siivoa sotkut
-    (u "DELETE FROM tarkastus WHERE tarkastusajo = " tarkastusajo-id ";"))))
+      ;; Siivoa sotkut
+      (u "DELETE FROM tarkastus WHERE tarkastusajo = " tarkastusajo-id ";"))))
 
 
 ;; -------- Apufunktioita REPL-tunkkaukseen --------
