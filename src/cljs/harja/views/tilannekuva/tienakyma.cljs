@@ -24,6 +24,8 @@
             [harja.views.kartta.infopaneeli :as infopaneeli]
             [harja.tiedot.kartta :as kartta-tiedot]))
 
+(def tr-osoite-taytetty? (every-pred :numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys))
+
 (defn- valinnat
   "Valintalomake tienäkymälle."
   [e! {:keys [valinnat haku-kaynnissa? tulokset] :as app}]
@@ -47,7 +49,12 @@
                  (r/wrap (:sijainti valinnat)
                          #(e! (tiedot/->PaivitaSijainti %))))
      :otsikko "Tierekisteriosoite"
-     :palstoja 3}
+     :palstoja 3
+     :validoi [(fn [osoite {sijainti :sijainti}]
+                 (when (and (tr-osoite-taytetty? osoite)
+                            (nil? sijainti))
+                   "Tarkista tierekisteriosoite"))]}
+
     {:nimi :alku :tyyppi :pvm-aika :pakota-suunta :ylos-vasen
      :pakollinen? true
      :otsikko "Alkaen" :palstoja 3}
