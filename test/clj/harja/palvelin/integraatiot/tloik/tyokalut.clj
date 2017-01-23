@@ -296,8 +296,11 @@
         ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
 
-(defn hae-ilmoitus []
+(defn hae-ilmoitukset-idlla-123456789 []
   (q "select * from ilmoitus where ilmoitusid = 123456789;"))
+
+(defn hae-ilmoitukset-mappina-idlla-123456789 []
+  (q-map "select * from ilmoitus where ilmoitusid = 123456789;"))
 
 (defn hae-valaistusilmoitus []
   (q "select * from ilmoitus where ilmoitusid = 987654321;"))
