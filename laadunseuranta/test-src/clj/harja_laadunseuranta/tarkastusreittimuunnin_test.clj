@@ -404,11 +404,17 @@
     (let [tarkastusten-maara-ennen (ffirst (q "SELECT COUNT(*) FROM tarkastus"))
           _ (ls-core/tallenna-muunnetut-tarkastukset-kantaan (:db jarjestelma) tarkastukset 1 urakka-id)
           tarkastusten-maara-jalkeen (ffirst (q "SELECT COUNT(*) FROM tarkastus"))
-          tarkastukset-kannassa (q "SELECT id FROM tarkastus WHERE tarkastusajo = " tarkastusajo-id ";")]
+          tarkastukset-kannassa (q-map "SELECT * FROM tarkastus WHERE tarkastusajo = " tarkastusajo-id ";")]
 
       ;; Määrä lisääntyi oikein
       (is (= (+ tarkastusten-maara-ennen odotettu-reitillisten-maara odotettu-pistemaisten-maara)
              tarkastusten-maara-jalkeen))
+
+      ;; Tiedot kirjautuivat kantaan täsmällisesti oikein
+      (is (every? #(= (:urakka %) urakka-id) tarkastukset-kannassa))
+      (is (every? #(= (:tarkastusajo %) tarkastusajo-id) tarkastukset-kannassa))
+      (is (every? #(some? (:aika %)) tarkastukset-kannassa))
+      (is (every? #(= (:laadunalitus %) false) tarkastukset-kannassa))
 
     ;; Siivoa sotkut
     (u "DELETE FROM tarkastus WHERE tarkastusajo = " tarkastusajo-id ";"))))
