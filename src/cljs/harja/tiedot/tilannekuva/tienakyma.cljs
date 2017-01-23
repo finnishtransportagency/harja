@@ -75,9 +75,7 @@
                      ;; Jos TR-osoite on muuttunut, nollaa sijainti
                      (if (not= (:tierekisteriosoite vanha) (:tierekisteriosoite uusi))
                        (assoc v :sijainti :ei-haettu)
-                       v)
-
-                     )]
+                       v))]
       (assoc tienakyma
              :valinnat valinnat)))
 
