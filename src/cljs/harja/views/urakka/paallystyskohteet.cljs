@@ -28,8 +28,6 @@
 
 (defn paallystyskohteet [ur]
   (komp/luo
-    (komp/ulos #(kartta/poista-popup!))
-    (komp/lippu paallystys/paallystyskohteet-nakymassa?)
     (fn [ur]
       [:div.paallystyskohteet
        [kartta/kartan-paikka]
@@ -44,7 +42,7 @@
         ur
         paallystys/yhan-paallystyskohteet
         {:otsikko "YHA:sta tuodut päällystyskohteet"
-         :nakyma :paallystys
+         :kohdetyyppi :paallystys
          :yha-sidottu? true
          :tallenna
          (yllapitokohteet/kasittele-tallennettavat-kohteet!
@@ -58,7 +56,7 @@
         ur
         paallystys/harjan-paikkauskohteet
         {:otsikko "Harjan paikkauskohteet"
-         :nakyma :paikkaus
+         :kohdetyyppi :paikkaus
          :yha-sidottu? false
          :tallenna
          (yllapitokohteet/kasittele-tallennettavat-kohteet!

@@ -37,14 +37,6 @@
     (is (= (tierekisteri-domain/laske-tien-pituus tie5) 1))
     (is (= (tierekisteri-domain/laske-tien-pituus tie6) nil))))
 
-(deftest muutos-kokonaishintaan-laskettu-oikein
-  (let [tyot [{:tilattu-maara 10 :toteutunut-maara 15 :yksikkohinta 1}
-              {:tilattu-maara 15 :toteutunut-maara 15  :yksikkohinta 666}
-              {:tilattu-maara 4 :toteutunut-maara 5 :yksikkohinta 8}]
-    tyot2 [{:tilattu-maara 4 :toteutunut-maara 2 :yksikkohinta 15}]]
-    (is (= (pot/laske-muutokset-kokonaishintaan tyot) 13))
-    (is (= (pot/laske-muutokset-kokonaishintaan tyot2) -30))))
-
 (def paallystysilmoituslomake-alkutila
   {:tila :aloitettu
    :muutoshinta 666
@@ -66,11 +58,7 @@
    :bitumi-indeksi nil
    :id 8
    :takuupvm nil
-   :ilmoitustiedot {:tyot [{:tyo "jotain" :tyyppi :ajoradan-paallyste :yksikko "m"
-                            :yksikkohinta 6.66
-                            :tilattu-maara 10
-                            :toteutunut-maara 110}]
-                    :osoitteet [{:tr-numero 20
+   :ilmoitustiedot {:osoitteet [{:tr-numero 20
                                  :tr-alkuosa 1 :tr-alkuetaisyys 1
                                  :tr-loppuosa 3 :tr-loppuetaisyys 42
                                  :kohdeosa-id 30 :tr-kaista 1 :tr-ajorata 0
@@ -101,7 +89,6 @@
    :arvonvahennykset nil
    :tekninen-osa {:paatos nil :asiatarkastus nil :kasittelyaika nil :perustelu nil}
    :valmispvm-paallystys nil
-   :taloudellinen-osa {:kasittelyaika nil :perustelu nil :paatos nil :asiatarkastus nil}
    :kokonaishinta 0})
 
 (defn tarkista-asiatarkastus [lomake]

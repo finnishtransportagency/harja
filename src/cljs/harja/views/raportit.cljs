@@ -56,7 +56,7 @@
 
                                            #{"urakka"})
                   urakkatyypin-raportit (filter
-                                          #(= (:urakkatyyppi %) (:arvo @nav/urakkatyyppi))
+                                          #((:urakkatyyppi %) (:arvo @nav/urakkatyyppi))
                                           (vals @raporttityypit))]
 
               (if (and (not salli-laaja-konteksti?) (nil? v-ur))
@@ -109,13 +109,20 @@
 
 
 (defonce hoitourakassa? (reaction (= :hoito (:tyyppi @nav/valittu-urakka))))
+(defonce valittu-urakkatyyppi (reaction (:arvo @nav/urakkatyyppi)))
 
 (defonce valittu-hoitokausi (reaction-writable
-                             (if @hoitourakassa?
-                               @u/valittu-hoitokausi
-                               (pvm/paivamaaran-hoitokausi (pvm/nyt)))))
+                              (when (= @valittu-urakkatyyppi :hoito)
+                                (if @hoitourakassa?
+                                  @u/valittu-hoitokausi
+                                  (pvm/paivamaaran-hoitokausi (pvm/nyt))))))
 
-(def valittu-vuosi (atom nil))
+(def valittu-vuosi (reaction-writable
+                     (if (= @valittu-urakkatyyppi :hoito)
+                       nil
+                       ;; Ylläpidossa vuosi-valintaa käytetään kk:n valitsemiseen,
+                       ;; joten valitaan oletukseksi tämä vuosi
+                       (pvm/vuosi (pvm/nyt)))))
 
 (defonce kuukaudet (reaction
                      (let [hk @valittu-hoitokausi
@@ -186,7 +193,7 @@
 (defmethod raportin-parametri "aikavali" [p arvo]
   ;; Näytetään seuraavat valinnat
   ;; - vuosi (joko urakkavuodet tai generoitu lista)
-  ;; - hoitokaudet (joko urakan hoitokaudet tai generoitu lista)
+  ;; - hoitokaudet (joko urakan hoitokaudet tai generoitu lista, vain jos valittuna hoito-tyyppi)
   ;; - kuukausi (valitun urakan tai hoitokauden kuukaudet, tai kaikki)
   ;; - vapaa tekstisyöttö aikavälille
   ;;
@@ -194,6 +201,7 @@
   ;; ei näytetä hoitokausivalintaa.
   (let [ur @nav/valittu-urakka
         hoitourakassa? @hoitourakassa?
+        urakkatyyppi @valittu-urakkatyyppi
         hal @nav/valittu-hallintayksikko
         vuosi-eka (if ur
                     (pvm/vuosi (:alkupvm ur))
@@ -205,15 +213,24 @@
         vain-kuukausivalinta? (vain-kuukausivalinta? (:nimi @valittu-raporttityyppi) ur)]
     [:span
      [:div.raportin-vuosi-hk-kk-valinta
-      [ui-valinnat/vuosi {:disabled (or @vapaa-aikavali?
-                                        vain-hoitokausivalinta?
-                                        vain-kuukausivalinta?)}
+      [ui-valinnat/vuosi {:disabled
+                          (or @vapaa-aikavali?
+                              vain-hoitokausivalinta?
+                              (and vain-kuukausivalinta?
+                                   ;; Hoidossa valitaan ensin hoitokausi, ja se määrää minkä vuoden
+                                   ;; kuukauden voi valita.
+                                   ;; Ylläpidossa ei ole hoitokausivalintaa, joten on pakko valita
+                                   ;; ensin vuosi, joka sitten taas määrää minkä vuoden kuukauden voi valita.
+                                   ;; Tästä syystä, jos vain-kuukausivalinta on tosi,
+                                   ;; disabloidaan vuosi-valinta vain hoidon urakoille
+                                   (= urakkatyyppi :hoito)))}
        vuosi-eka vuosi-vika valittu-vuosi
        #(do
          (reset! valittu-vuosi %)
          (reset! valittu-hoitokausi nil)
          (reset! valittu-kuukausi nil))]
-      (when (or hoitourakassa? (nil? ur))
+      (when (and (= urakkatyyppi :hoito)
+                 (or hoitourakassa? (nil? ur)))
         [ui-valinnat/hoitokausi
          {:disabled @vapaa-aikavali?}
          (if hoitourakassa?
@@ -236,7 +253,8 @@
                                             :else
                                             "Koko hoitokausi")}
        (cond-> @kuukaudet
-               vain-kuukausivalinta? rest) valittu-kuukausi]]
+               vain-kuukausivalinta? rest)
+       valittu-kuukausi]]
 
      (when-not (or vain-hoitokausivalinta? vain-kuukausivalinta?)
        [:div.raportin-valittu-aikavali

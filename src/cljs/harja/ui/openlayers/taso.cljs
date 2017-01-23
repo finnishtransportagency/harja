@@ -21,5 +21,4 @@ sen lisätä se itse ol3 karttaan (addLayer)")
   (hae-asiat-pisteessa [this koordinaatti extent]
     "Hakee asiat annetulle klikkauspisteelle. Palauttaa kanavan, josta löytyneet
     asiat voi lukea. Koordinaatti annetaan [x y] vektorina.
-    Extent on nykyisen kartan näkyvä koordinaattialue [x1 y1 x2 y2] vektorina.")
-  )
+    Extent on nykyisen kartan näkyvä koordinaattialue [x1 y1 x2 y2] vektorina."))

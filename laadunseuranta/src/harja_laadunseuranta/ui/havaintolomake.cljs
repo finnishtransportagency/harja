@@ -19,6 +19,7 @@
 
 (defn- havaintolomakekomponentti [{:keys [lomakedata tallenna-fn peruuta-fn
                                           tr-osoite-lomakkeen-avauksessa
+                                          kuvaa-otetaan-atom
                                           liittyvat-havainnot havainnot-ryhmittain]}]
   (let [kuvaus-atom (reagent/cursor lomakedata [:kuvaus])
         aikaleima-atom (reagent/cursor lomakedata [:aikaleima])
@@ -27,6 +28,7 @@
         kayttajanimi-atom (reagent/cursor lomakedata [:kayttajanimi])
         laadunalitus-atom (reagent/cursor lomakedata [:laadunalitus?])
         lomake-liittyy-havaintoon-atom (reagent/cursor lomakedata [:liittyy-havaintoon])
+        liittyy-varmasti-tiettyyn-havaintoon? (reagent/cursor lomakedata [:liittyy-varmasti-tiettyyn-havaintoon?])
         lomake-virheet-atom (atom #{})
         alusta-tr-osoite! (fn [tr-osoite-atom]
                             (when (:tie tr-osoite-lomakkeen-avauksessa)
@@ -45,10 +47,16 @@
          ^{:key "Lomake liittyy havaintoon rivi"}
          [lomake/rivi
           ^{:key "Lomake liittyy havaintoon"}
-          [lomake/kentta "Lomake liittyy havaintoon"
+          [lomake/kentta (if @liittyy-varmasti-tiettyyn-havaintoon?
+                           "Lomake liittyy havaintoon"
+                           ;; Jos on teksti 'liitty havaintoon' ja lomakkeella on vain yksi vaihtoehto
+                           ;; valittavissa -> voi syntyä käsitys, että lomake liittyy tähän asiaan, vaikka
+                           ;; kyseessä on vain ehdotus. Siksi eri otsikko eri tilanteeseen.
+                           "Liitä lomake havaintoon?")
            [lomake/liittyvat-havainnot
             {:liittyvat-havainnot liittyvat-havainnot
              :lomake-liittyy-havaintoon-atom lomake-liittyy-havaintoon-atom
+             :liittyy-varmasti-tiettyyn-havaintoon? @liittyy-varmasti-tiettyyn-havaintoon?
              :havainnot-ryhmittain havainnot-ryhmittain}]]])
 
        ^{:key "pvm-rivi"}
@@ -83,7 +91,8 @@
          [lomake/tekstialue kuvaus-atom]]
         ^{:key "Kamera"}
         [lomake/kentta ""
-         [kamera/kamerakomponentti esikatselukuva-atom]]]])))
+         [kamera/kamerakomponentti {:esikatselukuva-atom esikatselukuva-atom
+                                    :kuvaa-otetaan-atom kuvaa-otetaan-atom}]]]])))
 
 (defn havaintolomake []
   (let [lomakedata (alusta-uusi-lomake!)
@@ -93,6 +102,7 @@
        {:lomakedata lomakedata
         :tr-osoite-lomakkeen-avauksessa tr-osoite-lomakkeen-avauksessa
         :tallenna-fn tallenna-lomake!
+        :kuvaa-otetaan-atom s/kuvaa-otetaan?
         :havainnot-ryhmittain paanavigointi/havainnot-ryhmittain
         :peruuta-fn peruuta-lomake!
         :liittyvat-havainnot @s/liittyvat-havainnot}])))

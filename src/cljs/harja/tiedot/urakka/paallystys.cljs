@@ -16,7 +16,7 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
 
-(def paallystyskohteet-nakymassa? (atom false))
+(def kohdeluettelossa? (atom false))
 (def paallystysilmoitukset-nakymassa? (atom false))
 
 (defn hae-paallystysilmoitukset [urakka-id sopimus-id vuosi]
@@ -24,13 +24,14 @@
                                           :sopimus-id sopimus-id
                                           :vuosi vuosi}))
 
-(defn hae-paallystysilmoitus-paallystyskohteella [urakka-id paallystyskohde-id]
+(defn hae-paallystysilmoitus-paallystyskohteella [urakka-id yllapitokohde-id]
   (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:urakka-id urakka-id
-                                                           :paallystyskohde-id paallystyskohde-id}))
+                                                           :paallystyskohde-id yllapitokohde-id}))
 
-(defn tallenna-paallystysilmoitus! [urakka-id sopimus-id lomakedata]
+(defn tallenna-paallystysilmoitus! [{:keys [urakka-id sopimus-id vuosi lomakedata]}]
   (k/post! :tallenna-paallystysilmoitus {:urakka-id urakka-id
                                          :sopimus-id sopimus-id
+                                         :vuosi vuosi
                                          :paallystysilmoitus lomakedata}))
 
 (def paallystysilmoitukset
@@ -44,16 +45,13 @@
 
 (defonce paallystysilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 
-(def paallystysilmoituslomake-lukittu? (reaction (let [_ @lukko/nykyinen-lukko]
-                                                   (lukko/nykyinen-nakyma-lukittu?))))
-
 (defonce karttataso-paallystyskohteet (atom false))
 
 (def yllapitokohteet
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
-               nakymassa? @paallystyskohteet-nakymassa?]
+               nakymassa? @kohdeluettelossa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id vuosi))))
@@ -82,29 +80,12 @@
   (reaction (concat @yhan-paallystyskohteet @harjan-paikkauskohteet)))
 
 (defonce paallystyskohteet-kartalla
-         (reaction (let [taso @karttataso-paallystyskohteet
-                         kohderivit @yhan-paallystyskohteet
-                         ilmoitukset @paallystysilmoitukset
-                         avoin-paallystysilmoitus (:paallystyskohde-id @paallystysilmoitus-lomakedata)]
-                     (when (and taso
-                                (or kohderivit ilmoitukset))
-                       (kartalla-esitettavaan-muotoon
-                         (concat (map #(assoc % :paallystyskohde-id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
-                                      kohderivit)
-                                 ilmoitukset)
-                         @paallystysilmoitus-lomakedata
-                         [:paallystyskohde-id]
-                         (comp
-                           (mapcat (fn [kohde]
-                                     (keep (fn [kohdeosa]
-                                             (assoc (merge kohdeosa
-                                                           (dissoc kohde :kohdeosat))
-                                               :tila (or (:paallystysilmoitus-tila kohde) (:tila kohde))
-                                               :avoin? (= (:paallystyskohde-id kohde) avoin-paallystysilmoitus)
-                                               :osa kohdeosa ;; Redundanttia, tarvitaanko tosiaan?
-                                               :nimi (str (:nimi kohde) ": " (:nimi kohdeosa))))
-                                           (:kohdeosat kohde))))
-                           (keep #(and (:sijainti %) %))
-                           (map #(assoc % :tyyppi-kartalla :paallystys))))))))
+  (reaction (let [taso @karttataso-paallystyskohteet
+                  paallystyskohteet @yhan-paallystyskohteet
+                  lomakedata @paallystysilmoitus-lomakedata]
+              (when (and taso paallystyskohteet)
+                (yllapitokohteet/yllapitokohteet-kartalle
+                  paallystyskohteet
+                  lomakedata)))))
 
 (defonce kohteet-yha-lahetyksessa (atom nil))

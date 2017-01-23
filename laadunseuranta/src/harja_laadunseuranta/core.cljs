@@ -6,6 +6,7 @@
             [harja-laadunseuranta.tiedot.comms :as comms]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.tr-haku :as tr-haku]
+            [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset]
             [harja-laadunseuranta.utils :as utils]
             [harja-laadunseuranta.tiedot.puhe :as puhe]
             [harja-laadunseuranta.tiedot.tarkastusajon-luonti :as tarkastusajon-luonti]
@@ -53,9 +54,26 @@
   (if (paikannus/geolokaatio-tuettu?)
     (reset! sovellus/gps-tuettu true)))
 
-(defn- kuuntele-eventteja []
+(defn- kuuntele-dom-eventteja []
   (dom/kuuntele-leveyksia)
   (dom/kuuntele-body-klikkauksia))
+
+(defn- kasittele-sivun-nakyvyysmuutos [tarkastusajo-kaynnissa-atom
+                                       kuvaa-otetaan-atom]
+  (let [piilossa? js/document.hidden]
+    (when (and (not piilossa?) ;; Tultiin piilosta pois
+               (not @kuvaa-otetaan-atom)
+               @tarkastusajo-kaynnissa-atom)
+      (ilmoitukset/ilmoita
+       "Pidä sovellus näkyvillä, muuten merkinnät eivät tallennu!"
+       sovellus/ilmoitus
+       {:tyyppi :varoitus}))))
+
+(defn- kuuntele-sivun-nakyvyytta [tarkastusajo-kaynnissa-atom kuvaa-otetaan-atom]
+  (.addEventListener js/document "visibilitychange"
+                     #(kasittele-sivun-nakyvyysmuutos
+                        tarkastusajo-kaynnissa-atom
+                        kuvaa-otetaan-atom)))
 
 (defn kaynnista-kayttajatietojen-haku []
   ;; Haetaan käyttäjätiedot kun laite on paikannettu
@@ -111,7 +129,9 @@
   (sovelluksen-alustusviive)
   (alusta-paikannus-id)
   (alusta-geolokaatio-api)
-  (kuuntele-eventteja)
+  (kuuntele-dom-eventteja)
+  (kuuntele-sivun-nakyvyytta sovellus/tarkastusajo-kaynnissa?
+                             sovellus/kuvaa-otetaan?)
   (alusta-sovellus))
 
 (defn ^:export aja-testireitti [url]

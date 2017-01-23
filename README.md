@@ -68,7 +68,7 @@ VirtualBoxissa pyörii tietokantapalvelin. Harjan kehitysympäristössä on kaks
 Testidata löytyy tiedostosta testidata.sql, joka ajetaan molempiin kantoihin.
 
 ### Tunnukset ulkoisiin järjestelmiin
-Hae harja-testidata repositoriosta .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa. 
+Hae harja-testidata repositoriosta .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
 
 ### Kääntäminen
 
@@ -90,6 +90,73 @@ Harjan pitäisi olla käynnissä ja vastata osoitteesta localhost:8000
 - **migrate_and_clean.sh** pystyttää molemmat tietokannat uudelleen tyhjästä
 - **unit.sh** ajaa testit ja näyttää tulokset kehittäjäystävällisessä muodossa
 - **deploy2.sh** Deployaa aktiivisen haaran testipalvelimelle testausta varten. Suorittaa testit ennen deployaamista.
+
+## Dokumentaatio
+### Tietokanta
+Tietokantataulut dokumentoimaan antamalla niille kommentti migraatiossa luonnin yhteydessä. Kommenttiin lisätään seuraavat asiat:
+- Mikä on taulun konsepti?
+- Miten asiaks ymmärtää nämä käsitteet?
+- Mikä on taulun olemassaolon syy?
+- Viittaukset käsitteellisellä tasolla muihin konsepteihin. Ei siis viitteiden kuvausta, vaan käsitteellisesti miksi viitteet ovat olemassa.
+- Mikäli tarpeen voi kuvata, mistä data syntyy.
+
+Tässä dokumentaatiossa käytetään domainkieltä eikä teknistä kuvausta.
+
+Dokumentaatio tauluille lisätään repeatable migraatiossa: R__Dokumentaatio.sql. Tähän migraatioon lisätään kaikki uudet kommentit tauluille.
+
+Dokumentaatio voidaan lisätä kyselyllä: `COMMENT ON TABLE [TAULU] IS E'Rivi 1 \n Rivi 2'`
+
+Dokumentaation saa näkyviin esim. kyselyllä: `SELECT obj_description('public.[TAULU]' :: REGCLASS);`
+
+### Namespacet
+Jokaisen namespacen alkuun kirjataan seuraavat asiat:
+- Olemassa olon syy?
+- Listaus minkä domain-käsitteiden kanssa toimitaan tässä nimiavaruudessa.
+- Mitkä ovat pääpalvelut, jotka tämä nimiavaruus tarjoaa? Mistä kannattaa lähteä liikenteeseen?
+- Toistuvat käsitteet koodin kannalta, tärkeät keywordit.
+
+
+## Testaus
+
+Harjassa on kolme eritasoista test-suitea: fronttitestit (phantom), palvelutestit (backend) ja
+e2e testit (erillisessä projektissa).
+
+### Fronttitestit
+
+Fronttitestit ajetaan komennolla: lein doo phantom test
+
+Odotetaan, että kaikilla frontin nimiavaruuksilla on testitiedosto ja vähintään yksi
+testi.
+
+Kaikilla yleiskäyttöisillä peruskomponenteilla (esim. grid, lomake ja eri kenttätyypit) tulisi
+olla hyvät testit, koska niitä käytetään laajasti koko järjestelmässä.
+
+UI tilan käsittely pitää testata ja tarpeen vaatiessa UI-komponentin renderöinti DOMiin.
+Täysiä työnkulkuja, joissa on useita komponentteja, ei tarvitse tässä test suitessa tehdä.
+
+Testaa UI tilassa reaktioiden oikea toiminta ja tuck event käsittely.
+
+### Backend testit
+
+Backend testit testaavat harjan palvelinta ja käytössä on oikea tietokanta.
+Kaikille palveluille on syytä tehdä testi, joka testaa vähintään onnistuvan
+tapauksen ja mielellään myös virheellisen kutsun.
+
+Pyritään testaamaan kaikki CRUD operaatiot.
+
+Oikeustarkistuksien olemassaolo varmistetaan automaattisesti palvelukutsuissa,
+mutta eri käyttäjien pääsy tiettyyn palveluun on syytä testata sen palvelun testeissä.
+Testaa palvelukutsuja ainakin kahdella käyttäjällä: sellaisella joka pääsee ja sellaisella
+joka ei.
+
+### End-to-end testit
+
+End-to-end testit ajetaan harjan testiympäristöä vasten Seleniumilla. Tämän test suiten
+tarkoituksena on tehdä perustason smoke test, joka varmistaa että kaikki osiot latautuvat
+oikein eikä harja räsähdä.
+
+Uusille näkymille lisätään testi, jossa näkymään navigoidaan ja tarkistetaan jotain yksinkertaista
+sivun rakenteesta.
 
 ## Tietokanta
 
@@ -199,8 +266,8 @@ Fronttitestit pyörivät figwheelin kautta.
 Ne voi ajaa myös komentorivillä komennolla "lein doo phantom test"
 
 # Labyrintin SMS gatewayn testaus kehitysmpäristössä
-Labyrintin SMS viestien vastaanottoa voi testata tekemällä reverse SSH-tunneli 
-harja-front1-stg palvelimelle sekä muuttamalla NginX:n reititys osoittamaan 
+Labyrintin SMS viestien vastaanottoa voi testata tekemällä reverse SSH-tunneli
+harja-front1-stg palvelimelle sekä muuttamalla NginX:n reititys osoittamaan
 harja-app1-stg palvelimen sijasta localhostin SSH tunnelin porttiin.
 
 1. Avaa reverse SSH-tunneli molemmille tuotannon fronttipalvelimille:
@@ -243,25 +310,25 @@ https://github.com/finnishtransportagency/harja/blob/develop/LICENSE.txt
 7. Lisää ssh configiin (~/.ssh/config) seuraavat asetukset:
  Host harja-app1-stg
          ProxyCommand ssh harja-jenkins.solitaservices.fi -W %h:%p
-          
+
          # Testi-Sonjan JMS jonot (7.6.2)
          LocalForward 2511 testihaproxy.liikennevirasto.fi:2001
          # LocalForward 2511 192.83.32.231:2511
- 
+
          # Testi-Sonjan (2013) JMS jonot
          LocalForward 2511 testihaproxy.liikennevirasto.fi:2002
          # LocalForward 2512 81.22.173.248:2511
- 
+
          # Tuotanto-Sonja (7.6.2)
          LocalForward 2001 haproxy.liikennevirasto.fi:2001
          # LocalForward 2001 nginplus.liikennevirasto.fi:2001
- 
+
          # Tuotanto-Sonja (2013)
          LocalForward 2002 haproxy.liikennevirasto.fi:2002
          # LocalForward 2002 nginplus.liikennevirasto.fi:2002
 8. Avaa ssh-yhteys harja-app1-stg palvelimelle: ssh harja-db1-stg
-9. Avaa Hermes JMS  
- 
+9. Avaa Hermes JMS
+
 # FIM:n testikäyttö
 1. Määrittele asetukset.edn:n FIM:n URL:ksi https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity
 2. Avaa SSH-yhteys ssh -L6666:testioag.liikennevirasto.fi:443 harja-app1-stg

@@ -166,26 +166,24 @@
                                     (comp (map konv/alaviiva->rakenne)
                                           (map #(konv/string-poluista->keyword
                                                  %
-                                                 [[:taloudellinen-osa :paatos]
-                                                  [:tekninen-osa :paatos]
+                                                 [[:tekninen-osa :paatos]
                                                   [:tila]])))
                                     (paallystys-q/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
                                       db
                                       {:paallystyskohde kohde-id})))]
       (when-not (and (= :hyvaksytty (get-in paallystysilmoitus [:tekninen-osa :paatos]))
-                     (= :hyvaksytty (get-in paallystysilmoitus [:taloudellinen-osa :paatos]))
                      (or (= :valmis (:tila paallystysilmoitus))
                          (= :lukittu (:tila paallystysilmoitus))))
        (throw (SecurityException. (str "Kohteen " kohde-id " päällystysilmoituksen lähetys ei ole sallittu.")))))))
 
 (defn laheta-kohteet-yhaan
   "Lähettää annetut kohteet teknisine tietoineen YHA:n."
-  [db yha user {:keys [urakka-id sopimus-id kohde-idt]}]
+  [db yha user {:keys [urakka-id sopimus-id kohde-idt vuosi]}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (tarkista-lahetettavat-kohteet db kohde-idt)
   (log/debug (format "Lähetetään kohteet: %s YHA:n" kohde-idt))
   (yha/laheta-kohteet yha urakka-id kohde-idt)
-  (let [paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id)]
+  (let [paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi)]
     paivitetyt-ilmoitukset))
 
 (defrecord Yha []
