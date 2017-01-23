@@ -21,8 +21,8 @@
   "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
   <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
   <ilmoitusId>123456789</ilmoitusId>
-  <versionumero>1</versionumero>
   <tunniste>UV-1509-1a</tunniste>
+  <versionumero>1</versionumero>
   <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
   <ilmoitettu>2015-09-29T14:49:45</ilmoitettu>
   <urakkatyyppi>hoito</urakkatyyppi>
@@ -136,8 +136,8 @@
   "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
   <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
   <ilmoitusId>123456789</ilmoitusId>
-  <versionumero>1</versionumero>
   <tunniste>UV-1509-1a</tunniste>
+  <versionumero>1</versionumero>
   <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
   <ilmoitettu>2015-09-29T14:49:45</ilmoitettu>
   <urakkatyyppi>hoito</urakkatyyppi>
@@ -173,8 +173,8 @@
   "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
    <viestiId>14324234</viestiId>
    <ilmoitusId>987654321</ilmoitusId>
-   <versionumero>1</versionumero>
    <tunniste>UV-1509-1a</tunniste>
+   <versionumero>1</versionumero>
    <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
    <ilmoitettu>2016-09-15T12:49:45</ilmoitettu>
    <urakkatyyppi>valaistus</urakkatyyppi>
@@ -210,8 +210,8 @@
   "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
    <viestiId>14324234</viestiId>
    <ilmoitusId>987654321</ilmoitusId>
-   <versionumero>1</versionumero>
    <tunniste>UV-1509-1a</tunniste>
+   <versionumero>1</versionumero>
    <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
    <ilmoitettu>2016-09-21T10:49:45</ilmoitettu>
    <urakkatyyppi>paallystys</urakkatyyppi>
