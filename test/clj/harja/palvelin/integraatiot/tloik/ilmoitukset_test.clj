@@ -19,7 +19,9 @@
             [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [harja.kyselyt.konversio :as konv])
+  (:import (org.postgis PGgeometry)))
 
 (def kayttaja "yit-rakennus")
 
@@ -50,9 +52,28 @@
 
 (deftest tarkista-uuden-ilmoituksen-tallennus
   (tuo-ilmoitus)
-  (let [ilmoitukset (hae-ilmoitukset-idlla-123456789)]
+  (let [ilmoitukset (hae-ilmoitukset-mappina-idlla-123456789)
+        ilmoitus (first ilmoitukset)]
     (is (= 1 (count ilmoitukset)) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
-    (is (= "2015-09-29 17:49:45.0" (str (nth (first ilmoitukset) 3))) "Ilmoitusaika on parsittu oikein"))
+    (is (= (:yhteydenottopyynto ilmoitus) false))
+    (is (= (:tila ilmoitus) "kuittaamaton"))
+    (is (= (:tloik_tunniste ilmoitus) "UV-1509-1a"))
+    (is (= (:ilmoittaja_tyyppi ilmoitus) "tienkayttaja"))
+    (is (instance? PGgeometry (:sijainti ilmoitus)))
+    (is (= (:ilmoittaja_matkapuhelin ilmoitus) "08023394852"))
+    (is (= (:ilmoitusid ilmoitus) 123456789))
+    (is (= (:ilmoittaja_etunimi ilmoitus) "Uuno"))
+    (is (= (:ilmoittaja_sukunimi ilmoitus) "Urakoitsija"))
+    (is (= (:ilmoitustyyppi ilmoitus) "toimenpidepyynto"))
+    (is (= (:ilmoittaja_sahkoposti ilmoitus) "uuno.urakoitsija@example.com"))
+    (is (= (:urakka ilmoitus) 4))
+    (is (= (:lahettaja_etunimi ilmoitus) "Pekka"))
+    (is (= (:lahettaja_sukunimi ilmoitus) "Päivystäjä"))
+    (is (= (:lahettaja_sahkoposti ilmoitus) "pekka.paivystaja@livi.fi"))
+    (is (= (:lisatieto ilmoitus) "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."))
+    (is (= #{"auraustarve"
+             "aurausvallitNakemaesteena"}
+           (:selitteet (konv/array->set ilmoitus :selitteet)))))
   (poista-ilmoitus))
 
 (deftest tarkista-ilmoituksen-paivitys
