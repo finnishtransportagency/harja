@@ -288,6 +288,14 @@
    [aikasuodattimet]
    [aluesuodattimet]])
 
+(defn tienakyma []
+  (komp/luo
+   ;; Poistetaan muu tilannekuvan karttataso näkyvistä kun ollaan tienäkymässä
+   (komp/sisaan-ulos #(reset! tilannekuva-kartalla/karttataso-tilannekuva false)
+                     #(reset! tilannekuva-kartalla/karttataso-tilannekuva true))
+   (fn []
+     [tienakyma/tienakyma])))
+
 (defn suodattimet []
   (let [resize-kuuntelija (fn [this _]
                             (aseta-hallintapaneelin-max-korkeus (r/dom-node this)))]
@@ -310,9 +318,8 @@
 
           "Tienäkymä"
           :tienakyma
-          (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
-                     @tienakyma-tiedot/tienakyma-kaytossa?)
-            [tienakyma/tienakyma])]]))))
+          (when (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+            [tienakyma])]]))))
 
 (defonce hallintapaneeli-auki (atom {:hallintapaneeli true}))
 

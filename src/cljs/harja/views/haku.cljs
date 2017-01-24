@@ -65,7 +65,7 @@
   [o]
   (if (= :urakoitsija (:tyyppi o))
     (nayta-organisaation-yhteystiedot o)
-    (nav/valitse-hallintayksikko o)))
+    (nav/valitse-hallintayksikko! o)))
 
 (defn- kayttajan-tiedot [{org :organisaatio
                           email :sahkoposti
