@@ -17,6 +17,7 @@
              [harja.ui.grid-test]
              [harja.ui.edistymispalkki-testi]
              [harja.fmt-test]
+             [harja.tiedot.urakka.siirtymat-test]
              [harja.tiedot.tierekisteri.varusteet-test]
              ;; uusi testi tähän
              ))
@@ -38,7 +39,7 @@
            'harja.ui.edistymispalkki-testi
            'harja.views.kartta.infopaneeli-test
            'harja.fmt-test
+           'harja.tiedot.urakka.siirtymat-test
            'harja.tiedot.tierekisteri.varusteet-test
             ;; uusi testi tähän
            )
-

@@ -27,7 +27,7 @@
                                   :color "#323232"})
                         :on-click #(do
                                     (.preventDefault %)
-                                    (nav/valitse-hallintayksikko nil))}
+                                    (nav/valitse-hallintayksikko! nil))}
     "Koko maa"]])
 
 (defn hallintayksikko [valinta-auki]
@@ -40,7 +40,7 @@
          [:a.murupolkuteksti {:href "#"
                               :on-click #(do
                                           (.preventDefault %)
-                                          (nav/valitse-hallintayksikko valittu))}
+                                          (nav/valitse-hallintayksikko! valittu))}
           (str (or (:nimi valittu) "- Hallintayksikkö -") " ")]
 
          [:span.valittu-hallintayksikko.murupolkuteksti (or (:nimi valittu) "- Hallintayksikkö -") " "]))
@@ -60,7 +60,7 @@
         [:li.harja-alasvetolistaitemi
          [linkki (hal/elynumero-ja-nimi muu-yksikko)
           #(do (reset! valinta-auki nil)
-               (nav/valitse-hallintayksikko muu-yksikko))]])]]))
+               (nav/valitse-hallintayksikko! muu-yksikko))]])]]))
 
 (defn urakka [valinta-auki]
   (when @nav/valittu-hallintayksikko
