@@ -73,6 +73,7 @@
                                                     :losa 3
                                                     :tienumero 3}
                            :yha-id 3
+                           :yha-kohdenumero nil
                            :yllapitokohdetyotyyppi :paikkaus
                            :yllapitokohdetyyppi "paallyste"
                            :yllapitoluokka 1}]
