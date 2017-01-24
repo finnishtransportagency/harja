@@ -40,6 +40,7 @@
                  "sukunimi" "Meikäläinen"
                  "tyopuhelin" nil}
    "ilmoitusid" 123456789
+   "tunniste" "UV-1509-1a"
    "ilmoitustyyppi" "toimenpidepyynto"
    "lahettaja" {"email" "pekka.paivystaja@livi.fi"
                 "etunimi" "Pekka"

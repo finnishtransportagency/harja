@@ -23,6 +23,11 @@
                 "type": "integer",
                 "required": true
               },
+              "tunniste": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/tloik-tunniste",
+                "type": "string",
+                "required": true
+              },
               "ilmoitettu": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/ilmoitettu",
                 "type": "string",

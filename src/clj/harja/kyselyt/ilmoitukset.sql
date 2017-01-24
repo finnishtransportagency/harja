@@ -74,6 +74,7 @@ ORDER BY i.ilmoitettu DESC, it.kuitattu DESC;
 -- name: hae-ilmoitukset-ilmoitusidlla
 SELECT
   ilmoitusid,
+  tunniste as "tloik-tunniste",
   ilmoitettu,
   tila,
   yhteydenottopyynto,
@@ -230,6 +231,7 @@ WHERE i.id IN (:idt);
 -- name: hae-muuttuneet-ilmoitukset
 SELECT
   ilmoitusid,
+  tunniste AS "tloik-tunniste",
   ilmoitettu,
   yhteydenottopyynto,
   paikankuvaus,
