@@ -23,11 +23,11 @@
              (str/split (str/replace osoite #"\(|\)" "") #","))]
     {:tie (Integer/parseInt tie)
      :aosa (Integer/parseInt osa)
-     :aet (Float/parseFloat et)
+     :aet (Integer/parseInt et)
      :ajorata (Integer/parseInt ajr)
      :etaisyys-gps-pisteesta (Float/parseFloat d)}))
 
-(defn- kasittele-kantamerkinta [merkinta db]
+(defn- kasittele-kantamerkinta [db merkinta]
   (let [jatkuvat-vakiohavaintoidt (into #{} (map :id (hae-jatkuvat-vakiohavainto-idt db)))
         geometria (when (:sijainti merkinta)
                     (.getGeometry (:sijainti merkinta)))
@@ -45,7 +45,6 @@
                           :pistemainen-havainto (suodata-pistemainen-havainto havainnot jatkuvat-vakiohavaintoidt))
           (dissoc merkinta :havainnot))))
 
-
 (defn hae-reitin-merkinnat-tieosoitteilla
   "Hakee reittimerkinnät ja niiden projisoidun tieverkon osoitteet.
    Jokaisella merkinnällä on tieto sijainnin lähimmistä TR-osoitteista
@@ -56,7 +55,7 @@
    moottoritielle, jolloin reittiä analysoitaessa täytyy käyttää läheisiä TR-osoitteita
    apuna ja päätellä todellinen ajettu reitti (jatkettiinko motarilla vai siirryttiinkö rampille)."
   [db args]
-  (mapv #(kasittele-kantamerkinta % db) (hae-reitin-merkinnat-tieosoitteilla-raw db args)))
+  (mapv (partial kasittele-kantamerkinta db) (hae-reitin-merkinnat-tieosoitteilla-raw db args)))
 
 (defn hae-vakiohavaintoavaimet [db]
   (into {} (mapv (fn [r] [(keyword (:avain r)) (:id r)])

@@ -275,7 +275,6 @@
     (is (= (-> tarkastukset :reitilliset-tarkastukset second :soratiemittaus :sivukaltevuus) nil))
     (is (== (-> tarkastukset :reitilliset-tarkastukset last :soratiemittaus :sivukaltevuus) 3))))
 
-
 ;; -------- Tarkastuksen tallennus kantaan --------
 
 (deftest tarkastus-trvali-jossa-alkuosa-vaihtuu
