@@ -34,18 +34,28 @@
                     (.getGeometry (:sijainti merkinta)))
         havainnot (when (:havainnot merkinta)
                     (seq (.getArray (:havainnot merkinta))))]
-    (-> merkinta
-        (assoc :laheiset-tr-osoitteet (mapv lue-laheinen-osoiterivi
-                                           (.getArray (:laheiset-tr-osoitteet merkinta))))
-        ;; Jaetaan havainnot pistemäisiin ja jatkuviin
-        (assoc :sijainti [(.x geometria) (.y geometria)]
-               :jatkuvat-havainnot (suodata-jatkuvat-havainnot havainnot jatkuvat-vakiohavaintoidt)
-               :pistemainen-havainto (suodata-pistemainen-havainto havainnot jatkuvat-vakiohavaintoidt))
-        (dissoc :havainnot))))
+    (as-> merkinta merkinta
+          (assoc merkinta :laheiset-tr-osoitteet
+                          (mapv lue-laheinen-osoiterivi
+                                (.getArray (:laheiset-tr-osoitteet merkinta))))
+          (assoc merkinta :tr-osoite (first (sort-by :etaisyys-gps-pisteesta
+                                                     (:laheiset-tr-osoitteet merkinta))))
+          ;; Jaetaan havainnot pistemäisiin ja jatkuviin
+          (assoc merkinta :sijainti [(.x geometria) (.y geometria)]
+                          :jatkuvat-havainnot (suodata-jatkuvat-havainnot havainnot jatkuvat-vakiohavaintoidt)
+                          :pistemainen-havainto (suodata-pistemainen-havainto havainnot jatkuvat-vakiohavaintoidt))
+          (dissoc merkinta :havainnot))))
 
 
 (defn hae-reitin-merkinnat-tieosoitteilla
-  "Hakee reittimerkinnät ja niiden projisoidun tieverkon osoitteet."
+  "Hakee reittimerkinnät ja niiden projisoidun tieverkon osoitteet.
+   Jokaisella merkinnällä on tieto sijainnin lähimmistä TR-osoitteista
+   avaimessa :laheiset-tr-osoitteet. Lähin TR-osoite löytyy avaimesta :tr-osoite.
+
+   Lähimmäksi valittu TR-osoite on suurella todennäköisyydellä se tie, johon
+   ajon GPS-piste liittyy. Kuitenkin esimerkiksi ramppien alkuosa saattaa osua
+   moottoritielle, jolloin reittiä analysoitaessa täytyy käyttää läheisiä TR-osoitteita
+   apuna ja päätellä todellinen ajettu reitti (jatkettiinko motarilla vai siirryttiinkö rampille)."
   [db args]
   (mapv #(kasittele-kantamerkinta % db) (hae-reitin-merkinnat-tieosoitteilla-raw db args)))
 
