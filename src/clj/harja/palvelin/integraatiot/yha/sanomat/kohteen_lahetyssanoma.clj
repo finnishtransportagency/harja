@@ -88,8 +88,8 @@
                  {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm ilmoitustiedot] :as paallystys-ilmoitus}]
   [:kohde
    (when yhaid [:yha-id yhaid])
-   (when yha-kohdenumero [:kohdenumero yha-kohdenumero])
    [:harja-id id]
+   (when yha-kohdenumero [:kohdenumero yha-kohdenumero])
    [:kohdetyyppi (kasittele-kohteen-tyyppi yllapitokohdetyyppi)]
    [:kohdetyotyyppi yllapitokohdetyotyyppi]
    (when yhatunnus [:nimi yhatunnus])
