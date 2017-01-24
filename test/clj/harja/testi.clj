@@ -183,7 +183,11 @@
 
     ;; POST
     [this nimi kayttaja payload]
-    "kutsu HTTP palvelufunktiota suoraan."))
+    "kutsu HTTP palvelufunktiota suoraan.")
+
+  (kutsu-karttakuvapalvelua
+    ;; POST
+    [this nimi kayttaja payload koordinaatti extent]))
 
 (defn testi-http-palvelin
   "HTTP 'palvelin' joka vain ottaa talteen julkaistut palvelut."
@@ -205,7 +209,13 @@
         (let [vastaus ((get @palvelut nimi) kayttaja payload)]
           (if (http/async-response? vastaus)
             (async/<!! (:channel vastaus))
-            vastaus))))))
+            vastaus)))
+      (kutsu-karttakuvapalvelua [_ nimi kayttaja payload koordinaatti extent]
+        ((get @palvelut :karttakuva-klikkaus)
+          kayttaja
+          {:parametrit (assoc payload "_" nimi)
+           :koordinaatti koordinaatti
+           :extent (or extent [-550093.049087613 6372322.595126259 1527526.529326106 7870243.751025201])})))))
 
 (defn kutsu-http-palvelua
   "Lyhyt muoto testijärjestelmän HTTP palveluiden kutsumiseen."
