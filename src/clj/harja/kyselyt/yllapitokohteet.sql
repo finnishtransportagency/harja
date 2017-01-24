@@ -97,6 +97,7 @@ SELECT
   ypk.tr_ajorata                        AS "tr-ajorata",
   ypk.tr_kaista                         AS "tr-kaista",
   ypk.yhaid,
+  ypk.yha_kohdenumero                   AS "yha-kohdenumero",
   ypk.yllapitokohdetyyppi,
   ypk.yllapitokohdetyotyyppi,
   ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
