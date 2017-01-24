@@ -39,7 +39,7 @@
   (let [extent (geo/extent sijainti)]
     (merge
      ;; TR-osoitteen geometrinen alue envelope
-     (zipmap extent [:x1 :y1 :x2 :y2])
+     (zipmap  [:x1 :y1 :x2 :y2] extent)
 
      ;; Tierekisteriosoitteen geometria
      {:sijainti (geo/geometry (geo/clj->pg sijainti))}
@@ -76,6 +76,13 @@
               (map #(konv/array->keyword-set % :tyyppi)))
         (q/hae-turvallisuuspoikkeamat db parametrit)))
 
+(defn- hae-laatupoikkeamat [db parametrit]
+  (into []
+        (comp (map konv/alaviiva->rakenne)
+              (geo/muunna-pg-tulokset :sijainti)
+              (map #(assoc % :tyyppi-kartalla :laatupoikkeama)))
+        (q/hae-laatupoikkeamat db parametrit)))
+
 (defn- hae-ilmoitukset [db parametrit]
   (konv/sarakkeet-vektoriin
    (into []
@@ -90,7 +97,8 @@
   {:toteumat #'hae-toteumat
    :ilmoitukset #'hae-ilmoitukset
    :tarkastukset #'hae-tarkastukset
-   :turvallisuuspoikkeamat #'hae-turvallisuuspoikkeamat})
+   :turvallisuuspoikkeamat #'hae-turvallisuuspoikkeamat
+   :laatupoikkeamat #'hae-laatupoikkeamat})
 
 
 (defn- hae-tienakymaan [db user valinnat]

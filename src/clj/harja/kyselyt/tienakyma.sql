@@ -109,3 +109,29 @@ SELECT t.id,
  WHERE ST_DWithin(t.sijainti, :sijainti, 25) AND
        (t.tapahtunut :: DATE BETWEEN :alku AND :loppu OR
         t.kasitelty BETWEEN :alku AND :loppu);
+
+-- name: hae-laatupoikkeamat
+SELECT l.id, l.aika, l.kohde, l.tekija, l.kuvaus, l.sijainti, l.tarkastuspiste,
+       CONCAT(k.etunimi, ' ', k.sukunimi) AS tekijanimi,
+       l.kasittelyaika                    AS paatos_kasittelyaika,
+       l.paatos                           AS paatos_paatos,
+       l.kasittelytapa                    AS paatos_kasittelytapa,
+       l.perustelu                        AS paatos_perustelu,
+       l.muu_kasittelytapa                AS paatos_muukasittelytapa,
+       l.selvitys_pyydetty                AS selvityspyydetty,
+       l.tr_numero, l.tr_alkuosa, l.tr_alkuetaisyys, l.tr_loppuosa, l.tr_loppuetaisyys,
+       ypk.nimi AS yllapitokohde_nimi,
+       ypk.kohdenumero AS yllapitokohde_numero,
+       ypk.tr_numero AS yllapitokohde_tr_numero,
+       ypk.tr_alkuosa AS yllapitokohde_tr_alkuosa,
+       ypk.tr_alkuetaisyys AS yllapitokohde_tr_alkuetaisyys,
+       ypk.tr_loppuosa AS yllapitokohde_tr_loppuosa,
+       ypk.tr_loppuetaisyys AS yllapitokohde_tr_loppuetaisyys
+  FROM laatupoikkeama l
+       JOIN kayttaja k ON l.luoja = k.id
+       LEFT JOIN yllapitokohde ypk ON l.yllapitokohde = ypk.id
+ WHERE -- FIXME: sijainti ei löydä
+      (ST_Intersects(l.sijainti, :sijainti) OR l.tr_numero=20)
+       AND (l.aika BETWEEN :alku AND :loppu OR
+            l.kasittelyaika BETWEEN :alku AND :loppu)
+       AND l.poistettu IS NOT TRUE
