@@ -225,6 +225,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION laheiset_osoitteet_pisteelle(piste GEOMETRY, tarkkuus INTEGER)
+  RETURNS record AS $$
+  SELECT *
+    FROM (SELECT tie,osa,ajorata,geom,ST_Distance(piste, geom) as d
+            FROM tr_osan_ajorata
+	   WHERE geom IS NOT NULL AND
+           	 ST_Intersects(piste, envelope)
+	  ORDER BY d ASC) x WHERE x.d < tarkkuus;
+$$ LANGUAGE SQL IMMUTABLE;
+
+
 CREATE OR REPLACE FUNCTION tierekisteriosoite_pisteelle(
   piste geometry, treshold INTEGER)
   RETURNS tr_osoite
