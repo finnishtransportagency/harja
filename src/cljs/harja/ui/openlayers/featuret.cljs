@@ -14,6 +14,7 @@
             [ol.style.Fill]
             [ol.style.Stroke]
             [ol.style.Icon]
+            [ol.style.Circle]
 
             [harja.loki :refer [log]]
 
@@ -35,11 +36,17 @@ pienemmällä zindexillä." :const true}
 (defmulti luo-feature :type)
 (defmulti luo-geometria :type)
 
+(defn- circle-style [{:keys [fill stroke radius] :as circle}]
+  (ol.style.Circle. #js {:fill (ol.style.Fill. #js {:color fill})
+                         :stroke (ol.style.Stroke. #js {:color stroke :width 1})
+                         :radius (:radius circle)
+                         }))
 
-(defn aseta-tyylit [feature {:keys [fill color stroke marker zindex] :as geom}]
+(defn aseta-tyylit [feature {:keys [fill color stroke marker zindex circle] :as geom}]
   (doto feature
     (.setStyle (ol.style.Style.
-                #js {:fill (when fill
+                #js {:image (some-> circle circle-style)
+                     :fill (when fill
                              (ol.style.Fill. #js {:color (or color "red")}))
                      :stroke (ol.style.Stroke.
                               #js {:color (or (:color stroke) "black")
@@ -47,7 +54,8 @@ pienemmällä zindexillä." :const true}
                      ;; Default zindex asetetaan harja.views.kartta:ssa.
                      ;; Default arvo on 4 - täällä 0 ihan vaan fallbackina.
                      ;; Näin myös pitäisi huomata jos tämä ei toimikkaan.
-                     :zIndex (or zindex 0)}))))
+                     :zIndex (or zindex 0)
+                     }))))
 
 (defn- tee-nuoli
   [kasvava-zindex {:keys [img scale zindex anchor rotation]} [piste rotaatio]]
@@ -183,8 +191,8 @@ pienemmällä zindexillä." :const true}
 (defmethod luo-feature :point [{:keys [coordinates radius] :as point}]
   #_(ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
   (luo-feature (assoc point
-                 :type :circle
-                 :radius (or radius 10))))
+                      :type :circle
+                      :radius (or radius 10))))
 
 (defmethod luo-geometria :circle [{:keys [coordinates radius]}]
   (ol.geom.Circle. (clj->js coordinates) radius))
@@ -202,8 +210,12 @@ pienemmällä zindexillä." :const true}
   (ol.geom.LineString. (clj->js points)))
 
 (defmethod luo-geometria :geometry-collection [{gs :geometries}]
-  (log "LUODAAN GEOMETRY-COLLECTION " (pr-str gs))
   (ol.geom.GeometryCollection. (clj->js (mapv luo-geometria gs))))
+
+(defmethod luo-feature :geometry-collection [gc]
+  (aseta-tyylit
+   (ol.Feature. #js {:geometry (luo-geometria gc)})
+   gc))
 
 (defmethod luo-feature :default [this]
   (ol.Feature. #js {:geometry (luo-geometria this)}))

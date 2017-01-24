@@ -366,6 +366,7 @@ hakutiheys-historiakuva 1200000)
                     (assoc :tarkastukset (:tarkastukset hakuparametrit)))
           tulos (kasittele-tilannekuvan-hakutulos tulos)]
       (when @nakymassa?
+        (reset! tilannekuva-kartalla/valittu-tila @valittu-tila)
         (reset! tilannekuva-kartalla/haetut-asiat tulos))
       (kartta/aseta-paivitetaan-karttaa-tila! false))))
 
