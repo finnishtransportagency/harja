@@ -1,7 +1,11 @@
 (ns harja-laadunseuranta.tarkastusreittimuunnin.tarkastusreittimuunnin
   "Tämä namespace tarjoaa funktiot Harjan mobiililla laadunseurantatyökalulla tehtyjen reittimerkintöjen
    muuntamiseksi Harja-tarkastukseksi. Tärkein funktio on reittimerkinnat-tarkastuksiksi, joka
-   hoitaa varsinaisen muunnostyön."
+   hoitaa varsinaisen muunnostyön.
+
+   Tärkeimmät funktiot:
+   - reittimerkinnat-tarkastuksiksi, jolla varsinainen muunto tehdään
+   - tallenna-tarkastukset!, joka tallentaa tarkastukset kantaan"
   (:require [taoensso.timbre :as log]
             [harja-laadunseuranta.tietokanta :as tietokanta]
             [harja-laadunseuranta.kyselyt :as q]
