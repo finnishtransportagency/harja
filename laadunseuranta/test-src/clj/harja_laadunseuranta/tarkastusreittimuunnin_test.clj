@@ -12,7 +12,8 @@
             [com.stuartsierra.component :as component]
             [harja-laadunseuranta.core :as harja-laadunseuranta]
             [clojure.core :as core]
-            [clojure.set :as set])
+            [clojure.set :as set]
+            [clojure.java.jdbc :as jdbc])
   (:import (org.postgis PGgeometry MultiLineString Point)))
 
 (defn jarjestelma-fixture [testit]
@@ -29,7 +30,7 @@
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (defn lisaa-reittimerkinnoille-mockattu-tieosoite
   "Mock-funktio, joka lisää tiemerkinnöille tierekisteriosoitteet ilman oikeaa kannassa olevaa tieverkkoa.
@@ -415,9 +416,10 @@
     (is (= (:tr_loppuetaisyys tallennettava) let))))
 
 (deftest oikean-tarkastusajon-muunto-toimii
-  (let [tarkastusajo-id 754
+  (let [db (:db jarjestelma)
+        tarkastusajo-id 754
         urakka-id (hae-oulun-alueurakan-2014-2019-id)
-        tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi (:db jarjestelma) tarkastusajo-id)
+        tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
         tarkastukset (ls-core/lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)
         reitilliset (:reitilliset-tarkastukset tarkastukset)
         pistemaiset (:pistemaiset-tarkastukset tarkastukset)
@@ -447,13 +449,14 @@
     ;; Jokainen tallennettava tarkastus muodostetaan tieosoitteen osalta tarkalleen oikein
     (loop [i 0]
       (tarkista-tallennettavan-tarkastuksen-osoite
-        (nth kaikki-tarkastukset i) (nth odotetut-tarkastetut-tieosat i))
+       (nth kaikki-tarkastukset i) (nth odotetut-tarkastetut-tieosat i))
 
       (when (< i (- (count odotetut-tarkastetut-tieosat) 1))
         (recur (inc i))))
 
     (let [tarkastusten-maara-ennen (ffirst (q "SELECT COUNT(*) FROM tarkastus"))
-          _ (ls-core/tallenna-muunnetut-tarkastukset-kantaan (:db jarjestelma) tarkastukset {:id 1} urakka-id)
+          _ (jdbc/with-db-transaction [tx db]
+              (ls-core/tallenna-muunnetut-tarkastukset-kantaan tx tarkastukset {:id 1} urakka-id))
           tarkastusten-maara-jalkeen (ffirst (q "SELECT COUNT(*) FROM tarkastus"))
           tarkastukset-kannassa (q-map "SELECT * FROM tarkastus WHERE tarkastusajo = " tarkastusajo-id ";")]
 
@@ -478,7 +481,7 @@
       (loop [i 0]
         (is (= (-> (nth tarkastukset-kannassa i)
                    (select-keys
-                     [:tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys])
+                    [:tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys])
                    (set/rename-keys {:tr_numero :tie
                                      :tr_alkuosa :aosa
                                      :tr_alkuetaisyys :aet
