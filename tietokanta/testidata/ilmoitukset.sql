@@ -896,13 +896,13 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12617), 12617, '2015-3-16 11:1
 
 -- Kajaanin alueurakka 2014-2019
 INSERT INTO ilmoitus
-(urakka, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, paikankuvaus, sijainti,
+(urakka, tloik_tunniste, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, paikankuvaus, sijainti,
  tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
  ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id
          FROM urakka
-         WHERE nimi = 'Kajaanin alueurakka 2014-2019'), 22372, '2015-11-26 06:05:32', '2015-11-26 06:06:32', TRUE,
+         WHERE nimi = 'Kajaanin alueurakka 2014-2019'), 'UV-1509-1a', 22372, '2015-11-26 06:05:32', '2015-11-26 06:06:32', TRUE,
                                                      'Voimakas lumipyry nelostiellä lähellä prikaatia kohdalla ja tiet auraamatta.',
                                                      ST_MakePoint(533601, 7119368) :: GEOMETRY, 6, 6, 6, 6, 6, 'toimenpidepyynto' :: ilmoitustyyppi,
                                                                                                             ARRAY ['auraustarve'],

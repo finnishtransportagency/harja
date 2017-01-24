@@ -240,6 +240,7 @@
         {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
          :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
         {:otsikko "Id" :nimi :ilmoitusid :leveys 3}
+        {:otsikko "Tunniste" :nimi :tloik-tunniste :leveys 3}
         {:otsikko "Otsikko" :nimi :otsikko :leveys 7
          :hae #(leikkaa-sisalto-pituuteen 30 (:otsikko %))}
         {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 7

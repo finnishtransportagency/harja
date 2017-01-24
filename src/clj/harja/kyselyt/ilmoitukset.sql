@@ -2,6 +2,7 @@
 SELECT
   i.id,
   i.urakka,
+  i.tloik_tunniste as "tloik-tunniste",
   u.nimi as urakkanimi,
   i.ilmoitusid,
   i.ilmoitettu,
