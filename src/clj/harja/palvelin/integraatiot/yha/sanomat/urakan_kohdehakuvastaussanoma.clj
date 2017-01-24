@@ -1,10 +1,11 @@
 (ns harja.palvelin.integraatiot.yha.sanomat.urakan-kohdehakuvastaussanoma
-  (:require [hiccup.core :refer [html]]
-            [harja.tyokalut.xml :as xml]
-            [clojure.data.zip.xml :as z])
   "Käytetän purkamaan YHA:sta vastaanotettu XML-sanoma, joka sisältää urakan kohdeluettelon. Kohdeluettelo koostuu
   joko päällystys- tai paikkauskohteista. Ennen varsinaista käsittelyä sanoma validoidaan XSD-skeemaa vasten.
-  lue-sanoma funktio palauttaa vektorin mäppejä, joista jokainen kuvaa yhden kohteen. ")
+  lue-sanoma funktio palauttaa vektorin mäppejä, joista jokainen kuvaa yhden kohteen. "
+
+  (:require [hiccup.core :refer [html]]
+            [harja.tyokalut.xml :as xml]
+            [clojure.data.zip.xml :as z]))
 
 (def +xsd-polku+ "xsd/yha/")
 
