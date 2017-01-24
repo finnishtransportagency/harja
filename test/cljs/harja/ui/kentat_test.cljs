@@ -152,6 +152,102 @@
      (is (= "15.08.2010" (val)))
      (is (pvm/sama-pvm? (pvm/->pvm "15.8.2010") @data)))))
 
+
+(deftest pvm-aika
+  (let [data (r/atom nil)
+        pvm-kentta "tr td:nth-child(1) input"
+        aika-kentta "tr td:nth-child(2) input"
+        pvm! #(do (u/change pvm-kentta %)
+                  (u/blur pvm-kentta))
+        pvm #(.-value (u/sel1 pvm-kentta))
+        aika #(.-value (u/sel1 aika-kentta))
+        aika! #(do (u/change aika-kentta %)
+                   (u/blur aika-kentta))
+        p (fn [pp kk vvvv tt mm]
+            (pvm/aikana (pvm/luo-pvm vvvv (dec kk) pp)
+                        tt mm 0 0))]
+    (komponenttitesti
+     [kentat/tee-kentta {:tyyppi :pvm-aika} data]
+
+     "Alkutilanteessa arvo on tyhjä ja placeholderit oikein"
+     (is (nil? @data))
+     (is (= "" (pvm)))
+     (is (= "" (aika)))
+     (is (= "pp.kk.vvvv" (.getAttribute (u/sel1 pvm-kentta) "placeholder")))
+     (is (= "tt:mm" (.getAttribute (u/sel1 aika-kentta) "placeholder")))
+     --
+
+     "Pelkän päivämäärän asettaminen ei aseta arvoa"
+     (pvm! "8.4.1981")
+     --
+     (is (nil? @data))
+
+     "Ajan täyttäminen asettaa arvon"
+     (aika! "05:40")
+     --
+     (is (= (p 8 4 1981 5 40) @data))
+
+     "Ajan vaihtaminen ohjelmallisesti reflektoituu input kentissä"
+     (reset! data (p 29 8 1997 2 14))
+     --
+     (is (= "29.08.1997" (pvm)))
+     (is (= "02:14" (aika)))
+
+     "Ohjelmallinen tyhjentäminen reflektoituu input kentissä"
+     (reset! data nil)
+     --
+     (is (= "" (pvm)))
+     (is (= "" (aika)))
+
+     "Asetetaan aika tekstinä ja valitaan pvm pickerilla"
+     (aika! "12:34")
+     (u/click pvm-kentta)
+     --
+     (u/click ".pvm-tanaan")
+     --
+     (is (= @data (pvm/aikana (pvm/nyt) 12 34 0 0))))))
+
+(deftest pvm-aika-wrap
+  (let [data (r/atom {:pvm-aika nil})
+        pvm-kentta "tr td:nth-child(1) input"
+        aika-kentta "tr td:nth-child(2) input"
+        pvm! #(do (u/change pvm-kentta %)
+                  (u/blur pvm-kentta))
+        pvm #(.-value (u/sel1 pvm-kentta))
+        aika #(.-value (u/sel1 aika-kentta))
+        aika! #(do (u/change aika-kentta %)
+                   (u/blur aika-kentta))
+        p (fn [pp kk vvvv tt mm]
+            (pvm/aikana (pvm/luo-pvm vvvv (dec kk) pp)
+                        tt mm 0 0))]
+    (komponenttitesti
+     [kentat/tee-kentta {:tyyppi :pvm-aika} (r/wrap (:pvm-aika @data)
+                                                    #(swap! data assoc :pvm-aika %))]
+
+     "Alkutilanteessa tyhjä"
+     (is (= "" (pvm)))
+     (is (= "" (aika)))
+
+     "Päivämäärän ja ajan kirjoittaminen asettaa arvon"
+     (aika! "12:34")
+     (pvm! "6.6.2016")
+     --
+     (is (= @data {:pvm-aika (p 6 6 2016 12 34)}))
+
+     "Ohjelmallinen muuttaminen reflektoituu kenttiin"
+     (swap! data assoc :pvm-aika (p 7 7 2017 17 57))
+     --
+     (is (= "07.07.2017" (pvm)))
+     (is (= "17:57" (aika)))
+
+     "Ohjelmallinen tyhjentäminen reflektoituu kenttiin"
+     (swap! data assoc :pvm-aika nil)
+     --
+     (is (= "" (pvm)))
+     (is (= "" (aika)))
+     )))
+
+
 (def +tie20-osa1-alkupiste+ {:type :point, :coordinates [426938.1807000004 7212765.558800001]})
 (def +tr-vastaukset+
   {{:alkuosa 1, :numero 20, :alkuetaisyys 0}

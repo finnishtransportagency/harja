@@ -33,7 +33,7 @@
           ^{:key "hy-lista"}
           [suodatettu-lista {:format hal/elynumero-ja-nimi :haku :nimi
                              :selection nav/valittu-hallintayksikko
-                             :on-select nav/valitse-hallintayksikko
+                             :on-select nav/valitse-hallintayksikko!
                              :aputeksti "Kirjoita hallintayksikön nimi tähän"}
            hallintayksikot]]])]
      [:div.col-md-8

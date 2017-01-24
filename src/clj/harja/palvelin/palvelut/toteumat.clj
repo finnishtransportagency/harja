@@ -25,7 +25,8 @@
             [harja.domain.tierekisteri.tietolajit :as tietolajit]
             [harja.tyokalut.functor :as functor]
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
-            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]))
+            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
+            [harja.domain.roolit :as roolit]))
 
 (defn geometriaksi [reitti]
   (when reitti (geo/geometry (geo/clj->pg reitti))))
@@ -714,7 +715,7 @@
         alue {:xmin x1 :ymin y1
               :xmax x2 :ymax y2}
         toleranssi (geo/karkeistustoleranssi alue)
-        kartalle-xf (esitettavat-asiat/kartalla-esitettavaan-muotoon-xf nil :id)
+        kartalle-xf (esitettavat-asiat/kartalla-esitettavaan-muotoon-xf)
 
         ch (async/chan 32 (comp
                             (map konv/alaviiva->rakenne)
@@ -773,6 +774,19 @@
                     :toimenpidekoodi nil}
                    parametrit)))
     {:tehtava :tehtavat}))
+
+(defn- siirry-kokonaishintainen-toteuma
+  "Palauttaa frontin tarvitsemat tiedot, joilla kokonaishintaiseen toteumaan voidaan siirtyä"
+  [db user toteuma-id]
+  (first
+   (konv/sarakkeet-vektoriin
+    (into []
+          (map konv/alaviiva->rakenne)
+          (toteumat-q/siirry-kokonaishintainen-toteuma
+           db {:toteuma-id toteuma-id
+               :tarkista-urakka? (= :urakoitsija (roolit/osapuoli user))
+               :urakoitsija-id (get-in user [:organisaatio :id])}))
+    {:tehtava :tehtavat} :id (constantly true))))
 
 (defrecord Toteumat []
   component/Lifecycle
@@ -847,7 +861,10 @@
         (tallenna-varustetoteuma tierekisteri db user hakuehdot toteuma))
       :hae-toteuman-reitti-ja-tr-osoite
       (fn [user tiedot]
-        (hae-toteuman-reitti-ja-tr-osoite db user tiedot)))
+        (hae-toteuman-reitti-ja-tr-osoite db user tiedot))
+      :siirry-kokonaishintainen-toteuma
+      (fn [user toteuma-id]
+        (siirry-kokonaishintainen-toteuma db user toteuma-id)))
     this)
 
   (stop [this]
@@ -868,6 +885,7 @@
       :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
       :hae-kokonaishintaisen-toteuman-tiedot
       :urakan-varustetoteumat
-      :tallenna-varustetoteuma
-      :hae-toteuman-reitti-ja-tr-osoite)
+      :hae-toteuman-reitti-ja-tr-osoite
+      :siirry-kokonaishintainen-toteuma
+      :tallenna-varustetoteuma)
     this))

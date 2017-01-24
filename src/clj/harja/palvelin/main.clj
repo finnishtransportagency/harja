@@ -11,6 +11,7 @@
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
     [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
+    [harja.palvelin.komponentit.kehitysmoodi :as kehitysmoodi]
 
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -150,6 +151,10 @@
       :liitteiden-hallinta (component/using
                              (harja.palvelin.komponentit.liitteet/->Liitteet)
                              [:db :virustarkistus])
+
+      :kehitysmoodi (component/using
+                     (kehitysmoodi/luo-kehitysmoodi kehitysmoodi)
+                     [:http-palvelin])
 
       ;; Integraatioloki
       :integraatioloki

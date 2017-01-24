@@ -126,7 +126,7 @@
 (defn valinnat [e! valinnat]
   [:span
    ;; Nämä käyttävät suoraan atomeita valintoihin
-   [urakka-valinnat/urakan-sopimus]
+   [urakka-valinnat/urakan-sopimus @nav/valittu-urakka]
    [urakka-valinnat/aikavali]
    [urakka-valinnat/tienumero (r/wrap (:tienumero valinnat)
                                       #(e! (v/->YhdistaValinnat {:tienumero %})))]
