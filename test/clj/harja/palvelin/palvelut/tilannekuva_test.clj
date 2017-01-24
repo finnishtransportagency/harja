@@ -246,7 +246,7 @@
 (deftest infopaneelin-skeemojen-luonti
   (testing "Frontilla piirrettäville jutuille saadaan tehtyä skeemat."
     (let [vastaus (hae-tk parametrit-laaja-historia)]
-      #_(is (paneeli/skeeman-luonti-onnistuu-kaikille? :tietyomaa (:tietyomaat vastaus)))
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :tietyomaa (:tietyomaat vastaus)))
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? (map
                                                        #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
                                                        (:ilmoitukset vastaus))))
