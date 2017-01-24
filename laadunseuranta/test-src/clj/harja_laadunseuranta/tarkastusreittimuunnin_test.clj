@@ -542,7 +542,7 @@
     (log/debug "Reitillisten tarkastusten muodostama ajettu reitti:")
     (let [sijainnit (mapcat :sijainnit (sort-by :aika reitilliset-tarkastukset))]
       (doseq [sijainti sijainnit]
-        (log/debug (tie->str (:tr-osoite sijainti)))))
+        (log/debug (str (:sijainti sijainti) " --> " (tie->str (:tr-osoite sijainti))))))
 
     (log/debug "")
     (log/debug "-- Lopputulos --")
