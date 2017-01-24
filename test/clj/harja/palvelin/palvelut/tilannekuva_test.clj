@@ -273,4 +273,9 @@
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :turvallisuuspoikkeama (:turvallisuuspoikkeamat vastaus)))))
 
   (testing "Infopaneeli saadaan luotua myös palvelimella piirretyille asioille."
-    ))
+    (let [toteuma (kutsu-karttakuvapalvelua
+                    (:http-palvelin jarjestelma)
+                    :tilannekuva-toteumat +kayttaja-jvh+
+                    {:alku alku :loppu loppu :talvi #{27 24 50 51 25 34 23 35 26 52 49} :urakat #{4}}
+                    [447806 7191966] nil)]
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :toteuma toteuma)))))
