@@ -6,6 +6,7 @@ SELECT
   i.id,
   i.urakka,
   i.ilmoitusid,
+  i.tloik_tunniste as "tloik-tunniste",
   i.ilmoitettu,
   i.valitetty,
   i.yhteydenottopyynto,
