@@ -26,3 +26,6 @@ BEGIN
 END;
 $$
 LANGUAGE plpgsql;
+
+ALTER TABLE geometriapaivitys
+  ALTER COLUMN nimi TYPE VARCHAR(30);
