@@ -412,24 +412,24 @@
 
       ;; Hakutapa puuttuu kokonaan
       (nil? get-fn)
-      (rivin-skeemavirhe "skeemasta puuttuu :nimi tai :hae"
+      (rivin-skeemavirhe (str otsikko " skeemasta puuttuu :nimi tai :hae")
                          rivin-skeema infopaneeli-skeema)
 
       ;; Hakutapa on nimi, mutta datassa ei ole kyseistä avainta
       (and nimi (not (contains? data nimi)))
       (rivin-skeemavirhe
-        (str "Tiedossa ei ole nimen mukaista avainta, nimi: "
+        (str otsikko " tiedossa ei ole nimen mukaista avainta, nimi: "
              (str nimi))
         rivin-skeema infopaneeli-skeema)
 
       ;; Hakutapa on funktio, jolta puuttuu validointi
       (and hae (nil? (:validointi-fn hae)))
-      (rivin-skeemavirhe (str ":hae avaimen pitää sisältää map, jossa on :haku-fn ja :validointi-fn. " (:otsikko rivin-skeema))
+      (rivin-skeemavirhe (str otsikko " :hae avaimen pitää sisältää map, jossa on :haku-fn ja :validointi-fn. " (:otsikko rivin-skeema))
                          rivin-skeema infopaneeli-skeema)
 
       ;; Haun validointi epäonnistuu
       (and hae (not ((:validointi-fn hae) data)))
-      (rivin-skeemavirhe (str ":hae kentän :validointi-fn epäonnistui. Puuttuuko avaimia?")
+      (rivin-skeemavirhe (str otsikko " :hae kentän :validointi-fn epäonnistui. Puuttuuko avaimia?")
                          rivin-skeema infopaneeli-skeema)
 
       ;; Kaikki kunnossa
