@@ -21,7 +21,6 @@
              (str/starts-with? osoite "(")
              (str/ends-with? osoite ")")
              (str/split (str/replace osoite #"\(|\)" "") #","))]
-    ;; TODO Testaa miten toimii jos sproc ei löydä mitään.
     {:tie (Integer/parseInt tie)
      :aosa (Integer/parseInt osa)
      :aet (Float/parseFloat et)
