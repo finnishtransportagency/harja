@@ -6,7 +6,9 @@
              [testi :refer :all]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja-laadunseuranta.kyselyt :as q]
             [com.stuartsierra.component :as component]
+            [harja.domain.tierekisteri :as tr-domain]
             [harja-laadunseuranta.core :as harja-laadunseuranta]))
 
 (defn jarjestelma-fixture [testit]
@@ -26,4 +28,13 @@
 (use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (deftest ramppianalyysi-korjaa-virheelliset-rampit
-  (ramppianalyysi/korjaa-virheelliset-rampit))
+  (let [tarkastusajo-id 754
+        merkinnat (hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
+                                                       {:tarkastusajo tarkastusajo-id
+                                                        :treshold 100})
+        korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
+
+    ;; Ramppeja ei pitäisi enää olla, koska testattavassa ajossa osa
+    ;; pisteistä on virheellisesti geometrisoitunut rampeille
+    (is (not-any? #(tr-domain/ramppi? (get-in % [:tr-osoite :tie]))
+                  korjatut-merkinnat))))

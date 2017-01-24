@@ -10,3 +10,6 @@
             [clojure.string :as str]
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
+
+(defn korjaa-virheelliset-merkinnat [merkinnat]
+  merkinnat)

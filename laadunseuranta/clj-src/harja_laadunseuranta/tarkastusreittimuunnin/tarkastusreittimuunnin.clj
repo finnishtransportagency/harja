@@ -10,6 +10,7 @@
             [harja-laadunseuranta.kyselyt :as q]
             [harja-laadunseuranta.utils :as utils]
             [harja.kyselyt.tarkastukset :as tark-q]
+            [harja-laadunseuranta.tarkastusreittimuunnin.ramppianalyysi :as ramppianalyysi]
             [clojure.string :as str]
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
@@ -341,14 +342,20 @@
    :pistemaiset-tarkastukset (mapv #(liita-tarkastukseen-liittyvat-merkinnat % liittyvat-merkinnat)
                                    (:pistemaiset-tarkastukset tarkastukset))})
 
+(defn- valmistele-merkinnat-kasittelyyn [merkinnat]
+  (ramppianalyysi/korjaa-virheelliset-merkinnat merkinnat))
+
 (defn reittimerkinnat-tarkastuksiksi
   "Reittimerkintämuunnin, joka käy reittimerkinnät läpi ja palauttaa mapin, jossa reittimerkinnät muutettu
    reitillisiksi ja pistemäisiksi Harja-tarkastuksiksi."
   [tr-osoitteelliset-reittimerkinnat]
-  (let [tarkastukset {:reitilliset-tarkastukset (reittimerkinnat-reitillisiksi-tarkastuksiksi tr-osoitteelliset-reittimerkinnat)
-                      :pistemaiset-tarkastukset (reittimerkinnat-pistemaisiksi-tarkastuksiksi tr-osoitteelliset-reittimerkinnat)}
+  (let [kasiteltavat-merkinnat (valmistele-merkinnat-kasittelyyn tr-osoitteelliset-reittimerkinnat)
+        tarkastukset {:reitilliset-tarkastukset (reittimerkinnat-reitillisiksi-tarkastuksiksi
+                                                  kasiteltavat-merkinnat)
+                      :pistemaiset-tarkastukset (reittimerkinnat-pistemaisiksi-tarkastuksiksi
+                                                  kasiteltavat-merkinnat)}
         liittyvat-merkinnat (filterv toiseen-merkintaan-liittyva-merkinta?
-                                     tr-osoitteelliset-reittimerkinnat)
+                                     kasiteltavat-merkinnat)
         tarkastukset-lomaketiedoilla (liita-tarkastuksiin-lomakkeelta-kirjatut-tiedot tarkastukset
                                                                                       liittyvat-merkinnat)]
     tarkastukset-lomaketiedoilla))
