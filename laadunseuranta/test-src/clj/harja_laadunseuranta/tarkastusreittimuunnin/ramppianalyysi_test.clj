@@ -36,5 +36,5 @@
 
     ;; Ramppeja ei pitäisi enää olla, koska testattavassa ajossa osa
     ;; pisteistä on virheellisesti geometrisoitunut rampeille
-    (is (not-any? #(tr-domain/ramppi? (get-in % [:tr-osoite :tie]))
+    (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
                   korjatut-merkinnat))))

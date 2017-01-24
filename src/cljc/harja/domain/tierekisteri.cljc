@@ -154,14 +154,9 @@
        (assoc kohde :kohdeosat (sort-by tiekohteiden-jarjestys (:kohdeosat kohde))))
      kohteet)))
 
-(defn ramppi?
+(defn tie-rampilla?
   "Tarkistaa onko annettu tienumero ramppi. Rampit tunnistetaan tienumeron
   perusteella ja ne ovat välillä 20001-29999."
   [tie]
   (and (> tie 20000)
        (< tie 30000)))
-
-(defn rampilla?
-  "Tarkistaa onko annettu tierekisteriosoite rampilla."
-  [{tie :tr-numero}]
-  (ramppi? tie))
