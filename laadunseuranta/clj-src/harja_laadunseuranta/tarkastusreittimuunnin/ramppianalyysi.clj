@@ -1,4 +1,4 @@
-(ns harja-laadunseuranta.tarkastusreittimuunnin.tarkastusreittimuunnin
+(ns harja-laadunseuranta.tarkastusreittimuunnin.ramppianalyysi
   "Tämä namespace tarjoaa funktion laadunseurannan mobiilityökalulla tehtyjen
    reittimerkintöjen ja niihin liittyvän geometrisoinnin korjaamiseen, mikäli
    geometrisointi on osunut virheellisesti rampille."
