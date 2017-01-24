@@ -18,6 +18,7 @@
              [harja.ui.edistymispalkki-testi]
              [harja.fmt-test]
              [harja.tiedot.tierekisteri.varusteet-test]
+             [harja.ui.kartta.infopaneelin-sisalto-test]
              ;; uusi testi tähän
              ))
 
@@ -39,6 +40,7 @@
            'harja.views.kartta.infopaneeli-test
            'harja.fmt-test
            'harja.tiedot.tierekisteri.varusteet-test
+           'harja.ui.kartta.infopaneelin-sisalto-test
             ;; uusi testi tähän
            )
 
