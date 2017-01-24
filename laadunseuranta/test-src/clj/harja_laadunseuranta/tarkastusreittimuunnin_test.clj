@@ -372,7 +372,8 @@
             :sivukaltevuus 4.0}))
 
     ;; Mittaukset menevät myös kantaan oikein
-    (let [_ (ls-core/tallenna-muunnetut-tarkastukset-kantaan (:db jarjestelma) tarkastukset {:id 1} urakka-id)
+    (let [_ (jdbc/with-db-transaction [tx (:db jarjestelma)]
+              (ls-core/tallenna-muunnetut-tarkastukset-kantaan tx tarkastukset {:id 1} urakka-id))
           tarkastus-kannassa (first (q-map
                                       "SELECT
                                        thm.tasaisuus AS \"talvihoito-tasaisuus\",
