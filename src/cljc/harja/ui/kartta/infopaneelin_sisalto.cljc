@@ -19,8 +19,9 @@
   lähinnä yhtenäisyyden vuoksi noudatamme täällä samaa tyyliä, kuin lomakkeen skeemoissa, eli määrittelemme
   skeemassa vain funktiot, millä data haetaan.
 
-  :hae funktioiden ei pidä palauttaa nil, vaan vaikka tyhjä merkkijono. Nil arvo tulkitaan
-  testeissä unohtuneeksi arvoksi, ja testi epäonnistuu.
+  :hae avaimen alla pitää skeemasta löytyä {:validointi-fn (..) :haku-fn (..)}. :validointi-fn
+  käytetään skeeman validointivaiheessa varmistamaan, että annetussa skeemassa on kaikki tarvittavat
+  tiedot saatavilla. Lopuksi :validointi-fn poistetaan, ja :hae avaimen alle asetetaan :haku-fn'n arvo.
 
   Jos arvoa, jonka mukaan asia halutaan järjestää, ei ole, pitäisi :jarjesta-fn arvon olla
   funktio, joka palauttaa aina falsen, eli (constantly false). Tässä tapauksessa false tulkitaan siten,
