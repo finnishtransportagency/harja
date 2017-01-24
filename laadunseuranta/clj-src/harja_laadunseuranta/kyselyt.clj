@@ -35,7 +35,7 @@
         havainnot (when (:havainnot merkinta)
                     (seq (.getArray (:havainnot merkinta))))]
     (-> merkinta
-        (assoc :laheiset-tr-osoitteet (map lue-laheinen-osoiterivi
+        (assoc :laheiset-tr-osoitteet (mapv lue-laheinen-osoiterivi
                                            (.getArray (:laheiset-tr-osoitteet merkinta))))
         ;; Jaetaan havainnot pistemäisiin ja jatkuviin
         (assoc :sijainti [(.x geometria) (.y geometria)]
