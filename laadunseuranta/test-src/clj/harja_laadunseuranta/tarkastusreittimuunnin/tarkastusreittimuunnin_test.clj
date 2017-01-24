@@ -1,10 +1,10 @@
-(ns harja-laadunseuranta.tarkastusreittimuunnin-test
+(ns harja-laadunseuranta.tarkastusreittimuunnin.tarkastusreittimuunnin-test
   (:require [clojure.test :refer :all]
             [harja
              [pvm :as pvm]
              [testi :refer :all]]
             [harja-laadunseuranta.core :as ls-core]
-            [harja-laadunseuranta.tarkastusreittimuunnin :refer [reittimerkinnat-tarkastuksiksi
+            [harja-laadunseuranta.tarkastusreittimuunnin.tarkastusreittimuunnin :refer [reittimerkinnat-tarkastuksiksi
                                                                  luo-kantaan-tallennettava-tarkastus]]
             [harja-laadunseuranta.testidata :as testidata]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
