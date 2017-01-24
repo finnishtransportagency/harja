@@ -138,6 +138,8 @@ SELECT
   i.lahettaja_puhelinnumero,
   i.lahettaja_sahkoposti,
 
+  i.tloik_tunniste AS "tloik-tunniste",
+
   it.id                                    AS kuittaus_id,
   it.kuitattu                              AS kuittaus_kuitattu,
   it.vakiofraasi                           AS kuittaus_vakiofraasi,

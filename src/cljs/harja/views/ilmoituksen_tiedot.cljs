@@ -37,6 +37,7 @@
          [yleiset/tietoja {}
           "Urakka: " (:urakkanimi ilmoitus)
           "Id: " (:ilmoitusid ilmoitus)
+          "Tunniste: " (:tloik-tunniste ilmoitus)
           "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
           "Yhteydenottopyyntö:" (if (:yhteydenottopyynto ilmoitus) "Kyllä" "Ei")
           "Sijainti: " (tr-domain/tierekisteriosoite-tekstina (:tr ilmoitus))
