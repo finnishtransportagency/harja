@@ -53,7 +53,7 @@
 
 (deftest tarkista-uuden-ilmoituksen-tallennus
   (tuo-ilmoitus)
-  (let [ilmoitukset (hae-ilmoitukset-mappina-idlla-123456789)
+  (let [ilmoitukset (hae-testi-ilmoitukset)
         ilmoitus (first ilmoitukset)]
     (is (= 1 (count ilmoitukset)) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
     (is (= (pvm/pvm-aika (:ilmoitettu ilmoitus)) "29.9.2015 17:49"))
@@ -81,10 +81,10 @@
 
 (deftest tarkista-ilmoituksen-paivitys
   (tuo-ilmoitus)
-  (is (= 1 (count (hae-ilmoitukset-idlla-123456789)))
+  (is (= 1 (count (hae-testi-ilmoitukset)))
       "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
   (tuo-ilmoitus)
-  (is (= 1 (count (hae-ilmoitukset-idlla-123456789)))
+  (is (= 1 (count (hae-testi-ilmoitukset)))
       "Kun viesti on tuotu toiseen kertaan, on päivitetty olemassa olevaa ilmoitusta eikä luotu uutta.")
   (poista-ilmoitus))
 
@@ -136,7 +136,7 @@
         (is (= "valitetty" (z/xml1-> data :kuittaustyyppi z/text)) "Kuittauksen tyyppi on oikea.")
         (is (empty? (z/xml1-> data :virhe z/text)) "Virheitä ei ole raportoitu."))
 
-      (is (= 1 (count (hae-ilmoitukset-idlla-123456789)))
+      (is (= 1 (count (hae-testi-ilmoitukset)))
           "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä")
 
       (let [{:keys [status body]} @ilmoitushaku]
@@ -164,7 +164,7 @@
       (is (= "Tiedoilla ei voitu päätellä urakkaa." (z/xml1-> data :virhe z/text))
           "Virheitä ei ole raportoitu."))
 
-    (is (= 0 (count (hae-ilmoitukset-idlla-123456789))) "Tietokannasta ei löydy ilmoitusta T-LOIK:n id:llä")
+    (is (= 0 (count (hae-testi-ilmoitukset))) "Tietokannasta ei löydy ilmoitusta T-LOIK:n id:llä")
     (poista-ilmoitus)))
 
 (deftest ilmoittaja-kuuluu-urakoitsijan-organisaatioon-merkitaan-vastaanotetuksi
@@ -213,7 +213,8 @@
 
 (deftest tarkista-uusi-ilmoitus-ilman-tienumeroa
   (tuo-ilmoitus-ilman-tienumeroa)
-  (let [ilmoitukset (hae-ilmoitukset-idlla-123456789)]
+  (let [ilmoitukset (hae-testi-ilmoitukset)
+        ilmoitus (first ilmoitukset)]
     (is (= 1 (count ilmoitukset)) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
-    (is (= "2015-09-29 17:49:45.0" (str (nth (first ilmoitukset) 3))) "Ilmoitusaika on parsittu oikein"))
+    (is (is (= (pvm/pvm-aika (:ilmoitettu ilmoitus)) "29.9.2015 17:49")) "Ilmoitusaika on parsittu oikein"))
   (poista-ilmoitus))
