@@ -20,7 +20,8 @@
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [cheshire.core :as cheshire]
-            [harja.kyselyt.konversio :as konv])
+            [harja.kyselyt.konversio :as konv]
+            [harja.pvm :as pvm])
   (:import (org.postgis PGgeometry)))
 
 (def kayttaja "yit-rakennus")
@@ -55,6 +56,7 @@
   (let [ilmoitukset (hae-ilmoitukset-mappina-idlla-123456789)
         ilmoitus (first ilmoitukset)]
     (is (= 1 (count ilmoitukset)) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
+    (is (= (pvm/pvm-aika (:ilmoitettu ilmoitus)) "29.9.2015 17:49"))
     (is (= (:yhteydenottopyynto ilmoitus) false))
     (is (= (:tila ilmoitus) "kuittaamaton"))
     (is (= (:tloik_tunniste ilmoitus) "UV-1509-1a"))
@@ -67,6 +69,7 @@
     (is (= (:ilmoitustyyppi ilmoitus) "toimenpidepyynto"))
     (is (= (:ilmoittaja_sahkoposti ilmoitus) "uuno.urakoitsija@example.com"))
     (is (= (:urakka ilmoitus) 4))
+    (is (= (:tr_numero ilmoitus) 4))
     (is (= (:lahettaja_etunimi ilmoitus) "Pekka"))
     (is (= (:lahettaja_sukunimi ilmoitus) "Päivystäjä"))
     (is (= (:lahettaja_sahkoposti ilmoitus) "pekka.paivystaja@livi.fi"))
