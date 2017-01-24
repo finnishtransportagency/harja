@@ -226,14 +226,29 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION laheiset_osoitteet_pisteelle(piste GEOMETRY, tarkkuus INTEGER)
-  RETURNS record AS $$
-  SELECT *
-    FROM (SELECT tie,osa,ajorata,geom,ST_Distance(piste, geom) as d
-            FROM tr_osan_ajorata
-	   WHERE geom IS NOT NULL AND
-           	 ST_Intersects(piste, envelope)
-	  ORDER BY d ASC) x WHERE x.d < tarkkuus;
-$$ LANGUAGE SQL IMMUTABLE;
+  RETURNS laheinen_osoiterivi[] AS $$
+DECLARE
+  r RECORD;
+  lr laheinen_osoiterivi;
+  kohta tr_osan_kohta;
+  rivit laheinen_osoiterivi[];
+BEGIN
+  rivit := ARRAY[]::laheinen_osoiterivi[];
+  FOR r IN SELECT tie,osa,ajorata,geom,ST_Distance(piste, geom) as d
+                FROM tr_osan_ajorata
+               WHERE geom IS NOT NULL AND
+                     ST_Intersects(piste, envelope)
+	      ORDER BY d ASC
+  LOOP
+    IF r.d <= tarkkuus THEN
+      kohta := laske_tr_osan_kohta(r.geom, piste);
+      lr := (r.tie, r.osa, kohta.etaisyys, r.ajorata, r.d);
+      rivit := rivit || lr;
+    END IF;
+  END LOOP;
+  RETURN rivit;
+END;
+$$ LANGUAGE plpgsql;
 
 
 CREATE OR REPLACE FUNCTION tierekisteriosoite_pisteelle(

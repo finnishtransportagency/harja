@@ -1,7 +1,8 @@
 (ns harja-laadunseuranta.kyselyt
   (:require [jeesql.core :refer [defqueries]]
             [harja-laadunseuranta.tietokanta :as tietokanta]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clojure.string :as str]))
 
 (defqueries "harja_laadunseuranta/kyselyt/kyselyt.sql")
 
@@ -11,6 +12,17 @@
 (defn- suodata-pistemainen-havainto [havainnot jatkuvat-vakiohavainto-idt]
   (first (filterv (comp not jatkuvat-vakiohavainto-idt) havainnot)))
 
+(defn- lue-laheinen-osoiterivi [osoite]
+  "Lukee sprocin palauttaman laheinen_osoiterivi arvon tekstimuodosta, jossa on tie, osa, etaisyys,
+  ajorata ja d. \"(18637,1,204,1,8.13394232930644)\""
+  [osoite]
+  (let [[tie osa et ajr d :as arvot]
+        (and osoite
+             (str/starts-with? osoite "(")
+             (str/ends-with? osoite ")")
+             (str/split (str/replace osoite #"\(|\)" "") #","))]
+    ;; FIXME: muuta mapiksi ja parsi numerot
+    arvot))
 (defn- kasittele-kantamerkinta [merkinta db]
   (let [jatkuvat-vakiohavaintoidt (into #{} (map :id (hae-jatkuvat-vakiohavainto-idt db)))
         geometria (when (:sijainti merkinta)
@@ -23,6 +35,7 @@
                :jatkuvat-havainnot (suodata-jatkuvat-havainnot havainnot jatkuvat-vakiohavaintoidt)
                :pistemainen-havainto (suodata-pistemainen-havainto havainnot jatkuvat-vakiohavaintoidt))
         (dissoc :havainnot))))
+
 
 (defn hae-reitin-merkinnat-tieosoitteilla
   "Hakee reittimerkinnät ja niiden projisoidun tieverkon osoitteet."

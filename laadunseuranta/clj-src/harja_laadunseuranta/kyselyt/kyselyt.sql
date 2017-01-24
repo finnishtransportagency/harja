@@ -1,4 +1,3 @@
-
 -- name: tallenna-reittimerkinta!
 INSERT INTO tarkastusreitti
 (id, pistetyyppi, tarkastusajo, aikaleima, sijainti, sijainti_tarkkuus, kitkamittaus, havainnot, lampotila,
@@ -70,9 +69,7 @@ SELECT
   x.polyavyys,
   x.sivukaltevuus,
   x.kiinteys,
-  (x.trosoite).tie,
-  (x.trosoite).aosa,
-  (x.trosoite).aet,
+  x.trosoite,
   x.laadunalitus,
   x."liittyy-merkintaan",
   x."kayttajan-syottama-tie",
@@ -102,7 +99,7 @@ FROM (SELECT
         t.tr_alkuetaisyys as "kayttajan-syottama-aet",
         t.tr_loppuosa as "kayttajan-syottama-losa",
         t.tr_loppuetaisyys as "kayttajan-syottama-let",
-        CAST(yrita_tierekisteriosoite_pisteelle2(t.sijainti, CAST(:treshold AS INTEGER)) AS tr_osoite) AS trosoite,
+        laheiset_osoitteet_pisteelle(t.sijainti, t.sijainti_tarkkuus+5) AS trosoite,
         t.laadunalitus
       FROM tarkastusreitti t
         INNER JOIN tarkastusajo a ON a.id = t.tarkastusajo
