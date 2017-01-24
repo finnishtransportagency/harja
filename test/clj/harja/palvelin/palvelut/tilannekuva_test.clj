@@ -250,8 +250,25 @@
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? (map
                                                        #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
                                                        (:ilmoitukset vastaus))))
-      #_(is (paneeli/skeeman-luonti-onnistuu-kaikille? :paallystys (:paallystys vastaus)))
-      #_(is (paneeli/skeeman-luonti-onnistuu-kaikille? :paikkaus (:paikkaus vastaus)))
+      (let [ ;; Tämä transducer on oleellinen paneelin sisällön kannalta,
+            ;; mutta löytyy valitettavasti tällä hetkellä vain .cljs puolelta.
+            ;; Siksi kopiotu tänne.
+            ;; Katso harja.tiedot.urakka.yllapitokohteet/yllapitokohteet-kartalle
+            yllapito-xf (comp
+                          (mapcat (fn [kohde]
+                                    (keep (fn [kohdeosa]
+                                            (assoc kohdeosa :yllapitokohde (dissoc kohde :kohdeosat)
+                                                            :tyyppi-kartalla (:yllapitokohdetyotyyppi kohde)
+                                                            :tila-kartalla (:tila-kartalla kohde)
+                                                            :yllapitokohde-id (:id kohde)))
+                                          (:kohdeosat kohde))))
+                          (keep #(and (:sijainti %) %)))]
+        (is (paneeli/skeeman-luonti-onnistuu-kaikille?
+              :paallystys
+              (into [] yllapito-xf (:paallystys vastaus))))
+        (is (paneeli/skeeman-luonti-onnistuu-kaikille?
+              :paikkaus
+              (into [] yllapito-xf (:paikkaus vastaus)))))
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama (:laatupoikkeamat vastaus)))
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :turvallisuuspoikkeama (:turvallisuuspoikkeamat vastaus)))))
 

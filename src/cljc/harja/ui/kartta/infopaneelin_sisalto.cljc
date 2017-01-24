@@ -133,8 +133,8 @@
         paikkaus-valmis :paikkaus-loppupvm
         kohde-valmis :kohde-valmispvm]
     {:tyyppi (:yllapitokohdetyotyyppi (:yllapitokohde yllapitokohdeosa))
-     :jarjesta-fn (let [fn #(get-in yllapitokohdeosa [:yllapitokohde aloitus])]
-                    (if (fn)
+     :jarjesta-fn (let [fn #(get-in % [:yllapitokohde aloitus])]
+                    (if (fn yllapitokohdeosa)
                       fn
                       ;; Ylläpitokohteella ei ole välttämättä alkupäivämäärää.
                       ;; Tällöin haluamme järjestää kohteen listan alimmaiseksi.
@@ -155,8 +155,7 @@
                :hae (hakufunktio :yllapitokohde #(tr-domain/tierekisteriosoite-tekstina (:yllapitokohde %)))}
               {:otsikko "Kohteen pituus (m)" :tyyppi :string
                :hae (hakufunktio [[:yllapitokohde :pituus]] #(fmt/desimaaliluku-opt (get-in % [:yllapitokohde :pituus]) 0))}
-              {:otsikko "Alikohde" :tyyppi :string
-               :hae #(:nimi %)}
+              {:otsikko "Alikohde" :tyyppi :string :nimi :nimi}
               {:otsikko "Alikohteen osoite" :tyyppi :string
                :hae (hakufunktio
                       #(some true? (map (partial contains? %) [:numero :tr-numero :tie]))
