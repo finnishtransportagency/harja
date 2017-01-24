@@ -45,13 +45,14 @@
 (def karttataso-turvallisuuspoikkeamat (atom false))
 
 (defonce turvallisuuspoikkeamat-kartalla
-  (reaction (when @karttataso-turvallisuuspoikkeamat
-              (kartalla-esitettavaan-muotoon
-               @haetut-turvallisuuspoikkeamat
-               @valittu-turvallisuuspoikkeama
-               nil
-               (comp (keep #(and (:sijainti %) %)) ;; vain ne, joissa on sijainti
-                     (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama)))))))
+  (reaction
+   (let [valittu-turvallisuuspoikkeama-id (:id @valittu-turvallisuuspoikkeama)]
+     (when @karttataso-turvallisuuspoikkeamat
+       (kartalla-esitettavaan-muotoon
+        @haetut-turvallisuuspoikkeamat
+        #(= valittu-turvallisuuspoikkeama-id (:id %))
+        (comp (keep #(and (:sijainti %) %)) ;; vain ne, joissa on sijainti
+              (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama))))))))
 
 (defn kasaa-tallennettava-turpo
   [tp]
@@ -77,4 +78,3 @@
 (defn turvallisuuspoikkeaman-tallennus-onnistui
   [turvallisuuspoikkeamat]
   (reset! haetut-turvallisuuspoikkeamat turvallisuuspoikkeamat))
-

@@ -29,9 +29,7 @@
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
-(use-fixtures :once (compose-fixtures
-                      tietokanta-fixture
-                      jarjestelma-fixture))
+(use-fixtures :once jarjestelma-fixture)
 
 (defn lisaa-reittimerkinnoille-mockattu-tieosoite
   "Mock-funktio, joka lisää tiemerkinnöille tierekisteriosoitteet ilman oikeaa kannassa olevaa tieverkkoa.

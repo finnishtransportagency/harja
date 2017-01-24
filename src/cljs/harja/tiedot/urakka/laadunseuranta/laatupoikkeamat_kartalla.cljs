@@ -9,13 +9,13 @@
 (defonce karttataso-laatupoikkeamat (atom false))
 
 (defonce laatupoikkeamat-kartalla
-         (reaction
-           @laatupoikkeamat/urakan-laatupoikkeamat
-           (when @karttataso-laatupoikkeamat
-             (kartalla-esitettavaan-muotoon
-               @laatupoikkeamat/urakan-laatupoikkeamat
-               @laatupoikkeamat/valittu-laatupoikkeama
-               nil
-               (comp
-                 (filter #(not (nil? (:sijainti %))))
-                 (map #(assoc % :tyyppi-kartalla :laatupoikkeama)))))))
+  (reaction
+   (let [laatupoikkeamat @laatupoikkeamat/urakan-laatupoikkeamat
+         valittu-laatupoikkeama-id (:id @laatupoikkeamat/valittu-laatupoikkeama)]
+     (when @karttataso-laatupoikkeamat
+       (kartalla-esitettavaan-muotoon
+        laatupoikkeamat
+        #(= valittu-laatupoikkeama-id (:id %))
+        (comp
+         (filter #(not (nil? (:sijainti %))))
+         (map #(assoc % :tyyppi-kartalla :laatupoikkeama))))))))

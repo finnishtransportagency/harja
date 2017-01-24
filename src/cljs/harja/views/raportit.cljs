@@ -609,7 +609,7 @@
 (defn hallintayksikko-ja-urakkatyyppi [v-hal v-ur-tyyppi]
   [:span
    [yleiset/livi-pudotusvalikko
-    {:valitse-fn nav/valitse-hallintayksikko
+    {:valitse-fn nav/valitse-hallintayksikko!
      :valinta    v-hal
      :class      "raportti-alasveto"
      :format-fn  (fnil hy/elynumero-ja-nimi {:nimi (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
