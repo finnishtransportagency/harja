@@ -21,8 +21,13 @@
              (str/starts-with? osoite "(")
              (str/ends-with? osoite ")")
              (str/split (str/replace osoite #"\(|\)" "") #","))]
-    ;; FIXME: muuta mapiksi ja parsi numerot
-    arvot))
+    ;; TODO Testaa miten toimii jos sproc ei löydä mitään.
+    {:tie (Integer/parseInt tie)
+     :aosa (Integer/parseInt osa)
+     :aet (Float/parseFloat et)
+     :ajorata (Integer/parseInt ajr)
+     :etaisyys-gps-pisteesta (Float/parseFloat d)}))
+
 (defn- kasittele-kantamerkinta [merkinta db]
   (let [jatkuvat-vakiohavaintoidt (into #{} (map :id (hae-jatkuvat-vakiohavainto-idt db)))
         geometria (when (:sijainti merkinta)
@@ -30,6 +35,8 @@
         havainnot (when (:havainnot merkinta)
                     (seq (.getArray (:havainnot merkinta))))]
     (-> merkinta
+        (assoc :laheiset-tr-osoitteet (map lue-laheinen-osoiterivi
+                                           (.getArray (:laheiset-tr-osoitteet merkinta))))
         ;; Jaetaan havainnot pistemäisiin ja jatkuviin
         (assoc :sijainti [(.x geometria) (.y geometria)]
                :jatkuvat-havainnot (suodata-jatkuvat-havainnot havainnot jatkuvat-vakiohavaintoidt)

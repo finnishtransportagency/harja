@@ -69,7 +69,7 @@ SELECT
   x.polyavyys,
   x.sivukaltevuus,
   x.kiinteys,
-  x.trosoite,
+  x."laheiset-tr-osoitteet",
   x.laadunalitus,
   x."liittyy-merkintaan",
   x."kayttajan-syottama-tie",
@@ -99,7 +99,7 @@ FROM (SELECT
         t.tr_alkuetaisyys as "kayttajan-syottama-aet",
         t.tr_loppuosa as "kayttajan-syottama-losa",
         t.tr_loppuetaisyys as "kayttajan-syottama-let",
-        laheiset_osoitteet_pisteelle(t.sijainti, t.sijainti_tarkkuus+5) AS trosoite,
+        laheiset_osoitteet_pisteelle(t.sijainti, t.sijainti_tarkkuus+5) AS "laheiset-tr-osoitteet",
         t.laadunalitus
       FROM tarkastusreitti t
         INNER JOIN tarkastusajo a ON a.id = t.tarkastusajo
