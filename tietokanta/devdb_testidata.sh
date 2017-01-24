@@ -10,3 +10,4 @@ psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U harj
 psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U harja harja -c "ALTER USER harjatest WITH SUPERUSER;"
 psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U harja harja -c "CREATE DATABASE harjatest WITH TEMPLATE harja OWNER harjatest;"
 psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U harja harja -c "CREATE DATABASE harjatest_template WITH TEMPLATE harjatest OWNER harjatest;"
+psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U harja harja -c "CREATE DATABASE temp OWNER harjatest;"
