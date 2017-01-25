@@ -1,4 +1,5 @@
--- Tämä tarkastusajo on ajettu valtatietä numero 4 pohjoiseen päin Oulun seudulla
+-- Tämä on oikea tarkastusajo, joka on ajettu valtatietä numero 4 pohjoiseen päin Oulun seudulla
+-- (osa sijaintipisteistä projisoituu lähellä oleville rampeille, vaikka todellisuudessa niillä ei käyty)
 INSERT INTO tarkastusajo(id, ulkoinen_id, luoja, luotu, paatetty, tyyppi) VALUES (754, 0, 5, '2017-01-19 07:41:19.127216', '2017-01-19 07:46:07.392841', null);
 INSERT INTO tarkastusreitti(id, sijainti, pistetyyppi, tarkastusajo, aikaleima, vastaanotettu, kitkamittaus, lampotila, talvihoito_tasaisuus, lumisuus, kuvaus, kuva, havainnot, polyavyys, sivukaltevuus, kiinteys, laadunalitus, soratie_tasaisuus, sijainti_tarkkuus) VALUES (2016, 'POINT(430925.930308596 7198503.58736702)', 0, 754, '2017-01-19 07:41:19', '2017-01-19 07:41:21', null, null, null, null, null, null, '{null}', null, null, null, false, null, 5);
 INSERT INTO tarkastusreitti(id, sijainti, pistetyyppi, tarkastusajo, aikaleima, vastaanotettu, kitkamittaus, lampotila, talvihoito_tasaisuus, lumisuus, kuvaus, kuva, havainnot, polyavyys, sivukaltevuus, kiinteys, laadunalitus, soratie_tasaisuus, sijainti_tarkkuus) VALUES (2017, 'POINT(430918.924886477 7198522.39708705)', 0, 754, '2017-01-19 07:41:20', '2017-01-19 07:41:21', null, null, null, null, null, null, '{null}', null, null, null, false, null, 5);
