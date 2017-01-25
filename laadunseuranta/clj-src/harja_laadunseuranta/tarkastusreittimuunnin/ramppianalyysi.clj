@@ -30,8 +30,10 @@
     (:ramppien-alut tulos)))
 
 (defn projisoi-ramppi-moottoritielle [ramppia-edeltava-merkina rampin-merkinnat]
-  rampin-merkinnat
-  )
+  (log/debug "PROJISOIDAAN RAMPPI TAKAISIN MOOTTORITIELLE!")
+  (log/debug "EDELTÄVÄ: " (pr-str ramppia-edeltava-merkina))
+  (log/debug "RAMPPI: " (pr-str ramppia-edeltava-merkina))
+  rampin-merkinnat)
 
 (defn- korjaa-vahapatoiset-rampit
   "Ottaa reittimerkinnät ramppitiedolla sekä indeksin, joissa siirrytään rampille.
@@ -69,6 +71,7 @@
         ;; Käydään jokainen rampille siirtymä erikseen läpi ja korjataan tarvittaessa.
         korjatut-merkinnat (reduce (fn [edellinen-tulos seuraava-indeksi]
                                      (korjaa-vahapatoiset-rampit edellinen-tulos seuraava-indeksi 5))
+                                   merkinnat-ramppitiedoilla
                                    alkavien-ramppien-indeksit)]
     korjatut-merkinnat))
 
