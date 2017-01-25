@@ -59,35 +59,24 @@
 
 
 (defn- hae-tarkastukset [db parametrit]
-  (let [ch (async/chan)]
-    (async/thread
-      ;; FIXME: kursorilla
-      (async/>!! ch (into []
-                          (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
-                                (map #(konv/string->keyword % :tyyppi)))
-                          (q/hae-tarkastukset db parametrit))))
-    ch))
+  (kursori/hae-kanavaan (async/chan 32 (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
+                                             (map #(konv/string->keyword % :tyyppi))))
+                        db q/hae-tarkastukset parametrit))
 
 (defn- hae-turvallisuuspoikkeamat [db parametrit]
-  (let [ch (async/chan)]
-    (async/thread
-      (async/>!! ch (into []
-                          (comp (geo/muunna-pg-tulokset :sijainti)
-                                (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama))
-                                (map #(konv/array->keyword-set % :tyyppi)))
-                          (q/hae-turvallisuuspoikkeamat db parametrit))))
-    ch))
+  (kursori/hae-kanavaan (async/chan 32 (comp (geo/muunna-pg-tulokset :sijainti)
+                                             (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama))
+                                             (map #(konv/array->keyword-set % :tyyppi))))
+                        db q/hae-turvallisuuspoikkeamat parametrit))
 
 (defn- hae-ilmoitukset [db parametrit]
-  (let [ch (async/chan)]
-    (async/thread
-      (async/>!! ch (konv/sarakkeet-vektoriin
-                     (into []
-                           (comp tilannekuva/ilmoitus-xf
-                                 (map #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))))
-                           (q/hae-ilmoitukset db parametrit))
-                     {:kuittaus :kuittaukset})))
-    ch))
+  (async/thread
+    (konv/sarakkeet-vektoriin
+     (into []
+           (comp tilannekuva/ilmoitus-xf
+                 (map #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))))
+           (q/hae-ilmoitukset db parametrit))
+     {:kuittaus :kuittaukset})))
 
 (def ^{:private true
        :doc "Määrittelee kaikki kyselyt mitä tienäkymään voi hakea"}
@@ -97,18 +86,32 @@
    :tarkastukset #'hae-tarkastukset
    :turvallisuuspoikkeamat #'hae-turvallisuuspoikkeamat})
 
+(def +haun-max-kesto+ 20000)
 
 (defn- hae-tienakymaan [db user valinnat]
   (when-not (roolit/tilaajan-kayttaja? user)
     (throw+ (roolit/->EiOikeutta "vain tilaajan käyttäjille")))
   (let [parametrit (hakuparametrit valinnat)]
     (reset! debug-hakuparametrit parametrit)
-    (http-palvelin/async-stream
-     (async/to-chan [{:foo 1} {:bar 2} {:baz 3}])
-     #_(async/merge
-      (vals (fmap (fn [haku-fn]
-                    (haku-fn db parametrit))
-                  tienakyma-haut))))))
+
+    (let [timeout (async/timeout +haun-max-kesto+)
+          kanavat (vals (fmap (fn [haku-fn]
+                                (haku-fn db parametrit))
+                              tienakyma-haut))
+          tulos-ch (async/merge kanavat)
+          lue! #(async/alts!! [timeout tulos-ch])]
+      (try
+        (loop [acc []
+               [v ch] (lue!)]
+          (if (= ch timeout)
+            (do (log/warn "Aika loppui haettaessa tienäkymän tietoja")
+                acc)
+            (if v
+              (recur (conj acc v) (lue!))
+              acc)))
+        (finally
+          (doseq [k kanavat]
+            (async/close! k)))))))
 
 (defrecord Tienakyma []
   component/Lifecycle
@@ -116,7 +119,8 @@
     (julkaise-palvelut
      http
      :hae-tienakymaan (fn [user valinnat]
-                        (hae-tienakymaan db user valinnat)))
+                        (http-palvelin/async
+                         (hae-tienakymaan db user valinnat))))
     this)
 
   (stop [{http :http-palvelin :as this}]

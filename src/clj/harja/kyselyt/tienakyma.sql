@@ -39,7 +39,6 @@ WHERE sijainti IS NOT NULL AND
       (t.aika BETWEEN :alku AND :loppu)
 
 -- name: hae-ilmoitukset
--- fetch-size: 64
 SELECT i.id, i.urakka, i.ilmoitusid, i.ilmoitettu,
        i.valitetty, i.yhteydenottopyynto, i.otsikko,
        i.paikankuvaus, i.lisatieto, i.tila, i.ilmoitustyyppi,

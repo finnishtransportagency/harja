@@ -92,12 +92,11 @@
 
   HakuValmis
   (process-event [{tulokset :tulokset} tienakyma]
-    (let [kaikki-tulokset (into []
-                                (comp (mapcat val)
-                                      (map-indexed (fn [i tulos]
-                                                     (assoc tulos :idx i))))
-                                tulokset)]
-      (log "Tienäkymän haku löysi: " (pr-str (fmap count tulokset)))
+    (let [kaikki-tulokset (vec
+                           (map-indexed (fn [i tulos]
+                                          (assoc tulos :idx i))
+                                        tulokset))]
+      (log "Tienäkymän haku löysi " (count kaikki-tulokset) " tulosta")
       (kartalle
        (assoc tienakyma
               :kaikki-tulokset kaikki-tulokset
