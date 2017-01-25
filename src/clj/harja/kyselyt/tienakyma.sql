@@ -17,7 +17,8 @@ SELECT t.id,
        JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
        JOIN toimenpidekoodi tpk3 ON tpk.emo = tpk3.id
        JOIN kayttaja k ON t.luoja = k.id
-       LEFT JOIN reittipiste rp ON t.id = rp.toteuma
+       LEFT JOIN reittipiste rp ON (t.id = rp.toteuma AND
+                                    rp.aika BETWEEN :alku AND :loppu)
 
  WHERE ST_Intersects(t.envelope, :sijainti)
    AND ST_Intersects(ST_CollectionHomogenize(t.reitti), :sijainti)
