@@ -89,7 +89,7 @@
                     korjatut-merkinnat)))))
 
 (deftest ramppianalyysi-ei-tee-mitaan-kun-ajetaan-rampille
-  (let [tarkastusajo-id 668 ;; Ajetaan rampille ja takaisin tielle 4
+  (let [tarkastusajo-id 668 ;; Ajetaan tieltä 4 rampille ja takaisin tielle 4
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
                                                           :treshold 100})]
