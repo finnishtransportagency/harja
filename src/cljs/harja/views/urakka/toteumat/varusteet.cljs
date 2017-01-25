@@ -294,7 +294,6 @@
              :as app}]
 
       [:span
-       [debug app]
        (when virhe
          (yleiset/virheviesti-sailio virhe (fn [_] (e! (v/->VirheKasitelty)))))
        [kartta/kartan-paikka]
