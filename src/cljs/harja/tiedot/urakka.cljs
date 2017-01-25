@@ -44,7 +44,7 @@
 (defonce valitun-toimenpideinstanssin-koodi (atom nil))
 
 (defonce valittu-toimenpideinstanssi
-  (reaction
+  (reaction-writable
    (let [koodi @valitun-toimenpideinstanssin-koodi
          toimenpideinstanssit @urakan-toimenpideinstanssit]
      (or (and koodi (first (filter #(= (:t3_koodi %) koodi) toimenpideinstanssit)))
