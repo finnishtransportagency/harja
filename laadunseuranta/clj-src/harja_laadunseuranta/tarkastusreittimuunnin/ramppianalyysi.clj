@@ -125,7 +125,9 @@
                                 alkavien-ramppien-indeksit)]
     korjatut-rampit))
 
-(defn- merkinnat-erkanevat-rampilla-liian-kauas? [ramppia-edeltava-merkinta rampin-merkinnat treshold]
+(defn- merkinnat-erkanevat-rampilla-liian-kauas?
+  "Palauttaa true jos rampin merkinnät erkanavat ramppia edeltävästä tiestä liian kauas"
+  [ramppia-edeltava-merkinta rampin-merkinnat treshold]
   (let [edellisen-merkinnan-tie (get-in ramppia-edeltava-merkinta [:tr-osoite :tie])]
     (doseq [merkinta rampin-merkinnat]
       (let [lahin-osuma-edellisella-tiella (laheisten-pisteiden-lahin-osuma-tielle merkinta edellisen-merkinnan-tie)]
@@ -174,7 +176,9 @@
   [merkinnat]
   (log/debug "Projisoidaan virheelliset rampit uudelleen")
   (log/debug "Rampeille siirtymisiä havaittu: "
-             (count (maarittele-alkavien-ramppien-indeksit merkinnat)) "kpl.")
+             (count (-> merkinnat
+                        (lisaa-merkintoihin-ramppitiedot)
+                        (maarittele-alkavien-ramppien-indeksit))) "kpl.")
   (as-> merkinnat m
         ;; Vain muutama piste rampilla -> projisoi uudelleen
         (korjaa-vahapatoiset-rampit m 5)
