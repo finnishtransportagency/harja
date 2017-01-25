@@ -14,27 +14,22 @@
             :type "file"
             :accept "image/*"
             :capture true
+            ;; on-change kutsutaan kun käyttäjä on valinnut kuvan
+            ;; Yleensä tätä _ei_ kutsuta silloin kun käyttäjä
+            ;; peruu kuvan ottamisen, tällöinhän kentän arvo ei muutu.
+
+            ;; Toisaalta jos käyttäjä on aiemmin ottanut kuvan,
+            ;; ja tämän jälkeen lähtee ottamaan uutta ja peruu oton,
+            ;; niin kentän arvoksi tulee nil ja on-change laukeaa.
+            ;; Puhdasta "kuvanotto peruttu" eventtiä ei ilmeisesti
+            ;; ole olemassa.
             :on-change on-change}]])
 
-(defn kamerakomponentti [esikatselukuva-atom]
-  [:div.kameranappi {:on-click tiedot/ota-kuva}
+(defn kamerakomponentti [{:keys [esikatselukuva-atom kuvaa-otetaan-atom]}]
+  [:div.kameranappi {:on-click #(tiedot/ota-kuva kuvaa-otetaan-atom)}
    [:div.kameranappi-sisalto
     (if @esikatselukuva-atom
      [:img {:width "100px" :src @esikatselukuva-atom}]
      [:div.kamera-eikuvaa
       [kuvat/svg-sprite "kamera-24"]
       "Lisää kuva"])]])
-
-(defonce testikuva (atom nil))
-
-(defcard kamerakomponentti-card
-  "Kamerakomponentti"
-  (fn [kuva _]
-    (reagent/as-element
-      [:div
-       [:img {:src (or @kuva "")
-              :width "500px"
-              :height "400px"}]
-       [kamerakomponentti kuva]]))
-  testikuva
-  {:watch-atom true})

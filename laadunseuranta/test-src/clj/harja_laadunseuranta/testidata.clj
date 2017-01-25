@@ -127,6 +127,7 @@
     :jatkuvat-havainnot [3]
     :soratie-tasaisuus 1
     :kiinteys 3}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
    {:id 3 :sijainti [466089.5999816895 7230916.000024414]
     :jatkuvat-havainnot [3]}
    {:id 4 :sijainti [466409.5999816895 7230996.000024414]
@@ -135,9 +136,34 @@
     :jatkuvat-havainnot [3]}
    {:id 6 :sijainti [467257.5999816895 7231252.000024414]
     :jatkuvat-havainnot [3]}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
    {:id 7 :sijainti [467545.5999816895 7231332.000024414]
     :jatkuvat-havainnot [3]
     :soratie-tasaisuus 3}])
+
+(def tarkastus-jossa-soratie-tasaisuus-jatkuu
+  "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
+  [{:id 2 :sijainti [465641.5999816895 7230780.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1}
+   {:id 3 :sijainti [466089.5999816895 7230916.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1}
+   {:id 4 :sijainti [466409.5999816895 7230996.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
+   {:id 5 :sijainti [467009.5999816895 7231180.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 2}
+   {:id 6 :sijainti [467257.5999816895 7231252.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 2}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
+   {:id 7 :sijainti [467545.5999816895 7231332.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 3
+    :polyavyys 1}])
 
 (def tarkastus-jossa-soratie-kiinteys
   "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
@@ -145,6 +171,7 @@
     :jatkuvat-havainnot [3]
     :soratie-tasaisuus 1
     :kiinteys 3}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
    {:id 3 :sijainti [466089.5999816895 7230916.000024414]
     :jatkuvat-havainnot [3]}
    {:id 4 :sijainti [466409.5999816895 7230996.000024414]
@@ -153,10 +180,38 @@
     :jatkuvat-havainnot [3]}
    {:id 6 :sijainti [467257.5999816895 7231252.000024414]
     :jatkuvat-havainnot [3]}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
    {:id 7 :sijainti [467545.5999816895 7231332.000024414]
     :jatkuvat-havainnot [3]
     :kiinteys 3
     :soratie-tasaisuus 3}])
+
+(def tarkastus-jossa-soratie-kiinteys-jatkuu
+  "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
+  [{:id 2 :sijainti [465641.5999816895 7230780.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1
+    :kiinteys 3}
+   {:id 3 :sijainti [466089.5999816895 7230916.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1
+    :kiinteys 3}
+   {:id 4 :sijainti nil ;; GPS sekoaa
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1
+    :kiinteys 3}
+   {:id 5 :sijainti nil
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1
+    :kiinteys 3}
+   {:id 6 :sijainti [467257.5999816895 7231252.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1
+    :kiinteys 3}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
+   {:id 7 :sijainti [467545.5999816895 7231332.000024414]
+    :jatkuvat-havainnot [3]
+    :soratie-tasaisuus 1}])
 
 (def tarkastus-jossa-soratie-polyavyys
   "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
@@ -165,15 +220,18 @@
     :soratie-tasaisuus 1
     :polyavyys 1
     :kiinteys 3}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
    {:id 3 :sijainti [466089.5999816895 7230916.000024414]
     :jatkuvat-havainnot [3]
     :polyavyys 3}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
    {:id 4 :sijainti [466409.5999816895 7230996.000024414]
     :jatkuvat-havainnot [3]}
    {:id 5 :sijainti [467009.5999816895 7231180.000024414]
     :jatkuvat-havainnot [3]}
    {:id 6 :sijainti [467257.5999816895 7231252.000024414]
     :jatkuvat-havainnot [3]}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
    {:id 7 :sijainti [467545.5999816895 7231332.000024414]
     :jatkuvat-havainnot [3]
     :kiinteys 3
@@ -185,6 +243,7 @@
     :jatkuvat-havainnot [3]
     :soratie-tasaisuus 1
     :sivukaltevuus 3}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
    {:id 3 :sijainti [466089.5999816895 7230916.000024414]
     :jatkuvat-havainnot [3]}
    {:id 4 :sijainti [466409.5999816895 7230996.000024414]
@@ -193,6 +252,7 @@
     :jatkuvat-havainnot [3]}
    {:id 6 :sijainti [467257.5999816895 7231252.000024414]
     :jatkuvat-havainnot [3]}
+   ;; -- Mittausarvot muuttuu, uusi tarkastus alkaa
    {:id 7 :sijainti [467545.5999816895 7231332.000024414]
     :jatkuvat-havainnot [3]
     :sivukaltevuus 3
@@ -379,6 +439,43 @@
    {:id 4 :sijainti [467009.5999816895 7231180.000024414]
     :jatkuvat-havainnot [1]
     :pistemainen-havainto nil}])
+
+(def tarkastus-jossa-kaikki-mittaukset
+  [{:id 1 :sijainti [465641.5999816895 7230780.000024414]
+    :tarkastusajo 666
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/now))
+    :lumisuus 1
+    :talvihoito-tasaisuus 2
+    :kitkamittaus 3
+    :lampotila 4
+    :soratie-tasaisuus 1
+    :kiinteys 2
+    :polyavyys 3
+    :sivukaltevuus 4
+    :pistemainen-havainto nil}
+   {:id 2 :sijainti [466089.5999816895 7230916.000024414]
+    :tarkastusajo 666
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 3)))
+    :lumisuus 1
+    :talvihoito-tasaisuus 2
+    :kitkamittaus 3
+    :lampotila 4
+    :soratie-tasaisuus 1
+    :kiinteys 2
+    :polyavyys 3
+    :sivukaltevuus 4
+    :pistemainen-havainto nil}])
+
+(def tarkastus-jossa-kaikki-pisteet-samassa-sijainnissa
+  [{:id 1 :sijainti [465641.5999816895 7230780.000024414]}
+   {:id 2 :sijainti [465641.5999816895 7230780.000024414]}
+   {:id 3 :sijainti [465641.5999816895 7230780.000024414]}
+   {:id 4 :sijainti [465641.5999816895 7230780.000024414]}])
+
+(def tarkastus-jossa-yksi-piste
+  [{:id 1 :sijainti [465641.5999816895 7230780.000024414]}])
 
 (def tarkastus-jossa-jatkuva-laadunalitus
   "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."

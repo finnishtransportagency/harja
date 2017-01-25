@@ -70,6 +70,7 @@
 
    ;; Lomake
    :havaintolomake-auki? false
+   :kuvaa-otetaan? false ; Tulisi olla true silloin kun otetaan kuvaa (valitaan tiedostoa tai käytetään laitteen kameraa)
    :havaintolomakedata {:kayttajanimi nil
                         :aikaleima nil
                         :laadunalitus? false
@@ -96,8 +97,6 @@
             :nayta-ortokuva? false}
 
    ;; Muut
-   :vakiohavaintojen-kuvaukset nil ; Serveriltä saadut tiedot vakiohavainnoista
-
    :ilmoitus nil ; Nykyinen näytettävä ilmoitus (jos ei käytetä ilmoitusjonoa)
    :ilmoitukseen-liittyva-havainto-id nil ; tarjoaa mahdollisuuden avata lomake ko. pikahavaintoon sidottuna
    :idxdb nil ; indexed db kahva
@@ -108,7 +107,6 @@
 
 ;; Cursorit helpottamaan tilan muokkausta
 
-(def vakiohavaintojen-kuvaukset (reagent/cursor sovellus [:vakiohavaintojen-kuvaukset]))
 (def palautettava-tarkastusajo (reagent/cursor sovellus [:palautettava-tarkastusajo]))
 
 (def tr-tiedot (reagent/cursor sovellus [:tr-tiedot]))
@@ -125,6 +123,7 @@
 (def organisaatio (reagent/cursor sovellus [:kayttaja :organisaatio]))
 
 (def havaintolomake-auki? (reagent/cursor sovellus [:havaintolomake-auki?]))
+(def kuvaa-otetaan? (reagent/cursor sovellus [:kuvaa-otetaan?]))
 (def havaintolomakedata (reagent/cursor sovellus [:havaintolomakedata]))
 (def havaintolomakkeeseen-liittyva-havainto (reagent/cursor sovellus [:havaintolomakedata :liittyy-havaintoon]))
 (def liittyy-varmasti-tiettyyn-havaintoon? (reagent/cursor sovellus [:havaintolomakedata :liittyy-varmasti-tiettyyn-havaintoon?]))

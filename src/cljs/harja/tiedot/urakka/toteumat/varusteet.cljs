@@ -73,7 +73,7 @@
 (defn- varustetoteumat-karttataso [toteumat]
   (kartalla-esitettavaan-muotoon
     toteumat
-    nil nil
+    (constantly false)
     (keep (fn [toteuma]
             (when-let [sijainti (some-> toteuma :sijainti geo/pisteet first)]
               (assoc toteuma

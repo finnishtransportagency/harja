@@ -24,7 +24,8 @@
 
 (defn- paanakyma []
   [:div.toplevel
-   [kamera/file-input kamera-tiedot/kuva-otettu]
+   [kamera/file-input
+    #(kamera-tiedot/kuva-otettu % s/kuvaa-otetaan?)]
    [ylapalkki/ylapalkki]
 
    [:div.paasisalto-container

@@ -28,7 +28,8 @@
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
-            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q])
+            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
+            [harja.id :refer [id-olemassa?]])
   (:use org.httpkit.fake)
   (:import (com.sun.xml.internal.bind.v2 TODO)))
 
@@ -315,7 +316,7 @@
     (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))
     (doseq [kohde kohteet]
       (log/debug (str "Käsitellään saapunut ylläpitokohde: " kohde))
-      (if (and (:id kohde) (not (neg? (:id kohde))))
+      (if (id-olemassa? (:id kohde))
         (paivita-yllapitokohde c user urakka-id kohde)
         (luo-uusi-yllapitokohde c user urakka-id sopimus-id vuosi kohde)))
     (let [paallystyskohteet (hae-urakan-yllapitokohteet c user {:urakka-id urakka-id
@@ -390,7 +391,7 @@
 
       (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)
       (doseq [osa osat]
-        (if (and (:id osa) (not (neg? (:id osa))))
+        (if (id-olemassa? (:id osa))
           (paivita-yllapitokohdeosa c user urakka-id osa)
           (luo-uusi-yllapitokohdeosa c user yllapitokohde-id osa)))
       (yha/paivita-yllapitourakan-geometriat c urakka-id)
