@@ -5,13 +5,36 @@
   (:require [taoensso.timbre :as log]
             [harja.domain.tierekisteri :as tr-domain]))
 
+(defn- projisoi-merkinta-oikealle-tielle
+  "Projisoi yksittäisen merkinnän annetulle tielle"
+  [merkinta projisoitava-tie]
+  (log/debug "Projisoidaan yksittäinen ramppimerkintä tielle: " projisoitava-tie)
+  (let [projisoitavaa-tieta-vastaavat-osoitteet (filter #(= (:tie %) projisoitava-tie)
+                                                        (:laheiset-tr-osoitteet merkinta))
+        lahin-vastaava-osoite (first (sort-by :etaisyys-gps-pisteesta projisoitavaa-tieta-vastaavat-osoitteet))]
+    (if lahin-vastaava-osoite
+      (-> merkinta
+          (assoc-in [:tr-osoite :tie] (:tie lahin-vastaava-osoite))
+          (assoc-in [:tr-osoite :aosa] (:aosa lahin-vastaava-osoite))
+          (assoc-in [:tr-osoite :aet] (:aet lahin-vastaava-osoite))
+          (assoc-in [:tr-osoite :losa] (:losa lahin-vastaava-osoite))
+          (assoc-in [:tr-osoite :let] (:let lahin-vastaava-osoite)))
+      (do
+        (log/debug "Yritettiin korjata rampille osuneen merkinnän projisointi, mutta läheltä ei löydy
+                    projisointia halutulle tielle " projisoitava-tie)
+        ;; Poistetaan merkinnältä projisoitu osoite. Tarkastusreittimuunnin olettaa merkinnän olevan
+        ;; osa samaa tietä niin kauan kunnes oikea osoite löytyy.
+        ;; Merkintöjä ei kuitenkaan sovi poistaa, sillä muuten saatetaan menettää havaintoja / mittauksia.
+        (dissoc merkinta :tr-osoite)))))
+
 (defn- projisoi-ramppi-oikealle-tielle
-  "Projisoi rampin takaisin lähimmälle moo"
+  "Projisoi rampin takaisin ramppia edeltäneelle tielle"
   [ramppia-edeltava-merkina rampin-merkinnat]
   (log/debug "Projisoidaan ramppi takaisin ramppia edeltäneelle tielle.")
-  (log/debug "EDELTÄVÄ: " (pr-str ramppia-edeltava-merkina))
-  (log/debug "RAMPPI: " (pr-str rampin-merkinnat))
-  rampin-merkinnat)
+  (let [projisoitava-tie (get-in ramppia-edeltava-merkina [:tr-osoite :tie])
+        korjatut-merkinnat (mapv #(projisoi-merkinta-oikealle-tielle % projisoitava-tie)
+                                 rampin-merkinnat)]
+    korjatut-merkinnat))
 
 (defn- rampin-merkinnat-indeksista
   "Palauttaa indeksistä eteenpäin ne merkinnät, jotka ovat osa samaa rampilla ajoa"

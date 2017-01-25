@@ -49,7 +49,10 @@
     (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
       (is (= (count korjatut-merkinnat) (count merkinnat)))
       (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
-                    korjatut-merkinnat)))))
+                    korjatut-merkinnat))
+      (is (every? #(or (= (get-in % [:tr-osoite :tie]) 4)
+                       (nil? (get-in % [:tr-osoite :tie])))
+                  korjatut-merkinnat)))))
 
 (deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-osa-pisteista-osuu-rampille
   (let [tarkastusajo-id 666 ;; Osa pisteistä sijaitsee virheellisesti rampilla
@@ -64,7 +67,9 @@
     (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
       (is (= (count korjatut-merkinnat) (count merkinnat)))
       (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
-                    korjatut-merkinnat)))))
+                    korjatut-merkinnat))
+      (is (every? #(= (get-in % [:tr-osoite :tie]) 4)
+                  korjatut-merkinnat)))))
 
 (deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-iso-osa-pisteista-osuu-rampille
   ;; TODO Nyt on vähän makukysymys miten tämä tulkitaan, kun selkeästi iso osa pisteistä osuu rampille
@@ -80,7 +85,9 @@
     (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
       (is (= (count korjatut-merkinnat) (count merkinnat)))
       (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
-                    korjatut-merkinnat)))))
+                    korjatut-merkinnat))
+      (is (every? #(= (get-in % [:tr-osoite :tie]) 4)
+                  korjatut-merkinnat)))))
 
 (deftest ramppianalyysi-ei-tee-mitaan-kun-ajetaan-rampille
   (let [tarkastusajo-id 668 ;; Ajetaan tieltä 4 rampille ja takaisin tielle 4
