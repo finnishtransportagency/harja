@@ -279,4 +279,12 @@
                     {:alku alku :loppu loppu :talvi #{27 24 50 51 25 34 23 35 26 52 49} :urakat #{4}}
                     [447806 7191966] nil)]
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :toteuma toteuma))
-      (is (not (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama toteuma))))))
+      (is (not (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama toteuma))))
+
+    (let [tarkastus ()]
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :tarkastus tarkastus))
+      (is (not (paneeli/skeeman-luonti-onnistuu-kaikille? :toteuma tarkastus))))
+
+    (let [tyokone ()]
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :tyokone tyokone))
+      (is (not (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama tyokone))))))
