@@ -46,12 +46,15 @@
                             [kentat/nayta-arvo kentan-skeema (kentan-arvo kentan-skeema data)]))
                     tiedot))]))
 
+(defn sulje-nappi [piilota-fn!]
+  (when piilota-fn!
+    [:div
+     [napit/sulje piilota-fn!]]))
+
 (defn infopaneeli-komponentti [{:keys [avatut-asiat toggle-asia! piilota-fn! linkkifunktiot
                                        ei-tuloksia]} asiat]
   [:span
-   (when piilota-fn!
-     [:div
-      [napit/sulje piilota-fn!]])
+   [sulje-nappi piilota-fn!]
 
    (when (and (empty? asiat) ei-tuloksia)
      ei-tuloksia)
@@ -87,6 +90,7 @@
      (fn [{haetaan? :haetaan? :as asiat-pisteessa} piilota-fn! linkkifunktiot]
        (if haetaan?
          [:div
+          [sulje-nappi piilota-fn!]
           [ajax-loader]]
          [infopaneeli-komponentti
           {:avatut-asiat @avatut-asiat
