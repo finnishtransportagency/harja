@@ -125,17 +125,27 @@
                                 alkavien-ramppien-indeksit)]
     korjatut-rampit))
 
-(defn- merkinnat-erkanevat-rampilla-kauas?
-  "Palauttaa true jos rampin merkinnät erkanavat ramppia edeltävästä tiestä niin kauas,
-   että merkintöjä voidaan pitää luotettavana ja ajo tapahtui oikeasti rampilla."
-  [ramppia-edeltava-merkinta rampin-merkinnat treshold]
-  (let [edellisen-merkinnan-tie (get-in ramppia-edeltava-merkinta [:tr-osoite :tie])]
-    (doseq [merkinta rampin-merkinnat]
-      (let [lahin-osuma-edellisella-tiella (laheisten-pisteiden-lahin-osuma-tielle merkinta edellisen-merkinnan-tie)]
-        (log/debug "Lähin edellisellä tiellä (" edellisen-merkinnan-tie "): " (pr-str lahin-osuma-edellisella-tiella)))))
+(defn- merkinnat-todennakoisesti-ajettu-rampilla?
+  "Palauttaa true jos rampin merkinnät selkeästi erkanavat ramppia edeltävästä tiestä niin kauas,
+   että merkintöjä voidaan pitää luotettavana ja ajo tapahtui oikeasti rampilla.
 
-  ;; TODO KESKEN, palauta nyt vain false
-  true)
+   treshold on metrimäärä rampin alkupisteestä, jota käytetään rajana määrittämään luotettava
+   rampille siirtyminen."
+  [ramppia-edeltava-merkinta rampin-merkinnat treshold]
+  (let [edellisen-merkinnan-tie (get-in ramppia-edeltava-merkinta [:tr-osoite :tie])
+        ainakin-yksi-varma-piste-ylittaa-tresholdin?
+        ;; Löytyykö ainakin yksi piste, joka ylittää annetun tresholdin
+        ;; niin, että myös GPS:n epätarkkuus on huomioitu
+        (> (count (filter #(and (>= (:etaisyys-gps-pisteesta %)
+                                    (- treshold
+                                       (:gps-tarkkuus %))))
+                          (map :laheiset-tr-osoitteet rampin-merkinnat)))
+           0)]
+
+
+
+    ;; TODO KESKEN
+    ainakin-yksi-varma-piste-ylittaa-tresholdin?))
 
 (defn- korjaa-rampilla-ajo
   [merkinnat-ramppitiedoilla ramppi-indeksi treshold]
@@ -146,10 +156,10 @@
     (let [rampin-merkinnat (rampin-merkinnat-indeksista merkinnat-ramppitiedoilla ramppi-indeksi)
           korjattu-ramppi (let [ramppia-edeltava-merkinta (nth merkinnat-ramppitiedoilla
                                                                (dec ramppi-indeksi))]
-                            (if (merkinnat-erkanevat-rampilla-kauas? ramppia-edeltava-merkinta
-                                                                         rampin-merkinnat
-                                                                         treshold)
-                              rampin-merkinnat ;; Todennäköisesti ajo tapahtui oikeasti rampilla
+                            (if (merkinnat-todennakoisesti-ajettu-rampilla? ramppia-edeltava-merkinta
+                                                                            rampin-merkinnat
+                                                                            treshold)
+                              rampin-merkinnat
                               (projisoi-ramppi-oikealle-tielle ramppia-edeltava-merkinta
                                                                rampin-merkinnat)))]
       (merkinnat-korjatulla-rampilla merkinnat-ramppitiedoilla ramppi-indeksi korjattu-ramppi))))
@@ -184,7 +194,7 @@
         ;; Vain muutama piste rampilla -> projisoi uudelleen
         (korjaa-vahapatoiset-rampit m 5)
         ;; Pisteet erkanevat rampille, mutta eivät liian kauemmas -> projisoi uudelleen
-        (korjaa-rampilla-ajot m 20)))
+        (korjaa-rampilla-ajot m 30)))
 
 (defn korjaa-virheelliset-rampit
   "Ottaa tarkastusreittimerkinnät, jotka on projisoitu tieverkolle ja joilla on myös
