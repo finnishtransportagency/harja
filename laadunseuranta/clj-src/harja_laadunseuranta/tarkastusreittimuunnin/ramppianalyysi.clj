@@ -105,8 +105,7 @@
                             (projisoi-ramppi-oikealle-tielle (nth merkinnat-ramppitiedoilla
                                                                   (dec ramppi-indeksi))
                                                              rampin-merkinnat)
-                            rampin-merkinnat)
-          _ (log/debug "Vähäpätöinen ramppi havaittu ja korjattu? " (not= rampin-merkinnat korjattu-ramppi))]
+                            rampin-merkinnat)]
       (merkinnat-korjatulla-rampilla merkinnat-ramppitiedoilla ramppi-indeksi korjattu-ramppi))))
 
 (defn- korjaa-vahapatoiset-rampit
@@ -149,8 +148,7 @@
                                                                            treshold)
                               (projisoi-ramppi-oikealle-tielle ramppia-edeltava-merkinta
                                                                rampin-merkinnat)
-                              rampin-merkinnat))
-          _ (log/debug "Erkaneva ramppi havaittu ja korjattu? " (not= rampin-merkinnat korjattu-ramppi))]
+                              rampin-merkinnat))]
       (merkinnat-korjatulla-rampilla merkinnat-ramppitiedoilla ramppi-indeksi korjattu-ramppi))))
 
 (defn- korjaa-erkanevat-rampit
