@@ -97,15 +97,38 @@
    Mikäli rampilla ajo sisältää vähemmän kuin N pistettä, projisoi rampin takaisin edeltävälle tielle.
    Muussa tapauksessa ei tee rampille mitään.
 
-   Palauttaa kaikki merkinnät, joissa indeksin kuvaava ramppi-osa on korjattu."
+   Palauttaa kaikki merkinnät, vähäpätöiset ramppiosat on korjattu."
   [merkinnat-ramppitiedoilla n]
   (let [alkavien-ramppien-indeksit (maarittele-alkavien-ramppien-indeksit merkinnat-ramppitiedoilla)
         ;; Käydään jokainen rampille siirtymä erikseen läpi ja korjataan tarvittaessa.
-        korjatut-vahapatoiset-rampit (reduce (fn [edellinen-tulos seuraava-indeksi]
+        korjatut-rampit (reduce (fn [edellinen-tulos seuraava-indeksi]
                                                (korjaa-vahapatoinen-ramppi edellinen-tulos seuraava-indeksi n))
                                              merkinnat-ramppitiedoilla
                                              alkavien-ramppien-indeksit)]
-    korjatut-vahapatoiset-rampit))
+    korjatut-rampit))
+
+(defn- korjaa-erkaneva-ramppi
+  [merkinnat-ramppitiedoilla ramppi-indeksi treshold]
+  (log/debug "Analysoidaan mahdollisesti erkaneva ramppi indeksissä: " ramppi-indeksi)
+  ;; TODO Teepäs tämä @:D
+  merkinnat-ramppitiedoilla)
+
+(defn- korjaa-erkanevat-rampit
+  "Ottaa reittimerkinnät ramppitiedolla ja analysoi kaikki rampille siirtymiset.
+   Mikäli pisteet erkanevat rampilla riittävän kauas (treshold) edellisestä tiestä, tulkitaan
+   ajon käyneen rampilla. Mikäli selkeää erkanemista ei löydy, merkinnät projisoidaan
+   takaisin ramppia edeltävälle tielle.
+
+   Palauttaa kaikki merkinnät, joissa erkanevat ramppiosat on korjattu."
+  [merkinnat-ramppitiedoilla treshold]
+  ;; TODO
+  (let [alkavien-ramppien-indeksit (maarittele-alkavien-ramppien-indeksit merkinnat-ramppitiedoilla)
+        ;; Käydään jokainen rampille siirtymä erikseen läpi ja korjataan tarvittaessa.
+        korjatut-rampit (reduce (fn [edellinen-tulos seuraava-indeksi]
+                                               (korjaa-erkaneva-ramppi edellinen-tulos seuraava-indeksi treshold))
+                                             merkinnat-ramppitiedoilla
+                                             alkavien-ramppien-indeksit)]
+    korjatut-rampit))
 
 (defn- projisoi-virheelliset-rampit-uudelleen
   "Projisoi virheelliset rampit seuraavasti:
@@ -114,7 +137,9 @@
   (log/debug "Projisoidaan virheelliset rampit uudelleen")
   (log/debug "Rampeille siirtymisiä havaittu: "
              (count (maarittele-alkavien-ramppien-indeksit merkinnat-ramppitiedoilla)) "kpl.")
-  (korjaa-vahapatoiset-rampit merkinnat-ramppitiedoilla 5))
+  (as-> merkinnat-ramppitiedoilla m
+        (korjaa-vahapatoiset-rampit m 5)
+        (korjaa-erkanevat-rampit m 20)))
 
 (defn lisaa-merkintoihin-ramppitiedot
   "Lisää merkintöihin tiedon siitä, onko piste projisoitu rampille."
