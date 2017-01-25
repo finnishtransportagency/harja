@@ -68,7 +68,8 @@
       (is (= (count korjatut-merkinnat) (count merkinnat)))
       (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
                     korjatut-merkinnat))
-      (is (every? #(= (get-in % [:tr-osoite :tie]) 4)
+      (is (every? #(or (= (get-in % [:tr-osoite :tie]) 4)
+                       (nil? (get-in % [:tr-osoite :tie])))
                   korjatut-merkinnat)))))
 
 (deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-iso-osa-pisteista-osuu-rampille
@@ -86,7 +87,8 @@
       (is (= (count korjatut-merkinnat) (count merkinnat)))
       (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
                     korjatut-merkinnat))
-      (is (every? #(= (get-in % [:tr-osoite :tie]) 4)
+      (is (every? #(or (= (get-in % [:tr-osoite :tie]) 4)
+                       (nil? (get-in % [:tr-osoite :tie])))
                   korjatut-merkinnat)))))
 
 (deftest ramppianalyysi-ei-tee-mitaan-kun-ajetaan-rampille
