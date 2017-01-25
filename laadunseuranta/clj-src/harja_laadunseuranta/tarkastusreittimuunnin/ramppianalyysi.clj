@@ -125,35 +125,36 @@
                                 alkavien-ramppien-indeksit)]
     korjatut-rampit))
 
-(defn- merkinnat-erkanevat-rampilla-liian-kauas?
-  "Palauttaa true jos rampin merkinnät erkanavat ramppia edeltävästä tiestä liian kauas"
+(defn- merkinnat-erkanevat-rampilla-kauas?
+  "Palauttaa true jos rampin merkinnät erkanavat ramppia edeltävästä tiestä niin kauas,
+   että merkintöjä voidaan pitää luotettavana ja ajo tapahtui oikeasti rampilla."
   [ramppia-edeltava-merkinta rampin-merkinnat treshold]
   (let [edellisen-merkinnan-tie (get-in ramppia-edeltava-merkinta [:tr-osoite :tie])]
     (doseq [merkinta rampin-merkinnat]
       (let [lahin-osuma-edellisella-tiella (laheisten-pisteiden-lahin-osuma-tielle merkinta edellisen-merkinnan-tie)]
-      (log/debug "Lähin edellisellä tiellä (" edellisen-merkinnan-tie "): " (pr-str lahin-osuma-edellisella-tiella)))))
+        (log/debug "Lähin edellisellä tiellä (" edellisen-merkinnan-tie "): " (pr-str lahin-osuma-edellisella-tiella)))))
 
   ;; TODO KESKEN, palauta nyt vain false
   false)
 
-(defn- korjaa-erkaneva-ramppi
+(defn- korjaa-rampilla-ajo
   [merkinnat-ramppitiedoilla ramppi-indeksi treshold]
-  (log/debug "Analysoidaan mahdollisesti erkaneva ramppi indeksissä: "
-             ramppi-indeksi  "(" (:tr-osoite (nth merkinnat-ramppitiedoilla ramppi-indeksi)) ")")
+  (log/debug "Analysoidaan mahdollisesti virheellinen rampilla ajo indeksissä: "
+             ramppi-indeksi "(" (:tr-osoite (nth merkinnat-ramppitiedoilla ramppi-indeksi)) ")")
   (if (= ramppi-indeksi 0)
     merkinnat-ramppitiedoilla ;; Merkinnät alkavat rampilta, ei tehdä mitään.
     (let [rampin-merkinnat (rampin-merkinnat-indeksista merkinnat-ramppitiedoilla ramppi-indeksi)
           korjattu-ramppi (let [ramppia-edeltava-merkinta (nth merkinnat-ramppitiedoilla
                                                                (dec ramppi-indeksi))]
-                            (if (merkinnat-erkanevat-rampilla-liian-kauas? ramppia-edeltava-merkinta
-                                                                           rampin-merkinnat
-                                                                           treshold)
+                            (if-not (merkinnat-erkanevat-rampilla-kauas? ramppia-edeltava-merkinta
+                                                                         rampin-merkinnat
+                                                                         treshold)
                               (projisoi-ramppi-oikealle-tielle ramppia-edeltava-merkinta
                                                                rampin-merkinnat)
                               rampin-merkinnat))]
       (merkinnat-korjatulla-rampilla merkinnat-ramppitiedoilla ramppi-indeksi korjattu-ramppi))))
 
-(defn- korjaa-erkanevat-rampit
+(defn- korjaa-rampilla-ajot
   "Ottaa reittimerkinnät ja analysoi kaikki rampille siirtymiset.
    Mikäli pisteet erkanevat rampilla riittävän kauas (treshold) edellisestä tiestä, tulkitaan
    ajon käyneen rampilla. Mikäli kuitenkaan selkeää erkanemista ei löydy, merkinnät projisoidaan
@@ -165,7 +166,7 @@
         alkavien-ramppien-indeksit (maarittele-alkavien-ramppien-indeksit merkinnat-ramppitiedoilla)
         ;; Käydään jokainen rampille siirtymä erikseen läpi ja korjataan tarvittaessa.
         korjatut-rampit (reduce (fn [edellinen-tulos seuraava-indeksi]
-                                  (korjaa-erkaneva-ramppi edellinen-tulos seuraava-indeksi treshold))
+                                  (korjaa-rampilla-ajo edellinen-tulos seuraava-indeksi treshold))
                                 merkinnat-ramppitiedoilla
                                 alkavien-ramppien-indeksit)]
     korjatut-rampit))
@@ -183,7 +184,7 @@
         ;; Vain muutama piste rampilla -> projisoi uudelleen
         (korjaa-vahapatoiset-rampit m 5)
         ;; Pisteet erkanevat rampille, mutta eivät liian kauemmas -> projisoi uudelleen
-        (korjaa-erkanevat-rampit m 20)))
+        (korjaa-rampilla-ajot m 20)))
 
 (defn korjaa-virheelliset-rampit
   "Ottaa tarkastusreittimerkinnät, jotka on projisoitu tieverkolle ja joilla on myös
