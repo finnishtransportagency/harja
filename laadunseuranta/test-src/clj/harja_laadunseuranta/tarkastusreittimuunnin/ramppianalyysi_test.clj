@@ -31,34 +31,73 @@
   (let [tarkastusajo-id 754 ;; Osa tiellä 4 olevista pisteistä projisoituu virheellisesti rampeille
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
-                                                          :treshold 100})
-        korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
-    (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
-                  korjatut-merkinnat))))
+                                                          :treshold 100})]
+
+    (is (> (count merkinnat) 1 "Ainakin yksi merkintä testidatassa"))
+    (is (some #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie])) merkinnat)
+        "Osa testidatan merkinnöistä on rampilla")
+
+    (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
+      (is (= (count korjatut-merkinnat) (count merkinnat)))
+      (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
+                    korjatut-merkinnat)))))
+
+(deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-pari-pistetta-osuu-rampille
+  (let [tarkastusajo-id 665 ;; Pari pisteistä sijaitsee virheellisesti rampilla
+        merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
+                                                         {:tarkastusajo tarkastusajo-id
+                                                          :treshold 100})]
+
+    (is (> (count merkinnat) 1 "Ainakin yksi merkintä testidatassa"))
+    (is (some #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie])) merkinnat)
+        "Osa testidatan merkinnöistä on rampilla")
+
+    (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
+      (is (= (count korjatut-merkinnat) (count merkinnat)))
+      (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
+                    korjatut-merkinnat)))))
 
 (deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-osa-pisteista-osuu-rampille
   (let [tarkastusajo-id 666 ;; Osa pisteistä sijaitsee virheellisesti rampilla
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
-                                                          :treshold 100})
-        korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
-    (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
-                  korjatut-merkinnat))))
+                                                          :treshold 100})]
+
+    (is (> (count merkinnat) 1 "Ainakin yksi merkintä testidatassa"))
+    (is (some #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie])) merkinnat)
+        "Osa testidatan merkinnöistä on rampilla")
+
+    (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
+      (is (= (count korjatut-merkinnat) (count merkinnat)))
+      (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
+                    korjatut-merkinnat)))))
 
 (deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-osa-pisteista-osuu-rampille
   ;; TODO Nyt on vähän makukysymys miten tämä tulkitaan, kun selkeästi iso osa pisteistä osuu rampille
   (let [tarkastusajo-id 667 ;; Iso osa pisteistä sijaitsee virheellisesti rampilla
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
-                                                          :treshold 100})
-        korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
-    (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
-                  korjatut-merkinnat))))
+                                                          :treshold 100})]
+
+    (is (> (count merkinnat) 1 "Ainakin yksi merkintä testidatassa"))
+    (is (some #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie])) merkinnat)
+        "Osa testidatan merkinnöistä on rampilla")
+
+    (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
+      (is (= (count korjatut-merkinnat) (count merkinnat)))
+      (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
+                    korjatut-merkinnat)))))
 
 (deftest ramppianalyysi-ei-tee-mitaan-kun-ajetaan-rampille
   (let [tarkastusajo-id 668 ;; Ajetaan rampille ja takaisin tielle 4
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
-                                                          :treshold 100})
-        korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
-    (is (= korjatut-merkinnat merkinnat))))
+                                                          :treshold 100})]
+
+    (is (> (count merkinnat) 1 "Ainakin yksi merkintä testidatassa"))
+    (is (some #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie])) merkinnat)
+        "Osa testidatan merkinnöistä on rampilla")
+
+    (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
+      (is (= (count korjatut-merkinnat) (count merkinnat)))
+      (is (= korjatut-merkinnat merkinnat)))))
