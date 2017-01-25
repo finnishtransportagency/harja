@@ -29,19 +29,22 @@
                       merkinnat)]
     (:ramppien-alut tulos)))
 
-(defn projisoi-ramppi-moottoritielle [ramppia-edeltava-merkina rampin-merkinnat]
-  (log/debug "PROJISOIDAAN RAMPPI TAKAISIN MOOTTORITIELLE!")
+(defn projisoi-ramppi-oikealle-tielle
+  "Projisoi rampin takaisin lähimmälle moo"
+  [ramppia-edeltava-merkina rampin-merkinnat]
+  (log/debug "Projisoidaan ramppi takaisin ramppia edeltäneelle tielle.")
   (log/debug "EDELTÄVÄ: " (pr-str ramppia-edeltava-merkina))
   (log/debug "RAMPPI: " (pr-str ramppia-edeltava-merkina))
   rampin-merkinnat)
 
 (defn- korjaa-vahapatoiset-rampit
   "Ottaa reittimerkinnät ramppitiedolla sekä indeksin, joissa siirrytään rampille.
-   Mikäli rampilla ajo sisältää vähemmän kuin N pistettä, projisoi rampin takaisin moottoritielle.
+   Mikäli rampilla ajo sisältää vähemmän kuin N pistettä, projisoi rampin takaisin edeltävälle tielle.
    Muussa tapauksessa ei tee rampille mitään.
 
    Palauttaa kaikki merkinnät, joissa indeksin kuvaava ramppi-osa on korjattu."
   [merkinnat-ramppitiedoilla ramppi-indeksi n]
+  (log/debug "Analysoidaan mahdollisesti vähäpätöinen ramppi indeksissä: " ramppi-indeksi)
   (if (= ramppi-indeksi 0)
     merkinnat-ramppitiedoilla ;; Merkinnät alkavat rampilta, ei tehdä mitään.
     (let [indeksin-jalkeiset-pisteet (last (split-at ramppi-indeksi merkinnat-ramppitiedoilla))
@@ -52,9 +55,11 @@
                                    []
                                    indeksin-jalkeiset-pisteet)
           korjattu-ramppi (if (< (count rampin-merkinnat) n)
-                            (projisoi-ramppi-moottoritielle (nth merkinnat-ramppitiedoilla (dec ramppi-indeksi))
-                                                            rampin-merkinnat)
+                            (projisoi-ramppi-oikealle-tielle (nth merkinnat-ramppitiedoilla
+                                                                  (dec ramppi-indeksi))
+                                                             rampin-merkinnat)
                             rampin-merkinnat)
+          _ (log/debug "Vähäpätöinen ramppi havaittu? " (not= rampin-merkinnat korjattu-ramppi))
           osa-ennen-ramppia (take ramppi-indeksi merkinnat-ramppitiedoilla)
           osa-rampin-jalkeen (drop (+ ramppi-indeksi (count korjattu-ramppi)) merkinnat-ramppitiedoilla)]
       (concat
@@ -62,12 +67,14 @@
         korjattu-ramppi
         osa-rampin-jalkeen))))
 
-(defn projisoi-virheelliset-rampit-takaisin-moottoritielle
-  "Projisoi virheelliset rampit takaisin moottoritielle seuraavasti:
-  - Jos rampilla ajoa on erittäin pieni osuus, projisoi rampin suoraan moottoritielle"
+(defn projisoi-virheelliset-rampit-uudelleen
+  "Projisoi virheelliset rampit seuraavasti:
+  - Jos rampilla ajoa on erittäin pieni osuus, projisoi rampin takaisin tielle, josta rampille ajettiin"
   [merkinnat-ramppitiedoilla]
-  (let [;; Projisoi ramppi suoraan takaisin moottoritielle jos pisteitä on erittäin vähän
+  (let [;; Projisoi ramppi suoraan takaisin ramppia edeltäneelle tielle jos pisteitä on erittäin vähän
         alkavien-ramppien-indeksit (maarittele-alkavien-ramppien-indeksit merkinnat-ramppitiedoilla)
+        _ (log/debug "Rampeille siirtymisiä havaittu: " (count alkavien-ramppien-indeksit) "kpl. "
+                     "Indeksit: " (pr-str alkavien-ramppien-indeksit))
         ;; Käydään jokainen rampille siirtymä erikseen läpi ja korjataan tarvittaessa.
         korjatut-merkinnat (reduce (fn [edellinen-tulos seuraava-indeksi]
                                      (korjaa-vahapatoiset-rampit edellinen-tulos seuraava-indeksi 5))
@@ -86,7 +93,7 @@
   "Ottaa tarkastusreittimerkinnät, jotka on projisoitu tieverkolle ja joilla on myös
    tieto lähimmistä tierekisteriosoitteista. Etsii kohdat, joissa piste sijaitsee virheellisesti rampilla tai on
    virheellisesti prijisoitu rampille. Palauttaa uudet merkinnät, joissa
-   tällaiset virheelliset pisteet on projisoitu takaisin moottoritielle.
+   tällaiset virheelliset pisteet on projisoitu oikealle tielle.
 
    Jos yksikään piste ei sijaitse tai projisioidu rampille, palauttaa merkinnät sellaisenaan.
 
@@ -95,6 +102,7 @@
    projisoituvat virheellisesti rampille, vaikka ajo tapahtuisikin moottoritiellä. On syytä huomata, että
    GPS:n epätarkkuudesta johtuen tämä funktio pelaa todennäköisyyksillä eikä tulos ole täysin varma."
   [merkinnat]
+  (log/debug "Korjataan tarkastusajon virheelliset rampit. Merkintöjä: " (count merkinnat))
   (let [merkinnat-ramppitiedoilla (lisaa-merkintoihin-ramppitiedot merkinnat)
-        korjatut-merkinnat (projisoi-virheelliset-rampit-takaisin-moottoritielle merkinnat-ramppitiedoilla)]
+        korjatut-merkinnat (projisoi-virheelliset-rampit-uudelleen merkinnat-ramppitiedoilla)]
     korjatut-merkinnat))
