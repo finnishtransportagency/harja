@@ -671,3 +671,11 @@
   (-> dt
       tc/from-sql-date
       (t/to-time-zone suomen-aikavyohyke)))
+
+(defn q-sanktio-leftjoin-laatupoikkeama [sanktio-id]
+  (first (q-map
+     "SELECT s.id, s.maara as summa, s.poistettu, s.perintapvm, s.sakkoryhma as laji,
+             lp.id as lp_id, lp.aika as lp_aika, lp.poistettu as lp_poistettu
+        FROM sanktio s
+             LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
+       WHERE s.id = " sanktio-id ";")))
