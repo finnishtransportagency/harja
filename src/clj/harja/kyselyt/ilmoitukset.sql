@@ -2,7 +2,7 @@
 SELECT
   i.id,
   i.urakka,
-  i.tloik_tunniste as "tloik-tunniste",
+  i.tunniste,
   u.nimi as urakkanimi,
   i.ilmoitusid,
   i.ilmoitettu,
@@ -74,7 +74,7 @@ ORDER BY i.ilmoitettu DESC, it.kuitattu DESC;
 -- name: hae-ilmoitukset-ilmoitusidlla
 SELECT
   ilmoitusid,
-  tunniste as "tloik-tunniste",
+  tunniste,
   ilmoitettu,
   tila,
   yhteydenottopyynto,
@@ -139,7 +139,7 @@ SELECT
   i.lahettaja_puhelinnumero,
   i.lahettaja_sahkoposti,
 
-  i.tloik_tunniste AS "tloik-tunniste",
+  i.tunniste,
 
   it.id                                    AS kuittaus_id,
   it.kuitattu                              AS kuittaus_kuitattu,
@@ -231,7 +231,7 @@ WHERE i.id IN (:idt);
 -- name: hae-muuttuneet-ilmoitukset
 SELECT
   ilmoitusid,
-  tunniste AS "tloik-tunniste",
+  tunniste,
   ilmoitettu,
   yhteydenottopyynto,
   paikankuvaus,
@@ -279,7 +279,7 @@ INSERT INTO ilmoitus
  ilmoitustyyppi,
  selitteet,
  urakkatyyppi,
- tloik_tunniste)
+ tunniste)
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -292,7 +292,7 @@ VALUES
     :ilmoitustyyppi :: ilmoitustyyppi,
     :selitteet :: TEXT [],
     :urakkatyyppi :: urakkatyyppi,
-    :tloik_tunniste);
+    :tunniste);
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen
@@ -308,7 +308,7 @@ SET
   lisatieto          = :lisatieto,
   ilmoitustyyppi     = :ilmoitustyyppi :: ilmoitustyyppi,
   selitteet          = :selitteet :: TEXT [],
-  tloik_tunniste     = :tloik_tunniste,
+  tunniste     = :tunniste,
   muokattu           = NOW()
 WHERE id = :id;
 

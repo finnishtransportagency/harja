@@ -53,7 +53,7 @@
                    (string/capitalize (name (:ilmoitustyyppi ilmoitus))))
                  " " (pvm/pvm-aika (:ilmoitettu ilmoitus)))
    :tiedot [{:otsikko "Id" :tyyppi :string :nimi :ilmoitusid}
-            {:otsikko "Tunniste" :tyyppi :string :nimi :tloik-tunniste}
+            {:otsikko "Tunniste" :tyyppi :string :nimi :tunniste}
             {:otsikko "Ilmoitettu" :tyyppi :pvm-aika :nimi :ilmoitettu}
             {:otsikko "Otsikko" :tyyppi :string :nimi :otsikko}
             {:otsikko "Paikan kuvaus" :tyyppi :string :nimi :paikankuvaus}
