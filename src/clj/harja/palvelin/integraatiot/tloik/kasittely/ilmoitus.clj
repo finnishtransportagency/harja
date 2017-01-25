@@ -38,7 +38,7 @@
                                                 sijainti vastaanottaja tunniste]}]
   (ilmoitukset/paivita-ilmoitus!
     db
-    {:urakka-id urakka-id
+    {:urakka urakka-id
      :ilmoitusid ilmoitus-id
      :ilmoitettu ilmoitettu
      :valitetty valitetty

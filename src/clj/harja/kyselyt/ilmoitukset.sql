@@ -308,7 +308,7 @@ SET
   lisatieto          = :lisatieto,
   ilmoitustyyppi     = :ilmoitustyyppi :: ilmoitustyyppi,
   selitteet          = :selitteet :: TEXT [],
-  tunniste     = :tunniste,
+  tunniste           = :tunniste,
   muokattu           = NOW()
 WHERE id = :id;
 
