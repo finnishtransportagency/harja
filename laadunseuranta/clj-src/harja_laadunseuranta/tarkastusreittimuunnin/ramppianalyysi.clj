@@ -27,13 +27,36 @@
                       merkinnat)]
     (:ramppien-alut tulos)))
 
-#_(defn- korjaa-vahapatoiset-rampit
-  "Ottaa reittimerkinnät ramppitiedolla sekä indeksit, joissa siirrytään rampille.
-   Mikäli rampilla ajo sisältää vähemmän kuin N pistettä, projisoi rampin takaisin moottoritielle."
-  [merkinnat-ramppitiedoilla ramppien-indeksit n]
-  (let [ramppia-edeltava-piste
-        ramppia-seuraavat-pisteet])
+(defn projisoi-ramppi-moottoritielle [ramppia-edeltava-merkina rampin-merkinnat]
+  rampin-merkinnat
   )
+
+(defn- korjaa-vahapatoiset-rampit
+  "Ottaa reittimerkinnät ramppitiedolla sekä indeksin, joissa siirrytään rampille.
+   Mikäli rampilla ajo sisältää vähemmän kuin N pistettä, projisoi rampin takaisin moottoritielle.
+   Muussa tapauksessa ei tee rampille mitään.
+
+   Palauttaa kaikki merkinnät, joissa indeksin kuvaava ramppi-osa on korjattu."
+  [merkinnat-ramppitiedoilla ramppi-indeksi n]
+  (if (= ramppi-indeksi 0)
+    merkinnat-ramppitiedoilla ;; Merkinnät alkavat rampilta, ei tehdä mitään.
+    (let [indeksin-jalkeiset-pisteet (last (split-at ramppi-indeksi merkinnat-ramppitiedoilla))
+          rampin-merkinnat (reduce (fn [tulos seuraava]
+                                     (if (= seuraava true)
+                                       (conj tulos seuraava)
+                                       (reduced tulos)))
+                                   []
+                                   indeksin-jalkeiset-pisteet)
+          korjattu-ramppi (if (< (count rampin-merkinnat) n)
+                            (projisoi-ramppi-moottoritielle (nth merkinnat-ramppitiedoilla (dec ramppi-indeksi))
+                                                            rampin-merkinnat)
+                            rampin-merkinnat)
+          osa-ennen-ramppia (take ramppi-indeksi merkinnat-ramppitiedoilla)
+          osa-rampin-jalkeen (drop (+ ramppi-indeksi (count korjattu-ramppi)) merkinnat-ramppitiedoilla)]
+      (concat
+        osa-ennen-ramppia
+        korjattu-ramppi
+        osa-rampin-jalkeen))))
 
 (defn projisoi-virheelliset-rampit-takaisin-moottoritielle [merkinnat-ramppitiedoilla]
   (let [alkavien-ramppien-indeksit (maarittele-alkavien-ramppien-indeksit merkinnat-ramppitiedoilla)
