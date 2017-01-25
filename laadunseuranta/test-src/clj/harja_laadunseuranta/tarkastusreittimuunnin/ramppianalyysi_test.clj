@@ -56,7 +56,7 @@
       (is (not-any? :piste-rampilla? korjatut-merkinnat) "Merkinnät eivät sisällä analyysin sisäistä avainta"))))
 
 (deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-osa-pisteista-osuu-rampille
-  (let [tarkastusajo-id 666 ;; Osa pisteistä sijaitsee virheellisesti rampilla
+  (let [tarkastusajo-id 666 ;; Iso osa pisteistä sivuaa rampin reunaa
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
                                                           :treshold 100})]
@@ -75,7 +75,7 @@
 
 (deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-iso-osa-pisteista-osuu-rampille
   ;; TODO Nyt on vähän makukysymys miten tämä tulkitaan, kun selkeästi iso osa pisteistä osuu rampille
-  (let [tarkastusajo-id 667 ;; Iso osa pisteistä sijaitsee virheellisesti rampilla
+  (let [tarkastusajo-id 667 ;; Iso osa pisteistä sijoittuu pitkästi rampille
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
                                                           :treshold 100})]
