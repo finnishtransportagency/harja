@@ -200,7 +200,7 @@
         ;; Vain muutama piste rampilla -> projisoi uudelleen
         (korjaa-vahapatoiset-rampit m 5)
         ;; Pisteet erkanevat rampille, mutta eivät liian kauemmas -> projisoi uudelleen
-        (korjaa-rampilla-ajot m 50)))
+        (korjaa-rampilla-ajot m 40)))
 
 (defn korjaa-virheelliset-rampit
   "Ottaa tarkastusreittimerkinnät, jotka on projisoitu tieverkolle ja joilla on myös
