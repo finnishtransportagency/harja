@@ -1,19 +1,20 @@
 (ns harja.testi
   "Harjan testauksen apukoodia."
   (:require
-    [clojure.test :refer :all]
-    [taoensso.timbre :as log]
-    [harja.kyselyt.urakat :as urk-q]
-    [harja.palvelin.komponentit.todennus :as todennus]
-    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
-    [harja.palvelin.komponentit.http-palvelin :as http]
-    [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-    [harja.palvelin.komponentit.tietokanta :as tietokanta]
-    [harja.palvelin.komponentit.liitteet :as liitteet]
-    [com.stuartsierra.component :as component]
-    [clj-time.core :as t]
-    [clj-time.coerce :as tc]
-    [clojure.core.async :as async])
+   [clojure.test :refer :all]
+   [taoensso.timbre :as log]
+   [harja.kyselyt.urakat :as urk-q]
+   [harja.palvelin.komponentit.todennus :as todennus]
+   [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+   [harja.palvelin.komponentit.http-palvelin :as http]
+   [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+   [harja.palvelin.komponentit.tietokanta :as tietokanta]
+   [harja.palvelin.komponentit.liitteet :as liitteet]
+   [com.stuartsierra.component :as component]
+   [clj-time.core :as t]
+   [clj-time.coerce :as tc]
+   [clojure.core.async :as async]
+   [harja.domain.oikeudet :as oikeudet])
   (:import (java.util Locale)))
 
 (def jarjestelma nil)
@@ -185,7 +186,7 @@
     [this nimi kayttaja payload]
     "kutsu HTTP palvelufunktiota suoraan."))
 
-(defn testi-http-palvelin
+ (defn testi-http-palvelin
   "HTTP 'palvelin' joka vain ottaa talteen julkaistut palvelut."
   []
   (let [palvelut (atom {})]
@@ -200,9 +201,12 @@
 
       FeikkiHttpPalveluKutsu
       (kutsu-palvelua [_ nimi kayttaja]
-        ((get @palvelut nimi) kayttaja))
+        (let [vastaus ((get @palvelut nimi) kayttaja)]
+          (assert oikeudet/*oikeustarkistus-tehty*)
+          vastaus))
       (kutsu-palvelua [_ nimi kayttaja payload]
         (let [vastaus ((get @palvelut nimi) kayttaja payload)]
+          (assert oikeudet/*oikeustarkistus-tehty*)
           (if (http/async-response? vastaus)
             (async/<!! (:channel vastaus))
             vastaus))))))

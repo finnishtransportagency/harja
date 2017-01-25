@@ -12,6 +12,14 @@
 (declare on-oikeus? on-muu-oikeus?)
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
+(def ^:dynamic *oikeustarkistus-tehty*
+  "Onko tämän pyynnön käsittelyssä tehty jokin oikeustarkistus? nil = ei olla kutsussa, false = ei vielä, true = on tehty"
+  nil)
+
+(defn merkitse-oikeustarkistus-tehdyksi! []
+  (when (false? *oikeustarkistus-tehty*)
+    (set! *oikeustarkistus-tehty* true)))
+
 #?(:cljs
    (extend-type KayttoOikeus
      cljs.core/IFn
@@ -157,6 +165,7 @@
      ([oikeus kayttaja]
       (vaadi-lukuoikeus oikeus kayttaja nil))
      ([oikeus kayttaja urakka-id]
+      (merkitse-oikeustarkistus-tehdyksi!)
       (when-not (voi-lukea? oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
                  (str "Käyttäjällä '" (pr-str kayttaja) "' ei lukuoikeutta "
@@ -169,6 +178,7 @@
      ([oikeus kayttaja]
       (vaadi-kirjoitusoikeus oikeus kayttaja nil))
      ([oikeus kayttaja urakka-id]
+      (merkitse-oikeustarkistus-tehdyksi!)
       (when-not (voi-kirjoittaa? oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
                  (str "Käyttäjällä '" (pr-str kayttaja) "' ei kirjoitusoikeutta "
@@ -180,6 +190,7 @@
      ([tyyppi oikeus kayttaja]
       (vaadi-oikeus tyyppi oikeus kayttaja nil))
      ([tyyppi oikeus kayttaja urakka-id]
+      (merkitse-oikeustarkistus-tehdyksi!)
       (when-not  (on-muu-oikeus? tyyppi oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
                  (str "Käyttäjällä '" (pr-str kayttaja) "' ei oikeutta '" tyyppi "' "
