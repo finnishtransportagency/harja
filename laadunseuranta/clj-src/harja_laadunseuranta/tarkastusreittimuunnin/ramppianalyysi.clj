@@ -5,6 +5,13 @@
   (:require [taoensso.timbre :as log]
             [harja.domain.tierekisteri :as tr-domain]))
 
+(defn lisaa-merkintoihin-ramppitiedot
+  "Lisää merkintöihin tiedon siitä, onko piste projisoitu rampille."
+  [merkinnat]
+  (mapv #(do
+           (assoc % :piste-rampilla? (tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))))
+        merkinnat))
+
 (defn maarittele-alkavien-ramppien-indeksit
   "Palauttaa indeksit merkintöihin, joissa siirrytään ei-ramppitieltä rampille.
    Indeksiä seuraavat merkinnät ovat rampilla ajettuja pisteitä
@@ -13,14 +20,14 @@
   (let [tulos (reduce (fn [tulos seuraava]
                         (if
                           ;; Edellinen piste ei ollut rampilla, mutta seuraava on
-                          ;; --> Otetaan indeksi talteen
+                          ;; --> Otetaan indeksi talteen ja jatketaan reitin tutkimista...
                           (and (not (-> tulos :edellinen-piste :piste-rampilla?))
                                (:piste-rampilla? seuraava))
-                          ;; Jatketaan...
                           (assoc tulos :edellinen-piste seuraava
                                        :kasiteltava-indeksi (inc (:kasiteltava-indeksi tulos))
                                        :ramppien-alut
                                        (conj (:ramppien-alut tulos) (:kasiteltava-indeksi tulos)))
+                          ;; ...muuten vain jatketaan reitin tutkimista
                           (assoc tulos :edellinen-piste seuraava
                                        :kasiteltava-indeksi (inc (:kasiteltava-indeksi tulos)))))
                       {:ramppien-alut []
@@ -79,9 +86,9 @@
   (let [merkinnat-ennen-ramppia (take ramppi-indeksi kaikki-merkinnat)
         merkinnat-rampin-jalkeen (drop (+ ramppi-indeksi (count ramppimerkinnat)) kaikki-merkinnat)]
     (vec (concat
-       merkinnat-ennen-ramppia
-       ramppimerkinnat
-       merkinnat-rampin-jalkeen))))
+           merkinnat-ennen-ramppia
+           ramppimerkinnat
+           merkinnat-rampin-jalkeen))))
 
 (defn- korjaa-vahapatoinen-ramppi
   [merkinnat-ramppitiedoilla ramppi-indeksi n]
@@ -98,13 +105,14 @@
       (merkinnat-korjatulla-rampilla merkinnat-ramppitiedoilla ramppi-indeksi korjattu-ramppi))))
 
 (defn- korjaa-vahapatoiset-rampit
-  "Ottaa reittimerkinnät ramppitiedolla ja analysoi kaikki rampille siirtymiset.
+  "Ottaa reittimerkinnät ja analysoi kaikki rampille siirtymiset.
    Mikäli rampilla ajo sisältää vähemmän kuin N pistettä, projisoi rampin takaisin edeltävälle tielle.
    Muussa tapauksessa ei tee rampille mitään.
 
    Palauttaa kaikki merkinnät, vähäpätöiset ramppiosat on korjattu."
-  [merkinnat-ramppitiedoilla n]
-  (let [alkavien-ramppien-indeksit (maarittele-alkavien-ramppien-indeksit merkinnat-ramppitiedoilla)
+  [merkinnat n]
+  (let [merkinnat-ramppitiedoilla (lisaa-merkintoihin-ramppitiedot merkinnat)
+        alkavien-ramppien-indeksit (maarittele-alkavien-ramppien-indeksit merkinnat-ramppitiedoilla)
         ;; Käydään jokainen rampille siirtymä erikseen läpi ja korjataan tarvittaessa.
         korjatut-rampit (reduce (fn [edellinen-tulos seuraava-indeksi]
                                   (korjaa-vahapatoinen-ramppi edellinen-tulos seuraava-indeksi n))
@@ -112,7 +120,10 @@
                                 alkavien-ramppien-indeksit)]
     korjatut-rampit))
 
-(defn- merkinnat-erkanevat-rampilla-liian-kauas? [rampin-merkinnat treshold]
+(defn- merkinnat-erkanevat-rampilla-liian-kauas? [ramppia-edeltava-merkinta rampin-merkinnat treshold]
+  (log/debug "RAMPPIA EDELTÄVÄ: " (pr-str ramppia-edeltava-merkinta))
+  (log/debug "RAMPIN MERKINNÄT: " (pr-str ramppia-edeltava-merkinta))
+  (log/debug "TRESHOLD: " (pr-str treshold))
   false)
 
 (defn- korjaa-erkaneva-ramppi
@@ -121,24 +132,27 @@
   (if (= ramppi-indeksi 0)
     merkinnat-ramppitiedoilla ;; Merkinnät alkavat rampilta, ei tehdä mitään.
     (let [rampin-merkinnat (rampin-merkinnat-indeksista merkinnat-ramppitiedoilla ramppi-indeksi)
-          korjattu-ramppi (if (merkinnat-erkanevat-rampilla-liian-kauas? rampin-merkinnat treshold)
-                            (projisoi-ramppi-oikealle-tielle (nth merkinnat-ramppitiedoilla
-                                                                  (dec ramppi-indeksi))
-                                                             rampin-merkinnat)
-                            rampin-merkinnat)
+          korjattu-ramppi (let [ramppia-edeltava-merkinta (nth merkinnat-ramppitiedoilla
+                                                               (dec ramppi-indeksi))]
+                            (if (merkinnat-erkanevat-rampilla-liian-kauas? ramppia-edeltava-merkinta
+                                                                           rampin-merkinnat
+                                                                           treshold)
+                              (projisoi-ramppi-oikealle-tielle ramppia-edeltava-merkinta
+                                                               rampin-merkinnat)
+                              rampin-merkinnat))
           _ (log/debug "Erkaneva ramppi havaittu ja korjattu? " (not= rampin-merkinnat korjattu-ramppi))]
       (merkinnat-korjatulla-rampilla merkinnat-ramppitiedoilla ramppi-indeksi korjattu-ramppi))))
 
 (defn- korjaa-erkanevat-rampit
-  "Ottaa reittimerkinnät ramppitiedolla ja analysoi kaikki rampille siirtymiset.
+  "Ottaa reittimerkinnät ja analysoi kaikki rampille siirtymiset.
    Mikäli pisteet erkanevat rampilla riittävän kauas (treshold) edellisestä tiestä, tulkitaan
    ajon käyneen rampilla. Mikäli kuitenkaan selkeää erkanemista ei löydy, merkinnät projisoidaan
    takaisin ramppia edeltävälle tielle.
 
    Palauttaa kaikki merkinnät, joissa erkanevat ramppiosat on korjattu."
-  [merkinnat-ramppitiedoilla treshold]
-  ;; TODO
-  (let [alkavien-ramppien-indeksit (maarittele-alkavien-ramppien-indeksit merkinnat-ramppitiedoilla)
+  [merkinnat treshold]
+  (let [merkinnat-ramppitiedoilla (lisaa-merkintoihin-ramppitiedot merkinnat)
+        alkavien-ramppien-indeksit (maarittele-alkavien-ramppien-indeksit merkinnat-ramppitiedoilla)
         ;; Käydään jokainen rampille siirtymä erikseen läpi ja korjataan tarvittaessa.
         korjatut-rampit (reduce (fn [edellinen-tulos seuraava-indeksi]
                                   (korjaa-erkaneva-ramppi edellinen-tulos seuraava-indeksi treshold))
@@ -149,22 +163,15 @@
 (defn- projisoi-virheelliset-rampit-uudelleen
   "Projisoi virheelliset rampit seuraavasti:
   - Jos rampilla ajoa on erittäin pieni osuus, projisoi rampin takaisin tielle, josta rampille ajettiin"
-  [merkinnat-ramppitiedoilla]
+  [merkinnat]
   (log/debug "Projisoidaan virheelliset rampit uudelleen")
   (log/debug "Rampeille siirtymisiä havaittu: "
-             (count (maarittele-alkavien-ramppien-indeksit merkinnat-ramppitiedoilla)) "kpl.")
-  (as-> merkinnat-ramppitiedoilla m
+             (count (maarittele-alkavien-ramppien-indeksit merkinnat)) "kpl.")
+  (as-> merkinnat m
         ;; Vain muutama piste rampilla -> projisoi uudelleen
         (korjaa-vahapatoiset-rampit m 5)
         ;; Pisteet erkanevat rampille, mutta eivät liian kauemmas -> projisoi uudelleen
         (korjaa-erkanevat-rampit m 20)))
-
-(defn lisaa-merkintoihin-ramppitiedot
-  "Lisää merkintöihin tiedon siitä, onko piste projisoitu rampille."
-  [merkinnat]
-  (mapv #(do
-           (assoc % :piste-rampilla? (tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))))
-        merkinnat))
 
 (defn korjaa-virheelliset-rampit
   "Ottaa tarkastusreittimerkinnät, jotka on projisoitu tieverkolle ja joilla on myös
@@ -180,8 +187,5 @@
    GPS:n epätarkkuudesta johtuen tämä funktio pelaa todennäköisyyksillä eikä tulos ole täysin varma."
   [merkinnat]
   (log/debug "Korjataan tarkastusajon virheelliset rampit. Merkintöjä: " (count merkinnat))
-  (let [merkinnat-ramppitiedoilla (lisaa-merkintoihin-ramppitiedot merkinnat)
-        korjatut-merkinnat (if (some :piste-rampilla? merkinnat-ramppitiedoilla)
-                             (projisoi-virheelliset-rampit-uudelleen merkinnat-ramppitiedoilla)
-                             merkinnat-ramppitiedoilla)]
+  (let [korjatut-merkinnat (projisoi-virheelliset-rampit-uudelleen merkinnat)]
     (mapv #(dissoc % :piste-rampilla?) korjatut-merkinnat)))
