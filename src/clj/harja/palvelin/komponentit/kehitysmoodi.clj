@@ -10,7 +10,7 @@
 
 (def +wmts-url+ "https://karttakuva.maanmittauslaitos.fi")
 
-(def basic-auth-header (delay (slurp "../.harja/mml")))
+(def basic-auth-header (delay (str/trim-newline (slurp "../.harja/mml"))))
 
 (def debug-last-wmts-response (atom nil))
 
