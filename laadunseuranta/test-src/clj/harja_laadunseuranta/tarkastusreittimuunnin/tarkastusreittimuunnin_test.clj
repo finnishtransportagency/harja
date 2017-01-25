@@ -506,7 +506,8 @@
   ;; HUOMAA: Tämä EI poista mahdollisesti jo kerran tehtyä muunnosta!
   (let [tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
         tarkastukset (ls-core/lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)]
-    (ls-core/tallenna-muunnetut-tarkastukset-kantaan db tarkastukset 1 urakka-id)))
+    (jdbc/with-db-transaction [tx db]
+      (ls-core/tallenna-muunnetut-tarkastukset-kantaan tx tarkastukset 1 urakka-id))))
 
 (defn debuggaa-tarkastusajon-muunto [db tarkastusajo-id]
   ;; Muista ajaa tieverkko kantaan, jotta geometrisointi toimii!
