@@ -10,15 +10,4 @@ while ! nc -z localhost 5432; do
     sleep 0.5;
 done;
 
-# Ylempi tarkistus ei vielä takaa, että flyway saa yhteyden, vaan docker on käynnissä
-until mvn flyway:info &> /dev/null; do
-    echo "Odotetaan että flyway saa yhteyden kantaan.."
-    sleep 0.5
-done
-
-echo "Yhteys saatu! Ajetaan migraatiot"
-mvn flyway:migrate
-
-
-echo "Ajetaan testidata"
-docker run -v `pwd`:/tietokanta -it --link harjadb:postgres --rm postgres sh /tietokanta/devdb_testidata.sh
+sh devdb_migrate.sh
