@@ -54,7 +54,8 @@
              [konversio :as konv]
              [tilannekuva :as q]
              [turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
-             [urakat :as urakat-q]]
+             [urakat :as urakat-q]
+             [toteumat :as toteumat-q]]
             [harja.palvelin.komponentit.http-palvelin
              :refer
              [julkaise-palvelu poista-palvelut]]
@@ -476,6 +477,51 @@
                                        :tehtavat [(:tehtava %)]))))
 
 
+(defn- clj-piste->sql [m]
+  (let [[x y] (:coordinates m)]
+    (str "POINT(" (float x) " " (float y) ")")))
+
+(defn- interpoloi [n alkuarvo loppuarvo]
+  (+ alkuarvo (* (- loppuarvo alkuarvo) n)))
+
+(defn interpoloitu-aika-pisteessa [db klikkauspiste toteuma-id]
+  (let [muunna-sijainti #(assoc % :sijainti (geo/pg->clj (:sijainti %)))
+        reittipisteet (map muunna-sijainti
+                           (toteumat-q/hae-toteuman-reittipisteet db toteuma-id))
+        ymparoivat (fn [piste reittipisteet]
+                     (let [pisteen-gettime #(-> % :aika .getTime)
+                           myohemmat-pisteet (filter #(< (pisteen-gettime %) (pisteen-gettime piste)) reittipisteet)
+                           aiemmat-pisteet (filter #(> (pisteen-gettime %) (pisteen-gettime piste)) reittipisteet)
+                           lahin-aiempi (when (not-empty aiemmat-pisteet) (apply max-key pisteen-gettime aiemmat-pisteet))
+                           lahin-myohempi (when (not-empty myohemmat-pisteet) (apply min-key pisteen-gettime myohemmat-pisteet))]
+                       [lahin-aiempi lahin-myohempi]))
+        etaisyys (fn [rp]
+                   (let [[x y] (-> rp :sijainti :coordinates)
+                         xd (Math/abs (- x (:x klikkauspiste)))
+                         yd (Math/abs (- y (:y klikkauspiste)))]
+                     (Math/sqrt (+ (* xd xd) (* yd yd)))))
+        lahin-piste (apply min-key etaisyys reittipisteet)
+        [edellinen-piste seuraava-piste] (ymparoivat lahin-piste reittipisteet)
+        esi-naapurit-etaisyyksilla (q/reittipisteiden-sijainnit-toteuman-reitilla
+                                    db {:toteuma-id toteuma-id :reittipiste-idt (map :id [edellinen-piste seuraava-piste])})
+        naapurit-etaisyyksilla (map muunna-sijainti esi-naapurit-etaisyyksilla)
+
+        lahin-naapuri (apply min-key etaisyys naapurit-etaisyyksilla)
+        paikka-vastaus (q/suhteellinen-paikka-pisteiden-valissa
+                        db {:rp1 (clj-piste->sql (:sijainti lahin-naapuri)) :rp2 (clj-piste->sql (:sijainti lahin-piste))
+                            :piste (clj-piste->sql  {:type :point :coordinates [(:x  klikkauspiste ) (:y klikkauspiste)]})})
+        pisteen-paikka (:paikka (first paikka-vastaus))
+        sql->aikaleima (fn [reittipiste] (-> reittipiste :aika .getTime))
+        aikaleima->aika #(new java.util.Date %)]
+
+    (aikaleima->aika (long (interpoloi pisteen-paikka (sql->aikaleima lahin-naapuri) (sql->aikaleima lahin-piste))))))
+
+(defn interpoloi-toteuman-aika-pisteelle [asia parametrit db]
+  (println "itap kutsuttu, avaimet:" (keys asia))
+  (let [koordinaatit (select-keys parametrit [:x :y])]
+    (println "koordinaatit" koordinaatit)
+    (assoc asia :aika-pisteessa (interpoloitu-aika-pisteessa db koordinaatit (-> asia :tehtava :id)))))
+
 (defn- hae-toteumien-tiedot-kartalle
   "Hakee toteumien tiedot pisteessä infopaneelia varten."
   [db user parametrit]
@@ -484,7 +530,8 @@
          (comp
           (map konv/alaviiva->rakenne)
           (map #(assoc % :tyyppi-kartalla :toteuma))
-          (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
+          (map #(update % :tierekisteriosoite konv/lue-tr-osoite))
+          (map #(interpoloi-toteuman-aika-pisteelle % parametrit db)))
          (q/hae-toteumien-asiat db
                                 (as-> parametrit p
                                   (suodattimet-parametreista p)

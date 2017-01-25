@@ -506,6 +506,37 @@ WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       ST_Distance(t.reitti, ST_MakePoint(:x,:y)) < :toleranssi;
 
 
+-- name: hae-toteuman-interpolointitiedot
+-- hakee tarvittavat tiedot kun interpoloidaan aika-arvio pisteelle
+
+SELECT
+  -- kuinka lähellä tämä reittipiste on reittilinestringin klikkausta lähinnä oleva apistettä?
+  ST_Distance(rp.sijainti::geometry,
+              ST_ClosestPoint(reitin_lahin_osalinestring (rp.sijainti::geometry, :toteuma-id ::integer), :piste ::geometry)) AS etaisyys,
+  rp.sijainti AS rp_sijainti,
+  rp.aika AS rp_aika,
+  -- tämän reittipisteen suhteellinen sijainti reittiviivalla
+  ST_LineLocatePoint(reitin_lahin_osalinestring (:piste ::geometry, :toteuma-id ::integer), rp.sijainti ::geometry) AS paikka_viivalla,
+  rp.id AS lahin_rp_id
+FROM reittipiste rp
+WHERE rp.toteuma = :toteuma-id
+ORDER BY etaisyys
+LIMIT 3;
+
+-- name: reittipisteiden-sijainnit-toteuman-reitilla
+SELECT
+  ST_ClosestPoint(t.reitti, rp.sijainti ::geometry) AS sijainti,
+  rp.id AS reittipiste_id,
+  rp.aika AS aika
+FROM toteuma t, reittipiste rp
+WHERE t.id = :toteuma-id AND rp.toteuma = t.id AND  rp.id IN (:reittipiste-idt);
+
+-- name: suhteellinen-paikka-pisteiden-valissa
+SELECT
+  ST_LineLocatePoint(v.viiva ::geometry, ST_ClosestPoint (v.viiva ::geometry, :piste ::geometry) ::geometry) AS paikka
+FROM
+  (SELECT ST_MakeLine(:rp1 ::geometry, :rp2 ::geometry) AS viiva) v;
+
 -- name: hae-tyokoneselitteet
 -- Hakee työkoneiden selitteet
 SELECT
