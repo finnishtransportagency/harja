@@ -149,7 +149,7 @@
   (log/debug "Muutetaan reittipisteet tarkastuksiksi")
   (let [merkinnat-tr-osoitteilla (q/hae-reitin-merkinnat-tieosoitteilla
                                    tx {:tarkastusajo tarkastusajo-id
-                                       :laheiset_tiet_treshold 100})
+                                       :laheiset_tiet_threshold 100})
         merkinnat-tr-osoitteilla (lisaa-reittimerkinnoille-lopullinen-tieosoite merkinnat-tr-osoitteilla)
         tarkastukset (reittimuunnin/reittimerkinnat-tarkastuksiksi merkinnat-tr-osoitteilla)]
     (log/debug "Reittipisteet muunnettu tarkastuksiksi.")

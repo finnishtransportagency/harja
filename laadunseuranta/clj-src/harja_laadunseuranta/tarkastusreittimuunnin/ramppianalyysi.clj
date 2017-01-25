@@ -131,23 +131,30 @@
 
    treshold on metrimäärä rampin alkupisteestä, jota käytetään rajana määrittämään luotettava
    rampille siirtyminen."
-  [ramppia-edeltava-merkinta rampin-merkinnat treshold]
+  [ramppia-edeltava-merkinta rampin-merkinnat threshold]
   (let [tie-ennen-ramppia (get-in ramppia-edeltava-merkinta [:tr-osoite :tie])
-        ainakin-yksi-varma-piste-ylittaa-tresholdin?
-        ;; Löytyykö ainakin yksi reittimerkintä, jonka etäisyys ramppia edeltävästä tiestä
-        ;; ylittää tresholdin niin, että myös GPS:n epätarkkuus on huomioitu
+        ainakin-yksi-varma-piste-ylittaa-thresholdin?
+        ;; Löytyykö rampilta ainakin yksi reittimerkintä, jonka etäisyys ramppia edeltävästä tiestä
+        ;; ylittää thresholdin niin, että myös GPS:n epätarkkuus on huomioitu
         (> (count (filter #(let [lahin-osuma-edelliselle-tielle
                                  (laheisten-pisteiden-lahin-osuma-tielle % tie-ennen-ramppia)]
                              (and lahin-osuma-edelliselle-tielle
-                                  (>= (:etaisyys-gps-pisteesta lahin-osuma-edelliselle-tielle)
-                                      (- treshold
-                                         (:gps-tarkkuus %)))))
+                                  (>=
+                                    ;; GPS:n epätarkkuudesta johtuen projisio voi olla lähempänä
+                                    ;; kuin suoraan pisteestä laskettu etäisyys. Siispä vähennetään
+                                    ;; etäisyydestä GPS:n aiheuttama epätarkkuus
+                                    ;; Jos epätarkkuus on suuri, pisteen tulee olla hyvin kaukana
+                                    ;; projisioidusta tiestä, jotta uskomme sen ylittävän thresholdin
+                                    (max (- (:etaisyys-gps-pisteesta lahin-osuma-edelliselle-tielle)
+                                            (:gps-tarkkuus %))
+                                         0)
+                                    threshold)))
                           rampin-merkinnat))
            0)]
-    ainakin-yksi-varma-piste-ylittaa-tresholdin?))
+    ainakin-yksi-varma-piste-ylittaa-thresholdin?))
 
 (defn- korjaa-rampilla-ajo
-  [merkinnat-ramppitiedoilla ramppi-indeksi treshold]
+  [merkinnat-ramppitiedoilla ramppi-indeksi threshold]
   (log/debug "Analysoidaan mahdollisesti virheellinen rampilla ajo indeksissä: "
              ramppi-indeksi "(" (:tr-osoite (nth merkinnat-ramppitiedoilla ramppi-indeksi)) ")")
   (if (= ramppi-indeksi 0)
@@ -157,7 +164,7 @@
                                                                (dec ramppi-indeksi))]
                             (if (merkinnat-todennakoisesti-ajettu-rampilla? ramppia-edeltava-merkinta
                                                                             rampin-merkinnat
-                                                                            treshold)
+                                                                            threshold)
                               rampin-merkinnat
                               (projisoi-ramppi-oikealle-tielle ramppia-edeltava-merkinta
                                                                rampin-merkinnat)))]
@@ -165,17 +172,17 @@
 
 (defn- korjaa-rampilla-ajot
   "Ottaa reittimerkinnät ja analysoi kaikki rampille siirtymiset.
-   Mikäli pisteet erkanevat rampilla riittävän kauas (treshold) edellisestä tiestä, tulkitaan
+   Mikäli pisteet erkanevat rampilla riittävän kauas (threshold) edellisestä tiestä, tulkitaan
    ajon käyneen rampilla. Mikäli kuitenkaan selkeää erkanemista ei löydy, merkinnät projisoidaan
    takaisin ramppia edeltävälle tielle.
 
    Palauttaa kaikki merkinnät, joissa erkanevat ramppiosat on korjattu."
-  [merkinnat treshold]
+  [merkinnat threshold]
   (let [merkinnat-ramppitiedoilla (lisaa-merkintoihin-ramppitiedot merkinnat)
         alkavien-ramppien-indeksit (maarittele-alkavien-ramppien-indeksit merkinnat-ramppitiedoilla)
         ;; Käydään jokainen rampille siirtymä erikseen läpi ja korjataan tarvittaessa.
         korjatut-rampit (reduce (fn [edellinen-tulos seuraava-indeksi]
-                                  (korjaa-rampilla-ajo edellinen-tulos seuraava-indeksi treshold))
+                                  (korjaa-rampilla-ajo edellinen-tulos seuraava-indeksi threshold))
                                 merkinnat-ramppitiedoilla
                                 alkavien-ramppien-indeksit)]
     korjatut-rampit))
