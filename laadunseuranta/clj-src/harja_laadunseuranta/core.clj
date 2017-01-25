@@ -6,7 +6,7 @@
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [harja-laadunseuranta.tietokanta :as tietokanta]
             [harja-laadunseuranta.kyselyt :as q]
-            [harja-laadunseuranta.tarkastusreittimuunnin :as reittimuunnin]
+            [harja-laadunseuranta.tarkastusreittimuunnin.tarkastusreittimuunnin :as reittimuunnin]
             [harja-laadunseuranta.schemas :as schemas]
             [harja-laadunseuranta.utils :as utils]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
