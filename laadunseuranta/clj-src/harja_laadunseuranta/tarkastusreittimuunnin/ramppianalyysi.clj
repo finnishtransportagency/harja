@@ -36,27 +36,32 @@
                       merkinnat)]
     (:ramppien-alut tulos)))
 
+(defn- laheisten-pisteiden-lahin-osuma-tielle
+  "Etsii merkinnän läheisten teiden tiedoista annetun tienumeron projisoinnit ja palauttaa lähimmän."
+  [merkinta tie]
+  (let [projisoitavaa-tieta-vastaavat-osoitteet (filter #(= (:tie %) tie)
+                                                        (:laheiset-tr-osoitteet merkinta))
+        lahin-vastaava-osoite (first (sort-by :etaisyys-gps-pisteesta projisoitavaa-tieta-vastaavat-osoitteet))]
+    lahin-vastaava-osoite))
+
 (defn- projisoi-merkinta-oikealle-tielle
   "Projisoi yksittäisen merkinnän annetulle tielle"
   [merkinta projisoitava-tie]
-  (let [projisoitavaa-tieta-vastaavat-osoitteet (filter #(= (:tie %) projisoitava-tie)
-                                                        (:laheiset-tr-osoitteet merkinta))
-        lahin-vastaava-osoite (first (sort-by :etaisyys-gps-pisteesta projisoitavaa-tieta-vastaavat-osoitteet))]
-    (if lahin-vastaava-osoite
-      (do
-        (log/debug "Projisoidaan ramppimerkintä tielle: " projisoitava-tie)
-        (-> merkinta
-            (assoc-in [:tr-osoite :tie] (:tie lahin-vastaava-osoite))
-            (assoc-in [:tr-osoite :aosa] (:aosa lahin-vastaava-osoite))
-            (assoc-in [:tr-osoite :aet] (:aet lahin-vastaava-osoite))
-            (assoc-in [:tr-osoite :losa] (:losa lahin-vastaava-osoite))
-            (assoc-in [:tr-osoite :let] (:let lahin-vastaava-osoite))))
-      (do
-        (log/debug (str "Ei voitu projisoida ramppimerkintää tielle: " projisoitava-tie))
-        ;; Poistetaan merkinnältä projisoitu osoite. Tarkastusreittimuunnin olettaa merkinnän olevan
-        ;; osa samaa tietä niin kauan kunnes oikea osoite löytyy.
-        ;; Merkintöjä ei kuitenkaan sovi poistaa, sillä muuten saatetaan menettää havaintoja / mittauksia.
-        (dissoc merkinta :tr-osoite)))))
+  (if-let [lahin-vastaava-projisio (laheisten-pisteiden-lahin-osuma-tielle merkinta projisoitava-tie)]
+    (do
+      (log/debug "Projisoidaan ramppimerkintä tielle: " projisoitava-tie)
+      (-> merkinta
+          (assoc-in [:tr-osoite :tie] (:tie lahin-vastaava-projisio))
+          (assoc-in [:tr-osoite :aosa] (:aosa lahin-vastaava-projisio))
+          (assoc-in [:tr-osoite :aet] (:aet lahin-vastaava-projisio))
+          (assoc-in [:tr-osoite :losa] (:losa lahin-vastaava-projisio))
+          (assoc-in [:tr-osoite :let] (:let lahin-vastaava-projisio))))
+    (do
+      (log/debug (str "Ei voitu projisoida ramppimerkintää tielle: " projisoitava-tie))
+      ;; Poistetaan merkinnältä projisoitu osoite. Tarkastusreittimuunnin olettaa merkinnän olevan
+      ;; osa samaa tietä niin kauan kunnes oikea osoite löytyy.
+      ;; Merkintöjä ei kuitenkaan sovi poistaa, sillä muuten saatetaan menettää havaintoja / mittauksia.
+      (dissoc merkinta :tr-osoite))))
 
 (defn- projisoi-ramppi-oikealle-tielle
   "Projisoi rampin takaisin ramppia edeltäneelle tielle"
@@ -121,9 +126,12 @@
     korjatut-rampit))
 
 (defn- merkinnat-erkanevat-rampilla-liian-kauas? [ramppia-edeltava-merkinta rampin-merkinnat treshold]
-  (log/debug "RAMPPIA EDELTÄVÄ: " (pr-str ramppia-edeltava-merkinta))
-  (log/debug "RAMPIN MERKINNÄT: " (pr-str rampin-merkinnat))
-  (log/debug "TRESHOLD: " (pr-str treshold))
+  (let [edellisen-merkinnan-tie (get-in ramppia-edeltava-merkinta [:tr-osoite :tie])]
+    (doseq [merkinta rampin-merkinnat]
+      (let [lahin-osuma-edellisella-tiella (laheisten-pisteiden-lahin-osuma-tielle merkinta edellisen-merkinnan-tie)]
+      (log/debug "Lähin edellisellä tiellä: " (pr-str lahin-osuma-edellisella-tiella)))))
+
+  ;; TODO KESKEN, palauta nyt vain false
   false)
 
 (defn- korjaa-erkaneva-ramppi
