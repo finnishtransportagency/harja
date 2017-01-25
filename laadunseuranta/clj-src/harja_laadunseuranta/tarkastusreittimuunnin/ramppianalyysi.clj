@@ -97,7 +97,8 @@
 
 (defn- korjaa-vahapatoinen-ramppi
   [merkinnat-ramppitiedoilla ramppi-indeksi n]
-  (log/debug "Analysoidaan mahdollisesti vähäpätöinen ramppi indeksissä: " ramppi-indeksi)
+  (log/debug "Analysoidaan mahdollisesti vähäpätöinen ramppi indeksissä: "
+             ramppi-indeksi "(" (:tr-osoite (nth merkinnat-ramppitiedoilla ramppi-indeksi)) ")")
   (if (= ramppi-indeksi 0)
     merkinnat-ramppitiedoilla ;; Merkinnät alkavat rampilta, ei tehdä mitään.
     (let [rampin-merkinnat (rampin-merkinnat-indeksista merkinnat-ramppitiedoilla ramppi-indeksi)
@@ -130,14 +131,15 @@
   (let [edellisen-merkinnan-tie (get-in ramppia-edeltava-merkinta [:tr-osoite :tie])]
     (doseq [merkinta rampin-merkinnat]
       (let [lahin-osuma-edellisella-tiella (laheisten-pisteiden-lahin-osuma-tielle merkinta edellisen-merkinnan-tie)]
-      (log/debug "Lähin edellisellä tiellä: " (pr-str lahin-osuma-edellisella-tiella)))))
+      (log/debug "Lähin edellisellä tiellä (" edellisen-merkinnan-tie "): " (pr-str lahin-osuma-edellisella-tiella)))))
 
   ;; TODO KESKEN, palauta nyt vain false
   false)
 
 (defn- korjaa-erkaneva-ramppi
   [merkinnat-ramppitiedoilla ramppi-indeksi treshold]
-  (log/debug "Analysoidaan mahdollisesti erkaneva ramppi indeksissä: " ramppi-indeksi)
+  (log/debug "Analysoidaan mahdollisesti erkaneva ramppi indeksissä: "
+             ramppi-indeksi  "(" (:tr-osoite (nth merkinnat-ramppitiedoilla ramppi-indeksi)) ")")
   (if (= ramppi-indeksi 0)
     merkinnat-ramppitiedoilla ;; Merkinnät alkavat rampilta, ei tehdä mitään.
     (let [rampin-merkinnat (rampin-merkinnat-indeksista merkinnat-ramppitiedoilla ramppi-indeksi)
