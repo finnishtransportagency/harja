@@ -135,7 +135,7 @@
         (log/debug "Lähin edellisellä tiellä (" edellisen-merkinnan-tie "): " (pr-str lahin-osuma-edellisella-tiella)))))
 
   ;; TODO KESKEN, palauta nyt vain false
-  false)
+  true)
 
 (defn- korjaa-rampilla-ajo
   [merkinnat-ramppitiedoilla ramppi-indeksi treshold]
@@ -146,12 +146,12 @@
     (let [rampin-merkinnat (rampin-merkinnat-indeksista merkinnat-ramppitiedoilla ramppi-indeksi)
           korjattu-ramppi (let [ramppia-edeltava-merkinta (nth merkinnat-ramppitiedoilla
                                                                (dec ramppi-indeksi))]
-                            (if-not (merkinnat-erkanevat-rampilla-kauas? ramppia-edeltava-merkinta
+                            (if (merkinnat-erkanevat-rampilla-kauas? ramppia-edeltava-merkinta
                                                                          rampin-merkinnat
                                                                          treshold)
+                              rampin-merkinnat ;; Todennäköisesti ajo tapahtui oikeasti rampilla
                               (projisoi-ramppi-oikealle-tielle ramppia-edeltava-merkinta
-                                                               rampin-merkinnat)
-                              rampin-merkinnat))]
+                                                               rampin-merkinnat)))]
       (merkinnat-korjatulla-rampilla merkinnat-ramppitiedoilla ramppi-indeksi korjattu-ramppi))))
 
 (defn- korjaa-rampilla-ajot
