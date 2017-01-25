@@ -8,20 +8,20 @@
 (defn- projisoi-merkinta-oikealle-tielle
   "Projisoi yksittäisen merkinnän annetulle tielle"
   [merkinta projisoitava-tie]
-  (log/debug "Projisoidaan yksittäinen ramppimerkintä tielle: " projisoitava-tie)
   (let [projisoitavaa-tieta-vastaavat-osoitteet (filter #(= (:tie %) projisoitava-tie)
                                                         (:laheiset-tr-osoitteet merkinta))
         lahin-vastaava-osoite (first (sort-by :etaisyys-gps-pisteesta projisoitavaa-tieta-vastaavat-osoitteet))]
     (if lahin-vastaava-osoite
-      (-> merkinta
-          (assoc-in [:tr-osoite :tie] (:tie lahin-vastaava-osoite))
-          (assoc-in [:tr-osoite :aosa] (:aosa lahin-vastaava-osoite))
-          (assoc-in [:tr-osoite :aet] (:aet lahin-vastaava-osoite))
-          (assoc-in [:tr-osoite :losa] (:losa lahin-vastaava-osoite))
-          (assoc-in [:tr-osoite :let] (:let lahin-vastaava-osoite)))
       (do
-        (log/debug "Yritettiin korjata rampille osuneen merkinnän projisointi, mutta läheltä ei löydy
-                    projisointia halutulle tielle " projisoitava-tie)
+        (log/debug "Projisoidaan yksittäinen ramppimerkintä tielle: " projisoitava-tie)
+        (-> merkinta
+            (assoc-in [:tr-osoite :tie] (:tie lahin-vastaava-osoite))
+            (assoc-in [:tr-osoite :aosa] (:aosa lahin-vastaava-osoite))
+            (assoc-in [:tr-osoite :aet] (:aet lahin-vastaava-osoite))
+            (assoc-in [:tr-osoite :losa] (:losa lahin-vastaava-osoite))
+            (assoc-in [:tr-osoite :let] (:let lahin-vastaava-osoite))))
+      (do
+        (log/debug (str "Merkintää ei voida projisoida annetulle tielle: " projisoitava-tie))
         ;; Poistetaan merkinnältä projisoitu osoite. Tarkastusreittimuunnin olettaa merkinnän olevan
         ;; osa samaa tietä niin kauan kunnes oikea osoite löytyy.
         ;; Merkintöjä ei kuitenkaan sovi poistaa, sillä muuten saatetaan menettää havaintoja / mittauksia.
@@ -134,5 +134,7 @@
   [merkinnat]
   (log/debug "Korjataan tarkastusajon virheelliset rampit. Merkintöjä: " (count merkinnat))
   (let [merkinnat-ramppitiedoilla (lisaa-merkintoihin-ramppitiedot merkinnat)
-        korjatut-merkinnat (projisoi-virheelliset-rampit-uudelleen merkinnat-ramppitiedoilla)]
-    korjatut-merkinnat))
+        korjatut-merkinnat (if (some :piste-rampilla? merkinnat-ramppitiedoilla)
+                             (projisoi-virheelliset-rampit-uudelleen merkinnat-ramppitiedoilla)
+                             merkinnat-ramppitiedoilla)]
+    (mapv #(dissoc % :piste-rampilla?) korjatut-merkinnat)))

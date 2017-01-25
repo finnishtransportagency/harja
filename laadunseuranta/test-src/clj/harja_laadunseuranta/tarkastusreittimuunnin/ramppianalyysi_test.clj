@@ -52,7 +52,8 @@
                     korjatut-merkinnat))
       (is (every? #(or (= (get-in % [:tr-osoite :tie]) 4)
                        (nil? (get-in % [:tr-osoite :tie])))
-                  korjatut-merkinnat)))))
+                  korjatut-merkinnat))
+      (is (not-any? :piste-rampilla? korjatut-merkinnat) "Merkinnät eivät sisällä analyysin sisäistä avainta"))))
 
 (deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-osa-pisteista-osuu-rampille
   (let [tarkastusajo-id 666 ;; Osa pisteistä sijaitsee virheellisesti rampilla
