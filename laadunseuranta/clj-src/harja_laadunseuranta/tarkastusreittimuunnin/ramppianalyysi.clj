@@ -116,7 +116,7 @@
 (defn- korjaa-erkanevat-rampit
   "Ottaa reittimerkinnät ramppitiedolla ja analysoi kaikki rampille siirtymiset.
    Mikäli pisteet erkanevat rampilla riittävän kauas (treshold) edellisestä tiestä, tulkitaan
-   ajon käyneen rampilla. Mikäli selkeää erkanemista ei löydy, merkinnät projisoidaan
+   ajon käyneen rampilla. Mikäli kuitenkaan selkeää erkanemista ei löydy, merkinnät projisoidaan
    takaisin ramppia edeltävälle tielle.
 
    Palauttaa kaikki merkinnät, joissa erkanevat ramppiosat on korjattu."
@@ -138,7 +138,9 @@
   (log/debug "Rampeille siirtymisiä havaittu: "
              (count (maarittele-alkavien-ramppien-indeksit merkinnat-ramppitiedoilla)) "kpl.")
   (as-> merkinnat-ramppitiedoilla m
+        ;; Vain muutama piste rampilla -> projisoi uudelleen
         (korjaa-vahapatoiset-rampit m 5)
+        ;; Pisteet erkanevat rampille, mutta eivät liian kauemmas -> projisoi uudelleen
         (korjaa-erkanevat-rampit m 20)))
 
 (defn lisaa-merkintoihin-ramppitiedot
