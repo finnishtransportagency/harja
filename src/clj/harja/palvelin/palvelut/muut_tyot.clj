@@ -6,6 +6,7 @@
             [clojure.string :as str]
             [clojure.java.jdbc :as jdbc]
 
+            [harja.id :refer [id-olemassa?]]
             [harja.kyselyt.muutoshintaiset-tyot :as q]
             [harja.kyselyt.toteumat :as tot-q]
             [harja.kyselyt.konversio :as konv]
@@ -45,7 +46,7 @@
           (do
             (apply q/poista-muutoshintainen-tyo! parametrit))
           ;; uusien rivien id on negatiivinen
-          (if (neg? (:id tyo))
+          (if-not (id-olemassa? (:id tyo))
             ;; insert
             (do
               (apply q/lisaa-muutoshintainen-tyo<! parametrit))

@@ -5,7 +5,9 @@
   asioita. Palvelu on vain tilaajan käyttäjille, eikä hauissa ole mitään
   urakkarajauksia näkyvyyteen.
 
-  Tienäkymän kaikki löydökset renderöidään frontilla.
+  Tienäkymän kaikki löydökset renderöidään frontilla, koska tietomäärä on rajattu
+  yhteen tiehen ja aikaväliin. Tällä mallilla ei tarvitse tehdä erikseen enää
+  karttakuvan klikkauksesta hakua vaan kaikki tienäkymän tieto on jo frontilla.
 
   Kaikki hakufunktiot ottavat samat parametrit: tietokantayhteyden
   ja parametrimäpin, jossa on seuraavat tiedot:
@@ -26,7 +28,8 @@
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
             [harja.kyselyt.tienakyma :as q]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.palvelin.palvelut.tilannekuva :as tilannekuva]))
 
 (defonce debug-hakuparametrit (atom nil))
 
@@ -49,28 +52,43 @@
       :loppu loppu})))
 
 (defn- hae-toteumat [db parametrit]
-  (into []
-        (comp (geo/muunna-pg-tulokset :reitti)
-              (map #(assoc % :tyyppi-kartalla :toteuma)))
-        (q/hae-toteumat db parametrit)))
+  (konv/sarakkeet-vektoriin
+   (into []
+         (comp (map konv/alaviiva->rakenne)
+               (geo/muunna-pg-tulokset :reitti)
+               (map #(assoc % :tyyppi-kartalla :toteuma)))
+         (q/hae-toteumat db parametrit))
+   {:tehtava :tehtavat
+    :reittipiste :reittipisteet}
+   :id (constantly true)))
 
-(defn- hae-tyokoneet [db parametrit]
-  ;; FIXME: implement
-  [])
 
 (defn- hae-tarkastukset [db parametrit]
-  ;; FIXME: implement
-  [])
+  (into []
+        (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
+              (map #(konv/string->keyword % :tyyppi)))
+        (q/hae-tarkastukset db parametrit)))
 
 (defn- hae-turvallisuuspoikkeamat [db parametrit]
-  ;; FIXME: implement
-  [])
+  (into []
+        (comp (geo/muunna-pg-tulokset :sijainti)
+              (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama))
+              (map #(konv/array->keyword-set % :tyyppi)))
+        (q/hae-turvallisuuspoikkeamat db parametrit)))
+
+(defn- hae-ilmoitukset [db parametrit]
+  (konv/sarakkeet-vektoriin
+   (into []
+         (comp tilannekuva/ilmoitus-xf
+               (map #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))))
+         (q/hae-ilmoitukset db parametrit))
+   {:kuittaus :kuittaukset}))
 
 (def ^{:private true
        :doc "Määrittelee kaikki kyselyt mitä tienäkymään voi hakea"}
   tienakyma-haut
   {:toteumat #'hae-toteumat
-   :tyokoneet #'hae-tyokoneet
+   :ilmoitukset #'hae-ilmoitukset
    :tarkastukset #'hae-tarkastukset
    :turvallisuuspoikkeamat #'hae-turvallisuuspoikkeamat})
 
@@ -89,7 +107,8 @@
   (start [{db :db http :http-palvelin :as this}]
     (julkaise-palvelut
      http
-     :hae-tienakymaan (partial #'hae-tienakymaan db))
+     :hae-tienakymaan (fn [user valinnat]
+                        (hae-tienakymaan db user valinnat)))
     this)
 
   (stop [{http :http-palvelin :as this}]

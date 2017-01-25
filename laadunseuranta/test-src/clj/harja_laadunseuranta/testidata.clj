@@ -440,6 +440,34 @@
     :jatkuvat-havainnot [1]
     :pistemainen-havainto nil}])
 
+(def tarkastus-jossa-kaikki-mittaukset
+  [{:id 1 :sijainti [465641.5999816895 7230780.000024414]
+    :tarkastusajo 666
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/now))
+    :lumisuus 1
+    :talvihoito-tasaisuus 2
+    :kitkamittaus 3
+    :lampotila 4
+    :soratie-tasaisuus 1
+    :kiinteys 2
+    :polyavyys 3
+    :sivukaltevuus 4
+    :pistemainen-havainto nil}
+   {:id 2 :sijainti [466089.5999816895 7230916.000024414]
+    :tarkastusajo 666
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 3)))
+    :lumisuus 1
+    :talvihoito-tasaisuus 2
+    :kitkamittaus 3
+    :lampotila 4
+    :soratie-tasaisuus 1
+    :kiinteys 2
+    :polyavyys 3
+    :sivukaltevuus 4
+    :pistemainen-havainto nil}])
+
 (def tarkastus-jossa-kaikki-pisteet-samassa-sijainnissa
   [{:id 1 :sijainti [465641.5999816895 7230780.000024414]}
    {:id 2 :sijainti [465641.5999816895 7230780.000024414]}

@@ -195,4 +195,7 @@
 
        (click :#tallenna-paallystysilmoitus)
 
+       ;; Tallennusta kutsuttu
+       (let [tulos (<! tallennus)]
+         (is tulos))
        (done)))))
