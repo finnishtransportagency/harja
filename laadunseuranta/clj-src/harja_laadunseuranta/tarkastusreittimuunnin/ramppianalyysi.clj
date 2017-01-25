@@ -10,8 +10,21 @@
   [ramppia-edeltava-merkina rampin-merkinnat]
   (log/debug "Projisoidaan ramppi takaisin ramppia edeltäneelle tielle.")
   (log/debug "EDELTÄVÄ: " (pr-str ramppia-edeltava-merkina))
-  (log/debug "RAMPPI: " (pr-str ramppia-edeltava-merkina))
+  (log/debug "RAMPPI: " (pr-str rampin-merkinnat))
   rampin-merkinnat)
+
+(defn- rampin-merkinnat-indeksista
+  "Palauttaa indeksistä eteenpäin ne merkinnät, jotka ovat osa samaa rampilla ajoa"
+  [merkinnat-ramppitiedoilla ramppi-indeksi]
+  (let [indeksin-jalkeiset-merkinnat (last (split-at ramppi-indeksi merkinnat-ramppitiedoilla))
+        ;; Kerää rampin merkintöjä eteenpäin niin kauan kunnes ei olla enää rampilla
+        rampin-merkinnat (reduce (fn [merkinnat seuraava-merkinta]
+                                   (if (:piste-rampilla? seuraava-merkinta)
+                                     (conj merkinnat seuraava-merkinta)
+                                     (reduced merkinnat)))
+                                 []
+                                 indeksin-jalkeiset-merkinnat)]
+    rampin-merkinnat))
 
 (defn- korjaa-vahapatoiset-rampit
   "Ottaa reittimerkinnät ramppitiedolla sekä indeksin, joissa siirrytään rampille.
@@ -23,13 +36,7 @@
   (log/debug "Analysoidaan mahdollisesti vähäpätöinen ramppi indeksissä: " ramppi-indeksi)
   (if (= ramppi-indeksi 0)
     merkinnat-ramppitiedoilla ;; Merkinnät alkavat rampilta, ei tehdä mitään.
-    (let [indeksin-jalkeiset-pisteet (last (split-at ramppi-indeksi merkinnat-ramppitiedoilla))
-          rampin-merkinnat (reduce (fn [tulos seuraava]
-                                     (if (= seuraava true)
-                                       (conj tulos seuraava)
-                                       (reduced tulos)))
-                                   []
-                                   indeksin-jalkeiset-pisteet)
+    (let [rampin-merkinnat (rampin-merkinnat-indeksista merkinnat-ramppitiedoilla ramppi-indeksi)
           korjattu-ramppi (if (< (count rampin-merkinnat) n)
                             (projisoi-ramppi-oikealle-tielle (nth merkinnat-ramppitiedoilla
                                                                   (dec ramppi-indeksi))
