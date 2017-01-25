@@ -108,7 +108,6 @@
         tarkastus-ilman-tarkastajaa (-> tarkastustemplate
                                         (assoc-in [:tarkastus :tunniste :id] (second tarkastus-idt))
                                         (assoc-in [:tarkastus :tarkastaja] nil))
-
         tarkastus-ilman-vailinasella-tarkastajalla (-> tarkastustemplate
                                                        (assoc-in [:tarkastus :tunniste :id] (nth tarkastus-idt 2))
                                                        (assoc-in [:tarkastus :tarkastaja :etunimi] nil))
@@ -118,7 +117,6 @@
                       :tarkastukset [tarkastus-tarkastajan-kanssa
                                      tarkastus-ilman-tarkastajaa
                                      tarkastus-ilman-vailinasella-tarkastajalla]}
-
         vastaus (api-tyokalut/post-kutsu
                   ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
                   kayttaja
