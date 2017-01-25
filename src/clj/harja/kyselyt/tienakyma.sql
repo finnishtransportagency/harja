@@ -8,18 +8,13 @@ SELECT t.id,
        tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
        tt.maara AS tehtava_maara,
        tpk.yksikko AS tehtava_yksikko,
-       tpk.nimi AS tehtava_toimenpide,
-       rp.sijainti AS reittipiste_sijainti,
-       rp.aika AS reittipiste_aika
+       tpk.nimi AS tehtava_toimenpide
   FROM toteuma t
        JOIN urakka u ON t.urakka=u.id
        JOIN toteuma_tehtava tt ON tt.toteuma = t.id
        JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
        JOIN toimenpidekoodi tpk3 ON tpk.emo = tpk3.id
        JOIN kayttaja k ON t.luoja = k.id
-       LEFT JOIN reittipiste rp ON (t.id = rp.toteuma AND
-                                    rp.aika BETWEEN :alku AND :loppu)
-
  WHERE ST_Intersects(t.envelope, :sijainti)
    AND ST_Intersects(ST_CollectionHomogenize(t.reitti), :sijainti)
    AND ((t.alkanut BETWEEN :alku AND :loppu) OR
