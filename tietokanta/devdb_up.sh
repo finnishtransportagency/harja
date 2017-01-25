@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 echo "Käynnistetään harjadb docker image (PostgreSQL 9.5 + PostGIS 2.3)"
 docker run -p 5432:5432 --name harjadb -e POSTGRES_DB=harja -e POSTGRES_USER=harja -d mdillon/postgis:9.5
 
@@ -8,12 +10,13 @@ while ! nc -z localhost 5432; do
     sleep 0.5;
 done;
 
-echo "Odotellaan vielä hetki..."
 # Ylempi tarkistus ei vielä takaa, että flyway saa yhteyden, vaan docker on käynnissä
-sleep 20
+until mvn flyway:info &> /dev/null; do
+    echo "Odotetaan että flyway saa yhteyden kantaan.."
+    sleep 0.5
+done
 
-
-echo "Ajetaan migraatiot"
+echo "Yhteys saatu! Ajetaan migraatiot"
 mvn flyway:migrate
 
 

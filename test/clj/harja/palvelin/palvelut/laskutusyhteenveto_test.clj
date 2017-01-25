@@ -42,14 +42,6 @@
           poista-tpi (fn [tiedot]
                                 (map #(dissoc %
                                               :tpi) tiedot))
-          poista-suolasakot (fn [tiedot]
-                                (map #(dissoc %
-                                              :suolasakot_laskutettu
-                                              :suolasakot_laskutettu_ind_korotus
-                                              :suolasakot_laskutettu_ind_korotettuna
-                                              :suolasakot_laskutetaan
-                                              :suolasakot_laskutetaan_ind_korotus
-                                              :suolasakot_laskutetaan_ind_korotettuna) tiedot))
           haetut-tiedot-oulu-ilman-tpita (poista-tpi haetut-tiedot-oulu)
           haetut-tiedot-kajaani-ilman-tpita (poista-tpi haetut-tiedot-kajaani)
 
