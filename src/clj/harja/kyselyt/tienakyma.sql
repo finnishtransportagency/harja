@@ -1,4 +1,6 @@
 -- name: hae-toteumat
+-- fetch-size: 64
+-- row-fn: muunna-toteuma
 -- Hakee kaikki toteumat
 SELECT t.id,
        t.tyyppi,
@@ -21,6 +23,7 @@ SELECT t.id,
         (t.paattynyt BETWEEN :alku AND :loppu))
 
 -- name: hae-tarkastukset
+-- fetch-size: 64
 SELECT t.id, t.aika, t.tyyppi, t.tarkastaja,
        t.havainnot, t.laadunalitus,
        t.sijainti,
@@ -36,6 +39,7 @@ WHERE sijainti IS NOT NULL AND
       (t.aika BETWEEN :alku AND :loppu)
 
 -- name: hae-ilmoitukset
+-- fetch-size: 64
 SELECT i.id, i.urakka, i.ilmoitusid, i.ilmoitettu,
        i.valitetty, i.yhteydenottopyynto, i.otsikko,
        i.paikankuvaus, i.lisatieto, i.tila, i.ilmoitustyyppi,
@@ -79,6 +83,7 @@ SELECT i.id, i.urakka, i.ilmoitusid, i.ilmoitettu,
 
 
 -- name: hae-turvallisuuspoikkeamat
+-- fetch-size: 64
 SELECT t.id,
        t.urakka,
        t.tapahtunut,
