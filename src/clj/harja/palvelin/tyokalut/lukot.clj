@@ -36,9 +36,9 @@
    (let [odotusvali (* odotusvali 1000)]
      (loop []
        (if (lukko/aseta-lukko? db tunniste vanhenemisaika)
-         (do
-           (aja-toiminto db tunniste toiminto-fn)
-           (lukko/avaa-lukko? db tunniste))
+         (let [tulos (aja-toiminto db tunniste toiminto-fn)]
+           (lukko/avaa-lukko? db tunniste)
+           tulos)
          (do
            (Thread/sleep odotusvali)
            (recur)))))))
