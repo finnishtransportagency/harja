@@ -418,7 +418,7 @@ VALUES
     :kuitattu,
     :vakiofraasi,
     :vapaateksti,
-    :kuittaustyyppi :: kuittaustyyppi,
+    :kuittaustyyppi,
     :suunta :: viestisuunta,
     :kanava :: viestikanava,
     :tila :: lahetyksen_tila,
@@ -469,7 +469,7 @@ SELECT id
 FROM ilmoitustoimenpide
 WHERE
   (tila IS NULL OR tila = 'virhe') AND
-  kuittaustyyppi != 'valitys'::kuittaustyyppi;
+  kuittaustyyppi != 'valitys';
 
 -- name: hae-ilmoituksen-tieosoite
 SELECT
