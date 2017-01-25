@@ -4,9 +4,7 @@
 
 (defn aja-toiminto [db tunniste toiminto-fn]
   (try
-    (let [arvo (toiminto-fn)]
-      (lukko/avaa-lukko? db tunniste)
-      arvo)
+    (toiminto-fn)
     (catch Exception e
       (throw e))
     (finally
