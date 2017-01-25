@@ -122,7 +122,7 @@
 
 (defn- merkinnat-erkanevat-rampilla-liian-kauas? [ramppia-edeltava-merkinta rampin-merkinnat treshold]
   (log/debug "RAMPPIA EDELTÄVÄ: " (pr-str ramppia-edeltava-merkinta))
-  (log/debug "RAMPIN MERKINNÄT: " (pr-str ramppia-edeltava-merkinta))
+  (log/debug "RAMPIN MERKINNÄT: " (pr-str rampin-merkinnat))
   (log/debug "TRESHOLD: " (pr-str treshold))
   false)
 
