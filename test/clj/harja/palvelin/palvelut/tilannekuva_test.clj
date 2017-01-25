@@ -281,10 +281,14 @@
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :toteuma toteuma))
       (is (not (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama toteuma))))
 
-    (let [tarkastus ()]
+    #_(_let [tarkastus ()]
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :tarkastus tarkastus))
       (is (not (paneeli/skeeman-luonti-onnistuu-kaikille? :toteuma tarkastus))))
 
-    (let [tyokone ()]
+    (let [tyokone (kutsu-karttakuvapalvelua
+                    (:http-palvelin jarjestelma)
+                    :tilannekuva-tyokoneet +kayttaja-jvh+
+                    {:talvi #{27 24 50 51 25 34 23 35 26 52 49} :aikavalinta 504, :ilmoitukset {}, :urakat #{4}, :x 429312, :nykytilanne? true}
+                    [429312 7208832] nil)]
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :tyokone tyokone))
       (is (not (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama tyokone))))))
