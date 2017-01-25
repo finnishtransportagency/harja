@@ -4,7 +4,9 @@
 
 (defn aja-toiminto [db tunniste toiminto-fn]
   (try
-    (toiminto-fn)
+    (let [arvo (toiminto-fn)]
+      (lukko/avaa-lukko? db tunniste)
+      arvo)
     (catch Exception e
       (throw e))
     (finally
@@ -20,7 +22,6 @@
      (do
        (log/debug (format "Lukkoa: %s ei ole asetettu. Voidaan ajaa toiminto." tunniste))
        (aja-toiminto db tunniste toiminto-fn)
-       (lukko/avaa-lukko? db tunniste)
        true)
      (do
        (log/debug (format "Lukko: %s on asetettu. Toimintoa ei voida ajaa." tunniste))
@@ -36,9 +37,7 @@
    (let [odotusvali (* odotusvali 1000)]
      (loop []
        (if (lukko/aseta-lukko? db tunniste vanhenemisaika)
-         (let [tulos (aja-toiminto db tunniste toiminto-fn)]
-           (lukko/avaa-lukko? db tunniste)
-           tulos)
+         (aja-toiminto db tunniste toiminto-fn)
          (do
            (Thread/sleep odotusvali)
            (recur)))))))
