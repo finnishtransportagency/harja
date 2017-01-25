@@ -5,7 +5,7 @@
              [testi :refer :all]]
             [harja-laadunseuranta.core :as ls-core]
             [harja-laadunseuranta.tarkastusreittimuunnin.tarkastusreittimuunnin :refer [reittimerkinnat-tarkastuksiksi
-                                                                 luo-kantaan-tallennettava-tarkastus]]
+                                                                                        luo-kantaan-tallennettava-tarkastus]]
             [harja-laadunseuranta.testidata :as testidata]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [taoensso.timbre :as log]
@@ -13,7 +13,8 @@
             [harja-laadunseuranta.core :as harja-laadunseuranta]
             [clojure.core :as core]
             [clojure.set :as set]
-            [clojure.java.jdbc :as jdbc])
+            [clojure.java.jdbc :as jdbc]
+            [harja.domain.tierekisteri :as tr-domain])
   (:import (org.postgis PGgeometry MultiLineString Point)))
 
 (defn jarjestelma-fixture [testit]
@@ -546,7 +547,8 @@
     (log/debug "Reitillisten tarkastusten muodostama ajettu reitti:")
     (let [sijainnit (mapcat :sijainnit (sort-by :aika reitilliset-tarkastukset))]
       (doseq [sijainti sijainnit]
-        (log/debug (str (:sijainti sijainti) " --> " (tie->str (:tr-osoite sijainti))))))
+        (log/debug (str (:sijainti sijainti) " --> " (tie->str (:tr-osoite sijainti))
+                        " (ramppi? " (tr-domain/tie-rampilla? (get-in sijainti [:tr-osoite :tie])) ")"))))
 
     (log/debug "")
     (log/debug "-- Lopputulos --")
