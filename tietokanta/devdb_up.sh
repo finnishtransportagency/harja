@@ -10,12 +10,7 @@ while ! nc -z localhost 5432; do
     sleep 0.5;
 done;
 
-# echo "Odotellaan vielä hetki..."
 # Ylempi tarkistus ei vielä takaa, että flyway saa yhteyden, vaan docker on käynnissä
-# sleep 20
-
-
-
 until mvn flyway:info &> /dev/null; do
     echo "Odotetaan että flyway saa yhteyden kantaan.."
     sleep 0.5
