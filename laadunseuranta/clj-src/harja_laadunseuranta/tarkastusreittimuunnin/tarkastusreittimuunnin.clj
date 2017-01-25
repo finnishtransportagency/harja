@@ -342,14 +342,22 @@
    :pistemaiset-tarkastukset (mapv #(liita-tarkastukseen-liittyvat-merkinnat % liittyvat-merkinnat)
                                    (:pistemaiset-tarkastukset tarkastukset))})
 
-(defn- valmistele-merkinnat-kasittelyyn [merkinnat]
-  (ramppianalyysi/korjaa-virheelliset-rampit merkinnat))
+(defn- valmistele-merkinnat-kasittelyyn [merkinnat optiot]
+  (if (:analysoi-rampit? optiot)
+    (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)
+    merkinnat))
 
 (defn reittimerkinnat-tarkastuksiksi
   "Reittimerkintämuunnin, joka käy reittimerkinnät läpi ja palauttaa mapin, jossa reittimerkinnät muutettu
-   reitillisiksi ja pistemäisiksi Harja-tarkastuksiksi."
-  [tr-osoitteelliset-reittimerkinnat]
-  (let [kasiteltavat-merkinnat (valmistele-merkinnat-kasittelyyn tr-osoitteelliset-reittimerkinnat)
+   reitillisiksi ja pistemäisiksi Harja-tarkastuksiksi.
+
+   Optiot on mappi:
+   - analysoi-rampit?         Korjaa virheellisesti rampille projisoituneet pisteet takaisin moottoritielle.
+                              Oletus: true."
+  ([tr-osoitteelliset-reittimerkinnat]
+   (reittimerkinnat-tarkastuksiksi tr-osoitteelliset-reittimerkinnat {:analysoi-rampit? true}))
+  ([tr-osoitteelliset-reittimerkinnat optiot]
+  (let [kasiteltavat-merkinnat (valmistele-merkinnat-kasittelyyn tr-osoitteelliset-reittimerkinnat optiot)
         tarkastukset {:reitilliset-tarkastukset (reittimerkinnat-reitillisiksi-tarkastuksiksi
                                                   kasiteltavat-merkinnat)
                       :pistemaiset-tarkastukset (reittimerkinnat-pistemaisiksi-tarkastuksiksi
@@ -358,7 +366,7 @@
                                      kasiteltavat-merkinnat)
         tarkastukset-lomaketiedoilla (liita-tarkastuksiin-lomakkeelta-kirjatut-tiedot tarkastukset
                                                                                       liittyvat-merkinnat)]
-    tarkastukset-lomaketiedoilla))
+    tarkastukset-lomaketiedoilla)))
 
 ;; -------- Tarkastuksen tallennus kantaan --------
 
