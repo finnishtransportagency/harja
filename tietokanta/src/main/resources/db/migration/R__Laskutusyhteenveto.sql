@@ -144,21 +144,21 @@ DECLARE
 BEGIN
 
 -- Katsotaan löytyykö laskutusyhteenveto jo cachesta
---   SELECT
---     INTO cache rivit
---     FROM laskutusyhteenveto_cache c
---    WHERE c.urakka = ur
---      AND c.alkupvm = aikavali_alkupvm
---      AND c.loppupvm = aikavali_loppupvm;
---
---   IF cache IS NOT NULL THEN
---     RAISE NOTICE 'Käytetään muistettua laskutusyhteenvetoa urakalle % aikavälillä % - %', ur, aikavali_alkupvm, aikavali_loppupvm;
---     FOREACH rivi IN ARRAY cache
---     LOOP
---       RETURN NEXT rivi;
---     END LOOP;
---     RETURN;
---   END IF;
+  SELECT
+    INTO cache rivit
+  FROM laskutusyhteenveto_cache c
+  WHERE c.urakka = ur
+        AND c.alkupvm = aikavali_alkupvm
+        AND c.loppupvm = aikavali_loppupvm;
+
+  IF cache IS NOT NULL THEN
+    RAISE NOTICE 'Käytetään muistettua laskutusyhteenvetoa urakalle % aikavälillä % - %', ur, aikavali_alkupvm, aikavali_loppupvm;
+    FOREACH rivi IN ARRAY cache
+    LOOP
+      RETURN NEXT rivi;
+    END LOOP;
+    RETURN;
+  END IF;
 
   cache := ARRAY[]::laskutusyhteenveto_rivi[];
 
