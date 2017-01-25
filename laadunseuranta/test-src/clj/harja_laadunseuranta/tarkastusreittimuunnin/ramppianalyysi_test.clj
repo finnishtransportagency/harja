@@ -74,8 +74,7 @@
                   korjatut-merkinnat)))))
 
 (deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-iso-osa-pisteista-osuu-rampille
-  ;; TODO Nyt on vähän makukysymys miten tämä tulkitaan, kun selkeästi iso osa pisteistä osuu rampille
-  (let [tarkastusajo-id 667 ;; Iso osa pisteistä sijoittuu pitkästi rampille
+  (let [tarkastusajo-id 667 ;; Iso osa pisteistä sijoittuu pitkästi rampille, joskin epätarkasti
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
                                                           :laheiset_tiet_threshold 100})]
@@ -92,7 +91,7 @@
                        (nil? (get-in % [:tr-osoite :tie])))
                   korjatut-merkinnat)))))
 
-(deftest ramppianalyysi-ei-tee-mitaan-kun-ajetaan-rampille
+(deftest ramppianalyysi-ei-tee-mitaan-kun-ajetaan-oikeasti-rampille
   (let [tarkastusajo-id 668 ;; Ajetaan tieltä 4 rampille ja takaisin tielle 4
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
@@ -118,5 +117,9 @@
 
     (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
       (is (= (count korjatut-merkinnat) (count merkinnat)))
+      ;; Alussa ajettiin oikeasti rampilla, nämä pisteet ovat edelleen mukana
+      (is (some #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
+                    (take 40 korjatut-merkinnat)))
+      ;; Loppumatkan rampit on projisoitu uudelleen
       (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
-                    korjatut-merkinnat)))))
+                    (drop 40 korjatut-merkinnat))))))
