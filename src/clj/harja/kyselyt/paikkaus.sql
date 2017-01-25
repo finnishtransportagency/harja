@@ -118,3 +118,8 @@ SELECT
   kaasuindeksi
 FROM yllapitokohde
 WHERE urakka = :urakka AND id = :id;
+
+-- name: yllapitokohteella-paikkausilmoitus
+SELECT EXISTS(SELECT id
+              FROM paikkausilmoitus
+              WHERE paikkauskohde = :yllapitokohde);

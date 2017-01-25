@@ -7,6 +7,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
+            [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.tierekisteri :as tierekisteri]
 
@@ -290,9 +291,9 @@
         voi-muokata? (and voi-kirjoittaa?
                           (not jarjestelmasta?))
         kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
-        yllapitokohteet (:yllapitokohteet optiot)]
-    (if (and (some #(= (:nakyma optiot) %) [:paallystys :paikkaus :tiemerkinta])
-             (nil? yllapitokohteet))
+        yllapitokohteet (:yllapitokohteet optiot)
+        yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
+    (if (and yllapitokohdeurakka? (nil? yllapitokohteet))
       [yleiset/ajax-loader "Ladataan..."]
       [:div.tarkastus
        [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
@@ -329,8 +330,8 @@
          {:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
           :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
 
-         (when (some #(= (:nakyma optiot) %) [:paallystys :paikkaus :tiemerkinta])
-           {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde
+         (when yllapitokohdeurakka?
+           {:otsikko "Ylläpito\u00ADkohde" :tyyppi :valinta :nimi :yllapitokohde
             :palstoja 1
             :pakollinen? true
             :valinnat yllapitokohteet

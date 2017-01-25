@@ -67,52 +67,54 @@ WHERE
   AND t.poistettu IS NOT TRUE;
 
 -- name: toteuma-jarjestelman-lisaama
-SELECT
-  k.jarjestelma         AS jarjestelmanlisaama
+SELECT k.jarjestelma AS jarjestelmanlisaama
 FROM toteuma t
   LEFT JOIN kayttaja k ON k.id = t.luoja
 WHERE t.id = :toteuma;
 
 -- name: toteuman-urakka
-SELECT
-  t.urakka
+SELECT t.urakka
 FROM toteuma t
 WHERE t.id = :toteuma;
 
 -- name: toteuman-tyyppi
-SELECT
-  t.tyyppi
+SELECT t.tyyppi
 FROM toteuma t
 WHERE t.id = :toteuma;
 
 -- name: tehtavan-toteuma
-SELECT
-  tt.toteuma
+SELECT tt.toteuma
 FROM toteuma_tehtava tt
 WHERE tt.id = :tehtava;
 
 -- name: hae-toteumien-tehtavien-summat
 -- Listaa urakan toteumien tehtävien määrien summat toimenpidekoodilla ryhmiteltynä.
-SELECT x.tpk_id, x.maara, tk.nimi
-  FROM (SELECT toimenpidekoodi AS tpk_id,
-               SUM(tt.maara)   AS maara
-          FROM toteuma_tehtava tt
-         WHERE tt.toteuma IN (SELECT id FROM toteuma t
-                               WHERE t.urakka = :urakka
-		                 AND t.sopimus = :sopimus
-			         AND t.alkanut >= :alkanut
-			         AND t.alkanut <= :paattynyt
- 			         AND t.tyyppi = :tyyppi :: toteumatyyppi
- 			         AND t.poistettu IS NOT TRUE)
-           AND tt.toimenpidekoodi IN (SELECT id FROM toimenpidekoodi tk
+SELECT
+  x.tpk_id,
+  x.maara,
+  tk.nimi
+FROM (SELECT
+        toimenpidekoodi AS tpk_id,
+        SUM(tt.maara)   AS maara
+      FROM toteuma_tehtava tt
+      WHERE tt.toteuma IN (SELECT id
+                           FROM toteuma t
+                           WHERE t.urakka = :urakka
+                                 AND t.sopimus = :sopimus
+                                 AND t.alkanut >= :alkanut
+                                 AND t.alkanut <= :paattynyt
+                                 AND t.tyyppi = :tyyppi :: toteumatyyppi
+                                 AND t.poistettu IS NOT TRUE)
+            AND tt.toimenpidekoodi IN (SELECT id
+                                       FROM toimenpidekoodi tk
                                        WHERE (:toimenpide :: INTEGER IS NULL
-		                              OR tk.emo = (SELECT toimenpide
-                                                             FROM toimenpideinstanssi
-                                                            WHERE id = :toimenpide))
- 					 AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava))
-           AND tt.poistettu IS NOT TRUE
+                                              OR tk.emo = (SELECT toimenpide
+                                                           FROM toimenpideinstanssi
+                                                           WHERE id = :toimenpide))
+                                             AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava))
+            AND tt.poistettu IS NOT TRUE
       GROUP BY toimenpidekoodi) x
-   JOIN toimenpidekoodi tk ON x.tpk_id = tk.id
+  JOIN toimenpidekoodi tk ON x.tpk_id = tk.id
 ORDER BY nimi;
 
 -- name: hae-toteuman-toteuma-materiaalit-ja-tehtavat
@@ -291,7 +293,8 @@ SET alkanut           = :alkanut,
   tr_alkuosa          = :alkuosa,
   tr_alkuetaisyys     = :alkuetaisyys,
   tr_loppuosa         = :loppuosa,
-  tr_loppuetaisyys    = :loppuetaisyys
+  tr_loppuetaisyys    = :loppuetaisyys,
+  poistettu           = FALSE
 WHERE id = :id AND urakka = :urakka;
 
 -- name: paivita-toteuma-ulkoisella-idlla<!
@@ -304,7 +307,8 @@ SET alkanut           = :alkanut,
   suorittajan_ytunnus = :ytunnus,
   lisatieto           = :lisatieto,
   tyyppi              = :tyyppi :: toteumatyyppi,
-  sopimus             = :sopimus
+  sopimus             = :sopimus,
+  poistettu           = FALSE
 WHERE ulkoinen_id = :id AND urakka = :urakka;
 
 -- name: luo-toteuma<!
@@ -322,6 +326,11 @@ VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi :: toteumatyyppi, NOW()
 UPDATE toteuma
 SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
 WHERE id IN (:id) AND poistettu IS NOT TRUE;
+
+-- name: poista-toteumat-ulkoisilla-idlla-ja-luojalla!
+UPDATE toteuma
+SET muokattu = NOW(), muokkaaja = :kayttaja-id, poistettu = TRUE
+WHERE ulkoinen_id IN (:ulkoiset-idt) AND luoja = :kayttaja-id AND poistettu IS NOT TRUE;
 
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle
@@ -391,7 +400,7 @@ SET tyyppi            = :tyyppi :: erilliskustannustyyppi, urakka = :urakka, sop
   muokkaaja           = :muokkaaja,
   poistettu           = :poistettu
 WHERE id = :id
-AND urakka = :urakka;
+      AND urakka = :urakka;
 
 -- name: paivita-toteuman-tehtava!
 -- Päivittää toteuman tehtävän id:llä.
@@ -623,15 +632,16 @@ WHERE
 -- tiedot infopaneelissa näytettäväksi.
 SELECT
   t.id,
-  t.alkanut, t.paattynyt,
-  t.suorittajan_nimi AS suorittaja_nimi,
-  tk.nimi AS tehtava_toimenpide,
-  tt.maara AS tehtava_maara,
-  tk.yksikko AS tehtava_yksikko,
-  tt.toteuma AS tehtava_id,
-  tk.nimi AS toimenpide,
+  t.alkanut,
+  t.paattynyt,
+  t.suorittajan_nimi                                        AS suorittaja_nimi,
+  tk.nimi                                                   AS tehtava_toimenpide,
+  tt.maara                                                  AS tehtava_maara,
+  tk.yksikko                                                AS tehtava_yksikko,
+  tt.toteuma                                                AS tehtava_id,
+  tk.nimi                                                   AS toimenpide,
   yrita_tierekisteriosoite_pisteille2(
-     alkupiste(t.reitti), loppupiste(t.reitti), 1)::TEXT AS tierekisteriosoite
+      alkupiste(t.reitti), loppupiste(t.reitti), 1) :: TEXT AS tierekisteriosoite
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
   JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
@@ -642,10 +652,9 @@ WHERE
   AND t.alkanut >= :alkupvm
   AND t.alkanut <= :loppupvm
   AND ST_Distance(t.reitti, ST_MakePoint(:x, :y)) < :toleranssi
-  AND t.tyyppi = :tyyppi::toteumatyyppi
+  AND t.tyyppi = :tyyppi :: toteumatyyppi
   AND t.poistettu IS NOT TRUE
   AND (:toimenpidekoodi :: INTEGER IS NULL OR tk.id = :toimenpidekoodi);
-
 
 -- name: hae-kokonaishintaisen-toteuman-reitti
 SELECT
@@ -674,39 +683,48 @@ WHERE
   AND t.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-kokonaishintaiset-toteumat-paivakohtaisina-summina
-SELECT x.pvm, x.toimenpidekoodi, x.maara, x.pituus,
-       k.jarjestelma AS jarjestelmanlisaama,
-       tk.nimi as nimi,
-       tk.yksikko as yksikko
-  FROM -- Haetaan toteuma tehtävät summattuna
-       (SELECT t.alkanut::DATE  AS pvm,
-               tt.toimenpidekoodi,
-               SUM(tt.maara)            AS maara,
-               SUM(ST_Length(t.reitti)) AS pituus,
-               tt.luoja
-          FROM toteuma_tehtava tt
-          JOIN -- Haetaan ensin vain toteumat, jotka osuvat filttereihin
-	       -- tämän avulla planner tajuaa käyttää toteuma_tehtavan toteuma indeksiä
-	       (SELECT t.alkanut, t.id, t.reitti
-	         FROM toteuma t
-                 WHERE t.urakka = :urakkaid
-                   AND t.sopimus = :sopimusid
-                   AND t.alkanut >= :alkupvm
-                   AND t.alkanut <= :loppupvm
-                   AND t.tyyppi = 'kokonaishintainen' :: toteumatyyppi
-                   AND t.poistettu IS NOT TRUE) t ON t.id=tt.toteuma
-         WHERE tt.poistettu IS NOT TRUE
-           AND tt.toimenpidekoodi IN (SELECT id FROM toimenpidekoodi tk
-                                       WHERE (:toimenpide::INTEGER IS NULL OR
-				              tk.emo = (SELECT toimenpide
-				                          FROM toimenpideinstanssi
-						         WHERE id = :toimenpide))
-					 AND (:tehtava::INTEGER IS NULL OR tk.id = :tehtava))
-      GROUP BY pvm, toimenpidekoodi, luoja) x
+SELECT
+  x.pvm,
+  x.toimenpidekoodi,
+  x.maara,
+  x.pituus,
+  k.jarjestelma AS jarjestelmanlisaama,
+  tk.nimi       AS nimi,
+  tk.yksikko    AS yksikko
+FROM -- Haetaan toteuma tehtävät summattuna
+  (SELECT
+     t.alkanut :: DATE        AS pvm,
+     tt.toimenpidekoodi,
+     SUM(tt.maara)            AS maara,
+     SUM(ST_Length(t.reitti)) AS pituus,
+     tt.luoja
+   FROM toteuma_tehtava tt
+     JOIN -- Haetaan ensin vain toteumat, jotka osuvat filttereihin
+     -- tämän avulla planner tajuaa käyttää toteuma_tehtavan toteuma indeksiä
+     (SELECT
+        t.alkanut,
+        t.id,
+        t.reitti
+      FROM toteuma t
+      WHERE t.urakka = :urakkaid
+            AND t.sopimus = :sopimusid
+            AND t.alkanut >= :alkupvm
+            AND t.alkanut <= :loppupvm
+            AND t.tyyppi = 'kokonaishintainen' :: toteumatyyppi
+            AND t.poistettu IS NOT TRUE) t ON t.id = tt.toteuma
+   WHERE tt.poistettu IS NOT TRUE
+         AND tt.toimenpidekoodi IN (SELECT id
+                                    FROM toimenpidekoodi tk
+                                    WHERE (:toimenpide :: INTEGER IS NULL OR
+                                           tk.emo = (SELECT toimenpide
+                                                     FROM toimenpideinstanssi
+                                                     WHERE id = :toimenpide))
+                                          AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava))
+   GROUP BY pvm, toimenpidekoodi, luoja) x
   JOIN -- Otetaan mukaan käyttäjät järjestelmätietoa varten
-       kayttaja k ON x.luoja=k.id
+  kayttaja k ON x.luoja = k.id
   JOIN -- Otetaan mukaan toimenpidekoodi nimeä ja yksikköä varten
-       toimenpidekoodi tk ON x.toimenpidekoodi=tk.id
+  toimenpidekoodi tk ON x.toimenpidekoodi = tk.id
 ORDER BY pvm DESC
 
 -- name: hae-toteuman-tehtavat
@@ -822,7 +840,8 @@ SELECT
   tpk.nimi              AS tehtava_toimenpidekoodi_nimi,
   tpi.id                AS tehtava_toimenpideinstanssi_id,
   tpi.nimi              AS tehtava_toimenpideinstanssi_nimi,
-  ST_Length(reitti)     AS pituus
+  ST_Length(reitti)     AS pituus,
+  t.tr_numero, t.tr_alkuosa, t.tr_alkuetaisyys, t.tr_loppuosa, t.tr_loppuetaisyys
 FROM toteuma t
   JOIN kayttaja k ON t.luoja = k.id
                      AND t.poistettu IS NOT TRUE
@@ -834,9 +853,9 @@ FROM toteuma t
                                        AND tpi.urakka = t.urakka
 WHERE
   t.urakka = :urakka
-  AND (:toteuma::INTEGER IS NULL OR t.id = :toteuma)
-  AND (:pvm::DATE IS NULL OR t.alkanut :: DATE = :pvm :: DATE)
-  AND (:toimenpidekoodi::INTEGER IS NULL OR tt.toimenpidekoodi = :toimenpidekoodi);
+  AND (:toteuma :: INTEGER IS NULL OR t.id = :toteuma)
+  AND (:pvm :: DATE IS NULL OR t.alkanut :: DATE = :pvm :: DATE)
+  AND (:toimenpidekoodi :: INTEGER IS NULL OR tt.toimenpidekoodi = :toimenpidekoodi);
 
 -- name: hae-varustetoteuma
 SELECT
@@ -931,9 +950,9 @@ SELECT
   tr_loppuetaisyys AS loppuetaisyys
 FROM toteuma t
 WHERE reitti IS NULL
-AND t.tr_numero IS NOT NULL
-AND t.tr_alkuosa IS NOT NULL
-AND t.tr_alkuetaisyys IS NOT NULL;
+      AND t.tr_numero IS NOT NULL
+      AND t.tr_alkuosa IS NOT NULL
+      AND t.tr_alkuetaisyys IS NOT NULL;
 
 -- name: merkitse-varustetoteuma-lahetetyksi!
 UPDATE varustetoteuma
@@ -944,3 +963,21 @@ WHERE id = :id;
 SELECT id
 FROM varustetoteuma
 WHERE tila = 'virhe';
+
+-- name: siirry-kokonaishintainen-toteuma
+-- Palauttaa tiedot, joita tarvitaan kokonaishintaiseen toteumaan siirtymiseen ja
+-- tarkistaa että käyttäjällä on oikeus urakkaan, johon toteuma kuuluu
+SELECT t.alkanut, t.urakka AS "urakka-id", u.hallintayksikko AS "hallintayksikko-id",
+       tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
+       tpk3.koodi AS tehtava_toimenpideinstanssi,
+       hk.alkupvm AS aikavali_alku,
+       hk.loppupvm AS aikavali_loppu
+  FROM toteuma t
+       JOIN urakka u ON t.urakka = u.id
+       JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+       JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+       JOIN toimenpidekoodi tpk3 ON tpk.emo = tpk3.id
+       JOIN urakan_hoitokaudet(t.urakka) hk ON (t.alkanut BETWEEN hk.alkupvm AND hk.loppupvm)
+ WHERE t.id = :toteuma-id
+   AND (:tarkista-urakka? = FALSE
+        OR u.urakoitsija = :urakoitsija-id)

@@ -41,8 +41,6 @@
               (when nakymassa?
                 (hae-valitavoitteet))))
 
-(tarkkaile! "[VALVÄLI] Välitavoitteet: " valitavoitteet)
-
 (def kertaluontoiset-valitavoitteet
   (reaction (when @valitavoitteet
               (filterv #(= (:tyyppi %) :kertaluontoinen) @valitavoitteet))))

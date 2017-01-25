@@ -58,7 +58,6 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
   (r/wrap arvo
           #(assert false (str "Ei voi kirjoittaa vain luku atomia arvolle: " (pr-str arvo)))))
 
-
 (defmulti tee-kentta
           "Tekee muokattavan kentän tyypin perusteella"
           (fn [t _] (:tyyppi t)))
@@ -171,12 +170,14 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
 
 (defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex focus on-focus lomake? placeholder]} data]
-  [:input {:class       (when lomake? "form-control")
+  [:input {:class (when lomake? "form-control")
            :placeholder placeholder
-           on-change*   #(reset! data (-> % .-target .-value))
-           :on-focus    on-focus
-           :value       @data
-           :max-length  pituus-max}])
+           on-change* #(let [v (-> % .-target .-value)]
+                         (when (or (not regex) (re-matches regex v))
+                           (reset! data v)))
+           :on-focus on-focus
+           :value @data
+           :max-length pituus-max}])
 
 
 ;; Pitkä tekstikenttä käytettäväksi lomakkeissa, ei sovellu hyvin gridiin
@@ -581,7 +582,8 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
             (re-matches re t))
     (reset! atomi t)))
 
-(defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus lomake?]} data]
+(defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus lomake? pakota-suunta]}
+                                 data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
@@ -594,90 +596,120 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
         ;; picker auki?
         auki (atom false)
         pvm-aika-koskettu (atom [(not
-                                   (or (str/blank? @pvm-teksti) (nil? @pvm-teksti)))
+                                  (or (str/blank? @pvm-teksti) (nil? @pvm-teksti)))
                                  (not
-                                  (or (str/blank? @aika-teksti) (nil? @aika-teksti)))])]
+                                  (or (str/blank? @aika-teksti) (nil? @aika-teksti)))])
+
+        aseta-teksti! (fn [p]
+                        (if p
+                          (do
+                            (reset! pvm-teksti (pvm/pvm p))
+                            (reset! aika-teksti (pvm/aika p)))
+                          (do
+                            (reset! pvm-teksti "")
+                            (reset! aika-teksti ""))))
+
+        edellinen-arvo (volatile! @data)]
 
     (komp/luo
      (komp/klikattu-ulkopuolelle #(reset! auki false))
-      {:component-will-receive-props
-       (fn [this _ {:keys [focus] :as s} data]
-         (when-not focus
-           (reset! auki false))
-         (swap! pvm-teksti #(if-let [p @data]
-                             (pvm/pvm p)
-                             %)))}
 
-      (fn [_ data]
-        (let [aseta! (fn []
-                       (let [pvm @pvm-teksti
-                             aika @aika-teksti
-                             p (pvm/->pvm-aika (str pvm " " aika))]
-                         (when-not (some false? @pvm-aika-koskettu)
-                           (if p
-                             (reset! data p)
-                             (reset! data nil)))))
+     ;; Kuunnellaan data atomia, jos sen arvoa muutetaan muualla
+     ;; päivitetään tekstikenttien sisältö vastaamaan uutta tilaa
+     (komp/watcher data (fn [_ vanha uusi]
+                          (when-not (= vanha uusi)
+                            (aseta-teksti! uusi))))
 
-              muuta-pvm!   #(resetoi-jos-tyhja-tai-matchaa % +pvm-regex+ pvm-teksti)
-              muuta-aika!  #(if (re-matches #"\d{3}" %)
-                              ;; jos yritetään kirjoittaa aika käyttämättä : välimerkkiä,
-                              ;; niin 3 merkin kohdalla lisätään se automaattisesti
-                              (let [alku (js/parseInt (.substring % 0 2))]
-                                (if (< alku 24)
-                                  ;; 123 => 12:3
-                                  (reset! aika-teksti
-                                          (str (.substring % 0 2) ":" (.substring % 2)))
-                                  ;; 645 => 6:45
-                                  (reset! aika-teksti
-                                          (str (.substring % 0 1) ":" (.substring % 1)))))
-                        (resetoi-jos-tyhja-tai-matchaa % +aika-regex+ aika-teksti))
 
-              koske-aika! (fn [] (swap! pvm-aika-koskettu assoc 1 true))
-              koske-pvm! (fn [] (swap! pvm-aika-koskettu assoc 0 true))
+     ;; Jos data on wrap, verrataan muuttuvaa dataa edellliseen ja päivitetään
+     ;; tekstikentät jos muutoksia havaitaan.
+     (komp/vanhat-ja-uudet-parametrit
+      (fn [[_ vanha-data] [_ uusi-data]]
+        (when (not= vanha-data uusi-data)
+          ;; Data atomi on muuttunut (kyseessä wrap), päivitä jos on muuttunut edellisestä
+          (let [vanha @edellinen-arvo
+                uusi @uusi-data]
+            (when (not= vanha uusi)
+              (vreset! edellinen-arvo uusi)
+              (aseta-teksti! uusi))))))
 
-              nykyinen-pvm @data
-              nykyinen-pvm-teksti @pvm-teksti
-              nykyinen-aika-teksti @aika-teksti
-              pvm-tyhjana (or pvm-tyhjana (constantly nil))
-              naytettava-pvm (or
-                               (pvm/->pvm nykyinen-pvm-teksti)
-                               nykyinen-pvm
-                               (pvm-tyhjana rivi))]
-          [:span.pvm-aika-kentta
-           [:table
-            [:tbody
-             [:tr
-              [:td
-               [:input.pvm {:class       (when lomake? "form-control")
-                            :placeholder "pp.kk.vvvv"
-                            :on-click    #(do (.stopPropagation %)
-                                              (.preventDefault %)
-                                              (reset! auki true)
-                                              %)
-                            :value       nykyinen-pvm-teksti
-                            :on-focus    #(do (when on-focus (on-focus)) (reset! auki true) %)
-                            on-change*   #(muuta-pvm! (-> % .-target .-value))
-                            ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
-                            :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
+     ;; Sulje mahdollisesti auki jäänyt datepicker kun focus poistuu
+     {:component-will-receive-props
+      (fn [this _ {:keys [focus] :as s} data]
+        (when-not focus
+          (reset! auki false)))}
+
+     (fn [_ data]
+       (let [aseta! (fn [force?]
+                      (let [pvm @pvm-teksti
+                            aika @aika-teksti
+                            p (pvm/->pvm-aika (str pvm " " aika))]
+                        (when (or force? (not (some false? @pvm-aika-koskettu)))
+                          (if p
+                            (reset! data p)
+                            (reset! data nil)))))
+
+             muuta-pvm!   #(resetoi-jos-tyhja-tai-matchaa % +pvm-regex+ pvm-teksti)
+             muuta-aika!  #(if (re-matches #"\d{3}" %)
+                             ;; jos yritetään kirjoittaa aika käyttämättä : välimerkkiä,
+                             ;; niin 3 merkin kohdalla lisätään se automaattisesti
+                             (let [alku (js/parseInt (.substring % 0 2))]
+                               (if (< alku 24)
+                                 ;; 123 => 12:3
+                                 (reset! aika-teksti
+                                         (str (.substring % 0 2) ":" (.substring % 2)))
+                                 ;; 645 => 6:45
+                                 (reset! aika-teksti
+                                         (str (.substring % 0 1) ":" (.substring % 1)))))
+                             (resetoi-jos-tyhja-tai-matchaa % +aika-regex+ aika-teksti))
+
+             koske-aika! (fn [] (swap! pvm-aika-koskettu assoc 1 true))
+             koske-pvm! (fn [] (swap! pvm-aika-koskettu assoc 0 true))
+
+             nykyinen-pvm @data
+             nykyinen-pvm-teksti @pvm-teksti
+             nykyinen-aika-teksti @aika-teksti
+             pvm-tyhjana (or pvm-tyhjana (constantly nil))
+             naytettava-pvm (or
+                             (pvm/->pvm nykyinen-pvm-teksti)
+                             nykyinen-pvm
+                             (pvm-tyhjana rivi))]
+         [:span.pvm-aika-kentta
+          [:table
+           [:tbody
+            [:tr
+             [:td
+              [:input.pvm {:class       (when lomake? "form-control")
+                           :placeholder "pp.kk.vvvv"
+                           :on-click    #(do (.stopPropagation %)
+                                             (.preventDefault %)
+                                             (reset! auki true)
+                                             %)
+                           :value       nykyinen-pvm-teksti
+                           :on-focus    #(do (when on-focus (on-focus)) (reset! auki true) %)
+                           on-change*   #(muuta-pvm! (-> % .-target .-value))
+                           ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
+                           :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
                                            (reset! auki false)
                                            %)
-                            :on-blur     #(do (koske-pvm!) (aseta!) %)}]
-               (when @auki
-                 [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
-                                                                  (muuta-pvm! (pvm/pvm %))
-                                                                  (koske-pvm!)
-                                                                  (aseta!))
-                                                    :pvm     naytettava-pvm}])]
-              [:td
-               [:input {:class       (str (when lomake? "form-control")
-                                          (when (and (not (re-matches +aika-regex+ nykyinen-aika-teksti))
-                                                     (pvm/->pvm nykyinen-pvm-teksti))
-                                            " puuttuva-arvo"))
-                        :placeholder "tt:mm"
-                        :size        5 :max-length 5
-                        :value       nykyinen-aika-teksti
-                        on-change*   #(muuta-aika! (-> % .-target .-value))
-                        :on-blur     #(do (koske-aika!) (aseta!))}]]]]]])))))
+                           :on-blur     #(do (koske-pvm!) (aseta! false) %)}]
+              (when @auki
+                [pvm-valinta/pvm-valintakalenteri {:valitse #(do (reset! auki false)
+                                                                 (muuta-pvm! (pvm/pvm %))
+                                                                 (koske-pvm!)
+                                                                 (aseta! true))
+                                                   :pvm     naytettava-pvm
+                                                   :pakota-suunta pakota-suunta}])]
+             [:td
+              [:input {:class       (str (when lomake? "form-control")
+                                         (when (and (not (re-matches +aika-regex+ nykyinen-aika-teksti))
+                                                    (pvm/->pvm nykyinen-pvm-teksti))
+                                           " puuttuva-arvo"))
+                       :placeholder "tt:mm"
+                       :size        5 :max-length 5
+                       :value       nykyinen-aika-teksti
+                       on-change*   #(muuta-aika! (-> % .-target .-value))
+                       :on-blur     #(do (koske-aika!) (aseta! false))}]]]]]])))))
 
 (defmethod nayta-arvo :pvm-aika [_ data]
   [:span (if-let [p @data]
@@ -705,6 +737,18 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
 (defn- onko-tr-osoite-pistemainen? [osoite]
   (every? #(get osoite %) [:numero :alkuosa :alkuetaisyys]))
+
+(defn hae-tr [tr-osoite-ch virheet osoite]
+  (cond
+    (onko-tr-osoite-kokonainen? osoite)
+    (hae-tr-geometria osoite vkm/tieosoite->viiva tr-osoite-ch virheet)
+
+    (onko-tr-osoite-pistemainen? osoite)
+    (hae-tr-geometria osoite vkm/tieosoite->piste tr-osoite-ch virheet)
+    :else
+    (do
+      (tasot/poista-geometria! :tr-valittu-osoite)
+      (reset! virheet nil))))
 
 (defn tr-kentan-elementti [lomake? kartta? muuta! blur placeholder value key disabled?]
   [:input.tierekisteri {:class       (str
@@ -766,18 +810,15 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
    [:tbody
     [:tr
      [:td {:colSpan 2}
-      [:label.control-label [:span.kentan-label "Tie"]]
-      (when pakollinen? [:span.required-tahti " *"])]]
+      [:label.control-label [:span.kentan-label "Tie"]]]]
     [:tr
      [:td {:colSpan 2}
       tie]]
     [:tr
      [:td
-      [:label.control-label [:span.kentan-label "Alkuosa"]]
-      (when pakollinen? [:span.required-tahti " *"])]
+      [:label.control-label [:span.kentan-label "Alkuosa"]]]
      [:td
-      [:label.control-label [:span.kentan-label "Alkuetäisyys"]]
-      (when pakollinen? [:span.required-tahti " *"])]]
+      [:label.control-label [:span.kentan-label "Alkuetäisyys"]]]]
     [:tr
      [:td aosa] [:td aet]]
     [:tr
@@ -792,7 +833,8 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
        [:td {:colSpan 2} virhe]])]])
 
 
-(defmethod tee-kentta :tierekisteriosoite [{:keys [tyyli lomake? ala-nayta-virhetta-komponentissa? sijainti pakollinen?]} data]
+(defmethod tee-kentta :tierekisteriosoite [{:keys [tyyli lomake? ala-nayta-virhetta-komponentissa?
+                                                   sijainti pakollinen?]} data]
   (let [osoite-alussa @data
 
         hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
@@ -826,7 +868,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                           asioiden-ulkoasu/tr-ikoni
                                           asioiden-ulkoasu/tr-viiva)
                                   :type :tr-valittu-osoite})
-                               (keskita-kartta! arvo)))))]
+                               (keskita-kartta! arvo)))))
+
+        tee-tr-haku (partial hae-tr tr-osoite-ch virheet)]
     (when hae-sijainti
       (nayta-kartalla @sijainti)
       (go-loop []
@@ -842,14 +886,22 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                  (recur))))
 
     (komp/luo
-      {:component-will-update
-       (fn [_ _ {sijainti :sijainti}]
-         (when sijainti
-           (reset! alkuperainen-sijainti @sijainti)
-           (vreset! sijainti-atom sijainti)
-           (nayta-kartalla @sijainti)))}
+      (komp/vanhat-ja-uudet-parametrit
+        (fn [[_ vanha-osoite-atom :as vanhat] [_ uusi-osoite-atom :as uudet]]
+          (log (pr-str vanhat))
+          (log (pr-str uudet))
+          (when (not= @vanha-osoite-atom @uusi-osoite-atom)
+            (tee-tr-haku @uusi-osoite-atom))))
+     (komp/kun-muuttuu
+      (fn [{sijainti :sijainti} _]
+        (if-not sijainti
+          (tasot/poista-geometria! :tr-valittu-osoite)
+          (do (reset! alkuperainen-sijainti @sijainti)
+              (vreset! sijainti-atom sijainti)
+              (nayta-kartalla @sijainti)))))
 
-      (komp/kuuntelija :kartan-koko-vaihdettu #(keskita-kartta! @(deref sijainti-atom)))
+     (komp/kuuntelija :kartan-koko-vaihdettu #(when-let [sijainti-atom @sijainti-atom]
+                                                (keskita-kartta! @sijainti-atom)))
 
       (komp/ulos #(do
                    (log "Lopetetaan TR sijaintipäivitys")
@@ -869,17 +921,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                                                      (re-matches #"\d*" v))
                                                             (js/parseInt (-> % .-target .-value))))]))
               blur (when hae-sijainti
-                     (fn []
-                       (cond
-                         (onko-tr-osoite-kokonainen? osoite)
-                         (hae-tr-geometria osoite vkm/tieosoite->viiva tr-osoite-ch virheet)
-
-                         (onko-tr-osoite-pistemainen? osoite)
-                         (hae-tr-geometria osoite vkm/tieosoite->piste tr-osoite-ch virheet)
-                         :else
-                         (do
-                           (tasot/poista-geometria! :tr-valittu-osoite)
-                           (reset! virheet nil)))))
+                     #(tee-tr-haku osoite))
               kartta? @karttavalinta-kaynnissa]
           [:span.tierekisteriosoite-kentta (when @virheet {:class "sisaltaa-virheen"})
            (when (and @virheet (false? ala-nayta-virhetta-komponentissa?))
@@ -909,7 +951,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                                   (reset! karttavalinta-kaynnissa false)
                                                   (log "Saatiin tr-osoite! " (pr-str %))
                                                   (go (>! tr-osoite-ch %)))}])
-            (when-let [sijainti (and hae-sijainti @sijainti)]
+            (when-let [sijainti (and hae-sijainti sijainti @sijainti)]
               (when (vkm/virhe? sijainti)
                 [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]))]])))))
 

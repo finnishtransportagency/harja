@@ -6,6 +6,7 @@
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.urakka :as urakka]
     [harja.tiedot.urakka :as u]
+    [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.navigaatio :as nav]
     [harja.ui.viesti :as viesti])
 
@@ -17,6 +18,7 @@
   (k/post! :urakan-yllapitokohteet {:urakka-id urakka-id
                                     :sopimus-id sopimus-id
                                     :vuosi vuosi}))
+
 
 (defn tallenna-yllapitokohteet! [urakka-id sopimus-id vuosi kohteet]
   (k/post! :tallenna-yllapitokohteet {:urakka-id urakka-id
@@ -30,16 +32,19 @@
                                         :yllapitokohde-id yllapitokohde-id
                                         :osat osat}))
 
-(defn kuvaile-kohteen-tila [tila]
-  (case tila
-    :kohde-aloitettu "Kohde aloitettu"
-    :paallystys-aloitettu "Päällystys aloitettu"
-    :paallystys-valmis "Päällystys valmis"
-    :tiemerkinta-aloitettu "Tiemerkintä aloitettu"
-    :tiemerkinta-valmis "Tiemerkintä valmis"
-    :kohde-valmis "Kohde valmis"
-    :ei-aloitettu "Ei aloitettu"
-    "Ei tiedossa"))
+(defn hae-maaramuutokset [urakka-id yllapitokohde-id]
+  (k/post! :hae-maaramuutokset {:urakka-id urakka-id
+                                :yllapitokohde-id yllapitokohde-id}))
+
+(defn tallenna-maaramuutokset! [{:keys [urakka-id yllapitokohde-id maaramuutokset
+                                        sopimus-id vuosi]}]
+  (k/post! :tallenna-maaramuutokset {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi vuosi
+                                     :yllapitokohde-id yllapitokohde-id
+                                     :maaramuutokset maaramuutokset}))
+
+
 
 (defn paivita-yllapitokohde! [kohteet-atom id funktio & argumentit]
   (swap! kohteet-atom
@@ -180,3 +185,29 @@
                   (viesti/nayta! "Tallennus onnistui. Tarkista ja tallenna myös muokkaamiesi tieosoitteiden alikohteet."
                                  :success viesti/viestin-nayttoaika-keskipitka)
                   (valmis-fn vastaus))))))))
+
+(defn yllapitokohteet-kartalle
+  "Ylläpitokohde näytetään kartalla 'kohdeosina'.
+   Ottaa vectorin ylläpitokohteita ja palauttaa ylläpitokohteiden kohdeosat valmiina näytettäväksi kartalle.
+   Palautuneilla kohdeosilla on pääkohteen tiedot :yllapitokohde avaimen takana.
+
+   yllapitokohteet  Vector ylläpitokohteita, joilla on mukana ylläpitokohteen kohdeosat (:kohdeosat avaimessa)
+   lomakedata       Päällystys- tai paikkausilmoituksen lomakkeen tiedot"
+  ([yllapitokohteet] (yllapitokohteet-kartalle yllapitokohteet nil))
+  ([yllapitokohteet lomakedata]
+   (let [id #(or (:paallystyskohde-id %)
+                 (:paikkauskohde-id %)
+                 (:yllapitokohde-id %))
+         karttamuodossa (kartalla-esitettavaan-muotoon
+                         yllapitokohteet
+                         #(= (id lomakedata) (id %))
+                         (comp
+                           (mapcat (fn [kohde]
+                                     (keep (fn [kohdeosa]
+                                             (assoc kohdeosa :yllapitokohde (dissoc kohde :kohdeosat)
+                                                             :tyyppi-kartalla (:yllapitokohdetyotyyppi kohde)
+                                                             :tila-kartalla (:tila-kartalla kohde)
+                                                             :yllapitokohde-id (:id kohde)))
+                                           (:kohdeosat kohde))))
+                           (keep #(and (:sijainti %) %))))]
+    karttamuodossa)))

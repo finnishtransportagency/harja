@@ -36,3 +36,7 @@
 (defrecord VirheTapahtui [virhe])
 
 (defrecord VirheKasitelty [])
+
+(defrecord VarustetoteumatMuuttuneet [varustetoteumat])
+
+

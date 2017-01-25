@@ -21,6 +21,11 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
+(defn json-sapluunasta [polku pvm id]
+  (-> polku
+      slurp
+      (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
+      (.replace "__ID__" (str id))))
 
 (defn hae-vapaa-tarkastus-ulkoinen-id []
   (let [id (rand-int 10000)
@@ -31,10 +36,7 @@
   (let [pvm (Date.)
         id (hae-vapaa-tarkastus-ulkoinen-id)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/soratietarkastus"] kayttaja portti
-                                         (-> "test/resurssit/api/soratietarkastus.json"
-                                             slurp
-                                             (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
-                                             (.replace "__ID__" (str id))))]
+                                         (json-sapluunasta "test/resurssit/api/soratietarkastus.json" pvm id))]
 
     (is (= 200 (:status vastaus)))
     (let [tarkastus (first (q (str "SELECT t.tyyppi, t.havainnot, stm.kiinteys, l.nimi "
@@ -53,24 +55,34 @@
     (is (= 400 (:status vastaus)))
     (is (= "invalidi-json" (some-> vastaus :body json/read-str (get "virheet") first (get "virhe") (get "koodi"))))))
 
-(deftest tallenna-talvihoitotarkastus
+(deftest tallenna-ja-poista-talvihoitotarkastus
   (let [pvm (Date.)
         id (hae-vapaa-tarkastus-ulkoinen-id)
+        tarkista-kannasta #(first (q (str "SELECT t.tyyppi, t.havainnot, thm.lumimaara, l.nimi "
+                                          "  FROM tarkastus t "
+                                          "       JOIN talvihoitomittaus thm ON thm.tarkastus=t.id "
+                                          "       JOIN tarkastus_liite hl ON t.id = hl.tarkastus "
+                                          "       JOIN liite l ON hl.liite = l.id"
+                                          " WHERE t.ulkoinen_id = " id
+                                          "   AND t.poistettu IS NOT TRUE"
+                                          "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))
+        tallenna-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
+                                         (json-sapluunasta "test/resurssit/api/talvihoitotarkastus.json" pvm id))]
 
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
-                                         (-> "test/resurssit/api/talvihoitotarkastus.json"
-                                             slurp
-                                             (.replace "__PVM__" (json-tyokalut/json-pvm pvm))
-                                             (.replace "__ID__" (str id))))]
 
-    (is (= 200 (:status vastaus)))
-    (let [tark (first (q (str "SELECT t.tyyppi, t.havainnot, thm.lumimaara, l.nimi "
-                              "  FROM tarkastus t "
-                              "       JOIN talvihoitomittaus thm ON thm.tarkastus=t.id "
-                              "       JOIN tarkastus_liite hl ON t.id = hl.tarkastus "
-                              "       JOIN liite l ON hl.liite = l.id"
-                              " WHERE t.ulkoinen_id = " id
-                              "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))]
-      (is (= tark ["talvihoito" "jotain talvisen outoa" 15.00M "talvihoitotarkastus.jpg"]) (str "Tarkastuksen data tallentunut ok " id)))))
-    
-                               
+    (is (= 200 (:status tallenna-vastaus)))
+    (let [tark (tarkista-kannasta)]
+      (is (= tark ["talvihoito" "jotain talvisen outoa" 15.00M "talvihoitotarkastus.jpg"]) (str "Tarkastuksen data tallentunut ok " id)))
+
+    (let [poista-vastaus (api-tyokalut/delete-kutsu
+                          ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
+                          kayttaja portti
+                          (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-poisto.json" pvm id))
+          olemattoman-poista-vastaus (api-tyokalut/delete-kutsu
+                          ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
+                          kayttaja portti
+                          (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-poisto.json" pvm 88888888))
+          poista-tark (tarkista-kannasta)]
+      (is (-> poista-vastaus :status (= 200)))
+      (is (-> olemattoman-poista-vastaus :status (= 200)))
+      (is (empty? poista-tark)))))
