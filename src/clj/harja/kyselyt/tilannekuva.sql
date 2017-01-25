@@ -490,6 +490,7 @@ SELECT
   tpk.yksikko        AS tehtava_yksikko,
   tt.toteuma         AS tehtava_id,
   tpk.nimi AS toimenpide,
+  -- tarvitaanko viela kun interpolointi hakee myos?
   yrita_tierekisteriosoite_pisteille2(
       alkupiste(t.reitti), loppupiste(t.reitti), 1)::TEXT AS tierekisteriosoite
 FROM toteuma_tehtava tt
@@ -504,24 +505,6 @@ WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.alkanut BETWEEN :alku AND :loppu) AND
       (t.paattynyt BETWEEN :alku AND :loppu) AND
       ST_Distance(t.reitti, ST_MakePoint(:x,:y)) < :toleranssi;
-
-
--- name: hae-toteuman-interpolointitiedot
--- hakee tarvittavat tiedot kun interpoloidaan aika-arvio pisteelle
-
-SELECT
-  -- kuinka lähellä tämä reittipiste on reittilinestringin klikkausta lähinnä oleva apistettä?
-  ST_Distance(rp.sijainti::geometry,
-              ST_ClosestPoint(reitin_lahin_osalinestring (rp.sijainti::geometry, :toteuma-id ::integer), :piste ::geometry)) AS etaisyys,
-  rp.sijainti AS rp_sijainti,
-  rp.aika AS rp_aika,
-  -- tämän reittipisteen suhteellinen sijainti reittiviivalla
-  ST_LineLocatePoint(reitin_lahin_osalinestring (:piste ::geometry, :toteuma-id ::integer), rp.sijainti ::geometry) AS paikka_viivalla,
-  rp.id AS lahin_rp_id
-FROM reittipiste rp
-WHERE rp.toteuma = :toteuma-id
-ORDER BY etaisyys
-LIMIT 3;
 
 -- name: reittipisteiden-sijainnit-toteuman-reitilla
 SELECT
