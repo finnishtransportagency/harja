@@ -31,7 +31,7 @@
   (let [tarkastusajo-id 665 ;; Osa tiellä 4 olevista pisteistä projisoituu virheellisesti rampeille
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
-                                                          :treshold 100})
+                                                          :laheiset_tiet_treshold 100})
         merkinnat (ramppianalyysi/lisaa-merkintoihin-ramppitiedot merkinnat)
         indeksit (ramppianalyysi/maarittele-alkavien-ramppien-indeksit merkinnat)]
     (is (= indeksit [3]))))
@@ -40,7 +40,7 @@
   (let [tarkastusajo-id 665 ;; Pari pisteistä sijaitsee virheellisesti rampilla
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
-                                                          :treshold 100})]
+                                                          :laheiset_tiet_treshold 100})]
 
     (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
     (is (some #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie])) merkinnat)
@@ -59,7 +59,7 @@
   (let [tarkastusajo-id 666 ;; Iso osa pisteistä sivuaa rampin reunaa
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
-                                                          :treshold 100})]
+                                                          :laheiset_tiet_treshold 100})]
 
     (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
     (is (some #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie])) merkinnat)
@@ -78,7 +78,7 @@
   (let [tarkastusajo-id 667 ;; Iso osa pisteistä sijoittuu pitkästi rampille
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
-                                                          :treshold 100})]
+                                                          :laheiset_tiet_treshold 100})]
 
     (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
     (is (some #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie])) merkinnat)
@@ -96,7 +96,7 @@
   (let [tarkastusajo-id 668 ;; Ajetaan tieltä 4 rampille ja takaisin tielle 4
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
-                                                          :treshold 100})]
+                                                          :laheiset_tiet_treshold 100})]
 
     (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
     (is (some #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie])) merkinnat)
@@ -110,7 +110,7 @@
   (let [tarkastusajo-id 754 ;; Oikea ajo, jossa osa tiellä 4 olevista pisteistä projisoituu virheellisesti rampeille
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
-                                                          :treshold 100})]
+                                                          :laheiset_tiet_treshold 100})]
 
     (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
     (is (some #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie])) merkinnat)

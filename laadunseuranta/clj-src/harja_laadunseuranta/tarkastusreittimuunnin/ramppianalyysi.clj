@@ -132,19 +132,18 @@
    treshold on metrimäärä rampin alkupisteestä, jota käytetään rajana määrittämään luotettava
    rampille siirtyminen."
   [ramppia-edeltava-merkinta rampin-merkinnat treshold]
-  (let [edellisen-merkinnan-tie (get-in ramppia-edeltava-merkinta [:tr-osoite :tie])
+  (let [tie-ennen-ramppia (get-in ramppia-edeltava-merkinta [:tr-osoite :tie])
         ainakin-yksi-varma-piste-ylittaa-tresholdin?
-        ;; Löytyykö ainakin yksi piste, joka ylittää annetun tresholdin
-        ;; niin, että myös GPS:n epätarkkuus on huomioitu
-        (> (count (filter #(and (>= (:etaisyys-gps-pisteesta %)
-                                    (- treshold
-                                       (:gps-tarkkuus %))))
-                          (map :laheiset-tr-osoitteet rampin-merkinnat)))
+        ;; Löytyykö ainakin yksi reittimerkintä, jonka etäisyys ramppia edeltävästä tiestä
+        ;; ylittää tresholdin niin, että myös GPS:n epätarkkuus on huomioitu
+        (> (count (filter #(let [lahin-osuma-edelliselle-tielle
+                                 (laheisten-pisteiden-lahin-osuma-tielle % tie-ennen-ramppia)]
+                             (and lahin-osuma-edelliselle-tielle
+                                  (>= (:etaisyys-gps-pisteesta lahin-osuma-edelliselle-tielle)
+                                      (- treshold
+                                         (:gps-tarkkuus %)))))
+                          rampin-merkinnat))
            0)]
-
-
-
-    ;; TODO KESKEN
     ainakin-yksi-varma-piste-ylittaa-tresholdin?))
 
 (defn- korjaa-rampilla-ajo
@@ -194,7 +193,7 @@
         ;; Vain muutama piste rampilla -> projisoi uudelleen
         (korjaa-vahapatoiset-rampit m 5)
         ;; Pisteet erkanevat rampille, mutta eivät liian kauemmas -> projisoi uudelleen
-        (korjaa-rampilla-ajot m 30)))
+        (korjaa-rampilla-ajot m 50)))
 
 (defn korjaa-virheelliset-rampit
   "Ottaa tarkastusreittimerkinnät, jotka on projisoitu tieverkolle ja joilla on myös
