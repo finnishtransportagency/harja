@@ -336,3 +336,56 @@
       (is (= (:yht_laskutetaan haetut-tiedot-oulu-liikenneympariston-hoito) 7882.5M) ":yht_laskutetaan laskutusyhteenvedossa")
       (is (= (:yht_laskutetaan_ind_korotus haetut-tiedot-oulu-liikenneympariston-hoito) nil) ":yht_laskutetaan laskutusyhteenvedossa")
       (is (= (:yht_laskutetaan_ind_korotettuna haetut-tiedot-oulu-liikenneympariston-hoito) nil) ":yht_laskutetaan laskutusyhteenvedossa"))))
+
+(deftest laskutusyhteenvedon-cache
+  (testing "laskutusyhteenvedon-cache"
+    (let [urakka-id @oulun-alueurakan-2014-2019-id
+          cache-tyhja (first (q-map "SELECT * FROM laskutusyhteenveto_cache WHERE urakka = " urakka-id ";"))
+          eka-ajo (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+                               (:db jarjestelma) +kayttaja-jvh+
+                               {:urakka-id urakka-id :alkupvm   (pvm/->pvm "1.8.2015")
+                                :loppupvm (pvm/->pvm "31.8.2015")})
+          toka-ajo (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+                               (:db jarjestelma) +kayttaja-jvh+
+                               {:urakka-id urakka-id :alkupvm   (pvm/->pvm "1.8.2015")
+                                :loppupvm (pvm/->pvm "31.8.2015")})
+          haetut-tiedot-oulu (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+                               (:db jarjestelma) +kayttaja-jvh+
+                               {:urakka-id urakka-id :alkupvm   (pvm/->pvm "1.8.2015")
+                                :loppupvm (pvm/->pvm "31.8.2015")})
+          cachesta-haettu-kysely (first (q-map "select y.urakka,
+           sum((y.rivi).yht_laskutettu) as yht_laskutettu,
+           sum((y.rivi).yht_laskutetaan) as yht_laskutetaan,
+           sum((y.rivi).kaikki_laskutettu) as kaikki_laskutettu,
+           sum((y.rivi).kaikki_laskutetaan) as kaikki_laskutetaan,
+            sum((y.rivi).kaikki_laskutettu_ind_korotus) as kaikki_laskutettu_ind_korotus,
+            sum((y.rivi).kaikki_laskutetaan_ind_korotus) as kaikki_laskutetaan_ind_korotus
+            FROM (select unnest(x.rivit) as rivi, x.nimi as urakka
+           FROM (SELECT c.urakka, c.alkupvm, c.loppupvm, c.tallennettu, c.rivit, u.nimi
+                   FROM laskutusyhteenveto_cache c
+                        JOIN urakka u ON u.id = c.urakka
+                  WHERE c.urakka = " urakka-id " AND c.alkupvm = '2015-8-01') x) y WHERE (y.rivi).tuotekoodi = '23110' GROUP BY y.urakka order by y.urakka;"))
+          haetut-tiedot-oulu-liikenneympariston-hoito (first (filter #(= (:tuotekoodi %) "23110") haetut-tiedot-oulu))
+          cache-count (:count (first (q-map "SELECT count(*) FROM laskutusyhteenveto_cache c WHERE c.urakka = " urakka-id " AND c.alkupvm = '2015-8-01';")))]
+      (is (= cache-count 1) "Monta kyselyä samoin parametrein, silti vain yksi cachessa")
+      (is (nil? cache-tyhja) "cache tyhjä ennen kyselyn ajoa")
+      (is (some? cachesta-haettu-kysely) "cache ei tyhjä ennen kyselyn ajoa")
+      (is (= eka-ajo toka-ajo haetut-tiedot-oulu) "Saman laskutusyhteenvedon eri ajokerrat antaa saman tulokset")
+      (is (= 1000.0M
+             (:yht_laskutettu haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:yht_laskutettu cachesta-haettu-kysely)) ":yht_laskutettu laskutusyhteenvedossa")
+      (is (= 3000.0M
+             (:yht_laskutetaan haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:yht_laskutetaan cachesta-haettu-kysely)) ":yht_laskutetaan laskutusyhteenvedossa")
+      (is (= 3820.11494252873560900000M
+             (:kaikki_laskutettu haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:kaikki_laskutettu cachesta-haettu-kysely)) ":kaikki_laskutettu laskutusyhteenvedossa")
+      (is (= 13103.44827586206880000M
+             (:kaikki_laskutetaan haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:kaikki_laskutetaan cachesta-haettu-kysely)) ":kaikki_laskutetaan laskutusyhteenvedossa")
+      (is (= 20.11494252873560900000M
+             (:kaikki_laskutettu_ind_korotus haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:kaikki_laskutettu_ind_korotus cachesta-haettu-kysely)) ":kaikki_laskutettu_ind_korotus laskutusyhteenvedossa")
+      (is (= 103.44827586206880000M
+             (:kaikki_laskutetaan_ind_korotus haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:kaikki_laskutetaan_ind_korotus cachesta-haettu-kysely)) ":kaikki_laskutetaan_ind_korotus laskutusyhteenvedossa"))))
