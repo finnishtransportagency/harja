@@ -24,29 +24,43 @@
             [harja.views.kartta.infopaneeli :as infopaneeli]
             [harja.tiedot.kartta :as kartta-tiedot]))
 
+(def tr-osoite-taytetty? (every-pred :numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys))
+
 (defn- valinnat
   "Valintalomake tienäkymälle."
-  [e! {:keys [valinnat haku-kaynnissa?] :as app}]
+  [e! {:keys [valinnat haku-kaynnissa? tulokset] :as app}]
   [lomake/lomake
    {:otsikko "Tarkastele tien tietoja"
     :muokkaa! #(e! (tiedot/->PaivitaValinnat %))
-    :footer [:div.inline
-             [napit/yleinen
-              "Hae"
-              #(e! (tiedot/->Hae))
-              {:ikoni (ikonit/livicon-search)}]
-             (when haku-kaynnissa?
-               [yleiset/ajax-loader "Haetaan tietoja..."])]
+    :footer-fn (fn [data]
+                 [:span
+                  [napit/yleinen
+                   "Hae"
+                   #(e! (tiedot/->Hae))
+                   {:ikoni (ikonit/livicon-search)
+                    :disabled (or (= :ei-haettu (:sijainti valinnat))
+                                  (not (lomake/validi? data)))}]
+                  (when haku-kaynnissa?
+                    [yleiset/ajax-loader "Haetaan tietoja..." {:luokka "inline-block"}])])
     :ei-borderia? true}
    [{:nimi :tierekisteriosoite :tyyppi :tierekisteriosoite
      :tyyli :rivitetty
-     :sijainti (r/wrap (:sijainti valinnat)
-                       #(e! (tiedot/->PaivitaSijainti %)))
+     :pakollinen? true
+     :sijainti (when-not tulokset
+                 (r/wrap (:sijainti valinnat)
+                         #(e! (tiedot/->PaivitaSijainti %))))
      :otsikko "Tierekisteriosoite"
-     :palstoja 3}
-    {:nimi :alku :tyyppi :pvm-aika
+     :palstoja 3
+     :validoi [(fn [osoite {sijainti :sijainti}]
+                 (when (and (tr-osoite-taytetty? osoite)
+                            (nil? sijainti))
+                   "Tarkista tierekisteriosoite"))]}
+
+    {:nimi :alku :tyyppi :pvm-aika :pakota-suunta :ylos-vasen
+     :pakollinen? true
      :otsikko "Alkaen" :palstoja 3}
-    {:nimi :loppu :tyyppi :pvm-aika
+    {:nimi :loppu :tyyppi :pvm-aika :pakota-suunta :ylos-vasen
+     :pakollinen? true
      :otsikko "Loppuen" :palstoja 3}]
    valinnat])
 
@@ -55,12 +69,18 @@
    :tienakyma-tulokset
    ^{:class "kartan-infopaneeli"}
    [infopaneeli/infopaneeli-komponentti
-    tulokset avatut-tulokset
-    #(e! (tiedot/->AvaaTaiSuljeTulos %))
-    #(e! (tiedot/->SuljeInfopaneeli)) {}]))
+    {:avatut-asiat (comp avatut-tulokset :idx :data)
+     :toggle-asia! #(e! (tiedot/->AvaaTaiSuljeTulos (:idx (:data %))))
+     :piilota-fn! #(e! (tiedot/->SuljeInfopaneeli))
+     :linkkifunktiot {:toteuma {:teksti "Tarkastele toteumanäkymässä"
+                                :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}}
+     :ei-tuloksia [:span "Hakuehdoilla ei löytynyt tuloksia"]}
+    tulokset]))
 
 (defn- tulospaneeli [e! tulokset avatut-tulokset]
   (komp/luo
+   (komp/sisaan-ulos #(reset! kartta-tiedot/ikonien-selitykset-sijainti :vasen)
+                     #(reset! kartta-tiedot/ikonien-selitykset-sijainti :oikea))
    (komp/sisaan-ulos #(nayta-tulospaneeli! e! tulokset avatut-tulokset)
                      #(kartta-tiedot/poista-kartan-kontrollit! :tienakyma-tulokset))
    (komp/kun-muuttuu nayta-tulospaneeli!)
@@ -71,6 +91,10 @@
   (komp/luo
    (komp/sisaan-ulos #(e! (tiedot/->Nakymassa true))
                      #(e! (tiedot/->Nakymassa false)))
+   (komp/ulos (kartta-tiedot/aseta-klik-kasittelija!
+               (fn [{t :geometria}]
+                 (when-let [idx (:idx t)]
+                   (e! (tiedot/->AvaaTaiSuljeTulos (:idx t)))))))
    (fn [e! {:keys [tulokset avatut-tulokset] :as app}]
      [:span
       [valinnat e! app]
