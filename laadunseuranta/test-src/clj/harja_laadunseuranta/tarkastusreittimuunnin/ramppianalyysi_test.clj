@@ -28,10 +28,10 @@
 (use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (deftest ramppianalyysi-korjaa-virheelliset-rampit
-  (let [tarkastusajo-id 754 ;; Osa pisteistä projisoituu virheellisesti rampeille
+  (let [tarkastusajo-id 754 ;; Osa tiellä 4 olevista pisteistä projisoituu virheellisesti rampeille
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
-                                                       {:tarkastusajo tarkastusajo-id
-                                                        :treshold 100})
+                                                         {:tarkastusajo tarkastusajo-id
+                                                          :treshold 100})
         korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
     (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
                   korjatut-merkinnat))))
@@ -39,8 +39,8 @@
 (deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-osa-pisteista-osuu-rampille
   (let [tarkastusajo-id 666 ;; Osa pisteistä sijaitsee virheellisesti rampilla
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
-                                                       {:tarkastusajo tarkastusajo-id
-                                                        :treshold 100})
+                                                         {:tarkastusajo tarkastusajo-id
+                                                          :treshold 100})
         korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
     (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
                   korjatut-merkinnat))))
@@ -48,8 +48,8 @@
 (deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-osa-pisteista-osuu-rampille
   (let [tarkastusajo-id 667 ;; Iso osa pisteistä sijaitsee virheellisesti rampilla
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
-                                                       {:tarkastusajo tarkastusajo-id
-                                                        :treshold 100})
+                                                         {:tarkastusajo tarkastusajo-id
+                                                          :treshold 100})
         korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
     (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
                   korjatut-merkinnat))))
@@ -57,7 +57,7 @@
 (deftest ramppianalyysi-ei-tee-mitaan-kun-ajetaan-rampille
   (let [tarkastusajo-id 668 ;; Ajetaan rampille ja takaisin tielle 4
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
-                                                       {:tarkastusajo tarkastusajo-id
-                                                        :treshold 100})
+                                                         {:tarkastusajo tarkastusajo-id
+                                                          :treshold 100})
         korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
     (is (= korjatut-merkinnat merkinnat))))
