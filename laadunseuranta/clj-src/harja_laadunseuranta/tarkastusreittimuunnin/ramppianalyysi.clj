@@ -5,11 +5,6 @@
   (:require [taoensso.timbre :as log]
             [harja.domain.tierekisteri :as tr-domain]))
 
-(defn- lisaa-merkintoihin-ramppitiedot [merkinnat]
-  (mapv #(do
-           (assoc % :piste-rampilla? (tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))))
-        merkinnat))
-
 (defn- maarittele-alkavien-ramppien-indeksit
   "Palauttaa indeksit merkintöihin, joissa poiketaan rampille."
   [merkinnat]
@@ -32,6 +27,16 @@
                       merkinnat)]
     (:ramppien-alut tulos)))
 
+(defn projisoi-virheelliset-rampit-takaisin-moottoritielle [merkinnat-ramppitiedoilla]
+  (let [alkavien-ramppien-indeksit (maarittele-alkavien-ramppien-indeksit merkinnat-ramppitiedoilla)
+        korjatut-merkinnat merkinnat-ramppitiedoilla]
+    korjatut-merkinnat))
+
+(defn- lisaa-merkintoihin-ramppitiedot [merkinnat]
+  (mapv #(do
+           (assoc % :piste-rampilla? (tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))))
+        merkinnat))
+
 (defn korjaa-virheelliset-rampit
   "Ottaa tarkastusreittimerkinnät, jotka on projisoitu tieverkolle ja joilla on myös
    tieto lähimmistä tierekisteriosoitteista. Etsii kohdat, joissa piste osuu virheellisesti rampille tai on
@@ -44,6 +49,5 @@
    GPS:n epätarkkuudesta johtuen tämä funktio pelaa todennäköisyyksillä eikä tulos ole täysin varma."
   [merkinnat]
   (let [merkinnat-ramppitiedoilla (lisaa-merkintoihin-ramppitiedot merkinnat)
-        alkavien-ramppien-indeksit (maarittele-alkavien-ramppien-indeksit merkinnat-ramppitiedoilla)
-        lopputulos merkinnat]
-    lopputulos))
+        korjatut-merkinnat (projisoi-virheelliset-rampit-takaisin-moottoritielle merkinnat-ramppitiedoilla)]
+    korjatut-merkinnat))
