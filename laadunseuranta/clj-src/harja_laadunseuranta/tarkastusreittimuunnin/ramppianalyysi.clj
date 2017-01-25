@@ -6,7 +6,9 @@
             [harja.domain.tierekisteri :as tr-domain]))
 
 (defn- maarittele-alkavien-ramppien-indeksit
-  "Palauttaa indeksit merkintöihin, joissa poiketaan rampille."
+  "Palauttaa indeksit merkintöihin, joissa siirrytään ei-ramppitieltä rampille.
+   Indeksiä seuraavat merkinnät ovat rampilla ajettuja pisteitä
+   (paitsi jos rampilla ajoa on vain yksi piste)."
   [merkinnat]
   (let [tulos (reduce (fn [tulos seuraava]
                         (if
@@ -58,9 +60,16 @@
         korjattu-ramppi
         osa-rampin-jalkeen))))
 
-(defn projisoi-virheelliset-rampit-takaisin-moottoritielle [merkinnat-ramppitiedoilla]
-  (let [alkavien-ramppien-indeksit (maarittele-alkavien-ramppien-indeksit merkinnat-ramppitiedoilla)
-        korjatut-merkinnat merkinnat-ramppitiedoilla]
+(defn projisoi-virheelliset-rampit-takaisin-moottoritielle
+  "Projisoi virheelliset rampit takaisin moottoritielle seuraavasti:
+  - Jos rampilla ajoa on erittäin pieni osuus, projisoi rampin suoraan moottoritielle"
+  [merkinnat-ramppitiedoilla]
+  (let [;; Projisoi ramppi suoraan takaisin moottoritielle jos pisteitä on erittäin vähän
+        alkavien-ramppien-indeksit (maarittele-alkavien-ramppien-indeksit merkinnat-ramppitiedoilla)
+        ;; Käydään jokainen rampille siirtymä erikseen läpi ja korjataan tarvittaessa.
+        korjatut-merkinnat (reduce (fn [edellinen-tulos seuraava-indeksi]
+                                     (korjaa-vahapatoiset-rampit edellinen-tulos seuraava-indeksi 5))
+                                   alkavien-ramppien-indeksit)]
     korjatut-merkinnat))
 
 (defn- lisaa-merkintoihin-ramppitiedot

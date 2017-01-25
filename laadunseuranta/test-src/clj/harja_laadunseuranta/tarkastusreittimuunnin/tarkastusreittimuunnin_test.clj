@@ -500,8 +500,10 @@
 
 
 ;; -------- Apufunktioita REPL-tunkkaukseen --------
+
 ;; Älä poista näitä
 ;; Kutsu tässä NS:ssä esim. (harja.palvelin.main/with-db db (debuggaa-tarkastusajon-muunto db 1))
+;; Muista evaluoida REPLiin ensin (käännös ei sisällä näitä koska näitä ei käytetä)
 
 (defn muunna-tarkastusajo-kantaan [db tarkastusajo-id urakka-id]
   ;; HUOMAA: Tämä EI poista mahdollisesti jo kerran tehtyä muunnosta!
