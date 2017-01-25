@@ -27,6 +27,15 @@
 
 (use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
+(deftest maarittele-alkavien-ramppien-idneksit
+  (let [tarkastusajo-id 665 ;; Osa tiellä 4 olevista pisteistä projisoituu virheellisesti rampeille
+        merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
+                                                         {:tarkastusajo tarkastusajo-id
+                                                          :treshold 100})
+        merkinnat (ramppianalyysi/lisaa-merkintoihin-ramppitiedot merkinnat)
+        indeksit (ramppianalyysi/maarittele-alkavien-ramppien-indeksit merkinnat)]
+    (is (= indeksit [3]))))
+
 (deftest ramppianalyysi-korjaa-virheelliset-rampit
   (let [tarkastusajo-id 754 ;; Osa tiellä 4 olevista pisteistä projisoituu virheellisesti rampeille
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)

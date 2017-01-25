@@ -43,7 +43,7 @@
         korjattu-ramppi
         osa-rampin-jalkeen))))
 
-(defn- maarittele-alkavien-ramppien-indeksit
+(defn maarittele-alkavien-ramppien-indeksit
   "Palauttaa indeksit merkintöihin, joissa siirrytään ei-ramppitieltä rampille.
    Indeksiä seuraavat merkinnät ovat rampilla ajettuja pisteitä
    (paitsi jos rampilla ajoa on vain yksi piste)."
@@ -58,7 +58,7 @@
                           (assoc tulos :edellinen-piste seuraava
                                        :kasiteltava-indeksi (inc (:kasiteltava-indeksi tulos))
                                        :ramppien-alut
-                                       (conj (:ramppien-alut tulos) (inc (:kasiteltava-indeksi tulos))))
+                                       (conj (:ramppien-alut tulos) (:kasiteltava-indeksi tulos)))
                           (assoc tulos :edellinen-piste seuraava
                                        :kasiteltava-indeksi (inc (:kasiteltava-indeksi tulos)))))
                       {:ramppien-alut []
@@ -82,7 +82,7 @@
                                    alkavien-ramppien-indeksit)]
     korjatut-merkinnat))
 
-(defn- lisaa-merkintoihin-ramppitiedot
+(defn lisaa-merkintoihin-ramppitiedot
   "Lisää merkintöihin tiedon siitä, onko piste projisoitu rampille."
   [merkinnat]
   (mapv #(do
