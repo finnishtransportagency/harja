@@ -5,31 +5,7 @@
   (:require [taoensso.timbre :as log]
             [harja.domain.tierekisteri :as tr-domain]))
 
-(defn- maarittele-alkavien-ramppien-indeksit
-  "Palauttaa indeksit merkintöihin, joissa siirrytään ei-ramppitieltä rampille.
-   Indeksiä seuraavat merkinnät ovat rampilla ajettuja pisteitä
-   (paitsi jos rampilla ajoa on vain yksi piste)."
-  [merkinnat]
-  (let [tulos (reduce (fn [tulos seuraava]
-                        (if
-                          ;; Edellinen piste ei ollut rampilla, mutta seuraava on
-                          ;; --> Otetaan indeksi talteen
-                          (and (not (-> tulos :edellinen-piste :piste-rampilla?))
-                               (:piste-rampilla? seuraava))
-                          ;; Jatketaan...
-                          (assoc tulos :edellinen-piste seuraava
-                                       :kasiteltava-indeksi (inc (:kasiteltava-indeksi tulos))
-                                       :ramppien-alut
-                                       (conj (:ramppien-alut tulos) (inc (:kasiteltava-indeksi tulos))))
-                          (assoc tulos :edellinen-piste seuraava
-                                       :kasiteltava-indeksi (inc (:kasiteltava-indeksi tulos)))))
-                      {:ramppien-alut []
-                       :edellinen-piste nil
-                       :kasiteltava-indeksi 0}
-                      merkinnat)]
-    (:ramppien-alut tulos)))
-
-(defn projisoi-ramppi-oikealle-tielle
+(defn- projisoi-ramppi-oikealle-tielle
   "Projisoi rampin takaisin lähimmälle moo"
   [ramppia-edeltava-merkina rampin-merkinnat]
   (log/debug "Projisoidaan ramppi takaisin ramppia edeltäneelle tielle.")
@@ -67,7 +43,31 @@
         korjattu-ramppi
         osa-rampin-jalkeen))))
 
-(defn projisoi-virheelliset-rampit-uudelleen
+(defn- maarittele-alkavien-ramppien-indeksit
+  "Palauttaa indeksit merkintöihin, joissa siirrytään ei-ramppitieltä rampille.
+   Indeksiä seuraavat merkinnät ovat rampilla ajettuja pisteitä
+   (paitsi jos rampilla ajoa on vain yksi piste)."
+  [merkinnat]
+  (let [tulos (reduce (fn [tulos seuraava]
+                        (if
+                          ;; Edellinen piste ei ollut rampilla, mutta seuraava on
+                          ;; --> Otetaan indeksi talteen
+                          (and (not (-> tulos :edellinen-piste :piste-rampilla?))
+                               (:piste-rampilla? seuraava))
+                          ;; Jatketaan...
+                          (assoc tulos :edellinen-piste seuraava
+                                       :kasiteltava-indeksi (inc (:kasiteltava-indeksi tulos))
+                                       :ramppien-alut
+                                       (conj (:ramppien-alut tulos) (inc (:kasiteltava-indeksi tulos))))
+                          (assoc tulos :edellinen-piste seuraava
+                                       :kasiteltava-indeksi (inc (:kasiteltava-indeksi tulos)))))
+                      {:ramppien-alut []
+                       :edellinen-piste nil
+                       :kasiteltava-indeksi 0}
+                      merkinnat)]
+    (:ramppien-alut tulos)))
+
+(defn- projisoi-virheelliset-rampit-uudelleen
   "Projisoi virheelliset rampit seuraavasti:
   - Jos rampilla ajoa on erittäin pieni osuus, projisoi rampin takaisin tielle, josta rampille ajettiin"
   [merkinnat-ramppitiedoilla]
