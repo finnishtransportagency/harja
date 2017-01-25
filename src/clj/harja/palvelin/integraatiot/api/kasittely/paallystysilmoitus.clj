@@ -24,12 +24,10 @@
     db
     {:paallystyskohde kohde-id
      :tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila
-             valmis-kasiteltavaksi false false)
+             valmis-kasiteltavaksi false)
      :ilmoitustiedot ilmoitustiedot-json
      :takuupvm (json/aika-string->java-sql-date
                  (:takuupvm perustiedot))
-     :muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
-                    (:tyot paallystysilmoitus))
      :kayttaja (:id kayttaja)}))
 
 (defn- paivita-paallystysilmoitus [db kayttaja urakka-id kohde-id
@@ -48,8 +46,6 @@
        :ilmoitustiedot ilmoitustiedot-json
        :takuupvm (json/aika-string->java-sql-date
                    (:takuupvm perustiedot))
-       :muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
-                      (:tyot paallystysilmoitus))
        :muokkaaja (:id kayttaja)
        :id kohde-id
        :urakka urakka-id})
@@ -72,8 +68,7 @@
 (defn pura-paallystysilmoitus [data]
   (-> (:paallystysilmoitus data)
       (assoc :alikohteet (mapv :alikohde (get-in data [:paallystysilmoitus :yllapitokohde :alikohteet])))
-      (assoc :alustatoimenpiteet (mapv :alustatoimenpide (get-in data [:paallystysilmoitus :alustatoimenpiteet])))
-      (assoc :tyot (mapv :tyo (get-in data [:paallystysilmoitus :tyot])))))
+      (assoc :alustatoimenpiteet (mapv :alustatoimenpide (get-in data [:paallystysilmoitus :alustatoimenpiteet])))))
 
 (defn validoi-paallystysilmoitus [db urakka-id kohde paallystysilmoitus]
   (validointi/tarkista-urakan-kohde db urakka-id (:id kohde))

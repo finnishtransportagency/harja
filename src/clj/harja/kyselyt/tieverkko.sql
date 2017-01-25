@@ -65,7 +65,7 @@ SELECT *
 FROM tierekisteriosoitteelle_piste(CAST(:tie AS INTEGER), CAST(:aosa AS INTEGER), CAST(:aet AS INTEGER));
 
 -- name: hae-osien-pituudet
--- Hakee osien pituudet annetulla välillä (inclusive)
+-- Hakee osien pituudet (metreinä) annetulla välillä (inclusive).
 SELECT
   osa,
   pituus

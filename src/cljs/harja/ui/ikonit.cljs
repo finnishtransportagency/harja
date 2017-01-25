@@ -312,7 +312,7 @@
   [:span.glyphicon.glyphicon-open])
 (defn saved []
   [:span.glyphicon.glyphicon-saved])
-(defn import []
+(defn import-ikoni []
   [:span.glyphicon.glyphicon-import])
 (defn export []
   [:span.glyphicon.glyphicon-export])
@@ -545,6 +545,8 @@
   [:span.livicon-check])
 (defn livicon-wrench []
   [:span.livicon-wrench])
+(defn livicon-eye []
+  [:span.livicon-eye])
 
 ;; Tiettyjen toimintojen vakioikonit
 

@@ -1,4 +1,5 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.viestinta
+  "Tässä namespacessa on palveluita ylläpidon urakoiden väliseen sähköpostiviestintään."
   (:require [taoensso.timbre :as log]
             [clojure.core.match :refer [match]]
             [harja.fmt :as fmt]

@@ -122,7 +122,8 @@ FROM vakiohavainto
 WHERE jatkuva = FALSE;
 
 -- name: luo-uusi-tarkastus<!
-INSERT INTO tarkastus (urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, tarkastusajo, luoja, havainnot, lahde, laadunalitus)
+INSERT INTO tarkastus (urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
+                       sijainti, tarkastaja, tyyppi, tarkastusajo, luoja, havainnot, lahde, laadunalitus)
 VALUES
   (:urakka, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys, :sijainti, :tarkastaja,
             :tyyppi :: tarkastustyyppi, :tarkastusajo, :luoja, :havainnot, :lahde :: lahde, :laadunalitus);

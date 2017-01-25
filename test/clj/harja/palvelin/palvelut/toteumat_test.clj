@@ -325,12 +325,36 @@
 
 (deftest varustetoteumat-haettu-oikein
   (let [alkupvm (pvm/luo-pvm 2005 9 1)
-        loppupvm (pvm/luo-pvm 2006 10 30)
+        loppupvm (pvm/luo-pvm 2017 10 30)
         varustetoteumat (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :urakan-varustetoteumat +kayttaja-jvh+
                                         {:urakka-id @oulun-alueurakan-2005-2010-id
                                          :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
                                          :alkupvm alkupvm
                                          :loppupvm loppupvm})]
-    (is (>= (count varustetoteumat) 1))
+    (is (>= (count varustetoteumat) 3))
     (is (contains? (first varustetoteumat) :sijainti))))
+
+(deftest kokonaishintaisen-toteuman-siirtymatiedot
+  (let [toteuma-id 19 ;; pudasjärven alueurakan toteuma
+        hae #(kutsu-palvelua (:http-palvelin jarjestelma)
+                             :siirry-kokonaishintainen-toteuma
+                             %
+                             toteuma-id)
+        ok-tulos {:alkanut #inst "2008-09-08T21:10:00.000000000-00:00"
+                  :urakka-id 2
+                  :hallintayksikko-id 9
+                  :aikavali {:alku #inst "2007-09-30T21:00:00.000-00:00"
+                             :loppu #inst "2008-09-29T21:00:00.000-00:00"}
+                  :tehtavat
+                  [{:toimenpidekoodi 1350, :toimenpideinstanssi "10100"}]}
+        ei-ok-tulos nil]
+
+    ;; Tilaajan käyttäjä voi hakea siirtymätiedot
+    (is (= ok-tulos (hae +kayttaja-jvh+)))
+
+    ;; Eri urakoitsijalla palautuu tyhjät tiedot
+    (is (= ei-ok-tulos (hae +kayttaja-yit_uuvh+)))
+
+    ;; Toteuman urakan urakoitsijan käyttäjä näkee siirtymätiedot
+    (is (= ok-tulos (hae +kayttaja-ulle+)))))

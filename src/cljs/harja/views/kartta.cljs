@@ -250,26 +250,21 @@
 (def keskita-kartta-pisteeseen openlayers/keskita-kartta-pisteeseen!)
 
 
-(def ikonien-selitykset-nakyvissa-oletusarvo true)
-;; Eri näkymät voivat tarpeen mukaan asettaa ikonien selitykset päälle/pois komponenttiin tultaessa.
-;; Komponentista poistuttaessa tulisi arvo asettaa takaisin oletukseksi
-(def ikonien-selitykset-nakyvissa? (atom true))
-(def ikonien-selitykset-auki (atom true))
-
 (defn kartan-ikonien-selitykset []
   (let [selitteet (reduce set/union
                           (keep #(when % (taso/selitteet %))
                                 (vals @tasot/geometriat-kartalle)))
         lukumaara-str (fmt/left-pad 2 (count selitteet))
         varilaatikon-koko 20
-        teksti (if @ikonien-selitykset-auki
+        teksti (if @tiedot/ikonien-selitykset-auki
                  (str "Piilota | " lukumaara-str " kpl")
                  (str "Karttaselitteet | " lukumaara-str " kpl"))]
     (if (and (not= :S @nav/kartan-koko)
              (not (empty? selitteet))
-             @ikonien-selitykset-nakyvissa?)
+             @tiedot/ikonien-selitykset-nakyvissa?)
       [:div.kartan-selitykset.kartan-ikonien-selitykset
-       (if @ikonien-selitykset-auki
+       {:class (when (= :vasen @tiedot/ikonien-selitykset-sijainti) "kartan-ikonien-selitykset-vasen")}
+       (if @tiedot/ikonien-selitykset-auki
          [:div
           [:table
            [:tbody
@@ -320,11 +315,11 @@
                  [:td.kartan-ikonien-selitykset-selitys-sarake [:span.kartan-ikonin-selitys teksti]]]))]]
           [:div.kartan-ikonien-selitykset-sulje.klikattava
            {:on-click (fn [event]
-                        (reset! ikonien-selitykset-auki false)
+                        (reset! tiedot/ikonien-selitykset-auki false)
                         (.stopPropagation event)
                         (.preventDefault event))} teksti]]
          [:span.kartan-ikonien-selitykset-avaa.klikattava {:on-click (fn [event]
-                                                                       (reset! ikonien-selitykset-auki true)
+                                                                       (reset! tiedot/ikonien-selitykset-auki true)
                                                                        (.stopPropagation event)
                                                                        (.preventDefault event))}
           teksti])])))
@@ -424,7 +419,7 @@
   {:hy
    (fn [item]
      (when-not (= (:id item) (:id @nav/valittu-hallintayksikko))
-       (nav/valitse-hallintayksikko item)))
+       (nav/valitse-hallintayksikko! item)))
 
    :ur
    (fn [item]

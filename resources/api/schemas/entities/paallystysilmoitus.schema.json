@@ -281,60 +281,6 @@
           }
         }
       }
-    },
-    "tyot": {
-      "id": "urn:harja/tyot",
-      "type": "array",
-      "maxItems": 100,
-      "items": {
-        "id": "urn:harja/tyot/0/tyo",
-        "type": "object",
-        "properties": {
-          "tyo": {
-            "id": "urn:harja/tyot/0/tyo/tyyppi",
-            "required": true,
-            "type": "object",
-            "properties": {
-              "tyyppi": {
-                "id": "urn:harja/tyot/0/tyo/tyyppi",
-                "required": true,
-                "enum": [
-                  "Ajoradan päällyste",
-                  "Pienaluetyöt",
-                  "Tasaukset",
-                  "Jyrsinnät",
-                  "Muut"
-                ]
-              },
-              "tyotehtava": {
-                "id": "urn:harja/tyot/0/tyo/tyotehtava",
-                "type": "string",
-                "required": true
-              },
-              "tilattu-maara": {
-                "id": "urn:harja/tyot/0/tyo/tilattu-maara",
-                "type": "number",
-                "required": true
-              },
-              "toteutunut-maara": {
-                "id": "urn:harja/tyot/0/tyo/toteutunut-maara",
-                "type": "number",
-                "required": true
-              },
-              "yksikko": {
-                "id": "urn:harja/tyot/0/tyo/yksikko",
-                "type": "string",
-                "required": true
-              },
-              "yksikkohinta": {
-                "id": "urn:harja/tyot/0/tyo/yksikkohinta",
-                "type": "number",
-                "required": true
-              }
-            }
-          }
-        }
-      }
     }
   }
 }

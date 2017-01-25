@@ -27,7 +27,6 @@
 
 (defn paikkauskohteet [ur]
   (komp/luo
-    (komp/lippu paikkaus/paikkauskohteet-nakymassa?)
     (fn [ur]
       [:div.paikkauskohteet
        [kartta/kartan-paikka]
@@ -42,7 +41,7 @@
         ur
         paikkaus/paikkauskohteet
         {:otsikko "Paikkauskohteet"
-         :nakyma :paikkaus
+         :kohdetyyppi :paikkaus
          :tallenna
          (yllapitokohteet/kasittele-tallennettavat-kohteet!
            #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id ur))

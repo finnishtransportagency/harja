@@ -8,18 +8,18 @@ SELECT
            st_distance(au.alue, st_makepoint(:x, :y))) AS etaisyys
 FROM urakka u
   LEFT JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
-  WHERE
-          -- Urakka on käynnissä
-          (u.alkupvm <= now() AND
-          u.loppupvm > now())
-          OR
-          -- Urakka on käynnissä (loppua ei tiedossa)
-          (u.alkupvm <= now() AND
-          u.loppupvm IS NULL)
-          OR
-          -- Urakan takuuaika on voimassa
-          (u.alkupvm <= now() AND
-          u.takuu_loppupvm > now())
+WHERE
+  -- Urakka on käynnissä
+  (u.alkupvm <= now() AND
+   u.loppupvm > now())
+  OR
+  -- Urakka on käynnissä (loppua ei tiedossa)
+  (u.alkupvm <= now() AND
+   u.loppupvm IS NULL)
+  OR
+  -- Urakan takuuaika on voimassa
+  (u.alkupvm <= now() AND
+   u.takuu_loppupvm > now())
 ORDER BY etaisyys;
 
 -- name: hae-kaikki-urakat-aikavalilla
@@ -502,7 +502,7 @@ VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :elynumero);
 -- name: paivita-alueurakka!
 UPDATE alueurakka
 SET alue    = ST_GeomFromText(:alue) :: GEOMETRY,
-    elynumero = :elynumero
+  elynumero = :elynumero
 WHERE alueurakkanro = :alueurakkanro;
 
 -- name: hae-alueurakka-numerolla
@@ -647,7 +647,9 @@ VALUES (:urakkanro, ST_GeomFromText(:alue) :: GEOMETRY);
 
 -- name: hae-urakan-alkuvuosi
 -- single?: true
-SELECT EXTRACT(YEAR FROM alkupvm)::INTEGER FROM urakka WHERE id = :urakka;
+SELECT EXTRACT(YEAR FROM alkupvm) :: INTEGER
+FROM urakka
+WHERE id = :urakka;
 
 -- name: hae-urakan-ely
 SELECT
@@ -657,3 +659,21 @@ SELECT
 FROM organisaatio o
   JOIN urakka u ON o.id = u.hallintayksikko
 WHERE u.id = :urakkaid;
+
+-- name: hae-urakat-joihin-jarjestelmalla-erillisoikeus
+SELECT
+  u.id,
+  u.nimi,
+  u.tyyppi,
+  u.alkupvm,
+  u.loppupvm,
+  u.takuu_loppupvm,
+  u.urakkanro AS alueurakkanumero,
+  urk.nimi    AS urakoitsija_nimi,
+  urk.ytunnus AS urakoitsija_ytunnus
+FROM urakka u
+  JOIN organisaatio urk ON u.urakoitsija = urk.id
+  JOIN kayttajan_lisaoikeudet_urakkaan klu ON klu.urakka = u.id
+  JOIN kayttaja k ON klu.kayttaja = k.id
+WHERE k.kayttajanimi = :kayttajanimi
+      AND k.jarjestelma;

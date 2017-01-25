@@ -25,6 +25,7 @@
   "Kohdeluettelo-pääkomponentti"
   [ur]
   (komp/luo
+    (komp/lippu paikkaus/kohdeluettelossa?)
     (komp/lippu paikkaus/karttataso-paikkauskohteet)
     (fn [ur]
       (if (:yhatiedot ur)
