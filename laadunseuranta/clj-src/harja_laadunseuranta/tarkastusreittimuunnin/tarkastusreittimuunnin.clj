@@ -343,7 +343,7 @@
                                    (:pistemaiset-tarkastukset tarkastukset))})
 
 (defn- valmistele-merkinnat-kasittelyyn [merkinnat]
-  (ramppianalyysi/korjaa-virheelliset-merkinnat merkinnat))
+  (ramppianalyysi/korjaa-virheelliset-rampit merkinnat))
 
 (defn reittimerkinnat-tarkastuksiksi
   "Reittimerkintämuunnin, joka käy reittimerkinnät läpi ja palauttaa mapin, jossa reittimerkinnät muutettu
