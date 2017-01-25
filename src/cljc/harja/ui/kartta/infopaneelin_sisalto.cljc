@@ -258,7 +258,8 @@
               {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite :nimi :tierekisteriosoite}
               {:otsikko "Tarkastaja" :nimi :tarkastaja}
               {:otsikko "Havainnot" :hae (hakufunktio
-                                           [:havainnot :vakiohavainnot]
+                                           #(or (contains? % :havainnot)
+                                                (contains? % :vakiohavainnot))
                                            havainnot-fn)}]
      :data tarkastus}))
 
