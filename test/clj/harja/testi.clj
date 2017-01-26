@@ -295,6 +295,11 @@
                   FROM   toimenpideinstanssi
                   WHERE  nimi = 'Oulu Talvihoito TP 2014-2019';"))))
 
+(defn hae-oulun-alueurakan-liikenneympariston-hoito-tpi-id []
+  (ffirst (q (str "SELECT id
+                  FROM   toimenpideinstanssi
+                  WHERE  nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019';"))))
+
 (defn hae-muhoksen-paallystysurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
