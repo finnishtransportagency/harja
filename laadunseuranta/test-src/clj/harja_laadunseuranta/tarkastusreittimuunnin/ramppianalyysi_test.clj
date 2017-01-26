@@ -27,6 +27,14 @@
 
 (use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
+(defn- aseta-ramppimerkintojen-tarkkuus
+  "Etsii merkinnöistä rampille projisoidut pisteet ja ylikirjoittaa niiden GPS-tarkkuudeksi
+   annetun tarkkuuden."
+  [merkinnat tarkkuus]
+  (assert (and (number? tarkkuus)
+               (>= tarkkuus 0)) "Virheellinen tarkkuus")
+  (mapv #(assoc % :gps-tarkkuus tarkkuus) merkinnat))
+
 (deftest maarittele-alkavien-ramppien-idneksit
   (let [tarkastusajo-id 665 ;; Osa tiellä 4 olevista pisteistä projisoituu virheellisesti rampeille
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
@@ -74,7 +82,7 @@
                   korjatut-merkinnat)))))
 
 (deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-iso-osa-pisteista-osuu-rampille
-  (let [tarkastusajo-id 667 ;; Iso osa pisteistä sijoittuu pitkästi rampille, joskin epätarkasti
+  (let [tarkastusajo-id 667 ;; Iso osa pisteistä sijoittuu pitkästi rampille
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
                                                           :laheiset_tiet_threshold 100})]
@@ -90,6 +98,17 @@
       (is (every? #(or (= (get-in % [:tr-osoite :tie]) 4)
                        (nil? (get-in % [:tr-osoite :tie])))
                   korjatut-merkinnat)))))
+
+(deftest ramppianalyysi-ei-tee-mitaan-kun-iso-osa-tarkkoja-pisteita-osuu-rampille
+  (let [tarkastusajo-id 667 ;; Iso osa pisteistä sijoittuu pitkästi rampille
+        merkinnat (-> (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
+                                                          {:tarkastusajo tarkastusajo-id
+                                                           :laheiset_tiet_threshold 100})
+                      (aseta-ramppimerkintojen-tarkkuus 5))]
+
+    (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
+      (is (= (count korjatut-merkinnat) (count merkinnat)))
+      (is (= korjatut-merkinnat merkinnat)))))
 
 (deftest ramppianalyysi-ei-tee-mitaan-kun-ajetaan-oikeasti-rampille
   (let [tarkastusajo-id 668 ;; Ajetaan tieltä 4 rampille ja takaisin tielle 4

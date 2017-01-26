@@ -133,24 +133,36 @@
    rampille siirtyminen."
   [ramppia-edeltava-merkinta rampin-merkinnat threshold]
   (let [tie-ennen-ramppia (get-in ramppia-edeltava-merkinta [:tr-osoite :tie])
-        ainakin-yksi-varma-piste-ylittaa-thresholdin?
-        ;; Löytyykö rampilta ainakin yksi reittimerkintä, jonka etäisyys ramppia edeltävästä tiestä
-        ;; ylittää thresholdin niin, että myös GPS:n epätarkkuus on huomioitu
-        (> (count (filter #(let [lahin-osuma-edelliselle-tielle
-                                 (laheisten-pisteiden-lahin-osuma-tielle % tie-ennen-ramppia)]
-                             (and lahin-osuma-edelliselle-tielle
-                                  (>=
-                                    ;; GPS:n epätarkkuudesta johtuen projisio voi olla lähempänä
-                                    ;; kuin suoraan pisteestä laskettu etäisyys. Siispä vähennetään
-                                    ;; etäisyydestä GPS:n aiheuttama epätarkkuus
-                                    ;; Jos epätarkkuus on suuri, pisteen tulee olla hyvin kaukana
-                                    ;; projisioidusta tiestä, jotta uskomme sen ylittävän thresholdin
-                                    (max (- (:etaisyys-gps-pisteesta lahin-osuma-edelliselle-tielle)
-                                            (:gps-tarkkuus %))
-                                         0)
-                                    threshold)))
-                          rampin-merkinnat))
-           0)]
+        merkinnat-rampilla-yli-tresholdin
+        ;; Tutkitaan rampin reittimerkintöjen etäisyys ramppia edeltäneeseen tiehen.
+        ;; Pyritään löytämään pisteet, joissa etäisyys edellisestä tiestä ylittää thresholdin niin,
+        ;; että myös GPS:n epätarkkuus on huomioitu.
+        (filter #(let [lahin-osuma-edelliselle-tielle
+                       (laheisten-pisteiden-lahin-osuma-tielle % tie-ennen-ramppia)]
+                   (and lahin-osuma-edelliselle-tielle
+                        (>
+                          ;; GPS:n epätarkkuudesta johtuen projisio edelliselle tielole voi olla lähempänä
+                          ;; kuin suoraan pisteestä laskettu etäisyys. Siispä vähennetään
+                          ;; etäisyydestä GPS:n aiheuttama epätarkkuus.
+                          ;; Jos epätarkkuus on suuri, pisteen tulee olla hyvin kaukana
+                          ;; projisioidusta tiestä, jotta uskomme sen ylittävän thresholdin
+                          (max (- (:etaisyys-gps-pisteesta lahin-osuma-edelliselle-tielle)
+                                  (:gps-tarkkuus %))
+                               0)
+                          threshold)))
+                rampin-merkinnat)
+        ainakin-yksi-varma-piste-ylittaa-thresholdin? (> (count merkinnat-rampilla-yli-tresholdin) 0)]
+
+    (when ainakin-yksi-varma-piste-ylittaa-thresholdin?
+      (log/debug "Löytyi pisteitä, jotka sijaitsevat riittävän kaukana ramppia edeltävästä tiestä:")
+      (doseq [merkinta merkinnat-rampilla-yli-tresholdin]
+        (let [lahin-osuma (laheisten-pisteiden-lahin-osuma-tielle merkinta tie-ennen-ramppia)]
+          (log/debug (pr-str lahin-osuma " => " (pr-str "Etäisyys edelliseen tiehen GPS-tarkkuus huomioituna: "
+                                                        (- (:etaisyys-gps-pisteesta lahin-osuma)
+                                                           (:gps-tarkkuus merkinta))
+                                                        "> annettu htreshold" threshold)))))
+      (log/debug "Eli ajo on mitä todennäköisimmin tapahtunut rampilla"))
+
     ainakin-yksi-varma-piste-ylittaa-thresholdin?))
 
 (defn- korjaa-rampilla-ajo
