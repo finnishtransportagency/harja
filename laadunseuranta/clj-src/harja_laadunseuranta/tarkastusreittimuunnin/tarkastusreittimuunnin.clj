@@ -109,20 +109,20 @@
                          (:pistemainen-havainto reittimerkinta)))))
 
 (defn keskiarvo
-  [numerot]
+  [arvo]
   (cond
-    (nil? numerot)
+    (nil? arvo)
     nil
 
-    (number? numerot)
-    numerot
+    (number? arvo)
+    arvo
 
-    (empty? numerot)
+    (empty? arvo)
     nil
 
-    :default
+    :default ;; vector
     (float (with-precision 3
-             (/ (apply + numerot) (count numerot))))))
+             (/ (apply + arvo) (count arvo))))))
 
 (defn- paattele-tarkastustyyppi [reittimerkinta]
   (cond
@@ -148,7 +148,7 @@
         (assoc :losa nil :let nil))
     osoite))
 
-(defn- muodosta-merkinnan-lopullinen-tr-osoite [reittimerkinta]
+(defn- muodosta-tarkastuksen-lopullinen-tr-osoite [reittimerkinta]
   (let [tarkastuksen-reitti (:sijainnit reittimerkinta)
         lahtopiste (:tr-osoite (first tarkastuksen-reitti))
         paatepiste (:tr-osoite (last tarkastuksen-reitti))
@@ -167,51 +167,51 @@
    Reittimerkintä voi olla joko yksittäinen (pistemäinen) reittimerkintä tai
    jatkuvista havainnoista kasattu, yhdistetty reittimerkintä."
   [reittimerkinta]
-  (let [yhdista-arvot-vectoriin (fn [reittimerkinta avain]
-                                  (cond
-                                    (nil? (avain reittimerkinta))
-                                    []
+  (let [kentan-arvo-vectorina (fn [reittimerkinta avain]
+                                (cond
+                                  (nil? (avain reittimerkinta))
+                                  []
 
-                                    (number? (avain reittimerkinta))
-                                    [(avain reittimerkinta)]
+                                  (number? (avain reittimerkinta))
+                                  [(avain reittimerkinta)]
 
-                                    (vector? (avain reittimerkinta))
-                                    (avain reittimerkinta)))
-        yhdista-mittausarvot (fn [reittimerkinta mittaus-avain]
-                               (cond
-                                 (nil? (mittaus-avain reittimerkinta))
-                                 nil
+                                  (vector? (avain reittimerkinta))
+                                  (avain reittimerkinta)))
+        mittausarvojen-keskiarvo (fn [reittimerkinta mittaus-avain]
+                                   (cond
+                                     (nil? (mittaus-avain reittimerkinta))
+                                     nil
 
-                                 (number? (mittaus-avain reittimerkinta))
-                                 (mittaus-avain reittimerkinta)
+                                     (number? (mittaus-avain reittimerkinta))
+                                     (mittaus-avain reittimerkinta)
 
-                                 (vector? (mittaus-avain reittimerkinta))
-                                 (keskiarvo (mittaus-avain reittimerkinta))))]
+                                     (vector? (mittaus-avain reittimerkinta))
+                                     (keskiarvo (mittaus-avain reittimerkinta))))]
     (as-> {:aika (:aikaleima reittimerkinta)
            :tyyppi (paattele-tarkastustyyppi reittimerkinta)
            :tarkastusajo (:tarkastusajo reittimerkinta)
            ;; Reittimerkintöjen id:t, joista tämä tarkastus muodostuu
-           :reittimerkinta-idt (yhdista-arvot-vectoriin reittimerkinta :id)
+           :reittimerkinta-idt (kentan-arvo-vectorina reittimerkinta :id)
            :sijainnit (or (:sijainnit reittimerkinta) [{:sijainti (:sijainti reittimerkinta)
                                                         :tr-osoite (:tr-osoite reittimerkinta)}])
-           :liitteet (yhdista-arvot-vectoriin reittimerkinta :kuva)
+           :liitteet (kentan-arvo-vectorina reittimerkinta :kuva)
            :vakiohavainnot (yhdista-reittimerkinnan-kaikki-havainnot reittimerkinta)
            :havainnot (:kuvaus reittimerkinta)
            :talvihoitomittaus {:talvihoitoluokka nil
-                               :lumimaara (yhdista-mittausarvot reittimerkinta :lumisuus)
-                               :tasaisuus (yhdista-mittausarvot reittimerkinta :talvihoito-tasaisuus)
-                               :kitka (yhdista-mittausarvot reittimerkinta :kitkamittaus)
+                               :lumimaara (mittausarvojen-keskiarvo reittimerkinta :lumisuus)
+                               :tasaisuus (mittausarvojen-keskiarvo reittimerkinta :talvihoito-tasaisuus)
+                               :kitka (mittausarvojen-keskiarvo reittimerkinta :kitkamittaus)
                                :ajosuunta nil
-                               :lampotila_ilma (yhdista-mittausarvot reittimerkinta :lampotila)
+                               :lampotila_ilma (mittausarvojen-keskiarvo reittimerkinta :lampotila)
                                :lampotila_tie nil}
            :soratiemittaus {:hoitoluokka nil
-                            :tasaisuus (yhdista-mittausarvot reittimerkinta :soratie-tasaisuus)
-                            :kiinteys (yhdista-mittausarvot reittimerkinta :kiinteys)
-                            :polyavyys (yhdista-mittausarvot reittimerkinta :polyavyys)
-                            :sivukaltevuus (yhdista-mittausarvot reittimerkinta :sivukaltevuus)}
+                            :tasaisuus (mittausarvojen-keskiarvo reittimerkinta :soratie-tasaisuus)
+                            :kiinteys (mittausarvojen-keskiarvo reittimerkinta :kiinteys)
+                            :polyavyys (mittausarvojen-keskiarvo reittimerkinta :polyavyys)
+                            :sivukaltevuus (mittausarvojen-keskiarvo reittimerkinta :sivukaltevuus)}
            :laadunalitus (boolean (:laadunalitus reittimerkinta))}
           tarkastus
-          (assoc tarkastus :lopullinen-tr-osoite (muodosta-merkinnan-lopullinen-tr-osoite tarkastus)))))
+          (assoc tarkastus :lopullinen-tr-osoite (muodosta-tarkastuksen-lopullinen-tr-osoite tarkastus)))))
 
 (defn viimeinen-indeksi [sekvenssi]
   (- (count sekvenssi) 1))
