@@ -566,22 +566,29 @@
                                  (when (= :ilmoitus (:type item)) ;; Älä siirrä tätä cond-ehtoon
                                    (t/julkaise! (assoc item :aihe :ilmoitus-klikattu)))
 
+                                 ;; Tilannekuvassa voidaan klikata valitsematonta hallintayksikköä
+                                 ;; tai urakkaa, ja silti avataan infopaneeli pisteessä olevista asioista.
                                  (and (#{:tilannekuva} @nav/valittu-sivu)
                                       (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item))
                                  (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
                                                                           event
                                                                           asiat-pisteessa)
 
+                                 ;; Tien klikkaaminen esim toteuma-näkymässä osuu valittuun urakkaan
                                  (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
                                  (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
                                                                           event
                                                                           asiat-pisteessa)
 
+                                 ;; Etusivulla
                                  (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item)
                                  (if (= :hy (:type item))
                                    (nav/valitse-hallintayksikko! item)
                                    (t/julkaise! (assoc item :aihe :urakka-klikattu)))
 
+                                 ;; Klikattu asia ei ole hy/urakka, eikä se ole ilmoitus ilmoitusnäkymässä.
+                                 ;; Avataan infopaneeliin klikatun asian tiedot, ja haetaan sinne mahdollisesti
+                                 ;; muutakin
                                  :default
                                  (do
                                    (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
@@ -595,39 +602,28 @@
          :on-dblclick        nil
 
          :on-dblclick-select (fn [item event]
-
                                ;; Select tarkoittaa, että on klikattu jotain kartalla piirrettyä asiaa.
                                ;; Tuplaklikkaukseen halutaan reagoida joko kohdentamalla tuplaklikattuun asiaan,
                                ;; tai jos tuplaklikattu asia oli urakka, zoomaataan vaan karttaa askel eteenpäin.
-                               ;; Urakoiden tuplaklikkaukseen liittyy kuitenkin erikoistapauksia, joiden takia
-                               ;; tämä käsittely on hieman monimutkaista. Normaalisti Harjassa kartalle piirretyt
-                               ;; organisaatiot ovat joko valitsemattomia (värillä täytettyjä), tai valittuja (mustat äärirajat).
-                               ;; Valitsemattoman urakan (tupla)klikkaus voidaan yleensä ymmärtää haluksi valita kyseinen organisaatio,
-                               ;; esimerkiksi Harjan etusivulla.
-                               ;; Tilannekuvaan kuitenkin usein piirretään organisaatiorajoja, jotka eivät ole "valittuja".
-                               ;; Esim "valittu urakka" tarkoittaa urakkaa, jonka tiedot avautuvat Urakka-näkymään.
-                               ;; Tilannekuvan suodattimilla voidaan kartalle piirtää vaikka Harjan kaikki urakat,
-                               ;; mutta tämä ei tarkota sitä, että yksikään niistä olisi "valittu urakka".
-
                                (cond
+                                 ;; Ei infopaneelia ilmoitusnäkymässä
                                  (#{:ilmoitukset} @nav/valittu-sivu)
                                  (when (= :ilmoitus (:type item)) ;; Älä siirrä tätä cond-ehtoon
                                    (t/julkaise! (assoc item :aihe :ilmoitus-klikattu))
                                    (tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))
 
-                                 (and (#{:tilannekuva} @nav/valittu-sivu)
-                                      (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item))
                                  ;; Tilannekuvassa tai ilmoituksissa zoomataan aina sisään, jos
                                  ;; tuplaklikattu asia on hy/urakka
+                                 (and (#{:tilannekuva} @nav/valittu-sivu)
+                                      (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item))
                                  nil
 
-                                 (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
                                  ;; Muualla zoomataan sisään vain, jos klikattu hy/urakka on valittu
+                                 (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
                                  nil
 
-                                 (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item)
                                  ;; Tuplaklikattin valitsematonta asiaa, eli ollaan etusivulla valitsemassa hy/urakkaa.
-                                 ;; Valitaan klikattu organisaatio, ja kohdennetaan sen alueeseen.
+                                 (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item)
                                  (do (.stopPropagation event)
                                      (.preventDefault event)
                                      (if (= :hy (:type item))
@@ -636,9 +632,9 @@
                                      (tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))
 
                                  :default
-                                 ;; Jos tuplaklikataan jotain,
-                                 ;; joka ei ole hy/urakka, ei zoomata, vaan tarkennetaan tuplaklikattuun asiaan.
-                                 ;; Lisäksi avataan infopaneeli
+                                 ;; Tuplaklikattu asia ei ole hy/urakka, eikä se ole ilmoitus ilmoitusnäkymässä.
+                                 ;; Avataan infopaneeliin klikatun asian tiedot, ja haetaan sinne mahdollisesti
+                                 ;; muutakin. Lisäksi kohdennetaan tuplaklikattuun asiaan.
                                  (do (.stopPropagation event)
                                      (.preventDefault event)
                                      (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
