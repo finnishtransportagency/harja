@@ -13,21 +13,24 @@
 (defn- interpoloi [n alkuarvo loppuarvo]
   (+ alkuarvo (* (- loppuarvo alkuarvo) n)))
 
+(defn- ymparoivat [piste reittipisteet]
+                 (let [pisteen-gettime #(-> % :aika .getTime)
+                       myohemmat-pisteet (filter #(< (pisteen-gettime %) (pisteen-gettime piste)) reittipisteet)
+                       aiemmat-pisteet (filter #(> (pisteen-gettime %) (pisteen-gettime piste)) reittipisteet)
+                       lahin-aiempi (if (not-empty aiemmat-pisteet)
+                                      (apply max-key pisteen-gettime aiemmat-pisteet)
+                                      piste)
+                       lahin-myohempi (if (not-empty myohemmat-pisteet)
+                                        (apply min-key pisteen-gettime myohemmat-pisteet)
+                                        piste)]
+                   [lahin-aiempi lahin-myohempi]))
+
+
 (defn aika-ja-osoite-pisteessa [db klikkauspiste toteuma-id]
   (let [muunna-sijainti #(assoc % :sijainti (geo/pg->clj (:sijainti %)))
         reittipisteet (map muunna-sijainti
                            (toteumat-q/hae-toteuman-reittipisteet db toteuma-id))
-        ymparoivat (fn [piste reittipisteet]
-                     (let [pisteen-gettime #(-> % :aika .getTime)
-                           myohemmat-pisteet (filter #(< (pisteen-gettime %) (pisteen-gettime piste)) reittipisteet)
-                           aiemmat-pisteet (filter #(> (pisteen-gettime %) (pisteen-gettime piste)) reittipisteet)
-                           lahin-aiempi (if (not-empty aiemmat-pisteet)
-                                          (apply max-key pisteen-gettime aiemmat-pisteet)
-                                          piste)
-                           lahin-myohempi (if (not-empty myohemmat-pisteet)
-                                            (apply min-key pisteen-gettime myohemmat-pisteet)
-                                            piste)]
-                       [lahin-aiempi lahin-myohempi]))
+
         etaisyys (fn [rp]
                    (let [[x y] (-> rp :sijainti :coordinates)
                          xd (Math/abs (- x (:x klikkauspiste)))
@@ -52,7 +55,6 @@
         pisteen-paikka (:paikka (first paikka-vastaus))
         sql->aikaleima (fn [reittipiste] (-> reittipiste :aika .getTime))
         aikaleima->aika #(new java.util.Date %)]
-    (def *tro tr-osoite)
     [(aikaleima->aika (long (interpoloi pisteen-paikka (sql->aikaleima lahin-naapuri) (sql->aikaleima lahin-piste))))
      tr-osoite]))
 
@@ -62,3 +64,13 @@
         [aika tr-osoite] (aika-ja-osoite-pisteessa db koordinaatit (-> asia :tehtava :id))]
     (println "koordinaatit" koordinaatit)
     (assoc asia :aika-pisteessa aika :tierekisteriosoite tr-osoite)))
+
+(defn interpoloi-tarkastuksen-aika-pisteelle [asia parametrit db]
+  (println "itap kutsuttu, avaimet:" (keys asia))
+  (let [koordinaatit (select-keys parametrit [:x :y])
+        ;; [aika tr-osoite] (aika-ja-osoite-pisteessa db koordinaatit (-> asia :tehtava :id))
+        ]
+    (println "koordinaatit" koordinaatit)
+    ;; (assoc asia :aika-pisteessa aika :tierekisteriosoite tr-osoite)
+    asia
+    ))
