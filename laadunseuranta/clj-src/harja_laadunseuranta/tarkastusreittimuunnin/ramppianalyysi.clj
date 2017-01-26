@@ -160,7 +160,7 @@
           (log/debug (str lahin-osuma " => " "Etäisyys edelliseen tiehen GPS-tarkkuus huomioituna: "
                           (- (:etaisyys-gps-pisteesta lahin-osuma)
                              (:gps-tarkkuus merkinta))
-                          " > annettu htreshold " threshold))))
+                          " > annettu threshold " threshold))))
       (log/debug "Eli ajo on mitä todennäköisimmin tapahtunut rampilla"))
 
     ainakin-yksi-varma-piste-ylittaa-thresholdin?))
