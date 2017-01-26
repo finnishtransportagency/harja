@@ -7,15 +7,12 @@ SELECT t.id,
        t.reitti,
        t.alkanut, t.paattynyt,
        t.suorittajan_nimi AS suorittaja_nimi,
-       tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
-       tt.maara AS tehtava_maara,
-       tpk.yksikko AS tehtava_yksikko,
-       tpk.nimi AS tehtava_toimenpide
+       (SELECT array_agg(row(tt.toimenpidekoodi, tt.maara, tpk.yksikko, tpk.nimi))
+          FROM toteuma_tehtava tt
+ 	       JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+	 WHERE tt.toteuma = t.id) as tehtavat
   FROM toteuma t
        JOIN urakka u ON t.urakka=u.id
-       JOIN toteuma_tehtava tt ON tt.toteuma = t.id
-       JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-       JOIN toimenpidekoodi tpk3 ON tpk.emo = tpk3.id
        JOIN kayttaja k ON t.luoja = k.id
  WHERE ST_Intersects(t.envelope, :sijainti)
    AND ST_Intersects(ST_CollectionHomogenize(t.reitti), :sijainti)
