@@ -237,6 +237,36 @@
             :loppuetaisyys (:tr_loppuetaisyys rivi)})
       (dissoc :tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys)))
 
+(defn pgobject->map
+  "Muuntaa resultsetissä olevan record tyyppisen arvon (PGobject)
+  mäpiksi. Tulosmäpissä olevat avaimet ja arvojen tyypit annetaan
+  siinä järjestyksessä kuin ne esiintyy objektissa."
+  [pgobject & kenttien-nimet-ja-tyypit]
+  (let [kentat (partition 2 kenttien-nimet-ja-tyypit)
+        kentat-str (-> pgobject str
+                       (str/replace #"\(|\)" "")
+                       (str/split #","))]
+    (assert (= (count kentat) (count kentat-str))
+            (str "Odotettu kenttien määrä: " (count kentat)
+                 ", saatu kenttien määrä: " (count kentat-str)
+                 ", data: " pgobject))
+
+    (loop [m {}
+           [[nimi tyyppi] & kentat] kentat
+           [arvo & arvot] kentat-str]
+      (if-not nimi
+        m
+        (recur
+         (assoc m nimi
+                (case tyyppi
+                  :long (Long/parseLong arvo)
+                  :double (Double/parseDouble arvo)
+                  :string (if (str/starts-with? arvo "\"")
+                            (subs arvo 1 (dec (count arvo)))
+                            arvo)))
+         kentat
+         arvot)))))
+
 (defn lue-tr-osoite
   "Lukee yrita_tierekisteriosoite_pisteelle2 sprocin palauttaman arvon tekstimuodosta
   Tierekisteriosoite mäpiksi. Esim. \"(20,1,0,5,100,102012010220)\"."
