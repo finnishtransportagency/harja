@@ -283,7 +283,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                  (map
                    #(assoc % :tyyppi-kartalla (get % :ilmoitustyyppi))
                    ilmoitukset)
-                 valittu-ilmoitus)))))
+                 #(= (:id %) (:id valittu-ilmoitus)))))))
 
 
 (defn avaa-ilmoitus! [ilmoitus]
