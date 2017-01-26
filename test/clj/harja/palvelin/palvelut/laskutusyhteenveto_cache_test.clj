@@ -237,7 +237,6 @@
                             :tallenna-muutoshintaiset-tyot +kayttaja-jvh+
                             {:urakka-id @oulun-alueurakan-2014-2019-id
                              :tyot vesakonraivaus-muutoshinta-hyotykuorma})
-            _ (log/debug "muutoshinta vesakko" (first (q-map "SELECT * FROM muutoshintainen_tyo WHERE tehtava = 1391 AND urakka  = 4;")))
             cache-tyhja-koska-yht-trigger (first (q-map "SELECT * FROM laskutusyhteenveto_cache WHERE urakka = " urakka-id ";"))
             toka-tietojen-haku (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
                                  (:db jarjestelma) +kayttaja-jvh+
