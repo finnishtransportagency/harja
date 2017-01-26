@@ -3,6 +3,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto :as laskutusyhteenveto]
+            [harja.palvelin.palvelut.yksikkohintaiset-tyot :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
@@ -15,7 +16,11 @@
                   (fn [_]
                     (component/start
                       (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)))))
+                        :db (tietokanta/luo-tietokanta testitietokanta)
+                        :http-palvelin (testi-http-palvelin)
+                        :yksikkohintaiset-tyot (component/using
+                                                 (->Yksikkohintaiset-tyot)
+                                                 [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -42,14 +47,6 @@
           poista-tpi (fn [tiedot]
                                 (map #(dissoc %
                                               :tpi) tiedot))
-          poista-suolasakot (fn [tiedot]
-                                (map #(dissoc %
-                                              :suolasakot_laskutettu
-                                              :suolasakot_laskutettu_ind_korotus
-                                              :suolasakot_laskutettu_ind_korotettuna
-                                              :suolasakot_laskutetaan
-                                              :suolasakot_laskutetaan_ind_korotus
-                                              :suolasakot_laskutetaan_ind_korotettuna) tiedot))
           haetut-tiedot-oulu-ilman-tpita (poista-tpi haetut-tiedot-oulu)
           haetut-tiedot-kajaani-ilman-tpita (poista-tpi haetut-tiedot-kajaani)
 
@@ -336,3 +333,158 @@
       (is (= (:yht_laskutetaan haetut-tiedot-oulu-liikenneympariston-hoito) 7882.5M) ":yht_laskutetaan laskutusyhteenvedossa")
       (is (= (:yht_laskutetaan_ind_korotus haetut-tiedot-oulu-liikenneympariston-hoito) nil) ":yht_laskutetaan laskutusyhteenvedossa")
       (is (= (:yht_laskutetaan_ind_korotettuna haetut-tiedot-oulu-liikenneympariston-hoito) nil) ":yht_laskutetaan laskutusyhteenvedossa"))))
+
+(deftest laskutusyhteenvedon-cache
+  (testing "laskutusyhteenvedon-cache"
+    (let [urakka-id @oulun-alueurakan-2014-2019-id
+          varmista-tyhjyys (u "DELETE FROM laskutusyhteenveto_cache WHERE urakka = " urakka-id ";")
+          cache-tyhja (first (q-map "SELECT * FROM laskutusyhteenveto_cache WHERE urakka = " urakka-id ";"))
+          eka-ajo (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+                               (:db jarjestelma) +kayttaja-jvh+
+                               {:urakka-id urakka-id :alkupvm   (pvm/->pvm "1.8.2015")
+                                :loppupvm (pvm/->pvm "31.8.2015")})
+          toka-ajo (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+                               (:db jarjestelma) +kayttaja-jvh+
+                               {:urakka-id urakka-id :alkupvm   (pvm/->pvm "1.8.2015")
+                                :loppupvm (pvm/->pvm "31.8.2015")})
+          haetut-tiedot-oulu (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+                               (:db jarjestelma) +kayttaja-jvh+
+                               {:urakka-id urakka-id :alkupvm   (pvm/->pvm "1.8.2015")
+                                :loppupvm (pvm/->pvm "31.8.2015")})
+          cachesta-haettu-kysely (first (q-map "select y.urakka,
+           sum((y.rivi).yht_laskutettu) as yht_laskutettu,
+           sum((y.rivi).yht_laskutetaan) as yht_laskutetaan,
+           sum((y.rivi).kaikki_laskutettu) as kaikki_laskutettu,
+           sum((y.rivi).kaikki_laskutetaan) as kaikki_laskutetaan,
+            sum((y.rivi).kaikki_laskutettu_ind_korotus) as kaikki_laskutettu_ind_korotus,
+            sum((y.rivi).kaikki_laskutetaan_ind_korotus) as kaikki_laskutetaan_ind_korotus
+            FROM (select unnest(x.rivit) as rivi, x.nimi as urakka
+           FROM (SELECT c.urakka, c.alkupvm, c.loppupvm, c.tallennettu, c.rivit, u.nimi
+                   FROM laskutusyhteenveto_cache c
+                        JOIN urakka u ON u.id = c.urakka
+                  WHERE c.urakka = " urakka-id " AND c.alkupvm = '2015-8-01') x) y WHERE (y.rivi).tuotekoodi = '23110' GROUP BY y.urakka order by y.urakka;"))
+          haetut-tiedot-oulu-liikenneympariston-hoito (first (filter #(= (:tuotekoodi %) "23110") haetut-tiedot-oulu))
+          cache-count (:count (first (q-map "SELECT count(*) FROM laskutusyhteenveto_cache c WHERE c.urakka = " urakka-id " AND c.alkupvm = '2015-8-01';")))]
+      (is (= cache-count 1) "Monta kyselyä samoin parametrein, silti vain yksi cachessa")
+      (is (nil? cache-tyhja) "cache tyhjä ennen kyselyn ajoa")
+      (is (some? cachesta-haettu-kysely) "cache ei tyhjä ennen kyselyn ajoa")
+      (is (= eka-ajo toka-ajo haetut-tiedot-oulu) "Saman laskutusyhteenvedon eri ajokerrat antaa saman tulokset")
+      (is (= 1000.0M
+             (:yht_laskutettu haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:yht_laskutettu cachesta-haettu-kysely)) ":yht_laskutettu laskutusyhteenvedossa")
+      (is (= 3000.0M
+             (:yht_laskutetaan haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:yht_laskutetaan cachesta-haettu-kysely)) ":yht_laskutetaan laskutusyhteenvedossa")
+      (is (= 3820.11494252873560900000M
+             (:kaikki_laskutettu haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:kaikki_laskutettu cachesta-haettu-kysely)) ":kaikki_laskutettu laskutusyhteenvedossa")
+      (is (= 13103.44827586206880000M
+             (:kaikki_laskutetaan haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:kaikki_laskutetaan cachesta-haettu-kysely)) ":kaikki_laskutetaan laskutusyhteenvedossa")
+      (is (= 20.11494252873560900000M
+             (:kaikki_laskutettu_ind_korotus haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:kaikki_laskutettu_ind_korotus cachesta-haettu-kysely)) ":kaikki_laskutettu_ind_korotus laskutusyhteenvedossa")
+      (is (= 103.44827586206880000M
+             (:kaikki_laskutetaan_ind_korotus haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:kaikki_laskutetaan_ind_korotus cachesta-haettu-kysely)) ":kaikki_laskutetaan_ind_korotus laskutusyhteenvedossa"))))
+
+(deftest laskutusyhteenvedon-cache-tyhjenee-jos-yksikkohinta-muuttuu
+  (testing "laskutusyhteenvedon-cache-ja-triggerit"
+    (let [urakka-id @oulun-alueurakan-2014-2019-id
+          varmista-tyhjyys (u "DELETE FROM laskutusyhteenveto_cache WHERE urakka = " urakka-id ";")
+          cache-tyhja (first (q-map "SELECT * FROM laskutusyhteenveto_cache WHERE urakka = " urakka-id ";"))
+          eka-tietojen-haku (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+                              (:db jarjestelma) +kayttaja-jvh+
+                              {:urakka-id urakka-id :alkupvm (pvm/->pvm "1.8.2015")
+                               :loppupvm (pvm/->pvm "31.8.2015")})
+          cachesta-haettu-kysely (first (q-map "select y.urakka,
+           sum((y.rivi).yht_laskutettu) as yht_laskutettu,
+           sum((y.rivi).yht_laskutetaan) as yht_laskutetaan,
+           sum((y.rivi).kaikki_laskutettu) as kaikki_laskutettu,
+           sum((y.rivi).kaikki_laskutetaan) as kaikki_laskutetaan,
+            sum((y.rivi).kaikki_laskutettu_ind_korotus) as kaikki_laskutettu_ind_korotus,
+            sum((y.rivi).kaikki_laskutetaan_ind_korotus) as kaikki_laskutetaan_ind_korotus
+            FROM (select unnest(x.rivit) as rivi, x.nimi as urakka
+           FROM (SELECT c.urakka, c.alkupvm, c.loppupvm, c.tallennettu, c.rivit, u.nimi
+                   FROM laskutusyhteenveto_cache c
+                        JOIN urakka u ON u.id = c.urakka
+                  WHERE c.urakka = " urakka-id " AND c.alkupvm = '2015-8-01') x) y WHERE (y.rivi).tuotekoodi = '23110' GROUP BY y.urakka order by y.urakka;"))
+          haetut-tiedot-oulu-liikenneympariston-hoito (first (filter #(= (:tuotekoodi %) "23110") eka-tietojen-haku))
+          cache-count (:count (first (q-map "SELECT count(*) FROM laskutusyhteenveto_cache c WHERE c.urakka = " urakka-id " AND c.alkupvm = '2015-8-01';")))
+
+          ;; muuta yks.hintaa tehtävälle Metsän harvennus ko. ajalle --> cachen pitäisi tyhjentyä
+          metsanharvennus-yksikkohinta-hyotykuorma [{:yhteensa-kkt-1-9 122040, :yhteensa 162720, :yhteensa-kkt-10-12 40680,
+                                                     :loppupvm (pvm/->pvm "31.12.2014") :yksikko "ha", :koskematon true,
+                                                     :tehtava 1432, :urakka 4, :yksikkohinta 678, :maara 600,
+                                                     :tehtavan_nimi "Metsän harvennus", :sopimus 2, :maara-kkt-1-9 180,
+                                                     :alkupvm (pvm/->pvm "1.10.2014") :tehtavan_id 1432}
+                                                    {:yhteensa-kkt-1-9 122040, :yhteensa 162720, :yhteensa-kkt-10-12 40680,
+                                                     :loppupvm (pvm/->pvm "30.09.2015") :yksikko "ha", :koskematon true,
+                                                     :tehtava 1432, :urakka 4, :yksikkohinta 678, :maara 1800,
+                                                     :tehtavan_nimi "Metsän harvennus", :sopimus 2, :maara-kkt-1-9 180,
+                                                     :alkupvm (pvm/->pvm "1.1.2015") :tehtavan_id 1432}]]
+      (is (= cache-count 1) "Monta kyselyä samoin parametrein, silti vain yksi cachessa")
+      (is (nil? cache-tyhja) "cache tyhjä ennen kyselyn ajoa")
+      (is (some? cachesta-haettu-kysely) "cache ei tyhjä ennen kyselyn ajoa")
+
+      (is (= 1000.0M
+             (:yht_laskutettu haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:yht_laskutettu cachesta-haettu-kysely)) ":yht_laskutettu laskutusyhteenvedossa")
+      (is (= 3000.0M
+             (:yht_laskutetaan haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:yht_laskutetaan cachesta-haettu-kysely)) ":yht_laskutetaan laskutusyhteenvedossa")
+      (is (= 3820.11494252873560900000M
+             (:kaikki_laskutettu haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:kaikki_laskutettu cachesta-haettu-kysely)) ":kaikki_laskutettu laskutusyhteenvedossa")
+      (is (= 13103.44827586206880000M
+             (:kaikki_laskutetaan haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:kaikki_laskutetaan cachesta-haettu-kysely)) ":kaikki_laskutetaan laskutusyhteenvedossa")
+      (is (= 20.11494252873560900000M
+             (:kaikki_laskutettu_ind_korotus haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:kaikki_laskutettu_ind_korotus cachesta-haettu-kysely)) ":kaikki_laskutettu_ind_korotus laskutusyhteenvedossa")
+      (is (= 103.44827586206880000M
+             (:kaikki_laskutetaan_ind_korotus haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:kaikki_laskutetaan_ind_korotus cachesta-haettu-kysely)) ":kaikki_laskutetaan_ind_korotus laskutusyhteenvedossa")
+      (let [yksikkohintaa-muutettu
+            (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :tallenna-urakan-yksikkohintaiset-tyot +kayttaja-jvh+
+                            {:urakka-id @oulun-alueurakan-2014-2019-id
+                             :sopimusnumero @oulun-alueurakan-2014-2019-paasopimuksen-id
+                             :tyot metsanharvennus-yksikkohinta-hyotykuorma})
+            cache-tyhja-koska-yht-trigger (first (q-map "SELECT * FROM laskutusyhteenveto_cache WHERE urakka = " urakka-id ";"))
+            toka-tietojen-haku (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+                                 (:db jarjestelma) +kayttaja-jvh+
+                                 {:urakka-id urakka-id :alkupvm (pvm/->pvm "1.8.2015")
+                                  :loppupvm (pvm/->pvm "31.8.2015")})
+            toka-haetut-tiedot-oulu-liikenneympariston-hoito (first (filter #(= (:tuotekoodi %) "23110") toka-tietojen-haku))
+            cachesta-haettu-kysely-triggerin-jalkeen (first (q-map "select y.urakka,
+           sum((y.rivi).yht_laskutettu) as yht_laskutettu,
+           sum((y.rivi).yht_laskutetaan) as yht_laskutetaan,
+           sum((y.rivi).kaikki_laskutettu) as kaikki_laskutettu,
+           sum((y.rivi).kaikki_laskutetaan) as kaikki_laskutetaan,
+            sum((y.rivi).kaikki_laskutettu_ind_korotus) as kaikki_laskutettu_ind_korotus,
+            sum((y.rivi).kaikki_laskutetaan_ind_korotus) as kaikki_laskutetaan_ind_korotus
+            FROM (select unnest(x.rivit) as rivi, x.nimi as urakka
+           FROM (SELECT c.urakka, c.alkupvm, c.loppupvm, c.tallennettu, c.rivit, u.nimi
+                   FROM laskutusyhteenveto_cache c
+                        JOIN urakka u ON u.id = c.urakka
+                  WHERE c.urakka = " urakka-id " AND c.alkupvm = '2015-8-01') x) y WHERE (y.rivi).tuotekoodi = '23110' GROUP BY y.urakka order by y.urakka;"))]
+        (is (nil? cache-tyhja-koska-yht-trigger) "cache-tyhja-koska-yht-trigger")
+        (is (= 6780.0M
+               (:yht_laskutettu toka-haetut-tiedot-oulu-liikenneympariston-hoito)
+               (:yht_laskutettu cachesta-haettu-kysely-triggerin-jalkeen)) ":yht_laskutettu laskutusyhteenvedossa")
+        (is (= 20340.0M
+               (:yht_laskutetaan toka-haetut-tiedot-oulu-liikenneympariston-hoito)
+               (:yht_laskutetaan cachesta-haettu-kysely-triggerin-jalkeen)) ":yht_laskutetaan laskutusyhteenvedossa")
+        (is (= 9572.43295019157085802000M
+               (:kaikki_laskutettu toka-haetut-tiedot-oulu-liikenneympariston-hoito)
+               (:kaikki_laskutettu cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutettu laskutusyhteenvedossa")
+        (is (= 30742.41379310344763200M
+               (:kaikki_laskutetaan toka-haetut-tiedot-oulu-liikenneympariston-hoito)
+               (:kaikki_laskutetaan cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutetaan laskutusyhteenvedossa")
+        (is (= -7.56704980842914198000M
+               (:kaikki_laskutettu_ind_korotus toka-haetut-tiedot-oulu-liikenneympariston-hoito)
+               (:kaikki_laskutettu_ind_korotus cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutettu_ind_korotus laskutusyhteenvedossa")
+        (is (= 402.41379310344763200M
+               (:kaikki_laskutetaan_ind_korotus toka-haetut-tiedot-oulu-liikenneympariston-hoito)
+               (:kaikki_laskutetaan_ind_korotus cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutetaan_ind_korotus laskutusyhteenvedossa")))))
