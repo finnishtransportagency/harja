@@ -95,7 +95,6 @@
         paivystaja (hae-paivystaja)
         paivystaja {:id (first paivystaja) :matkapuhelin (second paivystaja)}
         ilmoitus (first (hae-testi-ilmoitukset))
-        ilmoitus (select-keys ilmoitus [:id :ilmoitus-id])
         paivystajaviestien-maara (fn []
                                    (count
                                      (q (format "select * from paivystajatekstiviesti where yhteyshenkilo = %s and ilmoitus = %s;"
@@ -106,7 +105,10 @@
 
       (let [viestien-maara-ennen (paivystajaviestien-maara)]
 
-        (tekstiviestit/laheta-ilmoitus-tekstiviestilla (:labyrintti jarjestelma) (:db jarjestelma) ilmoitus paivystaja)
+        (tekstiviestit/laheta-ilmoitus-tekstiviestilla (:labyrintti jarjestelma)
+                                                       (:db jarjestelma)
+                                                       ilmoitus
+                                                       paivystaja)
 
         (is (= (inc viestien-maara-ennen) (paivystajaviestien-maara))))
 
