@@ -375,7 +375,7 @@
                      {:db :db-replica
                       :http-palvelin :http-palvelin
                       :karttakuvat :karttakuvat})
-      :tienakyma (component/using
+      #_:tienakyma #_(component/using
                    (tienakyma/->Tienakyma)
                    {:db :db-replica
                     :http-palvelin :http-palvelin})
