@@ -36,3 +36,24 @@
   (is (= "{1,2,3}" (konversio/seq->array [:1 :2 :3])) "Keyword-sekvenssi muunnettin oikein")
   (is (= "{1,2,3}" (konversio/seq->array [1 2 3])) "Kokonaislukusekvenssi muunnettin oikein")
   (is (= "{1.1,2.2,3.3}" (konversio/seq->array [1.1 2.2 3.3])) "Desimaalilukusekvenssi muunnettin oikein")  )
+
+(deftest pgobject-luku
+  (testing "Moniarvoinen pgobject, jossa merkkijono sisältää pilkun"
+    (let [m (konversio/pgobject->map
+             "(6893,178.304790486446,-,\"Liikennemerkkien, opasteiden ja liikenteenohjauslaitteiden hoito sekä reunapaalujen kp\",666)"
+             :toimenpidekoodi :long
+             :maara :double
+             :yksikko :string
+             :toimenpide :string
+             :pedonluku :long)]
+      (is (= (:toimenpidekoodi m) 6893))
+      (is (=marginaalissa? (:maara m) 178.3))
+      (is (= (:yksikko m) "-"))
+      (is (= (:toimenpide m) "Liikennemerkkien, opasteiden ja liikenteenohjauslaitteiden hoito sekä reunapaalujen kp"))
+      (is (= (:pedonluku m) 666))))
+
+  (testing "Reunatapaukset, tyhjä tai yksi arvo"
+    (is (= {} (konversio/pgobject->map "()")))
+    (is (= {:meaning-of-life 42} (konversio/pgobject->map "(42)" :meaning-of-life :long)))
+    (is (= {:meta "foo, bar and baz"}
+           (konversio/pgobject->map "(\"foo, bar and baz\")" :meta :string)))))
