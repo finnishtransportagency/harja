@@ -26,7 +26,8 @@
             [harja.tyokalut.functor :as functor]
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
-            [harja.domain.roolit :as roolit]))
+            [harja.domain.roolit :as roolit]
+            [harja.palvelin.palvelut.interpolointi :as interpolointi]))
 
 (defn geometriaksi [reitti]
   (when reitti (geo/geometry (geo/clj->pg reitti))))
@@ -747,6 +748,7 @@
     (into []
           (comp (map #(assoc % :tyyppi-kartalla :toteuma))
                 (map konv/alaviiva->rakenne)
+                (map #(interpolointi/interpoloi-toteuman-aika-pisteelle % parametrit db))
                 (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
           (toteumat-q/hae-toteumien-tiedot-pisteessa
             db
@@ -767,6 +769,7 @@
     (into []
           (comp (map #(assoc % :tyyppi-kartalla :toteuma))
                 (map konv/alaviiva->rakenne)
+                (map #(interpolointi/interpoloi-toteuman-aika-pisteelle % parametrit db))
                 (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
           (toteumat-q/hae-toteumien-tiedot-pisteessa
             db
