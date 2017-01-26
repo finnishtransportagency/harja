@@ -896,7 +896,7 @@ VALUES ((SELECT id FROM ilmoitus WHERE ilmoitusid=12617), 12617, '2015-3-16 11:1
 
 -- Kajaanin alueurakka 2014-2019
 INSERT INTO ilmoitus
-(urakka, tloik_tunniste, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, paikankuvaus, sijainti,
+(urakka, tunniste, ilmoitusid, ilmoitettu, valitetty, yhteydenottopyynto, paikankuvaus, sijainti,
  tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, ilmoitustyyppi, selitteet, urakkatyyppi,
  ilmoittaja_etunimi, ilmoittaja_sukunimi, ilmoittaja_tyopuhelin, ilmoittaja_matkapuhelin, ilmoittaja_sahkoposti, ilmoittaja_tyyppi,
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)

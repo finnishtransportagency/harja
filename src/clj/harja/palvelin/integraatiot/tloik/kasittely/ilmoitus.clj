@@ -38,7 +38,7 @@
                                                 sijainti vastaanottaja tunniste]}]
   (ilmoitukset/paivita-ilmoitus!
     db
-    {:urakka-id urakka-id
+    {:urakka urakka-id
      :ilmoitusid ilmoitus-id
      :ilmoitettu ilmoitettu
      :valitetty valitetty
@@ -48,7 +48,7 @@
      :lisatieto lisatieto
      :ilmoitustyyppi ilmoitustyyppi
      :selitteet (konv/seq->array (map name selitteet))
-     :tloik_tunniste tunniste
+     :tunniste tunniste
      :id id})
   (paivita-ilmoittaja db id ilmoittaja)
   (paivita-lahettaja db id lahettaja)
@@ -72,7 +72,7 @@
                    :ilmoitustyyppi ilmoitustyyppi
                    :selitteet (konv/seq->array (map name selitteet))
                    :urakkatyyppi urakkatyyppi
-                   :tloik_tunniste tunniste}))]
+                   :tunniste tunniste}))]
     (paivita-ilmoittaja db id ilmoittaja)
     (paivita-lahettaja db id lahettaja)
     (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)

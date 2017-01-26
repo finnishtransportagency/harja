@@ -54,8 +54,8 @@
         db (:db jarjestelma)
         lokittaja (integraatioloki/lokittaja integraatioloki db "tloik" "toimenpiteen-lahetys")
         jms-lahettaja (jms/jonolahettaja lokittaja (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+)
-        ilmoitus (hae-ilmoitukset-idlla-123456789)
-        ilmoitus-id (nth (first ilmoitus) 2)
+        ilmoitus (first (hae-testi-ilmoitukset))
+        ilmoitus-id (:ilmoitusid ilmoitus)
         yhteyshenkilo (tee-testipaivystys)
         yhteyshenkilo-id (first yhteyshenkilo)
         puhelinnumero (second yhteyshenkilo)]
@@ -94,7 +94,7 @@
   (let [fake-vastaus [{:url +labyrintti-url+ :method :post} {:status 200}]
         paivystaja (hae-paivystaja)
         paivystaja {:id (first paivystaja) :matkapuhelin (second paivystaja)}
-        ilmoitus (first (hae-ilmoitukset-idlla-123456789))
+        ilmoitus (first (hae-testi-ilmoitukset))
         ilmoitus {:id (first ilmoitus) :ilmoitus-id (nth ilmoitus 2)}
         paivystajaviestien-maara (fn []
                                    (count

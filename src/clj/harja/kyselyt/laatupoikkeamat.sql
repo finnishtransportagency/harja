@@ -242,7 +242,8 @@ SET aika            = :aika,
   tr_alkuetaisyys = :alkuetaisyys,
   tr_loppuetaisyys = :loppuetaisyys,
   yllapitokohde = :yllapitokohde,
-  muokattu          = current_timestamp
+  muokattu          = current_timestamp,
+  poistettu          = :poistettu
 WHERE id = :id
 AND urakka = :urakka;
 

@@ -59,7 +59,7 @@
     (is (= (pvm/pvm-aika (:ilmoitettu ilmoitus)) "29.9.2015 17:49"))
     (is (= (:yhteydenottopyynto ilmoitus) false))
     (is (= (:tila ilmoitus) "kuittaamaton"))
-    (is (= (:tloik_tunniste ilmoitus) "UV-1509-1a"))
+    (is (= (:tunniste ilmoitus) "UV-1509-1a"))
     (is (= (:ilmoittaja_tyyppi ilmoitus) "tienkayttaja"))
     (is (instance? PGgeometry (:sijainti ilmoitus)))
     (is (= (:ilmoittaja_matkapuhelin ilmoitus) "08023394852"))
