@@ -81,7 +81,7 @@
                        (nil? (get-in % [:tr-osoite :tie])))
                   korjatut-merkinnat)))))
 
-(deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-iso-osa-pisteista-osuu-rampille
+(deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-iso-osa-epatarkkoja-pisteita-osuu-rampille
   (let [tarkastusajo-id 667 ;; Iso osa pisteistä sijoittuu pitkästi rampille
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
@@ -110,6 +110,17 @@
       (is (= (count korjatut-merkinnat) (count merkinnat)))
       (is (= korjatut-merkinnat merkinnat)))))
 
+(deftest ramppianalyysi-ei-tee-mitaan-kun-iso-osa-melko-tarkkoja-pisteita-osuu-rampille
+  (let [tarkastusajo-id 667 ;; Iso osa pisteistä sijoittuu pitkästi rampille
+        merkinnat (-> (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
+                                                             {:tarkastusajo tarkastusajo-id
+                                                              :laheiset_tiet_threshold 100})
+                      (aseta-ramppimerkintojen-tarkkuus 13))]
+
+    (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
+      (is (= (count korjatut-merkinnat) (count merkinnat)))
+      (is (= korjatut-merkinnat merkinnat)))))
+
 (deftest ramppianalyysi-ei-tee-mitaan-kun-ajetaan-oikeasti-rampille
   (let [tarkastusajo-id 668 ;; Ajetaan tieltä 4 rampille ja takaisin tielle 4
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
@@ -119,6 +130,17 @@
     (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
     (is (some #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie])) merkinnat)
         "Osa testidatan merkinnöistä on rampilla")
+
+    (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
+      (is (= (count korjatut-merkinnat) (count merkinnat)))
+      (is (= korjatut-merkinnat merkinnat)))))
+
+(deftest ramppianalyysi-ei-tee-mitaan-kun-ajetaan-oikeasti-rampille-melko-epatarkalla-gpslla
+  (let [tarkastusajo-id 668 ;; Ajetaan tieltä 4 rampille ja takaisin tielle 4
+        merkinnat (-> (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
+                                                             {:tarkastusajo tarkastusajo-id
+                                                              :laheiset_tiet_threshold 100})
+                      (aseta-ramppimerkintojen-tarkkuus 30))]
 
     (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
       (is (= (count korjatut-merkinnat) (count merkinnat)))
