@@ -55,7 +55,9 @@
       :loppu loppu})))
 
 (defn- hae-toteumat [db parametrit]
-  (kursori/hae-kanavaan 32 db q/hae-toteumat parametrit))
+  (kursori/hae-kanavaan
+   (async/chan 32 (map #(assoc % :tyyppi-kartalla :toteuma)))
+   db q/hae-toteumat parametrit))
 
 
 (defn- hae-tarkastukset [db parametrit]
@@ -70,13 +72,19 @@
                         db q/hae-turvallisuuspoikkeamat parametrit))
 
 (defn- hae-ilmoitukset [db parametrit]
-  (async/thread
-    (konv/sarakkeet-vektoriin
-     (into []
-           (comp tilannekuva/ilmoitus-xf
-                 (map #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))))
-           (q/hae-ilmoitukset db parametrit))
-     {:kuittaus :kuittaukset})))
+  (let [ch (async/chan 32)]
+    (async/thread
+      (let [tulokset (konv/sarakkeet-vektoriin
+                      (into []
+                            (comp tilannekuva/ilmoitus-xf
+                                  (map #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))))
+                            (q/hae-ilmoitukset db parametrit))
+                      {:kuittaus :kuittaukset})]
+        (loop [[t & tulokset] tulokset]
+          (when (and t (async/>!! ch t))
+            (recur tulokset)))
+        (async/close! ch)))
+    ch))
 
 (def ^{:private true
        :doc "Määrittelee kaikki kyselyt mitä tienäkymään voi hakea"}
