@@ -606,20 +606,54 @@
          :on-dblclick        nil
 
          :on-dblclick-select (fn [item event]
-                               ;; jos tuplaklikattiin valittua hallintayksikköä tai urakkaa (eli "tyhjää"),
-                               ;; niin silloin ei pysäytetä eventtiä, eli zoomataan sisään
-                               (when-not (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
-                                 (.stopPropagation event)
-                                 (.preventDefault event)
 
-                                 ;; Jos tuplaklikattu asia oli jotain muuta kuin HY/urakka, niin keskitetään
-                                 ;; kartta siihen.
-                                 (when-not (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item)
-                                   (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
-                                                                       event
-                                                                       asiat-pisteessa)
-                                   (kun-geometriaa-klikattu item event asiat-pisteessa)
-                                   (tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))))
+                               ;; Select tarkoittaa, että on klikattu jotain kartalla piirrettyä asiaa.
+                               ;; Tuplaklikkaukseen halutaan reagoida joko kohdentamalla tuplaklikattuun asiaan,
+                               ;; tai jos tuplaklikattu asia oli urakka, zoomaataan vaan karttaa askel eteenpäin.
+                               ;; Urakoiden tuplaklikkaukseen liittyy kuitenkin erikoistapauksia, joiden takia
+                               ;; tämä käsittely on hieman monimutkaista. Normaalisti Harjassa kartalle piirretyt
+                               ;; organisaatiot ovat joko valitsemattomia (värillä täytettyjä), tai valittuja (mustat äärirajat).
+                               ;; Valitsemattoman urakan (tupla)klikkaus voidaan yleensä ymmärtää haluksi valita kyseinen organisaatio,
+                               ;; esimerkiksi Harjan etusivulla.
+                               ;; Tilannekuvaan kuitenkin usein piirretään organisaatiorajoja, jotka eivät ole "valittuja".
+                               ;; Esim "valittu urakka" tarkoittaa urakkaa, jonka tiedot avautuvat Urakka-näkymään.
+                               ;; Tilannekuvan suodattimilla voidaan kartalle piirtää vaikka Harjan kaikki urakat,
+                               ;; mutta tämä ei tarkota sitä, että yksikään niistä olisi "valittu urakka".
+
+                               (cond
+                                 (and (#{:tilannekuva} @nav/valittu-sivu)
+                                      (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item))
+                                 ;; Tilannekuvassa tai ilmoituksissa zoomataan aina sisään, jos
+                                 ;; tuplaklikattu asia on hy/urakka
+                                 nil
+
+                                 (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
+                                 ;; Muualla zoomataan sisään vain, jos klikattu hy/urakka on valittu
+                                 nil
+
+                                 (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item)
+                                 ;; Tuplaklikattin valitsematonta asiaa, eli ollaan etusivulla valitsemassa hy/urakkaa.
+                                 ;; Valitaan klikattu organisaatio, ja kohdennetaan sen alueeseen.
+                                 (do (.stopPropagation event)
+                                     (.preventDefault event)
+                                     (kun-geometriaa-klikattu item event asiat-pisteessa)
+                                     (tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))
+
+                                 (not (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item))
+                                 ;; Jos tuplaklikataan jotain,
+                                 ;; joka ei ole hy/urakka, ei zoomata, vaan tarkennetaan tuplaklikattuun asiaan.
+                                 ;; Lisäksi avataan infopaneeli
+                                 (do (.stopPropagation event)
+                                     (.preventDefault event)
+                                     (when (hae-asiat? item)
+                                       (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
+                                                                           event
+                                                                           asiat-pisteessa))
+                                     (kun-geometriaa-klikattu item event asiat-pisteessa)
+                                     (tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))
+
+                                 :default
+                                 nil))
 
          :tooltip-fn         (fn [geom]
                                         ; Palauttaa funktion joka palauttaa tooltipin sisällön, tai nil jos hoverattu asia
