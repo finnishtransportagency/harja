@@ -60,6 +60,9 @@ WHERE i.id IN
       -- Rajaa tienumerolla
       (:tr-numero::INTEGER IS NULL OR tr_numero = :tr-numero) AND
 
+      -- Rajaa tunnisteella
+      (:tunniste_annettu IS FALSE OR (x.tunniste ILIKE :tunniste)) AND
+
       -- Rajaa ilmoittajan nimellä
       (:ilmoittaja-nimi::TEXT IS NULL OR
        CONCAT(x.ilmoittaja_etunimi,' ',x.ilmoittaja_sukunimi) ILIKE :ilmoittaja-nimi) AND

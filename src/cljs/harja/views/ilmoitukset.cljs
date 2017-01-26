@@ -132,6 +132,11 @@
      :otsikko "Tienumero"
      :placeholder "Rajaa tienumerolla"
      :tyyppi :positiivinen-numero :kokonaisluku? true}
+    {:nimi :tunniste
+     :palstoja 1
+     :otsikko "Tunniste"
+     :placeholder "Rajaa tunnisteella"
+     :tyyppi :string}
 
     (lomake/ryhma
       {:rivi? true}
