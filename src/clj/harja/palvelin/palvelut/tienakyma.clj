@@ -36,31 +36,6 @@
 
 (defonce debug-hakuparametrit (atom nil))
 
-(defn debug-explain []
-  ;; explain toteumakyselylle
-  (let [{:keys [sijainti alku loppu]} @debug-hakuparametrit]
-    (report-slow-queries
-     :query 0 (:db harja.palvelin.main/harja-jarjestelma)
-     ["SELECT t.id,
-       t.tyyppi,
-       t.reitti,
-       t.alkanut, t.paattynyt,
-       t.suorittajan_nimi AS suorittaja_nimi,
-       (SELECT array_agg(row(tt.toimenpidekoodi, tt.maara, tpk.yksikko, tpk.nimi))
-          FROM toteuma_tehtava tt
- 	       JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-	 WHERE tt.toteuma = t.id) as tehtavat
-  FROM toteuma t
-       JOIN urakka u ON t.urakka=u.id
-       JOIN kayttaja k ON t.luoja = k.id
- WHERE ST_Intersects(t.envelope, ?)
-   AND ST_Intersects(ST_CollectionHomogenize(t.reitti), ?)
-   AND ((t.alkanut BETWEEN ? AND ?) OR
-        (t.paattynyt BETWEEN ? AND ?))"
-      sijainti sijainti
-      alku loppu
-      alku loppu])))
-
 (defn- hakuparametrit
   "Tekee käyttäjän antamista hakuehdoista jeesql hakuparametrit"
   [{:keys [sijainti alku loppu tierekisteriosoite] :as valinnat}]
