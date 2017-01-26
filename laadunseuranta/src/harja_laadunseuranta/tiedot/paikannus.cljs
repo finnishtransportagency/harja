@@ -42,7 +42,7 @@
 (defn paivita-sijainti [{:keys [nykyinen]} sijainti ts]
   (let [uusi-sijainti (assoc sijainti :timestamp ts)
         uusi-nykyinen (if (ipad?)
-                        uusi-sijainti
+                        uusi-sijainti ;; iPadissa on ilmeisesti riittävä suodatus itsessään
                         (kalman/kalman nykyinen uusi-sijainti
                                        (utils/ms->sec (- ts (or (:timestamp nykyinen) ts)))))]
     {:edellinen nykyinen

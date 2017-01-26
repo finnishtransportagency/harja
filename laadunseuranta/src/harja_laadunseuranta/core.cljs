@@ -133,6 +133,8 @@
                              sovellus/kuvaa-otetaan?)
   (alusta-sovellus))
 
+;; --- Testausapurit ---
+
 (defn ^:export aja-testireitti
   "Hakee kannasta annetun tarkastusajon id:n ja ajaa sen.
    Päivitysväli kertoo, kuinka tiheästi siirrytään seuraavaan pisteeseen (ms).
@@ -141,7 +143,7 @@
   (.log js/console "Käynnistetään simuloidun reitin ajaminen")
   (paikannus/lopeta-paikannus @paikannus-id)
   (go
-    (let [vastaus (<! (comms/hae-simuloitu-tarkastusajo! 754))]
+    (let [vastaus (<! (comms/hae-simuloitu-tarkastusajo! tarkastusajo-id))]
       (when (and (:ok vastaus)
                  (> (count (:ok vastaus)) 0))
         (.log js/console "Ajetaan testireitti, jossa " (count (:ok vastaus)) " sijaintia")
