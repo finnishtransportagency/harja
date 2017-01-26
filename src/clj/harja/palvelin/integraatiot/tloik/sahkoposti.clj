@@ -77,7 +77,6 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
      [:table
       (html-tyokalut/taulukko
         [["Urakka" (:urakkanimi ilmoitus)]
-         ["Tunniste" (:tunniste ilmoitus)]
          ["Ilmoitettu" (:ilmoitettu ilmoitus)]
          ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
          ["Otsikko" (:otsikko ilmoitus)]
