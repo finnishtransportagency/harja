@@ -45,8 +45,8 @@ kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Lopetettu)\]")
 goole-static-map-url-template
   "http://maps.googleapis.com/maps/api/staticmap?zoom=15&markers=color:red|%s,%s&size=400x300&key=%s")
 
-(defn- otsikko [{:keys [ilmoitus-id urakka-id ilmoitustyyppi] :as ilmoitus}]
-  (str "#[" urakka-id "/" ilmoitus-id "] "
+(defn- otsikko [{:keys [tunniste urakka-id ilmoitustyyppi] :as ilmoitus}]
+  (str "#[" urakka-id "/" tunniste "] "
        (apurit/ilmoitustyypin-nimi (keyword ilmoitustyyppi))
        (when (ilm/virka-apupyynto? ilmoitus) " (VIRKA-APUPYYNTÖ)")))
 
@@ -73,11 +73,11 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
 
 (defn- viesti [vastausosoite otsikko ilmoitus google-static-maps-key]
   (html
-
     [:div
      [:table
       (html-tyokalut/taulukko
         [["Urakka" (:urakkanimi ilmoitus)]
+         ["Tunniste" (:tunniste ilmoitus)]
          ["Ilmoitettu" (:ilmoitettu ilmoitus)]
          ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
          ["Otsikko" (:otsikko ilmoitus)]
@@ -156,7 +156,7 @@ kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
           (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id))
 
         (assoc +onnistunut-viesti+
-          :otsikko (otsikko {:ilmoitus-id (:ilmoitusid ilmoitus)
+          :otsikko (otsikko {:tunniste (:tunniste ilmoitus)
                              :urakka-id (:urakka ilmoitus)
                              :ilmoitustyyppi (:ilmoitustyyppi ilmoitus)}))))))
 

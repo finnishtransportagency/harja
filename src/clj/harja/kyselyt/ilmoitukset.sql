@@ -453,6 +453,7 @@ VALUES
 SELECT
   id,
   ilmoitusid,
+  tunniste,
   ilmoitustyyppi,
   urakka
 FROM ilmoitus
