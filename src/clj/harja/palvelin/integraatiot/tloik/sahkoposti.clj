@@ -45,8 +45,11 @@ kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Lopetettu)\]")
 goole-static-map-url-template
   "http://maps.googleapis.com/maps/api/staticmap?zoom=15&markers=color:red|%s,%s&size=400x300&key=%s")
 
-(defn- otsikko [{:keys [tunniste urakka-id ilmoitustyyppi] :as ilmoitus}]
-  (str "#[" urakka-id "/" tunniste "] "
+(defn- otsikko
+  "Luo sähköpostin otsikon. Otsikkorivin tulee olla täsmälleen tiettyä muotoa, koska
+   sitä käytetään sisäisesti viestiketjujen yhdistämiseen."
+  [{:keys [ilmoitus-id urakka-id ilmoitustyyppi] :as ilmoitus}]
+  (str "#[" urakka-id "/" ilmoitus-id "] "
        (apurit/ilmoitustyypin-nimi (keyword ilmoitustyyppi))
        (when (ilm/virka-apupyynto? ilmoitus) " (VIRKA-APUPYYNTÖ)")))
 
@@ -77,6 +80,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
      [:table
       (html-tyokalut/taulukko
         [["Urakka" (:urakkanimi ilmoitus)]
+         ["Tunniste" (:tunniste ilmoitus)]
          ["Ilmoitettu" (:ilmoitettu ilmoitus)]
          ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
          ["Otsikko" (:otsikko ilmoitus)]
@@ -155,7 +159,7 @@ kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
           (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id))
 
         (assoc +onnistunut-viesti+
-          :otsikko (otsikko {:tunniste (:tunniste ilmoitus)
+          :otsikko (otsikko {:ilmoitus-id (:ilmoitusid ilmoitus)
                              :urakka-id (:urakka ilmoitus)
                              :ilmoitustyyppi (:ilmoitustyyppi ilmoitus)}))))))
 
