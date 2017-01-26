@@ -9,7 +9,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
             [harja.testi :as testi]
-            [harja.palvelin.palvelut.toteumat :as toteumat]))
+            [harja.palvelin.palvelut.toteumat :as toteumat]
+            [harja.palvelin.palvelut.muut-tyot :as muut-tyot]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -24,7 +25,10 @@
                                                  [:http-palvelin :db])
                         :toteumat (component/using
                                     (toteumat/->Toteumat)
-                                    [:http-palvelin :db])))))
+                                    [:http-palvelin :db])
+                        :muut-tyot (component/using
+                                     (muut-tyot/->Muut-tyot)
+                                     [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -44,6 +48,8 @@
 (defn- hae-cachesta-kentat [urakka-id tuotekoodi]
   (first (q-map
            "SELECT y.urakka,
+                    sum((y.rivi).muutostyot_laskutettu) as muutostyot_laskutettu,
+                    sum((y.rivi).muutostyot_laskutetaan) as muutostyot_laskutetaan,
                     sum((y.rivi).erilliskustannukset_laskutettu) as erilliskustannukset_laskutettu,
                     sum((y.rivi).erilliskustannukset_laskutetaan) as erilliskustannukset_laskutetaan,
                     sum((y.rivi).yht_laskutettu) as yht_laskutettu,
@@ -158,7 +164,7 @@
                                  (:db jarjestelma) +kayttaja-jvh+
                                  {:urakka-id urakka-id :alkupvm (pvm/->pvm "1.8.2015")
                                   :loppupvm (pvm/->pvm "31.8.2015")})
-            toka-haetut-tiedot-oulu-liikenneympariston-hoito (first (filter #(= (:tuotekoodi %) "23110") toka-tietojen-haku))
+            toka-haetut-tiedot-oulu-liikenneympariston-hoito (first (filter #(= (:tuotekoodi %) +tuotekoodi-liikenneympariston-hoito+) toka-tietojen-haku))
             cachesta-haettu-kysely-triggerin-jalkeen (hae-cachesta-kentat urakka-id +tuotekoodi-liikenneympariston-hoito+) ]
         (is (nil? cache-tyhja-koska-yht-trigger) "cache-tyhja-koska-yht-trigger")
         (is (= 6780.0M
@@ -177,6 +183,85 @@
                (:kaikki_laskutettu_ind_korotus toka-haetut-tiedot-oulu-liikenneympariston-hoito)
                (:kaikki_laskutettu_ind_korotus cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutettu_ind_korotus laskutusyhteenvedossa")
         (is (= 402.41379310344763200M
+               (:kaikki_laskutetaan_ind_korotus toka-haetut-tiedot-oulu-liikenneympariston-hoito)
+               (:kaikki_laskutetaan_ind_korotus cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutetaan_ind_korotus laskutusyhteenvedossa")))))
+
+(deftest laskutusyhteenvedon-cache-tyhjenee-jos-muutoshinta-muuttuu
+  (testing "laskutusyhteenvedon-cache-tyhjenee-jos-muutoshinta-muuttuu"
+    (let [urakka-id @oulun-alueurakan-2014-2019-id
+          oulu-liik-ymp-hoito-tpi-id (hae-oulun-alueurakan-liikenneympariston-hoito-tpi-id)
+          vesakonraivaus-tpk-id (ffirst (q "SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus' AND taso = 4;"))
+          oulu-vesakonraivaus-muutoshinta-id (ffirst (q "SELECT id FROM muutoshintainen_tyo WHERE urakka = " urakka-id
+                                                       " AND sopimus = " @oulun-alueurakan-2014-2019-paasopimuksen-id
+                                                       " AND tehtava = " vesakonraivaus-tpk-id ";"))
+          varmista-tyhjyys (tyhjenna-urakan-cache urakka-id)
+          cache-tyhja (first (q-map "SELECT * FROM laskutusyhteenveto_cache WHERE urakka = " urakka-id ";"))
+          eka-tietojen-haku (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+                              (:db jarjestelma) +kayttaja-jvh+
+                              {:urakka-id urakka-id :alkupvm (pvm/->pvm "1.8.2015")
+                               :loppupvm (pvm/->pvm "31.8.2015")})
+          cachesta-haettu-kysely (hae-cachesta-kentat urakka-id +tuotekoodi-liikenneympariston-hoito+)
+          haetut-tiedot-oulu-liikenneympariston-hoito (first (filter #(= (:tuotekoodi %) +tuotekoodi-liikenneympariston-hoito+) eka-tietojen-haku))
+          cache-count (:count (first (q-map "SELECT count(*) FROM laskutusyhteenveto_cache c WHERE c.urakka = " urakka-id " AND c.alkupvm = '2015-8-01';")))
+
+          ;; muuta yks.hintaa tehtävälle Metsän harvennus ko. ajalle --> cachen pitäisi tyhjentyä
+          vesakonraivaus-muutoshinta-hyotykuorma
+          [{:id oulu-vesakonraivaus-muutoshinta-id :urakka @oulun-alueurakan-2014-2019-id,
+            :tehtava vesakonraivaus-tpk-id :tehtavanimi "Vesakonraivaus" :yksikko "ha"
+            :alkupvm (pvm/->pvm-aika "1.10.2014 00:00:00.000") :loppupvm (pvm/->pvm-aika "30.9.2019 23:59:59.000")
+            :yksikkohinta 2000, :toimenpideinstanssi oulu-liik-ymp-hoito-tpi-id :sopimus @oulun-alueurakan-2014-2019-paasopimuksen-id}]]
+      (is (= cache-count 1) "Monta kyselyä samoin parametrein, silti vain yksi cachessa")
+      (is (nil? cache-tyhja) "cache tyhjä ennen kyselyn ajoa")
+      (is (some? cachesta-haettu-kysely) "cache ei tyhjä ennen kyselyn ajoa")
+
+      (is (= 3000.0M
+             (:muutostyot_laskutettu haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:muutostyot_laskutettu cachesta-haettu-kysely)) ":muutostyot_laskutettu laskutusyhteenvedossa")
+      (is (= 7000.0M
+             (:muutostyot_laskutetaan haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:muutostyot_laskutetaan cachesta-haettu-kysely)) ":muutostyot_laskutetaan laskutusyhteenvedossa")
+      (is (= 3820.11494252873560900000M
+             (:kaikki_laskutettu haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:kaikki_laskutettu cachesta-haettu-kysely)) ":kaikki_laskutettu laskutusyhteenvedossa")
+      (is (= 13103.44827586206880000M
+             (:kaikki_laskutetaan haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:kaikki_laskutetaan cachesta-haettu-kysely)) ":kaikki_laskutetaan laskutusyhteenvedossa")
+      (is (= 20.11494252873560900000M
+             (:kaikki_laskutettu_ind_korotus haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:kaikki_laskutettu_ind_korotus cachesta-haettu-kysely)) ":kaikki_laskutettu_ind_korotus laskutusyhteenvedossa")
+      (is (= 103.44827586206880000M
+             (:kaikki_laskutetaan_ind_korotus haetut-tiedot-oulu-liikenneympariston-hoito)
+             (:kaikki_laskutetaan_ind_korotus cachesta-haettu-kysely)) ":kaikki_laskutetaan_ind_korotus laskutusyhteenvedossa")
+      (let [yksikkohintaa-muutettu
+            (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :tallenna-muutoshintaiset-tyot +kayttaja-jvh+
+                            {:urakka-id @oulun-alueurakan-2014-2019-id
+                             :tyot vesakonraivaus-muutoshinta-hyotykuorma})
+            _ (log/debug "muutoshinta vesakko" (first (q-map "SELECT * FROM muutoshintainen_tyo WHERE tehtava = 1391 AND urakka  = 4;")))
+            cache-tyhja-koska-yht-trigger (first (q-map "SELECT * FROM laskutusyhteenveto_cache WHERE urakka = " urakka-id ";"))
+            toka-tietojen-haku (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+                                 (:db jarjestelma) +kayttaja-jvh+
+                                 {:urakka-id urakka-id :alkupvm (pvm/->pvm "1.8.2015")
+                                  :loppupvm (pvm/->pvm "31.8.2015")})
+            toka-haetut-tiedot-oulu-liikenneympariston-hoito (first (filter #(= (:tuotekoodi %) +tuotekoodi-liikenneympariston-hoito+) toka-tietojen-haku))
+            cachesta-haettu-kysely-triggerin-jalkeen (hae-cachesta-kentat urakka-id +tuotekoodi-liikenneympariston-hoito+) ]
+        (is (nil? cache-tyhja-koska-yht-trigger) "cache-tyhja-koska-yht-trigger")
+        (is (= 22000.0M
+               (:muutostyot_laskutettu toka-haetut-tiedot-oulu-liikenneympariston-hoito)
+               (:muutostyot_laskutettu cachesta-haettu-kysely-triggerin-jalkeen)) ":muutostyot_laskutettu laskutusyhteenvedossa")
+        (is (= 26000.0M
+               (:muutostyot_laskutetaan toka-haetut-tiedot-oulu-liikenneympariston-hoito)
+               (:muutostyot_laskutetaan cachesta-haettu-kysely-triggerin-jalkeen)) ":muutostyot_laskutetaan laskutusyhteenvedossa")
+        (is (= 42366.09195402298760900000M
+               (:kaikki_laskutettu toka-haetut-tiedot-oulu-liikenneympariston-hoito)
+               (:kaikki_laskutettu cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutettu laskutusyhteenvedossa")
+        (is (= 71086.2068965517224000M
+               (:kaikki_laskutetaan toka-haetut-tiedot-oulu-liikenneympariston-hoito)
+               (:kaikki_laskutetaan cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutetaan laskutusyhteenvedossa")
+        (is (= 566.09195402298760900000M
+               (:kaikki_laskutettu_ind_korotus toka-haetut-tiedot-oulu-liikenneympariston-hoito)
+               (:kaikki_laskutettu_ind_korotus cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutettu_ind_korotus laskutusyhteenvedossa")
+        (is (= 1086.2068965517224000M
                (:kaikki_laskutetaan_ind_korotus toka-haetut-tiedot-oulu-liikenneympariston-hoito)
                (:kaikki_laskutetaan_ind_korotus cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutetaan_ind_korotus laskutusyhteenvedossa")))))
 
