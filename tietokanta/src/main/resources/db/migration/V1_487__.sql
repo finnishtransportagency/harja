@@ -1,3 +1,12 @@
+<<<<<<< HEAD
+CREATE TYPE laheinen_osoiterivi AS (
+ tie INTEGER,      -- TR tie
+ osa INTEGER,      -- TR osa
+ etaisyys INTEGER, -- TR etäisyys tieosan alusta
+ ajorata INTEGER,  -- TR ajorata
+ d NUMERIC 	   -- ST_Distance annetusta pisteesta
+);
+=======
 -- Jos muutoshintaista työtä muokataan, poistetaan laskutusyhteenvedot urakan ajalta, koska muutoshinnan voimassa urakan ajan
 CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_muutoshintainen_tyo() RETURNS trigger AS $$
 BEGIN
@@ -30,3 +39,4 @@ AFTER INSERT OR UPDATE
   ON lampotilat
 FOR EACH ROW
 EXECUTE PROCEDURE poista_muistetut_laskutusyht_lampotila();
+>>>>>>> develop
