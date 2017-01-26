@@ -260,13 +260,14 @@
                            :nykytilanne? false,
                            :loppu #inst "2017-01-25T23:59:59.000-00:00"}
         asia-ulos (interpoloi-toteuman-aika-pisteelle asia-sisaan parametrit-sisaan (:db jarjestelma))
-        interpoloitu-aika (:aika-pisteessa asia-ulos)]
+        interpoloitu-aika (:aika-pisteessa asia-ulos)
+        pisteen-tr-osoite (:tierekisteriosoite asia-ulos)]
 
     (is (some? interpoloitu-aika))
-    (println "interpoloitu aika:" interpoloitu-aika)
     (is (->> interpoloitu-aika
              (compare (:paattynyt asia-ulos))
              (= 1)))
     (is (->> interpoloitu-aika
              (compare (:alkanut asia-ulos))
-             (= -1)))))
+             (= -1)))
+    (is (some? pisteen-tr-osoite))))

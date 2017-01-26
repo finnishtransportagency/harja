@@ -506,6 +506,10 @@ WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.paattynyt BETWEEN :alku AND :loppu) AND
       ST_Distance(t.reitti, ST_MakePoint(:x,:y)) < :toleranssi;
 
+-- name: osoite-reittipisteille
+-- Palauttaa tierekisteriosoitteen
+SELECT yrita_tierekisteriosoite_pisteille2(:rp2 ::geometry, :rp1 ::geometry, 1000) as tr_osoite;
+
 -- name: reittipisteiden-sijainnit-toteuman-reitilla
 SELECT
   ST_ClosestPoint(t.reitti, rp.sijainti ::geometry) AS sijainti,
