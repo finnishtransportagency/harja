@@ -16,6 +16,8 @@
   "Lukee sprocin palauttaman laheinen_osoiterivi arvon tekstimuodosta, jossa on tie, osa, etaisyys,
   ajorata ja d. \"(18637,1,204,1,8.13394232930644)\""
   [osoite]
+  ;; TODO KÄYTÄ lue-pgobject kunhan mergeytyy developpiin.
+  ;; ks. https://github.com/finnishtransportagency/harja/commit/ca012d9fbc6a58fd1444716665796a94a855a1cf
   (let [[tie osa et ajr d :as arvot]
         (and osoite
              (str/starts-with? osoite "(")
