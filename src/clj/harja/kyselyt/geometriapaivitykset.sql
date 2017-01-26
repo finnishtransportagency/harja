@@ -4,10 +4,8 @@ SELECT *
 FROM geometriapaivitys
 WHERE nimi = :nimi;
 
--- name: paivita-viimeisin-paivitys<!
-UPDATE geometriapaivitys
-SET viimeisin_paivitys = :viimeisin_paivitys
-WHERE nimi = :nimi;
+-- name: paivita-viimeisin-paivitys
+SELECT paivita_geometriapaivityksen_viimeisin_paivitys(:nimi, :viimeisin_paivitys :: TIMESTAMP);
 
 -- name: hae-karttapvm
 -- single?: true
