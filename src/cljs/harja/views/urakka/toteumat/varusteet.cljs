@@ -30,18 +30,17 @@
             [tuck.core :as t :refer [tuck]]
             [harja.ui.lomake :as lomake]
             [harja.ui.debug :refer [debug]]
-            [harja.views.tierekisteri.varustehaku :refer [varustehaku]]
+            [harja.views.tierekisteri.varusteet :refer [varustehaku]]
             [harja.domain.tierekisteri.varusteet
              :refer [varusteominaisuus->skeema]
              :as tierekisteri-varusteet]
             [harja.ui.viesti :as viesti]
-            [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.tierekisteri.varusteet :as varusteet])
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept send-to]]))
 
-(def tr-kaytossa? false)
+(def tr-kaytossa? true)
 
 (def nayta-max-toteumaa 500)
 
@@ -251,20 +250,7 @@
        (varusteen-ominaisuudet muokattava? ominaisuudet)]
       varustetoteuma]]))
 
-(defn kasittele-varustehaun-event [e!]
-  (let [vhe! (t/wrap-path e! :varustehaku)
-        pe! e!]
-    (intercept vhe!
-               ;; todo: jostain syystä tämän interceptointi ei enää toimi. eventti menee lapsinäkymään.
-               (varusteet/VarustetoteumatMuuttuneet
-                 {varustetoteumat :varustetoteumat :as t}
-                 (send-to pe! (v/->VarustetoteumatMuuttuneet varustetoteumat)))
-
-               (varusteet/AloitaVarusteenMuokkaus
-                 {varuste :varuste :as t}
-                 (send-to pe! (v/->UusiVarusteToteuma :paivitetty varuste))))))
-
-(defn varustehakulomake [e! nykyiset-valinnat naytettavat-toteumat varustehaun-tiedot]
+(defn varustehakulomake [e! nykyiset-valinnat naytettavat-toteumat app]
   [:span
    [:div.sisalto-container
     [:h1 "Varustekirjaukset Harjassa"]
@@ -275,7 +261,14 @@
       [:h1 "Varusteet Tierekisterissä"]
       (when oikeus-varusteiden-muokkaamiseen?
         [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisatty nil))])
-      [varustehaku (kasittele-varustehaun-event e!) varustehaun-tiedot]])])
+      [varustehaku e! app]])])
+
+(defn kasittele-alkutila [e! {:keys [uudet-varustetoteumat muokattava-varuste] }]
+  (when uudet-varustetoteumat
+    (e! (v/->VarustetoteumatMuuttuneet uudet-varustetoteumat)))
+
+  (when muokattava-varuste
+    (e! (v/->UusiVarusteToteuma :paivitetty muokattava-varuste))))
 
 (defn- varusteet* [e! varusteet]
   (e! (v/->YhdistaValinnat @varustetiedot/valinnat))
@@ -288,9 +281,10 @@
     (fn [e! {nykyiset-valinnat :valinnat
              naytettavat-toteumat :naytettavat-toteumat
              varustetoteuma :varustetoteuma
-             varustehaun-tiedot :varustehaku
              virhe :virhe
              :as app}]
+
+      (kasittele-alkutila e! app)
 
       [:span
        (when virhe
@@ -299,7 +293,7 @@
 
        (if varustetoteuma
          [varustetoteumalomake e! nykyiset-valinnat varustetoteuma]
-         [varustehakulomake e! nykyiset-valinnat naytettavat-toteumat varustehaun-tiedot])])))
+         [varustehakulomake e! nykyiset-valinnat naytettavat-toteumat app])])))
 
 (defn varusteet []
   [tuck varustetiedot/varusteet varusteet*])

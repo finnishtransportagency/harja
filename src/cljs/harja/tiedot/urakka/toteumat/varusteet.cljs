@@ -1,4 +1,5 @@
 (ns harja.tiedot.urakka.toteumat.varusteet
+  "Varustetoteumien tiedot ja niiden käsittely"
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<!]]
             [harja.loki :refer [log tarkkaile!]]
@@ -45,14 +46,12 @@
                 ;; Valittu varustetoteuma
                 :varustetoteuma nil
 
-                ;; Varustehaun hakuehdot ja tulokset
-                :varustehaku {:hakuehdot {:haku-kaynnissa? false
-                                          :tietolaji (ffirst (vec tierekisteri-varusteet/tietolaji->selitys))}
-
-                              ;; Tällä hetkellä näytettävä tietolaji
-                              ;; ja varusteet
-                              :tietolaji nil
-                              :varusteet nil}}))
+                ;; Tierekisterin varusteiden hakuehdot ja tulokset
+                :tierekisterin-varusteet {:hakuehdot {:haku-kaynnissa? false
+                                                      :tietolaji (ffirst (vec tierekisteri-varusteet/tietolaji->selitys))}
+                                          ;; Tällä hetkellä näytettävä tietolaji ja varusteet
+                                          :tietolaji nil
+                                          :varusteet nil}}))
 
 (defn- hae [{valinnat :valinnat toteumahaku-id :toteumahaku-id :as app}]
   (when toteumahaku-id
@@ -70,7 +69,7 @@
     " "
     (varusteet-domain/tietolaji->selitys tietolaji)))
 
-(defn- varustetoteumat-karttataso [toteumat]
+(defn varustetoteumat-karttataso [toteumat]
   (kartalla-esitettavaan-muotoon
     toteumat
     (constantly false)
@@ -219,7 +218,7 @@
   v/UusiVarusteToteuma
   (process-event [{:keys [toiminto varuste]} _]
     (let [tulos! (t/send-async! (partial v/->AsetaToteumanTiedot (uusi-varustetoteuma toiminto varuste)))]
-      (tulos!)))
+      (dissoc (tulos!) :muokattava-varuste)))
 
   v/AsetaToteumanTiedot
   (process-event [{tiedot :tiedot} {nykyinen-toteuma :varustetoteuma :as app}]
@@ -248,7 +247,7 @@
               (if (k/virhe? vastaus)
                 (virhe!)
                 (valmis! vastaus))))))
-      (assoc app :varustetoteuma uusi-toteuma)))
+      (assoc app :varustetoteuma uusi-toteuma :muokattava-varuste nil)))
 
   v/TietolajinKuvaus
   (process-event [{:keys [tietolaji kuvaus]} {toteuma :varustetoteuma :as app}]
@@ -288,6 +287,7 @@
   v/VarustetoteumatMuuttuneet
   (process-event [{toteumat :varustetoteumat :as data} app]
     (-> app
+        (dissoc :uudet-varustetoteumat)
         (assoc
           :karttataso (varustetoteumat-karttataso toteumat)
           :karttataso-nakyvissa? true)

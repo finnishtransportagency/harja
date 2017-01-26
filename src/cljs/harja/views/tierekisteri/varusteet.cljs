@@ -1,5 +1,5 @@
-(ns harja.views.tierekisteri.varustehaku
-  "Tierekisterin varustehaun käyttöliittymä"
+(ns harja.views.tierekisteri.varusteet
+  "Tierekisterin varusteiden käsittelyyn käyttöliittymä"
   (:require [harja.tiedot.tierekisteri.varusteet :as v]
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.ui.lomake :as lomake]
@@ -67,8 +67,8 @@
   (yleiset/varmista-kayttajalta
     {:otsikko "Varusteen poistaminen Tierekisteristä"
      :sisalto [:div "Haluatko varmasti poistaa tietolajin: "
-              [:b (str (varusteet/tietolaji->selitys tietolaji) " (" tietolaji ")")] " varusteen, jonka tunniste on: "
-              [:b tunniste] "."]
+               [:b (str (varusteet/tietolaji->selitys tietolaji) " (" tietolaji ")")] " varusteen, jonka tunniste on: "
+               [:b tunniste] "."]
      :hyvaksy "Poista"
      :hyvaksy-ikoni (ikonit/livicon-trash)
      :hyvaksy-napin-luokka "nappi-kielteinen"
@@ -143,7 +143,7 @@
 (defn varustehaku
   "Komponentti, joka näyttää lomakkeen varusteiden hakemiseksi tierekisteristä
   sekä haun tulokset."
-  [e! {:keys [hakuehdot listaus-skeema varusteet tarkastus] :as app}]
+  [e! {{:keys [hakuehdot listaus-skeema varusteet tarkastus]} :tierekisterin-varusteet :as app}]
   [:div.varustehaku
    [varustehaku-ehdot e! hakuehdot]
 

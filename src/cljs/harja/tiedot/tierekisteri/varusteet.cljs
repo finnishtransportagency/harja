@@ -33,16 +33,18 @@
       :kuntoluokitus kuntoluokitus
       :lisatieto lisatieto})))
 
-(defn hakutulokset [app tietolaji varusteet]
-  (-> app
-      (assoc-in [:varusteet] varusteet)
-      (assoc-in [:tietolaji] tietolaji)
-      (assoc-in [:listaus-skeema]
-                (into [varusteet/varusteen-osoite-skeema]
-                      (comp (filter varusteet/kiinnostaa-listauksessa?)
-                            (map varusteet/varusteominaisuus->skeema))
-                      (:ominaisuudet tietolaji)))
-      (assoc-in [:hakuehdot :haku-kaynnissa?] false)))
+(defn hakutulokset
+  ([app] (hakutulokset app nil nil))
+  ([app tietolaji varusteet]
+   (-> app
+       (assoc-in [:tierekisterin-varusteet :varusteet] varusteet)
+       (assoc-in [:tierekisterin-varusteet :tietolaji] tietolaji)
+       (assoc-in [:tierekisterin-varusteet :listaus-skeema]
+                 (into [varusteet/varusteen-osoite-skeema]
+                       (comp (filter varusteet/kiinnostaa-listauksessa?)
+                             (map varusteet/varusteominaisuus->skeema))
+                       (:ominaisuudet tietolaji)))
+       (assoc-in [:tierekisterin-varusteet :hakuehdot :haku-kaynnissa?] false))))
 
 ;; Määritellään varustehaun UI tapahtumat
 
@@ -59,23 +61,17 @@
 (defrecord PeruutaVarusteenTarkastus [])
 (defrecord AsetaVarusteTarkastuksenTiedot [tiedot])
 (defrecord TallennaVarustetarkastus [varuste tarkastus])
+(defrecord AloitaVarusteenMuokkaus [varuste])
 (defrecord ToimintoEpaonnistui [toiminto virhe])
 (defrecord ToimintoOnnistui [vastaus])
-
-(defrecord VarustetoteumatMuuttuneet [varustetoteumat])
-(defrecord AloitaVarusteenMuokkaus [varuste])
-
-(defn laheta-viivastyneesti [async-fn]
-  ;; hackish ratkaisu, jolla varmistetaan, että tämän funktion käsittely päättyy ennen kuin send-async menee läpi.
-  (.setTimeout js/window (async-fn) 1))
 
 (extend-protocol t/Event
   AsetaVarusteidenHakuehdot
   (process-event [{ehdot :hakuehdot} app]
-    (assoc-in app [:hakuehdot] ehdot))
+    (assoc-in app [:tierekisterin-varusteet :hakuehdot] ehdot))
 
   HaeVarusteita
-  (process-event [_ {hakuehdot :hakuehdot :as app}]
+  (process-event [_ {{hakuehdot :hakuehdot} :tierekisterin-varusteet :as app}]
     (let [tulos! (t/send-async! map->VarusteHakuTulos)
           virhe! (t/send-async! ->VarusteHakuEpaonnistui)]
       (go
@@ -86,8 +82,8 @@
             (virhe! vastaus)
             (tulos! vastaus))))
       (-> app
-          (assoc-in [:varusteet] nil)
-          (assoc-in [:hakuehdot :haku-kaynnissa?] true))))
+          (assoc-in [:tierekisterin-varusteet :varusteet] nil)
+          (assoc-in [:tierekisterin-varusteet :hakuehdot :haku-kaynnissa?] true))))
 
   VarusteHakuTulos
   (process-event [{tietolaji :tietolaji varusteet :varusteet} app]
@@ -97,29 +93,25 @@
   (process-event [{virhe :virhe} app]
     (log "[TR] Virhe haettaessa varusteita: " (pr-str virhe))
     (viesti/nayta! "Virhe haettaessa varusteita Tierekisteristä" :warning)
-    (assoc-in app [:hakuehdot :haku-kaynnissa?] false))
+    (assoc-in app [:tierekisterin-varusteet :hakuehdot :haku-kaynnissa?] false))
 
   ToimintoEpaonnistui
   (process-event [{{:keys [viesti vastaus]} :toiminto virhe :virhe :as tiedot} app]
     (log "[TR] Virhe suoritettaessa toimintoa. Virhe:" (pr-str virhe) ". Vastaus: " (pr-str vastaus) ".")
     (viesti/nayta! viesti :warning)
 
-    (let [tulos! (t/send-async! (partial ->VarustetoteumatMuuttuneet vastaus))]
-      (go (<! (async/timeout 1))
-          (tulos!)))
-
     ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
-    (hakutulokset app nil nil))
+    (-> app
+        (hakutulokset)
+        (assoc :uudet-varustetoteumat vastaus)))
 
   ToimintoOnnistui
   (process-event [{{:keys [vastaus]} :toiminto :as tiedot} app]
 
-    (let [tulos! (t/send-async! (partial ->VarustetoteumatMuuttuneet vastaus))]
-      (go (<! (async/timeout 1))
-          (tulos!)))
-
     ;; todo: mieti miten tehdä haku tierekisteriin uudestaan
-    (hakutulokset app nil nil))
+    (-> app
+        (hakutulokset)
+        (assoc :uudet-varustetoteumat vastaus)))
 
   PoistaVaruste
   (process-event [{varuste :varuste} app]
@@ -138,11 +130,11 @@
 
   AloitaVarusteenTarkastus
   (process-event [{:keys [varuste tunniste tietolaji]} app]
-    (assoc app :tarkastus {:varuste varuste :tunniste tunniste :tietolaji tietolaji}))
+    (assoc-in app [:tierekisterin-varusteet :tarkastus] {:varuste varuste :tunniste tunniste :tietolaji tietolaji}))
 
   PeruutaVarusteenTarkastus
   (process-event [_ app]
-    (dissoc app :tarkastus))
+    (assoc-in app [:tierekisterin-varusteet :tarkastus] nil))
 
   TallennaVarustetarkastus
   (process-event [{varuste :varuste {lisatieto :lisatietoja kuntoluokitus :kuntoluokitus} :tarkastus :as data} app]
@@ -158,18 +150,12 @@
           (if (or (k/virhe? vastaus) (not (:onnistunut vastaus)))
             (virhe! {:vastaus vastaus :viesti "Varusteen tarkastuksen kirjauksessa tapahtui virhe."})
             (tulos! {:vastaus vastaus :viesti "Varustetarkastus kirjattu onnistuneesti."})))))
-    (dissoc app :tarkastus))
+    (assoc-in app [:tierekisterin-varusteet :tarkastus] nil))
 
   AsetaVarusteTarkastuksenTiedot
   (process-event [{uudet-tiedot :tiedot} {tarkastus :tarkastus :as app}]
-    (assoc app :tarkastus (assoc tarkastus :tiedot uudet-tiedot)))
-
-  ;; Hook-upit päänäkymään (harja.tiedot.urakka.toteumat.varusteet)
-  VarustetoteumatMuuttuneet
-  (process-event [_ app]
-    ;; todo: tänne ei pitäisi tulla, mutta jostain syystä interceptointi ei enää toimi alinäkymän eventeistä
-    app)
+    (assoc-in app [:tierekisterin-varusteet :tarkastus] (assoc tarkastus :tiedot uudet-tiedot)))
 
   AloitaVarusteenMuokkaus
-  (process-event [_ app]
-    app))
+  (process-event [{varuste :varuste} app]
+    (assoc app :muokattava-varuste varuste)))
