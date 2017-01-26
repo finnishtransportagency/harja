@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.8</b>  
-<b>Julkaistu: 13.1.2016</b>
+<b>Nykyinen versio: 1.0.9</b>  
+<b>Julkaistu: 24.1.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.9 Julkaistu: 24.1.2017:
+    - Salli tarkastuksille suppeammat tiedot tarkastajasta.
 - Versionumero: 1.0.8 Julkaistu: 13.1.2017:
     - Päällystysilmoituksen kirjauksesta poistettu mahdollisuus kirjata taloudellinen osa (tyot-avaimen sisältö). Päällystysilmoituksella ei ole enää taloudellista osaa, vaan nämä tiedot käsitellään jatkossa omalla tietomallilla, jolle tulee myöhemmin oma API.
 - Versionumero: 1.0.7 Julkaistu: 2.1.2017:

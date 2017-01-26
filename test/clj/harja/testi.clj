@@ -295,6 +295,11 @@
                   FROM   toimenpideinstanssi
                   WHERE  nimi = 'Oulu Talvihoito TP 2014-2019';"))))
 
+(defn hae-oulun-alueurakan-liikenneympariston-hoito-tpi-id []
+  (ffirst (q (str "SELECT id
+                  FROM   toimenpideinstanssi
+                  WHERE  nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019';"))))
+
 (defn hae-muhoksen-paallystysurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -661,3 +666,11 @@
   (-> dt
       tc/from-sql-date
       (t/to-time-zone suomen-aikavyohyke)))
+
+(defn q-sanktio-leftjoin-laatupoikkeama [sanktio-id]
+  (first (q-map
+     "SELECT s.id, s.maara as summa, s.poistettu, s.perintapvm, s.sakkoryhma as laji,
+             lp.id as lp_id, lp.aika as lp_aika, lp.poistettu as lp_poistettu
+        FROM sanktio s
+             LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
+       WHERE s.id = " sanktio-id ";")))

@@ -3,6 +3,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto :as laskutusyhteenveto]
+            [harja.palvelin.palvelut.yksikkohintaiset-tyot :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
@@ -15,7 +16,8 @@
                   (fn [_]
                     (component/start
                       (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)))))
+                        :db (tietokanta/luo-tietokanta testitietokanta)
+                        :http-palvelin (testi-http-palvelin)))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -42,14 +44,6 @@
           poista-tpi (fn [tiedot]
                                 (map #(dissoc %
                                               :tpi) tiedot))
-          poista-suolasakot (fn [tiedot]
-                                (map #(dissoc %
-                                              :suolasakot_laskutettu
-                                              :suolasakot_laskutettu_ind_korotus
-                                              :suolasakot_laskutettu_ind_korotettuna
-                                              :suolasakot_laskutetaan
-                                              :suolasakot_laskutetaan_ind_korotus
-                                              :suolasakot_laskutetaan_ind_korotettuna) tiedot))
           haetut-tiedot-oulu-ilman-tpita (poista-tpi haetut-tiedot-oulu)
           haetut-tiedot-kajaani-ilman-tpita (poista-tpi haetut-tiedot-kajaani)
 
