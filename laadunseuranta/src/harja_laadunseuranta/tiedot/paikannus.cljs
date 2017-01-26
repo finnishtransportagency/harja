@@ -74,14 +74,14 @@
 (defn aseta-testisijainti
   "HUOM: testikäyttöön. Asettaa nykyisen sijainnin koordinaatit. Oikean geolocation pollerin tulisi
   olla pois päältä kun tätä käytetään."
-  [sijainti-atomi [x y]]
+  [sijainti-atomi [x y] tarkkuus]
   (swap! sijainti-atomi
          (fn [{:keys [nykyinen]}]
            {:edellinen nykyinen
             :nykyinen {:lat y
                        :lon x
                        :heading 0
-                       :accuracy 20
+                       :accuracy tarkkuus
                        :speed 40
                        :timestamp (timestamp)}})))
 

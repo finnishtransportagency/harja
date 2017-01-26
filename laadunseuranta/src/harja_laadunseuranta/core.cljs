@@ -137,9 +137,13 @@
 
 (defn ^:export aja-testireitti
   "Hakee kannasta annetun tarkastusajon id:n ja ajaa sen.
+
+   Tarkkuus on sama kuin HTML5 Geolocation API:n palauttama (säde metreinä).
+   Esim. arvo 5 on hyvin tarkka paikannus ja 50 epätarkka.
+
    Päivitysväli kertoo, kuinka tiheästi siirrytään seuraavaan pisteeseen (ms).
    2000 vastaa suurin piirtein todellista ajonopeutta."
-  [tarkastusajo-id paivitysvali]
+  [tarkastusajo-id tarkkuus paivitysvali]
   (.log js/console "Käynnistetään simuloidun reitin ajaminen")
   (paikannus/lopeta-paikannus @paikannus-id)
   (go
@@ -149,6 +153,5 @@
         (.log js/console "Ajetaan testireitti, jossa " (count (:ok vastaus)) " sijaintia")
         (reset! sovellus/keskita-ajoneuvoon? true)
         (doseq [sijainti (:ok vastaus)]
-          (.log js/console "Asetetaan simuloitu sijainti: " (pr-str sijainti))
-          (paikannus/aseta-testisijainti sovellus/sijainti (:sijainti sijainti))
+          (paikannus/aseta-testisijainti sovellus/sijainti (:sijainti sijainti) tarkkuus)
           (<! (async/timeout paivitysvali)))))))
