@@ -508,7 +508,7 @@ WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
 
 -- name: osoite-reittipisteille
 -- Palauttaa tierekisteriosoitteen
-SELECT yrita_tierekisteriosoite_pisteille2(:rp2 ::geometry, :rp1 ::geometry, 1000) as tr_osoite;
+SELECT yrita_tierekisteriosoite_pisteelle2(:piste ::geometry, 30) as tr_osoite;
 
 -- name: reittipisteiden-sijainnit-toteuman-reitilla
 SELECT

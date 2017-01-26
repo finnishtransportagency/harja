@@ -514,8 +514,7 @@
         naapurit-etaisyyksilla (map muunna-sijainti esi-naapurit-etaisyyksilla)
 
         lahin-naapuri (apply min-key etaisyys naapurit-etaisyyksilla)
-        osoite-vastaus (q/osoite-reittipisteille db {:rp1 (clj-piste->sql (:sijainti  lahin-piste))
-                                                     :rp2 (clj-piste->sql (:sijainti  lahin-naapuri))})
+        osoite-vastaus (q/osoite-reittipisteille db {:piste (clj-piste->sql (:sijainti lahin-piste))})
         tr-osoite (some-> osoite-vastaus first :tr_osoite .getValue konv/lue-tr-osoite)
         _ (println "saatiin tr-osoite:" tr-osoite, "pisteilta" [lahin-piste lahin-naapuri])
         paikka-vastaus (q/suhteellinen-paikka-pisteiden-valissa
