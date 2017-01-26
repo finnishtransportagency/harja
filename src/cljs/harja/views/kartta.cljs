@@ -502,8 +502,10 @@
    (= :tilannekuva @nav/valittu-sivu)))
 
 (defn kaynnista-asioiden-haku-pisteesta! [tasot event asiat-pisteessa]
-  (hae-asiat-pisteessa tasot event asiat-pisteessa)
-  (reset! tiedot/nayta-infopaneeli? true))
+  ;; Ilmoituksissa ei haluta näyttää infopaneelia
+  (when-not (#{:ilmoitukset} @nav/valittu-sivu)
+    (hae-asiat-pisteessa tasot event asiat-pisteessa)
+    (reset! tiedot/nayta-infopaneeli? true)))
 
 
 (defn- piilota-infopaneeli-jos-muuttunut
