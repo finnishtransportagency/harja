@@ -63,7 +63,7 @@
     (is (= (:ilmoittaja_tyyppi ilmoitus) "tienkayttaja"))
     (is (instance? PGgeometry (:sijainti ilmoitus)))
     (is (= (:ilmoittaja_matkapuhelin ilmoitus) "08023394852"))
-    (is (= (:ilmoitusid ilmoitus) 123456789))
+    (is (= (:ilmoitus-id ilmoitus) 123456789))
     (is (= (:ilmoittaja_etunimi ilmoitus) "Uuno"))
     (is (= (:ilmoittaja_sukunimi ilmoitus) "Urakoitsija"))
     (is (= (:ilmoitustyyppi ilmoitus) "toimenpidepyynto"))
@@ -75,8 +75,7 @@
     (is (= (:lahettaja_sahkoposti ilmoitus) "pekka.paivystaja@livi.fi"))
     (is (= (:lisatieto ilmoitus) "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."))
     (is (= #{"auraustarve"
-             "aurausvallitNakemaesteena"}
-           (:selitteet (konv/array->set ilmoitus :selitteet)))))
+             "aurausvallitNakemaesteena"})))
   (poista-ilmoitus))
 
 (deftest tarkista-ilmoituksen-paivitys
