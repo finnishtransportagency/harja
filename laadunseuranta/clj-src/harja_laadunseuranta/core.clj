@@ -151,7 +151,9 @@
                                    tx {:tarkastusajo tarkastusajo-id
                                        :laheiset_tiet_threshold 100})
         merkinnat-tr-osoitteilla (lisaa-reittimerkinnoille-lopullinen-tieosoite merkinnat-tr-osoitteilla)
-        tarkastukset (reittimuunnin/reittimerkinnat-tarkastuksiksi merkinnat-tr-osoitteilla)]
+        tarkastukset (reittimuunnin/reittimerkinnat-tarkastuksiksi
+                       merkinnat-tr-osoitteilla
+                       {:analysoi-rampit? true})]
     (log/debug "Reittipisteet muunnettu tarkastuksiksi.")
     tarkastukset))
 
