@@ -415,33 +415,7 @@
 (defn- nayta-infopaneelissa! [item]
   (swap! asiat-pisteessa update :asiat conj item))
 
-(def kasittele-geometrian-klikkaus
-  {:hy
-   (fn [item]
-     (when-not (= (:id item) (:id @nav/valittu-hallintayksikko))
-       (nav/valitse-hallintayksikko! item)))
-
-   :ur
-   (fn [item]
-     (when-not (= (:id item) (:id @nav/valittu-urakka))
-       (t/julkaise! (assoc item :aihe :urakka-klikattu))))
-
-   :ilmoitus
-   (fn [item]
-     (if (= :tilannekuva @nav/valittu-sivu)
-       (nayta-infopaneelissa! item)
-       (t/julkaise! (assoc item :aihe :ilmoitus-klikattu))))})
-
-(defn- kun-geometriaa-klikattu
-  "Event handler geometrioiden yksi- ja tuplaklikkauksille"
-  [item event asiat-pisteessa]
-  (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))
-        kasittelija (kasittele-geometrian-klikkaus (:type item))]
-    (if kasittelija
-      (kasittelija item)
-      (nayta-infopaneelissa! item))))
-
-(defn- hae-asiat-pisteessa [tasot event atomi]
+(defn- hae-asiat-pisteessa! [tasot event atomi]
   (let [koordinaatti (js->clj (.-coordinate event))
         extent ((juxt :xmin :ymin :xmax :ymax) @nav/kartalla-nakyva-alue)
         nayta-neula! #(tasot/nayta-geometria! :klikattu-karttapiste
@@ -485,27 +459,9 @@
         (= (:type geom) :hy)
         (= (:id geom) (:id @nav/valittu-hallintayksikko)))))
 
-(defn hae-asiat?
-  "Päättele tarviiko annetulle klikatulle geometrialle avata
-  infopaneeli ja hakea palvelimelta pisteessä olevat asiat."
-  [item]
-
-  (or
-   ;; Jos klikkaus osuu valittuun urakkaan tai hallintayksikköön,
-   ;; klikattiin sen alueelle (ei olla valitsemassa hallintayksikköä tai urakka)
-   (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
-
-   ;; Tälle tyypille ei ole erikoiskäsittelyä klikkaukselle
-   (not (contains? kasittele-geometrian-klikkaus (:type item)))
-
-   ;; Ollaan tilannekuvassa
-   (= :tilannekuva @nav/valittu-sivu)))
-
-(defn kaynnista-asioiden-haku-pisteesta! [tasot event asiat-pisteessa]
-  ;; Ilmoituksissa ei haluta näyttää infopaneelia
-  (when-not (#{:ilmoitukset} @nav/valittu-sivu)
-    (hae-asiat-pisteessa tasot event asiat-pisteessa)
-    (reset! tiedot/nayta-infopaneeli? true)))
+(defn kaynnista-infopaneeliin-haku-pisteesta! [tasot event asiat-pisteessa]
+  (hae-asiat-pisteessa! tasot event asiat-pisteessa)
+  (reset! tiedot/nayta-infopaneeli? true))
 
 
 (defn- piilota-infopaneeli-jos-muuttunut
@@ -591,17 +547,48 @@
          :on-mount           (fn [initialextent]
                                (paivita-extent nil initialextent))
          :on-click           (fn [event]
-                               (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
-                                                                   event
-                                                                   asiat-pisteessa)
+                               (cond
+                                 ;; Ilmoituksissa ei näytetä paneelia
+                                 (#{:ilmoitukset} @nav/valittu-sivu)
+                                 nil
+
+                                 :default
+                                 (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
+                                                                          event
+                                                                          asiat-pisteessa))
                                (.stopPropagation event)
                                (.preventDefault event))
          :on-select          (fn [item event]
-                               (when (hae-asiat? item)
-                                 (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
-                                                                     event
-                                                                     asiat-pisteessa))
-                               (kun-geometriaa-klikattu item event asiat-pisteessa)
+                               (cond
+                                 ;; Ilmoituksissa ei haluta ikinä näyttää infopaneelia,
+                                 ;; vaan valitaan klikattu ilmoitus
+                                 (#{:ilmoitukset} @nav/valittu-sivu)
+                                 (when (= :ilmoitus (:type item)) ;; Älä siirrä tätä cond-ehtoon
+                                   (t/julkaise! (assoc item :aihe :ilmoitus-klikattu)))
+
+                                 (and (#{:tilannekuva} @nav/valittu-sivu)
+                                      (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item))
+                                 (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
+                                                                          event
+                                                                          asiat-pisteessa)
+
+                                 (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
+                                 (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
+                                                                          event
+                                                                          asiat-pisteessa)
+
+                                 (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item)
+                                 (if (= :hy (:type item))
+                                   (nav/valitse-hallintayksikko! item)
+                                   (t/julkaise! (assoc item :aihe :urakka-klikattu)))
+
+                                 :default
+                                 (do
+                                   (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
+                                                                              event
+                                                                              asiat-pisteessa)
+                                   (nayta-infopaneelissa! item)))
+
                                (.stopPropagation event)
                                (.preventDefault event))
 
@@ -623,6 +610,11 @@
                                ;; mutta tämä ei tarkota sitä, että yksikään niistä olisi "valittu urakka".
 
                                (cond
+                                 (#{:ilmoitukset} @nav/valittu-sivu)
+                                 (when (= :ilmoitus (:type item)) ;; Älä siirrä tätä cond-ehtoon
+                                   (t/julkaise! (assoc item :aihe :ilmoitus-klikattu))
+                                   (tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))
+
                                  (and (#{:tilannekuva} @nav/valittu-sivu)
                                       (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item))
                                  ;; Tilannekuvassa tai ilmoituksissa zoomataan aina sisään, jos
@@ -638,24 +630,22 @@
                                  ;; Valitaan klikattu organisaatio, ja kohdennetaan sen alueeseen.
                                  (do (.stopPropagation event)
                                      (.preventDefault event)
-                                     (kun-geometriaa-klikattu item event asiat-pisteessa)
+                                     (if (= :hy (:type item))
+                                       (nav/valitse-hallintayksikko! item)
+                                       (t/julkaise! (assoc item :aihe :urakka-klikattu)))
                                      (tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))
 
-                                 (not (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item))
+                                 :default
                                  ;; Jos tuplaklikataan jotain,
                                  ;; joka ei ole hy/urakka, ei zoomata, vaan tarkennetaan tuplaklikattuun asiaan.
                                  ;; Lisäksi avataan infopaneeli
                                  (do (.stopPropagation event)
                                      (.preventDefault event)
-                                     (when (hae-asiat? item)
-                                       (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
-                                                                           event
-                                                                           asiat-pisteessa))
-                                     (kun-geometriaa-klikattu item event asiat-pisteessa)
-                                     (tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))
-
-                                 :default
-                                 nil))
+                                     (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
+                                                                              event
+                                                                              asiat-pisteessa)
+                                     (nayta-infopaneelissa! item)
+                                     (tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))))
 
          :tooltip-fn         (fn [geom]
                                         ; Palauttaa funktion joka palauttaa tooltipin sisällön, tai nil jos hoverattu asia
