@@ -157,10 +157,10 @@
       (log/debug "Löytyi pisteitä, jotka sijaitsevat riittävän kaukana ramppia edeltävästä tiestä:")
       (doseq [merkinta merkinnat-rampilla-yli-tresholdin]
         (let [lahin-osuma (laheisten-pisteiden-lahin-osuma-tielle merkinta tie-ennen-ramppia)]
-          (log/debug (pr-str lahin-osuma " => " (pr-str "Etäisyys edelliseen tiehen GPS-tarkkuus huomioituna: "
-                                                        (- (:etaisyys-gps-pisteesta lahin-osuma)
-                                                           (:gps-tarkkuus merkinta))
-                                                        "> annettu htreshold" threshold)))))
+          (log/debug (str lahin-osuma " => " (pr-str "Etäisyys edelliseen tiehen GPS-tarkkuus huomioituna: "
+                                                     (- (:etaisyys-gps-pisteesta lahin-osuma)
+                                                        (:gps-tarkkuus merkinta))
+                                                     " > annettu htreshold " threshold)))))
       (log/debug "Eli ajo on mitä todennäköisimmin tapahtunut rampilla"))
 
     ainakin-yksi-varma-piste-ylittaa-thresholdin?))
