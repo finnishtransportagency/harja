@@ -140,6 +140,10 @@
         merkinnat (-> (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                              {:tarkastusajo tarkastusajo-id
                                                               :laheiset_tiet_threshold 100})
+                      ;; Pisteet etenevät ramppia pitkin ja GPS:n tarkkuussäde on 30m.
+                      ;; Tämä riittää varmistamaan, että pisteet ovat oikeasti sijoittuneet
+                      ;; rampille. Tätä epätarkempi arvo voi potentiaalisesti projisoitua
+                      ;; takaisin ajetulle moottoritielle => ramppianalyysi korjaa projision.
                       (aseta-ramppimerkintojen-tarkkuus 30))]
 
     (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
