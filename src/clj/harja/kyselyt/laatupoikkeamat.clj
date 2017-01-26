@@ -15,7 +15,8 @@
 
 (defn luo-tai-paivita-laatupoikkeama
   "Luo uuden laatupoikkeaman tai päivittää olemassaolevan laatupoikkeaman perustiedot. Palauttaa laatupoikkeaman id:n."
-  [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty kuvaus sijainti tr yllapitokohde]}]
+  [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty kuvaus
+                   sijainti tr yllapitokohde poistettu]}]
   (let [{:keys [numero alkuosa loppuosa alkuetaisyys loppuetaisyys]} tr]
     (when yllapitokohde
       (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka yllapitokohde))
@@ -35,6 +36,7 @@
                                                 alkuetaisyys
                                                 loppuetaisyys
                                                 yllapitokohde
+                                                (boolean poistettu)
                                                 id
                                                 urakka)
          id)

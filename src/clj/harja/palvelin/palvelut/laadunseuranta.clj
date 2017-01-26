@@ -154,7 +154,7 @@
 
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio
-                   toimenpideinstanssi vakiofraasi] :as sanktio} laatupoikkeama urakka]
+                   toimenpideinstanssi vakiofraasi poistettu] :as sanktio} laatupoikkeama urakka]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaon " laatupoikkeama)
   (log/debug "LAJI ON: " (pr-str laji))
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
@@ -179,6 +179,7 @@
                 :laatupoikkeama laatupoikkeama
                 :suorasanktio (or suorasanktio false)
                 :id id
+                :poistettu poistettu
                 :muokkaaja (:id user)
                 :luoja (:id user)}]
     (if-not (id-olemassa? id)
@@ -348,7 +349,11 @@
   (when (id-olemassa? (:yllapitokohde laatupoikkeama))
     (yllapitokohteet-yleiset/vaadi-yllapitokohde-kuuluu-urakkaan db urakka (:yllapitokohde laatupoikkeama)))
   (jdbc/with-db-transaction [c db]
-    (let [id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"))]
+     ;; poistetaan laatupoikkeama vain jos kyseessä on suorasanktio,
+     ;; koska laatupoikkeamalla voi olla 0...n sanktiota
+    (let [poista-laatupoikkeama? (boolean (and (:suorasanktio sanktio) (:poistettu sanktio)))
+          id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"
+                                                                                          :poistettu poista-laatupoikkeama?))]
 
       (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
         (laatupoikkeamat/kirjaa-laatupoikkeaman-paatos! c
