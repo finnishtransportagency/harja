@@ -114,7 +114,7 @@
       (poista-ilmoitus))))
 
 (deftest tekstiviestin-muodostus
-  (let [ilmoitus {:ilmoitus-id 666
+  (let [ilmoitus {:tunniste "UV666"
                   :otsikko "Testiympäristö liekeissä!"
                   :paikankuvaus "Konesali"
                   :sijainti {:tr-numero 1
@@ -127,7 +127,7 @@
                   :selitteet #{:toimenpidekysely}}
         rivit (into #{} (str/split-lines
                           (tekstiviestit/ilmoitus-tekstiviesti ilmoitus 1234)))]
-    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (id: 666, viestinumero: 1234)."))
+    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (tunniste: UV666, viestinumero: 1234)."))
     (is (rivit "Yhteydenottopyyntö: Kyllä"))
     (is (rivit "Paikka: Konesali"))
     (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
@@ -135,7 +135,7 @@
     (is (rivit "Selitteet: Toimenpidekysely."))))
 
 (deftest tekstiviestin-muodostus-pisteelle
-  (let [ilmoitus {:ilmoitus-id 666
+  (let [ilmoitus {:tunniste "UV666"
                   :otsikko "Testiympäristö liekeissä!"
                   :paikankuvaus "Konesali"
                   :sijainti {:tr-numero 1
@@ -146,7 +146,7 @@
                   :selitteet #{:toimenpidekysely}}
         rivit (into #{} (str/split-lines
                           (tekstiviestit/ilmoitus-tekstiviesti ilmoitus 1234)))]
-    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (id: 666, viestinumero: 1234)."))
+    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (tunniste: UV666, viestinumero: 1234)."))
     (is (rivit "Yhteydenottopyyntö: Kyllä"))
     (is (rivit "Paikka: Konesali"))
     (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
@@ -154,7 +154,7 @@
     (is (rivit "Selitteet: Toimenpidekysely."))))
 
 (deftest tekstiviestin-muodostus-ilman-tr-osoitetta
-  (let [ilmoitus {:ilmoitus-id 666
+  (let [ilmoitus {:tunniste "UV666"
                   :otsikko "Testiympäristö liekeissä!"
                   :paikankuvaus "Kilpisjärvi"
                   :lisatieto "Soittakaapa äkkiä"
@@ -162,7 +162,7 @@
                   :selitteet #{:toimenpidekysely}}
         rivit (into #{} (str/split-lines
                           (tekstiviestit/ilmoitus-tekstiviesti ilmoitus 1234)))]
-    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (id: 666, viestinumero: 1234)."))
+    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (tunniste: UV666, viestinumero: 1234)."))
     (is (rivit "Yhteydenottopyyntö: Ei"))
     (is (rivit "Paikka: Kilpisjärvi"))
     (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
