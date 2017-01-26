@@ -121,6 +121,10 @@ SELECT
 FROM vakiohavainto
 WHERE jatkuva = FALSE;
 
+-- name: hae-tarkastusajon-reitti
+SELECT sijainti, sijainti_tarkkuus FROM tarkastusreitti
+  WHERE tarkastusajo = :id;
+
 -- name: luo-uusi-tarkastus<!
 INSERT INTO tarkastus (urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
                        sijainti, tarkastaja, tyyppi, tarkastusajo, luoja, havainnot, lahde, laadunalitus)

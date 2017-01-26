@@ -85,6 +85,7 @@
                        :speed 40
                        :timestamp (timestamp)}})))
 
-(defn lopeta-paikannus [n]
-  (when n
-    (js/clearInterval n)))
+(defn lopeta-paikannus [id]
+  (when id
+    (js/clearInterval id)
+    (.log js/console "Paikannut lopetettu!")))

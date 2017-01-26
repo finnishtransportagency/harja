@@ -65,9 +65,9 @@
                (not @kuvaa-otetaan-atom)
                @tarkastusajo-kaynnissa-atom)
       (ilmoitukset/ilmoita
-       "Pidä sovellus näkyvillä, muuten merkinnät eivät tallennu!"
-       sovellus/ilmoitus
-       {:tyyppi :varoitus}))))
+        "Pidä sovellus näkyvillä, muuten merkinnät eivät tallennu!"
+        sovellus/ilmoitus
+        {:tyyppi :varoitus}))))
 
 (defn- kuuntele-sivun-nakyvyytta [tarkastusajo-kaynnissa-atom kuvaa-otetaan-atom]
   (.addEventListener js/document "visibilitychange"
@@ -133,15 +133,20 @@
                              sovellus/kuvaa-otetaan?)
   (alusta-sovellus))
 
-(defn ^:export aja-testireitti [url]
+(defn ^:export aja-testireitti
+  "Hakee kannasta annetun tarkastusajon id:n ja ajaa sen.
+   Päivitysväli kertoo, kuinka tiheästi siirrytään seuraavaan pisteeseen (ms).
+   2000 vastaa suurin piirtein todellista ajonopeutta."
+  [tarkastusajo-id paivitysvali]
+  (.log js/console "Käynnistetään simuloidun reitin ajaminen")
   (paikannus/lopeta-paikannus @paikannus-id)
   (go
-    (let [tiedosto (<! (comms/hae-tiedosto url))
-          sijainnit (str/split tiedosto "\n")]
-      (.log js/console "Ajetaan testireitti, jossa " (count sijainnit) " sijaintia")
-      (loop [[sijainti & sijainnit] sijainnit]
-        (<! (async/timeout 2000))
-        (let [[x y] (map js/parseFloat (str/split sijainti " "))]
-          (.log js/console "Sijainti: " x ", " y)
-          (paikannus/aseta-testisijainti sovellus/sijainti [x y]))
-        (recur sijainnit)))))
+    (let [vastaus (<! (comms/hae-simuloitu-tarkastusajo! 754))]
+      (when (and (:ok vastaus)
+                 (> (count (:ok vastaus)) 0))
+        (.log js/console "Ajetaan testireitti, jossa " (count (:ok vastaus)) " sijaintia")
+        (reset! sovellus/keskita-ajoneuvoon? true)
+        (doseq [sijainti (:ok vastaus)]
+          (.log js/console "Asetetaan simuloitu sijainti: " (pr-str sijainti))
+          (paikannus/aseta-testisijainti sovellus/sijainti (:sijainti sijainti))
+          (<! (async/timeout paivitysvali)))))))

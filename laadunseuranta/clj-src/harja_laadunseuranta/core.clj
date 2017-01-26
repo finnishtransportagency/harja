@@ -22,7 +22,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
             [clj-time.core :as t]
-            [clj-time.coerce :as c])
+            [clj-time.coerce :as c]
+            [harja.domain.roolit :as roolit])
   (:import (org.postgis PGgeometry))
   (:gen-class))
 
@@ -178,6 +179,14 @@
   (q/luo-uusi-tarkastusajo<! db {:ulkoinen_id 0
                                  :kayttaja (:id kayttaja)}))
 
+(defn- hae-tarkastusajon-reitti [db tiedot kayttaja]
+  (roolit/vaadi-rooli kayttaja roolit/jarjestelmavastaava)
+  (let [merkinnat (mapv
+                    #(assoc % :sijainti (let [geometria (.getGeometry (:sijainti %))]
+                                              [(.x geometria) (.y geometria)]))
+                    (q/hae-tarkastusajon-reitti db {:id (:tarkastusajo-id tiedot)}))]
+    merkinnat))
+
 (defn- hae-tr-osoite [db lat lon treshold]
   (try
     (first (q/hae-tr-osoite db {:y lat
@@ -257,6 +266,13 @@
       (fn [user tiedot]
         (log/debug "Luodaan uusi tarkastusajo " tiedot)
         (luo-uusi-tarkastusajo! db tiedot user)))
+
+    :ls-simuloitu-reitti
+    (kasittele-api-kutsu
+      s/Any s/Any
+      (fn [user tiedot]
+        (log/debug "Palautetaan aiemmin ajettu tarkastusreitti simuloitua ajoa varten " tiedot)
+        (hae-tarkastusajon-reitti db tiedot user)))
 
     :ls-hae-tr-tiedot
     (kasittele-api-kutsu
