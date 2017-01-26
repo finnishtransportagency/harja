@@ -56,7 +56,7 @@
             tiedoston-muutospvm (hae-tiedoston-muutospaivamaara db integraatioloki integraatio tiedostourl)
             alk-paivitys (fn [] (aja-alk-paivitys integraatioloki db paivitystunnus kohdetiedoston-polku tiedostourl tiedoston-muutospvm paivitys))]
         (if (geometriapaivitykset/pitaako-paivittaa? db paivitystunnus tiedoston-muutospvm)
-          (lukko/yrita-ajaa-lukon-kanssa db paivitystunnus alk-paivitys 60)
+          (lukko/yrita-ajaa-lukon-kanssa db paivitystunnus alk-paivitys)
           (log/debug (format "Geometria-aineisto: %s, ei ole päivittynyt viimeisimmän haun jälkeen. Päivitystä ei tehdä." paivitystunnus))))
       (catch Exception e
         (log/error e (format "Geometria-aineiston päivityksessä: %s tapahtui poikkeus." paivitystunnus))))))
