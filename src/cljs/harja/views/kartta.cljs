@@ -650,7 +650,8 @@
    [kartan-ohjelaatikko]
    (when @tiedot/infopaneeli-nakyvissa?
      [:div.kartan-infopaneeli
-      [infopaneeli/infopaneeli @asiat-pisteessa #(reset! tiedot/nayta-infopaneeli? false)
+      [infopaneeli/infopaneeli @asiat-pisteessa #(do (reset! tiedot/nayta-infopaneeli? false)
+                                                     (tasot/poista-geometria! :klikattu-karttapiste))
        tiedot/infopaneelin-linkkifunktiot]])
    [kartan-ikonien-selitykset]
    [kartta-openlayers]
