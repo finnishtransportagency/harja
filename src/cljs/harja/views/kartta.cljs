@@ -1,5 +1,35 @@
 (ns harja.views.kartta
-  "Harjan kartta."
+  "Tämä namespace sisältää varsinaisen, käyttäjälle näkyvän karttakomponentin.
+  Karttakokonaisuus on Harjan toteutuksen aikana laajentunut paljon, ja aina kun
+  tuska on kasvanut tarpeeksi suureksi, on koodia refaktoroitu eri namespaceihin.
+  Valitettavasti tämä refaktorointi ei ole ikinä onnistunut täydellisesti, ja erityisesti
+  tämä namespace saattaa sisältää koodia, joka kirjotettaisiin nyt eri tavalla.
+
+  Oleellisia namespacen ominaisuuksia ovat infopaneelin, zoomausten, ja kartalla näkyvien
+  selitteidein hallinta. Hyvä paikka lähteä tutkimaan kokonaisuutta on lopusta löytyvä
+  komponentti, jossa luodaan openlayers-kartta, ja määritellään mm. handlerit erilaisille
+  click-tapahtumille.
+
+  harja.tiedot.kartta sisältää koodia, joka löytyi ennen tästä namespacesta. Tämä jako olisi pitänyt
+  tehdä alusta alkaen, mutta ei tehty. Lopulta jako jouduttiin tekemään circular dependencyjen
+  välttämiseksi. Tästä johtuen nämä kaksi namespacea saattavat sisältää koodia, jonka oikeastaan
+  pitäisi olla toisessa namespacessa.
+
+  Jos sinua kiinnostaa se, millä tyyleillä erilaiset asiat piirretään kartalle,
+  katso namespaceja harja.ui.kartta.esitettavat-asiat ja harja.ui.kartta.asioiden-ulkoasu. Näissä
+  namespaceissa käytetään ikään kuin DSL:ää määrittelemään asioiden tyylit. Nämä tietorakenteet
+  annetaan eteenpäin, jossa ne tulkitaan ja piirretään.
+
+  Em. tietorakenteita käsitellään frontilla namespacessa harja.ui.openlayers.featuret ja palvelimella
+  harja.palvelin.palvelut.karttakuvat.piirto. Esimerkiksi tarkastusten reitit piirretään palvelimella,
+  koska frontilla piirto on liian raskasta.
+
+  harja.views.kartta.tasot sisältää tasoja, joihin kartalle piirrettävät geometriat piirtyvät. Tämä
+  liittyy vahvasti Openlayersin ominaisuuteen. Tasot voivat sisältää joko frontilla piirretäviä geometrioita
+  (harja.ui.openlayers.geometriataso), tai tai palvelimella piirrettäviä kuvia (harja.ui.openlayers.kuvataso)
+
+  Infopaneelin ulkoasu määritellään namespacessa harja.views.kartta.infopaneeli, ja sisällön
+  muodostaminen tapahtuu namespacessa harja.ui.kartta.infopaneelin-sisalto"
   (:require [cljs.core.async :refer [timeout <! >! chan] :as async]
             [clojure.string :as str]
             [clojure.set :as set]
