@@ -96,9 +96,7 @@
 
 (def +haun-max-kesto+ 20000)
 
-(defn- hae-tienakymaan [db user valinnat]
-  (when-not (roolit/tilaajan-kayttaja? user)
-    (throw+ (roolit/->EiOikeutta "vain tilaajan käyttäjille")))
+(defn- hae-tienakymaan [db valinnat]
   (let [parametrit (hakuparametrit valinnat)]
     (reset! debug-hakuparametrit parametrit)
 
@@ -127,8 +125,9 @@
     (julkaise-palvelut
      http
      :hae-tienakymaan (fn [user valinnat]
-                        (http-palvelin/async
-                         (hae-tienakymaan db user valinnat))))
+                        (when-not (roolit/tilaajan-kayttaja? user)
+                          (throw+ (roolit/->EiOikeutta "vain tilaajan käyttäjille")))
+                        (hae-tienakymaan db valinnat)))
     this)
 
   (stop [{http :http-palvelin :as this}]
