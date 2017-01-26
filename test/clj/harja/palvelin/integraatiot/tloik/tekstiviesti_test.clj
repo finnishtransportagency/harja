@@ -101,7 +101,7 @@
                                                 (:id paivystaja)
                                                 (:id ilmoitus)))))]
     (with-fake-http
-      [{:url +labyrintti-url+ :method :post} fake-vastaus]
+      [{:url +labyrintti-url+ :method :get} fake-vastaus]
 
       (let [viestien-maara-ennen (paivystajaviestien-maara)]
 

@@ -11,7 +11,8 @@
             [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]
             [clojure.string :as str]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [clojure.set :as set]))
 
 (def +xsd-polku+ "xsd/tloik/")
 (def +tloik-ilmoitusviestijono+ "tloik-ilmoitusviestijono")
@@ -299,7 +300,9 @@
 
 (defn hae-testi-ilmoitukset []
   (let [vastaus (mapv
-                  #(konv/array->set % :selitteet)
+                  #(-> %
+                       (konv/array->set :selitteet)
+                       (set/rename-keys {:ilmoitusid :ilmoitus-id}))
                   (q-map "select * from ilmoitus where ilmoitusid = 123456789;"))]
     vastaus))
 
