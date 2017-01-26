@@ -3,6 +3,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.tilannekuva :refer :all]
+            [harja.palvelin.palvelut.interpolointi :as interpolointi]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
@@ -259,7 +260,7 @@
                            :alku #inst "2015-01-25T00:00:00.000-00:00",
                            :nykytilanne? false,
                            :loppu #inst "2017-01-25T23:59:59.000-00:00"}
-        asia-ulos (interpoloi-toteuman-aika-pisteelle asia-sisaan parametrit-sisaan (:db jarjestelma))
+        asia-ulos (interpolointi/interpoloi-toteuman-aika-pisteelle asia-sisaan parametrit-sisaan (:db jarjestelma))
         interpoloitu-aika (:aika-pisteessa asia-ulos)
         pisteen-tr-osoite (:tierekisteriosoite asia-ulos)]
 
