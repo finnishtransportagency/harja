@@ -14,7 +14,8 @@
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
             [clojure.string :as str]
             [harja-laadunseuranta.ui.yleiset.dom :as dom]
-            [harja-laadunseuranta.asiakas.tapahtumat :as tapahtumat])
+            [harja-laadunseuranta.asiakas.tapahtumat :as tapahtumat]
+            [cljs-time.local :as l])
   (:require-macros [reagent.ratom :refer [run!]]
                    [cljs.core.async.macros :refer [go]]
                    [harja-laadunseuranta.macros :refer [after-delay]]))
@@ -135,6 +136,8 @@
 
 ;; --- Testausapurit ---
 
+(def kaynissa-oleva-simulaatio-id (atom nil))
+
 (defn ^:export aja-testireitti
   "Hakee kannasta annetun tarkastusajon id:n ja ajaa sen.
 
@@ -147,11 +150,17 @@
   (.log js/console "Käynnistetään simuloidun reitin ajaminen")
   (paikannus/lopeta-paikannus @paikannus-id)
   (go
-    (let [vastaus (<! (comms/hae-simuloitu-tarkastusajo! tarkastusajo-id))]
-      (when (and (:ok vastaus)
-                 (> (count (:ok vastaus)) 0))
-        (.log js/console "Ajetaan testireitti, jossa " (count (:ok vastaus)) " sijaintia")
+    (let [tama-simulaatio-id (hash (l/local-now))
+          vastaus (<! (comms/hae-simuloitu-tarkastusajo! tarkastusajo-id))
+          sijainnit (:ok vastaus)]
+      (when (and sijainnit (> (count sijainnit) 0))
+        (.log js/console "Ajetaan testireitti, jossa " (count sijainnit) " sijaintia")
         (reset! sovellus/keskita-ajoneuvoon? true)
-        (doseq [sijainti (:ok vastaus)]
-          (paikannus/aseta-testisijainti sovellus/sijainti (:sijainti sijainti) tarkkuus)
-          (<! (async/timeout paivitysvali)))))))
+        (reset! kaynissa-oleva-simulaatio-id tama-simulaatio-id)
+        (loop [sijainti-indeksi 0]
+          (let [sijainti (nth sijainnit sijainti-indeksi)]
+            (paikannus/aseta-testisijainti sovellus/sijainti (:sijainti sijainti) tarkkuus)
+            (<! (async/timeout paivitysvali))
+            (when (and (= tama-simulaatio-id @kaynissa-oleva-simulaatio-id)
+                       (< sijainti-indeksi (- (count sijainnit) 1)))
+              (recur (inc sijainti-indeksi)))))))))
