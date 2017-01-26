@@ -486,7 +486,7 @@
                                               :yllapitokohde-id yllapitokohde-id
                                               :maaramuutokset %}))]
                            (if (k/virhe? vastaus)
-                             (viesti/nayta! "Määrämuutoksien tallennusepäonnistui"
+                             (viesti/nayta! "Määrämuutoksien tallennus epäonnistui"
                                             :warning
                                             viesti/viestin-nayttoaika-keskipitka)
                              (do
@@ -631,7 +631,7 @@
                     :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys yhteensa-leveys
                     :tasaa :oikea
                     :hae (fn [rivi] (+ (:sopimuksen-mukaiset-tyot rivi)
-                                       (:muutoshinta rivi)
+                                       (:maaramuutokset rivi)
                                        (:toteutunut-hinta rivi)
                                        (:arvonvahennykset rivi)
                                        (:bonukset-ja-sakot rivi)
@@ -648,21 +648,21 @@
                 sopimuksen-mukaiset-tyot-yhteensa
                 (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
                 toteutunut-hinta-yhteensa (laske-sarakkeen-summa :toteutunut-hinta kohteet)
-                muutoshinta-yhteensa (laske-sarakkeen-summa :muutoshinta kohteet)
+                maaramuutokset-yhteensa (laske-sarakkeen-summa :maaramuutokset kohteet)
                 arvonvahennykset-yhteensa (laske-sarakkeen-summa :arvonvahennykset kohteet)
                 bonukset-ja-sakot-yhteensa (laske-sarakkeen-summa :bonukset-ja-sakot kohteet)
                 bitumi-indeksi-yhteensa (laske-sarakkeen-summa :bitumi-indeksi kohteet)
                 kaasuindeksi-yhteensa (laske-sarakkeen-summa :kaasuindeksi kohteet)
                 kokonaishinta (+ sopimuksen-mukaiset-tyot-yhteensa
                                  toteutunut-hinta-yhteensa
-                                 muutoshinta-yhteensa
+                                 maaramuutokset-yhteensa
                                  arvonvahennykset-yhteensa
                                  bonukset-ja-sakot-yhteensa
                                  bitumi-indeksi-yhteensa
                                  kaasuindeksi-yhteensa)]
             [{:id 0
               :sopimuksen-mukaiset-tyot sopimuksen-mukaiset-tyot-yhteensa
-              :muutoshinta muutoshinta-yhteensa
+              :maaramuutokset maaramuutokset-yhteensa
               :toteutunut-hinta toteutunut-hinta-yhteensa
               :arvonvahennykset arvonvahennykset-yhteensa
               :bonukset-ja-sakot bonukset-ja-sakot-yhteensa
@@ -692,7 +692,7 @@
          :fmt fmt/euro-opt :tyyppi :numero
          :leveys tarjoushinta-leveys :tasaa :oikea})
       (when (= (:kohdetyyppi optiot) :paallystys)
-        {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :fmt fmt/euro-opt :tyyppi :numero
+        {:otsikko "Muutok\u00ADset" :nimi :maaramuutokset :fmt fmt/euro-opt :tyyppi :numero
          :leveys maaramuutokset-leveys :tasaa :oikea})
       (when (= (:kohdetyyppi optiot) :paikkaus)
         {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta :fmt fmt/euro-opt :tyyppi :numero

@@ -90,7 +90,14 @@
 (def ds {:datasource db})
 
 (defn q
-  "Kysele Harjan kannasta yksikkötestauksen yhteydessä"
+  "Kysele Harjan kannasta yksikkötestauksen yhteydessä.
+   Palauttaa vectorin, jossa item on riviä esittävä vector,
+   jossa kyseltyjen sarakkeiden arvot ovat järjestyksessä.
+
+   Esim: SELECT id, nimi FROM urakka
+   palauttaisi
+   [[4, 'Oulun alueurakka']
+    [5, 'Joensuun alueurakka']]"
   [& sql]
   (with-open [c (.getConnection db)
               ps (.prepareStatement c (reduce str sql))
@@ -103,7 +110,38 @@
           (recur (conj res (loop [row []
                                   i 1]
                              (if (<= i cols)
-                               (recur (conj row (.getObject rs i)) (inc i))
+                               (do
+                                 (recur (conj row (.getObject rs i))
+                                        (inc i)))
+                               row)))
+                 (.next rs)))))))
+
+(defn q-map
+  "Kysele Harjan kannasta yksikkötestauksen yhteydessä.
+   Palauttaa vectorin, jossa item on map, jonka avaimina
+   ovat kysellyt sarakkeet avaimina
+
+   Esim. SELECT id, nimi FROM urakka
+   palauttaisi
+   [{:id 4 :nimi 'Oulun alueurakka'}
+    {:id 5 :nimi 'Joensuun alueurakka'}]."
+  [& sql]
+  (with-open [c (.getConnection db)
+              ps (.prepareStatement c (reduce str sql))
+              rs (.executeQuery ps)]
+    (let [cols (-> (.getMetaData rs) .getColumnCount)]
+      (loop [res []
+             more? (.next rs)]
+        (if-not more?
+          res
+          (recur (conj res (loop [row {}
+                                  i 1]
+                             (if (<= i cols)
+                               (recur (assoc row
+                                        (keyword (-> (.getMetaData rs)
+                                             (.getColumnName i)))
+                                        (.getObject rs i))
+                                      (inc i))
                                row)))
                  (.next rs)))))))
 
@@ -256,6 +294,11 @@
   (ffirst (q (str "SELECT id
                   FROM   toimenpideinstanssi
                   WHERE  nimi = 'Oulu Talvihoito TP 2014-2019';"))))
+
+(defn hae-oulun-alueurakan-liikenneympariston-hoito-tpi-id []
+  (ffirst (q (str "SELECT id
+                  FROM   toimenpideinstanssi
+                  WHERE  nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019';"))))
 
 (defn hae-muhoksen-paallystysurakan-id []
   (ffirst (q (str "SELECT id
@@ -623,3 +666,11 @@
   (-> dt
       tc/from-sql-date
       (t/to-time-zone suomen-aikavyohyke)))
+
+(defn q-sanktio-leftjoin-laatupoikkeama [sanktio-id]
+  (first (q-map
+     "SELECT s.id, s.maara as summa, s.poistettu, s.perintapvm, s.sakkoryhma as laji,
+             lp.id as lp_id, lp.aika as lp_aika, lp.poistettu as lp_poistettu
+        FROM sanktio s
+             LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
+       WHERE s.id = " sanktio-id ";")))

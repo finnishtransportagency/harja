@@ -195,7 +195,8 @@ SELECT
   yksikkohinta
 FROM yllapitokohteen_maaramuutos
 WHERE yllapitokohde = :id
-AND (SELECT urakka FROM yllapitokohde WHERE id = :id) = :urakka;
+AND (SELECT urakka FROM yllapitokohde WHERE id = :id) = :urakka
+AND poistettu IS NOT TRUE;
 
 -- name: luo-yllapitokohteen-maaramuutos<!
 INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo,
@@ -212,18 +213,10 @@ UPDATE yllapitokohteen_maaramuutos SET
   toteutunut_maara = :toteutunut_maara,
   yksikkohinta = :yksikkohinta,
   muokattu = NOW(),
-  muokkaaja = :kayttaja
+  muokkaaja = :kayttaja,
+  poistettu = :poistettu
 WHERE id = :id
 AND (SELECT urakka FROM yllapitokohde WHERE id = :id) = :urakka;
-
--- name: poista-yllapitokohteen-maaramuutos<!
-UPDATE yllapitokohteen_maaramuutos SET
-  poistettu = TRUE,
-  muokattu = NOW(),
-  muokkaaja = :kayttaja
-WHERE id = :id
-AND (SELECT urakka FROM yllapitokohde WHERE id = :id) = :urakka;
-
 -- name: yllapitokohteella-paallystysilmoitus
 SELECT EXISTS(SELECT id
               FROM paallystysilmoitus

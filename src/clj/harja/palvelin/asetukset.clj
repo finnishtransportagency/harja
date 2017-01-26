@@ -2,7 +2,6 @@
   "Yleinen Harja-palvelimen konfigurointi. Esimerkkinä käytetty Antti Virtasen clj-weba."
   (:require [schema.core :as s]
             [taoensso.timbre :as log]
-            [gelfino.timbre :as gt]
             [clojure.java.io :as io]
             [harja.palvelin.lokitus.hipchat :as hipchat]
             [taoensso.timbre.appenders.postal :refer [make-postal-appender]]))
@@ -172,7 +171,6 @@
     (log/set-config! [:appenders :standard-out :min-level] :info))
 
   (when-let [gelf (-> asetukset :log :gelf)]
-    (log/set-config! [:appenders :gelf] (assoc gt/gelf-appender :min-level (:taso gelf)))
     (log/set-config! [:shared-appender-config :gelf] {:host (:palvelin gelf)}))
 
   (when-let [hipchat (-> asetukset :log :hipchat)]

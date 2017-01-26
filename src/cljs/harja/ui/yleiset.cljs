@@ -8,7 +8,8 @@
             [goog.events.EventType :as EventType]
             [harja.ui.dom :as dom]
             [harja.fmt :as fmt]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.ui.modal :as modal])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -17,11 +18,11 @@
 
 (defn navigaation-korkeus []
   (Math/max
-   navigaation-min-korkeus
-   (some-> js/document
-           (.getElementsByTagName "nav")
-           (aget 0)
-           .-clientHeight)))
+    navigaation-min-korkeus
+    (some-> js/document
+            (.getElementsByTagName "nav")
+            (aget 0)
+            .-clientHeight)))
 
 (defn murupolun-korkeus []
   (some-> js/document
@@ -66,19 +67,19 @@
 joita kutsutaan kun niiden näppäimiä paineetaan."
   [ylos alas enter]
   #(let [kc (.-keyCode %)]
-    (when (or (= kc 38)
-              (= kc 40)
-              (= kc 13))
-      (.preventDefault %)
-      (case kc
-        38                                                  ;; nuoli ylös
-        (ylos)
+     (when (or (= kc 38)
+               (= kc 40)
+               (= kc 13))
+       (.preventDefault %)
+       (case kc
+         38 ;; nuoli ylös
+         (ylos)
 
-        40                                                  ;; nuoli alas
-        (alas)
+         40 ;; nuoli alas
+         (alas)
 
-        13                                                  ;; enter
-        (enter)))))
+         13 ;; enter
+         (enter)))))
 
 (defn virheen-ohje
   "Virheen ohje. Tyyppi on :virhe (oletus jos ei annettu), :varoitus, tai :huomautus."
@@ -114,8 +115,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
     [:span.raksiboksi
      [:div.input-group
       [:div.input-group-addon
-       [:input.klikattava {:type      "checkbox"
-                           :checked   (if checked "checked" "")
+       [:input.klikattava {:type "checkbox"
+                           :checked (if checked "checked" "")
                            :disabled (when disabled? "disabled")
                            :on-change #(toiminto-fn %)}]
        [:span.raksiboksi-teksti {:class (when-not disabled? "klikattava")
@@ -157,26 +158,26 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                    :alas-oikea))]
     {:suunta suunta
      :max-korkeus (if (or (= suunta :alas-oikea) (= suunta :alas-vasen))
-                      (- etaisyys-alareunaan ikkunan-reunaan-jaava-tyhja-tila)
-                      (- etaisyys-ylareunaan ikkunan-reunaan-jaava-tyhja-tila))}))
+                    (- etaisyys-alareunaan ikkunan-reunaan-jaava-tyhja-tila)
+                    (- etaisyys-ylareunaan ikkunan-reunaan-jaava-tyhja-tila))}))
 
 (defn avautumissuunta-ja-korkeus-tyylit
   [max-korkeus avautumissuunta]
   (merge {:max-height (fmt/pikseleina max-korkeus)}
          (when (= avautumissuunta :alas-vasen)
-           {:top    "calc(100% - 1px)"
+           {:top "calc(100% - 1px)"
             :right "0"
             :bottom "auto"})
          (when (= avautumissuunta :alas-oikea)
-           {:top    "calc(100% - 1px)"
+           {:top "calc(100% - 1px)"
             :bottom "auto"})
          (when (= avautumissuunta :ylos-vasen)
            {:bottom "calc(100% - 1px)"
             :right "0"
-            :top    "auto"})
+            :top "auto"})
          (when (= avautumissuunta :ylos-oikea)
            {:bottom "calc(100% - 1px)"
-            :top    "auto"})))
+            :top "auto"})))
 
 (defn livi-pudotusvalikko
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
@@ -212,61 +213,61 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                                                 nil))])]
           [:div.dropdown.livi-alasveto {:class (str class " " (when @auki? "open"))}
            [:button.nappi-alasveto
-            {:class       (when disabled "disabled")
-             :type        "button"
-             :disabled    (if disabled "disabled" "")
-             :title       title
-             :on-click    #(do
-                            (when-not (empty? vaihtoehdot)
-                              (swap! auki? not)
+            {:class (when disabled "disabled")
+             :type "button"
+             :disabled (if disabled "disabled" "")
+             :title title
+             :on-click #(do
+                          (when-not (empty? vaihtoehdot)
+                            (swap! auki? not)
                             nil))
-             :on-focus    on-focus
+             :on-focus on-focus
              :on-key-down #(let [kc (.-keyCode %)
                                  vaihtoehdot (if (map? vaihtoehdot)
                                                (mapv (fn [avain]
-                                                      (-> [avain (get vaihtoehdot avain)]))
-                                                    (keys vaihtoehdot))
+                                                       (-> [avain (get vaihtoehdot avain)]))
+                                                     (keys vaihtoehdot))
                                                vaihtoehdot)]
-                            ;; keycode 9 on TAB, ei tehdä silloin mitään, jotta kenttien
-                            ;; välillä liikkumista ei estetä
-                            (when-not (= kc 9)
-                              (.preventDefault %)
-                              (.stopPropagation %)
-                              (if (or (= kc 38)
-                                      (= kc 40)
-                                      (= kc 13))
-                                (do
-                                  (when-not (empty? vaihtoehdot)
-                                    (let [nykyinen-valittu-idx (loop [i 0]
-                                                                 (if (= i (count vaihtoehdot))
-                                                                   nil
-                                                                   (if (= (nth vaihtoehdot i) valinta)
-                                                                     i
-                                                                     (recur (inc i)))))]
-                                      (case kc
-                                        38                  ;; nuoli ylös
-                                        (if (or (nil? nykyinen-valittu-idx)
-                                                (= 0 nykyinen-valittu-idx))
-                                          (valitse-fn (nth vaihtoehdot (dec (count vaihtoehdot))))
-                                          (valitse-fn (nth vaihtoehdot (dec nykyinen-valittu-idx))))
+                             ;; keycode 9 on TAB, ei tehdä silloin mitään, jotta kenttien
+                             ;; välillä liikkumista ei estetä
+                             (when-not (= kc 9)
+                               (.preventDefault %)
+                               (.stopPropagation %)
+                               (if (or (= kc 38)
+                                       (= kc 40)
+                                       (= kc 13))
+                                 (do
+                                   (when-not (empty? vaihtoehdot)
+                                     (let [nykyinen-valittu-idx (loop [i 0]
+                                                                  (if (= i (count vaihtoehdot))
+                                                                    nil
+                                                                    (if (= (nth vaihtoehdot i) valinta)
+                                                                      i
+                                                                      (recur (inc i)))))]
+                                       (case kc
+                                         38 ;; nuoli ylös
+                                         (if (or (nil? nykyinen-valittu-idx)
+                                                 (= 0 nykyinen-valittu-idx))
+                                           (valitse-fn (nth vaihtoehdot (dec (count vaihtoehdot))))
+                                           (valitse-fn (nth vaihtoehdot (dec nykyinen-valittu-idx))))
 
-                                        40                  ;; nuoli alas
-                                        (if (or (nil? nykyinen-valittu-idx)
-                                                (= (dec (count vaihtoehdot)) nykyinen-valittu-idx))
-                                          (valitse-fn (nth vaihtoehdot 0))
-                                          (valitse-fn (nth vaihtoehdot (inc nykyinen-valittu-idx))))
+                                         40 ;; nuoli alas
+                                         (if (or (nil? nykyinen-valittu-idx)
+                                                 (= (dec (count vaihtoehdot)) nykyinen-valittu-idx))
+                                           (valitse-fn (nth vaihtoehdot 0))
+                                           (valitse-fn (nth vaihtoehdot (inc nykyinen-valittu-idx))))
 
-                                        13                  ;; enter
-                                        (reset! auki? false)))))
+                                         13 ;; enter
+                                         (reset! auki? false)))))
 
-                                (do
-                                  (reset! term (char kc))
-                                  (when-let [itemi (first (filter (fn [vaihtoehto]
-                                                                    (= (.indexOf (.toLowerCase (format-fn vaihtoehto))
-                                                                                 (.toLowerCase @term)) 0))
-                                                                  vaihtoehdot))]
-                                    (valitse-fn itemi)
-                                    (reset! auki? false)))) nil))}
+                                 (do
+                                   (reset! term (char kc))
+                                   (when-let [itemi (first (filter (fn [vaihtoehto]
+                                                                     (= (.indexOf (.toLowerCase (format-fn vaihtoehto))
+                                                                                  (.toLowerCase @term)) 0))
+                                                                   vaihtoehdot))]
+                                     (valitse-fn itemi)
+                                     (reset! auki? false)))) nil))}
 
             [:div.valittu (format-fn valinta)]
             [:span.livicon-chevron-down {:class (when disabled "disabled")}]]
@@ -278,12 +279,12 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                   ^{:key ryhma}
                   [:div.harja-alasvetolista-ryhma
                    [:div.harja-alasvetolista-ryhman-otsikko (ryhman-otsikko ryhma)]
-                  (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
-                    ^{:key (hash vaihtoehto)}
-                    [lista-item vaihtoehto])])
-              (for [vaihtoehto vaihtoehdot]
-                ^{:key (hash vaihtoehto)}
-                [lista-item vaihtoehto])))]])))))
+                   (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
+                     ^{:key (hash vaihtoehto)}
+                     [lista-item vaihtoehto])])
+                (for [vaihtoehto vaihtoehdot]
+                  ^{:key (hash vaihtoehto)}
+                  [lista-item vaihtoehto])))]])))))
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto
@@ -298,9 +299,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
      (for [[otsikko arvo] (partition 2 vaihtoehdot)]
        ^{:key (hash otsikko)}
        [:label.btn.btn-primary {:disabled (if disabled "disabled" "")}
-        [:input {:type     "radio" :value (name arvo) :on-change vaihda-valinta
+        [:input {:type "radio" :value (name arvo) :on-change vaihda-valinta
                  :disabled (if disabled "disabled" "")
-                 :checked  (if (= arvo valinta) true false)} " " otsikko]])]))
+                 :checked (if (= arvo valinta) true false)} " " otsikko]])]))
 
 (defn kaksi-palstaa-otsikkoja-ja-arvoja
   "Tekee geneeriset kaksi palstaa. Optiossa voi olla :class, joka asetaan containerin lisäluokaksi."
@@ -385,14 +386,14 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 ;; Lasipaneelin tyyli, huom: parentin on oltava position: relative
 ;; FIXME CSS Expression on deprecated: https://robertnyman.com/2007/11/13/stop-using-poor-performance-css-expressions-use-javascript-instead/
 ;; Muutenkin pitäisi miettiä tarvitaanko tätä, sillä on epäyhteneväinen muun Harjan kanssa.
-(def lasipaneeli-tyyli {:display          "block"
-                        :position         "absolute"
-                        :top              0
-                        :bottom           0
-                        :opacity          0.5
+(def lasipaneeli-tyyli {:display "block"
+                        :position "absolute"
+                        :top 0
+                        :bottom 0
+                        :opacity 0.5
                         :background-color "black"
-                        :height           "expression(parentElement.scrollHeight+'px')"
-                        :width            "100%"})
+                        :height "expression(parentElement.scrollHeight+'px')"
+                        :width "100%"})
 
 (defn lasipaneeli [& sisalto]
   [:div {:style lasipaneeli-tyyli}
@@ -423,8 +424,8 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   [:div.haitari-rivi
    [:div.haitari-heading.klikattava
     {:on-click #(do
-                 (swap! rivi assoc :auki (not (:auki @rivi)))
-                 (.preventDefault %))}
+                  (swap! rivi assoc :auki (not (:auki @rivi)))
+                  (.preventDefault %))}
     [:span.haitarin-tila (if (:auki @rivi) (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
     [:div.haitari-title (when piiloita? {:class "haitari-piilossa"}) (or (:otsikko @rivi) "")]]
    [:div.haitari-sisalto (if (:auki @rivi) {:class "haitari-auki"} {:class "haitari-kiinni"}) (:sisalto @rivi)]])
@@ -458,24 +459,24 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   [:div.harja-haitari (when luokka {:class luokka})
    [:div.haitari
     (doall
-     (for [[otsikko avain komponentti] (partition 3 otsikko-avain-ja-komponentti)
-           :let [auki? (auki avain)]]
-       ^{:key (str avain)}
-       [:div.haitari-rivi
-        [:div.haitari-heading.klikattava
-         {:on-click #(do
-                       (toggle-osio! avain)
-                       (.preventDefault %))}
-         [:span.haitarin-tila
-          (if auki?
-            (ikonit/livicon-chevron-down)
-            (ikonit/livicon-chevron-right))]
-         [:div.haitari-title
-          (when-not auki? {:class "haitari-piilossa"})
-          otsikko]]
-        [:div.haitari-sisalto
-         {:class (if auki? "haitari-auki" "haitari-kiinni")}
-         komponentti]]))]])
+      (for [[otsikko avain komponentti] (partition 3 otsikko-avain-ja-komponentti)
+            :let [auki? (auki avain)]]
+        ^{:key (str avain)}
+        [:div.haitari-rivi
+         [:div.haitari-heading.klikattava
+          {:on-click #(do
+                        (toggle-osio! avain)
+                        (.preventDefault %))}
+          [:span.haitarin-tila
+           (if auki?
+             (ikonit/livicon-chevron-down)
+             (ikonit/livicon-chevron-right))]
+          [:div.haitari-title
+           (when-not auki? {:class "haitari-piilossa"})
+           otsikko]]
+         [:div.haitari-sisalto
+          {:class (if auki? "haitari-auki" "haitari-kiinni")}
+          komponentti]]))]])
 
 (defn haitari
   ([rivit] (haitari rivit {}))
@@ -592,35 +593,35 @@ jatkon."
 (defn- tooltip-sisalto [auki? sisalto]
   (let [x (atom nil)]
     (komp/luo
-     (komp/piirretty
-      #(let [n (r/dom-node %)
-             rect (aget (.getClientRects n) 0)
-             parent-rect (aget (.getClientRects (.-parentNode n)) 0)]
-         (reset! x
-                 (+ (/ (.-width rect) -2)
-                    (/ (.-width parent-rect) 2)))))
-     (fn [auki? sisalto]
-       [:div.tooltip.bottom {:class (when auki? "in")
-                             :style {:position "absolute"
-                                     :min-width 150
-                                     :left (when-let [x @x]
-                                             x)}}
-        [:div.tooltip-arrow]
-        [:div.tooltip-inner
-         sisalto]]))))
+      (komp/piirretty
+        #(let [n (r/dom-node %)
+               rect (aget (.getClientRects n) 0)
+               parent-rect (aget (.getClientRects (.-parentNode n)) 0)]
+           (reset! x
+                   (+ (/ (.-width rect) -2)
+                      (/ (.-width parent-rect) 2)))))
+      (fn [auki? sisalto]
+        [:div.tooltip.bottom {:class (when auki? "in")
+                              :style {:position "absolute"
+                                      :min-width 150
+                                      :left (when-let [x @x]
+                                              x)}}
+         [:div.tooltip-arrow]
+         [:div.tooltip-inner
+          sisalto]]))))
 
 (defn tooltip [opts komponentti tooltipin-sisalto]
   (let [tooltip-nakyy? (atom false)
         leveys (atom 0)]
     (komp/luo
-     (fn [opts komponentti tooltipin-sisalto]
-       [:div.inline-block
-        {:style {:position "relative"}               ;:div.inline-block
-         :on-mouse-enter #(reset! tooltip-nakyy? true)
-         :on-mouse-leave #(reset! tooltip-nakyy? false)}
-        komponentti
+      (fn [opts komponentti tooltipin-sisalto]
+        [:div.inline-block
+         {:style {:position "relative"} ;:div.inline-block
+          :on-mouse-enter #(reset! tooltip-nakyy? true)
+          :on-mouse-leave #(reset! tooltip-nakyy? false)}
+         komponentti
 
-        [tooltip-sisalto @tooltip-nakyy? tooltipin-sisalto]]))))
+         [tooltip-sisalto @tooltip-nakyy? tooltipin-sisalto]]))))
 
 (defn wrap-if
   "If condition is truthy, return container-component with
@@ -633,3 +634,28 @@ jatkon."
              containee
              %) container-component)
     containee))
+
+(defn varmista-kayttajalta [{:keys [otsikko sisalto toiminto-fn
+                                    hyvaksy hyvaksy-ikoni hyvaksy-napin-luokka]}]
+  "Suorittaa annetun toiminnon vain, jos käyttäjä hyväksyy sen.
+
+  Parametrimap:
+  :otsikko = dialogin otsikko
+  :sisalto = dialogin sisältö
+  :hyvaksy = hyväksyntäpainikkeen teksti tai elementti
+  :hyvaksy-ikoni = hyvaksy-ikoni
+  :hyvaksy-napin-luokka = hyvaksy-napin-luokka
+  :toiminto-fn = varsinainen toiminto, joka ajetaan käyttäjän hyväksyessä"
+  (modal/nayta! {:otsikko otsikko
+                 :footer [:span
+                          [:button.nappi-toissijainen {:type "button"
+                                                       :on-click #(do (.preventDefault %)
+                                                                      (modal/piilota!))}
+                           [:span (ikonit/livicon-ban) " Peruuta"]]
+                          [:button {:class hyvaksy-napin-luokka
+                                    :type "button"
+                                    :on-click #(do (.preventDefault %)
+                                                                    (modal/piilota!)
+                                                                    (toiminto-fn))}
+                           [:span hyvaksy-ikoni hyvaksy]]]}
+                sisalto))

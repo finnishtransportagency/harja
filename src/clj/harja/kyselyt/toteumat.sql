@@ -840,7 +840,8 @@ SELECT
   tpk.nimi              AS tehtava_toimenpidekoodi_nimi,
   tpi.id                AS tehtava_toimenpideinstanssi_id,
   tpi.nimi              AS tehtava_toimenpideinstanssi_nimi,
-  ST_Length(reitti)     AS pituus
+  ST_Length(reitti)     AS pituus,
+  t.tr_numero, t.tr_alkuosa, t.tr_alkuetaisyys, t.tr_loppuosa, t.tr_loppuetaisyys
 FROM toteuma t
   JOIN kayttaja k ON t.luoja = k.id
                      AND t.poistettu IS NOT TRUE
@@ -962,3 +963,21 @@ WHERE id = :id;
 SELECT id
 FROM varustetoteuma
 WHERE tila = 'virhe';
+
+-- name: siirry-kokonaishintainen-toteuma
+-- Palauttaa tiedot, joita tarvitaan kokonaishintaiseen toteumaan siirtymiseen ja
+-- tarkistaa että käyttäjällä on oikeus urakkaan, johon toteuma kuuluu
+SELECT t.alkanut, t.urakka AS "urakka-id", u.hallintayksikko AS "hallintayksikko-id",
+       tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
+       tpk3.koodi AS tehtava_toimenpideinstanssi,
+       hk.alkupvm AS aikavali_alku,
+       hk.loppupvm AS aikavali_loppu
+  FROM toteuma t
+       JOIN urakka u ON t.urakka = u.id
+       JOIN toteuma_tehtava tt ON tt.toteuma = t.id
+       JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+       JOIN toimenpidekoodi tpk3 ON tpk.emo = tpk3.id
+       JOIN urakan_hoitokaudet(t.urakka) hk ON (t.alkanut BETWEEN hk.alkupvm AND hk.loppupvm)
+ WHERE t.id = :toteuma-id
+   AND (:tarkista-urakka? = FALSE
+        OR u.urakoitsija = :urakoitsija-id)

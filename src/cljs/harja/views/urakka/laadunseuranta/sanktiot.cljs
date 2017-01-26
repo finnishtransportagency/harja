@@ -23,7 +23,9 @@
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.laadunseuranta.sanktiot :as sanktio-domain]
-            [harja.domain.tierekisteri :as tierekisteri])
+            [harja.domain.tierekisteri :as tierekisteri]
+            [harja.ui.modal :as modal]
+            [harja.ui.viesti :as viesti])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -32,7 +34,8 @@
   (let [muokattu (atom @tiedot/valittu-sanktio)
         _ (log "muokattu sanktio: " (pr-str muokattu))
         voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
-                                               (:id @nav/valittu-urakka))]
+                                               (:id @nav/valittu-urakka))
+        tallennus-kaynnissa (atom false)]
     (fn [optiot]
       (let [yllapitokohteet (:yllapitokohteet optiot)
             mahdolliset-sanktiolajit @tiedot-urakka/urakkatyypin-sanktiolajit
@@ -45,23 +48,47 @@
                   (or (not yllapitokokohdeurakka?)
                       (and yllapitokokohdeurakka? yllapitokohteet)))
            [lomake/lomake
-            {:otsikko      (if (:id @muokattu)
-                             (if (:suorasanktio @muokattu)
-                               "Muokkaa suoraa sanktiota"
-                               "Muokkaa laatupoikkeaman kautta tehtyä sanktiota")
-                             "Luo uusi suora sanktio")
-             :luokka       :horizontal
-             :muokkaa!     #(reset! muokattu %)
+            {:otsikko (if (:id @muokattu)
+                        (if (:suorasanktio @muokattu)
+                          "Muokkaa suoraa sanktiota"
+                          "Muokkaa laatupoikkeaman kautta tehtyä sanktiota")
+                        "Luo uusi suora sanktio")
+             :luokka :horizontal
+             :muokkaa! #(reset! muokattu %)
              :voi-muokata? voi-muokata?
-             :footer-fn    (fn [tarkastus]
-                             [napit/palvelinkutsu-nappi
-                              "Tallenna sanktio"
-                              #(tiedot/tallenna-sanktio @muokattu (:id @nav/valittu-urakka))
-                              {:luokka       "nappi-ensisijainen"
-                               :ikoni        (ikonit/tallenna)
-                               :kun-onnistuu #(reset! tiedot/valittu-sanktio nil)
-                               :disabled     (or (not voi-muokata?)
-                                                 (not (lomake/voi-tallentaa? tarkastus)))}])}
+             :footer-fn (fn [tarkastus]
+                          [:span.nappiwrappi
+                           [napit/palvelinkutsu-nappi
+                            "Tallenna sanktio"
+                            #(tiedot/tallenna-sanktio @muokattu (:id @nav/valittu-urakka))
+                            {:luokka "nappi-ensisijainen"
+                             :ikoni (ikonit/tallenna)
+                             :kun-onnistuu #(reset! tiedot/valittu-sanktio nil)
+                             :disabled (or (not voi-muokata?)
+                                           (not (lomake/voi-tallentaa? tarkastus)))}]
+                           (when (and voi-muokata? (:id @muokattu))
+                             [:button.nappi-kielteinen
+                              {:class (when @tallennus-kaynnissa "disabled")
+                               :on-click
+                               (fn [e]
+                                 (.preventDefault e)
+                                 (yleiset/varmista-kayttajalta
+                                   {:otsikko "Sanktion poistaminen"
+                                    :sisalto (str "Haluatko varmasti poistaa sanktion "
+                                                  (or (str (:summa @muokattu) "€") "")
+                                                  " päivämäärällä "
+                                                  (pvm/pvm (:perintapvm @muokattu)) "?")
+                                    :hyvaksy "Poista"
+                                    :hyvaksy-ikoni (ikonit/livicon-trash)
+                                    :hyvaksy-napin-luokka "nappi-kielteinen"
+                                    :toiminto-fn #(do
+                                                    (let [res (tiedot/tallenna-sanktio
+                                                                (assoc @muokattu
+                                                                  :poistettu true)
+                                                                (:id @nav/valittu-urakka))]
+                                                      (do (viesti/nayta! "Sanktio poistettu")
+                                                          (reset! tiedot/valittu-sanktio nil))))}))}
+                              (ikonit/livicon-trash) " Poista sanktio"])])}
             [{:otsikko     "Tekijä" :nimi :tekijanimi
               :hae         (comp :tekijanimi :laatupoikkeama)
               :aseta       (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :tekijanimi] arvo))

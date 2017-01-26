@@ -94,6 +94,22 @@
         (map (comp :nimi tk/suodattimet-idlla))
         s))
 
+(def ilmoitus-xf
+  (comp
+   (geo/muunna-pg-tulokset :sijainti)
+   (map konv/alaviiva->rakenne)
+   (map #(konv/string->keyword % :tila))
+   (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
+   (map #(konv/array->vec % :selitteet))
+   (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
+   (map #(assoc-in
+          %
+          [:kuittaus :kuittaustyyppi]
+          (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
+   (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
+   (map #(assoc-in % [:ilmoittaja :tyyppi]
+                   (keyword (get-in % [:ilmoittaja :tyyppi]))))))
+
 (defn- hae-ilmoitukset
   [db user {:keys [toleranssi] {:keys [tyypit]} :ilmoitukset :as tiedot} urakat]
   (when-not (empty? urakat)
@@ -104,28 +120,15 @@
                    (when-not (empty? (:kuittaukset %))
                      (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
          (let [ilmoitukset (konv/sarakkeet-vektoriin
-                 (into []
-                       (comp
-                         (geo/muunna-pg-tulokset :sijainti)
-                         (map konv/alaviiva->rakenne)
-                         (map #(konv/string->keyword % :tila))
-                         (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
-                         (map #(konv/array->vec % :selitteet))
-                         (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
-                         (map #(assoc-in
-                                %
-                                [:kuittaus :kuittaustyyppi]
-                                (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
-                         (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
-                         (map #(assoc-in % [:ilmoittaja :tyyppi]
-                                         (keyword (get-in % [:ilmoittaja :tyyppi])))))
-                       (q/hae-ilmoitukset db
-                                          toleranssi
-                                          (konv/sql-date (:alku tiedot))
-                                          (konv/sql-date (:loppu tiedot))
-                                          urakat
-                                          (mapv name haettavat)))
-                 {:kuittaus :kuittaukset})]
+                            (into []
+                                  ilmoitus-xf
+                                  (q/hae-ilmoitukset db
+                                                     toleranssi
+                                                     (konv/sql-date (:alku tiedot))
+                                                     (konv/sql-date (:loppu tiedot))
+                                                     urakat
+                                                     (mapv name haettavat)))
+                            {:kuittaus :kuittaukset})]
            ilmoitukset))))))
 
 (defn- hae-yllapitokohteet
@@ -145,6 +148,7 @@
                                   "paikkaus" tk/paikkaus))
       (let [vastaus (into []
                           (comp
+                            (map konv/alaviiva->rakenne)
                             (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
                             (map #(assoc % :tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla %)))
                             (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
@@ -163,6 +167,9 @@
                               "paikkaus" (q/hae-paikkaukset-historiakuvaan db
                                                                            (konv/sql-date loppu)
                                                                            (konv/sql-date alku)))))
+            vastaus (konv/sarakkeet-vektoriin
+                      vastaus
+                      {:yhteyshenkilo :yhteyshenkilot})
             osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db vastaus)
             vastaus (mapv #(assoc %
                              :pituus

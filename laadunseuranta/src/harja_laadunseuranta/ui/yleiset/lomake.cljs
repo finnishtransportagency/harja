@@ -100,7 +100,39 @@
             :on-change #(swap! arvo-atom not)}]
    [:label {:for nimi} nimi]])
 
-(defn liittyvat-havainnot [{:keys [havainnot-ryhmittain]}]
+
+(defn- liittyva-havainto-komp
+  [{:keys [liittyva-havainto lomake-liittyy-havaintoon-atom
+           havainnon-tiedot-avaimella liittyy-varmasti-tiettyyn-havaintoon?]}]
+  (let [aktiivinen-havainto? (= (:id liittyva-havainto)
+                                @lomake-liittyy-havaintoon-atom)]
+    [:div {:class (str "liittyva-havainto "
+                       (when aktiivinen-havainto?
+                         "liittyva-havainto-aktiivinen"))
+           :on-click (when-not liittyy-varmasti-tiettyyn-havaintoon?
+                       (fn []
+                         (if (= (:id liittyva-havainto)
+                                @lomake-liittyy-havaintoon-atom)
+                           (reset! lomake-liittyy-havaintoon-atom nil)
+                           (reset! lomake-liittyy-havaintoon-atom
+                                   (:id liittyva-havainto)))))}
+     [kuvat/svg-sprite (:ikoni (havainnon-tiedot-avaimella
+                                 (:havainto-avain liittyva-havainto)))]
+     ^{:key (hash liittyva-havainto)}
+     [:div.liittyva-havainto-tiedot
+      [:div
+       [:span.nimi (:nimi (havainnon-tiedot-avaimella
+                            (:havainto-avain liittyva-havainto)))]]
+      [:div
+       [:span.aika (fmt/klo (:aikaleima liittyva-havainto))]
+       [:span " "]
+       [:span.tr-osoite (when (:tr-osoite liittyva-havainto)
+                          (str "(" (fmt/tierekisteriosoite-tekstina
+                                     (:tr-osoite liittyva-havainto)
+                                     {:teksti-tie? false
+                                      :teksti-ei-tr-osoitetta? false}) ")"))]]]]))
+
+(defn liittyvat-havainnot [{:keys [havainnot-ryhmittain liittyy-varmasti-tiettyyn-havaintoon?]}]
   (let [kaikki-havainnot (into [] (apply concat (vals havainnot-ryhmittain)))
         havainnon-tiedot-avaimella (fn [avain]
                                      (first
@@ -112,34 +144,17 @@
       [:div.liittyvat-havainnot-container
        [:div.liittyvat-havainnot
         (doall
-          (for [liittyva-havainto liittyvat-havainnot]
-            (let [aktiivinen-havainto? (= (:id liittyva-havainto)
-                                          @lomake-liittyy-havaintoon-atom)]
+          (if-not liittyy-varmasti-tiettyyn-havaintoon?
+            (for [liittyva-havainto liittyvat-havainnot]
               ^{:key (:id liittyva-havainto)}
-              [:div {:class (str "liittyva-havainto "
-                                 (when aktiivinen-havainto?
-                                   "liittyva-havainto-aktiivinen"))
-                     :on-click (fn []
-                                 (if (= (:id liittyva-havainto)
-                                        @lomake-liittyy-havaintoon-atom)
-                                   (reset! lomake-liittyy-havaintoon-atom nil)
-                                   (reset! lomake-liittyy-havaintoon-atom
-                                           (:id liittyva-havainto))))}
-               [kuvat/svg-sprite (:ikoni (havainnon-tiedot-avaimella
-                                           (:havainto-avain liittyva-havainto)))]
-               ^{:key (hash liittyva-havainto)}
-               [:div.liittyva-havainto-tiedot
-                [:div
-                 [:span.nimi (:nimi (havainnon-tiedot-avaimella
-                                      (:havainto-avain liittyva-havainto)))]]
-                [:div
-                 [:span.aika (fmt/klo (:aikaleima liittyva-havainto))]
-                 [:span " "]
-                 [:span.tr-osoite (when (:tr-osoite liittyva-havainto)
-                                    (str "(" (fmt/tierekisteriosoite-tekstina
-                                              (:tr-osoite liittyva-havainto)
-                                              {:teksti-tie? false
-                                               :teksti-ei-tr-osoitetta? false}) ")"))]]]])))]
+              [liittyva-havainto-komp {:liittyva-havainto liittyva-havainto
+                                       :lomake-liittyy-havaintoon-atom lomake-liittyy-havaintoon-atom
+                                       :havainnon-tiedot-avaimella havainnon-tiedot-avaimella}])
+            (when-let [valittu-havainto (first (filter #(= (:id %)) liittyvat-havainnot))]
+              [liittyva-havainto-komp {:liittyva-havainto valittu-havainto
+                                       :lomake-liittyy-havaintoon-atom lomake-liittyy-havaintoon-atom
+                                       :havainnon-tiedot-avaimella havainnon-tiedot-avaimella
+                                       :liittyy-varmasti-tiettyyn-havaintoon? liittyy-varmasti-tiettyyn-havaintoon?}])))]
        [:div.jatkuvat-havainnot-vihje
         [yleiset/vihje "Jos et valitse mitään, lomake kirjataan yleisenä havaintona."]]])))
 

@@ -64,17 +64,24 @@
 ;; kartan normaali toiminta.
 ;; Nämä ovat normaaleja cljs atomeja, eivätkä siten voi olla
 ;; reagent riippuvuuksia.
-(defonce klik-kasittelija (cljs.core/atom nil))
-(defonce hover-kasittelija (cljs.core/atom nil))
+(defonce klik-kasittelija (cljs.core/atom []))
+(defonce hover-kasittelija (cljs.core/atom []))
 
-(defn aseta-klik-kasittelija! [funktio]
-  (reset! klik-kasittelija funktio))
-(defn poista-klik-kasittelija! []
-  (aseta-klik-kasittelija! nil))
-(defn aseta-hover-kasittelija! [funktio]
-  (reset! hover-kasittelija funktio))
-(defn poista-hover-kasittelija! []
-  (aseta-hover-kasittelija! nil))
+(defn aseta-klik-kasittelija!
+  "Asettaa kartan click käsittelijän. Palauttaa funktion, jolla käsittelijä poistetaan.
+  Käsittelijöitä voi olla useita samaan aikaan, jolloin vain viimeisenä lisättyä kutsutaan."
+  [funktio]
+  (swap! klik-kasittelija conj funktio)
+  #(swap! klik-kasittelija (fn [kasittelijat]
+                             (filterv (partial not= funktio) kasittelijat))))
+
+(defn aseta-hover-kasittelija!
+  "Asettaa kartan hover käsittelijän. Palauttaa funktion, jolla käsittelijä poistetaan.
+  Käsittelijoitä voi olla useita samaan aikaan, jolloin vain viimeisenä lisättyä kutsutaan."
+  [funktio]
+  (swap! hover-kasittelija conj funktio)
+  #(swap! hover-kasittelija (fn [kasittelijat]
+                              (filterv (partial not= funktio) kasittelijat))))
 
 ;; Kanava, jolla voidaan komentaa karttaa
 (def komento-ch (chan))
@@ -217,13 +224,14 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 
 (defn- tapahtuman-kuvaus
   "Tapahtuman kuvaus ulkoisille käsittelijöille"
-  [e]
+  [this e]
   (let [c (.-coordinate e)
         tyyppi (.-type e)]
     {:tyyppi   (case tyyppi
                  "pointermove" :hover
                  "click" :click
                  "singleclick" :click)
+     :geometria (tapahtuman-geometria this e)
      :sijainti [(aget c 0) (aget c 1)]
      :x        (aget (.-pixel e) 0)
      :y        (aget (.-pixel e) 1)}))
@@ -248,9 +256,9 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 (defn- aseta-klik-kasittelija [this ol3 on-click on-select]
   (.on ol3 "singleclick"
        (fn [e]
-         (if-let [kasittelija @klik-kasittelija]
+         (if-let [kasittelija (peek @klik-kasittelija)]
            ;; Lähinnä REPL tunkkausta varten
-           (kasittelija (tapahtuman-kuvaus e))
+           (kasittelija (tapahtuman-kuvaus this e))
 
            (if-let [g (tapahtuman-geometria this e)]
              (when on-select (on-select g e))
@@ -267,8 +275,8 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 (defn aseta-hover-kasittelija [this ol3]
   (.on ol3 "pointermove"
        (fn [e]
-         (if-let [kasittelija @hover-kasittelija]
-           (kasittelija (tapahtuman-kuvaus e))
+         (if-let [kasittelija (peek @hover-kasittelija)]
+           (kasittelija (tapahtuman-kuvaus this e))
 
            (reagent/set-state this
                               (if-let [g (tapahtuman-geometria this e)]

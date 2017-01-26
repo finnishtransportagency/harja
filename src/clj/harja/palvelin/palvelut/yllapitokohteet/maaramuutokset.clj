@@ -11,12 +11,12 @@
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.yha :as yha]
+            [harja.id :refer [id-olemassa?]]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]))
 
 (defn vaadi-maaramuutos-kuuluu-urakkaan [db urakka-id maaramuutos-id]
   (assert urakka-id "Urakka pitää olla!")
-  (when (and maaramuutos-id
-             (not (neg? maaramuutos-id)))
+  (when (id-olemassa? maaramuutos-id)
     (let [maaramuutoksen-todellinen-urakka (:urakka (first (q/hae-maaramuutoksen-urakka db {:id maaramuutos-id})))]
       (when (not= maaramuutoksen-todellinen-urakka urakka-id)
         (throw (SecurityException. (str "Määrämuutos " maaramuutos-id " ei kuulu valittuun urakkaan "
@@ -64,7 +64,7 @@
 
 (defn- paivita-maaramuutos [db user
                             {:keys [:urakka-id :yllapitokohde-id]}
-                            {:keys [id tyyppi tyo yksikko tilattu-maara
+                            {:keys [id tyyppi tyo yksikko tilattu-maara poistettu
                                     toteutunut-maara yksikkohinta] :as maaramuutos}]
   (log/debug "Päivitä määrämuutos: " (pr-str maaramuutos))
   (q/paivita-yllapitokohteen-maaramuutos<! db {:tyon_tyyppi (name tyyppi)
@@ -75,12 +75,12 @@
                                                :yksikkohinta yksikkohinta
                                                :kayttaja (:id user)
                                                :id id
-                                               :urakka urakka-id}))
+                                               :urakka urakka-id
+                                               :poistettu poistettu}))
 
 (defn- luo-tai-paivita-maaramuukset [db user urakka-ja-yllapitokohde maaramuutokset]
   (doseq [maaramuutos maaramuutokset]
-    (if (or (nil? (:id maaramuutos))
-            (neg? (:id maaramuutos)))
+    (if-not (id-olemassa? (:id maaramuutos))
       (luo-maaramuutos db user (:yllapitokohde-id urakka-ja-yllapitokohde) maaramuutos)
       (paivita-maaramuutos db user urakka-ja-yllapitokohde maaramuutos))))
 

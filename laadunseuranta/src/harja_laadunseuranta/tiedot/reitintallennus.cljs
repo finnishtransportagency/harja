@@ -32,7 +32,7 @@
     (do (.log js/console "Nykyisellä sijainnilla ei ole tarkkuutta!")
         true)))
 
-;; Jos muutat tätä, kasvata versionumeroa. Tällöin selaimen tekee migraation
+;; Jos muutat tätä, kasvata versionumeroa. Tällöin selain tekee migraation
 ;; uuteen versioon automaattisesti. Kannattaa toki testata, että migraatio onnistuu.
 (def db-spec {:version 3
               :on-error #(js/console.log (str "Tietokantavirhe " (pr-str %)))
@@ -130,17 +130,18 @@
                        s/ilmoitus
                        {:tyyppi :virhe}))
 
-(defn lisaa-merkinta-ehdolle-liitettavaksi-havainnoksi [{:keys [kirjaustulos lisaa-liittyva-havainto-fn
+(defn lisaa-merkinta-ehdolle-liitettavaksi-havainnoksi [{:keys [kirjaustulos havainto-kirjattu-fn
                                                                 aikaleima tr-osoite havainto-avain]}]
   (set! (.-onsuccess kirjaustulos)
         (fn [e]
           (let [indexed-db-id (-> e .-target .-result)]
-            (lisaa-liittyva-havainto-fn {:id indexed-db-id
+            (havainto-kirjattu-fn {:id indexed-db-id
                                          :aikaleima aikaleima
                                          :tr-osoite tr-osoite
                                          :havainto-avain havainto-avain})))))
 
-(defn kirjaa-pistemainen-havainto! [{:keys [idxdb sijainti tarkastusajo-id lisaa-liittyva-havainto-fn tr-osoite
+(defn kirjaa-pistemainen-havainto! [{:keys [idxdb sijainti tarkastusajo-id
+                                            havainto-kirjattu-fn tr-osoite
                                             epaonnistui-fn jatkuvat-havainnot havainto-avain] :as tiedot}]
   (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen sijainti)
                                            asetukset/+suurin-sallittu-tarkkuus+)
@@ -152,9 +153,9 @@
                                              :havainnot (into #{} (remove nil? (conj jatkuvat-havainnot
                                                                                      havainto-avain)))
                                              :mittaukset {}})]
-      (when lisaa-liittyva-havainto-fn
+      (when havainto-kirjattu-fn
         (lisaa-merkinta-ehdolle-liitettavaksi-havainnoksi {:kirjaustulos kirjaustulos
-                                                           :lisaa-liittyva-havainto-fn lisaa-liittyva-havainto-fn
+                                                           :havainto-kirjattu-fn havainto-kirjattu-fn
                                                            :aikaleima aikaleima-nyt
                                                            :tr-osoite tr-osoite
                                                            :havainto-avain havainto-avain}))
@@ -224,7 +225,7 @@
    Ei ole syytä kutsua pistemäisille muutoksille (pistemäiset havainnot),
    vaan niistä tulee kirjata erikseen oma merkintä."
   [{:keys [idxdb sijainti tarkastusajo-id jatkuvat-havainnot mittaustyyppi tr-osoite havainto-avain
-           soratiemittaussyotto epaonnistui-fn lisaa-liittyva-havainto-fn] :as tiedot}]
+           soratiemittaussyotto epaonnistui-fn havainto-kirjattu-fn] :as tiedot}]
   (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen sijainti)
                                            asetukset/+suurin-sallittu-tarkkuus+)
     (let [aikaleima-nyt (lt/local-now)
@@ -243,9 +244,9 @@
                                                                   {:soratie-tasaisuus (:tasaisuus soratiemittaussyotto)
                                                                    :kiinteys (:kiinteys soratiemittaussyotto)
                                                                    :polyavyys (:polyavyys soratiemittaussyotto)}))})]
-          (when lisaa-liittyva-havainto-fn
+          (when havainto-kirjattu-fn
             (lisaa-merkinta-ehdolle-liitettavaksi-havainnoksi {:kirjaustulos kirjaustulos
-                                                               :lisaa-liittyva-havainto-fn lisaa-liittyva-havainto-fn
+                                                               :havainto-kirjattu-fn havainto-kirjattu-fn
                                                                :aikaleima aikaleima-nyt
                                                                :tr-osoite tr-osoite
                                                                :havainto-avain havainto-avain}))
