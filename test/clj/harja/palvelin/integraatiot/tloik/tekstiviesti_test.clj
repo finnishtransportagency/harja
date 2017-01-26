@@ -55,7 +55,7 @@
         lokittaja (integraatioloki/lokittaja integraatioloki db "tloik" "toimenpiteen-lahetys")
         jms-lahettaja (jms/jonolahettaja lokittaja (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+)
         ilmoitus (first (hae-testi-ilmoitukset))
-        ilmoitus-id (:ilmoitusid ilmoitus)
+        ilmoitus-id (:ilmoitus-id ilmoitus)
         yhteyshenkilo (tee-testipaivystys)
         yhteyshenkilo-id (first yhteyshenkilo)
         puhelinnumero (second yhteyshenkilo)]
