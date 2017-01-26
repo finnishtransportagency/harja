@@ -319,8 +319,8 @@
     (is (= 10 (:tr_alkuosa tallennettava)))
     (is (= 4924 (:tr_alkuetaisyys tallennettava)))
     ;; Kaikki osoitteet olivat samat --> tallentuu pistemäisenä
-    (is (= nil))
-    (is (= nil))
+    (is (= nil (:tr_loppuosa tallennettava)))
+    (is (= nil (:tr_loppuetaisyys tallennettava)))
 
     ;; Ajolle saatiin muodostettua geometria
     (is (instance? PGgeometry (:sijainti tallennettava)))
@@ -338,8 +338,8 @@
     (is (= 20 (:tr_numero tallennettava)))
     (is (= 10 (:tr_alkuosa tallennettava)))
     (is (= 4924 (:tr_alkuetaisyys tallennettava)))
-    (is (= nil))
-    (is (= nil))
+    (is (= nil (:tr_loppuosa tallennettava)))
+    (is (= nil (:tr_loppuetaisyys tallennettava)))
 
     ;; Ajolle saatiin muodostettua geometria
     (is (instance? PGgeometry (:sijainti tallennettava)))

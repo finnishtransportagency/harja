@@ -46,8 +46,8 @@
 (def +kahden-pisteen-valinen-sallittu-aikaero-s+ 180)
 
 (defn- seuraava-mittausarvo-sama? [nykyinen-reittimerkinta
-                                  seuraava-reittimerkinta
-                                  mittaus-avain]
+                                   seuraava-reittimerkinta
+                                   mittaus-avain]
   (cond
     (nil? (mittaus-avain nykyinen-reittimerkinta))
     (= (nil? (mittaus-avain nykyinen-reittimerkinta))
@@ -137,6 +137,31 @@
     :default
     "laatu"))
 
+(defn- kasittele-pistemainen-tarkastusreitti
+  "Asettaa tieosoitteen paatepisteen (losa / let) nilliksi jos sama kuin lahtopiste (aosa / aet)"
+  [osoite]
+  (if (and (= (:aosa osoite)
+              (:losa osoite))
+           (= (:aet osoite)
+              (:let osoite)))
+    (-> osoite
+        (assoc :losa nil :let nil))
+    osoite))
+
+(defn- muodosta-merkinnan-lopullinen-tr-osoite [reittimerkinta]
+  (let [tarkastuksen-reitti (:sijainnit reittimerkinta)
+        lahtopiste (:tr-osoite (first tarkastuksen-reitti))
+        paatepiste (:tr-osoite (last tarkastuksen-reitti))
+        koko-tarkastuksen-tr-osoite {:tie (:tie lahtopiste)
+                                     :aosa (:aosa lahtopiste)
+                                     :aet (:aet lahtopiste)
+                                     :losa (or (:losa paatepiste) (:aosa paatepiste))
+                                     :let (or (:let paatepiste) (:aet paatepiste))}
+        ;; Pistemäisessä sekä lähtö- että paatepiste ovat samat, jolloin losa ja let ovat samat. Käsitellään ne:
+        koko-tarkastuksen-tr-osoite (kasittele-pistemainen-tarkastusreitti koko-tarkastuksen-tr-osoite)]
+
+    koko-tarkastuksen-tr-osoite))
+
 (defn- reittimerkinta-tarkastukseksi
   "Muuntaa reittimerkinnän Harja-tarkastukseksi.
    Reittimerkintä voi olla joko yksittäinen (pistemäinen) reittimerkintä tai
@@ -162,29 +187,31 @@
 
                                  (vector? (mittaus-avain reittimerkinta))
                                  (keskiarvo (mittaus-avain reittimerkinta))))]
-    {:aika (:aikaleima reittimerkinta)
-     :tyyppi (paattele-tarkastustyyppi reittimerkinta)
-     :tarkastusajo (:tarkastusajo reittimerkinta)
-     ;; Reittimerkintöjen id:t, joista tämä tarkastus muodostuu
-     :reittimerkinta-idt (yhdista-arvot-vectoriin reittimerkinta :id)
-     :sijainnit (or (:sijainnit reittimerkinta) [{:sijainti (:sijainti reittimerkinta)
-                                                  :tr-osoite (:tr-osoite reittimerkinta)}])
-     :liitteet (yhdista-arvot-vectoriin reittimerkinta :kuva)
-     :vakiohavainnot (yhdista-reittimerkinnan-kaikki-havainnot reittimerkinta)
-     :havainnot (:kuvaus reittimerkinta)
-     :talvihoitomittaus {:talvihoitoluokka nil
-                         :lumimaara (yhdista-mittausarvot reittimerkinta :lumisuus)
-                         :tasaisuus (yhdista-mittausarvot reittimerkinta :talvihoito-tasaisuus)
-                         :kitka (yhdista-mittausarvot reittimerkinta :kitkamittaus)
-                         :ajosuunta nil
-                         :lampotila_ilma (yhdista-mittausarvot reittimerkinta :lampotila)
-                         :lampotila_tie nil}
-     :soratiemittaus {:hoitoluokka nil
-                      :tasaisuus (yhdista-mittausarvot reittimerkinta :soratie-tasaisuus)
-                      :kiinteys (yhdista-mittausarvot reittimerkinta :kiinteys)
-                      :polyavyys (yhdista-mittausarvot reittimerkinta :polyavyys)
-                      :sivukaltevuus (yhdista-mittausarvot reittimerkinta :sivukaltevuus)}
-     :laadunalitus (boolean (:laadunalitus reittimerkinta))}))
+    (as-> {:aika (:aikaleima reittimerkinta)
+           :tyyppi (paattele-tarkastustyyppi reittimerkinta)
+           :tarkastusajo (:tarkastusajo reittimerkinta)
+           ;; Reittimerkintöjen id:t, joista tämä tarkastus muodostuu
+           :reittimerkinta-idt (yhdista-arvot-vectoriin reittimerkinta :id)
+           :sijainnit (or (:sijainnit reittimerkinta) [{:sijainti (:sijainti reittimerkinta)
+                                                        :tr-osoite (:tr-osoite reittimerkinta)}])
+           :liitteet (yhdista-arvot-vectoriin reittimerkinta :kuva)
+           :vakiohavainnot (yhdista-reittimerkinnan-kaikki-havainnot reittimerkinta)
+           :havainnot (:kuvaus reittimerkinta)
+           :talvihoitomittaus {:talvihoitoluokka nil
+                               :lumimaara (yhdista-mittausarvot reittimerkinta :lumisuus)
+                               :tasaisuus (yhdista-mittausarvot reittimerkinta :talvihoito-tasaisuus)
+                               :kitka (yhdista-mittausarvot reittimerkinta :kitkamittaus)
+                               :ajosuunta nil
+                               :lampotila_ilma (yhdista-mittausarvot reittimerkinta :lampotila)
+                               :lampotila_tie nil}
+           :soratiemittaus {:hoitoluokka nil
+                            :tasaisuus (yhdista-mittausarvot reittimerkinta :soratie-tasaisuus)
+                            :kiinteys (yhdista-mittausarvot reittimerkinta :kiinteys)
+                            :polyavyys (yhdista-mittausarvot reittimerkinta :polyavyys)
+                            :sivukaltevuus (yhdista-mittausarvot reittimerkinta :sivukaltevuus)}
+           :laadunalitus (boolean (:laadunalitus reittimerkinta))}
+          tarkastus
+          (assoc tarkastus :lopullinen-tr-osoite (muodosta-merkinnan-lopullinen-tr-osoite tarkastus)))))
 
 (defn viimeinen-indeksi [sekvenssi]
   (- (count sekvenssi) 1))
@@ -357,16 +384,16 @@
   ([tr-osoitteelliset-reittimerkinnat]
    (reittimerkinnat-tarkastuksiksi tr-osoitteelliset-reittimerkinnat {:analysoi-rampit? true}))
   ([tr-osoitteelliset-reittimerkinnat optiot]
-  (let [kasiteltavat-merkinnat (valmistele-merkinnat-kasittelyyn tr-osoitteelliset-reittimerkinnat optiot)
-        tarkastukset {:reitilliset-tarkastukset (reittimerkinnat-reitillisiksi-tarkastuksiksi
-                                                  kasiteltavat-merkinnat)
-                      :pistemaiset-tarkastukset (reittimerkinnat-pistemaisiksi-tarkastuksiksi
-                                                  kasiteltavat-merkinnat)}
-        liittyvat-merkinnat (filterv toiseen-merkintaan-liittyva-merkinta?
-                                     kasiteltavat-merkinnat)
-        tarkastukset-lomaketiedoilla (liita-tarkastuksiin-lomakkeelta-kirjatut-tiedot tarkastukset
-                                                                                      liittyvat-merkinnat)]
-    tarkastukset-lomaketiedoilla)))
+   (let [kasiteltavat-merkinnat (valmistele-merkinnat-kasittelyyn tr-osoitteelliset-reittimerkinnat optiot)
+         tarkastukset {:reitilliset-tarkastukset (reittimerkinnat-reitillisiksi-tarkastuksiksi
+                                                   kasiteltavat-merkinnat)
+                       :pistemaiset-tarkastukset (reittimerkinnat-pistemaisiksi-tarkastuksiksi
+                                                   kasiteltavat-merkinnat)}
+         liittyvat-merkinnat (filterv toiseen-merkintaan-liittyva-merkinta?
+                                      kasiteltavat-merkinnat)
+         tarkastukset-lomaketiedoilla (liita-tarkastuksiin-lomakkeelta-kirjatut-tiedot tarkastukset
+                                                                                       liittyvat-merkinnat)]
+     tarkastukset-lomaketiedoilla)))
 
 ;; -------- Tarkastuksen tallennus kantaan --------
 
@@ -374,51 +401,25 @@
   [db {:keys [tie aosa aet losa let] :as tieosoite}]
   (when (and tie aosa aet)
     (:geom (first (q/tr-osoitteelle-viiva
-              db
-              {:tr_numero tie
-               :tr_alkuosa aosa
-               :tr_alkuetaisyys aet
-               :tr_loppuosa (or losa aosa)
-               :tr_loppuetaisyys (or let aet)})))))
-
-(defn- kasittele-pistemainen-tarkastusreitti
-  "Asettaa tieosoitteen paatepisteen (losa / let) nilliksi jos sama kuin lahtopiste (aosa / aet)"
-  [osoite]
-  (if (and (= (:aosa osoite)
-              (:losa osoite))
-           (= (:aet osoite)
-              (:let osoite)))
-    (-> osoite
-        (assoc :losa nil :let nil))
-    osoite))
+                    db
+                    {:tr_numero tie
+                     :tr_alkuosa aosa
+                     :tr_alkuetaisyys aet
+                     :tr_loppuosa (or losa aosa)
+                     :tr_loppuetaisyys (or let aet)})))))
 
 (defn luo-kantaan-tallennettava-tarkastus
   "Ottaa reittimerkintämuuntimen luoman tarkastuksen ja palauttaa mapin,
-   jolla tarkastus voidaan lisätä kantaan.
-
-   Reittimerkintämuuntimen luoma tarkastus koostuu joko yhdestä tai useammasta
-   sijaintipisteestä sen mukaan onko kyse pistemäisestä vai reitillisestä tarkastuksesta
-   On tosin mahdollista, että myös reitillinen tarkastus on tallentunut vain yhdellä sijainnilla."
+   jolla tarkastus voidaan lisätä kantaan."
   [db tarkastus kayttaja]
-  (let [tarkastuksen-reitti (:sijainnit tarkastus)
-        lahtopiste (:tr-osoite (first tarkastuksen-reitti))
-        paatepiste (:tr-osoite (last tarkastuksen-reitti))
-        koko-tarkastuksen-tr-osoite {:tie (:tie lahtopiste)
-                                     :aosa (:aosa lahtopiste)
-                                     :aet (:aet lahtopiste)
-                                     :losa (or (:losa paatepiste) (:aosa paatepiste))
-                                     :let (or (:let paatepiste) (:aet paatepiste))}
-        ;; Pistemäisessä sekä lähtö- että paatepiste ovat samat, jolloin losa ja let ovat samat. Käsitellään ne:
-        koko-tarkastuksen-tr-osoite (kasittele-pistemainen-tarkastusreitti koko-tarkastuksen-tr-osoite)
-        geometria (muodosta-tarkastuksen-geometria db koko-tarkastuksen-tr-osoite)]
-
+  (let [geometria (muodosta-tarkastuksen-geometria db (:lopullinen-tr-osoite tarkastus))]
     (assoc tarkastus
       :tarkastaja (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
-      :tr_numero (:tie koko-tarkastuksen-tr-osoite)
-      :tr_alkuosa (:aosa koko-tarkastuksen-tr-osoite)
-      :tr_alkuetaisyys (:aet koko-tarkastuksen-tr-osoite)
-      :tr_loppuosa (:losa koko-tarkastuksen-tr-osoite)
-      :tr_loppuetaisyys (:let koko-tarkastuksen-tr-osoite)
+      :tr_numero (:tie (:lopullinen-tr-osoite tarkastus))
+      :tr_alkuosa (:aosa (:lopullinen-tr-osoite tarkastus))
+      :tr_alkuetaisyys (:aet (:lopullinen-tr-osoite tarkastus))
+      :tr_loppuosa (:losa (:lopullinen-tr-osoite tarkastus))
+      :tr_loppuetaisyys (:let (:lopullinen-tr-osoite tarkastus))
       :sijainti geometria
       :lahde "harja-ls-mobiili")))
 
