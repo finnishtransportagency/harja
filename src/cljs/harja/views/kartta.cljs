@@ -7,11 +7,9 @@
             [goog.events :as events]
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
-            [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.fmt :as fmt]
             [harja.geo :as geo]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.animaatio :as animaatio]
@@ -22,13 +20,11 @@
             [harja.views.kartta.infopaneeli :as infopaneeli]
             [reagent.core :refer [atom] :as reagent]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.kartta.varit.alpha :as varit]
             [harja.ui.openlayers.taso :as taso]
             [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
             [harja.ui.openlayers.edistymispalkki :as edistymispalkki]
             [harja.tiedot.kartta :as tiedot]
-            [harja.ui.kartta.ikonit :as kartta-ikonit]
-            [harja.tyokalut.vkm :as vkm])
+            [harja.ui.kartta.ikonit :as kartta-ikonit])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
