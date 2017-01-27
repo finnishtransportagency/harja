@@ -223,7 +223,7 @@
    :img    (nuoli-ikoni nuolen-vari)})
 
 (defn tyokoneen-nuoli [nuolen-vari]
-  {:paikka [:loppu :taitokset]
+  {:paikka [:loppu]
    :tyyppi :nuoli
    :img (nuoli-ikoni nuolen-vari)})
 
