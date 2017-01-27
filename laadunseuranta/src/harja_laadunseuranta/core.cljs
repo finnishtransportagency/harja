@@ -146,21 +146,22 @@
 
    Päivitysväli kertoo, kuinka tiheästi siirrytään seuraavaan pisteeseen (ms).
    2000 vastaa suurin piirtein todellista ajonopeutta."
-  [tarkastusajo-id tarkkuus paivitysvali]
-  (.log js/console "Käynnistetään simuloidun reitin ajaminen")
-  (paikannus/lopeta-paikannus @paikannus-id)
-  (go
-    (let [tama-simulaatio-id (hash (l/local-now))
-          vastaus (<! (comms/hae-simuloitu-tarkastusajo! tarkastusajo-id))
-          sijainnit (:ok vastaus)]
-      (when (and sijainnit (> (count sijainnit) 0))
-        (.log js/console "Ajetaan testireitti, jossa " (count sijainnit) " sijaintia")
-        (reset! sovellus/keskita-ajoneuvoon? true)
-        (reset! kaynissa-oleva-simulaatio-id tama-simulaatio-id)
-        (loop [sijainti-indeksi 0]
-          (let [sijainti (nth sijainnit sijainti-indeksi)]
-            (paikannus/aseta-testisijainti sovellus/sijainti (:sijainti sijainti) tarkkuus)
-            (<! (async/timeout paivitysvali))
-            (when (and (= tama-simulaatio-id @kaynissa-oleva-simulaatio-id)
-                       (< sijainti-indeksi (- (count sijainnit) 1)))
-              (recur (inc sijainti-indeksi)))))))))
+  ([tarkastusajo-id] (aja-testireitti tarkastusajo-id 5 2000))
+  ([tarkastusajo-id tarkkuus paivitysvali]
+   (.log js/console "Käynnistetään simuloidun reitin ajaminen")
+   (paikannus/lopeta-paikannus @paikannus-id)
+   (go
+     (let [tama-simulaatio-id (hash (l/local-now))
+           vastaus (<! (comms/hae-simuloitu-tarkastusajo! tarkastusajo-id))
+           sijainnit (:ok vastaus)]
+       (when (and sijainnit (> (count sijainnit) 0))
+         (.log js/console "Ajetaan testireitti, jossa " (count sijainnit) " sijaintia")
+         (reset! sovellus/keskita-ajoneuvoon? true)
+         (reset! kaynissa-oleva-simulaatio-id tama-simulaatio-id)
+         (loop [sijainti-indeksi 0]
+           (let [sijainti (nth sijainnit sijainti-indeksi)]
+             (paikannus/aseta-testisijainti sovellus/sijainti (:sijainti sijainti) tarkkuus)
+             (<! (async/timeout paivitysvali))
+             (when (and (= tama-simulaatio-id @kaynissa-oleva-simulaatio-id)
+                        (< sijainti-indeksi (- (count sijainnit) 1)))
+               (recur (inc sijainti-indeksi))))))))))
