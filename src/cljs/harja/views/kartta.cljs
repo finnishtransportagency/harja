@@ -545,7 +545,7 @@
       ;; vaan valitaan klikattu ilmoitus
       (#{:ilmoitukset} @nav/valittu-sivu)
       (when (= :ilmoitus (:type item)) ;; Älä siirrä tätä cond-ehtoon
-        (keskeyta-event!)
+        (keskeyta-event! event)
         (t/julkaise! (assoc item :aihe :ilmoitus-klikattu))
         (when tuplaklik? (keskita! item)))
 
