@@ -64,7 +64,8 @@
 (defn interpoloi-toteuman-aika-pisteelle [asia parametrit db]
   (let [koordinaatit (select-keys parametrit [:x :y])
         [aika tr-osoite] (aika-ja-osoite-pisteessa db koordinaatit (-> asia :tehtava :id))]
-    (assoc asia :aika-pisteessa aika :tierekisteriosoite tr-osoite)))
+    ;; jätetään entinen tierekisteriosoite-avain sikseen jos reittipisteitä ei löydy.
+    (assoc asia :aika-pisteessa aika :tierekisteriosoite (or tr-osoite (:tierekisteriosoite asia)))))
 
 (defn interpoloi-tarkastuksen-aika-pisteelle [asia parametrit db]
   (let [koordinaatit (select-keys parametrit [:x :y])
