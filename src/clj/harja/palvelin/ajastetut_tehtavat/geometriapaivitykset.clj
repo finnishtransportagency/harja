@@ -85,7 +85,7 @@
               (when (tarvitaanko-paikallinen-paivitys? db paivitystunnus shapefile)
                 (log/debug (format "Ajetaan paikallinen päivitys geometria-aineistolle: %s" paivitystunnus))
                 (paivitys db shapefile)
-                (geometriapaivitykset/paivita-viimeisin-paivitys<! db (harja.pvm/nyt) paivitystunnus))
+                (geometriapaivitykset/paivita-viimeisin-paivitys db paivitystunnus (harja.pvm/nyt)))
               (catch Exception e
                 (log/debug e (format "Paikallisessa geometriapäivityksessä %s tapahtui poikkeus." paivitystunnus))))))))))
 

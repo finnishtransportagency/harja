@@ -37,7 +37,10 @@ tyyppi-sarake kertoo ajon tyypin. Nykyään tämä sarake ei ole enää käytös
 COMMENT ON TABLE tarkastusreitti IS
 E'reittimerkinta-tauluun tallennetaan Harjan laadunseurannan mobiilityökalulla kerättyä raakaa dataa. Jokainen rivi taulussa kuvaa yksittäistä joko työkalun itsensä automaattisesti tekemää merkintää tarkastusajon aikana tai käyttäjän tekemää syötettä. Yhteen ajoon saattaa liittyä tuhansia eri merkintöjä. Reittimerkintä on aina uniikki merkinnän id:n ja siihen liittyvän tarkastusajon id:n kanssa.\n\n
 
-Tauluun tallennettua tietoa käytetään luomaan yhteenveto tehdystä ajosta eli datasta muodostetaan tarkastus tarkastus-tauluun. Ajon raakadataa ei välttämättä ole syytä säilyttää pitkäaikaisesti, vaan tarkoitus on, että datasta luotu tarkastus sisältää kaikki ajosta tarpeelliset tiedot.';
+Tauluun tallennettua tietoa käytetään luomaan yhteenveto tehdystä ajosta eli datasta muodostetaan tarkastus tarkastus-tauluun.\n\n
+
+Sarakkeiden selitykset:\n
+- sijainti_tarkkuus       HTML5-API:n palauttama GPS-pisteen tarkkuus (säde, metreinä)';
 
 COMMENT ON TABLE vakiohavainto IS
 E'Vakiohavaintotaulussa esitellään erilaisia usein tehtäviä havaintoja, joita voidaan tehdä Harjan laadunseurannan mobiilityökalulla. Tärkeät sarakkeet:\n

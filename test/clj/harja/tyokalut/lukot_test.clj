@@ -3,8 +3,7 @@
     [clojure.test :refer [deftest is use-fixtures]]
     [harja.testi :refer :all]
     [harja.palvelin.tyokalut.lukot :as lukot]
-    [harja.kyselyt.lukot :as qk]
-    [harja.palvelin.komponentit.tietokanta :as tietokanta]))
+    [harja.kyselyt.lukot :as qk]))
 
 (def +testilukko+ "TESTI")
 

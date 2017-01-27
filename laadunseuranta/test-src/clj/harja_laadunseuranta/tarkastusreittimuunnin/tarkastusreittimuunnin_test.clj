@@ -1,11 +1,11 @@
-(ns harja-laadunseuranta.tarkastusreittimuunnin-test
+(ns harja-laadunseuranta.tarkastusreittimuunnin.tarkastusreittimuunnin-test
   (:require [clojure.test :refer :all]
             [harja
              [pvm :as pvm]
              [testi :refer :all]]
             [harja-laadunseuranta.core :as ls-core]
-            [harja-laadunseuranta.tarkastusreittimuunnin :refer [reittimerkinnat-tarkastuksiksi
-                                                                 luo-kantaan-tallennettava-tarkastus]]
+            [harja-laadunseuranta.tarkastusreittimuunnin.tarkastusreittimuunnin :refer [reittimerkinnat-tarkastuksiksi
+                                                                                        luo-kantaan-tallennettava-tarkastus]]
             [harja-laadunseuranta.testidata :as testidata]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [taoensso.timbre :as log]
@@ -13,7 +13,8 @@
             [harja-laadunseuranta.core :as harja-laadunseuranta]
             [clojure.core :as core]
             [clojure.set :as set]
-            [clojure.java.jdbc :as jdbc])
+            [clojure.java.jdbc :as jdbc]
+            [harja.domain.tierekisteri :as tr-domain])
   (:import (org.postgis PGgeometry MultiLineString Point)))
 
 (defn jarjestelma-fixture [testit]
@@ -276,7 +277,6 @@
     (is (= (-> tarkastukset :reitilliset-tarkastukset second :soratiemittaus :sivukaltevuus) nil))
     (is (== (-> tarkastukset :reitilliset-tarkastukset last :soratiemittaus :sivukaltevuus) 3))))
 
-
 ;; -------- Tarkastuksen tallennus kantaan --------
 
 (deftest tarkastus-trvali-jossa-alkuosa-vaihtuu
@@ -319,8 +319,8 @@
     (is (= 10 (:tr_alkuosa tallennettava)))
     (is (= 4924 (:tr_alkuetaisyys tallennettava)))
     ;; Kaikki osoitteet olivat samat --> tallentuu pistemäisenä
-    (is (= nil))
-    (is (= nil))
+    (is (= nil (:tr_loppuosa tallennettava)))
+    (is (= nil (:tr_loppuetaisyys tallennettava)))
 
     ;; Ajolle saatiin muodostettua geometria
     (is (instance? PGgeometry (:sijainti tallennettava)))
@@ -338,8 +338,8 @@
     (is (= 20 (:tr_numero tallennettava)))
     (is (= 10 (:tr_alkuosa tallennettava)))
     (is (= 4924 (:tr_alkuetaisyys tallennettava)))
-    (is (= nil))
-    (is (= nil))
+    (is (= nil (:tr_loppuosa tallennettava)))
+    (is (= nil (:tr_loppuetaisyys tallennettava)))
 
     ;; Ajolle saatiin muodostettua geometria
     (is (instance? PGgeometry (:sijainti tallennettava)))
@@ -408,7 +408,6 @@
                              (:db jarjestelma)
                              tarkastus
                              {:kayttajanimi "jvh"})]
-
     (is (instance? MultiLineString (.getGeometry (:sijainti tallennettava))))
     (is (= (:tr_numero tallennettava) tie))
     (is (= (:tr_alkuosa tallennettava) aosa))
@@ -425,16 +424,23 @@
         reitilliset (:reitilliset-tarkastukset tarkastukset)
         pistemaiset (:pistemaiset-tarkastukset tarkastukset)
         odotettu-pistemaisten-maara 0
-        odotettu-reitillisten-maara 8
+        odotettu-reitillisten-maara 5
         kaikki-tarkastukset (concat reitilliset pistemaiset)
-        odotetut-tarkastetut-tieosat [{:tie 18637 :aosa 1 :aet 207 :losa 1 :let 187}
-                                      {:tie 18637 :aosa 1 :aet 187 :losa 1 :let 11}
-                                      {:tie 28409 :aosa 23 :aet 20 :losa 23 :let 401}
-                                      {:tie 4 :aosa 364 :aet 3586 :losa 364 :let 7520}
-                                      {:tie 28408 :aosa 23 :aet 406 :losa 23 :let 641}
-                                      {:tie 4 :aosa 364 :aet 7892 :losa 364 :let 8810}
-                                      {:tie 28407 :aosa 12 :aet 3 :losa 12 :let 135}
-                                      {:tie 4 :aosa 364 :aet 9039 :losa 367 :let 335}]]
+        odotetut-tarkastetut-tieosat
+        [{:tie 18637 :aosa 1 :aet 207 :losa 1 :let 187}
+         {:tie 18637 :aosa 1 :aet 187 :losa 1 :let 11}
+         {:tie 28409 :aosa 23 :aet 20 :losa 23 :let 401}
+         {:tie 4 :aosa 364 :aet 3586 :losa 364 :let 8653}
+         {:tie 4 :aosa 364 :aet 8740 :losa 367 :let 335}]
+        ;; Alkuperäinen ilman ramppianalyysiä, jos tarvii sitä testata:
+        #_[{:tie 18637 :aosa 1 :aet 207 :losa 1 :let 187}
+           {:tie 18637 :aosa 1 :aet 187 :losa 1 :let 11}
+           {:tie 28409 :aosa 23 :aet 20 :losa 23 :let 401}
+           {:tie 4 :aosa 364 :aet 3586 :losa 364 :let 7520}
+           {:tie 28408 :aosa 23 :aet 406 :losa 23 :let 641}
+           {:tie 4 :aosa 364 :aet 7892 :losa 364 :let 8810}
+           {:tie 28407 :aosa 12 :aet 3 :losa 12 :let 135}
+           {:tie 4 :aosa 364 :aet 9039 :losa 367 :let 335}]]
 
     ;; Muunnettu määrällisesti oikein
     (is (= (count pistemaiset) odotettu-pistemaisten-maara))
@@ -450,7 +456,7 @@
     ;; Jokainen tallennettava tarkastus muodostetaan tieosoitteen osalta tarkalleen oikein
     (loop [i 0]
       (tarkista-tallennettavan-tarkastuksen-osoite
-       (nth kaikki-tarkastukset i) (nth odotetut-tarkastetut-tieosat i))
+        (nth kaikki-tarkastukset i) (nth odotetut-tarkastetut-tieosat i))
 
       (when (< i (- (count odotetut-tarkastetut-tieosat) 1))
         (recur (inc i))))
@@ -482,7 +488,7 @@
       (loop [i 0]
         (is (= (-> (nth tarkastukset-kannassa i)
                    (select-keys
-                    [:tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys])
+                     [:tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys])
                    (set/rename-keys {:tr_numero :tie
                                      :tr_alkuosa :aosa
                                      :tr_alkuetaisyys :aet
@@ -500,8 +506,10 @@
 
 
 ;; -------- Apufunktioita REPL-tunkkaukseen --------
+
 ;; Älä poista näitä
 ;; Kutsu tässä NS:ssä esim. (harja.palvelin.main/with-db db (debuggaa-tarkastusajon-muunto db 1))
+;; Muista evaluoida REPLiin ensin (käännös ei sisällä näitä koska näitä ei käytetä)
 
 (defn muunna-tarkastusajo-kantaan [db tarkastusajo-id urakka-id]
   ;; HUOMAA: Tämä EI poista mahdollisesti jo kerran tehtyä muunnosta!
@@ -547,7 +555,8 @@
     (log/debug "Reitillisten tarkastusten muodostama ajettu reitti:")
     (let [sijainnit (mapcat :sijainnit (sort-by :aika reitilliset-tarkastukset))]
       (doseq [sijainti sijainnit]
-        (log/debug (str (:sijainti sijainti) " --> " (tie->str (:tr-osoite sijainti))))))
+        (log/debug (str (:sijainti sijainti) " --> " (tie->str (:tr-osoite sijainti))
+                        " (ramppi? " (tr-domain/tie-rampilla? (get-in sijainti [:tr-osoite :tie])) ")"))))
 
     (log/debug "")
     (log/debug "-- Lopputulos --")
