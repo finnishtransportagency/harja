@@ -113,6 +113,16 @@
    :taydennetty "Täydennetty"
    :suljettu "Suljettu"})
 
+(def urakan-vaylamuoto
+     {:tie "Tie"
+      :rautatie "Rautatie"
+      :vesi "Vesiväylä"})
+
+(defn urakan-tyyppi [tyyppi]
+     (if (= tyyppi "hoito")
+            "hoito"
+            "ylläpito"))
+
 (defn rakenna-lahde [data]
   [:lahde
    [:lahdejarjestelma "Harja"]
@@ -125,9 +135,16 @@
             [[:id turi-id]])
           [[:sampohankenimi (:urakka-nimi data)]]
           [[:sampohankeid (:urakka-sampoid data)]]
-          [[:sampohankeyhteyshenkilo (:sampo-yhteyshenkilo data)]]
+          [[:tilaajanvastuuhenkilokayttajatunnus (:tilaajanvastuuhenkilo-kayttajatunnus data)]]
+          [[:tilaajanvastuuhenkiloetunimi (:tilaajanvastuuhenkilo-etunimi data)]]
+          [[:tilaajanvastuuhenkilosukunimi (:tilaajanvastuuhenkilo-sukunimi data)]]
+          [[:tilaajanvastuuhenkilosposti (:tilaajanvastuuhenkilo-sposti data)]]
           [[:sampourakkanimi (:hanke-nimi data)]]
           [[:sampourakkaid (:urakka-sampoid data)]]
+          [[:urakanpaattymispvm (xml/formatoi-paivamaara (:urakka-loppupvm data))]]
+          [[:urakkavaylamuoto (urakan-vaylamuoto (:vaylamuoto data))]]
+          [[:urakkatyyppi (urakan-tyyppi (:urakka-tyyppi data))]]
+          [[:elyalue (str (:urakka-ely data) " ELY")]]
           [[:alueurakkanro (:alueurakkanro data)]]
           (poikkeamatyypit->numerot (:tyyppi data))
           [[:tapahtumapvm (xml/formatoi-paivamaara (:tapahtunut data))]
@@ -170,6 +187,10 @@
           [:poikkeamatoimenpide
            [:otsikko (:otsikko toimenpide)]
            [:kuvaus (:kuvaus toimenpide)]
+           [:vastuuhenkilokayttajatunnus (:vastuuhenkilokayttajatunnus toimenpide)]
+           [:vastuuhenkiloetunimi (:vastuuhenkiloetunimi toimenpide)]
+           [:vastuuhenkilosukunimi (:vastuuhenkilosukunimi toimenpide)]
+           [:vastuuhenkilosposti (:vastuuhenkilosposti toimenpide)]
            [:toteuttaja (:toteuttaja toimenpide)]
            [:tila (korjaava-toimenpide-tila->numero (:tila toimenpide))]])
         (:korjaavattoimenpiteet data)))
