@@ -265,10 +265,5 @@
         pisteen-tr-osoite (:tierekisteriosoite asia-ulos)]
 
     (is (some? interpoloitu-aika))
-    (is (->> interpoloitu-aika
-             (compare (:paattynyt asia-ulos))
-             (= 1)))
-    (is (->> interpoloitu-aika
-             (compare (:alkanut asia-ulos))
-             (= -1)))
-    (is (some? pisteen-tr-osoite))))
+    (is (= interpoloitu-aika #inst "2015-02-01T17:17:23.112-00:00"))
+    (is (= {:numero 4, :alkuosa 403, :alkuetaisyys 173} pisteen-tr-osoite))))
