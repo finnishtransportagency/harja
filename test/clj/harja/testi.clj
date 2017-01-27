@@ -185,6 +185,10 @@
     [this nimi kayttaja payload]
     "kutsu HTTP palvelufunktiota suoraan."))
 
+(defn- palvelua-ei-loydy [nimi]
+  (is false (str "Palvelua " nimi " ei löydy!"))
+  {:error "Palvelua ei löydy"})
+
 (defn testi-http-palvelin
   "HTTP 'palvelin' joka vain ottaa talteen julkaistut palvelut."
   []
@@ -200,12 +204,16 @@
 
       FeikkiHttpPalveluKutsu
       (kutsu-palvelua [_ nimi kayttaja]
-        ((get @palvelut nimi) kayttaja))
+        (if-let [palvelu (get @palvelut nimi)]
+          (palvelu kayttaja)
+          (palvelua-ei-loydy nimi)))
       (kutsu-palvelua [_ nimi kayttaja payload]
-        (let [vastaus ((get @palvelut nimi) kayttaja payload)]
-          (if (http/async-response? vastaus)
-            (async/<!! (:channel vastaus))
-            vastaus))))))
+        (if-let [palvelu (get @palvelut nimi)]
+          (let [vastaus (palvelu kayttaja payload)]
+            (if (http/async-response? vastaus)
+              (async/<!! (:channel vastaus))
+              vastaus))
+          (palvelua-ei-loydy nimi))))))
 
 (defn kutsu-http-palvelua
   "Lyhyt muoto testijärjestelmän HTTP palveluiden kutsumiseen."
