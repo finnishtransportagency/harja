@@ -209,15 +209,25 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 (defn- tapahtuman-geometria
   "Hakee annetulle ol3 tapahtumalle geometrian. Palauttaa ensimmäisen löytyneen
   geometrian."
-  [this e]
-  (let [geom (volatile! nil)
-        {:keys [ol3 geometry-layers]} (reagent/state this)]
-    (.forEachFeatureAtPixel ol3 (.-pixel e)
-                            (fn [feature layer]
-                              (vreset! geom (feature-geometria feature))
-                              true))
+  ([this e] (tapahtuman-geometria this e true))
+  ([this e lopeta-ensimmaiseen?]
+   (let [geom (volatile! [])
+         {:keys [ol3 geometry-layers]} (reagent/state this)]
+     (.forEachFeatureAtPixel ol3 (.-pixel e)
+                             (fn [feature layer]
+                               (vswap! geom conj (feature-geometria feature))
+                               lopeta-ensimmaiseen?)
+                             ;; Funktiolle voi antaa options, jossa hitTolerance. Eli radius, miltä featureita haetaan.
+                             )
 
-    @geom))
+     (cond
+       (empty? @geom)
+       nil
+
+       lopeta-ensimmaiseen?
+       (first @geom)
+
+       :else @geom))))
 
 (defn- laske-kartan-alue [ol3]
   (.calculateExtent (.getView ol3) (.getSize ol3)))
@@ -260,7 +270,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
            ;; Lähinnä REPL tunkkausta varten
            (kasittelija (tapahtuman-kuvaus this e))
 
-           (if-let [g (tapahtuman-geometria this e)]
+           (if-let [g (tapahtuman-geometria this e false)]
              (when on-select (on-select g e))
              (when on-click (on-click e)))))))
 
@@ -268,7 +278,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 (defn- aseta-dblclick-kasittelija [this ol3 on-click on-select]
   (.on ol3 "dblclick" (fn [e]
                         (when on-select
-                          (when-let [g (tapahtuman-geometria this e)]
+                          (when-let [g (tapahtuman-geometria this e false)]
                             (on-select g e))))))
 
 
