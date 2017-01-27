@@ -15,7 +15,8 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def +ilmoitusviesti+
-  (str "Uusi toimenpidepyyntö %s: %s (tunniste: %s, viestinumero: %s).\n\n"
+  (str "Uusi toimenpidepyyntö %s: %s (viestinumero: %s).\n\n"
+       "Tunniste: %s\n\n"
        "Urakka: %s\n\n"
        "Yhteydenottopyyntö: %s\n\n"
        "Ilmoittaja: %s\n\n"
@@ -142,8 +143,8 @@
       (format +ilmoitusviesti+
               virka-apupyynto
               otsikko
-              tunniste
               viestinumero
+              tunniste
               (:urakkanimi ilmoitus)
               (fmt/totuus (:yhteydenottopyynto ilmoitus))
               (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))
