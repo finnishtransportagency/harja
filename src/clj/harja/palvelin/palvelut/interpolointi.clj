@@ -31,34 +31,35 @@
   (let [osoite-vastaus (tilannekuva-q/osoite-reittipisteille db {:piste (clj-piste->sql (:sijainti geo-piste)) :etaisyys etaisyys})]
     (some-> osoite-vastaus first :tr_osoite .getValue konv/lue-tr-piste)))
 
+(defn muunna-sijainti [geo-piste] (assoc geo-piste :sijainti (geo/pg->clj (:sijainti geo-piste))))
+
 (defn aika-ja-osoite-pisteessa [db klikkauspiste toteuma-id]
-  (let [muunna-sijainti #(assoc % :sijainti (geo/pg->clj (:sijainti %)))
-        reittipisteet (map muunna-sijainti
-                           (toteumat-q/hae-toteuman-reittipisteet db toteuma-id))
+  (if-let [reittipisteet (not-empty (map muunna-sijainti
+                                           (toteumat-q/hae-toteuman-reittipisteet db toteuma-id)))]
+    (let [etaisyys (fn [rp]
+                     (let [[x y] (-> rp :sijainti :coordinates)
+                           xd (Math/abs (- x (:x klikkauspiste)))
+                           yd (Math/abs (- y (:y klikkauspiste)))]
+                       (Math/sqrt (+ (* xd xd) (* yd yd)))))
+          lahin-piste (apply min-key etaisyys reittipisteet)
+          [edellinen-piste seuraava-piste] (ymparoivat lahin-piste reittipisteet)
+          _ (println "pistvec" [edellinen-piste lahin-piste seuraava-piste])
+          [rp1 rp2 rp3] (map (comp clj-piste->sql :sijainti) [edellinen-piste lahin-piste seuraava-piste])
+          esi-naapurit-etaisyyksilla (tilannekuva-q/reittipisteiden-sijainnit-toteuman-reitilla
+                                      db {:toteuma-id toteuma-id :reittipiste-idt (map :id [edellinen-piste seuraava-piste])})
+          naapurit-etaisyyksilla (map muunna-sijainti esi-naapurit-etaisyyksilla)
 
-        etaisyys (fn [rp]
-                   (let [[x y] (-> rp :sijainti :coordinates)
-                         xd (Math/abs (- x (:x klikkauspiste)))
-                         yd (Math/abs (- y (:y klikkauspiste)))]
-                     (Math/sqrt (+ (* xd xd) (* yd yd)))))
-        lahin-piste (apply min-key etaisyys reittipisteet)
-        [edellinen-piste seuraava-piste] (ymparoivat lahin-piste reittipisteet)
-        _ (println "pistvec" [edellinen-piste lahin-piste seuraava-piste])
-        [rp1 rp2 rp3] (map (comp clj-piste->sql :sijainti) [edellinen-piste lahin-piste seuraava-piste])
-        esi-naapurit-etaisyyksilla (tilannekuva-q/reittipisteiden-sijainnit-toteuman-reitilla
-                                    db {:toteuma-id toteuma-id :reittipiste-idt (map :id [edellinen-piste seuraava-piste])})
-        naapurit-etaisyyksilla (map muunna-sijainti esi-naapurit-etaisyyksilla)
+          lahin-naapuri (apply min-key etaisyys naapurit-etaisyyksilla)
 
-        lahin-naapuri (apply min-key etaisyys naapurit-etaisyyksilla)
-
-        paikka-vastaus (tilannekuva-q/suhteellinen-paikka-pisteiden-valissa
-                        db {:rp1 (clj-piste->sql (:sijainti lahin-naapuri)) :rp2 (clj-piste->sql (:sijainti lahin-piste))
-                            :piste (clj-piste->sql  {:type :point :coordinates [(:x  klikkauspiste ) (:y klikkauspiste)]})})
-        pisteen-paikka (:paikka (first paikka-vastaus))
-        sql->aikaleima (fn [reittipiste] (-> reittipiste :aika .getTime))
-        aikaleima->aika #(new java.util.Date %)]
-    [(aikaleima->aika (long (interpoloi pisteen-paikka (sql->aikaleima lahin-naapuri) (sql->aikaleima lahin-piste))))
-     (tr-osoite-pisteelle db lahin-piste 30)]))
+          paikka-vastaus (tilannekuva-q/suhteellinen-paikka-pisteiden-valissa
+                          db {:rp1 (clj-piste->sql (:sijainti lahin-naapuri)) :rp2 (clj-piste->sql (:sijainti lahin-piste))
+                              :piste (clj-piste->sql  {:type :point :coordinates [(:x  klikkauspiste ) (:y klikkauspiste)]})})
+          pisteen-paikka (:paikka (first paikka-vastaus))
+          sql->aikaleima (fn [reittipiste] (-> reittipiste :aika .getTime))
+          aikaleima->aika #(new java.util.Date %)]
+      [(aikaleima->aika (long (interpoloi pisteen-paikka (sql->aikaleima lahin-naapuri) (sql->aikaleima lahin-piste))))
+       (tr-osoite-pisteelle db lahin-piste 30)])
+    [nil nil]))
 
 (defn interpoloi-toteuman-aika-pisteelle [asia parametrit db]
   (let [koordinaatit (select-keys parametrit [:x :y])
