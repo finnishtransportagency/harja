@@ -40,9 +40,14 @@
     (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
     (is (every? :tr-osoite merkinnat) "Merkinnät projisoitiin tielle oikein")
 
-    (let [korjatut-merkmerkinnat-ymparikaantymisillannat (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta merkinnat)]
-      (is (= (count korjatut-merkmerkinnat-ymparikaantymisillannat) (count merkinnat)))
-      (is (= (count (filter :ymparikaantyminen? korjatut-merkmerkinnat-ymparikaantymisillannat)) 1)))))
+    (let [merkmerkinnat-ymparikaantymisillannat (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta merkinnat)]
+      (is (= (count merkmerkinnat-ymparikaantymisillannat) (count merkinnat)))
+      ;; Havaittiin yksi ympärikääntyminen
+      (is (= (count (filter :ymparikaantyminen? merkmerkinnat-ymparikaantymisillannat)) 1))
+      ;; Ympärikääntyminen on merkitty suunnilleen oikeaan pisteeseen
+      (is (= (count (filter :ymparikaantyminen?
+                            (take 3 (drop 8 merkmerkinnat-ymparikaantymisillannat))))
+             1)))))
 
 (deftest ymparikaantymisanalyysi-havaitsee-ymparikaantymisen-kun-ollaan-paikallaan
   (let [tarkastusajo-id 900
@@ -55,7 +60,12 @@
 
     (let [merkinnat-ymparikaantymisilla (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta merkinnat)]
       (is (= (count merkinnat-ymparikaantymisilla) (count merkinnat)))
-      (is (= (count (filter :ymparikaantyminen? merkinnat-ymparikaantymisilla)) 1)))))
+      ;; Havaittiin yksi ympärikääntyminen
+      (is (= (count (filter :ymparikaantyminen? merkinnat-ymparikaantymisilla)) 1))
+      ;; Ympärikääntyminen on merkitty suunnilleen oikeaan pisteeseen
+      (is (= (count (filter :ymparikaantyminen?
+                            (take 9 (drop 8 merkinnat-ymparikaantymisilla))))
+             1)))))
 
 (deftest ymparikaantymisanalyysi-ei-havaitse-ymparikaantymista-tarkastusajossa-1
   (let [tarkastusajo-id 1
