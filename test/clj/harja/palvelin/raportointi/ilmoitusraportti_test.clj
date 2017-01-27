@@ -54,7 +54,7 @@
                                           {:otsikko "TUR (Tiedoksi)"}
                                           {:otsikko "URK (Kysely)"})
       (apurit/tarkista-taulukko-rivit taulukko
-                                      {:otsikko "Pohjois-Pohjanmaa"}
+                                      {:otsikko "12 Pohjois-Pohjanmaa"}
                                       ["Oulun alueurakka 2014-2019" 10 7 3]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
