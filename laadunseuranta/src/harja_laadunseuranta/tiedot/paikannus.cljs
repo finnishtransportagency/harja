@@ -42,7 +42,7 @@
 (defn paivita-sijainti [{:keys [nykyinen]} sijainti ts]
   (let [uusi-sijainti (assoc sijainti :timestamp ts)
         uusi-nykyinen (if (ipad?)
-                        uusi-sijainti
+                        uusi-sijainti ;; iPadissa on ilmeisesti riittävä suodatus itsessään
                         (kalman/kalman nykyinen uusi-sijainti
                                        (utils/ms->sec (- ts (or (:timestamp nykyinen) ts)))))]
     {:edellinen nykyinen
@@ -74,17 +74,18 @@
 (defn aseta-testisijainti
   "HUOM: testikäyttöön. Asettaa nykyisen sijainnin koordinaatit. Oikean geolocation pollerin tulisi
   olla pois päältä kun tätä käytetään."
-  [sijainti-atomi [x y]]
+  [sijainti-atomi [x y] tarkkuus]
   (swap! sijainti-atomi
          (fn [{:keys [nykyinen]}]
            {:edellinen nykyinen
             :nykyinen {:lat y
                        :lon x
                        :heading 0
-                       :accuracy 20
+                       :accuracy tarkkuus
                        :speed 40
                        :timestamp (timestamp)}})))
 
-(defn lopeta-paikannus [n]
-  (when n
-    (js/clearInterval n)))
+(defn lopeta-paikannus [id]
+  (when id
+    (js/clearInterval id)
+    (.log js/console "Paikannut lopetettu!")))
