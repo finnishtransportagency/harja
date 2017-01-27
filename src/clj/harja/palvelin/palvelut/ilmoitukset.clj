@@ -198,7 +198,8 @@
      ilmoitukset)))
 
 (defn hae-ilmoitukset-raportille
-  [db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi aikavali] :as hakuehdot}]
+  "Palauttaa ilmoitukset raporttia varten, minimaalisella tietosisällöllä ja ilman hidastavaa sorttausta."
+  [db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi aikavali]}]
   (let [aikavali-alku (when (first aikavali)
                         (konv/sql-timestamp (first aikavali)))
         aikavali-loppu (when (second aikavali)
