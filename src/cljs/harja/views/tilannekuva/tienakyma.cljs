@@ -78,10 +78,10 @@
 
 (defn- tulospaneeli [e! tulokset avatut-tulokset]
   (komp/luo
-   (komp/sisaan-ulos #(reset! kartta-tiedot/ikonien-selitykset-sijainti :vasen)
-                     #(reset! kartta-tiedot/ikonien-selitykset-sijainti :oikea))
-   (komp/sisaan-ulos #(nayta-tulospaneeli! e! tulokset avatut-tulokset)
-                     #(kartta-tiedot/poista-kartan-kontrollit! :tienakyma-tulokset))
+   (komp/sisaan-ulos #(do (reset! kartta-tiedot/ikonien-selitykset-sijainti :vasen)
+                          (nayta-tulospaneeli! e! tulokset avatut-tulokset))
+                     #(do (reset! kartta-tiedot/ikonien-selitykset-sijainti :oikea)
+                          (kartta-tiedot/poista-kartan-kontrollit! :tienakyma-tulokset)))
    (komp/kun-muuttuu nayta-tulospaneeli!)
    (fn [_ _ _]
      [:span.tienakyma-tulokset])))
