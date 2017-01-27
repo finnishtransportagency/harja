@@ -5,6 +5,7 @@
             [harja.palvelin.palvelut.tilannekuva :refer :all]
             [harja.palvelin.palvelut.interpolointi :as interpolointi]
             [harja.testi :refer :all]
+            [harja.paneeliapurit :as paneeli]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
             [clj-time.core :as t]
@@ -40,53 +41,63 @@
 (def urakkatyyppi :hoito)
 
 (def parametrit-laaja-historia
-  {:urakoitsija     urakoitsija
-   :urakkatyyppi    urakkatyyppi
-   :nykytilanne?    nykytilanne
-   :alue            {:xmin -550093.049087613, :ymin 6372322.595126259,
-                     :xmax 1527526.529326106, :ymax 7870243.751025201} ; Koko Suomi
-   :alku            alku
-   :loppu           loppu
-   :yllapito        {tk/paallystys true
-                     tk/paikkaus   true}
-   :ilmoitukset     {:tyypit {tk/tpp true
-                              tk/urk true
-                              tk/tur true}
-                     :tilat  #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus}}
-   :turvallisuus    {tk/turvallisuuspoikkeamat true}
-   :laatupoikkeamat {tk/laatupoikkeama-tilaaja     true
+  {:urakoitsija urakoitsija
+   :urakkatyyppi urakkatyyppi
+   :nykytilanne? nykytilanne
+   :alue {:xmin -550093.049087613, :ymin 6372322.595126259,
+          :xmax 1527526.529326106, :ymax 7870243.751025201} ; Koko Suomi
+   :alku alku
+   :loppu loppu
+   :yllapito {tk/paallystys true
+              tk/paikkaus true
+              tk/tietyomaat true
+              tk/paaasfalttilevitin true
+              tk/tiemerkintakone true
+              tk/kuumennuslaite true
+              tk/sekoitus-ja-stabilointijyrsin true
+              tk/tma-laite true
+              tk/jyra true}
+   :ilmoitukset {:tyypit {tk/tpp true
+                          tk/urk true
+                          tk/tur true}
+                 :tilat #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus}}
+   :turvallisuus {tk/turvallisuuspoikkeamat true}
+   :laatupoikkeamat {tk/laatupoikkeama-tilaaja true
                      tk/laatupoikkeama-urakoitsija true
-                     tk/laatupoikkeama-konsultti   true}
-   :tarkastukset    {tk/tarkastus-tiesto     true
-                     tk/tarkastus-talvihoito true
-                     tk/tarkastus-soratie    true
-                     tk/tarkastus-laatu      true}
-   :talvi           {tk/auraus-ja-sohjonpoisto          true
-                     tk/suolaus                         true
-                     tk/pistehiekoitus                  true
-                     tk/linjahiekoitus                  true
-                     tk/lumivallien-madaltaminen        true
-                     tk/sulamisveden-haittojen-torjunta true
-                     tk/kelintarkastus                  true
-                     tk/aurausviitoitus-ja-kinostimet   true
-                     tk/lumensiirto                     true
-                     tk/paannejaan-poisto               true
-                     tk/muu                             true}
-   :kesa            {tk/tiestotarkastus            true
-                     tk/koneellinen-niitto         true
-                     tk/koneellinen-vesakonraivaus true
-                     tk/liikennemerkkien-puhdistus true
-                     tk/sorateiden-muokkaushoylays true
-                     tk/sorateiden-polynsidonta    true
-                     tk/sorateiden-tasaus          true
-                     tk/sorastus                   true
-                     tk/harjaus                    true
-                     tk/pinnan-tasaus              true
-                     tk/paallysteiden-paikkaus     true
-                     tk/paallysteiden-juotostyot   true
-                     tk/siltojen-puhdistus         true
-                     tk/l-ja-p-alueiden-puhdistus  true
-                     tk/muu                        true}})
+                     tk/laatupoikkeama-konsultti true}
+   :tarkastukset {tk/tarkastus-tiesto true
+                  tk/tarkastus-talvihoito true
+                  tk/tarkastus-soratie true
+                  tk/tarkastus-laatu true}
+   :talvi {tk/auraus-ja-sohjonpoisto true
+           tk/suolaus true
+           tk/pistehiekoitus true
+           tk/linjahiekoitus true
+           tk/lumivallien-madaltaminen true
+           tk/sulamisveden-haittojen-torjunta true
+           tk/aurausviitoitus-ja-kinostimet true
+           tk/lumensiirto true
+           tk/paannejaan-poisto true
+           tk/muu true
+           tk/pinnan-tasaus true}
+   :kesa {tk/koneellinen-niitto true
+          tk/koneellinen-vesakonraivaus true
+          tk/liikennemerkkien-puhdistus true
+          tk/liikennemerkkien-opasteiden-ja-liikenteenohjauslaitteiden-hoito-seka-reunapaalujen-kunnossapito true
+          tk/palteen-poisto true
+          tk/paallystetyn-tien-sorapientareen-taytto true
+          tk/ojitus true
+          tk/sorapientareen-taytto true
+          tk/sorateiden-muokkaushoylays true
+          tk/sorateiden-polynsidonta true
+          tk/sorateiden-tasaus true
+          tk/sorastus true
+          tk/harjaus true
+          tk/paallysteiden-paikkaus true
+          tk/paallysteiden-juotostyot true
+          tk/siltojen-puhdistus true
+          tk/l-ja-p-alueiden-puhdistus true
+          tk/muu true}})
 
 (defn aseta-filtterit-falseksi [parametrit ryhma]
   (assoc parametrit ryhma (reduce
@@ -211,7 +222,7 @@
     (u sql)))
 
 
-(deftest vain-tilaaja-ja-urakoitsija-itse-nakee-urakattomat-tyokoneet []
+(deftest vain-tilaaja-ja-urakoitsija-itse-nakee-urakattomat-tyokoneet
   (let [parametrit (assoc parametrit-laaja-historia :nykytilanne? true)
         urakoitsija (hae-oulun-alueurakan-2005-2012-urakoitsija)
         hae #(let [vastaus (hae-tk % parametrit)
@@ -267,3 +278,57 @@
     (is (some? interpoloitu-aika))
     (is (= interpoloitu-aika #inst "2015-02-01T15:17:23.112-00:00"))
     (is (= {:numero 4, :alkuosa 403, :alkuetaisyys 173} pisteen-tr-osoite))))
+
+(deftest infopaneelin-skeemojen-luonti
+  (testing "Frontilla piirrettäville jutuille saadaan tehtyä skeemat."
+    (let [vastaus (hae-tk parametrit-laaja-historia)]
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :tietyomaa (:tietyomaat vastaus)))
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? (map
+                                                       #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
+                                                       (:ilmoitukset vastaus))))
+      (let [ ;; Tämä transducer on oleellinen paneelin sisällön kannalta,
+            ;; mutta löytyy valitettavasti tällä hetkellä vain .cljs puolelta.
+            ;; Siksi kopiotu tänne.
+            ;; Katso harja.tiedot.urakka.yllapitokohteet/yllapitokohteet-kartalle
+            yllapito-xf (comp
+                          (mapcat (fn [kohde]
+                                    (keep (fn [kohdeosa]
+                                            (assoc kohdeosa :yllapitokohde (dissoc kohde :kohdeosat)
+                                                            :tyyppi-kartalla (:yllapitokohdetyotyyppi kohde)
+                                                            :tila-kartalla (:tila-kartalla kohde)
+                                                            :yllapitokohde-id (:id kohde)))
+                                          (:kohdeosat kohde))))
+                          (keep #(and (:sijainti %) %)))]
+        (is (paneeli/skeeman-luonti-onnistuu-kaikille?
+              :paallystys
+              (into [] yllapito-xf (:paallystys vastaus))))
+        (is (paneeli/skeeman-luonti-onnistuu-kaikille?
+              :paikkaus
+              (into [] yllapito-xf (:paikkaus vastaus)))))
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama (:laatupoikkeamat vastaus)))
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :turvallisuuspoikkeama (:turvallisuuspoikkeamat vastaus)))))
+
+  (testing "Infopaneeli saadaan luotua myös palvelimella piirretyille asioille."
+    (let [toteuma (kutsu-karttakuvapalvelua
+                    (:http-palvelin jarjestelma)
+                    :tilannekuva-toteumat +kayttaja-jvh+
+                    {:alku alku :loppu loppu :talvi #{27 24 50 51 25 34 23 35 26 52 49} :urakat #{4}}
+                    [447806 7191966] nil)]
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :toteuma toteuma))
+      (is (not (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama toteuma))))
+
+    (let [tarkastus (kutsu-karttakuvapalvelua
+                      (:http-palvelin jarjestelma)
+                      :tilannekuva-tarkastukset +kayttaja-jvh+
+                      {:ilmoitukset {}, :urakat #{4}, :tarkastukset #{7 6 9 8}, :alku #inst "2015-12-31T22:00:00.000-00:00", :nykytilanne? false, :loppu #inst "2016-12-31T21:59:59.000-00:00"}
+                      [436352 7216512] nil)]
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :tarkastus tarkastus))
+      (is (not (paneeli/skeeman-luonti-onnistuu-kaikille? :toteuma tarkastus))))
+
+    (let [tyokone (kutsu-karttakuvapalvelua
+                    (:http-palvelin jarjestelma)
+                    :tilannekuva-tyokoneet +kayttaja-jvh+
+                    {:talvi #{27 24 50 51 25 34 23 35 26 52 49} :aikavalinta 504, :ilmoitukset {}, :urakat #{4}, :x 429312, :nykytilanne? true}
+                    [429312 7208832] nil)]
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :tyokone tyokone))
+      (is (not (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama tyokone))))))
