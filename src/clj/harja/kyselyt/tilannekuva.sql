@@ -6,6 +6,7 @@ SELECT
   i.id,
   i.urakka,
   i.ilmoitusid,
+  i.tunniste,
   i.ilmoitettu,
   i.valitetty,
   i.yhteydenottopyynto,

@@ -2,6 +2,7 @@
 SELECT
   i.id,
   i.urakka,
+  i.tunniste,
   u.nimi as urakkanimi,
   i.ilmoitusid,
   i.ilmoitettu,
@@ -59,6 +60,9 @@ WHERE i.id IN
       -- Rajaa tienumerolla
       (:tr-numero::INTEGER IS NULL OR tr_numero = :tr-numero) AND
 
+      -- Rajaa tunnisteella
+      (:tunniste_annettu IS FALSE OR (x.tunniste ILIKE :tunniste)) AND
+
       -- Rajaa ilmoittajan nimellä
       (:ilmoittaja-nimi::TEXT IS NULL OR
        CONCAT(x.ilmoittaja_etunimi,' ',x.ilmoittaja_sukunimi) ILIKE :ilmoittaja-nimi) AND
@@ -73,6 +77,7 @@ ORDER BY i.ilmoitettu DESC, it.kuitattu DESC;
 -- name: hae-ilmoitukset-ilmoitusidlla
 SELECT
   ilmoitusid,
+  tunniste,
   ilmoitettu,
   tila,
   yhteydenottopyynto,
@@ -136,6 +141,8 @@ SELECT
   i.lahettaja_sukunimi,
   i.lahettaja_puhelinnumero,
   i.lahettaja_sahkoposti,
+
+  i.tunniste,
 
   it.id                                    AS kuittaus_id,
   it.kuitattu                              AS kuittaus_kuitattu,
@@ -227,6 +234,7 @@ WHERE i.id IN (:idt);
 -- name: hae-muuttuneet-ilmoitukset
 SELECT
   ilmoitusid,
+  tunniste,
   ilmoitettu,
   yhteydenottopyynto,
   paikankuvaus,
@@ -273,7 +281,8 @@ INSERT INTO ilmoitus
  lisatieto,
  ilmoitustyyppi,
  selitteet,
- urakkatyyppi)
+ urakkatyyppi,
+ tunniste)
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -285,7 +294,8 @@ VALUES
     :lisatieto,
     :ilmoitustyyppi :: ilmoitustyyppi,
     :selitteet :: TEXT [],
-    :urakkatyyppi :: urakkatyyppi);
+    :urakkatyyppi :: urakkatyyppi,
+    :tunniste);
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen
@@ -297,10 +307,11 @@ SET
   valitetty          = :valitetty,
   yhteydenottopyynto = :yhteydenottopyynto,
   otsikko            = :otsikko,
-  paikankuvaus        = :paikankuvaus,
-  lisatieto        = :lisatieto,
+  paikankuvaus       = :paikankuvaus,
+  lisatieto          = :lisatieto,
   ilmoitustyyppi     = :ilmoitustyyppi :: ilmoitustyyppi,
   selitteet          = :selitteet :: TEXT [],
+  tunniste           = :tunniste,
   muokattu           = NOW()
 WHERE id = :id;
 
@@ -442,6 +453,7 @@ VALUES
 SELECT
   id,
   ilmoitusid,
+  tunniste,
   ilmoitustyyppi,
   urakka
 FROM ilmoitus

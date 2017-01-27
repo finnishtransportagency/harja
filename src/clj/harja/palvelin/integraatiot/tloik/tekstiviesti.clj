@@ -15,7 +15,8 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def +ilmoitusviesti+
-  (str "Uusi toimenpidepyyntö %s: %s (id: %s, viestinumero: %s).\n\n"
+  (str "Uusi toimenpidepyyntö %s: %s (viestinumero: %s).\n\n"
+       "Tunniste: %s\n\n"
        "Urakka: %s\n\n"
        "Yhteydenottopyyntö: %s\n\n"
        "Ilmoittaja: %s\n\n"
@@ -129,7 +130,7 @@
       +virhe-viesti+)))
 
 (defn ilmoitus-tekstiviesti [ilmoitus viestinumero]
-  (let [ilmoitus-id (:ilmoitus-id ilmoitus)
+  (let [tunniste (:tunniste ilmoitus)
         otsikko (:otsikko ilmoitus)
         paikankuvaus (:paikankuvaus ilmoitus)
         tr-osoite (tierekisteri/tierekisteriosoite-tekstina
@@ -144,8 +145,8 @@
       (format +ilmoitusviesti+
               virka-apupyynto
               otsikko
-              ilmoitus-id
               viestinumero
+              tunniste
               (:urakkanimi ilmoitus)
               (fmt/totuus (:yhteydenottopyynto ilmoitus))
               (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))
