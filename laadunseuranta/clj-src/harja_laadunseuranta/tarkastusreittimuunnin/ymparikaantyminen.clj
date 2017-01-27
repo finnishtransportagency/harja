@@ -1,4 +1,21 @@
 (ns harja-laadunseuranta.tarkastusreittimuunnin.ymparikaantyminen
+  "Ympärikääntyminen havaitseminen on ongelmallista, koska GPS on luonteeltaan epätarkka.
+  Yksi tai edes useampi eri suuntaan osoittava piste ei riitä indikoimaan, että
+  ympärikääntyminen on tapahtunut. Lisäksi jos ollaan pitkään paikallaan,
+  niin saatu suunta todennäköisesti muuttuu jatkuvasti, mitä ei pidä tulkita ympärikääntymiseksi.
+
+  Käydään reittipisteitä läpi niin kauan, että etäisyys ensimmäiseen pisteeseen on vähintään M metriä.
+  Ensimmäinen piste merkitään pisteeksi K. Jatketaan pisteiden läpikäyntiä.
+  Jos etäisyys nykyisestä käsiteltävästä pisteestä pisteeseen K on enemmän kuin M metriä,
+  siirretään K:ta eteenpäin reittiä pitkin niin kauan, että sen etäisyys nykyiseen pisteeseen
+  on lähellä M metriä. Jos K tämän siirron aikana törmää nykyiseen sijaintiin, on selvää, että
+  hieman aiemmin on käännytty ympäri.
+
+  Näin jos tietä ajetaan koko ajan yhteen suuntaan, piste K pysyy aina noin M metrin päässä nykyisestä
+  käsiteltävästä pisteestä. Jos pysähdytään paikalleen pitkäksi aikaa, niin K pysyy aina
+  suurinpiirtein yhtä kaukana. Nyt jos lopulta käännytään ympäri, niin aletaankin lähestyä pistettä K.
+  Jos lopulta törmätään pisteeseen K, niin voidaan todeta, että aiemmin tapahtui ympärikääntyminen.
+  Valitaan se piste, josta lähentyminen alkoi ja merkitään siihen: :ymparikaantyminen true?"
   (:require [taoensso.timbre :as log]
             [harja.math :as math]))
 
