@@ -107,4 +107,5 @@
         sortattu1 [yksi kaksi kolme nelja]
         sortattu2 [yksi kaksi nelja kolme]
         tulos (sort-by #((:jarjesta-fn %)) paneeli/jarjesta sorttaamaton)]
-    (is (or (= tulos sortattu1) (= tulos sortattu2)))))
+    (is (or (= tulos sortattu1) (= tulos sortattu2)))
+    (is (not (= tulos sorttaamaton)))))

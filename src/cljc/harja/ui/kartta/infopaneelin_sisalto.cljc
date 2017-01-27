@@ -54,14 +54,14 @@
 #?(:clj
    (def clj->js identity))
 
-(defn sisaltaa? [data path]
+(defn- sisaltaa? [data path]
   (let [puuttuu ::avain-puuttuu]
     (not= puuttuu
           (if (keyword? path)
             (get data path puuttuu)
             (get-in data path puuttuu)))))
 
-(defn hakufunktio [validointi-fn-tai-vaaditut-avaimet haku-fn]
+(defn- hakufunktio [validointi-fn-tai-vaaditut-avaimet haku-fn]
   {:validointi-fn (cond
                     (set? validointi-fn-tai-vaaditut-avaimet)
                     #(every? true? (map (fn [avain] (sisaltaa? % avain)) validointi-fn-tai-vaaditut-avaimet))
@@ -88,7 +88,7 @@
              :hae (hakufunktio :tehtavat #(string/join ", " (:tehtavat %)))}]
    :data tyokone})
 
-(defn ilmoituksen-tiedot [ilmoitus]
+(defn- ilmoituksen-tiedot [ilmoitus]
   {:tyyppi :ilmoitus
    :jarjesta-fn :ilmoitettu
    :otsikko (str (condp = (:ilmoitustyyppi ilmoitus)
@@ -436,7 +436,7 @@
       :default
       (rivin-skeema-ilman-haun-validointia rivin-skeema))))
 
-(defn validoi-infopaneeli-skeema
+(defn- validoi-infopaneeli-skeema
   "Validoi infopaneeli-skeema metodin muodostaman skeeman ja kaikki sen kentät.
   Jos skeema on validi, palauttaa skeeman sen valideilla kentillä.
   Jos skeema ei ole validi, logittaa virheen ja palauttaa nil."
@@ -477,7 +477,7 @@
        :default
        (assoc infopaneeli-skeema :tiedot validit-skeemat)))))
 
-(defn jarjesta [eka toka]
+(defn- jarjesta [eka toka]
   (cond
     (false? eka)
     false
@@ -487,7 +487,7 @@
 
     :default (pvm/jalkeen? eka toka)))
 
-(defn skeema-ilman-tyhjia-riveja [skeema]
+(defn- skeema-ilman-tyhjia-riveja [skeema]
   (assoc skeema :tiedot (keep identity (:tiedot skeema))))
 
 (defn skeemamuodossa
