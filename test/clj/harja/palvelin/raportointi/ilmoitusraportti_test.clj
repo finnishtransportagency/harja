@@ -4,6 +4,7 @@
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
             [harja.testi :refer :all]
+            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
@@ -241,3 +242,27 @@
                                              (= (apurit/raporttisolun-arvo tpp) 0)
                                              (= (apurit/raporttisolun-arvo tur) 5)
                                              (= (apurit/raporttisolun-arvo urk) 0)))))))
+
+
+(deftest ilmoitusraportti-koko-maa-pylvaat
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :suorita-raportti
+                                +kayttaja-jvh+
+                                {:nimi               :ilmoitusraportti
+                                 :konteksti          "koko maa"
+                                 :hallintayksikko-id nil
+                                 :parametrit         {:alkupvm      (pvm/->pvm "1.10.2016")
+                                                      :loppupvm     (pvm/->pvm "30.09.2017")
+                                                      :urakkatyyppi "hoito"
+                                                      :urakoittain?       true}})
+        pylvasgraafin-viimeinen-elementti (last (last (last vastaus)))]
+    (is (vector? vastaus))
+    (is (= pylvasgraafin-viimeinen-elementti ["2017/09" []]))
+    (let [otsikko "Ilmoitukset kuukausittain 01.10.2016-30.09.2017"
+          pylvaat (apurit/pylvaat-otsikolla vastaus otsikko)]
+      (apurit/tarkista-pylvaat-otsikko pylvaat "Ilmoitukset kuukausittain 01.10.2016-30.09.2017")
+      (apurit/tarkista-pylvaat-legend pylvaat ["TPP" "TUR" "URK"])
+      (apurit/tarkista-pylvaat-data
+        pylvaat
+        [["2016/10" []] ["2016/11" []] ["2016/12" []] ["2017/01" [nil 5 nil]] ["2017/02" []]
+         ["2017/03" []] ["2017/04" []] ["2017/05" []] ["2017/06" []] ["2017/07" []] ["2017/08" []] ["2017/09" []]]))))

@@ -1,5 +1,6 @@
 (ns harja.palvelin.raportointi.testiapurit
   (:require  [clojure.test :as t :refer [is]]
+             [taoensso.timbre :as log]
              [clojure.core.match :refer [match]]))
 
 (def raporttisolu? harja.domain.raportointi/raporttielementti?)
@@ -84,6 +85,29 @@
   (tarkista-taulukko-kaikki-rivit
     (assoc taulukko 3 [(last (nth taulukko 3))])
     viimeinen-rivi-pred-fn))
+
+(defn pylvaat-otsikolla
+  [vastaus otsikko]
+  #_(doseq [v vastaus]
+    (log/debug "v" v))
+  (some #(when
+           (and
+             (vector? %)
+             (= :pylvaat (first %))
+             (= otsikko (:otsikko (second %))))
+           %) vastaus))
+
+(defn tarkista-pylvaat-otsikko
+  [pylvaat otsikko]
+  (is (= (:otsikko (second pylvaat) otsikko))))
+
+(defn tarkista-pylvaat-legend
+  [pylvaat otsikko]
+  (is (= (:legend (second pylvaat) otsikko))))
+
+(defn tarkista-pylvaat-data
+  [pylvaat data]
+  (is (= (nth pylvaat 2) data)))
 
 (defmacro elementti [raportti elementin-match]
   `(let [loytynyt-elementti#
