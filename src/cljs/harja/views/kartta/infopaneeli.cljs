@@ -51,13 +51,12 @@
     [:div
      [napit/sulje piilota-fn!]]))
 
-(defn infopaneeli-komponentti [{:keys [avatut-asiat toggle-asia! piilota-fn! linkkifunktiot
-                                       ei-tuloksia]} asiat]
+(defn infopaneeli-komponentti [{:keys [avatut-asiat toggle-asia! piilota-fn! linkkifunktiot]} asiat]
   [:span
    [sulje-nappi piilota-fn!]
 
-   (when (and (empty? asiat) ei-tuloksia)
-     ei-tuloksia)
+   (when (empty? asiat)
+     [:span "Pisteestä ei löytynyt hakutuloksia."])
 
    (doall
     (for [[i asia] (zipmap (range) asiat)

@@ -73,8 +73,7 @@
      :toggle-asia! #(e! (tiedot/->AvaaTaiSuljeTulos (:idx (:data %))))
      :piilota-fn! #(e! (tiedot/->SuljeInfopaneeli))
      :linkkifunktiot {:toteuma {:teksti "Tarkastele toteumanäkymässä"
-                                :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}}
-     :ei-tuloksia [:span "Hakuehdoilla ei löytynyt tuloksia"]}
+                                :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}}}
     tulokset]))
 
 (defn- tulospaneeli [e! tulokset avatut-tulokset]
