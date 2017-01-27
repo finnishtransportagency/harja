@@ -40,8 +40,7 @@
 
 (deftest vain-tilaaja-voi-hakea
   (tarkista-oikeus-poikkeus #(kutsu +kayttaja-urakan-vastuuhenkilo+ parametrit))
-  (let [tulos-jvh (kutsu +kayttaja-jvh+ parametrit)
-        tulos-tero (kutsu +kayttaja-tero+ parametrit)]
+  (let [tulos-jvh (group-by :id (kutsu +kayttaja-jvh+ parametrit))
+        tulos-tero (group-by :id (kutsu +kayttaja-tero+ parametrit))]
     (is (= tulos-jvh tulos-tero) "Kaikki tilaajan käyttäjät saavat saman tuloksen")
-    (is (= 1 (count (:toteumat tulos-jvh))))q
-    (is (= 3 (count (:tarkastukset tulos-jvh))))))
+    (is (= 5 (count tulos-jvh)))))
