@@ -73,6 +73,7 @@ ORDER BY i.ilmoitettu DESC, it.kuitattu DESC;
 -- name: hae-ilmoitukset-raportille
 SELECT
   i.urakka,
+  i.ilmoitettu,
   i.ilmoitustyyppi,
   hy.id                                                              AS hallintayksikko_id,
   hy.nimi                                                            AS hallintayksikko_nimi,
