@@ -9,8 +9,7 @@
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
             [clojure.walk :as walk]
-            [harja.ui.viesti :as viesti]
-            [cljs.core.async :as async])
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn varustetoteuma
