@@ -35,8 +35,12 @@
                (>= tarkkuus 0)) "Virheellinen tarkkuus")
   (mapv #(assoc % :gps-tarkkuus tarkkuus) merkinnat))
 
+;; HOX! Tässä tehdään testejä kannassa löytyville ajoille, joilla on tietty id.
+;; Ajojen tekstuaalisen selityksen löydät: testidata/tarkastusajot.sql
+;; Tai käytä #tr näkymää piirtämään pisteet kartalle.
+
 (deftest ramppien-indeksit-ja-merkkinat-toimii
-  (let [tarkastusajo-id 665 ;; Osa tiellä 4 olevista pisteistä projisoituu virheellisesti rampeille
+  (let [tarkastusajo-id 665
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
                                                           :laheiset_tiet_threshold 100})
@@ -45,7 +49,7 @@
     (is (= indeksit [3]))))
 
 (deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-yksi-piste-osuu-rampille
-  (let [tarkastusajo-id 664 ;; Yksi pisteistä sijaitsee virheellisesti rampilla
+  (let [tarkastusajo-id 664
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
                                                           :laheiset_tiet_threshold 100})]
@@ -64,7 +68,7 @@
                   korjatut-merkinnat)))))
 
 (deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-pari-pistetta-osuu-rampille
-  (let [tarkastusajo-id 665 ;; Pari pisteistä sijaitsee virheellisesti rampilla
+  (let [tarkastusajo-id 665
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
                                                           :laheiset_tiet_threshold 100})]
@@ -83,7 +87,7 @@
       (is (not-any? :piste-rampilla? korjatut-merkinnat) "Merkinnät eivät sisällä analyysin sisäistä avainta"))))
 
 (deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-osa-pisteista-osuu-rampille
-  (let [tarkastusajo-id 666 ;; Iso osa pisteistä sivuaa rampin reunaa
+  (let [tarkastusajo-id 666
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
                                                           :laheiset_tiet_threshold 100})]
@@ -101,7 +105,7 @@
                   korjatut-merkinnat)))))
 
 (deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-iso-osa-epatarkkoja-pisteita-osuu-rampille
-  (let [tarkastusajo-id 667 ;; Iso osa pisteistä sijoittuu pitkästi rampille
+  (let [tarkastusajo-id 667
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
                                                           :laheiset_tiet_threshold 100})]
@@ -119,10 +123,10 @@
                   korjatut-merkinnat)))))
 
 (deftest ramppianalyysi-ei-tee-mitaan-kun-iso-osa-tarkkoja-pisteita-osuu-rampille
-  (let [tarkastusajo-id 667 ;; Iso osa pisteistä sijoittuu pitkästi rampille
+  (let [tarkastusajo-id 667
         merkinnat (-> (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
-                                                          {:tarkastusajo tarkastusajo-id
-                                                           :laheiset_tiet_threshold 100})
+                                                             {:tarkastusajo tarkastusajo-id
+                                                              :laheiset_tiet_threshold 100})
                       (aseta-ramppimerkintojen-tarkkuus 5))]
 
     (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
@@ -130,7 +134,7 @@
       (is (= korjatut-merkinnat merkinnat)))))
 
 (deftest ramppianalyysi-ei-tee-mitaan-kun-iso-osa-melko-tarkkoja-pisteita-osuu-rampille
-  (let [tarkastusajo-id 667 ;; Iso osa pisteistä sijoittuu pitkästi rampille
+  (let [tarkastusajo-id 667
         merkinnat (-> (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                              {:tarkastusajo tarkastusajo-id
                                                               :laheiset_tiet_threshold 100})
@@ -141,7 +145,7 @@
       (is (= korjatut-merkinnat merkinnat)))))
 
 (deftest ramppianalyysi-ei-tee-mitaan-kun-ajetaan-oikeasti-rampille
-  (let [tarkastusajo-id 668 ;; Ajetaan tieltä 4 rampille ja takaisin tielle 4
+  (let [tarkastusajo-id 668
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
                                                           :laheiset_tiet_threshold 100})]
@@ -155,7 +159,7 @@
       (is (= korjatut-merkinnat merkinnat)))))
 
 (deftest ramppianalyysi-ei-tee-mitaan-kun-ajetaan-oikeasti-rampille-melko-epatarkalla-gpslla
-  (let [tarkastusajo-id 668 ;; Ajetaan tieltä 4 rampille ja takaisin tielle 4
+  (let [tarkastusajo-id 668
         merkinnat (-> (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                              {:tarkastusajo tarkastusajo-id
                                                               :laheiset_tiet_threshold 100})
@@ -169,8 +173,8 @@
       (is (= (count korjatut-merkinnat) (count merkinnat)))
       (is (= korjatut-merkinnat merkinnat)))))
 
-(deftest ramppianalyysi-korjaa-virheelliset-rampit-oikeassa-ajossa
-  (let [tarkastusajo-id 754 ;; Oikea ajo, jossa osa tiellä 4 olevista pisteistä projisoituu virheellisesti rampeille
+(deftest ramppianalyysi-korjaa-virheelliset-rampit-oikeassa-ajossa-754
+  (let [tarkastusajo-id 754
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
                                                           :laheiset_tiet_threshold 100})]
@@ -183,7 +187,51 @@
       (is (= (count korjatut-merkinnat) (count merkinnat)))
       ;; Alussa ajettiin oikeasti rampilla, nämä pisteet ovat edelleen mukana
       (is (some #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
-                    (take 40 korjatut-merkinnat)))
+                (take 40 korjatut-merkinnat)))
       ;; Loppumatkan rampit on projisoitu uudelleen
       (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
                     (drop 40 korjatut-merkinnat))))))
+
+(deftest ramppianalyysi-korjaa-virheelliset-rampit-oikeassa-ajossa-1
+  (let [tarkastusajo-id 1
+        merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
+                                                         {:tarkastusajo tarkastusajo-id
+                                                          :laheiset_tiet_threshold 100})]
+
+    (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
+    (is (some #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie])) merkinnat)
+        "Osa testidatan merkinnöistä on rampilla")
+
+    (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)
+          osa-1-tie-18637 (take 74 korjatut-merkinnat)
+          osa-2-ramppi-28409 (take (- 92 77) (drop 77 korjatut-merkinnat))
+          osa-3-tie-4 (take (- 301 92) (drop 92 korjatut-merkinnat))
+          osa-4-ramppi-28402 (take (- 342 301) (drop 301 korjatut-merkinnat))
+          osa-5-tie-22 (drop 343 korjatut-merkinnat)]
+
+      (is (= (count korjatut-merkinnat) (count merkinnat)))
+
+      ;; Osa 1: Ajetaan tietä 18637, joka ei ole ramppi
+      (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
+                    osa-1-tie-18637))
+      (is (every? #(= (get-in % [:tr-osoite :tie]) 18637) osa-1-tie-18637))
+
+      ;; Osa 2: Siirrytään rampille
+      (is (every? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
+                  osa-2-ramppi-28409))
+      (is (every? #(= (get-in % [:tr-osoite :tie]) 28409) osa-2-ramppi-28409))
+
+      ;; Osa 3: Ajetaan tietä 4 pitkän matkaa
+      (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
+                    osa-3-tie-4))
+      (is (every? #(= (get-in % [:tr-osoite :tie]) 4) osa-3-tie-4))
+
+      ;; Osa 4: Taas ollaan rampilla
+      (is (every? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
+                  osa-4-ramppi-28402))
+      (is (every? #(= (get-in % [:tr-osoite :tie]) 28402) osa-4-ramppi-28402))
+
+      ;; Osa 5: Loppumatka tietä 22
+      (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
+                    osa-5-tie-22))
+      (is (every? #(= (get-in % [:tr-osoite :tie]) 22) osa-5-tie-22)))))
