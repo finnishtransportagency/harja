@@ -200,8 +200,6 @@
     korjatut-rampit))
 
 (defn- projisoi-virheelliset-rampit-uudelleen
-  "Projisoi virheelliset rampit seuraavasti:
-  - Jos rampilla ajoa on erittäin pieni osuus, projisoi rampin takaisin tielle, josta rampille ajettiin"
   [merkinnat]
   (log/debug "Projisoidaan virheelliset rampit uudelleen")
   (log/debug "Rampeille siirtymisiä havaittu: "
