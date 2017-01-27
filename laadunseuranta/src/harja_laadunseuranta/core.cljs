@@ -137,7 +137,7 @@
 ;; --- Testausapurit ---
 
 (def kaynissa-oleva-simulaatio-id (atom nil))
-(def +oletuspaivitysvali+ 5)
+(def +oletuspaivitysvali+ 2000)
 (def +oletustarkkuus+ 5)
 
 (defn ^:export aja-testireitti
