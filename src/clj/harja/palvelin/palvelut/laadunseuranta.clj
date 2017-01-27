@@ -388,7 +388,6 @@
                        (comp
                          (map #(konv/array->set % :vakiohavainnot))
                          (map laadunseuranta/tarkastus-tiedolla-onko-ok)
-                         (map #(interpolointi/interpoloi-tarkastuksen-aika-pisteelle % parametrit db))
                          (map #(konv/string->keyword % :tyyppi :tekija))
                          (map #(assoc %
                                  :tyyppi-kartalla :tarkastus
@@ -415,7 +414,7 @@
             (map #(konv/array->set % :vakiohavainnot))
             (map #(assoc % :tyyppi-kartalla :tarkastus))
             (map #(konv/string->keyword % :tyyppi))
-            ;; interpolointi tähän -erno
+            (map #(interpolointi/interpoloi-tarkastuksen-aika-pisteelle % parametrit db))
             (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
           (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
             db

@@ -2,7 +2,8 @@
   (:require [harja.geo :as geo]
             [harja.kyselyt.toteumat :as toteumat-q]
             [harja.kyselyt.tilannekuva :as tilannekuva-q]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.tarkastukset :as tarkastukset-q]))
 
 
 (defn- clj-piste->sql [m]
@@ -26,6 +27,10 @@
     [lahin-aiempi lahin-myohempi]))
 
 
+(defn tr-osoite-pisteelle [db geo-piste etaisyys]
+  (let [osoite-vastaus (tilannekuva-q/osoite-reittipisteille db {:piste (clj-piste->sql (:sijainti geo-piste)) :etaisyys etaisyys})]
+    (some-> osoite-vastaus first :tr_osoite .getValue konv/lue-tr-piste)))
+
 (defn aika-ja-osoite-pisteessa [db klikkauspiste toteuma-id]
   (let [muunna-sijainti #(assoc % :sijainti (geo/pg->clj (:sijainti %)))
         reittipisteet (map muunna-sijainti
@@ -45,10 +50,7 @@
         naapurit-etaisyyksilla (map muunna-sijainti esi-naapurit-etaisyyksilla)
 
         lahin-naapuri (apply min-key etaisyys naapurit-etaisyyksilla)
-        _ (println "tr-haku:" lahin-piste)
-        osoite-vastaus (tilannekuva-q/osoite-reittipisteille db {:piste (clj-piste->sql (:sijainti lahin-piste))})
-        tr-osoite (some-> osoite-vastaus first :tr_osoite .getValue konv/lue-tr-piste)
-        _ (println "saatiin tr-osoite:" tr-osoite)
+
         paikka-vastaus (tilannekuva-q/suhteellinen-paikka-pisteiden-valissa
                         db {:rp1 (clj-piste->sql (:sijainti lahin-naapuri)) :rp2 (clj-piste->sql (:sijainti lahin-piste))
                             :piste (clj-piste->sql  {:type :point :coordinates [(:x  klikkauspiste ) (:y klikkauspiste)]})})
@@ -56,21 +58,18 @@
         sql->aikaleima (fn [reittipiste] (-> reittipiste :aika .getTime))
         aikaleima->aika #(new java.util.Date %)]
     [(aikaleima->aika (long (interpoloi pisteen-paikka (sql->aikaleima lahin-naapuri) (sql->aikaleima lahin-piste))))
-     tr-osoite]))
+     (tr-osoite-pisteelle db lahin-piste 30)]))
 
 (defn interpoloi-toteuman-aika-pisteelle [asia parametrit db]
-  (println "itap kutsuttu, avaimet:" (keys asia))
   (let [koordinaatit (select-keys parametrit [:x :y])
         [aika tr-osoite] (aika-ja-osoite-pisteessa db koordinaatit (-> asia :tehtava :id))]
-    (println "koordinaatit" koordinaatit)
     (assoc asia :aika-pisteessa aika :tierekisteriosoite tr-osoite)))
 
 (defn interpoloi-tarkastuksen-aika-pisteelle [asia parametrit db]
-  (println "itap kutsuttu, avaimet:" (keys asia))
   (let [koordinaatit (select-keys parametrit [:x :y])
+        ;; tr-osoite (tr-osoite-pisteelle db lahin-piste 1000)
         ;; [aika tr-osoite] (aika-ja-osoite-pisteessa db koordinaatit (-> asia :tehtava :id))
         ]
-    (println "koordinaatit" koordinaatit)
     ;; (assoc asia :aika-pisteessa aika :tierekisteriosoite tr-osoite)
-    asia
-    ))
+    ;; (def *tasia asia)
+    asia))
