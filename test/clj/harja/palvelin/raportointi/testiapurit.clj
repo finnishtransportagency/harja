@@ -88,8 +88,6 @@
 
 (defn pylvaat-otsikolla
   [vastaus otsikko]
-  #_(doseq [v vastaus]
-    (log/debug "v" v))
   (some #(when
            (and
              (vector? %)
