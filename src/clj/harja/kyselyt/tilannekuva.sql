@@ -163,9 +163,14 @@ SELECT
   t.tyokonetyyppi,
   t.urakkaid,
   t.tehtavat,
-  MIN(t.lahetysaika) FILTER (WHERE t.lahetysaika BETWEEN :alku AND :loppu) AS alkanut
+  o.nimi AS organisaationimi,
+  u.nimi AS urakkanimi,
+  MIN(t.lahetysaika) FILTER (WHERE t.lahetysaika BETWEEN :alku AND :loppu) AS "ensimmainen-havainto",
+  MAX(t.lahetysaika) FILTER (WHERE t.lahetysaika BETWEEN :alku AND :loppu) AS "viimeisin-havainto"
 FROM
   tyokonehavainto t
+  LEFT JOIN organisaatio o ON t.organisaatio = o.id
+  LEFT JOIN urakka u ON u.id = t.urakkaid
 WHERE sijainti IS NOT NULL AND
       (t.urakkaid IN (:urakat) OR
       -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
@@ -173,7 +178,7 @@ WHERE sijainti IS NOT NULL AND
        (:nayta-kaikki OR t.organisaatio = :organisaatio))) AND
   (t.lahetysaika BETWEEN :alku AND :loppu) AND
   ST_Distance(t.sijainti :: GEOMETRY, ST_MakePoint(:x, :y)::geometry) < :toleranssi
-GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi, t.urakkaid;
+GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi, t.urakkaid, o.nimi, u.nimi;
 
 -- name: hae-turvallisuuspoikkeamat
 SELECT
