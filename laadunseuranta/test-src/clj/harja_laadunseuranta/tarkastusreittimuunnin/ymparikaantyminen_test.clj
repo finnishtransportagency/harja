@@ -38,11 +38,11 @@
                                                           :laheiset_tiet_threshold 100})]
 
     (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
+    (is (every? :tr-osoite merkinnat) "Merkinnät projisoitiin tielle oikein")
 
     (let [korjatut-merkmerkinnat-ymparikaantymisillannat (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta merkinnat)]
       (is (= (count korjatut-merkmerkinnat-ymparikaantymisillannat) (count merkinnat)))
-      ;; TODO IMPLEMENTAATIO PUUTTUU
-      #_(is (= (count (filter :ymparikaantyminen? korjatut-merkmerkinnat-ymparikaantymisillannat)) 1)))))
+      (is (= (count (filter :ymparikaantyminen? korjatut-merkmerkinnat-ymparikaantymisillannat)) 1)))))
 
 (deftest ymparikaantymisanalyysi-havaitsee-ymparikaantymisen-kun-ollaan-paikallaan
   (let [tarkastusajo-id 900
@@ -51,11 +51,11 @@
                                                           :laheiset_tiet_threshold 100})]
 
     (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
+    (is (every? :tr-osoite merkinnat) "Merkinnät projisoitiin tielle oikein")
 
     (let [merkinnat-ymparikaantymisilla (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta merkinnat)]
       (is (= (count merkinnat-ymparikaantymisilla) (count merkinnat)))
-      ;; TODO IMPLEMENTAATIO PUUTTUU
-      #_(is (= (count (filter :ymparikaantyminen? merkinnat-ymparikaantymisilla)) 1)))))
+      (is (= (count (filter :ymparikaantyminen? merkinnat-ymparikaantymisilla)) 1)))))
 
 (deftest ymparikaantymisanalyysi-ei-havaitse-ymparikaantymista-tarkastusajossa-1
   (let [tarkastusajo-id 1
