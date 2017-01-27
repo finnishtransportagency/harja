@@ -31,12 +31,6 @@
         kaukaisin-indeksi (.indexOf etaisyydet-khon kaukaisin)
         kaukaisin-merkinta (nth merkinnat-nykyisesta-khon kaukaisin-indeksi)
         ymparikaantymisen-indeksi (.indexOf kaikki-merkinnat kaukaisin-merkinta)]
-
-
-    (log/debug (str "Etäisyydet K:n" (pr-str etaisyydet-khon)))
-    (log/debug (str "Kaukaisin etäisyys K:n " kaukaisin))
-    (log/debug (str "Kaukaisin etäisyys K:n indeksi" kaukaisin-indeksi))
-    (log/debug (str "Kaukaisin merkintä" kaukaisin-merkinta))
     (log/debug (str "Määritetty ympärikääntyminen indeksiin: " ymparikaantymisen-indeksi))
     ymparikaantymisen-indeksi))
 
