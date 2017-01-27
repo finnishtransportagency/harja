@@ -230,7 +230,8 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
     {:tyyppi   (case tyyppi
                  "pointermove" :hover
                  "click" :click
-                 "singleclick" :click)
+                 "singleclick" :click
+                 "dblclick" :dbl-click)
      :geometria (tapahtuman-geometria this e)
      :sijainti [(aget c 0) (aget c 1)]
      :x        (aget (.-pixel e) 0)
@@ -257,19 +258,20 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
   (.on ol3 "singleclick"
        (fn [e]
          (if-let [kasittelija (peek @klik-kasittelija)]
-           ;; Lähinnä REPL tunkkausta varten
            (kasittelija (tapahtuman-kuvaus this e))
-
            (if-let [g (tapahtuman-geometria this e)]
              (when on-select (on-select g e))
              (when on-click (on-click e)))))))
 
 ;; dblclick on-clickille ei vielä tarvetta - zoomaus tulee muualta.
 (defn- aseta-dblclick-kasittelija [this ol3 on-click on-select]
-  (.on ol3 "dblclick" (fn [e]
-                        (when on-select
-                          (when-let [g (tapahtuman-geometria this e)]
-                            (on-select g e))))))
+  (.on ol3 "dblclick"
+       (fn [e]
+         (if-let [kasittelija (peek @klik-kasittelija)]
+           (kasittelija (tapahtuman-kuvaus this e))
+           (when on-select
+             (when-let [g (tapahtuman-geometria this e)]
+               (on-select g e)))))))
 
 
 (defn aseta-hover-kasittelija [this ol3]
