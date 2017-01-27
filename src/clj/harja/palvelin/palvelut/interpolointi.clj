@@ -27,13 +27,13 @@
     [lahin-aiempi lahin-myohempi]))
 
 
-(defn tr-osoite-pisteelle [db geo-piste etaisyys]
+(defn- tr-osoite-pisteelle [db geo-piste etaisyys]
   (let [osoite-vastaus (tilannekuva-q/osoite-reittipisteille db {:piste (clj-piste->sql (:sijainti geo-piste)) :etaisyys etaisyys})]
     (some-> osoite-vastaus first :tr_osoite .getValue konv/lue-tr-piste)))
 
-(defn muunna-sijainti [geo-piste] (assoc geo-piste :sijainti (geo/pg->clj (:sijainti geo-piste))))
+(defn- muunna-sijainti [geo-piste] (assoc geo-piste :sijainti (geo/pg->clj (:sijainti geo-piste))))
 
-(defn aika-ja-osoite-pisteessa [db klikkauspiste toteuma-id]
+(defn- aika-ja-osoite-pisteessa [db klikkauspiste toteuma-id]
   (if-let [reittipisteet (not-empty (map muunna-sijainti
                                            (toteumat-q/hae-toteuman-reittipisteet db toteuma-id)))]
     (let [etaisyys (fn [rp]
