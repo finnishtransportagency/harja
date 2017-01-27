@@ -146,7 +146,7 @@
 
    Tarkkuus on sama kuin HTML5 Geolocation API:n palauttama (säde metreinä).
    Esim. oletusarvo 5 on hyvin tarkka paikannus ja 50 epätarkka."
-  ([tarkastusajo-id] (aja-testireitti 1 2000 5))
+  ([] (aja-testireitti 1 2000 5))
   ([tarkastusajo-id] (aja-testireitti tarkastusajo-id 2000 5))
   ([tarkastusajo-id paivitysvali] (aja-testireitti tarkastusajo-id paivitysvali 5))
   ([tarkastusajo-id paivitysvali tarkkuus]
