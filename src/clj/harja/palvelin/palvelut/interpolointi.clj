@@ -14,16 +14,16 @@
   (+ alkuarvo (* (- loppuarvo alkuarvo) n)))
 
 (defn- ymparoivat [piste reittipisteet]
-                 (let [pisteen-gettime #(-> % :aika .getTime)
-                       myohemmat-pisteet (filter #(< (pisteen-gettime %) (pisteen-gettime piste)) reittipisteet)
-                       aiemmat-pisteet (filter #(> (pisteen-gettime %) (pisteen-gettime piste)) reittipisteet)
-                       lahin-aiempi (if (not-empty aiemmat-pisteet)
-                                      (apply max-key pisteen-gettime aiemmat-pisteet)
-                                      piste)
-                       lahin-myohempi (if (not-empty myohemmat-pisteet)
-                                        (apply min-key pisteen-gettime myohemmat-pisteet)
-                                        piste)]
-                   [lahin-aiempi lahin-myohempi]))
+  (let [pisteen-gettime #(-> % :aika .getTime)
+        myohemmat-pisteet (filter #(> (pisteen-gettime %) (pisteen-gettime piste)) reittipisteet)
+        aiemmat-pisteet (filter #(< (pisteen-gettime %) (pisteen-gettime piste)) reittipisteet)
+        lahin-aiempi (if (not-empty aiemmat-pisteet)
+                       (apply max-key pisteen-gettime aiemmat-pisteet)
+                       piste)
+        lahin-myohempi (if (not-empty myohemmat-pisteet)
+                         (apply min-key pisteen-gettime myohemmat-pisteet)
+                         piste)]
+    [lahin-aiempi lahin-myohempi]))
 
 
 (defn aika-ja-osoite-pisteessa [db klikkauspiste toteuma-id]
