@@ -20,7 +20,8 @@
                           :sijainti nil
                           :haku-kaynnissa? nil
                           :tulokset nil
-                          :nakymassa? false}))
+                          :nakymassa? false
+                          :reittipisteet {}}))
 
 (defrecord PaivitaSijainti [sijainti])
 (defrecord PaivitaValinnat [valinnat])
@@ -30,11 +31,13 @@
 (defrecord SuljeInfopaneeli [])
 (defrecord AvaaTaiSuljeTulos [idx])
 (defrecord TarkasteleToteumaa [toteuma])
+(defrecord HaeToteumanReittipisteet [toteuma])
+(defrecord ToteumanReittipisteetHaettu [id reittipisteet])
 
 (defn- kartalle
   "Muodosta tuloksista karttataso.
   Kaikki, jotka ovat infopaneelissa avattuina, renderöidään valittuina."
-  [{:keys [avatut-tulokset kaikki-tulokset valinnat] :as tienakyma}]
+  [{:keys [avatut-tulokset kaikki-tulokset valinnat reittipisteet] :as tienakyma}]
   (let [valittu? (comp boolean avatut-tulokset :idx)
         {valitut-tulokset true
          muut-tulokset false} (group-by valittu? kaikki-tulokset)]
@@ -42,6 +45,15 @@
            :valitut-tulokset-kartalla
            (esitettavat-asiat/kartalla-esitettavaan-muotoon
             (concat valitut-tulokset
+
+                    ;; Lisätään reittipisteet toteumille, joille ne on haettu
+                    (keep (fn [{id :id :as toteuma}]
+                            (when-let [haetut-reittipisteet (reittipisteet id)]
+                              (assoc toteuma
+                                     :tyyppi-kartalla :reittipisteet
+                                     :reittipisteet haetut-reittipisteet)))
+                          (filter #(= (:tyyppi-kartalla %) :toteuma) valitut-tulokset))
+
                     [(assoc (:sijainti valinnat)
                             :tyyppi-kartalla :tr-osoite-indikaattori)])
             (constantly false))
@@ -124,7 +136,20 @@
                   {{:keys [alku loppu]} :valinnat :as app}]
     (log "tarkastellaanpa toteumaa: " (pr-str toteuma))
     (siirtymat/nayta-kokonaishintainen-toteuma! id)
-    app))
+    app)
+
+  HaeToteumanReittipisteet
+  (process-event [{toteuma :toteuma} app]
+    (log "TOTEUMA " (pr-str toteuma))
+    (let [tulos! (tuck/send-async! (partial ->ToteumanReittipisteetHaettu (:id toteuma)))]
+      (go
+        (tulos! (<! (k/post! :hae-reittipisteet-tienakymaan {:toteuma-id (:id toteuma)})))))
+    app)
+
+  ToteumanReittipisteetHaettu
+  (process-event [{:keys [id reittipisteet]} app]
+    (log "Toteumalle " id " löytyi " (count reittipisteet) " reittipistettä.")
+    (kartalle (update app :reittipisteet assoc id reittipisteet))))
 
 (defonce muut-tulokset-kartalla
   (r/cursor tienakyma [:muut-tulokset-kartalla]))
