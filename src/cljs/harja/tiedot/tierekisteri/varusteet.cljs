@@ -76,8 +76,7 @@
       (go
         (let [vastaus (<! (k/post! :hae-varusteita hakuehdot))]
           (log "[TR] Varustehaun vastaus: " (pr-str vastaus))
-          (if (or (k/virhe? vastaus)
-                  (not (:onnistunut vastaus)))
+          (if (or (k/virhe? vastaus) (false? (:onnistunut vastaus)))
             (virhe! vastaus)
             (tulos! vastaus))))
       (-> app
@@ -122,7 +121,7 @@
                          :sopimus-id (first @urakka/valittu-sopimusnumero)
                          :aikavali @urakka/valittu-aikavali}
               vastaus (<! (varuste-tiedot/tallenna-varustetoteuma hakuehdot varustetoteuma))]
-          (if (or (k/virhe? vastaus) (not (:onnistunut vastaus)))
+          (if (or (k/virhe? vastaus) (false? (:onnistunut vastaus)))
             (virhe! {:vastaus vastaus :viesti "Varusteen poistossa tapahtui virhe."})
             (tulos! {:vastaus vastaus :viesti "Varuste poistettu onnistuneesti."})))))
     app)
@@ -146,7 +145,7 @@
                          :sopimus-id (first @urakka/valittu-sopimusnumero)
                          :aikavali @urakka/valittu-aikavali}
               vastaus (<! (varuste-tiedot/tallenna-varustetoteuma hakuehdot varustetoteuma))]
-          (if (or (k/virhe? vastaus) (not (:onnistunut vastaus)))
+          (if (or (k/virhe? vastaus) (false? (:onnistunut vastaus)))
             (virhe! {:vastaus vastaus :viesti "Varusteen tarkastuksen kirjauksessa tapahtui virhe."})
             (tulos! {:vastaus vastaus :viesti "Varustetarkastus kirjattu onnistuneesti."})))))
     (assoc-in app [:tierekisterin-varusteet :tarkastus] nil))
