@@ -13,18 +13,13 @@
             [clojure.string :as str]))
 
 (defn hae-ilmoitukset-raportille
-  [db user hallintayksikko-id urakka-id urakoitsija urakkatyyppi
-   +ilmoitustilat+ +ilmoitustyypit+ [alkupvm loppupvm] hakuehto selite]
-  (ilmoituspalvelu/hae-ilmoitukset db user
-                                   {:hallintayksikko hallintayksikko-id
-                                    :urakka urakka-id
-                                    :urakoitsija urakoitsija
-                                    :urakkatyyppi urakkatyyppi
-                                    :tyypit +ilmoitustyypit+
-                                    :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
-                                    :aikavali [alkupvm loppupvm]
-                                    :hakuehto hakuehto
-                                    :selite selite}))
+  [db user {:keys [hallintayksikko-id urakka-id urakoitsija urakkatyyppi alkupvm loppupvm]}]
+  (ilmoituspalvelu/hae-ilmoitukset-raportille db user
+                                              {:hallintayksikko hallintayksikko-id
+                                               :urakka urakka-id
+                                               :urakoitsija urakoitsija
+                                               :urakkatyyppi urakkatyyppi
+                                               :aikavali [alkupvm loppupvm]}))
 
 (def asiakaspalauteluokkien-jarjestys
   {"auraus ja sohjonpoisto" 100
@@ -80,20 +75,18 @@
         ;; vielä ei ole implementoitu selitevalintaa, mutta jos se tulee, niin logiikka tähän
         selite nil
         ilmoitukset (hae-ilmoitukset-raportille
-                      db user hallintayksikko-id urakka-id
-                      nil urakkatyyppi
-                      +ilmoitustilat+ +ilmoitustyypit+
-                      [alkupvm loppupvm] "" selite)
+                      db user {:hallintayksikko-id hallintayksikko-id :urakka-id urakka-id
+                               :urakoitsija nil :urakkatyyppi urakkatyyppi
+                               :alkupvm alkupvm :loppupvm loppupvm})
 
         ;; graafia varten haetaan joko ilmoitukset pitkältä aikaväliltä tai jos kk raportti, niin hoitokaudelta
         hoitokauden-alkupvm (first (pvm/paivamaaran-hoitokausi alkupvm))
         hoitokauden-loppupvm (second (pvm/paivamaaran-hoitokausi alkupvm))
         ilmoitukset-hoitokaudella (when kyseessa-kk-vali?
                                     (hae-ilmoitukset-raportille
-                                      db user hallintayksikko-id urakka-id
-                                      nil nil
-                                      +ilmoitustilat+ +ilmoitustyypit+
-                                      [hoitokauden-alkupvm hoitokauden-loppupvm] "" selite))
+                                      db user {:hallintayksikko-id hallintayksikko-id :urakka-id urakka-id
+                                               :urakoitsija nil :urakkatyyppi urakkatyyppi
+                                               :alkupvm hoitokauden-alkupvm :loppupvm hoitokauden-loppupvm}))
         ilmoitukset-kuukausittain (group-by ffirst
                                             (frequencies (map (juxt (comp vuosi-ja-kk :ilmoitettu)
                                                                     :ilmoitustyyppi)
@@ -151,7 +144,8 @@
                        (for [[hy ilmoitukset] ilmoitukset-hyn-mukaan]
                          (concat
                            (when (or urakoittain? (= :urakka konteksti))
-                             [{:otsikko (or (:nimi hy) "Ilmoitukset ilman urakkaa")}])
+                             [{:otsikko (or (when (:nimi hy) (str (:elynumero hy) " " (:nimi hy)))
+                                            "Ilmoitukset ilman urakkaa")}])
                            (when (or urakoittain? (= :urakka konteksti))
                              (for [[urakka hyn-ilmoitukset] (group-by :urakka ilmoitukset)
                                    :let [urakan-nimi (or (:nimi (first (urakat-q/hae-urakka db urakka))) "Ei urakkaa")

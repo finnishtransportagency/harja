@@ -70,6 +70,26 @@ WHERE i.id IN
       LIMIT :max-maara::INTEGER)
 ORDER BY i.ilmoitettu DESC, it.kuitattu DESC;
 
+-- name: hae-ilmoitukset-raportille
+SELECT
+  i.urakka,
+  i.ilmoitustyyppi,
+  hy.id                                                              AS hallintayksikko_id,
+  hy.nimi                                                            AS hallintayksikko_nimi,
+  lpad(cast(hy.elynumero as varchar), 2, '0')                        AS hallintayksikko_elynumero
+FROM ilmoitus i
+  LEFT JOIN urakka u ON i.urakka = u.id
+  LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
+WHERE i.id IN
+      (SELECT id FROM ilmoitus x WHERE
+        (x.urakka IS NULL OR x.urakka IN (:urakat)) AND
+
+        -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
+        ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
+         (:loppu_annettu IS FALSE AND x.ilmoitettu  >= :alku) OR
+         (:alku_annettu IS FALSE AND x.ilmoitettu  <= :loppu) OR
+         (x.ilmoitettu  BETWEEN :alku AND :loppu)));
+
 -- name: hae-ilmoitukset-ilmoitusidlla
 SELECT
   ilmoitusid,
