@@ -44,15 +44,18 @@
     (assoc tienakyma
            :valitut-tulokset-kartalla
            (esitettavat-asiat/kartalla-esitettavaan-muotoon
-            (concat valitut-tulokset
+            (concat (map #(if (contains? reittipisteet (:id %))
+                            (assoc % :ei-nuolia? true)
+                            %) valitut-tulokset)
 
                     ;; Lisätään reittipisteet toteumille, joille ne on haettu
-                    (keep (fn [{id :id :as toteuma}]
-                            (when-let [haetut-reittipisteet (reittipisteet id)]
-                              (assoc toteuma
-                                     :tyyppi-kartalla :reittipisteet
-                                     :reittipisteet haetut-reittipisteet)))
-                          (filter #(= (:tyyppi-kartalla %) :toteuma) valitut-tulokset))
+                    (mapcat (fn [{id :id :as toteuma}]
+                              (when-let [haetut-reittipisteet (reittipisteet id)]
+                                (for [rp haetut-reittipisteet]
+                                  (assoc rp
+                                         :tehtavat (:tehtavat toteuma)
+                                         :tyyppi-kartalla :reittipiste))))
+                            (filter #(= (:tyyppi-kartalla %) :toteuma) valitut-tulokset))
 
                     [(assoc (:sijainti valinnat)
                             :tyyppi-kartalla :tr-osoite-indikaattori)])
@@ -134,13 +137,11 @@
   TarkasteleToteumaa
   (process-event [{{:keys [urakka hallintayksikko id] :as toteuma} :toteuma}
                   {{:keys [alku loppu]} :valinnat :as app}]
-    (log "tarkastellaanpa toteumaa: " (pr-str toteuma))
     (siirtymat/nayta-kokonaishintainen-toteuma! id)
     app)
 
   HaeToteumanReittipisteet
   (process-event [{toteuma :toteuma} app]
-    (log "TOTEUMA " (pr-str toteuma))
     (let [tulos! (tuck/send-async! (partial ->ToteumanReittipisteetHaettu (:id toteuma)))]
       (go
         (tulos! (<! (k/post! :hae-reittipisteet-tienakymaan {:toteuma-id (:id toteuma)})))))
