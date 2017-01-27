@@ -507,7 +507,6 @@
 (defn- hae-tarkastuksien-tiedot-kartalle
   "Hakee tarkastuksien tiedot pisteessä infopaneelia varten."
   [db user {x :x y :y :as parametrit}]
-  (log/debug "Tarkastukset " (pr-str parametrit))
   (into []
         (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
               (map #(konv/string->keyword % :tyyppi))
@@ -533,7 +532,6 @@
 (defn- hae-tyokoneiden-tiedot-kartalle
   "Hakee työkoneiden tiedot pisteessä infopaneelia varten."
   [db user {x :x y :y :as parametrit}]
-  (log/debug "tyokoneet " (pr-str parametrit))
   (into []
         (comp (map #(assoc % :tyyppi-kartalla :tyokone))
               (map #(konv/array->set % :tehtavat))
