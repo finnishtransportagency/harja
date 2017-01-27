@@ -35,7 +35,7 @@
                (>= tarkkuus 0)) "Virheellinen tarkkuus")
   (mapv #(assoc % :gps-tarkkuus tarkkuus) merkinnat))
 
-(deftest maarittele-alkavien-ramppien-idneksit
+(deftest ramppien-indeksit-ja-merkkinat-toimii
   (let [tarkastusajo-id 665 ;; Osa tiellä 4 olevista pisteistä projisoituu virheellisesti rampeille
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
@@ -43,6 +43,25 @@
         merkinnat (ramppianalyysi/lisaa-merkintoihin-ramppitiedot merkinnat)
         indeksit (ramppianalyysi/maarittele-alkavien-ramppien-indeksit merkinnat)]
     (is (= indeksit [3]))))
+
+(deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-yksi-piste-osuu-rampille
+  (let [tarkastusajo-id 664 ;; Yksi pisteistä sijaitsee virheellisesti rampilla
+        merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
+                                                         {:tarkastusajo tarkastusajo-id
+                                                          :laheiset_tiet_threshold 100})]
+
+    (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
+    (is (= (count (filter #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie])) merkinnat))
+           1)
+        "Yksi testidatan merkinnöistä on rampilla")
+
+    (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
+      (is (= (count korjatut-merkinnat) (count merkinnat)))
+      (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
+                    korjatut-merkinnat))
+      (is (every? #(or (= (get-in % [:tr-osoite :tie]) 4)
+                       (nil? (get-in % [:tr-osoite :tie])))
+                  korjatut-merkinnat)))))
 
 (deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-pari-pistetta-osuu-rampille
   (let [tarkastusajo-id 665 ;; Pari pisteistä sijaitsee virheellisesti rampilla
