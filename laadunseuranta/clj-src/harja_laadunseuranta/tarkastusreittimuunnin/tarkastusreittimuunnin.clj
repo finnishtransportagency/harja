@@ -38,41 +38,48 @@
   "Ottaa reittimerkinnän ja järjestyksesä seuraavan reittimerkinnän ja kertoo muodostavatko ne loogisen jatkumon,
    toisin sanoen tulkitaanko seuraavan pisteen olevan osa samaa tarkastusta vai ei."
   [nykyinen-reittimerkinta seuraava-reittimerkinta]
-  (let [jatkuvat-havainnot-pysyvat-samana? (= (:jatkuvat-havainnot nykyinen-reittimerkinta
-                                                (:jatkuvat-havainnot seuraava-reittimerkinta)))
-        seuraava-piste-samalla-tiella? (or (nil? (:tr-osoite seuraava-reittimerkinta))
-                                           (= (get-in nykyinen-reittimerkinta [:tr-osoite :tie])
-                                              (get-in seuraava-reittimerkinta [:tr-osoite :tie])))
-        ei-ajallista-gappia? (or
-                               (nil? (:aikaleima nykyinen-reittimerkinta))
-                               (nil? (:aikaleima seuraava-reittimerkinta))
-                               (<= (t/in-seconds (t/interval (c/from-sql-time (:aikaleima nykyinen-reittimerkinta))
-                                                             (c/from-sql-time (:aikaleima seuraava-reittimerkinta))))
-                                   +kahden-pisteen-valinen-sallittu-aikaero-s+))
-        jatkuvat-mittausarvot-samat? (and (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :soratie-tasaisuus)
-                                          (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :kiinteys)
-                                          (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :polyavyys)
-                                          (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :sivukaltevuus))
+  (let [jatkuvat-havainnot-pysyvat-samana? (= (:jatkuvat-havainnot nykyinen-reittimerkinta)
+                                              (:jatkuvat-havainnot seuraava-reittimerkinta))
+        seuraava-piste-samalla-tiella? (boolean (or (nil? (:tr-osoite seuraava-reittimerkinta))
+                                                    (= (get-in nykyinen-reittimerkinta [:tr-osoite :tie])
+                                                       (get-in seuraava-reittimerkinta [:tr-osoite :tie]))))
+        ei-ajallista-gappia? (boolean (or
+                                        (nil? (:aikaleima nykyinen-reittimerkinta))
+                                        (nil? (:aikaleima seuraava-reittimerkinta))
+                                        (<= (t/in-seconds (t/interval (c/from-sql-time (:aikaleima nykyinen-reittimerkinta))
+                                                                      (c/from-sql-time (:aikaleima seuraava-reittimerkinta))))
+                                            +kahden-pisteen-valinen-sallittu-aikaero-s+)))
+        jatkuvat-mittausarvot-samat? (boolean (and (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :soratie-tasaisuus)
+                                                   (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :kiinteys)
+                                                   (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :polyavyys)
+                                                   (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :sivukaltevuus)))
         seuraavassa-pisteessa-ei-kaannyta-ympari? (not (:ymparikaantyminen? seuraava-reittimerkinta))]
 
-    (and
-      ;; Jatkuvat havainnot pysyvät samana myös seuraavassa pisteessä
-      jatkuvat-havainnot-pysyvat-samana?
-      ;; Seuraava piste on osa samaa tietä. Jos seuraavalle pistelle ei ole pystytty määrittelemään tietä,
-      ;; niin oletetaan kuitenkin, että se on osa samaa tarkastusta niin kauan kuin osoite oikeasti vaihtuu
-      seuraava-piste-samalla-tiella?
-      ;; Edellisen pisteen kirjauksesta ei ole kulunut ajallisesti liian kauan
-      ;; Jos on kulunut, emme tiedä, mitä näiden pisteiden välillä on tapahtunut, joten on turvallista
-      ;; päättää edellinen tarkastus ja aloittaa uusi.
-      ei-ajallista-gappia?
-      ;; Jatkuvat mittausarvot pysyvät samana. Soratiemittauksessa mittausarvot voivat olla päällä
-      ;; pitkän aikaa ja mittausarvot tallentuvat tällöin usealle pisteelle. Jos jokin mittausarvoista muuttuu,
-      ;; halutaan tarkastuskin katkaista, jotta samat päällä olevat mittausarvot muodostavat aina oman reitin.
-      ;; Edellisessä merkinnässä tehty mittaus on joko numero tai vector numeroita, jos kyseessä yhdistetty
-      ;; reittimerkintä
-      jatkuvat-mittausarvot-samat?
-      ;; Seuraava piste ei aiheuta ympärikääntymistä. Jos aiheuttaa, reitti tulee katkaista.
-      seuraavassa-pisteessa-ei-kaannyta-ympari?)))
+    (when-not jatkuvat-mittausarvot-samat? (log/debug "Jatkuvat havainnot muuttuu, katkaistaan reitti"))
+    (when-not seuraava-piste-samalla-tiella? (log/debug "Seuraava piste eri tiellä, katkaistaan reitti"))
+    (when-not ei-ajallista-gappia? (log/debug "Ajallinen gäppi pisteiden välillä, katkaistaan reitti"))
+    (when-not jatkuvat-mittausarvot-samat? (log/debug "Jatkuvat mittausarvot muuttuivat, katkaistaan reitti"))
+    (when-not seuraavassa-pisteessa-ei-kaannyta-ympari? (log/debug "Ympärikääntyminen havaittu, katkaistaan reitti"))
+
+    (boolean
+      (and
+        ;; Jatkuvat havainnot pysyvät samana myös seuraavassa pisteessä
+        jatkuvat-havainnot-pysyvat-samana?
+        ;; Seuraava piste on osa samaa tietä. Jos seuraavalle pistelle ei ole pystytty määrittelemään tietä,
+        ;; niin oletetaan kuitenkin, että se on osa samaa tarkastusta niin kauan kuin osoite oikeasti vaihtuu
+        seuraava-piste-samalla-tiella?
+        ;; Edellisen pisteen kirjauksesta ei ole kulunut ajallisesti liian kauan
+        ;; Jos on kulunut, emme tiedä, mitä näiden pisteiden välillä on tapahtunut, joten on turvallista
+        ;; päättää edellinen tarkastus ja aloittaa uusi.
+        ei-ajallista-gappia?
+        ;; Jatkuvat mittausarvot pysyvät samana. Soratiemittauksessa mittausarvot voivat olla päällä
+        ;; pitkän aikaa ja mittausarvot tallentuvat tällöin usealle pisteelle. Jos jokin mittausarvoista muuttuu,
+        ;; halutaan tarkastuskin katkaista, jotta samat päällä olevat mittausarvot muodostavat aina oman reitin.
+        ;; Edellisessä merkinnässä tehty mittaus on joko numero tai vector numeroita, jos kyseessä yhdistetty
+        ;; reittimerkintä
+        jatkuvat-mittausarvot-samat?
+        ;; Seuraava piste ei aiheuta ympärikääntymistä. Jos aiheuttaa, reitti tulee katkaista.
+        seuraavassa-pisteessa-ei-kaannyta-ympari?))))
 
 (defn- yhdista-reittimerkinnan-kaikki-havainnot
   "Yhdistää reittimerkinnän pistemäiset havainnot ja jatkuvat havainnot."
