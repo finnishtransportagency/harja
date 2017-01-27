@@ -336,7 +336,7 @@
     (is (contains? (first varustetoteumat) :sijainti))))
 
 (deftest kokonaishintaisen-toteuman-siirtymatiedot
-  (let [toteuma-id 19 ;; pudasjärven alueurakan toteuma
+  (let [toteuma-id (ffirst (q "SELECT id FROM toteuma WHERE urakka = 2 AND lisatieto = 'Tämä on käsin tekaistu juttu'"))
         hae #(kutsu-palvelua (:http-palvelin jarjestelma)
                              :siirry-kokonaishintainen-toteuma
                              %
@@ -349,6 +349,8 @@
                   :tehtavat
                   [{:toimenpidekoodi 1350, :toimenpideinstanssi "10100"}]}
         ei-ok-tulos nil]
+
+    (is (some? toteuma-id))
 
     ;; Tilaajan käyttäjä voi hakea siirtymätiedot
     (is (= ok-tulos (hae +kayttaja-jvh+)))

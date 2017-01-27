@@ -176,30 +176,20 @@
                                :on-click
                                (fn [e]
                                  (.preventDefault e)
-                                 (modal/nayta! {:otsikko "Erilliskustannuksen poistaminen"
-                                                :footer [:span
-                                                         [:button.nappi-toissijainen {:type "button"
-                                                                                      :on-click #(do (.preventDefault %)
-                                                                                                     (modal/piilota!))}
-                                                          "Peruuta"]
-                                                         [:button.nappi-kielteinen {:type "button"
-                                                                                    :on-click #(do (.preventDefault %)
-                                                                                                   (modal/piilota!)
-                                                                                                   (reset! tallennus-kaynnissa true)
-                                                                                                   (go (let [res (tallenna-erilliskustannus
-                                                                                                                   (assoc @muokattu :poistettu true))]
-                                                                                                         (if res
-                                                                                                           ;; Tallennus ok
-                                                                                                           (do (viesti/nayta! "Kustannus poistettu")
-                                                                                                               (reset! tallennus-kaynnissa false)
-                                                                                                               (reset! valittu-kustannus nil))
-
-                                                                                                           ;; Epäonnistui jostain syystä
-                                                                                                           (reset! tallennus-kaynnissa false)))))}
-                                                          "Poista kustannus"]]}
-                                               [:div (str "Haluatko varmasti poistaa erilliskustannuksen "
-                                                          (Math/abs (:rahasumma @muokattu)) "€ päivämäärällä "
-                                                          (pvm/pvm (:pvm @muokattu)) "?")]))}
+                                 (yleiset/varmista-kayttajalta
+                                   {:otsikko "Erilliskustannuksen poistaminen"
+                                    :sisalto (str "Haluatko varmasti poistaa erilliskustannuksen "
+                                                  (Math/abs (:rahasumma @muokattu)) "€ päivämäärällä "
+                                                  (pvm/pvm (:pvm @muokattu)) "?")
+                                    :hyvaksy "Poista"
+                                    :hyvaksy-ikoni (ikonit/livicon-trash)
+                                    :hyvaksy-napin-luokka "nappi-kielteinen"
+                                    :toiminto-fn #(go
+                                                    (let [res (tallenna-erilliskustannus
+                                                                (assoc @muokattu :poistettu true))]
+                                                      (when res
+                                                        (do (viesti/nayta! "Kustannus poistettu")
+                                                            (reset! valittu-kustannus nil)))))}))}
                               (ikonit/livicon-trash) " Poista kustannus"])]}
 
           [{:otsikko       "Sopimusnumero" :nimi :sopimus

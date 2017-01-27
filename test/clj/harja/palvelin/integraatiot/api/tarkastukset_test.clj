@@ -6,7 +6,9 @@
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [harja.palvelin.komponentit.liitteet :as liitteet])
+            [harja.palvelin.komponentit.liitteet :as liitteet]
+            [cheshire.core :as cheshire]
+            [clojure.string :as str])
   (:import (java.util Date)))
 
 (def kayttaja "destia")
@@ -67,7 +69,7 @@
                                           "   AND t.poistettu IS NOT TRUE"
                                           "   AND t.luoja = (SELECT id FROM kayttaja WHERE kayttajanimi='" kayttaja "')")))
         tallenna-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"] kayttaja portti
-                                         (json-sapluunasta "test/resurssit/api/talvihoitotarkastus.json" pvm id))]
+                                                  (json-sapluunasta "test/resurssit/api/talvihoitotarkastus.json" pvm id))]
 
 
     (is (= 200 (:status tallenna-vastaus)))
@@ -75,14 +77,52 @@
       (is (= tark ["talvihoito" "jotain talvisen outoa" 15.00M "talvihoitotarkastus.jpg"]) (str "Tarkastuksen data tallentunut ok " id)))
 
     (let [poista-vastaus (api-tyokalut/delete-kutsu
-                          ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
-                          kayttaja portti
-                          (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-poisto.json" pvm id))
+                           ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
+                           kayttaja portti
+                           (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-poisto.json" pvm id))
           olemattoman-poista-vastaus (api-tyokalut/delete-kutsu
-                          ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
-                          kayttaja portti
-                          (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-poisto.json" pvm 88888888))
+                                       ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
+                                       kayttaja portti
+                                       (json-sapluunasta "test/resurssit/api/talvihoitotarkastus-poisto.json" pvm 88888888))
           poista-tark (tarkista-kannasta)]
       (is (-> poista-vastaus :status (= 200)))
       (is (-> olemattoman-poista-vastaus :status (= 200)))
       (is (empty? poista-tark)))))
+
+(deftest tarkasta-tarkastajan-lahettaminen
+  (let [tarkastus-idt [6660001 6660002 6660003]
+        tarkastustemplate {:tarkastus {:tunniste {:id nil}
+                                       :aika "2015-02-02T15:01:00Z"
+                                       :alkusijainti {:x 441895 :y 7199136}
+                                       :loppusijainti {:x 442131 :y 7198982}
+                                       :tarkastaja {:id 123 :etunimi "Tarmo" :sukunimi "Tarkastaja"}
+                                       :havainnot "jotain talvisen outoa"}
+                           :mittaus {:hoitoluokka 1
+                                     :lumimaara 15
+                                     :tasaisuus 5
+                                     :kitka 3.2
+                                     :lampotilaIlma -10
+                                     :lampotilaTie -6}}
+        tarkastus-tarkastajan-kanssa (-> tarkastustemplate
+                                         (assoc-in [:tarkastus :tunniste :id] (first tarkastus-idt)))
+        tarkastus-ilman-tarkastajaa (-> tarkastustemplate
+                                        (assoc-in [:tarkastus :tunniste :id] (second tarkastus-idt))
+                                        (assoc-in [:tarkastus :tarkastaja] nil))
+        tarkastus-ilman-vailinasella-tarkastajalla (-> tarkastustemplate
+                                                       (assoc-in [:tarkastus :tunniste :id] (nth tarkastus-idt 2))
+                                                       (assoc-in [:tarkastus :tarkastaja :etunimi] nil))
+        tarkastukset {:otsikko {:lahettaja {:jarjestelma "testi", :organisaatio {:nimi "Destia" :ytunnus "y123435"}}
+                                :viestintunniste {:id 3333}
+                                :lahetysaika "2017-01-25T08:51:07+02"}
+                      :tarkastukset [tarkastus-tarkastajan-kanssa
+                                     tarkastus-ilman-tarkastajaa
+                                     tarkastus-ilman-vailinasella-tarkastajalla]}
+        vastaus (api-tyokalut/post-kutsu
+                  ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
+                  kayttaja
+                  portti
+                  (cheshire/encode tarkastukset))
+
+        tarkastuksia-kannassa (ffirst (q (str "SELECT count(id) FROM tarkastus WHERE ulkoinen_id IN (" (str/join "," tarkastus-idt) ");")))]
+    (is (= 200 (:status vastaus)) "Kutsu on onnistunut")
+    (is (= (count tarkastus-idt) tarkastuksia-kannassa) "Kaikki tarkastukset ovat kirjautuneet kantaan oikein")))
