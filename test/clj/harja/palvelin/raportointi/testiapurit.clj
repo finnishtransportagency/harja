@@ -76,6 +76,15 @@
                            (pr-str taulukon-rivi))))
                 (nth taulukko 3))))
 
+(defn tarkista-taulukko-kaikki-rivit-ja-yhteenveto
+  [taulukko rivi-pred-fn viimeinen-rivi-pred-fn]
+  #_(tarkista-taulukko-kaikki-rivit
+    (assoc taulukko 3 (butlast (nth taulukko 3)))
+    rivi-pred-fn)
+  (tarkista-taulukko-kaikki-rivit
+    (assoc taulukko 3 [(last (nth taulukko 3))])
+    viimeinen-rivi-pred-fn))
+
 (defmacro elementti [raportti elementin-match]
   `(let [loytynyt-elementti#
          (some (fn [elementti#]

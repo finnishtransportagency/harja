@@ -581,4 +581,5 @@
                      :hae-urakat-tilannekuvaan)
     (karttakuvat/poista-karttakuvan-lahde! karttakuvat :tilannekuva-toteumat)
     (karttakuvat/poista-karttakuvan-lahde! karttakuvat :tilannekuva-tarkastukset)
+    (karttakuvat/poista-karttakuvan-lahde! karttakuvat :tilannekuva-tyokoneet)
     this))
