@@ -141,13 +141,14 @@
 (defn ^:export aja-testireitti
   "Hakee kannasta annetun tarkastusajon id:n ja ajaa sen.
 
-   Tarkkuus on sama kuin HTML5 Geolocation API:n palauttama (säde metreinä).
-   Esim. arvo 5 on hyvin tarkka paikannus ja 50 epätarkka.
-
    Päivitysväli kertoo, kuinka tiheästi siirrytään seuraavaan pisteeseen (ms).
-   2000 vastaa suurin piirtein todellista ajonopeutta."
-  ([tarkastusajo-id] (aja-testireitti tarkastusajo-id 5 2000))
-  ([tarkastusajo-id tarkkuus paivitysvali]
+   Oletusarvo 2000 vastaa suurin piirtein todellista ajonopeutta.
+
+   Tarkkuus on sama kuin HTML5 Geolocation API:n palauttama (säde metreinä).
+   Esim. oletusarvo 5 on hyvin tarkka paikannus ja 50 epätarkka."
+  ([tarkastusajo-id] (aja-testireitti tarkastusajo-id 2000 5))
+  ([tarkastusajo-id paivitysvali] (aja-testireitti tarkastusajo-id paivitysvali 5))
+  ([tarkastusajo-id paivitysvali tarkkuus]
    (.log js/console "Käynnistetään simuloidun reitin ajaminen")
    (paikannus/lopeta-paikannus @paikannus-id)
    (go
