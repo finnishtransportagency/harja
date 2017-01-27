@@ -21,7 +21,8 @@ kuittaustyypit [["Vastaanotettu" :vastaanotettu]
                 ["Aloitettu" :aloitettu]
                 ["Lopetettu" :lopetettu]
                 ["Muutettu" :muutettu]
-                ["Vastattu" :vastattu]])
+                ["Vastattu" :vastattu]
+                ["Väärä urakka" :vaara-urakka]])
 
 (def ^{:doc "Kuittaustyypin tunnistava regex pattern" :const true :private true}
 kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Lopetettu)\]")
@@ -131,7 +132,8 @@ kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
                       :aloitettu "aloitus"
                       :lopetettu "lopetus"
                       :muutettu "muutos"
-                      :vastattu "vastaus"})
+                      :vastattu "vastaus"
+                      :vaara-urakka "vaara-urakka"})
 
 (defn- tallenna-ilmoitustoimenpide [jms-lahettaja db lahettaja {:keys [urakka-id ilmoitus-id kuittaustyyppi kommentti]}]
   (let [paivystaja (first (yhteyshenkilot/hae-urakan-paivystaja-sahkopostilla db urakka-id lahettaja))
