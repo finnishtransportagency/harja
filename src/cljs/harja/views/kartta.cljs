@@ -521,6 +521,74 @@
   (piilota-infopaneeli-jos-muuttunut vanha uusi)
   (zoomaa-geometrioihin-jos-muuttunut vanha uusi))
 
+(defn kasittele-select!
+  ([item event] (kasittele-select! item event false))
+  ([item event tuplaklik?]
+   (let [keskeyta-event! #(do (.stopPropagation %)
+                            (.preventDefault %))
+         valitse-organisaatio! #(if (= :hy (:type %))
+                                  (nav/valitse-hallintayksikko! %)
+                                  (t/julkaise! (assoc % :aihe :urakka-klikattu)))
+         keskita! #(tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue %)))]
+     ;; Select tarkoittaa, että on klikattu jotain kartalla piirrettyä asiaa.
+     ;; Tuplaklikkaukseen halutaan reagoida joko kohdentamalla tuplaklikattuun asiaan
+     ;; ja avaamalla sen tiedot infopaneeliin (paitsi ilmoituksissa, missä avataan suoraan lomake),
+     ;; tai jos tuplaklikattu asia oli urakka, zoomaataan vaan karttaa askel eteenpäin.
+     ;; Yksittäinen select toimii asiaa klikatessa samoin kuin tuplaklikkaus, mutta kohteeseen
+     ;; ei kohdenneta. Urakan selectointi tarkoittaa käyttäjän näkökulmasta "tyhjän" tai
+     ;; palvelinpäässä piirretyn toteuman klikkaamista, jolloin avataan infopaneeli, ja
+     ;; haetaan esim kyseiselle tielle tietoja.
+     ;;
+     ;; Tuplaklikkauksissa eventin keskeyttäminen tarkoittaa, että zoomausta ei tehdä.
+     (cond
+      ;; Ilmoituksissa ei haluta ikinä näyttää infopaneelia,
+      ;; vaan valitaan klikattu ilmoitus
+      (#{:ilmoitukset} @nav/valittu-sivu)
+      (when (= :ilmoitus (:type item)) ;; Älä siirrä tätä cond-ehtoon
+        (keskeyta-event!)
+        (t/julkaise! (assoc item :aihe :ilmoitus-klikattu))
+        (when tuplaklik? (keskita! item)))
+
+      ;; Tilannekuvassa voidaan klikata valitsematonta hallintayksikköä
+      ;; tai urakkaa, ja silti avataan infopaneeli pisteessä olevista asioista.
+      (and (#{:tilannekuva} @nav/valittu-sivu)
+           (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item))
+      (when-not tuplaklik?
+        (keskeyta-event! event)
+        (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
+                                                 event
+                                                 asiat-pisteessa))
+
+      ;; Tien klikkaaminen esim toteuma-näkymässä osuu valittuun urakkaan
+      (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
+      (when-not tuplaklik?
+        (keskeyta-event! event)
+        (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
+                                                 event
+                                                 asiat-pisteessa))
+
+      ;; Etusivulla
+      (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item)
+      (do
+        (keskeyta-event! event)
+        (valitse-organisaatio! item)
+        (when tuplaklik? (keskita! item)))
+
+      ;; Klikattu asia ei ole hy/urakka, eikä se ole ilmoitus ilmoitusnäkymässä.
+      ;; Avataan infopaneeliin klikatun asian tiedot, ja haetaan sinne mahdollisesti
+      ;; muutakin
+      :default
+      (do
+        (keskeyta-event! event)
+        (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
+                                                 event
+                                                 asiat-pisteessa)
+        (nayta-infopaneelissa! item)
+        (when tuplaklik? (keskita! item)))))))
+
+(defn kasittele-dblclick-select! [item event]
+  (kasittele-select! item event true))
+
 (defn kartta-openlayers []
   (komp/luo
 
@@ -584,90 +652,11 @@
                                                                           asiat-pisteessa))
                                (.stopPropagation event)
                                (.preventDefault event))
-         :on-select          (fn [item event]
-                               (cond
-                                 ;; Ilmoituksissa ei haluta ikinä näyttää infopaneelia,
-                                 ;; vaan valitaan klikattu ilmoitus
-                                 (#{:ilmoitukset} @nav/valittu-sivu)
-                                 (when (= :ilmoitus (:type item)) ;; Älä siirrä tätä cond-ehtoon
-                                   (t/julkaise! (assoc item :aihe :ilmoitus-klikattu)))
-
-                                 ;; Tilannekuvassa voidaan klikata valitsematonta hallintayksikköä
-                                 ;; tai urakkaa, ja silti avataan infopaneeli pisteessä olevista asioista.
-                                 (and (#{:tilannekuva} @nav/valittu-sivu)
-                                      (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item))
-                                 (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
-                                                                          event
-                                                                          asiat-pisteessa)
-
-                                 ;; Tien klikkaaminen esim toteuma-näkymässä osuu valittuun urakkaan
-                                 (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
-                                 (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
-                                                                          event
-                                                                          asiat-pisteessa)
-
-                                 ;; Etusivulla
-                                 (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item)
-                                 (if (= :hy (:type item))
-                                   (nav/valitse-hallintayksikko! item)
-                                   (t/julkaise! (assoc item :aihe :urakka-klikattu)))
-
-                                 ;; Klikattu asia ei ole hy/urakka, eikä se ole ilmoitus ilmoitusnäkymässä.
-                                 ;; Avataan infopaneeliin klikatun asian tiedot, ja haetaan sinne mahdollisesti
-                                 ;; muutakin
-                                 :default
-                                 (do
-                                   (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
-                                                                              event
-                                                                              asiat-pisteessa)
-                                   (nayta-infopaneelissa! item)))
-
-                               (.stopPropagation event)
-                               (.preventDefault event))
+         :on-select          kasittele-select!
 
          :on-dblclick        nil
 
-         :on-dblclick-select (fn [item event]
-                               ;; Select tarkoittaa, että on klikattu jotain kartalla piirrettyä asiaa.
-                               ;; Tuplaklikkaukseen halutaan reagoida joko kohdentamalla tuplaklikattuun asiaan,
-                               ;; tai jos tuplaklikattu asia oli urakka, zoomaataan vaan karttaa askel eteenpäin.
-                               (cond
-                                 ;; Ei infopaneelia ilmoitusnäkymässä
-                                 (#{:ilmoitukset} @nav/valittu-sivu)
-                                 (when (= :ilmoitus (:type item)) ;; Älä siirrä tätä cond-ehtoon
-                                   (t/julkaise! (assoc item :aihe :ilmoitus-klikattu))
-                                   (tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))
-
-                                 ;; Tilannekuvassa tai ilmoituksissa zoomataan aina sisään, jos
-                                 ;; tuplaklikattu asia on hy/urakka
-                                 (and (#{:tilannekuva} @nav/valittu-sivu)
-                                      (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item))
-                                 nil
-
-                                 ;; Muualla zoomataan sisään vain, jos klikattu hy/urakka on valittu
-                                 (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
-                                 nil
-
-                                 ;; Tuplaklikattin valitsematonta asiaa, eli ollaan etusivulla valitsemassa hy/urakkaa.
-                                 (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item)
-                                 (do (.stopPropagation event)
-                                     (.preventDefault event)
-                                     (if (= :hy (:type item))
-                                       (nav/valitse-hallintayksikko! item)
-                                       (t/julkaise! (assoc item :aihe :urakka-klikattu)))
-                                     (tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))
-
-                                 :default
-                                 ;; Tuplaklikattu asia ei ole hy/urakka, eikä se ole ilmoitus ilmoitusnäkymässä.
-                                 ;; Avataan infopaneeliin klikatun asian tiedot, ja haetaan sinne mahdollisesti
-                                 ;; muutakin. Lisäksi kohdennetaan tuplaklikattuun asiaan.
-                                 (do (.stopPropagation event)
-                                     (.preventDefault event)
-                                     (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
-                                                                              event
-                                                                              asiat-pisteessa)
-                                     (nayta-infopaneelissa! item)
-                                     (tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))))
+         :on-dblclick-select kasittele-dblclick-select!
 
          :tooltip-fn         (fn [geom]
                                         ; Palauttaa funktion joka palauttaa tooltipin sisällön, tai nil jos hoverattu asia
