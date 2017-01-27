@@ -55,7 +55,7 @@
                                                    (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :sivukaltevuus)))
         seuraavassa-pisteessa-ei-kaannyta-ympari? (not (:ymparikaantyminen? seuraava-reittimerkinta))]
 
-    (when-not jatkuvat-mittausarvot-samat? (log/debug "Jatkuvat havainnot muuttuu, katkaistaan reitti"))
+    (when-not jatkuvat-havainnot-pysyvat-samana? (log/debug "Jatkuvat havainnot muuttuu, katkaistaan reitti"))
     (when-not seuraava-piste-samalla-tiella? (log/debug "Seuraava piste eri tiellä, katkaistaan reitti"))
     (when-not ei-ajallista-gappia? (log/debug "Ajallinen gäppi pisteiden välillä, katkaistaan reitti"))
     (when-not jatkuvat-mittausarvot-samat? (log/debug "Jatkuvat mittausarvot muuttuivat, katkaistaan reitti"))
