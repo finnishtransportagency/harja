@@ -3,7 +3,11 @@
             [harja.ui.kartta.infopaneelin-sisalto :as paneeli]))
 
 (defn hakufunktion-validaattori-toimii? [data polku]
-  ((:validointi-fn (paneeli/hakufunktio polku (constantly nil))) data))
+  (try
+    ((:validointi-fn (paneeli/hakufunktio polku (constantly nil))) data)
+    (catch js/Error e
+      (do (println (pr-str e))
+          false))))
 
 (deftest hakufunktion-validaattori
   (let [data {:id 1 :foo false :bar nil
@@ -16,25 +20,25 @@
       (is (not (hakufunktion-validaattori-toimii? data :baz))))
 
     (testing "Ensimmäisen tason kentät voi hakea myös vektorilla"
-      (is (hakufunktion-validaattori-toimii? data [:id]))
-      (is (hakufunktion-validaattori-toimii? data [:foo]))
-      (is (hakufunktion-validaattori-toimii? data [:bar]))
-      (is (hakufunktion-validaattori-toimii? data [:nested]))
-      (is (not (hakufunktion-validaattori-toimii? data [:baz]))))
+      (is (hakufunktion-validaattori-toimii? data #{:id}))
+      (is (hakufunktion-validaattori-toimii? data #{:foo}))
+      (is (hakufunktion-validaattori-toimii? data #{:bar}))
+      (is (hakufunktion-validaattori-toimii? data #{:nested}))
+      (is (not (hakufunktion-validaattori-toimii? data #{:baz}))))
 
     (testing "Monta avainta vektorissa hakee ensimmäisen tason keywordit"
-      (is (hakufunktion-validaattori-toimii? data [:id :foo :bar]))
-      (is (not (hakufunktion-validaattori-toimii? data [:nested :n-id]))))
+      (is (hakufunktion-validaattori-toimii? data #{:id :foo :bar}))
+      (is (not (hakufunktion-validaattori-toimii? data #{:nested :n-id}))))
 
     (testing "Vektori vektorissa hakee nested avaimia"
-      (is (hakufunktion-validaattori-toimii? data [[:nested :n-id]]))
-      (is (hakufunktion-validaattori-toimii? data [[:nested :n-foo]]))
-      (is (hakufunktion-validaattori-toimii? data [[:nested :n-bar]]))
-      (is (not (hakufunktion-validaattori-toimii? data [[:nested :n-baz]]))))
+      (is (hakufunktion-validaattori-toimii? data #{[:nested :n-id]}))
+      (is (hakufunktion-validaattori-toimii? data #{[:nested :n-foo]}))
+      (is (hakufunktion-validaattori-toimii? data #{[:nested :n-bar]}))
+      (is (not (hakufunktion-validaattori-toimii? data #{[:nested :n-baz]}))))
 
     (testing "Monta vektoria vektorissa toimii myös"
-      (is (hakufunktion-validaattori-toimii? data [[:nested :n-id] [:nested :n-foo] [:nested :n-bar]]))
-      (is (hakufunktion-validaattori-toimii? data [[:nested :n-id] :id])))))
+      (is (hakufunktion-validaattori-toimii? data #{[:nested :n-id] [:nested :n-foo] [:nested :n-bar]}))
+      (is (hakufunktion-validaattori-toimii? data #{[:nested :n-id] :id})))))
 
 (deftest haun-validointi-tippuu-pois
   (let [skeema {:otsikko "Foobar" :hae {:validointi-fn :bar :haku-fn (constantly true)}}]

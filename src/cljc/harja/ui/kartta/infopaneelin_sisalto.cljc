@@ -63,7 +63,7 @@
 
 (defn hakufunktio [validointi-fn-tai-vaaditut-avaimet haku-fn]
   {:validointi-fn (cond
-                    (vector? validointi-fn-tai-vaaditut-avaimet)
+                    (set? validointi-fn-tai-vaaditut-avaimet)
                     #(every? true? (map (fn [avain] (sisaltaa? % avain)) validointi-fn-tai-vaaditut-avaimet))
 
                     (keyword? validointi-fn-tai-vaaditut-avaimet)
@@ -147,56 +147,56 @@
                 :paallystys "Päällystyskohde"
                 :paikkaus "Paikkauskohde"
                 nil)
-     :tiedot [{:otsikko "Kohde" :tyyppi :string :hae (hakufunktio [[:yllapitokohde :nimi]]
+     :tiedot [{:otsikko "Kohde" :tyyppi :string :hae (hakufunktio #{[:yllapitokohde :nimi]}
                                                                   #(get-in % [:yllapitokohde :nimi]))}
-              {:otsikko "Kohdenumero" :tyyppi :string :hae (hakufunktio [[:yllapitokohde :kohdenumero]]
+              {:otsikko "Kohdenumero" :tyyppi :string :hae (hakufunktio #{[:yllapitokohde :kohdenumero]}
                                                                         #(get-in % [:yllapitokohde :kohdenumero]))}
               {:otsikko "Kohteen osoite" :tyyppi :string
                :hae (hakufunktio :yllapitokohde #(tr-domain/tierekisteriosoite-tekstina (:yllapitokohde %)))}
               {:otsikko "Kohteen pituus (m)" :tyyppi :string
-               :hae (hakufunktio [[:yllapitokohde :pituus]] #(fmt/desimaaliluku-opt (get-in % [:yllapitokohde :pituus]) 0))}
+               :hae (hakufunktio #{[:yllapitokohde :pituus]} #(fmt/desimaaliluku-opt (get-in % [:yllapitokohde :pituus]) 0))}
               {:otsikko "Alikohde" :tyyppi :string :nimi :nimi}
               {:otsikko "Alikohteen osoite" :tyyppi :string
                :hae (hakufunktio
                       #(some true? (map (partial contains? %) [:numero :tr-numero :tie]))
                       #(tr-domain/tierekisteriosoite-tekstina %))}
               {:otsikko "Nykyinen päällyste" :tyyppi :string
-               :hae (hakufunktio [[:yllapitokohde :nykyinen-paallyste]]
+               :hae (hakufunktio #{[:yllapitokohde :nykyinen-paallyste]}
                                  #(paallystys-ja-paikkaus/hae-paallyste-koodilla (get-in % [:yllapitokohde :nykyinen-paallyste])))}
               {:otsikko "KVL" :tyyppi :string
                :hae (hakufunktio
-                      [[:yllapitokohde :keskimaarainen-vuorokausiliikenne]]
+                      #{[:yllapitokohde :keskimaarainen-vuorokausiliikenne]}
                       #(fmt/desimaaliluku-opt (get-in % [:yllapitokohde :keskimaarainen-vuorokausiliikenne]) 0))}
               {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
               {:otsikko "Tila" :tyyppi :string
                :hae (hakufunktio
-                      [[:yllapitokohde :tila]]
+                      #{[:yllapitokohde :tila]}
                       #(yllapitokohteet-domain/kuvaile-kohteen-tila (get-in % [:yllapitokohde :tila])))}
               (when (get-in yllapitokohdeosa [:yllapitokohde aloitus])
                 {:otsikko "Aloitettu" :tyyppi :pvm-aika
                  :hae (hakufunktio
-                        [[:yllapitokohde aloitus]]
+                        #{[:yllapitokohde aloitus]}
                         #(get-in % [:yllapitokohde aloitus]))})
               (when (get-in yllapitokohdeosa [:yllapitokohde paallystys-valmis])
                 {:otsikko "Päällystys valmistunut" :tyyppi :pvm-aika
                  :hae (hakufunktio
-                        [[:yllapitokohde paallystys-valmis]]
+                        #{[:yllapitokohde paallystys-valmis]}
                         #(get-in % [:yllapitokohde paallystys-valmis]))})
               (when (get-in yllapitokohdeosa [:yllapitokohde paikkaus-valmis])
                 {:otsikko "Paikkaus valmistunut" :tyyppi :pvm-aika
                  :hae (hakufunktio
-                        [[:yllapitokohde paikkaus-valmis]]
+                        #{[:yllapitokohde paikkaus-valmis]}
                         #(get-in % [:yllapitokohde paikkaus-valmis]))})
               (when (get-in yllapitokohdeosa [:yllapitokohde kohde-valmis])
                 {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika
                  :hae (hakufunktio
-                        [[:yllapitokohde kohde-valmis]]
+                        #{[:yllapitokohde kohde-valmis]}
                         #(get-in % [:yllapitokohde kohde-valmis]))})
               {:otsikko "Urakka" :tyyppi :string :hae (hakufunktio
-                                                        [[:yllapitokohde :urakka]]
+                                                        #{[:yllapitokohde :urakka]}
                                                         #(get-in % [:yllapitokohde :urakka]))}
               {:otsikko "Urakoitsija" :tyyppi :string :hae (hakufunktio
-                                                             [[:yllapitokohde :urakoitsija]]
+                                                             #{[:yllapitokohde :urakoitsija]}
                                                              #(get-in % [:yllapitokohde :urakoitsija]))}]
      :data yllapitokohdeosa}))
 
@@ -271,7 +271,7 @@
      :otsikko (str "Laatupoikkeama " (pvm/pvm-aika (:aika laatupoikkeama)))
      :tiedot [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
               {:otsikko "Tekijä" :hae (hakufunktio
-                                        [:tekijanimi :tekija]
+                                        #{:tekijanimi :tekija}
                                         #(str (:tekijanimi %) ", " (name (:tekija %))))}
               {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :string}
               {:otsikko "Tierekisteriosoite" :hae (hakufunktio
@@ -284,7 +284,7 @@
                                                          (:tr %))))}
               (when (:yllapitokohde laatupoikkeama)
                 {:otsikko "Kohde" :hae (hakufunktio
-                                         [[:yllapitokohde :numero] [:yllapitokohde :nimi]]
+                                         #{[:yllapitokohde :numero] [:yllapitokohde :nimi]}
                                          #(let [yllapitokohde (:yllapitokohde %)]
                                             (str (:numero yllapitokohde)
                                                  ", "
@@ -292,9 +292,9 @@
               (when (and (paatos laatupoikkeama) (kasittelyaika laatupoikkeama))
                 {:otsikko "Päätös"
                  :hae (hakufunktio
-                        [[:paatos :paatos] [:paatos :kasittelyaika]]
+                        #{[:paatos :paatos] [:paatos :kasittelyaika]}
                         #(str (kuvaile-paatostyyppi (paatos %))
-                             " (" (pvm/pvm-aika (kasittelyaika %)) ")"))})]
+                              " (" (pvm/pvm-aika (kasittelyaika %)) ")"))})]
      :data laatupoikkeama}))
 
 (defmethod infopaneeli-skeema :suljettu-tieosuus [osuus]
@@ -302,7 +302,7 @@
    :jarjesta-fn :aika
    :otsikko "Suljettu tieosuus"
    :tiedot [{:otsikko "Ylläpitokohde" :hae (hakufunktio
-                                             [:yllapitokohteen-nimi :yllapitokohteen-numero]
+                                             #{:yllapitokohteen-nimi :yllapitokohteen-numero}
                                              #(str (:yllapitokohteen-nimi %) " (" (:yllapitokohteen-numero %) ")"))}
             {:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
             {:otsikko "Osoite" :tyyppi :tierekisteriosoite :nimi :tr}
@@ -328,7 +328,7 @@
                          {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite
                           :nimi :tierekisteriosoite}
                          {:otsikko "Suorittaja" :hae (hakufunktio
-                                                       [[:suorittaja :nimi]]
+                                                       #{[:suorittaja :nimi]}
                                                        #(get-in % [:suorittaja :nimi]))}]
 
                         (for [{:keys [toimenpide maara yksikko]} (:tehtavat toteuma)]
@@ -342,7 +342,7 @@
                            :hae (hakufunktio
                                   (constantly true)
                                   #(str (get-in % [:materiaalit materiaalitoteuma :maara]) " "
-                                       (get-in % [:materiaalit materiaalitoteuma :materiaali :yksikko])))})
+                                        (get-in % [:materiaalit materiaalitoteuma :materiaali :yksikko])))})
                         (when (:lisatieto toteuma)
                           [{:otsikko "Lisätieto" :nimi :lisatieto}])))
    :data toteuma})
@@ -365,7 +365,7 @@
    :otsikko (str "Tietyömaa " (when (:aika tietyomaa)
                                 (pvm/pvm-aika (:aika tietyomaa))))
    :tiedot [{:otsikko "Ylläpitokohde" :hae (hakufunktio
-                                             [:yllapitokohteen-nimi :yllapitokohteen-numero]
+                                             #{:yllapitokohteen-nimi :yllapitokohteen-numero}
                                              #(str (:yllapitokohteen-nimi %) " (" (:yllapitokohteen-numero %) ")"))}
             {:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
             {:otsikko "Osoite" :hae (hakufunktio
