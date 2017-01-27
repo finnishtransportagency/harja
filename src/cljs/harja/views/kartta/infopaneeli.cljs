@@ -38,8 +38,15 @@
       nil)
     ;; else
     [:div.ip-osio
-     (when-let [{:keys [teksti toiminto]} (tyyppi linkin-kasittelijat)]
-       [:div [napit/yleinen teksti #(toiminto data) {:luokka "ip-toiminto btn-xs"}]])
+     (when-let [linkit (tyyppi linkin-kasittelijat)]
+       [:div
+        (doall
+         (map-indexed
+          (fn [i {:keys [teksti toiminto]}]
+            ^{:key (str "ip-toiminto-" i)}
+            [napit/yleinen teksti #(toiminto data) {:luokka "ip-toiminto btn-xs"}])
+          (if (vector? linkit)
+            linkit [linkit])))])
      (apply yleiset/tietoja {}
             (mapcat (juxt :otsikko
                           (fn [kentan-skeema]
