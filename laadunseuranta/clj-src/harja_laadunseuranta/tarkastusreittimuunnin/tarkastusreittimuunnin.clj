@@ -11,21 +11,10 @@
             [harja-laadunseuranta.utils :as utils]
             [harja.kyselyt.tarkastukset :as tark-q]
             [harja-laadunseuranta.tarkastusreittimuunnin.ramppianalyysi :as ramppianalyysi]
+            [harja-laadunseuranta.tarkastusreittimuunnin.ymparikaantyminen :as ymparikaantyminen]
             [clojure.string :as str]
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
-
-(defn etenemissuunta
-  "Palauttaa 1 jos tr-osoite2 on suurempi kuin tr-osoite1.
-   Palauttaa -1 jos tr-osoite2 on pienempi kuin tr-osoite1
-   Palauttaa 0 jos samat.
-   Jos ei jostain syystä voida määrittää, palauttaa nil"
-  [tr-osoite1 tr-osoite2]
-  (when (and (:aet tr-osoite1) (:aet tr-osoite2))
-    (cond
-      (< (:aet tr-osoite1) (:aet tr-osoite2)) -1
-      (> (:aet tr-osoite1) (:aet tr-osoite2)) 1
-      (= (:aet tr-osoite1) (:aet tr-osoite2)) 0)))
 
 (def +kahden-pisteen-valinen-sallittu-aikaero-s+ 180)
 
@@ -63,7 +52,8 @@
         jatkuvat-mittausarvot-samat? (and (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :soratie-tasaisuus)
                                           (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :kiinteys)
                                           (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :polyavyys)
-                                          (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :sivukaltevuus))]
+                                          (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :sivukaltevuus))
+        seuraavassa-pisteessa-ei-kaannyta-ympari? (not (:ymparikaantyminen? seuraava-reittimerkinta))]
 
     (and
       ;; Jatkuvat havainnot pysyvät samana myös seuraavassa pisteessä
@@ -81,8 +71,8 @@
       ;; Edellisessä merkinnässä tehty mittaus on joko numero tai vector numeroita, jos kyseessä yhdistetty
       ;; reittimerkintä
       jatkuvat-mittausarvot-samat?
-      ;; TODO Seuraava piste ei aiheuta reitin kääntymistä ympäri. Ks. HAR-4007
-      )))
+      ;; Seuraava piste ei aiheuta ympärikääntymistä. Jos aiheuttaa, reitti tulee katkaista.
+      seuraavassa-pisteessa-ei-kaannyta-ympari?)))
 
 (defn- yhdista-reittimerkinnan-kaikki-havainnot
   "Yhdistää reittimerkinnän pistemäiset havainnot ja jatkuvat havainnot."
@@ -354,19 +344,23 @@
                                    (:pistemaiset-tarkastukset tarkastukset))})
 
 (defn- valmistele-merkinnat-kasittelyyn [merkinnat optiot]
-  (if (:analysoi-rampit? optiot)
-    (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)
-    merkinnat))
+  (as->
+    merkinnat m
+    (if (:analysoi-rampit? optiot) (ramppianalyysi/korjaa-virheelliset-rampit merkinnat) m)
+    (if (:analysoi-ymparikaantymiset? optiot) (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta m) m)))
 
 (defn reittimerkinnat-tarkastuksiksi
   "Reittimerkintämuunnin, joka käy reittimerkinnät läpi ja palauttaa mapin, jossa reittimerkinnät muutettu
    reitillisiksi ja pistemäisiksi Harja-tarkastuksiksi.
 
    Optiot on mappi:
-   - analysoi-rampit?         Korjaa virheellisesti rampille projisoituneet pisteet takaisin moottoritielle.
-                              Oletus: true."
+   - analysoi-rampit?               Korjaa virheellisesti rampille projisoituneet pisteet takaisin moottoritielle.
+                                    Oletus: true.
+   - analysoi-ymparikaantymiset?    Katkaisee reitit pisteistä, joissa havaitaan selkeä ympärikääntyminen.
+                                    Oletus: true."
   ([tr-osoitteelliset-reittimerkinnat]
-   (reittimerkinnat-tarkastuksiksi tr-osoitteelliset-reittimerkinnat {:analysoi-rampit? true}))
+   (reittimerkinnat-tarkastuksiksi tr-osoitteelliset-reittimerkinnat {:analysoi-rampit? true
+                                                                      :analysoi-ymparikaantymiset? true}))
   ([tr-osoitteelliset-reittimerkinnat optiot]
    (let [kasiteltavat-merkinnat (valmistele-merkinnat-kasittelyyn tr-osoitteelliset-reittimerkinnat optiot)
          tarkastukset {:reitilliset-tarkastukset (reittimerkinnat-reitillisiksi-tarkastuksiksi
