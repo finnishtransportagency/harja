@@ -153,7 +153,7 @@
     (assoc-in app [:tierekisterin-varusteet :tarkastus] nil))
 
   AsetaVarusteTarkastuksenTiedot
-  (process-event [{uudet-tiedot :tiedot} {tarkastus :tarkastus :as app}]
+  (process-event [{uudet-tiedot :tiedot} {{tarkastus :tarkastus} :tierekisterin-varusteet :as app}]
     (assoc-in app [:tierekisterin-varusteet :tarkastus] (assoc tarkastus :tiedot uudet-tiedot)))
 
   AloitaVarusteenMuokkaus
