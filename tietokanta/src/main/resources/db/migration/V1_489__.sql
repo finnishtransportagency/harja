@@ -1,7 +1,15 @@
-CREATE TYPE laheinen_osoiterivi AS (
- tie INTEGER,      -- TR tie
- osa INTEGER,      -- TR osa
- etaisyys INTEGER, -- TR etäisyys tieosan alusta
- ajorata INTEGER,  -- TR ajorata
- d NUMERIC 	   -- ST_Distance annetusta pisteesta
-);
+-- Tee kuittaustyypeistä teksti enumin sijaan
+
+ALTER TABLE ilmoitustoimenpide
+ RENAME COLUMN kuittaustyyppi TO kuittaustyyppi_temp;
+ALTER TABLE ilmoitustoimenpide
+ ADD COLUMN kuittaustyyppi text;
+
+UPDATE ilmoitustoimenpide
+SET
+ kuittaustyyppi = kuittaustyyppi_temp;
+
+ALTER TABLE ilmoitustoimenpide
+ DROP COLUMN kuittaustyyppi_temp;
+
+DROP TYPE kuittaustyyppi;
