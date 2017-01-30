@@ -9,7 +9,9 @@
             [harja-laadunseuranta.kyselyt :as q]
             [com.stuartsierra.component :as component]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja-laadunseuranta.core :as harja-laadunseuranta]))
+            [harja-laadunseuranta.core :as harja-laadunseuranta]
+            [clj-time.core :as t]
+            [clojure.core.async :refer [go <! <!! >! thread >!!] :as async]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -67,16 +69,32 @@
                             (take 9 (drop 8 merkinnat-ymparikaantymisilla))))
              1)))))
 
-(deftest ymparikaantymisanalyysi-ei-havaitse-ymparikaantymista-kun-sita-ei-ole
-  (let [tarkastusajo-idt [1 754 664 665 666 667 668]]
+(defn- ymparikaantymisen-analyysi-ei-havaitse-ymprikaantymisia [tarkastusajo-id]
+  (let [merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
+                                                         {:tarkastusajo tarkastusajo-id
+                                                          :laheiset_tiet_threshold 100})]
 
+    (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
+
+    (let [merkinnat-ymparikaantymisilla (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta merkinnat)
+          ei-ymparikaantymisia? (empty? (filter :ymparikaantyminen? merkinnat-ymparikaantymisilla))]
+      (is (= (count merkinnat-ymparikaantymisilla) (count merkinnat)))
+      (is ei-ymparikaantymisia?)
+      ei-ymparikaantymisia?)))
+
+(deftest ymparikaantymisanalyysi-ei-havaitse-ymparikaantymista-ajoissa-joissa-sita-ei-ole
+  (let [tarkastusajo-idt [1 754 664 665 666 667 668]
+        vastaus-kanava (async/chan)]
+
+    ;; Analysoidaan jokainen ajo asynkronisesti, muuten testi on hidas
     (doseq [tarkastusajo-id tarkastusajo-idt]
-      (let [merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
-                                                             {:tarkastusajo tarkastusajo-id
-                                                              :laheiset_tiet_threshold 100})]
+      (go
+        (let [ei-ymparikaantymisia? (ymparikaantymisen-analyysi-ei-havaitse-ymprikaantymisia tarkastusajo-id)]
+          (>! vastaus-kanava ei-ymparikaantymisia?))))
 
-        (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
 
-        (let [merkinnat-ymparikaantymisilla (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta merkinnat)]
-          (is (= (count merkinnat-ymparikaantymisilla) (count merkinnat)))
-          (is (empty? (filter :ymparikaantyminen? merkinnat-ymparikaantymisilla))))))))
+    (loop [vastaukset []]
+      (if (< (count vastaukset) (count tarkastusajo-idt))
+        (let [vastaus (<!! vastaus-kanava)]
+          (recur (conj vastaukset vastaus)))
+        (is (every? true? vastaukset) "Ympärikääntymisiä ei havaittu")))))
