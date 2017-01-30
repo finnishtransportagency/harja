@@ -325,6 +325,7 @@
                    (str " " (pvm/pvm-aika (:alkanut toteuma)))))
    :tiedot (vec (concat [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
                          {:otsikko "Päättynyt" :tyyppi :pvm-aika :nimi :paattynyt}
+                         {:otsikko "Klo (arvio)" :tyyppi :pvm-aika :nimi :aika-pisteessa}
                          {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite
                           :nimi :tierekisteriosoite}
                          {:otsikko "Suorittaja" :hae (hakufunktio
