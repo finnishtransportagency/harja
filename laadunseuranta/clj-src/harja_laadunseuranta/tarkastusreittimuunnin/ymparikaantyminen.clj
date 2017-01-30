@@ -24,12 +24,13 @@
    tarkimmin M metrin päässä pisteestä N."
   [{:keys [etsittavat-merkinnat m n]}]
   (let [merkintojen-etaisyys-pisteeseen-n (map
-                                            #(math/pisteiden-etaisyys (:sijainti %) n)
+                                            #(when-let [sijainti (:sijainti %)]
+                                               (math/pisteiden-etaisyys sijainti n))
                                             etsittavat-merkinnat)
         n-etaisyyden-ero-m (map
-                             #(Math/abs (- % m))
+                             #(when % (Math/abs (- % m)))
                              merkintojen-etaisyys-pisteeseen-n)
-        pienin-ero-m (first (sort n-etaisyyden-ero-m))
+        pienin-ero-m (first (sort (remove nil? n-etaisyyden-ero-m)))
         pienin-ero-m-indeksi (.indexOf n-etaisyyden-ero-m pienin-ero-m)]
     (nth etsittavat-merkinnat pienin-ero-m-indeksi)))
 
@@ -54,10 +55,24 @@
 (defn- k-nykyisessa-sijainnissa? [k-sijainti nykyinen-sijainti]
   (<= (math/pisteiden-etaisyys k-sijainti nykyinen-sijainti) 30))
 
-(defn- maarita-seuraava-k [{:keys [tulos
-                                   kaikki-merkinnat
-                                   kasiteltava-indeksi
-                                   seuraava-merkinta
+(defn- etsi-kn-tormays-nykyiseen-sijaintiin
+  "Jos K on nykyisessä sijainnissa, palauttaa indeksin, jossa ympärikääntyminen tapahtui.
+   Muuten palauttaa nil."
+  [{:keys [kaikki-merkinnat kasiteltava-indeksi
+           seuraava-merkinta uusi-k-indeksi
+           uusi-k-sijainti]}]
+  (when (k-nykyisessa-sijainnissa? uusi-k-sijainti (:sijainti seuraava-merkinta))
+    (log/debug "--> K kohtasi nykyisen sijainnin!")
+    (log/debug "--> Käsiteltava indeksi: " kasiteltava-indeksi " ja uusi k indeksi: " uusi-k-indeksi)
+    (log/debug "--> Ympärikääntymisen piste täytyy löytä näiden välistä!")
+    (maarita-ymparikaantymisen-indeksi
+      kaikki-merkinnat
+      (take (- kasiteltava-indeksi uusi-k-indeksi)
+            (drop uusi-k-indeksi kaikki-merkinnat))
+      uusi-k-sijainti)))
+
+(defn- maarita-seuraava-k [{:keys [tulos kaikki-merkinnat
+                                   kasiteltava-indeksi seuraava-merkinta
                                    k-indeksi m]}]
   (let [sopiva-merkinta-takana (etsi-merkinta-m-metrin-paassa-pisteesta-n
                                  {:etsittavat-merkinnat (drop
@@ -65,34 +80,30 @@
                                                           (:lapikaydyt-merkinnat tulos))
                                   :m m
                                   :n (:sijainti seuraava-merkinta)})
-        sopiva-merkinta-takana-indeksi (.indexOf (:lapikaydyt-merkinnat tulos) sopiva-merkinta-takana)]
+        sopiva-merkinta-takana-indeksi (when sopiva-merkinta-takana
+                                         (.indexOf (:lapikaydyt-merkinnat tulos) sopiva-merkinta-takana))]
     ;; Siirrä K:ta eteenpäin niin kauan että saavutetaan takaa löydetty sopiva merkintä
     ;; Jokaisella siirrolla tulee tarkistaa, siirtyikö K suunnilleen samaan pisteeseen
     ;; kuin missä nyt ollaan. Jos siirtyi, tapahtui ympärikääntyminen takana löydetystä
     ;; merkinnästä
-    (loop [uusi-k-indeksi k-indeksi
-           ymparikaantyminen-indeksissa nil]
-      (let [uusi-k-sijainti (:sijainti (nth (:lapikaydyt-merkinnat tulos) uusi-k-indeksi))]
-        (if (= uusi-k-indeksi sopiva-merkinta-takana-indeksi)
-          (do (log/debug "K on sopivassa sijainnissa M metrin päässä.")
-              {:sijainti (:sijainti sopiva-merkinta-takana)
-               :indeksi uusi-k-indeksi
-               :ymparikaantyminen-indeksi ymparikaantyminen-indeksissa})
-          (do (log/debug (str "Siirretään K:ta eteenpäin indeksiin: " (inc uusi-k-indeksi)))
-              (recur (inc uusi-k-indeksi)
-                     ;; Kokeile törmääkö K nykyiseen sijaintiin
-                     ;; eli havaitaanko ympärikääntyminen, ellei jo havaittu
-                     (if ymparikaantyminen-indeksissa
-                       ymparikaantyminen-indeksissa
-                       (when (k-nykyisessa-sijainnissa? uusi-k-sijainti (:sijainti seuraava-merkinta))
-                         (log/debug "--> K kohtasi nykyisen sijainnin!")
-                         (log/debug "--> Käsiteltava indeksi: " kasiteltava-indeksi " ja uusi k indeksi: " uusi-k-indeksi)
-                         (log/debug "--> Ympärikääntymisen piste täytyy löytä näiden välistä!")
-                         (maarita-ymparikaantymisen-indeksi
-                           kaikki-merkinnat
-                           (take (- kasiteltava-indeksi uusi-k-indeksi)
-                                 (drop uusi-k-indeksi kaikki-merkinnat))
-                           uusi-k-sijainti))))))))))
+    (when sopiva-merkinta-takana-indeksi
+      (loop [uusi-k-indeksi k-indeksi
+             ymparikaantyminen-indeksissa nil]
+        (let [uusi-k-sijainti (:sijainti (nth (:lapikaydyt-merkinnat tulos) uusi-k-indeksi))]
+          (if (= uusi-k-indeksi sopiva-merkinta-takana-indeksi)
+            (do (log/debug "K on sopivassa sijainnissa M metrin päässä.")
+                {:sijainti (:sijainti sopiva-merkinta-takana)
+                 :indeksi uusi-k-indeksi
+                 :ymparikaantyminen-indeksi ymparikaantyminen-indeksissa})
+            (do (log/debug (str "Siirretään K:ta eteenpäin kohti indeksiä: " (inc uusi-k-indeksi)))
+                (recur (inc uusi-k-indeksi)
+                       (if ymparikaantyminen-indeksissa
+                         ymparikaantyminen-indeksissa ;; Ympärikääntyminen havaittiin aiemmin
+                         (etsi-kn-tormays-nykyiseen-sijaintiin {:kaikki-merkinnat kaikki-merkinnat
+                                                                :kasiteltava-indeksi kasiteltava-indeksi
+                                                                :seuraava-merkinta seuraava-merkinta
+                                                                :uusi-k-indeksi uusi-k-indeksi
+                                                                :uusi-k-sijainti uusi-k-sijainti}))))))))))
 
 (defn- yrita-maarittaa-ensimmainen-k [ensimmainen-merkinta seuraava-merkinta m]
   (when (>= (math/pisteiden-etaisyys (:sijainti ensimmainen-merkinta)
@@ -115,7 +126,9 @@
 
    Mikäli K:n siirron aikana havaitaan K:n olevan suunnilleen samassa pisteessä kuin nykyinen
    sijainti, ollaan havaittu ympärikääntyminen. Tällöin etsitään se sijainti, jossa
-   ympärikääntyminen tapahtui (sijainti, jossa alettiin lähestyä K:ta)."
+   ympärikääntyminen tapahtui (sijainti, jossa alettiin lähestyä K:ta).
+
+   On mahdollista, ettei uutta K:ta saada määritettyä, jos merkintöjen sijainti puuttuu."
   [{:keys [ensimmainen-merkinta tulos
            seuraava-merkinta kasiteltava-indeksi
            k-indeksi m kaikki-merkinnat]}]
@@ -152,8 +165,8 @@
                                                 :k-indeksi (:k-indeksi tulos)
                                                 :m m})]
                     {:kasiteltava-indeksi (inc (:kasiteltava-indeksi tulos))
-                     :k-indeksi (:indeksi uusi-k)
-                     :k-sijainti (:sijainti uusi-k)
+                     :k-indeksi (or (:indeksi uusi-k) (:k-indeksi tulos))
+                     :k-sijainti (or (:sijainti uusi-k) (:k-sijainti tulos))
                      :lapikaydyt-merkinnat (conj (:lapikaydyt-merkinnat tulos) seuraava)
                      :ymparikaantymisindeksit (if (:ymparikaantyminen-indeksi uusi-k)
                                                 (conj (:ymparikaantymisindeksit tulos)

@@ -278,6 +278,15 @@
     :jatkuvat-havainnot [17]
     :kitkamittaus 0.3}])
 
+(def tarkastus-jossa-sijainti-puuttuu-alusta
+  [{:id 0 :sijainti nil
+    :jatkuvat-havainnot [17]}
+   {:id 1 :sijainti [464681.5999816895 7230492.000024414]
+    :jatkuvat-havainnot [17]}
+   {:id 2 :sijainti nil
+    :jatkuvat-havainnot [17]
+    :kitkamittaus 0.3}])
+
 (def tarkastus-jossa-ajallinen-aukko
   [{:id 0 :sijainti [464681.5999816895 7230492.000024414]
     :jatkuvat-havainnot []
