@@ -40,9 +40,11 @@
   [nykyinen-reittimerkinta seuraava-reittimerkinta]
   (let [jatkuvat-havainnot-pysyvat-samana? (= (:jatkuvat-havainnot nykyinen-reittimerkinta)
                                               (:jatkuvat-havainnot seuraava-reittimerkinta))
-        seuraava-piste-samalla-tiella? (boolean (or (nil? (:tr-osoite seuraava-reittimerkinta))
-                                                    (= (get-in nykyinen-reittimerkinta [:tr-osoite :tie])
-                                                       (get-in seuraava-reittimerkinta [:tr-osoite :tie]))))
+        seuraava-piste-samalla-tiella? (boolean (or
+                                                  (nil? (:tr-osoite nykyinen-reittimerkinta))
+                                                  (nil? (:tr-osoite seuraava-reittimerkinta))
+                                                  (= (get-in nykyinen-reittimerkinta [:tr-osoite :tie])
+                                                     (get-in seuraava-reittimerkinta [:tr-osoite :tie]))))
         ei-ajallista-gappia? (boolean (or
                                         (nil? (:aikaleima nykyinen-reittimerkinta))
                                         (nil? (:aikaleima seuraava-reittimerkinta))
