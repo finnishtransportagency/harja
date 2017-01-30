@@ -1,9 +1,8 @@
 (ns harja-laadunseuranta.tarkastusreittimuunnin.ramppianalyysi-test
   (:require [clojure.test :refer :all]
             [harja-laadunseuranta.tarkastusreittimuunnin.ramppianalyysi :as ramppianalyysi]
-            [harja
-             [pvm :as pvm]
-             [testi :refer :all]]
+            [harja-laadunseuranta.tarkastusreittimuunnin.testityokalut :as tyokalut]
+            [harja.testi :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja-laadunseuranta.kyselyt :as q]
@@ -26,14 +25,6 @@
   (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
-
-(defn- aseta-ramppimerkintojen-tarkkuus
-  "Etsii merkinnöistä rampille projisoidut pisteet ja ylikirjoittaa niiden GPS-tarkkuudeksi
-   annetun tarkkuuden."
-  [merkinnat tarkkuus]
-  (assert (and (number? tarkkuus)
-               (>= tarkkuus 0)) "Virheellinen tarkkuus")
-  (mapv #(assoc % :gps-tarkkuus tarkkuus) merkinnat))
 
 ;; HOX! Tässä tehdään testejä kannassa löytyville ajoille, joilla on tietty id.
 ;; Ajojen tekstuaalisen selityksen löydät: testidata/tarkastusajot.sql
@@ -127,7 +118,7 @@
         merkinnat (-> (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                              {:tarkastusajo tarkastusajo-id
                                                               :laheiset_tiet_threshold 100})
-                      (aseta-ramppimerkintojen-tarkkuus 5))]
+                      (tyokalut/aseta-merkintojen-tarkkuus 5))]
 
     (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
       (is (= (count korjatut-merkinnat) (count merkinnat)))
@@ -138,7 +129,7 @@
         merkinnat (-> (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                              {:tarkastusajo tarkastusajo-id
                                                               :laheiset_tiet_threshold 100})
-                      (aseta-ramppimerkintojen-tarkkuus 13))]
+                      (tyokalut/aseta-merkintojen-tarkkuus 13))]
 
     (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
       (is (= (count korjatut-merkinnat) (count merkinnat)))
@@ -167,7 +158,7 @@
                       ;; Tämä riittää varmistamaan, että pisteet ovat oikeasti sijoittuneet
                       ;; rampille. Tätä epätarkempi arvo voi potentiaalisesti projisoitua
                       ;; takaisin ajetulle moottoritielle => ramppianalyysi korjaa projision.
-                      (aseta-ramppimerkintojen-tarkkuus 30))]
+                      (tyokalut/aseta-merkintojen-tarkkuus 30))]
 
     (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
       (is (= (count korjatut-merkinnat) (count merkinnat)))
