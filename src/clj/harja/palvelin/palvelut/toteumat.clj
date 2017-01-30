@@ -748,8 +748,8 @@
     (into []
           (comp (map #(assoc % :tyyppi-kartalla :toteuma))
                 (map konv/alaviiva->rakenne)
-                (map #(interpolointi/interpoloi-toteuman-aika-pisteelle % parametrit db))
-                (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
+                (map #(update % :tierekisteriosoite konv/lue-tr-osoite))
+                (map #(interpolointi/interpoloi-toteuman-aika-pisteelle % parametrit db)))
           (toteumat-q/hae-toteumien-tiedot-pisteessa
             db
             (merge {:x x :y y :tyyppi "kokonaishintainen"}
@@ -769,8 +769,8 @@
     (into []
           (comp (map #(assoc % :tyyppi-kartalla :toteuma))
                 (map konv/alaviiva->rakenne)
-                (map #(interpolointi/interpoloi-toteuman-aika-pisteelle % parametrit db))
-                (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
+                (map #(update % :tierekisteriosoite konv/lue-tr-osoite))
+                (map #(interpolointi/interpoloi-toteuman-aika-pisteelle % parametrit db)))
           (toteumat-q/hae-toteumien-tiedot-pisteessa
             db
             (merge {:x x :y y :tyyppi "yksikkohintainen"
