@@ -25,6 +25,13 @@
             "additionalProperties": false,
             "required": true,
             "properties": {
+              "tunniste": {
+                "id": "urn:harja/yllapitokohde/maaramuutokset/0/maaramuutostunniste",
+                "type": "object",
+                "additionalProperties": false,
+                "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+                "required": true
+              },
               "tyyppi": {
                 "id": "urn:harja/yllapitokohde/maaramuutokset/0/maaramuutos/tyyppi",
                 "enum": [
