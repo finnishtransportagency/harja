@@ -74,9 +74,7 @@
                                                   :hallintayksikko hallintayksikko-id
                                                   :urakkatyyppi "hoito"
                                                   :alku alkupvm :loppu loppupvm})
-        konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
-                        :default :koko-maa)
+        haettu-urakka (when urakka-id (first (urakat-q/hae-urakka db urakka-id)))
         urakka-idt (mapv :urakka-id urakat)
         kuukaudet (yleinen/kuukausivalit alkupvm loppupvm)
         laskutusyhteenvedot-kk (zipmap kuukaudet
@@ -94,7 +92,7 @@
                            (map :nimi kuukauden-laskutusyhteenvedot)))
                        (vals laskutusyhteenvedot-kk))
         alueen-nimi (if urakka-id
-                       (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                       (:nimi haettu-urakka)
                        (if hallintayksikko-id
                          (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                          "KOKO MAA"))
@@ -116,8 +114,8 @@
                              laskutusyhteenvedot-kk))
                      tuotteet))
         ;; Indeksiluvun näyttämiseen tarvittavat tiedot
-        indeksi-kaytossa? (boolean (when (= 1 (count urakat))
-                                     (some? (:indeksi (first (urakat-q/hae-urakka db urakka-id))))))
+        indeksi-kaytossa? (boolean (when urakka-id
+                                     (some? (:indeksi haettu-urakka))))
         kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         perusluku (:perusluku (ffirst (vals laskutusyhteenvedot-kk)))
         ;; Laskutusyhteenvedossa samankaltainen varoitus, mutta huomattavasti monipuolisempi..
@@ -129,9 +127,9 @@
     (into []
           (concat [:raportti {:nimi (str "Indeksitarkistusraportti " alueen-nimi " " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))}
                    varoitus-puuttuvista-indekseista
-                   (if (and (= :urakka konteksti) (not indeksi-kaytossa?))
+                   (if (and urakka-id (not indeksi-kaytossa?))
                      [:varoitusteksti "Urakassa ei käytetä indeksitarkistuksia."]
-                     (when (and (= :urakka konteksti) indeksi-kaytossa? perusluku)
+                     (when (and urakka-id indeksi-kaytossa? perusluku)
                       (yleinen/indeksitiedot {:perusluku perusluku :kyseessa-kk-vali? kyseessa-kk-vali?
                                               :alkupvm alkupvm :kkn-indeksiarvo kkn-indeksiarvo})))]
                   [(indeksitaulukko "Kaikki yhteensä" kuukaudet laskutusyhteenvedot-kk)]
