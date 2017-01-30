@@ -31,8 +31,10 @@
                              #(when % (Math/abs (- % m)))
                              merkintojen-etaisyys-pisteeseen-n)
         pienin-ero-m (first (sort (remove nil? n-etaisyyden-ero-m)))
-        pienin-ero-m-indeksi (.indexOf n-etaisyyden-ero-m pienin-ero-m)]
-    (nth etsittavat-merkinnat pienin-ero-m-indeksi)))
+        pienin-ero-m-indeksi (when pienin-ero-m
+                               (.indexOf n-etaisyyden-ero-m pienin-ero-m))]
+    (when pienin-ero-m-indeksi
+      (nth etsittavat-merkinnat pienin-ero-m-indeksi))))
 
 (defn- maarita-ymparikaantymisen-indeksi
   "Ottaa kaikki merkinnät nykyisestä käsiteltävästä sijainnista K:n.
