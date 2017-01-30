@@ -28,15 +28,15 @@
         ;; Kaikki käsitelty
         pisteet-ja-rotaatiot
 
-        (let [[x1 y1 :as p1] (or viimeisin-sijanti (first alkupiste))
-              [x2 y2 :as p2] (second sijainti)
-              dist (geo/etaisyys p1 p2)]
+        (let [[x1 y1 :as nuoli] (or viimeisin-sijanti (first alkupiste))
+              [x2 y2 :as taitoksen-alku] (first sijainti)
+              [x3 y3 :as taitoksen-loppu] (second sijainti)
+              dist (geo/etaisyys nuoli taitoksen-loppu)]
           (cond
             (> dist valimatka)
             (recur (conj pisteet-ja-rotaatiot
-                         [(-> sijainti second luo-piste)
-                          (kulma p1 p2)])
-                   (second sijainti) taitokset)
+                         [(luo-piste taitoksen-loppu) rotaatio])
+                   taitoksen-loppu taitokset)
 
             :else
             (recur pisteet-ja-rotaatiot
