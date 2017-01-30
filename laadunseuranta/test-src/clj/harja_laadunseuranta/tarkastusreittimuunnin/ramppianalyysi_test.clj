@@ -156,13 +156,29 @@
                                                               :laheiset_tiet_threshold 100})
                       ;; Pisteet etenevät ramppia pitkin ja GPS:n tarkkuussäde on 30m.
                       ;; Tämä riittää varmistamaan, että pisteet ovat oikeasti sijoittuneet
-                      ;; rampille. Tätä epätarkempi arvo voi potentiaalisesti projisoitua
-                      ;; takaisin ajetulle moottoritielle => ramppianalyysi korjaa projision.
+                      ;; rampille eli rampilla ajo hyväksytään.
                       (tyokalut/aseta-merkintojen-tarkkuus 30))]
 
     (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
       (is (= (count korjatut-merkinnat) (count merkinnat)))
       (is (= korjatut-merkinnat merkinnat)))))
+
+(deftest ramppianalyysi-korjaa-virheelliset-rampit-kun-iso-osa-erittain-epatarkkoja-pisteita-osuu-rampille
+  (let [tarkastusajo-id 668
+        merkinnat (-> (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
+                                                          {:tarkastusajo tarkastusajo-id
+                                                           :laheiset_tiet_threshold 100})
+                      ;; Erittäin epätarkka ajo rampilla, jota ei hyväksytä.
+                      ;; Merkintöjen odotetaan projisoituvan takaisin moottoritielle.
+                      (tyokalut/aseta-merkintojen-tarkkuus 80))]
+
+    (let [korjatut-merkinnat (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)]
+      (is (= (count korjatut-merkinnat) (count merkinnat)))
+      (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
+                    korjatut-merkinnat))
+      (is (every? #(or (= (get-in % [:tr-osoite :tie]) 4)
+                       (nil? (get-in % [:tr-osoite :tie])))
+                  korjatut-merkinnat)))))
 
 (deftest ramppianalyysi-korjaa-virheelliset-rampit-oikeassa-ajossa-754
   (let [tarkastusajo-id 754
