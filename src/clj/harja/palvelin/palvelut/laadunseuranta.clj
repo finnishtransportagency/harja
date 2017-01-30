@@ -37,7 +37,6 @@
 
             [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [harja.palvelin.palvelut.interpolointi :as interpolointi]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.domain.oikeudet :as oikeudet]
             [harja.id :refer [id-olemassa?]]
@@ -414,7 +413,6 @@
             (map #(konv/array->set % :vakiohavainnot))
             (map #(assoc % :tyyppi-kartalla :tarkastus))
             (map #(konv/string->keyword % :tyyppi))
-            (map #(interpolointi/interpoloi-tarkastuksen-aika-pisteelle % parametrit db))
             (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
           (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
             db
