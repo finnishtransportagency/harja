@@ -26,11 +26,11 @@
 
 (deftest kartan-konfiguraatio
   (testing "Kartan konfiguraatio"
-    (let [sijainti (atom {:lat 100
-                          :lon 200})
-          ajoneuvon-sijainti (atom {:lat 400
-                                    :lon 500
-                                    :heading 45})
+    (let [sijainti (atom (:nykyinen {:lat 100
+                                     :lon 200}))
+          ajoneuvon-sijainti (atom (:nykyinen {:lat 400
+                                               :lon 500
+                                               :heading 45}))
           reittipisteet (atom [{:segmentti [[1 1] [2 2]]
                                 :vari "black"}
                                {:segmentti [[2 2] [3 3]]
