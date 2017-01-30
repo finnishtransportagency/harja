@@ -22,7 +22,8 @@
             [harja.loki :refer [log]]
             [harja.ui.komponentti :as komp]
             [harja.views.kartta.infopaneeli :as infopaneeli]
-            [harja.tiedot.kartta :as kartta-tiedot]))
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.views.kartta.tasot :as tasot]))
 
 (def tr-osoite-taytetty? (every-pred :numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys))
 
@@ -46,9 +47,8 @@
    [{:nimi :tierekisteriosoite :tyyppi :tierekisteriosoite
      :tyyli :rivitetty
      :pakollinen? true
-     :sijainti (when-not tulokset
-                 (r/wrap (:sijainti valinnat)
-                         #(e! (tiedot/->PaivitaSijainti %))))
+     :sijainti (r/wrap (:sijainti valinnat)
+                       #(e! (tiedot/->PaivitaSijainti %)))
      :otsikko "Tierekisteriosoite"
      :palstoja 3
      :validoi [(fn [osoite {sijainti :sijainti}]
@@ -65,6 +65,9 @@
    valinnat])
 
 (defn- nayta-tulospaneeli! [e! tulokset avatut-tulokset]
+  ;; Poistetaan TR-valinnan katkoviiva häiritsemästä
+  (tasot/poista-geometria! :tr-valittu-osoite)
+
   (kartta-tiedot/nayta-kartan-kontrollit!
    :tienakyma-tulokset
    ^{:class "kartan-infopaneeli"}
