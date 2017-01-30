@@ -196,7 +196,7 @@
 
 (defn lisaa-tieto-ymparikaantymisesta
   [merkinnat]
-  (let [ymparikaantymiset (set (analysoi-ymparikaantymiset merkinnat 100))
+  (let [ymparikaantymiset (set (analysoi-ymparikaantymiset merkinnat 120))
         merkinnat (vec (map-indexed (fn [index merkinta]
                                       (if (ymparikaantymiset index)
                                         (assoc merkinta :ymparikaantyminen? true)
