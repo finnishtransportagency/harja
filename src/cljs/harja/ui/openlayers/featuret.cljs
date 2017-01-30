@@ -22,10 +22,7 @@
             [harja.geo :as geo]
             [harja.tiedot.navigaatio :as nav]))
 
-(def ^{:doc "Viivaan piirrettävien nuolten välimatka, jotta nuolia ei piirretä
-turhaan liikaa"
-       :const true}
-  nuolten-valimatka 3000)
+(def nuolten-valimatka 30000)
 
 (def ^{:doc "Kartalle piirrettävien asioiden oletus-zindex. Urakat ja muut piirretään
 pienemmällä zindexillä." :const true}
