@@ -145,13 +145,6 @@
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
 
-;; PENDING Ympärikääntymislogiikka disabloitu tällä hetkellä GPS:n epätarkkuudesta johtuen
-#_(deftest tarkastus-jossa-kaannytaan-ympari
-    (let [tarkastukset (reittimerkinnat-tarkastuksiksi (lisaa-reittimerkinnoille-mockattu-tieosoite testidata/tarkastus-jossa-kaannytaan-ympari))]
-      ;; Muunnettu määrällisesti oikein
-      (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
-      (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
-
 ;; -------- Laadunalitus --------
 
 (deftest tarkastus-jossa-jatkuva-laadunalitus
@@ -265,7 +258,7 @@
 (deftest soratie-jatkuva-kiinteys-laskettu-oikein
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
-                         testidata/tarkastus-jossa-soratie-kiinteys-jatkuu))]
+                         testidata/tarkastus-jossa-soratie-kiinteys-jatkuu-vaikka-gps-sekoaa))]
     ;; Munnetaan määrällisesti okein
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))
