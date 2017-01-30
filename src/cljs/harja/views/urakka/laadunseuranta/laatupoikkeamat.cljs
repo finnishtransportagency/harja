@@ -81,6 +81,9 @@
   [laatupoikkeama]
   (not (nil? (get-in laatupoikkeama [:paatos :paatos]))))
 
+(defn- vastaava-laatupoikkeama [lp]
+  (some (fn [haettu-lp] (when (= (:id haettu-lp) (:id lp)) haettu-lp)) @laatupoikkeamat/urakan-laatupoikkeamat))
+
 (defn laatupoikkeamat [optiot]
   (komp/luo
     (komp/lippu lp-kartalla/karttataso-laatupoikkeamat)
@@ -88,8 +91,14 @@
     (komp/ulos (kartta-tiedot/kuuntele-valittua! laatupoikkeamat/valittu-laatupoikkeama))
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                        (kartta-tiedot/kasittele-infopaneelin-linkit!
+                          {:laatupoikkeama {:toiminto (fn [lp]
+                                                        (reset! laatupoikkeamat/valittu-laatupoikkeama-id
+                                                                (:id (vastaava-laatupoikkeama lp))))
+                                            :teksti "Valitse laatupoikkeama"}})
                         (nav/vaihda-kartan-koko! :M))
-                      #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
+                      #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+                           (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
     (fn [optiot]
       [:span.laatupoikkeamat
        [kartta/kartan-paikka]

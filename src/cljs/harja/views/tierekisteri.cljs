@@ -165,7 +165,7 @@
 
 (defn tierekisteri []
   (komp/luo
-   (komp/lippu-arvo false @kartta-tiedot/pida-geometriat-nakyvilla? kartta-tiedot/pida-geometriat-nakyvilla?)
+   (komp/lippu-arvo false true kartta-tiedot/pida-geometriat-nakyvilla?)
    (komp/avain-lippu nav/tarvitsen-isoa-karttaa :tierekisteri)
    (fn []
      [:div.tr-debug

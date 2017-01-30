@@ -48,7 +48,7 @@
    [:div {:class (str "ajax-loader inline-block " (when (:luokka opts) (:luokka opts)))}
     [:img {:src "images/ajax-loader.gif" :style {:height 16}}]
     (when viesti
-      [:div.viesti viesti])]))
+      [:span.viesti (str " " viesti " ")])]))
 
 (defn ajax-loader-pisteet
   "Näyttää latausanimaatiokuvan ja optionaalisen viestin."
