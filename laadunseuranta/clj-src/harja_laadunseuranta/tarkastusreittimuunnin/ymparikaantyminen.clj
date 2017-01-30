@@ -24,8 +24,9 @@
    tarkimmin M metrin päässä pisteestä N."
   [{:keys [etsittavat-merkinnat m n]}]
   (let [merkintojen-etaisyys-pisteeseen-n (map
-                                            #(when-let [sijainti (:sijainti %)]
-                                               (math/pisteiden-etaisyys sijainti n))
+                                            #(let [merkinta-sijainti (:sijainti %)]
+                                               (when (and merkinta-sijainti n)
+                                                 (math/pisteiden-etaisyys merkinta-sijainti n)))
                                             etsittavat-merkinnat)
         n-etaisyyden-ero-m (map
                              #(when % (Math/abs (- % m)))
@@ -55,7 +56,9 @@
     ymparikaantymisen-indeksi))
 
 (defn- k-nykyisessa-sijainnissa? [k-sijainti nykyinen-sijainti]
-  (<= (math/pisteiden-etaisyys k-sijainti nykyinen-sijainti) 30))
+  (if (and k-sijainti nykyinen-sijainti)
+    (<= (math/pisteiden-etaisyys k-sijainti nykyinen-sijainti) 30)
+    false)) ;; Ei voida määrittää
 
 (defn- etsi-kn-tormays-nykyiseen-sijaintiin
   "Jos K on nykyisessä sijainnissa, palauttaa indeksin, jossa ympärikääntyminen tapahtui.
@@ -170,6 +173,7 @@
                                                 :k-indeksi (:k-indeksi tulos)
                                                 :m m})]
                     {:kasiteltava-indeksi (inc (:kasiteltava-indeksi tulos))
+                     ;; Jos uusi K saatiin määritettyä, käytä sitä, muuten ota olemassa oleva
                      :k-indeksi (or (:indeksi uusi-k) (:k-indeksi tulos))
                      :k-sijainti (or (:sijainti uusi-k) (:k-sijainti tulos))
                      :lapikaydyt-merkinnat (conj (:lapikaydyt-merkinnat tulos) seuraava)
