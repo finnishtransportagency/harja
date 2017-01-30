@@ -79,6 +79,7 @@
   (process-event [{uusi :valinnat} tienakyma]
     (let [vanha (:valinnat tienakyma)
           alku-muuttunut? (not= (:alku vanha) (:alku uusi))
+          tr-osoite-muuttunut? (not= (:tierekisteriosoite vanha) (:tierekisteriosoite uusi))
           valinnat (as-> uusi v
                      ;; Jos alku muuttunut ja vanhassa alku ja loppu olivat samat,
                      ;; päivitä myös loppukenttä
@@ -88,11 +89,23 @@
                        v)
 
                      ;; Jos TR-osoite on muuttunut, nollaa sijainti
-                     (if (not= (:tierekisteriosoite vanha) (:tierekisteriosoite uusi))
-                       (assoc v :sijainti :ei-haettu)
+                     (if tr-osoite-muuttunut?
+                       (do (log "TR osoite muuttui: "
+                                (pr-str (:tierekisteriosoite vanha))
+                                " => "
+                                (pr-str (:tierekisteriosoite uusi)))
+                           (assoc v :sijainti :ei-haettu))
                        v))]
-      (assoc tienakyma
-             :valinnat valinnat)))
+      (as-> tienakyma tienakyma
+        (assoc tienakyma
+               :valinnat valinnat)
+        (if tr-osoite-muuttunut?
+          ;; Jos TR-osoite muuttuu, poistetaan tulokset
+          (assoc tienakyma
+                 :tulokset nil
+                 :valitut-tulokset-kartalla nil
+                 :muut-tulokset-kartalla nil)
+          tienakyma))))
 
   Hae
   (process-event [_ tienakyma]
