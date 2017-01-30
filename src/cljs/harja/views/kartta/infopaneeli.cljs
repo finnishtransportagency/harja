@@ -62,7 +62,7 @@
    [sulje-nappi piilota-fn!]
    (when haetaan? [ajax-loader-pieni "Haetaan..." {:luokka "ip-loader"}])
 
-   (when (empty? asiat)
+   (when (and (empty? asiat) (not haetaan?))
      [:span "Pisteestä ei löytynyt hakutuloksia."])
 
    (doall
