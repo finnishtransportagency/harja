@@ -3,16 +3,12 @@
   olevien asioiden tiedot."
   (:require [harja.ui.komponentti :as komp]
             [reagent.core :refer [atom] :as r]
-            [cljs.core.async :as async]
             [harja.loki :refer [log tarkkaile! error] :as log]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.napit :as napit]
             [harja.ui.debug :refer [debug]]
             [harja.ui.kentat :as kentat]
-            [harja.ui.kartta.infopaneelin-sisalto :as infopaneelin-sisalto]
-            [harja.ui.ikonit :as ikonit])
-  (:require-macros
-   [cljs.core.async.macros :as async-macros]))
+            [harja.ui.kartta.infopaneelin-sisalto :as infopaneelin-sisalto]))
 
 (defn otsikko
   "Näyttää infopaneelin asialle otsikon, jota klikkaamalla asian saa auki/kiinni"
@@ -84,8 +80,11 @@
                                      #{}))))]
     (paivita-asiat! asiat-pisteessa)
     (komp/luo
-     (komp/kun-muuttuu (fn [asiat-pisteessa _ _]
-                         (paivita-asiat! asiat-pisteessa)))
+      (komp/vanhat-ja-uudet-parametrit
+        (fn [[vanhat-asiat _ _] [uudet-asiat _ _]]
+          ;; Infopaneeli saa propseja joka kerta kun karttaa zoomataa, jonka takia avatut asiat
+          ;; resetoitiin joka kerta kun vaikka nyt esimerkiksi zoomasi.
+          (when-not (= vanhat-asiat uudet-asiat) (paivita-asiat! uudet-asiat))))
      (fn [{haetaan? :haetaan? :as asiat-pisteessa} piilota-fn! linkkifunktiot]
        (if haetaan?
          [:div
