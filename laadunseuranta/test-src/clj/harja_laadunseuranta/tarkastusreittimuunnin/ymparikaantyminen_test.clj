@@ -88,7 +88,7 @@
                             (take 3 (drop 4 merkinnat-ymparikaantymisilla))))
              1)))))
 
-(deftest ymparikaantymisanalyysi-ei-havaitsee-ymparikaantymista-tosi-lyhyella-valilla
+(deftest ymparikaantymisanalyysi-ei-havaitse-ymparikaantymista-tosi-lyhyella-valilla
   (let [tarkastusajo-id 902
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
