@@ -104,3 +104,6 @@
 
 (def +urakan-yllapitokohteen-paivitys-request+ "api/schemas/urakan-yllapitokohteen-paivitys-request.schema.json")
 (def urakan-yllapitokohteen-paivitys-request (tee-validaattori +urakan-yllapitokohteen-paivitys-request+))
+
+(def +urakan-yllapitokohteen-maaramuutosten-kirjaus-request+ "api/schemas/urakan-yllapitokohteen-maaramuutosten-kirjaus-request.schema.json")
+(def urakan-yllapitokohteen-maaramuutosten-kirjaus-request (tee-validaattori +urakan-yllapitokohteen-maaramuutosten-kirjaus-request+))
