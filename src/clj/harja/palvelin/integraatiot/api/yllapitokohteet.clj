@@ -29,6 +29,11 @@
 
   TIETYÖMAAN POISTO KOHTEELTA
   - Kun tietyömaa on valmistunut ja aidat on poistettu kentältä, voidaan tällä kutsulla poistaa tietyömaa Harjasta.
+
+  MÄÄRÄMUUTOSTEN KIRJAUS KOHTEELLE
+  - Määrämuutoksilla seurataan yksittäisen kohteen kuluja rivitasolla. Yksittäinen rivi sisältää tiedon päällysteen mm.
+    tyypistä, työstä, määristä sekä yksikkö hinnasta. Rajapintakutsu ylikirjoittaa koko kohteen taloudellisen osan,
+    joten idea on, että rajapinnan kautta annetaan aina kokonaisena tiedot.
   "
 
   (:require [com.stuartsierra.component :as component]
@@ -265,6 +270,17 @@
     (tee-kirjausvastauksen-body
       {:ilmoitukset (str "Tietyömaa poistettu onnistuneesti.")})))
 
+(defn kirjaa-maaramuutokset [db kayttaja {:keys [urakka-id kohde-id]} {:keys [otsikko maaramuutokset]}]
+  (log/debug (format "Kirjataan urakan (id: %s) kohteen (id: %s) maaramuutokset käyttäjän: %s toimesta"
+                     urakka-id
+                     kohde-id
+                     kayttaja))
+  (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+  (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+  #_(q-yllapitokohteet/poista-yllapitokohteen-maaramuutokset db kohde-id)
+  (println "---> otsikko:" otsikko)
+  (println "---> maaramuutokset:" maaramuutokset))
+
 (def palvelut
   [{:palvelu :hae-yllapitokohteet
     :polku "/api/urakat/:id/yllapitokohteet"
@@ -313,7 +329,14 @@
     :kutsu-skeema json-skeemat/tietyomaan-poisto
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
-                    (poista-tietyomaa db kayttaja parametrit data))}])
+                    (poista-tietyomaa db kayttaja parametrit data))}
+   {:palvelu :kirjaa-maaramuutokset
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/maaramuutokset"
+    :tyyppi :POST
+    :kutsu-skeema json-skeemat/urakan-yllapitokohteen-maaramuutosten-kirjaus-request
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db]
+                    (kirjaa-maaramuutokset db kayttaja parametrit data))}])
 
 (defrecord Yllapitokohteet []
   component/Lifecycle
