@@ -46,6 +46,10 @@
              (luo-tloik-komponentti)
              [:db :sonja :integraatioloki :klusterin-tapahtumat :labyrintti])))
 
+(defn tekstiviestin-rivit [ilmoitus]
+  (into #{} (str/split-lines
+              (tekstiviestit/ilmoitus-tekstiviesti ilmoitus 1234))))
+
 (use-fixtures :each jarjestelma-fixture)
 
 (deftest tarkista-kuittauksen-vastaanotto-tekstiviestilla
@@ -127,9 +131,8 @@
                   :lisatieto "Soittakaapa äkkiä"
                   :yhteydenottopyynto true
                   :selitteet #{:toimenpidekysely}}
-        rivit (into #{} (str/split-lines
-                          (tekstiviestit/ilmoitus-tekstiviesti ilmoitus 1234)))]
-    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (tunniste: UV666, viestinumero: 1234)."))
+        rivit (tekstiviestin-rivit ilmoitus)]
+    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (viestinumero: 1234)."))
     (is (rivit "Yhteydenottopyyntö: Kyllä"))
     (is (rivit "Paikka: Konesali"))
     (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
@@ -146,9 +149,8 @@
                   :lisatieto "Soittakaapa äkkiä"
                   :yhteydenottopyynto true
                   :selitteet #{:toimenpidekysely}}
-        rivit (into #{} (str/split-lines
-                          (tekstiviestit/ilmoitus-tekstiviesti ilmoitus 1234)))]
-    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (tunniste: UV666, viestinumero: 1234)."))
+        rivit (tekstiviestin-rivit ilmoitus)]
+    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (viestinumero: 1234)."))
     (is (rivit "Yhteydenottopyyntö: Kyllä"))
     (is (rivit "Paikka: Konesali"))
     (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
@@ -162,9 +164,8 @@
                   :lisatieto "Soittakaapa äkkiä"
                   :yhteydenottopyynto false
                   :selitteet #{:toimenpidekysely}}
-        rivit (into #{} (str/split-lines
-                          (tekstiviestit/ilmoitus-tekstiviesti ilmoitus 1234)))]
-    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (tunniste: UV666, viestinumero: 1234)."))
+        rivit (tekstiviestin-rivit ilmoitus)]
+    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (viestinumero: 1234)."))
     (is (rivit "Yhteydenottopyyntö: Ei"))
     (is (rivit "Paikka: Kilpisjärvi"))
     (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
