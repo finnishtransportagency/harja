@@ -87,6 +87,20 @@
                             (take 3 (drop 4 merkinnat-ymparikaantymisilla))))
              1)))))
 
+(deftest ymparikaantymisanalyysi-ei-havaitsee-ymparikaantymita-tosi-lyhyella-valilla
+  (let [tarkastusajo-id 902
+        merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
+                                                         {:tarkastusajo tarkastusajo-id
+                                                          :laheiset_tiet_threshold 100})]
+
+    (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
+    (is (every? :tr-osoite merkinnat) "Merkinnät projisoitiin tielle oikein")
+
+    (let [merkinnat-ymparikaantymisilla (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta merkinnat)]
+      (is (= (count merkinnat-ymparikaantymisilla) (count merkinnat)))
+      ;; Näin lyhyt väli voi syntyä GPS-kohinasta, joten sitä ei hyväksytä ympärikääntymiseksi
+      (is (empty? (filter :ymparikaantyminen? merkinnat-ymparikaantymisilla))))))
+
 (defn- ymparikaantymisen-analyysi-ei-havaitse-ymprikaantymisia [tarkastusajo-id]
   (let [merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
