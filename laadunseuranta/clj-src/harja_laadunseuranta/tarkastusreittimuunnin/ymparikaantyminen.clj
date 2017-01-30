@@ -107,13 +107,19 @@
                                                                 :uusi-k-indeksi uusi-k-indeksi
                                                                 :uusi-k-sijainti uusi-k-sijainti}))))))))))
 
-(defn- yrita-maarittaa-ensimmainen-k [ensimmainen-merkinta seuraava-merkinta m]
-  (when (>= (math/pisteiden-etaisyys (:sijainti ensimmainen-merkinta)
-                                     (:sijainti seuraava-merkinta))
-            m)
-    (log/debug "Määritetään K ensimmäiseen pisteeseen")
-    {:sijainti (:sijainti ensimmainen-merkinta)
-     :indeksi 0}))
+(defn- yrita-maarittaa-ensimmainen-k
+  "Määrittää K:n ensimmäiseen merkintään, jolla on sijainti, kun seuraava merkintä
+   on vähintään M metrin päässä tästä merkinnästä."
+  [kaikki-merkinnat seuraava-merkinta m]
+  (let [ensimmainen-sijainti (:sijainti (first (remove #(nil? (:sijainti %)) kaikki-merkinnat)))
+        seuraava-sijainti (:sijainti seuraava-merkinta)]
+    (when (and ensimmainen-sijainti seuraava-sijainti
+               (>= (math/pisteiden-etaisyys ensimmainen-sijainti
+                                            seuraava-sijainti)
+                   m))
+      (log/debug "Määritetään K ensimmäiseen pisteeseen")
+      {:sijainti (:sijainti ensimmainen-sijainti)
+       :indeksi 0})))
 
 (defn- maarita-uusi-k
   "Mikäli K:ta ei ole määritelty, määrittää K:n ensimmäiseen sijaintiin
@@ -131,14 +137,12 @@
    ympärikääntyminen tapahtui (sijainti, jossa alettiin lähestyä K:ta).
 
    On mahdollista, ettei uutta K:ta saada määritettyä, jos merkintöjen sijainti puuttuu."
-  [{:keys [ensimmainen-merkinta tulos
-           seuraava-merkinta kasiteltava-indeksi
-           k-indeksi m kaikki-merkinnat]}]
+  [{:keys [tulos seuraava-merkinta kasiteltava-indeksi k-indeksi m kaikki-merkinnat]}]
   (log/debug "Käsitellään merkintä indeksissä: " kasiteltava-indeksi)
   (if (nil? (:k-indeksi tulos))
     ;; K:ta ei ole vielä määritelty, määrittele se ensimmäiseen pisteeseen
     ;; kunhan nykyinen käsiteltävä piste on riittävän kaukana
-    (yrita-maarittaa-ensimmainen-k ensimmainen-merkinta seuraava-merkinta m)
+    (yrita-maarittaa-ensimmainen-k kaikki-merkinnat seuraava-merkinta m)
     ;; Käy edelliset pisteet läpi K:sta eteenpäin ja etsi uusi sellainen piste, joka
     ;; on M metrin päässä nykyisestä pisteestä.
     (maarita-seuraava-k {:tulos tulos
@@ -159,8 +163,7 @@
   [merkinnat m]
   (let [tulos (reduce
                 (fn [tulos seuraava]
-                  (let [uusi-k (maarita-uusi-k {:ensimmainen-merkinta (first merkinnat)
-                                                :kaikki-merkinnat merkinnat
+                  (let [uusi-k (maarita-uusi-k {:kaikki-merkinnat merkinnat
                                                 :tulos tulos
                                                 :kasiteltava-indeksi (:kasiteltava-indeksi tulos)
                                                 :seuraava-merkinta seuraava
