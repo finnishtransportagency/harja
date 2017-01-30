@@ -101,7 +101,7 @@
       ;; Näin lyhyt väli voi syntyä GPS-kohinasta, joten sitä ei hyväksytä ympärikääntymiseksi
       (is (empty? (filter :ymparikaantyminen? merkinnat-ymparikaantymisilla))))))
 
-(defn- ymparikaantymisen-analyysi-ei-havaitse-ymprikaantymisia [tarkastusajo-id]
+(defn- ymparikaantymisen-analyysi-ei-havaitse-ymparikaantymisia [tarkastusajo-id]
   (let [merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
                                                           :laheiset_tiet_threshold 100})]
@@ -121,7 +121,7 @@
     ;; Analysoidaan jokainen ajo asynkronisesti, muuten testi on hidas
     (doseq [tarkastusajo-id tarkastusajo-idt]
       (go
-        (let [ei-ymparikaantymisia? (ymparikaantymisen-analyysi-ei-havaitse-ymprikaantymisia tarkastusajo-id)]
+        (let [ei-ymparikaantymisia? (ymparikaantymisen-analyysi-ei-havaitse-ymparikaantymisia tarkastusajo-id)]
           (>! vastaus-kanava ei-ymparikaantymisia?))))
 
 
