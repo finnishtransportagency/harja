@@ -19,28 +19,28 @@
                              :cljs (fn [p]
                                      (ol.geom.Point. (clj->js p))))))
   ([valimatka taitokset luo-piste]
-   (loop [pisteet-ja-rotaatiot []
-          viimeisin-sijanti nil
-          [{:keys [sijainti rotaatio]} & taitokset] taitokset
-          ensimmainen? true]
-     (if-not sijainti
-       ;; Kaikki käsitelty
-       pisteet-ja-rotaatiot
 
-       (let [[x1 y1 :as p1] (or viimeisin-sijanti (first sijainti))
-             [x2 y2 :as p2] (second sijainti)
-             dist (geo/etaisyys p1 p2)]
-         (cond
-           (or (> dist valimatka)
-               ensimmainen?)
-           (recur (conj pisteet-ja-rotaatiot
-                        [(-> sijainti second luo-piste)
-                         (kulma p1 p2)])
-                  (second sijainti) taitokset false)
+   (let [alkupiste (:sijainti (first taitokset))]
+     (loop [pisteet-ja-rotaatiot []
+           viimeisin-sijanti nil
+           [{:keys [sijainti rotaatio]} & taitokset] taitokset]
+      (if-not sijainti
+        ;; Kaikki käsitelty
+        pisteet-ja-rotaatiot
 
-           :else
-           (recur pisteet-ja-rotaatiot
-                  viimeisin-sijanti taitokset false)))))))
+        (let [[x1 y1 :as p1] (or viimeisin-sijanti (first alkupiste))
+              [x2 y2 :as p2] (second sijainti)
+              dist (geo/etaisyys p1 p2)]
+          (cond
+            (> dist valimatka)
+            (recur (conj pisteet-ja-rotaatiot
+                         [(-> sijainti second luo-piste)
+                          (kulma p1 p2)])
+                   (second sijainti) taitokset)
+
+            :else
+            (recur pisteet-ja-rotaatiot
+                   viimeisin-sijanti taitokset))))))))
 
 
 
