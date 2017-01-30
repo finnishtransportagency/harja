@@ -189,10 +189,11 @@ pienemmällä zindexillä." :const true}
   (ol.geom.Point. (clj->js c)))
 
 (defmethod luo-feature :point [{:keys [coordinates radius] :as point}]
-  #_(ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
-  (luo-feature (assoc point
-                      :type :circle
-                      :radius (or radius 10))))
+  (aseta-tyylit
+   (luo-feature (assoc point
+                       :type :circle
+                       :radius (or radius 10)))
+   point))
 
 (defmethod luo-geometria :circle [{:keys [coordinates radius]}]
   (ol.geom.Circle. (clj->js coordinates) radius))
