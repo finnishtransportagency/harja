@@ -137,17 +137,20 @@
 ;; --- Testausapurit ---
 
 (def kaynissa-oleva-simulaatio-id (atom nil))
+(def +oletuspaivitysvali+ 2000)
+(def +oletustarkkuus+ 5)
 
 (defn ^:export aja-testireitti
   "Hakee kannasta annetun tarkastusajon id:n ja ajaa sen.
 
    Päivitysväli kertoo, kuinka tiheästi siirrytään seuraavaan pisteeseen (ms).
-   Oletusarvo 2000 vastaa suurin piirtein todellista ajonopeutta.
+   Arvo 2000 vastaa suurin piirtein todellista ajonopeutta.
 
    Tarkkuus on sama kuin HTML5 Geolocation API:n palauttama (säde metreinä).
-   Esim. oletusarvo 5 on hyvin tarkka paikannus ja 50 epätarkka."
-  ([tarkastusajo-id] (aja-testireitti tarkastusajo-id 2000 5))
-  ([tarkastusajo-id paivitysvali] (aja-testireitti tarkastusajo-id paivitysvali 5))
+   Esim. 5 on hyvin tarkka paikannus ja 50 epätarkka."
+  ([] (aja-testireitti 1 +oletuspaivitysvali+ +oletustarkkuus+))
+  ([tarkastusajo-id] (aja-testireitti tarkastusajo-id +oletuspaivitysvali+ +oletustarkkuus+))
+  ([tarkastusajo-id paivitysvali] (aja-testireitti tarkastusajo-id paivitysvali +oletustarkkuus+))
   ([tarkastusajo-id paivitysvali tarkkuus]
    (.log js/console "Käynnistetään simuloidun reitin ajaminen")
    (paikannus/lopeta-paikannus @paikannus-id)
