@@ -6,7 +6,9 @@
             [taoensso.timbre :as log]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
-            [harja.tyokalut.functor :refer [fmap]]))
+            [harja.tyokalut.functor :refer [fmap]]
+            [harja.palvelin.palvelut.indeksit :as indeksipalvelu]
+            [harja.fmt :as fmt]))
 
 (def raportin-kentat [:kht_laskutetaan_ind_korotus
                       :yht_laskutetaan_ind_korotus
@@ -72,6 +74,9 @@
                                                   :hallintayksikko hallintayksikko-id
                                                   :urakkatyyppi "hoito"
                                                   :alku alkupvm :loppu loppupvm})
+        konteksti (cond urakka-id :urakka
+                        hallintayksikko-id :hallintayksikko
+                        :default :koko-maa)
         urakka-idt (mapv :urakka-id urakat)
         kuukaudet (yleinen/kuukausivalit alkupvm loppupvm)
         laskutusyhteenvedot-kk (zipmap kuukaudet
@@ -101,9 +106,6 @@
                                    (fn [[kentta _]] (some #(= kentta %) raportin-kentat))
                                    kuukauden-tiedot)))
                              (flatten (vals laskutusyhteenvedot-kk)))
-        ;; Laskutusyhteenvedossa samankaltainen varoitus, mutta huomattavasti monipuolisempi..
-        varoitus-puuttuvista-indekseista (when indekseja-puuttuu?
-                                           [:varoitusteksti " Huom! Indeksejä puuttuu. Vain järjestelmän vastuuhenkilö voi syöttää indeksiarvoja Harjaan."])
         ;; Tehdään jokaiselle tuottelle omat kk-rivit tarkempia
         ;; taulukoita varten
         tuotteen-laskutusyhteenvedot-kk
@@ -112,11 +114,26 @@
                        (fmap (fn [kk-rivit]
                                (filter #(= (:nimi %) tuote) kk-rivit))
                              laskutusyhteenvedot-kk))
-                     tuotteet))]
+                     tuotteet))
+        ;; Indeksiluvun näyttämiseen tarvittavat tiedot
+        indeksi-kaytossa? (boolean (when (= 1 (count urakat))
+                                     (some? (:indeksi (first urakat)))))
+        kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
+        perusluku (:perusluku (ffirst (vals laskutusyhteenvedot-kk)))
+        ;; Laskutusyhteenvedossa samankaltainen varoitus, mutta huomattavasti monipuolisempi..
+        varoitus-puuttuvista-indekseista (when (and indeksi-kaytossa? indekseja-puuttuu?)
+                                           [:varoitusteksti " Huom! Indeksejä puuttuu. Vain järjestelmän vastuuhenkilö voi syöttää indeksiarvoja Harjaan."])
+        kkn-indeksiarvo (when kyseessa-kk-vali?
+                          (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id (pvm/vuosi alkupvm) (pvm/kuukausi alkupvm)))]
 
     (into []
           (concat [:raportti {:nimi (str "Indeksitarkistusraportti " alueen-nimi " " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))}
-                   varoitus-puuttuvista-indekseista]
+                   varoitus-puuttuvista-indekseista
+                   (if (and (= :urakka konteksti) (not indeksi-kaytossa?))
+                     [:varoitusteksti "Urakassa ei käytetä indeksitarkistuksia."]
+                     (when (and (= :urakka konteksti) indeksi-kaytossa? perusluku)
+                      (yleinen/indeksitiedot {:perusluku perusluku :kyseessa-kk-vali? kyseessa-kk-vali?
+                                              :alkupvm alkupvm :kkn-indeksiarvo kkn-indeksiarvo})))]
                   [(indeksitaulukko "Kaikki yhteensä" kuukaudet laskutusyhteenvedot-kk)]
                   (for [tuote tuotteet]
                     (indeksitaulukko tuote kuukaudet (get tuotteen-laskutusyhteenvedot-kk tuote)))))))
