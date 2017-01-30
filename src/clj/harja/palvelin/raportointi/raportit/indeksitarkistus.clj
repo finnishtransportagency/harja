@@ -117,7 +117,7 @@
                      tuotteet))
         ;; Indeksiluvun näyttämiseen tarvittavat tiedot
         indeksi-kaytossa? (boolean (when (= 1 (count urakat))
-                                     (some? (:indeksi (first urakat)))))
+                                     (some? (:indeksi (first (urakat-q/hae-urakka db urakka-id))))))
         kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         perusluku (:perusluku (ffirst (vals laskutusyhteenvedot-kk)))
         ;; Laskutusyhteenvedossa samankaltainen varoitus, mutta huomattavasti monipuolisempi..

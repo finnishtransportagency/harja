@@ -2,7 +2,6 @@
 -- Listaa kaikki ne urakat, joita haku koskee
 SELECT
   u.id           AS "urakka-id",
-  u.indeksi      as indeksi,
   u.nimi         AS "nimi"
 FROM urakka u
 WHERE
