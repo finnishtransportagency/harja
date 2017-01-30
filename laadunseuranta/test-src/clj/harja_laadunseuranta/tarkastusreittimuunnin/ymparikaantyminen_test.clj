@@ -11,7 +11,8 @@
             [harja.domain.tierekisteri :as tr-domain]
             [harja-laadunseuranta.core :as harja-laadunseuranta]
             [clj-time.core :as t]
-            [clojure.core.async :refer [go <! <!! >! thread >!!] :as async]))
+            [clojure.core.async :refer [go <! <!! >! thread >!!] :as async]
+            [harja-laadunseuranta.tarkastusreittimuunnin.testityokalut :as tyokalut]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -101,18 +102,22 @@
       ;; Näin lyhyt väli voi syntyä GPS-kohinasta, joten sitä ei hyväksytä ympärikääntymiseksi
       (is (empty? (filter :ymparikaantyminen? merkinnat-ymparikaantymisilla))))))
 
-(defn- ymparikaantymisen-analyysi-ei-havaitse-ymparikaantymisia [tarkastusajo-id]
-  (let [merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
-                                                         {:tarkastusajo tarkastusajo-id
-                                                          :laheiset_tiet_threshold 100})]
+(defn- ymparikaantymisen-analyysi-ei-havaitse-ymparikaantymisia
+  ([tarkastusajo-id] (ymparikaantymisen-analyysi-ei-havaitse-ymparikaantymisia tarkastusajo-id nil))
+  ([tarkastusajo-id tarkkuus]
+   (let [merkinnat (as-> (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
+                                                                {:tarkastusajo tarkastusajo-id
+                                                                 :laheiset_tiet_threshold 100})
+                         merkinnat
+                         (if tarkkuus (tyokalut/aseta-merkintojen-tarkkuus merkinnat tarkkuus) merkinnat))]
 
-    (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
+     (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
 
-    (let [merkinnat-ymparikaantymisilla (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta merkinnat)
-          ei-ymparikaantymisia? (empty? (filter :ymparikaantyminen? merkinnat-ymparikaantymisilla))]
-      (is (= (count merkinnat-ymparikaantymisilla) (count merkinnat)))
-      (is ei-ymparikaantymisia?)
-      ei-ymparikaantymisia?)))
+     (let [merkinnat-ymparikaantymisilla (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta merkinnat)
+           ei-ymparikaantymisia? (empty? (filter :ymparikaantyminen? merkinnat-ymparikaantymisilla))]
+       (is (= (count merkinnat-ymparikaantymisilla) (count merkinnat)))
+       (is ei-ymparikaantymisia?)
+       ei-ymparikaantymisia?))))
 
 (deftest ymparikaantymisanalyysi-ei-havaitse-ymparikaantymista-ajoissa-joissa-sita-ei-ole
   (let [tarkastusajo-idt [1 754 664 665 666 667 668]
@@ -122,6 +127,24 @@
     (doseq [tarkastusajo-id tarkastusajo-idt]
       (go
         (let [ei-ymparikaantymisia? (ymparikaantymisen-analyysi-ei-havaitse-ymparikaantymisia tarkastusajo-id)]
+          (>! vastaus-kanava ei-ymparikaantymisia?))))
+
+
+    (loop [vastaukset []]
+      (if (< (count vastaukset) (count tarkastusajo-idt))
+        (let [vastaus (<!! vastaus-kanava)]
+          (recur (conj vastaukset vastaus)))
+        (is (every? true? vastaukset) "Ympärikääntymisiä ei havaittu")))))
+
+(deftest ymparikaantymisanalyysi-ei-havaitse-ymparikaantymista-eptarkoissa-ajoissa-joissa-sita-ei-ole
+  (let [tarkastusajo-idt [1 754 664 665 666 667 668]
+        vastaus-kanava (async/chan)]
+
+    ;; Analysoidaan jokainen ajo asynkronisesti, muuten testi on hidas
+    (doseq [tarkastusajo-id tarkastusajo-idt]
+      (go
+        (let [ei-ymparikaantymisia? (ymparikaantymisen-analyysi-ei-havaitse-ymparikaantymisia tarkastusajo-id
+                                                                                              60)]
           (>! vastaus-kanava ei-ymparikaantymisia?))))
 
 
