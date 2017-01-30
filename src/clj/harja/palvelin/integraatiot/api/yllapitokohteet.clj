@@ -47,6 +47,7 @@
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.kyselyt.tietyomaat :as q-tietyomaat]
             [harja.kyselyt.tieverkko :as q-tieverkko]
+            [harja.kyselyt.paallystys :as q-paallystys]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as q-urakat]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
@@ -275,11 +276,29 @@
                      urakka-id
                      kohde-id
                      kayttaja))
-  (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-  (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
-  #_(q-yllapitokohteet/poista-yllapitokohteen-maaramuutokset db kohde-id)
-  (println "---> otsikko:" otsikko)
-  (println "---> maaramuutokset:" maaramuutokset))
+  (let [urakka-id (Integer/parseInt urakka-id)
+        kohde-id (Integer/parseInt kohde-id)
+        jarjestelma (get-in otsikko [:lahettaja :jarjestelma])]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+    (q-paallystys/poista-yllapitokohteen-maaramuutokset! db {:yllapitokohdeid kohde-id})
+    (doseq [{{:keys [tunniste tyyppi tyo yksikko tilattu-maara toteutunut-maara yksikkohinta]} :maaramuutos}
+            maaramuutokset]
+      (let [parametrit {:yllapitokohde kohde-id
+                   :tyon_tyyppi tyyppi
+                   :tyo tyo
+                   :yksikko yksikko
+                   :tilattu_maara  tilattu-maara
+                   :toteutunut_maara toteutunut-maara
+                   :yksikkohinta yksikkohinta
+                   :luoja (:id kayttaja)
+                   ;; todo: lisää ulkoinen id & järjestelmä
+                   }]
+        (q-paallystys/luo-yllapitokohteen-maaramuutos<! db parametrit))
+      (println tunniste tyyppi tyo yksikko tilattu-maara toteutunut-maara yksikkohinta))
+
+    (tee-kirjausvastauksen-body
+      {:ilmoitukset (str "Määrämuutokset kirjattu onnistuneesti.")})))
 
 (def palvelut
   [{:palvelu :hae-yllapitokohteet

@@ -226,6 +226,6 @@ SELECT EXISTS(SELECT id
               FROM paallystysilmoitus
               WHERE paallystyskohde = :yllapitokohde);
 
--- name: poista-yllapitokohteen-maaramuutokset
+-- name: poista-yllapitokohteen-maaramuutokset!
 DELETE FROM yllapitokohteen_maaramuutos
 WHERE yllapitokohde = :yllapitokohdeid
