@@ -73,13 +73,6 @@
                (and (firefox?)
                     (firefox-vanhentunut?))))))
 
-(defn- flip [atomi]
-  (swap! atomi not))
-
-(defn timed-swap! [delay atom swap-fn]
-  (after-delay delay
-               (swap! atom swap-fn)))
-
 (defn parsi-kaynnistysparametrit [params]
   (let [params (if (str/starts-with? params "?")
                  (subs params 1)
@@ -97,16 +90,6 @@
 (defn ilman-tavutusta [teksti]
   (str/replace teksti #"\u00AD" ""))
 
-(defn erota-mittaukset [havainnot]
-  (select-keys havainnot [:lampotila :lumisuus :talvihoito-tasaisuus :soratie-tasaisuus :kitkamittaus
-                          :polyavyys :kiinteys :sivukaltevuus]))
-
-(defn erota-havainnot [havainnot]
-  (let [h (dissoc havainnot
-                  :lampotila :lumisuus :talvihoito-tasaisuus :soratie-tasaisuus :kitkamittaus
-                  :polyavyys :kiinteys :sivukaltevuus)]
-    (filterv h (keys h))))
-
 (defn kahdella-desimaalilla [arvo]
   (gstr/format "%.2f" arvo))
 
@@ -116,27 +99,6 @@
 
 (defn- avg [mittaukset]
   (/ (reduce + 0 mittaukset) (count mittaukset)))
-
-(def urakan-nimen-oletuspituus 60)
-
-(defn lyhenna-keskelta
-  "Lyhentää tekstijonon haluttuun pituuteen siten, että
-  pituutta otetaan pois keskeltä, ja korvataan kahdella pisteellä .."
-  [haluttu-pituus teksti]
-  (if (>= haluttu-pituus (count teksti))
-    teksti
-
-    (let [patkat (split-at (/ (count teksti) 2) teksti)
-          eka (apply str (first patkat))
-          ;; Ekan pituus pyöristetään ylöspäin, tokan alaspäin
-          eka-haluttu-pituus (int (Math/ceil (/ haluttu-pituus 2)))
-          toka (apply str (second patkat))
-          toka-haluttu-pituus (int (Math/floor (/ haluttu-pituus 2)))]
-      (str
-        ;; Otetaan haluttu pituus -1, jotta pisteet mahtuu mukaan
-        (apply str (take (dec eka-haluttu-pituus) eka))
-        ".."
-        (apply str (take-last (dec toka-haluttu-pituus) toka))))))
 
 (defn tarkkaile!
   [nimi atomi]
