@@ -72,8 +72,14 @@
     {:avatut-asiat (comp avatut-tulokset :idx :data)
      :toggle-asia! #(e! (tiedot/->AvaaTaiSuljeTulos (:idx (:data %))))
      :piilota-fn! #(e! (tiedot/->SuljeInfopaneeli))
-     :linkkifunktiot {:toteuma {:teksti "Tarkastele toteumanäkymässä"
-                                :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}}
+     :linkkifunktiot {:toteuma [{:teksti "Toteumanäkymään"
+                                 :tooltip "Siirry urakan toteumanäkymään"
+                                 :ikoni [ikonit/livicon-eye]
+                                 :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}
+                                {:teksti "Reittipisteet"
+                                 :tooltip "Hae toteuman kaikki reittipisteet kartalle"
+                                 :ikoni [ikonit/livicon-info-circle]
+                                 :toiminto #(e! (tiedot/->HaeToteumanReittipisteet %))}]}
      :ei-tuloksia [:span "Hakuehdoilla ei löytynyt tuloksia"]}
     tulokset]))
 
