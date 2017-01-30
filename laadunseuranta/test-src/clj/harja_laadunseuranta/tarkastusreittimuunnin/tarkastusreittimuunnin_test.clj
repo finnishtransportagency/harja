@@ -48,7 +48,7 @@
     (is (= (:tr_loppuosa tallennettava) losa))
     (is (= (:tr_loppuetaisyys tallennettava) let))))
 
-(defn- tarkista-tallennettien-tarkastuksien-osoite [tarkastukset odotetut-tieosat]
+(defn- tarkista-tallennettujen-tarkastuksien-osoite [tarkastukset odotetut-tieosat]
   (loop [i 0]
     (tarkista-tallennettavan-tarkastuksen-osoite
       (nth tarkastukset i) (nth odotetut-tieosat i))
@@ -322,7 +322,7 @@
     (is (= (count reitilliset) odotettu-reitillisten-maara))
 
     ;; Jokainen tallennettava tarkastus muodostetaan tieosoitteen osalta tarkalleen oikein
-    (tarkista-tallennettien-tarkastuksien-osoite reitilliset odotetut-tarkastetut-tieosat)))
+    (tarkista-tallennettujen-tarkastuksien-osoite reitilliset odotetut-tarkastetut-tieosat)))
 
 (deftest ymparikaantyminen-katkaistaan-oikein-vaikka-ollaan-paikallaan
   (let [db (:db jarjestelma)
@@ -343,7 +343,7 @@
     (is (= (count reitilliset) odotettu-reitillisten-maara))
 
     ;; Jokainen tallennettava tarkastus muodostetaan tieosoitteen osalta tarkalleen oikein
-    (tarkista-tallennettien-tarkastuksien-osoite reitilliset odotetut-tarkastetut-tieosat)))
+    (tarkista-tallennettujen-tarkastuksien-osoite reitilliset odotetut-tarkastetut-tieosat)))
 
 ;; -------- Tarkastuksen tallennus kantaan --------
 
@@ -509,7 +509,7 @@
     (is (every? #(empty? (:liitteet %)) kaikki-tarkastukset))
 
     ;; Jokainen tallennettava tarkastus muodostetaan tieosoitteen osalta tarkalleen oikein
-    (tarkista-tallennettien-tarkastuksien-osoite kaikki-tarkastukset odotetut-tarkastetut-tieosat)
+    (tarkista-tallennettujen-tarkastuksien-osoite kaikki-tarkastukset odotetut-tarkastetut-tieosat)
 
     (let [tarkastusten-maara-ennen (ffirst (q "SELECT COUNT(*) FROM tarkastus"))
           _ (jdbc/with-db-transaction [tx db]
