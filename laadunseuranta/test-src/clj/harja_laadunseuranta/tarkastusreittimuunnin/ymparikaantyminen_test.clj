@@ -67,26 +67,16 @@
                             (take 9 (drop 8 merkinnat-ymparikaantymisilla))))
              1)))))
 
-(deftest ymparikaantymisanalyysi-ei-havaitse-ymparikaantymista-tarkastusajossa-1
-  (let [tarkastusajo-id 1
-        merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
-                                                         {:tarkastusajo tarkastusajo-id
-                                                          :laheiset_tiet_threshold 100})]
+(deftest ymparikaantymisanalyysi-ei-havaitse-ymparikaantymista-kun-sita-ei-ole
+  (let [tarkastusajo-idt [1 754 664 665 666 667 668]]
 
-    (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
+    (doseq [tarkastusajo-id tarkastusajo-idt]
+      (let [merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
+                                                             {:tarkastusajo tarkastusajo-id
+                                                              :laheiset_tiet_threshold 100})]
 
-    (let [merkinnat-ymparikaantymisilla (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta merkinnat)]
-      (is (= (count merkinnat-ymparikaantymisilla) (count merkinnat)))
-      (is (empty? (filter :ymparikaantyminen? merkinnat-ymparikaantymisilla))))))
+        (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
 
-(deftest ymparikaantymisanalyysi-ei-havaitse-ymparikaantymista-tarkastusajossa-754
-  (let [tarkastusajo-id 754
-        merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
-                                                         {:tarkastusajo tarkastusajo-id
-                                                          :laheiset_tiet_threshold 100})]
-
-    (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
-
-    (let [merkinnat-ymparikaantymisilla (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta merkinnat)]
-      (is (= (count merkinnat-ymparikaantymisilla) (count merkinnat)))
-      (is (empty? (filter :ymparikaantyminen? merkinnat-ymparikaantymisilla))))))
+        (let [merkinnat-ymparikaantymisilla (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta merkinnat)]
+          (is (= (count merkinnat-ymparikaantymisilla) (count merkinnat)))
+          (is (empty? (filter :ymparikaantyminen? merkinnat-ymparikaantymisilla))))))))
