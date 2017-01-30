@@ -154,7 +154,8 @@
         merkinnat-tr-osoitteilla (lisaa-reittimerkinnoille-lopullinen-tieosoite merkinnat-tr-osoitteilla)
         tarkastukset (reittimuunnin/reittimerkinnat-tarkastuksiksi
                        merkinnat-tr-osoitteilla
-                       {:analysoi-rampit? true})]
+                       {:analysoi-rampit? true
+                        :analysoi-ymparikaantymiset? true})]
     (log/debug "Reittipisteet muunnettu tarkastuksiksi.")
     tarkastukset))
 

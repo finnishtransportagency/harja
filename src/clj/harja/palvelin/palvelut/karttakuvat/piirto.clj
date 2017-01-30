@@ -147,9 +147,9 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
   (let [viivat (reverse (sort-by :width viivat))]
     (doseq [viiva viivat
             line lines]
-      (piirra-viiva g line viiva)
-      (piirra-ikonit g {:points (:points line)
-                        :ikonit ikonit} ruudukko))))
+      (piirra-viiva g line viiva))
+    (piirra-ikonit g {:points (mapcat :points lines)
+                      :ikonit ikonit} ruudukko)))
 
 (def varoitusteksti
   "Paljon tuloksia, kaikkea ei ehditty piirtää! Tarkenna hakuehtoja tai zoomaa lähemmäs.")

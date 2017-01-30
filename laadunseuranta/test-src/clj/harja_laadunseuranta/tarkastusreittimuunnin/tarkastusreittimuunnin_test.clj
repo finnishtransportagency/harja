@@ -552,8 +552,7 @@
                                       (mapcat :sijainnit kaikki-tarkastukset)))))
     (log/debug "")
     (log/debug "-- Ajettu reitti --")
-    (log/debug "Reitillisten tarkastusten muodostama ajettu reitti:")
-    (let [sijainnit (mapcat :sijainnit (sort-by :aika reitilliset-tarkastukset))]
+    (let [sijainnit (mapcat :sijainnit (sort-by :aika kaikki-tarkastukset))]
       (doseq [sijainti sijainnit]
         (log/debug (str (:sijainti sijainti) " --> " (tie->str (:tr-osoite sijainti))
                         " (ramppi? " (tr-domain/tie-rampilla? (get-in sijainti [:tr-osoite :tie])) ")"))))

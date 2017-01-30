@@ -11,37 +11,10 @@
             [harja-laadunseuranta.utils :as utils]
             [harja.kyselyt.tarkastukset :as tark-q]
             [harja-laadunseuranta.tarkastusreittimuunnin.ramppianalyysi :as ramppianalyysi]
+            [harja-laadunseuranta.tarkastusreittimuunnin.ymparikaantyminen :as ymparikaantyminen]
             [clojure.string :as str]
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
-
-(defn etenemissuunta
-  "Palauttaa 1 jos tr-osoite2 on suurempi kuin tr-osoite1.
-   Palauttaa -1 jos tr-osoite2 on pienempi kuin tr-osoite1
-   Palauttaa 0 jos samat.
-   Jos ei jostain syystä voida määrittää, palauttaa nil"
-  [tr-osoite1 tr-osoite2]
-  (when (and (:aet tr-osoite1) (:aet tr-osoite2))
-    (cond
-      (< (:aet tr-osoite1) (:aet tr-osoite2)) -1
-      (> (:aet tr-osoite1) (:aet tr-osoite2)) 1
-      (= (:aet tr-osoite1) (:aet tr-osoite2)) 0)))
-
-;; NOTE On mahdollista, että epätarkka GPS heittääkin yhden pisteen muita taaemmas, jolloin tilanne
-;; tulkitaan ympärikääntymiseksi.
-(defn tr-osoitteet-sisaltavat-ymparikaantymisen?
-  "Ottaa kolme tr-osoitetta vectorissa ja kertoo sisältävätkö ne ympärikääntymisen. Päättely tehdään niin, että
-   tutkitaan ensin mihin suuntaan edetään kahden ensimmäisen pisteen kohdalla ja jos kolmas piste eteneekin
-   päinvastaiseen suuntaan, on tapahtunut ympärikääntyminen."
-  [tr-osoitteet]
-  (if (every? some? tr-osoitteet)
-    (let [etenemissuunta-piste1-piste2 (etenemissuunta (first tr-osoitteet) (second tr-osoitteet))
-          etenemissuunta-piste2-piste3 (etenemissuunta (second tr-osoitteet) (get tr-osoitteet 2))]
-      (if (or (= etenemissuunta-piste1-piste2 0)
-              (= etenemissuunta-piste2-piste3 0))
-        false
-        (not= etenemissuunta-piste1-piste2 etenemissuunta-piste2-piste3)))
-    false))
 
 (def +kahden-pisteen-valinen-sallittu-aikaero-s+ 180)
 
@@ -65,40 +38,48 @@
   "Ottaa reittimerkinnän ja järjestyksesä seuraavan reittimerkinnän ja kertoo muodostavatko ne loogisen jatkumon,
    toisin sanoen tulkitaanko seuraavan pisteen olevan osa samaa tarkastusta vai ei."
   [nykyinen-reittimerkinta seuraava-reittimerkinta]
-  (and
-    ;; Jatkuvat havainnot pysyvät samana myös seuraavassa pisteessä
-    (= (:jatkuvat-havainnot nykyinen-reittimerkinta) (:jatkuvat-havainnot seuraava-reittimerkinta))
-    ;; Seuraava piste on osa samaa tietä. Jos seuraavalle pistelle ei ole pystytty määrittelemään tietä,
-    ;; niin oletetaan kuitenkin, että se on osa samaa tarkastusta niin kauan kuin osoite oikeasti vaihtuu
-    (or (nil? (:tr-osoite seuraava-reittimerkinta))
-        (= (get-in nykyinen-reittimerkinta [:tr-osoite :tie]) (get-in seuraava-reittimerkinta [:tr-osoite :tie])))
-    ;; Edellisen pisteen kirjauksesta ei ole kulunut ajallisesti liian kauan
-    ;; Jos on kulunut, emme tiedä, mitä näiden pisteiden välillä on tapahtunut, joten on turvallista
-    ;; päättää edellinen tarkastus ja aloittaa uusi.
-    (or
-      (nil? (:aikaleima nykyinen-reittimerkinta))
-      (nil? (:aikaleima seuraava-reittimerkinta))
-      (<= (t/in-seconds (t/interval (c/from-sql-time (:aikaleima nykyinen-reittimerkinta))
-                                    (c/from-sql-time (:aikaleima seuraava-reittimerkinta))))
-          +kahden-pisteen-valinen-sallittu-aikaero-s+))
-    ;; Soratiemittauksen mittausarvot pysyvät samana. Soratiemittauksessa mittausarvot voivat olla päällä
-    ;; pitkän aikaa ja mittausarvot tallentuvat tällöin usealle pisteelle. Jos jokin mittausarvoista muuttuu,
-    ;; halutaan tarkastuskin katkaista, jotta samat päällä olevat mittausarvot muodostavat aina oman reitin.
-    ;; Edellisessä merkinnässä tehty mittaus on joko numero tai vector numeroita, jos kyseessä yhdistetty
-    ;; reittimerkintä
-    (and (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :soratie-tasaisuus)
-         (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :kiinteys)
-         (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :polyavyys)
-         (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :sivukaltevuus))
+  (let [jatkuvat-havainnot-pysyvat-samana? (= (:jatkuvat-havainnot nykyinen-reittimerkinta)
+                                              (:jatkuvat-havainnot seuraava-reittimerkinta))
+        seuraava-piste-samalla-tiella? (boolean (or (nil? (:tr-osoite seuraava-reittimerkinta))
+                                                    (= (get-in nykyinen-reittimerkinta [:tr-osoite :tie])
+                                                       (get-in seuraava-reittimerkinta [:tr-osoite :tie]))))
+        ei-ajallista-gappia? (boolean (or
+                                        (nil? (:aikaleima nykyinen-reittimerkinta))
+                                        (nil? (:aikaleima seuraava-reittimerkinta))
+                                        (<= (t/in-seconds (t/interval (c/from-sql-time (:aikaleima nykyinen-reittimerkinta))
+                                                                      (c/from-sql-time (:aikaleima seuraava-reittimerkinta))))
+                                            +kahden-pisteen-valinen-sallittu-aikaero-s+)))
+        jatkuvat-mittausarvot-samat? (boolean (and (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :soratie-tasaisuus)
+                                                   (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :kiinteys)
+                                                   (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :polyavyys)
+                                                   (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :sivukaltevuus)))
+        seuraavassa-pisteessa-ei-kaannyta-ympari? (not (:ymparikaantyminen? seuraava-reittimerkinta))]
 
-    ;; Seuraava piste ei aiheuta reitin kääntymistä ympäri
-    ;; PENDING GPS:n epätarkkuudesta johtuen aiheuttaa liikaa ympärikääntymisiä eikä toimi oikein, siksi kommentoitu
-    #_(not (tr-osoitteet-sisaltavat-ymparikaantymisen? [; Edellinen sijainti
-                                                        (:tr-osoite (get (:sijainnit nykyinen-reittimerkinta) (- (count (:sijainnit nykyinen-reittimerkinta)) 2)))
-                                                        ;; Nykyinen sijainti
-                                                        (:tr-osoite (last (:sijainnit nykyinen-reittimerkinta)))
-                                                        ;; Seuraavan pisteen sijainti
-                                                        (:tr-osoite seuraava-reittimerkinta)]))))
+    (when-not jatkuvat-havainnot-pysyvat-samana? (log/debug "Jatkuvat havainnot muuttuu, katkaistaan reitti"))
+    (when-not seuraava-piste-samalla-tiella? (log/debug "Seuraava piste eri tiellä, katkaistaan reitti"))
+    (when-not ei-ajallista-gappia? (log/debug "Ajallinen gäppi pisteiden välillä, katkaistaan reitti"))
+    (when-not jatkuvat-mittausarvot-samat? (log/debug "Jatkuvat mittausarvot muuttuivat, katkaistaan reitti"))
+    (when-not seuraavassa-pisteessa-ei-kaannyta-ympari? (log/debug "Ympärikääntyminen havaittu, katkaistaan reitti"))
+
+    (boolean
+      (and
+        ;; Jatkuvat havainnot pysyvät samana myös seuraavassa pisteessä
+        jatkuvat-havainnot-pysyvat-samana?
+        ;; Seuraava piste on osa samaa tietä. Jos seuraavalle pistelle ei ole pystytty määrittelemään tietä,
+        ;; niin oletetaan kuitenkin, että se on osa samaa tarkastusta niin kauan kuin osoite oikeasti vaihtuu
+        seuraava-piste-samalla-tiella?
+        ;; Edellisen pisteen kirjauksesta ei ole kulunut ajallisesti liian kauan
+        ;; Jos on kulunut, emme tiedä, mitä näiden pisteiden välillä on tapahtunut, joten on turvallista
+        ;; päättää edellinen tarkastus ja aloittaa uusi.
+        ei-ajallista-gappia?
+        ;; Jatkuvat mittausarvot pysyvät samana. Soratiemittauksessa mittausarvot voivat olla päällä
+        ;; pitkän aikaa ja mittausarvot tallentuvat tällöin usealle pisteelle. Jos jokin mittausarvoista muuttuu,
+        ;; halutaan tarkastuskin katkaista, jotta samat päällä olevat mittausarvot muodostavat aina oman reitin.
+        ;; Edellisessä merkinnässä tehty mittaus on joko numero tai vector numeroita, jos kyseessä yhdistetty
+        ;; reittimerkintä
+        jatkuvat-mittausarvot-samat?
+        ;; Seuraava piste ei aiheuta ympärikääntymistä. Jos aiheuttaa, reitti tulee katkaista.
+        seuraavassa-pisteessa-ei-kaannyta-ympari?))))
 
 (defn- yhdista-reittimerkinnan-kaikki-havainnot
   "Yhdistää reittimerkinnän pistemäiset havainnot ja jatkuvat havainnot."
@@ -370,19 +351,23 @@
                                    (:pistemaiset-tarkastukset tarkastukset))})
 
 (defn- valmistele-merkinnat-kasittelyyn [merkinnat optiot]
-  (if (:analysoi-rampit? optiot)
-    (ramppianalyysi/korjaa-virheelliset-rampit merkinnat)
-    merkinnat))
+  (as->
+    merkinnat m
+    (if (:analysoi-rampit? optiot) (ramppianalyysi/korjaa-virheelliset-rampit merkinnat) m)
+    (if (:analysoi-ymparikaantymiset? optiot) (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta m) m)))
 
 (defn reittimerkinnat-tarkastuksiksi
   "Reittimerkintämuunnin, joka käy reittimerkinnät läpi ja palauttaa mapin, jossa reittimerkinnät muutettu
    reitillisiksi ja pistemäisiksi Harja-tarkastuksiksi.
 
    Optiot on mappi:
-   - analysoi-rampit?         Korjaa virheellisesti rampille projisoituneet pisteet takaisin moottoritielle.
-                              Oletus: true."
+   - analysoi-rampit?               Korjaa virheellisesti rampille projisoituneet pisteet takaisin moottoritielle.
+                                    Oletus: true.
+   - analysoi-ymparikaantymiset?    Katkaisee reitit pisteistä, joissa havaitaan selkeä ympärikääntyminen.
+                                    Oletus: true."
   ([tr-osoitteelliset-reittimerkinnat]
-   (reittimerkinnat-tarkastuksiksi tr-osoitteelliset-reittimerkinnat {:analysoi-rampit? true}))
+   (reittimerkinnat-tarkastuksiksi tr-osoitteelliset-reittimerkinnat {:analysoi-rampit? true
+                                                                      :analysoi-ymparikaantymiset? true}))
   ([tr-osoitteelliset-reittimerkinnat optiot]
    (let [kasiteltavat-merkinnat (valmistele-merkinnat-kasittelyyn tr-osoitteelliset-reittimerkinnat optiot)
          tarkastukset {:reitilliset-tarkastukset (reittimerkinnat-reitillisiksi-tarkastuksiksi

@@ -201,6 +201,38 @@
      (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) ilmoitukset) "kappaletta")
      ilmoitukset)))
 
+(defn hae-ilmoitukset-raportille
+  "Palauttaa ilmoitukset raporttia varten, minimaalisella tietosisällöllä ja ilman hidastavaa sorttausta."
+  [db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi aikavali]}]
+  (let [aikavali-alku (when (first aikavali)
+                        (konv/sql-timestamp (first aikavali)))
+        aikavali-loppu (when (second aikavali)
+                         (konv/sql-timestamp (second aikavali)))
+        urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
+                 db user (fn [urakka-id kayttaja]
+                           (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset
+                                                urakka-id
+                                                kayttaja))
+                 urakka urakoitsija urakkatyyppi hallintayksikko
+                 (first aikavali) (second aikavali))
+        debug-viesti (str "Haetaan ilmoituksia raportille: "
+                          (viesti urakat "urakoista" "ilman urakoita")
+                          (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
+                          (viesti aikavali-loppu "päättyen" "ilman päättymisaikaa"))
+        _ (log/debug debug-viesti)
+        ilmoitukset
+        (if-not (empty? urakat)
+          (into []
+                ilmoitus-xf
+                (q/hae-ilmoitukset-raportille db
+                                              {:urakat urakat
+                                               :alku_annettu (hakuehto-annettu? aikavali-alku)
+                                               :loppu_annettu (hakuehto-annettu? aikavali-loppu)
+                                               :alku aikavali-alku
+                                               :loppu aikavali-loppu}))
+          [])]
+    ilmoitukset))
+
 (defn hae-ilmoitus [db user id]
   (let [tulos (first
                 (konv/sarakkeet-vektoriin
