@@ -69,6 +69,24 @@
                             (take 9 (drop 8 merkinnat-ymparikaantymisilla))))
              1)))))
 
+(deftest ymparikaantymisanalyysi-havaitsee-ymparikaantymisen-reilun-100m-matkalla
+  (let [tarkastusajo-id 901
+        merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
+                                                         {:tarkastusajo tarkastusajo-id
+                                                          :laheiset_tiet_threshold 100})]
+
+    (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
+    (is (every? :tr-osoite merkinnat) "Merkinnät projisoitiin tielle oikein")
+
+    (let [merkinnat-ymparikaantymisilla (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta merkinnat)]
+      (is (= (count merkinnat-ymparikaantymisilla) (count merkinnat)))
+      ;; Havaittiin yksi ympärikääntyminen
+      (is (= (count (filter :ymparikaantyminen? merkinnat-ymparikaantymisilla)) 1))
+      ;; Ympärikääntyminen on merkitty suunnilleen oikeaan pisteeseen
+      (is (= (count (filter :ymparikaantyminen?
+                            (take 3 (drop 4 merkinnat-ymparikaantymisilla))))
+             1)))))
+
 (defn- ymparikaantymisen-analyysi-ei-havaitse-ymprikaantymisia [tarkastusajo-id]
   (let [merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
