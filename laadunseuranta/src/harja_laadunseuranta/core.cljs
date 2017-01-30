@@ -163,7 +163,7 @@
          (reset! sovellus/keskita-ajoneuvoon? true)
          (reset! kaynissa-oleva-simulaatio-id tama-simulaatio-id)
          (loop [sijainti-indeksi 0]
-           (.log js/console (str "Simuloidaan sijainti (indeksi: " sijainti-indeksi ")")
+           (.log js/console (str "Simuloidaan sijainti (indeksi: " sijainti-indeksi ")"))
            (let [sijainti (nth sijainnit sijainti-indeksi)]
              (paikannus/aseta-testisijainti sovellus/sijainti (:sijainti sijainti) tarkkuus)
              (<! (async/timeout paivitysvali))
