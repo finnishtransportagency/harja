@@ -59,9 +59,9 @@
   (if (and k-sijainti nykyinen-sijainti)
     ;; Pisteet ovat hyvin lähellä toisiaan. Liian tarkkaa arvoa ei voi käyttää, koska
     ;; korkeassa nopeudessa GPS-pisteiden tiheys vähenee.
-    ;; Arvon 40 pitäisi kattaa pisteiden törmäys 100km/h vauhdissa, jos pisteitä on saatu otettua
+    ;; Arvon 35 pitäisi kattaa pisteiden törmäys 100km/h vauhdissa, jos pisteitä on saatu otettua
     ;; noin kahden sekunnin välein.
-    (<= (math/pisteiden-etaisyys k-sijainti nykyinen-sijainti) 40)
+    (<= (math/pisteiden-etaisyys k-sijainti nykyinen-sijainti) 35)
     false)) ;; Ei voida määrittää
 
 (defn- etsi-kn-tormays-nykyiseen-sijaintiin
