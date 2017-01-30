@@ -12,11 +12,6 @@ VALUES
   :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys)
 ON CONFLICT DO NOTHING;
 
--- name: hae-tarkastusajon-reittimerkinnat
-SELECT *
-FROM tarkastusreitti
-WHERE tarkastusajo = :tarkastusajo;
-
 -- name: luo-uusi-tarkastusajo<!
 -- Tekee uuden tarkastusajon ja palauttaa sen id:n
 INSERT INTO tarkastusajo (ulkoinen_id, luoja, luotu)
@@ -123,7 +118,8 @@ WHERE jatkuva = FALSE;
 
 -- name: hae-tarkastusajon-reitti
 SELECT sijainti, sijainti_tarkkuus FROM tarkastusreitti
-  WHERE tarkastusajo = :id;
+  WHERE tarkastusajo = :id
+ORDER by id;
 
 -- name: luo-uusi-tarkastus<!
 INSERT INTO tarkastus (urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
