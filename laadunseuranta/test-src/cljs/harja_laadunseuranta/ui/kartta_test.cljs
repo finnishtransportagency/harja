@@ -27,10 +27,10 @@
 (deftest kartan-konfiguraatio
   (testing "Kartan konfiguraatio"
     (let [sijainti (atom {:nykyinen {:lat 100
-                                     :lon 200})
+                                     :lon 200}})
           ajoneuvon-sijainti (atom {:nykyinen {:lat 400
                                                :lon 500
-                                               :heading 45})
+                                               :heading 45}})
           reittipisteet (atom [{:segmentti [[1 1] [2 2]]
                                 :vari "black"}
                                {:segmentti [[2 2] [3 3]]
@@ -73,10 +73,10 @@
                   (is (= [[2 2] [3 3]] (js->clj reittipistegeometriat2))))))
 
             (reset! sijainti {:nykyinen {:lat 200
-                                         :lon 300})
+                                         :lon 300}})
             (reset! ajoneuvon-sijainti {:nykyinen {:lat 1000
                                                    :lon 1000
-                                                   :heading 90})
+                                                   :heading 90}})
             (reagent/flush)
             (testing "Kartan keskipisteen siirtyminen"
               (is (= [300 200] (js->clj (.getCenter view)))))
