@@ -72,8 +72,8 @@
                   (is (= [[1 1] [2 2]] (js->clj reittipistegeometriat)))
                   (is (= [[2 2] [3 3]] (js->clj reittipistegeometriat2))))))
 
-            (reset! sijainti {:nykyinen {:lat 200
-                                         :lon 300}})
+            (reset! sijainti {:lat 200
+                              :lon 300})
             (reset! ajoneuvon-sijainti {:nykyinen {:lat 1000
                                                    :lon 1000
                                                    :heading 90}})
