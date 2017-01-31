@@ -137,7 +137,7 @@
        ei-ymparikaantymisia?))))
 
 (deftest ymparikaantymisanalyysi-ei-havaitse-ymparikaantymista-ajoissa-joissa-sita-ei-ole
-  (let [tarkastusajo-idt [1 754 664 665 666 667 668]
+  (let [tarkastusajo-idt [1 3 754 664 665 666 667 668]
         vastaus-kanava (async/chan)]
 
     ;; Analysoidaan jokainen ajo asynkronisesti, muuten testi on hidas
