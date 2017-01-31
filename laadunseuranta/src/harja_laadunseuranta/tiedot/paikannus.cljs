@@ -3,6 +3,7 @@
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.kalman :as kalman]
             [harja-laadunseuranta.utils :as utils]
+            [harja-laadunseuranta.math :as math]
             [harja-laadunseuranta.utils :refer [timestamp ipad?]]
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]))
 
@@ -44,7 +45,7 @@
         uusi-nykyinen (if (ipad?)
                         uusi-sijainti ;; iPadissa on ilmeisesti riittävä suodatus itsessään
                         (kalman/kalman nykyinen uusi-sijainti
-                                       (utils/ms->sec (- ts (or (:timestamp nykyinen) ts)))))]
+                                       (math/ms->sec (- ts (or (:timestamp nykyinen) ts)))))]
     {:edellinen nykyinen
      :nykyinen (assoc uusi-nykyinen
                       :speed (:speed uusi-sijainti)

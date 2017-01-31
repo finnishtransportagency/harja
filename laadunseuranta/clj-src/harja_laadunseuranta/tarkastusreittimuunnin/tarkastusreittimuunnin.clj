@@ -40,9 +40,11 @@
   [nykyinen-reittimerkinta seuraava-reittimerkinta]
   (let [jatkuvat-havainnot-pysyvat-samana? (= (:jatkuvat-havainnot nykyinen-reittimerkinta)
                                               (:jatkuvat-havainnot seuraava-reittimerkinta))
-        seuraava-piste-samalla-tiella? (boolean (or (nil? (:tr-osoite seuraava-reittimerkinta))
-                                                    (= (get-in nykyinen-reittimerkinta [:tr-osoite :tie])
-                                                       (get-in seuraava-reittimerkinta [:tr-osoite :tie]))))
+        seuraava-piste-samalla-tiella? (boolean (or
+                                                  (nil? (:tr-osoite nykyinen-reittimerkinta))
+                                                  (nil? (:tr-osoite seuraava-reittimerkinta))
+                                                  (= (get-in nykyinen-reittimerkinta [:tr-osoite :tie])
+                                                     (get-in seuraava-reittimerkinta [:tr-osoite :tie]))))
         ei-ajallista-gappia? (boolean (or
                                         (nil? (:aikaleima nykyinen-reittimerkinta))
                                         (nil? (:aikaleima seuraava-reittimerkinta))
@@ -55,11 +57,11 @@
                                                    (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :sivukaltevuus)))
         seuraavassa-pisteessa-ei-kaannyta-ympari? (not (:ymparikaantyminen? seuraava-reittimerkinta))]
 
-    (when-not jatkuvat-havainnot-pysyvat-samana? (log/debug "Jatkuvat havainnot muuttuu, katkaistaan reitti"))
-    (when-not seuraava-piste-samalla-tiella? (log/debug "Seuraava piste eri tiellä, katkaistaan reitti"))
-    (when-not ei-ajallista-gappia? (log/debug "Ajallinen gäppi pisteiden välillä, katkaistaan reitti"))
-    (when-not jatkuvat-mittausarvot-samat? (log/debug "Jatkuvat mittausarvot muuttuivat, katkaistaan reitti"))
-    (when-not seuraavassa-pisteessa-ei-kaannyta-ympari? (log/debug "Ympärikääntyminen havaittu, katkaistaan reitti"))
+    (when-not jatkuvat-havainnot-pysyvat-samana? (log/debug (:sijainti seuraava-reittimerkinta) "Jatkuvat havainnot muuttuu " (:jatkuvat-havainnot nykyinen-reittimerkinta) " -> " (:jatkuvat-havainnot seuraava-reittimerkinta) ", katkaistaan reitti"))
+    (when-not seuraava-piste-samalla-tiella? (log/debug (:sijainti seuraava-reittimerkinta) "Seuraava piste eri tiellä " (get-in nykyinen-reittimerkinta [:tr-osoite :tie]) " -> " (get-in seuraava-reittimerkinta [:tr-osoite :tie]) ", katkaistaan reitti"))
+    (when-not ei-ajallista-gappia? (log/debug (:sijainti seuraava-reittimerkinta) "Ajallinen gäppi pisteiden välillä " (c/from-sql-time (:aikaleima nykyinen-reittimerkinta)) " ja " (c/from-sql-time (:aikaleima seuraava-reittimerkinta)) ", katkaistaan reitti"))
+    (when-not jatkuvat-mittausarvot-samat? (log/debug (:sijainti seuraava-reittimerkinta) "Jatkuvat mittausarvot muuttuivat, katkaistaan reitti"))
+    (when-not seuraavassa-pisteessa-ei-kaannyta-ympari? (log/debug (:sijainti seuraava-reittimerkinta) "Ympärikääntyminen havaittu, katkaistaan reitti"))
 
     (boolean
       (and
