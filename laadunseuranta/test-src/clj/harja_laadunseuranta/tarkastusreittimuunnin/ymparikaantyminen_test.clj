@@ -88,6 +88,23 @@
                             (take 3 (drop 4 merkinnat-ymparikaantymisilla))))
              1)))))
 
+(deftest ymparikaantymisanalyysi-havaitsee-ymparikaantymisen-oikeassa-ajossa
+  (let [tarkastusajo-id 2
+        merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
+                                                         {:tarkastusajo tarkastusajo-id
+                                                          :laheiset_tiet_threshold 100})]
+
+    (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
+
+    (let [merkinnat-ymparikaantymisilla (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta merkinnat)]
+      (is (= (count merkinnat-ymparikaantymisilla) (count merkinnat)))
+      ;; Havaittiin yksi ympärikääntyminen
+      (is (= (count (filter :ymparikaantyminen? merkinnat-ymparikaantymisilla)) 1))
+      ;; Ympärikääntyminen on merkitty suunnilleen oikeaan pisteeseen
+      (is (= (count (filter :ymparikaantyminen?
+                            (take 23 (drop 20 merkinnat-ymparikaantymisilla))))
+             1)))))
+
 (deftest ymparikaantymisanalyysi-ei-havaitse-ymparikaantymista-tosi-lyhyella-valilla
   (let [tarkastusajo-id 902
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
@@ -137,7 +154,7 @@
         (is (every? true? vastaukset) "Ympärikääntymisiä ei havaittu")))))
 
 (deftest ymparikaantymisanalyysi-ei-havaitse-ymparikaantymista-eptarkoissa-ajoissa-joissa-sita-ei-ole
-  (let [tarkastusajo-idt [1 754 664 665 666 667 668]
+  (let [tarkastusajo-idt [1 3 754 664 665 666 667 668]
         vastaus-kanava (async/chan)]
 
     ;; Analysoidaan jokainen ajo asynkronisesti, muuten testi on hidas
