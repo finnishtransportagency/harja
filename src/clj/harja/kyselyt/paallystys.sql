@@ -200,10 +200,10 @@ WHERE yllapitokohde = :id
       AND poistettu IS NOT TRUE;
 
 -- name: luo-yllapitokohteen-maaramuutos<!
-INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo,
-                                         yksikko, tilattu_maara, toteutunut_maara, yksikkohinta, luoja)
-VALUES (:yllapitokohde, :tyon_tyyppi :: maaramuutos_tyon_tyyppi, :tyo,
-        :yksikko, :tilattu_maara, :toteutunut_maara, :yksikkohinta, :luoja);
+INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo, yksikko, tilattu_maara, toteutunut_maara,
+                                         yksikkohinta, luoja, ulkoinen_id, jarjestelma)
+VALUES (:yllapitokohde, :tyon_tyyppi :: maaramuutos_tyon_tyyppi, :tyo, :yksikko, :tilattu_maara, :toteutunut_maara,
+        :yksikkohinta, :luoja, :ulkoinen_id, :jarjestelma);
 
 -- name: paivita-yllapitokohteen-maaramuutos<!
 UPDATE yllapitokohteen_maaramuutos
@@ -226,6 +226,7 @@ SELECT EXISTS(SELECT id
               FROM paallystysilmoitus
               WHERE paallystyskohde = :yllapitokohde);
 
--- name: poista-yllapitokohteen-maaramuutokset!
+-- name: poista-yllapitokohteen-jarjestelman-kirjaamat-maaramuutokset!
 DELETE FROM yllapitokohteen_maaramuutos
-WHERE yllapitokohde = :yllapitokohdeid
+WHERE yllapitokohde = :yllapitokohdeid AND
+      jarjestelma = :jarjestelma

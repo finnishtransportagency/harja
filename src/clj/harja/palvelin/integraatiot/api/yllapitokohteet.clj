@@ -281,19 +281,20 @@
         jarjestelma (get-in otsikko [:lahettaja :jarjestelma])]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
-    (q-paallystys/poista-yllapitokohteen-maaramuutokset! db {:yllapitokohdeid kohde-id})
+    (q-paallystys/poista-yllapitokohteen-jarjestelman-kirjaamat-maaramuutokset! db {:yllapitokohdeid kohde-id
+                                                                                    :jarjestlelma jarjestelma})
     (doseq [{{:keys [tunniste tyyppi tyo yksikko tilattu-maara toteutunut-maara yksikkohinta]} :maaramuutos}
             maaramuutokset]
       (let [parametrit {:yllapitokohde kohde-id
-                   :tyon_tyyppi tyyppi
-                   :tyo tyo
-                   :yksikko yksikko
-                   :tilattu_maara  tilattu-maara
-                   :toteutunut_maara toteutunut-maara
-                   :yksikkohinta yksikkohinta
-                   :luoja (:id kayttaja)
-                   ;; todo: lisää ulkoinen id & järjestelmä
-                   }]
+                        :tyon_tyyppi tyyppi
+                        :tyo tyo
+                        :yksikko yksikko
+                        :tilattu_maara tilattu-maara
+                        :toteutunut_maara toteutunut-maara
+                        :yksikkohinta yksikkohinta
+                        :luoja (:id kayttaja)
+                        :ulkoinen-id (:id tunniste)
+                        :jarjestelma jarjestelma}]
         (q-paallystys/luo-yllapitokohteen-maaramuutos<! db parametrit))
       (println tunniste tyyppi tyo yksikko tilattu-maara toteutunut-maara yksikkohinta))
 
