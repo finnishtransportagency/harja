@@ -60,7 +60,10 @@
                                            :tilattu_maara tilattu-maara
                                            :toteutunut_maara toteutunut-maara
                                            :yksikkohinta yksikkohinta
-                                           :luoja (:id user)}))
+                                           :luoja (:id user)
+                                           :jarjestelma nil
+                                           :ulkoinen_id nil}))
+
 
 (defn- paivita-maaramuutos [db user
                             {:keys [:urakka-id :yllapitokohde-id]}
@@ -76,7 +79,9 @@
                                                :kayttaja (:id user)
                                                :id id
                                                :urakka urakka-id
-                                               :poistettu poistettu}))
+                                               :poistettu (true? poistettu)
+                                               :jarjestelma nil
+                                               :ulkoinen_id nil}))
 
 (defn- luo-tai-paivita-maaramuukset [db user urakka-ja-yllapitokohde maaramuutokset]
   (doseq [maaramuutos maaramuutokset]
