@@ -26,8 +26,8 @@
 
 (deftest kartan-konfiguraatio
   (testing "Kartan konfiguraatio"
-    (let [sijainti (atom {:nykyinen {:lat 100
-                                     :lon 200}})
+    (let [sijainti (atom {:lat 100
+                          :lon 200})
           ajoneuvon-sijainti (atom {:nykyinen {:lat 400
                                                :lon 500
                                                :heading 45}})
