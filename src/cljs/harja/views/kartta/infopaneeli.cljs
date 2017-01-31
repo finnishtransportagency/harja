@@ -62,13 +62,13 @@
    [sulje-nappi piilota-fn!]
    (when haetaan? [ajax-loader-pieni "Haetaan..." {:luokka "ip-loader"}])
 
-   (when (empty? asiat)
+   (when (and (empty? asiat) (not haetaan?))
      [:span "Pisteestä ei löytynyt hakutuloksia."])
 
    (doall
-    (for [[i asia] (zipmap (range) asiat)
+    (for [[i asia] (partition 2 (interleave (range) asiat))
           :let [auki? (avatut-asiat asia)]]
-      ^{:key i}
+      ^{:key (str "infopaneelin-elementti_" i)}
       [:div
        [otsikko asia #(toggle-asia! asia)]
        (when auki?
