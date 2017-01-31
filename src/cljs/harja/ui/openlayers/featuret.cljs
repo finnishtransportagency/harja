@@ -22,7 +22,16 @@
             [harja.geo :as geo]
             [harja.tiedot.navigaatio :as nav]))
 
-(def nuolten-valimatka 30000)
+(def ^{:doc "Viivaan piirrettävien nuolten välimatka, jotta nuolia ei piirretä
+turhaan liikaa"
+       :const true
+       :private true}
+maksimi-valimatka 30000)
+(def ^{:doc "Viivaan piirrettävien nuolten minimietäisyys, jotta taitoksissa nuolia ei piirretä l
+iian lähekkäin."
+       :const true
+       :private true}
+minimi-valimatka 300)
 
 (def ^{:doc "Kartalle piirrettävien asioiden oletus-zindex. Urakat ja muut piirretään
 pienemmällä zindexillä." :const true}
@@ -92,7 +101,7 @@ pienemmällä zindexillä." :const true}
                                (-> (laske-taitokset-fn) last :rotaatio)]]
                              :taitokset
                              (apurit/taitokset-valimatkoin
-                              nuolten-valimatka (butlast (laske-taitokset-fn)))))
+                              minimi-valimatka maksimi-valimatka (butlast (laske-taitokset-fn)))))
           pisteet-ja-rotaatiot (mapcat palauta-paikat (if (coll? paikka) paikka [paikka]))]
       (condp = tyyppi
         :nuoli (map #(tee-nuoli zindex ikoni %)

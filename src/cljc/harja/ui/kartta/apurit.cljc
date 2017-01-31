@@ -3,7 +3,8 @@
             #?@(:cljs
                 [[ol.geom.Point]])))
 
-(def kulmaraja-nuolelle (/ Math/PI 2)) ;; pi / 2 = 90 astetta
+(def kulmaraja-nuolelle (/ Math/PI 4)) ;; pi / 4 = 45 astetta
+(defn abs [i] (max i (- i)))
 
 (def +koko-suomi-extent+ [60000 6613000 736400 7780300])
 
@@ -13,17 +14,18 @@
    (- x2 x1)))
 
 (defn taitokset-valimatkoin
-  ([valimatka taitokset]
-   (taitokset-valimatkoin valimatka taitokset
+  ([min-etaisyys max-etaisyys taitokset]
+   (taitokset-valimatkoin min-etaisyys max-etaisyys taitokset
                           #?(:clj identity
                              :cljs (fn [p]
                                      (ol.geom.Point. (clj->js p))))))
-  ([valimatka taitokset luo-piste]
+  ([min-etaisyys max-etaisyys taitokset luo-piste]
 
    (let [alkupiste (:sijainti (first taitokset))]
      (loop [pisteet-ja-rotaatiot []
-           viimeisin-sijanti nil
-           [{:keys [sijainti rotaatio]} & taitokset] taitokset]
+            viimeisin-sijanti nil
+            edellisen-taitoksen-kulma nil
+            [{:keys [sijainti rotaatio]} & taitokset] taitokset]
       (if-not sijainti
         ;; Kaikki käsitelty
         pisteet-ja-rotaatiot
@@ -33,14 +35,27 @@
               [x3 y3 :as taitoksen-loppu] (second sijainti)
               dist (geo/etaisyys nuoli taitoksen-loppu)]
           (cond
-            (> dist valimatka)
+            (when edellisen-taitoksen-kulma
+              (and (> dist min-etaisyys)
+                   (> (abs (- (abs edellisen-taitoksen-kulma) (abs rotaatio))) kulmaraja-nuolelle)))
+            (recur (conj pisteet-ja-rotaatiot
+                         [(luo-piste taitoksen-alku) edellisen-taitoksen-kulma])
+                   taitoksen-alku
+                   rotaatio
+                   taitokset)
+
+            (> dist max-etaisyys)
             (recur (conj pisteet-ja-rotaatiot
                          [(luo-piste taitoksen-loppu) rotaatio])
-                   taitoksen-loppu taitokset)
+                   taitoksen-loppu
+                   rotaatio
+                   taitokset)
 
             :else
             (recur pisteet-ja-rotaatiot
-                   viimeisin-sijanti taitokset))))))))
+                   viimeisin-sijanti
+                   rotaatio
+                   taitokset))))))))
 
 
 
