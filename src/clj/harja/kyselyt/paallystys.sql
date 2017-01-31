@@ -221,6 +221,7 @@ WHERE id = :id
       AND (SELECT urakka
            FROM yllapitokohde
            WHERE id = :id) = :urakka;
+
 -- name: yllapitokohteella-paallystysilmoitus
 SELECT EXISTS(SELECT id
               FROM paallystysilmoitus

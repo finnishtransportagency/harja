@@ -10,7 +10,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.domain.skeema :as skeema]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
-            [clojure.walk :as walk]))
+            [clojure.walk :as walk]
+            [clojure.string :as str]))
 
 (def kayttaja-paallystys "skanska")
 (def kayttaja-tiemerkinta "tiemies")
@@ -371,3 +372,44 @@
     (is (= 400 status))
     (is (= "lukittu-yllapitokohde" (:koodi (:virhe (first (:virheet (cheshire/decode body true))))))
         "Virheelliselle kirjaukselle palautetaan oikea virhekoodi.")))
+
+(deftest maaramuutosten-kirjaaminen-kohteelle-toimii
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+        _ (u "INSERT INTO yllapitokohteen_maaramuutos (id, yllapitokohde, tyon_tyyppi, tyo, yksikko, tilattu_maara, toteutunut_maara, yksikkohinta, poistettu, luoja, luotu, muokkaaja, muokattu, jarjestelma, ulkoinen_id, ennustettu_maara)
+              VALUES (" urakka-id ", " kohde-id ", 'ajoradan_paallyste', 'Esimerkki työ', 'm2', 12, 14.2, 666, FALSE, 10, '2017-01-31 15:34:32', NULL, NULL, NULL, NULL, NULL)")
+
+        hae-maaramuutokset #(q "SELECT * FROM yllapitokohteen_maaramuutos WHERE yllapitokohde = " kohde-id)
+        maaramuutokset-ennen-kirjausta (hae-maaramuutokset)
+        harjan-kautta-kirjattu (first maaramuutokset-ennen-kirjausta)
+        polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/maaramuutokset"]
+        kutsudata (slurp "test/resurssit/api/maaramuutosten-kirjaus-request.json")
+        vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)
+        maaramuutokset-kirjauksen-jalkeen (hae-maaramuutokset)]
+
+    (is (= 200 (:status vastaus)) "Kirjaus tehtiin onnistuneesti")
+    (is (.contains (:body vastaus) "Määrämuutokset kirjattu onnistuneesti."))
+    (is (= (+ 1 (count maaramuutokset-ennen-kirjausta)) (count maaramuutokset-kirjauksen-jalkeen))
+        "Vain yksi uusi määrämuutos on kirjautunut")
+
+    (let [kutsudata (str/replace kutsudata "\"yksikkohinta\":666" "\"yksikkohinta\":888")
+          vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)
+          maaramuutokset-kirjauksen-jalkeen (hae-maaramuutokset)]
+
+      (is (= 200 (:status vastaus)) "Kirjaus tehtiin onnistuneesti")
+      (is (.contains (:body vastaus) "Määrämuutokset kirjattu onnistuneesti."))
+      (is (= (+ 1 (count maaramuutokset-ennen-kirjausta)) (count maaramuutokset-kirjauksen-jalkeen))
+          "Vain yksi uusi määrämuutos on kirjautunut")
+
+      (is (= harjan-kautta-kirjattu (first maaramuutokset-kirjauksen-jalkeen))
+          "Harjan käyttöliittymän kautta kirjattua määrä muutosta ei ole muutettu")
+      (is (= 888M (nth (second maaramuutokset-kirjauksen-jalkeen) 7)) "Uusi yksikköhinta on päivittynyt oikein"))))
+
+(deftest maaramuutosten-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka-id)
+        kutsudata (slurp "test/resurssit/api/maaramuutosten-kirjaus-request.json")
+        polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/maaramuutokset"]
+        vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)]
+    (is (= 400 (:status vastaus)))
+    (is (.contains (:body vastaus) "tuntematon-yllapitokohde"))))
