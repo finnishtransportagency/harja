@@ -38,6 +38,18 @@
             (when edellisen-taitoksen-kulma
               (and (> dist min-etaisyys)
                    (> (abs (- (abs edellisen-taitoksen-kulma) (abs rotaatio))) kulmaraja-nuolelle)))
+            ;; Datassa on paikoin suoralla tiellä todella lyhyitä pätkiä, kun tehdään muka tiukka käännös
+            ;;  |
+            ;;  |
+            ;;  |
+            ;;  -
+            ;;  |
+            ;;  |
+            ;; Käytännössä käyttäjä ei tuota "-" pätkää kartalla näe, mutta datassa se on. Jos nuoli
+            ;; laitettaisiin tuon pätkän loppuun, ja pätkän omalla rotaatiolla, niin silloin se
+            ;; osoittaisi käyttäjän näkökulmasta osoittaisi minne sattuu. Laitetaan nuoli "-" taitoksen
+            ;; ALKUUN, ja käytetään edellisen taitoksen kulmaa, niin käyttäjästä näyttää, että nuoli
+            ;; osoittaa oikein suoran tien suuntaan.
             (recur (conj pisteet-ja-rotaatiot
                          [(luo-piste taitoksen-alku) edellisen-taitoksen-kulma])
                    taitoksen-alku
