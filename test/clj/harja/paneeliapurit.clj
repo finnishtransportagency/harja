@@ -27,4 +27,4 @@
    (skeeman-luonti-onnistuu-kaikille?
      (map #(assoc % :tyyppi-kartalla tyyppi-kartalla) coll)))
   ([coll]
-   (when (not-empty coll) (every? true? (map skeeman-luonti-onnistuu? coll)))))
+   (every? skeeman-luonti-onnistuu? coll)))
