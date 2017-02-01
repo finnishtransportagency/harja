@@ -305,7 +305,7 @@
                   :date (lue-pgobject-date arvo)
                   (assert false (str "Ei tuettu tyyppi: " tyyppi ", arvo: " arvo))))
          kentat
-         arvot))))))
+         arvot)))))
 
 (defn lue-tr-osoite
   "Lukee yrita_tierekisteriosoite_pisteelle2 sprocin palauttaman arvon tekstimuodosta
