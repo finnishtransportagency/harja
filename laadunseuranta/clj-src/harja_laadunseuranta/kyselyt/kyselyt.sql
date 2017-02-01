@@ -123,10 +123,12 @@ ORDER by id;
 
 -- name: luo-uusi-tarkastus<!
 INSERT INTO tarkastus (urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
-                       sijainti, tarkastaja, tyyppi, tarkastusajo, luoja, havainnot, lahde, laadunalitus)
+                       sijainti, tarkastaja, tyyppi, tarkastusajo, luoja, havainnot, lahde, laadunalitus,
+                       nayta_urakoitsijalle)
 VALUES
-  (:urakka, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys, :sijainti, :tarkastaja,
-            :tyyppi :: tarkastustyyppi, :tarkastusajo, :luoja, :havainnot, :lahde :: lahde, :laadunalitus);
+  (:urakka, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys,
+            :sijainti, :tarkastaja, :tyyppi :: tarkastustyyppi, :tarkastusajo, :luoja, :havainnot, :lahde :: lahde, :laadunalitus,
+   :nayta_urakoitsijalle);
 
 -- name: luo-uusi-tarkastuksen-vakiohavainto<!
 INSERT INTO tarkastus_vakiohavainto (tarkastus, vakiohavainto) VALUES (:tarkastus, :vakiohavainto);
