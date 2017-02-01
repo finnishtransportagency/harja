@@ -128,8 +128,7 @@ SELECT l.id, l.aika, l.kohde, l.tekija, l.kuvaus, l.sijainti, l.tarkastuspiste,
   FROM laatupoikkeama l
        JOIN kayttaja k ON l.luoja = k.id
        LEFT JOIN yllapitokohde ypk ON l.yllapitokohde = ypk.id
- WHERE -- FIXME: sijainti ei löydä
-      (ST_Intersects(l.sijainti, :sijainti) OR l.tr_numero=20)
+ WHERE ST_Intersects(l.sijainti, :sijainti)
        AND (l.aika BETWEEN :alku AND :loppu OR
             l.kasittelyaika BETWEEN :alku AND :loppu)
        AND l.poistettu IS NOT TRUE
