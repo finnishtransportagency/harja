@@ -964,6 +964,12 @@ SELECT id
 FROM varustetoteuma
 WHERE tila = 'virhe';
 
+-- name: suhteellinen-paikka-pisteiden-valissa
+SELECT
+  ST_LineLocatePoint(v.viiva ::geometry, ST_ClosestPoint (v.viiva ::geometry, :piste ::geometry) ::geometry) AS paikka
+FROM
+  (SELECT ST_MakeLine(:rp1 ::geometry, :rp2 ::geometry) AS viiva) v;
+
 -- name: siirry-kokonaishintainen-toteuma
 -- Palauttaa tiedot, joita tarvitaan kokonaishintaiseen toteumaan siirtymiseen ja
 -- tarkistaa että käyttäjällä on oikeus urakkaan, johon toteuma kuuluu

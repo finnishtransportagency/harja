@@ -1,30 +1,26 @@
 -- name: hae-toteumat
+-- fetch-size: 64
+-- row-fn: muunna-toteuma
 -- Hakee kaikki toteumat
 SELECT t.id,
        t.tyyppi,
        t.reitti,
        t.alkanut, t.paattynyt,
        t.suorittajan_nimi AS suorittaja_nimi,
-       tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
-       tt.maara AS tehtava_maara,
-       tpk.yksikko AS tehtava_yksikko,
-       tpk.nimi AS tehtava_toimenpide,
-       rp.sijainti AS reittipiste_sijainti,
-       rp.aika AS reittipiste_aika
+       (SELECT array_agg(row(tt.toimenpidekoodi, tt.maara, tpk.yksikko, tpk.nimi))
+          FROM toteuma_tehtava tt
+ 	       JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+	 WHERE tt.toteuma = t.id) as tehtavat
   FROM toteuma t
        JOIN urakka u ON t.urakka=u.id
-       JOIN toteuma_tehtava tt ON tt.toteuma = t.id
-       JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-       JOIN toimenpidekoodi tpk3 ON tpk.emo = tpk3.id
        JOIN kayttaja k ON t.luoja = k.id
-       LEFT JOIN reittipiste rp ON t.id = rp.toteuma
-
  WHERE ST_Intersects(t.envelope, :sijainti)
    AND ST_Intersects(ST_CollectionHomogenize(t.reitti), :sijainti)
    AND ((t.alkanut BETWEEN :alku AND :loppu) OR
         (t.paattynyt BETWEEN :alku AND :loppu))
 
 -- name: hae-tarkastukset
+-- fetch-size: 64
 SELECT t.id, t.aika, t.tyyppi, t.tarkastaja,
        t.havainnot, t.laadunalitus,
        t.sijainti,
@@ -83,6 +79,7 @@ SELECT i.id, i.urakka, i.ilmoitusid, i.ilmoitettu,
 
 
 -- name: hae-turvallisuuspoikkeamat
+-- fetch-size: 64
 SELECT t.id,
        t.urakka,
        t.tapahtunut,
@@ -135,3 +132,7 @@ SELECT l.id, l.aika, l.kohde, l.tekija, l.kuvaus, l.sijainti, l.tarkastuspiste,
        AND (l.aika BETWEEN :alku AND :loppu OR
             l.kasittelyaika BETWEEN :alku AND :loppu)
        AND l.poistettu IS NOT TRUE
+
+-- name: hae-reittipisteet
+-- Hakee yhden annetun toteuman reittipisteet
+SELECT aika,sijainti FROM reittipiste WHERE toteuma = :toteuma-id

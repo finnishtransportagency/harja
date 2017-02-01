@@ -66,11 +66,12 @@
 (defn poista-varuste [e! tietolaji tunniste varuste]
   (yleiset/varmista-kayttajalta
     {:otsikko "Varusteen poistaminen Tierekisteristä"
-     :viesti [:div "Haluatko varmasti poistaa tietolajin: "
+     :sisalto [:div "Haluatko varmasti poistaa tietolajin: "
               [:b (str (varusteet/tietolaji->selitys tietolaji) " (" tietolaji ")")] " varusteen, jonka tunniste on: "
               [:b tunniste] "."]
-     :peruuta [:div (ikonit/livicon-ban) " Peruuta"]
-     :hyvaksy [:div (ikonit/livicon-trash) " Poista"]
+     :hyvaksy "Poista"
+     :hyvaksy-ikoni (ikonit/livicon-trash)
+     :hyvaksy-napin-luokka "nappi-kielteinen"
      :toiminto-fn (fn [] (e! (v/->PoistaVaruste varuste)))}))
 
 (def kuntoluokka->selite {"1" "Ala-arvoinen"
