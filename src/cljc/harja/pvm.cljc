@@ -252,6 +252,9 @@
 (def kokovuosi-ja-kuukausi-fmt
   (luo-format "yyyy/MM"))
 
+#?(:clj (def pgobject-format
+          (luo-format "yyyy-MM-dd HH:mm:ss")))
+
 (defn pvm-aika
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa"
   [pvm]
