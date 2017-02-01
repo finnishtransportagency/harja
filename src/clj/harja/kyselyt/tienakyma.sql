@@ -128,7 +128,7 @@ SELECT l.id, l.aika, l.kohde, l.tekija, l.kuvaus, l.sijainti, l.tarkastuspiste,
   FROM laatupoikkeama l
        JOIN kayttaja k ON l.luoja = k.id
        LEFT JOIN yllapitokohde ypk ON l.yllapitokohde = ypk.id
- WHERE ST_Intersects(l.sijainti, :sijainti)
+ WHERE ST_Intersects(ST_CollectionHomogenize(l.sijainti), :sijainti)
        AND (l.aika BETWEEN :alku AND :loppu OR
             l.kasittelyaika BETWEEN :alku AND :loppu)
        AND l.poistettu IS NOT TRUE
