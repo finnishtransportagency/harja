@@ -12,7 +12,8 @@
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -69,7 +70,17 @@
 (extend-protocol tuck/Event
   Nakymassa
   (process-event [{nakymassa? :nakymassa?} tienakyma]
-    (assoc tienakyma :nakymassa? nakymassa?))
+
+    (as-> tienakyma tienakyma
+      (assoc tienakyma :nakymassa? nakymassa?)
+
+      (if nakymassa?
+        ;; Näkymään tullaan, alustetaan myös päivämäärä ja kello
+        (update tienakyma
+                :valinnat assoc
+                :alku (pvm/aikana (pvm/nyt) 0 0 0 0)
+                :loppu (t/plus (pvm/nyt) (t/minutes 5)))
+        tienakyma)))
 
   PaivitaSijainti
   (process-event [{s :sijainti} tienakyma]
