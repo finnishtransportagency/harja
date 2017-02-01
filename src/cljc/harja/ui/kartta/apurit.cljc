@@ -36,7 +36,7 @@
               dist (geo/etaisyys nuoli taitoksen-loppu)]
           (cond
             (when edellisen-taitoksen-kulma
-              (and (> dist min-etaisyys)
+              (and (or (nil? viimeisin-sijanti) (> dist min-etaisyys))
                    (> (abs (- (abs edellisen-taitoksen-kulma) (abs rotaatio))) kulmaraja-nuolelle)))
             ;; Datassa on paikoin suoralla tiellä todella lyhyitä pätkiä, kun tehdään muka tiukka käännös
             ;;  |
