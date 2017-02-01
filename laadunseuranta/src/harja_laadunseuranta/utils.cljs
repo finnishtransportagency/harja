@@ -80,9 +80,9 @@
 
 (defn vanhentunut-selain? []
   (boolean (or (and (chrome?)
-                    (chrome-vanhentunut?)
-                    (and (firefox?)
-                         (firefox-vanhentunut?))))))
+                    (chrome-vanhentunut?))
+               (and (firefox?)
+                    (firefox-vanhentunut?)))))
 
 (defn parsi-kaynnistysparametrit [params]
   (let [params (if (str/starts-with? params "?")
