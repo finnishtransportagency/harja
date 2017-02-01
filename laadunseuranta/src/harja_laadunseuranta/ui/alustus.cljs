@@ -30,7 +30,7 @@
     [:p "Tarkistetaan..."]
 
     [tarkistusrivi "Selain tuettu" selain-tuettu
-     (cond (not selain-tuettu)
+     (cond (= selain-tuettu :virhe)
            {:virhe (str "Selain ei ole tuettu. Tuetut selaimet: " (utils/tuetut-selaimet-tekstina))}
 
            selain-vanhentunut?
