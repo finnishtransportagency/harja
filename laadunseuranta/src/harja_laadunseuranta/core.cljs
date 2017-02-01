@@ -49,7 +49,7 @@
 (defn- alusta-paikannus-id []
   (reset! paikannus-id (paikannus/kaynnista-paikannus
                          sovellus/sijainti
-                         sovellus/ensimmainen-sijainti)))
+                         sovellus/ensimmainen-sijainti-saatu)))
 
 (defn- alusta-geolokaatio-api []
   (if (paikannus/geolokaatio-tuettu?)
@@ -80,7 +80,7 @@
   ;; Haetaan käyttäjätiedot kun laite on paikannettu
   ;; Sijainti tarvitaan urakoiden lajitteluun, jotta defaulttina on valittuna lähin
   (run!
-    (when (and @sovellus/ensimmainen-sijainti
+    (when (and @sovellus/ensimmainen-sijainti-saatu
                (not @sovellus/kayttajanimi))
       (go (let [kayttajatiedot (<! (comms/hae-kayttajatiedot (:nykyinen @sovellus/sijainti)))]
             (reset! sovellus/kayttajanimi (-> kayttajatiedot :ok :nimi))

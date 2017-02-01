@@ -60,11 +60,11 @@
       :selain-vanhentunut? @s/selain-vanhentunut
       :gps-tuettu (cond
                     (nil? @s/gps-tuettu) :tarkistetaan
-                    (some? @s/gps-tuettu) :ok
+                    (true? @s/gps-tuettu) :ok
                     :default :virhe)
-      :ensimmainen-sijainti (cond
-                              (nil? @s/ensimmainen-sijainti) :tarkistetaan
-                              (some? @s/ensimmainen-sijainti) :ok
+      :ensimmainen-sijainti-saatu (cond
+                              (nil? @s/ensimmainen-sijainti-saatu) :tarkistetaan
+                              (true? @s/ensimmainen-sijainti-saatu) :ok
                               :default :virhe)
       :oikeus-urakoihin (cond
                           (nil? @s/oikeus-urakoihin) :tarkistetaan
@@ -72,10 +72,10 @@
                           :default :virhe)
       :idxdb-tuettu (cond
                       (nil? @s/idxdb-tuettu) :tarkistetaan
-                      (some? @s/idxdb-tuettu) :ok
+                      (true? @s/idxdb-tuettu) :ok
                       :default :virhe)
       :kayttaja-tunnistettu (cond
-                              (nil? @s/kayttajanimi) :tarkistetaan
-                              (some? @s/kayttajanimi) :ok
+                              (nil? @s/kayttaja-tunnistettu) :tarkistetaan
+                              (true? @s/kayttaja-tunnistettu) :ok
                               :default :virhe)
       :verkkoyhteys (if @s/verkkoyhteys :ok :virhe)}]))

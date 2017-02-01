@@ -20,7 +20,7 @@
     (when-let [virheviesti (:virhe optiot)]
       [:div.alustus-varoitus virheviesti])]))
 
-(defn alustuskomponentti [{:keys [gps-tuettu ensimmainen-sijainti idxdb-tuettu oikeus-urakoihin
+(defn alustuskomponentti [{:keys [gps-tuettu ensimmainen-sijainti-saatu idxdb-tuettu oikeus-urakoihin
                                   kayttaja-tunnistettu selain-tuettu verkkoyhteys selain-vanhentunut?]}]
   [:div.alustuskomponentti-container
    [:div.alustuskomponentti
@@ -34,10 +34,10 @@
      (when (= idxdb-tuettu :virhe)
        {:virhe "Selaintietokantaa ei voida käyttää. Ethän käytä selainta yksityisyystilassa?"})]
     [tarkistusrivi "Verkkoyhteys" verkkoyhteys]
-    [tarkistusrivi "GPS-tuki" gps-tuettu
-     (when (= gps-tuettu :virhe)
-       {:virhe "GPS:ää ei voida käyttää. Varmista, että laitteen paikannus on päällä ja että GPS:n käyttö on sallittu selaimen asetuksissa."})]
-    [tarkistusrivi "Laite paikannettu" ensimmainen-sijainti]
+    [tarkistusrivi "GPS-tuki" gps-tuettu]
+    [tarkistusrivi "Laite paikannettu" ensimmainen-sijainti-saatu
+     (when (= ensimmainen-sijainti-saatu :virhe)
+       {:virhe "Laitetta ei voida paikantaa. Varmista, että laitteen paikannus on päällä ja että GPS:n käyttö on sallittu selaimen asetuksissa."})]
     [tarkistusrivi "Käyttäjä tunnistettu" kayttaja-tunnistettu]
     [tarkistusrivi "Oikeus tehdä tarkastuksia" oikeus-urakoihin
      (when (= oikeus-urakoihin :virhe)

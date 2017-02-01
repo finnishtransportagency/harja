@@ -48,29 +48,34 @@
                                        (math/ms->sec (- ts (or (:timestamp nykyinen) ts)))))]
     {:edellinen nykyinen
      :nykyinen (assoc uusi-nykyinen
-                      :speed (:speed uusi-sijainti)
-                      :heading (:heading uusi-sijainti)
-                      :accuracy (:accuracy uusi-sijainti)
-                      :timestamp ts)}))
+                 :speed (:speed uusi-sijainti)
+                 :heading (:heading uusi-sijainti)
+                 :accuracy (:accuracy uusi-sijainti)
+                 :timestamp ts)}))
 
 (defn kaynnista-paikannus
   ([sijainti-atom] (kaynnista-paikannus sijainti-atom nil))
-  ([sijainti-atomi ensimmainen-sijainti-atom]
-  (when (geolokaatio-tuettu?)
-    (.log js/console "Paikannus käynnistetään")
-    (js/setInterval
-      (fn []
-        (let [sijainti-saatu #(do
-                               (when (and ensimmainen-sijainti-atom (nil? @ensimmainen-sijainti-atom))
-                                 (reset! ensimmainen-sijainti-atom (konvertoi-latlon %)))
-                               (swap! sijainti-atomi (fn [entinen]
-                                                       (paivita-sijainti entinen (konvertoi-latlon %) (timestamp)))))
-              sijainti-epaonnistui #(swap! sijainti-atomi identity)]
-          (.getCurrentPosition (geolocation-api)
-                               sijainti-saatu
-                               sijainti-epaonnistui
-                               paikannusoptiot)))
-      +paikan-raportointivali+))))
+  ([sijainti-atomi ensimmainen-sijainti-saatu-atom]
+   (when (geolokaatio-tuettu?)
+     (.log js/console "Paikannus käynnistetään")
+     (js/setInterval
+       (fn []
+         (let [sijainti-saatu #(do
+                                 (when (and ensimmainen-sijainti-saatu-atom
+                                            (nil? @ensimmainen-sijainti-saatu-atom))
+                                   (reset! ensimmainen-sijainti-saatu-atom true))
+                                 (swap! sijainti-atomi (fn [entinen]
+                                                         (paivita-sijainti entinen (konvertoi-latlon %) (timestamp)))))
+               sijainti-epaonnistui #(do
+                                       (when (and ensimmainen-sijainti-saatu-atom
+                                                  (nil? @ensimmainen-sijainti-saatu-atom))
+                                         (reset! ensimmainen-sijainti-saatu-atom false))
+                                       (swap! sijainti-atomi identity))]
+           (.getCurrentPosition (geolocation-api)
+                                sijainti-saatu
+                                sijainti-epaonnistui
+                                paikannusoptiot)))
+       +paikan-raportointivali+))))
 
 (defn aseta-testisijainti
   "HUOM: testikäyttöön. Asettaa nykyisen sijainnin koordinaatit. Oikean geolocation pollerin tulisi
