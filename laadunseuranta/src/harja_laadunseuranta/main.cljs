@@ -57,7 +57,7 @@
     [paanakyma]
     [alustus/alustuskomponentti
      {:selain-tuettu (if @s/selain-tuettu :ok :virhe)
-      :selain-vanhentunut (if @s/selain-vanhentunut :ok :virhe)
+      :selain-vanhentunut @s/selain-vanhentunut
       :gps-tuettu (cond
                     (nil? @s/gps-tuettu) :tarkistetaan
                     (some? @s/gps-tuettu) :ok

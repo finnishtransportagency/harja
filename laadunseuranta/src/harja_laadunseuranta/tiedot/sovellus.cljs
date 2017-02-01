@@ -133,8 +133,9 @@
 (def havaintolomake-kuva (reagent/cursor sovellus [:havaintolomakedata :kuva]))
 (def havaintolomake-esikatselukuva (reagent/cursor sovellus [:havaintolomakedata :esikatselukuva]))
 
-(def alustus-valmis (reaction (let [sovellus @sovellus]
+(def alustus-valmis? (reaction (let [sovellus @sovellus]
                                 (boolean (and (get-in sovellus [:alustus :gps-tuettu])
+                                              false ;; TODO POIS
                                               (get-in sovellus [:alustus :ensimmainen-sijainti])
                                               (get-in sovellus [:alustus :verkkoyhteys?])
                                               (get-in sovellus [:alustus :selain-tuettu?])
