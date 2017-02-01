@@ -227,7 +227,8 @@
       (tallenna-korjaavat-toimenpiteet db tp-id kirjaaja korjaavat)
       (tallenna-kommentit db tp-id kirjaaja kommentit)
       (log/debug "Tallennetaan turvallisuuspoikkeamalle " tp-id " " (count liitteet) " liitettä.")
-      (tallenna-liitteet-turvallisuuspoikkeamalle db liitteiden-hallinta urakka-id tp-id kirjaaja liitteet))))
+      (tallenna-liitteet-turvallisuuspoikkeamalle db liitteiden-hallinta urakka-id tp-id kirjaaja liitteet)
+      tp-id)))
 
 (defn laheta-poikkeamat-turin [turi idt]
   (when turi
