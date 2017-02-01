@@ -10,7 +10,7 @@
 
 (def +oletusraportointivali+ 2000)
 (def paikan-raportointivali-ms (atom +oletusraportointivali+))
-(def +raportointivalin-kertakasvatus+ 2000)
+(def +raportointivalin-kertakasvatus+ 1000)
 (def paikan-raportointivali-ms-max 8000)
 
 (def paikannus-id (atom nil))
