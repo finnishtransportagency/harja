@@ -7,10 +7,12 @@
 (def sovelluksen-alkutila
   {;; Sovelluksen alustustiedot
    :alustus {:alustettu? false
-             :gps-tuettu? false
+             :gps-tuettu nil
+             :idxdb-tuettu nil
              :ensimmainen-sijainti nil ; Estää sovelluksen käytön jos GPS ei toimi oikein
              :verkkoyhteys? (.-onLine js/navigator)
              :selain-tuettu? (utils/tuettu-selain?)
+             :kayttaja-tunnistettu nil
              :selain-vanhentunut? (utils/vanhentunut-selain?)}
 
    ;; Tarkastusajon perustiedot
@@ -30,7 +32,7 @@
    :kayttaja {:kayttajanimi nil
               :kayttajatunnus nil
               :roolit #{}
-              :oikeus-urakoihin [] ;; Urakat, joihin tarkastusoikeus, "sopivimmat" ensimmäisenä
+              :oikeus-urakoihin nil ;; Urakat, joihin tarkastusoikeus, "sopivimmat" ensimmäisenä. nil kun haetaan, vector kun haettu
               :organisaatio nil}
 
    ;; Ajonaikaiset tiedot
@@ -132,7 +134,7 @@
 (def havaintolomake-esikatselukuva (reagent/cursor sovellus [:havaintolomakedata :esikatselukuva]))
 
 (def alustus-valmis (reaction (let [sovellus @sovellus]
-                                (boolean (and (get-in sovellus [:alustus :gps-tuettu?])
+                                (boolean (and (get-in sovellus [:alustus :gps-tuettu])
                                               (get-in sovellus [:alustus :ensimmainen-sijainti])
                                               (get-in sovellus [:alustus :verkkoyhteys?])
                                               (get-in sovellus [:alustus :selain-tuettu?])
@@ -144,7 +146,9 @@
 (def verkkoyhteys (reagent/cursor sovellus [:alustus :verkkoyhteys?]))
 (def selain-tuettu (reagent/cursor sovellus [:alustus :selain-tuettu?]))
 (def selain-vanhentunut (reagent/cursor sovellus [:alustus :selain-vanhentunut?]))
-(def gps-tuettu (reagent/cursor sovellus [:alustus :gps-tuettu?]))
+(def gps-tuettu (reagent/cursor sovellus [:alustus :gps-tuettu]))
+(def kayttaja-tunnistettu (reagent/cursor sovellus [:alustus :kayttaja-tunnistettu]))
+(def idxdb-tuettu (reagent/cursor sovellus [:alustus :idxdb-tuettu]))
 (def ensimmainen-sijainti (reagent/cursor sovellus [:alustus :ensimmainen-sijainti]))
 (def oikeus-urakoihin (reagent/cursor sovellus [:kayttaja :oikeus-urakoihin]))
 

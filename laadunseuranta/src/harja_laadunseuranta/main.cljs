@@ -56,11 +56,26 @@
   (if @s/sovellus-alustettu
     [paanakyma]
     [alustus/alustuskomponentti
-     {:selain-vanhentunut @s/selain-vanhentunut
-      :gps-tuettu @s/gps-tuettu
-      :ensimmainen-sijainti @s/ensimmainen-sijainti
-      :oikeus-urakoihin @s/oikeus-urakoihin
-      :idxdb-tuettu @s/idxdb
-      :kayttaja @s/kayttajanimi
-      :verkkoyhteys @s/verkkoyhteys
-      :selain-tuettu @s/selain-tuettu}]))
+     {:selain-tuettu (if @s/selain-tuettu :ok :virhe)
+      :selain-vanhentunut (if @s/selain-vanhentunut :ok :virhe)
+      :gps-tuettu (cond
+                    (nil? @s/gps-tuettu) :tarkistetaan
+                    (some? @s/gps-tuettu) :ok
+                    :default :virhe)
+      :ensimmainen-sijainti (cond
+                              (nil? @s/ensimmainen-sijainti) :tarkistetaan
+                              (some? @s/ensimmainen-sijainti) :ok
+                              :default :virhe)
+      :oikeus-urakoihin (cond
+                          (nil? @s/oikeus-urakoihin) :tarkistetaan
+                          (not (empty? @s/oikeus-urakoihin)) :ok
+                          :default :virhe)
+      :idxdb-tuettu (cond
+                      (nil? @s/idxdb-tuettu) :tarkistetaan
+                      (some? @s/idxdb-tuettu) :ok
+                      :default :virhe)
+      :kayttaja (cond
+                  (nil? @s/kayttajanimi) :tarkistetaan
+                  (some? @s/kayttajanimi) :ok
+                  :default :virhe)
+      :verkkoyhteys (if @s/verkkoyhteys :ok :virhe)}]))

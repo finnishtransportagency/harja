@@ -3,10 +3,19 @@
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.ui.yleiset.yleiset :as yleiset]))
 
-(defn- checkmark [flag]
-  [:img {:src (if flag kuvat/+check+ kuvat/+cross+)
-         :width 36
-         :height 36}])
+(defn- checkmark
+  "Tila on keyword: :ok :virhe :tarkistetaan"
+  ([teksti tila] (checkmark teksti tila {}))
+  ([teksti tila optiot]
+   [:div (when (= (:varoitus optiot)) {:class "alustus-varoitus"})
+    [:img {:src (case tila
+                  :tarkistetaan kuvat/+spinner+
+                  :ok kuvat/+check+
+                  :virhe kuvat/+cross+
+                  kuvat/+spinner+)
+           :width 36
+           :height 36}]
+    teksti]))
 
 (defn alustuskomponentti [{:keys [gps-tuettu ensimmainen-sijainti idxdb-tuettu oikeus-urakoihin
                                   kayttaja selain-tuettu verkkoyhteys selain-vanhentunut]}]
@@ -14,16 +23,14 @@
    [:div.alustuskomponentti
     [:div.liikenneturvallisuusmuistutus "Muista aina liikenne\u00ADturvallisuus tarkastuksia tehdessäsi."]
     [:p "Tarkistetaan..."]
-    [:div {:class (when selain-vanhentunut
-                    "alustus-varoitus")}
-           [checkmark selain-tuettu] (if selain-vanhentunut
-                                        "Selain vaatii päivityksen"
-                                        "Selain tuettu")]
-    [:div [checkmark verkkoyhteys] "Verkkoyhteys"]
-    [:div [checkmark idxdb-tuettu] "Selaintietokanta-tuki"]
-    [:div [checkmark gps-tuettu] "GPS-tuki"]
-    [:div [checkmark ensimmainen-sijainti] "Laite paikannettu"]
-    [:div [checkmark kayttaja] "Käyttäjä tunnistettu"]
-    [:div [checkmark (not (empty? oikeus-urakoihin))] "Oikeus tehdä tarkastuksia"]
+    [checkmark "Selain tuettu" selain-tuettu
+     (when selain-vanhentunut
+       {:varoitus "Selain vaatii päivityksen"})] ;; TODO JOS EI TUETTU NÄYTÄ VIESTI MIKÄ SELAIN
+    [checkmark "Selaintietokanta-tuki" idxdb-tuettu]
+    [checkmark "Verkkoyhteys" verkkoyhteys]
+    [checkmark "GPS-tuki" gps-tuettu]
+    [checkmark "Laite paikannettu" ensimmainen-sijainti]
+    [checkmark "Käyttäjä tunnistettu" kayttaja]
+    [checkmark "Oikeus tehdä tarkastuksia" oikeus-urakoihin]
     [:div.screenlock-muistutus
      [yleiset/vihje "Muista asettaa näytön automaattilukitus pois päältä."]]]])

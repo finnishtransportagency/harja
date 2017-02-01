@@ -85,6 +85,9 @@
       (go (let [kayttajatiedot (<! (comms/hae-kayttajatiedot (:nykyinen @sovellus/sijainti)))]
             (reset! sovellus/kayttajanimi (-> kayttajatiedot :ok :nimi))
             (reset! sovellus/kayttajatunnus (-> kayttajatiedot :ok :kayttajanimi))
+            (if (-> kayttajatiedot :ok :kayttajanimi)
+              (reset! sovellus/kayttaja-tunnistettu true)
+              (reset! sovellus/kayttaja-tunnistettu false))
             (reset! sovellus/oikeus-urakoihin (-> kayttajatiedot :ok :urakat))
             (reset! sovellus/roolit (-> kayttajatiedot :ok :roolit))
             (reset! sovellus/organisaatio (-> kayttajatiedot :ok :organisaatio)))))))
@@ -92,7 +95,7 @@
 (defn- alusta-sovellus []
   (go
 
-    (reset! sovellus/idxdb (<! (reitintallennus/tietokannan-alustus)))
+    (reset! sovellus/idxdb (<! (reitintallennus/tietokannan-alustus sovellus/idxdb-tuettu)))
 
     (reitintallennus/palauta-tarkastusajo @sovellus/idxdb #(do
                                                              (reset! sovellus/palautettava-tarkastusajo %)
