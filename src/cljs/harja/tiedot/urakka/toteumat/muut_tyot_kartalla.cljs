@@ -10,10 +10,11 @@
 (defonce karttataso-muut-tyot (atom false))
 
 (defonce muut-tyot-kartalla (reaction
-                             (let [valittu-toteuma-id (:id @muut-tyot/valittu-toteuma)]
+                             (let [valittu-toteuma-id (get-in @muut-tyot/valittu-toteuma [:toteuma :id])]
                                (when karttataso-muut-tyot
                                  (kartalla-esitettavaan-muotoon
                                   @muut-tyot/haetut-muut-tyot
-                                  #(= valittu-toteuma-id (:id %))
+                                  #(when-let [taman-id (get-in % [:toteuma :id])]
+                                     (= valittu-toteuma-id taman-id))
                                   (map
                                    #(assoc % :tyyppi-kartalla :toteuma)))))))

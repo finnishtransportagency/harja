@@ -14,7 +14,8 @@
             [harja-laadunseuranta.tarkastusreittimuunnin.ymparikaantyminen :as ymparikaantyminen]
             [clojure.string :as str]
             [clj-time.core :as t]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [harja.domain.roolit :as roolit]))
 
 (def +kahden-pisteen-valinen-sallittu-aikaero-s+ 180)
 
@@ -426,7 +427,8 @@
   (let [tarkastus (luo-kantaan-tallennettava-tarkastus db tarkastus kayttaja)
         _ (q/luo-uusi-tarkastus<! db
                                   (merge tarkastus
-                                         {:luoja (:id kayttaja)}))
+                                         {:luoja (:id kayttaja)
+                                          :nayta_urakoitsijalle (roolit/urakoitsija? kayttaja)}))
         _ (log/debug "Uusi tarkastus luotu!")
         tarkastus-id (tark-q/luodun-tarkastuksen-id db)
         sisaltaa-talvihoitomittauksen? (not (empty? (remove nil? (vals (:talvihoitomittaus tarkastus)))))
