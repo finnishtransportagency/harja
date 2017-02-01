@@ -162,10 +162,10 @@
 
 (def ajoneuvon-sijainti (reaction
                           (if (:nykyinen @sijainti)
-                            (:nykyinen @sijainti)
+                            @sijainti
                             tyhja-sijainti)))
 
-(def kartan-keskipiste (reaction @ajoneuvon-sijainti))
+(def kartan-keskipiste (reaction (:nykyinen @ajoneuvon-sijainti)))
 
 (def tarkastusajo-kaynnissa? (reagent/cursor sovellus [:tarkastusajo-kaynnissa?]))
 (def ilmoitus (reagent/cursor sovellus [:ilmoitus]))

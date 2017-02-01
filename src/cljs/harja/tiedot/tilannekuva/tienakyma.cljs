@@ -12,7 +12,8 @@
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -20,7 +21,8 @@
                           :sijainti nil
                           :haku-kaynnissa? nil
                           :tulokset nil
-                          :nakymassa? false}))
+                          :nakymassa? false
+                          :reittipisteet {}}))
 
 (defrecord PaivitaSijainti [sijainti])
 (defrecord PaivitaValinnat [valinnat])
@@ -30,18 +32,32 @@
 (defrecord SuljeInfopaneeli [])
 (defrecord AvaaTaiSuljeTulos [idx])
 (defrecord TarkasteleToteumaa [toteuma])
+(defrecord HaeToteumanReittipisteet [toteuma])
+(defrecord ToteumanReittipisteetHaettu [id reittipisteet])
 
 (defn- kartalle
   "Muodosta tuloksista karttataso.
   Kaikki, jotka ovat infopaneelissa avattuina, renderöidään valittuina."
-  [{:keys [avatut-tulokset kaikki-tulokset valinnat] :as tienakyma}]
+  [{:keys [avatut-tulokset kaikki-tulokset valinnat reittipisteet] :as tienakyma}]
   (let [valittu? (comp boolean avatut-tulokset :idx)
         {valitut-tulokset true
          muut-tulokset false} (group-by valittu? kaikki-tulokset)]
     (assoc tienakyma
            :valitut-tulokset-kartalla
            (esitettavat-asiat/kartalla-esitettavaan-muotoon
-            (concat valitut-tulokset
+            (concat (map #(if (contains? reittipisteet (:id %))
+                            (assoc % :ei-nuolia? true)
+                            %) valitut-tulokset)
+
+                    ;; Lisätään reittipisteet toteumille, joille ne on haettu
+                    (mapcat (fn [{id :id :as toteuma}]
+                              (when-let [haetut-reittipisteet (reittipisteet id)]
+                                (for [rp haetut-reittipisteet]
+                                  (assoc rp
+                                         :tehtavat (:tehtavat toteuma)
+                                         :tyyppi-kartalla :reittipiste))))
+                            (filter #(= (:tyyppi-kartalla %) :toteuma) valitut-tulokset))
+
                     [(assoc (:sijainti valinnat)
                             :tyyppi-kartalla :tr-osoite-indikaattori)])
             (constantly false))
@@ -53,8 +69,20 @@
 
 (extend-protocol tuck/Event
   Nakymassa
-  (process-event [{nakymassa? :nakymassa?} tienakyma]
-    (assoc tienakyma :nakymassa? nakymassa?))
+  (process-event [{nakymassa? :nakymassa?} {valinnat :valinnat :as tienakyma}]
+
+    (as-> tienakyma tienakyma
+      (assoc tienakyma :nakymassa? nakymassa?)
+
+      (if (and nakymassa?
+               (nil? (:alku valinnat))
+               (nil? (:loppu valinnat)))
+        ;; Näkymään tullaan eikä aikaa vielä ole asetettu, alustetaan myös päivämäärä ja kello
+        (update tienakyma
+                :valinnat assoc
+                :alku (pvm/aikana (pvm/nyt) 0 0 0 0)
+                :loppu (t/plus (pvm/nyt) (t/minutes 5)))
+        tienakyma)))
 
   PaivitaSijainti
   (process-event [{s :sijainti} tienakyma]
@@ -64,6 +92,7 @@
   (process-event [{uusi :valinnat} tienakyma]
     (let [vanha (:valinnat tienakyma)
           alku-muuttunut? (not= (:alku vanha) (:alku uusi))
+          tr-osoite-muuttunut? (not= (:tierekisteriosoite vanha) (:tierekisteriosoite uusi))
           valinnat (as-> uusi v
                      ;; Jos alku muuttunut ja vanhassa alku ja loppu olivat samat,
                      ;; päivitä myös loppukenttä
@@ -73,11 +102,23 @@
                        v)
 
                      ;; Jos TR-osoite on muuttunut, nollaa sijainti
-                     (if (not= (:tierekisteriosoite vanha) (:tierekisteriosoite uusi))
-                       (assoc v :sijainti :ei-haettu)
+                     (if tr-osoite-muuttunut?
+                       (do (log "TR osoite muuttui: "
+                                (pr-str (:tierekisteriosoite vanha))
+                                " => "
+                                (pr-str (:tierekisteriosoite uusi)))
+                           (assoc v :sijainti :ei-haettu))
                        v))]
-      (assoc tienakyma
-             :valinnat valinnat)))
+      (as-> tienakyma tienakyma
+        (assoc tienakyma
+               :valinnat valinnat)
+        (if tr-osoite-muuttunut?
+          ;; Jos TR-osoite muuttuu, poistetaan tulokset
+          (assoc tienakyma
+                 :tulokset nil
+                 :valitut-tulokset-kartalla nil
+                 :muut-tulokset-kartalla nil)
+          tienakyma))))
 
   Hae
   (process-event [_ tienakyma]
@@ -122,9 +163,20 @@
   TarkasteleToteumaa
   (process-event [{{:keys [urakka hallintayksikko id] :as toteuma} :toteuma}
                   {{:keys [alku loppu]} :valinnat :as app}]
-    (log "tarkastellaanpa toteumaa: " (pr-str toteuma))
     (siirtymat/nayta-kokonaishintainen-toteuma! id)
-    app))
+    app)
+
+  HaeToteumanReittipisteet
+  (process-event [{toteuma :toteuma} app]
+    (let [tulos! (tuck/send-async! (partial ->ToteumanReittipisteetHaettu (:id toteuma)))]
+      (go
+        (tulos! (<! (k/post! :hae-reittipisteet-tienakymaan {:toteuma-id (:id toteuma)})))))
+    app)
+
+  ToteumanReittipisteetHaettu
+  (process-event [{:keys [id reittipisteet]} app]
+    (log "Toteumalle " id " löytyi " (count reittipisteet) " reittipistettä.")
+    (kartalle (update app :reittipisteet assoc id reittipisteet))))
 
 (defonce muut-tulokset-kartalla
   (r/cursor tienakyma [:muut-tulokset-kartalla]))

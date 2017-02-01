@@ -1,5 +1,35 @@
 (ns harja.views.kartta
-  "Harjan kartta."
+  "Tämä namespace sisältää varsinaisen, käyttäjälle näkyvän karttakomponentin.
+  Karttakokonaisuus on Harjan toteutuksen aikana laajentunut paljon, ja aina kun
+  tuska on kasvanut tarpeeksi suureksi, on koodia refaktoroitu eri namespaceihin.
+  Valitettavasti tämä refaktorointi ei ole ikinä onnistunut täydellisesti, ja erityisesti
+  tämä namespace saattaa sisältää koodia, joka kirjotettaisiin nyt eri tavalla.
+
+  Oleellisia namespacen ominaisuuksia ovat infopaneelin, zoomausten, ja kartalla näkyvien
+  selitteidein hallinta. Hyvä paikka lähteä tutkimaan kokonaisuutta on lopusta löytyvä
+  komponentti, jossa luodaan openlayers-kartta, ja määritellään mm. handlerit erilaisille
+  click-tapahtumille.
+
+  harja.tiedot.kartta sisältää koodia, joka löytyi ennen tästä namespacesta. Tämä jako olisi pitänyt
+  tehdä alusta alkaen, mutta ei tehty. Lopulta jako jouduttiin tekemään circular dependencyjen
+  välttämiseksi. Tästä johtuen nämä kaksi namespacea saattavat sisältää koodia, jonka oikeastaan
+  pitäisi olla toisessa namespacessa.
+
+  Jos sinua kiinnostaa se, millä tyyleillä erilaiset asiat piirretään kartalle,
+  katso namespaceja harja.ui.kartta.esitettavat-asiat ja harja.ui.kartta.asioiden-ulkoasu. Näissä
+  namespaceissa käytetään ikään kuin DSL:ää määrittelemään asioiden tyylit. Nämä tietorakenteet
+  annetaan eteenpäin, jossa ne tulkitaan ja piirretään.
+
+  Em. tietorakenteita käsitellään frontilla namespacessa harja.ui.openlayers.featuret ja palvelimella
+  harja.palvelin.palvelut.karttakuvat.piirto. Esimerkiksi tarkastusten reitit piirretään palvelimella,
+  koska frontilla piirto on liian raskasta.
+
+  harja.views.kartta.tasot sisältää tasoja, joihin kartalle piirrettävät geometriat piirtyvät. Tämä
+  liittyy vahvasti Openlayersin ominaisuuteen. Tasot voivat sisältää joko frontilla piirretäviä geometrioita
+  (harja.ui.openlayers.geometriataso), tai tai palvelimella piirrettäviä kuvia (harja.ui.openlayers.kuvataso)
+
+  Infopaneelin ulkoasu määritellään namespacessa harja.views.kartta.infopaneeli, ja sisällön
+  muodostaminen tapahtuu namespacessa harja.ui.kartta.infopaneelin-sisalto"
   (:require [cljs.core.async :refer [timeout <! >! chan] :as async]
             [clojure.string :as str]
             [clojure.set :as set]
@@ -7,11 +37,9 @@
             [goog.events :as events]
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
-            [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.fmt :as fmt]
             [harja.geo :as geo]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.animaatio :as animaatio]
@@ -22,13 +50,11 @@
             [harja.views.kartta.infopaneeli :as infopaneeli]
             [reagent.core :refer [atom] :as reagent]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.kartta.varit.alpha :as varit]
             [harja.ui.openlayers.taso :as taso]
             [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
             [harja.ui.openlayers.edistymispalkki :as edistymispalkki]
             [harja.tiedot.kartta :as tiedot]
-            [harja.ui.kartta.ikonit :as kartta-ikonit]
-            [harja.tyokalut.vkm :as vkm])
+            [harja.ui.kartta.ikonit :as kartta-ikonit])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -412,42 +438,17 @@
 (defn suomen-sisalla? [alue]
   (openlayers/extent-sisaltaa-extent? +koko-suomi-extent+ (geo/extent alue)))
 
-(defn- nayta-infopaneelissa! [item]
-  (swap! asiat-pisteessa update :asiat conj item))
+(defn- nayta-infopaneelissa! [& items]
+  (apply swap! asiat-pisteessa update :asiat conj items))
 
-(def kasittele-geometrian-klikkaus
-  {:hy
-   (fn [item]
-     (when-not (= (:id item) (:id @nav/valittu-hallintayksikko))
-       (nav/valitse-hallintayksikko! item)))
-
-   :ur
-   (fn [item]
-     (when-not (= (:id item) (:id @nav/valittu-urakka))
-       (t/julkaise! (assoc item :aihe :urakka-klikattu))))
-
-   :ilmoitus
-   (fn [item]
-     (if (= :tilannekuva @nav/valittu-sivu)
-       (nayta-infopaneelissa! item)
-       (t/julkaise! (assoc item :aihe :ilmoitus-klikattu))))})
-
-(defn- kun-geometriaa-klikattu
-  "Event handler geometrioiden yksi- ja tuplaklikkauksille"
-  [item event asiat-pisteessa]
-  (let [item (assoc item :klikkaus-koordinaatit (js->clj (.-coordinate event)))
-        kasittelija (kasittele-geometrian-klikkaus (:type item))]
-    (if kasittelija
-      (kasittelija item)
-      (nayta-infopaneelissa! item))))
-
-(defn- hae-asiat-pisteessa [tasot event atomi]
+(defn- hae-asiat-pisteessa! [tasot event atomi]
   (let [koordinaatti (js->clj (.-coordinate event))
         extent ((juxt :xmin :ymin :xmax :ymax) @nav/kartalla-nakyva-alue)
         nayta-neula! #(tasot/nayta-geometria! :klikattu-karttapiste
-                                {:alue {:type :icon
-                                        :coordinates %
-                                        :img (kartta-ikonit/sijainti-ikoni "syaani")}})]
+                                              {:alue {:type :icon
+                                                      :coordinates %
+                                                      :img (kartta-ikonit/sijainti-ikoni "syaani")}}
+                                              :infopaneelin-merkki)]
     (nayta-neula! koordinaatti)
     (swap! atomi assoc
            :koordinaatti koordinaatti
@@ -485,37 +486,21 @@
         (= (:type geom) :hy)
         (= (:id geom) (:id @nav/valittu-hallintayksikko)))))
 
-(defn hae-asiat?
-  "Päättele tarviiko annetulle klikatulle geometrialle avata
-  infopaneeli ja hakea palvelimelta pisteessä olevat asiat."
-  [item]
-
-  (or
-   ;; Jos klikkaus osuu valittuun urakkaan tai hallintayksikköön,
-   ;; klikattiin sen alueelle (ei olla valitsemassa hallintayksikköä tai urakka)
-   (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
-
-   ;; Tälle tyypille ei ole erikoiskäsittelyä klikkaukselle
-   (not (contains? kasittele-geometrian-klikkaus (:type item)))
-
-   ;; Ollaan tilannekuvassa
-   (= :tilannekuva @nav/valittu-sivu)))
-
-(defn kaynnista-asioiden-haku-pisteesta! [tasot event asiat-pisteessa]
-  (hae-asiat-pisteessa tasot event asiat-pisteessa)
+(defn kaynnista-infopaneeliin-haku-pisteesta! [tasot event asiat-pisteessa]
+  (hae-asiat-pisteessa! tasot event asiat-pisteessa)
   (reset! tiedot/nayta-infopaneeli? true))
 
 
 (defn- piilota-infopaneeli-jos-muuttunut
   "Jos annetut geometriat ovat muuttuneet (pl. näkymän geometriat), piilota infopaneeli."
   [vanha uusi]
-  (when (not= (dissoc vanha :nakyman-geometriat)
-              (dissoc uusi :nakyman-geometriat))
+  (when (not= (dissoc vanha :infopaneelin-merkki)
+              (dissoc uusi :infopaneelin-merkki))
     ;; Kun karttatasoissa muuttuu jotain muuta kuin :nakyman-geometriat
     ;; (klikattu piste), piilotetaan infopaneeli ja poistetaan
     ;; klikattu piste näkymän geometrioista.
     (reset! tiedot/nayta-infopaneeli? false)
-    (tasot/poista-geometria! :klikattu-karttapiste)))
+    (tasot/poista-geometria! :klikattu-karttapiste :infopaneelin-merkki)))
 
 (defn- zoomaa-geometrioihin-jos-muuttunut
   "Zoomaa geometrioihin uudelleen, jos ne ovat muuttuneet."
@@ -527,15 +512,97 @@
   ;; Myös jos :organisaatio karttatason tiedot ovat muuttuneet, tehdään
   ;; zoomaus (urakka/hallintayksikkö muutos)
   (when @tiedot/pida-geometriat-nakyvilla?
-    (when (or (not= (geometria-maarat vanha) (geometria-maarat uusi))
-              (not= (:organisaatio vanha) (:organisaatio uusi)))
-      (tiedot/zoomaa-geometrioihin))))
+    (let [vanha (dissoc vanha :infopaneelin-merkki)
+          uusi (dissoc uusi :infopaneelin-merkki)]
+      (when (or (not= (geometria-maarat vanha) (geometria-maarat uusi))
+                (not= (:organisaatio vanha) (:organisaatio uusi)))
+        (tiedot/zoomaa-geometrioihin)))))
 
 (defn- geometriat-muuttuneet
   "Käsittelee geometrioiden muutoksen. Parametrina vanhat ja uudet geometriat."
   [vanha uusi]
   (piilota-infopaneeli-jos-muuttunut vanha uusi)
   (zoomaa-geometrioihin-jos-muuttunut vanha uusi))
+
+(defn kasittele-select!
+  ([items event] (kasittele-select! items event false))
+  ([items event tuplaklik?]
+   (let [monta? #(< 1 (count %))
+         klikatut-organisaatiot (filter tapahtuman-geometria-on-hallintayksikko-tai-urakka? items)
+         klikatut-asiat (remove tapahtuman-geometria-on-hallintayksikko-tai-urakka? items)
+         keskeyta-event! #(do (.stopPropagation %)
+                            (.preventDefault %))
+         valitse-organisaatio! #(if (= :hy (:type %))
+                                  (nav/valitse-hallintayksikko! %)
+                                  (t/julkaise! (assoc % :aihe :urakka-klikattu)))
+         keskita-moneen! #(tiedot/keskita-kartta-alueeseen! (harja.geo/extent-monelle (map :alue %)))
+         keskita-yhteen! #(tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue %)))]
+     ;; Select tarkoittaa, että on klikattu jotain kartalla piirrettyä asiaa.
+     ;; Tuplaklikkaukseen halutaan reagoida joko kohdentamalla tuplaklikattuun asiaan
+     ;; ja avaamalla sen tiedot infopaneeliin (paitsi ilmoituksissa, missä avataan suoraan lomake),
+     ;; tai jos tuplaklikattu asia oli urakka, zoomaataan vaan karttaa askel eteenpäin.
+     ;; Yksittäinen select toimii asiaa klikatessa samoin kuin tuplaklikkaus, mutta kohteeseen
+     ;; ei kohdenneta. Urakan selectointi tarkoittaa käyttäjän näkökulmasta "tyhjän" tai
+     ;; palvelinpäässä piirretyn toteuman klikkaamista, jolloin avataan infopaneeli, ja
+     ;; haetaan esim kyseiselle tielle tietoja.
+     ;;
+     ;; Tuplaklikkauksissa eventin keskeyttäminen tarkoittaa, että zoomausta ei tehdä.
+     (cond
+      ;; Ilmoituksissa ei haluta ikinä näyttää infopaneelia,
+      ;; vaan valitaan klikattu ilmoitus
+      (#{:ilmoitukset} @nav/valittu-sivu)
+      (when-not (empty? klikatut-asiat) ;; Älä siirrä tätä cond-ehtoon
+        (keskeyta-event! event)
+        (if (monta? klikatut-asiat)
+          (do (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
+                                                       event
+                                                       asiat-pisteessa)
+              (apply nayta-infopaneelissa! klikatut-asiat))
+          (t/julkaise! (assoc (first klikatut-asiat) :aihe :ilmoitus-klikattu)))
+        (when tuplaklik? (keskita-moneen! klikatut-asiat)))
+
+      ;; Tilannekuvassa voidaan klikata valitsematonta hallintayksikköä
+      ;; tai urakkaa, ja silti avataan infopaneeli pisteessä olevista asioista.
+      (and (#{:tilannekuva} @nav/valittu-sivu)
+           (empty? klikatut-asiat))
+      (when-not tuplaklik?
+        (keskeyta-event! event)
+        (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
+                                                 event
+                                                 asiat-pisteessa))
+
+      ;; Tien klikkaaminen esim toteuma-näkymässä osuu valittuun urakkaan
+      (and (empty? klikatut-asiat)
+           (every? tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? klikatut-organisaatiot))
+      (when-not (#{:raportit} @nav/valittu-sivu)
+        (when-not tuplaklik?
+          (keskeyta-event! event)
+          (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
+                                                   event
+                                                   asiat-pisteessa)))
+
+      ;; Etusivulla
+      (and (empty? klikatut-asiat)
+           (not-empty klikatut-organisaatiot))
+      (do
+        (keskeyta-event! event)
+        (valitse-organisaatio! (first klikatut-organisaatiot))
+        (when tuplaklik? (keskita-yhteen! (first klikatut-organisaatiot))))
+
+      ;; Klikattu asia ei ole hy/urakka, eikä se ole ilmoitus ilmoitusnäkymässä.
+      ;; Avataan infopaneeliin klikatun asian tiedot, ja haetaan sinne mahdollisesti
+      ;; muutakin
+      :default
+      (do
+        (keskeyta-event! event)
+        (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
+                                                 event
+                                                 asiat-pisteessa)
+        (apply nayta-infopaneelissa! klikatut-asiat)
+        (when tuplaklik? (keskita-moneen! klikatut-asiat)))))))
+
+(defn kasittele-dblclick-select! [item event]
+  (kasittele-select! item event true))
 
 (defn kartta-openlayers []
   (komp/luo
@@ -589,37 +656,27 @@
          :on-mount           (fn [initialextent]
                                (paivita-extent nil initialextent))
          :on-click           (fn [event]
-                               (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
-                                                                   event
-                                                                   asiat-pisteessa)
+                               (cond
+                                 ;; Näissä näkymissä ei näytetä paneelia
+                                 (#{:ilmoitukset :raportit} @nav/valittu-sivu)
+                                 nil
+
+                                 ;; Etusivulla urakkaa valittaessa ei haluta avata infopaneelia
+                                 (and (#{:urakat} @nav/valittu-sivu)
+                                      (not @nav/valittu-urakka))
+                                 nil
+
+                                 :default
+                                 (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
+                                                                          event
+                                                                          asiat-pisteessa))
                                (.stopPropagation event)
                                (.preventDefault event))
-         :on-select          (fn [item event]
-                               (when (hae-asiat? item)
-                                 (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
-                                                                     event
-                                                                     asiat-pisteessa))
-                               (kun-geometriaa-klikattu item event asiat-pisteessa)
-                               (.stopPropagation event)
-                               (.preventDefault event))
+         :on-select          kasittele-select!
 
          :on-dblclick        nil
 
-         :on-dblclick-select (fn [item event]
-                               ;; jos tuplaklikattiin valittua hallintayksikköä tai urakkaa (eli "tyhjää"),
-                               ;; niin silloin ei pysäytetä eventtiä, eli zoomataan sisään
-                               (when-not (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? item)
-                                 (.stopPropagation event)
-                                 (.preventDefault event)
-
-                                 ;; Jos tuplaklikattu asia oli jotain muuta kuin HY/urakka, niin keskitetään
-                                 ;; kartta siihen.
-                                 (when-not (tapahtuman-geometria-on-hallintayksikko-tai-urakka? item)
-                                   (kaynnista-asioiden-haku-pisteesta! @tasot/geometriat-kartalle
-                                                                       event
-                                                                       asiat-pisteessa)
-                                   (kun-geometriaa-klikattu item event asiat-pisteessa)
-                                   (tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue item))))))
+         :on-dblclick-select kasittele-dblclick-select!
 
          :tooltip-fn         (fn [geom]
                                         ; Palauttaa funktion joka palauttaa tooltipin sisällön, tai nil jos hoverattu asia
@@ -650,7 +707,8 @@
    [kartan-ohjelaatikko]
    (when @tiedot/infopaneeli-nakyvissa?
      [:div.kartan-infopaneeli
-      [infopaneeli/infopaneeli @asiat-pisteessa #(reset! tiedot/nayta-infopaneeli? false)
+      [infopaneeli/infopaneeli @asiat-pisteessa #(do (reset! tiedot/nayta-infopaneeli? false)
+                                                     (tasot/poista-geometria! :klikattu-karttapiste :infopaneelin-merkki))
        tiedot/infopaneelin-linkkifunktiot]])
    [kartan-ikonien-selitykset]
    [kartta-openlayers]

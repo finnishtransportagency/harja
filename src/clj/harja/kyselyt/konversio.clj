@@ -301,7 +301,7 @@
        (str/ends-with? osoite ")")
        (zipmap [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]
                (mapv (fn [arvo]
-                       (when arvo
+                       (when (not-empty arvo)
                          (Integer/parseInt arvo)))
                      (take 5
                            (str/split (str/replace osoite #"\(|\)" "") #","))))))

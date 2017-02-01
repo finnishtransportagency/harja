@@ -106,3 +106,7 @@ SELECT t.id,
  WHERE ST_DWithin(t.sijainti, :sijainti, 25) AND
        (t.tapahtunut :: DATE BETWEEN :alku AND :loppu OR
         t.kasitelty BETWEEN :alku AND :loppu);
+
+-- name: hae-reittipisteet
+-- Hakee yhden annetun toteuman reittipisteet
+SELECT aika,sijainti FROM reittipiste WHERE toteuma = :toteuma-id
