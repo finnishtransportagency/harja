@@ -135,7 +135,6 @@
 
 (def alustus-valmis? (reaction (let [sovellus @sovellus]
                                 (boolean (and (get-in sovellus [:alustus :gps-tuettu])
-                                              false ;; TODO POIS
                                               (get-in sovellus [:alustus :ensimmainen-sijainti])
                                               (get-in sovellus [:alustus :verkkoyhteys?])
                                               (get-in sovellus [:alustus :selain-tuettu?])

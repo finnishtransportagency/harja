@@ -57,7 +57,7 @@
     [paanakyma]
     [alustus/alustuskomponentti
      {:selain-tuettu (if @s/selain-tuettu :ok :virhe)
-      :selain-vanhentunut @s/selain-vanhentunut
+      :selain-vanhentunut? @s/selain-vanhentunut
       :gps-tuettu (cond
                     (nil? @s/gps-tuettu) :tarkistetaan
                     (some? @s/gps-tuettu) :ok
@@ -74,8 +74,8 @@
                       (nil? @s/idxdb-tuettu) :tarkistetaan
                       (some? @s/idxdb-tuettu) :ok
                       :default :virhe)
-      :kayttaja (cond
-                  (nil? @s/kayttajanimi) :tarkistetaan
-                  (some? @s/kayttajanimi) :ok
-                  :default :virhe)
+      :kayttaja-tunnistettu (cond
+                              (nil? @s/kayttajanimi) :tarkistetaan
+                              (some? @s/kayttajanimi) :ok
+                              :default :virhe)
       :verkkoyhteys (if @s/verkkoyhteys :ok :virhe)}]))
