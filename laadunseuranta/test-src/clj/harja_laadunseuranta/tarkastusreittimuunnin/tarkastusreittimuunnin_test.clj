@@ -413,7 +413,7 @@
     (is (instance? PGgeometry (:sijainti tallennettava)))
     (is (instance? Point (.getGeometry (:sijainti tallennettava))))))
 
-(deftest tarkastus-jossa-kaikki-mittaukset-menee-kantaan-oikein
+(deftest tarkastuksen-kaikki-mittaukset-menee-kantaan-oikein
   (let [tarkastusajo-id 666
         urakka-id (hae-oulun-alueurakan-2014-2019-id)
         merkinnat-tieosoitteilla (lisaa-reittimerkinnoille-mockattu-tieosoite
@@ -470,7 +470,7 @@
       ;; Siivoa sotkut
       (u "DELETE FROM tarkastus WHERE tarkastusajo = " tarkastusajo-id ";"))))
 
-(deftest oikean-tarkastusajon-muunto-toimii
+(deftest oikean-tarkastusajon-754-muunto-toimii
   (let [db (:db jarjestelma)
         tarkastusajo-id 754
         urakka-id (hae-oulun-alueurakan-2014-2019-id)
@@ -553,6 +553,23 @@
 
       ;; Siivoa sotkut
       (u "DELETE FROM tarkastus WHERE tarkastusajo = " tarkastusajo-id ";"))))
+
+(deftest oikean-tarkastusajon-3-muunto-toimii
+  (let [db (:db jarjestelma)
+        tarkastusajo-id 3
+        urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
+        tarkastukset (ls-core/lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)
+        reitilliset (:reitilliset-tarkastukset tarkastukset)
+        pistemaiset (:pistemaiset-tarkastukset tarkastukset)
+        odotettu-pistemaisten-maara 0
+        odotettu-reitillisten-maara 9]
+
+    ;; Tämä testi havaitsi aiemmin virheellisiä ajallisia gäppejä tästä ajosta.
+
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count pistemaiset) odotettu-pistemaisten-maara))
+    (is (= (count reitilliset) odotettu-reitillisten-maara))))
 
 
 ;; -------- Apufunktioita REPL-tunkkaukseen --------
