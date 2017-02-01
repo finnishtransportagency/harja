@@ -144,7 +144,7 @@
           [[:urakanpaattymispvm (xml/formatoi-paivamaara (:urakka-loppupvm data))]]
           [[:urakkavaylamuoto (urakan-vaylamuoto (:vaylamuoto data))]]
           [[:urakkatyyppi (urakan-tyyppi (:urakka-tyyppi data))]]
-          [[:elyalue (str (:urakka-ely data) " ELY")]]
+          (when (:urakka-ely data) [[:elyalue (str (:urakka-ely data) " ELY")]])
           [[:alueurakkanro (:alueurakkanro data)]]
           (poikkeamatyypit->numerot (:tyyppi data))
           [[:tapahtumapvm (xml/formatoi-paivamaara (:tapahtunut data))]
@@ -216,6 +216,7 @@
 (defn muodosta [data]
   (let [sisalto (muodosta-viesti data)
         xml (xml/tee-xml-sanoma sisalto)]
+    (println "---> xml:" xml)
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "poikkeama-rest.xsd" xml)]
       (let [virheviesti (format "Turvallisuuspoikkeaman TURI-lähetyksen XML ei ole validia.\n
                                  Validointivirheet: %s\n
