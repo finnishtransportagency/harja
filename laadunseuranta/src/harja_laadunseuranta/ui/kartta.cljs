@@ -316,9 +316,15 @@
    [:div.kartan-kontrollit {:style (when @s/havaintolomake-auki?
                                      {:display "none"})}
     [:div#karttakontrollit] ;; OpenLayersin ikonit asetetaan tähän elementtiin erikseen
-    [:div.kontrollinappi.ortokuva {:on-click #(swap! s/nayta-ortokuva? not)}
+    [:div
+     {:class (str "kontrollinappi ortokuva "
+                  (when @s/nayta-ortokuva? "kontrollinappi-aktiivinen"))
+      :on-click #(swap! s/nayta-ortokuva? not)}
      [kuvat/svg-sprite "maasto-24"]]
-    [:div.kontrollinappi.kiinteistorajat {:on-click #(swap! s/nayta-kiinteistorajat? not)}
+    [:div
+     {:class (str "kontrollinappi kiinteistorajat "
+                  (when @s/nayta-kiinteistorajat? "kontrollinappi-aktiivinen"))
+      :on-click #(swap! s/nayta-kiinteistorajat? not)}
      [kuvat/svg-sprite "kiinteistoraja-24"]]
     [:div.kontrollinappi.keskityspainike {:on-click #(do (swap! s/keskita-ajoneuvoon? not)
                                                          (swap! s/keskita-ajoneuvoon? not))}
