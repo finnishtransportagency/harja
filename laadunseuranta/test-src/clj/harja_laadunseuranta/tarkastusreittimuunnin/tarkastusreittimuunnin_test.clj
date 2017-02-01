@@ -413,7 +413,7 @@
     (is (instance? PGgeometry (:sijainti tallennettava)))
     (is (instance? Point (.getGeometry (:sijainti tallennettava))))))
 
-(deftest tarkastuksen-kaikki-mittaukset-menee-kantaan-oikein
+(deftest tarkastus-jossa-kaikki-mittaukset-menee-kantaan-oikein
   (let [tarkastusajo-id 666
         urakka-id (hae-oulun-alueurakan-2014-2019-id)
         merkinnat-tieosoitteilla (lisaa-reittimerkinnoille-mockattu-tieosoite
@@ -479,23 +479,13 @@
         reitilliset (:reitilliset-tarkastukset tarkastukset)
         pistemaiset (:pistemaiset-tarkastukset tarkastukset)
         odotettu-pistemaisten-maara 0
-        odotettu-reitillisten-maara 5
+        odotettu-reitillisten-maara 4
         kaikki-tarkastukset (concat reitilliset pistemaiset)
         odotetut-tarkastetut-tieosat
         [{:tie 18637 :aosa 1 :aet 207 :losa 1 :let 187}
          {:tie 18637 :aosa 1 :aet 187 :losa 1 :let 11}
          {:tie 28409 :aosa 23 :aet 20 :losa 23 :let 401}
-         {:tie 4 :aosa 364 :aet 3586 :losa 364 :let 8653}
-         {:tie 4 :aosa 364 :aet 8740 :losa 367 :let 335}]
-        ;; Alkuperäinen ilman ramppianalyysiä, jos tarvii sitä testata:
-        #_[{:tie 18637 :aosa 1 :aet 207 :losa 1 :let 187}
-           {:tie 18637 :aosa 1 :aet 187 :losa 1 :let 11}
-           {:tie 28409 :aosa 23 :aet 20 :losa 23 :let 401}
-           {:tie 4 :aosa 364 :aet 3586 :losa 364 :let 7520}
-           {:tie 28408 :aosa 23 :aet 406 :losa 23 :let 641}
-           {:tie 4 :aosa 364 :aet 7892 :losa 364 :let 8810}
-           {:tie 28407 :aosa 12 :aet 3 :losa 12 :let 135}
-           {:tie 4 :aosa 364 :aet 9039 :losa 367 :let 335}]]
+         {:tie 4 :aosa 364 :aet 3586 :losa 367 :let 335}]]
 
     ;; Muunnettu määrällisesti oikein
     (is (= (count pistemaiset) odotettu-pistemaisten-maara))
