@@ -11,7 +11,7 @@
 (def +paikannuksen-oletustimeout+ 2000)
 (def paikannuksen-timeout-ms (atom +paikannuksen-oletustimeout+))
 (def +paikannuksen-timeoutin-kasvatusvali+ 1000)
-(def paikannuksen-timeout-ms-max 8000)
+(def paikannuksen-timeout-ms-max 5000)
 (def paikannuksen-vali-ms 2000)
 
 (def paikannus-id (atom nil))
