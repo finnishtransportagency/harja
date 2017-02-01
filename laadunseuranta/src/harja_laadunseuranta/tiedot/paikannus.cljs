@@ -7,7 +7,10 @@
             [harja-laadunseuranta.utils :refer [timestamp ipad?]]
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]))
 
-(def +paikan-raportointivali+ 2000) ; ms
+(def +oletusraportointivali+ 2000)
+(def paikan-raportointivali-ms (atom +oletusraportointivali+))
+(def +raportointivalin-kertakasvatus+ 2000)
+(def paikan-raportointivali-ms-max 8000)
 
 (defn- geolocation-api []
   (.-geolocation js/navigator))
@@ -36,9 +39,10 @@
      :accuracy (.-accuracy coords)
      :speed (or (.-speed coords) 0)}))
 
-(def paikannusoptiot #js {:enableHighAccuracy true
-                          :maximumAge 1000
-                          :timeout +paikan-raportointivali+})
+(defn tee-paikannusoptiot []
+  #js {:enableHighAccuracy true
+       :maximumAge 1000
+       :timeout @paikan-raportointivali-ms})
 
 (defn paivita-sijainti [{:keys [nykyinen]} sijainti ts]
   (let [uusi-sijainti (assoc sijainti :timestamp ts)
@@ -53,29 +57,41 @@
                  :accuracy (:accuracy uusi-sijainti)
                  :timestamp ts)}))
 
+(defn- yrita-kasvattaa-paikannuksen-raportointivalia []
+  (let [kasvatettu-raportointivali (+ @paikan-raportointivali-ms +raportointivalin-kertakasvatus+)]
+    (when (<= kasvatettu-raportointivali paikan-raportointivali-ms-max)
+      (reset! paikan-raportointivali-ms kasvatettu-raportointivali))))
+
+(defn- palauta-oletusraportointivali []
+  (reset! paikan-raportointivali-ms +oletusraportointivali+))
+
 (defn kaynnista-paikannus
-  ([sijainti-atom] (kaynnista-paikannus sijainti-atom nil))
-  ([sijainti-atomi ensimmainen-sijainti-saatu-atom]
+  ([sijainti-atom] (kaynnista-paikannus sijainti-atom nil nil))
+  ([sijainti-atomi ensimmainen-sijainti-saatu-atom ensimmainen-sijainti-virhekoodi-atom]
    (when (geolokaatio-tuettu?)
      (.log js/console "Paikannus käynnistetään")
      (js/setInterval
        (fn []
-         (let [sijainti-saatu #(do
-                                 (when (and ensimmainen-sijainti-saatu-atom
-                                            (nil? @ensimmainen-sijainti-saatu-atom))
-                                   (reset! ensimmainen-sijainti-saatu-atom true))
-                                 (swap! sijainti-atomi (fn [entinen]
-                                                         (paivita-sijainti entinen (konvertoi-latlon %) (timestamp)))))
-               sijainti-epaonnistui #(do
-                                       (when (and ensimmainen-sijainti-saatu-atom
-                                                  (nil? @ensimmainen-sijainti-saatu-atom))
-                                         (reset! ensimmainen-sijainti-saatu-atom false))
-                                       (swap! sijainti-atomi identity))]
+         (let [sijainti-saatu (fn [sijainti]
+                                (palauta-oletusraportointivali)
+                                (when (and ensimmainen-sijainti-saatu-atom
+                                           (nil? @ensimmainen-sijainti-saatu-atom))
+                                  (reset! ensimmainen-sijainti-saatu-atom true))
+                                (swap! sijainti-atomi (fn [entinen]
+                                                        (paivita-sijainti entinen (konvertoi-latlon sijainti) (timestamp)))))
+               sijainti-epaonnistui (fn [virhe]
+                                      (yrita-kasvattaa-paikannuksen-raportointivalia)
+                                      (when (and ensimmainen-sijainti-saatu-atom ensimmainen-sijainti-virhekoodi-atom
+                                                 (nil? @ensimmainen-sijainti-saatu-atom)
+                                                 (>= @paikan-raportointivali-ms paikan-raportointivali-ms-max))
+                                        (reset! ensimmainen-sijainti-virhekoodi-atom (.-code virhe))
+                                        (reset! ensimmainen-sijainti-saatu-atom false))
+                                      (swap! sijainti-atomi identity))]
            (.getCurrentPosition (geolocation-api)
                                 sijainti-saatu
                                 sijainti-epaonnistui
-                                paikannusoptiot)))
-       +paikan-raportointivali+))))
+                                (tee-paikannusoptiot))))
+       @paikan-raportointivali-ms))))
 
 (defn aseta-testisijainti
   "HUOM: testikäyttöön. Asettaa nykyisen sijainnin koordinaatit. Oikean geolocation pollerin tulisi

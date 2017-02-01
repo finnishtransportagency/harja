@@ -21,7 +21,8 @@
       [:div.alustus-varoitus virheviesti])]))
 
 (defn alustuskomponentti [{:keys [gps-tuettu ensimmainen-sijainti-saatu idxdb-tuettu oikeus-urakoihin
-                                  kayttaja-tunnistettu selain-tuettu verkkoyhteys selain-vanhentunut?]}]
+                                  kayttaja-tunnistettu selain-tuettu verkkoyhteys selain-vanhentunut?
+                                  ensimmainen-sijainti-virhekoodi]}]
   [:div.alustuskomponentti-container
    [:div.alustuskomponentti
     [:div.liikenneturvallisuusmuistutus "Muista aina liikenne\u00ADturvallisuus tarkastuksia tehdessäsi."]
@@ -37,7 +38,11 @@
     [tarkistusrivi "GPS-tuki" gps-tuettu]
     [tarkistusrivi "Laite paikannettu" ensimmainen-sijainti-saatu
      (when (= ensimmainen-sijainti-saatu :virhe)
-       {:virhe "Laitetta ei voida paikantaa. Varmista, että laitteen paikannus on päällä ja että GPS:n käyttö on sallittu selaimen asetuksissa."})]
+       {:virhe (case ensimmainen-sijainti-virhekoodi
+                 1 "GPS:n käyttö on estetty. Varmista, että laitteen paikannus on päällä ja että GPS:n käyttö on sallittu selaimen asetuksissa."
+                 2 "Laitetta ei voitu paikantaa."
+                 3 "Laitetta ei voitu paikantaa määräajassa."
+                 "Tuntematon virhe.")})]
     [tarkistusrivi "Käyttäjä tunnistettu" kayttaja-tunnistettu]
     [tarkistusrivi "Oikeus tehdä tarkastuksia" oikeus-urakoihin
      (when (= oikeus-urakoihin :virhe)

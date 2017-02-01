@@ -9,6 +9,7 @@
    :alustus {:gps-tuettu nil
              :idxdb-tuettu nil
              :ensimmainen-sijainti-saatu nil ; Estää sovelluksen käytön jos GPS ei toimi oikein
+             :ensimmainen-sijainti-virhekoodi nil
              :verkkoyhteys? (.-onLine js/navigator)
              :selain-tuettu? (utils/tuettu-selain?)
              :kayttaja-tunnistettu nil
@@ -148,6 +149,7 @@
 (def kayttaja-tunnistettu (reagent/cursor sovellus [:alustus :kayttaja-tunnistettu]))
 (def idxdb-tuettu (reagent/cursor sovellus [:alustus :idxdb-tuettu]))
 (def ensimmainen-sijainti-saatu (reagent/cursor sovellus [:alustus :ensimmainen-sijainti-saatu]))
+(def ensimmainen-sijainti-virhekoodi (reagent/cursor sovellus [:alustus :ensimmainen-sijainti-virhekoodi]))
 (def oikeus-urakoihin (reagent/cursor sovellus [:kayttaja :oikeus-urakoihin]))
 
 (def kirjauspisteet (reagent/cursor sovellus [:kirjauspisteet]))

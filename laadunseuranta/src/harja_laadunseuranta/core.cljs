@@ -43,7 +43,8 @@
 (defn- alusta-paikannus-id []
   (reset! paikannus-id (paikannus/kaynnista-paikannus
                          sovellus/sijainti
-                         sovellus/ensimmainen-sijainti-saatu)))
+                         sovellus/ensimmainen-sijainti-saatu
+                         sovellus/ensimmainen-sijainti-virhekoodi)))
 
 (defn- alusta-geolokaatio-api []
   (if (paikannus/geolokaatio-tuettu?)

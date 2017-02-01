@@ -66,6 +66,7 @@
                               (nil? @s/ensimmainen-sijainti-saatu) :tarkistetaan
                               (true? @s/ensimmainen-sijainti-saatu) :ok
                               :default :virhe)
+      :ensimmainen-sijainti-virhekoodi @s/ensimmainen-sijainti-virhekoodi
       :oikeus-urakoihin (cond
                           (nil? @s/oikeus-urakoihin) :tarkistetaan
                           (not (empty? @s/oikeus-urakoihin)) :ok
