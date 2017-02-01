@@ -38,8 +38,6 @@
       ;; Soiton täytyy alkaa suoraan user eventistä
       (.addEventListener js/document.body "click" #(soita-video video)))))
 
-(defonce paikannus-id (cljs.core/atom nil))
-
 (defn- alusta-paikannus-id []
   (reset! paikannus-id (paikannus/kaynnista-paikannus
                          {:sijainti-atom sovellus/sijainti
