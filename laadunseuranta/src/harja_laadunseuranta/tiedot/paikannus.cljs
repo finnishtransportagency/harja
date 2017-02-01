@@ -67,7 +67,6 @@
                                (swap! sijainti-atom (fn [entinen]
                                                       (paivita-sijainti entinen (konvertoi-latlon sijainti) (timestamp)))))
               sijainti-epaonnistui (fn [virhe]
-                                     (.log js/console "Paikannus epäonnistui (virhe: " (.-message virhe) " )")
                                      (when (and ensimmainen-sijainti-saatu-atom
                                                 ensimmainen-sijainti-yritys-atom
                                                 (nil? @ensimmainen-sijainti-saatu-atom))
