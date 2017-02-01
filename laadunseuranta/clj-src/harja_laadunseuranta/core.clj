@@ -29,13 +29,18 @@
 
 (defn- kayttajan-tarkastusurakat
   [db kayttaja sijainti]
-  (let [urakat (kayttajatiedot/kayttajan-lahimmat-urakat db
-                                                         kayttaja
-                                                         (fn [urakka kayttaja]
-                                                           (oikeudet/voi-kirjoittaa?
-                                                             oikeudet/urakat-laadunseuranta-tarkastukset
-                                                             urakka kayttaja))
-                                                         sijainti)
+  (let [urakat (kayttajatiedot/kayttajan-lahimmat-urakat
+                 db
+                 kayttaja
+                 (fn [urakka kayttaja]
+                   (or
+                     (oikeudet/voi-kirjoittaa?
+                       oikeudet/urakat-laadunseuranta-tarkastukset
+                       urakka kayttaja)
+                     (oikeudet/voi-kirjoittaa?
+                       oikeudet/laadunseuranta-kirjaus
+                       urakka kayttaja)))
+                 sijainti)
         urakat (map
                  #(assoc % :oma-urakka?
                            (boolean ((set
@@ -184,7 +189,7 @@
   (roolit/vaadi-rooli kayttaja roolit/jarjestelmavastaava)
   (let [merkinnat (mapv
                     #(assoc % :sijainti (let [geometria (.getGeometry (:sijainti %))]
-                                              [(.x geometria) (.y geometria)]))
+                                          [(.x geometria) (.y geometria)]))
                     (q/hae-tarkastusajon-reitti db {:id (:tarkastusajo-id tiedot)}))]
     merkinnat))
 
