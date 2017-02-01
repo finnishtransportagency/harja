@@ -71,7 +71,12 @@
           (:versio (selain-avaimella :firefox)))))
 
 (defn tuettu-selain? []
-  (boolean false))
+  (boolean (or (ipad?)
+               (iphone?)
+               (and (chrome?)
+                    (not (chrome-vanhentunut?)))
+               (and (firefox?)
+                    (not (firefox-vanhentunut?))))))
 
 (defn vanhentunut-selain? []
   (boolean (or (and (chrome?)
