@@ -86,9 +86,10 @@
   kartan-yleiset-kontrollit-sisalto (atom {}))
 
 (defn kaappaa-hiiri
-  "Muuttaa kartan toiminnallisuutta siten, että hover ja click eventit annetaan datana annettuun kanavaan.
-Palauttaa funktion, jolla kaappaamisen voi lopettaa. Tapahtumat ovat vektori, jossa on kaksi elementtiä:
-tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava."
+  "Muuttaa kartan toiminnallisuutta siten, että hover, click ja dblclick eventit annetaan datana
+  annettuun kanavaan. Palauttaa funktion, jolla kaappaamisen voi lopettaa. Tapahtumat ovat vektori,
+  jossa on kaksi elementtiä: tyyppi ja sijainti.
+  Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava."
   [kanava]
   (let [kasittelija #(go (>! kanava %))
         poista-klik-kasittelija! (aseta-klik-kasittelija! kasittelija)

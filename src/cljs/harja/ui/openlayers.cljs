@@ -209,15 +209,25 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 (defn- tapahtuman-geometria
   "Hakee annetulle ol3 tapahtumalle geometrian. Palauttaa ensimmäisen löytyneen
   geometrian."
-  [this e]
-  (let [geom (volatile! nil)
-        {:keys [ol3 geometry-layers]} (reagent/state this)]
-    (.forEachFeatureAtPixel ol3 (.-pixel e)
-                            (fn [feature layer]
-                              (vreset! geom (feature-geometria feature))
-                              true))
+  ([this e] (tapahtuman-geometria this e true))
+  ([this e lopeta-ensimmaiseen?]
+   (let [geom (volatile! [])
+         {:keys [ol3 geometry-layers]} (reagent/state this)]
+     (.forEachFeatureAtPixel ol3 (.-pixel e)
+                             (fn [feature layer]
+                               (vswap! geom conj (feature-geometria feature))
+                               lopeta-ensimmaiseen?)
+                             ;; Funktiolle voi antaa options, jossa hitTolerance. Eli radius, miltä featureita haetaan.
+                             )
 
-    @geom))
+     (cond
+       (empty? @geom)
+       nil
+
+       lopeta-ensimmaiseen?
+       (first @geom)
+
+       :else @geom))))
 
 (defn- laske-kartan-alue [ol3]
   (.calculateExtent (.getView ol3) (.getSize ol3)))
@@ -230,7 +240,8 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
     {:tyyppi   (case tyyppi
                  "pointermove" :hover
                  "click" :click
-                 "singleclick" :click)
+                 "singleclick" :click
+                 "dblclick" :dbl-click)
      :geometria (tapahtuman-geometria this e)
      :sijainti [(aget c 0) (aget c 1)]
      :x        (aget (.-pixel e) 0)
@@ -257,19 +268,21 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
   (.on ol3 "singleclick"
        (fn [e]
          (if-let [kasittelija (peek @klik-kasittelija)]
-           ;; Lähinnä REPL tunkkausta varten
            (kasittelija (tapahtuman-kuvaus this e))
 
-           (if-let [g (tapahtuman-geometria this e)]
+           (if-let [g (tapahtuman-geometria this e false)]
              (when on-select (on-select g e))
              (when on-click (on-click e)))))))
 
 ;; dblclick on-clickille ei vielä tarvetta - zoomaus tulee muualta.
 (defn- aseta-dblclick-kasittelija [this ol3 on-click on-select]
-  (.on ol3 "dblclick" (fn [e]
-                        (when on-select
-                          (when-let [g (tapahtuman-geometria this e)]
-                            (on-select g e))))))
+  (.on ol3 "dblclick"
+       (fn [e]
+         (if-let [kasittelija (peek @klik-kasittelija)]
+           (kasittelija (tapahtuman-kuvaus this e))
+           (when on-select
+             (when-let [g (tapahtuman-geometria this e false)]
+               (on-select g e)))))))
 
 
 (defn aseta-hover-kasittelija [this ol3]

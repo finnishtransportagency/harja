@@ -3,6 +3,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.tilannekuva :refer :all]
+            [harja.palvelin.palvelut.interpolointi :as interpolointi]
             [harja.testi :refer :all]
             [harja.paneeliapurit :as paneeli]
             [com.stuartsierra.component :as component]
@@ -242,6 +243,41 @@
 
     ;; eri urakoitsijaorganisaation käyttä ei näe työkonetta
     (is (not (hae +kayttaja-ulle+)) "Eri urakoitsijan käyttäjä ei näe työkonetta")))
+
+
+(deftest toteuman-klikkauksen-aika-interpolointi
+  (let [asia-sisaan {:tierekisteriosoite
+                     {:numero 4,
+                      :alkuosa 364,
+                      :alkuetaisyys 3308,
+                      :loppuosa 403,
+                      :loppuetaisyys 2780},
+                     :alkanut #inst "2015-02-01T17:00:00.000000000-00:00",
+                     :tehtava
+                     {:id 10, :toimenpide "Suolaus", :yksikko "tiekm", :maara 123M},
+                     :paattynyt #inst "2015-02-01T18:05:00.000000000-00:00",
+                     :suorittaja {:nimi "Tehotekijät Oy"},
+                     :tyyppi-kartalla :toteuma,
+                     :id 10,
+                     :toimenpide "Suolaus"}
+        parametrit-sisaan {:y 7214206.908812937,
+                           :talvi #{27 24 50 51 25 34 23 35 26 52 49},
+                           :toleranssi 1198.8469917446225,
+                           "ind" "1",
+                           "_" "tilannekuva-toteumat",
+                           :ilmoitukset {},
+                           :urakat #{4},
+                           :x 427840.00001579785,
+                           :alku #inst "2015-01-25T00:00:00.000-00:00",
+                           :nykytilanne? false,
+                           :loppu #inst "2017-01-25T23:59:59.000-00:00"}
+        asia-ulos (interpolointi/interpoloi-toteuman-aika-pisteelle asia-sisaan parametrit-sisaan (:db jarjestelma))
+        interpoloitu-aika (:aika-pisteessa asia-ulos)
+        pisteen-tr-osoite (:tierekisteriosoite asia-ulos)]
+
+    (is (some? interpoloitu-aika))
+    (is (= interpoloitu-aika #inst "2015-02-01T15:17:23.112-00:00"))
+    (is (= {:numero 4, :alkuosa 403, :alkuetaisyys 173} pisteen-tr-osoite))))
 
 (deftest infopaneelin-skeemojen-luonti
   (testing "Frontilla piirrettäville jutuille saadaan tehtyä skeemat."

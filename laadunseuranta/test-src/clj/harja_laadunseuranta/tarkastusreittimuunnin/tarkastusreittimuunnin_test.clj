@@ -33,6 +33,29 @@
 
 (use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
+;; -------- Apurit --------
+
+(defn- tarkista-tallennettavan-tarkastuksen-osoite [tarkastus
+                                                    {:keys [tie aosa aet losa let]}]
+  (core/let [tallennettava (luo-kantaan-tallennettava-tarkastus
+                             (:db jarjestelma)
+                             tarkastus
+                             {:kayttajanimi "jvh"})]
+    (is (instance? MultiLineString (.getGeometry (:sijainti tallennettava))))
+    (is (= (:tr_numero tallennettava) tie))
+    (is (= (:tr_alkuosa tallennettava) aosa))
+    (is (= (:tr_alkuetaisyys tallennettava) aet))
+    (is (= (:tr_loppuosa tallennettava) losa))
+    (is (= (:tr_loppuetaisyys tallennettava) let))))
+
+(defn- tarkista-tallennettujen-tarkastuksien-osoite [tarkastukset odotetut-tieosat]
+  (loop [i 0]
+    (tarkista-tallennettavan-tarkastuksen-osoite
+      (nth tarkastukset i) (nth odotetut-tieosat i))
+
+    (when (< i (- (count odotetut-tieosat) 1))
+      (recur (inc i)))))
+
 (defn lisaa-reittimerkinnoille-mockattu-tieosoite
   "Mock-funktio, joka lisää tiemerkinnöille tierekisteriosoitteet ilman oikeaa kannassa olevaa tieverkkoa.
   Mockin lisäämät tierekisteriarvot pohjautuvat kuitenkin oikeisiin tierekisteriosoitteisiin
@@ -114,6 +137,14 @@
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
 
+(deftest tarkastus-jossa-sijainti-puuttuu-alusta
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-sijainti-puuttuu-alusta))]
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+
 (deftest tarkastus-jossa-ajallinen-aukko
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
@@ -121,13 +152,6 @@
     ;; Muunnettu määrällisesti oikein
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
-
-;; PENDING Ympärikääntymislogiikka disabloitu tällä hetkellä GPS:n epätarkkuudesta johtuen
-#_(deftest tarkastus-jossa-kaannytaan-ympari
-    (let [tarkastukset (reittimerkinnat-tarkastuksiksi (lisaa-reittimerkinnoille-mockattu-tieosoite testidata/tarkastus-jossa-kaannytaan-ympari))]
-      ;; Muunnettu määrällisesti oikein
-      (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
-      (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
 
 ;; -------- Laadunalitus --------
 
@@ -242,7 +266,7 @@
 (deftest soratie-jatkuva-kiinteys-laskettu-oikein
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
-                         testidata/tarkastus-jossa-soratie-kiinteys-jatkuu))]
+                         testidata/tarkastus-jossa-soratie-kiinteys-jatkuu-vaikka-gps-sekoaa))]
     ;; Munnetaan määrällisesti okein
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))
@@ -276,6 +300,50 @@
     (is (== (-> tarkastukset :reitilliset-tarkastukset first :soratiemittaus :sivukaltevuus) 3))
     (is (= (-> tarkastukset :reitilliset-tarkastukset second :soratiemittaus :sivukaltevuus) nil))
     (is (== (-> tarkastukset :reitilliset-tarkastukset last :soratiemittaus :sivukaltevuus) 3))))
+
+;; -------- Ympärikääntyminen --------
+
+(deftest ymparikaantyminen-katkaistaan-oikein
+  (let [db (:db jarjestelma)
+        tarkastusajo-id 899
+        urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
+        tarkastukset (ls-core/lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)
+        reitilliset (:reitilliset-tarkastukset tarkastukset)
+        pistemaiset (:pistemaiset-tarkastukset tarkastukset)
+        odotettu-pistemaisten-maara 0
+        odotettu-reitillisten-maara 2
+        odotetut-tarkastetut-tieosat
+        [{:tie 20, :aosa 41, :aet 4493, :losa 41, :let 4952}
+         {:tie 20, :aosa 41, :aet 5031, :losa 41, :let 4493}]]
+
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count pistemaiset) odotettu-pistemaisten-maara))
+    (is (= (count reitilliset) odotettu-reitillisten-maara))
+
+    ;; Jokainen tallennettava tarkastus muodostetaan tieosoitteen osalta tarkalleen oikein
+    (tarkista-tallennettujen-tarkastuksien-osoite reitilliset odotetut-tarkastetut-tieosat)))
+
+(deftest ymparikaantyminen-katkaistaan-oikein-vaikka-ollaan-paikallaan
+  (let [db (:db jarjestelma)
+        tarkastusajo-id 900
+        urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
+        tarkastukset (ls-core/lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)
+        reitilliset (:reitilliset-tarkastukset tarkastukset)
+        pistemaiset (:pistemaiset-tarkastukset tarkastukset)
+        odotettu-pistemaisten-maara 0
+        odotettu-reitillisten-maara 2
+        odotetut-tarkastetut-tieosat
+        [{:tie 20, :aosa 41, :aet 4493, :losa 41, :let 5039}
+         {:tie 20, :aosa 41, :aet 5040, :losa 41, :let 4493}]]
+
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count pistemaiset) odotettu-pistemaisten-maara))
+    (is (= (count reitilliset) odotettu-reitillisten-maara))
+
+    ;; Jokainen tallennettava tarkastus muodostetaan tieosoitteen osalta tarkalleen oikein
+    (tarkista-tallennettujen-tarkastuksien-osoite reitilliset odotetut-tarkastetut-tieosat)))
 
 ;; -------- Tarkastuksen tallennus kantaan --------
 
@@ -402,19 +470,6 @@
       ;; Siivoa sotkut
       (u "DELETE FROM tarkastus WHERE tarkastusajo = " tarkastusajo-id ";"))))
 
-(defn- tarkista-tallennettavan-tarkastuksen-osoite [tarkastus
-                                                    {:keys [tie aosa aet losa let]}]
-  (core/let [tallennettava (luo-kantaan-tallennettava-tarkastus
-                             (:db jarjestelma)
-                             tarkastus
-                             {:kayttajanimi "jvh"})]
-    (is (instance? MultiLineString (.getGeometry (:sijainti tallennettava))))
-    (is (= (:tr_numero tallennettava) tie))
-    (is (= (:tr_alkuosa tallennettava) aosa))
-    (is (= (:tr_alkuetaisyys tallennettava) aet))
-    (is (= (:tr_loppuosa tallennettava) losa))
-    (is (= (:tr_loppuetaisyys tallennettava) let))))
-
 (deftest oikean-tarkastusajon-muunto-toimii
   (let [db (:db jarjestelma)
         tarkastusajo-id 754
@@ -454,12 +509,7 @@
     (is (every? #(empty? (:liitteet %)) kaikki-tarkastukset))
 
     ;; Jokainen tallennettava tarkastus muodostetaan tieosoitteen osalta tarkalleen oikein
-    (loop [i 0]
-      (tarkista-tallennettavan-tarkastuksen-osoite
-        (nth kaikki-tarkastukset i) (nth odotetut-tarkastetut-tieosat i))
-
-      (when (< i (- (count odotetut-tarkastetut-tieosat) 1))
-        (recur (inc i))))
+    (tarkista-tallennettujen-tarkastuksien-osoite kaikki-tarkastukset odotetut-tarkastetut-tieosat)
 
     (let [tarkastusten-maara-ennen (ffirst (q "SELECT COUNT(*) FROM tarkastus"))
           _ (jdbc/with-db-transaction [tx db]

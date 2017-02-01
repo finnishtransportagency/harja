@@ -14,7 +14,6 @@
             [harja-laadunseuranta.tiedot.tr-haku :as tr-haku]
             [harja-laadunseuranta.ui.havaintolomake :refer [havaintolomake]]
             [harja-laadunseuranta.ui.tarkastusajon-paattaminen :as tarkastusajon-paattaminen]
-            [harja-laadunseuranta.utils :refer [flip erota-havainnot]]
             [cljs.core.async :refer [<! timeout]])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 

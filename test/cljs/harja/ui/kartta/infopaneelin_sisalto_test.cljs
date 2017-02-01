@@ -99,13 +99,29 @@
       (is (validointi-onnistuu? (assoc data :jarjesta-fn :aika))))))
 
 (deftest jarjestaminen-toimii
-  (let [yksi {:jarjesta-fn (constantly (harja.pvm/nyt)) :id 1}
-        kaksi {:jarjesta-fn (constantly (harja.pvm/luo-pvm 2015 10 10)) :id 2}
-        nelja {:jarjesta-fn (constantly false) :id 4}
-        kolme {:jarjesta-fn (constantly false) :id 3}
-        sorttaamaton [nelja yksi kaksi kolme]
-        sortattu1 [yksi kaksi kolme nelja]
-        sortattu2 [yksi kaksi nelja kolme]
-        tulos (sort-by #((:jarjesta-fn %)) paneeli/jarjesta sorttaamaton)]
-    (is (or (= tulos sortattu1) (= tulos sortattu2)))
-    (is (not (= tulos sorttaamaton)))))
+  (testing "Järjestä pieni joukko asioita"
+    (let [yksi {:jarjesta-fn (constantly (harja.pvm/nyt)) :id 1}
+         kaksi {:jarjesta-fn (constantly (harja.pvm/luo-pvm 2015 10 10)) :id 2}
+         nelja {:jarjesta-fn (constantly false) :id 4}
+         kolme {:jarjesta-fn (constantly false) :id 3}
+         sorttaamaton [nelja yksi kaksi kolme]
+         sortattu1 [yksi kaksi kolme nelja]
+         sortattu2 [yksi kaksi nelja kolme]
+         tulos (sort-by #((:jarjesta-fn %)) paneeli/jarjesta sorttaamaton)]
+     (is (or (= tulos sortattu1) (= tulos sortattu2)))
+     (is (not (= tulos sorttaamaton)))))
+
+  (testing "Järjestä isompi joukko"
+    (let [paivamaarat (map (fn [vuosi] {:jarjesta-fn (harja.pvm/luo-pvm vuosi 10 10)
+                                        :vuosi vuosi}) (range 100 3000))
+          alkutilanne (shuffle paivamaarat)
+          tulos (sort-by :jarjesta-fn paneeli/jarjesta alkutilanne)]
+      (is (loop [edellinen (first tulos)
+                 nykyinen (second tulos)
+                 loput (drop 2 tulos)]
+            (if-not (>= (:vuosi edellinen) (:vuosi nykyinen))
+              false
+
+              (if-not (empty? (rest loput))
+                (recur nykyinen (first loput) (rest loput))
+                true)))))))

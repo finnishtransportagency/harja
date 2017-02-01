@@ -37,16 +37,16 @@
                                                (:id @nav/valittu-urakka))
         tallennus-kaynnissa (atom false)]
     (fn [optiot]
-      (let [yllapitokohteet (:yllapitokohteet optiot)
+      (let [yllapitokohteet (conj (:yllapitokohteet optiot) {:id nil})
             mahdolliset-sanktiolajit @tiedot-urakka/urakkatyypin-sanktiolajit
             yllapito? (:yllapito? optiot)
-            yllapitokokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
+            yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
         [:div
          [napit/takaisin "Takaisin sanktioluetteloon" #(reset! tiedot/valittu-sanktio nil)]
          ;; Vaadi tarvittavat tiedot ennen rendausta
          (if (and mahdolliset-sanktiolajit
-                  (or (not yllapitokokohdeurakka?)
-                      (and yllapitokokohdeurakka? yllapitokohteet)))
+                  (or (not yllapitokohdeurakka?)
+                      (and yllapitokohdeurakka? yllapitokohteet)))
            [lomake/lomake
             {:otsikko (if (:id @muokattu)
                         (if (:suorasanktio @muokattu)
@@ -117,26 +117,24 @@
                                           [:pvm-kentan-jalkeen (comp :aika :laatupoikkeama)
                                            "Ei voi olla ennen havaintoa"]]})
 
-             (if yllapito?
-               {:otsikko       "Ylläpitokohde" :tyyppi :valinta :nimi :yllapitokohde
-                :palstoja      1
-                :pakollinen?   true
-                :muokattava?   (constantly voi-muokata?)
-                :valinnat      yllapitokohteet
-                :jos-tyhja     "Ei valittavia kohteita"
+             (if yllapitokohdeurakka?
+               {:otsikko "Ylläpitokohde" :tyyppi :valinta :nimi :yllapitokohde
+                :palstoja 1 :pakollinen? false :muokattava? (constantly voi-muokata?)
+                :valinnat yllapitokohteet :jos-tyhja "Ei valittavia kohteita"
                 :valinta-nayta (fn [arvo voi-muokata?]
-                                 (if arvo
+                                 (if (:id arvo)
                                    (tierekisteri/yllapitokohde-tekstina
                                      arvo
-                                     {:osoite {:tr-numero        (:tr-numero arvo)
-                                               :tr-alkuosa       (:tr-alkuosa arvo)
-                                               :tr-alkuetaisyys  (:tr-alkuetaisyys arvo)
-                                               :tr-loppuosa      (:tr-loppuosa arvo)
+                                     {:osoite {:tr-numero (:tr-numero arvo)
+                                               :tr-alkuosa (:tr-alkuosa arvo)
+                                               :tr-alkuetaisyys (:tr-alkuetaisyys arvo)
+                                               :tr-loppuosa (:tr-loppuosa arvo)
                                                :tr-loppuetaisyys (:tr-loppuetaisyys arvo)}})
-                                   (if voi-muokata?
+                                   (if (and voi-muokata? (not arvo))
                                      "- Valitse kohde -"
-                                     "")))
-                :validoi       [[:ei-tyhja "Anna sanktion kohde"]]}
+                                     (if (and voi-muokata? (nil? (:id arvo)))
+                                       "Ei liity kohteeseen"
+                                       ""))))}
                {:otsikko     "Kohde" :tyyppi :string :nimi :kohde
                 :hae         (comp :kohde :laatupoikkeama)
                 :aseta       (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
@@ -247,7 +245,8 @@
 (defn sanktiolistaus
   [optiot valittu-urakka]
   (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot))
-        yllapito? (:yllapito? optiot)]
+        yllapito? (:yllapito? optiot)
+        yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
     [:div.sanktiot
      [urakka-valinnat/urakan-hoitokausi valittu-urakka]
      (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
@@ -266,13 +265,13 @@
        :tyhja         (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
        :rivi-klikattu #(reset! tiedot/valittu-sanktio %)}
       [{:otsikko "Päivä\u00ADmäärä" :nimi :perintapvm :fmt pvm/pvm-aika :leveys 1}
-       (if yllapito?
+       (if yllapitokohdeurakka?
          {:otsikko "Yllä\u00ADpito\u00ADkoh\u00ADde" :nimi :kohde :leveys 2
           :hae     (fn [rivi]
                      (if (get-in rivi [:yllapitokohde :id])
                        (tierekisteri/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
                                                              :nimi        (get-in rivi [:yllapitokohde :nimi])})
-                       (get-in rivi [:laatupoikkeama :kohde])))}
+                       "Ei liity kohteeseen"))}
          {:otsikko "Kohde" :nimi :kohde :hae (comp :kohde :laatupoikkeama) :leveys 1})
        {:otsikko "Perus\u00ADtelu" :nimi :kuvaus :hae (comp :perustelu :paatos :laatupoikkeama) :leveys 3}
        (if yllapito?

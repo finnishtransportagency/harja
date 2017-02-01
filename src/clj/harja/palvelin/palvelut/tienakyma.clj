@@ -119,17 +119,29 @@
           (doseq [k kanavat]
             (async/close! k)))))))
 
+(defn- hae-reittipisteet [db {:keys [toteuma-id]}]
+  (q/hae-reittipisteet db {:toteuma-id toteuma-id}))
+
+(defn vain-tilaajalle! [user]
+  (when-not (roolit/tilaajan-kayttaja? user)
+    (throw+ (roolit/->EiOikeutta "vain tilaajan käyttäjille"))))
+
 (defrecord Tienakyma []
   component/Lifecycle
   (start [{db :db http :http-palvelin :as this}]
     (julkaise-palvelut
      http
-     :hae-tienakymaan (fn [user valinnat]
-                        (when-not (roolit/tilaajan-kayttaja? user)
-                          (throw+ (roolit/->EiOikeutta "vain tilaajan käyttäjille")))
-                        (hae-tienakymaan db valinnat)))
+     :hae-tienakymaan
+     (fn [user valinnat]
+       (vain-tilaajalle! user)
+       (hae-tienakymaan db valinnat))
+
+     :hae-reittipisteet-tienakymaan
+     (fn [user valinnat]
+       (vain-tilaajalle! user)
+       (hae-reittipisteet db valinnat)))
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :hae-tienakymaan)
+    (poista-palvelut http :hae-tienakymaan :hae-reittipisteet-tienakymaan)
     this))
