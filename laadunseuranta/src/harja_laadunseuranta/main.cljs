@@ -56,16 +56,16 @@
   (if @s/alustus-valmis?
     [paanakyma]
     [alustus/alustuskomponentti
-     {:selain-tuettu (if @s/selain-tuettu :ok :virhe)
+     {:selain-tuettu (if (and @s/selain-tuettu (not @s/selain-vanhentunut)) :ok :virhe)
       :selain-vanhentunut? @s/selain-vanhentunut
       :gps-tuettu (cond
                     (nil? @s/gps-tuettu) :tarkistetaan
                     (true? @s/gps-tuettu) :ok
                     :default :virhe)
       :ensimmainen-sijainti-saatu (cond
-                              (nil? @s/ensimmainen-sijainti-saatu) :tarkistetaan
-                              (true? @s/ensimmainen-sijainti-saatu) :ok
-                              :default :virhe)
+                                    (nil? @s/ensimmainen-sijainti-saatu) :tarkistetaan
+                                    (true? @s/ensimmainen-sijainti-saatu) :ok
+                                    :default :virhe)
       :ensimmainen-sijainti-virhekoodi @s/ensimmainen-sijainti-virhekoodi
       :oikeus-urakoihin (cond
                           (nil? @s/oikeus-urakoihin) :tarkistetaan
