@@ -72,6 +72,10 @@
                     :default validointi-fn-tai-vaaditut-avaimet)
    :haku-fn haku-fn})
 
+(defn- ei-pakollinen-kentta [haku-fn]
+  {:validointi-fn (constantly true)
+   :haku-fn haku-fn})
+
 (defmethod infopaneeli-skeema :tyokone [tyokone]
   {:tyyppi :tyokone
    :jarjesta-fn :viimeisin-havainto
@@ -323,7 +327,8 @@
                      (string/join ", " toimenpiteet))))
    :tiedot (vec (concat [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
                          {:otsikko "Päättynyt" :tyyppi :pvm-aika :nimi :paattynyt}
-                         {:otsikko "Klo (arvio)" :tyyppi :pvm-aika :nimi :aika-pisteessa}
+                         {:otsikko "Klo (arvio)" :tyyppi :pvm-aika
+                          :hae (ei-pakollinen-kentta :aika-pisteessa)}
                          {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite
                           :nimi :tierekisteriosoite}
                          {:otsikko "Suorittaja" :hae (hakufunktio
