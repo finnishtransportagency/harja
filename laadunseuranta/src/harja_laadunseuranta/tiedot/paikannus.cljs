@@ -8,10 +8,11 @@
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]
             [cljs-time.local :as l]))
 
-(def +oletusraportointivali+ 2000)
-(def paikan-raportointivali-ms (atom +oletusraportointivali+))
-(def +raportointivalin-kertakasvatus+ 1000)
-(def paikan-raportointivali-ms-max 8000)
+(def +paikannuksen-oletustimeout+ 2000)
+(def paikannuksen-timeout-ms (atom +paikannuksen-oletustimeout+))
+(def +paikannuksen-timeoutin-kasvatusvali+ 1000)
+(def paikannuksen-timeout-ms-max 8000)
+(def paikannuksen-vali-ms 2000)
 
 (def paikannus-id (atom nil))
 
@@ -45,7 +46,7 @@
 (defn tee-paikannusoptiot []
   #js {:enableHighAccuracy true
        :maximumAge 1000
-       :timeout @paikan-raportointivali-ms})
+       :timeout @paikannuksen-timeout-ms})
 
 (defn paivita-sijainti [{:keys [nykyinen]} sijainti ts]
   (let [uusi-sijainti (assoc sijainti :timestamp ts)
@@ -61,12 +62,12 @@
                  :timestamp ts)}))
 
 (defn- yrita-kasvattaa-paikannuksen-raportointivalia []
-  (let [kasvatettu-raportointivali (+ @paikan-raportointivali-ms +raportointivalin-kertakasvatus+)]
-    (when (<= kasvatettu-raportointivali paikan-raportointivali-ms-max)
-      (reset! paikan-raportointivali-ms kasvatettu-raportointivali))))
+  (let [kasvatettu-raportointivali (+ @paikannuksen-timeout-ms +paikannuksen-timeoutin-kasvatusvali+)]
+    (when (<= kasvatettu-raportointivali paikannuksen-timeout-ms-max)
+      (reset! paikannuksen-timeout-ms kasvatettu-raportointivali))))
 
 (defn- palauta-oletusraportointivali []
-  (reset! paikan-raportointivali-ms +oletusraportointivali+))
+  (reset! paikannuksen-timeout-ms +paikannuksen-oletustimeout+))
 
 (defn- paikanna-laite-jatkuvasti
   "Käynnistää paikannuksen tietyllä id:llä. Lopettaa jos paikannus-id vaihtuu."
@@ -78,7 +79,7 @@
                                                        :sijainti-atom sijainti-atom
                                                        :ensimmainen-sijainti-saatu-atom ensimmainen-sijainti-saatu-atom
                                                        :ensimmainen-sijainti-virhekoodi-atom ensimmainen-sijainti-virhekoodi-atom})
-                                                   @paikan-raportointivali-ms))
+                                                   paikannuksen-vali-ms))
           sijainti-saatu (fn [sijainti]
                            (when (= @paikannus-id id)
                              (palauta-oletusraportointivali)
@@ -94,7 +95,7 @@
                                    (.log js/console "Paikannus epäonnistui (virhe: " (.-message virhe) " ), uudet optiot: " (tee-paikannusoptiot))
                                    (when (and ensimmainen-sijainti-saatu-atom ensimmainen-sijainti-virhekoodi-atom
                                               (nil? @ensimmainen-sijainti-saatu-atom)
-                                              (>= @paikan-raportointivali-ms paikan-raportointivali-ms-max))
+                                              (>= @paikannuksen-timeout-ms paikannuksen-timeout-ms-max))
                                      (reset! ensimmainen-sijainti-virhekoodi-atom (.-code virhe))
                                      (reset! ensimmainen-sijainti-saatu-atom false))
                                    (swap! sijainti-atom identity)
