@@ -20,6 +20,7 @@
              [harja.tiedot.urakka.siirtymat-test]
              [harja.tiedot.tierekisteri.varusteet-test]
              [harja.ui.kartta.infopaneelin-sisalto-test]
+             [harja.tiedot.tilannekuva.tienakyma-test]
              ;; uusi testi tähän
              ))
 
@@ -43,5 +44,6 @@
            'harja.tiedot.urakka.siirtymat-test
            'harja.tiedot.tierekisteri.varusteet-test
            'harja.ui.kartta.infopaneelin-sisalto-test
-            ;; uusi testi tähän
+           'harja.tiedot.tilannekuva.tienakyma-test
+           ;; uusi testi tähän
            )
