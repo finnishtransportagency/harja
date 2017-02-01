@@ -30,11 +30,11 @@
     [:p "Tarkistetaan..."]
 
     [tarkistusrivi "Selain tuettu" selain-tuettu
-     (cond (= selain-tuettu :virhe)
-           {:virhe (str "Selain ei ole tuettu. Tuetut selaimet: " (utils/tuetut-selaimet-tekstina))}
-
-           selain-vanhentunut?
+     (cond selain-vanhentunut?
            {:virhe "Selain vaatii päivityksen uudempaan versioon."}
+
+           (= selain-tuettu :virhe)
+           {:virhe (str "Selain ei ole tuettu. Tuetut selaimet: " (utils/tuetut-selaimet-tekstina))}
 
            :default {})]
     [tarkistusrivi "Selaintietokanta-tuki" idxdb-tuettu
