@@ -76,14 +76,21 @@
 
 (def ^{:doc "Ikonien tiheys, välimatkaksi otetaan alueen hypotenuusa jaettuna tällä.
 Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
-       :private true}
-  ikonien-tiheys 10)
+       :private true
+       :const true}
+  maksimi-etaisyys 10)
+
+(def ^{:doc "Ikonien minimitiheys. Käytetään erityisesti mutkittelevissa reiteissä, jotta
+ihan jokaiseen käännökseen ei laiteta nuolta. Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
+       :private true
+       :const true}
+minimi-etaisyys 40)
 
 (def ^{:doc "Raja, jota suuremmalla näkyvällä alueella ei enää piirretä ikoneita"
        :private true}
   ikonien-piirtoraja-m 1400000)
 
-(defn- nuolten-paikat [valimatka taitokset paikka]
+(defn- nuolten-paikat [min max taitokset paikka]
   (case paikka
     :alku
     (let [{:keys [sijainti rotaatio]} (first taitokset)]
@@ -94,7 +101,7 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
       [[(second sijainti) rotaatio]])
 
     :taitokset
-    (apurit/taitokset-valimatkoin valimatka (butlast taitokset))))
+    (apurit/taitokset-valimatkoin min max (butlast taitokset))))
 
 (defn- piirra-kuva
   ([g kuva skaala x y]
@@ -114,12 +121,13 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
 
 (defn- piirra-ikonit [g {points :points ikonit :ikonit} ruudukko]
   (let [hypotenuusa (geo/extent-hypotenuusa *extent*)
-        valimatka (/ hypotenuusa ikonien-tiheys)
+        max-et (/ hypotenuusa maksimi-etaisyys)
+        min-et (/ hypotenuusa minimi-etaisyys)
         taitokset (apurit/pisteiden-taitokset points)
         ikonin-skaala (partial apurit/ikonin-skaala hypotenuusa)]
     (when (< hypotenuusa ikonien-piirtoraja-m)
       (doseq [{:keys [img scale paikka]} ikonit
-              :let [paikat (mapcat (partial nuolten-paikat valimatka taitokset)
+              :let [paikat (mapcat (partial nuolten-paikat min-et max-et taitokset)
                                    paikka)
                     kuva (and img (hae-kuva img))
                     skaala (ikonin-skaala scale)]]
