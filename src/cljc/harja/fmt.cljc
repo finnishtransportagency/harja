@@ -5,10 +5,12 @@
     #?(:cljs [goog.i18n.NumberFormatSymbols])
     #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
     #?(:cljs [goog.i18n.NumberFormat])
-            [clojure.string :as str])
+      [clojure.string :as str])
   #?(:clj
      (:import (java.text NumberFormat)
               (java.util Locale))))
+
+#?(:cljs (def frontin-formatointivirheviestit #{"epäluku"}))
 
 #?(:clj
    (Locale/setDefault (Locale. "fi" "FI")))
@@ -26,19 +28,24 @@
   "Formatoi summan euroina näyttämistä varten. Tuhaterottimien ja valinnaisen euromerkin kanssa."
   ([eur] (euro true eur))
   ([nayta-euromerkki eur]
-    #?(:cljs
+   #?(:cljs
        ;; NOTE: lisätään itse perään euro symboli, koska googlella oli jotain ihan sotkua.
        ;; Käytetään googlen formatointia, koska toLocaleString tukee tarvittavia optioita, mutta
        ;; vasta IE11 versiosta lähtien.
-       (str (.format euro-number-format eur) " \u20AC")
+      (let [tulos (.format euro-number-format eur)]
+        (if (or
+              (or (nil? eur) (and (string? eur) (empty? eur)))
+              (frontin-formatointivirheviestit tulos))
+          (throw (js/Error. (str "Arvoa ei voi formatoida euroksi: " (pr-str eur))))
+          (str tulos " \u20AC")))
 
-       :clj
-       (.format (doto
-                  (if nayta-euromerkki
-                    (NumberFormat/getCurrencyInstance)
-                    (NumberFormat/getNumberInstance))
-                  (.setMaximumFractionDigits 2)
-                  (.setMinimumFractionDigits 2)) eur))))
+      :clj
+      (.format (doto
+                 (if nayta-euromerkki
+                   (NumberFormat/getCurrencyInstance)
+                   (NumberFormat/getNumberInstance))
+                 (.setMaximumFractionDigits 2)
+                 (.setMinimumFractionDigits 2)) eur))))
 
 
 
@@ -46,9 +53,9 @@
   "Formatoi euromäärän tai tyhjä, jos nil."
   ([summa] (euro-opt true summa))
   ([nayta-euromerkki summa]
-   (if summa
-     (euro nayta-euromerkki summa)
-     "")))
+   (if (or (nil? summa) (and (string? summa) (empty? summa)))
+     ""
+     (euro nayta-euromerkki summa))))
 
 (defn yksikolla [yksikko arvo]
   "Lisää arvo-merkkijonon loppuun välilyönnin ja yksikkö-merkkijonon"
@@ -412,7 +419,8 @@
   (pvm/pvm pvm))
 
 (defn pvm-opt
-  "Formatoi päivämäärän tai tyhjä, jos nil."
+  "Formatoi päivämäärän tai tyhjä, jos nil.
+  Jos formatoitava arvo ei ole pvm, palauttaa itse arvon."
   [p]
   (if p
     (pvm p)
@@ -434,9 +442,9 @@
            (zipmap (range 1 4)
                    (map #(doto (goog.i18n.NumberFormat.
                                  (.-DECIMAL goog.i18n.NumberFormat/Format))
-                          (.setShowTrailingZeros false)
-                          (.setMinimumFractionDigits %)
-                          (.setMaximumFractionDigits %))
+                           (.setShowTrailingZeros false)
+                           (.setMinimumFractionDigits %)
+                           (.setMaximumFractionDigits %))
                         (range 1 4))))))
 
 #?(:clj (def desimaali-symbolit
@@ -447,30 +455,38 @@
   ([luku] (desimaaliluku luku 2 false))
   ([luku tarkkuus] (desimaaliluku luku tarkkuus false))
   ([luku tarkkuus ryhmitelty?]
-    #?(:cljs
+   #?(:cljs
        ; Jostain syystä ei voi formatoida desimaalilukua nollalla desimaalilla. Aiheuttaa poikkeuksen.
-       (if (= tarkkuus 0)
-         (.toFixed luku 0)
-         (let [formatoitu (.format (desimaali-fmt tarkkuus) luku)]
-           (if-not ryhmitelty?
-             (str/replace formatoitu #" " "")
-             formatoitu)))
-       :clj
-       (.format (doto (java.text.DecimalFormat.)
-                  (.setDecimalFormatSymbols desimaali-symbolit)
-                  (.setMinimumFractionDigits tarkkuus)
-                  (.setMaximumFractionDigits tarkkuus)
-                  (.setGroupingSize (if ryhmitelty? 3 0)))
+      (if (= tarkkuus 0)
+        (.toFixed luku 0)
+        (let [formatoitu (.format (desimaali-fmt tarkkuus) luku)]
+          (cond
+            (or
+              (or (nil? luku) (and (string? luku) (empty? luku)))
+              (frontin-formatointivirheviestit formatoitu))
+            (throw (js/Error. (str "Arvoa ei voi formatoida desimaaliluvuksi:" (pr-str luku))))
 
-                (double luku)))))
+            ryhmitelty?
+            formatoitu
+
+            :default
+            (str/replace formatoitu #" " ""))))
+      :clj
+      (.format (doto (java.text.DecimalFormat.)
+                 (.setDecimalFormatSymbols desimaali-symbolit)
+                 (.setMinimumFractionDigits tarkkuus)
+                 (.setMaximumFractionDigits tarkkuus)
+                 (.setGroupingSize (if ryhmitelty? 3 0)))
+
+               (double luku)))))
 
 (defn desimaaliluku-opt
   ([luku] (desimaaliluku-opt luku 2 false))
   ([luku tarkkuus] (desimaaliluku-opt luku tarkkuus false))
   ([luku tarkkuus ryhmitelty?]
-   (if luku
-     (desimaaliluku luku tarkkuus ryhmitelty?)
-     "")))
+   (if (or (nil? luku) (and (string? luku) (empty? luku)))
+     ""
+     (desimaaliluku luku tarkkuus ryhmitelty?))))
 
 (defn prosentti
   ([luku] (prosentti luku 1))
@@ -478,23 +494,23 @@
    (str (desimaaliluku luku tarkkuus) "%")))
 
 (defn lampotila
-  ([luku] (desimaaliluku luku 1))
+  ([luku] (lampotila luku 1))
   ([luku tarkkuus]
    (str (desimaaliluku luku tarkkuus) "°C")))
 
 (defn lampotila-opt
-  ([luku] (desimaaliluku-opt luku 1))
+  ([luku] (lampotila-opt luku 1))
   ([luku tarkkuus]
-   (if luku
-     (lampotila luku tarkkuus)
-     "")))
+   (if (or (nil? luku) (and (string? luku) (empty? luku)))
+     ""
+     (lampotila luku tarkkuus))))
 
 (defn prosentti-opt
   ([luku] (prosentti-opt luku 1))
   ([luku tarkkuus]
-   (if luku
-     (prosentti luku tarkkuus)
-     "")))
+   (if (or (nil? luku) (and (string? luku) (empty? luku)))
+     ""
+     (prosentti luku tarkkuus))))
 
 (defn trimmaa-puhelinnumero
   "Ottaa suomalaisen puhelinnumeron teksimuodossa ja palauttaa sen yksinkertaistetussa numeromuodossa ilman etuliitettä

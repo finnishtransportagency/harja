@@ -1,5 +1,8 @@
 (ns harja.palvelin.palvelut.yha
-  "Paikallisen kannan YHA-tietojenkäsittelyn logiikka"
+  "Paikallisen kannan YHA-tietojenkäsittelyn logiikka.
+
+  YHA on päällystysurakoiden master-järjestelmä, josta haetaan Harjaan päällystyskohteet
+  ja johon ne lähetetään myöhemmin takaisin."
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [taoensso.timbre :as log]
@@ -9,7 +12,9 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.kyselyt.paallystys :as paallystys-q]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.pvm :as pvm]
+            [clj-time.core :as t]))
 
 (defn lukitse-urakan-yha-sidonta [db urakka-id]
   (log/info "Lukitaan urakan " urakka-id " yha-sidonta.")
@@ -127,7 +132,8 @@
                      :yllapitoluokka yllapitoluokka
                      :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
                      :nykyinen_paallyste nykyinen-paallyste
-                     :nimi nimi})]
+                     :nimi nimi
+                     :vuodet (konv/seq->array [(t/year (pvm/suomen-aikavyohykkeeseen (t/now)))])})]
         (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
           (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
           (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!
@@ -160,26 +166,24 @@
                                     (comp (map konv/alaviiva->rakenne)
                                           (map #(konv/string-poluista->keyword
                                                  %
-                                                 [[:taloudellinen-osa :paatos]
-                                                  [:tekninen-osa :paatos]
+                                                 [[:tekninen-osa :paatos]
                                                   [:tila]])))
                                     (paallystys-q/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
                                       db
                                       {:paallystyskohde kohde-id})))]
       (when-not (and (= :hyvaksytty (get-in paallystysilmoitus [:tekninen-osa :paatos]))
-                     (= :hyvaksytty (get-in paallystysilmoitus [:taloudellinen-osa :paatos]))
                      (or (= :valmis (:tila paallystysilmoitus))
                          (= :lukittu (:tila paallystysilmoitus))))
        (throw (SecurityException. (str "Kohteen " kohde-id " päällystysilmoituksen lähetys ei ole sallittu.")))))))
 
 (defn laheta-kohteet-yhaan
   "Lähettää annetut kohteet teknisine tietoineen YHA:n."
-  [db yha user {:keys [urakka-id sopimus-id kohde-idt]}]
+  [db yha user {:keys [urakka-id sopimus-id kohde-idt vuosi]}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (tarkista-lahetettavat-kohteet db kohde-idt)
   (log/debug (format "Lähetetään kohteet: %s YHA:n" kohde-idt))
   (yha/laheta-kohteet yha urakka-id kohde-idt)
-  (let [paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id)]
+  (let [paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi)]
     paivitetyt-ilmoitukset))
 
 (defrecord Yha []

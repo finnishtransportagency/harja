@@ -1,19 +1,19 @@
 (ns harja.testi
   "Harjan testauksen apukoodia."
   (:require
-   [clojure.test :refer :all]
-   [taoensso.timbre :as log]
-   [harja.kyselyt.urakat :as urk-q]
-   [harja.palvelin.komponentit.todennus :as todennus]
-   [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
-   [harja.palvelin.komponentit.http-palvelin :as http]
-   [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-   [harja.palvelin.komponentit.tietokanta :as tietokanta]
-   [harja.palvelin.komponentit.liitteet :as liitteet]
-   [com.stuartsierra.component :as component]
-   [clj-time.core :as t]
-   [clj-time.coerce :as tc]
-   [clojure.core.async :as async])
+    [clojure.test :refer :all]
+    [taoensso.timbre :as log]
+    [harja.kyselyt.urakat :as urk-q]
+    [harja.palvelin.komponentit.todennus :as todennus]
+    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+    [harja.palvelin.komponentit.http-palvelin :as http]
+    [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+    [harja.palvelin.komponentit.tietokanta :as tietokanta]
+    [harja.palvelin.komponentit.liitteet :as liitteet]
+    [com.stuartsierra.component :as component]
+    [clj-time.core :as t]
+    [clj-time.coerce :as tc]
+    [clojure.core.async :as async])
   (:import (java.util Locale)))
 
 (def jarjestelma nil)
@@ -90,7 +90,14 @@
 (def ds {:datasource db})
 
 (defn q
-  "Kysele Harjan kannasta yksikkötestauksen yhteydessä"
+  "Kysele Harjan kannasta yksikkötestauksen yhteydessä.
+   Palauttaa vectorin, jossa item on riviä esittävä vector,
+   jossa kyseltyjen sarakkeiden arvot ovat järjestyksessä.
+
+   Esim: SELECT id, nimi FROM urakka
+   palauttaisi
+   [[4, 'Oulun alueurakka']
+    [5, 'Joensuun alueurakka']]"
   [& sql]
   (with-open [c (.getConnection db)
               ps (.prepareStatement c (reduce str sql))
@@ -103,7 +110,38 @@
           (recur (conj res (loop [row []
                                   i 1]
                              (if (<= i cols)
-                               (recur (conj row (.getObject rs i)) (inc i))
+                               (do
+                                 (recur (conj row (.getObject rs i))
+                                        (inc i)))
+                               row)))
+                 (.next rs)))))))
+
+(defn q-map
+  "Kysele Harjan kannasta yksikkötestauksen yhteydessä.
+   Palauttaa vectorin, jossa item on map, jonka avaimina
+   ovat kysellyt sarakkeet avaimina
+
+   Esim. SELECT id, nimi FROM urakka
+   palauttaisi
+   [{:id 4 :nimi 'Oulun alueurakka'}
+    {:id 5 :nimi 'Joensuun alueurakka'}]."
+  [& sql]
+  (with-open [c (.getConnection db)
+              ps (.prepareStatement c (reduce str sql))
+              rs (.executeQuery ps)]
+    (let [cols (-> (.getMetaData rs) .getColumnCount)]
+      (loop [res []
+             more? (.next rs)]
+        (if-not more?
+          res
+          (recur (conj res (loop [row {}
+                                  i 1]
+                             (if (<= i cols)
+                               (recur (assoc row
+                                        (keyword (-> (.getMetaData rs)
+                                             (.getColumnName i)))
+                                        (.getObject rs i))
+                                      (inc i))
                                row)))
                  (.next rs)))))))
 
@@ -145,7 +183,15 @@
 
     ;; POST
     [this nimi kayttaja payload]
-    "kutsu HTTP palvelufunktiota suoraan."))
+    "kutsu HTTP palvelufunktiota suoraan.")
+
+  (kutsu-karttakuvapalvelua
+    ;; POST
+    [this nimi kayttaja payload koordinaatti extent]))
+
+(defn- palvelua-ei-loydy [nimi]
+  (is false (str "Palvelua " nimi " ei löydy!"))
+  {:error "Palvelua ei löydy"})
 
 (defn testi-http-palvelin
   "HTTP 'palvelin' joka vain ottaa talteen julkaistut palvelut."
@@ -162,12 +208,25 @@
 
       FeikkiHttpPalveluKutsu
       (kutsu-palvelua [_ nimi kayttaja]
-        ((get @palvelut nimi) kayttaja))
+        (if-let [palvelu (get @palvelut nimi)]
+          (palvelu kayttaja)
+          (palvelua-ei-loydy nimi)))
       (kutsu-palvelua [_ nimi kayttaja payload]
-        (let [vastaus ((get @palvelut nimi) kayttaja payload)]
-          (if (http/async-response? vastaus)
-            (async/<!! (:channel vastaus))
-            vastaus))))))
+        (if-let [palvelu (get @palvelut nimi)]
+          (let [vastaus (palvelu kayttaja payload)]
+            (if (http/async-response? vastaus)
+              (async/<!! (:channel vastaus))
+              vastaus))
+          (palvelua-ei-loydy nimi)))
+
+      (kutsu-karttakuvapalvelua [_ nimi kayttaja payload koordinaatti extent]
+        ((get @palvelut :karttakuva-klikkaus)
+         kayttaja
+         {:parametrit (assoc payload "_" nimi)
+          :koordinaatti koordinaatti
+          :extent (or extent
+                      [-550093.049087613 6372322.595126259 1527526.529326106 7870243.751025201])})))))
+
 
 (defn kutsu-http-palvelua
   "Lyhyt muoto testijärjestelmän HTTP palveluiden kutsumiseen."
@@ -252,10 +311,28 @@
                     JOIN toimenpideinstanssi tpi ON u.id = tpi.urakka
                   WHERE  u.nimi = 'Oulun alueurakka 2005-2012';")))))
 
+(defn hae-oulun-alueurakan-talvihoito-tpi-id []
+  (ffirst (q (str "SELECT id
+                  FROM   toimenpideinstanssi
+                  WHERE  nimi = 'Oulu Talvihoito TP 2014-2019';"))))
+
+(defn hae-oulun-alueurakan-liikenneympariston-hoito-tpi-id []
+  (ffirst (q (str "SELECT id
+                  FROM   toimenpideinstanssi
+                  WHERE  nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019';"))))
+
 (defn hae-muhoksen-paallystysurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Muhoksen päällystysurakka'"))))
+
+(defn hae-muhoksen-paallystysurakan-tpi-id []
+  (ffirst (q (str "SELECT id
+                   FROM   toimenpideinstanssi
+                   WHERE  urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')"))))
+
+(defn hae-muhoksen-paallystysurakan-testikohteen-id []
+  (ffirst (q (str "SELECT id FROM yllapitokohde WHERE nimi = 'Kuusamontien testi'"))))
 
 (defn hae-oulun-tiemerkintaurakan-id []
   (ffirst (q (str "SELECT id
@@ -346,6 +423,23 @@
 (defn hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa [tiemerkintaurakka-id]
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE suorittava_tiemerkintaurakka = " tiemerkintaurakka-id ";"))))
+
+(defn pura-tr-osoite [[numero aosa aet losa loppuet]]
+  {:numero numero
+   :aosa aosa
+   :aet aet
+   :losa losa
+   :loppuet loppuet})
+
+(defn hae-yllapitokohteen-tr-osoite [kohde-id]
+  (pura-tr-osoite (first (q (str "SELECT tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys
+                                  FROM yllapitokohde WHERE id = " kohde-id ";")))))
+
+(defn hae-yllapitokohteen-kohdeosien-tr-osoitteet [kohde-id]
+  (map
+    pura-tr-osoite
+    (q (str "SELECT tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys
+             FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id ";"))))
 
 ;; Määritellään käyttäjiä, joita testeissä voi käyttää
 ;; HUOM: näiden pitää täsmätä siihen mitä testidata.sql tiedostossa luodaan.
@@ -459,14 +553,14 @@
                  tulos
                  (first tulos))]
      (every?
-      #(let [loytyi? (not= ::ei-loydy
-                           (get-in tulos (if (vector? %)
-                                                   %
-                                                   [%]) ::ei-loydy))]
-         (when assertoi-kaikki?
-           (assert loytyi? (str "Polku " (pr-str %) " EI löydy tuloksesta! " (pr-str (first tulos)))))
-         loytyi?)
-      sarakkeet))))
+       #(let [loytyi? (not= ::ei-loydy
+                            (get-in tulos (if (vector? %)
+                                            %
+                                            [%]) ::ei-loydy))]
+          (when assertoi-kaikki?
+            (assert loytyi? (str "Polku " (pr-str %) " EI löydy tuloksesta! " (pr-str (first tulos)))))
+          loytyi?)
+       sarakkeet))))
 
 (defn oikeat-sarakkeet-palvelussa?
   "Tarkastaa sisältääkö palvelun palauttama tietorakenne ainakin annetut avaimet.
@@ -508,13 +602,13 @@
                      (first vastaus))]
          (log/error "Vastaus poikkeaa annetusta mallista. Vastaus: " (pr-str vastaus)
                     "\nPuuttuvat polut: " (pr-str
-                                           (keep (fn [sarake]
-                                                   (let [sarake (if (vector? sarake)
-                                                                  sarake
-                                                                  [sarake])]
-                                                     (when (= ::ei-loydy
-                                                              (get-in tulos sarake ::ei-loydy))
-                                                       sarake))) sarakkeet)))
+                                            (keep (fn [sarake]
+                                                    (let [sarake (if (vector? sarake)
+                                                                   sarake
+                                                                   [sarake])]
+                                                      (when (= ::ei-loydy
+                                                               (get-in tulos sarake ::ei-loydy))
+                                                        sarake))) sarakkeet)))
          false)))))
 
 (def portti nil)
@@ -530,28 +624,28 @@
      (alter-var-root #'jarjestelma
                      (fn [_#]
                        (component/start
-                        (component/system-map
-                         :db (tietokanta/luo-tietokanta testitietokanta)
-                         :db-replica (tietokanta/luo-tietokanta testitietokanta)
-                         :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat)
-                                                [:db])
+                         (component/system-map
+                           :db (tietokanta/luo-tietokanta testitietokanta)
+                           :db-replica (tietokanta/luo-tietokanta testitietokanta)
+                           :klusterin-tapahtumat (component/using
+                                                   (tapahtumat/luo-tapahtumat)
+                                                   [:db])
 
-                         :todennus (component/using
-                                    (todennus/http-todennus)
-                                    [:db :klusterin-tapahtumat])
-                         :http-palvelin (component/using
-                                         (http/luo-http-palvelin portti true)
-                                         [:todennus])
-                         :integraatioloki (component/using
-                                           (integraatioloki/->Integraatioloki nil)
-                                           [:db])
+                           :todennus (component/using
+                                       (todennus/http-todennus)
+                                       [:db :klusterin-tapahtumat])
+                           :http-palvelin (component/using
+                                            (http/luo-http-palvelin portti true)
+                                            [:todennus])
+                           :integraatioloki (component/using
+                                              (integraatioloki/->Integraatioloki nil)
+                                              [:db])
 
-                         :liitteiden-hallinta (component/using
-                                               (liitteet/->Liitteet)
-                                               [:db])
+                           :liitteiden-hallinta (component/using
+                                                  (liitteet/->Liitteet)
+                                                  [:db])
 
-                         ~@omat))))
+                           ~@omat))))
 
      (alter-var-root #'urakka
                      (fn [_#]
@@ -593,3 +687,11 @@
   (-> dt
       tc/from-sql-date
       (t/to-time-zone suomen-aikavyohyke)))
+
+(defn q-sanktio-leftjoin-laatupoikkeama [sanktio-id]
+  (first (q-map
+     "SELECT s.id, s.maara as summa, s.poistettu, s.perintapvm, s.sakkoryhma as laji,
+             lp.id as lp_id, lp.aika as lp_aika, lp.poistettu as lp_poistettu
+        FROM sanktio s
+             LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
+       WHERE s.id = " sanktio-id ";")))

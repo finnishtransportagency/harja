@@ -16,6 +16,7 @@
 (def pinkki (rgb 255 0 128))
 
 (def musta (rgb 0 0 0))
+(def valkoinen (rgb 255 255 255))
 (def vaaleanharmaa (rgb 242 242 242))
 (def harmaa (rgb 140 140 140))
 (def tummanharmaa (rgb 77 77 77))
@@ -33,7 +34,7 @@
 
 #?(:clj
    (defn- poista-epavarit [setti]
-     (disj setti 'musta 'harmaa 'tummanharmaa 'vaaleanharmaa)))
+     (disj setti 'musta 'valkoinen 'harmaa 'tummanharmaa 'vaaleanharmaa)))
 
 #?(:clj
    (defn varmenna-kaikki-vektori [ns]

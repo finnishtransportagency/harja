@@ -1,10 +1,12 @@
 (ns harja.domain.laadunseuranta.sanktiot)
 
 (defn sakko? [sanktio]
-  (not= :muistutus (:laji sanktio)))
+  (and (not= :muistutus (:laji sanktio))
+       (not= :yllapidon_muistutus (:laji sanktio))))
 
 (defn sakkoryhmasta-sakko? [sanktio]
-  (not= :muistutus (:sakkoryhma sanktio)))
+  (and (not= :muistutus (:sakkoryhma sanktio))
+       (not= :yllapidon_muistutus (:sakkoryhma sanktio))))
 
 (defn paatos-on-sanktio? [sanktio]
   (= :sanktio (get-in sanktio [:paatos :paatos])))

@@ -9,7 +9,8 @@
             [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.skeema :as skeema]
-            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]))
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
+            [clojure.walk :as walk]))
 
 (def kayttaja-paallystys "skanska")
 (def kayttaja-tiemerkinta "tiemies")
@@ -34,9 +35,9 @@
     (is (some? (:paallystys-aloitettu (:aikataulu leppajarven-ramppi))))
     (is (some? (:paallystys-valmis (:aikataulu leppajarven-ramppi))))
     (is (some? (:valmis-tiemerkintaan (:aikataulu leppajarven-ramppi))))
-    (is (nil? (:tiemerkinta-aloitettu (:aikataulu leppajarven-ramppi))))
-    (is (nil? (:tiemerkinta-valmis (:aikataulu leppajarven-ramppi))))
-    (is (nil? (:kohde-valmis (:aikataulu leppajarven-ramppi))))
+    (is (some? (:tiemerkinta-aloitettu (:aikataulu leppajarven-ramppi))))
+    (is (some? (:tiemerkinta-valmis (:aikataulu leppajarven-ramppi))))
+    (is (some? (:kohde-valmis (:aikataulu leppajarven-ramppi))))
     (is (some? (:takuupvm (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))))
 
 (deftest yllapitokohteiden-haku-ei-toimi-ilman-oikeuksia
@@ -63,7 +64,7 @@
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
     ;; Tarkistetaan, että tiedot tallentuivat oikein
-    (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, muutoshinta, tila, id
+    (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, tila, id
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
           ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))
           paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))]
@@ -76,13 +77,7 @@
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
       (is (match ilmoitustiedot
-                 {:tyot [{:tyo "työtehtävä"
-                          :tyyppi "tasaukset"
-                          :yksikko "kpl"
-                          :yksikkohinta 3
-                          :tilattu-maara 1
-                          :toteutunut-maara 2}],
-                  :osoitteet [{:kohdeosa-id _
+                 {:osoitteet [{:kohdeosa-id _
                                :edellinen-paallystetyyppi nil
                                :lisaaineet "lisäaineet"
                                :leveys 1.2
@@ -111,10 +106,9 @@
                                   :verkon-sijainti 1}]}
                  true))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
-      (is (== (get paallystysilmoitus 2) 3) "Muutoshinta laskettiin oikein")
-      (is (= (get paallystysilmoitus 3) "aloitettu") "Ei asetettu käsiteltäväksi, joten tila on aloitettu")
+      (is (= (get paallystysilmoitus 2) "aloitettu") "Ei asetettu käsiteltäväksi, joten tila on aloitettu")
 
-      (u "DELETE FROM paallystysilmoitus WHERE id = " (get paallystysilmoitus 4) ";"))))
+      (u "DELETE FROM paallystysilmoitus WHERE id = " (get paallystysilmoitus 3) ";"))))
 
 (deftest uuden-paallystysilmoituksen-kirjaaminen-kasiteltavaksi-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -136,7 +130,7 @@
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-tielta-20-jolla-paallystysilmoitus)
         paallystysilmoitusten-maara-kannassa-ennen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
-        vanha-paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, muutoshinta, tila
+        vanha-paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, tila
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
@@ -148,7 +142,7 @@
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
     ;; Tarkistetana, että tiedot tallentuivat oikein
-    (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, muutoshinta, tila
+    (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, tila
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
           ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))
           paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))]
@@ -160,13 +154,7 @@
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
       (is (match ilmoitustiedot
-                 {:tyot [{:tyo "työtehtävä"
-                          :tyyppi "tasaukset"
-                          :yksikko "kpl"
-                          :yksikkohinta 3
-                          :tilattu-maara 1
-                          :toteutunut-maara 2}],
-                  :osoitteet [{:kohdeosa-id _
+                 {:osoitteet [{:kohdeosa-id _
                                :edellinen-paallystetyyppi nil
                                :lisaaineet "lisäaineet"
                                :leveys 1.2
@@ -195,12 +183,12 @@
                                   :verkon-sijainti 1}]}
                  true))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
-      (is (== (get paallystysilmoitus 2) 3) "Muutoshinta laskettiin oikein")
-      (is (= (get paallystysilmoitus 3) (get vanha-paallystysilmoitus 3)) "Tila ei muuttunut miksikään"))))
+      (is (= (get paallystysilmoitus 2) (get vanha-paallystysilmoitus 2)) "Tila ei muuttunut miksikään"))))
 
 (deftest paallystysilmoituksen-paivittaminen-ei-paivita-lukittua-paallystysilmoitusta
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-tielta-20-jolla-lukittu-paallystysilmoitus)
+        _ (assert kohde "Ei lukittua kohdetta. Onko testidatassa vikaa?")
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
                                          (-> "test/resurssit/api/paallystysilmoituksen_kirjaus.json"
@@ -351,3 +339,35 @@
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "Ylläpitokohde ei kuulu urakkaan"))))
+
+(deftest avoimen-kohteen-paivittaminen-toimii
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+        payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-request.json")
+        {status :status} (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
+                                                 kayttaja-paallystys portti
+                                                 payload)]
+    (is (= 200 status))
+
+    (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
+          oletettu-tr-osoite {:numero 20, :aosa 14, :aet 1, :losa 17, :loppuet 1}
+          alikohteiden-tr-osoitteet (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id)
+          oletettu-ensimmaisen-alikohteen-tr-osoite {:numero nil, :aosa 14, :aet 1, :losa 14, :loppuet 666}
+          oletettu-toisen-alikohteen-tr-osoite {:aet 666 :aosa 14 :loppuet 1 :losa 17 :numero nil}]
+      (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
+      (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 2 kpl")
+      (is (= oletettu-ensimmaisen-alikohteen-tr-osoite (first alikohteiden-tr-osoitteet))
+          "Ensimmäisen alikohteen tierekisteriosite on päivittynyt oikein")
+      (is (= oletettu-toisen-alikohteen-tr-osoite (second alikohteiden-tr-osoitteet))
+          "Toisen alikohteen tierekisteriosite on päivittynyt oikein"))))
+
+(deftest paallystysilmoituksellisen-kohteen-paivitys-ei-onnistu
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-request.json")
+        {status :status body :body} (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
+                                                            kayttaja-paallystys portti
+                                                            payload)]
+    (is (= 400 status))
+    (is (= "lukittu-yllapitokohde" (:koodi (:virhe (first (:virheet (cheshire/decode body true))))))
+        "Virheelliselle kirjaukselle palautetaan oikea virhekoodi.")))

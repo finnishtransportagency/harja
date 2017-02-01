@@ -3,10 +3,11 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.tilannekuva.tilannekuva :as tiedot]
             [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva-kartalla]
+            [harja.views.tilannekuva.tienakyma :as tienakyma]
+            [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot]
             [harja.views.kartta :as kartta]
             [harja.ui.valinnat :as ui-valinnat]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.views.kartta.popupit :as popupit]
             [harja.views.murupolku :as murupolku]
             [harja.ui.kentat :as kentat]
             [harja.ui.yleiset :as yleiset]
@@ -21,7 +22,13 @@
             [harja.ui.modal :as modal]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.tilannekuva :as domain]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.ui.bootstrap :as bs]
+            [harja.ui.lomake :as lomake]
+            [harja.ui.napit :as napit]
+            [harja.domain.roolit :as roolit]
+            [harja.ui.grid :as grid]
+            [clojure.string :as str])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction-writable]]))
 
@@ -43,20 +50,6 @@
      (or (hae-arvo)
          (do (swap! paneelien-tila-atomit assoc paneeli (atom luotavan-arvo))
              (hae-arvo))))))
-
-(defn tilan-vaihtaja []
-  (let [on-off-tila (atom (not= :nykytilanne @tiedot/valittu-tila))]
-    (fn []
-      [:div#tk-tilan-vaihto
-       [:div.tk-tilan-vaihto-nykytilanne "Nykytilanne"]
-       [:div.tk-tilan-vaihto-historia "Historia"]
-       [on-off/on-off-valinta on-off-tila {:luokka "on-off-tilannekuva"
-                                           :on-change (fn []
-                                                        ;; Päivitä valittu tila
-                                                        (reset! tiedot/valittu-tila
-                                                                (if (false? @on-off-tila)
-                                                                  :nykytilanne
-                                                                  :historiakuva)))}]])))
 
 (defn nykytilanteen-aikavalinnat []
   [:div#tk-nykytilanteen-aikavalit
@@ -95,7 +88,7 @@
    vain atomin ilmoittama ryhmä voi olla kerrallaan auki. Jos kokoelmaa ei anneta, tämä checkbox-ryhmä ylläpitää
    itse omaa auki/kiinni-tilaansa."
   ([otsikko suodattimet-atom ryhma-polku]
-    (checkbox-suodatinryhma otsikko suodattimet-atom ryhma-polku nil))
+   (checkbox-suodatinryhma otsikko suodattimet-atom ryhma-polku nil))
   ([otsikko suodattimet-atom ryhma-polku {:keys [auki-atomi?] :as optiot}]
    (let [oma-auki-tila (or auki-atomi? (atom false))
          ryhmanjohtaja-tila-atom (reaction-writable
@@ -105,7 +98,7 @@
                                        :ei-valittu
                                        :osittain-valittu)))]
      (fn [otsikko suodattimet-atom ryhma-polku {:keys [luokka sisallon-luokka otsikon-luokka
-                                                                     nayta-lkm? kokoelma-atom] :as optiot}]
+                                                       nayta-lkm? kokoelma-atom] :as optiot}]
        (let [ryhman-elementtien-avaimet (or (get-in tk/tehtavien-jarjestys ryhma-polku)
                                             (sort-by :otsikko (keys (get-in @suodattimet-atom ryhma-polku))))
              auki? (fn [] (or @oma-auki-tila
@@ -116,7 +109,7 @@
          (when-not (empty? ryhman-elementtien-avaimet)
            [:div {:class (str "tk-checkbox-ryhma" (when luokka (str " " luokka)))}
             [:div
-             {:class    (str "tk-checkbox-ryhma-otsikko klikattava " (when (auki?) "alaraja"))
+             {:class (str "tk-checkbox-ryhma-otsikko klikattava " (when (auki?) "alaraja"))
               :on-click (fn [_]
                           (if kokoelma-atom
                             ;; Osa kokoelmaa, vain yksi kokoelman jäsen voi olla kerrallaan auki
@@ -158,23 +151,23 @@
   [otsikko {:keys [salli-piilotus? luokka auki-atomi? otsikon-luokka] :as optiot} sisalto]
   (when otsikko
     (let [auki? (or auki-atomi? (atom true))]
-     (fn [otsikko {:keys [salli-piilotus? luokka otsikon-luokka] :as optiot} sisalto]
-       [:div {:class (str "tk-asetuskokoelma" (when luokka (str " " luokka)))}
-        (when salli-piilotus?
-          [:div {:class    (str
-                             "tk-chevron-ryhma-tila chevron-rotate chevron-tk-asetuskokoelma "
-                             (when-not @auki? "chevron-rotate-down"))
-                 :on-click #(swap! auki? not)}
-           (if @auki?
-             (ikonit/livicon-chevron-down)
-             (ikonit/livicon-chevron-right))])
-        [:div {:class (str "tk-otsikko "
-                           (when salli-piilotus?
-                             "tk-otsikko-sisenna")
-                           (when otsikon-luokka (str " " otsikon-luokka)))}
-         otsikko]
-        (when @auki?
-          sisalto)]))))
+      (fn [otsikko {:keys [salli-piilotus? luokka otsikon-luokka] :as optiot} sisalto]
+        [:div {:class (str "tk-asetuskokoelma" (when luokka (str " " luokka)))}
+         (when salli-piilotus?
+           [:div {:class (str
+                           "tk-chevron-ryhma-tila chevron-rotate chevron-tk-asetuskokoelma "
+                           (when-not @auki? "chevron-rotate-down"))
+                  :on-click #(swap! auki? not)}
+            (if @auki?
+              (ikonit/livicon-chevron-down)
+              (ikonit/livicon-chevron-right))])
+         [:div {:class (str "tk-otsikko "
+                            (when salli-piilotus?
+                              "tk-otsikko-sisenna")
+                            (when otsikon-luokka (str " " otsikon-luokka)))}
+          otsikko]
+         (when @auki?
+           sisalto)]))))
 
 (def tilannekuvan-alueet ["Uusimaa"
                           "Varsinais-Suomi"
@@ -201,9 +194,9 @@
        (urakkatyypin-otsikot tyyppi)
        ;; TODO: poista kuollut koodi kunhan todetaan kumpi on parempi
        {:salli-piilotus? true
-        :auki-atomi?     (paneelin-tila-atomi! (keyword (str (name tyyppi) "-aluesuodatin")) false)
-        :luokka          "taustavari-taso2 ylaraja"
-        :otsikon-luokka  "fontti-taso2"}
+        :auki-atomi? (paneelin-tila-atomi! (keyword (str (name tyyppi) "-aluesuodatin")) false)
+        :luokka "taustavari-taso2 ylaraja"
+        :otsikon-luokka "fontti-taso2"}
        [:div.tk-suodatinryhmat
         (doall
           (for [alue tilannekuvan-alueet]
@@ -232,58 +225,76 @@
                                (some? (some true? valitut)))]
         [:div
          [asetuskokoelma
-         (cond
-           ensimmainen-haku-kaynnissa? "Haetaan urakoita"
-           onko-alueita? "Hae urakoista"
-           :else "Ei näytettäviä urakoita")
-         {:salli-piilotus? true
-          :auki-atomi? (paneelin-tila-atomi! :aluesuodattimet true)
-          :luokka "taustavari-taso1 eroa-huipulla ylaraja"
-          :otsikon-luokka "fontti-taso1"}
-        (if ensimmainen-haku-kaynnissa?
-           [yleiset/ajax-loader]
-           [:div.tk-suodatinryhmat
-            (doall
-              (for [urakkatyyppi tyypit-joissa-alueita]
-                ^{:key (str "aluesuodattimet-tyypille-" urakkatyyppi)}
-                [tyypin-aluesuodattimet urakkatyyppi]))])]
+          (cond
+            ensimmainen-haku-kaynnissa? "Haetaan urakoita"
+            onko-alueita? "Hae urakoista"
+            :else "Ei näytettäviä urakoita")
+          {:salli-piilotus? true
+           :auki-atomi? (paneelin-tila-atomi! :aluesuodattimet true)
+           :luokka "taustavari-taso1 eroa-huipulla ylaraja"
+           :otsikon-luokka "fontti-taso1"}
+          (if ensimmainen-haku-kaynnissa?
+            [yleiset/ajax-loader]
+            [:div.tk-suodatinryhmat
+             (doall
+               (for [urakkatyyppi tyypit-joissa-alueita]
+                 ^{:key (str "aluesuodattimet-tyypille-" urakkatyyppi)}
+                 [tyypin-aluesuodattimet urakkatyyppi]))])]
          (when (and (not alueita-valittu?) (not ensimmainen-haku-kaynnissa?))
            [yleiset/vihje "Yhtään aluetta ei ole valittu."])]))))
 
 (defn- aikasuodattimet []
-  (let [yleiset-asetukset {:luokka          "taustavari-taso3 ylaraja"
-                           :otsikon-luokka  "fontti-taso3"
+  (let [yleiset-asetukset {:luokka "taustavari-taso3 ylaraja"
+                           :otsikon-luokka "fontti-taso3"
                            :sisallon-luokka "taustavari-taso4"
                            :kokoelma-atom auki-oleva-checkbox-ryhma
                            :nayta-lkm? false}]
     [asetuskokoelma
-    (str "Näytä aikavälillä" (when-not (= :nykytilanne @tiedot/valittu-tila)
-                               " (max. yksi vuosi):"))
-    {:salli-piilotus? false
-     :luokka          "taustavari-taso0"}
-    [:div
-     (when (= :nykytilanne @tiedot/valittu-tila)
-       [nykytilanteen-aikavalinnat])
-     (when (= :historiakuva @tiedot/valittu-tila)
-       [historiankuvan-aikavalinnat])
-     [:div.tk-yksittaiset-suodattimet.fontti-taso3
-      [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat"
-       tiedot/suodattimet [:turvallisuus tk/turvallisuuspoikkeamat]
-       auki-oleva-checkbox-ryhma]]
-     [:div {:class "tk-suodatinryhmat"}
-      [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit]
-       (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:ilmoitukset :tyypit]) false)})]
-      [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito]
-       (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:yllapito]) false)})]
-      [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi]
-       (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:talvi]) false)})]
-      [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa]
-       (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:kesa]) false)})]
-      [checkbox-suodatinryhma "Laatupoikkeamat" tiedot/suodattimet [:laatupoikkeamat]
-       (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:laatupoikkeamat]) false)})]
-      [checkbox-suodatinryhma "Tarkastukset" tiedot/suodattimet [:tarkastukset]
-       (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:tarkastukset]) false)
-                                 :luokka "taustavari-taso3 yla-ja-alaraja"})]]]]))
+     (str "Näytä aikavälillä" (when-not (= :nykytilanne @tiedot/valittu-tila)
+                                " (max. yksi vuosi):"))
+     {:salli-piilotus? false
+      :luokka "taustavari-taso0"}
+     [:div
+      (when (= :nykytilanne @tiedot/valittu-tila)
+        [nykytilanteen-aikavalinnat])
+      (when (= :historiakuva @tiedot/valittu-tila)
+        [historiankuvan-aikavalinnat])
+      [:div.tk-yksittaiset-suodattimet.fontti-taso3
+       [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat"
+        tiedot/suodattimet [:turvallisuus tk/turvallisuuspoikkeamat]
+        auki-oleva-checkbox-ryhma]]
+      [:div {:class "tk-suodatinryhmat"}
+       [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit]
+        (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:ilmoitukset :tyypit]) false)})]
+       [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito]
+        (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:yllapito]) false)})]
+       [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi]
+        (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:talvi]) false)})]
+       [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa]
+        (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:kesa]) false)})]
+       [checkbox-suodatinryhma "Laatupoikkeamat" tiedot/suodattimet [:laatupoikkeamat]
+        (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:laatupoikkeamat]) false)})]
+       [checkbox-suodatinryhma "Tarkastukset" tiedot/suodattimet [:tarkastukset]
+        (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:tarkastukset]) false)
+                                  :luokka "taustavari-taso3 yla-ja-alaraja"})]]]]))
+
+(defn nykytilanne-valinnat []
+  [:span.tilannekuva-nykytilanne-valinnat
+   [aikasuodattimet]
+   [aluesuodattimet]])
+
+(defn historiakuva-valinnat []
+  [:span.tilannekuva-historiakuva-valinnat
+   [aikasuodattimet]
+   [aluesuodattimet]])
+
+(defn tienakyma []
+  (komp/luo
+   ;; Poistetaan muu tilannekuvan karttataso näkyvistä kun ollaan tienäkymässä
+   (komp/sisaan-ulos #(reset! tilannekuva-kartalla/karttataso-tilannekuva false)
+                     #(reset! tilannekuva-kartalla/karttataso-tilannekuva true))
+   (fn []
+     [tienakyma/tienakyma])))
 
 (defn suodattimet []
   (let [resize-kuuntelija (fn [this _]
@@ -296,19 +307,71 @@
         [:div#tk-suodattimet {:style {:max-height @hallintapaneeli-max-korkeus
                                       :overflow-x "hidden"
                                       :overflow-y "auto"}}
-         [tilan-vaihtaja]
-         [aikasuodattimet]
-         [aluesuodattimet]]))))
+         [bs/tabs {:active (nav/valittu-valilehti-atom :tilannekuva)}
+          "Nykytilanne"
+          :nykytilanne
+          [nykytilanne-valinnat]
 
-(def hallintapaneeli (atom {1 {:auki true :otsikko "Hallintapaneeli" :sisalto [suodattimet]}}))
+          "Historiakuva"
+          :historiakuva
+          [historiakuva-valinnat]
+
+          "Tienäkymä"
+          :tienakyma
+          (when (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+            [tienakyma])]]))))
+
+(defonce hallintapaneeli-auki (atom {:hallintapaneeli true}))
+
+(defn hallintapaneeli []
+  [yleiset/haitari-paneelit
+   {:auki @hallintapaneeli-auki
+    :luokka "haitari-tilannekuva"
+    :toggle-osio! #(swap! hallintapaneeli-auki update % not)}
+
+   "Hallintapaneeli" :hallintapaneeli [suodattimet]])
+
+(defn- yllapitokohteen-yhteyshenkilot-modal [yhteyshenkilot]
+  (log "Näytetään yhteyshenkilöt modalissa: " (pr-str yhteyshenkilot))
+  (modal/nayta!
+    {:otsikko "Kohteen urakan yhteyshenkilöt"
+     :footer [:span
+              [:button.nappi-toissijainen {:type "button"
+                                           :on-click #(do (.preventDefault %)
+                                                          (modal/piilota!))}
+               "Sulje"]]}
+    [:div
+     [grid/grid
+      {:otsikko "Yhteyshenkilöt"
+       :tyhja "Ei yhteyshenkilöitä."}
+      [{:otsikko "Rooli" :nimi :rooli :tyyppi :string}
+       {:otsikko "Nimi" :nimi :nimi :tyyppi :string
+        :hae #(str (:etunimi %) " " (:sukunimi %))}
+       {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin}
+       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin}
+       {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
+      yhteyshenkilot]]))
 
 (defn tilannekuva []
   (komp/luo
+    (komp/watcher tiedot/valittu-tila
+                  (fn [_ _ uusi-tila]
+                    (reset! kartta-tiedot/pida-geometriat-nakyvilla?
+                            (case uusi-tila
+                              :nykytilanne false
+                              :historiakuva true
+                              :tienakyma true
+                              true))))
     (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva istunto/ajastin-taukotilassa?)
-    (komp/sisaan-ulos #(do (reset! kartta-tiedot/pida-geometriat-nakyvilla? false)
-                           (kartta/aseta-paivitetaan-karttaa-tila! true)
+    (komp/sisaan-ulos #(do (kartta/aseta-paivitetaan-karttaa-tila! true)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa @nav/valittu-urakka)
                            (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa @nav/valittu-hallintayksikko)
+                           (kartta-tiedot/kasittele-infopaneelin-linkit!
+                             {:paallystys
+                              {:toiminto (fn [yllapitokohdeosa]
+                                           (yllapitokohteen-yhteyshenkilot-modal
+                                             (get-in yllapitokohdeosa [:yllapitokohde :yhteyshenkilot])))
+                               :teksti "Näytä yhteyshenkilöt"}})
                            (tiedot/seuraa-alueita!))
                       #(do (reset! kartta-tiedot/pida-geometriat-nakyvilla? true)
                            (kartta/aseta-paivitetaan-karttaa-tila! false)
@@ -316,24 +379,8 @@
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa nil)
                            (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa nil)
                            (tiedot/lopeta-alueiden-seuraus!)))
-    (komp/kuuntelija [:toteuma-klikattu :ilmoitus-klikattu
-                      :laatupoikkeama-klikattu :tarkastus-klikattu :turvallisuuspoikkeama-klikattu
-                      :paallystys-klikattu :paikkaus-klikattu :tyokone-klikattu
-                      :uusi-tyokonedata :tietyomaa-klikattu]
-                     (fn [_ tapahtuma] (popupit/nayta-popup tapahtuma))
-                     :popup-suljettu
-                     #(reset! popupit/klikattu-tyokone nil)
-                     :ilmoituksen-kuittaustiedot-päivitetty
-                     (fn [_ ilmoitus]
-                       (modal/piilota!)
-                       (tiedot/paivita-ilmoituksen-tiedot (:id ilmoitus))))
-    {:component-will-mount   (fn [_]
-                               (kartta-tiedot/aseta-yleiset-kontrollit!
-                                 [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? false
-                                                                   :luokka               "haitari-tilannekuva"}]))
-     :component-will-unmount (fn [_]
-                               (kartta-tiedot/tyhjenna-yleiset-kontrollit!)
-                               (kartta/poista-popup!))}
+    (komp/karttakontrollit :tilannekuva
+                           [hallintapaneeli])
     (fn []
       [:span.tilannekuva
        [kartta/kartan-paikka]])))

@@ -61,7 +61,6 @@
 
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Indeksitarkistusraportti Oulun alueurakka 2014-2019 01.08.2015 - 31.08.2015")
-
     (apurit/tarkista-taulukko-rivit
       taulukko
 
@@ -69,16 +68,16 @@
             akilliset-hoitotyot sanktiot suolabonus-ja-sakko
             yhteensa & _ ]]
         (and (= kuukausi "elo")
-             (=marginaalissa? kokhint 228.38M)
-             (=marginaalissa? ykshint 50.75M)
-             (=marginaalissa? erilliskust 16.92M)
-             (=marginaalissa? bonus 4.07)
-             (=marginaalissa? muutos-ja-lisatyot 33.83M)
-             (=marginaalissa? vahinkojen-korjaukset 16.92M)
-             (=marginaalissa? akilliset-hoitotyot 16.92M)
-             (=marginaalissa? sanktiot -30.45M)
-             (=marginaalissa? suolabonus-ja-sakko -94.99M)
-             (=marginaalissa? yhteensa 242.34M)
+             (=marginaalissa? (apurit/raporttisolun-arvo kokhint) 232.75M)
+             (=marginaalissa? (apurit/raporttisolun-arvo ykshint) 51.72M)
+             (=marginaalissa? (apurit/raporttisolun-arvo erilliskust) 17.24M)
+             (=marginaalissa? (apurit/raporttisolun-arvo bonus) 4.07)
+             (=marginaalissa? (apurit/raporttisolun-arvo muutos-ja-lisatyot) 34.48M)
+             (=marginaalissa? (apurit/raporttisolun-arvo vahinkojen-korjaukset) 17.24M)
+             (=marginaalissa? (apurit/raporttisolun-arvo akilliset-hoitotyot) 17.24M)
+             (=marginaalissa? (apurit/raporttisolun-arvo sanktiot) -31.03M)
+             (=marginaalissa? (apurit/raporttisolun-arvo suolabonus-ja-sakko) -104.52M)
+             (=marginaalissa? (apurit/raporttisolun-arvo yhteensa) 239.20M)
 
              (=marginaalissa? yhteensa laskutusyhteenveto-indeksien-nurkkasumma)))
       (fn [[yht & _]]
@@ -115,17 +114,17 @@
                                              (fn [[kuukausi kok-hint yks-hint er-kust bonus muutos vahinkojen-korjaukset akilliset-hoitotyot sanktiot
                                                    suolabonus yhteensa :as rivi]]
                                                (and (= (count rivi) 11)
-                                                    (string? kuukausi)
-                                                    (number? kok-hint)
-                                                    (number? yks-hint)
-                                                    (number? er-kust)
-                                                    (number? bonus)
-                                                    (number? muutos)
-                                                    (number? vahinkojen-korjaukset)
-                                                    (number? akilliset-hoitotyot)
-                                                    (number? sanktiot)
-                                                    (number? suolabonus)
-                                                    (number? yhteensa)))))
+                                                    (string? (apurit/raporttisolun-arvo kuukausi))
+                                                    (number? (apurit/raporttisolun-arvo kok-hint))
+                                                    (number? (apurit/raporttisolun-arvo yks-hint))
+                                                    (number? (apurit/raporttisolun-arvo er-kust))
+                                                    (number? (apurit/raporttisolun-arvo bonus))
+                                                    (number? (apurit/raporttisolun-arvo muutos))
+                                                    (number? (apurit/raporttisolun-arvo vahinkojen-korjaukset))
+                                                    (number? (apurit/raporttisolun-arvo akilliset-hoitotyot))
+                                                    (number? (apurit/raporttisolun-arvo sanktiot))
+                                                    (number? (apurit/raporttisolun-arvo suolabonus))
+                                                    (number? (apurit/raporttisolun-arvo yhteensa))))))
 
     ;; Talvihoito
     (let [otsikko "Talvihoito"
@@ -146,17 +145,17 @@
                                              (fn [[kuukausi kok-hint yks-hint er-kust bonus muutos vahinkojen-korjaukset akilliset-hoitotyot sanktiot
                                                    suolabonus yhteensa :as rivi]]
                                                (and (= (count rivi) 11)
-                                                    (string? kuukausi)
-                                                    (number? kok-hint)
-                                                    (number? yks-hint)
-                                                    (number? er-kust)
-                                                    (number? bonus)
-                                                    (number? muutos)
-                                                    (number? vahinkojen-korjaukset)
-                                                    (number? akilliset-hoitotyot)
-                                                    (number? sanktiot)
-                                                    (number? suolabonus)
-                                                    (number? yhteensa)))))
+                                                    (string? (apurit/raporttisolun-arvo kuukausi))
+                                                    (number? (apurit/raporttisolun-arvo kok-hint))
+                                                    (number? (apurit/raporttisolun-arvo yks-hint))
+                                                    (number? (apurit/raporttisolun-arvo er-kust))
+                                                    (number? (apurit/raporttisolun-arvo bonus))
+                                                    (number? (apurit/raporttisolun-arvo muutos))
+                                                    (number? (apurit/raporttisolun-arvo vahinkojen-korjaukset))
+                                                    (number? (apurit/raporttisolun-arvo akilliset-hoitotyot))
+                                                    (number? (apurit/raporttisolun-arvo sanktiot))
+                                                    (number? (apurit/raporttisolun-arvo suolabonus))
+                                                    (number? (apurit/raporttisolun-arvo yhteensa))))))
 
     ;; Liikenneympäristön hoito
     (let [otsikko "Liikenneympäristön hoito"
@@ -176,16 +175,16 @@
                                              (fn [[kuukausi kok-hint yks-hint er-kust bonus muutos vahinkojen-korjaukset akilliset-hoitotyot sanktiot
                                                    yhteensa :as rivi]]
                                                (and (= (count rivi) 10)
-                                                    (string? kuukausi)
-                                                    (number? kok-hint)
-                                                    (number? yks-hint)
-                                                    (number? er-kust)
-                                                    (number? bonus)
-                                                    (number? muutos)
-                                                    (number? vahinkojen-korjaukset)
-                                                    (number? akilliset-hoitotyot)
-                                                    (number? sanktiot)
-                                                    (number? yhteensa)))))
+                                                    (string? (apurit/raporttisolun-arvo kuukausi))
+                                                    (number? (apurit/raporttisolun-arvo kok-hint))
+                                                    (number? (apurit/raporttisolun-arvo yks-hint))
+                                                    (number? (apurit/raporttisolun-arvo er-kust))
+                                                    (number? (apurit/raporttisolun-arvo bonus))
+                                                    (number? (apurit/raporttisolun-arvo muutos))
+                                                    (number? (apurit/raporttisolun-arvo vahinkojen-korjaukset))
+                                                    (number? (apurit/raporttisolun-arvo akilliset-hoitotyot))
+                                                    (number? (apurit/raporttisolun-arvo sanktiot))
+                                                    (number? (apurit/raporttisolun-arvo yhteensa))))))
 
     ;; Soratien hoito
     (let [otsikko "Soratien hoito"
@@ -205,13 +204,13 @@
                                              (fn [[kuukausi kok-hint yks-hint er-kust bonus muutos vahinkojen-korjaukset akilliset-hoitotyot sanktiot
                                                    yhteensa :as rivi]]
                                                (and (= (count rivi) 10)
-                                                    (string? kuukausi)
-                                                    (number? kok-hint)
-                                                    (number? yks-hint)
-                                                    (number? er-kust)
-                                                    (number? bonus)
-                                                    (number? muutos)
-                                                    (number? vahinkojen-korjaukset)
-                                                    (number? akilliset-hoitotyot)
-                                                    (number? sanktiot)
-                                                    (number? yhteensa)))))))
+                                                    (string? (apurit/raporttisolun-arvo kuukausi))
+                                                    (number? (apurit/raporttisolun-arvo kok-hint))
+                                                    (number? (apurit/raporttisolun-arvo yks-hint))
+                                                    (number? (apurit/raporttisolun-arvo er-kust))
+                                                    (number? (apurit/raporttisolun-arvo bonus))
+                                                    (number? (apurit/raporttisolun-arvo muutos))
+                                                    (number? (apurit/raporttisolun-arvo vahinkojen-korjaukset))
+                                                    (number? (apurit/raporttisolun-arvo akilliset-hoitotyot))
+                                                    (number? (apurit/raporttisolun-arvo sanktiot))
+                                                    (number? (apurit/raporttisolun-arvo yhteensa))))))))

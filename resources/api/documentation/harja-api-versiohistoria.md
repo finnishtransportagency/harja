@@ -1,8 +1,18 @@
-<b>Nykyinen versio: 1.0.4</b>
-<b>Julkaistu: 16.11.2016</b>
+<b>Nykyinen versio: 1.0.9</b>  
+<b>Julkaistu: 24.1.2017</b>
 
 <b>Versiohistoria:</b>
-
+- Versionumero: 1.0.9 Julkaistu: 24.1.2017:
+    - Salli tarkastuksille suppeammat tiedot tarkastajasta.
+- Versionumero: 1.0.8 Julkaistu: 13.1.2017:
+    - Päällystysilmoituksen kirjauksesta poistettu mahdollisuus kirjata taloudellinen osa (tyot-avaimen sisältö). Päällystysilmoituksella ei ole enää taloudellista osaa, vaan nämä tiedot käsitellään jatkossa omalla tietomallilla, jolle tulee myöhemmin oma API.
+- Versionumero: 1.0.7 Julkaistu: 2.1.2017:
+    - Lisätty toteumien ja tarkastusten poisto
+- Versionumero: 1.0.6 Julkaistu: 29.12.2016:
+    - Työkoneiden reaaliaikaseurannan rajapintaan lisätty jyrät uutena työkonetyyppinä.
+    - Lisätty uusi rajapinta ylläpitokohteen tietojen päivittämiselle
+- Versionumero: 1.0.5 Julkaistu: 21.12.2016:
+    - Urakan yhteystietorajapintaan lisätty tieto urakan vastuu- ja varahenkilöistä 
 - Versionumero: 1.0.4 Julkaistu: 16.11.2016:
     - Poistettu päällystysilmoitukselta omat aikataulutiedot. Jatkossa päällystysilmoituksen aloituspvm, kohteen valmistumispvm ja päällystyksen valmistumispvm ovat sama asia kuin ilmoitukseen kuuluvan ylläpitokohteen vastaavat tiedot.
     - Lisätty päällystysilmoituksen kirjaukseen uusi kenttä "valmis-kasiteltavaksi" (true/false/null). Jos tässä kentässä on arvona true, asetetaan päällystysilmoitus valmiiksi tilaajan käsiteltäväksi (ellei jo ole käsiteltävänä tai käsitelty).

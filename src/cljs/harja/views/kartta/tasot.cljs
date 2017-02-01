@@ -27,7 +27,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.ui.openlayers.taso :as taso]
-            [harja.ui.kartta.varit.puhtaat :as varit])
+            [harja.ui.kartta.varit.puhtaat :as varit]
+            [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -48,8 +49,11 @@
     :paikkauskohteet
     :tr-valitsin
     :nakyman-geometriat
+    :infopaneelin-merkki
     :tilannekuva
-    :tilannekuva-organisaatiot})
+    :tilannekuva-organisaatiot
+    :tienakyma-valitut
+    :tienakyma-muut})
 
 (defn kartan-asioiden-z-indeksit [taso]
   (case taso
@@ -57,6 +61,7 @@
     :urakka 1
     :pohjavesialueet 2
     :sillat 3
+    :tienakyma-muut 3
     4))
 
 (def ^{:doc "Kartalle piirrettävien tasojen oletus-zindex. Urakat ja muut
@@ -130,15 +135,7 @@
 ;; Ad hoc geometrioiden näyttäminen näkymistä
 ;; Avain on avainsana ja arvo on itse geometria
 (defonce nakyman-geometriat (atom {}))
-
-(defn nayta-geometria! [avain geometria]
-  (assert (and (map? geometria)
-               (contains? geometria :alue))
-          "Geometrian tulee olla mäpissä :alue avaimessa!")
-  (swap! nakyman-geometriat assoc avain geometria))
-
-(defn poista-geometria! [avain]
-  (swap! nakyman-geometriat dissoc avain))
+(defonce infopaneelin-merkki (atom {}))
 
 (defn- aseta-z-index
   ([taso] (aseta-z-index taso oletus-zindex))
@@ -170,8 +167,24 @@
    :paikkauskohteet paikkaus/paikkauskohteet-kartalla
    :tr-valitsin tierekisteri/tr-alkupiste-kartalla
    :nakyman-geometriat nakyman-geometriat
+   :infopaneelin-merkki infopaneelin-merkki
    :tilannekuva tilannekuva/tilannekuvan-asiat-kartalla
-   :tilannekuva-organisaatiot tilannekuva/tilannekuvan-organisaatiot})
+   :tilannekuva-organisaatiot tilannekuva/tilannekuvan-organisaatiot
+   :tienakyma-valitut tienakyma-tiedot/valitut-tulokset-kartalla
+   :tienakyma-muut tienakyma-tiedot/muut-tulokset-kartalla})
+
+(defn nayta-geometria!
+  ([avain geometria] (nayta-geometria! avain geometria :nakyman-geometriat))
+  ([avain geometria taso]
+   (assert (and (map? geometria)
+                (contains? geometria :alue))
+           "Geometrian tulee olla mäpissä :alue avaimessa!")
+   (swap! (taso geometrioiden-atomit) assoc avain geometria)))
+
+(defn poista-geometria!
+  ([avain] (poista-geometria! avain :nakyman-geometriat))
+  ([avain taso]
+   (swap! (taso geometrioiden-atomit) dissoc avain)))
 
 (defn nakyvat-geometriat-z-indeksilla
   "Palauttaa valitun aiheen geometriat z-indeksilla jos geometrian taso on päällä."
@@ -197,27 +210,31 @@
 (def geometriat-kartalle
   (reaction
     (merge
-     {:organisaatio (taso :organisaatio :urakka 0.7)
-      :tilannekuva-organisaatiot (taso :tilannekuva-organisaatiot :urakka)
-      :pohjavesi (taso :pohjavesi :pohjavesialueet)
-      :sillat (taso :sillat :sillat)
-      :tarkastusreitit (taso :tarkastusreitit)
-      :laatupoikkeamat (taso :laatupoikkeamat)
-      :turvallisuus (taso :turvallisuus)
-      :ilmoitukset (taso :ilmoitukset)
-      :yks-hint-toteumat (taso :yks-hint-toteumat)
-      :kok-hint-toteumat (taso :kok-hint-toteumat)
-      :varusteet (taso :varusteet)
-      :muut-tyot (taso :muut-tyot)
-      :paallystyskohteet (taso :paallystyskohteet)
-      :paikkauskohteet (taso :paikkauskohteet)
-      :tr-valitsin (taso :tr-valitsin (inc oletus-zindex))
-      ;; Yksittäisen näkymän omat mahdolliset geometriat
-      :nakyman-geometriat
-      (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
-                     (inc oletus-zindex))}
+      {:organisaatio (taso :organisaatio :urakka 0.7)
+       :tilannekuva-organisaatiot (taso :tilannekuva-organisaatiot :urakka)
+       :pohjavesi (taso :pohjavesi :pohjavesialueet)
+       :sillat (taso :sillat :sillat)
+       :tarkastusreitit (taso :tarkastusreitit)
+       :laatupoikkeamat (taso :laatupoikkeamat)
+       :turvallisuus (taso :turvallisuus)
+       :ilmoitukset (taso :ilmoitukset)
+       :yks-hint-toteumat (taso :yks-hint-toteumat)
+       :kok-hint-toteumat (taso :kok-hint-toteumat)
+       :varusteet (taso :varusteet)
+       :muut-tyot (taso :muut-tyot)
+       :paallystyskohteet (taso :paallystyskohteet)
+       :paikkauskohteet (taso :paikkauskohteet)
+       :tr-valitsin (taso :tr-valitsin (inc oletus-zindex))
+       :tienakyma-valitut (taso :tienakyma-valitut)
+       :tienakyma-muut (taso :tienakyma-muut :tienakyma-muut 0.4)
+       ;; Yksittäisen näkymän omat mahdolliset geometriat
+       :nakyman-geometriat
+       (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
+                      (inc oletus-zindex))
+       :infopaneelin-merkki (aseta-z-index (vec (vals @(geometrioiden-atomit :infopaneelin-merkki)))
+                                           (+ oletus-zindex 2))}
       ;; Tilannekuvan geometriat muodostetaan hieman eri tavalla
-      (when (true? @(tasojen-nakyvyys-atomit :tilannekuva))
+     (when (true? @(tasojen-nakyvyys-atomit :tilannekuva))
         (into {}
               (map (fn [[tason-nimi tason-sisalto]]
                      {tason-nimi (aseta-z-index tason-sisalto oletus-zindex)})
@@ -240,7 +257,10 @@
    :tr-valitsin tierekisteri/karttataso-tr-alkuosoite
    :tilannekuva tilannekuva/karttataso-tilannekuva
    :tilannekuva-organisaatiot tilannekuva/karttataso-tilannekuva
-   :nakyman-geometriat (atom true)})
+   :tienakyma-valitut tienakyma-tiedot/karttataso-tienakyma
+   :tienakyma-muut tienakyma-tiedot/karttataso-tienakyma
+   :nakyman-geometriat (atom true)
+   :infopaneelin-merkki (atom true)})
 
 (defonce nykyiset-karttatasot
   (reaction (into #{}

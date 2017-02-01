@@ -10,7 +10,8 @@
     [harja.kyselyt.kayttajat :as kayttajat]
     [harja.kyselyt.tietyomaat :as q-tietyomaat]
     [harja.domain.roolit :as roolit]
-    [harja.domain.yllapitokohteet :as kohteet])
+    [harja.domain.yllapitokohteet :as kohteet]
+    [harja.kyselyt.paallystys :as paallystys-q])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn tarkista-urakka [db urakka-id]
@@ -94,12 +95,12 @@
 
 (defn sijainneissa-virheita? [db tienumero sijainnit]
   (not-every? #(q-tieverkko/onko-tierekisteriosoite-validi?
-                db
-                tienumero
-                (:aosa %)
-                (:aet %)
-                (:losa %)
-                (:let %))
+                 db
+                 tienumero
+                 (:aosa %)
+                 (:aet %)
+                 (:losa %)
+                 (:let %))
               sijainnit))
 
 (defn validoi-kohteiden-sijainnit-tieverkolla [db tienumero kohteen-sijainti alikohteet]
@@ -144,3 +145,12 @@
         (virheet/heita-poikkeus
           virheet/+viallinen-kutsu+
           [{:koodi virheet/+tuntematon-yllapitokohde+ :viesti viesti}])))))
+
+(defn tarkista-saako-kohteen-paivittaa [db kohde-id]
+  (when (paallystys-q/onko-olemassa-paallystysilmoitus? db kohde-id)
+    (do
+      (let [viesti (format "Kohteelle (id: %s) on jo kirjattu päällystysilmoitus. Päivitys ei ole sallittu" kohde-id)]
+        (log/warn viesti)
+        (virheet/heita-poikkeus
+          virheet/+viallinen-kutsu+
+          [{:koodi virheet/+lukittu-yllapitokohde+ :viesti viesti}])))))

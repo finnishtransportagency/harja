@@ -4,7 +4,8 @@
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]
-            [harja.geo :as geo]))
+            [harja.geo :as geo]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]))
 
 (defqueries "harja/kyselyt/laatupoikkeamat.sql"
   {:positional? true})
@@ -14,10 +15,11 @@
 
 (defn luo-tai-paivita-laatupoikkeama
   "Luo uuden laatupoikkeaman tai päivittää olemassaolevan laatupoikkeaman perustiedot. Palauttaa laatupoikkeaman id:n."
-  [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty kuvaus sijainti tr yllapitokohde]}]
+  [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty kuvaus
+                   sijainti tr yllapitokohde poistettu]}]
   (let [{:keys [numero alkuosa loppuosa alkuetaisyys loppuetaisyys]} tr]
     (when yllapitokohde
-      (yllapitokohteet/vaadi-yllapitokohde-kuuluu-urakkaan db urakka yllapitokohde))
+      (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka yllapitokohde))
     (if id
       (do
        (paivita-laatupoikkeaman-perustiedot<! db
@@ -34,6 +36,7 @@
                                                 alkuetaisyys
                                                 loppuetaisyys
                                                 yllapitokohde
+                                                (boolean poistettu)
                                                 id
                                                 urakka)
          id)

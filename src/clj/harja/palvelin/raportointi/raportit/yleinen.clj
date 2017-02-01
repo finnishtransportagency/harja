@@ -6,7 +6,8 @@
              [local :as l]]
             [harja.pvm :as pvm]
             [jeesql.core :refer [defqueries]]
-            [harja.tyokalut.functor :refer [fmap]]))
+            [harja.tyokalut.functor :refer [fmap]]
+            [harja.fmt :as fmt]))
 
 
 (defqueries "harja/palvelin/raportointi/raportit/yleinen.sql")
@@ -197,4 +198,13 @@
                (assoc! nahdyt avain true)
                rivit)))))
 
-(def +erheen-vari+ "#dd0000")
+(defn indeksitiedot [{:keys [perusluku kyseessa-kk-vali?
+                             alkupvm kkn-indeksiarvo]}]
+  [:teksti (str (str "Indeksilaskennan perusluku: " (fmt/desimaaliluku perusluku 1))
+                (when kyseessa-kk-vali?
+                  (str ". Kuukauden " (pvm/kuukausi-ja-vuosi alkupvm)
+                       " " (:nimi kkn-indeksiarvo)
+                       " indeksiarvo"
+                       (if kkn-indeksiarvo
+                         (str ": " (fmt/desimaaliluku (:arvo kkn-indeksiarvo) 1))
+                         " puuttuu."))))])

@@ -62,13 +62,10 @@
        (if (or (= :paallystys (:nakyma optiot))
                (= :paikkaus (:nakyma optiot))
                (= :tiemerkinta (:nakyma optiot)))
-         {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 2
+         {:otsikko "Yllä\u00ADpito\u00ADkoh\u00ADde" :nimi :kohde :leveys 2
           :hae (fn [rivi]
                  (tierekisteri/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
-                                                       :nimi (get-in rivi [:yllapitokohde :nimi])}
-                                                      {:osoite (get-in rivi [:yllapitokohde :tr])
-                                                       :nayta-teksti-tie? false
-                                                       :nayta-teksti-ei-tr-osoitetta? false}))}
+                                                       :nimi (get-in rivi [:yllapitokohde :nimi])}))}
          {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1})
        {:otsikko "TR-osoite"
         :nimi :tr
@@ -84,6 +81,9 @@
   [laatupoikkeama]
   (not (nil? (get-in laatupoikkeama [:paatos :paatos]))))
 
+(defn- vastaava-laatupoikkeama [lp]
+  (some (fn [haettu-lp] (when (= (:id haettu-lp) (:id lp)) haettu-lp)) @laatupoikkeamat/urakan-laatupoikkeamat))
+
 (defn laatupoikkeamat [optiot]
   (komp/luo
     (komp/lippu lp-kartalla/karttataso-laatupoikkeamat)
@@ -91,8 +91,14 @@
     (komp/ulos (kartta-tiedot/kuuntele-valittua! laatupoikkeamat/valittu-laatupoikkeama))
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                        (kartta-tiedot/kasittele-infopaneelin-linkit!
+                          {:laatupoikkeama {:toiminto (fn [lp]
+                                                        (reset! laatupoikkeamat/valittu-laatupoikkeama-id
+                                                                (:id (vastaava-laatupoikkeama lp))))
+                                            :teksti "Valitse laatupoikkeama"}})
                         (nav/vaihda-kartan-koko! :M))
-                      #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
+                      #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+                           (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
     (fn [optiot]
       [:span.laatupoikkeamat
        [kartta/kartan-paikka]

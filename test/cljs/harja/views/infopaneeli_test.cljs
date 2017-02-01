@@ -65,10 +65,10 @@
 (deftest otsikot
   (let [asiat-atomi (r/atom testidata)
         piilota-fn! #(log "piilota-fn! kutsuttu")
-        linkkifunktiot (r/atom {})]
+        linkkifunktiot (r/atom {:toteuma  {:teksti "linkkinappi" :toiminto #(fn [& argit] nil)}})]
     (tarkkaile! "mock-asiat-pisteessä" asiat-atomi)
     (komponenttitesti
-     [sut/infopaneeli @asiat-atomi piilota-fn! linkkifunktiot]
+     [:div.kartan-infopaneeli [sut/infopaneeli @asiat-atomi piilota-fn! linkkifunktiot]]
      (is (not (empty? (infopaneelin-sisalto/skeemamuodossa (:asiat @asiat-atomi)))))
      "infopaneelin sulkunappi ja otsikot, ei tietojen kenttiä"
      (is (= 1 (count (u/sel [:.kartan-infopaneeli :button]))))
@@ -77,6 +77,6 @@
      (is (= 0 (count (u/sel [:.kartan-infopaneeli :.kentan-label]))))
      (u/click (u/sel1 [:.kartan-infopaneeli :span.ip-haitari-otsikko]))
      --
-     "yhden asian tiedot esillä klikkauksen jälkeen"
-     (is (= 5 (count (u/sel [:.kartan-infopaneeli :.kentan-label]))))
-     (is (= 1 (count (u/sel [:.kartan-infopaneeli :.nappi-toissijainen])))))))
+     "yhden asian tiedot esillä klikkauksen jälkeen, ja linkkinappi myös"
+     (is (= 5 (count (u/sel [:.kartan-infopaneeli :.tietorivi]))))
+     (is (= 1 (count (u/sel [:.ip-osio :div :button])))))))

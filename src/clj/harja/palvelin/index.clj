@@ -86,7 +86,7 @@
            [:source {:src "video/keep_alive.webm" :type "video/webm"}]
            [:source {:src "video/keep_alive.ogv" :type "video/ogv"}]]
           [:div#app]
-          [:script {:type "text/javascript" :src "js/compiled/harja_laadunseuranta.js"}]]]
+          [:script {:type "text/javascript" :src "js/compiled/harja_laadunseuranta_dev.js"}]]]
 
         [:html
          [:head

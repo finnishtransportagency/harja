@@ -20,7 +20,9 @@
   (is (nil? (validoi json-skeemat/tietyoilmoituksen-kirjaus json-esimerkit/+tietyoilmoituksen-kirjaus+)))
 
   (is (nil? (validoi json-skeemat/pistetoteuman-kirjaus json-esimerkit/+pistetoteuman-kirjaus+)))
+  (is (nil? (validoi json-skeemat/pistetoteuman-poisto json-esimerkit/+pistetoteuman-poisto+)))
   (is (nil? (validoi json-skeemat/reittitoteuman-kirjaus json-esimerkit/+reittitoteuman-kirjaus+)))
+  (is (nil? (validoi json-skeemat/reittitoteuman-poisto json-esimerkit/+reittitoteuman-poisto+)))
 
   (is (nil? (validoi json-skeemat/turvallisuuspoikkeamien-kirjaus json-esimerkit/+turvallisuuspoikkeamien-kirjaus+)))
 
@@ -36,9 +38,13 @@
   (is (nil? (validoi json-skeemat/varustetoteuman-kirjaus json-esimerkit/+varustetoteuman-kirjaus+)))
 
   (is (nil? (validoi json-skeemat/siltatarkastuksen-kirjaus json-esimerkit/+siltatarkastuksen-kirjaus+)))
+  (is (nil? (validoi json-skeemat/siltatarkastuksen-poisto json-esimerkit/+siltatarkastuksen-poisto+)))
   (is (nil? (validoi json-skeemat/tiestotarkastuksen-kirjaus json-esimerkit/+tiestotarkastuksen-kirjaus+)))
+  (is (nil? (validoi json-skeemat/tiestotarkastuksen-poisto json-esimerkit/+tiestotarkastuksen-poisto+)))
   (is (nil? (validoi json-skeemat/soratietarkastuksen-kirjaus json-esimerkit/+soratietarkastuksen-kirjaus+)))
+  (is (nil? (validoi json-skeemat/soratietarkastuksen-poisto json-esimerkit/+soratietarkastuksen-poisto+)))
   (is (nil? (validoi json-skeemat/talvihoitotarkastuksen-kirjaus json-esimerkit/+talvihoitotarkastuksen-kirjaus+)))
+  (is (nil? (validoi json-skeemat/talvihoitotarkastuksen-poisto json-esimerkit/+talvihoitotarkastuksen-poisto+)))
 
   (is (nil? (validoi json-skeemat/paivystajatietojen-kirjaus json-esimerkit/+paivystajatietojen-kirjaus+)))
   (is (nil? (validoi json-skeemat/paivystajatietojen-haku-vastaus json-esimerkit/+paivystajatietojen-haku-vastaus+)))
@@ -57,4 +63,6 @@
   (is (nil? (validoi json-skeemat/tietyomaan-kirjaus json-esimerkit/+tietyomaan-kirjaus+)))
   (is (nil? (validoi json-skeemat/tietyomaan-poisto json-esimerkit/+tietyomaan-poisto+)))
 
-  (is (nil? (validoi json-skeemat/urakan-yhteystietojen-haku-vastaus json-esimerkit/+urakan-yhteystietoje-hakuvastaus+))))
+  (is (nil? (validoi json-skeemat/urakan-yhteystietojen-haku-vastaus json-esimerkit/+urakan-yhteystietoje-hakuvastaus+)))
+
+  (is (nil? (validoi json-skeemat/urakan-yllapitokohteen-paivitys-request json-esimerkit/+urakan-yllapitokohteen-paivitys-request+))))

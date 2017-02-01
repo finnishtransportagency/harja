@@ -13,13 +13,14 @@
             [cljs-time.core :as t]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.tilannekuva :as tk]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce nakymassa? (atom false))
-(defonce valittu-tila (atom :nykytilanne))
+(defonce valittu-tila (reaction (nav/valittu-valilehti :tilannekuva)))
 
 (def
   ^{:doc "Kuinka pitkä urakan nimi hyväksytään pudotusvalikkoon"
@@ -56,7 +57,8 @@ hakutiheys-historiakuva 1200000)
                 tk/tiemerkintakone false
                 tk/kuumennuslaite false
                 tk/sekoitus-ja-stabilointijyrsin false
-                tk/tma-laite false}
+                tk/tma-laite false
+                tk/jyra false}
      :ilmoitukset {:tyypit {tk/tpp false
                             tk/tur false
                             tk/urk false}}
@@ -324,14 +326,6 @@ hakutiheys-historiakuva 1200000)
          :aikavali-historia @historiakuvan-aikavali
          :suodattimet @suodattimet}))
 
-(def tyhjenna-popupit-kun-filtterit-muuttuu
-  (run!
-    @valittu-tila
-    @nykytilanteen-aikasuodattimen-arvo
-    @historiakuvan-aikavali
-    @suodattimet
-    (kartta/poista-popup!)))
-
 (defn kartan-tyypiksi [t avain tyyppi]
   (assoc t avain (map #(assoc % :tyyppi-kartalla tyyppi) (avain t))))
 
@@ -344,6 +338,11 @@ hakutiheys-historiakuva 1200000)
       (not= @suodattimet
             (:suodattimet @edellisen-haun-kayttajan-suodattimet))))
 
+(defn- kasittele-tilannekuvan-hakutulos [tulos]
+  (let [paallystykset (yllapitokohteet/yllapitokohteet-kartalle (:paallystys tulos))
+        paikkaukset (yllapitokohteet/yllapitokohteet-kartalle (:paikkaus tulos))]
+  (assoc tulos :paallystys paallystykset
+               :paikkaus paikkaukset)))
 
 (defn hae-asiat [hakuparametrit]
   (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ") " (pr-str hakuparametrit))
@@ -364,8 +363,10 @@ hakutiheys-historiakuva 1200000)
             (k/url-parametri (aikaparametrilla-kuva (dissoc hakuparametrit :alue))))
 
     (let [tulos (-> (<! (k/post! :hae-tilannekuvaan (aikaparametrilla hakuparametrit)))
-                    (assoc :tarkastukset (:tarkastukset hakuparametrit)))]
+                    (assoc :tarkastukset (:tarkastukset hakuparametrit)))
+          tulos (kasittele-tilannekuvan-hakutulos tulos)]
       (when @nakymassa?
+        (reset! tilannekuva-kartalla/valittu-tila @valittu-tila)
         (reset! tilannekuva-kartalla/haetut-asiat tulos))
       (kartta/aseta-paivitetaan-karttaa-tila! false))))
 
@@ -407,7 +408,8 @@ hakutiheys-historiakuva 1200000)
           (paivita-periodisesti asioiden-haku
                                 (case @valittu-tila
                                   :nykytilanne hakutiheys-nykytilanne
-                                  :historiakuva hakutiheys-historiakuva))))
+                                  :historiakuva hakutiheys-historiakuva
+                                  :tienakyma hakutiheys-historiakuva))))
 
 (defn lopeta-periodinen-haku-jos-kaynnissa []
   (when @lopeta-haku

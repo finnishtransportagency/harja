@@ -27,10 +27,15 @@
               :media "(max-width: 700px)"}]
     [:img {:src kuvat/+harja-logo+ :alt ""}]]])
 
-(defn- havaintosilma [havaintonappi-painettu]
-  (let [aktiivinen? (and @s/nayta-paanavigointi?
-                         @s/piirra-paanavigointi?)
-        disabloitu? (not @s/tarkastusajo-kaynnissa?)]
+(defn- havaintosilma [{:keys [havaintonappi-painettu
+                              nayta-paanavigointi?
+                              piirra-paanavigointi?
+                              havaintolomake-auki?
+                              tarkastusajo-kaynnissa?]}]
+  (let [aktiivinen? (and nayta-paanavigointi?
+                         piirra-paanavigointi?)
+        disabloitu? (or (not tarkastusajo-kaynnissa?)
+                        havaintolomake-auki?)]
     [:div {:class (str "ylapalkki-button ylapalkki-button-nayta-paanavigointi "
                        (when aktiivinen?
                          "ylapalkki-button-aktiivinen ")
@@ -41,71 +46,80 @@
      [kuvat/svg-sprite "silma-24"]]))
 
 (defn- tieosoite [tr-osoite]
-  [:div.tr-osoite (formatoi-tr-osoite @tr-osoite)])
+  [:div.tr-osoite (formatoi-tr-osoite tr-osoite)])
 
 (defn- metatiedot [soratiehoitoluokka hoitoluokka]
   [:div.ylapalkin-metatiedot
-   [:div.ylapalkin-metatieto.soratiehoitoluokka (str "SHL: " (or @soratiehoitoluokka "-"))]
-   [:div.ylapalkin-metatieto.talvihoitoluokka (str "THL: " (or @hoitoluokka "-"))]])
+   [:div.ylapalkin-metatieto.soratiehoitoluokka (str "SHL: " (or soratiehoitoluokka "-"))]
+   [:div.ylapalkin-metatieto.talvihoitoluokka (str "THL: " (or hoitoluokka "-"))]])
 
 (defn- kaynnistyspainike [{:keys [tarkastusajo-kaynnissa? kaynnista-fn
                                   pysayta-fn tarkastusajo-alkamassa?]}]
-  [:div.kaynnistyspainike {:class (when @tarkastusajo-kaynnissa? "kaynnissa")
-                           :on-click (if @tarkastusajo-kaynnissa?
+  [:div.kaynnistyspainike {:class (when tarkastusajo-kaynnissa? "kaynnissa")
+                           :on-click (if tarkastusajo-kaynnissa?
                                        pysayta-fn
                                        kaynnista-fn)}
-   (when-not @tarkastusajo-alkamassa?
+   (when-not tarkastusajo-alkamassa?
      [kuvat/svg-sprite "nuoli-ylos-alaviiva-24"])
    [:span.kaynnistyspainike-teksti
-    (if @tarkastusajo-kaynnissa?
+    (if tarkastusajo-kaynnissa?
       "Pysäytä tarkastus"
-      (if @tarkastusajo-alkamassa?
+      (if tarkastusajo-alkamassa?
         "Käynnistetään..."
         "Käynnistä tarkastus"))]])
 
-(defn- kamera []
-  (let [disabloitu? (not @s/tarkastusajo-kaynnissa?)]
+(defn- kamera [tarkastusajo-kaynnissa? kuvaa-otetaan-atom]
+  (let [disabloitu? (not tarkastusajo-kaynnissa?)]
     [:div {:class (str "ylapalkki-button "
                        (when disabloitu?
                          "ylapalkki-button-disabloitu "))
            :on-click #(when-not disabloitu?
-                        (kamera/ota-kuva))}
+                        (kamera/ota-kuva kuvaa-otetaan-atom))}
      [kuvat/svg-sprite "kamera-24"]]))
 
-(defn- ylapalkkikomponentti [{:keys [hoitoluokka soratiehoitoluokka
+(defn- ylapalkkikomponentti [{:keys [hoitoluokka soratiehoitoluokka nayta-paanavigointi?
                                      tr-osoite tarkastusajo-kaynnissa? tarkastusajo-alkamassa?
                                      kaynnista-tarkastus-fn pysayta-tarkastusajo-fn
                                      disabloi-kaynnistys? havaintonappi-painettu
-                                     palvelinvirhe]}]
+                                     kuvaa-otetaan-atom
+                                     palvelinvirhe piirra-paanavigointi? havaintolomake-auki?]}]
   [:div
    [:div.ylapalkki {:class (when (or (utils/kehitysymparistossa?)
                                      (utils/stg-ymparistossa?)) "testiharja")}
     [:div.ylapalkki-vasen
      [logo]
-     [havaintosilma havaintonappi-painettu]
-     [kamera]
+     [havaintosilma {:havaintonappi-painettu havaintonappi-painettu
+                     :nayta-paanavigointi? nayta-paanavigointi?
+                     :piirra-paanavigointi? piirra-paanavigointi?
+                     :havaintolomake-auki? havaintolomake-auki?
+                     :tarkastusajo-kaynnissa? tarkastusajo-kaynnissa?}]
+     [kamera tarkastusajo-kaynnissa? kuvaa-otetaan-atom]
      [tieosoite tr-osoite]
      [metatiedot soratiehoitoluokka hoitoluokka]]
     [:div.ylapalkki-oikea
      [kaynnistyspainike {:tarkastusajo-kaynnissa? tarkastusajo-kaynnissa?
                          :kaynnista-fn #(when (and (not disabloi-kaynnistys?)
-                                                   (not @tarkastusajo-alkamassa?))
+                                                   (not tarkastusajo-alkamassa?))
                                           (kaynnista-tarkastus-fn))
                          :pysayta-fn #(when-not disabloi-kaynnistys?
                                         (pysayta-tarkastusajo-fn))
                          :tarkastusajo-alkamassa? tarkastusajo-alkamassa?}]]]
-   (when @palvelinvirhe [:div.palvelinvirhe "Palvelinvirhe: " @palvelinvirhe])])
+   (when palvelinvirhe [:div.palvelinvirhe "Palvelinvirhe: " palvelinvirhe])])
 
 (defn ylapalkki []
   [ylapalkkikomponentti
-   {:hoitoluokka s/hoitoluokka
+   {:hoitoluokka @s/hoitoluokka
     :havaintonappi-painettu tiedot/havaintonappi-painettu!
-    :tarkastusajo-alkamassa? s/tarkastusajo-alkamassa?
-    :soratiehoitoluokka s/soratiehoitoluokka
+    :nayta-paanavigointi? @s/nayta-paanavigointi?
+    :piirra-paanavigointi? @s/piirra-paanavigointi?
+    :havaintolomake-auki? @s/havaintolomake-auki?
+    :kuvaa-otetaan-atom s/kuvaa-otetaan?
+    :tarkastusajo-alkamassa? @s/tarkastusajo-alkamassa?
+    :soratiehoitoluokka @s/soratiehoitoluokka
     :kaynnista-tarkastus-fn tarkastusajon-luonti/luo-ajo!
     :pysayta-tarkastusajo-fn tarkastusajon-paattaminen/aseta-ajo-paattymaan!
-    :tr-osoite s/tr-osoite
-    :tarkastusajo-kaynnissa? s/tarkastusajo-kaynnissa?
-    :disabloi-kaynnistys? (or @s/havaintolomake-auki
+    :tr-osoite @s/tr-osoite
+    :tarkastusajo-kaynnissa? @s/tarkastusajo-kaynnissa?
+    :disabloi-kaynnistys? (or @s/havaintolomake-auki?
                               @s/palautettava-tarkastusajo)
-    :palvelinvirhe s/palvelinvirhe}])
+    :palvelinvirhe @s/palvelinvirhe}])

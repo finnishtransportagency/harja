@@ -2,38 +2,38 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [cljs.core.async :as async :refer [timeout <!]]
             [harja-laadunseuranta.tiedot.ilmoitukset :as tiedot]
-            [cljs-time.local :as l]
-            [cljs-time.core :as t])
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
-
-(defn ilmoitusjonokomponentti
-  "Piirtää jonossa olevat ilmoitukset yksi kerrallaan"
-  [ilmoitukset-atom]
-  (let [ilmoitus-nakyvissa? (atom false)]
-
-    ;; Poista ilmoitus näkyvistä asynkronisesti tietyn ajan päästä,
-    ;; ellei ole jo pyydetty poistamaan
-    (when (and (not @ilmoitus-nakyvissa?)
-               (not (empty? @ilmoitukset-atom)))
-      (reset! ilmoitus-nakyvissa? true)
-      (go (<! (timeout tiedot/+ilmoituksen-nakymisaika-ms+))
-          ;; Tyhjennetään jonosta näytetty ilmoitus pois
-          (reset! ilmoitukset-atom (vec (rest @ilmoitukset-atom)))
-          (reset! ilmoitus-nakyvissa? nil)))
-
-    (when (first @ilmoitukset-atom)
-      [:div.ilmoitukset
-       [:div.ilmoitus (:ilmoitus (first @ilmoitukset-atom))]])))
 
 (defn ilmoituskomponentti
   "Piirtää nykyisen ilmoituksen"
-  [ilmoitus-atom]
-  (when @ilmoitus-atom
-    (tiedot/tyhjenna-ilmoitus-nakymisajan-jalkeen @ilmoitus-atom ilmoitus-atom))
+  [{:keys [ilmoitus-atom lomakedata havainnon-id
+           taydenna-havaintoa-painettu-fn ilmoitukseen-liittyva-havainto-id-atom] :as tiedot}]
+  (let [piirrettava-ilmoitus (atom @ilmoitus-atom)]
+    (fn [{:keys [ilmoitus-atom lomakedata havainnon-id
+                 taydenna-havaintoa-painettu-fn ilmoitukseen-liittyva-havainto-id-atom] :as tiedot}]
 
-  (when @ilmoitus-atom
-    [:div.ilmoitukset
-     [:div {:class (str "ilmoitus "
-                        (when-let [tyyppi (:tyyppi @ilmoitus-atom)]
-                          (str "ilmoitus-tyyppi-" (name tyyppi))))}
-      (:ilmoitus @ilmoitus-atom)]]))
+      (let [taydennettava? (boolean
+                             (and lomakedata havainnon-id (not= (:tyyppi @ilmoitus-atom) :virhe)))]
+        (if (and (not= piirrettava-ilmoitus @ilmoitus-atom)
+                 (not (str/blank? (:ilmoitus @ilmoitus-atom))))
+          ;; kun saadaan uusi ilmoitus, vaihdetaan se käytöön.
+          ;; muuten piirretään aina vanha jotta transitiossa alkaessa sisältö ei katoa
+          (reset! piirrettava-ilmoitus @ilmoitus-atom))
+        (when @ilmoitus-atom
+          (tiedot/tyhjenna-ilmoitus-nakymisajan-jalkeen @ilmoitus-atom ilmoitus-atom
+                                                        ilmoitukseen-liittyva-havainto-id-atom))
+
+        [:div.ilmoitukset {:class (str (when-let [tyyppi (:tyyppi @piirrettava-ilmoitus)]
+                                         (str "ilmoitus-tyyppi-" (name tyyppi)))
+                                       (when-not @ilmoitus-atom
+                                         " ilmoitus-container-piilossa ")
+                                       (when taydennettava?
+                                         " klikattava "))
+                           :on-click (when taydennettava?
+                                       taydenna-havaintoa-painettu-fn)}
+         [:div {:class (str "ilmoitus ")}
+          (:ilmoitus @piirrettava-ilmoitus)]
+         (when taydennettava?
+           [:a#taydenna-havaintoa
+            "Täydennä havaintoa"])]))))

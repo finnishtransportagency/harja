@@ -129,7 +129,7 @@
                       Näytetään sulkeissa kohteen tietojen perässä sulkeissa, jos löytyy."
   ([kohde] (yllapitokohde-tekstina kohde {}))
   ([kohde optiot]
-   (let [kohdenumero (or (:kohdenumero kohde) (:yllapitokohdenumero kohde))
+   (let [kohdenumero (or (:kohdenumero kohde) (:numero kohde) (:yllapitokohdenumero kohde))
          nimi (or (:nimi kohde) (:yllapitokohdenimi kohde))
          osoite (when-let [osoite (:osoite optiot)]
                   (let [tr-osoite (tierekisteriosoite-tekstina osoite {:teksti-ei-tr-osoitetta? false
@@ -150,6 +150,15 @@
   [kohteet]
   (when kohteet
     (mapv
-     (fn [kohde]
-       (assoc kohde :kohdeosat (sort-by tiekohteiden-jarjestys (:kohdeosat kohde))))
-     kohteet)))
+      (fn [kohde]
+        (assoc kohde :kohdeosat (sort-by tiekohteiden-jarjestys (:kohdeosat kohde))))
+      kohteet)))
+
+(defn tie-rampilla?
+  "Tarkistaa onko annettu tienumero ramppi. Rampit tunnistetaan tienumeron
+  perusteella ja ne ovat välillä 20001-29999."
+  [tie]
+  (if (and tie (number? tie))
+    (boolean (and (> tie 20000)
+                  (< tie 30000)))
+    false))

@@ -20,6 +20,7 @@
 
 (defonce karttataso-tilannekuva (atom false))
 (defonce haetut-asiat (atom nil))
+(defonce valittu-tila (atom nil)) ; :nykytilanne | :historiakuva | :tienakyma
 
 (defonce url-hakuparametrit (atom nil))
 (defonce tilannekuvan-asiat-kartalla (atom {}))
@@ -54,7 +55,7 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
 (defmethod muodosta-karttataso :default [taso uudet-asiat]
   (kartalla-esitettavaan-muotoon
    uudet-asiat
-   nil nil
+   (constantly false)
    (map (lisaa-karttatyyppi-fn taso))))
 
 (defn- muodosta-kuva-karttataso
@@ -64,7 +65,9 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
     nimi
     selitteet
     "tk" hakuparametrit
-    "ind" (str indikaattori))))
+    "ind" (when-not (= :historiakuva @valittu-tila)
+            ;; Historiakuvassa ei haluta indikaattoria
+            (str indikaattori)))))
 
 (defmethod muodosta-karttataso :toteumat [taso toimenpiteet]
   (let [yhteensa (reduce + (map :lukumaara toimenpiteet))]
@@ -105,7 +108,7 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
 ;; muuttuneet.
 (defn paivita-tilannekuvatasot
   "Päivittää tilannekuvan karttatasot kun niiden tiedot haetuissa asioissa
-ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
+  ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
   [vanha uusi]
   (if (nil? uusi)
     ;; Jos tilannekuva poistuu näkyvistä, haetut-asiat on nil

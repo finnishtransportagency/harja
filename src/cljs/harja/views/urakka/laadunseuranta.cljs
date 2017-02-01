@@ -40,7 +40,6 @@
          [siltatarkastukset/siltatarkastukset])
 
        "Mobiilityökalu" :mobiilityokalu
-       (when (and (= :hoito tyyppi))
-         ^{:key "mobiilityokalu"}
-         [mobiilityokalu/mobiilityokalu])])))
+       ^{:key "mobiilityokalu"}
+       [mobiilityokalu/mobiilityokalu]])))
 

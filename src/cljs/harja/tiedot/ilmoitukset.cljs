@@ -283,10 +283,8 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                  (map
                    #(assoc % :tyyppi-kartalla (get % :ilmoitustyyppi))
                    ilmoitukset)
-                 valittu-ilmoitus)))))
+                 #(= (:id %) (:id valittu-ilmoitus)))))))
 
-
-;; Kartan popupit käyttää näitä funktioita
 
 (defn avaa-ilmoitus! [ilmoitus]
   ;; Tilannekuvan ilmoitustiedoissa on iso osa ilmoituksen tarkemmista tiedoista.

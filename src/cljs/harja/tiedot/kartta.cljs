@@ -77,27 +77,42 @@
 (def aseta-kursori! openlayers/aseta-kursori!)
 
 (def aseta-klik-kasittelija! openlayers/aseta-klik-kasittelija!)
-(def poista-klik-kasittelija! openlayers/poista-klik-kasittelija!)
 (def aseta-hover-kasittelija! openlayers/aseta-hover-kasittelija!)
-(def poista-hover-kasittelija! openlayers/poista-hover-kasittelija!)
 
-(def kartan-yleiset-kontrollit-sisalto (atom nil))
+(def ^{:doc
+       "Kartan kontrollit, jotka näytetään karttanäkymän päällä.
+        Kartalla voi olla useita kontrolleja samaan aikaan.
+        Kontrollit lisätään ja poistetaan avaimella."}
+  kartan-yleiset-kontrollit-sisalto (atom {}))
 
 (defn kaappaa-hiiri
-  "Muuttaa kartan toiminnallisuutta siten, että hover ja click eventit annetaan datana annettuun kanavaan.
-Palauttaa funktion, jolla kaappaamisen voi lopettaa. Tapahtumat ovat vektori, jossa on kaksi elementtiä:
-tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava."
+  "Muuttaa kartan toiminnallisuutta siten, että hover, click ja dblclick eventit annetaan datana
+  annettuun kanavaan. Palauttaa funktion, jolla kaappaamisen voi lopettaa. Tapahtumat ovat vektori,
+  jossa on kaksi elementtiä: tyyppi ja sijainti.
+  Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava."
   [kanava]
-  (let [kasittelija #(go (>! kanava %))]
-    (aseta-klik-kasittelija! kasittelija)
-    (aseta-hover-kasittelija! kasittelija)
+  (let [kasittelija #(go (>! kanava %))
+        poista-klik-kasittelija! (aseta-klik-kasittelija! kasittelija)
+        poista-hover-kasittelija! (aseta-hover-kasittelija! kasittelija)]
 
     #(do (poista-klik-kasittelija!)
          (poista-hover-kasittelija!)
          (async/close! kanava))))
 
-(defn aseta-yleiset-kontrollit! [uusi-sisalto]
-  (reset! kartan-yleiset-kontrollit-sisalto uusi-sisalto))
+(defn nayta-kartan-kontrollit!
+  "Näyttää kartan päällä annetut kontrollit. Nimi on nämä kontrollit yksilöivä
+  keyword ja sisältö on mikä tahansa hiccup komponentti."
+  [nimi sisalto]
+  (swap! kartan-yleiset-kontrollit-sisalto assoc nimi sisalto))
 
-(defn tyhjenna-yleiset-kontrollit! []
-  (reset! kartan-yleiset-kontrollit-sisalto nil))
+(defn poista-kartan-kontrollit!
+  "Poistaa nimetyt kartan kontrollit näkyvistä."
+  [nimi]
+  (swap! kartan-yleiset-kontrollit-sisalto dissoc nimi))
+
+(def ikonien-selitykset-nakyvissa-oletusarvo true)
+;; Eri näkymät voivat tarpeen mukaan asettaa ikonien selitykset päälle/pois komponenttiin tultaessa.
+;; Komponentista poistuttaessa tulisi arvo asettaa takaisin oletukseksi
+(defonce ikonien-selitykset-nakyvissa? (atom true))
+(defonce ikonien-selitykset-auki (atom true))
+(defonce ikonien-selitykset-sijainti (atom :oikea))

@@ -1,12 +1,12 @@
 (ns harja.tiedot.urakka.yllapitokohteet
   "Ylläpitokohteiden tiedot"
   (:require
-    [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
     [harja.loki :refer [log tarkkaile!]]
     [cljs.core.async :refer [<!]]
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.urakka :as urakka]
     [harja.tiedot.urakka :as u]
+    [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.navigaatio :as nav]
     [harja.ui.viesti :as viesti])
 
@@ -14,13 +14,16 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(defn hae-yllapitokohteet [urakka-id sopimus-id]
+(defn hae-yllapitokohteet [urakka-id sopimus-id vuosi]
   (k/post! :urakan-yllapitokohteet {:urakka-id urakka-id
-                                    :sopimus-id sopimus-id}))
+                                    :sopimus-id sopimus-id
+                                    :vuosi vuosi}))
 
-(defn tallenna-yllapitokohteet! [urakka-id sopimus-id kohteet]
+
+(defn tallenna-yllapitokohteet! [urakka-id sopimus-id vuosi kohteet]
   (k/post! :tallenna-yllapitokohteet {:urakka-id urakka-id
                                       :sopimus-id sopimus-id
+                                      :vuosi vuosi
                                       :kohteet kohteet}))
 
 (defn tallenna-yllapitokohdeosat! [urakka-id sopimus-id yllapitokohde-id osat]
@@ -29,11 +32,18 @@
                                         :yllapitokohde-id yllapitokohde-id
                                         :osat osat}))
 
-(defn kuvaile-kohteen-tila [tila]
-  (case tila
-    :valmis "Valmis"
-    :aloitettu "Aloitettu"
-    "Ei aloitettu"))
+(defn hae-maaramuutokset [urakka-id yllapitokohde-id]
+  (k/post! :hae-maaramuutokset {:urakka-id urakka-id
+                                :yllapitokohde-id yllapitokohde-id}))
+
+(defn tallenna-maaramuutokset! [{:keys [urakka-id yllapitokohde-id maaramuutokset
+                                        sopimus-id vuosi]}]
+  (k/post! :tallenna-maaramuutokset {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi vuosi
+                                     :yllapitokohde-id yllapitokohde-id
+                                     :maaramuutokset maaramuutokset}))
+
 
 
 (defn paivita-yllapitokohde! [kohteet-atom id funktio & argumentit]
@@ -82,19 +92,19 @@
           loppu-muutettu? (not= (loppu muokattu-vanha) (loppu muokattu-uusi))]
 
       (as-> uudet rivit
-        (if alku-muutettu?
-          (assoc rivit edellinen-key
-                 (merge edellinen
-                        (zipmap [:tr-loppuosa :tr-loppuetaisyys]
-                                (alku muokattu-uusi))))
-          rivit)
+            (if alku-muutettu?
+              (assoc rivit edellinen-key
+                           (merge edellinen
+                                  (zipmap [:tr-loppuosa :tr-loppuetaisyys]
+                                          (alku muokattu-uusi))))
+              rivit)
 
-        (if loppu-muutettu?
-          (assoc rivit seuraava-key
-                 (merge seuraava
-                        (zipmap [:tr-alkuosa :tr-alkuetaisyys]
-                                (loppu muokattu-uusi))))
-          rivit)))))
+            (if loppu-muutettu?
+              (assoc rivit seuraava-key
+                           (merge seuraava
+                                  (zipmap [:tr-alkuosa :tr-alkuetaisyys]
+                                          (loppu muokattu-uusi))))
+              rivit)))))
 
 (defn lisaa-uusi-kohdeosa
   "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle). Muuttaa kaikkien
@@ -162,11 +172,12 @@
   (when (oikeustarkistus-fn)
     (fn [kohteet]
       (go (let [urakka-id (:id @nav/valittu-urakka)
+                vuosi @u/valittu-urakan-vuosi
                 [sopimus-id _] @u/valittu-sopimusnumero
                 _ (log "[YLLÄPITOKOHTEET] Tallennetaan kohteet: " (pr-str kohteet))
                 vastaus (<! (tallenna-yllapitokohteet!
-                              urakka-id sopimus-id
-                              (mapv #(assoc % :tyyppi kohdetyyppi)
+                              urakka-id sopimus-id vuosi
+                              (mapv #(assoc % :yllapitokohdetyotyyppi kohdetyyppi)
                                     kohteet)))]
             (if (k/virhe? vastaus)
               (viesti/nayta! "Kohteiden tallentaminen epännistui" :warning viesti/viestin-nayttoaika-keskipitka)
@@ -174,3 +185,29 @@
                   (viesti/nayta! "Tallennus onnistui. Tarkista ja tallenna myös muokkaamiesi tieosoitteiden alikohteet."
                                  :success viesti/viestin-nayttoaika-keskipitka)
                   (valmis-fn vastaus))))))))
+
+(defn yllapitokohteet-kartalle
+  "Ylläpitokohde näytetään kartalla 'kohdeosina'.
+   Ottaa vectorin ylläpitokohteita ja palauttaa ylläpitokohteiden kohdeosat valmiina näytettäväksi kartalle.
+   Palautuneilla kohdeosilla on pääkohteen tiedot :yllapitokohde avaimen takana.
+
+   yllapitokohteet  Vector ylläpitokohteita, joilla on mukana ylläpitokohteen kohdeosat (:kohdeosat avaimessa)
+   lomakedata       Päällystys- tai paikkausilmoituksen lomakkeen tiedot"
+  ([yllapitokohteet] (yllapitokohteet-kartalle yllapitokohteet nil))
+  ([yllapitokohteet lomakedata]
+   (let [id #(or (:paallystyskohde-id %)
+                 (:paikkauskohde-id %)
+                 (:yllapitokohde-id %))
+         karttamuodossa (kartalla-esitettavaan-muotoon
+                         yllapitokohteet
+                         #(= (id lomakedata) (id %))
+                         (comp
+                           (mapcat (fn [kohde]
+                                     (keep (fn [kohdeosa]
+                                             (assoc kohdeosa :yllapitokohde (dissoc kohde :kohdeosat)
+                                                             :tyyppi-kartalla (:yllapitokohdetyotyyppi kohde)
+                                                             :tila-kartalla (:tila-kartalla kohde)
+                                                             :yllapitokohde-id (:id kohde)))
+                                           (:kohdeosat kohde))))
+                           (keep #(and (:sijainti %) %))))]
+    karttamuodossa)))

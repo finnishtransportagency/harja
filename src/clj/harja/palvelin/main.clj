@@ -11,6 +11,7 @@
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
     [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
+    [harja.palvelin.komponentit.kehitysmoodi :as kehitysmoodi]
 
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -42,6 +43,7 @@
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
     [harja.palvelin.palvelut.yhteyshenkilot]
     [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
+    [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
     [harja.palvelin.palvelut.yllapitokohteet.paikkaus :as paikkaus]
     [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]
     [harja.palvelin.palvelut.ping :as ping]
@@ -64,6 +66,7 @@
     [harja.palvelin.palvelut.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
     [harja.palvelin.palvelut.status :as status]
     [harja.palvelin.palvelut.organisaatiot :as organisaatiot]
+    [harja.palvelin.palvelut.tienakyma :as tienakyma]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -148,6 +151,10 @@
       :liitteiden-hallinta (component/using
                              (harja.palvelin.komponentit.liitteet/->Liitteet)
                              [:db :virustarkistus])
+
+      :kehitysmoodi (component/using
+                     (kehitysmoodi/luo-kehitysmoodi kehitysmoodi)
+                     [:http-palvelin])
 
       ;; Integraatioloki
       :integraatioloki
@@ -263,11 +270,14 @@
                   (toteumat/->Toteumat)
                   [:http-palvelin :db :karttakuvat :tierekisteri])
       :yllapitototeumat (component/using
-                  (yllapito-toteumat/->YllapitoToteumat)
-                  [:http-palvelin :db])
+                          (yllapito-toteumat/->YllapitoToteumat)
+                          [:http-palvelin :db])
       :paallystys (component/using
                     (paallystys/->Paallystys)
                     [:http-palvelin :db])
+      :maaramuutokset (component/using
+                        (maaramuutokset/->Maaramuutokset)
+                        [:http-palvelin :db])
       :paikkaus (component/using
                   (paikkaus/->Paikkaus)
                   [:http-palvelin :db])
@@ -365,6 +375,10 @@
                      {:db :db-replica
                       :http-palvelin :http-palvelin
                       :karttakuvat :karttakuvat})
+      :tienakyma (component/using
+                  (tienakyma/->Tienakyma)
+                  {:db :db-replica
+                   :http-palvelin :http-palvelin})
       :karttakuvat (component/using
                      (karttakuvat/luo-karttakuvat)
                      [:http-palvelin :db])

@@ -89,3 +89,10 @@ WHERE tpi.id NOT IN (SELECT DISTINCT toimenpideinstanssi
                      FROM maksuera
                      WHERE toimenpideinstanssi IS NOT NULL)
       AND urakka.tyyppi = 'hoito';
+
+-- name: onko-urakalla-toimenpide
+SELECT exists(SELECT id
+              FROM toimenpideinstanssi
+              WHERE urakka = :urakka AND toimenpide = (SELECT id
+                                                       FROM toimenpidekoodi
+                                                       WHERE koodi = :toimenpidekoodi))

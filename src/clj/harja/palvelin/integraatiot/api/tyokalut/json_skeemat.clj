@@ -25,8 +25,12 @@
 
 (def +pistetoteuman-kirjaus+ "api/schemas/pistetoteuman-kirjaus-request.schema.json")
 (def pistetoteuman-kirjaus (tee-validaattori "api/schemas/pistetoteuman-kirjaus-request.schema.json"))
+(def +pistetoteuman-poisto+ "api/schemas/toteuman-poisto-request.schema.json")
+(def pistetoteuman-poisto (tee-validaattori "api/schemas/toteuman-poisto-request.schema.json"))
 (def +reittitoteuman-kirjaus+ "api/schemas/reittitoteuman-kirjaus-request.schema.json")
 (def reittitoteuman-kirjaus (tee-validaattori "api/schemas/reittitoteuman-kirjaus-request.schema.json"))
+(def +reittitoteuman-poisto+ "api/schemas/toteuman-poisto-request.schema.json")
+(def reittitoteuman-poisto (tee-validaattori "api/schemas/toteuman-poisto-request.schema.json"))
 
 (def +turvallisuuspoikkeamien-kirjaus+ "api/schemas/turvallisuuspoikkeamien-kirjaus-request.schema.json")
 (def turvallisuuspoikkeamien-kirjaus (tee-validaattori "api/schemas/turvallisuuspoikkeamien-kirjaus-request.schema.json"))
@@ -49,15 +53,25 @@
 (def varusteen-poisto (tee-validaattori "api/schemas/varusteen-poisto-request.schema.json"))
 (def +varustetoteuman-kirjaus+ "api/schemas/varustetoteuman-kirjaus-request.schema.json")
 (def varustetoteuman-kirjaus (tee-validaattori "api/schemas/varustetoteuman-kirjaus-request.schema.json"))
+(def +varustetoteuman-poisto+ "api/schemas/toteuman-poisto-request.schema.json")
+(def varustetoteuman-poisto (tee-validaattori "api/schemas/toteuman-poisto-request.schema.json"))
 
 (def +siltatarkastuksen-kirjaus+ "api/schemas/siltatarkastuksen-kirjaus-request.schema.json")
 (def siltatarkastuksen-kirjaus (tee-validaattori "api/schemas/siltatarkastuksen-kirjaus-request.schema.json"))
+(def +siltatarkastuksen-poisto+ "api/schemas/tarkastuksen-poisto-request.schema.json")
+(def siltatarkastuksen-poisto (tee-validaattori "api/schemas/tarkastuksen-poisto-request.schema.json"))
 (def +tiestotarkastuksen-kirjaus+ "api/schemas/tiestotarkastuksen-kirjaus-request.schema.json")
 (def tiestotarkastuksen-kirjaus (tee-validaattori "api/schemas/tiestotarkastuksen-kirjaus-request.schema.json"))
+(def +tiestotarkastuksen-poisto+ "api/schemas/tarkastuksen-poisto-request.schema.json")
+(def tiestotarkastuksen-poisto (tee-validaattori "api/schemas/tarkastuksen-poisto-request.schema.json"))
 (def +soratietarkastuksen-kirjaus+ "api/schemas/soratietarkastuksen-kirjaus-request.schema.json")
 (def soratietarkastuksen-kirjaus (tee-validaattori "api/schemas/soratietarkastuksen-kirjaus-request.schema.json"))
+(def +soratietarkastuksen-poisto+ "api/schemas/tarkastuksen-poisto-request.schema.json")
+(def soratietarkastuksen-poisto (tee-validaattori "api/schemas/tarkastuksen-poisto-request.schema.json"))
 (def +talvihoitotarkastuksen-kirjaus+ "api/schemas/talvihoitotarkastuksen-kirjaus-request.schema.json")
 (def talvihoitotarkastuksen-kirjaus (tee-validaattori "api/schemas/talvihoitotarkastuksen-kirjaus-request.schema.json"))
+(def +talvihoitotarkastuksen-poisto+ "api/schemas/tarkastuksen-poisto-request.schema.json")
+(def talvihoitotarkastuksen-poisto (tee-validaattori "api/schemas/tarkastuksen-poisto-request.schema.json"))
 
 (def +paivystajatietojen-kirjaus+ "api/schemas/paivystajatietojen-kirjaus-request.schema.json")
 (def paivystajatietojen-kirjaus (tee-validaattori "api/schemas/paivystajatietojen-kirjaus-request.schema.json"))
@@ -88,4 +102,5 @@
 (def +urakan-yhteystietojen-haku-vastaus+ "api/schemas/urakan-yhteystietojen-haku-response.schema.json")
 (def urakan-yhteystietojen-haku-vastaus (tee-validaattori +urakan-yhteystietojen-haku-vastaus+))
 
-
+(def +urakan-yllapitokohteen-paivitys-request+ "api/schemas/urakan-yllapitokohteen-paivitys-request.schema.json")
+(def urakan-yllapitokohteen-paivitys-request (tee-validaattori +urakan-yllapitokohteen-paivitys-request+))

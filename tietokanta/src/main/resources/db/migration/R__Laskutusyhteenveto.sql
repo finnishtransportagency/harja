@@ -144,21 +144,21 @@ DECLARE
 BEGIN
 
 -- Katsotaan löytyykö laskutusyhteenveto jo cachesta
---   SELECT
---     INTO cache rivit
---     FROM laskutusyhteenveto_cache c
---    WHERE c.urakka = ur
---      AND c.alkupvm = aikavali_alkupvm
---      AND c.loppupvm = aikavali_loppupvm;
---
---   IF cache IS NOT NULL THEN
---     RAISE NOTICE 'Käytetään muistettua laskutusyhteenvetoa urakalle % aikavälillä % - %', ur, aikavali_alkupvm, aikavali_loppupvm;
---     FOREACH rivi IN ARRAY cache
---     LOOP
---       RETURN NEXT rivi;
---     END LOOP;
---     RETURN;
---   END IF;
+  SELECT
+    INTO cache rivit
+  FROM laskutusyhteenveto_cache c
+  WHERE c.urakka = ur
+        AND c.alkupvm = aikavali_alkupvm
+        AND c.loppupvm = aikavali_loppupvm;
+
+  IF cache IS NOT NULL THEN
+    RAISE NOTICE 'Käytetään muistettua laskutusyhteenvetoa urakalle % aikavälillä % - %', ur, aikavali_alkupvm, aikavali_loppupvm;
+    FOREACH rivi IN ARRAY cache
+    LOOP
+      RETURN NEXT rivi;
+    END LOOP;
+    RETURN;
+  END IF;
 
   cache := ARRAY[]::laskutusyhteenveto_rivi[];
 
@@ -297,12 +297,12 @@ BEGIN
     sakot_laskutetaan_ind_korotus := 0.0;
 
     FOR sanktiorivi IN SELECT -maara AS maara, perintapvm, indeksi, perintapvm
-                         FROM sanktio s
-                        WHERE s.toimenpideinstanssi = t.tpi AND
-                              s.maara IS NOT NULL AND
-                              s.perintapvm >= hk_alkupvm AND
-                              s.perintapvm <= aikavali_loppupvm
-
+                       FROM sanktio s
+                       WHERE s.toimenpideinstanssi = t.tpi AND
+                             s.maara IS NOT NULL AND
+                             s.perintapvm >= hk_alkupvm AND
+                             s.perintapvm <= aikavali_loppupvm AND
+                             s.poistettu IS NOT TRUE
     LOOP
       SELECT *
         FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM sanktiorivi.perintapvm) :: INTEGER),
@@ -402,6 +402,7 @@ BEGIN
 		           mht.urakka = tot.urakka AND
 			   mht.sopimus = tot.sopimus)
                  WHERE tot.urakka = ur AND
+                   mht.poistettu IS NOT TRUE AND
 		       tpk3.id = t.tpk3_id AND
 		       tot.alkanut::DATE >= hk_alkupvm AND tot.alkanut::DATE <= aikavali_loppupvm
     LOOP

@@ -10,23 +10,23 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-01-30T12:00:00Z"
+    "lahetysaika": "2016-01-30T12:00:00+02:00"
   },
   "tietyomaa": {
     "id": 1,
     "alkuaidan-sijainti": {
       "koordinaatit": {
-        "x": 429005,
-        "y": 7198151
+        "x": 430102.969,
+        "y": 7212373.126
       }
     },
     "loppuaidan-sijainti": {
       "koordinaatit": {
-        "x": 429005,
-        "y": 7198151
+        "x": 430711.969,
+        "y": 7212623.626
       }
     },
-    "aika": "2016-01-30T12:00:00Z",
+    "aika": "2016-01-30T12:00:00+02:00",
     "ajoradat": [
       1,
       2
@@ -34,6 +34,7 @@
     "kaistat": [
       1,
       11
-    ]
+    ],
+    "nopeusrajoitus": 20
   }
 }

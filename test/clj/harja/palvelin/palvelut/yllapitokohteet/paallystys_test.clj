@@ -41,7 +41,6 @@
    :valmispvm-kohde (pvm/luo-pvm 2005 9 2)
    :valmispvm-paallystys (pvm/luo-pvm 2005 9 2)
    :takuupvm (pvm/luo-pvm 2005 9 3)
-   :muutoshinta 0
    :ilmoitustiedot {:osoitteet [{:nimi "Tie 666"
                                  :tr-numero 666
                                  :tr-alkuosa 2
@@ -99,14 +98,7 @@
                                     :verkkotyyppi 1
                                     :verkon-sijainti 1
                                     :verkon-tarkoitus 1
-                                    :tekninen-toimenpide 1}]
-
-                    :tyot [{:tyyppi :ajoradan-paallyste
-                            :tyo "AB 16/100 LTA"
-                            :tilattu-maara 100
-                            :toteutunut-maara 200
-                            :yksikko "km"
-                            :yksikkohinta 5}]}})
+                                    :tekninen-toimenpide 1}]}})
 
 (deftest skeemavalidointi-toimii
   (let [paallystyskohde-id (hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta)]
@@ -147,6 +139,73 @@
       (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
                           (konv/jsonb->clojuremap ilmoitusosa))))))
 
+(deftest hae-paallystysilmoitukset
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+        paallystysilmoitukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                              :urakan-paallystysilmoitukset +kayttaja-jvh+
+                                              {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id})]
+    (is (= (count paallystysilmoitukset) 5) "Päällystysilmoituksia löytyi")))
+
+(deftest hae-paallystysilmoitukset
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+        paallystysilmoitukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                              :urakan-paallystysilmoitukset +kayttaja-jvh+
+                                              {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id
+                                               :vuosi 2015})]
+    (is (= (count paallystysilmoitukset) 0) "Päällystysilmoituksia ei löydy vuodelle 2015")))
+
+(deftest hae-paallystysilmoitukset
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+        paallystysilmoitukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                              :urakan-paallystysilmoitukset +kayttaja-jvh+
+                                              {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id
+                                               :vuosi 2017})]
+    (is (= (count paallystysilmoitukset) 5) "Päällystysilmoituksia löytyi vuodelle 2017")))
+
+(deftest hae-yllapitokohteen-puuttuva-paallystysilmoitus
+  ;; Testattavalla ylläpitokohteella ei ole päällystysilmoitusta, mutta palvelu lupaa palauttaa
+  ;; silti minimaalisen päällystysilmoituksen, jota käyttäjä voi frontissa lähteä täyttämään
+  ;; (erityisesti kohdeosien esitäyttö on tärkeää)
+  ;; Testataan, että tällainen "ilmoituspohja" on mahdollista hakea.
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+        paallystyskohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+        paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                    :urakan-paallystysilmoitus-paallystyskohteella
+                                                    +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                    :sopimus-id sopimus-id
+                                                                    :paallystyskohde-id paallystyskohde-id})
+        kohdeosat (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])]
+    (is (not (nil? paallystysilmoitus-kannassa)))
+    (is (nil? (:tila paallystysilmoitus-kannassa)) "Päällystysilmoituksen tila on tyhjä")
+    ;; Puuttuvan päällystysilmoituksen kohdeosat esitäytettiin oikein
+    (is (= (count kohdeosat) 1))
+    (is (every? #(number? (:kohdeosa-id %)) kohdeosat))))
+
+(deftest hae-yllapitokohteen-olemassa-oleva-paallystysilmoitus
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+        paallystyskohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                    :urakan-paallystysilmoitus-paallystyskohteella
+                                                    +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                    :sopimus-id sopimus-id
+                                                                    :paallystyskohde-id paallystyskohde-id})
+        kohdeosat (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])]
+    (is (not (nil? paallystysilmoitus-kannassa)))
+    (is (= (:tila paallystysilmoitus-kannassa) :aloitettu) "Päällystysilmoituksen tila on aloitttu")
+    (is (== (:maaramuutokset paallystysilmoitus-kannassa) 160))
+    (is (== (:kokonaishinta paallystysilmoitus-kannassa) 5043.95))
+    ;; Kohdeosat on OK
+    (is (= (count kohdeosat) 1))
+    (is (every? #(number? (:kohdeosa-id %)) kohdeosat))))
+
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
   (let [paallystyskohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)]
     (is (not (nil? paallystyskohde-id)))
@@ -162,7 +221,6 @@
                                                                    :sopimus-id sopimus-id
                                                                    :paallystysilmoitus paallystysilmoitus})
       (let [maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
-            muutoshinta (ffirst (q (str "SELECT muutoshinta FROM paallystysilmoitus WHERE paallystyskohde = (SELECT id FROM yllapitokohde WHERE id =" paallystyskohde-id ");")))
             paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :urakan-paallystysilmoitus-paallystyskohteella
                                                         +kayttaja-jvh+ {:urakka-id urakka-id
@@ -172,7 +230,6 @@
         (is (not (nil? paallystysilmoitus-kannassa)))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
         (is (= (:tila paallystysilmoitus-kannassa) :valmis))
-        (is (= (:muutoshinta paallystysilmoitus-kannassa) muutoshinta))
         (is (= (:ilmoitustiedot paallystysilmoitus-kannassa)
                {:alustatoimet [{:kasittelymenetelma 1
                                 :paksuus 1234
@@ -209,13 +266,7 @@
                              :tr-loppuosa 4
                              :tr-numero 666
                              :tunnus nil
-                             :tyomenetelma 12}]
-                :tyot [{:tilattu-maara 100
-                        :toteutunut-maara 200
-                        :tyo "AB 16/100 LTA"
-                        :tyyppi :ajoradan-paallyste
-                        :yksikko "km"
-                        :yksikkohinta 5}]}))
+                             :tyomenetelma 12}]}))
         (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))))))
 
 
@@ -225,8 +276,8 @@
 
     (let [urakka-id @muhoksen-paallystysurakan-id
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
-          paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
-                                 (assoc-in [:taloudellinen-osa :paatos] :hyvaksytty)
+          paallystysilmoitus (-> (assoc pot-testidata
+                                   :paallystyskohde-id paallystyskohde-id)
                                  (assoc-in [:tekninen-osa :paatos] :hyvaksytty)
                                  (assoc-in [:tekninen-osa :perustelu] "Hyvä ilmoitus!"))]
 
@@ -244,7 +295,6 @@
         (is (not (nil? paallystysilmoitus-kannassa)))
         (is (= (:tila paallystysilmoitus-kannassa) :lukittu))
         (is (= (get-in paallystysilmoitus-kannassa [:tekninen-osa :paatos]) :hyvaksytty))
-        (is (= (get-in paallystysilmoitus-kannassa [:taloudellinen-osa :paatos]) :hyvaksytty))
         (is (= (get-in paallystysilmoitus-kannassa [:tekninen-osa :perustelu])
                (get-in paallystysilmoitus [:tekninen-osa :perustelu])))
 
@@ -289,13 +339,7 @@
                              :tr-loppuosa 4
                              :tr-numero 666
                              :tunnus nil
-                             :tyomenetelma 12}]
-                :tyot [{:tilattu-maara 100
-                        :toteutunut-maara 200
-                        :tyo "AB 16/100 LTA"
-                        :tyyppi :ajoradan-paallyste
-                        :yksikko "km"
-                        :yksikkohinta 5}]}))
+                             :tyomenetelma 12}]}))
 
         ; Lukittu, ei voi enää päivittää
         (log/debug "Tarkistetaan, ettei voi muokata lukittua ilmoitusta.")
@@ -308,7 +352,6 @@
         (u (str "UPDATE paallystysilmoitus SET
                       tila = NULL,
                       paatos_tekninen_osa = NULL,
-                      paatos_taloudellinen_osa = NULL,
                       perustelu_tekninen_osa = NULL
                   WHERE paallystyskohde =" paallystyskohde-id ";"))))))
 
@@ -372,7 +415,6 @@
     (let [urakka-id @muhoksen-paallystysurakan-id
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
           paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
-                                 (assoc-in [:taloudellinen-osa :paatos] :hyvaksytty)
                                  (assoc-in [:tekninen-osa :paatos] :hyvaksytty)
                                  (assoc-in [:tekninen-osa :perustelu]
                                            "Yritän saada ilmoituksen hyväksytyksi ilman oikeuksia."))]

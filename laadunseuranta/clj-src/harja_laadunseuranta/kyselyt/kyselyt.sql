@@ -1,22 +1,16 @@
-
 -- name: tallenna-reittimerkinta!
 INSERT INTO tarkastusreitti
 (id, pistetyyppi, tarkastusajo, aikaleima, sijainti, sijainti_tarkkuus, kitkamittaus, havainnot, lampotila,
  talvihoito_tasaisuus, soratie_tasaisuus, lumisuus, kuvaus, kuva,
- polyavyys, sivukaltevuus, kiinteys, laadunalitus,
+ polyavyys, sivukaltevuus, kiinteys, laadunalitus, liittyy_merkintaan,
 tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys)
 VALUES
   (:id, 0, :tarkastusajo, to_timestamp(:aikaleima / 1000), ST_MakePoint(:x, :y), :sijainti_tarkkuus,
         :kitkamittaus, ARRAY [:havainnot] :: INTEGER [], :lampotila, :talvihoito_tasaisuus,
         :soratie_tasaisuus, :lumisuus, :kuvaus, :kuva, :polyavyys,
-   :sivukaltevuus, :kiinteys, :laadunalitus,
+   :sivukaltevuus, :kiinteys, :laadunalitus, :liittyy_merkintaan,
   :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys)
 ON CONFLICT DO NOTHING;
-
--- name: hae-tarkastusajon-reittimerkinnat
-SELECT *
-FROM tarkastusreitti
-WHERE tarkastusajo = :tarkastusajo;
 
 -- name: luo-uusi-tarkastusajo<!
 -- Tekee uuden tarkastusajon ja palauttaa sen id:n
@@ -70,10 +64,10 @@ SELECT
   x.polyavyys,
   x.sivukaltevuus,
   x.kiinteys,
-  (x.trosoite).tie,
-  (x.trosoite).aosa,
-  (x.trosoite).aet,
+  x."gps-tarkkuus",
+  x."laheiset-tr-osoitteet",
   x.laadunalitus,
+  x."liittyy-merkintaan",
   x."kayttajan-syottama-tie",
   x."kayttajan-syottama-aosa",
   x."kayttajan-syottama-aet",
@@ -95,12 +89,15 @@ FROM (SELECT
         t.polyavyys,
         t.sivukaltevuus,
         t.kiinteys,
+        t.sijainti_tarkkuus AS "gps-tarkkuus",
+        t.liittyy_merkintaan as "liittyy-merkintaan",
         t.tr_numero as "kayttajan-syottama-tie",
         t.tr_alkuosa as "kayttajan-syottama-aosa",
         t.tr_alkuetaisyys as "kayttajan-syottama-aet",
         t.tr_loppuosa as "kayttajan-syottama-losa",
         t.tr_loppuetaisyys as "kayttajan-syottama-let",
-        CAST(yrita_tierekisteriosoite_pisteelle2(t.sijainti, CAST(:treshold AS INTEGER)) AS tr_osoite) AS trosoite,
+        laheiset_osoitteet_pisteelle(t.sijainti, COALESCE(:laheiset_tiet_threshold::INTEGER, 100))
+          AS "laheiset-tr-osoitteet",
         t.laadunalitus
       FROM tarkastusreitti t
         INNER JOIN tarkastusajo a ON a.id = t.tarkastusajo
@@ -119,8 +116,14 @@ SELECT
 FROM vakiohavainto
 WHERE jatkuva = FALSE;
 
+-- name: hae-tarkastusajon-reitti
+SELECT sijainti, sijainti_tarkkuus FROM tarkastusreitti
+  WHERE tarkastusajo = :id
+ORDER by id;
+
 -- name: luo-uusi-tarkastus<!
-INSERT INTO tarkastus (urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, tarkastusajo, luoja, havainnot, lahde, laadunalitus)
+INSERT INTO tarkastus (urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
+                       sijainti, tarkastaja, tyyppi, tarkastusajo, luoja, havainnot, lahde, laadunalitus)
 VALUES
   (:urakka, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys, :sijainti, :tarkastaja,
             :tyyppi :: tarkastustyyppi, :tarkastusajo, :luoja, :havainnot, :lahde :: lahde, :laadunalitus);

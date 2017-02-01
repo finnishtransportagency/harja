@@ -18,6 +18,7 @@
 (def +tallennus-url+ (str "/" (prefix) "_/ls-reittimerkinta"))
 (def +paatos-url+ (str "/" (prefix) "_/ls-paata-tarkastusajo"))
 (def +luonti-url+ (str "/" (prefix) "_/ls-uusi-tarkastusajo"))
+(def +simuloitu-ajo-url+ (str "/" (prefix) "_/ls-simuloitu-reitti"))
 (def +tr-tietojen-haku-url+ (str "/" (prefix) "_/ls-hae-tr-tiedot"))
 (def +kayttajatiedot-url+ (str "/" (prefix) "_/ls-hae-kayttajatiedot"))
 (def +liitteen-tallennus-url+ (str "/" (prefix) "_/ls-tallenna-liite"))
@@ -42,3 +43,6 @@
 
 ;; paluu harjaan
 (def +harja-url+ (str "/" (prefix) "#urakat/laadunseuranta/"))
+
+;; Ilmoitukset
+(def +ilmoituksen-nakymisaika-ms+ 10000)

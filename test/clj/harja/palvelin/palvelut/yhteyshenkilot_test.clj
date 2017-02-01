@@ -31,13 +31,6 @@
     (is (not (nil? vastaus)))
     (is (>= (count vastaus) 1))))
 
-(deftest yhteyshenkiloiden-tyyppien-haku-toimii
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-yhteyshenkilotyypit +kayttaja-jvh+ "Joku turha parametri?")]
-
-    (is (set? vastaus))
-    (is (>= (count vastaus) 1))))
-
 (deftest urakan-paivystajien-haku-toimii
   (u "INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo) VALUES (true, false, '2005-10-10','2030-06-06', 1, 1)")
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)

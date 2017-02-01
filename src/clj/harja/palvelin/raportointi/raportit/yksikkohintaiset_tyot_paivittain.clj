@@ -8,7 +8,9 @@
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+            [harja.domain.raportointi :refer [info-solu]]
             [clojure.string :as str]))
+
 
 ;; oulu au 2014 - 2019:
 ;; 1.10.2014-30.9.2015 elokuu 2015 kaikki
@@ -55,13 +57,13 @@
             (conj (yleinen/ryhmittele-tulokset-raportin-taulukolle
                     naytettavat-rivit :toimenpide
                     (juxt (comp pvm/pvm :pvm)
-                          #(or (:nimi %) [:info ""])
-                          #(or (:yksikko %) [:info ""])
-                          (comp #(or % [:info ""]) :yksikkohinta)
-                          (comp #(or % [:info "Ei suunnitelmaa"]) :suunniteltu_maara)
+                          #(or (:nimi %) (info-solu ""))
+                          #(or (:yksikko %) (info-solu ""))
+                          (comp #(or % (info-solu "")) :yksikkohinta)
+                          (comp #(or % (info-solu "Ei suunnitelmaa")) :suunniteltu_maara)
                           (comp #(or % 0) :toteutunut_maara)
-                          (comp #(or % [:info ""]) :suunnitellut_kustannukset)
-                          (comp #(or % [:info ""]) :toteutuneet_kustannukset)))
+                          (comp #(or % (info-solu "")) :suunnitellut_kustannukset)
+                          (comp #(or % (info-solu "")) :toteutuneet_kustannukset)))
                   (when (not (empty? naytettavat-rivit))
                     ["Yhteensä" nil nil nil nil nil nil
                      (reduce + (keep :toteutuneet_kustannukset naytettavat-rivit))])))]
