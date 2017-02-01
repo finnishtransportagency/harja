@@ -31,7 +31,7 @@ BEGIN
           JOIN urakka u ON ypk.urakka = u.id
         WHERE urakka.id = urakkaid
   GROUP BY u.id, u.nimi) AS geometriat
-  WHERE urakka.id = urakkaid;
+  WHERE u.id = urakkaid;
 RETURN;
 END;
 $$ LANGUAGE plpgsql;
