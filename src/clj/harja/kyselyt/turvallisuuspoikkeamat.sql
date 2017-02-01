@@ -206,8 +206,8 @@ SELECT
 
   u.sampoid                             AS "urakka-sampoid",
   hlo.kayttajatunnus                    AS "tilaajanvastuuhenkilo-kayttajatunnus",
-  hlo.nimi                              AS "tilaajanvastuuhenkilo-etunimi",
-  hlo.nimi                              AS "tilaajanvastuuhenkilo-sukunimi",
+  hlo.etunimi                           AS "tilaajanvastuuhenkilo-etunimi",
+  hlo.sukunimi                          AS "tilaajanvastuuhenkilo-sukunimi",
   hlo.sahkoposti                        AS "tilaajanvastuuhenkilo-sposti",
   u.tyyppi                              AS "urakka-tyyppi",
   o.lyhenne                             AS "urakka-ely",
