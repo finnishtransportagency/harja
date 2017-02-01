@@ -325,6 +325,7 @@
    :tiedot (vec (concat [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
                          {:otsikko "Päättynyt" :tyyppi :pvm-aika :nimi :paattynyt}
                          {:otsikko "Klo (arvio)" :tyyppi :pvm-aika
+                          ;; Arvioitu aika pisteessä saa puuttua, eli validointifunktio on (constantly true)
                           :hae (hakufunktio (constantly true) :aika-pisteessa)}
                          {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite
                           :nimi :tierekisteriosoite}
@@ -335,6 +336,8 @@
                         (for [{:keys [toimenpide maara yksikko]} (:tehtavat toteuma)]
                           {:otsikko toimenpide
                            :hae (hakufunktio
+                                  ;; Näitä ei edes tehdä jos arvot puuttuvat, joten ei
+                                  ;; tarvita erityistä validointia.
                                   (constantly true)
                                   (constantly (str maara " " yksikko)))})
 
