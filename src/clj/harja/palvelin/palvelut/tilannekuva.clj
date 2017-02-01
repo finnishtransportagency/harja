@@ -54,13 +54,15 @@
              [konversio :as konv]
              [tilannekuva :as q]
              [turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
-             [urakat :as urakat-q]]
+             [urakat :as urakat-q]
+             [toteumat :as toteumat-q]]
             [harja.palvelin.komponentit.http-palvelin
              :refer
              [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.palvelut
              [karttakuvat :as karttakuvat]
-             [urakat :as urakat]]
+             [urakat :as urakat]
+             [interpolointi :as interpolointi]]
             [harja.ui.kartta.esitettavat-asiat
              :as esitettavat-asiat
              :refer [kartalla-esitettavaan-muotoon-xf]]
@@ -475,7 +477,6 @@
                                        :tyyppi-kartalla :toteuma
                                        :tehtavat [(:tehtava %)]))))
 
-
 (defn- hae-toteumien-tiedot-kartalle
   "Hakee toteumien tiedot pisteessä infopaneelia varten."
   [db user parametrit]
@@ -484,7 +485,8 @@
          (comp
           (map konv/alaviiva->rakenne)
           (map #(assoc % :tyyppi-kartalla :toteuma))
-          (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
+          (map #(update % :tierekisteriosoite konv/lue-tr-osoite))
+          (map #(interpolointi/interpoloi-toteuman-aika-pisteelle % parametrit db)))
          (q/hae-toteumien-asiat db
                                 (as-> parametrit p
                                   (suodattimet-parametreista p)
@@ -492,7 +494,6 @@
                                   (assoc p :toimenpidekoodit (toteumien-toimenpidekoodit db p))
                                   (merge p (select-keys parametrit [:x :y])))))
    {:tehtava :tehtavat}))
-
 (defn- hae-tarkastuksien-sijainnit-kartalle
   "Hakee tarkastuksien sijainnit karttakuvaan piirrettäväksi."
   [db user parametrit]

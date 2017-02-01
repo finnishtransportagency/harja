@@ -186,7 +186,7 @@
     :kiinteys 3
     :soratie-tasaisuus 3}])
 
-(def tarkastus-jossa-soratie-kiinteys-jatkuu
+(def tarkastus-jossa-soratie-kiinteys-jatkuu-vaikka-gps-sekoaa
   "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
   [{:id 2 :sijainti [465641.5999816895 7230780.000024414]
     :jatkuvat-havainnot [3]
@@ -196,7 +196,7 @@
     :jatkuvat-havainnot [3]
     :soratie-tasaisuus 1
     :kiinteys 3}
-   {:id 4 :sijainti nil ;; GPS sekoaa
+   {:id 4 :sijainti nil ;; GPS sekoaa, mutta sama tarkastus jatkuu kunnes todistettavasti on syytä katkaista
     :jatkuvat-havainnot [3]
     :soratie-tasaisuus 1
     :kiinteys 3}
@@ -273,6 +273,15 @@
   [{:id 0 :sijainti [464681.5999816895 7230492.000024414]
     :jatkuvat-havainnot [17]}
    {:id 1 :sijainti nil
+    :jatkuvat-havainnot [17]}
+   {:id 2 :sijainti nil
+    :jatkuvat-havainnot [17]
+    :kitkamittaus 0.3}])
+
+(def tarkastus-jossa-sijainti-puuttuu-alusta
+  [{:id 0 :sijainti nil
+    :jatkuvat-havainnot [17]}
+   {:id 1 :sijainti [464681.5999816895 7230492.000024414]
     :jatkuvat-havainnot [17]}
    {:id 2 :sijainti nil
     :jatkuvat-havainnot [17]

@@ -28,8 +28,7 @@
   [db user oikeustarkistus-fn sijainti]
   "Palauttaa yksinkertaisen vectorin urakoita, joihin käyttäjällä on annettu oikeus.
   Urakat ovat järjestyksessä, lähin ensimmäisenä.
-  Oikeustarkistus on 2-arity funktio (urakka-id ja käyttäjä),
-  joka tarkistaa, että käyttäjä voi lukea urakkaa annetulla oikeudella."
+  Oikeustarkistus on 2-arity funktio (urakka-id ja käyttäjä)."
   (into []
         (filter (fn [{:keys [id] :as urakka}]
                   (oikeustarkistus-fn id user)))
