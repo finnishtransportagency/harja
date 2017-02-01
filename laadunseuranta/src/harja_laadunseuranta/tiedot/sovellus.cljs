@@ -9,11 +9,13 @@
    :alustus {:gps-tuettu nil
              :idxdb-tuettu nil
              :ensimmainen-sijainti-saatu nil ; Estää sovelluksen käytön jos GPS ei toimi oikein
-             :ensimmainen-sijainti-virhekoodi nil
              :verkkoyhteys? (.-onLine js/navigator)
              :selain-tuettu? (utils/tuettu-selain?)
              :kayttaja-tunnistettu nil
-             :selain-vanhentunut? (utils/vanhentunut-selain?)}
+             :selain-vanhentunut? (utils/vanhentunut-selain?)
+
+             ;; Virheviestejä yms. varten:
+             :ensimmainen-sijainti-virhekoodi nil}
 
    ;; Tarkastusajon perustiedot
    :tarkastusajo-alkamassa? false ; Käynnistysnappia painettu UI:sta

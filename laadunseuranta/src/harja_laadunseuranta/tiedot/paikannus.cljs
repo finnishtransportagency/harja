@@ -81,6 +81,7 @@
                                                         (paivita-sijainti entinen (konvertoi-latlon sijainti) (timestamp)))))
                sijainti-epaonnistui (fn [virhe]
                                       (yrita-kasvattaa-paikannuksen-raportointivalia)
+                                      (.log js/console "Paikannus epäonnistui, uusi väli: " @paikan-raportointivali-ms)
                                       (when (and ensimmainen-sijainti-saatu-atom ensimmainen-sijainti-virhekoodi-atom
                                                  (nil? @ensimmainen-sijainti-saatu-atom)
                                                  (>= @paikan-raportointivali-ms paikan-raportointivali-ms-max))

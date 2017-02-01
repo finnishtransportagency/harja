@@ -1,7 +1,8 @@
 (ns harja-laadunseuranta.ui.alustus
   (:require [reagent.core :as reagent :refer [atom]]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
-            [harja-laadunseuranta.ui.yleiset.yleiset :as yleiset]))
+            [harja-laadunseuranta.ui.yleiset.yleiset :as yleiset]
+            [harja-laadunseuranta.utils :as utils]))
 
 (defn- tarkistusrivi
   "Tila on keyword: :ok :virhe :tarkistetaan"
@@ -29,8 +30,13 @@
     [:p "Tarkistetaan..."]
 
     [tarkistusrivi "Selain tuettu" selain-tuettu
-     (when selain-vanhentunut?
-       {:virhe "Selain vaatii päivityksen"})]
+     (cond (not selain-tuettu)
+           {:virhe (str "Selain ei ole tuettu. Tuetut selaimet: " (utils/tuetut-selaimet-tekstina))}
+
+           selain-vanhentunut?
+           {:virhe "Selain vaatii päivityksen uudempaan versioon."}
+
+           :default {})]
     [tarkistusrivi "Selaintietokanta-tuki" idxdb-tuettu
      (when (= idxdb-tuettu :virhe)
        {:virhe "Selaintietokantaa ei voida käyttää. Ethän käytä selainta yksityisyystilassa?"})]
@@ -41,7 +47,7 @@
        {:virhe (case ensimmainen-sijainti-virhekoodi
                  1 "GPS:n käyttö on estetty. Varmista, että laitteen paikannus on päällä ja että GPS:n käyttö on sallittu selaimen asetuksissa."
                  2 "Laitetta ei voitu paikantaa."
-                 3 "Laitetta ei voitu paikantaa määräajassa."
+                 3 "Laitetta ei voitu paikantaa."
                  "Tuntematon virhe.")})]
     [tarkistusrivi "Käyttäjä tunnistettu" kayttaja-tunnistettu]
     [tarkistusrivi "Oikeus tehdä tarkastuksia" oikeus-urakoihin
