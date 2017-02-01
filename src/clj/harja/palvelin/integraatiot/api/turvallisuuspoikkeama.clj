@@ -21,7 +21,8 @@
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [clj-time.core :as t]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [clojure.core.async :as async])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tarkista-ammatin-selitteen-tallennus [turvallisuuspoikkeamat]
@@ -248,7 +249,7 @@
     (let [idt (mapv (fn [turvallisuuspoikkeama]
                       (tallenna-turvallisuuspoikkeama liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama))
                     turvallisuuspoikkeamat)]
-      (laheta-poikkeamat-turin turi idt))
+      (async/thread (laheta-poikkeamat-turin turi idt)))
     (vastaus turvallisuuspoikkeamat)))
 
 (defrecord Turvallisuuspoikkeama []
