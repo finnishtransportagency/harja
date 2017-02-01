@@ -56,7 +56,7 @@
   (if @s/alustus-valmis?
     [paanakyma]
     [alustus/alustuskomponentti
-     {:selain-tuettu (if (and @s/selain-tuettu (not @s/selain-vanhentunut)) :ok :virhe)
+     {:selain-tuettu (if @s/selain-tuettu :ok :virhe)
       :selain-vanhentunut? @s/selain-vanhentunut
       :gps-tuettu (cond
                     (nil? @s/gps-tuettu) :tarkistetaan
