@@ -69,13 +69,15 @@
 
 (extend-protocol tuck/Event
   Nakymassa
-  (process-event [{nakymassa? :nakymassa?} tienakyma]
+  (process-event [{nakymassa? :nakymassa?} {valinnat :valinnat :as tienakyma}]
 
     (as-> tienakyma tienakyma
       (assoc tienakyma :nakymassa? nakymassa?)
 
-      (if nakymassa?
-        ;; Näkymään tullaan, alustetaan myös päivämäärä ja kello
+      (if (and nakymassa?
+               (nil? (:alku valinnat))
+               (nil? (:loppu valinnat)))
+        ;; Näkymään tullaan eikä aikaa vielä ole asetettu, alustetaan myös päivämäärä ja kello
         (update tienakyma
                 :valinnat assoc
                 :alku (pvm/aikana (pvm/nyt) 0 0 0 0)
