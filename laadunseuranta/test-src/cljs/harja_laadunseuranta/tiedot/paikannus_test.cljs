@@ -7,6 +7,15 @@
                    [harja-laadunseuranta.macros :refer [after-delay]]
                    [reagent.ratom :refer [reaction]]))
 
+(deftest testaa-paikannus
+  (async paikka-saatu
+    (let [paikka-atomi (atom nil)
+          paikannus-id (p/kaynnista-paikannus {:sijainti-atom paikka-atomi})]
+      (add-watch paikka-atomi :muuttui (fn [_ _ _ val]
+                                         #_(is (nil? val))
+                                         (p/lopeta-paikannus paikannus-id)
+                                         (paikka-saatu))))))
+
 (deftest etaisyys-test
   (is (= (p/etaisyys {:lat 1 :lon 1}
                      {:lat 2 :lon 2})

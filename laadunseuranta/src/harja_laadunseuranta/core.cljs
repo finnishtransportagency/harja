@@ -38,11 +38,16 @@
       ;; Soiton täytyy alkaa suoraan user eventistä
       (.addEventListener js/document.body "click" #(soita-video video)))))
 
+(defonce paikannus-id (cljs.core/atom nil))
+
 (defn- alusta-paikannus-id []
-  (paikannus/kaynnista-paikannus
-    sovellus/sijainti
-    sovellus/ensimmainen-sijainti-saatu
-    sovellus/ensimmainen-sijainti-virhekoodi))
+  (reset! paikannus-id (paikannus/kaynnista-paikannus
+                         {:sijainti-atom sovellus/sijainti
+                          :ensimmainen-sijainti-yritys-atom sovellus/ensimmainen-sijainti-yritys
+                          :ensimmainen-sijainti-saatu-atom sovellus/ensimmainen-sijainti-saatu
+                          :ensimmainen-sijainti-virhekoodi-atom sovellus/ensimmainen-sijainti-virhekoodi})))
+
+(defonce paikannus-id (cljs.core/atom nil))
 
 (defn- alusta-geolokaatio-api []
   (if (paikannus/geolokaatio-tuettu?)
@@ -148,7 +153,7 @@
   ([tarkastusajo-id paivitysvali] (aja-testireitti tarkastusajo-id paivitysvali +oletustarkkuus+))
   ([tarkastusajo-id paivitysvali tarkkuus]
    (.log js/console "Käynnistetään simuloidun reitin ajaminen")
-   (paikannus/lopeta-paikannus)
+   (paikannus/lopeta-paikannus @paikannus-id)
    (go
      (let [tama-simulaatio-id (hash (l/local-now))
            vastaus (<! (comms/hae-simuloitu-tarkastusajo! tarkastusajo-id))
