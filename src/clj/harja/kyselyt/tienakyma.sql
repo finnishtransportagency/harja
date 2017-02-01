@@ -10,7 +10,12 @@ SELECT t.id,
        (SELECT array_agg(row(tt.toimenpidekoodi, tt.maara, tpk.yksikko, tpk.nimi))
           FROM toteuma_tehtava tt
  	       JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-	 WHERE tt.toteuma = t.id) as tehtavat
+	 WHERE tt.toteuma = t.id) as tehtavat,
+       t.tr_numero AS tierekisteriosoite_numero,
+       t.tr_alkuosa AS tierekisteriosoite_alkuosa,
+       t.tr_alkuetaisyys AS tierekisteriosoite_alkuetaisyys,
+       t.tr_loppuosa AS tierekisteriosoite_loppuosa,
+       t.tr_loppuetaisyys AS tierekisteriosoite_loppuetaisyys
   FROM toteuma t
        JOIN urakka u ON t.urakka=u.id
        JOIN kayttaja k ON t.luoja = k.id
