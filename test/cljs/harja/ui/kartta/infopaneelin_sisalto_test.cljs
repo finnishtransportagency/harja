@@ -56,8 +56,10 @@
     (testing "Hakutapa pitää olla"
       (is (validointi-onnistuu? (otsikolla {:nimi :foo :hae nil})))
       (is (validointi-onnistuu? (otsikolla {:nimi :foo})))
-      (is (validointi-onnistuu? (otsikolla {:nimi nil :hae {:haku-fn :foo :validointi-fn #(contains? % :foo)}})))
-      (is (validointi-onnistuu? (otsikolla {:hae {:haku-fn :foo :validointi-fn #(contains? % :foo)}})))
+      (is (validointi-onnistuu? (otsikolla {:nimi nil :hae {:haku-fn :foo :validointi-fn #(contains? % :foo)
+                                                            :pakollinen? true}})))
+      (is (validointi-onnistuu? (otsikolla {:hae {:haku-fn :foo :validointi-fn #(contains? % :foo)
+                                                  :pakollinen? true}})))
 
       (is (not (validointi-onnistuu? (otsikolla {:nimi nil :hae nil}))))
       ;; :hae funktion pitää tässä vaiheessa sisältää :validointi-fn ja :hae-fn
@@ -71,14 +73,19 @@
       (is (not (validointi-onnistuu? (otsikolla {:nimi :baz})))))
 
     (testing "Jos hakutapa on :hae, pitää sillä olla validointi"
-      (is (validointi-onnistuu? (otsikolla {:hae {:validointi-fn #(contains? % :foo) :haku-fn :foo}})))
+      (is (validointi-onnistuu? (otsikolla {:hae {:validointi-fn #(contains? % :foo) :haku-fn :foo
+                                                  :pakollinen? true}})))
       (is (not (validointi-onnistuu? (otsikolla {:hae {:haku-fn :foo}})))))
 
     (testing ":hae validointi-funktion pitää onnistua"
-      (is (validointi-onnistuu? (otsikolla {:hae {:validointi-fn (constantly true) :haku-fn :foo}})))
-      (is (validointi-onnistuu? (otsikolla {:hae {:validointi-fn #(contains? % :id) :haku-fn :foo}})))
-      (is (not (validointi-onnistuu? (otsikolla {:hae {:validointi-fn (constantly false) :haku-fn :foo}}))))
-      (is (not (validointi-onnistuu? (otsikolla {:hae {:validointi-fn #(contains? % :baz) :haku-fn :foo}})))))))
+      (is (validointi-onnistuu? (otsikolla {:hae {:validointi-fn (constantly true) :haku-fn :foo
+                                                  :pakollinen? true}})))
+      (is (validointi-onnistuu? (otsikolla {:hae {:validointi-fn #(contains? % :id) :haku-fn :foo
+                                                  :pakollinen? true}})))
+      (is (not (validointi-onnistuu? (otsikolla {:hae {:validointi-fn (constantly false) :haku-fn :foo
+                                                       :pakollinen? true}}))))
+      (is (not (validointi-onnistuu? (otsikolla {:hae {:validointi-fn #(contains? % :baz) :haku-fn :foo
+                                                       :pakollinen? true}})))))))
 
 (deftest validoi-infopaneeli-skeema
   (let [data {:otsikko :foo
