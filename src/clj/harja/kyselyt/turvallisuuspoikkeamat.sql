@@ -254,7 +254,7 @@ FROM turvallisuuspoikkeama t
     ON t.urakka = u.id
 
   LEFT JOIN urakanvastuuhenkilo hlo
-    ON hlo.urakka = u.id  AND hlo.id = (SELECT id from urakanvastuuhenkilo WHERE rooli = 'ELY_Urakanvalvoja' ORDER BY ensisijainen DESC LIMIT 1 )
+    ON hlo.urakka = u.id  AND hlo.id = (SELECT id from urakanvastuuhenkilo WHERE rooli = 'ELY_Urakanvalvoja' and urakka = u.id ORDER BY ensisijainen DESC LIMIT 1 )
 
   LEFT JOIN hanke h
     ON u.hanke = h.id
