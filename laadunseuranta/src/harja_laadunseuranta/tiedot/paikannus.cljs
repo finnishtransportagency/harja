@@ -5,12 +5,15 @@
             [harja-laadunseuranta.utils :as utils]
             [harja-laadunseuranta.math :as math]
             [harja-laadunseuranta.utils :refer [timestamp ipad?]]
-            [harja-laadunseuranta.tiedot.projektiot :as projektiot]))
+            [harja-laadunseuranta.tiedot.projektiot :as projektiot]
+            [cljs-time.local :as l]))
 
 (def +oletusraportointivali+ 2000)
 (def paikan-raportointivali-ms (atom +oletusraportointivali+))
 (def +raportointivalin-kertakasvatus+ 2000)
 (def paikan-raportointivali-ms-max 8000)
+
+(def paikannus-id (atom nil))
 
 (defn- geolocation-api []
   (.-geolocation js/navigator))
@@ -65,34 +68,54 @@
 (defn- palauta-oletusraportointivali []
   (reset! paikan-raportointivali-ms +oletusraportointivali+))
 
+(defn- paikanna-laite-jatkuvasti
+  "Käynnistää paikannuksen tietyllä id:llä. Lopettaa jos paikannus-id vaihtuu."
+  [{:keys [id sijainti-atom ensimmainen-sijainti-saatu-atom
+           ensimmainen-sijainti-virhekoodi-atom]}]
+  (when (= @paikannus-id id)
+    (let [paikanna-uudelleen (fn [] (js/setTimeout #(paikanna-laite-jatkuvasti
+                                                      {:id id
+                                                       :sijainti-atom sijainti-atom
+                                                       :ensimmainen-sijainti-saatu-atom ensimmainen-sijainti-saatu-atom
+                                                       :ensimmainen-sijainti-virhekoodi-atom ensimmainen-sijainti-virhekoodi-atom})
+                                                   @paikan-raportointivali-ms))
+          sijainti-saatu (fn [sijainti]
+                           (when (= @paikannus-id id)
+                             (palauta-oletusraportointivali)
+                             (when (and ensimmainen-sijainti-saatu-atom
+                                        (nil? @ensimmainen-sijainti-saatu-atom))
+                               (reset! ensimmainen-sijainti-saatu-atom true))
+                             (swap! sijainti-atom (fn [entinen]
+                                                    (paivita-sijainti entinen (konvertoi-latlon sijainti) (timestamp))))
+                             (paikanna-uudelleen)))
+          sijainti-epaonnistui (fn [virhe]
+                                 (when (= @paikannus-id id)
+                                   (yrita-kasvattaa-paikannuksen-raportointivalia)
+                                   (.log js/console "Paikannus epäonnistui (virhe: " (.-message virhe) " ), uudet optiot: " (tee-paikannusoptiot))
+                                   (when (and ensimmainen-sijainti-saatu-atom ensimmainen-sijainti-virhekoodi-atom
+                                              (nil? @ensimmainen-sijainti-saatu-atom)
+                                              (>= @paikan-raportointivali-ms paikan-raportointivali-ms-max))
+                                     (reset! ensimmainen-sijainti-virhekoodi-atom (.-code virhe))
+                                     (reset! ensimmainen-sijainti-saatu-atom false))
+                                   (swap! sijainti-atom identity)
+                                   (paikanna-uudelleen)))]
+      (.getCurrentPosition (geolocation-api)
+                           sijainti-saatu
+                           sijainti-epaonnistui
+                           (tee-paikannusoptiot)))))
+
 (defn kaynnista-paikannus
   ([sijainti-atom] (kaynnista-paikannus sijainti-atom nil nil))
-  ([sijainti-atomi ensimmainen-sijainti-saatu-atom ensimmainen-sijainti-virhekoodi-atom]
-   (when (geolokaatio-tuettu?)
-     (.log js/console "Paikannus käynnistetään")
-     (js/setInterval
-       (fn []
-         (let [sijainti-saatu (fn [sijainti]
-                                (palauta-oletusraportointivali)
-                                (when (and ensimmainen-sijainti-saatu-atom
-                                           (nil? @ensimmainen-sijainti-saatu-atom))
-                                  (reset! ensimmainen-sijainti-saatu-atom true))
-                                (swap! sijainti-atomi (fn [entinen]
-                                                        (paivita-sijainti entinen (konvertoi-latlon sijainti) (timestamp)))))
-               sijainti-epaonnistui (fn [virhe]
-                                      (yrita-kasvattaa-paikannuksen-raportointivalia)
-                                      (.log js/console "Paikannus epäonnistui, uusi väli: " @paikan-raportointivali-ms)
-                                      (when (and ensimmainen-sijainti-saatu-atom ensimmainen-sijainti-virhekoodi-atom
-                                                 (nil? @ensimmainen-sijainti-saatu-atom)
-                                                 (>= @paikan-raportointivali-ms paikan-raportointivali-ms-max))
-                                        (reset! ensimmainen-sijainti-virhekoodi-atom (.-code virhe))
-                                        (reset! ensimmainen-sijainti-saatu-atom false))
-                                      (swap! sijainti-atomi identity))]
-           (.getCurrentPosition (geolocation-api)
-                                sijainti-saatu
-                                sijainti-epaonnistui
-                                (tee-paikannusoptiot))))
-       @paikan-raportointivali-ms))))
+  ([sijainti-atom ensimmainen-sijainti-saatu-atom ensimmainen-sijainti-virhekoodi-atom]
+   (let [tama-paikannus-id (hash (l/local-now))]
+     (when (geolokaatio-tuettu?)
+       (.log js/console "Paikannus käynnistetään")
+       (reset! paikannus-id tama-paikannus-id)
+       (paikanna-laite-jatkuvasti
+         {:id tama-paikannus-id
+          :sijainti-atom sijainti-atom
+          :ensimmainen-sijainti-saatu-atom ensimmainen-sijainti-saatu-atom
+          :ensimmainen-sijainti-virhekoodi-atom ensimmainen-sijainti-virhekoodi-atom})))))
 
 (defn aseta-testisijainti
   "HUOM: testikäyttöön. Asettaa nykyisen sijainnin koordinaatit. Oikean geolocation pollerin tulisi
@@ -108,7 +131,6 @@
                        :speed 40
                        :timestamp (timestamp)}})))
 
-(defn lopeta-paikannus [id]
-  (when id
-    (js/clearInterval id)
-    (.log js/console "Paikannut lopetettu!")))
+(defn lopeta-paikannus []
+  (reset! paikannus-id nil)
+  (.log js/console "Paikannut lopetettu!"))
