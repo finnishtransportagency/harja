@@ -61,7 +61,8 @@
 
 
 (defn- hae-tarkastukset [db parametrit]
-  (kursori/hae-kanavaan (async/chan 32 (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
+  (kursori/hae-kanavaan (async/chan 32 (comp (map konv/alaviiva->rakenne)
+                                             (map #(assoc % :tyyppi-kartalla :tarkastus))
                                              (map #(konv/string->keyword % :tyyppi))))
                         db q/hae-tarkastukset parametrit))
 

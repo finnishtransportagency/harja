@@ -27,7 +27,12 @@ SELECT t.id, t.aika, t.tyyppi, t.tarkastaja,
        CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
        THEN 'urakoitsija' :: osapuoli
        ELSE 'tilaaja' :: osapuoli
-       END AS tekija
+       END AS tekija,
+       t.tr_numero AS tierekisteriosoite_numero,
+       t.tr_alkuosa AS tierekisteriosoite_alkuosa,
+       t.tr_alkuetaisyys AS tierekisteriosoite_alkuetaisyys,
+       t.tr_loppuosa AS tierekisteriosoite_loppuosa,
+       t.tr_loppuetaisyys AS tierekisteriosoite_loppuetaisyys
 FROM tarkastus t
      JOIN kayttaja k ON t.luoja = k.id
      JOIN organisaatio o ON o.id = k.organisaatio
@@ -79,6 +84,7 @@ SELECT i.id, i.urakka, i.ilmoitusid, i.ilmoitettu,
 
 
 -- name: hae-turvallisuuspoikkeamat
+-- row-fn: muunna-turvallisuuspoikkeama
 -- fetch-size: 64
 SELECT t.id,
        t.urakka,
@@ -97,12 +103,11 @@ SELECT t.id,
        t.tr_alkuosa,
        t.tr_loppuosa,
        t.tyyppi,
-       k.id              AS korjaavatoimenpide_id,
-       k.kuvaus          AS korjaavatoimenpide_kuvaus,
-       k.suoritettu      AS korjaavatoimenpide_suoritettu
+       (SELECT array_agg(row(k.id, k.kuvaus, k.suoritettu))
+          FROM korjaavatoimenpide k
+	 WHERE k.turvallisuuspoikkeama = t.id
+	       AND k.poistettu IS NOT TRUE) AS korjaavattoimenpiteet
   FROM turvallisuuspoikkeama t
-       LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama
-                                    AND k.poistettu IS NOT TRUE
  WHERE ST_DWithin(t.sijainti, :sijainti, 25) AND
        (t.tapahtunut :: DATE BETWEEN :alku AND :loppu OR
         t.kasitelty BETWEEN :alku AND :loppu);
