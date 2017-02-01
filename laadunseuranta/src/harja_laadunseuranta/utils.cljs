@@ -41,8 +41,8 @@
 
 (defn tuetut-selaimet-tekstina []
   (str/join ", " (map #(str (:nimi %) (when-let [versio (:versio %)]
-                                        (str " (") (:versio %) ")"))
-                      tuetut-selaimet)))
+                                        (str " (" versio ")"))
+                            tuetut-selaimet))))
 
 (defn maarita-selainversio-user-agentista [user-agent-text-lowercase selain-nimi]
   (let [selain-alku-index (.indexOf user-agent-text-lowercase (str selain-nimi "/"))
