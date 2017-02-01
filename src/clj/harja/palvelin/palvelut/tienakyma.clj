@@ -72,11 +72,13 @@
                         db q/hae-turvallisuuspoikkeamat parametrit))
 
 (defn- hae-laatupoikkeamat [db parametrit]
-  (into []
-        (comp (map konv/alaviiva->rakenne)
-              (geo/muunna-pg-tulokset :sijainti)
-              (map #(assoc % :tyyppi-kartalla :laatupoikkeama)))
-        (q/hae-laatupoikkeamat db parametrit)))
+  (kursori/hae-kanavaan (async/chan 32 (comp (map konv/alaviiva->rakenne)
+                                             (geo/muunna-pg-tulokset :sijainti)
+                                             (map #(if (nil? (get-in % [:yllapitokohde :numero]))
+                                                     (dissoc % :yllapitokohde)
+                                                     %))
+                                             (map #(assoc % :tyyppi-kartalla :laatupoikkeama))))
+                        db q/hae-laatupoikkeamat parametrit))
 
 (defn- hae-ilmoitukset [db parametrit]
   (let [ch (async/chan 32)]

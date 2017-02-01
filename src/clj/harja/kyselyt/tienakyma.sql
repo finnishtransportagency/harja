@@ -108,6 +108,7 @@ SELECT t.id,
         t.kasitelty BETWEEN :alku AND :loppu);
 
 -- name: hae-laatupoikkeamat
+-- fetch-size: 64
 SELECT l.id, l.aika, l.kohde, l.tekija, l.kuvaus, l.sijainti, l.tarkastuspiste,
        CONCAT(k.etunimi, ' ', k.sukunimi) AS tekijanimi,
        l.kasittelyaika                    AS paatos_kasittelyaika,
