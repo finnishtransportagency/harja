@@ -22,6 +22,7 @@
         "tyo": "Esimerkki työ",
         "yksikko": "m2",
         "tilattu-maara": 12,
+        "ennustettu-maara": 15.3,
         "toteutunut-maara": 14.2,
         "yksikkohinta":666
       }
