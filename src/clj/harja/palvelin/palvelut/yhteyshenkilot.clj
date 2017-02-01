@@ -232,7 +232,8 @@
   (let [luo<! (fn [c kayttaja ensisijainen]
                 (q/luo-urakan-vastuuhenkilo<! c {:urakka urakka-id
                                                  :rooli rooli
-                                                 :nimi (or (:nimi kayttaja) (fmt/kayttaja kayttaja))
+                                                 :etunimi  (:etunimi kayttaja)
+                                                 :sukunimi (:sukunimi kayttaja)
                                                  :puhelin (:puhelin kayttaja)
                                                  :sahkoposti (:sahkoposti kayttaja)
                                                  :kayttajatunnus (:kayttajatunnus kayttaja)
