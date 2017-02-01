@@ -94,6 +94,7 @@ SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
 
 -- Tarkastukset
 \i testidata/tarkastukset.sql
+\i testidata/tarkastusajot.sql
 
 -- Tyokoneseurannan havainnot
 \i testidata/tyokonehavainnot.sql
@@ -123,6 +124,8 @@ SELECT paivita_pohjavesialueet();
 
 -- Tieverkko
 \i testidata/tierekisteri.sql
+
+\i testidata/tietyomaat.sql
 
 
 SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();

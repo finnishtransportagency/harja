@@ -218,14 +218,16 @@
   (pinni-ikoni vari))
 
 (defn toteuman-nuoli [nuolen-vari]
-  {:paikka [:taitokset :loppu]
-   :tyyppi :nuoli
-   :img    (nuoli-ikoni nuolen-vari)})
+  [{:paikka [:loppu]
+    :tyyppi :nuoli
+    :img (nuoli-ikoni nuolen-vari)}
+   {:paikka [:taitokset]
+    :scale 0.8
+    :tyyppi :nuoli
+    :img (nuoli-ikoni "musta")}])
 
 (defn tyokoneen-nuoli [nuolen-vari]
-  {:paikka [:loppu :taitokset]
-   :tyyppi :nuoli
-   :img (nuoli-ikoni nuolen-vari)})
+  (toteuman-nuoli nuolen-vari))
 
 (defn yllapidon-ikoni []
   {:paikka [:loppu]

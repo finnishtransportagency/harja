@@ -41,14 +41,28 @@
                          (oikeudet/voi-lukea? oikeudet/urakat urakka-id @istunto/kayttaja))
                 (urakan-toimenpiteet/hae-urakan-toimenpiteet urakka-id))))
 
-(defonce valittu-toimenpideinstanssi (reaction-writable (first @urakan-toimenpideinstanssit)))
+(defonce valitun-toimenpideinstanssin-koodi (atom nil))
+
+(defonce valittu-toimenpideinstanssi
+  (reaction-writable
+   (let [koodi @valitun-toimenpideinstanssin-koodi
+         toimenpideinstanssit @urakan-toimenpideinstanssit]
+     (or (and koodi (first (filter #(= (:t3_koodi %) koodi) toimenpideinstanssit)))
+         (first toimenpideinstanssit)))))
 
 (defn urakan-toimenpideinstanssi-toimenpidekoodille [tpk]
   (have integer? tpk)
   (first (filter #(= tpk (:id %)) @urakan-toimenpideinstanssit)))
 
-(defn valitse-toimenpideinstanssi! [tpi]
-  (reset! valittu-toimenpideinstanssi tpi))
+(defn valitse-toimenpideinstanssi-koodilla!
+  "Valitsee urakan toimenpideinstanssin 3. tason SAMPO koodin perusteella."
+  [koodi]
+  (reset! valitun-toimenpideinstanssin-koodi koodi))
+
+(defn valitse-toimenpideinstanssi! [{koodi :t3_koodi :as tpi}]
+  (valitse-toimenpideinstanssi-koodilla! koodi))
+
+
 
 (defn hoitokaudet
   "Palauttaa urakan hoitokaudet, jos kyseessä on hoidon alueurakka. Muille urakoille palauttaa
@@ -136,6 +150,8 @@
 
 (defonce valittu-aikavali (reaction-writable @valittu-hoitokausi))
 
+(defn valitse-aikavali! [alku loppu]
+  (reset! valittu-aikavali [alku loppu]))
 
 (defn valitse-hoitokausi! [hk]
   (log "------- VALITAAN HOITOKAUSI:" (pr-str hk))

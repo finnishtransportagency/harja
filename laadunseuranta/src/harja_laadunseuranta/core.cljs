@@ -14,7 +14,8 @@
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
             [clojure.string :as str]
             [harja-laadunseuranta.ui.yleiset.dom :as dom]
-            [harja-laadunseuranta.asiakas.tapahtumat :as tapahtumat])
+            [harja-laadunseuranta.asiakas.tapahtumat :as tapahtumat]
+            [cljs-time.local :as l])
   (:require-macros [reagent.ratom :refer [run!]]
                    [cljs.core.async.macros :refer [go]]
                    [harja-laadunseuranta.macros :refer [after-delay]]))
@@ -65,9 +66,9 @@
                (not @kuvaa-otetaan-atom)
                @tarkastusajo-kaynnissa-atom)
       (ilmoitukset/ilmoita
-       "Pidä sovellus näkyvillä, muuten merkinnät eivät tallennu!"
-       sovellus/ilmoitus
-       {:tyyppi :varoitus}))))
+        "Pidä sovellus näkyvillä, muuten merkinnät eivät tallennu!"
+        sovellus/ilmoitus
+        {:tyyppi :varoitus}))))
 
 (defn- kuuntele-sivun-nakyvyytta [tarkastusajo-kaynnissa-atom kuvaa-otetaan-atom]
   (.addEventListener js/document "visibilitychange"
@@ -84,7 +85,6 @@
       (go (let [kayttajatiedot (<! (comms/hae-kayttajatiedot (:nykyinen @sovellus/sijainti)))]
             (reset! sovellus/kayttajanimi (-> kayttajatiedot :ok :nimi))
             (reset! sovellus/kayttajatunnus (-> kayttajatiedot :ok :kayttajanimi))
-            (reset! sovellus/vakiohavaintojen-kuvaukset (-> kayttajatiedot :ok :vakiohavaintojen-kuvaukset))
             (reset! sovellus/oikeus-urakoihin (-> kayttajatiedot :ok :urakat))
             (reset! sovellus/roolit (-> kayttajatiedot :ok :roolit))
             (reset! sovellus/organisaatio (-> kayttajatiedot :ok :organisaatio)))))))
@@ -134,15 +134,39 @@
                              sovellus/kuvaa-otetaan?)
   (alusta-sovellus))
 
-(defn ^:export aja-testireitti [url]
-  (paikannus/lopeta-paikannus @paikannus-id)
-  (go
-    (let [tiedosto (<! (comms/hae-tiedosto url))
-          sijainnit (str/split tiedosto "\n")]
-      (.log js/console "Ajetaan testireitti, jossa " (count sijainnit) " sijaintia")
-      (loop [[sijainti & sijainnit] sijainnit]
-        (<! (async/timeout 2000))
-        (let [[x y] (map js/parseFloat (str/split sijainti " "))]
-          (.log js/console "Sijainti: " x ", " y)
-          (paikannus/aseta-testisijainti sovellus/sijainti [x y]))
-        (recur sijainnit)))))
+;; --- Testausapurit ---
+
+(def kaynissa-oleva-simulaatio-id (atom nil))
+(def +oletuspaivitysvali+ 2000)
+(def +oletustarkkuus+ 5)
+
+(defn ^:export aja-testireitti
+  "Hakee kannasta annetun tarkastusajon id:n ja ajaa sen.
+
+   Päivitysväli kertoo, kuinka tiheästi siirrytään seuraavaan pisteeseen (ms).
+   Arvo 2000 vastaa suurin piirtein todellista ajonopeutta.
+
+   Tarkkuus on sama kuin HTML5 Geolocation API:n palauttama (säde metreinä).
+   Esim. 5 on hyvin tarkka paikannus ja 50 epätarkka."
+  ([] (aja-testireitti 1 +oletuspaivitysvali+ +oletustarkkuus+))
+  ([tarkastusajo-id] (aja-testireitti tarkastusajo-id +oletuspaivitysvali+ +oletustarkkuus+))
+  ([tarkastusajo-id paivitysvali] (aja-testireitti tarkastusajo-id paivitysvali +oletustarkkuus+))
+  ([tarkastusajo-id paivitysvali tarkkuus]
+   (.log js/console "Käynnistetään simuloidun reitin ajaminen")
+   (paikannus/lopeta-paikannus @paikannus-id)
+   (go
+     (let [tama-simulaatio-id (hash (l/local-now))
+           vastaus (<! (comms/hae-simuloitu-tarkastusajo! tarkastusajo-id))
+           sijainnit (:ok vastaus)]
+       (when (and sijainnit (> (count sijainnit) 0))
+         (.log js/console "Ajetaan testireitti, jossa " (count sijainnit) " sijaintia")
+         (reset! sovellus/keskita-ajoneuvoon? true)
+         (reset! kaynissa-oleva-simulaatio-id tama-simulaatio-id)
+         (loop [sijainti-indeksi 0]
+           (.log js/console (str "Simuloidaan sijainti (indeksi: " sijainti-indeksi ")"))
+           (let [sijainti (nth sijainnit sijainti-indeksi)]
+             (paikannus/aseta-testisijainti sovellus/sijainti (:sijainti sijainti) tarkkuus)
+             (<! (async/timeout paivitysvali))
+             (when (and (= tama-simulaatio-id @kaynissa-oleva-simulaatio-id)
+                        (< sijainti-indeksi (- (count sijainnit) 1)))
+               (recur (inc sijainti-indeksi))))))))))

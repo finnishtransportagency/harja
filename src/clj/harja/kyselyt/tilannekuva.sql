@@ -163,9 +163,14 @@ SELECT
   t.tyokonetyyppi,
   t.urakkaid,
   t.tehtavat,
-  MIN(t.lahetysaika) FILTER (WHERE t.lahetysaika BETWEEN :alku AND :loppu) AS alkanut
+  o.nimi AS organisaationimi,
+  u.nimi AS urakkanimi,
+  MIN(t.lahetysaika) FILTER (WHERE t.lahetysaika BETWEEN :alku AND :loppu) AS "ensimmainen-havainto",
+  MAX(t.lahetysaika) FILTER (WHERE t.lahetysaika BETWEEN :alku AND :loppu) AS "viimeisin-havainto"
 FROM
   tyokonehavainto t
+  LEFT JOIN organisaatio o ON t.organisaatio = o.id
+  LEFT JOIN urakka u ON u.id = t.urakkaid
 WHERE sijainti IS NOT NULL AND
       (t.urakkaid IN (:urakat) OR
       -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
@@ -173,7 +178,7 @@ WHERE sijainti IS NOT NULL AND
        (:nayta-kaikki OR t.organisaatio = :organisaatio))) AND
   (t.lahetysaika BETWEEN :alku AND :loppu) AND
   ST_Distance(t.sijainti :: GEOMETRY, ST_MakePoint(:x, :y)::geometry) < :toleranssi
-GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi, t.urakkaid;
+GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi, t.urakkaid, o.nimi, u.nimi;
 
 -- name: hae-turvallisuuspoikkeamat
 SELECT
@@ -490,6 +495,7 @@ SELECT
   tpk.yksikko        AS tehtava_yksikko,
   tt.toteuma         AS tehtava_id,
   tpk.nimi AS toimenpide,
+  -- tarvitaanko viela kun interpolointi hakee myos?
   yrita_tierekisteriosoite_pisteille2(
       alkupiste(t.reitti), loppupiste(t.reitti), 1)::TEXT AS tierekisteriosoite
 FROM toteuma_tehtava tt
@@ -505,6 +511,23 @@ WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.paattynyt BETWEEN :alku AND :loppu) AND
       ST_Distance(t.reitti, ST_MakePoint(:x,:y)) < :toleranssi;
 
+-- name: osoite-reittipisteille
+-- Palauttaa tierekisteriosoitteen
+SELECT yrita_tierekisteriosoite_pisteelle2(:piste ::geometry, :etaisyys ::integer) as tr_osoite;
+
+-- name: reittipisteiden-sijainnit-toteuman-reitilla
+SELECT
+  ST_ClosestPoint(t.reitti, rp.sijainti ::geometry) AS sijainti,
+  rp.id AS reittipiste_id,
+  rp.aika AS aika
+FROM toteuma t, reittipiste rp
+WHERE t.id = :toteuma-id AND rp.toteuma = t.id AND  rp.id IN (:reittipiste-idt);
+
+-- name: suhteellinen-paikka-pisteiden-valissa
+SELECT
+  ST_LineLocatePoint(v.viiva ::geometry, ST_ClosestPoint (v.viiva ::geometry, :piste ::geometry) ::geometry) AS paikka
+FROM
+  (SELECT ST_MakeLine(:rp1 ::geometry, :rp2 ::geometry) AS viiva) v;
 
 -- name: hae-tyokoneselitteet
 -- Hakee työkoneiden selitteet

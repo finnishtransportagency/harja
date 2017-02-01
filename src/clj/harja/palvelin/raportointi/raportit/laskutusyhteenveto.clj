@@ -2,7 +2,7 @@
   "Laskutusyhteenveto"
   (:require [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
             [taoensso.timbre :as log]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi]]
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
             [harja.palvelin.palvelut.indeksit :as indeksipalvelu]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
@@ -347,14 +347,8 @@
                [:raportti {:nimi "Laskutusyhteenveto"}
                 [:otsikko (str (or (str urakan-nimi ", ") "") (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))]
                 (when (and indeksi-kaytossa? perusluku)
-                  [:teksti (str (str "Indeksilaskennan perusluku: " (fmt/desimaaliluku perusluku 1))
-                                (when kyseessa-kk-vali?
-                                  (str ". Kuukauden " (pvm/kuukausi-ja-vuosi alkupvm)
-                                       " " (:nimi kkn-indeksiarvo)
-                                       " indeksiarvo"
-                                       (if kkn-indeksiarvo
-                                         (str ": " (fmt/desimaaliluku (:arvo kkn-indeksiarvo) 1))
-                                         " puuttuu."))))])
+                  (yleinen/indeksitiedot {:perusluku perusluku :kyseessa-kk-vali? kyseessa-kk-vali?
+                                          :alkupvm alkupvm :kkn-indeksiarvo kkn-indeksiarvo}))
                 varoitus-tietojen-puuttumisesta
                 (if (empty? taulukot)
                   [:teksti " Ei laskutettavaa"]

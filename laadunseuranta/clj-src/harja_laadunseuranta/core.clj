@@ -6,7 +6,7 @@
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [harja-laadunseuranta.tietokanta :as tietokanta]
             [harja-laadunseuranta.kyselyt :as q]
-            [harja-laadunseuranta.tarkastukset :as tarkastukset]
+            [harja-laadunseuranta.tarkastusreittimuunnin.tarkastusreittimuunnin :as reittimuunnin]
             [harja-laadunseuranta.schemas :as schemas]
             [harja-laadunseuranta.utils :as utils]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
@@ -22,19 +22,25 @@
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
             [clj-time.core :as t]
-            [clj-time.coerce :as c])
+            [clj-time.coerce :as c]
+            [harja.domain.roolit :as roolit])
   (:import (org.postgis PGgeometry))
   (:gen-class))
 
 (defn- kayttajan-tarkastusurakat
   [db kayttaja sijainti]
-  (let [urakat (kayttajatiedot/kayttajan-lahimmat-urakat db
-                                                         kayttaja
-                                                         (fn [urakka kayttaja]
-                                                           (oikeudet/voi-kirjoittaa?
-                                                             oikeudet/urakat-laadunseuranta-tarkastukset
-                                                             urakka kayttaja))
-                                                         sijainti)
+  (let [urakat (kayttajatiedot/kayttajan-lahimmat-urakat
+                 db
+                 kayttaja
+                 (fn [urakka kayttaja]
+                   (or
+                     (oikeudet/voi-kirjoittaa?
+                       oikeudet/urakat-laadunseuranta-tarkastukset
+                       urakka kayttaja)
+                     (oikeudet/voi-kirjoittaa?
+                       oikeudet/laadunseuranta-kirjaus
+                       urakka kayttaja)))
+                 sijainti)
         urakat (map
                  #(assoc % :oma-urakka?
                            (boolean ((set
@@ -140,18 +146,23 @@
   {:reitilliset-tarkastukset (mapv #(assoc % :urakka urakka-id) reitilliset-tarkastukset)
    :pistemaiset-tarkastukset (mapv #(assoc % :urakka urakka-id) pistemaiset-tarkastukset)})
 
-(defn- muunna-tarkastusajon-reittipisteet-tarkastuksiksi [tx tarkastusajo kayttaja urakka-id]
+(defn tallenna-muunnetut-tarkastukset-kantaan [tx tarkastukset kayttaja urakka-id]
+  (log/debug "Tallennetaan tarkastukset urakkaan " urakka-id)
+  (reittimuunnin/tallenna-tarkastukset! tx tarkastukset kayttaja)
+  (log/debug "Reittimerkitöjen muunto tarkastuksiksi suoritettu!"))
+
+(defn muunna-tarkastusajon-reittipisteet-tarkastuksiksi [tx tarkastusajo-id]
   (log/debug "Muutetaan reittipisteet tarkastuksiksi")
-  (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)
-        merkinnat-tr-osoitteilla (q/hae-reitin-merkinnat-tieosoitteilla
+  (let [merkinnat-tr-osoitteilla (q/hae-reitin-merkinnat-tieosoitteilla
                                    tx {:tarkastusajo tarkastusajo-id
-                                       :treshold 100})
+                                       :laheiset_tiet_threshold 100})
         merkinnat-tr-osoitteilla (lisaa-reittimerkinnoille-lopullinen-tieosoite merkinnat-tr-osoitteilla)
-        tarkastukset (-> (tarkastukset/reittimerkinnat-tarkastuksiksi merkinnat-tr-osoitteilla)
-                         (lisaa-tarkastuksille-urakka-id urakka-id))]
-    (log/debug "Reittipisteet muunnettu tarkastuksiksi. Tallennetaan tarkastukset urakkaan " urakka-id)
-    (tarkastukset/tallenna-tarkastukset! tx tarkastukset kayttaja)
-    (log/debug "Reittimerkitöjen muunto tarkastuksiksi suoritettu!")))
+        tarkastukset (reittimuunnin/reittimerkinnat-tarkastuksiksi
+                       merkinnat-tr-osoitteilla
+                       {:analysoi-rampit? true
+                        :analysoi-ymparikaantymiset? true})]
+    (log/debug "Reittipisteet muunnettu tarkastuksiksi.")
+    tarkastukset))
 
 (defn paata-tarkastusajo! [db tarkastusajo kayttaja]
   (jdbc/with-db-transaction [tx db]
@@ -162,14 +173,25 @@
                                             urakka-id)
           ajo-paatetty (:paatetty (first (q/ajo-paatetty tx {:id tarkastusajo-id})))]
       (if-not ajo-paatetty
-        (do
-          (muunna-tarkastusajon-reittipisteet-tarkastuksiksi tx tarkastusajo kayttaja urakka-id)
+        (let [tarkastukset (muunna-tarkastusajon-reittipisteet-tarkastuksiksi
+                             tx
+                             tarkastusajo-id)
+              tarkastukset (lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)]
+          (tallenna-muunnetut-tarkastukset-kantaan tx tarkastukset kayttaja urakka-id)
           (merkitse-ajo-paattyneeksi! tx tarkastusajo-id kayttaja))
         (log/warn (format "Yritettiin päättää ajo %s, joka on jo päätetty!" tarkastusajo-id))))))
 
 (defn- luo-uusi-tarkastusajo! [db tiedot kayttaja]
   (q/luo-uusi-tarkastusajo<! db {:ulkoinen_id 0
                                  :kayttaja (:id kayttaja)}))
+
+(defn- hae-tarkastusajon-reitti [db tiedot kayttaja]
+  (roolit/vaadi-rooli kayttaja roolit/jarjestelmavastaava)
+  (let [merkinnat (mapv
+                    #(assoc % :sijainti (let [geometria (.getGeometry (:sijainti %))]
+                                          [(.x geometria) (.y geometria)]))
+                    (q/hae-tarkastusajon-reitti db {:id (:tarkastusajo-id tiedot)}))]
+    merkinnat))
 
 (defn- hae-tr-osoite [db lat lon treshold]
   (try
@@ -251,6 +273,13 @@
         (log/debug "Luodaan uusi tarkastusajo " tiedot)
         (luo-uusi-tarkastusajo! db tiedot user)))
 
+    :ls-simuloitu-reitti
+    (kasittele-api-kutsu
+      s/Any s/Any
+      (fn [user tiedot]
+        (log/debug "Palautetaan aiemmin ajettu tarkastusreitti simuloitua ajoa varten " tiedot)
+        (hae-tarkastusajon-reitti db tiedot user)))
+
     :ls-hae-tr-tiedot
     (kasittele-api-kutsu
       s/Any s/Any
@@ -270,8 +299,7 @@
                       " "
                       (:sukunimi kayttajatiedot-kannassa))
            :urakat kayttajan-tarkastusurakat
-           :organisaatio (:organisaatio kayttajatiedot-kannassa)
-           :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset db)})))))
+           :organisaatio (:organisaatio kayttajatiedot-kannassa)})))))
 
 
 (defn- tallenna-liite [db req]
@@ -293,7 +321,6 @@
   ;; Laadunseurannan API kutsut
   (laadunseuranta-api db http))
 
-
 (defrecord Laadunseuranta [asetukset]
   component/Lifecycle
   (start [{db :db
@@ -306,11 +333,10 @@
 
   (stop [{http :http-palvelin :as this}]
     (http-palvelin/poista-palvelut http
-                                   :ls-juuri-1 :ls-juuri-2
-                                   :ls-tallenna-liite
                                    :ls-reittimerkinta
                                    :ls-paata-tarkastusajo
                                    :ls-uusi-tarkastusajo
-                                   :ls-hae-tr-tiedot
-                                   :ls-hae-kayttajatiedot)
+                                   :ls-paata-tarkastusajo
+                                   :ls-hae-kayttajatiedot
+                                   :ls-tallenna-liite)
     this))

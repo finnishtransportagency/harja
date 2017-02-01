@@ -97,8 +97,6 @@
             :nayta-ortokuva? false}
 
    ;; Muut
-   :vakiohavaintojen-kuvaukset nil ; Serveriltä saadut tiedot vakiohavainnoista
-
    :ilmoitus nil ; Nykyinen näytettävä ilmoitus (jos ei käytetä ilmoitusjonoa)
    :ilmoitukseen-liittyva-havainto-id nil ; tarjoaa mahdollisuuden avata lomake ko. pikahavaintoon sidottuna
    :idxdb nil ; indexed db kahva
@@ -109,7 +107,6 @@
 
 ;; Cursorit helpottamaan tilan muokkausta
 
-(def vakiohavaintojen-kuvaukset (reagent/cursor sovellus [:vakiohavaintojen-kuvaukset]))
 (def palautettava-tarkastusajo (reagent/cursor sovellus [:palautettava-tarkastusajo]))
 
 (def tr-tiedot (reagent/cursor sovellus [:tr-tiedot]))
@@ -165,10 +162,10 @@
 
 (def ajoneuvon-sijainti (reaction
                           (if (:nykyinen @sijainti)
-                            (:nykyinen @sijainti)
+                            @sijainti
                             tyhja-sijainti)))
 
-(def kartan-keskipiste (reaction @ajoneuvon-sijainti))
+(def kartan-keskipiste (reaction (:nykyinen @ajoneuvon-sijainti)))
 
 (def tarkastusajo-kaynnissa? (reagent/cursor sovellus [:tarkastusajo-kaynnissa?]))
 (def ilmoitus (reagent/cursor sovellus [:ilmoitus]))

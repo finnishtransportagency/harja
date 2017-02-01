@@ -9,6 +9,7 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.id :refer [id-olemassa?]]
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.geo :as geo]))
 
@@ -227,7 +228,7 @@
   (jdbc/with-db-transaction [db db]
     (doseq [toteuma toteumat]
       (log/debug "TALLENNA SUOLATOTEUMA: " toteuma)
-      (if (neg? (:id toteuma))
+      (if-not (id-olemassa? (:id toteuma))
         (luo-suolatoteuma db user urakka-id sopimus-id toteuma)
         (let [tmid (:tmid toteuma)]
           (if (:poistettu toteuma)

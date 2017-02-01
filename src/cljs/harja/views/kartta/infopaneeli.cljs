@@ -3,16 +3,12 @@
   olevien asioiden tiedot."
   (:require [harja.ui.komponentti :as komp]
             [reagent.core :refer [atom] :as r]
-            [cljs.core.async :as async]
             [harja.loki :refer [log tarkkaile! error] :as log]
-            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
+            [harja.ui.yleiset :refer [ajax-loader-pieni ajax-loader] :as yleiset]
             [harja.ui.napit :as napit]
             [harja.ui.debug :refer [debug]]
             [harja.ui.kentat :as kentat]
-            [harja.ui.kartta.infopaneelin-sisalto :as infopaneelin-sisalto]
-            [harja.ui.ikonit :as ikonit])
-  (:require-macros
-   [cljs.core.async.macros :as async-macros]))
+            [harja.ui.kartta.infopaneelin-sisalto :as infopaneelin-sisalto]))
 
 (defn otsikko
   "Näyttää infopaneelin asialle otsikon, jota klikkaamalla asian saa auki/kiinni"
@@ -38,47 +34,73 @@
       nil)
     ;; else
     [:div.ip-osio
-     (when-let [{:keys [teksti toiminto]} (tyyppi @linkin-kasittelijat)]
-       [:div [napit/yleinen teksti #(toiminto data) {:luokka "ip-toiminto btn-xs"}]])
+     (when-let [linkit (tyyppi linkin-kasittelijat)]
+       [:div
+        (doall
+         (map-indexed
+          (fn [i {:keys [teksti ikoni tooltip toiminto]}]
+            ^{:key (str "ip-toiminto-" i)}
+            [yleiset/wrap-if tooltip
+             [yleiset/tooltip {} :% tooltip]
+             [napit/yleinen teksti #(toiminto data) {:ikoni ikoni
+                                                     :luokka "ip-toiminto btn-xs"}]])
+          (if (vector? linkit)
+            linkit [linkit])))])
      (apply yleiset/tietoja {}
             (mapcat (juxt :otsikko
                           (fn [kentan-skeema]
                             [kentat/nayta-arvo kentan-skeema (kentan-arvo kentan-skeema data)]))
                     tiedot))]))
 
-(defn infopaneeli-komponentti [asiat avatut-asiat toggle-asia! piilota-fn! linkkifunktiot]
+(defn sulje-nappi [piilota-fn!]
+  (when piilota-fn!
+    [:div
+     [napit/sulje piilota-fn!]]))
+
+(defn infopaneeli-komponentti [{:keys [haetaan? avatut-asiat toggle-asia! piilota-fn! linkkifunktiot]} asiat]
   [:span
-   [:div
-    [napit/sulje piilota-fn!]]
+   [sulje-nappi piilota-fn!]
+   (when haetaan? [ajax-loader-pieni "Haetaan..." {:luokka "ip-loader"}])
+
+   (when (and (empty? asiat) (not haetaan?))
+     [:span "Pisteestä ei löytynyt hakutuloksia."])
 
    (doall
-    (for [[i asia] (zipmap (range) asiat)
-          :let [auki? (avatut-asiat i)]]
-      ^{:key i}
+    (for [[i asia] (partition 2 (interleave (range) asiat))
+          :let [auki? (avatut-asiat asia)]]
+      ^{:key (str "infopaneelin-elementti_" i)}
       [:div
-       [otsikko asia #(toggle-asia! i)]
+       [otsikko asia #(toggle-asia! asia)]
        (when auki?
          [yksityiskohdat asia linkkifunktiot])]))])
 
 (defn infopaneeli [asiat-pisteessa piilota-fn! linkkifunktiot]
-  (let [avatut-asiat (atom #{})
+  (let [asiat-skeemamuodossa (atom nil)
+        avatut-asiat (atom #{})
         toggle-asia! (fn [asia]
                        (swap! avatut-asiat
                               #(if (% asia)
                                  (disj % asia)
-                                 (conj % asia))))]
+                                 (conj % asia))))
+        paivita-asiat! (fn [{asiat :asiat :as asiat-pisteessa}]
+                         (let [asiat (infopaneelin-sisalto/skeemamuodossa asiat)]
+                           (reset! asiat-skeemamuodossa asiat)
+                           (reset! avatut-asiat
+                                   (if (= 1 (count asiat))
+                                     (into #{} asiat)
+                                     #{}))))]
+    (paivita-asiat! asiat-pisteessa)
     (komp/luo
-     (komp/kun-muuttuu (fn [_ _ _]
-                         (reset! avatut-asiat #{})))
-     (fn [asiat-pisteessa piilota-fn! linkkifunktiot]
-       (let [{:keys [asiat haetaan?]} asiat-pisteessa
-             asiat (infopaneelin-sisalto/skeemamuodossa asiat)
-             avatut (if (= 1 (count asiat))
-                      (constantly true)
-                      @avatut-asiat)]
-         (if haetaan?
-           [:div
-            [ajax-loader]]
-           [infopaneeli-komponentti
-            asiat avatut toggle-asia!
-            piilota-fn! linkkifunktiot]))))))
+      (komp/vanhat-ja-uudet-parametrit
+        (fn [[vanhat-asiat _ _] [uudet-asiat _ _]]
+          ;; Infopaneeli saa propseja joka kerta kun karttaa zoomataa, jonka takia avatut asiat
+          ;; resetoitiin joka kerta kun vaikka nyt esimerkiksi zoomasi.
+          (when-not (= vanhat-asiat uudet-asiat) (paivita-asiat! uudet-asiat))))
+     (fn [{haetaan? :haetaan? :as asiat-pisteessa} piilota-fn! linkkifunktiot]
+       [infopaneeli-komponentti
+        {:haetaan? haetaan?
+         :avatut-asiat @avatut-asiat
+         :toggle-asia! toggle-asia!
+         :piilota-fn! piilota-fn!
+         :linkkifunktiot @linkkifunktiot}
+        @asiat-skeemamuodossa]))))

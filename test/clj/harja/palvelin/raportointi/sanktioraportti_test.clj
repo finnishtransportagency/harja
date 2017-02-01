@@ -69,7 +69,7 @@
                                                       :urakkatyyppi "hoito"}})
         nurkkasumma (last (last (last (last vastaus))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 48419.80))
+    (is (=marginaalissa? nurkkasumma 67419.81))
     (let [otsikko "Pohjois-Pohjanmaa, Sanktioiden yhteenveto ajalta 01.10.2011 - 01.10.2016"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko

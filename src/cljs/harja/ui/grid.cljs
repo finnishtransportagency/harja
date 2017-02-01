@@ -430,8 +430,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                  tallenna-vain-muokatut)
 
         fokus (atom nil) ;; nyt fokusoitu item [id :sarake]
-        vetolaatikot-auki (atom (into #{}
-                                      (:vetolaatikot-auki opts)))
+        vetolaatikot-auki (or (:vetolaatikot-auki opts)
+                              (atom #{}))
         validoi-ja-anna-virheet (fn [virheet uudet-tiedot tyyppi]
                                   (into {}
                                         (keep (fn [rivi]
@@ -648,23 +648,24 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
       (komp/dom-kuuntelija js/window
                            EventType/SCROLL kasittele-scroll-event
                            EventType/RESIZE kasittele-resize-event)
+
       {:component-will-receive-props
-       (fn [this & [_ _ _ tiedot]]
-         ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
-         (nollaa-muokkaustiedot!)
-         (when muokkaa-aina
-           (aloita-muokkaus! tiedot))
-         (reset! rivien-maara (count tiedot))
-         (maarita-rendattavien-rivien-maara this))
+          (fn [this & [_ _ _ tiedot]]
+            ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
+            (nollaa-muokkaustiedot!)
+            (when muokkaa-aina
+              (aloita-muokkaus! tiedot))
+            (reset! rivien-maara (count tiedot))
+            (maarita-rendattavien-rivien-maara this))
 
-       :component-did-mount
-       (fn [this _]
-         (maarita-kiinnitetyn-otsikkorivin-leveys this)
-         (maarita-rendattavien-rivien-maara this))
+          :component-did-mount
+          (fn [this _]
+            (maarita-kiinnitetyn-otsikkorivin-leveys this)
+            (maarita-rendattavien-rivien-maara this))
 
-       :component-will-unmount
-       (fn []
-         (nollaa-muokkaustiedot!))}
+          :component-will-unmount
+          (fn []
+            (nollaa-muokkaustiedot!))}
       (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu
                     piilota-toiminnot? nayta-toimintosarake?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot
@@ -920,8 +921,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
         virheet-atom (or (:virheet opts) (atom {})) ;; validointivirheet: (:id rivi) => [virheet]
-        vetolaatikot-auki (atom (into #{}
-                                      (:vetolaatikot-auki opts)))
+        vetolaatikot-auki (or (:vetolaatikot-auki opts)
+                              (atom #{}))
         fokus (atom nil)
         ohjaus-fn (fn [muokatut virheet skeema]
                     (reify Grid

@@ -11,6 +11,7 @@
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [harja.domain.oikeudet :as oikeudet]
             [clj-time.core :as t]
+            [harja.id :refer [id-olemassa?]]
             [clj-time.coerce :as c]))
 
 (defn kasittele-vain-yksi-vamma-ja-ruumiinosa [turpo]
@@ -72,7 +73,7 @@
     annettu turvallisuuspoikkeaman id.")
 
   (log/debug "Tallenna korjaava toimenpide " (pr-str korjaavatoimenpide))
-  (if-not (or (nil? id) (neg? id))
+  (if (id-olemassa? id)
     (q/paivita-korjaava-toimenpide<!
       db
       {:otsikko otsikko
@@ -163,7 +164,7 @@
                 :tila (name tila)
                 :ilmoitukset_lahetetty (when ilmoituksetlahetetty
                                          (konv/sql-timestamp ilmoituksetlahetetty))})]
-    (if id
+    (if (id-olemassa? id)
       (do (q/paivita-turvallisuuspoikkeama! db (assoc parametrit :id id))
           id)
       (:id (q/luo-turvallisuuspoikkeama<! db parametrit)))))
@@ -198,7 +199,7 @@
       tp-id)))
 
 (defn- vaadi-turvallisuuspoikkeaman-kuuluminen-urakkaan [db urakka-id turvallisuuspoikkeama-id]
-  (when turvallisuuspoikkeama-id
+  (when (id-olemassa? turvallisuuspoikkeama-id)
     (let [turpon-todellinen-urakka-id (:urakka (first
                                                  (q/hae-turvallisuuspoikkeaman-urakka db turvallisuuspoikkeama-id)))]
       (log/debug "Tarkistetaan, että väitetty urakka-id " urakka-id " = " turpon-todellinen-urakka-id)
