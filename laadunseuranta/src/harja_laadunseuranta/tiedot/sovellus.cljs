@@ -6,8 +6,7 @@
 
 (def sovelluksen-alkutila
   {;; Sovelluksen alustustiedot
-   :alustus {:alustettu? false
-             :gps-tuettu nil
+   :alustus {:gps-tuettu nil
              :idxdb-tuettu nil
              :ensimmainen-sijainti-saatu nil ; Estää sovelluksen käytön jos GPS ei toimi oikein
              :verkkoyhteys? (.-onLine js/navigator)
@@ -142,7 +141,6 @@
                                               (get-in sovellus [:kayttaja :kayttajanimi])
                                               (not (empty? (get-in sovellus [:kayttaja :oikeus-urakoihin]))))))))
 
-(def sovellus-alustettu (reagent/cursor sovellus [:alustus :alustettu?]))
 (def verkkoyhteys (reagent/cursor sovellus [:alustus :verkkoyhteys?]))
 (def selain-tuettu (reagent/cursor sovellus [:alustus :selain-tuettu?]))
 (def selain-vanhentunut (reagent/cursor sovellus [:alustus :selain-vanhentunut?]))

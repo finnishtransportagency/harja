@@ -38,12 +38,6 @@
       ;; Soiton täytyy alkaa suoraan user eventistä
       (.addEventListener js/document.body "click" #(soita-video video)))))
 
-(defn- sovelluksen-alustusviive []
-  (run!
-    (when (and (not @sovellus/sovellus-alustettu) @sovellus/alustus-valmis?)
-      (after-delay 1000
-                   (reset! sovellus/sovellus-alustettu true)))))
-
 (defonce paikannus-id (cljs.core/atom nil))
 
 (defn- alusta-paikannus-id []
@@ -129,7 +123,6 @@
 
 (defn main []
   (esta-mobiililaitteen-nayton-lukitus)
-  (sovelluksen-alustusviive)
   (alusta-paikannus-id)
   (alusta-geolokaatio-api)
   (kuuntele-dom-eventteja)

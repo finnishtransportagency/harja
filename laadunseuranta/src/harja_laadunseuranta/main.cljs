@@ -53,7 +53,7 @@
     [spinneri s/lahettamattomia-merkintoja]]])
 
 (defn main []
-  (if @s/sovellus-alustettu
+  (if @s/alustus-valmis?
     [paanakyma]
     [alustus/alustuskomponentti
      {:selain-tuettu (if @s/selain-tuettu :ok :virhe)
