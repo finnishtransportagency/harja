@@ -463,11 +463,21 @@
             @tyorivit]])))))
 
 
+(defn- vastaava-toteuma [klikattu]
+  (some
+    (fn [haettu] (when (= (get-in haettu [:toteuma :id]) (get-in klikattu [:toteuma :id])) haettu))
+    @muut-tyot/haetut-muut-tyot))
 
 (defn muut-tyot-toteumat [ur]
   (komp/luo
     (komp/lippu muut-tyot-kartalla/karttataso-muut-tyot)
     (komp/kuuntelija :toteuma-klikattu #(reset! muut-tyot/valittu-toteuma %2))
+    (komp/sisaan-ulos #(kartta-tiedot/kasittele-infopaneelin-linkit!
+                         {:toteuma {:toiminto
+                                    (fn [klikattu]
+                                      (reset! muut-tyot/valittu-toteuma (vastaava-toteuma klikattu)))
+                                    :teksti "Valitse toteuma"}})
+                      #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
     (komp/ulos (kartta-tiedot/kuuntele-valittua! muut-tyot/valittu-toteuma)) ;;Palauttaa funktion jolla kuuntelu lopetetaan
     (fn []
       [:span
