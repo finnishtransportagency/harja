@@ -62,19 +62,16 @@
             (get-in data path puuttuu)))))
 
 (defn- hakufunktio
-  ([validointi-fn-tai-vaaditut-avaimet haku-fn]
-   (hakufunktio validointi-fn-tai-vaaditut-avaimet haku-fn true))
-  ([validointi-fn-tai-vaaditut-avaimet haku-fn pakollinen?]
-   {:validointi-fn (cond
-                     (set? validointi-fn-tai-vaaditut-avaimet)
-                     #(every? true? (map (fn [avain] (sisaltaa? % avain)) validointi-fn-tai-vaaditut-avaimet))
+  [validointi-fn-tai-vaaditut-avaimet haku-fn]
+  {:validointi-fn (cond
+                    (set? validointi-fn-tai-vaaditut-avaimet)
+                    #(every? true? (map (fn [avain] (sisaltaa? % avain)) validointi-fn-tai-vaaditut-avaimet))
 
-                     (keyword? validointi-fn-tai-vaaditut-avaimet)
-                     #(contains? % validointi-fn-tai-vaaditut-avaimet)
+                    (keyword? validointi-fn-tai-vaaditut-avaimet)
+                    #(contains? % validointi-fn-tai-vaaditut-avaimet)
 
-                     :default validointi-fn-tai-vaaditut-avaimet)
-    :pakollinen? pakollinen?
-    :haku-fn haku-fn}))
+                    :default validointi-fn-tai-vaaditut-avaimet)
+   :haku-fn haku-fn})
 
 (defmethod infopaneeli-skeema :tyokone [tyokone]
   {:tyyppi :tyokone
@@ -328,7 +325,7 @@
    :tiedot (vec (concat [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
                          {:otsikko "Päättynyt" :tyyppi :pvm-aika :nimi :paattynyt}
                          {:otsikko "Klo (arvio)" :tyyppi :pvm-aika
-                          :hae (hakufunktio :aika-pisteessa :aika-pisteessa false)}
+                          :hae (hakufunktio (constantly true) :aika-pisteessa)}
                          {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite
                           :nimi :tierekisteriosoite}
                          {:otsikko "Suorittaja" :hae (hakufunktio
@@ -431,8 +428,7 @@
                          rivin-skeema infopaneeli-skeema)
 
       ;; Haun validointi epäonnistuu
-      (and hae (not ((:validointi-fn hae) data))
-           (:pakollinen? hae))
+      (and hae (not ((:validointi-fn hae) data)))
       (rivin-skeemavirhe (str otsikko " :hae kentän :validointi-fn epäonnistui. Puuttuuko avaimia?")
                          rivin-skeema infopaneeli-skeema)
 
