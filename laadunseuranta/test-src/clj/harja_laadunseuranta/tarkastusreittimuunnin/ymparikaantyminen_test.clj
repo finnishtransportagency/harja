@@ -21,9 +21,9 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
-                        :harja-laadunseuranta
+                         :mobiili-laadunseuranta
                         (component/using
-                          (harja-laadunseuranta/->Laadunseuranta nil)
+                          (harja-laadunseuranta/->Laadunseuranta)
                           [:db :http-palvelin])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))

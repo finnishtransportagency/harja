@@ -61,7 +61,8 @@
             (get data path puuttuu)
             (get-in data path puuttuu)))))
 
-(defn- hakufunktio [validointi-fn-tai-vaaditut-avaimet haku-fn]
+(defn- hakufunktio
+  [validointi-fn-tai-vaaditut-avaimet haku-fn]
   {:validointi-fn (cond
                     (set? validointi-fn-tai-vaaditut-avaimet)
                     #(every? true? (map (fn [avain] (sisaltaa? % avain)) validointi-fn-tai-vaaditut-avaimet))
@@ -323,7 +324,9 @@
                      (string/join ", " toimenpiteet))))
    :tiedot (vec (concat [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
                          {:otsikko "Päättynyt" :tyyppi :pvm-aika :nimi :paattynyt}
-                         {:otsikko "Klo (arvio)" :tyyppi :pvm-aika :nimi :aika-pisteessa}
+                         {:otsikko "Klo (arvio)" :tyyppi :pvm-aika
+                          ;; Arvioitu aika pisteessä saa puuttua, eli validointifunktio on (constantly true)
+                          :hae (hakufunktio (constantly true) :aika-pisteessa)}
                          {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite
                           :nimi :tierekisteriosoite}
                          {:otsikko "Suorittaja" :hae (hakufunktio
@@ -333,6 +336,8 @@
                         (for [{:keys [toimenpide maara yksikko]} (:tehtavat toteuma)]
                           {:otsikko toimenpide
                            :hae (hakufunktio
+                                  ;; Näitä ei edes tehdä jos arvot puuttuvat, joten ei
+                                  ;; tarvita erityistä validointia.
                                   (constantly true)
                                   (constantly (str maara " " yksikko)))})
 

@@ -213,9 +213,11 @@
      :rivi? true}
     {:otsikko "Lumi" :tyyppi :numero :yksikko "cm"
      :nimi :lumimaara
+     :validoi [[:rajattu-numero-tai-tyhja nil 0 100 "Arvon tulee olla välillä 0-100"]]
      :hae (comp :lumimaara :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :lumimaara] %2)}
     {:otsikko "Tasaisuus" :tyyppi :numero :yksikko "cm"
-     :nimi :tasaisuus
+     :nimi :talvihoito-tasaisuus
+     :validoi [[:rajattu-numero-tai-tyhja nil 0 100 "Arvon tulee olla välillä 0-100"]]
      :hae (comp :tasaisuus :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :tasaisuus] %2)}
     {:otsikko "Kitka" :tyyppi :numero
      :nimi :kitka
