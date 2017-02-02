@@ -114,8 +114,7 @@
               materiaalit-kannassa (into {}
                                          (map (juxt materiaali-avain identity)
                                               vanhat-materiaalit))
-              materiaalit-sisaan (into #{} (map materiaali-avain materiaalit))
-              ]
+              materiaalit-sisaan (into #{} (map materiaali-avain materiaalit))]
 
           ;; Muille materiaaleille, poistetaan jos ei ole enää sisääntulevissa
           (poista-materiaalit-joita-ei-sisaan-tulevissa materiaalit-kannassa materiaalit-sisaan user c)
@@ -133,8 +132,7 @@
                   (if (== (:maara materiaali) (:maara materiaali-kannassa))
                     (do (log/debug "Ei muutosta määrään, ei päivitetä."))
                     (do (log/debug "Määrä muuttunut " (:maara materiaali-kannassa) " => " (:maara materiaali) ", päivitetään!")
-                        (q/paivita-materiaalinkaytto-maara! c (:id user) (:maara materiaali) (:id materiaali-kannassa))
-                        )))
+                        (q/paivita-materiaalinkaytto-maara! c (:id user) (:maara materiaali) (:id materiaali-kannassa)))))
 
               (let [{:keys [alkupvm loppupvm maara materiaali]} materiaali]
                 (log/debug "TÄYSIN UUSI MATSKU: " alkupvm loppupvm maara materiaali)
@@ -229,7 +227,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-suola user urakka-id)
   (jdbc/with-db-transaction [db db]
     (doseq [toteuma toteumat]
-      ;; TODO LISÄÄ VAADI FUNKTIOT
+      (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c (:tid toteuma) urakka-id)
       (log/debug "TALLENNA SUOLATOTEUMA: " toteuma)
       (if-not (id-olemassa? (:id toteuma))
         (luo-suolatoteuma db user urakka-id sopimus-id toteuma)
