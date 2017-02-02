@@ -21,6 +21,7 @@
              [harja.tiedot.tierekisteri.varusteet-test]
              [harja.ui.kartta.infopaneelin-sisalto-test]
              [harja.tiedot.tilannekuva.tienakyma-test]
+             [harja.tiedot.urakka.aikataulu-test]
              ;; uusi testi tähän
              ))
 
@@ -45,5 +46,6 @@
            'harja.tiedot.tierekisteri.varusteet-test
            'harja.ui.kartta.infopaneelin-sisalto-test
            'harja.tiedot.tilannekuva.tienakyma-test
+           'harja.tiedot.urakka.aikataulu-test
            ;; uusi testi tähän
            )
