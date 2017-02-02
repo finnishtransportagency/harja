@@ -90,7 +90,7 @@
     (log/debug "ID " id " poistetaan, sitä ei enää ole sisääntulevissa")
     (q/poista-materiaalinkaytto-id! c (:id user) id)))
 
-(defn tallenna-urakan-materiaalit [db user {:keys [urakka-id sopimus-id hoitokausi hoitokaudet tulevat-hoitokaudet-mukana? materiaalit] :as tiedot}]
+(defn tallenna-suunnitellut-materiaalit [db user {:keys [urakka-id sopimus-id hoitokausi hoitokaudet tulevat-hoitokaudet-mukana? materiaalit] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (log/debug "MATERIAALIT PÄIVITETTÄVÄKSI: " tiedot)
   (jdbc/with-db-transaction [c db]
@@ -228,6 +228,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-suola user urakka-id)
   (jdbc/with-db-transaction [db db]
     (doseq [toteuma toteumat]
+      ;; TODO LISÄÄ VAADI FUNKTIOT
       (log/debug "TALLENNA SUOLATOTEUMA: " toteuma)
       (if-not (id-olemassa? (:id toteuma))
         (luo-suolatoteuma db user urakka-id sopimus-id toteuma)
@@ -289,7 +290,7 @@
     (julkaise-palvelu (:http-palvelin this)
                       :tallenna-suunnitellut-materiaalit
                       (fn [user tiedot]
-                        (tallenna-urakan-materiaalit (:db this) user tiedot)))
+                        (tallenna-suunnitellut-materiaalit (:db this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
                       :tallenna-toteuma-materiaaleja!
                       (fn [user tiedot]
