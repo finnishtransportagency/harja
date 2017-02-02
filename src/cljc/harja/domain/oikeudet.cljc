@@ -12,13 +12,18 @@
 (declare on-oikeus? on-muu-oikeus?)
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
-(def ^:dynamic *oikeustarkistus-tehty*
-  "Onko tämän pyynnön käsittelyssä tehty jokin oikeustarkistus? nil = ei olla kutsussa, false = ei vielä, true = on tehty"
-  nil)
+#?(:clj
 
-(defn merkitse-oikeustarkistus-tehdyksi! []
-  (when (false? *oikeustarkistus-tehty*)
-    (set! *oikeustarkistus-tehty* true)))
+   (def ^:dynamic *oikeustarkistus-tehty*
+     "Onko tämän pyynnön käsittelyssä tehty jokin oikeustarkistus?
+  Kutsun aikana bindataan uudeksi atomiksi, jonka alkuarvo on false.
+  Jos ei olla kutsussa, arvo on nil."
+     nil))
+
+#?(:clj
+   (defn merkitse-oikeustarkistus-tehdyksi! []
+     (when *oikeustarkistus-tehty*
+       (reset! *oikeustarkistus-tehty* true))))
 
 #?(:cljs
    (extend-type KayttoOikeus

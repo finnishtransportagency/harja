@@ -269,7 +269,7 @@
                       (catch [:virhe :todennusvirhe] _
                         {:status 403 :body "Todennusvirhe"})
                       (finally
-                        (if (not oikeudet/*oikeustarkistus-tehty*)
+                        (if (not @oikeudet/*oikeustarkistus-tehty*)
                           (log/error "virhe: oikeustarkistusta ei tehty - uri:" (:uri req))
                           (log/debug "oikein: oikeustarkistus tehtiin - uri:" (:uri req)))
                         (metriikka/muuta! mittarit
