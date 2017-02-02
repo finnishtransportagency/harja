@@ -316,7 +316,7 @@
   ;; Laadunseurannan API kutsut
   (laadunseuranta-api db http))
 
-(defrecord Laadunseuranta [asetukset]
+(defrecord Laadunseuranta []
   component/Lifecycle
   (start [{db :db
            http :http-palvelin
