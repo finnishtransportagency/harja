@@ -207,6 +207,7 @@
                                  :loppupvm loppupvm})))
 
 (defn hae-suolamateriaalit [db user]
+  (oikeudet/ei-oikeustarkistusta!)
   (into []
         (q/hae-suolamateriaalit db)))
 

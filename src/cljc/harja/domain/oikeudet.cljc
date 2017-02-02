@@ -24,6 +24,9 @@
      (when *oikeustarkistus-tehty*
        (reset! *oikeustarkistus-tehty* true))))
 
+#?(:clj
+   (def ei-oikeustarkistusta! merkitse-oikeustarkistus-tehdyksi!))
+
 #?(:cljs
    (extend-type KayttoOikeus
      cljs.core/IFn
