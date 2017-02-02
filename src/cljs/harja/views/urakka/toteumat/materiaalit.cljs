@@ -236,8 +236,9 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                              hk
                              (first sop)))
         tallenna (reaction
-                   (if (or (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit
-                                                     (:id @nav/valittu-urakka))
+                   (if (or (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit
+                                                      (:id @nav/valittu-urakka)))
+                           (nil? @tiedot)
                            (every? :jarjestelmanlisaama @tiedot))
                      :ei-mahdollinen
                      (tallenna-toteuma-materiaaleja urakan-id tiedot)))]
@@ -248,7 +249,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
          [grid/grid
           {:otsikko (str (get-in mk [:materiaali :nimi]) " toteumat")
            :tyhja (if (nil? @tiedot) [ajax-loader "Ladataan toteumia"] "Ei toteumia")
-           :tallenna tallenna
+           :tallenna @tallenna
            :voi-lisata? false
            :esta-poistaminen? (fn [rivi] (:jarjestelmanlisaama rivi))
            :esta-poistaminen-tooltip (fn [_] "Järjestelmän lisäämää kohdetta ei voi poistaa.")
