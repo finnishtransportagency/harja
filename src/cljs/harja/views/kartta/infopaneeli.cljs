@@ -19,10 +19,11 @@
     [:span.ip-haitari-otsikko.klikattava otsikko]]])
 
 (defn- kentan-arvo [skeema data]
-  (let [arvo-fn (or (:hae skeema) (:nimi skeema))]
+  (let [arvo-fn (or (:hae skeema) (:nimi skeema))
+        arvo (when arvo-fn (arvo-fn data))]
     ;; Kentat namespace olettaa, että kentän arvo tulee atomissa
-    (when arvo-fn
-      (r/wrap (arvo-fn data)
+    (when arvo
+      (r/wrap arvo
               #(log/error "Infopaneelissa ei voi muokata tietoja: " %)))))
 
 (defn yksityiskohdat
@@ -49,7 +50,8 @@
      (apply yleiset/tietoja {}
             (mapcat (juxt :otsikko
                           (fn [kentan-skeema]
-                            [kentat/nayta-arvo kentan-skeema (kentan-arvo kentan-skeema data)]))
+                            (when-let [arvo (kentan-arvo kentan-skeema data)]
+                              [kentat/nayta-arvo kentan-skeema arvo])))
                     tiedot))]))
 
 (defn sulje-nappi [piilota-fn!]
