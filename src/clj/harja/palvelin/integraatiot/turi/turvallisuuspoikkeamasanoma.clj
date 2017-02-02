@@ -67,14 +67,14 @@
    :ei_tietoa 14})
 
 (defn vammat->numerot [vammat]
-  ;; PENDING Turi tukee tällä hetkellä vain yhtä arvoa tässä.
+  ;; todo: Turi tukee tällä hetkellä vain yhtä arvoa tässä.
   ;; Lähetetään (satunnainen) ensimmäinen arvo ja myöhemmin toivottavasti kaikki.
   (let [vamma (first vammat)]
     [(when vamma
        [:vammanlaatu (vamma->numero vamma)])])
   #_(mapv
-    (fn [vammat] [:vammanlaatu (vamma->numero vammat)])
-    vammat))
+      (fn [vammat] [:vammanlaatu (vamma->numero vammat)])
+      vammat))
 
 (def vahingoittunut-ruumiinosa->numero
   {:paan_alue 1
@@ -92,14 +92,14 @@
    :ei_tietoa 13})
 
 (defn vahingoittuneet-ruumiinosat->numerot [vahingoittuneet-ruumiinosat]
-  ;; PENDING Turi tukee tällä hetkellä vain yhtä arvoa tässä.
+  ;; todo: Turi tukee tällä hetkellä vain yhtä arvoa tässä.
   ;; Lähetetään (satunnainen) ensimmäinen arvo ja myöhemmin toivottavasti kaikki.
   (let [vahingoittunut-ruumiinosa (first vahingoittuneet-ruumiinosat)]
     [(when vahingoittunut-ruumiinosa
        [:vahingoittunutruumiinosa (vahingoittunut-ruumiinosa->numero vahingoittunut-ruumiinosa)])])
   #_(mapv
-    (fn [vammat] [:vahingoittunutruumiinosa (vahingoittunut-ruumiinosa->numero vammat)])
-    vahingoittuneet-ruumiinosat))
+      (fn [vammat] [:vahingoittunutruumiinosa (vahingoittunut-ruumiinosa->numero vammat)])
+      vahingoittuneet-ruumiinosat))
 
 (def korjaava-toimenpide-tila->numero
   {:avoin 0
@@ -141,6 +141,10 @@
           [[:tilaajanvastuuhenkilosposti (:tilaajanvastuuhenkilo-sposti data)]]
           [[:sampourakkanimi (:hanke-nimi data)]]
           [[:sampourakkaid (:urakka-sampoid data)]]
+          [[:urakanpaattymispvm (xml/formatoi-paivamaara (:urakka-loppupvm data))]]
+          [[:urakkavaylamuoto (urakan-vaylamuoto (:vaylamuoto data))]]
+          [[:urakkatyyppi (urakan-tyyppi (:urakka-tyyppi data))]]
+          [[:elyalue (str (:urakka-ely data) " ELY")]]
           [[:urakanpaattymispvm (xml/formatoi-paivamaara (:urakka-loppupvm data))]]
           [[:urakkavaylamuoto (urakan-vaylamuoto (:vaylamuoto data))]]
           [[:urakkatyyppi (urakan-tyyppi (:urakka-tyyppi data))]]
