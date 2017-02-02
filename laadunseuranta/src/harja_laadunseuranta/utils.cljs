@@ -18,20 +18,31 @@
 
 (defn iphone? []
   (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-                   [#".*iphone.*"])))
+                 [#".*iphone.*"])))
 
 (defn chrome? []
   (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-                   [#".*chrome.*"])))
+                 [#".*chrome.*"])))
 
 (defn firefox? []
   (boolean (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-                   [#".*firefox.*"])))
+                 [#".*firefox.*"])))
 
-(def +tuettu-chrome-versio+ 53) ;; Testattu toimivaksi ja toivottavasti estää useimmat Android Browserit,
-                                ;; joissa on usein vanha Chrome-versio user agentissa.
-                                ;; Android Browsereille ei voi tarjota luotettavaa tukea
-(def +tuettu-firefox-versio+ 49) ;; Testattu toimivaksi, tässä mm. Flexbox & IndexedDB mukana
+;; Nämä selaimet on käsin testattu toimivaksi.
+;; On kuitenkin syytä huomata, että esim Androidin lukuisat omat selaimet saattavat käyttää
+;; Chrome-nimeä user agentissa. Näitä ei tiedettävästi voi luotettavasti tunnistaa.
+(def tuetut-selaimet [{:avain :chrome :nimi "Google Chrome" :versio 53}
+                      {:avain :firefox :nimi "Mozilla Firefox" :versio 49} ;; mm. IndexedDB-tuki
+                      {:avain :iphone-safari :nimi "iPhone Safari"}
+                      {:avain :ipad-safari :nimi "iPad Safari"}])
+
+(defn selain-avaimella [avain]
+  (first (filter #(= (:avain %) avain) tuetut-selaimet)))
+
+(defn tuetut-selaimet-tekstina []
+  (str/join ", " (map #(str (:nimi %) (when-let [versio (:versio %)]
+                                        (str " (" versio ")")))
+                      tuetut-selaimet)))
 
 (defn maarita-selainversio-user-agentista [user-agent-text-lowercase selain-nimi]
   (let [selain-alku-index (.indexOf user-agent-text-lowercase (str selain-nimi "/"))
@@ -50,14 +61,14 @@
 (defn chrome-vanhentunut? []
   (and (chrome?)
        (< (maarita-chrome-versio-user-agentista
-             (clojure.string/lower-case js/window.navigator.userAgent))
-           +tuettu-chrome-versio+)))
+            (clojure.string/lower-case js/window.navigator.userAgent))
+          (:versio (selain-avaimella :chrome)))))
 
 (defn firefox-vanhentunut? []
   (and (firefox?)
        (< (maarita-firefox-versio-user-agentista
-             (clojure.string/lower-case js/window.navigator.userAgent))
-           +tuettu-firefox-versio+)))
+            (clojure.string/lower-case js/window.navigator.userAgent))
+          (:versio (selain-avaimella :firefox)))))
 
 (defn tuettu-selain? []
   (boolean (or (ipad?)
@@ -69,9 +80,9 @@
 
 (defn vanhentunut-selain? []
   (boolean (or (and (chrome?)
-                    (chrome-vanhentunut?)
+                    (chrome-vanhentunut?))
                (and (firefox?)
-                    (firefox-vanhentunut?))))))
+                    (firefox-vanhentunut?)))))
 
 (defn parsi-kaynnistysparametrit [params]
   (let [params (if (str/starts-with? params "?")

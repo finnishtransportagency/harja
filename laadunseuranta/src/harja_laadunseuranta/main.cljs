@@ -53,14 +53,30 @@
     [spinneri s/lahettamattomia-merkintoja]]])
 
 (defn main []
-  (if @s/sovellus-alustettu
+  (if @s/alustus-valmis?
     [paanakyma]
     [alustus/alustuskomponentti
-     {:selain-vanhentunut @s/selain-vanhentunut
-      :gps-tuettu @s/gps-tuettu
-      :ensimmainen-sijainti @s/ensimmainen-sijainti
-      :oikeus-urakoihin @s/oikeus-urakoihin
-      :idxdb-tuettu @s/idxdb
-      :kayttaja @s/kayttajanimi
-      :verkkoyhteys @s/verkkoyhteys
-      :selain-tuettu @s/selain-tuettu}]))
+     {:selain-tuettu (if @s/selain-tuettu :ok :virhe)
+      :selain-vanhentunut? @s/selain-vanhentunut
+      :gps-tuettu (cond
+                    (nil? @s/gps-tuettu) :tarkistetaan
+                    (true? @s/gps-tuettu) :ok
+                    :default :virhe)
+      :ensimmainen-sijainti-saatu (cond
+                                    (nil? @s/ensimmainen-sijainti-saatu) :tarkistetaan
+                                    (true? @s/ensimmainen-sijainti-saatu) :ok
+                                    :default :virhe)
+      :ensimmainen-sijainti-virhekoodi @s/ensimmainen-sijainti-virhekoodi
+      :oikeus-urakoihin (cond
+                          (nil? @s/oikeus-urakoihin) :tarkistetaan
+                          (not (empty? @s/oikeus-urakoihin)) :ok
+                          :default :virhe)
+      :idxdb-tuettu (cond
+                      (nil? @s/idxdb-tuettu) :tarkistetaan
+                      (true? @s/idxdb-tuettu) :ok
+                      :default :virhe)
+      :kayttaja-tunnistettu (cond
+                              (nil? @s/kayttaja-tunnistettu) :tarkistetaan
+                              (true? @s/kayttaja-tunnistettu) :ok
+                              :default :virhe)
+      :verkkoyhteys (if @s/verkkoyhteys :ok :virhe)}]))
