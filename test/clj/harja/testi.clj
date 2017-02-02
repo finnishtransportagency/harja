@@ -183,7 +183,15 @@
 
     ;; POST
     [this nimi kayttaja payload]
-    "kutsu HTTP palvelufunktiota suoraan."))
+    "kutsu HTTP palvelufunktiota suoraan.")
+
+  (kutsu-karttakuvapalvelua
+    ;; POST
+    [this nimi kayttaja payload koordinaatti extent]))
+
+(defn- palvelua-ei-loydy [nimi]
+  (is false (str "Palvelua " nimi " ei löydy!"))
+  {:error "Palvelua ei löydy"})
 
 (defn testi-http-palvelin
   "HTTP 'palvelin' joka vain ottaa talteen julkaistut palvelut."
@@ -200,12 +208,25 @@
 
       FeikkiHttpPalveluKutsu
       (kutsu-palvelua [_ nimi kayttaja]
-        ((get @palvelut nimi) kayttaja))
+        (if-let [palvelu (get @palvelut nimi)]
+          (palvelu kayttaja)
+          (palvelua-ei-loydy nimi)))
       (kutsu-palvelua [_ nimi kayttaja payload]
-        (let [vastaus ((get @palvelut nimi) kayttaja payload)]
-          (if (http/async-response? vastaus)
-            (async/<!! (:channel vastaus))
-            vastaus))))))
+        (if-let [palvelu (get @palvelut nimi)]
+          (let [vastaus (palvelu kayttaja payload)]
+            (if (http/async-response? vastaus)
+              (async/<!! (:channel vastaus))
+              vastaus))
+          (palvelua-ei-loydy nimi)))
+
+      (kutsu-karttakuvapalvelua [_ nimi kayttaja payload koordinaatti extent]
+        ((get @palvelut :karttakuva-klikkaus)
+         kayttaja
+         {:parametrit (assoc payload "_" nimi)
+          :koordinaatti koordinaatti
+          :extent (or extent
+                      [-550093.049087613 6372322.595126259 1527526.529326106 7870243.751025201])})))))
+
 
 (defn kutsu-http-palvelua
   "Lyhyt muoto testijärjestelmän HTTP palveluiden kutsumiseen."
@@ -294,6 +315,11 @@
   (ffirst (q (str "SELECT id
                   FROM   toimenpideinstanssi
                   WHERE  nimi = 'Oulu Talvihoito TP 2014-2019';"))))
+
+(defn hae-oulun-alueurakan-liikenneympariston-hoito-tpi-id []
+  (ffirst (q (str "SELECT id
+                  FROM   toimenpideinstanssi
+                  WHERE  nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019';"))))
 
 (defn hae-muhoksen-paallystysurakan-id []
   (ffirst (q (str "SELECT id
@@ -661,3 +687,11 @@
   (-> dt
       tc/from-sql-date
       (t/to-time-zone suomen-aikavyohyke)))
+
+(defn q-sanktio-leftjoin-laatupoikkeama [sanktio-id]
+  (first (q-map
+     "SELECT s.id, s.maara as summa, s.poistettu, s.perintapvm, s.sakkoryhma as laji,
+             lp.id as lp_id, lp.aika as lp_aika, lp.poistettu as lp_poistettu
+        FROM sanktio s
+             LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
+       WHERE s.id = " sanktio-id ";")))

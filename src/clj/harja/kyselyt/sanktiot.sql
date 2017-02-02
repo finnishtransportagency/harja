@@ -33,6 +33,7 @@ SET perintapvm        = :perintapvm,
   laatupoikkeama            = :laatupoikkeama,
   suorasanktio        = :suorasanktio,
   muokkaaja = :muokkaaja,
+  poistettu = :poistettu,
   muokattu = NOW()
 WHERE id = :id;
 
@@ -52,7 +53,8 @@ SELECT
   t.sanktiolaji     AS tyyppi_laji
 FROM sanktio s
   LEFT JOIN sanktiotyyppi t ON s.tyyppi = t.id
-WHERE laatupoikkeama = :laatupoikkeama;
+WHERE laatupoikkeama = :laatupoikkeama
+      AND s.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-sanktiot
 -- Palauttaa kaikki urakalle kirjatut sanktiot perintäpäivämäärällä ja toimenpideinstanssilla rajattuna
@@ -109,7 +111,7 @@ FROM sanktio s
   LEFT JOIN yllapitokohde ypk ON h.yllapitokohde = ypk.id
 WHERE
   h.urakka = :urakka
-  AND h.poistettu IS NOT TRUE
+  AND h.poistettu IS NOT TRUE AND s.poistettu IS NOT TRUE
   AND s.perintapvm >= :alku AND s.perintapvm <= :loppu;
 
 -- name: merkitse-maksuera-likaiseksi!

@@ -61,6 +61,9 @@
 (defn luo-ajo! []
   (post! asetukset/+luonti-url+ nil))
 
+(defn hae-simuloitu-tarkastusajo! [tarkastusajo-id]
+  (post! asetukset/+simuloitu-ajo-url+ {:tarkastusajo-id tarkastusajo-id}))
+
 (defn hae-kayttajatiedot [sijainti]
   (post! asetukset/+kayttajatiedot-url+ {:sijainti sijainti}))
 
