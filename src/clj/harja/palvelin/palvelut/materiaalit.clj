@@ -276,10 +276,6 @@
                       (fn [user urakka-id]
                         (hae-urakan-materiaalit (:db this) user urakka-id)))
     (julkaise-palvelu (:http-palvelin this)
-                      :poista-toteuma-materiaali!
-                      (fn [user tiedot]
-                        (poista-toteuma-materiaali! (:db this) user tiedot)))
-    (julkaise-palvelu (:http-palvelin this)
                       :hae-urakan-toteumat-materiaalille
                       (fn [user tiedot]
                         (hae-urakan-toteumat-materiaalille
@@ -333,7 +329,6 @@
                      :hae-urakan-toteumat-materiaalille
                      :hae-toteuman-materiaalitiedot
                      :hae-urakassa-kaytetyt-materiaalit
-                     :poista-toteuma-materiaali!
                      :tallenna-toteuma-materiaaleja!
                      :hae-suolatoteumat
                      :hae-suolamateriaalit
