@@ -1,2 +1,0 @@
--- Lisää uniikki indeksi: urakkaan kuuluvalla roolilla on vain yksi ensisijainen vastuuhenkilö
-CREATE UNIQUE INDEX uniikki_ensisijainen_urakanvastuuhenkilo_roolissa ON urakanvastuuhenkilo (urakka, rooli, ensisijainen);
