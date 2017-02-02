@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
             [clojure.data :refer [diff]]
-            [harja.kyselyt.konversio :as konversio]))
+            [harja.kyselyt.konversio :as konversio]
+            [harja.pvm :as pvm]))
 
 (deftest sarakkeet-vektoriin-test
   (let [mankeloitava [{:id 1 :juttu {:id 1}}
@@ -53,7 +54,29 @@
       (is (= (:pedonluku m) 666))))
 
   (testing "Reunatapaukset, tyhjä tai yksi arvo"
-    (is (= {} (konversio/pgobject->map "()")))
+    (is (= {:eka ""} (konversio/pgobject->map "()" :eka :string)))
     (is (= {:meaning-of-life 42} (konversio/pgobject->map "(42)" :meaning-of-life :long)))
     (is (= {:meta "foo, bar and baz"}
-           (konversio/pgobject->map "(\"foo, bar and baz\")" :meta :string)))))
+           (konversio/pgobject->map "(\"foo, bar and baz\")" :meta :string))))
+
+
+  (testing "Tyhjät arvot lasketaan oikein"
+    (is (= {:id 2
+            :kuvaus "kuvataan!"
+            :suoritettu ""}
+           (konversio/pgobject->map "(2,kuvataan!,)"
+                                    :id :long
+                                    :kuvaus :string
+                                    :suoritettu :string))
+        "Lopussa oleva tyhjä arvo toimii")
+    (is (= {:id 666
+            :eka ""
+            :toka "loppu"}
+           (konversio/pgobject->map "(666,,loppu)"
+                                    :id :long
+                                    :eka :string
+                                    :toka :string))))
+
+  (testing "Päivämäärän parsinta toimii"
+    (is (= (pvm/luo-pvm 3000 0 1)
+           (:p (konversio/pgobject->map "(3000-01-01 00:00:00)" :p :date))))))
