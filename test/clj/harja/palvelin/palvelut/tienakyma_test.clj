@@ -1,10 +1,11 @@
 (ns harja.palvelin.palvelut.tienakyma-test
-  (:require [clojure.test :as t :refer [deftest is use-fixtures]]
+  (:require [clojure.test :as t :refer [deftest is use-fixtures testing]]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.tienakyma :as tienakyma]
-            [slingshot.slingshot :refer [try+]])
+            [slingshot.slingshot :refer [try+]]
+            [harja.paneeliapurit :as paneeli])
   (:import [harja.domain.roolit EiOikeutta]))
 
 (defn jarjestelma-fixture [testit]
@@ -46,10 +47,14 @@
                                     +kayttaja-urakan-vastuuhenkilo+ parametrit)))
 
 (deftest tienakymahaku
-  (let [tulos-jvh (group-by :id (kutsu +kayttaja-jvh+ parametrit))
+  (let [tulos-kaikki-jvh (kutsu +kayttaja-jvh+ parametrit)
+        tulos-jvh (group-by :id tulos-kaikki-jvh)
         tulos-tero (group-by :id (kutsu +kayttaja-tero+ parametrit))]
     (is (= tulos-jvh tulos-tero) "Kaikki tilaajan käyttäjät saavat saman tuloksen")
-    (is (= 5 (count tulos-jvh)))))
+    (is (= 5 (count tulos-jvh)))
+
+    (testing "Palautettu data on validia: infopaneelin tarvitsemat tiedot löytyvät"
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? tulos-kaikki-jvh)))))
 
 (deftest reittipistehaku
   (let [reittipisteet (kutsu :hae-reittipisteet-tienakymaan +kayttaja-jvh+ {:toteuma-id 1})]

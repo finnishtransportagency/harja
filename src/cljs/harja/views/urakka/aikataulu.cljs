@@ -23,7 +23,8 @@
             [harja.domain.paallystysilmoitus :as pot]
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.urakka :as urakka]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.tyokalut.functor :refer [fmap]])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -78,37 +79,78 @@
                @valmis-tiemerkintaan-lomake]]))}
        "Aseta päivä\u00ADmäärä"]])))
 
+(defn- vuosivalinta
+  "Valitsee urakkavuoden urakan alku- ja loppupvm väliltä."
+  [ur]
+  [valinnat/vuosi {}
+   (t/year (:alkupvm ur))
+   (t/year (:loppupvm ur))
+   urakka/valittu-urakan-vuosi
+   urakka/valitse-urakan-vuosi!])
+
+(defn- paallystys-aloitettu-validointi
+  "Validoinnit päällystys aloitettu -kentälle"
+  [optiot]
+  (as-> [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
+          "Päällystys ei voi alkaa ennen kohteen aloitusta."]] validointi
+
+    ;; Päällystysnäkymässä validoidaan, että alku on annettu
+    (if (= (:nakyma optiot) :paallystys)
+      (conj validointi
+            [:toinen-arvo-annettu-ensin :aikataulu-kohde-alku
+             "Päällystystä ei voi merkitä alkaneeksi ennen kohteen aloitusta."])
+      validointi)))
+
+(defn- oikeudet
+  "Tarkistaa aikataulunäkymän tarvitsemat oikeudet"
+  [urakka-id]
+  (let [saa-muokata?
+        (oikeudet/voi-kirjoittaa? oikeudet/urakat-aikataulu urakka-id)
+
+        saa-asettaa-valmis-takarajan?
+        (oikeudet/on-muu-oikeus? "TM-takaraja"
+                                 oikeudet/urakat-aikataulu
+                                 urakka-id
+                                 @istunto/kayttaja)
+
+        saa-merkita-valmiiksi?
+        (oikeudet/on-muu-oikeus? "TM-valmis"
+                                 oikeudet/urakat-aikataulu
+                                 urakka-id
+                                 @istunto/kayttaja)]
+    {:saa-muokata? saa-muokata?
+     :saa-asettaa-valmis-takarajan? saa-asettaa-valmis-takarajan?
+     :saa-merkita-valmiiksi? saa-merkita-valmiiksi?
+     :voi-tallentaa? (or saa-muokata?
+                         saa-merkita-valmiiksi?
+                         saa-asettaa-valmis-takarajan?)}))
+
+(defn- otsikoi-aikataulurivit
+  "Lisää väliotsikot valmiille, keskeneräisille ja aloittamatta oleville kohteille."
+  [{:keys [valmis kesken aloittamatta] :as luokitellut-rivit}]
+  (concat (when-not (empty? valmis)
+            (into [(grid/otsikko "Valmiit kohteet")]
+                  valmis))
+          (when-not (empty? kesken)
+            (into [(grid/otsikko "Keskeneräiset kohteet")]
+                  kesken))
+          (when-not (empty? aloittamatta)
+            (into [(grid/otsikko "Aloittamatta olevat kohteet")]
+                  aloittamatta))))
+
 (defn aikataulu
   [urakka optiot]
   (komp/luo
     (komp/lippu tiedot/aikataulu-nakymassa?)
     (fn [urakka optiot]
-      (let [ur @nav/valittu-urakka
-            urakka-id (:id ur)
+      (let [{urakka-id :id :as ur}  @nav/valittu-urakka
             sopimus-id (first @u/valittu-sopimusnumero)
-            saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-aikataulu urakka-id)
-            saa-asettaa-valmis-takarajan? (oikeudet/on-muu-oikeus? "TM-takaraja"
-                                                                     oikeudet/urakat-aikataulu
-                                                                     urakka-id
-                                                                     @istunto/kayttaja)
-            saa-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "TM-valmis"
-                                                            oikeudet/urakat-aikataulu
-                                                            urakka-id
-                                                            @istunto/kayttaja)
-            voi-tallentaa? (or saa-muokata? saa-merkita-valmiiksi? saa-asettaa-valmis-takarajan?)
-            paallystys-aloitettu-validointi [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
-                                              "Päällystys ei voi alkaa ennen kohteen aloitusta."]]
-            paallystys-aloitettu-validointi (if (= (:nakyma optiot) :paallystys)
-                                              (conj paallystys-aloitettu-validointi
-                                                    [:toinen-arvo-annettu-ensin :aikataulu-kohde-alku
-                                                     "Päällystystä ei voi merkitä alkaneeksi ennen kohteen aloitusta."])
-                                              paallystys-aloitettu-validointi)]
+
+            {:keys [voi-tallentaa? saa-muokata?
+                    saa-asettaa-valmis-takarajan?
+                    saa-merkita-valmiiksi?]} (oikeudet urakka-id)]
         [:div.aikataulu
-         [valinnat/vuosi {}
-          (t/year (:alkupvm ur))
-          (t/year (:loppupvm ur))
-          urakka/valittu-urakan-vuosi
-          urakka/valitse-urakan-vuosi!]
+         [vuosivalinta ur]
          [grid/grid
           {:otsikko "Kohteiden aikataulu"
            :voi-poistaa? (constantly false)
@@ -169,7 +211,7 @@
            {:otsikko "Pääl\u00ADlys\u00ADtys a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-paallystys-alku
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
-            :validoi paallystys-aloitettu-validointi}
+            :validoi (paallystys-aloitettu-validointi optiot)}
            {:otsikko "Pääl\u00ADlys\u00ADtys val\u00ADmis" :leveys 8 :nimi :aikataulu-paallystys-loppu
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
@@ -244,6 +286,6 @@
                        "Tiemerkintää ei ole merkitty lopetetuksi."]
                       [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-loppu
                        "Kohde ei voi olla valmis ennen kuin tiemerkintä on valmistunut."]]}]
-          (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/aikataulurivit)]
+          (otsikoi-aikataulurivit @tiedot/aikataulurivit-valmiuden-mukaan)]
          (if (= (:nakyma optiot) :tiemerkinta)
            [vihje "Tiemerkinnän valmistumisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle ja vastuuhenkilölle."])]))))

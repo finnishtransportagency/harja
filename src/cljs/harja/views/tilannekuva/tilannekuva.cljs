@@ -359,9 +359,9 @@
                     (reset! kartta-tiedot/pida-geometriat-nakyvilla?
                             (case uusi-tila
                               :nykytilanne false
-                              :historiakuva true
-                              :tienakyma true
-                              true))))
+                              :historiakuva false
+                              :tienakyma false
+                              false))))
     (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva istunto/ajastin-taukotilassa?)
     (komp/sisaan-ulos #(do (kartta/aseta-paivitetaan-karttaa-tila! true)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa @nav/valittu-urakka)
