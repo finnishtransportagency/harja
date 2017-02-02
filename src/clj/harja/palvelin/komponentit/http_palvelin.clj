@@ -251,7 +251,7 @@
               (http/run-server
                 (cookies/wrap-cookies
                  (fn [req]
-                   (binding [oikeudet/*oikeustarkistus-tehty* false]
+                   (binding [oikeudet/*oikeustarkistus-tehty* (atom false)]
                      (try+
                       (metriikka/inc! mittarit :aktiiviset_pyynnot)
                       (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
