@@ -179,14 +179,14 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                     :footer [napit/palvelinkutsu-nappi
                              "Tallenna toteuma"
                              #(tallenna-toteuma-ja-toteumamateriaalit!
-                               (:toteumamateriaalit tiedot)
-                               tiedot)
+                                (:toteumamateriaalit tiedot)
+                                tiedot)
                              {:luokka "nappi-ensisijainen"
                               :ikoni (ikonit/tallenna)
                               :kun-onnistuu
                               #(do
-                                (reset! urakan-materiaalin-kaytot %)
-                                (reset! valittu-materiaalin-kaytto nil))
+                                 (reset! urakan-materiaalin-kaytot %)
+                                 (reset! valittu-materiaalin-kaytto nil))
                               :disabled (or (not voi-tallentaa?)
                                             (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))))}]}
 
@@ -214,9 +214,9 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
              {:otsikko "Materiaalit" :nimi :materiaalit :palstoja 2
               :komponentti (fn [_]
                              [materiaalit-ja-maarat
-                             materiaalitoteumat-mapissa
-                             materiaalien-virheet
-                             (:jarjestelmanlisaama tiedot)]) :tyyppi :komponentti}
+                              materiaalitoteumat-mapissa
+                              materiaalien-virheet
+                              (:jarjestelmanlisaama tiedot)]) :tyyppi :komponentti}
              {:otsikko "Suorittaja" :pakollinen? true :tyyppi :string :pituus-max 256 :muokattava? muokattava-pred :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
              {:otsikko "Suorittajan y-tunnus" :pakollinen? true :tyyppi :string :pituus-max 256 :nimi :ytunnus :muokattava? muokattava-pred :validoi [[:ei-tyhja "Anna y-tunnus"]]}
              {:otsikko "Lisätietoja" :tyyppi :text :palstoja 2 :koko [80 :auto]
@@ -234,7 +234,13 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                              urakan-id
                              (:id (:materiaali mk))
                              hk
-                             (first sop)))]
+                             (first sop)))
+        tallenna (reaction
+                   (if (or (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit
+                                                     (:id @nav/valittu-urakka))
+                           (every? :jarjestelmanlisaama @tiedot))
+                     :ei-mahdollinen
+                     (tallenna-toteuma-materiaaleja urakan-id tiedot)))]
     (komp/luo
       (fn [urakan-id vm]
         {:key (:id vm)}
@@ -242,10 +248,10 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
          [grid/grid
           {:otsikko (str (get-in mk [:materiaali :nimi]) " toteumat")
            :tyhja (if (nil? @tiedot) [ajax-loader "Ladataan toteumia"] "Ei toteumia")
-           :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit
-                                                     (:id @nav/valittu-urakka))
-                       (tallenna-toteuma-materiaaleja urakan-id tiedot))
+           :tallenna tallenna
            :voi-lisata? false
+           :esta-poistaminen? (fn [rivi] (:jarjestelmanlisaama rivi))
+           :esta-poistaminen-tooltip (fn [_] "Järjestelmän lisäämää kohdetta ei voi poistaa.")
            :tunniste :tmid}
           [{:otsikko "Päivämäärä"
             :tyyppi :pvm
@@ -287,15 +293,15 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
   [:div
    [valinnat/urakan-sopimus-ja-hoitokausi ur]
    (let [oikeus? (oikeudet/voi-kirjoittaa?
-                  oikeudet/urakat-toteumat-materiaalit
-                  (:id @nav/valittu-urakka))]
+                   oikeudet/urakat-toteumat-materiaalit
+                   (:id @nav/valittu-urakka))]
      (yleiset/wrap-if
-      (not oikeus?)
-      [yleiset/tooltip {} :%
-       (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                       oikeudet/urakat-toteumat-materiaalit)]
-      [napit/uusi "Lisää toteuma" #(reset! valittu-materiaalin-kaytto {})
-       {:disabled (not oikeus?)}]))
+       (not oikeus?)
+       [yleiset/tooltip {} :%
+        (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                        oikeudet/urakat-toteumat-materiaalit)]
+       [napit/uusi "Lisää toteuma" #(reset! valittu-materiaalin-kaytto {})
+        {:disabled (not oikeus?)}]))
 
    [grid/grid
     {:otsikko "Materiaalien käyttö"
