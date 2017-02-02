@@ -52,13 +52,19 @@
 
 (defn- reitita
   "Reititä sisääntuleva pyyntö käsittelijöille."
-  [req kasittelijat]
-  (apply compojure/routing
-         (if
-           (= "/" (:uri req))
-           (assoc req :uri "/index.html")
-           req)
-         (remove nil? kasittelijat)))
+  [req kasittelijat vaadi-oikeustarkistus?]
+  (binding [oikeudet/*oikeustarkistus-tehty* (atom false)]
+    (try
+      (apply compojure/routing
+             (if
+                 (= "/" (:uri req))
+               (assoc req :uri "/index.html")
+               req)
+             (remove nil? kasittelijat))
+      (finally
+        (if (and vaadi-oikeustarkistus? (not @oikeudet/*oikeustarkistus-tehty*))
+          (log/error "virhe: oikeustarkistusta ei tehty - uri:" (:uri req))
+          (log/debug "oikein: oikeustarkistus tehtiin - uri:" (:uri req)))))))
 
 (defn- transit-palvelun-polku [nimi]
   (str "/_/" (name nimi)))
@@ -251,30 +257,27 @@
               (http/run-server
                 (cookies/wrap-cookies
                  (fn [req]
-                   (binding [oikeudet/*oikeustarkistus-tehty* (atom false)]
-                     (try+
-                      (metriikka/inc! mittarit :aktiiviset_pyynnot)
-                      (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
-                            ui-kasittelijat (mapv :fn @kasittelijat)
-                            ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
-                                               (wrap-anti-forgery anti-csrf-kaytossa?))]
+                   (try+
+                    (metriikka/inc! mittarit :aktiiviset_pyynnot)
+                    (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
+                          ui-kasittelijat (mapv :fn @kasittelijat)
+                          ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
+                                             (wrap-anti-forgery anti-csrf-kaytossa?))]
 
-                        (or (reitita req (conj (mapv :fn ei-todennettavat)
-                                               dev-resurssit resurssit))
-                            (reitita (todennus/todenna-pyynto todennus req)
-                                     (-> (mapv :fn todennettavat)
-                                         (conj (partial index-kasittelija kehitysmoodi))
-                                         (conj (partial ls-index-kasittelija kehitysmoodi))
-                                         (conj ui-kasittelija)))))
-                      (catch [:virhe :todennusvirhe] _
-                        {:status 403 :body "Todennusvirhe"})
-                      (finally
-                        (if (not @oikeudet/*oikeustarkistus-tehty*)
-                          (log/error "virhe: oikeustarkistusta ei tehty - uri:" (:uri req))
-                          (log/debug "oikein: oikeustarkistus tehtiin - uri:" (:uri req)))
-                        (metriikka/muuta! mittarit
-                                          :aktiiviset_pyynnot dec
-                                          :pyyntoja_palveltu inc))))))
+                      (or (reitita req (conj (mapv :fn ei-todennettavat)
+                                             dev-resurssit resurssit) false)
+                          (reitita (todennus/todenna-pyynto todennus req)
+                                   (-> (mapv :fn todennettavat)
+                                       (conj (partial index-kasittelija kehitysmoodi))
+                                       (conj (partial ls-index-kasittelija kehitysmoodi))
+                                       (conj ui-kasittelija))
+                                   true)))
+                    (catch [:virhe :todennusvirhe] _
+                      {:status 403 :body "Todennusvirhe"})
+                    (finally
+                      (metriikka/muuta! mittarit
+                                        :aktiiviset_pyynnot dec
+                                        :pyyntoja_palveltu inc)))))
 
                  {:port     (or (:portti asetukset) asetukset)
                   :thread   (or (:threads asetukset) 8)
