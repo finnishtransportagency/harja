@@ -228,7 +228,7 @@
   (jdbc/with-db-transaction [db db]
     (doseq [toteuma toteumat]
       (log/debug "TALLENNA SUOLATOTEUMA: " toteuma)
-      (if-not (id-olemassa? (:id toteuma))
+      (if-not (id-olemassa? (:tid toteuma))
         (luo-suolatoteuma db user urakka-id sopimus-id toteuma)
         (let [tmid (:tmid toteuma)]
           (if (:poistettu toteuma)
