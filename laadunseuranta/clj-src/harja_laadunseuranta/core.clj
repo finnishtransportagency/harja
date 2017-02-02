@@ -27,19 +27,14 @@
   (:import (org.postgis PGgeometry))
   (:gen-class))
 
+
 (defn- kayttajan-tarkastusurakat
   [db kayttaja sijainti]
   (let [urakat (kayttajatiedot/kayttajan-lahimmat-urakat
                  db
                  kayttaja
                  (fn [urakka kayttaja]
-                   (or
-                     (oikeudet/voi-kirjoittaa?
-                       oikeudet/urakat-laadunseuranta-tarkastukset
-                       urakka kayttaja)
-                     (oikeudet/voi-kirjoittaa?
-                       oikeudet/laadunseuranta-kirjaus
-                       urakka kayttaja)))
+                   (oikeudet/voi-kirjata-ls-tyokalulla? kayttaja urakka))
                  sijainti)
         urakat (map
                  #(assoc % :oma-urakka?
@@ -168,9 +163,7 @@
   (jdbc/with-db-transaction [tx db]
     (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)
           urakka-id (:urakka tarkastusajo)
-          _ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset
-                                            kayttaja
-                                            urakka-id)
+          _ (oikeudet/vaadi-ls-tyokalun-kirjausoikeus kayttaja urakka-id)
           ajo-paatetty (:paatetty (first (q/ajo-paatetty tx {:id tarkastusajo-id})))]
       (if-not ajo-paatetty
         (let [tarkastukset (muunna-tarkastusajon-reittipisteet-tarkastuksiksi
@@ -185,7 +178,9 @@
   (q/luo-uusi-tarkastusajo<! db {:ulkoinen_id 0
                                  :kayttaja (:id kayttaja)}))
 
-(defn- hae-tarkastusajon-reitti [db tiedot kayttaja]
+(defn- hae-tarkastusajon-reitti
+  "Debug-funktio, jota käytetään vain salaisesta TR-osiosta, vaatii jvh:n."
+  [db tiedot kayttaja]
   (roolit/vaadi-rooli kayttaja roolit/jarjestelmavastaava)
   (let [merkinnat (mapv
                     #(assoc % :sijainti (let [geometria (.getGeometry (:sijainti %))]
