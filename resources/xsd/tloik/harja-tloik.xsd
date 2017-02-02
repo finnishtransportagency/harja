@@ -76,8 +76,12 @@
         <xs:complexType>
             <xs:sequence>
                 <xs:element name="viestiId" type="uuid" minOccurs="1" maxOccurs="1"/>
-                <xs:element name="harja-tietyoilmoitus-id" type="xs:int" minOccurs="1" maxOccurs="1"/>
-                <xs:element name="tloik-tietyoilmoitus-id" type="xs:int" minOccurs="1" maxOccurs="1"/>
+
+                <xs:choice minOccurs="1" maxOccurs="2">
+                    <xs:element name="harja-tietyoilmoitus-id" type="xs:int"/>
+                    <xs:element name="tloik-tietyoilmoitus-id" type="xs:int"/>
+                </xs:choice>
+
                 <xs:element name="harja-paatietyoilmoitus-id" type="xs:int" minOccurs="0" maxOccurs="1" nillable="true">
                     <xs:annotation>
                         <xs:documentation>
@@ -94,30 +98,31 @@
                         </xs:documentation>
                     </xs:annotation>
                 </xs:element>
-                <xs:element name="asiatyyppi" type="asiatyyppi" minOccurs="1" maxOccurs="1"/>
-                <xs:element name="ilmoitettu" type="xs:dateTime" minOccurs="1" maxOccurs="1"/>
-                <xs:element name="ilmoittaja" type="henkilo" minOccurs="1" maxOccurs="1"/>
-                <xs:element name="urakka" type="urakka" minOccurs="1" maxOccurs="1"/>
-                <xs:element name="urakoitsija" type="organisaatio" minOccurs="0"/>
-                <xs:element name="urakoitsijan-yhteyshenkilo" type="henkilo" minOccurs="0"/>
-                <xs:element name="tilaaja" type="organisaatio" minOccurs="0"/>
-                <xs:element name="tilaajan-yhteyshenkilo" type="henkilo" minOccurs="0"/>
-                <xs:element name="luvan-diaarinumero" type="xs:integer" minOccurs="0"/>
                 <xs:element name="toimenpide" minOccurs="0">
                     <xs:simpleType>
                         <xs:restriction base="xs:string">
                             <xs:enumeration value="uusi"/>
                             <xs:enumeration value="muokkaus"/>
-                            <xs:enumeration value="lopetus"/>
                         </xs:restriction>
                     </xs:simpleType>
                 </xs:element>
-                <xs:element name="sijainti" type="tietyonSijainti" minOccurs="0"/>
-                <xs:element name="ajankohta" minOccurs="0">
+                <xs:element name="kirjattu" type="xs:dateTime" minOccurs="1" maxOccurs="1"/>
+                <xs:element name="muokattu" type="xs:dateTime" minOccurs="0" maxOccurs="1"/>
+                <xs:element name="ilmoittaja" type="henkilo" minOccurs="1" maxOccurs="1"/>
+                <xs:element name="urakka" type="urakka" minOccurs="1" maxOccurs="1"/>
+                <xs:element name="urakoitsija" type="organisaatio" minOccurs="0"/>
+                <xs:element name="urakoitsijan-yhteyshenkilot">
                     <xs:complexType>
                         <xs:sequence>
-                            <xs:element name="alku" type="xs:dateTime" minOccurs="1"/>
-                            <xs:element name="loppu" type="xs:dateTime" minOccurs="1"/>
+                            <xs:element name="urakoitsijan-yhteyshenkilo" type="vastuuhenkilo" minOccurs="1" maxOccurs="unbounded" />
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="tilaaja" type="organisaatio" minOccurs="0"/>
+                <xs:element name="tilaajan-yhteyshenkilot">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="tilaajan-yhteyshenkilo" type="vastuuhenkilo" minOccurs="1" maxOccurs="unbounded" />
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
@@ -127,11 +132,21 @@
                             <xs:element name="tyotyypit">
                                 <xs:complexType>
                                     <xs:sequence>
-                                        <xs:element name="tyotyyppi" type="tietyoilmoitustyotyyppi" minOccurs="1" maxOccurs="unbounded" nillable="true"/>
+                                        <xs:element name="tyotyyppi" type="tietyoilmoitustyotyyppi" minOccurs="1" maxOccurs="unbounded"/>
                                     </xs:sequence>
                                 </xs:complexType>
                             </xs:element>
                             <xs:element name="tyypinKuvaus" type="xs:string" minOccurs="1"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="luvan-diaarinumero" type="xs:integer" minOccurs="0"/>
+                <xs:element name="sijainti" type="tietyonSijainti" minOccurs="0"/>
+                <xs:element name="ajankohta" minOccurs="0">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="alku" type="xs:dateTime" minOccurs="1"/>
+                            <xs:element name="loppu" type="xs:dateTime" minOccurs="1"/>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
@@ -345,6 +360,15 @@
             </xs:sequence>
         </xs:complexType>
     </xs:element>
+    <xs:complexType name="vastuuhenkilo">
+        <xs:complexContent>
+            <xs:extension base="henkilo">
+                <xs:sequence>
+                    <xs:element name="vastuuhenkilo" type="xs:boolean" minOccurs="0" maxOccurs="1" nillable="true"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
     <xs:complexType name="ilmoittaja">
         <xs:complexContent>
             <xs:extension base="henkilo">
@@ -656,22 +680,15 @@
         <xs:sequence>
             <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali" minOccurs="1" maxOccurs="1"/>
             <xs:element name="alkukoordinaatit" type="koordinaattit" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="loppukoordinaatit" type="koordinaattit"/>
-            <xs:element type="xs:decimal" name="pituus"/>
-            <xs:element type="xs:string" name="tienNimi"/>
-            <xs:element type="xs:string" name="kunnat"/>
-            <xs:element type="xs:string" name="alkusijainninKuvaus"/>
-            <xs:element type="xs:string" name="loppusijainninKuvaus"/>
+            <xs:element name="loppukoordinaatit" type="koordinaattit" minOccurs="0" maxOccurs="1" nillable="true"/>
+            <xs:element name="esityssijainti" type="koordinaattit" minOccurs="0" maxOccurs="1" nillable="true"/>
+            <xs:element type="xs:decimal" name="pituus" minOccurs="0" maxOccurs="1" nillable="true"/>
+            <xs:element type="xs:string" name="tienNimi" minOccurs="0" maxOccurs="1" nillable="true"/>
+            <xs:element type="xs:string" name="kunnat" minOccurs="0" maxOccurs="1" nillable="true"/>
+            <xs:element type="xs:string" name="alkusijainninKuvaus" minOccurs="0" maxOccurs="1" nillable="true"/>
+            <xs:element type="xs:string" name="loppusijainninKuvaus" minOccurs="0" maxOccurs="1" nillable="true"/>
         </xs:sequence>
     </xs:complexType>
-    <xs:simpleType name="asiatyyppi">
-        <xs:restriction base="xs:string">
-            <xs:enumeration value="ensimmainenIlmoitusTyosta"/>
-            <xs:enumeration value="muutosAiempaanTietoon"/>
-            <xs:enumeration value="liikennettaHaittaavaTyovaihe"/>
-            <xs:enumeration value="muutosTyovaiheTietoon"/>
-        </xs:restriction>
-    </xs:simpleType>
     <xs:simpleType name="rajoitustyyppi">
         <xs:restriction base="xs:integer">
             <xs:enumeration value="30"/>

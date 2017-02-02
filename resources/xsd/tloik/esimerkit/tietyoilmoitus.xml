@@ -2,8 +2,8 @@
     <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
     <harja-tietyoilmoitus-id>234908234</harja-tietyoilmoitus-id>
     <tloik-tietyoilmoitus-id>234908234</tloik-tietyoilmoitus-id>
-    <asiatyyppi>liikennettaHaittaavaTyovaihe</asiatyyppi>
-    <ilmoitettu>2016-12-24T04:49:45</ilmoitettu>
+    <toimenpide>uusi</toimenpide>
+    <kirjattu>2016-12-24T04:49:45</kirjattu>
     <ilmoittaja>
         <etunimi>Irma</etunimi>
         <sukunimi>Ilmoittaja</sukunimi>
@@ -20,25 +20,37 @@
         <nimi>Destia Oy</nimi>
         <ytunnus>2163026-3</ytunnus>
     </urakoitsija>
-    <urakoitsijan-yhteyshenkilo>
-        <etunimi>Urho</etunimi>
-        <sukunimi>Urakoitsija</sukunimi>
-        <matkapuhelin>+34592349342</matkapuhelin>
-        <tyopuhelin>+34592349342</tyopuhelin>
-        <sahkoposti>urho@example.com</sahkoposti>
-    </urakoitsijan-yhteyshenkilo>
+    <urakoitsijan-yhteyshenkilot>
+        <urakoitsijan-yhteyshenkilo>
+            <etunimi>Urho</etunimi>
+            <sukunimi>Urakoitsija</sukunimi>
+            <matkapuhelin>+34592349342</matkapuhelin>
+            <tyopuhelin>+34592349342</tyopuhelin>
+            <sahkoposti>urho@example.com</sahkoposti>
+            <vastuuhenkilo>true</vastuuhenkilo>
+        </urakoitsijan-yhteyshenkilo>
+    </urakoitsijan-yhteyshenkilot>
     <tilaaja>
         <nimi>Pohjois-Savo</nimi>
     </tilaaja>
-    <tilaajan-yhteyshenkilo>
-        <etunimi>Eija</etunimi>
-        <sukunimi>Elyläinen</sukunimi>
-        <matkapuhelin>+34592349342</matkapuhelin>
-        <tyopuhelin>+34592349342</tyopuhelin>
-        <sahkoposti>eija@example.com</sahkoposti>
-    </tilaajan-yhteyshenkilo>
+    <tilaajan-yhteyshenkilot>
+        <tilaajan-yhteyshenkilo>
+            <etunimi>Eija</etunimi>
+            <sukunimi>Elyläinen</sukunimi>
+            <matkapuhelin>+34592349342</matkapuhelin>
+            <tyopuhelin>+34592349342</tyopuhelin>
+            <sahkoposti>eija@example.com</sahkoposti>
+            <vastuuhenkilo>true</vastuuhenkilo>
+        </tilaajan-yhteyshenkilo>
+    </tilaajan-yhteyshenkilot>
+    <tyyppi>
+        <tyotyypit>
+            <tyotyyppi>Viimeistely</tyotyyppi>
+            <tyotyyppi>Viimeistely</tyotyyppi>
+        </tyotyypit>
+        <tyypinKuvaus>Viimeistellään töitä</tyypinKuvaus>
+    </tyyppi>
     <luvan-diaarinumero>09864321</luvan-diaarinumero>
-    <toimenpide>uusi</toimenpide>
     <sijainti>
         <tierekisteriosoitevali>
             <tienumero>23</tienumero>
@@ -66,13 +78,6 @@
         <alku>2016-01-01T07:49:45+02:00</alku>
         <loppu>2017-01-15T18:41:13+02:00</loppu>
     </ajankohta>
-    <tyyppi>
-        <tyotyypit>
-            <tyotyyppi>Viimeistely</tyotyyppi>
-            <tyotyyppi>Viimeistely</tyotyyppi>
-        </tyotyypit>
-        <tyypinKuvaus>Viimeistellään töitä</tyypinKuvaus>
-    </tyyppi>
     <tyoajat>
         <tyoaika>
             <alku>07:00:00+02:00</alku>
