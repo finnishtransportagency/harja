@@ -19,7 +19,8 @@
             [harja.tiedot.istunto :as istunto]
             [harja.ui.modal :as modal]
             [harja.ui.yleiset :as yleiset]
-            [harja.ui.liitteet :as liitteet])
+            [harja.ui.liitteet :as liitteet]
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
