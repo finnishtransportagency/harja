@@ -156,6 +156,7 @@
 
 (defn hae-urakan-organisaatio [db user urakka-id]
   (log/debug "Haetaan organisaatio urakalle: " urakka-id)
+  (oikeudet/ei-oikeustarkistusta!)
   (let [organisaatio (first (into []
                                   (q/hae-urakan-organisaatio db urakka-id)))]
     (log/debug "Urakan organisaatio saatu: " (pr-str organisaatio))

@@ -406,6 +406,7 @@
   ([db user tiedot]
    (hae-tilannekuvaan db user tiedot tilannekuvan-osiot))
   ([db user tiedot osiot]
+   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
    (let [urakat (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
                                                 oikeudet/tilannekuva-nykytilanne
                                                 oikeudet/tilannekuva-historia) % user)
