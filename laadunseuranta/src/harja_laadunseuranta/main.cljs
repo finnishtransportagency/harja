@@ -52,31 +52,22 @@
 
     [spinneri s/lahettamattomia-merkintoja]]])
 
+(defn- maarita-alustuksen-tila [alustustieto]
+  (cond
+    (nil? alustustieto) :tarkistetaan
+    (true? alustustieto) :ok
+    :default :virhe))
+
 (defn main []
-  (if @s/alustus-valmis?
+  (if (and @s/alustus-valmis? @s/sovelluksen-naytto-sallittu?)
     [paanakyma]
     [alustus/alustuskomponentti
-     {:selain-tuettu (if @s/selain-tuettu :ok :virhe)
+     {:selain-tuettu (maarita-alustuksen-tila @s/selain-tuettu?)
       :selain-vanhentunut? @s/selain-vanhentunut
-      :gps-tuettu (cond
-                    (nil? @s/gps-tuettu) :tarkistetaan
-                    (true? @s/gps-tuettu) :ok
-                    :default :virhe)
-      :ensimmainen-sijainti-saatu (cond
-                                    (nil? @s/ensimmainen-sijainti-saatu) :tarkistetaan
-                                    (true? @s/ensimmainen-sijainti-saatu) :ok
-                                    :default :virhe)
+      :gps-tuettu (maarita-alustuksen-tila @s/gps-tuettu)
+      :ensimmainen-sijainti-saatu (maarita-alustuksen-tila @s/ensimmainen-sijainti-saatu)
       :ensimmainen-sijainti-virhekoodi @s/ensimmainen-sijainti-virhekoodi
-      :oikeus-urakoihin (cond
-                          (nil? @s/oikeus-urakoihin) :tarkistetaan
-                          (not (empty? @s/oikeus-urakoihin)) :ok
-                          :default :virhe)
-      :idxdb-tuettu (cond
-                      (nil? @s/idxdb-tuettu) :tarkistetaan
-                      (true? @s/idxdb-tuettu) :ok
-                      :default :virhe)
-      :kayttaja-tunnistettu (cond
-                              (nil? @s/kayttaja-tunnistettu) :tarkistetaan
-                              (true? @s/kayttaja-tunnistettu) :ok
-                              :default :virhe)
-      :verkkoyhteys (if @s/verkkoyhteys :ok :virhe)}]))
+      :oikeus-urakoihin (maarita-alustuksen-tila @s/kayttajalla-oikeus-ainakin-yhteen-urakkaan)
+      :idxdb-tuettu (maarita-alustuksen-tila @s/idxdb-tuettu)
+      :kayttaja-tunnistettu (maarita-alustuksen-tila @s/kayttaja-tunnistettu)
+      :verkkoyhteys (maarita-alustuksen-tila @s/verkkoyhteys)}]))

@@ -14,6 +14,7 @@
              :verkkoyhteys? (.-onLine js/navigator)
              :selain-tuettu? (utils/tuettu-selain?)
              :kayttaja-tunnistettu nil
+             :oikeus-ainakin-yhteen-urakkaan nil
              :selain-vanhentunut? (utils/vanhentunut-selain?)}
 
    ;; Tarkastusajon perustiedot
@@ -134,25 +135,26 @@
 (def havaintolomake-kuva (reagent/cursor sovellus [:havaintolomakedata :kuva]))
 (def havaintolomake-esikatselukuva (reagent/cursor sovellus [:havaintolomakedata :esikatselukuva]))
 
-(def alustus-valmis? (reaction (let [sovellus @sovellus]
-                                (boolean (and (get-in sovellus [:alustus :selain-tuettu?])
-                                              (:idxdb sovellus)
-                                              (get-in sovellus [:alustus :verkkoyhteys?])
-                                              (get-in sovellus [:alustus :gps-tuettu])
-                                              (get-in sovellus [:alustus :ensimmainen-sijainti-saatu])
-                                              (get-in sovellus [:kayttaja :kayttajanimi])
-                                              (not (empty? (get-in sovellus [:kayttaja :oikeus-urakoihin]))))))))
-
 (def verkkoyhteys (reagent/cursor sovellus [:alustus :verkkoyhteys?]))
-(def selain-tuettu (reagent/cursor sovellus [:alustus :selain-tuettu?]))
+(def selain-tuettu? (reagent/cursor sovellus [:alustus :selain-tuettu?]))
 (def selain-vanhentunut (reagent/cursor sovellus [:alustus :selain-vanhentunut?]))
 (def gps-tuettu (reagent/cursor sovellus [:alustus :gps-tuettu]))
+(def kayttajalla-oikeus-ainakin-yhteen-urakkaan (reagent/cursor sovellus [:alustus :oikeus-ainakin-yhteen-urakkaan]))
 (def kayttaja-tunnistettu (reagent/cursor sovellus [:alustus :kayttaja-tunnistettu]))
 (def idxdb-tuettu (reagent/cursor sovellus [:alustus :idxdb-tuettu]))
 (def ensimmainen-sijainti-saatu (reagent/cursor sovellus [:alustus :ensimmainen-sijainti-saatu]))
 (def ensimmainen-sijainti-yritys (reagent/cursor sovellus [:alustus :ensimmainen-sijainti-yritys]))
 (def ensimmainen-sijainti-virhekoodi (reagent/cursor sovellus [:alustus :ensimmainen-sijainti-virhekoodi]))
 (def oikeus-urakoihin (reagent/cursor sovellus [:kayttaja :oikeus-urakoihin]))
+
+(def alustus-valmis? (reaction (boolean (and @selain-tuettu?
+                                             @idxdb-tuettu
+                                             @verkkoyhteys
+                                             @gps-tuettu
+                                             @ensimmainen-sijainti-saatu
+                                             @kayttaja-tunnistettu
+                                             @kayttajalla-oikeus-ainakin-yhteen-urakkaan))))
+(def sovelluksen-naytto-sallittu? (atom false))
 
 (def kirjauspisteet (reagent/cursor sovellus [:kirjauspisteet]))
 
