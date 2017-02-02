@@ -11,7 +11,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.id :refer [id-olemassa?]]
             [harja.kyselyt.materiaalit :as materiaalit]
-            [harja.geo :as geo]))
+            [harja.geo :as geo]
+            [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]))
 
 (defn hae-materiaalikoodit [db]
   (into []
@@ -154,8 +155,8 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-materiaalit user urakka-id)
   (jdbc/with-db-transaction [c db]
     (doseq [tm toteumamateriaalit]
-      (toteumat-q/vaadi-toteuma-ei-jarjestelman-luoma c (:toteuma tm))
-      (vaadi-toteuma-ei-jarjestelman-luoma c (:toteuma tm))
+      (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c (:toteuma tm) urakka-id)
+      (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c (:toteuma tm))
       ;; Positiivinen id = luodaan tai poistetaan toteuma-materiaali
       (if (and (:id tm) (pos? (:id tm)))
         (do
