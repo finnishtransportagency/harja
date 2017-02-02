@@ -60,7 +60,7 @@
 
     (when-not jatkuvat-havainnot-pysyvat-samana? (log/debug (:sijainti seuraava-reittimerkinta) "Jatkuvat havainnot muuttuu " (:jatkuvat-havainnot nykyinen-reittimerkinta) " -> " (:jatkuvat-havainnot seuraava-reittimerkinta) ", katkaistaan reitti"))
     (when-not seuraava-piste-samalla-tiella? (log/debug (:sijainti seuraava-reittimerkinta) "Seuraava piste eri tiellä " (get-in nykyinen-reittimerkinta [:tr-osoite :tie]) " -> " (get-in seuraava-reittimerkinta [:tr-osoite :tie]) ", katkaistaan reitti"))
-    (when-not ei-ajallista-gappia? (log/debug (:sijainti seuraava-reittimerkinta) "Ajallinen gäppi pisteiden välillä " (c/from-sql-time (:aikaleima nykyinen-reittimerkinta)) " ja " (c/from-sql-time (:aikaleima seuraava-reittimerkinta)) ", katkaistaan reitti"))
+    (when-not ei-ajallista-gappia? (log/debug (:sijainti seuraava-reittimerkinta) "Ajallinen gäppi pisteiden välillä, " (c/from-sql-time (:aikaleima nykyinen-reittimerkinta)) " ja " (c/from-sql-time (:aikaleima seuraava-reittimerkinta)) ", katkaistaan reitti"))
     (when-not jatkuvat-mittausarvot-samat? (log/debug (:sijainti seuraava-reittimerkinta) "Jatkuvat mittausarvot muuttuivat, katkaistaan reitti"))
     (when-not seuraavassa-pisteessa-ei-kaannyta-ympari? (log/debug (:sijainti seuraava-reittimerkinta) "Ympärikääntyminen havaittu, katkaistaan reitti"))
 
@@ -171,7 +171,9 @@
 
                                      (vector? (mittaus-avain reittimerkinta))
                                      (keskiarvo (mittaus-avain reittimerkinta))))]
-    (as-> {:aika (:aikaleima reittimerkinta)
+    (as-> {;; Pistemäisessä aika on aina tämä, koska yksi piste.
+           ;; Yhdistetyttä merkinnässä tässä on viimeisimmän merkinnän aika
+           :aika (:aikaleima reittimerkinta)
            :tyyppi (paattele-tarkastustyyppi reittimerkinta)
            :tarkastusajo (:tarkastusajo reittimerkinta)
            ;; Reittimerkintöjen id:t, joista tämä tarkastus muodostuu
@@ -242,6 +244,14 @@
     (assoc reittimerkinta :laadunalitus true)
     reittimerkinta))
 
+(defn- keraa-seuraavan-pisteen-aikaleima
+  "Ottaa reittimerkinnän ja järjestyksessä seuraavan reittimerkinnän.
+   Asettaa aikaleimaksi seuraavan merkinnän aikaleiman."
+  [reittimerkinta seuraava-reittimerkinta]
+  (if-let [seuraava-aikaleima (:aikaleima seuraava-reittimerkinta)]
+    (assoc reittimerkinta :aikaleima seuraava-aikaleima)
+    reittimerkinta))
+
 (defn- keraa-reittimerkintojen-kuvaukset
   "Yhdistää samalla jatkuvalla havainnolla olevat kuvauskentät yhteen"
   [reittimerkinta seuraava-reittimerkinta]
@@ -266,6 +276,7 @@
               (as-> viimeisin-yhdistetty-reittimerkinta edellinen
                     (keraa-seuraavan-pisteen-sijainti edellinen seuraava-merkinta)
                     (keraa-seuraavan-pisteen-laadunalitus edellinen seuraava-merkinta)
+                    (keraa-seuraavan-pisteen-aikaleima edellinen seuraava-merkinta)
                     (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :talvihoito-tasaisuus)
                     (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :lumisuus)
                     (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :kitkamittaus)
