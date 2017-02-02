@@ -121,6 +121,7 @@
     (julkaise-palvelu (:http-palvelin this)
                       :kayttajatiedot
                       (fn [user alku]
+                        (oikeudet/ei-oikeustarkistusta!)
                         (assoc user :urakkatyyppi
                                     (oletusurakkatyyppi (:db this) user))))
     this)
