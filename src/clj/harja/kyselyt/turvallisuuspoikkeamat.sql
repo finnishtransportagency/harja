@@ -57,7 +57,7 @@ SELECT
   t.ilmoitukset_lahetetty  AS ilmoituksetlahetetty,
   k.id                     AS korjaavatoimenpide_id,
   k.kuvaus                 AS korjaavatoimenpide_kuvaus,
-  k.suoritettu             AS korjaavatoimenpide_suoritettu,
+  k.suoritettu             AS korjaavatoimenpide_suoritettu
 FROM turvallisuuspoikkeama t
   LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama AND k.poistettu IS NOT TRUE
 WHERE t.tapahtunut :: DATE BETWEEN :alku AND :loppu
@@ -204,14 +204,14 @@ SELECT
   u.urakkanro                           AS alueurakkanro,
 
   u.sampoid                             AS "urakka-sampoid",
-  (SELECT (etunimi || ' ' || sukunimi)
-   FROM yhteyshenkilo
-   WHERE id =
-         (SELECT yhteyshenkilo
-          FROM yhteyshenkilo_urakka
-          WHERE urakka = t.urakka
-                AND rooli = 'Sampo yhteyshenkilö'
-          LIMIT 1))                     AS "sampo-yhteyshenkilo",
+  u.tyyppi                              AS "urakka-tyyppi",
+  o.lyhenne                             AS "urakka-ely",
+  u.loppupvm                            AS "urakka-loppupvm",
+  (SELECT kayttajatunnus
+   FROM urakanvastuuhenkilo
+   WHERE urakka = t.urakka AND
+         rooli = 'ELY_Urakanvalvoja' AND
+         ensisijainen = TRUE)           AS "sampo-yhteyshenkilo",
   u.nimi                                AS "urakka-nimi",
   h.nimi                                AS "hanke-nimi",
 
@@ -220,6 +220,10 @@ SELECT
   k.kuvaus                              AS korjaavatoimenpide_kuvaus,
   k.suoritettu                          AS korjaavatoimenpide_suoritettu,
   k.otsikko                             AS korjaavatoimenpide_otsikko,
+  (SELECT kayttajanimi
+   FROM kayttaja
+   WHERE id = k.vastuuhenkilo
+  )                                     AS korjaavatoimenpide_vastuuhenkilo,
   k.toteuttaja                          AS korjaavatoimenpide_toteuttaja,
   k.tila                                AS korjaavatoimenpide_tila,
 
@@ -248,27 +252,24 @@ SELECT
 FROM turvallisuuspoikkeama t
   LEFT JOIN urakka u
     ON t.urakka = u.id
-
   LEFT JOIN hanke h
     ON u.hanke = h.id
-
   LEFT JOIN korjaavatoimenpide k
     ON t.id = k.turvallisuuspoikkeama
        AND k.poistettu IS NOT TRUE
-
   LEFT JOIN turvallisuuspoikkeama_liite tl
     ON t.id = tl.turvallisuuspoikkeama
   LEFT JOIN liite l
     ON l.id = tl.liite
-
   LEFT JOIN turvallisuuspoikkeama_kommentti tpk
     ON t.id = tpk.turvallisuuspoikkeama
   LEFT JOIN kommentti kom
     ON tpk.kommentti = kom.id
        AND kom.poistettu IS NOT TRUE
-
-  LEFT JOIN liite koml ON kom.liite = koml.id
-
+  LEFT JOIN liite koml
+    ON kom.liite = koml.id
+  LEFT JOIN organisaatio o
+    ON u.hallintayksikko = o.id
 WHERE t.id = :id;
 
 -- name: onko-olemassa-ulkoisella-idlla
@@ -554,6 +555,7 @@ FROM turvallisuuspoikkeama
 WHERE id = :id;
 
 -- name: tallenna-turvallisuuspoikkeaman-turi-id!
-UPDATE turvallisuuspoikkeama SET
+UPDATE turvallisuuspoikkeama
+SET
   turi_id = :turi_id
 WHERE id = :id;
