@@ -444,6 +444,7 @@
           (assoc p :toleranssi (geo/karkeistustoleranssi (:alue p))))))
 
 (defn- luettavat-urakat [user tiedot]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
                                   oikeudet/tilannekuva-nykytilanne
                                   oikeudet/tilannekuva-historia) % user)

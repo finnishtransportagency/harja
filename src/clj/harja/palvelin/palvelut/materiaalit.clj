@@ -14,6 +14,7 @@
             [harja.geo :as geo]))
 
 (defn hae-materiaalikoodit [db]
+  (oikeudet/ei-oikeustarkistusta!)
   (into []
         (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
         (q/hae-materiaalikoodit-ilman-talvisuolaa db)))
