@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<!DOCTYPE xml>
-<p:poikkeama xmlns:p="http://restimport.xml.turi.oikeatoliot.fi" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="poikkeama-rest ../../main/resources/xsd/poikkeama-rest.xsd">
+<imp:poikkeama xmlns:imp="http://restimport.xml.turi.oikeatoliot.fi">
     <lahde>
         <lahdejarjestelma>Harja</lahdejarjestelma>
         <lahdeid>123</lahdeid>
@@ -148,4 +146,4 @@
             hCRnpk/nCU8SPC8PTGAjPH3wvERbnLMY4amP9x9gAmwm1iIt6gAAAABJRU5ErkJggg==
         </tiedosto>
     </poikkeamaliite>
-</p:poikkeama>
+</imp:poikkeama>

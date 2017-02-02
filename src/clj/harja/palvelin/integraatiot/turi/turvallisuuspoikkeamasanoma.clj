@@ -114,14 +114,14 @@
    :suljettu "Suljettu"})
 
 (def urakan-vaylamuoto
-     {:tie "Tie"
-      :rautatie "Rautatie"
-      :vesi "Vesiväylä"})
+  {:tie "Tie"
+   :rautatie "Rautatie"
+   :vesi "Vesiväylä"})
 
 (defn urakan-tyyppi [tyyppi]
-     (if (= tyyppi "hoito")
-            "hoito"
-            "ylläpito"))
+  (if (= tyyppi "hoito")
+    "hoito"
+    "ylläpito"))
 
 (defn rakenna-lahde [data]
   [:lahde
@@ -141,10 +141,6 @@
           [[:tilaajanvastuuhenkilosposti (:tilaajanvastuuhenkilo-sposti data)]]
           [[:sampourakkanimi (:hanke-nimi data)]]
           [[:sampourakkaid (:urakka-sampoid data)]]
-          [[:urakanpaattymispvm (xml/formatoi-paivamaara (:urakka-loppupvm data))]]
-          [[:urakkavaylamuoto (urakan-vaylamuoto (:vaylamuoto data))]]
-          [[:urakkatyyppi (urakan-tyyppi (:urakka-tyyppi data))]]
-          [[:elyalue (str (:urakka-ely data) " ELY")]]
           [[:urakanpaattymispvm (xml/formatoi-paivamaara (:urakka-loppupvm data))]]
           [[:urakkavaylamuoto (urakan-vaylamuoto (:vaylamuoto data))]]
           [[:urakkatyyppi (urakan-tyyppi (:urakka-tyyppi data))]]
