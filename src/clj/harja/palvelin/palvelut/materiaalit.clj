@@ -3,7 +3,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.materiaalit :as q]
             [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.toteumat :as toteumat]
+            [harja.kyselyt.toteumat :as toteumat-q]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
             [clj-time.core :as t]
@@ -151,10 +151,11 @@
   * Jos tähän funktioon tehdään muutoksia, pitäisi muutokset tehdä myös
   toteumat/tallenna-toteuma-ja-toteumamateriaalit funktioon (todnäk)"
   [db user urakka-id toteumamateriaalit hoitokausi sopimus]
-
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-materiaalit user urakka-id)
   (jdbc/with-db-transaction [c db]
     (doseq [tm toteumamateriaalit]
+      (toteumat-q/vaadi-toteuma-ei-jarjestelman-luoma c (:toteuma tm))
+      (vaadi-toteuma-ei-jarjestelman-luoma c (:toteuma tm))
       ;; Positiivinen id = luodaan tai poistetaan toteuma-materiaali
       (if (and (:id tm) (pos? (:id tm)))
         (do
@@ -192,7 +193,7 @@
     (when (:tmid tiedot)
       (q/poista-toteuma-materiaali! db (:id user) (:tmid tiedot)))
     (when (:tid tiedot)
-      (toteumat/poista-toteuma! db (:id user) (:tid tiedot)))
+      (toteumat-q/poista-toteuma! db (:id user) (:tid tiedot)))
     (when (:hk-alku tiedot)
       (hae-urakassa-kaytetyt-materiaalit
         db user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot) (:sopimus tiedot)))))
@@ -211,7 +212,7 @@
         (q/hae-suolamateriaalit db)))
 
 (defn luo-suolatoteuma [db user urakka-id sopimus-id toteuma]
-  (let [t (toteumat/luo-toteuma<!
+  (let [t (toteumat-q/luo-toteuma<!
            db urakka-id sopimus-id
            (:alkanut toteuma) (:alkanut toteuma)
            "kokonaishintainen"
@@ -219,7 +220,7 @@
            (:lisatieto toteuma)
            nil nil nil nil nil nil nil
            "harja-ui")]
-    (toteumat/luo-toteuma-materiaali<!
+    (toteumat-q/luo-toteuma-materiaali<!
      db (:id t) (:id (:materiaali toteuma))
      (:maara toteuma) (:id user))))
 
@@ -237,8 +238,8 @@
               (poista-toteuma-materiaali! db user toteuma))
             (do
               (log/debug "päivitä toteuma materiaali id: " tmid)
-              (toteumat/paivita-toteuma! db
-                                         {:alkanut (:alkanut toteuma)
+              (toteumat-q/paivita-toteuma! db
+                                           {:alkanut (:alkanut toteuma)
                                           :paattynyt (or (:paattynyt toteuma) (:alkanut toteuma))
                                           :tyyppi "kokonaishintainen"
                                           :kayttaja (:id user)
@@ -252,10 +253,10 @@
                                           :loppuetaisyys nil
                                           :id (:tid toteuma)
                                           :urakka urakka-id})
-              (when (:reitti toteuma) (toteumat/paivita-toteuman-reitti! db
-                                                                         {:reitti (geo/geometry (geo/clj->pg (:reitti toteuma)))
+              (when (:reitti toteuma) (toteumat-q/paivita-toteuman-reitti! db
+                                                                           {:reitti (geo/geometry (geo/clj->pg (:reitti toteuma)))
                                                                           :id     (:tid toteuma)}))
-              (toteumat/paivita-toteuma-materiaali!
+              (toteumat-q/paivita-toteuma-materiaali!
                db (:id (:materiaali toteuma))
                (:maara toteuma) (:id user)
                (:tmid toteuma) urakka-id)))))
