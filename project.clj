@@ -2,6 +2,11 @@
                     (.getHostName (java.net.InetAddress/getLocalHost))))
 
 (defproject harja "0.0.1-SNAPSHOT"
+  ;; :jvm-opts ["-Dcom.sun.management.jmxremote"
+  ;;          "-Dcom.sun.management.jmxremote.ssl=false"
+  ;;          "-Dcom.sun.management.jmxremote.authenticate=false"
+  ;;          "-Dcom.sun.management.jmxremote.port=43210"]
+
   :description "Liikenneviraston Harja"
 
   :dependencies [[org.clojure/clojure "1.8.0"]
@@ -162,6 +167,7 @@
   ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds
               [{:id "dev"
+                :figwheel     {:websocket-host "harja-dev2.lxd"}
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-dev"]
                 :compiler {:optimizations :none
                            :source-map true
@@ -204,10 +210,11 @@
                            :closure-output-charset "US-ASCII"}}
 
                ;; Laadunseurannan buildit
-               {:id "laadunseuranta-dev"
+               #_{:id "laadunseuranta-dev"
                 :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
 
-                :figwheel {:on-jsload "harja-laadunseuranta.dev-core/on-js-reload"}
+                :figwheel {:on-jsload "harja-laadunseuranta.dev-core/on-js-reload"
+                           :websocket-url "ws://harja-dev2.lxd:3449/figwheel-ws"}
 
                 :compiler {:main harja-laadunseuranta.dev-core
                            :asset-path "js/compiled/dev_out"
@@ -219,8 +226,9 @@
                 :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
 
                 :figwheel {:devcards true
-                           ;:nrepl-port 7889
-                           ;:server-port 3450
+                           :websocket-url "ws://harja-dev2.lxd:3449/figwheel-ws"
+                                        ;:nrepl-port 7889
+                                        ;:server-port 3450
                            }
 
                 :compiler {:main harja-laadunseuranta.devcards-core
@@ -247,7 +255,7 @@
                ;; This next build is an compressed minified build for
                ;; production. You can build this with:
                ;; lein cljsbuild once min
-               {:id "laadunseuranta-min"
+               #_{:id "laadunseuranta-min"
                 :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
                 :jar true
                 :compiler {:output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta.js"
@@ -289,6 +297,7 @@
 
   ;; Clientin reload ja REPL
   :figwheel {:server-port 3449
+             :server-ip "0.0.0.0"
              :reload-clj-files false
              :css-dirs ["resources/public/laadunseuranta/css"]}
 
