@@ -8,6 +8,7 @@
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]))
 
 (def +paikan-raportointivali+ 2000) ; ms
+(def +max-maara-paikannusyrityksia-alustuksessa+ 10)
 
 (defn- geolocation-api []
   (.-geolocation js/navigator))
@@ -73,7 +74,7 @@
                                        (swap! ensimmainen-sijainti-yritys-atom inc))
                                      (when (and ensimmainen-sijainti-saatu-atom
                                                 ensimmainen-sijainti-virhekoodi-atom
-                                                (>= @ensimmainen-sijainti-yritys-atom 5)
+                                                (>= @ensimmainen-sijainti-yritys-atom +max-maara-paikannusyrityksia-alustuksessa+)
                                                 (nil? @ensimmainen-sijainti-saatu-atom))
                                        (reset! ensimmainen-sijainti-virhekoodi-atom (.-code virhe))
                                        (reset! ensimmainen-sijainti-saatu-atom false))
