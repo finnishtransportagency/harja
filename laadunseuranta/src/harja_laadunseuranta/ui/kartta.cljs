@@ -249,16 +249,14 @@
                       sijainti-edellinen
                       sijainti-nykyinen)
                     10)
-        ;; Mitä pienempi arvo, sitä kauemmas kartta zoomautuu nopeuden mukaan
-        ;; Arvolla 25 kartta zoomautuu suunnilleen sallittuun minimiarvoonsa 100km/h vauhdissa
-        zoomauksen-herkkyys 25
+        max-nopeus-max-zoomaus 30 ;; m/s, jolla kartta zoomautuu minimiarvoonsa eli niin kauas kuin sallittu
         uusi-zoom-taso (if nopeus
                          ;; Zoomataan karttaa kauemmas sopivalle tasolle GPS:stä saadun nopeustiedon perusteella
-                         (- max-zoom (/ nopeus zoomauksen-herkkyys))
+                         (- max-zoom (float (* (/ nopeus max-nopeus-max-zoomaus) (- max-zoom min-zoom))))
                          ;; Nopeustieto puuttuu, pyritään laskemaan käsin pisteiden etäisyyksistä sillä oletuksella,
                          ;; että pisteitä on saatu määritettyä kartalle noin 2s välein. Etäisyys olisi täten
                          ;; nopeudeksi muutettuna ((etäisyys / 2) m / s)
-                         (- max-zoom (/ (/ etaisyys 2) zoomauksen-herkkyys)))
+                         (- max-zoom (float (* (/ (/ etaisyys 2) max-nopeus-max-zoomaus) (- max-zoom min-zoom)))))
         uusi-tarkastettu-zoom-taso (cond
                                      (< uusi-zoom-taso min-zoom)
                                      min-zoom
