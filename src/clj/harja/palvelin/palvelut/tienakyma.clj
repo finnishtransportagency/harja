@@ -56,7 +56,9 @@
 
 (defn- hae-toteumat [db parametrit]
   (kursori/hae-kanavaan
-   (async/chan 32 (map #(assoc % :tyyppi-kartalla :toteuma)))
+   (async/chan 32 (comp
+                    (filter #(not (empty? (:tehtavat %))))
+                    (map #(assoc % :tyyppi-kartalla :toteuma))))
    db q/hae-toteumat parametrit))
 
 
