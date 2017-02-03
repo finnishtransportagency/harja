@@ -26,6 +26,14 @@
    :avain :vesilammikot
    :vaatii-nappaimiston? false})
 
+(def halkeamat
+  {:nimi "Hal\u00ADkeamat"
+   :tyyppi :vali
+   :ikoni "halkeama-36"
+   :ikoni-lahde "livicons"
+   :avain :halkeamat
+   :vaatii-nappaimiston? false})
+
 ;; Välilehdet ja niiden sisällöt
 
 (def havainnot-ryhmittain
@@ -311,12 +319,7 @@
      :ikoni-lahde "livicons"
      :avain :epatasaisuus
      :vaatii-nappaimiston? false}
-    {:nimi "Hal\u00ADkeamat"
-     :tyyppi :vali
-     :ikoni "halkeama-36"
-     :ikoni-lahde "livicons"
-     :avain :halkeamat
-     :vaatii-nappaimiston? false}
+    halkeamat
     vesilammikot
     {:nimi "Epä\u00ADtasai\u00ADset reunat"
      :tyyppi :vali
@@ -373,12 +376,7 @@
      :ikoni-lahde "livicons"
      :avain :reikajono
      :vaatii-nappaimiston? false}
-    {:nimi "Halkeamat"
-     :tyyppi :vali
-     :ikoni nil ; TODO IKONI PUUTTUU
-     :ikoni-lahde "livicons"
-     :avain :halkeamat
-     :vaatii-nappaimiston? false}
+    halkeamat
     {:nimi "Reuna\u00ADpainuma"
      :tyyppi :vali
      :ikoni nil ; TODO IKONI PUUTTUU

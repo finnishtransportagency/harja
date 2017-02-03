@@ -82,7 +82,6 @@
                   :saumavirhe
                   :lajittuma
                   :epatasaisuus
-                  :halkeamat
                   :vesilammikot
                   :epatasaisetreunat
                   :jyranjalkia

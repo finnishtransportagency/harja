@@ -10,7 +10,6 @@ INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Reunapalteet', 't', 'r
 
 INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Yksittäinen reikä', 'f', 'yksittainen-reika');
 INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Reikäjono', 't', 'reikajono');
-INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Halkeamat', 't', 'halkeamat');
 INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Reunapainuma', 't', 'reunapainuma');
 INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Purkaumat', 't', 'purkaumat');
 INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Syvät ajourat', 't', 'syvat-ajourat');
