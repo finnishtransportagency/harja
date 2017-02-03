@@ -6,8 +6,6 @@ INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Kevätmuokkauspuute', 
 INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Sorastuspuute', 't', 'sorastuspuute');
 INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Kelirikkohavainnot', 't', 'kelirikkohavainnot');
 
-INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Reunapalteet', 't', 'reunapalteet');
-
 INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Yksittäinen reikä', 'f', 'yksittainen-reika');
 INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Reikäjono', 't', 'reikajono');
 INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Reunapainuma', 't', 'reunapainuma');
