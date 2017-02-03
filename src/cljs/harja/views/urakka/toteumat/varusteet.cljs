@@ -40,7 +40,7 @@
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept send-to]]))
 
-(def tr-kaytossa? false)
+(def tr-kaytossa? true)
 
 (def nayta-max-toteumaa 500)
 
@@ -111,7 +111,7 @@
       :hae #(get-in % [:tierekisteriosoite :loppuosa])}
      {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea
       :hae #(get-in % [:tierekisteriosoite :loppuetaisyys])}
-     {:otsikko "Kuntoluokka" :nimi :kuntoluokka :tyyppi :positiivinen-numero :leveys 10}
+     {:otsikko "Yleinen kuntoluokitus" :nimi :kuntoluokka :tyyppi :positiivinen-numero :leveys 10}
      {:otsikko "Lähetys Tierekisteriin" :nimi :lahetyksen-tila :tyyppi :komponentti :leveys 9
       :komponentti #(nayta-varustetoteuman-lahetyksen-tila %)
       :fmt pvm/pvm-aika}
