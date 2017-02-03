@@ -92,6 +92,13 @@
                   :pintakuivatuspuute
                   :kaivojenkorkeusasema
 
+                  :reikajono
+                  :halkeamat
+                  :reunapainuma
+                  :syvat-ajourat
+                  :liikenneturvallisuutta-vaarantava-heitto
+                  :ajomukavuutta-haittaava-epatasaisuus
+
                   ;; Pistekohtaiset
 
                   :liikennemerkki-likainen
@@ -137,7 +144,8 @@
                   :yleishavainto
                   :maakivi
                   :liikennemerkki-vaurioitunut
-                  :reunapaalut-vaurioitunut)}
+                  :reunapaalut-vaurioitunut
+                  :yksittainen-reika)}
 
    (s/optional-key :kuvaus) (s/maybe s/Str)
    (s/optional-key :liittyy-havaintoon) (s/maybe s/Int)

@@ -18,6 +18,14 @@
    :avain :liikennemerkki-luminen
    :vaatii-nappaimiston? false})
 
+(def vesilammikot
+  {:nimi "Vesi\u00ADlammi\u00ADkot"
+   :tyyppi :vali
+   :ikoni "vesilammikko-36"
+   :ikoni-lahde "livicons"
+   :avain :vesilammikot
+   :vaatii-nappaimiston? false})
+
 ;; Välilehdet ja niiden sisällöt
 
 (def havainnot-ryhmittain
@@ -309,12 +317,7 @@
      :ikoni-lahde "livicons"
      :avain :halkeamat
      :vaatii-nappaimiston? false}
-    {:nimi "Vesi\u00ADlammi\u00ADkot"
-     :tyyppi :vali
-     :ikoni "vesilammikko-36"
-     :ikoni-lahde "livicons"
-     :avain :vesilammikot
-     :vaatii-nappaimiston? false}
+    vesilammikot
     {:nimi "Epä\u00ADtasai\u00ADset reunat"
      :tyyppi :vali
      :ikoni "epatasaiset-reunat-36"
@@ -356,7 +359,59 @@
      :ikoni "kaivon-korkeus-36"
      :ikoni-lahde "livicons"
      :avain :kaivojenkorkeusasema
-     :vaatii-nappaimiston? false}]})
+     :vaatii-nappaimiston? false}]
+   :paallysteen-kunto
+   [{:nimi "Yksit\u00ADtäinen reikä"
+     :tyyppi :piste
+     :ikoni nil ; TODO IKONI PUUTTUU
+     :ikoni-lahde "livicons"
+     :avain :yksittainen-reika
+     :vaatii-nappaimiston? false}
+    {:nimi "Reikä\u00ADjono"
+     :tyyppi :vali
+     :ikoni nil ; TODO IKONI PUUTTUU
+     :ikoni-lahde "livicons"
+     :avain :reikajono
+     :vaatii-nappaimiston? false}
+    {:nimi "Halkeamat"
+     :tyyppi :vali
+     :ikoni nil ; TODO IKONI PUUTTUU
+     :ikoni-lahde "livicons"
+     :avain :halkeamat
+     :vaatii-nappaimiston? false}
+    {:nimi "Reuna\u00ADpainuma"
+     :tyyppi :vali
+     :ikoni nil ; TODO IKONI PUUTTUU
+     :ikoni-lahde "livicons"
+     :avain :reunapainuma
+     :vaatii-nappaimiston? false}
+    {:nimi "Purkaumat"
+     :tyyppi :vali
+     :ikoni nil ; TODO IKONI PUUTTUU
+     :ikoni-lahde "livicons"
+     :avain :purkaumat
+     :vaatii-nappaimiston? false}
+    {:nimi "Syvät ajourat"
+     :tyyppi :vali
+     :ikoni nil ; TODO IKONI PUUTTUU
+     :ikoni-lahde "livicons"
+     :avain :syvat-ajourat
+     :vaatii-nappaimiston? false}
+    {:nimi "L.turvallisuutta vaarantava heitto"
+     :tyyppi :vali
+     :ikoni nil ; TODO IKONI PUUTTUU
+     :ikoni-lahde "livicons"
+     :avain :liikenneturvallisuutta-vaarantava-heitto
+     :vaatii-nappaimiston? false
+     :pienempi-fontti? true}
+    {:nimi "Ajomukavuutta haittaava epätas."
+     :tyyppi :vali
+     :ikoni nil ; TODO IKONI PUUTTUU
+     :ikoni-lahde "livicons"
+     :avain :ajomukavuutta-haittaava-epatasaisuus
+     :vaatii-nappaimiston? false
+     :pienempi-fontti? true}
+    vesilammikot]})
 
 (defn jarjesta-valilehdet [valilehdet]
   (into [] (sort-by :jarjestys valilehdet)))
@@ -399,32 +454,36 @@
     :sisalto (:talvihoito havainnot-ryhmittain)}
    {:avain :liikennemerkit
     :nimi "Liikennemerkit"
-    :jarjestys 1
+    :jarjestys 2
     :sisalto (:liikennemerkit havainnot-ryhmittain)}
    {:avain :viherhoito
     :nimi "Viherhoito"
-    :jarjestys 1
+    :jarjestys 3
     :sisalto (:viherhoito havainnot-ryhmittain)}
    {:avain :reunat
     :nimi "Reunat"
-    :jarjestys 1
+    :jarjestys 4
     :sisalto (:reunat havainnot-ryhmittain)}
    {:avain :p-ja-l-alueet
     :nimi "P- ja L-alueet"
-    :jarjestys 1
+    :jarjestys 5
     :sisalto (:p-ja-l-alueet havainnot-ryhmittain)}
    {:avain :soratiet
     :nimi "Soratiet"
-    :jarjestys 1
+    :jarjestys 6
     :sisalto (:soratiet havainnot-ryhmittain)}
    {:avain :muut
     :nimi "Sillat"
-    :jarjestys 1
+    :jarjestys 7
     :sisalto (:sillat havainnot-ryhmittain)}
    {:avain :paallystyksen-tyovirheluettelo ;; Koskee ylläpitoa
     :nimi "Pääll. työvirhel."
-    :jarjestys 1
-    :sisalto (:paallystyksen-tyovirheluettelo havainnot-ryhmittain)}])
+    :jarjestys 8
+    :sisalto (:paallystyksen-tyovirheluettelo havainnot-ryhmittain)}
+   {:avain :paallysteen-kunto ;; Koskee hoitoa
+    :nimi "Pääl. kunto"
+    :jarjestys 9
+    :sisalto (:paallysteen-kunto havainnot-ryhmittain)}])
 
 ;; Käsittelylogiikka
 
