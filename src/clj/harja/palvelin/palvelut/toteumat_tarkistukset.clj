@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.toteumat-tarkistukset
-  (:require [harja.kyselyt.toteumat :as toteumat-q]))
+  (:require [harja.kyselyt.toteumat :as toteumat-q]
+            [taoensso.timbre :as log]))
 
 
 (defn vaadi-toteuma-ei-jarjestelman-luoma [db toteuma-id]
