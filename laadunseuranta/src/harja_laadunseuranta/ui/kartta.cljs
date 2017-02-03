@@ -244,8 +244,10 @@
                                          sijainti-nykyinen)
                                        (/ Math/PI 2)))))
 
-(defn- maarita-kartan-zoom-taso-ajonopeuden-mukaan [{:keys [kartta nopeus kayttaja-muutti-zoomausta-aikaleima]}]
+(defn- maarita-kartan-zoom-taso-ajonopeuden-mukaan [{:keys [kartta nopeus kayttaja-muutti-zoomausta-aikaleima
+                                                            keskita-ajoneuvoon?]}]
   (when (and kayttaja-muutti-zoomausta-aikaleima
+             (not keskita-ajoneuvoon?)
              (> (t/in-seconds (t/interval kayttaja-muutti-zoomausta-aikaleima (l/local-now))) 30))
     (let [min-zoom asetukset/+min-zoom+
           max-zoom asetukset/+max-zoom+
@@ -267,7 +269,7 @@
 
 (defn kartta-did-mount [this {:keys [wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva keskipiste-atomi
                                      ajoneuvon-sijainti-atomi reittipisteet-atomi kirjatut-pisteet-atomi optiot
-                                     kayttaja-muutti-zoomausta-aikaleima-atom]}]
+                                     kayttaja-muutti-zoomausta-aikaleima-atom keskita-ajoneuvoon-atom]}]
   (let [alustava-sijainti-saatu? (cljs.core/atom false)
         map-element (reagent/dom-node this)
 
@@ -303,6 +305,7 @@
                                     (:nykyinen @ajoneuvon-sijainti-atomi))]
             (maarita-kartan-zoom-taso-ajonopeuden-mukaan
               {:kartta kartta
+               :keskita-ajoneuvoon? @keskita-ajoneuvoon-atom
                :kayttaja-muutti-zoomausta-aikaleima @kayttaja-muutti-zoomausta-aikaleima-atom
                :nopeus (:speed (:nykyinen @ajoneuvon-sijainti-atomi))})
             (maarita-kartan-rotaatio-ajosuunnan-mukaan kartta sijainti-edellinen sijainti-nykyinen)))
@@ -326,7 +329,7 @@
 
 (defn karttakomponentti [{:keys [wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva sijainti-atomi
                                  ajoneuvon-sijainti-atomi reittipisteet-atomi kirjauspisteet-atomi optiot
-                                 kayttaja-muutti-zoomausta-aikaleima-atom]}]
+                                 kayttaja-muutti-zoomausta-aikaleima-atom keskita-ajoneuvoon-atom]}]
   (reagent/create-class {:reagent-render kartta-render
                          :component-did-mount
                          #(kartta-did-mount
@@ -339,6 +342,7 @@
                              :reittipisteet-atomi reittipisteet-atomi
                              :kirjatut-pisteet-atomi kirjauspisteet-atomi
                              :optiot optiot
+                             :keskita-ajoneuvoon-atom keskita-ajoneuvoon-atom
                              :kayttaja-muutti-zoomausta-aikaleima-atom kayttaja-muutti-zoomausta-aikaleima-atom})}))
 
 (defn kartta []
@@ -350,6 +354,7 @@
      :sijainti-atomi s/kartan-keskipiste
      :ajoneuvon-sijainti-atomi s/ajoneuvon-sijainti
      :reittipisteet-atomi s/reittipisteet
+     :keskita-ajoneuvoon-atom s/keskita-ajoneuvoon?
      :kayttaja-muutti-zoomausta-aikaleima-atom s/kayttaja-muutti-zoomausta-aikaleima
      :kirjauspisteet-atomi s/kirjauspisteet
      :optiot s/karttaoptiot}]
