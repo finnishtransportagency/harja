@@ -183,6 +183,12 @@
              :avain :reunataytto-puutteellinen
              :vaatii-nappaimiston? false
              :ikoni "reunapuute-36"
+             :ikoni-lahde "livicons"}
+            {:nimi "Reunapalteet"
+             :tyyppi :vali
+             :avain :reunapalteet
+             :vaatii-nappaimiston? false
+             :ikoni nil ;; TODO IKONI PUUTTUU
              :ikoni-lahde "livicons"}]
    :p-ja-l-alueet [{:nimi "Auraa\u00ADmatta"
                     :tyyppi :piste

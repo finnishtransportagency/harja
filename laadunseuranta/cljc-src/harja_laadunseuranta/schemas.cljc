@@ -73,6 +73,7 @@
                   :niittamatta
                   :reunapalletta
                   :reunataytto-puutteellinen
+                  :reunapalteet
 
                   :kevatmuokkauspuute
                   :sorastuspuute
