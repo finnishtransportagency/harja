@@ -242,9 +242,33 @@
                                          sijainti-nykyinen)
                                        (/ Math/PI 2)))))
 
-(defn- maarita-kartan-zoom-taso-ajonopeuden-mukaan [kartta sijainti-edellinen sijainti-nykyinen]
-  ;; TODO
-  )
+(defn- maarita-kartan-zoom-taso-ajonopeuden-mukaan [{:keys [kartta sijainti-edellinen sijainti-nykyinen nopeus]}]
+  (let [min-zoom asetukset/+min-zoom+
+        max-zoom asetukset/+max-zoom+
+        etaisyys (/ (math/pisteiden-etaisyys
+                      sijainti-edellinen
+                      sijainti-nykyinen)
+                    10)
+        ;; Mitä pienempi arvo, sitä kauemmas kartta zoomautuu nopeuden mukaan
+        ;; Arvolla 25 kartta zoomautuu suunnilleen sallittuun minimiarvoonsa 100km/h vauhdissa
+        zoomauksen-herkkyys 25
+        uusi-zoom-taso (if nopeus
+                         ;; Zoomataan karttaa kauemmas sopivalle tasolle GPS:stä saadun nopeustiedon perusteella
+                         (- max-zoom (/ nopeus zoomauksen-herkkyys))
+                         ;; Nopeustieto puuttuu, pyritään laskemaan käsin pisteiden etäisyyksistä sillä oletuksella,
+                         ;; että pisteitä on saatu määritettyä kartalle noin 2s välein. Etäisyys olisi täten
+                         ;; nopeudeksi muutettuna ((etäisyys / 2) m / s)
+                         (- max-zoom (/ (/ etaisyys 2) zoomauksen-herkkyys)))
+        uusi-tarkastettu-zoom-taso (cond
+                                     (< uusi-zoom-taso min-zoom)
+                                     min-zoom
+
+                                     (> uusi-zoom-taso max-zoom)
+                                     max-zoom
+
+                                     :default
+                                     uusi-zoom-taso)]
+    (paivita-kartan-zoom kartta uusi-tarkastettu-zoom-taso)))
 
 (defn kartta-did-mount [this wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva keskipiste-atomi
                         ajoneuvon-sijainti-atomi reittipisteet-atomi kirjatut-pisteet-atomi optiot]
@@ -281,7 +305,11 @@
                                      (:edellinen @ajoneuvon-sijainti-atomi))
                 sijainti-nykyinen (projektiot/latlon-vektoriksi
                                     (:nykyinen @ajoneuvon-sijainti-atomi))]
-            (maarita-kartan-zoom-taso-ajonopeuden-mukaan kartta sijainti-edellinen sijainti-nykyinen)
+            (maarita-kartan-zoom-taso-ajonopeuden-mukaan
+              {:kartta kartta
+               :sijainti-edellinen sijainti-edellinen
+               :sijainti-nykyinen sijainti-nykyinen
+               :nopeus (:speed (:nykyinen @ajoneuvon-sijainti-atomi))})
             (maarita-kartan-rotaatio-ajosuunnan-mukaan kartta sijainti-edellinen sijainti-nykyinen)))
         (kytke-dragpan kartta true)))
 

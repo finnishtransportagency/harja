@@ -49,9 +49,9 @@
                                        (math/ms->sec (- ts (or (:timestamp nykyinen) ts)))))]
     {:edellinen nykyinen
      :nykyinen (assoc uusi-nykyinen
-                 :speed (:speed uusi-sijainti)
+                 :speed (:speed uusi-sijainti) ; m/s
                  :heading (:heading uusi-sijainti)
-                 :accuracy (:accuracy uusi-sijainti)
+                 :accuracy (:accuracy uusi-sijainti) ; säde metreinä
                  :timestamp ts)}))
 
 (defn kaynnista-paikannus
@@ -96,7 +96,7 @@
                        :lon x
                        :heading 0
                        :accuracy tarkkuus
-                       :speed 40
+                       :speed 30
                        :timestamp (timestamp)}})))
 
 (defn lopeta-paikannus [id]

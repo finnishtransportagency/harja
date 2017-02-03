@@ -28,6 +28,8 @@
 
 ;; kartta
 (def +oletuszoom+ 14) ;; Väliltä 1-18 (arvo 1 on erittäin kaukana ja arvo 18 on ihan kiinni tiessä)
+(def +min-zoom+ 12.6)
+(def +max-zoom+ 14)
 (def +heading-ikonikorjaus+ -90)
 (def +reittiviivan-leveys+ 4)
 
