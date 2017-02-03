@@ -96,7 +96,7 @@
                        :lon x
                        :heading 0
                        :accuracy tarkkuus
-                       :speed 30
+                       :speed (+ 25 (rand-int 5))
                        :timestamp (timestamp)}})))
 
 (defn lopeta-paikannus [id]
