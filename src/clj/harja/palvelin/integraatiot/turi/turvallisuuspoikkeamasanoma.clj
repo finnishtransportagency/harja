@@ -67,14 +67,14 @@
    :ei_tietoa 14})
 
 (defn vammat->numerot [vammat]
-  ;; PENDING Turi tukee tällä hetkellä vain yhtä arvoa tässä.
+  ;; todo: Turi tukee tällä hetkellä vain yhtä arvoa tässä.
   ;; Lähetetään (satunnainen) ensimmäinen arvo ja myöhemmin toivottavasti kaikki.
   (let [vamma (first vammat)]
     [(when vamma
        [:vammanlaatu (vamma->numero vamma)])])
   #_(mapv
-    (fn [vammat] [:vammanlaatu (vamma->numero vammat)])
-    vammat))
+      (fn [vammat] [:vammanlaatu (vamma->numero vammat)])
+      vammat))
 
 (def vahingoittunut-ruumiinosa->numero
   {:paan_alue 1
@@ -92,14 +92,14 @@
    :ei_tietoa 13})
 
 (defn vahingoittuneet-ruumiinosat->numerot [vahingoittuneet-ruumiinosat]
-  ;; PENDING Turi tukee tällä hetkellä vain yhtä arvoa tässä.
+  ;; todo: Turi tukee tällä hetkellä vain yhtä arvoa tässä.
   ;; Lähetetään (satunnainen) ensimmäinen arvo ja myöhemmin toivottavasti kaikki.
   (let [vahingoittunut-ruumiinosa (first vahingoittuneet-ruumiinosat)]
     [(when vahingoittunut-ruumiinosa
        [:vahingoittunutruumiinosa (vahingoittunut-ruumiinosa->numero vahingoittunut-ruumiinosa)])])
   #_(mapv
-    (fn [vammat] [:vahingoittunutruumiinosa (vahingoittunut-ruumiinosa->numero vammat)])
-    vahingoittuneet-ruumiinosat))
+      (fn [vammat] [:vahingoittunutruumiinosa (vahingoittunut-ruumiinosa->numero vammat)])
+      vahingoittuneet-ruumiinosat))
 
 (def korjaava-toimenpide-tila->numero
   {:avoin 0
@@ -114,14 +114,14 @@
    :suljettu "Suljettu"})
 
 (def urakan-vaylamuoto
-     {:tie "Tie"
-      :rautatie "Rautatie"
-      :vesi "Vesiväylä"})
+  {:tie "Tie"
+   :rautatie "Rautatie"
+   :vesi "Vesiväylä"})
 
 (defn urakan-tyyppi [tyyppi]
-     (if (= tyyppi "hoito")
-            "hoito"
-            "ylläpito"))
+  (if (= tyyppi "hoito")
+    "hoito"
+    "ylläpito"))
 
 (defn rakenna-lahde [data]
   [:lahde
