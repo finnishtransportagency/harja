@@ -42,7 +42,7 @@
   (let [extent (geo/extent sijainti)]
     (merge
      ;; TR-osoitteen geometrinen alue envelope
-     (zipmap extent [:x1 :y1 :x2 :y2])
+     (zipmap  [:x1 :y1 :x2 :y2] extent)
 
      ;; Tierekisteriosoitteen geometria
      {:sijainti (geo/geometry (geo/clj->pg sijainti))}
@@ -61,7 +61,8 @@
 
 
 (defn- hae-tarkastukset [db parametrit]
-  (kursori/hae-kanavaan (async/chan 32 (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
+  (kursori/hae-kanavaan (async/chan 32 (comp (map konv/alaviiva->rakenne)
+                                             (map #(assoc % :tyyppi-kartalla :tarkastus))
                                              (map #(konv/string->keyword % :tyyppi))))
                         db q/hae-tarkastukset parametrit))
 
@@ -70,6 +71,15 @@
                                              (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama))
                                              (map #(konv/array->keyword-set % :tyyppi))))
                         db q/hae-turvallisuuspoikkeamat parametrit))
+
+(defn- hae-laatupoikkeamat [db parametrit]
+  (kursori/hae-kanavaan (async/chan 32 (comp (map konv/alaviiva->rakenne)
+                                             (geo/muunna-pg-tulokset :sijainti)
+                                             (map #(if (nil? (get-in % [:yllapitokohde :numero]))
+                                                     (dissoc % :yllapitokohde)
+                                                     %))
+                                             (map #(assoc % :tyyppi-kartalla :laatupoikkeama))))
+                        db q/hae-laatupoikkeamat parametrit))
 
 (defn- hae-ilmoitukset [db parametrit]
   (let [ch (async/chan 32)]
@@ -92,7 +102,8 @@
   {:toteumat #'hae-toteumat
    :ilmoitukset #'hae-ilmoitukset
    :tarkastukset #'hae-tarkastukset
-   :turvallisuuspoikkeamat #'hae-turvallisuuspoikkeamat})
+   :turvallisuuspoikkeamat #'hae-turvallisuuspoikkeamat
+   :laatupoikkeamat #'hae-laatupoikkeamat})
 
 (def +haun-max-kesto+ 20000)
 

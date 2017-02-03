@@ -86,6 +86,9 @@
                         (when-let [error-handler (:on-error options)]
                           (error-handler %))
                         (close! channel))
-                     #(go (>! channel %)) 
+                     #(do
+                        (when-let [success-handler (:on-success options)]
+                          (success-handler))
+                        (go (>! channel %)))
                      #(create-objectstores % (:objectstores options)))
     channel))
