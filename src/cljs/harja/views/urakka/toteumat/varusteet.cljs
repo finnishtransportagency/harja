@@ -35,7 +35,8 @@
              :refer [varusteominaisuus->skeema]
              :as tierekisteri-varusteet]
             [harja.ui.viesti :as viesti]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept send-to]]))
@@ -278,6 +279,15 @@
                     (e! (v/->YhdistaValinnat uusi))))
     (komp/kuuntelija :varustetoteuma-klikattu
                      (fn [_ i] (e! (v/->ValitseToteuma i))))
+    (komp/sisaan-ulos #(do
+                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                         (kartta-tiedot/kasittele-infopaneelin-linkit!
+                           {:varustetoteuma {:toiminto (fn [klikattu-varustetoteuma]
+                                                    (e! (v/->ValitseToteuma klikattu-varustetoteuma)))
+                                        :teksti "Valitse varustetoteuma"}})
+                         (nav/vaihda-kartan-koko! :M))
+                      #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+                           (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
     (fn [e! {nykyiset-valinnat :valinnat
              naytettavat-toteumat :naytettavat-toteumat
              varustetoteuma :varustetoteuma
