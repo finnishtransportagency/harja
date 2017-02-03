@@ -74,6 +74,10 @@
                   :reunapalletta
                   :reunataytto-puutteellinen
 
+                  :kevatmuokkauspuute
+                  :sorastuspuute
+                  :kelirikkohavainnot
+
                   :saumavirhe
                   :lajittuma
                   :epatasaisuus

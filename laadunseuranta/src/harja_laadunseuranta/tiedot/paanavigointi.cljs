@@ -66,7 +66,8 @@
                  :ikoni nil ;; TODO IKONI PUUTTUU
                  :ikoni-lahde "livicons"
                  :tyyppi :vali
-                 :avain :yli-tai-aliauraus}
+                 :avain :yli-tai-aliauraus
+                 :vaatii-nappaimiston? false}
                 {:nimi "Pysäkki: hiekoit\u00ADtamatta"
                  :tyyppi :piste
                  :avain :pysakki-hiekoittamatta
@@ -257,6 +258,25 @@
                :ikoni "maakivi-36"
                :ikoni-lahde "livicons"
                :avain :maakivi
+               :vaatii-nappaimiston? false}
+
+              {:nimi "Kevät\u00ADmuokkaus\u00ADpuute"
+               :tyyppi :vali
+               :ikoni nil ;; TODO IKONI PUUTTUU
+               :ikoni-lahde "livicons"
+               :avain :kevatmuokkauspuute
+               :vaatii-nappaimiston? false}
+              {:nimi "Sorastus\u00ADpuute"
+               :tyyppi :vali
+               :ikoni nil ;; TODO IKONI PUUTTUU
+               :ikoni-lahde "livicons"
+               :avain :sorastuspuute
+               :vaatii-nappaimiston? false}
+              {:nimi "Keli\u00ADrikko\u00ADhavainnot"
+               :tyyppi :vali
+               :ikoni nil ;; TODO IKONI PUUTTUU
+               :ikoni-lahde "livicons"
+               :avain :kelirikkohavainnot
                :vaatii-nappaimiston? false}]
    :paallystyksen-tyovirheluettelo
    [{:nimi "Sauma\u00ADvirhe"
