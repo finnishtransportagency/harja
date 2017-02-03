@@ -88,3 +88,13 @@ INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 9, 
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 10, 104.9);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 11, 105.2);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 12, 106.2);
+
+-- Ylläpidon indeksejä
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo)
+VALUES
+  ('Platts: FO 3,5%S CIF NWE Cargo', 2015, 12, 125.36),
+  ('Platts: FO 3,5%S CIF NWE Cargo', 2016, 9, 206.29),
+  ('Platts: Propane CIF NWE 7kt+', 2015, 8, 285.55),
+  ('Platts: Propane CIF NWE 7kt+', 2016, 9, 271.02),
+  ('Platts: ULSD 10ppmS CIF NWE Cargo', 2015, 8, 123.45),
+  ('Platts: ULSD 10ppmS CIF NWE Cargo', 2016, 9, 234.56);
