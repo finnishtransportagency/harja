@@ -32,6 +32,9 @@
 (def +max-zoom+ 14)
 (def +heading-ikonikorjaus+ -90)
 (def +reittiviivan-leveys+ 4)
+;; Montako sekuntia kartan annetaan olla käyttäjän zoomaamassa paikassa
+;; ennen kuin automatiikka palaa käyttöön
+(def +kunnioita-kayttajan-zoomia-s+ 30)
 
 ;; Tätä epätarkempia pisteitä ei koskaan kirjata IndexedDB:n eikä Harjaan.
 ;; Asetettu mielekkääksi tutkimalla seuraavien laitteiden keskimääräiset GPS-tarkkuudet

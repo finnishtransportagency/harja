@@ -244,11 +244,10 @@
                                          sijainti-nykyinen)
                                        (/ Math/PI 2)))))
 
-(defn- maarita-kartan-zoom-taso-ajonopeuden-mukaan [{:keys [kartta nopeus kayttaja-muutti-zoomausta-aikaleima
-                                                            keskita-ajoneuvoon?]}]
+(defn- maarita-kartan-zoom-taso-ajonopeuden-mukaan [{:keys [kartta nopeus kayttaja-muutti-zoomausta-aikaleima]}]
   (when (and kayttaja-muutti-zoomausta-aikaleima
-             (not keskita-ajoneuvoon?)
-             (> (t/in-seconds (t/interval kayttaja-muutti-zoomausta-aikaleima (l/local-now))) 30))
+             (> (t/in-seconds (t/interval kayttaja-muutti-zoomausta-aikaleima (l/local-now)))
+                asetukset/+kunnioita-kayttajan-zoomia-s+))
     (let [min-zoom asetukset/+min-zoom+
           max-zoom asetukset/+max-zoom+
           max-nopeus-max-zoomaus 30 ;; m/s, jolla kartta zoomautuu minimiarvoonsa eli niin kauas kuin sallittu
