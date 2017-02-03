@@ -92,6 +92,7 @@
 
                   :reikajono
                   :halkeamat
+                  :purkaumat
                   :reunapainuma
                   :syvat-ajourat
                   :liikenneturvallisuutta-vaarantava-heitto
