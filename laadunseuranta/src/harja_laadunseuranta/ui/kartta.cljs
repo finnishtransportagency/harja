@@ -242,21 +242,14 @@
                                          sijainti-nykyinen)
                                        (/ Math/PI 2)))))
 
-(defn- maarita-kartan-zoom-taso-ajonopeuden-mukaan [{:keys [kartta sijainti-edellinen sijainti-nykyinen nopeus]}]
+(defn- maarita-kartan-zoom-taso-ajonopeuden-mukaan [{:keys [kartta nopeus]}]
   (let [min-zoom asetukset/+min-zoom+
         max-zoom asetukset/+max-zoom+
-        etaisyys (/ (math/pisteiden-etaisyys
-                      sijainti-edellinen
-                      sijainti-nykyinen)
-                    10)
         max-nopeus-max-zoomaus 30 ;; m/s, jolla kartta zoomautuu minimiarvoonsa eli niin kauas kuin sallittu
         uusi-zoom-taso (if nopeus
                          ;; Zoomataan karttaa kauemmas sopivalle tasolle GPS:stä saadun nopeustiedon perusteella
                          (- max-zoom (float (* (/ nopeus max-nopeus-max-zoomaus) (- max-zoom min-zoom))))
-                         ;; Nopeustieto puuttuu, pyritään laskemaan käsin pisteiden etäisyyksistä sillä oletuksella,
-                         ;; että pisteitä on saatu määritettyä kartalle noin 2s välein. Etäisyys olisi täten
-                         ;; nopeudeksi muutettuna ((etäisyys / 2) m / s)
-                         (- max-zoom (float (* (/ (/ etaisyys 2) max-nopeus-max-zoomaus) (- max-zoom min-zoom)))))
+                         max-zoom)
         uusi-tarkastettu-zoom-taso (cond
                                      (< uusi-zoom-taso min-zoom)
                                      min-zoom
@@ -305,8 +298,6 @@
                                     (:nykyinen @ajoneuvon-sijainti-atomi))]
             (maarita-kartan-zoom-taso-ajonopeuden-mukaan
               {:kartta kartta
-               :sijainti-edellinen sijainti-edellinen
-               :sijainti-nykyinen sijainti-nykyinen
                :nopeus (:speed (:nykyinen @ajoneuvon-sijainti-atomi))})
             (maarita-kartan-rotaatio-ajosuunnan-mukaan kartta sijainti-edellinen sijainti-nykyinen)))
         (kytke-dragpan kartta true)))
