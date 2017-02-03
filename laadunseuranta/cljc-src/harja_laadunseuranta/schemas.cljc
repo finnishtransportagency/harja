@@ -67,6 +67,7 @@
                   :soratie
                   :tasauspuute
                   :lumista
+                  :yli-tai-aliauraus
 
                   :vesakko-raivaamatta
                   :niittamatta

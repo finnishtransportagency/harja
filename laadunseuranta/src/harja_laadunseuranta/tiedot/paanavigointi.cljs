@@ -22,52 +22,57 @@
 
 (def havainnot-ryhmittain
   ;; Jos muutat näitä, varmista, että tiedot ovat yhteneväiset kannassa olevien vakiohavaintojen kanssa
-  ;; Erityisesti avain ja jatkuvuus
+  ;; sekä palvelimen skeemassa. Erityisesti avain ja jatkuvuustieto on tärkeä kannassa.
   {:talvihoito [{:nimi "Liu\u00ADkas\u00ADta"
-                      :ikoni "liukas-36"
-                      :ikoni-lahde "livicons"
-                      :tyyppi :vali
-                      :avain :liukasta
-                      :mittaus {:nimi "Liukkaus"
-                                :tyyppi :kitkamittaus
-                                :yksikko nil}
-                      :vaatii-nappaimiston? true}
-                     {:nimi "Lu\u00ADmis\u00ADta"
-                      :ikoni "lumi-36"
-                      :ikoni-lahde "livicons"
-                      :tyyppi :vali
-                      :avain :lumista
-                      :mittaus {:nimi "Lumisuus"
-                                :tyyppi :lumisuus
-                                :yksikko "cm"}
-                      :vaatii-nappaimiston? true}
-                     {:nimi "Tasaus\u00ADpuute"
-                      :avain :tasauspuute
-                      :tyyppi :vali
-                      :ikoni "epatasa-36"
-                      :ikoni-lahde "livicons"
-                      :mittaus {:nimi "Tasauspuute"
-                                :tyyppi :talvihoito-tasaisuus
-                                :yksikko "cm"}
-                      :vaatii-nappaimiston? true}
-                     {:nimi "Pysäkki: epä\u00ADtas. polanne"
-                      :tyyppi :piste
-                      :avain :pysakilla-epatasainen-polanne
-                      :ikoni "polanne-36"
-                      :ikoni-lahde "livicons"
-                      :vaatii-nappaimiston? false}
-                     {:nimi "Pysäkki: auraa\u00ADmatta"
-                      :tyyppi :piste
-                      :avain :pysakki-auraamatta
-                      :ikoni "pinta-lumi-36"
-                      :ikoni-lahde "livicons"
-                      :vaatii-nappaimiston? false}
-                     {:nimi "Pysäkki: hiekoit\u00ADtamatta"
-                      :tyyppi :piste
-                      :avain :pysakki-hiekoittamatta
-                      :ikoni "pinta-hiekka-kielto-36"
-                      :ikoni-lahde "livicons"
-                      :vaatii-nappaimiston? false}
+                 :ikoni "liukas-36"
+                 :ikoni-lahde "livicons"
+                 :tyyppi :vali
+                 :avain :liukasta
+                 :mittaus {:nimi "Liukkaus"
+                           :tyyppi :kitkamittaus
+                           :yksikko nil}
+                 :vaatii-nappaimiston? true}
+                {:nimi "Lu\u00ADmis\u00ADta"
+                 :ikoni "lumi-36"
+                 :ikoni-lahde "livicons"
+                 :tyyppi :vali
+                 :avain :lumista
+                 :mittaus {:nimi "Lumisuus"
+                           :tyyppi :lumisuus
+                           :yksikko "cm"}
+                 :vaatii-nappaimiston? true}
+                {:nimi "Tasaus\u00ADpuute"
+                 :avain :tasauspuute
+                 :tyyppi :vali
+                 :ikoni "epatasa-36"
+                 :ikoni-lahde "livicons"
+                 :mittaus {:nimi "Tasauspuute"
+                           :tyyppi :talvihoito-tasaisuus
+                           :yksikko "cm"}
+                 :vaatii-nappaimiston? true}
+                {:nimi "Pysäkki: epä\u00ADtas. polanne"
+                 :tyyppi :piste
+                 :avain :pysakilla-epatasainen-polanne
+                 :ikoni "polanne-36"
+                 :ikoni-lahde "livicons"
+                 :vaatii-nappaimiston? false}
+                {:nimi "Pysäkki: auraa\u00ADmatta"
+                 :tyyppi :piste
+                 :avain :pysakki-auraamatta
+                 :ikoni "pinta-lumi-36"
+                 :ikoni-lahde "livicons"
+                 :vaatii-nappaimiston? false}
+                {:nimi "Yli/\u00AD-aliauraus"
+                 :ikoni nil ;; TODO IKONI PUUTTUU
+                 :ikoni-lahde "livicons"
+                 :tyyppi :vali
+                 :avain :yli-tai-aliauraus}
+                {:nimi "Pysäkki: hiekoit\u00ADtamatta"
+                 :tyyppi :piste
+                 :avain :pysakki-hiekoittamatta
+                 :ikoni "pinta-hiekka-kielto-36"
+                 :ikoni-lahde "livicons"
+                 :vaatii-nappaimiston? false}
                 liikennemerkki-luminen]
    :liikennemerkit [{:nimi "Liikenne\u00ADmerkki likai\u00ADnen"
                      :ikoni "liikennemerkki-lika-36"
