@@ -19,7 +19,9 @@
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]
             [harja-laadunseuranta.tiedot.sovellus :as s]
-            [harja.math :as math])
+            [harja.math :as math]
+            [cljs-time.local :as l]
+            [cljs-time.core :as t])
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
 
@@ -242,27 +244,30 @@
                                          sijainti-nykyinen)
                                        (/ Math/PI 2)))))
 
-(defn- maarita-kartan-zoom-taso-ajonopeuden-mukaan [{:keys [kartta nopeus]}]
-  (let [min-zoom asetukset/+min-zoom+
-        max-zoom asetukset/+max-zoom+
-        max-nopeus-max-zoomaus 30 ;; m/s, jolla kartta zoomautuu minimiarvoonsa eli niin kauas kuin sallittu
-        uusi-zoom-taso (if nopeus
-                         ;; Zoomataan karttaa kauemmas sopivalle tasolle GPS:stä saadun nopeustiedon perusteella
-                         (- max-zoom (float (* (/ nopeus max-nopeus-max-zoomaus) (- max-zoom min-zoom))))
-                         max-zoom)
-        uusi-tarkastettu-zoom-taso (cond
-                                     (< uusi-zoom-taso min-zoom)
-                                     min-zoom
+(defn- maarita-kartan-zoom-taso-ajonopeuden-mukaan [{:keys [kartta nopeus kayttaja-muutti-zoomausta-aikaleima]}]
+  (when (and kayttaja-muutti-zoomausta-aikaleima
+             (> (t/in-seconds (t/interval kayttaja-muutti-zoomausta-aikaleima (l/local-now))) 30))
+    (let [min-zoom asetukset/+min-zoom+
+          max-zoom asetukset/+max-zoom+
+          max-nopeus-max-zoomaus 30 ;; m/s, jolla kartta zoomautuu minimiarvoonsa eli niin kauas kuin sallittu
+          uusi-zoom-taso (if nopeus
+                           ;; Zoomataan karttaa kauemmas sopivalle tasolle GPS:stä saadun nopeustiedon perusteella
+                           (- max-zoom (float (* (/ nopeus max-nopeus-max-zoomaus) (- max-zoom min-zoom))))
+                           max-zoom)
+          uusi-tarkastettu-zoom-taso (cond
+                                       (< uusi-zoom-taso min-zoom)
+                                       min-zoom
 
-                                     (> uusi-zoom-taso max-zoom)
-                                     max-zoom
+                                       (> uusi-zoom-taso max-zoom)
+                                       max-zoom
 
-                                     :default
-                                     uusi-zoom-taso)]
-    (paivita-kartan-zoom kartta uusi-tarkastettu-zoom-taso)))
+                                       :default
+                                       uusi-zoom-taso)]
+      (paivita-kartan-zoom kartta uusi-tarkastettu-zoom-taso))))
 
-(defn kartta-did-mount [this wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva keskipiste-atomi
-                        ajoneuvon-sijainti-atomi reittipisteet-atomi kirjatut-pisteet-atomi optiot]
+(defn kartta-did-mount [this {:keys [wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva keskipiste-atomi
+                                     ajoneuvon-sijainti-atomi reittipisteet-atomi kirjatut-pisteet-atomi optiot
+                                     kayttaja-muutti-zoomausta-aikaleima-atom]}]
   (let [alustava-sijainti-saatu? (cljs.core/atom false)
         map-element (reagent/dom-node this)
 
@@ -298,6 +303,7 @@
                                     (:nykyinen @ajoneuvon-sijainti-atomi))]
             (maarita-kartan-zoom-taso-ajonopeuden-mukaan
               {:kartta kartta
+               :kayttaja-muutti-zoomausta-aikaleima @kayttaja-muutti-zoomausta-aikaleima-atom
                :nopeus (:speed (:nykyinen @ajoneuvon-sijainti-atomi))})
             (maarita-kartan-rotaatio-ajosuunnan-mukaan kartta sijainti-edellinen sijainti-nykyinen)))
         (kytke-dragpan kartta true)))
@@ -319,19 +325,21 @@
 
 
 (defn karttakomponentti [{:keys [wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva sijainti-atomi
-                                 ajoneuvon-sijainti-atomi reittipisteet-atomi kirjauspisteet-atomi optiot]}]
+                                 ajoneuvon-sijainti-atomi reittipisteet-atomi kirjauspisteet-atomi optiot
+                                 kayttaja-muutti-zoomausta-aikaleima-atom]}]
   (reagent/create-class {:reagent-render kartta-render
                          :component-did-mount
                          #(kartta-did-mount
                             %
-                            wmts-url
-                            wmts-url-kiinteistorajat
-                            wmts-url-ortokuva
-                            sijainti-atomi
-                            ajoneuvon-sijainti-atomi
-                            reittipisteet-atomi
-                            kirjauspisteet-atomi
-                            optiot)}))
+                            {:wmts-url wmts-url
+                             :wmts-url-kiinteistorajat wmts-url-kiinteistorajat
+                             :wmts-url-ortokuva wmts-url-ortokuva
+                             :keskipiste-atomi sijainti-atomi
+                             :ajoneuvon-sijainti-atomi ajoneuvon-sijainti-atomi
+                             :reittipisteet-atomi reittipisteet-atomi
+                             :kirjatut-pisteet-atomi kirjauspisteet-atomi
+                             :optiot optiot
+                             :kayttaja-muutti-zoomausta-aikaleima-atom kayttaja-muutti-zoomausta-aikaleima-atom})}))
 
 (defn kartta []
   [:div
@@ -342,11 +350,13 @@
      :sijainti-atomi s/kartan-keskipiste
      :ajoneuvon-sijainti-atomi s/ajoneuvon-sijainti
      :reittipisteet-atomi s/reittipisteet
+     :kayttaja-muutti-zoomausta-aikaleima-atom s/kayttaja-muutti-zoomausta-aikaleima
      :kirjauspisteet-atomi s/kirjauspisteet
      :optiot s/karttaoptiot}]
    [:div.kartan-kontrollit {:style (when @s/havaintolomake-auki?
                                      {:display "none"})}
-    [:div#karttakontrollit] ;; OpenLayersin ikonit asetetaan tähän elementtiin erikseen
+    [:div#karttakontrollit ;; OpenLayersin ikonit asetetaan tähän elementtiin erikseen
+     {:on-click #(reset! s/kayttaja-muutti-zoomausta-aikaleima (l/local-now))}]
     [:div
      {:class (str "kontrollinappi ortokuva "
                   (when @s/nayta-ortokuva? "kontrollinappi-aktiivinen"))

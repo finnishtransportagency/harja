@@ -181,6 +181,7 @@
 (def ilmoitukseen-liittyva-havainto-id (reagent/cursor sovellus [:ilmoitukseen-liittyva-havainto-id]))
 
 (def nayta-kiinteistorajat? (reagent/cursor sovellus [:kartta :nayta-kiinteistorajat?]))
+(def kayttaja-muutti-zoomausta-aikaleima (reagent/cursor sovellus [:kartta :kayttaja-muutti-zoomausta-aikaleima]))
 (def nayta-ortokuva? (reagent/cursor sovellus [:kartta :nayta-ortokuva?]))
 (def keskita-ajoneuvoon? (reagent/cursor sovellus [:kartta :keskita-ajoneuvoon?]))
 (def karttaoptiot (reaction {:seuraa-sijaintia? @keskita-ajoneuvoon?
