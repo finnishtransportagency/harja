@@ -395,7 +395,7 @@
      :ikoni-lahde "livicons"
      :avain :syvat-ajourat
      :vaatii-nappaimiston? false}
-    {:nimi "L.turvallisuutta vaarantava heitto"
+    {:nimi "Turvallisuutta vaarantava heitto"
      :tyyppi :vali
      :ikoni nil ; TODO IKONI PUUTTUU
      :ikoni-lahde "livicons"
