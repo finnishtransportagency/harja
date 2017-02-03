@@ -3,7 +3,7 @@
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.kalman :as kalman]
             [harja-laadunseuranta.utils :as utils]
-            [harja-laadunseuranta.math :as math]
+            [harja.math :as math]
             [harja-laadunseuranta.utils :refer [timestamp ipad?]]
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]))
 

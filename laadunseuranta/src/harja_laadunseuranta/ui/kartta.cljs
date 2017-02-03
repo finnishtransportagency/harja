@@ -19,7 +19,7 @@
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]
             [harja-laadunseuranta.tiedot.sovellus :as s]
-            [harja-laadunseuranta.math :as math])
+            [harja.math :as math])
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
 
@@ -179,6 +179,12 @@
   (let [view (.getView kartta)]
     (doto view
       (.setRotation rad)
+      (.changed))))
+
+(defn- paivita-kartan-zoom [kartta zoom-taso]
+  (let [view (.getView kartta)]
+    (doto view
+      (.setZoom zoom-taso)
       (.changed))))
 
 (defn- paivita-ajettu-reitti [kartta ajettu-reitti reittikerros reittipisteet]
