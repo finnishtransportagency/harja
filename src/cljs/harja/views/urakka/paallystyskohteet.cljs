@@ -6,6 +6,7 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [cljs.core.async :refer [<!]]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
+            [harja.views.urakka.muut-kustannukset :as muut-kustannukset-view]
             [harja.ui.komponentti :as komp]
             [harja.views.kartta :as kartta]
             [harja.ui.komponentti :as komp]
@@ -63,6 +64,8 @@
            #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
            :paikkaus
            #(reset! paallystys/harjan-paikkauskohteet (filter (comp not yllapitokohteet/yha-kohde?) %)))}]
+
+       [muut-kustannukset-view/muut-kustannukset ur]
 
        [yllapitokohteet-view/yllapitokohteet-yhteensa
         paallystys/kohteet-yhteensa {:nakyma :paallystys}]
