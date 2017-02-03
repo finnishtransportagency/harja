@@ -42,7 +42,7 @@
 ;; - Samsung Galaxy S4: 10
 ;; - Samsung Galaxy Tab A: 23
 ;; - Apple iPhone: 60
-(def +suurin-sallittu-tarkkuus+ 200) ;; Metreinä, mitä pienempi, sitä tarkempi
+(def +suurin-sallittu-tarkkuus+ 80) ;; Metreinä, mitä pienempi, sitä tarkempi
 
 (def +tros-haun-treshold+ 100)
 
