@@ -38,7 +38,8 @@
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.domain.tierekisteri.varusteet :as varusteet]))
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
 
@@ -94,9 +95,9 @@
    :otsikko (str
               (pvm/pvm-aika (:ilmoitettu ilmoitus)) " - "
               (condp = (:ilmoitustyyppi ilmoitus)
-                   :toimenpidepyynto "Toimenpidepyyntö"
-                   :tiedoitus "Tiedotus"
-                   (string/capitalize (name (:ilmoitustyyppi ilmoitus)))))
+                :toimenpidepyynto "Toimenpidepyyntö"
+                :tiedoitus "Tiedotus"
+                (string/capitalize (name (:ilmoitustyyppi ilmoitus)))))
    :tiedot [{:otsikko "Id" :tyyppi :string :nimi :ilmoitusid}
             {:otsikko "Ilmoitettu" :tyyppi :pvm-aika :nimi :ilmoitettu}
             {:otsikko "Otsikko" :tyyppi :string :nimi :otsikko}
@@ -121,7 +122,8 @@
    :tiedot [{:otsikko "Päivämäärä" :tyyppi :pvm :nimi :alkupvm}
             {:otsikko "Tunniste" :tyyppi :string :nimi :tunniste}
             {:otsikko "Tietolaji" :tyyppi :string :nimi :tietolaji}
-            {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
+            {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide
+             :hae (hakufunktio :toimenpide #(varusteet/varuste-toimenpide->string (:toimenpide %)))}
             {:otsikko "Kuntoluokka" :tyyppi :string :nimi :kuntoluokka}
             {:otsikko "Avaa varustekortti" :tyyppi :linkki :nimi :varustekortti-url}]
    :data toteuma})
@@ -235,8 +237,8 @@
                :hae (hakufunktio
                       :korjaavattoimenpiteet
                       #(str (count (filter :suoritettu (:korjaavattoimenpiteet %)))
-                           "/"
-                           (count (:korjaavattoimenpiteet %))))}]
+                            "/"
+                            (count (:korjaavattoimenpiteet %))))}]
      :data turpo}))
 
 (defmethod infopaneeli-skeema :tarkastus [tarkastus]
