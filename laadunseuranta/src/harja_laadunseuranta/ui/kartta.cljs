@@ -252,10 +252,10 @@
                   asetukset/+kunnioita-kayttajan-zoomia-s+)))
     (let [min-zoom asetukset/+min-zoom+
           max-zoom asetukset/+max-zoom+
-          max-nopeus-max-zoomaus 30 ;; m/s, jolla kartta zoomautuu minimiarvoonsa eli niin kauas kuin sallittu
+          max-nopeus-min-zoomaus 30 ;; m/s, jolla kartta zoomautuu minimiarvoonsa eli niin kauas kuin sallittu
           uusi-zoom-taso (if nopeus
                            ;; Zoomataan karttaa kauemmas sopivalle tasolle GPS:stä saadun nopeustiedon perusteella
-                           (- max-zoom (float (* (/ nopeus max-nopeus-max-zoomaus) (- max-zoom min-zoom))))
+                           (- max-zoom (float (* (/ nopeus max-nopeus-min-zoomaus) (- max-zoom min-zoom))))
                            max-zoom)
           uusi-tarkastettu-zoom-taso (cond
                                        (< uusi-zoom-taso min-zoom)
