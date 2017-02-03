@@ -233,6 +233,19 @@
     (when (and kontrollien-paikka kontrollit)
       (.appendChild kontrollien-paikka kontrollit))))
 
+(defn- maarita-kartan-rotaatio-ajosuunnan-mukaan [kartta sijainti-edellinen sijainti-nykyinen]
+  ;; Rotatoi kartta ajosuuntaan, mutta vain jos nopeus on riittävä, muuten
+  ;; paikallaolo ja siitä aiheutuva GPS-kohina saa kartan levottomaksi
+  (when (>= (math/pisteiden-etaisyys sijainti-edellinen sijainti-nykyinen) 8)
+    (paivita-kartan-rotaatio kartta (- (math/pisteiden-kulma-radiaaneina
+                                         sijainti-edellinen
+                                         sijainti-nykyinen)
+                                       (/ Math/PI 2)))))
+
+(defn- maarita-kartan-zoom-taso-ajonopeuden-mukaan [kartta sijainti-edellinen sijainti-nykyinen]
+  ;; TODO
+  )
+
 (defn kartta-did-mount [this wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva keskipiste-atomi
                         ajoneuvon-sijainti-atomi reittipisteet-atomi kirjatut-pisteet-atomi optiot]
   (let [alustava-sijainti-saatu? (cljs.core/atom false)
@@ -268,13 +281,8 @@
                                      (:edellinen @ajoneuvon-sijainti-atomi))
                 sijainti-nykyinen (projektiot/latlon-vektoriksi
                                     (:nykyinen @ajoneuvon-sijainti-atomi))]
-            ;; Rotatoi kartta ajosuuntaan, mutta vain jos nopeus on riittävä, muuten
-            ;; paikallaolo ja siitä aiheutuva GPS-kohina saa kartan levottomaksi
-            (when (>= (math/pisteiden-etaisyys sijainti-edellinen sijainti-nykyinen) 8)
-              (paivita-kartan-rotaatio kartta (- (math/pisteiden-kulma-radiaaneina
-                                                   sijainti-edellinen
-                                                   sijainti-nykyinen)
-                                                 (/ Math/PI 2))))))
+            (maarita-kartan-zoom-taso-ajonopeuden-mukaan kartta sijainti-edellinen sijainti-nykyinen)
+            (maarita-kartan-rotaatio-ajosuunnan-mukaan kartta sijainti-edellinen sijainti-nykyinen)))
         (kytke-dragpan kartta true)))
 
     (run!
@@ -332,8 +340,10 @@
                   (when @s/nayta-kiinteistorajat? "kontrollinappi-aktiivinen"))
       :on-click #(swap! s/nayta-kiinteistorajat? not)}
      [kuvat/svg-sprite "kiinteistoraja-24"]]
-    [:div.kontrollinappi.keskityspainike {:on-click #(do (swap! s/keskita-ajoneuvoon? not)
-                                                         (swap! s/keskita-ajoneuvoon? not))}
+    [:div
+     {:class (str "kontrollinappi keskityspainike "
+                  (when @s/keskita-ajoneuvoon? "kontrollinappi-aktiivinen"))
+      :on-click #(do (swap! s/keskita-ajoneuvoon? not))}
      [kuvat/svg-sprite "tahtain-24"]]]])
 
 ;; devcards

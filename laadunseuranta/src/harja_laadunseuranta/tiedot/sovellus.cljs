@@ -96,8 +96,9 @@
    :kirjauspisteet [] ; Kartalla näytettäviä ikoneita varten
    :reittipisteet [] ; Kartalle piirrettävä häntä mäppejä {:segmentti [[x1 y1] [x2 y2]] :vari html-vari}
 
-   :kartta {:keskita-ajoneuvoon? false
+   :kartta {:keskita-ajoneuvoon? true ;; Pidä kartta koko ajan keskitettynä ajoneuvoon
             :nayta-kiinteistorajat? false
+            :kayttaja-muutti-zoomausta-aikaleima nil ;; Milloin käyttäjä viimeksi muutti zoomitasoa. Vaikuttaa automaattisen zoomauksen toimintaan.
             :nayta-ortokuva? false}
 
    ;; Muut
@@ -182,7 +183,7 @@
 (def nayta-kiinteistorajat? (reagent/cursor sovellus [:kartta :nayta-kiinteistorajat?]))
 (def nayta-ortokuva? (reagent/cursor sovellus [:kartta :nayta-ortokuva?]))
 (def keskita-ajoneuvoon? (reagent/cursor sovellus [:kartta :keskita-ajoneuvoon?]))
-(def karttaoptiot (reaction {:seuraa-sijaintia? (or @tarkastusajo-kaynnissa? @keskita-ajoneuvoon?)
+(def karttaoptiot (reaction {:seuraa-sijaintia? @keskita-ajoneuvoon?
                              :nayta-kiinteistorajat? @nayta-kiinteistorajat?
                              :nayta-ortokuva? @nayta-ortokuva?}))
 
