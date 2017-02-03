@@ -13,5 +13,5 @@ INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Reikäjono', 't', 'rei
 INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Reunapainuma', 't', 'reunapainuma');
 INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Purkaumat', 't', 'purkaumat');
 INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Syvät ajourat', 't', 'syvat-ajourat');
-INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Liikenneturvallisuutta vaarantava heitto', 't', 'liikenneturvallisuutta-vaarantava-heitto');
+INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Turvallisuutta vaarantava heitto', 't', 'liikenneturvallisuutta-vaarantava-heitto');
 INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Ajomukavuutta haittaava epätasaisuus', 't', 'ajomukavuutta-haittaava-epatasaisuus-vaarantava-heitto');
