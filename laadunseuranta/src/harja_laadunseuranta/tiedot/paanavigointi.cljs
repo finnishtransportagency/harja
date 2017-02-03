@@ -8,12 +8,22 @@
             [cljs-time.coerce :as tc]
             [cljs-time.local :as lt]))
 
-;; Havainnot ja välilehdet
+;; Havainnot (ne, jotka ovat esiintyvät usean välilehden alla, muutoin määritelty havainnot-ryhmittain -muuttujaan)
+
+(def liikennemerkki-luminen
+  {:nimi "Liikenne\u00ADmerkki lumi\u00ADnen"
+   :ikoni "liikennemerkki-lumi-36"
+   :ikoni-lahde "livicons"
+   :tyyppi :piste
+   :avain :liikennemerkki-luminen
+   :vaatii-nappaimiston? false})
+
+;; Välilehdet ja niiden sisällöt
 
 (def havainnot-ryhmittain
   ;; Jos muutat näitä, varmista, että tiedot ovat yhteneväiset kannassa olevien vakiohavaintojen kanssa
-  ;; Erityisesti avain ja jatkuvuus!
-  {:talviset-pinnat [{:nimi "Liu\u00ADkas\u00ADta"
+  ;; Erityisesti avain ja jatkuvuus
+  {:talvihoito [{:nimi "Liu\u00ADkas\u00ADta"
                       :ikoni "liukas-36"
                       :ikoni-lahde "livicons"
                       :tyyppi :vali
@@ -57,7 +67,8 @@
                       :avain :pysakki-hiekoittamatta
                       :ikoni "pinta-hiekka-kielto-36"
                       :ikoni-lahde "livicons"
-                      :vaatii-nappaimiston? false}]
+                      :vaatii-nappaimiston? false}
+                liikennemerkki-luminen]
    :liikennemerkit [{:nimi "Liikenne\u00ADmerkki likai\u00ADnen"
                      :ikoni "liikennemerkki-lika-36"
                      :ikoni-lahde "livicons"
@@ -76,12 +87,7 @@
                      :tyyppi :piste
                      :avain :liikennemerkki-vaurioitunut
                      :vaatii-nappaimiston? false}
-                    {:nimi "Liikenne\u00ADmerkki lumi\u00ADnen"
-                     :ikoni "liikennemerkki-lumi-36"
-                     :ikoni-lahde "livicons"
-                     :tyyppi :piste
-                     :avain :liikennemerkki-luminen
-                     :vaatii-nappaimiston? false}]
+                    liikennemerkki-luminen]
    :viherhoito [{:nimi "Vesakko raivaa\u00ADmatta"
                  :tyyppi :vali
                  :ikoni "vesakko-leikkaus-36"
@@ -357,9 +363,9 @@
 
 (def oletusvalilehdet
   [{:avain :talvihoito
-    :nimi "Talviset pinnat"
+    :nimi "Talvihoito"
     :jarjestys 1
-    :sisalto (:talviset-pinnat havainnot-ryhmittain)}
+    :sisalto (:talvihoito havainnot-ryhmittain)}
    {:avain :liikennemerkit
     :nimi "Liikennemerkit"
     :jarjestys 1
