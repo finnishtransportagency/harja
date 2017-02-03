@@ -85,6 +85,9 @@
               (reset! sovellus/kayttaja-tunnistettu true)
               (reset! sovellus/kayttaja-tunnistettu false))
             (reset! sovellus/oikeus-urakoihin (-> kayttajatiedot :ok :urakat))
+            (if (not (empty? (-> kayttajatiedot :ok :urakat)))
+              (reset! sovellus/kayttajalla-oikeus-ainakin-yhteen-urakkaan true)
+              (reset! sovellus/kayttajalla-oikeus-ainakin-yhteen-urakkaan false))
             (reset! sovellus/roolit (-> kayttajatiedot :ok :roolit))
             (reset! sovellus/organisaatio (-> kayttajatiedot :ok :organisaatio)))))))
 
@@ -123,9 +126,15 @@
        :jatkuvat-havainnot-atom sovellus/jatkuvat-havainnot})
     (tr-haku/alusta-tr-haku sovellus/sijainti sovellus/tr-tiedot)))
 
+(defn- tarkkaile-alustusta []
+  (run! (when @sovellus/alustus-valmis?
+          (after-delay 1000
+            (reset! sovellus/sovelluksen-naytto-sallittu? true)))))
+
 (defn main []
   (esta-mobiililaitteen-nayton-lukitus)
   (alusta-paikannus-id)
+  (tarkkaile-alustusta)
   (alusta-geolokaatio-api)
   (kuuntele-dom-eventteja)
   (kuuntele-sivun-nakyvyytta sovellus/tarkastusajo-kaynnissa?
