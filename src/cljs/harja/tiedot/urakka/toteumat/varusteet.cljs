@@ -77,7 +77,7 @@
             (when-let [sijainti (some-> toteuma :sijainti geo/pisteet first)]
               (assoc toteuma
                 :tyyppi-kartalla :varustetoteuma
-                :selitys-kartalla (selite toteuma)
+                :tooltip (selite toteuma)
                 :sijainti {:type :point
                            :coordinates sijainti}))))))
 
