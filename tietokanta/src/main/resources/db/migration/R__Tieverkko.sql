@@ -454,7 +454,7 @@ BEGIN
  WHILE i < pisteita LOOP
   alku := pisteet[i];
   loppu := pisteet[i+1];
-  aika := EXTRACT(EPOCH FROM age(loppu.aika, alku.piste));
+  aika := EXTRACT(EPOCH FROM age(loppu.aika, alku.aika));
   alkupiste := ST_MakePoint(alku.x, alku.y);
   loppupiste := ST_MakePoint(loppu.x, loppu.y);
   RETURN NEXT (alkupiste, loppupiste,
