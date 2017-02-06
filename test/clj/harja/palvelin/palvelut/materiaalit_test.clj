@@ -128,8 +128,11 @@
   (let [[toteuma_id sopimus] (first (q (str "SELECT id, sopimus FROM toteuma WHERE urakka="@oulun-alueurakan-2005-2010-id" LIMIT 1")))
         vanha-maara 12398751
         uusi-maara 12
-        toteumamateriaalit (atom [{:toteuma toteuma_id :maara vanha-maara :materiaalikoodi 1} {:toteuma toteuma_id :maara vanha-maara :materiaalikoodi 1}])
-        parametrit {:toteumamateriaalit @toteumamateriaalit :urakka-id @oulun-alueurakan-2005-2010-id :sopimus sopimus}
+        toteumamateriaalit (atom [{:toteuma toteuma_id :maara vanha-maara :materiaalikoodi 1}
+                                  {:toteuma toteuma_id :maara vanha-maara :materiaalikoodi 1}])
+        parametrit {:toteumamateriaalit @toteumamateriaalit
+                    :urakka-id @oulun-alueurakan-2005-2010-id
+                    :sopimus sopimus}
         hae-materiaalitoteumien-maara (fn [id] (ffirst (q (str "SELECT count(*) FROM toteuma_materiaali
                                                                 WHERE poistettu IS NOT TRUE AND toteuma="id))))
         vanhat-materiaalitoteumat-lukumaara (hae-materiaalitoteumien-maara toteuma_id)
@@ -140,7 +143,10 @@
 
     ;; Luo kaksi uutta materiaalitoteumaa ja varmista että palvelu vastaa nil
     ;; (palauttaa urakassa käytetyt materiaalit jos hoitokausi on annettu)
-    (is (nil? (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-toteuma-materiaaleja! +kayttaja-jvh+ parametrit))
+    (is (nil? (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :tallenna-toteuma-materiaaleja!
+                              +kayttaja-jvh+
+                              parametrit))
         "Palvelun ei pitäisi palauttaa mitään jos hoitokautta ei ole annettu")
     (is (= (hae-materiaalitoteumien-maara toteuma_id) (+ 2 vanhat-materiaalitoteumat-lukumaara))
         "Tallentaminen epäonnistui?")
@@ -171,6 +177,21 @@
         "Toteumamateriaalin määrän olisi pitänyt päivittyä.")
 
     (u (str "DELETE FROM toteuma_materiaali WHERE id=" @tmid))))
+
+(deftest jarjestelman-kuomia-materiaaleja-ei-voi-muokata
+  (let [[toteuma_id sopimus] (first (q (str "SELECT id, sopimus FROM toteuma WHERE urakka="@oulun-alueurakan-2005-2010-id"
+                                             AND luoja IN (SELECT id FROM kayttaja WHERE jarjestelma IS TRUE) LIMIT 1")))
+        vanha-maara 12398751
+        toteumamateriaalit (atom [{:toteuma toteuma_id :maara vanha-maara :materiaalikoodi 1}
+                                  {:toteuma toteuma_id :maara vanha-maara :materiaalikoodi 1}])
+        parametrit {:toteumamateriaalit @toteumamateriaalit
+                    :urakka-id @oulun-alueurakan-2005-2010-id
+                    :sopimus sopimus}]
+
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :tallenna-toteuma-materiaaleja!
+                              +kayttaja-jvh+
+                              parametrit)))))
 
 (deftest poista-toteuma-materiaali-test
   (let [maara 874625
