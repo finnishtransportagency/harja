@@ -62,7 +62,7 @@ VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'), 'ajo
 INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo,
 yksikko, tilattu_maara, toteutunut_maara, yksikkohinta, luoja)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'),'ajoradan_paallyste'::maaramuutos_tyon_tyyppi,
-'Järjestelmän luoma työ', 'kg', 90, 130, 3, (SELECT id FROM kayttaja WHERE jarjestelma IS TRUE LIMIT 1));
+'Järjestelmän luoma työ', 'kg', 1, 1, 5, (SELECT id FROM kayttaja WHERE jarjestelma IS TRUE LIMIT 1));
 
 
 -- Päällystysilmoitukset
