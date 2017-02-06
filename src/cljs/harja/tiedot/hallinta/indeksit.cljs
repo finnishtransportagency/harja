@@ -1,4 +1,4 @@
-(ns harja.tiedot.indeksit
+(ns harja.tiedot.hallinta.indeksit
   "Indeksien tiedot"
   (:require [reagent.core :refer [atom] :as reagent]
             [cljs.core.async :refer [<! >! chan close!]]
@@ -17,16 +17,26 @@
    (if (nil? @indeksit)
            (go (reset! indeksit
                (<! (k/get! :indeksit))))))
- 
- 
-(defn tallenna-indeksi
-  "Tallentaa indeksit, palauttaa kanavan, josta vastauksen voi lukea."
-  [nimi indeksit]
-  (k/post! :tallenna-indeksi
-           {:nimi nimi
-            :indeksit indeksit}))
 
 (defonce indeksien-nimet
   (let [a (atom nil)]
     (go (reset! a (<! (k/get! :indeksien-nimet))))
+    a))
+
+(defn tallenna-indeksi
+  "Tallentaa indeksiarvot, palauttaa kanavan, josta vastauksen voi lukea."
+  [nimi uudet-indeksivuodet]
+  (go (let [tallennettavat
+            (into []
+                  (comp (filter #(not (:poistettu %))))
+                  uudet-indeksivuodet)
+            res (<! (k/post! :tallenna-indeksi
+                             {:nimi nimi
+                              :indeksit tallennettavat}))]
+        (reset! indeksit res)
+        true)))
+
+(defonce urakkatyypin-indeksit
+  (let [a (atom nil)]
+    (go (reset! a (<! (k/get! :urakkatyypin-indeksit))))
     a))

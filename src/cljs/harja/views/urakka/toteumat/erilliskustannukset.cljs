@@ -10,7 +10,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.indeksit :as i]
+            [harja.tiedot.hallinta.indeksit :as i]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.toteumat :as toteumat]

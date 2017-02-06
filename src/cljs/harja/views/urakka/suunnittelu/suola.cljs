@@ -15,7 +15,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.napit :as napit]
             [harja.ui.viesti :as viesti]
-            [harja.tiedot.indeksit :as i]
+            [harja.tiedot.hallinta.indeksit :as i]
             [harja.tiedot.navigaatio :as nav]
             [harja.views.kartta :as kartta]
             [harja.fmt :as fmt]

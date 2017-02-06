@@ -98,3 +98,11 @@ VALUES
   ('Platts: Propane CIF NWE 7kt+', 2016, 9, 271.02),
   ('Platts: ULSD 10ppmS CIF NWE Cargo', 2015, 8, 123.45),
   ('Platts: ULSD 10ppmS CIF NWE Cargo', 2016, 9, 234.56);
+
+INSERT INTO paallystysurakan_indeksit (indeksi_polttooljyraskas,indeksi_polttooljykevyt,indeksi_nestekaasu,
+                                       urakkavuosi,lahtotaso_vuosi,lahtotaso_kuukausi,urakka)
+VALUES
+  ((SELECT id FROM urakkatyypin_indeksi WHERE indeksinimi = 'Platts: FO 3,5%S CIF NWE Cargo' AND urakkatyyppi = 'paallystys'),
+   (SELECT id FROM urakkatyypin_indeksi WHERE indeksinimi = 'Platts: Propane CIF NWE 7kt+' AND urakkatyyppi = 'paallystys'),
+   (SELECT id FROM urakkatyypin_indeksi WHERE indeksinimi = 'Platts: ULSD 10ppmS CIF NWE Cargo' AND urakkatyyppi = 'paallystys'),
+  2017, 2016, 9, (SELECT id FROM urakka where nimi = 'Muhoksen päällystysurakka'))

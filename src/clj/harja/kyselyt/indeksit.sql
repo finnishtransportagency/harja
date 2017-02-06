@@ -37,3 +37,7 @@ DELETE FROM indeksi
 -- Hakee indeksien nimet
 SELECT DISTINCT nimi
   FROM indeksi
+
+--name: hae-urakkatyypin-indeksit
+SELECT id, urakkatyyppi, indeksinimi, materiaali, koodi
+  FROM urakkatyypin_indeksi;

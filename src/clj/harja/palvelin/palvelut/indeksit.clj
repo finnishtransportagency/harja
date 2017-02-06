@@ -5,7 +5,9 @@
             [clojure.set :refer [intersection difference]]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.indeksit :as q]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.kyselyt.konversio :as konv]))
 
 (defn hae-indeksien-nimet
   "Palvelu, joka palauttaa Harjassa olevien indeksien nimet."
@@ -35,6 +37,7 @@
 (defn hae-indeksit
   "Palvelu, joka palauttaa indeksit."
   [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-indeksit user)
   (zippaa (ryhmittele-indeksit (q/listaa-indeksit db))))
 
 (defn hae-indeksi
@@ -46,6 +49,7 @@
   "Palvelu joka tallentaa nimellä tunnistetun indeksin tiedot"
   [db user {:keys [nimi indeksit]}]
   (assert (vector? indeksit) "indeksit tulee olla vektori")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-indeksit user)
   (let [nykyiset-arvot (hae-indeksi db nimi)]
     (jdbc/with-db-transaction [c db]
       (doseq [indeksivuosi indeksit]
@@ -79,6 +83,16 @@
 
       (hae-indeksit c user))))
 
+(defn hae-urakkatyypin-indeksit
+  "Palvelu, joka palauttaa kaikki urakkatyypin-indeksit taulun rivit."
+  [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-indeksit user)
+  (let [indeksit (into []
+                       (map #(konv/string->keyword % :urakkatyyppi))
+                       (q/hae-urakkatyypin-indeksit db))]
+    (log/debug "hae urakkatyypin indeksit: " indeksit)
+    indeksit))
+
 
 (defrecord Indeksit []
   component/Lifecycle
@@ -92,11 +106,17 @@
                           (tallenna-indeksi (:db this) user tiedot)))
       (julkaise-palvelu :indeksien-nimet
                         (fn [user]
-                          (hae-indeksien-nimet (:db this) user))))
+                          (hae-indeksien-nimet (:db this) user)))
+      (julkaise-palvelu :urakkatyypin-indeksit
+                        (fn [user]
+                          (hae-urakkatyypin-indeksit (:db this) user)))
+
+      )
     this)
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :indeksit)
     (poista-palvelu (:http-palvelin this) :tallenna-indeksi)
     (poista-palvelu (:http-palvelin this) :indeksien-nimet)
+    (poista-palvelu (:http-palvelin this) :urakkatyypin-indeksit)
     this))
