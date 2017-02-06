@@ -1,92 +1,50 @@
-(ns harja.views.urakka.muut-kustannukset)
+(ns harja.views.urakka.muut-kustannukset
+  (:require [reagent.core :refer [atom] :as r]
+            [harja.ui.yleiset :refer [ajax-loader]]
+            [harja.ui.grid :as grid]
+            [harja.loki :refer [log logt tarkkaile!]]
+            [harja.ui.komponentti :as komp]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as u]
+            [harja.tiedot.urakka :as urakka]
+            [harja.ui.valinnat :as valinnat]
+            [cljs-time.core :as t]))
 
 (defonce kustannukset-atom (atom {}))
 
+;; Ylläpitokohteiden sarakkeiden leveydet
+(def kustannus-nimi-leveys 5)
+(def kustannus-summa-leveys 3)
+
+
 ;; muokkaus yllapitokohteet-viewin pohjalla wip
-(defn muut-kustannukset [urakka]
-  (komp/luo
-   (fn [urakka kustannukset-atom]
-     [:div.muut-kustannukset
-      [grid/grid
-       {:otsikko "Muut kustannukset"
+
+(def grid-opts {:otsikko "Muut kustannukset"
         :tyhja (if (nil? @kustannukset-atom) [ajax-loader "Haetaan kustannuksia..."] "Ei kustannuksia")
-        ;; :vetolaatikot
-        ;; (into {}
-        ;;       (map (juxt
-        ;;             :id
-        ;;             (fn [rivi]
-        ;;               [kohteen-vetolaatikko urakka kustannukset-atom rivi])))
-        ;;       @kustannukset-atom)
         :tallenna #(log "muut-kustannukset: tallenna kutsuttu")
         :muutos (fn [grid]
-                  ;; ??
-                  ; (hae-osan-pituudet grid osan-pituudet-teille)
-                  ;(validoi-tr-osoite grid tr-sijainnit tr-virheet)
-                  )
+                  #(log "muut-kustannukset: muutos kutsuttu"))
         :voi-lisata? true
         :esta-poistaminen? (fn [rivi] (or (not (nil? (:paallystysilmoitus-id rivi))) ;; <- tahan tsekkaus onko kohdistamaton sanktio vai suoraan syötetty?
                                           (not (nil? (:paikkausilmoitus-id rivi)))))
         :esta-poistaminen-tooltip
-        (fn [_] "Kohteeseen liittymättömästä sanktiosta johtuvaa kustannusta ei voi poistaa.")}
-       #_(into []
-             (concat
-              [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
-               {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :nimi :kohdenumero
-                :tyyppi :string :leveys id-leveys
-                :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
-               {:otsikko "Koh\u00ADteen ni\u00ADmi" :nimi :nimi
-                :tyyppi :string :leveys kohde-leveys}]
-              (tierekisteriosoite-sarakkeet
-               tr-leveys
-               [nil
-                nil
-                {:nimi :tr-numero :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                {:nimi :tr-ajorata :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                {:nimi :tr-kaista :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                {:nimi :tr-alkuosa :validoi [(partial validoi-kohteen-osoite :tr-alkuosa)]}
-                {:nimi :tr-alkuetaisyys :validoi [(partial validoi-kohteen-osoite :tr-alkuetaisyys)]}
-                {:nimi :tr-loppuosa :validoi [(partial validoi-kohteen-osoite :tr-loppuosa)]}
-                {:nimi :tr-loppuetaisyys :validoi [(partial validoi-kohteen-osoite :tr-loppuetaisyys)]}])
-              [{:otsikko "KVL"
-                :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :numero :leveys kvl-leveys
-                :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-               {:otsikko "YP-lk"
-                :nimi :yllapitoluokka :tyyppi :numero :leveys yllapitoluokka-leveys
-                :muokattava? (constantly (not (:yha-sidottu? optiot)))}
+        (fn [_] "Kohteeseen liittymättömästä sanktiosta johtuvaa kustannusta ei voi poistaa.")})
 
-               (when (= (:kohdetyyppi optiot) :paallystys)
-                 {:otsikko "Tar\u00ADjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
-                  :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :tasaa :oikea})
-               (when (= (:kohdetyyppi optiot) :paallystys)
-                 {:otsikko "Mää\u00ADrä\u00ADmuu\u00ADtok\u00ADset"
-                  :nimi :maaramuutokset :muokattava? (constantly false)
-                  :fmt fmt/euro-opt :tyyppi :numero :leveys maaramuutokset-leveys :tasaa :oikea})
-               (when (= (:kohdetyyppi optiot) :paikkaus)
-                 {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta
-                  :muokattava? (constantly false)
-                  :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys
-                  :tasaa :oikea})
-               {:otsikko "Ar\u00ADvon muu\u00ADtok\u00ADset" :nimi :arvonvahennykset :fmt fmt/euro-opt
-                :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea}
-               {:otsikko "Sak\u00ADko/bo\u00ADnus" :nimi :bonukset-ja-sakot :fmt fmt/euro-opt
-                :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea
-                :muokattava? (constantly false)}
-               {:otsikko "Bi\u00ADtumi-in\u00ADdek\u00ADsi" :nimi :bitumi-indeksi
-                :fmt fmt/euro-opt
-                :tyyppi :numero :leveys bitumi-indeksi-leveys :tasaa :oikea}
-               {:otsikko "Kaa\u00ADsu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt
-                :tyyppi :numero :leveys kaasuindeksi-leveys :tasaa :oikea}
-               {:otsikko (str "Ko\u00ADko\u00ADnais\u00ADhinta"
-                              " (ind\u00ADek\u00ADsit mu\u00ADka\u00ADna)")
-                :muokattava? (constantly false)
-                :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys yhteensa-leveys
-                :tasaa :oikea
-                :hae (fn [rivi] (+ (:sopimuksen-mukaiset-tyot rivi)
-                                   (:maaramuutokset rivi)
-                                   (:toteutunut-hinta rivi)
-                                   (:arvonvahennykset rivi)
-                                   (:bonukset-ja-sakot rivi)
-                                   (:bitumi-indeksi rivi)
-                                   (:kaasuindeksi rivi)))}]))
-       ;; (sort-by tr/tiekohteiden-jarjestys @kustannukset-atom) ;; miten sorttaus?
-       ]])))
+(def grid-skeema
+  (into [] (concat  [{:otsikko "Kustannus" :nimi :kustannus-nimi
+                      :tyyppi :string :leveys kustannus-nimi-leveys
+                      :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
+                     {:otsikko "summa" :nimi :kustannus-summa
+                      :tyyppi :string :leveys kustannus-summa-leveys}]
+                    [])))
+
+(defn grid-tiedot []
+  ^{:key "zonk"} [^{:key "a"} {:kustannus-nimi "ruoka" :kustannus-summa 42.50} ^{:key "b"} {:kustannus-nimi "juoma" :kustannus-summa 234.00}])
+
+(defn muut-kustannukset [urakka]
+  (komp/luo
+   (fn [urakka]
+     [:div.muut-kustannukset
+      [grid/grid grid-opts grid-skeema (grid-tiedot)]])))
