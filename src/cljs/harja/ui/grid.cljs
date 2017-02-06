@@ -220,54 +220,54 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                 (if (and (or (nil? voi-muokata-rivia?) (voi-muokata-rivia? rivi index))
                          (or (nil? muokattava?) (muokattava? rivi index)))
 
-                  ^{:key (str nimi)}
-                  [:td {:class (str "muokattava " tasaus-luokka (cond
-                                                                  (not (empty? kentan-virheet)) " sisaltaa-virheen"
-                                                                  (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
-                                                                  (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))}
-                   (cond
-                     (not (empty? kentan-virheet)) (virheen-ohje kentan-virheet)
-                     (not (empty? kentan-varoitukset)) (virheen-ohje kentan-varoitukset :varoitus)
-                     (not (empty? kentan-huomautukset)) (virheen-ohje kentan-huomautukset :huomautus))
+  ^{:key (str nimi)}
+  [:td {:class (str "muokattava " tasaus-luokka (cond
+                                                  (not (empty? kentan-virheet)) " sisaltaa-virheen"
+                                                  (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
+                                                  (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))}
+   (cond
+     (not (empty? kentan-virheet)) (virheen-ohje kentan-virheet)
+     (not (empty? kentan-varoitukset)) (virheen-ohje kentan-varoitukset :varoitus)
+     (not (empty? kentan-huomautukset)) (virheen-ohje kentan-huomautukset :huomautus))
 
-                   ;; Jos skeema tukee kopiointia, näytetään kopioi alas nappi
+   ;; Jos skeema tukee kopiointia, näytetään kopioi alas nappi
                    (when-let [tayta-alas (:tayta-alas? s)]
-                     (when (and (= fokus fokus-id)
-                                (tayta-alas arvo)
+     (when (and (= fokus fokus-id)
+                (tayta-alas arvo)
 
-                                ;; Sallitaan täyttö, vain jos tulevia rivejä on ja kaikkien niiden arvot ovat tyhjiä
-                                (not (empty? tulevat-rivit))
-                                (every? str/blank? (map hae tulevat-rivit)))
+                ;; Sallitaan täyttö, vain jos tulevia rivejä on ja kaikkien niiden arvot ovat tyhjiä
+                (not (empty? tulevat-rivit))
+                (every? str/blank? (map hae tulevat-rivit)))
 
                        [:div {:class (if (= :oikea (:tasaa s))
-                                       "pull-left"
-                                       "pull-right")}
-                        [:div {:style {:position "absolute" :display "inline-block"}}
+                       "pull-left"
+                       "pull-right")}
+        [:div {:style {:position "absolute" :display "inline-block"}}
                          [:button {:class (str "nappi-toissijainen nappi-tayta" (when (:kelluta-tayta-nappi s) " kelluta-tayta-nappi"))
                                    :title (:tayta-tooltip s)
-                                   :style {:position "absolute"
+                   :style {:position "absolute"
                                            :left (when (= :oikea (:tasaa s)) 0)
                                            :right (when-not (= :oikea (:tasaa s)) "100%")}
                                    :on-click #(muokkaa-rivit! ohjaus tayta-tiedot-alas [s rivi (:tayta-fn s)])}
-                          (ikonit/livicon-arrow-down) " Täytä"]]]))
+          (ikonit/livicon-arrow-down) " Täytä"]]]))
 
-                   (if (= tyyppi :komponentti)
-                     (komponentti rivi {:index index
-                                        :muokataan? true})
+   (if (= tyyppi :komponentti)
+     (komponentti rivi {:index index
+                        :muokataan? true})
                      [tee-kentta (assoc s
-                                   :focus (= fokus fokus-id)
-                                   :on-focus #(aseta-fokus! fokus-id)
+                   :focus (= fokus fokus-id)
+                   :on-focus #(aseta-fokus! fokus-id)
                                    :pituus-max (:pituus-max s))
-                      (r/wrap
-                        arvo
-                        (fn [uusi]
-                          (if aseta
-                            (muokkaa! id (fn [rivi]
-                                           (aseta rivi uusi)))
+      (r/wrap
+        arvo
+        (fn [uusi]
+          (if aseta
+            (muokkaa! id (fn [rivi]
+                           (aseta rivi uusi)))
                             (muokkaa! id assoc nimi uusi))))])]
 
-                  ^{:key (str nimi)}
-                  [:td {:class (str "ei-muokattava " tasaus-luokka)}
+  ^{:key (str nimi)}
+  [:td {:class (str "ei-muokattava " tasaus-luokka)}
                    ((or fmt str) (hae rivi))])))))
    (when-not piilota-toiminnot?
      [:td.toiminnot
@@ -408,12 +408,15 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                          :teksti (näytettävä teksti) ja :sarakkeita (colspan)
   :id                                   mahdollinen DOM noden id, gridin pääelementille
 
+  :voi-muokata-rivia?                   predikaattifunktio, jolla voidaan määrittää jolla voidaan määrittää kaikille
+                                        riveille yhteinen sääntö milloin rivejä saa muokata
+
   "
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata?
            rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta max-rivimaara
-           max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip] :as opts} skeema tiedot]
+           max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?] :as opts} skeema tiedot]
   (let [komponentti-id (hash (str opts skeema tiedot (t/now)))
         muokatut (atom nil) ;; muokattu datajoukko
         jarjestys (atom nil) ;; id:t indekseissä (tai otsikko)
@@ -811,22 +814,23 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                (when-not (or (:yhteenveto rivi) (:poistettu rivi))
                                                  [^{:key id}
                                                  [muokkausrivi {:ohjaus ohjaus
-                                                                 :vetolaatikot vetolaatikot
-                                                                 :muokkaa! muokkaa!
-                                                                 :luokka (str (if (even? (+ i 1))
-                                                                                "parillinen"
-                                                                                "pariton"))
-                                                                 :id id
-                                                                 :rivin-virheet rivin-virheet
-                                                                 :rivin-varoitukset rivin-varoitukset
-                                                                 :rivin-huomautukset rivin-huomautukset
-                                                                 :voi-poistaa? voi-poistaa?
-                                                                 :esta-poistaminen? esta-poistaminen?
-                                                                 :esta-poistaminen-tooltip esta-poistaminen-tooltip
-                                                                 :fokus nykyinen-fokus
-                                                                 :aseta-fokus! #(reset! fokus %)
-                                                                 :tulevat-rivit (tulevat-rivit i)
-                                                                 :piilota-toiminnot? piilota-toiminnot?}
+                                                                :vetolaatikot vetolaatikot
+                                                                :muokkaa! muokkaa!
+                                                                :luokka (str (if (even? (+ i 1))
+                                                                               "parillinen"
+                                                                               "pariton"))
+                                                                :id id
+                                                                :rivin-virheet rivin-virheet
+                                                                :rivin-varoitukset rivin-varoitukset
+                                                                :rivin-huomautukset rivin-huomautukset
+                                                                :voi-poistaa? voi-poistaa?
+                                                                :esta-poistaminen? esta-poistaminen?
+                                                                :esta-poistaminen-tooltip esta-poistaminen-tooltip
+                                                                :fokus nykyinen-fokus
+                                                                :aseta-fokus! #(reset! fokus %)
+                                                                :tulevat-rivit (tulevat-rivit i)
+                                                                :piilota-toiminnot? piilota-toiminnot?
+                                                                :voi-muokata-rivia? voi-muokata-rivia?}
                                                   skeema rivi i]
                                                   (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)]))))
                                          jarjestys))))))
