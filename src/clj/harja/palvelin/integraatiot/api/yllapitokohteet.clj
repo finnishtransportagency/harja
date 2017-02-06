@@ -215,40 +215,41 @@
                      kohde-id
                      kayttaja))
 
-  (let [urakka-id (Integer/parseInt urakka-id)
-        kohde-id (Integer/parseInt kohde-id)]
-    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+  (jdbc/with-db-transaction [db db]
+    (let [urakka-id (Integer/parseInt urakka-id)
+          kohde-id (Integer/parseInt kohde-id)]
+      (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+      (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
 
-    (let [jarjestelma (get-in otsikko [:lahettaja :jarjestelma])
-          alkukoordinaatit (:koordinaatit (:alkuaidan-sijainti tietyomaa))
-          loppukoordinaatit (:koordinaatit (:loppuaidan-sijainti tietyomaa))
-          tr-osoite (hae-tr-osoite db alkukoordinaatit loppukoordinaatit)
-          parametrit {:jarjestelma jarjestelma
-                      :osuusid (:id tietyomaa)
-                      :alkux (:x alkukoordinaatit)
-                      :alkuy (:y alkukoordinaatit)
-                      :loppux (:x loppukoordinaatit)
-                      :loppuy (:y loppukoordinaatit)
-                      :asetettu (aika-string->java-sql-timestamp (:aika tietyomaa))
-                      :kaistat (konv/seq->array (:kaistat tietyomaa))
-                      :ajoradat (konv/seq->array (:ajoradat tietyomaa))
-                      :yllapitokohde kohde-id
-                      :kirjaaja (:id kayttaja)
-                      :tr_tie (:tie tr-osoite)
-                      :tr_aosa (:aosa tr-osoite)
-                      :tr_aet (:aet tr-osoite)
-                      :tr_losa (:losa tr-osoite)
-                      :tr_let (:let tr-osoite)
-                      :nopeusrajoitus (:nopeusrajoitus tietyomaa)}]
+      (let [jarjestelma (get-in otsikko [:lahettaja :jarjestelma])
+            alkukoordinaatit (:koordinaatit (:alkuaidan-sijainti tietyomaa))
+            loppukoordinaatit (:koordinaatit (:loppuaidan-sijainti tietyomaa))
+            tr-osoite (hae-tr-osoite db alkukoordinaatit loppukoordinaatit)
+            parametrit {:jarjestelma jarjestelma
+                        :osuusid (:id tietyomaa)
+                        :alkux (:x alkukoordinaatit)
+                        :alkuy (:y alkukoordinaatit)
+                        :loppux (:x loppukoordinaatit)
+                        :loppuy (:y loppukoordinaatit)
+                        :asetettu (aika-string->java-sql-timestamp (:aika tietyomaa))
+                        :kaistat (konv/seq->array (:kaistat tietyomaa))
+                        :ajoradat (konv/seq->array (:ajoradat tietyomaa))
+                        :yllapitokohde kohde-id
+                        :kirjaaja (:id kayttaja)
+                        :tr_tie (:tie tr-osoite)
+                        :tr_aosa (:aosa tr-osoite)
+                        :tr_aet (:aet tr-osoite)
+                        :tr_losa (:losa tr-osoite)
+                        :tr_let (:let tr-osoite)
+                        :nopeusrajoitus (:nopeusrajoitus tietyomaa)}]
 
-      (if (q-tietyomaat/onko-olemassa? db {:id (:id tietyomaa) :jarjestelma jarjestelma})
-        (q-tietyomaat/paivita-tietyomaa! db parametrit)
-        (q-tietyomaat/luo-tietyomaa<! db parametrit))
-      (let [vastaus (cond-> {:ilmoitukset (str "Tietyömaa kirjattu onnistuneesti.")}
-                            (nil? tr-osoite)
-                            (assoc :varoitukset "Annetulle tieosuudelle ei saatu haettua tierekisteriosoitetta."))]
-        (tee-kirjausvastauksen-body vastaus)))))
+        (if (q-tietyomaat/onko-olemassa? db {:id (:id tietyomaa) :jarjestelma jarjestelma})
+          (q-tietyomaat/paivita-tietyomaa! db parametrit)
+          (q-tietyomaat/luo-tietyomaa<! db parametrit))
+        (let [vastaus (cond-> {:ilmoitukset (str "Tietyömaa kirjattu onnistuneesti.")}
+                              (nil? tr-osoite)
+                              (assoc :varoitukset "Annetulle tieosuudelle ei saatu haettua tierekisteriosoitetta."))]
+          (tee-kirjausvastauksen-body vastaus))))))
 
 (defn poista-tietyomaa [db kayttaja {:keys [urakka-id kohde-id]} {:keys [otsikko tietyomaa]}]
   (log/debug (format "Poistetaan urakan (id: %s) kohteelta (id: %s) tietyömaa käyttäjän: %s toimesta"
@@ -256,20 +257,21 @@
                      kohde-id
                      kayttaja))
 
-  (let [urakka-id (Integer/parseInt urakka-id)
-        kohde-id (Integer/parseInt kohde-id)
-        jarjestelma (get-in otsikko [:lahettaja :jarjestelma])
-        id (:id tietyomaa)
-        parametrit {:jarjestelma jarjestelma
-                    :osuusid id
-                    :poistettu (aika-string->java-sql-timestamp (:aika tietyomaa))
-                    :poistaja (:id kayttaja)}]
-    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
-    (validointi/tarkista-tietyomaa db id jarjestelma)
-    (q-tietyomaat/merkitse-tietyomaa-poistetuksi! db parametrit)
-    (tee-kirjausvastauksen-body
-      {:ilmoitukset (str "Tietyömaa poistettu onnistuneesti.")})))
+  (jdbc/with-db-transaction [db db]
+    (let [urakka-id (Integer/parseInt urakka-id)
+         kohde-id (Integer/parseInt kohde-id)
+         jarjestelma (get-in otsikko [:lahettaja :jarjestelma])
+         id (:id tietyomaa)
+         parametrit {:jarjestelma jarjestelma
+                     :osuusid id
+                     :poistettu (aika-string->java-sql-timestamp (:aika tietyomaa))
+                     :poistaja (:id kayttaja)}]
+     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+     (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+     (validointi/tarkista-tietyomaa db id jarjestelma)
+     (q-tietyomaat/merkitse-tietyomaa-poistetuksi! db parametrit)
+     (tee-kirjausvastauksen-body
+       {:ilmoitukset (str "Tietyömaa poistettu onnistuneesti.")}))))
 
 (defn kirjaa-maaramuutokset [db kayttaja {:keys [urakka-id kohde-id]} {:keys [otsikko maaramuutokset]}]
   (log/debug (format "Kirjataan urakan (id: %s) kohteen (id: %s) maaramuutokset käyttäjän: %s toimesta"
