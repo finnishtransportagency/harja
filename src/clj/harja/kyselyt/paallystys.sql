@@ -182,6 +182,12 @@ FROM yllapitokohteen_maaramuutos ym
   JOIN urakka u ON ypk.urakka = u.id
 WHERE ym.id = :id;
 
+-- name: maaramuutos-jarjestelmam-luoma
+SELECT k.jarjestelma AS "jarjestelman-luoma"
+FROM yllapitokohteen_maaramuutos ym
+  JOIN kayttaja k ON ym.luoja = k.id
+WHERE ym.id = :id;
+
 -- name: hae-yllapitokohteen-maaramuutokset
 SELECT
   id,
