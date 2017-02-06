@@ -190,7 +190,7 @@ WHERE ym.id = :id;
 
 -- name: hae-yllapitokohteen-maaramuutokset
 SELECT
-  id,
+  ym.id,
   yllapitokohde,
   tyon_tyyppi               AS "tyyppi",
   tyo,
@@ -198,13 +198,14 @@ SELECT
   tilattu_maara             AS "tilattu-maara",
   toteutunut_maara          AS "toteutunut-maara",
   yksikkohinta,
-  (jarjestelma IS NOT NULL) AS "jarjestelman-lisaama"
-FROM yllapitokohteen_maaramuutos
+  k.jarjestelma             AS "jarjestelman-lisaama"
+FROM yllapitokohteen_maaramuutos ym
+  LEFT JOIN kayttaja k ON ym.luoja = k.id
 WHERE yllapitokohde = :id
       AND (SELECT urakka
            FROM yllapitokohde
            WHERE id = :id) = :urakka
-      AND poistettu IS NOT TRUE;
+      AND ym.poistettu IS NOT TRUE;
 
 -- name: luo-yllapitokohteen-maaramuutos<!
 INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo, yksikko, tilattu_maara, toteutunut_maara,
