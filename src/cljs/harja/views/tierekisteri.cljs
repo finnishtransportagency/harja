@@ -210,11 +210,13 @@
       "Piirrä reitti"]]))
 
 (defonce reittitoteuman-piste-idt (atom nil))
-(defn- nayta-reittitoteuman-pisteet [{tot "reittitoteuma" :as payload}]
+(defn- nayta-reittitoteuman-pisteet [payload]
   (doseq [id @reittitoteuman-piste-idt]
     (tasot/poista-geometria! id))
   (reset! reittitoteuman-piste-idt [])
-  (let [{reitti "reitti"} tot]
+  (let [tot (or (get-in payload "reittitoteuma")
+                (get-in payload ["reittitoteumat" 0 "reittitoteuma"]))
+        {reitti "reitti"} tot]
     (doseq [{rp "reittipiste"} reitti
             :let [aika (get rp "aika")
                   {:strs [x y]} (get rp "koordinaatit")
@@ -224,8 +226,16 @@
                               {:alue {:type :point
                                       :coordinates [(js/parseFloat x) (js/parseFloat y)]}
                                :nimi (str "RP " aika)
-                               :type :reittitoteuman-piste})
-      (.log js/console "RP " x ", " y " @ " aika))))
+                               :type :reittitoteuman-piste}))))
+
+(defn- geometrisoi-ja-nayta-reittitoteuma [json]
+  (go
+    (let [reitti (<! (k/post! :debug-geometrisoi-reittitoteuma
+                              json))]
+      (tasot/nayta-geometria! :geometrisoitu-reittitoteuma
+                              {:type :geometrisoitu-reittitoteuma
+                               :nimi "Geometrisoitu reittitoteuma"
+                               :alue reitti}))))
 
 (defn- reittitoteuma-payload []
   (let [payload (atom "")]
@@ -238,10 +248,11 @@
                    :value @payload
                    :on-change #(let [v (-> % .-target .-value)]
                                  (reset! payload v))}]
-       [:button {:on-click #(some-> @payload
-                                    js/JSON.parse
-                                    js->clj
-                                    nayta-reittitoteuman-pisteet)}
+       [:button {:on-click #(when-let [p (some-> @payload
+                                                 js/JSON.parse
+                                                 js->clj)]
+                              (nayta-reittitoteuman-pisteet p)
+                              (geometrisoi-ja-nayta-reittitoteuma @payload))}
         "piirteleppä!"]])))
 
 (defn tierekisteri []

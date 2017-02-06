@@ -7,7 +7,10 @@
             [harja.palvelin.komponentit.http-palvelin :as http]
             [harja.kyselyt.debug :as q]
 
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [cheshire.core :as cheshire]
+            [harja.palvelin.integraatiot.api.reittitoteuma :as reittitoteuma]
+            [taoensso.timbre :as log]))
 
 (defn hae-toteuman-reitti-ja-pisteet [db toteuma-id]
   (let [tulos (konv/sarakkeet-vektoriin
@@ -18,8 +21,23 @@
     {:reitti (:reitti (first tulos))
      :reittipisteet (:reittipisteet (first tulos))}))
 
-(defn vaadi-jvh! [user]
-  (roolit/jvh? user))
+(defn geometrisoi-reittoteuma [db json]
+  (let [parsittu  (cheshire/decode json)
+        reitti (or (get-in parsittu ["reittitoteuma" "reitti"])
+                   (get-in parsittu ["reittitoteumat" 0 "reittitoteuma" "reitti"]))
+        pisteet (mapv (fn [{{koordinaatit "koordinaatit"} "reittipiste"}]
+                        [(get koordinaatit "x") (get koordinaatit "y")])
+                      reitti)]
+    (reittitoteuma/hae-reitti db pisteet)))
+
+(defn geometrisoi-reittipisteet [db pisteet]
+  (reittitoteuma/hae-reitti db pisteet))
+
+(defn vaadi-jvh! [palvelu-fn]
+  (fn [user payload]
+    (if-not (roolit/jvh? user)
+      (log/error "DEBUG näkymän palvelua yritti käyttää ei-jvh: " user)
+      (palvelu-fn payload))))
 
 
 (defrecord Debug []
@@ -29,13 +47,17 @@
     (http/julkaise-palvelut
      http
      :debug-hae-toteuman-reitti-ja-pisteet
-     (fn [user toteuma-id]
-       (vaadi-jvh! user)
-       (hae-toteuman-reitti-ja-pisteet db toteuma-id)))
+     (vaadi-jvh! (partial #'hae-toteuman-reitti-ja-pisteet db))
+     :debug-geometrisoi-reittitoteuma
+     (vaadi-jvh! (partial #'geometrisoi-reittoteuma db))
+     :debug-geometrisoi-reittipisteet
+     (vaadi-jvh! (partial #'geometrisoi-reittipisteet db)))
     this)
 
   (stop [{http :http-palvelin :as this}]
     (http/poista-palvelut
      http
-     :debug-hae-toteuman-reitti-ja-pisteet)
+     :debug-hae-toteuman-reitti-ja-pisteet
+     :debug-geometrisoi-reittitoteuma
+     :debug-geometrisoi-reittipisteet)
     this))
