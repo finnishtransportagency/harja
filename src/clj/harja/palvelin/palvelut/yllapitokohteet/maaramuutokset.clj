@@ -24,8 +24,9 @@
 
 (defn vaadi-maaramuutos-ei-jarjestelman-luoma [db maaramuutos-id]
   (when (id-olemassa? maaramuutos-id)
+
     (let [maaramuutos-jarjestelman-luoma (some? (:jarjestelman-luoma
-                                                  (first (q/hae-maaramuutoksen-urakka db {:id maaramuutos-id}))))]
+                                                  (first (q/maaramuutos-jarjestelmam-luoma db {:id maaramuutos-id}))))]
       (when maaramuutos-jarjestelman-luoma
         (throw (SecurityException. "Määrämuutos on järjestelmän luoma, ei voi muokata!"))))))
 
@@ -116,8 +117,9 @@
   (log/debug "Aloitetaan määrämuutoksien tallennus")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
-  (vaadi-maaramuutos-ei-jarjestelman-luoma db urakka-id yllapitokohde-id)
+
   (doseq [maaramuutos maaramuutokset]
+    (vaadi-maaramuutos-ei-jarjestelman-luoma db (:id maaramuutos))
     (vaadi-maaramuutos-kuuluu-urakkaan db urakka-id (:id maaramuutos)))
 
   (jdbc/with-db-transaction [db db]
