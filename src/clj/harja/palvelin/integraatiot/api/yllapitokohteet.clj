@@ -276,29 +276,31 @@
                      urakka-id
                      kohde-id
                      kayttaja))
-  (let [urakka-id (Integer/parseInt urakka-id)
-        kohde-id (Integer/parseInt kohde-id)
-        jarjestelma (get-in otsikko [:lahettaja :jarjestelma])]
-    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
-    (q-paallystys/poista-yllapitokohteen-jarjestelman-kirjaamat-maaramuutokset! db {:yllapitokohdeid kohde-id
-                                                                                    :jarjestelma jarjestelma})
-    (doseq [{{:keys [tunniste tyyppi tyo yksikko tilattu-maara toteutunut-maara yksikkohinta]} :maaramuutos}
-            maaramuutokset]
-      (let [parametrit {:yllapitokohde kohde-id
-                        :tyon_tyyppi tyyppi
-                        :tyo tyo
-                        :yksikko yksikko
-                        :tilattu_maara tilattu-maara
-                        :toteutunut_maara toteutunut-maara
-                        :yksikkohinta yksikkohinta
-                        :luoja (:id kayttaja)
-                        :ulkoinen_id (:id tunniste)
-                        :jarjestelma jarjestelma}]
-        (q-paallystys/luo-yllapitokohteen-maaramuutos<! db parametrit)))
+  (jdbc/with-db-transaction
+    [db db]
+    (let [urakka-id (Integer/parseInt urakka-id)
+          kohde-id (Integer/parseInt kohde-id)
+          jarjestelma (get-in otsikko [:lahettaja :jarjestelma])]
+      (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+      (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+      (q-paallystys/poista-yllapitokohteen-jarjestelman-kirjaamat-maaramuutokset! db {:yllapitokohdeid kohde-id
+                                                                                      :jarjestelma jarjestelma})
+      (doseq [{{:keys [tunniste tyyppi tyo yksikko tilattu-maara toteutunut-maara yksikkohinta]} :maaramuutos}
+              maaramuutokset]
+        (let [parametrit {:yllapitokohde kohde-id
+                          :tyon_tyyppi tyyppi
+                          :tyo tyo
+                          :yksikko yksikko
+                          :tilattu_maara tilattu-maara
+                          :toteutunut_maara toteutunut-maara
+                          :yksikkohinta yksikkohinta
+                          :luoja (:id kayttaja)
+                          :ulkoinen_id (:id tunniste)
+                          :jarjestelma jarjestelma}]
+          (q-paallystys/luo-yllapitokohteen-maaramuutos<! db parametrit)))
 
-    (tee-kirjausvastauksen-body
-      {:ilmoitukset (str "Määrämuutokset kirjattu onnistuneesti.")})))
+      (tee-kirjausvastauksen-body
+        {:ilmoitukset (str "Määrämuutokset kirjattu onnistuneesti.")}))))
 
 (def palvelut
   [{:palvelu :hae-yllapitokohteet
