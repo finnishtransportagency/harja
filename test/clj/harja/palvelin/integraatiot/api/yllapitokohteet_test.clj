@@ -378,8 +378,7 @@
         kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
         _ (u "INSERT INTO yllapitokohteen_maaramuutos (id, yllapitokohde, tyon_tyyppi, tyo, yksikko, tilattu_maara, toteutunut_maara, yksikkohinta, poistettu, luoja, luotu, muokkaaja, muokattu, jarjestelma, ulkoinen_id, ennustettu_maara)
               VALUES (" urakka-id ", " kohde-id ", 'ajoradan_paallyste', 'Esimerkki työ', 'm2', 12, 14.2, 666, FALSE, 10, '2017-01-31 15:34:32', NULL, NULL, NULL, NULL, NULL)")
-
-        hae-maaramuutokset #(q "SELECT * FROM yllapitokohteen_maaramuutos WHERE yllapitokohde = " kohde-id)
+        hae-maaramuutokset #(q-map "SELECT * FROM yllapitokohteen_maaramuutos WHERE yllapitokohde = " kohde-id)
         maaramuutokset-ennen-kirjausta (hae-maaramuutokset)
         harjan-kautta-kirjattu (first maaramuutokset-ennen-kirjausta)
         polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/maaramuutokset"]
@@ -403,7 +402,8 @@
 
       (is (= harjan-kautta-kirjattu (first maaramuutokset-kirjauksen-jalkeen))
           "Harjan käyttöliittymän kautta kirjattua määrä muutosta ei ole muutettu")
-      (is (= 888M (nth (second maaramuutokset-kirjauksen-jalkeen) 7)) "Uusi yksikköhinta on päivittynyt oikein"))))
+
+      (is (= 888M (:yksikkohinta (second maaramuutokset-kirjauksen-jalkeen) )) "Uusi yksikköhinta on päivittynyt oikein"))))
 
 (deftest maaramuutosten-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)

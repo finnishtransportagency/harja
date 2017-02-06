@@ -186,12 +186,13 @@ WHERE ym.id = :id;
 SELECT
   id,
   yllapitokohde,
-  tyon_tyyppi      AS "tyyppi",
+  tyon_tyyppi               AS "tyyppi",
   tyo,
   yksikko,
-  tilattu_maara    AS "tilattu-maara",
-  toteutunut_maara AS "toteutunut-maara",
-  yksikkohinta
+  tilattu_maara             AS "tilattu-maara",
+  toteutunut_maara          AS "toteutunut-maara",
+  yksikkohinta,
+  (jarjestelma IS NOT NULL) AS "jarjestelman-lisaama"
 FROM yllapitokohteen_maaramuutos
 WHERE yllapitokohde = :id
       AND (SELECT urakka

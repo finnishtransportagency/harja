@@ -295,8 +295,7 @@
                         :luoja (:id kayttaja)
                         :ulkoinen_id (:id tunniste)
                         :jarjestelma jarjestelma}]
-        (q-paallystys/luo-yllapitokohteen-maaramuutos<! db parametrit))
-      (println tunniste tyyppi tyo yksikko tilattu-maara toteutunut-maara yksikkohinta))
+        (q-paallystys/luo-yllapitokohteen-maaramuutos<! db parametrit)))
 
     (tee-kirjausvastauksen-body
       {:ilmoitukset (str "Määrämuutokset kirjattu onnistuneesti.")})))
