@@ -217,7 +217,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                     fokus-id [id nimi]]
 
                 ;; muokattava? -> voiko muokata yksittäistä saraketta
-                ;; voi-muokata-riviä? -> voiko muokata yksittäistä gridiä
+                ;; voi-muokata-riviä? -> voiko muokata yksittäistä riviä
                 (if (and (or (nil? voi-muokata-rivia?) (voi-muokata-rivia? rivi index))
                          (or (nil? muokattava?) (muokattava? rivi index)))
 
