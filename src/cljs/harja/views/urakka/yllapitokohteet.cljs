@@ -493,8 +493,8 @@
                                      (reset! maaramuutokset (:maaramuutokset vastaus))
                                      (reset! yllapitokohteet-atom (:yllapitokohteet vastaus)))))))
               :voi-muokata? voi-muokata?
-              ;:esta-poistaminen? #(:jarjestelman-lisaama %)
-              ;:esta-poistaminen-tooltip (fn [_] "Järjestelmän lisäämää kohdetta ei voi poistaa.")
+              :esta-poistaminen? #(:jarjestelman-lisaama %)
+              :esta-poistaminen-tooltip (fn [_] "Järjestelmän lisäämää kohdetta ei voi poistaa.")
               :voi-muokata-rivia? #(not (:jarjestelman-lisaama %))}
              [{:otsikko "Päällyste\u00ADtyön tyyppi"
                :nimi :tyyppi
