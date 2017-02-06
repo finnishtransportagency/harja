@@ -24,11 +24,12 @@
 
 (defn- paanakyma []
   [:div.toplevel
-   (when @s/varmistusdialog-nakyvissa?
-     [varmistusdialog/varmistusdialog-komponentti @s/varmistusdialog-data])
    [kamera/file-input
     #(kamera-tiedot/kuva-otettu % s/kuvaa-otetaan?)]
    [ylapalkki/ylapalkki]
+
+   (when @s/varmistusdialog-nakyvissa?
+     [varmistusdialog/varmistusdialog-komponentti @s/varmistusdialog-data])
 
    [:div.paasisalto-container
     [kartta/kartta]
