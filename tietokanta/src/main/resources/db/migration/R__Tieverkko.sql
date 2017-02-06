@@ -459,7 +459,7 @@ BEGIN
   loppupiste := ST_MakePoint(loppu.x, loppu.y);
   RETURN NEXT (alkupiste, loppupiste,
                (SELECT ytp.geometria
-	          FROM yrita_tierekisteriosoite_pisteille_max(alkupiste, loppupiste, 30.0 * aika)));
+	          FROM yrita_tierekisteriosoite_pisteille_max(alkupiste, loppupiste, 30.0 * aika) ytp));
  END LOOP;
 END;
 $$ LANGUAGE plpgsql;
