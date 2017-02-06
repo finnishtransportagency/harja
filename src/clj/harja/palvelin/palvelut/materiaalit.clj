@@ -227,7 +227,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-suola user urakka-id)
   (jdbc/with-db-transaction [db db]
     (doseq [toteuma toteumat]
-      (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c (:tid toteuma) urakka-id)
+      (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db (:tid toteuma) urakka-id)
       (log/debug "TALLENNA SUOLATOTEUMA: " toteuma)
       (if-not (id-olemassa? (:id toteuma))
         (luo-suolatoteuma db user urakka-id sopimus-id toteuma)
