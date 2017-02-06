@@ -29,7 +29,7 @@ FROM
       tieviivat_pisteille(ST_GeomFromText(:pisteet), :threshold :: INTEGER)
     AS vali(alku GEOMETRY, loppu GEOMETRY, geometria GEOMETRY);
 
--- name: hae-tieviivat-pisteilla-aika
+-- name: hae-tieviivat-pisteille-aika
 -- Hakee tieverkolle projisoidut viivat annetuille pisteille.
 -- Huomio pisteiden välisen ajan järkevän geometrisoinnin päättelyssä.
 SELECT *
