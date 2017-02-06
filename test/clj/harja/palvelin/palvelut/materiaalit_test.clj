@@ -54,7 +54,7 @@
 
 (deftest hae-urakan-materiaalit-sarakkeet
   (let [tallennus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :tallenna-urakan-materiaalit
+                                  :tallenna-suunnitellut-materiaalit
                                   +kayttaja-jvh+
 
                                   {:urakka-id @oulun-alueurakan-2005-2010-id

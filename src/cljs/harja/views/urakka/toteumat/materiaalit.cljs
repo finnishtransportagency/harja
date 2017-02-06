@@ -252,7 +252,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
            :tallenna @tallenna
            :voi-lisata? false
            :esta-poistaminen? (fn [rivi] (:jarjestelmanlisaama rivi))
-           :esta-poistaminen-tooltip (fn [_] "Järjestelmän lisäämää kohdetta ei voi poistaa.")
+           :esta-poistaminen-tooltip (fn [_] "Järjestelmän lisäämää toteumaa ei voi poistaa.")
            :tunniste :tmid}
           [{:otsikko "Päivämäärä"
             :tyyppi :pvm
