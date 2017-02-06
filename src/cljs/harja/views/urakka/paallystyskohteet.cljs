@@ -1,14 +1,11 @@
 (ns harja.views.urakka.paallystyskohteet
   "Päällystyskohteet"
   (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko tietoja]]
+            [harja.ui.yleiset :refer [ajax-loader]]
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.loki :refer [log logt tarkkaile!]]
-            [cljs.core.async :refer [<!]]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
             [harja.views.urakka.muut-kustannukset :as muut-kustannukset-view]
-            [harja.ui.komponentti :as komp]
-            [harja.views.kartta :as kartta]
             [harja.ui.komponentti :as komp]
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
@@ -17,15 +14,11 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.tiedot.urakka.yhatuonti :as yha]
-            [harja.pvm :as pvm]
             [harja.tiedot.urakka :as urakka]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.viesti :as viesti]
             [harja.ui.valinnat :as valinnat]
             [cljs-time.core :as t])
   (:require-macros [reagent.ratom :refer [reaction]]
-                   [cljs.core.async.macros :refer [go]]
-                   [harja.atom :refer [reaction<!]]))
+                   [cljs.core.async.macros :refer [go]]))
 
 (defn paallystyskohteet [ur]
   (komp/luo
