@@ -408,36 +408,51 @@
 (defn jarjesta-valilehdet [valilehdet]
   (into [] (sort-by :jarjestys valilehdet)))
 
+(defn- kayttajaroolin-valilehdet-paallystyksen-kunto [valilehdet oikeus-hoitourakkaan?]
+  ;; Päällystyksen kunto -välilehti näytetään vain jos on oikeus johonkin hoitourakkaan
+  (if oikeus-hoitourakkaan?
+    valilehdet
+    (filterv #(not= (:avain %) :paallystyksen-kunto) valilehdet)))
+
+(defn- kayttajaroolin-valilehdet-paallystyksen-tyovirheluettelo [valilehdet oikeus-paallystysurakkaan?]
+  ;; Päällystyksen työvirheluettelo näytetään vain jos on oikeus johonkin päällystysurakkaan
+  (if oikeus-paallystysurakkaan?
+    valilehdet
+    (filterv #(not= (:avain %) :paallystyksen-tyovirheluettelo) valilehdet)))
+
+(defn- kayttajaroolin-valilehdet-paallystysurakoitsija [valilehdet oikeus-vain-paallystysurakoihin? urakoitsija?]
+  ;; Päällystysurakoitsijalle näytetään vain Päällystyksen työvirheluettelo -välilehti
+  (if (and urakoitsija? oikeus-vain-paallystysurakoihin?)
+    (filterv #(= (:avain %) :paallystyksen-tyovirheluettelo) valilehdet)
+    valilehdet))
+
+(defn- kayttajaroolin-valilehdet-paallystyksen-muu-henkilo [valilehdet oikeus-vain-paallystysurakoihin?]
+  ;; Päällystysurakan muille kuin urakoitsijoille siirreään päällystyksen työvirheluettelo kärkeen
+  (if oikeus-vain-paallystysurakoihin?
+    (let [muokatut-valilehdet (mapv #(if (= (:avain %) :paallystyksen-tyovirheluettelo)
+                                       (assoc % :jarjestys 0)
+                                       %)
+                                    valilehdet)]
+      (jarjesta-valilehdet muokatut-valilehdet))
+    valilehdet))
+
 (defn kayttajaroolin-mukaiset-valilehdet
   "Palauttaa vain ne välilehdet, jotka ovat kyseiselle käyttäjäroolille tarpeelliset.
    Säätää myös järjestyksen kohdalleen."
   [oletusvalilehdet kayttajatiedot]
-  (let [oikeus-paallystykseen? (boolean (some #(= (:tyyppi %) "paallystys")
-                                              (:oikeus-urakoihin kayttajatiedot)))
-        oikeus-vain-paallystykseen? (every? #(= (:tyyppi %) "paallystys")
-                                            (:oikeus-urakoihin kayttajatiedot))
+  (let [oikeus-paallystysurakkaan? (boolean (some #(= (:tyyppi %) "paallystys")
+                                                  (:oikeus-urakoihin kayttajatiedot)))
+        oikeus-hoitourakkaan? (boolean (some #(= (:tyyppi %) "hoito")
+                                             (:oikeus-urakoihin kayttajatiedot)))
+        oikeus-vain-paallystysurakoihin? (every? #(= (:tyyppi %) "paallystys")
+                                                 (:oikeus-urakoihin kayttajatiedot))
         urakoitsija? (= (get-in kayttajatiedot [:organisaatio :tyyppi]) :urakoitsija)]
-    (cond
-      ;; Päällystysurakoitsijalle näytetään vain Päällystyksen työvirheluettelo -välilehti
-      (and urakoitsija?
-           oikeus-vain-paallystykseen?)
-      (filterv #(= (:avain %) :paallystyksen-tyovirheluettelo) oletusvalilehdet)
 
-      ;; Päällystyksen muille henkilöille siirreään vain päällystys-välilehti kärkeen
-      oikeus-vain-paallystykseen?
-      (let [muokatut-valilehdet (mapv #(if (= (:avain %) :paallystyksen-tyovirheluettelo)
-                                         (assoc % :jarjestys 0)
-                                         %)
-                                      oletusvalilehdet)]
-        (jarjesta-valilehdet muokatut-valilehdet))
-
-      ;; Päällystyksen työvirheluettelo näytetään vain jos on oikeus päällystysurakkaan
-      (not oikeus-paallystykseen?)
-      (filterv #(not= (:avain %) :paallystyksen-tyovirheluettelo) oletusvalilehdet)
-
-      ;; Ei roolin mukaisia sääntöjä
-      :default
-      oletusvalilehdet)))
+    (-> oletusvalilehdet
+        (kayttajaroolin-valilehdet-paallystyksen-kunto oikeus-hoitourakkaan?)
+        (kayttajaroolin-valilehdet-paallystyksen-tyovirheluettelo oikeus-paallystysurakkaan?)
+        (kayttajaroolin-valilehdet-paallystysurakoitsija oikeus-vain-paallystysurakoihin? urakoitsija?)
+        (kayttajaroolin-valilehdet-paallystyksen-muu-henkilo oikeus-vain-paallystysurakoihin?))))
 
 (def oletusvalilehdet
   [{:avain :talvihoito
