@@ -215,7 +215,11 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                     tasaus-luokka (y/tasaus-luokka tasaa)
                     fokus-id [id nimi]]
 
-                (if (or (nil? muokattava?) (muokattava? rivi index))
+                ;; muokattava? -> voiko muokata yksittäistä saraketta
+                ;; voi-muokata-riviä? -> voiko muokata yksittäistä gridiä
+                (if (and (or (nil? voi-muokata-rivia?) (voi-muokata-rivia? rivi index))
+                         (or (nil? muokattava?) (muokattava? rivi index)))
+
                   ^{:key (str nimi)}
                   [:td {:class (str "muokattava " tasaus-luokka (cond
                                                                   (not (empty? kentan-virheet)) " sisaltaa-virheen"
@@ -261,6 +265,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                             (muokkaa! id (fn [rivi]
                                            (aseta rivi uusi)))
                             (muokkaa! id assoc nimi uusi))))])]
+
                   ^{:key (str nimi)}
                   [:td {:class (str "ei-muokattava " tasaus-luokka)}
                    ((or fmt str) (hae rivi))])))))
