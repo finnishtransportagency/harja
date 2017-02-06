@@ -44,6 +44,10 @@ maksimi-linnuntien-etaisyys 200)
   [(get-in pistepari [:reittipiste :koordinaatit :x])
    (get-in pistepari [:reittipiste :koordinaatit :y])])
 
+(def ^{:private true} piste-aika (juxt (comp :x :koordinaatit :reittipiste)
+                                       (comp :y :koordinaatit :reittipiste)
+                                       (comp :aika :reittipiste)))
+
 (defn- valin-geometria
   ([reitti] (valin-geometria reitti maksimi-linnuntien-etaisyys))
   ([{:keys [alku loppu geometria]} maksimi-etaisyys]
@@ -66,11 +70,11 @@ maksimi-linnuntien-etaisyys 200)
   ([db pisteet] (hae-reitti db maksimi-linnuntien-etaisyys pisteet))
   ([db maksimi-etaisyys pisteet]
    (as-> pisteet p
-         (map (fn [[x y]]
-                (str "POINT(" x " " y ")")) p)
+         (map (fn [[x y aika]]
+                (str "\"(" x "," y "," aika ")\"")) p)
          (str/join "," p)
-         (str "GEOMETRYCOLLECTION(" p ")")
-         (tieverkko/hae-tieviivat-pisteille db p 250)
+         (str "{" p "}")
+         (tieverkko/hae-tieviivat-pisteille-aika db p)
          (keep #(valin-geometria % maksimi-etaisyys) p)
          (yhdista-viivat p))))
 
