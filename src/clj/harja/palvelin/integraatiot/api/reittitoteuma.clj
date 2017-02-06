@@ -66,7 +66,7 @@ maksimi-linnuntien-etaisyys 200)
            (do (log/warn "EI TEHDÄ linnuntietä, etäisyys: " etaisyys ", max: " maksimi-etaisyys)
                nil))))))
 
-(defn- hae-reitti
+(defn hae-reitti
   ([db pisteet] (hae-reitti db maksimi-linnuntien-etaisyys pisteet))
   ([db maksimi-etaisyys pisteet]
    (as-> pisteet p
