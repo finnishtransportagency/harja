@@ -142,7 +142,8 @@
                                                     (:tyyppi m)
                                                     (:pvm m)
                                                     (:rahasumma m))))
-        tallennus-kaynnissa (atom false)]
+        tallennus-kaynnissa (atom false)
+        valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit (:tyyppi ur)))]
 
     (komp/luo
       (fn []
@@ -241,7 +242,7 @@
               :muokattava? #(not (and
                                   (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
                                   (= :hoito (:tyyppi ur))))
-              :valinnat    (conj @i/indeksien-nimet yleiset/+ei-sidota-indeksiin+)
+              :valinnat    (conj valittavat-indeksit yleiset/+ei-sidota-indeksiin+)
               :fmt         #(if (nil? %)
                               yleiset/+valitse-indeksi+
                               (str %))

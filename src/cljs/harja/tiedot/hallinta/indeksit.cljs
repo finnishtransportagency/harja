@@ -18,11 +18,6 @@
            (go (reset! indeksit
                (<! (k/get! :indeksit))))))
 
-(defonce indeksien-nimet
-  (let [a (atom nil)]
-    (go (reset! a (<! (k/get! :indeksien-nimet))))
-    a))
-
 (defn tallenna-indeksi
   "Tallentaa indeksiarvot, palauttaa kanavan, josta vastauksen voi lukea."
   [nimi uudet-indeksivuodet]
@@ -36,7 +31,12 @@
         (reset! indeksit res)
         true)))
 
-(defonce urakkatyypin-indeksit
+(defonce kaikkien-urakkatyyppien-indeksit
   (let [a (atom nil)]
     (go (reset! a (<! (k/get! :urakkatyypin-indeksit))))
     a))
+
+(defn urakkatyypin-indeksit
+  [urakkatyyppi]
+  (filter #(= urakkatyyppi (:urakkatyyppi %))
+          @kaikkien-urakkatyyppien-indeksit))

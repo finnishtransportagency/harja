@@ -16,23 +16,25 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
-(defn indeksi-grid [{:keys [indeksin-nimi platts? koodi]}]
+(defn indeksi-grid [{:keys [indeksinimi koodi]}]
 
   (let [indeksit @i/indeksit
         rivit (reverse (sort-by :vuosi
                                 (map #(assoc (second %) :kannassa? true)
                                      (filter (fn [[[nimi _] _]]
-                                               (= nimi indeksin-nimi)
+                                               (= nimi indeksinimi)
                                                ) indeksit))))
         varatut-vuodet (into #{} (map :vuosi rivit))
+        ;; Ylläpidossa käytettävien Platssin indeksien tarkkuus on 2 ja arvot ovat euroa per tonni
+        platts? (str/includes? indeksinimi "Platts")
         tarkkuus (if platts? 2 1)
         formatter #(fmt/desimaaliluku-opt % tarkkuus)
         vihje (when platts? "Plattsin indeksit syötettävä muodossa euroa / tonni.")]
     [:span.indeksi-grid
      [grid/grid
-      {:otsikko (str indeksin-nimi (when koodi (str " (koodi: " koodi ")")))
+      {:otsikko (str indeksinimi (when koodi (str " (koodi: " koodi ")")))
        :tyhja (if (nil? indeksit) [yleiset/ajax-loader "Indeksejä haetaan..."] "Ei indeksitietoja")
-       :tallenna #(i/tallenna-indeksi indeksin-nimi %)
+       :tallenna #(i/tallenna-indeksi indeksinimi %)
        :tunniste :vuosi
        :piilota-toiminnot? true
        :voi-poistaa? #(not (:kannassa? %))}
@@ -66,19 +68,16 @@
       [:span
        [:h3 "Indeksit urakkatyypille " (:nimi urakkatyyppi)]
        (for [i indeksit]
-         (let [platts? (str/includes? (:indeksinimi i) "Platts")]
-           ^{:key (:id i)}
-           [:span
-            [indeksi-grid {:indeksin-nimi (:indeksinimi i)
-                           :koodi (:koodi i) :platts? platts?}]
-            [:hr]]))]
+         ^{:key (:id i)}
+         [:span
+          [indeksi-grid i]
+          [:hr]])]
       [:div "Ei indeksejä valitulle urakkatyypille"]))
 
 (defn indeksit-elementti []
   (i/hae-indeksit)
   (let [urakkatyyppi @yhteiset/valittu-urakkatyyppi
-        urakkatyyppien-indeksit @i/urakkatyypin-indeksit
-        indeksit (filter #(= (:arvo urakkatyyppi) (:urakkatyyppi %)) urakkatyyppien-indeksit)]
+        indeksit (i/urakkatyypin-indeksit (:arvo urakkatyyppi))]
     [:span.indeksit
      [valinnat/urakkatyyppi
       yhteiset/valittu-urakkatyyppi

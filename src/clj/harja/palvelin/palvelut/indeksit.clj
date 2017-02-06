@@ -9,12 +9,6 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konv]))
 
-(defn hae-indeksien-nimet
-  "Palvelu, joka palauttaa Harjassa olevien indeksien nimet."
-  [db user]
-  (into #{}
-        (map :nimi (q/hae-indeksien-nimet db))))
-
 (defn hae-urakan-kuukauden-indeksiarvo
   "Palvelu, joka palauttaa tietyn kuukauden indeksin arvon ja nimen urakalle"
   [db urakka-id vuosi kuukausi]
@@ -104,19 +98,13 @@
       (julkaise-palvelu :tallenna-indeksi
                         (fn [user tiedot]
                           (tallenna-indeksi (:db this) user tiedot)))
-      (julkaise-palvelu :indeksien-nimet
-                        (fn [user]
-                          (hae-indeksien-nimet (:db this) user)))
       (julkaise-palvelu :urakkatyypin-indeksit
                         (fn [user]
-                          (hae-urakkatyypin-indeksit (:db this) user)))
-
-      )
+                          (hae-urakkatyypin-indeksit (:db this) user))))
     this)
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :indeksit)
     (poista-palvelu (:http-palvelin this) :tallenna-indeksi)
-    (poista-palvelu (:http-palvelin this) :indeksien-nimet)
     (poista-palvelu (:http-palvelin this) :urakkatyypin-indeksit)
     this))
