@@ -9,6 +9,8 @@
        100.0)
     0.0))
 
+;; TODO APureista kulma-funktio tänne
+
 (defn ms->sec
   "Muuntaa millisekunnit sekunneiksi"
   [s]
