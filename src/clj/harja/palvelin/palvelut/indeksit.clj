@@ -88,6 +88,30 @@
     indeksit))
 
 
+(defn hae-paallystysurakan-indeksitiedot
+  "Palvelu, joka palauttaa annetun päällystysurakan indeksitiedot"
+  [db user {:keys [urakka-id]}]
+  (log/debug "hae-paallystysurakan-indeksit" urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
+  (let [indeksit (into []
+                       (map konv/alaviiva->rakenne)
+                       (q/hae-paallystysurakan-indeksit db {:urakka urakka-id}))]
+    (log/debug "hae-paallystysurakan-indeksit: " indeksit)
+    indeksit))
+
+
+(defn tallenna-paallystysurakan-indeksitiedot
+  "Palvelu joka tallentaa päällystysurakan indeksitiedot eli mihin arvoihin mikäkin raaka-ainehinta on sidottu.
+  Esim. Bitumin arvo sidotaan usein raskaan polttoöljyn Platts-indeksiin, nestekaasulle ja kevyelle polttoöljylle on omat hintansta."
+  [db user {:keys [urakka-id] :as tiedot}]
+  (log/debug "tallenna-paallystysurakan-indeksitiedot" tiedot)
+  (assert (map? tiedot) "tiedot tulee olla vektori")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
+  (jdbc/with-db-transaction [c db]
+    (q/upsert-paallystysurakan-indeksit tiedot)
+    (hae-paallystysurakan-indeksitiedot c user {:urakka urakka-id})))
+
+
 (defrecord Indeksit []
   component/Lifecycle
   (start [this]
@@ -100,11 +124,20 @@
                           (tallenna-indeksi (:db this) user tiedot)))
       (julkaise-palvelu :urakkatyypin-indeksit
                         (fn [user]
-                          (hae-urakkatyypin-indeksit (:db this) user))))
+                          (hae-urakkatyypin-indeksit (:db this) user)))
+      (julkaise-palvelu :paallystysurakan-indeksitiedot
+                        (fn [user tiedot]
+                          (hae-paallystysurakan-indeksitiedot (:db this) user tiedot)))
+      (julkaise-palvelu :tallenna-paallystysurakan-indeksitiedot
+                        (fn [user tiedot]
+                          (tallenna-paallystysurakan-indeksitiedot (:db this) user tiedot)))
+      )
     this)
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :indeksit)
     (poista-palvelu (:http-palvelin this) :tallenna-indeksi)
     (poista-palvelu (:http-palvelin this) :urakkatyypin-indeksit)
+    (poista-palvelu (:http-palvelin this) :paallystysurakan-indeksitiedot)
+    (poista-palvelu (:http-palvelin this) :tallenna-paallystysurakan-indeksitiedot)
     this))

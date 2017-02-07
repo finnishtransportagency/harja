@@ -19,22 +19,29 @@ CREATE TABLE paallystysurakan_indeksit (
   lahtotaso_vuosi INTEGER,
   lahtotaso_kuukausi INTEGER,
 
+  -- muokkausmetatiedot
+  poistettu BOOLEAN DEFAULT FALSE,
+  muokkaaja INTEGER,
+  muokattu TIMESTAMP,
+  luoja INTEGER,
+  luotu TIMESTAMP DEFAULT NOW(),
+
   CHECK (urakkavuosi > 1970 AND urakkavuosi < 2050),
   CHECK (lahtotaso_kuukausi > 0 AND lahtotaso_kuukausi < 13),
   CHECK (lahtotaso_vuosi > 1970 AND lahtotaso_vuosi < 2050),
 
-  unique (urakka, indeksi_polttooljyraskas, indeksi_polttooljykevyt, indeksi_nestekaasu, urakkavuosi)
+  CONSTRAINT uniikki_paallystysindeksi UNIQUE (urakka, urakkavuosi)
 );
 
 
-INSERT INTO urakkatyypin_indeksi(urakkatyyppi, indeksinimi, koodi)
+INSERT INTO urakkatyypin_indeksi(urakkatyyppi, indeksinimi, koodi, materiaali)
 VALUES
-  ('hoito'::urakkatyyppi, 'MAKU 2005', NULL),
-  ('hoito'::urakkatyyppi, 'MAKU 2010', NULL),
-  ('tiemerkinta'::urakkatyyppi, 'MAKU 2010', NULL),
-  ('paallystys'::urakkatyyppi, 'Platts: FO 3,5%S CIF NWE Cargo', 'ABWGL03'), -- bitumin arvoa varten
-  ('paikkaus'::urakkatyyppi, 'Platts: FO 3,5%S CIF NWE Cargo', 'ABWGL03'),
-  ('paallystys'::urakkatyyppi, 'Platts: Propane CIF NWE 7kt+', 'PMUEE03'),  -- nestekaasu
-  ('paikkaus'::urakkatyyppi, 'Platts: Propane CIF NWE 7kt+', 'PMUEE03'),
-  ('paallystys'::urakkatyyppi, 'Platts: ULSD 10ppmS CIF NWE Cargo', 'ABWHK03'), -- kevyt polttoöljy
-  ('paikkaus'::urakkatyyppi, 'Platts: ULSD 10ppmS CIF NWE Cargo', 'ABWHK03');
+  ('hoito'::urakkatyyppi, 'MAKU 2005', NULL, NULL),
+  ('hoito'::urakkatyyppi, 'MAKU 2010', NULL, NULL),
+  ('tiemerkinta'::urakkatyyppi, 'MAKU 2010', NULL, NULL),
+  ('paallystys'::urakkatyyppi, 'Platts: FO 3,5%S CIF NWE Cargo', 'ABWGL03', 'raskas_po'), -- bitumin arvoa varten
+  ('paikkaus'::urakkatyyppi, 'Platts: FO 3,5%S CIF NWE Cargo', 'ABWGL03', 'raskas_po'),
+  ('paallystys'::urakkatyyppi, 'Platts: ULSD 10ppmS CIF NWE Cargo', 'ABWHK03', 'kevyt_po'), -- kevyt polttoöljy
+  ('paikkaus'::urakkatyyppi, 'Platts: ULSD 10ppmS CIF NWE Cargo', 'ABWHK03', 'kevyt_po'),
+  ('paallystys'::urakkatyyppi, 'Platts: Propane CIF NWE 7kt+', 'PMUEE03', 'nestekaasu'),  -- nestekaasu
+  ('paikkaus'::urakkatyyppi, 'Platts: Propane CIF NWE 7kt+', 'PMUEE03', 'nestekaasu');

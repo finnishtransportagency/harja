@@ -7,6 +7,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.hallinta.indeksit :as indeksit]
             [harja.tiedot.urakka.yhteystiedot :as yht]
             [harja.tiedot.urakka.sopimustiedot :as sopimus]
             [harja.tiedot.navigaatio :as navigaatio]
@@ -532,6 +533,46 @@
                (not palvelusopimus?))
       (yha/nayta-tuontidialogi ur))))
 
+(defn paallystysurakan-indeksit
+  "Käyttöliittymä päällystysurakassa käytettävien indeksien valintaan."
+  [ur]
+  (let [hae! (fn [urakka]
+               (go (reset! urakka/paallystysurakan-indeksitiedot
+                           (<! (indeksit/hae-paallystysurakan-indeksitiedot (:id urakka))))))
+        indeksivalinnat-raskas-po (filter #(or (nil? (:materiaali %))
+                                       (= "raskas_po" (:materiaali %))) @urakka/paallystysurakan-indeksitiedot)
+        indeksivalinnat-kevyt-po (filter #(or (nil? (:materiaali %))
+                                      (= "kevyt_po" (:materiaali %))) @urakka/paallystysurakan-indeksitiedot)
+        indeksivalinnat-nestekaasu (filter #(or (nil? (:materiaali %))
+                                        (= "nestekaasu" (:materiaali %))) @urakka/paallystysurakan-indeksitiedot)]
+    (log "indeksitiedot" (pr-str @urakka/paallystysurakan-indeksitiedot))
+    (log "indeksit raskas po" (pr-str indeksivalinnat-raskas-po))
+    (hae! ur)
+    (komp/luo
+      (komp/kun-muuttuu hae!)
+      (fn [ur]
+        [grid/grid
+         {:otsikko "Urakan käyttämät indeksit"
+          :tyhja "Ei indeksejä."
+          :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
+                      #(indeksit/tallenna-paallystysurakan-indeksit {:urakka-id (:id ur) :tiedot %}))}
+         [{:otsikko "Vuosi" :nimi :urakkavuosi :tyyppi :positiivinen-numero :leveys 6}
+          {:otsikko "Raskas polttoöljy" :nimi :raskas :tyyppi :valinta :leveys 12
+           :fmt :indeksinimi
+           :valinnat indeksivalinnat-raskas-po :valinta-nayta :indeksinimi
+           :valinta-arvo :id}
+          {:otsikko "Kevyt polttoöljy" :nimi :kevyt :tyyppi :valinta :leveys 12
+           :fmt :indeksinimi
+           :valinnat indeksivalinnat-kevyt-po :valinta-nayta :indeksinimi
+           :valinta-arvo :id}
+          {:otsikko "Nestekaasu" :nimi :nestekaasu :tyyppi :valinta :leveys 12
+           :fmt :indeksinimi
+           :valinnat indeksivalinnat-nestekaasu :valinta-nayta :indeksinimi
+           :valinta-arvo :id}
+          {:otsikko "Lähtö\u00ADtason vuosi" :nimi :lahtotaso_vuosi :tyyppi :positiivinen-numero :leveys 6}
+          {:otsikko "Lähtö\u00ADtason kk" :nimi :lahtotaso_kuukausi :tyyppi :positiivinen-numero :leveys 6}]
+         @urakka/paallystysurakan-indeksitiedot]))))
+
 (defn yleiset [ur]
   (let [kayttajat (atom nil)
         vastuuhenkilot (atom nil)
@@ -548,6 +589,8 @@
       (fn [ur]
         [:div
          [yleiset-tiedot #(reset! vastuuhenkilot %) ur @kayttajat @vastuuhenkilot]
+         (when (= :paallystys (:tyyppi ur))
+           [paallystysurakan-indeksit ur])
          [urakkaan-liitetyt-kayttajat @kayttajat]
          [yhteyshenkilot ur]
          (when (urakka/paivystys-kaytossa? ur)

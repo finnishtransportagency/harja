@@ -105,4 +105,9 @@ VALUES
   ((SELECT id FROM urakkatyypin_indeksi WHERE indeksinimi = 'Platts: FO 3,5%S CIF NWE Cargo' AND urakkatyyppi = 'paallystys'),
    (SELECT id FROM urakkatyypin_indeksi WHERE indeksinimi = 'Platts: Propane CIF NWE 7kt+' AND urakkatyyppi = 'paallystys'),
    (SELECT id FROM urakkatyypin_indeksi WHERE indeksinimi = 'Platts: ULSD 10ppmS CIF NWE Cargo' AND urakkatyyppi = 'paallystys'),
-  2017, 2016, 9, (SELECT id FROM urakka where nimi = 'Muhoksen päällystysurakka'))
+  2017, 2016, 9, (SELECT id FROM urakka where nimi = 'Muhoksen päällystysurakka'));
+
+
+INSERT INTO urakkatyypin_indeksi(urakkatyyppi, indeksinimi, koodi, materiaali)
+VALUES
+  ('paallystys'::urakkatyyppi, 'Platts: testiindeksi XYZ', 'TESTIKOODI', 'raskas_po'); -- bitumin arvoa varten
