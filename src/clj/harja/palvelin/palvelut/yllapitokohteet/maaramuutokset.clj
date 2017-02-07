@@ -24,9 +24,8 @@
 
 (defn vaadi-maaramuutos-ei-jarjestelman-luoma [db maaramuutos-id]
   (when (id-olemassa? maaramuutos-id)
-
-    (let [maaramuutos-jarjestelman-luoma (some? (:jarjestelman-luoma
-                                                  (first (q/maaramuutos-jarjestelmam-luoma db {:id maaramuutos-id}))))]
+    (let [maaramuutos-jarjestelman-luoma (:jarjestelman-luoma
+                                           (first (q/maaramuutos-jarjestelman-luoma db {:id maaramuutos-id})))]
       (when maaramuutos-jarjestelman-luoma
         (throw (SecurityException. "Määrämuutos on järjestelmän luoma, ei voi muokata!"))))))
 

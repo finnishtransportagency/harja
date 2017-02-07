@@ -484,7 +484,7 @@
                                                     :sopimus-id sopimus-id
                                                     :vuosi vuosi
                                                     :yllapitokohde-id yllapitokohde-id
-                                                    :maaramuutokset %}))]
+                                                    :maaramuutokset (filterv (comp not :jarjestelman-lisaama) %)}))]
                                  (if (k/virhe? vastaus)
                                    (viesti/nayta! "Määrämuutoksien tallennus epäonnistui"
                                                   :warning
