@@ -354,10 +354,28 @@
     (is (= 200 status))
 
     (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
-          oletettu-tr-osoite {:numero 20, :aosa 14, :aet 1, :losa 17, :loppuet 1}
+          oletettu-tr-osoite {:aet 1
+                              :ajorata 1
+                              :aosa 14
+                              :kaista 1
+                              :loppuet 1
+                              :losa 17
+                              :numero 20}
           alikohteiden-tr-osoitteet (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id)
-          oletettu-ensimmaisen-alikohteen-tr-osoite {:numero 20, :aosa 14, :aet 1, :losa 14, :loppuet 666}
-          oletettu-toisen-alikohteen-tr-osoite {:aet 666 :aosa 14 :loppuet 1 :losa 17 :numero 20}]
+          oletettu-ensimmaisen-alikohteen-tr-osoite {:aet 1
+                                                     :ajorata 1
+                                                     :aosa 14
+                                                     :kaista 1
+                                                     :loppuet 666
+                                                     :losa 14
+                                                     :numero 20}
+          oletettu-toisen-alikohteen-tr-osoite {:aet 666
+                                                :ajorata 1
+                                                :aosa 14
+                                                :kaista 1
+                                                :loppuet 1
+                                                :losa 17
+                                                :numero 20}]
       (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
       (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 2 kpl")
       (is (= oletettu-ensimmaisen-alikohteen-tr-osoite (first alikohteiden-tr-osoitteet))

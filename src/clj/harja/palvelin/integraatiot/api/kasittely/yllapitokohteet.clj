@@ -19,8 +19,8 @@
                         :tr_alkuetaisyys (:aet sijainti)
                         :tr_loppuosa (:losa sijainti)
                         :tr_loppuetaisyys (:let sijainti)
-                        :tr_ajorata (:tr-ajorata kohde)
-                        :tr_kaista (:tr-kaista kohde)
+                        :tr_ajorata (:ajr sijainti)
+                        :tr_kaista (:kaista sijainti)
                         :toimenpide (:toimenpide alikohde)
                         :ulkoinen-id (:ulkoinen-id alikohde)}]
         (assoc alikohde :id (:id (q-yllapitokohteet/luo-yllapitokohdeosa<! db parametrit)))))
