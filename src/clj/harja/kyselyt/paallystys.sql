@@ -209,9 +209,11 @@ WHERE yllapitokohde = :id
       AND ym.poistettu IS NOT TRUE;
 
 -- name: luo-yllapitokohteen-maaramuutos<!
-INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo, yksikko, tilattu_maara, toteutunut_maara,
+INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo, yksikko, tilattu_maara,
+                                         ennustettu_maara, toteutunut_maara,
                                          yksikkohinta, luoja, ulkoinen_id, jarjestelma)
-VALUES (:yllapitokohde, :tyon_tyyppi :: maaramuutos_tyon_tyyppi, :tyo, :yksikko, :tilattu_maara, :toteutunut_maara,
+VALUES (:yllapitokohde, :tyon_tyyppi :: maaramuutos_tyon_tyyppi, :tyo, :yksikko, :tilattu_maara,
+        :ennustettu_maara, :toteutunut_maara,
         :yksikkohinta, :luoja, :ulkoinen_id, :jarjestelma);
 
 -- name: paivita-yllapitokohteen-maaramuutos<!
@@ -221,6 +223,7 @@ SET
   tyo              = :tyo,
   yksikko          = :yksikko,
   tilattu_maara    = :tilattu_maara,
+  ennustettu_maara = :ennustettu_maara,
   toteutunut_maara = :toteutunut_maara,
   yksikkohinta     = :yksikkohinta,
   muokattu         = NOW(),

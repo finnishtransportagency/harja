@@ -59,13 +59,14 @@
 
 (defn- luo-maaramuutos [db user yllapitokohde-id
                         {:keys [tyyppi tyo yksikko tilattu-maara
-                                toteutunut-maara yksikkohinta] :as maaramuutos}]
+                                toteutunut-maara yksikkohinta ennustettu-maara] :as maaramuutos}]
   (log/debug "Luo määrämuutos: " (pr-str maaramuutos))
   (q/luo-yllapitokohteen-maaramuutos<! db {:yllapitokohde yllapitokohde-id
                                            :tyon_tyyppi (name tyyppi)
                                            :tyo tyo
                                            :yksikko yksikko
                                            :tilattu_maara tilattu-maara
+                                           :ennustettu_maara ennustettu-maara
                                            :toteutunut_maara toteutunut-maara
                                            :yksikkohinta yksikkohinta
                                            :luoja (:id user)
@@ -76,12 +77,13 @@
 (defn- paivita-maaramuutos [db user
                             {:keys [:urakka-id :yllapitokohde-id]}
                             {:keys [id tyyppi tyo yksikko tilattu-maara poistettu
-                                    toteutunut-maara yksikkohinta] :as maaramuutos}]
+                                    toteutunut-maara yksikkohinta ennustettu-maara] :as maaramuutos}]
   (log/debug "Päivitä määrämuutos: " (pr-str maaramuutos))
   (q/paivita-yllapitokohteen-maaramuutos<! db {:tyon_tyyppi (name tyyppi)
                                                :tyo tyo
                                                :yksikko yksikko
                                                :tilattu_maara tilattu-maara
+                                               :ennustettu_maara ennustettu-maara
                                                :toteutunut_maara toteutunut-maara
                                                :yksikkohinta yksikkohinta
                                                :kayttaja (:id user)
