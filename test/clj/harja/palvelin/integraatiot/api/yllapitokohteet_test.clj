@@ -73,8 +73,7 @@
       (is (= (+ paallystysilmoitusten-maara-kannassa-ennen 1) paallystysilmoitusten-maara-kannassa-jalkeen))
 
       ;; Tiedot ovat skeeman mukaiset
-      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
-                          ilmoitustiedot))
+      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitustiedot))
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
       (is (match ilmoitustiedot
@@ -108,6 +107,10 @@
                  true))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
       (is (= (get paallystysilmoitus 2) "aloitettu") "Ei asetettu käsiteltäväksi, joten tila on aloitettu")
+
+      (let [alikohteet (q-map (str "SELECT sijainti, tr_numero FROM yllapitokohdeosa WHERE yllapitokohde = " kohde))]
+        (is (every? #(and (not (nil? (:sijainti %))) (not (nil? (:tr_numero %)))) alikohteet)
+            "Kaikilla alikohteilla on sijainti & tienumero"))
 
       (u "DELETE FROM paallystysilmoitus WHERE id = " (get paallystysilmoitus 3) ";"))))
 
@@ -362,9 +365,9 @@
       (is (= oletettu-toisen-alikohteen-tr-osoite (second alikohteiden-tr-osoitteet))
           "Toisen alikohteen tierekisteriosite on päivittynyt oikein")
 
-      (let [alikohteiden-sijainnit (q-map (str "SELECT sijainti FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id))]
-        (doseq [alikohde alikohteiden-sijainnit]
-          (is (not (nil? (:sijainti alikohde))) "Alikohteelle on saatu luotua sijainti"))))))
+      (let [alikohteet (q-map (str "SELECT sijainti, tr_numero FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id))]
+        (is (every? #(and (not (nil? (:sijainti %))) (not (nil? (:tr_numero %)))) alikohteet)
+            "Kaikilla alikohteilla on sijainti & tienumero")))))
 
 (deftest paallystysilmoituksellisen-kohteen-paivitys-ei-onnistu
   (let [urakka (hae-muhoksen-paallystysurakan-id)

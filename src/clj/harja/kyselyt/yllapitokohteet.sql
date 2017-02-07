@@ -632,3 +632,6 @@ INSERT INTO yllapitokohde_tiemerkinta(yllapitokohde, hinta, hintatyyppi, muutosp
 -- name: hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
 SELECT id FROM yllapitokohde_tiemerkinta
 WHERE yllapitokohde = :yllapitokohde;
+
+-- name: hae-kohteen-tienumero
+SELECT tr_numero FROM yllapitokohde WHERE id = :kohdeid;
