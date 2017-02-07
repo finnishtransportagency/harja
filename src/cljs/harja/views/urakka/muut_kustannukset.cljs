@@ -18,7 +18,6 @@
 (def kustannus-nimi-leveys 5)
 (def kustannus-summa-leveys 3)
 
-
 ;; muokkaus yllapitokohteet-viewin pohjalla wip
 
 (def grid-opts {:otsikko "Muut kustannukset"
@@ -27,7 +26,7 @@
                 :muutos (fn [grid]
                           #(log "muut-kustannukset: muutos kutsuttu"))
                 :voi-lisata? true
-                :voi-muokata? #(log "muut-kustannukset: voi-muokata? kutsuttu")
+                :voi-muokata-rivia? :muokattava
                 :esta-poistaminen? (fn [rivi] (or (not (nil? (:paallystysilmoitus-id rivi))) ;; <- tahan tsekkaus onko kohdistamaton sanktio vai suoraan syötetty?
                                                   (not (nil? (:paikkausilmoitus-id rivi)))))
                 :esta-poistaminen-tooltip
@@ -42,7 +41,8 @@
                     [])))
 
 (defn grid-tiedot []
-  ^{:key "zonk"} [^{:key "a"} {:kustannus-nimi "ruoka" :kustannus-summa 42.50} ^{:key "b"} {:kustannus-nimi "juoma" :kustannus-summa 234.00}])
+  [{:id "foo" :kustannus-nimi "ruoka" :muokattava true :kustannus-summa 42.50 }
+   {:id "bar" :kustannus-nimi "juoma" :muokattava false :kustannus-summa 234.00}])
 
 (defn muut-kustannukset [urakka]
   (komp/luo
