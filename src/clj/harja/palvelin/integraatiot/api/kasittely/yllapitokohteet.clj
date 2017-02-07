@@ -14,7 +14,7 @@
             parametrit {:yllapitokohde (:id kohde)
                         :nimi (:nimi alikohde)
                         :tunnus (:tunnus alikohde)
-                        :tr_numero (:tr-numero kohde)
+                        :tr_numero (:numero sijainti)
                         :tr_alkuosa (:aosa sijainti)
                         :tr_alkuetaisyys (:aet sijainti)
                         :tr_loppuosa (:losa sijainti)
