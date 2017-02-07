@@ -73,8 +73,7 @@
       (is (= (+ paallystysilmoitusten-maara-kannassa-ennen 1) paallystysilmoitusten-maara-kannassa-jalkeen))
 
       ;; Tiedot ovat skeeman mukaiset
-      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
-                          ilmoitustiedot))
+      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitustiedot))
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
       (is (match ilmoitustiedot
@@ -108,6 +107,10 @@
                  true))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
       (is (= (get paallystysilmoitus 2) "aloitettu") "Ei asetettu käsiteltäväksi, joten tila on aloitettu")
+
+      (let [alikohteet (q-map (str "SELECT sijainti, tr_numero FROM yllapitokohdeosa WHERE yllapitokohde = " kohde))]
+        (is (every? #(and (not (nil? (:sijainti %))) (not (nil? (:tr_numero %)))) alikohteet)
+            "Kaikilla alikohteilla on sijainti & tienumero"))
 
       (u "DELETE FROM paallystysilmoitus WHERE id = " (get paallystysilmoitus 3) ";"))))
 
@@ -353,14 +356,18 @@
     (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
           oletettu-tr-osoite {:numero 20, :aosa 14, :aet 1, :losa 17, :loppuet 1}
           alikohteiden-tr-osoitteet (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id)
-          oletettu-ensimmaisen-alikohteen-tr-osoite {:numero nil, :aosa 14, :aet 1, :losa 14, :loppuet 666}
-          oletettu-toisen-alikohteen-tr-osoite {:aet 666 :aosa 14 :loppuet 1 :losa 17 :numero nil}]
+          oletettu-ensimmaisen-alikohteen-tr-osoite {:numero 20, :aosa 14, :aet 1, :losa 14, :loppuet 666}
+          oletettu-toisen-alikohteen-tr-osoite {:aet 666 :aosa 14 :loppuet 1 :losa 17 :numero 20}]
       (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
       (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 2 kpl")
       (is (= oletettu-ensimmaisen-alikohteen-tr-osoite (first alikohteiden-tr-osoitteet))
           "Ensimmäisen alikohteen tierekisteriosite on päivittynyt oikein")
       (is (= oletettu-toisen-alikohteen-tr-osoite (second alikohteiden-tr-osoitteet))
-          "Toisen alikohteen tierekisteriosite on päivittynyt oikein"))))
+          "Toisen alikohteen tierekisteriosite on päivittynyt oikein")
+
+      (let [alikohteet (q-map (str "SELECT sijainti, tr_numero FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id))]
+        (is (every? #(and (not (nil? (:sijainti %))) (not (nil? (:tr_numero %)))) alikohteet)
+            "Kaikilla alikohteilla on sijainti & tienumero")))))
 
 (deftest paallystysilmoituksellisen-kohteen-paivitys-ei-onnistu
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -403,7 +410,7 @@
       (is (= harjan-kautta-kirjattu (first maaramuutokset-kirjauksen-jalkeen))
           "Harjan käyttöliittymän kautta kirjattua määrä muutosta ei ole muutettu")
 
-      (is (= 888M (:yksikkohinta (second maaramuutokset-kirjauksen-jalkeen) )) "Uusi yksikköhinta on päivittynyt oikein"))))
+      (is (= 888M (:yksikkohinta (second maaramuutokset-kirjauksen-jalkeen))) "Uusi yksikköhinta on päivittynyt oikein"))))
 
 (deftest maaramuutosten-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
