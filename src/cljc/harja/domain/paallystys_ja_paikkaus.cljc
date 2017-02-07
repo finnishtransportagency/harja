@@ -57,7 +57,19 @@
 (defn summaa-maaramuutokset
   "Laskee ilmoitettujen töiden toteutumien erotuksen tilattuun määrään ja summaa tulokset yhteen."
   [tyot]
-  (reduce + (mapv
-              (fn [tyo]
-                (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
-              (filter #(not= true (:poistettu %)) tyot))))
+  (reduce
+    +
+    (mapv
+      (fn [tyo]
+        (let [tilattu-maara (:tilattu-maara tyo)
+              ennustettu-maara (:ennustettu-maara tyo)
+              toteutunut-maara (:toteutunut-maara tyo)
+              yksikkohinta (:yksikkohinta tyo)]
+          (cond (and tilattu-maara toteutunut-maara yksikkohinta)
+                (* (- toteutunut-maara tilattu-maara) yksikkohinta)
+
+                (and tilattu-maara ennustettu-maara yksikkohinta)
+                (* (- ennustettu-maara tilattu-maara) yksikkohinta)
+
+                :default 0)))
+      (filter #(not= true (:poistettu %)) tyot))))
