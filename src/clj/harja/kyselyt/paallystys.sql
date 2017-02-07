@@ -196,6 +196,7 @@ SELECT
   tyo,
   yksikko,
   tilattu_maara             AS "tilattu-maara",
+  ennustettu_maara          AS "ennustettu-maara",
   toteutunut_maara          AS "toteutunut-maara",
   yksikkohinta,
   k.jarjestelma             AS "jarjestelman-lisaama"
