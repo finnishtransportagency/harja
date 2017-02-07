@@ -4,7 +4,7 @@ CREATE TABLE urakan_materiaalin_kaytto_hoitoluokittain (
   materiaalikoodi INTEGER REFERENCES materiaalikoodi (id),
   talvihoitoluokka INTEGER,
   urakka INTEGER REFERENCES urakka (id),
-  maara NUMERIC
+  maara NUMERIC,
   CONSTRAINT uniikki_urakan_materiaalin_kaytto_hoitoluokittain
       UNIQUE (pvm, materiaalikoodi, talvihoitoluokka, urakka)
 );
@@ -27,7 +27,7 @@ SELECT rp.aika::date AS pvm,
 
 
 -- Päivitetään toteuman luovan transaktion lopuksi materiaalit
-CREATE PROCEDURE paivita_urakan_materiaalin_kaytto_hoitoluokittain ()
+CREATE FUNCTION paivita_urakan_materiaalin_kaytto_hoitoluokittain ()
   RETURNS TRIGGER AS $$
 DECLARE
   rivi RECORD;
