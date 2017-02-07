@@ -22,15 +22,16 @@
 ;; muokkaus yllapitokohteet-viewin pohjalla wip
 
 (def grid-opts {:otsikko "Muut kustannukset"
-        :tyhja (if (nil? @kustannukset-atom) [ajax-loader "Haetaan kustannuksia..."] "Ei kustannuksia")
-        :tallenna #(log "muut-kustannukset: tallenna kutsuttu")
-        :muutos (fn [grid]
-                  #(log "muut-kustannukset: muutos kutsuttu"))
-        :voi-lisata? true
-        :esta-poistaminen? (fn [rivi] (or (not (nil? (:paallystysilmoitus-id rivi))) ;; <- tahan tsekkaus onko kohdistamaton sanktio vai suoraan syötetty?
-                                          (not (nil? (:paikkausilmoitus-id rivi)))))
-        :esta-poistaminen-tooltip
-        (fn [_] "Kohteeseen liittymättömästä sanktiosta johtuvaa kustannusta ei voi poistaa.")})
+                :tyhja (if (nil? @kustannukset-atom) [ajax-loader "Haetaan kustannuksia..."] "Ei kustannuksia")
+                :tallenna #(log "muut-kustannukset: tallenna kutsuttu")
+                :muutos (fn [grid]
+                          #(log "muut-kustannukset: muutos kutsuttu"))
+                :voi-lisata? true
+                :voi-muokata? #(log "muut-kustannukset: voi-muokata? kutsuttu")
+                :esta-poistaminen? (fn [rivi] (or (not (nil? (:paallystysilmoitus-id rivi))) ;; <- tahan tsekkaus onko kohdistamaton sanktio vai suoraan syötetty?
+                                                  (not (nil? (:paikkausilmoitus-id rivi)))))
+                :esta-poistaminen-tooltip
+                (fn [_] "Kohteeseen liittymättömästä sanktiosta johtuvaa kustannusta ei voi poistaa.")})
 
 (def grid-skeema
   (into [] (concat  [{:otsikko "Kustannus" :nimi :kustannus-nimi
