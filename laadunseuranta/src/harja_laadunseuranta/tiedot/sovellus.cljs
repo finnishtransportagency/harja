@@ -6,11 +6,15 @@
 
 (def sovelluksen-alkutila
   {;; Sovelluksen alustustiedot
-   :alustus {:alustettu? false
-             :gps-tuettu? false
-             :ensimmainen-sijainti nil ; Estää sovelluksen käytön jos GPS ei toimi oikein
+   :alustus {:gps-tuettu nil
+             :idxdb-tuettu nil
+             :ensimmainen-sijainti-saatu nil ; Estää sovelluksen käytön jos GPS ei toimi oikein
+             :ensimmainen-sijainti-yritys 0
+             :ensimmainen-sijainti-virhekoodi nil
              :verkkoyhteys? (.-onLine js/navigator)
              :selain-tuettu? (utils/tuettu-selain?)
+             :kayttaja-tunnistettu nil
+             :oikeus-ainakin-yhteen-urakkaan nil
              :selain-vanhentunut? (utils/vanhentunut-selain?)}
 
    ;; Tarkastusajon perustiedot
@@ -30,7 +34,7 @@
    :kayttaja {:kayttajanimi nil
               :kayttajatunnus nil
               :roolit #{}
-              :oikeus-urakoihin [] ;; Urakat, joihin tarkastusoikeus, "sopivimmat" ensimmäisenä
+              :oikeus-urakoihin nil ;; Urakat, joihin tarkastusoikeus, "sopivimmat" ensimmäisenä. nil kun haetaan, vector kun haettu
               :organisaatio nil}
 
    ;; Ajonaikaiset tiedot
@@ -131,22 +135,26 @@
 (def havaintolomake-kuva (reagent/cursor sovellus [:havaintolomakedata :kuva]))
 (def havaintolomake-esikatselukuva (reagent/cursor sovellus [:havaintolomakedata :esikatselukuva]))
 
-(def alustus-valmis (reaction (let [sovellus @sovellus]
-                                (boolean (and (get-in sovellus [:alustus :gps-tuettu?])
-                                              (get-in sovellus [:alustus :ensimmainen-sijainti])
-                                              (get-in sovellus [:alustus :verkkoyhteys?])
-                                              (get-in sovellus [:alustus :selain-tuettu?])
-                                              (not (empty? (get-in sovellus [:kayttaja :oikeus-urakoihin])))
-                                              (:idxdb sovellus)
-                                              (get-in sovellus [:kayttaja :kayttajanimi]))))))
-
-(def sovellus-alustettu (reagent/cursor sovellus [:alustus :alustettu?]))
 (def verkkoyhteys (reagent/cursor sovellus [:alustus :verkkoyhteys?]))
-(def selain-tuettu (reagent/cursor sovellus [:alustus :selain-tuettu?]))
+(def selain-tuettu? (reagent/cursor sovellus [:alustus :selain-tuettu?]))
 (def selain-vanhentunut (reagent/cursor sovellus [:alustus :selain-vanhentunut?]))
-(def gps-tuettu (reagent/cursor sovellus [:alustus :gps-tuettu?]))
-(def ensimmainen-sijainti (reagent/cursor sovellus [:alustus :ensimmainen-sijainti]))
+(def gps-tuettu (reagent/cursor sovellus [:alustus :gps-tuettu]))
+(def kayttajalla-oikeus-ainakin-yhteen-urakkaan (reagent/cursor sovellus [:alustus :oikeus-ainakin-yhteen-urakkaan]))
+(def kayttaja-tunnistettu (reagent/cursor sovellus [:alustus :kayttaja-tunnistettu]))
+(def idxdb-tuettu (reagent/cursor sovellus [:alustus :idxdb-tuettu]))
+(def ensimmainen-sijainti-saatu (reagent/cursor sovellus [:alustus :ensimmainen-sijainti-saatu]))
+(def ensimmainen-sijainti-yritys (reagent/cursor sovellus [:alustus :ensimmainen-sijainti-yritys]))
+(def ensimmainen-sijainti-virhekoodi (reagent/cursor sovellus [:alustus :ensimmainen-sijainti-virhekoodi]))
 (def oikeus-urakoihin (reagent/cursor sovellus [:kayttaja :oikeus-urakoihin]))
+
+(def alustus-valmis? (reaction (boolean (and @selain-tuettu?
+                                             @idxdb-tuettu
+                                             @verkkoyhteys
+                                             @gps-tuettu
+                                             @ensimmainen-sijainti-saatu
+                                             @kayttaja-tunnistettu
+                                             @kayttajalla-oikeus-ainakin-yhteen-urakkaan))))
+(def sovelluksen-naytto-sallittu? (atom false))
 
 (def kirjauspisteet (reagent/cursor sovellus [:kirjauspisteet]))
 
@@ -162,10 +170,10 @@
 
 (def ajoneuvon-sijainti (reaction
                           (if (:nykyinen @sijainti)
-                            (:nykyinen @sijainti)
+                            @sijainti
                             tyhja-sijainti)))
 
-(def kartan-keskipiste (reaction @ajoneuvon-sijainti))
+(def kartan-keskipiste (reaction (:nykyinen @ajoneuvon-sijainti)))
 
 (def tarkastusajo-kaynnissa? (reagent/cursor sovellus [:tarkastusajo-kaynnissa?]))
 (def ilmoitus (reagent/cursor sovellus [:ilmoitus]))

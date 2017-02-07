@@ -35,7 +35,6 @@
 ;; Jos muutat tätä, kasvata versionumeroa. Tällöin selain tekee migraation
 ;; uuteen versioon automaattisesti. Kannattaa toki testata, että migraatio onnistuu.
 (def db-spec {:version 3
-              :on-error #(js/console.log (str "Tietokantavirhe " (pr-str %)))
               :objectstores [{:name asetukset/+reittimerkinta-store+
                               :key-path :id
                               :auto-increment true}
@@ -298,5 +297,7 @@
          :soratiemittaussyotto @soratiemittaussyotto-atom
          :epaonnistui-fn merkinta-epaonnistui}))))
 
-(defn tietokannan-alustus []
-  (idb/create-indexed-db "harja2" db-spec))
+(defn tietokannan-alustus [idxdb-tuettu-atom]
+  (idb/create-indexed-db "harja2" (assoc db-spec
+                                    :on-error #(reset! idxdb-tuettu-atom false)
+                                    :on-success #(reset! idxdb-tuettu-atom true))))

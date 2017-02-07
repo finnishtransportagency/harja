@@ -1,15 +1,16 @@
 (ns harja.ui.kartta.esitettavat-asiat
   (:require [clojure.string :as str]
-    #?(:cljs [harja.ui.openlayers.edistymispalkki :as edistymispalkki])
-    #?(:cljs [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
-       :clj
-            [taoensso.timbre :as log])
+            #?(:cljs [harja.ui.openlayers.edistymispalkki :as edistymispalkki])
+            #?(:cljs [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
+               :clj
+               [taoensso.timbre :as log])
             [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.domain.ilmoitukset :as ilmoitukset]
             [harja.geo :as geo]
-            [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]))
+            [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]
+            [harja.pvm :as pvm]))
 
 #?(:clj (defn log [& things]
           (log/info things)))
@@ -462,7 +463,9 @@
         :selite {:teksti nimi
                  :vari   (viivojen-varit-leveimmasta-kapeimpaan viivat)}
         :alue (maarittele-feature reitti valittu?
-                                  (ulkoasu/toteuman-nuoli nuolen-vari)
+                                  (if (:ei-nuolia? toteuma)
+                                    nil
+                                    (ulkoasu/toteuman-nuoli nuolen-vari))
                                   viivat
                                   (ulkoasu/toteuman-ikoni nuolen-vari))))))
 
@@ -533,17 +536,18 @@
                                {:type :line
                                 :points (viiva loppu-ang loppu-x loppu-y)}]})))
 
-(defmethod asia-kartalle :reittipisteet [{pisteet :reittipisteet :as toteuma} valittu?]
+(defmethod asia-kartalle :reittipiste [{:keys [sijainti aika tehtavat] :as reittipiste} valittu?]
   ;; Näyttää toteuman reittipisteet palloina
-  (let [[viivat _] (tehtavan-viivat-ja-nuolitiedosto
-                    (map :toimenpide (:tehtavat toteuma)) valittu?)
+  (let [toimenpiteet (map :toimenpide tehtavat)
+        [viivat _] (tehtavan-viivat-ja-nuolitiedosto
+                    toimenpiteet valittu?)
         vari (last (viivojen-varit-leveimmasta-kapeimpaan viivat))]
     {:type :reittipisteet
-     :alue {:type :geometry-collection
-            :circle {:fill vari :radius 8
-                     :stroke "black"}
-            :geometries (mapv :sijainti
-                              pisteet)}}))
+     :nimi (str (tehtavan-nimi toimenpiteet) "\n"
+                (pvm/pvm-aika-sek aika))
+     :alue (assoc sijainti
+                  :fill true
+                  :color vari)}))
 
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
   (if tyyppi

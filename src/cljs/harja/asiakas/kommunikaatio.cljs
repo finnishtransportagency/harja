@@ -1,7 +1,7 @@
 (ns harja.asiakas.kommunikaatio
   "Palvelinkommunikaation utilityt, transit lähettäminen."
   (:require [reagent.core :as r]
-            [ajax.core :refer [ajax-request transit-request-format transit-response-format]]
+            [ajax.core :refer [ajax-request transit-request-format transit-response-format] :as ajax]
             [cljs.core.async :refer [put! close! chan timeout]]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.pvm :as pvm]
@@ -71,7 +71,8 @@
 (defn extranet-virhe? [vastaus]
   (= 0 (:status vastaus)))
 
-(defn- kysely [palvelu metodi parametrit transducer paasta-virhe-lapi? chan yritysten-maara]
+(defn- kysely [palvelu metodi parametrit
+               {:keys [transducer paasta-virhe-lapi? chan yritysten-maara] :as opts}]
   (let [cb (fn [[_ vastaus]]
              (when-not (nil? vastaus)
                (cond
@@ -84,7 +85,7 @@
                      (close! chan))
 
                  (and (extranet-virhe? vastaus) (contains? #{:post :get} metodi) (< yritysten-maara 4))
-                 (kysely palvelu metodi parametrit transducer paasta-virhe-lapi? chan (+ yritysten-maara 1))
+                 (kysely palvelu metodi parametrit (update opts :yritysten-maara (fnil inc 0)))
 
                  :default
                  (do (put! chan (if transducer (into [] transducer vastaus) vastaus))
@@ -110,6 +111,7 @@
                                           (close! chan))})))
     chan))
 
+
 (defn post!
   "Lähetä HTTP POST -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea.
 Kolmen parametrin versio ottaa lisäksi transducerin, jolla tulosdata vektori muunnetaan ennen kanavaan kirjoittamista."
@@ -117,7 +119,15 @@ Kolmen parametrin versio ottaa lisäksi transducerin, jolla tulosdata vektori mu
   ([service payload transducer] (post! service payload transducer false))
   ([service payload transducer paasta-virhe-lapi?] (post! service payload transducer paasta-virhe-lapi? (chan) 0))
   ([service payload transducer paasta-virhe-lapi? kanava yritysten-maara]
-   (kysely service :post payload transducer paasta-virhe-lapi? kanava yritysten-maara)))
+   (kysely service :post payload {:transducer transducer
+                                  :paasta-virhe-lapi? paasta-virhe-lapi?
+                                  :chan kanava
+                                  :yritysten-maara yritysten-maara})))
+
+(defn post!*
+  "Läheta HTTT POST -palvelupyyntö ja anna optiot mäpissä."
+  [service payload options]
+  (kysely service :post payload (merge {:chan (chan)} options)))
 
 (defn get!
   "Lähetä HTTP GET -palvelupyyntö palvelimelle ja palauta kanava, josta vastauksen voi lukea.
@@ -126,7 +136,10 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   ([service transducer] (get! service transducer false))
   ([service transducer paasta-virhe-lapi?] (get! service transducer paasta-virhe-lapi? (chan) 0))
   ([service transducer paasta-virhe-lapi? kanava yritysten-maara]
-   (kysely service :get nil transducer paasta-virhe-lapi? kanava yritysten-maara)))
+   (kysely service :get nil {:transducer transducer
+                             :paasta-virhe-lapi? paasta-virhe-lapi?
+                             :chan kanava
+                             :yritysten-maara yritysten-maara})))
 
 (defn laheta-liite!
   "Lähettää liitetiedoston palvelimen liitepolkuun. Palauttaa kanavan, josta voi lukea edistymisen.

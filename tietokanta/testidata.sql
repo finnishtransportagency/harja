@@ -125,6 +125,8 @@ SELECT paivita_pohjavesialueet();
 -- Tieverkko
 \i testidata/tierekisteri.sql
 
+\i testidata/tietyomaat.sql
+
 
 SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 

@@ -22,7 +22,8 @@
             [harja.loki :refer [log]]
             [harja.ui.komponentti :as komp]
             [harja.views.kartta.infopaneeli :as infopaneeli]
-            [harja.tiedot.kartta :as kartta-tiedot]))
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.views.kartta.tasot :as tasot]))
 
 (def tr-osoite-taytetty? (every-pred :numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys))
 
@@ -46,9 +47,8 @@
    [{:nimi :tierekisteriosoite :tyyppi :tierekisteriosoite
      :tyyli :rivitetty
      :pakollinen? true
-     :sijainti (when-not tulokset
-                 (r/wrap (:sijainti valinnat)
-                         #(e! (tiedot/->PaivitaSijainti %))))
+     :sijainti (r/wrap (:sijainti valinnat)
+                       #(e! (tiedot/->PaivitaSijainti %)))
      :otsikko "Tierekisteriosoite"
      :palstoja 3
      :validoi [(fn [osoite {sijainti :sijainti}]
@@ -65,6 +65,9 @@
    valinnat])
 
 (defn- nayta-tulospaneeli! [e! tulokset avatut-tulokset]
+  ;; Poistetaan TR-valinnan katkoviiva häiritsemästä
+  (tasot/poista-geometria! :tr-valittu-osoite)
+
   (kartta-tiedot/nayta-kartan-kontrollit!
    :tienakyma-tulokset
    ^{:class "kartan-infopaneeli"}
@@ -72,17 +75,22 @@
     {:avatut-asiat (comp avatut-tulokset :idx :data)
      :toggle-asia! #(e! (tiedot/->AvaaTaiSuljeTulos (:idx (:data %))))
      :piilota-fn! #(e! (tiedot/->SuljeInfopaneeli))
-     :linkkifunktiot {:toteuma {:teksti "Tarkastele toteumanäkymässä"
-                                :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}}
-     :ei-tuloksia [:span "Hakuehdoilla ei löytynyt tuloksia"]}
+     :linkkifunktiot {:toteuma [{:teksti "Toteumanäkymään"
+                                 :tooltip "Siirry urakan toteumanäkymään"
+                                 :ikoni [ikonit/livicon-eye]
+                                 :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}
+                                {:teksti "Reittipisteet"
+                                 :tooltip "Hae toteuman kaikki reittipisteet kartalle"
+                                 :ikoni [ikonit/livicon-info-circle]
+                                 :toiminto #(e! (tiedot/->HaeToteumanReittipisteet %))}]} }
     tulokset]))
 
 (defn- tulospaneeli [e! tulokset avatut-tulokset]
   (komp/luo
-   (komp/sisaan-ulos #(reset! kartta-tiedot/ikonien-selitykset-sijainti :vasen)
-                     #(reset! kartta-tiedot/ikonien-selitykset-sijainti :oikea))
-   (komp/sisaan-ulos #(nayta-tulospaneeli! e! tulokset avatut-tulokset)
-                     #(kartta-tiedot/poista-kartan-kontrollit! :tienakyma-tulokset))
+   (komp/sisaan-ulos #(do (reset! kartta-tiedot/ikonien-selitykset-sijainti :vasen)
+                          (nayta-tulospaneeli! e! tulokset avatut-tulokset))
+                     #(do (reset! kartta-tiedot/ikonien-selitykset-sijainti :oikea)
+                          (kartta-tiedot/poista-kartan-kontrollit! :tienakyma-tulokset)))
    (komp/kun-muuttuu nayta-tulospaneeli!)
    (fn [_ _ _]
      [:span.tienakyma-tulokset])))

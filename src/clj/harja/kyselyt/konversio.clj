@@ -7,7 +7,8 @@
             [taoensso.timbre :as log]
             [clj-time.format :as format]
             [clojure.java.jdbc :as jdbc]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.pvm :as pvm])
   (:import (clojure.lang Keyword)))
 
 
@@ -237,6 +238,75 @@
             :loppuetaisyys (:tr_loppuetaisyys rivi)})
       (dissoc :tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys)))
 
+(defn- lue-pgobject [pgobject]
+  (let [string (str pgobject)]
+    (assert (and (str/starts-with? string "(")
+                 (str/ends-with? string ")"))
+            "PGobject tulee alkaa '(' ja päättyä ')'")
+    (let [string (subs string 1 (dec (count string)))
+          len (count string)]
+      (loop [acc []
+             pos 0]
+        (if (>= pos len)
+          (if (= pos len)
+            (conj acc "")
+            acc)
+          (cond
+            (= \" (.charAt string pos))
+            ;; Quotattu merkkijono, etsitään loppuquote
+            (let [new-pos (.indexOf string (int \") (inc pos))]
+              (assert (not= -1 new-pos)
+                      "Päättymätön merkkijono, päättävää \" merkkiä ei löydy.")
+              (recur (conj acc (subs string (inc pos) new-pos))
+                     ;; Hypätään " ja , merkkien yli
+                     (+ new-pos 2)))
+
+            (= \, (.charAt string pos))
+            ;; Tyhjä arvo
+            (recur (conj acc "") (inc pos))
+
+            ;; Ei quotattu arvo, etsitään pilkku
+            :else
+            (let [new-pos (.indexOf string (int \,) (inc pos))]
+              (if (= -1 new-pos)
+                ;; Ei löydy pilkkua, tämä on viimeinen arvo
+                (conj acc (subs string pos len))
+
+                ;; Pilkku löytyy, lisää arvoja
+                (recur (conj acc (subs string pos new-pos))
+                       (inc new-pos))))))))))
+
+(def ^:private lue-pgobject-date
+  (partial pvm/parsi pvm/pgobject-format))
+
+(defn pgobject->map
+  "Muuntaa resultsetissä olevan record tyyppisen arvon (PGobject)
+  mäpiksi. Tulosmäpissä olevat avaimet ja arvojen tyypit annetaan
+  siinä järjestyksessä kuin ne esiintyy objektissa."
+  [pgobject & kenttien-nimet-ja-tyypit]
+  (let [kentat (partition 2 kenttien-nimet-ja-tyypit)
+        kentat-str (lue-pgobject pgobject)]
+    (assert (= (count kentat) (count kentat-str))
+            (str "Odotettu kenttien määrä: " (count kentat)
+                 ", saatu kenttien määrä: " (count kentat-str)
+                 ", data: " pgobject))
+
+    (loop [m {}
+           [[nimi tyyppi] & kentat] kentat
+           [arvo & arvot] kentat-str]
+      (if-not nimi
+        m
+        (recur
+         (assoc m nimi
+                (case tyyppi
+                  :long (Long/parseLong arvo)
+                  :double (Double/parseDouble arvo)
+                  :string arvo
+                  :date (lue-pgobject-date arvo)
+                  (assert false (str "Ei tuettu tyyppi: " tyyppi ", arvo: " arvo))))
+         kentat
+         arvot)))))
+
 (defn lue-tr-osoite
   "Lukee yrita_tierekisteriosoite_pisteelle2 sprocin palauttaman arvon tekstimuodosta
   Tierekisteriosoite mäpiksi. Esim. \"(20,1,0,5,100,102012010220)\"."
@@ -246,7 +316,7 @@
        (str/ends-with? osoite ")")
        (zipmap [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]
                (mapv (fn [arvo]
-                       (when arvo
+                       (when (not-empty arvo)
                          (Integer/parseInt arvo)))
                      (take 5
                            (str/split (str/replace osoite #"\(|\)" "") #","))))))

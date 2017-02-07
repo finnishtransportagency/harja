@@ -18,7 +18,8 @@
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]
-            [harja-laadunseuranta.tiedot.sovellus :as s])
+            [harja-laadunseuranta.tiedot.sovellus :as s]
+            [harja-laadunseuranta.math :as math])
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
 
@@ -174,6 +175,12 @@
       (.setCenter (clj->js (projektiot/latlon-vektoriksi keskipiste)))
       (.changed))))
 
+(defn- paivita-kartan-rotaatio [kartta rad]
+  (let [view (.getView kartta)]
+    (doto view
+      (.setRotation rad)
+      (.changed))))
+
 (defn- paivita-ajettu-reitti [kartta ajettu-reitti reittikerros reittipisteet]
   (let [src (.getSource reittikerros)]
     (.clear src)
@@ -225,7 +232,7 @@
   (let [alustava-sijainti-saatu? (cljs.core/atom false)
         map-element (reagent/dom-node this)
 
-        ajoneuvo (tee-piste-feature @ajoneuvon-sijainti-atomi)
+        ajoneuvo (tee-piste-feature (:nykyinen @ajoneuvon-sijainti-atomi))
         ajettu-reitti (tee-viiva-featuret @reittipisteet-atomi)
         kirjatut-pisteet (tee-ikoni-featuret @kirjatut-pisteet-atomi)
 
@@ -250,7 +257,18 @@
       (if (:seuraa-sijaintia? @optiot)
         (do
           (kytke-dragpan kartta false)
-          (paivita-kartan-keskipiste kartta @keskipiste-atomi))
+          (paivita-kartan-keskipiste kartta @keskipiste-atomi)
+          (let [sijainti-edellinen (projektiot/latlon-vektoriksi
+                                     (:edellinen @ajoneuvon-sijainti-atomi))
+                sijainti-nykyinen (projektiot/latlon-vektoriksi
+                                    (:nykyinen @ajoneuvon-sijainti-atomi))]
+            ;; Rotatoi kartta ajosuuntaan, mutta vain jos nopeus on riittävä, muuten
+            ;; paikallaolo ja siitä aiheutuva GPS-kohina saa kartan levottomaksi
+            (when (>= (math/pisteiden-etaisyys sijainti-edellinen sijainti-nykyinen) 8)
+              (paivita-kartan-rotaatio kartta (- (math/pisteiden-kulma-radiaaneina
+                                                   sijainti-edellinen
+                                                   sijainti-nykyinen)
+                                                 (/ Math/PI 2))))))
         (kytke-dragpan kartta true)))
 
     (run!
@@ -260,7 +278,7 @@
       (kytke-ortokuva kartta (:nayta-ortokuva? @optiot)))
 
     ;; reagoidaan ajoneuvon sijainnin muutokseen
-    (run! (paivita-ajoneuvon-sijainti kartta ajoneuvo ajoneuvokerros @ajoneuvon-sijainti-atomi))
+    (run! (paivita-ajoneuvon-sijainti kartta ajoneuvo ajoneuvokerros (:nykyinen @ajoneuvon-sijainti-atomi)))
 
     ;; reagoidaan reittipisteiden muutokseen
     (run! (paivita-ajettu-reitti kartta ajettu-reitti reittikerros @reittipisteet-atomi))
@@ -298,9 +316,15 @@
    [:div.kartan-kontrollit {:style (when @s/havaintolomake-auki?
                                      {:display "none"})}
     [:div#karttakontrollit] ;; OpenLayersin ikonit asetetaan tähän elementtiin erikseen
-    [:div.kontrollinappi.ortokuva {:on-click #(swap! s/nayta-ortokuva? not)}
+    [:div
+     {:class (str "kontrollinappi ortokuva "
+                  (when @s/nayta-ortokuva? "kontrollinappi-aktiivinen"))
+      :on-click #(swap! s/nayta-ortokuva? not)}
      [kuvat/svg-sprite "maasto-24"]]
-    [:div.kontrollinappi.kiinteistorajat {:on-click #(swap! s/nayta-kiinteistorajat? not)}
+    [:div
+     {:class (str "kontrollinappi kiinteistorajat "
+                  (when @s/nayta-kiinteistorajat? "kontrollinappi-aktiivinen"))
+      :on-click #(swap! s/nayta-kiinteistorajat? not)}
      [kuvat/svg-sprite "kiinteistoraja-24"]]
     [:div.kontrollinappi.keskityspainike {:on-click #(do (swap! s/keskita-ajoneuvoon? not)
                                                          (swap! s/keskita-ajoneuvoon? not))}
@@ -323,31 +347,31 @@
   (str "http://localhost:8000" url))
 
 (defcard kartta-card
-         "Karttakomponentti"
-         (fn [sijainti _]
-           (reagent/as-element
-             [:div {:style {:width "100%"
-                            :height "800px"}}
-              [karttakomponentti {:wmts-url (paikallinen asetukset/+wmts-url+)
-                                  :wmts-url-kiinteistorajat (paikallinen asetukset/+wmts-url-kiinteistojaotus+)
-                                  :wmts-url-ortokuva (paikallinen asetukset/+wmts-url-ortokuva+)
-                                  :sijainti-atomi sijainti
-                                  :ajoneuvon-sijainti-atomi sijainti
-                                  :reittipisteet-atomi test-reittipisteet
-                                  :kirjauspisteet-atomi test-ikonit
-                                  :optiot testioptiot}]]))
-         test-sijainti
-         {:inspect-data true
-          :watch-atom true})
+  "Karttakomponentti"
+  (fn [sijainti _]
+    (reagent/as-element
+      [:div {:style {:width "100%"
+                     :height "800px"}}
+       [karttakomponentti {:wmts-url (paikallinen asetukset/+wmts-url+)
+                           :wmts-url-kiinteistorajat (paikallinen asetukset/+wmts-url-kiinteistojaotus+)
+                           :wmts-url-ortokuva (paikallinen asetukset/+wmts-url-ortokuva+)
+                           :sijainti-atomi sijainti
+                           :ajoneuvon-sijainti-atomi sijainti
+                           :reittipisteet-atomi test-reittipisteet
+                           :kirjauspisteet-atomi test-ikonit
+                           :optiot testioptiot}]]))
+  test-sijainti
+  {:inspect-data true
+   :watch-atom true})
 
 (defcard kartan-ohjaus
-         "Siirrä karttaa muuttamalla sijaintiatomia. Autonuolen pitäisi liikkua kartalla, ei jäädä paikalleen"
-         (fn [sijainti _]
-           (reagent/as-element
-             [:div
-              [:button {:on-click #(swap! sijainti update-in [:lat] (fn [x] (+ x 100)))}
-               "Siirrä"]
-              [:button {:on-click #(swap! sijainti update-in [:heading] (fn [suunta] (+ suunta 10)))}
-               "Suuntaa"]]))
-         test-sijainti
-         {:watch-atom true})
+  "Siirrä karttaa muuttamalla sijaintiatomia. Autonuolen pitäisi liikkua kartalla, ei jäädä paikalleen"
+  (fn [sijainti _]
+    (reagent/as-element
+      [:div
+       [:button {:on-click #(swap! sijainti update-in [:lat] (fn [x] (+ x 100)))}
+        "Siirrä"]
+       [:button {:on-click #(swap! sijainti update-in [:heading] (fn [suunta] (+ suunta 10)))}
+        "Suuntaa"]]))
+  test-sijainti
+  {:watch-atom true})

@@ -10,7 +10,7 @@
 (deftest testaa-paikannus
   (async paikka-saatu
     (let [paikka-atomi (atom nil)
-          paikannus-id (p/kaynnista-paikannus paikka-atomi)]
+          paikannus-id (p/kaynnista-paikannus {:sijainti-atom paikka-atomi})]
       (add-watch paikka-atomi :muuttui (fn [_ _ _ val]
                                          #_(is (nil? val))
                                          (p/lopeta-paikannus paikannus-id)
