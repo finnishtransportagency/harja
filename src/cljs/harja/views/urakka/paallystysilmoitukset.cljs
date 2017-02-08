@@ -53,10 +53,6 @@
      :muutokset-kokonaishintaan muutokset-kokonaishintaan
      :toteuman-kokonaishinta toteuman-kokonaishinta}))
 
-(defn paivita-kokonaishinta [lomakedata-nyt]
-  (assoc lomakedata-nyt
-    :toteuman-kokonaishinta (:toteuman-kokonaishinta (laske-hinta lomakedata-nyt))))
-
 (defn yhteenveto [lomakedata-nyt]
   (let [{:keys [urakkasopimuksen-mukainen-kokonaishinta
                 muutokset-kokonaishintaan
