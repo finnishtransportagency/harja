@@ -475,49 +475,54 @@
                                        (reset! maaramuutokset vastaus)))))]
     (hae-maara-muutokset! urakka-id yllapitokohde-id)
     (fn [{:keys [yllapitokohde-id urakka-id] :as tiedot}]
-      [grid/grid
-       {:otsikko "Määrämuutokset"
-        :tyhja (if (nil? @maaramuutokset) [ajax-loader "Haetaan määrämuutoksia..."] "Ei määrämuutoksia")
-        :tallenna (when voi-muokata?
-                    #(go (let [vastaus (<! (tiedot/tallenna-maaramuutokset!
-                                             {:urakka-id urakka-id
-                                              :sopimus-id sopimus-id
-                                              :vuosi vuosi
-                                              :yllapitokohde-id yllapitokohde-id
-                                              :maaramuutokset %}))]
-                           (if (k/virhe? vastaus)
-                             (viesti/nayta! "Määrämuutoksien tallennus epäonnistui"
-                                            :warning
-                                            viesti/viestin-nayttoaika-keskipitka)
-                             (do
-                               (reset! maaramuutokset (:maaramuutokset vastaus))
-                               (reset! yllapitokohteet-atom (:yllapitokohteet vastaus)))))))
-        :voi-muokata? voi-muokata?}
-       [{:otsikko "Päällyste\u00ADtyön tyyppi"
-         :nimi :tyyppi
-         :tyyppi :valinta
-         :valinta-arvo :koodi
-         :fmt pot/paallystystyon-tyypin-nimi-koodilla
-         :valinta-nayta #(if % (:nimi %) "- Valitse työ -")
-         :valinnat pot/+paallystystyon-tyypit+
-         :leveys "30%" :validoi [[:ei-tyhja "Valitse tyyppi"]]}
-        {:otsikko "Työ" :nimi :tyo :tyyppi :string :leveys "30%" :pituus-max 256
-         :validoi [[:ei-tyhja "Anna työ"]]}
-        {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 20
-         :validoi [[:ei-tyhja "Anna yksikkö"]]}
-        {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :positiivinen-numero :tasaa :oikea
-         :kokonaisosan-maara 6 :leveys "15%" :validoi [[:ei-tyhja "Anna tilattu määrä"]]}
-        {:otsikko "Toteu\u00ADtunut määrä" :nimi :toteutunut-maara :leveys "15%" :tasaa :oikea
-         :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Anna toteutunut määrä"]]}
-        {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false)
-         :hae (fn [rivi] (- (:toteutunut-maara rivi) (:tilattu-maara rivi)))}
-        {:otsikko "Yks.\u00ADhinta" :nimi :yksikkohinta :leveys "10%" :tasaa :oikea :fmt fmt/euro-opt
-         :tyyppi :positiivinen-numero :kokonaisosan-maara 4 :validoi [[:ei-tyhja "Anna yksikköhinta"]]}
-        {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :tasaa :oikea
-         :muokattava? (constantly false) :tyyppi :numero :fmt fmt/euro-opt
-         :hae (fn [rivi]
-                (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
-       @maaramuutokset])))
+      [:div [grid/grid
+             {:otsikko "Määrämuutokset"
+              :tyhja (if (nil? @maaramuutokset) [ajax-loader "Haetaan määrämuutoksia..."] "Ei määrämuutoksia")
+              :tallenna (when voi-muokata?
+                          #(go (let [vastaus (<! (tiedot/tallenna-maaramuutokset!
+                                                   {:urakka-id urakka-id
+                                                    :sopimus-id sopimus-id
+                                                    :vuosi vuosi
+                                                    :yllapitokohde-id yllapitokohde-id
+                                                    :maaramuutokset %}))]
+                                 (if (k/virhe? vastaus)
+                                   (viesti/nayta! "Määrämuutoksien tallennus epäonnistui"
+                                                  :warning
+                                                  viesti/viestin-nayttoaika-keskipitka)
+                                   (do
+                                     (reset! maaramuutokset (:maaramuutokset vastaus))
+                                     (reset! yllapitokohteet-atom (:yllapitokohteet vastaus)))))))
+              :voi-muokata? voi-muokata?
+              :esta-poistaminen? #(:jarjestelman-lisaama %)
+              :esta-poistaminen-tooltip (fn [_] "Järjestelmän lisäämää kohdetta ei voi poistaa.")
+              :voi-muokata-rivia? #(not (:jarjestelman-lisaama %))}
+             [{:otsikko "Päällyste\u00ADtyön tyyppi"
+               :nimi :tyyppi
+               :tyyppi :valinta
+               :valinta-arvo :koodi
+               :fmt pot/paallystystyon-tyypin-nimi-koodilla
+               :valinta-nayta #(if % (:nimi %) "- Valitse työ -")
+               :valinnat pot/+paallystystyon-tyypit+
+               :leveys "30%" :validoi [[:ei-tyhja "Valitse tyyppi"]]}
+              {:otsikko "Työ" :nimi :tyo :tyyppi :string :leveys "30%" :pituus-max 256
+               :validoi [[:ei-tyhja "Anna työ"]]}
+              {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 20
+               :validoi [[:ei-tyhja "Anna yksikkö"]]}
+              {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :positiivinen-numero :tasaa :oikea
+               :kokonaisosan-maara 6 :leveys "15%" :validoi [[:ei-tyhja "Anna tilattu määrä"]]}
+              {:otsikko "Toteu\u00ADtunut määrä" :nimi :toteutunut-maara :leveys "15%" :tasaa :oikea
+               :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Anna toteutunut määrä"]]}
+              {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false)
+               :hae (fn [rivi] (- (:toteutunut-maara rivi) (:tilattu-maara rivi)))}
+              {:otsikko "Yks.\u00ADhinta" :nimi :yksikkohinta :leveys "10%" :tasaa :oikea :fmt fmt/euro-opt
+               :tyyppi :positiivinen-numero :kokonaisosan-maara 4 :validoi [[:ei-tyhja "Anna yksikköhinta"]]}
+              {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :tasaa :oikea
+               :muokattava? (constantly false) :tyyppi :numero :fmt fmt/euro-opt
+               :hae (fn [rivi]
+                      (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
+             @maaramuutokset]
+       (when (some :jarjestelman-lisaama @maaramuutokset)
+         [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])])))
 
 (defn kohteen-vetolaatikko [urakka kohteet-atom rivi]
   [:div
@@ -583,6 +588,9 @@
                    {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :nimi :kohdenumero
                     :tyyppi :string :leveys id-leveys
                     :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
+                   {:otsikko "YHA-koh\u00ADde\u00ADnu\u00ADme\u00ADro" :nimi :yha-kohdenumero
+                    :tyyppi :numero :leveys id-leveys
+                    :muokattava (constantly false)}
                    {:otsikko "Koh\u00ADteen ni\u00ADmi" :nimi :nimi
                     :tyyppi :string :leveys kohde-leveys}]
                   (tierekisteriosoite-sarakkeet

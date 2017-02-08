@@ -22,6 +22,14 @@
         (throw (SecurityException. (str "Määrämuutos " maaramuutos-id " ei kuulu valittuun urakkaan "
                                         urakka-id " vaan urakkaan " maaramuutoksen-todellinen-urakka)))))))
 
+(defn vaadi-maaramuutos-ei-jarjestelman-luoma [db maaramuutos-id]
+  (when (id-olemassa? maaramuutos-id)
+
+    (let [maaramuutos-jarjestelman-luoma (some? (:jarjestelman-luoma
+                                                  (first (q/maaramuutos-jarjestelmam-luoma db {:id maaramuutos-id}))))]
+      (when maaramuutos-jarjestelman-luoma
+        (throw (SecurityException. "Määrämuutos on järjestelmän luoma, ei voi muokata!"))))))
+
 (def maaramuutoksen-tyon-tyyppi->kantaenum
   {:ajoradan-paallyste "ajoradan_paallyste"
    :pienaluetyot "pienaluetyot"
@@ -46,7 +54,7 @@
                                (map #(konv/string-polusta->keyword % [:tyyppi])))
                              (q/hae-yllapitokohteen-maaramuutokset db {:id yllapitokohde-id
                                                                        :urakka urakka-id}))]
-    (log/debug "Määrämuutokset saatu: " (pr-str maaramuutokset))
+    (log/debug "Määrämuutokset saatu: " maaramuutokset)
     maaramuutokset))
 
 (defn- luo-maaramuutos [db user yllapitokohde-id
@@ -60,7 +68,10 @@
                                            :tilattu_maara tilattu-maara
                                            :toteutunut_maara toteutunut-maara
                                            :yksikkohinta yksikkohinta
-                                           :luoja (:id user)}))
+                                           :luoja (:id user)
+                                           :jarjestelma nil
+                                           :ulkoinen_id nil}))
+
 
 (defn- paivita-maaramuutos [db user
                             {:keys [:urakka-id :yllapitokohde-id]}
@@ -76,7 +87,9 @@
                                                :kayttaja (:id user)
                                                :id id
                                                :urakka urakka-id
-                                               :poistettu poistettu}))
+                                               :poistettu (true? poistettu)
+                                               :jarjestelma nil
+                                               :ulkoinen_id nil}))
 
 (defn- luo-tai-paivita-maaramuukset [db user urakka-ja-yllapitokohde maaramuutokset]
   (doseq [maaramuutos maaramuutokset]
@@ -104,13 +117,14 @@
   (log/debug "Aloitetaan määrämuutoksien tallennus")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
+
   (doseq [maaramuutos maaramuutokset]
+    (vaadi-maaramuutos-ei-jarjestelman-luoma db (:id maaramuutos))
     (vaadi-maaramuutos-kuuluu-urakkaan db urakka-id (:id maaramuutos)))
 
   (jdbc/with-db-transaction [db db]
     (let [maaramuutokset (map #(assoc % :tyyppi (maaramuutoksen-tyon-tyyppi->kantaenum (:tyyppi %)))
                               maaramuutokset)]
-      (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
       (yha/lukitse-urakan-yha-sidonta db urakka-id)
       (luo-tai-paivita-maaramuukset db user {:yllapitokohde-id yllapitokohde-id
                                              :urakka-id urakka-id} maaramuutokset)
