@@ -1,3 +1,5 @@
+// Näppäimistö
+
 .nappaimisto {
   width: 240px;
   background-color: @sisaltolaatikoiden-taustavari;
@@ -5,96 +7,100 @@
   box-sizing: border-box;
   display: flex;
   flex-flow: column;
-}
 
-.mittaustiedot {
-  padding: 5px;
-  font-weight: bold;
-  text-align: center;
-  min-height: 50px;
-}
+  .mittaustiedot {
+    padding: 5px;
+    font-weight: bold;
+    text-align: center;
+    min-height: 50px;
+  }
 
-.nappaimiston-syottokentta {
-  padding: 5px;
-  background-color: @harmaa9;
-  font-size: 32px;
-  font-weight: bold;
+  .nappaimiston-syottokentta {
+    padding: 5px;
+    background-color: @harmaa9;
+    font-size: 32px;
+    font-weight: bold;
 
-  > .nappaimiston-kursori {
+    > .nappaimiston-kursori {
+      display: inline-block;
+      background-color: @musta;
+      width: 24px;
+      height: 32px;
+      position: relative;
+      top: 3px;
+      margin-left: 2px;
+    }
+
+    > .nappaimiston-syottoyksikko {
+      float: right;
+    }
+  }
+
+  .nappi-peruuta {
+    max-width: 100%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+
+  // Painikkeiden säännöt
+
+  @nappaimiston-painike-leveys: 75px;
+  @nappaimiston-painike-korkeus: 65px;
+  @nappaimiston-painike-teksti-koko: 38px;
+
+  .nappaimiston-painikekentat {
+    width: 240px;
+    text-align: center;
+  }
+
+  .nappaimiston-painike {
     display: inline-block;
-    background-color: @musta;
-    width: 24px;
-    height: 32px;
-    position: relative;
-    top: 3px;
-    margin-left: 2px;
+    vertical-align: top;
+    box-sizing: border-box;
+    width: @nappaimiston-painike-leveys;
+    height: @nappaimiston-painike-korkeus;
+    font-size: @nappaimiston-painike-teksti-koko;
+    font-weight: bold;
+    text-align: center;
+    padding-top: 3px;
+    color: @valkoinen;
+    background-color: @harmaa2;
+    border-color: @sininen4;
+    margin-right: 3px;
+    margin-bottom: 3px;
+
+    > svg {
+      width: 70%;
+      height: 70%;
+      position: relative;
+      top: 6px;
+    }
   }
 
-  > .nappaimiston-syottoyksikko {
-    float: right;
+  .nappaimiston-painike:active:not(.nappaimiston-painike-disabloitu) {
+    background-color: @nappi-aktiivinen;
   }
-}
 
-.nappi-peruuta {
-  max-width: 100%;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  margin-top: 5px;
-  margin-bottom: 5px;
-}
-
-.nappaimiston-painikekentat {
-  width: 240px;
-  text-align: center;
-}
-
-.nappaimiston-painike {
-  @painike-teksti-koko: 38px;
-
-  display: inline-block;
-  vertical-align: top;
-  box-sizing: border-box;
-  width: 75px;
-  height: 65px;
-  font-size: 38px;
-  font-weight: bold;
-  text-align: center;
-  padding-top: 3px;
-  color: @valkoinen;
-  background-color: @harmaa2;
-  border-color: @sininen4;
-  margin-right: 3px;
-  margin-bottom: 3px;
-
-  > svg {
-    width: 70%;
-    height: 70%;
-    position: relative;
-    top: 6px;
+  .nappaimiston-painike-painettu {
+    background-color: @nappi-aktiivinen;
   }
-}
 
-.nappaimiston-painike:active:not(.nappaimiston-painike-disabloitu) {
-  background-color: @nappi-aktiivinen;
-}
+  .nappaimiston-painike-ok {
+    background-color: @vihrea4;
+  }
 
-.nappaimiston-painike-painettu {
-  background-color: @nappi-aktiivinen;
-}
+  .nappaimiston-painike-disabloitu {
+    background-color: @harmaa6;
+  }
 
-.nappaimiston-painike-ok {
-  background-color: @vihrea4;
-}
-
-.nappaimiston-painike-disabloitu {
-  background-color: @harmaa6;
-}
-
-.nappaimiston-syottovaroitus {
-  text-align: center;
-  color: @punainen6;
-  font-weight: normal;
+  .nappaimiston-syottovaroitus {
+    text-align: center;
+    color: @punainen6;
+    font-weight: normal;
+  }
 }
 
 // Erikoisnäppäimistöt
