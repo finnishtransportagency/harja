@@ -403,7 +403,13 @@
       (is (= harjan-kautta-kirjattu (first maaramuutokset-kirjauksen-jalkeen))
           "Harjan käyttöliittymän kautta kirjattua määrä muutosta ei ole muutettu")
 
-      (is (= 888M (:yksikkohinta (second maaramuutokset-kirjauksen-jalkeen) )) "Uusi yksikköhinta on päivittynyt oikein"))))
+      (is (== 888 (:yksikkohinta (second maaramuutokset-kirjauksen-jalkeen))) "Uusi yksikköhinta on päivittynyt oikein")
+      (is (= "m2" (:yksikko (second maaramuutokset-kirjauksen-jalkeen))))
+      (is (== 12 (:tilattu_maara (second maaramuutokset-kirjauksen-jalkeen))))
+      (is (== 15.3 (:ennustettu_maara (second maaramuutokset-kirjauksen-jalkeen))))
+      (is (== 14.2 (:toteutunut_maara (second maaramuutokset-kirjauksen-jalkeen))))
+      (is (= "ajoradan_paallyste" (:tyon_tyyppi (second maaramuutokset-kirjauksen-jalkeen))))
+      (is (= "Esimerkki työ" (:tyo (second maaramuutokset-kirjauksen-jalkeen)))))))
 
 (deftest maaramuutosten-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
