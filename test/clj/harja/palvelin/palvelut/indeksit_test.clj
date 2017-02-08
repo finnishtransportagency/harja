@@ -4,7 +4,8 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.indeksit :refer :all]
             [harja.testi :refer :all]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [clojure.string :as str]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -48,3 +49,27 @@
  (2016, 10, 'MAKU 2005', 387800, 135.4);")))]
     (is (=marginaalissa? korotus 1145.64))))
 
+(deftest urakkatyypin-indeksien-haku
+  (let [indeksit (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :urakkatyypin-indeksit +kayttaja-jvh+)
+        hoidon (filter #(= :hoito (:urakkatyyppi %)) indeksit)
+        tiemerkinnan (filter #(= :tiemerkinta (:urakkatyyppi %)) indeksit)
+        paallystyksen (filter #(= :paallystys (:urakkatyyppi %)) indeksit)]
+    (is (some #(= "MAKU 2005" (:indeksinimi %)) hoidon))
+    (is (some #(= "MAKU 2010" (:indeksinimi %)) hoidon))
+    (is (not (some #(= "MAKU 2008" (:indeksinimi %)) hoidon))) ;tällaista ei käytetä
+    (is (some #(= "MAKU 2010" (:indeksinimi %)) tiemerkinnan))
+    (is (some #(= "Platts: FO 3,5%S CIF NWE Cargo" (:indeksinimi %)) paallystyksen))
+    (is (some #(= "raskas_polttooljy" (:raakaaine %)) paallystyksen))
+    (is (some #(= "ABWGL03" (:koodi %)) paallystyksen))
+    (is (some #(str/includes? (:indeksinimi %) "Platts") paallystyksen))))
+
+(deftest paallystysurakan-indeksitietojen-haku
+  (let [indeksit (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :paallystysurakan-indeksitiedot
+                                 +kayttaja-jvh+
+                                 {:urakka-id 5})
+        rivi (first indeksit)]
+    (is (= (:raskas rivi) {:raakaaine "raskas_polttooljy", :id 4, :indeksinimi "Platts: FO 3,5%S CIF NWE Cargo", :koodi "ABWGL03"}))
+    (is (= (:kevyt rivi) {:indeksinimi "Platts: Propane CIF NWE 7kt+", :koodi "PMUEE03", :raakaaine "nestekaasu", :id 8}))
+    (is (= (:nestekaasu rivi) {:raakaaine "kevyt_polttooljy", :id 6, :koodi "ABWHK03", :indeksinimi "Platts: ULSD 10ppmS CIF NWE Cargo"}))))
