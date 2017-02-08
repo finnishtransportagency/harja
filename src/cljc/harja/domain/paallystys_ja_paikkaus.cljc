@@ -55,21 +55,25 @@
   (apply s/enum (map :koodi +paallystetyypit+)))
 
 (defn summaa-maaramuutokset
-  "Laskee ilmoitettujen töiden toteutumien erotuksen tilattuun määrään ja summaa tulokset yhteen."
+  "Laskee ilmoitettujen töiden toteutumien erotuksen tilattuun määrään ja summaa tulokset yhteen.
+   Palauttaa mapin, jossa laskun tulos sekä tieto siitä, sisältääkö lasku ennustettuja määriä."
   [tyot]
-  (reduce
-    +
-    (mapv
-      (fn [tyo]
-        (let [tilattu-maara (:tilattu-maara tyo)
-              ennustettu-maara (:ennustettu-maara tyo)
-              toteutunut-maara (:toteutunut-maara tyo)
-              yksikkohinta (:yksikkohinta tyo)]
-          (cond (and tilattu-maara toteutunut-maara yksikkohinta)
-                (* (- toteutunut-maara tilattu-maara) yksikkohinta)
+  {:tulos (reduce
+            +
+            (mapv
+              (fn [tyo]
+                (let [tilattu-maara (:tilattu-maara tyo)
+                      ennustettu-maara (:ennustettu-maara tyo)
+                      toteutunut-maara (:toteutunut-maara tyo)
+                      yksikkohinta (:yksikkohinta tyo)]
+                  (cond (and tilattu-maara toteutunut-maara yksikkohinta)
+                        (* (- toteutunut-maara tilattu-maara) yksikkohinta)
 
-                (and tilattu-maara ennustettu-maara yksikkohinta)
-                (* (- ennustettu-maara tilattu-maara) yksikkohinta)
+                        (and tilattu-maara ennustettu-maara yksikkohinta)
+                        (* (- ennustettu-maara tilattu-maara) yksikkohinta)
 
-                :default 0)))
-      (filter #(not= true (:poistettu %)) tyot))))
+                        :default 0)))
+              (filter #(not= true (:poistettu %)) tyot)))
+   :ennustettu? (boolean (some #(and (:ennustettu-maara %)
+                                     (not (:toteutunut-maara %)))
+                               tyot))})

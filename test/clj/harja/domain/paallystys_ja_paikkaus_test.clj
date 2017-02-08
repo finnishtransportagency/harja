@@ -10,10 +10,19 @@
         tyot2 [{:tilattu-maara 4 :toteutunut-maara 2 :yksikkohinta 15}]
         tyot3 [{:tilattu-maara 4 :ennustettu-maara 666 :toteutunut-maara 2 :yksikkohinta 15}]
         tyot4 [{:tilattu-maara 1 :ennustettu-maara 2 :yksikkohinta 1}]]
+    ;; -- Laskut menee oikein --
+
     ;; Toteutuneiden määrien lasku toimii oikein
-    (is (= (paallystys-ja-paikkaus/summaa-maaramuutokset tyot) 13))
-    (is (= (paallystys-ja-paikkaus/summaa-maaramuutokset tyot2) -30))
+    (is (= (:tulos (paallystys-ja-paikkaus/summaa-maaramuutokset tyot)) 13))
+    (is (= (:tulos (paallystys-ja-paikkaus/summaa-maaramuutokset tyot2)) -30))
     ;; Sekä ennustettu että toteutunut, toteutunut on vahvempi
-    (is (= (paallystys-ja-paikkaus/summaa-maaramuutokset tyot3) -30))
+    (is (= (:tulos (paallystys-ja-paikkaus/summaa-maaramuutokset tyot3)) -30))
     ;; Vain ennustettu
-    (is (= (paallystys-ja-paikkaus/summaa-maaramuutokset tyot4) 1))))
+    (is (= (:tulos (paallystys-ja-paikkaus/summaa-maaramuutokset tyot4)) 1))
+
+    ;; -- Ennustettu tieto näytetään oikein? --
+
+    ;; Sekä ennustettu että toteutunut, ennustetta ei huomioida, tulos ei ennustettu
+    (is (false? (:ennustettu? (paallystys-ja-paikkaus/summaa-maaramuutokset tyot3))))
+    ;; Vain ennuste, joten sitä käytetään laskussa. Ennuste on true.
+    (is (true? (:ennustettu? (paallystys-ja-paikkaus/summaa-maaramuutokset tyot4))))))
