@@ -10,8 +10,9 @@
             [chime :as chime]))
 
 (defn- muodosta-laskutusyhteenveto [db alku loppu urakka]
-  (let [hk-alku (pvm/luo-pvm (pvm/vuosi alku) 9 1)
-        hk-loppu (pvm/luo-pvm (pvm/vuosi loppu) 8 30)]
+  (let [[hk-alku hk-loppu :as hk] (pvm/paivamaaran-hoitokausi alku)]
+    (when-not (= hk (pvm/paivamaaran-hoitokausi loppu))
+      (log/error "Alku- ja loppupäivämäärä laskutusyhteenvedolle eivät ole samalla hoitokaudella"))
     (q/hae-laskutusyhteenvedon-tiedot db {:urakka urakka
                                           :hk_alkupvm hk-alku
                                           :hk_loppupvm hk-loppu
