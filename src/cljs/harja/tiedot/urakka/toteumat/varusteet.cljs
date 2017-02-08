@@ -62,7 +62,7 @@
                                  500)
     :toteumat nil))
 
-(defn- selite [{:keys [toimenpide tietolaji alkupvm]}]
+(defn- tooltip [{:keys [toimenpide tietolaji alkupvm]}]
   (str
     (pvm/pvm alkupvm) " "
     (varusteet-domain/varuste-toimenpide->string toimenpide)
@@ -77,7 +77,7 @@
             (when-let [sijainti (some-> toteuma :sijainti geo/pisteet first)]
               (assoc toteuma
                 :tyyppi-kartalla :varustetoteuma
-                :tooltip (selite toteuma)
+                :tooltip (tooltip toteuma)
                 :sijainti {:type :point
                            :coordinates sijainti}))))))
 
