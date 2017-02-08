@@ -163,7 +163,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
 
               materiaalien-virheet (wrap (::materiaalivirheet @tiedot)
                                          #(swap! tiedot assoc ::materiaalivirheet %))
-              muokattava-pred (constantly (not (:jarjestelmanlisaama tiedot)))
+              jarjestelman-luoma-fn (constantly (not (:jarjestelmanlisaama tiedot)))
               tiedot @tiedot
               voi-tallentaa? (and (lomake/validi? tiedot)
                                   (> (count @materiaalitoteumat-mapissa) 0)
@@ -174,7 +174,8 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                                "Muokkaa toteumaa"
                                "Luo uusi toteuma")
                     :luokka :horizontal
-                    :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))
+                    :voi-muokata? (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))
+                                       (not (jarjestelman-luoma-fn)))
                     :muokkaa! muokkaa!
                     :footer [napit/palvelinkutsu-nappi
                              "Tallenna toteuma"
@@ -190,11 +191,16 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                               :disabled (or (not voi-tallentaa?)
                                             (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))))}]}
 
-            [{:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
+            [(when (jarjestelman-luoma-fn)
+               {:otsikko "Lähde" :nimi :luoja :tyyppi :string
+                :hae (fn [rivi] (str "Järjestelmä (" (:luoja rivi) " / " (:organisaatio rivi) ")"))
+                :muokattava? (constantly false)
+                :vihje toteumat/ilmoitus-jarjestelman-luoma-toteuma})
+             {:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
              {:otsikko "Aloitus" :pakollinen? true :uusi-rivi? true
               :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
               :huomauta [[:urakan-aikana-ja-hoitokaudella]]
-              :muokattava? muokattava-pred
+              :muokattava? jarjestelman-luoma-fn
               :aseta (fn [rivi arvo]
                        (assoc
                          (if (or
@@ -207,7 +213,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
               :pakollinen? true
               :tyyppi :pvm :validoi [[:ei-tyhja "Anna lopetuspäivämäärä"]
                                      [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]
-              :muokattava? muokattava-pred}
+              :muokattava? jarjestelman-luoma-fn}
              (when (:jarjestelmanlisaama tiedot)
                {:otsikko "Lähde" :nimi :luoja :tyyppi :string
                 :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")")) :muokattava? (constantly false)})
@@ -217,10 +223,10 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                               materiaalitoteumat-mapissa
                               materiaalien-virheet
                               (:jarjestelmanlisaama tiedot)]) :tyyppi :komponentti}
-             {:otsikko "Suorittaja" :pakollinen? true :tyyppi :string :pituus-max 256 :muokattava? muokattava-pred :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
-             {:otsikko "Suorittajan y-tunnus" :pakollinen? true :tyyppi :string :pituus-max 256 :nimi :ytunnus :muokattava? muokattava-pred :validoi [[:ei-tyhja "Anna y-tunnus"]]}
+             {:otsikko "Suorittaja" :pakollinen? true :tyyppi :string :pituus-max 256 :muokattava? jarjestelman-luoma-fn :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
+             {:otsikko "Suorittajan y-tunnus" :pakollinen? true :tyyppi :string :pituus-max 256 :nimi :ytunnus :muokattava? jarjestelman-luoma-fn :validoi [[:ei-tyhja "Anna y-tunnus"]]}
              {:otsikko "Lisätietoja" :tyyppi :text :palstoja 2 :koko [80 :auto]
-              :nimi :lisatieto :muokattava? muokattava-pred}]
+              :nimi :lisatieto :muokattava? jarjestelman-luoma-fn}]
             tiedot]])))))
 
 (defn tarkastele-toteumaa-nappi [rivi]
@@ -262,6 +268,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
             :hae (comp pvm/pvm :alkanut :toteuma)
             :muokattava? (constantly false)}
            {:otsikko "Määrä"
+            :muokattava? (comp not :jarjestelmanlisaama :toteuma)
             :nimi :toteuman_maara
             :tyyppi :positiivinen-numero
             :hae (comp :maara :toteuma)

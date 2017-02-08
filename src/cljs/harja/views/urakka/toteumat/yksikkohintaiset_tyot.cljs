@@ -227,7 +227,7 @@
              {:otsikko "Lähde" :nimi :luoja :tyyppi :string
               :hae (fn [rivi] (str "Järjestelmä (" (:luoja rivi) " / " (:organisaatio rivi) ")"))
               :muokattava? (constantly false)
-              :vihje toteumat/ilmoitus-jarjestelman-muokkaama-toteuma})
+              :vihje toteumat/ilmoitus-jarjestelman-luoma-toteuma})
            {:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
            {:otsikko "Aloitus" :nimi :alkanut :pakollinen? true :tyyppi :pvm
             :uusi-rivi? true
