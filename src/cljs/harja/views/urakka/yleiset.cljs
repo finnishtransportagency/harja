@@ -539,12 +539,10 @@
   (let [hae! (fn [urakka]
                (go (reset! urakka/paallystysurakan-indeksitiedot
                            (<! (indeksit/hae-paallystysurakan-indeksitiedot (:id urakka))))))
-        indeksivalinnat-raskas-po (filter #(or (nil? (:materiaali %))
-                                       (= "raskas_polttooljy" (:materiaali %))) @urakka/paallystysurakan-indeksitiedot)
-        indeksivalinnat-kevyt-po (filter #(or (nil? (:materiaali %))
-                                      (= "kevyt_polttooljy" (:materiaali %))) @urakka/paallystysurakan-indeksitiedot)
-        indeksivalinnat-nestekaasu (filter #(or (nil? (:materiaali %))
-                                        (= "nestekaasu" (:materiaali %))) @urakka/paallystysurakan-indeksitiedot)]
+        varatut-vuodet (into #{} (map :vuosi @urakka/paallystysurakan-indeksitiedot))
+        indeksivalinnat-raskas-po (indeksit/raakaaineen-indeksit "raskas_polttooljy" @urakka/paallystysurakan-indeksitiedot)
+        indeksivalinnat-kevyt-po (indeksit/raakaaineen-indeksit "kevyt_polttooljy" @urakka/paallystysurakan-indeksitiedot)
+        indeksivalinnat-nestekaasu (indeksit/raakaaineen-indeksit "nestekaasu" @urakka/paallystysurakan-indeksitiedot)]
     (log "indeksitiedot" (pr-str @urakka/paallystysurakan-indeksitiedot))
     (log "indeksit raskas po" (pr-str indeksivalinnat-raskas-po))
     (hae! ur)
@@ -556,7 +554,16 @@
           :tyhja "Ei indeksejä."
           :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
                       #(indeksit/tallenna-paallystysurakan-indeksit {:urakka-id (:id ur) :tiedot %}))}
-         [{:otsikko "Vuosi" :nimi :urakkavuosi :tyyppi :positiivinen-numero :leveys 6}
+         [{:otsikko "Vuosi" :nimi :vuosi :tyyppi :valinta :leveys 6
+           :valinta-arvo identity
+           :valinta-nayta #(if (nil? %) "- valitse -" %)
+
+           :valinnat (vec (filter #(not (varatut-vuodet %))
+                                  (range (pvm/vuosi (:alkupvm ur))
+                                         (+ 1 (pvm/vuosi (:loppupvm ur))))))
+           :validoi [[:ei-tyhja "Anna urakkavuosi"] [:uniikki "Yksi rivi per vuosi"]]}
+
+
           {:otsikko "Raskas polttoöljy" :nimi :raskas :tyyppi :valinta :leveys 12
            :fmt :indeksinimi
            :valinnat indeksivalinnat-raskas-po :valinta-nayta :indeksinimi
@@ -569,8 +576,8 @@
            :fmt :indeksinimi
            :valinnat indeksivalinnat-nestekaasu :valinta-nayta :indeksinimi
            :valinta-arvo :id}
-          {:otsikko "Lähtö\u00ADtason vuosi" :nimi :lahtotaso_vuosi :tyyppi :positiivinen-numero :leveys 6}
-          {:otsikko "Lähtö\u00ADtason kk" :nimi :lahtotaso_kuukausi :tyyppi :positiivinen-numero :leveys 6}]
+          {:otsikko "Lähtö\u00ADtason vuosi" :nimi :lahtotason-vuosi :tyyppi :positiivinen-numero :leveys 6}
+          {:otsikko "Lähtö\u00ADtason kk" :nimi :lahtotason-kuukausi :tyyppi :positiivinen-numero :leveys 6}]
          @urakka/paallystysurakan-indeksitiedot]))))
 
 (defn yleiset [ur]

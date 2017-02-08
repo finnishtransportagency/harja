@@ -52,5 +52,11 @@
   (log "tallenna päällystysurakan indeksit urakkaan " urakka-id " tiedot" (pr-str tiedot))
   (go (let [res (<! (k/post! :tallenna-paallystysurakan-indeksitiedot
                              {:urakka-id urakka-id
-                              :tiedot tiedot}))]
+                              :indeksitiedot tiedot}))]
         res)))
+
+(defn raakaaineen-indeksit
+  "Palauttaa raakaaineen indeksit"
+  [raakaaine paallystysurakan-indeksitiedot]
+  (filter #(or (nil? (:raakaaine %))
+                           (= raakaaine (:raakaaine %))) paallystysurakan-indeksitiedot))

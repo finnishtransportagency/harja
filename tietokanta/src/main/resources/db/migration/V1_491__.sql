@@ -18,8 +18,8 @@ CREATE TABLE paallystysurakan_indeksit (
   indeksi_polttooljykevyt INTEGER REFERENCES urakkatyypin_indeksi(id),
   indeksi_nestekaasu INTEGER REFERENCES urakkatyypin_indeksi(id),
 
-  lahtotaso_vuosi INTEGER,
-  lahtotaso_kuukausi INTEGER,
+  lahtotason_vuosi INTEGER,
+  lahtotason_kuukausi INTEGER,
 
   -- muokkausmetatiedot
   poistettu BOOLEAN DEFAULT FALSE,
@@ -29,8 +29,8 @@ CREATE TABLE paallystysurakan_indeksit (
   luotu TIMESTAMP DEFAULT NOW(),
 
   CHECK (urakkavuosi > 1970 AND urakkavuosi < 2050),
-  CHECK (lahtotaso_kuukausi > 0 AND lahtotaso_kuukausi < 13),
-  CHECK (lahtotaso_vuosi > 1970 AND lahtotaso_vuosi < 2050),
+  CHECK (lahtotason_kuukausi > 0 AND lahtotason_kuukausi < 13),
+  CHECK (lahtotason_vuosi > 1970 AND lahtotason_vuosi < 2050),
 
   CONSTRAINT uniikki_paallystysindeksi UNIQUE (urakka, urakkavuosi)
 );
