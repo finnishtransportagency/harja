@@ -78,6 +78,7 @@ CREATE CONSTRAINT TRIGGER tg_paivita_urakan_materiaalin_kaytto_hoitoluokittain
  ON toteuma
  DEFERRABLE INITIALLY DEFERRED
  FOR EACH ROW
+ WHEN (NEW.lahde = 'harja-api')
  EXECUTE PROCEDURE paivita_urakan_materiaalin_kaytto_hoitoluokittain();
 
 -- FIXME: mitä jos toteuma poistetaan?
