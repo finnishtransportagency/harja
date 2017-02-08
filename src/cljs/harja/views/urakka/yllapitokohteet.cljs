@@ -23,7 +23,8 @@
             [harja.tiedot.urakka :as urakka]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.validointi :as validointi]
-            [harja.atom :refer [wrap-vain-luku]])
+            [harja.atom :refer [wrap-vain-luku]]
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -525,7 +526,7 @@
               {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :tasaa :oikea
                :muokattava? (constantly false) :tyyppi :numero :fmt fmt/euro-opt
                :hae (fn [rivi]
-                      (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
+                      (paallystys-ja-paikkaus/summaa-maaramuutokset [rivi]))}]
              @maaramuutokset]
        (when (some :jarjestelman-lisaama @maaramuutokset)
          [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])])))
