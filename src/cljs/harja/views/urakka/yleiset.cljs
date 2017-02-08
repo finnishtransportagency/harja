@@ -540,9 +540,9 @@
                (go (reset! urakka/paallystysurakan-indeksitiedot
                            (<! (indeksit/hae-paallystysurakan-indeksitiedot (:id urakka))))))
         indeksivalinnat-raskas-po (filter #(or (nil? (:materiaali %))
-                                       (= "raskas_po" (:materiaali %))) @urakka/paallystysurakan-indeksitiedot)
+                                       (= "raskas_polttooljy" (:materiaali %))) @urakka/paallystysurakan-indeksitiedot)
         indeksivalinnat-kevyt-po (filter #(or (nil? (:materiaali %))
-                                      (= "kevyt_po" (:materiaali %))) @urakka/paallystysurakan-indeksitiedot)
+                                      (= "kevyt_polttooljy" (:materiaali %))) @urakka/paallystysurakan-indeksitiedot)
         indeksivalinnat-nestekaasu (filter #(or (nil? (:materiaali %))
                                         (= "nestekaasu" (:materiaali %))) @urakka/paallystysurakan-indeksitiedot)]
     (log "indeksitiedot" (pr-str @urakka/paallystysurakan-indeksitiedot))

@@ -108,6 +108,6 @@ VALUES
   2017, 2016, 9, (SELECT id FROM urakka where nimi = 'Muhoksen päällystysurakka'));
 
 
-INSERT INTO urakkatyypin_indeksi(urakkatyyppi, indeksinimi, koodi, materiaali)
+INSERT INTO urakkatyypin_indeksi(urakkatyyppi, indeksinimi, koodi, raakaaine)
 VALUES
-  ('paallystys'::urakkatyyppi, 'Platts: testiindeksi XYZ', 'TESTIKOODI', 'raskas_po'); -- bitumin arvoa varten
+  ('paallystys'::urakkatyyppi, 'Platts: testiindeksi XYZ', 'TESTIKOODI', 'raskas_polttooljy'); -- bitumin arvoa varten

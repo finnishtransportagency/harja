@@ -1,8 +1,10 @@
+CREATE TYPE raakaainetyyppi AS ENUM ('raskas_polttooljy', 'kevyt_polttooljy', 'nestekaasu');
+
 CREATE TABLE urakkatyypin_indeksi (
   id SERIAL PRIMARY KEY,
   urakkatyyppi urakkatyyppi NOT NULL,
   indeksinimi TEXT NOT NULL,
-  materiaali TEXT DEFAULT NULL,
+  raakaaine raakaainetyyppi DEFAULT NULL,
   koodi TEXT DEFAULT NULL,
   UNIQUE (urakkatyyppi, indeksinimi)
 );
@@ -34,14 +36,14 @@ CREATE TABLE paallystysurakan_indeksit (
 );
 
 
-INSERT INTO urakkatyypin_indeksi(urakkatyyppi, indeksinimi, koodi, materiaali)
+INSERT INTO urakkatyypin_indeksi(urakkatyyppi, indeksinimi, koodi, raakaaine)
 VALUES
   ('hoito'::urakkatyyppi, 'MAKU 2005', NULL, NULL),
   ('hoito'::urakkatyyppi, 'MAKU 2010', NULL, NULL),
   ('tiemerkinta'::urakkatyyppi, 'MAKU 2010', NULL, NULL),
-  ('paallystys'::urakkatyyppi, 'Platts: FO 3,5%S CIF NWE Cargo', 'ABWGL03', 'raskas_po'), -- bitumin arvoa varten
-  ('paikkaus'::urakkatyyppi, 'Platts: FO 3,5%S CIF NWE Cargo', 'ABWGL03', 'raskas_po'),
-  ('paallystys'::urakkatyyppi, 'Platts: ULSD 10ppmS CIF NWE Cargo', 'ABWHK03', 'kevyt_po'), -- kevyt polttoöljy
-  ('paikkaus'::urakkatyyppi, 'Platts: ULSD 10ppmS CIF NWE Cargo', 'ABWHK03', 'kevyt_po'),
+  ('paallystys'::urakkatyyppi, 'Platts: FO 3,5%S CIF NWE Cargo', 'ABWGL03', 'raskas_polttooljy'), -- bitumin arvoa varten
+  ('paikkaus'::urakkatyyppi, 'Platts: FO 3,5%S CIF NWE Cargo', 'ABWGL03', 'raskas_polttooljy'),
+  ('paallystys'::urakkatyyppi, 'Platts: ULSD 10ppmS CIF NWE Cargo', 'ABWHK03', 'kevyt_polttooljy'), -- kevyt polttoöljy
+  ('paikkaus'::urakkatyyppi, 'Platts: ULSD 10ppmS CIF NWE Cargo', 'ABWHK03', 'kevyt_polttooljy'),
   ('paallystys'::urakkatyyppi, 'Platts: Propane CIF NWE 7kt+', 'PMUEE03', 'nestekaasu'),  -- nestekaasu
   ('paikkaus'::urakkatyyppi, 'Platts: Propane CIF NWE 7kt+', 'PMUEE03', 'nestekaasu');
