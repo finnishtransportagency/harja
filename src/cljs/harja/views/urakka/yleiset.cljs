@@ -13,7 +13,7 @@
             [harja.tiedot.navigaatio :as navigaatio]
             [harja.tiedot.urakka.yhatuonti :as yhatiedot]
             [harja.views.urakka.yhatuonti :as yha]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
 
             [cljs.core.async :refer [<!]]
@@ -532,6 +532,8 @@
                (not sidonta-lukittu?)
                (not palvelusopimus?))
       (yha/nayta-tuontidialogi ur))))
+
+(tarkkaile! "urakka/paallystysurakan-indeksitiedot" urakka/paallystysurakan-indeksitiedot)
 
 (defn paallystysurakan-indeksit
   "Käyttöliittymä päällystysurakassa käytettävien indeksien valintaan."

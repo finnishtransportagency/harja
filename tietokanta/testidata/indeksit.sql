@@ -89,9 +89,17 @@ INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 10,
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 11, 105.2);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 12, 106.2);
 
+
+INSERT INTO urakkatyypin_indeksi(urakkatyyppi, indeksinimi, koodi, raakaaine)
+VALUES
+  ('paallystys'::urakkatyyppi, 'Platts: testiindeksi XYZ', 'TESTIKOODI', 'raskas_polttooljy'); -- bitumin arvoa varten
+
+
 -- Ylläpidon indeksejä
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo)
 VALUES
+  ('Platts: testiindeksi XYZ', 2015, 12, 225.00),
+  ('Platts: testiindeksi XYZ', 2016, 9, 306.00),
   ('Platts: FO 3,5%S CIF NWE Cargo', 2015, 12, 125.36),
   ('Platts: FO 3,5%S CIF NWE Cargo', 2016, 9, 206.29),
   ('Platts: Propane CIF NWE 7kt+', 2015, 8, 285.55),
@@ -99,15 +107,16 @@ VALUES
   ('Platts: ULSD 10ppmS CIF NWE Cargo', 2015, 8, 123.45),
   ('Platts: ULSD 10ppmS CIF NWE Cargo', 2016, 9, 234.56);
 
+
 INSERT INTO paallystysurakan_indeksit (indeksi_polttooljyraskas,indeksi_polttooljykevyt,indeksi_nestekaasu,
                                        urakkavuosi,lahtotason_vuosi,lahtotason_kuukausi,urakka)
 VALUES
+  ((SELECT id FROM urakkatyypin_indeksi WHERE indeksinimi = 'Platts: testiindeksi XYZ' AND urakkatyyppi = 'paallystys'),
+   (SELECT id FROM urakkatyypin_indeksi WHERE indeksinimi = 'Platts: Propane CIF NWE 7kt+' AND urakkatyyppi = 'paallystys'),
+   (SELECT id FROM urakkatyypin_indeksi WHERE indeksinimi = 'Platts: ULSD 10ppmS CIF NWE Cargo' AND urakkatyyppi = 'paallystys'),
+  2016, 2015, 9, (SELECT id FROM urakka where nimi = 'Muhoksen päällystysurakka')),
   ((SELECT id FROM urakkatyypin_indeksi WHERE indeksinimi = 'Platts: FO 3,5%S CIF NWE Cargo' AND urakkatyyppi = 'paallystys'),
    (SELECT id FROM urakkatyypin_indeksi WHERE indeksinimi = 'Platts: Propane CIF NWE 7kt+' AND urakkatyyppi = 'paallystys'),
    (SELECT id FROM urakkatyypin_indeksi WHERE indeksinimi = 'Platts: ULSD 10ppmS CIF NWE Cargo' AND urakkatyyppi = 'paallystys'),
-  2017, 2016, 9, (SELECT id FROM urakka where nimi = 'Muhoksen päällystysurakka'));
+   2017, 2016, 9, (SELECT id FROM urakka where nimi = 'Muhoksen päällystysurakka'));
 
-
-INSERT INTO urakkatyypin_indeksi(urakkatyyppi, indeksinimi, koodi, raakaaine)
-VALUES
-  ('paallystys'::urakkatyyppi, 'Platts: testiindeksi XYZ', 'TESTIKOODI', 'raskas_polttooljy'); -- bitumin arvoa varten
