@@ -251,8 +251,9 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
            :tyhja (if (nil? @tiedot) [ajax-loader "Ladataan toteumia"] "Ei toteumia")
            :tallenna @tallenna
            :voi-lisata? false
-           :esta-poistaminen? (fn [rivi] (:jarjestelmanlisaama rivi))
+           :esta-poistaminen? (comp :jarjestelmanlisaama :toteuma)
            :esta-poistaminen-tooltip (fn [_] "Järjestelmän lisäämää toteumaa ei voi poistaa.")
+           :voi-muokata-rivia? (comp not :jarjestelmanlisaama :toteuma)
            :tunniste :tmid}
           [{:otsikko "Päivämäärä"
             :tyyppi :pvm
@@ -261,7 +262,6 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
             :hae (comp pvm/pvm :alkanut :toteuma)
             :muokattava? (constantly false)}
            {:otsikko "Määrä"
-            :muokattava? (comp not :jarjestelmanlisaama :toteuma)
             :nimi :toteuman_maara
             :tyyppi :positiivinen-numero
             :hae (comp :maara :toteuma)
