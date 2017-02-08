@@ -98,10 +98,11 @@
         maaramuutokset (let [maaramuutokset (maaramuutokset/hae-maaramuutokset
                                               db user {:yllapitokohde-id paallystyskohde-id
                                                        :urakka-id urakka-id})]
-                         (:tulos (paallystys-ja-paikkaus/summaa-maaramuutokset maaramuutokset)))
+                         (paallystys-ja-paikkaus/summaa-maaramuutokset maaramuutokset))
         paallystysilmoitus (assoc paallystysilmoitus
                              :kokonaishinta kokonaishinta
-                             :maaramuutokset maaramuutokset
+                             :maaramuutokset (:tulos maaramuutokset)
+                             :maaramuutokset-ennustettu? (:ennustettu? maaramuutokset)
                              :paallystyskohde-id paallystyskohde-id
                              :kommentit kommentit)]
     (log/debug "Päällystysilmoitus kasattu: " (pr-str paallystysilmoitus))
