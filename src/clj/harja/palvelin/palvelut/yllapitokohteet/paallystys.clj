@@ -98,6 +98,7 @@
         maaramuutokset (let [maaramuutokset (maaramuutokset/hae-maaramuutokset
                                               db user {:yllapitokohde-id paallystyskohde-id
                                                        :urakka-id urakka-id})]
+                         (log/debug "MÄÄRÄMUUTOKSET DEBUG: " (pr-str maaramuutokset))
                          (paallystys-ja-paikkaus/summaa-maaramuutokset maaramuutokset))
         paallystysilmoitus (assoc paallystysilmoitus
                              :kokonaishinta kokonaishinta
