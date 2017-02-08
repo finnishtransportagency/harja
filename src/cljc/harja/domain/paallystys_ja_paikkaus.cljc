@@ -56,8 +56,8 @@
 
 (defn maaramuutoksissa-ennustettuja-maaria? [tyot]
   (boolean (some #(and (:ennustettu-maara %)
-               (not (:toteutunut-maara %)))
-         tyot)))
+                       (not (:toteutunut-maara %)))
+                 tyot)))
 
 (defn summaa-maaramuutokset
   "Laskee ilmoitettujen töiden toteutumien erotuksen tilattuun määrään ja summaa tulokset yhteen.
@@ -71,12 +71,8 @@
                       ennustettu-maara (:ennustettu-maara tyo)
                       toteutunut-maara (:toteutunut-maara tyo)
                       yksikkohinta (:yksikkohinta tyo)]
-                  (cond (and tilattu-maara toteutunut-maara yksikkohinta)
-                        (* (- toteutunut-maara tilattu-maara) yksikkohinta)
-
-                        (and tilattu-maara ennustettu-maara yksikkohinta)
-                        (* (- ennustettu-maara tilattu-maara) yksikkohinta)
-
-                        :default 0)))
+                  (* (- (or toteutunut-maara ennustettu-maara)
+                        tilattu-maara)
+                     yksikkohinta)))
               (filter #(not= true (:poistettu %)) tyot)))
    :ennustettu? (maaramuutoksissa-ennustettuja-maaria? tyot)})
