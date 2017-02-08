@@ -104,9 +104,12 @@
   (mapv #(if (= (:yllapitokohdetyotyyppi %) :paallystys)
            (let [kohteen-maaramuutokset
                  (hae-maaramuutokset db user {:yllapitokohde-id (:id %)
-                                              :urakka-id urakka-id})]
-             (assoc % :maaramuutokset
-                      (paallystys-ja-paikkaus/summaa-maaramuutokset kohteen-maaramuutokset)))
+                                              :urakka-id urakka-id})
+                 summatut-maaramuutokset (paallystys-ja-paikkaus/summaa-maaramuutokset kohteen-maaramuutokset)
+                 maaramuutokset (:tulos summatut-maaramuutokset)
+                 maaramuutos-ennustettu? (:ennustettu? summatut-maaramuutokset)]
+             (assoc % :maaramuutokset maaramuutokset
+                      :maaramuutokset-ennustettu? maaramuutos-ennustettu?))
            %)
         yllapitokohteet))
 

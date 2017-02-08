@@ -20,7 +20,7 @@
     ;; Vain ennustettu
     (is (= (:tulos (paallystys-ja-paikkaus/summaa-maaramuutokset tyot4)) 1))
 
-    ;; -- Ennustettu tieto näytetään oikein? --
+    ;; -- Ennustettu tieto näytetään oikein --
 
     ;; Sekä ennustettu että toteutunut, ennustetta ei huomioida, tulos ei ennustettu
     (is (false? (:ennustettu? (paallystys-ja-paikkaus/summaa-maaramuutokset tyot3))))

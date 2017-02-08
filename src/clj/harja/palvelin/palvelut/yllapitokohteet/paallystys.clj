@@ -98,7 +98,7 @@
         maaramuutokset (let [maaramuutokset (maaramuutokset/hae-maaramuutokset
                                               db user {:yllapitokohde-id paallystyskohde-id
                                                        :urakka-id urakka-id})]
-                         (paallystys-ja-paikkaus/summaa-maaramuutokset maaramuutokset))
+                         (:tulos (paallystys-ja-paikkaus/summaa-maaramuutokset maaramuutokset)))
         paallystysilmoitus (assoc paallystysilmoitus
                              :kokonaishinta kokonaishinta
                              :maaramuutokset maaramuutokset
