@@ -287,13 +287,15 @@
       (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
       (q-paallystys/poista-yllapitokohteen-jarjestelman-kirjaamat-maaramuutokset! db {:yllapitokohdeid kohde-id
                                                                                       :jarjestelma jarjestelma})
-      (doseq [{{:keys [tunniste tyyppi tyo yksikko tilattu-maara toteutunut-maara yksikkohinta]} :maaramuutos}
+      (doseq [{{:keys [tunniste tyyppi tyo yksikko tilattu-maara
+                       toteutunut-maara yksikkohinta ennustettu-maara]} :maaramuutos}
               maaramuutokset]
         (let [parametrit {:yllapitokohde kohde-id
                           :tyon_tyyppi tyyppi
                           :tyo tyo
                           :yksikko yksikko
                           :tilattu_maara tilattu-maara
+                          :ennustettu_maara ennustettu-maara
                           :toteutunut_maara toteutunut-maara
                           :yksikkohinta yksikkohinta
                           :luoja (:id kayttaja)
