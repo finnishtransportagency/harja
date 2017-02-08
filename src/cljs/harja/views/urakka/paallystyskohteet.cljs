@@ -65,13 +65,13 @@
            :paikkaus
            #(reset! paallystys/harjan-paikkauskohteet (filter (comp not yllapitokohteet/yha-kohde?) %)))}]
 
+       [yllapitokohteet-view/yllapitokohteet-yhteensa
+        paallystys/kohteet-yhteensa {:nakyma :paallystys}]
+
        [vihje-elementti [:span
                          [:span "Huomioi etumerkki hinnanmuutoksissa. Ennustettuja määriä sisältävät kentät on värjätty "]
                          [:span.grid-solu-ennustettu "sinisellä"]
                          [:span "."]]]
-
-       [yllapitokohteet-view/yllapitokohteet-yhteensa
-        paallystys/kohteet-yhteensa {:nakyma :paallystys}]
 
        [:div.kohdeluettelon-paivitys
         [yha/paivita-kohdeluettelo ur oikeudet/urakat-kohdeluettelo-paallystyskohteet]

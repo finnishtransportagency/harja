@@ -529,8 +529,8 @@
           :komponentti (fn [rivi]
                          (let [maaramuutoksen-lasku (paallystys-ja-paikkaus/summaa-maaramuutokset [rivi])]
                            [:span {:class (when (:ennustettu? maaramuutoksen-lasku)
-                                           "grid-solu-ennustettu")}
-                           (fmt/euro-opt (:tulos maaramuutoksen-lasku))]))}]
+                                            "grid-solu-ennustettu")}
+                            (fmt/euro-opt (:tulos maaramuutoksen-lasku))]))}]
         @maaramuutokset]
        (when (some :jarjestelman-lisaama @maaramuutokset)
          [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])])))
@@ -656,13 +656,13 @@
                     :komponentti (fn [rivi]
                                    [:span {:class (when (:maaramuutokset-ennustettu? rivi)
                                                     "grid-solu-ennustettu")}
-                                    (+ (:sopimuksen-mukaiset-tyot rivi)
-                                       (:maaramuutokset rivi)
-                                       (:toteutunut-hinta rivi)
-                                       (:arvonvahennykset rivi)
-                                       (:bonukset-ja-sakot rivi)
-                                       (:bitumi-indeksi rivi)
-                                       (:kaasuindeksi rivi))])}]))
+                                    (fmt/euro-opt (+ (:sopimuksen-mukaiset-tyot rivi)
+                                                     (:maaramuutokset rivi)
+                                                     (:toteutunut-hinta rivi)
+                                                     (:arvonvahennykset rivi)
+                                                     (:bonukset-ja-sakot rivi)
+                                                     (:bitumi-indeksi rivi)
+                                                     (:kaasuindeksi rivi)))])}]))
           (sort-by tr/tiekohteiden-jarjestys @kohteet-atom)]
          [tr-virheilmoitus tr-virheet]]))))
 
@@ -731,6 +731,12 @@
        :leveys bitumi-indeksi-leveys :tasaa :oikea}
       {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero
        :leveys kaasuindeksi-leveys :tasaa :oikea}
-      {:otsikko "Kokonais\u00ADhinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt
-       :tyyppi :numero :leveys yhteensa-leveys :tasaa :oikea}]
+      {:otsikko "Kokonais\u00ADhinta (indeksit mukana)" :nimi :kokonaishinta
+       :tyyppi :komponentti :leveys yhteensa-leveys :tasaa :oikea
+       :komponentti
+       (fn [rivi]
+         (log "KOHTEET ATOMI " (pr-str @kohteet-atom))
+         [:span {:class (when (some :maaramuutokset-ennustettu? @kohteet-atom)
+                          "grid-solu-ennustettu")}
+          (fmt/euro-opt (:kokonaishinta rivi))])}]
      @yhteensa]))
