@@ -139,7 +139,7 @@
                              (if (<= i cols)
                                (recur (assoc row
                                         (keyword (-> (.getMetaData rs)
-                                             (.getColumnName i)))
+                                                     (.getColumnName i)))
                                         (.getObject rs i))
                                       (inc i))
                                row)))
@@ -221,11 +221,11 @@
 
       (kutsu-karttakuvapalvelua [_ nimi kayttaja payload koordinaatti extent]
         ((get @palvelut :karttakuva-klikkaus)
-         kayttaja
-         {:parametrit (assoc payload "_" nimi)
-          :koordinaatti koordinaatti
-          :extent (or extent
-                      [-550093.049087613 6372322.595126259 1527526.529326106 7870243.751025201])})))))
+          kayttaja
+          {:parametrit (assoc payload "_" nimi)
+           :koordinaatti koordinaatti
+           :extent (or extent
+                       [-550093.049087613 6372322.595126259 1527526.529326106 7870243.751025201])})))))
 
 
 (defn kutsu-http-palvelua
@@ -424,21 +424,24 @@
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE suorittava_tiemerkintaurakka = " tiemerkintaurakka-id ";"))))
 
-(defn pura-tr-osoite [[numero aosa aet losa loppuet]]
+(defn pura-tr-osoite [[numero aosa aet losa loppuet kaista ajorata]]
   {:numero numero
    :aosa aosa
    :aet aet
    :losa losa
-   :loppuet loppuet})
+   :loppuet loppuet
+   :kaista kaista
+   :ajorata ajorata})
 
 (defn hae-yllapitokohteen-tr-osoite [kohde-id]
-  (pura-tr-osoite (first (q (str "SELECT tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys
+  (pura-tr-osoite (first (q (str "SELECT tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
+                                         tr_kaista, tr_ajorata
                                   FROM yllapitokohde WHERE id = " kohde-id ";")))))
 
 (defn hae-yllapitokohteen-kohdeosien-tr-osoitteet [kohde-id]
   (map
     pura-tr-osoite
-    (q (str "SELECT tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys
+    (q (str "SELECT tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_kaista, tr_ajorata
              FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id ";"))))
 
 ;; Määritellään käyttäjiä, joita testeissä voi käyttää
@@ -690,8 +693,8 @@
 
 (defn q-sanktio-leftjoin-laatupoikkeama [sanktio-id]
   (first (q-map
-     "SELECT s.id, s.maara as summa, s.poistettu, s.perintapvm, s.sakkoryhma as laji,
-             lp.id as lp_id, lp.aika as lp_aika, lp.poistettu as lp_poistettu
-        FROM sanktio s
-             LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
-       WHERE s.id = " sanktio-id ";")))
+           "SELECT s.id, s.maara as summa, s.poistettu, s.perintapvm, s.sakkoryhma as laji,
+                   lp.id as lp_id, lp.aika as lp_aika, lp.poistettu as lp_poistettu
+              FROM sanktio s
+                   LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
+             WHERE s.id = " sanktio-id ";")))

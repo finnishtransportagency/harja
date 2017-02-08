@@ -168,7 +168,7 @@
                :hae (fn [rivi]
                       (str "Järjestelmä (" (get-in rivi [:suorittaja :nimi]) ")"))
                :muokattava? (constantly false)
-               :vihje toteumat/ilmoitus-jarjestelman-muokkaama-toteuma})
+               :vihje toteumat/ilmoitus-jarjestelman-luoma-toteuma})
             {:otsikko     "Päivämäärä"
              :nimi        :alkanut
              :pakollinen? true
