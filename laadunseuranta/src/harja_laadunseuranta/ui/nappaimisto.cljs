@@ -7,7 +7,7 @@
              :refer [numeronappain-painettu!
                      tyhjennyspainike-painettu! syotto-onnistui!
                      lopeta-mittaus-painettu!
-                     kirjaa-mittaus! syoton-rajat syotto-validi?
+                     kirjaa-mittaus! syotto-validi? syottosaannot
                      soratienappaimiston-numeronappain-painettu!]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [harja-laadunseuranta.ui.yleiset.napit :refer [nappi]]
@@ -130,13 +130,20 @@
     [soratienappaimiston-numeropainike {:syotto-atom syotto-atom :syottotyyppi :polyavyys
                                         :numero 1 :numeronappain-painettu numeronappain-painettu}]]])
 
-(defn- numeronappaimiston-numero [{:keys [numeronappain-painettu numero mittaustyyppi syotto-atom]}]
+(defn- numeronappaimiston-painike [{:keys [id on-click :lisaluokat-str disabled sisalto]}]
   ;; NOTE Oikeaoppisesti nappien kuuluisi olla <button> elementtejä, mutta jostain
   ;; syystä iPadin safari piirtää tällöin vain kaksi nappia samalle riville.
   [:div
-   {:class "nappaimiston-painike"
-    :id (str "nappaimiston-painike-" numero)
-    :on-click #(numeronappain-painettu numero mittaustyyppi syotto-atom)} (str numero)])
+   {:class (str "nappaimiston-painike " lisaluokat-str)
+    :disabled (not syotto-validi?)
+    :id (str "nappaimiston-painike-" id)
+    :on-click on-click}
+   (when sisalto
+     sisalto)])
+
+(defn- numeronappaimiston-numero [{:keys [numeronappain-painettu numero mittaustyyppi syotto-atom]}]
+  [numeronappaimiston-painike {:sisalto numero
+                               :on-click #(numeronappain-painettu numero mittaustyyppi syotto-atom)}])
 
 (defn- numeronappaimisto [{:keys [syotto-atom kirjaa-arvo mittaustyyppi
                                   numeronappain-painettu syotto-validi? syotto-onnistui]
@@ -164,23 +171,21 @@
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
       [numeronappaimiston-numero {:numero 3 :syotto-atom syotto-atom
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
-      [:div
-       {:class "nappaimiston-painike"
-        :id "nappaimiston-painike-delete"
-        :on-click #(tyhjennyspainike-painettu! mittaustyyppi syotto-atom)}
-       [kuvat/svg-sprite "askelpalautin-24"]]
+
+      [numeronappaimiston-painike {:id "delete"
+                                   :on-click #(tyhjennyspainike-painettu! mittaustyyppi syotto-atom)
+                                   :sisalto [kuvat/svg-sprite "askelpalautin-24"]}]
       [numeronappaimiston-numero {:numero 0 :syotto-atom syotto-atom
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
-      [:div
-       {:disabled (not syotto-validi?)
-        :class (str "nappaimiston-painike nappaimiston-painike-ok "
-                    (when-not syotto-validi?
-                      "nappaimiston-painike-disabloitu"))
-        :id "nappaimiston-painike-ok"
-        :on-click #(when syotto-validi?
-                     (when (kirjaa-arvo (fmt/string->numero (:nykyinen-syotto @syotto-atom)))
-                       (syotto-onnistui mittaustyyppi syotto-atom)))}
-       [kuvat/svg-sprite "tarkistus-24"]]]]))
+      [numeronappaimiston-painike {:id "ok"
+                                   :lisaluokat-str (str "nappaimiston-painike-ok "
+                                                    (when-not syotto-validi?
+                                                      "nappaimiston-painike-disabloitu"))
+                                   :disabled (not syotto-validi?)
+                                   :on-click #(when syotto-validi?
+                                                (when (kirjaa-arvo (fmt/string->numero (:nykyinen-syotto @syotto-atom)))
+                                                  (syotto-onnistui mittaustyyppi syotto-atom)))
+                                   :sisalto [kuvat/svg-sprite "tarkistus-24"]}]]]))
 
 (defn- nappaimistokomponentti [{:keys [mittaustyyppi] :as tiedot}]
   (let [nayta-syottokentta? (not= mittaustyyppi :soratie)]
@@ -202,7 +207,7 @@
                         2)
            :syotetty-arvo (:nykyinen-syotto @mittaussyotto-atom)
            :yksikko mittausyksikko
-           :rajat (mittaustyyppi syoton-rajat)}]
+           :rajat (get-in syottosaannot [mittaustyyppi :rajat])}]
          (when nayta-syottokentta?
            [syottokentta mittaussyotto-atom mittausyksikko])]
         [:div.nappaimisto-oikea
