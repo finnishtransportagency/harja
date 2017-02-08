@@ -227,7 +227,7 @@
              {:otsikko "Lähde" :nimi :luoja :tyyppi :string
               :hae (fn [rivi] (str "Järjestelmä (" (:luoja rivi) " / " (:organisaatio rivi) ")"))
               :muokattava? (constantly false)
-              :vihje toteumat/ilmoitus-jarjestelman-muokkaama-toteuma})
+              :vihje toteumat/ilmoitus-jarjestelman-luoma-toteuma})
            {:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
            {:otsikko "Aloitus" :nimi :alkanut :pakollinen? true :tyyppi :pvm
             :uusi-rivi? true
@@ -277,8 +277,11 @@
         aikavali [(first @u/valittu-aikavali) (second @u/valittu-aikavali)]
         toteutuneet-tehtavat (atom nil)
         tallenna (reaction
-                   (if (or (nil? @toteutuneet-tehtavat)
-                           (every? :jarjestelmanlisaama @toteutuneet-tehtavat))
+                   (if (or
+                         (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-yksikkohintaisettyot
+                                                        (:id @nav/valittu-urakka)))
+                         (nil? @toteutuneet-tehtavat)
+                         (every? :jarjestelmanlisaama @toteutuneet-tehtavat))
                      :ei-mahdollinen
                      #(go (let [vastaus (<! (toteumat/paivita-yk-hint-toteumien-tehtavat
                                               urakka-id
@@ -300,7 +303,6 @@
         {:otsikko (str "Yksilöidyt tehtävät: " (:nimi toteuma-rivi))
          :tyhja (if (nil? @toteutuneet-tehtavat) [ajax-loader "Haetaan..."] "Toteumia ei löydy")
          :tallenna @tallenna
-         :tallennus-ei-mahdollinen-tooltip (constantly "Kaikki toteumat ovat järjestelmän lisäämiä.")
          :voi-lisata? false
          :esta-poistaminen? (fn [rivi] (:jarjestelmanlisaama rivi))
          :esta-poistaminen-tooltip (fn [_] "Järjestelmän lisäämää kohdetta ei voi poistaa.")

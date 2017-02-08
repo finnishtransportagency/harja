@@ -14,7 +14,8 @@
             [harja-laadunseuranta.tiedot.tr-haku :as tr-haku]
             [harja-laadunseuranta.ui.havaintolomake :refer [havaintolomake]]
             [harja-laadunseuranta.ui.tarkastusajon-paattaminen :as tarkastusajon-paattaminen]
-            [cljs.core.async :refer [<! timeout]])
+            [cljs.core.async :refer [<! timeout]]
+            [harja-laadunseuranta.ui.yleiset.varmistusdialog :as varmistusdialog])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn- spinneri [lahettamattomia]
@@ -26,6 +27,9 @@
    [kamera/file-input
     #(kamera-tiedot/kuva-otettu % s/kuvaa-otetaan?)]
    [ylapalkki/ylapalkki]
+
+   (when @s/varmistusdialog-nakyvissa?
+     [varmistusdialog/varmistusdialog-komponentti @s/varmistusdialog-data])
 
    [:div.paasisalto-container
     [kartta/kartta]
