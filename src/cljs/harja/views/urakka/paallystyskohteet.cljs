@@ -8,7 +8,7 @@
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
             [harja.ui.komponentti :as komp]
             [harja.views.kartta :as kartta]
-            [harja.ui.yleiset :refer [vihje]]
+            [harja.ui.yleiset :refer [vihje-elementti]]
             [harja.ui.komponentti :as komp]
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
@@ -65,7 +65,10 @@
            :paikkaus
            #(reset! paallystys/harjan-paikkauskohteet (filter (comp not yllapitokohteet/yha-kohde?) %)))}]
 
-       [vihje "Huomioi etumerkki hinnanmuutoksissa. Ennustettuja määriä sisältävät kentät on värjätty sinisellä."]
+       [vihje-elementti [:span
+                         [:span "Huomioi etumerkki hinnanmuutoksissa. Ennustettuja määriä sisältävät kentät on värjätty "]
+                         [:span.grid-solu-ennustettu "sinisellä"]
+                         [:span "."]]]
 
        [yllapitokohteet-view/yllapitokohteet-yhteensa
         paallystys/kohteet-yhteensa {:nakyma :paallystys}]

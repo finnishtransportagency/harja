@@ -529,7 +529,7 @@
           :komponentti (fn [rivi]
                          (let [maaramuutoksen-lasku (paallystys-ja-paikkaus/summaa-maaramuutokset [rivi])]
                            [:span {:class (when (:ennustettu? maaramuutoksen-lasku)
-                                           "ennustettu-maaramuutos")}
+                                           "grid-solu-ennustettu")}
                            (fmt/euro-opt (:tulos maaramuutoksen-lasku))]))}]
         @maaramuutokset]
        (when (some :jarjestelman-lisaama @maaramuutokset)
@@ -631,7 +631,7 @@
                       :tyyppi :komponentti :leveys maaramuutokset-leveys :tasaa :oikea
                       :komponentti (fn [rivi]
                                      [:span {:class (when (:maaramuutokset-ennustettu? rivi)
-                                                      "ennustettu-maaramuutos")}
+                                                      "grid-solu-ennustettu")}
                                       (fmt/euro-opt (:maaramuutokset rivi))])})
                    (when (= (:kohdetyyppi optiot) :paikkaus)
                      {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta
@@ -651,15 +651,18 @@
                    {:otsikko (str "Ko\u00ADko\u00ADnais\u00ADhinta"
                                   " (ind\u00ADek\u00ADsit mu\u00ADka\u00ADna)")
                     :muokattava? (constantly false)
-                    :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys yhteensa-leveys
+                    :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :komponentti :leveys yhteensa-leveys
                     :tasaa :oikea
-                    :hae (fn [rivi] (+ (:sopimuksen-mukaiset-tyot rivi)
+                    :komponentti (fn [rivi]
+                                   [:span {:class (when (:maaramuutokset-ennustettu? rivi)
+                                                    "grid-solu-ennustettu")}
+                                    (+ (:sopimuksen-mukaiset-tyot rivi)
                                        (:maaramuutokset rivi)
                                        (:toteutunut-hinta rivi)
                                        (:arvonvahennykset rivi)
                                        (:bonukset-ja-sakot rivi)
                                        (:bitumi-indeksi rivi)
-                                       (:kaasuindeksi rivi)))}]))
+                                       (:kaasuindeksi rivi))])}]))
           (sort-by tr/tiekohteiden-jarjestys @kohteet-atom)]
          [tr-virheilmoitus tr-virheet]]))))
 
