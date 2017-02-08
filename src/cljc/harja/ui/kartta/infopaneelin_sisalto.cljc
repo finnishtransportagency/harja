@@ -124,8 +124,7 @@
             {:otsikko "Tietolaji" :tyyppi :string :nimi :tietolaji}
             {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide
              :hae (hakufunktio :toimenpide #(varusteet/varuste-toimenpide->string (:toimenpide %)))}
-            {:otsikko "Kuntoluokka" :tyyppi :string :nimi :kuntoluokka}
-            {:otsikko "Avaa varustekortti" :tyyppi :linkki :nimi :varustekortti-url}]
+            {:otsikko "Kuntoluokka" :tyyppi :string :nimi :kuntoluokka}]
    :data toteuma})
 
 (defn- yllapitokohde-skeema
