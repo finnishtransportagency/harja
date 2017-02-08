@@ -1,7 +1,9 @@
 // Näppäimistö
 
+@nappaimoston-leveys: 240px;
+
 .nappaimisto {
-  width: 240px;
+  width: @nappaimoston-leveys;
   background-color: @sisaltolaatikoiden-taustavari;
   border: @sisaltolaatikoiden-reunaviiva;
   box-sizing: border-box;
@@ -13,6 +15,12 @@
     font-weight: bold;
     text-align: center;
     min-height: 50px;
+
+    > .nappaimiston-syottovaroitus {
+      text-align: center;
+      color: @punainen6;
+      font-weight: normal;
+    }
   }
 
   .nappaimiston-syottokentta {
@@ -80,6 +88,14 @@
     }
   }
 
+  .nappaimiston-painike-leveys-tupla {
+    width: @nappaimiston-painike-leveys * 2
+  }
+
+  .nappaimiston-painike-leveys-puolet {
+    width: (@nappaimoston-leveys / 2%) - 8;
+  }
+
   .nappaimiston-painike:active:not(.nappaimiston-painike-disabloitu) {
     background-color: @nappi-aktiivinen;
   }
@@ -94,12 +110,6 @@
 
   .nappaimiston-painike-disabloitu {
     background-color: @harmaa6;
-  }
-
-  .nappaimiston-syottovaroitus {
-    text-align: center;
-    color: @punainen6;
-    font-weight: normal;
   }
 }
 

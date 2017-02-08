@@ -11,13 +11,16 @@
 
 (def syottosaannot {:kitkamittaus {:lahtoarvo "0,"
                                    :rajat [0.01 0.99]
-                                   :max-merkkimaara 4}
+                                   :max-merkkimaara 4
+                                   :salli-syottaa-desimaalierotin? false} ;; On jo mukana lähtöarvossa
                     :lumisuus {:lahtoarvo ""
                                :rajat [0 100]
-                               :max-merkkimaara 3}
+                               :max-merkkimaara 3
+                               :salli-syottaa-desimaalierotin? false}
                     :talvihoito-tasaisuus {:lahtoarvo ""
                                            :rajat [0 100]
-                                           :max-merkkimaara 3}})
+                                           :max-merkkimaara 3
+                                           :salli-syottaa-desimaalierotin? true}})
 
 ;; Näppäimistön toiminnallisuus
 

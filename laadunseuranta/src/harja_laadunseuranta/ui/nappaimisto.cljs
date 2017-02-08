@@ -134,15 +134,21 @@
   ;; NOTE Oikeaoppisesti nappien kuuluisi olla <button> elementtejä, mutta jostain
   ;; syystä iPadin safari piirtää tällöin vain kaksi nappia samalle riville.
   [:div
-   {:class (str "nappaimiston-painike " lisaluokat-str)
+   {:class (str "nappaimiston-painike "
+                (when disabled
+                  "nappaimiston-painike-disabloitu ")
+                lisaluokat-str)
     :disabled disabled
     :id (str "nappaimiston-painike-" id)
     :on-click on-click}
    (when sisalto
      sisalto)])
 
-(defn- numeronappaimiston-numero [{:keys [numeronappain-painettu numero mittaustyyppi syotto-atom]}]
+(defn- numeronappaimiston-numero [{:keys [numeronappain-painettu numero
+                                          mittaustyyppi syotto-atom lisaluokat-str]}]
   [numeronappaimiston-painike {:sisalto numero
+                               :id numero
+                               :lisaluokat-str lisaluokat-str
                                :on-click #(numeronappain-painettu numero mittaustyyppi syotto-atom)}])
 
 (defn- numeronappaimisto [{:keys [syotto-atom kirjaa-arvo mittaustyyppi
@@ -172,15 +178,22 @@
       [numeronappaimiston-numero {:numero 3 :syotto-atom syotto-atom
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
 
+      [numeronappaimiston-numero {:numero 0 :syotto-atom syotto-atom
+                                  :lisaluokat-str "nappaimiston-painike-leveys-tupla"
+                                  :mittaustyyppi mittaustyyppi
+                                  :numeronappain-painettu numeronappain-painettu}]
+      [numeronappaimiston-painike {:id "pilkku"
+                                   :disabled (not (get-in syottosaannot
+                                                          [mittaustyyppi :salli-syottaa-desimaalierotin?]))
+                                   :on-click #(.log js/console "Painoit pilkkua!")
+                                   :sisalto ","}]
+
       [numeronappaimiston-painike {:id "delete"
+                                   :lisaluokat-str "nappaimiston-painike-leveys-puolet"
                                    :on-click #(tyhjennyspainike-painettu! mittaustyyppi syotto-atom)
                                    :sisalto [kuvat/svg-sprite "askelpalautin-24"]}]
-      [numeronappaimiston-numero {:numero 0 :syotto-atom syotto-atom
-                                  :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
       [numeronappaimiston-painike {:id "ok"
-                                   :lisaluokat-str (str "nappaimiston-painike-ok "
-                                                    (when-not syotto-validi?
-                                                      "nappaimiston-painike-disabloitu"))
+                                   :lisaluokat-str "nappaimiston-painike-ok nappaimiston-painike-leveys-puolet"
                                    :disabled (not syotto-validi?)
                                    :on-click #(when syotto-validi?
                                                 (when (kirjaa-arvo (fmt/string->numero (:nykyinen-syotto @syotto-atom)))
