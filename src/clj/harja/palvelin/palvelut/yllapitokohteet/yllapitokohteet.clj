@@ -30,8 +30,7 @@
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.id :refer [id-olemassa?]])
-  (:use org.httpkit.fake)
-  (:import (com.sun.xml.internal.bind.v2 TODO)))
+  (:use org.httpkit.fake))
 
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
