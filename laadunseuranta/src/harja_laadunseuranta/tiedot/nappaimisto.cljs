@@ -19,7 +19,7 @@
                                :salli-syottaa-desimaalierotin? false}
                     :talvihoito-tasaisuus {:lahtoarvo ""
                                            :rajat [0 100]
-                                           :max-merkkimaara 3
+                                           :max-merkkimaara 4
                                            :salli-syottaa-desimaalierotin? true}})
 
 ;; Näppäimistön toiminnallisuus

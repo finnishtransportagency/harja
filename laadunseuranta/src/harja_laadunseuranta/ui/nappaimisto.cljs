@@ -154,7 +154,8 @@
 (defn- numeronappaimisto [{:keys [syotto-atom kirjaa-arvo mittaustyyppi
                                   numeronappain-painettu syotto-validi? syotto-onnistui]
                            :as tiedot}]
-  (let [syotto-validi? (syotto-validi? mittaustyyppi (:nykyinen-syotto @syotto-atom))]
+  (let [nykyinen-syotto (:nykyinen-syotto @syotto-atom)
+        syotto-validi? (syotto-validi? mittaustyyppi nykyinen-syotto)]
     [:div.numeronappaimisto
      [:div.nappaimiston-painikekentat
       [numeronappaimiston-numero {:numero 7 :syotto-atom syotto-atom
@@ -183,8 +184,9 @@
                                   :mittaustyyppi mittaustyyppi
                                   :numeronappain-painettu numeronappain-painettu}]
       [numeronappaimiston-painike {:id "pilkku"
-                                   :disabled (not (get-in syottosaannot
-                                                          [mittaustyyppi :salli-syottaa-desimaalierotin?]))
+                                   :disabled (or (not (get-in syottosaannot
+                                                           [mittaustyyppi :salli-syottaa-desimaalierotin?]))
+                                                 (empty? nykyinen-syotto)) ;; Pilkku ei voi olla ensimmäinen
                                    :on-click #(.log js/console "Painoit pilkkua!")
                                    :sisalto ","}]
 
@@ -196,7 +198,7 @@
                                    :lisaluokat-str "nappaimiston-painike-ok nappaimiston-painike-leveys-puolet"
                                    :disabled (not syotto-validi?)
                                    :on-click #(when syotto-validi?
-                                                (when (kirjaa-arvo (fmt/string->numero (:nykyinen-syotto @syotto-atom)))
+                                                (when (kirjaa-arvo (fmt/string->numero nykyinen-syotto))
                                                   (syotto-onnistui mittaustyyppi syotto-atom)))
                                    :sisalto [kuvat/svg-sprite "tarkistus-24"]}]]]))
 
