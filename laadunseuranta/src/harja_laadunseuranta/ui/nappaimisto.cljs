@@ -135,7 +135,7 @@
   ;; syystä iPadin safari piirtää tällöin vain kaksi nappia samalle riville.
   [:div
    {:class (str "nappaimiston-painike " lisaluokat-str)
-    :disabled (not syotto-validi?)
+    :disabled disabled
     :id (str "nappaimiston-painike-" id)
     :on-click on-click}
    (when sisalto
