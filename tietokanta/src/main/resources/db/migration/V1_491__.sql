@@ -80,7 +80,3 @@ CREATE CONSTRAINT TRIGGER tg_paivita_urakan_materiaalin_kaytto_hoitoluokittain
  FOR EACH ROW
  WHEN (NEW.lahde = 'harja-api')
  EXECUTE PROCEDURE paivita_urakan_materiaalin_kaytto_hoitoluokittain();
-
--- FIXME: mitä jos toteuma poistetaan?
--- tee triggeri, joka poistaa tai modaa ylempää tekemään määrää vähentävä
--- update poiston tapauksessa
