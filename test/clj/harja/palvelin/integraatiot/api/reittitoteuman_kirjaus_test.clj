@@ -128,7 +128,7 @@
                  ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                  (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                      slurp
-                     (.replace "__ID__" (str (tyokalut/hae-vapaa-toteuma-ulkoinen-id)))
+                     (.replace "__ID__" (str ulkoinen-id))
                      (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
     (is (= 200 (:status vastaus)) "Reittitoteuman tallennus onnistuu")
     ulkoinen-id))
@@ -167,6 +167,7 @@
 
           (testing "Ensimmäisen toteuman poistaminen vähentää määriä"
             (poista-toteuma ulkoinen-id)
+
             (let [rivit3 (hae-materiaalit)
                   maara3 (-> rivit3 first last)]
               (is (= 1 (count rivit3)) "Rivejä on sama määrä")
