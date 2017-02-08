@@ -130,7 +130,7 @@
     [soratienappaimiston-numeropainike {:syotto-atom syotto-atom :syottotyyppi :polyavyys
                                         :numero 1 :numeronappain-painettu numeronappain-painettu}]]])
 
-(defn- numeronappaimiston-painike [{:keys [id on-click :lisaluokat-str disabled sisalto]}]
+(defn- numeronappaimiston-painike [{:keys [id on-click lisaluokat-str disabled sisalto]}]
   ;; NOTE Oikeaoppisesti nappien kuuluisi olla <button> elementtejä, mutta jostain
   ;; syystä iPadin safari piirtää tällöin vain kaksi nappia samalle riville.
   [:div
