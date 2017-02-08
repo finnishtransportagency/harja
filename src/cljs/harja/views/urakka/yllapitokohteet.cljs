@@ -661,7 +661,6 @@
                                        (:bitumi-indeksi rivi)
                                        (:kaasuindeksi rivi)))}]))
           (sort-by tr/tiekohteiden-jarjestys @kohteet-atom)]
-         [vihje "Huomioi etumerkki hinnanmuutoksissa."]
          [tr-virheilmoitus tr-virheet]]))))
 
 (defn yllapitokohteet-yhteensa [kohteet-atom optiot]
