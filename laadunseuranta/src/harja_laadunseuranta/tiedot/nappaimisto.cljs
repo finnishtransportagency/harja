@@ -10,14 +10,14 @@
             [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset]))
 
 (def syottosaannot {:kitkamittaus {:lahtoarvo "0,"
-                                  :rajat [0.01 0.99]
-                                  :max-merkkimaara 4}
-                   :lumisuus {:lahtoarvo ""
-                              :rajat [0 100]
-                              :max-merkkimaara 3}
-                   :talvihoito-tasaisuus {:lahtoarvo ""
-                                          :rajat [0 100]
-                                          :max-merkkimaara 3}})
+                                   :rajat [0.01 0.99]
+                                   :max-merkkimaara 4}
+                    :lumisuus {:lahtoarvo ""
+                               :rajat [0 100]
+                               :max-merkkimaara 3}
+                    :talvihoito-tasaisuus {:lahtoarvo ""
+                                           :rajat [0 100]
+                                           :max-merkkimaara 3}})
 
 ;; Näppäimistön toiminnallisuus
 
