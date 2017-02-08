@@ -110,12 +110,12 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
             (swap! atomi paivita-toteuma-materiaalit materiaalit))))))
 
 (defn materiaalit-ja-maarat
-  [materiaalit-atom virheet-atom koneen-lisaama?]
+  [materiaalit-atom virheet-atom jarjestelman-luoma?]
 
   [grid/muokkaus-grid
    {:tyhja "Ei materiaaleja."
     :muutos (fn [g] (reset! virheet-atom (grid/hae-virheet g)))
-    :voi-muokata? (and (not koneen-lisaama?)
+    :voi-muokata? (and (not jarjestelman-luoma?)
                        (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka)))}
    [{:otsikko "Materiaali" :nimi :materiaali :tyyppi :valinta
      :valinnat @materiaalikoodit
@@ -163,8 +163,8 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
 
               materiaalien-virheet (wrap (::materiaalivirheet @tiedot)
                                          #(swap! tiedot assoc ::materiaalivirheet %))
-              jarjestelman-luoma-fn (constantly (not (:jarjestelmanlisaama tiedot)))
               tiedot @tiedot
+              jarjestelman-luoma? (true? (:jarjestelmanlisaama tiedot))
               voi-tallentaa? (and (lomake/validi? tiedot)
                                   (> (count @materiaalitoteumat-mapissa) 0)
                                   (zero? (count @materiaalien-virheet)))]
@@ -175,7 +175,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                                "Luo uusi toteuma")
                     :luokka :horizontal
                     :voi-muokata? (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))
-                                       (not (jarjestelman-luoma-fn)))
+                                       (not jarjestelman-luoma?))
                     :muokkaa! muokkaa!
                     :footer [napit/palvelinkutsu-nappi
                              "Tallenna toteuma"
@@ -189,9 +189,10 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                                  (reset! urakan-materiaalin-kaytot %)
                                  (reset! valittu-materiaalin-kaytto nil))
                               :disabled (or (not voi-tallentaa?)
+                                            jarjestelman-luoma?
                                             (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))))}]}
 
-            [(when (jarjestelman-luoma-fn)
+            [(when jarjestelman-luoma?
                {:otsikko "Lähde" :nimi :luoja :tyyppi :string
                 :hae (fn [rivi] (str "Järjestelmä (" (:luoja rivi) " / " (:organisaatio rivi) ")"))
                 :muokattava? (constantly false)
@@ -200,7 +201,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
              {:otsikko "Aloitus" :pakollinen? true :uusi-rivi? true
               :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
               :huomauta [[:urakan-aikana-ja-hoitokaudella]]
-              :muokattava? jarjestelman-luoma-fn
+              :muokattava? (constantly (not jarjestelman-luoma?))
               :aseta (fn [rivi arvo]
                        (assoc
                          (if (or
@@ -213,8 +214,8 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
               :pakollinen? true
               :tyyppi :pvm :validoi [[:ei-tyhja "Anna lopetuspäivämäärä"]
                                      [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]
-              :muokattava? jarjestelman-luoma-fn}
-             (when (:jarjestelmanlisaama tiedot)
+              :muokattava? (constantly (not jarjestelman-luoma?))}
+             (when jarjestelman-luoma?
                {:otsikko "Lähde" :nimi :luoja :tyyppi :string
                 :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")")) :muokattava? (constantly false)})
              {:otsikko "Materiaalit" :nimi :materiaalit :palstoja 2
@@ -222,11 +223,13 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                              [materiaalit-ja-maarat
                               materiaalitoteumat-mapissa
                               materiaalien-virheet
-                              (:jarjestelmanlisaama tiedot)]) :tyyppi :komponentti}
-             {:otsikko "Suorittaja" :pakollinen? true :tyyppi :string :pituus-max 256 :muokattava? jarjestelman-luoma-fn :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
-             {:otsikko "Suorittajan y-tunnus" :pakollinen? true :tyyppi :string :pituus-max 256 :nimi :ytunnus :muokattava? jarjestelman-luoma-fn :validoi [[:ei-tyhja "Anna y-tunnus"]]}
+                              jarjestelman-luoma?]) :tyyppi :komponentti}
+             {:otsikko "Suorittaja" :pakollinen? true :tyyppi :string :pituus-max 256
+              :muokattava? (constantly (not jarjestelman-luoma?)) :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
+             {:otsikko "Suorittajan y-tunnus" :pakollinen? true :tyyppi :string :pituus-max 256
+              :nimi :ytunnus :muokattava? (constantly (not jarjestelman-luoma?)) :validoi [[:ei-tyhja "Anna y-tunnus"]]}
              {:otsikko "Lisätietoja" :tyyppi :text :palstoja 2 :koko [80 :auto]
-              :nimi :lisatieto :muokattava? jarjestelman-luoma-fn}]
+              :nimi :lisatieto :muokattava? (constantly (not jarjestelman-luoma?))}]
             tiedot]])))))
 
 (defn tarkastele-toteumaa-nappi [rivi]
@@ -243,7 +246,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                              (first sop)))
         tallenna (reaction
                    (if (or (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit
-                                                      (:id @nav/valittu-urakka)))
+                                                          (:id @nav/valittu-urakka)))
                            (nil? @tiedot)
                            (every? :jarjestelmanlisaama @tiedot))
                      :ei-mahdollinen
