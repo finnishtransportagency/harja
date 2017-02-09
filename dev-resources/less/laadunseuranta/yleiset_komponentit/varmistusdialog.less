@@ -1,0 +1,40 @@
+.varmistusdialog-container {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: @z-index-varmistusdialog;
+  display: flex;
+  justify-content: center;
+}
+
+.varmistusdialog {
+  background-color: white;
+  padding: 10px;
+  width: 450px;
+  max-width: 100%;
+  min-height: 100px;
+  align-self: center;
+
+  > .varmistus {
+    padding: 5px;
+  }
+
+  > .vastaus {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-around;
+  }
+}
+
+@media (max-width: @leveys-tabletti) {
+  .varmistusdialog {
+    > .vastaus {
+      flex-flow: column;
+
+      > * {
+        align-self: center;
+      }
+    }
+  }
+}

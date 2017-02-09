@@ -51,6 +51,7 @@
 
    ;; UI
    :ui {:tr-tiedot-nakyvissa? false
+        :varmistusdialog-data nil
         :paanavigointi {:nakyvissa? true
                         :valilehdet-nakyvissa? true
                         :valilehtiryhmat [] ; Näkyvien välilehtien määritykset {:avain ..., :nimi ... , :sisalto ...}
@@ -88,6 +89,7 @@
                                     :aet nil
                                     :losa nil
                                     :let nil}}
+   :lomake-koskettu? false ;; Tulisi olla true heti kun käyttäjä on muokannut uuden lomakkeen jotain kenttää
 
    :liittyvat-havainnot [] ;; Lista viimeisiä havaintoja, joihin lomake voidaan liittää
    ;; Item on map: {:id <indexeddb-id> :havainto-avain :lumista :aikaleima <aika> :tr-osoite <tr-osoite-mappi>}
@@ -130,6 +132,7 @@
 (def havaintolomake-auki? (reagent/cursor sovellus [:havaintolomake-auki?]))
 (def kuvaa-otetaan? (reagent/cursor sovellus [:kuvaa-otetaan?]))
 (def havaintolomakedata (reagent/cursor sovellus [:havaintolomakedata]))
+(def lomake-koskettu? (reagent/cursor sovellus [:lomake-koskettu?]))
 (def havaintolomakkeeseen-liittyva-havainto (reagent/cursor sovellus [:havaintolomakedata :liittyy-havaintoon]))
 (def liittyy-varmasti-tiettyyn-havaintoon? (reagent/cursor sovellus [:havaintolomakedata :liittyy-varmasti-tiettyyn-havaintoon?]))
 (def liittyvat-havainnot (reagent/cursor sovellus [:liittyvat-havainnot]))
@@ -233,6 +236,8 @@
                           (not @havaintolomake-auki?)))))
 
 (def nayta-paanavigointi? (reagent/cursor sovellus [:ui :paanavigointi :nakyvissa?]))
+(def varmistusdialog-data (reagent/cursor sovellus [:ui :varmistusdialog-data]))
+(def varmistusdialog-nakyvissa? (reaction (some? @varmistusdialog-data)))
 (def nayta-paanavigointi-valilehdet? (reagent/cursor sovellus [:ui :paanavigointi :valilehdet-nakyvissa?]))
 (def paanavigoinnin-valilehtiryhmat (reagent/cursor sovellus [:ui :paanavigointi :valilehtiryhmat]))
 (def paanavigoinnin-valittu-valilehtiryhma (reagent/cursor sovellus [:ui :paanavigointi :valittu-valilehtiryhma]))

@@ -8,6 +8,7 @@
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
             [harja.ui.komponentti :as komp]
             [harja.views.kartta :as kartta]
+            [harja.ui.yleiset :refer [vihje-elementti]]
             [harja.ui.komponentti :as komp]
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
@@ -66,6 +67,11 @@
 
        [yllapitokohteet-view/yllapitokohteet-yhteensa
         paallystys/kohteet-yhteensa {:nakyma :paallystys}]
+
+       [vihje-elementti [:span
+                         [:span "Huomioi etumerkki hinnanmuutoksissa. Ennustettuja määriä sisältävät kentät on värjätty "]
+                         [:span.grid-solu-ennustettu "sinisellä"]
+                         [:span "."]]]
 
        [:div.kohdeluettelon-paivitys
         [yha/paivita-kohdeluettelo ur oikeudet/urakat-kohdeluettelo-paallystyskohteet]

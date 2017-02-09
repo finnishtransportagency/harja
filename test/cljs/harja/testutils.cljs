@@ -134,7 +134,7 @@
           (sim/click elt nil))))))
 
 (defn change [path value]
-  (let [elt  (->elt path)]
+  (let [elt (->elt path)]
     (when elt
       (sim/change elt {:target {:value value}}))))
 
@@ -152,3 +152,11 @@
 
 (defn blur [path]
   (sim/blur (->elt path) nil))
+
+(defn input? [path]
+  (let [elt (->elt path)]
+    (when elt
+      (= "INPUT" (.-tagName elt)))))
+
+(defn print-html []
+  (println (.-innerHTML @*test-container*)))
