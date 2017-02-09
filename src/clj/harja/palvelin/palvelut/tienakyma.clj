@@ -57,6 +57,10 @@
 (defn- hae-toteumat [db parametrit]
   (kursori/hae-kanavaan
    (async/chan 32 (comp
+                    ;; Tässä ei haluta palauttaa varustetoteumia.
+                    ;; Tehokkain tapa estää varustetoteumien palautuminen on tehdä filtteröinti
+                    ;; täällä, koska kommentin kirjoittamisen hetkellä suodattaminen vaatisi SQL-puolella
+                    ;; raskaan EXISTS tarkastuksen.
                     (filter #(not (empty? (:tehtavat %))))
                     (map #(assoc % :tyyppi-kartalla :toteuma))))
    db q/hae-toteumat parametrit))
