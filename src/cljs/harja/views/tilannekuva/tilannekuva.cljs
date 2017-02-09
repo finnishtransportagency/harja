@@ -354,17 +354,10 @@
 
 (defn tilannekuva []
   (komp/luo
-    (komp/watcher tiedot/valittu-tila
-                  (fn [_ _ uusi-tila]
-                    (reset! kartta-tiedot/pida-geometriat-nakyvilla?
-                            (case uusi-tila
-                              :nykytilanne false
-                              :historiakuva false
-                              :tienakyma false
-                              false))))
     (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva istunto/ajastin-taukotilassa?)
     (komp/sisaan-ulos #(do (kartta/aseta-paivitetaan-karttaa-tila! true)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa @nav/valittu-urakka)
+                           (reset! kartta-tiedot/pida-geometriat-nakyvilla? false)
                            (kartta-tiedot/kasittele-infopaneelin-linkit!
                              {:paallystys
                               {:toiminto (fn [yllapitokohdeosa]
@@ -376,6 +369,7 @@
                            (kartta/aseta-paivitetaan-karttaa-tila! false)
                            (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa nil)
+                           (reset! kartta-tiedot/pida-geometriat-nakyvilla? kartta-tiedot/pida-geometria-nakyvilla-oletusarvo)
                            (tiedot/lopeta-alueiden-seuraus!)))
     (komp/karttakontrollit :tilannekuva
                            [hallintapaneeli])
