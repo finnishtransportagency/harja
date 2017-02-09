@@ -22,14 +22,15 @@
 
 (geolocation/setup-mock-geolocation!)
 
-(doo-tests 'harja-laadunseuranta.tiedot.projektiot-test
-           'harja-laadunseuranta.tiedot.nappaimisto-test
+(doo-tests ;'harja-laadunseuranta.tiedot.projektiot-test
+           ;'harja-laadunseuranta.tiedot.nappaimisto-test
            'harja-laadunseuranta.ui.nappaimisto-test
-           'harja-laadunseuranta.tiedot.paikannus-test
-           'harja-laadunseuranta.ui.kartta-test
-           'harja-laadunseuranta.tiedot.reitintallennus-test
-           'harja-laadunseuranta.core-test
-           'harja-laadunseuranta.ui.kamera-test
-           'harja-laadunseuranta.utils-test
-           'harja-laadunseuranta.ui.ylapalkki-test
-           'harja-laadunseuranta.tiedot.sovellus-test)
+           ;'harja-laadunseuranta.tiedot.paikannus-test
+           ;'harja-laadunseuranta.ui.kartta-test
+           ;'harja-laadunseuranta.tiedot.reitintallennus-test
+           ;'harja-laadunseuranta.core-test
+           ;'harja-laadunseuranta.ui.kamera-test
+           ;'harja-laadunseuranta.utils-test
+           ;'harja-laadunseuranta.ui.ylapalkki-test
+           ;'harja-laadunseuranta.tiedot.sovellus-test
+           )

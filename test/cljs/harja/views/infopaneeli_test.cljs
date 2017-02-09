@@ -6,10 +6,11 @@
              [harja.views.kartta.infopaneeli :as sut]
              [harja.ui.kartta.infopaneelin-sisalto :as infopaneelin-sisalto]
              [cljs-time.core :as time]
-             [harja.testutils :as u])
+             [harja.testutils.shared-testutils :as u]
+             [harja.testutils :refer [komponentti-fixture]])
   (:require-macros [harja.testutils.macros :refer [komponenttitesti]]))
 
-(t/use-fixtures :each u/komponentti-fixture)
+(t/use-fixtures :each komponentti-fixture)
 
 (defn make-time [y m d h m s]
   (cljs-time.core/local-date-time y m d h m s))

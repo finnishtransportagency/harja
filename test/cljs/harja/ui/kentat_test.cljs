@@ -2,7 +2,8 @@
   "Lomakekenttien komponenttitestejä"
   (:require [harja.ui.kentat :as kentat]
             [cljs.test :as t :refer-macros [deftest is testing async]]
-            [harja.testutils :as u]
+            [harja.testutils.shared-testutils :as u]
+            [harja.testutils :refer [komponentti-fixture fake-palvelut-fixture]]
             [cljs.core.async :as async]
             [reagent.core :as r]
             [cljs-react-test.simulate :as sim]
@@ -11,8 +12,8 @@
   (:require-macros [harja.testutils.macros :refer [komponenttitesti]]))
 
 (t/use-fixtures :each
-  u/komponentti-fixture
-  u/fake-palvelut-fixture)
+  komponentti-fixture
+  fake-palvelut-fixture)
 
 (deftest valinta
  (let [data (r/atom nil)]
