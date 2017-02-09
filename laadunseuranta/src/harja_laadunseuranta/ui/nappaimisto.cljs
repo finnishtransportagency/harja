@@ -4,7 +4,7 @@
             [harja-laadunseuranta.tiedot.math :as math]
             [harja-laadunseuranta.tiedot.fmt :as fmt]
             [harja-laadunseuranta.tiedot.nappaimisto
-             :refer [numeronappain-painettu! max-merkkimaara-saavutettu?
+             :refer [numeronappain-painettu! nykyisen-syotto-osan-max-merkkimaara-saavutettu?
                      tyhjennyspainike-painettu! syotto-onnistui!
                      lopeta-mittaus-painettu! desimaalierotin-painettu!
                      kirjaa-mittaus! syotto-validi? syottosaannot
@@ -161,37 +161,37 @@
     [:div.numeronappaimisto
      [:div.nappaimiston-painikekentat
       [numeronappaimiston-numero {:numero 7 :syotto-atom syotto-atom
-                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
+                                  :disabled (nykyisen-syotto-osan-max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
       [numeronappaimiston-numero {:numero 8 :syotto-atom syotto-atom
-                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
+                                  :disabled (nykyisen-syotto-osan-max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
       [numeronappaimiston-numero {:numero 9 :syotto-atom syotto-atom
-                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
+                                  :disabled (nykyisen-syotto-osan-max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
 
       [numeronappaimiston-numero {:numero 4 :syotto-atom syotto-atom
-                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
+                                  :disabled (nykyisen-syotto-osan-max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
       [numeronappaimiston-numero {:numero 5 :syotto-atom syotto-atom
-                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
+                                  :disabled (nykyisen-syotto-osan-max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
       [numeronappaimiston-numero {:numero 6 :syotto-atom syotto-atom
-                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
+                                  :disabled (nykyisen-syotto-osan-max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
 
       [numeronappaimiston-numero {:numero 1 :syotto-atom syotto-atom
-                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
+                                  :disabled (nykyisen-syotto-osan-max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
       [numeronappaimiston-numero {:numero 2 :syotto-atom syotto-atom
-                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
+                                  :disabled (nykyisen-syotto-osan-max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
       [numeronappaimiston-numero {:numero 3 :syotto-atom syotto-atom
-                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
+                                  :disabled (nykyisen-syotto-osan-max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
 
       [numeronappaimiston-numero {:numero 0 :syotto-atom syotto-atom
-                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
+                                  :disabled (nykyisen-syotto-osan-max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :lisaluokat-str "nappaimiston-painike-leveys-tupla"
                                   :mittaustyyppi mittaustyyppi
                                   :numeronappain-painettu numeronappain-painettu}]

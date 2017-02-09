@@ -25,10 +25,10 @@
                     :talvihoito-tasaisuus {:lahtoarvo ""
                                            :rajat [0 100]
                                            :kokonaisosan-merkkimaara 3
-                                           :desimaaliosan-merkkimaara 2
+                                           :desimaaliosan-merkkimaara 1
                                            :salli-syottaa-desimaalierotin? true}})
 
-(defn max-merkkimaara-saavutettu? [mittaustyyppi nykyinen-syotto]
+(defn nykyisen-syotto-osan-max-merkkimaara-saavutettu? [mittaustyyppi nykyinen-syotto]
   (let [syoton-tyyppi (if (number? (str/index-of nykyinen-syotto ",")) :desimaaliosa :kokonaisosa)
         kokonaisosan-merkkimaara (get-in syottosaannot [mittaustyyppi :kokonaisosan-merkkimaara])
         desimaaliosan-merkkimaara (get-in syottosaannot [mittaustyyppi :desimaaliosan-merkkimaara])
