@@ -66,17 +66,12 @@
         "Palautetuun rakenteen pitäisi olla jotain tällaista {:hoito {{:id 1 :nimi :lappi} {{:id 1 :nimi :kuusamon-urakka} false {:id 2 :nimi :rovaniemen-urakka} true}}}")))
 
 (deftest uusi-tai-vanha-suodattimen-arvo
-  (is (= true (tk/uusi-tai-vanha-suodattimen-arvo* nil true 1 1 1 1)) "Jos vanha arvo on nil, palautetaan uusi arvo")
-  (is (= false (tk/uusi-tai-vanha-suodattimen-arvo* nil false 1 1 1 1)) "Jos vanha arvo on nil, palautetaan uusi arvo")
+  (is (= true (tk/uusi-tai-vanha-suodattimen-arvo* nil true)) "Jos vanha arvo on nil, palautetaan uusi arvo")
+  (is (= false (tk/uusi-tai-vanha-suodattimen-arvo* nil false)) "Jos vanha arvo on nil, palautetaan uusi arvo")
 
-  (is (= true (tk/uusi-tai-vanha-suodattimen-arvo* false true 1 2 1 3)) "Jos urakka on sama kuin murupolun kautta valittu, palautetaan uusi arvo")
-  (is (= false (tk/uusi-tai-vanha-suodattimen-arvo* true false 1 2 1 3)) "Jos urakka on sama kuin murupolun kautta valittu, palautetaan uusi arvo")
-
-  (is (= true (tk/uusi-tai-vanha-suodattimen-arvo* false true 2 1 nil 1)) "Jos murupolun urakka on tyhjä, mutta hallintayksiksiköt mätsää, niin palautetaan uusi arvo")
-  (is (= false (tk/uusi-tai-vanha-suodattimen-arvo* true false 2 1 nil 1)) "Jos murupolun urakka on tyhjä, mutta hallintayksiksiköt mätsää, niin palautetaan uusi arvo")
-
-  (is (= true (tk/uusi-tai-vanha-suodattimen-arvo* true false 1 2 3 4)) "Oletuksena palautetaan vanha arvo")
-  (is (= false (tk/uusi-tai-vanha-suodattimen-arvo* false true 1 2 3 4)) "Oletuksena palautetaan vanha arvo"))
+  (is (= true (tk/uusi-tai-vanha-suodattimen-arvo* true false)) "Jos vanha arvo löytyy, käytä sitä")
+  (is (= false (tk/uusi-tai-vanha-suodattimen-arvo* false true)) "Jos vanha arvo löytyy, käytä sitä")
+  (is (= false (tk/uusi-tai-vanha-suodattimen-arvo* false nil))) "Jos vanha arvo löytyy, käytä sitä")
 
 (deftest yhdista-aluesuodattimet
   (is (empty? (tk/yhdista-aluesuodattimet {} {})))

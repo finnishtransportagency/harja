@@ -273,27 +273,22 @@ hakutiheys-historiakuva 1200000)
         ;; {:x {{:id . :nimi "Lappi"} [{:id 1 :nimi "Kuusamon urakka}]}
         )))
 
-(defn- uusi-tai-vanha-suodattimen-arvo* [vanha-arvo uusi-arvo urakka-id hallintayksikko-id
-                                         murupolku-urakka-id murupolku-hallintayksikko-id]
-  (cond
-    (nil? vanha-arvo) uusi-arvo
-    (= urakka-id murupolku-urakka-id) uusi-arvo
-    (and (nil? murupolku-urakka-id)
-         (= hallintayksikko-id murupolku-hallintayksikko-id)) uusi-arvo
-    :else vanha-arvo))
+(defn- uusi-tai-vanha-suodattimen-arvo* [vanha-arvo uusi-arvo]
+  ;; Älä vaihda tätä orriksi ;)
+  (if (some? vanha-arvo) vanha-arvo uusi-arvo))
 
-
-;; Alkuperäinen logiikka nojasi siihen, että valitaan AINA vanhan suodattimen arvo,
-;; jos sellainen löytyy. Jos ei löydy, niin sitten käytetään uuden suodattimen arvoa, jonka
-;; valintalogiikka löytyy valitse-urakka? funktiosta.
-;; Tämä funktio piti lisätä, koska tietyissä tapauksissa halutaan ylikirjoittaa vanha
-;; suodattimen arvo uudella.
-;; Esim: Valitse Oulun urakka -> Mene tilannekuvaan -> Ota Oulu pois päältä -> Mene vaikka toteumiin ->
-;; -> Mene takaisin Tilannekuvaan -> Tässä tapauksessa Oulun pitäisi mennä takaisin päälle!
-(defn uusi-tai-vanha-suodattimen-arvo [vanha-arvo uusi-arvo urakka hallintayksikko]
-  (uusi-tai-vanha-suodattimen-arvo* vanha-arvo uusi-arvo (:id urakka) (:id hallintayksikko)
-                                    (:id @valittu-urakka-tilannekuvaan-tullessa)
-                                    (:id @valittu-hallintayksikko-tilannekuvaan-tullessa)))
+;; VALINTALOGIIKAN AIKAKIRJA:
+;; v1:  Kunnioitetaan aina vanhaa, eli käyttäjän tekemää valintaa. Palvelimelta palautettavat
+;;      alueet eivät ikinä ylikirjoita jo olemassa olevia valintoja.
+;; v2:  Logiikka muuttui tämä vaatimuksen takia:
+;;      Valitse Oulun urakka -> Mene tilannekuvaan -> Ota Oulu pois päältä -> Mene vaikka toteumiin ->
+;;      -> Mene takaisin Tilannekuvaan -> Tässä tapauksessa Oulun pitäisi mennä takaisin päälle!
+;; v3:  Ei ollut hyvä. Valitse murupolun kautta urakka -> tule tilannekuvaan -> poista urakan valinta
+;;      -> vaihda aikaväliä -> Urakka valittiin uudestaan!
+;;      Vaihdettiin takaisin versio #1. Jos käyttäjä itse ottaa urakan pois päältä, niin sopii olettaa
+;;      että hän ymmärtää sen olevan pois päältä myös takaisin tilannekuvaan tultaessa?
+(defn uusi-tai-vanha-suodattimen-arvo [vanha-arvo uusi-arvo]
+  (uusi-tai-vanha-suodattimen-arvo* vanha-arvo uusi-arvo))
 
 (defn yhdista-aluesuodattimet [vanhat uudet]
   ;; Yhdistetään kaksi mäppiä, joka sisältää mäppiä
@@ -310,8 +305,7 @@ hakutiheys-historiakuva 1200000)
                                  (map
                                    (fn [[suodatin valittu?]]
                                      (let [vanha-arvo (get-in vanhat [tyyppi (:nimi hallintayksikko) suodatin])
-                                           arvo (uusi-tai-vanha-suodattimen-arvo vanha-arvo valittu?
-                                                                                 suodatin hallintayksikko)]
+                                           arvo (uusi-tai-vanha-suodattimen-arvo vanha-arvo valittu?)]
                                        [suodatin arvo]))
                                    urakat))})
                         aluekokonaisuudet))})
