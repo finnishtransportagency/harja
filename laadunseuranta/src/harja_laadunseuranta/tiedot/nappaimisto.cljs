@@ -10,6 +10,8 @@
             [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset]
             [clojure.string :as str]))
 
+;; Näppäimistön toiminnallisuus
+
 (def syottosaannot {:kitkamittaus {:lahtoarvo "0,"
                                    :rajat [0.01 0.99]
                                    :kokonaisosan-merkkimaara 1
@@ -23,12 +25,10 @@
                     :talvihoito-tasaisuus {:lahtoarvo ""
                                            :rajat [0 100]
                                            :kokonaisosan-merkkimaara 3
-                                           :desimaaliosan-merkkimaara 0
+                                           :desimaaliosan-merkkimaara 2
                                            :salli-syottaa-desimaalierotin? true}})
 
-;; Näppäimistön toiminnallisuus
-
-(defn- syotto-validi?
+(defn syotto-validi?
   "Kertoo, onko annettu syöttö validi eli voidaanko se kirjata, paluuarvo true tai false.
    Optioilla voidaan määrittää, mitkä kaikki syöttösäännöt tarkistetaan (oletuksena kaikki true)."
   ([mittaustyyppi nykyinen-syotto] (syotto-validi? mittaustyyppi nykyinen-syotto {}))
