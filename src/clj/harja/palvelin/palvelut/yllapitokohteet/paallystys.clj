@@ -101,7 +101,8 @@
                          (paallystys-ja-paikkaus/summaa-maaramuutokset maaramuutokset))
         paallystysilmoitus (assoc paallystysilmoitus
                              :kokonaishinta kokonaishinta
-                             :maaramuutokset maaramuutokset
+                             :maaramuutokset (:tulos maaramuutokset)
+                             :maaramuutokset-ennustettu? (:ennustettu? maaramuutokset)
                              :paallystyskohde-id paallystyskohde-id
                              :kommentit kommentit)]
     (log/debug "Päällystysilmoitus kasattu: " (pr-str paallystysilmoitus))

@@ -24,9 +24,8 @@
 
 (defn vaadi-maaramuutos-ei-jarjestelman-luoma [db maaramuutos-id]
   (when (id-olemassa? maaramuutos-id)
-
-    (let [maaramuutos-jarjestelman-luoma (some? (:jarjestelman-luoma
-                                                  (first (q/maaramuutos-jarjestelmam-luoma db {:id maaramuutos-id}))))]
+    (let [maaramuutos-jarjestelman-luoma (:jarjestelman-luoma
+                                           (first (q/maaramuutos-jarjestelman-luoma db {:id maaramuutos-id})))]
       (when maaramuutos-jarjestelman-luoma
         (throw (SecurityException. "Määrämuutos on järjestelmän luoma, ei voi muokata!"))))))
 
@@ -59,13 +58,14 @@
 
 (defn- luo-maaramuutos [db user yllapitokohde-id
                         {:keys [tyyppi tyo yksikko tilattu-maara
-                                toteutunut-maara yksikkohinta] :as maaramuutos}]
+                                toteutunut-maara yksikkohinta ennustettu-maara] :as maaramuutos}]
   (log/debug "Luo määrämuutos: " (pr-str maaramuutos))
   (q/luo-yllapitokohteen-maaramuutos<! db {:yllapitokohde yllapitokohde-id
                                            :tyon_tyyppi (name tyyppi)
                                            :tyo tyo
                                            :yksikko yksikko
                                            :tilattu_maara tilattu-maara
+                                           :ennustettu_maara ennustettu-maara
                                            :toteutunut_maara toteutunut-maara
                                            :yksikkohinta yksikkohinta
                                            :luoja (:id user)
@@ -76,12 +76,13 @@
 (defn- paivita-maaramuutos [db user
                             {:keys [:urakka-id :yllapitokohde-id]}
                             {:keys [id tyyppi tyo yksikko tilattu-maara poistettu
-                                    toteutunut-maara yksikkohinta] :as maaramuutos}]
+                                    toteutunut-maara yksikkohinta ennustettu-maara] :as maaramuutos}]
   (log/debug "Päivitä määrämuutos: " (pr-str maaramuutos))
   (q/paivita-yllapitokohteen-maaramuutos<! db {:tyon_tyyppi (name tyyppi)
                                                :tyo tyo
                                                :yksikko yksikko
                                                :tilattu_maara tilattu-maara
+                                               :ennustettu_maara ennustettu-maara
                                                :toteutunut_maara toteutunut-maara
                                                :yksikkohinta yksikkohinta
                                                :kayttaja (:id user)
@@ -103,9 +104,12 @@
   (mapv #(if (= (:yllapitokohdetyotyyppi %) :paallystys)
            (let [kohteen-maaramuutokset
                  (hae-maaramuutokset db user {:yllapitokohde-id (:id %)
-                                              :urakka-id urakka-id})]
-             (assoc % :maaramuutokset
-                      (paallystys-ja-paikkaus/summaa-maaramuutokset kohteen-maaramuutokset)))
+                                              :urakka-id urakka-id})
+                 summatut-maaramuutokset (paallystys-ja-paikkaus/summaa-maaramuutokset kohteen-maaramuutokset)
+                 maaramuutokset (:tulos summatut-maaramuutokset)
+                 maaramuutos-ennustettu? (:ennustettu? summatut-maaramuutokset)]
+             (assoc % :maaramuutokset maaramuutokset
+                      :maaramuutokset-ennustettu? maaramuutos-ennustettu?))
            %)
         yllapitokohteet))
 
