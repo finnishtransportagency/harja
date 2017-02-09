@@ -39,11 +39,10 @@
     (is (= {:hoito #{:uusimaa} :paallystys #{:uusimaa :pohjoispohjanmaa}} (tk/hyt-joiden-urakoilla-ei-arvoa* alueet false)))))
 
 (deftest valitse-urakka?
-  (is (true? (tk/valitse-urakka?* 1 {:id 2 :nimi :foo} :hoito 1 2 {} {})) "Murupolun kautta valittu urakka valitaan")
-  (is (true? (tk/valitse-urakka?* 1 {:id 2 :nimi :foo} :hoito nil 2 {} {})) "Jos murupolun kautta oli valittuna vain hallintayksikkö, valitaan urakka, jos se kuuluu siihen hallintayksikköön")
-  (is (true? (tk/valitse-urakka?* 1 {:id 2 :nimi :foo} :hoito 3 2 {} {:hoito #{:foo}})) "Urakka valitaan, jos se kuuluu hallintayksikköön, josta kaikki on valittu")
-  (is (false? (tk/valitse-urakka?* 1 {:id 2 :nimi :foo} :hoito 3 2 {:hoito #{:foo}} {})) "Urakkaa ei valita, jos se kuuluu hallintayksikköön, josta mitään ei ole valittu")
-  (is (false? (tk/valitse-urakka?* 1 {:id 2 :nimi :foo} :hoito 3 2 {} {})) "Oletuksena funktio palauttaa false"))
+  (is (true? (tk/valitse-urakka?* 1 {:id 2 :nimi :foo} :hoito 1 {} {})) "Murupolun kautta valittu urakka valitaan")
+  (is (true? (tk/valitse-urakka?* 1 {:id 2 :nimi :foo} :hoito 3 {} {:hoito #{:foo}})) "Urakka valitaan, jos se kuuluu hallintayksikköön, josta kaikki on valittu")
+  (is (false? (tk/valitse-urakka?* 1 {:id 2 :nimi :foo} :hoito 3 {:hoito #{:foo}} {})) "Urakkaa ei valita, jos se kuuluu hallintayksikköön, josta mitään ei ole valittu")
+  (is (false? (tk/valitse-urakka?* 1 {:id 2 :nimi :foo} :hoito 3 {} {})) "Oletuksena funktio palauttaa false"))
 
 (deftest aluesuodattimet-nested-mapiksi
   (let [payload [{:tyyppi :hoito :hallintayksikko {:id 1 :nimi :lappi} :urakat [{:id 1 :nimi "Kuusamo"} {:id 2 :nimi "Rovaniemi"}]}

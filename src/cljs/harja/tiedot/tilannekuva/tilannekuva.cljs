@@ -192,19 +192,13 @@ hakutiheys-historiakuva 1200000)
       {true  (funktio true)
        false (funktio false)})))
 
-(defn- valitse-urakka?* [urakka-id hallintayksikko tyyppi valittu-urakka valittu-hallintayksikko
+(defn- valitse-urakka?* [urakka-id hallintayksikko tyyppi valittu-urakka
                          hallintayksikot-joista-ei-mitaan-valittu hallintayksikot-joista-kaikki-valittu]
   (cond
 
     ;; Jos murupolun kautta oli valittu urakka tilannekuvaan tultaessa,
     ;; tarkasta, onko tämä urakka se
     (= urakka-id valittu-urakka)
-    (do
-      true)
-
-    ;; Jos murupolun kautta tultaessa oli valittuna hallintayksikkö,
-    ;; tarkasta, kuuluuko tämä urakka siihen hallintayksikköön
-    (and (nil? valittu-urakka) (= valittu-hallintayksikko (:id hallintayksikko)))
     (do
       true)
 
@@ -238,7 +232,6 @@ hakutiheys-historiakuva 1200000)
   (valitse-urakka?*
     urakka-id hallintayksikko tyyppi
     (:id @valittu-urakka-tilannekuvaan-tullessa)
-    (:id @valittu-hallintayksikko-tilannekuvaan-tullessa)
     (get @hyt-joiden-urakoilla-ei-arvoa true)
     (get @hyt-joiden-urakoilla-ei-arvoa false)))
 
