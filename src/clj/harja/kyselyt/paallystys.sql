@@ -182,7 +182,7 @@ FROM yllapitokohteen_maaramuutos ym
   JOIN urakka u ON ypk.urakka = u.id
 WHERE ym.id = :id;
 
--- name: maaramuutos-jarjestelmam-luoma
+-- name: maaramuutos-jarjestelman-luoma
 SELECT k.jarjestelma AS "jarjestelman-luoma"
 FROM yllapitokohteen_maaramuutos ym
   JOIN kayttaja k ON ym.luoja = k.id
@@ -196,6 +196,7 @@ SELECT
   tyo,
   yksikko,
   tilattu_maara             AS "tilattu-maara",
+  ennustettu_maara          AS "ennustettu-maara",
   toteutunut_maara          AS "toteutunut-maara",
   yksikkohinta,
   k.jarjestelma             AS "jarjestelman-lisaama"
@@ -208,9 +209,11 @@ WHERE yllapitokohde = :id
       AND ym.poistettu IS NOT TRUE;
 
 -- name: luo-yllapitokohteen-maaramuutos<!
-INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo, yksikko, tilattu_maara, toteutunut_maara,
+INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo, yksikko, tilattu_maara,
+                                         ennustettu_maara, toteutunut_maara,
                                          yksikkohinta, luoja, ulkoinen_id, jarjestelma)
-VALUES (:yllapitokohde, :tyon_tyyppi :: maaramuutos_tyon_tyyppi, :tyo, :yksikko, :tilattu_maara, :toteutunut_maara,
+VALUES (:yllapitokohde, :tyon_tyyppi :: maaramuutos_tyon_tyyppi, :tyo, :yksikko, :tilattu_maara,
+        :ennustettu_maara, :toteutunut_maara,
         :yksikkohinta, :luoja, :ulkoinen_id, :jarjestelma);
 
 -- name: paivita-yllapitokohteen-maaramuutos<!
@@ -220,6 +223,7 @@ SET
   tyo              = :tyo,
   yksikko          = :yksikko,
   tilattu_maara    = :tilattu_maara,
+  ennustettu_maara = :ennustettu_maara,
   toteutunut_maara = :toteutunut_maara,
   yksikkohinta     = :yksikkohinta,
   muokattu         = NOW(),
