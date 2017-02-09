@@ -218,7 +218,7 @@
 (defn- nappaimistokomponentti [{:keys [mittaustyyppi] :as tiedot}]
   (let [nayta-syottokentta? (not= mittaustyyppi :soratie)]
     (fn [{:keys [nimi avain mittausyksikko mittaustyyppi mittaussyotto-atom
-                 soratiemittaussyotto-atom lopeta-jatkuva-havainto] :as tiedot}]
+                 soratiemittaussyotto-atom] :as tiedot}]
       [:div.nappaimisto-container
        [:div.nappaimisto
         [:div.nappaimisto-vasen
@@ -226,7 +226,7 @@
                           :avain avain
                           :mittaustyyppi mittaustyyppi
                           :syottoarvot (:syotot @mittaussyotto-atom)
-                          :lopeta-jatkuva-havainto lopeta-jatkuva-havainto}]
+                          :lopeta-jatkuva-havainto lopeta-mittaus-painettu!}]
          [mittaustiedot
           {:mittaustyyppi mittaustyyppi
            :mittaukset (count (:syotot @mittaussyotto-atom))
@@ -262,5 +262,4 @@
     :mittaustyyppi (get-in havainto [:mittaus :tyyppi])
     :mittausyksikko (get-in havainto [:mittaus :yksikko])
     :nimi (get-in havainto [:mittaus :nimi])
-    :avain (:avain havainto)
-    :lopeta-jatkuva-havainto lopeta-mittaus-painettu!}])
+    :avain (:avain havainto)}])
