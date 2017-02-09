@@ -28,6 +28,19 @@
                                            :desimaaliosan-merkkimaara 2
                                            :salli-syottaa-desimaalierotin? true}})
 
+(defn max-merkkimaara-saavutettu? [mittaustyyppi nykyinen-syotto]
+  (let [syoton-tyyppi (if (number? (str/index-of nykyinen-syotto ",")) :desimaaliosa :kokonaisosa)
+        kokonaisosan-merkkimaara (get-in syottosaannot [mittaustyyppi :kokonaisosan-merkkimaara])
+        desimaaliosan-merkkimaara (get-in syottosaannot [mittaustyyppi :desimaaliosan-merkkimaara])
+        syotetty-kokonaisosa (first (str/split nykyinen-syotto #","))
+        syotetty-desimaaliosa (second (str/split nykyinen-syotto #","))
+        max-maara? (case syoton-tyyppi
+                     :desimaaliosa
+                     (>= (count syotetty-desimaaliosa) desimaaliosan-merkkimaara)
+                     :kokonaisosa
+                     (>= (count syotetty-kokonaisosa) kokonaisosan-merkkimaara))]
+    max-maara?))
+
 (defn syotto-validi?
   "Kertoo, onko annettu syöttö validi eli voidaanko se kirjata, paluuarvo true tai false.
    Optioilla voidaan määrittää, mitkä kaikki syöttösäännöt tarkistetaan (oletuksena kaikki true)."

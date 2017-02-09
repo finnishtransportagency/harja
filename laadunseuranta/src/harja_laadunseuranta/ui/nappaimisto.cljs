@@ -4,7 +4,7 @@
             [harja-laadunseuranta.tiedot.math :as math]
             [harja-laadunseuranta.tiedot.fmt :as fmt]
             [harja-laadunseuranta.tiedot.nappaimisto
-             :refer [numeronappain-painettu!
+             :refer [numeronappain-painettu! max-merkkimaara-saavutettu?
                      tyhjennyspainike-painettu! syotto-onnistui!
                      lopeta-mittaus-painettu! desimaalierotin-painettu!
                      kirjaa-mittaus! syotto-validi? syottosaannot
@@ -145,11 +145,12 @@
    (when sisalto
      sisalto)])
 
-(defn- numeronappaimiston-numero [{:keys [numeronappain-painettu numero
+(defn- numeronappaimiston-numero [{:keys [numeronappain-painettu numero disabled
                                           mittaustyyppi syotto-atom lisaluokat-str]}]
   [numeronappaimiston-painike {:sisalto numero
                                :id numero
                                :lisaluokat-str lisaluokat-str
+                               :disabled disabled
                                :on-click #(numeronappain-painettu numero mittaustyyppi syotto-atom)}])
 
 (defn- numeronappaimisto [{:keys [syotto-atom kirjaa-arvo mittaustyyppi
@@ -160,27 +161,37 @@
     [:div.numeronappaimisto
      [:div.nappaimiston-painikekentat
       [numeronappaimiston-numero {:numero 7 :syotto-atom syotto-atom
+                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
       [numeronappaimiston-numero {:numero 8 :syotto-atom syotto-atom
+                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
       [numeronappaimiston-numero {:numero 9 :syotto-atom syotto-atom
+                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
 
       [numeronappaimiston-numero {:numero 4 :syotto-atom syotto-atom
+                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
       [numeronappaimiston-numero {:numero 5 :syotto-atom syotto-atom
+                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
       [numeronappaimiston-numero {:numero 6 :syotto-atom syotto-atom
+                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
 
       [numeronappaimiston-numero {:numero 1 :syotto-atom syotto-atom
+                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
       [numeronappaimiston-numero {:numero 2 :syotto-atom syotto-atom
+                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
       [numeronappaimiston-numero {:numero 3 :syotto-atom syotto-atom
+                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :mittaustyyppi mittaustyyppi :numeronappain-painettu numeronappain-painettu}]
 
       [numeronappaimiston-numero {:numero 0 :syotto-atom syotto-atom
+                                  :disabled (max-merkkimaara-saavutettu? mittaustyyppi nykyinen-syotto)
                                   :lisaluokat-str "nappaimiston-painike-leveys-tupla"
                                   :mittaustyyppi mittaustyyppi
                                   :numeronappain-painettu numeronappain-painettu}]
