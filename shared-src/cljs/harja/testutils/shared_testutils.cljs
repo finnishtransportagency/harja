@@ -1,4 +1,4 @@
-(ns harja.shared-testutils
+(ns harja.testutils.shared-testutils
   "Harjan ja mobiilin laadunseurannan yhteiset jaetut fronttitestityökalut"
   (:require [cljs.test :as t :refer-macros [is]]
             [cljs-react-test.utils :as rt-utils]
