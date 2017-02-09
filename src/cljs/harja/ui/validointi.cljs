@@ -56,7 +56,7 @@
         hoitokausi-alku (first @u/valittu-hoitokausi)
         hoitokausi-loppu (second @u/valittu-hoitokausi)
         urakan-aikana? (and data alkupvm loppupvm
-                           (pvm/valissa? data alkupvm loppupvm))
+                            (pvm/valissa? data alkupvm loppupvm))
         hoitokaudella? (and data (pvm/valissa? data hoitokausi-alku hoitokausi-loppu))]
     (if (false? urakan-aikana?)
       (or viesti
@@ -76,7 +76,7 @@
         hoitokaudella? (and data (pvm/valissa? data hoitokausi-alku hoitokausi-loppu))
         [valittu-kk-alkupvm valittu-kk-loppupvm] @u/valittu-hoitokauden-kuukausi
         valitun-kkn-aikana? (and data valittu-kk-alkupvm valittu-kk-loppupvm
-                                (pvm/valissa? data valittu-kk-alkupvm valittu-kk-loppupvm))]
+                                 (pvm/valissa? data valittu-kk-alkupvm valittu-kk-loppupvm))]
     (if (false? urakan-aikana?)
       (or viesti
           (ei-urakan-aikana-str (pvm/pvm alkupvm) (pvm/pvm loppupvm)))
@@ -146,8 +146,13 @@
 
 (defmethod validoi-saanto :toinen-arvo-annettu-ensin [_ _ data rivi _ & [avain viesti]]
   (when (and
-            data
-            (nil? (avain rivi)))
+          data
+          (nil? (avain rivi)))
+    viesti))
+
+(defmethod validoi-saanto :ainakin-toinen-annettu [_ _ data rivi _ & [[avain1 avain2] viesti]]
+  (when-not (or (avain1 rivi)
+                (avain2 rivi))
     viesti))
 
 (defmethod validoi-saanto :yllapitoluokka [_ _ data rivi _ _ & [viesti]]

@@ -76,7 +76,7 @@
         leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi")
                                           kohteet))]
     (is (= (count kohteet) kohteiden-lkm) "Päällystyskohteiden määrä")
-    (is (== (:maaramuutokset leppajarven-ramppi) 160)
+    (is (== (:maaramuutokset leppajarven-ramppi) 205)
         "Leppäjärven rampin määrämuutos laskettu oikein")))
 
 (deftest paallystyskohteet-haettu-oikein-vuodelle-2017

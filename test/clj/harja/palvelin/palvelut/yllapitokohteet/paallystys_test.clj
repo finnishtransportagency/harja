@@ -200,7 +200,7 @@
         kohdeosat (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])]
     (is (not (nil? paallystysilmoitus-kannassa)))
     (is (= (:tila paallystysilmoitus-kannassa) :aloitettu) "Päällystysilmoituksen tila on aloitttu")
-    (is (== (:maaramuutokset paallystysilmoitus-kannassa) 160))
+    (is (== (:maaramuutokset paallystysilmoitus-kannassa) 205))
     (is (== (:kokonaishinta paallystysilmoitus-kannassa) 5043.95))
     ;; Kohdeosat on OK
     (is (= (count kohdeosat) 1))

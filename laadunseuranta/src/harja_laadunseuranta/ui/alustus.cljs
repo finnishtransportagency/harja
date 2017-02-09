@@ -46,8 +46,8 @@
      (when (= ensimmainen-sijainti-saatu :virhe)
        {:virhe (case ensimmainen-sijainti-virhekoodi
                  1 "GPS:n käyttö on estetty. Varmista, että laitteen paikannus on päällä ja että GPS:n käyttö on sallittu selaimen asetuksissa."
-                 2 "Laitetta ei voitu paikantaa."
-                 3 "Laitetta ei voitu paikantaa."
+                 2 "Laitetta ei voitu paikantaa, yritä hetken kuluttua uudelleen."
+                 3 "Laitetta ei voitu paikantaa, yritä hetken kuluttua uudelleen."
                  "Tuntematon virhe.")})]
     [tarkistusrivi "Käyttäjä tunnistettu" kayttaja-tunnistettu]
     [tarkistusrivi "Oikeus tehdä tarkastuksia" oikeus-urakoihin
