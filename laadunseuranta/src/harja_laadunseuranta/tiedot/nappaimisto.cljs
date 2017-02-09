@@ -42,9 +42,11 @@
                     ;; Merkkimäärät eivät ylity
                     (and (<= (count syotetty-kokonaisosa) kokonaisosan-merkkimaara)
                          (or (nil? syotetty-desimaaliosa)
-                             ;; Desimaali osa annettu, sen merkkimäärä ei ylity ja pilkku ei ole viimeinen mekrki
-                             (and (<= (count syotetty-desimaaliosa) desimaaliosan-merkkimaara)
-                                  (not= (str (last nykyinen-syotto)) ","))))
+                             (<= (count syotetty-desimaaliosa) desimaaliosan-merkkimaara)))
+                    ;; Pilkku ei ole viimeinen merkki
+                    (or (nil? (str/index-of nykyinen-syotto ","))
+                        (and (number? (str/index-of nykyinen-syotto ","))
+                             (not= (str (last nykyinen-syotto)) ",")))
                     ;; Raja-arvot eivät ylity
                     (or (not validoi-rajat?)
                         (>= (fmt/string->numero nykyinen-syotto)
