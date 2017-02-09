@@ -44,7 +44,7 @@
 (defn syotto-validi?
   "Kertoo, onko annettu syöttö validi eli voidaanko se kirjata, paluuarvo true tai false.
    Optioilla voidaan määrittää, mitkä kaikki syöttösäännöt tarkistetaan (oletuksena kaikki true)."
-  ([mittaustyyppi nykyinen-syotto] (syotto-validi? mittaustyyppi nykyinen-syotto {}))
+  ([mittaustyyppi nykyinen-syotto] (syotto-validi? mittaustyyppi nykyinen-syotto {:validoi-rajat? true}))
   ([mittaustyyppi nykyinen-syotto {:keys [validoi-rajat?] :as optiot}]
    (let [kokonaisosan-merkkimaara (get-in syottosaannot [mittaustyyppi :kokonaisosan-merkkimaara])
          desimaaliosan-merkkimaara (get-in syottosaannot [mittaustyyppi :desimaaliosan-merkkimaara])
@@ -56,9 +56,10 @@
                     (and (<= (count syotetty-kokonaisosa) kokonaisosan-merkkimaara)
                          (or (nil? syotetty-desimaaliosa)
                              (<= (count syotetty-desimaaliosa) desimaaliosan-merkkimaara)))
-                    ;; Pilkku ei ole viimeinen merkki
+                    ;; Pilkku ei ole väärässä paikassa
                     (or (nil? (str/index-of nykyinen-syotto ","))
                         (and (number? (str/index-of nykyinen-syotto ","))
+                             (not= (str (first nykyinen-syotto)) ",")
                              (not= (str (last nykyinen-syotto)) ",")))
                     ;; Raja-arvot eivät ylity
                     (or (not validoi-rajat?)
