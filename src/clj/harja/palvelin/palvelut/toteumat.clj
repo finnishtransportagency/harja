@@ -3,6 +3,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
+            [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [harja.domain.skeema :refer [Toteuma validoi]]
@@ -251,8 +252,8 @@
                                   user (:urakka-id toteuma))
   (log/debug "Toteuman tallennus aloitettu. Payload: " (pr-str toteuma))
   (jdbc/with-db-transaction [c db]
-    (vaadi-toteuma-kuuluu-urakkaan c (:toteuma-id toteuma) (:urakka-id toteuma))
-    (vaadi-toteuma-ei-jarjestelman-luoma c (:toteuma-id toteuma))
+    (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c (:toteuma-id toteuma) (:urakka-id toteuma))
+    (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c (:toteuma-id toteuma))
     (let [id (if (:toteuma-id toteuma)
                (paivita-toteuma c user toteuma)
                (luo-toteuma c user toteuma))
@@ -280,8 +281,8 @@
   (log/debug "Toteuman tallennus aloitettu. Payload: " (pr-str toteuma))
   (jdbc/with-db-transaction
     [db db]
-    (vaadi-toteuma-kuuluu-urakkaan db (:toteuma-id toteuma) (:urakka-id toteuma))
-    (vaadi-toteuma-ei-jarjestelman-luoma db (:toteuma-id toteuma))
+    (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db (:toteuma-id toteuma) (:urakka-id toteuma))
+    (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma db (:toteuma-id toteuma))
     (let [tulos (if (:toteuma-id toteuma)
                   (paivita-toteuma db user toteuma)
                   (luo-toteuma db user toteuma))]
@@ -302,8 +303,8 @@
     (jdbc/with-db-transaction [c db]
       (doseq [tehtava tehtavat]
         (let [toteuma-id (:toteuma (first (toteumat-q/tehtavan-toteuma db (:tehtava_id tehtava))))]
-          (vaadi-toteuma-kuuluu-urakkaan c toteuma-id urakka-id)
-          (vaadi-toteuma-ei-jarjestelman-luoma c toteuma-id)
+          (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c toteuma-id urakka-id)
+          (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c toteuma-id)
           (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava)))
           (toteumat-q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava)
                                                 (:paivanhinta tehtava) (:tehtava_id tehtava)))
@@ -453,8 +454,8 @@
   [db user toteuma]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-muutos-ja-lisatyot user (:urakka-id toteuma))
   (jdbc/with-db-transaction [db db]
-    (vaadi-toteuma-kuuluu-urakkaan db (get-in toteuma [:toteuma :id]) (:urakka-id toteuma))
-    (vaadi-toteuma-ei-jarjestelman-luoma db (get-in toteuma [:toteuma :id]))
+    (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db (get-in toteuma [:toteuma :id]) (:urakka-id toteuma))
+    (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma db (get-in toteuma [:toteuma :id]))
     (if (get-in toteuma [:toteuma :id])
       (paivita-muun-tyon-toteuma db user toteuma)
       (luo-muun-tyon-toteuma db user toteuma))
@@ -483,8 +484,8 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-materiaalit user (:urakka t))
   (log/debug "Tallenna toteuma: " (pr-str t) " ja toteumamateriaalit " (pr-str toteumamateriaalit))
   (jdbc/with-db-transaction [c db]
-    (vaadi-toteuma-kuuluu-urakkaan c (:id t) (:urakka t))
-    (vaadi-toteuma-ei-jarjestelman-luoma c (:id t))
+    (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c (:id t) (:urakka t))
+    (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c (:id t))
     ;; Jos toteumalla on positiivinen id, toteuma on olemassa
     (let [toteuma (if (and (:id t) (pos? (:id t)))
                     ;; Jos poistettu=true, halutaan toteuma poistaa.

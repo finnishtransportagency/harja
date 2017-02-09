@@ -1,7 +1,11 @@
-<b>Nykyinen versio: 1.0.9</b>  
-<b>Julkaistu: 24.1.2017</b>
+<b>Nykyinen versio: 1.0.11</b>  
+<b>Julkaistu: 7.2.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.11 Julkaistu: 7.2.2017:
+    - Ylläpitokohteen päivityksessä ei voi enää päivittää tienumeroa kohteelle tai alikohteelle
+- Versionumero: 1.0.10 Julkaistu: 30.1.2017:
+    - Lisää rajapinta ylläpitokohteen määrämuutosten hallintaan
 - Versionumero: 1.0.9 Julkaistu: 24.1.2017:
     - Salli tarkastuksille suppeammat tiedot tarkastajasta.
 - Versionumero: 1.0.8 Julkaistu: 13.1.2017:
