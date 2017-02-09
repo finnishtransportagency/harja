@@ -365,7 +365,6 @@
     (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva istunto/ajastin-taukotilassa?)
     (komp/sisaan-ulos #(do (kartta/aseta-paivitetaan-karttaa-tila! true)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa @nav/valittu-urakka)
-                           (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa @nav/valittu-hallintayksikko)
                            (kartta-tiedot/kasittele-infopaneelin-linkit!
                              {:paallystys
                               {:toiminto (fn [yllapitokohdeosa]
@@ -377,7 +376,6 @@
                            (kartta/aseta-paivitetaan-karttaa-tila! false)
                            (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa nil)
-                           (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa nil)
                            (tiedot/lopeta-alueiden-seuraus!)))
     (komp/karttakontrollit :tilannekuva
                            [hallintapaneeli])

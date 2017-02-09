@@ -45,7 +45,6 @@ hakutiheys-historiakuva 1200000)
 (def oletusalueet {})
 
 (def valittu-urakka-tilannekuvaan-tullessa (atom nil))
-(def valittu-hallintayksikko-tilannekuvaan-tullessa (atom nil))
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
 (defonce suodattimet
