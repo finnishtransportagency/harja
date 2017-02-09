@@ -36,17 +36,21 @@
       (async test-ok
         (go
           (let [numeronappaimisto (sel1 [:.numeronappaimisto])
+                pilkkupainike (sel1 [:#nappaimiston-painike-pilkku])
                 numeropainikkeet (reduce (fn [tulos numero]
                                            (assoc tulos (keyword (str numero))
                                                         (sel1 [keyword (str "#nappaimiston-painike-" numero)])))
                                          {}
                                          (range 0 10))]
 
+            ;; Komponentit mountattu ok
             (is numeronappaimisto "Numeronäppäimistö saatiin luotua")
+            (is pilkkupainike "Pilkkupainike saatiin luotua")
             (doseq [numerokomponentti (vals numeropainikkeet)]
               (is numerokomponentti "Kaikki numerokomponentit löytyy"))
 
-
-            (click (:1 numeropainikkeet))
-            (is (= (:nykyinen-syotto @syotto-atom) "1") "Numeron painaminen lisäsi syötön oikein")
-            (test-ok)))))))
+            ;; Testisyöttöjä
+            (click (:1 numeropainikkeet)) (is (= (:nykyinen-syotto @syotto-atom) "1") "Syöttö onnistui")
+            (click (:2 numeropainikkeet)) (is (= (:nykyinen-syotto @syotto-atom) "12") "Syöttö onnistui")
+            (click (:3 numeropainikkeet)) (is (= (:nykyinen-syotto @syotto-atom) "123") "Syöttö onnistui")
+            (click (:3 numeropainikkeet)) (is (= (:nykyinen-syotto @syotto-atom) "123") "Ei anna syöttää yli rajojen") (test-ok)))))))
