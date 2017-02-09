@@ -37,18 +37,21 @@
          desimaaliosan-merkkimaara (get-in syottosaannot [mittaustyyppi :desimaaliosan-merkkimaara])
          syotetty-kokonaisosa (first (str/split nykyinen-syotto #","))
          syotetty-desimaaliosa (second (str/split nykyinen-syotto #","))
-         syotto-sallittu? (boolean (and
-                                     ;; Merkkimäärät eivät ylity
-                                     (and (<= (count syotetty-kokonaisosa) kokonaisosan-merkkimaara)
-                                          (or (nil? syotetty-desimaaliosa)
-                                              (<= (count syotetty-desimaaliosa) desimaaliosan-merkkimaara)))
-                                     ;; Raja-arvot eivät ylity
-                                     (or (not validoi-rajat?)
-                                         (>= (fmt/string->numero nykyinen-syotto)
-                                             (first (get-in syottosaannot [mittaustyyppi :rajat]))))
-                                     (or (not validoi-rajat?)
-                                         (<= (fmt/string->numero nykyinen-syotto)
-                                             (second (get-in syottosaannot [mittaustyyppi :rajat]))))))]
+         syotto-sallittu?
+         (boolean (and
+                    ;; Merkkimäärät eivät ylity
+                    (and (<= (count syotetty-kokonaisosa) kokonaisosan-merkkimaara)
+                         (or (nil? syotetty-desimaaliosa)
+                             ;; Desimaali osa annettu, sen merkkimäärä ei ylity ja pilkku ei ole viimeinen mekrki
+                             (and (<= (count syotetty-desimaaliosa) desimaaliosan-merkkimaara)
+                                  (not= (str (last nykyinen-syotto)) ","))))
+                    ;; Raja-arvot eivät ylity
+                    (or (not validoi-rajat?)
+                        (>= (fmt/string->numero nykyinen-syotto)
+                            (first (get-in syottosaannot [mittaustyyppi :rajat]))))
+                    (or (not validoi-rajat?)
+                        (<= (fmt/string->numero nykyinen-syotto)
+                            (second (get-in syottosaannot [mittaustyyppi :rajat]))))))]
      (.log js/console "Syöttö sallittu? " (pr-str syotto-sallittu?))
      syotto-sallittu?)))
 
@@ -63,6 +66,17 @@
   (let [nykyinen-syotto (:nykyinen-syotto @syotto-atom)
         uusi-syotto (str nykyinen-syotto numero)
         salli-syotto? (syotto-validi? mittaustyyppi uusi-syotto {:validoi-rajat? false})
+        lopullinen-syotto (if salli-syotto?
+                            uusi-syotto
+                            nykyinen-syotto)]
+    (swap! syotto-atom assoc :nykyinen-syotto lopullinen-syotto)))
+
+(defn desimaalierotin-painettu!
+  "Lisää desimaalierottimen syöttö-atomiin"
+  [syotto-atom]
+  (let [nykyinen-syotto (:nykyinen-syotto @syotto-atom)
+        uusi-syotto (str nykyinen-syotto ",")
+        salli-syotto? (nil? (str/index-of nykyinen-syotto ","))
         lopullinen-syotto (if salli-syotto?
                             uusi-syotto
                             nykyinen-syotto)]

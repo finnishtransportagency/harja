@@ -6,13 +6,14 @@
             [harja-laadunseuranta.tiedot.nappaimisto
              :refer [numeronappain-painettu!
                      tyhjennyspainike-painettu! syotto-onnistui!
-                     lopeta-mittaus-painettu!
+                     lopeta-mittaus-painettu! desimaalierotin-painettu!
                      kirjaa-mittaus! syotto-validi? syottosaannot
                      soratienappaimiston-numeronappain-painettu!]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [harja-laadunseuranta.ui.yleiset.napit :refer [nappi]]
             [harja-laadunseuranta.ui.yleiset.dom :as dom]
-            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat])
+            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
+            [clojure.string :as str])
   (:require-macros
     [harja-laadunseuranta.macros :as m]
     [cljs.core.async.macros :refer [go go-loop]]
@@ -140,7 +141,7 @@
                 lisaluokat-str)
     :disabled disabled
     :id (str "nappaimiston-painike-" id)
-    :on-click on-click}
+    :on-click #(when-not disabled (on-click))}
    (when sisalto
      sisalto)])
 
@@ -184,10 +185,12 @@
                                   :mittaustyyppi mittaustyyppi
                                   :numeronappain-painettu numeronappain-painettu}]
       [numeronappaimiston-painike {:id "pilkku"
-                                   :disabled (or (not (get-in syottosaannot
-                                                           [mittaustyyppi :salli-syottaa-desimaalierotin?]))
-                                                 (empty? nykyinen-syotto)) ;; Pilkku ei voi olla ensimmäinen
-                                   :on-click #(.log js/console "Painoit pilkkua!")
+                                   :disabled
+                                   (or (not (get-in syottosaannot
+                                                    [mittaustyyppi :salli-syottaa-desimaalierotin?]))
+                                       (empty? nykyinen-syotto) ;; Pilkku ei voi olla ensimmäinen
+                                       (number? (str/index-of nykyinen-syotto ","))) ;; Pilkku on jo annettu
+                                   :on-click #(desimaalierotin-painettu! syotto-atom)
                                    :sisalto ","}]
 
       [numeronappaimiston-painike {:id "delete"
@@ -197,9 +200,8 @@
       [numeronappaimiston-painike {:id "ok"
                                    :lisaluokat-str "nappaimiston-painike-ok nappaimiston-painike-leveys-puolet"
                                    :disabled (not nykyinen-syotto-validi?)
-                                   :on-click #(when nykyinen-syotto-validi?
-                                                (when (kirjaa-arvo (fmt/string->numero nykyinen-syotto))
-                                                  (syotto-onnistui mittaustyyppi syotto-atom)))
+                                   :on-click #(when (kirjaa-arvo (fmt/string->numero nykyinen-syotto))
+                                                (syotto-onnistui mittaustyyppi syotto-atom))
                                    :sisalto [kuvat/svg-sprite "tarkistus-24"]}]]]))
 
 (defn- nappaimistokomponentti [{:keys [mittaustyyppi] :as tiedot}]
