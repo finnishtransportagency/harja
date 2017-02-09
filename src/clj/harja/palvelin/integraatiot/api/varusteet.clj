@@ -76,11 +76,7 @@
 (defn hae-kaikki-tietolajit [tierekisteri muutospaivamaara]
   "Hakee kaikkien tietolajien kuvaukset Tierekisteristä tunnisteen perusteella."
   (let [vastausdata (tierekisteri/hae-kaikki-tietolajit tierekisteri muutospaivamaara)]
-    {:tietolajit (remove #(empty? (get-in % [:tietolaji :ominaisuudet]))
-                         (map (fn [t] {:tietolaji (assoc (:tietolaji t)
-                                                    :ominaisuudet
-                                                    (map (fn [o] {:ominaisuus o})
-                                                         (get-in t [:tietolaji :ominaisuudet])))}) vastausdata))}))
+    (tierekisteri-sanomat/muunna-tietolajien-hakuvastaus vastausdata)))
 
 (defn hae-tietolaji [tierekisteri parametrit kayttaja]
   (let [tunniste (get parametrit "tunniste")
