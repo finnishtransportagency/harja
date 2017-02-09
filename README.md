@@ -34,7 +34,7 @@ Harja repon hakemistorakenne:
       - api/                (Harja API endpointit ja tukikoodi)
       - palvelut/           (Harja asiakkaalle palveluja tarjoavat EDN endpointit)
       - main.cljs           (palvelimen aloituspiste)
-- shared-cljc             (Yhteistä koodia Harjalle ja laadunseurannan mobiilityökalulle)
+- shared-cljc               (Yhteistä koodia Harjalle ja laadunseurannan mobiilityökalulle. Näillä tulisi olla mahdollisimman vähän riippuvuuksia)
 
 - (dev-)resources/          (web-puolen resurssit)
   - css/                    (ulkoiset css tiedostot)
