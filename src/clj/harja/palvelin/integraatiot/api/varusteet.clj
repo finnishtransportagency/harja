@@ -34,12 +34,6 @@
           "default"))
       (validointi/heita-virheelliset-parametrit-poikkeus (format "Pakollista parametria: %s ei ole annettu" parametri)))))
 
-(defn tarkista-tietolajihaun-parametrit [parametrit]
-  (tarkista-parametrit
-    parametrit
-    [{:parametri "tunniste"
-      :tyyppi :string}]))
-
 (defn tarkista-tietueiden-haun-parametrit [parametrit]
   (tarkista-parametrit
     parametrit
@@ -71,28 +65,40 @@
       :tyyppi :date}]))
 
 (defn hae-tietolaji-tunnisteella
-  "Hakee tietolajion tierekisteristä tunnisteen perusteella. Optionaalisesti
+  "Hakee tietolajin Tierekisteristä tunnisteen perusteella. Optionaalisesti
   ottaa sisään myös muutospäivämäärän hakuehdoksi."
   ([tierekisteri tunniste] (hae-tietolaji-tunnisteella tierekisteri tunniste nil))
   ([tierekisteri tunniste muutospaivamaara]
-   (let [vastausdata (tierekisteri/hae-tietolajit tierekisteri tunniste muutospaivamaara)
+   (let [vastausdata (tierekisteri/hae-tietolaji tierekisteri tunniste muutospaivamaara)
          ominaisuudet (get-in vastausdata [:tietolaji :ominaisuudet])]
-     (tierekisteri-sanomat/muunna-tietolajin-hakuvastaus
-       vastausdata ominaisuudet))))
+     (tierekisteri-sanomat/muunna-tietolajin-hakuvastaus vastausdata ominaisuudet))))
+
+(defn hae-kaikki-tietolajit [tierekisteri muutospaivamaara]
+  "Hakee kaikkien tietolajien kuvaukset Tierekisteristä tunnisteen perusteella."
+  (let [vastausdata (tierekisteri/hae-kaikki-tietolajit tierekisteri muutospaivamaara)]
+    {:tietolajit (remove #(empty? (get-in % [:tietolaji :ominaisuudet]))
+                         (map (fn [t] {:tietolaji (assoc (:tietolaji t)
+                                                    :ominaisuudet
+                                                    (map (fn [o] {:ominaisuus o})
+                                                         (get-in t [:tietolaji :ominaisuudet])))}) vastausdata))}))
 
 (defn hae-tietolaji [tierekisteri parametrit kayttaja]
-  (tarkista-tietolajihaun-parametrit parametrit)
   (let [tunniste (get parametrit "tunniste")
         muutospaivamaara (get parametrit "muutospaivamaara")]
-    (log/debug "Haetaan tietolajin: " tunniste " kuvaus muutospäivämäärällä: " muutospaivamaara " käyttäjälle: " kayttaja)
-    (hae-tietolaji-tunnisteella tierekisteri tunniste muutospaivamaara)))
+    (if (not (str/blank? tunniste))
+      (do
+        (log/debug "Haetaan tietolajin: " tunniste " kuvaus muutospäivämäärällä: " muutospaivamaara " käyttäjälle: " kayttaja)
+        (hae-tietolaji-tunnisteella tierekisteri tunniste muutospaivamaara))
+      (do
+        (log/debug "Haetaan kaikkien tietolajien kuvaukset muutospäivämäärällä: " muutospaivamaara " käyttäjälle: " kayttaja)
+        (hae-kaikki-tietolajit tierekisteri muutospaivamaara)))))
 
 (defn- muodosta-tietueiden-hakuvastaus [tierekisteri vastausdata]
   {:varusteet
    (mapv
      (fn [tietue]
        (let [tietolaji (get-in tietue [:tietue :tietolaji :tietolajitunniste])
-             vastaus (tierekisteri/hae-tietolajit tierekisteri tietolaji nil)
+             vastaus (tierekisteri/hae-tietolaji tierekisteri tietolaji nil)
              tietolajin-kuvaus (:tietolaji vastaus)
              arvot (first (get-in tietue [:tietue :tietolaji :arvot]))
              arvot-mappina (tietolajit/tietolajin-arvot-merkkijono->map arvot tietolajin-kuvaus)]
@@ -210,14 +216,14 @@
           (and tierekisteriosoite
                (not (str/blank? tietolaji)))
           (tierekisteri/hae-tietueet
-           tierekisteri
-           {:numero (:numero tierekisteriosoite)
-            :aet (:alkuetaisyys tierekisteriosoite)
-            :aosa (:alkuosa tierekisteriosoite)
-            :let (:loppuetaisyys tierekisteriosoite)
-            :losa (:loppuosa tierekisteriosoite)}
-           tietolaji
-           nyt nyt)
+            tierekisteri
+            {:numero (:numero tierekisteriosoite)
+             :aet (:alkuetaisyys tierekisteriosoite)
+             :aosa (:alkuosa tierekisteriosoite)
+             :let (:loppuetaisyys tierekisteriosoite)
+             :losa (:loppuosa tierekisteriosoite)}
+            tietolaji
+            nyt nyt)
 
           :default
           {:error "Ei hakuehtoja"})]

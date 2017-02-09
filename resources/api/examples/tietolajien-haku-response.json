@@ -1,79 +1,83 @@
 {
-  "tietolaji": {
-    "tunniste": "tl506",
-    "ominaisuudet": [
-      {
-        "ominaisuus": {
-          "kenttatunniste": "tunniste",
-          "selite": "Tunniste",
-          "jarjestysnumero": 1,
-          "koodisto": null,
-          "desimaalit": null,
-          "voimassaolo": {
-            "alkupvm": "2008-09-01T21:00:00+02:00",
-            "loppupvm": null
-          },
-          "alaraja": null,
-          "pakollinen": false,
-          "tietotyyppi": "merkkijono",
-          "pituus": 20,
-          "ylaraja": null
-        }
-      },
-      {
-        "ominaisuus": {
-          "kenttatunniste": "kuntoluokitus",
-          "selite": "Yleinen kuntokuokitus",
-          "jarjestysnumero": 2,
-          "koodisto": [
-            {
-              "koodiryhma": "kuntoluokk",
-              "koodi": 1,
-              "lyhenne": "huono",
-              "selite": "Ala-arvoinen",
-              "muutospvm": "2009-03-22T22:00:00+02:00"
-            },
-            {
-              "koodiryhma": "kuntoluokk",
-              "koodi": 2,
-              "lyhenne": "v�ltt�v�",
-              "selite": "Merkitt�vi� puutteita",
-              "muutospvm": "2009-03-22T22:00:00+02:00"
-            },
-            {
-              "koodiryhma": "kuntoluokk",
-              "koodi": 3,
-              "lyhenne": "tyydytt�v�",
-              "selite": "Ep�oleellisia puutteita",
-              "muutospvm": "2009-03-22T22:00:00+02:00"
-            },
-            {
-              "koodiryhma": "kuntoluokk",
-              "koodi": 4,
-              "lyhenne": "hyv�",
-              "selite": "hyv�",
-              "muutospvm": "2009-03-22T22:00:00+02:00"
-            },
-            {
-              "koodiryhma": "kuntoluokk",
-              "koodi": 5,
-              "lyhenne": "erinomaine",
-              "selite": "erinomainen",
-              "muutospvm": "2009-03-22T22:00:00+02:00"
+  "tietolajit": [
+    {
+      "tietolaji": {
+        "tunniste": "tl506",
+        "ominaisuudet": [
+          {
+            "ominaisuus": {
+              "kenttatunniste": "tunniste",
+              "selite": "Tunniste",
+              "jarjestysnumero": 1,
+              "koodisto": null,
+              "desimaalit": null,
+              "voimassaolo": {
+                "alkupvm": "2008-09-01T21:00:00+02:00",
+                "loppupvm": null
+              },
+              "alaraja": null,
+              "pakollinen": false,
+              "tietotyyppi": "merkkijono",
+              "pituus": 20,
+              "ylaraja": null
             }
-          ],
-          "desimaalit": null,
-          "voimassaolo": {
-            "alkupvm": "2009-03-22T22:00:00+02:00",
-            "loppupvm": null
           },
-          "alaraja": null,
-          "pakollinen": false,
-          "tietotyyppi": "koodisto",
-          "pituus": 1,
-          "ylaraja": null
-        }
+          {
+            "ominaisuus": {
+              "kenttatunniste": "kuntoluokitus",
+              "selite": "Yleinen kuntokuokitus",
+              "jarjestysnumero": 2,
+              "koodisto": [
+                {
+                  "koodiryhma": "kuntoluokk",
+                  "koodi": 1,
+                  "lyhenne": "huono",
+                  "selite": "Ala-arvoinen",
+                  "muutospvm": "2009-03-22T22:00:00+02:00"
+                },
+                {
+                  "koodiryhma": "kuntoluokk",
+                  "koodi": 2,
+                  "lyhenne": "v�ltt�v�",
+                  "selite": "Merkitt�vi� puutteita",
+                  "muutospvm": "2009-03-22T22:00:00+02:00"
+                },
+                {
+                  "koodiryhma": "kuntoluokk",
+                  "koodi": 3,
+                  "lyhenne": "tyydytt�v�",
+                  "selite": "Ep�oleellisia puutteita",
+                  "muutospvm": "2009-03-22T22:00:00+02:00"
+                },
+                {
+                  "koodiryhma": "kuntoluokk",
+                  "koodi": 4,
+                  "lyhenne": "hyv�",
+                  "selite": "hyv�",
+                  "muutospvm": "2009-03-22T22:00:00+02:00"
+                },
+                {
+                  "koodiryhma": "kuntoluokk",
+                  "koodi": 5,
+                  "lyhenne": "erinomaine",
+                  "selite": "erinomainen",
+                  "muutospvm": "2009-03-22T22:00:00+02:00"
+                }
+              ],
+              "desimaalit": null,
+              "voimassaolo": {
+                "alkupvm": "2009-03-22T22:00:00+02:00",
+                "loppupvm": null
+              },
+              "alaraja": null,
+              "pakollinen": false,
+              "tietotyyppi": "koodisto",
+              "pituus": 1,
+              "ylaraja": null
+            }
+          }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
