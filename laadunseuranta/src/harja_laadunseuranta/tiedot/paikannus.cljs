@@ -8,7 +8,7 @@
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]))
 
 (def +paikan-raportointivali+ 2000) ; ms
-(def +max-maara-paikannusyrityksia-alustuksessa+ 10)
+(def +max-maara-alustuksen-paikannnusyrityksia+ 10)
 
 (defn- geolocation-api []
   (.-geolocation js/navigator))
