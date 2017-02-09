@@ -175,8 +175,9 @@
       (recur m loput))))
 
 (defn valittu? [valitut-set suodatin]
-  (and valitut-set
-       (valitut-set (:id suodatin))))
+  (some?
+    (and valitut-set
+         (valitut-set (:id suodatin)))))
 
 (defn- valitut-kentat* [taulukko suodattimet]
   (loop [t taulukko
