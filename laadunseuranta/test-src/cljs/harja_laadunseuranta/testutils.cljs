@@ -1,6 +1,5 @@
 (ns harja-laadunseuranta.testutils
-  (:require [dommy.core :as dommy]
-            [cljs-react-test.simulate :as sim]))
+  (:require [dommy.core :as dommy]))
 
 (def *test-container* (cljs.core/atom nil))
 
@@ -10,5 +9,4 @@
 (defn sel1 [path]
   (dommy/sel1 @*test-container* path))
 
-(defn click [element]
-  (sim/click element nil))
+

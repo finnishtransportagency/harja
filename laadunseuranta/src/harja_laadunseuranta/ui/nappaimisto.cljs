@@ -139,7 +139,6 @@
                 (when disabled
                   "nappaimiston-painike-disabloitu ")
                 lisaluokat-str)
-    :disabled disabled
     :id (str "nappaimiston-painike-" id)
     :on-click #(when-not disabled (on-click))}
    (when sisalto
@@ -196,11 +195,10 @@
                                   :mittaustyyppi mittaustyyppi
                                   :numeronappain-painettu numeronappain-painettu}]
       [numeronappaimiston-painike {:id "pilkku"
-                                   :disabled
-                                   (or (not (get-in syottosaannot
-                                                    [mittaustyyppi :salli-syottaa-desimaalierotin?]))
-                                       (empty? nykyinen-syotto) ;; Pilkku ei voi olla ensimmäinen
-                                       (number? (str/index-of nykyinen-syotto ","))) ;; Pilkku on jo annettu
+                                   :disabled (or (not (get-in syottosaannot
+                                                              [mittaustyyppi :salli-syottaa-desimaalierotin?]))
+                                                 (empty? nykyinen-syotto) ;; Pilkku ei voi olla ensimmäinen
+                                                 (number? (str/index-of nykyinen-syotto ","))) ;; Pilkku on jo annettu
                                    :on-click #(desimaalierotin-painettu! syotto-atom)
                                    :sisalto ","}]
 

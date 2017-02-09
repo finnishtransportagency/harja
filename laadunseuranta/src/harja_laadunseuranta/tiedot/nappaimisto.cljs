@@ -29,7 +29,7 @@
                                            :salli-syottaa-desimaalierotin? true}})
 
 (defn nykyisen-syotto-osan-max-merkkimaara-saavutettu? [mittaustyyppi nykyinen-syotto]
-  (let [syoton-tyyppi (if (number? (str/index-of nykyinen-syotto ",")) :desimaaliosa :kokonaisosa)
+  (let [syoton-tyyppi (if (str/includes? nykyinen-syotto ",") :desimaaliosa :kokonaisosa)
         kokonaisosan-merkkimaara (get-in syottosaannot [mittaustyyppi :kokonaisosan-merkkimaara])
         desimaaliosan-merkkimaara (get-in syottosaannot [mittaustyyppi :desimaaliosan-merkkimaara])
         syotetty-kokonaisosa (first (str/split nykyinen-syotto #","))
@@ -57,8 +57,8 @@
                          (or (nil? syotetty-desimaaliosa)
                              (<= (count syotetty-desimaaliosa) desimaaliosan-merkkimaara)))
                     ;; Pilkku ei ole väärässä paikassa
-                    (or (nil? (str/index-of nykyinen-syotto ","))
-                        (and (number? (str/index-of nykyinen-syotto ","))
+                    (or (not (str/includes? nykyinen-syotto ","))
+                        (and (str/includes? nykyinen-syotto ",")
                              (not= (str (first nykyinen-syotto)) ",")
                              (not= (str (last nykyinen-syotto)) ",")))
                     ;; Raja-arvot eivät ylity
@@ -92,7 +92,7 @@
   [syotto-atom]
   (let [nykyinen-syotto (:nykyinen-syotto @syotto-atom)
         uusi-syotto (str nykyinen-syotto ",")
-        salli-syotto? (nil? (str/index-of nykyinen-syotto ","))
+        salli-syotto? (not (str/includes? nykyinen-syotto ","))
         lopullinen-syotto (if salli-syotto?
                             uusi-syotto
                             nykyinen-syotto)]

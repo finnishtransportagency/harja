@@ -33,4 +33,5 @@
   'harja-laadunseuranta.ui.kamera-test
   'harja-laadunseuranta.utils-test
   'harja-laadunseuranta.ui.ylapalkki-test
-  'harja-laadunseuranta.tiedot.sovellus-test)
+  'harja-laadunseuranta.tiedot.sovellus-test
+  )
