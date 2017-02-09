@@ -1,8 +1,8 @@
 (ns harja.ui.historia-test
   (:require [harja.ui.historia :as historia]
             [cljs.test :as test :refer-macros [deftest is testing async]]
-            [harja.testutils.shared-testutils :refer [render change click paivita sel1 disabled?]]
-            [harja.testutils :refer [komponentti-fixture]]
+            [harja.testutils.shared-testutils :refer [komponentti-fixture render change click
+                                                      paivita sel1 disabled?]]
             [reagent.core :as r]
             [cljs.core.async :refer [<!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))

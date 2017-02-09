@@ -2,14 +2,14 @@
   "Yleiset näkymän testi"
   (:require [cljs.test :as t :refer-macros [deftest is testing async]]
             [harja.testutils.shared-testutils :as u]
-            [harja.testutils :refer [komponentti-fixture fake-palvelut-fixture fake-palvelukutsu
+            [harja.testutils :refer [fake-palvelut-fixture fake-palvelukutsu
                                      jvh-fixture]]
             [reagent.core :as r]
             [harja.views.urakka.yleiset :as yleiset]
             [harja.pvm :as pvm])
   (:require-macros [harja.testutils.macros :refer [komponenttitesti]]))
 
-(t/use-fixtures :each komponentti-fixture)
+(t/use-fixtures :each u/komponentti-fixture)
 
 (def paivystajadata
   [{:urakka_tyyppi "hoito", :vastuuhenkilo true, :sahkoposti "kyostiyit@example.org", :urakoitsija_nimi "YIT Rakennus Oy",

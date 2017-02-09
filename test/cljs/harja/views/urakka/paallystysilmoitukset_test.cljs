@@ -9,7 +9,7 @@
     [harja.ui.tierekisteri :as tierekisteri]
     [harja.testutils.shared-testutils :refer [render paivita sel sel1 grid-solu click change
                                               disabled? ilman-tavutusta]]
-    [harja.testutils :refer [komponentti-fixture fake-palvelut-fixture fake-palvelukutsu
+    [harja.testutils :refer [fake-palvelut-fixture fake-palvelukutsu
                              jvh-fixture]]
     [harja.views.urakka.paallystysilmoitukset :as p]
     [harja.pvm :as pvm]
@@ -22,7 +22,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
-(test/use-fixtures :each komponentti-fixture fake-palvelut-fixture jvh-fixture)
+(test/use-fixtures :each u/komponentti-fixture fake-palvelut-fixture jvh-fixture)
 
 (deftest tien-pituus-laskettu-oikein
   (let [tie1 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 3 :tr-loppuetaisyys 5}
