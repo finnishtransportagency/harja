@@ -22,6 +22,7 @@
              [harja.ui.kartta.infopaneelin-sisalto-test]
              [harja.tiedot.tilannekuva.tienakyma-test]
              [harja.tiedot.urakka.aikataulu-test]
+             [harja.tiedot.tilannekuva.tilannekuva-test]
              ;; uusi testi tähän
              ))
 
@@ -47,5 +48,6 @@
            'harja.ui.kartta.infopaneelin-sisalto-test
            'harja.tiedot.tilannekuva.tienakyma-test
            'harja.tiedot.urakka.aikataulu-test
+           'harja.tiedot.tilannekuva.tilannekuva-test
            ;; uusi testi tähän
            )
