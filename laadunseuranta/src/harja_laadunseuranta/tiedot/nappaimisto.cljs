@@ -7,25 +7,53 @@
             [harja-laadunseuranta.tiedot.math :as math]
             [harja-laadunseuranta.tiedot.fmt :as fmt]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
-            [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset]))
+            [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset]
+            [clojure.string :as str]))
 
 (def syottosaannot {:kitkamittaus {:lahtoarvo "0,"
                                    :rajat [0.01 0.99]
-                                   :max-merkkimaara 4
+                                   :kokonaisosan-merkkimaara 1
+                                   :desimaaliosan-merkkimaara 4
                                    :salli-syottaa-desimaalierotin? false} ;; On jo mukana lähtöarvossa
                     :lumisuus {:lahtoarvo ""
                                :rajat [0 100]
-                               :max-merkkimaara 3
+                               :kokonaisosan-merkkimaara 3
+                               :desimaaliosan-merkkimaara 0
                                :salli-syottaa-desimaalierotin? false}
                     :talvihoito-tasaisuus {:lahtoarvo ""
                                            :rajat [0 100]
-                                           :max-merkkimaara 4
+                                           :kokonaisosan-merkkimaara 3
+                                           :desimaaliosan-merkkimaara 0
                                            :salli-syottaa-desimaalierotin? true}})
 
 ;; Näppäimistön toiminnallisuus
 
+(defn- syotto-validi?
+  "Kertoo, onko annettu syöttö validi eli voidaanko se kirjata, paluuarvo true tai false.
+   Optioilla voidaan määrittää, mitkä kaikki syöttösäännöt tarkistetaan (oletuksena kaikki true)."
+  ([mittaustyyppi nykyinen-syotto] (syotto-validi? mittaustyyppi nykyinen-syotto {}))
+  ([mittaustyyppi nykyinen-syotto {:keys [validoi-rajat?] :as optiot}]
+   (let [kokonaisosan-merkkimaara (get-in syottosaannot [mittaustyyppi :kokonaisosan-merkkimaara])
+         desimaaliosan-merkkimaara (get-in syottosaannot [mittaustyyppi :desimaaliosan-merkkimaara])
+         syotetty-kokonaisosa (first (str/split nykyinen-syotto #","))
+         syotetty-desimaaliosa (second (str/split nykyinen-syotto #","))
+         syotto-sallittu? (boolean (and
+                                     ;; Merkkimäärät eivät ylity
+                                     (and (<= (count syotetty-kokonaisosa) kokonaisosan-merkkimaara)
+                                          (or (nil? syotetty-desimaaliosa)
+                                              (<= (count syotetty-desimaaliosa) desimaaliosan-merkkimaara)))
+                                     ;; Raja-arvot eivät ylity
+                                     (or (not validoi-rajat?)
+                                         (>= (fmt/string->numero nykyinen-syotto)
+                                             (first (get-in syottosaannot [mittaustyyppi :rajat]))))
+                                     (or (not validoi-rajat?)
+                                         (<= (fmt/string->numero nykyinen-syotto)
+                                             (second (get-in syottosaannot [mittaustyyppi :rajat]))))))]
+     (.log js/console "Syöttö sallittu? " (pr-str syotto-sallittu?))
+     syotto-sallittu?)))
+
 (defn numeronappain-painettu!
-  "Lisää syötteen syöttö-atomiin, jos se on sallittu.
+  "Lisää syötteen syöttö-atomiin.
    Estää liian pitkät syötteet, mutta ei tarkista esim.
    min-max rajoja ylittäviä syötteitä. Näistä on tarkoitus
    näyttää varoitus käyttöliittymässä ja käyttäjää
@@ -34,9 +62,7 @@
   (.log js/console "Numero syötetty: " (pr-str numero))
   (let [nykyinen-syotto (:nykyinen-syotto @syotto-atom)
         uusi-syotto (str nykyinen-syotto numero)
-        suurin-sallittu-tarkkuus (get-in syottosaannot [mittaustyyppi :max-merkkimaara])
-        salli-syotto? (<= (count uusi-syotto) suurin-sallittu-tarkkuus)
-        _ (.log js/console "Salli syöttö: " (pr-str salli-syotto?))
+        salli-syotto? (syotto-validi? mittaustyyppi uusi-syotto {:validoi-rajat? false})
         lopullinen-syotto (if salli-syotto?
                             uusi-syotto
                             nykyinen-syotto)]
@@ -65,17 +91,6 @@
   (ilmoitukset/ilmoita
     (str nimi " päättyy")
     s/ilmoitus))
-
-(defn- syotto-validi? [mittaustyyppi nykyinen-syotto]
-  (let [suurin-sallittu-tarkkuus (get-in syottosaannot [mittaustyyppi :max-merkkimaara])
-        syotto-sallittu? (boolean (and (<= (count nykyinen-syotto)
-                                           suurin-sallittu-tarkkuus)
-                                       (>= (fmt/string->numero nykyinen-syotto)
-                                           (first (get-in syottosaannot [mittaustyyppi :rajat])))
-                                       (<= (fmt/string->numero nykyinen-syotto)
-                                           (second (get-in syottosaannot [mittaustyyppi :rajat])))))]
-    (.log js/console "Syöttö sallittu? " (pr-str syotto-sallittu?))
-    syotto-sallittu?))
 
 ;; Erikoisnäppäimistöt
 

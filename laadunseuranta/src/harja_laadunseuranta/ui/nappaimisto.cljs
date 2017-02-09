@@ -155,7 +155,7 @@
                                   numeronappain-painettu syotto-validi? syotto-onnistui]
                            :as tiedot}]
   (let [nykyinen-syotto (:nykyinen-syotto @syotto-atom)
-        syotto-validi? (syotto-validi? mittaustyyppi nykyinen-syotto)]
+        nykyinen-syotto-validi? (syotto-validi? mittaustyyppi nykyinen-syotto)]
     [:div.numeronappaimisto
      [:div.nappaimiston-painikekentat
       [numeronappaimiston-numero {:numero 7 :syotto-atom syotto-atom
@@ -196,8 +196,8 @@
                                    :sisalto [kuvat/svg-sprite "askelpalautin-24"]}]
       [numeronappaimiston-painike {:id "ok"
                                    :lisaluokat-str "nappaimiston-painike-ok nappaimiston-painike-leveys-puolet"
-                                   :disabled (not syotto-validi?)
-                                   :on-click #(when syotto-validi?
+                                   :disabled (not nykyinen-syotto-validi?)
+                                   :on-click #(when nykyinen-syotto-validi?
                                                 (when (kirjaa-arvo (fmt/string->numero nykyinen-syotto))
                                                   (syotto-onnistui mittaustyyppi syotto-atom)))
                                    :sisalto [kuvat/svg-sprite "tarkistus-24"]}]]]))
