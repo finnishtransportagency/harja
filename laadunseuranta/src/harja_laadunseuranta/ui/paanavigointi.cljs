@@ -294,9 +294,12 @@
 (defn- paanavigointi-footer [{:keys [vapauta-kaikki-painettu havaintolomake-painettu] :as tiedot}]
   [:footer
    [:div.footer-vasen
-    [nappi "Vapauta kaikki" {:on-click vapauta-kaikki-painettu
-                             :ikoni (kuvat/svg-sprite "nuoli-ylos-24")
-                             :luokat-str "nappi-toissijainen"}]]
+    [nappi (if (< @dom/leveys dom/+leveys-tabletti+)
+             "Vapauta"
+             "Vapauta kaikki")
+     {:on-click vapauta-kaikki-painettu
+      :ikoni (kuvat/svg-sprite "nuoli-ylos-24")
+      :luokat-str "nappi-toissijainen"}]]
    [:div.footer-oikea
     [nappi (if (< @dom/leveys dom/+leveys-tabletti+)
              "Lomake"
