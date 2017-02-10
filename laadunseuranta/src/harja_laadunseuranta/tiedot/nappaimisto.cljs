@@ -15,7 +15,7 @@
 (def syottosaannot {:kitkamittaus {:lahtoarvo "0,"
                                    :rajat [0.01 0.99]
                                    :kokonaisosan-merkkimaara 1
-                                   :desimaaliosan-merkkimaara 4
+                                   :desimaaliosan-merkkimaara 2
                                    :salli-syottaa-desimaalierotin? false} ;; On jo mukana lähtöarvossa
                     :lumisuus {:lahtoarvo ""
                                :rajat [0 100]
