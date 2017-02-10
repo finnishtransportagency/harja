@@ -8,7 +8,7 @@
             [clojure.string :as str])
   (:require-macros [harja-laadunseuranta.test-macros :refer [with-component
                                                              prepare-component-tests]]
-                   [harja.testutils.macro :refer [klikkaa-ja-odota]]
+                   [harja.testutils.macros :refer [klikkaa-ja-odota]]
                    [cljs.core.async.macros :refer [go go-loop]]
                    [harja-laadunseuranta.macros :refer [after-delay]]))
 
