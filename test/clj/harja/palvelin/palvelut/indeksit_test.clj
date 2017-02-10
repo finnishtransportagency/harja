@@ -70,6 +70,9 @@
                                  +kayttaja-jvh+
                                  {:urakka-id 5})
         rivi (first indeksit)]
-    (is (= (:raskas rivi) {:raakaaine "raskas_polttooljy", :id 4, :indeksinimi "Platts: FO 3,5%S CIF NWE Cargo", :koodi "ABWGL03"}))
-    (is (= (:kevyt rivi) {:indeksinimi "Platts: Propane CIF NWE 7kt+", :koodi "PMUEE03", :raakaaine "nestekaasu", :id 8}))
-    (is (= (:nestekaasu rivi) {:raakaaine "kevyt_polttooljy", :id 6, :koodi "ABWHK03", :indeksinimi "Platts: ULSD 10ppmS CIF NWE Cargo"}))))
+    (is (= (:raskas rivi) {:raakaaine "raskas_polttooljy", :id 4,
+                           :indeksinimi "Platts: FO 3,5%S CIF NWE Cargo", :koodi "ABWGL03" :lahtotason-arvo 225.00M}))
+    (is (= (:kevyt rivi) {:indeksinimi "Platts: Propane CIF NWE 7kt+", :koodi "PMUEE03"
+                          :raakaaine "nestekaasu", :id 8 :lahtotason-arvo 285.55M}))
+    (is (= (:nestekaasu rivi) {:raakaaine "kevyt_polttooljy", :id 6, :koodi "ABWHK03"
+                               :indeksinimi "Platts: ULSD 10ppmS CIF NWE Cargo" :lahtotason-arvo 123.45M}))))
