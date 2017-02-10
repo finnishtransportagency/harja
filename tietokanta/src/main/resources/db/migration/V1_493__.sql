@@ -12,7 +12,7 @@ CREATE TABLE urakkatyypin_indeksi (
 CREATE TABLE paallystysurakan_indeksit (
   id SERIAL PRIMARY KEY,
   urakka integer REFERENCES urakka(id) NOT NULL,
-  urakkavuosi INTEGER,
+  urakkavuosi INTEGER NOT NULL,
 
   indeksi_polttooljyraskas INTEGER REFERENCES urakkatyypin_indeksi(id),
   indeksi_polttooljykevyt INTEGER REFERENCES urakkatyypin_indeksi(id),
@@ -30,11 +30,10 @@ CREATE TABLE paallystysurakan_indeksit (
 
   CHECK (urakkavuosi > 1970 AND urakkavuosi < 2050),
   CHECK (lahtotason_kuukausi > 0 AND lahtotason_kuukausi < 13),
-  CHECK (lahtotason_vuosi > 1970 AND lahtotason_vuosi < 2050),
-
-  CONSTRAINT uniikki_paallystysindeksi UNIQUE (urakka, urakkavuosi)
+  CHECK (lahtotason_vuosi > 1970 AND lahtotason_vuosi < 2050)
 );
 
+CREATE UNIQUE INDEX on paallystysurakan_indeksit (urakka, urakkavuosi) WHERE poistettu IS NOT TRUE;
 
 INSERT INTO urakkatyypin_indeksi(urakkatyyppi, indeksinimi, koodi, raakaaine)
 VALUES

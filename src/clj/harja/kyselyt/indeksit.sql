@@ -62,15 +62,28 @@ SELECT
     LEFT JOIN urakkatyypin_indeksi kevytoljy ON kevytoljy.id = pui.indeksi_polttooljykevyt
     LEFT JOIN urakkatyypin_indeksi nestekaasu ON nestekaasu.id = pui.indeksi_nestekaasu
 
- WHERE urakka = :urakka and poistettu IS NOT TRUE;
+ WHERE urakka = :urakka and pui.poistettu IS NOT TRUE;
 
---name: upsert-paallystysurakan-indeksitiedot
+--name: upsert-paallystysurakan-indeksitiedot!
 INSERT INTO paallystysurakan_indeksit
 (indeksi_polttooljyraskas,indeksi_polttooljykevyt,indeksi_nestekaasu,
  urakkavuosi,lahtotason_vuosi,lahtotason_kuukausi,urakka, luoja, luotu)
 VALUES (:indeksi_polttooljyraskas,:indeksi_polttooljykevyt,:indeksi_nestekaasu,
         :urakkavuosi,:lahtotason_vuosi,:lahtotason_kuukausi,:urakka, :kayttaja, NOW())
-ON CONFLICT ON CONSTRAINT uniikki_paallystysindeksi
-  DO UPDATE SET indeksi_polttooljyraskas = :indeksi_polttooljyraskas,indeksi_polttooljykevyt = :indeksi_polttooljykevyt,indeksi_nestekaasu = :indeksi_nestekaasu,
-    urakkavuosi = :urakkavuosi,lahtotason_vuosi = :lahtotason_vuosi,lahtotason_kuukausi = :lahtotason_kuukausi,urakka = :urakka,
-    muokkaaja = :kayttaja, muokattu = NOW();
+ON CONFLICT (urakka, urakkavuosi) WHERE poistettu IS NOT TRUE
+  DO UPDATE SET indeksi_polttooljyraskas = :indeksi_polttooljyraskas,
+    indeksi_polttooljykevyt = :indeksi_polttooljykevyt,
+    indeksi_nestekaasu = :indeksi_nestekaasu,
+    urakkavuosi = :urakkavuosi,
+    lahtotason_vuosi = :lahtotason_vuosi,
+    lahtotason_kuukausi = :lahtotason_kuukausi,
+    urakka = :urakka,
+    muokkaaja = :kayttaja,
+    poistettu = :poistettu,
+    muokattu = NOW();
+
+--name: hae-paallystysurakan-indeksin-urakka-id
+SELECT
+  urakka
+  FROM paallystysurakan_indeksit
+ WHERE id = :id;

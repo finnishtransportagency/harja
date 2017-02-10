@@ -2,7 +2,7 @@
   "Indeksien tiedot"
   (:require [reagent.core :refer [atom] :as reagent]
             [cljs.core.async :refer [<! >! chan close!]]
-
+            [harja.tiedot.urakka :as urakka]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
             [harja.tiedot.navigaatio :as nav])
@@ -43,7 +43,6 @@
 
 (defn hae-paallystysurakan-indeksitiedot
   [urakka-id]
-  (log "hae päällyhstyksurakan indeksitoedit " (pr-str urakka-id))
   (when @kaikkien-urakkatyyppien-indeksit
     (k/post! :paallystysurakan-indeksitiedot {:urakka-id urakka-id})))
 
@@ -53,10 +52,11 @@
   (go (let [res (<! (k/post! :tallenna-paallystysurakan-indeksitiedot
                              {:urakka-id urakka-id
                               :indeksitiedot tiedot}))]
-        res)))
+        (reset! urakka/paallystysurakan-indeksitiedot res))))
 
 (defn raakaaineen-indeksit
-  "Palauttaa raakaaineen indeksit"
-  [raakaaine paallystysurakan-indeksitiedot]
+  "Palauttaa raakaaineelle mahdolliset indeksit"
+  [raakaaine paallystysurakoiden-indeksitiedot]
   (filter #(or (nil? (:raakaaine %))
-                           (= raakaaine (:raakaaine %))) paallystysurakan-indeksitiedot))
+                           (= raakaaine (:raakaaine %)))
+          paallystysurakoiden-indeksitiedot))

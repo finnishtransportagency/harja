@@ -99,19 +99,36 @@
     (log/debug "hae-paallystysurakan-indeksit: " indeksit)
     indeksit))
 
+(defn vaadi-paallystysurakan-indeksi-kuuluu-urakkaan [db urakka-id paallystysurakan-indeksi-id]
+  "Tarkistaa, että päällystysurakan indeksitieto kuuluu annettuun urakkaan"
+  (assert (and urakka-id paallystysurakan-indeksi-id) "Ei voida suorittaa tarkastusta")
+  (let [indeksin-urakka-id-kannasta (:urakka (first (q/hae-paallystysurakan-indeksin-urakka-id db {:id paallystysurakan-indeksi-id})))]
+    (when (not= urakka-id indeksin-urakka-id-kannasta)
+      (throw (SecurityException. (str " päällystysurakan indeksitieto " paallystysurakan-indeksi-id " ei kuulu valittuun urakkaan "
+                                      urakka-id " vaan urakkaan " indeksin-urakka-id-kannasta))))))
 
 (defn tallenna-paallystysurakan-indeksitiedot
   "Palvelu joka tallentaa päällystysurakan indeksitiedot eli mihin arvoihin mikäkin raaka-ainehinta on sidottu.
   Esim. Bitumin arvo sidotaan usein raskaan polttoöljyn Platts-indeksiin, nestekaasulle ja kevyelle polttoöljylle on omat hintansta."
-  [db user {:keys [urakka-id] :as indeksitiedot}]
-  (log/debug "tallenna-paallystysurakan-indeksiindeksitiedot" indeksitiedot)
-  (assert (map? indeksitiedot) "indeksitiedot tulee olla vektori")
+  [db user {:keys [urakka-id indeksitiedot]}]
+  (log/debug "tallenna-paallystysurakan-indeksitiedot: " indeksitiedot)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (jdbc/with-db-transaction [c db]
     (doseq [i indeksitiedot]
-      (log/debug "kirjaan indeksitiedon: " i)
-      (q/upsert-paallystysurakan-indeksitiedot c i))
-    (hae-paallystysurakan-indeksitiedot c user {:urakka urakka-id})))
+      (let [id (:id i)
+            params {:indeksi_nestekaasu (get-in i [:nestekaasu :id])
+                    :indeksi_polttooljyraskas (get-in i [:raskas :id])
+                    :indeksi_polttooljykevyt (get-in i [:kevyt :id])
+                    :kayttaja (:id user)
+                    :urakka urakka-id
+                    :lahtotason_kuukausi (:lahtotason-kuukausi i)
+                    :lahtotason_vuosi (:lahtotason-vuosi i)
+                    :urakkavuosi (:urakkavuosi i)
+                    :poistettu (:poistettu i)}]
+        (when id
+          (vaadi-paallystysurakan-indeksi-kuuluu-urakkaan c urakka-id id))
+        (q/upsert-paallystysurakan-indeksitiedot! c params)))
+    (hae-paallystysurakan-indeksitiedot c user {:urakka-id urakka-id})))
 
 
 (defrecord Indeksit []
