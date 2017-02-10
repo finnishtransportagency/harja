@@ -257,7 +257,8 @@ SET silta       = :silta,
   tarkastaja    = :tarkastaja,
   luoja         = :luoja,
   poistettu     = :poistettu
-WHERE ulkoinen_id = :ulkoinen_id;
+WHERE ulkoinen_id = :id AND luoja = :luoja AND poistettu = FALSE;
+
 
 -- name: hae-siltatarkastusten-kohteet
 -- Hakee annettujen siltatarkastusten kohteet ID:iden perusteella
