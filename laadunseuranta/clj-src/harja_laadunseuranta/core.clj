@@ -27,15 +27,15 @@
   (:import (org.postgis PGgeometry))
   (:gen-class))
 
+
 (defn- kayttajan-tarkastusurakat
   [db kayttaja sijainti]
-  (let [urakat (kayttajatiedot/kayttajan-lahimmat-urakat db
-                                                         kayttaja
-                                                         (fn [urakka kayttaja]
-                                                           (oikeudet/voi-kirjoittaa?
-                                                             oikeudet/urakat-laadunseuranta-tarkastukset
-                                                             urakka kayttaja))
-                                                         sijainti)
+  (let [urakat (kayttajatiedot/kayttajan-lahimmat-urakat
+                 db
+                 kayttaja
+                 (fn [urakka kayttaja]
+                   (oikeudet/voi-kirjata-ls-tyokalulla? kayttaja urakka))
+                 sijainti)
         urakat (map
                  #(assoc % :oma-urakka?
                            (boolean ((set
@@ -94,6 +94,9 @@
                                 :luoja kayttaja-id}))))
 
 (defn- tallenna-merkinnat! [db kirjaukset kayttaja-id]
+  ;; Ei urakkaa tässä vaiheessa, ei voida tehdä oikeustarkistusta
+  ;; Palvelun käyttö vaatii kuitenkin frontilla pääsyn työkaluun
+  ;; ja Livi-tunnuksen, mikä on riittävä suoja.
   (log/debug "Vastaanotettu merkintä: " (pr-str kirjaukset))
   (jdbc/with-db-transaction [tx db]
     (let [vakiohavainto-idt (q/hae-vakiohavaintoavaimet tx)]
@@ -163,9 +166,7 @@
   (jdbc/with-db-transaction [tx db]
     (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)
           urakka-id (:urakka tarkastusajo)
-          _ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset
-                                            kayttaja
-                                            urakka-id)
+          _ (oikeudet/vaadi-ls-tyokalun-kirjausoikeus kayttaja urakka-id)
           ajo-paatetty (:paatetty (first (q/ajo-paatetty tx {:id tarkastusajo-id})))]
       (if-not ajo-paatetty
         (let [tarkastukset (muunna-tarkastusajon-reittipisteet-tarkastuksiksi
@@ -177,14 +178,19 @@
         (log/warn (format "Yritettiin päättää ajo %s, joka on jo päätetty!" tarkastusajo-id))))))
 
 (defn- luo-uusi-tarkastusajo! [db tiedot kayttaja]
+  ;; Ei urakkaa tässä vaiheessa, ei voida tehdä oikeustarkistusta
+  ;; Palvelun käyttö vaatii kuitenkin frontilla pääsyn työkaluun
+  ;; ja Livi-tunnuksen, mikä on riittävä suoja.
   (q/luo-uusi-tarkastusajo<! db {:ulkoinen_id 0
                                  :kayttaja (:id kayttaja)}))
 
-(defn- hae-tarkastusajon-reitti [db tiedot kayttaja]
+(defn- hae-tarkastusajon-reitti
+  "Debug-funktio, jota käytetään vain salaisesta TR-osiosta, vaatii jvh:n."
+  [db tiedot kayttaja]
   (roolit/vaadi-rooli kayttaja roolit/jarjestelmavastaava)
   (let [merkinnat (mapv
                     #(assoc % :sijainti (let [geometria (.getGeometry (:sijainti %))]
-                                              [(.x geometria) (.y geometria)]))
+                                          [(.x geometria) (.y geometria)]))
                     (q/hae-tarkastusajon-reitti db {:id (:tarkastusajo-id tiedot)}))]
     merkinnat))
 
@@ -316,7 +322,7 @@
   ;; Laadunseurannan API kutsut
   (laadunseuranta-api db http))
 
-(defrecord Laadunseuranta [asetukset]
+(defrecord Laadunseuranta []
   component/Lifecycle
   (start [{db :db
            http :http-palvelin

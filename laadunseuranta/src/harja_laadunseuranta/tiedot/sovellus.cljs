@@ -6,11 +6,15 @@
 
 (def sovelluksen-alkutila
   {;; Sovelluksen alustustiedot
-   :alustus {:alustettu? false
-             :gps-tuettu? false
-             :ensimmainen-sijainti nil ; Estää sovelluksen käytön jos GPS ei toimi oikein
+   :alustus {:gps-tuettu nil
+             :idxdb-tuettu nil
+             :ensimmainen-sijainti-saatu nil ; Estää sovelluksen käytön jos GPS ei toimi oikein
+             :ensimmainen-sijainti-yritys 0
+             :ensimmainen-sijainti-virhekoodi nil
              :verkkoyhteys? (.-onLine js/navigator)
              :selain-tuettu? (utils/tuettu-selain?)
+             :kayttaja-tunnistettu nil
+             :oikeus-ainakin-yhteen-urakkaan nil
              :selain-vanhentunut? (utils/vanhentunut-selain?)}
 
    ;; Tarkastusajon perustiedot
@@ -30,7 +34,7 @@
    :kayttaja {:kayttajanimi nil
               :kayttajatunnus nil
               :roolit #{}
-              :oikeus-urakoihin [] ;; Urakat, joihin tarkastusoikeus, "sopivimmat" ensimmäisenä
+              :oikeus-urakoihin nil ;; Urakat, joihin tarkastusoikeus, "sopivimmat" ensimmäisenä. nil kun haetaan, vector kun haettu
               :organisaatio nil}
 
    ;; Ajonaikaiset tiedot
@@ -47,6 +51,7 @@
 
    ;; UI
    :ui {:tr-tiedot-nakyvissa? false
+        :varmistusdialog-data nil
         :paanavigointi {:nakyvissa? true
                         :valilehdet-nakyvissa? true
                         :valilehtiryhmat [] ; Näkyvien välilehtien määritykset {:avain ..., :nimi ... , :sisalto ...}
@@ -84,6 +89,7 @@
                                     :aet nil
                                     :losa nil
                                     :let nil}}
+   :lomake-koskettu? false ;; Tulisi olla true heti kun käyttäjä on muokannut uuden lomakkeen jotain kenttää
 
    :liittyvat-havainnot [] ;; Lista viimeisiä havaintoja, joihin lomake voidaan liittää
    ;; Item on map: {:id <indexeddb-id> :havainto-avain :lumista :aikaleima <aika> :tr-osoite <tr-osoite-mappi>}
@@ -125,28 +131,33 @@
 (def havaintolomake-auki? (reagent/cursor sovellus [:havaintolomake-auki?]))
 (def kuvaa-otetaan? (reagent/cursor sovellus [:kuvaa-otetaan?]))
 (def havaintolomakedata (reagent/cursor sovellus [:havaintolomakedata]))
+(def lomake-koskettu? (reagent/cursor sovellus [:lomake-koskettu?]))
 (def havaintolomakkeeseen-liittyva-havainto (reagent/cursor sovellus [:havaintolomakedata :liittyy-havaintoon]))
 (def liittyy-varmasti-tiettyyn-havaintoon? (reagent/cursor sovellus [:havaintolomakedata :liittyy-varmasti-tiettyyn-havaintoon?]))
 (def liittyvat-havainnot (reagent/cursor sovellus [:liittyvat-havainnot]))
 (def havaintolomake-kuva (reagent/cursor sovellus [:havaintolomakedata :kuva]))
 (def havaintolomake-esikatselukuva (reagent/cursor sovellus [:havaintolomakedata :esikatselukuva]))
 
-(def alustus-valmis (reaction (let [sovellus @sovellus]
-                                (boolean (and (get-in sovellus [:alustus :gps-tuettu?])
-                                              (get-in sovellus [:alustus :ensimmainen-sijainti])
-                                              (get-in sovellus [:alustus :verkkoyhteys?])
-                                              (get-in sovellus [:alustus :selain-tuettu?])
-                                              (not (empty? (get-in sovellus [:kayttaja :oikeus-urakoihin])))
-                                              (:idxdb sovellus)
-                                              (get-in sovellus [:kayttaja :kayttajanimi]))))))
-
-(def sovellus-alustettu (reagent/cursor sovellus [:alustus :alustettu?]))
 (def verkkoyhteys (reagent/cursor sovellus [:alustus :verkkoyhteys?]))
-(def selain-tuettu (reagent/cursor sovellus [:alustus :selain-tuettu?]))
+(def selain-tuettu? (reagent/cursor sovellus [:alustus :selain-tuettu?]))
 (def selain-vanhentunut (reagent/cursor sovellus [:alustus :selain-vanhentunut?]))
-(def gps-tuettu (reagent/cursor sovellus [:alustus :gps-tuettu?]))
-(def ensimmainen-sijainti (reagent/cursor sovellus [:alustus :ensimmainen-sijainti]))
+(def gps-tuettu (reagent/cursor sovellus [:alustus :gps-tuettu]))
+(def kayttajalla-oikeus-ainakin-yhteen-urakkaan (reagent/cursor sovellus [:alustus :oikeus-ainakin-yhteen-urakkaan]))
+(def kayttaja-tunnistettu (reagent/cursor sovellus [:alustus :kayttaja-tunnistettu]))
+(def idxdb-tuettu (reagent/cursor sovellus [:alustus :idxdb-tuettu]))
+(def ensimmainen-sijainti-saatu (reagent/cursor sovellus [:alustus :ensimmainen-sijainti-saatu]))
+(def ensimmainen-sijainti-yritys (reagent/cursor sovellus [:alustus :ensimmainen-sijainti-yritys]))
+(def ensimmainen-sijainti-virhekoodi (reagent/cursor sovellus [:alustus :ensimmainen-sijainti-virhekoodi]))
 (def oikeus-urakoihin (reagent/cursor sovellus [:kayttaja :oikeus-urakoihin]))
+
+(def alustus-valmis? (reaction (boolean (and @selain-tuettu?
+                                             @idxdb-tuettu
+                                             @verkkoyhteys
+                                             @gps-tuettu
+                                             @ensimmainen-sijainti-saatu
+                                             @kayttaja-tunnistettu
+                                             @kayttajalla-oikeus-ainakin-yhteen-urakkaan))))
+(def sovelluksen-naytto-sallittu? (atom false))
 
 (def kirjauspisteet (reagent/cursor sovellus [:kirjauspisteet]))
 
@@ -162,10 +173,10 @@
 
 (def ajoneuvon-sijainti (reaction
                           (if (:nykyinen @sijainti)
-                            (:nykyinen @sijainti)
+                            @sijainti
                             tyhja-sijainti)))
 
-(def kartan-keskipiste (reaction @ajoneuvon-sijainti))
+(def kartan-keskipiste (reaction (:nykyinen @ajoneuvon-sijainti)))
 
 (def tarkastusajo-kaynnissa? (reagent/cursor sovellus [:tarkastusajo-kaynnissa?]))
 (def ilmoitus (reagent/cursor sovellus [:ilmoitus]))
@@ -223,6 +234,8 @@
                           (not @havaintolomake-auki?)))))
 
 (def nayta-paanavigointi? (reagent/cursor sovellus [:ui :paanavigointi :nakyvissa?]))
+(def varmistusdialog-data (reagent/cursor sovellus [:ui :varmistusdialog-data]))
+(def varmistusdialog-nakyvissa? (reaction (some? @varmistusdialog-data)))
 (def nayta-paanavigointi-valilehdet? (reagent/cursor sovellus [:ui :paanavigointi :valilehdet-nakyvissa?]))
 (def paanavigoinnin-valilehtiryhmat (reagent/cursor sovellus [:ui :paanavigointi :valilehtiryhmat]))
 (def paanavigoinnin-valittu-valilehtiryhma (reagent/cursor sovellus [:ui :paanavigointi :valittu-valilehtiryhma]))

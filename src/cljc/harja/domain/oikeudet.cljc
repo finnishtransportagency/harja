@@ -187,6 +187,25 @@
                       (when urakka-id
                         (str " urakassa " urakka-id)))))))))
 
+#?(:clj
+   (defn voi-kirjata-ls-tyokalulla?
+     [kayttaja urakka-id]
+     (or
+       (voi-kirjoittaa?
+         urakat-laadunseuranta-tarkastukset
+         urakka-id kayttaja)
+       (voi-kirjoittaa?
+         laadunseuranta-kirjaus
+         urakka-id kayttaja))))
+#?(:clj
+   (defn vaadi-ls-tyokalun-kirjausoikeus
+     [kayttaja urakka-id]
+     (when-not (voi-kirjata-ls-tyokalulla? kayttaja urakka-id)
+       (throw+ (roolit/->EiOikeutta
+                 (str "Käyttäjällä '" (pr-str kayttaja) "' ei oikeutta tehdä tarkastustyökalulla kirjauksia "
+                      (when urakka-id
+                        (str " urakassa " urakka-id))))))))
+
 (def ilmoitus-ei-oikeutta-muokata-toteumaa
   "Käyttäjäroolillasi ei ole oikeutta muokata tätä toteumaa.")
 

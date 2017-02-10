@@ -7,7 +7,8 @@
             [taoensso.timbre :as log]
             [clj-time.format :as format]
             [clojure.java.jdbc :as jdbc]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.pvm :as pvm])
   (:import (clojure.lang Keyword)))
 
 
@@ -247,8 +248,11 @@
       (loop [acc []
              pos 0]
         (if (>= pos len)
-          acc
-          (if (= \" (.charAt string pos))
+          (if (= pos len)
+            (conj acc "")
+            acc)
+          (cond
+            (= \" (.charAt string pos))
             ;; Quotattu merkkijono, etsitään loppuquote
             (let [new-pos (.indexOf string (int \") (inc pos))]
               (assert (not= -1 new-pos)
@@ -257,7 +261,12 @@
                      ;; Hypätään " ja , merkkien yli
                      (+ new-pos 2)))
 
+            (= \, (.charAt string pos))
+            ;; Tyhjä arvo
+            (recur (conj acc "") (inc pos))
+
             ;; Ei quotattu arvo, etsitään pilkku
+            :else
             (let [new-pos (.indexOf string (int \,) (inc pos))]
               (if (= -1 new-pos)
                 ;; Ei löydy pilkkua, tämä on viimeinen arvo
@@ -266,6 +275,10 @@
                 ;; Pilkku löytyy, lisää arvoja
                 (recur (conj acc (subs string pos new-pos))
                        (inc new-pos))))))))))
+
+(def ^:private lue-pgobject-date
+  (partial pvm/parsi pvm/pgobject-format))
+
 (defn pgobject->map
   "Muuntaa resultsetissä olevan record tyyppisen arvon (PGobject)
   mäpiksi. Tulosmäpissä olevat avaimet ja arvojen tyypit annetaan
@@ -288,7 +301,9 @@
                 (case tyyppi
                   :long (Long/parseLong arvo)
                   :double (Double/parseDouble arvo)
-                  :string arvo))
+                  :string arvo
+                  :date (lue-pgobject-date arvo)
+                  (assert false (str "Ei tuettu tyyppi: " tyyppi ", arvo: " arvo))))
          kentat
          arvot)))))
 
@@ -301,7 +316,7 @@
        (str/ends-with? osoite ")")
        (zipmap [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]
                (mapv (fn [arvo]
-                       (when arvo
+                       (when (not-empty arvo)
                          (Integer/parseInt arvo)))
                      (take 5
                            (str/split (str/replace osoite #"\(|\)" "") #","))))))

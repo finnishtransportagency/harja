@@ -8,7 +8,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as urakka])
+            [harja.tiedot.urakka :as urakka]
+            [harja.domain.tierekisteri :as tr-domain])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -29,21 +30,37 @@
                                                     :urakka-id urakka-id
                                                     :sopimus-id sopimus-id}))
 
-(def aikataulurivit
+(defonce aikataulurivit
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @u/valittu-sopimusnumero
                nakymassa? @aikataulu-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                (hae-aikataulut valittu-urakka-id valittu-sopimus-id vuosi))))
+                (go
+                  (sort-by tr-domain/tiekohteiden-jarjestys
+                           (<! (hae-aikataulut valittu-urakka-id
+                                               valittu-sopimus-id vuosi)))))))
 
-(def tiemerkinnan-suorittavat-urakat
+(defonce tiemerkinnan-suorittavat-urakat
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                nakymassa? @aikataulu-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id nakymassa?)
                 (hae-tiemerkinnan-suorittavat-urakat valittu-urakka-id))))
+
+(defn luokittele-valmiuden-mukaan
+  "Luokittelee annetun aikataulurivin valmiuden mukaan kolmeen kategoriaan:
+  :valmis, :kesken, :aloittamatta."
+  [{valmis :aikataulu-kohde-valmis
+    aloitettu :aikataulu-kohde-alku :as aikataulurivi}]
+  (cond
+    (some? valmis) :valmis
+    (some? aloitettu) :kesken
+    :default :aloittamatta))
+
+(defonce aikataulurivit-valmiuden-mukaan
+  (reaction (group-by luokittele-valmiuden-mukaan @aikataulurivit)))
 
 (defn tallenna-yllapitokohteiden-aikataulu [urakka-id sopimus-id kohteet]
   (go

@@ -495,6 +495,7 @@ SELECT
   tpk.yksikko        AS tehtava_yksikko,
   tt.toteuma         AS tehtava_id,
   tpk.nimi AS toimenpide,
+  -- tarvitaanko viela kun interpolointi hakee myos?
   yrita_tierekisteriosoite_pisteille2(
       alkupiste(t.reitti), loppupiste(t.reitti), 1)::TEXT AS tierekisteriosoite
 FROM toteuma_tehtava tt
@@ -510,6 +511,23 @@ WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.paattynyt BETWEEN :alku AND :loppu) AND
       ST_Distance(t.reitti, ST_MakePoint(:x,:y)) < :toleranssi;
 
+-- name: osoite-reittipisteille
+-- Palauttaa tierekisteriosoitteen
+SELECT yrita_tierekisteriosoite_pisteelle2(:piste ::geometry, :etaisyys ::integer) as tr_osoite;
+
+-- name: reittipisteiden-sijainnit-toteuman-reitilla
+SELECT
+  ST_ClosestPoint(t.reitti, rp.sijainti ::geometry) AS sijainti,
+  rp.id AS reittipiste_id,
+  rp.aika AS aika
+FROM toteuma t, reittipiste rp
+WHERE t.id = :toteuma-id AND rp.toteuma = t.id AND  rp.id IN (:reittipiste-idt);
+
+-- name: suhteellinen-paikka-pisteiden-valissa
+SELECT
+  ST_LineLocatePoint(v.viiva ::geometry, ST_ClosestPoint (v.viiva ::geometry, :piste ::geometry) ::geometry) AS paikka
+FROM
+  (SELECT ST_MakeLine(:rp1 ::geometry, :rp2 ::geometry) AS viiva) v;
 
 -- name: hae-tyokoneselitteet
 -- Hakee työkoneiden selitteet

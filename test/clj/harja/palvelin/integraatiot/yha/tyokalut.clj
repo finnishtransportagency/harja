@@ -78,6 +78,7 @@
     <kohteet>
       <kohde>
         <yha-id>3</yha-id>
+        <kohdenumero>666</kohdenumero>
         <kohdetyyppi>1</kohdetyyppi>
         <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
         <nimi>string</nimi>

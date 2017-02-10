@@ -14,7 +14,8 @@
             [harja-laadunseuranta.tarkastusreittimuunnin.ymparikaantyminen :as ymparikaantyminen]
             [clojure.string :as str]
             [clj-time.core :as t]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [harja.domain.roolit :as roolit]))
 
 (def +kahden-pisteen-valinen-sallittu-aikaero-s+ 180)
 
@@ -40,9 +41,11 @@
   [nykyinen-reittimerkinta seuraava-reittimerkinta]
   (let [jatkuvat-havainnot-pysyvat-samana? (= (:jatkuvat-havainnot nykyinen-reittimerkinta)
                                               (:jatkuvat-havainnot seuraava-reittimerkinta))
-        seuraava-piste-samalla-tiella? (boolean (or (nil? (:tr-osoite seuraava-reittimerkinta))
-                                                    (= (get-in nykyinen-reittimerkinta [:tr-osoite :tie])
-                                                       (get-in seuraava-reittimerkinta [:tr-osoite :tie]))))
+        seuraava-piste-samalla-tiella? (boolean (or
+                                                  (nil? (:tr-osoite nykyinen-reittimerkinta))
+                                                  (nil? (:tr-osoite seuraava-reittimerkinta))
+                                                  (= (get-in nykyinen-reittimerkinta [:tr-osoite :tie])
+                                                     (get-in seuraava-reittimerkinta [:tr-osoite :tie]))))
         ei-ajallista-gappia? (boolean (or
                                         (nil? (:aikaleima nykyinen-reittimerkinta))
                                         (nil? (:aikaleima seuraava-reittimerkinta))
@@ -55,11 +58,11 @@
                                                    (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :sivukaltevuus)))
         seuraavassa-pisteessa-ei-kaannyta-ympari? (not (:ymparikaantyminen? seuraava-reittimerkinta))]
 
-    (when-not jatkuvat-havainnot-pysyvat-samana? (log/debug "Jatkuvat havainnot muuttuu, katkaistaan reitti"))
-    (when-not seuraava-piste-samalla-tiella? (log/debug "Seuraava piste eri tiellä, katkaistaan reitti"))
-    (when-not ei-ajallista-gappia? (log/debug "Ajallinen gäppi pisteiden välillä, katkaistaan reitti"))
-    (when-not jatkuvat-mittausarvot-samat? (log/debug "Jatkuvat mittausarvot muuttuivat, katkaistaan reitti"))
-    (when-not seuraavassa-pisteessa-ei-kaannyta-ympari? (log/debug "Ympärikääntyminen havaittu, katkaistaan reitti"))
+    (when-not jatkuvat-havainnot-pysyvat-samana? (log/debug (:sijainti seuraava-reittimerkinta) "Jatkuvat havainnot muuttuu " (:jatkuvat-havainnot nykyinen-reittimerkinta) " -> " (:jatkuvat-havainnot seuraava-reittimerkinta) ", katkaistaan reitti"))
+    (when-not seuraava-piste-samalla-tiella? (log/debug (:sijainti seuraava-reittimerkinta) "Seuraava piste eri tiellä " (get-in nykyinen-reittimerkinta [:tr-osoite :tie]) " -> " (get-in seuraava-reittimerkinta [:tr-osoite :tie]) ", katkaistaan reitti"))
+    (when-not ei-ajallista-gappia? (log/debug (:sijainti seuraava-reittimerkinta) "Ajallinen gäppi pisteiden välillä, " (c/from-sql-time (:aikaleima nykyinen-reittimerkinta)) " ja " (c/from-sql-time (:aikaleima seuraava-reittimerkinta)) ", katkaistaan reitti"))
+    (when-not jatkuvat-mittausarvot-samat? (log/debug (:sijainti seuraava-reittimerkinta) "Jatkuvat mittausarvot muuttuivat, katkaistaan reitti"))
+    (when-not seuraavassa-pisteessa-ei-kaannyta-ympari? (log/debug (:sijainti seuraava-reittimerkinta) "Ympärikääntyminen havaittu, katkaistaan reitti"))
 
     (boolean
       (and
@@ -168,7 +171,9 @@
 
                                      (vector? (mittaus-avain reittimerkinta))
                                      (keskiarvo (mittaus-avain reittimerkinta))))]
-    (as-> {:aika (:aikaleima reittimerkinta)
+    (as-> {;; Pistemäisessä aika on aina tämä, koska yksi piste.
+           ;; Yhdistetyttä merkinnässä tässä on viimeisimmän merkinnän aika
+           :aika (:aikaleima reittimerkinta)
            :tyyppi (paattele-tarkastustyyppi reittimerkinta)
            :tarkastusajo (:tarkastusajo reittimerkinta)
            ;; Reittimerkintöjen id:t, joista tämä tarkastus muodostuu
@@ -239,6 +244,14 @@
     (assoc reittimerkinta :laadunalitus true)
     reittimerkinta))
 
+(defn- keraa-seuraavan-pisteen-aikaleima
+  "Ottaa reittimerkinnän ja järjestyksessä seuraavan reittimerkinnän.
+   Asettaa aikaleimaksi seuraavan merkinnän aikaleiman."
+  [reittimerkinta seuraava-reittimerkinta]
+  (if-let [seuraava-aikaleima (:aikaleima seuraava-reittimerkinta)]
+    (assoc reittimerkinta :aikaleima seuraava-aikaleima)
+    reittimerkinta))
+
 (defn- keraa-reittimerkintojen-kuvaukset
   "Yhdistää samalla jatkuvalla havainnolla olevat kuvauskentät yhteen"
   [reittimerkinta seuraava-reittimerkinta]
@@ -263,6 +276,7 @@
               (as-> viimeisin-yhdistetty-reittimerkinta edellinen
                     (keraa-seuraavan-pisteen-sijainti edellinen seuraava-merkinta)
                     (keraa-seuraavan-pisteen-laadunalitus edellinen seuraava-merkinta)
+                    (keraa-seuraavan-pisteen-aikaleima edellinen seuraava-merkinta)
                     (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :talvihoito-tasaisuus)
                     (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :lumisuus)
                     (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :kitkamittaus)
@@ -413,7 +427,8 @@
   (let [tarkastus (luo-kantaan-tallennettava-tarkastus db tarkastus kayttaja)
         _ (q/luo-uusi-tarkastus<! db
                                   (merge tarkastus
-                                         {:luoja (:id kayttaja)}))
+                                         {:luoja (:id kayttaja)
+                                          :nayta_urakoitsijalle (roolit/urakoitsija? kayttaja)}))
         _ (log/debug "Uusi tarkastus luotu!")
         tarkastus-id (tark-q/luodun-tarkastuksen-id db)
         sisaltaa-talvihoitomittauksen? (not (empty? (remove nil? (vals (:talvihoitomittaus tarkastus)))))

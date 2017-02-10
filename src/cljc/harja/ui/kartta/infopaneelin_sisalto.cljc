@@ -38,7 +38,8 @@
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.domain.tierekisteri.varusteet :as varusteet]))
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
 
@@ -61,7 +62,8 @@
             (get data path puuttuu)
             (get-in data path puuttuu)))))
 
-(defn- hakufunktio [validointi-fn-tai-vaaditut-avaimet haku-fn]
+(defn- hakufunktio
+  [validointi-fn-tai-vaaditut-avaimet haku-fn]
   {:validointi-fn (cond
                     (set? validointi-fn-tai-vaaditut-avaimet)
                     #(every? true? (map (fn [avain] (sisaltaa? % avain)) validointi-fn-tai-vaaditut-avaimet))
@@ -75,10 +77,9 @@
 (defmethod infopaneeli-skeema :tyokone [tyokone]
   {:tyyppi :tyokone
    :jarjesta-fn :viimeisin-havainto
-   :otsikko (str "Työkone: "
+   :otsikko (str (pvm/pvm-aika (:viimeisin-havainto tyokone)) " - Työkone: "
                  (when (:tehtavat tyokone)
-                   (string/join ", " (:tehtavat tyokone)))
-                 " " (pvm/pvm-aika (:viimeisin-havainto tyokone)))
+                   (string/join ", " (:tehtavat tyokone))))
    :tiedot [{:otsikko "Ensimmäinen havainto" :tyyppi :pvm-aika :nimi :ensimmainen-havainto}
             {:otsikko "Viimeisin havainto" :tyyppi :pvm-aika :nimi :viimeisin-havainto}
             {:otsikko "Tyyppi" :tyyppi :string :nimi :tyokonetyyppi}
@@ -91,11 +92,12 @@
 (defn- ilmoituksen-tiedot [ilmoitus]
   {:tyyppi :ilmoitus
    :jarjesta-fn :ilmoitettu
-   :otsikko (str (condp = (:ilmoitustyyppi ilmoitus)
-                   :toimenpidepyynto "Toimenpidepyyntö"
-                   :tiedoitus "Tiedotus"
-                   (string/capitalize (name (:ilmoitustyyppi ilmoitus))))
-                 " " (pvm/pvm-aika (:ilmoitettu ilmoitus)))
+   :otsikko (str
+              (pvm/pvm-aika (:ilmoitettu ilmoitus)) " - "
+              (condp = (:ilmoitustyyppi ilmoitus)
+                :toimenpidepyynto "Toimenpidepyyntö"
+                :tiedoitus "Tiedotus"
+                (string/capitalize (name (:ilmoitustyyppi ilmoitus)))))
    :tiedot [{:otsikko "Id" :tyyppi :string :nimi :ilmoitusid}
             {:otsikko "Ilmoitettu" :tyyppi :pvm-aika :nimi :ilmoitettu}
             {:otsikko "Otsikko" :tyyppi :string :nimi :otsikko}
@@ -116,13 +118,13 @@
 (defmethod infopaneeli-skeema :varustetoteuma [toteuma]
   {:tyyppi :varustetoteuma
    :jarjesta-fn :alkupvm
-   :otsikko (str "Varustetoteuma " (pvm/pvm-aika (:alkupvm toteuma)))
+   :otsikko (str (pvm/pvm-aika (:alkupvm toteuma)) " - Varustetoteuma")
    :tiedot [{:otsikko "Päivämäärä" :tyyppi :pvm :nimi :alkupvm}
             {:otsikko "Tunniste" :tyyppi :string :nimi :tunniste}
             {:otsikko "Tietolaji" :tyyppi :string :nimi :tietolaji}
-            {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
-            {:otsikko "Kuntoluokka" :tyyppi :string :nimi :kuntoluokka}
-            {:otsikko "Avaa varustekortti" :tyyppi :linkki :nimi :varustekortti-url}]
+            {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide
+             :hae (hakufunktio :toimenpide #(varusteet/varuste-toimenpide->string (:toimenpide %)))}
+            {:otsikko "Kuntoluokka" :tyyppi :string :nimi :kuntoluokka}]
    :data toteuma})
 
 (defn- yllapitokohde-skeema
@@ -212,7 +214,7 @@
         kasitelty :kasitelty]
     {:tyyppi :turvallisuuspoikkeama
      :jarjesta-fn :tapahtunut
-     :otsikko (str "Turvallisuuspoikkeama " (pvm/pvm-aika (tapahtunut turpo)))
+     :otsikko (str (pvm/pvm-aika (tapahtunut turpo)) " - Turvallisuuspoikkeama")
      :tiedot [(when (tapahtunut turpo)
                 {:otsikko "Tapahtunut" :tyyppi :pvm-aika :nimi tapahtunut})
               (when (kasitelty turpo)
@@ -234,8 +236,8 @@
                :hae (hakufunktio
                       :korjaavattoimenpiteet
                       #(str (count (filter :suoritettu (:korjaavattoimenpiteet %)))
-                           "/"
-                           (count (:korjaavattoimenpiteet %))))}]
+                            "/"
+                            (count (:korjaavattoimenpiteet %))))}]
      :data turpo}))
 
 (defmethod infopaneeli-skeema :tarkastus [tarkastus]
@@ -252,8 +254,7 @@
                         :default nil)]
     {:tyyppi :tarkastus
      :jarjesta-fn :aika
-     :otsikko (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus))
-                   (str " " (pvm/pvm-aika (:aika tarkastus))))
+     :otsikko (str (pvm/pvm-aika (:aika tarkastus)) " - " (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)))
      :tiedot [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
               {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite :nimi :tierekisteriosoite}
               {:otsikko "Tarkastaja" :nimi :tarkastaja}
@@ -268,7 +269,7 @@
         kasittelyaika #(get-in % [:paatos :kasittelyaika])]
     {:tyyppi :laatupoikkeama
      :jarjesta-fn :aika
-     :otsikko (str "Laatupoikkeama " (pvm/pvm-aika (:aika laatupoikkeama)))
+     :otsikko (str (pvm/pvm-aika (:aika laatupoikkeama)) " - Laatupoikkeama")
      :tiedot [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
               {:otsikko "Tekijä" :hae (hakufunktio
                                         #{:tekijanimi :tekija}
@@ -317,14 +318,16 @@
 (defmethod infopaneeli-skeema :toteuma [toteuma]
   {:tyyppi :toteuma
    :jarjesta-fn :alkanut
-   :otsikko (let [toimenpiteet (map :toimenpide (:tehtavat toteuma))
-                  _ (log "toteuma" (pr-str toteuma))]
-              (str (if (empty? toimenpiteet)
+   :otsikko (let [toimenpiteet (map :toimenpide (:tehtavat toteuma))]
+              (str (pvm/pvm-aika (:alkanut toteuma)) " - "
+                   (if (empty? toimenpiteet)
                      "Toteuma"
-                     (string/join ", " toimenpiteet))
-                   (str " " (pvm/pvm-aika (:alkanut toteuma)))))
+                     (string/join ", " toimenpiteet))))
    :tiedot (vec (concat [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
                          {:otsikko "Päättynyt" :tyyppi :pvm-aika :nimi :paattynyt}
+                         {:otsikko "Klo (arvio)" :tyyppi :pvm-aika
+                          ;; Arvioitu aika pisteessä saa puuttua, eli validointifunktio on (constantly true)
+                          :hae (hakufunktio (constantly true) :aika-pisteessa)}
                          {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite
                           :nimi :tierekisteriosoite}
                          {:otsikko "Suorittaja" :hae (hakufunktio
@@ -334,6 +337,8 @@
                         (for [{:keys [toimenpide maara yksikko]} (:tehtavat toteuma)]
                           {:otsikko toimenpide
                            :hae (hakufunktio
+                                  ;; Näitä ei edes tehdä jos arvot puuttuvat, joten ei
+                                  ;; tarvita erityistä validointia.
                                   (constantly true)
                                   (constantly (str maara " " yksikko)))})
 
@@ -351,8 +356,7 @@
 (defmethod infopaneeli-skeema :silta [silta]
   {:tyyppi :silta
    :jarjesta-fn :tarkastusaika
-   :otsikko (str "Silta " (when (:tarkastusaika silta)
-                            (pvm/pvm-aika (:tarkastusaika silta))))
+   :otsikko (or (:siltanimi silta) "Silta")
    :tiedot [{:otsikko "Nimi" :nimi :siltanimi}
             {:otsikko "Sillan tunnus" :nimi :siltatunnus}
             {:otsikko "Edellinen tarkastus" :tyyppi :pvm :nimi :tarkastusaika}
@@ -362,8 +366,8 @@
 (defmethod infopaneeli-skeema :tietyomaa [tietyomaa]
   {:tyyppi :tietyomaa
    :jarjesta-fn :aika
-   :otsikko (str "Tietyömaa " (when (:aika tietyomaa)
-                                (pvm/pvm-aika (:aika tietyomaa))))
+   :otsikko (str (when (:aika tietyomaa)
+                   (str (pvm/pvm-aika (:aika tietyomaa)) " - ")) "Tietyömaa")
    :tiedot [{:otsikko "Ylläpitokohde" :hae (hakufunktio
                                              #{:yllapitokohteen-nimi :yllapitokohteen-numero}
                                              #(str (:yllapitokohteen-nimi %) " (" (:yllapitokohteen-numero %) ")"))}
