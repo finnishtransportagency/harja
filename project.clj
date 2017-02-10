@@ -126,7 +126,7 @@
                  [yleisradio/new-reliquary "1.0.0"]
 
                  ;; Tuck UI apuri
-                 [webjure/tuck "0.2.3"]
+                 [webjure/tuck "0.3"]
 
                  ;; Laadunseurantatyökalua varten
                  [org.clojure/data.codec "0.1.0"]
@@ -162,7 +162,7 @@
   ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds
               [{:id "dev"
-                :source-paths ["src/cljs" "shared-src/cljs" "src/cljc" "src/cljs-dev"]
+                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev"]
                 :compiler {:optimizations :none
                            :source-map true
                            ;;:preamble ["reagent/react.js"]
@@ -173,8 +173,8 @@
                            :recompile-dependents false
                            }}
                {:id "test"
-                :source-paths ["src/cljs" "shared-src/cljs" "src/cljc" "src/cljs-dev"
-                               "test/cljs" "test/doo"]
+                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev"
+                               "test/cljs" "test/doo" "test/shared-cljs"]
                 :compiler {:output-to "target/cljs/test/test.js"
                            :output-dir "target/cljs/test"
                            :optimizations :none
@@ -188,7 +188,7 @@
                ;;:warning-handlers [utils.cljs-warning-handler/handle]}
 
                {:id "prod"
-                :source-paths ["src/cljs" "shared-src/cljs" "src/cljc" "src/cljs-prod"]
+                :source-paths ["src/cljs" "src/cljc" "src/cljs-prod"]
                 :compiler {:optimizations :advanced
                            ;; korjaa pitkän buildiajan http://dev.clojure.org/jira/browse/CLJS-1228
                            :recompile-dependents false
@@ -205,7 +205,7 @@
 
                ;; Laadunseurannan buildit
                {:id "laadunseuranta-dev"
-                :source-paths ["laadunseuranta/src" "shared-src/cljs" "laadunseuranta/cljc-src"]
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
 
                 :figwheel {:on-jsload "harja-laadunseuranta.dev-core/on-js-reload"}
 
@@ -216,7 +216,7 @@
                            :source-map-timestamp true}}
 
                {:id "laadunseuranta-devcards"
-                :source-paths ["laadunseuranta/src" "shared-src/cljs" "laadunseuranta/cljc-src"]
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
 
                 :figwheel {:devcards true
                            ;:nrepl-port 7889
@@ -230,8 +230,8 @@
                            :source-map-timestamp true}}
 
                {:id "laadunseuranta-test"
-                :source-paths ["laadunseuranta/src" "shared-src/cljs" "laadunseuranta/cljc-src"
-                               "laadunseuranta/test-src/cljs"]
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"
+                               "laadunseuranta/test-src/cljs" "test/shared-cljs"]
 
                 :compiler {:main harja-laadunseuranta.test-main
                            ;;:asset-path "laadunseuranta/js/out"
@@ -248,7 +248,7 @@
                ;; production. You can build this with:
                ;; lein cljsbuild once min
                {:id "laadunseuranta-min"
-                :source-paths ["laadunseuranta/src" "shared-src/cljs" "laadunseuranta/cljc-src"]
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
                 :jar true
                 :compiler {:output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta.js"
                            :output-dir "resources/public/laadunseuranta/js/compiled/out"
