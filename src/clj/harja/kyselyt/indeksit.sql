@@ -76,7 +76,7 @@ SELECT
 
  WHERE urakka = :urakka and pui.poistettu IS NOT TRUE;
 
---name: upsert-paallystysurakan-indeksitiedot!
+--name: tallenna-paallystysurakan-indeksitiedot!
 INSERT INTO paallystysurakan_indeksit
 (indeksi_polttooljyraskas,indeksi_polttooljykevyt,indeksi_nestekaasu,
  urakkavuosi,lahtotason_vuosi,lahtotason_kuukausi,urakka, luoja, luotu)

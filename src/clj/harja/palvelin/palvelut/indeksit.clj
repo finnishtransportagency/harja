@@ -127,7 +127,7 @@
                     :poistettu (:poistettu i)}]
         (when id
           (vaadi-paallystysurakan-indeksi-kuuluu-urakkaan c urakka-id id))
-        (q/upsert-paallystysurakan-indeksitiedot! c params)))
+        (q/tallenna-paallystysurakan-indeksitiedot! c params)))
     (hae-paallystysurakan-indeksitiedot c user {:urakka-id urakka-id})))
 
 
