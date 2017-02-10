@@ -44,7 +44,7 @@
   [{:id "foo" :kustannus-nimi "ruoka" :muokattava true :kustannus-summa 42.50 }
    {:id "bar" :kustannus-nimi "juoma" :muokattava false :kustannus-summa 234.00}])
 
-(defn muut-kustannukset [urakka]
+(defn muut-kustannukset [urakka muut-kustannukset-lomakedata]
   (komp/luo
    (fn [urakka]
      [:div.muut-kustannukset
