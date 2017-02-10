@@ -1,7 +1,19 @@
 (ns harja.domain.tierekisteri
-  (:require [schema.core :as s]
+  (:require [clojure.spec :as s]
             [clojure.string :as str]
     #?@(:cljs [[harja.loki :refer [log]]])))
+
+(s/def ::numero int?)
+(s/def ::alkuosa int?)
+(s/def ::alkuetaisyys int?)
+(s/def ::loppuosa int?)
+(s/def ::loppuetaisyys int?)
+
+(s/def ::tierekisteriosoite
+  ;; FIXME: Onko erikseen "vain alku" -tierekisteriosoite)?
+  (s/keys :req-un [::numero
+                   ::alkuosa ::alkuetaisyys
+                   ::loppuosa ::loppuetaisyys]))
 
 (defn samalla-tiella? [tie1 tie2]
   (= (:tr-numero tie1) (:tr-numero tie2)))
