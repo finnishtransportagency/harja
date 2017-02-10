@@ -316,8 +316,30 @@
         padding: 5px;
       }
     }
-  }
 
+    .paanavigointi-container {
+      .navigointilaatikko {
+        > footer {
+          .nappi {
+            width: auto;
+            height: 30px;
+          }
+        }
+      }
+
+      > .nappaimisto-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+
+        // Tässä pelkkä container, itse näppäimistö-elementin responsiivisuus määritelty
+        // sen omassa LESS-tiedostossa
+      }
+    }
+  }
+}
+
+@media (max-width: @leveys-tabletti) and (orientation: portrait) {
   .paanavigointi-container {
     flex-flow: column;
 
@@ -325,23 +347,8 @@
       order: 2;
     }
 
-    .navigointilaatikko {
-      > footer {
-        .nappi {
-          width: auto;
-          height: 30px;
-        }
-      }
-    }
-
     > .nappaimisto-container {
       order: 1;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-
-      // Tässä pelkkä container, itse näppäimistö-elementin responsiivisuus määritelty
-      // sen omassa LESS-tiedostossa
     }
   }
 }

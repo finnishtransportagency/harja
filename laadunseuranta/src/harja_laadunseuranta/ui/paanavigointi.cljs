@@ -78,15 +78,16 @@
   (when header-komponentti
     (let [header-leveys (.-width (.getBoundingClientRect header-komponentti))]
       (when (not= header-leveys @edellinen-header-leveys)
-        (.log js/console "Header leveys muuttui, ryhmitellään tabit uudelleen.")
+        (.log js/console "Header leveys muuttui " @edellinen-header-leveys " -> " header-leveys ", ryhmitellään tabit uudelleen.")
         (let [valilehtia-per-ryhma
               (maarittele-valilehtien-maara-per-ryhma header-leveys
                                                       valilehdet)]
-          (reset! valilehtiryhmat (partition-all valilehtia-per-ryhma valilehdet))
-          (reset! edellinen-header-leveys header-leveys)
-          ;; Ryhmittely päivitetty, varmistetaan, että nykyinen valinta on edelleen taulukon sisällä
-          (when (> @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))
-            (reset! valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))))))))
+          (when (> valilehtia-per-ryhma 0)
+            (reset! valilehtiryhmat (partition-all valilehtia-per-ryhma valilehdet))
+            ;; Ryhmittely päivitetty, varmistetaan, että nykyinen valinta on edelleen taulukon sisällä
+            (when (> @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))
+              (reset! valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))))
+          (reset! edellinen-header-leveys header-leveys))))))
 
 (defn- valilehtielementit [{:keys [valittu-valilehti]}]
   ;; Hampurilaisvalikon kanssa näytetään aina vain aktiivinen välilehti
