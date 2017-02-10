@@ -290,9 +290,6 @@
 
 (defn tienakyma []
   (komp/luo
-   ;; Poistetaan muu tilannekuvan karttataso näkyvistä kun ollaan tienäkymässä
-   (komp/sisaan-ulos #(reset! tilannekuva-kartalla/karttataso-tilannekuva false)
-                     #(reset! tilannekuva-kartalla/karttataso-tilannekuva true))
    (fn []
      [tienakyma/tienakyma])))
 
@@ -352,10 +349,30 @@
        {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
       yhteyshenkilot]]))
 
+(defn- nayta-vai-piilota? [taso]
+  (case taso
+    :nykytilanne true
+    :historiakuva true
+    :tienakyma false
+    false))
+
+(defn- nayta-tai-piilota-karttataso! [taso]
+  (reset! tilannekuva-kartalla/karttataso-tilannekuva (nayta-vai-piilota? taso)))
+
 (defn tilannekuva []
   (komp/luo
-    (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva istunto/ajastin-taukotilassa?)
+    (komp/lippu tiedot/nakymassa? istunto/ajastin-taukotilassa?)
+    (komp/watcher tiedot/valittu-tila
+                  (fn [_ _ uusi]
+                    (nayta-tai-piilota-karttataso! uusi)))
     (komp/sisaan-ulos #(do (kartta/aseta-paivitetaan-karttaa-tila! true)
+                           ;; Karttatason näyttäminen/piilottaminen täytyy tehdä täällä,
+                           ;; koska aktiivinen tila voi olla tienäkymä, eikä tienäkymässä
+                           ;; haluta näyttää esim. organisaatiorajoja. Jos tienäkymä
+                           ;; hallitsisi itse tason näkyvyyttä, ei se voisi tietää,
+                           ;; poistuttiinko tienäkymästä nykytilanteeseen (-> taso päälle)
+                           ;; vai toiseen näkymään (-> taso pois)
+                           (nayta-tai-piilota-karttataso! tiedot/valittu-tila)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa @nav/valittu-urakka)
                            (reset! kartta-tiedot/pida-geometriat-nakyvilla? false)
                            (kartta-tiedot/kasittele-infopaneelin-linkit!
@@ -367,6 +384,7 @@
                            (tiedot/seuraa-alueita!))
                       #(do (reset! kartta-tiedot/pida-geometriat-nakyvilla? true)
                            (kartta/aseta-paivitetaan-karttaa-tila! false)
+                           (reset! tilannekuva-kartalla/karttataso-tilannekuva false)
                            (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa nil)
                            (reset! kartta-tiedot/pida-geometriat-nakyvilla? kartta-tiedot/pida-geometria-nakyvilla-oletusarvo)
