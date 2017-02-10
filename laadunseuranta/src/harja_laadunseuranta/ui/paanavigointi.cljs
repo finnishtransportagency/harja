@@ -80,15 +80,16 @@
   (when header-komponentti
     (let [header-leveys (.-width (.getBoundingClientRect header-komponentti))]
       (when (not= header-leveys @edellinen-header-leveys)
-        (.log js/console "Header leveys muuttui, ryhmitellään tabit uudelleen.")
+        (.log js/console "Header leveys muuttui " @edellinen-header-leveys " -> " header-leveys ", ryhmitellään tabit uudelleen.")
         (let [valilehtia-per-ryhma
               (maarittele-valilehtien-maara-per-ryhma header-leveys
                                                       valilehdet)]
-          (reset! valilehtiryhmat (partition-all valilehtia-per-ryhma valilehdet))
-          (reset! edellinen-header-leveys header-leveys)
-          ;; Ryhmittely päivitetty, varmistetaan, että nykyinen valinta on edelleen taulukon sisällä
-          (when (> @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))
-            (reset! valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))))))))
+          (when (> valilehtia-per-ryhma 0)
+            (reset! valilehtiryhmat (partition-all valilehtia-per-ryhma valilehdet))
+            ;; Ryhmittely päivitetty, varmistetaan, että nykyinen valinta on edelleen taulukon sisällä
+            (when (> @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))
+              (reset! valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))))
+          (reset! edellinen-header-leveys header-leveys))))))
 
 (defn- valilehtielementit [{:keys [valittu-valilehti]}]
   ;; Hampurilaisvalikon kanssa näytetään aina vain aktiivinen välilehti
@@ -295,9 +296,12 @@
 (defn- paanavigointi-footer [{:keys [vapauta-kaikki-painettu havaintolomake-painettu] :as tiedot}]
   [:footer
    [:div.footer-vasen
-    [nappi "Vapauta kaikki" {:on-click vapauta-kaikki-painettu
-                             :ikoni (kuvat/svg-sprite "nuoli-ylos-24")
-                             :luokat-str "nappi-toissijainen"}]]
+    [nappi (if (< @dom/leveys dom/+leveys-tabletti+)
+             "Vapauta"
+             "Vapauta kaikki")
+     {:on-click vapauta-kaikki-painettu
+      :ikoni (kuvat/svg-sprite "nuoli-ylos-24")
+      :luokat-str "nappi-toissijainen"}]]
    [:div.footer-oikea
     [nappi (if (< @dom/leveys dom/+leveys-tabletti+)
              "Lomake"
