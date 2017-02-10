@@ -25,7 +25,7 @@
                                             (lopeta-jatkuva-havainto nimi avain))
                                 :luokat-str "nappi-kielteinen nappi-peruuta"}])
 
-(defn- mittaustiedot-keskiarvo [{:keys [mittaukset keskiarvo mittauksia-sana
+(defn- mittaustiedot-keskiarvo [{:keys [mittaukset keskiarvo mittaustyyppi
                                         syotetty-arvo yksikko rajat]}]
   (let [arvo-liian-suuri? (if syotetty-arvo
                             (> syotetty-arvo (second rajat))
@@ -36,7 +36,8 @@
         [:span (str "Liian suuri!")
          [:br] "Max: " (second rajat) yksikko]]
        [:div
-        [:div.mittaustieto (str (or mittauksia-sana "Mittauksia") ": ") mittaukset]
+        [:div.mittaustieto (str "Mittaus: " mittaustyyppi)]
+        [:div.mittaustieto (str "Mittauksia: " mittaukset)]
         [:div.mittaustieto (str "Keskiarvo: " (if (pos? mittaukset)
                                                 keskiarvo
                                                 "-"))]])]))
@@ -49,19 +50,19 @@
                                             :syotetty-arvo syotetty-arvo
                                             :yksikko yksikko
                                             :rajat rajat
-                                            :mittauksia-sana "Kitkamittauksia"}]
+                                            :mittaustyyppi "Kitka"}]
     :lumisuus [mittaustiedot-keskiarvo {:mittaukset mittaukset
                                         :keskiarvo keskiarvo
                                         :syotetty-arvo syotetty-arvo
                                         :yksikko yksikko
                                         :rajat rajat
-                                        :mittauksia-sana "Lumisuusmittauksia"}]
+                                        :mittaustyyppi "Lumisuus"}]
     :talvihoito-tasaisuus [mittaustiedot-keskiarvo {:mittaukset mittaukset
                                                     :keskiarvo keskiarvo
                                                     :syotetty-arvo syotetty-arvo
                                                     :yksikko yksikko
                                                     :rajat rajat
-                                                    :mittauksia-sana "Tasaisuusmittauksia"}]
+                                                    :mittaustyyppi "Tasaisuus"}]
     [:div]))
 
 (defn- syottokentta [syotto-atom yksikko]
