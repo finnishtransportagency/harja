@@ -2,7 +2,7 @@
   "Päällystyskohteet"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.yleiset :refer [ajax-loader]]
-            [harja.tiedot.urakka.paallystys :as paallystys]
+            [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
             [harja.views.urakka.muut-kustannukset :as muut-kustannukset-view]
@@ -34,7 +34,7 @@
 
        [yllapitokohteet-view/yllapitokohteet
         ur
-        paallystys/yhan-paallystyskohteet
+        paallystys-tiedot/yhan-paallystyskohteet
         {:otsikko "YHA:sta tuodut päällystyskohteet"
          :kohdetyyppi :paallystys
          :yha-sidottu? true
@@ -42,13 +42,13 @@
          (yllapitokohteet/kasittele-tallennettavat-kohteet!
            #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
            :paallystys
-           #(reset! paallystys/yhan-paallystyskohteet (filter yllapitokohteet/yha-kohde? %)))
+           #(reset! paallystys-tiedot/yhan-paallystyskohteet (filter yllapitokohteet/yha-kohde? %)))
          :kun-onnistuu (fn [_]
                          (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]
 
        [yllapitokohteet-view/yllapitokohteet
         ur
-        paallystys/harjan-paikkauskohteet
+        paallystys-tiedot/harjan-paikkauskohteet
         {:otsikko "Harjan paikkauskohteet"
          :kohdetyyppi :paikkaus
          :yha-sidottu? false
@@ -56,12 +56,12 @@
          (yllapitokohteet/kasittele-tallennettavat-kohteet!
            #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
            :paikkaus
-           #(reset! paallystys/harjan-paikkauskohteet (filter (comp not yllapitokohteet/yha-kohde?) %)))}]
+           #(reset! paallystys-tiedot/harjan-paikkauskohteet (filter (comp not yllapitokohteet/yha-kohde?) %)))}]
 
        [muut-kustannukset-view/muut-kustannukset ur]
 
        [yllapitokohteet-view/yllapitokohteet-yhteensa
-        paallystys/kohteet-yhteensa {:nakyma :paallystys}]
+        paallystys-tiedot/kohteet-yhteensa {:nakyma :paallystys}]
 
        [:div.kohdeluettelon-paivitys
         [yha/paivita-kohdeluettelo ur oikeudet/urakat-kohdeluettelo-paallystyskohteet]
