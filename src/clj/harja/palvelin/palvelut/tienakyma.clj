@@ -155,7 +155,8 @@
      (fn [user valinnat]
        (vain-tilaajalle! user)
        (hae-tienakymaan db valinnat))
-     {:kysely-spec ::d/hakuehdot})
+     {:kysely-spec ::d/hakuehdot
+      :vastaus-spec ::d/tulokset})
 
     (julkaise-palvelu
      http
