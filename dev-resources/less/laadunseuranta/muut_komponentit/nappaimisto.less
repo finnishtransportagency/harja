@@ -1,6 +1,7 @@
 // Näppäimistö
 
 @nappaimoston-leveys: 240px;
+@nappaimoston-leveys-pienempi: 180px;
 
 .nappaimisto {
   width: @nappaimoston-leveys;
@@ -145,37 +146,37 @@
     width: 100%;
     flex-flow: row;
     justify-content: space-between;
-  }
 
-  .nappaimiston-painikekentat {
-    width: 180px;
-  }
+    .nappaimiston-painikekentat {
+      width: @nappaimoston-leveys-pienempi;
+    }
 
-  .nappaimisto-vasen {
-    flex: 1;
-  }
+    .nappaimisto-vasen {
+      flex: 1;
+    }
 
-  .nappaimiston-painike {
-    width: 50px;
-    height: 45px;
-    padding-top: 3px;
-    font-size: 24px;
-  }
+    .nappaimiston-painike {
+      width: 50px;
+      height: 45px;
+      padding-top: 3px;
+      font-size: 24px;
+    }
 
-  .nappi-peruuta {
-    width: 100%;
-    height: auto;
-  }
+    .nappi-peruuta {
+      width: 100%;
+      height: auto;
+    }
 
-  .mittaustiedot {
-    font-size: 0.9em;
-  }
+    .mittaustiedot {
+      font-size: 0.9em;
+    }
 
-  .nappaimiston-syottokentta {
-    font-size: 20px;
+    .nappaimiston-syottokentta {
+      font-size: 20px;
 
-    > * {
-      vertical-align: top;
+      > * {
+        vertical-align: top;
+      }
     }
   }
 
