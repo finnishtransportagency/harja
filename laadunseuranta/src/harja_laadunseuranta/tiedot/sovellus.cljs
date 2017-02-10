@@ -25,10 +25,10 @@
    :palautettava-tarkastusajo nil ; TODO REFACTOR dokumentoi tämä
    :tarkastusajo-paattymassa? false ; Jos true, näytetään päättämisdialogi
    :tarkastusajon-paattamisvaihe nil ;; Mikä dialogi näytetään:
-   ;; :paattamisvarmistus
-   ;; :urakkavarmistus
-   ;; :paatetaan
-   ;; nil
+                                     ;; :paattamisvarmistus
+                                     ;; :urakkavarmistus
+                                     ;; :paatetaan
+                                     ;; nil
 
    ;; Käyttäjätiedot
    :kayttaja {:kayttajanimi nil
@@ -61,7 +61,7 @@
 
    ;; Havainnot
    :jatkuvat-havainnot #{} ; Tähän tallentuu välikohtaiset havainnot (esim. liukasta, lumista jne.).
-   ; Sama kuin UI:ssa alas painetut havaintonapit.
+                           ; Sama kuin UI:ssa alas painetut havaintonapit.
 
    ;; Mittaukset
    ;; Mittaustiedot kun kyseessä on "perusnäppäimistö"
