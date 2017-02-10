@@ -1,7 +1,7 @@
 (ns harja.ui.grid-test
   (:require [harja.ui.grid :as g]
             [cljs.test :as t :refer-macros [deftest is]]
-            [harja.testutils :as u]
+            [harja.testutils.shared-testutils :as u]
             [reagent.core :as r]
             [clojure.string :as str]
             [cljs-react-test.simulate :as sim])

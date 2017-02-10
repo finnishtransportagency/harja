@@ -13,7 +13,7 @@
             [harja-laadunseuranta.tiedot.sovellus-test]
             [harja-laadunseuranta.mock.geolocation :as geolocation]
 
-            ;; External javascriptit proj4 kirjastolle
+    ;; External javascriptit proj4 kirjastolle
             [proj4]
             [epsg3067]
 

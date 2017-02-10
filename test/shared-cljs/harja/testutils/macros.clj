@@ -8,7 +8,7 @@
                  ~komp)]
      (cljs.test/async
       done#
-      (harja.testutils/render [comp#])
+      (harja.testutils.shared-testutils/render [comp#])
       (cljs.core.async.macros/go
         ~@(loop [testit []
                  osio nil
@@ -22,7 +22,7 @@
                        `(cljs.test/testing ~form)
                        forms)
                 (let [form (if (= form '--)
-                             `(cljs.core.async/<! (harja.testutils/paivita))
+                             `(cljs.core.async/<! (harja.testutils.shared-testutils/paivita))
                              form)]
                   (if osio
                     (recur testit
