@@ -10,7 +10,7 @@
             [ring.middleware.params :refer [wrap-params]]
 
             [cognitect.transit :as t]
-            [schema.core :as s]
+            [clojure.spec :as s]
             ;; Pyyntöjen todennus (autentikointi)
             [harja.palvelin.komponentit.todennus :as todennus]
             ;; Metriikkadatan julkaisu
@@ -32,7 +32,8 @@
   ([status data]
    {:status  status
     :headers {"Content-Type" "application/transit+json"}
-    :body    (transit/clj->transit data)}))
+    :body    (transit/clj->transit data)
+    :vastaus data}))
 
 (defrecord AsyncResponse [channel])
 
@@ -68,6 +69,10 @@
       (when (= polku (:uri req))
         (kasittelija-fn req)))))
 
+(defn- validoi-vastaus [spec data]
+  (when (and spec (= ::s/invalid (s/conform spec data)))
+    (log/error (s/explain-str spec data))))
+
 (defn- transit-post-kasittelija
   "Luo transit käsittelijän POST kutsuille annettuun palvelufunktioon."
   [nimi palvelu-fn optiot]
@@ -75,32 +80,41 @@
     (fn [req]
       (when (and (= :post (:request-method req))
                  (= polku (:uri req)))
-        (let [skeema (:skeema optiot)
+        (let [kysely-spec (:kysely-spec optiot)
               kysely (try (transit/lue-transit (:body req))
                           (catch Exception e
                             (log/warn (.getMessage e))
                             ::ei-validi-kysely))
-              kysely (if-not skeema
-                       kysely
-                       (try
-                         (if (= kysely ::ei-validi-kysely)
-                           kysely
-                           (s/validate skeema kysely))
-                         (catch Exception e
-                           (log/warn e "Palvelukutsu " nimi " ei-validilla datalla.")
-                           ::ei-validi-kysely)))]
+              [kysely virhe]
+              (if (= kysely ::ei-validi-kysely)
+                ;; Transit parse virhe, palauta virheviesti
+                [kysely "Transit parse virhe"]
+                (if-not kysely-spec
+                  ;; Parse onnistui ja ei speciä
+                  [kysely nil]
+
+                  (let [conformed (s/conform kysely-spec kysely)]
+                    (if (= ::s/invalid conformed)
+                      ;; Ei spec mukainen kysely, anna selitys virheeksi
+                      [::ei-validi-kysely (s/explain-str kysely-spec kysely)]
+
+                      ;; Data parsittu ok ja specin mukainen
+                      [conformed nil]))))]
           (if (= kysely ::ei-validi-kysely)
             {:status 400
-             :body   "Ei validi kysely"}
+             :body   virhe}
             (try+
              (let [palvelu-vastaus (palvelu-fn (:kayttaja req) kysely)]
                (if (async-response? palvelu-vastaus)
                  (http/with-channel req channel
                    (async/go
                      (let [vastaus (async/<! (:channel palvelu-vastaus))]
+                       (validoi-vastaus (:vastaus-spec optiot) (:vastaus vastaus))
                        (http/send! channel vastaus)
                        (http/close channel))))
-                 (transit-vastaus palvelu-vastaus)))
+                 (do
+                   (validoi-vastaus (:vastaus-spec optiot) palvelu-vastaus)
+                   (transit-vastaus palvelu-vastaus))))
              (catch harja.domain.roolit.EiOikeutta eo
                ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
                (transit-vastaus 403 eo))
@@ -160,7 +174,10 @@
 
      :tarkista-polku?     Ring käsittelijän julkaisussa voidaan antaa :tarkista-polku? false, jolloin käsittelijää
                           ei sidota normaaliin palvelupolkuun keyword nimen perusteella. Tässä tapauksessa
-                          käsittelijän vastuulla on tarkistaa itse polku. Käytetään compojure reittien julkaisuun.")
+                          käsittelijän vastuulla on tarkistaa itse polku. Käytetään compojure reittien julkaisuun.
+
+     :kysely-spec    spec, jolla kyselyn payload validoidaan
+     :vastaus-spec   spec, jolla palvelun vastaus validoidaan")
 
   (poista-palvelu [this nimi]
     "Poistaa nimetyn palvelun käsittelijän."))
