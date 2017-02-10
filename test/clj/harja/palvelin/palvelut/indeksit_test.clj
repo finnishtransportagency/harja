@@ -32,7 +32,7 @@
 
 (deftest kaikki-indeksit-haettu-oikein
   (let [indeksit (kutsu-palvelua (:http-palvelin jarjestelma)
-                                 :indeksit +kayttaja-tero+)
+                                 :indeksit +kayttaja-jvh+)
         maku-2005-2013 (get indeksit ["MAKU 2005" 2013])]
     (is (> (count indeksit) 0))
     (is (= (count maku-2005-2013) 13))
