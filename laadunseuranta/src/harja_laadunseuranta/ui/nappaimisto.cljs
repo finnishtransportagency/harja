@@ -34,8 +34,7 @@
      (if arvo-liian-suuri?
        [:div.nappaimiston-syottovaroitus
         [:span (str "Liian suuri!")
-         [:br] "Max: " (second rajat) yksikko
-         [:br]]] ;; Jotta korkeus on aina sama kuin alemmalla divillä
+         [:br] "Max: " (second rajat) yksikko]]
        [:div
         [:div.mittaustieto (str "Mittaus: " mittaustyyppi)]
         [:div.mittaustieto (str "Mittauksia: " mittaukset)]
