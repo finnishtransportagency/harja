@@ -1,10 +1,17 @@
 // Näppäimistö
 
-@nappaimoston-leveys: 240px;
-@nappaimoston-leveys-pienempi: 180px;
+@nappaimiston-leveys: 240px;
+@nappaimiston-leveys-pienempi: 180px;
+
+@nappaimiston-painike-leveys: 75px;
+@nappaimiston-painike-leveys-pienempi: 50px;
+@nappaimiston-painike-korkeus: 65px;
+@nappaimiston-painike-korkeus-pienempi: 45px;
+@nappaimiston-painike-teksti-koko: 38px;
+@nappaimiston-painike-teksti-koko-pienempi: 24px;
 
 .nappaimisto {
-  width: @nappaimoston-leveys;
+  width: @nappaimiston-leveys;
   background-color: @sisaltolaatikoiden-taustavari;
   border: @sisaltolaatikoiden-reunaviiva;
   box-sizing: border-box;
@@ -56,10 +63,6 @@
 
   // Painikkeiden säännöt
 
-  @nappaimiston-painike-leveys: 75px;
-  @nappaimiston-painike-korkeus: 65px;
-  @nappaimiston-painike-teksti-koko: 38px;
-
   .nappaimiston-painikekentat {
     width: 240px;
     text-align: center;
@@ -90,11 +93,11 @@
   }
 
   .nappaimiston-painike-leveys-tupla {
-    width: @nappaimiston-painike-leveys * 2
+    width: (@nappaimiston-painike-leveys * 2) + 1;
   }
 
   .nappaimiston-painike-leveys-puolet {
-    width: (@nappaimoston-leveys / 2%) - 8;
+    width: (@nappaimiston-leveys / 2%) - 8;
   }
 
   .nappaimiston-painike:active:not(.nappaimiston-painike-disabloitu) {
@@ -148,7 +151,7 @@
     justify-content: space-between;
 
     .nappaimiston-painikekentat {
-      width: @nappaimoston-leveys-pienempi;
+      width: @nappaimiston-leveys-pienempi;
     }
 
     .nappaimisto-vasen {
@@ -156,10 +159,18 @@
     }
 
     .nappaimiston-painike {
-      width: 50px;
-      height: 45px;
+      width: @nappaimiston-painike-leveys-pienempi;
+      height: @nappaimiston-painike-korkeus-pienempi;
       padding-top: 3px;
-      font-size: 24px;
+      font-size: @nappaimiston-painike-teksti-koko-pienempi;
+    }
+
+    .nappaimiston-painike-leveys-tupla {
+      width: (@nappaimiston-painike-leveys-pienempi * 2) + 1;
+    }
+
+    .nappaimiston-painike-leveys-puolet {
+      width: (@nappaimiston-leveys-pienempi / 2%) - 16;
     }
 
     .nappi-peruuta {
