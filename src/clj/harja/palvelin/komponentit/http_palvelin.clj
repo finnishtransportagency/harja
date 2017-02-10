@@ -70,7 +70,8 @@
         (kasittelija-fn req)))))
 
 (defn- validoi-vastaus [spec data]
-  (when (and spec (= ::s/invalid (s/conform spec data)))
+  (log/debug "VALIDOI VASTAUS: " spec)
+  (when (and spec (not (s/valid? spec data)))
     (log/error (s/explain-str spec data))))
 
 (defn- transit-post-kasittelija
