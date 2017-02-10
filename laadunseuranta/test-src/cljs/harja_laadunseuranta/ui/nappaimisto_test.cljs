@@ -2,13 +2,13 @@
   (:require [cljs.test :as t :refer-macros [deftest is testing async]]
             [reagent.core :as reagent :refer [atom]]
             [cljs.core.async :as async :refer [put! <! timeout chan close!]]
-            [harja-laadunseuranta.testutils :refer [sel sel1]]
+            [harja.testutils.shared-testutils :refer [sel sel1]]
             [harja-laadunseuranta.ui.nappaimisto :as nappaimisto]
             [cljs-react-test.simulate :as sim] ;; click-macro vaatii!
             [clojure.string :as str])
   (:require-macros [harja-laadunseuranta.test-macros :refer [with-component
-                                                             prepare-component-tests
-                                                             click]]
+                                                             prepare-component-tests]]
+                   [harja.testutils.macro :refer [klikkaa-ja-odota]]
                    [cljs.core.async.macros :refer [go go-loop]]
                    [harja-laadunseuranta.macros :refer [after-delay]]))
 
@@ -55,25 +55,25 @@
 
             ;; Testisyöttöjä
             (is (str/includes? (.-className pilkkupainike) "nappaimiston-painike-disabloitu") "Pilkkua ei voi laittaa ensimmäiseksi merkiksi")
-            (click (:1 numeropainikkeet))
+            (klikkaa-ja-odota (:1 numeropainikkeet))
             (is (= (:nykyinen-syotto @syotto-atom) "1") "Syöttö onnistui")
             (is (not (str/includes? (.-className pilkkupainike) "nappaimiston-painike-disabloitu")))
 
-            (click (:2 numeropainikkeet))
+            (klikkaa-ja-odota (:2 numeropainikkeet))
             (is (= (:nykyinen-syotto @syotto-atom) "12") "Syöttö onnistui")
 
-            (click (:3 numeropainikkeet))
+            (klikkaa-ja-odota (:3 numeropainikkeet))
             (is (= (:nykyinen-syotto @syotto-atom) "123") "Syöttö onnistui")
 
-            (click (:3 numeropainikkeet))
+            (klikkaa-ja-odota (:3 numeropainikkeet))
             (is (= (:nykyinen-syotto @syotto-atom) "123") "Ei anna syöttää yli rajojen")
 
-            (click pilkkupainike)
+            (klikkaa-ja-odota pilkkupainike)
             (is (= (:nykyinen-syotto @syotto-atom) "123,") "Pilkun syöttö onnistui")
 
-            (click (:1 numeropainikkeet))
+            (klikkaa-ja-odota (:1 numeropainikkeet))
             (is (= (:nykyinen-syotto @syotto-atom) "123,1") "Syöttö onnistui")
 
-            (click (:1 numeropainikkeet))
+            (klikkaa-ja-odota (:1 numeropainikkeet))
             (is (= (:nykyinen-syotto @syotto-atom) "123,1") "Ei anna syöttää yli rajojen")
             (test-ok)))))))
