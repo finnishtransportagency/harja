@@ -98,13 +98,13 @@ VALUES
 -- Ylläpidon indeksejä
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo)
 VALUES
-  ('Platts: testiindeksi XYZ', 2015, 12, 225.00),
+  ('Platts: testiindeksi XYZ', 2015, 9, 225.00),
   ('Platts: testiindeksi XYZ', 2016, 9, 306.00),
-  ('Platts: FO 3,5%S CIF NWE Cargo', 2015, 12, 125.36),
+  ('Platts: FO 3,5%S CIF NWE Cargo', 2015, 9, 125.36),
   ('Platts: FO 3,5%S CIF NWE Cargo', 2016, 9, 206.29),
-  ('Platts: Propane CIF NWE 7kt+', 2015, 8, 285.55),
+  ('Platts: Propane CIF NWE 7kt+', 2015, 9, 285.55),
   ('Platts: Propane CIF NWE 7kt+', 2016, 9, 271.02),
-  ('Platts: ULSD 10ppmS CIF NWE Cargo', 2015, 8, 123.45),
+  ('Platts: ULSD 10ppmS CIF NWE Cargo', 2015, 9, 123.45),
   ('Platts: ULSD 10ppmS CIF NWE Cargo', 2016, 9, 234.56);
 
 

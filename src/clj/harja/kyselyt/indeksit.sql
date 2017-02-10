@@ -51,16 +51,28 @@ SELECT
 
   raskasoljy.id as raskas_id, raskasoljy.indeksinimi as raskas_indeksinimi,
   raskasoljy.raakaaine as raskas_raakaaine, raskasoljy.koodi as raskas_koodi,
+  ri.arvo as "raskas_lahtotason-arvo",
 
   kevytoljy.id as kevyt_id, kevytoljy.indeksinimi as kevyt_indeksinimi,
   kevytoljy.raakaaine as kevyt_raakaaine, kevytoljy.koodi as kevyt_koodi,
+  ki.arvo as "kevyt_lahtotason-arvo",
 
   nestekaasu.id as nestekaasu_id, nestekaasu.indeksinimi as nestekaasu_indeksinimi,
-  nestekaasu.raakaaine as nestekaasu_raakaaine, nestekaasu.koodi as nestekaasu_koodi
+  nestekaasu.raakaaine as nestekaasu_raakaaine, nestekaasu.koodi as nestekaasu_koodi,
+  nki.arvo as "nestekaasu_lahtotason-arvo"
+
   FROM paallystysurakan_indeksit pui
     LEFT JOIN urakkatyypin_indeksi raskasoljy ON raskasoljy.id = pui.indeksi_polttooljyraskas
+    LEFT JOIN indeksi ri ON (raskasoljy.indeksinimi = ri.nimi AND
+                             pui.lahtotason_vuosi = ri.vuosi AND pui.lahtotason_kuukausi = ri.kuukausi)
+
     LEFT JOIN urakkatyypin_indeksi kevytoljy ON kevytoljy.id = pui.indeksi_polttooljykevyt
+    LEFT JOIN indeksi ki ON (kevytoljy.indeksinimi = ki.nimi AND
+                             pui.lahtotason_vuosi = ki.vuosi AND pui.lahtotason_kuukausi = ki.kuukausi)
+
     LEFT JOIN urakkatyypin_indeksi nestekaasu ON nestekaasu.id = pui.indeksi_nestekaasu
+    LEFT JOIN indeksi nki ON (nestekaasu.indeksinimi = nki.nimi AND
+                             pui.lahtotason_vuosi = nki.vuosi AND pui.lahtotason_kuukausi = nki.kuukausi)
 
  WHERE urakka = :urakka and pui.poistettu IS NOT TRUE;
 

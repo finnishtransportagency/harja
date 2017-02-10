@@ -29,6 +29,21 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+(defn- materiaalin-indeksisidontarivi
+  [otsikko rivi raaka-aine-avain]
+  (let [raaka-aine (raaka-aine-avain rivi)]
+    (when (:id raaka-aine)
+      [:div
+       [:span.tietokentta (str otsikko ": ")]
+       [:span.tietoarvo
+        (str
+          (:indeksinimi raaka-aine)
+          (when (:lahtotason-arvo raaka-aine)
+            (str " (lähtötaso "
+                 (:lahtotason-vuosi rivi) "/" (:lahtotason-kuukausi rivi)
+                 ": "
+                 (:lahtotason-arvo raaka-aine) " €/t)")))]])))
+
 (defn indeksitiedot
   [valittu-vuosi]
   (let [valittu-vuosi (if-not valittu-vuosi
@@ -36,24 +51,12 @@
                         valittu-vuosi)
         vuoden-indeksitiedot (first (filter #(= valittu-vuosi (:urakkavuosi %))
                                             @urakka/paallystysurakan-indeksitiedot))]
-    (log "vuoden indeksitiedot" (pr-str vuoden-indeksitiedot))
     (when (map? vuoden-indeksitiedot)
       [:span
        [:h6 "Urakassa vuonna " valittu-vuosi " raaka-aineiden hinnat sidottu seuraaviin indekseihin"]
-       [yleiset/kaksi-palstaa-otsikkoja-ja-arvoja {}
-
-        "Raskas polttoöljy:" (when (get-in vuoden-indeksitiedot [:raskas :indeksinimi])
-                               (str (get-in vuoden-indeksitiedot [:raskas :indeksinimi])
-                                    " lähtötason kuukausi " (:lahtotason-kuukausi vuoden-indeksitiedot) "/" (:lahtotason-vuosi vuoden-indeksitiedot) " arvolla " "TÄHÄN ARVO")
-                                )
-
-        (when (get-in vuoden-indeksitiedot [:kevyt :id])
-          [:div "Kevyt polttoöljy: " (get-in vuoden-indeksitiedot [:kevyt :indeksinimi])])
-        (when (get-in vuoden-indeksitiedot [:nestekaasu :id])
-          [:div "Nestekaasu: " (get-in vuoden-indeksitiedot [:nestekaasu :indeksinimi])])]
-
-       ]))
-  )
+       (materiaalin-indeksisidontarivi "Raskas polttoöljy" vuoden-indeksitiedot :raskas)
+       (materiaalin-indeksisidontarivi "Kevyt polttoöljy" vuoden-indeksitiedot :kevyt)
+       (materiaalin-indeksisidontarivi "Nestekaasu" vuoden-indeksitiedot :nestekaasu)])))
 
 (defn paallystyskohteet [ur]
   (let [hae-tietoja (fn [urakan-tiedot]

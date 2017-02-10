@@ -533,9 +533,19 @@
                (not palvelusopimus?))
       (yha/nayta-tuontidialogi ur))))
 
-(tarkkaile! "urakka/paallystysurakan-indeksitiedot" urakka/paallystysurakan-indeksitiedot)
+(defn- indeksinimi-ja-lahtotaso-fmt
+  [rivi]
+  (str (:indeksinimi rivi)
+       (when (:lahtotason-arvo rivi)
+         (str " (lähtötaso: "
+              (:lahtotason-arvo rivi) " €/t)"))))
 
-
+(defn- indeksinimen-kentta
+  [nimi otsikko valinnat]
+  {:otsikko otsikko :nimi nimi :tyyppi :valinta :leveys 12
+   :valinta-nayta :indeksinimi
+   :fmt indeksinimi-ja-lahtotaso-fmt
+   :valinnat valinnat})
 
 (defn paallystysurakan-indeksit
   "Käyttöliittymä päällystysurakassa käytettävien indeksien valintaan."
@@ -561,24 +571,15 @@
                                          (+ 1 (pvm/vuosi (:loppupvm ur))))))
            :validoi [[:ei-tyhja "Anna urakkavuosi"] [:uniikki "Yksi rivi per vuosi"]]}
 
+          (indeksinimen-kentta :raskas "Raskas polttoöljy" indeksivalinnat-raskas-po)
+          (indeksinimen-kentta :kevyt "Kevyt polttoöljy" indeksivalinnat-kevyt-po)
+          (indeksinimen-kentta :nestekaasu "Nestekaasu" indeksivalinnat-nestekaasu)
 
-          {:otsikko "Raskas polttoöljy" :nimi :raskas :tyyppi :valinta :leveys 12
-           :valinta-nayta :indeksinimi
-           :fmt :indeksinimi
-           :valinnat indeksivalinnat-raskas-po}
-          {:otsikko "Kevyt polttoöljy" :nimi :kevyt :tyyppi :valinta :leveys 12
-           :valinta-nayta :indeksinimi
-           :fmt :indeksinimi
-           :valinnat indeksivalinnat-kevyt-po}
-          {:otsikko "Nestekaasu" :nimi :nestekaasu :tyyppi :valinta :leveys 12
-           :valinta-nayta :indeksinimi
-           :fmt :indeksinimi
-           :valinnat indeksivalinnat-nestekaasu}
           {:otsikko "Lähtö\u00ADtason vuosi" :nimi :lahtotason-vuosi :tyyppi :positiivinen-numero :leveys 6
            :validoi [[:rajattu-numero-tai-tyhja nil 2000 2030 "Anna vuosiluku"]]}
           {:otsikko "Lähtö\u00ADtason kk" :nimi :lahtotason-kuukausi :tyyppi :positiivinen-numero :leveys 6
            :validoi [[:rajattu-numero-tai-tyhja nil 1 12"Anna kuukausi"]]}]
-         @urakka/paallystysurakan-indeksitiedot]))))
+         (reverse (sort-by :urakkavuosi @urakka/paallystysurakan-indeksitiedot))]))))
 
 (defn yleiset [ur]
   (let [kayttajat (atom nil)
