@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 -- Mobiiliin laadunseurantatyökaluun lisää uusia vakiohavaintoja
 
 INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Yli-/aliauraus', 't', 'yli-tai-aliauraus');
@@ -14,6 +13,3 @@ INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Purkaumat', 't', 'purk
 INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Syvät ajourat', 't', 'syvat-ajourat');
 INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Turvallisuutta vaarantava heitto', 't', 'liikenneturvallisuutta-vaarantava-heitto');
 INSERT INTO vakiohavainto (nimi, jatkuva, avain) VALUES ('Ajomukavuutta haittaava epätasaisuus', 't', 'ajomukavuutta-haittaava-epatasaisuus-vaarantava-heitto');
-=======
-ALTER TABLE tarkastusreitti ALTER COLUMN talvihoito_tasaisuus TYPE numeric USING (talvihoito_tasaisuus::numeric);
->>>>>>> develop
