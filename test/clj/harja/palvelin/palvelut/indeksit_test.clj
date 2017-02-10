@@ -69,13 +69,32 @@
                                  :paallystysurakan-indeksitiedot
                                  +kayttaja-jvh+
                                  {:urakka-id 5})
-        rivi-2016 (first (filter #(= 2016 (:urakkavuosi %)) indeksit))]
+        rivi-2016 (first (filter #(= 2016 (:urakkavuosi %)) indeksit))
+        rivi-2017 (first (filter #(= 2017 (:urakkavuosi %)) indeksit))]
+    (is (integer? (:id rivi-2016)) "id on")
+    (is (integer? (:id rivi-2017)) "id on")
+    (is (not= (:id rivi-2016) (:id rivi-2017)) "eri vuonna eri id")
     (is (= (:raskas rivi-2016) {:id 10
                                 :indeksinimi "Platts: testiindeksi XYZ"
                                 :koodi "TESTIKOODI"
-                                :lahtotason-arvo nil
+                                :lahtotason-arvo 225.00M
                                 :raakaaine "raskas_polttooljy"}))
     (is (= (:nestekaasu rivi-2016) {:raakaaine "kevyt_polttooljy", :id 6, :koodi "ABWHK03"
                                     :indeksinimi "Platts: ULSD 10ppmS CIF NWE Cargo" :lahtotason-arvo 123.45M}))
     (is (= (:kevyt rivi-2016) {:indeksinimi "Platts: Propane CIF NWE 7kt+", :koodi "PMUEE03"
-                          :raakaaine "nestekaasu", :id 8 :lahtotason-arvo 285.55M}))))
+                               :raakaaine "nestekaasu", :id 8 :lahtotason-arvo 285.55M}))
+    (is (= (:raskas rivi-2017) {:id 4
+                                :indeksinimi "Platts: FO 3,5%S CIF NWE Cargo"
+                                :koodi "ABWGL03"
+                                :lahtotason-arvo 206.29M
+                                :raakaaine "raskas_polttooljy"}))
+    (is (= (:nestekaasu rivi-2017) {:id 6
+                                    :indeksinimi "Platts: ULSD 10ppmS CIF NWE Cargo"
+                                    :koodi "ABWHK03"
+                                    :lahtotason-arvo 234.56M
+                                    :raakaaine "kevyt_polttooljy"}))
+    (is (= (:kevyt rivi-2017) {:id 8
+                               :indeksinimi "Platts: Propane CIF NWE 7kt+"
+                               :koodi "PMUEE03"
+                               :lahtotason-arvo 271.02M
+                               :raakaaine "nestekaasu"}))))
