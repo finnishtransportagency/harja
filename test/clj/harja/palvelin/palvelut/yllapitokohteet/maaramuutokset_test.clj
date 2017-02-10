@@ -34,7 +34,7 @@
                                 {:urakka-id @muhoksen-paallystysurakan-id
                                  :yllapitokohde-id yllapitokohde-id})
         maaramuutos (first vastaus)]
-    (is (= (count vastaus) 2) "Määrämuutosten määrä täsmää")
+    (is (= (count vastaus) 4) "Määrämuutosten määrä täsmää")
     (is (= (:yllapitokohde maaramuutos) yllapitokohde-id) "Ylläpitokohteen id täsmää")
     (is (= (:tyyppi maaramuutos) :ajoradan-paallyste) "Tyyppi täsmää")
     (is (= (:tyo maaramuutos) "Testityö") "Työn kuvaus täsmää")
@@ -78,13 +78,32 @@
         maaramuutokset-tallennuksen-jalkeen (:maaramuutokset vastaus)
         yllapitokohteet-tallennuksen-jalkeen (:yllapitokohteet vastaus)
         leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi")
-                                    yllapitokohteet-tallennuksen-jalkeen))]
+                                          yllapitokohteet-tallennuksen-jalkeen))]
     (is (= (count maaramuutokset-tallennuksen-jalkeen)
            (+ (count maaramuutokset-ennen-testia) 1)) "Tallennuksen jälkeen määrä kasvoi yhdellä")
-    (is (== (:maaramuutokset leppajarven-ramppi) 220)
+    (is (== (:maaramuutokset leppajarven-ramppi) 265)
         "Leppäjärven rampin määrämuutos laskettu oikein eli määrämuutoksien
         (toteutunut - tilattu) * hinta
         summattuna yhteen")
 
     ;; Siivoa sotkut
     (u "DELETE FROM yllapitokohteen_maaramuutos WHERE tyo = 'Testissä luotu määrämuutos';")))
+
+(deftest maaramuutosten-tallennus-ei-anna-muokata-jarjestelman-luomaa
+  (let [yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        testipayload [{:id (ffirst (q "SELECT id FROM yllapitokohteen_maaramuutos WHERE tyo = 'Järjestelmän luoma työ' LIMIT 1;"))
+                       :yllapitokohde yllapitokohde-id
+                       :tyyppi :ajoradan-paallyste
+                       :tyo "Testissä luotu määrämuutos"
+                       :yksikko "kg"
+                       :tilattu-maara 100
+                       :toteutunut-maara 120
+                       :yksikkohinta 3}]]
+    (is (thrown? SecurityException (kutsu-palvelua
+                                     (:http-palvelin jarjestelma)
+                                     :tallenna-maaramuutokset +kayttaja-jvh+
+                                     {:urakka-id @muhoksen-paallystysurakan-id
+                                      :yllapitokohde-id yllapitokohde-id
+                                      :maaramuutokset testipayload
+                                      :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                                      :vuosi 2017})))))

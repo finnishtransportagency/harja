@@ -470,7 +470,7 @@
       ;; Siivoa sotkut
       (u "DELETE FROM tarkastus WHERE tarkastusajo = " tarkastusajo-id ";"))))
 
-(deftest oikean-tarkastusajon-muunto-toimii
+(deftest oikean-tarkastusajon-754-muunto-toimii
   (let [db (:db jarjestelma)
         tarkastusajo-id 754
         urakka-id (hae-oulun-alueurakan-2014-2019-id)
@@ -479,23 +479,13 @@
         reitilliset (:reitilliset-tarkastukset tarkastukset)
         pistemaiset (:pistemaiset-tarkastukset tarkastukset)
         odotettu-pistemaisten-maara 0
-        odotettu-reitillisten-maara 5
+        odotettu-reitillisten-maara 4
         kaikki-tarkastukset (concat reitilliset pistemaiset)
         odotetut-tarkastetut-tieosat
         [{:tie 18637 :aosa 1 :aet 207 :losa 1 :let 187}
          {:tie 18637 :aosa 1 :aet 187 :losa 1 :let 11}
          {:tie 28409 :aosa 23 :aet 20 :losa 23 :let 401}
-         {:tie 4 :aosa 364 :aet 3586 :losa 364 :let 8653}
-         {:tie 4 :aosa 364 :aet 8740 :losa 367 :let 335}]
-        ;; Alkuperäinen ilman ramppianalyysiä, jos tarvii sitä testata:
-        #_[{:tie 18637 :aosa 1 :aet 207 :losa 1 :let 187}
-           {:tie 18637 :aosa 1 :aet 187 :losa 1 :let 11}
-           {:tie 28409 :aosa 23 :aet 20 :losa 23 :let 401}
-           {:tie 4 :aosa 364 :aet 3586 :losa 364 :let 7520}
-           {:tie 28408 :aosa 23 :aet 406 :losa 23 :let 641}
-           {:tie 4 :aosa 364 :aet 7892 :losa 364 :let 8810}
-           {:tie 28407 :aosa 12 :aet 3 :losa 12 :let 135}
-           {:tie 4 :aosa 364 :aet 9039 :losa 367 :let 335}]]
+         {:tie 4 :aosa 364 :aet 3586 :losa 367 :let 335}]]
 
     ;; Muunnettu määrällisesti oikein
     (is (= (count pistemaiset) odotettu-pistemaisten-maara))
@@ -553,6 +543,23 @@
 
       ;; Siivoa sotkut
       (u "DELETE FROM tarkastus WHERE tarkastusajo = " tarkastusajo-id ";"))))
+
+(deftest oikean-tarkastusajon-3-muunto-toimii
+  (let [db (:db jarjestelma)
+        tarkastusajo-id 3
+        urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
+        tarkastukset (ls-core/lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)
+        reitilliset (:reitilliset-tarkastukset tarkastukset)
+        pistemaiset (:pistemaiset-tarkastukset tarkastukset)
+        odotettu-pistemaisten-maara 0
+        odotettu-reitillisten-maara 9]
+
+    ;; Tämä testi havaitsi aiemmin virheellisiä ajallisia gäppejä tästä ajosta.
+
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count pistemaiset) odotettu-pistemaisten-maara))
+    (is (= (count reitilliset) odotettu-reitillisten-maara))))
 
 
 ;; -------- Apufunktioita REPL-tunkkaukseen --------
