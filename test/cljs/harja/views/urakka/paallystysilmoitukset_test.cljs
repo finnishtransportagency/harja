@@ -1,23 +1,24 @@
 (ns harja.views.urakka.paallystysilmoitukset-test
   (:require
-   [cljs-time.core :as t]
-   [cljs.test :as test :refer-macros [deftest is async]]
-   [harja.loki :refer [log tarkkaile!]]
-   [harja.ui.historia :as historia]
-   [harja.domain.paallystysilmoitus :as pot]
-   [harja.domain.tierekisteri :as tierekisteri-domain]
-   [harja.ui.tierekisteri :as tierekisteri]
-   [harja.testutils :refer [komponentti-fixture fake-palvelut-fixture fake-palvelukutsu jvh-fixture
-                            render paivita sel sel1 grid-solu click change
-                            disabled? ilman-tavutusta]]
-   [harja.views.urakka.paallystysilmoitukset :as p]
-   [harja.pvm :as pvm]
-   [reagent.core :as r]
-   [cljs.core.async :refer [<! >!]]
-   [cljs-react-test.simulate :as sim]
-   [schema.core :as s]
-   [harja.domain.paallystysilmoitus :as pot]
-   [harja.pvm :as pvm])
+    [cljs-time.core :as t]
+    [cljs.test :as test :refer-macros [deftest is async]]
+    [harja.loki :refer [log tarkkaile!]]
+    [harja.ui.historia :as historia]
+    [harja.domain.paallystysilmoitus :as pot]
+    [harja.domain.tierekisteri :as tierekisteri-domain]
+    [harja.ui.tierekisteri :as tierekisteri]
+    [harja.testutils.shared-testutils :refer [render paivita sel sel1 grid-solu click change
+                                              disabled? ilman-tavutusta komponentti-fixture]]
+    [harja.testutils :refer [fake-palvelut-fixture fake-palvelukutsu
+                             jvh-fixture]]
+    [harja.views.urakka.paallystysilmoitukset :as p]
+    [harja.pvm :as pvm]
+    [reagent.core :as r]
+    [cljs.core.async :refer [<! >!]]
+    [cljs-react-test.simulate :as sim]
+    [schema.core :as s]
+    [harja.domain.paallystysilmoitus :as pot]
+    [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -144,58 +145,58 @@
                                                    :kayttaja 2, :aikaleima (pvm/nyt)}))
         tallennus (fake-palvelukutsu :tallenna-paallystysilmoitus identity)]
     (async
-     done
-     (go
-       (render [comp])
+      done
+      (go
+        (render [comp])
 
-       ;; Tarkista, että tieosoite näkyy oikein
-       (is (= "piru 1"
-              (some-> (grid-solu "yllapitokohdeosat" 0 1)
-                      .-value)))
+        ;; Tarkista, että tieosoite näkyy oikein
+        (is (= "piru 1"
+               (some-> (grid-solu "yllapitokohdeosat" 0 1)
+                       .-value)))
 
-       (<! pituudet-haettu)
+        (<! pituudet-haettu)
 
-       (<! (paivita))
+        (<! (paivita))
 
-       (is (= "Tierekisterikohteiden pituus yhteensä: 10,00 km"
-              (some-> (sel1 :#kohdeosien-pituus-yht) .-innerText)))
+        (is (= "Tierekisterikohteiden pituus yhteensä: 10,00 km"
+               (some-> (sel1 :#kohdeosien-pituus-yht) .-innerText)))
 
 
-       ;; Tallennus nappi enabled
-       (is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled not))
+        ;; Tallennus nappi enabled
+        (is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled not))
 
-       (let [tila-ok @lomake]
+        (let [tila-ok @lomake]
 
-         ;; Muutetaan päällystystoimenpiteen RC% arvoksi ei-validi
-         (sim/change (grid-solu "paallystysilmoitus-paallystystoimenpiteet" 0 4)
-                     {:target {:value "888"}})
+          ;; Muutetaan päällystystoimenpiteen RC% arvoksi ei-validi
+          (sim/change (grid-solu "paallystysilmoitus-paallystystoimenpiteet" 0 4)
+                      {:target {:value "888"}})
 
-         (<! (paivita))
+          (<! (paivita))
 
-         (is (= 888 (get-in @lomake [:ilmoitustiedot :osoitteet 0 :rc%])))
+          (is (= 888 (get-in @lomake [:ilmoitustiedot :osoitteet 0 :rc%])))
 
-         (is (= (get-in @lomake [:virheet :paallystystoimenpide 1 :rc%])
-                '("Anna arvo välillä 0 - 100")))
+          (is (= (get-in @lomake [:virheet :paallystystoimenpide 1 :rc%])
+                 '("Anna arvo välillä 0 - 100")))
 
-         ;; Tallennus nappi disabled
-         (is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled))
+          ;; Tallennus nappi disabled
+          (is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled))
 
-         (<! (tarkista-asiatarkastus lomake))
-         (reset! lomake tila-ok))
+          (<! (tarkista-asiatarkastus lomake))
+          (reset! lomake tila-ok))
 
-       (<! (paivita))
+        (<! (paivita))
 
-       ;; Muutetaan takaisin validiksi ja yritetään tallentaa
-       (sim/change (grid-solu "paallystysilmoitus-paallystystoimenpiteet" 0 4)
-                   {:target {:value "8"}})
+        ;; Muutetaan takaisin validiksi ja yritetään tallentaa
+        (sim/change (grid-solu "paallystysilmoitus-paallystystoimenpiteet" 0 4)
+                    {:target {:value "8"}})
 
-       (<! (paivita))
+        (<! (paivita))
 
-       (<! (tarkista-kopioidun-rivin-virhe lomake))
+        (<! (tarkista-kopioidun-rivin-virhe lomake))
 
-       (click :#tallenna-paallystysilmoitus)
+        (click :#tallenna-paallystysilmoitus)
 
-       ;; Tallennusta kutsuttu
-       (let [tulos (<! tallennus)]
-         (is tulos))
-       (done)))))
+        ;; Tallennusta kutsuttu
+        (let [tulos (<! tallennus)]
+          (is tulos))
+        (done)))))
