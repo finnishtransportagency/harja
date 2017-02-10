@@ -69,10 +69,10 @@
                                  :paallystysurakan-indeksitiedot
                                  +kayttaja-jvh+
                                  {:urakka-id 5})
-        rivi (first indeksit)]
-    (is (= (:raskas rivi) {:raakaaine "raskas_polttooljy", :id 4,
+        rivi-2016 (first (filter #(= 2016 (:urakkavuosi %)) indeksit))]
+    (is (= (:raskas rivi-2016) {:raakaaine "raskas_polttooljy", :id 4,
                            :indeksinimi "Platts: FO 3,5%S CIF NWE Cargo", :koodi "ABWGL03" :lahtotason-arvo 225.00M}))
-    (is (= (:kevyt rivi) {:indeksinimi "Platts: Propane CIF NWE 7kt+", :koodi "PMUEE03"
+    (is (= (:kevyt rivi-2016) {:indeksinimi "Platts: Propane CIF NWE 7kt+", :koodi "PMUEE03"
                           :raakaaine "nestekaasu", :id 8 :lahtotason-arvo 285.55M}))
-    (is (= (:nestekaasu rivi) {:raakaaine "kevyt_polttooljy", :id 6, :koodi "ABWHK03"
+    (is (= (:nestekaasu rivi-2016) {:raakaaine "kevyt_polttooljy", :id 6, :koodi "ABWHK03"
                                :indeksinimi "Platts: ULSD 10ppmS CIF NWE Cargo" :lahtotason-arvo 123.45M}))))
