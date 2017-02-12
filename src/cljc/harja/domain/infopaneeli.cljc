@@ -61,9 +61,9 @@
                    ::aika ::tr ::kaistat ::ajoradat]))
 
 (defmethod infopaneeli-skeema :toteuma [_]
-  (s/keys :opt-un [::aika-pisteessa ::lisatieto]
+  (s/keys :opt-un [::aika-pisteessa ::lisatieto ::materiaalit]
           :req-un [::alkanut ::paattynyt ::suorittaja
-                   ::tehtavat ::materiaalit]))
+                   ::tehtavat]))
 
 (defmethod infopaneeli-skeema :silta [_]
   (s/keys :req-un [::siltanimi ::siltatunnus ::tarkastusaika ::tarkasttaja]))
