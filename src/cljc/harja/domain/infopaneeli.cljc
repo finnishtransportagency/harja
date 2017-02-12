@@ -5,10 +5,6 @@
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
 
-;; FIXME: määrittele eri skeemat
-;; Nämä pitäisi määritellä omissa domain asioissa tai
-;; määritellä vaaditut avaimet suoraan täällä
-
 (defmethod infopaneeli-skeema :tyokone [_]
   (s/keys :req-un [::ensimmainen-havainto ::viimeisin-havainto ::tyokonetyyppi
                    ::organisaationimi ::urakkanimi ::tehtavat]))
