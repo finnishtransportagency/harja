@@ -1,7 +1,8 @@
 (ns harja.domain.tierekisteri
   (:require [clojure.spec :as s]
             [clojure.string :as str]
-    #?@(:cljs [[harja.loki :refer [log]]])))
+            #?@(:clj [[clojure.future :refer :all]]
+                :cljs [[harja.loki :refer [log]]])))
 
 (s/def ::numero int?)
 (s/def ::alkuosa int?)

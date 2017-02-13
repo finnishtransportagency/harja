@@ -2,7 +2,8 @@
   "Tienäkymän tietojen spec-määritykset"
   (:require [clojure.spec :as s]
             [harja.domain.tierekisteri :as tr]
-            [harja.domain.infopaneeli :as infopaneeli]))
+            [harja.domain.infopaneeli :as infopaneeli]
+            #?@(:clj [[clojure.future :refer :all]])))
 
 (s/def ::alku inst?)
 (s/def ::loppu inst?)
