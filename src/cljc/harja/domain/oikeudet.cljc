@@ -231,7 +231,7 @@
   (:kuvaus (get roolit rooli)))
 
 (defn kayttajan-urakat [{urakkaroolit :urakkaroolit}]
-  (merkitse-oikeustarkistus-tehdyksi!)
+  #?(:clj (merkitse-oikeustarkistus-tehdyksi!))
   (into #{} (keys urakkaroolit)))
 
 (defn oikeuden-puute-kuvaus [oikeustyyppi oikeus]
