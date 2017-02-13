@@ -72,12 +72,12 @@
       (is (= (:valmis-kommentti vt1) "valmis!"))
 
       ;; VT2 tallentui oikein
-      (is (some? (:valmis-merkitsija vt1)))
-      (is (some? (:valmispvm vt1)))
-      (is (nil? (:valtakunnallinen-id vt1)))
-      (is (= (:urakka-id vt1) urakka-id))
-      (is (some? (:takaraja vt1)))
-      (is (= (:valmis-kommentti vt1) "valmis tämäkin!")))
+      (is (some? (:valmis-merkitsija vt2)))
+      (is (some? (:valmispvm vt2)))
+      (is (nil? (:valtakunnallinen-id vt2)))
+      (is (= (:urakka-id vt2) urakka-id))
+      (is (some? (:takaraja vt2)))
+      (is (= (:valmis-kommentti vt2) "valmis tämäkin!")))
 
     ;; Päivitys toimii
     (let [muokattu-vt (->> vt-lisayksen-jalkeen
