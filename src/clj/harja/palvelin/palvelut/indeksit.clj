@@ -116,19 +116,20 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (jdbc/with-db-transaction [c db]
     (doseq [i indeksitiedot]
-      (let [id (:id i)
-            params {:indeksi_nestekaasu (get-in i [:nestekaasu :id])
-                    :indeksi_polttooljyraskas (get-in i [:raskas :id])
-                    :indeksi_polttooljykevyt (get-in i [:kevyt :id])
-                    :kayttaja (:id user)
-                    :urakka urakka-id
-                    :lahtotason_kuukausi (:lahtotason-kuukausi i)
-                    :lahtotason_vuosi (:lahtotason-vuosi i)
-                    :urakkavuosi (:urakkavuosi i)
-                    :poistettu (:poistettu i)}]
-        (when (id-olemassa? id)
-          (vaadi-paallystysurakan-indeksi-kuuluu-urakkaan c urakka-id id))
-        (q/tallenna-paallystysurakan-indeksitiedot! c params)))
+      (when (id-olemassa? (:id i))
+        (vaadi-paallystysurakan-indeksi-kuuluu-urakkaan db urakka-id (:id i)))
+
+      (when-not (and (neg? (:id i)) (:poistettu i))  ;gridillä poistettu samalla kun luotu, ei käsitellä
+        (let [params {:indeksi_nestekaasu (get-in i [:nestekaasu :id])
+                      :indeksi_polttooljyraskas (get-in i [:raskas :id])
+                      :indeksi_polttooljykevyt (get-in i [:kevyt :id])
+                      :kayttaja (:id user)
+                      :urakka urakka-id
+                      :lahtotason_kuukausi (:lahtotason-kuukausi i)
+                      :lahtotason_vuosi (:lahtotason-vuosi i)
+                      :urakkavuosi (:urakkavuosi i)
+                      :poistettu (:poistettu i)}]
+          (q/tallenna-paallystysurakan-indeksitiedot! c params))))
     (hae-paallystysurakan-indeksitiedot c user {:urakka-id urakka-id})))
 
 

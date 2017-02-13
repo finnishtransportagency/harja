@@ -543,7 +543,7 @@
 (defn- indeksinimen-kentta
   [nimi otsikko valinnat]
   {:otsikko otsikko :nimi nimi :tyyppi :valinta :leveys 12
-   :valinta-nayta :indeksinimi
+   :valinta-nayta #(if (:id %) (:indeksinimi %) "- valitse -")
    :fmt indeksinimi-ja-lahtotaso-fmt
    :valinnat valinnat})
 
@@ -563,7 +563,7 @@
           :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
                       #(indeksit/tallenna-paallystysurakan-indeksit {:urakka-id (:id ur) :tiedot %}))}
          [{:otsikko "Vuosi" :nimi :urakkavuosi :tyyppi :valinta :leveys 6
-
+           :muokattava? #(neg? (:id %))
            :valinta-nayta #(if (nil? %) "- valitse -" %)
 
            :valinnat (vec (filter #(not (varatut-vuodet %))

@@ -14,9 +14,8 @@
 (def indeksit (atom nil))
 
  (defn hae-indeksit []
-   (if (nil? @indeksit)
-           (go (reset! indeksit
-               (<! (k/get! :indeksit))))))
+   (when (nil? @indeksit)
+     (go (reset! indeksit (<! (k/get! :indeksit))))))
 
 (defn tallenna-indeksi
   "Tallentaa indeksiarvot, palauttaa kanavan, josta vastauksen voi lukea."
