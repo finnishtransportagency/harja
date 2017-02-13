@@ -86,7 +86,6 @@
                           (mapv #(if (= (:nimi %) "testi566")
                                   (assoc % :valmis-kommentti "hyvin tehty")
                                   %)))
-          _ (log/debug "PÄIVITÄ: " (pr-str muokattu-vt))
           _ (kutsu-palvelua
               (:http-palvelin jarjestelma)
               :tallenna-urakan-valitavoitteet

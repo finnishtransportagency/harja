@@ -17,32 +17,34 @@
         (map konv/alaviiva->rakenne)
         (q/hae-urakan-valitavoitteet db urakka-id)))
 
-
-
 (defn- poista-poistetut-urakan-valitavoitteet [db user valitavoitteet urakka-id]
   (doseq [poistettava (filter :poistettu valitavoitteet)]
     (q/poista-urakan-valitavoite! db (:id user) urakka-id (:id poistettava))))
 
-(defn- luo-uudet-urakan-valitavoitteet [db user valitavoitteet urakka-id]
-  (doseq [{:keys [takaraja nimi]} (filter
-                                    #(and (not (id-olemassa? (:id %)))
-                                          (not (:poistettu %)))
-                                    valitavoitteet)]
-    (log/debug "Luodaan uusi välitavoite: " nimi)
-    (q/lisaa-urakan-valitavoite<! db {:urakka urakka-id
-                                      :takaraja (konv/sql-date takaraja)
-                                      :nimi nimi
-                                      :valtakunnallinen_valitavoite nil
-                                      :luoja (:id user)})))
-
 (defn- merkitse-valitavoite-valmiiksi! [db user
-                                        {:keys [urakka-id id valmispvm valmis-kommentti] :as tiedot}]
+                                        {:keys [nimi urakka-id id valmispvm valmis-kommentti] :as tiedot}]
+  (log/debug "Merkitään välitavoite valmiiksi: " nimi)
+  (log/debug tiedot)
   (q/merkitse-valmiiksi! db
                          (when valmispvm
                            (konv/sql-date valmispvm))
                          (when valmispvm
                            valmis-kommentti)
                          (:id user) urakka-id id))
+
+(defn- luo-uudet-urakan-valitavoitteet [db user valitavoitteet urakka-id]
+  (doseq [{:keys [takaraja nimi] :as valitavoite} (filter
+                                                    #(and (not (id-olemassa? (:id %)))
+                                                          (not (:poistettu %)))
+                                                    valitavoitteet)]
+    (log/debug "Luodaan uusi välitavoite: " nimi)
+    (let [lisatty-vt-id (:id (q/lisaa-urakan-valitavoite<! db {:urakka urakka-id
+                                                               :takaraja (konv/sql-date takaraja)
+                                                               :nimi nimi
+                                                               :valtakunnallinen_valitavoite nil
+                                                               :luoja (:id user)}))]
+      (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
+        (merkitse-valitavoite-valmiiksi! db user (assoc valitavoite :id lisatty-vt-id))))))
 
 (defn- paivita-urakan-valitavoitteet! [db user valitavoitteet urakka-id]
   (let [valitavoitteet (filter (comp not :valtakunnallinen-id) valitavoitteet)]
@@ -62,9 +64,7 @@
                           (not (:poistettu %)))
                     valitavoitteet)]
 
-      ;; Urakkakohtaisten muutosten tekemiseen vaaditaan "valmis" oikeus, kuten myös valmiiksi merkitsemiseen.
-      (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
-        (q/paivita-urakan-valitavoite! db nimi (konv/sql-date takaraja) (:id user) urakka-id id))
+      (q/paivita-urakan-valitavoite! db nimi (konv/sql-date takaraja) (:id user) urakka-id id)
       (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
         (merkitse-valitavoite-valmiiksi! db user valitavoite)))))
 
