@@ -67,7 +67,7 @@
       (finally
         (if (and vaadi-oikeustarkistus? (not @oikeudet/*oikeustarkistus-tehty*))
           (log/error "virhe: oikeustarkistusta ei tehty - uri:" (:uri req))
-          (log/debug "oikein: oikeustarkistus tehtiin - uri:" (:uri req)))))))
+          (log/debug "oikein: oikeustarkistus tehtiin - uri:" (:uri req))))))))
 
 (defn- transit-palvelun-polku [nimi]
   (str "/_/" (name nimi)))
