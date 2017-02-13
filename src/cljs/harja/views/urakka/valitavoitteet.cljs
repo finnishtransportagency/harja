@@ -45,8 +45,8 @@
 (defn- suodata-valitavoitteet-urakkavuodella [valitavoitteet]
   (filterv #(or
               (= valitavoitteet :kaikki)
-              (nil? (:takaraja %))
-              (= (t/year (:takaraja %)) valitavoitteet))
+              (and (some? (:takaraja %))
+                   (= (t/year (:takaraja %)) valitavoitteet)))
            valitavoitteet))
 
 (defn urakan-omat-valitavoitteet
