@@ -42,13 +42,13 @@
                                                                  {:lyhenna-yksikot? true})
                                  ")"))))))
 
-(defn- urakan-omat-valitavoitteet
-  [urakka kaikki-valitavoitteet-atom urakan-valitavoitteet-atom]
+(defn urakan-omat-valitavoitteet
+  [{:keys [urakka kaikki-valitavoitteet-atom urakan-valitavoitteet valittu-urakan-vuosi]}]
   (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
         voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))]
     [grid/grid
      {:otsikko "Urakan välitavoitteet"
-      :tyhja (if (nil? @urakan-valitavoitteet-atom)
+      :tyhja (if (nil? urakan-valitavoitteet)
                [y/ajax-loader "Välitavoitteita haetaan..."]
                "Ei välitavoitteita")
       :tallenna (if voi-muokata?
@@ -63,8 +63,8 @@
 
      [{:otsikko "Nimi" :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 128}
       {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
-                                                                   (pvm/pvm-opt %)
-                                                                   "Ei takarajaa")
+                                                                    (pvm/pvm-opt %)
+                                                                    "Ei takarajaa")
        :tyyppi :pvm}
       {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}
@@ -72,8 +72,8 @@
        :muokattava? (constantly voi-merkita-valmiiksi?)
        :nimi :valmispvm
        :fmt #(if %
-              (pvm/pvm-opt %)
-              "-")}
+               (pvm/pvm-opt %)
+               "-")}
       {:otsikko "Kom\u00ADmentti val\u00ADmis\u00ADtu\u00ADmi\u00ADses\u00ADta"
        :leveys 35 :tyyppi :string :muokattava? #(and voi-merkita-valmiiksi?
                                                      (:valmispvm %))
@@ -82,14 +82,14 @@
        :nimi :merkitsija :hae (fn [rivi]
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
      (filterv #(or
-                 (= @urakka/valittu-urakan-vuosi :kaikki)
-                 (= (t/year (:takaraja %)) @urakka/valittu-urakan-vuosi))
-              @urakan-valitavoitteet-atom)]))
+                 (= valittu-urakan-vuosi :kaikki)
+                 (= (t/year (:takaraja %)) valittu-urakan-vuosi))
+              urakan-valitavoitteet)]))
 
-(defn- urakan-omat-ja-valtakunnalliset-valitavoitteet
+(defn urakan-omat-ja-valtakunnalliset-valitavoitteet
   "Tässä gridissä näytetään sekä urakan omat että valtakunnallisten välitavoitteiden pohjalta urakkaan liitetyt
    välitavoitteet"
-  [urakka kaikki-valitavoitteet-atom]
+  [{:keys [urakka kaikki-valitavoitteet-atom valittu-urakan-vuosi]}]
   (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
         voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))]
     [grid/grid
@@ -109,8 +109,8 @@
 
      [{:otsikko "Nimi" :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 128}
       {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
-                                                                   (pvm/pvm-opt %)
-                                                                   "Ei takarajaa")
+                                                                    (pvm/pvm-opt %)
+                                                                    "Ei takarajaa")
        :tyyppi :pvm}
       {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}
@@ -118,8 +118,8 @@
        :muokattava? (constantly voi-merkita-valmiiksi?)
        :nimi :valmispvm
        :fmt #(if %
-              (pvm/pvm-opt %)
-              "-")}
+               (pvm/pvm-opt %)
+               "-")}
       {:otsikko "Kom\u00ADmentti val\u00ADmis\u00ADtu\u00ADmi\u00ADses\u00ADta"
        :leveys 35 :tyyppi :string :muokattava? #(and voi-merkita-valmiiksi?
                                                      (:valmispvm %))
@@ -128,29 +128,30 @@
        :nimi :merkitsija :hae (fn [rivi]
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
      (filterv #(or
-                (= @urakka/valittu-urakan-vuosi :kaikki)
-                (= (t/year (:takaraja %)) @urakka/valittu-urakan-vuosi))
+                 (= valittu-urakan-vuosi :kaikki)
+                 (= (t/year (:takaraja %)) valittu-urakan-vuosi))
               @kaikki-valitavoitteet-atom)]))
 
 (defn ainakin-yksi-tavoite-muutettu-urakkaan [rivit]
   (some #(or
-          ;; Kertaluontoinen takaraja poikkeaa
-          (and (:valtakunnallinen-takaraja %)
-               (not= (:takaraja %) (:valtakunnallinen-takaraja %)))
+           ;; Kertaluontoinen takaraja poikkeaa
+           (and (:valtakunnallinen-takaraja %)
+                (not= (:takaraja %) (:valtakunnallinen-takaraja %)))
 
-          ;; Toistuva takaraja poikkeaa
-          (and (:valtakunnallinen-takarajan-toistopaiva %)
-               (:valtakunnallinen-takarajan-toistokuukausi %)
-               (or (not= (:valtakunnallinen-takarajan-toistopaiva %)
-                         (t/day (:takaraja %)))
-                   (not= (:valtakunnallinen-takarajan-toistokuukausi %)
-                         (t/month (:takaraja %)))))
+           ;; Toistuva takaraja poikkeaa
+           (and (:valtakunnallinen-takarajan-toistopaiva %)
+                (:valtakunnallinen-takarajan-toistokuukausi %)
+                (or (not= (:valtakunnallinen-takarajan-toistopaiva %)
+                          (t/day (:takaraja %)))
+                    (not= (:valtakunnallinen-takarajan-toistokuukausi %)
+                          (t/month (:takaraja %)))))
 
-          ;; Välitavoitteen nimi poikkeaa
-          (not= (:valtakunnallinen-nimi %) (:nimi %)))
+           ;; Välitavoitteen nimi poikkeaa
+           (not= (:valtakunnallinen-nimi %) (:nimi %)))
         rivit))
 
-(defn- valtakunnalliset-valitavoitteet [urakka kaikki-valitavoitteet-atom valtakunnalliset-valitavoitteet-atom]
+(defn valtakunnalliset-valitavoitteet
+  [{:keys [urakka kaikki-valitavoitteet-atom valtakunnalliset-valitavoitteet valittu-urakan-vuosi]}]
   (let [voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))
         voi-tehda-tarkennuksen? voi-merkita-valmiiksi? ; Toistaiseksi oletetaan nämä oikeudet samaksi
         ;; Mitään taulukon kenttää ei voi muokata ilman oikeutta merkitä valmiiksi tai tehdä tarkennuksia
@@ -160,7 +161,7 @@
     [:div
      [grid/grid
       {:otsikko "Valtakunnalliset välitavoitteet"
-       :tyhja (if (nil? @valtakunnalliset-valitavoitteet-atom)
+       :tyhja (if (nil? valtakunnalliset-valitavoitteet)
                 [y/ajax-loader "Välitavoitteita haetaan..."]
                 "Ei välitavoitteita")
        :tallenna (if voi-muokata?
@@ -191,18 +192,18 @@
         :leveys 20
         :nimi :valtakunnallinen-takaraja
         :hae #(cond
-               (:valtakunnallinen-takaraja %)
-               (pvm/pvm-opt (:valtakunnallinen-takaraja %))
+                (:valtakunnallinen-takaraja %)
+                (pvm/pvm-opt (:valtakunnallinen-takaraja %))
 
-               (and (:valtakunnallinen-takarajan-toistopaiva %)
-                    (:valtakunnallinen-takarajan-toistokuukausi %))
-               (str "Vuosittain "
-                    (:valtakunnallinen-takarajan-toistopaiva %)
-                    "."
-                    (:valtakunnallinen-takarajan-toistokuukausi %))
+                (and (:valtakunnallinen-takarajan-toistopaiva %)
+                     (:valtakunnallinen-takarajan-toistokuukausi %))
+                (str "Vuosittain "
+                     (:valtakunnallinen-takarajan-toistopaiva %)
+                     "."
+                     (:valtakunnallinen-takarajan-toistokuukausi %))
 
-               :default
-               "Ei takarajaa")
+                :default
+                "Ei takarajaa")
         :tyyppi :pvm
         :muokattava? (constantly false)}
        {:otsikko "Taka\u00ADraja ura\u00ADkassa"
@@ -230,8 +231,8 @@
         :muokattava? (constantly voi-merkita-valmiiksi?)
         :nimi :valmispvm
         :fmt #(if %
-               (pvm/pvm-opt %)
-               "-")}
+                (pvm/pvm-opt %)
+                "-")}
        {:otsikko "Kom\u00ADmentti val\u00ADmis\u00ADtu\u00ADmi\u00ADses\u00ADta"
         :leveys 35 :tyyppi :string :muokattava? #(and voi-merkita-valmiiksi?
                                                       (:valmispvm %))
@@ -240,11 +241,11 @@
         :nimi :merkitsija :hae (fn [rivi]
                                  (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
       (filterv #(or
-                  (= @urakka/valittu-urakan-vuosi :kaikki)
-                  (= (t/year (:takaraja %)) @urakka/valittu-urakan-vuosi))
-               @valtakunnalliset-valitavoitteet-atom)]
+                  (= valittu-urakan-vuosi :kaikki)
+                  (= (t/year (:takaraja %)) valittu-urakan-vuosi))
+               valtakunnalliset-valitavoitteet)]
 
-     (when (ainakin-yksi-tavoite-muutettu-urakkaan @valtakunnalliset-valitavoitteet-atom)
+     (when (ainakin-yksi-tavoite-muutettu-urakkaan valtakunnalliset-valitavoitteet)
        [yleiset/vihje-elementti [:span
                                  [:span "Urakkakohtaisten tarkennukset värjätty "]
                                  [:span.grid-solu-varoitus "punaisella"]
@@ -278,20 +279,23 @@
 
          (when nayta-urakkakohtaiset-grid?
            [urakan-omat-valitavoitteet
-            ur
-            tiedot/valitavoitteet
-            tiedot/urakan-valitavoitteet])
+            {:urakka ur
+             :kaikki-valitavoitteet-atom tiedot/valitavoitteet
+             :urakan-valitavoitteet @tiedot/urakan-valitavoitteet
+             :valittu-urakan-vuosi @urakka/valittu-urakan-vuosi}])
 
          (when nayta-valtakunnalliset-grid?
            [valtakunnalliset-valitavoitteet
-            ur
-            tiedot/valitavoitteet
-            tiedot/valtakunnalliset-valitavoitteet])
+            {:urakka ur
+             :kaikki-valitavoitteet-atom tiedot/valitavoitteet
+             :valtakunnalliset-valitavoitteet @tiedot/valtakunnalliset-valitavoitteet
+             :valittu-urakan-vuosi @urakka/valittu-urakan-vuosi}])
 
          (when nayta-yhdistetty-grid?
            [urakan-omat-ja-valtakunnalliset-valitavoitteet
-            ur
-            tiedot/valitavoitteet])
+            {:urakka ur
+             :kaikki-valitavoitteet-atom tiedot/valitavoitteet
+             :valittu-urakan-vuosi @urakka/valittu-urakan-vuosi}])
 
          (when nayta-valtakunnalliset-grid?
            [yleiset/vihje (str
