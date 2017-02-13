@@ -58,7 +58,7 @@
            :paikkaus
            #(reset! paallystys-tiedot/harjan-paikkauskohteet (filter (comp not yllapitokohteet/yha-kohde?) %)))}]
 
-       [muut-kustannukset-view/muut-kustannukset ur]
+       [muut-kustannukset-view/muut-kustannukset ur paallystys-tiedot/muut-kustannukset-lomakedata]
 
        [yllapitokohteet-view/yllapitokohteet-yhteensa
         paallystys-tiedot/kohteet-yhteensa {:nakyma :paallystys}]

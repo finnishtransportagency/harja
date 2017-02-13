@@ -4,13 +4,12 @@
             [harja.ui.grid :as grid]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.komponentti :as komp]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka :as urakka]
+            [harja.tiedot.urakka :as tiedot-urakka]
+            [harja.tiedot.urakka.toteumat.tiemerkinta-muut-tyot :refer [tallenna-toteuma hae-toteuma]]
             [harja.ui.valinnat :as valinnat]
-            [cljs-time.core :as t]))
+            [cljs-time.core :as t])
+  (:require-macros [reagent.ratom :refer [reaction]]
+                   [cljs.core.async.macros :refer [go]]))
 
 (defonce kustannukset-atom (atom {}))
 
@@ -22,7 +21,6 @@
 
 (def grid-opts {:otsikko "Muut kustannukset"
                 :tyhja (if (nil? @kustannukset-atom) [ajax-loader "Haetaan kustannuksia..."] "Ei kustannuksia")
-                :tallenna #(log "muut-kustannukset: tallenna kutsuttu")
                 :muutos (fn [grid]
                           #(log "muut-kustannukset: muutos kutsuttu"))
                 :voi-lisata? true
@@ -36,16 +34,27 @@
   (into [] (concat  [{:otsikko "Kustannus" :nimi :kustannus-nimi
                       :tyyppi :string :leveys kustannus-nimi-leveys
                       :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
-                     {:otsikko "summa" :nimi :kustannus-summa
+                     {:otsikko "Hinta" :nimi :hinta
                       :tyyppi :string :leveys kustannus-summa-leveys}]
                     [])))
 
 (defn grid-tiedot []
-  [{:id "foo" :kustannus-nimi "ruoka" :muokattava true :kustannus-summa 42.50 }
-   {:id "bar" :kustannus-nimi "juoma" :muokattava false :kustannus-summa 234.00}])
+  [{:id "foo" :alkupvm #inst "2015-12-12T12:12:12" :kustannus-nimi "ruoka" :muokattava true :hinta 42.50 }
+   {:id "zorp" :alkupvm #inst "2014-12-12T12:12:12" :kustannus-nimi "ffff" :muokattava true :hinta 44.50 }
+   {:id "bar" :alkupvm #inst "2011-12-12T12:12:12" :kustannus-nimi "juoma" :muokattava false :hinta 234.00}])
+
+(defn tallenna-lomake [urakka data-atomi grid-data] ;; XXX siirrä tämä tiedot-namespaceen
+  ;; kustannukset tallennetaan ilman laskentakohdetta yllapito_toteuma-tauluun,
+  ;; -> backin palvelut.yllapito-toteumat/tallenna-yllapito-toteuma
+
+  (let [toteuman-avaimet-gridista #(select-keys % [:toteuma :alkupvm :loppupvm :uusi-laskentakohde])]
+    (go
+      (mapv #(-> % toteuman-avaimet-gridista (assoc :urakka (:id urakka) :sopimus @tiedot-urakka/valittu-sopimusnumero) (tallenna-toteuma []))
+            grid-data)
+      (println "tallennettiin lomakedataan" grid-data))))
 
 (defn muut-kustannukset [urakka muut-kustannukset-lomakedata]
   (komp/luo
    (fn [urakka]
      [:div.muut-kustannukset
-      [grid/grid grid-opts grid-skeema (grid-tiedot)]])))
+      [grid/grid (assoc grid-opts :tallenna #(tallenna-lomake urakka muut-kustannukset-lomakedata %)) grid-skeema (grid-tiedot)]])))
