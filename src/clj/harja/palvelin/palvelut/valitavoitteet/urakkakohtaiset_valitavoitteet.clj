@@ -6,6 +6,7 @@
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
+            [harja.id :refer [id-olemassa?]]
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn hae-urakan-valitavoitteet
@@ -24,7 +25,7 @@
 
 (defn- luo-uudet-urakan-valitavoitteet [db user valitavoitteet urakka-id]
   (doseq [{:keys [takaraja nimi]} (filter
-                                    #(and (< (:id %) 0)
+                                    #(and (not (id-olemassa? %))
                                           (not (:poistettu %)))
                                     valitavoitteet)]
     (q/lisaa-urakan-valitavoite<! db {:urakka urakka-id
@@ -45,7 +46,7 @@
 (defn- paivita-urakan-valitavoitteet! [db user valitavoitteet urakka-id]
   (let [valitavoitteet (filter (comp not :valtakunnallinen-id) valitavoitteet)]
     (doseq [{:keys [id takaraja nimi] :as valitavoite}
-            (filter #(and (> (:id %) 0)
+            (filter #(and (id-olemassa? %)
                           (not (:poistettu %)))
                     valitavoitteet)]
       (q/paivita-urakan-valitavoite! db nimi (konv/sql-date takaraja) (:id user) urakka-id id)
@@ -55,7 +56,7 @@
 (defn- paivita-urakan-valtakunnalliset-valitavoitteet! [db user valitavoitteet urakka-id]
   (let [valitavoitteet (filter :valtakunnallinen-id valitavoitteet)]
     (doseq [{:keys [id takaraja nimi] :as valitavoite}
-            (filter #(and (> (:id %) 0)
+            (filter #(and (id-olemassa? %)
                           (not (:poistettu %)))
                     valitavoitteet)]
 
