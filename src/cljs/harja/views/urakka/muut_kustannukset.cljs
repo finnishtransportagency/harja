@@ -4,8 +4,8 @@
             [harja.ui.grid :as grid]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.urakka :as tiedot-urakka]
-            [harja.tiedot.urakka.toteumat.tiemerkinta-muut-tyot :refer [tallenna-toteuma hae-toteuma]]
+            [harja.tiedot.urakka.muut-kustannukset :as tiedot-muut-kustannukset]
+            ;; [harja.tiedot.urakka.toteumat.tiemerkinta-muut-tyot :refer [tallenna-toteuma hae-toteuma]]
             [harja.ui.valinnat :as valinnat]
             [cljs-time.core :as t])
   (:require-macros [reagent.ratom :refer [reaction]]
@@ -35,26 +35,13 @@
                       :tyyppi :string :leveys kustannus-nimi-leveys
                       :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
                      {:otsikko "Hinta" :nimi :hinta
-                      :tyyppi :string :leveys kustannus-summa-leveys}]
+                      :tyyppi :numero :leveys kustannus-summa-leveys}]
                     [])))
 
-(defn grid-tiedot []
-  [{:id "foo" :alkupvm #inst "2015-12-12T12:12:12" :kustannus-nimi "ruoka" :muokattava true :hinta 42.50 }
-   {:id "zorp" :alkupvm #inst "2014-12-12T12:12:12" :kustannus-nimi "ffff" :muokattava true :hinta 44.50 }
-   {:id "bar" :alkupvm #inst "2011-12-12T12:12:12" :kustannus-nimi "juoma" :muokattava false :hinta 234.00}])
-
-(defn tallenna-lomake [urakka data-atomi grid-data] ;; XXX siirrä tämä tiedot-namespaceen
-  ;; kustannukset tallennetaan ilman laskentakohdetta yllapito_toteuma-tauluun,
-  ;; -> backin palvelut.yllapito-toteumat/tallenna-yllapito-toteuma
-
-  (let [toteuman-avaimet-gridista #(select-keys % [:toteuma :alkupvm :loppupvm :uusi-laskentakohde])]
-    (go
-      (mapv #(-> % toteuman-avaimet-gridista (assoc :urakka (:id urakka) :sopimus @tiedot-urakka/valittu-sopimusnumero) (tallenna-toteuma []))
-            grid-data)
-      (println "tallennettiin lomakedataan" grid-data))))
-
-(defn muut-kustannukset [urakka muut-kustannukset-lomakedata]
+(defn muut-kustannukset [urakka]
   (komp/luo
    (fn [urakka]
      [:div.muut-kustannukset
-      [grid/grid (assoc grid-opts :tallenna #(tallenna-lomake urakka muut-kustannukset-lomakedata %)) grid-skeema (grid-tiedot)]])))
+      [grid/grid (assoc grid-opts :tallenna #(tiedot-muut-kustannukset/tallenna-lomake urakka tiedot-muut-kustannukset/lomakedata %))
+       grid-skeema
+       (tiedot-muut-kustannukset/grid-tiedot)]])))
