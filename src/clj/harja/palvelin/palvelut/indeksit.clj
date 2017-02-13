@@ -6,6 +6,7 @@
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.indeksit :as q]
             [harja.pvm :as pvm]
+            [harja.id :refer [id-olemassa?]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konv]))
 
@@ -80,7 +81,7 @@
 (defn hae-urakkatyypin-indeksit
   "Palvelu, joka palauttaa kaikki urakkatyypin-indeksit taulun rivit."
   [db user]
-  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-indeksit user)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user)
   (let [indeksit (into []
                        (map #(konv/string->keyword % :urakkatyyppi))
                        (q/hae-urakkatyypin-indeksit db))]
@@ -125,7 +126,7 @@
                     :lahtotason_vuosi (:lahtotason-vuosi i)
                     :urakkavuosi (:urakkavuosi i)
                     :poistettu (:poistettu i)}]
-        (when id
+        (when (id-olemassa? id)
           (vaadi-paallystysurakan-indeksi-kuuluu-urakkaan c urakka-id id))
         (q/tallenna-paallystysurakan-indeksitiedot! c params)))
     (hae-paallystysurakan-indeksitiedot c user {:urakka-id urakka-id})))
