@@ -65,29 +65,26 @@
       :tyyppi :date}]))
 
 (defn hae-tietolaji-tunnisteella
-  "Hakee tietolajin Tierekisteristä tunnisteen perusteella. Optionaalisesti
-  ottaa sisään myös muutospäivämäärän hakuehdoksi."
-  ([tierekisteri tunniste] (hae-tietolaji-tunnisteella tierekisteri tunniste nil))
-  ([tierekisteri tunniste muutospaivamaara]
-   (let [vastausdata (tierekisteri/hae-tietolaji tierekisteri tunniste muutospaivamaara)
-         ominaisuudet (get-in vastausdata [:tietolaji :ominaisuudet])]
-     (tierekisteri-sanomat/muunna-tietolajin-hakuvastaus vastausdata ominaisuudet))))
+  "Hakee tietolajin Tierekisteristä tunnisteen perusteella."
+  [tierekisteri tunniste]
+  (let [vastausdata (tierekisteri/hae-tietolaji tierekisteri tunniste nil)
+        ominaisuudet (get-in vastausdata [:tietolaji :ominaisuudet])]
+    (tierekisteri-sanomat/muunna-tietolajin-hakuvastaus vastausdata ominaisuudet)))
 
-(defn hae-kaikki-tietolajit [tierekisteri muutospaivamaara]
+(defn hae-kaikki-tietolajit [tierekisteri]
   "Hakee kaikkien tietolajien kuvaukset Tierekisteristä tunnisteen perusteella."
-  (let [vastausdata (tierekisteri/hae-kaikki-tietolajit tierekisteri muutospaivamaara)]
+  (let [vastausdata (tierekisteri/hae-kaikki-tietolajit tierekisteri)]
     (tierekisteri-sanomat/muunna-tietolajien-hakuvastaus vastausdata)))
 
 (defn hae-tietolaji [tierekisteri parametrit kayttaja]
-  (let [tunniste (get parametrit "tunniste")
-        muutospaivamaara (get parametrit "muutospaivamaara")]
+  (let [tunniste (get parametrit "tunniste")]
     (if (not (str/blank? tunniste))
       (do
-        (log/debug "Haetaan tietolajin: " tunniste " kuvaus muutospäivämäärällä: " muutospaivamaara " käyttäjälle: " kayttaja)
-        (hae-tietolaji-tunnisteella tierekisteri tunniste muutospaivamaara))
+        (log/debug "Haetaan tietolajin: " tunniste " kuvaus käyttäjälle: " kayttaja)
+        (hae-tietolaji-tunnisteella tierekisteri tunniste))
       (do
-        (log/debug "Haetaan kaikkien tietolajien kuvaukset muutospäivämäärällä: " muutospaivamaara " käyttäjälle: " kayttaja)
-        (hae-kaikki-tietolajit tierekisteri muutospaivamaara)))))
+        (log/debug "Haetaan kaikkien tietolajien kuvaukset käyttäjälle: " kayttaja)
+        (hae-kaikki-tietolajit tierekisteri)))))
 
 (defn- muodosta-tietueiden-hakuvastaus [tierekisteri vastausdata]
   {:varusteet
