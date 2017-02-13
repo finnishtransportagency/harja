@@ -8,6 +8,7 @@
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]))
 
 (def +paikan-raportointivali+ 2000) ; ms
+(def +max-maara-alustuksen-paikannnusyrityksia+ 10)
 
 (defn- geolocation-api []
   (.-geolocation js/navigator))
@@ -62,19 +63,20 @@
       (fn []
         (let [sijainti-saatu (fn [sijainti]
                                (when (and ensimmainen-sijainti-saatu-atom
-                                          (nil? @ensimmainen-sijainti-saatu-atom))
+                                          (not @ensimmainen-sijainti-saatu-atom))
                                  (reset! ensimmainen-sijainti-saatu-atom true))
                                (swap! sijainti-atom (fn [entinen]
                                                       (paivita-sijainti entinen (konvertoi-latlon sijainti) (timestamp)))))
               sijainti-epaonnistui (fn [virhe]
                                      (when (and ensimmainen-sijainti-saatu-atom
                                                 ensimmainen-sijainti-yritys-atom
-                                                (nil? @ensimmainen-sijainti-saatu-atom))
+                                                (not @ensimmainen-sijainti-saatu-atom))
                                        (swap! ensimmainen-sijainti-yritys-atom inc))
                                      (when (and ensimmainen-sijainti-saatu-atom
                                                 ensimmainen-sijainti-virhekoodi-atom
-                                                (>= @ensimmainen-sijainti-yritys-atom 5)
-                                                (nil? @ensimmainen-sijainti-saatu-atom))
+                                                (>= @ensimmainen-sijainti-yritys-atom +max-maara-alustuksen-paikannnusyrityksia+)
+                                                (not @ensimmainen-sijainti-saatu-atom))
+                                       (.log js/console "Paikannus epäonnistui: " (.-message virhe))
                                        (reset! ensimmainen-sijainti-virhekoodi-atom (.-code virhe))
                                        (reset! ensimmainen-sijainti-saatu-atom false))
                                      (swap! sijainti-atom identity))]

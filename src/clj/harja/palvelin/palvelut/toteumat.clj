@@ -3,6 +3,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
+            [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [harja.domain.skeema :refer [Toteuma validoi]]
@@ -56,8 +57,8 @@
   (assert vaitetty-urakka-id "Urakka id puuttuu!")
   (when toteuma-id
     (let [toteuman-todellinen-urakka-id (:urakka (first
-                                                (toteumat-q/toteuman-urakka
-                                                  db {:toteuma toteuma-id})))]
+                                                   (toteumat-q/toteuman-urakka
+                                                     db {:toteuma toteuma-id})))]
       (when (and (some? toteuman-todellinen-urakka-id)
                  (not= toteuman-todellinen-urakka-id vaitetty-urakka-id))
         (throw (SecurityException. (str "Toteuma ei kuulu väitettyyn urakkaan " vaitetty-urakka-id
@@ -109,7 +110,7 @@
   (oikeudet/vaadi-lukuoikeus (case tyyppi
                                :kokonaishintainen oikeudet/urakat-toteumat-kokonaishintaisettyot
                                :yksikkohintainen oikeudet/urakat-toteumat-yksikkohintaisettyot
-                               (:akillinen-hoitotyo :lisatyo :muutostyo :vahinkojen-korjaukset)  oikeudet/urakat-toteumat-muutos-ja-lisatyot
+                               (:akillinen-hoitotyo :lisatyo :muutostyo :vahinkojen-korjaukset) oikeudet/urakat-toteumat-muutos-ja-lisatyot
                                :materiaali oikeudet/urakat-toteumat-materiaalit
 
                                :default oikeudet/urakat-toteumat-kokonaishintaisettyot)
@@ -131,7 +132,7 @@
   (oikeudet/vaadi-lukuoikeus (case tyyppi
                                :kokonaishintainen oikeudet/urakat-toteumat-kokonaishintaisettyot
                                :yksikkohintainen oikeudet/urakat-toteumat-yksikkohintaisettyot
-                               (:akillinen-hoitotyo :lisatyo :muutostyo :vahinkojen-korjaukset)  oikeudet/urakat-toteumat-muutos-ja-lisatyot
+                               (:akillinen-hoitotyo :lisatyo :muutostyo :vahinkojen-korjaukset) oikeudet/urakat-toteumat-muutos-ja-lisatyot
                                :materiaali oikeudet/urakat-toteumat-materiaalit
 
                                :default oikeudet/urakat-toteumat-kokonaishintaisettyot)
@@ -153,7 +154,7 @@
   (oikeudet/vaadi-lukuoikeus (case tyyppi
                                :kokonaishintainen oikeudet/urakat-toteumat-kokonaishintaisettyot
                                :yksikkohintainen oikeudet/urakat-toteumat-yksikkohintaisettyot
-                               (:akillinen-hoitotyo :lisatyo :muutostyo :vahinkojen-korjaukset)  oikeudet/urakat-toteumat-muutos-ja-lisatyot
+                               (:akillinen-hoitotyo :lisatyo :muutostyo :vahinkojen-korjaukset) oikeudet/urakat-toteumat-muutos-ja-lisatyot
                                :materiaali oikeudet/urakat-toteumat-materiaalit
 
                                :default oikeudet/urakat-toteumat-kokonaishintaisettyot)
@@ -244,15 +245,15 @@
   (oikeudet/vaadi-kirjoitusoikeus (case (:tyyppi toteuma)
                                     :kokonaishintainen oikeudet/urakat-toteumat-kokonaishintaisettyot
                                     :yksikkohintainen oikeudet/urakat-toteumat-yksikkohintaisettyot
-                                    (:akillinen-hoitotyo :lisatyo :muutostyo :vahinkojen-korjaukset)  oikeudet/urakat-toteumat-muutos-ja-lisatyot
+                                    (:akillinen-hoitotyo :lisatyo :muutostyo :vahinkojen-korjaukset) oikeudet/urakat-toteumat-muutos-ja-lisatyot
                                     :materiaali oikeudet/urakat-toteumat-materiaalit
 
                                     :default oikeudet/urakat-toteumat-kokonaishintaisettyot)
                                   user (:urakka-id toteuma))
   (log/debug "Toteuman tallennus aloitettu. Payload: " (pr-str toteuma))
   (jdbc/with-db-transaction [c db]
-    (vaadi-toteuma-kuuluu-urakkaan c (:toteuma-id toteuma) (:urakka-id toteuma))
-    (vaadi-toteuma-ei-jarjestelman-luoma c (:toteuma-id toteuma))
+    (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c (:toteuma-id toteuma) (:urakka-id toteuma))
+    (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c (:toteuma-id toteuma))
     (let [id (if (:toteuma-id toteuma)
                (paivita-toteuma c user toteuma)
                (luo-toteuma c user toteuma))
@@ -272,7 +273,7 @@
   (oikeudet/vaadi-kirjoitusoikeus (case (:tyyppi toteuma)
                                     :kokonaishintainen oikeudet/urakat-toteumat-kokonaishintaisettyot
                                     :yksikkohintainen oikeudet/urakat-toteumat-yksikkohintaisettyot
-                                    (:akillinen-hoitotyo :lisatyo :muutostyo :vahinkojen-korjaukset)  oikeudet/urakat-toteumat-muutos-ja-lisatyot
+                                    (:akillinen-hoitotyo :lisatyo :muutostyo :vahinkojen-korjaukset) oikeudet/urakat-toteumat-muutos-ja-lisatyot
                                     :materiaali oikeudet/urakat-toteumat-materiaalit
 
                                     :default oikeudet/urakat-toteumat-kokonaishintaisettyot)
@@ -280,8 +281,8 @@
   (log/debug "Toteuman tallennus aloitettu. Payload: " (pr-str toteuma))
   (jdbc/with-db-transaction
     [db db]
-    (vaadi-toteuma-kuuluu-urakkaan db (:toteuma-id toteuma) (:urakka-id toteuma))
-    (vaadi-toteuma-ei-jarjestelman-luoma db (:toteuma-id toteuma))
+    (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db (:toteuma-id toteuma) (:urakka-id toteuma))
+    (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma db (:toteuma-id toteuma))
     (let [tulos (if (:toteuma-id toteuma)
                   (paivita-toteuma db user toteuma)
                   (luo-toteuma db user toteuma))]
@@ -302,8 +303,8 @@
     (jdbc/with-db-transaction [c db]
       (doseq [tehtava tehtavat]
         (let [toteuma-id (:toteuma (first (toteumat-q/tehtavan-toteuma db (:tehtava_id tehtava))))]
-          (vaadi-toteuma-kuuluu-urakkaan c toteuma-id urakka-id)
-          (vaadi-toteuma-ei-jarjestelman-luoma c toteuma-id)
+          (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c toteuma-id urakka-id)
+          (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c toteuma-id)
           (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava)))
           (toteumat-q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava)
                                                 (:paivanhinta tehtava) (:tehtava_id tehtava)))
@@ -411,22 +412,22 @@
       (apply toteumat-q/poista-toteuma! params))
     (do
       (toteumat-q/paivita-toteuma! c {:alkanut (konv/sql-date (:alkanut toteuma))
-                                        :paattynyt (konv/sql-date (:paattynyt toteuma))
-                                        :tyyppi (name (:tyyppi toteuma))
-                                        :kayttaja (:id user)
-                                        :suorittaja (:suorittajan-nimi toteuma)
-                                        :ytunnus (:suorittajan-ytunnus toteuma)
-                                        :lisatieto (:lisatieto toteuma)
-                                        :numero (get-in toteuma [:tr :numero])
-                                        :alkuosa (get-in toteuma [:tr :alkuosa])
-                                        :alkuetaisyys (get-in toteuma [:tr :alkuetaisyys])
-                                        :loppuosa (get-in toteuma [:tr :loppuosa])
-                                        :loppuetaisyys (get-in toteuma [:tr :loppuetaisyys])
-                                        :id (get-in toteuma [:toteuma :id])
-                                        :urakka (:urakka-id toteuma)})
-        (paivita-toteuman-reitti c (get-in toteuma [:toteuma :id]) (:reitti toteuma))
-        (kasittele-toteumatehtava c user toteuma (assoc (:tehtava toteuma)
-                                                   :tehtava-id (get-in toteuma [:tehtava :id]))))))
+                                      :paattynyt (konv/sql-date (:paattynyt toteuma))
+                                      :tyyppi (name (:tyyppi toteuma))
+                                      :kayttaja (:id user)
+                                      :suorittaja (:suorittajan-nimi toteuma)
+                                      :ytunnus (:suorittajan-ytunnus toteuma)
+                                      :lisatieto (:lisatieto toteuma)
+                                      :numero (get-in toteuma [:tr :numero])
+                                      :alkuosa (get-in toteuma [:tr :alkuosa])
+                                      :alkuetaisyys (get-in toteuma [:tr :alkuetaisyys])
+                                      :loppuosa (get-in toteuma [:tr :loppuosa])
+                                      :loppuetaisyys (get-in toteuma [:tr :loppuetaisyys])
+                                      :id (get-in toteuma [:toteuma :id])
+                                      :urakka (:urakka-id toteuma)})
+      (paivita-toteuman-reitti c (get-in toteuma [:toteuma :id]) (:reitti toteuma))
+      (kasittele-toteumatehtava c user toteuma (assoc (:tehtava toteuma)
+                                                 :tehtava-id (get-in toteuma [:tehtava :id]))))))
 
 (defn luo-muun-tyon-toteuma
   [c user toteuma]
@@ -453,8 +454,8 @@
   [db user toteuma]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-muutos-ja-lisatyot user (:urakka-id toteuma))
   (jdbc/with-db-transaction [db db]
-    (vaadi-toteuma-kuuluu-urakkaan db (get-in toteuma [:toteuma :id]) (:urakka-id toteuma))
-    (vaadi-toteuma-ei-jarjestelman-luoma db (get-in toteuma [:toteuma :id]))
+    (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db (get-in toteuma [:toteuma :id]) (:urakka-id toteuma))
+    (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma db (get-in toteuma [:toteuma :id]))
     (if (get-in toteuma [:toteuma :id])
       (paivita-muun-tyon-toteuma db user toteuma)
       (luo-muun-tyon-toteuma db user toteuma))
@@ -483,8 +484,8 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-materiaalit user (:urakka t))
   (log/debug "Tallenna toteuma: " (pr-str t) " ja toteumamateriaalit " (pr-str toteumamateriaalit))
   (jdbc/with-db-transaction [c db]
-    (vaadi-toteuma-kuuluu-urakkaan c (:id t) (:urakka t))
-    (vaadi-toteuma-ei-jarjestelman-luoma c (:id t))
+    (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c (:id t) (:urakka t))
+    (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c (:id t))
     ;; Jos toteumalla on positiivinen id, toteuma on olemassa
     (let [toteuma (if (and (:id t) (pos? (:id t)))
                     ;; Jos poistettu=true, halutaan toteuma poistaa.
@@ -642,22 +643,24 @@
                                        tietolaji
                                        toiminto
                                        alkupvm
-                                       loppupvm] :as toteuma}]
+                                       loppupvm
+                                       kuntoluokitus] :as toteuma}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (log/debug "Tallennetaan uusi varustetoteuma")
-  (let [varustetoteuma-id (jdbc/with-db-transaction [db db]
-                            (let [nyt (pvm/nyt)
-                                  sijainti
-                                  (cond
-                                    (not (nil? sijainti)) (geo/geometry (geo/clj->pg sijainti))
-                                    (not (nil? tierekisteriosoite)) (geo/geometry (geo/clj->pg (tr-q/hae-tr-viiva db tierekisteriosoite)))
-                                    :else nil)
-                                  toiminto (name toiminto)
-                                  tunniste (if (= toiminto "lisatty")
-                                             (livitunnisteet/hae-seuraava-livitunniste db)
-                                             (:tunniste arvot))
-                                  arvot (functor/fmap str (assoc arvot :tunniste tunniste))
-                                  arvot (tietolajit/validoi-ja-muunna-arvot-merkkijonoksi tierekisteri arvot tietolaji)
+  (let [varustetoteuma-id
+        (jdbc/with-db-transaction [db db]
+          (let [nyt (pvm/nyt)
+                sijainti
+                (cond
+                  (not (nil? sijainti)) (geo/geometry (geo/clj->pg sijainti))
+                  (not (nil? tierekisteriosoite)) (geo/geometry (geo/clj->pg (tr-q/hae-tr-viiva db tierekisteriosoite)))
+                  :else nil)
+                toiminto (name toiminto)
+                tunniste (if (= toiminto "lisatty")
+                           (livitunnisteet/hae-seuraava-livitunniste db)
+                           (:tunniste arvot))
+                arvot (functor/fmap str (assoc arvot :tunniste tunniste))
+                arvot (tietolajit/validoi-ja-muunna-arvot-merkkijonoksi tierekisteri arvot tietolaji)
 
                 elynro (:elynumero (first (urakat-q/hae-urakan-ely db urakka-id)))
                 sopimus-id (:id (first (sopimukset-q/hae-urakan-paasopimus db urakka-id)))
@@ -686,7 +689,7 @@
                                 :alkupvm alkupvm
                                 :loppupvm loppupvm
                                 :piiri elynro
-                                :kuntoluokka (:kuntoluokitus arvot)
+                                :kuntoluokka kuntoluokitus
                                 :tierekisteriurakkakoodi (:tierekisteriurakkakoodi arvot)
                                 :luoja (:id user)
                                 :tr_numero (:numero tierekisteriosoite)
@@ -782,14 +785,14 @@
   "Palauttaa frontin tarvitsemat tiedot, joilla kokonaishintaiseen toteumaan voidaan siirtyä"
   [db user toteuma-id]
   (first
-   (konv/sarakkeet-vektoriin
-    (into []
-          (map konv/alaviiva->rakenne)
-          (toteumat-q/siirry-kokonaishintainen-toteuma
-           db {:toteuma-id toteuma-id
-               :tarkista-urakka? (= :urakoitsija (roolit/osapuoli user))
-               :urakoitsija-id (get-in user [:organisaatio :id])}))
-    {:tehtava :tehtavat} :id (constantly true))))
+    (konv/sarakkeet-vektoriin
+      (into []
+            (map konv/alaviiva->rakenne)
+            (toteumat-q/siirry-kokonaishintainen-toteuma
+              db {:toteuma-id toteuma-id
+                  :tarkista-urakka? (= :urakoitsija (roolit/osapuoli user))
+                  :urakoitsija-id (get-in user [:organisaatio :id])}))
+      {:tehtava :tehtavat} :id (constantly true))))
 
 (defrecord Toteumat []
   component/Lifecycle
