@@ -55,12 +55,15 @@
   [req kasittelijat vaadi-oikeustarkistus?]
   (binding [oikeudet/*oikeustarkistus-tehty* (atom false)]
     (try
-      (apply compojure/routing
-             (if
-                 (= "/" (:uri req))
-               (assoc req :uri "/index.html")
-               req)
-             (remove nil? kasittelijat))
+      (let [res (apply compojure/routing
+                       (if
+                           (= "/" (:uri req))
+                         (assoc req :uri "/index.html")
+                         req)
+                       (remove nil? kasittelijat))]
+        (when (= 404 (:status res))
+          (reset! *oikeustarkistus-tehty* true))
+        res)
       (finally
         (if (and vaadi-oikeustarkistus? (not @oikeudet/*oikeustarkistus-tehty*))
           (log/error "virhe: oikeustarkistusta ei tehty - uri:" (:uri req))
