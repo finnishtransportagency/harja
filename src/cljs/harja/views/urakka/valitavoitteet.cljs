@@ -78,7 +78,7 @@
        :leveys 35 :tyyppi :string :muokattava? #(and voi-merkita-valmiiksi?
                                                      (:valmispvm %))
        :nimi :valmis-kommentti}
-      {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
+      {:otsikko "Valmiiksimerkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :merkitsija :hae (fn [rivi]
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
      (filterv #(or
