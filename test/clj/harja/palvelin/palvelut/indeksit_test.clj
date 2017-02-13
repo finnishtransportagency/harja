@@ -98,3 +98,41 @@
                                :koodi "PMUEE03"
                                :lahtotason-arvo 271.02M
                                :raakaaine "nestekaasu"}))))
+
+(deftest paallystysurakan-indeksitiedot-tallennus
+  (let [hyotykuorma [{:id -1, :urakkavuosi 2015,
+                      :lahtotason-vuosi 2014, :lahtotason-kuukausi 9
+                      :raskas {:id 10, :urakkatyyppi :paallystys, :indeksinimi "Platts: testiindeksi XYZ", :raakaaine "raskas_polttooljy", :koodi "TESTIKOODI"},
+                      :kevyt {:id 6, :urakkatyyppi :paallystys, :indeksinimi "Platts: ULSD 10ppmS CIF NWE Cargo", :raakaaine "kevyt_polttooljy", :koodi "ABWHK03"},
+                      :nestekaasu {:id 8, :urakkatyyppi :paallystys, :indeksinimi "Platts: Propane CIF NWE 7kt+", :raakaaine "nestekaasu", :koodi "PMUEE03"}}]
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-paallystysurakan-indeksitiedot
+                                +kayttaja-jvh+
+                                {:urakka-id 5 :indeksitiedot hyotykuorma})
+        rivi-2015 (first (filter #(= 2015 (:urakkavuosi %)) vastaus))
+        rivi-2015-raskas (:raskas rivi-2015)
+        rivi-2015-kevyt (:kevyt rivi-2015)
+        rivi-2015-nestekaasu (:nestekaasu rivi-2015)
+        pos-int? #(and (pos? %) (integer? %))]
+    ;; Yleiset assertit
+    (is (= 3 (count vastaus)) "indeksivuosien lukumäärä tallennuksen jälkeen")
+    (is (= 2014 (:lahtotason-vuosi rivi-2015)) "lähtötason vuosi")
+    (is (= 9 (:lahtotason-kuukausi rivi-2015)) "lähtötason kuukausi")
+    (is (pos-int? (:id rivi-2015)) "positiivinen id annettiin")
+
+    ;; Raaka-ainekohtaiset assertit
+    (is (= "raskas_polttooljy" (:raakaaine rivi-2015-raskas)) "raaka-aine")
+    (is (= "kevyt_polttooljy" (:raakaaine rivi-2015-kevyt)) "raaka-aine")
+    (is (= "nestekaasu" (:raakaaine rivi-2015-nestekaasu)) "raaka-aine")
+    (is (= nil (:lahtotason-arvo rivi-2015-raskas)) "lähtötason kuukausi")
+    (is (= nil (:lahtotason-arvo rivi-2015-kevyt)) "lähtötason kuukausi")
+    (is (= nil (:lahtotason-arvo rivi-2015-nestekaasu)) "lähtötason kuukausi")
+    (is (= "TESTIKOODI" (:koodi rivi-2015-raskas)) "koodi")
+    (is (= "ABWHK03" (:koodi rivi-2015-kevyt)) "koodi")
+    (is (= "PMUEE03" (:koodi rivi-2015-nestekaasu)) "koodi")
+    (is (= "Platts: testiindeksi XYZ" (:indeksinimi rivi-2015-raskas)) "indeksinimi")
+    (is (= "Platts: ULSD 10ppmS CIF NWE Cargo" (:indeksinimi rivi-2015-kevyt)) "indeksinimi")
+    (is (= "Platts: Propane CIF NWE 7kt+" (:indeksinimi rivi-2015-nestekaasu)) "indeksinimi")
+    (is (pos-int? (:id rivi-2015-raskas)) "id")
+    (is (pos-int? (:id rivi-2015-kevyt)) "id ")
+    (is (pos-int? (:id rivi-2015-nestekaasu)) "id")))
