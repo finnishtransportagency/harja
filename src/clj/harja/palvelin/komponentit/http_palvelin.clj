@@ -50,6 +50,10 @@
                          (log/warn e# "Virhe async POST palvelussa")
                          (transit-vastaus 500 {:virhe (.getMessage e#)}))))))
 
+(def
+  ^{:doc "Vastauksen HTTP statuskoodit, joille ei vaadita oikeustarkistusta."}
+  ei-oikeustarkistusta-statuskoodit #{403 404})
+
 (defn- reitita
   "Reititä sisääntuleva pyyntö käsittelijöille."
   [req kasittelijat vaadi-oikeustarkistus?]
@@ -61,8 +65,8 @@
                          (assoc req :uri "/index.html")
                          req)
                        (remove nil? kasittelijat))]
-        (when (= 404 (:status res))
-          (reset! oikeudet/*oikeustarkistus-tehty* true))
+        (when (ei-oikeustarkistusta-statuskoodit (:status res))
+          (oikeudet/ei-oikeustarkistusta!))
         res)
       (finally
         (if (and vaadi-oikeustarkistus? (not @oikeudet/*oikeustarkistus-tehty*))
@@ -188,6 +192,7 @@
         salattu (index/laske-mac token)]
     (when (or (= uri "/")
               (= uri "/index.html"))
+      (oikeudet/ei-oikeustarkistusta!)
       {:status  200
        :headers {"Content-Type"  "text/html"
                  "Cache-Control" "no-cache, no-store, must-revalidate"
@@ -204,20 +209,23 @@
         oikea-kohde "/harja/laadunseuranta/"]
     (cond
       (= uri "/laadunseuranta")
-      {:status 301
-       :headers {"Location" oikea-kohde}}
+      (do (oikeudet/ei-oikeustarkistusta!)
+          {:status 301
+           :headers {"Location" oikea-kohde}})
 
       (= uri "/laadunseuranta/index.html")
-      {:status 301
-       :headers {"Location" oikea-kohde}}
+      (do (oikeudet/ei-oikeustarkistusta!)
+          {:status 301
+           :headers {"Location" oikea-kohde}})
 
       (= uri "/laadunseuranta/")
-      {:status  200
-       :headers {"Content-Type"  "text/html"
-                 "Cache-Control" "no-cache, no-store, must-revalidate"
-                 "Pragma"        "no-cache"
-                 "Expires"       "0"}
-       :body    (index/tee-ls-paasivu kehitysmoodi)}
+      (do (oikeudet/ei-oikeustarkistusta!)
+          {:status  200
+           :headers {"Content-Type"  "text/html"
+                     "Cache-Control" "no-cache, no-store, must-revalidate"
+                     "Pragma"        "no-cache"
+                     "Expires"       "0"}
+           :body    (index/tee-ls-paasivu kehitysmoodi)})
       :default
        nil)))
 
