@@ -356,7 +356,10 @@
 
 (defmethod infopaneeli-skeema :silta [silta]
   {:tyyppi :silta
-   :jarjesta-fn :tarkastusaika
+   :jarjesta-fn (let [fn :tarkastusaika]
+                  (if (fn silta)
+                    fn
+                    (constantly false)))
    :otsikko (or (:siltanimi silta) "Silta")
    :tiedot [{:otsikko "Nimi" :nimi :siltanimi}
             {:otsikko "Sillan tunnus" :nimi :siltatunnus}
