@@ -141,6 +141,7 @@
   (q/hae-reittipisteet db {:toteuma-id toteuma-id}))
 
 (defn vain-tilaajalle! [user]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (when-not (roolit/tilaajan-kayttaja? user)
     (throw+ (roolit/->EiOikeutta "vain tilaajan käyttäjille"))))
 

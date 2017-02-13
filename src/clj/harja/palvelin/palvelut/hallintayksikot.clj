@@ -1,11 +1,14 @@
 (ns harja.palvelin.palvelut.hallintayksikot
+  "Palvelut organisaatioiden perustietojen ja urakoiden hakemiseksi.
+  Ei oikeustarkistuksia, koska tiedot ovat julkisia."
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.hallintayksikot :as q]
             [harja.kyselyt.organisaatiot :as org-q]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.palvelut.urakat :refer [hae-organisaation-urakat hallintayksikon-urakat]]
-            [harja.geo :refer [muunna-pg-tulokset]]))
+            [harja.geo :refer [muunna-pg-tulokset]]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (def organisaatio-xf
   (map #(assoc % :tyyppi (keyword (:tyyppi %)))))
@@ -13,6 +16,7 @@
 (defn hae-hallintayksikot
   "Palvelu, joka palauttaa halutun liikennemuodon hallintayksiköt."
   [db user liikennemuoto]
+  (oikeudet/ei-oikeustarkistusta!)
   (into []
         (muunna-pg-tulokset :alue)
         (q/listaa-hallintayksikot-kulkumuodolle db (case liikennemuoto
@@ -24,7 +28,7 @@
 (defn hae-organisaatio
   "Palvelu, joka palauttaa organisaation tiedot id:llä."
   [db user org-id]
-  ;; FIXME: oikeustarkistuksia ei mietitty
+  (oikeudet/ei-oikeustarkistusta!)
   (let [o (first (into []
                        organisaatio-xf (org-q/hae-organisaatio db org-id)))
         organisaation-urakat (if (= :urakoitsija (:tyyppi o))

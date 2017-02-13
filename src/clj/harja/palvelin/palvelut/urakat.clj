@@ -125,7 +125,9 @@
 (defn hallintayksikon-urakat [db {organisaatio :organisaatio :as user} hallintayksikko-id]
   (log/debug "Haetaan hallintayksikön urakat: " hallintayksikko-id)
   (if-not organisaatio
-    []
+    (do
+      (oikeudet/ei-oikeustarkistusta!)
+      [])
     (let [urakat (oikeudet/kayttajan-urakat user)]
       (into []
             urakka-xf
@@ -154,6 +156,7 @@
 
 (defn hae-urakan-organisaatio [db user urakka-id]
   (log/debug "Haetaan organisaatio urakalle: " urakka-id)
+  (oikeudet/ei-oikeustarkistusta!)
   (let [organisaatio (first (into []
                                   (q/hae-urakan-organisaatio db urakka-id)))]
     (log/debug "Urakan organisaatio saatu: " (pr-str organisaatio))
