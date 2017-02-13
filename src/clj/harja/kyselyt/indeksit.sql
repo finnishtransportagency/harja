@@ -33,11 +33,6 @@ UPDATE indeksi
 DELETE FROM indeksi 
 	  WHERE nimi=:nimi AND vuosi=:vuosi AND kuukausi = :kuukausi
 
--- name: hae-indeksien-nimet
--- Hakee indeksien nimet
-SELECT DISTINCT nimi
-  FROM indeksi
-
 --name: hae-urakkatyypin-indeksit
 SELECT id, urakkatyyppi, indeksinimi, raakaaine, koodi
   FROM urakkatyypin_indeksi;
