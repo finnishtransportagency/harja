@@ -11,10 +11,18 @@
 
 (defonce lomakedata (atom nil))
 
-(defn grid-tiedot []
+#_(defn grid-tiedot []
   [{:id "foo" :alkupvm #inst "2015-12-12T12:12:12" :kustannus-nimi "ruoka" :selite "naksuja" :muokattava true :hinta 42.50 }
    {:id "zorp" :alkupvm #inst "2014-12-12T12:12:12" :kustannus-nimi "ffff" :selite "uuu" :muokattava true :hinta 44.50 }
    {:id "bar" :alkupvm #inst "2011-12-12T12:12:12" :kustannus-nimi "juoma" :selite "(*)" :muokattava false :hinta 234.00}])
+
+(defn lataa-lomakedata! [urakka-id sopimus-id alkupvm loppupvm]
+  (go
+    (log "lataa-lomakedata! enter")
+    (let [vastaus (<!
+                   (do  (log "lataa-lomakedata! post")
+                        (k/post! :hae-yllapito-toteuma {:urakka urakka-id :sopimus sopimus-id :alkupvm alkupvm :loppupvm loppupvm})))]
+         (log "lataa-lomakedata ->" (pr-str vastaus)))))
 
 (defn tallenna-toteuma! [toteuman-tiedot]
   (k/post! :tallenna-yllapito-toteuma toteuman-tiedot))

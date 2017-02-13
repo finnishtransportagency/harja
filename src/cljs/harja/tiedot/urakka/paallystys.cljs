@@ -89,5 +89,3 @@
                   lomakedata)))))
 
 (defonce kohteet-yha-lahetyksessa (atom nil))
-
-(defonce muut-kustannukset-lomakedata (atom nil))

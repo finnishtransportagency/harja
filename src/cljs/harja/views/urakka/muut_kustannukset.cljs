@@ -41,7 +41,10 @@
 (defn muut-kustannukset [urakka]
   (komp/luo
    (fn [urakka]
+     (tiedot-muut-kustannukset/lataa-lomakedata! 5 8  #inst "2011-11-11T11:11:11" #inst "2019-11-11T11:11:11")
      [:div.muut-kustannukset
       [grid/grid (assoc grid-opts :tallenna #(tiedot-muut-kustannukset/tallenna-lomake urakka tiedot-muut-kustannukset/lomakedata %))
        grid-skeema
-       (tiedot-muut-kustannukset/grid-tiedot)]])))
+                                        ; (tiedot-muut-kustannukset/grid-tiedot)
+       @tiedot-muut-kustannukset/lomakedata
+       ]])))
