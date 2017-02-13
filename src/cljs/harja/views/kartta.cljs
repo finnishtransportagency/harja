@@ -547,8 +547,12 @@
   [items tuplaklik? sivu val-ur-id val-hy-id]
   (let [monta? #(< 1 (count %))
         klikatut-organisaatiot (filter tapahtuman-geometria-on-hallintayksikko-tai-urakka? items)
+        paallimmainen-organisatio (first klikatut-organisaatiot)
         klikatut-asiat (remove tapahtuman-geometria-on-hallintayksikko-tai-urakka? items)
-        urakka? #(= :ur (:type %))]
+        urakka? #(= :ur (:type %))
+        hallintayksikko? #(= :hy (:type %))
+        valittu-organisaatio? #(tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka?
+                                val-ur-id val-hy-id %)]
     ;; Select tarkoittaa, että on klikattu jotain kartalla piirrettyä asiaa.
     ;; Tuplaklikkaukseen halutaan reagoida joko kohdentamalla tuplaklikattuun asiaan
     ;; ja avaamalla sen tiedot infopaneeliin (paitsi ilmoituksissa, missä avataan suoraan lomake),
@@ -583,15 +587,20 @@
 
       ;; Tien klikkaaminen esim toteuma-näkymässä osuu valittuun urakkaan
       (and (empty? klikatut-asiat)
-           (every?
-             (partial tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? val-ur-id val-hy-id)
-             klikatut-organisaatiot))
+           (urakka? paallimmainen-organisatio)
+           (valittu-organisaatio? paallimmainen-organisatio))
       (when-not (#{:raportit} sivu)
         (when-not tuplaklik?
           {:keskeyta-event? true
            :avaa-paneeli? true}))
 
-      ;; Etusivulla
+      ;; "Ohi klikkaaminen" etusivulla ei tee mitään
+      (and (empty? klikatut-asiat)
+           (hallintayksikko? paallimmainen-organisatio)
+           (valittu-organisaatio? paallimmainen-organisatio))
+      nil
+
+      ;; Urakan tai hallintayksikön valitseminen etusivulla
       (and (empty? klikatut-asiat)
            (not-empty klikatut-organisaatiot))
       (do
