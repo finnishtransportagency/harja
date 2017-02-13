@@ -73,7 +73,7 @@
 
 (defn hae-kaikki-tietolajit [tierekisteri]
   "Hakee kaikkien tietolajien kuvaukset Tierekisteristä tunnisteen perusteella."
-  (let [vastausdata (tierekisteri/hae-kaikki-tietolajit tierekisteri)]
+  (let [vastausdata (tierekisteri/hae-kaikki-tietolajit tierekisteri nil)]
     (tierekisteri-sanomat/muunna-tietolajien-hakuvastaus vastausdata)))
 
 (defn hae-tietolaji [tierekisteri parametrit kayttaja]
