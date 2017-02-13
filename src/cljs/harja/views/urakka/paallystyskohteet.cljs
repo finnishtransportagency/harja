@@ -7,6 +7,7 @@
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
             [harja.views.urakka.muut-kustannukset :as muut-kustannukset-view]
             [harja.ui.komponentti :as komp]
+            [harja.ui.yleiset :refer [vihje-elementti]]
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
@@ -58,7 +59,7 @@
            :paikkaus
            #(reset! paallystys-tiedot/harjan-paikkauskohteet (filter (comp not yllapitokohteet/yha-kohde?) %)))}]
 
-       [muut-kustannukset-view/muut-kustannukset ur paallystys-tiedot/muut-kustannukset-lomakedata]
+       ;; [muut-kustannukset-view/muut-kustannukset ur paallystys-tiedot/muut-kustannukset-lomakedata]
 
        [yllapitokohteet-view/yllapitokohteet-yhteensa
         paallystys-tiedot/kohteet-yhteensa {:nakyma :paallystys}]
