@@ -2,7 +2,7 @@
   (:require [cljs.test :as t :refer-macros [deftest is testing async]]
             [reagent.core :as reagent :refer [atom]]
             [dommy.core :as dommy]
-            [harja-laadunseuranta.testutils :refer [sel sel1]]
+            [harja.testutils.shared-testutils :refer [sel sel1]]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.ui.kartta :as kartta])
   (:require-macros [harja-laadunseuranta.test-macros :refer [with-component prepare-component-tests]]
@@ -28,9 +28,9 @@
   (testing "Kartan konfiguraatio"
     (let [sijainti (atom {:lat 100
                           :lon 200})
-          ajoneuvon-sijainti (atom {:lat 400
-                                    :lon 500
-                                    :heading 45})
+          ajoneuvon-sijainti (atom {:nykyinen {:lat 400
+                                               :lon 500
+                                               :heading 45}})
           reittipisteet (atom [{:segmentti [[1 1] [2 2]]
                                 :vari "black"}
                                {:segmentti [[2 2] [3 3]]
@@ -74,9 +74,9 @@
 
             (reset! sijainti {:lat 200
                               :lon 300})
-            (reset! ajoneuvon-sijainti {:lat 1000
-                                        :lon 1000
-                                        :heading 90})
+            (reset! ajoneuvon-sijainti {:nykyinen {:lat 1000
+                                                   :lon 1000
+                                                   :heading 90}})
             (reagent/flush)
             (testing "Kartan keskipisteen siirtyminen"
               (is (= [300 200] (js->clj (.getCenter view)))))

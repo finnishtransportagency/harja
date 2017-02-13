@@ -284,7 +284,7 @@
   (let [ikoni (ulkoasu/varustetoteuman-ikoni)]
     (assoc varustetoteuma
       :type :varustetoteuma
-      :nimi (or (:selitys-kartalla varustetoteuma) "Varustetoteuma")
+      :nimi (or (:tooltip varustetoteuma) "Varustetoteuma")
       :selite {:teksti "Varustetoteuma"
                :img    ikoni}
       :alue (maarittele-feature varustetoteuma valittu?
@@ -544,7 +544,7 @@
         vari (last (viivojen-varit-leveimmasta-kapeimpaan viivat))]
     {:type :reittipisteet
      :nimi (str (tehtavan-nimi toimenpiteet) "\n"
-                (pvm/pvm-aika aika))
+                (pvm/pvm-aika-sek aika))
      :alue (assoc sijainti
                   :fill true
                   :color vari)}))

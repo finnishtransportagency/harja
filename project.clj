@@ -126,7 +126,7 @@
                  [yleisradio/new-reliquary "1.0.0"]
 
                  ;; Tuck UI apuri
-                 [webjure/tuck "0.2.3"]
+                 [webjure/tuck "0.3"]
 
                  ;; Laadunseurantatyökalua varten
                  [org.clojure/data.codec "0.1.0"]
@@ -174,7 +174,7 @@
                            }}
                {:id "test"
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-dev"
-                               "test/cljs" "test/doo"]
+                               "test/cljs" "test/doo" "test/shared-cljs"]
                 :compiler {:output-to "target/cljs/test/test.js"
                            :output-dir "target/cljs/test"
                            :optimizations :none
@@ -231,7 +231,7 @@
 
                {:id "laadunseuranta-test"
                 :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"
-                               "laadunseuranta/test-src/cljs"]
+                               "laadunseuranta/test-src/cljs" "test/shared-cljs"]
 
                 :compiler {:main harja-laadunseuranta.test-main
                            ;;:asset-path "laadunseuranta/js/out"

@@ -135,6 +135,7 @@ e2e testit (erillisessä projektissa).
 ### Fronttitestit
 
 Fronttitestit ajetaan komennolla: lein doo phantom test
+Laadunseurantatyökalun testit ajetaan komennolla: lein doo phantom laadunseuranta-test
 
 Odotetaan, että kaikilla frontin nimiavaruuksilla on testitiedosto ja vähintään yksi
 testi.
