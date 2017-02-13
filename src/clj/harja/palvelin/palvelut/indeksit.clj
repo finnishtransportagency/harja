@@ -5,11 +5,13 @@
             [clojure.set :refer [intersection difference]]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.indeksit :as q]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (defn hae-indeksien-nimet
   "Palvelu, joka palauttaa Harjassa olevien indeksien nimet."
   [db user]
+  (oikeudet/ei-oikeustarkistusta!)
   (into #{}
         (map :nimi (q/hae-indeksien-nimet db))))
 
