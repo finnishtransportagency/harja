@@ -42,6 +42,13 @@
                                                                  {:lyhenna-yksikot? true})
                                  ")"))))))
 
+(defn- suodata-valitavoitteet-urakkavuodella [valitavoitteet]
+  (filterv #(or
+              (= valitavoitteet :kaikki)
+              (nil? (:takaraja %))
+              (= (t/year (:takaraja %)) valitavoitteet))
+           valitavoitteet))
+
 (defn urakan-omat-valitavoitteet
   [{:keys [urakka kaikki-valitavoitteet-atom urakan-valitavoitteet valittu-urakan-vuosi]}]
   (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
@@ -81,10 +88,7 @@
       {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :merkitsija :hae (fn [rivi]
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
-     (filterv #(or
-                 (= valittu-urakan-vuosi :kaikki)
-                 (= (t/year (:takaraja %)) valittu-urakan-vuosi))
-              urakan-valitavoitteet)]))
+     (suodata-valitavoitteet-urakkavuodella urakan-valitavoitteet)]))
 
 (defn urakan-omat-ja-valtakunnalliset-valitavoitteet
   "Tässä gridissä näytetään sekä urakan omat että valtakunnallisten välitavoitteiden pohjalta urakkaan liitetyt
@@ -127,10 +131,7 @@
       {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :merkitsija :hae (fn [rivi]
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
-     (filterv #(or
-                 (= valittu-urakan-vuosi :kaikki)
-                 (= (t/year (:takaraja %)) valittu-urakan-vuosi))
-              @kaikki-valitavoitteet-atom)]))
+     (suodata-valitavoitteet-urakkavuodella @kaikki-valitavoitteet-atom)]))
 
 (defn ainakin-yksi-tavoite-muutettu-urakkaan [rivit]
   (some #(or
@@ -240,10 +241,7 @@
        {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
         :nimi :merkitsija :hae (fn [rivi]
                                  (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
-      (filterv #(or
-                  (= valittu-urakan-vuosi :kaikki)
-                  (= (t/year (:takaraja %)) valittu-urakan-vuosi))
-               valtakunnalliset-valitavoitteet)]
+      (suodata-valitavoitteet-urakkavuodella valtakunnalliset-valitavoitteet)]
 
      (when (ainakin-yksi-tavoite-muutettu-urakkaan valtakunnalliset-valitavoitteet)
        [yleiset/vihje-elementti [:span
