@@ -13,7 +13,6 @@
     "Lisää numerotyyppinen mittari, jota pollataan. Mittari-ref on Clojure ref, joka sisältää mäpin.
      Refin kaikki avaimet julkaistaan arvoina."))
 
-
 (defrecord JmxMetriikka []
   component/Lifecycle
   (start [this]
@@ -24,13 +23,15 @@
 
   Metriikka
   (lisaa-mittari! [this nimi mittari-ref]
-    (jmx/register-mbean
-     (jmx/create-bean mittari-ref)
-     (str +mbean-prefix+ nimi))))
+    (try
+      (jmx/register-mbean
+       (jmx/create-bean mittari-ref)
+       (str +mbean-prefix+ nimi))
+      (catch javax.management.InstanceAlreadyExistsException t
+        (log/debug "mittari" nimi "oli jo olemassa")))))
 
 (defn luo-jmx-metriikka []
   (->JmxMetriikka))
-
 
 ;; Apureita mittarit ref käyttämiseksi
 (defn luo-mittari-ref [alkuarvot]

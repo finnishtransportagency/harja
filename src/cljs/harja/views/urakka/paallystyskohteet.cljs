@@ -63,6 +63,11 @@
        [yllapitokohteet-view/yllapitokohteet-yhteensa
         paallystys-tiedot/kohteet-yhteensa {:nakyma :paallystys}]
 
+       [vihje-elementti [:span
+                         [:span "Huomioi etumerkki hinnanmuutoksissa. Ennustettuja määriä sisältävät kentät on värjätty "]
+                         [:span.grid-solu-ennustettu "sinisellä"]
+                         [:span "."]]]
+
        [:div.kohdeluettelon-paivitys
         [yha/paivita-kohdeluettelo ur oikeudet/urakat-kohdeluettelo-paallystyskohteet]
         [yha/kohdeluettelo-paivitetty ur]]])))

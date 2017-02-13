@@ -56,7 +56,13 @@
 
 (defn- hae-toteumat [db parametrit]
   (kursori/hae-kanavaan
-   (async/chan 32 (map #(assoc % :tyyppi-kartalla :toteuma)))
+   (async/chan 32 (comp
+                    ;; Tässä ei haluta palauttaa varustetoteumia.
+                    ;; Tehokkain tapa estää varustetoteumien palautuminen on tehdä filtteröinti
+                    ;; täällä, koska kommentin kirjoittamisen hetkellä suodattaminen vaatisi SQL-puolella
+                    ;; raskaan EXISTS tarkastuksen.
+                    (filter #(not (empty? (:tehtavat %))))
+                    (map #(assoc % :tyyppi-kartalla :toteuma))))
    db q/hae-toteumat parametrit))
 
 
@@ -134,6 +140,7 @@
   (q/hae-reittipisteet db {:toteuma-id toteuma-id}))
 
 (defn vain-tilaajalle! [user]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (when-not (roolit/tilaajan-kayttaja? user)
     (throw+ (roolit/->EiOikeutta "vain tilaajan käyttäjille"))))
 

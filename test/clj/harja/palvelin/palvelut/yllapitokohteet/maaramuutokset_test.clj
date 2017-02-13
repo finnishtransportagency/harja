@@ -34,7 +34,7 @@
                                 {:urakka-id @muhoksen-paallystysurakan-id
                                  :yllapitokohde-id yllapitokohde-id})
         maaramuutos (first vastaus)]
-    (is (= (count vastaus) 3) "Määrämuutosten määrä täsmää")
+    (is (= (count vastaus) 4) "Määrämuutosten määrä täsmää")
     (is (= (:yllapitokohde maaramuutos) yllapitokohde-id) "Ylläpitokohteen id täsmää")
     (is (= (:tyyppi maaramuutos) :ajoradan-paallyste) "Tyyppi täsmää")
     (is (= (:tyo maaramuutos) "Testityö") "Työn kuvaus täsmää")
@@ -81,7 +81,7 @@
                                           yllapitokohteet-tallennuksen-jalkeen))]
     (is (= (count maaramuutokset-tallennuksen-jalkeen)
            (+ (count maaramuutokset-ennen-testia) 1)) "Tallennuksen jälkeen määrä kasvoi yhdellä")
-    (is (== (:maaramuutokset leppajarven-ramppi) 220)
+    (is (== (:maaramuutokset leppajarven-ramppi) 265)
         "Leppäjärven rampin määrämuutos laskettu oikein eli määrämuutoksien
         (toteutunut - tilattu) * hinta
         summattuna yhteen")
