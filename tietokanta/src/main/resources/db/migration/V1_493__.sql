@@ -1,0 +1,1 @@
+ALTER TABLE tarkastusreitti ALTER COLUMN talvihoito_tasaisuus TYPE numeric USING (talvihoito_tasaisuus::numeric);

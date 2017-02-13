@@ -174,7 +174,7 @@
                            }}
                {:id "test"
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-dev"
-                               "test/cljs" "test/doo"]
+                               "test/cljs" "test/doo" "test/shared-cljs"]
                 :compiler {:output-to "target/cljs/test/test.js"
                            :output-dir "target/cljs/test"
                            :optimizations :none
@@ -231,7 +231,7 @@
 
                {:id "laadunseuranta-test"
                 :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"
-                               "laadunseuranta/test-src/cljs"]
+                               "laadunseuranta/test-src/cljs" "test/shared-cljs"]
 
                 :compiler {:main harja-laadunseuranta.test-main
                            ;;:asset-path "laadunseuranta/js/out"

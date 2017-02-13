@@ -2,7 +2,8 @@
   "Lomakekenttien komponenttitestejä"
   (:require [harja.ui.kentat :as kentat]
             [cljs.test :as t :refer-macros [deftest is testing async]]
-            [harja.testutils :as u]
+            [harja.testutils.shared-testutils :as u]
+            [harja.testutils :refer [fake-palvelut-fixture fake-palvelukutsu]]
             [cljs.core.async :as async]
             [reagent.core :as r]
             [cljs-react-test.simulate :as sim]
@@ -12,7 +13,7 @@
 
 (t/use-fixtures :each
   u/komponentti-fixture
-  u/fake-palvelut-fixture)
+  fake-palvelut-fixture)
 
 (deftest valinta
  (let [data (r/atom nil)]
@@ -277,7 +278,7 @@
                (.-value (u/sel1 (tr-sel kentta))))
         aseta! (fn [kentta arvo]
                  (u/change (tr-sel kentta) arvo))
-        hae-tr-viivaksi (u/fake-palvelukutsu
+        hae-tr-viivaksi (fake-palvelukutsu
                          :hae-tr-viivaksi
                          (fn [payload]
                            (.log js/console ":hae-tr-viivaksi => " payload)
