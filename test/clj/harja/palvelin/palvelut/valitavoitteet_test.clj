@@ -39,7 +39,9 @@
         valitavoitteet [{:nimi "testi566", :takaraja (c/to-date (t/now)),
                          :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis!"}
                         {:nimi "testi34554", :takaraja (c/to-date (t/now)),
-                         :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis tämäkin!"}]
+                         :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis tämäkin!"}
+                        {:nimi "melko tyhjä vt", :takaraja nil,
+                         :valmispvm nil, :valmis-kommentti nil}]
         vt-ennen-testia (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :hae-urakan-valitavoitteet +kayttaja-jvh+
                                         urakka-id)
@@ -54,14 +56,16 @@
                                              urakka-id)]
 
     ;; Määrä lisääntyi oikein
-    (is (= (+ (count vt-ennen-testia) 2)
+    (is (= (+ (count vt-ennen-testia) 3)
            (count vt-lisayksen-jalkeen)))
 
     ;; Tiedot tallentuivat oikein
     (let [vt1 (first (filter #(= (:nimi %) "testi566") vt-lisayksen-jalkeen))
-          vt2 (first (filter #(= (:nimi %) "testi34554") vt-lisayksen-jalkeen))]
+          vt2 (first (filter #(= (:nimi %) "testi34554") vt-lisayksen-jalkeen))
+          vt3 (first (filter #(= (:nimi %) "melko tyhjä vt") vt-lisayksen-jalkeen))]
       (is vt1)
       (is vt2)
+      (is vt3)
 
       ;; VT1 tallentui oikein
       (is (some? (:valmis-merkitsija vt1)))
@@ -77,7 +81,15 @@
       (is (nil? (:valtakunnallinen-id vt2)))
       (is (= (:urakka-id vt2) urakka-id))
       (is (some? (:takaraja vt2)))
-      (is (= (:valmis-kommentti vt2) "valmis tämäkin!")))
+      (is (= (:valmis-kommentti vt2) "valmis tämäkin!"))
+
+      ;; VT3 tallentui oikein
+      (is (nil? (:valmis-merkitsija vt3)))
+      (is (nil? (:valmispvm vt3)))
+      (is (nil? (:valtakunnallinen-id vt3)))
+      (is (= (:urakka-id vt3) urakka-id))
+      (is (nil? (:takaraja vt3)))
+      (is (nil? (:valmis-kommentti vt3))))
 
     ;; Päivitys toimii
     (let [muokattu-vt (->> vt-lisayksen-jalkeen
