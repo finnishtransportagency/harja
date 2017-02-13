@@ -47,19 +47,19 @@
             (:http-palvelin jarjestelma)
             :tallenna-urakan-valitavoitteet
             +kayttaja-jvh+
-            {:urakka-id (hae-oulun-alueurakan-2014-2019-id)
+            {:urakka-id urakka-id
              :valitavoitteet valitavoitteet})
-        vt-testin-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
-                                          :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                          urakka-id)]
+        vt-lisayksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                             :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                             urakka-id)]
 
     ;; Määrä lisääntyi oikein
     (is (= (+ (count vt-ennen-testia) 2)
-           (count vt-testin-jalkeen)))
+           (count vt-lisayksen-jalkeen)))
 
     ;; Tiedot tallentuivat oikein
-    (let [vt1 (first (filter #(= (:nimi %) "testi566") vt-testin-jalkeen))
-          vt2 (first (filter #(= (:nimi %) "testi34554") vt-testin-jalkeen))]
+    (let [vt1 (first (filter #(= (:nimi %) "testi566") vt-lisayksen-jalkeen))
+          vt2 (first (filter #(= (:nimi %) "testi34554") vt-lisayksen-jalkeen))]
       (is vt1)
       (is vt2)
 
@@ -79,9 +79,35 @@
       (is (some? (:takaraja vt1)))
       (is (= (:valmis-kommentti vt1) "valmis tämäkin!")))
 
+    ;; Päivitys toimii
+    (let [muokattu-vt (->> vt-lisayksen-jalkeen
+                          (filter #(or (= (:nimi %) "testi566")
+                                       (= (:nimi %) "testi34554")))
+                          (mapv #(if (= (:nimi %) "testi566")
+                                  (assoc % :valmis-kommentti "hyvin tehty")
+                                  %)))
+          _ (log/debug "PÄIVITÄ: " (pr-str muokattu-vt))
+          _ (kutsu-palvelua
+              (:http-palvelin jarjestelma)
+              :tallenna-urakan-valitavoitteet
+              +kayttaja-jvh+
+              {:urakka-id urakka-id
+               :valitavoitteet muokattu-vt})
+          vt-paivityksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                 :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                 urakka-id)]
+
+      ;; Määrä edelleen sama oikein
+      (is (= (count vt-lisayksen-jalkeen)
+             (count vt-paivityksen-jalkeen)))
+
+      ;; VT1 päivittyi oikein
+      (let [vt1 (first (filter #(= (:nimi %) "testi566") vt-paivityksen-jalkeen))]
+        (is (= (:valmis-kommentti vt1) "hyvin tehty"))))
+
 
     ;; Siivoa sotkut
-    (u (str "DELETE FROM valitavoite WHERE nimi = 'testi566' OR nimi = '34554'"))))
+    (u "DELETE FROM valitavoite WHERE nimi = 'testi566' OR nimi = '34554';")))
 
 (deftest toistuvan-valtakunnallisen-valitavoitteen-lisaaminen-toimii
   (let [oulun-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
