@@ -81,11 +81,11 @@
 
     ;; Päivitys toimii
     (let [muokattu-vt (->> vt-lisayksen-jalkeen
-                          (filter #(or (= (:nimi %) "testi566")
-                                       (= (:nimi %) "testi34554")))
-                          (mapv #(if (= (:nimi %) "testi566")
-                                  (assoc % :valmis-kommentti "hyvin tehty")
-                                  %)))
+                           (filter #(or (= (:nimi %) "testi566")
+                                        (= (:nimi %) "testi34554")))
+                           (mapv #(if (= (:nimi %) "testi566")
+                                    (assoc % :valmis-kommentti "hyvin tehty")
+                                    %)))
           _ (kutsu-palvelua
               (:http-palvelin jarjestelma)
               :tallenna-urakan-valitavoitteet
@@ -107,6 +107,19 @@
 
     ;; Siivoa sotkut
     (u "DELETE FROM valitavoite WHERE nimi = 'testi566' OR nimi = '34554';")))
+
+(deftest urakkakohtaisen-valitavoitteen-tallentaminen-ei-toimi-ilman-oikeuksia
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        valitavoitteet [{:nimi "testi566", :takaraja (c/to-date (t/now)),
+                         :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis!"}
+                        {:nimi "testi34554", :takaraja (c/to-date (t/now)),
+                         :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis tämäkin!"}]]
+    (is (thrown? Exception (kutsu-palvelua
+                             (:http-palvelin jarjestelma)
+                             :tallenna-urakan-valitavoitteet
+                             +kayttaja-ulle+
+                             {:urakka-id urakka-id
+                              :valitavoitteet valitavoitteet})))))
 
 (deftest toistuvan-valtakunnallisen-valitavoitteen-lisaaminen-toimii
   (let [oulun-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
