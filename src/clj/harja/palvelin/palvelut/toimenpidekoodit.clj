@@ -77,6 +77,7 @@
       (julkaise-palvelu
         :hae-toimenpidekoodit
         (fn [kayttaja]
+          (oikeudet/ei-oikeustarkistusta!)
           (hae-toimenpidekoodit (:db this) kayttaja))
         {:last-modified (fn [user]
                           (:muokattu (first (q/viimeisin-muokkauspvm (:db this)))))})
@@ -87,6 +88,7 @@
       (julkaise-palvelu
         :hae-reaaliaikaseurannan-tehtavat
         (fn [_]
+          (oikeudet/ei-oikeustarkistusta!)
           (hae-reaaliaikaseurannan-tehtavat))))
     this)
 

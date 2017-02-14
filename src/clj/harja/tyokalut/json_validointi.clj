@@ -5,7 +5,8 @@
             [webjure.json-schema.validator :refer [validate]]
             [webjure.json-schema.validator.macro :refer [make-validator]]
             [cheshire.core :as cheshire]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.domain.oikeudet :as oikeudet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defmulti formatoi-virhe (fn [polku virhe] (:error virhe)))
