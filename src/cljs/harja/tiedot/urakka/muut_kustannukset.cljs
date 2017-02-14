@@ -3,6 +3,7 @@
     [reagent.core :refer [atom] :as r]
     [harja.loki :refer [log tarkkaile!]]
     [harja.tiedot.urakka :as tiedot-urakka]
+    [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot-sanktiot]
     [harja.tiedot.navigaatio :as nav]
 
     [cljs.core.async :refer [<!]]
@@ -12,13 +13,18 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce muiden-kustannusten-tiedot (atom nil))
+(defonce kohdistamattomien-sanktioiden-tiedot (atom nil))
 
 (defn grid-tiedot* [mk-tiedot]
-  (for [[i kt] (map-indexed vector mk-tiedot)]
-    (-> kt (assoc :muokattava true))))
+  (map #(assoc % :muokattava true) mk-tiedot))
 
 (def grid-tiedot
   (reaction (grid-tiedot* @muiden-kustannusten-tiedot)))
+
+#_(defn hae-kohteettomat-sanktiot! [urakkaid alkupvm loppupvm]
+  (go (let [ch (tiedot-sanktiot/hae-urakan-sanktiot urakkaid [alkupvm loppupvm])
+            vastaus (<! ch)]
+        (log "sanktiot-vastaus:" (clj->js vastaus)))))
 
 (defn hae-muiden-kustannusten-tiedot! [urakka-id sopimus-id alkupvm loppupvm]
   (do (log "hae-muiden-kustannusten-tiedot! post")
