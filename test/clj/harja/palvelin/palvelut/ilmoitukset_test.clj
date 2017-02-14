@@ -131,12 +131,12 @@
                      :ulkoinen-ilmoitusid 123
                      :ilmoittaja-matkapuhelin "0400123123"
                      :vapaatesti "TESTI123"
-                     :tyyppi :aloitus}]
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                     :tyyppi :aloitus}]]
+    (is (thrown-with-msg? Exception #"EiOikeutta"
+         (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-ilmoitustoimenpiteet
                                 +kayttaja-tero+
-                                parametrit)]
-    (is (= 403 (:status vastaus)))))
+                                parametrit)))))
 
 (deftest hae-ilmoituksia-tienumerolla
   (let [oletusparametrit {:hallintayksikko nil
@@ -244,5 +244,3 @@
     (is (= 1 (count ilmoitukset-palvelusta)) "Annettu aikaväli palauttaa vain yhden ilmoituksen")
     (is (t/after? (c/from-sql-time (:ilmoitettu ilmoitus)) alkuaika))
     (is (t/before? (c/from-sql-time (:ilmoitettu ilmoitus)) loppuaika))))
-
-
