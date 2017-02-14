@@ -321,7 +321,7 @@
         viiva (ulkoasu/yllapidon-viiva valittu? (:avoin? yllapitokohde) tila tyyppi)]
     (assoc yllapitokohde
       :nimi (or (:nimi yllapitokohde) teksti)
-      :selite {:teksti (str teksti tila-teksti)
+      :selite {:teksti (str teksti ", " tila-teksti)
                :vari   (viivojen-varit-leveimmasta-kapeimpaan viiva)}
       :alue (maarittele-feature yllapitokohde valittu?
                                 ikoni
