@@ -16,15 +16,15 @@ SELECT
   v.valmis_kommentti "valmis-kommentti",
   v.valmis_merkitsija as "valmis-merkitsija",
   v.valmis_merkitty as "valmis-merkitty",
-  k.etunimi as "valmis-merkitsija-etunimi",
-  k.sukunimi as "valmis-merkitsija-sukunimi",
+  merkitsija.etunimi as "valmis-merkitsija-etunimi",
+  merkitsija.sukunimi as "valmis-merkitsija-sukunimi",
   v.luotu,
   v.muokattu,
   v.luoja,
   v.muokkaaja
 FROM valitavoite v
   LEFT JOIN valitavoite vv ON v.valtakunnallinen_valitavoite = vv.id
-  LEFT JOIN kayttaja k ON v.valmis_merkitsija = k.id
+  LEFT JOIN kayttaja merkitsija ON v.valmis_merkitsija = merkitsija.id
 WHERE v.poistettu = FALSE
       AND v.urakka = :urakka
 ORDER BY v.takaraja ASC;
