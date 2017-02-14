@@ -111,7 +111,7 @@ SELECT
       -- Luodaan yhtenäinen polygon alueurakan alueelle (multipolygonissa voi olla reikiä)
       ST_MakePolygon(ST_ExteriorRing((ST_Dump(au.alue)).geom))
   ELSE
-    ST_Simplify(tlu.alue, 50)
+    ST_Simplify(au.alue, 50)
   END                         AS alueurakan_alue
 
 FROM urakka u
