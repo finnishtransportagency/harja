@@ -735,7 +735,6 @@
        :tyyppi :komponentti :leveys yhteensa-leveys :tasaa :oikea
        :komponentti
        (fn [rivi]
-         (log "KOHTEET ATOMI " (pr-str @kohteet-atom))
          [:span {:class (when (some :maaramuutokset-ennustettu? @kohteet-atom)
                           "grid-solu-ennustettu")}
           (fmt/euro-opt (:kokonaishinta rivi))])}]
