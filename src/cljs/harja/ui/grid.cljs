@@ -695,7 +695,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                    [:span.pull-right.muokkaustoiminnot
                     (when (and tallenna
                                (not (nil? tiedot)))
-                      (log "Muuta gridiä muokataan " muuta-gridia-muokataan?)
                       (let [tallenna-nappi [:button.nappi-ensisijainen
                                             {:disabled (or (= :ei-mahdollinen tallenna)
                                                            muuta-gridia-muokataan?)
