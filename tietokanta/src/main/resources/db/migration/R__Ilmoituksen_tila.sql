@@ -1,4 +1,4 @@
-CREATE FUNCTION aseta_ilmoituksen_tila()
+CREATE OR REPLACE FUNCTION aseta_ilmoituksen_tila()
   RETURNS TRIGGER AS $$
 DECLARE
   uusi_tila ilmoituksen_tila;
