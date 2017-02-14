@@ -8,6 +8,7 @@
             [harja.views.urakka.muut-kustannukset :as muut-kustannukset-view]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :refer [vihje-elementti]]
+            [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
@@ -54,8 +55,8 @@
 
 (defn paallystyskohteet [ur]
   (let [hae-tietoja (fn [urakan-tiedot]
-                      (go (reset! urakka/paallystysurakan-indeksitiedot
-                                  (<! (indeksit/hae-paallystysurakan-indeksitiedot (:id urakan-tiedot))))))]
+                      (go (if-let [ch (indeksit/hae-paallystysurakan-indeksitiedot (:id urakan-tiedot))]
+                            (reset! urakka/paallystysurakan-indeksitiedot (<! ch)))))]
     (hae-tietoja ur)
     (komp/kun-muuttuu (hae-tietoja ur))
     (komp/luo
@@ -71,7 +72,7 @@
 
         [yllapitokohteet-view/yllapitokohteet
          ur
-         paallystys/yhan-paallystyskohteet
+         paallystys-tiedot/yhan-paallystyskohteet
          {:otsikko "YHA:sta tuodut päällystyskohteet"
           :kohdetyyppi :paallystys
           :yha-sidottu? true
@@ -79,13 +80,13 @@
           (yllapitokohteet/kasittele-tallennettavat-kohteet!
             #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
             :paallystys
-            #(reset! paallystys/yhan-paallystyskohteet (filter yllapitokohteet/yha-kohde? %)))
+            #(reset! paallystys-tiedot/yhan-paallystyskohteet (filter yllapitokohteet/yha-kohde? %)))
           :kun-onnistuu (fn [_]
                           (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]
 
         [yllapitokohteet-view/yllapitokohteet
          ur
-         paallystys/harjan-paikkauskohteet
+         paallystys-tiedot/harjan-paikkauskohteet
          {:otsikko "Harjan paikkauskohteet"
           :kohdetyyppi :paikkaus
           :yha-sidottu? false
@@ -93,12 +94,12 @@
           (yllapitokohteet/kasittele-tallennettavat-kohteet!
             #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
             :paikkaus
-            #(reset! paallystys/harjan-paikkauskohteet (filter (comp not yllapitokohteet/yha-kohde?) %)))}]
+            #(reset! paallystys-tiedot/harjan-paikkauskohteet (filter (comp not yllapitokohteet/yha-kohde?) %)))}]
 
         [muut-kustannukset-view/muut-kustannukset ur]
 
         [yllapitokohteet-view/yllapitokohteet-yhteensa
-         paallystys/kohteet-yhteensa {:nakyma :paallystys}]
+         paallystys-tiedot/kohteet-yhteensa {:nakyma :paallystys}]
 
         [vihje-elementti [:span
                           [:span "Huomioi etumerkki hinnanmuutoksissa. Ennustettuja määriä sisältävät kentät on värjätty "]
