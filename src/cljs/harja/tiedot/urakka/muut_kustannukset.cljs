@@ -15,8 +15,7 @@
 
 (defn grid-tiedot* [mk-tiedot]
   (for [[i kt] (map-indexed vector mk-tiedot)]
-    (do  (log "grid-tiedot ->" (pr-str (assoc kt :id (str i) :muokattava true) ))
-         (assoc kt :id (str i) :muokattava true)) ))
+    (-> kt (assoc :muokattava true))))
 
 (def grid-tiedot
   (reaction (grid-tiedot* @muiden-kustannusten-tiedot)))
@@ -31,7 +30,7 @@
 (defn tallenna-lomake [urakka data-atomi grid-data] ;; XXX siirrä tämä tiedot-namespaceen
   ;; kustannukset tallennetaan ilman laskentakohdetta yllapito_toteuma-tauluun,
   ;; -> backin palvelut.yllapito-toteumat/tallenna-yllapito-toteuma
-  (let [toteuman-avaimet-gridista #(select-keys % [:toteuma :alkupvm :loppupvm :selite :pvm :hinta])
+  (let [toteuman-avaimet-gridista #(select-keys % [:id :toteuma :alkupvm :loppupvm :selite :pvm :hinta])
         [sopimus-id sopimus-nimi] @tiedot-urakka/valittu-sopimusnumero
         dump #(do (log "talenna-toteuma saa:" (pr-str %)) %)]
     (go
