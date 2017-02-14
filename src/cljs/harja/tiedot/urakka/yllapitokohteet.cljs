@@ -46,16 +46,6 @@
 
 
 
-(defn paivita-yllapitokohde! [kohteet-atom id funktio & argumentit]
-  (swap! kohteet-atom
-         (fn [kohderivit]
-           (into []
-                 (map (fn [kohderivi]
-                        (if (= id (:id kohderivi))
-                          (apply funktio kohderivi argumentit)
-                          kohderivi)))
-                 kohderivit))))
-
 (defn yha-kohde? [kohde]
   (some? (:yhaid kohde)))
 
