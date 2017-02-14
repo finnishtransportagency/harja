@@ -3,6 +3,33 @@
   #?(:clj
      (:require [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])))
 
+
+(def ^{:doc "Mahdolliset ylläpitoluokat. Nimi kertoo käyttöliittymässä käytetyn
+nimen. Numero on YHA:n koodi luokalle joka talletetaan myös Harjan kantaan.
+2017 alkaen pyritään käyttämään enää luokkia 1,2 ja 3 (eli numerot 8, 9 ja 10), mutta
+taaksenpäin yhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
+yllapitoluokat
+  [{:nimi "Luokka 1"  :numero 8}
+   {:nimi "Luokka 2"  :numero 9}
+   {:nimi "Luokka 3"  :numero 10}
+   {:nimi "Luokka 1a"  :numero 1}
+   {:nimi "Luokka 1b"   :numero 2}
+   {:nimi "Luokka 1c"  :numero 3}
+   {:nimi "Luokka 2a" :numero 4}
+   {:nimi "Luokka 2b"  :numero 5}
+   {:nimi "Luokka 3a" :numero 6}
+   {:nimi "Luokka 3b" :numero 7}
+   {:nimi "Ei ylläpitoluokkaa" :numero nil}])
+
+
+(def ^{:doc "Mäppäys yllapitoluokan numerosta sen nimeen."}
+yllapitoluokan-nimi
+  (into {} (map (juxt :numero :nimi)) yllapitoluokat))
+
+(def ^{:doc "Mäppäys yllapitoluokan nimestä sen numeroon."}
+yllapitoluokan-numero
+  (into {} (map (juxt :nimi :numero)) yllapitoluokat))
+
 (def +kohteissa-viallisia-sijainteja+ "viallisia-sijainteja")
 (def +viallinen-yllapitokohteen-sijainti+ "viallinen-kohteen-sijainti")
 (def +viallinen-yllapitokohdeosan-sijainti+ "viallinen-alikohteen-sijainti")

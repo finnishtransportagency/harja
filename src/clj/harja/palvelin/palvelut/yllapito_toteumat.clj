@@ -9,12 +9,15 @@
              [julkaise-palvelu poista-palvelut]]
             [clojure.java.jdbc :as jdbc]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.kyselyt.konversio :as konv]))
 
 (def muutyo-xf
   (comp
     (map #(assoc % :laskentakohde [(get-in % [:laskentakohde-id])
-                                  (get-in % [:laskentakohde-nimi])]))
+                                  (get-in % [:laskentakohde-nimi])]
+                   :yllapitoluokka {:nimi (yllapitokohteet-domain/yllapitoluokan-nimi (:yllapitoluokka %))
+                                    :numero (:yllapitoluokka %)}))
     (map #(dissoc % :laskentakohde-id :laskentakohde-nimi))))
 
 (defn hae-yllapito-toteumat [db user {:keys [urakka sopimus alkupvm loppupvm] :as tiedot}]
@@ -66,7 +69,7 @@
                                            :selite         selite
                                            :pvm            pvm
                                            :hinta          hinta
-                                           :yllapitoluokka yllapitoluokka
+                                           :yllapitoluokka (:numero yllapitoluokka)
                                            :laskentakohde  laskentakohde-id
                                            :kayttaja       (:id user)}]
 
