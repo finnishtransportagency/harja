@@ -88,6 +88,15 @@
       (is (= (nth @data 3)
              {:id -1 :nimi "Max Syöttöpaine" :kieli "Vanha hieno kieli" :vuosi 2016})))))
 
+(defn- grid-container []
+  [:div
+   (for [id (range 0 3)]
+     ^{:key id}
+     [g/grid {:id (str "g" id)
+              :tallenna (constantly nil)}
+      skeema
+      data])])
+
 (deftest vain-yksi-grid-voi-olla-muokkauksessa
   ;; Vain yhtä gridiä saa kerrallaan muokata, koska
   ;; - Gridin tallennus nollaa muiden gridien muokkauksen, ei kivaa UX:ää
