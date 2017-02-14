@@ -99,6 +99,7 @@
                 :tiedoitus "Tiedotus"
                 (string/capitalize (name (:ilmoitustyyppi ilmoitus)))))
    :tiedot [{:otsikko "Id" :tyyppi :string :nimi :ilmoitusid}
+            {:otsikko "Tunniste" :tyyppi :string :nimi :tunniste}
             {:otsikko "Ilmoitettu" :tyyppi :pvm-aika :nimi :ilmoitettu}
             {:otsikko "Otsikko" :tyyppi :string :nimi :otsikko}
             {:otsikko "Paikan kuvaus" :tyyppi :string :nimi :paikankuvaus}
@@ -355,7 +356,10 @@
 
 (defmethod infopaneeli-skeema :silta [silta]
   {:tyyppi :silta
-   :jarjesta-fn :tarkastusaika
+   :jarjesta-fn (let [fn :tarkastusaika]
+                  (if (fn silta)
+                    fn
+                    (constantly false)))
    :otsikko (or (:siltanimi silta) "Silta")
    :tiedot [{:otsikko "Nimi" :nimi :siltanimi}
             {:otsikko "Sillan tunnus" :nimi :siltatunnus}
