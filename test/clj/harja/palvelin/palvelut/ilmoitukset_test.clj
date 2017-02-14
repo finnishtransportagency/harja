@@ -244,3 +244,15 @@
     (is (= 1 (count ilmoitukset-palvelusta)) "Annettu aikaväli palauttaa vain yhden ilmoituksen")
     (is (t/after? (c/from-sql-time (:ilmoitettu ilmoitus)) alkuaika))
     (is (t/before? (c/from-sql-time (:ilmoitettu ilmoitus)) loppuaika))))
+
+
+(deftest hae-ilmoitus-oikeudet
+  (let [hae-ilmoitus-kayttajana #(kutsu-palvelua (:http-palvelin jarjestelma)
+                                                 :hae-ilmoitus % 1)]
+    (testing "Ilmoituksen haku oikeuksilla toimii"
+      (is (= (:ilmoitusid (hae-ilmoitus-kayttajana +kayttaja-jvh+)) 12345)))
+
+    (testing "Ilmoituksen haku ilman oikeuksia epäonnistuu"
+      (is (thrown-with-msg?
+           Exception #"EiOikeutta"
+           (hae-ilmoitus-kayttajana +kayttaja-ulle+))))))
