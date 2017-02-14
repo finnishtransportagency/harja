@@ -46,7 +46,7 @@ WHERE sijainti IS NOT NULL AND
       (t.aika BETWEEN :alku AND :loppu)
 
 -- name: hae-ilmoitukset
-SELECT i.id, i.urakka, i.ilmoitusid, i.ilmoitettu,
+SELECT i.id, i.urakka, i.ilmoitusid, i.tunniste, i.ilmoitettu,
        i.valitetty, i.yhteydenottopyynto, i.otsikko,
        i.paikankuvaus, i.lisatieto, i.tila, i.ilmoitustyyppi,
        i.selitteet, i.urakkatyyppi,
@@ -77,11 +77,11 @@ SELECT i.id, i.urakka, i.ilmoitusid, i.ilmoitettu,
        it.kasittelija_organisaatio_ytunnus AS kuittaus_kasittelija_ytunnus,
 
        EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id
-                AND kuittaustyyppi = 'vastaanotto'::kuittaustyyppi) as vastaanotettu,
+                AND kuittaustyyppi = 'vastaanotto') as vastaanotettu,
        EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id
-                 AND kuittaustyyppi = 'aloitus'::kuittaustyyppi) as aloitettu,
+                 AND kuittaustyyppi = 'aloitus') as aloitettu,
        EXISTS(SELECT * FROM ilmoitustoimenpide WHERE ilmoitus = i.id
-                 AND kuittaustyyppi = 'lopetus'::kuittaustyyppi) as lopetettu
+                 AND kuittaustyyppi = 'lopetus') as lopetettu
   FROM ilmoitus i
        LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
  WHERE (i.ilmoitettu BETWEEN :alku AND :loppu)

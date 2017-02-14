@@ -6,14 +6,9 @@
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.indeksit :as q]
             [harja.pvm :as pvm]
-            [harja.domain.oikeudet :as oikeudet]))
-
-(defn hae-indeksien-nimet
-  "Palvelu, joka palauttaa Harjassa olevien indeksien nimet."
-  [db user]
-  (oikeudet/ei-oikeustarkistusta!)
-  (into #{}
-        (map :nimi (q/hae-indeksien-nimet db))))
+            [harja.id :refer [id-olemassa?]]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.kyselyt.konversio :as konv]))
 
 (defn hae-urakan-kuukauden-indeksiarvo
   "Palvelu, joka palauttaa tietyn kuukauden indeksin arvon ja nimen urakalle"
@@ -37,6 +32,7 @@
 (defn hae-indeksit
   "Palvelu, joka palauttaa indeksit."
   [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-indeksit user)
   (zippaa (ryhmittele-indeksit (q/listaa-indeksit db))))
 
 (defn hae-indeksi
@@ -48,6 +44,7 @@
   "Palvelu joka tallentaa nimellä tunnistetun indeksin tiedot"
   [db user {:keys [nimi indeksit]}]
   (assert (vector? indeksit) "indeksit tulee olla vektori")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-indeksit user)
   (let [nykyiset-arvot (hae-indeksi db nimi)]
     (jdbc/with-db-transaction [c db]
       (doseq [indeksivuosi indeksit]
@@ -81,6 +78,60 @@
 
       (hae-indeksit c user))))
 
+(defn hae-urakkatyypin-indeksit
+  "Palvelu, joka palauttaa kaikki urakkatyypin-indeksit taulun rivit."
+  [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user)
+  (let [indeksit (into []
+                       (map #(konv/string->keyword % :urakkatyyppi))
+                       (q/hae-urakkatyypin-indeksit db))]
+    (log/debug "hae urakkatyypin indeksit: " indeksit)
+    indeksit))
+
+
+(defn hae-paallystysurakan-indeksitiedot
+  "Palvelu, joka palauttaa annetun päällystysurakan indeksitiedot"
+  [db user {:keys [urakka-id]}]
+  (log/debug "hae-paallystysurakan-indeksit" urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
+  (let [indeksit (into []
+                       (map konv/alaviiva->rakenne)
+                       (q/hae-paallystysurakan-indeksitiedot db {:urakka urakka-id}))]
+    (log/debug "hae-paallystysurakan-indeksit: " indeksit)
+    indeksit))
+
+(defn vaadi-paallystysurakan-indeksi-kuuluu-urakkaan [db urakka-id paallystysurakan-indeksi-id]
+  "Tarkistaa, että päällystysurakan indeksitieto kuuluu annettuun urakkaan"
+  (assert (and urakka-id paallystysurakan-indeksi-id) "Ei voida suorittaa tarkastusta")
+  (let [indeksin-urakka-id-kannasta (:urakka (first (q/hae-paallystysurakan-indeksin-urakka-id db {:id paallystysurakan-indeksi-id})))]
+    (when (not= urakka-id indeksin-urakka-id-kannasta)
+      (throw (SecurityException. (str " päällystysurakan indeksitieto " paallystysurakan-indeksi-id " ei kuulu valittuun urakkaan "
+                                      urakka-id " vaan urakkaan " indeksin-urakka-id-kannasta))))))
+
+(defn tallenna-paallystysurakan-indeksitiedot
+  "Palvelu joka tallentaa päällystysurakan indeksitiedot eli mihin arvoihin mikäkin raaka-ainehinta on sidottu.
+  Esim. Bitumin arvo sidotaan usein raskaan polttoöljyn Platts-indeksiin, nestekaasulle ja kevyelle polttoöljylle on omat hintansta."
+  [db user {:keys [urakka-id indeksitiedot]}]
+  (log/debug "tallenna-paallystysurakan-indeksitiedot: " indeksitiedot)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
+  (jdbc/with-db-transaction [c db]
+    (doseq [i indeksitiedot]
+      (when (id-olemassa? (:id i))
+        (vaadi-paallystysurakan-indeksi-kuuluu-urakkaan db urakka-id (:id i)))
+
+      (when-not (and (neg? (:id i)) (:poistettu i))  ;gridillä poistettu samalla kun luotu, ei käsitellä
+        (let [params {:indeksi_nestekaasu (get-in i [:nestekaasu :id])
+                      :indeksi_polttooljyraskas (get-in i [:raskas :id])
+                      :indeksi_polttooljykevyt (get-in i [:kevyt :id])
+                      :kayttaja (:id user)
+                      :urakka urakka-id
+                      :lahtotason_kuukausi (:lahtotason-kuukausi i)
+                      :lahtotason_vuosi (:lahtotason-vuosi i)
+                      :urakkavuosi (:urakkavuosi i)
+                      :poistettu (:poistettu i)}]
+          (q/tallenna-paallystysurakan-indeksitiedot! c params))))
+    (hae-paallystysurakan-indeksitiedot c user {:urakka-id urakka-id})))
+
 
 (defrecord Indeksit []
   component/Lifecycle
@@ -92,13 +143,22 @@
       (julkaise-palvelu :tallenna-indeksi
                         (fn [user tiedot]
                           (tallenna-indeksi (:db this) user tiedot)))
-      (julkaise-palvelu :indeksien-nimet
+      (julkaise-palvelu :urakkatyypin-indeksit
                         (fn [user]
-                          (hae-indeksien-nimet (:db this) user))))
+                          (hae-urakkatyypin-indeksit (:db this) user)))
+      (julkaise-palvelu :paallystysurakan-indeksitiedot
+                        (fn [user tiedot]
+                          (hae-paallystysurakan-indeksitiedot (:db this) user tiedot)))
+      (julkaise-palvelu :tallenna-paallystysurakan-indeksitiedot
+                        (fn [user tiedot]
+                          (tallenna-paallystysurakan-indeksitiedot (:db this) user tiedot)))
+      )
     this)
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :indeksit)
     (poista-palvelu (:http-palvelin this) :tallenna-indeksi)
-    (poista-palvelu (:http-palvelin this) :indeksien-nimet)
+    (poista-palvelu (:http-palvelin this) :urakkatyypin-indeksit)
+    (poista-palvelu (:http-palvelin this) :paallystysurakan-indeksitiedot)
+    (poista-palvelu (:http-palvelin this) :tallenna-paallystysurakan-indeksitiedot)
     this))

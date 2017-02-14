@@ -112,7 +112,7 @@
   ([db user suodattimet] (hae-ilmoitukset db user suodattimet nil))
   ([db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit
                     kuittaustyypit hakuehto selite vain-myohassa?
-                    aloituskuittauksen-ajankohta tr-numero
+                    aloituskuittauksen-ajankohta tr-numero tunniste
                     ilmoittaja-nimi ilmoittaja-puhelin] :as hakuehdot}
     max-maara]
 
@@ -141,6 +141,7 @@
                            (viesti aloituskuittauksen-ajankohta "aloituskuittausrajaksella: " "ilman aloituskuittausrajausta")
                            (viesti vain-myohassa? "vain myöhässä olevat: " "myös myöhästyneet")
                            (viesti selite "selitteellä:" "ilman selitettä")
+                           (viesti tunniste "tunnisteella:" "ilman tunnistetta")
                            (viesti hakuehto "hakusanoilla:" "ilman tekstihakua")
                            (viesti tr-numero "tienumerolla:" "ilman tienumeroa")
                            (cond
@@ -169,6 +170,9 @@
                                        :teksti (str "%" hakuehto "%")
                                        :selite_annettu selite-annettu?
                                        :selite selite
+                                       :tunniste_annettu (hakuehto-annettu? tunniste)
+                                       :tunniste (when-not (str/blank? tunniste)
+                                                   (str "%" tunniste "%"))
                                        :tr-numero tr-numero
                                        :ilmoittaja-nimi (when-not (str/blank? ilmoittaja-nimi)
                                                           (str "%" ilmoittaja-nimi "%"))
