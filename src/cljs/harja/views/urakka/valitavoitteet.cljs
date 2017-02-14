@@ -42,11 +42,11 @@
                                                                  {:lyhenna-yksikot? true})
                                  ")"))))))
 
-(defn- suodata-valitavoitteet-urakkavuodella [valitavoitteet]
+(defn- suodata-valitavoitteet-urakkavuodella [valitavoitteet valittu-urakan-vuosi]
   (filterv #(or
-              (= valitavoitteet :kaikki)
+              (= valittu-urakan-vuosi :kaikki)
               (and (some? (:takaraja %))
-                   (= (t/year (:takaraja %)) valitavoitteet)))
+                   (= (pvm/vuosi (:takaraja %)) valitavoitteet)))
            valitavoitteet))
 
 (defn urakan-omat-valitavoitteet
@@ -88,7 +88,7 @@
       {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :merkitsija :hae (fn [rivi]
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
-     (suodata-valitavoitteet-urakkavuodella urakan-valitavoitteet)]))
+     (suodata-valitavoitteet-urakkavuodella urakan-valitavoitteet valittu-urakan-vuosi)]))
 
 (defn urakan-omat-ja-valtakunnalliset-valitavoitteet
   "Tässä gridissä näytetään sekä urakan omat että valtakunnallisten välitavoitteiden pohjalta urakkaan liitetyt
@@ -131,25 +131,25 @@
       {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :merkitsija :hae (fn [rivi]
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
-     (suodata-valitavoitteet-urakkavuodella @kaikki-valitavoitteet-atom)]))
+     (suodata-valitavoitteet-urakkavuodella @kaikki-valitavoitteet-atom valittu-urakan-vuosi)]))
 
-(defn ainakin-yksi-tavoite-muutettu-urakkaan [rivit]
-  (some #(or
-           ;; Kertaluontoinen takaraja poikkeaa
-           (and (:valtakunnallinen-takaraja %)
-                (not= (:takaraja %) (:valtakunnallinen-takaraja %)))
+(defn ainakin-yksi-tavoite-muutettu-urakkaan? [rivit]
+  (boolean (some #(or
+                    ;; Kertaluontoinen takaraja poikkeaa
+                    (and (:valtakunnallinen-takaraja %)
+                         (not= (:takaraja %) (:valtakunnallinen-takaraja %)))
 
-           ;; Toistuva takaraja poikkeaa
-           (and (:valtakunnallinen-takarajan-toistopaiva %)
-                (:valtakunnallinen-takarajan-toistokuukausi %)
-                (or (not= (:valtakunnallinen-takarajan-toistopaiva %)
-                          (t/day (:takaraja %)))
-                    (not= (:valtakunnallinen-takarajan-toistokuukausi %)
-                          (t/month (:takaraja %)))))
+                    ;; Toistuva takaraja poikkeaa
+                    (and (:valtakunnallinen-takarajan-toistopaiva %)
+                         (:valtakunnallinen-takarajan-toistokuukausi %)
+                         (or (not= (:valtakunnallinen-takarajan-toistopaiva %)
+                                   (t/day (:takaraja %)))
+                             (not= (:valtakunnallinen-takarajan-toistokuukausi %)
+                                   (t/month (:takaraja %)))))
 
-           ;; Välitavoitteen nimi poikkeaa
-           (not= (:valtakunnallinen-nimi %) (:nimi %)))
-        rivit))
+                    ;; Välitavoitteen nimi poikkeaa
+                    (not= (:valtakunnallinen-nimi %) (:nimi %)))
+                 rivit)))
 
 (defn valtakunnalliset-valitavoitteet
   [{:keys [urakka kaikki-valitavoitteet-atom valtakunnalliset-valitavoitteet valittu-urakan-vuosi]}]
@@ -241,9 +241,9 @@
        {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
         :nimi :merkitsija :hae (fn [rivi]
                                  (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
-      (suodata-valitavoitteet-urakkavuodella valtakunnalliset-valitavoitteet)]
+      (suodata-valitavoitteet-urakkavuodella valtakunnalliset-valitavoitteet valittu-urakan-vuosi)]
 
-     (when (ainakin-yksi-tavoite-muutettu-urakkaan valtakunnalliset-valitavoitteet)
+     (when (ainakin-yksi-tavoite-muutettu-urakkaan? valtakunnalliset-valitavoitteet)
        [yleiset/vihje-elementti [:span
                                  [:span "Urakkakohtaisten tarkennukset värjätty "]
                                  [:span.grid-solu-varoitus "punaisella"]
