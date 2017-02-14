@@ -7,6 +7,7 @@ BEGIN
         FROM yllapitokohdeosa osa
           JOIN yllapitokohde ypk ON osa.yllapitokohde = ypk.id
           JOIN urakka u ON ypk.urakka = u.id
+          WHERE u.tyyppi = 'paallystys' OR u.tyyppi = 'paikkaus'
         GROUP BY u.id, u.nimi) AS geometriat
   WHERE urakka.id = geometriat.id;
   RETURN;
@@ -21,6 +22,7 @@ BEGIN
         FROM yllapitokohdeosa osa
           JOIN yllapitokohde ypk ON osa.yllapitokohde = ypk.id
           JOIN urakka u ON ypk.urakka = u.id
+        WHERE u.tyyppi = 'paallystys' OR u.tyyppi = 'paikkaus'
         GROUP BY u.id, u.nimi) AS geometriat
   WHERE urakka.id = urakkaid;
   RETURN;
