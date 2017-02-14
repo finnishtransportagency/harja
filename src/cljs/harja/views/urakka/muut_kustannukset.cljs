@@ -4,23 +4,22 @@
             [harja.ui.grid :as grid]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.urakka.muut-kustannukset :as tiedot-muut-kustannukset]
+            [harja.tiedot.urakka.muut-kustannukset :as tiedot]
             ;; [harja.tiedot.urakka.toteumat.tiemerkinta-muut-tyot :refer [tallenna-toteuma hae-toteuma]]
             [harja.ui.valinnat :as valinnat]
             [cljs-time.core :as t])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defonce kustannukset-atom (atom {}))
-
 ;; Ylläpitokohteiden sarakkeiden leveydet
-(def kustannus-nimi-leveys 5)
-(def kustannus-summa-leveys 3)
+(def kustannus-selite-leveys 5)
+(def kustannus-hinta-leveys 3)
+(def kustannus-pvm-leveys 3)
 
 ;; muokkaus yllapitokohteet-viewin pohjalla wip
 
 (def grid-opts {:otsikko "Muut kustannukset"
-                :tyhja (if (nil? @kustannukset-atom) [ajax-loader "Haetaan kustannuksia..."] "Ei kustannuksia")
+
                 :muutos (fn [grid]
                           #(log "muut-kustannukset: muutos kutsuttu"))
                 :voi-lisata? true
@@ -31,20 +30,33 @@
                 (fn [_] "Kohteeseen liittymättömästä sanktiosta johtuvaa kustannusta ei voi poistaa.")})
 
 (def grid-skeema
-  (into [] (concat  [{:otsikko "Kustannus" :nimi :kustannus-nimi
-                      :tyyppi :string :leveys kustannus-nimi-leveys
+  (into [] (concat  [{:otsikko "Selite" :nimi :selite
+                      :tyyppi :string :leveys kustannus-selite-leveys
                       :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
                      {:otsikko "Hinta" :nimi :hinta
-                      :tyyppi :numero :leveys kustannus-summa-leveys}]
+                      :tyyppi :numero :leveys kustannus-hinta-leveys}
+                     {:otsikko "Pvm" :nimi :pvm
+                      :tyyppi :pvm :leveys kustannus-pvm-leveys}]
+
                     [])))
 
 (defn muut-kustannukset [urakka]
   (komp/luo
    (fn [urakka]
-     (tiedot-muut-kustannukset/lataa-lomakedata! 5 8  #inst "2011-11-11T11:11:11" #inst "2019-11-11T11:11:11")
+     ;; (tiedot/lataa-lomakedata! 5 8  #inst "2011-11-11T11:11:11" #inst "2019-11-11T11:11:11")
+     (log "mk komponentti: tiedot" (pr-str @tiedot/grid-tiedot))
      [:div.muut-kustannukset
-      [grid/grid (assoc grid-opts :tallenna #(tiedot-muut-kustannukset/tallenna-lomake urakka tiedot-muut-kustannukset/lomakedata %))
+      [grid/grid (assoc grid-opts
+                        :tallenna #(tiedot/tallenna-lomake urakka tiedot/muiden-kustannusten-tiedot %)
+                        :tyhja (if false ;; (nil? @tiedot/muiden-kustannusten-tiedot)
+                                 (do
+                                   (log "tyhja->ajax-loader")
+                                   [ajax-loader "Haetaan kustannuksia..."])
+                                 (do
+                                   (log "tyhja->oikeasti tyhja")
+                                   "Ei kustannuksia"))
+                        )
        grid-skeema
-                                        ; (tiedot-muut-kustannukset/grid-tiedot)
-       @tiedot-muut-kustannukset/lomakedata
+                                        ; (tiedot/grid-tiedot)
+       @tiedot/grid-tiedot
        ]])))

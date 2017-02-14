@@ -3,26 +3,45 @@
     [reagent.core :refer [atom] :as r]
     [harja.loki :refer [log tarkkaile!]]
     [harja.tiedot.urakka :as tiedot-urakka]
+    [harja.tiedot.navigaatio :as nav]
+
     [cljs.core.async :refer [<!]]
     [harja.asiakas.kommunikaatio :as k])
   (:require-macros [reagent.ratom :refer [reaction]]
+                   [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
 
-(defonce lomakedata (atom nil))
 
-#_(defn grid-tiedot []
-  [{:id "foo" :alkupvm #inst "2015-12-12T12:12:12" :kustannus-nimi "ruoka" :selite "naksuja" :muokattava true :hinta 42.50 }
-   {:id "zorp" :alkupvm #inst "2014-12-12T12:12:12" :kustannus-nimi "ffff" :selite "uuu" :muokattava true :hinta 44.50 }
-   {:id "bar" :alkupvm #inst "2011-12-12T12:12:12" :kustannus-nimi "juoma" :selite "(*)" :muokattava false :hinta 234.00}])
+#_(def muut-yllapito-toteumat-lomakkeelle
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
+               [sopimus-id _] @tiedot-urakka/valittu-sopimusnumero]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and urakka-id sopimus-id)
+                (hae-urakan-yllapitokohteet-lomakkeelle urakka-id sopimus-id))))
 
-(defn lataa-lomakedata! [urakka-id sopimus-id alkupvm loppupvm]
+(defonce muiden-kustannusten-tiedot (atom nil))
+
+(defn grid-tiedot* [mk-tiedot]
+  (for [[i kt] (map-indexed vector mk-tiedot)]
+    (do  (log "grid-tiedot ->" (pr-str (assoc kt :id (str i) :muokattava true) ))
+         (assoc kt :id (str i) :muokattava true)) ))
+
+(def grid-tiedot
+  (reaction (grid-tiedot* @muiden-kustannusten-tiedot)))
+
+(defn hae-muiden-kustannusten-tiedot! [urakka-id sopimus-id alkupvm loppupvm]
+  (do (log "hae-muiden-kustannusten-tiedot! post")
+      (k/post! :hae-yllapito-toteumat {:urakka urakka-id :sopimus sopimus-id :alkupvm alkupvm :loppupvm loppupvm})))
+
+#_(defn hae-muiden-kustannusten-tiedot! [urakka-id sopimus-id alkupvm loppupvm]
   (go
-    (log "lataa-lomakedata! enter")
+    (log "hae-muiden-kustannusten-tiedot! enter")
     (let [vastaus (<!
-                   (do  (log "lataa-lomakedata! post")
-                        (k/post! :hae-yllapito-toteuma {:urakka urakka-id :sopimus sopimus-id :alkupvm alkupvm :loppupvm loppupvm})))]
-         (log "lataa-lomakedata ->" (pr-str vastaus)))))
+                   (do  (log "hae-muiden-kustannusten-tiedot! post")
+                        (k/post! :hae-yllapito-toteumat {:urakka urakka-id :sopimus sopimus-id :alkupvm alkupvm :loppupvm loppupvm})))]
+      (log "hae-muiden-kustannusten-tiedot ->" (pr-str vastaus))
+      (swap! muiden-kustannusten-tiedot vastaus))))
 
 (defn tallenna-toteuma! [toteuman-tiedot]
   (k/post! :tallenna-yllapito-toteuma toteuman-tiedot))
@@ -37,4 +56,4 @@
     (go
       (mapv #(-> % toteuman-avaimet-gridista (assoc :urakka (:id urakka) :sopimus sopimus-id) dump tallenna-toteuma!)
             grid-data)
-      (println "tallennettiin lomakedataan" grid-data))))
+      (println "tallennettiin" grid-data))))

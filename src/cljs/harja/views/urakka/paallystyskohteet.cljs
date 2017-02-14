@@ -1,6 +1,7 @@
 (ns harja.views.urakka.paallystyskohteet
   "Päällystyskohteet"
   (:require [reagent.core :refer [atom] :as r]
+            [cljs.core.async :refer [<!]]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
             [harja.loki :refer [log logt tarkkaile!]]
@@ -20,6 +21,7 @@
             [harja.ui.valinnat :as valinnat]
             [cljs-time.core :as t]
             [harja.tiedot.hallinta.indeksit :as indeksit]
+            [harja.tiedot.urakka.muut-kustannukset :as muut-kustannukset-tiedot]
             [harja.ui.yleiset :as yleiset])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -56,7 +58,12 @@
 (defn paallystyskohteet [ur]
   (let [hae-tietoja (fn [urakan-tiedot]
                       (go (if-let [ch (indeksit/hae-paallystysurakan-indeksitiedot (:id urakan-tiedot))]
-                            (reset! urakka/paallystysurakan-indeksitiedot (<! ch)))))]
+                            (reset! urakka/paallystysurakan-indeksitiedot (<! ch)))
+                          (let [ch (muut-kustannukset-tiedot/hae-muiden-kustannusten-tiedot!
+                                    (:id urakan-tiedot) (first @u/valittu-sopimusnumero) (:alkupvm ur) (:loppupvm ur))
+                                vastaus (and ch (<! ch))]
+                            (log "vastaus:" (pr-str vastaus))
+                            (reset! muut-kustannukset-tiedot/muiden-kustannusten-tiedot vastaus))))]
     (hae-tietoja ur)
     (komp/kun-muuttuu (hae-tietoja ur))
     (komp/luo
