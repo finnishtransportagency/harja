@@ -151,7 +151,7 @@
               (log/warn "YHA:n kohdeosalle " (pr-str uusi-kohdeosa) " ei voitu muodostaa geometriaa"))))))
     (merkitse-urakan-kohdeluettelo-paivitetyksi c urakka-id)
     (log/debug "YHA-kohteet tallennettu, päivitetään urakan geometria")
-    (yy/paivita-yllapitourakan-geometriat c urakka-id)
+    (yy/paivita-yllapitourakan-geometria c urakka-id)
     (log/debug "Geometria päivitetty.")
     (hae-urakan-yha-tiedot c urakka-id)))
 
