@@ -15,12 +15,12 @@
             [harja.ui.kommentit :as kommentit]
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta]
-            [harja.tiedot.kartta :as kartta-tiedot]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.modal :as modal]
             [harja.ui.yleiset :as yleiset]
-            [harja.ui.liitteet :as liitteet])
+            [harja.ui.liitteet :as liitteet]
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
@@ -296,8 +296,8 @@
             :koko [80 :auto]
             :palstoja 1
             :pakollinen? true
-            :validoi [[:ei-tyhja "Anna kuvaus"]]
-            :pituus-max 2000}
+            :pituus-max 2000
+            :validoi [[:ei-tyhja "Anna kuvaus"]]}
            {:otsikko "Aiheutuneet seuraukset"
             :nimi :seuraukset
             :tyyppi :text
