@@ -4,17 +4,20 @@
             #?@(:clj [[clojure.future :refer :all]]
                 :cljs [[harja.loki :refer [log]]])))
 
-(s/def ::numero int?)
-(s/def ::alkuosa int?)
-(s/def ::alkuetaisyys int?)
-(s/def ::loppuosa int?)
-(s/def ::loppuetaisyys int?)
+(s/def ::numero pos-int?)
+(s/def ::alkuosa pos-int?)
+(s/def ::alkuetaisyys nat-int?)
+(s/def ::loppuosa pos-int?)
+(s/def ::loppuetaisyys nat-int?)
 
+;; Halutaan tierekisteriosoite, joka voi olla pistemäinen tai sisältää myös
+;; loppuosan ja loppuetäisyyden.
+;; Tämä voitaisiin s/or tehdä ja tarkistaa että pistemäisessä EI ole loppuosa/-etäisyys
+;; kenttiä, mutta se johtaa epäselviin validointiongelmiin.
 (s/def ::tierekisteriosoite
-  ;; FIXME: Onko erikseen "vain alku" -tierekisteriosoite)?
   (s/keys :req-un [::numero
-                   ::alkuosa ::alkuetaisyys
-                   ::loppuosa ::loppuetaisyys]))
+                   ::alkuosa ::alkuetaisyys]
+          :opt-un [::loppuosa ::loppuetaisyys]))
 
 (defn samalla-tiella? [tie1 tie2]
   (= (:tr-numero tie1) (:tr-numero tie2)))
