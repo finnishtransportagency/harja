@@ -15,7 +15,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.napit :as napit]
             [harja.ui.viesti :as viesti]
-            [harja.tiedot.indeksit :as i]
+            [harja.tiedot.hallinta.indeksit :as i]
             [harja.tiedot.navigaatio :as nav]
             [harja.views.kartta :as kartta]
             [harja.fmt :as fmt]
@@ -128,7 +128,8 @@
     (fn []
       (let [{:keys [pohjavesialueet]} @suolasakot-ja-lampotilat
             tiedot (:suolasakko @syotettavat-tiedot)
-            lampotilat @lampotilat]
+            lampotilat @lampotilat
+            valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit :hoito))] ;suolasakot hoitospesifistä
         [:span.suolasakkolomake
          [:h5 "Urakan suolasakkotiedot hoitokautta kohden"]
          [lomake {:muokkaa! (fn [uusi]
@@ -178,7 +179,7 @@
               :valinta-nayta #(if (not saa-muokata?)
                                 ""
                                 (if (nil? %) "Ei indeksiä" (str %)))
-              :valinnat (conj @i/indeksien-nimet nil)
+              :valinnat (conj valittavat-indeksit nil)
 
               :palstoja 1})
 

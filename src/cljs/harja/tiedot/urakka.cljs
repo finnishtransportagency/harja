@@ -440,3 +440,5 @@
                   (= :paikkaus urakkatyyppi)
                   (= :tiemerkinta urakkatyyppi)
                   (= :valaistus urakkatyyppi)))))
+
+(def paallystysurakan-indeksitiedot (atom nil))
