@@ -46,7 +46,7 @@
   (filterv #(or
               (= valittu-urakan-vuosi :kaikki)
               (and (some? (:takaraja %))
-                   (= (pvm/vuosi (:takaraja %)) valitavoitteet)))
+                   (= (pvm/vuosi (:takaraja %)) valittu-urakan-vuosi)))
            valitavoitteet))
 
 (defn urakan-omat-valitavoitteet
