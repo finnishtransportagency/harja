@@ -771,9 +771,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
           [:div.panel.panel-default.livi-grid {:id (:id opts)
                                                :class (clojure.string/join " " luokat)}
            (muokkauspaneeli true)
-           (log "MUOKKAUKSESSA GRIDIT: " (pr-str @muokkauksessa-olevat-gridit))
-           (log "TÄMÄ KOMP ID" (pr-str komponentti-id))
-           (log "MUUTA MUOKATAAN?" (pr-str muuta-gridia-muokataan?))
            [:div.panel-body
             (when @kiinnita-otsikkorivi?
               ^{:key "kiinnitettyotsikko"}

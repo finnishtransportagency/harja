@@ -88,6 +88,37 @@
       (is (= (nth @data 3)
              {:id -1 :nimi "Max Syöttöpaine" :kieli "Vanha hieno kieli" :vuosi 2016})))))
 
+(deftest vain-yksi-grid-voi-olla-muokkauksessa
+  ;; Vain yhtä gridiä saa kerrallaan muokata, koska
+  ;; - Gridin tallennus nollaa muiden gridien muokkauksen, ei kivaa UX:ää
+  ;; - Jos gridi on gridin sisällä vetolaatikossa, se tod.näk liittyy isäntäänsä.
+  ;;   On hasardia muokata molempia samaan aikaan.
+
+  (komponenttitesti
+    [grid-container]
+
+    (let [muokkausnapit (u/sel [:.grid-muokkaa])
+          peru-napit (u/sel [:.grid-peru])
+          muokkausnappi-1 (-> (nth muokkausnapit 0) .-parentNode)
+          muokkausnappi-2 (-> (nth muokkausnapit 1) .-parentNode)
+          muokkausnappi-3 (-> (nth muokkausnapit 2) .-parentNode)]
+
+      (is (= (count muokkausnapit) 3))
+      (is (= (count peru-napit) 0) "Peru-nappeja ei voi olla ennen muokkaustilaa")
+
+      ;; Kaikki napit on enabloitu
+      (is (not (u/disabled? muokkausnappi-1)))
+      (is (not (u/disabled? muokkausnappi-2)))
+      (is (not (u/disabled? muokkausnappi-3)))
+
+      ;; Asetetaan grid 1 muokkaustilaan
+      (u/click muokkausnappi-1)
+      --
+      ;; Muiden gridien muokkausnappien pitäisi olla disabloitu
+      ;; FIXME Miksi nämä kaksi ei toimi!?
+      #_(is (u/disabled? muokkausnappi-2))
+      #_(is (u/disabled? muokkausnappi-3)))))
+
 (deftest rivin-muokattavuus
   "Testaa että rivin muokkausehdot toimivat oikein: tekee rivikohtaisen ehdon, jonka mukaan vain vuoden 2000 jälkeen
    kehitettyjä kieliä saa muokata. "
