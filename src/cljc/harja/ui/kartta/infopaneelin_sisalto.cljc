@@ -99,6 +99,7 @@
                 :tiedoitus "Tiedotus"
                 (string/capitalize (name (:ilmoitustyyppi ilmoitus)))))
    :tiedot [{:otsikko "Id" :tyyppi :string :nimi :ilmoitusid}
+            {:otsikko "Tunniste" :tyyppi :string :nimi :tunniste}
             {:otsikko "Ilmoitettu" :tyyppi :pvm-aika :nimi :ilmoitettu}
             {:otsikko "Otsikko" :tyyppi :string :nimi :otsikko}
             {:otsikko "Paikan kuvaus" :tyyppi :string :nimi :paikankuvaus}

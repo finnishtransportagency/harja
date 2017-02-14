@@ -3,6 +3,7 @@
     {
       "ilmoitus": {
         "ilmoitusid": 3213123,
+        "tunniste": "UV-1509-1a",
         "ilmoitettu": "2015-09-29T14:49:45",
         "ilmoitustyyppi": "toimenpidepyynto",
         "yhteydenottopyynto": false,
