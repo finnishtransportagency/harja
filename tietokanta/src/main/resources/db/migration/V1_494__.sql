@@ -1,6 +1,6 @@
 -- Tee kuittaustyypeistä teksti enumin sijaan
 
-DROP TRIGGER tg_aseta_ilmoituksen_tila
+DROP TRIGGER IF EXISTS tg_aseta_ilmoituksen_tila
 ON ilmoitustoimenpide;
 
 DROP FUNCTION IF EXISTS aseta_ilmoituksen_tila();
