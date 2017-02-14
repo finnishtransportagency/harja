@@ -23,6 +23,10 @@
                 "type": "integer",
                 "required": true
               },
+              "tunniste": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/tunniste",
+                "type": "string"
+              },
               "ilmoitettu": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/ilmoitettu",
                 "type": "string",
