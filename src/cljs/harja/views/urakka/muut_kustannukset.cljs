@@ -7,7 +7,8 @@
             [harja.tiedot.urakka.muut-kustannukset :as tiedot]
             ;; [harja.tiedot.urakka.toteumat.tiemerkinta-muut-tyot :refer [tallenna-toteuma hae-toteuma]]
             [harja.ui.valinnat :as valinnat]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [harja.pvm :as pvm])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -32,7 +33,7 @@
                       :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
                      {:otsikko "Hinta" :nimi :hinta
                       :tyyppi :numero :leveys kustannus-hinta-leveys}
-                     {:otsikko "Pvm" :nimi :pvm
+                     {:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm
                       :tyyppi :pvm :leveys kustannus-pvm-leveys}]
 
                     [])))
