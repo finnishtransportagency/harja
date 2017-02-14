@@ -236,7 +236,8 @@
                         ilmoitus-xf
                         (q/hae-ilmoitus db {:id id}))
                   {:kuittaus :kuittaukset}))]
-    (when (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset (:urakka tulos) user) tulos)))
+    (oikeudet/vaadi-lukuoikeus oikeudet/ilmoitukset-ilmoitukset user (:urakka tulos))
+    tulos))
 
 (defn tallenna-ilmoitustoimenpide [db tloik _
                                    {:keys [ilmoituksen-id
@@ -367,7 +368,6 @@
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user urakka-id))))
 
 (defn tallenna-ilmoitustoimenpiteet [db tloik user ilmoitustoimenpiteet]
-  (tarkista-oikeudet db user ilmoitustoimenpiteet)
   (vec
     (for [ilmoitustoimenpide ilmoitustoimenpiteet]
       (tallenna-ilmoitustoimenpide db tloik user ilmoitustoimenpide))))
@@ -386,6 +386,7 @@
                         (hae-ilmoitus db user tiedot)))
     (julkaise-palvelu http :tallenna-ilmoitustoimenpiteet
                       (fn [user ilmoitustoimenpiteet]
+                        (tarkista-oikeudet db user ilmoitustoimenpiteet)
                         (async
                          (tallenna-ilmoitustoimenpiteet db tloik user ilmoitustoimenpiteet))))
     (julkaise-palvelu http :hae-ilmoituksia-idlla
