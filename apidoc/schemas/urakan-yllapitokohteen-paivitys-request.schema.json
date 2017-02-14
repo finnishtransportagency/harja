@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "yllapitokohde": {
+      "id": "urn:harja/yllapitokohde",
+      "type": "object",
+      "required": true,
+      "additionalProperties": false,
+      "properties": {
+        "sijainti": {
+          "id": "urn:harja/yllapitokohde/tiesijainti",
+          "type": "object",
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/tieosoitevali.schema.json"
+        },
+        "alikohteet": {
+          "id": "urn:harja/yllapitokohde/alikohteet",
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "id": "urn:harja/yllapitokohde/alikohteet/0",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "alikohde": {
+                "id": "urn:harja/yllapitokohde/alikohteet/0/alikohde",
+                "type": "object",
+                "additionalProperties": false,
+                "required": true,
+                "properties": {
+                  "tunniste": {
+                    "id": "urn:harja/yllapitokohde/tunniste",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+                    "required": true
+                  },
+                  "tunnus": {
+                    "id": "urn:harja/yllapitokohde/kohdenumero",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "nimi": {
+                    "id": "urn:harja/yllapitokohde/nimi",
+                    "required": false,
+                    "type": "string",
+                    "maxLength": 128
+                  },
+                  "sijainti": {
+                    "id": "urn:harja/yllapitokohde/tiesijainti",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/tieosoitevali.schema.json"
+                  },
+                  "toimenpide": {
+                    "id": "urn:harja/yllapitokohde/nimi",
+                    "required": false,
+                    "type": "string",
+                    "maxLength": 128
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

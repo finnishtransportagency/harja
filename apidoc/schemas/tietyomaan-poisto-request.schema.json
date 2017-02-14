@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "tietyomaa": {
+      "id": "urn:harja/tietyomaa",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "id": "urn:harja/tietyomaa/id",
+          "type": "integer",
+          "required": true
+        },
+        "aika": {
+          "id": "urn:harja/tietyomaa/aika",
+          "type": "string",
+          "format": "date-time",
+          "required": true
+        }
+      }
+    }
+  }
+}

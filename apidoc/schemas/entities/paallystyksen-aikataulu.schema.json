@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "kohde-aloitettu": {
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/kohde-aloitettu",
+      "type": "string",
+      "format": "date-time"
+    },
+    "paallystys-aloitettu": {
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/paallystys-aloitettu",
+      "type": "string",
+      "format": "date-time"
+    },
+    "paallystys-valmis": {
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/paallystys-valmis",
+      "type": "string",
+      "format": "date-time"
+    },
+    "valmis-tiemerkintaan": {
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/valmis-tiemerkintaan",
+      "type": "string",
+      "format": "date-time"
+    },
+    "tiemerkinta-takaraja": {
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/aikataulu-tiemerkinta-takaraja",
+      "type": "string",
+      "format": "date-time"
+    },
+    "kohde-valmis": {
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/kohde-valmis",
+      "type": "string",
+      "format": "date-time"
+    },
+    "paallystysilmoitus": {
+      "id": "urn:harja/paallystysilmoitusaikataulu",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/paallystysilmoitus_aikataulu.schema.json"
+    }
+  }
+}

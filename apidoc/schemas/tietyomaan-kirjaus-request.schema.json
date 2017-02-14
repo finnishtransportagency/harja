@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "tietyomaa": {
+      "id": "urn:harja/tietyomaa",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "id": "urn:harja/tietyomaa/id",
+          "type": "integer",
+          "required": true
+        },
+        "alkuaidan-sijainti": {
+          "id": "urn:harja/tietyomaa/alkuaidan-sijainti",
+          "type": "object",
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+          "required": true
+        },
+        "loppuaidan-sijainti": {
+          "id": "urn:harja/tietyomaa/loppuaidan-sijainti",
+          "type": "object",
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+          "required": true
+        },
+        "aika": {
+          "id": "urn:harja/tietyomaa/aika",
+          "type": "string",
+          "format": "date-time",
+          "required": true
+        },
+        "ajoradat": {
+          "id": "urn:harja/tietyomaa/ajoradat",
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "id": "urn:harja/tietyomaa/ajoradat/0",
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "kaistat": {
+          "id": "urn:harja/tietyomaa/kaistat",
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "id": "urn:harja/tietyomaa/kaistat/0",
+            "enum": [
+              1,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29
+            ]
+          }
+        },
+        "nopeusrajoitus": {
+          "id": "urn:harja/tietyomaa/nopeusrajoitus",
+          "type": "integer",
+          "required": false
+        }
+      }
+    }
+  }
+}
