@@ -66,6 +66,11 @@
                                       "- Valitse kuittaustyyppi -")
                     :vihje (when (= :vaara-urakka (:tyyppi kuittaus))
                              "Oikean urakan tiedot pyydetään välitettäväksi vapaatekstikentässä.")}
+                   {:nimi :vakiofraasi
+                    :otsikko "Vakiofraasi"
+                    :tyyppi :haku
+                    :lahde fraasihaku
+                    :hae-kun-yli-n-merkkia 0}
                    {:nimi :vapaateksti
                     :otsikko "Vapaateksti"
                     :tyyppi :text
