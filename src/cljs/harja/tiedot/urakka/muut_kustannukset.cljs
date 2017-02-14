@@ -11,15 +11,6 @@
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
-
-
-#_(def muut-yllapito-toteumat-lomakkeelle
-  (reaction<! [urakka-id (:id @nav/valittu-urakka)
-               [sopimus-id _] @tiedot-urakka/valittu-sopimusnumero]
-              {:nil-kun-haku-kaynnissa? true}
-              (when (and urakka-id sopimus-id)
-                (hae-urakan-yllapitokohteet-lomakkeelle urakka-id sopimus-id))))
-
 (defonce muiden-kustannusten-tiedot (atom nil))
 
 (defn grid-tiedot* [mk-tiedot]
@@ -34,22 +25,12 @@
   (do (log "hae-muiden-kustannusten-tiedot! post")
       (k/post! :hae-yllapito-toteumat {:urakka urakka-id :sopimus sopimus-id :alkupvm alkupvm :loppupvm loppupvm})))
 
-#_(defn hae-muiden-kustannusten-tiedot! [urakka-id sopimus-id alkupvm loppupvm]
-  (go
-    (log "hae-muiden-kustannusten-tiedot! enter")
-    (let [vastaus (<!
-                   (do  (log "hae-muiden-kustannusten-tiedot! post")
-                        (k/post! :hae-yllapito-toteumat {:urakka urakka-id :sopimus sopimus-id :alkupvm alkupvm :loppupvm loppupvm})))]
-      (log "hae-muiden-kustannusten-tiedot ->" (pr-str vastaus))
-      (swap! muiden-kustannusten-tiedot vastaus))))
-
 (defn tallenna-toteuma! [toteuman-tiedot]
   (k/post! :tallenna-yllapito-toteuma toteuman-tiedot))
 
 (defn tallenna-lomake [urakka data-atomi grid-data] ;; XXX siirrä tämä tiedot-namespaceen
   ;; kustannukset tallennetaan ilman laskentakohdetta yllapito_toteuma-tauluun,
   ;; -> backin palvelut.yllapito-toteumat/tallenna-yllapito-toteuma
-
   (let [toteuman-avaimet-gridista #(select-keys % [:toteuma :alkupvm :loppupvm :selite :pvm :hinta])
         [sopimus-id sopimus-nimi] @tiedot-urakka/valittu-sopimusnumero
         dump #(do (log "talenna-toteuma saa:" (pr-str %)) %)]

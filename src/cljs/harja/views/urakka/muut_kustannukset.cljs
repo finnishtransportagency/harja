@@ -16,10 +16,7 @@
 (def kustannus-hinta-leveys 3)
 (def kustannus-pvm-leveys 3)
 
-;; muokkaus yllapitokohteet-viewin pohjalla wip
-
 (def grid-opts {:otsikko "Muut kustannukset"
-
                 :muutos (fn [grid]
                           #(log "muut-kustannukset: muutos kutsuttu"))
                 :voi-lisata? true
@@ -43,20 +40,13 @@
 (defn muut-kustannukset [urakka]
   (komp/luo
    (fn [urakka]
-     ;; (tiedot/lataa-lomakedata! 5 8  #inst "2011-11-11T11:11:11" #inst "2019-11-11T11:11:11")
      (log "mk komponentti: tiedot" (pr-str @tiedot/grid-tiedot))
      [:div.muut-kustannukset
       [grid/grid (assoc grid-opts
                         :tallenna #(tiedot/tallenna-lomake urakka tiedot/muiden-kustannusten-tiedot %)
-                        :tyhja (if false ;; (nil? @tiedot/muiden-kustannusten-tiedot)
-                                 (do
-                                   (log "tyhja->ajax-loader")
-                                   [ajax-loader "Haetaan kustannuksia..."])
-                                 (do
-                                   (log "tyhja->oikeasti tyhja")
-                                   "Ei kustannuksia"))
-                        )
+                        :tyhja (if (nil? @tiedot/muiden-kustannusten-tiedot)
+                                 [ajax-loader "Haetaan kustannuksia..."]
+                                 "Ei kustannuksia"))
        grid-skeema
-                                        ; (tiedot/grid-tiedot)
        @tiedot/grid-tiedot
        ]])))
