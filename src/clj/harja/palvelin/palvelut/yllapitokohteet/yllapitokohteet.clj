@@ -393,7 +393,7 @@
         (if (id-olemassa? (:id osa))
           (paivita-yllapitokohdeosa c user urakka-id osa)
           (luo-uusi-yllapitokohdeosa c user yllapitokohde-id osa)))
-      (yha/paivita-yllapitourakan-geometriat c urakka-id)
+      (yy/paivita-yllapitourakan-geometriat c urakka-id)
       (let [yllapitokohdeosat (hae-osat)]
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
         (sort-by tr/tiekohteiden-jarjestys yllapitokohdeosat)))))

@@ -91,3 +91,7 @@
                                    (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))
                                 yllapitokohteet)]
       yllapitokohteet)))
+
+(defn paivita-yllapitourakan-geometriat [db urakka-id]
+  (log/info "Päivitetään urakan " urakka-id " geometriat.")
+  (yha-q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id}))
