@@ -22,8 +22,7 @@
                           #(log "muut-kustannukset: muutos kutsuttu"))
                 :voi-lisata? true
                 :voi-muokata-rivia? :muokattava
-                :esta-poistaminen? (fn [rivi] (or (not (nil? (:paallystysilmoitus-id rivi))) ;; <- tahan tsekkaus onko kohdistamaton sanktio vai suoraan syötetty?
-                                                  (not (nil? (:paikkausilmoitus-id rivi)))))
+                :esta-poistaminen? (complement :muokattava)
                 :esta-poistaminen-tooltip
                 (fn [_] "Kohteeseen liittymättömästä sanktiosta johtuvaa kustannusta ei voi poistaa.")})
 
