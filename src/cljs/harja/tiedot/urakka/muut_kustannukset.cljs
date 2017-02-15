@@ -8,7 +8,8 @@
 
    [cljs.core.async :refer [<!]]
    [harja.asiakas.kommunikaatio :as k]
-   [harja.pvm :as pvm])
+   [harja.pvm :as pvm]
+   [clojure.string :as s])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -50,11 +51,20 @@
       (reset! muiden-kustannusten-tiedot vastaus))))
 
 
-(defn tallenna-lomake [urakka data-atomi grid-data]
+(defn tallenna-lomake! [urakka data-atomi grid-data]
   (let [toteuman-avaimet-gridista #(select-keys % [:id :toteuma :alkupvm :loppupvm :selite :pvm :hinta])
         [sopimus-id sopimus-nimi] @tiedot-urakka/valittu-sopimusnumero
+        palauta-ypt-id #(-> % (s/replace "ypt-" "") js/parseInt)
         dump #(do (log "tallenna-toteuma saa:" (pr-str %)) %)]
     (go
-      (mapv #(-> % toteuman-avaimet-gridista (assoc :urakka (:id urakka) :sopimus sopimus-id) dump tallenna-toteuma!)
+      (mapv #(-> %
+                 toteuman-avaimet-gridista
+                 (assoc :urakka (:id urakka)
+                        :sopimus sopimus-id)
+                 (update :id palauta-ypt-id)
+                 dump
+                 tallenna-toteuma!)
             grid-data)
-      (println "tallennettiin" grid-data))))
+      (println "tallennettiin" grid-data)))
+
+  (lataa-tiedot! urakka))
