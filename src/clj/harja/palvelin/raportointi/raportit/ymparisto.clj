@@ -123,8 +123,11 @@
                                                                            :yksikko (:yksikko materiaali)}]))
                                    {} kk-rivit)
                yhteensa-arvo #(reduce + 0 (remove nil? (map (comp :arvo second) %)))
-               yhteensa-kentta #(do [:arvo-ja-yksikko {:arvo (yhteensa-arvo %)
-                                                       :yksikko (:yksikko materiaali)}])]
+               yhteensa-kentta (fn [arvot nayta-aina?]
+                                 (let [yht (yhteensa-arvo arvot)]
+                                   (when (or (> yht 0) nayta-aina?)
+                                     [:arvo-ja-yksikko {:arvo yht
+                                                        :yksikko (:yksikko materiaali)}])))]
            ;(log/info "KK-ARVOT: " kk-arvot "; KUUKAUDET: " kuukaudet)
            (concat
             ;; Normaali materiaalikohtainen rivi
@@ -143,7 +146,7 @@
                             (map kk-arvot kuukaudet)
 
                             ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
-                            [(yhteensa-kentta (vals kk-arvot))
+                            [(yhteensa-kentta (vals kk-arvot) false)
                              (when suunniteltu (/ (* 100.0 (yhteensa-arvo (vals kk-arvot))) suunniteltu))
                              suunniteltu]))}]
 
@@ -162,7 +165,7 @@
 
                             (map kk-arvot kuukaudet)
 
-                            [(yhteensa-kentta (vals kk-arvot))
+                            [(yhteensa-kentta (vals kk-arvot) false)
                              nil nil]))))
                  (sort-by first (group-by :luokka luokitellut))))))
 
