@@ -106,7 +106,7 @@ SELECT
     THEN ST_Simplify(sps.alue, 50)
   WHEN u.tyyppi = 'tekniset-laitteet' :: urakkatyyppi
     THEN ST_Simplify(tlu.alue, 50)
-  WHEN u.tyyppi = 'hoito' :: urakkatyyppi
+  WHEN (u.tyyppi = 'hoito' :: urakkatyyppi AND au.alue IS NOT NULL)
     THEN
       -- Luodaan yhtenäinen polygon alueurakan alueelle (multipolygonissa voi olla reikiä)
       ST_MakePolygon(ST_ExteriorRing((ST_Dump(au.alue)).geom))
