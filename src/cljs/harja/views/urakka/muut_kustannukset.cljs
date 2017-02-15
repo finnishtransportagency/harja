@@ -28,15 +28,13 @@
                 (fn [_] "Kohteeseen liittymättömästä sanktiosta johtuvaa kustannusta ei voi poistaa.")})
 
 (def grid-skeema
-  (into [] (concat  [{:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm
-                      :tyyppi :pvm :leveys kustannus-pvm-leveys}
-                     {:otsikko "Kustannuksen kuvaus" :nimi :selite
-                      :tyyppi :string :leveys kustannus-selite-leveys
-                      :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
-                     {:otsikko "Summa" :nimi :hinta
-                      :tyyppi :numero :leveys kustannus-hinta-leveys}]
-
-                    [])))
+  [{:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm
+    :tyyppi :pvm :leveys kustannus-pvm-leveys}
+   {:otsikko "Kustannuksen kuvaus" :nimi :selite
+    :tyyppi :string :leveys kustannus-selite-leveys
+    :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
+   {:otsikko "Summa" :nimi :hinta
+    :tyyppi :numero :leveys kustannus-hinta-leveys}])
 
 (defn muut-kustannukset [urakka]
   (komp/luo
