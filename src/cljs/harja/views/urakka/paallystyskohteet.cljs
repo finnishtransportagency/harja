@@ -66,9 +66,9 @@
                             (log "vastaus:" (pr-str vastaus))
                             (reset! muut-kustannukset-tiedot/muiden-kustannusten-tiedot vastaus))
                           (reset! muut-kustannukset-tiedot/kohdistamattomien-sanktioiden-tiedot
-                                  (filter #(-> % :yllapitokohde nil?))
-                                  (<! (tiedot-sanktiot/hae-urakan-sanktiot
-                                       (:id urakan-tiedot) [#inst "1970-01-01T00:00:00" #inst "2100-01-01T00:00:00"])))))]
+                                  (filter #(-> % :yllapitokohde :id nil?)
+                                          (<! (tiedot-sanktiot/hae-urakan-sanktiot
+                                               (:id urakan-tiedot) [#inst "1970-01-01T00:00:00" #inst "2100-01-01T00:00:00"]))))))]
     (hae-tietoja ur)
     (komp/kun-muuttuu (hae-tietoja ur))
     (komp/luo
