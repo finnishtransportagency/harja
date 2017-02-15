@@ -59,6 +59,12 @@
    [:fo:inline " "]
    [:fo:inline {:font-size (str (- taulukon-fonttikoko 2) taulukon-fonttikoko-yksikko)} (str "( " osuus "%)")]])
 
+(defmethod muodosta-pdf :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt]}]]
+  [:fo:inline
+   [:fo:inline (if fmt (fmt arvo) arvo)]
+   [:fo:inline " "]
+   [:fo:inline (str yksikko)]])
+
 (defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt]}]]
   [:fo:inline
    [:fo:inline {:color (or itsepaisesti-maaritelty-oma-vari (raportti-domain/virhetyylit tyyli) "black")}

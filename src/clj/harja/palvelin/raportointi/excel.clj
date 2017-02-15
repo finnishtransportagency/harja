@@ -82,6 +82,9 @@
 (defmethod muodosta-solu :arvo-ja-osuus [[_ {:keys [arvo osuus]}] solun-tyyli]
   [arvo solun-tyyli])
 
+(defmethod muodosta-solu :arvo-ja-yksikko [[_ {:keys [arvo yksikko]}] solun-tyyli]
+  [arvo solun-tyyli])
+
 (defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli]}] solun-tyyli]
   [arvo (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))])
 

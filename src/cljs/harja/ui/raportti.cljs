@@ -41,6 +41,12 @@
    [:span " "]
    [:span.osuus (str "(" osuus "%)")]])
 
+(defmethod muodosta-html :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt]}]]
+  [:span.arvo-ja-yksikko
+   [:span.arvo (if fmt (fmt arvo) arvo)]
+   [:span " "]
+   [:span.osuus (str yksikko)]])
+
 (defmethod muodosta-html :varillinen-teksti
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
   ;; ennaltamääriteltyjä tyylejä, mutta jos on erikoistapaus missä halutaan käyttää itsemääriteltyä väriä,
