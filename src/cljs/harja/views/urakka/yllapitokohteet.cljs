@@ -567,8 +567,7 @@
                    (if (and @yha/yha-kohteiden-paivittaminen-kaynnissa? (:yha-sidottu? optiot))
                      :ei-mahdollinen
                      (:tallenna optiot)))
-        osan-pituudet-teille (atom {20 {1 1000 2 2000 3 3000}
-                                    4 {4 4000 5 5000 6 6000}})
+        osan-pituudet-teille (atom nil)
         validoi-kohteen-osoite (fn [kentta arvo rivi]
                                  (validoi-kohteen-osoite @osan-pituudet-teille kentta arvo rivi))]
     (komp/luo
