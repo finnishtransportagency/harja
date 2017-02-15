@@ -5,9 +5,9 @@
             [cljs.core.async :refer [<! >! chan]]
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k])
-  (:require-macros [harja.atom :refer [reaction<!]]
-                   [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction]]
+                   [harja.atom :refer [reaction<!]]))
 
 (def nakymassa? (atom false))
 
@@ -15,13 +15,10 @@
   (log "Haetaan mailiosoitteet")
   (k/post! :yhteydenpito-vastaanottajat nil))
 
-(def vastaanottajat (atom nil))
-
-(run! (let [nakymassa? @nakymassa?]
-        (reset! vastaanottajat nil)
-        (when nakymassa?
-          (go (let [vastaus (<! (hae-yhteydenpidon-vastaanottajat))]
-                (reset! vastaanottajat vastaus))))))
+(def vastaanottajat (reaction<! [nakymassa? @nakymassa?]
+                                {:nil-kun-haku-kaynnissa? true}
+                                (when nakymassa?
+                                  (hae-yhteydenpidon-vastaanottajat))))
 
 (defn mailto-bcc-linkki [vastaanottajat]
   (str "mailto:?bcc="
