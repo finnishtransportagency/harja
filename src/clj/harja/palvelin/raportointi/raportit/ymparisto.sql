@@ -9,6 +9,7 @@ SELECT -- haetaan käytetyt määrät per materiaali ja kk
       JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
  WHERE (t.alkanut :: DATE BETWEEN :alkupvm AND :loppupvm)
    AND t.poistettu IS NOT TRUE
+   AND tm.poistettu IS NOT TRUE
    AND (:urakka::integer IS NULL OR u.id = :urakka)
    AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
    AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
