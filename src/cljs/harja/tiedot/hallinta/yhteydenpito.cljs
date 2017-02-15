@@ -1,7 +1,6 @@
 (ns harja.tiedot.hallinta.yhteydenpito
   (:require [reagent.core :refer [atom]]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.tiedot.navigaatio :as nav]
             [cljs.core.async :refer [<! >! chan]]
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as k])
