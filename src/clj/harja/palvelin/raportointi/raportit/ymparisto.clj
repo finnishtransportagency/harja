@@ -119,9 +119,12 @@
                materiaalirivit (remove #(nil? (:kk %)) rivit)
                kk-rivit (group-by :kk (filter (comp not :luokka) materiaalirivit))
                kk-arvot (reduce-kv (fn [kk-arvot kk rivit]
-                                     (assoc kk-arvot kk (reduce + 0 (keep :maara rivit))))
+                                     (assoc kk-arvot kk [:arvo-ja-yksikko {:arvo (reduce + 0 (keep :maara rivit))
+                                                                           :yksikko (:yksikko materiaali)}]))
                                    {} kk-rivit)
-               yhteensa (reduce + 0 (vals kk-arvot))]
+               yhteensa-arvo #(reduce + 0 (remove nil? (map (comp :arvo second) %)))
+               yhteensa-kentta #(do [:arvo-ja-yksikko {:arvo (yhteensa-arvo %)
+                                                       :yksikko (:yksikko materiaali)}])]
            ;(log/info "KK-ARVOT: " kk-arvot "; KUUKAUDET: " kuukaudet)
            (concat
             ;; Normaali materiaalikohtainen rivi
@@ -129,25 +132,26 @@
               :rivi (into []
                           (concat
 
-                           ;; Urakan nimi, jos urakoittain jaottelu päällä
-                           (when urakoittain?
-                             [(:nimi urakka)])
+                            ;; Urakan nimi, jos urakoittain jaottelu päällä
+                            (when urakoittain?
+                              [(:nimi urakka)])
 
-                           ;; Materiaalin nimi
-                           [(:nimi materiaali)]
+                            ;; Materiaalin nimi
+                            [(:nimi materiaali)]
 
-                           ;; Kuukausittaiset määrät
-                           (map kk-arvot kuukaudet)
+                            ;; Kuukausittaiset määrät
+                            (map kk-arvot kuukaudet)
 
-                           ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
-                           [yhteensa
-                            (when suunniteltu (/ (* 100.0 yhteensa) suunniteltu))
-                            suunniteltu]))}]
+                            ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
+                            [(yhteensa-kentta (vals kk-arvot))
+                             (when suunniteltu (/ (* 100.0 (yhteensa-arvo (vals kk-arvot))) suunniteltu))
+                             suunniteltu]))}]
 
             ;; Mahdolliset hoitoluokkakohtaiset rivit
             (map (fn [[luokka rivit]]
                    (let [kk-arvot (into {}
-                                        (map (juxt :kk :maara))
+                                        (map (juxt :kk #(do [:arvo-ja-yksikko {:arvo (:maara %)
+                                                                               :yksikko (:yksikko materiaali)}])))
                                         rivit)]
                      (into []
                            (concat
@@ -158,7 +162,7 @@
 
                             (map kk-arvot kuukaudet)
 
-                            [(reduce + (remove nil? (vals kk-arvot)))
+                            [(yhteensa-kentta (vals kk-arvot))
                              nil nil]))))
                  (sort-by first (group-by :luokka luokitellut))))))
 

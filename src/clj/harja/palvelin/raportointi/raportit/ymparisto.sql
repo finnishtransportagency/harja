@@ -5,6 +5,7 @@ SELECT
   umkh.talvihoitoluokka AS luokka,
   mk.id AS materiaali_id,
   mk.nimi AS materiaali_nimi,
+  mk.yksikko AS materiaali_yksikko,
   date_trunc('month', umkh.pvm) AS kk,
   umkh.maara AS maara
 FROM urakka u
@@ -21,6 +22,7 @@ SELECT
   NULL AS luokka,
   mk.id AS materiaali_id,
   mk.nimi AS materiaali_nimi,
+  mk.yksikko AS materiaali_yksikko,
   date_trunc('month', t.alkanut) AS kk,
   SUM(tm.maara)
 FROM toteuma t
@@ -33,12 +35,13 @@ WHERE (t.alkanut :: DATE BETWEEN :alkupvm AND :loppupvm)
       AND (:urakka::integer IS NULL OR u.id = :urakka)
       AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
       AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
-GROUP BY u.id, u.nimi, mk.id, mk.nimi, date_trunc('month', t.alkanut)
+GROUP BY u.id, u.nimi, mk.id, mk.nimi, date_trunc('month', t.alkanut), mk.yksikko
 UNION
 SELECT
   u.id as urakka_id, u.nimi as urakka_nimi,
   NULL as luokka,
   mk.id as materiaali_id, mk.nimi as materiaali_nimi,
+  mk.yksikko AS materiaali_yksikko,
   NULL as kk,
   SUM(s.maara) as maara
 FROM materiaalin_kaytto s
@@ -49,7 +52,7 @@ WHERE s.poistettu IS NOT TRUE
       AND (:urakka::integer IS NULL OR s.urakka = :urakka)
       AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
       AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
-GROUP BY u.id, u.nimi, mk.id, mk.nimi;
+GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.yksikko;
 
 -- name: hae-materiaalit
 -- Hakee materiaali id:t ja nimet
