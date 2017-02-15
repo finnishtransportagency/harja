@@ -4,6 +4,7 @@
             [cljs.core.async :refer [<! >! timeout chan]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.hallinta.valtakunnalliset-valitavoitteet :as tiedot]
+            [harja.tiedot.hallinta.yhteiset :as yhteiset]
             [harja.pvm :as pvm]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.grid :refer [grid]]
@@ -37,7 +38,7 @@
                                                      (-> valitavoite
                                                          (assoc :tyyppi :kertaluontoinen)
                                                          (assoc :urakkatyyppi
-                                                                (:arvo @tiedot/valittu-urakkatyyppi))))))))]
+                                                                (:arvo @yhteiset/valittu-urakkatyyppi))))))))]
                        (if (k/virhe? vastaus)
                          (viesti/nayta! "Välitavoitteiden tallentaminen epännistui"
                                         :warning viesti/viestin-nayttoaika-keskipitka)
@@ -49,7 +50,7 @@
                                                                  "Ei takarajaa")
      :tyyppi :pvm}]
    (sort-by :takaraja (filter #(= (:urakkatyyppi %)
-                                  (:arvo @tiedot/valittu-urakkatyyppi))
+                                  (:arvo @yhteiset/valittu-urakkatyyppi))
                               @kertaluontoiset-valitavoitteet-atom))])
 
 (defn toistuvat-valitavoitteet-grid
@@ -67,7 +68,7 @@
                                                      (-> valitavoite
                                                          (assoc :tyyppi :toistuva)
                                                          (assoc :urakkatyyppi
-                                                                (:arvo @tiedot/valittu-urakkatyyppi))))))))]
+                                                                (:arvo @yhteiset/valittu-urakkatyyppi))))))))]
                        (if (k/virhe? vastaus)
                          (viesti/nayta! "Välitavoitteiden tallentaminen epännistui"
                                         :warning viesti/viestin-nayttoaika-keskipitka)
@@ -80,14 +81,14 @@
      :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 12 "Anna kuukausi välillä 1 - 12"]]}]
    (sort-by (juxt :takaraja-toistokuukausi :takaraja-toistopaiva)
             (filter #(= (:urakkatyyppi %)
-                        (:arvo @tiedot/valittu-urakkatyyppi))
+                        (:arvo @yhteiset/valittu-urakkatyyppi))
                     @toistuvat-valitavoitteet-atom))])
 
 (defn- suodattimet []
   [valinnat/urakkatyyppi
-   tiedot/valittu-urakkatyyppi
+   yhteiset/valittu-urakkatyyppi
    nav/+urakkatyypit+
-   #(reset! tiedot/valittu-urakkatyyppi %)])
+   #(reset! yhteiset/valittu-urakkatyyppi %)])
 
 (defn valitavoitteet []
   (komp/luo
@@ -95,10 +96,10 @@
     (fn []
       (let [nayta-kertaluontoiset-valtakunnalliset?
             (some? (tiedot/valtakunnalliset-kertaluontoiset-valitavoitteet-kaytossa
-                                             (:arvo @tiedot/valittu-urakkatyyppi)))
+                                             (:arvo @yhteiset/valittu-urakkatyyppi)))
             nayta-toistuvat-valtakunnalliset?
             (some? (tiedot/valtakunnalliset-toistuvat-valitavoitteet-kaytossa
-                     (:arvo @tiedot/valittu-urakkatyyppi)))]
+                     (:arvo @yhteiset/valittu-urakkatyyppi)))]
 
         [:div
          [suodattimet]
@@ -106,13 +107,13 @@
            [kertaluontoiset-valitavoitteet-grid
             tiedot/valitavoitteet
             tiedot/kertaluontoiset-valitavoitteet
-            tiedot/valittu-urakkatyyppi])
+            yhteiset/valittu-urakkatyyppi])
          [:br]
          (when nayta-toistuvat-valtakunnalliset?
            [toistuvat-valitavoitteet-grid
             tiedot/valitavoitteet
             tiedot/toistuvat-valitavoitteet
-            tiedot/valittu-urakkatyyppi])
+            yhteiset/valittu-urakkatyyppi])
 
          (if (or nayta-toistuvat-valtakunnalliset?
                  nayta-toistuvat-valtakunnalliset?)

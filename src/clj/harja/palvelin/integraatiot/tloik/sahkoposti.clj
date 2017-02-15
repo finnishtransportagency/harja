@@ -21,7 +21,8 @@ kuittaustyypit [["Vastaanotettu" :vastaanotettu]
                 ["Aloitettu" :aloitettu]
                 ["Lopetettu" :lopetettu]
                 ["Muutettu" :muutettu]
-                ["Vastattu" :vastattu]])
+                ["Vastattu" :vastattu]
+                ["Väärä urakka" :vaara-urakka]])
 
 (def ^{:doc "Kuittaustyypin tunnistava regex pattern" :const true :private true}
 kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Lopetettu)\]")
@@ -45,7 +46,10 @@ kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Lopetettu)\]")
 goole-static-map-url-template
   "http://maps.googleapis.com/maps/api/staticmap?zoom=15&markers=color:red|%s,%s&size=400x300&key=%s")
 
-(defn- otsikko [{:keys [ilmoitus-id urakka-id ilmoitustyyppi] :as ilmoitus}]
+(defn- otsikko
+  "Luo sähköpostin otsikon. Otsikkorivin tulee olla täsmälleen tiettyä muotoa, koska
+   sitä käytetään sisäisesti viestiketjujen yhdistämiseen."
+  [{:keys [ilmoitus-id urakka-id ilmoitustyyppi] :as ilmoitus}]
   (str "#[" urakka-id "/" ilmoitus-id "] "
        (apurit/ilmoitustyypin-nimi (keyword ilmoitustyyppi))
        (when (ilm/virka-apupyynto? ilmoitus) " (VIRKA-APUPYYNTÖ)")))
@@ -73,11 +77,11 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
 
 (defn- viesti [vastausosoite otsikko ilmoitus google-static-maps-key]
   (html
-
     [:div
      [:table
       (html-tyokalut/taulukko
         [["Urakka" (:urakkanimi ilmoitus)]
+         ["Tunniste" (:tunniste ilmoitus)]
          ["Ilmoitettu" (:ilmoitettu ilmoitus)]
          ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
          ["Otsikko" (:otsikko ilmoitus)]
@@ -131,7 +135,8 @@ kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
                       :aloitettu "aloitus"
                       :lopetettu "lopetus"
                       :muutettu "muutos"
-                      :vastattu "vastaus"})
+                      :vastattu "vastaus"
+                      :vaara-urakka "vaara-urakka"})
 
 (defn- tallenna-ilmoitustoimenpide [jms-lahettaja db lahettaja {:keys [urakka-id ilmoitus-id kuittaustyyppi kommentti]}]
   (let [paivystaja (first (yhteyshenkilot/hae-urakan-paivystaja-sahkopostilla db urakka-id lahettaja))
