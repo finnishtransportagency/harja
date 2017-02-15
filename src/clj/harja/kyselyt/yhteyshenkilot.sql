@@ -351,13 +351,14 @@ DELETE FROM urakanvastuuhenkilo
 
 -- name: luo-urakan-vastuuhenkilo<!
 INSERT INTO urakanvastuuhenkilo
-       (urakka, rooli, nimi, puhelin, sahkoposti, kayttajatunnus, ensisijainen)
-VALUES (:urakka, :rooli, :nimi, :puhelin, :sahkoposti, :kayttajatunnus, :ensisijainen);
+       (urakka, rooli, etunimi, sukunimi, puhelin, sahkoposti, kayttajatunnus, ensisijainen)
+VALUES (:urakka, :rooli, :etunimi, :sukunimi, :puhelin, :sahkoposti, :kayttajatunnus, :ensisijainen);
 
 -- name: hae-urakan-vastuuhenkilot
 SELECT
   kayttajatunnus,
-  nimi,
+  etunimi,
+  sukunimi,
   sahkoposti,
   puhelin,
   rooli,

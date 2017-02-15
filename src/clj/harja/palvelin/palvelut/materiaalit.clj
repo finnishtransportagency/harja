@@ -15,6 +15,7 @@
             [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]))
 
 (defn hae-materiaalikoodit [db]
+  (oikeudet/ei-oikeustarkistusta!)
   (into []
         (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
         (q/hae-materiaalikoodit-ilman-talvisuolaa db)))
@@ -207,6 +208,7 @@
                                  :loppupvm loppupvm})))
 
 (defn hae-suolamateriaalit [db user]
+  (oikeudet/ei-oikeustarkistusta!)
   (into []
         (q/hae-suolamateriaalit db)))
 

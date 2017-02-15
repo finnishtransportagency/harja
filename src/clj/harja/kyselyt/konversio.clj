@@ -151,12 +151,14 @@
   (muunna rivi kentat double))
 
 (defn seq->array
-  "Muuntaa yksittäisen arvon Clojure-sekvenssistä JDBC arrayksi."
-  [seq]
-  (let [kasittele #(if (or (= Keyword (type %)) (= String (type %)))
+  "Muuntaa yksittäisen arvon Clojure-kokoelmasta JDBC arrayksi.
+   Itemien tulisi olla joko tekstiä, numeroita ja keywordeja, sillä
+   ne muunnetaan aina tekstiksi."
+  [collection]
+  (let [kasittele #(if (= Keyword (type %))
                     (name %)
                     (str %))]
-    (str "{" (clojure.string/join "," (map kasittele seq)) "}")))
+    (str "{" (clojure.string/join "," (map kasittele collection)) "}")))
 
 (defn string-vector->keyword-vector
   "Muuntaa mapin kentän vectorissa olevat stringit keywordeiksi."
