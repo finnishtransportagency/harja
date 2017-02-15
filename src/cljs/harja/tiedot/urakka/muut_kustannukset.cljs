@@ -29,11 +29,6 @@
 (def grid-tiedot
   (reaction (grid-tiedot* @muiden-kustannusten-tiedot @kohdistamattomien-sanktioiden-tiedot)))
 
-#_(defn hae-kohteettomat-sanktiot! [urakkaid alkupvm loppupvm]
-  (go (let [ch (tiedot-sanktiot/hae-urakan-sanktiot urakkaid [alkupvm loppupvm])
-            vastaus (<! ch)]
-        (log "sanktiot-vastaus:" (clj->js vastaus)))))
-
 (defn hae-muiden-kustannusten-tiedot! [urakka-id sopimus-id [alkupvm loppupvm]]
   (do (log "hae-muiden-kustannusten-tiedot! post")
       (k/post! :hae-yllapito-toteumat {:urakka urakka-id :sopimus sopimus-id :alkupvm alkupvm :loppupvm loppupvm})))
@@ -42,8 +37,6 @@
   (k/post! :tallenna-yllapito-toteuma toteuman-tiedot))
 
 (defn tallenna-lomake [urakka data-atomi grid-data] ;; XXX siirrä tämä tiedot-namespaceen
-  ;; kustannukset tallennetaan ilman laskentakohdetta yllapito_toteuma-tauluun,
-  ;; -> backin palvelut.yllapito-toteumat/tallenna-yllapito-toteuma
   (let [toteuman-avaimet-gridista #(select-keys % [:id :toteuma :alkupvm :loppupvm :selite :pvm :hinta])
         [sopimus-id sopimus-nimi] @tiedot-urakka/valittu-sopimusnumero
         dump #(do (log "talenna-toteuma saa:" (pr-str %)) %)]
