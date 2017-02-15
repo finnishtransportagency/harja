@@ -43,7 +43,7 @@
 (defn hae-paallystysurakan-indeksitiedot
   [urakka-id]
   (log "indeksitietojen haku: onko? ->" (some? @kaikkien-urakkatyyppien-indeksit))
-  (when @kaikkien-urakkatyyppien-indeksit
+  (if @kaikkien-urakkatyyppien-indeksit
     (k/post! :paallystysurakan-indeksitiedot {:urakka-id urakka-id})))
 
 (defn tallenna-paallystysurakan-indeksit
