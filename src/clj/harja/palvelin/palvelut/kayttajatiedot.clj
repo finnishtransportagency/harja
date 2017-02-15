@@ -1,11 +1,12 @@
 (ns harja.palvelin.palvelut.kayttajatiedot
   "Palvelu, jolla voi hakea perustietoja Harjan käyttäjistä"
-  (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
+  (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.kayttajat :as q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.urakat :as urakat]
+            [taoensso.timbre :as log]
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]
@@ -152,7 +153,9 @@
 (defn- hae-yhteydenpidon-vastaanottajat [db user]
   (roolit/vaadi-rooli user roolit/jarjestelmavastaava)
   (log/debug "Haetaan yhteydenpidon vastaanottajat")
-  (q/hae-yhteydenpidon-vastaanottajat db))
+  (let [vastaus (into [] (q/hae-yhteydenpidon-vastaanottajat db))]
+    (log/debug "Vastaus: " vastaus)
+    vastaus))
 
 (defrecord Kayttajatiedot []
   component/Lifecycle
@@ -165,11 +168,11 @@
                                     (oletusurakkatyyppi (:db this) user))))
     (julkaise-palvelu (:http-palvelin this)
                       :yhteydenpito-vastaanottajat
-                      (fn [user alku]
+                      (fn [user]
                         (hae-yhteydenpidon-vastaanottajat (:db this) user)))
     this)
   (stop [this]
-    (poista-palvelu (:http-palvelin this)
-                    :kayttajatiedot
-                    :yhteydenpito-vastaanottajat)
+    (poista-palvelut (:http-palvelin this)
+                     :kayttajatiedot
+                     :yhteydenpito-vastaanottajat)
     this))
