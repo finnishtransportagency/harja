@@ -52,7 +52,7 @@
 
    "Yhteydenpito"
    :yhteydenpito
-   (when true ;; TODO OIKEUSTARKISTUS
+   (when (oikeudet/hallinta)
      ^{:key "yhteydenpito"}
      [yhteydenpito/yhteydenpito])
 

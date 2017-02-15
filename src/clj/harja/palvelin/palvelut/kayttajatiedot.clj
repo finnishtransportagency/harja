@@ -1,5 +1,5 @@
 (ns harja.palvelin.palvelut.kayttajatiedot
-  "Palvelu, jolla voi hakea perustietoja nykyisestä käyttäjästä"
+  "Palvelu, jolla voi hakea perustietoja Harjan käyttäjistä"
   (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.kayttajat :as q]
@@ -9,7 +9,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [harja.domain.roolit :as roolit]))
 
 (defn oletusurakkatyyppi
   [db user]
@@ -115,6 +116,44 @@
                              (:urakat au))))
        aluekokonaisuudet))))
 
+(defn kayttajan-urakat-aikavalilta-alueineen
+  "Tekee saman kuin kayttajan-urakat-aikavalilta, mutta liittää urakoihin mukaan niiden geometriat."
+  ([db user oikeustarkistus-fn]
+   (kayttajan-urakat-aikavalilta-alueineen db user oikeustarkistus-fn nil nil nil nil (pvm/nyt) (pvm/nyt)))
+  ([db user oikeustarkistus-fn urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu]
+   (kayttajan-urakat-aikavalilta-alueineen db user oikeustarkistus-fn urakka-id urakoitsija urakkatyyppi
+                                           hallintayksikot alku loppu urakat/oletus-toleranssi))
+  ([db user oikeustarkistus-fn urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu toleranssi]
+   (let [aluekokonaisuudet (kayttajan-urakat-aikavalilta db user oikeustarkistus-fn urakka-id
+                                                         urakoitsija urakkatyyppi
+                                                         hallintayksikot alku loppu)
+         urakka-idt (mapcat
+                      (fn [aluekokonaisuus]
+                        (map :id (:urakat aluekokonaisuus)))
+                      aluekokonaisuudet)
+         urakat-alueineen (into {} (map
+                                     (fn [ur]
+                                       [(get-in ur [:urakka :id]) (or (get-in ur [:urakka :alue])
+                                                                      (get-in ur [:alueurakka :alue]))])
+                                     (urakat/urakoiden-alueet
+                                       db
+                                       user
+                                       oikeustarkistus-fn
+                                       urakka-idt
+                                       toleranssi)))]
+     (mapv
+       (fn [au]
+         (assoc au :urakat (mapv
+                             (fn [urakka]
+                               (assoc urakka :alue (get urakat-alueineen (:id urakka))))
+                             (:urakat au))))
+       aluekokonaisuudet))))
+
+(defn- hae-yhteydenpidon-vastaanottajat [db user]
+  (roolit/vaadi-rooli user roolit/jarjestelmavastaava)
+  (log/debug "Haetaan yhteydenpidon vastaanottajat")
+  (q/hae-yhteydenpidon-vastaanottajat db))
+
 (defrecord Kayttajatiedot []
   component/Lifecycle
   (start [this]
@@ -124,7 +163,13 @@
                         (oikeudet/ei-oikeustarkistusta!)
                         (assoc user :urakkatyyppi
                                     (oletusurakkatyyppi (:db this) user))))
+    (julkaise-palvelu (:http-palvelin this)
+                      :yhteydenpito-vastaanottajat
+                      (fn [user alku]
+                        (hae-yhteydenpidon-vastaanottajat (:db this) user)))
     this)
   (stop [this]
-    (poista-palvelu (:http-palvelin this) :kayttajatiedot)
+    (poista-palvelu (:http-palvelin this)
+                    :kayttajatiedot
+                    :yhteydenpito-vastaanottajat)
     this))

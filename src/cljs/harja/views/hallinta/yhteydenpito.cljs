@@ -2,6 +2,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.tiedot.hallinta.yhteydenpito :as tiedot]
             [cljs.core.async :refer [<! >! timeout chan]]
+            [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.komponentti :as komp]))
 
 (defn yhteydenpito* [vastaanottajat]
@@ -17,4 +18,6 @@
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (fn []
-      [yhteydenpito* @tiedot/vastaanottajat])))
+      (if @tiedot/vastaanottajat
+        [yhteydenpito* @tiedot/vastaanottajat]
+        [ajax-loader "Ladataan..."]))))
