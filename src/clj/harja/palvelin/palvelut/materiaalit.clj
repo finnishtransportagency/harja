@@ -24,8 +24,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
-              (map #(assoc % :maara (double (:maara %))))
-              (map #(assoc % :kokonaismaara (if (:kokonaismaara %) (double (:kokonaismaara %)) 0))))
+              (map #(assoc % :maara (double (:maara %)))))
         (let [tulos (q/hae-urakan-materiaalit db urakka-id)]
           (log/debug "HAETAAN URAKAN MATERIAALIT")
           tulos)))

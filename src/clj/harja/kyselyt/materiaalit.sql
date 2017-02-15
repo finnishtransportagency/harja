@@ -20,9 +20,7 @@ FROM materiaalikoodi
 WHERE materiaalityyppi != 'talvisuola' :: materiaalityyppi;
 
 -- name: hae-urakan-materiaalit
--- Hakee jokaisen materiaalin, joka liittyy urakkaan JA JOLLA ON RIVI MATERIAALIN_KAYTTO taulussa.
--- Oleellista on, että palauttaa yhden rivin per materiaali, ja laskee yhteen paljonko materiaalia
--- on käytetty.
+-- Hakee kaikki materiaalit, ja palauttaa materiaalin suunnittelutiedot, jos materiaalia on urakkaan suunniteltu.
 SELECT
   mk.id,
   mk.alkupvm,
@@ -31,13 +29,7 @@ SELECT
   mk.sopimus,
   m.id      AS materiaali_id,
   m.nimi    AS materiaali_nimi,
-  m.yksikko AS materiaali_yksikko,
-
-  (SELECT SUM(maara) AS kokonaismaara
-   FROM toteuma_materiaali
-   WHERE materiaalikoodi = mk.id AND toteuma IN (SELECT id
-                                                 FROM toteuma
-                                                 WHERE urakka = :urakka))
+  m.yksikko AS materiaali_yksikko
 FROM materiaalin_kaytto mk
   LEFT JOIN materiaalikoodi m ON mk.materiaali = m.id
 WHERE mk.urakka = :urakka AND
