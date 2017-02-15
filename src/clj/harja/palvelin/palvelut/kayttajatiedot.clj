@@ -117,39 +117,6 @@
                              (:urakat au))))
        aluekokonaisuudet))))
 
-(defn kayttajan-urakat-aikavalilta-alueineen
-  "Tekee saman kuin kayttajan-urakat-aikavalilta, mutta liittää urakoihin mukaan niiden geometriat."
-  ([db user oikeustarkistus-fn]
-   (kayttajan-urakat-aikavalilta-alueineen db user oikeustarkistus-fn nil nil nil nil (pvm/nyt) (pvm/nyt)))
-  ([db user oikeustarkistus-fn urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu]
-   (kayttajan-urakat-aikavalilta-alueineen db user oikeustarkistus-fn urakka-id urakoitsija urakkatyyppi
-                                           hallintayksikot alku loppu urakat/oletus-toleranssi))
-  ([db user oikeustarkistus-fn urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu toleranssi]
-   (let [aluekokonaisuudet (kayttajan-urakat-aikavalilta db user oikeustarkistus-fn urakka-id
-                                                         urakoitsija urakkatyyppi
-                                                         hallintayksikot alku loppu)
-         urakka-idt (mapcat
-                      (fn [aluekokonaisuus]
-                        (map :id (:urakat aluekokonaisuus)))
-                      aluekokonaisuudet)
-         urakat-alueineen (into {} (map
-                                     (fn [ur]
-                                       [(get-in ur [:urakka :id]) (or (get-in ur [:urakka :alue])
-                                                                      (get-in ur [:alueurakka :alue]))])
-                                     (urakat/urakoiden-alueet
-                                       db
-                                       user
-                                       oikeustarkistus-fn
-                                       urakka-idt
-                                       toleranssi)))]
-     (mapv
-       (fn [au]
-         (assoc au :urakat (mapv
-                             (fn [urakka]
-                               (assoc urakka :alue (get urakat-alueineen (:id urakka))))
-                             (:urakat au))))
-       aluekokonaisuudet))))
-
 (defn- hae-yhteydenpidon-vastaanottajat [db user]
   (roolit/vaadi-rooli user roolit/jarjestelmavastaava)
   (log/debug "Haetaan yhteydenpidon vastaanottajat")
