@@ -24,6 +24,11 @@
         vastaus (q (str "SELECT * FROM yhteyshenkilo WHERE ulkoinen_id = '" id "';"))]
     (if (empty? vastaus) id (recur))))
 
+(defn luo-urakalle-paivystys [urakka-id]
+  (u (str "INSERT INTO paivystys (vastuuhenkilo, alku, loppu, urakka, yhteyshenkilo)
+           VALUES (TRUE, (now() :: DATE - 1) :: TIMESTAMP, (now() :: DATE + 1) :: TIMESTAMP,
+           " urakka-id ", (SELECT id FROM yhteyshenkilo WHERE tyopuhelin = '0505555555' LIMIT 1));")))
+
 (deftest tallenna-paivystajatiedot
   (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
         urakoitsija-id (hae-oulun-alueurakan-2005-2012-urakoitsija)
@@ -65,11 +70,12 @@
 
 (deftest hae-paivystajatiedot-urakan-idlla
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        _ (luo-urakalle-paivystys urakka-id)
         vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/paivystajatiedot"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= (count (:paivystajatiedot encoodattu-body)) 1))
-    (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 3))))
+    (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 1))))
 
 (deftest testaa-puhelinnumeron-trimmaus
   (is (= (fmt/trimmaa-puhelinnumero "0400123123") (fmt/trimmaa-puhelinnumero "+358400123123")))
@@ -95,7 +101,9 @@
     (is (= (count (:paivystajatiedot encoodattu-body)) 0))))
 
 (deftest hae-paivystajatiedot-puhelinnumerolla
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?puhelinnumero=0505555555"] kayttaja-jvh portti)
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        _ (luo-urakalle-paivystys urakka-id)
+        vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?puhelinnumero=0505555555"] kayttaja-jvh portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= (count (:paivystajatiedot encoodattu-body)) 1))
@@ -106,11 +114,13 @@
     (is (= 400 (:status vastaus)))))
 
 (deftest hae-paivystajatiedot-sijainnilla-kayttaen-lyhytta-aikavalia
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395"] kayttaja-yit portti)
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        _ (luo-urakalle-paivystys urakka-id)
+        vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= (count (:paivystajatiedot encoodattu-body)) 1))
-    (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 3))))
+    (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 1))))
 
 (deftest hae-paivystajatiedot-sijainnilla-kayttaen-pitkaa-aikavalia
   (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395&alkaen=2029-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z"] kayttaja-yit portti)
@@ -119,11 +129,13 @@
     (is (= (count (:paivystajatiedot encoodattu-body)) 0))))
 
 (deftest hae-paivystajatiedot-sijainnilla
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395"] kayttaja-yit portti)
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        _ (luo-urakalle-paivystys urakka-id)
+        vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= (count (:paivystajatiedot encoodattu-body)) 1))
-    (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 3))))
+    (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 1))))
 
 (defn- tee-testiyhteyshenkilo [ulkoinen-id]
   (u "INSERT INTO yhteyshenkilo (etunimi, sukunimi, ulkoinen_id)\nVALUES ('Pertti', 'Päivystäjä', '" ulkoinen-id "');"))
