@@ -15,18 +15,26 @@
 (defonce muiden-kustannusten-tiedot (atom nil))
 (defonce kohdistamattomien-sanktioiden-tiedot (atom nil))
 
-(defn grid-tiedot* [mk-tiedot]
-  (map #(assoc % :muokattava true) mk-tiedot))
+(defn grid-tiedot* [mk-tiedot ks-tiedot]
+  (let [mk-id #(str "ypt-" (:id %))
+        ks-id #(str "sanktio-" (:id %))
+        ks->grid (fn [ks] {:hinta  (-> ks :summa)
+                           :pvm    (-> ks :laatupoikkeama :aika)
+                           :selite (-> ks :tyyppi :nimi)
+                           :id     (-> ks :id)})]
+    (concat
+     (map #(assoc % :muokattava true :id (mk-id %)) mk-tiedot)
+     (map #(-> % ks->grid (assoc % :muokattava false :id (ks-id %))) ks-tiedot))))
 
 (def grid-tiedot
-  (reaction (grid-tiedot* @muiden-kustannusten-tiedot)))
+  (reaction (grid-tiedot* @muiden-kustannusten-tiedot @kohdistamattomien-sanktioiden-tiedot)))
 
 #_(defn hae-kohteettomat-sanktiot! [urakkaid alkupvm loppupvm]
   (go (let [ch (tiedot-sanktiot/hae-urakan-sanktiot urakkaid [alkupvm loppupvm])
             vastaus (<! ch)]
         (log "sanktiot-vastaus:" (clj->js vastaus)))))
 
-(defn hae-muiden-kustannusten-tiedot! [urakka-id sopimus-id alkupvm loppupvm]
+(defn hae-muiden-kustannusten-tiedot! [urakka-id sopimus-id [alkupvm loppupvm]]
   (do (log "hae-muiden-kustannusten-tiedot! post")
       (k/post! :hae-yllapito-toteumat {:urakka urakka-id :sopimus sopimus-id :alkupvm alkupvm :loppupvm loppupvm})))
 
