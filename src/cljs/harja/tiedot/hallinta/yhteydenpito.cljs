@@ -23,9 +23,6 @@
           (go (let [vastaus (<! (hae-yhteydenpidon-vastaanottajat))]
                 (reset! vastaanottajat vastaus))))))
 
-(add-watch vastaanottajat ::debug (fn [_ _ old new]
-                                    (.log js/console "asd: " (pr-str old) " => " (pr-str new))))
-
 (defn mailto-bcc-linkki [vastaanottajat]
   (str "mailto:?bcc="
        (str/join "," (keep :sahkoposti vastaanottajat))))
