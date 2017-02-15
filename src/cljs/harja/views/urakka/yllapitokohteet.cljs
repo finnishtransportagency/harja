@@ -543,11 +543,13 @@
                     :urakka-id (:id urakka)
                     :yllapitokohteet-atom kohteet-atom}]])
 
-(defn hae-osan-pituudet [grid osan-pituudet-teille]
+(defn hae-osan-pituudet [grid osan-pituudet-teille-atom]
   (let [tiet (into #{} (map (comp :tr-numero second)) (grid/hae-muokkaustila grid))]
-    (doseq [tie tiet :when (not (contains? @osan-pituudet-teille tie))]
+    (doseq [tie tiet :when (not (contains? @osan-pituudet-teille-atom tie))]
       (go
-        (swap! osan-pituudet-teille assoc tie (<! (vkm/tieosien-pituudet tie)))))))
+        (let [pituudet (<! (vkm/tieosien-pituudet tie))]
+          (log "Haettu osat tielle " tie ", vastaus: " (pr-str pituudet))
+          (swap! osan-pituudet-teille-atom assoc tie pituudet))))))
 
 
 
