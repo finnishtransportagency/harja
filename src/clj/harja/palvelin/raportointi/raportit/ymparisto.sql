@@ -1,54 +1,55 @@
 -- name: hae-ymparistoraportti-tiedot
-SELECT -- haetaan käytetyt määrät per materiaali ja kk
-         u.id as urakka_id, u.nimi as urakka_nimi,
-         NULL as luokka, mk.id as materiaali_id, mk.nimi as materiaali_nimi,
-         date_trunc('month', t.alkanut) as kk, SUM(tm.maara) as maara
- FROM toteuma t
-      JOIN toteuma_materiaali tm ON tm.toteuma=t.id
-      JOIN urakka u ON t.urakka=u.id AND u.urakkanro IS NOT NULL
-      JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
- WHERE (t.alkanut :: DATE BETWEEN :alkupvm AND :loppupvm)
-   AND t.poistettu IS NOT TRUE
-   AND tm.poistettu IS NOT TRUE
-   AND (:urakka::integer IS NULL OR u.id = :urakka)
-   AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
-   AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
- GROUP BY u.id, u.nimi, mk.id, mk.nimi, date_trunc('month', t.alkanut)
+SELECT
+  u.id AS urakka_id,
+  u.nimi AS urakka_nimi,
+  umkh.talvihoitoluokka AS luokka,
+  mk.id AS materiaali_id,
+  mk.nimi AS materiaali_nimi,
+  date_trunc('month', umkh.pvm) AS kk,
+  umkh.maara AS maara
+FROM urakka u
+  JOIN urakan_materiaalin_kaytto_hoitoluokittain umkh ON u.id = umkh.urakka
+  JOIN materiaalikoodi mk ON mk.id = umkh.materiaalikoodi
+WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
+      AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
+      AND (umkh.pvm::DATE BETWEEN :alkupvm AND :loppupvm)
+      AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
 UNION
-SELECT -- Haetaan reittipisteiden toteumat hoitoluokittain
-       u.id as urakka_id, u.nimi as urakka_nimi,
-       rp.talvihoitoluokka as luokka, mk.id as materiaali_id, mk.nimi as materiaali_nimi,
-       date_trunc('month', t.alkanut) as kk, SUM(rm.maara) as maara
-  FROM reitti_materiaali rm
-       JOIN materiaalikoodi mk ON mk.id = rm.materiaalikoodi
-       JOIN reittipiste rp ON rm.reittipiste=rp.id
-       JOIN toteuma t ON rp.toteuma=t.id
-       JOIN urakka u ON t.urakka = u.id AND u.urakkanro IS NOT NULL
- WHERE (t.alkanut :: DATE BETWEEN :alkupvm AND :loppupvm)
-   AND t.poistettu IS NOT TRUE
-   AND rp.talvihoitoluokka IS NOT NULL
-   AND (:urakka::integer IS NULL OR t.urakka = :urakka)
-   AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
-   AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
- GROUP BY u.id, u.nimi, mk.id, mk.nimi, date_trunc('month', t.alkanut), rp.talvihoitoluokka
+SELECT
+  u.id AS urakka_id,
+  u.nimi AS urakka_nimi,
+  NULL AS luokka,
+  mk.id AS materiaali_id,
+  mk.nimi AS materiaali_nimi,
+  date_trunc('month', t.alkanut) AS kk,
+  SUM(tm.maara)
+FROM toteuma t
+  JOIN toteuma_materiaali tm ON t.id = tm.toteuma
+  JOIN urakka u ON t.urakka = u.id AND u.urakkanro IS NOT NULL
+  JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
+WHERE (t.alkanut :: DATE BETWEEN :alkupvm AND :loppupvm)
+      AND t.poistettu IS NOT TRUE
+      AND tm.poistettu IS NOT TRUE
+      AND (:urakka::integer IS NULL OR u.id = :urakka)
+      AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
+      AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
+GROUP BY u.id, u.nimi, mk.id, mk.nimi, date_trunc('month', t.alkanut)
 UNION
-SELECT -- Haetaan suunnitelmat materiaaleille
-       u.id as urakka_id, u.nimi as urakka_nimi,
-       NULL as luokka,
-       mk.id as materiaali_id, mk.nimi as materiaali_nimi,
-       NULL as kk,
-       SUM(s.maara) as maara
-  FROM materiaalin_kaytto s
-       JOIN materiaalikoodi mk ON s.materiaali = mk.id
-       JOIN urakka u ON s.urakka = u.id AND u.urakkanro IS NOT NULL
- WHERE s.poistettu IS NOT TRUE
-   AND (s.alkupvm BETWEEN :alkupvm AND :loppupvm
-        OR
-	s.loppupvm BETWEEN :alkupvm AND :loppupvm)
-   AND (:urakka::integer IS NULL OR s.urakka = :urakka)
-   AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
-   AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
- GROUP BY u.id, u.nimi, mk.id, mk.nimi;
+SELECT
+  u.id as urakka_id, u.nimi as urakka_nimi,
+  NULL as luokka,
+  mk.id as materiaali_id, mk.nimi as materiaali_nimi,
+  NULL as kk,
+  SUM(s.maara) as maara
+FROM materiaalin_kaytto s
+  JOIN materiaalikoodi mk ON s.materiaali = mk.id
+  JOIN urakka u ON s.urakka = u.id AND u.urakkanro IS NOT NULL
+WHERE s.poistettu IS NOT TRUE
+      AND (s.alkupvm, s.loppupvm) OVERLAPS (:alkupvm, :loppupvm)
+      AND (:urakka::integer IS NULL OR s.urakka = :urakka)
+      AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
+      AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
+GROUP BY u.id, u.nimi, mk.id, mk.nimi;
 
 -- name: hae-materiaalit
 -- Hakee materiaali id:t ja nimet
