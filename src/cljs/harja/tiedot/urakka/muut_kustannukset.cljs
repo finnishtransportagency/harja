@@ -1,13 +1,14 @@
 (ns harja.tiedot.urakka.muut-kustannukset
   (:require
-    [reagent.core :refer [atom] :as r]
-    [harja.loki :refer [log tarkkaile!]]
-    [harja.tiedot.urakka :as tiedot-urakka]
-    [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot-sanktiot]
-    [harja.tiedot.navigaatio :as nav]
+   [reagent.core :refer [atom] :as r]
+   [harja.loki :refer [log tarkkaile!]]
+   [harja.tiedot.urakka :as tiedot-urakka]
+   [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot-sanktiot]
+   [harja.tiedot.navigaatio :as nav]
 
-    [cljs.core.async :refer [<!]]
-    [harja.asiakas.kommunikaatio :as k])
+   [cljs.core.async :refer [<!]]
+   [harja.asiakas.kommunikaatio :as k]
+   [harja.pvm :as pvm])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -35,10 +36,24 @@
 (defn tallenna-toteuma! [toteuman-tiedot]
   (k/post! :tallenna-yllapito-toteuma toteuman-tiedot))
 
-(defn tallenna-lomake [urakka data-atomi grid-data] ;; XXX siirrä tämä tiedot-namespaceen
+(defn lataa-tiedot! [urakan-tiedot]
+  (go
+    (reset! kohdistamattomien-sanktioiden-tiedot
+            (filter #(-> % :yllapitokohde :id nil?)
+                    (<! (tiedot-sanktiot/hae-urakan-sanktiot
+                         (:id urakan-tiedot) (pvm/vuoden-aikavali @tiedot-urakka/valittu-urakan-vuosi)))))
+    (let [ch (hae-muiden-kustannusten-tiedot!
+              (:id urakan-tiedot) (first @tiedot-urakka/valittu-sopimusnumero)
+              (pvm/vuoden-aikavali @tiedot-urakka/valittu-urakan-vuosi))
+          vastaus (and ch (<! ch))]
+      (log "vastaus:" (pr-str vastaus))
+      (reset! muiden-kustannusten-tiedot vastaus))))
+
+
+(defn tallenna-lomake [urakka data-atomi grid-data]
   (let [toteuman-avaimet-gridista #(select-keys % [:id :toteuma :alkupvm :loppupvm :selite :pvm :hinta])
         [sopimus-id sopimus-nimi] @tiedot-urakka/valittu-sopimusnumero
-        dump #(do (log "talenna-toteuma saa:" (pr-str %)) %)]
+        dump #(do (log "tallenna-toteuma saa:" (pr-str %)) %)]
     (go
       (mapv #(-> % toteuman-avaimet-gridista (assoc :urakka (:id urakka) :sopimus sopimus-id) dump tallenna-toteuma!)
             grid-data)

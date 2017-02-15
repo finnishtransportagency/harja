@@ -14,7 +14,6 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.tiedot.urakka :as urakka]
@@ -60,16 +59,8 @@
   (let [hae-tietoja (fn [urakan-tiedot]
                       (go (if-let [ch (indeksit/hae-paallystysurakan-indeksitiedot (:id urakan-tiedot))]
                             (reset! urakka/paallystysurakan-indeksitiedot (<! ch)))
-                          (let [ch (muut-kustannukset-tiedot/hae-muiden-kustannusten-tiedot!
-                                    (:id urakan-tiedot) (first @u/valittu-sopimusnumero)
-                                    (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
-                                vastaus (and ch (<! ch))]
-                            (log "vastaus:" (pr-str vastaus))
-                            (reset! muut-kustannukset-tiedot/muiden-kustannusten-tiedot vastaus))
-                          (reset! muut-kustannukset-tiedot/kohdistamattomien-sanktioiden-tiedot
-                                  (filter #(-> % :yllapitokohde :id nil?)
-                                          (<! (tiedot-sanktiot/hae-urakan-sanktiot
-                                               (:id urakan-tiedot) (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi)))))))]
+
+                          (muut-kustannukset-tiedot/lataa-tiedot! urakan-tiedot)))]
     (hae-tietoja ur)
     (komp/kun-muuttuu (hae-tietoja ur))
     (komp/luo
