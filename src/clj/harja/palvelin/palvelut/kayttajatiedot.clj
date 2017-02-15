@@ -168,7 +168,7 @@
                                     (oletusurakkatyyppi (:db this) user))))
     (julkaise-palvelu (:http-palvelin this)
                       :yhteydenpito-vastaanottajat
-                      (fn [user]
+                      (fn [user _]
                         (hae-yhteydenpidon-vastaanottajat (:db this) user)))
     this)
   (stop [this]
