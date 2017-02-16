@@ -200,7 +200,7 @@
         (recur (assoc m avain tulos) loput))
 
       (map? arvo)
-      (recur (assoc m avain (suodatin-muutettuna* arvo funktio id-set)) loput)
+      (recur (assoc m avain (suodatin-muutettuna arvo funktio id-set)) loput)
 
       :else
       (recur m loput))))
