@@ -43,18 +43,22 @@
   (let [rivi (:rivi sisalto)
         materiaali (first rivi)
         [yhteensa prosentti suunniteltu] (take-last 3 rivi)
-        hoitokaudet (drop-last 3 (rest rivi))]
+        hoitokaudet (drop-last 3 (rest rivi))
+        solu? #(or (nil? %)
+                   (and (apurit/raporttisolu? %) (number? (apurit/raporttisolun-arvo %)))
+                   (apurit/tyhja-raporttisolu? %))]
     (and (= (count rivi) 16)
          (string? materiaali)
-         (every? #(or (nil? %) (number? %)) hoitokaudet)
-         (or (nil? yhteensa) (number? yhteensa))
-         (or (nil? suunniteltu) (number? suunniteltu))
+         (every? solu? hoitokaudet)
+         (solu? yhteensa)
+         (solu? suunniteltu)
          (or (nil? prosentti) (string? prosentti))
          (or (and (every? nil? hoitokaudet) (nil? yhteensa))
-             (= (reduce (fnil + 0 0) hoitokaudet) yhteensa))
+             (= (reduce (fnil + 0 0) (map apurit/raporttisolun-arvo hoitokaudet))
+                (apurit/raporttisolun-arvo yhteensa)))
          (or
            (nil? prosentti) (nil? yhteensa) (nil? suunniteltu)
-           (= (/ (* 100.0 yhteensa) suunniteltu)
+           (= (/ (* 100.0 (apurit/raporttisolun-arvo yhteensa)) (apurit/raporttisolun-arvo suunniteltu))
               (Integer/parseInt (re-find #"\d+" prosentti)))))))
 
 
