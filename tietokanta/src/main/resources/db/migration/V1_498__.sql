@@ -20,7 +20,7 @@ CREATE TYPE tietyotyyppi AS ENUM (
   'Räjäytystyö',
   'Muu, mikä?' );
 
-CREATE TYPE tietyon_tyypin_kuvaus AS (tyyppi tietyootyyppi, kuvaus VARCHAR(256));
+CREATE TYPE tietyon_tyypin_kuvaus AS (tyyppi tietyotyyppi, kuvaus VARCHAR(256));
 
 CREATE TYPE viikonpaiva AS ENUM (
   'maanantai',
@@ -81,7 +81,7 @@ CREATE TYPE tietyon_huomautukset AS ENUM (
 CREATE TABLE tietyilmoitus (
   id                                    SERIAL PRIMARY KEY,
   tloik_id                              INTEGER,
-  paatietyoilmoitus                     INTEGER REFERENCES tietyoilmoitus (id),
+  paatietyoilmoitus                     INTEGER,
   tloik_paatietyoilmoitus_id            INTEGER,
 
   luotu                                 TIMESTAMP,
@@ -158,5 +158,7 @@ CREATE TABLE tietyilmoitus (
   ajoittain_suljettu_tie                BOOLEAN,
   pysaytysten_alku                      TIMESTAMP,
   pysaytysten_loppu                     TIMESTAMP,
-  lisatietoja                           TEXT);
+  lisatietoja                           TEXT,
+
+  FOREIGN KEY (paatietyoilmoitus) REFERENCES tietyilmoitus (id));
 
