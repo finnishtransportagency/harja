@@ -430,7 +430,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         viimeisin-muokattu-id (atom nil)
         tallennus-kaynnissa (atom false)
         valittu-rivi (atom nil)
-        gridia-muokataan? (atom false)
         rivien-maara (atom (count tiedot))
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
         skeema (keep identity skeema)
@@ -589,7 +588,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                     (muutos ohjaus))))
 
         nollaa-muokkaustiedot! (fn []
-                                 (reset! gridia-muokataan? false)
                                  (swap! muokkauksessa-olevat-gridit disj komponentti-id)
                                  (reset! virheet {})
                                  (reset! varoitukset {})
@@ -605,7 +603,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         aloita-muokkaus! (fn [tiedot]
                            (reset! vetolaatikot-auki #{}) ; sulje vetolaatikot
                            (nollaa-muokkaustiedot!)
-                           (reset! gridia-muokataan? true)
                            (swap! muokkauksessa-olevat-gridit conj komponentti-id)
                            (loop [muok {}
                                   jarj []
@@ -681,6 +678,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                     mahdollista-rivin-valinta rivi-valinta-peruttu
                     korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts} skeema alkup-tiedot]
         (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
+              muuta-gridia-muokataan? (and
+                                        (>= (count @muokkauksessa-olevat-gridit) 1)
+                                        (not (@muokkauksessa-olevat-gridit komponentti-id)))
               colspan (if (or piilota-toiminnot? (nil? tallenna))
                         (count skeema)
                         (inc (count skeema)))
@@ -697,7 +697,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                (not (nil? tiedot)))
                       (let [tallenna-nappi [:button.nappi-ensisijainen
                                             {:disabled (or (= :ei-mahdollinen tallenna)
-                                                           @gridia-muokataan?)
+                                                           muuta-gridia-muokataan?)
                                              :on-click #(do (.preventDefault %)
                                                             (aloita-muokkaus! tiedot))}
                                             [:span.grid-muokkaa

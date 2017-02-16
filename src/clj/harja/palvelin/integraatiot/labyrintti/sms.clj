@@ -91,7 +91,13 @@
     #(swap! kuuntelijat disj kuuntelija-fn))
 
   (laheta [this numero viesti]
-    (laheta-sms (:db this) (:integraatioloki this) (:kayttajatunnus this) (:salasana this) (:url this) numero viesti)))
+    (laheta-sms (:db this)
+                (:integraatioloki this)
+                (:kayttajatunnus this)
+                (:salasana this)
+                (:url this)
+                numero
+                viesti)))
 
 (defn luo-labyrintti [asetukset]
   (->Labyrintti (:url asetukset) (:kayttajatunnus asetukset) (:salasana asetukset) (atom #{})))

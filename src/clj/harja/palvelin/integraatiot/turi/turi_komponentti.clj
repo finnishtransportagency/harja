@@ -1,4 +1,6 @@
 (ns harja.palvelin.integraatiot.turi.turi-komponentti
+  "TURI:n (TUrvallisuuspoikkeamien ja RIskienhallinnan tietojärjestelmä)
+   käyttöön tarkoitetut palvelut"
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]

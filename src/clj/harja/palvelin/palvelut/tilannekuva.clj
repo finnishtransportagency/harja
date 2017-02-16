@@ -406,6 +406,7 @@
   ([db user tiedot]
    (hae-tilannekuvaan db user tiedot tilannekuvan-osiot))
   ([db user tiedot osiot]
+   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
    (let [urakat (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
                                                 oikeudet/tilannekuva-nykytilanne
                                                 oikeudet/tilannekuva-historia) % user)
@@ -444,6 +445,7 @@
           (assoc p :toleranssi (geo/karkeistustoleranssi (:alue p))))))
 
 (defn- luettavat-urakat [user tiedot]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
                                   oikeudet/tilannekuva-nykytilanne
                                   oikeudet/tilannekuva-historia) % user)
