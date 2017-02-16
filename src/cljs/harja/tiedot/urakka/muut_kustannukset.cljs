@@ -38,23 +38,29 @@
   (k/post! :tallenna-yllapito-toteuma toteuman-tiedot))
 
 (defn lataa-tiedot! [urakan-tiedot]
+  (log "lataa-tiedot!")
   (go
+    (log "lataa-tiedot! / sanktiot")
     (reset! kohdistamattomien-sanktioiden-tiedot
             (filter #(-> % :yllapitokohde :id nil?)
                     (<! (tiedot-sanktiot/hae-urakan-sanktiot
                          (:id urakan-tiedot) (pvm/vuoden-aikavali @tiedot-urakka/valittu-urakan-vuosi)))))
+    (log "lataa-tiedot! / muut kustannukset")
     (let [ch (hae-muiden-kustannusten-tiedot!
               (:id urakan-tiedot) (first @tiedot-urakka/valittu-sopimusnumero)
               (pvm/vuoden-aikavali @tiedot-urakka/valittu-urakan-vuosi))
           vastaus (and ch (<! ch))]
-      (log "vastaus:" (pr-str vastaus))
+      (log "saatiin muut-kustannukset vastaus, laitetaan atomiin:" (pr-str vastaus))
       (reset! muiden-kustannusten-tiedot vastaus))))
 
 
 (defn tallenna-lomake! [urakka data-atomi grid-data]
   (let [toteuman-avaimet-gridista #(select-keys % [:id :toteuma :alkupvm :loppupvm :selite :pvm :hinta])
         [sopimus-id sopimus-nimi] @tiedot-urakka/valittu-sopimusnumero
-        palauta-ypt-id #(-> % (s/replace "ypt-" "") js/parseInt)
+        ;; tulee vain ypt-id:llä olevia, koska muut eivät ole muokattavia
+        palauta-ypt-id #(if (neg? %)
+                          nil
+                          (-> % (s/replace "ypt-" "") js/parseInt))
         dump #(do (log "tallenna-toteuma saa:" (pr-str %)) %)]
     (go
       (mapv #(-> %

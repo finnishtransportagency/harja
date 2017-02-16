@@ -41,7 +41,7 @@
      (log "mk komponentti: tiedot" (pr-str @tiedot/grid-tiedot))
      [:div.muut-kustannukset
       [grid/grid (assoc grid-opts
-                        :tallenna #(tiedot/tallenna-lomake urakka tiedot/muiden-kustannusten-tiedot %)
+                        :tallenna #(tiedot/tallenna-lomake! urakka tiedot/muiden-kustannusten-tiedot %)
                         :tyhja (if (nil? @tiedot/muiden-kustannusten-tiedot)
                                  [ajax-loader "Haetaan kustannuksia..."]
                                  "Ei kustannuksia"))
