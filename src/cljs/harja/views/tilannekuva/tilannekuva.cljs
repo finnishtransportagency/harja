@@ -353,8 +353,7 @@
   (case tila
     :nykytilanne true
     :historiakuva true
-    :tienakyma false
-    false))
+    :tienakyma false))
 
 (defn- nayta-tai-piilota-karttataso! [tila]
   (reset! tilannekuva-kartalla/karttataso-tilannekuva (nayta-vai-piilota? tila)))
