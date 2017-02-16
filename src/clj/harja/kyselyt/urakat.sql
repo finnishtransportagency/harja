@@ -106,9 +106,12 @@ SELECT
     THEN ST_Simplify(sps.alue, 50)
   WHEN u.tyyppi = 'tekniset-laitteet' :: urakkatyyppi
     THEN ST_Simplify(tlu.alue, 50)
+  WHEN (u.tyyppi = 'hoito' :: urakkatyyppi AND au.alue IS NOT NULL)
+    THEN
+      -- Luodaan yhtenäinen polygon alueurakan alueelle (multipolygonissa voi olla reikiä)
+     hoidon_alueurakan_geometria(u.urakkanro)
   ELSE
-    -- Luodaan yhtenäinen polygon alueurakan alueelle (multipolygonissa voi olla reikiä)
-    ST_MakePolygon(ST_ExteriorRing((ST_Dump(au.alue)).geom))
+    ST_Simplify(au.alue, 50)
   END                         AS alueurakan_alue
 
 FROM urakka u
@@ -526,7 +529,13 @@ WHERE u.id = :id;
 SELECT
   ST_Simplify(u.alue, :toleranssi)          AS urakka_alue,
   u.id                                      AS urakka_id,
-  ST_Simplify(alueurakka.alue, :toleranssi) AS alueurakka_alue
+  CASE
+  WHEN (u.tyyppi = 'hoito'::urakkatyyppi AND alueurakka.alue IS NOT NULL)
+  THEN
+    hoidon_alueurakan_geometria(alueurakka.alueurakkanro)
+  ELSE
+    ST_Simplify(alueurakka.alue, :toleranssi)
+  END AS alueurakka_alue
 FROM urakka u
   LEFT JOIN alueurakka ON u.urakkanro = alueurakka.alueurakkanro
 WHERE u.id IN (:idt);

@@ -278,8 +278,7 @@
          (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
          (reset! paallystys/kohteet-yha-lahetyksessa kohde-idt)
          (k/post! :laheta-kohteet-yhaan {:urakka-id urakka-id
-                                         :sopimus-id
-                                         :sopimus-id
+                                         :sopimus-id sopimus-id
                                          :kohde-idt kohde-idt
                                          :vuosi vuosi}))
        {:luokka "nappi-grid nappi-ensisijainen"
