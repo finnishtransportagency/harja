@@ -1,4 +1,5 @@
 (ns harja.views.hallinta.yhteydenpito
+  "Näkymästä voi lähettää kaikille käyttäjille sähköpostia. Hyödyllinen esimerkiksi päivityskatkoista tiedottamiseen."
   (:require [reagent.core :refer [atom] :as r]
             [harja.tiedot.hallinta.yhteydenpito :as tiedot]
             [cljs.core.async :refer [<! >! timeout chan]]
