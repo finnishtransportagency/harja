@@ -349,15 +349,15 @@
        {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
       yhteyshenkilot]]))
 
-(defn- nayta-vai-piilota? [taso]
-  (case taso
+(defn- nayta-vai-piilota? [tila]
+  (case tila
     :nykytilanne true
     :historiakuva true
     :tienakyma false
     false))
 
-(defn- nayta-tai-piilota-karttataso! [taso]
-  (reset! tilannekuva-kartalla/karttataso-tilannekuva (nayta-vai-piilota? taso)))
+(defn- nayta-tai-piilota-karttataso! [tila]
+  (reset! tilannekuva-kartalla/karttataso-tilannekuva (nayta-vai-piilota? tila)))
 
 (defn tilannekuva []
   (komp/luo
@@ -372,7 +372,7 @@
                            ;; hallitsisi itse tason näkyvyyttä, ei se voisi tietää,
                            ;; poistuttiinko tienäkymästä nykytilanteeseen (-> taso päälle)
                            ;; vai toiseen näkymään (-> taso pois)
-                           (nayta-tai-piilota-karttataso! tiedot/valittu-tila)
+                           (nayta-tai-piilota-karttataso! @tiedot/valittu-tila)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa @nav/valittu-urakka)
                            (reset! kartta-tiedot/pida-geometriat-nakyvilla? false)
                            (kartta-tiedot/kasittele-infopaneelin-linkit!
