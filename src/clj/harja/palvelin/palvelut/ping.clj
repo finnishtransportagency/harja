@@ -1,7 +1,6 @@
 (ns harja.palvelin.palvelut.ping
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.domain.skeema :refer [Toteuma validoi]]
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn kasittele-ping [db user tiedot]
