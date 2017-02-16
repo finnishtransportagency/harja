@@ -102,7 +102,7 @@
             #(reset! paallystys/harjan-paikkauskohteet (filter (comp not yllapitokohteet/yha-kohde?) %)))}]
 
         [yllapitokohteet-view/yllapitokohteet-yhteensa
-         paallystys/kohteet-yhteensa {:nakyma :paallystys}]
+         paallystys/kaikki-kohteet {:nakyma :paallystys}]
 
         [vihje-elementti [:span
                           [:span "Huomioi etumerkki hinnanmuutoksissa. Ennustettuja määriä sisältävät kentät on värjätty "]

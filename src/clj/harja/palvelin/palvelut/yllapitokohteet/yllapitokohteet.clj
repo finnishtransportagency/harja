@@ -318,6 +318,7 @@
       (if (id-olemassa? (:id kohde))
         (paivita-yllapitokohde c user urakka-id kohde)
         (luo-uusi-yllapitokohde c user urakka-id sopimus-id vuosi kohde)))
+    (yy/paivita-yllapitourakan-geometria c urakka-id)
     (let [paallystyskohteet (hae-urakan-yllapitokohteet c user {:urakka-id urakka-id
                                                                 :sopimus-id sopimus-id})]
       (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str paallystyskohteet))
@@ -393,7 +394,7 @@
         (if (id-olemassa? (:id osa))
           (paivita-yllapitokohdeosa c user urakka-id osa)
           (luo-uusi-yllapitokohdeosa c user yllapitokohde-id osa)))
-      (yha/paivita-yllapitourakan-geometriat c urakka-id)
+      (yy/paivita-yllapitourakan-geometria c urakka-id)
       (let [yllapitokohdeosat (hae-osat)]
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
         (sort-by tr/tiekohteiden-jarjestys yllapitokohdeosat)))))

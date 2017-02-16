@@ -635,3 +635,6 @@ WHERE yllapitokohde = :yllapitokohde;
 
 -- name: hae-kohteen-tienumero
 SELECT tr_numero FROM yllapitokohde WHERE id = :kohdeid;
+
+-- name: paivita-paallystys-tai-paikkausurakan-geometria
+SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka :: INTEGER);
