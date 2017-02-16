@@ -626,14 +626,13 @@
 (defn- kasittele-select!
   ([items event] (kasittele-select! items event false))
   ([items event tuplaklik?]
-   (let [
-         [{:keys [keskeyta-event?
-                  valitse-urakka
-                  valitse-hallintayksikko
-                  valitse-ilmoitus
-                  avaa-paneeli?
-                  nayta-nama-paneelissa
-                  keskita-naihin]}] (klikkauksesta-seuraavat-tapahtumat items tuplaklik? @nav/valittu-sivu
+   (let [{:keys [keskeyta-event?
+                 valitse-urakka
+                 valitse-hallintayksikko
+                 valitse-ilmoitus
+                 avaa-paneeli?
+                 nayta-nama-paneelissa
+                 keskita-naihin]} (klikkauksesta-seuraavat-tapahtumat items tuplaklik? @nav/valittu-sivu
                                                                         (:id @nav/valittu-urakka) (:id @nav/valittu-hallintayksikko))]
      (when keskeyta-event?
        (.stopPropagation event)
@@ -653,7 +652,7 @@
        (apply nayta-infopaneelissa! nayta-nama-paneelissa))
 
      (when-not (empty? keskita-naihin)
-       (tiedot/keskita-kartta-alueeseen! (harja.geo/extent-monelle keskita-naihin))))))
+       (tiedot/keskita-kartta-alueeseen! (harja.geo/extent-monelle (map :alue keskita-naihin)))))))
 
 (defn- kasittele-dblclick-select! [item event]
   (kasittele-select! item event true))
