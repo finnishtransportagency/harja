@@ -55,7 +55,7 @@
 
 
 (defn tallenna-lomake! [urakka data-atomi grid-data]
-  (let [toteuman-avaimet-gridista #(select-keys % [:id :toteuma :alkupvm :loppupvm :selite :pvm :hinta])
+  (let [toteuman-avaimet-gridista #(select-keys % [:id :poistettu :toteuma :alkupvm :loppupvm :selite :pvm :hinta])
         [sopimus-id sopimus-nimi] @tiedot-urakka/valittu-sopimusnumero
         ;; tulee vain ypt-id:llä olevia, koska muut eivät ole muokattavia
         palauta-ypt-id #(if (neg? %)

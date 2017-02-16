@@ -12,6 +12,7 @@ FROM yllapito_toteuma yt
   LEFT JOIN urakka_laskentakohde lk ON lk.id = yt.laskentakohde
 WHERE yt.urakka = :urakka AND yt.sopimus = :sopimus
       AND yt.pvm::DATE BETWEEN :alkupvm and :loppupvm
+      AND yt.poistettu IS NOT TRUE
 ORDER BY yt.pvm DESC;
 
 -- name: hae-muu-tyo
@@ -27,7 +28,8 @@ SELECT
 FROM yllapito_toteuma yt
   LEFT JOIN urakka_laskentakohde lk ON lk.id = yt.laskentakohde
 WHERE yt.urakka = :urakka
-      AND yt.id = :id;
+      AND yt.id = :id
+      AND yt.poistettu IS NOT TRUE;
 
 -- name: luo-uusi-muu-tyo<!
 INSERT INTO yllapito_toteuma
@@ -44,7 +46,8 @@ SET
   yllapitoluokka = :yllapitoluokka,
   laskentakohde = :laskentakohde,
   muokattu = NOW(),
-  muokkaaja = :kayttaja
+  muokkaaja = :kayttaja,
+  poistettu = :poistettu
 WHERE id = :id and urakka = :urakka;
 
 -- name: hae-urakan-laskentakohteet
