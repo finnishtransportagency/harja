@@ -83,7 +83,8 @@
    (when tekninen-toimenpide
      [:tekninen-toimenpide tekninen-toimenpide])])
 
-(defn tee-kohde [{:keys [yhaid yha-kohdenumero id yllapitokohdetyyppi yllapitokohdetyotyyppi yhatunnus tr-numero karttapvm] :as kohde}
+(defn tee-kohde [{:keys [yhaid yha-kohdenumero id yllapitokohdetyyppi yllapitokohdetyotyyppi tr-numero
+                         karttapvm nimi] :as kohde}
                  alikohteet
                  {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm ilmoitustiedot] :as paallystys-ilmoitus}]
   [:kohde
@@ -92,7 +93,7 @@
    (when yha-kohdenumero [:kohdenumero yha-kohdenumero])
    [:kohdetyyppi (kasittele-kohteen-tyyppi yllapitokohdetyyppi)]
    [:kohdetyotyyppi yllapitokohdetyotyyppi]
-   (when yhatunnus [:nimi yhatunnus])
+   (when nimi [:nimi nimi])
    (when aloituspvm [:toiden-aloituspaivamaara (xml/formatoi-paivamaara aloituspvm)])
    (when valmispvm-paallystys [:paallystyksen-valmistumispaivamaara (xml/formatoi-paivamaara valmispvm-paallystys)])
    (when valmispvm-kohde [:kohteen-valmistumispaivamaara (xml/formatoi-paivamaara valmispvm-kohde)])
