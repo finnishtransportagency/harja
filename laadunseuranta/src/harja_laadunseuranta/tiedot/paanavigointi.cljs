@@ -79,7 +79,7 @@
                  :ikoni-lahde "livicons"
                  :vaatii-nappaimiston? false}
                 {:nimi "Yli/\u00AD-aliauraus"
-                 :ikoni nil ;; TODO IKONI PUUTTUU
+                 :ikoni "auraus-36"
                  :ikoni-lahde "livicons"
                  :tyyppi :vali
                  :avain :yli-tai-aliauraus
@@ -278,19 +278,19 @@
 
               {:nimi "Kevät\u00ADmuokkaus\u00ADpuute"
                :tyyppi :vali
-               :ikoni nil ;; TODO IKONI PUUTTUU
+               :ikoni "harva-pinta-36"
                :ikoni-lahde "livicons"
                :avain :kevatmuokkauspuute
                :vaatii-nappaimiston? false}
               {:nimi "Sorastus\u00ADpuute"
                :tyyppi :vali
-               :ikoni nil ;; TODO IKONI PUUTTUU
+               :ikoni "pinta-hiekka-kielto-36"
                :ikoni-lahde "livicons"
                :avain :sorastuspuute
                :vaatii-nappaimiston? false}
               {:nimi "Keli\u00ADrikko\u00ADhavainnot"
                :tyyppi :vali
-               :ikoni nil ;; TODO IKONI PUUTTUU
+               :ikoni "kelirikko-36"
                :ikoni-lahde "livicons"
                :avain :kelirikkohavainnot
                :vaatii-nappaimiston? false}]
@@ -360,50 +360,56 @@
    :paallysteen-kunto
    [{:nimi "Yksit\u00ADtäinen reikä"
      :tyyppi :piste
-     :ikoni nil ; TODO IKONI PUUTTUU
+     :ikoni "reika-36"
      :ikoni-lahde "livicons"
      :avain :yksittainen-reika
      :vaatii-nappaimiston? false}
     {:nimi "Reikä\u00ADjono"
      :tyyppi :vali
-     :ikoni nil ; TODO IKONI PUUTTUU
+     :ikoni "reikajono-36"
      :ikoni-lahde "livicons"
      :avain :reikajono
      :vaatii-nappaimiston? false}
     halkeamat
     {:nimi "Reuna\u00ADpainuma"
      :tyyppi :vali
-     :ikoni nil ; TODO IKONI PUUTTUU
+     :ikoni "epatasaiset-reunat-36"
      :ikoni-lahde "livicons"
      :avain :reunapainuma
      :vaatii-nappaimiston? false}
     {:nimi "Purkaumat"
      :tyyppi :vali
-     :ikoni nil ; TODO IKONI PUUTTUU
+     :ikoni "kohouma-36"
      :ikoni-lahde "livicons"
      :avain :purkaumat
      :vaatii-nappaimiston? false}
     {:nimi "Syvät ajourat"
      :tyyppi :vali
-     :ikoni nil ; TODO IKONI PUUTTUU
+     :ikoni "urat-36"
      :ikoni-lahde "livicons"
      :avain :syvat-ajourat
      :vaatii-nappaimiston? false}
     {:nimi "Turvallisuutta vaarantava heitto"
      :tyyppi :vali
-     :ikoni nil ; TODO IKONI PUUTTUU
+     :ikoni "kohouma-vaara-36"
      :ikoni-lahde "livicons"
      :avain :liikenneturvallisuutta-vaarantava-heitto
      :vaatii-nappaimiston? false
      :pienempi-fontti? true}
     {:nimi "Ajomukavuutta haittaava epätas."
      :tyyppi :vali
-     :ikoni nil ; TODO IKONI PUUTTUU
+     :ikoni "epatasa-36"
      :ikoni-lahde "livicons"
      :avain :ajomukavuutta-haittaava-epatasaisuus
      :vaatii-nappaimiston? false
      :pienempi-fontti? true}
-    vesilammikot]})
+    vesilammikot
+    {:nimi "Harjaus\u00ADpuute"
+     :tyyppi :vali
+     :ikoni "harja-36"
+     :ikoni-lahde "livicons"
+     :avain :harjauspuute
+     :vaatii-nappaimiston? false}]})
 
 (defn jarjesta-valilehdet [valilehdet]
   (into [] (sort-by :jarjestys valilehdet)))

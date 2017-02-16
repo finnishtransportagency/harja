@@ -97,6 +97,7 @@
                   :syvat-ajourat
                   :liikenneturvallisuutta-vaarantava-heitto
                   :ajomukavuutta-haittaava-epatasaisuus
+                  :harjauspuute
 
                   ;; Pistekohtaiset
 
