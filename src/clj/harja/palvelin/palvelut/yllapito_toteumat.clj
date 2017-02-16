@@ -14,10 +14,9 @@
 
 (def muutyo-xf
   (comp
+    yllapitokohteet-domain/yllapitoluokka-xf
     (map #(assoc % :laskentakohde [(get-in % [:laskentakohde-id])
-                                  (get-in % [:laskentakohde-nimi])]
-                   :yllapitoluokka {:nimi (yllapitokohteet-domain/yllapitoluokan-nimi (:yllapitoluokka %))
-                                    :numero (:yllapitoluokka %)}))
+                                  (get-in % [:laskentakohde-nimi])]))
     (map #(dissoc % :laskentakohde-id :laskentakohde-nimi))))
 
 (defn hae-yllapito-toteumat [db user {:keys [urakka sopimus alkupvm loppupvm] :as tiedot}]

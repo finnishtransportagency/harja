@@ -78,7 +78,7 @@
        {:otsikko "Ylläpitoluokka" :nimi :yllapitoluokka :tyyppi :valinta
         :valinta-nayta #(if % (:nimi %) "- valitse -")
         :fmt :nimi
-        :valinnat yllapitokohteet-domain/yllapitoluokat}
+        :valinnat yllapitokohteet-domain/nykyiset-yllapitoluokat}
 
        {:otsikko               "Laskentakohde"
         :nimi                  :laskentakohde
