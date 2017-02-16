@@ -543,11 +543,13 @@
                     :urakka-id (:id urakka)
                     :yllapitokohteet-atom kohteet-atom}]])
 
-(defn hae-osan-pituudet [grid osan-pituudet-teille]
+(defn hae-osan-pituudet [grid osan-pituudet-teille-atom]
   (let [tiet (into #{} (map (comp :tr-numero second)) (grid/hae-muokkaustila grid))]
-    (doseq [tie tiet :when (not (contains? @osan-pituudet-teille tie))]
+    (doseq [tie tiet :when (not (contains? @osan-pituudet-teille-atom tie))]
       (go
-        (swap! osan-pituudet-teille assoc tie (<! (vkm/tieosien-pituudet tie)))))))
+        (let [pituudet (<! (vkm/tieosien-pituudet tie))]
+          (log "Haettu osat tielle " tie ", vastaus: " (pr-str pituudet))
+          (swap! osan-pituudet-teille-atom assoc tie pituudet))))))
 
 
 
@@ -567,8 +569,7 @@
                    (if (and @yha/yha-kohteiden-paivittaminen-kaynnissa? (:yha-sidottu? optiot))
                      :ei-mahdollinen
                      (:tallenna optiot)))
-        osan-pituudet-teille (atom {20 {1 1000 2 2000 3 3000}
-                                    4 {4 4000 5 5000 6 6000}})
+        osan-pituudet-teille (atom {})
         validoi-kohteen-osoite (fn [kentta arvo rivi]
                                  (validoi-kohteen-osoite @osan-pituudet-teille kentta arvo rivi))]
     (komp/luo
@@ -735,7 +736,6 @@
        :tyyppi :komponentti :leveys yhteensa-leveys :tasaa :oikea
        :komponentti
        (fn [rivi]
-         (log "KOHTEET ATOMI " (pr-str @kohteet-atom))
          [:span {:class (when (some :maaramuutokset-ennustettu? @kohteet-atom)
                           "grid-solu-ennustettu")}
           (fmt/euro-opt (:kokonaishinta rivi))])}]

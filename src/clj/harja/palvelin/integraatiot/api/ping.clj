@@ -23,7 +23,7 @@
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
-      http :ping
+      http :api-ping
       (GET "/api/ping" request
         (kasittele-kutsu db integraatioloki :ping-sisaan request nil json-skeemat/kirjausvastaus
                          (fn [_ _ _ _]
@@ -31,5 +31,5 @@
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :ping)
+    (poista-palvelut http :api-ping)
     this))

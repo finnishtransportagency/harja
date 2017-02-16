@@ -45,6 +45,7 @@
   ([db user oikeustarkistus-fn]
    (kayttajan-urakat-aikavalilta db user oikeustarkistus-fn nil nil nil nil (pvm/nyt) (pvm/nyt)))
   ([db user oikeustarkistus-fn urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu]
+   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
    (konv/sarakkeet-vektoriin
      (into []
            (comp
@@ -120,6 +121,7 @@
     (julkaise-palvelu (:http-palvelin this)
                       :kayttajatiedot
                       (fn [user alku]
+                        (oikeudet/ei-oikeustarkistusta!)
                         (assoc user :urakkatyyppi
                                     (oletusurakkatyyppi (:db this) user))))
     this)

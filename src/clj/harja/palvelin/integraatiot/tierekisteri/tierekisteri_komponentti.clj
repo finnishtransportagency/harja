@@ -1,6 +1,6 @@
 (ns harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti
   "Tarjoaa yhteydet Tierekisteriin:
-  1. Tietolajien kuvauksen hakeminen
+  1. Tietolajien kuvausten hakeminen
   2. Varusteiden hakeminen
   3. Varusteiden hallinta: lisäys, poisto, päivitys
 
@@ -29,7 +29,8 @@
   (:import (java.text SimpleDateFormat)))
 
 (defprotocol TierekisteriPalvelut
-  (hae-tietolajit [this tietolajitunniste muutospvm])
+  (hae-tietolaji [this tietolajitunniste muutospvm])
+  (hae-kaikki-tietolajit [this muutospvm])
   (hae-tietueet [this tierekisteriosoitevali tietolajitunniste voimassaolopvm tilannepvm])
   (hae-urakan-tietueet [this urakka tietolajitunniste tilannepvm])
   (hae-tietue [this tietueen-tunniste tietolajitunniste tilannepvm])
@@ -60,8 +61,7 @@
                                 tr
                                 luotu
                                 tietolaji
-                                arvot
-                                toimenpide]}]
+                                arvot]}]
   (let [formatoi-pvm #(when % (.format (SimpleDateFormat. "yyyy-MM-dd") %))
         tekija {:henkilo henkilo
                 :jarjestelma "Harja"
@@ -135,12 +135,19 @@
     this)
 
   TierekisteriPalvelut
-  (hae-tietolajit
+  (hae-tietolaji
     [this tietolajitunniste muutospvm]
     (validoi-tietolajitunniste tietolajitunniste)
     (when (not (empty? tierekisteri-api-url))
-      (tietolajit/hae-tietolajit
+      (tietolajit/hae-tietolaji
         (:db this) (:integraatioloki this) tierekisteri-api-url tietolajitunniste muutospvm)))
+
+  (hae-kaikki-tietolajit
+    [this muutospvm]
+    (when (not (empty? tierekisteri-api-url))
+      (mapv
+        #(tietolajit/hae-tietolaji (:db this) (:integraatioloki this) tierekisteri-api-url % muutospvm)
+        tietolajitunnisteet)))
 
   (hae-tietueet
     [this tr tietolajitunniste voimassaolopvm tilannepvm]
