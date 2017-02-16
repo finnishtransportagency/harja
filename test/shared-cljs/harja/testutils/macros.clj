@@ -35,4 +35,5 @@
 
 (defmacro klikkaa-ja-odota [element]
   `(do (cljs-react-test.simulate/click ~element nil)
+       ;; FIXME Kutsu flush
        (cljs.core.async/<! (cljs.core.async/timeout 2000))))

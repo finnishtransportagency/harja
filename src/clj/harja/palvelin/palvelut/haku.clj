@@ -13,6 +13,7 @@
 (defn hae-harjasta
   "Palvelu, joka hakee Harjasta hakutermin avulla."
   [db user hakutermi]
+  (oikeudet/ei-oikeustarkistusta!) ;urakoitsijan osalta oikeustarkistus tehdään alla filterissä ja SQL-kyselyssä
   (let [termi (str "%" hakutermi "%")
         kayttajan-org (:organisaatio user)
         loytyneet-urakat (into []
@@ -36,8 +37,7 @@
                                                                   (:nimi %) ", " (:organisaatiotyyppi %)))
                                            (org-q/hae-organisaation-tunnistetiedot db termi)))
         tulokset (into []
-                       (concat loytyneet-urakat loytyneet-kayttajat loytyneet-organisaatiot))
-        _ (log/debug "haun tulokset" tulokset)]
+                       (concat loytyneet-urakat loytyneet-kayttajat loytyneet-organisaatiot))]
     tulokset))
 
 (defn hae-kayttajan-tiedot

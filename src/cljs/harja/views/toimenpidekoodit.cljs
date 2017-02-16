@@ -204,7 +204,7 @@
             valinnan-koodi #(get kaikki-koodit (-> % .-target .-value js/parseInt))]
 
         [:div.container-fluid.toimenpidekoodit
-         [:h2 "Tehtävien hallinta"]
+         [:h3 "Tehtävien hallinta"]
          [:div.input-group
           [:select#taso1 {:on-change #(do (reset! valittu-taso1 (valinnan-koodi %))
                                           (reset! valittu-taso2 nil)

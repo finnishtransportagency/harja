@@ -45,7 +45,7 @@
   (z/xml-> data :ominaisuudet :ominaisuus parsi-ominaisuus))
 
 (defn parsi-tietolaji [data]
-  (let [tietolaji (z/xml1-> data :ns2:tietolajit :ns2:tietolaji)]
+  (when-let [tietolaji (z/xml1-> data :ns2:tietolajit :ns2:tietolaji)]
     {:tunniste (parsi-tunniste tietolaji)
      :ominaisuudet (parsi-ominaisuudet tietolaji)}))
 
