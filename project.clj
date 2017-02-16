@@ -71,7 +71,7 @@
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
                  [cljs-ajax "0.5.8"]
-                 [figwheel "0.5.8"]
+                 [figwheel "0.5.9"]
 
                  [reagent "0.6.0-rc" :exclusions [[cljsjs/react :classifier "*"]]]
                  ; TODO Voisi päivittää, mutta 0.6.0 rikkoo kenttätestit (numero/pvm kentistä .-value palauttaa aina tyhjää).
@@ -152,12 +152,13 @@
   :plugins [[lein-cljsbuild "1.1.5"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.10"]
-            [lein-figwheel "0.5.8"]
+            [lein-figwheel "0.5.9"]
             [codox "0.8.11"]
             [jonase/eastwood "0.2.3"]
             [lein-auto "0.1.2"]
             [lein-pdo "0.1.1"]
             [lein-doo "0.1.6"]]
+
 
   ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds
@@ -182,8 +183,7 @@
                            :source-map true
                            :libs ["src/js/kuvataso.js"]
                            :closure-output-charset "US-ASCII"
-                           :main harja.runner
-                           }
+                           :main harja.runner}
                 :notify-command ["./run-karma.sh"]}
                ;;:warning-handlers [utils.cljs-warning-handler/handle]}
 
@@ -207,8 +207,6 @@
                {:id "laadunseuranta-dev"
                 :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
 
-                :figwheel {:on-jsload "harja-laadunseuranta.dev-core/on-js-reload"}
-
                 :compiler {:main harja-laadunseuranta.dev-core
                            :asset-path "js/compiled/dev_out"
                            :output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta_dev.js"
@@ -218,10 +216,7 @@
                {:id "laadunseuranta-devcards"
                 :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
 
-                :figwheel {:devcards true
-                           ;:nrepl-port 7889
-                           ;:server-port 3450
-                           }
+                :figwheel {:devcards true}
 
                 :compiler {:main harja-laadunseuranta.devcards-core
                            :asset-path "js/compiled/devcards_out"
@@ -286,11 +281,9 @@
                  :timeout 120000
                  :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
 
-
   ;; Clientin reload ja REPL
   :figwheel {:server-port 3449
-             :reload-clj-files false
-             :css-dirs ["resources/public/laadunseuranta/css"]}
+             :reload-clj-files false}
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
   :aliases {"tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
