@@ -269,6 +269,9 @@ hakutiheys-historiakuva 1200000)
   ;; Älä vaihda tätä orriksi ;)
   (if (some? vanha-arvo) vanha-arvo uusi-arvo))
 
+(defn aseta-urakka-valituksi! [id]
+  (swap! suodattimet assoc :alueet (tk/suodatin-muutettuna (:alueet @suodattimet) (fn [s val?] [s true]) #{id})))
+
 ;; VALINTALOGIIKAN AIKAKIRJA:
 ;; v1:  Kunnioitetaan aina vanhaa, eli käyttäjän tekemää valintaa. Palvelimelta palautettavat
 ;;      alueet eivät ikinä ylikirjoita jo olemassa olevia valintoja.

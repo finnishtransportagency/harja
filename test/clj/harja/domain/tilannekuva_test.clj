@@ -31,6 +31,18 @@
     (is (= 3 (count tulos)))
     (is (= valitut (into #{} tulos)))))
 
+(deftest suodatin-muutettuna
+  (let [alkutilanne suodattimet
+        haluttu {:eka {:toka {{:id 1 :nimi :foo} {:neljas {:foo false
+                                                           (tee-suodatin 2) true
+                                                           (tee-suodatin 3) false}}}}
+                 :foo {:bar {:baz {(tee-suodatin 4) false
+                                   (tee-suodatin 5) true
+                                   (tee-suodatin 6) false}}}}]
+    (is (= haluttu (tk/suodatin-muutettuna alkutilanne #(do [:foo (not %2)]) #{1})))
+
+    (is (not (= {} (tk/suodatin-muutettuna alkutilanne #(do [:foo (not %2)]) #{1}))))))
+
 (deftest valittujen-suodattimien-idt
   (let [valitut (into #{} (map :id (map tee-suodatin [1 2 5])))
         tulos (tk/valittujen-suodattimien-idt suodattimet)]

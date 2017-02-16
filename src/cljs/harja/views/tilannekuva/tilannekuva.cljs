@@ -373,6 +373,7 @@
                            ;; vai toiseen näkymään (-> taso pois)
                            (nayta-tai-piilota-karttataso! @tiedot/valittu-tila)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa @nav/valittu-urakka)
+                           (when (:id @nav/valittu-urakka) (tiedot/aseta-urakka-valituksi! (:id @nav/valittu-urakka)))
                            (reset! kartta-tiedot/pida-geometriat-nakyvilla? false)
                            (kartta-tiedot/kasittele-infopaneelin-linkit!
                              {:paallystys
