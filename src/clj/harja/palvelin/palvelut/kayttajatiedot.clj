@@ -118,7 +118,7 @@
        aluekokonaisuudet))))
 
 (defn- hae-yhteydenpidon-vastaanottajat [db user]
-  (roolit/vaadi-rooli user roolit/jarjestelmavastaava)
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-yhteydenpito user)
   (log/debug "Haetaan yhteydenpidon vastaanottajat")
   (let [vastaus (into [] (q/hae-yhteydenpidon-vastaanottajat db))]
     (log/debug "Vastaus: " vastaus)

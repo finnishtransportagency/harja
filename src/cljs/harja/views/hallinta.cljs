@@ -52,7 +52,7 @@
 
    "Yhteydenpito"
    :yhteydenpito
-   (when (oikeudet/hallinta)
+   (when (oikeudet/hallinta-yhteydenpito)
      ^{:key "yhteydenpito"}
      [yhteydenpito/yhteydenpito])
 
