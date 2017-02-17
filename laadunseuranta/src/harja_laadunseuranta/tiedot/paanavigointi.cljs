@@ -8,7 +8,7 @@
             [cljs-time.coerce :as tc]
             [cljs-time.local :as lt]))
 
-;; Havainnot (ne, jotka ovat esiintyvät usean välilehden alla, muutoin määritelty havainnot-ryhmittain -muuttujaan)
+;; Havainnot (ne, jotka esiintyvät usean välilehden alla, muutoin määritelty havainnot-ryhmittain -muuttujaan)
 
 (def liikennemerkki-luminen
   {:nimi "Liikenne\u00ADmerkki lumi\u00ADnen"
