@@ -11,11 +11,13 @@
               +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
               kuittaustyypin-selite kuittaustyypin-lyhenne
               tilan-selite] :as domain]
+            [harja.ui.bootstrap :as bs]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.loki :refer [log tarkkaile!]]
+            [harja.tiedot.istunto :as istunto]
             [harja.ui.napit :refer [palvelinkutsu-nappi] :as napit]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.ui.lomake :as lomake]
@@ -305,4 +307,16 @@
 
 (defn ilmoitukset []
   (fn []
-    [tuck tiedot/ilmoitukset ilmoitukset*]))
+    (if (contains? istunto/pois-kytketyt-ominaisuudet :paallystysilmoitukset)
+      [tuck tiedot/ilmoitukset ilmoitukset*]
+      ;; else
+      [bs/tabs {:style :tabs :classes "tabs-taso1"
+                :active (nav/valittu-valilehti-atom :ilmoitukset-valilehti)}
+
+       "Tieliikenne"
+       :tieliikenne
+       [tuck tiedot/ilmoitukset ilmoitukset*]
+
+       "Tietyöt"
+       :tietyot
+       [:div "terve"]])))
