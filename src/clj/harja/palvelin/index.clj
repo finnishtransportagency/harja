@@ -1,6 +1,5 @@
 (ns harja.palvelin.index
-  (:require [hiccup.core :refer [html]]
-            [harja.palvelin.tyokalut.svg :as svg])
+  (:require [hiccup.core :refer [html]])
   (:import [javax.crypto Mac]
            [javax.crypto.spec SecretKeySpec]
            [java.util Base64]
@@ -50,16 +49,20 @@
        [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token token}
         [:div#app]]])))
 
+(def livicons-18 (delay (slurp "resources/public/laadunseuranta/img/livicons-18.svg")))
+(def livicons-24 (delay (slurp "resources/public/laadunseuranta/img/livicons-24.svg")))
+(def livicons-36 (delay (slurp "resources/public/laadunseuranta/img/livicons-36.svg")))
+
 (defn tee-ls-paasivu [devmode]
   (let [inline-svg-18 (reify HtmlRenderer
                         (render-html [_]
-                          (svg/svg-spritet "resources/public/laadunseuranta/img/livicons-18.svg")))
+                          @livicons-18))
         inline-svg-24 (reify HtmlRenderer
                         (render-html [_]
-                          (svg/svg-spritet "resources/public/laadunseuranta/img/livicons-24.svg")))
+                          @livicons-24))
         inline-svg-36 (reify HtmlRenderer
                         (render-html [_]
-                          (svg/svg-spritet "resources/public/laadunseuranta/img/livicons-36.svg")))]
+                          @livicons-36))]
     (html
       "<!DOCTYPE html>\n"
       (if devmode
