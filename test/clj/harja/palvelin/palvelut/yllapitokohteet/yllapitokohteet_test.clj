@@ -120,11 +120,27 @@
                                            :urakan-yllapitokohteet
                                            +kayttaja-jvh+ {:urakka-id urakka-id
                                                            :sopimus-id sopimus-id})
-          urakan-geometria-muutoksen-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))]
+          urakan-geometria-lisayksen-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))]
       (log/debug "Kohteet kannassa: " (pr-str kohteet-kannassa))
       (is (not (nil? kohteet-kannassa)))
-      (is (not= urakan-geometria-ennen-muutosta urakan-geometria-muutoksen-jalkeen "Urakan geometria päivittyi"))
+      (is (not= urakan-geometria-ennen-muutosta urakan-geometria-lisayksen-jalkeen "Urakan geometria päivittyi"))
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
+
+      ;; Edelleen jos ylläpitokohde poistetaan, niin myös geometria päivittyy
+      (let [lisatty-kohde (first (filter #(= (:nimi %) "Testiramppi4564ddf") kohteet-kannassa))
+            _ (is lisatty-kohde "Lisätty kohde löytyi vastauksesta")
+            lisatty-kohde (assoc lisatty-kohde :poistettu true)
+            kohteet-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                             :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                       :sopimus-id sopimus-id
+                                                                                       :kohteet [lisatty-kohde]})
+            poistettu-kohde (first (filter #(= (:nimi %) "Testiramppi4564ddf") kohteet-kannassa))
+            urakan-geometria-poiston-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))]
+
+        (is (nil? poistettu-kohde) "Poistettua kohdetta ei ole enää vastauksessa")
+        (is (not= urakan-geometria-lisayksen-jalkeen urakan-geometria-poiston-jalkeen "Geometria päivittyi")))
+
+      ;; Siivoa sotkut
       (u (str "DELETE FROM yllapitokohde WHERE nimi = 'Testiramppi4564ddf';")))))
 
 (deftest tallenna-paallystyskohde-kantaan-vuodelle-2015
