@@ -3,14 +3,14 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]))
 
-(defrecord PoisKytketytOminaisuudet [pois-kytketyt-ominaisuudet-vektori]
+(defrecord PoisKytketytOminaisuudet [pois-kytketyt-ominaisuudet-joukko]
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)]
       (julkaise-palvelu http :pois-kytketyt-ominaisuudet
                         (fn [user tiedot]
                           (oikeudet/ei-oikeustarkistusta!)
-                          pois-kytketyt-ominaisuudet-vektori))
+                          pois-kytketyt-ominaisuudet-joukko))
       this))
 
   (stop [this]
