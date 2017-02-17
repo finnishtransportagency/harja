@@ -163,7 +163,8 @@
   ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds
               [{:id "dev"
-                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"]
+                :figwheel true
+                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev"]
                 :compiler {:optimizations :none
                            :source-map true
                            ;;:preamble ["reagent/react.js"]
@@ -174,7 +175,7 @@
                            :recompile-dependents false
                            }}
                {:id "test"
-                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"
+                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev"
                                "test/cljs" "test/doo" "test/shared-cljs"]
                 :compiler {:output-to "target/cljs/test/test.js"
                            :output-dir "target/cljs/test"
@@ -188,7 +189,7 @@
                ;;:warning-handlers [utils.cljs-warning-handler/handle]}
 
                {:id "prod"
-                :source-paths ["src/cljs" "src/cljc" "src/cljs-prod" "src/shared-cljc"]
+                :source-paths ["src/cljs" "src/cljc" "src/cljs-prod"]
                 :compiler {:optimizations :advanced
                            ;; korjaa pitkän buildiajan http://dev.clojure.org/jira/browse/CLJS-1228
                            :recompile-dependents false
@@ -205,8 +206,8 @@
 
                ;; Laadunseurannan buildit
                {:id "laadunseuranta-dev"
-                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]
-
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
+                :figwheel true
                 :compiler {:main harja-laadunseuranta.dev-core
                            :asset-path "js/compiled/dev_out"
                            :output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta_dev.js"
@@ -214,7 +215,7 @@
                            :source-map-timestamp true}}
 
                {:id "laadunseuranta-devcards"
-                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
 
                 :figwheel {:devcards true}
 
@@ -225,7 +226,7 @@
                            :source-map-timestamp true}}
 
                {:id "laadunseuranta-test"
-                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"
                                "laadunseuranta/test-src/cljs" "test/shared-cljs"]
 
                 :compiler {:main harja-laadunseuranta.test-main
@@ -243,7 +244,7 @@
                ;; production. You can build this with:
                ;; lein cljsbuild once min
                {:id "laadunseuranta-min"
-                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
                 :jar true
                 :compiler {:output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta.js"
                            :output-dir "resources/public/laadunseuranta/js/compiled/out"
@@ -266,7 +267,7 @@
 
 
   ;; Palvelimen buildin tietoja
-  :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src" "src/shared-cljc"]
+  :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src"]
   :test-paths ["test/clj" "laadunseuranta/test-src/clj"]
   :aot :all
   :main harja.palvelin.main
