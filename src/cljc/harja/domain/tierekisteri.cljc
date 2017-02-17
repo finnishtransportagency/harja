@@ -4,11 +4,14 @@
             #?@(:clj [[clojure.future :refer :all]]
                 :cljs [[harja.loki :refer [log]]])))
 
-(s/def ::numero pos-int?)
-(s/def ::alkuosa pos-int?)
-(s/def ::alkuetaisyys nat-int?)
-(s/def ::loppuosa pos-int?)
-(s/def ::loppuetaisyys nat-int?)
+(s/def ::osa (s/and pos-int? #(< % 1000)))
+(s/def ::etaisyys (s/and nat-int? #(< % 50000)))
+
+(s/def ::numero (s/and pos-int? #(< % 100000)))
+(s/def ::alkuosa  ::osa)
+(s/def ::alkuetaisyys ::etaisyys)
+(s/def ::loppuosa ::osa)
+(s/def ::loppuetaisyys ::etaisyys)
 
 ;; Halutaan tierekisteriosoite, joka voi olla pistemäinen tai sisältää myös
 ;; loppuosan ja loppuetäisyyden.
