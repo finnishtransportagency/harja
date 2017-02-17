@@ -1,5 +1,6 @@
 (ns harja.palvelin.index
-  (:require [hiccup.core :refer [html]])
+  (:require [hiccup.core :refer [html]]
+            [clojure.java.io :as io])
   (:import [javax.crypto Mac]
            [javax.crypto.spec SecretKeySpec]
            [java.util Base64]
@@ -52,10 +53,17 @@
 
 
 (defn tee-ls-paasivu [devmode]
-  (let [livicons-osoite (if devmode "resources/public/laadunseuranta/img/" "img/")
-        livicons-18 (slurp (str livicons-osoite "livicons-18.svg"))
-        livicons-24 (slurp (str livicons-osoite "livicons-24.svg"))
-        livicons-36 (slurp (str livicons-osoite "livicons-36.svg"))
+  (let [livicons-osoite (if devmode "resources/public/laadunseuranta/img/"
+                                    "public/laadunseuranta/img/")
+        livicons-18 (if devmode
+                      (slurp (str livicons-osoite "livicons-18.svg"))
+                      (slurp (io/resource (str livicons-osoite "livicons-18.svg"))))
+        livicons-24 (if devmode
+                      (slurp (str livicons-osoite "livicons-24.svg"))
+                      (slurp (io/resource (str livicons-osoite "livicons-24.svg"))))
+        livicons-36 (if devmode
+                      (slurp (str livicons-osoite "livicons-36.svg"))
+                      (slurp (io/resource (str livicons-osoite "livicons-36.svg"))))
         inline-svg-18 (reify HtmlRenderer
                         (render-html [_]
                           livicons-18))
