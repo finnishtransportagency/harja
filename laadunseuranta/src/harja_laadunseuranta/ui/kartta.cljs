@@ -250,10 +250,12 @@
           (and kayttaja-muutti-zoomausta-aikaleima
                (> (t/in-seconds (t/interval kayttaja-muutti-zoomausta-aikaleima (l/local-now)))
                   asetukset/+kunnioita-kayttajan-zoomia-s+)))
-    (let [min-zoom asetukset/+min-zoom+
+    (let [nopeus-tiedossa? (not (or (js/isNaN nopeus) ;; GPS-API palauttaa nopeuden JS NaN -muodossa, jos ei saada
+                                    (nil? nopeus)))
+          min-zoom asetukset/+min-zoom+
           max-zoom asetukset/+max-zoom+
           max-nopeus-min-zoomaus 30 ;; m/s, jolla kartta zoomautuu minimiarvoonsa eli niin kauas kuin sallittu
-          uusi-zoom-taso (if nopeus
+          uusi-zoom-taso (if nopeus-tiedossa?
                            ;; Zoomataan karttaa kauemmas sopivalle tasolle GPS:stä saadun nopeustiedon perusteella
                            (- max-zoom (float (* (/ nopeus max-nopeus-min-zoomaus) (- max-zoom min-zoom))))
                            max-zoom)
