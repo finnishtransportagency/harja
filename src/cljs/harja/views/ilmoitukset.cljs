@@ -307,7 +307,7 @@
 
 (defn ilmoitukset []
   (fn []
-    (if (contains? istunto/pois-kytketyt-ominaisuudet :paallystysilmoitukset)
+    (if-not (istunto/ominaisuus-kaytossa? :tietyoilmoitukset)
       [tuck tiedot/ilmoitukset ilmoitukset*]
       ;; else
       [bs/tabs {:style :tabs :classes "tabs-taso1"

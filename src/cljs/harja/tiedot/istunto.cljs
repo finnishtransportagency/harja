@@ -127,3 +127,7 @@
 
 
 (defonce pois-kytketyt-ominaisuudet (atom nil)) ;; tähän luetaan set
+
+(defn ominaisuus-kaytossa? [k]
+  (let [pko @pois-kytketyt-ominaisuudet]
+    (and (set? pko) (contains? pko k))))
