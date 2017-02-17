@@ -49,20 +49,22 @@
        [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token token}
         [:div#app]]])))
 
-(def livicons-18 (delay (slurp "img/livicons-18.svg")))
-(def livicons-24 (delay (slurp "img/livicons-24.svg")))
-(def livicons-36 (delay (slurp "img/livicons-36.svg")))
+
 
 (defn tee-ls-paasivu [devmode]
-  (let [inline-svg-18 (reify HtmlRenderer
+  (let [livicons-osoite (if devmode "resources/public/laadunseuranta/img/" "img/")
+        livicons-18 (slurp (str livicons-osoite "livicons-18.svg"))
+        livicons-24 (slurp (str livicons-osoite "livicons-24.svg"))
+        livicons-36 (slurp (str livicons-osoite "livicons-36.svg"))
+        inline-svg-18 (reify HtmlRenderer
                         (render-html [_]
-                          @livicons-18))
+                          livicons-18))
         inline-svg-24 (reify HtmlRenderer
                         (render-html [_]
-                          @livicons-24))
+                          livicons-24))
         inline-svg-36 (reify HtmlRenderer
                         (render-html [_]
-                          @livicons-36))]
+                          livicons-36))]
     (html
       "<!DOCTYPE html>\n"
       (if devmode
