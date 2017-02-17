@@ -243,7 +243,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   (when-not @pk-atomi
     (go
       (let [pko (<! (post! :pois-kytketyt-ominaisuudet {}))]
-        (swap! pk-atomi pko)
+        (swap! pk-atomi (set pko))
         (log "pois kytketyt ominaisuudet:" (pr-str pko))))))
 
 (defn lisaa-kuuntelija-selaimen-verkkotilalle []
