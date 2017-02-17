@@ -17,8 +17,6 @@
             [harja.ui.modal :as modal])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defonce pois-kytketyt-ominaisuudet (atom nil))
-
 (defn render []
   (reagent/render [#'main-view/main] (.getElementById js/document "app")))
 
@@ -63,6 +61,7 @@
     (istunto/kaynnista-ajastin!)
     (modal/aloita-urln-kuuntelu)
     (k/kaynnista-palvelimen-pingaus)
-    (k/kysy-pois-kytketyt-ominaisuudet! pois-kytketyt-ominaisuudet)
+    (log "pois-kytketyt-ominaisuudet kutsu mainista")
+    (k/kysy-pois-kytketyt-ominaisuudet! istunto/pois-kytketyt-ominaisuudet)
     (istunto/aseta-kayttaja (<! (k/post! :kayttajatiedot
                                          (reset! istunto/istunto-alkoi (js/Date.)))))))

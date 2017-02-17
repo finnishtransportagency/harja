@@ -118,10 +118,12 @@
 
 (defn testikaytto-mahdollista? []
   (not (empty? @testikayttajat)))
-  
+
 (defn aseta-testikayttaja! [kayttaja]
   (if-not kayttaja
     (cookie/remove "testikayttaja")
     (cookie/set "testikayttaja" (:kayttajanimi kayttaja)))
   (.reload js/window.location))
 
+
+(defonce pois-kytketyt-ominaisuudet (atom nil)) ;; tähän luetaan set
