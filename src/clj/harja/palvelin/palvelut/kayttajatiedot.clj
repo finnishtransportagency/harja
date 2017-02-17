@@ -1,15 +1,17 @@
 (ns harja.palvelin.palvelut.kayttajatiedot
-  "Palvelu, jolla voi hakea perustietoja nykyisestä käyttäjästä"
-  (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
+  "Palvelu, jolla voi hakea perustietoja Harjan käyttäjistä"
+  (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.kayttajat :as q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.urakat :as urakat]
+            [taoensso.timbre :as log]
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [harja.domain.roolit :as roolit]))
 
 (defn oletusurakkatyyppi
   [db user]
@@ -115,6 +117,13 @@
                              (:urakat au))))
        aluekokonaisuudet))))
 
+(defn- hae-yhteydenpidon-vastaanottajat [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-yhteydenpito user)
+  (log/debug "Haetaan yhteydenpidon vastaanottajat")
+  (let [vastaus (into [] (q/hae-yhteydenpidon-vastaanottajat db))]
+    (log/debug "Vastaus: " vastaus)
+    vastaus))
+
 (defrecord Kayttajatiedot []
   component/Lifecycle
   (start [this]
@@ -124,7 +133,13 @@
                         (oikeudet/ei-oikeustarkistusta!)
                         (assoc user :urakkatyyppi
                                     (oletusurakkatyyppi (:db this) user))))
+    (julkaise-palvelu (:http-palvelin this)
+                      :yhteydenpito-vastaanottajat
+                      (fn [user _]
+                        (hae-yhteydenpidon-vastaanottajat (:db this) user)))
     this)
   (stop [this]
-    (poista-palvelu (:http-palvelin this) :kayttajatiedot)
+    (poista-palvelut (:http-palvelin this)
+                     :kayttajatiedot
+                     :yhteydenpito-vastaanottajat)
     this))
