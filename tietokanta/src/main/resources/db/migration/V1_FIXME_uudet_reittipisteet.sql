@@ -67,3 +67,6 @@ BEGIN
   RETURN lkm;
 END;
 $$ LANGUAGE plpgsql;
+
+-- FIXME: toteumassa oleva hoitoluokittainen triggeri pitää poistaa ja siirtää
+-- tähän toteuman_reittipisteet tauluun.
