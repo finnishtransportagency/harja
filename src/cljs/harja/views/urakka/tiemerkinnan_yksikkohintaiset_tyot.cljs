@@ -32,6 +32,9 @@
         [:div
          [grid/grid
           {:otsikko "Yksikköhintaiset työt"
+           :tyhja (if (nil? @tiedot/yksikkohintaiset-tyot)
+                    [ajax-loader "Haetaan töitä..."]
+                    "Töitä ei löytynyt")
            :voi-poistaa? (constantly false)
            :voi-lisata? false
            :piilota-toiminnot? true

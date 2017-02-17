@@ -163,6 +163,7 @@
   ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds
               [{:id "dev"
+                :figwheel true
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-dev"]
                 :compiler {:optimizations :none
                            :source-map true
@@ -206,7 +207,7 @@
                ;; Laadunseurannan buildit
                {:id "laadunseuranta-dev"
                 :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
-
+                :figwheel true
                 :compiler {:main harja-laadunseuranta.dev-core
                            :asset-path "js/compiled/dev_out"
                            :output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta_dev.js"
