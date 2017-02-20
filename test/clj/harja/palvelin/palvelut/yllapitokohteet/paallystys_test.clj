@@ -252,10 +252,12 @@
                                 :verkkotyyppi 1
                                 :verkon-sijainti 1
                                 :verkon-tarkoitus 1}]
+                ;; Päällystysilmoituksen myötä kohteen kohdeosat päivitettiin vastaamaan
+                ;; päällystysilmoituksessa mainittuja osia
                 :osoitteet [{:edellinen-paallystetyyppi 1
                              :esiintyma "asd"
                              :km-arvo "asd"
-                             :kohdeosa-id 19
+                             :kohdeosa-id 14
                              :kokonaismassamaara 2
                              :leveys 5
                              :lisaaineet "asd"
