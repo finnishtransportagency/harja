@@ -1,4 +1,6 @@
 -- name: hae-ymparistoraportti-tiedot
+-- Hae APIn kautta raportoidut materiaalinkäytöt urakan_materiaalin_kaytto_hoitoluokittain
+-- taulusta.
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
@@ -16,6 +18,7 @@ WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
       AND (umkh.pvm::DATE BETWEEN :alkupvm AND :loppupvm)
       AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
 UNION
+-- liitä mukaan frontilla raportoitu materiaalinkäyttö toteuma_materiaali taulusta
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
@@ -37,6 +40,8 @@ WHERE (t.alkanut :: DATE BETWEEN :alkupvm AND :loppupvm)
       AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
 GROUP BY u.id, u.nimi, mk.id, mk.nimi, date_trunc('month', t.alkanut), mk.yksikko
 UNION
+-- Liitä lopuksi mukaan suunnittelutiedot. Kuukausi on null, josta myöhemmin
+-- rivi tunnistetaan suunnittelutiedoksi.
 SELECT
   u.id as urakka_id, u.nimi as urakka_nimi,
   NULL as luokka,
