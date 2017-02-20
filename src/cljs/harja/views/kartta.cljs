@@ -478,13 +478,15 @@
       (= :hy (:type geom))))
 
 (defn- tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka?
-  [geom]
-  (or (and
-        (= (:type geom) :ur)
-        (= (:id geom) (:id @nav/valittu-urakka)))
-      (and
-        (= (:type geom) :hy)
-        (= (:id geom) (:id @nav/valittu-hallintayksikko)))))
+  ([geom] (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka?
+           (:id @nav/valittu-urakka) (:id @nav/valittu-hallintayksikko) geom))
+  ([valittu-urakka valittu-hy geom]
+   (or (and
+         (= (:type geom) :ur)
+         (= (:id geom) valittu-urakka))
+       (and
+         (= (:type geom) :hy)
+         (= (:id geom) valittu-hy)))))
 
 (defn kaynnista-infopaneeliin-haku-pisteesta! [tasot event asiat-pisteessa]
   (hae-asiat-pisteessa! tasot event asiat-pisteessa)
@@ -524,84 +526,135 @@
   (piilota-infopaneeli-jos-muuttunut vanha uusi)
   (zoomaa-geometrioihin-jos-muuttunut vanha uusi))
 
-(defn kasittele-select!
-  ([items event] (kasittele-select! items event false))
-  ([items event tuplaklik?]
-   (let [monta? #(< 1 (count %))
-         klikatut-organisaatiot (filter tapahtuman-geometria-on-hallintayksikko-tai-urakka? items)
-         klikatut-asiat (remove tapahtuman-geometria-on-hallintayksikko-tai-urakka? items)
-         keskeyta-event! #(do (.stopPropagation %)
-                            (.preventDefault %))
-         valitse-organisaatio! #(if (= :hy (:type %))
-                                  (nav/valitse-hallintayksikko! %)
-                                  (t/julkaise! (assoc % :aihe :urakka-klikattu)))
-         keskita-moneen! #(tiedot/keskita-kartta-alueeseen! (harja.geo/extent-monelle (map :alue %)))
-         keskita-yhteen! #(tiedot/keskita-kartta-alueeseen! (harja.geo/extent (:alue %)))]
-     ;; Select tarkoittaa, että on klikattu jotain kartalla piirrettyä asiaa.
-     ;; Tuplaklikkaukseen halutaan reagoida joko kohdentamalla tuplaklikattuun asiaan
-     ;; ja avaamalla sen tiedot infopaneeliin (paitsi ilmoituksissa, missä avataan suoraan lomake),
-     ;; tai jos tuplaklikattu asia oli urakka, zoomaataan vaan karttaa askel eteenpäin.
-     ;; Yksittäinen select toimii asiaa klikatessa samoin kuin tuplaklikkaus, mutta kohteeseen
-     ;; ei kohdenneta. Urakan selectointi tarkoittaa käyttäjän näkökulmasta "tyhjän" tai
-     ;; palvelinpäässä piirretyn toteuman klikkaamista, jolloin avataan infopaneeli, ja
-     ;; haetaan esim kyseiselle tielle tietoja.
-     ;;
-     ;; Tuplaklikkauksissa eventin keskeyttäminen tarkoittaa, että zoomausta ei tehdä.
-     (cond
+(defn klikkauksesta-seuraavat-tapahtumat
+  "Funktio palauttaa mäpin, joka sisältää ohjeet, miten kyseiseen select-tapahtumaan
+  tulee reagoida.
+
+  Parametrit:
+  - items: Vektori asioita, joihin klikkaus osui. Organisaatioita ja \"muita\"
+  - tuplaklik?: true/false. Oliko tuplaklikkaus
+  - sivu: nykyinen sivu
+  - val-ur-id, val-hy-id: valitun urakan ja hallintayksikön idt:
+
+  Paluuarvo on mäp, joka sisältää:
+  - avaa-paneeli? true/false: Avataanko infopaneeli, ja aloitetaanko haku
+  - nayta-nama-paneelissa [{..}, {..}]: Vektori mäppejä, jotka lisätään paneeliin
+  - keskita-naihin [{}]: Vektori mäppejä. Kartta zoomataan siten, että kaikki nämä mahtuvat kartalle.
+  - keskeyta-event? true/false: Käytännössä estää zoomauksen kun karttaa tuplaklikataan.
+  - valitse-urakka {}: valitse klikattu urakka, esim etusivulla, raporteissa.
+  - valitse-hallintayksikko {}: Valitse klikattu hy
+  - valitse-ilmoitus {}: Ilmoitusnäkymässä yhden ilmoituksen klikkaaminen aukaisee suoraan lomakkeen"
+  [items tuplaklik? sivu val-ur-id val-hy-id]
+  (let [monta? #(< 1 (count %))
+        klikatut-organisaatiot (filter tapahtuman-geometria-on-hallintayksikko-tai-urakka? items)
+        paallimmainen-organisatio (first klikatut-organisaatiot)
+        klikatut-asiat (remove tapahtuman-geometria-on-hallintayksikko-tai-urakka? items)
+        urakka? #(= :ur (:type %))
+        hallintayksikko? #(= :hy (:type %))
+        valittu-organisaatio? #(tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka?
+                                val-ur-id val-hy-id %)]
+    ;; Select tarkoittaa, että on klikattu jotain kartalla piirrettyä asiaa.
+    ;; Tuplaklikkaukseen halutaan reagoida joko kohdentamalla tuplaklikattuun asiaan
+    ;; ja avaamalla sen tiedot infopaneeliin (paitsi ilmoituksissa, missä avataan suoraan lomake),
+    ;; tai jos tuplaklikattu asia oli urakka, zoomaataan vaan karttaa askel eteenpäin.
+    ;; Yksittäinen select toimii asiaa klikatessa samoin kuin tuplaklikkaus, mutta kohteeseen
+    ;; ei kohdenneta. Urakan selectointi tarkoittaa käyttäjän näkökulmasta "tyhjän" tai
+    ;; palvelinpäässä piirretyn toteuman klikkaamista, jolloin avataan infopaneeli, ja
+    ;; haetaan esim kyseiselle tielle tietoja.
+    ;;
+    ;; Tuplaklikkauksissa eventin keskeyttäminen tarkoittaa, että zoomausta ei tehdä.
+    (cond
       ;; Ilmoituksissa ei haluta ikinä näyttää infopaneelia,
       ;; vaan valitaan klikattu ilmoitus
-      (#{:ilmoitukset} @nav/valittu-sivu)
+      (#{:ilmoitukset} sivu)
       (when-not (empty? klikatut-asiat) ;; Älä siirrä tätä cond-ehtoon
-        (keskeyta-event! event)
-        (if (monta? klikatut-asiat)
-          (do (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
-                                                       event
-                                                       asiat-pisteessa)
-              (apply nayta-infopaneelissa! klikatut-asiat))
-          (t/julkaise! (assoc (first klikatut-asiat) :aihe :ilmoitus-klikattu)))
-        (when tuplaklik? (keskita-moneen! klikatut-asiat)))
+        (merge
+          {:keskeyta-event? true}
+          (if (monta? klikatut-asiat)
+            {:avaa-paneeli? true
+             :nayta-nama-paneelissa klikatut-asiat}
+            {:valitse-ilmoitus (first klikatut-asiat)})
+          (when tuplaklik?
+            {:keskita-naihin klikatut-asiat})))
 
       ;; Tilannekuvassa voidaan klikata valitsematonta hallintayksikköä
       ;; tai urakkaa, ja silti avataan infopaneeli pisteessä olevista asioista.
-      (and (#{:tilannekuva} @nav/valittu-sivu)
+      (and (#{:tilannekuva} sivu)
            (empty? klikatut-asiat))
       (when-not tuplaklik?
-        (keskeyta-event! event)
-        (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
-                                                 event
-                                                 asiat-pisteessa))
+        {:keskeyta-event? true
+         :avaa-paneeli? true})
 
       ;; Tien klikkaaminen esim toteuma-näkymässä osuu valittuun urakkaan
       (and (empty? klikatut-asiat)
-           (every? tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? klikatut-organisaatiot))
-      (when-not (#{:raportit} @nav/valittu-sivu)
+           (urakka? paallimmainen-organisatio)
+           (valittu-organisaatio? paallimmainen-organisatio))
+      (when-not (#{:raportit} sivu)
         (when-not tuplaklik?
-          (keskeyta-event! event)
-          (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
-                                                   event
-                                                   asiat-pisteessa)))
+          {:keskeyta-event? true
+           :avaa-paneeli? true}))
 
-      ;; Etusivulla
+      ;; "Ohi klikkaaminen" etusivulla ei tee mitään
+      (and (empty? klikatut-asiat)
+           (hallintayksikko? paallimmainen-organisatio)
+           (valittu-organisaatio? paallimmainen-organisatio))
+      nil
+
+      ;; Urakan tai hallintayksikön valitseminen etusivulla
       (and (empty? klikatut-asiat)
            (not-empty klikatut-organisaatiot))
       (do
-        (keskeyta-event! event)
-        (valitse-organisaatio! (first klikatut-organisaatiot))
-        (when tuplaklik? (keskita-yhteen! (first klikatut-organisaatiot))))
+        (merge
+          {:keskeyta-event? true}
+          (if (urakka? (first klikatut-organisaatiot))
+            {:valitse-urakka (first klikatut-organisaatiot)}
+            {:valitse-hallintayksikko (first klikatut-organisaatiot)})
+          (when tuplaklik?
+            {:keskita-naihin [(first klikatut-organisaatiot)]})))
 
       ;; Klikattu asia ei ole hy/urakka, eikä se ole ilmoitus ilmoitusnäkymässä.
       ;; Avataan infopaneeliin klikatun asian tiedot, ja haetaan sinne mahdollisesti
       ;; muutakin
       :default
       (do
-        (keskeyta-event! event)
-        (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
-                                                 event
-                                                 asiat-pisteessa)
-        (apply nayta-infopaneelissa! klikatut-asiat)
-        (when tuplaklik? (keskita-moneen! klikatut-asiat)))))))
+        (merge
+          {:keskeyta-event? true
+          :avaa-paneeli? true
+          :nayta-nama-paneelissa klikatut-asiat}
+          (when tuplaklik? {:keskita-naihin klikatut-asiat}))))))
 
-(defn kasittele-dblclick-select! [item event]
+(defn- kasittele-select!
+  ([items event] (kasittele-select! items event false))
+  ([items event tuplaklik?]
+   (let [{:keys [keskeyta-event?
+                 valitse-urakka
+                 valitse-hallintayksikko
+                 valitse-ilmoitus
+                 avaa-paneeli?
+                 nayta-nama-paneelissa
+                 keskita-naihin]} (klikkauksesta-seuraavat-tapahtumat items tuplaklik? @nav/valittu-sivu
+                                                                        (:id @nav/valittu-urakka) (:id @nav/valittu-hallintayksikko))]
+     (when keskeyta-event?
+       (.stopPropagation event)
+       (.preventDefault event))
+
+     (when valitse-urakka (t/julkaise! (assoc valitse-urakka :aihe :urakka-klikattu)))
+
+     (when valitse-hallintayksikko (nav/valitse-hallintayksikko! valitse-hallintayksikko))
+
+     (when valitse-ilmoitus (t/julkaise! (assoc valitse-ilmoitus :aihe :ilmoitus-klikattu)))
+
+     (when avaa-paneeli? (kaynnista-infopaneeliin-haku-pisteesta! @tasot/geometriat-kartalle
+                                                                  event
+                                                                  asiat-pisteessa))
+
+     (when-not (empty? nayta-nama-paneelissa)
+       (apply nayta-infopaneelissa! nayta-nama-paneelissa))
+
+     (when-not (empty? keskita-naihin)
+       (tiedot/keskita-kartta-alueeseen! (harja.geo/extent-monelle (map :alue keskita-naihin)))))))
+
+(defn- kasittele-dblclick-select! [item event]
   (kasittele-select! item event true))
 
 (defn kartta-openlayers []
@@ -656,6 +709,8 @@
          :on-mount           (fn [initialextent]
                                (paivita-extent nil initialextent))
          :on-click           (fn [event]
+                               ;; Click tarkoittaa tyhjän pisteen klikkaamista,
+                               ;; eli esim valitun urakan "ulkopuolelle" klikkaamista.
                                (cond
                                  ;; Näissä näkymissä ei näytetä paneelia
                                  (#{:ilmoitukset :raportit} @nav/valittu-sivu)

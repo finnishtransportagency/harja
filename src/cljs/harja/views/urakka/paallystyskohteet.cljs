@@ -103,7 +103,7 @@
         [muut-kustannukset-view/muut-kustannukset ur]
 
         [yllapitokohteet-view/yllapitokohteet-yhteensa
-         paallystys-tiedot/kohteet-yhteensa {:nakyma :paallystys}]
+         paallystys-tiedot/kaikki-kohteet {:nakyma :paallystys}]
 
         [vihje-elementti [:span
                           [:span "Huomioi etumerkki hinnanmuutoksissa. Ennustettuja määriä sisältävät kentät on värjätty "]
