@@ -36,7 +36,7 @@
           {:koodi virheet/+virheellinen-paivamaara+
            :viesti (format "Päivämäärää: %s ei voi parsia. Anna päivämäärä muodossa: YYYY-MM-DD." paivamaara)})))))
 
-(defn- kasittele-aikaparametrit
+(defn- parsi-aikaparametrit
   "Tarkistaa, että alku ja loppu on annettu ja ettei loppu ole ennen alkua.
    Jos alkua ja loppua ei ole annettu, palauttaa aikavälin nykyhetkestä pitkälle tulevaisuuteen."
   [alkaen paattyen]
@@ -154,7 +154,7 @@
   (parametrivalidointi/tarkista-parametrit parametrit {:puhelinnumero "Puhelinnumero puuttuu"})
   (validointi/tarkista-rooli kayttaja roolit/liikennepaivystaja)
   (let [{puhelinnumero :puhelinnumero alkaen :alkaen paattyen :paattyen} parametrit
-        pvm-vali (kasittele-aikaparametrit alkaen paattyen)
+        pvm-vali (parsi-aikaparametrit alkaen paattyen)
         kaikki-paivystajatiedot (yhteyshenkilot-q/hae-kaikki-paivystajat db (first pvm-vali) (second pvm-vali))
         paivystajatiedot-puhelinnumerolla (suodata-puhelinnumerolla puhelinnumero kaikki-paivystajatiedot)
         vastaus (paivystajatiedot-sanoma/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot-puhelinnumerolla)]
@@ -175,7 +175,7 @@
   (let [{urakkatyyppi :urakkatyyppi alkaen :alkaen paattyen :paattyen x :x y :y} parametrit
         x (Double/parseDouble x)
         y (Double/parseDouble y)
-        pvm-vali (kasittele-aikaparametrit alkaen paattyen)
+        pvm-vali (parsi-aikaparametrit alkaen paattyen)
         urakka-idt (urakat/hae-urakka-idt-sijainnilla db urakkatyyppi {:x x :y y})]
     (if (empty? urakka-idt)
       (virheet/heita-ei-hakutuloksia-apikutsulle-poikkeus
@@ -193,8 +193,8 @@
     :vastaus-skeema json-skeemat/paivystajatietojen-haku-vastaus
     :kasittely-fn (fn [parametrit _ kayttaja-id db]
                     (let [urakka-id (Integer/parseInt (:id parametrit))
-                          pvm-vali (kasittele-aikaparametrit (get parametrit "alkaen")
-                                                             (get parametrit "paattyen"))]
+                          pvm-vali (parsi-aikaparametrit (get parametrit "alkaen")
+                                                         (get parametrit "paattyen"))]
                       (hae-paivystajatiedot-urakan-idlla db urakka-id kayttaja-id pvm-vali)))}
    {:palvelu :hae-paivystajatiedot-sijainnilla
     :polku "/api/paivystajatiedot/haku/sijainnilla"
