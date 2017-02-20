@@ -198,12 +198,23 @@
                                                                     :sopimus-id sopimus-id
                                                                     :paallystyskohde-id paallystyskohde-id})
         kohdeosat (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])]
+    ;; Päällystysilmoituksen perustiedot OK
     (is (not (nil? paallystysilmoitus-kannassa)))
     (is (= (:tila paallystysilmoitus-kannassa) :aloitettu) "Päällystysilmoituksen tila on aloitttu")
     (is (== (:maaramuutokset paallystysilmoitus-kannassa) 205))
     (is (== (:kokonaishinta paallystysilmoitus-kannassa) 5043.95))
+    (is (= (:maaramuutokset-ennustettu? paallystysilmoitus-kannassa) true))
+    (is (= (:kohdenimi paallystysilmoitus-kannassa) "Leppäjärven ramppi"))
+    (is (= (:kohdenumero paallystysilmoitus-kannassa) "L03"))
     ;; Kohdeosat on OK
     (is (= (count kohdeosat) 1))
+    (is (= kohdeosat
+           [{:kohdeosa-id 666, :tr-kaista 1, :edellinen-paallystetyyppi 2, :lisaaineet "12",
+             :leveys 12, :kokonaismassamaara 12, :tr-ajorata 1, :sideainetyyppi 2, :muotoarvo "12",
+             :esiintyma "12", :pitoisuus 12, :tr-loppuosa 3, :tunnus nil, :tr-alkuosa 1, :pinta-ala 12,
+             :massamenekki 1, :kuulamylly 2, :tr-loppuetaisyys 0, :nimi "Leppäjärven kohdeosa", :raekoko 1,
+             :tyomenetelma 21, :rc% 12, :paallystetyyppi 2, :tr-alkuetaisyys 0, :tr-numero 20, :toimenpide nil,
+             :km-arvo "12"}]))
     (is (every? #(number? (:kohdeosa-id %)) kohdeosat))))
 
 (deftest tallenna-uusi-paallystysilmoitus-kantaan

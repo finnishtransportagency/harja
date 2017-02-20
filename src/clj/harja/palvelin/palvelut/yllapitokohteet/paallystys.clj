@@ -33,26 +33,31 @@
     (log/debug "Päällystysilmoitukset saatu: " (count vastaus) "kpl")
     vastaus))
 
-(defn- lisaa-paallystysilmoitukseen-kohdeosien-tiedot [paallystysilmoitus]
+(defn- taydenna-paallystysilmoituksen-kohdeosien-tiedot
+  "Ottaa päällystysilmoituksen ja lisää sen kohdeosiin niiden vastaavat ilmoitustiedot."
+  [paallystysilmoitus]
   (-> paallystysilmoitus
       (assoc-in [:ilmoitustiedot :osoitteet]
                 (->> paallystysilmoitus
                      :kohdeosat
                      (map (fn [kohdeosa]
                             ;; Lisää kohdeosan tietoihin päällystystoimenpiteen tiedot
-                            (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
-                                   (some
-                                     (fn [paallystystoimenpide]
-                                       (when (= (:id kohdeosa)
-                                                (:kohdeosa-id paallystystoimenpide))
-                                         paallystystoimenpide))
-                                     (get-in paallystysilmoitus
-                                             [:ilmoitustiedot :osoitteet])))))
+                            ;; On mahdollista, ettei kohdeosalle ole lisätty mitään tietoja
+                            (when-let [kohdeosan-ilmoitustiedot
+                                       (first (filter
+                                                (fn [paallystystoimenpide]
+                                                  (when (= (:id kohdeosa)
+                                                           (:kohdeosa-id paallystystoimenpide))
+                                                    paallystystoimenpide))
+                                                (get-in paallystysilmoitus
+                                                        [:ilmoitustiedot :osoitteet])))]
+                              (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
+                                     kohdeosan-ilmoitustiedot))))
                      (sort-by tierekisteri-domain/tiekohteiden-jarjestys)
                      vec))
       (dissoc :kohdeosat)))
 
-(defn pyorista-kasittelypaksuus
+(defn- pyorista-kasittelypaksuus
   "Käsittelypaksuus täytyy pyöristää johtuen siitä, että aiemmassa mallissa, käsittelypaksuudelle sallittiin desimaalit.
    Myöhemmin YHA:ssa sallittiin vain kokonaisluvut ja olemassa olevien päällystysilmoitusten migrointi ei ole enää
    mahdollista. Sen takia vanhat arvot pyöristetään vaikka kaikki uudet arvot voi tallentaa vain kokonaislukuina."
@@ -96,7 +101,7 @@
                             ilmoitustiedot))
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
-        paallystysilmoitus (lisaa-paallystysilmoitukseen-kohdeosien-tiedot paallystysilmoitus)
+        paallystysilmoitus (taydenna-paallystysilmoituksen-kohdeosien-tiedot paallystysilmoitus)
         kokonaishinta (reduce + (keep paallystysilmoitus [:sopimuksen-mukaiset-tyot
                                                           :arvonvahennykset
                                                           :bitumi-indeksi
