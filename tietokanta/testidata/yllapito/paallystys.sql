@@ -6,7 +6,7 @@
 
 
 INSERT INTO yllapitokohde
-(id, urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi,
+(urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi,
  aikataulu_kohde_alku, aikataulu_paallystys_alku, aikataulu_paallystys_loppu, aikataulu_tiemerkinta_alku, aikataulu_tiemerkinta_loppu,
  aikataulu_kohde_valmis, aikataulu_muokkaaja, aikataulu_muokattu, valmis_tiemerkintaan, aikataulu_tiemerkinta_takaraja,
  yllapitokohdetyyppi, yllapitokohdetyotyyppi, yhaid,
