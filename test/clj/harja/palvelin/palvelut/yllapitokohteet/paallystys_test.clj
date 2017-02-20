@@ -375,7 +375,7 @@
     (let [urakka-id @muhoksen-paallystysurakan-id
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
           paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
-          kohteita #(count (q (str "SELECT * FROM yllapitokohdeosa"
+          hae-kohteiden-maara #(count (q (str "SELECT * FROM yllapitokohdeosa"
                                    " WHERE poistettu IS NOT TRUE "
                                    " AND yllapitokohde = " paallystyskohde-id ";")))]
 
@@ -385,7 +385,7 @@
                        :sopimus-id sopimus-id
                        :paallystysilmoitus paallystysilmoitus})
 
-      (let [kohteita-ennen-lisaysta (kohteita)
+      (let [kohteita-ennen-lisaysta (hae-kohteiden-maara)
             paallystysilmoitus (update-in paallystysilmoitus [:ilmoitustiedot :osoitteet]
                                           conj {:nimi "Tie 4242"
                                                 :tr-numero 4242
@@ -419,7 +419,7 @@
                          :sopimus-id sopimus-id
                          :paallystysilmoitus paallystysilmoitus})
 
-        (is (= (inc kohteita-ennen-lisaysta) (kohteita)) "Kohteita on nyt 1 enemmän")))))
+        (is (= (inc kohteita-ennen-lisaysta) (hae-kohteiden-maara)) "Kohteita on nyt 1 enemmän")))))
 
 (deftest ala-paivita-paallystysilmoitukselle-paatostiedot-jos-ei-oikeuksia
   (let [paallystyskohde-id (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)]
