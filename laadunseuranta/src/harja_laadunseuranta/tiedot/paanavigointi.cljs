@@ -489,14 +489,14 @@
     :nimi "Sillat"
     :jarjestys 7
     :sisalto (:sillat havainnot-ryhmittain)}
+  {:avain :paallysteen-kunto ;; Koskee hoitoa
+    :nimi "Pääll. kunto"
+    :jarjestys 8
+    :sisalto (:paallysteen-kunto havainnot-ryhmittain)}
    {:avain :paallystyksen-tyovirheluettelo ;; Koskee ylläpitoa
     :nimi "Pääll. työvirhel."
-    :jarjestys 8
-    :sisalto (:paallystyksen-tyovirheluettelo havainnot-ryhmittain)}
-   {:avain :paallysteen-kunto ;; Koskee hoitoa
-    :nimi "Pääl. kunto"
     :jarjestys 9
-    :sisalto (:paallysteen-kunto havainnot-ryhmittain)}])
+    :sisalto (:paallystyksen-tyovirheluettelo havainnot-ryhmittain)}])
 
 ;; Käsittelylogiikka
 
