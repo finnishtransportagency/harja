@@ -104,7 +104,7 @@
 (defn- yllapitoluokan-raporttirivit
   [luokka luokan-rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
   [{:otsikko (if luokka
-               (str "Ylläpitoluokka: " (yllapitokohteet-domain/yllapitoluokan-lyhyt-nimi luokka))
+               (str "Ylläpitoluokka " (yllapitokohteet-domain/yllapitoluokan-lyhyt-nimi luokka))
                "Ei ylläpitoluokkaa")}
    (luo-rivi-muistutusten-maara "Muistutukset yht." luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
    (luo-rivi-indeksien-summa "Indeksit yht." luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
