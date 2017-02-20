@@ -42,6 +42,8 @@
                         :wmts-url-kiinteistorajat asetukset/+wmts-url-kiinteistojaotus+
                         :wmts-url-ortokuva asetukset/+wmts-url-ortokuva+
                         :sijainti-atomi sijainti
+                        :keskita-ajoneuvoon-atom (atom false)
+                        :kayttaja-muutti-zoomausta-aikaleima-atom (atom nil)
                         :ajoneuvon-sijainti-atomi ajoneuvon-sijainti
                         :reittipisteet-atomi reittipisteet
                         :kirjauspisteet-atomi kirjauspisteet

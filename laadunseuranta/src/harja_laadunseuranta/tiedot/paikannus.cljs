@@ -3,7 +3,7 @@
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.kalman :as kalman]
             [harja-laadunseuranta.utils :as utils]
-            [harja-laadunseuranta.math :as math]
+            [harja.math :as math]
             [harja-laadunseuranta.utils :refer [timestamp ipad?]]
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]))
 
@@ -49,9 +49,9 @@
                                        (math/ms->sec (- ts (or (:timestamp nykyinen) ts)))))]
     {:edellinen nykyinen
      :nykyinen (assoc uusi-nykyinen
-                 :speed (:speed uusi-sijainti)
+                 :speed (:speed uusi-sijainti) ; m/s
                  :heading (:heading uusi-sijainti)
-                 :accuracy (:accuracy uusi-sijainti)
+                 :accuracy (:accuracy uusi-sijainti) ; säde metreinä
                  :timestamp ts)}))
 
 (defn kaynnista-paikannus
@@ -97,7 +97,7 @@
                        :lon x
                        :heading 0
                        :accuracy tarkkuus
-                       :speed 40
+                       :speed (+ 25 (rand-int 5))
                        :timestamp (timestamp)}})))
 
 (defn lopeta-paikannus [id]

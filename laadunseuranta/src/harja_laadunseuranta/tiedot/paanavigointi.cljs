@@ -8,56 +8,89 @@
             [cljs-time.coerce :as tc]
             [cljs-time.local :as lt]))
 
-;; Havainnot ja välilehdet
+;; Havainnot (ne, jotka esiintyvät usean välilehden alla, muutoin määritelty havainnot-ryhmittain -muuttujaan)
+
+(def liikennemerkki-luminen
+  {:nimi "Liikenne\u00ADmerkki lumi\u00ADnen"
+   :ikoni "liikennemerkki-lumi-36"
+   :ikoni-lahde "livicons"
+   :tyyppi :piste
+   :avain :liikennemerkki-luminen
+   :vaatii-nappaimiston? false})
+
+(def vesilammikot
+  {:nimi "Vesi\u00ADlammi\u00ADkot"
+   :tyyppi :vali
+   :ikoni "vesilammikko-36"
+   :ikoni-lahde "livicons"
+   :avain :vesilammikot
+   :vaatii-nappaimiston? false})
+
+(def halkeamat
+  {:nimi "Hal\u00ADkeamat"
+   :tyyppi :vali
+   :ikoni "halkeama-36"
+   :ikoni-lahde "livicons"
+   :avain :halkeamat
+   :vaatii-nappaimiston? false})
+
+;; Välilehdet ja niiden sisällöt
 
 (def havainnot-ryhmittain
   ;; Jos muutat näitä, varmista, että tiedot ovat yhteneväiset kannassa olevien vakiohavaintojen kanssa
-  ;; Erityisesti avain ja jatkuvuus!
-  {:talviset-pinnat [{:nimi "Liu\u00ADkas\u00ADta"
-                      :ikoni "liukas-36"
-                      :ikoni-lahde "livicons"
-                      :tyyppi :vali
-                      :avain :liukasta
-                      :mittaus {:nimi "Liukkaus"
-                                :tyyppi :kitkamittaus
-                                :yksikko nil}
-                      :vaatii-nappaimiston? true}
-                     {:nimi "Lu\u00ADmis\u00ADta"
-                      :ikoni "lumi-36"
-                      :ikoni-lahde "livicons"
-                      :tyyppi :vali
-                      :avain :lumista
-                      :mittaus {:nimi "Lumisuus"
-                                :tyyppi :lumisuus
-                                :yksikko "cm"}
-                      :vaatii-nappaimiston? true}
-                     {:nimi "Tasaus\u00ADpuute"
-                      :avain :tasauspuute
-                      :tyyppi :vali
-                      :ikoni "epatasa-36"
-                      :ikoni-lahde "livicons"
-                      :mittaus {:nimi "Tasauspuute"
-                                :tyyppi :talvihoito-tasaisuus
-                                :yksikko "cm"}
-                      :vaatii-nappaimiston? true}
-                     {:nimi "Pysäkki: epä\u00ADtas. polanne"
-                      :tyyppi :piste
-                      :avain :pysakilla-epatasainen-polanne
-                      :ikoni "polanne-36"
-                      :ikoni-lahde "livicons"
-                      :vaatii-nappaimiston? false}
-                     {:nimi "Pysäkki: auraa\u00ADmatta"
-                      :tyyppi :piste
-                      :avain :pysakki-auraamatta
-                      :ikoni "pinta-lumi-36"
-                      :ikoni-lahde "livicons"
-                      :vaatii-nappaimiston? false}
-                     {:nimi "Pysäkki: hiekoit\u00ADtamatta"
-                      :tyyppi :piste
-                      :avain :pysakki-hiekoittamatta
-                      :ikoni "pinta-hiekka-kielto-36"
-                      :ikoni-lahde "livicons"
-                      :vaatii-nappaimiston? false}]
+  ;; sekä palvelimen skeemassa. Erityisesti avain ja jatkuvuustieto on tärkeä kannassa.
+  {:talvihoito [{:nimi "Liu\u00ADkas\u00ADta"
+                 :ikoni "liukas-36"
+                 :ikoni-lahde "livicons"
+                 :tyyppi :vali
+                 :avain :liukasta
+                 :mittaus {:nimi "Liukkaus"
+                           :tyyppi :kitkamittaus
+                           :yksikko nil}
+                 :vaatii-nappaimiston? true}
+                {:nimi "Lu\u00ADmis\u00ADta"
+                 :ikoni "lumi-36"
+                 :ikoni-lahde "livicons"
+                 :tyyppi :vali
+                 :avain :lumista
+                 :mittaus {:nimi "Lumisuus"
+                           :tyyppi :lumisuus
+                           :yksikko "cm"}
+                 :vaatii-nappaimiston? true}
+                {:nimi "Tasaus\u00ADpuute"
+                 :avain :tasauspuute
+                 :tyyppi :vali
+                 :ikoni "epatasa-36"
+                 :ikoni-lahde "livicons"
+                 :mittaus {:nimi "Tasauspuute"
+                           :tyyppi :talvihoito-tasaisuus
+                           :yksikko "cm"}
+                 :vaatii-nappaimiston? true}
+                {:nimi "Pysäkki: epä\u00ADtas. polanne"
+                 :tyyppi :piste
+                 :avain :pysakilla-epatasainen-polanne
+                 :ikoni "polanne-36"
+                 :ikoni-lahde "livicons"
+                 :vaatii-nappaimiston? false}
+                {:nimi "Pysäkki: auraa\u00ADmatta"
+                 :tyyppi :piste
+                 :avain :pysakki-auraamatta
+                 :ikoni "pinta-lumi-36"
+                 :ikoni-lahde "livicons"
+                 :vaatii-nappaimiston? false}
+                {:nimi "Yli-/aliauraus"
+                 :ikoni "auraus-36"
+                 :ikoni-lahde "livicons"
+                 :tyyppi :vali
+                 :avain :yli-tai-aliauraus
+                 :vaatii-nappaimiston? false}
+                {:nimi "Pysäkki: hiekoit\u00ADtamatta"
+                 :tyyppi :piste
+                 :avain :pysakki-hiekoittamatta
+                 :ikoni "pinta-hiekka-kielto-36"
+                 :ikoni-lahde "livicons"
+                 :vaatii-nappaimiston? false}
+                liikennemerkki-luminen]
    :liikennemerkit [{:nimi "Liikenne\u00ADmerkki likai\u00ADnen"
                      :ikoni "liikennemerkki-lika-36"
                      :ikoni-lahde "livicons"
@@ -76,12 +109,7 @@
                      :tyyppi :piste
                      :avain :liikennemerkki-vaurioitunut
                      :vaatii-nappaimiston? false}
-                    {:nimi "Liikenne\u00ADmerkki lumi\u00ADnen"
-                     :ikoni "liikennemerkki-lumi-36"
-                     :ikoni-lahde "livicons"
-                     :tyyppi :piste
-                     :avain :liikennemerkki-luminen
-                     :vaatii-nappaimiston? false}]
+                    liikennemerkki-luminen]
    :viherhoito [{:nimi "Vesakko raivaa\u00ADmatta"
                  :tyyppi :vali
                  :ikoni "vesakko-leikkaus-36"
@@ -246,6 +274,25 @@
                :ikoni "maakivi-36"
                :ikoni-lahde "livicons"
                :avain :maakivi
+               :vaatii-nappaimiston? false}
+
+              {:nimi "Kevät\u00ADmuokkaus\u00ADpuute"
+               :tyyppi :vali
+               :ikoni "harva-pinta-36"
+               :ikoni-lahde "livicons"
+               :avain :kevatmuokkauspuute
+               :vaatii-nappaimiston? false}
+              {:nimi "Sorastus\u00ADpuute"
+               :tyyppi :vali
+               :ikoni "pinta-hiekka-kielto-36"
+               :ikoni-lahde "livicons"
+               :avain :sorastuspuute
+               :vaatii-nappaimiston? false}
+              {:nimi "Keli\u00ADrikko\u00ADhavainnot"
+               :tyyppi :vali
+               :ikoni "kelirikko-36"
+               :ikoni-lahde "livicons"
+               :avain :kelirikkohavainnot
                :vaatii-nappaimiston? false}]
    :paallystyksen-tyovirheluettelo
    [{:nimi "Sauma\u00ADvirhe"
@@ -266,18 +313,8 @@
      :ikoni-lahde "livicons"
      :avain :epatasaisuus
      :vaatii-nappaimiston? false}
-    {:nimi "Hal\u00ADkeamat"
-     :tyyppi :vali
-     :ikoni "halkeama-36"
-     :ikoni-lahde "livicons"
-     :avain :halkeamat
-     :vaatii-nappaimiston? false}
-    {:nimi "Vesi\u00ADlammi\u00ADkot"
-     :tyyppi :vali
-     :ikoni "vesilammikko-36"
-     :ikoni-lahde "livicons"
-     :avain :vesilammikot
-     :vaatii-nappaimiston? false}
+    halkeamat
+    vesilammikot
     {:nimi "Epä\u00ADtasai\u00ADset reunat"
      :tyyppi :vali
      :ikoni "epatasaiset-reunat-36"
@@ -319,74 +356,146 @@
      :ikoni "kaivon-korkeus-36"
      :ikoni-lahde "livicons"
      :avain :kaivojenkorkeusasema
+     :vaatii-nappaimiston? false}]
+   :paallysteen-kunto
+   [{:nimi "Yksit\u00ADtäinen reikä"
+     :tyyppi :piste
+     :ikoni "reika-36"
+     :ikoni-lahde "livicons"
+     :avain :yksittainen-reika
+     :vaatii-nappaimiston? false}
+    {:nimi "Reikä\u00ADjono"
+     :tyyppi :vali
+     :ikoni "reikajono-36"
+     :ikoni-lahde "livicons"
+     :avain :reikajono
+     :vaatii-nappaimiston? false}
+    halkeamat
+    {:nimi "Reuna\u00ADpainuma"
+     :tyyppi :vali
+     :ikoni "epatasaiset-reunat-36"
+     :ikoni-lahde "livicons"
+     :avain :reunapainuma
+     :vaatii-nappaimiston? false}
+    {:nimi "Purkaumat"
+     :tyyppi :vali
+     :ikoni "kohouma-36"
+     :ikoni-lahde "livicons"
+     :avain :purkaumat
+     :vaatii-nappaimiston? false}
+    {:nimi "Syvät ajourat"
+     :tyyppi :vali
+     :ikoni "urat-36"
+     :ikoni-lahde "livicons"
+     :avain :syvat-ajourat
+     :vaatii-nappaimiston? false}
+    {:nimi "Turvallisuutta vaarantava heitto"
+     :tyyppi :vali
+     :ikoni "kohouma-vaara-36"
+     :ikoni-lahde "livicons"
+     :avain :liikenneturvallisuutta-vaarantava-heitto
+     :vaatii-nappaimiston? false
+     :pienempi-fontti? true}
+    {:nimi "Ajomukavuutta haittaava epätas."
+     :tyyppi :vali
+     :ikoni "epatasa-36"
+     :ikoni-lahde "livicons"
+     :avain :ajomukavuutta-haittaava-epatasaisuus
+     :vaatii-nappaimiston? false
+     :pienempi-fontti? true}
+    vesilammikot
+    {:nimi "Harjaus\u00ADpuute"
+     :tyyppi :vali
+     :ikoni "harja-36"
+     :ikoni-lahde "livicons"
+     :avain :harjauspuute
      :vaatii-nappaimiston? false}]})
 
 (defn jarjesta-valilehdet [valilehdet]
   (into [] (sort-by :jarjestys valilehdet)))
 
+(defn- kayttajaroolin-valilehdet-paallystyksen-kunto [valilehdet oikeus-hoitourakkaan?]
+  ;; Päällystyksen kunto -välilehti näytetään vain jos on oikeus johonkin hoitourakkaan
+  (if oikeus-hoitourakkaan?
+    valilehdet
+    (filterv #(not= (:avain %) :paallystyksen-kunto) valilehdet)))
+
+(defn- kayttajaroolin-valilehdet-paallystyksen-tyovirheluettelo [valilehdet oikeus-paallystysurakkaan?]
+  ;; Päällystyksen työvirheluettelo näytetään vain jos on oikeus johonkin päällystysurakkaan
+  (if oikeus-paallystysurakkaan?
+    valilehdet
+    (filterv #(not= (:avain %) :paallystyksen-tyovirheluettelo) valilehdet)))
+
+(defn- kayttajaroolin-valilehdet-paallystysurakoitsija [valilehdet oikeus-vain-paallystysurakoihin? urakoitsija?]
+  ;; Päällystysurakoitsijalle näytetään vain Päällystyksen työvirheluettelo -välilehti
+  (if (and urakoitsija? oikeus-vain-paallystysurakoihin?)
+    (filterv #(= (:avain %) :paallystyksen-tyovirheluettelo) valilehdet)
+    valilehdet))
+
+(defn- kayttajaroolin-valilehdet-paallystyksen-muu-henkilo [valilehdet oikeus-vain-paallystysurakoihin?]
+  ;; Päällystysurakan muille kuin urakoitsijoille siirreään päällystyksen työvirheluettelo kärkeen
+  (if oikeus-vain-paallystysurakoihin?
+    (let [muokatut-valilehdet (mapv #(if (= (:avain %) :paallystyksen-tyovirheluettelo)
+                                       (assoc % :jarjestys 0)
+                                       %)
+                                    valilehdet)]
+      (jarjesta-valilehdet muokatut-valilehdet))
+    valilehdet))
+
 (defn kayttajaroolin-mukaiset-valilehdet
   "Palauttaa vain ne välilehdet, jotka ovat kyseiselle käyttäjäroolille tarpeelliset.
    Säätää myös järjestyksen kohdalleen."
   [oletusvalilehdet kayttajatiedot]
-  (let [oikeus-paallystykseen? (boolean (some #(= (:tyyppi %) "paallystys")
-                                              (:oikeus-urakoihin kayttajatiedot)))
-        oikeus-vain-paallystykseen? (every? #(= (:tyyppi %) "paallystys")
-                                            (:oikeus-urakoihin kayttajatiedot))
+  (let [oikeus-paallystysurakkaan? (boolean (some #(= (:tyyppi %) "paallystys")
+                                                  (:oikeus-urakoihin kayttajatiedot)))
+        oikeus-hoitourakkaan? (boolean (some #(= (:tyyppi %) "hoito")
+                                             (:oikeus-urakoihin kayttajatiedot)))
+        oikeus-vain-paallystysurakoihin? (every? #(= (:tyyppi %) "paallystys")
+                                                 (:oikeus-urakoihin kayttajatiedot))
         urakoitsija? (= (get-in kayttajatiedot [:organisaatio :tyyppi]) :urakoitsija)]
-    (cond
-      ;; Päällystysurakoitsijalle näytetään vain Päällystyksen työvirheluettelo -välilehti
-      (and urakoitsija?
-           oikeus-vain-paallystykseen?)
-      (filterv #(= (:avain %) :paallystyksen-tyovirheluettelo) oletusvalilehdet)
 
-      ;; Päällystyksen muille henkilöille siirreään vain päällystys-välilehti kärkeen
-      oikeus-vain-paallystykseen?
-      (let [muokatut-valilehdet (mapv #(if (= (:avain %) :paallystyksen-tyovirheluettelo)
-                                         (assoc % :jarjestys 0)
-                                         %)
-                                      oletusvalilehdet)]
-        (jarjesta-valilehdet muokatut-valilehdet))
-
-      ;; Päällystyksen työvirheluettelo näytetään vain jos on oikeus päällystysurakkaan
-      (not oikeus-paallystykseen?)
-      (filterv #(not= (:avain %) :paallystyksen-tyovirheluettelo) oletusvalilehdet)
-
-      ;; Ei roolin mukaisia sääntöjä
-      :default
-      oletusvalilehdet)))
+    (-> oletusvalilehdet
+        (kayttajaroolin-valilehdet-paallystyksen-kunto oikeus-hoitourakkaan?)
+        (kayttajaroolin-valilehdet-paallystyksen-tyovirheluettelo oikeus-paallystysurakkaan?)
+        (kayttajaroolin-valilehdet-paallystysurakoitsija oikeus-vain-paallystysurakoihin? urakoitsija?)
+        (kayttajaroolin-valilehdet-paallystyksen-muu-henkilo oikeus-vain-paallystysurakoihin?))))
 
 (def oletusvalilehdet
   [{:avain :talvihoito
-    :nimi "Talviset pinnat"
+    :nimi "Talvihoito"
     :jarjestys 1
-    :sisalto (:talviset-pinnat havainnot-ryhmittain)}
+    :sisalto (:talvihoito havainnot-ryhmittain)}
    {:avain :liikennemerkit
     :nimi "Liikennemerkit"
-    :jarjestys 1
+    :jarjestys 2
     :sisalto (:liikennemerkit havainnot-ryhmittain)}
    {:avain :viherhoito
     :nimi "Viherhoito"
-    :jarjestys 1
+    :jarjestys 3
     :sisalto (:viherhoito havainnot-ryhmittain)}
    {:avain :reunat
     :nimi "Reunat"
-    :jarjestys 1
+    :jarjestys 4
     :sisalto (:reunat havainnot-ryhmittain)}
    {:avain :p-ja-l-alueet
     :nimi "P- ja L-alueet"
-    :jarjestys 1
+    :jarjestys 5
     :sisalto (:p-ja-l-alueet havainnot-ryhmittain)}
    {:avain :soratiet
     :nimi "Soratiet"
-    :jarjestys 1
+    :jarjestys 6
     :sisalto (:soratiet havainnot-ryhmittain)}
    {:avain :muut
     :nimi "Sillat"
-    :jarjestys 1
+    :jarjestys 7
     :sisalto (:sillat havainnot-ryhmittain)}
+  {:avain :paallysteen-kunto ;; Koskee hoitoa
+    :nimi "Pääll. kunto"
+    :jarjestys 8
+    :sisalto (:paallysteen-kunto havainnot-ryhmittain)}
    {:avain :paallystyksen-tyovirheluettelo ;; Koskee ylläpitoa
     :nimi "Pääll. työvirhel."
-    :jarjestys 1
+    :jarjestys 9
     :sisalto (:paallystyksen-tyovirheluettelo havainnot-ryhmittain)}])
 
 ;; Käsittelylogiikka
