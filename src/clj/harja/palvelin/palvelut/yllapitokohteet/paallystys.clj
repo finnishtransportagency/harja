@@ -45,10 +45,8 @@
                             ;; On mahdollista, ettei kohdeosalle ole lisätty mitään tietoja
                             (when-let [kohdeosan-ilmoitustiedot
                                        (first (filter
-                                                (fn [paallystystoimenpide]
-                                                  (when (= (:id kohdeosa)
-                                                           (:kohdeosa-id paallystystoimenpide))
-                                                    paallystystoimenpide))
+                                                #(= (:id kohdeosa)
+                                                    (:kohdeosa-id %))
                                                 (get-in paallystysilmoitus
                                                         [:ilmoitustiedot :osoitteet])))]
                               (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
