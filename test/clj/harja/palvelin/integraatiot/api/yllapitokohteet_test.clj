@@ -102,7 +102,7 @@
                                   :tr-loppuosa 5
                                   :tr-alkuetaisyys 1
                                   :tekninen-toimenpide 1
-                                  :paksuus 1.2
+                                  :paksuus 1
                                   :verkon-sijainti 1}]}
                  true))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
@@ -183,7 +183,7 @@
                                   :tr-loppuosa 5
                                   :tr-alkuetaisyys 1
                                   :tekninen-toimenpide 1
-                                  :paksuus 1.2
+                                  :paksuus 1
                                   :verkon-sijainti 1}]}
                  true))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
