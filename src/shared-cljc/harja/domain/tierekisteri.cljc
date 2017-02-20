@@ -1,8 +1,7 @@
 (ns harja.domain.tierekisteri
   (:require [clojure.spec :as s]
             [clojure.string :as str]
-            #?@(:clj [[clojure.future :refer :all]]
-                :cljs [[harja.loki :refer [log]]])))
+            #?@(:clj [[clojure.future :refer :all]])))
 
 (s/def ::osa (s/and pos-int? #(< % 1000)))
 (s/def ::etaisyys (s/and nat-int? #(< % 50000)))
