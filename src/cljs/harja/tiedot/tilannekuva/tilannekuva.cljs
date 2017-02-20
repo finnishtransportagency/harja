@@ -265,10 +265,6 @@ hakutiheys-historiakuva 1200000)
         ;; {:x {{:id . :nimi "Lappi"} [{:id 1 :nimi "Kuusamon urakka}]}
         )))
 
-(defn- uusi-tai-vanha-suodattimen-arvo* [vanha-arvo uusi-arvo]
-  ;; Älä vaihda tätä orriksi ;)
-  (if (some? vanha-arvo) vanha-arvo uusi-arvo))
-
 (defn aseta-urakka-valituksi! [id]
   (swap! suodattimet assoc :alueet (tk/suodatin-muutettuna (:alueet @suodattimet) (fn [s val?] [s true]) #{id})))
 
@@ -283,7 +279,7 @@ hakutiheys-historiakuva 1200000)
 ;;      Vaihdettiin takaisin versio #1. Jos käyttäjä itse ottaa urakan pois päältä, niin sopii olettaa
 ;;      että hän ymmärtää sen olevan pois päältä myös takaisin tilannekuvaan tultaessa?
 (defn uusi-tai-vanha-suodattimen-arvo [vanha-arvo uusi-arvo]
-  (uusi-tai-vanha-suodattimen-arvo* vanha-arvo uusi-arvo))
+  (if (some? vanha-arvo) vanha-arvo uusi-arvo))
 
 (defn yhdista-aluesuodattimet [vanhat uudet]
   ;; Yhdistetään kaksi mäppiä, joka sisältää mäppiä
