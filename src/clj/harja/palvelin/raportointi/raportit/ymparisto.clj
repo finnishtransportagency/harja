@@ -88,7 +88,7 @@
 
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
-     [:teksti "Raportti ei vielä kykene laskemaan Suolan toteumaprosentteja."]
+     [:teksti "Raportti ei laske Suolan toteumaprosentteja tai suunniteltuja määriä."]
      [:taulukko {:otsikko otsikko
                  :oikealle-tasattavat-kentat (into #{} (range 1 (+ 4 (count kuukaudet))))
                  :sheet-nimi raportin-nimi}
