@@ -36,4 +36,4 @@
   "Logittaa yksittäisen selainvirheen"
   [user virhe]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (log/warn (formatoi-virhe user virhe)))
+  (log/error (formatoi-virhe user virhe)))
