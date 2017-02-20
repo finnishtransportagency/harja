@@ -45,7 +45,6 @@ hakutiheys-historiakuva 1200000)
 (def oletusalueet {})
 
 (def valittu-urakka-tilannekuvaan-tullessa (atom nil))
-(def valittu-hallintayksikko-tilannekuvaan-tullessa (atom nil))
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
 (defonce suodattimet
@@ -169,112 +168,118 @@ hakutiheys-historiakuva 1200000)
      {:alku (first @historiakuvan-aikavali)
       :loppu (second @historiakuvan-aikavali)})))
 
+(defn- hyt-joiden-urakoilla-ei-arvoa* [alueet boolean-arvo]
+  (apply merge
+         (keep
+           (fn [[tyyppi aluekokonaisuudet]]
+             {tyyppi (into
+                       #{} (keep (fn [[nimi urakat]]
+                                   (when-not (empty? urakat)
+                                     (when-not (some
+                                                 (fn [[suodatin valittu?]]
+                                                   (= valittu? boolean-arvo))
+                                                 urakat)
+                                       nimi)))
+                                 aluekokonaisuudet))})
+           alueet)))
+
 (def hyt-joiden-urakoilla-ei-arvoa
   ;; Uusimmassa reagentissa tulee funktio r/track, jolla tämä
   ;; olisi hoitunut paljon mukavemmin, mutta onnistuu kai tämä näinkin
   (reaction
-    (let [funktio (fn [boolean-arvo]
-                    (into #{}
-                          (keep
-                            (fn [[tyyppi aluekokonaisuudet]]
-                              (map (fn [[nimi urakat]]
-                                     (when-not (empty? urakat)
-                                       (when-not (some
-                                                   (fn [[suodatin valittu?]]
-                                                     (= valittu? boolean-arvo))
-                                                   urakat)
-                                         nimi)))
-                                   aluekokonaisuudet))
-                            (:alueet @suodattimet))))]
+    (let [funktio (partial hyt-joiden-urakoilla-ei-arvoa* (:alueet @suodattimet))]
       {true  (funktio true)
        false (funktio false)})))
 
+(defn- valitse-urakka?* [urakka-id hallintayksikko tyyppi valittu-urakka
+                         hallintayksikot-joista-ei-mitaan-valittu hallintayksikot-joista-kaikki-valittu]
+  (cond
+
+    ;; Jos murupolun kautta oli valittu urakka tilannekuvaan tultaessa,
+    ;; tarkasta, onko tämä urakka se
+    (= urakka-id valittu-urakka)
+    (do
+      true)
+
+    ;; Valitse urakka, jos se kuuluu hallintayksikköön, joista käyttäjä on valinnut
+    ;; kaikki urakat
+    (and
+      (get hallintayksikot-joista-kaikki-valittu tyyppi)
+      ((get hallintayksikot-joista-kaikki-valittu tyyppi) (:nimi hallintayksikko)))
+    (do
+      #_(log (:nimi hallintayksikko) " on hy, joista kaikki on valittu!")
+      true)
+
+    ;; Älä ikinä valitse urakkaa, jos se kuuluu hallintayksikköön, josta käyttäjä
+    ;; ei ole valinnut yhtään urakkaa (kaiki on false!)
+    (and
+      (get hallintayksikot-joista-ei-mitaan-valittu tyyppi)
+      ((get hallintayksikot-joista-ei-mitaan-valittu tyyppi) (:nimi hallintayksikko)))
+    (do
+      #_(log (:nimi hallintayksikko) " on hy, joista ei ole mitään valittu!")
+      false)
+
+    ;; Sisään tultaessa oli valittuna "koko maa"
+    :else
+    (do
+      #_(log "Koko maa valittu! :)")
+      false)))
+
 ;; Valitaanko palvelimelta palautettu suodatin vai ei.
 ;; Yhdistäminen tehdään muualla
-(defn- valitse-urakka? [urakka-id hallintayksikko]
-  (let [valittu-urakka (:id @valittu-urakka-tilannekuvaan-tullessa)
-        valittu-hallintayksikko (:id @valittu-hallintayksikko-tilannekuvaan-tullessa)
-        hallintayksikot-joista-ei-mitaan-valittu (get @hyt-joiden-urakoilla-ei-arvoa true)
-        hallintayksikot-joista-kaikki-valittu (get @hyt-joiden-urakoilla-ei-arvoa false)]
-    (cond
+(defn- valitse-urakka? [urakka-id hallintayksikko tyyppi]
+  (valitse-urakka?*
+    urakka-id hallintayksikko tyyppi
+    (:id @valittu-urakka-tilannekuvaan-tullessa)
+    (get @hyt-joiden-urakoilla-ei-arvoa true)
+    (get @hyt-joiden-urakoilla-ei-arvoa false)))
 
-      ;; Jos murupolun kautta oli valittu urakka tilannekuvaan tultaessa,
-      ;; tarkasta, onko tämä urakka se
-      (= urakka-id valittu-urakka)
-      (do
-        true)
-
-      ;; Jos murupolun kautta tultaessa oli valittuna hallintayksikkö,
-      ;; tarkasta, kuuluuko tämä urakka siihen hallintayksikköön
-      (and (nil? valittu-urakka) (= valittu-hallintayksikko (:id hallintayksikko)))
-      (do
-        true)
-
-      ;; Valitse urakka, jos se kuuluu hallintayksikköön, joista käyttäjä on valinnut
-      ;; kaikki urakat
-      (hallintayksikot-joista-kaikki-valittu (:nimi hallintayksikko))
-      (do
-        #_(log (:nimi hallintayksikko) " on hy, joista kaikki on valittu!")
-        true)
-
-      ;; Älä ikinä valitse urakkaa, jos se kuuluu hallintayksikköön, josta käyttäjä
-      ;; ei ole valinnut yhtään urakkaa (kaiki on false!)
-      (hallintayksikot-joista-ei-mitaan-valittu (:nimi hallintayksikko))
-      (do
-        #_(log (:nimi hallintayksikko) " on hy, joista ei ole mitään valittu!")
-        false)
-
-      ;; Sisään tultaessa oli valittuna "koko maa"
-      :else
-      (do
-        #_(log "Koko maa valittu! :)")
-        false))))
+(defn- aluesuodattimet-nested-mapiksi [tulos]
+  (into {}
+        (map (fn [[tyyppi aluekokonaisuus]]
+               {tyyppi (into {}
+                             (map (fn [{:keys [hallintayksikko urakat]}]
+                                    {hallintayksikko
+                                     (into {}
+                                           (map (fn [{:keys [id nimi alue]}]
+                                                  [(tk/->Aluesuodatin id
+                                                                      (-> nimi
+                                                                          (clojure.string/replace " " "_")
+                                                                          (clojure.string/replace "," "_")
+                                                                          (clojure.string/replace "(" "_")
+                                                                          (clojure.string/replace ")" "_")
+                                                                          (keyword))
+                                                                      (format/lyhennetty-urakan-nimi urakan-nimen-pituus nimi)
+                                                                      alue)
+                                                   (valitse-urakka? id hallintayksikko tyyppi)])
+                                                urakat))})
+                                  aluekokonaisuus))}))
+        (group-by :tyyppi tulos)))
 
 (defn- hae-aluesuodattimet [tila urakoitsija]
   (go (let [tulos (<! (k/post! :hae-urakat-tilannekuvaan (aikaparametrilla
                                                            {:urakoitsija  (:id urakoitsija)
                                                             :nykytilanne? (= :nykytilanne tila)})))]
         ;; tulos: [{:tyyppi :x :hallintayksikko {:id . :nimi .} :urakat [{:id :nimi}, ..]} {..}]
-        (into {}
-              (map (fn [[tyyppi aluekokonaisuus]]
-                     {tyyppi (into {}
-                                   (map (fn [{:keys [hallintayksikko urakat]}]
-                                          {hallintayksikko
-                                           (into {}
-                                                 (map (fn [{:keys [id nimi alue]}]
-                                                        [(tk/->Aluesuodatin id
-                                                                            (-> nimi
-                                                                                (clojure.string/replace " " "_")
-                                                                                (clojure.string/replace "," "_")
-                                                                                (clojure.string/replace "(" "_")
-                                                                                (clojure.string/replace ")" "_")
-                                                                                (keyword))
-                                                                            (format/lyhennetty-urakan-nimi urakan-nimen-pituus nimi)
-                                                                            alue)
-                                                         (valitse-urakka? id hallintayksikko)])
-                                                      urakat))})
-                                        aluekokonaisuus))}))
-              (group-by :tyyppi tulos))
+        (aluesuodattimet-nested-mapiksi tulos)
         ;; {:x {{:id . :nimi "Lappi"} [{:id 1 :nimi "Kuusamon urakka}]}
         )))
 
+(defn aseta-urakka-valituksi! [id]
+  (swap! suodattimet assoc :alueet (tk/suodatin-muutettuna (:alueet @suodattimet) (fn [s val?] [s true]) #{id})))
 
-;; Alkuperäinen logiikka nojasi siihen, että valitaan AINA vanhan suodattimen arvo,
-;; jos sellainen löytyy. Jos ei löydy, niin sitten käytetään uuden suodattimen arvoa, jonka
-;; valintalogiikka löytyy valitse-urakka? funktiosta.
-;; Tämä funktio piti lisätä, koska tietyissä tapauksissa halutaan ylikirjoittaa vanha
-;; suodattimen arvo uudella.
-;; Esim: Valitse Oulun urakka -> Mene tilannekuvaan -> Ota Oulu pois päältä -> Mene vaikka toteumiin ->
-;; -> Mene takaisin Tilannekuvaan -> Tässä tapauksessa Oulun pitäisi mennä takaisin päälle!
-(defn uusi-tai-vanha-suodattimen-arvo [vanha-arvo uusi-arvo urakka hallintayksikko]
-  (let [arvo (cond
-               (nil? vanha-arvo) uusi-arvo
-               (= (:id urakka) (:id @valittu-urakka-tilannekuvaan-tullessa)) uusi-arvo
-               (and (nil? @valittu-urakka-tilannekuvaan-tullessa)
-                    (= (:id hallintayksikko) (:id @valittu-hallintayksikko-tilannekuvaan-tullessa))) uusi-arvo
-               :else vanha-arvo)]
-    #_(log "Urakalle " (pr-str (:nimi urakka)) " käytetään arvoa " (pr-str arvo) "(" (pr-str vanha-arvo) " => " (pr-str uusi-arvo) ")")
-    arvo))
+;; VALINTALOGIIKAN AIKAKIRJA:
+;; v1:  Kunnioitetaan aina vanhaa, eli käyttäjän tekemää valintaa. Palvelimelta palautettavat
+;;      alueet eivät ikinä ylikirjoita jo olemassa olevia valintoja.
+;; v2:  Logiikka muuttui tämä vaatimuksen takia:
+;;      Valitse Oulun urakka -> Mene tilannekuvaan -> Ota Oulu pois päältä -> Mene vaikka toteumiin ->
+;;      -> Mene takaisin Tilannekuvaan -> Tässä tapauksessa Oulun pitäisi mennä takaisin päälle!
+;; v3:  Ei ollut hyvä. Valitse murupolun kautta urakka -> tule tilannekuvaan -> poista urakan valinta
+;;      -> vaihda aikaväliä -> Urakka valittiin uudestaan!
+;;      Vaihdettiin takaisin versio #1. Jos käyttäjä itse ottaa urakan pois päältä, niin sopii olettaa
+;;      että hän ymmärtää sen olevan pois päältä myös takaisin tilannekuvaan tultaessa?
+(defn uusi-tai-vanha-suodattimen-arvo [vanha-arvo uusi-arvo]
+  (if (some? vanha-arvo) vanha-arvo uusi-arvo))
 
 (defn yhdista-aluesuodattimet [vanhat uudet]
   ;; Yhdistetään kaksi mäppiä, joka sisältää mäppiä
@@ -291,8 +296,7 @@ hakutiheys-historiakuva 1200000)
                                  (map
                                    (fn [[suodatin valittu?]]
                                      (let [vanha-arvo (get-in vanhat [tyyppi (:nimi hallintayksikko) suodatin])
-                                           arvo (uusi-tai-vanha-suodattimen-arvo vanha-arvo valittu?
-                                                                                 suodatin hallintayksikko)]
+                                           arvo (uusi-tai-vanha-suodattimen-arvo vanha-arvo valittu?)]
                                        [suodatin arvo]))
                                    urakat))})
                         aluekokonaisuudet))})

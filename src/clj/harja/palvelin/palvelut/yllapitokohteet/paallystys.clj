@@ -52,6 +52,19 @@
                      vec))
       (dissoc :kohdeosat)))
 
+(defn pyorista-kasittelypaksuus
+  "Käsittelypaksuus täytyy pyöristää johtuen siitä, että aiemmassa mallissa, käsittelypaksuudelle sallittiin desimaalit.
+   Myöhemmin YHA:ssa sallittiin vain kokonaisluvut ja olemassa olevien päällystysilmoitusten migrointi ei ole enää
+   mahdollista. Sen takia vanhat arvot pyöristetään vaikka kaikki uudet arvot voi tallentaa vain kokonaislukuina."
+  [paallystysilmoitus]
+  (let [alustatoimet (get-in paallystysilmoitus [:ilmoitustiedot :alustatoimet])]
+    (if (empty? alustatoimet)
+      paallystysilmoitus
+      (assoc-in paallystysilmoitus
+                [:ilmoitustiedot :alustatoimet]
+                (map #(assoc % :paksuus (int (:paksuus %)))
+                     alustatoimet)))))
+
 (defn hae-urakan-paallystysilmoitus-paallystyskohteella
   "Hakee päällystysilmoituksen ja kohteen tiedot.
 
@@ -77,6 +90,7 @@
                                     paallystysilmoitus
                                     {:kohdeosa :kohdeosat}
                                     :id))
+        paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
         _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
             (skeema/validoi pot-domain/+paallystysilmoitus+
                             ilmoitustiedot))
