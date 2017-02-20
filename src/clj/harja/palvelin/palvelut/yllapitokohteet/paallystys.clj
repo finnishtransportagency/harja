@@ -43,7 +43,7 @@
                      (map (fn [kohdeosa]
                             ;; Lisää kohdeosan tietoihin päällystystoimenpiteen tiedot
                             ;; On mahdollista, ettei kohdeosalle ole lisätty mitään tietoja
-                            (when-let [kohdeosan-ilmoitustiedot
+                            (let [kohdeosan-ilmoitustiedot
                                        (first (filter
                                                 #(= (:id kohdeosa)
                                                     (:kohdeosa-id %))
