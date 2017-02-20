@@ -78,7 +78,7 @@
                  :ikoni "pinta-lumi-36"
                  :ikoni-lahde "livicons"
                  :vaatii-nappaimiston? false}
-                {:nimi "Yli/\u00AD-aliauraus"
+                {:nimi "Yli-/aliauraus"
                  :ikoni "auraus-36"
                  :ikoni-lahde "livicons"
                  :tyyppi :vali
