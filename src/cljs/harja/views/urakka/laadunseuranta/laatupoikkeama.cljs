@@ -181,7 +181,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
   (reset! (reitit/valittu-valilehti-atom :laadunseuranta) :tarkastukset))
 
 (defn- sanktiotaulukon-rivit [laatupoikkeama]
-  (remove :poistettu (vals (:sanktiot laatupoikkeama))))
+  (vals (:sanktiot laatupoikkeama)))
 
 (defn- sanktiotaulukko-tyhja? [laatupoikkeama]
   (empty? (sanktiotaulukon-rivit laatupoikkeama)))
@@ -299,31 +299,31 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
              [:div.laatupoikkeama
               [napit/takaisin "Takaisin laatupoikkeamaluetteloon" #(reset! laatupoikkeamat/valittu-laatupoikkeama-id nil)]
               [lomake/lomake
-               {:otsikko      "Laatupoikkeaman tiedot"
-                :muokkaa!     #(let [uusi-lp
-                                     (if (kohde-muuttui? (get-in @laatupoikkeama [:yllapitokohde :id])
-                                                         (get-in % [:yllapitokohde :id]))
-                                       (laatupoikkeamat/paivita-yllapitokohteen-tr-tiedot % yllapitokohteet)
-                                       %)]
-                                 (reset! laatupoikkeama uusi-lp))
+               {:otsikko "Laatupoikkeaman tiedot"
+                :muokkaa! #(let [uusi-lp
+                                 (if (kohde-muuttui? (get-in @laatupoikkeama [:yllapitokohde :id])
+                                                     (get-in % [:yllapitokohde :id]))
+                                   (laatupoikkeamat/paivita-yllapitokohteen-tr-tiedot % yllapitokohteet)
+                                   %)]
+                             (reset! laatupoikkeama uusi-lp))
                 :voi-muokata? @laatupoikkeamat/voi-kirjata?
-                :footer-fn    (fn [sisalto]
-                                (when voi-kirjoittaa?
-                                  [napit/palvelinkutsu-nappi
-                                   (cond
-                                     (paatos? sisalto)
-                                     "Tallenna ja lukitse laatupoikkeama"
+                :footer-fn (fn [sisalto]
+                (when voi-kirjoittaa?
+                  [napit/palvelinkutsu-nappi
+                   (cond
+                     (paatos? sisalto)
+                     "Tallenna ja lukitse laatupoikkeama"
 
-                                     :default
-                                     "Tallenna laatupoikkeama")
-                                   #(tallenna-laatupoikkeama sisalto (:nakyma optiot))
-                                   {:ikoni        (ikonit/tallenna)
-                                    :disabled     (or
-                                                    (not (validoi-sanktiotiedot sisalto))
-                                                    (not (sanktiorivit-ok? sisalto yllapito?))
-                                                    (not (lomake/voi-tallentaa? sisalto)))
-                                    :virheviesti  "Laatupoikkeaman tallennus epäonnistui"
-                                    :kun-onnistuu (fn [_] (reset! laatupoikkeamat/valittu-laatupoikkeama-id nil))}]))}
+                     :default
+                     "Tallenna laatupoikkeama")
+                   #(tallenna-laatupoikkeama sisalto (:nakyma optiot))
+                   {:ikoni (ikonit/tallenna)
+                    :disabled (or
+                                (not (validoi-sanktiotiedot sisalto))
+                                (not (sanktiorivit-ok? sisalto yllapito?))
+                                (not (lomake/voi-tallentaa? sisalto)))
+                    :virheviesti "Laatupoikkeaman tallennus epäonnistui"
+                    :kun-onnistuu (fn [_] (reset! laatupoikkeamat/valittu-laatupoikkeama-id nil))}]))}
 
                [{:otsikko     "Päivämäärä ja aika"
                  :pakollinen? true

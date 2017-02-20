@@ -10,7 +10,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.indeksit :as i]
+            [harja.tiedot.hallinta.indeksit :as i]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.toteumat :as toteumat]
@@ -142,7 +142,8 @@
                                                     (:tyyppi m)
                                                     (:pvm m)
                                                     (:rahasumma m))))
-        tallennus-kaynnissa (atom false)]
+        tallennus-kaynnissa (atom false)
+        valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit (:tyyppi ur)))]
 
     (komp/luo
       (fn []
@@ -176,30 +177,20 @@
                                :on-click
                                (fn [e]
                                  (.preventDefault e)
-                                 (modal/nayta! {:otsikko "Erilliskustannuksen poistaminen"
-                                                :footer [:span
-                                                         [:button.nappi-toissijainen {:type "button"
-                                                                                      :on-click #(do (.preventDefault %)
-                                                                                                     (modal/piilota!))}
-                                                          "Peruuta"]
-                                                         [:button.nappi-kielteinen {:type "button"
-                                                                                    :on-click #(do (.preventDefault %)
-                                                                                                   (modal/piilota!)
-                                                                                                   (reset! tallennus-kaynnissa true)
-                                                                                                   (go (let [res (tallenna-erilliskustannus
-                                                                                                                   (assoc @muokattu :poistettu true))]
-                                                                                                         (if res
-                                                                                                           ;; Tallennus ok
-                                                                                                           (do (viesti/nayta! "Kustannus poistettu")
-                                                                                                               (reset! tallennus-kaynnissa false)
-                                                                                                               (reset! valittu-kustannus nil))
-
-                                                                                                           ;; Epäonnistui jostain syystä
-                                                                                                           (reset! tallennus-kaynnissa false)))))}
-                                                          "Poista kustannus"]]}
-                                               [:div (str "Haluatko varmasti poistaa erilliskustannuksen "
-                                                          (Math/abs (:rahasumma @muokattu)) "€ päivämäärällä "
-                                                          (pvm/pvm (:pvm @muokattu)) "?")]))}
+                                 (yleiset/varmista-kayttajalta
+                                   {:otsikko "Erilliskustannuksen poistaminen"
+                                    :sisalto (str "Haluatko varmasti poistaa erilliskustannuksen "
+                                                  (Math/abs (:rahasumma @muokattu)) "€ päivämäärällä "
+                                                  (pvm/pvm (:pvm @muokattu)) "?")
+                                    :hyvaksy "Poista"
+                                    :hyvaksy-ikoni (ikonit/livicon-trash)
+                                    :hyvaksy-napin-luokka "nappi-kielteinen"
+                                    :toiminto-fn #(go
+                                                    (let [res (tallenna-erilliskustannus
+                                                                (assoc @muokattu :poistettu true))]
+                                                      (when res
+                                                        (do (viesti/nayta! "Kustannus poistettu")
+                                                            (reset! valittu-kustannus nil)))))}))}
                               (ikonit/livicon-trash) " Poista kustannus"])]}
 
           [{:otsikko       "Sopimusnumero" :nimi :sopimus
@@ -251,7 +242,7 @@
               :muokattava? #(not (and
                                   (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
                                   (= :hoito (:tyyppi ur))))
-              :valinnat    (conj @i/indeksien-nimet yleiset/+ei-sidota-indeksiin+)
+              :valinnat    (conj valittavat-indeksit yleiset/+ei-sidota-indeksiin+)
               :fmt         #(if (nil? %)
                               yleiset/+valitse-indeksi+
                               (str %))

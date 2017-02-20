@@ -18,7 +18,10 @@
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]
-            [harja-laadunseuranta.tiedot.sovellus :as s])
+            [harja-laadunseuranta.tiedot.sovellus :as s]
+            [harja.math :as math]
+            [cljs-time.local :as l]
+            [cljs-time.core :as t])
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
 
@@ -174,6 +177,18 @@
       (.setCenter (clj->js (projektiot/latlon-vektoriksi keskipiste)))
       (.changed))))
 
+(defn- paivita-kartan-rotaatio [kartta rad]
+  (let [view (.getView kartta)]
+    (doto view
+      (.setRotation rad)
+      (.changed))))
+
+(defn- paivita-kartan-zoom [kartta zoom-taso]
+  (let [view (.getView kartta)]
+    (doto view
+      (.setZoom zoom-taso)
+      (.changed))))
+
 (defn- paivita-ajettu-reitti [kartta ajettu-reitti reittikerros reittipisteet]
   (let [src (.getSource reittikerros)]
     (.clear src)
@@ -220,12 +235,48 @@
     (when (and kontrollien-paikka kontrollit)
       (.appendChild kontrollien-paikka kontrollit))))
 
-(defn kartta-did-mount [this wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva keskipiste-atomi
-                        ajoneuvon-sijainti-atomi reittipisteet-atomi kirjatut-pisteet-atomi optiot]
+(defn- maarita-kartan-rotaatio-ajosuunnan-mukaan [kartta sijainti-edellinen sijainti-nykyinen]
+  ;; Rotatoi kartta ajosuuntaan, mutta vain jos nopeus on riittävä, muuten
+  ;; paikallaolo ja siitä aiheutuva GPS-kohina saa kartan levottomaksi
+  (when (>= (math/pisteiden-etaisyys sijainti-edellinen sijainti-nykyinen) 8)
+    (paivita-kartan-rotaatio kartta (- (math/pisteiden-kulma-radiaaneina
+                                         sijainti-edellinen
+                                         sijainti-nykyinen)
+                                       (/ Math/PI 2)))))
+
+(defn- maarita-kartan-zoom-taso-ajonopeuden-mukaan [{:keys [kartta nopeus kayttaja-muutti-zoomausta-aikaleima]}]
+  (when (or
+          (nil? kayttaja-muutti-zoomausta-aikaleima)
+          (and kayttaja-muutti-zoomausta-aikaleima
+               (> (t/in-seconds (t/interval kayttaja-muutti-zoomausta-aikaleima (l/local-now)))
+                  asetukset/+kunnioita-kayttajan-zoomia-s+)))
+    (let [nopeus-tiedossa? (not (or (js/isNaN nopeus) ;; GPS-API palauttaa nopeuden JS NaN -muodossa, jos ei saada
+                                    (nil? nopeus)))
+          min-zoom asetukset/+min-zoom+
+          max-zoom asetukset/+max-zoom+
+          max-nopeus-min-zoomaus 30 ;; m/s, jolla kartta zoomautuu minimiarvoonsa eli niin kauas kuin sallittu
+          uusi-zoom-taso (if nopeus-tiedossa?
+                           ;; Zoomataan karttaa kauemmas sopivalle tasolle GPS:stä saadun nopeustiedon perusteella
+                           (- max-zoom (float (* (/ nopeus max-nopeus-min-zoomaus) (- max-zoom min-zoom))))
+                           max-zoom)
+          uusi-tarkastettu-zoom-taso (cond
+                                       (< uusi-zoom-taso min-zoom)
+                                       min-zoom
+
+                                       (> uusi-zoom-taso max-zoom)
+                                       max-zoom
+
+                                       :default
+                                       uusi-zoom-taso)]
+      (paivita-kartan-zoom kartta uusi-tarkastettu-zoom-taso))))
+
+(defn kartta-did-mount [this {:keys [wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva keskipiste-atomi
+                                     ajoneuvon-sijainti-atomi reittipisteet-atomi kirjatut-pisteet-atomi optiot
+                                     kayttaja-muutti-zoomausta-aikaleima-atom keskita-ajoneuvoon-atom]}]
   (let [alustava-sijainti-saatu? (cljs.core/atom false)
         map-element (reagent/dom-node this)
 
-        ajoneuvo (tee-piste-feature @ajoneuvon-sijainti-atomi)
+        ajoneuvo (tee-piste-feature (:nykyinen @ajoneuvon-sijainti-atomi))
         ajettu-reitti (tee-viiva-featuret @reittipisteet-atomi)
         kirjatut-pisteet (tee-ikoni-featuret @kirjatut-pisteet-atomi)
 
@@ -250,7 +301,17 @@
       (if (:seuraa-sijaintia? @optiot)
         (do
           (kytke-dragpan kartta false)
-          (paivita-kartan-keskipiste kartta @keskipiste-atomi))
+          (paivita-kartan-keskipiste kartta @keskipiste-atomi)
+          (let [sijainti-edellinen (projektiot/latlon-vektoriksi
+                                     (:edellinen @ajoneuvon-sijainti-atomi))
+                sijainti-nykyinen (projektiot/latlon-vektoriksi
+                                    (:nykyinen @ajoneuvon-sijainti-atomi))]
+            (maarita-kartan-zoom-taso-ajonopeuden-mukaan
+              {:kartta kartta
+               :keskita-ajoneuvoon? @keskita-ajoneuvoon-atom
+               :kayttaja-muutti-zoomausta-aikaleima @kayttaja-muutti-zoomausta-aikaleima-atom
+               :nopeus (:speed (:nykyinen @ajoneuvon-sijainti-atomi))})
+            (maarita-kartan-rotaatio-ajosuunnan-mukaan kartta sijainti-edellinen sijainti-nykyinen)))
         (kytke-dragpan kartta true)))
 
     (run!
@@ -260,7 +321,7 @@
       (kytke-ortokuva kartta (:nayta-ortokuva? @optiot)))
 
     ;; reagoidaan ajoneuvon sijainnin muutokseen
-    (run! (paivita-ajoneuvon-sijainti kartta ajoneuvo ajoneuvokerros @ajoneuvon-sijainti-atomi))
+    (run! (paivita-ajoneuvon-sijainti kartta ajoneuvo ajoneuvokerros (:nykyinen @ajoneuvon-sijainti-atomi)))
 
     ;; reagoidaan reittipisteiden muutokseen
     (run! (paivita-ajettu-reitti kartta ajettu-reitti reittikerros @reittipisteet-atomi))
@@ -270,19 +331,22 @@
 
 
 (defn karttakomponentti [{:keys [wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva sijainti-atomi
-                                 ajoneuvon-sijainti-atomi reittipisteet-atomi kirjauspisteet-atomi optiot]}]
+                                 ajoneuvon-sijainti-atomi reittipisteet-atomi kirjauspisteet-atomi optiot
+                                 kayttaja-muutti-zoomausta-aikaleima-atom keskita-ajoneuvoon-atom]}]
   (reagent/create-class {:reagent-render kartta-render
                          :component-did-mount
                          #(kartta-did-mount
                             %
-                            wmts-url
-                            wmts-url-kiinteistorajat
-                            wmts-url-ortokuva
-                            sijainti-atomi
-                            ajoneuvon-sijainti-atomi
-                            reittipisteet-atomi
-                            kirjauspisteet-atomi
-                            optiot)}))
+                            {:wmts-url wmts-url
+                             :wmts-url-kiinteistorajat wmts-url-kiinteistorajat
+                             :wmts-url-ortokuva wmts-url-ortokuva
+                             :keskipiste-atomi sijainti-atomi
+                             :ajoneuvon-sijainti-atomi ajoneuvon-sijainti-atomi
+                             :reittipisteet-atomi reittipisteet-atomi
+                             :kirjatut-pisteet-atomi kirjauspisteet-atomi
+                             :optiot optiot
+                             :keskita-ajoneuvoon-atom keskita-ajoneuvoon-atom
+                             :kayttaja-muutti-zoomausta-aikaleima-atom kayttaja-muutti-zoomausta-aikaleima-atom})}))
 
 (defn kartta []
   [:div
@@ -293,17 +357,28 @@
      :sijainti-atomi s/kartan-keskipiste
      :ajoneuvon-sijainti-atomi s/ajoneuvon-sijainti
      :reittipisteet-atomi s/reittipisteet
+     :keskita-ajoneuvoon-atom s/keskita-ajoneuvoon?
+     :kayttaja-muutti-zoomausta-aikaleima-atom s/kayttaja-muutti-zoomausta-aikaleima
      :kirjauspisteet-atomi s/kirjauspisteet
      :optiot s/karttaoptiot}]
    [:div.kartan-kontrollit {:style (when @s/havaintolomake-auki?
                                      {:display "none"})}
-    [:div#karttakontrollit] ;; OpenLayersin ikonit asetetaan tähän elementtiin erikseen
-    [:div.kontrollinappi.ortokuva {:on-click #(swap! s/nayta-ortokuva? not)}
+    [:div#karttakontrollit ;; OpenLayersin ikonit asetetaan tähän elementtiin erikseen
+     {:on-click #(reset! s/kayttaja-muutti-zoomausta-aikaleima (l/local-now))}]
+    [:div
+     {:class (str "kontrollinappi ortokuva "
+                  (when @s/nayta-ortokuva? "kontrollinappi-aktiivinen"))
+      :on-click #(swap! s/nayta-ortokuva? not)}
      [kuvat/svg-sprite "maasto-24"]]
-    [:div.kontrollinappi.kiinteistorajat {:on-click #(swap! s/nayta-kiinteistorajat? not)}
+    [:div
+     {:class (str "kontrollinappi kiinteistorajat "
+                  (when @s/nayta-kiinteistorajat? "kontrollinappi-aktiivinen"))
+      :on-click #(swap! s/nayta-kiinteistorajat? not)}
      [kuvat/svg-sprite "kiinteistoraja-24"]]
-    [:div.kontrollinappi.keskityspainike {:on-click #(do (swap! s/keskita-ajoneuvoon? not)
-                                                         (swap! s/keskita-ajoneuvoon? not))}
+    [:div
+     {:class (str "kontrollinappi keskityspainike "
+                  (when @s/keskita-ajoneuvoon? "kontrollinappi-aktiivinen"))
+      :on-click #(do (swap! s/keskita-ajoneuvoon? not))}
      [kuvat/svg-sprite "tahtain-24"]]]])
 
 ;; devcards
@@ -323,31 +398,31 @@
   (str "http://localhost:8000" url))
 
 (defcard kartta-card
-         "Karttakomponentti"
-         (fn [sijainti _]
-           (reagent/as-element
-             [:div {:style {:width "100%"
-                            :height "800px"}}
-              [karttakomponentti {:wmts-url (paikallinen asetukset/+wmts-url+)
-                                  :wmts-url-kiinteistorajat (paikallinen asetukset/+wmts-url-kiinteistojaotus+)
-                                  :wmts-url-ortokuva (paikallinen asetukset/+wmts-url-ortokuva+)
-                                  :sijainti-atomi sijainti
-                                  :ajoneuvon-sijainti-atomi sijainti
-                                  :reittipisteet-atomi test-reittipisteet
-                                  :kirjauspisteet-atomi test-ikonit
-                                  :optiot testioptiot}]]))
-         test-sijainti
-         {:inspect-data true
-          :watch-atom true})
+  "Karttakomponentti"
+  (fn [sijainti _]
+    (reagent/as-element
+      [:div {:style {:width "100%"
+                     :height "800px"}}
+       [karttakomponentti {:wmts-url (paikallinen asetukset/+wmts-url+)
+                           :wmts-url-kiinteistorajat (paikallinen asetukset/+wmts-url-kiinteistojaotus+)
+                           :wmts-url-ortokuva (paikallinen asetukset/+wmts-url-ortokuva+)
+                           :sijainti-atomi sijainti
+                           :ajoneuvon-sijainti-atomi sijainti
+                           :reittipisteet-atomi test-reittipisteet
+                           :kirjauspisteet-atomi test-ikonit
+                           :optiot testioptiot}]]))
+  test-sijainti
+  {:inspect-data true
+   :watch-atom true})
 
 (defcard kartan-ohjaus
-         "Siirrä karttaa muuttamalla sijaintiatomia. Autonuolen pitäisi liikkua kartalla, ei jäädä paikalleen"
-         (fn [sijainti _]
-           (reagent/as-element
-             [:div
-              [:button {:on-click #(swap! sijainti update-in [:lat] (fn [x] (+ x 100)))}
-               "Siirrä"]
-              [:button {:on-click #(swap! sijainti update-in [:heading] (fn [suunta] (+ suunta 10)))}
-               "Suuntaa"]]))
-         test-sijainti
-         {:watch-atom true})
+  "Siirrä karttaa muuttamalla sijaintiatomia. Autonuolen pitäisi liikkua kartalla, ei jäädä paikalleen"
+  (fn [sijainti _]
+    (reagent/as-element
+      [:div
+       [:button {:on-click #(swap! sijainti update-in [:lat] (fn [x] (+ x 100)))}
+        "Siirrä"]
+       [:button {:on-click #(swap! sijainti update-in [:heading] (fn [suunta] (+ suunta 10)))}
+        "Suuntaa"]]))
+  test-sijainti
+  {:watch-atom true})

@@ -33,7 +33,8 @@
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.ui.kentat :as kentat]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def selitehaku
@@ -132,6 +133,11 @@
      :otsikko "Tienumero"
      :placeholder "Rajaa tienumerolla"
      :tyyppi :positiivinen-numero :kokonaisluku? true}
+    {:nimi :tunniste
+     :palstoja 1
+     :otsikko "Tunniste"
+     :placeholder "Rajaa tunnisteella"
+     :tyyppi :string}
 
     (lomake/ryhma
       {:rivi? true}
@@ -240,6 +246,7 @@
         {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
          :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
         {:otsikko "Id" :nimi :ilmoitusid :leveys 3}
+        {:otsikko "Tunniste" :nimi :tunniste :leveys 3}
         {:otsikko "Otsikko" :nimi :otsikko :leveys 7
          :hae #(leikkaa-sisalto-pituuteen 30 (:otsikko %))}
         {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 7
@@ -274,10 +281,21 @@
   (e! (v/->YhdistaValinnat @tiedot/valinnat))
 
   (komp/luo
+    (komp/lippu tiedot/karttataso-ilmoitukset)
+    (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus i))))
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (v/->YhdistaValinnat uusi))))
-    (komp/sisaan #(notifikaatiot/pyyda-notifikaatiolupa))
-    (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus i))))
+    (komp/sisaan-ulos #(do
+                         (notifikaatiot/pyyda-notifikaatiolupa)
+                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                         (nav/vaihda-kartan-koko! :M)
+                         (kartta-tiedot/kasittele-infopaneelin-linkit!
+                           {:ilmoitus {:toiminto (fn [ilmoitus-infopaneelista]
+                                                   (e! (v/->ValitseIlmoitus ilmoitus-infopaneelista)))
+                                       :teksti "Valitse ilmoitus"}}))
+                      #(do
+                         (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
+                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
     (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
       [:span
        [kartta/kartan-paikka]
@@ -286,13 +304,5 @@
          [ilmoitusten-paanakyma e! ilmoitukset])])))
 
 (defn ilmoitukset []
-  (komp/luo
-    (komp/sisaan #(notifikaatiot/pyyda-notifikaatiolupa))
-    (komp/sisaan-ulos #(do
-                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                        (nav/vaihda-kartan-koko! :M))
-                      #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
-    (komp/lippu tiedot/karttataso-ilmoitukset)
-
-    (fn []
-      [tuck tiedot/ilmoitukset ilmoitukset*])))
+  (fn []
+    [tuck tiedot/ilmoitukset ilmoitukset*]))

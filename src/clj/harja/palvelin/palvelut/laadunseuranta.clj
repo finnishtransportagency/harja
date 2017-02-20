@@ -1,5 +1,22 @@
 (ns harja.palvelin.palvelut.laadunseuranta
-  "Laadunseuranta: Tarkastukset, Laatupoikkeamat ja Sanktiot"
+  "Laadunseuranta: Tarkastukset, Laatupoikkeamat ja Sanktiot
+
+  Palvelu sisältää perus CRUD-operaatiot Laadunseurannan kokonaisuuksille: Tarkastuksille,
+  Laatupoikkeamille, ja (suora)Sanktioille. Palvelimella piirrettävien asioiden karttakuvan piirtäminen
+  ja tietojen hakeminen infopaneeliin löytyy täältä myös; kirjoittamisen hetkellä tarkastukset piirretään
+  palvelimella.
+
+  Vaikka kaikkia kolme laadunseurannan käsitettä tukevat luontia suoraan käyttöliittymästä,
+  voivat ne olla hyvin tiivisti yhteydessä toisiinsa, joka näkyy näissä palveluissa.
+
+  Tarkastuksen pohjalta voidaan luoda laatupoikkeama. Tällöin tarkastus ja laatupoikkeama ovat yhteydessä.
+
+  Laatupoikkeamat, joille on annettu päätös, voivat sisältää 0-n sanktiota.
+
+  Sanktioita voi luoda käyttöliittymästä myös suoraan, ilman laatupoikkeaman luontia - koodissa
+  näitä kutsutaan suorasanktioiksi. On tärkeää huomata, että tietomallissa myös suorasanktioihin
+  kuuluu laatupoikkeama. Näitä koneellisesti generoituja laatupoikkeamia ei kuitenkaan ole yleensä
+  mielekästä näyttää käyttäjälle."
 
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
@@ -22,6 +39,7 @@
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.id :refer [id-olemassa?]]
             [clojure.core.async :as async]))
 
 (def laatupoikkeama-xf
@@ -128,17 +146,18 @@
 
 (defn vaadi-sanktio-kuuluu-urakkaan [db urakka-id sanktio-id]
   "Tarkistaa, että sanktio kuuluu annettuun urakkaan"
-  (let [sanktion-urakka (:urakka (first (sanktiot/hae-sanktion-urakka-id db {:sanktioid sanktio-id})))]
-    (when-not (= sanktion-urakka urakka-id)
-      (throw (SecurityException. (str "Sanktio " sanktio-id" ei kuulu valittuun urakkaan "
-                                      urakka-id " vaan urakkaan " sanktion-urakka))))))
+  (when (id-olemassa? sanktio-id)
+    (let [sanktion-urakka (:urakka (first (sanktiot/hae-sanktion-urakka-id db {:sanktioid sanktio-id})))]
+     (when-not (= sanktion-urakka urakka-id)
+       (throw (SecurityException. (str "Sanktio " sanktio-id " ei kuulu valittuun urakkaan "
+                                       urakka-id " vaan urakkaan " sanktion-urakka)))))))
 
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio
-                   toimenpideinstanssi vakiofraasi] :as sanktio} laatupoikkeama urakka]
+                   toimenpideinstanssi vakiofraasi poistettu] :as sanktio} laatupoikkeama urakka]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaon " laatupoikkeama)
   (log/debug "LAJI ON: " (pr-str laji))
-  (when id (vaadi-sanktio-kuuluu-urakkaan db urakka id))
+  (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
   (let [sanktiotyyppi (if (:id tyyppi)
                         (:id tyyppi)
                         (when laji
@@ -160,9 +179,10 @@
                 :laatupoikkeama laatupoikkeama
                 :suorasanktio (or suorasanktio false)
                 :id id
+                :poistettu poistettu
                 :muokkaaja (:id user)
                 :luoja (:id user)}]
-    (if (or (nil? id) (neg? id))
+    (if-not (id-olemassa? id)
      (let [uusi-sanktio (sanktiot/luo-sanktio<! db params)]
        (sanktiot/merkitse-maksuera-likaiseksi! db (:id uusi-sanktio))
        (:id uusi-sanktio))
@@ -227,6 +247,7 @@
 (defn hae-sanktiotyypit
   "Palauttaa kaikki sanktiotyypit, hyvin harvoin muuttuvaa dataa."
   [db user]
+  (oikeudet/ei-oikeustarkistusta!)
   (into []
         ;; Muunnetaan sanktiolajit arraysta, keyword setiksi
         (map #(konv/array->set % :laji keyword))
@@ -326,10 +347,14 @@
   (log/debug "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama)
             ", urakassa " urakka)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka)
-  (when (:yllapitokohde laatupoikkeama)
+  (when (id-olemassa? (:yllapitokohde laatupoikkeama))
     (yllapitokohteet-yleiset/vaadi-yllapitokohde-kuuluu-urakkaan db urakka (:yllapitokohde laatupoikkeama)))
   (jdbc/with-db-transaction [c db]
-    (let [id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"))]
+     ;; poistetaan laatupoikkeama vain jos kyseessä on suorasanktio,
+     ;; koska laatupoikkeamalla voi olla 0...n sanktiota
+    (let [poista-laatupoikkeama? (boolean (and (:suorasanktio sanktio) (:poistettu sanktio)))
+          id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"
+                                                                                          :poistettu poista-laatupoikkeama?))]
 
       (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
         (laatupoikkeamat/kirjaa-laatupoikkeaman-paatos! c

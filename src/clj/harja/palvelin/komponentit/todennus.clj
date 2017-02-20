@@ -87,7 +87,7 @@ on nil."
   ja urakoitsijan-id funktioita."
   [urakan-id urakoitsijan-id roolit oam-groups]
   (let [roolit-ja-linkit (->> (str/split oam-groups #",")
-                              (map (partial ryhman-rooli-ja-linkki roolit)))]
+                              (keep (partial ryhman-rooli-ja-linkki roolit)))]
     {:roolit (yleisroolit roolit-ja-linkit)
      :urakkaroolit (urakkaroolit urakan-id roolit-ja-linkit)
      :organisaatioroolit (organisaatioroolit urakoitsijan-id roolit-ja-linkit)}))

@@ -1,5 +1,6 @@
 (ns harja.palvelin.raportointi.testiapurit
   (:require  [clojure.test :as t :refer [is]]
+             [taoensso.timbre :as log]
              [clojure.core.match :refer [match]]))
 
 (def raporttisolu? harja.domain.raportointi/raporttielementti?)
@@ -75,6 +76,36 @@
                       (str "Taulukon rivi " i " ei täsmää predikaattiin: "
                            (pr-str taulukon-rivi))))
                 (nth taulukko 3))))
+
+(defn tarkista-taulukko-kaikki-rivit-ja-yhteenveto
+  [taulukko rivi-pred-fn viimeinen-rivi-pred-fn]
+  #_(tarkista-taulukko-kaikki-rivit
+    (assoc taulukko 3 (butlast (nth taulukko 3)))
+    rivi-pred-fn)
+  (tarkista-taulukko-kaikki-rivit
+    (assoc taulukko 3 [(last (nth taulukko 3))])
+    viimeinen-rivi-pred-fn))
+
+(defn pylvaat-otsikolla
+  [vastaus otsikko]
+  (some #(when
+           (and
+             (vector? %)
+             (= :pylvaat (first %))
+             (= otsikko (:otsikko (second %))))
+           %) vastaus))
+
+(defn tarkista-pylvaat-otsikko
+  [pylvaat otsikko]
+  (is (= (:otsikko (second pylvaat) otsikko))))
+
+(defn tarkista-pylvaat-legend
+  [pylvaat otsikko]
+  (is (= (:legend (second pylvaat) otsikko))))
+
+(defn tarkista-pylvaat-data
+  [pylvaat data]
+  (is (= (nth pylvaat 2) data)))
 
 (defmacro elementti [raportti elementin-match]
   `(let [loytynyt-elementti#

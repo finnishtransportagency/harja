@@ -151,7 +151,7 @@
   "Hakee tietolajin kuvauksen, validoi arvot sen pohjalta ja muuntaa arvot merkkijonoksi"
   [tierekisteri arvot tietolaji]
   (when tierekisteri
-    (let [vastaus (tierekisteri/hae-tietolajit
+    (let [vastaus (tierekisteri/hae-tietolaji
                    tierekisteri
                    tietolaji
                    nil)
@@ -172,7 +172,7 @@
   "Hakee tietolajin kuvauksen, muuntaa merkkijonon arvoiksi ja validoi ne"
   [tierekisteri merkkijono tietolaji]
   (when tierekisteri
-    (let [vastaus (tierekisteri/hae-tietolajit tierekisteri tietolaji nil)
+    (let [vastaus (tierekisteri/hae-tietolaji tierekisteri tietolaji nil)
          tietolajin-kuvaus (:tietolaji vastaus)
          arvot (walk/keywordize-keys (tietolajin-arvot-merkkijono->map merkkijono tietolajin-kuvaus))]
      (try

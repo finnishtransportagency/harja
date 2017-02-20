@@ -20,7 +20,7 @@
 (def edellinen-header-leveys (atom nil))
 (def +header-reuna-padding+ 80)
 (def +valilehti-perusleveys+ 60) ;; Kun välilehti on tyhjä
-(def +kirjain-leveys+ 9.3) ;; kirjaimen leveys keskimäärin
+(def +kirjain-leveys+ 9.5) ;; kirjaimen leveys keskimäärin
 (defn- maarittele-valilehtien-maara-per-ryhma [header-leveys valilehdet]
   ;; Jaetaan välilehdet ryhmiin. Tarkoituksena etsiä sellainen jako, jossa
   ;; välilehtien määrä / ryhmä on mahdollisimman suuri niin, ettei välilehtien
@@ -52,7 +52,7 @@
 ;; (some mahtuuko-fn (range (count homma) 1))
 
 (defn- toggle-painike [_]
-  (fn [{:keys [nimi ikoni avain tyyppi ikoni-lahde
+  (fn [{:keys [nimi ikoni avain tyyppi ikoni-lahde pienempi-fontti?
                click-fn jatkuvat-havainnot disabloitu?] :as tiedot}]
     [:div {:on-click #(when-not disabloitu?
                         (click-fn tiedot))
@@ -69,7 +69,9 @@
         :vali [:img.toggle-vali {:src kuvat/+havainto-vali+}])
       (when ikoni
         [kuvat/svg-sprite ikoni "toggle-ikoni"])]
-     [:div.toggle-valintapainike-otsikko
+     [:div {:class (str "toggle-valintapainike-otsikko "
+                        (when pienempi-fontti?
+                          "toggle-valintapainike-otsikko-pienempi"))}
       nimi]]))
 
 (defn- ryhmittele-valilehdet-uudelleen-tarvittaessa! [{:keys [header-komponentti
@@ -78,15 +80,16 @@
   (when header-komponentti
     (let [header-leveys (.-width (.getBoundingClientRect header-komponentti))]
       (when (not= header-leveys @edellinen-header-leveys)
-        (.log js/console "Header leveys muuttui, ryhmitellään tabit uudelleen.")
+        (.log js/console "Header leveys muuttui " @edellinen-header-leveys " -> " header-leveys ", ryhmitellään tabit uudelleen.")
         (let [valilehtia-per-ryhma
               (maarittele-valilehtien-maara-per-ryhma header-leveys
                                                       valilehdet)]
-          (reset! valilehtiryhmat (partition-all valilehtia-per-ryhma valilehdet))
-          (reset! edellinen-header-leveys header-leveys)
-          ;; Ryhmittely päivitetty, varmistetaan, että nykyinen valinta on edelleen taulukon sisällä
-          (when (> @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))
-            (reset! valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))))))))
+          (when (> valilehtia-per-ryhma 0)
+            (reset! valilehtiryhmat (partition-all valilehtia-per-ryhma valilehdet))
+            ;; Ryhmittely päivitetty, varmistetaan, että nykyinen valinta on edelleen taulukon sisällä
+            (when (> @valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))
+              (reset! valittu-valilehtiryhma (- (count @valilehtiryhmat) 1))))
+          (reset! edellinen-header-leveys header-leveys))))))
 
 (defn- valilehtielementit [{:keys [valittu-valilehti]}]
   ;; Hampurilaisvalikon kanssa näytetään aina vain aktiivinen välilehti
@@ -293,9 +296,12 @@
 (defn- paanavigointi-footer [{:keys [vapauta-kaikki-painettu havaintolomake-painettu] :as tiedot}]
   [:footer
    [:div.footer-vasen
-    [nappi "Vapauta kaikki" {:on-click vapauta-kaikki-painettu
-                             :ikoni (kuvat/svg-sprite "nuoli-ylos-24")
-                             :luokat-str "nappi-toissijainen"}]]
+    [nappi (if (< @dom/leveys dom/+leveys-tabletti+)
+             "Vapauta"
+             "Vapauta kaikki")
+     {:on-click vapauta-kaikki-painettu
+      :ikoni (kuvat/svg-sprite "nuoli-ylos-24")
+      :luokat-str "nappi-toissijainen"}]]
    [:div.footer-oikea
     [nappi (if (< @dom/leveys dom/+leveys-tabletti+)
              "Lomake"

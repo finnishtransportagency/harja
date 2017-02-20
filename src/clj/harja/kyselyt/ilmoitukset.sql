@@ -2,6 +2,7 @@
 SELECT
   i.id,
   i.urakka,
+  i.tunniste,
   u.nimi as urakkanimi,
   i.ilmoitusid,
   i.ilmoitettu,
@@ -59,6 +60,9 @@ WHERE i.id IN
       -- Rajaa tienumerolla
       (:tr-numero::INTEGER IS NULL OR tr_numero = :tr-numero) AND
 
+      -- Rajaa tunnisteella
+      (:tunniste_annettu IS FALSE OR (x.tunniste ILIKE :tunniste)) AND
+
       -- Rajaa ilmoittajan nimellä
       (:ilmoittaja-nimi::TEXT IS NULL OR
        CONCAT(x.ilmoittaja_etunimi,' ',x.ilmoittaja_sukunimi) ILIKE :ilmoittaja-nimi) AND
@@ -70,9 +74,31 @@ WHERE i.id IN
       LIMIT :max-maara::INTEGER)
 ORDER BY i.ilmoitettu DESC, it.kuitattu DESC;
 
+-- name: hae-ilmoitukset-raportille
+SELECT
+  i.urakka,
+  i.ilmoitettu,
+  i.ilmoitustyyppi,
+  hy.id                                                              AS hallintayksikko_id,
+  hy.nimi                                                            AS hallintayksikko_nimi,
+  lpad(cast(hy.elynumero as varchar), 2, '0')                        AS hallintayksikko_elynumero
+FROM ilmoitus i
+  LEFT JOIN urakka u ON i.urakka = u.id
+  LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
+WHERE i.id IN
+      (SELECT id FROM ilmoitus x WHERE
+        (x.urakka IS NULL OR x.urakka IN (:urakat)) AND
+
+        -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
+        ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
+         (:loppu_annettu IS FALSE AND x.ilmoitettu  >= :alku) OR
+         (:alku_annettu IS FALSE AND x.ilmoitettu  <= :loppu) OR
+         (x.ilmoitettu  BETWEEN :alku AND :loppu)));
+
 -- name: hae-ilmoitukset-ilmoitusidlla
 SELECT
   ilmoitusid,
+  tunniste,
   ilmoitettu,
   tila,
   yhteydenottopyynto,
@@ -136,6 +162,8 @@ SELECT
   i.lahettaja_sukunimi,
   i.lahettaja_puhelinnumero,
   i.lahettaja_sahkoposti,
+
+  i.tunniste,
 
   it.id                                    AS kuittaus_id,
   it.kuitattu                              AS kuittaus_kuitattu,
@@ -227,6 +255,7 @@ WHERE i.id IN (:idt);
 -- name: hae-muuttuneet-ilmoitukset
 SELECT
   ilmoitusid,
+  tunniste,
   ilmoitettu,
   yhteydenottopyynto,
   paikankuvaus,
@@ -273,7 +302,8 @@ INSERT INTO ilmoitus
  lisatieto,
  ilmoitustyyppi,
  selitteet,
- urakkatyyppi)
+ urakkatyyppi,
+ tunniste)
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -285,7 +315,8 @@ VALUES
     :lisatieto,
     :ilmoitustyyppi :: ilmoitustyyppi,
     :selitteet :: TEXT [],
-    :urakkatyyppi :: urakkatyyppi);
+    :urakkatyyppi :: urakkatyyppi,
+    :tunniste);
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen
@@ -297,10 +328,11 @@ SET
   valitetty          = :valitetty,
   yhteydenottopyynto = :yhteydenottopyynto,
   otsikko            = :otsikko,
-  paikankuvaus        = :paikankuvaus,
-  lisatieto        = :lisatieto,
+  paikankuvaus       = :paikankuvaus,
+  lisatieto          = :lisatieto,
   ilmoitustyyppi     = :ilmoitustyyppi :: ilmoitustyyppi,
   selitteet          = :selitteet :: TEXT [],
+  tunniste           = :tunniste,
   muokattu           = NOW()
 WHERE id = :id;
 
@@ -418,7 +450,7 @@ VALUES
     :kuitattu,
     :vakiofraasi,
     :vapaateksti,
-    :kuittaustyyppi :: kuittaustyyppi,
+    :kuittaustyyppi,
     :suunta :: viestisuunta,
     :kanava :: viestikanava,
     :tila :: lahetyksen_tila,
@@ -442,6 +474,7 @@ VALUES
 SELECT
   id,
   ilmoitusid,
+  tunniste,
   ilmoitustyyppi,
   urakka
 FROM ilmoitus
@@ -469,7 +502,7 @@ SELECT id
 FROM ilmoitustoimenpide
 WHERE
   (tila IS NULL OR tila = 'virhe') AND
-  kuittaustyyppi != 'valitys'::kuittaustyyppi;
+  kuittaustyyppi != 'valitys';
 
 -- name: hae-ilmoituksen-tieosoite
 SELECT

@@ -112,7 +112,7 @@
   ([db user suodattimet] (hae-ilmoitukset db user suodattimet nil))
   ([db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit
                     kuittaustyypit hakuehto selite vain-myohassa?
-                    aloituskuittauksen-ajankohta tr-numero
+                    aloituskuittauksen-ajankohta tr-numero tunniste
                     ilmoittaja-nimi ilmoittaja-puhelin] :as hakuehdot}
     max-maara]
 
@@ -141,6 +141,7 @@
                            (viesti aloituskuittauksen-ajankohta "aloituskuittausrajaksella: " "ilman aloituskuittausrajausta")
                            (viesti vain-myohassa? "vain myöhässä olevat: " "myös myöhästyneet")
                            (viesti selite "selitteellä:" "ilman selitettä")
+                           (viesti tunniste "tunnisteella:" "ilman tunnistetta")
                            (viesti hakuehto "hakusanoilla:" "ilman tekstihakua")
                            (viesti tr-numero "tienumerolla:" "ilman tienumeroa")
                            (cond
@@ -169,6 +170,9 @@
                                        :teksti (str "%" hakuehto "%")
                                        :selite_annettu selite-annettu?
                                        :selite selite
+                                       :tunniste_annettu (hakuehto-annettu? tunniste)
+                                       :tunniste (when-not (str/blank? tunniste)
+                                                   (str "%" tunniste "%"))
                                        :tr-numero tr-numero
                                        :ilmoittaja-nimi (when-not (str/blank? ilmoittaja-nimi)
                                                           (str "%" ilmoittaja-nimi "%"))
@@ -197,6 +201,38 @@
      (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) ilmoitukset) "kappaletta")
      ilmoitukset)))
 
+(defn hae-ilmoitukset-raportille
+  "Palauttaa ilmoitukset raporttia varten, minimaalisella tietosisällöllä ja ilman hidastavaa sorttausta."
+  [db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi aikavali]}]
+  (let [aikavali-alku (when (first aikavali)
+                        (konv/sql-timestamp (first aikavali)))
+        aikavali-loppu (when (second aikavali)
+                         (konv/sql-timestamp (second aikavali)))
+        urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
+                 db user (fn [urakka-id kayttaja]
+                           (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset
+                                                urakka-id
+                                                kayttaja))
+                 urakka urakoitsija urakkatyyppi hallintayksikko
+                 (first aikavali) (second aikavali))
+        debug-viesti (str "Haetaan ilmoituksia raportille: "
+                          (viesti urakat "urakoista" "ilman urakoita")
+                          (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
+                          (viesti aikavali-loppu "päättyen" "ilman päättymisaikaa"))
+        _ (log/debug debug-viesti)
+        ilmoitukset
+        (if-not (empty? urakat)
+          (into []
+                ilmoitus-xf
+                (q/hae-ilmoitukset-raportille db
+                                              {:urakat urakat
+                                               :alku_annettu (hakuehto-annettu? aikavali-alku)
+                                               :loppu_annettu (hakuehto-annettu? aikavali-loppu)
+                                               :alku aikavali-alku
+                                               :loppu aikavali-loppu}))
+          [])]
+    ilmoitukset))
+
 (defn hae-ilmoitus [db user id]
   (let [tulos (first
                 (konv/sarakkeet-vektoriin
@@ -204,7 +240,8 @@
                         ilmoitus-xf
                         (q/hae-ilmoitus db {:id id}))
                   {:kuittaus :kuittaukset}))]
-    (when (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset (:urakka tulos) user) tulos)))
+    (oikeudet/vaadi-lukuoikeus oikeudet/ilmoitukset-ilmoitukset user (:urakka tulos))
+    tulos))
 
 (defn tallenna-ilmoitustoimenpide [db tloik _
                                    {:keys [ilmoituksen-id
@@ -335,7 +372,6 @@
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user urakka-id))))
 
 (defn tallenna-ilmoitustoimenpiteet [db tloik user ilmoitustoimenpiteet]
-  (tarkista-oikeudet db user ilmoitustoimenpiteet)
   (vec
     (for [ilmoitustoimenpide ilmoitustoimenpiteet]
       (tallenna-ilmoitustoimenpide db tloik user ilmoitustoimenpide))))
@@ -354,6 +390,7 @@
                         (hae-ilmoitus db user tiedot)))
     (julkaise-palvelu http :tallenna-ilmoitustoimenpiteet
                       (fn [user ilmoitustoimenpiteet]
+                        (tarkista-oikeudet db user ilmoitustoimenpiteet)
                         (async
                          (tallenna-ilmoitustoimenpiteet db tloik user ilmoitustoimenpiteet))))
     (julkaise-palvelu http :hae-ilmoituksia-idlla

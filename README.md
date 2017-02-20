@@ -46,7 +46,8 @@ Harja repon hakemistorakenne:
 Asenna Leiningen:
 http://leiningen.org/
 
-Asenna tarvittavat kehitystyökalut: vagrant, ansible, virtualbox, Java 8
+Asenna tarvittavat kehitystyökalut: vagrant, ansible, virtualbox, Java 8.
+Vaihtoehtoisesti voit käyttää dockeria.
 
 ### VirtualBox
 
@@ -68,6 +69,7 @@ VirtualBoxissa pyörii tietokantapalvelin. Harjan kehitysympäristössä on kaks
 Testidata löytyy tiedostosta testidata.sql, joka ajetaan molempiin kantoihin.
 
 ### Tunnukset ulkoisiin järjestelmiin
+
 Hae harja-testidata repositoriosta .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
 
 ### Kääntäminen
@@ -82,17 +84,31 @@ Käännä frontend ja käynnistä Figwheel:<br/>
 lein figwheel
 </code>
 
-Harjan pitäisi olla käynnissä ja vastata osoitteesta localhost:8000
+Harjan pitäisi olla käynnissä ja vastata osoitteesta localhost:8000 tai localhost:3000
 
 ### Kehitystyötä helpottavat työkalut
 
+Migraatioiden ajaminen Vagrantin VirtualBox-koneeseen:
+
 - **migrate_test.sh** pystyttää testikannan uudelleen
 - **migrate_and_clean.sh** pystyttää molemmat tietokannat uudelleen tyhjästä
+
 - **unit.sh** ajaa testit ja näyttää tulokset kehittäjäystävällisessä muodossa
-- **deploy2.sh** Deployaa aktiivisen haaran testipalvelimelle testausta varten. Suorittaa testit ennen deployaamista.
+- **deploy2.sh** Deployaa aktiivisen haaran testipalvelimelle testausta varten.
+
+### Docker paikallinen kehitysympäristö
+
+Paikallisen kehitysympäristön tarvitsemat palvelut voi käynnistää myös dockerilla.
+Tietokanta tarvitaan aina. ActiveMQ ei ole pakollinen, jos ei testaa integraatioita, mutta sovellus
+logittaa virheitä jos JMS brokeriin ei saada yhteyttä.
+
+* Tietokanta: ks. tietokanta/devdb_up.sh ja tietokanta/devdb_down.sh
+* ActiveMQ: docker run -p 61616:61616 -p 8161:8161 rmohr/activemq
 
 ## Dokumentaatio
+
 ### Tietokanta
+
 Tietokantataulut dokumentoimaan antamalla niille kommentti migraatiossa luonnin yhteydessä. Kommenttiin lisätään seuraavat asiat:
 - Mikä on taulun konsepti?
 - Miten asiaks ymmärtää nämä käsitteet?
@@ -115,7 +131,6 @@ Jokaisen namespacen alkuun kirjataan seuraavat asiat:
 - Mitkä ovat pääpalvelut, jotka tämä nimiavaruus tarjoaa? Mistä kannattaa lähteä liikenteeseen?
 - Toistuvat käsitteet koodin kannalta, tärkeät keywordit.
 
-
 ## Testaus
 
 Harjassa on kolme eritasoista test-suitea: fronttitestit (phantom), palvelutestit (backend) ja
@@ -124,6 +139,7 @@ e2e testit (erillisessä projektissa).
 ### Fronttitestit
 
 Fronttitestit ajetaan komennolla: lein doo phantom test
+Laadunseurantatyökalun testit ajetaan komennolla: lein doo phantom laadunseuranta-test
 
 Odotetaan, että kaikilla frontin nimiavaruuksilla on testitiedosto ja vähintään yksi
 testi.
@@ -224,13 +240,6 @@ Hae työkalu: https://github.com/jarnovayrynen/cloverage
 Työkalun cloverage/cloverage kansiossa aja "lein install"
 Harjan juuressa aja "env CLOVERAGE_VERSION=1.0.8-SNAPSHOT lein cloverage"
 
-## Tietokantadumpin ottaminen omalle koneelle
-
-```
-cd vagrant
-sh fresh_dump.sh
-```
-
 ## Kirjautuminen
 
 Harja käyttää liikenneviraston extranetista tulevia headereita kirjautumiseen.
@@ -260,12 +269,7 @@ Seuraavat headerit tuettuna:
 Staging-ympäristössä voidaan lisäksi testata eri rooleja testitunnuksilla,
 jotka löytyvät toisesta Excelistä, mitä ei ole Harjan repossa (ei salasanoja repoon).
 
-# Fronttitestit
-
-Fronttitestit pyörivät figwheelin kautta.
-Ne voi ajaa myös komentorivillä komennolla "lein doo phantom test"
-
-# Labyrintin SMS gatewayn testaus kehitysmpäristössä
+## Labyrintin SMS gatewayn testaus kehitysmpäristössä
 Labyrintin SMS viestien vastaanottoa voi testata tekemällä reverse SSH-tunneli
 harja-front1-stg palvelimelle sekä muuttamalla NginX:n reititys osoittamaan
 harja-app1-stg palvelimen sijasta localhostin SSH tunnelin porttiin.
@@ -283,24 +287,22 @@ upstream sms-kasittelija {
 6. Lähetä tekstiviesti numeroon +358 50 9023530
 -> Viesti pitäisi välittyä REPL:n
 
+## Liikenneviraston Harja-järjestelmän laadunseurantatyökalu #
 
-# Liikenneviraston Harja-järjestelmän laadunseurantatyökalu #
-
-Toisessa serverissä pyörii Harjan laadunseurantatyökalu, jonka avulla tieverkon kunnossapitoa voidaan valvoa
-ja raportoida tiestön kuntoon liittyviä havaintoja ja mittauksia.
+Toisessa serverissä pyörii Harjan laadunseurantatyökalu, jonka avulla tieverkon kunnossapitoa voidaan valvoa ja raportoida tiestön kuntoon liittyviä havaintoja ja mittauksia.
 
 Käyttöliittymän kääntäminen ja ajaminen kansiosta /harja:
 
     lein figwheel laadunseuranta-dev
 
-Avaa selain http://localhost:8000/laadunseuranta/index.html
+Avaa selain http://localhost:3000/laadunseuranta/
 
 Palvelin käynnistyy kun Harja käynnistetään.
 
 ## Lisenssi
 https://github.com/finnishtransportagency/harja/blob/develop/LICENSE.txt
 
-# Sonjan JMS jonojen käyttäminen Hermes JMS:llä
+## Sonjan JMS jonojen käyttäminen Hermes JMS:llä
 1. Hae Hermes JMS: https://sourceforge.net/projects/hermesjms/
 2. Asenna Java SE 6 runtime: https://support.apple.com/kb/DL1572?locale=en_US
 3. Kopioi harja-testidata repositoriosta hermes-config.xml kansioon ~/.hermes
@@ -329,6 +331,6 @@ https://github.com/finnishtransportagency/harja/blob/develop/LICENSE.txt
 8. Avaa ssh-yhteys harja-app1-stg palvelimelle: ssh harja-db1-stg
 9. Avaa Hermes JMS
 
-# FIM:n testikäyttö
+## FIM:n testikäyttö
 1. Määrittele asetukset.edn:n FIM:n URL:ksi https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity
 2. Avaa SSH-yhteys ssh -L6666:testioag.liikennevirasto.fi:443 harja-app1-stg

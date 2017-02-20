@@ -29,6 +29,11 @@
 
   TIETYÖMAAN POISTO KOHTEELTA
   - Kun tietyömaa on valmistunut ja aidat on poistettu kentältä, voidaan tällä kutsulla poistaa tietyömaa Harjasta.
+
+  MÄÄRÄMUUTOSTEN KIRJAUS KOHTEELLE
+  - Määrämuutoksilla seurataan yksittäisen kohteen kuluja rivitasolla. Yksittäinen rivi sisältää tiedon päällysteen mm.
+    tyypistä, työstä, määristä sekä yksikkö hinnasta. Rajapintakutsu ylikirjoittaa koko kohteen taloudellisen osan,
+    joten idea on, että rajapinnan kautta annetaan aina kokonaisena tiedot.
   "
 
   (:require [com.stuartsierra.component :as component]
@@ -42,6 +47,7 @@
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.kyselyt.tietyomaat :as q-tietyomaat]
             [harja.kyselyt.tieverkko :as q-tieverkko]
+            [harja.kyselyt.paallystys :as q-paallystys]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as q-urakat]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
@@ -49,6 +55,7 @@
             [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as yllapitokohteet]
             [harja.kyselyt.paallystys :as paallystys-q])
   (:use [slingshot.slingshot :only [throw+ try+]])
@@ -92,14 +99,18 @@
         urakan-tyyppi (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id))))
         kohde (assoc (:yllapitokohde data) :id kohde-id)
         kohteen-sijainti (:sijainti kohde)
-        alikohteet (mapv #(assoc (:alikohde %) :ulkoinen-id (get-in % [:alikohde :tunniste :id])) (:alikohteet kohde))
-        kohteen-tienumero (:numero kohteen-sijainti)]
+        kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid kohde-id})))
+        alikohteet (mapv #(-> (:alikohde %)
+                              (assoc :ulkoinen-id (get-in % [:alikohde :tunniste :id]))
+                              (assoc-in [:sijainti :numero ] kohteen-tienumero))
+                         (:alikohteet kohde))]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (vaadi-kohde-kuuluu-urakkaan db urakka-id urakan-tyyppi kohde-id)
     (validointi/tarkista-saako-kohteen-paivittaa db kohde-id)
     (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
     (yllapitokohteet/paivita-kohde db kohde-id kohteen-sijainti)
     (yllapitokohteet/paivita-alikohteet db kohde alikohteet)
+    (yy/paivita-yllapitourakan-geometria db urakka-id)
     (tee-kirjausvastauksen-body
       {:ilmoitukset (str "Ylläpitokohde päivitetty onnistuneesti")})))
 
@@ -209,40 +220,41 @@
                      kohde-id
                      kayttaja))
 
-  (let [urakka-id (Integer/parseInt urakka-id)
-        kohde-id (Integer/parseInt kohde-id)]
-    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+  (jdbc/with-db-transaction [db db]
+    (let [urakka-id (Integer/parseInt urakka-id)
+          kohde-id (Integer/parseInt kohde-id)]
+      (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+      (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
 
-    (let [jarjestelma (get-in otsikko [:lahettaja :jarjestelma])
-          alkukoordinaatit (:koordinaatit (:alkuaidan-sijainti tietyomaa))
-          loppukoordinaatit (:koordinaatit (:loppuaidan-sijainti tietyomaa))
-          tr-osoite (hae-tr-osoite db alkukoordinaatit loppukoordinaatit)
-          parametrit {:jarjestelma jarjestelma
-                      :osuusid (:id tietyomaa)
-                      :alkux (:x alkukoordinaatit)
-                      :alkuy (:y alkukoordinaatit)
-                      :loppux (:x loppukoordinaatit)
-                      :loppuy (:y loppukoordinaatit)
-                      :asetettu (aika-string->java-sql-timestamp (:aika tietyomaa))
-                      :kaistat (konv/seq->array (:kaistat tietyomaa))
-                      :ajoradat (konv/seq->array (:ajoradat tietyomaa))
-                      :yllapitokohde kohde-id
-                      :kirjaaja (:id kayttaja)
-                      :tr_tie (:tie tr-osoite)
-                      :tr_aosa (:aosa tr-osoite)
-                      :tr_aet (:aet tr-osoite)
-                      :tr_losa (:losa tr-osoite)
-                      :tr_let (:let tr-osoite)
-                      :nopeusrajoitus (:nopeusrajoitus tietyomaa)}]
+      (let [jarjestelma (get-in otsikko [:lahettaja :jarjestelma])
+            alkukoordinaatit (:koordinaatit (:alkuaidan-sijainti tietyomaa))
+            loppukoordinaatit (:koordinaatit (:loppuaidan-sijainti tietyomaa))
+            tr-osoite (hae-tr-osoite db alkukoordinaatit loppukoordinaatit)
+            parametrit {:jarjestelma jarjestelma
+                        :osuusid (:id tietyomaa)
+                        :alkux (:x alkukoordinaatit)
+                        :alkuy (:y alkukoordinaatit)
+                        :loppux (:x loppukoordinaatit)
+                        :loppuy (:y loppukoordinaatit)
+                        :asetettu (aika-string->java-sql-timestamp (:aika tietyomaa))
+                        :kaistat (konv/seq->array (:kaistat tietyomaa))
+                        :ajoradat (konv/seq->array (:ajoradat tietyomaa))
+                        :yllapitokohde kohde-id
+                        :kirjaaja (:id kayttaja)
+                        :tr_tie (:tie tr-osoite)
+                        :tr_aosa (:aosa tr-osoite)
+                        :tr_aet (:aet tr-osoite)
+                        :tr_losa (:losa tr-osoite)
+                        :tr_let (:let tr-osoite)
+                        :nopeusrajoitus (:nopeusrajoitus tietyomaa)}]
 
-      (if (q-tietyomaat/onko-olemassa? db {:id (:id tietyomaa) :jarjestelma jarjestelma})
-        (q-tietyomaat/paivita-tietyomaa! db parametrit)
-        (q-tietyomaat/luo-tietyomaa<! db parametrit))
-      (let [vastaus (cond-> {:ilmoitukset (str "Tietyömaa kirjattu onnistuneesti.")}
-                            (nil? tr-osoite)
-                            (assoc :varoitukset "Annetulle tieosuudelle ei saatu haettua tierekisteriosoitetta."))]
-        (tee-kirjausvastauksen-body vastaus)))))
+        (if (q-tietyomaat/onko-olemassa? db {:id (:id tietyomaa) :jarjestelma jarjestelma})
+          (q-tietyomaat/paivita-tietyomaa! db parametrit)
+          (q-tietyomaat/luo-tietyomaa<! db parametrit))
+        (let [vastaus (cond-> {:ilmoitukset (str "Tietyömaa kirjattu onnistuneesti.")}
+                              (nil? tr-osoite)
+                              (assoc :varoitukset "Annetulle tieosuudelle ei saatu haettua tierekisteriosoitetta."))]
+          (tee-kirjausvastauksen-body vastaus))))))
 
 (defn poista-tietyomaa [db kayttaja {:keys [urakka-id kohde-id]} {:keys [otsikko tietyomaa]}]
   (log/debug (format "Poistetaan urakan (id: %s) kohteelta (id: %s) tietyömaa käyttäjän: %s toimesta"
@@ -250,20 +262,54 @@
                      kohde-id
                      kayttaja))
 
-  (let [urakka-id (Integer/parseInt urakka-id)
-        kohde-id (Integer/parseInt kohde-id)
-        jarjestelma (get-in otsikko [:lahettaja :jarjestelma])
-        id (:id tietyomaa)
-        parametrit {:jarjestelma jarjestelma
-                    :osuusid id
-                    :poistettu (aika-string->java-sql-timestamp (:aika tietyomaa))
-                    :poistaja (:id kayttaja)}]
-    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
-    (validointi/tarkista-tietyomaa db id jarjestelma)
-    (q-tietyomaat/merkitse-tietyomaa-poistetuksi! db parametrit)
-    (tee-kirjausvastauksen-body
-      {:ilmoitukset (str "Tietyömaa poistettu onnistuneesti.")})))
+  (jdbc/with-db-transaction [db db]
+    (let [urakka-id (Integer/parseInt urakka-id)
+          kohde-id (Integer/parseInt kohde-id)
+          jarjestelma (get-in otsikko [:lahettaja :jarjestelma])
+          id (:id tietyomaa)
+          parametrit {:jarjestelma jarjestelma
+                      :osuusid id
+                      :poistettu (aika-string->java-sql-timestamp (:aika tietyomaa))
+                      :poistaja (:id kayttaja)}]
+      (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+      (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+      (validointi/tarkista-tietyomaa db id jarjestelma)
+      (q-tietyomaat/merkitse-tietyomaa-poistetuksi! db parametrit)
+      (tee-kirjausvastauksen-body
+        {:ilmoitukset (str "Tietyömaa poistettu onnistuneesti.")}))))
+
+(defn kirjaa-maaramuutokset [db kayttaja {:keys [urakka-id kohde-id]} {:keys [otsikko maaramuutokset]}]
+  (log/debug (format "Kirjataan urakan (id: %s) kohteen (id: %s) maaramuutokset käyttäjän: %s toimesta"
+                     urakka-id
+                     kohde-id
+                     kayttaja))
+  (jdbc/with-db-transaction
+    [db db]
+    (let [urakka-id (Integer/parseInt urakka-id)
+          kohde-id (Integer/parseInt kohde-id)
+          jarjestelma (get-in otsikko [:lahettaja :jarjestelma])]
+      (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+      (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+      (q-paallystys/poista-yllapitokohteen-jarjestelman-kirjaamat-maaramuutokset! db {:yllapitokohdeid kohde-id
+                                                                                      :jarjestelma jarjestelma})
+      (doseq [{{:keys [tunniste tyyppi tyo yksikko tilattu-maara
+                       toteutunut-maara yksikkohinta ennustettu-maara]} :maaramuutos}
+              maaramuutokset]
+        (let [parametrit {:yllapitokohde kohde-id
+                          :tyon_tyyppi tyyppi
+                          :tyo tyo
+                          :yksikko yksikko
+                          :tilattu_maara tilattu-maara
+                          :ennustettu_maara ennustettu-maara
+                          :toteutunut_maara toteutunut-maara
+                          :yksikkohinta yksikkohinta
+                          :luoja (:id kayttaja)
+                          :ulkoinen_id (:id tunniste)
+                          :jarjestelma jarjestelma}]
+          (q-paallystys/luo-yllapitokohteen-maaramuutos<! db parametrit)))
+
+      (tee-kirjausvastauksen-body
+        {:ilmoitukset (str "Määrämuutokset kirjattu onnistuneesti.")}))))
 
 (def palvelut
   [{:palvelu :hae-yllapitokohteet
@@ -313,7 +359,14 @@
     :kutsu-skeema json-skeemat/tietyomaan-poisto
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
-                    (poista-tietyomaa db kayttaja parametrit data))}])
+                    (poista-tietyomaa db kayttaja parametrit data))}
+   {:palvelu :kirjaa-maaramuutokset
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/maaramuutokset"
+    :tyyppi :POST
+    :kutsu-skeema json-skeemat/urakan-yllapitokohteen-maaramuutosten-kirjaus-request
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db]
+                    (kirjaa-maaramuutokset db kayttaja parametrit data))}])
 
 (defrecord Yllapitokohteet []
   component/Lifecycle

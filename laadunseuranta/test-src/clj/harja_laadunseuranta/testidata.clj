@@ -186,7 +186,7 @@
     :kiinteys 3
     :soratie-tasaisuus 3}])
 
-(def tarkastus-jossa-soratie-kiinteys-jatkuu
+(def tarkastus-jossa-soratie-kiinteys-jatkuu-vaikka-gps-sekoaa
   "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
   [{:id 2 :sijainti [465641.5999816895 7230780.000024414]
     :jatkuvat-havainnot [3]
@@ -196,7 +196,7 @@
     :jatkuvat-havainnot [3]
     :soratie-tasaisuus 1
     :kiinteys 3}
-   {:id 4 :sijainti nil ;; GPS sekoaa
+   {:id 4 :sijainti nil ;; GPS sekoaa, mutta sama tarkastus jatkuu kunnes todistettavasti on syytä katkaista
     :jatkuvat-havainnot [3]
     :soratie-tasaisuus 1
     :kiinteys 3}
@@ -273,6 +273,15 @@
   [{:id 0 :sijainti [464681.5999816895 7230492.000024414]
     :jatkuvat-havainnot [17]}
    {:id 1 :sijainti nil
+    :jatkuvat-havainnot [17]}
+   {:id 2 :sijainti nil
+    :jatkuvat-havainnot [17]
+    :kitkamittaus 0.3}])
+
+(def tarkastus-jossa-sijainti-puuttuu-alusta
+  [{:id 0 :sijainti nil
+    :jatkuvat-havainnot [17]}
+   {:id 1 :sijainti [464681.5999816895 7230492.000024414]
     :jatkuvat-havainnot [17]}
    {:id 2 :sijainti nil
     :jatkuvat-havainnot [17]
@@ -438,6 +447,34 @@
     :pistemainen-havainto nil}
    {:id 4 :sijainti [467009.5999816895 7231180.000024414]
     :jatkuvat-havainnot [1]
+    :pistemainen-havainto nil}])
+
+(def tarkastus-jossa-kaikki-mittaukset
+  [{:id 1 :sijainti [465641.5999816895 7230780.000024414]
+    :tarkastusajo 666
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/now))
+    :lumisuus 1
+    :talvihoito-tasaisuus 2
+    :kitkamittaus 3
+    :lampotila 4
+    :soratie-tasaisuus 1
+    :kiinteys 2
+    :polyavyys 3
+    :sivukaltevuus 4
+    :pistemainen-havainto nil}
+   {:id 2 :sijainti [466089.5999816895 7230916.000024414]
+    :tarkastusajo 666
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 3)))
+    :lumisuus 1
+    :talvihoito-tasaisuus 2
+    :kitkamittaus 3
+    :lampotila 4
+    :soratie-tasaisuus 1
+    :kiinteys 2
+    :polyavyys 3
+    :sivukaltevuus 4
     :pistemainen-havainto nil}])
 
 (def tarkastus-jossa-kaikki-pisteet-samassa-sijainnissa
