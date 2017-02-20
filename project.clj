@@ -71,7 +71,7 @@
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
                  [cljs-ajax "0.5.8"]
-                 [figwheel "0.5.8"]
+                 [figwheel "0.5.9"]
 
                  [reagent "0.6.0-rc" :exclusions [[cljsjs/react :classifier "*"]]]
                  ; TODO Voisi päivittää, mutta 0.6.0 rikkoo kenttätestit (numero/pvm kentistä .-value palauttaa aina tyhjää).
@@ -152,17 +152,19 @@
   :plugins [[lein-cljsbuild "1.1.5"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.10"]
-            [lein-figwheel "0.5.8"]
+            [lein-figwheel "0.5.9"]
             [codox "0.8.11"]
             [jonase/eastwood "0.2.3"]
             [lein-auto "0.1.2"]
             [lein-pdo "0.1.1"]
             [lein-doo "0.1.6"]]
 
+
   ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds
               [{:id "dev"
-                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev"]
+                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"]
+                :figwheel true
                 :compiler {:optimizations :none
                            :source-map true
                            ;;:preamble ["reagent/react.js"]
@@ -173,7 +175,7 @@
                            :recompile-dependents false
                            }}
                {:id "test"
-                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev"
+                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"
                                "test/cljs" "test/doo" "test/shared-cljs"]
                 :compiler {:output-to "target/cljs/test/test.js"
                            :output-dir "target/cljs/test"
@@ -182,13 +184,12 @@
                            :source-map true
                            :libs ["src/js/kuvataso.js"]
                            :closure-output-charset "US-ASCII"
-                           :main harja.runner
-                           }
+                           :main harja.runner}
                 :notify-command ["./run-karma.sh"]}
                ;;:warning-handlers [utils.cljs-warning-handler/handle]}
 
                {:id "prod"
-                :source-paths ["src/cljs" "src/cljc" "src/cljs-prod"]
+                :source-paths ["src/cljs" "src/cljc" "src/cljs-prod" "src/shared-cljc"]
                 :compiler {:optimizations :advanced
                            ;; korjaa pitkän buildiajan http://dev.clojure.org/jira/browse/CLJS-1228
                            :recompile-dependents false
@@ -205,10 +206,8 @@
 
                ;; Laadunseurannan buildit
                {:id "laadunseuranta-dev"
-                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
-
-                :figwheel {:on-jsload "harja-laadunseuranta.dev-core/on-js-reload"}
-
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]
+                :figwheel true
                 :compiler {:main harja-laadunseuranta.dev-core
                            :asset-path "js/compiled/dev_out"
                            :output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta_dev.js"
@@ -216,12 +215,9 @@
                            :source-map-timestamp true}}
 
                {:id "laadunseuranta-devcards"
-                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]
 
-                :figwheel {:devcards true
-                           ;:nrepl-port 7889
-                           ;:server-port 3450
-                           }
+                :figwheel {:devcards true}
 
                 :compiler {:main harja-laadunseuranta.devcards-core
                            :asset-path "js/compiled/devcards_out"
@@ -230,7 +226,7 @@
                            :source-map-timestamp true}}
 
                {:id "laadunseuranta-test"
-                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"
                                "laadunseuranta/test-src/cljs" "test/shared-cljs"]
 
                 :compiler {:main harja-laadunseuranta.test-main
@@ -248,7 +244,7 @@
                ;; production. You can build this with:
                ;; lein cljsbuild once min
                {:id "laadunseuranta-min"
-                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]
                 :jar true
                 :compiler {:output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta.js"
                            :output-dir "resources/public/laadunseuranta/js/compiled/out"
@@ -271,7 +267,7 @@
 
 
   ;; Palvelimen buildin tietoja
-  :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src"]
+  :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src" "src/shared-cljc"]
   :test-paths ["test/clj" "laadunseuranta/test-src/clj"]
   :aot :all
   :main harja.palvelin.main
@@ -286,11 +282,9 @@
                  :timeout 120000
                  :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
 
-
   ;; Clientin reload ja REPL
   :figwheel {:server-port 3449
-             :reload-clj-files false
-             :css-dirs ["resources/public/laadunseuranta/css"]}
+             :reload-clj-files false}
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
   :aliases {"tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
