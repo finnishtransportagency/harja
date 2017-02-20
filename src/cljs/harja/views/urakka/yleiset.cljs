@@ -372,7 +372,7 @@
           :leveys 2
           :tyyppi :valinta
           :valinta-nayta #(if (= :ei-muutosta %)
-                            (:nimi ensisijainen)
+                            (fmt/kayttaja ensisijainen)
                             (fmt/kayttaja %))
           :valinnat mahdolliset-henkilot}
          {:otsikko "Varalla"
@@ -380,7 +380,7 @@
           :leveys 2
           :tyyppi :valinta
           :valinta-nayta #(if (= :ei-muutosta %)
-                            (:nimi varalla)
+                            (fmt/kayttaja varalla)
                             (fmt/kayttaja %))
           :valinnat mahdolliset-henkilot}]
         @henkilot]])))
@@ -404,13 +404,13 @@
      [:span
       (if ensisijainen
         [yleiset/tooltip {}
-         [:span.vastuuhenkilo-ensisijainen (:nimi ensisijainen)]
+         [:span.vastuuhenkilo-ensisijainen (fmt/kayttaja ensisijainen)]
          [vastuuhenkilo-tooltip ensisijainen]]
         [:span.vastuuhenkilo-ei-tiedossa "Ei tiedossa"])
       " "
       (when varalla
         [yleiset/tooltip {}
-         [:span.vastuuhenkilo-varalla "(sijainen " (:nimi varalla) ")"]
+         [:span.vastuuhenkilo-varalla "(sijainen " (fmt/kayttaja varalla) ")"]
          [vastuuhenkilo-tooltip varalla]])
       (when voi-muokata?
         [:span.klikattava {:on-click #(modal/nayta!

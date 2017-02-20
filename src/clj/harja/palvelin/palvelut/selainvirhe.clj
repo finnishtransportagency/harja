@@ -3,6 +3,7 @@
   (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
+            [harja.domain.oikeudet :as oikeudet]
             [clojure.string :as str]))
 
 (declare raportoi-selainvirhe)
@@ -34,6 +35,5 @@
 (defn raportoi-selainvirhe
   "Logittaa yksittäisen selainvirheen"
   [user virhe]
-  (log/warn (formatoi-virhe user virhe)))
-  
-  
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
+  (log/error (formatoi-virhe user virhe)))

@@ -174,9 +174,41 @@
       :else
       (recur m loput))))
 
+(defn suodatin-muutettuna
+  "Ottaa nested map rakenteen, jossa viimeisellä tasolla avaimet ovat
+  Suodatin recordeja ja arvot boolean. Lisäksi ottaa kahden parametrin funktion ja setin id:tä.
+  Kun löydetään id-settiin osuva suodatin, kutsutaan funktiota suodattimella ja boolean-arvolla.
+  Funktion paluu arvo korvaa vanhan [suodatin boolean] avain-arvoparin.
+  Mäp palautetaan samalla rakenteella."
+  [valinnat funktio id-set]
+  (loop [m valinnat
+         [[avain arvo] & loput] (seq valinnat)]
+    (cond
+      (nil? avain)
+      m
+
+      (and (map? arvo)
+           (every? suodatin? (keys arvo)))
+      (let [loytyy? (some #(id-set (:id %)) (keys arvo))
+            tulos (if-not loytyy?
+                    arvo
+                    (into {}
+                          (map
+                            (fn [[suodatin valittu? :as pari]]
+                              (if (id-set (:id suodatin)) (funktio suodatin valittu?) pari))
+                            (seq arvo))))]
+        (recur (assoc m avain tulos) loput))
+
+      (map? arvo)
+      (recur (assoc m avain (suodatin-muutettuna arvo funktio id-set)) loput)
+
+      :else
+      (recur m loput))))
+
 (defn valittu? [valitut-set suodatin]
-  (and valitut-set
-       (valitut-set (:id suodatin))))
+  (some?
+    (and valitut-set
+         (valitut-set (:id suodatin)))))
 
 (defn- valitut-kentat* [taulukko suodattimet]
   (loop [t taulukko
