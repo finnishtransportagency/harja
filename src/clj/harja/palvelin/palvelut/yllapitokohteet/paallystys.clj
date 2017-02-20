@@ -43,12 +43,11 @@
                      (map (fn [kohdeosa]
                             ;; Lisää kohdeosan tietoihin päällystystoimenpiteen tiedot
                             ;; On mahdollista, ettei kohdeosalle ole lisätty mitään tietoja
-                            (let [kohdeosan-ilmoitustiedot
-                                       (first (filter
-                                                #(= (:id kohdeosa)
-                                                    (:kohdeosa-id %))
-                                                (get-in paallystysilmoitus
-                                                        [:ilmoitustiedot :osoitteet])))]
+                            (let [kohdeosan-ilmoitustiedot (first (filter
+                                                                    #(= (:id kohdeosa)
+                                                                        (:kohdeosa-id %))
+                                                                    (get-in paallystysilmoitus
+                                                                            [:ilmoitustiedot :osoitteet])))]
                               (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
                                      kohdeosan-ilmoitustiedot))))
                      (sort-by tierekisteri-domain/tiekohteiden-jarjestys)
