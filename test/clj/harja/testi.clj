@@ -13,7 +13,8 @@
     [com.stuartsierra.component :as component]
     [clj-time.core :as t]
     [clj-time.coerce :as tc]
-    [clojure.core.async :as async])
+    [clojure.core.async :as async]
+    [clojure.spec :as s])
   (:import (java.util Locale)))
 
 (def jarjestelma nil)
@@ -193,6 +194,25 @@
   (is false (str "Palvelua " nimi " ei löydy!"))
   {:error "Palvelua ei löydy"})
 
+(defn- wrap-validointi [nimi palvelu-fn {:keys [kysely-spec vastaus-spec]}]
+  (as-> palvelu-fn f
+    (if kysely-spec
+      (fn [user payload]
+        (testing (str "Palvelun " nimi " kysely on validi")
+          (is (s/valid? kysely-spec payload)
+              (s/explain-str kysely-spec payload)))
+        (f user payload))
+      f)
+
+    (if vastaus-spec
+      (fn [user payload]
+        (let [v (f user payload)]
+          (testing (str "Palvelun " nimi " vastaus on validi")
+            (is (s/valid? vastaus-spec v)
+                (s/explain-str vastaus-spec v)))
+          v))
+      f)))
+
 (defn testi-http-palvelin
   "HTTP 'palvelin' joka vain ottaa talteen julkaistut palvelut."
   []
@@ -202,7 +222,8 @@
       (julkaise-palvelu [_ nimi palvelu-fn]
         (swap! palvelut assoc nimi palvelu-fn))
       (julkaise-palvelu [_ nimi palvelu-fn optiot]
-        (swap! palvelut assoc nimi palvelu-fn))
+        (swap! palvelut assoc nimi
+               (wrap-validointi nimi palvelu-fn optiot)))
       (poista-palvelu [_ nimi]
         (swap! palvelut dissoc nimi))
 

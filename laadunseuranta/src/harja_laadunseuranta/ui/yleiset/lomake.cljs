@@ -8,7 +8,8 @@
             [cljs-time.format :as time-fmt]
             [harja-laadunseuranta.ui.yleiset.varmistusdialog :as varmistusdialog]
             [harja-laadunseuranta.ui.yleiset.yleiset :as yleiset]
-            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat])
+            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
+            [harja.domain.tierekisteri :as tr-domain])
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
 
@@ -128,7 +129,7 @@
        [:span.aika (fmt/klo (:aikaleima liittyva-havainto))]
        [:span " "]
        [:span.tr-osoite (when (:tr-osoite liittyva-havainto)
-                          (str "(" (fmt/tierekisteriosoite-tekstina
+                          (str "(" (tr-domain/tierekisteriosoite-tekstina
                                      (:tr-osoite liittyva-havainto)
                                      {:teksti-tie? false
                                       :teksti-ei-tr-osoitetta? false}) ")"))]]]]))
