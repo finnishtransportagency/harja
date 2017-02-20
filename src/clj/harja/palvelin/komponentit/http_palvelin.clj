@@ -107,13 +107,12 @@
                   ;; Parse onnistui ja ei speciä
                   [kysely nil]
 
-                  (let [conformed (s/conform kysely-spec kysely)]
-                    (if (= ::s/invalid conformed)
-                      ;; Ei spec mukainen kysely, anna selitys virheeksi
-                      [::ei-validi-kysely (s/explain-str kysely-spec kysely)]
+                  (if-not (s/valid? kysely-spec kysely)
+                    ;; Ei spec mukainen kysely, anna selitys virheeksi
+                    [::ei-validi-kysely (s/explain-str kysely-spec kysely)]
 
-                      ;; Data parsittu ok ja specin mukainen
-                      [conformed nil]))))]
+                    ;; Data parsittu ok ja specin mukainen
+                    [kysely nil])))]
           (if (= kysely ::ei-validi-kysely)
             {:status 400
              :body   virhe}
