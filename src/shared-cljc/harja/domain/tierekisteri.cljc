@@ -1,7 +1,4 @@
-(ns harja.domain.tierekisteri
-  (:require [schema.core :as s]
-            [clojure.string :as str]
-    #?@(:cljs [[harja.loki :refer [log]]])))
+(ns harja.domain.tierekisteri)
 
 (defn samalla-tiella? [tie1 tie2]
   (= (:tr-numero tie1) (:tr-numero tie2)))
