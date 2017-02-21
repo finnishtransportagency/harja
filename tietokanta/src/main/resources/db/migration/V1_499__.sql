@@ -70,3 +70,4 @@ $$ LANGUAGE plpgsql;
 
 -- FIXME: toteumassa oleva hoitoluokittainen triggeri pitää poistaa ja siirtää
 -- tähän toteuman_reittipisteet tauluun.
+SELECT siirra_reittipisteet(id) FROM toteuma;

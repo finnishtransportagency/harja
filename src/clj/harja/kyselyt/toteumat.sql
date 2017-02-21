@@ -514,12 +514,6 @@ VALUES (:reittipiste, NOW(), :materiaalikoodi, :maara);
 DELETE FROM reitti_materiaali
 WHERE reittipiste = :id;
 
--- name: hae-toteuman-reittipisteet-idlla
-SELECT *
-FROM reittipiste
-WHERE toteuma = :id
-ORDER BY aika ASC;
-
 -- name: paivita-varustetoteuman-tr-osoite!
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee parametreja max 20
 UPDATE varustetoteuma
@@ -742,13 +736,11 @@ WHERE
 
 -- name: hae-toteuman-reittipisteet
 SELECT
-  rp.id       AS id,
-  rp.aika     AS aika,
-  rp.sijainti AS sijainti
-FROM reittipiste rp
-WHERE
-  rp.toteuma = :toteuma_id
-ORDER BY rp.aika ASC;
+  (x.rp).aika     AS aika,
+  (x.rp).sijainti AS sijainti
+FROM (SELECT unnest(reittipisteet) AS rp
+        FROM toteuman_reittipisteet
+       WHERE toteuma = :toteuma_id) x
 
 -- name: hae-toteuman-reitti-ja-tr-osoite
 SELECT
