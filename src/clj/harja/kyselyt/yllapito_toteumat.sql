@@ -48,7 +48,8 @@ SET
   muokattu = NOW(),
   muokkaaja = :kayttaja,
   poistettu = :poistettu
-WHERE id = :id and urakka = :urakka;
+WHERE id = :id and urakka = :urakka
+      AND poistettu IS NOT TRUE;
 
 -- name: hae-urakan-laskentakohteet
 SELECT id, urakka, nimi FROM urakka_laskentakohde
