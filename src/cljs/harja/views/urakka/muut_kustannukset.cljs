@@ -18,8 +18,6 @@
 (def kustannus-pvm-leveys 3)
 
 (def grid-opts {:otsikko "Muut kustannukset"
-                :muutos (fn [grid]
-                          #(log "muut-kustannukset: muutos kutsuttu"))
                 :voi-lisata? true
                 :voi-muokata-rivia? :muokattava
                 :esta-poistaminen? (complement :muokattava)
@@ -38,7 +36,6 @@
 (defn muut-kustannukset [urakka]
   (komp/luo
    (fn [urakka]
-     (log "mk komponentti: tiedot" (pr-str @tiedot/grid-tiedot))
      [:div.muut-kustannukset
       [grid/grid (assoc grid-opts
                         :tallenna #(tiedot/tallenna-lomake! urakka tiedot/muiden-kustannusten-tiedot %)
@@ -46,5 +43,4 @@
                                  [ajax-loader "Haetaan kustannuksia..."]
                                  "Ei kustannuksia"))
        grid-skeema
-       @tiedot/grid-tiedot
-       ]])))
+       @tiedot/grid-tiedot]])))

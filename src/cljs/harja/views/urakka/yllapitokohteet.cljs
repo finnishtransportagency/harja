@@ -689,7 +689,6 @@
                                  bitumi-indeksi-yhteensa
                                  kaasuindeksi-yhteensa
                                  muut-yhteensa)]
-            (log "muut yhteensa:" muut-yhteensa)
             [{:id 0
               :sopimuksen-mukaiset-tyot sopimuksen-mukaiset-tyot-yhteensa
               :maaramuutokset maaramuutokset-yhteensa
