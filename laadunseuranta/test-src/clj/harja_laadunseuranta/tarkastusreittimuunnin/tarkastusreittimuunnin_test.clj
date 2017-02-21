@@ -556,6 +556,8 @@
         odotettu-reitillisten-maara 7]
 
     ;; Tämä testi havaitsi aiemmin virheellisiä ajallisia gäppejä tästä ajosta.
+    ;; Tämä testi vaatii, että piste numero 36, joka osuu virheellisesti eri tielle risteyksessä,
+    ;; saadaan projisoitua takaisin edelliselle tielle
 
     ;; Muunnettu määrällisesti oikein
     (is (= (count pistemaiset) odotettu-pistemaisten-maara))
