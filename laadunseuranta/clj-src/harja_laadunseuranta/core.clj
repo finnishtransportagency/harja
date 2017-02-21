@@ -158,7 +158,8 @@
         tarkastukset (reittimuunnin/reittimerkinnat-tarkastuksiksi
                        merkinnat-tr-osoitteilla
                        {:analysoi-rampit? true
-                        :analysoi-ymparikaantymiset? true})]
+                        :analysoi-ymparikaantymiset? true
+                        :analysoi-virheelliset-tiet? true})]
     (log/debug "Reittipisteet muunnettu tarkastuksiksi.")
     tarkastukset))
 
