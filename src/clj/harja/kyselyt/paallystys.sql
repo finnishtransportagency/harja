@@ -105,7 +105,8 @@ SET
 WHERE paallystyskohde = :id
       AND paallystyskohde IN (SELECT id
                               FROM yllapitokohde
-                              WHERE urakka = :urakka);
+                              WHERE urakka = :urakka)
+      AND poistettu IS NOT TRUE;
 
 -- name: paivita-paallystysilmoituksen-kasittelytiedot<!
 -- Päivittää päällystysilmoituksen käsittelytiedot
@@ -119,7 +120,8 @@ SET
 WHERE paallystyskohde = :id
       AND paallystyskohde IN (SELECT id
                               FROM yllapitokohde
-                              WHERE urakka = :urakka);
+                              WHERE urakka = :urakka)
+      AND poistettu IS NOT TRUE;
 
 -- name: paivita-paallystysilmoituksen-asiatarkastus<!
 -- Päivittää päällystysilmoituksen asiatarkastuksen
@@ -134,7 +136,8 @@ SET
 WHERE paallystyskohde = :id
       AND paallystyskohde IN (SELECT id
                               FROM yllapitokohde
-                              WHERE urakka = :urakka);
+                              WHERE urakka = :urakka)
+      AND poistettu IS NOT TRUE;
 
 -- name: luo-paallystysilmoitus<!
 -- Luo uuden päällystysilmoituksen
@@ -232,7 +235,8 @@ SET
 WHERE id = :id
       AND (SELECT urakka
            FROM yllapitokohde
-           WHERE id = :id) = :urakka;
+           WHERE id = :id) = :urakka
+      AND poistettu IS NOT TRUE;
 
 -- name: yllapitokohteella-paallystysilmoitus
 SELECT EXISTS(SELECT id

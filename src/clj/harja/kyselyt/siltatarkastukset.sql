@@ -257,7 +257,8 @@ SET silta       = :silta,
   tarkastaja    = :tarkastaja,
   luoja         = :luoja,
   poistettu     = :poistettu
-WHERE ulkoinen_id = :id AND luoja = :luoja AND poistettu = FALSE;
+WHERE ulkoinen_id = :id AND luoja = :luoja AND poistettu = FALSE
+AND poistettu IS NOT TRUE;
 
 
 -- name: hae-siltatarkastusten-kohteet
@@ -279,7 +280,8 @@ UPDATE siltatarkastus
   muokattu = NOW(),
   muokkaaja = :kayttaja
   WHERE id = :id
-      AND urakka = :urakka;
+      AND urakka = :urakka
+      AND poistettu IS NOT TRUE;
 
 -- name: paivita-siltatarkastuksen-kohteet!
 -- Päivittää olemassaolevan siltatarkastuksen kohteet
@@ -310,7 +312,8 @@ UPDATE siltatarkastus
   muokkaaja = :kayttaja-id
 WHERE ulkoinen_id::integer IN (:ulkoiset-idt)
   AND luoja = :kayttaja-id
-  AND urakka = :urakka-id;
+  AND urakka = :urakka-id
+  AND poistettu IS NOT TRUE;
 
 -- name: poista-siltatarkastuskohteet!
 -- Poistaa siltatarkastuksen kohteet siltatarkastuksen

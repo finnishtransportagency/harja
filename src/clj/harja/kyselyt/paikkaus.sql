@@ -61,7 +61,8 @@ SET
   muokattu                          = NOW(),
   muokkaaja                         = :muokkaaja,
   poistettu                         = FALSE
-WHERE paikkauskohde = :id;
+WHERE paikkauskohde = :id
+AND poistettu IS NOT TRUE;
 
 -- name: luo-paikkausilmoitus<!
 -- Luo uuden paikkausilmoituksen
