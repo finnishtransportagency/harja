@@ -1,24 +1,6 @@
 -- name: hae-ymparistoraportti-tiedot
--- Hae APIn kautta raportoidut materiaalinkäytöt urakan_materiaalin_kaytto_hoitoluokittain
--- taulusta.
-SELECT
-  u.id AS urakka_id,
-  u.nimi AS urakka_nimi,
-  umkh.talvihoitoluokka AS luokka,
-  mk.id AS materiaali_id,
-  mk.nimi AS materiaali_nimi,
-  mk.yksikko AS materiaali_yksikko,
-  date_trunc('month', umkh.pvm) AS kk,
-  umkh.maara AS maara
-FROM urakka u
-  JOIN urakan_materiaalin_kaytto_hoitoluokittain umkh ON u.id = umkh.urakka
-  JOIN materiaalikoodi mk ON mk.id = umkh.materiaalikoodi
-WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
-      AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
-      AND (umkh.pvm::DATE BETWEEN :alkupvm AND :loppupvm)
-      AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
-UNION
--- liitä mukaan frontilla raportoitu materiaalinkäyttö toteuma_materiaali taulusta
+-- Haetaan kuinka paljon jokaista materiaalia on käytetty. Tämä on "summarivi" hoitoluokittaisille riveille,
+-- lisäksi tälle riville otetaan mukaan frontin kautta raportoidut käytöt, jolle ei ole hoitoluokkatietoa.
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
@@ -39,6 +21,24 @@ WHERE (t.alkanut :: DATE BETWEEN :alkupvm AND :loppupvm)
       AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
       AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
 GROUP BY u.id, u.nimi, mk.id, mk.nimi, date_trunc('month', t.alkanut), mk.yksikko
+UNION
+-- Haetaan hoitoluokittaiset käytöt urakan_materiaalin_kaytto_hoitoluokittain taulusta.
+SELECT
+  u.id AS urakka_id,
+  u.nimi AS urakka_nimi,
+  umkh.talvihoitoluokka AS luokka,
+  mk.id AS materiaali_id,
+  mk.nimi AS materiaali_nimi,
+  mk.yksikko AS materiaali_yksikko,
+  date_trunc('month', umkh.pvm) AS kk,
+  umkh.maara AS maara
+FROM urakka u
+  JOIN urakan_materiaalin_kaytto_hoitoluokittain umkh ON u.id = umkh.urakka
+  JOIN materiaalikoodi mk ON mk.id = umkh.materiaalikoodi
+WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
+      AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
+      AND (umkh.pvm::DATE BETWEEN :alkupvm AND :loppupvm)
+      AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
 UNION
 -- Liitä lopuksi mukaan suunnittelutiedot. Kuukausi on null, josta myöhemmin
 -- rivi tunnistetaan suunnittelutiedoksi.
