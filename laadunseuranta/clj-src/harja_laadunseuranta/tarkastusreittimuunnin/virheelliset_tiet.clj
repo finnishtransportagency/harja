@@ -43,7 +43,7 @@
                                                      pisteet-threshold laheisyys-threshold]
   (let [edellinen-tie (get-in edellinen-merkinta [:tr-osoite :tie])
         merkinnat-alittavat-thresholdin? (< (count tien-merkinnat) pisteet-threshold)
-        merkintojen-etaisyys-edeltavaan-tiehen (map
+        merkintojen-etaisyys-edeltavaan-tiehen (keep
                                                  #(:etaisyys-gps-pisteesta
                                                     (yhteiset/laheisten-teiden-lahin-osuma-tielle
                                                       % edellinen-tie))
