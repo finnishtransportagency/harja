@@ -59,7 +59,9 @@ GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.yksikko;
 
 -- name: hae-materiaalit
 -- Hakee materiaali id:t ja nimet
-SELECT id,nimi FROM materiaalikoodi
+-- Huomaa, että tämän kyselyn pitää palauttaa samat sarakkeet, kuin mitkä ympäristöraportissa haetaan
+-- "materiaali_*" nimeen
+SELECT id,nimi, yksikko FROM materiaalikoodi;
 
 
 -- name: testi

@@ -170,10 +170,10 @@
                                      :urakka-id urakka-id
                                      :parametrit param})
                     "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2014 - 30.09.2015")
-        ymp-kaytetty-suola (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 3))
-        ymp-suola-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 13 3))
-        ymp-hiekka-totpros (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 14 10))
-        ymp-hiekka-suunniteltu (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 15 10))
+        ymp-kaytetty-suola (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 2))
+        ymp-suola-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 13 2))
+        ymp-hiekka-totpros (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 14 9))
+        ymp-hiekka-suunniteltu (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 15 9))
         materiaali (apurit/taulukko-otsikolla
                      (kutsu-palvelua (:http-palvelin jarjestelma)
                                      :suorita-raportti
