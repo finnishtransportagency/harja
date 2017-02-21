@@ -261,12 +261,14 @@ SET aika               = :aika,
   yllapitokohde        = :yllapitokohde,
   nayta_urakoitsijalle = :nayta_urakoitsijalle,
   poistettu            = FALSE
-WHERE urakka = :urakka AND id = :id;
+WHERE urakka = :urakka AND id = :id
+AND poistettu IS NOT TRUE;
 
 -- name: poista-tarkastus!
 UPDATE tarkastus
 SET muokattu = NOW(), muokkaaja = :kayttajanimi, poistettu = TRUE
-WHERE ulkoinen_id IN (:ulkoiset-idt) AND poistettu IS NOT TRUE;
+WHERE ulkoinen_id IN (:ulkoiset-idt) AND poistettu IS NOT TRUE
+AND poistettu IS NOT TRUE;
 
 -- name: luo-talvihoitomittaus<!
 -- Luo uuden talvihoitomittauksen annetulle tarkastukselle.
@@ -285,7 +287,8 @@ SET talvihoitoluokka = :talvihoitoluokka,
   lampotila_ilma     = :lampotila_ilma,
   lampotila_tie      = :lampotila_tie,
   ajosuunta          = :ajosuunta
-WHERE tarkastus = :tarkastus;
+WHERE tarkastus = :tarkastus
+AND ((SELECT poistettu FROM tarkastus WHERE id = :tarkastus) IS NOT TRUE);
 
 --name: poista-talvihoitomittaus!
 DELETE
@@ -307,7 +310,8 @@ SET hoitoluokka = :hoitoluokka,
   kiinteys      = :kiinteys,
   polyavyys     = :polyavyys,
   sivukaltevuus = :sivukaltevuus
-WHERE tarkastus = :tarkastus;
+WHERE tarkastus = :tarkastus
+AND ((SELECT poistettu FROM tarkastus WHERE id = :tarkastus) IS NOT TRUE);
 
 --name: poista-soratiemittaus!
 DELETE

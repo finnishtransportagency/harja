@@ -27,7 +27,8 @@ VALUES (:nimi, :emo, 4, :yksikko, :hinnoittelu :: hinnoittelutyyppi [], :apiseur
 -- Poistaa (merkitsee poistetuksi) annetun toimenpidekoodin.
 UPDATE toimenpidekoodi
 SET poistettu = TRUE, muokkaaja = :kayttajaid, muokattu = NOW()
-WHERE id = :id;
+WHERE id = :id
+AND poistettu IS NOT TRUE;
 
 -- name: muokkaa-toimenpidekoodi!
 -- Muokkaa annetun toimenpidekoodin nimen.
@@ -35,7 +36,8 @@ UPDATE toimenpidekoodi
 SET muokkaaja = :kayttajaid, muokattu = NOW(), poistettu = :poistettu,
   nimi        = :nimi, yksikko = :yksikko,
   hinnoittelu = :hinnoittelu :: hinnoittelutyyppi [], api_seuranta = :apiseuranta
-WHERE id = :id;
+WHERE id = :id
+AND poistettu IS NOT TRUE;
 
 -- name: viimeisin-muokkauspvm
 -- Antaa MAX(muokattu) päivämäärän toimenpidekoodeista

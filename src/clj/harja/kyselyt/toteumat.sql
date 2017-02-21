@@ -295,7 +295,8 @@ SET alkanut           = :alkanut,
   tr_loppuosa         = :loppuosa,
   tr_loppuetaisyys    = :loppuetaisyys,
   poistettu           = FALSE
-WHERE id = :id AND urakka = :urakka;
+WHERE id = :id AND urakka = :urakka
+AND poistettu IS NOT TRUE;
 
 -- name: paivita-toteuma-ulkoisella-idlla<!
 UPDATE toteuma
@@ -309,7 +310,8 @@ SET alkanut           = :alkanut,
   tyyppi              = :tyyppi :: toteumatyyppi,
   sopimus             = :sopimus,
   poistettu           = FALSE
-WHERE ulkoinen_id = :id AND urakka = :urakka;
+WHERE ulkoinen_id = :id AND urakka = :urakka
+AND poistettu IS NOT TRUE;
 
 -- name: luo-toteuma<!
 -- Luo uuden toteuman.
@@ -325,12 +327,14 @@ VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi :: toteumatyyppi, NOW()
 -- name: poista-toteuma!
 UPDATE toteuma
 SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
-WHERE id IN (:id) AND poistettu IS NOT TRUE;
+WHERE id IN (:id) AND poistettu IS NOT TRUE
+AND poistettu IS NOT TRUE;
 
 -- name: poista-toteumat-ulkoisilla-idlla-ja-luojalla!
 UPDATE toteuma
 SET muokattu = NOW(), muokkaaja = :kayttaja-id, poistettu = TRUE
-WHERE ulkoinen_id IN (:ulkoiset-idt) AND luoja = :kayttaja-id AND poistettu IS NOT TRUE;
+WHERE ulkoinen_id IN (:ulkoiset-idt) AND luoja = :kayttaja-id AND poistettu IS NOT TRUE
+AND poistettu IS NOT TRUE;
 
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle
@@ -400,7 +404,8 @@ SET tyyppi            = :tyyppi :: erilliskustannustyyppi, urakka = :urakka, sop
   muokkaaja           = :muokkaaja,
   poistettu           = :poistettu
 WHERE id = :id
-      AND urakka = :urakka;
+      AND urakka = :urakka
+      AND poistettu IS NOT TRUE;
 
 -- name: paivita-toteuman-tehtava!
 -- Päivittää toteuman tehtävän id:llä.
@@ -411,13 +416,15 @@ SET toimenpidekoodi = :toimenpidekoodi, maara = :maara, poistettu = :poistettu,
     THEN TRUE
                        ELSE FALSE
                        END)
-WHERE id = :id;
+WHERE id = :id
+AND poistettu IS NOT TRUE;
 
 -- name: poista-toteuman-tehtava!
 -- Poistaa toteuman tehtävän
 UPDATE toteuma_tehtava
 SET poistettu = TRUE
-WHERE id = :id;
+WHERE id = :id
+AND poistettu IS NOT TRUE;
 
 -- name: merkitse-toteuman-maksuera-likaiseksi!
 -- Merkitsee toteumaa vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
@@ -771,7 +778,8 @@ SET materiaalikoodi = :materiaali,
 WHERE id = :tmid
       AND toteuma IN (SELECT id
                       FROM toteuma t
-                      WHERE t.urakka = :urakka);
+                      WHERE t.urakka = :urakka)
+      AND poistettu IS NOT TRUE;
 
 -- name: hae-urakan-varustetoteumat
 SELECT
@@ -921,12 +929,14 @@ FROM tierekisteriosoitteelle_viiva(:tie :: INTEGER,
 -- name: paivita-toteuman-reitti!
 UPDATE toteuma
 SET reitti = :reitti
-WHERE id = :id;
+WHERE id = :id
+AND poistettu IS NOT TRUE;
 
 -- name: paivita-toteuman-reitti<!
 UPDATE toteuma
 SET reitti = :reitti
-WHERE id = :id;
+WHERE id = :id
+AND poistettu IS NOT TRUE;
 
 -- AJASTETTUJA TEHTÄVIÄ VARTEN
 
