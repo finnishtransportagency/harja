@@ -680,14 +680,16 @@
                 bonukset-ja-sakot-yhteensa (laske-sarakkeen-summa :bonukset-ja-sakot kohteet)
                 bitumi-indeksi-yhteensa (laske-sarakkeen-summa :bitumi-indeksi kohteet)
                 kaasuindeksi-yhteensa (laske-sarakkeen-summa :kaasuindeksi kohteet)
-                muut-yhteensa (laske-sarakkeen-summa)
+                muut-yhteensa (laske-sarakkeen-summa :muut-hinta kohteet)
                 kokonaishinta (+ sopimuksen-mukaiset-tyot-yhteensa
                                  toteutunut-hinta-yhteensa
                                  maaramuutokset-yhteensa
                                  arvonvahennykset-yhteensa
                                  bonukset-ja-sakot-yhteensa
                                  bitumi-indeksi-yhteensa
-                                 kaasuindeksi-yhteensa)]
+                                 kaasuindeksi-yhteensa
+                                 muut-yhteensa)]
+            (log "muut yhteensa:" muut-yhteensa)
             [{:id 0
               :sopimuksen-mukaiset-tyot sopimuksen-mukaiset-tyot-yhteensa
               :maaramuutokset maaramuutokset-yhteensa
@@ -696,8 +698,9 @@
               :bonukset-ja-sakot bonukset-ja-sakot-yhteensa
               :bitumi-indeksi bitumi-indeksi-yhteensa
               :kaasuindeksi kaasuindeksi-yhteensa
-              :muut muut-yhteensa
+              :muut-hinta muut-yhteensa
               :kokonaishinta kokonaishinta}]))]
+
     [grid/grid
      {:nayta-toimintosarake? true
       :otsikko "Yhteensä"
@@ -726,7 +729,7 @@
       (when (= (:kohdetyyppi optiot) :paikkaus)
         {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta :fmt fmt/euro-opt :tyyppi :numero
          :leveys toteutunut-hinta-leveys :tasaa :oikea})
-      {:otsikko "Muut kustannukset" :nimi :muut :fmt fmt/euro-opt :tyyppi :numero
+      {:otsikko "Muut kustannukset" :nimi :muut-hinta :fmt fmt/euro-opt :tyyppi :numero
        :leveys muut-leveys :tasaa :oikea}
       {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero
        :leveys arvonvahennykset-leveys :tasaa :oikea}

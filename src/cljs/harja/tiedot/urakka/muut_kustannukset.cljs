@@ -17,7 +17,7 @@
 (defonce muiden-kustannusten-tiedot (atom nil))
 (defonce kohdistamattomien-sanktioiden-tiedot (atom nil))
 
-(defn grid-tiedot* [mk-tiedot ks-tiedot]
+(defn- grid-tiedot* [mk-tiedot ks-tiedot]
   (let [mk-id #(str "ypt-" (:id %))
         ks-id #(str "sanktio-" (:id %))
         ks->grid (fn [ks] {:hinta  (-> ks :summa)
@@ -30,6 +30,15 @@
 
 (def grid-tiedot
   (reaction (grid-tiedot* @muiden-kustannusten-tiedot @kohdistamattomien-sanktioiden-tiedot)))
+
+(defn- uudelleennimea-avain [m k1 k2]
+  (assoc (dissoc m k1) k2 (get m k1)))
+
+(defn- kohteet* [tiedot]
+  (map #(uudelleennimea-avain % :hinta :muut-hinta)
+       tiedot))
+
+(defonce kohteet (reaction (kohteet* @grid-tiedot)))
 
 (defn hae-muiden-kustannusten-tiedot! [urakka-id sopimus-id [alkupvm loppupvm]]
   (k/post! :hae-yllapito-toteumat {:urakka urakka-id :sopimus sopimus-id :alkupvm alkupvm :loppupvm loppupvm}))
