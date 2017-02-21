@@ -34,8 +34,10 @@
 
 (defn- nayta-web-notifikaatio [otsikko teksti]
   (if (notifikaatiolupa?)
-    ;; Android Chromessa Notification-objekti on olemassa eli API olisi näennäisesti tuettu, mutta
-    ;; itse notifikaation luominen aiheuttaa räsähdyksen --> try catch
+    ;; Mobiiliympäristössä (ainakin Android Chrome) tämä ei toimi, vaan tulisi käyttää Service Workeria
+    ;; (jotta notifikaatiot toimivat myös jos käyttäjä sulkee selaimen).
+    ;; Tälle ei toistaiseksi ole tehty tukea, vaan yritetään näyttää notifikaatio normaalisti.
+    ;; Jos ei onnistu, failaa hiljaa.
     (try
       (js/Notification. otsikko #js {:body teksti
                                      :icon +notifikaatio-ikoni+})
