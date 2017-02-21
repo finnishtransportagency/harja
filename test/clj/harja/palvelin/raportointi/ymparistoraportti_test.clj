@@ -155,3 +155,50 @@
                                           {:otsikko "Tot-%"}
                                           {:otsikko "Suunniteltu määrä"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko tarkistusfunktio))))
+
+(deftest ymparisto-materiaali-ja-suolaraportin-tulokset-tasmaavat
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        param {:alkupvm (c/to-date (t/local-date 2014 10 1))
+               :loppupvm (c/to-date (t/local-date 2015 9 30))
+               :urakkatyyppi "hoito"}
+        ymparisto (apurit/taulukko-otsikolla
+                    (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :suorita-raportti
+                                    +kayttaja-jvh+
+                                    {:nimi :ymparistoraportti
+                                     :konteksti "urakka"
+                                     :urakka-id urakka-id
+                                     :parametrit param})
+                    "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2014 - 30.09.2015")
+        ymp-kaytetty-suola (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 3))
+        ymp-suola-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 13 3))
+        ymp-hiekka-totpros (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 14 10))
+        ymp-hiekka-suunniteltu (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 15 10))
+        materiaali (apurit/taulukko-otsikolla
+                     (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :suorita-raportti
+                                     +kayttaja-jvh+
+                                     {:nimi :materiaaliraportti
+                                      :konteksti "urakka"
+                                      :urakka-id urakka-id
+                                      :parametrit param})
+                     "Oulun alueurakka 2014-2019, Materiaaliraportti ajalta 01.10.2014 - 30.09.2015")
+        mat-kaytetty-suola (apurit/taulukon-solu materiaali 1 0)
+        mat-kaytetty-hiekka (apurit/taulukon-solu materiaali 2 0)
+        suola (apurit/taulukko-otsikolla
+                (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :suorita-raportti
+                                +kayttaja-jvh+
+                                {:nimi       :suolasakko
+                                 :konteksti  "urakka"
+                                 :urakka-id urakka-id
+                                 :parametrit param})
+                "Oulun alueurakka 2014-2019, Suolasakkoraportti ajalta 01.10.2014 - 30.09.2015")
+        suola-kaytetty-suola (apurit/taulukon-solu suola 8 0)]
+    (is (= ymp-kaytetty-suola mat-kaytetty-suola suola-kaytetty-suola)
+        "Ympäristö-, suola- ja materiaaliraportin pitäisi laskea käytetyn suolan summa samalla tavalla")
+    (is (= ymp-kaytetty-suola ymp-suola-yht) "Ympäristöraportin käytetyn ja yhteenlasketun suolan määrä pitäisi olla sama")
+    ;; Testidatasta riippuvia testejä.. vähän huonoja
+    (is (= 0.0 ymp-hiekka-totpros) "Ympäristöraportin hiekan toteumaprosentin pitäisi olla nolla, toteumia ei ole")
+    (is (= 0 mat-kaytetty-hiekka) "Materiaaliraportin pitäisi raportoida hiekan määräksi nolla, koska toteumia ei ole")
+    (is (= 800M ymp-hiekka-suunniteltu) "Onko testidata muuttunut? Ympäristöraportti odottaa, että hiekoitushiekkaa on suunniteltu 800t")))
