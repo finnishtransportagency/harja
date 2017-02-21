@@ -65,13 +65,6 @@ INSERT INTO muutoshintainen_tyo (alkupvm, loppupvm, yksikko, yksikkohinta, tehta
 VALUES ((SELECT alkupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 'tiekm', 100.0, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null)),
        ((SELECT alkupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 'ha', 100.0, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null));
 
--- Suolauksen sallittu määrä
-INSERT INTO materiaalin_kaytto (alkupvm, loppupvm, maara, materiaali,
-                                urakka, sopimus, luotu, muokattu, luoja, muokkaaja, poistettu)
-     VALUES ('20141001', '20150930', 800, (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'),
-             (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
-             (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019') AND paasopimus IS null),
-             '2004-10-19 10:23:54+02', null, (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), null, false);
 
 -- Suolauksen toteuma (materiaalitoteuma)
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)

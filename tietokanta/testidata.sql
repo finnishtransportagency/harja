@@ -49,8 +49,7 @@ UPDATE organisaatio SET elynumero=14 WHERE lyhenne='LAP';
 \i testidata/pohjavesialueet.sql
 
 -- Materiaalin käytöt
-INSERT INTO materiaalin_kaytto (alkupvm, loppupvm, maara, materiaali, urakka, sopimus, luotu, muokattu, luoja, muokkaaja, poistettu) VALUES ('20051001', '20100930', 15, 1, 1, 1, '2004-10-19 10:23:54+02', '2004-10-19 10:23:54+02', 1, 1, false);
-
+\i testidata/materiaalin_kaytto.sql
 -- Toteumat
 \i testidata/toteumat.sql
 
