@@ -553,7 +553,7 @@
         reitilliset (:reitilliset-tarkastukset tarkastukset)
         pistemaiset (:pistemaiset-tarkastukset tarkastukset)
         odotettu-pistemaisten-maara 0
-        odotettu-reitillisten-maara 9]
+        odotettu-reitillisten-maara 7]
 
     ;; Tämä testi havaitsi aiemmin virheellisiä ajallisia gäppejä tästä ajosta.
 
