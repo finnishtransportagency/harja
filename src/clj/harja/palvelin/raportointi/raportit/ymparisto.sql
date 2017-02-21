@@ -9,7 +9,7 @@ SELECT
   mk.nimi AS materiaali_nimi,
   mk.yksikko AS materiaali_yksikko,
   date_trunc('month', skm.alkupvm) AS kk,
-  SUM(skm.maara)
+  SUM(skm.maara) AS maara
 FROM sopimuksen_kaytetty_materiaali skm
   JOIN sopimus s ON skm.sopimus = s.id
   JOIN urakka u ON s.urakka = u.id AND u.urakkanro IS NOT NULL
