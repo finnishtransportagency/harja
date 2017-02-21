@@ -94,8 +94,6 @@
   tilanteet, joissa muutama yksittäinen piste osuu eri tielle esim. siltojen
   ja risteysten kohdalla"
   [merkinnat]
-  (log/debug "Korjataan tarkastusajon virheelliset tiet. Merkintöjä: " (count merkinnat))
-  (doseq [m merkinnat]
-    (log/debug (:tr-osoite m)))
-  (let [korjatut-merkinnat (projisoi-virheelliset-tiet-uudelleen merkinnat 4 10)]
+  (log/debug "Korjataan tarkastusajon virheelliset tieosoitteet. Merkintöjä: " (count merkinnat))
+  (let [korjatut-merkinnat (projisoi-virheelliset-tiet-uudelleen merkinnat 5 8)]
     korjatut-merkinnat))
