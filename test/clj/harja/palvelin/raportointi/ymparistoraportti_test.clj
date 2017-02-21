@@ -52,14 +52,14 @@
          (every? solu? hoitokaudet)
          (solu? yhteensa)
          (solu? suunniteltu)
-         (or (nil? prosentti) (string? prosentti))
+         (or (nil? prosentti) (and (number? prosentti) (or (= 0 prosentti) (pos? prosentti))))
          (or (and (every? nil? hoitokaudet) (nil? yhteensa))
              (= (reduce (fnil + 0 0) (map apurit/raporttisolun-arvo hoitokaudet))
                 (apurit/raporttisolun-arvo yhteensa)))
          (or
            (nil? prosentti) (nil? yhteensa) (nil? suunniteltu)
            (= (/ (* 100.0 (apurit/raporttisolun-arvo yhteensa)) (apurit/raporttisolun-arvo suunniteltu))
-              (Integer/parseInt (re-find #"\d+" prosentti)))))))
+              prosentti)))))
 
 
 (deftest raportin-suoritus-urakalle-toimii
