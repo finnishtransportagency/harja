@@ -66,11 +66,9 @@ SET
                                                    ST_MakePoint(:loppux, :loppuy)),
                                                   CAST(10000 AS INTEGER))
                            AS vali(alku GEOMETRY, loppu GEOMETRY, geometria GEOMETRY))
-WHERE osuus_id = :osuusid AND jarjestelma = :jarjestelma
-AND poistettu IS NOT TRUE;
+WHERE osuus_id = :osuusid AND jarjestelma = :jarjestelma;
 
 -- name: merkitse-tietyomaa-poistetuksi!
 UPDATE tietyomaa
 SET poistettu = :poistettu, poistaja = :poistaja
 WHERE osuus_id = :osuusid AND jarjestelma = :jarjestelma
-AND poistettu IS NOT TRUE;
