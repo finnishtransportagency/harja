@@ -31,7 +31,7 @@
 ;; Ajojen tekstuaalisen selityksen löydät: testidata/tarkastusajot.sql
 ;; Tai käytä #tr näkymää piirtämään pisteet kartalle.
 
-(deftest ramppianalyysi-korjaa-virheelliset-rampit-oikeassa-ajossa-1
+(deftest siltaan-osuva-piste-projisoidaan-edelliseen-tiehen-ajossa-999
   (let [tarkastusajo-id 999
         merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
                                                          {:tarkastusajo tarkastusajo-id
@@ -42,7 +42,24 @@
         "Osa testidatan merkinnöistä on eri tiellä (yksi osuu sillalle ja muut moottoritielle)")
 
     (let [korjatut-merkinnat (virheelliset-tiet/korjaa-virheelliset-tiet merkinnat)]
-      ;; Korjauksen jälkeen kaikki pisteet projisoitu moottoritielle"
+      (is (= (count korjatut-merkinnat) (count merkinnat)))
+      ;; Korjauksen jälkeen kaikki pisteet projisoitu moottoritielle
       (is (= (count (distinct (map #(get-in % [:tr-osoite :tie]) korjatut-merkinnat))) 1)
           "Korjauksen jälkeen kaikki pisteet projisoitu moottoritielle")
       (is (every? #(= 4 %) (map #(get-in % [:tr-osoite :tie]) korjatut-merkinnat))))))
+
+(deftest siltaan-osuva-piste-projisoidaan-edelliseen-tiehen-oikeassa-ajossa-1
+  (let [tarkastusajo-id 1
+        merkinnat (q/hae-reitin-merkinnat-tieosoitteilla (:db jarjestelma)
+                                                         {:tarkastusajo tarkastusajo-id
+                                                          :laheiset_tiet_threshold 100})]
+
+    (is (> (count merkinnat) 1) "Ainakin yksi merkintä testidatassa")
+
+    (let [korjatut-merkinnat (virheelliset-tiet/korjaa-virheelliset-tiet merkinnat)
+          osa-3-tie-4 (take (- 301 92) (drop 92 korjatut-merkinnat))]
+      (is (= (count korjatut-merkinnat) (count merkinnat)))
+      ;; Kaikki pisteet osuvat tiehen 4 paitsi yksi, joka osuu eri tielle
+      ;; yli-/alikulun kohdalla. Varmistutaan siitä, että kyseinen piste on korjattu
+      ;; oikealle tielle
+      (is (every? #(= (get-in % [:tr-osoite :tie]) 4) osa-3-tie-4)))))
