@@ -2,11 +2,6 @@
                     (.getHostName (java.net.InetAddress/getLocalHost))))
 
 (defproject harja "0.0.1-SNAPSHOT"
-  ;; :jvm-opts ["-Dcom.sun.management.jmxremote"
-  ;;          "-Dcom.sun.management.jmxremote.ssl=false"
-  ;;          "-Dcom.sun.management.jmxremote.authenticate=false"
-  ;;          "-Dcom.sun.management.jmxremote.port=43210"]
-
   :description "Liikenneviraston Harja"
 
   :dependencies [[org.clojure/clojure "1.8.0"]
@@ -171,7 +166,7 @@
   :cljsbuild {:builds
               [{:id "dev"
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"]
-                :figwheel     {:websocket-host "harja-dev2.lxd"}
+                :figwheel true
                 :compiler {:optimizations :none
                            :source-map true
                            ;;:preamble ["reagent/react.js"]
@@ -224,11 +219,7 @@
                {:id "laadunseuranta-devcards"
                 :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]
 
-                :figwheel {:devcards true
-                           :websocket-url "ws://harja-dev2.lxd:3449/figwheel-ws"
-                                        ;:nrepl-port 7889
-                                        ;:server-port 3450
-                           }
+                :figwheel {:devcards true}
 
                 :compiler {:main harja-laadunseuranta.devcards-core
                            :asset-path "js/compiled/devcards_out"
@@ -295,7 +286,6 @@
 
   ;; Clientin reload ja REPL
   :figwheel {:server-port 3449
-             :server-ip "0.0.0.0"
              :reload-clj-files false}
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
