@@ -94,7 +94,7 @@
         ;; Pyritään löytämään pisteet, joissa etäisyys edellisestä tiestä ylittää thresholdin niin,
         ;; että myös GPS:n epätarkkuus on huomioitu.
         (filter #(let [lahin-osuma-edelliselle-tielle
-                       (laheisten-pisteiden-lahin-osuma-tielle % tie-ennen-ramppia)]
+                       (yhteiset/laheisten-teiden-lahin-osuma-tielle % tie-ennen-ramppia)]
                    (and lahin-osuma-edelliselle-tielle
                         (>
                           ;; GPS:n epätarkkuudesta johtuen projisio edelliselle tielle voi olla lähempänä

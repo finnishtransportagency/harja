@@ -12,7 +12,7 @@
            uudet-merkinnat
            merkinnat-indeksin-jalkeen))))
 
-(defn laheisten-pisteiden-lahin-osuma-tielle
+(defn laheisten-teiden-lahin-osuma-tielle
   "Etsii merkinnän läheisten teiden tiedoista lähimmän etäisyyden annetun merkinnän sijaintiin.
    Huomaa, että jos tiellä on useampi ajorata, tämä palauttaa lähimmän."
   [merkinta tie]
@@ -27,7 +27,7 @@
    osa samaa tietä niin kauan kunnes oikea osoite löytyy. Merkintöjä ei sovi poistaa,
    sillä muuten saatetaan menettää havaintoja / mittauksia)."
   [merkinta tie]
-  (if-let [lahin-vastaava-projisio (laheisten-pisteiden-lahin-osuma-tielle merkinta tie)]
+  (if-let [lahin-vastaava-projisio (laheisten-teiden-lahin-osuma-tielle merkinta tie)]
     (do
       (log/debug "Projisoidaan merkintä tielle: " tie)
       (-> merkinta

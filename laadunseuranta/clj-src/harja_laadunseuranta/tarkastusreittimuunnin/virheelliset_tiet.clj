@@ -45,7 +45,7 @@
         merkinnat-alittavat-thresholdin? (< (count tien-merkinnat) pisteet-threshold)
         merkintojen-etaisyys-edeltavaan-tiehen (map
                                                  #(:etaisyys-gps-pisteesta
-                                                    (yhteiset/laheisten-pisteiden-lahin-osuma-tielle
+                                                    (yhteiset/laheisten-teiden-lahin-osuma-tielle
                                                       % edellinen-tie))
                                                  tien-merkinnat)
         merkinnat-lahella-edellista-tieta (when-not (empty? merkintojen-etaisyys-edeltavaan-tiehen)
