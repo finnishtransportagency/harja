@@ -1,4 +1,10 @@
 (ns harja.tiedot.urakka.muut-kustannukset
+  "Päällystyskohteiden Muut kustannukset-taulukon tiedot.
+
+  Tässä taulukossa näytetään sanktiot jotka eivät liity mihinkään ylläpitokohteeseen,
+  sekä käsin syötetyt vapaamuotoiset muut kustannukset. Sanktioita ei voi muokata tai lisätä.
+
+  Nämä kustannukset lasketaan mukaan kustannusyhteenvetotaulukkoon käyttäen kohteet-reaktiota."
   (:require
    [reagent.core :refer [atom] :as r]
    [harja.loki :refer [log tarkkaile!]]
