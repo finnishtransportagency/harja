@@ -8,19 +8,17 @@ SELECT
   mk.id AS materiaali_id,
   mk.nimi AS materiaali_nimi,
   mk.yksikko AS materiaali_yksikko,
-  date_trunc('month', t.alkanut) AS kk,
-  SUM(tm.maara)
-FROM toteuma t
-  JOIN toteuma_materiaali tm ON t.id = tm.toteuma
-  JOIN urakka u ON t.urakka = u.id AND u.urakkanro IS NOT NULL
-  JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
-WHERE (t.alkanut :: DATE BETWEEN :alkupvm AND :loppupvm)
-      AND t.poistettu IS NOT TRUE
-      AND tm.poistettu IS NOT TRUE
-      AND (:urakka::integer IS NULL OR u.id = :urakka)
-      AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
+  date_trunc('month', skm.alkupvm) AS kk,
+  SUM(skm.maara)
+FROM sopimuksen_kaytetty_materiaali skm
+  JOIN sopimus s ON skm.sopimus = s.id
+  JOIN urakka u ON s.urakka = u.id AND u.urakkanro IS NOT NULL
+  JOIN materiaalikoodi mk ON skm.materiaalikoodi = mk.id
+WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
+      AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
+      AND (skm.alkupvm::DATE BETWEEN :alkupvm AND :loppupvm)
       AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
-GROUP BY u.id, u.nimi, mk.id, mk.nimi, date_trunc('month', t.alkanut), mk.yksikko
+GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.yksikko, date_trunc('month', skm.alkupvm)
 UNION
 -- Haetaan hoitoluokittaiset käytöt urakan_materiaalin_kaytto_hoitoluokittain taulusta.
 SELECT
