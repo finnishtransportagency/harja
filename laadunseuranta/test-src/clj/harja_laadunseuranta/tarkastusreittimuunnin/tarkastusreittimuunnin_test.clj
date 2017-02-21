@@ -561,7 +561,6 @@
     (is (= (count pistemaiset) odotettu-pistemaisten-maara))
     (is (= (count reitilliset) odotettu-reitillisten-maara))))
 
-
 ;; -------- Apufunktioita REPL-tunkkaukseen --------
 
 ;; Älä poista näitä

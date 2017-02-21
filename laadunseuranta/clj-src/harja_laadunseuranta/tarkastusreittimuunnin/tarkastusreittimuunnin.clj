@@ -370,7 +370,7 @@
     merkinnat m
     (if (:analysoi-rampit? optiot) (ramppianalyysi/korjaa-virheelliset-rampit merkinnat) m)
     (if (:analysoi-ymparikaantymiset? optiot) (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta m) m)
-    (if (:analysoi-virheelliset-tiet? optiot) (virheelliset-tiet/korjaa-virheelliset-tiet m))))
+    (if (:analysoi-virheelliset-tiet? optiot) (virheelliset-tiet/korjaa-virheelliset-tiet m) m)))
 
 (defn reittimerkinnat-tarkastuksiksi
   "Reittimerkintämuunnin, joka käy reittimerkinnät läpi ja palauttaa mapin, jossa reittimerkinnät muutettu
