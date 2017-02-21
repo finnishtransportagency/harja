@@ -13,10 +13,10 @@
            merkinnat-indeksin-jalkeen))))
 
 (defn laheisten-pisteiden-lahin-osuma-tielle
-  "Etsii merkinnän läheisten teiden tiedoista etäisyyden annettuun tiehen ja palauttaa lähimmän."
+  "Etsii merkinnän läheisten teiden tiedoista lähimmän etäisyyden annetun merkinnän sijaintiin.
+   Huomaa, että jos tiellä on useampi ajorata, tämä palauttaa lähimmän."
   [merkinta tie]
-  (let [projisoitavaa-tieta-vastaavat-osoitteet (filter #(= (:tie %) tie)
-                                                        (:laheiset-tr-osoitteet merkinta))
+  (let [projisoitavaa-tieta-vastaavat-osoitteet (filter #(= (:tie %) tie) (:laheiset-tr-osoitteet merkinta))
         lahin-vastaava-osoite (first (sort-by :etaisyys-gps-pisteesta projisoitavaa-tieta-vastaavat-osoitteet))]
     lahin-vastaava-osoite))
 

@@ -43,15 +43,17 @@
                                                      pisteet-threshold laheisyys-threshold]
   (let [edellinen-tie (get-in edellinen-merkinta [:tr-osoite :tie])
         merkinnat-alittavat-thresholdin? (< (count tien-merkinnat) pisteet-threshold)
-        merkintojen-laheiset-tr-osoitteet (mapcat :laheiset-tr-osoitteet tien-merkinnat)
-        merkintojen-etaisyydet-edelliseen-tiehen (map :etaisyys-gps-pisteesta
-                                                      (filter #(= (:tie %) edellinen-tie)
-                                                              merkintojen-laheiset-tr-osoitteet))
-        merkinnat-ovat-riittavan-lahella-edellista-tieta (when-not (empty? merkintojen-etaisyydet-edelliseen-tiehen)
-                                                           (every? #(< % laheisyys-threshold)
-                                                                   merkintojen-etaisyydet-edelliseen-tiehen))]
-    (boolean (and merkinnat-alittavat-thresholdin?
-                  merkinnat-ovat-riittavan-lahella-edellista-tieta))))
+        merkintojen-etaisyys-edeltavaan-tiehen (map
+                                                 #(:etaisyys-gps-pisteesta
+                                                    (yhteiset/laheisten-pisteiden-lahin-osuma-tielle
+                                                      % edellinen-tie))
+                                                 tien-merkinnat)
+        merkinnat-lahella-edellista-tieta (when-not (empty? merkintojen-etaisyys-edeltavaan-tiehen)
+                                            (every? #(< % laheisyys-threshold)
+                                                    merkintojen-etaisyys-edeltavaan-tiehen))
+        todennakoisesti-virheellinen-projisio? (boolean (and merkinnat-alittavat-thresholdin?
+                                                             merkinnat-lahella-edellista-tieta))]
+    todennakoisesti-virheellinen-projisio?))
 
 (defn- korjaa-virheellinen-tie [merkinnat tie-indeksi pisteet-threshold laheisyys-threshold]
   (if (= tie-indeksi 0) ;; Ensimmäinen tie, ei tarvi käsittelyä
@@ -62,11 +64,10 @@
                                                                          tien-merkinnat
                                                                          pisteet-threshold
                                                                          laheisyys-threshold)
-                         tien-merkinnat
                          (yhteiset/projisoi-merkinnat-edelliselle-tielle
                            edellinen-merkinta
-                           tien-merkinnat))]
-
+                           tien-merkinnat)
+                         tien-merkinnat)]
       (yhteiset/merkinnat-korjatulla-osalla merkinnat tie-indeksi korjattu-tie))))
 
 (defn- projisoi-virheelliset-tiet-uudelleen
@@ -87,7 +88,14 @@
                               teiden-alkujen-indeksit)]
     korjatut-tiet))
 
-(defn korjaa-virheelliset-tiet [merkinnat]
+(defn korjaa-virheelliset-tiet
+  "Projisoi tien pisteet edelliselle tielle, jos tielle on osunut vain pieni määrä
+  pisteitä ja ne kaikki ovat lähellä edellistä tietä. Tarkoituksena korjata
+  tilanteet, joissa muutama yksittäinen piste osuu eri tielle esim. siltojen
+  ja risteysten kohdalla"
+  [merkinnat]
   (log/debug "Korjataan tarkastusajon virheelliset tiet. Merkintöjä: " (count merkinnat))
-  (let [korjatut-merkinnat (projisoi-virheelliset-tiet-uudelleen merkinnat 5 10)]
+  (doseq [m merkinnat]
+    (log/debug (:tr-osoite m)))
+  (let [korjatut-merkinnat (projisoi-virheelliset-tiet-uudelleen merkinnat 4 10)]
     korjatut-merkinnat))
