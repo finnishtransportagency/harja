@@ -3,6 +3,7 @@
    reittimerkintöjen ja niihin liittyvän geometrisoinnin korjaamiseen, mikäli
    geometrisointi on osunut virheellisesti rampille."
   (:require [taoensso.timbre :as log]
+            [harja-laadunseuranta.tarkastusreittimuunnin.yhteiset :as yhteiset]
             [harja.domain.tierekisteri :as tr-domain]))
 
 (defn lisaa-merkintoihin-ramppitiedot
@@ -85,16 +86,6 @@
                                  indeksin-jalkeiset-merkinnat)]
     rampin-merkinnat))
 
-(defn- merkinnat-korjatulla-rampilla
-  "Korvaa indeksistä eteenpäin löytyvät merkinnät annetuilla ramppimerkinnöillä"
-  [kaikki-merkinnat ramppi-indeksi ramppimerkinnat]
-  (let [merkinnat-ennen-ramppia (take ramppi-indeksi kaikki-merkinnat)
-        merkinnat-rampin-jalkeen (drop (+ ramppi-indeksi (count ramppimerkinnat)) kaikki-merkinnat)]
-    (vec (concat
-           merkinnat-ennen-ramppia
-           ramppimerkinnat
-           merkinnat-rampin-jalkeen))))
-
 (defn- korjaa-vahapatoinen-ramppi
   [merkinnat-ramppitiedoilla ramppi-indeksi n]
   (log/debug "Analysoidaan mahdollisesti vähäpätöinen ramppi indeksissä: "
@@ -107,7 +98,7 @@
                                                                   (dec ramppi-indeksi))
                                                              rampin-merkinnat)
                             rampin-merkinnat)]
-      (merkinnat-korjatulla-rampilla merkinnat-ramppitiedoilla ramppi-indeksi korjattu-ramppi))))
+      (yhteiset/merkinnat-korjatulla-osalla merkinnat-ramppitiedoilla ramppi-indeksi korjattu-ramppi))))
 
 (defn- korjaa-vahapatoiset-rampit
   "Ottaa reittimerkinnät ja analysoi kaikki rampille siirtymiset.
@@ -126,7 +117,7 @@
     korjatut-rampit))
 
 (defn- merkinnat-todennakoisesti-ajettu-rampilla?
-  "Palauttaa true jos rampin merkinnät selkeästi erkanavat ramppia edeltävästä tiestä niin kauas,
+  "Palauttaa true jos rampin merkinnät selkeästi erkanevat ramppia edeltävästä tiestä niin kauas,
    että merkintöjä voidaan pitää luotettavana ja ajo tapahtui oikeasti rampilla.
 
    treshold on metrimäärä rampin alkupisteestä, jota käytetään rajana määrittämään luotettava
@@ -172,15 +163,14 @@
   (if (= ramppi-indeksi 0)
     merkinnat-ramppitiedoilla ;; Merkinnät alkavat rampilta, ei tehdä mitään.
     (let [rampin-merkinnat (rampin-merkinnat-indeksista merkinnat-ramppitiedoilla ramppi-indeksi)
-          korjattu-ramppi (let [ramppia-edeltava-merkinta (nth merkinnat-ramppitiedoilla
-                                                               (dec ramppi-indeksi))]
-                            (if (merkinnat-todennakoisesti-ajettu-rampilla? ramppia-edeltava-merkinta
-                                                                            rampin-merkinnat
-                                                                            threshold)
-                              rampin-merkinnat
-                              (projisoi-ramppi-oikealle-tielle ramppia-edeltava-merkinta
-                                                               rampin-merkinnat)))]
-      (merkinnat-korjatulla-rampilla merkinnat-ramppitiedoilla ramppi-indeksi korjattu-ramppi))))
+          ramppia-edeltava-merkinta (nth merkinnat-ramppitiedoilla (dec ramppi-indeksi))
+          korjattu-ramppi (if (merkinnat-todennakoisesti-ajettu-rampilla? ramppia-edeltava-merkinta
+                                                                          rampin-merkinnat
+                                                                          threshold)
+                            rampin-merkinnat
+                            (projisoi-ramppi-oikealle-tielle ramppia-edeltava-merkinta
+                                                             rampin-merkinnat))]
+      (yhteiset/merkinnat-korjatulla-osalla merkinnat-ramppitiedoilla ramppi-indeksi korjattu-ramppi))))
 
 (defn- korjaa-rampilla-ajot
   "Ottaa reittimerkinnät ja analysoi kaikki rampille siirtymiset.
