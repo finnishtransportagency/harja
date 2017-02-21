@@ -4,11 +4,25 @@
              [clojure.core.match :refer [match]]))
 
 (defn taulukon-rivit [taulukko] (nth taulukko 3))
-(defn rivin-sarake [rivi indeksi]
+(defn rivin-solu [rivi indeksi]
   (let [rivi (or (:rivi rivi) rivi)] (nth rivi indeksi)))
 (defn taulukon-solu [taulukko sarake rivi] (-> (taulukon-rivit taulukko)
                                                (nth rivi)
-                                               (rivin-sarake sarake)))
+                                               (rivin-solu sarake)))
+
+(defn sarakkeiden-data [taulukko]
+  (let [tayta (fn [pituus coll] (concat coll (take (- pituus (count coll)) (repeat nil))))
+        rivin-data #(or (:rivi %) identity)
+        rivit (map rivin-data (taulukon-rivit taulukko))
+        pituus (apply max (map count rivit))
+        taytetyt (map (partial tayta pituus) rivit)]
+    (apply map vector taytetyt)))
+
+(defn taulukon-sarake [taulukko indeksi]
+  (nth (sarakkeiden-data taulukko) indeksi))
+
+(defn sarakkeiden-otsikot [taulukko]
+  (nth taulukko 2))
 
 (def raporttisolu? harja.domain.raportointi/raporttielementti?)
 
@@ -46,7 +60,7 @@
              laskettu-summa " != " raportoitu-summa))))
 
 (defn tarkista-taulukko-sarakkeet [taulukko & sarakkeet]
-  (let [taulukon-sarakkeet (nth taulukko 2)]
+  (let [taulukon-sarakkeet (sarakkeiden-otsikot taulukko)]
     (is (= (count taulukon-sarakkeet) (count sarakkeet))
         (str "Taulukossa on eri määrä sarakkeita. "
              (count taulukon-sarakkeet) " != " (count sarakkeet)))

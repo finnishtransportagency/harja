@@ -202,3 +202,17 @@
     (is (= 0.0 ymp-hiekka-totpros) "Ympäristöraportin hiekan toteumaprosentin pitäisi olla nolla, toteumia ei ole")
     (is (= 0 mat-kaytetty-hiekka) "Materiaaliraportin pitäisi raportoida hiekan määräksi nolla, koska toteumia ei ole")
     (is (= 800M ymp-hiekka-suunniteltu) "Onko testidata muuttunut? Ympäristöraportti odottaa, että hiekoitushiekkaa on suunniteltu 800t")))
+
+(deftest jokainen-materiaali-vain-kerran
+  (let [taulukko (apurit/taulukko-otsikolla
+                   (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :suorita-raportti
+                                   +kayttaja-jvh+
+                                   {:nimi       :ymparistoraportti
+                                    :konteksti  "urakka"
+                                    :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
+                                    :parametrit {:alkupvm  (c/to-date (t/local-date 2014 10 1))
+                                                 :loppupvm (c/to-date (t/local-date 2015 9 30))}})
+                   "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2014 - 30.09.2015")
+        nimet (apurit/taulukon-sarake taulukko 0)]
+    (is (= (count nimet) (count (into #{} nimet))) "Materiaalien nimet ovat ympäristöraportissa vain kerran.")))
