@@ -46,7 +46,7 @@ WHERE id = :id
 UPDATE kayttajan_lisaoikeudet_urakkaan SET
   urakka = :urakka
 WHERE id = :id
-      AND poistettu IS NOT TRUE;;
+      AND poistettu IS NOT TRUE;
 
 -- name: poista-jarjestelmatunnuksen-lisaoikeus-urakkaan!
 DELETE FROM kayttajan_lisaoikeudet_urakkaan WHERE

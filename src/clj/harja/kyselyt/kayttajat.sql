@@ -236,6 +236,7 @@ INSERT INTO kayttaja_rooli (luoja, luotu, kayttaja, rooli) VALUES (:luoja, NOW()
 UPDATE kayttaja
 SET poistettu = TRUE, muokkaaja = :muokkaaja, muokattu = NOW()
 WHERE id = :kayttaja
+      AND poistettu IS NOT TRUE
 
 -- name: hae-organisaatio-nimella
 -- Hakee nimetyn organisaation. Tämä kysely on FIM käyttäjän tietojen yhdistämistä varten.
