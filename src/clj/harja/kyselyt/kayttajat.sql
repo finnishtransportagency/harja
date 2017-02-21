@@ -28,6 +28,7 @@ ON CONFLICT ON CONSTRAINT uniikki_kayttajanimi DO
   UPDATE SET etunimi = :etunimi, sukunimi = :sukunimi,
              sahkoposti = :sahkoposti, puhelin = :puhelin,
              organisaatio = :organisaatio, muokattu = NOW()
+  WHERE kayttaja.poistettu IS NOT TRUE
 RETURNING id
 
 -- name: hae-ely-numerolla

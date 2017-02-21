@@ -245,7 +245,8 @@ SET aika            = :aika,
   muokattu          = current_timestamp,
   poistettu          = :poistettu
 WHERE id = :id
-AND urakka = :urakka;
+AND urakka = :urakka
+AND poistettu IS NOT TRUE;
 
 -- name: luo-laatupoikkeama<!
 -- Luo uuden laatupoikkeaman annetuille perustiedoille. Luontivaiheessa ei
@@ -283,7 +284,8 @@ SET kasittelyaika   = :kasittelyaika,
   muu_kasittelytapa = :muukasittelytapa,
   muokkaaja         = :muokkaaja,
   muokattu          = current_timestamp
-WHERE id = :id;
+WHERE id = :id
+AND poistettu IS NOT TRUE;
 
 -- name: liita-kommentti<!
 -- Liittää laatupoikkeamaon uuden kommentin
@@ -320,7 +322,8 @@ SET
   muokkaaja        = :muokkaaja,
   muokattu         = current_timestamp
 WHERE ulkoinen_id = :ulkoinen_id AND
-      luoja = :luoja;
+      luoja = :luoja AND
+      poistettu IS NOT TRUE;
 
 -- name: hae-urakan-laatupoikkeamat-liitteineen-raportille
 -- Hakee urakan laatupoikkeamat aikavälin perusteella raportille
