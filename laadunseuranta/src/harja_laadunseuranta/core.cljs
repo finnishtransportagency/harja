@@ -131,12 +131,26 @@
           (after-delay 1000
             (reset! sovellus/sovelluksen-naytto-sallittu? true)))))
 
+(defn- arsyttava-virhe [& msgs]
+  (.alert js/window (str "Upsista keikkaa, Harja räsähti! Olemme pahoillamme. Kuulisimme "
+                         "mielellämme miten sait vian esiin, joten voisitko lähettää meille "
+                         "palautetta? Liitä mukaan alla olevat virheen tekniset tiedot, "
+                         "kuvankaappaus sekä kuvaus siitä mitä olit tekemässä.\n"
+                         (apply str msgs))))
+
+(defn- kuuntele-rasahdyksia []
+  (set! (.-onerror js/window)
+        (fn [errorMsg url lineNumber column errorObj]
+          (.error js/console errorObj)
+          (arsyttava-virhe errorMsg " " url " " lineNumber ":" column " " errorObj))))
+
 (defn main []
   (esta-mobiililaitteen-nayton-lukitus)
   (alusta-paikannus-id)
   (tarkkaile-alustusta)
   (alusta-geolokaatio-api)
   (kuuntele-dom-eventteja)
+  (kuuntele-rasahdyksia)
   (kuuntele-sivun-nakyvyytta sovellus/tarkastusajo-kaynnissa?
                              sovellus/kuvaa-otetaan?)
   (alusta-sovellus))

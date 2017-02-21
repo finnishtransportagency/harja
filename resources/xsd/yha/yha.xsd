@@ -357,7 +357,7 @@
         <xs:sequence>
             <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="kasittelymenetelma" type="alustamenetelma" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="kasittelypaksuus" type="xs:decimal" nillable="false" minOccurs="1" maxOccurs="1">
+            <xs:element name="kasittelypaksuus" type="xs:short" nillable="false" minOccurs="1" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>
                         Yksikkö: senttimetri
