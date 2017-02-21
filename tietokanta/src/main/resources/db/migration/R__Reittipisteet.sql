@@ -1,5 +1,7 @@
 -- Reittipisteiden käsittely
 
+-- Hakee klikkauspisteelle interpoloidun kohdan toteuman reittipisteiden perusteella.
+-- Palauttaa arvioidun ajan ja osoitteen interpoloidulle pisteelle.
 CREATE OR REPLACE FUNCTION aika_ja_osoite_pisteessa(toteumaid INTEGER, piste GEOMETRY)
    RETURNS RECORD AS $$
 DECLARE
