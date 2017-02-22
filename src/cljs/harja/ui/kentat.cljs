@@ -278,8 +278,8 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
     [:span (normalisoi-numero (fmt @data))]))
 
 (defmethod tee-kentta :positiivinen-numero [kentta data]
-  (tee-kentta (assoc kentta :vaadi-ei-negatiivinen? true
-                            :tyyppi :numero) data))
+  [tee-kentta (assoc kentta :vaadi-ei-negatiivinen? true
+                     :tyyppi :numero) data])
 
 (defmethod nayta-arvo :positiivinen-numero [kentta data]
   (nayta-arvo (assoc kentta :tyyppi :numero) data))
