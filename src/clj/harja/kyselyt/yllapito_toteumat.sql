@@ -58,42 +58,34 @@ VALUES (:urakka, :nimi, NOW(), :kayttaja);
 
 -- name: hae-tiemerkintaurakan-yksikkohintaiset-tyot
 SELECT
-  ypk.id,
-  kohdenumero,
-  nimi,
-  urakka,
-  sopimus,
-  tr_numero                      AS "tr-numero",
-  tr_alkuosa                     AS "tr-alkuosa",
-  tr_alkuetaisyys                AS "tr-alkuetaisyys",
-  tr_loppuosa                    AS "tr-loppuosa",
-  tr_loppuetaisyys               AS "tr-loppuetaisyys",
-  tr_ajorata                     AS "tr-ajorata",
-  tr_kaista                      AS "tr-kaista",
+  id,
+  yllapitokohde,
   hinta,
+    hintatyyppi,
   hinta_kohteelle                AS "hinta-kohteelle",
-  hintatyyppi,
   muutospvm,
   yllapitoluokka
-FROM yllapitokohde ypk
-  LEFT JOIN yllapitokohde_tiemerkinta yt ON yt.yllapitokohde = ypk.id
+  kohde_nimi,
+  tr_numero                      AS "tr-numero",
+  pituus
+FROM tiemerkinnan_yksikkohintainen_toteuma yt ON yt.yllapitokohde = ypk.id
 WHERE
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
   AND poistettu IS NOT TRUE;
 
 -- name: paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
-UPDATE yllapitokohde_tiemerkinta SET
+UPDATE tiemerkinnan_yksikkohintainen_toteuma SET
   hinta = :hinta,
-  hintatyyppi = :hintatyyppi::yllapitokohde_tiemerkinta_hintatyyppi,
+  hintatyyppi = :hintatyyppi::tiemerkinta_toteuma_hintatyyppi,
   muutospvm = :muutospvm,
   hinta_kohteelle = :hinta_kohteelle
 WHERE yllapitokohde = :yllapitokohde;
 
 -- name: luo-tiemerkintaurakan-yksikkohintainen-tyo<!
-INSERT INTO yllapitokohde_tiemerkinta(yllapitokohde, hinta, hintatyyppi, muutospvm, hinta_kohteelle) VALUES
-  (:yllapitokohde, :hinta, :hintatyyppi::yllapitokohde_tiemerkinta_hintatyyppi, :muutospvm,
+INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(yllapitokohde, hinta, hintatyyppi, muutospvm, hinta_kohteelle) VALUES
+  (:yllapitokohde, :hinta, :hintatyyppi::tiemerkinta_toteuma_hintatyyppi, :muutospvm,
   :hinta_kohteelle);
 
 -- name: hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
-SELECT id FROM yllapitokohde_tiemerkinta
+SELECT id FROM tiemerkinnan_yksikkohintainen_toteuma
 WHERE yllapitokohde = :yllapitokohde;
