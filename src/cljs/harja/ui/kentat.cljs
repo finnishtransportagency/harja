@@ -257,7 +257,10 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                  :on-focus    (:on-focus kentta)
                  :on-blur     #(reset! teksti nil)
                  :value       nykyinen-teksti
-                 on-change*   #(let [v (normalisoi-numero (-> % .-target .-value))]
+                 on-change*   #(let [v (normalisoi-numero (-> % .-target .-value))
+                                     v (if vaadi-ei-negatiivinen?
+                                         (str/replace v #"-" "")
+                                         v)]
                                  (when (or (= v "")
                                            (when-not vaadi-ei-negatiivinen? (= v "-"))
                                            (re-matches (if kokonaisluku?
