@@ -76,7 +76,7 @@
                             :hinta 665.5}
                maara-ennen-lisaysta (ffirst (q
                                               (str "SELECT count(*)
-                                                       FROM yllapito_toteuma
+                                                       FROM yllapito_muu_toteuma
                                                      WHERE urakka = " urakka
                                                    " AND sopimus = " sopimus
                                                    " AND pvm >= '2016-1-01' AND pvm <= '2016-12-31'")))
@@ -89,7 +89,7 @@
                                    hyotykuorma)
                maara-lisayksen-jalkeen (ffirst (q
                                               (str "SELECT count(*)
-                                                       FROM yllapito_toteuma
+                                                       FROM yllapito_muu_toteuma
                                                      WHERE urakka = " urakka
                                                    " AND sopimus = " sopimus
                                                    " AND pvm >= '2016-1-01' AND pvm <= '2016-12-31'")))
