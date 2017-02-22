@@ -417,8 +417,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta max-rivimaara
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?] :as opts} skeema tiedot]
-  (when voi-muokata-rivia?
-    (log "opts sis. voi-muokata-rivia? "))
   (let [komponentti-id (hash (str opts skeema tiedot (t/now)))
         muokatut (atom nil) ;; muokattu datajoukko
         jarjestys (atom nil) ;; id:t indekseissä (tai otsikko)
