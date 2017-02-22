@@ -45,7 +45,8 @@
                                  :konteksti "urakka"
                                  :urakka-id (hae-muhoksen-paallystysurakan-id)
                                  :parametrit {:alkupvm (pvm/->pvm "1.1.2017")
-                                              :loppupvm (pvm/->pvm "31.1.2017")}})
+                                              :loppupvm (pvm/->pvm "31.1.2017")
+                                              :urakkatyyppi :paallystys}})
         nurkkasumma (last (last (last (last (butlast vastaus)))))]
     (is (vector? vastaus))
     (is (= [:teksti "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."] (last vastaus)))
