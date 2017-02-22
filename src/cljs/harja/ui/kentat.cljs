@@ -257,7 +257,10 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                  :on-focus    (:on-focus kentta)
                  :on-blur     #(reset! teksti nil)
                  :value       nykyinen-teksti
-                 on-change*   #(let [v (normalisoi-numero (-> % .-target .-value))]
+                 on-change*   #(let [v (normalisoi-numero (-> % .-target .-value))
+                                     v (if vaadi-ei-negatiivinen?
+                                         (str/replace v #"-" "")
+                                         v)]
                                  (when (or (= v "")
                                            (when-not vaadi-ei-negatiivinen? (= v "-"))
                                            (re-matches (if kokonaisluku?
@@ -278,8 +281,8 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
     [:span (normalisoi-numero (fmt @data))]))
 
 (defmethod tee-kentta :positiivinen-numero [kentta data]
-  (tee-kentta (assoc kentta :vaadi-ei-negatiivinen? true
-                            :tyyppi :numero) data))
+  [tee-kentta (assoc kentta :vaadi-ei-negatiivinen? true
+                     :tyyppi :numero) data])
 
 (defmethod nayta-arvo :positiivinen-numero [kentta data]
   (nayta-arvo (assoc kentta :tyyppi :numero) data))
