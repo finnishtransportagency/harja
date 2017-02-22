@@ -15,7 +15,8 @@
             [taoensso.timbre :as log]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
-            [harja.domain.tierekisteri :as tr])
+            [harja.domain.tierekisteri :as tr]
+            [harja.palvelin.palvelut.tierek-haku :as tr-haku])
   (:use org.httpkit.fake))
 
 (defn tarkista-urakkatyypin-mukainen-kirjoitusoikeus [db user urakka-id]
@@ -91,6 +92,13 @@
                                    (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))
                                 yllapitokohteet)]
       yllapitokohteet)))
+
+(defn lisaa-yllapitokohteelle-kohteen-pituus [db {:keys [tr-numero tr-alkuosa tr-loppuosa] :as kohde}]
+  (let [osien-pituudet (tr-haku/hae-osien-pituudet db {:tie tr-numero
+                                                       :aosa tr-alkuosa
+                                                       :losa tr-loppuosa})
+        pituus (tr/laske-tien-pituus osien-pituudet kohde)]
+    (assoc kohde :tr-pituus pituus)))
 
 (defn paivita-yllapitourakan-geometria [db urakka-id]
   (log/info "Päivitetään urakan " urakka-id " geometriat.")

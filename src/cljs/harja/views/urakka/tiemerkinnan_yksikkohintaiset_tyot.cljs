@@ -22,7 +22,66 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(defn yksikkohintaiset-tyot
+(defn paallystysurakan-kohteet
+  [urakka]
+  (komp/luo
+    (komp/lippu tiedot/nakymassa?)
+    (fn [urakka]
+      (let [urakka-id (:id urakka)]
+        [:div
+         [grid/grid
+          {:otsikko "Päällystysurakassa tehdyt päällystykset"
+           :tyhja (if (nil? @tiedot/tiemerkinnan-toteumat)
+                    [ajax-loader "Haetaan töitä..."]
+                    "Kohteita ei löytynyt")}
+          [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
+            :pituus-max 128 :muokattava? (constantly false)}
+           {:otsikko "Koh\u00ADteen nimi" :leveys 7 :nimi :nimi :tyyppi :string :pituus-max 128
+            :muokattava? (constantly false)}
+           {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
+            :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
+            :muokattava? (constantly false)}
+           #_{:otsikko "Ajo\u00ADrata"
+            :nimi :tr-ajorata
+            :muokattava? (constantly false)
+            :tyyppi :string
+            :tasaa :oikea
+            :fmt (fn [arvo] (:koodi (first (filter #(= (:koodi %) arvo) pot/+ajoradat+))))
+            :leveys 3}
+           #_{:otsikko "Kais\u00ADta"
+            :muokattava? (constantly false)
+            :nimi :tr-kaista
+            :tyyppi :string
+            :tasaa :oikea
+            :fmt (fn [arvo] (:nimi (first (filter #(= (:koodi %) arvo) pot/+kaistat+))))
+            :leveys 3}
+           ;; Nämä kentät tulee frontille tällä hetkellä, mutta niitä ei haluta nähdä.
+           #_{:otsikko "Aosa" :nimi :tr-alkuosa :leveys 3
+            :tyyppi :positiivinen-numero
+            :tasaa :oikea
+            :muokattava? (constantly false)}
+           #_{:otsikko "Aet" :nimi :tr-alkuetaisyys :leveys 3
+            :tyyppi :positiivinen-numero
+            :tasaa :oikea
+            :muokattava? (constantly false)}
+           #_{:otsikko "Losa" :nimi :tr-loppuosa :leveys 3
+            :tyyppi :positiivinen-numero
+            :tasaa :oikea
+            :muokattava? (constantly false)}
+           #_{:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 3
+            :tyyppi :positiivinen-numero
+            :tasaa :oikea
+            :muokattava? (constantly false)}
+           {:otsikko "Pit. (m)" :nimi :tr-pituus :leveys 3
+            :tyyppi :positiivinen-numero
+            :tasaa :oikea
+            :muokattava? (constantly false)}
+           {:otsikko "YP-lk"
+            :nimi :yllapitoluokka :tyyppi :numero :leveys 4
+            :muokattava? (constantly false)}]
+          (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/tiemerkinnan-toteumat)]]))))
+
+(defn toteutuneet-tiemerkinnat
   [urakka]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
@@ -31,23 +90,21 @@
             saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteutus-yksikkohintaisettyot urakka-id)]
         [:div
          [grid/grid
-          {:otsikko "Yksikköhintaiset työt"
-           :tyhja (if (nil? @tiedot/yksikkohintaiset-tyot)
+          {:otsikko "Toteutuneet tiemerkinnät"
+           :tyhja (if (nil? @tiedot/tiemerkinnan-toteumat)
                     [ajax-loader "Haetaan töitä..."]
-                    "Töitä ei löytynyt")
+                    "Toteumia ei löytynyt")
            :voi-poistaa? (constantly false)
            :voi-lisata? false
            :piilota-toiminnot? true
            :tallenna (if saa-muokata?
-                       #(go (let [vastaus (<! (tiedot/tallenna-tiemerkinnan-yksikkohintaiset-tyot urakka-id %))]
+                       #(go (let [vastaus (<! (tiedot/tallenna-tiemerkinnan-toteumat urakka-id %))]
                               (if (k/virhe? vastaus)
                                 (viesti/nayta! "Tallentaminen epäonnistui"
                                                :warning viesti/viestin-nayttoaika-lyhyt)
-                                (reset! tiedot/yksikkohintaiset-tyot vastaus))))
+                                (reset! tiedot/tiemerkinnan-toteumat vastaus))))
                        :ei-mahdollinen)}
-          [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
-            :pituus-max 128 :muokattava? (constantly false)}
-           {:otsikko "Koh\u00ADteen nimi" :leveys 7 :nimi :nimi :tyyppi :string :pituus-max 128
+          [{:otsikko "Kohde" :leveys 7 :nimi :nimi :tyyppi :string :pituus-max 128
             :muokattava? (constantly false)}
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
             :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
@@ -96,24 +153,30 @@
             :huomio (fn [rivi]
                       (when (:hinnan-kohde-muuttunut? rivi)
                         {:tyyppi :varoitus
-                        :teksti (str "Koh\u00ADteen oso\u00ADite on muut\u00ADtunut.\n
+                         :teksti (str "Koh\u00ADteen oso\u00ADite on muut\u00ADtunut.\n
                                       Hin\u00ADta on annet\u00ADtu koh\u00ADteen vanhal\u00ADle osoit\u00ADteelle:\n"
-                                     (:hinta-kohteelle rivi))}))}
+                                      (:hinta-kohteelle rivi))}))}
            {:otsikko "Hintatyyppi"
             :nimi :hintatyyppi :tyyppi :valinta :leveys 5
             :valinta-arvo identity
             :fmt #(case %
-                   :suunnitelma "Suunnitelma"
-                   :toteuma "Toteuma"
-                   "")
+                    :suunnitelma "Suunnitelma"
+                    :toteuma "Toteuma"
+                    "")
             :valinnat [:suunnitelma :toteuma]
             :valinta-nayta #(case %
-                             :suunnitelma "Suunnitelma"
-                             :toteuma "Toteuma"
-                             "- valitse -")
+                              :suunnitelma "Suunnitelma"
+                              :toteuma "Toteuma"
+                              "- valitse -")
             :muokattava? (constantly saa-muokata?)}
            {:otsikko "Muutospvm"
             :nimi :muutospvm :tyyppi :pvm :leveys 4
             :fmt pvm/pvm-opt
             :muokattava? (constantly saa-muokata?)}]
-          (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/yksikkohintaiset-tyot)]]))))
+          (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/tiemerkinnan-toteumat)]]))))
+
+
+(defn yksikkohintaiset-tyot [urakka]
+  [:div
+   [toteutuneet-tiemerkinnat urakka]
+   [paallystysurakan-kohteet urakka]])

@@ -9,7 +9,8 @@
              [julkaise-palvelu poista-palvelut]]
             [clojure.java.jdbc :as jdbc]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]))
 
 (def muutyo-xf
   (comp
@@ -78,6 +79,45 @@
                    :laskentakohteet (hae-laskentakohteet db user {:urakka urakka})}]
       vastaus)))
 
+(defn hae-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id]}]
+  (assert urakka-id "anna urakka-id")
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
+  (log/debug "Haetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (let [kohteet (into []
+                        (map #(konv/string->keyword % :hintatyyppi))
+                        (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot
+                          db
+                          {:suorittava_tiemerkintaurakka urakka-id}))
+          kohteet (mapv (partial yy/lisaa-yllapitokohteelle-kohteen-pituus db) kohteet)
+          kohteet (mapv lisaa-yllapitokohteelle-tieto-hinnan-muuttumisesta kohteet)]
+      kohteet)))
+
+(defn tallenna-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id kohteet]}]
+  (assert urakka-id "anna urakka-id")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
+  (log/debug "Tallennetaan yksikköhintaiset työt " kohteet " tiemerkintäurakalle: " urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (doseq [{:keys [hinta hintatyyppi muutospvm id] :as kohde} kohteet]
+      (let [hinta-osoitteelle (maarittele-hinnan-kohde kohde)
+            tiedot (first (q/hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
+                            db
+                            {:yllapitokohde id}))]
+        (if tiedot
+          (q/paivita-tiemerkintaurakan-yksikkohintainen-tyo<! db {:hinta hinta
+                                                                  :hintatyyppi (when hintatyyppi (name hintatyyppi))
+                                                                  :muutospvm muutospvm
+                                                                  :hinta_kohteelle (when hinta
+                                                                                     hinta-osoitteelle)
+                                                                  :yllapitokohde id})
+          (q/luo-tiemerkintaurakan-yksikkohintainen-tyo<! db {:hinta hinta
+                                                              :hintatyyppi (when hintatyyppi (name hintatyyppi))
+                                                              :muutospvm muutospvm
+                                                              :hinta_kohteelle (when hinta
+                                                                                 hinta-osoitteelle)
+                                                              :yllapitokohde id}))))
+    (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id})))
+
 (defrecord YllapitoToteumat []
   component/Lifecycle
   (start [this]
@@ -95,6 +135,12 @@
       (julkaise-palvelu http :tallenna-yllapito-toteuma
                         (fn [user tiedot]
                           (tallenna-yllapito-toteuma db user tiedot)))
+      (julkaise-palvelu http :hae-tiemerkinnan-yksikkohintaiset-tyot
+                        (fn [user tiedot]
+                          (hae-tiemerkinnan-yksikkohintaiset-tyot db user tiedot)))
+      (julkaise-palvelu http :tallenna-tiemerkinnan-yksikkohintaiset-tyot
+                        (fn [user tiedot]
+                          (tallenna-tiemerkinnan-yksikkohintaiset-tyot db user tiedot)))
       this))
 
   (stop [this]
@@ -103,5 +149,7 @@
       :hae-yllapito-toteumat
       :hae-yllapito-toteuma
       :hae-laskentakohteet
-      :tallenna-yllapito-toteuma)
+      :tallenna-yllapito-toteuma
+      :tallenna-tiemerkinnan-yksikkohintaiset-tyot
+      :hae-tiemerkinnan-yksikkohintaiset-tyot)
     this))
