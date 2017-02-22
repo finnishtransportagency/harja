@@ -65,7 +65,6 @@ pienemmällä zindexillä." :const true}
 
 (defn- tee-nuoli
   [kasvava-zindex {:keys [img scale zindex anchor rotation min-resolution max-resolution]} [piste rotaatio] reso]
-  (log "piirretään nuoli resoluutiolla " (pr-str reso) ", asetukset sanoo " (pr-str min-resolution) " - " (pr-str max-resolution))
   (let [sopiva-reso? (and (or (nil? min-resolution)
                                (>= reso min-resolution))
                            (or (nil? max-resolution)
@@ -132,7 +131,7 @@ pienemmällä zindexillä." :const true}
 (defmethod luo-geometria :viiva [{points :points}]
   (ol.geom.LineString. (clj->js points)))
 
-(defmethod luo-feature :viiva
+(defn luo-viiva
   [{:keys [viivat points ikonit] :as viiva}]
   (let [feature (ol.Feature. #js {:geometry (luo-geometria viiva)})
         kasvava-zindex (atom oletus-zindex)
@@ -148,26 +147,18 @@ pienemmällä zindexillä." :const true}
     (doto feature (.setStyle (fn [reso]
                                (clj->js (flatten (map (fn [f] (f reso)) tyylit))))))))
 
+(defmethod luo-feature :viiva
+  [viiva]
+  (luo-viiva viiva))
+
 (defmethod luo-geometria :moniviiva
   [{lines :lines}]
   (ol.geom.MultiLineString.
    (clj->js (mapv :points lines))))
 
 (defmethod luo-feature :moniviiva
-  [{:keys [lines viivat ikonit] :as moniviiva}]
-  (let [feature (ol.Feature. #js {:geometry (luo-geometria moniviiva)})
-        kasvava-zindex (atom oletus-zindex)
-        taitokset (atom [])
-        laske-taitokset (fn []
-                          (if-not (empty? @taitokset)
-                            @taitokset
-                            (reset! taitokset
-                                    (apurit/pisteiden-taitokset (mapcat :points lines) false))))
-        tee-ikoni #(partial tee-ikonille-tyyli kasvava-zindex laske-taitokset %)
-        tee-viiva #(partial tee-viivalle-tyyli kasvava-zindex %)
-        tyylit (concat (mapv tee-viiva viivat) (mapv tee-ikoni ikonit))]
-    (doto feature (.setStyle (fn [reso]
-                               (clj->js (flatten (map (fn [f] (f reso)) tyylit))))))))
+  [{:keys [lines] :as moniviiva}]
+  (luo-viiva (assoc moniviiva :points (mapcat :points lines))))
 
 (defmethod luo-geometria :merkki
   [{c :coordinates}]
