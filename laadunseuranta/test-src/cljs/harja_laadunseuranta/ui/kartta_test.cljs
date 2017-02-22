@@ -62,7 +62,7 @@
 
             (testing "Kerrokset"
               (let [kerrokset (kartan-kerrokset ol)]
-                (is (= 6 (.-length kerrokset)))
+                (is (= 7 (.-length kerrokset)))
 
                 (let [ajoneuvokerros (aget kerrokset 3)
                       ajoneuvon-geometria (kerroksen-geometria ajoneuvokerros 0)]
