@@ -15,7 +15,8 @@
    [cljs.core.async :refer [<!]]
    [harja.asiakas.kommunikaatio :as k]
    [harja.pvm :as pvm]
-   [clojure.string :as s])
+   [clojure.string :as s]
+   [clojure.set :refer [rename-keys]])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -37,11 +38,8 @@
 (def grid-tiedot
   (reaction (grid-tiedot* @muiden-kustannusten-tiedot @kohdistamattomien-sanktioiden-tiedot)))
 
-(defn- uudelleennimea-avain [m k1 k2]
-  (assoc (dissoc m k1) k2 (get m k1)))
-
 (defn- kohteet* [tiedot]
-  (map #(uudelleennimea-avain % :hinta :muut-hinta)
+  (map #(rename-keys % {:hinta :muut-hinta})
        tiedot))
 
 (defonce kohteet (reaction (kohteet* @grid-tiedot)))
