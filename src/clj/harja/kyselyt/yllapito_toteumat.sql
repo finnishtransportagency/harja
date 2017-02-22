@@ -61,11 +61,11 @@ SELECT
   id,
   yllapitokohde,
   hinta,
-    hintatyyppi,
+  hintatyyppi,
   hinta_kohteelle                AS "hinta-kohteelle",
   muutospvm,
   yllapitoluokka
-  kohde_nimi,
+  selite,
   tr_numero                      AS "tr-numero",
   pituus
 FROM tiemerkinnan_yksikkohintainen_toteuma yt ON yt.yllapitokohde = ypk.id
