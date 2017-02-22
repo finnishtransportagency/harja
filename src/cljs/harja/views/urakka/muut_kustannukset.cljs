@@ -5,7 +5,6 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka.muut-kustannukset :as tiedot]
-            ;; [harja.tiedot.urakka.toteumat.tiemerkinta-muut-tyot :refer [tallenna-toteuma hae-toteuma]]
             [harja.ui.valinnat :as valinnat]
             [cljs-time.core :as t]
             [harja.pvm :as pvm])
