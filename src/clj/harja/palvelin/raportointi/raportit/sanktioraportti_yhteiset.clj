@@ -62,9 +62,9 @@
   ([otsikko rivit alueet]
    (luo-rivi-sakkojen-summa otsikko rivit alueet {}))
   ([otsikko rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
-   (let [rivi (apply conj [(str otsikko " (€)")] (mapv (fn [alue]
-                                                         (sakkojen-summa rivit (merge optiot alue)))
-                                                       alueet))]
+   (let [rivi (apply conj [otsikko] (mapv (fn [alue]
+                                            (sakkojen-summa rivit (merge optiot alue)))
+                                          alueet))]
      (if yhteensa-sarake?
        (conj rivi (sakkojen-summa rivit optiot))
        rivi))))
@@ -73,9 +73,9 @@
   ([otsikko rivit alueet]
    (luo-rivi-muistutusten-maara otsikko rivit alueet {}))
   ([otsikko rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
-   (let [rivi (apply conj [(str otsikko " (kpl)")] (mapv (fn [alue]
-                                                           (muistutusten-maara rivit (merge optiot alue)))
-                                                         alueet))]
+   (let [rivi (apply conj [otsikko] (mapv (fn [alue]
+                                            (muistutusten-maara rivit (merge optiot alue)))
+                                          alueet))]
      (if yhteensa-sarake?
        (conj rivi (muistutusten-maara rivit optiot))
        rivi))))
@@ -84,9 +84,9 @@
   ([otsikko rivit alueet]
    (luo-rivi-indeksien-summa otsikko rivit alueet {}))
   ([otsikko rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
-   (let [rivi (apply conj [(str otsikko " (€)")] (mapv (fn [alue]
-                                                         (indeksien-summa rivit (merge optiot alue)))
-                                                       alueet))]
+   (let [rivi (apply conj [otsikko] (mapv (fn [alue]
+                                            (indeksien-summa rivit (merge optiot alue)))
+                                          alueet))]
      (if yhteensa-sarake?
        (conj rivi (indeksien-summa rivit optiot))
        rivi))))
@@ -94,22 +94,32 @@
 (defn luo-rivi-kaikki-yht
   ([otsikko rivit alueet] (luo-rivi-kaikki-yht otsikko rivit alueet {}))
   ([otsikko rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
-   (let [rivi (apply conj [(str otsikko " (€)")] (mapv (fn [alue]
-                                                         (+ (sakkojen-summa rivit alue)
-                                                            (indeksien-summa rivit alue)))
-                                                       alueet))]
+   (let [rivi (apply conj [otsikko] (mapv (fn [alue]
+                                            (+ (sakkojen-summa rivit alue)
+                                               (indeksien-summa rivit alue)))
+                                          alueet))]
      (if yhteensa-sarake?
        (conj rivi (+ (sakkojen-summa rivit)
                      (indeksien-summa rivit)))
        rivi))))
 
+(def +sakkorivin-nimi-yllapito "Sakot (-) ja bonukset (+)")
+
 (defn raporttirivit-yhteensa [rivit alueet {:keys [yhteensa-sarake? urakkatyyppi] :as optiot}]
-  (keep identity
-        [{:otsikko "Yhteensä"}
-         (luo-rivi-muistutusten-maara "Muistutukset yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
-         (when-not (or (= urakkatyyppi :paallystys)
-                       (= urakkatyyppi :paikkaus)
-                       (= urakkatyyppi :tiemerkinta))
-           (luo-rivi-indeksien-summa "Indeksit yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?}))
-         (luo-rivi-sakkojen-summa "Kaikki sakot yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
-         (luo-rivi-kaikki-yht "Kaikki yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?})]))
+  (let [yllapito? (or (= urakkatyyppi :paallystys)
+                      (= urakkatyyppi :paikkaus)
+                      (= urakkatyyppi :tiemerkinta))
+        sakkorivin-nimi (if yllapito?
+                          +sakkorivin-nimi-yllapito
+                          "Kaikki sakot yht.")
+        muistutusrivin-nimi (if yllapito?
+                              "Muistutukset"
+                              "Muistutukset yht.")]
+    (keep identity
+          [{:otsikko "Yhteensä"}
+           (luo-rivi-muistutusten-maara muistutusrivin-nimi rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
+           (when-not yllapito?
+             (luo-rivi-indeksien-summa "Indeksit yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?}))
+           (luo-rivi-sakkojen-summa sakkorivin-nimi rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
+           (when-not yllapito?
+             (luo-rivi-kaikki-yht "Kaikki yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?}))])))

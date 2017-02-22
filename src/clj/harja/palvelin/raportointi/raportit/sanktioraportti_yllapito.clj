@@ -9,14 +9,15 @@
             [harja.kyselyt.konversio :as konv]
             [clojure.set :as set]))
 
+(defqueries "harja/palvelin/raportointi/raportit/sanktiot.sql")
+
 (defn- yllapitoluokan-raporttirivit
   [luokka luokan-rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
   [{:otsikko (if luokka
                (str "Ylläpitoluokka " (yllapitokohteet-domain/yllapitoluokan-lyhyt-nimi luokka))
                "Ei ylläpitoluokkaa")}
-   (yhteiset/luo-rivi-muistutusten-maara "Muistutukset yht." luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "Kaikki sakot yht." luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-kaikki-yht "Kaikki yht." luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})])
+   (yhteiset/luo-rivi-muistutusten-maara "Muistutukset" luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
+   (yhteiset/luo-rivi-sakkojen-summa yhteiset/+sakkorivin-nimi-yllapito luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})])
 
 
 (defn suorita [db user {:keys [alkupvm loppupvm
@@ -60,7 +61,7 @@
                                       naytettavat-alueet)
                                     (when yhteensa-sarake?
                                       [{:otsikko "Yh\u00ADteen\u00ADsä" :leveys 15 :fmt :raha}])))
-        raportin-nimi "Sanktioraportti"
+        raportin-nimi "Sakko- ja bonusraportti"
         optiot {:yhteensa-sarake? yhteensa-sarake? :urakkatyyppi urakkatyyppi}
         otsikko (yleinen/raportin-otsikko
                   (case konteksti
@@ -84,4 +85,5 @@
             (when (> (count naytettavat-alueet) 0)
               (concat
                 yllapitoluokittaiset-rivit
-                yhteensa-rivit)))]]))
+                yhteensa-rivit)))]
+     [:teksti "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."]]))
