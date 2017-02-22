@@ -16,7 +16,7 @@
 (def kustannus-hinta-leveys 3)
 (def kustannus-pvm-leveys 3)
 
-(def grid-opts {:otsikko "Muut kustannukset"
+(def grid-opts {:otsikko "Urakan muut kustannukset (ei kohdekohtaiset)"
                 :voi-lisata? true
                 :voi-muokata-rivia? :muokattava
                 :esta-poistaminen? (complement :muokattava)
