@@ -247,7 +247,6 @@
 (defn- aseta-taustakartta
   "Asettaa karttatasojen näkyvyydet käyttäjän valitseman taustakartan perusteella"
   [kartta valinta]
-  (.log js/console "valittu taustakartta " (pr-str valinta))
   (doseq [{:keys [nimi tason-indeksi]} taustakarttatyypit]
     (kytke-taso tason-indeksi kartta (= valinta nimi))))
 
