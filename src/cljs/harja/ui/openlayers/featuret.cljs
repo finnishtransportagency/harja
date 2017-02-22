@@ -64,21 +64,16 @@ pienemmällä zindexillä." :const true}
                      }))))
 
 (defn- tee-nuoli
-  [kasvava-zindex {:keys [img scale zindex anchor rotation min-resolution max-resolution]} [piste rotaatio] reso]
-  (let [sopiva-reso? (and (or (nil? min-resolution)
-                               (>= reso min-resolution))
-                           (or (nil? max-resolution)
-                               (<= reso max-resolution)))
-        image (ol.style.Icon.
-                #js {:src (str img)
-                     :scale (apurit/ikonin-skaala-resoluutiolle reso (or scale 1))
-                     :rotation (or rotation rotaatio) ;; Rotaatio on laskettu, rotation annettu.
-                     :anchor (or (clj->js anchor) #js [0.5 0.5])
-                     :rotateWithView false})]
-    (ol.style.Style.
-     #js {:geometry piste
-          :zIndex (or zindex (swap! kasvava-zindex inc))
-          :image (when sopiva-reso? image)})))
+  [kasvava-zindex {:keys [img scale zindex anchor rotation]} [piste rotaatio] reso]
+  (ol.style.Style.
+    #js {:geometry piste
+         :zIndex (or zindex (swap! kasvava-zindex inc))
+         :image (ol.style.Icon.
+                  #js {:src (str img)
+                       :scale (apurit/ikonin-skaala-resoluutiolle reso (or scale 1))
+                       :rotation (or rotation rotaatio) ;; Rotaatio on laskettu, rotation annettu.
+                       :anchor (or (clj->js anchor) #js [0.5 0.5])
+                       :rotateWithView false})}))
 
 ;; Käytetään sisäisesti :viiva featurea rakentaessa
 (defn- tee-merkki
