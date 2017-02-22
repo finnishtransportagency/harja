@@ -12,6 +12,7 @@
             [harja.kyselyt.tarkastukset :as tark-q]
             [harja-laadunseuranta.tarkastusreittimuunnin.ramppianalyysi :as ramppianalyysi]
             [harja-laadunseuranta.tarkastusreittimuunnin.ymparikaantyminen :as ymparikaantyminen]
+            [harja-laadunseuranta.tarkastusreittimuunnin.virheelliset-tiet :as virheelliset-tiet]
             [clojure.string :as str]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
@@ -368,20 +369,27 @@
   (as->
     merkinnat m
     (if (:analysoi-rampit? optiot) (ramppianalyysi/korjaa-virheelliset-rampit merkinnat) m)
-    (if (:analysoi-ymparikaantymiset? optiot) (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta m) m)))
+    (if (:analysoi-ymparikaantymiset? optiot) (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta m) m)
+    (if (:analysoi-virheelliset-tiet? optiot) (virheelliset-tiet/korjaa-virheelliset-tiet m) m)))
 
 (defn reittimerkinnat-tarkastuksiksi
   "Reittimerkintämuunnin, joka käy reittimerkinnät läpi ja palauttaa mapin, jossa reittimerkinnät muutettu
    reitillisiksi ja pistemäisiksi Harja-tarkastuksiksi.
 
    Optiot on mappi:
-   - analysoi-rampit?               Korjaa virheellisesti rampille projisoituneet pisteet takaisin moottoritielle.
-                                    Oletus: true.
-   - analysoi-ymparikaantymiset?    Katkaisee reitit pisteistä, joissa havaitaan selkeä ympärikääntyminen.
-                                    Oletus: true."
+   - analysoi-rampit?                         Korjaa virheellisesti rampille projisoituneet pisteet takaisin moottoritielle.
+                                              Oletus: true.
+   - analysoi-ymparikaantymiset?              Katkaisee reitit pisteistä, joissa havaitaan selkeä ympärikääntyminen.
+                                              Oletus: true.
+   - analysoi-virheelliset-tiet?              Projisoi tien pisteet edelliselle tielle, jos tielle on osunut vain pieni määrä
+                                              pisteitä ja ne kaikki ovat lähellä edellistä tietä. Tarkoituksena korjata
+                                              tilanteet, joissa muutama yksittäinen piste osuu eri tielle esim. siltojen
+                                              ja risteysten kohdalla.
+                                              Oletus: true."
   ([tr-osoitteelliset-reittimerkinnat]
    (reittimerkinnat-tarkastuksiksi tr-osoitteelliset-reittimerkinnat {:analysoi-rampit? true
-                                                                      :analysoi-ymparikaantymiset? true}))
+                                                                      :analysoi-ymparikaantymiset? true
+                                                                      :analysoi-virheelliset-tiet? true}))
   ([tr-osoitteelliset-reittimerkinnat optiot]
    (let [kasiteltavat-merkinnat (valmistele-merkinnat-kasittelyyn tr-osoitteelliset-reittimerkinnat optiot)
          tarkastukset {:reitilliset-tarkastukset (reittimerkinnat-reitillisiksi-tarkastuksiksi
