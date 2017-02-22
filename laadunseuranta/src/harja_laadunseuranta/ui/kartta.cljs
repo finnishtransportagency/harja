@@ -235,14 +235,14 @@
     (when-let [dragpan (etsi-dragpan kartta)]
       (.removeInteraction kartta dragpan))))
 
-(defn- kytke-kiinteistorajat [kartta enable]
-  (.setVisible (aget (.getArray (.getLayers kartta)) taso-kiinteistorajat) enable))
 
 (defn- kytke-taso [taso-idx kartta enable]
   (-> kartta
       .getLayers .getArray
       (aget taso-idx)
       (.setVisible enable)))
+
+(def kytke-kiinteistorajat (partial kytke-taso taso-kiinteistorajat))
 
 (defn- aseta-taustakartta
   "Asettaa karttatasojen näkyvyydet käyttäjän valitseman taustakartan perusteella"
