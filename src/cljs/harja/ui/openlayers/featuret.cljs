@@ -136,7 +136,7 @@ pienemmällä zindexillä." :const true}
         tee-viiva #(partial tee-viivalle-tyyli kasvava-zindex %)
         tyylit (concat (mapv tee-viiva viivat) (mapv tee-ikoni ikonit))]
     (doto feature (.setStyle (fn [reso]
-                               (clj->js (flatten (map (fn [f] (f reso)) tyylit))))))))
+                               (clj->js (flatten (keep (fn [f] (f reso)) tyylit))))))))
 
 (defmethod luo-feature :viiva
   [viiva]
