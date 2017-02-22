@@ -1,4 +1,14 @@
 (ns harja.palvelin.raportointi.raportit.sanktioraportti-yllapito
+  "Ylläpidon Sakko- ja bonusraportti.
+
+  Sisältää ylläpitourakan sakko- ja bonustiedot.
+
+  Kontekstikohtaiset sarakkeet ovat:
+    -urakka: urakan nimi
+    -ELY: urakoiden nimet ja yhteensä
+    -Koko maa: ELYjen nimet ja yhteensä
+
+  Riveinä muistutusten ja sakkojen määrä ylläpitoluokittain ja kaikki luokat yhteensä."
   (:require [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.kyselyt.urakat :as urakat-q]
