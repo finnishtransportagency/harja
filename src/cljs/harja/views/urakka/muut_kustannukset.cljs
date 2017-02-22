@@ -27,8 +27,7 @@
   [{:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm
     :tyyppi :pvm :leveys kustannus-pvm-leveys}
    {:otsikko "Kustannuksen kuvaus" :nimi :selite
-    :tyyppi :string :leveys kustannus-selite-leveys
-    :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
+    :tyyppi :string :leveys kustannus-selite-leveys}
    {:otsikko "Summa" :nimi :hinta
     :tyyppi :numero :leveys kustannus-hinta-leveys}])
 
