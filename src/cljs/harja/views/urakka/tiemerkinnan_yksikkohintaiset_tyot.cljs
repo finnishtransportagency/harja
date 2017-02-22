@@ -31,7 +31,7 @@
         [:div
          [grid/grid
           {:otsikko "Päällystysurakassa tehdyt päällystykset"
-           :tyhja (if (nil? @tiedot/tiemerkinnan-toteumat)
+           :tyhja (if (nil? @tiedot/paallystysurakan-kohteet)
                     [ajax-loader "Haetaan töitä..."]
                     "Kohteita ei löytynyt")}
           [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
@@ -79,7 +79,7 @@
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :tyyppi :numero :leveys 4
             :muokattava? (constantly false)}]
-          (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/tiemerkinnan-toteumat)]]))))
+          (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/paallystysurakan-kohteet)]]))))
 
 (defn toteutuneet-tiemerkinnat
   [urakka]

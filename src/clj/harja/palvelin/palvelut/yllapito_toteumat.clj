@@ -12,6 +12,18 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]))
 
+(defn- maarittele-hinnan-kohde [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys
+                                        tr-loppuosa tr-loppuetaisyys] :as kohde}]
+  (str tr-numero " / " tr-alkuosa " / " tr-alkuetaisyys " / "
+       tr-loppuosa " / " tr-loppuetaisyys))
+
+(defn- lisaa-yllapitokohteelle-tieto-hinnan-muuttumisesta [kohde]
+  (let [hinnan-kohde-eri-kuin-nykyinen-osoite?
+        (and (:hinta-kohteelle kohde)
+             (not= (maarittele-hinnan-kohde kohde)
+                   (:hinta-kohteelle kohde)))]
+    (assoc kohde :hinnan-kohde-muuttunut? hinnan-kohde-eri-kuin-nykyinen-osoite?)))
+
 (def muutyo-xf
   (comp
     (map #(assoc % :laskentakohde [(get-in % [:laskentakohde-id])
