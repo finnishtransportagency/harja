@@ -82,46 +82,42 @@ pienemmällä zindexillä." :const true}
 
 ;; Käytetään sisäisesti :viiva featurea rakentaessa
 (defn- tee-ikonille-tyyli
-  ([zindex laske-taitokset-fn opts]
-    (tee-ikonille-tyyli zindex laske-taitokset-fn opts 10))
-  ([zindex laske-taitokset-fn {:keys [tyyppi paikka img] :as ikoni} reso]
-    ;; Kokonaisuus koodattiin alunperin sillä oletuksella, että :viivalle piirrettäisiin aina jokin ikoni.
-    ;; Oletuksena pieni merkki reitin loppuun. Tuli kuitenkin todettua, että esim tarkastukset joissa ei ilmennyt
-    ;; mitään halutaan todnäk vaan piirtää hyvin haalealla harmaalla tms. Tällaisissa tapauksissa :img arvoa
-    ;; ei ole määritelty, eikä siis haluta piirtää mitään.
-   (when img
-     (assert (#{:nuoli :merkki} tyyppi) "Merkin tyypin pitää olla joko :nuoli tai :merkki")
-     (let [palauta-paikat (fn [paikka]
-                            (assert (#{:alku :loppu :taitokset} paikka)
-                                    "Merkin paikan pitää olla :alku, :loppu, :taitokset")
-                            (condp = paikka
-                              :alku
-                              [[(-> (laske-taitokset-fn) first :sijainti first clj->js ol.geom.Point.)
-                                (-> (laske-taitokset-fn) first :rotaatio)]]
-                              :loppu
-                              [[(-> (laske-taitokset-fn) last :sijainti second clj->js ol.geom.Point.)
-                                (-> (laske-taitokset-fn) last :rotaatio)]]
-                              :taitokset
-                              (apurit/taitokset-valimatkoin
-                                (* minimi-valimatka reso) (* maksimi-valimatka reso) (butlast (laske-taitokset-fn)))))
-           pisteet-ja-rotaatiot (mapcat palauta-paikat (if (coll? paikka) paikka [paikka]))]
-       (condp = tyyppi
-         :nuoli (map #(tee-nuoli zindex ikoni % reso)
-                     pisteet-ja-rotaatiot)
-         :merkki (map #(tee-merkki zindex ikoni % reso) pisteet-ja-rotaatiot))))))
+  [zindex laske-taitokset-fn {:keys [tyyppi paikka img] :as ikoni} reso]
+  ;; Kokonaisuus koodattiin alunperin sillä oletuksella, että :viivalle piirrettäisiin aina jokin ikoni.
+  ;; Oletuksena pieni merkki reitin loppuun. Tuli kuitenkin todettua, että esim tarkastukset joissa ei ilmennyt
+  ;; mitään halutaan todnäk vaan piirtää hyvin haalealla harmaalla tms. Tällaisissa tapauksissa :img arvoa
+  ;; ei ole määritelty, eikä siis haluta piirtää mitään.
+  (when img
+    (assert (#{:nuoli :merkki} tyyppi) "Merkin tyypin pitää olla joko :nuoli tai :merkki")
+    (let [palauta-paikat (fn [paikka]
+                           (assert (#{:alku :loppu :taitokset} paikka)
+                                   "Merkin paikan pitää olla :alku, :loppu, :taitokset")
+                           (condp = paikka
+                             :alku
+                             [[(-> (laske-taitokset-fn) first :sijainti first clj->js ol.geom.Point.)
+                               (-> (laske-taitokset-fn) first :rotaatio)]]
+                             :loppu
+                             [[(-> (laske-taitokset-fn) last :sijainti second clj->js ol.geom.Point.)
+                               (-> (laske-taitokset-fn) last :rotaatio)]]
+                             :taitokset
+                             (apurit/taitokset-valimatkoin
+                               (* minimi-valimatka reso) (* maksimi-valimatka reso) (butlast (laske-taitokset-fn)))))
+          pisteet-ja-rotaatiot (mapcat palauta-paikat (if (coll? paikka) paikka [paikka]))]
+      (condp = tyyppi
+        :nuoli (map #(tee-nuoli zindex ikoni % reso)
+                    pisteet-ja-rotaatiot)
+        :merkki (map #(tee-merkki zindex ikoni % reso) pisteet-ja-rotaatiot)))))
 
 ;; Käytetään sisäisesti :viiva featurea rakentaessa
 (defn- tee-viivalle-tyyli
-  ([kasvava-zindex opts]
-    (tee-viivalle-tyyli kasvava-zindex opts 10))
-  ([kasvava-zindex {:keys [color width zindex dash cap join miter]} reso]
-   (ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
-                                                        :width (or width 2)
-                                                        :lineDash (or (clj->js dash) nil)
-                                                        :lineCap (or cap "round")
-                                                        :lineJoin (or join "round")
-                                                        :miterLimit (or miter 10)})
-                         :zindex (or zindex (swap! kasvava-zindex inc))})))
+  [kasvava-zindex {:keys [color width zindex dash cap join miter]} reso]
+  (ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color (or color "black")
+                                                       :width (or width 2)
+                                                       :lineDash (or (clj->js dash) nil)
+                                                       :lineCap (or cap "round")
+                                                       :lineJoin (or join "round")
+                                                       :miterLimit (or miter 10)})
+                        :zindex (or zindex (swap! kasvava-zindex inc))}))
 
 (defmethod luo-geometria :viiva [{points :points}]
   (ol.geom.LineString. (clj->js points)))
