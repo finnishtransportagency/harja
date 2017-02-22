@@ -1,4 +1,4 @@
-(ns harja.views.urakka.paikkauksen-kohdeluettelo
+(ns harja.views.urakka.yllapitokohteet.paikkauksen-kohdeluettelo
   "Paikkauksen 'Kohdeluettelo' välilehti:"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.bootstrap :as bs]
@@ -43,4 +43,3 @@
           (when (oikeudet/urakat-kohdeluettelo-paikkausilmoitukset (:id ur))
             [paikkausilmoitukset/paikkausilmoitukset ur])]]
         [vihje "Paikkausurakka täytyy sitoa YHA-urakkaan ennen kuin sen kohteita voi hallita."]))))
-
