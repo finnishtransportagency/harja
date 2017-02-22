@@ -20,6 +20,9 @@
                 :voi-lisata? true
                 :voi-muokata-rivia? :muokattava
                 :esta-poistaminen? (complement :muokattava)
+                :muutos (fn [grid]
+                          #(log "muut-kustannukset: muutos kutsuttu"))
+
                 :esta-poistaminen-tooltip
                 (fn [_] "Kohteeseen liittymättömästä sanktiosta johtuvaa kustannusta ei voi poistaa.")})
 
