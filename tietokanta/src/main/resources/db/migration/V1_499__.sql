@@ -68,6 +68,28 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION siirra_kaikki_reittipisteet () RETURNS VOID AS $$
+DECLARE
+ t RECORD;
+ lkm INTEGER;
+ pisteita INTEGER;
+ kaikki INTEGER;
+ alku TIMESTAMP;
+BEGIN
+ lkm := 0;
+ kaikki := 0;
+ alku := clock_timestamp();
+ FOR t IN SELECT id FROM toteuma LOOP
+   SELECT INTO pisteita siirra_reittipisteet(t.id);
+   kaikki := kaikki + pisteita;
+   lkm := lkm + 1;
+   IF (lkm % 1000) = 0 THEN
+     RAISE NOTICE '[%] Reittipisteet siirretty % toteumalle (yht % pistettä)', clock_timestamp()-alku, lkm, kaikki;
+   END IF;
+ END LOOP;
+END; 
+$$ LANGUAGE plpgsql;
+
 -- FIXME: toteumassa oleva hoitoluokittainen triggeri pitää poistaa ja siirtää
 -- tähän toteuman_reittipisteet tauluun.
-SELECT siirra_reittipisteet(id) FROM toteuma;
+EXECUTE siirra_kaikki_reittipisteet() FROM toteuma;
