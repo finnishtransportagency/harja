@@ -232,10 +232,8 @@
       (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
                     osa-3-tie-4))
 
-      ;; FIXME Kaikki pisteet osuvat tiehen 4 paitsi yksi, joka osuu eri tielle
-      ;; yli-/alikulun kohdalla. Voisi korjata projisoimalla tällaiset
-      ;; "vähäpätöiset" eri tielle osuvat pisteet takaisin edelliselle tielle. Ks. HAR-4419
-      #_(is (every? #(= (get-in % [:tr-osoite :tie]) 4) osa-3-tie-4))
+      ;; Tässä kohtaa kaikki pisteet osuvat tiehen 4 paitsi yksi, joka osuu eri tielle
+      ;; yli-/alikulun kohdalla. Tämä hanskataan erikseen omassa testissä.
 
       ;; Osa 4: Taas ollaan rampilla
       (is (every? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
@@ -246,3 +244,4 @@
       (is (not-any? #(tr-domain/tie-rampilla? (get-in % [:tr-osoite :tie]))
                     osa-5-tie-22))
       (is (every? #(= (get-in % [:tr-osoite :tie]) 22) osa-5-tie-22)))))
+
