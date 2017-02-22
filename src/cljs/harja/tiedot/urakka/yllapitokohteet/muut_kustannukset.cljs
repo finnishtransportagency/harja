@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.muut-kustannukset
+(ns harja.tiedot.urakka.yllapitokohteet.muut-kustannukset
   "Päällystyskohteiden Muut kustannukset-taulukon tiedot.
 
   Tässä taulukossa näytetään sanktiot jotka eivät liity mihinkään ylläpitokohteeseen,

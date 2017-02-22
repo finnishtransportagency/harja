@@ -1,10 +1,10 @@
-(ns harja.views.urakka.muut-kustannukset
+(ns harja.views.urakka.yllapitokohteet.muut-kustannukset
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.grid :as grid]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.urakka.muut-kustannukset :as tiedot]
+            [harja.tiedot.urakka.yllapitokohteet.muut-kustannukset :as tiedot]
             [harja.ui.valinnat :as valinnat]
             [cljs-time.core :as t]
             [harja.pvm :as pvm])

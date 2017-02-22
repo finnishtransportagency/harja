@@ -6,7 +6,7 @@
             [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
-            [harja.views.urakka.muut-kustannukset :as muut-kustannukset-view]
+            [harja.views.urakka.yllapitokohteet.muut-kustannukset :as muut-kustannukset-view]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :refer [vihje-elementti]]
             [harja.pvm :as pvm]
@@ -20,7 +20,7 @@
             [harja.ui.valinnat :as valinnat]
             [cljs-time.core :as t]
             [harja.tiedot.hallinta.indeksit :as indeksit]
-            [harja.tiedot.urakka.muut-kustannukset :as muut-kustannukset-tiedot]
+            [harja.tiedot.urakka.yllapitokohteet.muut-kustannukset :as muut-kustannukset-tiedot]
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot-sanktiot])
   (:require-macros [reagent.ratom :refer [reaction]]
