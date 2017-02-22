@@ -54,8 +54,8 @@ INSERT INTO materiaalin_kaytto (alkupvm, loppupvm, maara, materiaali, urakka, so
 -- Toteumat
 \i testidata/toteumat.sql
 
--- Ylläpidon toteumat
-\i testidata/yllapito/yllapito_toteumat.sql
+-- Ylläpidon muut toteumat
+\i testidata/yllapito/yllapito_muut_toteumat.sql
 
 -- Sillat
 \i testidata/sillat.sql
