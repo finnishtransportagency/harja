@@ -103,9 +103,13 @@
                      (indeksien-summa rivit)))
        rivi))))
 
-(defn raporttirivit-yhteensa [rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
-  [{:otsikko "Yhteensä"}
-   (luo-rivi-muistutusten-maara "Muistutukset yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
-   (luo-rivi-indeksien-summa "Indeksit yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
-   (luo-rivi-sakkojen-summa "Kaikki sakot yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
-   (luo-rivi-kaikki-yht "Kaikki yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?})])
+(defn raporttirivit-yhteensa [rivit alueet {:keys [yhteensa-sarake? urakkatyyppi] :as optiot}]
+  (keep identity
+        [{:otsikko "Yhteensä"}
+         (luo-rivi-muistutusten-maara "Muistutukset yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
+         (when-not (or (= urakkatyyppi :paallystys)
+                       (= urakkatyyppi :paikkaus)
+                       (= urakkatyyppi :tiemerkinta))
+           (luo-rivi-indeksien-summa "Indeksit yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?}))
+         (luo-rivi-sakkojen-summa "Kaikki sakot yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
+         (luo-rivi-kaikki-yht "Kaikki yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?})]))

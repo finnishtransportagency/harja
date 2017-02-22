@@ -15,7 +15,6 @@
                (str "Ylläpitoluokka " (yllapitokohteet-domain/yllapitoluokan-lyhyt-nimi luokka))
                "Ei ylläpitoluokkaa")}
    (yhteiset/luo-rivi-muistutusten-maara "Muistutukset yht." luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-indeksien-summa "Indeksit yht." luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
    (yhteiset/luo-rivi-sakkojen-summa "Kaikki sakot yht." luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
    (yhteiset/luo-rivi-kaikki-yht "Kaikki yht." luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})])
 
@@ -62,7 +61,7 @@
                                     (when yhteensa-sarake?
                                       [{:otsikko "Yh\u00ADteen\u00ADsä" :leveys 15 :fmt :raha}])))
         raportin-nimi "Sanktioraportti"
-        optiot {:yhteensa-sarake? yhteensa-sarake?}
+        optiot {:yhteensa-sarake? yhteensa-sarake? :urakkatyyppi urakkatyyppi}
         otsikko (yleinen/raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))

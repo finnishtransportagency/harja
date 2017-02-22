@@ -8,8 +8,6 @@
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.testiapurit :as apurit]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.palvelut.raportit :as raportit]))
@@ -58,31 +56,26 @@
       (apurit/tarkista-taulukko-rivit taulukko
                                       {:otsikko "Ylläpitoluokka 1"}
                                       ["Muistutukset yht. (kpl)" "0 kpl"]
-                                      ["Indeksit yht. (€)" 0]
                                       ["Kaikki sakot yht. (€)" -2000M]
                                       ["Kaikki yht. (€)" -2000M]
 
                                       {:otsikko "Ylläpitoluokka 2"}
                                       ["Muistutukset yht. (kpl)" "1 kpl"]
-                                      ["Indeksit yht. (€)" 0]
                                       ["Kaikki sakot yht. (€)" 0]
                                       ["Kaikki yht. (€)" 0]
 
                                       {:otsikko "Ylläpitoluokka 3"}
                                       ["Muistutukset yht. (kpl)" "1 kpl"]
-                                      ["Indeksit yht. (€)" 0]
                                       ["Kaikki sakot yht. (€)" 3000M]
                                       ["Kaikki yht. (€)" 3000M]
 
                                       {:otsikko "Ei ylläpitoluokkaa"}
                                       ["Muistutukset yht. (kpl)" "0 kpl"]
-                                      ["Indeksit yht. (€)" 0]
                                       ["Kaikki sakot yht. (€)" 1500M]
                                       ["Kaikki yht. (€)" 1500M]
 
                                       {:otsikko "Yhteensä"}
                                       ["Muistutukset yht. (kpl)" "2 kpl"]
-                                      ["Indeksit yht. (€)" 0]
                                       ["Kaikki sakot yht. (€)" 2500M]
                                       ["Kaikki yht. (€)" 2500M]))))
 
@@ -112,31 +105,26 @@
       (apurit/tarkista-taulukko-rivit taulukko
                                       {:otsikko "Ylläpitoluokka 1"}
                                       ["Muistutukset yht. (kpl)" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl"]
-                                      ["Indeksit yht. (€)" 0 0 0 0 0]
                                       ["Kaikki sakot yht. (€)" -2000M 0 0 0 -2000M]
                                       ["Kaikki yht. (€)" -2000M 0 0 0 -2000M]
 
                                       {:otsikko "Ylläpitoluokka 2"}
                                       ["Muistutukset yht. (kpl)" "1 kpl" "0 kpl" "0 kpl" "0 kpl" "1 kpl"]
-                                      ["Indeksit yht. (€)" 0 0 0 0 0]
                                       ["Kaikki sakot yht. (€)" 0 0 0 0 0]
                                       ["Kaikki yht. (€)" 0 0 0 0 0]
 
                                       {:otsikko "Ylläpitoluokka 3"}
                                       ["Muistutukset yht. (kpl)" "1 kpl" "0 kpl" "0 kpl" "0 kpl" "1 kpl"]
-                                      ["Indeksit yht. (€)" 0 0 0 0 0]
                                       ["Kaikki sakot yht. (€)" 3000M 0 0 0 3000M]
                                       ["Kaikki yht. (€)" 3000M 0 0 0 3000M]
 
                                       {:otsikko "Ei ylläpitoluokkaa"}
                                       ["Muistutukset yht. (kpl)" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl"]
-                                      ["Indeksit yht. (€)" 0 0 0 0 0]
                                       ["Kaikki sakot yht. (€)" 1500M 0 0 0 1500M]
                                       ["Kaikki yht. (€)" 1500M 0 0 0 1500M]
 
                                       {:otsikko "Yhteensä"}
                                       ["Muistutukset yht. (kpl)" "2 kpl" "0 kpl" "0 kpl" "0 kpl" "2 kpl"]
-                                      ["Indeksit yht. (€)" 0 0 0 0 0]
                                       ["Kaikki sakot yht. (€)" 2500M 0 0 0 2500M]
                                       ["Kaikki yht. (€)" 2500M 0 0 0 2500M]))))
 
@@ -172,30 +160,25 @@
       (apurit/tarkista-taulukko-rivit taulukko
                                       {:otsikko "Ylläpitoluokka 1"}
                                       ["Muistutukset yht. (kpl)" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl"]
-                                      ["Indeksit yht. (€)" 0 0 0 0 0 0 0 0 0 0]
                                       ["Kaikki sakot yht. (€)" 0 0 0 0 0 0 0 -2000M  0 -2000M]
                                       ["Kaikki yht. (€)" 0 0 0 0 0 0 0 -2000M 0 -2000M]
 
                                       {:otsikko "Ylläpitoluokka 2"}
                                       ["Muistutukset yht. (kpl)" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "1 kpl" "0 kpl" "1 kpl"]
-                                      ["Indeksit yht. (€)" 0 0 0 0 0 0 0 0 0 0]
                                       ["Kaikki sakot yht. (€)" 0 0 0 0 0 0 0 0  0 0]
                                       ["Kaikki yht. (€)" 0 0 0 0 0 0 0 0 0 0]
 
                                       {:otsikko "Ylläpitoluokka 3"}
                                       ["Muistutukset yht. (kpl)" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "1 kpl" "0 kpl" "1 kpl"]
-                                      ["Indeksit yht. (€)" 0 0 0 0 0 0 0 0 0 0]
                                       ["Kaikki sakot yht. (€)" 0 0 0 0 0 0 0 3000M  0 3000M]
                                       ["Kaikki yht. (€)" 0 0 0 0 0 0 0 3000M 0 3000M]
 
                                       {:otsikko "Ei ylläpitoluokkaa"}
                                       ["Muistutukset yht. (kpl)" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl"]
-                                      ["Indeksit yht. (€)" 0 0 0 0 0 0 0 0 0 0]
                                       ["Kaikki sakot yht. (€)" 0 3000M 0 0 0 0 0 1500M  0 4500M]
                                       ["Kaikki yht. (€)" 0 3000M 0 0 0 0 0 1500M  0 4500M]
 
                                       {:otsikko "Yhteensä"}
                                       ["Muistutukset yht. (kpl)" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "2 kpl" "0 kpl" "2 kpl"]
-                                      ["Indeksit yht. (€)" 0 0 0 0 0 0 0 0 0 0]
                                       ["Kaikki sakot yht. (€)" 0 3000M 0 0 0 0 0 2500M  0 5500M]
                                       ["Kaikki yht. (€)" 0 3000M 0 0 0 0 0 2500M 0 5500M]))))
