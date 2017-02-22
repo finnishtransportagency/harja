@@ -10,6 +10,7 @@
             [harja.palvelin.raportointi.testiapurit :as apurit]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
+            [harja.palvelin.raportointi.raportit.sanktioraportti-yhteiset :as yhteiset]
             [harja.palvelin.palvelut.raportit :as raportit]))
 
 (defn jarjestelma-fixture [testit]
@@ -45,39 +46,38 @@
                                  :urakka-id (hae-muhoksen-paallystysurakan-id)
                                  :parametrit {:alkupvm (pvm/->pvm "1.1.2017")
                                               :loppupvm (pvm/->pvm "31.1.2017")}})
-        nurkkasumma (last (last (last (last vastaus))))]
+        nurkkasumma (last (last (last (last (butlast vastaus)))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 2500.00))
-    (let [otsikko "Muhoksen päällystysurakka, Sanktioraportti tammikuussa 2017"
+    (is (= [:teksti "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."] (last vastaus)))
+    (is (=marginaalissa? nurkkasumma -2500.00))
+    (let [otsikko "Muhoksen päällystysurakka, Sakko- ja bonusraportti tammikuussa 2017"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko ""}
                                           {:otsikko "Muhoksen päällystysurakka"})
       (apurit/tarkista-taulukko-rivit taulukko
                                       {:otsikko "Ylläpitoluokka 1"}
-                                      ["Muistutukset yht. (kpl)" "0 kpl"]
-                                      ["Kaikki sakot yht. (€)" -2000M]
-                                      ["Kaikki yht. (€)" -2000M]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "0 kpl"]
+                                      [yhteiset/+sakkorivin-nimi-yllapito+ 2000M]
 
                                       {:otsikko "Ylläpitoluokka 2"}
-                                      ["Muistutukset yht. (kpl)" "1 kpl"]
-                                      ["Kaikki sakot yht. (€)" 0]
-                                      ["Kaikki yht. (€)" 0]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "1 kpl"]
+                                      [yhteiset/+sakkorivin-nimi-yllapito+ 0]
+
 
                                       {:otsikko "Ylläpitoluokka 3"}
-                                      ["Muistutukset yht. (kpl)" "1 kpl"]
-                                      ["Kaikki sakot yht. (€)" 3000M]
-                                      ["Kaikki yht. (€)" 3000M]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "1 kpl"]
+                                      [yhteiset/+sakkorivin-nimi-yllapito+ -3000M]
+
 
                                       {:otsikko "Ei ylläpitoluokkaa"}
-                                      ["Muistutukset yht. (kpl)" "0 kpl"]
-                                      ["Kaikki sakot yht. (€)" 1500M]
-                                      ["Kaikki yht. (€)" 1500M]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "0 kpl"]
+                                      [yhteiset/+sakkorivin-nimi-yllapito+ -1500M]
+
 
                                       {:otsikko "Yhteensä"}
-                                      ["Muistutukset yht. (kpl)" "2 kpl"]
-                                      ["Kaikki sakot yht. (€)" 2500M]
-                                      ["Kaikki yht. (€)" 2500M]))))
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "2 kpl"]
+                                      [yhteiset/+sakkorivin-nimi-yllapito+ -2500M]))))
 
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
@@ -90,10 +90,11 @@
                                  :parametrit {:alkupvm (pvm/->pvm "1.1.2017")
                                               :loppupvm (pvm/->pvm "31.12.2017")
                                               :urakkatyyppi :paallystys}})
-        nurkkasumma (last (last (last (last vastaus))))]
+        nurkkasumma (last (last (last (last (butlast vastaus)))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 2500.00))
-    (let [otsikko "Pohjois-Pohjanmaa, Sanktioraportti ajalta 01.01.2017 - 31.12.2017"
+    (is (= [:teksti "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."] (last vastaus)))
+    (is (=marginaalissa? nurkkasumma -2500.00))
+    (let [otsikko "Pohjois-Pohjanmaa, Sakko- ja bonusraportti ajalta 01.01.2017 - 31.12.2017"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko ""}
@@ -104,29 +105,28 @@
                                           {:otsikko "Yh\u00ADteen\u00ADsä"})
       (apurit/tarkista-taulukko-rivit taulukko
                                       {:otsikko "Ylläpitoluokka 1"}
-                                      ["Muistutukset yht. (kpl)" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl"]
-                                      ["Kaikki sakot yht. (€)" -2000M 0 0 0 -2000M]
-                                      ["Kaikki yht. (€)" -2000M 0 0 0 -2000M]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl"]
+                                      [yhteiset/+sakkorivin-nimi-yllapito+ 2000M 0 0 0 2000M]
+
 
                                       {:otsikko "Ylläpitoluokka 2"}
-                                      ["Muistutukset yht. (kpl)" "1 kpl" "0 kpl" "0 kpl" "0 kpl" "1 kpl"]
-                                      ["Kaikki sakot yht. (€)" 0 0 0 0 0]
-                                      ["Kaikki yht. (€)" 0 0 0 0 0]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "1 kpl" "0 kpl" "0 kpl" "0 kpl" "1 kpl"]
+                                      [yhteiset/+sakkorivin-nimi-yllapito+ 0 0 0 0 0]
+
 
                                       {:otsikko "Ylläpitoluokka 3"}
-                                      ["Muistutukset yht. (kpl)" "1 kpl" "0 kpl" "0 kpl" "0 kpl" "1 kpl"]
-                                      ["Kaikki sakot yht. (€)" 3000M 0 0 0 3000M]
-                                      ["Kaikki yht. (€)" 3000M 0 0 0 3000M]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "1 kpl" "0 kpl" "0 kpl" "0 kpl" "1 kpl"]
+                                      [yhteiset/+sakkorivin-nimi-yllapito+ -3000M 0 0 0 -3000M]
+
 
                                       {:otsikko "Ei ylläpitoluokkaa"}
-                                      ["Muistutukset yht. (kpl)" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl"]
-                                      ["Kaikki sakot yht. (€)" 1500M 0 0 0 1500M]
-                                      ["Kaikki yht. (€)" 1500M 0 0 0 1500M]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl"]
+                                      [yhteiset/+sakkorivin-nimi-yllapito+ -1500M 0 0 0 -1500M]
+
 
                                       {:otsikko "Yhteensä"}
-                                      ["Muistutukset yht. (kpl)" "2 kpl" "0 kpl" "0 kpl" "0 kpl" "2 kpl"]
-                                      ["Kaikki sakot yht. (€)" 2500M 0 0 0 2500M]
-                                      ["Kaikki yht. (€)" 2500M 0 0 0 2500M]))))
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "2 kpl" "0 kpl" "0 kpl" "0 kpl" "2 kpl"]
+                                      [yhteiset/+sakkorivin-nimi-yllapito+ -2500M 0 0 0 -2500M]))))
 
 
 
@@ -140,10 +140,11 @@
                                  :parametrit {:alkupvm (pvm/->pvm "1.1.2017")
                                               :loppupvm (pvm/->pvm "31.12.2017")
                                               :urakkatyyppi :paallystys}})
-        nurkkasumma (last (last (last (last vastaus))))]
+        nurkkasumma (last (last (last (last (butlast vastaus)))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 5500.00M))
-    (let [otsikko "KOKO MAA, Sanktioraportti ajalta 01.01.2017 - 31.12.2017"
+    (is (= [:teksti "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."] (last vastaus)))
+    (is (=marginaalissa? nurkkasumma -5500.00M))
+    (let [otsikko "KOKO MAA, Sakko- ja bonusraportti ajalta 01.01.2017 - 31.12.2017"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko ""}
@@ -159,26 +160,21 @@
                                           {:otsikko "Yh\u00ADteen\u00ADsä"})
       (apurit/tarkista-taulukko-rivit taulukko
                                       {:otsikko "Ylläpitoluokka 1"}
-                                      ["Muistutukset yht. (kpl)" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl"]
-                                      ["Kaikki sakot yht. (€)" 0 0 0 0 0 0 0 -2000M  0 -2000M]
-                                      ["Kaikki yht. (€)" 0 0 0 0 0 0 0 -2000M 0 -2000M]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl"]
+                                      [yhteiset/+sakkorivin-nimi-yllapito+ 0 0 0 0 0 0 0 2000M  0 2000M]
 
                                       {:otsikko "Ylläpitoluokka 2"}
-                                      ["Muistutukset yht. (kpl)" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "1 kpl" "0 kpl" "1 kpl"]
-                                      ["Kaikki sakot yht. (€)" 0 0 0 0 0 0 0 0  0 0]
-                                      ["Kaikki yht. (€)" 0 0 0 0 0 0 0 0 0 0]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "1 kpl" "0 kpl" "1 kpl"]
+                                      [yhteiset/+sakkorivin-nimi-yllapito+ 0 0 0 0 0 0 0 0  0 0]
 
                                       {:otsikko "Ylläpitoluokka 3"}
-                                      ["Muistutukset yht. (kpl)" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "1 kpl" "0 kpl" "1 kpl"]
-                                      ["Kaikki sakot yht. (€)" 0 0 0 0 0 0 0 3000M  0 3000M]
-                                      ["Kaikki yht. (€)" 0 0 0 0 0 0 0 3000M 0 3000M]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "1 kpl" "0 kpl" "1 kpl"]
+                                      [yhteiset/+sakkorivin-nimi-yllapito+ 0 0 0 0 0 0 0 -3000M  0 -3000M]
 
                                       {:otsikko "Ei ylläpitoluokkaa"}
-                                      ["Muistutukset yht. (kpl)" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl"]
-                                      ["Kaikki sakot yht. (€)" 0 3000M 0 0 0 0 0 1500M  0 4500M]
-                                      ["Kaikki yht. (€)" 0 3000M 0 0 0 0 0 1500M  0 4500M]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl"]
+                                      [yhteiset/+sakkorivin-nimi-yllapito+ 0 -3000M 0 0 0 0 0 -1500M  0 -4500M]
 
                                       {:otsikko "Yhteensä"}
-                                      ["Muistutukset yht. (kpl)" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "2 kpl" "0 kpl" "2 kpl"]
-                                      ["Kaikki sakot yht. (€)" 0 3000M 0 0 0 0 0 2500M  0 5500M]
-                                      ["Kaikki yht. (€)" 0 3000M 0 0 0 0 0 2500M 0 5500M]))))
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "2 kpl" "0 kpl" "2 kpl"]
+                                      [yhteiset/+sakkorivin-nimi-yllapito+ 0 -3000M 0 0 0 0 0 -2500M  0 -5500M]))))

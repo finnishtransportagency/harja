@@ -103,18 +103,22 @@
                      (indeksien-summa rivit)))
        rivi))))
 
-(def +sakkorivin-nimi-yllapito "Sakot (-) ja bonukset (+)")
+(def +muistutusrivin-nimi-hoito+ "Muistutukset yht.")
+(def +muistutusrivin-nimi-yllapito+ "Muistutukset")
+
+(def +sakkorivin-nimi-hoito+ "Kaikki sakot yht.")
+(def +sakkorivin-nimi-yllapito+ "Sakot (-) ja bonukset (+)")
 
 (defn raporttirivit-yhteensa [rivit alueet {:keys [yhteensa-sarake? urakkatyyppi] :as optiot}]
   (let [yllapito? (or (= urakkatyyppi :paallystys)
                       (= urakkatyyppi :paikkaus)
                       (= urakkatyyppi :tiemerkinta))
         sakkorivin-nimi (if yllapito?
-                          +sakkorivin-nimi-yllapito
-                          "Kaikki sakot yht.")
+                          +sakkorivin-nimi-yllapito+
+                          +sakkorivin-nimi-hoito+)
         muistutusrivin-nimi (if yllapito?
-                              "Muistutukset"
-                              "Muistutukset yht.")]
+                              +muistutusrivin-nimi-yllapito+
+                              +muistutusrivin-nimi-hoito+)]
     (keep identity
           [{:otsikko "Yhteensä"}
            (luo-rivi-muistutusten-maara muistutusrivin-nimi rivit alueet {:yhteensa-sarake? yhteensa-sarake?})

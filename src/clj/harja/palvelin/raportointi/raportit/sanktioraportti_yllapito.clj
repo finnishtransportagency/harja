@@ -16,8 +16,8 @@
   [{:otsikko (if luokka
                (str "Ylläpitoluokka " (yllapitokohteet-domain/yllapitoluokan-lyhyt-nimi luokka))
                "Ei ylläpitoluokkaa")}
-   (yhteiset/luo-rivi-muistutusten-maara "Muistutukset" luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa yhteiset/+sakkorivin-nimi-yllapito luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})])
+   (yhteiset/luo-rivi-muistutusten-maara yhteiset/+muistutusrivin-nimi-yllapito+ luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
+   (yhteiset/luo-rivi-sakkojen-summa yhteiset/+sakkorivin-nimi-yllapito+ luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})])
 
 
 (defn suorita [db user {:keys [alkupvm loppupvm
