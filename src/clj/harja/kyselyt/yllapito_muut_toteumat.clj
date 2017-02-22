@@ -1,4 +1,4 @@
-(ns harja.kyselyt.yllapito-toteumat
+(ns harja.kyselyt.yllapito-muut-toteumat
   (:require [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.geo :as geo]))
