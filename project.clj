@@ -8,6 +8,8 @@
                  [org.clojure/clojurescript "1.9.293"]
 
                  ;;;;;;; Yleiset ;;;;;;;
+                 [clojure-future-spec "1.9.0-alpha14"]
+
                  [prismatic/schema "1.1.3"]
                  [org.clojure/core.async "0.2.395"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
