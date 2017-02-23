@@ -8,7 +8,8 @@
             [harja.tiedot.navigaatio :as nav])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
-                   [harja.atom :refer [reaction<!]]))
+                   [harja.atom :refer [reaction<!]]
+                   [harja.domain.urakka :as urakka]))
 
 
 (def indeksit (atom nil))
@@ -43,7 +44,7 @@
 (defn hae-paallystysurakan-indeksitiedot
   [urakka-id]
   (when @kaikkien-urakkatyyppien-indeksit
-    (k/post! :paallystysurakan-indeksitiedot {:urakka-id urakka-id})))
+    (k/post! :paallystysurakan-indeksitiedot {::urakka/id urakka-id})))
 
 (defn tallenna-paallystysurakan-indeksit
   [{:keys [urakka-id tiedot]}]
