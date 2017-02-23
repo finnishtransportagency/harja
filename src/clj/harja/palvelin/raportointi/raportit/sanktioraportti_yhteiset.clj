@@ -38,7 +38,9 @@
 (defn muistutusten-maara
   ([rivit] (muistutusten-maara rivit {}))
   ([rivit suodattimet]
-   (str (count (suodata-muistutukset rivit suodattimet)) " kpl")))
+   [:arvo-ja-yksikko {:arvo (count (suodata-muistutukset rivit suodattimet))
+                      :yksikko " kpl"
+                      :fmt? false}]))
 
 
 (defn sakkojen-summa
