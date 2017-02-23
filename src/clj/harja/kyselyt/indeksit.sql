@@ -44,8 +44,8 @@ SELECT pui.id,
        urakka,
        pui.lahtotason_vuosi as "lahtotason-vuosi",
        pui.lahtotason_kuukausi as "lahtotason-kuukausi",
-       i.id AS indeksi_id,
-       i.nimi AS indeksi_indeksinimi,
+       uti.id AS indeksi_id,
+       uti.indeksinimi AS indeksi_indeksinimi,
        i.arvo AS indeksi_arvo,
        uti.raakaaine AS indeksi_raakaaine,
        uti.urakkatyyppi AS indeksi_urakkatyyppi
@@ -56,13 +56,13 @@ SELECT pui.id,
 
 --name: tallenna-paallystysurakan-indeksitiedot!
 INSERT
-  INTO paallystysurakan_indeksit
+  INTO paallystysurakan_indeksi
        (indeksi,lahtotason_vuosi,lahtotason_kuukausi,urakka, luoja, luotu)
-VALUES (:indeksi,:lahtotason_vuosi,:lahtotason_kuukausi,:urakka, :kayttaja, NOW())
+VALUES (:indeksi,:lahtotason-vuosi,:lahtotason-kuukausi,:urakka, :kayttaja, NOW())
 ON CONFLICT (urakka, indeksi) WHERE poistettu IS NOT TRUE DO
-UPDATE SET indeksi = :indeksi
-   	   lahtotason_vuosi = :lahtotason_vuosi,
-    	   lahtotason_kuukausi = :lahtotason_kuukausi,
+UPDATE SET indeksi = :indeksi,
+   	   lahtotason_vuosi = :lahtotason-vuosi,
+    	   lahtotason_kuukausi = :lahtotason-kuukausi,
     	   urakka = :urakka,
     	   muokkaaja = :kayttaja,
     	   poistettu = :poistettu,

@@ -9,7 +9,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]
-                   [harja.domain.urakka :as urakka]))
+                   [harja.domain.urakka :as urakka]
+                   [harja.domain.indeksit :as indeksit]))
 
 
 (def indeksit (atom nil))
@@ -50,8 +51,7 @@
   [{:keys [urakka-id tiedot]}]
   (log "tallenna päällystysurakan indeksit urakkaan " urakka-id " tiedot" (pr-str tiedot))
   (go (let [res (<! (k/post! :tallenna-paallystysurakan-indeksitiedot
-                             {:urakka-id urakka-id
-                              :indeksitiedot tiedot}))]
+                             (mapv #(assoc % :urakka urakka-id) tiedot)))]
         (reset! urakka/paallystysurakan-indeksitiedot res))))
 
 (defn raakaaineen-indeksit
