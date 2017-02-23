@@ -143,7 +143,8 @@ SELECT
   ypk.yha_kohdenumero                   AS "yha-kohdenumero"
 FROM yllapitokohde ypk
 WHERE
-  ypk.suorittava_tiemerkintaurakka = :urakka;
+  ypk.suorittava_tiemerkintaurakka = :urakka
+  AND ypk.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-yllapitokohteet-lomakkeelle
 -- Hakee urakan kaikki yllapitokohteet, listaten vain minimaalisen määrän tietoa

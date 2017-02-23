@@ -104,7 +104,7 @@
                         (map #(konv/string->keyword % :hintatyyppi))
                         (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot
                           db
-                          {:suorittava_tiemerkintaurakka urakka-id}))
+                          {:urakka urakka-id}))
           kohteet (mapv (partial yy/lisaa-yllapitokohteelle-kohteen-pituus db) kohteet)
           kohteet (mapv lisaa-yllapitokohteelle-tieto-hinnan-muuttumisesta kohteet)]
       kohteet)))

@@ -68,10 +68,11 @@ SELECT
   selite,
   tr_numero                      AS "tr-numero",
   pituus
-FROM tiemerkinnan_yksikkohintainen_toteuma
+FROM tiemerkinnan_yksikkohintainen_toteuma tyt
 WHERE
-  suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
-  AND poistettu IS NOT TRUE;
+  urakka = :urakka
+  AND (SELECT poistettu FROM yllapitokohde WHERE id = tyt.yllapitokohde)
+  IS NOT TRUE; -- FIXME Entä jos poistetulle kohteelle on liitetty toteuma?
 
 -- name: paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
 UPDATE tiemerkinnan_yksikkohintainen_toteuma SET
