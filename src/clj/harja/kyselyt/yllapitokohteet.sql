@@ -216,14 +216,16 @@ SET
   bitumi_indeksi                    = :bitumi_indeksi,
   kaasuindeksi                      = :kaasuindeksi
 WHERE id = :id
-      AND urakka = :urakka;
+      AND urakka = :urakka
+      AND poistettu IS NOT TRUE;
 
 -- name: poista-yllapitokohde!
 -- Poistaa ylläpitokohteen
 UPDATE yllapitokohde
 SET poistettu = TRUE
 WHERE id = :id
-      AND urakka = :urakka;
+      AND urakka = :urakka
+      AND poistettu IS NOT TRUE;
 
 -- name: luo-yllapitokohdeosa<!
 -- Luo uuden yllapitokohdeosan
@@ -271,7 +273,8 @@ SET
 WHERE id = :id
       AND yllapitokohde IN (SELECT id
                             FROM yllapitokohde
-                            WHERE urakka = :urakka);
+                            WHERE urakka = :urakka)
+      AND poistettu IS NOT TRUE;
 
 -- name: poista-yllapitokohdeosa!
 -- Poistaa ylläpitokohdeosan
@@ -280,7 +283,8 @@ SET poistettu = TRUE
 WHERE id = :id
       AND yllapitokohde IN (SELECT id
                             FROM yllapitokohde
-                            WHERE urakka = :urakka);
+                            WHERE urakka = :urakka)
+      AND poistettu IS NOT TRUE;
 
 -- name: hae-paallystysurakan-aikataulu
 -- Hakee päällystysurakan kohteiden aikataulutiedot
@@ -375,7 +379,8 @@ SET
   aikataulu_muokkaaja          = :aikataulu_muokkaaja,
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
 WHERE id = :id
-      AND urakka = :urakka;
+      AND urakka = :urakka
+      AND poistettu IS NOT TRUE;
 
 -- name: tallenna-yllapitokohteen-valmis-viimeistaan-paallystysurakasta!
 -- Tallentaa ylläpitokohteen valmis viimeistään -sarakkeen tiedon
@@ -383,7 +388,8 @@ UPDATE yllapitokohde
 SET
   aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
 WHERE id = :id
-      AND urakka = :urakka;
+      AND urakka = :urakka
+      AND poistettu IS NOT TRUE;
 
 -- name: tallenna-yllapitokohteen-valmis-viimeistaan-tiemerkintaurakasta!
 -- Tallentaa ylläpitokohteen valmis viimeistään -sarakkeen tiedon
@@ -391,7 +397,8 @@ UPDATE yllapitokohde
 SET
   aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
 WHERE id = :id
-      AND suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka;
+      AND suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
+      AND poistettu IS NOT TRUE;
 
 -- name: merkitse-kohde-valmiiksi-tiemerkintaan<!
 UPDATE yllapitokohde
@@ -399,7 +406,8 @@ SET
   valmis_tiemerkintaan           = :valmis_tiemerkintaan,
   aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
 WHERE id = :id
-      AND urakka = :urakka;
+      AND urakka = :urakka
+      AND poistettu IS NOT TRUE;
 
 -- name: hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
 SELECT
@@ -451,10 +459,8 @@ SET
   aikataulu_muokattu          = NOW(),
   aikataulu_muokkaaja         = :aikataulu_muokkaaja
 WHERE id = :id
-      AND suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka;
-
-
-
+      AND suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
+      AND poistettu IS NOT TRUE;
 
 -- name: hae-yllapitokohteen-urakka-id
 SELECT urakka AS id
@@ -536,7 +542,8 @@ WHERE yllapitokohde = :yllapitokohde AND
 -- name: merkitse-kohteen-lahetystiedot!
 UPDATE yllapitokohde
 SET lahetetty = :lahetetty, lahetys_onnistunut = :onnistunut, lahetysvirhe = :lahetysvirhe
-WHERE id = :kohdeid;
+WHERE id = :kohdeid
+AND poistettu IS NOT TRUE;
 
 -- name: onko-olemassa-urakalla?
 -- single?: true
@@ -552,7 +559,8 @@ SET
   tr_alkuetaisyys  = :tr_alkuetaisyys,
   tr_loppuosa      = :tr_loppuosa,
   tr_loppuetaisyys = :tr_loppuetaisyys
-WHERE id = :id;
+WHERE id = :id
+AND poistettu IS NOT TRUE;
 
 -- name: paivita-yllapitokohteen-paallystysaikataulu!
 -- Päivittää ylläpitokohteen aikataulutiedot
@@ -566,7 +574,8 @@ SET
   aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja,
   aikataulu_muokattu             = NOW(),
   aikataulu_muokkaaja            = :muokkaaja
-WHERE id = :id;
+WHERE id = :id
+AND poistettu IS NOT TRUE;
 
 -- name: paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<!
 -- Päivittää päällystysilmoituksen aikataulutiedot
@@ -585,7 +594,8 @@ SET
   aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja,
   aikataulu_muokattu = NOW(),
   aikataulu_muokkaaja = :muokkaaja
-WHERE id = :id;
+WHERE id = :id
+AND poistettu IS NOT TRUE;
 
 -- name: poista-yllapitokohteen-kohdeosat!
 DELETE FROM yllapitokohdeosa

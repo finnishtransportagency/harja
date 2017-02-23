@@ -71,4 +71,4 @@ WHERE osuus_id = :osuusid AND jarjestelma = :jarjestelma;
 -- name: merkitse-tietyomaa-poistetuksi!
 UPDATE tietyomaa
 SET poistettu = :poistettu, poistaja = :poistaja
-WHERE osuus_id = :osuusid AND jarjestelma = :jarjestelma;
+WHERE osuus_id = :osuusid AND jarjestelma = :jarjestelma

@@ -51,7 +51,8 @@ UPDATE valitavoite
      valmis_merkitsija=:user,
      valmis_merkitty=NOW(),
      muokattu = NOW()
- WHERE urakka = :urakka AND id = :valitavoite AND poistettu = false;
+ WHERE urakka = :urakka AND id = :valitavoite AND poistettu = false
+ AND poistettu IS NOT TRUE;
 
 -- name: poista-urakan-valitavoite!
 -- Merkitsee urakan välitavoitteen poistetuksi
@@ -59,7 +60,8 @@ UPDATE valitavoite
    SET poistettu = true,
      muokattu = NOW(),
      muokkaaja = :user
- WHERE urakka = :urakka AND id = :valitavoite;
+ WHERE urakka = :urakka AND id = :valitavoite
+ AND poistettu IS NOT TRUE;
 
 -- name: lisaa-urakan-valitavoite<!
 -- Lisää uuden välitavoitteen urakalle
@@ -82,7 +84,8 @@ VALUES (:urakka,
 -- Päivittää urakan välitavoitteen tiedot
 UPDATE valitavoite
    SET nimi = :nimi, takaraja = :takaraja, muokattu = NOW(), muokkaaja = :user
- WHERE urakka = :urakka AND id = :id;
+ WHERE urakka = :urakka AND id = :id
+ AND poistettu IS NOT TRUE;
 
 -- name: lisaa-valtakunnallinen-kertaluontoinen-valitavoite<!
 -- Lisää uuden valtakunnallisen välitavoitteen
@@ -129,7 +132,8 @@ SET nimi = :nimi,
   muokattu = NOW(),
   muokkaaja = :user
 WHERE id = :id
-      AND urakka IS NULL;
+      AND urakka IS NULL
+      AND poistettu IS NOT TRUE;
 
 -- name: poista-valtakunnallinen-valitavoite!
 -- Merkitsee valtakunnallisen välitavoitteen poistetuksi
@@ -138,7 +142,8 @@ SET poistettu = true,
   muokattu = NOW(),
   muokkaaja = :user
 WHERE id = :id
-      AND urakka IS NULL;
+      AND urakka IS NULL
+      AND poistettu IS NOT TRUE;
 
 -- name: hae-valitavoitteeseen-linkitetyt-valitavoitteet
 SELECT
@@ -177,7 +182,8 @@ SET nimi = :nimi,
   takaraja = :takaraja
   -- Ei päivitetä muokkaustietoja, koska niitä käytetään tutkimaan onko käyttäjä muokannut tätä urakassa
 WHERE valtakunnallinen_valitavoite = :id
-AND muokattu IS NULL;
+AND muokattu IS NULL
+AND poistettu IS NOT TRUE;
 
 -- name: poista-toistuvaan-valitavoitteeseen-linkitetty-muokkaamaton-valitavoite!
 DELETE FROM valitavoite

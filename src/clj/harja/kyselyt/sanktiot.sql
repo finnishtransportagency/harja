@@ -35,7 +35,8 @@ SET perintapvm        = :perintapvm,
   muokkaaja = :muokkaaja,
   poistettu = :poistettu,
   muokattu = NOW()
-WHERE id = :id;
+WHERE id = :id
+AND poistettu IS NOT TRUE;
 
 -- name: hae-laatupoikkeaman-sanktiot
 -- Palauttaa kaikki annetun laatupoikkeaman sanktiot

@@ -227,7 +227,8 @@ VALUES (:alku, :loppu, :maara, :materiaali, :urakka, :sopimus, NOW(), :kayttaja,
 -- Päivittää yhden materiaalin määrän id:n perusteella
 UPDATE materiaalin_kaytto
 SET muokattu = NOW(), muokkaaja = :kayttaja, maara = :maara
-WHERE id = :id;
+WHERE id = :id
+AND poistettu IS NOT TRUE;
 
 -- name: poista-materiaalinkaytto!
 -- Poistaa urakan sopimuksen materiaalin päivämäärien ja materiaalin mukaan
@@ -235,19 +236,22 @@ UPDATE materiaalin_kaytto
 SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
 WHERE urakka = :urakka AND sopimus = :sopimus
       AND alkupvm = :alkupvm AND loppupvm = :loppupvm
-      AND materiaali = :materiaali;
+      AND materiaali = :materiaali
+      AND poistettu IS NOT TRUE;
 
 -- name: poista-materiaalinkaytto-id!
 -- Poistaa materiaalin käytön id:llä.
 UPDATE materiaalin_kaytto
 SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
-WHERE id = :id;
+WHERE id = :id
+AND poistettu IS NOT TRUE;
 
 -- name: poista-urakan-materiaalinkaytto!
 UPDATE materiaalin_kaytto
 SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
 WHERE urakka = :urakka AND sopimus = :sopimus
-      AND alkupvm = :alkupvm AND loppupvm = :loppupvm;
+      AND alkupvm = :alkupvm AND loppupvm = :loppupvm
+      AND poistettu IS NOT TRUE;
 
 -- name: luo-toteuma-materiaali<!
 -- Luo uuden materiaalin toteumalle
@@ -260,12 +264,14 @@ VALUES (:toteuma, :materiaalikoodi, :maara, NOW(), :kayttaja, FALSE);
 -- Päivittää toteuma_materiaalin
 UPDATE toteuma_materiaali
 SET materiaalikoodi = :materiaalikoodi, maara = :maara, muokattu = NOW(), muokkaaja = :kayttaja
-WHERE toteuma = :toteuma AND id = :id;
+WHERE toteuma = :toteuma AND id = :id
+AND poistettu IS NOT TRUE;
 
 -- name: poista-toteuma-materiaali!
 UPDATE toteuma_materiaali
 SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
-WHERE id IN (:id) AND poistettu IS NOT TRUE;
+WHERE id IN (:id) AND poistettu IS NOT TRUE
+AND poistettu IS NOT TRUE;
 
 -- name: hae-materiaalikoodin-id-nimella
 SELECT id

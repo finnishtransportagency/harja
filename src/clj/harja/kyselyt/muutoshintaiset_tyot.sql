@@ -22,14 +22,16 @@ SELECT
 UPDATE muutoshintainen_tyo
    SET yksikko = :yksikko, yksikkohinta = :yksikkohinta, muokattu = NOW(), muokkaaja = :kayttaja
  WHERE urakka = :urakka AND sopimus = :sopimus AND tehtava = :tehtava
-      AND alkupvm = :alkupvm AND loppupvm = :loppupvm;
+      AND alkupvm = :alkupvm AND loppupvm = :loppupvm
+      AND poistettu IS NOT TRUE;
 
 -- name: poista-muutoshintainen-tyo!
 -- Päivittää urakan hoitokauden muutoshintaiset tyot
 UPDATE muutoshintainen_tyo
 SET poistettu = true, yksikko = :yksikko, yksikkohinta = :yksikkohinta, muokattu = NOW(), muokkaaja = :kayttaja
 WHERE urakka = :urakka AND sopimus = :sopimus AND tehtava = :tehtava
-      AND alkupvm = :alkupvm AND loppupvm = :loppupvm;
+      AND alkupvm = :alkupvm AND loppupvm = :loppupvm
+      AND poistettu IS NOT TRUE;
 
 
 -- name: lisaa-muutoshintainen-tyo<!
