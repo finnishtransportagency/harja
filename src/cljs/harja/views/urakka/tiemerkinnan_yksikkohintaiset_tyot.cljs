@@ -22,64 +22,6 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(defn paallystysurakan-kohteet
-  [urakka paallystysurakan-kohteet]
-  (komp/luo
-    (komp/lippu tiedot/nakymassa?)
-    (fn [urakka paallystysurakan-kohteet]
-      (let [urakka-id (:id urakka)]
-        [:div
-         [grid/grid
-          {:otsikko "Päällystysurakassa tehdyt päällystykset"
-           :tyhja (if (nil? paallystysurakan-kohteet)
-                    [ajax-loader "Haetaan töitä..."]
-                    "Kohteita ei löytynyt")}
-          [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
-            :pituus-max 128 :muokattava? (constantly false)}
-           {:otsikko "Koh\u00ADteen nimi" :leveys 7 :nimi :nimi :tyyppi :string :pituus-max 128
-            :muokattava? (constantly false)}
-           {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
-            :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
-            :muokattava? (constantly false)}
-           {:otsikko "Ajo\u00ADrata"
-            :nimi :tr-ajorata
-            :muokattava? (constantly false)
-            :tyyppi :string
-            :tasaa :oikea
-            :fmt (fn [arvo] (:koodi (first (filter #(= (:koodi %) arvo) pot/+ajoradat+))))
-            :leveys 3}
-           {:otsikko "Kais\u00ADta"
-            :muokattava? (constantly false)
-            :nimi :tr-kaista
-            :tyyppi :string
-            :tasaa :oikea
-            :fmt (fn [arvo] (:nimi (first (filter #(= (:koodi %) arvo) pot/+kaistat+))))
-            :leveys 3}
-           {:otsikko "Aosa" :nimi :tr-alkuosa :leveys 3
-            :tyyppi :positiivinen-numero
-            :tasaa :oikea
-            :muokattava? (constantly false)}
-           {:otsikko "Aet" :nimi :tr-alkuetaisyys :leveys 3
-            :tyyppi :positiivinen-numero
-            :tasaa :oikea
-            :muokattava? (constantly false)}
-           {:otsikko "Losa" :nimi :tr-loppuosa :leveys 3
-            :tyyppi :positiivinen-numero
-            :tasaa :oikea
-            :muokattava? (constantly false)}
-           {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 3
-            :tyyppi :positiivinen-numero
-            :tasaa :oikea
-            :muokattava? (constantly false)}
-           {:otsikko "Pit. (m)" :nimi :tr-pituus :leveys 3
-            :tyyppi :positiivinen-numero
-            :tasaa :oikea
-            :muokattava? (constantly false)}
-           {:otsikko "YP-lk"
-            :nimi :yllapitoluokka :tyyppi :numero :leveys 4
-            :muokattava? (constantly false)}]
-          (sort-by tr-domain/tiekohteiden-jarjestys paallystysurakan-kohteet)]]))))
-
 (defn toteutuneet-tiemerkinnat
   [urakka tiemerkinnan-toteumat paallystysurakan-kohteet]
   (komp/luo
@@ -157,6 +99,63 @@
             :fmt pvm/pvm-opt}]
           (sort-by tr-domain/tiekohteiden-jarjestys tiemerkinnan-toteumat)]]))))
 
+(defn paallystysurakan-kohteet
+  [urakka paallystysurakan-kohteet]
+  (komp/luo
+    (komp/lippu tiedot/nakymassa?)
+    (fn [urakka paallystysurakan-kohteet]
+      (let [urakka-id (:id urakka)]
+        [:div
+         [grid/grid
+          {:otsikko "Päällystysurakassa tehdyt päällystykset"
+           :tyhja (if (nil? paallystysurakan-kohteet)
+                    [ajax-loader "Haetaan töitä..."]
+                    "Kohteita ei löytynyt")}
+          [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
+            :pituus-max 128 :muokattava? (constantly false)}
+           {:otsikko "Koh\u00ADteen nimi" :leveys 7 :nimi :nimi :tyyppi :string :pituus-max 128
+            :muokattava? (constantly false)}
+           {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
+            :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
+            :muokattava? (constantly false)}
+           {:otsikko "Ajo\u00ADrata"
+            :nimi :tr-ajorata
+            :muokattava? (constantly false)
+            :tyyppi :string
+            :tasaa :oikea
+            :fmt (fn [arvo] (:koodi (first (filter #(= (:koodi %) arvo) pot/+ajoradat+))))
+            :leveys 3}
+           {:otsikko "Kais\u00ADta"
+            :muokattava? (constantly false)
+            :nimi :tr-kaista
+            :tyyppi :string
+            :tasaa :oikea
+            :fmt (fn [arvo] (:nimi (first (filter #(= (:koodi %) arvo) pot/+kaistat+))))
+            :leveys 3}
+           {:otsikko "Aosa" :nimi :tr-alkuosa :leveys 3
+            :tyyppi :positiivinen-numero
+            :tasaa :oikea
+            :muokattava? (constantly false)}
+           {:otsikko "Aet" :nimi :tr-alkuetaisyys :leveys 3
+            :tyyppi :positiivinen-numero
+            :tasaa :oikea
+            :muokattava? (constantly false)}
+           {:otsikko "Losa" :nimi :tr-loppuosa :leveys 3
+            :tyyppi :positiivinen-numero
+            :tasaa :oikea
+            :muokattava? (constantly false)}
+           {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 3
+            :tyyppi :positiivinen-numero
+            :tasaa :oikea
+            :muokattava? (constantly false)}
+           {:otsikko "Pit. (m)" :nimi :tr-pituus :leveys 3
+            :tyyppi :positiivinen-numero
+            :tasaa :oikea
+            :muokattava? (constantly false)}
+           {:otsikko "YP-lk"
+            :nimi :yllapitoluokka :tyyppi :numero :leveys 4
+            :muokattava? (constantly false)}]
+          (sort-by tr-domain/tiekohteiden-jarjestys paallystysurakan-kohteet)]]))))
 
 (defn yksikkohintaiset-tyot [urakka]
   [:div

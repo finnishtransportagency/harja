@@ -22,7 +22,7 @@
   (str tr-numero " / " tr-alkuosa " / " tr-alkuetaisyys " / "
        tr-loppuosa " / " tr-loppuetaisyys))
 
-(defn- lisaa-yllapitokohteelle-tieto-hinnan-muuttumisesta [kohde]
+(defn- lisaa-toteumaan-tieto-hinnan-muuttumisesta [kohde]
   (let [hinnan-kohde-eri-kuin-nykyinen-osoite?
         (and (:hinta-kohteelle kohde)
              (not= (maarittele-hinnan-kohde kohde)
@@ -102,12 +102,12 @@
   (log/debug "Haetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [kohteet (into []
-                        (map #(konv/string->keyword % :hintatyyppi))
+                        (comp
+                          (map #(konv/string->keyword % :hintatyyppi)))
                         (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot
                           db
                           {:urakka urakka-id}))
-          kohteet (mapv (partial yy/lisaa-yllapitokohteelle-kohteen-pituus db) kohteet)
-          kohteet (mapv lisaa-yllapitokohteelle-tieto-hinnan-muuttumisesta kohteet)]
+          kohteet (mapv lisaa-toteumaan-tieto-hinnan-muuttumisesta kohteet)]
       kohteet)))
 
 (defn tallenna-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id kohteet]}]

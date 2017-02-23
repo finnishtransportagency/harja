@@ -114,7 +114,7 @@
                                 yllapitokohteet)]
       yllapitokohteet)))
 
-(defn lisaa-yllapitokohteelle-kohteen-pituus [db {:keys [tr-numero tr-alkuosa tr-loppuosa] :as kohde}]
+(defn lisaa-yllapitokohteelle-pituus [db {:keys [tr-numero tr-alkuosa tr-loppuosa] :as kohde}]
   (let [osien-pituudet (tr-haku/hae-osien-pituudet db {:tie tr-numero
                                                        :aosa tr-alkuosa
                                                        :losa tr-loppuosa})
