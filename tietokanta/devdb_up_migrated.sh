@@ -3,7 +3,7 @@
 set -e
 
 echo "Käynnistetään valmiiksi migratoitu harja-db Docker image"
-docker run -p 5432:5432 --name harjadb -d jarzka/harja-db
+docker run -p 5432:5432 --name harjadb -d jarzka/harjadb
 
 echo "Odotetaan, että PostgreSQL on käynnissä ja vastaa yhteyksiin portissa 5432"
 while ! nc -z localhost 5432; do

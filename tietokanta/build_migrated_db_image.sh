@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build -t harja-db .
+docker build -t harjadb .
