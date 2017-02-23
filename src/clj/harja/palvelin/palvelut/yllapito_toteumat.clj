@@ -4,6 +4,7 @@
             [harja.domain.skeema :refer [Toteuma validoi]]
             [harja.kyselyt.yllapito-toteumat :as q]
             [taoensso.timbre :as log]
+            [harja.id :as id]
             [harja.palvelin.komponentit.http-palvelin
              :refer
              [julkaise-palvelu poista-palvelut]]
@@ -96,7 +97,7 @@
       vastaus)))
 
 (defn hae-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id]}]
-  (assert urakka-id "anna urakka-id")
+  (assert urakka-id "anna urakka-id") ;; TODO KÄYTÄ SPEC
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
   (log/debug "Haetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
@@ -110,28 +111,29 @@
       kohteet)))
 
 (defn tallenna-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id kohteet]}]
-  (assert urakka-id "anna urakka-id")
+  (assert urakka-id "anna urakka-id") ;; TODO KÄYTÄ SPEC
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
-  (log/debug "Tallennetaan yksikköhintaiset työt " kohteet " tiemerkintäurakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
+    (doseq [{:keys [id hinta hintatyyppi muutospvm yllapitokohde-id] :as kohde} kohteet]
+      (yy/vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan db urakka-id yllapitokohde-id))
+
+    (log/debug "Tallennetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
+
     (doseq [{:keys [hinta hintatyyppi muutospvm id] :as kohde} kohteet]
-      (let [hinta-osoitteelle (maarittele-hinnan-kohde kohde)
-            tiedot (first (q/hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
-                            db
-                            {:yllapitokohde id}))]
-        (if tiedot
+      (let [hinta-osoitteelle (maarittele-hinnan-kohde kohde)]
+        (if (id/id-olemassa? id)
           (q/paivita-tiemerkintaurakan-yksikkohintainen-tyo<! db {:hinta hinta
                                                                   :hintatyyppi (when hintatyyppi (name hintatyyppi))
                                                                   :muutospvm muutospvm
                                                                   :hinta_kohteelle (when hinta
                                                                                      hinta-osoitteelle)
-                                                                  :yllapitokohde id})
+                                                                  :id id})
           (q/luo-tiemerkintaurakan-yksikkohintainen-tyo<! db {:hinta hinta
                                                               :hintatyyppi (when hintatyyppi (name hintatyyppi))
                                                               :muutospvm muutospvm
                                                               :hinta_kohteelle (when hinta
                                                                                  hinta-osoitteelle)
-                                                              :yllapitokohde id}))))
+                                                              :id id}))))
     (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id})))
 
 (defrecord YllapitoToteumat []
