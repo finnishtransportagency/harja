@@ -82,6 +82,9 @@
 (defmethod muodosta-solu :arvo-ja-osuus [[_ {:keys [arvo osuus]}] solun-tyyli]
   [arvo solun-tyyli])
 
+(defmethod muodosta-solu :arvo-ja-yksikko [[_ {:keys [arvo yksikko]}] solun-tyyli]
+  [arvo solun-tyyli])
+
 (defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli]}] solun-tyyli]
   [arvo (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))])
 
@@ -154,22 +157,24 @@
                                     (and viimeinen-rivi-yhteenveto?
                                          (= rivi viimeinen-rivi)))
                        korosta? (:korosta? optiot)
+                       arvo-datassa (nth data sarake-nro)
+                       formatoi-solu? (raportti-domain/formatoi-solu? arvo-datassa)
                        formaatti-fn (fn [tyyli]
                                       ;; Jos halutaan tukea erityyppisiä sarakkeita,
                                       ;; pitää tänne lisätä formatter.
-                                      (case (:fmt sarake)
-                                        ;; .setDataFormat hakee indeksillä tyylejä.
-                                        ;; Tyylejä voi määritellä itse (https://poi.apache.org/apidocs/org/apache/poi/xssf/usermodel/XSSFDataFormat.html)
-                                        ;; tai voimme käyttää valmiita, sisäänrakennettuja tyylejä.
-                                        ;; http://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/BuiltinFormats.html
-                                        :raha (.setDataFormat tyyli 8)
-                                        :prosentti (.setDataFormat tyyli 10)
-                                        :numero (.setDataFormat tyyli 2)
-                                        :pvm (.setDataFormat tyyli 14)
-                                        :pvm-aika (.setDataFormat tyyli 22)
-                                        nil))
+                                      (when formatoi-solu?
+                                        (case (:fmt sarake)
+                                         ;; .setDataFormat hakee indeksillä tyylejä.
+                                         ;; Tyylejä voi määritellä itse (https://poi.apache.org/apidocs/org/apache/poi/xssf/usermodel/XSSFDataFormat.html)
+                                         ;; tai voimme käyttää valmiita, sisäänrakennettuja tyylejä.
+                                         ;; http://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/BuiltinFormats.html
+                                         :raha (.setDataFormat tyyli 8)
+                                         :prosentti (.setDataFormat tyyli 10)
+                                         :numero (.setDataFormat tyyli 2)
+                                         :pvm (.setDataFormat tyyli 14)
+                                         :pvm-aika (.setDataFormat tyyli 22)
+                                         nil)))
                        oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta?)
-                       arvo-datassa (nth data sarake-nro)
                        [naytettava-arvo solun-tyyli] (if (raportti-domain/raporttielementti? arvo-datassa)
                                          (muodosta-solu arvo-datassa oletustyyli)
                                          [arvo-datassa oletustyyli])

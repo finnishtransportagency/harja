@@ -1,5 +1,5 @@
 (ns harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat
-  "Turvallisuusraportti koostuu kolmesta elementistä. Elementtien sisältö riippuu kotekstista.
+  "Turvallisuusraportti koostuu kolmesta elementistä. Elementtien sisältö riippuu kontekstista.
 
   URAKAN KONTEKSTI:
 
