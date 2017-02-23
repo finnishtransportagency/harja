@@ -39,7 +39,6 @@ SELECT id, urakkatyyppi, indeksinimi, raakaaine, koodi
 
 
 --name: hae-paallystysurakan-indeksitiedot
--- FIXME tämä kysely täysin uusiksi
 SELECT pui.id,
        urakka,
        pui.lahtotason_vuosi as "lahtotason-vuosi",
