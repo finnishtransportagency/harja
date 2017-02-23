@@ -408,7 +408,6 @@
                                      {:display "none"})}
     [:div#karttakontrollit ;; OpenLayersin ikonit asetetaan tähän elementtiin erikseen
      {:on-click #(reset! s/kayttaja-muutti-zoomausta-aikaleima (l/local-now))}]
-    [taustakartan-valinta @s/taustakartta #(reset! s/taustakartta %)]
     [:div
      {:class (str "kontrollinappi kiinteistorajat "
                   (when @s/nayta-kiinteistorajat? "kontrollinappi-aktiivinen"))
@@ -418,7 +417,8 @@
      {:class (str "kontrollinappi keskityspainike "
                   (when @s/keskita-ajoneuvoon? "kontrollinappi-aktiivinen"))
       :on-click #(do (swap! s/keskita-ajoneuvoon? not))}
-     [kuvat/svg-sprite "tahtain-24"]]]])
+     [kuvat/svg-sprite "tahtain-24"]]
+    [taustakartan-valinta @s/taustakartta #(reset! s/taustakartta %)]]])
 
 ;; devcards
 

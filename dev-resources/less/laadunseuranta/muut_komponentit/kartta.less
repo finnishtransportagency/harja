@@ -47,9 +47,13 @@
     font-size: 1.5em;
     background-color: @harmaa2;
   }
+  .taustakartan-valinta {
+    display: inline-block;
+    border-top: solid 1px white;
+  }
 }
 
-.taustakartan-valinta { display: inline-block; }
+
 
 @media (max-width: @leveys-tabletti) and (orientation: landscape) {
   .kartan-kontrollit {
@@ -72,6 +76,11 @@
 
     .ol-zoom > button {
       display: inline-block;
+    }
+    .taustakartan-valinta {
+      display: inline-block;
+      border-top: none;
+      border-left: solid 1px white;
     }
   }
 }
