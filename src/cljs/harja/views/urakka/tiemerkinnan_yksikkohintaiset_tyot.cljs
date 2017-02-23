@@ -114,14 +114,23 @@
            {:otsikko "Selite" :leveys 7 :nimi :selite :tyyppi :string :pituus-max 512}
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
             :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
-            :muokattava? #(boolean (not (:yllapitokohde-id %)))}
+            :muokattava? #(boolean (not (:yllapitokohde-id %)))
+            :hae #(if-let [yllapitokohde-id (:yllapitokohde-id %)]
+                    (:tr-numero (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet yllapitokohde-id ))
+                    (:tr-numero %))}
            {:otsikko "Pit. (m)" :nimi :pituus :leveys 3
             :tyyppi :positiivinen-numero
             :tasaa :oikea
+            :hae #(if-let [yllapitokohde-id (:yllapitokohde-id %)]
+                    (:pituus (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet yllapitokohde-id ))
+                    (:pituus %))
             :muokattava? #(boolean (not (:yllapitokohde-id %)))}
-           {:otsikko "YP-lk"
+           {:otsikko "YP-lk" ;; FIXME Formatoi oikein ja lisää arvolle validointi?
             :nimi :yllapitoluokka :tyyppi :numero :leveys 3
-            :muokattava? #(boolean (not (:yllapitokohde-id %)))}
+            :muokattava? #(boolean (not (:yllapitokohde-id %)))
+            :hae #(if-let [yllapitokohde-id (:yllapitokohde-id %)]
+                    (:yllapitoluokka (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet yllapitokohde-id ))
+                    (:yllapitoluokka %))}
            {:otsikko "Hinta"
             :nimi :hinta :tyyppi :positiivinen-numero :fmt fmt/euro-opt :leveys 3
             :tasaa :oikea
