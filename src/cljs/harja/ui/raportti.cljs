@@ -103,7 +103,10 @@
                              (when raporttielementteja?
                                {:komponentti (fn [rivi]
                                                (let [elementti (get rivi i)]
-                                                 (muodosta-html (raportti-domain/raporttielementti-formatterilla elementti format-fn))))}))))
+                                                 (muodosta-html
+                                                   (if (raportti-domain/formatoi-solu? elementti)
+                                                     (raportti-domain/raporttielementti-formatterilla elementti format-fn)
+                                                     elementti))))}))))
                         sarakkeet))
      (if (empty? data)
        [(grid/otsikko (or tyhja "Ei tietoja"))]

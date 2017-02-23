@@ -148,8 +148,10 @@
                                          (cond
                                            (raportti-domain/raporttielementti? arvo-datassa)
                                            (muodosta-pdf
-                                             (raportti-domain/raporttielementti-formatterilla
-                                               arvo-datassa fmt))
+                                             (if (raportti-domain/formatoi-solu? arvo-datassa)
+                                               (raportti-domain/raporttielementti-formatterilla
+                                                arvo-datassa fmt)
+                                               arvo-datassa))
 
                                            :else (fmt arvo-datassa))
                                          "")]]
