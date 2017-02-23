@@ -10,7 +10,7 @@
 (defonce nakymassa? (atom false))
 
 (defn hae-yksikkohintaiset-tyot [urakka-id]
-  (k/post! :hae-tiemerkinnan-yksikkohintaiset-tyot {:urakka-id  urakka-id}))
+  (k/post! :hae-tiemerkinnan-yksikkohintaiset-tyot {:urakka-id urakka-id}))
 
 (defn hae-paallystysurakan-kohteet [urakka-id]
   (k/post! :tiemerkintaurakalle-osoitetut-yllapitokohteet {:urakka-id urakka-id}))
@@ -28,6 +28,10 @@
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id nakymassa?)
                 (hae-paallystysurakan-kohteet valittu-urakka-id))))
+
+(defn paallystysurakan-kohde-idlla [kohteet id]
+  (when id
+    (first (filter (fn [kohde] (= (:id kohde) id)) kohteet))))
 
 (defn tallenna-tiemerkinnan-toteumat [urakka-id kohteet]
   (k/post! :tallenna-tiemerkinnan-yksikkohintaiset-tyot

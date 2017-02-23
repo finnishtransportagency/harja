@@ -23,15 +23,15 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 (defn paallystysurakan-kohteet
-  [urakka]
+  [urakka paallystysurakan-kohteet]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
-    (fn [urakka]
+    (fn [urakka paallystysurakan-kohteet]
       (let [urakka-id (:id urakka)]
         [:div
          [grid/grid
           {:otsikko "Päällystysurakassa tehdyt päällystykset"
-           :tyhja (if (nil? @tiedot/paallystysurakan-kohteet)
+           :tyhja (if (nil? paallystysurakan-kohteet)
                     [ajax-loader "Haetaan töitä..."]
                     "Kohteita ei löytynyt")}
           [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
@@ -78,19 +78,19 @@
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :tyyppi :numero :leveys 4
             :muokattava? (constantly false)}]
-          (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/paallystysurakan-kohteet)]]))))
+          (sort-by tr-domain/tiekohteiden-jarjestys paallystysurakan-kohteet)]]))))
 
 (defn toteutuneet-tiemerkinnat
-  [urakka]
+  [urakka tiemerkinnan-toteumat paallystysurakan-kohteet]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
-    (fn [urakka]
+    (fn [urakka tiemerkinnan-toteumat paallystysurakan-kohteet]
       (let [urakka-id (:id urakka)
             saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteutus-yksikkohintaisettyot urakka-id)]
         [:div
          [grid/grid
           {:otsikko "Toteutuneet tiemerkinnät"
-           :tyhja (if (nil? @tiedot/tiemerkinnan-toteumat)
+           :tyhja (if (nil? tiemerkinnan-toteumat)
                     [ajax-loader "Haetaan töitä..."]
                     "Toteumia ei löytynyt")
            :voi-poistaa? (constantly false)
@@ -103,7 +103,14 @@
                                                :warning viesti/viestin-nayttoaika-lyhyt)
                                 (reset! tiedot/tiemerkinnan-toteumat vastaus))))
                        :ei-mahdollinen)}
-          [{:otsikko "Kohde" :leveys 7 :nimi :nimi :tyyppi :string}
+          [{:otsikko "Kohde" :leveys 7 :nimi :nimi :tyyppi :valinta
+            :valinnat (conj (map :id paallystysurakan-kohteet) nil)
+            :valinta-nayta #(if % (tr-domain/yllapitokohde-tekstina
+                                    (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet %))
+                                  "Ei liity kohteeseen")
+            :fmt #(if-let [kohde (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet %)]
+                     (tr-domain/yllapitokohde-tekstina kohde)
+                     "Ei liity kohteeseen")}
            {:otsikko "Selite" :leveys 7 :nimi :selite :tyyppi :string :pituus-max 512}
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
             :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
@@ -118,7 +125,6 @@
            {:otsikko "Hinta"
             :nimi :hinta :tyyppi :positiivinen-numero :fmt fmt/euro-opt :leveys 3
             :tasaa :oikea
-            :muokattava? (constantly saa-muokata?)
             :huomio (fn [rivi]
                       (when (:hinnan-kohde-muuttunut? rivi)
                         {:tyyppi :varoitus
@@ -136,16 +142,14 @@
             :valinta-nayta #(case %
                               :suunnitelma "Suunnitelma"
                               :toteuma "Toteuma"
-                              "- valitse -")
-            :muokattava? (constantly saa-muokata?)}
+                              "- valitse -")}
            {:otsikko "Muutospvm"
             :nimi :muutospvm :tyyppi :pvm :leveys 3
-            :fmt pvm/pvm-opt
-            :muokattava? (constantly saa-muokata?)}]
-          (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/tiemerkinnan-toteumat)]]))))
+            :fmt pvm/pvm-opt}]
+          (sort-by tr-domain/tiekohteiden-jarjestys tiemerkinnan-toteumat)]]))))
 
 
 (defn yksikkohintaiset-tyot [urakka]
   [:div
-   [toteutuneet-tiemerkinnat urakka]
-   [paallystysurakan-kohteet urakka]])
+   [toteutuneet-tiemerkinnat urakka @tiedot/tiemerkinnan-toteumat @tiedot/paallystysurakan-kohteet]
+   [paallystysurakan-kohteet urakka @tiedot/paallystysurakan-kohteet]])
