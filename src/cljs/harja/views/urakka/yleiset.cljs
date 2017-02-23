@@ -548,7 +548,8 @@
                (go (reset! vastuuhenkilot (<! (yht/hae-urakan-vastuuhenkilot (:id urakan-tiedot)))))
                (when (= :paallystys (:tyyppi ur))
                  (reset! urakka/paallystysurakan-indeksitiedot nil)
-                 (go (reset! urakka/paallystysurakan-indeksitiedot (<! (indeksit/hae-paallystysurakan-indeksitiedot (:id urakan-tiedot)))))))]
+                 (go (reset! urakka/paallystysurakan-indeksitiedot
+                             (<! (indeksit/hae-paallystysurakan-indeksitiedot (:id urakan-tiedot)))))))]
     (hae! ur)
     (komp/luo
       (komp/kun-muuttuu hae!)
