@@ -59,12 +59,12 @@ VALUES (:urakka, :nimi, NOW(), :kayttaja);
 -- name: hae-tiemerkintaurakan-yksikkohintaiset-tyot
 SELECT
   id,
-  yllapitokohde,
+  yllapitokohde                  AS "yllapitokohde-id",
   hinta,
   hintatyyppi,
   hinta_kohteelle                AS "hinta-kohteelle",
   muutospvm,
-  yllapitoluokka
+  yllapitoluokka,
   selite,
   tr_numero                      AS "tr-numero",
   pituus

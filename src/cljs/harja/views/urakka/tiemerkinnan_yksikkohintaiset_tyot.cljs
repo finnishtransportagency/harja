@@ -103,18 +103,18 @@
                                                :warning viesti/viestin-nayttoaika-lyhyt)
                                 (reset! tiedot/tiemerkinnan-toteumat vastaus))))
                        :ei-mahdollinen)}
-          [{:otsikko "Kohde" :leveys 7 :nimi :nimi :tyyppi :string :pituus-max 128
-            :muokattava? (constantly false)}
+          [{:otsikko "Kohde" :leveys 7 :nimi :nimi :tyyppi :string}
+           {:otsikko "Selite" :leveys 7 :nimi :selite :tyyppi :string :pituus-max 512}
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
             :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
-            :muokattava? (constantly false)}
-           {:otsikko "Pit. (m)" :nimi :tr-pituus :leveys 3
+            :muokattava? #(boolean (:yllapitokohde-id %))}
+           {:otsikko "Pit. (m)" :nimi :pituus :leveys 3
             :tyyppi :positiivinen-numero
             :tasaa :oikea
-            :muokattava? (constantly false)}
+            :muokattava? #(boolean (:yllapitokohde-id %))}
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :tyyppi :numero :leveys 3
-            :muokattava? (constantly false)}
+            :muokattava? #(boolean (:yllapitokohde-id %))}
            {:otsikko "Hinta"
             :nimi :hinta :tyyppi :positiivinen-numero :fmt fmt/euro-opt :leveys 3
             :tasaa :oikea
