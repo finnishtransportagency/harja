@@ -130,15 +130,13 @@
 
         (when-not (and (neg? id) poistettu)  ;gridillä poistettu samalla kun luotu, ei käsitellä
           (q/tallenna-paallystysurakan-indeksitiedot!
-           c (let [p (-> i
-                         ;; korvaa indeksi mäp sen :id arvolla
-                         (update :indeksi :id)
-                         ;; lisää käyttäjän tieto
-                         (assoc :kayttaja (:id user))
-                         ;; poistettu tieto
-                         (assoc :poistettu (boolean poistettu)))]
-               (println "PARAMS: " p)
-               p))))
+           c (-> i
+                 ;; korvaa indeksi mäp sen :id arvolla
+                 (update :indeksi :id)
+                 ;; lisää käyttäjän tieto
+                 (assoc :kayttaja (:id user))
+                 ;; poistettu tieto
+                 (assoc :poistettu (boolean poistettu))))))
       (hae-paallystysurakan-indeksitiedot c user {::urakka/id urakka-id}))))
 
 
