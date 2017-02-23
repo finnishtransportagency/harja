@@ -37,6 +37,9 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
+(defn muistutus-solu [arvo]
+  [:arvo-ja-yksikko {:arvo arvo :yksikko " kpl" :fmt? false}])
+
 (deftest raportin-suoritus-urakalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
@@ -58,26 +61,26 @@
                                           {:otsikko "Muhoksen päällystysurakka"})
       (apurit/tarkista-taulukko-rivit taulukko
                                       {:otsikko "Ylläpitoluokka 1"}
-                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "0 kpl"]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0)]
                                       [yhteiset/+sakkorivin-nimi-yllapito+ 2000M]
 
                                       {:otsikko "Ylläpitoluokka 2"}
-                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "1 kpl"]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 1)]
                                       [yhteiset/+sakkorivin-nimi-yllapito+ 0]
 
 
                                       {:otsikko "Ylläpitoluokka 3"}
-                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "1 kpl"]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 1)]
                                       [yhteiset/+sakkorivin-nimi-yllapito+ -3000M]
 
 
                                       {:otsikko "Ei ylläpitoluokkaa"}
-                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "0 kpl"]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0)]
                                       [yhteiset/+sakkorivin-nimi-yllapito+ -1500M]
 
 
                                       {:otsikko "Yhteensä"}
-                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "2 kpl"]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 2)]
                                       [yhteiset/+sakkorivin-nimi-yllapito+ -2500M]))))
 
 
@@ -106,27 +109,27 @@
                                           {:otsikko "Yh\u00ADteen\u00ADsä"})
       (apurit/tarkista-taulukko-rivit taulukko
                                       {:otsikko "Ylläpitoluokka 1"}
-                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl"]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0)]
                                       [yhteiset/+sakkorivin-nimi-yllapito+ 2000M 0 0 0 2000M]
 
 
                                       {:otsikko "Ylläpitoluokka 2"}
-                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "1 kpl" "0 kpl" "0 kpl" "0 kpl" "1 kpl"]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 1) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 1)]
                                       [yhteiset/+sakkorivin-nimi-yllapito+ 0 0 0 0 0]
 
 
                                       {:otsikko "Ylläpitoluokka 3"}
-                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "1 kpl" "0 kpl" "0 kpl" "0 kpl" "1 kpl"]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 1) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 1)]
                                       [yhteiset/+sakkorivin-nimi-yllapito+ -3000M 0 0 0 -3000M]
 
 
                                       {:otsikko "Ei ylläpitoluokkaa"}
-                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl"]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0)]
                                       [yhteiset/+sakkorivin-nimi-yllapito+ -1500M 0 0 0 -1500M]
 
 
                                       {:otsikko "Yhteensä"}
-                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "2 kpl" "0 kpl" "0 kpl" "0 kpl" "2 kpl"]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 2) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 2)]
                                       [yhteiset/+sakkorivin-nimi-yllapito+ -2500M 0 0 0 -2500M]))))
 
 
@@ -161,21 +164,21 @@
                                           {:otsikko "Yh\u00ADteen\u00ADsä"})
       (apurit/tarkista-taulukko-rivit taulukko
                                       {:otsikko "Ylläpitoluokka 1"}
-                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl"]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0)]
                                       [yhteiset/+sakkorivin-nimi-yllapito+ 0 0 0 0 0 0 0 2000M  0 2000M]
 
                                       {:otsikko "Ylläpitoluokka 2"}
-                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "1 kpl" "0 kpl" "1 kpl"]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 1) (muistutus-solu 0) (muistutus-solu 1)]
                                       [yhteiset/+sakkorivin-nimi-yllapito+ 0 0 0 0 0 0 0 0  0 0]
 
                                       {:otsikko "Ylläpitoluokka 3"}
-                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "1 kpl" "0 kpl" "1 kpl"]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 1) (muistutus-solu 0) (muistutus-solu 1)]
                                       [yhteiset/+sakkorivin-nimi-yllapito+ 0 0 0 0 0 0 0 -3000M  0 -3000M]
 
                                       {:otsikko "Ei ylläpitoluokkaa"}
-                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl"]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0)]
                                       [yhteiset/+sakkorivin-nimi-yllapito+ 0 -3000M 0 0 0 0 0 -1500M  0 -4500M]
 
                                       {:otsikko "Yhteensä"}
-                                      [yhteiset/+muistutusrivin-nimi-yllapito+ "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "0 kpl" "2 kpl" "0 kpl" "2 kpl"]
+                                      [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 2) (muistutus-solu 0) (muistutus-solu 2)]
                                       [yhteiset/+sakkorivin-nimi-yllapito+ 0 -3000M 0 0 0 0 0 -2500M  0 -5500M]))))
