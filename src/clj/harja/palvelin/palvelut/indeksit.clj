@@ -8,7 +8,9 @@
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.domain.indeksit :as d]
+            [harja.domain.urakka :as urakka]))
 
 (defn hae-urakan-kuukauden-indeksiarvo
   "Palvelu, joka palauttaa tietyn kuukauden indeksin arvon ja nimen urakalle"
@@ -91,7 +93,7 @@
 
 (defn hae-paallystysurakan-indeksitiedot
   "Palvelu, joka palauttaa annetun päällystysurakan indeksitiedot"
-  [db user {:keys [urakka-id]}]
+  [db user {urakka-id ::urakka/id}]
   (log/debug "hae-paallystysurakan-indeksit" urakka-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
   (let [indeksit (into []
@@ -130,7 +132,7 @@
                       :urakkavuosi (:urakkavuosi i)
                       :poistettu (:poistettu i)}]
           (q/tallenna-paallystysurakan-indeksitiedot! c params))))
-    (hae-paallystysurakan-indeksitiedot c user {:urakka-id urakka-id})))
+    (hae-paallystysurakan-indeksitiedot c user {::urakka/id urakka-id})))
 
 
 (defrecord Indeksit []
@@ -148,7 +150,9 @@
                           (hae-urakkatyypin-indeksit (:db this) user)))
       (julkaise-palvelu :paallystysurakan-indeksitiedot
                         (fn [user tiedot]
-                          (hae-paallystysurakan-indeksitiedot (:db this) user tiedot)))
+                          (hae-paallystysurakan-indeksitiedot (:db this) user tiedot))
+                        {:kysely-spec ::urakka/urakka-kysely
+                         :vastaus-spec ::d/paallystysurakan-indeksit})
       (julkaise-palvelu :tallenna-paallystysurakan-indeksitiedot
                         (fn [user tiedot]
                           (tallenna-paallystysurakan-indeksitiedot (:db this) user tiedot)))
