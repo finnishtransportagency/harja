@@ -29,7 +29,7 @@ SELECT
   mk.nimi AS materiaali_nimi,
   mk.yksikko AS materiaali_yksikko,
   date_trunc('month', umkh.pvm) AS kk,
-  umkh.maara AS maara
+  SUM(umkh.maara) AS maara
 FROM urakka u
   JOIN urakan_materiaalin_kaytto_hoitoluokittain umkh ON u.id = umkh.urakka
   JOIN materiaalikoodi mk ON mk.id = umkh.materiaalikoodi
@@ -37,6 +37,7 @@ WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
       AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
       AND (umkh.pvm::DATE BETWEEN :alkupvm AND :loppupvm)
       AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
+GROUP BY u.id, u.nimi, mk.id, mk.nimi, date_trunc('month', umkh.pvm), umkh.talvihoitoluokka
 UNION
 -- Liitä lopuksi mukaan suunnittelutiedot. Kuukausi on null, josta myöhemmin
 -- rivi tunnistetaan suunnittelutiedoksi.
