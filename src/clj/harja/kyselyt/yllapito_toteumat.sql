@@ -71,8 +71,12 @@ SELECT
 FROM tiemerkinnan_yksikkohintainen_toteuma tyt
 WHERE
   urakka = :urakka
-  AND (SELECT poistettu FROM yllapitokohde WHERE id = tyt.yllapitokohde)
-  IS NOT TRUE; -- FIXME Entä jos poistetulle kohteelle on liitetty toteuma?
+  AND ((yllapitokohde IS NULL)
+      OR
+      (yllapitokohde IS NOT NULL
+      AND
+      -- FIXME Entä jos poistetulle kohteelle on liitetty toteuma?
+      (SELECT poistettu FROM yllapitokohde WHERE id = tyt.yllapitokohde) IS NOT TRUE));
 
 -- name: paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
 UPDATE tiemerkinnan_yksikkohintainen_toteuma SET
