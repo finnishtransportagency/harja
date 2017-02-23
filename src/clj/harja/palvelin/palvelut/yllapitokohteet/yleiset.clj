@@ -119,7 +119,7 @@
                                                        :aosa tr-alkuosa
                                                        :losa tr-loppuosa})
         pituus (tr/laske-tien-pituus osien-pituudet kohde)]
-    (assoc kohde :tr-pituus pituus)))
+    (assoc kohde :pituus pituus)))
 
 (defn paivita-yllapitourakan-geometria [db urakka-id]
   (log/info "Päivitetään urakan " urakka-id " geometriat.")

@@ -64,7 +64,7 @@
             :tyyppi :positiivinen-numero
             :tasaa :oikea
             :hae #(if-let [yllapitokohde-id (:yllapitokohde-id %)]
-                    (:pituus (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet yllapitokohde-id ))
+                    (:pituus (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet yllapitokohde-id))
                     (:pituus %))
             :muokattava? #(boolean (not (:yllapitokohde-id %)))}
            {:otsikko "YP-lk" ;; FIXME Formatoi oikein ja lisää arvolle validointi?
@@ -112,6 +112,8 @@
                     [ajax-loader "Haetaan töitä..."]
                     "Kohteita ei löytynyt")}
           [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
+            :pituus-max 128 :muokattava? (constantly false)}
+           {:otsikko "YHA-id" :leveys 3 :nimi :y-haid :tyyppi :string
             :pituus-max 128 :muokattava? (constantly false)}
            {:otsikko "Koh\u00ADteen nimi" :leveys 7 :nimi :nimi :tyyppi :string :pituus-max 128
             :muokattava? (constantly false)}

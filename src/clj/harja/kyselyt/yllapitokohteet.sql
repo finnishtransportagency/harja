@@ -139,7 +139,7 @@ SELECT
   ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
   ypk.tr_ajorata                        AS "tr-ajorata",
   ypk.tr_kaista                         AS "tr-kaista",
-  ypk.yhaid,
+  ypk.yhaid                             AS "yha-id",
   ypk.yha_kohdenumero                   AS "yha-kohdenumero"
 FROM yllapitokohde ypk
 WHERE
