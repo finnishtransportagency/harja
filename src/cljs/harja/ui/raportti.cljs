@@ -44,8 +44,7 @@
 (defmethod muodosta-html :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt]}]]
   [:span.arvo-ja-yksikko
    [:span.arvo (if fmt (fmt arvo) arvo)]
-   [:span " "]
-   [:span.osuus (str yksikko)]])
+   [:span.yksikko (str yksikko)]])
 
 (defmethod muodosta-html :varillinen-teksti
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään

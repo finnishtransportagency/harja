@@ -62,7 +62,6 @@
 (defmethod muodosta-pdf :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt]}]]
   [:fo:inline
    [:fo:inline (if fmt (fmt arvo) arvo)]
-   [:fo:inline " "]
    [:fo:inline (str yksikko)]])
 
 (defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt]}]]
