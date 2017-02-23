@@ -16,6 +16,8 @@ ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma
     ADD CONSTRAINT jos_linkattu_yllapitokohteeseen_ei_omia_kohdetietoja CHECK
       (yllapitokohde IS NULL
         OR (yllapitokohde IS NOT NULL AND tr_numero IS NULL AND yllapitoluokka IS NULL AND pituus IS NULL));
+ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma ALTER COLUMN yllapitokohde DROP NOT NULL;
+
 
 -- Jatkossa tiemerkinnän yks. hint. toteumat sidotaan suoraan urakkaan, koska ylläpitokohde-linkitys
 -- on vapaaehtoinen. Migratoidaan vanha data (tehdään urakka-linkki ylläpitokohteen kautta)
