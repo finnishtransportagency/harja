@@ -41,34 +41,33 @@
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
             :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
             :muokattava? (constantly false)}
-           #_{:otsikko "Ajo\u00ADrata"
+           {:otsikko "Ajo\u00ADrata"
             :nimi :tr-ajorata
             :muokattava? (constantly false)
             :tyyppi :string
             :tasaa :oikea
             :fmt (fn [arvo] (:koodi (first (filter #(= (:koodi %) arvo) pot/+ajoradat+))))
             :leveys 3}
-           #_{:otsikko "Kais\u00ADta"
+           {:otsikko "Kais\u00ADta"
             :muokattava? (constantly false)
             :nimi :tr-kaista
             :tyyppi :string
             :tasaa :oikea
             :fmt (fn [arvo] (:nimi (first (filter #(= (:koodi %) arvo) pot/+kaistat+))))
             :leveys 3}
-           ;; Nämä kentät tulee frontille tällä hetkellä, mutta niitä ei haluta nähdä.
-           #_{:otsikko "Aosa" :nimi :tr-alkuosa :leveys 3
+           {:otsikko "Aosa" :nimi :tr-alkuosa :leveys 3
             :tyyppi :positiivinen-numero
             :tasaa :oikea
             :muokattava? (constantly false)}
-           #_{:otsikko "Aet" :nimi :tr-alkuetaisyys :leveys 3
+           {:otsikko "Aet" :nimi :tr-alkuetaisyys :leveys 3
             :tyyppi :positiivinen-numero
             :tasaa :oikea
             :muokattava? (constantly false)}
-           #_{:otsikko "Losa" :nimi :tr-loppuosa :leveys 3
+           {:otsikko "Losa" :nimi :tr-loppuosa :leveys 3
             :tyyppi :positiivinen-numero
             :tasaa :oikea
             :muokattava? (constantly false)}
-           #_{:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 3
+           {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 3
             :tyyppi :positiivinen-numero
             :tasaa :oikea
             :muokattava? (constantly false)}
@@ -109,42 +108,12 @@
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
             :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
             :muokattava? (constantly false)}
-           {:otsikko "Ajo\u00ADrata"
-            :nimi :tr-ajorata
-            :muokattava? (constantly false)
-            :tyyppi :string
-            :tasaa :oikea
-            :fmt (fn [arvo] (:koodi (first (filter #(= (:koodi %) arvo) pot/+ajoradat+))))
-            :leveys 3}
-           {:otsikko "Kais\u00ADta"
-            :muokattava? (constantly false)
-            :nimi :tr-kaista
-            :tyyppi :string
-            :tasaa :oikea
-            :fmt (fn [arvo] (:nimi (first (filter #(= (:koodi %) arvo) pot/+kaistat+))))
-            :leveys 3}
-           {:otsikko "Aosa" :nimi :tr-alkuosa :leveys 3
-            :tyyppi :positiivinen-numero
-            :tasaa :oikea
-            :muokattava? (constantly false)}
-           {:otsikko "Aet" :nimi :tr-alkuetaisyys :leveys 3
-            :tyyppi :positiivinen-numero
-            :tasaa :oikea
-            :muokattava? (constantly false)}
-           {:otsikko "Losa" :nimi :tr-loppuosa :leveys 3
-            :tyyppi :positiivinen-numero
-            :tasaa :oikea
-            :muokattava? (constantly false)}
-           {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 3
-            :tyyppi :positiivinen-numero
-            :tasaa :oikea
-            :muokattava? (constantly false)}
            {:otsikko "Pit. (m)" :nimi :tr-pituus :leveys 3
             :tyyppi :positiivinen-numero
             :tasaa :oikea
             :muokattava? (constantly false)}
            {:otsikko "YP-lk"
-            :nimi :yllapitoluokka :tyyppi :numero :leveys 4
+            :nimi :yllapitoluokka :tyyppi :numero :leveys 3
             :muokattava? (constantly false)}
            {:otsikko "Hinta"
             :nimi :hinta :tyyppi :positiivinen-numero :fmt fmt/euro-opt :leveys 3
@@ -157,7 +126,7 @@
                                       Hin\u00ADta on annet\u00ADtu koh\u00ADteen vanhal\u00ADle osoit\u00ADteelle:\n"
                                       (:hinta-kohteelle rivi))}))}
            {:otsikko "Hintatyyppi"
-            :nimi :hintatyyppi :tyyppi :valinta :leveys 5
+            :nimi :hintatyyppi :tyyppi :valinta :leveys 3
             :valinta-arvo identity
             :fmt #(case %
                     :suunnitelma "Suunnitelma"
@@ -170,7 +139,7 @@
                               "- valitse -")
             :muokattava? (constantly saa-muokata?)}
            {:otsikko "Muutospvm"
-            :nimi :muutospvm :tyyppi :pvm :leveys 4
+            :nimi :muutospvm :tyyppi :pvm :leveys 3
             :fmt pvm/pvm-opt
             :muokattava? (constantly saa-muokata?)}]
           (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/tiemerkinnan-toteumat)]]))))

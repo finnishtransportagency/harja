@@ -68,7 +68,7 @@ SELECT
   selite,
   tr_numero                      AS "tr-numero",
   pituus
-FROM tiemerkinnan_yksikkohintainen_toteuma yt ON yt.yllapitokohde = ypk.id
+FROM tiemerkinnan_yksikkohintainen_toteuma
 WHERE
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
   AND poistettu IS NOT TRUE;
