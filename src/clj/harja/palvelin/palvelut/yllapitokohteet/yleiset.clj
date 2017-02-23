@@ -62,7 +62,8 @@
                                                            {:id yllapitokohde-id})))]
     (when (not= kohteen-suorittava-tiemerkintaurakka urakka-id)
       (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei ole urakan"
-                                      urakka-id " suoritettavana tiemerkintään, vaan urakan " kohteen-urakka))))))
+                                      urakka-id " suoritettavana tiemerkintään, vaan urakan "
+                                      kohteen-suorittava-tiemerkintaurakka))))))
 
 (defn vaadi-yllapitokohde-kuuluu-urakkaan
   [db urakka-id yllapitokohde-id]

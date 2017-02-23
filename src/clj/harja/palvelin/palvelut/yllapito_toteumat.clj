@@ -114,26 +114,28 @@
   (assert urakka-id "anna urakka-id") ;; TODO KÄYTÄ SPEC
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
   (jdbc/with-db-transaction [db db]
-    (doseq [{:keys [id hinta hintatyyppi muutospvm yllapitokohde-id] :as kohde} kohteet]
-      (yy/vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan db urakka-id yllapitokohde-id))
+    (doseq [{:keys [yllapitokohde-id] :as kohde} kohteet]
+      (when yllapitokohde-id (yy/vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan db urakka-id yllapitokohde-id)))
 
     (log/debug "Tallennetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
 
-    (doseq [{:keys [hinta hintatyyppi muutospvm id] :as kohde} kohteet]
-      (let [hinta-osoitteelle (maarittele-hinnan-kohde kohde)]
+    (doseq [{:keys [hinta hintatyyppi muutospvm id yllapitokohde-id
+                    selite tr-numero yllapitoluokka pituus] :as kohde} kohteet]
+      (let [hinta-osoitteelle (maarittele-hinnan-kohde kohde)
+            sql-parametrit {:yllapitokohde yllapitokohde-id
+                            :hinta hinta
+                            :hintatyyppi (when hintatyyppi (name hintatyyppi))
+                            :muutospvm muutospvm
+                            :hinta_kohteelle (when hinta hinta-osoitteelle)
+                            :selite (when-not yllapitokohde-id selite)
+                            :tr_numero (when-not yllapitokohde-id tr-numero)
+                            :yllapitoluokka (when-not yllapitokohde-id yllapitoluokka)
+                            :pituus (when-not yllapitokohde-id pituus)}]
         (if (id/id-olemassa? id)
-          (q/paivita-tiemerkintaurakan-yksikkohintainen-tyo<! db {:hinta hinta
-                                                                  :hintatyyppi (when hintatyyppi (name hintatyyppi))
-                                                                  :muutospvm muutospvm
-                                                                  :hinta_kohteelle (when hinta
-                                                                                     hinta-osoitteelle)
-                                                                  :id id})
-          (q/luo-tiemerkintaurakan-yksikkohintainen-tyo<! db {:hinta hinta
-                                                              :hintatyyppi (when hintatyyppi (name hintatyyppi))
-                                                              :muutospvm muutospvm
-                                                              :hinta_kohteelle (when hinta
-                                                                                 hinta-osoitteelle)
-                                                              :id id}))))
+          (q/paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
+            db (merge sql-parametrit {:id id :urakka urakka-id}))
+          (q/luo-tiemerkintaurakan-yksikkohintainen-tyo<!
+            db (merge sql-parametrit {:urakka urakka-id})))))
     (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id})))
 
 (defrecord YllapitoToteumat []

@@ -80,16 +80,26 @@ WHERE
 
 -- name: paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
 UPDATE tiemerkinnan_yksikkohintainen_toteuma SET
+  yllapitokohde = :yllapitokohde,
   hinta = :hinta,
   hintatyyppi = :hintatyyppi::tiemerkinta_toteuma_hintatyyppi,
   muutospvm = :muutospvm,
-  hinta_kohteelle = :hinta_kohteelle
-WHERE yllapitokohde = :yllapitokohde;
+  hinta_kohteelle = :hinta_kohteelle,
+  selite = :selite,
+  tr_numero = :tr_numero,
+  yllapitoluokka = :yllapitoluokka,
+  pituus = :pituus
+WHERE id = :id
+AND ((yllapitokohde IS NULL
+    OR
+    (SELECT suorittava_tiemerkintaurakka FROM yllapitokohde WHERE id = yllapitokohde) = :urakka));
 
 -- name: luo-tiemerkintaurakan-yksikkohintainen-tyo<!
-INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(yllapitokohde, hinta, hintatyyppi, muutospvm, hinta_kohteelle) VALUES
-  (:yllapitokohde, :hinta, :hintatyyppi::tiemerkinta_toteuma_hintatyyppi, :muutospvm,
-  :hinta_kohteelle);
+INSERT INTO tiemerkinnan_yksikkohintainen_toteuma
+(yllapitokohde, urakka, hinta, hintatyyppi, muutospvm, hinta_kohteelle, selite,
+tr_numero, yllapitoluokka, pituus)
+VALUES (:yllapitokohde, :urakka, :hinta, :hintatyyppi::tiemerkinta_toteuma_hintatyyppi, :muutospvm,
+  :hinta_kohteelle, :selite, :tr_numero, :yllapitoluokka, :pituus);
 
 -- name: hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
 SELECT id FROM tiemerkinnan_yksikkohintainen_toteuma
