@@ -62,7 +62,6 @@
 (defmethod muodosta-pdf :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt]}]]
   [:fo:inline
    [:fo:inline (if fmt (fmt arvo) arvo)]
-   [:fo:inline " "]
    [:fo:inline (str yksikko)]])
 
 (defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt]}]]
@@ -148,8 +147,10 @@
                                          (cond
                                            (raportti-domain/raporttielementti? arvo-datassa)
                                            (muodosta-pdf
-                                             (raportti-domain/raporttielementti-formatterilla
-                                               arvo-datassa fmt))
+                                             (if (raportti-domain/formatoi-solu? arvo-datassa)
+                                               (raportti-domain/raporttielementti-formatterilla
+                                                arvo-datassa fmt)
+                                               arvo-datassa))
 
                                            :else (fmt arvo-datassa))
                                          "")]]
