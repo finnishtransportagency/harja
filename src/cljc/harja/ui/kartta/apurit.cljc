@@ -103,3 +103,20 @@ Suurempi näkyvä alue skaalaa ikonia pienemmäksi."
         :default
         (+ pienin-skaala (* skaala-range
                             (/ (- suurin-extent hypotenuusa) extent-range)))))))
+
+(def ^:private suurin-resoluutio 1024)
+(def ^:private pienin-resoluutio 8)
+(def ^:private resoluutio-range (- suurin-resoluutio pienin-resoluutio))
+
+(defn ikonin-skaala-resoluutiolle
+  "Palauttaa ikonille uuden skaalan näkyvän alueen koon perusteella.
+Suurempi näkyvä alue skaalaa ikonia pienemmäksi."
+  [resoluutio scale]
+  (double
+    (* scale
+       (cond
+         (<= resoluutio pienin-resoluutio) suurin-skaala
+         (>= resoluutio suurin-resoluutio) pienin-skaala
+         :default
+         (+ pienin-skaala (* skaala-range
+                             (/ (- suurin-resoluutio resoluutio) resoluutio-range)))))))
