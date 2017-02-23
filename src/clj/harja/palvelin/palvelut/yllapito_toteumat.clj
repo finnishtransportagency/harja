@@ -18,6 +18,7 @@
    jossa hinta on annettu ylläpitokohteen vanhalle tieosoitteelle."
   [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys
            tr-loppuosa tr-loppuetaisyys] :as kohde}]
+  (assert (and tr-numero tr-alkuosa tr-alkuetaisyys) "Puutteelliset parametrit")
   ;; Tod.näk. et halua muuttaa tätä ainakaan migratoimatta kannassa olevaa dataa.
   (str tr-numero " / " tr-alkuosa " / " tr-alkuetaisyys " / "
        tr-loppuosa " / " tr-loppuetaisyys))
@@ -110,23 +111,26 @@
           kohteet (mapv lisaa-toteumaan-tieto-hinnan-muuttumisesta kohteet)]
       kohteet)))
 
-(defn tallenna-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id kohteet]}]
+(defn tallenna-tiemerkinnan-yksikkohintaiset-tyot [db user
+                                                   {:keys [urakka-id toteumat paallystysurakan-yllapitokohteet]}]
   (assert urakka-id "anna urakka-id") ;; TODO KÄYTÄ SPEC
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
   (jdbc/with-db-transaction [db db]
-    (doseq [{:keys [yllapitokohde-id] :as kohde} kohteet]
+    (doseq [{:keys [yllapitokohde-id] :as kohde} toteumat]
       (when yllapitokohde-id (yy/vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan db urakka-id yllapitokohde-id)))
 
     (log/debug "Tallennetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
 
     (doseq [{:keys [hinta hintatyyppi muutospvm id yllapitokohde-id
-                    selite tr-numero yllapitoluokka pituus] :as kohde} kohteet]
-      (let [hinta-osoitteelle (maarittele-hinnan-kohde kohde)
+                    selite tr-numero yllapitoluokka pituus] :as kohde} toteumat]
+      (let [hinta-osoitteelle (when yllapitokohde-id
+                                (maarittele-hinnan-kohde (first (filter #(= (:id %) yllapitokohde-id)
+                                                                  paallystysurakan-yllapitokohteet))))
             sql-parametrit {:yllapitokohde yllapitokohde-id
                             :hinta hinta
                             :hintatyyppi (when hintatyyppi (name hintatyyppi))
                             :muutospvm muutospvm
-                            :hinta_kohteelle (when hinta hinta-osoitteelle)
+                            :hinta_kohteelle (when (and hinta yllapitokohde-id) hinta-osoitteelle)
                             :selite (when-not yllapitokohde-id selite)
                             :tr_numero (when-not yllapitokohde-id tr-numero)
                             :yllapitoluokka (when-not yllapitokohde-id yllapitoluokka)

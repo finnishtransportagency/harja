@@ -33,8 +33,9 @@
   (when id
     (first (filter (fn [kohde] (= (:id kohde) id)) kohteet))))
 
-(defn tallenna-tiemerkinnan-toteumat [urakka-id kohteet]
+(defn tallenna-tiemerkinnan-toteumat [urakka-id toteumat paallystysurakan-yllapitokohteet]
   (k/post! :tallenna-tiemerkinnan-yksikkohintaiset-tyot
            {:urakka-id urakka-id
-            :kohteet kohteet}))
+            :toteumat toteumat
+            :paallystysurakan-yllapitokohteet paallystysurakan-yllapitokohteet}))
 

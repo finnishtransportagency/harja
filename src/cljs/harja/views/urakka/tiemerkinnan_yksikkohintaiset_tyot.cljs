@@ -39,7 +39,10 @@
            :voi-lisata? false
            :piilota-toiminnot? true
            :tallenna (if saa-muokata?
-                       #(go (let [vastaus (<! (tiedot/tallenna-tiemerkinnan-toteumat urakka-id %))]
+                       #(go (let [vastaus (<! (tiedot/tallenna-tiemerkinnan-toteumat
+                                                urakka-id
+                                                %
+                                                paallystysurakan-kohteet))]
                               (if (k/virhe? vastaus)
                                 (viesti/nayta! "Tallentaminen epäonnistui"
                                                :warning viesti/viestin-nayttoaika-lyhyt)
@@ -51,14 +54,14 @@
                                     (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet %))
                                   "Ei liity kohteeseen")
             :fmt #(if-let [kohde (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet %)]
-                     (tr-domain/yllapitokohde-tekstina kohde)
-                     "Ei liity kohteeseen")}
+                    (tr-domain/yllapitokohde-tekstina kohde)
+                    "Ei liity kohteeseen")}
            {:otsikko "Selite" :leveys 7 :nimi :selite :tyyppi :string :pituus-max 512}
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
             :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
             :muokattava? #(boolean (not (:yllapitokohde-id %)))
             :hae #(if-let [yllapitokohde-id (:yllapitokohde-id %)]
-                    (:tr-numero (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet yllapitokohde-id ))
+                    (:tr-numero (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet yllapitokohde-id))
                     (:tr-numero %))}
            {:otsikko "Pit. (m)" :nimi :pituus :leveys 3
             :tyyppi :positiivinen-numero
@@ -71,7 +74,7 @@
             :nimi :yllapitoluokka :tyyppi :numero :leveys 3
             :muokattava? #(boolean (not (:yllapitokohde-id %)))
             :hae #(if-let [yllapitokohde-id (:yllapitokohde-id %)]
-                    (:yllapitoluokka (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet yllapitokohde-id ))
+                    (:yllapitoluokka (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet yllapitokohde-id))
                     (:yllapitoluokka %))}
            {:otsikko "Hinta"
             :nimi :hinta :tyyppi :positiivinen-numero :fmt fmt/euro-opt :leveys 3
