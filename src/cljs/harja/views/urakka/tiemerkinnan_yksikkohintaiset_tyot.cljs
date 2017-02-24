@@ -162,7 +162,28 @@
             :muokattava? (constantly false)}]
           (sort-by tr-domain/tiekohteiden-jarjestys paallystysurakan-kohteet)]]))))
 
+(defn- yhteenveto [toteutuneet-tiemerkinnat]
+  (let [suunniteltu-yhteensa (->> toteutuneet-tiemerkinnat
+                                  (filter #(= (:hintatyyppi %) :suunnitelma))
+                                  (map :hinta)
+                                  (reduce +))
+        toteumat-yhteensa (->> toteutuneet-tiemerkinnat
+                               (filter #(= (:hintatyyppi %) :toteuma))
+                               (map :hinta)
+                               (reduce +))
+        kaikki-yhteensa (+ suunniteltu-yhteensa toteumat-yhteensa)]
+    [yleiset/taulukkotietonakyma {}
+    "Suunnitellut toteumat yhteensä:"
+    (fmt/euro-opt suunniteltu-yhteensa)
+
+    "Toteumat yhteensä:"
+    (fmt/euro-opt toteumat-yhteensa)
+
+    "Kaikki yhteensä:"
+    (fmt/euro-opt kaikki-yhteensa)]))
+
 (defn yksikkohintaiset-tyot [urakka]
   [:div
+   [paallystysurakan-kohteet urakka @tiedot/paallystysurakan-kohteet]
    [toteutuneet-tiemerkinnat urakka @tiedot/tiemerkinnan-toteumat @tiedot/paallystysurakan-kohteet]
-   [paallystysurakan-kohteet urakka @tiedot/paallystysurakan-kohteet]])
+   [yhteenveto @tiedot/paallystysurakan-kohteet]])
