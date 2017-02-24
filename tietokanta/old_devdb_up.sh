@@ -10,4 +10,4 @@ while ! nc -z localhost 5432; do
     sleep 0.5;
 done;
 
-sh devdb_migrate.sh
+sh old_devdb_migrate.sh
