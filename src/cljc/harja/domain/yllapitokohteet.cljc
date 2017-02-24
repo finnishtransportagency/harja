@@ -248,4 +248,4 @@ yllapitoluokan-numero
     :aloitettu "Aloitettu"
     "Ei aloitettu"))
 
-(s/def ::yllapitoluokka (s/and int? pos? #(< % 20)))
+(s/def ::yllapitoluokka (s/int-in 0 20))
