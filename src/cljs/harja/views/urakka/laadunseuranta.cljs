@@ -11,7 +11,8 @@
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.views.urakka.laadunseuranta.siltatarkastukset :as siltatarkastukset]))
+            [harja.views.urakka.laadunseuranta.siltatarkastukset :as siltatarkastukset]
+            [harja.tiedot.urakka :as tiedot-urakka]))
 
 (defn laadunseuranta [ur]
   (komp/luo
@@ -29,7 +30,7 @@
        (when (oikeudet/urakat-laadunseuranta-laatupoikkeamat id)
          [laatupoikkeamat/laatupoikkeamat {:nakyma tyyppi}])
 
-       "Sanktiot" :sanktiot
+       (if @tiedot-urakka/yllapidon-urakka? "Sakot ja bonukset" "Sanktiot") :sanktiot
        (when (oikeudet/urakat-laadunseuranta-sanktiot id)
          [sanktiot/sanktiot {:nakyma tyyppi}])
 
