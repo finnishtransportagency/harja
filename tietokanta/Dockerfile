@@ -14,16 +14,13 @@ RUN echo "host    all             all             0.0.0.0/0            trust" >>
 RUN service postgresql restart && \
     sleep 5 && \
     psql -c "CREATE USER harjatest WITH CREATEDB;" -U postgres && \
-    psql -c "CREATE USER harja;" -U postgres && \
     psql -c "ALTER USER harjatest WITH SUPERUSER;" -U postgres && \
+    psql -c "CREATE USER harja;" -U postgres && \
     psql -c "ALTER USER harja WITH SUPERUSER;" -U postgres && \
     psql -c "CREATE DATABASE harja OWNER harja;" -U postgres && \
     psql -c "CREATE DATABASE temp OWNER harjatest;" -U postgres && \
-    psql -c "CREATE DATABASE harjatest_template OWNER harjatest;" -U postgres && \
     psql -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO harjatest;" -U postgres && \
     psql -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO harja;" -U postgres  && \
-    psql -c "CREATE EXTENSION postgis" -U postgres harjatest_template && \
-    psql -c "CREATE EXTENSION postgis_topology" -U postgres harjatest_template && \
     psql -c "CREATE EXTENSION postgis" -U postgres harja && \
     psql -c "CREATE EXTENSION postgis_topology" -U postgres harja
 
