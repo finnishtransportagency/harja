@@ -117,7 +117,7 @@
   [db user indeksitiedot]
   (log/debug "tallenna-paallystysurakan-indeksitiedot: " indeksitiedot)
   (doseq [urakka-id (distinct (map :urakka indeksitiedot))]
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id))
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id))
   (let [urakka-id (some :urakka indeksitiedot)]
     (jdbc/with-db-transaction [c db]
       (doseq [{urakka-id :urakka
