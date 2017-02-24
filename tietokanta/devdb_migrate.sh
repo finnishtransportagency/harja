@@ -2,7 +2,7 @@
 
 set -e
 
-echo "Ajetaan migraatiot"
+echo "Ajetaan migraatiot harja-kantaan"
 
 until mvn flyway:info &> /dev/null; do
     echo "Odotetaan että flyway saa yhteyden kantaan..."
