@@ -110,7 +110,7 @@
                             :hintatyyppi (when hintatyyppi (name hintatyyppi))
                             :muutospvm muutospvm
                             :hinta_kohteelle (when (and hinta yllapitokohde-id) hinta-osoitteelle)
-                            :selite (when-not yllapitokohde-id selite)
+                            :selite selite
                             :tr_numero (when-not yllapitokohde-id tr-numero)
                             :yllapitoluokka (when-not yllapitokohde-id yllapitoluokka)
                             :pituus (when-not yllapitokohde-id pituus)}]
