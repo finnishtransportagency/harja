@@ -4,6 +4,11 @@ set -e
 
 docker images | grep harjadb >> /dev/null || sh build_migrated_db_image.sh
 
+echo ""
+docker images | head -n1
+docker images | grep harjadb
+
+echo ""
 echo "Käynnistetään valmiiksi migratoitu harjadb Docker-image"
 docker run -p 5432:5432 --name harjadb -dit harjadb
 
