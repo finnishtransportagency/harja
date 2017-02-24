@@ -8,9 +8,12 @@
             [harja.ui.grid :as grid]
             [harja.loki :refer [log]]))
 
+(def raaka-aine-nimi {"bitumi" "Bitumi"
+                      "kevyt_polttooljy" "Kevyt polttoöljy"
+                      "nestekaasu" "Nestekaasu"})
+
 (defn- indeksinimi-ja-lahtotaso-fmt
   [rivi]
-  (log "INDEKSI: " (pr-str rivi))
   (str (:indeksinimi rivi)
        (when (:arvo rivi)
          (str " (lähtötaso: "
@@ -41,8 +44,8 @@
            :valinta-nayta :indeksinimi}
           {:otsikko "Raaka-aine" :nimi :raakaaine :leveys 3
            :hae #(get-in % [:indeksi :raakaaine])
-           :tyyppi :valinta :muokattava? (constantly false)
-           :validoi [[:uniikki "Samalle raaka-aineelle ei voi asettaa montaa indeksiä"]]}
+           :fmt raaka-aine-nimi
+           :tyyppi :valinta :muokattava? (constantly false)}
 
           {:otsikko "Lähtö\u00ADtason vuosi" :nimi :lahtotason-vuosi :tyyppi :positiivinen-numero
            :leveys 1
