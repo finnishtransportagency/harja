@@ -1,7 +1,9 @@
 (ns harja.domain.yllapitokohteet
   "Ylläpitokohteiden yhteisiä apureita"
   #?(:clj
-     (:require [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])))
+     (:require [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+               [clojure.spec :as s]
+       #?@(:clj [[clojure.future :refer :all]]))))
 
 (def ^{:doc "Sisältää vain nykyisin käytössä olevat luokat 1,2 ja 3 (eli numerot 8, 9 ja 10)."}
 nykyiset-yllapitoluokat
@@ -245,3 +247,5 @@ yllapitoluokan-numero
     :valmis "Valmis"
     :aloitettu "Aloitettu"
     "Ei aloitettu"))
+
+(s/def ::yllapitoluokka (s/and int? pos? #(< % 20)))

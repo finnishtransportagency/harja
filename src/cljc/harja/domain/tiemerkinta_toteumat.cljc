@@ -3,21 +3,22 @@
   (:require
     [clojure.spec :as s]
     [harja.pvm :as pvm]
-    #?@(:clj [
-    [clojure.future :refer :all]])))
+    [harja.domain.yllapitokohteet :as yllapitokohteet]
+    [harja.domain.tierekisteri :as tr-domain]
+    #?@(:clj [[clojure.future :refer :all]])))
 
 (s/def ::selite string?)
 (s/def ::muutospvm #?(:clj inst?
                       :cljs inst?))
 (s/def ::hintatyyppi #{:toteuma :suunnitelma})
-(s/def ::yllapitoluokka (s/and int? pos?))
+(s/def ::yllapitoluokka ::yllapitokohteet/yllapitoluokka)
 (s/def ::id int?)
-(s/def ::pituus (s/and number? pos?))
-(s/def ::hinta-kohteelle (s/and number? pos?))
+(s/def ::pituus ::tr-domain/pituus)
+(s/def ::hinta-kohteelle string?)
 (s/def ::yllapitokohde-id (s/or :puuttuu nil?
-                                :annettu (s/and number? pos?)))
-(s/def ::tr-numero (s/and int? pos?))
-(s/def ::hinta (s/and number? pos?))
+                                :annettu (s/and int? pos?)))
+(s/def ::tr-numero ::tr-domain/numero)
+(s/def ::hinta (s/and number? pos? #(< % 1000000000)))
 
 
 (s/def ::tiemerkinnan-yksikkohintainen-tyo

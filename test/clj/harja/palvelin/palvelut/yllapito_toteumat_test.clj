@@ -120,7 +120,7 @@
 
 (deftest tiemerkinnan-yks-hint-toteuma-kirjataan-oikein
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
-        testien-maara 100
+        testien-maara 10
         maara-ennen-testia (ffirst (q "SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma;"))
         yllapitokohde-id (hae-tiemerkintaurakkaan-osoitettu-yllapitokohde urakka-id)]
 
