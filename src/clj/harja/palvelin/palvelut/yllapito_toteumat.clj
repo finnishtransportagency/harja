@@ -3,6 +3,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.domain.skeema :refer [Toteuma validoi]]
             [harja.kyselyt.yllapito-toteumat :as q]
+            [harja.domain.tiemerkinta-toteumat :as tt]
             [taoensso.timbre :as log]
             [harja.id :as id]
             [harja.palvelin.komponentit.http-palvelin
@@ -91,6 +92,7 @@
                          (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot
                            db
                            {:urakka urakka-id}))]
+      (log/debug "VASTAUS: " toteumat)
       toteumat)))
 
 (defn tallenna-tiemerkinnan-yksikkohintaiset-tyot
@@ -140,7 +142,9 @@
                           (tallenna-yllapito-toteuma db user tiedot)))
       (julkaise-palvelu http :hae-tiemerkinnan-yksikkohintaiset-tyot
                         (fn [user tiedot]
-                          (hae-tiemerkinnan-yksikkohintaiset-tyot db user tiedot)))
+                          (hae-tiemerkinnan-yksikkohintaiset-tyot db user tiedot))
+                        {:kysely-spec ::tt/hae-tiemerkinnan-yksikkohintaiset-tyot-kysely
+                         :vastaus-spec ::tt/hae-tiemerkinnan-yksikkohintaiset-tyot-vastaus})
       (julkaise-palvelu http :tallenna-tiemerkinnan-yksikkohintaiset-tyot
                         (fn [user tiedot]
                           (tallenna-tiemerkinnan-yksikkohintaiset-tyot db user tiedot)))
