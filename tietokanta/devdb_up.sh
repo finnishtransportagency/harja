@@ -4,15 +4,15 @@ set -e
 
 docker images | grep harjadb >> /dev/null || sh build_migrated_db_image.sh
 
-#echo "Käynnistetään valmiiksi migratoitu harjadb Docker-image"
-#docker run -p 5432:5432 --name harjadb -dit harjadb
+echo "Käynnistetään valmiiksi migratoitu harjadb Docker-image"
+docker run -p 5432:5432 --name harjadb -dit harjadb
 
-#echo "Odotetaan, että PostgreSQL on käynnissä ja vastaa yhteyksiin portissa 5432"
-#while ! nc -z localhost 5432; do
-#    sleep 0.5;
-#done;
+echo "Odotetaan, että PostgreSQL on käynnissä ja vastaa yhteyksiin portissa 5432"
+while ! nc -z localhost 5432; do
+    sleep 0.5;
+done;
 
-#sh devdb_migrate.sh
+sh devdb_migrate.sh
 
 echo "Harja käynnissä! Imagen tiedot:"
 echo ""
