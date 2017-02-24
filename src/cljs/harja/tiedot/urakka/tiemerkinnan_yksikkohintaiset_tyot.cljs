@@ -33,9 +33,42 @@
   (when id
     (first (filter (fn [kohde] (= (:id kohde) id)) kohteet))))
 
-(defn tallenna-tiemerkinnan-toteumat [urakka-id toteumat paallystysurakan-yllapitokohteet]
+(defn- tallenna-tiemerkinnan-toteumat [urakka-id toteumat paallystysurakan-yllapitokohteet]
   (k/post! :tallenna-tiemerkinnan-yksikkohintaiset-tyot
            {:urakka-id urakka-id
             :toteumat toteumat
             :paallystysurakan-yllapitokohteet paallystysurakan-yllapitokohteet}))
 
+(defn maarittele-hinnan-kohde
+  "Palauttaa stringin, jossa on ylläpitokohteen tieosoitteen tiedot. Käytetään tunnistamaan tilanne,
+   jossa ylläpitokohteeseen liittyvä hinta on annettu ylläpitokohteen vanhalle tieosoitteelle."
+  [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys
+           tr-loppuosa tr-loppuetaisyys] :as kohde}]
+  (log "KOHDE ON: " (pr-str kohde))
+  (assert (and tr-numero tr-alkuosa tr-alkuetaisyys) "Puutteelliset parametrit")
+  ;; Tod.näk. et halua muuttaa tätä ainakaan migratoimatta kannassa olevaa dataa.
+  (str tr-numero " / " tr-alkuosa " / " tr-alkuetaisyys " / "
+       tr-loppuosa " / " tr-loppuetaisyys))
+
+(defn toteuman-hinnan-kohde-muuttunut? [{:keys [hinta-kohteelle] :as toteuma} kohde]
+  (let [hinnan-kohde-eri-kuin-nykyinen-osoite? (and hinta-kohteelle kohde
+                                                    (not= (maarittele-hinnan-kohde kohde)
+                                                          hinta-kohteelle))]
+    (boolean hinnan-kohde-eri-kuin-nykyinen-osoite?)))
+
+(defn tallenna-toteumat-grid [{:keys [toteumat urakka-id tiemerkinnan-toteumat-atom
+                                      paallystysurakan-kohteet epaonnistui-fn]}]
+  (go (let [kasitellyt-toteumat (map
+                                  #(if-let [kohde (paallystysurakan-kohde-idlla paallystysurakan-kohteet
+                                                                                (:yllapitokohde-id %))]
+                                     (assoc % :hinta-osoitteelle (maarittele-hinnan-kohde kohde))
+                                     %)
+                                  toteumat)
+            _ (log "TALLENNA: " (pr-str kasitellyt-toteumat))
+            vastaus (<! (tallenna-tiemerkinnan-toteumat
+                          urakka-id
+                          kasitellyt-toteumat
+                          paallystysurakan-kohteet))]
+        (if (k/virhe? vastaus)
+          (epaonnistui-fn)
+          (reset! tiemerkinnan-toteumat-atom vastaus)))))

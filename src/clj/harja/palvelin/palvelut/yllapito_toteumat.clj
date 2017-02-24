@@ -13,23 +13,6 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]))
 
-(defn- maarittele-hinnan-kohde
-  "Palauttaa stringin, jossa on ylläpitokohteen tieosoitteen tiedot. Käytetään tunnistamaan tilanne,
-   jossa hinta on annettu ylläpitokohteen vanhalle tieosoitteelle."
-  [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys
-           tr-loppuosa tr-loppuetaisyys] :as kohde}]
-  (assert (and tr-numero tr-alkuosa tr-alkuetaisyys) "Puutteelliset parametrit")
-  ;; Tod.näk. et halua muuttaa tätä ainakaan migratoimatta kannassa olevaa dataa.
-  (str tr-numero " / " tr-alkuosa " / " tr-alkuetaisyys " / "
-       tr-loppuosa " / " tr-loppuetaisyys))
-
-(defn- lisaa-toteumaan-tieto-hinnan-muuttumisesta [kohde]
-  (let [hinnan-kohde-eri-kuin-nykyinen-osoite?
-        (and (:hinta-kohteelle kohde)
-             (not= (maarittele-hinnan-kohde kohde)
-                   (:hinta-kohteelle kohde)))]
-    (assoc kohde :hinnan-kohde-muuttunut? hinnan-kohde-eri-kuin-nykyinen-osoite?)))
-
 (def muutyo-xf
   (comp
     (map #(assoc % :laskentakohde [(get-in % [:laskentakohde-id])
@@ -46,9 +29,6 @@
                                :sopimus sopimus
                                :alkupvm alkupvm
                                :loppupvm loppupvm}))))
-
-
-
 
 (defn hae-yllapito-toteuma [db user {:keys [urakka id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-muuttyot user urakka)
@@ -102,31 +82,27 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
   (log/debug "Haetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
-    (let [kohteet (into []
-                        (comp
-                          (map #(konv/string->keyword % :hintatyyppi)))
-                        (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot
-                          db
-                          {:urakka urakka-id}))
-          kohteet (mapv lisaa-toteumaan-tieto-hinnan-muuttumisesta kohteet)]
-      kohteet)))
+    (let [toteumat (into []
+                         (comp
+                           (map #(konv/string->keyword % :hintatyyppi)))
+                         (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot
+                           db
+                           {:urakka urakka-id}))]
+      toteumat)))
 
-(defn tallenna-tiemerkinnan-yksikkohintaiset-tyot [db user
-                                                   {:keys [urakka-id toteumat paallystysurakan-yllapitokohteet]}]
+(defn tallenna-tiemerkinnan-yksikkohintaiset-tyot
+  [db user {:keys [urakka-id toteumat]}]
   (assert urakka-id "anna urakka-id") ;; TODO KÄYTÄ SPEC
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
   (jdbc/with-db-transaction [db db]
-    (doseq [{:keys [yllapitokohde-id] :as kohde} toteumat]
+    (doseq [{:keys [yllapitokohde-id ] :as kohde} toteumat]
       (when yllapitokohde-id (yy/vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan db urakka-id yllapitokohde-id)))
 
     (log/debug "Tallennetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
 
     (doseq [{:keys [hinta hintatyyppi muutospvm id yllapitokohde-id
-                    selite tr-numero yllapitoluokka pituus] :as kohde} toteumat]
-      (let [hinta-osoitteelle (when yllapitokohde-id
-                                (maarittele-hinnan-kohde (first (filter #(= (:id %) yllapitokohde-id)
-                                                                  paallystysurakan-yllapitokohteet))))
-            sql-parametrit {:yllapitokohde yllapitokohde-id
+                    selite tr-numero yllapitoluokka pituus hinta-osoitteelle] :as kohde} toteumat]
+      (let [sql-parametrit {:yllapitokohde yllapitokohde-id
                             :hinta hinta
                             :hintatyyppi (when hintatyyppi (name hintatyyppi))
                             :muutospvm muutospvm

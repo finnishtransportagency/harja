@@ -23,30 +23,30 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 (defn toteutuneet-tiemerkinnat
-  [urakka tiemerkinnan-toteumat paallystysurakan-kohteet]
+  [urakka tiemerkinnan-toteumat-atom paallystysurakan-kohteet]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
-    (fn [urakka tiemerkinnan-toteumat paallystysurakan-kohteet]
+    (fn [urakka tiemerkinnan-toteumat-atom paallystysurakan-kohteet]
       (let [urakka-id (:id urakka)
             saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteutus-yksikkohintaisettyot urakka-id)]
         [:div
          [grid/grid
           {:otsikko "Toteutuneet tiemerkinnät"
-           :tyhja (if (nil? tiemerkinnan-toteumat)
+           :tyhja (if (nil? @tiemerkinnan-toteumat-atom)
                     [ajax-loader "Haetaan töitä..."]
                     "Toteumia ei löytynyt")
            :voi-poistaa? (constantly false)
            :voi-lisata? false
            :piilota-toiminnot? true
            :tallenna (if saa-muokata?
-                       #(go (let [vastaus (<! (tiedot/tallenna-tiemerkinnan-toteumat
-                                                urakka-id
-                                                %
-                                                paallystysurakan-kohteet))]
-                              (if (k/virhe? vastaus)
-                                (viesti/nayta! "Tallentaminen epäonnistui"
-                                               :warning viesti/viestin-nayttoaika-lyhyt)
-                                (reset! tiedot/tiemerkinnan-toteumat vastaus))))
+                       (fn [toteumat]
+                         (tiedot/tallenna-toteumat-grid
+                           {:toteumat toteumat
+                            :urakka-id urakka-id
+                            :tiemerkinnan-toteumat-atom tiemerkinnan-toteumat-atom
+                            :paallystysurakan-kohteet paallystysurakan-kohteet
+                            :epaonnistui-fn #(viesti/nayta! "Tallentaminen epäonnistui"
+                                                            :warning viesti/viestin-nayttoaika-lyhyt)}))
                        :ei-mahdollinen)}
           [{:otsikko "Liittyy kohteeseen" :leveys 7 :nimi :yllapitokohde-id :tyyppi :valinta
             :valinnat (conj (map :id paallystysurakan-kohteet) nil)
@@ -80,11 +80,16 @@
             :nimi :hinta :tyyppi :positiivinen-numero :fmt fmt/euro-opt :leveys 3
             :tasaa :oikea
             :huomio (fn [rivi]
-                      (when (:hinnan-kohde-muuttunut? rivi)
-                        {:tyyppi :varoitus
-                         :teksti (str "Koh\u00ADteen oso\u00ADite on muut\u00ADtunut.\n
+                      (let [hinnan-kohde-muuttunut?
+                            (tiedot/toteuman-hinnan-kohde-muuttunut?
+                              rivi
+                              (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet
+                                                                   (:yllapitokohde-id rivi)))]
+                        (when hinnan-kohde-muuttunut?
+                          {:tyyppi :varoitus
+                           :teksti (str "Koh\u00ADteen oso\u00ADite on muut\u00ADtunut.\n
                                       Hin\u00ADta on annet\u00ADtu koh\u00ADteen vanhal\u00ADle osoit\u00ADteelle:\n"
-                                      (:hinta-kohteelle rivi))}))}
+                                        (:hinta-kohteelle rivi))})))}
            {:otsikko "Hintatyyppi"
             :nimi :hintatyyppi :tyyppi :valinta :leveys 3
             :valinta-arvo identity
@@ -100,7 +105,7 @@
            {:otsikko "Muutospvm"
             :nimi :muutospvm :tyyppi :pvm :leveys 3
             :fmt pvm/pvm-opt}]
-          (sort-by tr-domain/tiekohteiden-jarjestys tiemerkinnan-toteumat)]]))))
+          (sort-by tr-domain/tiekohteiden-jarjestys @tiemerkinnan-toteumat-atom)]]))))
 
 (defn paallystysurakan-kohteet
   [urakka paallystysurakan-kohteet]
@@ -173,17 +178,17 @@
                                (reduce +))
         kaikki-yhteensa (+ suunniteltu-yhteensa toteumat-yhteensa)]
     [yleiset/taulukkotietonakyma {}
-    "Suunnitellut toteumat yhteensä:"
-    (fmt/euro-opt suunniteltu-yhteensa)
+     "Suunnitellut toteumat yhteensä:"
+     (fmt/euro-opt suunniteltu-yhteensa)
 
-    "Toteumat yhteensä:"
-    (fmt/euro-opt toteumat-yhteensa)
+     "Toteumat yhteensä:"
+     (fmt/euro-opt toteumat-yhteensa)
 
-    "Kaikki yhteensä:"
-    (fmt/euro-opt kaikki-yhteensa)]))
+     "Kaikki yhteensä:"
+     (fmt/euro-opt kaikki-yhteensa)]))
 
 (defn yksikkohintaiset-tyot [urakka]
   [:div
    [paallystysurakan-kohteet urakka @tiedot/paallystysurakan-kohteet]
-   [toteutuneet-tiemerkinnat urakka @tiedot/tiemerkinnan-toteumat @tiedot/paallystysurakan-kohteet]
+   [toteutuneet-tiemerkinnat urakka tiedot/tiemerkinnan-toteumat @tiedot/paallystysurakan-kohteet]
    [yhteenveto @tiedot/paallystysurakan-kohteet]])
