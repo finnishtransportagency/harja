@@ -92,7 +92,6 @@
                          (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot
                            db
                            {:urakka urakka-id}))]
-      (log/debug "VASTAUS: " toteumat)
       toteumat)))
 
 (defn tallenna-tiemerkinnan-yksikkohintaiset-tyot
@@ -147,7 +146,9 @@
                          :vastaus-spec ::tt/hae-tiemerkinnan-yksikkohintaiset-tyot-vastaus})
       (julkaise-palvelu http :tallenna-tiemerkinnan-yksikkohintaiset-tyot
                         (fn [user tiedot]
-                          (tallenna-tiemerkinnan-yksikkohintaiset-tyot db user tiedot)))
+                          (tallenna-tiemerkinnan-yksikkohintaiset-tyot db user tiedot))
+                        {:kysely-spec ::tt/tallenna-tiemerkinnan-yksikkohintaiset-tyot-kysely
+                         :vastaus-spec ::tt/tallenna-tiemerkinnan-yksikkohintaiset-tyot-vastaus})
       this))
 
   (stop [this]

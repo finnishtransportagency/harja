@@ -33,11 +33,10 @@
   (when id
     (first (filter (fn [kohde] (= (:id kohde) id)) kohteet))))
 
-(defn- tallenna-tiemerkinnan-toteumat [urakka-id toteumat paallystysurakan-yllapitokohteet]
+(defn- tallenna-tiemerkinnan-toteumat [urakka-id toteumat]
   (k/post! :tallenna-tiemerkinnan-yksikkohintaiset-tyot
            {:urakka-id urakka-id
-            :toteumat toteumat
-            :paallystysurakan-yllapitokohteet paallystysurakan-yllapitokohteet}))
+            :toteumat toteumat}))
 
 (defn maarittele-hinnan-kohde
   "Palauttaa stringin, jossa on ylläpitokohteen tieosoitteen tiedot. Käytetään tunnistamaan tilanne,
@@ -64,11 +63,7 @@
                                      (assoc % :hinta-osoitteelle (maarittele-hinnan-kohde kohde))
                                      %)
                                   toteumat)
-            _ (log "TALLENNA: " (pr-str kasitellyt-toteumat))
-            vastaus (<! (tallenna-tiemerkinnan-toteumat
-                          urakka-id
-                          kasitellyt-toteumat
-                          paallystysurakan-kohteet))]
+            vastaus (<! (tallenna-tiemerkinnan-toteumat urakka-id kasitellyt-toteumat))]
         (if (k/virhe? vastaus)
           (epaonnistui-fn)
           (reset! tiemerkinnan-toteumat-atom vastaus)))))
