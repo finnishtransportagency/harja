@@ -5,6 +5,7 @@
     [harja.pvm :as pvm]
     [harja.domain.yllapitokohteet :as yllapitokohteet]
     [harja.domain.tierekisteri :as tr-domain]
+    [harja.tyokalut.spec-apurit :as apurit]
     #?@(:clj [[clojure.future :refer :all]])))
 
 (s/def ::selite string?)
@@ -12,13 +13,13 @@
                       :cljs inst?))
 (s/def ::hintatyyppi #{:toteuma :suunnitelma})
 (s/def ::yllapitoluokka ::yllapitokohteet/yllapitoluokka)
-(s/def ::id int?)
+(s/def ::id int?) ;; Voi olla negatiivinen kun tehdään uusi
 (s/def ::pituus ::tr-domain/pituus)
 (s/def ::hinta-kohteelle string?)
 (s/def ::yllapitokohde-id (s/or :puuttuu nil?
-                                :annettu (s/and int? pos?)))
+                                :annettu ::apurit/postgres-serial))
 (s/def ::tr-numero ::tr-domain/numero)
-(s/def ::hinta (s/and number? pos? #(< % 1000000000)))
+(s/def ::hinta (s/double-in :min 0 :max 10000000 :infinite? false :NaN? false))
 
 
 (s/def ::tiemerkinnan-yksikkohintainen-tyo
@@ -42,6 +43,3 @@
 
 (s/def ::tallenna-tiemerkinnan-yksikkohintaiset-tyot-vastaus
   ::hae-tiemerkinnan-yksikkohintaiset-tyot-vastaus)
-
-
-

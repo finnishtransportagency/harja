@@ -134,7 +134,7 @@
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-tiemerkinnan-yksikkohintaiset-tyot +kayttaja-jvh+
                                     pyynto)]
-        (when (< index testien-maara)
+        (when (<= index testien-maara)
           (recur (inc index)))))
 
     (let [maara-testin-jalkeen (ffirst (q "SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma;"))]
