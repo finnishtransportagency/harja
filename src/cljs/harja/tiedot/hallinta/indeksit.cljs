@@ -51,7 +51,11 @@
   [{:keys [urakka-id tiedot]}]
   (log "tallenna päällystysurakan indeksit urakkaan " urakka-id " tiedot" (pr-str tiedot))
   (go (let [res (<! (k/post! :tallenna-paallystysurakan-indeksitiedot
-                             (mapv #(assoc % :urakka urakka-id) tiedot)))]
+                             (into []
+                                   (comp (filter #(not (and (neg? (:id %))
+                                                            (:poistettu %))))
+                                         (map #(assoc % :urakka urakka-id)))
+                                   tiedot)))]
         (reset! urakka/paallystysurakan-indeksitiedot res))))
 
 (defn raakaaineen-indeksit
