@@ -30,14 +30,14 @@
 
 ;; Valinnat jotka riippuvat ulkoisista atomeista
 (defonce valinnat
-         (reaction
-          {:voi-hakea? true
-           :hallintayksikko (:id @nav/valittu-hallintayksikko)
-           :urakka (:id @nav/valittu-urakka)
-           :valitun-urakan-hoitokaudet @u/valitun-urakan-hoitokaudet
-           :urakoitsija (:id @nav/valittu-urakoitsija)
-           :urakkatyyppi (:arvo @nav/urakkatyyppi)
-           :hoitokausi @u/valittu-hoitokausi}))
+  (reaction
+   {:voi-hakea? true
+    :hallintayksikko (:id @nav/valittu-hallintayksikko)
+    :urakka (:id @nav/valittu-urakka)
+    :valitun-urakan-hoitokaudet @u/valitun-urakan-hoitokaudet
+    :urakoitsija (:id @nav/valittu-urakoitsija)
+    :urakkatyyppi (:arvo @nav/urakkatyyppi)
+    :hoitokausi @u/valittu-hoitokausi}))
 
 
 (def ^{:const true}
@@ -46,24 +46,24 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 (def aanimerkki-uusista-ilmoituksista? (local-storage (atom true) :aanimerkki-ilmoituksista))
 
 (defonce ilmoitukset
-         (atom {:ilmoitusnakymassa? false
-                :valittu-ilmoitus nil
-                :uusi-kuittaus-auki? false
-                :ilmoitushaku-id nil ;; ilmoitushaun timeout
-                :taustahaku? false ;; true jos haku tehdään taustapollauksena (ei käyttäjän syötteestä)
-                :ilmoitukset nil ;; haetut ilmoitukset
-                :valinnat {:tyypit +ilmoitustyypit+
-                           :tilat (into #{} tila-filtterit)
-                           :hakuehto ""
-                           :selite [nil ""]
-                           :vain-myohassa? false
-                           :aloituskuittauksen-ajankohta :kaikki
-                           :ilmoittaja-nimi ""
-                           :ilmoittaja-puhelin ""
-                           :vakioaikavali (first aikavalit)
-                           :alkuaika (pvm/tuntia-sitten 1)
-                           :loppuaika (pvm/nyt)}
-                :kuittaa-monta nil}))
+  (atom {:ilmoitusnakymassa? false
+         :valittu-ilmoitus nil
+         :uusi-kuittaus-auki? false
+         :ilmoitushaku-id nil ;; ilmoitushaun timeout
+         :taustahaku? false ;; true jos haku tehdään taustapollauksena (ei käyttäjän syötteestä)
+         :ilmoitukset nil ;; haetut ilmoitukset
+         :valinnat {:tyypit +ilmoitustyypit+
+                    :tilat (into #{} tila-filtterit)
+                    :hakuehto ""
+                    :selite [nil ""]
+                    :vain-myohassa? false
+                    :aloituskuittauksen-ajankohta :kaikki
+                    :ilmoittaja-nimi ""
+                    :ilmoittaja-puhelin ""
+                    :vakioaikavali (first aikavalit)
+                    :alkuaika (pvm/tuntia-sitten 1)
+                    :loppuaika (pvm/nyt)}
+         :kuittaa-monta nil}))
 
 (defn- jarjesta-ilmoitukset [tulos]
   (reverse (sort-by

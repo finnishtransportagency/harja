@@ -4,6 +4,7 @@
             [clojure.string :refer [capitalize]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
+            [harja.tiedot.ilmoitukset.tietyot :as tietyoilmoitukset-tiedot]
             [harja.domain.ilmoitukset :refer
              [kuittausvaatimukset-str +ilmoitustyypit+ ilmoitustyypin-nimi
               ilmoitustyypin-lyhenne ilmoitustyypin-lyhenne-ja-nimi
@@ -320,4 +321,6 @@
 
        "Tietyöt"
        :tietyot
-       [tietyoilmoitukset-view/tietyoilmoitukset]])))
+       [tuck tietyoilmoitukset-tiedot/ilmoitukset tietyoilmoitukset-view/ilmoitukset*]
+       #_[tietyoilmoitukset-view/ilmoitukset]
+       ])))
