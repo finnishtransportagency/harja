@@ -129,7 +129,7 @@ SELECT paivita_pohjavesialueet();
 
 
 -- Tietyöilmoitukset
-\i testidata/tietyoilmoitukset.sql
+-- \i testidata/tietyoilmoitukset.sql
 
 SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 
