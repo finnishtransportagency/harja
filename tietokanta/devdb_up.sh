@@ -14,6 +14,7 @@ done;
 
 sh devdb_migrate.sh
 
+echo ""
 echo "Harja käynnissä! Imagen tiedot:"
 echo ""
 
