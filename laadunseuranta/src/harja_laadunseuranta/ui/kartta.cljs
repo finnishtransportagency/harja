@@ -46,12 +46,12 @@
   taustakarttatyypit
   [{:nimi :taustakartta
     :luokka "taustakartta"
-    :napin-sprite "kompassi-24"
+    :napin-sprite "kartta-24"
     :tason-indeksi 0}
 
    {:nimi :ortokuva
     :luokka "ortokuva"
-    :napin-sprite "silma-24"
+    :napin-sprite "satelliitti-24"
     :tason-indeksi 1}
 
    {:nimi :maastokartta
