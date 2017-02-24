@@ -115,6 +115,7 @@
                             :tr_numero (when-not yllapitokohde-id tr-numero)
                             :yllapitoluokka (when-not yllapitokohde-id yllapitoluokka)
                             :pituus (when-not yllapitokohde-id pituus)}]
+        (log/debug "[DEBUG] KÄSITTELE " (pr-str kohde))
         (if (id/id-olemassa? id)
           (q/paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
             db (merge sql-parametrit {:id id :urakka urakka-id}))

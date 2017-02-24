@@ -1,7 +1,24 @@
 (ns harja.domain.tiemerkinta-toteumat
   "Tienäkymän tietojen spec-määritykset"
-  (:require [clojure.spec :as s]
-    #?@(:clj [[clojure.future :refer :all]])))
+  (:require
+    [clojure.spec :as s]
+    [harja.pvm :as pvm]
+    #?@(:clj [
+    [clojure.future :refer :all]])))
+
+(s/def ::selite string?)
+(s/def ::muutospvm #?(:clj inst?
+                      :cljs inst?))
+(s/def ::hintatyyppi #{:toteuma :suunnitelma})
+(s/def ::yllapitoluokka (s/and int? pos?))
+(s/def ::id int?)
+(s/def ::pituus (s/and number? pos?))
+(s/def ::hinta-kohteelle (s/and number? pos?))
+(s/def ::yllapitokohde-id (s/or :puuttuu nil?
+                                :annettu (s/and number? pos?)))
+(s/def ::tr-numero (s/and int? pos?))
+(s/def ::hinta (s/and number? pos?))
+
 
 (s/def ::tiemerkinnan-yksikkohintainen-tyo
   (s/keys :req-un [::selite ::muutospvm ::hintatyyppi ::yllapitoluokka ::id

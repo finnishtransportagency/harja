@@ -406,6 +406,11 @@
                    urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')\n
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
 
+(defn hae-tiemerkintaurakkaan-osoitettu-yllapitokohde [urakka-id]
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   suorittava_tiemerkintaurakka = " urakka-id ";"))))
+
 (defn hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE
