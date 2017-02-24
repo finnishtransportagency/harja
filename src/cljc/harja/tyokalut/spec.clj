@@ -3,7 +3,7 @@
   joilla määritellään nimen lisäksi arvon spec."
   (:require [clojure.spec :as s]
             [clojure.core.specs :as cs]
-            #?@(:clj [[clojure.future :refer :all]])))
+            [clojure.future :refer :all]))
 
 (s/def ::specish (s/or :kw keyword?
                        :fn fn?
