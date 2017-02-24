@@ -83,6 +83,16 @@
     ;; Jos annettu solu ei ole raporttielementti, voidaan sen arvo formatoida suoraan.
     (when fmt (fmt solu))))
 
+(defn formatoi-solu?
+  [solu]
+  (if (raporttielementti? solu)
+    (case (get-in solu [1 :fmt?])
+     true true
+     false false
+     true)
+
+    true))
+
 (defn voi-nahda-laajemman-kontekstin-raportit? [kayttaja]
   (and (not (roolit/roolissa? roolit/tilaajan-laadunvalvontakonsultti kayttaja))
        (roolit/tilaajan-kayttaja? kayttaja)))

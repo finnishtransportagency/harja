@@ -42,7 +42,9 @@
           yllapitokohteet (maaramuutokset/liita-yllapitokohteisiin-maaramuutokset
                             db user {:yllapitokohteet yllapitokohteet
                                      :urakka-id urakka-id})]
-      yllapitokohteet)))
+         (into []
+               yllapitokohteet-domain/yllapitoluokka-xf
+               yllapitokohteet))))
 
 (defn hae-urakan-yllapitokohteet-lomakkeelle [db user {:keys [urakka-id sopimus-id]}]
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
@@ -109,7 +111,9 @@
   (log/debug "Haetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [kohteet (into []
-                        (map #(konv/string->keyword % :hintatyyppi))
+                        (comp
+                          (map #(konv/string->keyword % :hintatyyppi))
+                          yllapitokohteet-domain/yllapitoluokka-xf)
                         (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot
                           db
                           {:suorittava_tiemerkintaurakka urakka-id}))
@@ -261,7 +265,9 @@
                             :tr_ajorata tr-ajorata
                             :tr_kaista tr-kaista
                             :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
-                            :yllapitoluokka yllapitoluokka
+                            :yllapitoluokka (if (map? yllapitoluokka)
+                                              (:numero yllapitoluokka)
+                                              yllapitoluokka)
                             :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
                             :arvonvahennykset arvonvahennykset
                             :bitumi_indeksi bitumi-indeksi
@@ -300,7 +306,9 @@
                                    :tr_ajorata tr-ajorata
                                    :tr_kaista tr-kaista
                                    :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
-                                   :yllapitoluokka yllapitoluokka
+                                   :yllapitoluokka (if (map? yllapitoluokka)
+                                                     (:numero yllapitoluokka)
+                                                     yllapitoluokka)
                                    :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
                                    :arvonvanhennykset arvonvahennykset
                                    :bitumi_indeksi bitumi-indeksi
