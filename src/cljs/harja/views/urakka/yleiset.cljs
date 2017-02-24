@@ -467,7 +467,8 @@
       "Urakkatyyppi: " ; Päällystysurakan voi muuttaa paikkaukseksi ja vice versa
       (yllapidon-urakkatyypin-vaihto ur yha-tiedot)
 
-      "Indeksi: " [urakan-indeksi ur]]]))
+      "Indeksi: " (when-not (#{:paallystys :paikkaus} (:tyyppi ur))
+                    [urakan-indeksi ur])]]))
 
 (defn yhteyshenkilot [ur]
   (let [yhteyshenkilot (atom nil)
