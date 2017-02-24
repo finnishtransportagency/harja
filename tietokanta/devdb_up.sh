@@ -2,17 +2,25 @@
 
 set -e
 
-docker images | grep harjadb >> /dev/null || sh build_migrated_db_image.sh
+IMAGE=${1:-solita/harjadb}
 
-echo ""
-echo "Käynnistetään valmiiksi migratoitu harjadb Docker-image"
+if ! docker images | grep $IMAGE >> /dev/null; then
+    echo "Imagea" $IMAGE "ei löydetty. Yritetään pullata."
+    if ! docker pull $IMAGE; then
+        echo $IMAGE "ei ole docker hubissa. Buildataan."
+        docker build -t $IMAGE . ;
+    fi
+    echo ""
+fi
+
+docker run -p 5432:5432 --name harjadb -dit $IMAGE 1> /dev/null
+
+echo "Käynnistetään Docker-image" $IMAGE
 echo ""
 docker images | head -n1
-docker images | grep harjadb
+docker images | grep $IMAGE
 
 echo ""
-docker run -p 5432:5432 --name harjadb -dit harjadb 1> /dev/null
-
 echo "Odotetaan, että PostgreSQL on käynnissä ja vastaa yhteyksiin portissa 5432"
 while ! nc -z localhost 5432; do
     sleep 0.5;
@@ -25,8 +33,4 @@ echo "Harja käynnissä! Imagen tiedot:"
 echo ""
 
 docker images | head -n1
-docker images | grep harjadb
-
-echo ""
-echo "Jos imagen rakentamisesta on kovin pitkä aika, voit nopeuttaa kehitysmpäristön käynnistymistä buildaamalla imagen uudelleen."
-echo "Komento oh sh build_migrated_db_image.sh"
+docker images | grep $IMAGE
