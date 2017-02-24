@@ -191,4 +191,4 @@
   [:div
    [paallystysurakan-kohteet urakka @tiedot/paallystysurakan-kohteet]
    [toteutuneet-tiemerkinnat urakka tiedot/tiemerkinnan-toteumat @tiedot/paallystysurakan-kohteet]
-   [yhteenveto @tiedot/paallystysurakan-kohteet]])
+   [yhteenveto @tiedot/tiemerkinnan-toteumat]])
