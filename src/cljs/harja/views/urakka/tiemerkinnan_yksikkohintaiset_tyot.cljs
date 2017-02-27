@@ -57,7 +57,8 @@
             :fmt #(if-let [kohde (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet %)]
                     (tr-domain/yllapitokohde-tekstina kohde)
                     "Ei liity kohteeseen")}
-           {:otsikko "Selite" :leveys 7 :nimi :selite :tyyppi :string :pituus-max 512}
+           {:otsikko "Selite" :leveys 7 :nimi :selite :tyyppi :string :pituus-max 512
+            :validoi [[:ei-tyhja "Anna selite"]]}
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
             :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
             :muokattava? #(boolean (not (:yllapitokohde-id %)))
@@ -78,6 +79,7 @@
             :fmt :lyhyt-nimi
             :muokattava? #(boolean (not (:yllapitokohde-id %)))}
            {:otsikko "Hinta"
+            :validoi [[:ei-tyhja "Anna hinta"]]
             :nimi :hinta :tyyppi :positiivinen-numero :fmt fmt/euro-opt :leveys 3
             :tasaa :oikea
             :huomio (fn [rivi]
@@ -93,6 +95,7 @@
                                         (:hinta-kohteelle rivi))})))}
            {:otsikko "Hintatyyppi"
             :nimi :hintatyyppi :tyyppi :valinta :leveys 3
+            :validoi [[:ei-tyhja "Anna hintatyyppi"]]
             :valinta-arvo identity
             :fmt #(case %
                     :suunnitelma "Suunnitelma"

@@ -10,17 +10,17 @@
 
 ;; Toteuma
 
-(s/def ::selite (s/nilable string?))
+(s/def ::selite string?)
 (s/def ::muutospvm #?(:clj (s/nilable inst?)
                       :cljs (s/nilable inst?)))
-(s/def ::hintatyyppi (s/nilable #{:toteuma :suunnitelma}))
+(s/def ::hintatyyppi #{:toteuma :suunnitelma})
 (s/def ::yllapitoluokka (s/nilable ::yllapitokohteet/yllapitoluokka))
 (s/def ::id (s/nilable int?))
 (s/def ::pituus (s/nilable ::tr-domain/pituus))
 (s/def ::hinta-kohteelle (s/nilable string?))
 (s/def ::yllapitokohde-id (s/nilable ::apurit/postgres-serial))
 (s/def ::tr-numero (s/nilable ::tr-domain/numero))
-(s/def ::hinta (s/nilable (s/double-in :min 0 :max 10000000 :infinite? false :NaN? false)))
+(s/def ::hinta (s/double-in :min 0 :max 10000000 :infinite? false :NaN? false))
 
 (s/def ::tiemerkinnan-yksikkohintainen-tyo
   (s/keys :req-un [::selite ::muutospvm ::hintatyyppi ::yllapitoluokka ::id
