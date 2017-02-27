@@ -69,7 +69,9 @@
         ;; tulee vain ypt-id:llä olevia, koska muut eivät ole muokattavia
         palauta-ypt-id #(if (neg? %)
                           nil
-                          (-> % (s/replace "ypt-" "") js/parseInt))]
+                          (-> % (s/replace "ypt-" "") js/parseInt))
+        grid-data-ilman-poistettuja-lisayksia (remove #(and (-> % :id neg?) (-> % :poistettu))
+                                                      grid-data)]
     (go
       (mapv #(-> %
                  toteuman-avaimet-gridista
@@ -77,5 +79,5 @@
                         :sopimus sopimus-id)
                  (update :id palauta-ypt-id)
                  tallenna-toteuma!)
-            grid-data)))
+            grid-data-ilman-poistettuja-lisayksia)))
   (lataa-tiedot! urakka))
