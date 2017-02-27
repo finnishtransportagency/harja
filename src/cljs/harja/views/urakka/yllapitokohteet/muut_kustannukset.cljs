@@ -6,6 +6,7 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka.yllapitokohteet.muut-kustannukset :as tiedot]
             [harja.ui.valinnat :as valinnat]
+            [harja.ui.validointi :as validointi]
             [cljs-time.core :as t]
             [harja.pvm :as pvm])
   (:require-macros [reagent.ratom :refer [reaction]]
@@ -33,8 +34,13 @@
    {:otsikko "Kustannuksen kuvaus" :nimi :selite
     :tyyppi :string :leveys kustannus-selite-leveys}
    {:otsikko "Summa" :nimi :hinta
-    :validoi [[:rajattu-numero nil 0 100000000 "Anna arvo väliltä 0 - 100 000 000"]]
+    :validoi [[:rajattu-numero-jos-muokattava nil 0 100000000 "Anna arvo väliltä 0 - 100 000 000"]]
     :tyyppi :numero :leveys kustannus-hinta-leveys}])
+
+(defmethod validoi-saanto :rajattu-numero-jos-muokattava [_ _ data rivi _ _ & [min-arvo max-arvo viesti]]
+  (when (:muokattava rivi)
+    (when-not (<= min-arvo data max-arvo)
+      (or viesti (str "Anna arvo välillä " min-arvo " - " max-arvo "")))))
 
 (defn muut-kustannukset [urakka]
   (komp/luo
