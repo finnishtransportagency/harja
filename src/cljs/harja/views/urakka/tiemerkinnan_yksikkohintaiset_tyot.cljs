@@ -62,7 +62,7 @@
             :hae #(if-let [yllapitokohde-id (:yllapitokohde-id %)]
                     (:tr-numero (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet yllapitokohde-id))
                     (:tr-numero %))
-            :validoi [[:ei-tyhja "Anna tienumero"]]}
+            :validoi [[:ei-tyhja-jos-toinen-avain-nil :yllapitokohde-id "Anna tienumero"]]}
            {:otsikko "Pit. (m)" :nimi :pituus :leveys 3
             :tyyppi :positiivinen-numero
             :tasaa :oikea
@@ -70,7 +70,7 @@
                     (:pituus (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet yllapitokohde-id))
                     (:pituus %))
             :muokattava? #(boolean (not (:yllapitokohde-id %)))
-            :validoi [[:ei-tyhja "Anna pituus"]]}
+            :validoi [[:ei-tyhja-jos-toinen-avain-nil :yllapitokohde-id "Anna pituus"]]}
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :leveys 3 :tyyppi :valinta
             :valinnat (map :numero yllapitokohteet-domain/nykyiset-yllapitoluokat)
