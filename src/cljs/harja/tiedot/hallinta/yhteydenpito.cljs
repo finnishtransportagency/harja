@@ -20,5 +20,7 @@
                                   (hae-yhteydenpidon-vastaanottajat))))
 
 (defn mailto-bcc-linkki [vastaanottajat]
-  (str "mailto:?bcc="
-       (str/join "," (keep :sahkoposti vastaanottajat))))
+  (let [sahkopostit (->> (keep :sahkoposti vastaanottajat)
+                         (filter #(str/includes? % "@")))]
+    (str "mailto:?bcc="
+         (str/join "," sahkopostit))))

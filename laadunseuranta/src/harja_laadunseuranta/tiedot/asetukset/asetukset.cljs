@@ -27,9 +27,14 @@
 (def +persistoitavien-max-maara+ 500)
 
 ;; kartta
-(def +oletuszoom+ 14)
+(def +oletuszoom+ 14) ;; Väliltä 1-18 (arvo 1 on erittäin kaukana ja arvo 18 on ihan kiinni tiessä)
+(def +min-zoom+ 12.6)
+(def +max-zoom+ 14)
 (def +heading-ikonikorjaus+ -90)
 (def +reittiviivan-leveys+ 4)
+;; Montako sekuntia kartan annetaan olla käyttäjän zoomaamassa paikassa
+;; ennen kuin automatiikka palaa käyttöön
+(def +kunnioita-kayttajan-zoomia-s+ 30)
 
 ;; Tätä epätarkempia pisteitä ei koskaan kirjata IndexedDB:n eikä Harjaan.
 ;; Asetettu mielekkääksi tutkimalla seuraavien laitteiden keskimääräiset GPS-tarkkuudet

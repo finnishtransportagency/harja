@@ -445,6 +445,7 @@
                     :validoi [[:ei-tyhja "Tieto puuttuu"]]}
                    {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys "15%"
                     :tyyppi :positiivinen-numero :tasaa :oikea
+                    :desimaalien-maara 0
                     :validoi [[:ei-tyhja "Tieto puuttuu"]]}
                    {:otsikko "Verkko\u00ADtyyppi"
                     :nimi :verkkotyyppi

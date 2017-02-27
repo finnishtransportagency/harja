@@ -41,6 +41,11 @@
    [:span " "]
    [:span.osuus (str "(" osuus "%)")]])
 
+(defmethod muodosta-html :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt]}]]
+  [:span.arvo-ja-yksikko
+   [:span.arvo (if fmt (fmt arvo) arvo)]
+   [:span.yksikko (str yksikko)]])
+
 (defmethod muodosta-html :varillinen-teksti
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
   ;; ennaltamääriteltyjä tyylejä, mutta jos on erikoistapaus missä halutaan käyttää itsemääriteltyä väriä,
@@ -97,7 +102,10 @@
                              (when raporttielementteja?
                                {:komponentti (fn [rivi]
                                                (let [elementti (get rivi i)]
-                                                 (muodosta-html (raportti-domain/raporttielementti-formatterilla elementti format-fn))))}))))
+                                                 (muodosta-html
+                                                   (if (raportti-domain/formatoi-solu? elementti)
+                                                     (raportti-domain/raporttielementti-formatterilla elementti format-fn)
+                                                     elementti))))}))))
                         sarakkeet))
      (if (empty? data)
        [(grid/otsikko (or tyhja "Ei tietoja"))]

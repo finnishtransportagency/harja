@@ -27,15 +27,22 @@
   []
   (when kayta-web-notification-apia? ;; Tsekkaa tämä ensin, jottei kaadu jos Notification API ei ole tuettu
     (when (and
-           (not= (.-permission js/Notification) "granted")
-           (not @notifikaatiolupaa-pyydetty?))
-     (reset! notifikaatiolupaa-pyydetty? true)
-     (.requestPermission js/Notification))))
+            (not= (.-permission js/Notification) "granted")
+            (not @notifikaatiolupaa-pyydetty?))
+      (reset! notifikaatiolupaa-pyydetty? true)
+      (.requestPermission js/Notification))))
 
 (defn- nayta-web-notifikaatio [otsikko teksti]
   (if (notifikaatiolupa?)
-    (js/Notification. otsikko #js {:body teksti
-                                   :icon +notifikaatio-ikoni+})))
+    ;; Mobiiliympäristössä (ainakin Android Chrome) tämä ei toimi, vaan tulisi käyttää Service Workeria
+    ;; (jotta notifikaatiot toimivat myös jos käyttäjä sulkee selaimen).
+    ;; Tälle ei toistaiseksi ole tehty tukea, vaan yritetään näyttää notifikaatio normaalisti.
+    ;; Jos ei onnistu, failaa hiljaa.
+    (try
+      (js/Notification. otsikko #js {:body teksti
+                                     :icon +notifikaatio-ikoni+})
+      (catch js/Error e
+        (log "Notifikaation luonti epäonnistui: " e)))))
 
 (defn- yrita-nayttaa-web-notifikaatio
   "Näyttää web-notifikaation, jos käyttäjä on antanut siihen luvan.
