@@ -9,3 +9,10 @@
 
 (s/def ::postgres-int (s/and int? #(s/int-in-range? postgres-int-min postgres-int-max %)))
 (s/def ::postgres-serial (s/and nat-int? #(s/int-in-range? 1 postgres-int-max %)))
+
+;; Yleiset apurit
+
+(defn poista-nil-avaimet [mappi]
+  (let [arvottomat-avaimet (into #{} (filter #(nil? (% mappi)) (keys mappi)))
+        mappi-ilman-nil-avaimia (apply dissoc mappi arvottomat-avaimet)]
+    mappi-ilman-nil-avaimia))
