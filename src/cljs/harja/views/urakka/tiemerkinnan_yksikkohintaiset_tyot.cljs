@@ -18,7 +18,8 @@
             [harja.ui.viesti :as viesti]
             [harja.asiakas.kommunikaatio :as k]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -70,12 +71,12 @@
                     (:pituus (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet yllapitokohde-id))
                     (:pituus %))
             :muokattava? #(boolean (not (:yllapitokohde-id %)))}
-           {:otsikko "YP-lk" ;; FIXME Formatoi oikein ja lisää arvolle validointi?
-            :nimi :yllapitoluokka :tyyppi :numero :leveys 3
-            :muokattava? #(boolean (not (:yllapitokohde-id %)))
-            :hae #(if-let [yllapitokohde-id (:yllapitokohde-id %)]
-                    (:yllapitoluokka (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet yllapitokohde-id))
-                    (:yllapitoluokka %))}
+           {:otsikko "YP-lk"
+            :nimi :yllapitoluokka :leveys 3 :tyyppi :valinta
+            :valinnat yllapitokohteet-domain/nykyiset-yllapitoluokat
+            :valinta-nayta #(if % (:lyhyt-nimi %) "-")
+            :fmt :lyhyt-nimi
+            :muokattava? #(boolean (not (:yllapitokohde-id %)))}
            {:otsikko "Hinta"
             :nimi :hinta :tyyppi :positiivinen-numero :fmt fmt/euro-opt :leveys 3
             :tasaa :oikea
