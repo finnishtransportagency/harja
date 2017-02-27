@@ -178,8 +178,11 @@
   "Yhdistää 1-ajorataisen (ajr0) ja 2-ajorataisen halutun suunnan mukaisen osan
   viivat yhdeksi viivaksi. Osasta ei tiedetä kummalla ajoradalle se alkaa, mutta
   koko viiva on kulutettava, joten pitää yrittää molempia."
-  [{g0 :the_geom :as ajr0} {g1 :the_geom :as ajr1} fallback ota-lahin?]
+  [tie {g0 :the_geom :as ajr0} {g1 :the_geom :as ajr1} fallback ota-lahin?]
   (cond
+    ;; Jos ei ole kumpaakaan ajorataa, palautetaan nil
+    (and (nil? g0) (nil? g1)) nil
+
     ;; Jos toinen on nil, valitaan suoraan toinen
     (nil? g0) (jatkuva-line-string (line-string-seq g1))
     (nil? g1) (jatkuva-line-string (line-string-seq g0))
@@ -224,13 +227,15 @@
   (let [ajoradat (into {}
                        (map (juxt :ajorata identity))
                        osan-geometriat)
-        oikea (or (keraa-geometriat (ajoradat 0) (ajoradat 1)
+        _ (when (= (keys ajoradat) (list 2))
+            (log/warn "TIE " tie " OSA " osa " EI ole ajorataa 0 tai 1, vain 2."))
+        oikea (or (keraa-geometriat tie (ajoradat 0) (ajoradat 1)
                                     (luo-fallback (ajoradat 2)) false)
-                  (keraa-geometriat (ajoradat 0) (ajoradat 1)
+                  (keraa-geometriat tie (ajoradat 0) (ajoradat 1)
                                     (luo-fallback (ajoradat 2)) true))
-        vasen (or (keraa-geometriat (ajoradat 0) (ajoradat 2)
+        vasen (or (keraa-geometriat tie (ajoradat 0) (ajoradat 2)
                                     (luo-fallback (ajoradat 1)) false)
-                  (keraa-geometriat (ajoradat 0) (ajoradat 2)
+                  (keraa-geometriat tie (ajoradat 0) (ajoradat 2)
                                     (luo-fallback (ajoradat 1)) true))]
 
     (k/vie-tien-osan-ajorata! db {:tie tie :osa osa :ajorata 1 :geom (some-> oikea str)})
@@ -254,8 +259,8 @@
     (log/debug "Tieosoiteverkon tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
 
 ;; Tuonnin testaus REPListä:
-;; (def db (:db harja.palvelin.main/harja-jarjestelma))
-;; (vie-tieverkko-kantaan db "file:shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp")
+(def db (:db harja.palvelin.main/harja-jarjestelma))
+(vie-tieverkko-kantaan db "file:shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp")
 
 ;; Hae tietyn tien pätkät tarkasteluun:
 ;; (def t (harja.shp/lue-shapefile "file:shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"))
