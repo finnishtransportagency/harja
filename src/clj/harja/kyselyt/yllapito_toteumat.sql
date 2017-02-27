@@ -70,7 +70,8 @@ SELECT
   pituus
 FROM tiemerkinnan_yksikkohintainen_toteuma tyt
 WHERE
-  urakka = :urakka
+  poistettu IS NOT TRUE
+  AND urakka = :urakka
   AND ((yllapitokohde IS NULL)
       OR
       (yllapitokohde IS NOT NULL

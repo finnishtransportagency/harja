@@ -11,6 +11,7 @@ ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma
   ADD COLUMN tr_numero INTEGER,
   ADD COLUMN yllapitoluokka INTEGER,
   ADD COLUMN pituus INTEGER,
+  ADD COLUMN poistettu BOOLEAN NOT NULL DEFAULT FALSE,
   ADD CONSTRAINT pituus_ei_neg CHECK (pituus >= 0),
     -- Jos linkattu ylläpitokohteeseen, ei voi olla omia kohdetietoja.
     ADD CONSTRAINT jos_linkattu_yllapitokohteeseen_ei_omia_kohdetietoja CHECK

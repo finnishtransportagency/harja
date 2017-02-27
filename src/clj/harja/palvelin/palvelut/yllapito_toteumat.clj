@@ -103,7 +103,7 @@
 
     (log/debug "Tallennetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
 
-    (doseq [{:keys [hinta hintatyyppi muutospvm id yllapitokohde-id
+    (doseq [{:keys [hinta hintatyyppi muutospvm id yllapitokohde-id poistettu
                     selite tr-numero yllapitoluokka pituus hinta-osoitteelle] :as kohde} toteumat]
       (let [sql-parametrit {:yllapitokohde yllapitokohde-id
                             :hinta hinta
@@ -118,7 +118,8 @@
           (q/paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
             db (merge sql-parametrit {:id id :urakka urakka-id}))
           (q/luo-tiemerkintaurakan-yksikkohintainen-tyo<!
-            db (merge sql-parametrit {:urakka urakka-id})))))
+            db (merge sql-parametrit {:urakka urakka-id
+                                      :poistettu poistettu})))))
     (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id})))
 
 (defrecord YllapitoToteumat []
