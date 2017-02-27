@@ -16,7 +16,7 @@ ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma
     -- Jos linkattu ylläpitokohteeseen, ei voi olla omia kohdetietoja, mutta hinta kohteelle -tieto on pakko olla
     -- Jos ei ole linkattu ylläpitokohteeseen, on pakko olla tienumero ja pituus
     ADD CONSTRAINT linkattu_tai_omat_tiedot_tarkistus CHECK
-      (yllapitokohde IS NULL AND tr_numero IS NOT AND pituus IS NOT NULL)
+      ((yllapitokohde IS NULL AND tr_numero IS NOT AND pituus IS NOT NULL)
         OR (yllapitokohde IS NOT NULL AND tr_numero IS NULL AND yllapitoluokka IS NULL AND pituus IS NULL AND hinta_kohteelle IS NOT NULL));
 ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma ALTER COLUMN yllapitokohde DROP NOT NULL;
 ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma DROP CONSTRAINT yllapitokohde_tiemerkinta_yllapitokohde_key;
