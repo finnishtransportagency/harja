@@ -37,7 +37,7 @@
                     [ajax-loader "Haetaan töitä..."]
                     "Toteumia ei löytynyt")
            :voi-poistaa? (constantly false)
-           :voi-lisata? false
+           :voi-lisata? true
            :piilota-toiminnot? true
            :tallenna (if saa-muokata?
                        (fn [toteumat]
