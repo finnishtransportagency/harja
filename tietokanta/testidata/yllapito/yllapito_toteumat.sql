@@ -54,9 +54,9 @@ VALUES
 INSERT INTO tiemerkinnan_yksikkohintainen_toteuma
 (urakka, yllapitokohde, hinta, hintatyyppi, muutospvm, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
 VALUES ((SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'),
-null, 666, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null, 'Testitoteuma 1', 20, 1, 5),
+null, 666, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null, 'Testitoteuma 1', 20, 8, 5),
 ((SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'),
-null, 123, 'suunnitelma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null, 'Testitoteuma 2', 20, 1, 15),
+null, 123, 'suunnitelma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null, 'Testitoteuma 2', 20, 9, 15),
 ((SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'),
 (SELECT id FROM yllapitokohde WHERE suorittava_tiemerkintaurakka = (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018' LIMIT 1)),
-500, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', '', 'Testitoteuma 3', 20, 1, 53);
+500, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', '', 'Testitoteuma 3', 20, 10, 53);
