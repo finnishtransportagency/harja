@@ -58,7 +58,7 @@
             :validoi [[:ei-tyhja "Anna selite"]]}
 
            ;; Pituus ja tienumero on annettava jos ei linkitetä suoraan ylläpitokohteeseen
-           {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
+           {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero :desimaalien-maara 0
             :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
             :muokattava? #(boolean (not (:yllapitokohde-id %)))
             :hae #(if-let [yllapitokohde-id (:yllapitokohde-id %)]
@@ -66,7 +66,7 @@
                     (:tr-numero %))
             :validoi [[:ei-tyhja-jos-toinen-avain-nil :yllapitokohde-id "Anna tienumero"]]}
            {:otsikko "Pit. (m)" :nimi :pituus :leveys 3
-            :tyyppi :positiivinen-numero
+            :tyyppi :positiivinen-numero :desimaalien-maara 0
             :tasaa :oikea
             :hae #(if-let [yllapitokohde-id (:yllapitokohde-id %)]
                     (:pituus (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet yllapitokohde-id))
@@ -75,7 +75,7 @@
             :validoi [[:ei-tyhja-jos-toinen-avain-nil :yllapitokohde-id "Anna pituus"]]}
 
            {:otsikko "YP-lk"
-            :nimi :yllapitoluokka :leveys 3 :tyyppi :valinta
+            :nimi :yllapitoluokka :leveys 3 :tyyppi :valinta :desimaalien-maara 0
             :valinnat (map :numero yllapitokohteet-domain/nykyiset-yllapitoluokat)
             :valinta-nayta #(if % (yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi %) "-")
             :fmt :lyhyt-nimi
