@@ -82,7 +82,6 @@
       vastaus)))
 
 (defn hae-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id]}]
-  (assert urakka-id "anna urakka-id") ;; TODO KÄYTÄ SPEC
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
   (log/debug "Haetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
@@ -97,7 +96,6 @@
 
 (defn tallenna-tiemerkinnan-yksikkohintaiset-tyot
   [db user {:keys [urakka-id toteumat]}]
-  (assert urakka-id "anna urakka-id") ;; TODO KÄYTÄ SPEC
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
   (jdbc/with-db-transaction [db db]
     (doseq [{:keys [yllapitokohde-id ] :as kohde} toteumat]
