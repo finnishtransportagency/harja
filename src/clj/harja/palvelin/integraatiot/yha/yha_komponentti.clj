@@ -148,13 +148,11 @@
                                (lisaa-http-parametri "yha-id" yha-id)
                                (lisaa-http-parametri "vuosi" vuosi)
                                (lisaa-http-parametri "kayttaja" kayttajatunnus))
-                otsikot {"Content-Type" "text/xml; charset=utf-8"}
                 http-asetukset {:metodi :GET
                                 :url url
                                 :parametrit parametrit
                                 :kayttajatunnus kayttajatunnus
-                                :salasana salasana
-                                :otsikot otsikot {"Content-Type" "text/xml; charset=utf-8"}}
+                                :salasana salasana}
                 {body :body headers :headers}
                 (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
             (kasittele-urakan-kohdehakuvastaus body headers)))))
@@ -175,10 +173,12 @@
               kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
               url (str url "toteumatiedot")
               kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)
+              otsikot {"Content-Type" "text/xml; charset=utf-8"}
               http-asetukset {:metodi :POST
                               :url url
                               :kayttajatunnus kayttajatunnus
-                              :salasana salasana}
+                              :salasana salasana
+                              :otsikot otsikot}
               {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
           (kasittele-urakan-kohdelahetysvastaus db body headers kohteet))
 
