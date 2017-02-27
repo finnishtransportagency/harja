@@ -107,14 +107,14 @@
         toteumien-maara 10
         pyynto {:urakka-id urakka-id
                 :toteumat (->> (mapv (fn [_] (gen/generate (s/gen ::tt/tiemerkinnan-yksikkohintainen-tyo)))
-                                    (range 1 (inc toteumien-maara)))
+                                     (range 1 (inc toteumien-maara)))
                                ;; Liitä osa toteumista ylläpitokohteeseen
                                (mapv #(assoc % :id nil
-                                              :yllapitokohde-id (get [yllapitokohde-id nil] (int (rand 2))))))}
+                                               :yllapitokohde-id (get [yllapitokohde-id nil] (int (rand 2))))))}
         maara-ennen-lisaysta (ffirst (q "SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma;"))
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-tiemerkinnan-yksikkohintaiset-tyot +kayttaja-jvh+
-                                pyynto)
+                          :tallenna-tiemerkinnan-yksikkohintaiset-tyot +kayttaja-jvh+
+                          pyynto)
         maara-lisayksen-jalkeen (ffirst (q "SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma;"))]
     (is (= (+ maara-ennen-lisaysta toteumien-maara) maara-lisayksen-jalkeen))))
 
@@ -125,14 +125,42 @@
         yllapitokohde-id (hae-tiemerkintaurakkaan-osoitettu-yllapitokohde urakka-id)]
 
     (loop [index 0]
-      (let [pyynto {:urakka-id urakka-id
-                    :toteumat [(-> (gen/generate (s/gen ::tt/tiemerkinnan-yksikkohintainen-tyo))
-                                   ;; Tee tästä uusi toteuma ja liitä vain osalle ylläpitokohde
-                                   (assoc :id nil
-                                          :yllapitokohde-id (get [yllapitokohde-id nil] (int (rand 2)))))]}
+      (let [selite (str "yksikkötesti" index)
+            linkitettava-yllapitokohde-id (get [yllapitokohde-id nil] (int (rand 2)))
+            kirjattava-toteuma (as-> (gen/generate (s/gen ::tt/tiemerkinnan-yksikkohintainen-tyo)) toteuma
+                                     ;; Tee tästä uusi toteuma ja liitä vain osalle ylläpitokohde
+                                     (assoc toteuma
+                                       :id nil
+                                       :selite selite
+                                       :poistettu false
+                                       :yllapitokohde-id linkitettava-yllapitokohde-id))
+            pyynto {:urakka-id urakka-id
+                    :toteumat [kirjattava-toteuma]}
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-tiemerkinnan-yksikkohintaiset-tyot +kayttaja-jvh+
-                                    pyynto)]
+                                    pyynto)
+            kirjatut-toteumat (filter #(= (:selite %) selite) vastaus)
+            kirjattu-toteuma (first kirjatut-toteumat)]
+
+        ;; Arvot on kirjattu oikein
+        (is (= (count kirjatut-toteumat) 1))
+        (is (= (:selite kirjattu-toteuma) selite))
+        (is (= (:hintatyyppi kirjattu-toteuma) (:hintatyyppi kirjattava-toteuma)))
+        (is (= (:yllapitoluokka kirjattu-toteuma) (if linkitettava-yllapitokohde-id
+                                                    nil
+                                                    (:yllapitoluokka kirjattava-toteuma))))
+        (is (= (:pituus kirjattu-toteuma) (if linkitettava-yllapitokohde-id
+                                            nil
+                                            (:pituus kirjattava-toteuma))))
+        (is (= (:yllapitokohde-id kirjattu-toteuma) (:yllapitokohde-id kirjattava-toteuma)))
+        (is (= (:tr-numero kirjattu-toteuma) (if linkitettava-yllapitokohde-id
+                                               nil
+                                               (:tr-numero kirjattava-toteuma))))
+        (is (= (:hinta kirjattu-toteuma) (:hinta kirjattava-toteuma)))
+        (is (= (:hinta-kohteelle kirjattu-toteuma) (if linkitettava-yllapitokohde-id
+                                                     (:hinta-kohteelle kirjattava-toteuma)
+                                                     nil)))
+
         (when (< index (dec testien-maara))
           (recur (inc index)))))
 
