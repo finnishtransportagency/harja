@@ -573,7 +573,7 @@
         reitilliset (:reitilliset-tarkastukset tarkastukset)
         pistemaiset (:pistemaiset-tarkastukset tarkastukset)
         odotettu-pistemaisten-maara 0
-        odotettu-reitillisten-maara 4
+        odotettu-reitillisten-maara 3
         osa1 (nth reitilliset 0)
         osa2 (nth reitilliset 1)
         osa3 (nth reitilliset 2)]
@@ -593,7 +593,7 @@
     ;; Muunnosten sisältö vastaa yllä kuvattua olettamusta
     (is (= (:lopullinen-tr-osoite osa1) {:tie nil, :aosa nil, :aet nil, :losa nil, :let nil}))
     (is (empty? (:vakiohavainnot osa1)))
-    (is (= (:lopullinen-tr-osoite osa2) {:tie 666, :aosa 666, :aet 666, :losa 1, :let 1190}))
+    (is (= (:lopullinen-tr-osoite osa2) {:tie 18637, :aosa 1, :aet 1237, :losa 1, :let 1190}))
     (is (not (empty? (:vakiohavainnot osa2))))
     (is (= (:lopullinen-tr-osoite osa3) {:tie 18637, :aosa 1, :aet 1190, :losa 1, :let 1139}))
     (is (empty? (:vakiohavainnot osa3)))))

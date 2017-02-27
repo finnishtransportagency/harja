@@ -135,8 +135,8 @@
 
 (defn- muodosta-tarkastuksen-lopullinen-tr-osoite [reittimerkinta]
   (let [tarkastuksen-reitti (:sijainnit reittimerkinta)
-        lahtopiste (:tr-osoite (first tarkastuksen-reitti))
-        paatepiste (:tr-osoite (last tarkastuksen-reitti))
+        lahtopiste (:tr-osoite (first (remove #(nil? (:tr-osoite %)) tarkastuksen-reitti)))
+        paatepiste (:tr-osoite (last (remove #(nil? (:tr-osoite %)) tarkastuksen-reitti)))
         koko-tarkastuksen-tr-osoite {:tie (:tie lahtopiste)
                                      :aosa (:aosa lahtopiste)
                                      :aet (:aet lahtopiste)
