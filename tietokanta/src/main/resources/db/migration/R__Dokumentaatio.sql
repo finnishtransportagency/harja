@@ -31,9 +31,9 @@ E'Päällystysilmoitus on ylläpitokohteeseen (paallystyskohde-sarake) liittyvä
   -- Ylläpito (tiemerkintä)
 
 COMMENT ON TABLE tiemerkinnan_yksikkohintainen_toteuma IS
-E'Tauluun tallentuu tiemerkintäurakassa tehdyt toteumat, jotka voivat liittyä ylläpitokohteeseen. Mikäli toteuma ei liity ylläpitokohteeseen, sille kirjataan oma tr-osoite, ylläpitoluokka ja pituus.\n\n
+E'Tauluun tallentuu tiemerkintäurakassa tehdyt toteumat, jotka voivat liittyä ylläpitokohteeseen. Mikäli toteuma ei liity ylläpitokohteeseen, sille kirjataan oma tr-osoite ja pituus.\n\n
 
-hinta_kohteelle, string, jonka sisältönä on kohteen osoite sillä hetkellä kun hinta annettuun. Käytetään tunnistamaan tilanne, jossa hinta on annettu kohteen vanhalle osoitteelle';
+hinta_kohteelle, string, jonka sisältönä on kohteen osoite sillä hetkellä kun hinta annettiin. Käytetään tunnistamaan tilanne, jossa hinta on annettu kohteen vanhalle osoitteelle';
 
 -- FIXME ENABLOI TÄMÄ KUN HAR-4284 on tehty
 -- COMMENT ON TABLE yllapito_muu_toteuma IS
