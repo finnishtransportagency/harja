@@ -54,9 +54,6 @@ INSERT INTO materiaalin_kaytto (alkupvm, loppupvm, maara, materiaali, urakka, so
 -- Toteumat
 \i testidata/toteumat.sql
 
--- Ylläpidon toteumat
-\i testidata/yllapito/yllapito_toteumat.sql
-
 -- Sillat
 \i testidata/sillat.sql
 
@@ -75,6 +72,9 @@ INSERT INTO materiaalin_kaytto (alkupvm, loppupvm, maara, materiaali, urakka, so
 
 -- Paikkauskohteet & -ilmoitukset
 \i testidata/yllapito/paikkaus.sql
+
+-- Ylläpidon toteumat
+\i testidata/yllapito/yllapito_toteumat.sql
 
 -- Päivitä päällystys & paikkausurakoiden geometriat kohdeluetteloiden perusteella
 SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
