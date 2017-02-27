@@ -117,7 +117,7 @@
         (if (id/id-olemassa? id)
           (q/paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
             db (merge sql-parametrit {:id id :urakka urakka-id
-                                      :poistettu poistettu}))
+                                      :poistettu (or poistettu false)}))
           (q/luo-tiemerkintaurakan-yksikkohintainen-tyo<!
             db (merge sql-parametrit {:urakka urakka-id})))))
     (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id})))
