@@ -156,10 +156,7 @@
         (is (= (:tr-numero kirjattu-toteuma) (if linkitettava-yllapitokohde-id
                                                nil
                                                (:tr-numero kirjattava-toteuma))))
-        (is (= (:hinta kirjattu-toteuma) (:hinta kirjattava-toteuma)))
-        (is (= (:hinta-kohteelle kirjattu-toteuma) (if linkitettava-yllapitokohde-id
-                                                     (:hinta-kohteelle kirjattava-toteuma)
-                                                     nil)))
+        (is (= (format "%.2f" (:hinta kirjattu-toteuma)) (format "%.2f" (:hinta kirjattava-toteuma))))
 
         (when (< index (dec testien-maara))
           (recur (inc index)))))

@@ -11,7 +11,7 @@
 ;; Toteuma
 
 (s/def ::selite string?)
-(s/def ::muutospvm #?(:clj (s/nilable inst?)
+(s/def ::muutospvm #?(:clj  (s/nilable inst?)
                       :cljs (s/nilable inst?)))
 (s/def ::hintatyyppi #{:toteuma :suunnitelma})
 (s/def ::yllapitoluokka (s/nilable ::yllapitokohteet/yllapitoluokka))
@@ -25,8 +25,8 @@
 
 (s/def ::tiemerkinnan-yksikkohintainen-tyo
   (s/keys :req-un [::selite ::muutospvm ::hintatyyppi ::yllapitoluokka ::id
-                   ::pituus ::hinta-kohteelle
-                   ::yllapitokohde-id ::tr-numero ::hinta]
+                   ::pituus ::yllapitokohde-id ::hinta-kohteelle
+                   ::tr-numero ::hinta]
           :opt-un [::poistettu]))
 
 ;; Haut
