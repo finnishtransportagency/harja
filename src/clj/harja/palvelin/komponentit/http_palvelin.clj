@@ -83,9 +83,10 @@
         (kasittelija-fn req)))))
 
 (defn- validoi-vastaus [spec data]
-  (log/debug "VALIDOI VASTAUS: " spec)
-  (when (and spec (not (s/valid? spec data)))
-    (log/error (s/explain-str spec data))))
+  (when spec
+    (log/debug "VALIDOI VASTAUS: " spec)
+    (when (not (s/valid? spec data))
+      (log/error (s/explain-str spec data)))))
 
 (defn- transit-post-kasittelija
   "Luo transit-käsittelijän POST kutsuille annettuun palvelufunktioon."

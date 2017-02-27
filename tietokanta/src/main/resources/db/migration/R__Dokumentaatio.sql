@@ -108,6 +108,6 @@ E'Sanktiotyyppi-taulussa kerrotaan eri urakkatyyppien kannalta olennaiset sankti
 COMMENT ON TABLE urakkatyypin_indeksi IS
 E'Sisältää tiedon mitä indeksejä erityyppisissä urakoissa on käytössä.';
 
-COMMENT ON TABLE paallystysurakan_indeksit IS
-E'Päällystysurakoissa pitää sitoa kustannuksia mm. raskaan ja kevyen polttoöljyn tai \n
+COMMENT ON TABLE paallystysurakan_indeksi IS
+E'Päällystysurakoissa pitää sitoa kustannuksia mm. bitumin ja kevyen polttoöljyn tai \n
  nestekaasun hintaindekseihin. Tässä taulussa on tieto, mitä sidontoja päällystysurakoissa on tehty.';

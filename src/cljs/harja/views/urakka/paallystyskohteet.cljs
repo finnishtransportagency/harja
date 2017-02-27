@@ -24,39 +24,33 @@
             [harja.ui.valinnat :as valinnat]
             [cljs-time.core :as t]
             [harja.tiedot.hallinta.indeksit :as indeksit]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
 (defn- materiaalin-indeksisidontarivi
-  [otsikko rivi raaka-aine-avain]
-  (let [raaka-aine (raaka-aine-avain rivi)]
-    (when (:id raaka-aine)
-      [:div
-       [:span.tietokentta (str otsikko ": ")]
-       [:span.tietoarvo
-        (str
-          (:indeksinimi raaka-aine)
-          (when (:lahtotason-arvo raaka-aine)
-            (str " (lähtötaso "
-                 (:lahtotason-vuosi rivi) "/" (:lahtotason-kuukausi rivi)
-                 ": "
-                 (:lahtotason-arvo raaka-aine) " €/t)")))]])))
+  [{:keys [indeksi lahtotason-vuosi lahtotason-kuukausi]}]
+  [:div
+   [:span.tietokentta (paallystys-indeksit/raaka-aine-nimi (:raakaaine indeksi)) ": "]
+   [:span.tietoarvo
+    (str
+     (:indeksinimi indeksi)
+     (when (:arvo indeksi)
+       (str " (lähtötaso "
+            lahtotason-vuosi "/" lahtotason-kuukausi
+            ": "
+            (:arvo indeksi) " €/t)")))]])
 
 (defn indeksitiedot
-  [valittu-vuosi]
-  (let [valittu-vuosi (if-not valittu-vuosi
-                        (pvm/vuosi (pvm/nyt))
-                        valittu-vuosi)
-        vuoden-indeksitiedot (first (filter #(= valittu-vuosi (:urakkavuosi %))
-                                            @urakka/paallystysurakan-indeksitiedot))]
-    (when (map? vuoden-indeksitiedot)
-      [:span
-       [:h6 "Urakassa vuonna " valittu-vuosi " raaka-aineiden hinnat sidottu seuraaviin indekseihin"]
-       (materiaalin-indeksisidontarivi "Raskas polttoöljy" vuoden-indeksitiedot :raskas)
-       (materiaalin-indeksisidontarivi "Kevyt polttoöljy" vuoden-indeksitiedot :kevyt)
-       (materiaalin-indeksisidontarivi "Nestekaasu" vuoden-indeksitiedot :nestekaasu)])))
+  []
+  (let [indeksitiedot @urakka/paallystysurakan-indeksitiedot]
+    [:span
+     [:h6 "Urakassa raaka-aineiden hinnat sidottu seuraaviin indekseihin"]
+     (for [idx indeksitiedot]
+       ^{:key (:id idx)}
+       [materiaalin-indeksisidontarivi idx])]))
 
 (defn paallystyskohteet [ur]
   (let [hae-tietoja (fn [urakan-tiedot]
@@ -108,7 +102,7 @@
                           [:span "Huomioi etumerkki hinnanmuutoksissa. Ennustettuja määriä sisältävät kentät on värjätty "]
                           [:span.grid-solu-ennustettu "sinisellä"]
                           [:span "."]]]
-        [indeksitiedot @urakka/valittu-urakan-vuosi]
+        [indeksitiedot]
 
         [:div.kohdeluettelon-paivitys
          [yha/paivita-kohdeluettelo ur oikeudet/urakat-kohdeluettelo-paallystyskohteet]

@@ -15,5 +15,5 @@ psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U harj
 echo "Luodaan harjatest_template kanta harja-kannan pohjalta"
 psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U harja harja -c "CREATE DATABASE harjatest_template WITH TEMPLATE harja OWNER harjatest;"
 
-echo "Luodaan harjatest kanta harja-kannan pohjalta"
+echo "Luodaan harjatest kanta harjatest_template kannan pohjalta"
 psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U harja harja -c "CREATE DATABASE harjatest WITH TEMPLATE harjatest_template OWNER harjatest;"

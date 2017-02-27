@@ -94,6 +94,9 @@
     (when elt
       (.-disabled elt))))
 
+(defn enabled? [path]
+  (not (disabled? path)))
+
 (defn text [path]
   (when-let [e (->elt path)]
     (.-innerText e)))
