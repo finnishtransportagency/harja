@@ -16,10 +16,14 @@
 (def kustannus-hinta-leveys 3)
 (def kustannus-pvm-leveys 3)
 
+(defn- rivi-poistettavissa? [m]
+  (log "rivi-poistettavissa? " (pr-str m))
+  (or (-> m :muokattava) (-> m :id neg?)))
+
 (def grid-opts {:otsikko "Urakan muut kustannukset (ei kohdekohtaiset)"
                 :voi-lisata? true
                 :voi-muokata-rivia? :muokattava
-                :esta-poistaminen? (complement :muokattava)
+                :esta-poistaminen? (complement rivi-poistettavissa?)
                 :esta-poistaminen-tooltip
                 (fn [_] "Kohteeseen liittymättömästä sanktiosta johtuvaa kustannusta ei voi poistaa.")})
 
