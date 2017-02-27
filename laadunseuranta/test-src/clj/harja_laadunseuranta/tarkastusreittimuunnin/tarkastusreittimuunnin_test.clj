@@ -580,7 +580,8 @@
 
     ;; Tässä pitäisi muodostua kolme tarkastusta:
     ;; 1. Ajo lähtee tieverkon ulkopuolelta ja katkeaa kun laitetaan jatkuva havainto päälle.
-    ;;    Tälle tarkastukselle ei saada ollenkaan muodostettua tieosoitetta. Tämä on OK.
+    ;;    Tarkastus on kokonaisuudessaan tieverkon ulkopuolella, joten
+    ;;    tälle tarkastukselle ei saada muodostettua tieosoitetta. Tämä on OK.
     ;; 2. Ajo, jossa on jatkuva havainto päällä. Jossain vaiheessa tullaan tieverkolle.
     ;;    Ajon tieosoitte alkaa ensimmäisestä pisteestä, joka osuu tieverkolle, ja päättyy
     ;;    viimeiseen pisteeseen, jossa havainto oli päällä.
