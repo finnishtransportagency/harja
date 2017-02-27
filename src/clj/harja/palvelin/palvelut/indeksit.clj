@@ -8,7 +8,9 @@
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.domain.indeksit :as d]
+            [harja.domain.urakka :as urakka]))
 
 (defn hae-urakan-kuukauden-indeksiarvo
   "Palvelu, joka palauttaa tietyn kuukauden indeksin arvon ja nimen urakalle"
@@ -91,11 +93,12 @@
 
 (defn hae-paallystysurakan-indeksitiedot
   "Palvelu, joka palauttaa annetun päällystysurakan indeksitiedot"
-  [db user {:keys [urakka-id]}]
+  [db user {urakka-id ::urakka/id}]
   (log/debug "hae-paallystysurakan-indeksit" urakka-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
   (let [indeksit (into []
-                       (map konv/alaviiva->rakenne)
+                       (comp (map konv/alaviiva->rakenne)
+                             (map #(konv/string->keyword % [:indeksi :urakkatyyppi])))
                        (q/hae-paallystysurakan-indeksitiedot db {:urakka urakka-id}))]
     (log/debug "hae-paallystysurakan-indeksit: " indeksit)
     indeksit))
@@ -111,26 +114,30 @@
 (defn tallenna-paallystysurakan-indeksitiedot
   "Palvelu joka tallentaa päällystysurakan indeksitiedot eli mihin arvoihin mikäkin raaka-ainehinta on sidottu.
   Esim. Bitumin arvo sidotaan usein raskaan polttoöljyn Platts-indeksiin, nestekaasulle ja kevyelle polttoöljylle on omat hintansta."
-  [db user {:keys [urakka-id indeksitiedot]}]
+  [db user indeksitiedot]
   (log/debug "tallenna-paallystysurakan-indeksitiedot: " indeksitiedot)
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
-  (jdbc/with-db-transaction [c db]
-    (doseq [i indeksitiedot]
-      (when (id-olemassa? (:id i))
-        (vaadi-paallystysurakan-indeksi-kuuluu-urakkaan db urakka-id (:id i)))
+  (doseq [urakka-id (distinct (map :urakka indeksitiedot))]
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id))
+  (let [urakka-id (some :urakka indeksitiedot)]
+    (jdbc/with-db-transaction [c db]
+      (doseq [{urakka-id :urakka
+               id :id
+               poistettu :poistettu
+               indeksi :indeksi
+               :as i} indeksitiedot]
+        (when (id-olemassa? id)
+          (vaadi-paallystysurakan-indeksi-kuuluu-urakkaan db urakka-id id))
 
-      (when-not (and (neg? (:id i)) (:poistettu i))  ;gridillä poistettu samalla kun luotu, ei käsitellä
-        (let [params {:indeksi_nestekaasu (get-in i [:nestekaasu :id])
-                      :indeksi_polttooljyraskas (get-in i [:raskas :id])
-                      :indeksi_polttooljykevyt (get-in i [:kevyt :id])
-                      :kayttaja (:id user)
-                      :urakka urakka-id
-                      :lahtotason_kuukausi (:lahtotason-kuukausi i)
-                      :lahtotason_vuosi (:lahtotason-vuosi i)
-                      :urakkavuosi (:urakkavuosi i)
-                      :poistettu (:poistettu i)}]
-          (q/tallenna-paallystysurakan-indeksitiedot! c params))))
-    (hae-paallystysurakan-indeksitiedot c user {:urakka-id urakka-id})))
+        (when-not (and (neg? id) poistettu)  ;gridillä poistettu samalla kun luotu, ei käsitellä
+          (q/tallenna-paallystysurakan-indeksitiedot!
+           c (-> i
+                 ;; korvaa indeksi mäp sen :id arvolla
+                 (update :indeksi :id)
+                 ;; lisää käyttäjän tieto
+                 (assoc :kayttaja (:id user))
+                 ;; poistettu tieto
+                 (assoc :poistettu (boolean poistettu))))))
+      (hae-paallystysurakan-indeksitiedot c user {::urakka/id urakka-id}))))
 
 
 (defrecord Indeksit []
@@ -148,10 +155,14 @@
                           (hae-urakkatyypin-indeksit (:db this) user)))
       (julkaise-palvelu :paallystysurakan-indeksitiedot
                         (fn [user tiedot]
-                          (hae-paallystysurakan-indeksitiedot (:db this) user tiedot)))
+                          (hae-paallystysurakan-indeksitiedot (:db this) user tiedot))
+                        {:kysely-spec ::urakka/urakka-kysely
+                         :vastaus-spec ::d/paallystysurakan-indeksit})
       (julkaise-palvelu :tallenna-paallystysurakan-indeksitiedot
                         (fn [user tiedot]
-                          (tallenna-paallystysurakan-indeksitiedot (:db this) user tiedot)))
+                          (tallenna-paallystysurakan-indeksitiedot (:db this) user tiedot))
+                        {:kysely-spec ::d/paallystysurakan-indeksit
+                         :vastaus-spec ::d/paallystysurakan-indeksit})
       )
     this)
 
