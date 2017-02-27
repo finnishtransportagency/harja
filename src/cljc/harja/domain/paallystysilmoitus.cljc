@@ -246,7 +246,7 @@
     :tr-loppuosa s/Int
     :tr-loppuetaisyys s/Int
     :kasittelymenetelma +alustamenetelma+
-    :paksuus s/Num ;; cm
+    :paksuus s/Int ;; cm
     :verkkotyyppi +verkkotyyppi+
     :verkon-tarkoitus +verkon-tarkoitus+
     :verkon-sijainti +verkon-sijainti+

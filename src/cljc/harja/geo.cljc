@@ -3,7 +3,76 @@
   #?(:clj
      (:import (org.postgresql.geometric PGpoint PGpolygon)
               (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString
-                           GeometryCollection Geometry MultiPoint))))
+                           GeometryCollection Geometry MultiPoint)))
+  (:require [clojure.spec :as s]))
+
+(s/def ::single-coordinate (s/every number? :min-count 2 :max-count 2))
+(s/def ::multiple-coordinates (s/every ::single-coordinate))
+(s/def ::coordinates
+  ;; :coordinates avainta käytetään joko yhden [x y] koordinaatin
+  ;; tai [[x1 y1] ... [xN yN]] vektorin esittämiseen.
+  (s/or :single-coordinate ::single-coordinate
+        :multiple-coordinates ::multiple-coordinates))
+(s/def ::points (s/every ::single-coordinate))
+
+(defmulti geometria-spec
+  "Määrittelee geometrian tyypin mukaisen specin"
+  :type)
+
+(s/def ::geometria
+  (s/multi-spec geometria-spec :type))
+
+(defmethod geometria-spec :point [_]
+  (s/keys :req-un [::coordinates]))
+
+(defmethod geometria-spec :geometry-collection [_]
+  (s/keys :req-un [::geometries]))
+(s/def ::geometries (s/every ::geometria))
+
+(defmethod geometria-spec :multipolygon [_]
+  (s/keys :req-un [::polygons]))
+(s/def ::polygons (s/coll-of ::polygon))
+
+(defmethod geometria-spec :polygon [_]
+  ::polygon)
+(s/def ::polygon (s/keys :req-un [::coordinates]))
+
+(defmethod geometria-spec :multipoint [_]
+  (s/keys :req-un [::coordinates]))
+
+(defmethod geometria-spec :line [_]
+  ::line)
+(s/def ::line (s/keys :req-un [::points]))
+
+(defmethod geometria-spec :multiline [_]
+  (s/keys :req-un [::lines]))
+(s/def ::lines (s/every ::line))
+
+
+;; FIXME: Jossain vaiheessa geometriat ja featuret näyttää
+;; menneen vähän sekaisin ja tarvitaan specit eri
+;; suomenkielisille varianteille: viiva, moniviiva
+;; sekä featureille: icon, merkki
+;;
+;; Nämä pitäisi korjata käyttöpaikoissa.
+
+(defmethod geometria-spec :icon [_]
+  (s/keys :req-un [::coordinates]))
+
+(s/def ::radius pos?)
+
+(defmethod geometria-spec :circle [_]
+  (s/keys :req-un [::coordinates ::radius]))
+
+(defmethod geometria-spec :moniviiva [_]
+  (s/keys :req-un [::lines]))
+(defmethod geometria-spec :viiva [_]
+  ::line)
+(defmethod geometria-spec :merkki [_]
+  (s/keys :req-un [::coordinates]))
+
+
+
 
 #?(:clj
    (defprotocol MuunnaGeometria

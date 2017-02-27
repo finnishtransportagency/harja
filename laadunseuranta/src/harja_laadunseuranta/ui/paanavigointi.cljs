@@ -20,7 +20,7 @@
 (def edellinen-header-leveys (atom nil))
 (def +header-reuna-padding+ 80)
 (def +valilehti-perusleveys+ 60) ;; Kun välilehti on tyhjä
-(def +kirjain-leveys+ 9.3) ;; kirjaimen leveys keskimäärin
+(def +kirjain-leveys+ 9.5) ;; kirjaimen leveys keskimäärin
 (defn- maarittele-valilehtien-maara-per-ryhma [header-leveys valilehdet]
   ;; Jaetaan välilehdet ryhmiin. Tarkoituksena etsiä sellainen jako, jossa
   ;; välilehtien määrä / ryhmä on mahdollisimman suuri niin, ettei välilehtien
@@ -52,7 +52,7 @@
 ;; (some mahtuuko-fn (range (count homma) 1))
 
 (defn- toggle-painike [_]
-  (fn [{:keys [nimi ikoni avain tyyppi ikoni-lahde
+  (fn [{:keys [nimi ikoni avain tyyppi ikoni-lahde pienempi-fontti?
                click-fn jatkuvat-havainnot disabloitu?] :as tiedot}]
     [:div {:on-click #(when-not disabloitu?
                         (click-fn tiedot))
@@ -69,7 +69,9 @@
         :vali [:img.toggle-vali {:src kuvat/+havainto-vali+}])
       (when ikoni
         [kuvat/svg-sprite ikoni "toggle-ikoni"])]
-     [:div.toggle-valintapainike-otsikko
+     [:div {:class (str "toggle-valintapainike-otsikko "
+                        (when pienempi-fontti?
+                          "toggle-valintapainike-otsikko-pienempi"))}
       nimi]]))
 
 (defn- ryhmittele-valilehdet-uudelleen-tarvittaessa! [{:keys [header-komponentti
