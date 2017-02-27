@@ -3,7 +3,11 @@
   #?(:clj
      (:require [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
                [clojure.spec :as s]
-       #?@(:clj [[clojure.future :refer :all]]))))
+       #?@(:clj [[clojure.future :refer :all]])))
+  #?(:cljs
+     (:require [cljs.spec :as s])))
+
+(s/def ::yllapitoluokka (s/int-in 1 10))
 
 (def ^{:doc "Sisältää vain nykyisin käytössä olevat luokat 1,2 ja 3 (eli numerot 8, 9 ja 10)."}
 nykyiset-yllapitoluokat
@@ -12,7 +16,7 @@ nykyiset-yllapitoluokat
    {:lyhyt-nimi "3" :nimi "Luokka 3"  :numero 10}
    {:lyhyt-nimi "-" :nimi "Ei ylläpitoluokkaa" :numero nil}])
 
-(def vanhat-yllapitoluokat ^{:doc "Sisältää vanhat ylläpitoluokat, tarvitaan YHA:n kanssa taakseepäin yhteensopivuuden vuoksi."}
+(def vanhat-yllapitoluokat ^{:doc "Sisältää vanhat ylläpitoluokat, tarvitaan YHA:n kanssa taakseepäinyhteensopivuuden vuoksi."}
   [{:lyhyt-nimi "1a" :nimi "Luokka 1a"  :numero 1}
    {:lyhyt-nimi "1b" :nimi "Luokka 1b"   :numero 2}
    {:lyhyt-nimi "1c" :nimi "Luokka 1c"  :numero 3}
@@ -24,7 +28,7 @@ nykyiset-yllapitoluokat
 (def ^{:doc "Mahdolliset ylläpitoluokat. Nimi kertoo käyttöliittymässä käytetyn
 nimen. Numero on YHA:n koodi luokalle joka talletetaan myös Harjan kantaan.
 2017 alkaen pyritään käyttämään enää luokkia 1,2 ja 3 (eli numerot 8, 9 ja 10), mutta
-taaksenpäin yhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
+taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
 yllapitoluokat
   (into [] (concat nykyiset-yllapitoluokat vanhat-yllapitoluokat)))
 
@@ -247,5 +251,3 @@ yllapitoluokan-numero
     :valmis "Valmis"
     :aloitettu "Aloitettu"
     "Ei aloitettu"))
-
-(s/def ::yllapitoluokka (s/int-in 0 20))
