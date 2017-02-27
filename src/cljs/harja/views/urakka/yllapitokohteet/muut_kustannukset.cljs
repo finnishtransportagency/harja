@@ -37,11 +37,6 @@
     :validoi [[:rajattu-numero-jos-muokattava nil 0 100000000 "Anna arvo väliltä 0 - 100 000 000"]]
     :tyyppi :numero :leveys kustannus-hinta-leveys}])
 
-(defmethod validoi-saanto :rajattu-numero-jos-muokattava [_ _ data rivi _ _ & [min-arvo max-arvo viesti]]
-  (when (:muokattava rivi)
-    (when-not (<= min-arvo data max-arvo)
-      (or viesti (str "Anna arvo välillä " min-arvo " - " max-arvo "")))))
-
 (defn muut-kustannukset [urakka]
   (komp/luo
    (fn [urakka]
