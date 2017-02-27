@@ -71,9 +71,9 @@
             :muokattava? #(boolean (not (:yllapitokohde-id %)))}
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :leveys 3 :tyyppi :valinta
-            :valinnat yllapitokohteet-domain/nykyiset-yllapitoluokat
-            :valinta-nayta #(if % (:lyhyt-nimi %) "-")
-            :fmt :lyhyt-nimi
+            :valinnat (map :numero yllapitokohteet-domain/nykyiset-yllapitoluokat)
+            :valinta-nayta #(if % (yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi %) "-")
+            :fmt yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi
             :muokattava? #(boolean (not (:yllapitokohde-id %)))}
            {:otsikko "Hinta"
             :validoi [[:ei-tyhja "Anna hinta"]]
