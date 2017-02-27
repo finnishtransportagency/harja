@@ -25,5 +25,8 @@ ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma DROP CONSTRAINT yllapitokohde_
 UPDATE tiemerkinnan_yksikkohintainen_toteuma tyt
 SET urakka = (SELECT suorittava_tiemerkintaurakka FROM yllapitokohde WHERE id = tyt.yllapitokohde);
 
+-- Hinta pitäisi olla numeric
+ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma ALTER COLUMN hinta TYPE NUMERIC USING hinta::NUMERIC;
+
 -- Päivitä hintatyyppi-type
 ALTER TYPE yllapitokohde_tiemerkinta_hintatyyppi RENAME TO tiemerkinta_toteuma_hintatyyppi;
