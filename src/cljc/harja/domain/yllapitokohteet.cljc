@@ -26,8 +26,8 @@ nykyiset-yllapitoluokat
 
 (def kaikki-yllapitoluokat (concat nykyiset-yllapitoluokat vanhat-yllapitoluokat))
 
-(s/def ::yllapitoluokka (s/int-in (apply min kaikki-yllapitoluokat)
-                                  (apply max kaikki-yllapitoluokat)))
+(s/def ::yllapitoluokka (s/int-in (apply min (map :numero kaikki-yllapitoluokat))
+                                  (apply max (map :numero kaikki-yllapitoluokat))))
 
 (def ^{:doc "Mahdolliset ylläpitoluokat. Nimi kertoo käyttöliittymässä käytetyn
 nimen. Numero on YHA:n koodi luokalle joka talletetaan myös Harjan kantaan.
