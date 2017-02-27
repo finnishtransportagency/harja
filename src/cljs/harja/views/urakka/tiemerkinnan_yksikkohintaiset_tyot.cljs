@@ -53,8 +53,7 @@
                                   "Ei liity kohteeseen")
             :fmt #(if-let [kohde (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet %)]
                     (tr-domain/yllapitokohde-tekstina kohde)
-                    "Ei liity kohteeseen")
-            :validoi [[:ei-tyhja "Anna arvo"]]}
+                    "Ei liity kohteeseen")}
            {:otsikko "Selite" :leveys 7 :nimi :selite :tyyppi :string :pituus-max 512
             :validoi [[:ei-tyhja "Anna selite"]]}
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
