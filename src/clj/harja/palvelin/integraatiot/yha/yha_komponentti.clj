@@ -148,11 +148,13 @@
                                (lisaa-http-parametri "yha-id" yha-id)
                                (lisaa-http-parametri "vuosi" vuosi)
                                (lisaa-http-parametri "kayttaja" kayttajatunnus))
+                otsikot {"Content-Type" "text/xml; charset=utf-8"}
                 http-asetukset {:metodi :GET
                                 :url url
                                 :parametrit parametrit
                                 :kayttajatunnus kayttajatunnus
-                                :salasana salasana}
+                                :salasana salasana
+                                :otsikot otsikot {"Content-Type" "text/xml; charset=utf-8"}}
                 {body :body headers :headers}
                 (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
             (kasittele-urakan-kohdehakuvastaus body headers)))))
