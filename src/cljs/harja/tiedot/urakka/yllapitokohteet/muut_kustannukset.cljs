@@ -24,7 +24,7 @@
 (defonce muiden-kustannusten-tiedot (atom nil))
 (defonce kohdistamattomien-sanktioiden-tiedot (atom nil))
 
-(defn- grid-tiedot* [mk-tiedot ks-tiedot]
+(defn- grid-tiedot* [muut-kustannukset-tiedot kohdistamattomat-tiedot]
   (let [mk-id #(str "ypt-" (:id %))
         ks-id #(str "sanktio-" (:id %))
         ks->grid (fn [ks] {:hinta  (-> ks :summa)
@@ -32,8 +32,8 @@
                            :selite (-> ks :tyyppi :nimi)
                            :id     (-> ks :id)})]
     (concat
-     (map #(assoc % :muokattava true :id (mk-id %)) mk-tiedot)
-     (map #(-> % ks->grid (assoc :muokattava false :id (ks-id %))) ks-tiedot))))
+     (map #(assoc % :muokattava true :id (mk-id %)) muut-kustannukset-tiedot)
+     (map #(-> % ks->grid (assoc :muokattava false :id (ks-id %))) kohdistamattomat-tiedot))))
 
 (def grid-tiedot
   (reaction (grid-tiedot* @muiden-kustannusten-tiedot @kohdistamattomien-sanktioiden-tiedot)))
