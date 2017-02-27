@@ -6,28 +6,28 @@
     [harja.domain.yllapitokohteet :as yllapitokohteet]
     [harja.domain.tierekisteri :as tr-domain]
     [harja.tyokalut.spec-apurit :as apurit]
-    #?@(:clj [[clojure.future :refer :all]])))
+    #?@(:clj [
+    [clojure.future :refer :all]])))
 
 ;; Toteuma
 
 (s/def ::selite string?)
-(s/def ::muutospvm #?(:clj  (s/nilable inst?)
-                      :cljs (s/nilable inst?)))
+(s/def ::muutospvm #?(:clj  inst?
+                      :cljs inst?))
 (s/def ::hintatyyppi #{:toteuma :suunnitelma})
-(s/def ::yllapitoluokka (s/nilable ::yllapitokohteet/yllapitoluokka))
+(s/def ::yllapitoluokka (s/nilable ::yllapitokohteet/yllapitoluokka)) ;; nil = ei ylläpitoluokkaa
 (s/def ::id (s/nilable int?))
-(s/def ::pituus (s/nilable ::tr-domain/pituus))
-(s/def ::hinta-kohteelle (s/nilable (s/and string? #(>= (count %) 1))))
-(s/def ::yllapitokohde-id (s/nilable ::apurit/postgres-serial))
-(s/def ::tr-numero (s/nilable ::tr-domain/numero))
+(s/def ::pituus ::tr-domain/pituus)
+(s/def ::hinta-kohteelle (s/and string? #(>= (count %) 1)))
+(s/def ::yllapitokohde-id ::apurit/postgres-serial)
+(s/def ::tr-numero ::tr-domain/numero)
 (s/def ::hinta (s/double-in :min 0 :max 10000000 :infinite? false :NaN? false))
 (s/def ::poistettu boolean?)
 
 (s/def ::tiemerkinnan-yksikkohintainen-tyo
-  (s/keys :req-un [::selite ::muutospvm ::hintatyyppi ::yllapitoluokka ::id
-                   ::pituus ::yllapitokohde-id ::hinta-kohteelle
-                   ::tr-numero ::hinta]
-          :opt-un [::poistettu]))
+  (s/keys :req-un [::id ::selite ::hintatyyppi ::hinta]
+          :opt-un [::poistettu ::muutospvm ::pituus ::tr-numero ::yllapitoluokka
+                   ::yllapitokohde-id ::hinta-kohteelle]))
 
 ;; Haut
 

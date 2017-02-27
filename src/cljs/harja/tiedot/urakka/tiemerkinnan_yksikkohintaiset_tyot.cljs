@@ -2,6 +2,7 @@
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.loki :refer [log tarkkaile!]]
+            [harja.tyokalut.spec-apurit :as spec-apurit]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav])
   (:require-macros [harja.atom :refer [reaction<!]]
@@ -56,12 +57,13 @@
 
 (defn tallenna-toteumat-grid [{:keys [toteumat urakka-id tiemerkinnan-toteumat-atom
                                       paallystysurakan-kohteet epaonnistui-fn]}]
-  (go (let [kasitellyt-toteumat (map
-                                  #(if-let [kohde (paallystysurakan-kohde-idlla paallystysurakan-kohteet
-                                                                                (:yllapitokohde-id %))]
-                                     (assoc % :hinta-kohteelle (maarittele-hinnan-kohde kohde))
-                                     %)
-                                  toteumat)
+  (go (let [kasitellyt-toteumat (->> toteumat
+                                     (map ;; Lisää :hinta-kohteelle jos linkitetty ylläpitokohteeseen
+                                       #(if-let [kohde (paallystysurakan-kohde-idlla paallystysurakan-kohteet
+                                                                                     (:yllapitokohde-id %))]
+                                          (assoc % :hinta-kohteelle (maarittele-hinnan-kohde kohde))
+                                          %))
+                                     (map spec-apurit/poista-nil-avaimet))
             vastaus (<! (tallenna-tiemerkinnan-toteumat urakka-id kasitellyt-toteumat))]
         (if (k/virhe? vastaus)
           (epaonnistui-fn)

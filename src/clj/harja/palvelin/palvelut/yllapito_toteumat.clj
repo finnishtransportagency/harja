@@ -5,6 +5,7 @@
             [harja.kyselyt.yllapito-toteumat :as q]
             [harja.domain.tiemerkinta-toteumat :as tt]
             [taoensso.timbre :as log]
+            [harja.tyokalut.spec-apurit :as spec-apurit]
             [harja.id :as id]
             [harja.palvelin.komponentit.http-palvelin
              :refer
@@ -87,6 +88,7 @@
   (jdbc/with-db-transaction [db db]
     (let [toteumat (into []
                          (comp
+                           (map spec-apurit/poista-nil-avaimet)
                            (map #(konv/string->keyword % :hintatyyppi))
                            (map #(assoc % :hinta (when-let [hinta (:hinta %)] (double hinta)))))
                          (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot
