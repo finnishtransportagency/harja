@@ -25,9 +25,12 @@
 (s/def ::poistettu boolean?)
 
 (s/def ::tiemerkinnan-yksikkohintainen-tyo
-  (s/keys :req-un [::id ::selite ::hintatyyppi ::hinta]
-          :opt-un [::poistettu ::muutospvm ::pituus ::tr-numero ::yllapitoluokka
-                   ::yllapitokohde-id ::hinta-kohteelle]))
+  (s/keys :req-un [::id ::selite ::hintatyyppi ::hinta
+                   ;; Joko linkitetty ylläpitokohteeseen ja määritelty hinta-kohteelle -avain,
+                   ;; tai sitten on kohteeseen kuulumaton toteuma
+                   (or (and ::yllapitokohde-id ::hinta-kohteelle)
+                       (and ::tr-numero ::pituus))]
+          :opt-un [::poistettu ::muutospvm ::yllapitoluokka]))
 
 ;; Haut
 

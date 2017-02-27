@@ -53,7 +53,8 @@
                                   "Ei liity kohteeseen")
             :fmt #(if-let [kohde (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet %)]
                     (tr-domain/yllapitokohde-tekstina kohde)
-                    "Ei liity kohteeseen")}
+                    "Ei liity kohteeseen")
+            :validoi [[:ei-tyhja "Anna arvo"]]}
            {:otsikko "Selite" :leveys 7 :nimi :selite :tyyppi :string :pituus-max 512
             :validoi [[:ei-tyhja "Anna selite"]]}
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
@@ -61,19 +62,21 @@
             :muokattava? #(boolean (not (:yllapitokohde-id %)))
             :hae #(if-let [yllapitokohde-id (:yllapitokohde-id %)]
                     (:tr-numero (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet yllapitokohde-id))
-                    (:tr-numero %))}
+                    (:tr-numero %))
+            :validoi [[:ei-tyhja "Anna tienumero"]]}
            {:otsikko "Pit. (m)" :nimi :pituus :leveys 3
             :tyyppi :positiivinen-numero
             :tasaa :oikea
             :hae #(if-let [yllapitokohde-id (:yllapitokohde-id %)]
                     (:pituus (tiedot/paallystysurakan-kohde-idlla paallystysurakan-kohteet yllapitokohde-id))
                     (:pituus %))
-            :muokattava? #(boolean (not (:yllapitokohde-id %)))}
+            :muokattava? #(boolean (not (:yllapitokohde-id %)))
+            :validoi [[:ei-tyhja "Anna pituus"]]}
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :leveys 3 :tyyppi :valinta
             :valinnat (map :numero yllapitokohteet-domain/nykyiset-yllapitoluokat)
             :valinta-nayta #(if % (yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi %) "-")
-            :fmt yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi
+            :fmt :lyhyt-nimi
             :muokattava? #(boolean (not (:yllapitokohde-id %)))}
            {:otsikko "Hinta"
             :validoi [[:ei-tyhja "Anna hinta"]]

@@ -7,15 +7,16 @@ ALTER TABLE yllapitokohde_tiemerkinta RENAME TO tiemerkinnan_yksikkohintainen_to
 
 ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma
   ADD COLUMN urakka integer REFERENCES urakka (id) NOT NULL,
-  ADD COLUMN selite VARCHAR(512),
-  ADD COLUMN tr_numero INTEGER,
+  ADD COLUMN selite VARCHAR(512) NOT NULL,
+  ADD COLUMN tr_numero INTEGER, -- NOT NULL vain jos ylläpitokohdetta ei ole annettu, ks. CONSTRAINT
+  ADD COLUMN pituus INTEGER, -- NOT NULL vain jos ylläpitokohdetta ei ole annettu, ks. CONSTRAINT
   ADD COLUMN yllapitoluokka INTEGER,
-  ADD COLUMN pituus INTEGER,
   ADD COLUMN poistettu BOOLEAN NOT NULL DEFAULT FALSE,
   ADD CONSTRAINT pituus_ei_neg CHECK (pituus >= 0),
     -- Jos linkattu ylläpitokohteeseen, ei voi olla omia kohdetietoja.
-    ADD CONSTRAINT jos_linkattu_yllapitokohteeseen_ei_omia_kohdetietoja CHECK
-      (yllapitokohde IS NULL
+    -- Jos ei ole, on pakko olla tienumero ja pituus
+    ADD CONSTRAINT linkattu_tai_omat_tiedot_tarkistus CHECK
+      (yllapitokohde IS NULL AND tr_numero IS NOT AND pituus IS NOT NULL)
         OR (yllapitokohde IS NOT NULL AND tr_numero IS NULL AND yllapitoluokka IS NULL AND pituus IS NULL));
 ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma ALTER COLUMN yllapitokohde DROP NOT NULL;
 ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma DROP CONSTRAINT yllapitokohde_tiemerkinta_yllapitokohde_key;
