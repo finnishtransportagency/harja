@@ -56,6 +56,8 @@
                     "Ei liity kohteeseen")}
            {:otsikko "Selite" :leveys 7 :nimi :selite :tyyppi :string :pituus-max 512
             :validoi [[:ei-tyhja "Anna selite"]]}
+
+           ;; Pituus ja tienumero on annettava jos ei linkitetä suoraan ylläpitokohteeseen
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
             :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
             :muokattava? #(boolean (not (:yllapitokohde-id %)))
@@ -71,6 +73,7 @@
                     (:pituus %))
             :muokattava? #(boolean (not (:yllapitokohde-id %)))
             :validoi [[:ei-tyhja-jos-toinen-avain-nil :yllapitokohde-id "Anna pituus"]]}
+
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :leveys 3 :tyyppi :valinta
             :valinnat (map :numero yllapitokohteet-domain/nykyiset-yllapitoluokat)
