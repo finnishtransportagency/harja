@@ -24,41 +24,40 @@
                                    (yleinen/kk-ja-vv pvm))))))
         (hae-ymparistoraportti-tiedot db parametrit)))
 
+(defn hae-raportti* [db hakuasetukset]
+  (let [urakoittain? (nil? (:urakka-id hakuasetukset))
+        rivit (hae-raportin-tiedot db hakuasetukset)
+        materiaali-rivit (hae-materiaalit db)
+        urakat (into #{} (map :urakka rivit))
+        materiaali-avaimet (if urakoittain?
+                             [:materiaali :urakka]
+                             [:materiaali])
+        materiaalit (into {}
+                          (for [m materiaali-rivit
+                                u urakat]
+                            (if urakoittain?
+                              [{:materiaali m :urakka u} []]
+                              [{:materiaali m} []])))]
+    (sort-by (comp :nimi :materiaali first)
+             (merge materiaalit
+                    (group-by
+                      #(select-keys % materiaali-avaimet)
+                      rivit)))))
+
 
 (defn hae-raportti [db alkupvm loppupvm urakka-id hallintayksikko-id urakkatyyppi]
-  (let [kaikki-materiaalit (into {}
-                                 ;; hae tyhjät rivit kaikille materiaaleille
-                                 (map (juxt (fn [m]
-                                              {:materiaali m})
-                                            (constantly [])))
-                                 (hae-materiaalit db))]
-    (sort-by (comp :nimi :materiaali first)
-             (merge kaikki-materiaalit
-                    (group-by #(select-keys % [:materiaali])
-                              (hae-raportin-tiedot db {:alkupvm alkupvm
-                                                       :loppupvm loppupvm
-                                                       :urakka urakka-id
-                                                       :urakkatyyppi (some-> urakkatyyppi name)
-                                                       :hallintayksikko hallintayksikko-id}))))))
+  (hae-raportti* db {:alkupvm alkupvm
+                     :loppupvm loppupvm
+                     :urakka urakka-id
+                     :urakkatyyppi (some-> urakkatyyppi name)
+                     :hallintayksikko hallintayksikko-id}))
 
 (defn hae-raportti-urakoittain [db alkupvm loppupvm hallintayksikko-id urakkatyyppi]
-  (let [rivit (hae-raportin-tiedot db {:alkupvm alkupvm
-                                       :loppupvm loppupvm
-                                       :urakka nil
-                                       :urakkatyyppi (some-> urakkatyyppi name)
-                                       :hallintayksikko hallintayksikko-id})
-        urakat (into #{} (map :urakka rivit))
-        kaikki-materiaalit (hae-materiaalit db)
-
-        ;; luodaan tyhjä rivilista kaikille materiaali/urakka kombinaatioille
-        kaikki-urakka-materiaalit (into {}
-                                        (for [m kaikki-materiaalit
-                                              u urakat]
-                                          [{:materiaali m :urakka u} []]))]
-    (sort-by (comp :nimi :materiaali first)
-             (merge kaikki-urakka-materiaalit
-                    (group-by #(select-keys % [:materiaali :urakka])
-                              rivit)))))
+  (hae-raportti* db {:alkupvm alkupvm
+                     :loppupvm loppupvm
+                     :urakka nil
+                     :urakkatyyppi (some-> urakkatyyppi name)
+                     :hallintayksikko hallintayksikko-id}))
 
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
@@ -120,10 +119,10 @@
                materiaalirivit (remove #(nil? (:kk %)) rivit)
                kk-rivit (group-by :kk (filter (comp not :luokka) materiaalirivit))
                kk-arvot (reduce-kv (fn [kk-arvot kk rivit]
-                                     (assoc kk-arvot kk [:arvo-ja-yksikko {:arvo (reduce + 0 (keep :maara rivit))
+                                     (assoc kk-arvot kk [:arvo-ja-yksikko {:arvo (reduce + (keep :maara rivit))
                                                                            :yksikko (:yksikko materiaali)}]))
                                    {} kk-rivit)
-               yhteensa-arvo #(reduce + 0 (remove nil? (map (comp :arvo second) %)))
+               yhteensa-arvo #(reduce + (remove nil? (map (comp :arvo second) %)))
                yhteensa-kentta (fn [arvot nayta-aina?]
                                  (let [yht (yhteensa-arvo arvot)]
                                    (when (or (> yht 0) nayta-aina?)
