@@ -101,7 +101,12 @@
    :kartta {:keskita-ajoneuvoon? true ;; Pidä kartta koko ajan keskitettynä ajoneuvoon
             :nayta-kiinteistorajat? false
             :kayttaja-muutti-zoomausta-aikaleima nil ;; Milloin käyttäjä viimeksi muutti zoomitasoa. Vaikuttaa automaattisen zoomauksen toimintaan.
-            :nayta-ortokuva? false}
+
+            ;; Mikä MML taustakarttataso on käytössä:
+            ;; :taustakartta (normaali)
+            ;; :ortokuva
+            ;; :maastokartta
+            :taustakartta :taustakartta}
 
    ;; Muut
    :ilmoitus nil ; Nykyinen näytettävä ilmoitus (jos ei käytetä ilmoitusjonoa)
@@ -210,11 +215,12 @@
 (def kirjauspisteet (reagent/cursor sovellus [:kirjauspisteet]))
 (def nayta-kiinteistorajat? (reagent/cursor sovellus [:kartta :nayta-kiinteistorajat?]))
 (def kayttaja-muutti-zoomausta-aikaleima (reagent/cursor sovellus [:kartta :kayttaja-muutti-zoomausta-aikaleima]))
-(def nayta-ortokuva? (reagent/cursor sovellus [:kartta :nayta-ortokuva?]))
+(def taustakartta (reagent/cursor sovellus [:kartta :taustakartta]))
+
 (def keskita-ajoneuvoon? (reagent/cursor sovellus [:kartta :keskita-ajoneuvoon?]))
 (def karttaoptiot (reaction {:seuraa-sijaintia? @keskita-ajoneuvoon?
                              :nayta-kiinteistorajat? @nayta-kiinteistorajat?
-                             :nayta-ortokuva? @nayta-ortokuva?}))
+                             :taustakartta @taustakartta}))
 (def reittipisteet (reagent/cursor sovellus [:reittipisteet]))
 
 ;; Kartalle piirtoa varten

@@ -31,7 +31,8 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.napit :as napit]
             [harja.tiedot.urakat :as urakat]
-            [harja.ui.lomake :as lomake])
+            [harja.ui.lomake :as lomake]
+            [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; hallintayksikkö myös
@@ -466,7 +467,8 @@
       "Urakkatyyppi: " ; Päällystysurakan voi muuttaa paikkaukseksi ja vice versa
       (yllapidon-urakkatyypin-vaihto ur yha-tiedot)
 
-      "Indeksi: " [urakan-indeksi ur]]]))
+      "Indeksi: " (when-not (#{:paallystys :paikkaus} (:tyyppi ur))
+                    [urakan-indeksi ur])]]))
 
 (defn yhteyshenkilot [ur]
   (let [yhteyshenkilot (atom nil)
@@ -533,53 +535,9 @@
                (not palvelusopimus?))
       (yha/nayta-tuontidialogi ur))))
 
-(defn- indeksinimi-ja-lahtotaso-fmt
-  [rivi]
-  (str (:indeksinimi rivi)
-       (when (:lahtotason-arvo rivi)
-         (str " (lähtötaso: "
-              (:lahtotason-arvo rivi) " €/t)"))))
 
-(defn- indeksinimen-kentta
-  [nimi otsikko valinnat]
-  {:otsikko otsikko :nimi nimi :tyyppi :valinta :leveys 12
-   :valinta-nayta #(if (:id %) (:indeksinimi %) "- valitse -")
-   :fmt indeksinimi-ja-lahtotaso-fmt
-   :valinnat valinnat})
 
-(defn paallystysurakan-indeksit
-  "Käyttöliittymä päällystysurakassa käytettävien indeksien valintaan."
-  [ur]
-  (komp/luo
-    (fn [ur]
-      (let [varatut-vuodet (into #{} (map :urakkavuosi @urakka/paallystysurakan-indeksitiedot))
-            indeksivalinnat (indeksit/urakkatyypin-indeksit :paallystys)
-            indeksivalinnat-raskas-po (indeksit/raakaaineen-indeksit "raskas_polttooljy" indeksivalinnat)
-            indeksivalinnat-kevyt-po (indeksit/raakaaineen-indeksit "kevyt_polttooljy" indeksivalinnat)
-            indeksivalinnat-nestekaasu (indeksit/raakaaineen-indeksit "nestekaasu" indeksivalinnat)]
-        [grid/grid
-         {:otsikko "Urakan käyttämät indeksit"
-          :tyhja "Ei indeksejä."
-          :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-                      #(indeksit/tallenna-paallystysurakan-indeksit {:urakka-id (:id ur) :tiedot %}))}
-         [{:otsikko "Vuosi" :nimi :urakkavuosi :tyyppi :valinta :leveys 6
-           :muokattava? #(neg? (:id %))
-           :valinta-nayta #(if (nil? %) "- valitse -" %)
 
-           :valinnat (vec (filter #(not (varatut-vuodet %))
-                                  (range (pvm/vuosi (:alkupvm ur))
-                                         (+ 1 (pvm/vuosi (:loppupvm ur))))))
-           :validoi [[:ei-tyhja "Anna urakkavuosi"] [:uniikki "Yksi rivi per vuosi"]]}
-
-          (indeksinimen-kentta :raskas "Raskas polttoöljy" indeksivalinnat-raskas-po)
-          (indeksinimen-kentta :kevyt "Kevyt polttoöljy" indeksivalinnat-kevyt-po)
-          (indeksinimen-kentta :nestekaasu "Nestekaasu" indeksivalinnat-nestekaasu)
-
-          {:otsikko "Lähtö\u00ADtason vuosi" :nimi :lahtotason-vuosi :tyyppi :positiivinen-numero :leveys 6
-           :validoi [[:rajattu-numero-tai-tyhja nil 2000 2030 "Anna vuosiluku"]]}
-          {:otsikko "Lähtö\u00ADtason kk" :nimi :lahtotason-kuukausi :tyyppi :positiivinen-numero :leveys 6
-           :validoi [[:rajattu-numero-tai-tyhja nil 1 12"Anna kuukausi"]]}]
-         (reverse (sort-by :urakkavuosi @urakka/paallystysurakan-indeksitiedot))]))))
 
 (defn yleiset [ur]
   (let [kayttajat (atom nil)
@@ -591,7 +549,8 @@
                (go (reset! vastuuhenkilot (<! (yht/hae-urakan-vastuuhenkilot (:id urakan-tiedot)))))
                (when (= :paallystys (:tyyppi ur))
                  (reset! urakka/paallystysurakan-indeksitiedot nil)
-                 (go (reset! urakka/paallystysurakan-indeksitiedot (<! (indeksit/hae-paallystysurakan-indeksitiedot (:id urakan-tiedot)))))))]
+                 (go (reset! urakka/paallystysurakan-indeksitiedot
+                             (<! (indeksit/hae-paallystysurakan-indeksitiedot (:id urakan-tiedot)))))))]
     (hae! ur)
     (komp/luo
       (komp/kun-muuttuu hae!)
@@ -601,7 +560,7 @@
         [:div
          [yleiset-tiedot #(reset! vastuuhenkilot %) ur @kayttajat @vastuuhenkilot]
          (when (= :paallystys (:tyyppi ur))
-           [paallystysurakan-indeksit ur])
+           [paallystys-indeksit/paallystysurakan-indeksit ur])
          [urakkaan-liitetyt-kayttajat @kayttajat]
          [yhteyshenkilot ur]
          (when (urakka/paivystys-kaytossa? ur)

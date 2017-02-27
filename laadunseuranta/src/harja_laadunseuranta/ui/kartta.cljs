@@ -30,7 +30,7 @@
          conj (assoc (select-keys (:nykyinen @s/sijainti) [:lat :lon])
                 :label teksti)))
 
-(defn- wmts-source [url layer]
+(defn- wmts-source [layer url]
   (ol.source.WMTS. #js {:attributions [(ol.Attribution. #js {:html "MML"})]
                         :url url
                         :layer layer
@@ -41,14 +41,31 @@
                         :style "default"
                         :wrapX true}))
 
-(defn- wmts-source-taustakartta [url]
-  (wmts-source url "taustakartta"))
+;; Karttakuvatasot kytketään indeksillä, joten merkitään ne tänne
+(def ^:const
+  taustakarttatyypit
+  [{:nimi :taustakartta
+    :luokka "taustakartta"
+    :napin-sprite "kartta-24"
+    :tason-indeksi 0}
 
-(defn- wmts-source-kiinteistojaotus [url]
-  (wmts-source url "kiinteistojaotus"))
+   {:nimi :ortokuva
+    :luokka "ortokuva"
+    :napin-sprite "satelliitti-24"
+    :tason-indeksi 1}
 
-(defn- wmts-source-ortokuva [url]
-  (wmts-source url "ortokuva"))
+   {:nimi :maastokartta
+    :luokka "maastokartta"
+    :napin-sprite "maasto-24"
+    :tason-indeksi 2}])
+
+(def ^:const taso-kiinteistorajat 3)
+
+;; Funktiot, jotka palauttavat WMTS sourcen URLille
+(def wmts-source-taustakartta (partial wmts-source "taustakartta"))
+(def wmts-source-kiinteistojaotus (partial wmts-source "kiinteistojaotus"))
+(def wmts-source-ortokuva (partial wmts-source "ortokuva"))
+(def wmts-source-maastokartta (partial wmts-source "maastokartta"))
 
 (defn- tile-layer [source]
   (ol.layer.Tile.
@@ -139,8 +156,11 @@
 
 (defn- luo-optiot [wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva
                    sijainti kohde-elementti ajoneuvokerros reittikerros ikonikerros]
-  {:layers [(tile-layer (wmts-source-taustakartta wmts-url))
+  {:layers [;; Karttakuvatasojen järjestyksellä on merkitystä, niitä
+            ;; käytetään suoraan indekseillä
+            (tile-layer (wmts-source-taustakartta wmts-url))
             (tile-layer (wmts-source-ortokuva wmts-url-ortokuva))
+            (tile-layer (wmts-source-maastokartta wmts-url))
             (tile-layer (wmts-source-kiinteistojaotus wmts-url-kiinteistorajat))
             ajoneuvokerros
             reittikerros
@@ -215,11 +235,20 @@
     (when-let [dragpan (etsi-dragpan kartta)]
       (.removeInteraction kartta dragpan))))
 
-(defn- kytke-kiinteistorajat [kartta enable]
-  (.setVisible (aget (.getArray (.getLayers kartta)) 2) enable))
 
-(defn- kytke-ortokuva [kartta enable]
-  (.setVisible (aget (.getArray (.getLayers kartta)) 1) enable))
+(defn- kytke-taso [taso-idx kartta enable]
+  (-> kartta
+      .getLayers .getArray
+      (aget taso-idx)
+      (.setVisible enable)))
+
+(def kytke-kiinteistorajat (partial kytke-taso taso-kiinteistorajat))
+
+(defn- aseta-taustakartta
+  "Asettaa karttatasojen näkyvyydet käyttäjän valitseman taustakartan perusteella"
+  [kartta valinta]
+  (doseq [{:keys [nimi tason-indeksi]} taustakarttatyypit]
+    (kytke-taso tason-indeksi kartta (= valinta nimi))))
 
 (defn- sijainti-ok? [{:keys [lat lon]}]
   (and (not= 0 lon)
@@ -318,7 +347,8 @@
       (kytke-kiinteistorajat kartta (:nayta-kiinteistorajat? @optiot)))
 
     (run!
-      (kytke-ortokuva kartta (:nayta-ortokuva? @optiot)))
+     ;; Aseta taustakarttatasojen näkyvyydet kun käyttäjän valinta muuttuu
+     (aseta-taustakartta kartta (:taustakartta @optiot)))
 
     ;; reagoidaan ajoneuvon sijainnin muutokseen
     (run! (paivita-ajoneuvon-sijainti kartta ajoneuvo ajoneuvokerros (:nykyinen @ajoneuvon-sijainti-atomi)))
@@ -348,6 +378,19 @@
                              :keskita-ajoneuvoon-atom keskita-ajoneuvoon-atom
                              :kayttaja-muutti-zoomausta-aikaleima-atom kayttaja-muutti-zoomausta-aikaleima-atom})}))
 
+(defn- taustakartan-valinta
+  "Valinnat, jolla voi vaihtaa näytettävä taustakartta: normaali, ortokuva tai maastokartta."
+  [valittu-tyyppi aseta-tyyppi!]
+  [:div.taustakartan-valinta
+   (for [{:keys [luokka napin-sprite nimi]} taustakarttatyypit]
+     ^{:key (str nimi)}
+     [:div.kontrollinappi
+      {:class (str luokka
+                   (when (= nimi valittu-tyyppi)
+                     " kontrollinappi-aktiivinen"))
+       :on-click #(aseta-tyyppi! nimi)}
+      [kuvat/svg-sprite napin-sprite]])])
+
 (defn kartta []
   [:div
    [karttakomponentti
@@ -366,11 +409,6 @@
     [:div#karttakontrollit ;; OpenLayersin ikonit asetetaan tähän elementtiin erikseen
      {:on-click #(reset! s/kayttaja-muutti-zoomausta-aikaleima (l/local-now))}]
     [:div
-     {:class (str "kontrollinappi ortokuva "
-                  (when @s/nayta-ortokuva? "kontrollinappi-aktiivinen"))
-      :on-click #(swap! s/nayta-ortokuva? not)}
-     [kuvat/svg-sprite "maasto-24"]]
-    [:div
      {:class (str "kontrollinappi kiinteistorajat "
                   (when @s/nayta-kiinteistorajat? "kontrollinappi-aktiivinen"))
       :on-click #(swap! s/nayta-kiinteistorajat? not)}
@@ -379,7 +417,8 @@
      {:class (str "kontrollinappi keskityspainike "
                   (when @s/keskita-ajoneuvoon? "kontrollinappi-aktiivinen"))
       :on-click #(do (swap! s/keskita-ajoneuvoon? not))}
-     [kuvat/svg-sprite "tahtain-24"]]]])
+     [kuvat/svg-sprite "tahtain-24"]]
+    [taustakartan-valinta @s/taustakartta #(reset! s/taustakartta %)]]])
 
 ;; devcards
 
