@@ -573,19 +573,30 @@
         reitilliset (:reitilliset-tarkastukset tarkastukset)
         pistemaiset (:pistemaiset-tarkastukset tarkastukset)
         odotettu-pistemaisten-maara 0
-        odotettu-reitillisten-maara 4]
+        odotettu-reitillisten-maara 4
+        osa1 (nth reitilliset 0)
+        osa2 (nth reitilliset 1)
+        osa3 (nth reitilliset 2)]
 
     ;; Tässä pitäisi muodostua kolme tarkastusta:
     ;; 1. Ajo lähtee tieverkon ulkopuolelta ja katkeaa kun laitetaan jatkuva havainto päälle.
     ;;    Tälle tarkastukselle ei saada ollenkaan muodostettua tieosoitetta. Tämä on OK.
     ;; 2. Ajo, jossa on jatkuva havainto päällä. Jossain vaiheessa tullaan tieverkolle.
-    ;;    Ajo katkaistaan tästä.
-    ;; 3. Ajetaan tieverkolla jatkuva havainto päälläH
-    ;; 4. Jatkuva havainto laitetaan pois päältä. Ajetaan tieverkolla ilman havaintoja.
+    ;;    Ajon tieosoitte alkaa ensimmäisestä pisteestä, joka osuu tieverkolle, ja päättyy
+    ;;    viimeiseen pisteeseen, jossa havainto oli päällä.
+    ;; 3. Jatkuva havainto laitettu pois päältä. Ajetaan tieverkolla ilman havaintoja.
 
     ;; Muunnettu määrällisesti oikein
     (is (= (count pistemaiset) odotettu-pistemaisten-maara))
-    (is (= (count reitilliset) odotettu-reitillisten-maara))))
+    (is (= (count reitilliset) odotettu-reitillisten-maara))
+
+    ;; Muunnosten sisältö vastaa yllä kuvattua olettamusta
+    (is (= (:lopullinen-tr-osoite osa1) {:tie nil, :aosa nil, :aet nil, :losa nil, :let nil}))
+    (is (empty? (:vakiohavainnot osa1)))
+    (is (= (:lopullinen-tr-osoite osa2) {:tie 666, :aosa 666, :aet 666, :losa 1, :let 1190}))
+    (is (not (empty? (:vakiohavainnot osa2))))
+    (is (= (:lopullinen-tr-osoite osa3) {:tie 18637, :aosa 1, :aet 1190, :losa 1, :let 1139}))
+    (is (empty? (:vakiohavainnot osa3)))))
 
 ;; -------- Apufunktioita REPL-tunkkaukseen --------
 
