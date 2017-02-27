@@ -33,6 +33,7 @@
    {:otsikko "Kustannuksen kuvaus" :nimi :selite
     :tyyppi :string :leveys kustannus-selite-leveys}
    {:otsikko "Summa" :nimi :hinta
+    :validoi [[:rajattu-numero nil 0 100000000 "Anna arvo väliltä 0 - 100 000 000"]]
     :tyyppi :numero :leveys kustannus-hinta-leveys}])
 
 (defn muut-kustannukset [urakka]
