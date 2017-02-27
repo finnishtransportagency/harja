@@ -24,15 +24,17 @@ nykyiset-yllapitoluokat
  {:lyhyt-nimi "3a" :nimi "Luokka 3a" :numero 6}
  {:lyhyt-nimi "3b" :nimi "Luokka 3b" :numero 7}])
 
-(s/def ::yllapitoluokka (s/int-in (apply min (concat nykyiset-yllapitoluokat vanhat-yllapitoluokat))
-                                  (apply max (concat nykyiset-yllapitoluokat vanhat-yllapitoluokat))))
+(def kaikki-yllapitoluokat (concat nykyiset-yllapitoluokat vanhat-yllapitoluokat))
+
+(s/def ::yllapitoluokka (s/int-in (apply min kaikki-yllapitoluokat)
+                                  (apply max kaikki-yllapitoluokat)))
 
 (def ^{:doc "Mahdolliset ylläpitoluokat. Nimi kertoo käyttöliittymässä käytetyn
 nimen. Numero on YHA:n koodi luokalle joka talletetaan myös Harjan kantaan.
 2017 alkaen pyritään käyttämään enää luokkia 1,2 ja 3 (eli numerot 8, 9 ja 10), mutta
 taaksenpäinyhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
 yllapitoluokat
-  (into [] (concat nykyiset-yllapitoluokat vanhat-yllapitoluokat)))
+  (into [] kaikki-yllapitoluokat))
 
 
 (def ^{:doc "Mäppäys ylläpitoluokan numerosta sen lyhyeen nimeen."}
