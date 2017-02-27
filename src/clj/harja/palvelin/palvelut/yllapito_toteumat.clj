@@ -88,7 +88,8 @@
   (jdbc/with-db-transaction [db db]
     (let [toteumat (into []
                          (comp
-                           (map #(konv/string->keyword % :hintatyyppi)))
+                           (map #(konv/string->keyword % :hintatyyppi))
+                           (map #(assoc % :hinta (when-let [hinta (:hinta %)] (double hinta)))))
                          (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot
                            db
                            {:urakka urakka-id}))]

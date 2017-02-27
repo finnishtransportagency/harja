@@ -8,6 +8,8 @@
     [harja.tyokalut.spec-apurit :as apurit]
     #?@(:clj [[clojure.future :refer :all]])))
 
+;; Toteuma
+
 (s/def ::selite (s/nilable string?))
 (s/def ::muutospvm #?(:clj (s/nilable inst?)
                       :cljs (s/nilable inst?)))
@@ -19,7 +21,6 @@
 (s/def ::yllapitokohde-id (s/nilable ::apurit/postgres-serial))
 (s/def ::tr-numero (s/nilable ::tr-domain/numero))
 (s/def ::hinta (s/nilable (s/double-in :min 0 :max 10000000 :infinite? false :NaN? false)))
-
 
 (s/def ::tiemerkinnan-yksikkohintainen-tyo
   (s/keys :req-un [::selite ::muutospvm ::hintatyyppi ::yllapitoluokka ::id

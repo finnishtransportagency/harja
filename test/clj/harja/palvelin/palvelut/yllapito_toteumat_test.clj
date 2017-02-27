@@ -127,10 +127,9 @@
     (loop [index 0]
       (let [pyynto {:urakka-id urakka-id
                     :toteumat [(-> (gen/generate (s/gen ::tt/tiemerkinnan-yksikkohintainen-tyo))
-                                   ;; Tee tästä uusi toteuma ja liitä ylläpitokohde randomisti
+                                   ;; Tee tästä uusi toteuma ja liitä vain osalle ylläpitokohde
                                    (assoc :id nil
                                           :yllapitokohde-id (get [yllapitokohde-id nil] (int (rand 2)))))]}
-
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-tiemerkinnan-yksikkohintaiset-tyot +kayttaja-jvh+
                                     pyynto)]
