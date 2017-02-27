@@ -58,10 +58,13 @@
       (u/click :.grid-muokkaa)
       --
       (is (= "2004" (.-value (solu 1 2))))
+      "Alkutilanteessa tallenna-nappi on disabled"
+      (is (u/disabled? :.grid-tallenna) "ei voi tallentaa ilman muokkauksia")
 
       "Rivin lisäys toimii"
       (u/click :.grid-lisaa)
       --
+      (is (u/enabled? :.grid-tallenna) "Muokkauksen jälkeen voi tallentaa")
       (is (= "" (.-value (solu 3 0))))
       (is (= "" (.-value (solu 3 1))))
       (is (= "" (.-value (solu 3 2))))
