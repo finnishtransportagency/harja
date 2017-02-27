@@ -563,6 +563,30 @@
     (is (= (count pistemaiset) odotettu-pistemaisten-maara))
     (is (= (count reitilliset) odotettu-reitillisten-maara))))
 
+(deftest oikean-tarkastusajon-313-muunto-toimii
+  "Ajo lähtee tieverkon ulkopuolelta ja päätyy tieverkolle"
+  (let [db (:db jarjestelma)
+        tarkastusajo-id 213
+        urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
+        tarkastukset (ls-core/lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)
+        reitilliset (:reitilliset-tarkastukset tarkastukset)
+        pistemaiset (:pistemaiset-tarkastukset tarkastukset)
+        odotettu-pistemaisten-maara 0
+        odotettu-reitillisten-maara 4]
+
+    ;; Tässä pitäisi muodostua kolme tarkastusta:
+    ;; 1. Ajo lähtee tieverkon ulkopuolelta ja katkeaa kun laitetaan jatkuva havainto päälle.
+    ;;    Tälle tarkastukselle ei saada ollenkaan muodostettua tieosoitetta. Tämä on OK.
+    ;; 2. Ajo, jossa on jatkuva havainto päällä. Jossain vaiheessa tullaan tieverkolle.
+    ;;    Ajo katkaistaan tästä.
+    ;; 3. Ajetaan tieverkolla jatkuva havainto päälläH
+    ;; 4. Jatkuva havainto laitetaan pois päältä. Ajetaan tieverkolla ilman havaintoja.
+
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count pistemaiset) odotettu-pistemaisten-maara))
+    (is (= (count reitilliset) odotettu-reitillisten-maara))))
+
 ;; -------- Apufunktioita REPL-tunkkaukseen --------
 
 ;; Älä poista näitä
