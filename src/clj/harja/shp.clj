@@ -62,13 +62,13 @@
 
 (defn featuret-ryhmiteltyna
   "Palauttaa shapefilen featuret sortattuna annetun avaimen mukaan"
-  [shp kentta callback]
+  [shp kentta-keyword callback]
 
   ;; Tämä pitää tehdä clojuren puolella, jos featureita hakee
   ;; geotoolsin Sort queryllä, häviää featureita, ks. HAR-4685
 
-  (let [ryhmiteltyna (group-by (keyword (str/lower-case kentta))
-                               (feature-propertyt (featuret-lazy shp)))]
+  (let [ryhmiteltyna (group-by kentta-keyword
+                               (map feature-propertyt (featuret-lazy shp)))]
     (doseq [avain (sort (keys ryhmiteltyna))]
       (callback (get ryhmiteltyna avain)))))
 
