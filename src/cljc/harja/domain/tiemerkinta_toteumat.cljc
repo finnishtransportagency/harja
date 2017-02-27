@@ -21,11 +21,13 @@
 (s/def ::yllapitokohde-id (s/nilable ::apurit/postgres-serial))
 (s/def ::tr-numero (s/nilable ::tr-domain/numero))
 (s/def ::hinta (s/double-in :min 0 :max 10000000 :infinite? false :NaN? false))
+(s/def ::poistettu boolean?)
 
 (s/def ::tiemerkinnan-yksikkohintainen-tyo
   (s/keys :req-un [::selite ::muutospvm ::hintatyyppi ::yllapitoluokka ::id
                    ::pituus ::hinta-kohteelle
-                   ::yllapitokohde-id ::tr-numero ::hinta]))
+                   ::yllapitokohde-id ::tr-numero ::hinta]
+          :opt-un [::poistettu]))
 
 ;; Haut
 
