@@ -25,6 +25,20 @@
       .toArray
       seq))
 
+(defn- to-iterator [feature-iterator]
+  (reify java.util.Iterator
+    (hasNext [_] (.hasNext feature-iterator))
+    (next [_] (.next feature-iterator))))
+
+(defn featuret-lazy
+  ([shp] (featuret-lazy shp nil))
+  ([shp q]
+   (let [get-features (if q
+                        #(.getFeatures % q)
+                        #(.getFeatures %))]
+     (-> shp .getFeatureSource get-features .features
+         to-iterator iterator-seq))))
+
 (defn feature-propertyt
   "Muuntaa yhden featuren kaikki property mäpiksi, jossa avain on keyword."
   [feature]
@@ -37,36 +51,26 @@
                (.getValue p))
              ps))))
 
+(defn- sort-by-query [shp kentta ascending?]
+  (let [sort-by (-> shp .getFilterFactory
+                    (.sort kentta (if ascending?
+                                    SortOrder/ASCENDING
+                                    SortOrder/DESCENDING)))]
+    (doto (Query.)
+      (.setSortBy (into-array SortBy
+                              [sort-by])))))
+
 (defn featuret-ryhmiteltyna
   "Palauttaa shapefilen featuret sortattuna annetun avaimen mukaan"
   [shp kentta callback]
 
-  (let [sort-by (-> shp .getFilterFactory
-                    (.sort kentta SortOrder/ASCENDING))
-        q (doto (Query.)
-            (.setSortBy (into-array SortBy
-                                    [sort-by])))]
-    (with-open [iter (-> shp
-                         .getFeatureSource
-                         (.getFeatures q) .features)]
-      (loop [ryhma nil
-             aiempi-value ::alku]
-        (if-not (.hasNext iter)
-          ;; Viimeinen ryhmä, kutsu callback ja lopeta
-          (when ryhma
-            (callback ryhma))
+  ;; Tämä pitää tehdä clojuren puolella, jos featureita hakee
+  ;; geotoolsin Sort queryllä, häviää featureita, ks. HAR-4685
 
-          (let [item (.next iter)
-                value (some-> item (.getProperty kentta) .getValue)]
-            (if (not= value aiempi-value)
-              (do
-                (when-not (empty? ryhma)
-                  (callback ryhma))
-                ;; Aloitetaan uusi ryhmä
-                (recur [(feature-propertyt item)] value))
-
-              ;; Samaa ryhmää, joinaa mukaan
-              (recur (conj ryhma (feature-propertyt item)) aiempi-value))))))))
+  (let [ryhmiteltyna (group-by (keyword (str/lower-case kentta))
+                               (feature-propertyt (featuret-lazy shp)))]
+    (doseq [avain (sort (keys ryhmiteltyna))]
+      (callback (get ryhmiteltyna avain)))))
 
 
 
