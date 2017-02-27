@@ -76,7 +76,6 @@ WHERE
       OR
       (yllapitokohde IS NOT NULL
       AND
-      -- FIXME Entä jos poistetulle kohteelle on liitetty toteuma?
       (SELECT poistettu FROM yllapitokohde WHERE id = tyt.yllapitokohde) IS NOT TRUE));
 
 -- name: paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
@@ -89,7 +88,8 @@ UPDATE tiemerkinnan_yksikkohintainen_toteuma SET
   selite = :selite,
   tr_numero = :tr_numero,
   yllapitoluokka = :yllapitoluokka,
-  pituus = :pituus
+  pituus = :pituus,
+  poistettu = :poistettu
 WHERE id = :id
 AND ((yllapitokohde IS NULL
     OR

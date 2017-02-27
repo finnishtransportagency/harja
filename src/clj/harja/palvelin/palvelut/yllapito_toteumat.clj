@@ -116,10 +116,10 @@
                             :pituus (when-not yllapitokohde-id pituus)}]
         (if (id/id-olemassa? id)
           (q/paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
-            db (merge sql-parametrit {:id id :urakka urakka-id}))
+            db (merge sql-parametrit {:id id :urakka urakka-id
+                                      :poistettu poistettu}))
           (q/luo-tiemerkintaurakan-yksikkohintainen-tyo<!
-            db (merge sql-parametrit {:urakka urakka-id
-                                      :poistettu poistettu})))))
+            db (merge sql-parametrit {:urakka urakka-id})))))
     (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id})))
 
 (defrecord YllapitoToteumat []
