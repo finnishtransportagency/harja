@@ -36,9 +36,6 @@
            :tyhja (if (nil? @tiemerkinnan-toteumat-atom)
                     [ajax-loader "Haetaan töitä..."]
                     "Toteumia ei löytynyt")
-           :voi-poistaa? (constantly false)
-           :voi-lisata? true
-           :piilota-toiminnot? true
            :tallenna (if saa-muokata?
                        (fn [toteumat]
                          (tiedot/tallenna-toteumat-grid
