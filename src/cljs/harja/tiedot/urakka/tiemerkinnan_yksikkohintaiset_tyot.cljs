@@ -43,7 +43,6 @@
    jossa ylläpitokohteeseen liittyvä hinta on annettu ylläpitokohteen vanhalle tieosoitteelle."
   [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys
            tr-loppuosa tr-loppuetaisyys] :as kohde}]
-  (log "KOHDE ON: " (pr-str kohde))
   (assert (and tr-numero tr-alkuosa tr-alkuetaisyys) "Puutteelliset parametrit")
   ;; Tod.näk. et halua muuttaa tätä ainakaan migratoimatta kannassa olevaa dataa.
   (str tr-numero " / " tr-alkuosa " / " tr-alkuetaisyys " / "
@@ -60,7 +59,7 @@
   (go (let [kasitellyt-toteumat (map
                                   #(if-let [kohde (paallystysurakan-kohde-idlla paallystysurakan-kohteet
                                                                                 (:yllapitokohde-id %))]
-                                     (assoc % :hinta-osoitteelle (maarittele-hinnan-kohde kohde))
+                                     (assoc % :hinta-kohteelle (maarittele-hinnan-kohde kohde))
                                      %)
                                   toteumat)
             vastaus (<! (tallenna-tiemerkinnan-toteumat urakka-id kasitellyt-toteumat))]

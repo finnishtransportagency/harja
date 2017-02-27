@@ -11,7 +11,8 @@
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
             [clojure.spec.gen :as gen]
-            [clojure.spec :as s]))
+            [clojure.spec :as s]
+            [clojure.string :as str]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -156,7 +157,11 @@
         (is (= (:tr-numero kirjattu-toteuma) (if linkitettava-yllapitokohde-id
                                                nil
                                                (:tr-numero kirjattava-toteuma))))
-        (is (= (format "%.2f" (:hinta kirjattu-toteuma)) (format "%.2f" (:hinta kirjattava-toteuma))))
+        (is (= (format "%.2f" (:hinta kirjattu-toteuma))
+               (str/replace (format "%.2f" (:hinta kirjattava-toteuma)) #"-" ""))) ;; Koska voi tulla -0,00
+        (if linkitettava-yllapitokohde-id
+          (is (= (:hinta-kohteelle kirjattava-toteuma) (:hinta-kohteelle kirjattu-toteuma)))
+          (is (nil? (:hinta-kohteelle kirjattu-toteuma))))
 
         (when (< index (dec testien-maara))
           (recur (inc index)))))
