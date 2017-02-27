@@ -106,10 +106,10 @@
         yllapitokohde-id (hae-tiemerkintaurakkaan-osoitettu-yllapitokohde urakka-id)
         toteumien-maara 10
         pyynto {:urakka-id urakka-id
-                :toteumat (->> (map (fn [_] (gen/generate (s/gen ::tt/tiemerkinnan-yksikkohintainen-tyo)))
+                :toteumat (->> (mapv (fn [_] (gen/generate (s/gen ::tt/tiemerkinnan-yksikkohintainen-tyo)))
                                     (range 1 (inc toteumien-maara)))
                                ;; Liitä osa toteumista ylläpitokohteeseen
-                               (map #(assoc % :id nil
+                               (mapv #(assoc % :id nil
                                               :yllapitokohde-id (get [yllapitokohde-id nil] (int (rand 2))))))}
         maara-ennen-lisaysta (ffirst (q "SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma;"))
         _ (kutsu-palvelua (:http-palvelin jarjestelma)

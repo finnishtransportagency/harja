@@ -187,8 +187,8 @@
      "Kaikki yhteensä:"
      (fmt/euro-opt kaikki-yhteensa)]))
 
-(defn yksikkohintaiset-tyot [urakka]
-  [:div
-   [paallystysurakan-kohteet urakka @tiedot/paallystysurakan-kohteet]
-   [toteutuneet-tiemerkinnat urakka tiedot/tiemerkinnan-toteumat @tiedot/paallystysurakan-kohteet]
-   [yhteenveto @tiedot/tiemerkinnan-toteumat]])
+(defn yksikkohintaiset-tyot [urakka tiemerkinnan-toteumat-atom paallystysurakan-kohteet-atom]
+  [:div.tiemerkinnan-yks-hint-tyot
+   [paallystysurakan-kohteet-atom urakka @paallystysurakan-kohteet-atom]
+   [toteutuneet-tiemerkinnat urakka tiemerkinnan-toteumat-atom @paallystysurakan-kohteet-atom]
+   [yhteenveto @tiemerkinnan-toteumat-atom]])
