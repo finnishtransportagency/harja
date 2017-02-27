@@ -13,11 +13,11 @@ ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma
   ADD COLUMN yllapitoluokka INTEGER,
   ADD COLUMN poistettu BOOLEAN NOT NULL DEFAULT FALSE,
   ADD CONSTRAINT pituus_ei_neg CHECK (pituus >= 0),
-    -- Jos linkattu ylläpitokohteeseen, ei voi olla omia kohdetietoja.
-    -- Jos ei ole, on pakko olla tienumero ja pituus
+    -- Jos linkattu ylläpitokohteeseen, ei voi olla omia kohdetietoja, mutta hinta kohteelle -tieto on pakko olla
+    -- Jos ei ole linkattu ylläpitokohteeseen, on pakko olla tienumero ja pituus
     ADD CONSTRAINT linkattu_tai_omat_tiedot_tarkistus CHECK
       (yllapitokohde IS NULL AND tr_numero IS NOT AND pituus IS NOT NULL)
-        OR (yllapitokohde IS NOT NULL AND tr_numero IS NULL AND yllapitoluokka IS NULL AND pituus IS NULL));
+        OR (yllapitokohde IS NOT NULL AND tr_numero IS NULL AND yllapitoluokka IS NULL AND pituus IS NULL AND hinta_kohteelle IS NOT NULL));
 ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma ALTER COLUMN yllapitokohde DROP NOT NULL;
 ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma DROP CONSTRAINT yllapitokohde_tiemerkinta_yllapitokohde_key;
 
@@ -28,6 +28,8 @@ SET urakka = (SELECT suorittava_tiemerkintaurakka FROM yllapitokohde WHERE id = 
 
 -- Hinta pitäisi olla numeric
 ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma ALTER COLUMN hinta TYPE NUMERIC(10, 2) USING hinta::NUMERIC;
+ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma ALTER COLUMN hinta SET NOT NULL;
+ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma ALTER COLUMN hintatyyppi SET NOT NULL;
 
 -- Päivitä hintatyyppi-type
 ALTER TYPE yllapitokohde_tiemerkinta_hintatyyppi RENAME TO tiemerkinta_toteuma_hintatyyppi;
