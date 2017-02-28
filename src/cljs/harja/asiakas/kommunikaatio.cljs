@@ -239,6 +239,13 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 (defn- kasittele-istunto-vanhentunut []
   (reset! istunto-vanhentunut? true))
 
+(defn kysy-pois-kytketyt-ominaisuudet! [pk-atomi]
+  (when-not @pk-atomi
+    (go
+      (let [pko (<! (post! :pois-kytketyt-ominaisuudet {}))]
+        (reset! pk-atomi pko)
+        (log "pois kytketyt ominaisuudet:" (pr-str pko))))))
+
 (defn lisaa-kuuntelija-selaimen-verkkotilalle []
   (.addEventListener js/window "offline" #(kasittele-yhteyskatkos nil)))
 

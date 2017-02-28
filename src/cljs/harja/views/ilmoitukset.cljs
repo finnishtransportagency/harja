@@ -4,6 +4,7 @@
             [clojure.string :refer [capitalize]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
+            [harja.tiedot.ilmoitukset.tietyot :as tietyoilmoitukset-tiedot]
             [harja.domain.ilmoitukset :refer
              [kuittausvaatimukset-str +ilmoitustyypit+ ilmoitustyypin-nimi
               ilmoitustyypin-lyhenne ilmoitustyypin-lyhenne-ja-nimi
@@ -11,11 +12,13 @@
               +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
               kuittaustyypin-selite kuittaustyypin-lyhenne
               tilan-selite] :as domain]
+            [harja.ui.bootstrap :as bs]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.loki :refer [log tarkkaile!]]
+            [harja.tiedot.istunto :as istunto]
             [harja.ui.napit :refer [palvelinkutsu-nappi] :as napit]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.ui.lomake :as lomake]
@@ -26,6 +29,7 @@
             [harja.views.kartta :as kartta]
             [harja.views.ilmoituskuittaukset :as kuittaukset]
             [harja.views.ilmoituksen-tiedot :as it]
+            [harja.views.ilmoitukset.tietyot :as tietyoilmoitukset-view]
             [harja.ui.ikonit :as ikonit]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.ui.valinnat :as valinnat]
@@ -305,4 +309,18 @@
 
 (defn ilmoitukset []
   (fn []
-    [tuck tiedot/ilmoitukset ilmoitukset*]))
+    (if-not (istunto/ominaisuus-kaytossa? :tietyoilmoitukset)
+      [tuck tiedot/ilmoitukset ilmoitukset*]
+      ;; else
+      [bs/tabs {:style :tabs :classes "tabs-taso1"
+                :active (nav/valittu-valilehti-atom :ilmoitukset-valilehti)}
+
+       "Tieliikenne"
+       :tieliikenne
+       [tuck tiedot/ilmoitukset ilmoitukset*]
+
+       "Tietyöt"
+       :tietyot
+       [tuck tietyoilmoitukset-tiedot/ilmoitukset tietyoilmoitukset-view/ilmoitukset*]
+       #_[tietyoilmoitukset-view/ilmoitukset]
+       ])))
