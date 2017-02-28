@@ -120,7 +120,7 @@ VALUES (
   (SELECT sahkoposti
    FROM kayttaja
    WHERE sahkoposti = 'tero.toripolliisi@example.com'),
-  ARRAY ['(Tienrakennus, Rakennetaan tietä)'] :: tietyon_tyypin_kuvaus [],
+  '{"(Tienrakennus,Rakennetaan tietä)"}',
   st_makepoint(452935, 7186873),
   20,
   1,
