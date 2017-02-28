@@ -148,6 +148,12 @@ WHERE t.urakka = :urakka
            OR ((char_length(t.havainnot) > 0 AND lower(t.havainnot) != 'ok')
                OR EXISTS(SELECT tarkastus
                          FROM tarkastus_vakiohavainto
+                         WHERE tarkastus = t.id)
+               OR EXISTS(SELECT tarkastus
+                         FROM talvihoitomittaus
+                         WHERE tarkastus = t.id)
+               OR EXISTS(SELECT tarkastus
+                         FROM soratiemittaus
                          WHERE tarkastus = t.id)))
       AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE)
       AND t.poistettu IS NOT TRUE;
