@@ -100,14 +100,19 @@
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
      (when (= konteksti :urakka)
-       [:teksti (str "Hoitokauden talvisuolan maksimimäärä urakassa on "
-                     talvisuolan-maxmaaratieto "t. Talvisuolaa läytetty valitulla aikavälillä "
+       [:teksti (str "Hoitokauden talvisuolan maksimimäärä urakassa: "
+                     talvisuolan-maxmaaratieto "t")])
+     (when (= konteksti :urakka)
+       [:teksti (str "Erilaisia talvisuoloja käytetty valitulla aikavälillä: "
                      (fmt/desimaaliluku-opt talvisuolan-toteutunut-maara 2)
-                     "t. Toteumaprosentti valitulla aikavälillä vs. hoitokauden max-määrä: "
-                     (fmt/desimaaliluku-opt
-                       (* 100 (with-precision 3 (/ talvisuolan-toteutunut-maara
-                                                   talvisuolan-maxmaaratieto)))
-                       1) "%")])
+                     "t")])
+     (when (= konteksti :urakka)
+       [:teksti (str
+                  "Toteumaprosentti suhteessa hoitokauden maksimimäärään: "
+                  (fmt/desimaaliluku-opt
+                    (* 100 (with-precision 3 (/ talvisuolan-toteutunut-maara
+                                                talvisuolan-maxmaaratieto)))
+                    1) "%")])
      [:taulukko {:otsikko otsikko
                  :oikealle-tasattavat-kentat (into #{} (range 1 (+ 4 (count kuukaudet))))
                  :sheet-nimi raportin-nimi}
