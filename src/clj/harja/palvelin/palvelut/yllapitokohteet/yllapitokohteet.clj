@@ -283,8 +283,9 @@
                                       yllapitoluokka sopimuksen-mukaiset-tyot
                                       arvonvahennykset bitumi-indeksi kaasuindeksi
                                       keskimaarainen-vuorokausiliikenne poistettu]}]
-  (if poistettu ;; FIXME TARKISTA KÄYTTÄEN yllapitokohteen-voi-poistaa?
-    (q/poista-yllapitokohde! db {:id id :urakka urakka-id})
+  (if poistettu
+    (when (yy/yllapitokohteen-voi-poistaa? db id)
+      (q/poista-yllapitokohde! db {:id id :urakka urakka-id}))
     (do (log/debug "Päivitetään ylläpitokohde")
         (q/paivita-yllapitokohde! db
                                   {:kohdenumero kohdenumero
