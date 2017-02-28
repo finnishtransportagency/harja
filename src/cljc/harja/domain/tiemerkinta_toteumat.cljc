@@ -26,7 +26,7 @@
 (s/def ::poistettu boolean?)
 
 (s/def ::tiemerkinnan-yksikkohintainen-tyo
-  (s/keys :req-un [::id ::selite ::hintatyyppi ::hinta ::seppo
+  (s/keys :req-un [::id ::selite ::hintatyyppi ::hinta
                    ;; Joko linkitetty ylläpitokohteeseen ja määritelty hinta-kohteelle -avain,
                    ;; tai sitten on kohteeseen kuulumaton toteuma
                    (or (and ::yllapitokohde-id ::hinta-kohteelle)
