@@ -69,7 +69,7 @@
               (tieverkko/hae-osien-pituudet db tie min-osa max-osa))))
     (group-by :tr-numero yllapitokohteet)))
 
-(defn- yllapitokohteen-voi-poistaa?
+(defn yllapitokohteen-voi-poistaa?
   "Palauttaa true tai false sen mukaan onko ylläpitokohteeseen liitetty kirjauksia, jotka
    estävät kohteen poiston."
   [db yllapitokohde-id]
