@@ -25,7 +25,7 @@
 (s/def ::poistettu boolean?)
 
 (s/def ::tiemerkinnan-yksikkohintainen-tyo
-  (s/keys :req-un [::id ::selite ::hintatyyppi ::hinta
+  (s/keys :req-un [::id ::selite ::hintatyyppi ::hinta ::seppo
                    ;; Joko linkitetty ylläpitokohteeseen ja määritelty hinta-kohteelle -avain,
                    ;; tai sitten on kohteeseen kuulumaton toteuma
                    (or (and ::yllapitokohde-id ::hinta-kohteelle)
@@ -33,6 +33,8 @@
           :opt-un [::poistettu ::muutospvm ::yllapitoluokka]))
 
 ;; Haut
+
+(s/def ::urakka-id ::apurit/postgres-serial)
 
 (s/def ::hae-tiemerkinnan-yksikkohintaiset-tyot-kysely
   (s/keys :req-un [::urakka-id]))
@@ -42,9 +44,9 @@
 
 ;; Tallennukset
 
+(s/def ::toteumat (s/coll-of ::tiemerkinnan-yksikkohintainen-tyo))
 (s/def ::tallenna-tiemerkinnan-yksikkohintaiset-tyot-kysely
-  (s/keys :req-un [::urakka-id int?
-                   ::toteumat (s/coll-of ::tiemerkinnan-yksikkohintainen-tyo)]))
+  (s/keys :req-un [::urakka-id ::toteumat]))
 
 (s/def ::tallenna-tiemerkinnan-yksikkohintaiset-tyot-vastaus
   ::hae-tiemerkinnan-yksikkohintaiset-tyot-vastaus)
