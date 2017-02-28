@@ -2,7 +2,6 @@
   "Harjan ilmoituksien pääsivu."
   (:require [reagent.core :refer [atom] :as r]
             [clojure.string :refer [capitalize]]
-            [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
             [harja.tiedot.ilmoitukset.tietyot :as tietyoilmoitukset-tiedot]
             [harja.domain.ilmoitukset :refer
