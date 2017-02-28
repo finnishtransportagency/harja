@@ -49,57 +49,7 @@
    {:luokka :horizontal
     :muokkaa! #(e! (tiedot/->AsetaValinnat %))}
 
-   [(aikavalivalitsin valinnat-nyt)
-    {:nimi :hakuehto :otsikko "Hakusana"
-     :placeholder "Hae tekstillä..."
-     :tyyppi :string
-     :pituus-max 64
-     :palstoja 1}
-    #_{:nimi :selite
-     :palstoja 1
-     :otsikko "Selite"
-     :placeholder "Hae ja valitse selite"
-     :tyyppi :haku
-     :hae-kun-yli-n-merkkia 0
-     :nayta second :fmt second
-     :lahde selitehaku}
-    {:nimi :tr-numero
-     :palstoja 1
-     :otsikko "Tienumero"
-     :placeholder "Rajaa tienumerolla"
-     :tyyppi :positiivinen-numero :kokonaisluku? true}
-    {:nimi :tunniste
-     :palstoja 1
-     :otsikko "Tunniste"
-     :placeholder "Rajaa tunnisteella"
-     :tyyppi :string}
-
-    (lomake/ryhma
-      {:rivi? true}
-      {:nimi :ilmoittaja-nimi
-       :palstoja 1
-       :otsikko "Ilmoittajan nimi"
-       :placeholder "Rajaa ilmoittajan nimellä"
-       :tyyppi :string}
-      {:nimi :ilmoittaja-puhelin
-       :palstoja 1
-       :otsikko "Ilmoittajan puhelinnumero"
-       :placeholder "Rajaa ilmoittajan puhelinnumerolla"
-       :tyyppi :puhelin})
-
-    (lomake/ryhma
-      {:rivi? true}
-      #_{:nimi :tilat
-       :otsikko "Tila"
-       :tyyppi :checkbox-group
-       :vaihtoehdot tiedot/tila-filtterit
-       :vaihtoehto-nayta tilan-selite}
-      {:nimi :tyypit
-       :otsikko "Tyyppi"
-       :tyyppi :checkbox-group
-       :vaihtoehdot [:hyva :huono]
-       :vaihtoehto-nayta str}
-      )]
+   [(aikavalivalitsin valinnat-nyt)]
    valinnat-nyt])
 
 (defn leikkaa-sisalto-pituuteen [pituus sisalto]
@@ -126,36 +76,20 @@
       :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
 
      [
-      {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
+      {:otsikko "Urakka" :nimi :urakkanimi :leveys 5
        :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
-      {:otsikko "Harja-tunniste" :nimi :harja-tunniste :leveys 3}
-      {:otsikko "T-LOIK-tunniste" :nimi :t-loik-tunniste :leveys 3}
-      {:otsikko "Otsikko" :nimi :otsikko :leveys 7
-       :hae #(leikkaa-sisalto-pituuteen 30 (:otsikko %))}
-      {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 7
-       :hae #(leikkaa-sisalto-pituuteen 30 (:lisatieto %))}
-      {:otsikko "Alkaa" :nimi :alkaa
-       :hae (comp pvm/pvm-aika :alkaa) :leveys 6}
-      {:otsikko "Ilmoitettu" :nimi :ilmoitettu
-       :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 6}
-      #_{:otsikko "Tyyppi" :nimi :ilmoitustyyppi
-         :tyyppi :komponentti
-         :komponentti #(ilmoitustyypin-selite (:ilmoitustyyppi %))
-         :leveys 2}
-      {:otsikko "Sijainti" :nimi :tierekisteri
+      {:otsikko "Tie" :nimi :tierekisteri
        :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
-       :leveys 7}
-
-      #_{:otsikko "Selitteet" :nimi :selitteet
-         :tyyppi :komponentti
-         :komponentti it/selitelista
-         :leveys 6}
-
-      #_{:otsikko "Tila" :nimi :tila :leveys 7 :hae #(tilan-selite (:tila %))}]
-     (mapv #(if (:yhteydenottopyynto %)
-              (assoc % :lihavoi true)
-              %)
-           haetut-ilmoitukset)]]])
+       :leveys 4}
+      {:otsikko "Alkupvm" :nimi :alkaa
+       :hae (comp pvm/pvm-aika :alkaa) :leveys 2}
+      {:otsikko "Loppupvm" :nimi :loppuu
+       :hae (comp pvm/pvm-aika :loppuu) :leveys 2}
+      {:otsikko "Työn tyyppi" :nimi :tyon-tyyppi
+       :leveys 4}
+      {:otsikko "Ilmoittaja" :nimi :ilmoittaja
+       :leveys 7}]
+     haetut-ilmoitukset]]])
 
 (defn ilmoituksen-tiedot [e! ilmoitus]
   [:div
