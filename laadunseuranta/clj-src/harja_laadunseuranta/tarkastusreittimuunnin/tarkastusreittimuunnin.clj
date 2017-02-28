@@ -52,9 +52,9 @@
                                (if (or
                                      (nil? (:aikaleima nykyinen-reittimerkinta))
                                      (nil? (:aikaleima seuraava-reittimerkinta))
+                                     ;; Kerran törmättiin harvinaiseen tilanteeseen, jossa myöhemmin kirjatun pisteen
+                                     ;; aikaleima oli ennen seuraavaa. Tällainen tilanne pitää pystyä käsittelemään
                                      (t/before? aikaleima-seuraava-merkinta aikaleima-nykyinen-merkinta))
-                                 ;; Kerran törmättiin harvinaiseen tilanteeseen, jossa myöhemmin kirjatun pisteen
-                                 ;; aikaleima oli ennen seuraavaa. Tällainen tilanne pitää pystyä käsittelemään
                                  true
                                  (boolean (<= (t/in-seconds (t/interval aikaleima-nykyinen-merkinta
                                                                         aikaleima-seuraava-merkinta))
