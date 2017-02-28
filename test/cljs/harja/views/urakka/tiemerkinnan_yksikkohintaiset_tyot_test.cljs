@@ -14,7 +14,7 @@
 
 (def tiemerkinnan-toteumat
   [{:selite "Testi",
-    :muutospvm #inst"1970-01-01T00:00:30.994-00:00",
+    :muutospvm nil,
     :hintatyyppi :toteuma,
     :yllapitoluokka 5,
     :id -1,
@@ -32,7 +32,8 @@
 
 (deftest yksikkohintaiset-tyot
   (komponenttitesti
-    [tyy/yksikkohintaiset-tyot urakka
+    [tyy/yksikkohintaiset-tyot
+     urakka
      (r/atom tiemerkinnan-toteumat)
      (r/atom paallystyksen-kohteet)]
 
