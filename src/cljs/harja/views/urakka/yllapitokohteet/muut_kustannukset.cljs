@@ -8,6 +8,7 @@
             [harja.ui.valinnat :as valinnat]
             [harja.ui.validointi :as validointi]
             [cljs-time.core :as t]
+            [harja.fmt :as fmt]
             [harja.pvm :as pvm])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -33,7 +34,7 @@
     :tyyppi :pvm :leveys kustannus-pvm-leveys}
    {:otsikko "Kustannuksen kuvaus" :nimi :selite
     :tyyppi :string :leveys kustannus-selite-leveys}
-   {:otsikko "Summa" :nimi :hinta
+   {:otsikko "Summa" :nimi :hinta :fmt fmt/euro-opt
     :validoi [[:rajattu-numero-jos-muokattava nil 0 100000000 "Anna arvo väliltä 0 - 100 000 000"]]
     :tyyppi :numero :leveys kustannus-hinta-leveys}])
 

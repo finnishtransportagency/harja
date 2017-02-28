@@ -27,7 +27,7 @@
 (defn- grid-tiedot* [muut-kustannukset-tiedot kohdistamattomat-tiedot]
   (let [mk-id #(str "ypt-" (:id %))
         ks-id #(str "sanktio-" (:id %))
-        ks->grid (fn [ks] {:hinta  (-> ks :summa)
+        ks->grid (fn [ks] {:hinta  (-> ks :summa -) ;; käännetään sanktioiden etumerkki ladattaessa (näitä ei tallenneta, ovat read-only gridissä)
                            :pvm    (-> ks :laatupoikkeama :aika)
                            :selite (-> ks :tyyppi :nimi)
                            :id     (-> ks :id)})]
