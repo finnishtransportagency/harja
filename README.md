@@ -240,6 +240,11 @@ Hae työkalu: https://github.com/jarnovayrynen/cloverage
 Työkalun cloverage/cloverage kansiossa aja "lein install"
 Harjan juuressa aja "env CLOVERAGE_VERSION=1.0.8-SNAPSHOT lein cloverage"
 
+## Tieverkon tuonti kantaan
+
+Replissä: (harja.palvelin.main/with-db db (harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko/vie-tieverkko-kantaan db "file:/.../harja-testidata/shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"))
+
+
 ## Kirjautuminen
 
 Harja käyttää liikenneviraston extranetista tulevia headereita kirjautumiseen.
