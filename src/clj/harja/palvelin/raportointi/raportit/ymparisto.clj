@@ -27,7 +27,7 @@
         (hae-ymparistoraportti-tiedot db parametrit)))
 
 (defn hae-raportti* [db hakuasetukset]
-  (let [urakoittain? (nil? (:urakka-id hakuasetukset))
+  (let [urakoittain? (:urakoittain? hakuasetukset)
         rivit (hae-raportin-tiedot db hakuasetukset)
         materiaali-rivit (hae-materiaalit db)
         urakat (into #{} (map :urakka rivit))
@@ -47,19 +47,23 @@
                       rivit)))))
 
 
-(defn hae-raportti [db alkupvm loppupvm urakka-id hallintayksikko-id urakkatyyppi]
+(defn hae-raportti [db alkupvm loppupvm urakka-id hallintayksikko-id
+                    urakkatyyppi urakoittain?]
   (hae-raportti* db {:alkupvm alkupvm
                      :loppupvm loppupvm
                      :urakka urakka-id
                      :urakkatyyppi (some-> urakkatyyppi name)
-                     :hallintayksikko hallintayksikko-id}))
+                     :hallintayksikko hallintayksikko-id
+                     :urakoittain? urakoittain?}))
 
-(defn hae-raportti-urakoittain [db alkupvm loppupvm hallintayksikko-id urakkatyyppi]
+(defn hae-raportti-urakoittain [db alkupvm loppupvm hallintayksikko-id
+                                urakkatyyppi urakoittain?]
   (hae-raportti* db {:alkupvm alkupvm
                      :loppupvm loppupvm
                      :urakka nil
                      :urakkatyyppi (some-> urakkatyyppi name)
-                     :hallintayksikko hallintayksikko-id}))
+                     :hallintayksikko hallintayksikko-id
+                     :urakoittain? urakoittain?}))
 
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
@@ -69,8 +73,8 @@
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         materiaalit (if urakoittain?
-                      (hae-raportti-urakoittain db alkupvm loppupvm hallintayksikko-id urakkatyyppi)
-                      (hae-raportti db alkupvm loppupvm urakka-id hallintayksikko-id urakkatyyppi))
+                      (hae-raportti-urakoittain db alkupvm loppupvm hallintayksikko-id urakkatyyppi urakoittain?)
+                      (hae-raportti db alkupvm loppupvm urakka-id hallintayksikko-id urakkatyyppi urakoittain?))
         kk-lev (if urakoittain?
                  "4%" ; tehdään yksittäisestä kk:sta pienempi, jotta urakan nimi mahtuu
                  "5%")
