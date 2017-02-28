@@ -3,6 +3,7 @@
   (:require
     [clojure.spec :as s]
     [harja.pvm :as pvm]
+    [harja.domain.urakka :as urakka]
     [harja.domain.yllapitokohteet :as yllapitokohteet]
     [harja.domain.tierekisteri :as tr-domain]
     [harja.tyokalut.spec-apurit :as apurit]
@@ -34,7 +35,7 @@
 
 ;; Haut
 
-(s/def ::urakka-id ::apurit/postgres-serial)
+(s/def ::urakka-id ::urakka/id)
 
 (s/def ::hae-tiemerkinnan-yksikkohintaiset-tyot-kysely
   (s/keys :req-un [::urakka-id]))
