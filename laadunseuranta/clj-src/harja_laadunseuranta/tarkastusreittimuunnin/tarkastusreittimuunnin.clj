@@ -49,16 +49,16 @@
                                                      (get-in seuraava-reittimerkinta [:tr-osoite :tie]))))
         ei-ajallista-gappia? (let [aikaleima-nykyinen-merkinta (c/from-sql-time (:aikaleima nykyinen-reittimerkinta))
                                    aikaleima-seuraava-merkinta (c/from-sql-time (:aikaleima seuraava-reittimerkinta))]
-                               (if (t/before? aikaleima-seuraava-merkinta aikaleima-nykyinen-merkinta)
+                               (if (or
+                                     (nil? (:aikaleima nykyinen-reittimerkinta))
+                                     (nil? (:aikaleima seuraava-reittimerkinta))
+                                     (t/before? aikaleima-seuraava-merkinta aikaleima-nykyinen-merkinta))
                                  ;; Kerran törmättiin harvinaiseen tilanteeseen, jossa myöhemmin kirjatun pisteen
                                  ;; aikaleima oli ennen seuraavaa. Tällainen tilanne pitää pystyä käsittelemään
                                  true
-                                 (boolean (or
-                                            (nil? (:aikaleima nykyinen-reittimerkinta))
-                                            (nil? (:aikaleima seuraava-reittimerkinta))
-                                            (<= (t/in-seconds (t/interval aikaleima-nykyinen-merkinta
-                                                                          aikaleima-seuraava-merkinta))
-                                                +kahden-pisteen-valinen-sallittu-aikaero-s+)))))
+                                 (boolean (<= (t/in-seconds (t/interval aikaleima-nykyinen-merkinta
+                                                                        aikaleima-seuraava-merkinta))
+                                              +kahden-pisteen-valinen-sallittu-aikaero-s+))))
         jatkuvat-mittausarvot-samat? (boolean (and (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :soratie-tasaisuus)
                                                    (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :kiinteys)
                                                    (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :polyavyys)
