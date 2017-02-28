@@ -62,24 +62,6 @@
 
 (defrecord PoistaIlmoitusValinta [])
 
-;; Kuittaukset
-(defrecord AvaaUusiKuittaus [])
-(defrecord SuljeUusiKuittaus [])
-
-(defrecord AloitaMonenKuittaus [])
-(defrecord PeruMonenKuittaus [])
-(defrecord ValitseKuitattavaIlmoitus [ilmoitus])
-
-;; asettaa tyypin ja vapaatekstin
-(defrecord AsetaKuittausTiedot [tiedot])
-
-;; Tekee kuittauksen palvelimella
-(defrecord Kuittaa [])
-
-;; Kuittauksen vastaus
-(defrecord KuittaaVastaus [vastaus])
-
-
 (defn- hae-ilmoitus [arg]
   (log "hae-ilmoitus" (pr-str arg)))
 
