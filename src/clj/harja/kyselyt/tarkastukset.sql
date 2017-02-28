@@ -87,13 +87,36 @@ SELECT
     THEN 'urakoitsija' :: osapuoli
   ELSE 'tilaaja' :: osapuoli
   END                                  AS tekija,
+  -- Talvihoito- ja soratiemittauksesta riittää tieto, onko niitä tarkastuksella
+  CASE WHEN
+      thm.lumimaara IS NULL AND
+      thm.tasaisuus IS NULL AND
+      thm.kitka IS NULL AND
+      thm.lampotila_ilma IS NULL AND
+      thm.lampotila_tie IS NULL
+    THEN NULL
+    ELSE 'Talvihoitomittaus'
+  END AS talvihoitomittaus,
+  CASE WHEN
+      stm.tasaisuus IS NULL AND
+      stm.kiinteys IS NULL AND
+      stm.polyavyys IS NULL AND
+      stm.sivukaltevuus IS NULL
+    THEN NULL
+    ELSE 'Soratiemittaus'
+  END AS soratiemittaus,
+  -- Vakiohavainnot otetaan merkkijonona, koska tyyliin vaikuttaa tietyt avainsanat (esim. "Luminen")
   (SELECT array_agg(nimi)
    FROM tarkastus_vakiohavainto t_vh
      JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
-   WHERE tarkastus = t.id)             AS vakiohavainnot
+   WHERE tarkastus = t.id)             AS vakiohavainnot,
+  t.havainnot AS havainnot
 FROM tarkastus t
   LEFT JOIN kayttaja k ON t.luoja = k.id
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
+  -- Talvi- ja soratiemittaukset
+  LEFT JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
+  LEFT JOIN soratiemittaus stm ON t.id = stm.tarkastus
 WHERE t.urakka = :urakka
       AND t.sijainti IS NOT NULL
       AND ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
