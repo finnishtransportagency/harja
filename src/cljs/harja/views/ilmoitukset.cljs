@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [clojure.string :refer [capitalize]]
             [harja.tiedot.ilmoitukset :as tiedot]
-            [harja.tiedot.ilmoitukset.tietyot :as tietyoilmoitukset-tiedot]
+            [harja.tiedot.ilmoitukset.tietyotilmoitukset :as tietyoilmoitukset-tiedot]
             [harja.domain.ilmoitukset :refer
              [kuittausvaatimukset-str +ilmoitustyypit+ ilmoitustyypin-nimi
               ilmoitustyypin-lyhenne ilmoitustyypin-lyhenne-ja-nimi
@@ -28,7 +28,7 @@
             [harja.views.kartta :as kartta]
             [harja.views.ilmoituskuittaukset :as kuittaukset]
             [harja.views.ilmoituksen-tiedot :as it]
-            [harja.views.ilmoitukset.tietyot :as tietyoilmoitukset-view]
+            [harja.views.ilmoitukset.tietyotilmoitukset :as tietyoilmoitukset-view]
             [harja.ui.ikonit :as ikonit]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.ui.valinnat :as valinnat]

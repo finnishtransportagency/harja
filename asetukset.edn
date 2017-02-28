@@ -134,5 +134,5 @@
  :paivystystarkistus  {:paivittainen-aika [12 11 00]}
  :reittitarkistus  {:paivittainen-aika [00 30 00]}
 
- :pois-kytketyt-ominaisuudet #{:tietyoilmoitukset :tierekisterin-varusteet}
+ :pois-kytketyt-ominaisuudet #{ :tierekisterin-varusteet}
  }

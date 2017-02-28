@@ -1,6 +1,6 @@
-(ns harja.views.ilmoitukset.tietyot
+(ns harja.views.ilmoitukset.tietyotilmoitukset
   (:require [reagent.core :refer [atom] :as r]
-            [harja.tiedot.ilmoitukset.tietyot :as tiedot]
+            [harja.tiedot.ilmoitukset.tietyotilmoitukset :as tiedot]
             [harja.ui.bootstrap :as bs]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
@@ -43,19 +43,15 @@
      alkuaikakentta
      loppuaikakentta)))
 
-(defn ilmoitusten-hakuehdot [e! {:keys [aikavali urakka] :as valinnat-nyt}]
-  (log "renskaillaan hakuehtolomake")
+(defn ilmoitusten-hakuehdot [e! valinnat-nyt]
+  (log "---> renskaillaan hakuehdot. valinnat nyt: " (pr-str (:alkuaika valinnat-nyt))
+       (pr-str (:loppuaika valinnat-nyt)))
   [lomake/lomake
    {:luokka :horizontal
     :muokkaa! #(e! (tiedot/->AsetaValinnat %))}
 
    [(aikavalivalitsin valinnat-nyt)]
    valinnat-nyt])
-
-(defn leikkaa-sisalto-pituuteen [pituus sisalto]
-  (if (> (count sisalto) pituus)
-    (str (fmt/leikkaa-merkkijono pituus sisalto) "...")
-    sisalto))
 
 (defn ilmoitusten-paanakyma
   [e! {valinnat-nyt :valinnat
@@ -100,12 +96,10 @@
 
 (defn ilmoitukset* [e! ilmoitukset]
   (log "z 2")
-  (e! (tiedot/->YhdistaValinnat @tiedot/valinnat))
+  (e! (tiedot/->YhdistaValinnat @tiedot/ulkoisetvalinnat))
   (komp/luo
    (komp/lippu tiedot/karttataso-ilmoitukset)
    (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (tiedot/->ValitseIlmoitus i))))
-   (komp/watcher tiedot/valinnat (fn [_ _ uusi]
-                                    (e! (tiedot/->YhdistaValinnat uusi))))
    (komp/sisaan-ulos #(do
                          (notifikaatiot/pyyda-notifikaatiolupa)
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)

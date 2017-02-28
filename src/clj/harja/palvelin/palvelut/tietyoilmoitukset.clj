@@ -10,15 +10,17 @@
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
             [harja.geo :as geo]))
 
-(defn hae-tietyoilmoitukset [db user {:keys [alku loppu] :as hakuehdot} max-maara]
+(defn hae-tietyoilmoitukset [db user {:keys [alkuaika loppuaika] :as hakuehdot} max-maara]
+
+  (println "---> haetaan tietyöilmoitukset: " hakuehdot )
   (let [kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
                            db
                            user
                            (fn [urakka-id kayttaja]
                              (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset urakka-id kayttaja)))
         tietyoilmoitukset (q-tietyoilmoitukset/hae-tietyoilmoitukset db
-                                                                     {:alku (konv/sql-timestamp alku)
-                                                                      :loppu (konv/sql-timestamp loppu)
+                                                                     {:alku (konv/sql-timestamp alkuaika)
+                                                                      :loppu (konv/sql-timestamp loppuaika)
                                                                       :urakat kayttajan-urakat
                                                                       :max-maara max-maara})
         tulos (mapv (fn [tietyilmoitus]
