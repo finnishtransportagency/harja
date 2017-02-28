@@ -5,22 +5,35 @@
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [clj-time.coerce :refer [from-sql-time]]
-            [harja.kyselyt.ilmoitukset :as q]
-            [harja.domain.ilmoitukset :as ilmoitukset-domain]
-            [harja.palvelin.palvelut.urakat :as urakat]
-            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
-            [clj-time.core :as t]
-            [harja.pvm :as pvm]
-            [clj-time.coerce :as c]
+            [harja.kyselyt.tietyoilmoitukset :as q-tietyoilmoitukset]
             [harja.domain.oikeudet :as oikeudet]
-            [clojure.java.jdbc :as jdbc]
-            [clojure.string :as str]
-            [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot])
-  (:import (java.util Date)))
+            [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
+            [harja.geo :as geo]))
 
-
-(defn hae-tietyoilmoitukset [db user tiedot param4]
-  )
+(defn hae-tietyoilmoitukset [db user {:keys [alku loppu] :as hakuehdot} max-maara]
+  (let [kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
+                           db
+                           user
+                           (fn [urakka-id kayttaja]
+                             (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset urakka-id kayttaja)))
+        tietyoilmoitukset (q-tietyoilmoitukset/hae-tietyoilmoitukset (:db harja.palvelin.main/harja-jarjestelma)
+                                                                     {:alku (konv/sql-timestamp alku)
+                                                                      :loppu (konv/sql-timestamp loppu)
+                                                                      :urakat kayttajan-urakat
+                                                                      :max-maara max-maara})
+        tulos (mapv (fn [tietyilmoitus]
+                      (as-> tietyilmoitus t
+                            (update t :sijainti geo/pg->clj)
+                            (konv/array->vec t :tyotyypit)
+                            (assoc t :tyotyypit (mapv #(konv/pgobject->map % :tyyppi :string :selite :string) (:tyotyypit t)))
+                            (konv/array->vec t :tienpinnat)
+                            (assoc t :tienpinnat (mapv #(konv/pgobject->map % :materiaali :string :matka :long) (:tienpinnat t)))
+                            (konv/array->vec t :kiertotienpinnat)
+                            (assoc t :kiertotienpinnat (mapv #(konv/pgobject->map % :materiaali :string :matka :long) (:kiertotienpinnat t)))
+                            (konv/array->vec t :nopeusrajoitukset)
+                            (assoc t :nopeusrajoitukset (mapv #(konv/pgobject->map % :nopeusrajoitus :long :matka :long) (:nopeusrajoitukset t)))))
+                    tietyoilmoitukset)]
+    tulos))
 
 (defrecord Tietyoilmoitukset []
   component/Lifecycle
