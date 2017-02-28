@@ -74,10 +74,9 @@
             virhe-viesti (:selite virhe)]
 
         (if onnistunut?
-          (do
-            (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s.\"" kohde-id virhe-viesti))
-            (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id}))
-          (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id}))
+          (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
+          (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s.\"" kohde-id virhe-viesti))
+              (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})))
 
         (q-yllapitokohteet/merkitse-kohteen-lahetystiedot!
           db
