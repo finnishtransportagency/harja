@@ -56,9 +56,9 @@
                                      ;; aikaleima oli ennen seuraavaa. Tällainen tilanne pitää pystyä käsittelemään
                                      (t/before? aikaleima-seuraava-merkinta aikaleima-nykyinen-merkinta))
                                  true
-                                 (boolean (<= (t/in-seconds (t/interval aikaleima-nykyinen-merkinta
-                                                                        aikaleima-seuraava-merkinta))
-                                              +kahden-pisteen-valinen-sallittu-aikaero-s+))))
+                                 (<= (t/in-seconds (t/interval aikaleima-nykyinen-merkinta
+                                                               aikaleima-seuraava-merkinta))
+                                     +kahden-pisteen-valinen-sallittu-aikaero-s+)))
         jatkuvat-mittausarvot-samat? (boolean (and (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :soratie-tasaisuus)
                                                    (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :kiinteys)
                                                    (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :polyavyys)
