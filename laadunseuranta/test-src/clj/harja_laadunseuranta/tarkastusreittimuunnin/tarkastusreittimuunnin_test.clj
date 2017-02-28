@@ -153,6 +153,14 @@
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
 
+(deftest tarkastus-jossa-merkintojen-aikaleimoissa-outouksia
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-yhden-pisteen-aikaleima-on-aiemmin))]
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+
 ;; -------- Laadunalitus --------
 
 (deftest tarkastus-jossa-jatkuva-laadunalitus
