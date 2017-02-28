@@ -260,8 +260,8 @@
     (log/debug "Tieosoiteverkon tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
 
 ;; Tuonnin testaus REPListä:
-(def db (:db harja.palvelin.main/harja-jarjestelma))
-(vie-tieverkko-kantaan db "file:shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp")
+;;(def db (:db harja.palvelin.main/harja-jarjestelma))
+;;(vie-tieverkko-kantaan db "file:shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp")
 
 
 ;; Hae tietyn tien pätkät tarkasteluun:
