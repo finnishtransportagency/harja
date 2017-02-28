@@ -123,10 +123,3 @@
       (if valittu-ilmoitus
         [ilmoituksen-tiedot e! valittu-ilmoitus]
         [ilmoitusten-paanakyma e! ilmoitukset])])))
-
-#_(defn ilmoitukset []
-  (log "z 1")
-  (fn []
-    [tuck tiedot/ilmoitukset ilmoitukset*]
-    (log "z 3")
-    [:div "terve"]))

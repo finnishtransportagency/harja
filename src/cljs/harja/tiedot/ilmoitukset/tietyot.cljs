@@ -6,7 +6,7 @@
             [harja.tiedot.urakka :as u]
             [harja.loki :refer [log tarkkaile!]]
             [cljs.core.async :refer [<!]]
-            [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<! reaction-writable]]
+            [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [tuck.core :as t]
             [clojure.string :as str]
@@ -28,20 +28,16 @@
 
 (defonce karttataso-ilmoitukset (atom false))
 
+(def haetut-ilmoitukset-feikkidata
+  [
+   {:id 1 :urakkanimi "Melkonen urakka" :alkupvm #inst "2004-07-24T18:18:00"
+    :loppupvm #inst "2014-07-24T18:18:00" :tyon-tyyppi "lapiointi" :ilmoittaja "Leena Lampiainen"}
+   {}])
+
 (defonce ilmoitukset (atom {:ilmoitusnakymassa? false
                             :valittu-ilmoitus nil
                             :ilmoitukset nil ;; haetut ilmoitukset
-                            :valinnat {}
-                            #_{:tyypit +ilmoitustyypit+
-                                       :tilat (into #{} tila-filtterit)
-                                       :hakuehto ""
-                                       :selite [nil ""]
-                                       :vain-myohassa? false
-                                       :aloituskuittauksen-ajankohta :kaikki
-                                       :ilmoittaja-nimi ""
-                                       :ilmoittaja-puhelin ""
-                                       :vakioaikavali (first aikavalit)
-                                       :alkuaika (pvm/tuntia-sitten 1)
+                            :valinnat {:alkuaika (pvm/tuntia-sitten 1)
                                        :loppuaika (pvm/nyt)}}))
 
 ;; Vaihtaa valinnat
@@ -62,23 +58,24 @@
 
 (defrecord PoistaIlmoitusValinta [])
 
-(defn- hae-ilmoitus [arg]
-  (log "hae-ilmoitus" (pr-str arg)))
+(defn- hae-ilmoitukset [{valinnat :valinnat}]
+  (log "hae-ilmoitukset" (pr-str valinnat))
+  (swap! ilmoitukset update :ilmoitukset haetut-ilmoitukset-feikkidata))
 
 ;; Kaikki mitä UI voi ilmoitusnäkymässä tehdä, käsitellään täällä
 (extend-protocol t/Event
   AsetaValinnat
   (process-event [{valinnat :valinnat} app]
-    (hae-ilmoitus
+    (hae-ilmoitukset
       (assoc app :valinnat valinnat)))
 
   YhdistaValinnat
   (process-event [{valinnat :valinnat :as e} app]
-    (hae-ilmoitus
+    (hae-ilmoitukset
       (update-in app [:valinnat] merge valinnat)))
 
   HaeIlmoitukset
-  (process-event [_ {valinnat :valinnat taustahaku? :taustahaku? :as app}]
+  (process-event [_ {valinnat :valinnat :as app}]
     (let [tulos! (t/send-async! ->IlmoitusHaku)]
       (go
         (let [haku (-> valinnat
@@ -87,21 +84,16 @@
                                #(log "update valinnat .."))
                        )]
           (tulos!
-           {:ilmoitukset (<! (k/post! :hae-ilmoitukset haku))
-            :taustahaku? taustahaku?}))))
-    (if taustahaku?
-      app
-      (assoc app :ilmoitukset nil)))
+           {:ilmoitukset (<! (k/post! :hae-ilmoitukset haku))}))))
+    (assoc app :ilmoitukset nil))
 
   IlmoitusHaku
   (process-event [{tulokset :tulokset} {valittu :valittu-ilmoitus :as app}]
     #_(let [uudet-ilmoitusidt (set/difference (into #{} (map :id (:ilmoitukset tulokset)))
                                             (into #{} (map :id (:ilmoitukset app))))
           uudet-ilmoitukset (filter #(uudet-ilmoitusidt (:id %)) (:ilmoitukset tulokset))]
-      (when (:taustahaku? tulokset)
-        (nayta-notifikaatio-uusista-ilmoituksista uudet-ilmoitukset
-                                                  {:aani? @aanimerkki-uusista-ilmoituksista?}))
-      (hae-ilmoitus (assoc app
+
+        (hae-ilmoitukset (assoc app
              ;; Uudet ilmoitukset
              :ilmoitukset (cond-> (:ilmoitukset tulokset)
                                   (:taustahaku? tulokset)
@@ -121,7 +113,7 @@
   (process-event [{ilmoitus :ilmoitus} app]
     (let [tulos (t/send-async! ->IlmoituksenTiedot)]
       (go
-        (tulos (<! (k/post! :hae-ilmoitus (:id ilmoitus))))))
+        (tulos (<! (k/post! :hae-ilmoitukset (:id ilmoitus))))))
     (assoc app :ilmoituksen-haku-kaynnissa? true))
 
   IlmoituksenTiedot
