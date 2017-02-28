@@ -285,6 +285,7 @@
                                       keskimaarainen-vuorokausiliikenne poistettu]}]
   (if poistettu
     (when (yy/yllapitokohteen-voi-poistaa? db id)
+      (log/debug "Poistetaan ylläpitokohde")
       (q/poista-yllapitokohde! db {:id id :urakka urakka-id}))
     (do (log/debug "Päivitetään ylläpitokohde")
         (q/paivita-yllapitokohde! db
