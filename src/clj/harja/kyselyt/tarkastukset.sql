@@ -155,11 +155,24 @@ SELECT
    FROM tarkastus_vakiohavainto t_vh
      JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
    WHERE tarkastus = t.id)                                   AS vakiohavainnot,
+  thm.talvihoitoluokka     AS talvihoitomittaus_hoitoluokka,
+  thm.lumimaara            AS talvihoitomittaus_lumimaara,
+  thm.tasaisuus            AS talvihoitomittaus_tasaisuus,
+  thm.kitka                AS talvihoitomittaus_kitka,
+  thm.lampotila_tie        AS talvihoitomittaus_lampotila_tie,
+  thm.lampotila_ilma       AS talvihoitomittaus_lampotila_ilma,
+  stm.hoitoluokka          AS soratiemittaus_hoitoluokka,
+  stm.tasaisuus            AS soratiemittaus_tasaisuus,
+  stm.kiinteys             AS soratiemittaus_kiinteys,
+  stm.polyavyys            AS soratiemittaus_polyavyys,
+  stm.sivukaltevuus        AS soratiemittaus_sivukaltevuus,
   yrita_tierekisteriosoite_pisteille2
   (alkupiste(t.sijainti), loppupiste(t.sijainti), 1) :: TEXT AS tierekisteriosoite
 FROM tarkastus t
   LEFT JOIN kayttaja k ON t.luoja = k.id
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
+  LEFT JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
+  LEFT JOIN soratiemittaus stm ON t.id = stm.tarkastus
 WHERE t.urakka = :urakka
       AND t.sijainti IS NOT NULL
       AND ST_Distance(t.sijainti, ST_MakePoint(:x, :y)) < :toleranssi

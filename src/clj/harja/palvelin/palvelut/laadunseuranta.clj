@@ -413,6 +413,7 @@
           (comp
             (map #(konv/array->set % :vakiohavainnot))
             (map #(assoc % :tyyppi-kartalla :tarkastus))
+            (map konv/alaviiva->rakenne)
             (map #(konv/string->keyword % :tyyppi))
             (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
           (tarkastukset/hae-urakan-tarkastusten-asiat-kartalle
