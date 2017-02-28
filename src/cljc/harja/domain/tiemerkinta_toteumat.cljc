@@ -22,7 +22,7 @@
 (s/def ::hinta-kohteelle (s/and string? #(>= (count %) 1)))
 (s/def ::yllapitokohde-id ::apurit/postgres-serial)
 (s/def ::tr-numero ::tr-domain/numero)
-(s/def ::hinta (s/double-in :min 0 :max 10000000 :infinite? false :NaN? false))
+(s/def ::hinta (s/and number? pos?))
 (s/def ::poistettu boolean?)
 
 (s/def ::tiemerkinnan-yksikkohintainen-tyo
