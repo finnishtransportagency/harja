@@ -125,11 +125,13 @@
                              (conj (when (not (empty? yha-nimi)) ["nimi" yha-nimi]))
                              (conj (when (not (empty? sampotunniste)) ["sampo-id" sampotunniste]))
                              (conj (when vuosi ["vuosi" vuosi])))
+              otsikot {"Content-Type" "text/xml; charset=utf-8"}
               http-asetukset {:metodi :GET
                               :url url
                               :parametrit parametrit
                               :kayttajatunnus kayttajatunnus
-                              :salasana salasana}
+                              :salasana salasana
+                              :otsikot otsikot}
               {body :body headers :headers}
               (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
           (kasittele-urakoiden-hakuvastaus body headers))))))
@@ -171,10 +173,12 @@
               kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
               url (str url "toteumatiedot")
               kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)
+              otsikot {"Content-Type" "text/xml; charset=utf-8"}
               http-asetukset {:metodi :POST
                               :url url
                               :kayttajatunnus kayttajatunnus
-                              :salasana salasana}
+                              :salasana salasana
+                              :otsikot otsikot}
               {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
           (kasittele-urakan-kohdelahetysvastaus db body headers kohteet))
 
