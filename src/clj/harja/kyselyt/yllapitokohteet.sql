@@ -71,6 +71,17 @@ WHERE
   ypk.suorittava_tiemerkintaurakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
 
+-- name: hae-yllapitokohteeseen-liittyvat-kirjaukset
+SELECT
+  (SELECT COUNT(*) FROM tarkastus WHERE yllapitokohde = :id) as "tarkastukset",
+  (SELECT COUNT(*) FROM tarkastus WHERE yllapitokohde = :id) as "laatupoikkeamat",
+  -- TODO Ota mukaan kun HAR-4630 on mergetetty: (SELECT COUNT(*) FROM tiemerkinta_yksikkohintainen_toteuma WHERE yllapitokohde = 1) as "tiemerkinnan-toteumat",
+  (SELECT COUNT(*) FROM paallystysilmoitus WHERE paallystyskohde = :id) as "paallystysilmoitukset",
+  (SELECT COUNT(*) FROM paikkausilmoitus WHERE paikkauskohde = :id) as "paikkausilmoitukset",
+  (SELECT COUNT(*) FROM tietyomaa WHERE yllapitokohde = :id) as "tietyomaat"
+FROM yllapitokohde
+WHERE id = :id;
+
 -- name: hae-urakan-sopimuksen-yllapitokohteet
 -- Hakee urakan sopimuksen kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
 SELECT

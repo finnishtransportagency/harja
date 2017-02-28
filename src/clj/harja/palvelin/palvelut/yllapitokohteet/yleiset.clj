@@ -69,6 +69,14 @@
               (tieverkko/hae-osien-pituudet db tie min-osa max-osa))))
     (group-by :tr-numero yllapitokohteet)))
 
+(defn- yllapitokohteen-voi-poistaa?
+  "Palauttaa true tai false sen mukaan onko ylläpitokohteeseen liitetty kirjauksia, jotka
+   estävät kohteen poiston."
+  [db yllapitokohde-id]
+  (let [kirjaukset (first (q/hae-yllapitokohteeseen-liittyvat-kirjaukset db {:id yllapitokohde-id}))
+        kirjauksia-yhteensa (reduce + (vals kirjaukset))]
+    (= kirjauksia-yhteensa 0)))
+
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
   (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (log/debug "Haetaan urakan ylläpitokohteet.")
@@ -86,10 +94,12 @@
                                                                              :sopimus sopimus-id
                                                                              :vuosi vuosi}))
           osien-pituudet-tielle (laske-osien-pituudet db yllapitokohteet)
-          yllapitokohteet (mapv #(assoc %
-                                   :pituus
-                                   (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))
-                                yllapitokohteet)]
+          yllapitokohteet (->> yllapitokohteet
+                               (mapv #(assoc % :pituus
+                                               (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %)))
+                               (mapv #(assoc % :yllapitokohteen-voi-poistaa?
+                                               (yllapitokohteen-voi-poistaa? db (:id %)))))]
+      (log/debug "[DEBUG] VASTAUS ON " (pr-str yllapitokohteet))
       yllapitokohteet)))
 
 (defn paivita-yllapitourakan-geometria [db urakka-id]

@@ -283,17 +283,8 @@
                                       yllapitoluokka sopimuksen-mukaiset-tyot
                                       arvonvahennykset bitumi-indeksi kaasuindeksi
                                       keskimaarainen-vuorokausiliikenne poistettu]}]
-  (if poistettu
-    (do (log/debug "Tarkistetaan onko ylläpitokohteella ilmoituksia")
-        (let [paallystysilmoitus (paallystys-q/onko-olemassa-paallystysilmoitus? db id)
-              paikkausilmoitus (paikkaus-q/onko-olemassa-paikkausilmioitus? db id)]
-          (log/debug "Vastaus päällystysilmoitus: " paallystysilmoitus)
-          (log/debug "Vastaus paikkausilmoitus: " paikkausilmoitus)
-          (if (or paallystysilmoitus paikkausilmoitus)
-            (log/debug "Ei voi poistaa, ylläpitokohteelle on kirjattu ilmoituksia!")
-            (do
-              (log/debug "Ilmoituksia ei löytynyt, poistetaan ylläpitokohde")
-              (q/poista-yllapitokohde! db {:id id :urakka urakka-id})))))
+  (if poistettu ;; FIXME TARKISTA KÄYTTÄEN yllapitokohteen-voi-poistaa?
+    (q/poista-yllapitokohde! db {:id id :urakka urakka-id})
     (do (log/debug "Päivitetään ylläpitokohde")
         (q/paivita-yllapitokohde! db
                                   {:kohdenumero kohdenumero
