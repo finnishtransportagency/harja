@@ -1,7 +1,7 @@
 -- name: hae-tietyoilmoitukset
 SELECT
   id
-  tloik_id,
+    tloik_id,
   paatietyoilmoitus,
   tloik_paatietyoilmoitus_id,
   luotu,
@@ -66,7 +66,8 @@ SELECT
   liikenteenohjaaja,
   huomautukset
 FROM tietyilmoitus
-WHERE alku >= :alku AND loppu <= :loppu
+WHERE alku >= :alku AND loppu <= :loppu AND
+      (x.urakka IS NULL OR x.urakka IN (:urakat))
 ORDER BY i.ilmoitettu DESC, it.kuitattu DESC
 LIMIT :max-maara :: INTEGER;
 
