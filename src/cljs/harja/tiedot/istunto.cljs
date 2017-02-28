@@ -130,4 +130,4 @@
 
 (defn ominaisuus-kaytossa? [k]
   (let [pko @pois-kytketyt-ominaisuudet]
-    (and (set? pko) (contains? pko k))))
+    (and (set? pko) (not (contains? pko k)))))
