@@ -16,7 +16,7 @@
                            user
                            (fn [urakka-id kayttaja]
                              (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset urakka-id kayttaja)))
-        tietyoilmoitukset (q-tietyoilmoitukset/hae-tietyoilmoitukset (:db harja.palvelin.main/harja-jarjestelma)
+        tietyoilmoitukset (q-tietyoilmoitukset/hae-tietyoilmoitukset db
                                                                      {:alku (konv/sql-timestamp alku)
                                                                       :loppu (konv/sql-timestamp loppu)
                                                                       :urakat kayttajan-urakat
