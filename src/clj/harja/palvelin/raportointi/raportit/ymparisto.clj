@@ -3,12 +3,14 @@
             [harja.domain.hoitoluokat :as hoitoluokat]
             [harja.kyselyt
              [hallintayksikot :as hallintayksikot-q]
+             [lampotilat :as suolasakko-q]
              [konversio :as konv]
              [urakat :as urakat-q]]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen
              :refer [raportin-otsikko]]
             [jeesql.core :refer [defqueries]]
-            ))
+            [taoensso.timbre :as log]
+            [harja.fmt :as fmt]))
 
 (defqueries "harja/palvelin/raportointi/raportit/ymparisto.sql"
   {:positional? true})
@@ -83,11 +85,29 @@
         materiaalit (sort-by #(materiaalidomain/materiaalien-jarjestys
                                (get-in (first %) [:materiaali :nimi]))
                              materiaalit)
-        kuukaudet (yleinen/kuukaudet alkupvm loppupvm yleinen/kk-ja-vv-fmt)]
+        kuukaudet (yleinen/kuukaudet alkupvm loppupvm yleinen/kk-ja-vv-fmt)
+        talvisuolan-maxmaaratieto (when (= :urakka konteksti)
+                                    (:talvisuolaraja (first (suolasakko-q/hae-urakan-suolasakot db {:urakka urakka-id}))))
+        talvisuolan-toteutunut-maara (when (= :urakka konteksti)
+                                       (some->> materiaalit
+                                                (filter (fn [[materiaali _]]
+                                                          (= "talvisuola" (get-in materiaali [:materiaali :tyyppi])))) ;; vain talvisuolat
+                                                (mapcat second)
+                                                (filter #(nil? (:luokka %))) ;; luokka on nil toteumariveillä (lihavoidut raportissa)
+                                                (map :maara)
+                                                (reduce +)))]
 
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
-     [:teksti "Raportti ei laske Suolan toteumaprosentteja tai suunniteltuja määriä."]
+     (when (= konteksti :urakka)
+       [:teksti (str "Hoitokauden talvisuolan maksimimäärä urakassa on "
+                     talvisuolan-maxmaaratieto "t. Talvisuolaa läytetty valitulla aikavälillä "
+                     (fmt/desimaaliluku-opt talvisuolan-toteutunut-maara 2)
+                     "t. Toteumaprosentti valitulla aikavälillä vs. hoitokauden max-määrä: "
+                     (fmt/desimaaliluku-opt
+                       (* 100 (with-precision 3 (/ talvisuolan-toteutunut-maara
+                                                   talvisuolan-maxmaaratieto)))
+                       1) "%")])
      [:taulukko {:otsikko otsikko
                  :oikealle-tasattavat-kentat (into #{} (range 1 (+ 4 (count kuukaudet))))
                  :sheet-nimi raportin-nimi}
