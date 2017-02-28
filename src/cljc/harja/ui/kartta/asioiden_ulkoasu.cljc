@@ -265,48 +265,62 @@
 (defn varustetoteuman-ikoni []
   (pinni-ikoni (:varustetoteuma ikonien-varit)))
 
-(defn tarkastuksen-ikoni [valittu? ok? vakiohavainnot reitti? tekija]
+(defn tarkastuksen-ikoni [valittu? ok? havainnot vakiohavainnot talvihoitomittaus soratiemittaus reitti? tekija]
   (cond
     reitti? nil
-    (not ok?) (pinni-ikoni (case tekija
-                             :tilaaja (:ei-ok-tarkastus-tilaaja ikonien-varit)
-                             :konsultti (:ei-ok-tarkastus-konsultti ikonien-varit)
-                             :urakoitsija (:ei-ok-tarkastus-urakoitsija ikonien-varit)
-                             (:ei-ok-tarkastus ikonien-varit)))
-    (not (empty? vakiohavainnot)) (pinni-ikoni (:tarkastus-vakiohavainnolla ikonien-varit))
-    (and valittu? ok?) (pinni-ikoni (case tekija
-                                      :tilaaja (:ok-tarkastus-tilaaja ikonien-varit)
-                                      :konsultti (:ok-tarkastus-konsultti ikonien-varit)
-                                      :urakoitsija (:ok-tarkastus-urakoitsija ikonien-varit)
-                                      (:ok-tarkastus ikonien-varit))))) ;; Ei näytetä pistemäisiä ok-tarkastuksia jos ei ole valittu
+    (not ok?)
+    (pinni-ikoni (case tekija
+                   :tilaaja (:ei-ok-tarkastus-tilaaja ikonien-varit)
+                   :konsultti (:ei-ok-tarkastus-konsultti ikonien-varit)
+                   :urakoitsija (:ei-ok-tarkastus-urakoitsija ikonien-varit)
+                   (:ei-ok-tarkastus ikonien-varit)))
 
-(defn tarkastuksen-reitti [ok? vakiohavainnot tekija]
-  (if-not ok?                                               ;;laadunalitus
-    {:color (case tekija
-              :tilaaja (:ei-ok-tarkastus-tilaaja viivojen-varit)
-              :konsultti (:ei-ok-tarkastus-konsultti viivojen-varit)
-              :urakoitsija (:ei-ok-tarkastus-urakoitsija viivojen-varit)
-              (:ei-ok-tarkastus viivojen-varit))}
-    (if-not (empty? vakiohavainnot)
-      ;; on vakiohavaintoja. Erikoiskeissi lumista tai liukasta.
-      (if (or (str/includes? vakiohavainnot "Liukasta")
-              (str/includes? vakiohavainnot "Lumista"))
-        (tarkastus-vakiohavainnolla-luminen-tai-liukas (case tekija
-                                                         :tilaaja (:ok-tarkastus-tilaaja viivojen-varit)
-                                                         :konsultti (:ok-tarkastus-konsultti viivojen-varit)
-                                                         :urakoitsija (:ok-tarkastus-urakoitsija viivojen-varit)
-                                                         (:ok-tarkastus viivojen-varit)))
-        (tarkastus-vakiohavainnolla (case tekija
-                                      :tilaaja (:ok-tarkastus-tilaaja viivojen-varit)
-                                      :konsultti (:ok-tarkastus-konsultti viivojen-varit)
-                                      :urakoitsija (:ok-tarkastus-urakoitsija viivojen-varit)
-                                      (:ok-tarkastus viivojen-varit))))
-      ;; kaikki OK
-      {:color (case tekija
-                :tilaaja (:ok-tarkastus-tilaaja viivojen-varit)
-                :konsultti (:ok-tarkastus-konsultti viivojen-varit)
-                :urakoitsija (:ok-tarkastus-urakoitsija viivojen-varit)
-                (:ok-tarkastus viivojen-varit))})))
+    (or (not-empty vakiohavainnot)
+        (not-empty havainnot)
+        (not-empty talvihoitomittaus)
+        (not-empty soratiemittaus))
+    (pinni-ikoni (:tarkastus-vakiohavainnolla ikonien-varit))
+
+    (and valittu? ok?)
+    (pinni-ikoni (case tekija
+                   :tilaaja (:ok-tarkastus-tilaaja ikonien-varit)
+                   :konsultti (:ok-tarkastus-konsultti ikonien-varit)
+                   :urakoitsija (:ok-tarkastus-urakoitsija ikonien-varit)
+                   (:ok-tarkastus ikonien-varit))))) ;; Ei näytetä pistemäisiä ok-tarkastuksia jos ei ole valittu
+
+(defn tarkastuksen-reitti
+  ([ok? havainnot tekija]
+    (tarkastuksen-reitti ok? havainnot nil nil nil tekija))
+  ([ok? havainnot vakiohavainnot talvihoitomittaus soratiemittaus tekija]
+   (if-not ok? ;;laadunalitus
+     {:color (case tekija
+               :tilaaja (:ei-ok-tarkastus-tilaaja viivojen-varit)
+               :konsultti (:ei-ok-tarkastus-konsultti viivojen-varit)
+               :urakoitsija (:ei-ok-tarkastus-urakoitsija viivojen-varit)
+               (:ei-ok-tarkastus viivojen-varit))}
+     (if (or (not-empty vakiohavainnot) (not-empty havainnot)
+             (not-empty talvihoitomittaus) (not-empty soratiemittaus))
+       ;; on vakiohavaintoja. Erikoiskeissi lumista tai liukasta.
+       (if (and
+             (some? vakiohavainnot)
+             (or (str/includes? vakiohavainnot "Liukasta")
+                (str/includes? vakiohavainnot "Lumista")))
+         (tarkastus-vakiohavainnolla-luminen-tai-liukas (case tekija
+                                                          :tilaaja (:ok-tarkastus-tilaaja viivojen-varit)
+                                                          :konsultti (:ok-tarkastus-konsultti viivojen-varit)
+                                                          :urakoitsija (:ok-tarkastus-urakoitsija viivojen-varit)
+                                                          (:ok-tarkastus viivojen-varit)))
+         (tarkastus-vakiohavainnolla (case tekija
+                                       :tilaaja (:ok-tarkastus-tilaaja viivojen-varit)
+                                       :konsultti (:ok-tarkastus-konsultti viivojen-varit)
+                                       :urakoitsija (:ok-tarkastus-urakoitsija viivojen-varit)
+                                       (:ok-tarkastus viivojen-varit))))
+       ;; kaikki OK
+       {:color (case tekija
+                 :tilaaja (:ok-tarkastus-tilaaja viivojen-varit)
+                 :konsultti (:ok-tarkastus-konsultti viivojen-varit)
+                 :urakoitsija (:ok-tarkastus-urakoitsija viivojen-varit)
+                 (:ok-tarkastus viivojen-varit))}))))
 
 (defn laatupoikkeaman-ikoni [tekija]
   (pinni-ikoni (case tekija

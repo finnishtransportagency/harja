@@ -264,9 +264,15 @@
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu?]
   (let [ikoni (ulkoasu/tarkastuksen-ikoni
-               valittu? (:ok? tarkastus) (:vakiohavainnot tarkastus) (reitillinen-asia? tarkastus)
+               valittu? (:ok? tarkastus)
+               (:havainnot tarkastus) (:vakiohavainnot tarkastus)
+               (:talvihoitomittaus tarkastus) (:soratiemittaus tarkastus)
+               (reitillinen-asia? tarkastus)
                (:tekija tarkastus))
-        viiva (ulkoasu/tarkastuksen-reitti (:ok? tarkastus) (:vakiohavainnot tarkastus) (:tekija tarkastus))
+        viiva (ulkoasu/tarkastuksen-reitti (:ok? tarkastus)
+                                           (:havainnot tarkastus) (:vakiohavainnot tarkastus)
+                                           (:talvihoitomittaus tarkastus) (:soratiemittaus tarkastus)
+                                           (:tekija tarkastus))
         selite-teksti {:teksti (otsikko-tekijalla "Tarkastus" tarkastus)}
         selite (if ikoni
                  (assoc selite-teksti :img ikoni)
