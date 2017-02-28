@@ -23,8 +23,8 @@
                                                                       :loppu (konv/sql-timestamp loppuaika)
                                                                       :urakat kayttajan-urakat
                                                                       :max-maara max-maara})
-        tulos (mapv (fn [tietyilmoitus]
-                      (as-> tietyilmoitus t
+        tulos (mapv (fn [tietyoilmoitus]
+                      (as-> tietyoilmoitus t
                             (update t :sijainti geo/pg->clj)
                             (konv/array->vec t :tyotyypit)
                             (assoc t :tyotyypit (mapv #(konv/pgobject->map % :tyyppi :string :selite :string) (:tyotyypit t)))

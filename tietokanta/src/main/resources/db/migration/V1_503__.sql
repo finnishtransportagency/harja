@@ -78,7 +78,7 @@ CREATE TYPE tietyon_huomautukset AS ENUM (
   'avotuli',
   'tyokoneitaLiikenteenSeassa');
 
-CREATE TABLE tietyilmoitus (
+CREATE TABLE tietyoilmoitus (
   id                                    SERIAL PRIMARY KEY,
   tloik_id                              INTEGER,
   paatietyoilmoitus                     INTEGER,
@@ -160,5 +160,4 @@ CREATE TABLE tietyilmoitus (
   pysaytysten_loppu                     TIMESTAMP,
   lisatietoja                           TEXT,
 
-  FOREIGN KEY (paatietyoilmoitus) REFERENCES tietyilmoitus (id));
-
+  FOREIGN KEY (paatietyoilmoitus) REFERENCES tietyoilmoitus (id));

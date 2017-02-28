@@ -1,4 +1,4 @@
-INSERT INTO tietyilmoitus (luotu,
+INSERT INTO tietyoilmoitus (luotu,
                            luoja,
                            ilmoittaja,
                            ilmoittaja_etunumi,
