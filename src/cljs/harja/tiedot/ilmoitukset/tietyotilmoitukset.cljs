@@ -79,31 +79,14 @@
       (log "---> HaeIlmoitukset: valinnat:" (pr-str valinnat))
       (go
         (tulos!
-          {:ilmoitukset (<! (k/post! :hae-tietyoilmoitukset valinnat))})))
+         {:ilmoitukset (<! (k/post! :hae-tietyoilmoitukset (select-keys valinnat [:alkuaika :loppuaika] )))})))
     (assoc app :ilmoitukset nil))
 
   IlmoitusHaku
-  (process-event [{tulokset :tulokset} {valittu :valittu-ilmoitus :as app}]
-    (log "----> IlmoitusHaku" (pr-str tulokset))
-    #_(let [uudet-ilmoitusidt (set/difference (into #{} (map :id (:ilmoitukset tulokset)))
-                                              (into #{} (map :id (:ilmoitukset app))))
-            uudet-ilmoitukset (filter #(uudet-ilmoitusidt (:id %)) (:ilmoitukset tulokset))]
-
-        (hae-ilmoitukset (assoc app
-                           ;; Uudet ilmoitukset
-                           :ilmoitukset (cond-> (:ilmoitukset tulokset)
-                                                (:taustahaku? tulokset)
-                                                (merkitse-uudet-ilmoitukset uudet-ilmoitusidt)
-                                                true
-                                                (jarjesta-ilmoitukset))
-
-                           ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
-                           :valittu-ilmoitus (if (some #(= (:ilmoitusid valittu) %)
-                                                       (map :ilmoitusid (:ilmoitukset tulokset)))
-                                               valittu
-                                               nil))
-                         60000
-                         true)))
+  (process-event [vastaus {valittu :valittu-ilmoitus :as app}]
+    (log "----> IlmoitusHaku" (pr-str vastaus))
+    (let [ilmoitukset (:ilmoitukset (:tulokset vastaus))]
+      (assoc app :ilmoitukset ilmoitukset)))
 
   ValitseIlmoitus
   (process-event [{ilmoitus :ilmoitus} app]
