@@ -242,17 +242,16 @@
      :data turpo}))
 
 (defmethod infopaneeli-skeema :tarkastus [tarkastus]
-  (let [havainnot-fn #(cond
-                        (and (:havainnot %) (not-empty (:vakiohavainnot %)))
-                        (str (:havainnot %) " & " (string/join ", " (:vakiohavainnot %)))
-
-                        (:havainnot %)
-                        (:havainnot %)
-
-                        (not-empty (:vakiohavainnot %))
-                        (string/join ", " (:vakiohavainnot %))
-
-                        :default nil)]
+  (let [havainnot-fn (fn [t]
+                       #?(:clj (constantly nil))
+                       #?(:cljs
+                          (->> (conj []
+                                 (:havainnot t)
+                                 (tarkastukset/formatoi-vakiohavainnot (:vakiohavainnot t))
+                                 (tarkastukset/formatoi-talvihoitomittaukset (:talvihoitomittaus t))
+                                 (tarkastukset/formatoi-soratiemittaukset (:soratiemittaus t)))
+                              (remove empty?)
+                              (string/join " & "))))]
     {:tyyppi :tarkastus
      :jarjesta-fn :aika
      :otsikko (str (pvm/pvm-aika (:aika tarkastus)) " - " (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)))
@@ -260,8 +259,10 @@
               {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite :nimi :tierekisteriosoite}
               {:otsikko "Tarkastaja" :nimi :tarkastaja}
               {:otsikko "Havainnot" :hae (hakufunktio
-                                           #(or (contains? % :havainnot)
-                                                (contains? % :vakiohavainnot))
+                                           #(and (contains? % :havainnot)
+                                                (contains? % :vakiohavainnot)
+                                                (contains? % :talvihoitomittaus)
+                                                (contains? % :soratiemittaus))
                                            havainnot-fn)}]
      :data tarkastus}))
 
