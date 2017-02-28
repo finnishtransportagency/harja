@@ -36,12 +36,11 @@
              :as tierekisteri-varusteet]
             [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept send-to]]))
-
-(def tr-kaytossa? false)
 
 (def nayta-max-toteumaa 500)
 
@@ -212,7 +211,7 @@
      :muokattava? (constantly muokattava?)}))
 
 (defn varusteen-ominaisuudet [muokattava? ominaisuudet]
-  (when tr-kaytossa?
+  (when (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
     (let [poista-tunniste-fn (fn [o] (filter #(not (= "tunniste" (get-in % [:ominaisuus :kenttatunniste]))) o))
           ominaisuudet (if muokattava?
                          (poista-tunniste-fn ominaisuudet)
@@ -236,7 +235,7 @@
        :footer-fn (fn [toteuma]
                     (when muokattava?
                       [:div
-                       (when (and tr-kaytossa? (empty? ominaisuudet))
+                       (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet) (empty? ominaisuudet))
                          (lomake/yleinen-varoitus "Ladataan tietolajin kuvausta. Kirjaus voidaan tehdä vasta, kun kuvaus on ladattu"))
                        [napit/palvelinkutsu-nappi
                         "Tallenna"
@@ -257,7 +256,7 @@
     [:h1 "Varustekirjaukset Harjassa"]
     [valinnat e! nykyiset-valinnat]
     [toteumataulukko e! naytettavat-toteumat]]
-   (when tr-kaytossa?
+   (when (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
      [:div.sisalto-container
       [:h1 "Varusteet Tierekisterissä"]
       (when oikeus-varusteiden-muokkaamiseen?

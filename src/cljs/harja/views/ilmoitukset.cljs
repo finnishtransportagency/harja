@@ -319,8 +319,8 @@
        :tieliikenne
        [tuck tiedot/ilmoitukset ilmoitukset*]
 
-       "Tietyöt"
-       :tietyot
+       "Tietyö"
+       :tietyo
        [tuck tietyoilmoitukset-tiedot/ilmoitukset tietyoilmoitukset-view/ilmoitukset*]
        #_[tietyoilmoitukset-view/ilmoitukset]
        ])))
