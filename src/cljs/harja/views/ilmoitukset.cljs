@@ -276,8 +276,8 @@
 
         {:otsikko "Tila" :nimi :tila :leveys 7 :hae #(tilan-selite (:tila %))}]
        (mapv #(if (:yhteydenottopyynto %)
-               (assoc % :lihavoi true)
-               %)
+                (assoc % :lihavoi true)
+                %)
              haetut-ilmoitukset)]]]))
 
 (defn- ilmoitukset* [e! ilmoitukset]
@@ -321,6 +321,4 @@
 
        "Tietyö"
        :tietyo
-       [tuck tietyoilmoitukset-tiedot/ilmoitukset tietyoilmoitukset-view/ilmoitukset*]
-       #_[tietyoilmoitukset-view/ilmoitukset]
-       ])))
+       [tuck tietyoilmoitukset-tiedot/ilmoitukset tietyoilmoitukset-view/ilmoitukset*]])))

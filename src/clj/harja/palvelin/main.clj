@@ -60,6 +60,7 @@
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
     [harja.palvelin.palvelut.yha :as yha]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
+    [harja.palvelin.palvelut.tietyoilmoitukset :as tietyoilmoitukset]
     [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
     [harja.palvelin.palvelut.integraatioloki :as integraatioloki-palvelu]
     [harja.palvelin.palvelut.raportit :as raportit]
@@ -327,6 +328,10 @@
 
       :ilmoitukset (component/using
                      (ilmoitukset/->Ilmoitukset)
+                     [:http-palvelin :db :tloik])
+
+      :tietyoilmoitukset (component/using
+                     (tietyoilmoitukset/->Tietyoilmoitukset)
                      [:http-palvelin :db :tloik])
 
       :turvallisuuspoikkeamat (component/using
