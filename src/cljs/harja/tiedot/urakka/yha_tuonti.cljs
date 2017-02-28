@@ -285,7 +285,8 @@
         :disabled (or (not (empty? @paallystys/kohteet-yha-lahetyksessa))
                       (empty? kohde-idt)
                       (not (oikeudet/on-muu-oikeus? "sido" oikeus urakka-id @istunto/kayttaja)))
-        :virheviesti "Lähetys epäonnistui."
+        :virheviestin-nayttoaika viesti/viestin-nayttoaika-pitka
+        :virheviesti "Lähetys epäonnistui. Epäonnistuneiden päällystysilmoitusten lukko avattiin mahdollista muokkausta varten."
         :kun-valmis #(reset! paallystys/kohteet-yha-lahetyksessa nil)
         :kun-onnistuu (fn [paivitetyt-ilmoitukset]
                         (if (every? #(or (:lahetys-onnistunut %) (nil? (:lahetys-onnistunut %))) paivitetyt-ilmoitukset)

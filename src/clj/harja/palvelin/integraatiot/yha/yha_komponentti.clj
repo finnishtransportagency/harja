@@ -58,7 +58,7 @@
     (str "YHA palautti seuraavat virheet: " virhe-viestit)))
 
 (defn kasittele-urakan-kohdelahetysvastaus [db sisalto otsikot kohteet]
-  (log/debug format "YHA palautti urakokan kohteiden kirjauksille vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
+  (log/debug format "YHA palautti urakan kohteiden kirjauksille vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
   (let [vastaus (kohteen-lahetysvastaussanoma/lue-sanoma sisalto)
         virheet (:virheet vastaus)
         onnistunut? (empty? virheet)
@@ -66,19 +66,26 @@
     (if onnistunut?
       (log/info "Kohteiden lähetys YHA:n onnistui")
       (log/error (str "Kohteiden lähetys YHA:n epäonnistui: " virhe-viesti)))
+
     (doseq [kohde kohteet]
       (let [kohde-id (:id (:kohde kohde))
             kohde-yha-id (:yhaid (:kohde kohde))
             virhe (first (filter #(= kohde-yha-id (:kohde-yha-id %)) (:virheet vastaus)))
             virhe-viesti (:selite virhe)]
-        (when (not onnistunut?)
-          (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s.\"" kohde-id virhe-viesti)))
+
+        (if onnistunut?
+          (do
+            (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s.\"" kohde-id virhe-viesti))
+            (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id}))
+          (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id}))
+
         (q-yllapitokohteet/merkitse-kohteen-lahetystiedot!
           db
           {:lahetetty (pvm/nyt)
            :onnistunut onnistunut?
            :lahetysvirhe virhe-viesti
            :kohdeid kohde-id})))
+
     (when (not onnistunut?)
       (throw+ {:type +virhe-kohteen-lahetyksessa+
                :virheet {:virhe virhe-viesti}}))))

@@ -243,3 +243,13 @@ SELECT EXISTS(SELECT id
 DELETE FROM yllapitokohteen_maaramuutos
 WHERE yllapitokohde = :yllapitokohdeid AND
       jarjestelma = :jarjestelma
+
+-- name: avaa-paallystysilmoituksen-lukko!
+UPDATE paallystysilmoitus
+SET tila = 'valmis'::paallystystila
+WHERE paallystyskohde = :yllapitokohde_id
+
+-- name: lukitse-paallystysilmoitus!
+UPDATE paallystysilmoitus
+SET tila = 'lukittu'::paallystystila
+WHERE paallystyskohde = :yllapitokohde_id
