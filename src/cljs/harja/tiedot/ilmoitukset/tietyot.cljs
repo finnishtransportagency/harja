@@ -58,9 +58,12 @@
 
 (defrecord PoistaIlmoitusValinta [])
 
-(defn- hae-ilmoitukset [{valinnat :valinnat}]
+(defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
   (log "hae-ilmoitukset" (pr-str valinnat))
-  (swap! ilmoitukset update :ilmoitukset haetut-ilmoitukset-feikkidata))
+  (-> app
+      (assoc :ilmoitushaku-id (.setTimeout js/window
+                                           (t/send-async! ->HaeIlmoitukset)
+                                           1000))))
 
 ;; Kaikki mitä UI voi ilmoitusnäkymässä tehdä, käsitellään täällä
 (extend-protocol t/Event
@@ -77,6 +80,7 @@
   HaeIlmoitukset
   (process-event [_ {valinnat :valinnat :as app}]
     (let [tulos! (t/send-async! ->IlmoitusHaku)]
+      (log "HaeIlmoitukset")
       (go
         (let [haku (-> valinnat
                        ;; jos tyyppiä/tilaa ei valittu, ota kaikki
@@ -84,11 +88,12 @@
                                #(log "update valinnat .."))
                        )]
           (tulos!
-           {:ilmoitukset (<! (k/post! :hae-ilmoitukset haku))}))))
+           {:ilmoitukset (<! (k/post! :hae-tietyoilmoitukset haku))}))))
     (assoc app :ilmoitukset nil))
 
   IlmoitusHaku
   (process-event [{tulokset :tulokset} {valittu :valittu-ilmoitus :as app}]
+    (log "IlmoitusHaku" (pr-str tulokset))
     #_(let [uudet-ilmoitusidt (set/difference (into #{} (map :id (:ilmoitukset tulokset)))
                                             (into #{} (map :id (:ilmoitukset app))))
           uudet-ilmoitukset (filter #(uudet-ilmoitusidt (:id %)) (:ilmoitukset tulokset))]
