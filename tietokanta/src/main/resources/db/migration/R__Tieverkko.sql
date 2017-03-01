@@ -366,7 +366,6 @@ BEGIN
       let := tmp_et;
     END IF;
     geom := tr_osoitteelle_viiva3(r.tie, aosa, aet, losa, let);
-    RAISE NOTICE 'tielle % pituus: %', r.tie, ST_Length(geom);
     pituus := ST_Length(geom);
     IF(pituus >= min_pituus AND pituus <= max_pituus) THEN
       RETURN ROW(r.tie, aosa, aet, losa, let, geom);
@@ -461,6 +460,7 @@ BEGIN
   RETURN NEXT (alkupiste, loppupiste,
                (SELECT ytp.geometria
 	          FROM yrita_tierekisteriosoite_pisteille_max(alkupiste, loppupiste, 30.0 * aika) ytp));
+  i := i + 1;
  END LOOP;
 END;
 $$ LANGUAGE plpgsql;
