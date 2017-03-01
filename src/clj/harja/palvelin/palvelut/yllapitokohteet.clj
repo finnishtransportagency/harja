@@ -133,17 +133,28 @@
   (log/debug "Tallennetaan päällystysurakan " paallystysurakka-id " ylläpitokohteiden aikataulutiedot.")
   (jdbc/with-db-transaction [db db]
     (doseq [kohde kohteet]
-      ;; TODO TARKISTA VOIKO SUORITTAJAN VAIHTAA
-      (q/tallenna-paallystyskohteen-aikataulu!
-        db
-        {:aikataulu_kohde_alku (:aikataulu-kohde-alku kohde)
-         :aikataulu_paallystys_alku (:aikataulu-paallystys-alku kohde)
-         :aikataulu_paallystys_loppu (:aikataulu-paallystys-loppu kohde)
-         :aikataulu_kohde_valmis (:aikataulu-kohde-valmis kohde)
-         :aikataulu_muokkaaja (:id user)
-         :suorittava_tiemerkintaurakka (:suorittava-tiemerkintaurakka kohde)
-         :id (:id kohde)
-         :urakka paallystysurakka-id})
+      (let [kayttajan-valitseman-suorittava-tiemerkintaurakka-id (:suorittava-tiemerkintaurakka kohde)
+            kohteen-nykyinen-suorittava-tiemerkintaurakka-id (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
+                                                                           db
+                                                                           {:id (:id kohde)})))]
+        (q/tallenna-paallystyskohteen-aikataulu!
+          db
+          {:aikataulu_kohde_alku (:aikataulu-kohde-alku kohde)
+           :aikataulu_paallystys_alku (:aikataulu-paallystys-alku kohde)
+           :aikataulu_paallystys_loppu (:aikataulu-paallystys-loppu kohde)
+           :aikataulu_kohde_valmis (:aikataulu-kohde-valmis kohde)
+           :aikataulu_muokkaaja (:id user)
+           :suorittava_tiemerkintaurakka
+           (if (= kayttajan-valitseman-suorittava-tiemerkintaurakka-id
+                  kohteen-nykyinen-suorittava-tiemerkintaurakka-id)
+             (:suorittava-tiemerkintaurakka kohde)
+             ;; Suorittajaa yritetään vaihtaa, tarkistetaan onko sallittu
+             (if (yy/yllapitokohteen-suorittavan-tiemerkintaurakan-voi-vaihtaa?
+                   db (:id kohde) kohteen-nykyinen-suorittava-tiemerkintaurakka-id)
+               (:suorittava-tiemerkintaurakka kohde)
+               kohteen-nykyinen-suorittava-tiemerkintaurakka-id))
+           :id (:id kohde)
+           :urakka paallystysurakka-id}))
       (when voi-tallentaa-tiemerkinnan-takarajan?
         (q/tallenna-yllapitokohteen-valmis-viimeistaan-paallystysurakasta!
           db
