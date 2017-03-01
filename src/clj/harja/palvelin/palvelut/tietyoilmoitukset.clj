@@ -12,12 +12,14 @@
 
 (defn hae-tietyoilmoitukset [db user {:keys [alkuaika loppuaika] :as hakuehdot} max-maara]
 
-  (println "---> haetaan tietyöilmoitukset: " hakuehdot )
+  (log/debug "---> haetaan tietyöilmoitukset, hakuehdot: " hakuehdot )
   (let [kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
                            db
                            user
+
                            (fn [urakka-id kayttaja]
-                             (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset urakka-id kayttaja)))
+                             (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset urakka-id kayttaja))
+                           nil nil nil nil #inst "1900-01-01" #inst "2100-01-01")
         tietyoilmoitukset (q-tietyoilmoitukset/hae-tietyoilmoitukset db
                                                                      {:alku (konv/sql-timestamp alkuaika)
                                                                       :loppu (konv/sql-timestamp loppuaika)
@@ -35,6 +37,7 @@
                             (konv/array->vec t :nopeusrajoitukset)
                             (assoc t :nopeusrajoitukset (mapv #(konv/pgobject->map % :nopeusrajoitus :long :matka :long) (:nopeusrajoitukset t)))))
                     tietyoilmoitukset)]
+    (log/debug "---> tietyöilmoitukset, hakutulos: " tulos)
     tulos))
 
 (defrecord Tietyoilmoitukset []
