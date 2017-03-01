@@ -80,7 +80,7 @@
   (->> (q/hae-paallystysurakan-aikataulu db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi})
        (mapv #(assoc % :tiemerkintaurakan-voi-vaihtaa?
                        (yy/yllapitokohteen-suorittavan-tiemerkintaurakan-voi-vaihtaa?
-                         db (:suorittava-tiemerkintaurakka %) urakka-id)))))
+                         db (:id %) (:suorittava-tiemerkintaurakka %))))))
 
 (defn- hae-tiemerkintaurakan-aikataulu [db urakka-id vuosi]
   (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
