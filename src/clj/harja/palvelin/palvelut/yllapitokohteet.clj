@@ -84,7 +84,9 @@
     ;; Urakkatyypin mukaan näytetään vain tietyt asiat, joten erilliset kyselyt
     (case (hae-urakkatyyppi db urakka-id)
       :paallystys
-      (q/hae-paallystysurakan-aikataulu db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi})
+      (->> (q/hae-paallystysurakan-aikataulu db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi})
+           (mapv #(assoc % :tiemerkintaurakan-voi-vaihtaa?
+                           (yy/yllapitokohteen-suorittavan-tiemerkintaurakan-voi-vaihtaa? db (:id %) urakka-id))))
       :tiemerkinta
       (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
                                              :vuosi vuosi}))))

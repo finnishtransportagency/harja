@@ -14,7 +14,6 @@
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
-            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.domain.tierekisteri :as tr]
             [harja.palvelin.palvelut.tierek-haku :as tr-haku])
   (:use org.httpkit.fake))
@@ -91,13 +90,40 @@
               (tieverkko/hae-osien-pituudet db tie min-osa max-osa))))
     (group-by :tr-numero yllapitokohteet)))
 
-(defn yllapitokohteen-voi-poistaa?
-  "Palauttaa true tai false sen mukaan onko ylläpitokohteeseen liitetty kirjauksia, jotka
-   estävät kohteen poiston."
+(defn- yllapitokohde-sisaltaa-kirjauksia?
+  "Palauttaa true tai false sen mukaan onko ylläpitokohteeseen liitetty kirjauksia
+  (laatupoikkeamia, tarkastuksia, toteumia...)"
   [db yllapitokohde-id]
-  (let [kirjaukset (first (q/hae-yllapitokohteeseen-liittyvat-kirjaukset db {:id yllapitokohde-id}))
+  (let [kirjaukset (first (q/hae-yllapitokohteeseen-liittyvien-kirjauksien-maara db {:id yllapitokohde-id}))
         kirjauksia-yhteensa (reduce + (vals kirjaukset))]
-    (= kirjauksia-yhteensa 0)))
+    (> kirjauksia-yhteensa 0)))
+
+(defn- yllapitokohde-sisaltaa-urakassa-tehtyja-kirjauksia?
+  "Palauttaa true tai false sen mukaan onko ylläpitokohteeseen liitetty kirjauksia annetussa
+   urakassa (laatupoikkeamia, tarkastuksia, toteumia...)"
+  [db yllapitokohde-id urakka-id]
+  (let [kirjaukset (first (q/hae-yllapitokohteeseen-tiemerkintaurakassa-liittyvien-kirjauksien-maara
+                            db {:yllapitokohde_id yllapitokohde-id
+                                :urakka_id urakka-id}))
+        kirjauksia-yhteensa (reduce + (vals kirjaukset))]
+    (> kirjauksia-yhteensa 0)))
+
+(defn- yllapitokohde-sisaltaa-tiemerkintaaikataulun?
+  [db yllapitokohde-id]
+  (let [aikataulu (first (q/hae-yllapitokohteen-tiemerkintaaikataulu
+                            db {:id yllapitokohde-id}))
+        aikatauluarvot (vals aikataulu)
+        ajalliset-aikatauluarvot (remove nil? aikatauluarvot)]
+    (not (empty? ajalliset-aikatauluarvot))))
+
+(defn yllapitokohteen-voi-poistaa?
+  [db yllapitokohde-id]
+  (not (yllapitokohde-sisaltaa-kirjauksia? db yllapitokohde-id)))
+
+(defn yllapitokohteen-suorittavan-tiemerkintaurakan-voi-vaihtaa?
+  [db yllapitokohde-id tiemerkintaurakka-id]
+  (and (not (yllapitokohde-sisaltaa-urakassa-tehtyja-kirjauksia? db yllapitokohde-id tiemerkintaurakka-id))
+       (not (yllapitokohde-sisaltaa-tiemerkintaaikataulun? db yllapitokohde-id))))
 
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
   (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
@@ -111,7 +137,7 @@
                                   (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
                                   (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
                                   (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
-                                  (map #(yllapitokohteet-q/liita-kohdeosat db % (:id %))))
+                                  (map #(q/liita-kohdeosat db % (:id %))))
                                 (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
                                                                              :sopimus sopimus-id
                                                                              :vuosi vuosi}))

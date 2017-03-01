@@ -71,16 +71,25 @@ WHERE
   ypk.suorittava_tiemerkintaurakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
 
--- name: hae-yllapitokohteeseen-liittyvat-kirjaukset
+-- name: hae-yllapitokohteeseen-liittyvien-kirjauksien-maara
 SELECT
   (SELECT COUNT(*) FROM tarkastus WHERE yllapitokohde = :id) as "tarkastukset",
-  (SELECT COUNT(*) FROM tarkastus WHERE yllapitokohde = :id) as "laatupoikkeamat",
+  (SELECT COUNT(*) FROM laatupoikkeama WHERE yllapitokohde = :id) as "laatupoikkeamat",
   (SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma WHERE yllapitokohde = :id) as "tiemerkinnan-toteumat",
   (SELECT COUNT(*) FROM paallystysilmoitus WHERE paallystyskohde = :id) as "paallystysilmoitukset",
   (SELECT COUNT(*) FROM paikkausilmoitus WHERE paikkauskohde = :id) as "paikkausilmoitukset",
   (SELECT COUNT(*) FROM tietyomaa WHERE yllapitokohde = :id) as "tietyomaat"
 FROM yllapitokohde
 WHERE id = :id;
+
+-- name: hae-yllapitokohteeseen-tiemerkintaurakassa-liittyvien-kirjauksien-maara
+SELECT
+  (SELECT COUNT(*) FROM tarkastus WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) as "tarkastukset",
+  (SELECT COUNT(*) FROM laatupoikkeama WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_d) as "laatupoikkeamat",
+  (SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma
+    WHERE yllapitokohde = yllapitokohde_id AND urakka = :urakka_id) as "tiemerkinnan-toteumat",
+FROM yllapitokohde
+WHERE id = :yllapitokohde_id;
 
 -- name: hae-urakan-sopimuksen-yllapitokohteet
 -- Hakee urakan sopimuksen kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
@@ -534,6 +543,14 @@ SELECT
   (SELECT viimeisin_paivitys
    FROM geometriapaivitys
    WHERE nimi = 'tieverkko') AS karttapvm
+FROM yllapitokohde
+WHERE id = :id;
+
+-- name: hae-yllapitokohteen-tiemerkintaaikataulu
+SELECT
+aikataulu_tiemerkinta_alku as "tiemerkinta-alku",
+aikataulu_tiemerkinta_loppu as "tiemerkinta-loppu",
+aikataulu_tiemerkinta_takaraja as "tiemerkinta-takaraja"
 FROM yllapitokohde
 WHERE id = :id;
 
