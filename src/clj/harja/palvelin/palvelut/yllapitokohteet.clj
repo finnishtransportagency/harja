@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.yllapitokohteet
   "Tässä namespacessa on palvelut ylläpitokohteiden ja -kohdeosien hakuun ja tallentamiseen."
   (:require [clojure.java.jdbc :as jdbc]
+            [clojure.core.async :refer [go <! >! thread >!! timeout] :as async]
             [clojure.set :as set]
             [com.stuartsierra.component :as component]
             [harja.domain
@@ -42,9 +43,9 @@
           yllapitokohteet (maaramuutokset/liita-yllapitokohteisiin-maaramuutokset
                             db user {:yllapitokohteet yllapitokohteet
                                      :urakka-id urakka-id})]
-         (into []
-               yllapitokohteet-domain/yllapitoluokka-xf
-               yllapitokohteet))))
+      (into []
+            yllapitokohteet-domain/yllapitoluokka-xf
+            yllapitokohteet))))
 
 (defn hae-urakan-yllapitokohteet-lomakkeelle [db user {:keys [urakka-id sopimus-id]}]
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
@@ -164,8 +165,8 @@
        :id kohde-id
        :urakka urakka-id}))
 
-  (viestinta/laheta-sposti-kohde-valmis-merkintaan db fim email
-                                                   kohde-id tiemerkintapvm user)
+  (go (viestinta/laheta-sposti-kohde-valmis-merkintaan db fim email
+                                                       kohde-id tiemerkintapvm user))
 
   (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                  :sopimus-id sopimus-id}))
@@ -212,7 +213,9 @@
            :id (:id kohde)
            :suorittava_tiemerkintaurakka tiemerkintaurakka-id}))))
 
-  (viestinta/laheta-sposti-tiemerkinta-valmis db fim email (map :id kohteet) user))
+  (let [;; TODO HAE KOHTEET KANNASTA JA KATSO ONKO AIKATAULU NYT ANNETTU
+        nyt-valmistuneet-kohteet (filter :aikataulu-tiemerkinta-loppu kohteet)]
+    (go (viestinta/laheta-sposti-tiemerkinta-valmis db fim email (map :id nyt-valmistuneet-kohteet) user))))
 
 (defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id kohteet]}]
   (assert (and urakka-id sopimus-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
