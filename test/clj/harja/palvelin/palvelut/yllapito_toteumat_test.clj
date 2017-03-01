@@ -131,13 +131,17 @@
 
     (loop [index 0]
       (let [selite (str "yksikkötesti" index)
+            linkitettava-yllapitokohde-id (get [yllapitokohde-id nil] (int (rand 2)))
             kirjattava-toteuma (as-> (gen/generate (s/gen ::tt/tiemerkinnan-yksikkohintainen-tyo)) toteuma
-                                     ;; Tee tästä uusi toteuma ja liitä vain osalle ylläpitokohde
+                                     ;; Tee tästä uusi toteuma
                                      (assoc toteuma
                                        :id nil
                                        :selite selite
-                                       :poistettu false
-                                       :yllapitokohde-id yllapitokohde-id))
+                                       :poistettu false)
+                                     ;; Liitä ylläpitokohde jos satuttiin arpomaan se
+                                     (if linkitettava-yllapitokohde-id
+                                       (assoc toteuma :yllapitokohde-id linkitettava-yllapitokohde-id)
+                                       (dissoc toteuma :yllapitokohde-id)))
             pyynto {:urakka-id urakka-id
                     :toteumat [kirjattava-toteuma]}
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -160,8 +164,8 @@
         (is (= (:tr-numero kirjattu-toteuma) (if linkitettava-yllapitokohde-id
                                                nil
                                                (:tr-numero kirjattava-toteuma))))
-        (is (= (format "%.2f" (:hinta kirjattu-toteuma))
-               (str/replace (format "%.2f" (:hinta kirjattava-toteuma)) #"-" ""))) ;; Koska voi tulla -0,00
+        (is (= (format "%.2f" (float (:hinta kirjattu-toteuma)))
+               (format "%.2f" (float (:hinta kirjattava-toteuma)))))
         (if linkitettava-yllapitokohde-id
           (is (= (:hinta-kohteelle kirjattava-toteuma) (:hinta-kohteelle kirjattu-toteuma)))
           (is (nil? (:hinta-kohteelle kirjattu-toteuma))))
