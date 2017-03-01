@@ -66,9 +66,9 @@
 
 (deftest paallystyskohteet-haettu-oikein
   (let [kohteet (kutsu-palvelua (:http-palvelin jarjestelma)
-                            :urakan-yllapitokohteet +kayttaja-jvh+
-                            {:urakka-id @muhoksen-paallystysurakan-id
-                             :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id})
+                                :urakan-yllapitokohteet +kayttaja-jvh+
+                                {:urakka-id @muhoksen-paallystysurakan-id
+                                 :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id})
         kohteiden-lkm (ffirst (q
                                 (str "SELECT COUNT(*)
                                       FROM yllapitokohde
@@ -86,12 +86,18 @@
                                                 :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
                                                 :vuosi 2017})
         aikataulu (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-yllapitourakan-aikataulu +kayttaja-jvh+
-                                {:urakka-id @muhoksen-paallystysurakan-id
-                                 :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
-                                 :vuosi 2017})]
+                                  :hae-yllapitourakan-aikataulu +kayttaja-jvh+
+                                  {:urakka-id @muhoksen-paallystysurakan-id
+                                   :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                                   :vuosi 2017})
+        leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi") aikataulu))
+        muut-kohteet (filter #(not= (:nimi %) "Leppäjärven ramppi") aikataulu)]
     (is (= (count urakan-yllapitokohteet) (count aikataulu))
-         "Jokaiselle kohteelle saatiin haettua aikataulu")))
+        "Jokaiselle kohteelle saatiin haettua aikataulu")
+    (is (false? (:tiemerkintaurakan-voi-vaihtaa? leppajarven-ramppi))
+        "Leppäjärven rampilla on kirjauksia, ei saa vaihtaa suorittavaa tiemerkintäurakkaa")
+    (is (every? true? (map :tiemerkintaurakan-voi-vaihtaa? muut-kohteet))
+        "Muiden kohteiden tiemerkinnän suorittaja voidaan vaihtaa")))
 
 (deftest paallystyskohteet-haettu-oikein-vuodelle-2017
   (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
