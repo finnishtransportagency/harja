@@ -93,7 +93,7 @@
                                                    (str " (" puhelin ")")))]
                               ["Merkitsijän urakka" tiemerkintaurakka-nimi]])]))
 
-(defn- sahkoposti-kohteen-tiemerkinta-valmis [db email kohde-id henkilo ilmoittaja]
+(defn- laheta-sahkoposti-kohteen-tiemerkinta-valmis [db email kohde-id henkilo ilmoittaja]
   (let [{:keys [paallystysurakka-nimi kohde-nimi
                 tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                 aikataulu-tiemerkinta-loppu
@@ -167,11 +167,11 @@
       (doseq [henkilo ilmoituksen-saajat]
         (if (> (count yhden-paallystysurakan-kohde-idt) 1)
           (sahkoposti-kohteiden-tiemerkinta-valmis db email yhden-paallystysurakan-kohde-idt henkilo ilmoittaja)
-          (sahkoposti-kohteen-tiemerkinta-valmis db email (first yhden-paallystysurakan-kohde-idt) henkilo ilmoittaja)))
+          (laheta-sahkoposti-kohteen-tiemerkinta-valmis db email (first yhden-paallystysurakan-kohde-idt) henkilo ilmoittaja)))
       (log/warn (format "Päällystysurakalle %s ei löydy FIM:stä henkiöä, jolle ilmoittaa tiemerkinnän valmistumisesta."
                         paallystysurakka-id)))))
 
-(defn sahkoposti-tiemerkinta-valmis
+(defn laheta-sahkoposti-tiemerkinta-valmis
   "Lähettää päällystysurakoitsijalle sähköpostiviestillä ilmoituksen
    ylläpitokohteen tiemerkinnän valmistumisesta."
   [db fim email kohde-idt ilmoittaja]
