@@ -20,14 +20,9 @@
             [harja.ui.valinnat :as valinnat]
             [cljs-time.core :as t]
             [harja.tiedot.hallinta.indeksit :as indeksit]
-<<<<<<< HEAD
             [harja.tiedot.urakka.yllapitokohteet.muut-kustannukset :as muut-kustannukset-tiedot]
-            [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot-sanktiot])
-=======
-            [harja.ui.yleiset :as yleiset]
+            [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot-sanktiot]
             [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit])
->>>>>>> origin/develop
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -88,7 +83,7 @@
 
         [yllapitokohteet-view/yllapitokohteet
          ur
-          paallystys/harjan-paikkauskohteet
+          paallystys-tiedot/harjan-paikkauskohteet
           {:otsikko "Harjan paikkauskohteet ja muut kohteet"
           :kohdetyyppi :paikkaus
           :yha-sidottu? false
