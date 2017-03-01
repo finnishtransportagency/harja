@@ -172,7 +172,7 @@
 (defn laheta-kohteet-yhaan [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-idt]
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHA:n URL:lla: %s." urakka-id kohde-idt url))
   (integraatiotapahtuma/suorita-integraatio
-    db integraatioloki "yha" "kohteiden-lahetys"
+    db integraatioloki "yha" "kohteiden-lahetys" nil
     (fn [konteksti]
       (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
         (let [urakka (assoc urakka :harjaid urakka-id :sampoid (q-urakat/hae-urakan-sampo-id db {:urakka urakka-id}))
@@ -192,7 +192,10 @@
           (log/error virhe)
           (throw+
             {:type +virhe-kohteen-lahetyksessa+
-             :virheet {:virhe virhe}}))))))
+             :virheet {:virhe virhe}}))))
+    {:virhekasittelija (fn [_ _]
+                         (doseq [kohde-id kohde-idt]
+                           (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})))}))
 
 (defrecord Yha [asetukset]
   component/Lifecycle
