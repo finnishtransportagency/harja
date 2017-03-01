@@ -7,7 +7,7 @@ ALTER TABLE yllapitokohde_tiemerkinta RENAME TO tiemerkinnan_yksikkohintainen_to
 
 ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma
   ADD COLUMN urakka integer REFERENCES urakka (id),
-  ADD COLUMN selite VARCHAR(512) NOT NULL,
+  ADD COLUMN selite VARCHAR(512),
   ADD COLUMN tr_numero INTEGER, -- NOT NULL vain jos ylläpitokohdetta ei ole annettu, ks. CONSTRAINT
   ADD COLUMN pituus INTEGER, -- NOT NULL vain jos ylläpitokohdetta ei ole annettu, ks. CONSTRAINT
   ADD COLUMN yllapitoluokka INTEGER,
@@ -26,9 +26,14 @@ ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma DROP CONSTRAINT yllapitokohde_
 UPDATE tiemerkinnan_yksikkohintainen_toteuma tyt
 SET urakka = (SELECT suorittava_tiemerkintaurakka FROM yllapitokohde WHERE id = tyt.yllapitokohde);
 
+-- Aseta vanhojen rivien uusiin pakollisiin sarakkeisiin arvot
+UPDATE tiemerkinnan_yksikkohintainen_toteuma SET selite = '' WHERE selite IS NULL;
+UPDATE tiemerkinnan_yksikkohintainen_toteuma SET hinta = 0 WHERE hinta IS NULL;
+
 -- Hinta pitäisi olla numeric
 ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma ALTER COLUMN hinta TYPE NUMERIC(10, 2) USING hinta::NUMERIC;
 ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma ALTER COLUMN hinta SET NOT NULL;
+ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma ALTER COLUMN selite SET NOT NULL;
 ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma ALTER COLUMN hintatyyppi SET NOT NULL;
 ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma ALTER COLUMN urakka SET NOT NULL;
 
