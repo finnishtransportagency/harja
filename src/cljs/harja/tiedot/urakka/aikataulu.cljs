@@ -17,9 +17,9 @@
 (defonce aikataulu-nakymassa? (atom false))
 
 (defn hae-aikataulut [urakka-id sopimus-id vuosi]
-  (k/post! :hae-aikataulut {:urakka-id  urakka-id
-                            :sopimus-id sopimus-id
-                            :vuosi vuosi}))
+  (k/post! :hae-yllapitourakan-aikataulu {:urakka-id urakka-id
+                                          :sopimus-id sopimus-id
+                                          :vuosi vuosi}))
 
 (defn hae-tiemerkinnan-suorittavat-urakat [urakka-id]
   (k/post! :hae-tiemerkinnan-suorittavat-urakat {:urakka-id urakka-id}))
@@ -65,7 +65,7 @@
 (defn tallenna-yllapitokohteiden-aikataulu [urakka-id sopimus-id kohteet]
   (go
     (let [vastaus (<! (k/post! :tallenna-yllapitokohteiden-aikataulu
-                               {:urakka-id  urakka-id
+                               {:urakka-id urakka-id
                                 :sopimus-id sopimus-id
-                                :kohteet    kohteet}))]
+                                :kohteet kohteet}))]
       (reset! aikataulurivit vastaus))))

@@ -395,7 +395,7 @@
       (julkaise-palvelu http :tallenna-yllapitokohdeosat
                         (fn [user tiedot]
                           (tallenna-yllapitokohdeosat db user tiedot)))
-      (julkaise-palvelu http :hae-aikataulut
+      (julkaise-palvelu http :hae-yllapitourakan-aikataulu
                         (fn [user tiedot]
                           (hae-urakan-aikataulu db user tiedot)))
       (julkaise-palvelu http :hae-tiemerkinnan-suorittavat-urakat
@@ -418,6 +418,6 @@
       :yllapitokohteen-yllapitokohdeosat
       :tallenna-yllapitokohteet
       :tallenna-yllapitokohdeosat
-      :hae-aikataulut
+      :hae-yllapitourakan-aikataulu
       :tallenna-yllapitokohteiden-aikataulu)
     this))
