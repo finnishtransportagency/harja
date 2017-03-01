@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet
+(ns harja.palvelin.palvelut.yllapitokohteet
   "Tässä namespacessa on palvelut ylläpitokohteiden ja -kohdeosien hakuun ja tallentamiseen."
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.set :as set]
