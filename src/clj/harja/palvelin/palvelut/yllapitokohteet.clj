@@ -76,6 +76,16 @@
 (defn- hae-urakkatyyppi [db urakka-id]
   (keyword (:tyyppi (first (q/hae-urakan-tyyppi db {:urakka urakka-id})))))
 
+(defn- hae-paallystysurakan-aikataulu [{:keys [db urakka-id sopimus-id vuosi]}]
+  (->> (q/hae-paallystysurakan-aikataulu db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi})
+       (mapv #(assoc % :tiemerkintaurakan-voi-vaihtaa?
+                       (yy/yllapitokohteen-suorittavan-tiemerkintaurakan-voi-vaihtaa?
+                         db (:suorittava-tiemerkintaurakka %) urakka-id)))))
+
+(defn- hae-tiemerkintaurakan-aikataulu [db urakka-id vuosi]
+  (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
+                                         :vuosi vuosi}))
+
 (defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id vuosi]}]
   (assert (and urakka-id sopimus-id) "anna urakka-id ja sopimus-id")
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-aikataulu user urakka-id)
@@ -84,12 +94,9 @@
     ;; Urakkatyypin mukaan näytetään vain tietyt asiat, joten erilliset kyselyt
     (case (hae-urakkatyyppi db urakka-id)
       :paallystys
-      (->> (q/hae-paallystysurakan-aikataulu db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi})
-           (mapv #(assoc % :tiemerkintaurakan-voi-vaihtaa?
-                           (yy/yllapitokohteen-suorittavan-tiemerkintaurakan-voi-vaihtaa? db (:id %) urakka-id))))
+      (hae-paallystysurakan-aikataulu {:db db :urakka-id urakka-id :sopimus-id sopimus-id :vuosi vuosi})
       :tiemerkinta
-      (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
-                                             :vuosi vuosi}))))
+      (hae-tiemerkintaurakan-aikataulu db urakka-id vuosi))))
 
 (defn hae-tiemerkinnan-suorittavat-urakat [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-aikataulu user urakka-id)
@@ -126,6 +133,7 @@
   (log/debug "Tallennetaan päällystysurakan " paallystysurakka-id " ylläpitokohteiden aikataulutiedot.")
   (jdbc/with-db-transaction [db db]
     (doseq [kohde kohteet]
+      ;; TODO TARKISTA VOIKO SUORITTAJAN VAIHTAA
       (q/tallenna-paallystyskohteen-aikataulu!
         db
         {:aikataulu_kohde_alku (:aikataulu-kohde-alku kohde)

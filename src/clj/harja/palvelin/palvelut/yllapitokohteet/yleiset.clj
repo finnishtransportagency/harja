@@ -111,7 +111,7 @@
 (defn- yllapitokohde-sisaltaa-tiemerkintaaikataulun?
   [db yllapitokohde-id]
   (let [aikataulu (first (q/hae-yllapitokohteen-tiemerkintaaikataulu
-                            db {:id yllapitokohde-id}))
+                           db {:id yllapitokohde-id}))
         aikatauluarvot (vals aikataulu)
         ajalliset-aikatauluarvot (remove nil? aikatauluarvot)]
     (not (empty? ajalliset-aikatauluarvot))))
@@ -122,8 +122,10 @@
 
 (defn yllapitokohteen-suorittavan-tiemerkintaurakan-voi-vaihtaa?
   [db yllapitokohde-id tiemerkintaurakka-id]
-  (and (not (yllapitokohde-sisaltaa-urakassa-tehtyja-kirjauksia? db yllapitokohde-id tiemerkintaurakka-id))
-       (not (yllapitokohde-sisaltaa-tiemerkintaaikataulun? db yllapitokohde-id))))
+  (if tiemerkintaurakka-id
+    (and (not (yllapitokohde-sisaltaa-urakassa-tehtyja-kirjauksia? db yllapitokohde-id tiemerkintaurakka-id))
+         (not (yllapitokohde-sisaltaa-tiemerkintaaikataulun? db yllapitokohde-id)))
+    true))
 
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
   (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
