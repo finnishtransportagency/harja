@@ -106,6 +106,12 @@
   (when (str/blank? data)
     viesti))
 
+(defmethod validoi-saanto :ei-tyhja-jos-toinen-avain-nil
+  [_ nimi data rivi _ & [toinen-avain viesti]]
+  (when (and (str/blank? data)
+             (not (toinen-avain rivi)))
+    viesti))
+
 (defmethod validoi-saanto :ei-tulevaisuudessa [_ nimi data _ _ & [viesti]]
   (when (and data (t/after? data (pvm/nyt)))
     viesti))

@@ -126,6 +126,11 @@
   #?(:cljs (DateTime.)
      :clj (Date.)))
 
+(defn pvm?
+  [pvm]
+  #?(:cljs (instance? DateTime pvm)
+     :clj  (joda-time? pvm)))
+
 (defn luo-pvm
   "Frontissa palauttaa goog.date.Datetimen
   Backendissä palauttaa java.util.Daten"
