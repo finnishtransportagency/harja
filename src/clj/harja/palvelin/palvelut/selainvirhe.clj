@@ -22,7 +22,7 @@
 (defn sanitoi [sisalto]
   (str/replace (str sisalto) "<" "&lt;"))
 
-(defn formatoi-virhe [{:keys [id]} {:keys [url viesti rivi sarake selain stack sijainti]}]
+(defn formatoi-virhe [{:keys [id kayttajanimi]} {:keys [url viesti rivi sarake selain stack sijainti]}]
   [:table
    [:tr [:td {:valign "top"} [:b "Selainvirhe"]] [:td [:pre (sanitoi viesti)]]]
    [:tr [:td {:valign "top"} [:b "Sijainti Harjassa:"]] [:td [:pre sijainti]]]
@@ -30,7 +30,7 @@
    [:tr [:td {:valign "top"} [:b "selain: "]] [:td [:pre (sanitoi selain)]]]
    [:tr [:td {:valign "top"} [:b "rivi: "]] [:td [:pre (sanitoi rivi)]]]
    [:tr [:td {:valign "top"} [:b "sarake: "]] [:td [:pre (sanitoi sarake)]]]
-   [:tr [:td {:valign "top"} [:b "käyttäjä id: "]] [:td [:pre (sanitoi id)]]]
+   [:tr [:td {:valign "top"} [:b "käyttäjä: "]] [:td [:pre (sanitoi kayttajanimi) " (" (sanitoi id) ")"]]]
    (when stack [:tr [:td {:valign "top"} [:b "stack: "]] [:td [:pre (sanitoi stack)]]])])
 
 (defn raportoi-selainvirhe
