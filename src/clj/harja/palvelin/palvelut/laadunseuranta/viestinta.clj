@@ -8,3 +8,10 @@
             [hiccup.core :refer [html]]
             [harja.palvelin.komponentit.fim :as fim])
   (:use [slingshot.slingshot :only [try+ throw+]]))
+
+;; Viestien muodostus
+
+
+;; Sisäinen käsittely
+
+;; Viestien lähetykset (julkinen rajapinta)

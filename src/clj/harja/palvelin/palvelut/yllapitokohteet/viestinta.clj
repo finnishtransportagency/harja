@@ -136,7 +136,7 @@
       (log/warn (format "Päällystysurakalle %s ei löydy FIM:stä henkiöä, jolle ilmoittaa tiemerkinnän valmistumisesta."
                         paallystysurakka-id)))))
 
-;; Viestien lähetykset
+;; Viestien lähetykset (julkinen rajapinta)
 
 (defn laheta-sposti-tiemerkinta-valmis
   "Lähettää päällystysurakoitsijalle sähköpostiviestillä ilmoituksen
