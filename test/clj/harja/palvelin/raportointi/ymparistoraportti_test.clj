@@ -70,10 +70,16 @@
                                  :konteksti  "urakka"
                                  :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
                                  :parametrit {:alkupvm  (c/to-date (t/local-date 2015 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2016 9 30))}})]
+                                              :loppupvm (c/to-date (t/local-date 2016 9 30))}})
+        talvisuolojen-kaytto (nth (butlast vastaus) 2)
+        talvisuolojen-maxmaara (nth (butlast vastaus) 3)
+        talvisuolojen-toteumaprosentti (nth (butlast vastaus) 4)]
     (is (vector? vastaus))
     (let [otsikko "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (is (= talvisuolojen-kaytto [:teksti "Erilaisia talvisuoloja käytetty valitulla aikavälillä: 0,00t"]) "talvisuolan toteutunut määrä")
+      (is (= talvisuolojen-maxmaara [:teksti "Hoitokauden talvisuolan maksimimäärä urakassa: 800t"]) "talvisuolan max-määrä")
+      (is (= talvisuolojen-toteumaprosentti [:teksti "Toteumaprosentti suhteessa hoitokauden maksimimäärään: 0,0%"]) "talvisuola tot-%")
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Materiaali"}
                                           {:otsikko "10/15"}

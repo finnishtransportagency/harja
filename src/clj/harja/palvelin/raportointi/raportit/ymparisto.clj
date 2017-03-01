@@ -104,13 +104,18 @@
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
      (when (= konteksti :urakka)
-       [:teksti (str "Hoitokauden talvisuolan maksimimäärä urakassa: "
-                     talvisuolan-maxmaaratieto "t")])
-     (when (= konteksti :urakka)
        [:teksti (str "Erilaisia talvisuoloja käytetty valitulla aikavälillä: "
                      (fmt/desimaaliluku-opt talvisuolan-toteutunut-maara 2)
                      "t")])
      (when (= konteksti :urakka)
+       [:teksti
+        (if talvisuolan-maxmaaratieto
+          (str "Hoitokauden talvisuolan maksimimäärä urakassa: "
+               talvisuolan-maxmaaratieto "t")
+          "Urakassa ei ole asetettu talvisuolan käyttörajaa")])
+     (when (and (= konteksti :urakka)
+                talvisuolan-maxmaaratieto
+                (not (== 0 talvisuolan-maxmaaratieto))) ;älä anna jakaa nollalla
        [:teksti (str
                   "Toteumaprosentti suhteessa hoitokauden maksimimäärään: "
                   (fmt/desimaaliluku-opt
