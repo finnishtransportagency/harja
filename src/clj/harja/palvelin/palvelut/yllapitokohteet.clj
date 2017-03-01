@@ -133,7 +133,7 @@
   (log/debug "Tallennetaan päällystysurakan " paallystysurakka-id " ylläpitokohteiden aikataulutiedot.")
   (jdbc/with-db-transaction [db db]
     (doseq [kohde kohteet]
-      (let [kayttajan-valitseman-suorittava-tiemerkintaurakka-id (:suorittava-tiemerkintaurakka kohde)
+      (let [kayttajan-valitsema-suorittava-tiemerkintaurakka-id (:suorittava-tiemerkintaurakka kohde)
             kohteen-nykyinen-suorittava-tiemerkintaurakka-id (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
                                                                            db
                                                                            {:id (:id kohde)})))]
@@ -145,7 +145,7 @@
            :aikataulu_kohde_valmis (:aikataulu-kohde-valmis kohde)
            :aikataulu_muokkaaja (:id user)
            :suorittava_tiemerkintaurakka
-           (if (= kayttajan-valitseman-suorittava-tiemerkintaurakka-id
+           (if (= kayttajan-valitsema-suorittava-tiemerkintaurakka-id
                   kohteen-nykyinen-suorittava-tiemerkintaurakka-id)
              (:suorittava-tiemerkintaurakka kohde)
              ;; Suorittajaa yritetään vaihtaa, tarkistetaan onko sallittu
