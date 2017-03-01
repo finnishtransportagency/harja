@@ -10,6 +10,7 @@
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.ui.lomake :as lomake]
             [harja.ui.protokollat :as protokollat]
+            [harja.ui.debug :as ui-debug]
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.istunto :as istunto]
             [harja.fmt :as fmt]
@@ -45,7 +46,7 @@
 
 (defn ilmoitusten-hakuehdot [e! valinnat-nyt]
   (log "---> renskaillaan hakuehdot. valinnat nyt: " (pr-str (:alkuaika valinnat-nyt))
-       (pr-str (:loppuaika valinnat-nyt)))
+       (pr-str (:loppuaika valinnat-nyt))) ;; nil nil toisella kerralla, ekalla ok
   [lomake/lomake
    {:luokka :horizontal
     :muokkaa! #(e! (tiedot/->AsetaValinnat %))}
@@ -57,7 +58,7 @@
   [e! {valinnat-nyt :valinnat
        haetut-ilmoitukset :ilmoitukset
        ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa? :as ilmoitukset}]
-  (log "renskaillaan paanakyma")
+  (log "renskaillaan paanakyma, valinnat" (pr-str valinnat-nyt))
   [:span.tietyoilmoitukset
 
    [ilmoitusten-hakuehdot e! valinnat-nyt]
@@ -113,6 +114,10 @@
                          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
    (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
      [:span
+      #_[ui-debug/debug {:ilmoitukset @tiedot/ilmoitukset
+                       ;;:tiedot/ulkoisetvalinnat @tiedot/ulkoisetvalinnat
+                       }]
+      [ui-debug/debug  @tiedot/ilmoitukset]
       [kartta/kartan-paikka]
       (if valittu-ilmoitus
         [ilmoituksen-tiedot e! valittu-ilmoitus]

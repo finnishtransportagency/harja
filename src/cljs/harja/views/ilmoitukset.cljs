@@ -34,6 +34,7 @@
             [harja.ui.valinnat :as valinnat]
             [harja.ui.notifikaatiot :as notifikaatiot]
             [tuck.core :refer [tuck send-value! send-async!]]
+            [tuck.debug :as td]
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.ui.kentat :as kentat]
             [harja.domain.oikeudet :as oikeudet]
@@ -320,4 +321,4 @@
 
        "Tietyö"
        :tietyo
-       [tuck tietyoilmoitukset-tiedot/ilmoitukset tietyoilmoitukset-view/ilmoitukset*]])))
+       [td/tuck tietyoilmoitukset-tiedot/ilmoitukset tietyoilmoitukset-view/ilmoitukset*]])))
