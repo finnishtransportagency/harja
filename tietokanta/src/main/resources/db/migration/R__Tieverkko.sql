@@ -335,7 +335,8 @@ DECLARE
   pituus NUMERIC;
 BEGIN
   -- Minimipituus on linnuntie (teleportaatiota ei sallittu)
-  min_pituus := ST_Distance(apiste, bpiste);
+  -- miinus 10 metriä (varotoimi jos GPS pisteitä raportoitu ja niissä epätarkkuutta)
+  min_pituus := ST_Distance(apiste, bpiste) - 10.0;
   FOR r IN SELECT a.tie,a.osa as alkuosa, a.ajorata, b.osa as loppuosa,
            	  a.geom as alkuosa_geom, b.geom as loppuosa_geom,
 		  (ST_Distance(apiste, a.geom) + ST_Distance(bpiste, b.geom)) as d
