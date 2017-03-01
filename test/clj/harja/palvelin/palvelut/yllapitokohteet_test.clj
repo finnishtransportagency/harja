@@ -1,9 +1,9 @@
-(ns harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet-test
+(ns harja.palvelin.palvelut.yllapitokohteet-test
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :refer :all]
-            [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :refer :all]
+            [harja.palvelin.palvelut.yllapitokohteet :refer :all]
             [harja.testi :refer :all]
             [clojure.core.match :refer [match]]
             [com.stuartsierra.component :as component]
@@ -78,6 +78,20 @@
     (is (= (count kohteet) kohteiden-lkm) "Päällystyskohteiden määrä")
     (is (== (:maaramuutokset leppajarven-ramppi) 205)
         "Leppäjärven rampin määrämuutos laskettu oikein")))
+
+(deftest paallystysurakan-aikatauluhaku-toimii
+  (let [urakan-yllapitokohteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                               :urakan-yllapitokohteet +kayttaja-jvh+
+                                               {:urakka-id @muhoksen-paallystysurakan-id
+                                                :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                                                :vuosi 2017})
+        aikataulu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-yllapitourakan-aikataulu +kayttaja-jvh+
+                                {:urakka-id @muhoksen-paallystysurakan-id
+                                 :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                                 :vuosi 2017})]
+    (is (= (count urakan-yllapitokohteet) (count aikataulu))
+         "Jokaiselle kohteelle saatiin haettua aikataulu")))
 
 (deftest paallystyskohteet-haettu-oikein-vuodelle-2017
   (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
