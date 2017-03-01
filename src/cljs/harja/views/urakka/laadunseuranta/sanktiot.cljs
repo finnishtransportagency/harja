@@ -25,7 +25,8 @@
             [harja.domain.laadunseuranta.sanktiot :as sanktio-domain]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.ui.modal :as modal]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.fmt :as fmt])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -220,7 +221,7 @@
                {:otsikko     "Summa" :nimi :summa :palstoja 1 :tyyppi :positiivinen-numero
                 :hae         #(when (:summa %) (Math/abs (:summa %)))
                 :pakollinen? true :uusi-rivi? true :yksikko "€"
-                :validoi     [[:ei-tyhja "Anna summa"]]})
+                :validoi     [[:ei-tyhja "Anna summa"] [:rajattu-numero nil 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
 
              (when (and (sanktio-domain/sakko? @muokattu) (urakka/indeksi-kaytossa?))
                {:otsikko       "Indeksi" :nimi :indeksi :leveys 2
@@ -246,6 +247,11 @@
   [optiot valittu-urakka]
   (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot))
         yllapito? (:yllapito? optiot)
+        yhteensa (reduce + (map :summa sanktiot))
+        yhteensa (when yhteensa
+                   (if yllapito?
+                     (- yhteensa)                            ; ylläpidossa sakot miinusmerkkisiä
+                     yhteensa))
         yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
     [:div.sanktiot
      [urakka-valinnat/urakan-hoitokausi valittu-urakka]
@@ -261,8 +267,8 @@
           {:disabled (not oikeus?)}]))
 
      [grid/grid
-      {:otsikko       "Sanktiot"
-       :tyhja         (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
+      {:otsikko (if yllapito? "Sakot ja bonukset" "Sanktiot")
+       :tyhja (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
        :rivi-klikattu #(reset! tiedot/valittu-sanktio %)}
       [{:otsikko "Päivä\u00ADmäärä" :nimi :perintapvm :fmt pvm/pvm-aika :leveys 1}
        (if yllapitokohdeurakka?
@@ -280,8 +286,16 @@
          {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi) :leveys 3})
        {:otsikko "Tekijä" :nimi :tekija :hae (comp :tekijanimi :laatupoikkeama) :leveys 1}
        {:otsikko "Summa €" :nimi :summa :leveys 1 :tyyppi :numero :tasaa :oikea
-        :hae     #(or (:summa %) "Muistutus")}]
-      sanktiot]]))
+        :hae #(or (when (:summa %)
+                    (if yllapito?
+                      (- (:summa %))                        ;ylläpidossa on sakkoja ja -bonuksia, sakot miinusmerkillä
+                      (:summa %)))
+                  "Muistutus")}]
+      sanktiot]
+     (when yllapito?
+       (yleiset/vihje "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."))
+     (when (> (count sanktiot) 0)
+       [:div.pull-right.bold (str "Yhteensä " (fmt/euro-opt yhteensa))])]))
 
 (defn sanktiot [optiot]
   (komp/luo

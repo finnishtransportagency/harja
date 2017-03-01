@@ -47,7 +47,7 @@ msg "Deploy valmis palvelimelle $HARJA_ENV. Laitoin Harja Projekti HipChat-kanav
 HIPCHAT_TOKEN=`cat ../.harja/hipchat-token`
 # HipChat notifikaatio
 CONFIG="from=deploy2.sh&color=purple"
-MESSAGE="$USER deployasi juuri uuden Harja-version haarasta $BRANCH palvelimelle <a href=\"https://$HARJA_ENV\">$HARJA_ENV</a>"
+MESSAGE="$USER deployasi juuri uuden Harja-version haarasta $BRANCH palvelimelle <a href=\"https://$HARJA_ENV.harjatest.solita.fi\">$HARJA_ENV.harjatest.solita.fi</a>"
 curl -d $CONFIG --data-urlencode "message=${MESSAGE}" "https://api.hipchat.com/v2/room/914801/notification?auth_token=$HIPCHAT_TOKEN&format=json"
 
 END_TS=`date +%s`

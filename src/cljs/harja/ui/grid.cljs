@@ -687,6 +687,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
               tiedot (if max-rivimaara
                        (take max-rivimaara alkup-tiedot)
                        alkup-tiedot)
+              muokattu? (not (empty? @historia))
               muokkauspaneeli
               (fn [nayta-otsikko?]
                 [:div.panel-heading
@@ -694,7 +695,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                    [:span.pull-right.muokkaustoiminnot
                     (when (and tallenna
                                (not (nil? tiedot)))
-                      (let [tallenna-nappi [:button.nappi-ensisijainen
+                      (let [muokkaa-nappi [:button.nappi-ensisijainen
                                             {:disabled (or (= :ei-mahdollinen tallenna)
                                                            muuta-gridia-muokataan?)
                                              :on-click #(do (.preventDefault %)
@@ -703,11 +704,11 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                              [ikonit/ikoni-ja-teksti [ikonit/muokkaa] "Muokkaa"]]]]
                         (if (and (= :ei-mahdollinen tallenna)
                                  tallennus-ei-mahdollinen-tooltip)
-                          [yleiset/tooltip {} tallenna-nappi tallennus-ei-mahdollinen-tooltip]
-                          tallenna-nappi)))]
+                          [yleiset/tooltip {} muokkaa-nappi tallennus-ei-mahdollinen-tooltip]
+                          muokkaa-nappi)))]
                    [:span.pull-right.muokkaustoiminnot
                     [:button.nappi-toissijainen
-                     {:disabled (empty? @historia)
+                     {:disabled (not muokattu?)
                       :on-click #(do (.stopPropagation %)
                                      (.preventDefault %)
                                      (peru!))}
@@ -722,7 +723,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                     (when-not muokkaa-aina
                       [:button.nappi-myonteinen.grid-tallenna
                        {:disabled (or (not (empty? @virheet))
-                                      @tallennus-kaynnissa)
+                                      @tallennus-kaynnissa
+                                      (not muokattu?))
                         :on-click #(when-not @tallennus-kaynnissa
                                      (let [kaikki-rivit (mapv second @muokatut)
                                            tallennettavat

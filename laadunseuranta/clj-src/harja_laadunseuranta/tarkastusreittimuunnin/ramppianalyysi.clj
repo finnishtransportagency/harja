@@ -3,6 +3,7 @@
    reittimerkintöjen ja niihin liittyvän geometrisoinnin korjaamiseen, mikäli
    geometrisointi on osunut virheellisesti rampille."
   (:require [taoensso.timbre :as log]
+            [harja-laadunseuranta.tarkastusreittimuunnin.yhteiset :as yhteiset]
             [harja.domain.tierekisteri :as tr-domain]))
 
 (defn lisaa-merkintoihin-ramppitiedot
@@ -36,42 +37,6 @@
                       merkinnat)]
     (:ramppien-alut tulos)))
 
-(defn- laheisten-pisteiden-lahin-osuma-tielle
-  "Etsii merkinnän läheisten teiden tiedoista annetun tienumeron projisoinnit ja palauttaa lähimmän."
-  [merkinta tie]
-  (let [projisoitavaa-tieta-vastaavat-osoitteet (filter #(= (:tie %) tie)
-                                                        (:laheiset-tr-osoitteet merkinta))
-        lahin-vastaava-osoite (first (sort-by :etaisyys-gps-pisteesta projisoitavaa-tieta-vastaavat-osoitteet))]
-    lahin-vastaava-osoite))
-
-(defn- projisoi-merkinta-oikealle-tielle
-  "Projisoi yksittäisen merkinnän annetulle tielle"
-  [merkinta projisoitava-tie]
-  (if-let [lahin-vastaava-projisio (laheisten-pisteiden-lahin-osuma-tielle merkinta projisoitava-tie)]
-    (do
-      (log/debug "Projisoidaan ramppimerkintä tielle: " projisoitava-tie)
-      (-> merkinta
-          (assoc-in [:tr-osoite :tie] (:tie lahin-vastaava-projisio))
-          (assoc-in [:tr-osoite :aosa] (:aosa lahin-vastaava-projisio))
-          (assoc-in [:tr-osoite :aet] (:aet lahin-vastaava-projisio))
-          (assoc-in [:tr-osoite :losa] (:losa lahin-vastaava-projisio))
-          (assoc-in [:tr-osoite :let] (:let lahin-vastaava-projisio))))
-    (do
-      (log/debug (str "Ei voitu projisoida ramppimerkintää tielle: " projisoitava-tie))
-      ;; Poistetaan merkinnältä projisoitu osoite. Tarkastusreittimuunnin olettaa merkinnän olevan
-      ;; osa samaa tietä niin kauan kunnes oikea osoite löytyy.
-      ;; Merkintöjä ei kuitenkaan sovi poistaa, sillä muuten saatetaan menettää havaintoja / mittauksia.
-      (dissoc merkinta :tr-osoite))))
-
-(defn- projisoi-ramppi-oikealle-tielle
-  "Projisoi rampin takaisin ramppia edeltäneelle tielle"
-  [ramppia-edeltava-merkina rampin-merkinnat]
-  (log/debug "Projisoidaan ramppi takaisin ramppia edeltäneelle tielle.")
-  (let [projisoitava-tie (get-in ramppia-edeltava-merkina [:tr-osoite :tie])
-        korjatut-merkinnat (mapv #(projisoi-merkinta-oikealle-tielle % projisoitava-tie)
-                                 rampin-merkinnat)]
-    korjatut-merkinnat))
-
 (defn- rampin-merkinnat-indeksista
   "Palauttaa indeksistä eteenpäin ne merkinnät, jotka ovat osa samaa rampilla ajoa"
   [merkinnat-ramppitiedoilla ramppi-indeksi]
@@ -85,16 +50,6 @@
                                  indeksin-jalkeiset-merkinnat)]
     rampin-merkinnat))
 
-(defn- merkinnat-korjatulla-rampilla
-  "Korvaa indeksistä eteenpäin löytyvät merkinnät annetuilla ramppimerkinnöillä"
-  [kaikki-merkinnat ramppi-indeksi ramppimerkinnat]
-  (let [merkinnat-ennen-ramppia (take ramppi-indeksi kaikki-merkinnat)
-        merkinnat-rampin-jalkeen (drop (+ ramppi-indeksi (count ramppimerkinnat)) kaikki-merkinnat)]
-    (vec (concat
-           merkinnat-ennen-ramppia
-           ramppimerkinnat
-           merkinnat-rampin-jalkeen))))
-
 (defn- korjaa-vahapatoinen-ramppi
   [merkinnat-ramppitiedoilla ramppi-indeksi n]
   (log/debug "Analysoidaan mahdollisesti vähäpätöinen ramppi indeksissä: "
@@ -102,12 +57,13 @@
   (if (= ramppi-indeksi 0)
     merkinnat-ramppitiedoilla ;; Merkinnät alkavat rampilta, ei tehdä mitään.
     (let [rampin-merkinnat (rampin-merkinnat-indeksista merkinnat-ramppitiedoilla ramppi-indeksi)
+          ramppia-edeltava-merkinta (nth merkinnat-ramppitiedoilla (dec ramppi-indeksi))
           korjattu-ramppi (if (< (count rampin-merkinnat) n)
-                            (projisoi-ramppi-oikealle-tielle (nth merkinnat-ramppitiedoilla
-                                                                  (dec ramppi-indeksi))
-                                                             rampin-merkinnat)
+                            (yhteiset/projisoi-merkinnat-edelliselle-tielle
+                              ramppia-edeltava-merkinta
+                              rampin-merkinnat)
                             rampin-merkinnat)]
-      (merkinnat-korjatulla-rampilla merkinnat-ramppitiedoilla ramppi-indeksi korjattu-ramppi))))
+      (yhteiset/merkinnat-korjatulla-osalla merkinnat-ramppitiedoilla ramppi-indeksi korjattu-ramppi))))
 
 (defn- korjaa-vahapatoiset-rampit
   "Ottaa reittimerkinnät ja analysoi kaikki rampille siirtymiset.
@@ -126,7 +82,7 @@
     korjatut-rampit))
 
 (defn- merkinnat-todennakoisesti-ajettu-rampilla?
-  "Palauttaa true jos rampin merkinnät selkeästi erkanavat ramppia edeltävästä tiestä niin kauas,
+  "Palauttaa true jos rampin merkinnät selkeästi erkanevat ramppia edeltävästä tiestä niin kauas,
    että merkintöjä voidaan pitää luotettavana ja ajo tapahtui oikeasti rampilla.
 
    treshold on metrimäärä rampin alkupisteestä, jota käytetään rajana määrittämään luotettava
@@ -138,14 +94,14 @@
         ;; Pyritään löytämään pisteet, joissa etäisyys edellisestä tiestä ylittää thresholdin niin,
         ;; että myös GPS:n epätarkkuus on huomioitu.
         (filter #(let [lahin-osuma-edelliselle-tielle
-                       (laheisten-pisteiden-lahin-osuma-tielle % tie-ennen-ramppia)]
+                       (yhteiset/laheisten-teiden-lahin-osuma-tielle % tie-ennen-ramppia)]
                    (and lahin-osuma-edelliselle-tielle
                         (>
-                          ;; GPS:n epätarkkuudesta johtuen projisio edelliselle tielole voi olla lähempänä
+                          ;; GPS:n epätarkkuudesta johtuen projisio edelliselle tielle voi olla lähempänä
                           ;; kuin suoraan pisteestä laskettu etäisyys. Siispä vähennetään
                           ;; etäisyydestä GPS:n aiheuttama epätarkkuus.
-                          ;; Jos epätarkkuus on suuri, pisteen tulee olla hyvin kaukana
-                          ;; projisioidusta tiestä, jotta uskomme sen ylittävän thresholdin
+                          ;; Eli jos epätarkkuus on suuri, pisteen tulee olla hyvin kaukana
+                          ;; projisioidusta tiestä, jotta uskomme sen ylittävän thresholdin.
                           (max (- (:etaisyys-gps-pisteesta lahin-osuma-edelliselle-tielle)
                                   (:gps-tarkkuus %))
                                0)
@@ -154,14 +110,7 @@
         ainakin-yksi-varma-piste-ylittaa-thresholdin? (> (count merkinnat-rampilla-yli-tresholdin) 0)]
 
     (when ainakin-yksi-varma-piste-ylittaa-thresholdin?
-      (log/debug "Löytyi pisteitä, jotka sijaitsevat riittävän kaukana ramppia edeltävästä tiestä:")
-      (doseq [merkinta merkinnat-rampilla-yli-tresholdin]
-        (let [lahin-osuma (laheisten-pisteiden-lahin-osuma-tielle merkinta tie-ennen-ramppia)]
-          (log/debug (str lahin-osuma " => " "Etäisyys edelliseen tiehen GPS-tarkkuus huomioituna: "
-                          (- (:etaisyys-gps-pisteesta lahin-osuma)
-                             (:gps-tarkkuus merkinta))
-                          " > annettu threshold " threshold))))
-      (log/debug "Eli ajo on mitä todennäköisimmin tapahtunut rampilla"))
+      (log/debug "Löytyi pisteitä, jotka sijaitsevat riittävän kaukana ramppia edeltävästä tiestä."))
 
     ainakin-yksi-varma-piste-ylittaa-thresholdin?))
 
@@ -172,15 +121,15 @@
   (if (= ramppi-indeksi 0)
     merkinnat-ramppitiedoilla ;; Merkinnät alkavat rampilta, ei tehdä mitään.
     (let [rampin-merkinnat (rampin-merkinnat-indeksista merkinnat-ramppitiedoilla ramppi-indeksi)
-          korjattu-ramppi (let [ramppia-edeltava-merkinta (nth merkinnat-ramppitiedoilla
-                                                               (dec ramppi-indeksi))]
-                            (if (merkinnat-todennakoisesti-ajettu-rampilla? ramppia-edeltava-merkinta
-                                                                            rampin-merkinnat
-                                                                            threshold)
-                              rampin-merkinnat
-                              (projisoi-ramppi-oikealle-tielle ramppia-edeltava-merkinta
-                                                               rampin-merkinnat)))]
-      (merkinnat-korjatulla-rampilla merkinnat-ramppitiedoilla ramppi-indeksi korjattu-ramppi))))
+          ramppia-edeltava-merkinta (nth merkinnat-ramppitiedoilla (dec ramppi-indeksi))
+          korjattu-ramppi (if (merkinnat-todennakoisesti-ajettu-rampilla? ramppia-edeltava-merkinta
+                                                                          rampin-merkinnat
+                                                                          threshold)
+                            rampin-merkinnat
+                            (yhteiset/projisoi-merkinnat-edelliselle-tielle
+                              ramppia-edeltava-merkinta
+                              rampin-merkinnat))]
+      (yhteiset/merkinnat-korjatulla-osalla merkinnat-ramppitiedoilla ramppi-indeksi korjattu-ramppi))))
 
 (defn- korjaa-rampilla-ajot
   "Ottaa reittimerkinnät ja analysoi kaikki rampille siirtymiset.

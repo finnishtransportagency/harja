@@ -102,6 +102,29 @@
      --
      (is (= "0,66" (val))))))
 
+(deftest positiivinen-numero
+  (let [data (r/atom nil)
+        val! #(u/change :input %)
+        val #(some-> :input u/sel1 .-value)]
+    (komponenttitesti
+     [kentat/tee-kentta {:nimi :foo :tyyppi :positiivinen-numero}
+      data]
+
+     "aluksi arvo on tyhjä"
+     (is (= "" (val)))
+
+     "Normaali kokonaisluku päivittyy oikein"
+     (val! "80")
+     --
+     (is (= "80" (val)))
+     (is (= 80 @data))
+
+     "Miinusmerkkiä ei hyväksytä"
+     (val! "-12")
+     --
+     (is (= "12" (val)))
+     (is (= 12 @data)))))
+
 (deftest pvm
   (let [data (r/atom nil)
         val! #(u/change :input %)

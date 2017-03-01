@@ -3,6 +3,47 @@
   #?(:clj
      (:require [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])))
 
+(def ^{:doc "Sisältää vain nykyisin käytössä olevat luokat 1,2 ja 3 (eli numerot 8, 9 ja 10)."}
+nykyiset-yllapitoluokat
+  [{:lyhyt-nimi "1" :nimi "Luokka 1"  :numero 8}
+   {:lyhyt-nimi "2" :nimi "Luokka 2"  :numero 9}
+   {:lyhyt-nimi "3" :nimi "Luokka 3"  :numero 10}
+   {:lyhyt-nimi "-" :nimi "Ei ylläpitoluokkaa" :numero nil}])
+
+(def vanhat-yllapitoluokat ^{:doc "Sisältää vanhat ylläpitoluokat, tarvitaan YHA:n kanssa taakseepäin yhteensopivuuden vuoksi."}
+  [{:lyhyt-nimi "1a" :nimi "Luokka 1a"  :numero 1}
+   {:lyhyt-nimi "1b" :nimi "Luokka 1b"   :numero 2}
+   {:lyhyt-nimi "1c" :nimi "Luokka 1c"  :numero 3}
+   {:lyhyt-nimi "2a" :nimi "Luokka 2a" :numero 4}
+   {:lyhyt-nimi "2b" :nimi "Luokka 2b"  :numero 5}
+   {:lyhyt-nimi "3a" :nimi "Luokka 3a" :numero 6}
+   {:lyhyt-nimi "3b" :nimi "Luokka 3b" :numero 7}])
+
+(def ^{:doc "Mahdolliset ylläpitoluokat. Nimi kertoo käyttöliittymässä käytetyn
+nimen. Numero on YHA:n koodi luokalle joka talletetaan myös Harjan kantaan.
+2017 alkaen pyritään käyttämään enää luokkia 1,2 ja 3 (eli numerot 8, 9 ja 10), mutta
+taaksenpäin yhteensopivuuden nimissä pidetään vanhatkin luokat koodistossa."}
+yllapitoluokat
+  (into [] (concat nykyiset-yllapitoluokat vanhat-yllapitoluokat)))
+
+
+(def ^{:doc "Mäppäys ylläpitoluokan numerosta sen lyhyeen nimeen."}
+yllapitoluokan-lyhyt-nimi
+  (into {} (map (juxt :numero :lyhyt-nimi)) yllapitoluokat))
+
+(def ^{:doc "Mäppäys ylläpitoluokan numerosta sen lyhyeen nimeen."}
+yllapitoluokan-nimi
+  (into {} (map (juxt :numero :nimi)) yllapitoluokat))
+
+(def ^{:doc "Mäppäys ylläpitoluokan nimestä sen numeroon."}
+yllapitoluokan-numero
+  (into {} (map (juxt :nimi :numero)) yllapitoluokat))
+
+(def yllapitoluokka-xf
+  (map #(assoc % :yllapitoluokka {:nimi (yllapitoluokan-nimi (:yllapitoluokka %))
+                                  :lyhyt-nimi (yllapitoluokan-lyhyt-nimi (:yllapitoluokka %))
+                                  :numero (:yllapitoluokka %)})))
+
 (def +kohteissa-viallisia-sijainteja+ "viallisia-sijainteja")
 (def +viallinen-yllapitokohteen-sijainti+ "viallinen-kohteen-sijainti")
 (def +viallinen-yllapitokohdeosan-sijainti+ "viallinen-alikohteen-sijainti")

@@ -153,6 +153,14 @@
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
 
+(deftest tarkastus-jossa-merkintojen-aikaleimoissa-outouksia
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-yhden-pisteen-aikaleima-on-aiemmin))]
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+
 ;; -------- Laadunalitus --------
 
 (deftest tarkastus-jossa-jatkuva-laadunalitus
@@ -553,14 +561,51 @@
         reitilliset (:reitilliset-tarkastukset tarkastukset)
         pistemaiset (:pistemaiset-tarkastukset tarkastukset)
         odotettu-pistemaisten-maara 0
-        odotettu-reitillisten-maara 9]
+        odotettu-reitillisten-maara 7]
 
     ;; Tämä testi havaitsi aiemmin virheellisiä ajallisia gäppejä tästä ajosta.
+    ;; Tämä testi vaatii, että piste numero 36, joka osuu virheellisesti eri tielle risteyksessä,
+    ;; saadaan projisoitua takaisin edelliselle tielle
 
     ;; Muunnettu määrällisesti oikein
     (is (= (count pistemaiset) odotettu-pistemaisten-maara))
     (is (= (count reitilliset) odotettu-reitillisten-maara))))
 
+(deftest oikean-tarkastusajon-313-muunto-toimii
+  "Ajo lähtee tieverkon ulkopuolelta ja päätyy tieverkolle"
+  (let [db (:db jarjestelma)
+        tarkastusajo-id 213
+        urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
+        tarkastukset (ls-core/lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)
+        reitilliset (:reitilliset-tarkastukset tarkastukset)
+        pistemaiset (:pistemaiset-tarkastukset tarkastukset)
+        odotettu-pistemaisten-maara 0
+        odotettu-reitillisten-maara 3
+        osa1 (nth reitilliset 0)
+        osa2 (nth reitilliset 1)
+        osa3 (nth reitilliset 2)]
+
+    ;; Tässä pitäisi muodostua kolme tarkastusta:
+    ;; 1. Ajo lähtee tieverkon ulkopuolelta ja katkeaa kun laitetaan jatkuva havainto päälle.
+    ;;    Tarkastus on kokonaisuudessaan tieverkon ulkopuolella, joten
+    ;;    tälle tarkastukselle ei saada muodostettua tieosoitetta. Tämä on OK.
+    ;; 2. Ajo, jossa on jatkuva havainto päällä. Jossain vaiheessa tullaan tieverkolle.
+    ;;    Ajon tieosoitte alkaa ensimmäisestä pisteestä, joka osuu tieverkolle, ja päättyy
+    ;;    viimeiseen pisteeseen, jossa havainto oli päällä.
+    ;; 3. Jatkuva havainto laitettu pois päältä. Ajetaan tieverkolla ilman havaintoja.
+
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count pistemaiset) odotettu-pistemaisten-maara))
+    (is (= (count reitilliset) odotettu-reitillisten-maara))
+
+    ;; Muunnosten sisältö vastaa yllä kuvattua olettamusta
+    (is (= (:lopullinen-tr-osoite osa1) {:tie nil, :aosa nil, :aet nil, :losa nil, :let nil}))
+    (is (empty? (:vakiohavainnot osa1)))
+    (is (= (:lopullinen-tr-osoite osa2) {:tie 18637, :aosa 1, :aet 1237, :losa 1, :let 1190}))
+    (is (not (empty? (:vakiohavainnot osa2))))
+    (is (= (:lopullinen-tr-osoite osa3) {:tie 18637, :aosa 1, :aet 1190, :losa 1, :let 1139}))
+    (is (empty? (:vakiohavainnot osa3)))))
 
 ;; -------- Apufunktioita REPL-tunkkaukseen --------
 

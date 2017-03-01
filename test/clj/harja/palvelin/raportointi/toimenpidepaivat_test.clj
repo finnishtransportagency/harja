@@ -96,7 +96,7 @@
        :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "-"
+       :otsikko "Ei tiedossa"
        :tasaa   :oikea})))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii-usean-vuoden-aikavalilla
@@ -157,7 +157,7 @@
        :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "-"
+       :otsikko "Ei tiedossa"
        :tasaa   :oikea})))
 
 (deftest raportin-suoritus-koko-maalle-toimii
@@ -217,7 +217,7 @@
        :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "-"
+       :otsikko "Ei tiedossa"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
@@ -244,7 +244,7 @@
        :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "-"
+       :otsikko "Ei tiedossa"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
@@ -271,7 +271,7 @@
        :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "-"
+       :otsikko "Ei tiedossa"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
@@ -298,7 +298,7 @@
        :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "-"
+       :otsikko "Ei tiedossa"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
@@ -325,7 +325,7 @@
        :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "-"
+       :otsikko "Ei tiedossa"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
@@ -352,7 +352,7 @@
        :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "-"
+       :otsikko "Ei tiedossa"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
@@ -379,7 +379,7 @@
        :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "-"
+       :otsikko "Ei tiedossa"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
@@ -406,7 +406,7 @@
        :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "-"
+       :otsikko "Ei tiedossa"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "Is"
@@ -433,5 +433,5 @@
        :otsikko "K2"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "-"
+       :otsikko "Ei tiedossa"
        :tasaa   :oikea})))

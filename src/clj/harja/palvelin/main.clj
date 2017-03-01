@@ -108,7 +108,7 @@
 
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset
-     :refer [lue-asetukset konfiguroi-lokitus validoi-asetukset]]
+     :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset]]
 
     ;; Metriikat
     [harja.palvelin.komponentit.metriikka :as metriikka])
@@ -117,10 +117,8 @@
 (defn luo-jarjestelma [asetukset]
   (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
     (konfiguroi-lokitus asetukset)
-    (try
-      (validoi-asetukset asetukset)
-      (catch Exception e
-        (log/error e "Validointivirhe asetuksissa!")))
+    (if-let [virheet (tarkista-asetukset asetukset)]
+      (log/error "Validointivirhe asetuksissa:" virheet))
 
     (component/system-map
       :metriikka (metriikka/luo-jmx-metriikka)

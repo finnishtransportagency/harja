@@ -12,6 +12,7 @@
             [harja.tyokalut.vkm :as vkm]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.paallystysilmoitus :as pot]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
@@ -45,7 +46,7 @@
 (def id-leveys 6)
 (def kohde-leveys 15)
 (def kvl-leveys 5)
-(def yllapitoluokka-leveys 5)
+(def yllapitoluokka-leveys 7)
 (def tr-leveys 8)
 (def tarjoushinta-leveys 10)
 (def maaramuutokset-leveys 10)
@@ -621,7 +622,10 @@
                     :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :numero :leveys kvl-leveys
                     :muokattava? (constantly (not (:yha-sidottu? optiot)))}
                    {:otsikko "YP-lk"
-                    :nimi :yllapitoluokka :tyyppi :numero :leveys yllapitoluokka-leveys
+                    :nimi :yllapitoluokka :leveys yllapitoluokka-leveys :tyyppi :valinta
+                    :valinnat yllapitokohteet-domain/nykyiset-yllapitoluokat
+                    :valinta-nayta #(if % (:lyhyt-nimi %) "-")
+                    :fmt :lyhyt-nimi
                     :muokattava? (constantly (not (:yha-sidottu? optiot)))}
 
                    (when (= (:kohdetyyppi optiot) :paallystys)

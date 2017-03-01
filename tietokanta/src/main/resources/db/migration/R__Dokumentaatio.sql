@@ -6,7 +6,8 @@ E'Ylläpitokohte kuvaa tienosaa, jolle tehdään ylläpitoluonteista työtä (p�
 Kohteet ovat joko päällystys- tai paikkaustyyppisiä, joka päätellään yllopitokohdetyotyyppi-sarakkeesta. Kohteen tyyppi kuvaa sitä, millaista työtä kohteella on tarkoitus ensisijaisesti tehdä. Kohteen tyyppiä ei pidä sekoittaa sarakkeeseen yllapitokohdetyyppi, joka kuvaa sitä, millaista tietä ollaan työstämässä (päällystetty tie, soratie, kevytliikenne).\n\n
 
 Ylläpitokohde koostuu yleensä vähintään yhdestä ylläpitokohdeosasta (ks. taulu yllapitokohdeosa).\n\n
-
+Ylläpitokohteella voi olla ylläpitoluokka, jonka arvot ovat kokonaislukuja 1-10, koodit menevät YHA:an.\n
+Ylläpitoluokista tarkempaa domain-tietoa löytyy harja.domain.yllapitokohteet.\n\n
 Ylläpitokohte on sidottu urakkaan urakka-sarakkeen kautta. Tämä sarake kuvaa kohtee "ensisijaista" urakkkaa. Lisäksi on olemassa sarake suorittava_tiemerkintaurakka, joka kuva kohteen suorittavaa tiemerkintäurakkaa. Tiemerkinnässä kohde siis edelleen kuuluu ensisijaisesti päällystysurakkaan urakka-sarakkeen kautta, mutta linkittyy tiemerkintäurakkaan suorittava_tiemerkintaurakka -sarakkeen kautta.';
 
 COMMENT ON TABLE yllapitokohdeosa IS
@@ -96,6 +97,6 @@ E'Sanktiotyyppi-taulussa kerrotaan eri urakkatyyppien kannalta olennaiset sankti
 COMMENT ON TABLE urakkatyypin_indeksi IS
 E'Sisältää tiedon mitä indeksejä erityyppisissä urakoissa on käytössä.';
 
-COMMENT ON TABLE paallystysurakan_indeksit IS
-E'Päällystysurakoissa pitää sitoa kustannuksia mm. raskaan ja kevyen polttoöljyn tai \n
+COMMENT ON TABLE paallystysurakan_indeksi IS
+E'Päällystysurakoissa pitää sitoa kustannuksia mm. bitumin ja kevyen polttoöljyn tai \n
  nestekaasun hintaindekseihin. Tässä taulussa on tieto, mitä sidontoja päällystysurakoissa on tehty.';

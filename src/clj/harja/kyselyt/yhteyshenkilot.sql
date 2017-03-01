@@ -55,8 +55,8 @@ FROM paivystys p
   LEFT JOIN urakka u ON u.id = :urakka
   LEFT JOIN organisaatio org ON y.organisaatio = org.id
 WHERE p.urakka = :urakka AND
-      (:alkaen :: DATE IS NULL OR p.alku <= :paattyen :: DATE) AND
-      (:paattyen :: DATE IS NULL OR p.loppu >= :alkaen :: DATE);
+      (:alkaen :: DATE IS NULL OR p.alku <= :paattyen :: TIMESTAMP) AND
+      (:paattyen :: DATE IS NULL OR p.loppu >= :alkaen :: TIMESTAMP);
 
 -- name: hae-kaikki-paivystajat
 -- Hakee kaikki päivystykset
@@ -86,8 +86,8 @@ FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
   LEFT JOIN urakka u ON p.urakka = u.id
   LEFT JOIN organisaatio org ON u.urakoitsija = org.id
-WHERE (:alkaen :: DATE IS NULL OR p.alku <= :paattyen :: DATE) AND
-      (:paattyen :: DATE IS NULL OR p.loppu >= :alkaen :: DATE);
+WHERE (:alkaen :: DATE IS NULL OR p.alku <= :paattyen :: TIMESTAMP) AND
+      (:paattyen :: DATE IS NULL OR p.loppu >= :alkaen :: TIMESTAMP);
 
 -- name: hae-urakan-kayttajat
 -- Hakee urakkaan linkitetyt oikeat käyttäjät

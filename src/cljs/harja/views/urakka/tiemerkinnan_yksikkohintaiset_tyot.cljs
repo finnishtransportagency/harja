@@ -88,6 +88,7 @@
             :muokattava? (constantly false)}
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :tyyppi :numero :leveys 4
+            :fmt :lyhyt-nimi
             :muokattava? (constantly false)}
            {:otsikko "Hinta"
             :nimi :hinta :tyyppi :positiivinen-numero :fmt fmt/euro-opt :leveys 3

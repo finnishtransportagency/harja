@@ -1,7 +1,9 @@
 <b>Nykyinen versio: 1.0.12</b>  
-<b>Julkaistu: 9.2.2017</b>
+<b>Julkaistu: 23.2.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.13 Julkaistu: 23.2.2017:
+    - Päivystäjätietojen haun rajapinnat palauttavat ainoastaan voimassa olevat ja tulevat päivystykset, mikäli kutsuja ei rajaa hakua aikavälillä.
 - Versionumero: 1.0.12 Julkaistu: 9.2.2017:
     - Tietolajien haulla voidaan hakea kaikki tietolajin kuvaukset kerralla. Muutospäivämäärää ei enää voi antaa parametrinä.
 - Versionumero: 1.0.11 Julkaistu: 7.2.2017:
