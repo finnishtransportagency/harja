@@ -36,6 +36,7 @@
 
 (def grid-skeema
   [{:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm
+    :validoi [[:ei-tyhja "Anna päivämäärä"]]
     :tyyppi :pvm :leveys kustannus-pvm-leveys}
    {:otsikko "Kustannuksen kuvaus" :nimi :selite
     :validoi [[:ei-tyhja "Anna kuvaus"]]
