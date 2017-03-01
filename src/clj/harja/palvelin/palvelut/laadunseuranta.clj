@@ -294,7 +294,7 @@
 
 (defrecord Laadunseuranta []
   component/Lifecycle
-  (start [{:keys [http-palvelin db karttakuvat] :as this}]
+  (start [{:keys [http-palvelin db karttakuvat fim sonja-sahkoposti] :as this}]
 
     (julkaise-palvelut
       http-palvelin
