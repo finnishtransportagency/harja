@@ -198,20 +198,20 @@
                                                         voi-tallentaa-tiemerkinnan-takarajan?] :as tiedot}]
   (log/debug "Tallennetaan tiemerkintäurakan " tiemerkintaurakka-id " ylläpitokohteiden aikataulutiedot.")
 
-  ;; Lähetetään ensin sähköposti tiemerkinnän valmistumisesta, koska nyt on tieto siitä,
-  ;; että muuttuuko valmistumispäivämäärä nillistä päivämääräksi
-  (go (let [kohteet-kannassa (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                        db {:idt (map :id kohteet)}))
-            nyt-valmistuneet-kohteet (filter (fn [tallennettava-kohde]
-                                               (let [kohde-kannassa (first (filter #(= (:id tallennettava-kohde) (:id %))
-                                                                                    kohteet-kannassa))]
-                                                 (and (nil? (:aikataulu-tiemerkinta-loppu kohde-kannassa))
-                                                      (some? (:aikataulu-tiemerkinta-loppu tallennettava-kohde)))))
-                                             kohteet)]
-        (viestinta/laheta-sposti-tiemerkinta-valmis db fim email (mapv :id nyt-valmistuneet-kohteet) user)))
+  (jdbc/with-db-transaction [db db]
+    ;; Lähetetään ennen tallennusta sähköposti tiemerkinnän valmistumisesta, koska nyt on tieto siitä,
+    ;; että muuttuuko valmistumispäivämäärä nillistä päivämääräksi
+    (let [kohteet-kannassa (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                      db {:idt (map :id kohteet)}))
+          nyt-valmistuneet-kohteet (filter (fn [tallennettava-kohde]
+                                             (let [kohde-kannassa (first (filter #(= (:id tallennettava-kohde) (:id %))
+                                                                                 kohteet-kannassa))]
+                                               (and (nil? (:aikataulu-tiemerkinta-loppu kohde-kannassa))
+                                                    (some? (:aikataulu-tiemerkinta-loppu tallennettava-kohde)))))
+                                           kohteet)]
+      (go (viestinta/laheta-sposti-tiemerkinta-valmis db fim email (mapv :id nyt-valmistuneet-kohteet) user)))
 
-  (doseq [kohde kohteet]
-    (jdbc/with-db-transaction [db db]
+    (doseq [kohde kohteet]
       (q/tallenna-tiemerkintakohteen-aikataulu!
         db
         {:aikataulu_tiemerkinta_alku (:aikataulu-tiemerkinta-alku kohde)
