@@ -110,7 +110,7 @@
         "Tiemerkinnän aikataulu ei sisällä päällystysurakkaan liittyvää tietoa")))
 
 (deftest paallystyskohteet-haettu-oikein-vuodelle-2017
-  (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                             :urakan-yllapitokohteet +kayttaja-jvh+
                             {:urakka-id @muhoksen-paallystysurakan-id
                              :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
@@ -119,9 +119,17 @@
                                 (str "SELECT COUNT(*)
                                       FROM yllapitokohde
                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")
-                                      AND vuodet @> ARRAY[2017]::int[]")))]
-    (is (> (count res) 0) "Päällystyskohteita löytyi")
-    (is (= (count res) kohteiden-lkm) "Löytyi oikea määrä kohteita")))
+                                      AND vuodet @> ARRAY[2017]::int[]")))
+        kuusamontien-testi (first (filter #(= (:nimi %) "Kuusamontien testi") vastaus))
+        muut-kohteet (filter #(not= (:nimi %) "Kuusamontien testi") vastaus)]
+    (log/debug (pr-str vastaus))
+    (is (> (count vastaus) 0) "Päällystyskohteita löytyi")
+    (is (= (count vastaus) kohteiden-lkm) "Löytyi oikea määrä kohteita")
+
+    (is (true? (:yllapitokohteen-voi-poistaa? kuusamontien-testi))
+        "Kuusamontien testi -kohteen saa poistaa (ei ole mitään kirjauksia)")
+    (is (every? false? (map :yllapitokohteen-voi-poistaa? muut-kohteet))
+        "Muita kohteita ei saa poistaa (sisältävät kirjauksia)")))
 
 (deftest paallystyskohteet-haettu-oikein-vuodelle-2016
   (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
