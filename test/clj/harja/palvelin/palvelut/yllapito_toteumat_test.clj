@@ -131,7 +131,7 @@
 
     (loop [index 0]
       (let [selite (str "yksikkötesti" index)
-            linkitettava-yllapitokohde-id (get [yllapitokohde-id nil] (int (rand 2)))
+            linkitettava-yllapitokohde-id yllapitokohde-id
             kirjattava-toteuma (as-> (gen/generate (s/gen ::tt/tiemerkinnan-yksikkohintainen-tyo)) toteuma
                                      ;; Tee tästä uusi toteuma ja liitä vain osalle ylläpitokohde
                                      (assoc toteuma
