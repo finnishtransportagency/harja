@@ -147,7 +147,7 @@
            :suorittava_tiemerkintaurakka
            (if (= kayttajan-valitsema-suorittava-tiemerkintaurakka-id
                   kohteen-nykyinen-suorittava-tiemerkintaurakka-id)
-             (:suorittava-tiemerkintaurakka kohde)
+             kohteen-nykyinen-suorittava-tiemerkintaurakka-id
              ;; Suorittajaa yritetään vaihtaa, tarkistetaan onko sallittu
              (if (yy/yllapitokohteen-suorittavan-tiemerkintaurakan-voi-vaihtaa?
                    db (:id kohde) kohteen-nykyinen-suorittava-tiemerkintaurakka-id)
