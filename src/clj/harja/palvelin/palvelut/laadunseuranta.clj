@@ -19,11 +19,13 @@
   mielekästä näyttää käyttäjälle."
 
   (:require [com.stuartsierra.component :as component]
+            [clojure.core.async :refer [go <! >! thread >!! timeout] :as async]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat]
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.sanktiot :as sanktiot]
+            [harja.palvelin.palvelut.laadunseuranta.viestinta :as viestinta]
             [harja.kyselyt.tarkastukset :as tarkastukset]
 
             [harja.kyselyt.konversio :as konv]
@@ -176,6 +178,11 @@
         (sanktiot/merkitse-maksuera-likaiseksi! db id)
         id))))
 
+(defn- valita-tieto-pyydetysta-selvityksesta [{:keys [db fim email laatupoikkeama-id selvityksen-pyytaja]}]
+  (go (viestinta/laheta-sposti-laatupoikkeamasta-selvitys-pyydetty
+        {:db db :fim fim :email email :laatupoikkeama-id laatupoikkeama-id
+         :selvityksen-pyytaja selvityksen-pyytaja})))
+
 (defn tallenna-laatupoikkeama [db user {:keys [urakka] :as laatupoikkeama}]
   (log/info "Tuli laatupoikkeama: " laatupoikkeama)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka)
@@ -227,6 +234,9 @@
           (doseq [sanktio (:sanktiot laatupoikkeama)]
             (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka))))
 
+      (valita-tieto-pyydetysta-selvityksesta {:db db :fim fim :email email
+                                              :laatupoikkeama-id laatupoikkeama-id
+                                              :selvityksen-pyytaja selvityksen-pyytaja})
       (hae-laatupoikkeaman-tiedot c user urakka id))))
 
 (defn hae-sanktiotyypit
