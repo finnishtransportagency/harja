@@ -33,9 +33,6 @@
                                                    (str " (" puhelin ")")))]
                               ["Merkitsijän urakka" paallystysurakka-nimi]])]))
 
-
-
-
 (defn- viesti-kohteen-tiemerkinta-valmis [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite
                                                   tiemerkinta-valmis ilmoittaja tiemerkintaurakka-nimi] :as tiedot}]
   (html
@@ -141,7 +138,7 @@
 (defn laheta-sposti-tiemerkinta-valmis
   "Lähettää päällystysurakoitsijalle sähköpostiviestillä ilmoituksen
    ylläpitokohteen tiemerkinnän valmistumisesta."
-  [db fim email kohde-idt ilmoittaja]
+  [{:keys [db fim email kohde-idt ilmoittaja]}]
   (log/debug (format "Lähetetään sähköposti tiemerkintäkohteiden %s valmistumisesta." (pr-str kohde-idt)))
   (try+
     (let [kohteiden-tiedot
@@ -160,7 +157,7 @@
 (defn laheta-sposti-kohde-valmis-merkintaan
   "Lähettää tiemerkintäurakoitsijalle sähköpostiviestillä ilmoituksen
    ylläpitokohteen valmiudesta tiemerkintään."
-  [db fim email kohde-id tiemerkintapvm ilmoittaja]
+  [{:keys [db fim email kohde-id tiemerkintapvm ilmoittaja]}]
   (log/debug (format "Lähetetään sähköposti: ylläpitokohde %s valmis tiemerkintään %s" kohde-id tiemerkintapvm))
   (try+
     (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys

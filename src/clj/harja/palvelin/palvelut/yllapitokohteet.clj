@@ -147,6 +147,11 @@
                                                               :yllapitokohde id}))))
     (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id})))
 
+(defn- valita-tieto-kohteen-valmiudesta-tiemerkintaan [{:keys [db fim email kohde-id tiemerkintapvm user]}]
+  (go (viestinta/laheta-sposti-kohde-valmis-merkintaan {:db db :fim fim :email email
+                                                        :kohde-id kohde-id :tiemerkintapvm tiemerkintapvm
+                                                        :ilmoittaja user})))
+
 (defn merkitse-kohde-valmiiksi-tiemerkintaan
   "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä.
    Palauttaa päivitetyt kohteet aikataulunäkymään"
@@ -165,8 +170,8 @@
        :id kohde-id
        :urakka urakka-id}))
 
-  (go (viestinta/laheta-sposti-kohde-valmis-merkintaan db fim email
-                                                       kohde-id tiemerkintapvm user))
+  (valita-tieto-kohteen-valmiudesta-tiemerkintaan {:db db :fim fim :email email :kohde-id kohde-id
+                                                   :tiemerkintapvm tiemerkintapvm :user user})
 
   (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                  :sopimus-id sopimus-id}))
@@ -194,22 +199,29 @@
            :id (:id kohde)
            :urakka paallystysurakka-id})))))
 
+(defn- valita-tieto-tiemerkinnan-valmistumisesta [{:keys [db user fim email kohteet]}]
+  ;; Täytyy ajaa samassa transaktiossa tallennuksen kanssa
+  (let [kohteet-kannassa (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                    db {:idt (map :id kohteet)}))
+        nyt-valmistuneet-kohteet (filter (fn [tallennettava-kohde]
+                                           (let [kohde-kannassa (first (filter #(= (:id tallennettava-kohde) (:id %))
+                                                                               kohteet-kannassa))]
+                                             (and (nil? (:aikataulu-tiemerkinta-loppu kohde-kannassa))
+                                                  (some? (:aikataulu-tiemerkinta-loppu tallennettava-kohde)))))
+                                         kohteet)]
+    (go (viestinta/laheta-sposti-tiemerkinta-valmis {:db db :fim fim :email email
+                                                     :kohte-idt (mapv :id nyt-valmistuneet-kohteet)
+                                                     :ilmoittaja user}))))
+
 (defn- tallenna-tiemerkintakohteiden-aikataulu [{:keys [fim email db user kohteet tiemerkintaurakka-id
                                                         voi-tallentaa-tiemerkinnan-takarajan?] :as tiedot}]
   (log/debug "Tallennetaan tiemerkintäurakan " tiemerkintaurakka-id " ylläpitokohteiden aikataulutiedot.")
 
   (jdbc/with-db-transaction [db db]
     ;; Lähetetään ennen tallennusta sähköposti tiemerkinnän valmistumisesta, koska nyt on tieto siitä,
-    ;; että muuttuuko valmistumispäivämäärä nillistä päivämääräksi
-    (let [kohteet-kannassa (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                      db {:idt (map :id kohteet)}))
-          nyt-valmistuneet-kohteet (filter (fn [tallennettava-kohde]
-                                             (let [kohde-kannassa (first (filter #(= (:id tallennettava-kohde) (:id %))
-                                                                                 kohteet-kannassa))]
-                                               (and (nil? (:aikataulu-tiemerkinta-loppu kohde-kannassa))
-                                                    (some? (:aikataulu-tiemerkinta-loppu tallennettava-kohde)))))
-                                           kohteet)]
-      (go (viestinta/laheta-sposti-tiemerkinta-valmis db fim email (mapv :id nyt-valmistuneet-kohteet) user)))
+    ;; että tuleeko valmistumispäivämäärä muuttumaan kannassa nillistä päivämääräksi
+    (valita-tieto-tiemerkinnan-valmistumisesta {:db db :user user :fim fim
+                                                :email email :kohteet kohteet})
 
     (doseq [kohde kohteet]
       (q/tallenna-tiemerkintakohteen-aikataulu!
