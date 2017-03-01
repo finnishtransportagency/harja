@@ -183,61 +183,68 @@
         {:db db :fim fim :email email :laatupoikkeama-id laatupoikkeama-id
          :selvityksen-pyytaja selvityksen-pyytaja})))
 
+(defn- tallenna-laatupoikkeaman-kommentit [{:keys [db user laatupoikkeama id]}]
+  (when-let [uusi-kommentti (:uusi-kommentti laatupoikkeama)]
+    (log/info "UUSI KOMMENTTI LAATUPOIKKEAMAAN: " uusi-kommentti)
+    (let [liite (some->> uusi-kommentti
+                         :liite
+                         :id
+                         (liitteet/hae-urakan-liite-id db urakka)
+                         first
+                         :id)
+          kommentti (kommentit/luo-kommentti<! db
+                                               (name (:tekija laatupoikkeama))
+                                               (:kommentti uusi-kommentti)
+                                               liite
+                                               (:id user))]
+      ;; Liitä kommentti laatupoikkeamaon
+      (laatupoikkeamat/liita-kommentti<! db id (:id kommentti)))))
+
+(defn- tallenna-laatupoikkeaman-liitteet [db laatupoikkeama id]
+  (when-let [uusi-liite (:uusi-liite laatupoikkeama)]
+    (log/info "UUSI LIITE LAATUPOIKKEAMAAN: " uusi-liite)
+    (laatupoikkeamat/liita-liite<! c id (:id uusi-liite))))
+
+(defn- tallenna-laatupoikkeaman-paatos [{:keys [db urakka user laatupoikkeama id]}]
+  ;; Urakanvalvoja voi kirjata päätöksen
+  (when (and (:paatos (:paatos laatupoikkeama))
+             (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-laadunseuranta-sanktiot urakka user))
+    (log/info "Kirjataan päätös havainnolle: " id ", päätös: " (:paatos laatupoikkeama))
+    (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
+      (laatupoikkeamat/kirjaa-laatupoikkeaman-paatos! db
+                                                      (konv/sql-timestamp kasittelyaika)
+                                                      (name paatos) perustelu
+                                                      (name kasittelytapa) muukasittelytapa
+                                                      (:id user)
+                                                      id))
+    (when (= :sanktio (:paatos (:paatos laatupoikkeama)))
+      (doseq [sanktio (:sanktiot laatupoikkeama)]
+        (tallenna-laatupoikkeaman-sanktio db user sanktio id urakka)))))
+
 (defn tallenna-laatupoikkeama [db user {:keys [urakka] :as laatupoikkeama}]
   (log/info "Tuli laatupoikkeama: " laatupoikkeama)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka)
   (jdbc/with-db-transaction [c db]
     (let [osapuoli (roolit/osapuoli user)
+          laatupoikkeama-kannassa nil ; TODO HAE SE
           laatupoikkeama (assoc laatupoikkeama
                            ;; Jos osapuoli ei ole urakoitsija, voidaan asettaa selvitys-pyydetty päälle
                            :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
-                                                   (:selvitys-pyydetty laatupoikkeama))
+                                                   (:selvitys-pyydetty laatupoikkeama)))]
 
-                           ;; Jos urakoitsija kommentoi, asetetaan selvitys annettu
-                           :selvitys-annettu (and (:uusi-kommentti laatupoikkeama)
-                                                  (= :urakoitsija osapuoli)))
-          id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama c user laatupoikkeama)]
-      ;; Luodaan uudet kommentit
-      (when-let [uusi-kommentti (:uusi-kommentti laatupoikkeama)]
-        (log/info "UUSI KOMMENTTI: " uusi-kommentti)
-        (let [liite (some->> uusi-kommentti
-                             :liite
-                             :id
-                             (liitteet/hae-urakan-liite-id c urakka)
-                             first
-                             :id)
-              kommentti (kommentit/luo-kommentti<! c
-                                                   (name (:tekija laatupoikkeama))
-                                                   (:kommentti uusi-kommentti)
-                                                   liite
-                                                   (:id user))]
-          ;; Liitä kommentti laatupoikkeamaon
-          (laatupoikkeamat/liita-kommentti<! c id (:id kommentti))))
-
-      ;; Liitä liite laatupoikkeamaon
-      (when-let [uusi-liite (:uusi-liite laatupoikkeama)]
-        (log/info "UUSI LIITE: " uusi-liite)
-        (laatupoikkeamat/liita-liite<! c id (:id uusi-liite)))
-
-      ;; Urakanvalvoja voi kirjata päätöksen
-      (when (and (:paatos (:paatos laatupoikkeama))
-                 (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-laadunseuranta-sanktiot urakka user))
-        (log/info "Kirjataan päätös havainnolle: " id ", päätös: " (:paatos laatupoikkeama))
-        (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
-          (laatupoikkeamat/kirjaa-laatupoikkeaman-paatos! c
-                                                          (konv/sql-timestamp kasittelyaika)
-                                                          (name paatos) perustelu
-                                                          (name kasittelytapa) muukasittelytapa
-                                                          (:id user)
-                                                          id))
-        (when (= :sanktio (:paatos (:paatos laatupoikkeama)))
-          (doseq [sanktio (:sanktiot laatupoikkeama)]
-            (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka))))
-
+      ;; Lähetetään ennen tallennusta viesti pyydetystä selvityksestä, koska nyt on tieto siitä,
+      ;; että tuleeko selvitys pyydetty -arvo muuttumaan kannassa falsesta trueksi
       (valita-tieto-pyydetysta-selvityksesta {:db db :fim fim :email email
                                               :laatupoikkeama-id laatupoikkeama-id
                                               :selvityksen-pyytaja selvityksen-pyytaja})
-      (hae-laatupoikkeaman-tiedot c user urakka id))))
+
+      (let [id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama c user laatupoikkeama)]
+        (tallenna-laatupoikkeaman-kommentit {:db c :user user
+                                             :laatupoikkeama laatupoikkeama :id id})
+        (tallenna-laatupoikkeaman-liitteet db laatupoikkeama id)
+        (tallenna-laatupoikkeaman-paatos {:db c :urakka urakka :user user
+                                          :laatupoikkeama laatupoikkeama :id id})
+        (hae-laatupoikkeaman-tiedot c user urakka id)))))
 
 (defn hae-sanktiotyypit
   "Palauttaa kaikki sanktiotyypit, hyvin harvoin muuttuvaa dataa."

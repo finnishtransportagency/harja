@@ -248,7 +248,7 @@
                                  urakka-id
                                  user)]
     (case (hae-urakkatyyppi db urakka-id)
-      ;; NOTE Päällystysurakoitsija ja tiemerkkari eivät saa muokata samoja asioita,
+      ;; Päällystysurakoitsija ja tiemerkkari eivät saa muokata samoja asioita,
       ;; siksi urakkatyypin mukainen kysely
       :paallystys
       (tallenna-paallystyskohteiden-aikataulu
