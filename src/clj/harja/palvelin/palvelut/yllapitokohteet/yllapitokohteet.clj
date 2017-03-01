@@ -164,8 +164,8 @@
        :id kohde-id
        :urakka urakka-id}))
 
-  (viestinta/sahkoposti-kohde-valmis-merkintaan db fim email
-                                                kohde-id tiemerkintapvm user)
+  (viestinta/laheta-sposti-kohde-valmis-merkintaan db fim email
+                                                   kohde-id tiemerkintapvm user)
 
   (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                  :sopimus-id sopimus-id}))
@@ -212,7 +212,7 @@
            :id (:id kohde)
            :suorittava_tiemerkintaurakka tiemerkintaurakka-id}))))
 
-  (viestinta/laheta-sahkoposti-tiemerkinta-valmis db fim email (map :id kohteet) user))
+  (viestinta/laheta-sposti-tiemerkinta-valmis db fim email (map :id kohteet) user))
 
 (defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id kohteet]}]
   (assert (and urakka-id sopimus-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
