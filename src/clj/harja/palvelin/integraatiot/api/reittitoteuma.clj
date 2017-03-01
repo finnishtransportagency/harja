@@ -95,7 +95,8 @@ maksimi-linnuntien-etaisyys 200)
   ([db toteuma-id maksimi-etaisyys]
    (let [reitti (->> toteuma-id
                      (toteumat/hae-toteuman-reittipisteet db)
-                     (map (comp :coordinates geo/pg->clj :sijainti))
+                     (map (fn [{sijainti :sijainti aika :aika}]
+                            [(.-x sijainti) (.-y sijainti) aika]))
                      (hae-reitti db maksimi-etaisyys))
          geometria (when-not (= reitti +yhdistamis-virhe+)
                      (-> reitti
