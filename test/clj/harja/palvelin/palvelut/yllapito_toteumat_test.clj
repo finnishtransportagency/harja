@@ -109,9 +109,13 @@
         pyynto {:urakka-id urakka-id
                 :toteumat (->> (mapv (fn [_] (gen/generate (s/gen ::tt/tiemerkinnan-yksikkohintainen-tyo)))
                                      (range 1 (inc toteumien-maara)))
-                               ;; Liitä osa toteumista ylläpitokohteeseen
+                               ;; Tee kohteista uusia
                                (mapv #(assoc % :id nil
-                                               :yllapitokohde-id (get [yllapitokohde-id nil] (int (rand 2))))))}
+                                               :yllapitokohde-id (get [yllapitokohde-id nil] (int (rand 2)))))
+                               ;; Liitä osa toteumista ylläpitokohteeseen
+                               (mapv #(if (int (rand 2))
+                                        (assoc % :yllapitokohde-id yllapitokohde-id)
+                                        (dissoc % :yllapitokohde-id))))}
         maara-ennen-lisaysta (ffirst (q "SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma;"))
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
                           :tallenna-tiemerkinnan-yksikkohintaiset-tyot +kayttaja-jvh+
