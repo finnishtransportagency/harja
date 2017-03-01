@@ -22,7 +22,7 @@
 (s/def ::hinta-kohteelle (s/and string? #(>= (count %) 1)))
 (s/def ::yllapitokohde-id ::apurit/postgres-serial)
 (s/def ::tr-numero ::tr-domain/numero)
-(s/def ::hinta (s/and number? (comp not neg?)))
+(s/def ::hinta (s/and number? (comp not neg?) #(< % 10000000)))
 (s/def ::poistettu boolean?)
 
 (s/def ::tiemerkinnan-yksikkohintainen-tyo
