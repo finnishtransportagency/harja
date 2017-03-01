@@ -73,18 +73,20 @@
       :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
 
      [
-      {:otsikko "Urakka" :nimi :urakkanimi :leveys 5
-       :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
-      {:otsikko "Tie" :nimi :tierekisteri
-       :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
+      {:otsikko "Urakka" :nimi :urakka_nimi :leveys 5
+       :hae (comp fmt/lyhennetty-urakan-nimi :urakka_nimi)}
+      {:otsikko "Tie" :nimi :tien_nimi
+       ;; :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
        :leveys 4}
-      {:otsikko "Alkupvm" :nimi :alkaa
-       :hae (comp pvm/pvm-aika :alkaa) :leveys 2}
-      {:otsikko "Loppupvm" :nimi :loppuu
-       :hae (comp pvm/pvm-aika :loppuu) :leveys 2}
-      {:otsikko "Työn tyyppi" :nimi :tyon-tyyppi
+      {:otsikko "Alkupvm" :nimi :alku
+       :hae (comp pvm/pvm-aika :alku)
+
+       :leveys 2}
+      {:otsikko "Loppupvm" :nimi :loppu
+       :hae (comp pvm/pvm-aika :loppu) :leveys 2}
+      {:otsikko "Työn tyyppi" :nimi :tyotyypit
        :leveys 4}
-      {:otsikko "Ilmoittaja" :nimi :ilmoittaja
+      {:otsikko "Ilmoittaja" :nimi :ilmoittaja_etunumi
        :leveys 7}]
      haetut-ilmoitukset]]])
 

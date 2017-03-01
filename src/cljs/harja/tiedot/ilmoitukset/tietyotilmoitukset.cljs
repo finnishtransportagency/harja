@@ -91,9 +91,9 @@
 
   ValitseIlmoitus
   (process-event [{ilmoitus :ilmoitus} app]
-    (let [tulos (t/send-async! ->IlmoituksenTiedot)]
+    (let [tulos! (t/send-async! ->IlmoituksenTiedot)]
       (go
-        (tulos (<! (k/post! :hae-ilmoitukset (:id ilmoitus))))))
+        (tulos! (<! (k/post! :hae-ilmoitukset (:id ilmoitus))))))
     (assoc app :ilmoituksen-haku-kaynnissa? true))
 
   IlmoituksenTiedot
