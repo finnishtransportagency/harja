@@ -78,5 +78,5 @@
             :alkupvm alkupvm
             :loppupvm loppupvm}))
 
-(def ilmoitus-jarjestelman-muokkaama-toteuma
+(def ilmoitus-jarjestelman-luoma-toteuma
   "Tietojärjestelmästä tulleen toteuman muokkaus ei ole sallittu.")

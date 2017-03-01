@@ -40,6 +40,7 @@
                  "sukunimi" "Meikäläinen"
                  "tyopuhelin" nil}
    "ilmoitusid" 123456789
+   "tunniste" "UV-1509-1a"
    "ilmoitustyyppi" "toimenpidepyynto"
    "lahettaja" {"email" "pekka.paivystaja@livi.fi"
                 "etunimi" "Pekka"
@@ -156,12 +157,14 @@
       (is (= "valitetty" (z/xml1-> data :kuittaustyyppi z/text))))))
 
 (deftest hae-muuttuneet-ilmoitukset
-  (u (str "UPDATE ilmoitus SET muokattu = NOW() + INTERVAL '1 hour' WHERE urakka = 4 AND id IN (SELECT id FROM ilmoitus WHERE urakka = 4 LIMIT 1)"))
+  (u (str "UPDATE ilmoitus SET muokattu = NOW() + INTERVAL '1 hour'
+           WHERE urakka = 4 AND id IN (SELECT id FROM ilmoitus WHERE urakka = 4 LIMIT 1)"))
 
   (let [nyt (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?muuttunutJalkeen=" (URLEncoder/encode nyt)]
                                         kayttaja portti)
-        kaikkien-ilmoitusten-maara-suoraan-kannasta (ffirst (q (str "SELECT count(*) FROM ilmoitus where urakka = 4;")))]
+        kaikkien-ilmoitusten-maara-suoraan-kannasta (ffirst (q (str "SELECT count(*) FROM ilmoitus
+                                                                     WHERE urakka = 4;")))]
     (is (= 200 (:status vastaus)))
 
     (let [vastausdata (cheshire/decode (:body vastaus))

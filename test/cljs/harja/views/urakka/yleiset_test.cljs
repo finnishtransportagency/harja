@@ -1,7 +1,9 @@
 (ns harja.views.urakka.yleiset-test
   "Yleiset näkymän testi"
   (:require [cljs.test :as t :refer-macros [deftest is testing async]]
-            [harja.testutils :as u]
+            [harja.testutils.shared-testutils :as u]
+            [harja.testutils :refer [fake-palvelut-fixture fake-palvelukutsu
+                                     jvh-fixture]]
             [reagent.core :as r]
             [harja.views.urakka.yleiset :as yleiset]
             [harja.pvm :as pvm])

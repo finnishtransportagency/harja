@@ -4,7 +4,8 @@
             [harja.kyselyt.tieverkko :as tv]
             [harja.geo :as geo]
             [harja.kyselyt.konversio :as konv]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (def +threshold+ 250)
 
@@ -69,18 +70,23 @@
     (julkaise-palvelut
       http-palvelin
       :hae-tr-pisteilla (fn [_ params]
+                          (oikeudet/ei-oikeustarkistusta!)
                           (hae-tr-pisteilla db params))
 
       :hae-tr-pisteella (fn [_ params]
+                          (oikeudet/ei-oikeustarkistusta!)
                           (hae-tr-pisteella db params))
 
       :hae-tr-viivaksi (fn [_ params]
+                         (oikeudet/ei-oikeustarkistusta!)
                          (hae-tr-viiva db params))
 
       :hae-tr-osien-pituudet (fn [_ params]
+                               (oikeudet/ei-oikeustarkistusta!)
                                (hae-osien-pituudet db params))
 
       :hae-tr-osan-ajoradat (fn [_ params]
+                              (oikeudet/ei-oikeustarkistusta!)
                               (hae-tieosan-ajoradat db params)))
 
     this)

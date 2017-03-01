@@ -9,7 +9,7 @@
 (def +ilmoitustyypit+ #{:kysely :toimenpidepyynto :tiedoitus})
 
 (def kuittaustyypit
-  [:vastaanotto :aloitus :lopetus :muutos :vastaus])
+  [:vastaanotto :aloitus :lopetus :muutos :vastaus :vaara-urakka])
 
 (defn valitysviesti? [kuittaus]
   (#{:valitys} (:kuittaustyyppi kuittaus)))
@@ -26,7 +26,8 @@
    :lopetus "Lopetus"
    :muutos "Muutos"
    :vastaus "Vastaus"
-   :valitys "Välitys"})
+   :valitys "Välitys"
+   :vaara-urakka "Väärä urakka"})
 
 (def kanavan-otsikko
   {:sahkoposti "Sähköposti"
@@ -40,14 +41,16 @@
    :aloitus "Aloitettu"
    :lopetus "Lopetettu"
    :muutos "Muutos"
-   :vastaus "Vastaus"})
+   :vastaus "Vastaus"
+   :vaara-urakka "Väärä urakka"})
 
 (def kuittaustyypin-lyhenne
   {:vastaanotto "VOT"
    :aloitus "ALO"
    :lopetus "LOP"
    :muutos "MUU"
-   :vastaus "VAS"})
+   :vastaus "VAS"
+   :vaara-urakka "VAA"})
 
 (defn ilmoitustyypin-nimi
   [tyyppi]

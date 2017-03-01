@@ -10,6 +10,7 @@
     [harja.kyselyt.kayttajat :as kayttajat]
     [harja.kyselyt.tietyomaat :as q-tietyomaat]
     [harja.domain.roolit :as roolit]
+    [harja.domain.oikeudet :as oikeudet]
     [harja.domain.yllapitokohteet :as kohteet]
     [harja.kyselyt.paallystys :as paallystys-q])
   (:use [slingshot.slingshot :only [throw+ try+]]))
@@ -38,6 +39,7 @@
              :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Koordinaattien järjestys väärä"}]})))
 
 (defn tarkista-kayttajan-oikeudet-urakkaan [db urakka-id kayttaja]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (when (and (not (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
              (not (kayttajat/onko-kayttajalla-lisaoikeus-urakkaan? db urakka-id (:id kayttaja))))
     (throw+ {:type virheet/+viallinen-kutsu+
@@ -46,6 +48,7 @@
                                      urakka-id)}]})))
 
 (defn tarkista-onko-kayttaja-organisaatiossa [db ytunnus kayttaja]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (when-not (kayttajat/onko-kayttaja-organisaatiossa? db ytunnus (:id kayttaja))
     (throw+ {:type virheet/+viallinen-kutsu+
              :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
@@ -59,10 +62,12 @@
                         :viesti (str "Käyttäjä " (:kayttajanimi kayttaja) " ei ole järjestelmä")}]})))
 
 (defn tarkista-urakka-ja-kayttaja [db urakka-id kayttaja]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tarkista-urakka db urakka-id)
   (tarkista-kayttajan-oikeudet-urakkaan db urakka-id kayttaja))
 
 (defn tarkista-rooli [kayttaja rooli]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (when-not (roolit/roolissa? kayttaja rooli)
     (throw+ {:type virheet/+viallinen-kutsu+
              :virheet [{:koodi virheet/+tuntematon-kayttaja-koodi+
@@ -74,6 +79,7 @@
   (tarkista-kayttajan-oikeudet-urakkaan db urakka-id kayttaja))
 
 (defn tarkista-oikeudet-urakan-paivystajatietoihin [db urakka-id kayttaja]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (when-not (or (roolit/roolissa? kayttaja roolit/liikennepaivystaja)
                 (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
     (throw+ {:type virheet/+viallinen-kutsu+

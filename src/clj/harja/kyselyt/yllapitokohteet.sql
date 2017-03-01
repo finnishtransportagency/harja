@@ -97,6 +97,7 @@ SELECT
   ypk.tr_ajorata                        AS "tr-ajorata",
   ypk.tr_kaista                         AS "tr-kaista",
   ypk.yhaid,
+  ypk.yha_kohdenumero                   AS "yha-kohdenumero",
   ypk.yllapitokohdetyyppi,
   ypk.yllapitokohdetyotyyppi,
   ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
@@ -496,6 +497,7 @@ SELECT
   yllapitokohdetyyppi,
   yhatunnus,
   yhaid,
+  yha_kohdenumero            AS "yha-kohdenumero",
   yllapitoluokka,
   lahetysaika,
   keskimaarainen_vuorokausiliikenne,
@@ -630,3 +632,9 @@ INSERT INTO yllapitokohde_tiemerkinta(yllapitokohde, hinta, hintatyyppi, muutosp
 -- name: hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
 SELECT id FROM yllapitokohde_tiemerkinta
 WHERE yllapitokohde = :yllapitokohde;
+
+-- name: hae-kohteen-tienumero
+SELECT tr_numero FROM yllapitokohde WHERE id = :kohdeid;
+
+-- name: paivita-paallystys-tai-paikkausurakan-geometria
+SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka :: INTEGER);

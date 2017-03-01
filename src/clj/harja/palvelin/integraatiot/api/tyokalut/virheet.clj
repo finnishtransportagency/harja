@@ -1,4 +1,5 @@
 (ns harja.palvelin.integraatiot.api.tyokalut.virheet
+  (:require [harja.domain.oikeudet :as oikeudet])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (def +invalidi-json+ ::invalidi-json)
@@ -40,6 +41,7 @@
 (def +paallystysilmoitus-lukittu+ "paallystysilmoitus-kukittu")
 
 (defn heita-poikkeus [tyyppi virheet]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (throw+
     (let [virheet (if (map? virheet) [virheet] virheet)]
       {:type    tyyppi

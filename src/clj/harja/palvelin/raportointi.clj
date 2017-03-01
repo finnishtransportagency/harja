@@ -26,6 +26,7 @@
             [harja.palvelin.raportointi.raportit.laatupoikkeama]
             [harja.palvelin.raportointi.raportit.siltatarkastus]
             [harja.palvelin.raportointi.raportit.sanktio]
+            [harja.palvelin.raportointi.raportit.sanktioraportti-yllapito]
             [harja.palvelin.raportointi.raportit.soratietarkastus]
             [harja.palvelin.raportointi.raportit.valitavoiteraportti]
             [harja.palvelin.raportointi.raportit.ymparisto]

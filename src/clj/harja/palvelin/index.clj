@@ -1,6 +1,6 @@
 (ns harja.palvelin.index
   (:require [hiccup.core :refer [html]]
-            [harja.palvelin.tyokalut.svg :as svg])
+            [clojure.java.io :as io])
   (:import [javax.crypto Mac]
            [javax.crypto.spec SecretKeySpec]
            [java.util Base64]
@@ -50,16 +50,29 @@
        [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token token}
         [:div#app]]])))
 
+
+
 (defn tee-ls-paasivu [devmode]
-  (let [inline-svg-18 (reify HtmlRenderer
+  (let [livicons-osoite (if devmode "resources/public/laadunseuranta/img/"
+                                    "public/laadunseuranta/img/")
+        livicons-18 (if devmode
+                      (slurp (str livicons-osoite "livicons-18.svg"))
+                      (slurp (io/resource (str livicons-osoite "livicons-18.svg"))))
+        livicons-24 (if devmode
+                      (slurp (str livicons-osoite "livicons-24.svg"))
+                      (slurp (io/resource (str livicons-osoite "livicons-24.svg"))))
+        livicons-36 (if devmode
+                      (slurp (str livicons-osoite "livicons-36.svg"))
+                      (slurp (io/resource (str livicons-osoite "livicons-36.svg"))))
+        inline-svg-18 (reify HtmlRenderer
                         (render-html [_]
-                          (svg/svg-spritet "resources/public/laadunseuranta/img/livicons-18.svg")))
+                          livicons-18))
         inline-svg-24 (reify HtmlRenderer
                         (render-html [_]
-                          (svg/svg-spritet "resources/public/laadunseuranta/img/livicons-24.svg")))
+                          livicons-24))
         inline-svg-36 (reify HtmlRenderer
                         (render-html [_]
-                          (svg/svg-spritet "resources/public/laadunseuranta/img/livicons-36.svg")))]
+                          livicons-36))]
     (html
       "<!DOCTYPE html>\n"
       (if devmode

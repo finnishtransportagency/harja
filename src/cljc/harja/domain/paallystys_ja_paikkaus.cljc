@@ -54,10 +54,25 @@
 (def +paallystetyyppi+ "Päällystetyypin valinta koodilla"
   (apply s/enum (map :koodi +paallystetyypit+)))
 
+(defn maaramuutoksissa-ennustettuja-maaria? [tyot]
+  (boolean (some #(and (:ennustettu-maara %)
+                       (not (:toteutunut-maara %)))
+                 tyot)))
+
 (defn summaa-maaramuutokset
-  "Laskee ilmoitettujen töiden toteutumien erotuksen tilattuun määrään ja summaa tulokset yhteen."
+  "Laskee ilmoitettujen töiden toteutumien erotuksen tilattuun määrään ja summaa tulokset yhteen.
+   Palauttaa mapin, jossa laskun tulos sekä tieto siitä, sisältääkö lasku ennustettuja määriä."
   [tyot]
-  (reduce + (mapv
+  {:tulos (reduce
+            +
+            (mapv
               (fn [tyo]
-                (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
-              (filter #(not= true (:poistettu %)) tyot))))
+                (let [tilattu-maara (:tilattu-maara tyo)
+                      ennustettu-maara (:ennustettu-maara tyo)
+                      toteutunut-maara (:toteutunut-maara tyo)
+                      yksikkohinta (:yksikkohinta tyo)]
+                  (* (- (or toteutunut-maara ennustettu-maara)
+                        tilattu-maara)
+                     yksikkohinta)))
+              (filter #(not= true (:poistettu %)) tyot)))
+   :ennustettu? (maaramuutoksissa-ennustettuja-maaria? tyot)})

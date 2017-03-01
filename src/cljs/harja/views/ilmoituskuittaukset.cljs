@@ -41,77 +41,78 @@
    {:class "uusi-kuittaus"}
    [lomake/lomake
     {:muokkaa! #(e! (v/->AsetaKuittausTiedot %))
-     :luokka   :horizontal
-     :footer   [:div
-                [napit/tallenna
-                 "Lähetä"
-                 #(e! (v/->Kuittaa))
-                 {:tallennus-kaynnissa? (:tallennus-kaynnissa? kuittaus)
-                  :ikoni        (ikonit/tallenna)
-                  :disabled     (esta-lahetys? kuittaus)
-                  :virheviesti  "Kuittauksen tallennuksessa tai lähetyksessä T-LOIK:n tapahtui virhe."
-                  :luokka       "nappi-ensisijainen"}]
-                [napit/peruuta
-                 "Peruuta"
-                 #(e! (v/->SuljeUusiKuittaus))
-                 {:luokka "pull-right"}]]}
-    [(lomake/ryhma {:otsikko    "Kuittaus"}
-                   {:nimi          :tyyppi
-                    :otsikko       "Tyyppi"
-                    :pakollinen?   true
-                    :tyyppi        :valinta
-                    :valinnat      apurit/kuittaustyypit
+     :luokka :horizontal
+     :footer [:div
+              [napit/tallenna
+               "Lähetä"
+               #(e! (v/->Kuittaa))
+               {:tallennus-kaynnissa? (:tallennus-kaynnissa? kuittaus)
+                :ikoni (ikonit/tallenna)
+                :disabled (esta-lahetys? kuittaus)
+                :virheviesti "Kuittauksen tallennuksessa tai lähetyksessä T-LOIK:n tapahtui virhe."
+                :luokka "nappi-ensisijainen"}]
+              [napit/peruuta
+               "Peruuta"
+               #(e! (v/->SuljeUusiKuittaus))
+               {:luokka "pull-right"}]]}
+    [(lomake/ryhma {:otsikko "Kuittaus"}
+                   {:nimi :tyyppi
+                    :otsikko "Tyyppi"
+                    :pakollinen? true
+                    :tyyppi :valinta
+                    :valinnat apurit/kuittaustyypit
                     :valinta-nayta #(if %
-                                     (apurit/kuittaustyypin-selite %)
-                                     "- Valitse kuittaustyyppi -")}
+                                      (apurit/kuittaustyypin-selite %)
+                                      "- Valitse kuittaustyyppi -")
+                    :vihje (when (= :vaara-urakka (:tyyppi kuittaus))
+                             "Oikean urakan tiedot pyydetään välitettäväksi vapaatekstikentässä.")}
                    {:nimi :vakiofraasi
                     :otsikko "Vakiofraasi"
                     :tyyppi :haku
                     :lahde fraasihaku
                     :hae-kun-yli-n-merkkia 0}
-
-                   {:nimi        :vapaateksti
-                    :otsikko     "Vapaateksti"
-                    :tyyppi      :text
+                   {:nimi :vapaateksti
+                    :otsikko "Vapaateksti"
+                    :tyyppi :text
                     ;; pituus on XSD-skeeman maksimi 1024 - pisimmän vakiofraasin mitta (48)
                     :pituus-max 976})
 
-     (lomake/ryhma {:otsikko    "Käsittelijä"
+     (lomake/ryhma {:otsikko "Käsittelijä"
                     :leveys-col 3}
-                   {:nimi       :kasittelija-etunimi
-                    :otsikko    "Etunimi"
+                   {:nimi :kasittelija-etunimi
+                    :otsikko "Etunimi"
                     :leveys-col 3
-                    :tyyppi     :string
+                    :tyyppi :string
                     :pituus-max 32}
-                   {:nimi       :kasittelija-sukunimi
-                    :otsikko    "Sukunimi"
+                   {:nimi :kasittelija-sukunimi
+                    :otsikko "Sukunimi"
                     :leveys-col 3
-                    :tyyppi     :string
+                    :tyyppi :string
                     :pituus-max 32}
-                   {:nimi       :kasittelija-matkapuhelin
-                    :otsikko    "Matkapuhelin"
+                   {:nimi :kasittelija-matkapuhelin
+                    :otsikko "Matkapuhelin"
                     :leveys-col 3
-                    :tyyppi     :puhelin
+                    :tyyppi :puhelin
                     :pituus-max 32}
-                   {:nimi       :kasittelija-tyopuhelin
-                    :otsikko    "Työpuhelin"
+                   {:nimi :kasittelija-tyopuhelin
+                    :otsikko "Työpuhelin"
                     :leveys-col 3
-                    :tyyppi     :puhelin
+                    :tyyppi :puhelin
                     :pituus-max 32}
-                   {:nimi       :kasittelija-sahkoposti
-                    :otsikko    "Sähköposti"
+                   {:nimi :kasittelija-sahkoposti
+                    :otsikko "Sähköposti"
                     :leveys-col 3
-                    :tyyppi     :email
+                    :tyyppi :email
                     :pituus-max 64}
-                   {:nimi       :kasittelija-organisaatio
-                    :otsikko    "Organisaation nimi"
+                   {:nimi :kasittelija-organisaatio
+                    :otsikko "Organisaation nimi"
                     :leveys-col 3
-                    :tyyppi     :string
+                    :tyyppi :string
                     :pituus-max 128}
-                   {:nimi       :kasittelija-ytunnus
-                    :otsikko    "Organisaation y-tunnus"
+                   {:nimi :kasittelija-ytunnus
+                    :otsikko "Organisaation y-tunnus"
                     :leveys-col 3
-                    :tyyppi     :string
+                    :tyyppi :string
                     :pituus-max 9})]
     kuittaus]])
 
@@ -168,8 +169,9 @@
           :tyyppi :valinta
           :valinnat apurit/kuittaustyypit
           :valinta-nayta #(or (apurit/kuittaustyypin-selite %) "- Valitse kuittaustyyppi -")
-          :nimi :tyyppi}
-
+          :nimi :tyyppi
+          :vihje (when (= :vaara-urakka (:tyyppi data))
+                   "Oikean urakan tiedot pyydetään välitettäväksi vapaatekstikentässä.")}
          {:otsikko "Vakiofraasi"
           :tyyppi :haku
           :hae-kun-yli-n-merkkia 0
@@ -191,7 +193,7 @@
 
       {:ikoni (ikonit/tallenna)
        :tallennus-kaynnissa? tallennus-kaynnissa?
-       :luokka   (str (when tallennus-kaynnissa? "disabled ") "nappi-ensisijainen kuittaa-monta-tallennus")
+       :luokka (str (when tallennus-kaynnissa? "disabled ") "nappi-ensisijainen kuittaa-monta-tallennus")
        :disabled (or (:tallennus-kaynnissa? data)
                      (not (lomake/voi-tallentaa-ja-muokattu? data))
                      (zero? valittuna))}]

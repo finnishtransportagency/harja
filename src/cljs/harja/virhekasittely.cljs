@@ -1,7 +1,6 @@
 (ns harja.virhekasittely
   (:require [reagent.core :refer [atom]]
             [harja.tiedot.palaute :as palaute]
-            [harja.tiedot.istunto :as istunto]
             [harja.ui.ikonit :as ikonit]))
 
 (def pahoitteluviesti

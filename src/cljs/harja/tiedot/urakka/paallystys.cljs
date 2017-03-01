@@ -76,7 +76,7 @@
                                      kohteet))]
       (tr-domain/jarjesta-kohteiden-kohdeosat harjan-paikkauskohteet))))
 
-(def kohteet-yhteensa
+(def kaikki-kohteet
   (reaction (concat @yhan-paallystyskohteet @harjan-paikkauskohteet)))
 
 (defonce paallystyskohteet-kartalla

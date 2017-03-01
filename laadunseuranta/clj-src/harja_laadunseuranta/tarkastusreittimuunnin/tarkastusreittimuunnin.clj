@@ -12,6 +12,7 @@
             [harja.kyselyt.tarkastukset :as tark-q]
             [harja-laadunseuranta.tarkastusreittimuunnin.ramppianalyysi :as ramppianalyysi]
             [harja-laadunseuranta.tarkastusreittimuunnin.ymparikaantyminen :as ymparikaantyminen]
+            [harja-laadunseuranta.tarkastusreittimuunnin.virheelliset-tiet :as virheelliset-tiet]
             [clojure.string :as str]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
@@ -46,12 +47,18 @@
                                                   (nil? (:tr-osoite seuraava-reittimerkinta))
                                                   (= (get-in nykyinen-reittimerkinta [:tr-osoite :tie])
                                                      (get-in seuraava-reittimerkinta [:tr-osoite :tie]))))
-        ei-ajallista-gappia? (boolean (or
-                                        (nil? (:aikaleima nykyinen-reittimerkinta))
-                                        (nil? (:aikaleima seuraava-reittimerkinta))
-                                        (<= (t/in-seconds (t/interval (c/from-sql-time (:aikaleima nykyinen-reittimerkinta))
-                                                                      (c/from-sql-time (:aikaleima seuraava-reittimerkinta))))
-                                            +kahden-pisteen-valinen-sallittu-aikaero-s+)))
+        ei-ajallista-gappia? (let [aikaleima-nykyinen-merkinta (c/from-sql-time (:aikaleima nykyinen-reittimerkinta))
+                                   aikaleima-seuraava-merkinta (c/from-sql-time (:aikaleima seuraava-reittimerkinta))]
+                               (if (or
+                                     (nil? (:aikaleima nykyinen-reittimerkinta))
+                                     (nil? (:aikaleima seuraava-reittimerkinta))
+                                     ;; Kerran törmättiin harvinaiseen tilanteeseen, jossa myöhemmin kirjatun pisteen
+                                     ;; aikaleima oli ennen seuraavaa. Tällainen tilanne pitää pystyä käsittelemään
+                                     (t/before? aikaleima-seuraava-merkinta aikaleima-nykyinen-merkinta))
+                                 true
+                                 (<= (t/in-seconds (t/interval aikaleima-nykyinen-merkinta
+                                                               aikaleima-seuraava-merkinta))
+                                     +kahden-pisteen-valinen-sallittu-aikaero-s+)))
         jatkuvat-mittausarvot-samat? (boolean (and (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :soratie-tasaisuus)
                                                    (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :kiinteys)
                                                    (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :polyavyys)
@@ -60,7 +67,7 @@
 
     (when-not jatkuvat-havainnot-pysyvat-samana? (log/debug (:sijainti seuraava-reittimerkinta) "Jatkuvat havainnot muuttuu " (:jatkuvat-havainnot nykyinen-reittimerkinta) " -> " (:jatkuvat-havainnot seuraava-reittimerkinta) ", katkaistaan reitti"))
     (when-not seuraava-piste-samalla-tiella? (log/debug (:sijainti seuraava-reittimerkinta) "Seuraava piste eri tiellä " (get-in nykyinen-reittimerkinta [:tr-osoite :tie]) " -> " (get-in seuraava-reittimerkinta [:tr-osoite :tie]) ", katkaistaan reitti"))
-    (when-not ei-ajallista-gappia? (log/debug (:sijainti seuraava-reittimerkinta) "Ajallinen gäppi pisteiden välillä " (c/from-sql-time (:aikaleima nykyinen-reittimerkinta)) " ja " (c/from-sql-time (:aikaleima seuraava-reittimerkinta)) ", katkaistaan reitti"))
+    (when-not ei-ajallista-gappia? (log/debug (:sijainti seuraava-reittimerkinta) "Ajallinen gäppi pisteiden välillä, " (c/from-sql-time (:aikaleima nykyinen-reittimerkinta)) " ja " (c/from-sql-time (:aikaleima seuraava-reittimerkinta)) ", katkaistaan reitti"))
     (when-not jatkuvat-mittausarvot-samat? (log/debug (:sijainti seuraava-reittimerkinta) "Jatkuvat mittausarvot muuttuivat, katkaistaan reitti"))
     (when-not seuraavassa-pisteessa-ei-kaannyta-ympari? (log/debug (:sijainti seuraava-reittimerkinta) "Ympärikääntyminen havaittu, katkaistaan reitti"))
 
@@ -134,8 +141,8 @@
 
 (defn- muodosta-tarkastuksen-lopullinen-tr-osoite [reittimerkinta]
   (let [tarkastuksen-reitti (:sijainnit reittimerkinta)
-        lahtopiste (:tr-osoite (first tarkastuksen-reitti))
-        paatepiste (:tr-osoite (last tarkastuksen-reitti))
+        lahtopiste (:tr-osoite (first (remove #(nil? (:tr-osoite %)) tarkastuksen-reitti)))
+        paatepiste (:tr-osoite (last (remove #(nil? (:tr-osoite %)) tarkastuksen-reitti)))
         koko-tarkastuksen-tr-osoite {:tie (:tie lahtopiste)
                                      :aosa (:aosa lahtopiste)
                                      :aet (:aet lahtopiste)
@@ -171,7 +178,9 @@
 
                                      (vector? (mittaus-avain reittimerkinta))
                                      (keskiarvo (mittaus-avain reittimerkinta))))]
-    (as-> {:aika (:aikaleima reittimerkinta)
+    (as-> {;; Pistemäisessä aika on aina tämä, koska yksi piste.
+           ;; Yhdistetyttä merkinnässä tässä on viimeisimmän merkinnän aika
+           :aika (:aikaleima reittimerkinta)
            :tyyppi (paattele-tarkastustyyppi reittimerkinta)
            :tarkastusajo (:tarkastusajo reittimerkinta)
            ;; Reittimerkintöjen id:t, joista tämä tarkastus muodostuu
@@ -242,6 +251,14 @@
     (assoc reittimerkinta :laadunalitus true)
     reittimerkinta))
 
+(defn- keraa-seuraavan-pisteen-aikaleima
+  "Ottaa reittimerkinnän ja järjestyksessä seuraavan reittimerkinnän.
+   Asettaa aikaleimaksi seuraavan merkinnän aikaleiman."
+  [reittimerkinta seuraava-reittimerkinta]
+  (if-let [seuraava-aikaleima (:aikaleima seuraava-reittimerkinta)]
+    (assoc reittimerkinta :aikaleima seuraava-aikaleima)
+    reittimerkinta))
+
 (defn- keraa-reittimerkintojen-kuvaukset
   "Yhdistää samalla jatkuvalla havainnolla olevat kuvauskentät yhteen"
   [reittimerkinta seuraava-reittimerkinta]
@@ -266,6 +283,7 @@
               (as-> viimeisin-yhdistetty-reittimerkinta edellinen
                     (keraa-seuraavan-pisteen-sijainti edellinen seuraava-merkinta)
                     (keraa-seuraavan-pisteen-laadunalitus edellinen seuraava-merkinta)
+                    (keraa-seuraavan-pisteen-aikaleima edellinen seuraava-merkinta)
                     (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :talvihoito-tasaisuus)
                     (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :lumisuus)
                     (keraa-seuraavan-pisteen-arvot edellinen seuraava-merkinta :kitkamittaus)
@@ -357,20 +375,27 @@
   (as->
     merkinnat m
     (if (:analysoi-rampit? optiot) (ramppianalyysi/korjaa-virheelliset-rampit merkinnat) m)
-    (if (:analysoi-ymparikaantymiset? optiot) (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta m) m)))
+    (if (:analysoi-ymparikaantymiset? optiot) (ymparikaantyminen/lisaa-tieto-ymparikaantymisesta m) m)
+    (if (:analysoi-virheelliset-tiet? optiot) (virheelliset-tiet/korjaa-virheelliset-tiet m) m)))
 
 (defn reittimerkinnat-tarkastuksiksi
   "Reittimerkintämuunnin, joka käy reittimerkinnät läpi ja palauttaa mapin, jossa reittimerkinnät muutettu
    reitillisiksi ja pistemäisiksi Harja-tarkastuksiksi.
 
    Optiot on mappi:
-   - analysoi-rampit?               Korjaa virheellisesti rampille projisoituneet pisteet takaisin moottoritielle.
-                                    Oletus: true.
-   - analysoi-ymparikaantymiset?    Katkaisee reitit pisteistä, joissa havaitaan selkeä ympärikääntyminen.
-                                    Oletus: true."
+   - analysoi-rampit?                         Korjaa virheellisesti rampille projisoituneet pisteet takaisin moottoritielle.
+                                              Oletus: true.
+   - analysoi-ymparikaantymiset?              Katkaisee reitit pisteistä, joissa havaitaan selkeä ympärikääntyminen.
+                                              Oletus: true.
+   - analysoi-virheelliset-tiet?              Projisoi tien pisteet edelliselle tielle, jos tielle on osunut vain pieni määrä
+                                              pisteitä ja ne kaikki ovat lähellä edellistä tietä. Tarkoituksena korjata
+                                              tilanteet, joissa muutama yksittäinen piste osuu eri tielle esim. siltojen
+                                              ja risteysten kohdalla.
+                                              Oletus: true."
   ([tr-osoitteelliset-reittimerkinnat]
    (reittimerkinnat-tarkastuksiksi tr-osoitteelliset-reittimerkinnat {:analysoi-rampit? true
-                                                                      :analysoi-ymparikaantymiset? true}))
+                                                                      :analysoi-ymparikaantymiset? true
+                                                                      :analysoi-virheelliset-tiet? true}))
   ([tr-osoitteelliset-reittimerkinnat optiot]
    (let [kasiteltavat-merkinnat (valmistele-merkinnat-kasittelyyn tr-osoitteelliset-reittimerkinnat optiot)
          tarkastukset {:reitilliset-tarkastukset (reittimerkinnat-reitillisiksi-tarkastuksiksi

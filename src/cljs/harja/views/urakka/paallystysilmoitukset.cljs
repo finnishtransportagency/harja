@@ -53,10 +53,6 @@
      :muutokset-kokonaishintaan muutokset-kokonaishintaan
      :toteuman-kokonaishinta toteuman-kokonaishinta}))
 
-(defn paivita-kokonaishinta [lomakedata-nyt]
-  (assoc lomakedata-nyt
-    :toteuman-kokonaishinta (:toteuman-kokonaishinta (laske-hinta lomakedata-nyt))))
-
 (defn yhteenveto [lomakedata-nyt]
   (let [{:keys [urakkasopimuksen-mukainen-kokonaishinta
                 muutokset-kokonaishintaan
@@ -66,7 +62,9 @@
      "Urakkasopimuksen mukainen kokonaishinta: "
      (fmt/euro-opt (or urakkasopimuksen-mukainen-kokonaishinta 0))
 
-     "Määrämuutosten vaikutus kokonaishintaan: "
+     (str "Määrämuutosten vaikutus kokonaishintaan"
+          (when (:maaramuutokset-ennustettu? lomakedata-nyt) " (ennustettu)")
+          ": ")
      (fmt/euro-opt (or muutokset-kokonaishintaan 0))
 
      "Yhteensä: "
@@ -137,9 +135,9 @@
        :valinnat [:hyvaksytty :hylatty]
        :validoi [[:ei-tyhja "Anna päätös"]]
        :valinta-nayta #(cond
-                        % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %)
-                        muokattava? "- Valitse päätös -"
-                        :default "-")
+                         % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %)
+                         muokattava? "- Valitse päätös -"
+                         :default "-")
        :palstoja 1}
 
       (when (:paatos osa)
@@ -192,12 +190,12 @@
                                   lomake/ilman-lomaketietoja
                                   (grid/poista-idt [:ilmoitustiedot :osoitteet])
                                   (grid/poista-idt [:ilmoitustiedot :alustatoimet]))]
-        (log "[PÄÄLLYSTYS] Lomake-data: " (pr-str lomake))
-        (log "[PÄÄLLYSTYS] Lähetetään data " (pr-str lahetettava-data))
-        (paallystys/tallenna-paallystysilmoitus! {:urakka-id urakka-id
-                                                  :sopimus-id sopimus-id
-                                                  :lomakedata lahetettava-data
-                                                  :vuosi vuosi}))
+         (log "[PÄÄLLYSTYS] Lomake-data: " (pr-str lomake))
+         (log "[PÄÄLLYSTYS] Lähetetään data " (pr-str lahetettava-data))
+         (paallystys/tallenna-paallystysilmoitus! {:urakka-id urakka-id
+                                                   :sopimus-id sopimus-id
+                                                   :lomakedata lahetettava-data
+                                                   :vuosi vuosi}))
       {:luokka "nappi-ensisijainen"
        :id "tallenna-paallystysilmoitus"
        :disabled (false? valmis-tallennettavaksi?)
@@ -447,6 +445,7 @@
                     :validoi [[:ei-tyhja "Tieto puuttuu"]]}
                    {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys "15%"
                     :tyyppi :positiivinen-numero :tasaa :oikea
+                    :desimaalien-maara 0
                     :validoi [[:ei-tyhja "Tieto puuttuu"]]}
                    {:otsikko "Verkko\u00ADtyyppi"
                     :nimi :verkkotyyppi

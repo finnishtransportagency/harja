@@ -34,9 +34,6 @@
                         :tallenna-urakan-materiaalit (component/using
                                                        (->Materiaalit)
                                                        [:http-palvelin :db])
-                        :poista-toteuma-materiaali! (component/using
-                                                      (->Materiaalit)
-                                                      [:http-palvelin :db])
                         :tallenna-toteuma-materiaaleja! (component/using
                                                           (->Materiaalit)
                                                           [:http-palvelin :db])))))
@@ -54,7 +51,7 @@
 
 (deftest hae-urakan-materiaalit-sarakkeet
   (let [tallennus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :tallenna-urakan-materiaalit
+                                  :tallenna-suunnitellut-materiaalit
                                   +kayttaja-jvh+
 
                                   {:urakka-id @oulun-alueurakan-2005-2010-id
@@ -125,11 +122,15 @@
 
 
 (deftest tallenna-toteuma-materiaaleja-test
-  (let [[toteuma_id sopimus] (first (q (str "SELECT id, sopimus FROM toteuma WHERE urakka="@oulun-alueurakan-2005-2010-id" LIMIT 1")))
+  (let [[toteuma_id sopimus] (first (q (str "SELECT id, sopimus FROM toteuma WHERE urakka="@oulun-alueurakan-2005-2010-id
+                                            "AND luoja IN (SELECT id FROM kayttaja WHERE jarjestelma IS NOT TRUE) LIMIT 1")))
         vanha-maara 12398751
         uusi-maara 12
-        toteumamateriaalit (atom [{:toteuma toteuma_id :maara vanha-maara :materiaalikoodi 1} {:toteuma toteuma_id :maara vanha-maara :materiaalikoodi 1}])
-        parametrit {:toteumamateriaalit @toteumamateriaalit :urakka-id @oulun-alueurakan-2005-2010-id :sopimus sopimus}
+        toteumamateriaalit (atom [{:toteuma toteuma_id :maara vanha-maara :materiaalikoodi 1}
+                                  {:toteuma toteuma_id :maara vanha-maara :materiaalikoodi 1}])
+        parametrit {:toteumamateriaalit @toteumamateriaalit
+                    :urakka-id @oulun-alueurakan-2005-2010-id
+                    :sopimus sopimus}
         hae-materiaalitoteumien-maara (fn [id] (ffirst (q (str "SELECT count(*) FROM toteuma_materiaali
                                                                 WHERE poistettu IS NOT TRUE AND toteuma="id))))
         vanhat-materiaalitoteumat-lukumaara (hae-materiaalitoteumien-maara toteuma_id)
@@ -140,7 +141,10 @@
 
     ;; Luo kaksi uutta materiaalitoteumaa ja varmista että palvelu vastaa nil
     ;; (palauttaa urakassa käytetyt materiaalit jos hoitokausi on annettu)
-    (is (nil? (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-toteuma-materiaaleja! +kayttaja-jvh+ parametrit))
+    (is (nil? (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :tallenna-toteuma-materiaaleja!
+                              +kayttaja-jvh+
+                              parametrit))
         "Palvelun ei pitäisi palauttaa mitään jos hoitokautta ei ole annettu")
     (is (= (hae-materiaalitoteumien-maara toteuma_id) (+ 2 vanhat-materiaalitoteumat-lukumaara))
         "Tallentaminen epäonnistui?")
@@ -172,32 +176,17 @@
 
     (u (str "DELETE FROM toteuma_materiaali WHERE id=" @tmid))))
 
-(deftest poista-toteuma-materiaali-test
-  (let [maara 874625
-        [urakka sopimus] (first (q "SELECT urakka, sopimus FROM toteuma WHERE id=1"))
-        hoitokausi [(pvm/luo-pvm 2005 9 1) (pvm/luo-pvm 2006 8 30)]
-        lisaa-materiaalitoteuma (fn [] (ffirst (q "INSERT INTO toteuma_materiaali
-                                          (toteuma, materiaalikoodi, maara, luotu, luoja, poistettu)
-                                          VALUES (1, 1, "maara", NOW(), "(:id +kayttaja-jvh+)", false) RETURNING id;" )))
-        hae-lkm (fn [] (ffirst (q (str "SELECT count(*) FROM toteuma_materiaali WHERE poistettu IS NOT TRUE and toteuma=1;"))))
-        alkuperainen-lkm (hae-lkm)
-        lisatyt (doall (repeatedly 3 lisaa-materiaalitoteuma))]
+(deftest jarjestelman-luomia-materiaaleja-ei-voi-muokata
+  (let [[toteuma_id sopimus] (first (q (str "SELECT id, sopimus FROM toteuma WHERE urakka="@oulun-alueurakan-2005-2010-id"
+                                             AND luoja IN (SELECT id FROM kayttaja WHERE jarjestelma IS TRUE) LIMIT 1")))
+        vanha-maara 12398751
+        toteumamateriaalit (atom [{:toteuma toteuma_id :maara vanha-maara :materiaalikoodi 1}
+                                  {:toteuma toteuma_id :maara vanha-maara :materiaalikoodi 1}])
+        parametrit {:toteumamateriaalit @toteumamateriaalit
+                    :urakka-id @oulun-alueurakan-2005-2010-id
+                    :sopimus sopimus}]
 
-    (is (= (hae-lkm) (+ 3 alkuperainen-lkm)))
-
-    ;; Poistamisen pitäisi palauttaa urakassa käytetyt materiaalit jos hoitokausi annetaan
-
-
-    (let [payload {:urakka   urakka
-                   :sopimus  sopimus
-                   :hk-alku  (first hoitokausi)
-                   :hk-loppu (second hoitokausi)
-                   :tid 1}]
-      (doseq [lisatty lisatyt]
-        (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-toteuma-materiaali! +kayttaja-jvh+
-                                      (assoc payload :tmid lisatty))]
-
-          ;; Testidatassa ei ole mitään materiaaleja, koska talvisuolat eivät enää tule tämän palvelun kautta
-          (is (vector? vastaus)))))
-
-(is (= alkuperainen-lkm (hae-lkm)))))
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :tallenna-toteuma-materiaaleja!
+                              +kayttaja-jvh+
+                              parametrit)))))

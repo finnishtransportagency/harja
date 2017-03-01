@@ -5,13 +5,12 @@
             [clojure.set :refer [intersection difference]]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.indeksit :as q]
-            [harja.pvm :as pvm]))
-
-(defn hae-indeksien-nimet
-  "Palvelu, joka palauttaa Harjassa olevien indeksien nimet."
-  [db user]
-  (into #{}
-        (map :nimi (q/hae-indeksien-nimet db))))
+            [harja.pvm :as pvm]
+            [harja.id :refer [id-olemassa?]]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.kyselyt.konversio :as konv]
+            [harja.domain.indeksit :as d]
+            [harja.domain.urakka :as urakka]))
 
 (defn hae-urakan-kuukauden-indeksiarvo
   "Palvelu, joka palauttaa tietyn kuukauden indeksin arvon ja nimen urakalle"
@@ -35,6 +34,7 @@
 (defn hae-indeksit
   "Palvelu, joka palauttaa indeksit."
   [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-indeksit user)
   (zippaa (ryhmittele-indeksit (q/listaa-indeksit db))))
 
 (defn hae-indeksi
@@ -46,6 +46,7 @@
   "Palvelu joka tallentaa nimellä tunnistetun indeksin tiedot"
   [db user {:keys [nimi indeksit]}]
   (assert (vector? indeksit) "indeksit tulee olla vektori")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-indeksit user)
   (let [nykyiset-arvot (hae-indeksi db nimi)]
     (jdbc/with-db-transaction [c db]
       (doseq [indeksivuosi indeksit]
@@ -79,6 +80,65 @@
 
       (hae-indeksit c user))))
 
+(defn hae-urakkatyypin-indeksit
+  "Palvelu, joka palauttaa kaikki urakkatyypin-indeksit taulun rivit."
+  [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user)
+  (let [indeksit (into []
+                       (map #(konv/string->keyword % :urakkatyyppi))
+                       (q/hae-urakkatyypin-indeksit db))]
+    (log/debug "hae urakkatyypin indeksit: " indeksit)
+    indeksit))
+
+
+(defn hae-paallystysurakan-indeksitiedot
+  "Palvelu, joka palauttaa annetun päällystysurakan indeksitiedot"
+  [db user {urakka-id ::urakka/id}]
+  (log/debug "hae-paallystysurakan-indeksit" urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
+  (let [indeksit (into []
+                       (comp (map konv/alaviiva->rakenne)
+                             (map #(konv/string->keyword % [:indeksi :urakkatyyppi])))
+                       (q/hae-paallystysurakan-indeksitiedot db {:urakka urakka-id}))]
+    (log/debug "hae-paallystysurakan-indeksit: " indeksit)
+    indeksit))
+
+(defn vaadi-paallystysurakan-indeksi-kuuluu-urakkaan [db urakka-id paallystysurakan-indeksi-id]
+  "Tarkistaa, että päällystysurakan indeksitieto kuuluu annettuun urakkaan"
+  (assert (and urakka-id paallystysurakan-indeksi-id) "Ei voida suorittaa tarkastusta")
+  (let [indeksin-urakka-id-kannasta (:urakka (first (q/hae-paallystysurakan-indeksin-urakka-id db {:id paallystysurakan-indeksi-id})))]
+    (when (not= urakka-id indeksin-urakka-id-kannasta)
+      (throw (SecurityException. (str " päällystysurakan indeksitieto " paallystysurakan-indeksi-id " ei kuulu valittuun urakkaan "
+                                      urakka-id " vaan urakkaan " indeksin-urakka-id-kannasta))))))
+
+(defn tallenna-paallystysurakan-indeksitiedot
+  "Palvelu joka tallentaa päällystysurakan indeksitiedot eli mihin arvoihin mikäkin raaka-ainehinta on sidottu.
+  Esim. Bitumin arvo sidotaan usein raskaan polttoöljyn Platts-indeksiin, nestekaasulle ja kevyelle polttoöljylle on omat hintansta."
+  [db user indeksitiedot]
+  (log/debug "tallenna-paallystysurakan-indeksitiedot: " indeksitiedot)
+  (doseq [urakka-id (distinct (map :urakka indeksitiedot))]
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id))
+  (let [urakka-id (some :urakka indeksitiedot)]
+    (jdbc/with-db-transaction [c db]
+      (doseq [{urakka-id :urakka
+               id :id
+               poistettu :poistettu
+               indeksi :indeksi
+               :as i} indeksitiedot]
+        (when (id-olemassa? id)
+          (vaadi-paallystysurakan-indeksi-kuuluu-urakkaan db urakka-id id))
+
+        (when-not (and (neg? id) poistettu)  ;gridillä poistettu samalla kun luotu, ei käsitellä
+          (q/tallenna-paallystysurakan-indeksitiedot!
+           c (-> i
+                 ;; korvaa indeksi mäp sen :id arvolla
+                 (update :indeksi :id)
+                 ;; lisää käyttäjän tieto
+                 (assoc :kayttaja (:id user))
+                 ;; poistettu tieto
+                 (assoc :poistettu (boolean poistettu))))))
+      (hae-paallystysurakan-indeksitiedot c user {::urakka/id urakka-id}))))
+
 
 (defrecord Indeksit []
   component/Lifecycle
@@ -90,13 +150,26 @@
       (julkaise-palvelu :tallenna-indeksi
                         (fn [user tiedot]
                           (tallenna-indeksi (:db this) user tiedot)))
-      (julkaise-palvelu :indeksien-nimet
+      (julkaise-palvelu :urakkatyypin-indeksit
                         (fn [user]
-                          (hae-indeksien-nimet (:db this) user))))
+                          (hae-urakkatyypin-indeksit (:db this) user)))
+      (julkaise-palvelu :paallystysurakan-indeksitiedot
+                        (fn [user tiedot]
+                          (hae-paallystysurakan-indeksitiedot (:db this) user tiedot))
+                        {:kysely-spec ::urakka/urakka-kysely
+                         :vastaus-spec ::d/paallystysurakan-indeksit})
+      (julkaise-palvelu :tallenna-paallystysurakan-indeksitiedot
+                        (fn [user tiedot]
+                          (tallenna-paallystysurakan-indeksitiedot (:db this) user tiedot))
+                        {:kysely-spec ::d/paallystysurakan-indeksit
+                         :vastaus-spec ::d/paallystysurakan-indeksit})
+      )
     this)
 
   (stop [this]
     (poista-palvelu (:http-palvelin this) :indeksit)
     (poista-palvelu (:http-palvelin this) :tallenna-indeksi)
-    (poista-palvelu (:http-palvelin this) :indeksien-nimet)
+    (poista-palvelu (:http-palvelin this) :urakkatyypin-indeksit)
+    (poista-palvelu (:http-palvelin this) :paallystysurakan-indeksitiedot)
+    (poista-palvelu (:http-palvelin this) :tallenna-paallystysurakan-indeksitiedot)
     this))

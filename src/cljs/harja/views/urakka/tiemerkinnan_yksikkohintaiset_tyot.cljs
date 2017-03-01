@@ -32,6 +32,9 @@
         [:div
          [grid/grid
           {:otsikko "Yksikköhintaiset työt"
+           :tyhja (if (nil? @tiedot/yksikkohintaiset-tyot)
+                    [ajax-loader "Haetaan töitä..."]
+                    "Töitä ei löytynyt")
            :voi-poistaa? (constantly false)
            :voi-lisata? false
            :piilota-toiminnot? true
@@ -85,6 +88,7 @@
             :muokattava? (constantly false)}
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :tyyppi :numero :leveys 4
+            :fmt :lyhyt-nimi
             :muokattava? (constantly false)}
            {:otsikko "Hinta"
             :nimi :hinta :tyyppi :positiivinen-numero :fmt fmt/euro-opt :leveys 3

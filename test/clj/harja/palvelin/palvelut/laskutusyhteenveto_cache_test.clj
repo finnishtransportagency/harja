@@ -337,3 +337,14 @@
         (is (= 5.8416125217525626212000000M
                (:kaikki_laskutetaan_ind_korotus toka-haetut-tiedot-oulu-talvihoito)
                (:kaikki_laskutetaan_ind_korotus cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutetaan_ind_korotus laskutusyhteenvedossa")))))
+
+;; Kysely, jolla voi tarkistaa onko tyhjiä laskutusyhteenvetoja:
+;; SELECT u.nimi, y.urakka, y.alkupvm, y.loppupvm, y.tallennettu,
+;;        SUM( (y.rivi).kaikki_laskutetaan ) as kaikki_laskutetaan_summa
+;;   FROM (SELECT urakka, alkupvm, loppupvm, tallennettu, unnest(rivit) as rivi
+;;           FROM laskutusyhteenveto_cache) y
+;;        JOIN urakka u ON u.id=y.urakka
+;;  WHERE y.alkupvm >= '2016-10-01' AND
+;;        y.loppupvm < NOW()
+;; GROUP BY u.nimi,y.urakka,y.alkupvm,y.loppupvm,y.tallennettu
+;; HAVING SUM( (y.rivi).kaikki_laskutetaan ) = 0;

@@ -10,7 +10,7 @@
             [ring.middleware.params :refer [wrap-params]]
 
             [cognitect.transit :as t]
-            [schema.core :as s]
+            [clojure.spec :as s]
             ;; Pyyntöjen todennus (autentikointi)
             [harja.palvelin.komponentit.todennus :as todennus]
             ;; Metriikkadatan julkaisu
@@ -19,6 +19,7 @@
             [harja.geo :as geo]
             [harja.transit :as transit]
             [harja.domain.roolit]
+            [harja.domain.oikeudet :as oikeudet]
 
             [slingshot.slingshot :refer [try+ throw+]]
 
@@ -32,7 +33,8 @@
   ([status data]
    {:status  status
     :headers {"Content-Type" "application/transit+json"}
-    :body    (transit/clj->transit data)}))
+    :body    (transit/clj->transit data)
+    :vastaus data}))
 
 (defrecord AsyncResponse [channel])
 
@@ -49,15 +51,27 @@
                          (log/warn e# "Virhe async POST palvelussa")
                          (transit-vastaus 500 {:virhe (.getMessage e#)}))))))
 
+(def
+  ^{:doc "Vastauksen HTTP statuskoodit, joille ei vaadita oikeustarkistusta."}
+  ei-oikeustarkistusta-statuskoodit #{403 404})
+
 (defn- reitita
   "Reititä sisääntuleva pyyntö käsittelijöille."
-  [req kasittelijat]
-  (apply compojure/routing
-         (if
-           (= "/" (:uri req))
-           (assoc req :uri "/index.html")
-           req)
-         (remove nil? kasittelijat)))
+  [req kasittelijat vaadi-oikeustarkistus?]
+  (binding [oikeudet/*oikeustarkistus-tehty* (atom false)]
+    (try
+      (let [res (apply compojure/routing
+                       (if
+                           (= "/" (:uri req))
+                         (assoc req :uri "/index.html")
+                         req)
+                       (remove nil? kasittelijat))]
+        (when (ei-oikeustarkistusta-statuskoodit (:status res))
+          (oikeudet/ei-oikeustarkistusta!))
+        res)
+      (finally
+        (when (and vaadi-oikeustarkistus? (not @oikeudet/*oikeustarkistus-tehty*))
+          (log/error "virhe: oikeustarkistusta ei tehty - uri:" (:uri req)))))))
 
 (defn- transit-palvelun-polku [nimi]
   (str "/_/" (name nimi)))
@@ -68,39 +82,53 @@
       (when (= polku (:uri req))
         (kasittelija-fn req)))))
 
+(defn- validoi-vastaus [spec data]
+  (when spec
+    (log/debug "VALIDOI VASTAUS: " spec)
+    (when (not (s/valid? spec data))
+      (log/error (s/explain-str spec data)))))
+
 (defn- transit-post-kasittelija
-  "Luo transit käsittelijän POST kutsuille annettuun palvelufunktioon."
+  "Luo transit-käsittelijän POST kutsuille annettuun palvelufunktioon."
   [nimi palvelu-fn optiot]
   (let [polku (transit-palvelun-polku nimi)]
     (fn [req]
       (when (and (= :post (:request-method req))
                  (= polku (:uri req)))
-        (let [skeema (:skeema optiot)
+        (let [kysely-spec (:kysely-spec optiot)
               kysely (try (transit/lue-transit (:body req))
                           (catch Exception e
                             (log/warn (.getMessage e))
                             ::ei-validi-kysely))
-              kysely (if-not skeema
-                       kysely
-                       (try
-                         (if (= kysely ::ei-validi-kysely)
-                           kysely
-                           (s/validate skeema kysely))
-                         (catch Exception e
-                           (log/warn e "Palvelukutsu " nimi " ei-validilla datalla.")
-                           ::ei-validi-kysely)))]
+              [kysely virhe]
+              (if (= kysely ::ei-validi-kysely)
+                ;; Transit parse virhe, palauta virheviesti
+                [kysely "Transit parse virhe"]
+                (if-not kysely-spec
+                  ;; Parse onnistui ja ei speciä
+                  [kysely nil]
+
+                  (if-not (s/valid? kysely-spec kysely)
+                    ;; Ei spec mukainen kysely, anna selitys virheeksi
+                    [::ei-validi-kysely (s/explain-str kysely-spec kysely)]
+
+                    ;; Data parsittu ok ja specin mukainen
+                    [kysely nil])))]
           (if (= kysely ::ei-validi-kysely)
             {:status 400
-             :body   "Ei validi kysely"}
+             :body   virhe}
             (try+
              (let [palvelu-vastaus (palvelu-fn (:kayttaja req) kysely)]
                (if (async-response? palvelu-vastaus)
                  (http/with-channel req channel
                    (async/go
                      (let [vastaus (async/<! (:channel palvelu-vastaus))]
+                       (validoi-vastaus (:vastaus-spec optiot) (:vastaus vastaus))
                        (http/send! channel vastaus)
                        (http/close channel))))
-                 (transit-vastaus palvelu-vastaus)))
+                 (do
+                   (validoi-vastaus (:vastaus-spec optiot) palvelu-vastaus)
+                   (transit-vastaus palvelu-vastaus))))
              (catch harja.domain.roolit.EiOikeutta eo
                ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
                (transit-vastaus 403 eo))
@@ -160,7 +188,10 @@
 
      :tarkista-polku?     Ring käsittelijän julkaisussa voidaan antaa :tarkista-polku? false, jolloin käsittelijää
                           ei sidota normaaliin palvelupolkuun keyword nimen perusteella. Tässä tapauksessa
-                          käsittelijän vastuulla on tarkistaa itse polku. Käytetään compojure reittien julkaisuun.")
+                          käsittelijän vastuulla on tarkistaa itse polku. Käytetään compojure reittien julkaisuun.
+
+     :kysely-spec    spec, jolla kyselyn payload validoidaan
+     :vastaus-spec   spec, jolla palvelun vastaus validoidaan")
 
   (poista-palvelu [this nimi]
     "Poistaa nimetyn palvelun käsittelijän."))
@@ -178,6 +209,7 @@
         salattu (index/laske-mac token)]
     (when (or (= uri "/")
               (= uri "/index.html"))
+      (oikeudet/ei-oikeustarkistusta!)
       {:status  200
        :headers {"Content-Type"  "text/html"
                  "Cache-Control" "no-cache, no-store, must-revalidate"
@@ -194,20 +226,23 @@
         oikea-kohde "/harja/laadunseuranta/"]
     (cond
       (= uri "/laadunseuranta")
-      {:status 301
-       :headers {"Location" oikea-kohde}}
+      (do (oikeudet/ei-oikeustarkistusta!)
+          {:status 301
+           :headers {"Location" oikea-kohde}})
 
       (= uri "/laadunseuranta/index.html")
-      {:status 301
-       :headers {"Location" oikea-kohde}}
+      (do (oikeudet/ei-oikeustarkistusta!)
+          {:status 301
+           :headers {"Location" oikea-kohde}})
 
       (= uri "/laadunseuranta/")
-      {:status  200
-       :headers {"Content-Type"  "text/html"
-                 "Cache-Control" "no-cache, no-store, must-revalidate"
-                 "Pragma"        "no-cache"
-                 "Expires"       "0"}
-       :body    (index/tee-ls-paasivu kehitysmoodi)}
+      (do (oikeudet/ei-oikeustarkistusta!)
+          {:status  200
+           :headers {"Content-Type"  "text/html"
+                     "Cache-Control" "no-cache, no-store, must-revalidate"
+                     "Pragma"        "no-cache"
+                     "Expires"       "0"}
+           :body    (index/tee-ls-paasivu kehitysmoodi)})
       :default
        nil)))
 
@@ -247,29 +282,30 @@
                           (route/files "" {:root "dev-resources"}))]
       (swap! lopetus-fn
              (constantly
-               (http/run-server
-                 (cookies/wrap-cookies
-                  (fn [req]
-                    (try+
-                     (metriikka/inc! mittarit :aktiiviset_pyynnot)
-                     (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
-                           ui-kasittelijat (mapv :fn @kasittelijat)
-                           ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
-                                              (wrap-anti-forgery anti-csrf-kaytossa?))]
+              (http/run-server
+                (cookies/wrap-cookies
+                 (fn [req]
+                   (try+
+                    (metriikka/inc! mittarit :aktiiviset_pyynnot)
+                    (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
+                          ui-kasittelijat (mapv :fn @kasittelijat)
+                          ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
+                                             (wrap-anti-forgery anti-csrf-kaytossa?))]
 
-                       (or (reitita req (conj (mapv :fn ei-todennettavat)
-                                              dev-resurssit resurssit))
-                           (reitita (todennus/todenna-pyynto todennus req)
-                                    (-> (mapv :fn todennettavat)
-                                        (conj (partial index-kasittelija kehitysmoodi))
-                                        (conj (partial ls-index-kasittelija kehitysmoodi))
-                                        (conj ui-kasittelija)))))
-                     (catch [:virhe :todennusvirhe] _
-                       {:status 403 :body "Todennusvirhe"})
-                     (finally
-                       (metriikka/muuta! mittarit
-                                         :aktiiviset_pyynnot dec
-                                         :pyyntoja_palveltu inc)))))
+                      (or (reitita req (conj (mapv :fn ei-todennettavat)
+                                             dev-resurssit resurssit) false)
+                          (reitita (todennus/todenna-pyynto todennus req)
+                                   (-> (mapv :fn todennettavat)
+                                       (conj (partial index-kasittelija kehitysmoodi))
+                                       (conj (partial ls-index-kasittelija kehitysmoodi))
+                                       (conj ui-kasittelija))
+                                   true)))
+                    (catch [:virhe :todennusvirhe] _
+                      {:status 403 :body "Todennusvirhe"})
+                    (finally
+                      (metriikka/muuta! mittarit
+                                        :aktiiviset_pyynnot dec
+                                        :pyyntoja_palveltu inc)))))
 
                  {:port     (or (:portti asetukset) asetukset)
                   :thread   (or (:threads asetukset) 8)
@@ -291,7 +327,9 @@
                               (or (:kategoria optiot) "Backend palvelut")
                               (str nimi)
                               {}
-                              #(apply palvelu-fn args)))
+                              #(do
+                                 ;; (println "palvelu-fn" palvelu-fn args)
+                                 (apply palvelu-fn args))))
                           palvelu-fn)]
       (if (:ring-kasittelija? optiot)
         (swap! sessiottomat-kasittelijat conj {:nimi nimi

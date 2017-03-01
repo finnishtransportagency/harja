@@ -6,6 +6,13 @@
             <xs:sequence>
                 <xs:element name="viestiId" type="uuid" minOccurs="1" maxOccurs="1" />
                 <xs:element name="ilmoitusId" type="xs:int" minOccurs="1" maxOccurs="1" />
+                <xs:element name="tunniste" minOccurs="1" maxOccurs="1">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:maxLength value="64" />
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
                 <xs:element name="versionumero" type="xs:int" minOccurs="1" maxOccurs="1" />
                 <xs:element name="ilmoitustyyppi" type="ilmoitustyyppi" minOccurs="1" maxOccurs="1" />
                 <xs:element name="ilmoitettu" type="xs:dateTime" minOccurs="1" maxOccurs="1" />
@@ -76,6 +83,13 @@
                 <xs:element name="ilmoitusId" type="xs:int" minOccurs="1" />
                 <xs:element name="tyyppi" type="toimenpidetyyppi" minOccurs="1" />
                 <xs:element name="aika" type="xs:dateTime" minOccurs="1" />
+                <xs:element name="tunniste" minOccurs="0">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:maxLength value="64" />
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
                 <xs:element name="vapaateksti" minOccurs="0" >
                     <xs:simpleType>
                         <xs:restriction base="xs:string">
@@ -319,6 +333,7 @@
             <xs:enumeration value="lopetus" />
             <xs:enumeration value="vastaus" />
             <xs:enumeration value="muutos" />
+            <xs:enumeration value="vaara-urakka" />
         </xs:restriction>
     </xs:simpleType>
     <xs:complexType name="kasittelija">

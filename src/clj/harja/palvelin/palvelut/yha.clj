@@ -14,15 +14,12 @@
             [harja.kyselyt.paallystys :as paallystys-q]
             [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]))
 
 (defn lukitse-urakan-yha-sidonta [db urakka-id]
   (log/info "Lukitaan urakan " urakka-id " yha-sidonta.")
   (yha-q/lukitse-urakan-yha-sidonta<! db {:urakka urakka-id}))
-
-(defn paivita-yllapitourakan-geometriat [db urakka-id]
-  (log/info "Päivitetään urakan " urakka-id " geometriat.")
-  (yha-q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id}))
 
 (defn- lisaa-urakalle-yha-tiedot [db user urakka-id {:keys [yhatunnus yhaid yhanimi elyt vuodet] :as yha-tiedot}]
   (log/info "Lisätään YHA-tiedot urakalle " urakka-id ", yhatunnus: " yhatunnus " ja yhaid: " yhaid)
@@ -109,7 +106,7 @@
   (log/debug "Tallennetaan " (count kohteet) " yha-kohdetta")
   (jdbc/with-db-transaction [c db]
     (doseq [{:keys [tierekisteriosoitevali
-                    tunnus yha-id alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
+                    tunnus yha-id yha-kohdenumero alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
                     yllapitoluokka
                     keskimaarainen_vuorokausiliikenne
                     nykyinen-paallyste
@@ -133,7 +130,8 @@
                      :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
                      :nykyinen_paallyste nykyinen-paallyste
                      :nimi nimi
-                     :vuodet (konv/seq->array [(t/year (pvm/suomen-aikavyohykkeeseen (t/now)))])})]
+                     :vuodet (konv/seq->array [(t/year (pvm/suomen-aikavyohykkeeseen (t/now)))])
+                     :yha_kohdenumero yha-kohdenumero})]
         (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
           (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
           (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!
@@ -153,7 +151,7 @@
               (log/warn "YHA:n kohdeosalle " (pr-str uusi-kohdeosa) " ei voitu muodostaa geometriaa"))))))
     (merkitse-urakan-kohdeluettelo-paivitetyksi c urakka-id)
     (log/debug "YHA-kohteet tallennettu, päivitetään urakan geometria")
-    (paivita-yllapitourakan-geometriat c urakka-id)
+    (yy/paivita-yllapitourakan-geometria c urakka-id)
     (log/debug "Geometria päivitetty.")
     (hae-urakan-yha-tiedot c urakka-id)))
 

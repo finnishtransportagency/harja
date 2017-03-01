@@ -1,5 +1,5 @@
-(ns harja.views.tierekisteri.varustehaku
-  "Tierekisterin varustehaun käyttöliittymä"
+(ns harja.views.tierekisteri.varusteet
+  "Tierekisterin varusteiden käsittelyyn käyttöliittymä"
   (:require [harja.tiedot.tierekisteri.varusteet :as v]
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.ui.lomake :as lomake]
@@ -49,16 +49,16 @@
        :valinta-arvo first}
       (lomake/ryhma
         ""
-        {:nimi        :tierekisteriosoite
-        :otsikko     "Tierekisteriosoite"
-        :tyyppi      :tierekisteriosoite
-        :sijainti    (atom nil)                             ;; sijainti ei kiinnosta, mutta johtuen komponentin toiminnasta, atom täytyy antaa
+        {:nimi :tierekisteriosoite
+         :otsikko "Tierekisteriosoite"
+         :tyyppi :tierekisteriosoite
+         :sijainti (atom nil) ;; sijainti ei kiinnosta, mutta johtuen komponentin toiminnasta, atom täytyy antaa
          ;; FIXME: Jostain syystä tr-osoitteen pakollinen-merkki ei poistu, kun tunnisteen syöttää.
          ;:pakollinen? (str/blank? varusteentunniste)
          }
-        {:nimi        :tunniste
-         :otsikko     "Varusteen tunniste"
-         :tyyppi      :string
+        {:nimi :tunniste
+         :otsikko "Varusteen tunniste"
+         :tyyppi :string
          ;:pakollinen? (not (tr-ok? tr-osoite))
          })]
      hakuehdot]))
@@ -67,8 +67,8 @@
   (yleiset/varmista-kayttajalta
     {:otsikko "Varusteen poistaminen Tierekisteristä"
      :sisalto [:div "Haluatko varmasti poistaa tietolajin: "
-              [:b (str (varusteet/tietolaji->selitys tietolaji) " (" tietolaji ")")] " varusteen, jonka tunniste on: "
-              [:b tunniste] "."]
+               [:b (str (varusteet/tietolaji->selitys tietolaji) " (" tietolaji ")")] " varusteen, jonka tunniste on: "
+               [:b tunniste] "."]
      :hyvaksy "Poista"
      :hyvaksy-ikoni (ikonit/livicon-trash)
      :hyvaksy-napin-luokka "nappi-kielteinen"
@@ -123,7 +123,7 @@
                                           tietolaji (get-in varuste [:tietue :tietolaji :tunniste])]
                                       [:div
                                        [napit/tarkasta "Tarkasta" #(e! (v/->AloitaVarusteenTarkastus varuste tunniste tietolaji))]
-                                       [napit/muokkaa "Muokkaa" #()]
+                                       [napit/muokkaa "Muokkaa" #(e! (v/->AloitaVarusteenMuokkaus varuste))]
                                        [napit/poista "Poista" #(poista-varuste e! tietolaji tunniste varuste)]]))}]
       (conj tietolajin-listaus-skeema toiminnot))
     tietolajin-listaus-skeema))
@@ -143,7 +143,7 @@
 (defn varustehaku
   "Komponentti, joka näyttää lomakkeen varusteiden hakemiseksi tierekisteristä
   sekä haun tulokset."
-  [e! {:keys [hakuehdot listaus-skeema varusteet tarkastus] :as app}]
+  [e! {{:keys [hakuehdot listaus-skeema varusteet tarkastus]} :tierekisterin-varusteet :as app}]
   [:div.varustehaku
    [varustehaku-ehdot e! hakuehdot]
 

@@ -5,8 +5,9 @@ BEGIN
   SET alue = ST_BUFFER(uusi_alue, 1000)
   FROM (SELECT u.id, u.nimi, ST_ConvexHull(ST_UNION(sijainti)) AS uusi_alue
         FROM yllapitokohdeosa osa
-          JOIN yllapitokohde ypk ON osa.yllapitokohde = ypk.id
+          JOIN yllapitokohde ypk ON osa.yllapitokohde = ypk.id AND ypk.poistettu IS NOT TRUE
           JOIN urakka u ON ypk.urakka = u.id
+          WHERE u.tyyppi = 'paallystys' OR u.tyyppi = 'paikkaus'
         GROUP BY u.id, u.nimi) AS geometriat
   WHERE urakka.id = geometriat.id;
   RETURN;
@@ -19,10 +20,12 @@ BEGIN
   SET alue = ST_BUFFER(uusi_alue, 1000)
   FROM (SELECT u.id, u.nimi, ST_ConvexHull(ST_UNION(sijainti)) AS uusi_alue
         FROM yllapitokohdeosa osa
-          JOIN yllapitokohde ypk ON osa.yllapitokohde = ypk.id
+          JOIN yllapitokohde ypk ON osa.yllapitokohde = ypk.id AND ypk.poistettu IS NOT TRUE
           JOIN urakka u ON ypk.urakka = u.id
+        WHERE (u.tyyppi = 'paallystys' OR u.tyyppi = 'paikkaus')
+          AND u.id = urakkaid
         GROUP BY u.id, u.nimi) AS geometriat
-  WHERE urakka.id = urakkaid;
+  WHERE urakka.id = urakkaid AND geometriat.id = urakkaid;
   RETURN;
 END;
 $$ LANGUAGE plpgsql;

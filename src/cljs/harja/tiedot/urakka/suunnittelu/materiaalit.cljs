@@ -45,7 +45,7 @@
  
 (defn tallenna [urakka-id sopimus-id hoitokausi hoitokaudet tuleville-valittu materiaalit]
   (log "TALLENNETAAN MATSKUT: " (pr-str materiaalit))
-  (k/post! :tallenna-urakan-materiaalit
+  (k/post! :tallenna-suunnitellut-materiaalit
            {:urakka-id   urakka-id
             :sopimus-id  sopimus-id
             :hoitokausi  hoitokausi

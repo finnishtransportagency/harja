@@ -25,7 +25,7 @@
    :tietokanta                            Tietokanta
    :tietokanta-replica                    Tietokanta
    :fim                                   {:url s/Str
-                                           :tiedosto s/Str}
+                                           (s/optional-key :tiedosto) s/Str}
    :log                                   {(s/optional-key :gelf)    {:palvelin s/Str
                                                                       :taso     s/Keyword}
                                            (s/optional-key :hipchat) {:huone-id s/Int :token s/Str :taso s/Keyword}
@@ -61,7 +61,7 @@
                                            :salasana s/Str
                                            :paivittainen-lahetysaika [s/Num]}
    (s/optional-key :tierekisteri)         {:url s/Str
-                                           :uudelleenlahetys-aikavali-minuutteina s/Num}
+                                           (s/optional-key :uudelleenlahetys-aikavali-minuutteina) s/Num}
 
    :ilmatieteenlaitos                     {:lampotilat-url s/Str}
 
@@ -146,8 +146,8 @@
                 %2)
               oletukset asetukset))
 
-(defn validoi-asetukset [asetukset]
-  (s/validate Asetukset asetukset))
+(defn tarkista-asetukset [asetukset]
+  (s/check Asetukset asetukset))
 
 (defn lue-asetukset
   "Lue Harja palvelimen asetukset annetusta tiedostosta ja varmista, että ne ovat oikeat"
@@ -188,18 +188,3 @@
                         ^{:host (:palvelin email)}
                         {:from (str (.getHostName (java.net.InetAddress/getLocalHost)) "@solita.fi")
                          :to   (:vastaanottaja email)}}))))
-
-
-
-(comment (defn konfiguroi-lokitus
-           "Konfiguroi logback lokutiksen ulkoisesta .properties tiedostosta."
-           [asetukset]
-           (let [konfiguroija (JoranConfigurator.)
-                 konteksti (LoggerFactory/getILoggerFactory)
-                 konfiguraatio (-> asetukset
-                                   :logback-konfiguraatio
-                                   io/file)]
-             (println "Lokituksen konfiguraatio: " (.getAbsolutePath konfiguraatio)) ;; käytetään println ennen lokituksen alustusta
-             (.setContext konfiguroija konteksti)
-             (.reset konteksti)
-             (.doConfigure konfiguroija konfiguraatio))))

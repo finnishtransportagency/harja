@@ -15,12 +15,12 @@
             [harja.ui.kommentit :as kommentit]
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta]
-            [harja.tiedot.kartta :as kartta-tiedot]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.modal :as modal]
             [harja.ui.yleiset :as yleiset]
-            [harja.ui.liitteet :as liitteet])
+            [harja.ui.liitteet :as liitteet]
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
@@ -109,13 +109,14 @@
      :tyyppi :komponentti
      :leveys 5
      :komponentti (fn [rivi]
-                    [:button.nappi-ensisijainen {:on-click (fn [e]
-                                                             (let [korjaava-toimenpide-id (.preventDefault e)]
-                                                               (swap! toimenpiteet-atom
-                                                                      assoc
-                                                                      korjaava-toimenpide-id
-                                                                      (assoc korjaava-toimenpide :vastuuhenkilo rivi)))
-                                                             (modal/piilota!))}
+                    [:button.nappi-ensisijainen {:on-click
+                                                 (fn [e]
+                                                   (let [korjaava-toimenpide-id (:id korjaava-toimenpide)]
+                                                     (swap! toimenpiteet-atom
+                                                            assoc
+                                                            korjaava-toimenpide-id
+                                                            (assoc korjaava-toimenpide :vastuuhenkilo rivi)))
+                                                   (modal/piilota!))}
                      "Valitse"])}]
    @tiedot/kayttajahakutulokset-data])
 
@@ -176,9 +177,9 @@
      :tyyppi :komponentti
      :komponentti (fn [rivi] [:button.nappi-ensisijainen.nappi-grid
                               {:on-click #(avaa-kayttajahaku-modal
-                                           rivi
-                                           toimenpiteet
-                                           @nav/valittu-urakka)}
+                                            rivi
+                                            toimenpiteet
+                                            @nav/valittu-urakka)}
                               (if (:vastuuhenkilo rivi)
                                 (str "Vaihda " (get-in rivi [:vastuuhenkilo :etunimi])
                                      " " (get-in rivi [:vastuuhenkilo :sukunimi]))
@@ -219,7 +220,7 @@
            :muokkaa! #(let [tarkistettu-lomakedata (if (= (:vaaralliset-aineet %) #{:vaarallisten-aineiden-vuoto})
                                                      (assoc % :vaaralliset-aineet #{})
                                                      %)]
-                       (reset! turvallisuuspoikkeama tarkistettu-lomakedata))
+                        (reset! turvallisuuspoikkeama tarkistettu-lomakedata))
            :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id @nav/valittu-urakka))
            :footer [:div
                     [napit/palvelinkutsu-nappi
@@ -228,8 +229,8 @@
                      {:luokka "nappi-ensisijainen"
                       :ikoni (ikonit/tallenna)
                       :kun-onnistuu #(do
-                                      (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
-                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
+                                       (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
+                                       (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                       :virheviesti "Turvallisuuspoikkeaman tallennus epäonnistui."
                       :disabled (not (voi-tallentaa? @turvallisuuspoikkeama @toimenpiteet-virheet))}]
                     [yleiset/vihje "Turvallisuuspoikkeama lähetetään automaattisesti TURI:iin aina tallentaessa"]]}
@@ -261,9 +262,9 @@
                           :vaihtoehto-nayta #(turpodomain/turpo-vakavuusasteet %)
                           :validoi [#(when (nil? %) "Anna turvallisuuspoikkeaman vakavuusaste")]
                           :vaihtoehdot (keys turpodomain/turpo-vakavuusasteet)
-                          :vihje       (str "Vakavaksi työtapaturmaksi katsotaan tilanne, jonka seurauksena on kuolema, yli 30 päivän poissaolo työstä tai vaikealaatuinen vamma. \n"
-                                            "Vakavaksi vaaratilanteeksi katsotaan tilanne, jonka seurauksena olisi voinut aiheutua vakava työtapaturma. \n"
-                                            "Vakavaksi ympäristövahingoksi katsotaan tilanne, jonka seurauksena paikalle joudutaan pyytämään pelastusviranomainen.")})
+                          :vihje (str "Vakavaksi työtapaturmaksi katsotaan tilanne, jonka seurauksena on kuolema, yli 30 päivän poissaolo työstä tai vaikealaatuinen vamma. \n"
+                                      "Vakavaksi vaaratilanteeksi katsotaan tilanne, jonka seurauksena olisi voinut aiheutua vakava työtapaturma. \n"
+                                      "Vakavaksi ympäristövahingoksi katsotaan tilanne, jonka seurauksena paikalle joudutaan pyytämään pelastusviranomainen.")})
            {:otsikko "Tierekisteriosoite"
             :nimi :tr
             :pakollinen? true
@@ -296,8 +297,8 @@
             :koko [80 :auto]
             :palstoja 1
             :pakollinen? true
-            :validoi [[:ei-tyhja "Anna kuvaus"]]
-            :pituus-max 2000}
+            :pituus-max 2000
+            :validoi [[:ei-tyhja "Anna kuvaus"]]}
            {:otsikko "Aiheutuneet seuraukset"
             :nimi :seuraukset
             :tyyppi :text
@@ -407,8 +408,8 @@
                          {:otsikko "Ilmoitukset lähetetty" :nimi :ilmoituksetlahetetty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                           :validoi [[:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
                          {:otsikko "Loppuunkäsitelty" :nimi :kasitelty :fmt #(if %
-                                                                              (pvm/pvm-aika-opt %)
-                                                                              "Ei")
+                                                                               (pvm/pvm-aika-opt %)
+                                                                               "Ei")
                           :tyyppi :pvm-aika
                           :muokattava? (constantly false)})]
           @turvallisuuspoikkeama]]))))
@@ -453,18 +454,18 @@
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-turvallisuuspoikkeamat)
     (komp/kuuntelija :turvallisuuspoikkeama-klikattu #(valitse-turvallisuuspoikkeama (:id @nav/valittu-urakka) (:id %2)))
     (komp/sisaan-ulos
-     #(kartta-tiedot/kasittele-infopaneelin-linkit!
-       {:turvallisuuspoikkeama {:toiminto
-                                (fn [turpo]
-                                  (valitse-turvallisuuspoikkeama
-                                   (:id @nav/valittu-urakka) (:id turpo)))
-                                :teksti "Avaa turvallisuuspoikkeama"}})
-     #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
+      #(kartta-tiedot/kasittele-infopaneelin-linkit!
+         {:turvallisuuspoikkeama {:toiminto
+                                  (fn [turpo]
+                                    (valitse-turvallisuuspoikkeama
+                                      (:id @nav/valittu-urakka) (:id turpo)))
+                                  :teksti "Avaa turvallisuuspoikkeama"}})
+      #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
     (komp/sisaan-ulos #(do
-                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                        (nav/vaihda-kartan-koko! :M))
+                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                         (nav/vaihda-kartan-koko! :M))
                       #(do
-                        (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
+                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
     (komp/ulos (kartta-tiedot/kuuntele-valittua! tiedot/valittu-turvallisuuspoikkeama))
     (fn []
       [:span

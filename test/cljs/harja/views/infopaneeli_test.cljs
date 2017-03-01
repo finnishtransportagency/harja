@@ -6,7 +6,7 @@
              [harja.views.kartta.infopaneeli :as sut]
              [harja.ui.kartta.infopaneelin-sisalto :as infopaneelin-sisalto]
              [cljs-time.core :as time]
-             [harja.testutils :as u])
+             [harja.testutils.shared-testutils :as u])
   (:require-macros [harja.testutils.macros :refer [komponenttitesti]]))
 
 (t/use-fixtures :each u/komponentti-fixture)

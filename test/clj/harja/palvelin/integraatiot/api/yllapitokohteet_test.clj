@@ -10,7 +10,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.domain.skeema :as skeema]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
-            [clojure.walk :as walk]))
+            [clojure.walk :as walk]
+            [clojure.string :as str]))
 
 (def kayttaja-paallystys "skanska")
 (def kayttaja-tiemerkinta "tiemies")
@@ -72,8 +73,7 @@
       (is (= (+ paallystysilmoitusten-maara-kannassa-ennen 1) paallystysilmoitusten-maara-kannassa-jalkeen))
 
       ;; Tiedot ovat skeeman mukaiset
-      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
-                          ilmoitustiedot))
+      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitustiedot))
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
       (is (match ilmoitustiedot
@@ -102,11 +102,15 @@
                                   :tr-loppuosa 5
                                   :tr-alkuetaisyys 1
                                   :tekninen-toimenpide 1
-                                  :paksuus 1.2
+                                  :paksuus 1
                                   :verkon-sijainti 1}]}
                  true))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
       (is (= (get paallystysilmoitus 2) "aloitettu") "Ei asetettu käsiteltäväksi, joten tila on aloitettu")
+
+      (let [alikohteet (q-map (str "SELECT sijainti, tr_numero FROM yllapitokohdeosa WHERE yllapitokohde = " kohde))]
+        (is (every? #(and (not (nil? (:sijainti %))) (not (nil? (:tr_numero %)))) alikohteet)
+            "Kaikilla alikohteilla on sijainti & tienumero"))
 
       (u "DELETE FROM paallystysilmoitus WHERE id = " (get paallystysilmoitus 3) ";"))))
 
@@ -179,7 +183,7 @@
                                   :tr-loppuosa 5
                                   :tr-alkuetaisyys 1
                                   :tekninen-toimenpide 1
-                                  :paksuus 1.2
+                                  :paksuus 1
                                   :verkon-sijainti 1}]}
                  true))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
@@ -350,16 +354,38 @@
     (is (= 200 status))
 
     (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
-          oletettu-tr-osoite {:numero 20, :aosa 14, :aet 1, :losa 17, :loppuet 1}
+          oletettu-tr-osoite {:aet 1
+                              :ajorata 1
+                              :aosa 14
+                              :kaista 1
+                              :loppuet 1
+                              :losa 17
+                              :numero 20}
           alikohteiden-tr-osoitteet (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id)
-          oletettu-ensimmaisen-alikohteen-tr-osoite {:numero nil, :aosa 14, :aet 1, :losa 14, :loppuet 666}
-          oletettu-toisen-alikohteen-tr-osoite {:aet 666 :aosa 14 :loppuet 1 :losa 17 :numero nil}]
+          oletettu-ensimmaisen-alikohteen-tr-osoite {:aet 1
+                                                     :ajorata 1
+                                                     :aosa 14
+                                                     :kaista 1
+                                                     :loppuet 666
+                                                     :losa 14
+                                                     :numero 20}
+          oletettu-toisen-alikohteen-tr-osoite {:aet 666
+                                                :ajorata 1
+                                                :aosa 14
+                                                :kaista 1
+                                                :loppuet 1
+                                                :losa 17
+                                                :numero 20}]
       (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
       (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 2 kpl")
       (is (= oletettu-ensimmaisen-alikohteen-tr-osoite (first alikohteiden-tr-osoitteet))
           "Ensimmäisen alikohteen tierekisteriosite on päivittynyt oikein")
       (is (= oletettu-toisen-alikohteen-tr-osoite (second alikohteiden-tr-osoitteet))
-          "Toisen alikohteen tierekisteriosite on päivittynyt oikein"))))
+          "Toisen alikohteen tierekisteriosite on päivittynyt oikein")
+
+      (let [alikohteet (q-map (str "SELECT sijainti, tr_numero FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id))]
+        (is (every? #(and (not (nil? (:sijainti %))) (not (nil? (:tr_numero %)))) alikohteet)
+            "Kaikilla alikohteilla on sijainti & tienumero")))))
 
 (deftest paallystysilmoituksellisen-kohteen-paivitys-ei-onnistu
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -371,3 +397,50 @@
     (is (= 400 status))
     (is (= "lukittu-yllapitokohde" (:koodi (:virhe (first (:virheet (cheshire/decode body true))))))
         "Virheelliselle kirjaukselle palautetaan oikea virhekoodi.")))
+
+(deftest maaramuutosten-kirjaaminen-kohteelle-toimii
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+        _ (u "INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo, yksikko, tilattu_maara, toteutunut_maara, yksikkohinta, poistettu, luoja, luotu, muokkaaja, muokattu, jarjestelma, ulkoinen_id, ennustettu_maara)
+              VALUES (" kohde-id ", 'ajoradan_paallyste', 'Esimerkki työ', 'm2', 12, 14.2, 666, FALSE, 10, '2017-01-31 15:34:32', NULL, NULL, NULL, NULL, NULL)")
+        hae-maaramuutokset #(q-map "SELECT * FROM yllapitokohteen_maaramuutos WHERE yllapitokohde = " kohde-id)
+        maaramuutokset-ennen-kirjausta (hae-maaramuutokset)
+        harjan-kautta-kirjattu (first maaramuutokset-ennen-kirjausta)
+        polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/maaramuutokset"]
+        kutsudata (slurp "test/resurssit/api/maaramuutosten-kirjaus-request.json")
+        vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)
+        maaramuutokset-kirjauksen-jalkeen (hae-maaramuutokset)]
+
+    (is (= 200 (:status vastaus)) "Kirjaus tehtiin onnistuneesti")
+    (is (.contains (:body vastaus) "Määrämuutokset kirjattu onnistuneesti."))
+    (is (= (+ 1 (count maaramuutokset-ennen-kirjausta)) (count maaramuutokset-kirjauksen-jalkeen))
+        "Vain yksi uusi määrämuutos on kirjautunut")
+
+    (let [kutsudata (str/replace kutsudata "\"yksikkohinta\":666" "\"yksikkohinta\":888")
+          vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)
+          maaramuutokset-kirjauksen-jalkeen (hae-maaramuutokset)]
+
+      (is (= 200 (:status vastaus)) "Kirjaus tehtiin onnistuneesti")
+      (is (.contains (:body vastaus) "Määrämuutokset kirjattu onnistuneesti."))
+      (is (= (+ 1 (count maaramuutokset-ennen-kirjausta)) (count maaramuutokset-kirjauksen-jalkeen))
+          "Vain yksi uusi määrämuutos on kirjautunut")
+
+      (is (= harjan-kautta-kirjattu (first maaramuutokset-kirjauksen-jalkeen))
+          "Harjan käyttöliittymän kautta kirjattua määrä muutosta ei ole muutettu")
+
+      (is (== 888 (:yksikkohinta (second maaramuutokset-kirjauksen-jalkeen))) "Uusi yksikköhinta on päivittynyt oikein")
+      (is (= "m2" (:yksikko (second maaramuutokset-kirjauksen-jalkeen))))
+      (is (== 12 (:tilattu_maara (second maaramuutokset-kirjauksen-jalkeen))))
+      (is (== 15.3 (:ennustettu_maara (second maaramuutokset-kirjauksen-jalkeen))))
+      (is (== 14.2 (:toteutunut_maara (second maaramuutokset-kirjauksen-jalkeen))))
+      (is (= "ajoradan_paallyste" (:tyon_tyyppi (second maaramuutokset-kirjauksen-jalkeen))))
+      (is (= "Esimerkki työ" (:tyo (second maaramuutokset-kirjauksen-jalkeen)))))))
+
+(deftest maaramuutosten-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka-id)
+        kutsudata (slurp "test/resurssit/api/maaramuutosten-kirjaus-request.json")
+        polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/maaramuutokset"]
+        vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)]
+    (is (= 400 (:status vastaus)))
+    (is (.contains (:body vastaus) "tuntematon-yllapitokohde"))))

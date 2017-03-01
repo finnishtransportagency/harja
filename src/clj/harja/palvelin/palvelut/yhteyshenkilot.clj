@@ -56,6 +56,7 @@
 
      :hae-urakan-kayttajat
      (fn [user urakka-id]
+       (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
        (async
         (hae-urakan-kayttajat (:db this) (:fim this) user urakka-id)))
 
@@ -81,7 +82,6 @@
     this))
 
 (defn hae-urakan-kayttajat [db fim user urakka-id]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
   (->> urakka-id
        (uq/hae-urakan-sampo-id db)
        (fim/hae-urakan-kayttajat fim)))
@@ -232,7 +232,8 @@
   (let [luo<! (fn [c kayttaja ensisijainen]
                 (q/luo-urakan-vastuuhenkilo<! c {:urakka urakka-id
                                                  :rooli rooli
-                                                 :nimi (or (:nimi kayttaja) (fmt/kayttaja kayttaja))
+                                                 :etunimi  (:etunimi kayttaja)
+                                                 :sukunimi (:sukunimi kayttaja)
                                                  :puhelin (:puhelin kayttaja)
                                                  :sahkoposti (:sahkoposti kayttaja)
                                                  :kayttajatunnus (:kayttajatunnus kayttaja)

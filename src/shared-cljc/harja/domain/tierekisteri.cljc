@@ -1,7 +1,25 @@
 (ns harja.domain.tierekisteri
-  (:require [schema.core :as s]
+  (:require [clojure.spec :as s]
             [clojure.string :as str]
-    #?@(:cljs [[harja.loki :refer [log]]])))
+            #?@(:clj [[clojure.future :refer :all]])))
+
+(s/def ::osa (s/and pos-int? #(< % 1000)))
+(s/def ::etaisyys (s/and nat-int? #(< % 50000)))
+
+(s/def ::numero (s/and pos-int? #(< % 100000)))
+(s/def ::alkuosa  ::osa)
+(s/def ::alkuetaisyys ::etaisyys)
+(s/def ::loppuosa ::osa)
+(s/def ::loppuetaisyys ::etaisyys)
+
+;; Halutaan tierekisteriosoite, joka voi olla pistemäinen tai sisältää myös
+;; loppuosan ja loppuetäisyyden.
+;; Tämä voitaisiin s/or tehdä ja tarkistaa että pistemäisessä EI ole loppuosa/-etäisyys
+;; kenttiä, mutta se johtaa epäselviin validointiongelmiin.
+(s/def ::tierekisteriosoite
+  (s/keys :req-un [::numero
+                   ::alkuosa ::alkuetaisyys]
+          :opt-un [::loppuosa ::loppuetaisyys]))
 
 (defn samalla-tiella? [tie1 tie2]
   (= (:tr-numero tie1) (:tr-numero tie2)))

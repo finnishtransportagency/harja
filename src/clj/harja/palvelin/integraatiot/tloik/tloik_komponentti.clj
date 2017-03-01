@@ -1,4 +1,12 @@
 (ns harja.palvelin.integraatiot.tloik.tloik-komponentti
+  "T-LOIKin käyttöön tarvittavat palvelut.
+  T-LOIK on Tieliikennekeskuksen järjestelmä, missä ilmoitukset kirjataan ja välitetään Harjaan.
+
+  Tieliikennekeskuksen vastaanottamat ilmoitukset kirjataan T-LOIK-järjestelmään
+  (Tieliikennekeskuksen integroitu käyttöliittymä), josta ilmoitukset välitetään Harjaan.
+  Harjan vastuulla on päätellä annetun ilmoituksen käsittelevä urakka urakkatyypin
+  ja sijannin perusteella. Urakoitsijat lähettävät kuittauksia eli ns. ilmoitustoimenpiteitä
+  esim. vastaamaan kysymyksiin sekä kertomaaan työn edistymisestä."
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.sonja :as sonja]

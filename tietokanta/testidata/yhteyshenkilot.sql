@@ -221,10 +221,10 @@ INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshe
 INSERT INTO paivystajatekstiviesti (viestinumero, ilmoitus, yhteyshenkilo) VALUES (0, (SELECT id FROM ilmoitus WHERE otsikko = 'Soittakaa Sepolle'), (SELECT id FROM yhteyshenkilo WHERE sahkoposti = 'ismoyit@example.org'));
 
 -- Urakan vastuuhenkilöt
-INSERT INTO urakanvastuuhenkilo (urakka, rooli, nimi, puhelin, sahkoposti, kayttajatunnus, ensisijainen)
+INSERT INTO urakanvastuuhenkilo (urakka, rooli, etunimi, sukunimi, puhelin, sahkoposti, kayttajatunnus, ensisijainen)
  VALUES ((SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
-         'ELY_Urakanvalvoja', 'Erno Penttikoski', '04012345678', 'erno@penttikoski.com','LXPENTTIER', true),
+         'ELY_Urakanvalvoja', 'Erno', 'Penttikoski', '04012345678', 'erno@penttikoski.com','LXPENTTIER', true),
 	((SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
-	 'ELY_Urakanvalvoja', 'Max Syöttöpaine', '04087654321','max@example.org','LXSYOTMAX', false),
+	 'ELY_Urakanvalvoja', 'Max', 'Syöttöpaine', '04087654321','max@example.org','LXSYOTMAX', false),
         ((SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
-         'vastuuhenkilo', 'Uuno Urakoitsija','0911223344','uuno@example.org', 'LXUUU', true);
+         'vastuuhenkilo', 'Uuno', 'Urakoitsija','0911223344','uuno@example.org', 'LXUUU', true);

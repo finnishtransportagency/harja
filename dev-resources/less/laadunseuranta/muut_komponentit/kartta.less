@@ -8,7 +8,7 @@
   font-size: 2em;
   width: @napin-leveys;
 
-  > .kontrollinappi {
+  .kontrollinappi {
     width: @napin-leveys;
     height: @napin-leveys;
     display: block;
@@ -25,6 +25,10 @@
     }
   }
 
+   .kontrollinappi-aktiivinen {
+    background-color: @harmaa4;
+  }
+
   > #karttakontrollit {
     display: inline-block;
     height: 120px; // "auto" ei toimi Firefoxissa jostain syystä.
@@ -36,11 +40,47 @@
     display: block;
   }
 
-  .ol-zoom button {
+  .ol-zoom > button {
     display: block;
     width: @napin-leveys;
     height: @napin-leveys;
     font-size: 1.5em;
     background-color: @harmaa2;
+  }
+  .taustakartan-valinta {
+    display: inline-block;
+    border-top: solid 1px white;
+  }
+}
+
+
+
+@media (max-width: @leveys-tabletti) and (orientation: landscape) {
+  .kartan-kontrollit {
+    width: auto;
+
+     .kontrollinappi {
+      display: inline-block;
+    }
+
+    > #karttakontrollit {
+      display: inline-block;
+      height: auto;
+    }
+
+    .ol-zoom {
+      width: auto;
+      height: auto;
+      display: inline-block;
+    }
+
+    .ol-zoom > button {
+      display: inline-block;
+    }
+    .taustakartan-valinta {
+      display: inline-block;
+      border-top: none;
+      border-left: solid 1px white;
+    }
   }
 }

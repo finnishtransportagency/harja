@@ -10,8 +10,9 @@
             [harja.jms-test :refer [feikki-sonja]]
             [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]
-            [clojure.string :as str]))
-
+            [clojure.string :as str]
+            [harja.kyselyt.konversio :as konv]
+            [clojure.set :as set]))
 
 (def +xsd-polku+ "xsd/tloik/")
 (def +tloik-ilmoitusviestijono+ "tloik-ilmoitusviestijono")
@@ -22,6 +23,7 @@
   "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
   <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
   <ilmoitusId>123456789</ilmoitusId>
+  <tunniste>UV-1509-1a</tunniste>
   <versionumero>1</versionumero>
   <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
   <ilmoitettu>2015-09-29T14:49:45</ilmoitettu>
@@ -136,6 +138,7 @@
   "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
   <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
   <ilmoitusId>123456789</ilmoitusId>
+  <tunniste>UV-1509-1a</tunniste>
   <versionumero>1</versionumero>
   <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
   <ilmoitettu>2015-09-29T14:49:45</ilmoitettu>
@@ -172,6 +175,7 @@
   "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
    <viestiId>14324234</viestiId>
    <ilmoitusId>987654321</ilmoitusId>
+   <tunniste>UV-1509-1a</tunniste>
    <versionumero>1</versionumero>
    <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
    <ilmoitettu>2016-09-15T12:49:45</ilmoitettu>
@@ -208,6 +212,7 @@
   "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
    <viestiId>14324234</viestiId>
    <ilmoitusId>987654321</ilmoitusId>
+   <tunniste>UV-1509-1a</tunniste>
    <versionumero>1</versionumero>
    <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
    <ilmoitettu>2016-09-21T10:49:45</ilmoitettu>
@@ -288,13 +293,18 @@
   (let [ilmoitus (ilmoitussanoma/lue-viesti +testi-valaistusilmoitus-sanoma+)]
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
 
-(defn tuo-ilmoitus-ilman-tienumeroa[]
+(defn tuo-ilmoitus-ilman-tienumeroa []
   (let [sanoma (str/replace +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+ "<tienumero>4</tienumero>" "")
         ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
 
-(defn hae-ilmoitus []
-  (q "select * from ilmoitus where ilmoitusid = 123456789;"))
+(defn hae-testi-ilmoitukset []
+  (let [vastaus (mapv
+                  #(-> %
+                       (konv/array->set :selitteet)
+                       (set/rename-keys {:ilmoitusid :ilmoitus-id}))
+                  (q-map "select * from ilmoitus where ilmoitusid = 123456789;"))]
+    vastaus))
 
 (defn hae-valaistusilmoitus []
   (q "select * from ilmoitus where ilmoitusid = 987654321;"))

@@ -62,3 +62,5 @@
 
 (def +urakan-yllapitokohteen-paivitys-request+ "api/examples/urakan-yllapitokohteen-paivitys-request.json")
 
+(def +urakan-yllapitokohteen-maaramuutosten-kirjaus+ "api/examples/urakan-yllapitokohteen-maaramuutosten-kirjaus-request.json")
+

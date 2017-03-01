@@ -67,16 +67,20 @@
                   :soratie
                   :tasauspuute
                   :lumista
+                  :yli-tai-aliauraus
 
                   :vesakko-raivaamatta
                   :niittamatta
                   :reunapalletta
                   :reunataytto-puutteellinen
 
+                  :kevatmuokkauspuute
+                  :sorastuspuute
+                  :kelirikkohavainnot
+
                   :saumavirhe
                   :lajittuma
                   :epatasaisuus
-                  :halkeamat
                   :vesilammikot
                   :epatasaisetreunat
                   :jyranjalkia
@@ -85,6 +89,15 @@
                   :pintaharva
                   :pintakuivatuspuute
                   :kaivojenkorkeusasema
+
+                  :reikajono
+                  :halkeamat
+                  :purkaumat
+                  :reunapainuma
+                  :syvat-ajourat
+                  :liikenneturvallisuutta-vaarantava-heitto
+                  :ajomukavuutta-haittaava-epatasaisuus
+                  :harjauspuute
 
                   ;; Pistekohtaiset
 
@@ -131,7 +144,8 @@
                   :yleishavainto
                   :maakivi
                   :liikennemerkki-vaurioitunut
-                  :reunapaalut-vaurioitunut)}
+                  :reunapaalut-vaurioitunut
+                  :yksittainen-reika)}
 
    (s/optional-key :kuvaus) (s/maybe s/Str)
    (s/optional-key :liittyy-havaintoon) (s/maybe s/Int)

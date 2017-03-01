@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "maaramuutokset": {
+      "id": "urn:harja/yllapitokohde/maaramuutokset",
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "id": "urn:harja/yllapitokohde/maaramuutokset/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "maaramuutos": {
+            "id": "urn:harja/yllapitokohde/maaramuutokset/0/maaramuutos",
+            "type": "object",
+            "additionalProperties": false,
+            "required": true,
+            "properties": {
+              "tunniste": {
+                "id": "urn:harja/yllapitokohde/maaramuutokset/0/maaramuutostunniste",
+                "type": "object",
+                "additionalProperties": false,
+                "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+                "required": true
+              },
+              "tyyppi": {
+                "id": "urn:harja/yllapitokohde/maaramuutokset/0/maaramuutos/tyyppi",
+                "enum": [
+                  "ajoradan_paallyste",
+                  "pienaluetyot",
+                  "tasaukset",
+                  "jyrsinnat",
+                  "muut"
+                ],
+                "required": true
+              },
+              "tyo": {
+                "id": "urn:harja/yllapitokohde/maaramuutokset/0/maaramuutos/tyo",
+                "type": "string",
+                "required": true,
+                "maxLength": 256
+              },
+              "yksikko": {
+                "id": "urn:harja/yllapitokohde/maaramuutokset/0/maaramuutos/yksikko",
+                "type": "string",
+                "required": true,
+                "maxLength": 32
+              },
+              "tilattu-maara": {
+                "id": "urn:harja/yllapitokohde/maaramuutokset/0/maaramuutos/tilattu-maara",
+                "type": "number",
+                "required": true
+              },
+              "ennustettu-maara": {
+                "id": "urn:harja/yllapitokohde/maaramuutokset/0/maaramuutos/ennustettu-maara",
+                "type": "number",
+                "required": true
+              },
+              "toteutunut-maara": {
+                "id": "urn:harja/yllapitokohde/maaramuutokset/0/maaramuutos/toteutunut-maara",
+                "type": "number",
+                "required": true
+              },
+              "yksikkohinta": {
+                "id": "urn:harja/yllapitokohde/maaramuutokset/0/maaramuutos/yksikkohinta",
+                "type": "number",
+                "required": true
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

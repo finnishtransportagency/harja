@@ -14,6 +14,7 @@
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-xf]]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.ui.valinnat :as valinnat]
@@ -74,8 +75,11 @@
 
       [{:otsikko "Päivämäärä" :nimi :pvm :tyyppi :pvm :pakollinen? true}
        {:otsikko "Hinta" :nimi :hinta :tyyppi :positiivinen-numero :pakollinen? true}
-       {:otsikko "Ylläpitoluokka" :nimi :yllapitoluokka :tyyppi :positiivinen-numero
-        :kokonaisluku? true :validoi [[:yllapitoluokka]]}
+       {:otsikko "Ylläpitoluokka" :nimi :yllapitoluokka :tyyppi :valinta
+        :valinta-nayta #(if % (:nimi %) "- valitse -")
+        :fmt :nimi
+        :valinnat yllapitokohteet-domain/nykyiset-yllapitoluokat}
+
        {:otsikko               "Laskentakohde"
         :nimi                  :laskentakohde
         :placeholder           "Hae kohde tai luo uusi"
@@ -114,7 +118,9 @@
     [{:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm-opt :nimi :pvm :leveys 10}
      {:otsikko "Selite" :tyyppi :string :nimi :selite :leveys 20}
      {:otsikko "Hinta" :tyyppi :numero :nimi :hinta :fmt (partial fmt/euro-opt true) :leveys 10}
-     {:otsikko "Ylläpitoluokka" :tyyppi :numero :nimi :yllapitoluokka :leveys 10}
+     {:otsikko "Ylläpitoluokka" :tyyppi :string :nimi :yllapitoluokka
+      :hae #(when (:yllapitoluokka %) (get-in % [:yllapitoluokka :nimi]))
+      :leveys 10}
      {:otsikko "Laskentakohde" :tyyppi :string :nimi :laskentakohde :fmt second :leveys 10}]
     toteumat]])
 

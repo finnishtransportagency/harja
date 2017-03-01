@@ -38,18 +38,14 @@
       ;; Soiton täytyy alkaa suoraan user eventistä
       (.addEventListener js/document.body "click" #(soita-video video)))))
 
-(defn- sovelluksen-alustusviive []
-  (run!
-    (when (and (not @sovellus/sovellus-alustettu) @sovellus/alustus-valmis)
-      (after-delay 1000
-                   (reset! sovellus/sovellus-alustettu true)))))
-
 (defonce paikannus-id (cljs.core/atom nil))
 
 (defn- alusta-paikannus-id []
   (reset! paikannus-id (paikannus/kaynnista-paikannus
-                         sovellus/sijainti
-                         sovellus/ensimmainen-sijainti)))
+                         {:sijainti-atom sovellus/sijainti
+                          :ensimmainen-sijainti-yritys-atom sovellus/ensimmainen-sijainti-yritys
+                          :ensimmainen-sijainti-saatu-atom sovellus/ensimmainen-sijainti-saatu
+                          :ensimmainen-sijainti-virhekoodi-atom sovellus/ensimmainen-sijainti-virhekoodi})))
 
 (defn- alusta-geolokaatio-api []
   (if (paikannus/geolokaatio-tuettu?)
@@ -80,19 +76,25 @@
   ;; Haetaan käyttäjätiedot kun laite on paikannettu
   ;; Sijainti tarvitaan urakoiden lajitteluun, jotta defaulttina on valittuna lähin
   (run!
-    (when (and @sovellus/ensimmainen-sijainti
+    (when (and @sovellus/ensimmainen-sijainti-saatu
                (not @sovellus/kayttajanimi))
       (go (let [kayttajatiedot (<! (comms/hae-kayttajatiedot (:nykyinen @sovellus/sijainti)))]
             (reset! sovellus/kayttajanimi (-> kayttajatiedot :ok :nimi))
             (reset! sovellus/kayttajatunnus (-> kayttajatiedot :ok :kayttajanimi))
+            (if (-> kayttajatiedot :ok :kayttajanimi)
+              (reset! sovellus/kayttaja-tunnistettu true)
+              (reset! sovellus/kayttaja-tunnistettu false))
             (reset! sovellus/oikeus-urakoihin (-> kayttajatiedot :ok :urakat))
+            (if (not (empty? (-> kayttajatiedot :ok :urakat)))
+              (reset! sovellus/kayttajalla-oikeus-ainakin-yhteen-urakkaan true)
+              (reset! sovellus/kayttajalla-oikeus-ainakin-yhteen-urakkaan false))
             (reset! sovellus/roolit (-> kayttajatiedot :ok :roolit))
             (reset! sovellus/organisaatio (-> kayttajatiedot :ok :organisaatio)))))))
 
 (defn- alusta-sovellus []
   (go
 
-    (reset! sovellus/idxdb (<! (reitintallennus/tietokannan-alustus)))
+    (reset! sovellus/idxdb (<! (reitintallennus/tietokannan-alustus sovellus/idxdb-tuettu)))
 
     (reitintallennus/palauta-tarkastusajo @sovellus/idxdb #(do
                                                              (reset! sovellus/palautettava-tarkastusajo %)
@@ -124,12 +126,31 @@
        :jatkuvat-havainnot-atom sovellus/jatkuvat-havainnot})
     (tr-haku/alusta-tr-haku sovellus/sijainti sovellus/tr-tiedot)))
 
+(defn- tarkkaile-alustusta []
+  (run! (when @sovellus/alustus-valmis?
+          (after-delay 1000
+            (reset! sovellus/sovelluksen-naytto-sallittu? true)))))
+
+(defn- arsyttava-virhe [& msgs]
+  (.alert js/window (str "Upsista keikkaa, Harja räsähti! Olemme pahoillamme. Kuulisimme "
+                         "mielellämme miten sait vian esiin, joten voisitko lähettää meille "
+                         "palautetta? Liitä mukaan alla olevat virheen tekniset tiedot, "
+                         "kuvankaappaus sekä kuvaus siitä mitä olit tekemässä.\n"
+                         (apply str msgs))))
+
+(defn- kuuntele-rasahdyksia []
+  (set! (.-onerror js/window)
+        (fn [errorMsg url lineNumber column errorObj]
+          (.error js/console errorObj)
+          (arsyttava-virhe errorMsg " " url " " lineNumber ":" column " " errorObj))))
+
 (defn main []
   (esta-mobiililaitteen-nayton-lukitus)
-  (sovelluksen-alustusviive)
   (alusta-paikannus-id)
+  (tarkkaile-alustusta)
   (alusta-geolokaatio-api)
   (kuuntele-dom-eventteja)
+  (kuuntele-rasahdyksia)
   (kuuntele-sivun-nakyvyytta sovellus/tarkastusajo-kaynnissa?
                              sovellus/kuvaa-otetaan?)
   (alusta-sovellus))

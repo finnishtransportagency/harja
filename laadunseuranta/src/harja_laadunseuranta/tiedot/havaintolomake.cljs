@@ -12,7 +12,9 @@
 (defn sulje-lomake! []
   (reset! s/havaintolomake-auki? false))
 
-(defn tyhjenna-lomake! []
+(defn tyhjenna-lomake!
+  "Tyhjentää lomakkeen sovelluksen tilaan ja palauttaan lomakedata-atomin"
+  []
   (reset! s/havaintolomakedata
           {:kayttajanimi nil
            :tr-osoite {:tie nil
@@ -27,10 +29,13 @@
            :kuvaus ""
            :kuva nil
            :esikatselukuva nil})
+  (reset! s/lomake-koskettu? false)
   s/havaintolomakedata)
 
 
-(defn alusta-uusi-lomake! []
+(defn alusta-uusi-lomake!
+  "Alustaa uuden lomakkeen sovelluksen tilaan ja palauttaan lomakedata-atomin"
+  []
   (reset! s/havaintolomakedata
           (merge
             @s/havaintolomakedata
@@ -44,6 +49,7 @@
              :aikaleima (l/local-now)
              :laadunalitus? false
              :kuvaus ""}))
+  (reset! s/lomake-koskettu? false)
   s/havaintolomakedata)
 
 (defn tallenna-lomake! []

@@ -7,12 +7,13 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.hallinta.indeksit :as indeksit]
             [harja.tiedot.urakka.yhteystiedot :as yht]
             [harja.tiedot.urakka.sopimustiedot :as sopimus]
             [harja.tiedot.navigaatio :as navigaatio]
             [harja.tiedot.urakka.yhatuonti :as yhatiedot]
             [harja.views.urakka.yhatuonti :as yha]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
 
             [cljs.core.async :refer [<!]]
@@ -30,7 +31,8 @@
             [harja.domain.roolit :as roolit]
             [harja.ui.napit :as napit]
             [harja.tiedot.urakat :as urakat]
-            [harja.ui.lomake :as lomake])
+            [harja.ui.lomake :as lomake]
+            [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; hallintayksikkö myös
@@ -371,7 +373,7 @@
           :leveys 2
           :tyyppi :valinta
           :valinta-nayta #(if (= :ei-muutosta %)
-                            (:nimi ensisijainen)
+                            (fmt/kayttaja ensisijainen)
                             (fmt/kayttaja %))
           :valinnat mahdolliset-henkilot}
          {:otsikko "Varalla"
@@ -379,7 +381,7 @@
           :leveys 2
           :tyyppi :valinta
           :valinta-nayta #(if (= :ei-muutosta %)
-                            (:nimi varalla)
+                            (fmt/kayttaja varalla)
                             (fmt/kayttaja %))
           :valinnat mahdolliset-henkilot}]
         @henkilot]])))
@@ -403,13 +405,13 @@
      [:span
       (if ensisijainen
         [yleiset/tooltip {}
-         [:span.vastuuhenkilo-ensisijainen (:nimi ensisijainen)]
+         [:span.vastuuhenkilo-ensisijainen (fmt/kayttaja ensisijainen)]
          [vastuuhenkilo-tooltip ensisijainen]]
         [:span.vastuuhenkilo-ei-tiedossa "Ei tiedossa"])
       " "
       (when varalla
         [yleiset/tooltip {}
-         [:span.vastuuhenkilo-varalla "(sijainen " (:nimi varalla) ")"]
+         [:span.vastuuhenkilo-varalla "(sijainen " (fmt/kayttaja varalla) ")"]
          [vastuuhenkilo-tooltip varalla]])
       (when voi-muokata?
         [:span.klikattava {:on-click #(modal/nayta!
@@ -465,7 +467,8 @@
       "Urakkatyyppi: " ; Päällystysurakan voi muuttaa paikkaukseksi ja vice versa
       (yllapidon-urakkatyypin-vaihto ur yha-tiedot)
 
-      "Indeksi: " [urakan-indeksi ur]]]))
+      "Indeksi: " (when-not (#{:paallystys :paikkaus} (:tyyppi ur))
+                    [urakan-indeksi ur])]]))
 
 (defn yhteyshenkilot [ur]
   (let [yhteyshenkilot (atom nil)
@@ -532,14 +535,22 @@
                (not palvelusopimus?))
       (yha/nayta-tuontidialogi ur))))
 
+
+
+
+
 (defn yleiset [ur]
   (let [kayttajat (atom nil)
         vastuuhenkilot (atom nil)
-        hae! (fn [urakka]
+        hae! (fn [urakan-tiedot]
                (reset! kayttajat nil)
                (reset! vastuuhenkilot nil)
-               (go (reset! kayttajat (<! (yht/hae-urakan-kayttajat (:id urakka)))))
-               (go (reset! vastuuhenkilot (<! (yht/hae-urakan-vastuuhenkilot (:id urakka))))))]
+               (go (reset! kayttajat (<! (yht/hae-urakan-kayttajat (:id urakan-tiedot)))))
+               (go (reset! vastuuhenkilot (<! (yht/hae-urakan-vastuuhenkilot (:id urakan-tiedot)))))
+               (when (= :paallystys (:tyyppi ur))
+                 (reset! urakka/paallystysurakan-indeksitiedot nil)
+                 (go (reset! urakka/paallystysurakan-indeksitiedot
+                             (<! (indeksit/hae-paallystysurakan-indeksitiedot (:id urakan-tiedot)))))))]
     (hae! ur)
     (komp/luo
       (komp/kun-muuttuu hae!)
@@ -548,6 +559,8 @@
       (fn [ur]
         [:div
          [yleiset-tiedot #(reset! vastuuhenkilot %) ur @kayttajat @vastuuhenkilot]
+         (when (= :paallystys (:tyyppi ur))
+           [paallystys-indeksit/paallystysurakan-indeksit ur])
          [urakkaan-liitetyt-kayttajat @kayttajat]
          [yhteyshenkilot ur]
          (when (urakka/paivystys-kaytossa? ur)

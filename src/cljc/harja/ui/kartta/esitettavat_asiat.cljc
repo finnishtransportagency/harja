@@ -284,7 +284,7 @@
   (let [ikoni (ulkoasu/varustetoteuman-ikoni)]
     (assoc varustetoteuma
       :type :varustetoteuma
-      :nimi (or (:selitys-kartalla varustetoteuma) "Varustetoteuma")
+      :nimi (or (:tooltip varustetoteuma) "Varustetoteuma")
       :selite {:teksti "Varustetoteuma"
                :img    ikoni}
       :alue (maarittele-feature varustetoteuma valittu?
@@ -321,7 +321,7 @@
         viiva (ulkoasu/yllapidon-viiva valittu? (:avoin? yllapitokohde) tila tyyppi)]
     (assoc yllapitokohde
       :nimi (or (:nimi yllapitokohde) teksti)
-      :selite {:teksti (str teksti tila-teksti)
+      :selite {:teksti (str teksti ", " tila-teksti)
                :vari   (viivojen-varit-leveimmasta-kapeimpaan viiva)}
       :alue (maarittele-feature yllapitokohde valittu?
                                 ikoni

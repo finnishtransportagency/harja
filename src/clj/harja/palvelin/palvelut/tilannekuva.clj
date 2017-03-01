@@ -85,11 +85,13 @@
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
                   ", mutta virhe tapahtui: " (.getMessage e))))
 
-(defn tulosta-tulos! [asiaa tulos]
-  (if (vector? tulos)
-    (log/debug (str "  - " (count tulos) " " asiaa))
-    (log/debug (str "  - " (count (keys tulos)) " " asiaa)))
-  tulos)
+(defn tulosta-tulos!
+  ([asiaa tulos] (tulosta-tulos! asiaa tulos identity))
+  ([asiaa tulos fn]
+   (if (vector? (fn tulos))
+     (log/debug (str "  - " (count (fn tulos)) " " asiaa))
+     (log/debug (str "  - " (count (keys (fn tulos))) " " asiaa)))
+   tulos))
 
 (defn haettavat [s]
   (into #{}
@@ -350,12 +352,13 @@
 
 (defmulti hae-osio (fn [db user tiedot urakat osio] osio))
 (defmethod hae-osio :toteumat [db user tiedot urakat _]
-  (tulosta-tulos! "toteuman selitettä"
+  (tulosta-tulos! "uniikkia toteuman tehtävää"
                   (hae-toteumien-selitteet db user tiedot urakat)))
 
 (defmethod hae-osio :tyokoneet [db user tiedot urakat _]
-  (tulosta-tulos! "tyokonetta"
-                  (hae-tyokoneiden-selitteet db user tiedot urakat)))
+  (tulosta-tulos! "uniikkia työkoneen tehtävää"
+                  (hae-tyokoneiden-selitteet db user tiedot urakat)
+                  :tehtavat))
 
 (defmethod hae-osio :turvallisuuspoikkeamat [db user tiedot urakat _]
   (tulosta-tulos! "turvallisuuspoikkeamaa"
@@ -406,6 +409,7 @@
   ([db user tiedot]
    (hae-tilannekuvaan db user tiedot tilannekuvan-osiot))
   ([db user tiedot osiot]
+   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
    (let [urakat (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
                                                 oikeudet/tilannekuva-nykytilanne
                                                 oikeudet/tilannekuva-historia) % user)
@@ -444,6 +448,7 @@
           (assoc p :toleranssi (geo/karkeistustoleranssi (:alue p))))))
 
 (defn- luettavat-urakat [user tiedot]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
                                   oikeudet/tilannekuva-nykytilanne
                                   oikeudet/tilannekuva-historia) % user)

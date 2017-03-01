@@ -19,7 +19,9 @@
             [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]
             [harja-laadunseuranta.tiedot.sovellus :as s]
-            [harja-laadunseuranta.math :as math])
+            [harja.math :as math]
+            [cljs-time.local :as l]
+            [cljs-time.core :as t])
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
 
@@ -28,7 +30,7 @@
          conj (assoc (select-keys (:nykyinen @s/sijainti) [:lat :lon])
                 :label teksti)))
 
-(defn- wmts-source [url layer]
+(defn- wmts-source [layer url]
   (ol.source.WMTS. #js {:attributions [(ol.Attribution. #js {:html "MML"})]
                         :url url
                         :layer layer
@@ -39,14 +41,31 @@
                         :style "default"
                         :wrapX true}))
 
-(defn- wmts-source-taustakartta [url]
-  (wmts-source url "taustakartta"))
+;; Karttakuvatasot kytketään indeksillä, joten merkitään ne tänne
+(def ^:const
+  taustakarttatyypit
+  [{:nimi :taustakartta
+    :luokka "taustakartta"
+    :napin-sprite "kartta-24"
+    :tason-indeksi 0}
 
-(defn- wmts-source-kiinteistojaotus [url]
-  (wmts-source url "kiinteistojaotus"))
+   {:nimi :ortokuva
+    :luokka "ortokuva"
+    :napin-sprite "satelliitti-24"
+    :tason-indeksi 1}
 
-(defn- wmts-source-ortokuva [url]
-  (wmts-source url "ortokuva"))
+   {:nimi :maastokartta
+    :luokka "maastokartta"
+    :napin-sprite "maasto-24"
+    :tason-indeksi 2}])
+
+(def ^:const taso-kiinteistorajat 3)
+
+;; Funktiot, jotka palauttavat WMTS sourcen URLille
+(def wmts-source-taustakartta (partial wmts-source "taustakartta"))
+(def wmts-source-kiinteistojaotus (partial wmts-source "kiinteistojaotus"))
+(def wmts-source-ortokuva (partial wmts-source "ortokuva"))
+(def wmts-source-maastokartta (partial wmts-source "maastokartta"))
 
 (defn- tile-layer [source]
   (ol.layer.Tile.
@@ -137,8 +156,11 @@
 
 (defn- luo-optiot [wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva
                    sijainti kohde-elementti ajoneuvokerros reittikerros ikonikerros]
-  {:layers [(tile-layer (wmts-source-taustakartta wmts-url))
+  {:layers [;; Karttakuvatasojen järjestyksellä on merkitystä, niitä
+            ;; käytetään suoraan indekseillä
+            (tile-layer (wmts-source-taustakartta wmts-url))
             (tile-layer (wmts-source-ortokuva wmts-url-ortokuva))
+            (tile-layer (wmts-source-maastokartta wmts-url))
             (tile-layer (wmts-source-kiinteistojaotus wmts-url-kiinteistorajat))
             ajoneuvokerros
             reittikerros
@@ -181,6 +203,12 @@
       (.setRotation rad)
       (.changed))))
 
+(defn- paivita-kartan-zoom [kartta zoom-taso]
+  (let [view (.getView kartta)]
+    (doto view
+      (.setZoom zoom-taso)
+      (.changed))))
+
 (defn- paivita-ajettu-reitti [kartta ajettu-reitti reittikerros reittipisteet]
   (let [src (.getSource reittikerros)]
     (.clear src)
@@ -207,11 +235,20 @@
     (when-let [dragpan (etsi-dragpan kartta)]
       (.removeInteraction kartta dragpan))))
 
-(defn- kytke-kiinteistorajat [kartta enable]
-  (.setVisible (aget (.getArray (.getLayers kartta)) 2) enable))
 
-(defn- kytke-ortokuva [kartta enable]
-  (.setVisible (aget (.getArray (.getLayers kartta)) 1) enable))
+(defn- kytke-taso [taso-idx kartta enable]
+  (-> kartta
+      .getLayers .getArray
+      (aget taso-idx)
+      (.setVisible enable)))
+
+(def kytke-kiinteistorajat (partial kytke-taso taso-kiinteistorajat))
+
+(defn- aseta-taustakartta
+  "Asettaa karttatasojen näkyvyydet käyttäjän valitseman taustakartan perusteella"
+  [kartta valinta]
+  (doseq [{:keys [nimi tason-indeksi]} taustakarttatyypit]
+    (kytke-taso tason-indeksi kartta (= valinta nimi))))
 
 (defn- sijainti-ok? [{:keys [lat lon]}]
   (and (not= 0 lon)
@@ -227,8 +264,44 @@
     (when (and kontrollien-paikka kontrollit)
       (.appendChild kontrollien-paikka kontrollit))))
 
-(defn kartta-did-mount [this wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva keskipiste-atomi
-                        ajoneuvon-sijainti-atomi reittipisteet-atomi kirjatut-pisteet-atomi optiot]
+(defn- maarita-kartan-rotaatio-ajosuunnan-mukaan [kartta sijainti-edellinen sijainti-nykyinen]
+  ;; Rotatoi kartta ajosuuntaan, mutta vain jos nopeus on riittävä, muuten
+  ;; paikallaolo ja siitä aiheutuva GPS-kohina saa kartan levottomaksi
+  (when (>= (math/pisteiden-etaisyys sijainti-edellinen sijainti-nykyinen) 8)
+    (paivita-kartan-rotaatio kartta (- (math/pisteiden-kulma-radiaaneina
+                                         sijainti-edellinen
+                                         sijainti-nykyinen)
+                                       (/ Math/PI 2)))))
+
+(defn- maarita-kartan-zoom-taso-ajonopeuden-mukaan [{:keys [kartta nopeus kayttaja-muutti-zoomausta-aikaleima]}]
+  (when (or
+          (nil? kayttaja-muutti-zoomausta-aikaleima)
+          (and kayttaja-muutti-zoomausta-aikaleima
+               (> (t/in-seconds (t/interval kayttaja-muutti-zoomausta-aikaleima (l/local-now)))
+                  asetukset/+kunnioita-kayttajan-zoomia-s+)))
+    (let [nopeus-tiedossa? (not (or (js/isNaN nopeus) ;; GPS-API palauttaa nopeuden JS NaN -muodossa, jos ei saada
+                                    (nil? nopeus)))
+          min-zoom asetukset/+min-zoom+
+          max-zoom asetukset/+max-zoom+
+          max-nopeus-min-zoomaus 30 ;; m/s, jolla kartta zoomautuu minimiarvoonsa eli niin kauas kuin sallittu
+          uusi-zoom-taso (if nopeus-tiedossa?
+                           ;; Zoomataan karttaa kauemmas sopivalle tasolle GPS:stä saadun nopeustiedon perusteella
+                           (- max-zoom (float (* (/ nopeus max-nopeus-min-zoomaus) (- max-zoom min-zoom))))
+                           max-zoom)
+          uusi-tarkastettu-zoom-taso (cond
+                                       (< uusi-zoom-taso min-zoom)
+                                       min-zoom
+
+                                       (> uusi-zoom-taso max-zoom)
+                                       max-zoom
+
+                                       :default
+                                       uusi-zoom-taso)]
+      (paivita-kartan-zoom kartta uusi-tarkastettu-zoom-taso))))
+
+(defn kartta-did-mount [this {:keys [wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva keskipiste-atomi
+                                     ajoneuvon-sijainti-atomi reittipisteet-atomi kirjatut-pisteet-atomi optiot
+                                     kayttaja-muutti-zoomausta-aikaleima-atom keskita-ajoneuvoon-atom]}]
   (let [alustava-sijainti-saatu? (cljs.core/atom false)
         map-element (reagent/dom-node this)
 
@@ -262,20 +335,20 @@
                                      (:edellinen @ajoneuvon-sijainti-atomi))
                 sijainti-nykyinen (projektiot/latlon-vektoriksi
                                     (:nykyinen @ajoneuvon-sijainti-atomi))]
-            ;; Rotatoi kartta ajosuuntaan, mutta vain jos nopeus on riittävä, muuten
-            ;; paikallaolo ja siitä aiheutuva GPS-kohina saa kartan levottomaksi
-            (when (>= (math/pisteiden-etaisyys sijainti-edellinen sijainti-nykyinen) 8)
-              (paivita-kartan-rotaatio kartta (- (math/pisteiden-kulma-radiaaneina
-                                                   sijainti-edellinen
-                                                   sijainti-nykyinen)
-                                                 (/ Math/PI 2))))))
+            (maarita-kartan-zoom-taso-ajonopeuden-mukaan
+              {:kartta kartta
+               :keskita-ajoneuvoon? @keskita-ajoneuvoon-atom
+               :kayttaja-muutti-zoomausta-aikaleima @kayttaja-muutti-zoomausta-aikaleima-atom
+               :nopeus (:speed (:nykyinen @ajoneuvon-sijainti-atomi))})
+            (maarita-kartan-rotaatio-ajosuunnan-mukaan kartta sijainti-edellinen sijainti-nykyinen)))
         (kytke-dragpan kartta true)))
 
     (run!
       (kytke-kiinteistorajat kartta (:nayta-kiinteistorajat? @optiot)))
 
     (run!
-      (kytke-ortokuva kartta (:nayta-ortokuva? @optiot)))
+     ;; Aseta taustakarttatasojen näkyvyydet kun käyttäjän valinta muuttuu
+     (aseta-taustakartta kartta (:taustakartta @optiot)))
 
     ;; reagoidaan ajoneuvon sijainnin muutokseen
     (run! (paivita-ajoneuvon-sijainti kartta ajoneuvo ajoneuvokerros (:nykyinen @ajoneuvon-sijainti-atomi)))
@@ -288,19 +361,35 @@
 
 
 (defn karttakomponentti [{:keys [wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva sijainti-atomi
-                                 ajoneuvon-sijainti-atomi reittipisteet-atomi kirjauspisteet-atomi optiot]}]
+                                 ajoneuvon-sijainti-atomi reittipisteet-atomi kirjauspisteet-atomi optiot
+                                 kayttaja-muutti-zoomausta-aikaleima-atom keskita-ajoneuvoon-atom]}]
   (reagent/create-class {:reagent-render kartta-render
                          :component-did-mount
                          #(kartta-did-mount
                             %
-                            wmts-url
-                            wmts-url-kiinteistorajat
-                            wmts-url-ortokuva
-                            sijainti-atomi
-                            ajoneuvon-sijainti-atomi
-                            reittipisteet-atomi
-                            kirjauspisteet-atomi
-                            optiot)}))
+                            {:wmts-url wmts-url
+                             :wmts-url-kiinteistorajat wmts-url-kiinteistorajat
+                             :wmts-url-ortokuva wmts-url-ortokuva
+                             :keskipiste-atomi sijainti-atomi
+                             :ajoneuvon-sijainti-atomi ajoneuvon-sijainti-atomi
+                             :reittipisteet-atomi reittipisteet-atomi
+                             :kirjatut-pisteet-atomi kirjauspisteet-atomi
+                             :optiot optiot
+                             :keskita-ajoneuvoon-atom keskita-ajoneuvoon-atom
+                             :kayttaja-muutti-zoomausta-aikaleima-atom kayttaja-muutti-zoomausta-aikaleima-atom})}))
+
+(defn- taustakartan-valinta
+  "Valinnat, jolla voi vaihtaa näytettävä taustakartta: normaali, ortokuva tai maastokartta."
+  [valittu-tyyppi aseta-tyyppi!]
+  [:div.taustakartan-valinta
+   (for [{:keys [luokka napin-sprite nimi]} taustakarttatyypit]
+     ^{:key (str nimi)}
+     [:div.kontrollinappi
+      {:class (str luokka
+                   (when (= nimi valittu-tyyppi)
+                     " kontrollinappi-aktiivinen"))
+       :on-click #(aseta-tyyppi! nimi)}
+      [kuvat/svg-sprite napin-sprite]])])
 
 (defn kartta []
   [:div
@@ -311,18 +400,25 @@
      :sijainti-atomi s/kartan-keskipiste
      :ajoneuvon-sijainti-atomi s/ajoneuvon-sijainti
      :reittipisteet-atomi s/reittipisteet
+     :keskita-ajoneuvoon-atom s/keskita-ajoneuvoon?
+     :kayttaja-muutti-zoomausta-aikaleima-atom s/kayttaja-muutti-zoomausta-aikaleima
      :kirjauspisteet-atomi s/kirjauspisteet
      :optiot s/karttaoptiot}]
    [:div.kartan-kontrollit {:style (when @s/havaintolomake-auki?
                                      {:display "none"})}
-    [:div#karttakontrollit] ;; OpenLayersin ikonit asetetaan tähän elementtiin erikseen
-    [:div.kontrollinappi.ortokuva {:on-click #(swap! s/nayta-ortokuva? not)}
-     [kuvat/svg-sprite "maasto-24"]]
-    [:div.kontrollinappi.kiinteistorajat {:on-click #(swap! s/nayta-kiinteistorajat? not)}
+    [:div#karttakontrollit ;; OpenLayersin ikonit asetetaan tähän elementtiin erikseen
+     {:on-click #(reset! s/kayttaja-muutti-zoomausta-aikaleima (l/local-now))}]
+    [:div
+     {:class (str "kontrollinappi kiinteistorajat "
+                  (when @s/nayta-kiinteistorajat? "kontrollinappi-aktiivinen"))
+      :on-click #(swap! s/nayta-kiinteistorajat? not)}
      [kuvat/svg-sprite "kiinteistoraja-24"]]
-    [:div.kontrollinappi.keskityspainike {:on-click #(do (swap! s/keskita-ajoneuvoon? not)
-                                                         (swap! s/keskita-ajoneuvoon? not))}
-     [kuvat/svg-sprite "tahtain-24"]]]])
+    [:div
+     {:class (str "kontrollinappi keskityspainike "
+                  (when @s/keskita-ajoneuvoon? "kontrollinappi-aktiivinen"))
+      :on-click #(do (swap! s/keskita-ajoneuvoon? not))}
+     [kuvat/svg-sprite "tahtain-24"]]
+    [taustakartan-valinta @s/taustakartta #(reset! s/taustakartta %)]]])
 
 ;; devcards
 

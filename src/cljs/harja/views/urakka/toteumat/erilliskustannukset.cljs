@@ -10,7 +10,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.indeksit :as i]
+            [harja.tiedot.hallinta.indeksit :as i]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.toteumat :as toteumat]
@@ -142,7 +142,8 @@
                                                     (:tyyppi m)
                                                     (:pvm m)
                                                     (:rahasumma m))))
-        tallennus-kaynnissa (atom false)]
+        tallennus-kaynnissa (atom false)
+        valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit (:tyyppi ur)))]
 
     (komp/luo
       (fn []
@@ -241,7 +242,7 @@
               :muokattava? #(not (and
                                   (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
                                   (= :hoito (:tyyppi ur))))
-              :valinnat    (conj @i/indeksien-nimet yleiset/+ei-sidota-indeksiin+)
+              :valinnat    (conj valittavat-indeksit yleiset/+ei-sidota-indeksiin+)
               :fmt         #(if (nil? %)
                               yleiset/+valitse-indeksi+
                               (str %))

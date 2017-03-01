@@ -88,3 +88,29 @@ INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 9, 
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 10, 104.9);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 11, 105.2);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 12, 106.2);
+
+
+INSERT INTO urakkatyypin_indeksi(urakkatyyppi, indeksinimi, koodi, raakaaine)
+VALUES
+  ('paallystys'::urakkatyyppi, 'Platts: testiindeksi XYZ', 'TESTIKOODI', 'bitumi');
+
+
+-- Ylläpidon indeksejä
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo)
+VALUES
+  ('Platts: testiindeksi XYZ', 2015, 9, 225.00),
+  ('Platts: testiindeksi XYZ', 2016, 9, 306.00),
+  ('Platts: FO 3,5%S CIF NWE Cargo', 2015, 9, 125.36),
+  ('Platts: FO 3,5%S CIF NWE Cargo', 2016, 9, 206.29),
+  ('Platts: Propane CIF NWE 7kt+', 2015, 9, 285.55),
+  ('Platts: Propane CIF NWE 7kt+', 2016, 9, 271.02),
+  ('Platts: ULSD 10ppmS CIF NWE Cargo', 2015, 9, 123.45),
+  ('Platts: ULSD 10ppmS CIF NWE Cargo', 2016, 9, 234.56);
+
+
+INSERT INTO paallystysurakan_indeksi (indeksi,lahtotason_vuosi,lahtotason_kuukausi,urakka)
+VALUES
+  ((SELECT id FROM urakkatyypin_indeksi WHERE indeksinimi = 'Platts: testiindeksi XYZ' AND urakkatyyppi = 'paallystys'),
+  2015, 9, (SELECT id FROM urakka where nimi = 'Muhoksen päällystysurakka')),
+  ((SELECT id FROM urakkatyypin_indeksi WHERE indeksinimi = 'Platts: FO 3,5%S CIF NWE Cargo' AND urakkatyyppi = 'paallystys'),
+   2016, 9, (SELECT id FROM urakka where nimi = 'Muhoksen päällystysurakka'));

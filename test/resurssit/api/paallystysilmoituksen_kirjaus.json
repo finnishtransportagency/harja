@@ -22,7 +22,9 @@
         "aosa": 1,
         "aet": 1,
         "losa": 5,
-        "let": 16
+        "let": 16,
+        "ajr": 1,
+        "kaista": 1
       },
       "alikohteet": [
         {
@@ -33,7 +35,9 @@
               "aosa": 1,
               "aet": 1,
               "losa": 5,
-              "let": 16
+              "let": 16,
+              "ajr": 1,
+              "kaista": 1
             },
             "paallystetyyppi": "avoin asfaltti",
             "raekoko": 12,
@@ -70,7 +74,7 @@
             "let": 15
           },
           "kasittelymenetelma": "Massanvaihto",
-          "paksuus": 1.2,
+          "paksuus": 1,
           "verkkotyyppi": "Teräsverkko",
           "verkon-tarkoitus": "Moniongelmaisen tukeminen",
           "verkon-sijainti": "Päällysteessä",

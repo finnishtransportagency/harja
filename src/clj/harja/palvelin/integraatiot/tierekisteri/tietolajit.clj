@@ -56,7 +56,7 @@
   (let [suodatetut-ominaisuudet (filter #(some? (:jarjestysnumero %)) ominaisuudet)]
     (assoc tietolajin-kuvaus :ominaisuudet suodatetut-ominaisuudet)))
 
-(defn hae-tietolajit
+(defn hae-tietolaji
   "Hakee annetun tietolajin kuvauksen.
   Vastaus palautetaan cachesta jos löytyy, muuten haetaan uusin kuvaus tierekisteristä"
   [db integraatioloki url tunniste muutospvm]

@@ -2,7 +2,7 @@
   (:require [cljs.test :as t :refer-macros [deftest is testing async]]
             [reagent.core :as reagent :refer [atom]]
             [dommy.core :as dommy]
-            [harja-laadunseuranta.testutils :refer [sel sel1]]
+            [harja.testutils.shared-testutils :refer [sel sel1]]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.ui.kartta :as kartta])
   (:require-macros [harja-laadunseuranta.test-macros :refer [with-component prepare-component-tests]]
@@ -42,6 +42,8 @@
                         :wmts-url-kiinteistorajat asetukset/+wmts-url-kiinteistojaotus+
                         :wmts-url-ortokuva asetukset/+wmts-url-ortokuva+
                         :sijainti-atomi sijainti
+                        :keskita-ajoneuvoon-atom (atom false)
+                        :kayttaja-muutti-zoomausta-aikaleima-atom (atom nil)
                         :ajoneuvon-sijainti-atomi ajoneuvon-sijainti
                         :reittipisteet-atomi reittipisteet
                         :kirjauspisteet-atomi kirjauspisteet
@@ -60,13 +62,13 @@
 
             (testing "Kerrokset"
               (let [kerrokset (kartan-kerrokset ol)]
-                (is (= 6 (.-length kerrokset)))
+                (is (= 7 (.-length kerrokset)))
 
-                (let [ajoneuvokerros (aget kerrokset 3)
+                (let [ajoneuvokerros (aget kerrokset 4)
                       ajoneuvon-geometria (kerroksen-geometria ajoneuvokerros 0)]
                   (is (= [500 400] (js->clj ajoneuvon-geometria))))
 
-                (let [reittipistekerros (aget kerrokset 4)
+                (let [reittipistekerros (aget kerrokset 5)
                       reittipistegeometriat (kerroksen-geometria reittipistekerros 0)
                       reittipistegeometriat2 (kerroksen-geometria reittipistekerros 1)]
                   (is (= [[1 1] [2 2]] (js->clj reittipistegeometriat)))
@@ -82,6 +84,6 @@
               (is (= [300 200] (js->clj (.getCenter view)))))
 
             (testing "Ajoneuvon geometrioiden muuttuminen"
-              (let [ajoneuvokerros (kartan-kerros ol 3)
+              (let [ajoneuvokerros (kartan-kerros ol 4)
                     ajoneuvon-geometria (kerroksen-geometria ajoneuvokerros 0)]
                 (is (= [1000 1000] (js->clj ajoneuvon-geometria)))))))))))

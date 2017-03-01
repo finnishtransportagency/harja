@@ -13,7 +13,8 @@
     [com.stuartsierra.component :as component]
     [clj-time.core :as t]
     [clj-time.coerce :as tc]
-    [clojure.core.async :as async])
+    [clojure.core.async :as async]
+    [clojure.spec :as s])
   (:import (java.util Locale)))
 
 (def jarjestelma nil)
@@ -139,7 +140,7 @@
                              (if (<= i cols)
                                (recur (assoc row
                                         (keyword (-> (.getMetaData rs)
-                                             (.getColumnName i)))
+                                                     (.getColumnName i)))
                                         (.getObject rs i))
                                       (inc i))
                                row)))
@@ -193,6 +194,25 @@
   (is false (str "Palvelua " nimi " ei löydy!"))
   {:error "Palvelua ei löydy"})
 
+(defn- wrap-validointi [nimi palvelu-fn {:keys [kysely-spec vastaus-spec]}]
+  (as-> palvelu-fn f
+    (if kysely-spec
+      (fn [user payload]
+        (testing (str "Palvelun " nimi " kysely on validi")
+          (is (s/valid? kysely-spec payload)
+              (s/explain-str kysely-spec payload)))
+        (f user payload))
+      f)
+
+    (if vastaus-spec
+      (fn [user payload]
+        (let [v (f user payload)]
+          (testing (str "Palvelun " nimi " vastaus on validi")
+            (is (s/valid? vastaus-spec v)
+                (s/explain-str vastaus-spec v)))
+          v))
+      f)))
+
 (defn testi-http-palvelin
   "HTTP 'palvelin' joka vain ottaa talteen julkaistut palvelut."
   []
@@ -202,7 +222,8 @@
       (julkaise-palvelu [_ nimi palvelu-fn]
         (swap! palvelut assoc nimi palvelu-fn))
       (julkaise-palvelu [_ nimi palvelu-fn optiot]
-        (swap! palvelut assoc nimi palvelu-fn))
+        (swap! palvelut assoc nimi
+               (wrap-validointi nimi palvelu-fn optiot)))
       (poista-palvelu [_ nimi]
         (swap! palvelut dissoc nimi))
 
@@ -221,11 +242,11 @@
 
       (kutsu-karttakuvapalvelua [_ nimi kayttaja payload koordinaatti extent]
         ((get @palvelut :karttakuva-klikkaus)
-         kayttaja
-         {:parametrit (assoc payload "_" nimi)
-          :koordinaatti koordinaatti
-          :extent (or extent
-                      [-550093.049087613 6372322.595126259 1527526.529326106 7870243.751025201])})))))
+          kayttaja
+          {:parametrit (assoc payload "_" nimi)
+           :koordinaatti koordinaatti
+           :extent (or extent
+                       [-550093.049087613 6372322.595126259 1527526.529326106 7870243.751025201])})))))
 
 
 (defn kutsu-http-palvelua
@@ -424,21 +445,24 @@
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE suorittava_tiemerkintaurakka = " tiemerkintaurakka-id ";"))))
 
-(defn pura-tr-osoite [[numero aosa aet losa loppuet]]
+(defn pura-tr-osoite [[numero aosa aet losa loppuet kaista ajorata]]
   {:numero numero
    :aosa aosa
    :aet aet
    :losa losa
-   :loppuet loppuet})
+   :loppuet loppuet
+   :kaista kaista
+   :ajorata ajorata})
 
 (defn hae-yllapitokohteen-tr-osoite [kohde-id]
-  (pura-tr-osoite (first (q (str "SELECT tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys
+  (pura-tr-osoite (first (q (str "SELECT tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
+                                         tr_kaista, tr_ajorata
                                   FROM yllapitokohde WHERE id = " kohde-id ";")))))
 
 (defn hae-yllapitokohteen-kohdeosien-tr-osoitteet [kohde-id]
   (map
     pura-tr-osoite
-    (q (str "SELECT tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys
+    (q (str "SELECT tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_kaista, tr_ajorata
              FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id ";"))))
 
 ;; Määritellään käyttäjiä, joita testeissä voi käyttää
@@ -690,8 +714,8 @@
 
 (defn q-sanktio-leftjoin-laatupoikkeama [sanktio-id]
   (first (q-map
-     "SELECT s.id, s.maara as summa, s.poistettu, s.perintapvm, s.sakkoryhma as laji,
-             lp.id as lp_id, lp.aika as lp_aika, lp.poistettu as lp_poistettu
-        FROM sanktio s
-             LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
-       WHERE s.id = " sanktio-id ";")))
+           "SELECT s.id, s.maara as summa, s.poistettu, s.perintapvm, s.sakkoryhma as laji,
+                   lp.id as lp_id, lp.aika as lp_aika, lp.poistettu as lp_poistettu
+              FROM sanktio s
+                   LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
+             WHERE s.id = " sanktio-id ";")))

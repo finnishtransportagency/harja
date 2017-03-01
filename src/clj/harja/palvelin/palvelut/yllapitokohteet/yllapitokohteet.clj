@@ -30,8 +30,7 @@
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.id :refer [id-olemassa?]])
-  (:use org.httpkit.fake)
-  (:import (com.sun.xml.internal.bind.v2 TODO)))
+  (:use org.httpkit.fake))
 
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
@@ -43,7 +42,9 @@
           yllapitokohteet (maaramuutokset/liita-yllapitokohteisiin-maaramuutokset
                             db user {:yllapitokohteet yllapitokohteet
                                      :urakka-id urakka-id})]
-      yllapitokohteet)))
+         (into []
+               yllapitokohteet-domain/yllapitoluokka-xf
+               yllapitokohteet))))
 
 (defn hae-urakan-yllapitokohteet-lomakkeelle [db user {:keys [urakka-id sopimus-id]}]
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
@@ -110,7 +111,9 @@
   (log/debug "Haetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [kohteet (into []
-                        (map #(konv/string->keyword % :hintatyyppi))
+                        (comp
+                          (map #(konv/string->keyword % :hintatyyppi))
+                          yllapitokohteet-domain/yllapitoluokka-xf)
                         (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot
                           db
                           {:suorittava_tiemerkintaurakka urakka-id}))
@@ -262,7 +265,9 @@
                             :tr_ajorata tr-ajorata
                             :tr_kaista tr-kaista
                             :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
-                            :yllapitoluokka yllapitoluokka
+                            :yllapitoluokka (if (map? yllapitoluokka)
+                                              (:numero yllapitoluokka)
+                                              yllapitoluokka)
                             :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
                             :arvonvahennykset arvonvahennykset
                             :bitumi_indeksi bitumi-indeksi
@@ -301,7 +306,9 @@
                                    :tr_ajorata tr-ajorata
                                    :tr_kaista tr-kaista
                                    :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
-                                   :yllapitoluokka yllapitoluokka
+                                   :yllapitoluokka (if (map? yllapitoluokka)
+                                                     (:numero yllapitoluokka)
+                                                     yllapitoluokka)
                                    :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
                                    :arvonvanhennykset arvonvahennykset
                                    :bitumi_indeksi bitumi-indeksi
@@ -319,6 +326,7 @@
       (if (id-olemassa? (:id kohde))
         (paivita-yllapitokohde c user urakka-id kohde)
         (luo-uusi-yllapitokohde c user urakka-id sopimus-id vuosi kohde)))
+    (yy/paivita-yllapitourakan-geometria c urakka-id)
     (let [paallystyskohteet (hae-urakan-yllapitokohteet c user {:urakka-id urakka-id
                                                                 :sopimus-id sopimus-id})]
       (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str paallystyskohteet))
@@ -394,7 +402,7 @@
         (if (id-olemassa? (:id osa))
           (paivita-yllapitokohdeosa c user urakka-id osa)
           (luo-uusi-yllapitokohdeosa c user yllapitokohde-id osa)))
-      (yha/paivita-yllapitourakan-geometriat c urakka-id)
+      (yy/paivita-yllapitourakan-geometria c urakka-id)
       (let [yllapitokohdeosat (hae-osat)]
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
         (sort-by tr/tiekohteiden-jarjestys yllapitokohdeosat)))))

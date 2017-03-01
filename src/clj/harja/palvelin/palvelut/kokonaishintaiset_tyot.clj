@@ -7,6 +7,7 @@
             [clj-time.coerce :as c]
 
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.kokonaishintaiset-tyot :as q]
             [harja.domain.oikeudet :as oikeudet]))
 
@@ -36,14 +37,15 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
   (into []
         (map #(assoc %
-               :summa (if (:summa %) (double (:summa %)))))
+                :summa (if (:summa %) (double (:summa %)))))
         (q/listaa-kokonaishintaiset-tyot db urakka-id)))
 
 (defn tallenna-kokonaishintaiset-tyot
   "Palvelu joka tallentaa urakan kokonaishintaiset tyot."
   [db user {:keys [urakka sopimusnumero tyot]}]
-  (oikeudet/vaadi-kirjoitusoikeus
-    (oikeudet/tarkistettava-oikeus-kok-hint-tyot (:tyyppi urakka)) user (:id urakka))
+  (let [urakkatyyppi-kannassa (keyword (first (urakat-q/hae-urakan-tyyppi db (:id urakka))))]
+    (oikeudet/vaadi-kirjoitusoikeus
+      (oikeudet/tarkistettava-oikeus-kok-hint-tyot urakkatyyppi-kannassa) user (:id urakka)))
   (assert (vector? tyot) "tyot tulee olla vektori")
   (jdbc/with-db-transaction [c db]
     (let [urakka-id (:id urakka)
@@ -53,8 +55,8 @@
                       [(:toimenpideinstanssi rivi) (:vuosi rivi) (:kuukausi rivi)])
           tyot-kannassa (into #{} (map tyo-avain
                                        (filter #(and
-                                                 (= (:sopimus %) sopimusnumero)
-                                                 (valitut-vuosi-ja-kk [(:vuosi %) (:kuukausi %)]))
+                                                  (= (:sopimus %) sopimusnumero)
+                                                  (valitut-vuosi-ja-kk [(:vuosi %) (:kuukausi %)]))
                                                nykyiset-arvot)))
           uniikit-toimenpideninstanssit (into #{} (map #(:toimenpideinstanssi %) tyot))]
       (doseq [tyo tyot]

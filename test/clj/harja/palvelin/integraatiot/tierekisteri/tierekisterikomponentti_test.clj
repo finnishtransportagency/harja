@@ -31,7 +31,7 @@
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]
-      (let [vastausdata (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)]
+      (let [vastausdata (tierekisteri/hae-tietolaji (:tierekisteri jarjestelma) "tl506" nil)]
         (is (true? (:onnistunut vastausdata)))
         (is (= "tl506" (get-in vastausdata [:tietolaji :tunniste])))
         (is (= 15 (count (get-in vastausdata [:tietolaji :ominaisuudet]))))
@@ -57,18 +57,18 @@
     ;; Cache on tyhjä, joten vastaus haetaan tierekisteristä HTTP-kutsulla
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]
-      (let [vastausdata (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)]
+      (let [vastausdata (tierekisteri/hae-tietolaji (:tierekisteri jarjestelma) "tl506" nil)]
         (is (true? (:onnistunut vastausdata)))))
 
     ;; Tehdään kysely uudestaan, vastauksen täytyy palautua cachesta eli HTTP-requestia ei lähde
     (with-fake-http
       []
-      (let [vastausdata (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)]
+      (let [vastausdata (tierekisteri/hae-tietolaji (:tierekisteri jarjestelma) "tl506" nil)]
         (is (true? (:onnistunut vastausdata)))
         (is (= "tl506" (get-in vastausdata [:tietolaji :tunniste]))))
 
       ;; Haetaan eri parametreilla, joten vastaus ei saa tulla cachesta (tulee virhe, koska http-kutsut on estetty)
-      (is (thrown? Exception (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" (t/now)))))))
+      (is (thrown? Exception (tierekisteri/hae-tietolaji (:tierekisteri jarjestelma) "tl506" (t/now)))))))
 
 (deftest tarkista-tietueiden-haku
   (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
@@ -264,7 +264,7 @@
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]
       (try+
-        (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)
+        (tierekisteri/hae-tietolaji (:tierekisteri jarjestelma) "tl506" nil)
         (is false "Pitäisi tapahtua poikkeus")
         (catch [:type "ulkoinen-kasittelyvirhe"] {:keys [virheet]}
           (is (.contains (:viesti (first virheet)) "Tietolajia ei löydy")))))))

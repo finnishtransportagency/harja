@@ -121,9 +121,11 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                            uusien-kyselyjen-maara)
         optiot))))
 
+(def ^:const ilmoitushaun-aloitusviive-ms 1000)
+
 (defn- hae
   "Ajastaa uuden ilmoitushaun. Jos ilmoitushaku on jo ajastettu, se perutaan ja uusi ajastetaan."
-  ([app] (hae app 300))
+  ([app] (hae app ilmoitushaun-aloitusviive-ms))
   ([app timeout] (hae app timeout false))
   ([{valinnat :valinnat haku :ilmoitushaku-id :as app} timeout taustahaku?]
    (if-not (:voi-hakea? valinnat)

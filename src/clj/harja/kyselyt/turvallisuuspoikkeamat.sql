@@ -201,23 +201,27 @@ SELECT
   t.turvallisuuskoordinaattori_etunimi  AS turvallisuuskoordinaattorietunimi,
   t.turvallisuuskoordinaattori_sukunimi AS turvallisuuskoordinaattorisukunimi,
   t.aiheutuneet_seuraukset              AS seuraukset,
+
   u.urakkanro                           AS alueurakkanro,
 
   u.sampoid                             AS "urakka-sampoid",
-  (SELECT (etunimi || ' ' || sukunimi)
-   FROM yhteyshenkilo
-   WHERE id =
-         (SELECT yhteyshenkilo
-          FROM yhteyshenkilo_urakka
-          WHERE urakka = t.urakka
-                AND rooli = 'Sampo yhteyshenkilö'
-          LIMIT 1))                     AS "sampo-yhteyshenkilo",
+  hlo.kayttajatunnus                    AS "tilaajanvastuuhenkilo-kayttajatunnus",
+  hlo.etunimi                           AS "tilaajanvastuuhenkilo-etunimi",
+  hlo.sukunimi                          AS "tilaajanvastuuhenkilo-sukunimi",
+  hlo.sahkoposti                        AS "tilaajanvastuuhenkilo-sposti",
+  u.tyyppi                              AS "urakka-tyyppi",
+  o.lyhenne                             AS "urakka-ely",
+  u.loppupvm                            AS "urakka-loppupvm",
   u.nimi                                AS "urakka-nimi",
   h.nimi                                AS "hanke-nimi",
 
 
   k.id                                  AS korjaavatoimenpide_id,
   k.kuvaus                              AS korjaavatoimenpide_kuvaus,
+  khlo.kayttajanimi                     AS korjaavatoimenpide_vastuuhenkilokayttajatunnus,
+  khlo.etunimi                          AS korjaavatoimenpide_vastuuhenkiloetunimi,
+  khlo.sukunimi                         AS korjaavatoimenpide_vastuuhenkilosukunimi,
+  khlo.sahkoposti                       AS korjaavatoimenpide_vastuuhenkilosposti,
   k.suoritettu                          AS korjaavatoimenpide_suoritettu,
   k.otsikko                             AS korjaavatoimenpide_otsikko,
   k.toteuttaja                          AS korjaavatoimenpide_toteuttaja,
@@ -249,6 +253,9 @@ FROM turvallisuuspoikkeama t
   LEFT JOIN urakka u
     ON t.urakka = u.id
 
+  LEFT JOIN urakanvastuuhenkilo hlo
+    ON hlo.urakka = u.id  AND hlo.id = (SELECT id from urakanvastuuhenkilo WHERE rooli = 'ELY_Urakanvalvoja' and urakka = u.id ORDER BY ensisijainen DESC LIMIT 1 )
+
   LEFT JOIN hanke h
     ON u.hanke = h.id
 
@@ -268,6 +275,10 @@ FROM turvallisuuspoikkeama t
        AND kom.poistettu IS NOT TRUE
 
   LEFT JOIN liite koml ON kom.liite = koml.id
+
+  LEFT JOIN kayttaja khlo ON k.vastuuhenkilo = khlo.id
+
+  LEFT JOIN organisaatio o ON u.hallintayksikko = o.id
 
 WHERE t.id = :id;
 

@@ -3,11 +3,12 @@
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.kalman :as kalman]
             [harja-laadunseuranta.utils :as utils]
-            [harja-laadunseuranta.math :as math]
+            [harja.math :as math]
             [harja-laadunseuranta.utils :refer [timestamp ipad?]]
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]))
 
 (def +paikan-raportointivali+ 2000) ; ms
+(def +max-maara-alustuksen-paikannnusyrityksia+ 10)
 
 (defn- geolocation-api []
   (.-geolocation js/navigator))
@@ -48,29 +49,42 @@
                                        (math/ms->sec (- ts (or (:timestamp nykyinen) ts)))))]
     {:edellinen nykyinen
      :nykyinen (assoc uusi-nykyinen
-                      :speed (:speed uusi-sijainti)
-                      :heading (:heading uusi-sijainti)
-                      :accuracy (:accuracy uusi-sijainti)
-                      :timestamp ts)}))
+                 :speed (:speed uusi-sijainti) ; m/s
+                 :heading (:heading uusi-sijainti)
+                 :accuracy (:accuracy uusi-sijainti) ; säde metreinä
+                 :timestamp ts)}))
 
 (defn kaynnista-paikannus
-  ([sijainti-atom] (kaynnista-paikannus sijainti-atom nil))
-  ([sijainti-atomi ensimmainen-sijainti-atom]
+  [{:keys [sijainti-atom ensimmainen-sijainti-saatu-atom ensimmainen-sijainti-virhekoodi-atom
+           ensimmainen-sijainti-yritys-atom]}]
   (when (geolokaatio-tuettu?)
     (.log js/console "Paikannus käynnistetään")
     (js/setInterval
       (fn []
-        (let [sijainti-saatu #(do
-                               (when (and ensimmainen-sijainti-atom (nil? @ensimmainen-sijainti-atom))
-                                 (reset! ensimmainen-sijainti-atom (konvertoi-latlon %)))
-                               (swap! sijainti-atomi (fn [entinen]
-                                                       (paivita-sijainti entinen (konvertoi-latlon %) (timestamp)))))
-              sijainti-epaonnistui #(swap! sijainti-atomi identity)]
+        (let [sijainti-saatu (fn [sijainti]
+                               (when (and ensimmainen-sijainti-saatu-atom
+                                          (not @ensimmainen-sijainti-saatu-atom))
+                                 (reset! ensimmainen-sijainti-saatu-atom true))
+                               (swap! sijainti-atom (fn [entinen]
+                                                      (paivita-sijainti entinen (konvertoi-latlon sijainti) (timestamp)))))
+              sijainti-epaonnistui (fn [virhe]
+                                     (when (and ensimmainen-sijainti-saatu-atom
+                                                ensimmainen-sijainti-yritys-atom
+                                                (not @ensimmainen-sijainti-saatu-atom))
+                                       (swap! ensimmainen-sijainti-yritys-atom inc))
+                                     (when (and ensimmainen-sijainti-saatu-atom
+                                                ensimmainen-sijainti-virhekoodi-atom
+                                                (>= @ensimmainen-sijainti-yritys-atom +max-maara-alustuksen-paikannnusyrityksia+)
+                                                (not @ensimmainen-sijainti-saatu-atom))
+                                       (.log js/console "Paikannus epäonnistui: " (.-message virhe))
+                                       (reset! ensimmainen-sijainti-virhekoodi-atom (.-code virhe))
+                                       (reset! ensimmainen-sijainti-saatu-atom false))
+                                     (swap! sijainti-atom identity))]
           (.getCurrentPosition (geolocation-api)
                                sijainti-saatu
                                sijainti-epaonnistui
                                paikannusoptiot)))
-      +paikan-raportointivali+))))
+      +paikan-raportointivali+)))
 
 (defn aseta-testisijainti
   "HUOM: testikäyttöön. Asettaa nykyisen sijainnin koordinaatit. Oikean geolocation pollerin tulisi
@@ -83,7 +97,7 @@
                        :lon x
                        :heading 0
                        :accuracy tarkkuus
-                       :speed 40
+                       :speed (+ 25 (rand-int 5))
                        :timestamp (timestamp)}})))
 
 (defn lopeta-paikannus [id]

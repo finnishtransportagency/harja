@@ -20,7 +20,7 @@
   "
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin
-             :refer [julkaise-palvelut poista-palvelut]
+             :refer [julkaise-palvelu poista-palvelut]
              :as http-palvelin]
             [harja.geo :as geo]
             [harja.domain.oikeudet :as oikeudet]
@@ -32,7 +32,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.palvelut.tilannekuva :as tilannekuva]
             [clojure.core.async :as async]
-            [harja.kyselyt.kursori :as kursori]))
+            [harja.kyselyt.kursori :as kursori]
+            [harja.domain.tienakyma :as d]))
 
 (defonce debug-hakuparametrit (atom nil))
 
@@ -56,7 +57,13 @@
 
 (defn- hae-toteumat [db parametrit]
   (kursori/hae-kanavaan
-   (async/chan 32 (map #(assoc % :tyyppi-kartalla :toteuma)))
+   (async/chan 32 (comp
+                    ;; Tässä ei haluta palauttaa varustetoteumia.
+                    ;; Tehokkain tapa estää varustetoteumien palautuminen on tehdä filtteröinti
+                    ;; täällä, koska kommentin kirjoittamisen hetkellä suodattaminen vaatisi SQL-puolella
+                    ;; raskaan EXISTS tarkastuksen.
+                    (filter #(not (empty? (:tehtavat %))))
+                    (map #(assoc % :tyyppi-kartalla :toteuma))))
    db q/hae-toteumat parametrit))
 
 
@@ -134,19 +141,26 @@
   (q/hae-reittipisteet db {:toteuma-id toteuma-id}))
 
 (defn vain-tilaajalle! [user]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (when-not (roolit/tilaajan-kayttaja? user)
     (throw+ (roolit/->EiOikeutta "vain tilaajan käyttäjille"))))
+
+
 
 (defrecord Tienakyma []
   component/Lifecycle
   (start [{db :db http :http-palvelin :as this}]
-    (julkaise-palvelut
+    (julkaise-palvelu
      http
      :hae-tienakymaan
      (fn [user valinnat]
        (vain-tilaajalle! user)
        (hae-tienakymaan db valinnat))
+     {:kysely-spec ::d/hakuehdot
+      :vastaus-spec ::d/tulokset})
 
+    (julkaise-palvelu
+     http
      :hae-reittipisteet-tienakymaan
      (fn [user valinnat]
        (vain-tilaajalle! user)

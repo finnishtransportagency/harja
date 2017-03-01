@@ -19,7 +19,7 @@
 
 (defn- havaintolomakekomponentti [{:keys [lomakedata tallenna-fn peruuta-fn
                                           tr-osoite-lomakkeen-avauksessa
-                                          kuvaa-otetaan-atom
+                                          kuvaa-otetaan-atom lomake-koskettu-atom
                                           liittyvat-havainnot havainnot-ryhmittain]}]
   (let [kuvaus-atom (reagent/cursor lomakedata [:kuvaus])
         aikaleima-atom (reagent/cursor lomakedata [:aikaleima])
@@ -41,6 +41,7 @@
         :peruuta-fn peruuta-fn
         :tallenna-fn tallenna-fn
         :lomakedata-atom lomakedata
+        :lomake-koskettu-atom lomake-koskettu-atom
         :lomake-virheet-atom lomake-virheet-atom}
 
        (when-not (empty? liittyvat-havainnot)
@@ -103,6 +104,7 @@
         :tr-osoite-lomakkeen-avauksessa tr-osoite-lomakkeen-avauksessa
         :tallenna-fn tallenna-lomake!
         :kuvaa-otetaan-atom s/kuvaa-otetaan?
+        :lomake-koskettu-atom s/lomake-koskettu?
         :havainnot-ryhmittain paanavigointi/havainnot-ryhmittain
         :peruuta-fn peruuta-lomake!
         :liittyvat-havainnot @s/liittyvat-havainnot}])))

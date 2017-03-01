@@ -169,6 +169,7 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
                                            (domain/valitut-kentat suodattimet))))
 
 (defn seuraa-alueita! [suodattimet]
+  (zoomaa-urakoihin! (aseta-valitut-organisaatiot! (:alueet @suodattimet)))
   (add-watch suodattimet ::alueen-seuraus (fn [_ _ vanha-tila uusi-tila]
                                              (when-not (= (domain/valitut-suodattimet (:alueet vanha-tila))
                                                           (domain/valitut-suodattimet (:alueet uusi-tila)))

@@ -24,7 +24,8 @@
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.urakka :as urakka]
             [harja.ui.yleiset :as yleiset]
-            [harja.tyokalut.functor :refer [fmap]])
+            [harja.tyokalut.functor :refer [fmap]]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -201,7 +202,8 @@
             :tasaa :oikea
             :muokattava? (constantly false)}
            {:otsikko "YP-lk"
-            :nimi :yllapitoluokka :tyyppi :numero :leveys 4
+            :nimi :yllapitoluokka :leveys 4 :tyyppi :string
+            :fmt yllapitokohteet-domain/yllapitoluokan-lyhyt-nimi
             :muokattava? (constantly false)}
            (when (= (:nakyma optiot) :paallystys) ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
              {:otsikko "Kohde a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-kohde-alku

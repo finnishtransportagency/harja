@@ -397,3 +397,10 @@ SELECT exists(
     WHERE k.kayttajanimi = :kayttajanimi AND
           k.jarjestelma IS TRUE AND
           o.tyyppi = 'liikennevirasto');
+
+-- name: hae-yhteydenpidon-vastaanottajat
+SELECT
+  etunimi,
+  sukunimi,
+  sahkoposti
+FROM kayttaja;

@@ -35,7 +35,7 @@
                             :alustatoimenpiteet
                             [{:sijainti {:aosa 1, :aet 1, :losa 5, :let 15},
                               :kasittelymenetelma "Massanvaihto",
-                              :paksuus 1.2,
+                              :paksuus 1,
                               :verkkotyyppi "Teräsverkko",
                               :verkon-tarkoitus "Muiden routavaurioiden ehkäisy",
                               :verkon-sijainti "Päällysteessä",
@@ -80,7 +80,7 @@
                                     :paallystetyyppi 11,
                                     :km-arvo "testi"}],
                        :alustatoimet [{:kasittelymenetelma 1
-                                       :paksuus 1.2
+                                       :paksuus 1
                                        :tekninen-toimenpide 1
                                        :tr-alkuetaisyys 1
                                        :tr-alkuosa 1

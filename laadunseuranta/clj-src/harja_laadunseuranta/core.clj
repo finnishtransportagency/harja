@@ -94,6 +94,9 @@
                                 :luoja kayttaja-id}))))
 
 (defn- tallenna-merkinnat! [db kirjaukset kayttaja-id]
+  ;; Ei urakkaa tässä vaiheessa, ei voida tehdä oikeustarkistusta
+  ;; Palvelun käyttö vaatii kuitenkin frontilla pääsyn työkaluun
+  ;; ja Livi-tunnuksen, mikä on riittävä suoja.
   (log/debug "Vastaanotettu merkintä: " (pr-str kirjaukset))
   (jdbc/with-db-transaction [tx db]
     (let [vakiohavainto-idt (q/hae-vakiohavaintoavaimet tx)]
@@ -155,7 +158,8 @@
         tarkastukset (reittimuunnin/reittimerkinnat-tarkastuksiksi
                        merkinnat-tr-osoitteilla
                        {:analysoi-rampit? true
-                        :analysoi-ymparikaantymiset? true})]
+                        :analysoi-ymparikaantymiset? true
+                        :analysoi-virheelliset-tiet? true})]
     (log/debug "Reittipisteet muunnettu tarkastuksiksi.")
     tarkastukset))
 
@@ -175,6 +179,9 @@
         (log/warn (format "Yritettiin päättää ajo %s, joka on jo päätetty!" tarkastusajo-id))))))
 
 (defn- luo-uusi-tarkastusajo! [db tiedot kayttaja]
+  ;; Ei urakkaa tässä vaiheessa, ei voida tehdä oikeustarkistusta
+  ;; Palvelun käyttö vaatii kuitenkin frontilla pääsyn työkaluun
+  ;; ja Livi-tunnuksen, mikä on riittävä suoja.
   (q/luo-uusi-tarkastusajo<! db {:ulkoinen_id 0
                                  :kayttaja (:id kayttaja)}))
 

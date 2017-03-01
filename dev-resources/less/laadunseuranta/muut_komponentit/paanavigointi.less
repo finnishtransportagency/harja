@@ -241,6 +241,10 @@
     padding-bottom: 15px;
     height: 60px;
   }
+
+  > .toggle-valintapainike-otsikko-pienempi {
+    font-size: 0.8em;
+  }
 }
 
 .toggle-valintapainike:active:not(.toggle-valintapainike-disabloitu),
@@ -319,12 +323,6 @@
   }
 
   .paanavigointi-container {
-    flex-flow: column;
-
-    > .navigointilaatikko-container {
-      order: 2;
-    }
-
     .navigointilaatikko {
       > footer {
         .nappi {
@@ -335,13 +333,26 @@
     }
 
     > .nappaimisto-container {
-      order: 1;
-      width: 100%;
       display: flex;
       justify-content: center;
 
       // Tässä pelkkä container, itse näppäimistö-elementin responsiivisuus määritelty
       // sen omassa LESS-tiedostossa
+    }
+  }
+}
+
+@media (max-width: @leveys-tabletti) and (orientation: portrait) {
+  .paanavigointi-container {
+    flex-flow: column;
+
+    > .navigointilaatikko-container {
+      order: 2;
+    }
+
+    > .nappaimisto-container {
+      width: 100%;
+      order: 1;
     }
   }
 }

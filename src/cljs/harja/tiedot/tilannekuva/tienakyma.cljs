@@ -8,9 +8,6 @@
             [tuck.core :as tuck]
             [harja.ui.kartta.infopaneelin-sisalto :as infopaneelin-sisalto]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as urakka]
-            [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.pvm :as pvm]
             [cljs-time.core :as t])

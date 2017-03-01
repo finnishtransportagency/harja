@@ -247,6 +247,7 @@
 (defn hae-sanktiotyypit
   "Palauttaa kaikki sanktiotyypit, hyvin harvoin muuttuvaa dataa."
   [db user]
+  (oikeudet/ei-oikeustarkistusta!)
   (into []
         ;; Muunnetaan sanktiolajit arraysta, keyword setiksi
         (map #(konv/array->set % :laji keyword))

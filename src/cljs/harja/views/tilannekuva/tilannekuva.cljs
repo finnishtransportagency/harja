@@ -290,9 +290,6 @@
 
 (defn tienakyma []
   (komp/luo
-   ;; Poistetaan muu tilannekuvan karttataso näkyvistä kun ollaan tienäkymässä
-   (komp/sisaan-ulos #(reset! tilannekuva-kartalla/karttataso-tilannekuva false)
-                     #(reset! tilannekuva-kartalla/karttataso-tilannekuva true))
    (fn []
      [tienakyma/tienakyma])))
 
@@ -352,20 +349,32 @@
        {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
       yhteyshenkilot]]))
 
+(defn- nayta-vai-piilota? [tila]
+  (case tila
+    :nykytilanne true
+    :historiakuva true
+    :tienakyma false))
+
+(defn- nayta-tai-piilota-karttataso! [tila]
+  (reset! tilannekuva-kartalla/karttataso-tilannekuva (nayta-vai-piilota? tila)))
+
 (defn tilannekuva []
   (komp/luo
+    (komp/lippu tiedot/nakymassa? istunto/ajastin-taukotilassa?)
     (komp/watcher tiedot/valittu-tila
-                  (fn [_ _ uusi-tila]
-                    (reset! kartta-tiedot/pida-geometriat-nakyvilla?
-                            (case uusi-tila
-                              :nykytilanne false
-                              :historiakuva false
-                              :tienakyma false
-                              false))))
-    (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva istunto/ajastin-taukotilassa?)
+                  (fn [_ _ uusi]
+                    (nayta-tai-piilota-karttataso! uusi)))
     (komp/sisaan-ulos #(do (kartta/aseta-paivitetaan-karttaa-tila! true)
+                           ;; Karttatason näyttäminen/piilottaminen täytyy tehdä täällä,
+                           ;; koska aktiivinen tila voi olla tienäkymä, eikä tienäkymässä
+                           ;; haluta näyttää esim. organisaatiorajoja. Jos tienäkymä
+                           ;; hallitsisi itse tason näkyvyyttä, ei se voisi tietää,
+                           ;; poistuttiinko tienäkymästä nykytilanteeseen (-> taso päälle)
+                           ;; vai toiseen näkymään (-> taso pois)
+                           (nayta-tai-piilota-karttataso! @tiedot/valittu-tila)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa @nav/valittu-urakka)
-                           (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa @nav/valittu-hallintayksikko)
+                           (when (:id @nav/valittu-urakka) (tiedot/aseta-urakka-valituksi! (:id @nav/valittu-urakka)))
+                           (reset! kartta-tiedot/pida-geometriat-nakyvilla? false)
                            (kartta-tiedot/kasittele-infopaneelin-linkit!
                              {:paallystys
                               {:toiminto (fn [yllapitokohdeosa]
@@ -373,11 +382,11 @@
                                              (get-in yllapitokohdeosa [:yllapitokohde :yhteyshenkilot])))
                                :teksti "Näytä yhteyshenkilöt"}})
                            (tiedot/seuraa-alueita!))
-                      #(do (reset! kartta-tiedot/pida-geometriat-nakyvilla? true)
-                           (kartta/aseta-paivitetaan-karttaa-tila! false)
+                      #(do (kartta/aseta-paivitetaan-karttaa-tila! false)
+                           (reset! tilannekuva-kartalla/karttataso-tilannekuva false)
                            (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa nil)
-                           (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa nil)
+                           (reset! kartta-tiedot/pida-geometriat-nakyvilla? kartta-tiedot/pida-geometria-nakyvilla-oletusarvo)
                            (tiedot/lopeta-alueiden-seuraus!)))
     (komp/karttakontrollit :tilannekuva
                            [hallintapaneeli])

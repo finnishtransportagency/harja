@@ -7,26 +7,72 @@
             [harja-laadunseuranta.tiedot.math :as math]
             [harja-laadunseuranta.tiedot.fmt :as fmt]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
-            [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset]))
-
-;; Syöttöjen validiusehdot
-
-(def mittaustyypin-lahtoarvo {:kitkamittaus "0,"
-                              :lumisuus ""
-                              :talvihoito-tasaisuus ""})
-
-(def syoton-max-merkkimaara {:kitkamittaus 4
-                             :lumisuus 3
-                             :talvihoito-tasaisuus 3})
-
-(def syoton-rajat {:kitkamittaus [0.01 0.99]
-                   :lumisuus [0 100]
-                   :talvihoito-tasaisuus [0 100]})
+            [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset]
+            [clojure.string :as str]))
 
 ;; Näppäimistön toiminnallisuus
 
+(def syottosaannot {:kitkamittaus {:lahtoarvo "0,"
+                                   :rajat [0.01 0.99]
+                                   :kokonaisosan-merkkimaara 1
+                                   :desimaaliosan-merkkimaara 2
+                                   :salli-syottaa-desimaalierotin? false} ;; On jo mukana lähtöarvossa
+                    :lumisuus {:lahtoarvo ""
+                               :rajat [0 100]
+                               :kokonaisosan-merkkimaara 3
+                               :desimaaliosan-merkkimaara 0
+                               :salli-syottaa-desimaalierotin? false}
+                    :talvihoito-tasaisuus {:lahtoarvo ""
+                                           :rajat [0 100]
+                                           :kokonaisosan-merkkimaara 3
+                                           :desimaaliosan-merkkimaara 1
+                                           :salli-syottaa-desimaalierotin? true}})
+
+(defn nykyisen-syotto-osan-max-merkkimaara-saavutettu? [mittaustyyppi nykyinen-syotto]
+  (let [syoton-tyyppi (if (str/includes? nykyinen-syotto ",") :desimaaliosa :kokonaisosa)
+        kokonaisosan-merkkimaara (get-in syottosaannot [mittaustyyppi :kokonaisosan-merkkimaara])
+        desimaaliosan-merkkimaara (get-in syottosaannot [mittaustyyppi :desimaaliosan-merkkimaara])
+        syotetty-kokonaisosa (first (str/split nykyinen-syotto #","))
+        syotetty-desimaaliosa (second (str/split nykyinen-syotto #","))
+        max-maara? (case syoton-tyyppi
+                     :desimaaliosa
+                     (>= (count syotetty-desimaaliosa) desimaaliosan-merkkimaara)
+                     :kokonaisosa
+                     (>= (count syotetty-kokonaisosa) kokonaisosan-merkkimaara))]
+    max-maara?))
+
+(defn syotto-validi?
+  "Kertoo, onko annettu syöttö validi eli voidaanko se kirjata, paluuarvo true tai false.
+   Optioilla voidaan määrittää, mitkä kaikki syöttösäännöt tarkistetaan (oletuksena kaikki true)."
+  ([mittaustyyppi nykyinen-syotto] (syotto-validi? mittaustyyppi nykyinen-syotto {:validoi-rajat? true}))
+  ([mittaustyyppi nykyinen-syotto {:keys [validoi-rajat?] :as optiot}]
+   (let [kokonaisosan-merkkimaara (get-in syottosaannot [mittaustyyppi :kokonaisosan-merkkimaara])
+         desimaaliosan-merkkimaara (get-in syottosaannot [mittaustyyppi :desimaaliosan-merkkimaara])
+         syotetty-kokonaisosa (first (str/split nykyinen-syotto #","))
+         syotetty-desimaaliosa (second (str/split nykyinen-syotto #","))
+         syotto-sallittu?
+         (boolean (and
+                    ;; Merkkimäärät eivät ylity
+                    (and (<= (count syotetty-kokonaisosa) kokonaisosan-merkkimaara)
+                         (or (nil? syotetty-desimaaliosa)
+                             (<= (count syotetty-desimaaliosa) desimaaliosan-merkkimaara)))
+                    ;; Pilkku ei ole väärässä paikassa
+                    (or (not (str/includes? nykyinen-syotto ","))
+                        (and (str/includes? nykyinen-syotto ",")
+                             (not= (str (first nykyinen-syotto)) ",")
+                             (not= (str (last nykyinen-syotto)) ",")))
+                    ;; Raja-arvot eivät ylity
+                    (or (not validoi-rajat?)
+                        (>= (fmt/string->numero nykyinen-syotto)
+                            (first (get-in syottosaannot [mittaustyyppi :rajat]))))
+                    (or (not validoi-rajat?)
+                        (<= (fmt/string->numero nykyinen-syotto)
+                            (second (get-in syottosaannot [mittaustyyppi :rajat]))))))]
+     (.log js/console "Syöttö sallittu? " (pr-str syotto-sallittu?))
+     syotto-sallittu?)))
+
 (defn numeronappain-painettu!
-  "Lisää syötteen syöttö-atomiin, jos se on sallittu.
+  "Lisää syötteen syöttö-atomiin.
    Estää liian pitkät syötteet, mutta ei tarkista esim.
    min-max rajoja ylittäviä syötteitä. Näistä on tarkoitus
    näyttää varoitus käyttöliittymässä ja käyttäjää
@@ -35,21 +81,30 @@
   (.log js/console "Numero syötetty: " (pr-str numero))
   (let [nykyinen-syotto (:nykyinen-syotto @syotto-atom)
         uusi-syotto (str nykyinen-syotto numero)
-        suurin-sallittu-tarkkuus (mittaustyyppi syoton-max-merkkimaara)
-        salli-syotto? (<= (count uusi-syotto) suurin-sallittu-tarkkuus)
-        _ (.log js/console "Salli syöttö: " (pr-str salli-syotto?))
+        salli-syotto? (syotto-validi? mittaustyyppi uusi-syotto {:validoi-rajat? false})
+        lopullinen-syotto (if salli-syotto?
+                            uusi-syotto
+                            nykyinen-syotto)]
+    (swap! syotto-atom assoc :nykyinen-syotto lopullinen-syotto)))
+
+(defn desimaalierotin-painettu!
+  "Lisää desimaalierottimen syöttö-atomiin"
+  [syotto-atom]
+  (let [nykyinen-syotto (:nykyinen-syotto @syotto-atom)
+        uusi-syotto (str nykyinen-syotto ",")
+        salli-syotto? (not (str/includes? nykyinen-syotto ","))
         lopullinen-syotto (if salli-syotto?
                             uusi-syotto
                             nykyinen-syotto)]
     (swap! syotto-atom assoc :nykyinen-syotto lopullinen-syotto)))
 
 (defn alusta-mittaussyotto! [mittaustyyppi syotto-atom]
-  (swap! syotto-atom assoc :nykyinen-syotto (mittaustyyppi mittaustyypin-lahtoarvo)))
+  (swap! syotto-atom assoc :nykyinen-syotto (get-in syottosaannot [mittaustyyppi :lahtoarvo])))
 
 (defn tyhjennyspainike-painettu! [mittaustyyppi syotto-atom]
   (let [poista-viimeinen-merkki #(apply str (butlast %))
         poiston-jalkeen (poista-viimeinen-merkki (:nykyinen-syotto @syotto-atom))
-        mittaustyypin-alustusarvo (mittaustyyppi mittaustyypin-lahtoarvo)
+        mittaustyypin-alustusarvo (get-in syottosaannot [mittaustyyppi :lahtoarvo])
         uusi-syotto (if (< (count poiston-jalkeen) (count mittaustyypin-alustusarvo))
                       mittaustyypin-alustusarvo
                       poiston-jalkeen)]
@@ -57,7 +112,7 @@
 
 (defn syotto-onnistui! [mittaustyyppi syotto-atom]
   (swap! syotto-atom assoc :syotot (conj (:syotot @syotto-atom) (:nykyinen-syotto @syotto-atom)))
-  (swap! syotto-atom assoc :nykyinen-syotto (mittaustyyppi mittaustyypin-lahtoarvo))
+  (swap! syotto-atom assoc :nykyinen-syotto (get-in syottosaannot [mittaustyyppi :lahtoarvo]))
   (.log js/console "Syötöt nyt: " (pr-str (:syotot @syotto-atom))))
 
 (defn lopeta-mittaus-painettu! [nimi avain]
@@ -66,17 +121,6 @@
   (ilmoitukset/ilmoita
     (str nimi " päättyy")
     s/ilmoitus))
-
-(defn- syotto-validi? [mittaustyyppi nykyinen-syotto]
-  (let [suurin-sallittu-tarkkuus (mittaustyyppi syoton-max-merkkimaara)
-        syotto-sallittu? (boolean (and (<= (count nykyinen-syotto)
-                                           suurin-sallittu-tarkkuus)
-                                       (>= (fmt/string->numero nykyinen-syotto)
-                                           (first (mittaustyyppi syoton-rajat)))
-                                       (<= (fmt/string->numero nykyinen-syotto)
-                                           (second (mittaustyyppi syoton-rajat)))))]
-    (.log js/console "Syöttö sallittu? " (pr-str syotto-sallittu?))
-    syotto-sallittu?))
 
 ;; Erikoisnäppäimistöt
 

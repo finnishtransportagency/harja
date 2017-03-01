@@ -33,24 +33,39 @@
     (log/debug "Päällystysilmoitukset saatu: " (count vastaus) "kpl")
     vastaus))
 
-(defn- lisaa-paallystysilmoitukseen-kohdeosien-tiedot [paallystysilmoitus]
+(defn- taydenna-paallystysilmoituksen-kohdeosien-tiedot
+  "Ottaa päällystysilmoituksen ja lisää sen kohdeosiin niiden vastaavat ilmoitustiedot."
+  [paallystysilmoitus]
   (-> paallystysilmoitus
       (assoc-in [:ilmoitustiedot :osoitteet]
                 (->> paallystysilmoitus
                      :kohdeosat
                      (map (fn [kohdeosa]
                             ;; Lisää kohdeosan tietoihin päällystystoimenpiteen tiedot
-                            (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
-                                   (some
-                                     (fn [paallystystoimenpide]
-                                       (when (= (:id kohdeosa)
-                                                (:kohdeosa-id paallystystoimenpide))
-                                         paallystystoimenpide))
-                                     (get-in paallystysilmoitus
-                                             [:ilmoitustiedot :osoitteet])))))
+                            ;; On mahdollista, ettei kohdeosalle ole lisätty mitään tietoja
+                            (let [kohdeosan-ilmoitustiedot (first (filter
+                                                                    #(= (:id kohdeosa)
+                                                                        (:kohdeosa-id %))
+                                                                    (get-in paallystysilmoitus
+                                                                            [:ilmoitustiedot :osoitteet])))]
+                              (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
+                                     kohdeosan-ilmoitustiedot))))
                      (sort-by tierekisteri-domain/tiekohteiden-jarjestys)
                      vec))
       (dissoc :kohdeosat)))
+
+(defn- pyorista-kasittelypaksuus
+  "Käsittelypaksuus täytyy pyöristää johtuen siitä, että aiemmassa mallissa, käsittelypaksuudelle sallittiin desimaalit.
+   Myöhemmin YHA:ssa sallittiin vain kokonaisluvut ja olemassa olevien päällystysilmoitusten migrointi ei ole enää
+   mahdollista. Sen takia vanhat arvot pyöristetään vaikka kaikki uudet arvot voi tallentaa vain kokonaislukuina."
+  [paallystysilmoitus]
+  (let [alustatoimet (get-in paallystysilmoitus [:ilmoitustiedot :alustatoimet])]
+    (if (empty? alustatoimet)
+      paallystysilmoitus
+      (assoc-in paallystysilmoitus
+                [:ilmoitustiedot :alustatoimet]
+                (map #(assoc % :paksuus (int (:paksuus %)))
+                     alustatoimet)))))
 
 (defn hae-urakan-paallystysilmoitus-paallystyskohteella
   "Hakee päällystysilmoituksen ja kohteen tiedot.
@@ -77,12 +92,13 @@
                                     paallystysilmoitus
                                     {:kohdeosa :kohdeosat}
                                     :id))
+        paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
         _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
             (skeema/validoi pot-domain/+paallystysilmoitus+
                             ilmoitustiedot))
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
-        paallystysilmoitus (lisaa-paallystysilmoitukseen-kohdeosien-tiedot paallystysilmoitus)
+        paallystysilmoitus (taydenna-paallystysilmoituksen-kohdeosien-tiedot paallystysilmoitus)
         kokonaishinta (reduce + (keep paallystysilmoitus [:sopimuksen-mukaiset-tyot
                                                           :arvonvahennykset
                                                           :bitumi-indeksi
@@ -101,7 +117,8 @@
                          (paallystys-ja-paikkaus/summaa-maaramuutokset maaramuutokset))
         paallystysilmoitus (assoc paallystysilmoitus
                              :kokonaishinta kokonaishinta
-                             :maaramuutokset maaramuutokset
+                             :maaramuutokset (:tulos maaramuutokset)
+                             :maaramuutokset-ennustettu? (:ennustettu? maaramuutokset)
                              :paallystyskohde-id paallystyskohde-id
                              :kommentit kommentit)]
     (log/debug "Päällystysilmoitus kasattu: " (pr-str paallystysilmoitus))

@@ -1,6 +1,15 @@
-(ns harja-laadunseuranta.math)
+(ns harja.math
+  "Yleiskäyttöiset matematiikka-apurit")
 
-;; TODO Pitäisi yhdistää harja.math:iin...
+(defn osuus-prosentteina
+  [osoittaja nimittaja]
+  (if (not= nimittaja 0)
+    (* (/ osoittaja
+          nimittaja)
+       100.0)
+    0.0))
+
+;; TODO APureista kulma-funktio tänne
 
 (defn ms->sec
   "Muuntaa millisekunnit sekunneiksi"

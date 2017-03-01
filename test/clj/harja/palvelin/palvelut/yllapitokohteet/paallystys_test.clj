@@ -198,12 +198,23 @@
                                                                     :sopimus-id sopimus-id
                                                                     :paallystyskohde-id paallystyskohde-id})
         kohdeosat (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])]
+    ;; Päällystysilmoituksen perustiedot OK
     (is (not (nil? paallystysilmoitus-kannassa)))
     (is (= (:tila paallystysilmoitus-kannassa) :aloitettu) "Päällystysilmoituksen tila on aloitttu")
-    (is (== (:maaramuutokset paallystysilmoitus-kannassa) 160))
+    (is (== (:maaramuutokset paallystysilmoitus-kannassa) 205))
     (is (== (:kokonaishinta paallystysilmoitus-kannassa) 5043.95))
+    (is (= (:maaramuutokset-ennustettu? paallystysilmoitus-kannassa) true))
+    (is (= (:kohdenimi paallystysilmoitus-kannassa) "Leppäjärven ramppi"))
+    (is (= (:kohdenumero paallystysilmoitus-kannassa) "L03"))
     ;; Kohdeosat on OK
     (is (= (count kohdeosat) 1))
+    (is (= kohdeosat
+           [{:kohdeosa-id 666, :tr-kaista 1, :edellinen-paallystetyyppi 2, :lisaaineet "12",
+             :leveys 12, :kokonaismassamaara 12, :tr-ajorata 1, :sideainetyyppi 2, :muotoarvo "12",
+             :esiintyma "12", :pitoisuus 12, :tr-loppuosa 3, :tunnus nil, :tr-alkuosa 1, :pinta-ala 12,
+             :massamenekki 1, :kuulamylly 2, :tr-loppuetaisyys 0, :nimi "Leppäjärven kohdeosa", :raekoko 1,
+             :tyomenetelma 21, :rc% 12, :paallystetyyppi 2, :tr-alkuetaisyys 0, :tr-numero 20, :toimenpide nil,
+             :km-arvo "12"}]))
     (is (every? #(number? (:kohdeosa-id %)) kohdeosat))))
 
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
@@ -241,10 +252,12 @@
                                 :verkkotyyppi 1
                                 :verkon-sijainti 1
                                 :verkon-tarkoitus 1}]
+                ;; Päällystysilmoituksen myötä kohteen kohdeosat päivitettiin vastaamaan
+                ;; päällystysilmoituksessa mainittuja osia
                 :osoitteet [{:edellinen-paallystetyyppi 1
                              :esiintyma "asd"
                              :km-arvo "asd"
-                             :kohdeosa-id 19
+                             :kohdeosa-id 14
                              :kokonaismassamaara 2
                              :leveys 5
                              :lisaaineet "asd"
@@ -317,7 +330,7 @@
                 :osoitteet [{:edellinen-paallystetyyppi 1
                              :esiintyma "asd"
                              :km-arvo "asd"
-                             :kohdeosa-id 19
+                             :kohdeosa-id 14
                              :kokonaismassamaara 2
                              :leveys 5
                              :lisaaineet "asd"
@@ -362,7 +375,7 @@
     (let [urakka-id @muhoksen-paallystysurakan-id
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
           paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
-          kohteita #(count (q (str "SELECT * FROM yllapitokohdeosa"
+          hae-kohteiden-maara #(count (q (str "SELECT * FROM yllapitokohdeosa"
                                    " WHERE poistettu IS NOT TRUE "
                                    " AND yllapitokohde = " paallystyskohde-id ";")))]
 
@@ -372,7 +385,7 @@
                        :sopimus-id sopimus-id
                        :paallystysilmoitus paallystysilmoitus})
 
-      (let [kohteita-ennen-lisaysta (kohteita)
+      (let [kohteita-ennen-lisaysta (hae-kohteiden-maara)
             paallystysilmoitus (update-in paallystysilmoitus [:ilmoitustiedot :osoitteet]
                                           conj {:nimi "Tie 4242"
                                                 :tr-numero 4242
@@ -406,7 +419,7 @@
                          :sopimus-id sopimus-id
                          :paallystysilmoitus paallystysilmoitus})
 
-        (is (= (inc kohteita-ennen-lisaysta) (kohteita)) "Kohteita on nyt 1 enemmän")))))
+        (is (= (inc kohteita-ennen-lisaysta) (hae-kohteiden-maara)) "Kohteita on nyt 1 enemmän")))))
 
 (deftest ala-paivita-paallystysilmoitukselle-paatostiedot-jos-ei-oikeuksia
   (let [paallystyskohde-id (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)]

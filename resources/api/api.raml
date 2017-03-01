@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Harja API
-version: 1.0.9
+version: 1.0.12
 baseUri: https://testioag.liikennevirasto.fi/harja/api (testi) & https://oag.liikennevirasto.fi/harja/api (tuotanto)
 protocols: [HTTPS]
 mediaType: application/json
@@ -42,6 +42,7 @@ schemas:
  - tietyomaan-poisto-request: !include schemas/tietyomaan-poisto-request.schema.json
  - urakan-yhteystietojen-haku-response: !include schemas/urakan-yhteystietojen-haku-response.schema.json
  - urakan-yllapitokohteen-paivitys-request: !include schemas/urakan-yllapitokohteen-paivitys-request.schema.json
+ - urakan-yllapitokohteen-maaramuutosten-kirjaus-request: !include schemas/urakan-yllapitokohteen-maaramuutosten-kirjaus-request.schema.json
 
 securitySchemes:
  - basic:
@@ -766,7 +767,30 @@ documentation:
                     application/json:
                      example: !include examples/virhe-response.json
                      schema: virhe-response
-
+          /maaramuutokset:
+            post:
+              is: [secured]
+              description: Kohteen määrämuutosten (taloudellisen osan kirjaus). Rajapinnan kautta voidana päivittää kohteen kulutiedot, kuten esim. yksittäiset työt, yksikköhintoineen ja määrineen. Yksittäinen kutsu rajapintaan poistaa saman käyttäjän luomat olemassaolevat tiedot ja päivittää ne annetuilla. Tarkoitus on siis, että kaikki kohteen määrämuutokset välitetään jokaisessa kutsussa. Kentistä "ennustettu-maara" ja "toteutunut-maara" on pakko antaa ainakin toinen.
+              body:
+                application/json:
+                  example: !include examples/urakan-yllapitokohteen-maaramuutosten-kirjaus-request.json
+                  schema: urakan-yllapitokohteen-maaramuutosten-kirjaus-request
+              responses:
+                200:
+                  body:
+                    application/json:
+                      example: !include examples/onnistunut-kirjaus-response.json
+                      schema: kirjaus-response
+                500:
+                  body:
+                    application/json:
+                     example: !include examples/virhe-response.json
+                     schema: virhe-response
+                400:
+                  body:
+                    application/json:
+                     example: !include examples/virhe-response.json
+                     schema: virhe-response
   /yhteystiedot:
     /{urakkanumero}:
       get:
@@ -866,10 +890,6 @@ documentation:
           description: Haettavan tietolajin tunniste
           type: string
           example: tl506
-        muutospaivamaara:
-          description: Haettavan tietolajin muutospäivämäärä
-          type: date
-          example: 2015-01-01
       responses:
          200:
           body:

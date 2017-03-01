@@ -2,7 +2,7 @@
   (:require [cljs.test :as t :refer-macros [deftest is testing async]]
             [reagent.core :as reagent :refer [atom]]
             [dommy.core :as dommy]
-            [harja-laadunseuranta.testutils :refer [sel sel1]]
+            [harja.testutils.shared-testutils :refer [sel sel1]]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.ui.ylapalkki :as ylapalkki]
             [cljs-react-test.utils])
