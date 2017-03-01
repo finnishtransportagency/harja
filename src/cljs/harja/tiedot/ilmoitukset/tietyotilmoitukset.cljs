@@ -14,17 +14,15 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-
 ;; Valinnat jotka riippuvat ulkoisista atomeista
 (defonce ulkoisetvalinnat
-         (reaction
-           {:voi-hakea? true
-            :hallintayksikko (:id @nav/valittu-hallintayksikko)
-            :urakka (:id @nav/valittu-urakka)
-            :valitun-urakan-hoitokaudet @u/valitun-urakan-hoitokaudet
-            :urakoitsija (:id @nav/valittu-urakoitsija)
-            :urakkatyyppi (:arvo @nav/urakkatyyppi)
-            :hoitokausi @u/valittu-hoitokausi}))
+  (reaction {:voi-hakea? true
+             :hallintayksikko (:id @nav/valittu-hallintayksikko)
+             :urakka (:id @nav/valittu-urakka)
+             :valitun-urakan-hoitokaudet @u/valitun-urakan-hoitokaudet
+             :urakoitsija (:id @nav/valittu-urakoitsija)
+             :urakkatyyppi (:arvo @nav/urakkatyyppi)
+             :hoitokausi @u/valittu-hoitokausi}))
 
 (defonce karttataso-ilmoitukset (atom false))
 
@@ -34,6 +32,8 @@
                             :ilmoitukset nil ;; haetut ilmoitukset
                             :valinnat {:alkuaika (pvm/tuntia-sitten 1)
                                        :loppuaika (pvm/nyt)}}))
+
+;; (tarkkaile! "tti/ilmoitukset" ilmoitukset)
 
 ;; Vaihtaa valinnat
 (defrecord AsetaValinnat [valinnat])
@@ -54,7 +54,7 @@
 (defrecord PoistaIlmoitusValinta [])
 
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
-  (log "hae-ilmoitukset" (pr-str valinnat))
+  (log "---> hae-ilmoitukset, appin :valinnat = " (pr-str valinnat))
   (-> app
       (assoc :ilmoitushaku-id (.setTimeout js/window
                                            (t/send-async! ->HaeIlmoitukset)
@@ -63,20 +63,21 @@
 (extend-protocol t/Event
   AsetaValinnat
   (process-event [{valinnat :valinnat} app]
-    (log "---> valinnat" (pr-str valinnat))
+    (log "---> AsetaValinnat, valinnat" (pr-str valinnat))
     (hae-ilmoitukset
-      (assoc app :valinnat valinnat)))
+       (assoc app :valinnat valinnat)))
 
   YhdistaValinnat
   (process-event [{ulkoisetvalinnat :ulkoisetvalinnat :as e} app]
     (let [uudet-valinnat (merge ulkoisetvalinnat (:valinnat app))
           app (assoc app :valinnat uudet-valinnat)]
+      (log "--->YhdistaValinnat, kutsutaan hae-ilmoitukset")
       (hae-ilmoitukset app)))
 
   HaeIlmoitukset
   (process-event [_ {valinnat :valinnat :as app}]
     (let [tulos! (t/send-async! ->IlmoitusHaku)]
-      (log "---> HaeIlmoitukset: valinnat:" (pr-str valinnat))
+      (log "---> HaeIlmoitukset: valinnat:" (pr-str valinnat) ", app keys:" (pr-str (keys  app)))
       (go
         (tulos!
          {:ilmoitukset (<! (k/post! :hae-tietyoilmoitukset (select-keys valinnat [:alkuaika :loppuaika] )))})))
