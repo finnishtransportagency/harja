@@ -203,7 +203,7 @@
             :muokattava? (constantly false)}
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :leveys 4 :tyyppi :string
-            :fmt yllapitokohteet-domain/yllapitoluokan-lyhyt-nimi
+            :fmt yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi
             :muokattava? (constantly false)}
            (when (= (:nakyma optiot) :paallystys) ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
              {:otsikko "Kohde a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-kohde-alku

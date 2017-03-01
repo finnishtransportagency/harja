@@ -34,24 +34,26 @@
 (use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (def ilmoituksien-saajat
-  [{:tunniste nil,
-    :kayttajatunnus "A000001",
-    :etunimi "Erkki",
-    :sukunimi "Esimerkki",
-    :sahkoposti "erkki.esimerkki@example.com",
-    :puhelin "",
-    :roolit ["ELY urakanvalvoja"],
+  [{:etunimi "Erkki"
+    :kayttajatunnus "A000001"
+    :organisaatio "ELY"
+    :poistettu false
+    :puhelin ""
     :roolinimet ["ELY_Urakanvalvoja"]
-    :organisaatio "ELY"}
-   {:tunniste nil,
-    :kayttajatunnus "A000002",
-    :etunimi "Eero",
-    :sukunimi "Esimerkki",
-    :sahkoposti "eero.esimerkki@example.com",
-    :puhelin "0400123456789",
-    :roolit ["Urakan vastuuhenkilö"],
+    :roolit ["ELY urakanvalvoja"]
+    :sahkoposti "erkki.esimerkki@example.com"
+    :sukunimi "Esimerkki"
+    :tunniste nil}
+   {:etunimi "Eero"
+    :kayttajatunnus "A000002"
+    :organisaatio "ELY"
+    :poistettu false
+    :puhelin "0400123456789"
     :roolinimet ["vastuuhenkilo"]
-    :organisaatio "ELY"}])
+    :roolit ["Urakan vastuuhenkilö"]
+    :sahkoposti "eero.esimerkki@example.com"
+    :sukunimi "Esimerkki"
+    :tunniste nil}])
 
 (deftest urakoiden-paivystajien-haku-toimii
   (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
