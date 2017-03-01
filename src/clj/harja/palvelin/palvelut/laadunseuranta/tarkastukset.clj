@@ -192,7 +192,7 @@
             laatupoikkeama-id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama db user laatupoikkeama)]
         (tarkastukset/liita-tarkastukselle-laatupoikkeama<!
           db
-          {:tarkastus tarkastus-idsh
+          {:tarkastus tarkastus-id
            :laatupoikkeama laatupoikkeama-id})
         (tarkastukset/liita-tarkastuksen-liitteet-laatupoikkeamalle<!
           db
