@@ -184,7 +184,7 @@
                                (reduce +))
         kaikki-yhteensa (+ suunniteltu-yhteensa toteumat-yhteensa)]
     [yleiset/taulukkotietonakyma {}
-     "Suunnitellut toteumat yhteensä:"
+     "Suunnitellut työt yhteensä:"
      (fmt/euro-opt suunniteltu-yhteensa)
 
      "Toteumat yhteensä:"
