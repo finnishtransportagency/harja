@@ -40,8 +40,7 @@
    {:otsikko "Kustannuksen kuvaus" :nimi :selite
     :validoi [[:ei-tyhja "Anna kuvaus"]]
     :tyyppi :string :leveys kustannus-selite-leveys}
-   {:otsikko "Summa" :nimi :hinta ;; :fmt fmt/euro-opt
-    ;; :validoi [[:rajattu-numero-jos-muokattava nil 0 100000000 "Anna arvo väliltä 0 - 100 000 000"]]
+   {:otsikko "Summa" :nimi :hinta :fmt fmt/euro-opt
     :validoi [validoi-rajattu-numero-jos-muokattava]
     :tyyppi :numero :leveys kustannus-hinta-leveys}])
 
