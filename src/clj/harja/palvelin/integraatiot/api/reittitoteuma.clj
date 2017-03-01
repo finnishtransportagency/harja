@@ -191,7 +191,7 @@ maksimi-linnuntien-etaisyys 200)
 (defn tarkista-pyynto [db urakka-id kirjaaja data]
   (let [sopimus-idt (api-toteuma/hae-toteuman-kaikki-sopimus-idt :reittitoteuma :reittitoteumat data)]
     (doseq [sopimus-id sopimus-idt]
-      (validointi/tarkista-urakka-sopimus-ja-kayttaja db urakka-id sopimus-id kirjaaja)))
+      (validointi/tarkista-urakka-sopi mus-ja-kayttaja db urakka-id sopimus-id kirjaaja)))
   (when (:reittitoteuma data)
     (toteuman-validointi/tarkista-reittipisteet data)
     (toteuman-validointi/tarkista-tehtavat
@@ -212,6 +212,7 @@ maksimi-linnuntien-etaisyys 200)
     (tarkista-pyynto db urakka-id kirjaaja data)
     (tallenna-kaikki-pyynnon-reittitoteumat db db-replica urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
+
 
 (defn poista-toteuma [db _ {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)
@@ -258,3 +259,9 @@ maksimi-linnuntien-etaisyys 200)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-reittitoteuma)
     this))
+
+;; Reittitoteuman kirjaaminen tiedostosta (esim. payload integraatiolokista)
+;; (def toteuma (cheshire.core/parse-string (slurp "json-tiedosto-tähän")))
+;; (def db (:db harja.palvelin.main/harja-jarjestelma))
+;; (kirjaa-toteuma db db {:id urakka-id} toteuma {:id urakoitsijan-kayttajan-id})
+;;
