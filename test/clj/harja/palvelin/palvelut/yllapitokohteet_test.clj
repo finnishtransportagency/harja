@@ -99,6 +99,16 @@
     (is (every? true? (map :tiemerkintaurakan-voi-vaihtaa? muut-kohteet))
         "Muiden kohteiden tiemerkinnän suorittaja voidaan vaihtaa")))
 
+(deftest tiemerkintaurakan-aikatauluhaku-toimii
+  (let [aikataulu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-yllapitourakan-aikataulu +kayttaja-jvh+
+                                  {:urakka-id (hae-oulun-tiemerkintaurakan-id)
+                                   :sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+                                   :vuosi 2017})]
+    (is (= (count aikataulu) 3) "Löytyi kaikki tiemerkintäurakalle osoitetut ylläpitokohteet")
+    (is (not-any? #(contains? % :suorittava-tiemerkintaurakka) aikataulu)
+        "Tiemerkinnän aikataulu ei sisällä päällystysurakkaan liittyvää tietoa")))
+
 (deftest paallystyskohteet-haettu-oikein-vuodelle-2017
   (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
                             :urakan-yllapitokohteet +kayttaja-jvh+
