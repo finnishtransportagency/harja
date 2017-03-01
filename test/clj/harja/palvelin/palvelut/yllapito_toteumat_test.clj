@@ -131,14 +131,13 @@
 
     (loop [index 0]
       (let [selite (str "yksikkötesti" index)
-            linkitettava-yllapitokohde-id yllapitokohde-id
             kirjattava-toteuma (as-> (gen/generate (s/gen ::tt/tiemerkinnan-yksikkohintainen-tyo)) toteuma
                                      ;; Tee tästä uusi toteuma ja liitä vain osalle ylläpitokohde
                                      (assoc toteuma
                                        :id nil
                                        :selite selite
                                        :poistettu false
-                                       :yllapitokohde-id linkitettava-yllapitokohde-id))
+                                       :yllapitokohde-id yllapitokohde-id))
             pyynto {:urakka-id urakka-id
                     :toteumat [kirjattava-toteuma]}
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
