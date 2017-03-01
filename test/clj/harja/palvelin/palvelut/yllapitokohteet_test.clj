@@ -122,7 +122,6 @@
                                       AND vuodet @> ARRAY[2017]::int[]")))
         kuusamontien-testi (first (filter #(= (:nimi %) "Kuusamontien testi") vastaus))
         muut-kohteet (filter #(not= (:nimi %) "Kuusamontien testi") vastaus)]
-    (log/debug (pr-str vastaus))
     (is (> (count vastaus) 0) "Päällystyskohteita löytyi")
     (is (= (count vastaus) kohteiden-lkm) "Löytyi oikea määrä kohteita")
 
