@@ -22,9 +22,10 @@
 (defn sanitoi [sisalto]
   (str/replace (str sisalto) "<" "&lt;"))
 
-(defn formatoi-virhe [{:keys [id]} {:keys [url viesti rivi sarake selain stack]}]
+(defn formatoi-virhe [{:keys [id]} {:keys [url viesti rivi sarake selain stack sijainti]}]
   [:table
    [:tr [:td {:valign "top"} [:b "Selainvirhe"]] [:td [:pre (sanitoi viesti)]]]
+   [:tr [:td {:valign "top"} [:b "Sijainti Harjassa:"]] [:td [:pre sijainti]]]
    [:tr [:td {:valign "top"} [:b "URL:"]] [:td [:pre (sanitoi url)]]]
    [:tr [:td {:valign "top"} [:b "selain: "]] [:td [:pre (sanitoi selain)]]]
    [:tr [:td {:valign "top"} [:b "rivi: "]] [:td [:pre (sanitoi rivi)]]]
