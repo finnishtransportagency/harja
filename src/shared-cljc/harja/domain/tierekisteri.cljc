@@ -1,16 +1,22 @@
 (ns harja.domain.tierekisteri
   (:require [clojure.spec :as s]
+            [harja.tyokalut.spec-apurit :as spec-apurit]
             [clojure.string :as str]
             #?@(:clj [[clojure.future :refer :all]])))
 
+;; Osan tiedot
 (s/def ::osa (s/and pos-int? #(< % 1000)))
 (s/def ::etaisyys (s/and nat-int? #(< % 50000)))
 
+;; Tien tiedot
 (s/def ::numero (s/and pos-int? #(< % 100000)))
 (s/def ::alkuosa  ::osa)
 (s/def ::alkuetaisyys ::etaisyys)
 (s/def ::loppuosa ::osa)
 (s/def ::loppuetaisyys ::etaisyys)
+
+;; Yleiset suureet
+(s/def ::pituus (s/and int? #(s/int-in-range? 1 spec-apurit/postgres-int-max %)))
 
 ;; Halutaan tierekisteriosoite, joka voi olla pistemäinen tai sisältää myös
 ;; loppuosan ja loppuetäisyyden.
