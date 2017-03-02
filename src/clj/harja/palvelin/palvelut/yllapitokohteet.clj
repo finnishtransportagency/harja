@@ -183,7 +183,7 @@
 
   (viestinta/sahkoposti-tiemerkinta-valmis db fim email (map :id kohteet) user))
 
-(defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id kohteet]}]
+(defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (assert (and urakka-id sopimus-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden aikataulutiedot: " kohteet)
@@ -210,7 +210,8 @@
 
     (log/debug "Aikataulutiedot tallennettu!")
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
-                                   :sopimus-id sopimus-id})))
+                                   :sopimus-id sopimus-id
+                                   :vuosi vuosi})))
 
 (defn- luo-uusi-yllapitokohde [db user urakka-id sopimus-id vuosi
                                {:keys [kohdenumero nimi

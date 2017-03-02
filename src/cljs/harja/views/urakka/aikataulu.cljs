@@ -146,7 +146,7 @@
     (fn [urakka optiot]
       (let [{urakka-id :id :as ur} @nav/valittu-urakka
             sopimus-id (first @u/valittu-sopimusnumero)
-
+            vuosi @u/valittu-urakan-vuosi
             {:keys [voi-tallentaa? saa-muokata?
                     saa-asettaa-valmis-takarajan?
                     saa-merkita-valmiiksi?]} (oikeudet urakka-id)]
@@ -160,9 +160,7 @@
            :tyhja (if (nil? @tiedot/aikataulurivit)
                     [yleiset/ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :tallenna (if voi-tallentaa?
-                       #(tiedot/tallenna-yllapitokohteiden-aikataulu urakka-id
-                                                                     sopimus-id
-                                                                     %)
+                       #(tiedot/tallenna-yllapitokohteiden-aikataulu urakka-id sopimus-id vuosi %)
                        :ei-mahdollinen)}
           [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
             :pituus-max 128 :muokattava? (constantly false)}
