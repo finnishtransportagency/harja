@@ -48,7 +48,7 @@
                                                      (str "SELECT count(*)
                                                        FROM yllapito_muu_toteuma
                                                      WHERE urakka = " urakka
-                                                          " AND sopimus = " sopimus
+                                                          " AND sopimus = " sopimus-id
                                                           " AND pvm >= '2016-1-01' AND pvm <= '2016-12-31'")))]
     (is (= (count res) oulun-tiemerkintaurakan-toiden-lkm) "Muiden töiden määrä")))
 
