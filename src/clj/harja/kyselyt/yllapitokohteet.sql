@@ -82,12 +82,19 @@ SELECT
 FROM yllapitokohde
 WHERE id = :id;
 
--- name: hae-yllapitokohteeseen-tiemerkintaurakassa-liittyvien-kirjauksien-maara
+-- name: hae-yllapitokohteeseen-urakassa-liittyvien-kirjauksien-maara
 SELECT
   (SELECT COUNT(*) FROM tarkastus WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) as "tarkastukset",
   (SELECT COUNT(*) FROM laatupoikkeama WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) as "laatupoikkeamat",
   (SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma
-    WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) as "tiemerkinnan-toteumat"
+    WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) as "tiemerkinnan-toteumat",
+    -- Seuraavat asiat otetaan mukaan jos ylläpitokohteen urakka on annettu urakka
+  (SELECT COUNT(*) FROM paallystysilmoitus WHERE paallystyskohde = :yllapitokohde_id
+  AND (SELECT urakka FROM yllapitokohde WHERE id = :yllapitokohde_id) = :urakka_id) as "paallystysilmoitukset",
+  (SELECT COUNT(*) FROM paikkausilmoitus WHERE paikkauskohde = :yllapitokohde_id
+   AND (SELECT urakka FROM yllapitokohde WHERE id = :yllapitokohde_id) = :urakka_id) as "paikkausilmoitukset",
+  (SELECT COUNT(*) FROM tietyomaa WHERE yllapitokohde = :yllapitokohde_id
+  AND (SELECT urakka FROM yllapitokohde WHERE id = :yllapitokohde_id) = :urakka_id) as "tietyomaat"
 FROM yllapitokohde
 WHERE id = :yllapitokohde_id;
 
