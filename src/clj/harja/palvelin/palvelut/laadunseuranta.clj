@@ -221,8 +221,9 @@
       (doseq [sanktio (:sanktiot laatupoikkeama)]
         (tallenna-laatupoikkeaman-sanktio db user sanktio id urakka)))))
 
-(defn tallenna-laatupoikkeama [db user {:keys [urakka] :as laatupoikkeama}]
+(defn tallenna-laatupoikkeama [db user fim email {:keys [urakka] :as laatupoikkeama}]
   (log/info "Tuli laatupoikkeama: " laatupoikkeama)
+  (log/info "KÄYTTÄJÄ OLI " user)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka)
   (jdbc/with-db-transaction [c db]
     (let [osapuoli (roolit/osapuoli user)
@@ -305,7 +306,7 @@
 
       :tallenna-laatupoikkeama
       (fn [user laatupoikkeama]
-        (tallenna-laatupoikkeama db user laatupoikkeama))
+        (tallenna-laatupoikkeama db user fim sonja-sahkoposti laatupoikkeama))
 
       :tallenna-suorasanktio
       (fn [user tiedot]
