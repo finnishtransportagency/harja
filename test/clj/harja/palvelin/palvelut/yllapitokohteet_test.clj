@@ -66,9 +66,9 @@
 
 (deftest paallystyskohteet-haettu-oikein
   (let [kohteet (kutsu-palvelua (:http-palvelin jarjestelma)
-                            :urakan-yllapitokohteet +kayttaja-jvh+
-                            {:urakka-id @muhoksen-paallystysurakan-id
-                             :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id})
+                                :urakan-yllapitokohteet +kayttaja-jvh+
+                                {:urakka-id @muhoksen-paallystysurakan-id
+                                 :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id})
         kohteiden-lkm (ffirst (q
                                 (str "SELECT COUNT(*)
                                       FROM yllapitokohde
@@ -79,19 +79,56 @@
     (is (== (:maaramuutokset leppajarven-ramppi) 205)
         "Leppäjärven rampin määrämuutos laskettu oikein")))
 
+(deftest paallystysurakan-aikatauluhaku-toimii
+  (let [urakan-yllapitokohteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                               :urakan-yllapitokohteet +kayttaja-jvh+
+                                               {:urakka-id @muhoksen-paallystysurakan-id
+                                                :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                                                :vuosi 2017})
+        aikataulu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-yllapitourakan-aikataulu +kayttaja-jvh+
+                                  {:urakka-id @muhoksen-paallystysurakan-id
+                                   :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                                   :vuosi 2017})
+        leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi") aikataulu))
+        muut-kohteet (filter #(not= (:nimi %) "Leppäjärven ramppi") aikataulu)]
+    (is (= (count urakan-yllapitokohteet) (count aikataulu))
+        "Jokaiselle kohteelle saatiin haettua aikataulu")
+    (is (false? (:tiemerkintaurakan-voi-vaihtaa? leppajarven-ramppi))
+        "Leppäjärven rampilla on kirjauksia, ei saa vaihtaa suorittavaa tiemerkintäurakkaa")
+    (is (every? true? (map :tiemerkintaurakan-voi-vaihtaa? muut-kohteet))
+        "Muiden kohteiden tiemerkinnän suorittaja voidaan vaihtaa")))
+
+(deftest tiemerkintaurakan-aikatauluhaku-toimii
+  (let [aikataulu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-yllapitourakan-aikataulu +kayttaja-jvh+
+                                  {:urakka-id (hae-oulun-tiemerkintaurakan-id)
+                                   :sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+                                   :vuosi 2017})]
+    (is (= (count aikataulu) 3) "Löytyi kaikki tiemerkintäurakalle osoitetut ylläpitokohteet")
+    (is (not-any? #(contains? % :suorittava-tiemerkintaurakka) aikataulu)
+        "Tiemerkinnän aikataulu ei sisällä päällystysurakkaan liittyvää tietoa")))
+
 (deftest paallystyskohteet-haettu-oikein-vuodelle-2017
-  (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
-                            :urakan-yllapitokohteet +kayttaja-jvh+
-                            {:urakka-id @muhoksen-paallystysurakan-id
-                             :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
-                             :vuosi 2017})
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :urakan-yllapitokohteet +kayttaja-jvh+
+                                {:urakka-id @muhoksen-paallystysurakan-id
+                                 :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                                 :vuosi 2017})
         kohteiden-lkm (ffirst (q
                                 (str "SELECT COUNT(*)
                                       FROM yllapitokohde
                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")
-                                      AND vuodet @> ARRAY[2017]::int[]")))]
-    (is (> (count res) 0) "Päällystyskohteita löytyi")
-    (is (= (count res) kohteiden-lkm) "Löytyi oikea määrä kohteita")))
+                                      AND vuodet @> ARRAY[2017]::int[]")))
+        kuusamontien-testi (first (filter #(= (:nimi %) "Kuusamontien testi") vastaus))
+        muut-kohteet (filter #(not= (:nimi %) "Kuusamontien testi") vastaus)]
+    (is (> (count vastaus) 0) "Päällystyskohteita löytyi")
+    (is (= (count vastaus) kohteiden-lkm) "Löytyi oikea määrä kohteita")
+
+    (is (true? (:yllapitokohteen-voi-poistaa? kuusamontien-testi))
+        "Kuusamontien testi -kohteen saa poistaa (ei ole mitään kirjauksia)")
+    (is (every? false? (map :yllapitokohteen-voi-poistaa? muut-kohteet))
+        "Muita kohteita ei saa poistaa (sisältävät kirjauksia)")))
 
 (deftest paallystyskohteet-haettu-oikein-vuodelle-2016
   (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -242,6 +279,7 @@
 (deftest tallenna-paallystysurakan-aikataulut
   (let [urakka-id @muhoksen-paallystysurakan-id
         sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+        vuosi 2017
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
@@ -261,6 +299,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-yllapitokohteiden-aikataulu +kayttaja-jvh+ {:urakka-id urakka-id
                                                                                       :sopimus-id sopimus-id
+                                                                                      :vuosi vuosi
                                                                                       :kohteet kohteet})
         maara-paivityksen-jalkeen (ffirst (q
                                             (str "SELECT count(*) FROM yllapitokohde
@@ -286,6 +325,45 @@
     (is (= (:aikataulu-tiemerkinta-alku odotettu) (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-tiemerkinta-alku")
     (is (= (:aikataulu-tiemerkinta-loppu odotettu) (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-tiemerkinta-loppu")
     (is (= (:aikataulu-kohde-valmis odotettu) (:aikataulu-kohde-valmis vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-kohde-valmis")))
+
+(deftest yllapitokohteen-suorittavan-tiemerkintaurakan-vaihto-ei-toimi-jos-kirjauksia
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+        lapin-urakka-id (hae-lapin-tiemerkintaurakan-id)
+        vuosi 2017
+        kohteet [{:kohdenumero "L03"
+                  :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00") :aikataulu-muokkaaja 2
+                  :urakka (hae-muhoksen-paallystysurakan-id),
+                  :aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
+                  :nimi "Leppäjärven ramppi",
+                  :suorittava-tiemerkintaurakka lapin-urakka-id
+                  :valmis-tiemerkintaan (pvm/->pvm-aika "23.5.2017 12:00")
+                  :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00"),
+                  :id 1
+                  :sopimus (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+                  :aikataulu-muokattu (pvm/->pvm-aika "29.5.2017 12:00")
+                  :aikataulu-tiemerkinta-takaraja (pvm/->pvm "1.6.2017")
+                  :aikataulu-tiemerkinta-alku nil,
+                  :aikataulu-tiemerkinta-loppu (pvm/->pvm "26.5.2017")}]
+        aiempi-aikataulu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                         :hae-yllapitourakan-aikataulu +kayttaja-jvh+
+                                         {:urakka-id @muhoksen-paallystysurakan-id
+                                          :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                                          :vuosi vuosi})
+        aiempi-aikataulu-leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi") aiempi-aikataulu))
+        nykyinen-aikataulu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-yllapitokohteiden-aikataulu
+                                           +kayttaja-jvh+
+                                           {:urakka-id urakka-id
+                                            :sopimus-id sopimus-id
+                                            :vuosi vuosi
+                                            :kohteet kohteet})
+        nykyinen-aikataulu-leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi") nykyinen-aikataulu))]
+    (is (not= (:suorittava-tiemerkintaurakka nykyinen-aikataulu-leppajarven-ramppi) lapin-urakka-id)
+        "Suorittavaa tiemerkintäurakkaa ei vaihdettu, koska tiemerkintäurakasta on tehty kirjauksia kohteelle")
+    (is (= (:suorittava-tiemerkintaurakka aiempi-aikataulu-leppajarven-ramppi)
+           (:suorittava-tiemerkintaurakka nykyinen-aikataulu-leppajarven-ramppi))
+        "Leppäjärven rampin suorittava tiemerkintäurakka on edelleen sama")))
 
 (deftest testidatassa-validit-kohteet
   ;; On kiva jos meidän oma testidata on validia

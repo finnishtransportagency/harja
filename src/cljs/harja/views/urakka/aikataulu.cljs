@@ -78,7 +78,7 @@
                  :pakollinen? true
                  :tyyppi :pvm}]
                @valmis-tiemerkintaan-lomake]]))}
-       "Aseta päivä\u00ADmäärä"]])))
+        "Aseta päivä\u00ADmäärä"]])))
 
 (defn- vuosivalinta
   "Valitsee urakkavuoden urakan alku- ja loppupvm väliltä."
@@ -95,12 +95,12 @@
   (as-> [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
           "Päällystys ei voi alkaa ennen kohteen aloitusta."]] validointi
 
-    ;; Päällystysnäkymässä validoidaan, että alku on annettu
-    (if (= (:nakyma optiot) :paallystys)
-      (conj validointi
-            [:toinen-arvo-annettu-ensin :aikataulu-kohde-alku
-             "Päällystystä ei voi merkitä alkaneeksi ennen kohteen aloitusta."])
-      validointi)))
+        ;; Päällystysnäkymässä validoidaan, että alku on annettu
+        (if (= (:nakyma optiot) :paallystys)
+          (conj validointi
+                [:toinen-arvo-annettu-ensin :aikataulu-kohde-alku
+                 "Päällystystä ei voi merkitä alkaneeksi ennen kohteen aloitusta."])
+          validointi)))
 
 (defn- oikeudet
   "Tarkistaa aikataulunäkymän tarvitsemat oikeudet"
@@ -144,9 +144,9 @@
   (komp/luo
     (komp/lippu tiedot/aikataulu-nakymassa?)
     (fn [urakka optiot]
-      (let [{urakka-id :id :as ur}  @nav/valittu-urakka
+      (let [{urakka-id :id :as ur} @nav/valittu-urakka
             sopimus-id (first @u/valittu-sopimusnumero)
-
+            vuosi @u/valittu-urakan-vuosi
             {:keys [voi-tallentaa? saa-muokata?
                     saa-asettaa-valmis-takarajan?
                     saa-merkita-valmiiksi?]} (oikeudet urakka-id)]
@@ -160,9 +160,7 @@
            :tyhja (if (nil? @tiedot/aikataulurivit)
                     [yleiset/ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :tallenna (if voi-tallentaa?
-                       #(tiedot/tallenna-yllapitokohteiden-aikataulu urakka-id
-                                                                     sopimus-id
-                                                                     %)
+                       #(tiedot/tallenna-yllapitokohteiden-aikataulu urakka-id sopimus-id vuosi %)
                        :ei-mahdollinen)}
           [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
             :pituus-max 128 :muokattava? (constantly false)}
@@ -174,8 +172,7 @@
            {:otsikko "Ajo\u00ADrata"
             :nimi :tr-ajorata
             :muokattava? (constantly false)
-            :tyyppi :string
-            :tasaa :oikea
+            :tyyppi :string :tasaa :oikea
             :fmt (fn [arvo] (:koodi (first (filter #(= (:koodi %) arvo) pot/+ajoradat+))))
             :leveys 3}
            {:otsikko "Kais\u00ADta"
@@ -234,12 +231,12 @@
               :valinnat @tiedot/tiemerkinnan-suorittavat-urakat
               :nayta-ryhmat [:sama-hallintayksikko :eri-hallintayksikko]
               :ryhmittely #(if (= (:hallintayksikko %) (:id (:hallintayksikko urakka)))
-                            :sama-hallintayksikko
-                            :eri-hallintayksikko)
+                             :sama-hallintayksikko
+                             :eri-hallintayksikko)
               :ryhman-otsikko #(case %
-                                :sama-hallintayksikko "Hallintayksikön tiemerkintäurakat"
-                                :eri-hallintayksikko "Muut tiemerkintäurakat")
-              :muokattava? (constantly saa-muokata?)})
+                                 :sama-hallintayksikko "Hallintayksikön tiemerkintäurakat"
+                                 :eri-hallintayksikko "Muut tiemerkintäurakat")
+              :muokattava? (fn [rivi] (and saa-muokata? (:tiemerkintaurakan-voi-vaihtaa? rivi)))})
            {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
             :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? (constantly saa-muokata?)
             :komponentti (fn [rivi {:keys [muokataan?]}]
