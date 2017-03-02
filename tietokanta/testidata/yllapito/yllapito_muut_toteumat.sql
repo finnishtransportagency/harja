@@ -60,4 +60,3 @@ null, 123, 'suunnitelma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null, 
 ((SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'),
 (SELECT id FROM yllapitokohde WHERE suorittava_tiemerkintaurakka = (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018') LIMIT 1),
 500, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', '20 / 1 / 0 / 3 / 0', 'Testitoteuma 3', null, null, null);
->>>>>>> develop:tietokanta/testidata/yllapito/yllapito_toteumat.sql

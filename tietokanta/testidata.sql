@@ -50,11 +50,9 @@ UPDATE organisaatio SET elynumero=14 WHERE lyhenne='LAP';
 
 -- Materiaalin käytöt
 \i testidata/materiaalin_kaytto.sql
+
 -- Toteumat
 \i testidata/toteumat.sql
-
--- Ylläpidon muut toteumat
-\i testidata/yllapito/yllapito_muut_toteumat.sql
 
 -- Sillat
 \i testidata/sillat.sql
@@ -68,7 +66,6 @@ UPDATE organisaatio SET elynumero=14 WHERE lyhenne='LAP';
 -- Muutoshintaiset työt
 \i testidata/muutoshintaiset_tyot.sql
 
-
 -- Päällystyskohteet & -ilmoitukset
 \i testidata/yllapito/paallystys.sql
 
@@ -76,7 +73,7 @@ UPDATE organisaatio SET elynumero=14 WHERE lyhenne='LAP';
 \i testidata/yllapito/paikkaus.sql
 
 -- Ylläpidon toteumat
-\i testidata/yllapito/yllapito_toteumat.sql
+\i testidata/yllapito/yllapito_muut_toteumat.sql
 
 -- Päivitä päällystys & paikkausurakoiden geometriat kohdeluetteloiden perusteella
 SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
