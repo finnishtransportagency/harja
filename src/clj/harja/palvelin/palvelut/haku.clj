@@ -33,7 +33,7 @@
                                                                (str "Järjestelmäkäyttäjä: " (:kayttajanimi %))
                                                                (clojure.string/trimr (str (:etunimi %) " " (:sukunimi %) ", " (:org_nimi %)))))
                                         (k-q/hae-kayttajien-tunnistetiedot db {:hakutermi termi
-                                                                               :organisaatiotyyppi (:tyyppi kayttajan-org)
+                                                                               :organisaatiotyyppi (name (:tyyppi kayttajan-org))
                                                                                :organisaatioid (:id kayttajan-org)}))))
         loytyneet-organisaatiot (when kayttajan-org         ;sallitaan haku vain jos on organisaatio tiedossa (oikeustarkistus)
                                   (into []
