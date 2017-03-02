@@ -1,6 +1,7 @@
-(ns harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet
+(ns harja.palvelin.palvelut.yllapitokohteet
   "Tässä namespacessa on palvelut ylläpitokohteiden ja -kohdeosien hakuun ja tallentamiseen."
   (:require [clojure.java.jdbc :as jdbc]
+            [clojure.core.async :refer [go <! >! thread >!! timeout] :as async]
             [clojure.set :as set]
             [com.stuartsierra.component :as component]
             [harja.domain
@@ -94,6 +95,72 @@
   (log/debug "Haetaan tiemerkinnän suorittavat urakat.")
   (q/hae-tiemerkinnan-suorittavat-urakat db))
 
+<<<<<<< HEAD:src/clj/harja/palvelin/palvelut/yllapitokohteet.clj
+(defn lisaa-yllapitokohteelle-kohteen-pituus [db {:keys [tr-numero tr-alkuosa tr-loppuosa] :as kohde}]
+  (let [osien-pituudet (tr-haku/hae-osien-pituudet db {:tie tr-numero
+                                                       :aosa tr-alkuosa
+                                                       :losa tr-loppuosa})
+        pituus (tr/laske-tien-pituus osien-pituudet kohde)]
+    (assoc kohde :tr-pituus pituus)))
+
+(defn- maarittele-hinnan-kohde [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys
+                                        tr-loppuosa tr-loppuetaisyys] :as kohde}]
+  (str tr-numero " / " tr-alkuosa " / " tr-alkuetaisyys " / "
+       tr-loppuosa " / " tr-loppuetaisyys))
+
+(defn- lisaa-yllapitokohteelle-tieto-hinnan-muuttumisesta [kohde]
+  (let [hinnan-kohde-eri-kuin-nykyinen-osoite?
+        (and (:hinta-kohteelle kohde)
+             (not= (maarittele-hinnan-kohde kohde)
+                   (:hinta-kohteelle kohde)))]
+    (assoc kohde :hinnan-kohde-muuttunut? hinnan-kohde-eri-kuin-nykyinen-osoite?)))
+
+(defn hae-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id]}]
+  (assert urakka-id "anna urakka-id")
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
+  (log/debug "Haetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (let [kohteet (into []
+                        (comp
+                          (map #(konv/string->keyword % :hintatyyppi))
+                          yllapitokohteet-domain/yllapitoluokka-xf)
+                        (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot
+                          db
+                          {:suorittava_tiemerkintaurakka urakka-id}))
+          kohteet (mapv (partial lisaa-yllapitokohteelle-kohteen-pituus db) kohteet)
+          kohteet (mapv lisaa-yllapitokohteelle-tieto-hinnan-muuttumisesta kohteet)]
+      kohteet)))
+
+(defn tallenna-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id kohteet]}]
+  (assert urakka-id "anna urakka-id")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
+  (log/debug "Tallennetaan yksikköhintaiset työt " kohteet " tiemerkintäurakalle: " urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (doseq [{:keys [hinta hintatyyppi muutospvm id] :as kohde} kohteet]
+      (let [hinta-osoitteelle (maarittele-hinnan-kohde kohde)
+            tiedot (first (q/hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
+                            db
+                            {:yllapitokohde id}))]
+        (if tiedot
+          (q/paivita-tiemerkintaurakan-yksikkohintainen-tyo<! db {:hinta hinta
+                                                                  :hintatyyppi (when hintatyyppi (name hintatyyppi))
+                                                                  :muutospvm muutospvm
+                                                                  :hinta_kohteelle (when hinta
+                                                                                     hinta-osoitteelle)
+                                                                  :yllapitokohde id})
+          (q/luo-tiemerkintaurakan-yksikkohintainen-tyo<! db {:hinta hinta
+                                                              :hintatyyppi (when hintatyyppi (name hintatyyppi))
+                                                              :muutospvm muutospvm
+                                                              :hinta_kohteelle (when hinta
+                                                                                 hinta-osoitteelle)
+                                                              :yllapitokohde id}))))
+    (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id})))
+
+(defn- valita-tieto-kohteen-valmiudesta-tiemerkintaan [{:keys [db fim email kohde-id tiemerkintapvm user]}]
+  (go (viestinta/laheta-sposti-kohde-valmis-merkintaan {:db db :fim fim :email email
+                                                        :kohde-id kohde-id :tiemerkintapvm tiemerkintapvm
+                                                        :ilmoittaja user})))
+
 (defn merkitse-kohde-valmiiksi-tiemerkintaan
   "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä.
    Palauttaa päivitetyt kohteet aikataulunäkymään"
@@ -112,8 +179,8 @@
        :id kohde-id
        :urakka urakka-id}))
 
-  (viestinta/sahkoposti-kohde-valmis-merkintaan db fim email
-                                                kohde-id tiemerkintapvm user)
+  (valita-tieto-kohteen-valmiudesta-tiemerkintaan {:db db :fim fim :email email :kohde-id kohde-id
+                                                   :tiemerkintapvm tiemerkintapvm :user user})
 
   (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                  :sopimus-id sopimus-id}))
@@ -141,11 +208,31 @@
            :id (:id kohde)
            :urakka paallystysurakka-id})))))
 
+(defn- valita-tieto-tiemerkinnan-valmistumisesta [{:keys [db user fim email kohteet]}]
+  ;; Täytyy ajaa samassa transaktiossa tallennuksen kanssa
+  (let [kohteet-kannassa (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                    db {:idt (map :id kohteet)}))
+        nyt-valmistuneet-kohteet (filter (fn [tallennettava-kohde]
+                                           (let [kohde-kannassa (first (filter #(= (:id tallennettava-kohde) (:id %))
+                                                                               kohteet-kannassa))]
+                                             (and (nil? (:aikataulu-tiemerkinta-loppu kohde-kannassa))
+                                                  (some? (:aikataulu-tiemerkinta-loppu tallennettava-kohde)))))
+                                         kohteet)]
+    (go (viestinta/laheta-sposti-tiemerkinta-valmis {:db db :fim fim :email email
+                                                     :kohte-idt (mapv :id nyt-valmistuneet-kohteet)
+                                                     :ilmoittaja user}))))
+
 (defn- tallenna-tiemerkintakohteiden-aikataulu [{:keys [fim email db user kohteet tiemerkintaurakka-id
                                                         voi-tallentaa-tiemerkinnan-takarajan?] :as tiedot}]
   (log/debug "Tallennetaan tiemerkintäurakan " tiemerkintaurakka-id " ylläpitokohteiden aikataulutiedot.")
-  (doseq [kohde kohteet]
-    (jdbc/with-db-transaction [db db]
+
+  (jdbc/with-db-transaction [db db]
+    ;; Lähetetään ennen tallennusta sähköposti tiemerkinnän valmistumisesta, koska nyt on tieto siitä,
+    ;; että tuleeko valmistumispäivämäärä muuttumaan kannassa nillistä päivämääräksi
+    (valita-tieto-tiemerkinnan-valmistumisesta {:db db :user user :fim fim
+                                                :email email :kohteet kohteet})
+
+    (doseq [kohde kohteet]
       (q/tallenna-tiemerkintakohteen-aikataulu!
         db
         {:aikataulu_tiemerkinta_alku (:aikataulu-tiemerkinta-alku kohde)
@@ -158,9 +245,7 @@
           db
           {:aikataulu_tiemerkinta_takaraja (:aikataulu-tiemerkinta-takaraja kohde)
            :id (:id kohde)
-           :suorittava_tiemerkintaurakka tiemerkintaurakka-id}))))
-
-  (viestinta/sahkoposti-tiemerkinta-valmis db fim email (map :id kohteet) user))
+           :suorittava_tiemerkintaurakka tiemerkintaurakka-id})))))
 
 (defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id kohteet]}]
   (assert (and urakka-id sopimus-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
@@ -172,7 +257,7 @@
                                  urakka-id
                                  user)]
     (case (hae-urakkatyyppi db urakka-id)
-      ;; NOTE Päällystysurakoitsija ja tiemerkkari eivät saa muokata samoja asioita,
+      ;; Päällystysurakoitsija ja tiemerkkari eivät saa muokata samoja asioita,
       ;; siksi urakkatyypin mukainen kysely
       :paallystys
       (tallenna-paallystyskohteiden-aikataulu
