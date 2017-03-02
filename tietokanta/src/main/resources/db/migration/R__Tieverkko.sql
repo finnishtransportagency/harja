@@ -371,6 +371,7 @@ BEGIN
       RETURN ROW(r.tie, aosa, aet, losa, let, geom);
     END IF;
   END LOOP;
+  RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 

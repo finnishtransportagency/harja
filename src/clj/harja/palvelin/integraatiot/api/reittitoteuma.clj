@@ -40,9 +40,10 @@ maksimi-linnuntien-etaisyys 200)
               viivat)}
     +yhdistamis-virhe+))
 
-(defn- piste [pistepari]
-  [(get-in pistepari [:reittipiste :koordinaatit :x])
-   (get-in pistepari [:reittipiste :koordinaatit :y])])
+(defn- piste [{reittipiste :reittipiste}]
+  [(get-in reittipiste [:koordinaatit :x])
+   (get-in reittipiste [:koordinaatit :y])
+   (:aika reittipiste)])
 
 (def ^{:private true} piste-aika (juxt (comp :x :koordinaatit :reittipiste)
                                        (comp :y :koordinaatit :reittipiste)
@@ -50,7 +51,7 @@ maksimi-linnuntien-etaisyys 200)
 
 (defn- valin-geometria
   ([reitti] (valin-geometria reitti maksimi-linnuntien-etaisyys))
-  ([{:keys [alku loppu geometria]} maksimi-etaisyys]
+  ([{:keys [alku loppu geometria] :as vali} maksimi-etaisyys]
    (or (and geometria (geo/pg->clj geometria))
        (let [[x1 y1 :as p1] (:coordinates (geo/pg->clj alku))
              [x2 y2 :as p2] (:coordinates (geo/pg->clj loppu))
@@ -261,7 +262,6 @@ maksimi-linnuntien-etaisyys 200)
     this))
 
 ;; Reittitoteuman kirjaaminen tiedostosta (esim. payload integraatiolokista)
-;; (def toteuma (cheshire.core/parse-string (slurp "json-tiedosto-tähän")))
-;; (def db (:db harja.palvelin.main/harja-jarjestelma))
-;; (kirjaa-toteuma db db {:id urakka-id} toteuma {:id urakoitsijan-kayttajan-id})
-;;
+;;(def toteuma (cheshire.core/parse-string (slurp "reittitoteuma-urakka-125.json") keyword))
+;;(def db (:db harja.palvelin.main/harja-jarjestelma))
+;;(kirjaa-toteuma db db {:id "urakkaid"} toteuma {:id kayttajaid})
