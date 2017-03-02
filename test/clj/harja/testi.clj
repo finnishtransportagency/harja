@@ -488,7 +488,7 @@
                       :etunimi "Tero"
                       :sukunimi "Toripolliisi"
                       :kayttajanimi "LX123456789"
-                      :organisaatio {:id 9 :tyyppi :hallintayksikko :nimi "Pop"}
+                      :organisaatio {:id 9 :tyyppi "hallintayksikko" :nimi "Pop"}
                       :roolit #{"ELY_Urakanvalvoja"}
                       :organisaation-urakat #{}})
 
@@ -497,7 +497,7 @@
                      :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"Jarjestelmavastaava"}, :id 2
                      :etunimi "Jalmari" :urakka-roolit []
                      :organisaatio {:id 1 :nimi "Liikennevirasto",
-                                    :tyyppi :liikennevirasto :lyhenne nil :ytunnus nil}
+                                    :tyyppi "liikennevirasto" :lyhenne nil :ytunnus nil}
                      :organisaation-urakat #{}
                      :urakkaroolit {}})
 
