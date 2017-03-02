@@ -160,7 +160,7 @@
         (sanktiot/merkitse-maksuera-likaiseksi! db id)
         id))))
 
-(defn- valita-tieto-pyydetysta-selvityksesta [{:keys [db fim email urakka-id laatupoikkeama selvityksen-pyytaja]}]
+(defn- valita-tieto-pyydetysta-selvityksesta [{:keys [db sms fim email urakka-id laatupoikkeama selvityksen-pyytaja]}]
   (go (viestinta/laheta-sposti-laatupoikkeamasta-selvitys-pyydetty
         {:db db :fim fim :email email :laatupoikkeama laatupoikkeama
          :selvityksen-pyytaja selvityksen-pyytaja :urakka-id urakka-id})))
@@ -204,7 +204,7 @@
       (doseq [sanktio (:sanktiot laatupoikkeama)]
         (tallenna-laatupoikkeaman-sanktio db user sanktio id urakka)))))
 
-(defn tallenna-laatupoikkeama [db user fim email {:keys [urakka] :as laatupoikkeama}]
+(defn tallenna-laatupoikkeama [db user fim email sms {:keys [urakka] :as laatupoikkeama}]
   (log/info "Tuli laatupoikkeama: " laatupoikkeama)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka)
   (jdbc/with-db-transaction [c db]
@@ -228,6 +228,7 @@
         (when (and (not (:selvitys-pyydetty laatupoikkeama-kannassa-ennen-tallennusta))
                    (:selvitys-pyydetty laatupoikkeama))
           (valita-tieto-pyydetysta-selvityksesta {:db db :fim fim :email email :urakka-id urakka
+                                                  :sms sms
                                                   :laatupoikkeama (assoc laatupoikkeama :id id)
                                                   :selvityksen-pyytaja (str (:etunimi user)
                                                                             " "
@@ -283,7 +284,7 @@
 
 (defrecord Laadunseuranta []
   component/Lifecycle
-  (start [{:keys [http-palvelin db karttakuvat fim sonja-sahkoposti] :as this}]
+  (start [{:keys [http-palvelin db karttakuvat fim labyrintti sonja-sahkoposti] :as this}]
 
     (julkaise-palvelut
       http-palvelin
@@ -294,7 +295,7 @@
 
       :tallenna-laatupoikkeama
       (fn [user laatupoikkeama]
-        (tallenna-laatupoikkeama db user fim sonja-sahkoposti laatupoikkeama))
+        (tallenna-laatupoikkeama db user fim sonja-sahkoposti labyrintti laatupoikkeama))
 
       :tallenna-suorasanktio
       (fn [user tiedot]
