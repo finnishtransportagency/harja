@@ -125,7 +125,7 @@
 
 (deftest tiemerkinnan-yks-hint-toteuma-kirjataan-oikein
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
-        testien-maara 10
+        testien-maara 50
         maara-ennen-testia (ffirst (q "SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma;"))
         yllapitokohde-id (hae-tiemerkintaurakkaan-osoitettu-yllapitokohde urakka-id)]
 
@@ -164,8 +164,8 @@
         (is (= (:tr-numero kirjattu-toteuma) (if linkitettava-yllapitokohde-id
                                                nil
                                                (:tr-numero kirjattava-toteuma))))
-        (is (= (format "%.2f" (float (:hinta kirjattu-toteuma)))
-               (format "%.2f" (float (:hinta kirjattava-toteuma)))))
+        (is (= (str/replace (format "%.2f" (bigdec (:hinta kirjattu-toteuma))) "-0," "0,")
+               (str/replace (format "%.2f" (bigdec (:hinta kirjattava-toteuma))) "-0," "0,") ))
         (if linkitettava-yllapitokohde-id
           (is (= (:hinta-kohteelle kirjattava-toteuma) (:hinta-kohteelle kirjattu-toteuma)))
           (is (nil? (:hinta-kohteelle kirjattu-toteuma))))
