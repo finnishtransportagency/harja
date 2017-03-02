@@ -19,7 +19,7 @@
                    sijainti tr yllapitokohde poistettu]}]
   (let [{:keys [numero alkuosa loppuosa alkuetaisyys loppuetaisyys]} tr]
     (when yllapitokohde
-      (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka yllapitokohde))
+      (yy/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka yllapitokohde))
     (if id
       (do
        (paivita-laatupoikkeaman-perustiedot<! db
