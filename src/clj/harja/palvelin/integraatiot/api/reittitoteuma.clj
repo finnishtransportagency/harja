@@ -191,7 +191,7 @@ maksimi-linnuntien-etaisyys 200)
 (defn tarkista-pyynto [db urakka-id kirjaaja data]
   (let [sopimus-idt (api-toteuma/hae-toteuman-kaikki-sopimus-idt :reittitoteuma :reittitoteumat data)]
     (doseq [sopimus-id sopimus-idt]
-      (validointi/tarkista-urakka-sopi mus-ja-kayttaja db urakka-id sopimus-id kirjaaja)))
+      (validointi/tarkista-urakka-sopimus-ja-kayttaja db urakka-id sopimus-id kirjaaja)))
   (when (:reittitoteuma data)
     (toteuman-validointi/tarkista-reittipisteet data)
     (toteuman-validointi/tarkista-tehtavat
