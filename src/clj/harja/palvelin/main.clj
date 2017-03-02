@@ -329,10 +329,6 @@
                      (ilmoitukset/->Ilmoitukset)
                      [:http-palvelin :db :tloik])
 
-      :tietyoilmoitukset (component/using
-                     (tietyoilmoitukset/->Tietyoilmoitukset)
-                     [:http-palvelin :db :tloik])
-
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
                                 [:http-palvelin :db :turi])
