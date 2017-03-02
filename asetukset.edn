@@ -37,7 +37,7 @@
        }
 
  :sonja
- {:url "tcp://harja-c7-dev.lxd:61616"
+ {:url "tcp://localhost:61616"
   :kayttaja "harja"
   :salasana "harjaxx"
   :tyyppi :activemq}
