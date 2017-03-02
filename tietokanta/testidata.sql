@@ -53,6 +53,9 @@ UPDATE organisaatio SET elynumero=14 WHERE lyhenne='LAP';
 -- Toteumat
 \i testidata/toteumat.sql
 
+-- Ylläpidon muut toteumat
+\i testidata/yllapito/yllapito_muut_toteumat.sql
+
 -- Sillat
 \i testidata/sillat.sql
 

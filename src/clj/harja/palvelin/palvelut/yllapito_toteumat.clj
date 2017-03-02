@@ -51,13 +51,14 @@
     (into [] (q/hae-urakan-laskentakohteet db {:urakka urakka}))))
 
 (defn tallenna-yllapito-toteuma [db user {:keys [id urakka sopimus selite pvm hinta yllapitoluokka
-                                                 laskentakohde alkupvm loppupvm uusi-laskentakohde] :as toteuma}]
+                                                 laskentakohde alkupvm loppupvm uusi-laskentakohde poistettu] :as toteuma}]
   (log/debug "tallenna ylläpito_toteuma:" toteuma)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-muuttyot user urakka)
   (jdbc/with-db-transaction [db db]
     (let [uusi-tallennettava-laskentakohde {:nimi uusi-laskentakohde
                                             :urakka urakka
                                             :kayttaja (:id user)}
+
           laskentakohde-id (if (first laskentakohde)
                              (first laskentakohde)
                              (when uusi-laskentakohde
@@ -70,12 +71,12 @@
                    :selite selite
                    :pvm pvm
                    :hinta hinta
-                   :yllapitoluokka yllapitoluokka
+                   :yllapitoluokka (:numero yllapitoluokka)
                    :laskentakohde laskentakohde-id
                    :kayttaja (:id user)}]
 
       (if (:id toteuma)
-        (q/paivita-muu-tyo<! db muu-tyo)
+        (q/paivita-muu-tyo<! db (assoc muu-tyo :poistettu (boolean poistettu)))
         (q/luo-uusi-muu-tyo<! db muu-tyo)))
     (let [vastaus {:toteumat (hae-yllapito-toteumat db user {:urakka urakka :sopimus sopimus
                                                              :alkupvm alkupvm :loppupvm loppupvm})

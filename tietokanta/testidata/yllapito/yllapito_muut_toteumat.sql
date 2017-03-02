@@ -14,7 +14,7 @@ VALUES
  ((SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'),
   'Laskentakohde 4', NOW(), (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));
 
-INSERT INTO yllapito_toteuma (urakka, sopimus, selite, pvm, hinta, yllapitoluokka, laskentakohde, luotu, luoja)
+INSERT INTO yllapito_muu_toteuma (urakka, sopimus, selite, pvm, hinta, yllapitoluokka, laskentakohde, luotu, luoja)
 VALUES
 ((SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'),
  (SELECT id FROM sopimus WHERE nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2013-2018'),
@@ -60,3 +60,4 @@ null, 123, 'suunnitelma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null, 
 ((SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'),
 (SELECT id FROM yllapitokohde WHERE suorittava_tiemerkintaurakka = (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018') LIMIT 1),
 500, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', '20 / 1 / 0 / 3 / 0', 'Testitoteuma 3', null, null, null);
+>>>>>>> develop:tietokanta/testidata/yllapito/yllapito_toteumat.sql
