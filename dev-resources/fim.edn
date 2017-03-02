@@ -2,9 +2,9 @@
                    :kayttajatunnus "LXPENTTIER"
                    :etunimi "Erno"
                    :sukunimi "Penttikoski"
-                   :sahkoposti "erno.penttikoski@example.com"
+                   :sahkoposti "jari.hanhela@solita.fi"
                    :puhelin "0123456789"
-                   :roolit "1242141-OULU2_ELY_Urakanvalvoja"
+                   :roolit "1242141-OULU2_vastuuhenkilo"
                    :organisaatio "foo"
                    :poistettu false}
                   {:tunniste 2

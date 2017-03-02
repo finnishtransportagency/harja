@@ -663,6 +663,7 @@ WHERE id = :urakka;
 
 -- name: hae-urakan-ely
 SELECT
+  o.id,
   o.nimi,
   o.elynumero,
   o.lyhenne
