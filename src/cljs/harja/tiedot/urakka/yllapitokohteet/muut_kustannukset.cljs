@@ -34,10 +34,7 @@
                nakymassa? @nakymassa?
                riveja-tallennettu-laskuri @riveja-tallennettu-laskuri]
               {:nil-kun-haku-kaynnissa? true}
-              (log "reaction mkt: kutsuttu")
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                (log "reaction mkt: paivitetaan")
-
                 (hae-muiden-kustannusten-tiedot!
                  valittu-urakka-id valittu-sopimus-id
                  (pvm/vuoden-aikavali vuosi)))))
@@ -49,13 +46,10 @@
                nakymassa? @nakymassa?
                riveja-tallennettu-laskuri @riveja-tallennettu-laskuri]
               {:nil-kun-haku-kaynnissa? true}
-              (log "reaction kst: kutsuttu")
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                (log "reaction kst: paivitetaan")
                 (pipe (tiedot-sanktiot/hae-urakan-sanktiot
                        valittu-urakka-id (pvm/vuoden-aikavali vuosi))
-                      (chan 1 (filter #(do (log "filtteroidaan" (-> % :yllapitokohde :id nil?))
-                                           (-> % :yllapitokohde :id nil?))))))))
+                      (chan 1 (filter #(-> % :yllapitokohde :id nil?)))))))
 
 (defn- grid-tiedot* [muut-kustannukset-tiedot kohdistamattomat-tiedot]
   (let [mk-id #(str "ypt-" (:id %))
