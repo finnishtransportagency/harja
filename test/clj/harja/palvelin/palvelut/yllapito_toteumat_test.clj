@@ -45,11 +45,11 @@
                              :alkupvm alkupvm
                              :loppupvm loppupvm})
         oulun-tiemerkintaurakan-toiden-lkm (ffirst (q
-                                                     (str "SELECT count(*)
+                                                    (str "SELECT count(*)
                                                        FROM yllapito_muu_toteuma
-                                                     WHERE urakka = " urakka
-                                                          " AND sopimus = " sopimus-id
-                                                          " AND pvm >= '2016-1-01' AND pvm <= '2016-12-31'")))]
+                                                     WHERE urakka = " urakka-id
+                                                         " AND sopimus = " sopimus-id
+                                                         " AND pvm >= '2016-1-01' AND pvm <= '2016-12-31'")))]
     (is (= (count res) oulun-tiemerkintaurakan-toiden-lkm) "Muiden töiden määrä")))
 
 (deftest tallenna-yllapito-toteuma-test
