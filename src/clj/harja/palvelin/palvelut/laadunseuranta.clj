@@ -239,12 +239,13 @@
         (tallenna-laatupoikkeaman-paatos {:db c :urakka urakka :user user
                                           :laatupoikkeama laatupoikkeama :id id})
 
-        (when (:selvitys-pyydetty asdd)
+        (when (and (not (:selvitys-pyydetty laatupoikkeama-kannassa-ennen-tallennusta))
+                   (:selvitys-pyydetty laatupoikkeama))
           (valita-tieto-pyydetysta-selvityksesta {:db db :fim fim :email email
-                                                 :laatupoikkeama-id id
-                                                 :selvityksen-pyytaja (str (:etunimi user)
-                                                                           " "
-                                                                           (:sukunimi user))}))
+                                                  :laatupoikkeama-id id
+                                                  :selvityksen-pyytaja (str (:etunimi user)
+                                                                            " "
+                                                                            (:sukunimi user))}))
 
         (hae-laatupoikkeaman-tiedot c user urakka id)))))
 
