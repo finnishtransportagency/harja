@@ -287,7 +287,11 @@ WHERE (k.kayttajanimi ILIKE :hakutermi
        OR k.etunimi ILIKE  :hakutermi
        OR k.sukunimi ILIKE  :hakutermi
       OR (CONCAT(k.etunimi, ' ' , k.sukunimi) ILIKE :hakutermi))
-      AND k.poistettu = FALSE
+  AND (:organisaatiotyyppi::organisaatiotyyppi != 'urakoitsija'::organisaatiotyyppi
+       OR k.organisaatio = :organisaatioid
+       OR k.organisaatio IN (SELECT id FROM organisaatio WHERE tyyppi != 'urakoitsija')) -- urakoitsijalle kerrotaan vain oman firman henkilötietoja
+      AND k.poistettu IS NOT TRUE
+      AND k.jarjestelma IS NOT TRUE -- ei paljasteta järjestelmäkäyttäjien käyttäjätunnuksia
 LIMIT 11;
 
 -- name: hae-kayttaja-kayttajanimella

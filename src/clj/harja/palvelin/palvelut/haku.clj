@@ -13,29 +13,34 @@
 (defn hae-harjasta
   "Palvelu, joka hakee Harjasta hakutermin avulla."
   [db user hakutermi]
-  (oikeudet/ei-oikeustarkistusta!) ;urakoitsijan osalta oikeustarkistus tehdään alla filterissä ja SQL-kyselyssä
+  (oikeudet/ei-oikeustarkistusta!) ;urakoitsijan osalta oikeustarkistus tehdään organisaation kautta SQL-kyselyssä
   (let [termi (str "%" hakutermi "%")
         kayttajan-org (:organisaatio user)
-        loytyneet-urakat (into []
-                               (filter #(if (= "urakoitsija" (:tyyppi kayttajan-org))
-                                         (oikeudet/voi-lukea? oikeudet/urakat (:id %) user)
-                                         true))
-                               (map #(assoc % :tyyppi :urakka
-                                              :hakusanat (str (:nimi %) ", " (:sampoid %)))
-                                    (ur-q/hae-urakoiden-tunnistetiedot db termi
-                                                                       (name (:tyyppi kayttajan-org))
-                                                                       (:id kayttajan-org))))
-        loytyneet-kayttajat (into []
-                                  (map #(assoc % :tyyppi :kayttaja
-                                                 :hakusanat (if (:jarjestelmasta %)
-                                                              (str "Järjestelmäkäyttäjä: "(:kayttajanimi %))
-                                                              (clojure.string/trimr (str (:etunimi %) " " (:sukunimi %) ", " (:org_nimi %)))))
-                                       (k-q/hae-kayttajien-tunnistetiedot db termi)))
-        loytyneet-organisaatiot (into []
-                                      (map #(assoc % :tyyppi :organisaatio
-                                                     :hakusanat (str (when (:lyhenne %) (str (:lyhenne %) " "))
-                                                                  (:nimi %) ", " (:organisaatiotyyppi %)))
-                                           (org-q/hae-organisaation-tunnistetiedot db termi)))
+        loytyneet-urakat (when kayttajan-org                ;sallitaan haku vain jos on organisaatio tiedossa (oikeustarkistus)
+                           (into []
+                                (filter #(if (= "urakoitsija" (:tyyppi kayttajan-org))
+                                           (oikeudet/voi-lukea? oikeudet/urakat (:id %) user)
+                                           true))
+                                (map #(assoc % :tyyppi :urakka
+                                               :hakusanat (str (:nimi %) ", " (:sampoid %)))
+                                     (ur-q/hae-urakoiden-tunnistetiedot db termi
+                                                                        (name (:tyyppi kayttajan-org))
+                                                                        (:id kayttajan-org)))))
+        loytyneet-kayttajat (when kayttajan-org             ;sallitaan haku vain jos on organisaatio tiedossa (oikeustarkistus)
+                              (into []
+                                   (map #(assoc % :tyyppi :kayttaja
+                                                  :hakusanat (if (:jarjestelmasta %)
+                                                               (str "Järjestelmäkäyttäjä: " (:kayttajanimi %))
+                                                               (clojure.string/trimr (str (:etunimi %) " " (:sukunimi %) ", " (:org_nimi %)))))
+                                        (k-q/hae-kayttajien-tunnistetiedot db {:hakutermi termi
+                                                                               :organisaatiotyyppi (:tyyppi kayttajan-org)
+                                                                               :organisaatioid (:id kayttajan-org)}))))
+        loytyneet-organisaatiot (when kayttajan-org         ;sallitaan haku vain jos on organisaatio tiedossa (oikeustarkistus)
+                                  (into []
+                                        (map #(assoc % :tyyppi :organisaatio
+                                                       :hakusanat (str (when (:lyhenne %) (str (:lyhenne %) " "))
+                                                                       (:nimi %) ", " (:organisaatiotyyppi %)))
+                                             (org-q/hae-organisaation-tunnistetiedot db termi))))
         tulokset (into []
                        (concat loytyneet-urakat loytyneet-kayttajat loytyneet-organisaatiot))]
     tulokset))
@@ -43,6 +48,7 @@
 (defn hae-kayttajan-tiedot
   "Hakee käyttäjän tarkemmat tiedot muokkausnäkymää varten."
   [db user kayttaja-id]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user)
   (kayttajatiedot/hae-kayttaja db kayttaja-id))
 
 (defrecord Haku []
