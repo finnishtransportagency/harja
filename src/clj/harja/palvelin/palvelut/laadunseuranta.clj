@@ -211,12 +211,13 @@
              (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-laadunseuranta-sanktiot urakka user))
     (log/info "Kirjataan päätös havainnolle: " id ", päätös: " (:paatos laatupoikkeama))
     (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
-      (laatupoikkeamat/kirjaa-laatupoikkeaman-paatos! db
-                                                      (konv/sql-timestamp kasittelyaika)
-                                                      (name paatos) perustelu
-                                                      (name kasittelytapa) muukasittelytapa
-                                                      (:id user)
-                                                      id))
+      (laatupoikkeamat/kirjaa-laatupoikkeaman-paatos!
+        db
+        (konv/sql-timestamp kasittelyaika)
+        (name paatos) perustelu
+        (name kasittelytapa) muukasittelytapa
+        (:id user)
+        id))
     (when (= :sanktio (:paatos (:paatos laatupoikkeama)))
       (doseq [sanktio (:sanktiot laatupoikkeama)]
         (tallenna-laatupoikkeaman-sanktio db user sanktio id urakka)))))
