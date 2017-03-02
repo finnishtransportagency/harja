@@ -174,10 +174,10 @@
         (sanktiot/merkitse-maksuera-likaiseksi! db id)
         id))))
 
-(defn- valita-tieto-pyydetysta-selvityksesta [{:keys [db fim email laatupoikkeama-id selvityksen-pyytaja]}]
+(defn- valita-tieto-pyydetysta-selvityksesta [{:keys [db fim email urakka-id laatupoikkeama-id selvityksen-pyytaja]}]
   (go (viestinta/laheta-sposti-laatupoikkeamasta-selvitys-pyydetty
         {:db db :fim fim :email email :laatupoikkeama-id laatupoikkeama-id
-         :selvityksen-pyytaja selvityksen-pyytaja})))
+         :selvityksen-pyytaja selvityksen-pyytaja :urakka-id urakka-id})))
 
 (defn- tallenna-laatupoikkeaman-kommentit [{:keys [db user urakka laatupoikkeama id]}]
   (when-let [uusi-kommentti (:uusi-kommentti laatupoikkeama)]
@@ -226,7 +226,7 @@
           laatupoikkeama-kannassa-ennen-tallennusta
           (first (into []
                        laatupoikkeama-xf
-                       (laatupoikkeamat-q/hae-laatupoikkeaman-tiedot db urakka-id laatupoikkeama-id)))
+                       (laatupoikkeamat-q/hae-laatupoikkeaman-tiedot db urakka (:id laatupoikkeama))))
           laatupoikkeama (assoc laatupoikkeama
                            ;; Jos osapuoli ei ole urakoitsija, voidaan asettaa selvitys-pyydetty päälle
                            :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
@@ -241,7 +241,7 @@
 
         (when (and (not (:selvitys-pyydetty laatupoikkeama-kannassa-ennen-tallennusta))
                    (:selvitys-pyydetty laatupoikkeama))
-          (valita-tieto-pyydetysta-selvityksesta {:db db :fim fim :email email
+          (valita-tieto-pyydetysta-selvityksesta {:db db :fim fim :email email :urakka-id urakka
                                                   :laatupoikkeama-id id
                                                   :selvityksen-pyytaja (str (:etunimi user)
                                                                             " "

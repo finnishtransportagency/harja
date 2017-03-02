@@ -3,7 +3,7 @@
   (:require [taoensso.timbre :as log]
             [clojure.core.match :refer [match]]
             [harja.tyokalut.html :as html-tyokalut]
-
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [hiccup.core :refer [html]]
             [harja.palvelin.komponentit.fim :as fim])
@@ -27,12 +27,11 @@
 (defn laheta-sposti-laatupoikkeamasta-selvitys-pyydetty
   "Lähettää urakoitsijan urakan vastuuhenkilölle tiedon siitä, että laatupoikkeamasta
    on pyydetty selvitys urakoitsijalta."
-  [{:keys [db fim email laatupoikkeama-id selvityksen-pyytaja]}]
+  [{:keys [db fim email urakka-id laatupoikkeama-id selvityksen-pyytaja]}]
   (log/debug (format "Lähetetään sähköposti: laatupoikkeamasta
   %s pyydetty selvitys" laatupoikkeama-id))
   (try+
-    (let [urakka-id nil ;; TODO
-          urakka-nimi "" ;; TODO
+    (let [urakka-nimi (:nimi (first (urakat-q/hae-urakka db urakka-id)))
           ilmoituksen-saajat (fim/hae-urakan-kayttajat-jotka-roolissa
                                fim
                                urakka-id
