@@ -16,7 +16,7 @@
 
 ;; Viestien muodostus
 
-(defn laatupoikkeama-harja-url [urakka-id hallintayksikko-id]
+(defn- laatupoikkeama-harja-url [urakka-id hallintayksikko-id]
   (str "https://extranet.liikennevirasto.fi/harja#urakat/laadunseuranta/laatupoikkeamat?&hy="
        hallintayksikko-id "&u=" urakka-id))
 
@@ -39,8 +39,6 @@
                                 ["Aika" (pvm/pvm-aika-opt aika)]])
        [:p "Laatupoikkeama Harjassa: "
         [:a {:href linkki} linkki]]])))
-
-;; Sisäinen käsittely
 
 ;; Viestien lähetykset (julkinen rajapinta)
 
