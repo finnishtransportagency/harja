@@ -224,7 +224,6 @@
 
 (defn tallenna-laatupoikkeama [db user fim email {:keys [urakka] :as laatupoikkeama}]
   (log/info "Tuli laatupoikkeama: " laatupoikkeama)
-  (log/info "KÄYTTÄJÄ OLI " user)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka)
   (jdbc/with-db-transaction [c db]
     (let [osapuoli (roolit/osapuoli user)
@@ -243,7 +242,9 @@
 
         (valita-tieto-pyydetysta-selvityksesta {:db db :fim fim :email email
                                                 :laatupoikkeama-id id
-                                                :selvityksen-pyytaja nil}) ;; TODO
+                                                :selvityksen-pyytaja (str (:etunimi user)
+                                                                          " "
+                                                                          (:sukunimi user))})
 
         (hae-laatupoikkeaman-tiedot c user urakka id)))))
 
