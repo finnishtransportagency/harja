@@ -24,7 +24,7 @@
 (defn- yllapitoluokan-raporttirivit
   [luokka luokan-rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
   [{:otsikko (if luokka
-               (str "Ylläpitoluokka " (yllapitokohteet-domain/yllapitoluokan-lyhyt-nimi luokka))
+               (str "Ylläpitoluokka " (yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi luokka))
                "Ei ylläpitoluokkaa")}
    (yhteiset/luo-rivi-muistutusten-maara yhteiset/+muistutusrivin-nimi-yllapito+ luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
    (yhteiset/luo-rivi-sakkojen-summa yhteiset/+sakkorivin-nimi-yllapito+ luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})])

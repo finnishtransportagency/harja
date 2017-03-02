@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+ALTER TABLE yllapito_toteuma
+  ADD COLUMN poistettu boolean
+  DEFAULT FALSE
+  NOT NULL;
+
+ALTER TABLE yllapito_toteuma RENAME TO yllapito_muu_toteuma;
+=======
 -- Tiemerkintäurakan yks. hint. työt -näkymän muutokset
 
 -- yllapitokohde_tiemerkinta taulua käytettiin liittämään ylläpitokohteeseen tiemerkintään liittyvät
@@ -39,3 +47,4 @@ ALTER TABLE tiemerkinnan_yksikkohintainen_toteuma ALTER COLUMN urakka SET NOT NU
 
 -- Päivitä hintatyyppi-type
 ALTER TYPE yllapitokohde_tiemerkinta_hintatyyppi RENAME TO tiemerkinta_toteuma_hintatyyppi;
+>>>>>>> develop
