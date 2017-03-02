@@ -16,10 +16,14 @@
 
 (def +polku+ (let [host (.-host js/location)]
                (if (or (gstr/startsWith host "10.")
+                       (re-matches #".*\.lxd:8000$" host)
                        (#{"localhost" "localhost:3000" "localhost:8000"
                           "harja-test.solitaservices.fi"} host))
                  "/"
                  "/harja/")))
+
+(log "polku" +polku+ "koska" (pr-str (re-matches #".*\.lxd:8000$" (.-host js/location))))
+
 (defn polku []
   (str +polku+ "_/"))
 

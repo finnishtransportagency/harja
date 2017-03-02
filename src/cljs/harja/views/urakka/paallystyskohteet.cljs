@@ -51,9 +51,7 @@
 (defn paallystyskohteet [ur]
   (let [hae-tietoja (fn [urakan-tiedot]
                       (go (if-let [ch (indeksit/hae-paallystysurakan-indeksitiedot (:id urakan-tiedot))]
-                            (reset! urakka/paallystysurakan-indeksitiedot (<! ch)))
-
-                          (muut-kustannukset-tiedot/lataa-tiedot! urakan-tiedot)))]
+                            (reset! urakka/paallystysurakan-indeksitiedot (<! ch)))))]
     (hae-tietoja ur)
     (komp/kun-muuttuu (hae-tietoja ur))
     (komp/luo

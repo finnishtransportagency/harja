@@ -12,7 +12,7 @@
    [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot-sanktiot]
    [harja.tiedot.navigaatio :as nav]
 
-   [cljs.core.async :refer [<!]]
+   [cljs.core.async :refer [<! pipe chan]]
    [harja.asiakas.kommunikaatio :as k]
    [harja.pvm :as pvm]
    [clojure.string :as s]
@@ -21,8 +21,41 @@
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defonce muiden-kustannusten-tiedot (atom nil))
-(defonce kohdistamattomien-sanktioiden-tiedot (atom nil))
+(defonce nakymassa? (atom nil)) ;; komp/lippu päivittää tätä
+(defonce riveja-tallennettu-laskuri (atom 0)) ;; käytetään potkaisemaan hakureaktiota tallennuksen jälkeen
+
+(defn hae-muiden-kustannusten-tiedot! [urakka-id sopimus-id [alkupvm loppupvm]]
+  (k/post! :hae-yllapito-toteumat {:urakka urakka-id :sopimus sopimus-id :alkupvm alkupvm :loppupvm loppupvm}))
+
+(def muiden-kustannusten-tiedot
+  (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+               vuosi @tiedot-urakka/valittu-urakan-vuosi
+               [valittu-sopimus-id _] @tiedot-urakka/valittu-sopimusnumero
+               nakymassa? @nakymassa?
+               riveja-tallennettu-laskuri @riveja-tallennettu-laskuri]
+              {:nil-kun-haku-kaynnissa? true}
+              (log "reaction mkt: kutsuttu")
+              (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
+                (log "reaction mkt: paivitetaan")
+
+                (hae-muiden-kustannusten-tiedot!
+                 valittu-urakka-id valittu-sopimus-id
+                 (pvm/vuoden-aikavali vuosi)))))
+
+(def kohdistamattomien-sanktioiden-tiedot
+  (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+               vuosi @tiedot-urakka/valittu-urakan-vuosi
+               [valittu-sopimus-id _] @tiedot-urakka/valittu-sopimusnumero
+               nakymassa? @nakymassa?
+               riveja-tallennettu-laskuri @riveja-tallennettu-laskuri]
+              {:nil-kun-haku-kaynnissa? true}
+              (log "reaction kst: kutsuttu")
+              (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
+                (log "reaction kst: paivitetaan")
+                (pipe (tiedot-sanktiot/hae-urakan-sanktiot
+                       valittu-urakka-id (pvm/vuoden-aikavali vuosi))
+                      (chan 1 (filter #(do (log "filtteroidaan" (-> % :yllapitokohde :id nil?))
+                                           (-> % :yllapitokohde :id nil?))))))))
 
 (defn- grid-tiedot* [muut-kustannukset-tiedot kohdistamattomat-tiedot]
   (let [mk-id #(str "ypt-" (:id %))
@@ -44,24 +77,8 @@
 
 (defonce kohteet (reaction (kohteet* @grid-tiedot)))
 
-(defn hae-muiden-kustannusten-tiedot! [urakka-id sopimus-id [alkupvm loppupvm]]
-  (k/post! :hae-yllapito-toteumat {:urakka urakka-id :sopimus sopimus-id :alkupvm alkupvm :loppupvm loppupvm}))
-
 (defn tallenna-toteuma! [toteuman-tiedot]
   (k/post! :tallenna-yllapito-toteuma toteuman-tiedot))
-
-(defn lataa-tiedot! [urakan-tiedot]
-  (go
-    (reset! kohdistamattomien-sanktioiden-tiedot
-            (filter #(-> % :yllapitokohde :id nil?)
-                    (<! (tiedot-sanktiot/hae-urakan-sanktiot
-                         (:id urakan-tiedot) (pvm/vuoden-aikavali @tiedot-urakka/valittu-urakan-vuosi)))))
-    (let [ch (hae-muiden-kustannusten-tiedot!
-              (:id urakan-tiedot) (first @tiedot-urakka/valittu-sopimusnumero)
-              (pvm/vuoden-aikavali @tiedot-urakka/valittu-urakan-vuosi))
-          vastaus (and ch (<! ch))]
-      (reset! muiden-kustannusten-tiedot vastaus))))
-
 
 (defn tallenna-lomake! [urakka data-atomi grid-data]
   (let [toteuman-avaimet-gridista #(select-keys % [:id :poistettu :toteuma :alkupvm :loppupvm :selite :pvm :hinta])
@@ -80,4 +97,5 @@
                  (update :id palauta-ypt-id)
                  tallenna-toteuma!)
             grid-data-ilman-poistettuja-lisayksia)))
-  (lataa-tiedot! urakka))
+  (swap! riveja-tallennettu-laskuri inc)
+  (chan))

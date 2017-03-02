@@ -166,7 +166,8 @@
   :cljsbuild {:builds
               [{:id "dev"
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"]
-                :figwheel true
+                :figwheel {:websocket-host "harja-dev2.lxd"
+                           }
                 :compiler {:optimizations :none
                            :source-map true
                            ;;:preamble ["reagent/react.js"]
@@ -209,7 +210,7 @@
                ;; Laadunseurannan buildit
                {:id "laadunseuranta-dev"
                 :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src" "src/shared-cljc"]
-                :figwheel true
+                :figwheel {:websocket-host "harja-dev2.lxd"}
                 :compiler {:main harja-laadunseuranta.dev-core
                            :asset-path "js/compiled/dev_out"
                            :output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta_dev.js"
@@ -286,7 +287,10 @@
 
   ;; Clientin reload ja REPL
   :figwheel {:server-port 3449
-             :reload-clj-files false}
+             :server-ip "0.0.0.0"
+             :reload-clj-files false
+             :nrepl-port 6922
+             :nrepl-host "0.0.0.0"}
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
   :aliases {"tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
