@@ -33,7 +33,7 @@
                nakymassa? @nakymassa?
                riveja-tallennettu-laskuri @riveja-tallennettu-laskuri]
               {:nil-kun-haku-kaynnissa? true}
-              (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
+              (when (and valittu-urakka-id valittu-sopimus-id nakymassa? vuosi)
                 (hae-muiden-kustannusten-tiedot!
                  valittu-urakka-id valittu-sopimus-id
                  (pvm/vuoden-aikavali vuosi)))))
@@ -45,7 +45,7 @@
                nakymassa? @nakymassa?
                riveja-tallennettu-laskuri @riveja-tallennettu-laskuri]
               {:nil-kun-haku-kaynnissa? true}
-              (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
+              (when (and valittu-urakka-id valittu-sopimus-id nakymassa? vuosi)
                 (pipe (tiedot-sanktiot/hae-urakan-sanktiot
                        valittu-urakka-id (pvm/vuoden-aikavali vuosi))
                       (chan 1 (filter #(-> % :yllapitokohde :id nil?)))))))
