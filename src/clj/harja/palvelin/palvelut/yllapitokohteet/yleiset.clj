@@ -98,9 +98,9 @@
         kirjauksia-yhteensa (reduce + (vals kirjaukset))]
     (> kirjauksia-yhteensa 0)))
 
-(defn- yllapitokohde-sisaltaa-urakassa-tehtyja-kirjauksia?
+(defn- yllapitokohde-sisaltaa-tiemerkintaurakassa-tehtyja-kirjauksia?
   "Palauttaa true tai false sen mukaan onko ylläpitokohteeseen liitetty kirjauksia annetussa
-   urakassa (laatupoikkeamia, tarkastuksia, toteumia...)"
+   tiemerkintäurakassa (laatupoikkeamia, tarkastuksia, toteumia...)"
   [db yllapitokohde-id urakka-id]
   (let [kirjaukset (first (q/hae-yllapitokohteeseen-tiemerkintaurakassa-liittyvien-kirjauksien-maara
                             db {:yllapitokohde_id yllapitokohde-id
@@ -123,7 +123,7 @@
 (defn yllapitokohteen-suorittavan-tiemerkintaurakan-voi-vaihtaa?
   [db yllapitokohde-id tiemerkintaurakka-id]
   (if tiemerkintaurakka-id
-    (and (not (yllapitokohde-sisaltaa-urakassa-tehtyja-kirjauksia? db yllapitokohde-id tiemerkintaurakka-id))
+    (and (not (yllapitokohde-sisaltaa-tiemerkintaurakassa-tehtyja-kirjauksia? db yllapitokohde-id tiemerkintaurakka-id))
          (not (yllapitokohde-sisaltaa-tiemerkintaaikataulun? db yllapitokohde-id)))
     true))
 
