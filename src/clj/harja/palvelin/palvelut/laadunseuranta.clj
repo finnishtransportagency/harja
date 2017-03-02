@@ -183,7 +183,7 @@
         {:db db :fim fim :email email :laatupoikkeama-id laatupoikkeama-id
          :selvityksen-pyytaja selvityksen-pyytaja})))
 
-(defn- tallenna-laatupoikkeaman-kommentit [{:keys [db user laatupoikkeama id]}]
+(defn- tallenna-laatupoikkeaman-kommentit [{:keys [db user urakka laatupoikkeama id]}]
   (when-let [uusi-kommentti (:uusi-kommentti laatupoikkeama)]
     (log/info "UUSI KOMMENTTI LAATUPOIKKEAMAAN: " uusi-kommentti)
     (let [liite (some->> uusi-kommentti
@@ -203,7 +203,7 @@
 (defn- tallenna-laatupoikkeaman-liitteet [db laatupoikkeama id]
   (when-let [uusi-liite (:uusi-liite laatupoikkeama)]
     (log/info "UUSI LIITE LAATUPOIKKEAMAAN: " uusi-liite)
-    (laatupoikkeamat/liita-liite<! c id (:id uusi-liite))))
+    (laatupoikkeamat/liita-liite<! db id (:id uusi-liite))))
 
 (defn- tallenna-laatupoikkeaman-paatos [{:keys [db urakka user laatupoikkeama id]}]
   ;; Urakanvalvoja voi kirjata päätöksen
@@ -228,24 +228,23 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka)
   (jdbc/with-db-transaction [c db]
     (let [osapuoli (roolit/osapuoli user)
-          laatupoikkeama-kannassa nil ; TODO HAE SE
+          laatupoikkeama-kannassa-ennen-tallennusta nil ; TODO HAE SE
           laatupoikkeama (assoc laatupoikkeama
                            ;; Jos osapuoli ei ole urakoitsija, voidaan asettaa selvitys-pyydetty päälle
                            :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
                                                    (:selvitys-pyydetty laatupoikkeama)))]
 
-      ;; Lähetetään ennen tallennusta viesti pyydetystä selvityksestä, koska nyt on tieto siitä,
-      ;; että tuleeko selvitys pyydetty -arvo muuttumaan kannassa falsesta trueksi
-      (valita-tieto-pyydetysta-selvityksesta {:db db :fim fim :email email
-                                              :laatupoikkeama-id laatupoikkeama-id
-                                              :selvityksen-pyytaja selvityksen-pyytaja})
-
       (let [id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama c user laatupoikkeama)]
-        (tallenna-laatupoikkeaman-kommentit {:db c :user user
+        (tallenna-laatupoikkeaman-kommentit {:db c :user user :urakka urakka
                                              :laatupoikkeama laatupoikkeama :id id})
         (tallenna-laatupoikkeaman-liitteet db laatupoikkeama id)
         (tallenna-laatupoikkeaman-paatos {:db c :urakka urakka :user user
                                           :laatupoikkeama laatupoikkeama :id id})
+
+        (valita-tieto-pyydetysta-selvityksesta {:db db :fim fim :email email
+                                                :laatupoikkeama-id id
+                                                :selvityksen-pyytaja nil}) ;; TODO
+
         (hae-laatupoikkeaman-tiedot c user urakka id)))))
 
 (defn hae-sanktiotyypit
