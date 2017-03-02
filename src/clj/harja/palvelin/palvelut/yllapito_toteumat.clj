@@ -2,7 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.domain.skeema :refer [Toteuma validoi]]
-            [harja.kyselyt.yllapito-toteumat :as q]
+            [harja.kyselyt.yllapito-muut-toteumat :as q]
             [harja.domain.tiemerkinta-toteumat :as tt]
             [taoensso.timbre :as log]
             [harja.tyokalut.spec-apurit :as spec-apurit]
