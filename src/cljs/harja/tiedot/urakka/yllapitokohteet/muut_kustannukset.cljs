@@ -30,8 +30,7 @@
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @tiedot-urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @tiedot-urakka/valittu-sopimusnumero
-               nakymassa? @nakymassa?
-               riveja-tallennettu-laskuri @riveja-tallennettu-laskuri]
+               nakymassa? @nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa? vuosi)
                 (hae-muiden-kustannusten-tiedot!
@@ -42,8 +41,7 @@
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @tiedot-urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @tiedot-urakka/valittu-sopimusnumero
-               nakymassa? @nakymassa?
-               riveja-tallennettu-laskuri @riveja-tallennettu-laskuri]
+               nakymassa? @nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa? vuosi)
                 (pipe (tiedot-sanktiot/hae-urakan-sanktiot
