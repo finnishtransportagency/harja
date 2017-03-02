@@ -11,7 +11,7 @@
    [harja.tiedot.urakka :as tiedot-urakka]
    [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot-sanktiot]
    [harja.tiedot.navigaatio :as nav]
-
+   [harja.atom :refer [paivita!]]
    [cljs.core.async :refer [<! pipe chan]]
    [harja.asiakas.kommunikaatio :as k]
    [harja.pvm :as pvm]
@@ -22,7 +22,6 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce nakymassa? (atom nil)) ;; komp/lippu päivittää tätä
-(defonce riveja-tallennettu-laskuri (atom 0)) ;; käytetään potkaisemaan hakureaktiota tallennuksen jälkeen
 
 (defn hae-muiden-kustannusten-tiedot! [urakka-id sopimus-id [alkupvm loppupvm]]
   (k/post! :hae-yllapito-toteumat {:urakka urakka-id :sopimus sopimus-id :alkupvm alkupvm :loppupvm loppupvm}))
@@ -91,5 +90,6 @@
                  (update :id palauta-ypt-id)
                  tallenna-toteuma!)
             grid-data-ilman-poistettuja-lisayksia)))
-  (swap! riveja-tallennettu-laskuri inc)
+  (paivita! muiden-kustannusten-tiedot)
+  (paivita! kohdistamattomien-sanktioiden-tiedot)
   (chan))
