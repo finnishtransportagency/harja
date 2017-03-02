@@ -28,13 +28,13 @@
   "Lähettää urakoitsijan urakan vastuuhenkilölle tiedon siitä, että laatupoikkeamasta
    on pyydetty selvitys urakoitsijalta."
   [{:keys [db fim email urakka-id laatupoikkeama-id selvityksen-pyytaja]}]
-  (log/debug (format "Lähetetään sähköposti: laatupoikkeamasta
-  %s pyydetty selvitys" laatupoikkeama-id))
+  (log/debug (format "Lähetetään sähköposti: laatupoikkeamasta %s pyydetty selvitys" laatupoikkeama-id))
   (try+
     (let [urakka-nimi (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+          urakka-sampoid (urakat-q/hae-urakan-sampo-id db urakka-id)
           ilmoituksen-saajat (fim/hae-urakan-kayttajat-jotka-roolissa
                                fim
-                               urakka-id
+                               urakka-sampoid
                                #{"urakan vastuuhenkilö"})]
       (if-not (empty? ilmoituksen-saajat)
         (doseq [henkilo ilmoituksen-saajat]
@@ -52,5 +52,4 @@
                           urakka-id))))
     (catch Object e
       (log/error (format "Sähköpostia ei voitu lähettää laatupoikkeaman %s urakan vastuuhenkilölle: %s %s"
-                         laatupoikkeama-id e (when (instance? Throwable e)
-                                      (.printStackTrace e)))))))
+                         laatupoikkeama-id e (when (instance? Throwable e) (.printStackTrace e)))))))
