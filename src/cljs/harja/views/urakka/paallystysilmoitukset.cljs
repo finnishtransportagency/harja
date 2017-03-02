@@ -74,6 +74,7 @@
   "Asiatarkastusosio konsultille."
   [urakka {:keys [tila asiatarkastus] :as lomakedata-nyt}
    lukittu? muokkaa!]
+  (log "ASIATARKASTUS " (pr-str asiatarkastus))
   (let [muokattava? (and
                       (oikeudet/on-muu-oikeus? "asiatarkastus"
                                                oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
@@ -100,8 +101,8 @@
         :tyyppi :string
         :validoi [[:ei-tyhja "Anna tarkastaja"]]
         :pituus-max 1024}
-       {:teksti "Tekninen osa tarkastettu"
-        :nimi :tekninen-osa
+       {:teksti "Hyväksytty"
+        :nimi :hyvaksytty
         :tyyppi :checkbox
         :fmt #(if % "Tekninen osa tarkastettu" "Teknistä osaa ei tarkastettu")}
        {:otsikko "Lisätiedot"
