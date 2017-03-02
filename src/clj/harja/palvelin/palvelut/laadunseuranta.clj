@@ -26,6 +26,7 @@
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.sanktiot :as sanktiot]
             [harja.palvelin.palvelut.laadunseuranta.viestinta :as viestinta]
+            [harja.palvelin.palvelut.laadunseuranta.yhteiset :as yhteiset]
 
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
@@ -40,22 +41,7 @@
             [harja.id :refer [id-olemassa?]]
             [clojure.core.async :as async]))
 
-(def laatupoikkeama-xf
-  (comp
-    (geo/muunna-pg-tulokset :sijainti)
-    (map konv/alaviiva->rakenne)
-    (map #(assoc % :selvitys-pyydetty (:selvityspyydetty %)))
-    (map #(dissoc % :selvityspyydetty))
-    (map #(assoc % :tekija (keyword (:tekija %))))
-    (map #(update-in % [:paatos :paatos]
-                     (fn [p]
-                       (when p (keyword p)))))
-    (map #(update-in % [:paatos :kasittelytapa]
-                     (fn [k]
-                       (when k (keyword k)))))
-    (map #(if (nil? (:kasittelyaika (:paatos %)))
-            (dissoc % :paatos)
-            %))))
+
 
 (defn hae-urakan-laatupoikkeamat [db user {:keys [listaus urakka-id alku loppu]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
@@ -72,7 +58,7 @@
              :loppu (konv/sql-timestamp loppu)
              :kayttaja (:id user)})
           uniikit (map (fn [[_ vektori]] (first vektori)) (group-by :id tietokannasta-nostetut))
-          tulos (into [] laatupoikkeama-xf uniikit)]
+          tulos (into [] yhteiset/laatupoikkeama-xf uniikit)]
       tulos)))
 
 (defn hae-laatupoikkeaman-tiedot
@@ -82,7 +68,7 @@
   [db user urakka-id laatupoikkeama-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
   (let [laatupoikkeama (first (into []
-                                    laatupoikkeama-xf
+                                    yhteiset/laatupoikkeama-xf
                                     (laatupoikkeamat-q/hae-laatupoikkeaman-tiedot db urakka-id laatupoikkeama-id)))]
     (when laatupoikkeama
       (assoc laatupoikkeama
@@ -174,9 +160,9 @@
         (sanktiot/merkitse-maksuera-likaiseksi! db id)
         id))))
 
-(defn- valita-tieto-pyydetysta-selvityksesta [{:keys [db fim email urakka-id laatupoikkeama-id selvityksen-pyytaja]}]
+(defn- valita-tieto-pyydetysta-selvityksesta [{:keys [db fim email urakka-id laatupoikkeama selvityksen-pyytaja]}]
   (go (viestinta/laheta-sposti-laatupoikkeamasta-selvitys-pyydetty
-        {:db db :fim fim :email email :laatupoikkeama-id laatupoikkeama-id
+        {:db db :fim fim :email email :laatupoikkeama laatupoikkeama
          :selvityksen-pyytaja selvityksen-pyytaja :urakka-id urakka-id})))
 
 (defn- tallenna-laatupoikkeaman-kommentit [{:keys [db user urakka laatupoikkeama id]}]
@@ -225,7 +211,7 @@
     (let [osapuoli (roolit/osapuoli user)
           laatupoikkeama-kannassa-ennen-tallennusta
           (first (into []
-                       laatupoikkeama-xf
+                       yhteiset/laatupoikkeama-xf
                        (laatupoikkeamat-q/hae-laatupoikkeaman-tiedot db urakka (:id laatupoikkeama))))
           laatupoikkeama (assoc laatupoikkeama
                            ;; Jos osapuoli ei ole urakoitsija, voidaan asettaa selvitys-pyydetty päälle
@@ -242,7 +228,7 @@
         (when (and (not (:selvitys-pyydetty laatupoikkeama-kannassa-ennen-tallennusta))
                    (:selvitys-pyydetty laatupoikkeama))
           (valita-tieto-pyydetysta-selvityksesta {:db db :fim fim :email email :urakka-id urakka
-                                                  :laatupoikkeama-id id
+                                                  :laatupoikkeama (assoc laatupoikkeama :id id)
                                                   :selvityksen-pyytaja (str (:etunimi user)
                                                                             " "
                                                                             (:sukunimi user))}))
