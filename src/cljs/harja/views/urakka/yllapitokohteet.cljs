@@ -591,10 +591,9 @@
                      (hae-osan-pituudet grid osan-pituudet-teille)
                      (validoi-tr-osoite grid tr-sijainnit tr-virheet))
            :voi-lisata? (not (:yha-sidottu? optiot))
-           :esta-poistaminen? (fn [rivi] (or (not (nil? (:paallystysilmoitus-id rivi)))
-                                             (not (nil? (:paikkausilmoitus-id rivi)))))
+           :esta-poistaminen? (fn [rivi] (not (:yllapitokohteen-voi-poistaa? rivi)))
            :esta-poistaminen-tooltip
-           (fn [_] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
+           (fn [_] "Kohteeseen on liitetty kirjauksia, kohdetta ei voi poistaa.")}
           (into []
                 (concat
                   [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
