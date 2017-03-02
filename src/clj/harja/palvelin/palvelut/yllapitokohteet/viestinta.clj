@@ -139,20 +139,21 @@
   "Lähettää päällystysurakoitsijalle sähköpostiviestillä ilmoituksen
    ylläpitokohteen tiemerkinnän valmistumisesta."
   [{:keys [db fim email kohde-idt ilmoittaja]}]
-  (log/debug (format "Lähetetään sähköposti tiemerkintäkohteiden %s valmistumisesta." (pr-str kohde-idt)))
-  (try+
-    (let [kohteiden-tiedot
-          (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-                     db
-                     {:idt kohde-idt}))
-          paallystysurakoiden-kohteet (group-by :paallystysurakka-id kohteiden-tiedot)]
-      (doseq [kohteet (vals paallystysurakoiden-kohteet)]
-        (kasittele-yhden-paallystysurakan-tiemerkityt-kohteet
-          db fim email (:paallystysurakka-id (first kohteet)) (map :id kohteet) ilmoittaja)))
-  (catch Object e
-    (log/error (format "Sähköpostia ei voitu lähettää kohteiden %s päällystäjälle: %s %s"
-                       (pr-str kohde-idt) e (when (instance? Throwable e)
-                                              (.printStackTrace e)))))))
+  (when-not (empty? kohde-idt)
+    (log/debug (format "Lähetetään sähköposti tiemerkintäkohteiden %s valmistumisesta." (pr-str kohde-idt)))
+    (try+
+      (let [kohteiden-tiedot
+            (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+                       db
+                       {:idt kohde-idt}))
+            paallystysurakoiden-kohteet (group-by :paallystysurakka-id kohteiden-tiedot)]
+        (doseq [kohteet (vals paallystysurakoiden-kohteet)]
+          (kasittele-yhden-paallystysurakan-tiemerkityt-kohteet
+            db fim email (:paallystysurakka-id (first kohteet)) (map :id kohteet) ilmoittaja)))
+      (catch Object e
+        (log/error (format "Sähköpostia ei voitu lähettää kohteiden %s päällystäjälle: %s %s"
+                           (pr-str kohde-idt) e (when (instance? Throwable e)
+                                                  (.printStackTrace e))))))))
 
 (defn laheta-sposti-kohde-valmis-merkintaan
   "Lähettää tiemerkintäurakoitsijalle sähköpostiviestillä ilmoituksen
