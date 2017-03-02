@@ -289,7 +289,7 @@ WHERE (k.kayttajanimi ILIKE :hakutermi
       OR (CONCAT(k.etunimi, ' ' , k.sukunimi) ILIKE :hakutermi))
   AND (:organisaatiotyyppi::organisaatiotyyppi != 'urakoitsija'::organisaatiotyyppi
        OR k.organisaatio = :organisaatioid
-       OR k.organisaatio IN (SELECT id FROM organisaatio WHERE tyyppi != 'urakoitsija')) -- urakoitsijalle kerrotaan vain oman firman henkilötietoja
+       OR k.organisaatio IN (SELECT id FROM organisaatio WHERE tyyppi != 'urakoitsija')) -- urakoitsijalle ei kerrota toisten urakoitsijoiden henkilötietoja
       AND k.poistettu IS NOT TRUE
       AND k.jarjestelma IS NOT TRUE -- ei paljasteta järjestelmäkäyttäjien käyttäjätunnuksia
 LIMIT 11;
