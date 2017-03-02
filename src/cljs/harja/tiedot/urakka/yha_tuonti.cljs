@@ -15,7 +15,8 @@
             [harja.pvm :as pvm]
             [harja.ui.modal :as modal]
             [harja.ui.ikonit :as ikonit]
-            [harja.tiedot.urakka.paallystys :as paallystys])
+            [harja.tiedot.urakka.paallystys :as paallystys]
+            [cljs.core.async :as async])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -70,35 +71,34 @@
   (str "alikohde-" (:yha-id kohde) "-" (:yha-id alikohde) "-loppu"))
 
 (defn rakenna-tieosoitteet [kohteet]
-  {:tieosoitteet
-   (into []
-         (mapcat (fn [kohde]
-                   (let [tr (:tierekisteriosoitevali kohde)]
-                     (concat
-                       [{:tunniste (kohteen-alun-tunnus kohde)
-                         :tie (:tienumero tr)
-                         :osa (:aosa tr)
-                         :etaisyys (:aet tr)
-                         :ajorata (:ajorata tr)}
-                        {:tunniste (kohteen-lopun-tunnus kohde)
-                         :tie (:tienumero tr)
-                         :osa (:losa tr)
-                         :etaisyys (:let tr)
-                         :ajorata (:ajorata tr)}]
-                       (mapcat (fn [alikohde]
-                                 (let [tr (:tierekisteriosoitevali alikohde)]
-                                   [{:tunniste (alikohteen-alun-tunnus kohde alikohde)
-                                     :tie (:tienumero tr)
-                                     :osa (:aosa tr)
-                                     :etaisyys (:aet tr)
-                                     :ajorata (:ajorata tr)}
-                                    {:tunniste (alikohteen-lopun-tunnus kohde alikohde)
-                                     :tie (:tienumero tr)
-                                     :osa (:losa tr)
-                                     :etaisyys (:let tr)
-                                     :ajorata (:ajorata tr)}]))
-                               (:alikohteet kohde)))))
-                 kohteet))})
+  (into []
+        (mapcat (fn [kohde]
+                  (let [tr (:tierekisteriosoitevali kohde)]
+                    (concat
+                      [{:tunniste (kohteen-alun-tunnus kohde)
+                        :tie (:tienumero tr)
+                        :osa (:aosa tr)
+                        :etaisyys (:aet tr)
+                        :ajorata (:ajorata tr)}
+                       {:tunniste (kohteen-lopun-tunnus kohde)
+                        :tie (:tienumero tr)
+                        :osa (:losa tr)
+                        :etaisyys (:let tr)
+                        :ajorata (:ajorata tr)}]
+                      (mapcat (fn [alikohde]
+                                (let [tr (:tierekisteriosoitevali alikohde)]
+                                  [{:tunniste (alikohteen-alun-tunnus kohde alikohde)
+                                    :tie (:tienumero tr)
+                                    :osa (:aosa tr)
+                                    :etaisyys (:aet tr)
+                                    :ajorata (:ajorata tr)}
+                                   {:tunniste (alikohteen-lopun-tunnus kohde alikohde)
+                                    :tie (:tienumero tr)
+                                    :osa (:losa tr)
+                                    :etaisyys (:let tr)
+                                    :ajorata (:ajorata tr)}]))
+                              (:alikohteet kohde)))))
+                kohteet)))
 
 (defn paivita-osoitteen-osa [kohde osoite avain tunnus]
   (assoc-in kohde [:tierekisteriosoitevali avain]
@@ -147,6 +147,24 @@
 
 (def yha-kohteiden-paivittaminen-kaynnissa? (atom false))
 
+(defn hae-vkm-kohteet [tieosoitteet tilanne-pvm]
+  ;; VKM-muuntimelle annetaan tieosoitteet URL-parametreinä.
+  ;; Jotta URL:n pituus ei kasva liian isoksi, käsitellään osoitteet 10 kpl. erissä.
+  (let [tieosoiteerat (partition-all 10 tieosoitteet)
+        kanavat (mapv
+                  #(vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle
+                     {:tieosoitteet %}
+                     tilanne-pvm
+                     (pvm/nyt))
+                  tieosoiteerat)
+        kanavat (async/merge kanavat)]
+    
+    (go (loop [acc []
+               v (<! kanavat)]
+          (if (nil? v)
+            (vec acc)
+            (recur (concat acc v) (<! kanavat)))))))
+
 (defn- hae-paivita-ja-tallenna-yllapitokohteet
   "Hakee YHA-kohteet, päivittää ne nykyiselle tieverkolle kutsumalla VMK-palvelua (viitekehysmuunnin)
    ja tallentaa ne Harjan kantaan. Palauttaa mapin, jossa tietoja suorituksesta"
@@ -161,7 +179,7 @@
             (let [_ (log "[YHA] Tehdään VKM-haku")
                   tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet)
                   tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
-                  vkm-kohteet (<! (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle tieosoitteet tilanne-pvm (pvm/nyt)))]
+                  vkm-kohteet (hae-vkm-kohteet tieosoitteet tilanne-pvm)]
               (log "[YHA] VKM-kohteet: " (pr-str vkm-kohteet))
               (if (k/virhe? vkm-kohteet)
                 {:status :error :viesti "YHA:n kohteiden päivittäminen viitekehysmuuntimella epäonnistui."
@@ -244,8 +262,8 @@
     [harja.ui.napit/palvelinkutsu-nappi
      "Hae uudet YHA-kohteet"
      #(do
-       (log "[YHA] Päivitetään Harja-urakan " (:id urakka) " kohdeluettelo.")
-       (paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? true}))
+        (log "[YHA] Päivitetään Harja-urakan " (:id urakka) " kohdeluettelo.")
+        (paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? true}))
      {:luokka "nappi-ensisijainen"
       :disabled (not (oikeudet/on-muu-oikeus? "sido" oikeus (:id urakka) @istunto/kayttaja))
       :virheviesti "Kohdeluettelon päivittäminen epäonnistui."
@@ -275,17 +293,18 @@
          (ikonit/teksti-ja-ikoni "Lähetä" (ikonit/livicon-arrow-right))
          "Lähetä kaikki kohteet YHA:n")
        #(do
-         (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
-         (reset! paallystys/kohteet-yha-lahetyksessa kohde-idt)
-         (k/post! :laheta-kohteet-yhaan {:urakka-id urakka-id
-                                         :sopimus-id sopimus-id
-                                         :kohde-idt kohde-idt
-                                         :vuosi vuosi}))
+          (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
+          (reset! paallystys/kohteet-yha-lahetyksessa kohde-idt)
+          (k/post! :laheta-kohteet-yhaan {:urakka-id urakka-id
+                                          :sopimus-id sopimus-id
+                                          :kohde-idt kohde-idt
+                                          :vuosi vuosi}))
        {:luokka "nappi-grid nappi-ensisijainen"
         :disabled (or (not (empty? @paallystys/kohteet-yha-lahetyksessa))
                       (empty? kohde-idt)
                       (not (oikeudet/on-muu-oikeus? "sido" oikeus urakka-id @istunto/kayttaja)))
-        :virheviesti "Lähetys epäonnistui."
+        :virheviestin-nayttoaika viesti/viestin-nayttoaika-pitka
+        :virheviesti "Lähetys epäonnistui. Epäonnistuneiden päällystysilmoitusten lukko avattiin mahdollista muokkausta varten."
         :kun-valmis #(reset! paallystys/kohteet-yha-lahetyksessa nil)
         :kun-onnistuu (fn [paivitetyt-ilmoitukset]
                         (if (every? #(or (:lahetys-onnistunut %) (nil? (:lahetys-onnistunut %))) paivitetyt-ilmoitukset)

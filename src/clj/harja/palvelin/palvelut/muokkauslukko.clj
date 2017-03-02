@@ -1,4 +1,7 @@
 (ns harja.palvelin.palvelut.muokkauslukko
+  "Palvelu tarjoaa operaatiot muokkauslukko-taulun käsittelyyn. Taulua käytetään lukitsemaan jokin
+  muokattava näkymä/asia (esim. päällystysilmoitus), jotta useampi käyttäjä ei voi muokata samaa
+  asiaa samaan aikaan"
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [taoensso.timbre :as log]
@@ -6,7 +9,14 @@
             [clj-time.coerce :as coerce]
             [harja.domain.skeema :refer [Toteuma validoi]]
             [clojure.java.jdbc :as jdbc]
-            [harja.kyselyt.muokkauslukko :as q]))
+            [harja.kyselyt.muokkauslukko :as q]
+            [harja.domain.oikeudet :as oikeudet]))
+
+;; NOTE: Tämä on hyvin geneerinen palvelu, jossa ei tällä hetkellä ole oikeustarkistuksia.
+;; Jos oikeustarkistuksille ilmenee tarve, niin pyynnöissä tulisi eritellä urakan id
+;; sekä lukittava asia tarkemmin. Tämän jälkeen pitäisi tutkia, että käyttäjällä on
+;; lukittavaan asiaan liittyvä oikeus ja että lukittava asia kuuluu urakkaan.
+;; Lukittavat asiat voisi määritellä esim. specillä.
 
 (def suurin-sallittu-lukon-ika-minuuteissa 5)
 (def suurin-sallittu-lukon-ika-sekunneissa (* 60 suurin-sallittu-lukon-ika-minuuteissa))
@@ -25,6 +35,7 @@
           false))))
 
 (defn virkista-lukko [db user {:keys [id]}]
+  (oikeudet/ei-oikeustarkistusta!)
   (log/debug "Virkistetään lukko")
   (q/virkista-lukko<! db id (:id user)))
 
@@ -34,6 +45,7 @@
   (log/debug "Lukko vapautettu"))
 
 (defn vapauta-kayttajan-lukko [db user lukko-id]
+  (oikeudet/ei-oikeustarkistusta!)
   (log/debug "Vapautetaan käyttäjän " (:kayttajanimi user) " lukko " lukko-id)
   (q/vapauta-kayttajan-lukko! db lukko-id (:id user))
   (log/debug "Lukko vapautettu"))
@@ -44,6 +56,7 @@
   Jos lukko löytyy, mutta se on vanhentunut, poistaa sen ja palauttaa :ei-lukittu
   Jos lukkoa ei löydy, palauttaa :ei-lukittu."
   [db {:keys [id]}]
+  (oikeudet/ei-oikeustarkistusta!)
   (jdbc/with-db-transaction [c db]
     (log/debug "Haetaan lukko id:llä " id)
     (let [lukko (first (q/hae-lukko-idlla c id))]
@@ -61,6 +74,7 @@
   Jos onnistuu, palauttaa lukon tiedot
   Jos epäonnistuu, palauttaa :ei-lukittu"
   [db user {:keys [id]}]
+  (oikeudet/ei-oikeustarkistusta!)
   (jdbc/with-db-transaction [db db]
     (log/debug "Yritetään lukita " id)
     (let [lukko (first (q/hae-lukko-idlla db id))]

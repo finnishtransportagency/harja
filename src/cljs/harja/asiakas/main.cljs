@@ -47,6 +47,7 @@
           (error errorObj)
           (k/post! :raportoi-selainvirhe
                    {:url    url
+                    :sijainti (-> js/window .-location .-href)
                     :viesti errorMsg
                     :rivi   lineNumber
                     :sarake column

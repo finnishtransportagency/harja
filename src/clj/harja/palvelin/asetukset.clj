@@ -25,7 +25,7 @@
    :tietokanta                            Tietokanta
    :tietokanta-replica                    Tietokanta
    :fim                                   {:url s/Str
-                                           :tiedosto s/Str}
+                                           (s/optional-key :tiedosto) s/Str}
    :log                                   {(s/optional-key :gelf)    {:palvelin s/Str
                                                                       :taso     s/Keyword}
                                            (s/optional-key :hipchat) {:huone-id s/Int :token s/Str :taso s/Keyword}
@@ -61,7 +61,7 @@
                                            :salasana s/Str
                                            :paivittainen-lahetysaika [s/Num]}
    (s/optional-key :tierekisteri)         {:url s/Str
-                                           :uudelleenlahetys-aikavali-minuutteina s/Num}
+                                           (s/optional-key :uudelleenlahetys-aikavali-minuutteina) s/Num}
 
    :ilmatieteenlaitos                     {:lampotilat-url s/Str}
 

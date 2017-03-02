@@ -45,7 +45,7 @@
     [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
     [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
     [harja.palvelin.palvelut.yllapitokohteet.paikkaus :as paikkaus]
-    [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]
+    [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
     [harja.palvelin.palvelut.ping :as ping]
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]

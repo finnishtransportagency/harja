@@ -26,9 +26,20 @@
       seq))
 
 (defn- to-iterator [feature-iterator]
-  (reify java.util.Iterator
-    (hasNext [_] (.hasNext feature-iterator))
-    (next [_] (.next feature-iterator))))
+  (let [closed? (volatile! false)]
+    (reify java.util.Iterator
+      (hasNext [_]
+        (if @closed?
+          false
+          (let [more? (.hasNext feature-iterator)]
+            (when-not more?
+              (.close feature-iterator)
+              (vreset! closed? true))
+            more?)))
+      (next [_]
+        (when @closed?
+          (throw (IllegalStateException. "Feature iterator has already been closed")))
+        (.next feature-iterator)))))
 
 (defn featuret-lazy
   ([shp] (featuret-lazy shp nil))

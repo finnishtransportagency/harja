@@ -86,7 +86,7 @@
         [yllapitokohteet-view/yllapitokohteet
          ur
          paallystys/harjan-paikkauskohteet
-         {:otsikko "Harjan paikkauskohteet"
+         {:otsikko "Harjan paikkauskohteet ja muut kohteet"
           :kohdetyyppi :paikkaus
           :yha-sidottu? false
           :tallenna
