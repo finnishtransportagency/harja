@@ -8,10 +8,11 @@ SELECT
   yt.yllapitoluokka,
   lk.id as "laskentakohde-id",
   lk.nimi as "laskentakohde-nimi"
-FROM yllapito_toteuma yt
+FROM yllapito_muu_toteuma yt
   LEFT JOIN urakka_laskentakohde lk ON lk.id = yt.laskentakohde
 WHERE yt.urakka = :urakka AND yt.sopimus = :sopimus
       AND yt.pvm::DATE BETWEEN :alkupvm and :loppupvm
+      AND yt.poistettu IS NOT TRUE
 ORDER BY yt.pvm DESC;
 
 -- name: hae-muu-tyo
@@ -24,18 +25,19 @@ SELECT
   yt.yllapitoluokka,
   lk.id as "laskentakohde-id",
   lk.nimi as "laskentakohde-nimi"
-FROM yllapito_toteuma yt
+FROM yllapito_muu_toteuma yt
   LEFT JOIN urakka_laskentakohde lk ON lk.id = yt.laskentakohde
 WHERE yt.urakka = :urakka
-      AND yt.id = :id;
+      AND yt.id = :id
+      AND yt.poistettu IS NOT TRUE;
 
 -- name: luo-uusi-muu-tyo<!
-INSERT INTO yllapito_toteuma
+INSERT INTO yllapito_muu_toteuma
 (urakka, sopimus, selite, pvm, hinta, yllapitoluokka, laskentakohde, luotu, luoja)
 VALUES (:urakka, :sopimus, :selite, :pvm, :hinta, :yllapitoluokka, :laskentakohde, NOW(), :kayttaja);
 
 -- name: paivita-muu-tyo<!
-UPDATE yllapito_toteuma
+UPDATE yllapito_muu_toteuma
 SET
   selite = :selite,
   sopimus = :sopimus,
@@ -44,8 +46,10 @@ SET
   yllapitoluokka = :yllapitoluokka,
   laskentakohde = :laskentakohde,
   muokattu = NOW(),
-  muokkaaja = :kayttaja
-WHERE id = :id and urakka = :urakka;
+  muokkaaja = :kayttaja,
+  poistettu = :poistettu
+WHERE id = :id and urakka = :urakka
+      AND poistettu IS NOT TRUE;
 
 -- name: hae-urakan-laskentakohteet
 SELECT id, urakka, nimi FROM urakka_laskentakohde
