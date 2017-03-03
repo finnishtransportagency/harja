@@ -42,11 +42,12 @@
 (defn indeksitiedot
   []
   (let [indeksitiedot @urakka/paallystysurakan-indeksitiedot]
-    [:span
-     [:h6 "Urakassa raaka-aineiden hinnat sidottu seuraaviin indekseihin"]
-     (for [idx indeksitiedot]
-       ^{:key (:id idx)}
-       [materiaalin-indeksisidontarivi idx])]))
+    (when-not (empty? indeksitiedot)
+      [:span
+       [:h6 "Urakassa raaka-aineiden hinnat sidottu seuraaviin indekseihin"]
+       (for [idx indeksitiedot]
+         ^{:key (:id idx)}
+         [materiaalin-indeksisidontarivi idx])])))
 
 (defn paallystyskohteet [ur]
   (let [hae-tietoja (fn [urakan-tiedot]
