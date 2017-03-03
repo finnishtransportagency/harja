@@ -37,7 +37,7 @@
                                                :tr-loppuetaisyys (:loppuetaisyys tr-osoite)}
                                               {:teksti-tie? false})]
                                 ["Aika" (pvm/pvm-aika-opt aika)]])
-       [:p "Laatupoikkeama Harjassa: "
+       [:p "Laatupoikkeamat Harjassa: "
         [:a {:href linkki} linkki]]])))
 
 (defn- tekstiviesti-laatupoikkeamasta-pyydetty-selvitys
@@ -58,7 +58,7 @@
                       :tr-loppuetaisyys (:loppuetaisyys tr-osoite)}
                      {:teksti-tie? false})
         "Aika" (pvm/pvm-aika-opt aika))
-      "Laatupoikkeama Harjassa: " linkki)))
+      "Laatupoikkeamat Harjassa: " linkki)))
 
 ;; Viestien lähetykset (julkinen rajapinta)
 
