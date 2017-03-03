@@ -93,7 +93,7 @@ CREATE TABLE tietyoilmoitus (
 
   ilmoittaja                            INTEGER REFERENCES kayttaja (id),
   ilmoittaja_etunimi                    VARCHAR(32),
-  ilmoittaja_sukunumi                   VARCHAR(32),
+  ilmoittaja_sukunimi                   VARCHAR(32),
   ilmoittaja_matkapuhelin               VARCHAR(32),
   ilmoittaja_sahkoposti                 VARCHAR(64),
 
@@ -103,7 +103,7 @@ CREATE TABLE tietyoilmoitus (
 
   urakoitsijayhteyshenkilo              INTEGER REFERENCES kayttaja (id),
   urakoitsijayhteyshenkilo_etunimi      VARCHAR(32),
-  urakoitsijayhteyshenkilo_sukunumi     VARCHAR(32),
+  urakoitsijayhteyshenkilo_sukunimi     VARCHAR(32),
   urakoitsijayhteyshenkilo_matkapuhelin VARCHAR(32),
   urakoitsijayhteyshenkilo_sahkoposti   VARCHAR(64),
 
@@ -112,7 +112,7 @@ CREATE TABLE tietyoilmoitus (
 
   tilaajayhteyshenkilo                  INTEGER REFERENCES kayttaja (id),
   tilaajayhteyshenkilo_etunimi          VARCHAR(32),
-  tilaajayhteyshenkilo_sukunumi         VARCHAR(32),
+  tilaajayhteyshenkilo_sukunimi         VARCHAR(32),
   tilaajayhteyshenkilo_matkapuhelin     VARCHAR(32),
   tilaajayhteyshenkilo_sahkoposti       VARCHAR(64),
 
