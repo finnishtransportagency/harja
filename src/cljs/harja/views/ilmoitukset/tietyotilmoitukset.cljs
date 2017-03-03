@@ -86,7 +86,7 @@
        :hae (comp pvm/pvm-aika :loppu) :leveys 2}
       {:otsikko "Työn tyyppi" :nimi :tyotyypit
        :leveys 4}
-      {:otsikko "Ilmoittaja" :nimi :ilmoittaja_etunumi
+      {:otsikko "Ilmoittaja" :nimi :ilmoittaja_etunimi
        :leveys 7}]
      haetut-ilmoitukset]]])
 
