@@ -1,5 +1,6 @@
 (ns harja.views.ilmoitukset.tietyotilmoitukset
   (:require [reagent.core :refer [atom] :as r]
+            [clojure.string :as s]
             [harja.tiedot.ilmoitukset.tietyotilmoitukset :as tiedot]
             [harja.ui.bootstrap :as bs]
             [harja.ui.komponentti :as komp]
@@ -11,7 +12,8 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.protokollat :as protokollat]
             [harja.ui.debug :as ui-debug]
-            [harja.loki :refer [log tarkkaile!]]
+            [harja.loki :refer [tarkkaile! log]]
+            [cljs.pprint :refer [pprint]]
             [harja.tiedot.istunto :as istunto]
             [harja.fmt :as fmt]
             [harja.tiedot.navigaatio :as nav]
@@ -85,8 +87,10 @@
       {:otsikko "Loppupvm" :nimi :loppu
        :hae (comp pvm/pvm-aika :loppu) :leveys 2}
       {:otsikko "Työn tyyppi" :nimi :tyotyypit
+       :hae #(s/join ", " (->> % :tyotyypit (map :tyyppi)))
        :leveys 4}
-      {:otsikko "Ilmoittaja" :nimi :ilmoittaja_etunimi
+      {:otsikko "Ilmoittaja" :nimi :ilmoittaja
+       :hae #(str (:ilmoittaja_etunimi %) " " (:ilmoittaja_sukunimi %))
        :leveys 7}]
      haetut-ilmoitukset]]])
 
