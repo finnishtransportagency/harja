@@ -1,5 +1,5 @@
 (ns harja.palvelin.palvelut.viestinta
-  "Yleisiä apufunktioita domain-asioihin liittyvään sähkö- ja tekstiviestiviestintään.
+  "Yleisiä apufunktioita domain-asioihin liittyvään sähköposti- ja tekstiviestiviestintään.
 
    Domain-asioiden tarkemmat viestinvälitysfunktiot löytyvät asioiden omista namespaceista, ks. esim:
    - harja.palvelin.palvelut.laadunseuranta.viestinta

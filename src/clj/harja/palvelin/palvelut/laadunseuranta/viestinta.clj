@@ -1,5 +1,5 @@
 (ns harja.palvelin.palvelut.laadunseuranta.viestinta
-  "Tässä namespacessa on palveluita laadunseuranta-asioihin liittyvään teksti-/sähköpostiviestintään."
+  "Tässä namespacessa on palveluita laadunseuranta-asioihin liittyvään tekstiviesti-/sähköpostiviestintään."
   (:require [taoensso.timbre :as log]
             [clojure.core.match :refer [match]]
             [harja.tyokalut.html :as html-tyokalut]

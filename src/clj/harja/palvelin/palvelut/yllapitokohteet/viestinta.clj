@@ -90,22 +90,24 @@
        :email email
        :urakka-sampoid urakka-sampoid
        :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö"}
-       :viesti-otsikko (if (> (count yhden-paallystysurakan-kohde-idt) 1)
-                         (format "Urakan '%s' tiemerkintäkohteita valmistunut" (:paallystysurakka-nimi eka-kohde))
-                         (format "Urakan '%s' kohteen '%s' tiemerkintä on valmistunut %s"
-                                 (:paallystysurakka-nimi eka-kohde)
-                                 (or (:kohde-nimi eka-kohde)
-                                     (tierekisteri/tierekisteriosoite-tekstina (:kohde-osoite eka-kohde)))
-                                 (fmt/pvm (:aikataulu-tiemerkinta-loppu eka-kohde))))
-       :viesti-body (if (> (count yhden-paallystysurakan-kohde-idt) 1)
-                      (viesti-kohteiden-tiemerkinta-valmis kohteiden-tiedot ilmoittaja)
-                      (viesti-kohteen-tiemerkinta-valmis {:paallystysurakka-nimi (:paallystysurakka-nimi eka-kohde)
-                                                          :tiemerkintaurakka-nimi (:tiemerkintaurakka-nimi eka-kohde)
-                                                          :urakan-nimi (:paallystysurakka-nimi eka-kohde)
-                                                          :kohde-nimi (:kohde-nimi eka-kohde)
-                                                          :kohde-osoite (:kohde-osoite eka-kohde)
-                                                          :tiemerkinta-valmis (:aikataulu-tiemerkinta-loppu eka-kohde)
-                                                          :ilmoittaja (:ilmoittaja eka-kohde)}))})))
+       :viesti-otsikko
+       (if (> (count yhden-paallystysurakan-kohde-idt) 1)
+         (format "Urakan '%s' tiemerkintäkohteita valmistunut" (:paallystysurakka-nimi eka-kohde))
+         (format "Urakan '%s' kohteen '%s' tiemerkintä on valmistunut %s"
+                 (:paallystysurakka-nimi eka-kohde)
+                 (or (:kohde-nimi eka-kohde)
+                     (tierekisteri/tierekisteriosoite-tekstina (:kohde-osoite eka-kohde)))
+                 (fmt/pvm (:aikataulu-tiemerkinta-loppu eka-kohde)))
+         :viesti-body) (if (> (count yhden-paallystysurakan-kohde-idt) 1)
+                         (viesti-kohteiden-tiemerkinta-valmis kohteiden-tiedot ilmoittaja)
+                         (viesti-kohteen-tiemerkinta-valmis
+                           {:paallystysurakka-nimi (:paallystysurakka-nimi eka-kohde)
+                            :tiemerkintaurakka-nimi (:tiemerkintaurakka-nimi eka-kohde)
+                            :urakan-nimi (:paallystysurakka-nimi eka-kohde)
+                            :kohde-nimi (:kohde-nimi eka-kohde)
+                            :kohde-osoite (:kohde-osoite eka-kohde)
+                            :tiemerkinta-valmis (:aikataulu-tiemerkinta-loppu eka-kohde)
+                            :ilmoittaja (:ilmoittaja eka-kohde)}))})))
 
 ;; Viestien lähetykset (julkinen rajapinta)
 
