@@ -365,6 +365,16 @@
                    FROM   sopimus
                    WHERE  nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2013-2018'"))))
 
+(defn hae-lapin-tiemerkintaurakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Lapin tiemerkinnän palvelusopimus 2013-2018'"))))
+
+(defn hae-lapin-tiemerkintaurakan-paasopimuksen-id []
+  (ffirst (q (str "SELECT id
+                   FROM   sopimus
+                   WHERE  nimi = 'Lapin tiemerkinnän palvelusopimuksen pääsopimus 2013-2018'"))))
+
 (defn hae-muhoksen-paikkausurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -405,6 +415,11 @@
                    WHERE
                    urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')\n
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
+
+(defn hae-tiemerkintaurakkaan-osoitettu-yllapitokohde [urakka-id]
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   suorittava_tiemerkintaurakka = " urakka-id ";"))))
 
 (defn hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
@@ -473,7 +488,7 @@
                       :etunimi "Tero"
                       :sukunimi "Toripolliisi"
                       :kayttajanimi "LX123456789"
-                      :organisaatio {:id 9 :tyyppi :hallintayksikko :nimi "Pop"}
+                      :organisaatio {:id 9 :tyyppi "hallintayksikko" :nimi "Pop"}
                       :roolit #{"ELY_Urakanvalvoja"}
                       :organisaation-urakat #{}})
 
@@ -482,7 +497,7 @@
                      :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"Jarjestelmavastaava"}, :id 2
                      :etunimi "Jalmari" :urakka-roolit []
                      :organisaatio {:id 1 :nimi "Liikennevirasto",
-                                    :tyyppi :liikennevirasto :lyhenne nil :ytunnus nil}
+                                    :tyyppi "liikennevirasto" :lyhenne nil :ytunnus nil}
                      :organisaation-urakat #{}
                      :urakkaroolit {}})
 

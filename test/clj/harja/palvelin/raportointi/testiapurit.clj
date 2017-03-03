@@ -3,6 +3,27 @@
              [taoensso.timbre :as log]
              [clojure.core.match :refer [match]]))
 
+(defn taulukon-rivit [taulukko] (nth taulukko 3))
+(defn rivin-solu [rivi indeksi]
+  (let [rivi (or (:rivi rivi) rivi)] (nth rivi indeksi)))
+(defn taulukon-solu [taulukko sarake rivi] (-> (taulukon-rivit taulukko)
+                                               (nth rivi)
+                                               (rivin-solu sarake)))
+
+(defn sarakkeiden-data [taulukko]
+  (let [tayta (fn [pituus coll] (concat coll (take (- pituus (count coll)) (repeat nil))))
+        rivin-data #(or (:rivi %) identity)
+        rivit (map rivin-data (taulukon-rivit taulukko))
+        pituus (apply max (map count rivit))
+        taytetyt (map (partial tayta pituus) rivit)]
+    (apply map vector taytetyt)))
+
+(defn taulukon-sarake [taulukko indeksi]
+  (nth (sarakkeiden-data taulukko) indeksi))
+
+(defn sarakkeiden-otsikot [taulukko]
+  (nth taulukko 2))
+
 (def raporttisolu? harja.domain.raportointi/raporttielementti?)
 
 (defn raporttisolun-arvo [solu]
@@ -30,7 +51,7 @@
         (str "Taulukon otsikko ei täsmää! " taulukon-otsikko " != " otsikko))))
 
 (defn tarkista-taulukko-yhteensa [taulukko numero-sarake]
-  (let [rivit (nth taulukko 3)
+  (let [rivit (taulukon-rivit taulukko)
         laskettu-summa (reduce + 0 (keep #(nth % numero-sarake)
                                          (filter vector? (butlast rivit))))
         raportoitu-summa (nth (last rivit) numero-sarake)]
@@ -39,7 +60,7 @@
              laskettu-summa " != " raportoitu-summa))))
 
 (defn tarkista-taulukko-sarakkeet [taulukko & sarakkeet]
-  (let [taulukon-sarakkeet (nth taulukko 2)]
+  (let [taulukon-sarakkeet (sarakkeiden-otsikot taulukko)]
     (is (= (count taulukon-sarakkeet) (count sarakkeet))
         (str "Taulukossa on eri määrä sarakkeita. "
              (count taulukon-sarakkeet) " != " (count sarakkeet)))
@@ -53,7 +74,7 @@
           taulukon-sarakkeet sarakkeet))))
 
 (defn tarkista-taulukko-rivit [taulukko & rivit]
-  (let [taulukon-rivit (nth taulukko 3)]
+  (let [taulukon-rivit (taulukon-rivit taulukko)]
     (is (= (count taulukon-rivit) (count rivit))
         (str "Taulukossa eri määrä rivejä. "
              (count taulukon-rivit) " != " (count rivit)))
@@ -75,15 +96,15 @@
                   (is (rivi-pred-fn taulukon-rivi)
                       (str "Taulukon rivi " i " ei täsmää predikaattiin: "
                            (pr-str taulukon-rivi))))
-                (nth taulukko 3))))
+                (taulukon-rivit taulukko))))
 
 (defn tarkista-taulukko-kaikki-rivit-ja-yhteenveto
   [taulukko rivi-pred-fn viimeinen-rivi-pred-fn]
   #_(tarkista-taulukko-kaikki-rivit
-    (assoc taulukko 3 (butlast (nth taulukko 3)))
+    (assoc taulukko 3 (butlast (taulukon-rivit taulukko)))
     rivi-pred-fn)
   (tarkista-taulukko-kaikki-rivit
-    (assoc taulukko 3 [(last (nth taulukko 3))])
+    (assoc taulukko 3 [(last (taulukon-rivit taulukko))])
     viimeinen-rivi-pred-fn))
 
 (defn pylvaat-otsikolla

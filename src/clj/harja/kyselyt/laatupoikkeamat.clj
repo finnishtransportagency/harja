@@ -3,7 +3,7 @@
   (:require [jeesql.core :refer [defqueries]]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
-            [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]
+            [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
             [harja.geo :as geo]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]))
 
@@ -19,7 +19,7 @@
                    sijainti tr yllapitokohde poistettu]}]
   (let [{:keys [numero alkuosa loppuosa alkuetaisyys loppuetaisyys]} tr]
     (when yllapitokohde
-      (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka yllapitokohde))
+      (yy/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka yllapitokohde))
     (if id
       (do
        (paivita-laatupoikkeaman-perustiedot<! db

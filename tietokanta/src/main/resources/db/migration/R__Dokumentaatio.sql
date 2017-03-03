@@ -28,6 +28,17 @@ E'Päällystysilmoitus on ylläpitokohteeseen (paallystyskohde-sarake) liittyvä
   - valmis, päällystysilmoituksen tiedot on täytetty, mutta sitä ei ole vielä hyväksytty
   - lukittu, tilaaja on hyväksynyt tehdyn päällystysilmoituksen. Lukittua ilmoitusta ei tulisi enää muokata.';
 
+  -- Ylläpito (tiemerkintä)
+
+COMMENT ON TABLE tiemerkinnan_yksikkohintainen_toteuma IS
+E'Tauluun tallentuu tiemerkintäurakassa tehdyt toteumat, jotka voivat liittyä ylläpitokohteeseen. Mikäli toteuma ei liity ylläpitokohteeseen, sille kirjataan oma tr-osoite ja pituus.\n\n
+
+hinta_kohteelle, string, jonka sisältönä on kohteen osoite sillä hetkellä kun hinta annettiin. Käytetään tunnistamaan tilanne, jossa hinta on annettu kohteen vanhalle osoitteelle';
+
+-- FIXME ENABLOI TÄMÄ KUN HAR-4284 on tehty
+-- COMMENT ON TABLE yllapito_muu_toteuma IS
+-- E'Tätä taulua käytetään tallentamaan ylläpidon urakoiden muita toteumia (tiemerkintäurakan muut toteumat ja päällystysurakan muut kustannukset)';
+
 -- Mobiili laadunseuranta
 
 COMMENT ON TABLE tarkastusajo IS
@@ -75,7 +86,7 @@ Tiemerkintäurakoissa valtakunnallisia välitavoitteita kutsutaan termillä "vä
 -- Lukot
 
 COMMENT ON TABLE muokkauslukko IS
-E'Muokkauslukko-taulua käytetään lukitsemaan jokin muokattava asia (esim. päällystysilmoitus), jotta useampi käyttäjä ei voi muokata samaa asiaa samaan aikaan. Muokkauslukolla on:\n
+E'Muokkauslukko-taulua käytetään lukitsemaan jokin muokattava näkymä/asia (esim. päällystysilmoitus), jotta useampi käyttäjä ei voi muokata samaa asiaa samaan aikaan. Muokkauslukolla on:\n
  - id (voi olla mikä tahansa mielivaltainen teksti, mutta nimessä kannattaisi olla muokattavan asian nimi ja sen yksilöivä id)\n
  - kayttaja (kertoo, kuka asian lukitsi)\n
  - aikaleima (kertoo, milloin lukko on viimeksi virkistetty)';

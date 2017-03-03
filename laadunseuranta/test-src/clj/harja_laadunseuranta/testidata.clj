@@ -502,6 +502,20 @@
     :jatkuvat-havainnot [17]
     :laadunalitus true}])
 
+(def tarkastus-jossa-yhden-pisteen-aikaleima-on-aiemmin
+  "Tällaista dataa ei pitäisi tulla, mutta kerran tällainen kuitenkin saatiin.
+   Muunnos ei saa kaatua, vaikka data olisi tältä osin huonoa."
+  [{:id 0 :sijainti [464681.5999816895 7230492.000024414]
+    :aikaleima (c/to-timestamp (time/now))}
+   {:id 1 :sijainti [465321.5999816895 7230676.000024414]
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 1)))}
+   {:id 2 :sijainti [465641.5999816895 7230780.000024414]
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 2)))}
+   {:id 3 :sijainti [466089.5999816895 7230916.000024414]
+    :aikaleima (c/to-timestamp (time/minus (time/now) (time/seconds 3)))}
+   {:id 4 :sijainti [466409.5999816895 7230996.000024414]
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 4)))}])
+
 (def tarkastus-jossa-liittyvia-pistemaisia-merkintoja
   "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
   [;; Tehdään pistemäinen havainto

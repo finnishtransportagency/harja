@@ -51,7 +51,7 @@ SELECT
   kasittelyaika_tekninen_osa     AS "tekninen-osa_kasittelyaika",
   asiatarkastus_pvm              AS "asiatarkastus_tarkastusaika",
   asiatarkastus_tarkastaja       AS "asiatarkastus_tarkastaja",
-  asiatarkastus_tekninen_osa     AS "asiatarkastus_tekninen-osa",
+  asiatarkastus_hyvaksytty       AS "asiatarkastus_hyvaksytty",
   asiatarkastus_lisatiedot       AS "asiatarkastus_lisatiedot",
   ypko.id                        AS kohdeosa_id,
   ypko.nimi                      AS kohdeosa_nimi,
@@ -87,7 +87,7 @@ SELECT
   kasittelyaika_tekninen_osa AS "tekninen-osa_kasittelyaika",
   asiatarkastus_pvm          AS "asiatarkastus_tarkastusaika",
   asiatarkastus_tarkastaja   AS "asiatarkastus_tarkastaja",
-  asiatarkastus_tekninen_osa AS "asiatarkastus_tekninen-osa",
+  asiatarkastus_hyvaksytty   AS "asiatarkastus_hyvaksytty",
   asiatarkastus_lisatiedot   AS "asiatarkastus_lisatiedot"
 FROM paallystysilmoitus pi
 WHERE paallystyskohde = :paallystyskohde;
@@ -127,7 +127,7 @@ UPDATE paallystysilmoitus
 SET
   asiatarkastus_pvm          = :asiatarkastus_pvm,
   asiatarkastus_tarkastaja   = :asiatarkastus_tarkastaja,
-  asiatarkastus_tekninen_osa = :asiatarkastus_tekninen_osa,
+  asiatarkastus_hyvaksytty   = :asiatarkastus_hyvaksytty,
   asiatarkastus_lisatiedot   = :asiatarkastus_lisatiedot,
   muokattu                   = NOW(),
   muokkaaja                  = :muokkaaja
@@ -243,3 +243,13 @@ SELECT EXISTS(SELECT id
 DELETE FROM yllapitokohteen_maaramuutos
 WHERE yllapitokohde = :yllapitokohdeid AND
       jarjestelma = :jarjestelma
+
+-- name: avaa-paallystysilmoituksen-lukko!
+UPDATE paallystysilmoitus
+SET tila = 'valmis'::paallystystila
+WHERE paallystyskohde = :yllapitokohde_id
+
+-- name: lukitse-paallystysilmoitus!
+UPDATE paallystysilmoitus
+SET tila = 'lukittu'::paallystystila
+WHERE paallystyskohde = :yllapitokohde_id
