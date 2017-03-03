@@ -6,9 +6,7 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.palvelin.palvelut.viestinta :as viestinta]
             [harja.tyokalut.sms :as sms-tyokalut]
-            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [hiccup.core :refer [html]]
-            [harja.palvelin.komponentit.fim :as fim]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [try+ throw+]]))
