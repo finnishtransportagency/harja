@@ -36,7 +36,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
@@ -203,16 +203,16 @@
         maara-ennen-testia (ffirst (q
                                      (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
-        nykyiset-kohteet (kutsu-palvelua (:http-palvelin jarjestelma)
+        kohteet-ennen-testia (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :urakan-yllapitokohteet +kayttaja-jvh+
                                          {:urakka-id @muhoksen-paallystysurakan-id
                                           :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id})
-        kohde-jolla-ilmoitus (first (filter :paallystysilmoitus-id nykyiset-kohteet))
+        kohde-jolla-ilmoitus (first (filter :paallystysilmoitus-id kohteet-ennen-testia))
         paivitetyt-kohteet (map
                              (fn [kohde] (if (= (:id kohde) (:id kohde-jolla-ilmoitus))
                                            (assoc kohde :poistettu true)
                                            kohde))
-                             nykyiset-kohteet)]
+                             kohteet-ennen-testia)]
 
     (kutsu-palvelua (:http-palvelin jarjestelma)
                     :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
@@ -221,12 +221,12 @@
     (let [maara-testin-jalkeen (ffirst (q
                                          (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
-          kohteet-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+          kohteet-testin-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :urakan-yllapitokohteet
                                            +kayttaja-jvh+ {:urakka-id urakka-id
                                                            :sopimus-id sopimus-id})]
       (is (= maara-ennen-testia maara-testin-jalkeen))
-      (is (= kohteet-kannassa nykyiset-kohteet)))))
+      (is (= kohteet-testin-jalkeen kohteet-ennen-testia)))))
 
 (deftest tallenna-yllapitokohdeosa-kantaan
   (let [yllapitokohde-id (yllapitokohde-id-jolla-on-paallystysilmoitus)]
