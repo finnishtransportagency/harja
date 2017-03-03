@@ -5,6 +5,7 @@
             [harja.tyokalut.html :as html-tyokalut]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.palvelin.palvelut.viestinta :as viestinta]
+            [harja.tyokalut.sms :as sms-tyokalut]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [hiccup.core :refer [html]]
             [harja.palvelin.komponentit.fim :as fim]
@@ -43,20 +44,20 @@
   [{:keys [urakka-id hallintayksikko-id urakka-nimi raportoija
            kuvaus tr-osoite aika]}]
   (let [linkki (laatupoikkeama-harja-url urakka-id hallintayksikko-id)]
-
     (str
       "Seuraavasta laatupoikkeamasta on pyydetty selvitys urakoitsijalta:\n"
-      "Urakka: " urakka-nimi "\n"
-      "Raportoija: " raportoija "\n"
-      "Kuvaus: " kuvaus "\n"
-      "Sijainti: " (tierekisteri/tierekisteriosoite-tekstina
+      (sms-tyokalut/tietolista
+        "Urakka" urakka-nimi
+        "Raportoija" raportoija
+        "Kuvaus" kuvaus
+        "Sijainti" (tierekisteri/tierekisteriosoite-tekstina
                      {:tr-numero (:numero tr-osoite)
                       :tr-alkuosa (:alkuosa tr-osoite)
                       :tr-alkuetaisyys (:alkuetaisyys tr-osoite)
                       :tr-loppuosa (:loppuosa tr-osoite)
                       :tr-loppuetaisyys (:loppuetaisyys tr-osoite)}
-                     {:teksti-tie? false}) "\n"
-      "Aika: " (pvm/pvm-aika-opt aika) "\n"
+                     {:teksti-tie? false})
+        "Aika" (pvm/pvm-aika-opt aika))
       "Laatupoikkeama Harjassa: " linkki)))
 
 ;; Viestien lähetykset (julkinen rajapinta)
