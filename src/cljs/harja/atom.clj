@@ -19,8 +19,9 @@
                                                           (pr-str vanha#) " => " (pr-str uusi#)))))
 (defmacro reaction<!
   "Asynkroninen reaktio (esim. serveriltä haku). Haun tulee palauttaa kanava (tai nil).
-  Kun kanava palauttaa dataa, se asetetaan atomin tilaksi. Reaktio laukaistaan uudelleen
-  ennen kuin kanavasta on luettu, hylätään arvo. Jos haku palauttaa nil, asetetaan atomin arvoksi nil.
+  Kun kanava palauttaa arvon, se asetetaan atomin tilaksi. Jos reaktio
+  laukaistaan uudelleen ennen kuin kanavasta on luettu, hylätään
+  luettu arvo. Jos haku palauttaa nil, asetetaan atomin arvoksi nil.
 
   Ottaa sisään let-bindings vektorin, [arvo1 @riippuvuusatomi1 ...] jossa kaikki atomit, joihin
   reaktion halutaan riippuvan, tulee määritellä. Arvoja voi käyttää bodyssa hyödyksi.

@@ -1,4 +1,4 @@
-(ns harja.views.urakka.paallystyksen-kohdeluettelo
+(ns harja.views.urakka.yllapitokohteet.paallystyksen-kohdeluettelo
   "Päällystysurakan 'Kohdeluettelo' välilehti:"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.bootstrap :as bs]
