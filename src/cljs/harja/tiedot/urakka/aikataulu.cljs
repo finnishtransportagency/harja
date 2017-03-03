@@ -50,16 +50,16 @@
               (when (and valittu-urakka-id nakymassa?)
                 (hae-tiemerkinnan-suorittavat-urakat valittu-urakka-id))))
 
-(defn- kohteen-aikataulun-tila [kentta-aloitettu kentta-valmis]
+(defn- kohteen-aikataulun-tila [kentta-aloitettu kentta-valmis pvm-nyt]
   (cond
     (and kentta-aloitettu
-         (pvm/jalkeen? kentta-aloitettu (pvm/nyt))) :aloittamatta
+         (pvm/jalkeen? kentta-aloitettu pvm-nyt)) :aloittamatta
     (and kentta-valmis
-         (pvm/sama-tai-ennen? kentta-valmis (pvm/nyt))) :valmis
+         (pvm/sama-tai-ennen? kentta-valmis pvm-nyt)) :valmis
     (and kentta-valmis
-         (pvm/jalkeen? kentta-valmis (pvm/nyt))) :kesken
+         (pvm/jalkeen? kentta-valmis pvm-nyt)) :kesken
     (and kentta-aloitettu
-         (pvm/ennen? kentta-aloitettu (pvm/nyt))) :kesken
+         (pvm/ennen? kentta-aloitettu pvm-nyt)) :kesken
 
     :default :aloittamatta))
 
@@ -72,21 +72,22 @@
   Jos kohde on merkitty valmiiksi tulevaisuudessa, palautetaan :kesken
   Jos kohde on aloitettu menneisyydessä, palautetaan :kesken
   Muuten palautetaan :aloittamatta"
-  [{kohde-valmis :aikataulu-kohde-valmis
-    kohde-aloitettu :aikataulu-kohde-alku
+  [{kohde-aloitettu :aikataulu-kohde-alku
+    kohde-valmis :aikataulu-kohde-valmis
     tiemerkinta-aloitettu :aikataulu-tiemerkinta-alku
     tiemerkinta-lopetettu :aikataulu-tiemerkinta-loppu
-    :as aikataulurivi} urakkatyyppi]
-  (log "luokittele valmiuden mukjaan, ut: " (pr-str urakkatyyppi))
+    :as aikataulurivi} urakkatyyppi pvm-nyt]
   (case urakkatyyppi
     (:paallystys :paikkaus)
-    (kohteen-aikataulun-tila kohde-aloitettu kohde-valmis)
+    (kohteen-aikataulun-tila kohde-aloitettu kohde-valmis pvm-nyt)
 
     :tiemerkinta
-    (kohteen-aikataulun-tila tiemerkinta-aloitettu tiemerkinta-lopetettu)))
+    (kohteen-aikataulun-tila tiemerkinta-aloitettu tiemerkinta-lopetettu pvm-nyt)))
 
 (defonce aikataulurivit-valmiuden-mukaan
-  (reaction (group-by #(luokittele-valmiuden-mukaan % (:arvo @nav/urakkatyyppi))
+  (reaction (group-by #(luokittele-valmiuden-mukaan %
+                                                    (:arvo @nav/urakkatyyppi)
+                                                    (pvm/nyt))
                       @aikataulurivit)))
 
 (defn tallenna-yllapitokohteiden-aikataulu [urakka-id sopimus-id vuosi kohteet]
