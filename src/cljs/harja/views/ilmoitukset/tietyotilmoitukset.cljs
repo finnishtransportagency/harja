@@ -75,8 +75,8 @@
      [
       {:otsikko "Urakka" :nimi :urakka_nimi :leveys 5
        :hae (comp fmt/lyhennetty-urakan-nimi :urakka_nimi)}
-      {:otsikko "Tie" :nimi :tien_nimi
-       ;; :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
+      {:otsikko "Tie" :nimi :tie
+       :hae #(str (:tr_numero % "(ei tien numeroa)") " " (:tien_nimi % "(ei tien nimeä)"))
        :leveys 4}
       {:otsikko "Alkupvm" :nimi :alku
        :hae (comp pvm/pvm-aika :alku)
