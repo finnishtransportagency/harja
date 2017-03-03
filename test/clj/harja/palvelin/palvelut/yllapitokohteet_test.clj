@@ -36,7 +36,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :each (compose-fixtures
+(use-fixtures :once (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
@@ -120,13 +120,12 @@
                                       FROM yllapitokohde
                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")
                                       AND vuodet @> ARRAY[2017]::int[]")))
-        kuusamontien-testi (first (filter #(= (:nimi %) "Kuusamontien testi") vastaus))
-        muut-kohteet (filter #(not= (:nimi %) "Kuusamontien testi") vastaus)]
+        ei-yha-kohde (first (filter #(= (:nimi %) "Ei YHA-kohde") vastaus))
+        muut-kohteet (filter #(not= (:nimi %) "Ei YHA-kohde") vastaus)]
     (is (> (count vastaus) 0) "Päällystyskohteita löytyi")
     (is (= (count vastaus) kohteiden-lkm) "Löytyi oikea määrä kohteita")
-
-    (is (true? (:yllapitokohteen-voi-poistaa? kuusamontien-testi))
-        "Kuusamontien testi -kohteen saa poistaa (ei ole mitään kirjauksia)")
+    (is (true? (:yllapitokohteen-voi-poistaa? ei-yha-kohde))
+        "Ei YHA -kohteen saa poistaa (ei ole mitään kirjauksia)")
     (is (every? false? (map :yllapitokohteen-voi-poistaa? muut-kohteet))
         "Muita kohteita ei saa poistaa (sisältävät kirjauksia)")))
 
