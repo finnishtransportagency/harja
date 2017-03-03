@@ -320,7 +320,7 @@
 
       :laadunseuranta (component/using
                         (laadunseuranta/->Laadunseuranta)
-                        [:http-palvelin :db :karttakuvat :fim :sonja-sahkoposti :labyrintti])
+                        [:http-palvelin :db :fim :sonja-sahkoposti :labyrintti])
 
       :tarkastukset (component/using
                       (tarkastukset/->Tarkastukset)

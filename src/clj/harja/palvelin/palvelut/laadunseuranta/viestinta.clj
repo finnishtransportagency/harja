@@ -18,8 +18,9 @@
   (str "https://extranet.liikennevirasto.fi/harja#urakat/laadunseuranta/laatupoikkeamat?&hy="
        hallintayksikko-id "&u=" urakka-id))
 
-(defn- viesti-laatupoikkeamasta-pyydetty-selvitys [{:keys [urakka-id hallintayksikko-id urakka-nimi raportoija
-                                                           kuvaus tr-osoite aika]}]
+(defn- sahkoposti-laatupoikkeamasta-pyydetty-selvitys
+  [{:keys [urakka-id hallintayksikko-id urakka-nimi raportoija
+           kuvaus tr-osoite aika]}]
   (let [linkki (laatupoikkeama-harja-url urakka-id hallintayksikko-id)]
     (html
       [:div
@@ -38,10 +39,30 @@
        [:p "Laatupoikkeama Harjassa: "
         [:a {:href linkki} linkki]]])))
 
+(defn- tekstiviesti-laatupoikkeamasta-pyydetty-selvitys
+  [{:keys [urakka-id hallintayksikko-id urakka-nimi raportoija
+           kuvaus tr-osoite aika]}]
+  (let [linkki (laatupoikkeama-harja-url urakka-id hallintayksikko-id)]
+
+    (str
+      "Seuraavasta laatupoikkeamasta on pyydetty selvitys urakoitsijalta:\n"
+      "Urakka: " urakka-nimi "\n"
+      "Raportoija: " raportoija "\n"
+      "Kuvaus: " kuvaus "\n"
+      "Sijainti: " (tierekisteri/tierekisteriosoite-tekstina
+                     {:tr-numero (:numero tr-osoite)
+                      :tr-alkuosa (:alkuosa tr-osoite)
+                      :tr-alkuetaisyys (:alkuetaisyys tr-osoite)
+                      :tr-loppuosa (:loppuosa tr-osoite)
+                      :tr-loppuetaisyys (:loppuetaisyys tr-osoite)}
+                     {:teksti-tie? false}) "\n"
+      "Aika: " (pvm/pvm-aika-opt aika) "\n"
+      "Laatupoikkeama Harjassa: " linkki)))
+
 ;; Viestien lähetykset (julkinen rajapinta)
 
 (defn laheta-sposti-laatupoikkeamasta-selvitys-pyydetty
-  "Lähettää urakoitsijan urakan vastuuhenkilölle tiedon siitä, että laatupoikkeamasta
+  "Lähettää urakoitsijan urakan vastuuhenkilölle sähköpostilla tiedon siitä, että laatupoikkeamasta
    on pyydetty selvitys urakoitsijalta."
   [{:keys [db fim email urakka-id laatupoikkeama selvityksen-pyytaja]}]
   (log/debug (format "Lähetetään sähköposti: laatupoikkeamasta %s pyydetty selvitys" (:id laatupoikkeama)))
@@ -55,7 +76,7 @@
        :urakka-sampoid urakka-sampoid
        :fim-kayttajaroolit #{"urakan vastuuhenkilö"}
        :viesti-otsikko (format "Laatupoikkeamasta tehty selvityspyyntö urakassa %s" urakka-nimi)
-       :viesti-body (viesti-laatupoikkeamasta-pyydetty-selvitys
+       :viesti-body (sahkoposti-laatupoikkeamasta-pyydetty-selvitys
                       {:raportoija selvityksen-pyytaja
                        :urakka-id urakka-id
                        :hallintayksikko-id hallintayksikko-id
@@ -64,3 +85,27 @@
                        :kohde (:kohde laatupoikkeama)
                        :tr-osoite (:tr laatupoikkeama)
                        :aika (:aika laatupoikkeama)})})))
+
+(defn laheta-tekstiviesti-laatupoikkeamasta-selvitys-pyydetty
+  "Lähettää urakoitsijan urakan vastuuhenkilölle tekstiviestillä tiedon siitä, että laatupoikkeamasta
+   on pyydetty selvitys urakoitsijalta."
+  [{:keys [db fim sms urakka-id laatupoikkeama selvityksen-pyytaja]}]
+  (log/debug (format "Lähetetään tekstiviesti: laatupoikkeamasta %s pyydetty selvitys" (:id laatupoikkeama)))
+
+  (let [urakka-nimi (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+        hallintayksikko-id (:id (first (urakat-q/hae-urakan-ely db urakka-id)))
+        urakka-sampoid (urakat-q/hae-urakan-sampo-id db urakka-id)]
+    (viestinta/laheta-tekstiviesti-fim-kayttajarooleille
+      {:fim fim
+       :sms sms
+       :urakka-sampoid urakka-sampoid
+       :fim-kayttajaroolit #{"urakan vastuuhenkilö"}
+       :viesti (tekstiviesti-laatupoikkeamasta-pyydetty-selvitys
+                 {:raportoija selvityksen-pyytaja
+                  :urakka-id urakka-id
+                  :hallintayksikko-id hallintayksikko-id
+                  :urakka-nimi urakka-nimi
+                  :kuvaus (:kuvaus laatupoikkeama)
+                  :kohde (:kohde laatupoikkeama)
+                  :tr-osoite (:tr laatupoikkeama)
+                  :aika (:aika laatupoikkeama)})})))

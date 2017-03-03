@@ -160,9 +160,13 @@
         (sanktiot/merkitse-maksuera-likaiseksi! db id)
         id))))
 
-(defn- valita-tieto-pyydetysta-selvityksesta [{:keys [db sms fim email urakka-id laatupoikkeama selvityksen-pyytaja]}]
+(defn- valita-tieto-pyydetysta-selvityksesta [{:keys [db sms fim email urakka-id
+                                                      laatupoikkeama selvityksen-pyytaja]}]
   (go (viestinta/laheta-sposti-laatupoikkeamasta-selvitys-pyydetty
         {:db db :fim fim :email email :laatupoikkeama laatupoikkeama
+         :selvityksen-pyytaja selvityksen-pyytaja :urakka-id urakka-id}))
+  (go (viestinta/laheta-tekstiviesti-laatupoikkeamasta-selvitys-pyydetty
+        {:db db :fim fim :sms sms :laatupoikkeama laatupoikkeama
          :selvityksen-pyytaja selvityksen-pyytaja :urakka-id urakka-id})))
 
 (defn- tallenna-laatupoikkeaman-kommentit [{:keys [db user urakka laatupoikkeama id]}]
@@ -204,37 +208,37 @@
       (doseq [sanktio (:sanktiot laatupoikkeama)]
         (tallenna-laatupoikkeaman-sanktio db user sanktio id urakka)))))
 
-(defn tallenna-laatupoikkeama [db user fim email sms {:keys [urakka] :as laatupoikkeama}]
-  (log/info "Tuli laatupoikkeama: " laatupoikkeama)
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka)
-  (jdbc/with-db-transaction [c db]
-    (let [osapuoli (roolit/osapuoli user)
-          laatupoikkeama-kannassa-ennen-tallennusta
-          (first (into []
-                       yhteiset/laatupoikkeama-xf
-                       (laatupoikkeamat-q/hae-laatupoikkeaman-tiedot db urakka (:id laatupoikkeama))))
-          laatupoikkeama (assoc laatupoikkeama
-                           ;; Jos osapuoli ei ole urakoitsija, voidaan asettaa selvitys-pyydetty päälle
-                           :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
-                                                   (:selvitys-pyydetty laatupoikkeama)))]
+(defn tallenna-laatupoikkeama [{:keys [db user fim email sms laatupoikkeama]}]
+  (let [urakka-id (:urakka laatupoikkeama)]
+    (log/info "Tuli laatupoikkeama: " laatupoikkeama)
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
+    (jdbc/with-db-transaction [c db]
+      (let [osapuoli (roolit/osapuoli user)
+            laatupoikkeama-kannassa-ennen-tallennusta
+            (first (into []
+                         yhteiset/laatupoikkeama-xf
+                         (laatupoikkeamat-q/hae-laatupoikkeaman-tiedot db urakka-id (:id laatupoikkeama))))
+            laatupoikkeama (assoc laatupoikkeama
+                             ;; Jos osapuoli ei ole urakoitsija, voidaan asettaa selvitys-pyydetty päälle
+                             :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
+                                                     (:selvitys-pyydetty laatupoikkeama)))]
 
-      (let [id (laatupoikkeamat-q/luo-tai-paivita-laatupoikkeama c user laatupoikkeama)]
-        (tallenna-laatupoikkeaman-kommentit {:db c :user user :urakka urakka
-                                             :laatupoikkeama laatupoikkeama :id id})
-        (tallenna-laatupoikkeaman-liitteet db laatupoikkeama id)
-        (tallenna-laatupoikkeaman-paatos {:db c :urakka urakka :user user
-                                          :laatupoikkeama laatupoikkeama :id id})
+        (let [id (laatupoikkeamat-q/luo-tai-paivita-laatupoikkeama c user laatupoikkeama)]
+          (tallenna-laatupoikkeaman-kommentit {:db c :user user :urakka urakka-id
+                                               :laatupoikkeama laatupoikkeama :id id})
+          (tallenna-laatupoikkeaman-liitteet db laatupoikkeama id)
+          (tallenna-laatupoikkeaman-paatos {:db c :urakka urakka-id :user user
+                                            :laatupoikkeama laatupoikkeama :id id})
 
-        (when (and (not (:selvitys-pyydetty laatupoikkeama-kannassa-ennen-tallennusta))
-                   (:selvitys-pyydetty laatupoikkeama))
-          (valita-tieto-pyydetysta-selvityksesta {:db db :fim fim :email email :urakka-id urakka
-                                                  :sms sms
-                                                  :laatupoikkeama (assoc laatupoikkeama :id id)
-                                                  :selvityksen-pyytaja (str (:etunimi user)
-                                                                            " "
-                                                                            (:sukunimi user))}))
+          (when (and (not (:selvitys-pyydetty laatupoikkeama-kannassa-ennen-tallennusta))
+                     (:selvitys-pyydetty laatupoikkeama))
+            (valita-tieto-pyydetysta-selvityksesta {:db db :fim fim :email email :urakka-id urakka-id
+                                                    :sms sms :laatupoikkeama (assoc laatupoikkeama :id id)
+                                                    :selvityksen-pyytaja (str (:etunimi user)
+                                                                              " "
+                                                                              (:sukunimi user))}))
 
-        (hae-laatupoikkeaman-tiedot c user urakka id)))))
+          (hae-laatupoikkeaman-tiedot c user urakka-id id))))))
 
 (defn hae-sanktiotyypit
   "Palauttaa kaikki sanktiotyypit, hyvin harvoin muuttuvaa dataa."
@@ -284,7 +288,7 @@
 
 (defrecord Laadunseuranta []
   component/Lifecycle
-  (start [{:keys [http-palvelin db karttakuvat fim labyrintti sonja-sahkoposti] :as this}]
+  (start [{:keys [http-palvelin db fim labyrintti sonja-sahkoposti] :as this}]
 
     (julkaise-palvelut
       http-palvelin
@@ -295,7 +299,9 @@
 
       :tallenna-laatupoikkeama
       (fn [user laatupoikkeama]
-        (tallenna-laatupoikkeama db user fim sonja-sahkoposti labyrintti laatupoikkeama))
+        (tallenna-laatupoikkeama
+          {:db db :user user :fim fim :email sonja-sahkoposti
+           :sms labyrintti :laatupoikkeama laatupoikkeama}))
 
       :tallenna-suorasanktio
       (fn [user tiedot]
