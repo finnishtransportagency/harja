@@ -94,19 +94,17 @@
   "Palauttaa true tai false sen mukaan onko ylläpitokohteeseen liitetty kirjauksia
   (laatupoikkeamia, tarkastuksia, toteumia...)"
   [db yllapitokohde-id]
-  (let [kirjaukset (first (q/hae-yllapitokohteeseen-liittyvien-kirjauksien-maara db {:id yllapitokohde-id}))
-        kirjauksia-yhteensa (reduce + (vals kirjaukset))]
-    (> kirjauksia-yhteensa 0)))
+  (let [kirjauksia? (:kirjauksia (first (q/hae-yllapitokohteeseen-liittyvien-kirjauksien-maara db {:id yllapitokohde-id})))]
+    kirjauksia?))
 
 (defn- yllapitokohde-sisaltaa-urakassa-tehtyja-kirjauksia?
   "Palauttaa true tai false sen mukaan onko ylläpitokohteeseen liitetty kirjauksia annetussa
    urakassa (laatupoikkeamia, tarkastuksia, toteumia...)"
   [db yllapitokohde-id urakka-id]
-  (let [kirjaukset (first (q/hae-yllapitokohteeseen-urakassa-liittyvien-kirjauksien-maara
-                            db {:yllapitokohde_id yllapitokohde-id
-                                :urakka_id urakka-id}))
-        kirjauksia-yhteensa (reduce + (vals kirjaukset))]
-    (> kirjauksia-yhteensa 0)))
+  (let [kirjauksia? (:kirjauksia (first (q/hae-yllapitokohteeseen-urakassa-liittyvien-kirjauksien-maara
+                              db {:yllapitokohde_id yllapitokohde-id
+                                  :urakka_id urakka-id})))]
+    kirjauksia?))
 
 (defn- yllapitokohde-sisaltaa-tiemerkintaaikataulun?
   [db yllapitokohde-id]
