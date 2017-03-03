@@ -337,7 +337,8 @@ https://github.com/finnishtransportagency/harja/blob/develop/LICENSE.txt
 9. Avaa Hermes JMS
 
 ## FIM:n testikäyttö
-Huom. FIM:llä on testissä kaksi versiota FIM ja FIMDEV. Staging-ympäristössä käytetään FIM-ympäristöä, siinä missä FIMDEV on kehityskäyttöön tarkoitettu.
+Huom. FIM:llä on testissä kaksi versiota FIM ja FIMDEV. Staging-ympäristössä käytetään FIM-ympäristöä ja lokaalissa ympäristössä FIMDEV:iä. FIMDEV palauttaa aina fim.edn-tiedoston sisällön.
 
+FIM:n testikäyttö:
 1. Määrittele asetukset.edn:n FIM:n URL:ksi https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity sekä poista :tiedosto avain.
 2. Avaa SSH-yhteys ssh -L6666:testioag.liikennevirasto.fi:443 harja-app1-stg
