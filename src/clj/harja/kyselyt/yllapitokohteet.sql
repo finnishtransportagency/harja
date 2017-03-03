@@ -71,7 +71,7 @@ WHERE
   ypk.suorittava_tiemerkintaurakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
 
--- name: hae-yllapitokohteeseen-liittyvien-kirjauksien-maara
+-- name: yllapitokohteen-saa-poistaa
 SELECT
   (((SELECT COUNT(yhaid) FROM yllapitokohde WHERE id = :id AND yhaid IS NOT NULL) > 0) OR
   ((SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma WHERE yllapitokohde = :id) > 0) OR
@@ -79,24 +79,23 @@ SELECT
   ((SELECT COUNT(*) FROM paikkausilmoitus WHERE paikkauskohde = :id) > 0) OR
   ((SELECT COUNT(*) FROM tietyomaa WHERE yllapitokohde = :id) > 0) OR
   ((SELECT COUNT(*) FROM laatupoikkeama WHERE yllapitokohde = :id) > 0) OR
-  ((SELECT COUNT(*) FROM tarkastus WHERE yllapitokohde = :id) > 0)) as kirjauksia
+  ((SELECT COUNT(*) FROM tarkastus WHERE yllapitokohde = :id) > 0)) as "saa-poistaa"
 FROM yllapitokohde
 WHERE id = :id;
 
--- name: hae-yllapitokohteeseen-urakassa-liittyvien-kirjauksien-maara
+-- name: yllapitokohde-sisaltaa-kirjauksia-urakassa
 SELECT
-  (((SELECT COUNT(yhaid) FROM yllapitokohde WHERE id = :yllapitokohde_id AND yhaid IS NOT NULL) > 0) OR
-   ((SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma
+  (((SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma
      WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) > 0) OR
     -- Seuraavat asiat otetaan mukaan jos ylläpitokohteen urakka on annettu urakka
    ((SELECT COUNT(*) FROM paallystysilmoitus WHERE paallystyskohde = :yllapitokohde_id
                                              AND (SELECT urakka FROM yllapitokohde WHERE id = :yllapitokohde_id) = :urakka_id) > 0) OR
    ((SELECT COUNT(*) FROM paikkausilmoitus WHERE paikkauskohde = :yllapitokohde_id
                                            AND (SELECT urakka FROM yllapitokohde WHERE id = :yllapitokohde_id) = :urakka_id) > 0) OR
-   ((SELECT COUNT(*) FROM tarkastus WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) > 0) OR
    ((SELECT COUNT(*) FROM laatupoikkeama WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) > 0) OR
    ((SELECT COUNT(*) FROM tietyomaa WHERE yllapitokohde = :yllapitokohde_id
-                                    AND (SELECT urakka FROM yllapitokohde WHERE id = :yllapitokohde_id) = :urakka_id)) > 0) as kirjauksia
+                                    AND (SELECT urakka FROM yllapitokohde WHERE id = :yllapitokohde_id) = :urakka_id) > 0) OR
+   ((SELECT COUNT(*) FROM tarkastus WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) > 0)) as kirjauksia
 FROM yllapitokohde
 WHERE id = :yllapitokohde_id;
 
