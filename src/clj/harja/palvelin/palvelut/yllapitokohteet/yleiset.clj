@@ -118,11 +118,14 @@
 
 (defn yllapitokohteen-voi-poistaa?
   [db yllapitokohde-id]
-  (not (yllapitokohde-sisaltaa-kirjauksia? db yllapitokohde-id)))
+  true ;;FIXME: pikafiksi koska tarkistus hidas
+  #_(not (yllapitokohde-sisaltaa-kirjauksia? db yllapitokohde-id))
+  )
 
 (defn yllapitokohteen-suorittavan-tiemerkintaurakan-voi-vaihtaa?
   [db yllapitokohde-id tiemerkintaurakka-id]
-  (if tiemerkintaurakka-id
+  true ;;FIXME: pikafiksi koska tarkistus hidas
+  #_(if tiemerkintaurakka-id
     (and (not (yllapitokohde-sisaltaa-urakassa-tehtyja-kirjauksia? db yllapitokohde-id tiemerkintaurakka-id))
          (not (yllapitokohde-sisaltaa-tiemerkintaaikataulun? db yllapitokohde-id)))
     true))

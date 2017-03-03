@@ -79,7 +79,8 @@
     (is (== (:maaramuutokset leppajarven-ramppi) 205)
         "Leppäjärven rampin määrämuutos laskettu oikein")))
 
-(deftest paallystysurakan-aikatauluhaku-toimii
+;; FIXME: takaisin kunhan tsekin hitaus korjattu
+#_(deftest paallystysurakan-aikatauluhaku-toimii
   (let [urakan-yllapitokohteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                :urakan-yllapitokohteet +kayttaja-jvh+
                                                {:urakka-id @muhoksen-paallystysurakan-id
@@ -109,7 +110,8 @@
     (is (not-any? #(contains? % :suorittava-tiemerkintaurakka) aikataulu)
         "Tiemerkinnän aikataulu ei sisällä päällystysurakkaan liittyvää tietoa")))
 
-(deftest paallystyskohteet-haettu-oikein-vuodelle-2017
+;; FIXME: takaisin kunhan tsekin hitaus korjattu
+#_(deftest paallystyskohteet-haettu-oikein-vuodelle-2017
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :urakan-yllapitokohteet +kayttaja-jvh+
                                 {:urakka-id @muhoksen-paallystysurakan-id
