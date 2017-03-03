@@ -14,7 +14,7 @@ VALUES
  ((SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'),
   'Laskentakohde 4', NOW(), (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));
 
-INSERT INTO yllapito_toteuma (urakka, sopimus, selite, pvm, hinta, yllapitoluokka, laskentakohde, luotu, luoja)
+INSERT INTO yllapito_muu_toteuma (urakka, sopimus, selite, pvm, hinta, yllapitoluokka, laskentakohde, luotu, luoja)
 VALUES
 ((SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'),
  (SELECT id FROM sopimus WHERE nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2013-2018'),

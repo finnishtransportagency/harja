@@ -45,16 +45,16 @@
                              :alkupvm alkupvm
                              :loppupvm loppupvm})
         oulun-tiemerkintaurakan-toiden-lkm (ffirst (q
-                                                     (str "SELECT count(*)
-                                                       FROM yllapito_toteuma
+                                                    (str "SELECT count(*)
+                                                       FROM yllapito_muu_toteuma
                                                      WHERE urakka = " urakka-id
-                                                          " AND sopimus = " sopimus-id
-                                                          " AND pvm >= '2016-1-01' AND pvm <= '2016-12-31'")))]
+                                                         " AND sopimus = " sopimus-id
+                                                         " AND pvm >= '2016-1-01' AND pvm <= '2016-12-31'")))]
     (is (= (count res) oulun-tiemerkintaurakan-toiden-lkm) "Muiden töiden määrä")))
 
 (deftest tallenna-yllapito-toteuma-test
-  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
-        sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+  (let [urakka (hae-oulun-tiemerkintaurakan-id)
+        sopimus (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
         alkupvm (pvm/luo-pvm 2016 0 1)
         loppupvm (pvm/luo-pvm 2016 11 31)
         toteuman-pvm (pvm/luo-pvm 2016 11 24)
@@ -62,30 +62,30 @@
                      :selite "Jouluaattona hommissa"
                      :laskentakohde [nil "ei kohdetta tässä.."]
                      :uusi-laskentakohde "Uusikohde"
-                     :urakka urakka-id
-                     :sopimus sopimus-id
+                     :urakka urakka
+                     :sopimus sopimus
                      :yllapitoluokka 1
                      :alkupvm alkupvm
                      :loppupvm loppupvm
                      :hinta 665.5}
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*)
-                                                       FROM yllapito_toteuma
-                                                     WHERE urakka = " urakka-id
-                                            " AND sopimus = " sopimus-id
+                                                       FROM yllapito_muu_toteuma
+                                                     WHERE urakka = " urakka
+                                            " AND sopimus = " sopimus
                                             " AND pvm >= '2016-1-01' AND pvm <= '2016-12-31'")))
         laskentakohdelkm-ennen (ffirst (q
                                          (str "SELECT count(*)
                                                        FROM urakka_laskentakohde
-                                                     WHERE urakka = " urakka-id)))
+                                                     WHERE urakka = " urakka)))
         res (kutsu-palvelua (:http-palvelin jarjestelma)
                             :tallenna-yllapito-toteuma +kayttaja-jvh+
                             hyotykuorma)
         maara-lisayksen-jalkeen (ffirst (q
                                           (str "SELECT count(*)
-                                                       FROM yllapito_toteuma
-                                                     WHERE urakka = " urakka-id
-                                               " AND sopimus = " sopimus-id
+                                                       FROM yllapito_muu_toteuma
+                                                     WHERE urakka = " urakka
+                                               " AND sopimus = " sopimus
                                                " AND pvm >= '2016-1-01' AND pvm <= '2016-12-31'")))
         lisatty-toteuma (first (filter #(= (:pvm %) toteuman-pvm) (:toteumat res)))
         laskentakohteet-jalkeen (:laskentakohteet res)]
@@ -125,7 +125,7 @@
 
 (deftest tiemerkinnan-yks-hint-toteuma-kirjataan-oikein
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
-        testien-maara 10
+        testien-maara 50
         maara-ennen-testia (ffirst (q "SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma;"))
         yllapitokohde-id (hae-tiemerkintaurakkaan-osoitettu-yllapitokohde urakka-id)]
 
@@ -164,8 +164,8 @@
         (is (= (:tr-numero kirjattu-toteuma) (if linkitettava-yllapitokohde-id
                                                nil
                                                (:tr-numero kirjattava-toteuma))))
-        (is (= (format "%.2f" (float (:hinta kirjattu-toteuma)))
-               (format "%.2f" (float (:hinta kirjattava-toteuma)))))
+        (is (= (str/replace (format "%.2f" (bigdec (:hinta kirjattu-toteuma))) "-0," "0,")
+               (str/replace (format "%.2f" (bigdec (:hinta kirjattava-toteuma))) "-0," "0,") ))
         (if linkitettava-yllapitokohde-id
           (is (= (:hinta-kohteelle kirjattava-toteuma) (:hinta-kohteelle kirjattu-toteuma)))
           (is (nil? (:hinta-kohteelle kirjattu-toteuma))))

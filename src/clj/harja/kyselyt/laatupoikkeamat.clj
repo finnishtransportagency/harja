@@ -3,7 +3,7 @@
   (:require [jeesql.core :refer [defqueries]]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
-            [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]
+            [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
             [harja.geo :as geo]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]))
 
