@@ -73,7 +73,6 @@ WHERE
 
 -- name: hae-yllapitokohteeseen-liittyvien-kirjauksien-maara
 SELECT
-  (SELECT COUNT(*) FROM tarkastus WHERE yllapitokohde = :id) as "tarkastukset",
   (SELECT COUNT(*) FROM laatupoikkeama WHERE yllapitokohde = :id) as "laatupoikkeamat",
   (SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma WHERE yllapitokohde = :id) as "tiemerkinnan-toteumat",
   (SELECT COUNT(*) FROM paallystysilmoitus WHERE paallystyskohde = :id) as "paallystysilmoitukset",
@@ -84,7 +83,6 @@ WHERE id = :id;
 
 -- name: hae-yllapitokohteeseen-urakassa-liittyvien-kirjauksien-maara
 SELECT
-  (SELECT COUNT(*) FROM tarkastus WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) as "tarkastukset",
   (SELECT COUNT(*) FROM laatupoikkeama WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) as "laatupoikkeamat",
   (SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma
     WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) as "tiemerkinnan-toteumat",
