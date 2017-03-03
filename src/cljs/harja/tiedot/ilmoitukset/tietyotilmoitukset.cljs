@@ -53,6 +53,8 @@
 
 (defrecord PoistaIlmoitusValinta [])
 
+(defrecord IlmoitustaMuokattu [ilmoitus])
+
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
   (log "---> hae-ilmoitukset, appin :valinnat = " (pr-str valinnat))
   (-> app
@@ -91,15 +93,18 @@
 
   ValitseIlmoitus
   (process-event [{ilmoitus :ilmoitus} app]
-    (let [tulos! (t/send-async! ->IlmoituksenTiedot)]
+    #_(let [tulos! (t/send-async! ->IlmoituksenTiedot)]
       (go
         (tulos! (<! (k/post! :hae-ilmoitukset (:id ilmoitus))))))
-    (assoc app :ilmoituksen-haku-kaynnissa? true))
-
-  IlmoituksenTiedot
-  (process-event [{ilmoitus :ilmoitus} app]
-    (assoc app :valittu-ilmoitus ilmoitus :ilmoituksen-haku-kaynnissa? false))
+    #_(assoc app :ilmoituksen-haku-kaynnissa? true)
+    (assoc app :valittu-ilmoitus ilmoitus))
 
   PoistaIlmoitusValinta
   (process-event [_ app]
-    (assoc app :valittu-ilmoitus nil)))
+    (assoc app :valittu-ilmoitus nil))
+
+  IlmoitustaMuokattu
+  (process-event [ilmoitus app]
+    (log "IlmoitustaMuokattu: saatiin" (keys ilmoitus) "ja" (keys app))
+    app)
+  )

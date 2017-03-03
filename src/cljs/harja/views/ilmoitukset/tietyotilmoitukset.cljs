@@ -94,15 +94,59 @@
        :leveys 7}]
      haetut-ilmoitukset]]])
 
+(def koskee-valinnat [[nil "Valitse..."]
+                      [:ensimmainen "Ensimmäinen ilmoitus työstä"],
+                      [:muutos "Korjaus/muutos aiempaan tietoon"],
+                      [:tyovaihe "Työvaihetta koskeva ilmoitus"],
+                      [:paattyminen "Työn päättymisilmoitus"]])
+
+(defn- projekti-valinnat []
+  (let [urakka-idt (:organisaation-urakat @istunto/kayttaja)
+        urakka-nimet (map str urakka-idt) ;; fixme
+        ]
+    (interleave urakka-idt urakka-nimet)))
+
 (defn ilmoituksen-tiedot [e! ilmoitus]
-  [:div
-   [:span
-    [napit/takaisin "Listaa ilmoitukset" #(e! (tiedot/->PoistaIlmoitusValinta))]
-    [:div "Tässä ois leikisti ilmoituksen tiedot"]
-    #_[it/ilmoitus e! ilmoitus]]])
+  (fn [e! ilmoitus]
+    [:div
+     [:span
+      [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (tiedot/->PoistaIlmoitusValinta))]
+      [lomake/lomake {:otsikko "Muokkaa ilmoitusta"
+                      :muokkaa #(e! tiedot/->IlmoitustaMuokattu %)}
+       [(lomake/ryhma
+         "zz"
+         {:nimi :koskee
+          :otsikko "Ilmoitus koskee:"
+          :tyyppi :valinta
+          :valinnat koskee-valinnat
+          :valinta-nayta second
+          :valinta-arvo first
+          :muokattava? (constantly true)}
+         {:nimi :projekti-tai-urakka
+          :tyyppi :valinta
+          :valinnat (projekti-valinnat)
+          :valinta-nayta second :valinta-arvo first
+          :muokattava? (constantly true)
+          }
+         {:nimi :tr_numero
+          :otsikko "Tienumero"
+          :tyyppi :positiivinen-numero
+          :muokattava? (constantly true)}
+         )]
+       ilmoitus]
+      #_[:div
+       [bs/panel {}
+        [yleiset/tietoja {}
+         "Loppusijainti:" (:loppusijainnin_kuvaus ilmoitus)
+         "Urakka:" (:urakka_nimi ilmoitus)
+         "Lisätietoja:" (when (:lisatietoja ilmoitus)
+                          [yleiset/pitka-teksti (:lisatieto ilmoitus)])
+         ]
+        ]]
+
+      ]]))
 
 (defn ilmoitukset* [e! ilmoitukset]
-  (log "z 2")
   (e! (tiedot/->YhdistaValinnat @tiedot/ulkoisetvalinnat))
   (komp/luo
    (komp/lippu tiedot/karttataso-ilmoitukset)
