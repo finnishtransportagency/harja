@@ -55,7 +55,7 @@
    urakka-sampoid         Sen urakan sampo-id, jonka käyttäjiä etsitään FIMistä
    fim-kayttajaroolit     Setti rooleja, joissa oleville henkilöille viesti lähetetään. Huomioi kirjoitusasu!
                           Esim. #{\"urakan vastuuhenkilö\"}
-   viesti            Tekstiviestin sisältö"
+   viesti                 Tekstiviestin sisältö"
   [{:keys [fim sms urakka-sampoid fim-kayttajaroolit viesti-otsikko viesti]}]
   (log/debug (format "Lähetetään tekstiviesti FIM-käyttäjille %s. Aihe: %s" fim-kayttajaroolit viesti-otsikko))
   (try+
