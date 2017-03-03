@@ -203,7 +203,9 @@
 
       ;; Labyrintti SMS Gateway
       :labyrintti (component/using
-                    (labyrintti/luo-labyrintti (:labyrintti asetukset))
+                    (if kehitysmoodi
+                      (labyrintti/feikki-labyrintti)
+                      (labyrintti/luo-labyrintti (:labyrintti asetukset)))
                     [:http-palvelin :db :integraatioloki])
 
       :turi (component/using

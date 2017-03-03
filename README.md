@@ -274,8 +274,11 @@ Seuraavat headerit tuettuna:
 Staging-ympäristössä voidaan lisäksi testata eri rooleja testitunnuksilla,
 jotka löytyvät toisesta Excelistä, mitä ei ole Harjan repossa (ei salasanoja repoon).
 
-## Labyrintin SMS gatewayn testaus kehitysmpäristössä
-Labyrintin SMS viestien vastaanottoa voi testata tekemällä reverse SSH-tunneli
+## Labyrintin SMS-gateway
+
+Harja käyttää Labyrintin SMS-gatewaytä SMS-viestien lähettämiseen. Labyrintin komponentista on olemassa kaksi eri versiota: Labyrintti ja FeikkiLabyrintti. FeikkiLabyrintti on käytössä vain lokaalissa kehitysympäristössä ja se ainoastaan logittaa viestit REPLiin.
+
+Oikeinden Labyrintin SMS viestien vastaanottoa voi testata tekemällä reverse SSH-tunneli
 harja-front1-stg palvelimelle sekä muuttamalla NginX:n reititys osoittamaan
 harja-app1-stg palvelimen sijasta localhostin SSH tunnelin porttiin.
 
@@ -336,9 +339,10 @@ https://github.com/finnishtransportagency/harja/blob/develop/LICENSE.txt
 8. Avaa ssh-yhteys harja-app1-stg palvelimelle: ssh harja-db1-stg
 9. Avaa Hermes JMS
 
-## FIM:n testikäyttö
-Huom. FIM:llä on testissä kaksi versiota FIM ja FIMDEV. Staging-ympäristössä käytetään FIM-ympäristöä ja lokaalissa ympäristössä FIMDEV:iä. FIMDEV palauttaa aina fim.edn-tiedoston sisällön.
+## FIM
 
-FIM:n testikäyttö:
+Harja käyttää FIM:iä käyttäjätietojen hakemiseen. FIM-komponentista on kaksi eri versiota: FIM ja FIMDEV. FIMDEV on käytössä vain lokaalissa kehitysympäristössä ja se palauttaa aina fim.edn-tiedoston sisällön.
+
+Oikean FIM:n testikäyttö:
 1. Määrittele asetukset.edn:n FIM:n URL:ksi https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity sekä poista :tiedosto avain.
 2. Avaa SSH-yhteys ssh -L6666:testioag.liikennevirasto.fi:443 harja-app1-stg
