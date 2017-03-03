@@ -40,13 +40,18 @@ maksimi-linnuntien-etaisyys 200)
               viivat)}
     +yhdistamis-virhe+))
 
-(defn- piste [pistepari]
-  [(get-in pistepari [:reittipiste :koordinaatit :x])
-   (get-in pistepari [:reittipiste :koordinaatit :y])])
+(defn- piste [{reittipiste :reittipiste}]
+  [(get-in reittipiste [:koordinaatit :x])
+   (get-in reittipiste [:koordinaatit :y])
+   (:aika reittipiste)])
+
+(def ^{:private true} piste-aika (juxt (comp :x :koordinaatit :reittipiste)
+                                       (comp :y :koordinaatit :reittipiste)
+                                       (comp :aika :reittipiste)))
 
 (defn- valin-geometria
   ([reitti] (valin-geometria reitti maksimi-linnuntien-etaisyys))
-  ([{:keys [alku loppu geometria]} maksimi-etaisyys]
+  ([{:keys [alku loppu geometria] :as vali} maksimi-etaisyys]
    (or (and geometria (geo/pg->clj geometria))
        (let [[x1 y1 :as p1] (:coordinates (geo/pg->clj alku))
              [x2 y2 :as p2] (:coordinates (geo/pg->clj loppu))
@@ -62,15 +67,15 @@ maksimi-linnuntien-etaisyys 200)
            (do (log/warn "EI TEHDÄ linnuntietä, etäisyys: " etaisyys ", max: " maksimi-etaisyys)
                nil))))))
 
-(defn- hae-reitti
+(defn hae-reitti
   ([db pisteet] (hae-reitti db maksimi-linnuntien-etaisyys pisteet))
   ([db maksimi-etaisyys pisteet]
    (as-> pisteet p
-         (map (fn [[x y]]
-                (str "POINT(" x " " y ")")) p)
+         (map (fn [[x y aika]]
+                (str "\"(" x "," y "," aika ")\"")) p)
          (str/join "," p)
-         (str "GEOMETRYCOLLECTION(" p ")")
-         (tieverkko/hae-tieviivat-pisteille db p 250)
+         (str "{" p "}")
+         (tieverkko/hae-tieviivat-pisteille-aika db p)
          (keep #(valin-geometria % maksimi-etaisyys) p)
          (yhdista-viivat p))))
 
@@ -91,7 +96,8 @@ maksimi-linnuntien-etaisyys 200)
   ([db toteuma-id maksimi-etaisyys]
    (let [reitti (->> toteuma-id
                      (toteumat/hae-toteuman-reittipisteet db)
-                     (map (comp :coordinates geo/pg->clj :sijainti))
+                     (map (fn [{sijainti :sijainti aika :aika}]
+                            [(.-x sijainti) (.-y sijainti) aika]))
                      (hae-reitti db maksimi-etaisyys))
          geometria (when-not (= reitti +yhdistamis-virhe+)
                      (-> reitti
@@ -208,6 +214,7 @@ maksimi-linnuntien-etaisyys 200)
     (tallenna-kaikki-pyynnon-reittitoteumat db db-replica urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
 
+
 (defn poista-toteuma [db _ {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)
         ulkoiset-idt (-> data :toteumien-tunnisteet)]
@@ -253,3 +260,8 @@ maksimi-linnuntien-etaisyys 200)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-reittitoteuma)
     this))
+
+;; Reittitoteuman kirjaaminen tiedostosta (esim. payload integraatiolokista)
+;;(def toteuma (cheshire.core/parse-string (slurp "reittitoteuma-urakka-125.json") keyword))
+;;(def db (:db harja.palvelin.main/harja-jarjestelma))
+;;(kirjaa-toteuma db db {:id "urakkaid"} toteuma {:id kayttajaid})
