@@ -72,14 +72,27 @@ WHERE
   AND ypk.poistettu IS NOT TRUE;
 
 -- name: yllapitokohteen-saa-poistaa
-SELECT
-  (((SELECT COUNT(yhaid) FROM yllapitokohde WHERE id = :id AND yhaid IS NOT NULL) > 0) OR
-  ((SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma WHERE yllapitokohde = :id) > 0) OR
-  ((SELECT COUNT(*) FROM paallystysilmoitus WHERE paallystyskohde = :id) > 0) OR
-  ((SELECT COUNT(*) FROM paikkausilmoitus WHERE paikkauskohde = :id) > 0) OR
-  ((SELECT COUNT(*) FROM tietyomaa WHERE yllapitokohde = :id) > 0) OR
-  ((SELECT COUNT(*) FROM laatupoikkeama WHERE yllapitokohde = :id) > 0) OR
-  ((SELECT COUNT(*) FROM tarkastus WHERE yllapitokohde = :id) > 0)) as "saa-poistaa"
+SELECT NOT (((SELECT COUNT(yhaid)
+              FROM yllapitokohde
+              WHERE id = :id AND yhaid IS NOT NULL) > 0) OR
+            ((SELECT COUNT(*)
+              FROM tiemerkinnan_yksikkohintainen_toteuma
+              WHERE yllapitokohde = :id) > 0) OR
+            ((SELECT COUNT(*)
+              FROM paallystysilmoitus
+              WHERE paallystyskohde = :id) > 0) OR
+            ((SELECT COUNT(*)
+              FROM paikkausilmoitus
+              WHERE paikkauskohde = :id) > 0) OR
+            ((SELECT COUNT(*)
+              FROM tietyomaa
+              WHERE yllapitokohde = :id) > 0) OR
+            ((SELECT COUNT(*)
+              FROM laatupoikkeama
+              WHERE yllapitokohde = :id) > 0) OR
+            ((SELECT COUNT(*)
+              FROM tarkastus
+              WHERE yllapitokohde = :id) > 0)) AS "saa-poistaa"
 FROM yllapitokohde
 WHERE id = :id;
 
