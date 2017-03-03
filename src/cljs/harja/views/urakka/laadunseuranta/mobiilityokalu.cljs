@@ -25,7 +25,7 @@
    [:a {:href "https://extranet.liikennevirasto.fi/harja/laadunseuranta/"}
     (ikonit/ikoni-ja-teksti (ikonit/livicon-arrow-right)
                             "Siirry Mobiiliin laadunseurantatyökaluun")]
-   [:p "Työkalulla kirjatut tarkastukset kirjataan suoraan Harjaan siihen urakkaan, jonka alueella tarkastus tehtiin."]
+   [:p "Työkalulla kirjatut tarkastukset kirjataan suoraan Harjaan käyttäjän valitsemaan urakkaan."]
    [:a {:href "https://testiextranet.liikennevirasto.fi/harja/laadunseuranta/"}
     (ikonit/ikoni-ja-teksti (ikonit/livicon-arrow-right)
                             "Siirry testiympäristöön")]
