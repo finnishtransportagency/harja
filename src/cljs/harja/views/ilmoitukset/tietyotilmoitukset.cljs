@@ -26,9 +26,10 @@
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.ui.kentat :as kentat]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.hallintayksikot :as hallintayksikot-tiedot]
             [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros
-                   [cljs.core.async.macros :refer [go]]))
+   [cljs.core.async.macros :refer [go]]))
 
 (defn aikavalivalitsin [valinnat-nyt]
   (let [alkuaika (:alkuaika valinnat-nyt)
@@ -147,6 +148,7 @@
       ]]))
 
 (defn ilmoitukset* [e! ilmoitukset]
+  (e! (tiedot/->HaeKayttajanUrakat @hallintayksikot-tiedot/hallintayksikot))
   (e! (tiedot/->YhdistaValinnat @tiedot/ulkoisetvalinnat))
   (komp/luo
    (komp/lippu tiedot/karttataso-ilmoitukset)

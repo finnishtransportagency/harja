@@ -12,6 +12,7 @@
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [tuck.core :as t]
             [clojure.string :as str]
+            [cljs.pprint :refer [pprint]]
             [reagent.core :as r])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -32,17 +33,6 @@
     ;; else
     (concat akku arvo)))
 
-(defonce kayttajan-urakat
-  (reaction<! [hallintayksikot @hy/hallintayksikot]
-              (log "kayttajan-urakat kaynnistetty")
-              (when hallintayksikot ;; (and nakyvissa? hallintayksikot)
-                (go
-                  (async/<!
-                   (async/reduce nil-hylkiva-concat
-                                 []
-                                 (async/merge (mapv tiedot-urakat/hae-hallintayksikon-urakat
-                                                    hallintayksikot))))))))
-
 (defonce karttataso-ilmoitukset (atom false))
 
 (defonce ilmoitukset (atom {:ilmoitusnakymassa? false
@@ -51,8 +41,6 @@
                             :ilmoitukset nil ;; haetut ilmoitukset
                             :valinnat {:alkuaika (pvm/tuntia-sitten 1)
                                        :loppuaika (pvm/nyt)}}))
-
-;; (tarkkaile! "tti/ilmoitukset" ilmoitukset)
 
 ;; Vaihtaa valinnat
 (defrecord AsetaValinnat [valinnat])
@@ -74,6 +62,10 @@
 
 (defrecord IlmoitustaMuokattu [ilmoitus])
 
+(defrecord HaeKayttajanUrakat [hallintayksikot])
+
+(defrecord KayttajanUrakatHaettu [urakat])
+
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
   (log "---> hae-ilmoitukset, appin :valinnat = " (pr-str valinnat))
   (-> app
@@ -94,6 +86,23 @@
           app (assoc app :valinnat uudet-valinnat)]
       (log "--->YhdistaValinnat, kutsutaan hae-ilmoitukset")
       (hae-ilmoitukset app)))
+
+  HaeKayttajanUrakat
+  (process-event [{hallintayksikot :hallintayksikot} app]
+    (log "kayttajan-urakat kaynnistetty, hy id:t" (pr-str (mapv :id hallintayksikot)))
+    (let [tulos! (t/send-async! ->KayttajanUrakatHaettu)]
+      (when hallintayksikot
+        (go (tulos! (async/<!
+                     (async/reduce nil-hylkiva-concat []
+                                   (async/merge
+                                    (mapv tiedot-urakat/hae-hallintayksikon-urakat
+                                          hallintayksikot))))))))
+    (assoc app :kayttajan-urakat nil))
+
+  KayttajanUrakatHaettu
+  (process-event [{urakat :urakat} app]
+    (log "-->KayttajanUrakatHaettu: id:t:" (pr-str (mapv :id urakat)))
+    (assoc app :kayttajan-urakat urakat))
 
   HaeIlmoitukset
   (process-event [_ {valinnat :valinnat :as app}]
