@@ -36,12 +36,11 @@
              :as tierekisteri-varusteet]
             [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as ominaisuudet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept send-to]]))
-
-(def tr-kaytossa? false)
 
 (def nayta-max-toteumaa 500)
 
@@ -212,7 +211,7 @@
      :muokattava? (constantly muokattava?)}))
 
 (defn varusteen-ominaisuudet [muokattava? ominaisuudet]
-  (when tr-kaytossa?
+  (when (ominaisuudet/ominaisuus-kaytossa? :tierekisterin-varusteet)
     (let [poista-tunniste-fn (fn [o] (filter #(not (= "tunniste" (get-in % [:ominaisuus :kenttatunniste]))) o))
           ominaisuudet (if muokattava?
                          (poista-tunniste-fn ominaisuudet)
@@ -236,7 +235,7 @@
        :footer-fn (fn [toteuma]
                     (when muokattava?
                       [:div
-                       (when (and tr-kaytossa? (empty? ominaisuudet))
+                       (when (and (ominaisuudet/ominaisuus-kaytossa? :tierekisterin-varusteet) (empty? ominaisuudet))
                          (lomake/yleinen-varoitus "Ladataan tietolajin kuvausta. Kirjaus voidaan tehdä vasta, kun kuvaus on ladattu"))
                        [napit/palvelinkutsu-nappi
                         "Tallenna"
@@ -257,14 +256,14 @@
     [:h1 "Varustekirjaukset Harjassa"]
     [valinnat e! nykyiset-valinnat]
     [toteumataulukko e! naytettavat-toteumat]]
-   (when tr-kaytossa?
+   (when (ominaisuudet/ominaisuus-kaytossa? :tierekisterin-varusteet)
      [:div.sisalto-container
       [:h1 "Varusteet Tierekisterissä"]
       (when oikeus-varusteiden-muokkaamiseen?
         [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisatty nil))])
       [varustehaku e! app]])])
 
-(defn kasittele-alkutila [e! {:keys [uudet-varustetoteumat muokattava-varuste] }]
+(defn kasittele-alkutila [e! {:keys [uudet-varustetoteumat muokattava-varuste]}]
   (when uudet-varustetoteumat
     (e! (v/->VarustetoteumatMuuttuneet uudet-varustetoteumat)))
 
@@ -283,8 +282,8 @@
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
                            {:varustetoteuma {:toiminto (fn [klikattu-varustetoteuma]
-                                                    (e! (v/->ValitseToteuma klikattu-varustetoteuma)))
-                                        :teksti "Valitse varustetoteuma"}})
+                                                         (e! (v/->ValitseToteuma klikattu-varustetoteuma)))
+                                             :teksti "Valitse varustetoteuma"}})
                          (nav/vaihda-kartan-koko! :M))
                       #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                            (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
