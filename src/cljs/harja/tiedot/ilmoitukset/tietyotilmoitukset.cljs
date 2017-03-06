@@ -26,6 +26,11 @@
              :urakkatyyppi (:arvo @nav/urakkatyyppi)
              :hoitokausi @tiedot-urakka/valittu-hoitokausi}))
 
+(defn- nil-hylkiva-concat [akku arvo]
+  (if (or (nil? arvo) (nil? akku))
+    nil
+    ;; else
+    (concat akku arvo)))
 
 (defonce kayttajan-urakat
   (reaction<! [hallintayksikot @hy/hallintayksikot]
@@ -33,7 +38,8 @@
               (when hallintayksikot ;; (and nakyvissa? hallintayksikot)
                 (go
                   (async/<!
-                   (async/reduce conj []
+                   (async/reduce nil-hylkiva-concat
+                                 []
                                  (async/merge (mapv tiedot-urakat/hae-hallintayksikon-urakat
                                                     hallintayksikot))))))))
 
