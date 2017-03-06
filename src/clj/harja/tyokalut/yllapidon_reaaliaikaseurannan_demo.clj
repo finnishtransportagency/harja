@@ -5,7 +5,7 @@
 (ns harja.tyokalut.yllapidon-reaaliaikaseurannan-demo
   (:require [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.suljetut-tieosuudet :as q-suljetut-tieosuudet]
+            [harja.kyselyt.tietyomaat :as q-tietyomaat]
             [harja.kyselyt.tyokoneseuranta :as tks]
             [harja.geo :as geo])
   (:import (java.util Calendar)
@@ -50,7 +50,7 @@
   (new Timestamp (.getTime (.getTime (Calendar/getInstance)))))
 
 (defn tee-tyokonehavainto [db id tyyppi x y urakka-id tehtava suunta]
-  (tks/tallenna-tyokonehavainto
+  (tks/tallenna-tyokonehavainto<!
     db
     "Harja"
     "Solita Oy"
@@ -103,7 +103,7 @@
                           :tr_let 688}]
 
     ;; Tehdään ensin suljettu tieosuus, joka rajaa alueen työkoneille
-    (q-suljetut-tieosuudet/luo-suljettu-tieosuus<! db suljettutieosuus)
+    (q-tietyomaat/luo-tietyomaa<! db suljettutieosuus)
 
     ;; Aseta TMA-aidat suljetun tieosuuden alkuun ja loppuun
     (tee-tyokonehavainto db 1000001 "TMA-aita 1" alkux alkuy urakka-id "turvalaite" 425)
