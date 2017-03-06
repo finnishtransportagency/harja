@@ -68,6 +68,7 @@
     [harja.palvelin.palvelut.status :as status]
     [harja.palvelin.palvelut.organisaatiot :as organisaatiot]
     [harja.palvelin.palvelut.tienakyma :as tienakyma]
+    [harja.palvelin.palvelut.debug :as debug]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -383,6 +384,11 @@
       :karttakuvat (component/using
                      (karttakuvat/luo-karttakuvat)
                      [:http-palvelin :db])
+
+      :debug (component/using
+              (debug/->Debug)
+              {:db :db-replica
+               :http-palvelin :http-palvelin})
 
       :api-jarjestelmatunnukset (component/using
                                   (api-jarjestelmatunnukset/->APIJarjestelmatunnukset)

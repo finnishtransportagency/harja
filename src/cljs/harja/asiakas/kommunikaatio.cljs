@@ -74,7 +74,7 @@
 (defn- kysely [palvelu metodi parametrit
                {:keys [transducer paasta-virhe-lapi? chan yritysten-maara] :as opts}]
   (let [cb (fn [[_ vastaus]]
-             (when-not (nil? vastaus)
+             (when (some? vastaus)
                (cond
                  (= (:status vastaus) 302)
                  (do (kasittele-istunto-vanhentunut)
@@ -89,7 +89,9 @@
 
                  :default
                  (do (put! chan (if transducer (into [] transducer vastaus) vastaus))
-                     (close! chan)))))]
+                     (close! chan)))
+               ;; else
+               (close! chan)))]
     (go
       (if-let [testipalvelu @testmode]
         (do
