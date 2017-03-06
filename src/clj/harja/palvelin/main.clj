@@ -113,8 +113,9 @@
      :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset]]
 
     ;; Metriikat
-     [harja.palvelin.komponentit.metriikka :as metriikka]
-     (:gen-class)))
+    [harja.palvelin.komponentit.metriikka :as metriikka])
+  
+  (:gen-class))
 
 (defn luo-jarjestelma [asetukset]
   (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
@@ -152,8 +153,8 @@
                              [:db :virustarkistus])
 
       :kehitysmoodi (component/using
-                     (kehitysmoodi/luo-kehitysmoodi kehitysmoodi)
-                     [:http-palvelin])
+                      (kehitysmoodi/luo-kehitysmoodi kehitysmoodi)
+                      [:http-palvelin])
 
       ;; Integraatioloki
       :integraatioloki
@@ -246,7 +247,7 @@
               [:http-palvelin :db])
       :pois-kytketyt-ominaisuudet (component/using
                                    (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet (:pois-kytketyt-ominaisuudet asetukset))
-                                   [:http-palvelin :db])
+              [:http-palvelin :db])
       :haku (component/using
               (haku/->Haku)
               [:http-palvelin :db])
@@ -378,17 +379,17 @@
                       :http-palvelin :http-palvelin
                       :karttakuvat :karttakuvat})
       :tienakyma (component/using
-                  (tienakyma/->Tienakyma)
-                  {:db :db-replica
-                   :http-palvelin :http-palvelin})
+                   (tienakyma/->Tienakyma)
+                   {:db :db-replica
+                    :http-palvelin :http-palvelin})
       :karttakuvat (component/using
                      (karttakuvat/luo-karttakuvat)
                      [:http-palvelin :db])
 
       :debug (component/using
-              (debug/->Debug)
-              {:db :db-replica
-               :http-palvelin :http-palvelin})
+               (debug/->Debug)
+               {:db :db-replica
+                :http-palvelin :http-palvelin})
 
       :api-jarjestelmatunnukset (component/using
                                   (api-jarjestelmatunnukset/->APIJarjestelmatunnukset)
