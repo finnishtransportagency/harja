@@ -113,8 +113,9 @@
      :refer [lue-asetukset konfiguroi-lokitus tarkista-asetukset]]
 
     ;; Metriikat
-     [harja.palvelin.komponentit.metriikka :as metriikka]
-     (:gen-class)))
+    [harja.palvelin.komponentit.metriikka :as metriikka])
+
+  (:gen-class))
 
 (defn luo-jarjestelma [asetukset]
   (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
