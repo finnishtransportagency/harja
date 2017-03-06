@@ -36,11 +36,12 @@
              :as tierekisteri-varusteet]
             [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept send-to]]))
+
+(def tr-kaytossa? false)
 
 (def nayta-max-toteumaa 500)
 
@@ -211,7 +212,7 @@
      :muokattava? (constantly muokattava?)}))
 
 (defn varusteen-ominaisuudet [muokattava? ominaisuudet]
-  (when (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
+  (when tr-kaytossa?
     (let [poista-tunniste-fn (fn [o] (filter #(not (= "tunniste" (get-in % [:ominaisuus :kenttatunniste]))) o))
           ominaisuudet (if muokattava?
                          (poista-tunniste-fn ominaisuudet)
@@ -235,7 +236,7 @@
        :footer-fn (fn [toteuma]
                     (when muokattava?
                       [:div
-                       (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet) (empty? ominaisuudet))
+                       (when (and tr-kaytossa? (empty? ominaisuudet))
                          (lomake/yleinen-varoitus "Ladataan tietolajin kuvausta. Kirjaus voidaan tehdä vasta, kun kuvaus on ladattu"))
                        [napit/palvelinkutsu-nappi
                         "Tallenna"
@@ -256,14 +257,14 @@
     [:h1 "Varustekirjaukset Harjassa"]
     [valinnat e! nykyiset-valinnat]
     [toteumataulukko e! naytettavat-toteumat]]
-   (when (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
+   (when tr-kaytossa?
      [:div.sisalto-container
       [:h1 "Varusteet Tierekisterissä"]
       (when oikeus-varusteiden-muokkaamiseen?
         [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisatty nil))])
       [varustehaku e! app]])])
 
-(defn kasittele-alkutila [e! {:keys [uudet-varustetoteumat muokattava-varuste]}]
+(defn kasittele-alkutila [e! {:keys [uudet-varustetoteumat muokattava-varuste] }]
   (when uudet-varustetoteumat
     (e! (v/->VarustetoteumatMuuttuneet uudet-varustetoteumat)))
 
