@@ -55,5 +55,6 @@
            'harja.views.kartta-test
            'harja.tiedot.tilannekuva.tilannekuva-test
            'harja.views.urakka.tiemerkinnan-yksikkohintaiset-tyot-test
+           'harja.views.urakka.yllapitokohteet.muut-kustannukset-test
            ;; uusi testi tähän
            )
