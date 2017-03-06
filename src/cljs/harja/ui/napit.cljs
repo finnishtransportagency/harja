@@ -2,6 +2,7 @@
   (:require [harja.ui.ikonit :as ikonit]
             [harja.ui.viesti :as viesti]
             [harja.ui.modal :as modal]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as y]
             [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
@@ -43,6 +44,7 @@
     (fn [teksti kysely asetukset]
       (let [luokka (if (nil? (:luokka asetukset)) "nappi-ensisijainen" (name (:luokka asetukset)))
             ikoni (:ikoni asetukset)
+            virheviestin-nayttoaika (:virheviestin-nayttoaika asetukset)
             virheviesti (or (:virheviesti asetukset) "Virhe tapahtui.")
             virheen-esitystapa (case (:virheen-esitystapa asetukset)
                                  :modal :modal
@@ -84,7 +86,8 @@
          (when @nayta-virheviesti?
            (case virheen-esitystapa
              :flash (do
-                      (viesti/nayta! virheviesti :warning viesti/viestin-nayttoaika-keskipitka)
+                      (viesti/nayta! virheviesti :warning (or virheviestin-nayttoaika
+                                                              viesti/viestin-nayttoaika-keskipitka))
                       (sulkemisfunktio)
                       nil)
              :modal (do (modal/nayta! {:otsikko "Virhe tapahtui" :sulje sulkemisfunktio} virheviesti) nil)
@@ -96,13 +99,13 @@
   [:button.nappi-toissijainen {:on-click #(do
                                            (.preventDefault %)
                                            (takaisin-fn))}
-   [y/ikoni-ja-teksti (ikonit/livicon-chevron-left) teksti]])
+   [ikonit/ikoni-ja-teksti (ikonit/livicon-chevron-left) teksti]])
 
 (defn urakan-sivulle [teksti click-fn]
   [:button.nappi-toissijainen {:on-click #(do
                                            (.preventDefault %)
                                            (click-fn))}
-   [y/ikoni-ja-teksti (ikonit/livicon-chevron-left) teksti]])
+   [ikonit/ikoni-ja-teksti (ikonit/livicon-chevron-left) teksti]])
 
 (defn uusi
   "Nappi 'uuden asian' luonnille.
@@ -117,7 +120,7 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
      :on-click #(do
                  (.preventDefault %)
                  (uusi-fn))}
-    [y/ikoni-ja-teksti [ikonit/livicon-plus] teksti]]))
+    [ikonit/ikoni-ja-teksti [ikonit/livicon-plus] teksti]]))
 
 (defn hyvaksy
   ([hyvaksy-fn] (hyvaksy "OK" hyvaksy-fn {}))
@@ -129,7 +132,7 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
       :on-click #(do
                   (.preventDefault %)
                   (hyvaksy-fn))}
-     [y/ikoni-ja-teksti [ikonit/check] teksti]]))
+     [ikonit/ikoni-ja-teksti [ikonit/check] teksti]]))
 
 (defn peruuta
   ([teksti peruuta-fn] (peruuta teksti peruuta-fn {}))
@@ -140,7 +143,7 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
      :on-click #(do
                  (.preventDefault %)
                  (peruuta-fn))}
-    [y/ikoni-ja-teksti [ikonit/livicon-ban] teksti]]))
+    [ikonit/ikoni-ja-teksti [ikonit/livicon-ban] teksti]]))
 
 (defn yleinen
   "Yleinen toimintopainike
@@ -158,3 +161,58 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
     (if ikoni
       [:span ikoni (str " " teksti)]
       teksti)]))
+
+(defn tallenna
+  "Yleinen 'Tallenna' nappi."
+  ([sisalto toiminto-fn] (tallenna sisalto toiminto-fn {}))
+  ([sisalto toiminto-fn {:keys [disabled luokka ikoni tallennus-kaynnissa?]}]
+   [:button.nappi-ensisijainen
+    {:class (str (when disabled "disabled " luokka))
+     :disabled disabled
+     :on-click #(do (.preventDefault %)
+                    (toiminto-fn))}
+    (if tallennus-kaynnissa?
+      [y/ajax-loader]
+      ikoni)
+    (when (or ikoni tallennus-kaynnissa?) " ")
+    sisalto]))
+
+(defn sulje
+  "'Sulje' ruksi"
+  [sulje!]
+  [:button.close {:on-click sulje!
+                  :type "button"}
+   [ikonit/remove]])
+
+(defn poista
+  ([teksti poista-fn] (poista teksti poista-fn {}))
+  ([teksti poista-fn {:keys [disabled luokka]}]
+   [:button.nappi-kielteinen
+    {:class    (str (when disabled "disabled ") (or luokka ""))
+     :disabled disabled
+     :on-click #(do
+                  (.preventDefault %)
+                  (poista-fn))}
+    [ikonit/ikoni-ja-teksti [ikonit/livicon-trash] teksti]]))
+
+(defn tarkasta
+  ([teksti tarkasta-fn] (tarkasta teksti tarkasta-fn {}))
+  ([teksti tarkasta-fn {:keys [disabled luokka]}]
+   [:button.nappi-toissijainen
+    {:class    (str (when disabled "disabled ") (or luokka ""))
+     :disabled disabled
+     :on-click #(do
+                  (.preventDefault %)
+                  (tarkasta-fn))}
+    [ikonit/ikoni-ja-teksti [ikonit/eye-open] teksti]]))
+
+(defn muokkaa
+  ([teksti muokkaa-fn] (muokkaa teksti muokkaa-fn {}))
+  ([teksti muokkaa-fn {:keys [disabled luokka]}]
+   [:button.nappi-toissijainen
+    {:class    (str (when disabled "disabled ") (or luokka ""))
+     :disabled disabled
+     :on-click #(do
+                  (.preventDefault %)
+                  (muokkaa-fn))}
+    [ikonit/ikoni-ja-teksti [ikonit/livicon-pen] teksti]]))

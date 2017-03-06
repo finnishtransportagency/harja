@@ -3,6 +3,13 @@
   "id": "urn:harja",
   "type": "object",
   "properties": {
+    "perustiedot": {
+      "id": "urn:harja/paallystysilmoitusaikataulu",
+      "type": "object",
+      "required": true,
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/paallystysilmoitus_aikataulu.schema.json"
+    },
     "yllapitokohde": {
       "id": "urn:harja/yllapitokohde",
       "type": "object",
@@ -144,28 +151,28 @@
                             "sideainetyyppi": {
                               "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/kivi-ja-sideaineet/sideainetyyppi",
                               "enum": [
-                                "1",
-                                "2",
-                                "3",
-                                "4",
-                                "5",
-                                "6",
-                                "7",
-                                "8",
-                                "9",
-                                "10",
-                                "11",
-                                "12",
-                                "13",
-                                "14",
-                                "15",
-                                "16",
-                                "17",
-                                "18",
-                                "19",
-                                "20",
-                                "21",
-                                "22"
+                                "20/30",
+                                "35/50",
+                                "50/70",
+                                "70/100",
+                                "100/150",
+                                "160/220",
+                                "250/330",
+                                "330/430",
+                                "500/650",
+                                "650/900",
+                                "V1500",
+                                "V3000",
+                                "KB65",
+                                "KB75",
+                                "KB85",
+                                "BL5",
+                                "BL2K",
+                                "BL2 Bio",
+                                "BE-L",
+                                "BE-SIP",
+                                "BE-SOP",
+                                "BE-PAB"
                               ]
                             },
                             "pitoisuus": {
@@ -269,60 +276,6 @@
                   "Suuntauksen parantaminen",
                   "Raskas rakenteen parantaminen"
                 ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "tyot": {
-      "id": "urn:harja/tyot",
-      "type": "array",
-      "maxItems": 100,
-      "items": {
-        "id": "urn:harja/tyot/0/tyo",
-        "type": "object",
-        "properties": {
-          "tyo": {
-            "id": "urn:harja/tyot/0/tyo/tyyppi",
-            "required": true,
-            "type": "object",
-            "properties": {
-              "tyyppi": {
-                "id": "urn:harja/tyot/0/tyo/tyyppi",
-                "required": true,
-                "enum": [
-                  "Ajoradan päällyste",
-                  "Pienaluetyöt",
-                  "Tasaukset",
-                  "Jyrsinnät",
-                  "Muut"
-                ]
-              },
-              "tyotehtava": {
-                "id": "urn:harja/tyot/0/tyo/tyotehtava",
-                "type": "string",
-                "required": true
-              },
-              "tilattu-maara": {
-                "id": "urn:harja/tyot/0/tyo/tilattu-maara",
-                "type": "number",
-                "required": true
-              },
-              "toteutunut-maara": {
-                "id": "urn:harja/tyot/0/tyo/toteutunut-maara",
-                "type": "number",
-                "required": true
-              },
-              "yksikko": {
-                "id": "urn:harja/tyot/0/tyo/yksikko",
-                "type": "string",
-                "required": true
-              },
-              "yksikkohinta": {
-                "id": "urn:harja/tyot/0/tyo/yksikkohinta",
-                "type": "number",
-                "required": true
               }
             }
           }

@@ -42,10 +42,6 @@ http {
       server 10.0.2.2:3000;
     }
 
-    upstream laadunseuranta {
-      server 10.0.2.2:3002;
-    }
-
     server {
         listen       8000;
         server_name  localhost;
@@ -54,24 +50,22 @@ http {
 
         underscores_in_headers on;
 
-        location ~ ^/laadunseuranta/(?<path>.*) {
-	    proxy_pass_request_headers on;
-	    proxy_pass http://laadunseuranta/$path$is_args$args;
-	    access_log /var/log/nginx/3001_access.log;
-	    error_log /var/log/nginx/3001_error.log;
-	}
-
 	location ~ /wmts/(?<path>.*)$ {
 	  proxy_set_header Host "karttakuva.maanmittauslaitos.fi:443";
-          proxy_set_header Authorization "Basic TGlpa2VubmV2aXJrb2U6VGFtbWlrdXUyMDE2";
+          proxy_set_header Authorization "Basic TGlpa2VubmV2aXJrb2U6Sm91bHVrdXUyMzEyMjAxNg==";
           proxy_pass   https://wmts/$path$is_args$args;
 	  access_log /var/log/nginx/wmts.log;
         }
 
         location ~ /(?<path>.*)$ {
 	    proxy_pass_request_headers on;
-	    #proxy_pass_header OAM_REMOTE_USER;
-	    #proxy_set_header OAM_REMOTE_USER jvh;
+        #proxy_set_header OAM_REMOTE_USER "jvh";
+	    #proxy_set_header OAM_GROUPS "Jarjestelmavastaava";
+        #proxy_set_header OAM_ORGANIZATION "Liikennevirasto";
+        #proxy_set_header OAM_USER_FIRST_NAME "Jalmari";
+        #proxy_set_header OAM_USER_LAST_NAME "Jarjestelmavastaava";
+        #proxy_set_header OAM_USER_EMAIL "harja@example.com";
+        #proxy_set_header OAM_USER_MOBILE "1234567890";
 	    proxy_pass http://harja/$path$is_args$args;
 	    access_log /var/log/nginx/3000_access.log;
 	    error_log /var/log/nginx/3000_error.log;

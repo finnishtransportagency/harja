@@ -3,6 +3,7 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.yksikkohintaiset-tyot :as q]
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
+            [harja.domain.raportointi :refer [info-solu]]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot :as yks-hint-tyot]
@@ -49,7 +50,8 @@
                            ;; esiintyvät avaimissa
                            (let [suunniteltu-maara (:suunniteltu_maara (first tehtavat))
                                  maara-yhteensa (reduce + (keep :toteutunut_maara tehtavat))
-                                 toteumaprosentti (if (and (number? suunniteltu-maara) (not= suunniteltu-maara 0))
+                                 toteumaprosentti (when (and (number? suunniteltu-maara)
+                                                             (not (zero? suunniteltu-maara)))
                                                     (with-precision 10 (* (/ maara-yhteensa suunniteltu-maara) 100)))
                                  kuukausittaiset-summat (reduce
                                                           (fn [map tehtava]
@@ -119,7 +121,7 @@
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         suunnittelutiedot (when (= :urakka konteksti)
-                            (yks-hint-tyot/hae-urakan-hoitokaudet db urakka-id))
+                            (yks-hint-tyot/suunnitellut-tehtavat db urakka-id))
         kuukausittaiset-summat (hae-kuukausittaiset-summat db {:konteksti konteksti
                                                                :urakka-id urakka-id
                                                                :hallintayksikko-id hallintayksikko-id
@@ -130,7 +132,7 @@
                                                                :urakoittain? urakoittain?
                                                                :urakkatyyppi urakkatyyppi})
         naytettavat-rivit (muodosta-raportin-rivit kuukausittaiset-summat urakoittain?)
-        aikavali-kasittaa-hoitokauden? (yks-hint-tyot/aikavali-kasittaa-yhden-hoitokauden? alkupvm loppupvm suunnittelutiedot)
+        aikavali-kasittaa-hoitokauden? (yks-hint-tyot/aikavali-hoitokaudella? alkupvm loppupvm suunnittelutiedot)
         listattavat-pvmt (take-while (fn [pvm]
                                        ;; Nykyisen iteraation kk ei ole myöhempi kuin loppupvm:n kk
                                        (not (t/after?
@@ -142,7 +144,7 @@
                                                             1))))
                                      (iterate (fn [pvm]
                                                 (t/plus pvm (t/months 1)))
-                                              (t/to-time-zone (c/from-date alkupvm) (t/time-zone-for-id "Europe/Helsinki"))))
+                                              (pvm/suomen-aikavyohykkeeseen (c/from-date alkupvm))))
         raportin-nimi "Yksikköhintaiset työt kuukausittain"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -193,13 +195,13 @@
                                                        (and (or (string? formatoitu) (coll? formatoitu))
                                                             (empty? formatoitu))))
                                             formatoitu
-                                            [:info "-"]))
+                                            (info-solu "-")))
                                         (let [formatoitu (:suunniteltu_maara rivi)]
                                           (if (not (or (nil? formatoitu)
                                                        (and (or (string? formatoitu) (coll? formatoitu))
                                                             (empty? formatoitu))))
                                             formatoitu
-                                            [:info "Ei suunnitelmaa"]))]))))
+                                            (info-solu "Ei suunnitelmaa")))]))))
             naytettavat-rivit)]
      (yks-hint-tyot/suunnitelutietojen-nayttamisilmoitus konteksti alkupvm loppupvm suunnittelutiedot)]))
 

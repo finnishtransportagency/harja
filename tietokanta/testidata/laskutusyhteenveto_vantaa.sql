@@ -1,139 +1,131 @@
--- Tämä tiedosto sisältää Vantaan alueurakka 2014-2019 testidataa, jonka avulla voidaan luoda mielekäs laskutusyhteenveto
+-- Tämä tiedosto sisältää Vantaan alueurakka 2009-2019 testidataa, jonka avulla voidaan luoda mielekäs laskutusyhteenveto
 INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinstanssi,sopimus)
-     VALUES (2014, 10, 3500, '2014-10-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2014, 11, 3500, '2014-11-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2014, 12, 3500, '2014-12-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2015, 1, 3500, '2015-01-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2015, 2, 3500, '2015-02-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2015, 3, 3500, '2015-03-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2015, 4, 3500, '2015-04-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2015, 5, 3500, '2015-05-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2015, 6, 3500, '2015-06-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2015, 7, 3500, '2015-07-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2015, 8, 3500, '2015-08-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2015, 9, 3500, '2015-09-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2014, 10, 10000, '2014-10-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2014, 11, 10000, '2014-11-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2014, 12, 10000, '2014-12-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2015, 1, 10000, '2015-01-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2015, 2, 10000, '2015-02-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2015, 3, 10000, '2015-03-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2015, 4, 10000, '2015-04-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2015, 5, 10000, '2015-05-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2015, 6, 10000, '2015-06-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2015, 7, 10000, '2015-07-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-            (2015, 8, 10000, '2015-08-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
+     VALUES (2014, 10, 3500, '2014-10-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2014, 11, 3500, '2014-11-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2014, 12, 3500, '2014-12-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2015, 1, 3500, '2015-01-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2015, 2, 3500, '2015-02-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2015, 3, 3500, '2015-03-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2015, 4, 3500, '2015-04-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2015, 5, 3500, '2015-05-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2015, 6, 3500, '2015-06-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2015, 7, 3500, '2015-07-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2015, 8, 3500, '2015-08-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2015, 9, 3500, '2015-09-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2014, 10, 10000, '2014-10-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2014, 11, 10000, '2014-11-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2014, 12, 10000, '2014-12-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2015, 1, 10000, '2015-01-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2015, 2, 10000, '2015-02-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2015, 3, 10000, '2015-03-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2015, 4, 10000, '2015-04-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2015, 5, 10000, '2015-05-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2015, 6, 10000, '2015-06-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2015, 7, 10000, '2015-07-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+            (2015, 8, 10000, '2015-08-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
             -- Lisäsopimuksesta kokonaishintaista työtä mukaan myös
-            (2015, 9, 10, '2015-09-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS NOT null)),
-            (2015, 9, 10000, '2015-09-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null));
+            (2015, 9, 10, '2015-09-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS NOT null)),
+            (2015, 9, 10000, '2015-09-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null));
 
 INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinstanssi,sopimus)
-VALUES (2015, 10, 3500, '2015-10-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2015, 11, 3500, '2015-11-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2015, 12, 3500, '2015-12-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2016, 1, 3500, '2016-01-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2016, 2, 3500, '2016-02-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2016, 3, 3500, '2016-03-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2016, 4, 3500, '2016-04-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2016, 5, 3500, '2016-05-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2016, 6, 3500, '2016-06-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2016, 7, 3500, '2016-07-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2016, 8, 3500, '2016-08-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2016, 9, 3500, '2016-09-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2015, 10, 10000, '2015-10-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2015, 11, 10000, '2015-11-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2015, 12, 10000, '2015-12-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2016, 1, 10000, '2016-01-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2016, 2, 10000, '2016-02-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2016, 3, 10000, '2016-03-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2016, 4, 10000, '2016-04-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2016, 5, 10000, '2016-05-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2016, 6, 10000, '2016-06-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2016, 7, 10000, '2016-07-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-  (2016, 8, 10000, '2016-08-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
+VALUES (2015, 10, 3500, '2015-10-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2015, 11, 3500, '2015-11-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2015, 12, 3500, '2015-12-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2016, 1, 3500, '2016-01-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2016, 2, 3500, '2016-02-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2016, 3, 3500, '2016-03-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2016, 4, 3500, '2016-04-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2016, 5, 3500, '2016-05-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2016, 6, 3500, '2016-06-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2016, 7, 3500, '2016-07-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2016, 8, 3500, '2016-08-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2016, 9, 3500, '2016-09-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2015, 10, 10000, '2015-10-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2015, 11, 10000, '2015-11-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2015, 12, 10000, '2015-12-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2016, 1, 10000, '2016-01-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2016, 2, 10000, '2016-02-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2016, 3, 10000, '2016-03-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2016, 4, 10000, '2016-04-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2016, 5, 10000, '2016-05-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2016, 6, 10000, '2016-06-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2016, 7, 10000, '2016-07-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+  (2016, 8, 10000, '2016-08-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
   -- Lisäsopimuksesta kokonaishintaista työtä mukaan myös
-  (2016, 9, 10, '2016-09-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS NOT null)),
-  (2016, 9, 10000, '2016-09-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null));
+  (2016, 9, 10, '2016-09-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS NOT null)),
+  (2016, 9, 10000, '2016-09-15', (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Sorateiden hoito TP 2014-2019'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null));
 
 INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus)
-    VALUES ('2014-10-01', '2014-12-31', 3, 'km', 100, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 2-ajorat. KVL >15000'), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-           ('2015-01-01', '2015-09-30', 9, 'km', 100, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 2-ajorat. KVL >15000'), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-           ('2014-10-01', '2014-12-31', 60, 'ha', 100, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-           ('2015-01-01', '2015-09-30', 180, 'ha', 100, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null));
+    VALUES ('2014-10-01', '2014-12-31', 3, 'km', 100, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 2-ajorat. KVL >15000'), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+           ('2015-01-01', '2015-09-30', 9, 'km', 100, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 2-ajorat. KVL >15000'), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+           ('2014-10-01', '2014-12-31', 60, 'ha', 100, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+           ('2015-01-01', '2015-09-30', 180, 'ha', 100, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null));
 
 INSERT INTO muutoshintainen_tyo (alkupvm, loppupvm, yksikko, yksikkohinta, tehtava, urakka, sopimus)
-VALUES ((SELECT alkupvm FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), 'tiekm', 100.0, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null)),
-       ((SELECT alkupvm FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), 'ha', 100.0, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null));
-
--- Suolauksen sallittu määrä
-INSERT INTO materiaalin_kaytto (alkupvm, loppupvm, maara, materiaali,
-                                urakka, sopimus, luotu, muokattu, luoja, muokkaaja, poistettu)
-     VALUES ('20141001', '20150930', 800, (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'),
-             (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-             (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
-             '2004-10-19 10:23:54+02', null, (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), null, false);
+VALUES ((SELECT alkupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), 'tiekm', 100.0, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
+       ((SELECT alkupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), 'ha', 100.0, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null));
 
 -- Suolauksen toteuma (materiaalitoteuma)
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
-     VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-             (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
+     VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+             (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
              '2015-02-19 10:23:54+02', '2015-02-18 00:00:00+02', '2015-02-18 02:00:00+02',
              'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', 'Y123', 'VAN-LYV-toteuma');
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara)
     VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'VAN-LYV-toteuma'), '2015-02-19 10:23:54+02',
-            (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'), 1000);
+            (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'), 2000);
 
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
-VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-       (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
+VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+       (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
         '2015-01-19 10:23:54+02', '2015-01-19 10:23:54+02', '2015-01-19 10:23:54+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'VANlyv_yht_tot1'),
-       ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-        (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
+       ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+        (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
         '2015-01-19 10:23:54+02', '2015-01-19 10:23:54+02', '2015-01-19 10:23:54+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'VANlyv_yht_tot2'),
-  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
+  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
    '2015-07-19 10:23:54+02', '2015-07-19 10:23:54+02', '2015-07-19 10:23:54+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'VANlyv_yht_tot_heinakuu'),
-  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
+  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
    '2015-08-01 00:00:00+02', '2015-08-01 00:00:00+02', '2015-08-01 00:00:00+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'VANlyv_yht_tot_elokuu_eka'),
-  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
+  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
    '2015-08-19 10:23:54+02', '2015-08-19 10:23:54+02', '2015-08-19 10:23:54+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'VANlyv_yht_tot_elokuu'),
-  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
+  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
    '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', 'yksikkohintainen'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'VANlyv_yht_tot_elokuu2'),
-  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
+  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
    '2015-07-19 10:23:54+02', '2015-07-19 10:23:54+02', '2015-07-19 10:23:54+02', 'muutostyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'VANlyv_muutostyo_tot_heinakuu'),
-  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
+  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
    '2015-07-12 10:23:54+02', '2015-07-12 10:23:54+02', '2015-07-12 10:23:54+02', 'muutostyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'VANlyv_muutostyo_tot_heinakuu_paivanhinta'),
-  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
+  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
    '2015-08-01 00:00:00+02', '2015-08-01 00:00:00+02', '2015-08-01 00:00:00+02', 'muutostyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'VANlyv_muutostyo_tot_elokuu_eka'),
-  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
+  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
    '2015-08-01 00:00:00+02', '2015-08-01 00:00:00+02', '2015-08-01 00:00:00+02', 'muutostyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'VANlyv_muutostyo_tot_elokuu_eka_paivanhinta'),
-  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
+  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
    '2015-08-19 10:23:54+02', '2015-08-19 10:23:54+02', '2015-08-19 10:23:54+02', 'lisatyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'VANlyv_lisatyo_tot_elokuu'),
-  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
+  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
    '2015-08-10 10:23:54+02', '2015-08-10 10:23:54+02', '2015-08-10 10:23:54+02', 'lisatyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'VANlyv_lisatyo_tot_elokuu_paivanhinta_1'),
-  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
+  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
    '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', 'lisatyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'VANlyv_lisatyo_tot_elokuu_paivanhinta_2'),
-  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
+  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
    '2015-07-22 10:23:54+02', '2015-07-20 10:23:54+02', '2015-07-20 10:23:54+02', 'akillinen-hoitotyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'VANlyv_akillinen_tot_heinakuu'),
-  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
+  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
    '2015-08-22 10:23:54+02', '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', 'akillinen-hoitotyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'VANlyv_akillinen_tot_elokuu'),
-  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
+  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
    '2015-08-23 10:23:54+02', '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', 'akillinen-hoitotyo'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'VANlyv_akillinen_tot_elokuu_paivanhinta'),
-  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
-   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null),
+  ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
+   (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
    '2015-08-24 10:23:54+02', '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', 'vahinkojen-korjaukset'::toteumatyyppi, 'Antti Ahertaja', 'Y124', 'VANlyv_vahinkojen-korjaukset_tot_elokuu_paivanhinta');
 
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara)
@@ -152,37 +144,37 @@ VALUES
   ((SELECT id from toteuma where lisatieto = 'VANlyv_akillinen_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10),
   ((SELECT id from toteuma where lisatieto = 'VANlyv_vahinkojen-korjaukset_tot_elokuu_paivanhinta'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10);
 
-INSERT INTO toteuma_tehtava (toteuma, toimenpidekoodi, maara, paivan_hinta)
+INSERT INTO toteuma_tehtava (toteuma, toimenpidekoodi, maara, paivan_hinta, indeksi)
 VALUES
-  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_akillinen_tot_elokuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000);
+  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_akillinen_tot_elokuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false);
 
 --Erilliskustannukset
 INSERT INTO erilliskustannus (tyyppi,sopimus,urakka,toimenpideinstanssi,pvm,rahasumma,indeksin_nimi,lisatieto,luotu,luoja)
 VALUES
-  ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), '2015-05-15', -1000, 'MAKU 2010', 'Urakoitsija maksaa tilaajalle', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
-  ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), '2015-06-15', 1000, 'MAKU 2010', 'Vahingot on nyt korjattu, lasku tulossa.', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
-  ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), '2015-07-15', 1000, null, 'Tilaaja maksaa urakoitsijlle.', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
-  ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), '2015-08-01', 1000, 'MAKU 2010', 'Muu erilliskustannus', '2015-08-01', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
-  ('asiakastyytyvaisyysbonus', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), '2015-08-15', 1000, 'MAKU 2005', 'Asiakkaat erittäin tyytyväisiä, tyytyväisyysindeksi 0,92.', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
-  ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), '2015-09-15', 1000, 'MAKU 2010', 'Muun erilliskustannuksen lisätieto', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh'));
+  ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), '2015-05-15', -1000, 'MAKU 2010', 'Urakoitsija maksaa tilaajalle', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
+  ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), '2015-06-15', 1000, 'MAKU 2010', 'Vahingot on nyt korjattu, lasku tulossa.', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
+  ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), '2015-07-15', 1000, null, 'Tilaaja maksaa urakoitsijlle.', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
+  ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), '2015-08-01', 1000, 'MAKU 2010', 'Muu erilliskustannus', '2015-08-01', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
+  ('asiakastyytyvaisyysbonus', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), '2015-08-15', 1000, 'MAKU 2005', 'Asiakkaat erittäin tyytyväisiä, tyytyväisyysindeksi 0,92.', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh')),
+  ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT id FROM toimenpideinstanssi WHERE nimi='Vantaa Talvihoito TP 2014-2019'), '2015-09-15', 1000, 'MAKU 2010', 'Muun erilliskustannuksen lisätieto', '2015-09-13', (SELECT ID FROM kayttaja WHERE kayttajanimi = 'yit_uuvh'));
 
 
 -- Sydäntalven lämpötila hoitokaudella ja pitkän ajan keskiarvo, vaikuttaa sallittuun suolamäärään
 INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila)
-     VALUES ((SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
+     VALUES ((SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
             '2014-10-01', '2015-09-30', -6.0, -8.8);
 
 -- Suolasakon suuruus ja sidottava indeksi
 INSERT INTO suolasakko (maara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, talvisuolaraja)
-     VALUES (30.0, 2014, 8, 'MAKU 2010', (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), 800);
+     VALUES (30.0, 2014, 8, 'MAKU 2005', (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), 800);
 
 -- Maksuerät
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Vantaa Talvihoito TP 2014-2019'), 'kokonaishintainen', 'Vantaa Talvihoito TP ME 2014-2019' );

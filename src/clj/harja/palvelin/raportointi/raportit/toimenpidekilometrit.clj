@@ -33,11 +33,11 @@
     alueet))
 
 (defn muodosta-datarivit [alueet hoitoluokat toteumat]
-  (let [tehtava-nimet (into #{} (distinct (map :toimenpidekoodi-nimi toteumat)))]
+  (let [tehtava-nimet (into #{} (distinct (map (juxt :toimenpidekoodi-nimi :toimenpidekoodi-yksikko) toteumat)))]
     (mapv
-      (fn [tehtava]
+      (fn [[tehtava yksikko]]
         (concat
-          [tehtava]
+          [(str tehtava " (" yksikko ")")]
           (aluesarakkeet alueet hoitoluokat tehtava toteumat)))
       tehtava-nimet)))
 

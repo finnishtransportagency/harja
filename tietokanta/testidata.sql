@@ -1,4 +1,3 @@
-
 -- Luodaan Liikennevirasto
 INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikennevirasto','Liikennevirasto','Livi', '1010547-1');
 
@@ -50,7 +49,7 @@ UPDATE organisaatio SET elynumero=14 WHERE lyhenne='LAP';
 \i testidata/pohjavesialueet.sql
 
 -- Materiaalin käytöt
-INSERT INTO materiaalin_kaytto (alkupvm, loppupvm, maara, materiaali, urakka, sopimus, luotu, muokattu, luoja, muokkaaja, poistettu) VALUES ('20051001', '20100930', 15, 1, 1, 1, '2004-10-19 10:23:54+02', '2004-10-19 10:23:54+02', 1, 1, false);
+\i testidata/materiaalin_kaytto.sql
 
 -- Toteumat
 \i testidata/toteumat.sql
@@ -67,12 +66,14 @@ INSERT INTO materiaalin_kaytto (alkupvm, loppupvm, maara, materiaali, urakka, so
 -- Muutoshintaiset työt
 \i testidata/muutoshintaiset_tyot.sql
 
-
 -- Päällystyskohteet & -ilmoitukset
 \i testidata/yllapito/paallystys.sql
 
 -- Paikkauskohteet & -ilmoitukset
 \i testidata/yllapito/paikkaus.sql
+
+-- Ylläpidon toteumat
+\i testidata/yllapito/yllapito_muut_toteumat.sql
 
 -- Päivitä päällystys & paikkausurakoiden geometriat kohdeluetteloiden perusteella
 SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
@@ -92,6 +93,7 @@ SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
 
 -- Tarkastukset
 \i testidata/tarkastukset.sql
+\i testidata/tarkastusajot.sql
 
 -- Tyokoneseurannan havainnot
 \i testidata/tyokonehavainnot.sql
@@ -116,6 +118,15 @@ SELECT paivita_pohjavesialueet();
 \i testidata/laskutusyhteenveto_vantaa.sql
 \i testidata/laskutusyhteenveto_espoo.sql
 
--- Tieverkkoon tie 20
+-- Suolabonustestausta varten
+\i testidata/vantaa_suolabonusta_varten.sql
+
+-- Tieverkko
 \i testidata/tierekisteri.sql
+
+\i testidata/tietyomaat.sql
+
+
+SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
+
 -- ****

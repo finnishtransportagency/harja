@@ -26,10 +26,20 @@
   [urakka-id]
   (k/post! :urakan-muutoshintaiset-toimenpiteet-ja-tehtavat urakka-id))
 
+(defn- toimenpideinstanssin-sort-avain [{t3 :t3_koodi nimi :tpi_nimi}]
+  [(case t3
+     "23104" 1 ; Talvihoito ensimmäisenä
+     "23116" 2 ; Liikenneympäristön hoito toisena
+     "23124" 3 ; Soratien hoito kolmantena
+     4)      ; kaikki muut sen jälkeen
+   nimi])
+
 (defn hae-urakan-toimenpiteet
   "Hakee urakan toimenpiteet (3. taso) urakan id:llä."
   [urakka-id]
-  (k/post! :urakan-toimenpiteet urakka-id))
+  (go
+    (vec (sort-by toimenpideinstanssin-sort-avain
+                  (<! (k/post! :urakan-toimenpiteet urakka-id))))))
 
 ;; yleisiä pikkuapureita
 (defn toimenpideinstanssin-tehtavat [tpi-id tp-instanssit tehtavat-tasoineen]

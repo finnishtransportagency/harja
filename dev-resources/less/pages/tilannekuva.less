@@ -1,12 +1,76 @@
 .haitari-tilannekuva {
+  max-width: 300px;
+  min-width: 300px;
+
   .haitari-sisalto {
-    background-color: @harmaa9;
+    background-color: @valkoinen;
   }
 
-  .haitari-sisalto.haitari-auki {
-    max-width: 300px;
-    min-width: 300px;
+
+
+  .haitari-heading {
+    background-color: @harmaa8;
   }
+
+  .valilehti {
+    padding: 0px;
+  }
+}
+
+.taustavari-taso0 {
+  background-color: @valkoinen;
+}
+
+.taustavari-taso1 {
+  background-color: @harmaa9;
+}
+
+.taustavari-taso2 {
+  background-color: @harmaa11;
+}
+
+.taustavari-taso3 {
+  background-color: @harmaa13;
+}
+
+.taustavari-taso4 {
+  background-color: @harmaa15;
+}
+
+.fontti-taso1 {
+  font-size: 120%;
+}
+
+.fontti-taso2 {
+  font-weight: bold;
+}
+
+.fontti-taso3 {
+  text-transform: uppercase;
+}
+
+.fontti-taso4 {  }
+
+.eroa-huipulla {
+  margin-top: 5px;
+}
+
+.ylaraja {
+  border-width: 1px 0 0 0;
+  border-style: solid;
+  border-color: @harmaa5;
+}
+
+.yla-ja-alaraja {
+  border-width: 1px 0 1px 0;
+  border-style: solid;
+  border-color: @harmaa5;
+}
+
+.alaraja {
+  border-width: 0 0 1px 0;
+  border-style: solid;
+  border-color: @harmaa5;
 }
 
 #tk-tilan-vaihto {
@@ -37,8 +101,8 @@
     padding: 2px;
     display: inline-block;
   }
-
   margin-bottom: 10px;
+  padding-left: 5px;
 }
 
 #tk-historiakuvan-aikavalit {
@@ -50,18 +114,18 @@
   }
 }
 
+// Checkbox-ryhmät
+
 .tk-checkbox-ryhma {
-  border: 1px solid @harmaa3;
-  background-color: @harmaa10;
-  margin-bottom: 2px;
 }
 
 .tk-checkbox-ryhma-otsikko {
   height: 26px;
-  background-color: @harmaa10;
+  white-space: nowrap; // Pakota otsikko viemään mahdollisimman paljon leveystilaa, älä rivitä
+  //background-color: @harmaa15;
 }
 
-.tk-checkbox-ryhma-tila {
+.tk-chevron-ryhma-tila {
   cursor: pointer;
   display: inline-block;
   margin-left: 5px;
@@ -69,6 +133,10 @@
   vertical-align: top;
   position: relative;
   top: 8px;
+}
+
+.chevron-tk-asetuskokoelma {
+  position: absolute;
 }
 
 .tk-checkbox-ryhma-checkbox {
@@ -83,30 +151,31 @@
 }
 
 .tk-checkbox-ryhma-sisalto {
-  padding: 5px;
+  padding: 5px 5px 5px 22px;
 }
 
-#tk-paavalikko {
-  margin-top: 8px;
-  padding: 5px;
-  border: 1px solid @harmaa5;
-  background-color: @harmaa10;
+// Luokka elementille, jossa on otsikko ja useita suodatinryhmiä
+.tk-asetuskokoelma {
+  padding: 5px 0 0 0;
+  position: relative;
 }
 
-#tk-aluevalikko {
-  margin-top: 8px;
-  padding: 5px;
-  border: 1px solid @harmaa5;
-  background-color: @harmaa10;
+.tk-yksittaiset-suodattimet {
+  margin: 5px 0 5px 5px;
 }
 
-#tk-aluevaihtoehdot {
-  padding-top: 5px;
+.tk-otsikko {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 5px;
 }
 
-.tk-suodatinryhmat {
-  margin-bottom: 10px;
+.tk-otsikko-sisenna {
+  padding-left: 23px;
 }
+
+// Luokka elementille jossa on useita suodatinryhmiä
+.tk-suodatinryhmat {  }
 
 .chevron-rotate { transition: all .2s ease-in-out; }
 
@@ -116,4 +185,8 @@
   -ms-transform: rotate(0.25turn);
   -o-transform: rotate(0.25turn);
   transform: rotate(0.25turn);
+}
+
+#tk-suodattimet .yleinen-pikkuvihje {
+  padding: 2px;
 }

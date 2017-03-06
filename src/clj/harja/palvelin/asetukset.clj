@@ -2,7 +2,6 @@
   "Yleinen Harja-palvelimen konfigurointi. Esimerkkinä käytetty Antti Virtasen clj-weba."
   (:require [schema.core :as s]
             [taoensso.timbre :as log]
-            [gelfino.timbre :as gt]
             [clojure.java.io :as io]
             [harja.palvelin.lokitus.hipchat :as hipchat]
             [taoensso.timbre.appenders.postal :refer [make-postal-appender]]))
@@ -16,7 +15,8 @@
                  :salasana s/Str})
 (def Asetukset
   "Harja-palvelinasetuksien skeema"
-  {:http-palvelin                         {:portti                         s/Int
+  {(s/optional-key :sahke-headerit) {s/Str {s/Str s/Str}}
+   :http-palvelin                         {:portti                         s/Int
                                            :url                            s/Str
                                            (s/optional-key :threads)       s/Int
                                            (s/optional-key :max-body-size) s/Int}
@@ -24,7 +24,8 @@
    (s/optional-key :testikayttajat)       [{:kayttajanimi s/Str :kuvaus s/Str}]
    :tietokanta                            Tietokanta
    :tietokanta-replica                    Tietokanta
-   :fim                                   {:url s/Str}
+   :fim                                   {:url s/Str
+                                           (s/optional-key :tiedosto) s/Str}
    :log                                   {(s/optional-key :gelf)    {:palvelin s/Str
                                                                       :taso     s/Keyword}
                                            (s/optional-key :hipchat) {:huone-id s/Int :token s/Str :taso s/Keyword}
@@ -53,13 +54,14 @@
                                            :ilmoituskuittausjono   s/Str
                                            :toimenpideviestijono   s/Str
                                            :toimenpidekuittausjono s/Str
-                                           :paivittainen-lahetysaika [s/Num]
+                                           :uudelleenlahetysvali-minuuteissa s/Num
                                            (s/optional-key :ilmoitukset) {:google-static-maps-key s/Str}}
    (s/optional-key :turi)                 {:url s/Str
                                            :kayttajatunnus s/Str
                                            :salasana s/Str
                                            :paivittainen-lahetysaika [s/Num]}
-   (s/optional-key :tierekisteri)         {:url s/Str}
+   (s/optional-key :tierekisteri)         {:url s/Str
+                                           (s/optional-key :uudelleenlahetys-aikavali-minuutteina) s/Num}
 
    :ilmatieteenlaitos                     {:lampotilat-url s/Str}
 
@@ -84,13 +86,42 @@
                                            (s/optional-key :urakoiden-alk-tuontikohde)                 s/Str
                                            (s/optional-key :ely-alueiden-shapefile)                    s/Str
                                            (s/optional-key :ely-alueiden-alk-osoite)                   s/Str
-                                           (s/optional-key :ely-alueiden-alk-tuontikohde)              s/Str}
+                                           (s/optional-key :ely-alueiden-alk-tuontikohde)              s/Str
+                                           (s/optional-key :valaistusurakoiden-shapefile)              s/Str
+                                           (s/optional-key :valaistusurakoiden-alk-osoite)             s/Str
+                                           (s/optional-key :valaistusurakoiden-alk-tuontikohde)        s/Str
+                                           (s/optional-key :paallystyspalvelusopimusten-shapefile)              s/Str
+                                           (s/optional-key :paallystyspalvelusopimusten-alk-osoite)             s/Str
+                                           (s/optional-key :paallystyspalvelusopimusten-alk-tuontikohde)         s/Str
+                                           (s/optional-key :tekniset-laitteet-urakat-shapefile)              s/Str
+                                           (s/optional-key :tekniset-laitteet-urakat-alk-osoite)             s/Str
+                                           (s/optional-key :tekniset-laitteet-urakat-alk-tuontikohde)         s/Str
+                                           (s/optional-key :siltojenpalvelusopimusten-shapefile)              s/Str
+                                           (s/optional-key :siltojenpalvelusopimusten-alk-osoite)             s/Str
+                                           (s/optional-key :siltojenpalvelusopimusten-alk-tuontikohde)         s/Str
+                                           }
 
-   (s/optional-key :yha)                  {:url            s/Str}
+   (s/optional-key :yha)                  {:url            s/Str
+                                           :kayttajatunnus s/Str
+                                           :salasana       s/Str}
 
    (s/optional-key :labyrintti)           {:url            s/Str
                                            :kayttajatunnus s/Str
-                                           :salasana       s/Str}})
+                                           :salasana       s/Str}
+
+   (s/optional-key :virustarkistus)       {:url            s/Str}
+
+   (s/optional-key :paivystystarkistus)   {:paivittainen-aika [s/Num]}
+   (s/optional-key :reittitarkistus)   {:paivittainen-aika [s/Num]}
+
+   (s/optional-key :api-yhteysvarmistus)  {(s/optional-key :ajovali-minuutteina)     s/Int
+                                           (s/optional-key :url)                     s/Str
+                                           (s/optional-key :kayttajatunnus)          s/Str
+                                           (s/optional-key :salasana)                s/Str}
+
+   (s/optional-key :sonja-jms-yhteysvarmistus)  {(s/optional-key :ajovali-minuutteina)     s/Int
+                                                 (s/optional-key :jono)                    s/Str}
+   })
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"
@@ -115,8 +146,8 @@
                 %2)
               oletukset asetukset))
 
-(defn validoi-asetukset [asetukset]
-  (s/validate Asetukset asetukset))
+(defn tarkista-asetukset [asetukset]
+  (s/check Asetukset asetukset))
 
 (defn lue-asetukset
   "Lue Harja palvelimen asetukset annetusta tiedostosta ja varmista, että ne ovat oikeat"
@@ -140,7 +171,6 @@
     (log/set-config! [:appenders :standard-out :min-level] :info))
 
   (when-let [gelf (-> asetukset :log :gelf)]
-    (log/set-config! [:appenders :gelf] (assoc gt/gelf-appender :min-level (:taso gelf)))
     (log/set-config! [:shared-appender-config :gelf] {:host (:palvelin gelf)}))
 
   (when-let [hipchat (-> asetukset :log :hipchat)]
@@ -158,18 +188,3 @@
                         ^{:host (:palvelin email)}
                         {:from (str (.getHostName (java.net.InetAddress/getLocalHost)) "@solita.fi")
                          :to   (:vastaanottaja email)}}))))
-
-
-
-(comment (defn konfiguroi-lokitus
-           "Konfiguroi logback lokutiksen ulkoisesta .properties tiedostosta."
-           [asetukset]
-           (let [konfiguroija (JoranConfigurator.)
-                 konteksti (LoggerFactory/getILoggerFactory)
-                 konfiguraatio (-> asetukset
-                                   :logback-konfiguraatio
-                                   io/file)]
-             (println "Lokituksen konfiguraatio: " (.getAbsolutePath konfiguraatio)) ;; käytetään println ennen lokituksen alustusta
-             (.setContext konfiguroija konteksti)
-             (.reset konteksti)
-             (.doConfigure konfiguroija konfiguraatio))))

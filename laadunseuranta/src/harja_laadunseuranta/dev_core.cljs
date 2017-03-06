@@ -8,3 +8,5 @@
   ;; optionally touch your app-state to force rerendering depending on
   ;; your application
 )
+
+;; FIXME Parempi olisi kutsua kun body ladattu

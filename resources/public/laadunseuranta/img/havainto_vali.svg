@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 19.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 11.4 7.5" enable-background="new 0 0 11.4 7.5" xml:space="preserve">
+<symbol  id="alue" viewBox="-5.2 -3.5 10.4 7">
+	<g id="Pistemäinen_1_">
+		<path fill="none" stroke="#FAAF40" stroke-miterlimit="10" d="M4.7,1.4c0-0.9-0.7-1.6-1.6-1.6S1.4,0.5,1.4,1.4S2.2,3,3.1,3
+			S4.7,2.3,4.7,1.4z"/>
+		<line fill="none" stroke="#FAAF40" stroke-miterlimit="10" x1="3.1" y1="-0.2" x2="3.1" y2="-3.2"/>
+		<path fill="none" stroke="#FAAF40" stroke-miterlimit="10" d="M-1.4,1.4c0-0.9-0.7-1.6-1.6-1.6s-1.6,0.7-1.6,1.6S-4,3-3.1,3
+			S-1.4,2.3-1.4,1.4z"/>
+		<line fill="none" stroke="#FAAF40" stroke-miterlimit="10" x1="-3.1" y1="-0.2" x2="-3.1" y2="-3.2"/>
+	</g>
+	<g>
+		<g>
+			<line fill="none" stroke="#FAAF40" stroke-miterlimit="10" x1="-3.1" y1="-3" x2="-2.6" y2="-3"/>
+			
+				<line fill="none" stroke="#FAAF40" stroke-miterlimit="10" stroke-dasharray="1.0272,1.0272" x1="-1.5" y1="-3" x2="2.1" y2="-3"/>
+			<line fill="none" stroke="#FAAF40" stroke-miterlimit="10" x1="2.6" y1="-3" x2="3.1" y2="-3"/>
+		</g>
+	</g>
+</symbol>
+<use xlink:href="#alue"  width="10.4" height="7" x="-5.2" y="-3.5" transform="matrix(1 0 0 -1 5.8081 3.9481)" overflow="visible"/>
+</svg>

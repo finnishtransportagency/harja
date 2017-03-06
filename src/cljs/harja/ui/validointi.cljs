@@ -4,7 +4,6 @@
             [harja.loki :refer [log]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :refer [tee-kentta]]
             [harja.pvm :as pvm]
 
             [cljs.core.async :refer [<! put! chan]]
@@ -12,7 +11,8 @@
             [schema.core :as s :include-macros true]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn ei-hoitokaudella-str [alku loppu]
@@ -56,7 +56,7 @@
         hoitokausi-alku (first @u/valittu-hoitokausi)
         hoitokausi-loppu (second @u/valittu-hoitokausi)
         urakan-aikana? (and data alkupvm loppupvm
-                           (pvm/valissa? data alkupvm loppupvm))
+                            (pvm/valissa? data alkupvm loppupvm))
         hoitokaudella? (and data (pvm/valissa? data hoitokausi-alku hoitokausi-loppu))]
     (if (false? urakan-aikana?)
       (or viesti
@@ -76,7 +76,7 @@
         hoitokaudella? (and data (pvm/valissa? data hoitokausi-alku hoitokausi-loppu))
         [valittu-kk-alkupvm valittu-kk-loppupvm] @u/valittu-hoitokauden-kuukausi
         valitun-kkn-aikana? (and data valittu-kk-alkupvm valittu-kk-loppupvm
-                                (pvm/valissa? data valittu-kk-alkupvm valittu-kk-loppupvm))]
+                                 (pvm/valissa? data valittu-kk-alkupvm valittu-kk-loppupvm))]
     (if (false? urakan-aikana?)
       (or viesti
           (ei-urakan-aikana-str (pvm/pvm alkupvm) (pvm/pvm loppupvm)))
@@ -86,6 +86,15 @@
         (when (and valittu-kk-alkupvm (not valitun-kkn-aikana?))
           (or viesti
               (ei-kuukauden-aikana-str (pvm/pvm valittu-kk-alkupvm) (pvm/pvm valittu-kk-loppupvm))))))))
+
+(defmethod validoi-saanto :vakiohuomautus [_ _ data _ _ & [viesti]]
+  viesti)
+
+(defmethod validoi-saanto :validi-tr [_ _ data taulukko _ & [viesti reittipolku]]
+  (when
+    (and (:numero data) (:alkuosa data) (:alkuetaisyys data)
+         (or (= 0 (:numero data)) (not (get-in taulukko reittipolku))))
+    viesti))
 
 (defmethod validoi-saanto :uusi-arvo-ei-setissa [_ _ data rivi taulukko & [setti-atom viesti]]
   "Tarkistaa, onko rivi uusi ja arvo annetussa setissä."
@@ -97,8 +106,18 @@
   (when (str/blank? data)
     viesti))
 
+(defmethod validoi-saanto :ei-tyhja-jos-toinen-avain-nil
+  [_ nimi data rivi _ & [toinen-avain viesti]]
+  (when (and (str/blank? data)
+             (not (toinen-avain rivi)))
+    viesti))
+
+(defmethod validoi-saanto :ei-tulevaisuudessa [_ nimi data _ _ & [viesti]]
+  (when (and data (t/after? data (pvm/nyt)))
+    viesti))
+
 (defmethod validoi-saanto :ei-avoimia-korjaavia-toimenpiteitä [_ nimi data lomake _ & [viesti]]
-  (when (and (= data :suljettu)
+  (when (and (or (= data :suljettu) (= data :kasitelty))
              (not (every? #(= (:tila %) :toteutettu) (:korjaavattoimenpiteet lomake))))
     viesti))
 
@@ -131,11 +150,20 @@
           (pvm/ennen? data vertailtava-pvm))
     viesti))
 
-(defmethod validoi-saanto :pvm-ei-annettu-ennen-toista [_ _ data rivi _ & [avain viesti]]
+(defmethod validoi-saanto :toinen-arvo-annettu-ensin [_ _ data rivi _ & [avain viesti]]
   (when (and
-            (not (nil? data))
-            (nil? (avain rivi)))
+          data
+          (nil? (avain rivi)))
     viesti))
+
+(defmethod validoi-saanto :ainakin-toinen-annettu [_ _ data rivi _ & [[avain1 avain2] viesti]]
+  (when-not (or (avain1 rivi)
+                (avain2 rivi))
+    viesti))
+
+(defmethod validoi-saanto :yllapitoluokka [_ _ data rivi _ _ & [viesti]]
+  (when-not (or (nil? data) (= data 1) (= data 2) (= data 3))
+    (or viesti "Anna ylläpitoluokka välillä 1 \u2014 3")))
 
 (defmethod validoi-saanto :lampotila [_ _ data rivi _ _ & [viesti]]
   (when-not (<= -55 data 55)
@@ -144,6 +172,12 @@
 (defmethod validoi-saanto :rajattu-numero [_ _ data rivi _ _ & [min-arvo max-arvo viesti]]
   (when-not (<= min-arvo data max-arvo)
     (or viesti (str "Anna arvo välillä " min-arvo " - " max-arvo ""))))
+
+(defmethod validoi-saanto :rajattu-numero-tai-tyhja [_ _ data rivi _ _ & [min-arvo max-arvo viesti]]
+  (and
+    data
+    (when-not (<= min-arvo data max-arvo)
+      (or viesti (str "Anna arvo välillä " min-arvo " - " max-arvo "")))))
 
 (defn validoi-saannot
   "Palauttaa kaikki validointivirheet kentälle, jos tyhjä niin validointi meni läpi."
@@ -176,6 +210,12 @@
              (recur (if (empty? virheet) v (assoc v nimi virheet))
                     skeema))))))))
 
+(defn tyhja-tr-osoite? [arvo]
+  (or (nil? (:numero arvo))
+      (nil? (:alkuosa arvo))
+      (nil? (:alkuetaisyys arvo))))
+
+
 (defn tyhja-arvo? [arvo]
   (or (nil? arvo)
       (str/blank? arvo)))
@@ -183,10 +223,14 @@
 (defn puuttuvat-pakolliset-kentat
   "Palauttaa pakolliset kenttäskeemat, joiden arvo puuttuu"
   [rivi skeema]
-  (keep (fn [{:keys [pakollinen? hae nimi] :as s}]
+  (keep (fn [{:keys [pakollinen? hae nimi tyyppi] :as s}]
           (when (and pakollinen?
-                     (tyhja-arvo? (if hae
-                                    (hae rivi)
-                                    (get rivi nimi))))
+                     (if (= :tierekisteriosoite tyyppi)
+                       (tyhja-tr-osoite? (if hae
+                                           (hae rivi)
+                                           (get rivi nimi)))
+                       (tyhja-arvo? (if hae
+                                      (hae rivi)
+                                      (get rivi nimi)))))
             s))
         skeema))

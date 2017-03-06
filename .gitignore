@@ -1,5 +1,4 @@
 *.DS_Store
-asetukset.edn
 resources/public/css
 resources/public/js
 resources/~$roolit.xlsx
@@ -26,6 +25,7 @@ node_modules
 harja.iml
 *~
 .vagrant
+/vagrant/db_provision.retry
 build.xml
 test2junit
 \#*\#
@@ -38,6 +38,7 @@ tuotanto_test.sh
 .turi-salasana
 .google-static-maps-key
 .hipchat-token
+doo-index.html
 opt/sonic/7.6.2/sonic-client.jar
 opt/sonic/7.6.2/sonic-crypto.jar
 opt/sonic/7.6.2/sonic-xmessage.jar
@@ -45,3 +46,9 @@ tietokanta/harja_prod_dump
 tietokanta/restored_prod_dump.sql
 tietokanta/harja_stg_dump
 tietokanta/restored_stg_dump.sql
+tietokanta/*.csv
+out/
+resources/private/
+/test_envs/upcloud/deploy2.retry
+resources/public/laadunseuranta/js/compiled/
+resources/public/laadunseuranta/css/

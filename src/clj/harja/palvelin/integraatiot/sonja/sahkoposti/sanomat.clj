@@ -39,9 +39,7 @@
    [:vastaanottajat [:vastaanottaja vastaanottaja]]
    [:lahettaja lahettaja]
    [:otsikko otsikko]
-   [:sisalto (reify HtmlRenderer
-               (render-html [_]
-                 (str "<![CDATA[" sisalto "]]>")))]])
+   [:sisalto (xml/tee-c-data-elementti sisalto)]])
 
 (defn lue-kuittaus [xml-viesti]
   (let [v (lue-xml xml-viesti)]

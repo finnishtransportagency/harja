@@ -1,0 +1,30 @@
+// Erittäin geneerinen popup-lista
+.lista {
+  position: absolute;
+  z-index: @z-index-valintalista;
+  border: 1px solid @primaari-sininen;
+  background: @valkoinen;
+  color: @primaari-sininen;
+  min-width: 200px;
+  overflow: auto;
+
+  > ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+
+    > li {
+      margin: 0;
+      padding: 5px;
+    }
+
+    > li:active {
+      background-color: @harmaa10;
+    }
+
+    > li.aktiivinen-valinta {
+      background-color: @primaari-sininen;
+      color: white;
+    }
+  }
+}

@@ -4,21 +4,266 @@
             [clj-time.periodic :refer [periodic-seq]]
             [chime :refer [chime-at]]
             [harja.kyselyt.tieverkko :as k]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
+            [harja.geo :as geo])
+  (:import (com.vividsolutions.jts.geom Coordinate LineString MultiLineString GeometryFactory)
+           (com.vividsolutions.jts.geom.impl CoordinateArraySequence)
+           (com.vividsolutions.jts.operation.linemerge LineSequencer)))
 
-(defn vie-tieverkko-entry [db tv]
-  ;; todo: Onko ok, jos rivejä missä tätä tietoa ei ole ei tuoda?
-  (when (:osoite3 tv)
-    (k/vie-tieverkkotauluun! db (:osoite3 tv) (:tie tv) (:ajorata tv) (:osa tv) (:tiepiiri tv) (:tr_pituus tv) (.toString (:the_geom tv)))))
+(defn- line-string-seq
+  ([multilinestring]
+   (line-string-seq 0 (.getNumGeometries multilinestring) multilinestring))
+  ([i n multilinestring]
+   (lazy-seq
+    (cons (.getGeometryN multilinestring i)
+          (when (< i (dec n))
+            (line-string-seq (inc i) n multilinestring))))))
+
+(defn- ensimmainen-piste [g]
+  (let [arr (.getCoordinates g)]
+    (aget arr 0)))
+
+(defn- viimeinen-piste [g]
+  (let [arr (.getCoordinates g)]
+    (aget arr (dec (alength arr)))))
+
+(defn luo-line-string [pisteet]
+  (LineString. (CoordinateArraySequence.
+                (into-array Coordinate pisteet))
+               (GeometryFactory.)))
+
+(defn luo-multi-line-string [line-strings]
+  (MultiLineString. (into-array LineString line-strings)
+                    (GeometryFactory.)))
+
+(defn luo-coordinate [[x y]]
+  (Coordinate. x y))
+
+(defn jatkuva-line-string
+  "Yritä yhdistää tie yhtenäiseksi linestringiksi. Valtaosa teiden osien geometrioista jakaa alku-
+  ja loppupisteet, joten ne voidaan muuntaa linestringiksi pudottamalla
+  duplikoitu yhtenäinen piste.
+  Joissain teissä on oikeasti reikiä geometriassa eikä niitä voi yhdistää
+  yhdeksi linestringiksi. Tässä tapauksessa pitää palauttaa multilinestring."
+  [lines]
+  (let [line-strings
+        (mapv luo-line-string
+              (reduce
+               (fn [viivat ls]
+                 (let [viimeinen-viiva (last viivat)
+                       koordinaatit (seq (.getCoordinates ls))]
+                   (if-not viimeinen-viiva
+                     ;; Ensimmäinen viiva
+                     [(vec koordinaatit)]
+
+                     ;; Yritä yhdistää edelliseen, jos se alkaa samalla kuin
+                     ;; edellinen loppuu
+                     (let [viimeinen-piste (last viimeinen-viiva)]
+                       (if (= viimeinen-piste (first koordinaatit))
+                         ;; Voidaan jatkaa samaa linestringiä
+                         (conj (vec (butlast viivat))
+                               (vec (concat viimeinen-viiva (drop 1 koordinaatit))))
+
+                         ;; Tehdään uusi linestring
+                         (conj viivat
+                               (vec koordinaatit)))))))
+               [] lines))]
+    (if (= 1 (count line-strings))
+      (first line-strings)
+      (luo-multi-line-string line-strings))))
+
+(defn- coord [c]
+  (str "X: " (.x c) ", Y: " (.y c)))
+
+(defn- piste [^Coordinate c]
+  [(.x c) (.y c)])
+
+
+(defn ota-ls-alkupisteella [alkupiste ls]
+  (let [loytynyt-ls (some #(when (= alkupiste (ensimmainen-piste %))
+                             %)
+                          ls)]
+    (if-not loytynyt-ls
+      [nil ls]
+      [loytynyt-ls (filter #(not= loytynyt-ls %) ls)])))
+
+(defn- etaisyys-viivan-alkuun [coord line-string]
+  (and coord line-string
+       (geo/etaisyys (piste coord)
+                     (piste (ensimmainen-piste line-string)))))
+
+(defn- yhdista-viivat
+  "Yhdistää kaksi multilinestringiä siten, että viiva alkaa ensimmäisen
+  multilinestringin osalla. Jos yhdistys ei onnistu siten, että kaikki
+  linestringit tulevat käytettyä, palautetaan nil."
+  ([g0 g1 fallback]
+   (yhdista-viivat g0 g1 fallback false))
+  ([g0 g1 fallback ota-lahin?]
+   (let [ls0 (line-string-seq g0)
+         ls1 (line-string-seq g1)]
+     (loop [result [(first ls0)]
+            loppupiste (viimeinen-piste (first ls0))
+            ls0 (rest ls0)
+            ls1 ls1]
+       (if (and (empty? ls0) (empty? ls1))
+         ;; Molemmat empty, onnistui!
+         ;; HUOM: fallbackin ei tarvitse olla tyhjä
+         (jatkuva-line-string result)
+
+         ;; Ei vielä loppu, ota jommasta kummasta seuraava pala, joka
+         ;; jatkaa loppupisteestä
+         (let [seuraava-ls0 (first ls0)
+               seuraava-ls1 (first ls1)]
+           (cond
+             ;; ls0 jatkaa geometriaa
+             (and seuraava-ls0 (= loppupiste (ensimmainen-piste seuraava-ls0)))
+             (recur (conj result seuraava-ls0)
+                    (viimeinen-piste seuraava-ls0)
+                    (rest ls0)
+                    ls1)
+
+             ;; ls1 jatkaa geometriaa
+             (and seuraava-ls1 (= loppupiste (ensimmainen-piste seuraava-ls1)))
+             (recur (conj result seuraava-ls1)
+                    (viimeinen-piste seuraava-ls1)
+                    ls0
+                    (rest ls1))
+
+             ;; Last ditch effort: kutsutaan fallbackia etsimään
+             ;; jatkopala joko seuraavaan ls0 tai ls1 pätkään.
+             ;; fallback on funktio joka ottaa nykyisen loppupisteen
+             :default
+             (let [fallback-ls (and fallback
+                                    (fallback (piste loppupiste)))]
+               (cond
+                 fallback-ls
+                 (recur (conj result fallback-ls)
+                        (viimeinen-piste fallback-ls)
+                        ls0
+                        ls1)
+
+                 ;; Jos ota lähin on päällä, otetaan ls0/ls1 lähempi
+                 ota-lahin?
+                 (let [et0 (etaisyys-viivan-alkuun loppupiste seuraava-ls0)
+                       et1 (etaisyys-viivan-alkuun loppupiste seuraava-ls1)
+                       valitse (cond (or (and et0 et1 (< et0 et1))
+                                         (and et0 (nil? et1)))
+                                     0
+
+                                     (or (and et0 et1 (< et1 et0))
+                                         (and et1 (nil? et0)))
+                                     1
+
+                                     :default nil)]
+                   (case valitse
+                     ;; ls0 lähempänä
+                     0
+                     (recur (conj result seuraava-ls0)
+                            (viimeinen-piste seuraava-ls0)
+                            (rest ls0)
+                            ls1)
+
+                     ;; ls1 lähempänä
+                     1
+                     (recur (conj result seuraava-ls1)
+                            (viimeinen-piste seuraava-ls1)
+                            ls0
+                            (rest ls1))
+
+                     :default nil))
+
+                 :default nil)))))))))
+
+(defn- keraa-geometriat
+  "Yhdistää 1-ajorataisen (ajr0) ja 2-ajorataisen halutun suunnan mukaisen osan
+  viivat yhdeksi viivaksi. Osasta ei tiedetä kummalla ajoradalle se alkaa, mutta
+  koko viiva on kulutettava, joten pitää yrittää molempia."
+  [tie osa {g0 :the_geom :as ajr0} {g1 :the_geom :as ajr1} fallback ota-lahin?]
+  (cond
+    ;; Jos ei ole kumpaakaan ajorataa, palautetaan nil
+    (and (nil? g0) (nil? g1))
+    (do (log/error "Tie " tie ", osa " osa
+                   " geometrian luonnissa virhe, molemmat ajoratageometriat nil")
+        nil)
+
+    ;; Jos toinen on nil, valitaan suoraan toinen
+    (nil? g0) (jatkuva-line-string (line-string-seq g1))
+    (nil? g1) (jatkuva-line-string (line-string-seq g0))
+
+    ;; Muuten yhdistetään viivat molemmin päin
+    :default
+    (or (yhdista-viivat g0 g1 fallback ota-lahin?)
+        (yhdista-viivat g1 g0 fallback ota-lahin?))))
+
+(defn- alkaen-pisteesta
+  "Palauttaa LineString, joka alkaa annetusta [x y] pisteestä. Jos input
+  linestring ei sisällä pistettä, palauttaa nil."
+  [ls alkupiste]
+  (let [coords (drop-while #(not= alkupiste (piste %))
+                           (seq (.getCoordinates ls)))]
+    (when (> (count coords) 1)
+      (luo-line-string coords))))
+
+(defn luo-fallback [{g :the_geom}]
+  (fn [alkupiste & _]
+    (some #(alkaen-pisteesta % alkupiste)
+          (line-string-seq g))))
+
+(defn vie-tieosa [db tie osa osan-geometriat]
+  ;; Yrittää ensin muodostaa "normaali"tapauksen, jossa tien geometria
+  ;; on yhtenäinen linestring. Fallback tapauksessa joudutaan tekemään
+  ;; multilinestring. Emme tiedä kummalla ajoradalla osa alkaa, joten yhdistämistä
+  ;; yritetään molemmin päin joista jompi kumpi saa kaikki osat käytettyä.
+  ;;
+  ;; Normaalitapaus, jossa yhdistetään vain yhteinen ja haluttu ajorata
+  ;; yhtenäiseksi onnistuu noin 98,4% tapauksista.
+  ;;
+  ;; Fallback tapaus on lainata toiselta ajoradalta pätkä, jos tällä ajoradalla
+  ;; on aukko geometriassa. Esim 2-ajr geometria on puutteellinen, mutta lainaamalla
+  ;; pala 1-ajr geometriasta täydentäää sen. Näitä tapauksia on noin 1,1%
+  ;;
+  ;; Loput geometriat ovat tapauksia, joissa linestring muodostaminen ei onnistu.
+  ;; Näissä tapauksissa osan keskellä on oikeasti aukko. Tällöin käytetään vielä
+  ;; fallbackia joka ottaa aina lähimmän palan jatkoksi ja muodostaa multilinestringin.
+  ;; Tämä kattaa loput noin vajaa 0,5% tapauksista.
+  ;;
+  (let [ajoradat (into {}
+                       (map (juxt :ajorata identity))
+                       osan-geometriat)
+        oikea (or (keraa-geometriat tie osa (ajoradat 0) (ajoradat 1)
+                                    (luo-fallback (ajoradat 2)) false)
+                  (keraa-geometriat tie osa (ajoradat 0) (ajoradat 1)
+                                    (luo-fallback (ajoradat 2)) true))
+        vasen (or (keraa-geometriat tie osa (ajoradat 0) (ajoradat 2)
+                                    (luo-fallback (ajoradat 1)) false)
+                  (keraa-geometriat tie osa (ajoradat 0) (ajoradat 2)
+                                    (luo-fallback (ajoradat 1)) true))]
+
+    (k/vie-tien-osan-ajorata! db {:tie tie :osa osa :ajorata 1 :geom (some-> oikea str)})
+    (k/vie-tien-osan-ajorata! db {:tie tie :osa osa :ajorata 2 :geom (some-> vasen str)})))
 
 (defn vie-tieverkko-kantaan [db shapefile]
   (if shapefile
     (do
       (log/debug (str "Tuodaan tieosoiteverkkoa kantaan tiedostosta " shapefile))
       (jdbc/with-db-transaction [db db]
-        (k/tuhoa-tieverkkodata! db)
-        (doseq [tv (shapefile/tuo shapefile)]
-          (vie-tieverkko-entry db tv)))
+        (k/tuhoa-tien-osien-ajoradat! db)
+        (shapefile/tuo-ryhmiteltyna
+         shapefile :tie
+         (fn [tien-geometriat]
+           (let [tie (:tie (first tien-geometriat))]
+             (doseq [[osa geometriat] (sort-by first (group-by :osa tien-geometriat))]
+               (vie-tieosa db tie osa geometriat))))))
+
       (k/paivita-paloiteltu-tieverkko db)
       (log/debug "Tieosoiteverkon tuonti kantaan valmis."))
     (log/debug "Tieosoiteverkon tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
+
+;; Tuonnin testaus REPListä:
+;;(def db (:db harja.palvelin.main/harja-jarjestelma))
+;;(vie-tieverkko-kantaan db "file:shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp")
+
+
+;; Hae tietyn tien pätkät tarkasteluun:
+;; (def t (harja.shp/lue-shapefile "file:shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"))
+;; (def tie110 (into [] (comp (map harja.shp/feature-propertyt) (filter #(= 110 (:tie %)))) (harja.shp/featuret t)))

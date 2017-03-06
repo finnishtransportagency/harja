@@ -61,9 +61,7 @@
 
 
 (defn henkilovahingon-checkboksien-avaimet-jarjestyksessa [map]
-  (-> map
-      keys
-      sort
+  (-> (sort-by map (keys map))
       (->> (remove #{:ei_tietoa}))
       (conj :ei_tietoa)))
 

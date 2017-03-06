@@ -1,5 +1,8 @@
 (ns harja.palvelin.palvelut.yha
-  "Paikallisen kannan YHA-tietojenkäsittelyn logiikka"
+  "Paikallisen kannan YHA-tietojenkäsittelyn logiikka.
+
+  YHA on päällystysurakoiden master-järjestelmä, josta haetaan Harjaan päällystyskohteet
+  ja johon ne lähetetään myöhemmin takaisin."
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [taoensso.timbre :as log]
@@ -9,15 +12,14 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.kyselyt.paallystys :as paallystys-q]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.pvm :as pvm]
+            [clj-time.core :as t]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]))
 
 (defn lukitse-urakan-yha-sidonta [db urakka-id]
   (log/info "Lukitaan urakan " urakka-id " yha-sidonta.")
   (yha-q/lukitse-urakan-yha-sidonta<! db {:urakka urakka-id}))
-
-(defn paivita-yllapitourakan-geometriat [db urakka-id]
-  (log/info "Päivitetään urakan " urakka-id " geometriat.")
-  (yha-q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id}))
 
 (defn- lisaa-urakalle-yha-tiedot [db user urakka-id {:keys [yhatunnus yhaid yhanimi elyt vuodet] :as yha-tiedot}]
   (log/info "Lisätään YHA-tiedot urakalle " urakka-id ", yhatunnus: " yhatunnus " ja yhaid: " yhaid)
@@ -104,57 +106,82 @@
   (log/debug "Tallennetaan " (count kohteet) " yha-kohdetta")
   (jdbc/with-db-transaction [c db]
     (doseq [{:keys [tierekisteriosoitevali
-                    tunnus yha-id alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
+                    tunnus yha-id yha-kohdenumero alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
                     yllapitoluokka
                     keskimaarainen_vuorokausiliikenne
                     nykyinen-paallyste
                     nimi] :as kohde} kohteet]
       (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id)
-      (let [kohde (yha-q/luo-yllapitokohde<! c
-                                             {:urakka urakka-id
-                                              :tr_numero (:tienumero tierekisteriosoitevali)
-                                              :tr_alkuosa (:aosa tierekisteriosoitevali)
-                                              :tr_alkuetaisyys (:aet tierekisteriosoitevali)
-                                              :tr_loppuosa (:losa tierekisteriosoitevali)
-                                              :tr_loppuetaisyys (:let tierekisteriosoitevali)
-                                              :tr_ajorata (:ajorata tierekisteriosoitevali)
-                                              :tr_kaista (:kaista tierekisteriosoitevali)
-                                              :yhatunnus tunnus
-                                              :yhaid yha-id
-                                              :yllapitokohdetyyppi (name yllapitokohdetyyppi)
-                                              :yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi)
-                                              :yllapitoluokka yllapitoluokka
-                                              :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
-                                              :nykyinen_paallyste nykyinen-paallyste
-                                              :nimi nimi})]
+      (let [kohde (yha-q/luo-yllapitokohde<!
+                    c
+                    {:urakka urakka-id
+                     :tr_numero (:tienumero tierekisteriosoitevali)
+                     :tr_alkuosa (:aosa tierekisteriosoitevali)
+                     :tr_alkuetaisyys (:aet tierekisteriosoitevali)
+                     :tr_loppuosa (:losa tierekisteriosoitevali)
+                     :tr_loppuetaisyys (:let tierekisteriosoitevali)
+                     :tr_ajorata (:ajorata tierekisteriosoitevali)
+                     :tr_kaista (:kaista tierekisteriosoitevali)
+                     :yhatunnus tunnus
+                     :yhaid yha-id
+                     :yllapitokohdetyyppi (name yllapitokohdetyyppi)
+                     :yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi)
+                     :yllapitoluokka yllapitoluokka
+                     :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
+                     :nykyinen_paallyste nykyinen-paallyste
+                     :nimi nimi
+                     :vuodet (konv/seq->array [(t/year (pvm/suomen-aikavyohykkeeseen (t/now)))])
+                     :yha_kohdenumero yha-kohdenumero})]
         (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
           (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
-          (yha-q/luo-yllapitokohdeosa<! c
-                                        {:yllapitokohde (:id kohde)
-                                         :nimi nimi
-                                         :tunnus tunnus
-                                         :sijainti sijainti
-                                         :tr_numero (:tienumero tierekisteriosoitevali)
-                                         :tr_alkuosa (:aosa tierekisteriosoitevali)
-                                         :tr_alkuetaisyys (:aet tierekisteriosoitevali)
-                                         :tr_loppuosa (:losa tierekisteriosoitevali)
-                                         :tr_loppuetaisyys (:let tierekisteriosoitevali)
-                                         :tr_ajorata (:ajorata tierekisteriosoitevali)
-                                         :tr_kaista (:kaista tierekisteriosoitevali)
-                                         :yhaid yha-id}))))
+          (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!
+             c
+             {:yllapitokohde (:id kohde)
+              :nimi nimi
+              :tunnus tunnus
+              :tr_numero (:tienumero tierekisteriosoitevali)
+              :tr_alkuosa (:aosa tierekisteriosoitevali)
+              :tr_alkuetaisyys (:aet tierekisteriosoitevali)
+              :tr_loppuosa (:losa tierekisteriosoitevali)
+              :tr_loppuetaisyys (:let tierekisteriosoitevali)
+              :tr_ajorata (:ajorata tierekisteriosoitevali)
+              :tr_kaista (:kaista tierekisteriosoitevali)
+              :yhaid yha-id})]
+            (when-not (:sijainti uusi-kohdeosa)
+              (log/warn "YHA:n kohdeosalle " (pr-str uusi-kohdeosa) " ei voitu muodostaa geometriaa"))))))
     (merkitse-urakan-kohdeluettelo-paivitetyksi c urakka-id)
     (log/debug "YHA-kohteet tallennettu, päivitetään urakan geometria")
-    (paivita-yllapitourakan-geometriat c urakka-id)
+    (yy/paivita-yllapitourakan-geometria c urakka-id)
     (log/debug "Geometria päivitetty.")
     (hae-urakan-yha-tiedot c urakka-id)))
 
+(defn- tarkista-lahetettavat-kohteet
+  "Tarkistaa, että kaikki annetut kohteet ovat siinä tilassa, että ne voidaan lähettää.
+   Jos ei ole, heittää poikkeuksen."
+  [db kohde-idt]
+  (doseq [kohde-id kohde-idt]
+    (let [paallystysilmoitus (first (into []
+                                    (comp (map konv/alaviiva->rakenne)
+                                          (map #(konv/string-poluista->keyword
+                                                 %
+                                                 [[:tekninen-osa :paatos]
+                                                  [:tila]])))
+                                    (paallystys-q/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
+                                      db
+                                      {:paallystyskohde kohde-id})))]
+      (when-not (and (= :hyvaksytty (get-in paallystysilmoitus [:tekninen-osa :paatos]))
+                     (or (= :valmis (:tila paallystysilmoitus))
+                         (= :lukittu (:tila paallystysilmoitus))))
+       (throw (SecurityException. (str "Kohteen " kohde-id " päällystysilmoituksen lähetys ei ole sallittu.")))))))
+
 (defn laheta-kohteet-yhaan
   "Lähettää annetut kohteet teknisine tietoineen YHA:n."
-  [db yha user {:keys [urakka-id sopimus-id kohde-idt]}]
+  [db yha user {:keys [urakka-id sopimus-id kohde-idt vuosi]}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+  (tarkista-lahetettavat-kohteet db kohde-idt)
   (log/debug (format "Lähetetään kohteet: %s YHA:n" kohde-idt))
   (yha/laheta-kohteet yha urakka-id kohde-idt)
-  (let [paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id)]
+  (let [paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi)]
     paivitetyt-ilmoitukset))
 
 (defrecord Yha []

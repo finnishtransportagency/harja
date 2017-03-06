@@ -66,15 +66,14 @@
   [valitavoite]
   (cond
     (ajoissa? valitavoite)
-    (let [paivia-valissa (t/in-days (t/interval (c/from-date (:valmis-pvm valitavoite))
-                                                (c/from-date (:takaraja valitavoite))))]
+    (let [paivia-valissa (pvm/paivia-valissa (c/from-date (:valmis-pvm valitavoite))
+                                             (c/from-date (:takaraja valitavoite)))]
       (when (pos? paivia-valissa)
         (str (fmt/kuvaile-paivien-maara paivia-valissa) " ennen")))
 
     (myohassa? valitavoite)
-    (let [paivia-valissa (t/in-days (t/interval
-                                      (c/from-date (:takaraja valitavoite))
-                                      (c/from-date (:valmis-pvm valitavoite))))]
+    (let [paivia-valissa (pvm/paivia-valissa (c/from-date (:takaraja valitavoite))
+                                             (c/from-date (:valmis-pvm valitavoite)))]
       (when (pos? paivia-valissa)
         (str (fmt/kuvaile-paivien-maara paivia-valissa) " myöhässä")))
     :default

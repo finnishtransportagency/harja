@@ -65,8 +65,8 @@ WHERE yt.yhaid IN (:yhaidt);
 INSERT INTO yllapitokohde
 (urakka, sopimus, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
  tr_ajorata, tr_kaista,
- yhatunnus, yhaid, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yllapitoluokka, keskimaarainen_vuorokausiliikenne,
- nykyinen_paallyste, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, nimi)
+ yhatunnus, yhaid, yha_kohdenumero, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yllapitoluokka, keskimaarainen_vuorokausiliikenne,
+ nykyinen_paallyste, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, nimi, vuodet)
 VALUES (
   :urakka,
   (SELECT id
@@ -81,6 +81,7 @@ VALUES (
   :tr_kaista,
   :yhatunnus,
   :yhaid,
+  :yha_kohdenumero,
   :yllapitokohdetyyppi :: yllapitokohdetyyppi,
   :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi,
   :yllapitoluokka,
@@ -90,7 +91,8 @@ VALUES (
   0,
   0,
   0,
-  :nimi);
+  :nimi,
+  :vuodet::integer[]);
 
 -- name: luo-yllapitokohdeosa<!
 -- Luo uuden yllapitokohdeosan
@@ -108,7 +110,12 @@ VALUES (
   :tr_loppuetaisyys,
   :tr_ajorata,
   :tr_kaista,
-  :sijainti,
+  (SELECT tierekisteriosoitteelle_viiva AS geom
+   FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
+                                      CAST(:tr_alkuosa AS INTEGER),
+                                      CAST(:tr_alkuetaisyys AS INTEGER),
+                                      CAST(:tr_loppuosa AS INTEGER),
+                                      CAST(:tr_loppuetaisyys AS INTEGER))),
   :yhaid);
 
 -- name: hae-yllapitokohde-idlla
@@ -155,6 +162,3 @@ DELETE FROM paikkausilmoitus
 WHERE paikkauskohde IN (SELECT id
                         FROM yllapitokohde
                         WHERE urakka = :urakka);
-
--- name: paivita-paallystys-tai-paikkausurakan-geometria
-SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka :: INTEGER);

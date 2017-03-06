@@ -1,3 +1,8 @@
+-- pari tosi vanhaa indeksiä, jotta saadaan perusluku suolasakkorapparitestiä varten
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2008, 12, 118.7);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2009, 1, 119.4);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2009, 2, 119.2);
+
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2013, 1, 101.9);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2013, 2, 103.2);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2013, 3, 107.6);
@@ -33,16 +38,17 @@ INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2015, 6, 
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2015, 7, 105.9);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2015, 8, 106.2);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2015, 9, 106.2);
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2015, 10, 104.9);
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2015, 11, 105.2);
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2015, 12, 106.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2015, 10, 136.8);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2015, 11, 136.8);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2015, 12, 136.7);
 
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 1, 104.9);
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 2, 105.2);
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 3, 106.2);
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 4, 105.9);
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 5, 104.2);
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 6, 107.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 1, 134.9);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 2, 134.7);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 3, 134.8);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 4, 135.0);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 5, 135.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 6, 135.5);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 10, 135.8);
 
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2013, 1, 101.9);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2013, 2, 106.2);
@@ -82,3 +88,29 @@ INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 9, 
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 10, 104.9);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 11, 105.2);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2015, 12, 106.2);
+
+
+INSERT INTO urakkatyypin_indeksi(urakkatyyppi, indeksinimi, koodi, raakaaine)
+VALUES
+  ('paallystys'::urakkatyyppi, 'Platts: testiindeksi XYZ', 'TESTIKOODI', 'bitumi');
+
+
+-- Ylläpidon indeksejä
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo)
+VALUES
+  ('Platts: testiindeksi XYZ', 2015, 9, 225.00),
+  ('Platts: testiindeksi XYZ', 2016, 9, 306.00),
+  ('Platts: FO 3,5%S CIF NWE Cargo', 2015, 9, 125.36),
+  ('Platts: FO 3,5%S CIF NWE Cargo', 2016, 9, 206.29),
+  ('Platts: Propane CIF NWE 7kt+', 2015, 9, 285.55),
+  ('Platts: Propane CIF NWE 7kt+', 2016, 9, 271.02),
+  ('Platts: ULSD 10ppmS CIF NWE Cargo', 2015, 9, 123.45),
+  ('Platts: ULSD 10ppmS CIF NWE Cargo', 2016, 9, 234.56);
+
+
+INSERT INTO paallystysurakan_indeksi (indeksi,lahtotason_vuosi,lahtotason_kuukausi,urakka)
+VALUES
+  ((SELECT id FROM urakkatyypin_indeksi WHERE indeksinimi = 'Platts: testiindeksi XYZ' AND urakkatyyppi = 'paallystys'),
+  2015, 9, (SELECT id FROM urakka where nimi = 'Muhoksen päällystysurakka')),
+  ((SELECT id FROM urakkatyypin_indeksi WHERE indeksinimi = 'Platts: FO 3,5%S CIF NWE Cargo' AND urakkatyyppi = 'paallystys'),
+   2016, 9, (SELECT id FROM urakka where nimi = 'Muhoksen päällystysurakka'));

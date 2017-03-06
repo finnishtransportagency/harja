@@ -15,6 +15,9 @@
 (def ely {:id 666 :tyyppi "hallintayksikko" :nimi "Mun ely"})
 (def ely-urakat #{1 2 3})
 
+(def toinen-ely {:id 667 :tyyppi "hallintayksikko" :nimi "Mun toinen-ely"})
+(def toinen-ely-urakat #{4 5})
+
 ;; ELYn urakanvalvoja
 (def ely-uv {:roolit #{}
              :urakkaroolit {1 #{"ELY_Urakanvalvoja"}}
@@ -87,6 +90,17 @@
                   :organisaatioroolit {}
                   :organisaatio livi
                   :organisaation-urakat #{}})
+
+;; ELY_Laadunvalvoja
+(def ely-lv {:roolit #{}
+             :urakkaroolit {1 #{"ELY_Laadunvalvoja"}
+                            4 #{"ELY_Laadunvalvoja"}}
+             :organisaatioroolit {}
+             :organisaatio ely
+             :organisaation-urakat ely-urakat})
+
+
+
 
 (deftest vaadi-jvh-saa-tehda-mita-vaan
   (is (oikeudet/voi-kirjoittaa? oikeudet/hallinta-lampotilat nil jvh))
@@ -172,3 +186,26 @@
   (is (not (oikeudet/on-muu-oikeus? "asiatarkastus"
                                     oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                     1 ur-uvh))))
+
+(deftest ely-laadunvalvoja-voi-tehda-tarkastuksen-nimettyihin-urakoihin
+  ;; koti ELY:ssä
+  (is (oikeudet/voi-lukea? oikeudet/urakat-laadunseuranta-tarkastukset
+                                1 ely-lv))
+  (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset
+                                1 ely-lv))
+  ;; muussa ELY:ssä
+  (is (oikeudet/voi-lukea? oikeudet/urakat-laadunseuranta-tarkastukset
+                                4 ely-lv))
+
+  (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset
+                                4 ely-lv))
+
+  ;; en saa touhuta täällä koska en oo urakkajengissä
+  (is (not (oikeudet/voi-lukea? oikeudet/urakat-laadunseuranta-tarkastukset
+                                     666 ely-lv)))
+  (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset
+                                     666 ely-lv))))
+
+(deftest jvh-voi-kirjoittaa-suolatoteumat
+  (is (oikeudet/voi-lukea? oikeudet/urakat-toteumat-suola 123 jvh))
+  (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-suola 123 jvh)))

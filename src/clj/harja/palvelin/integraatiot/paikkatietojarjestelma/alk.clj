@@ -36,7 +36,7 @@
   (hae-tiedosto integraatioloki (str paivitystunnus "-haku") tiedostourl kohdetiedoston-polku)
   (arkisto/pura-paketti kohdetiedoston-polku)
   (paivitys)
-  (geometriapaivitykset/paivita-viimeisin-paivitys<! db tiedoston-muutospvm paivitystunnus))
+  (geometriapaivitykset/paivita-viimeisin-paivitys db paivitystunnus tiedoston-muutospvm))
 
 (defn onko-kohdetiedosto-ok? [kohdepolku]
   (let [file (io/file kohdepolku)

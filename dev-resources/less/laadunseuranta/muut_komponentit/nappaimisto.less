@@ -1,0 +1,209 @@
+// Näppäimistö
+
+@nappaimiston-leveys: 240px;
+@nappaimiston-leveys-pienempi: 165px;
+
+@nappaimiston-painike-leveys: 75px;
+@nappaimiston-painike-leveys-pienempi: 45px;
+@nappaimiston-painike-korkeus: 65px;
+@nappaimiston-painike-korkeus-pienempi: 40px;
+@nappaimiston-painike-teksti-koko: 38px;
+@nappaimiston-painike-teksti-koko-pienempi: 24px;
+
+.nappaimisto {
+  width: @nappaimiston-leveys;
+  background-color: @sisaltolaatikoiden-taustavari;
+  border: @sisaltolaatikoiden-reunaviiva;
+  box-sizing: border-box;
+  display: flex;
+  flex-flow: column;
+
+  .mittaustiedot {
+    padding: 5px;
+    font-weight: bold;
+    padding-left: 15px;
+    min-height: 50px;
+    height: 70px;
+
+    > .nappaimiston-syottovaroitus {
+      text-align: center;
+      color: @punainen6;
+      font-weight: normal;
+    }
+  }
+
+  .nappaimiston-syottokentta {
+    padding: 5px;
+    background-color: @harmaa9;
+    font-size: 32px;
+    font-weight: bold;
+
+    > .nappaimiston-kursori {
+      display: inline-block;
+      background-color: @musta;
+      width: 24px;
+      height: 32px;
+      position: relative;
+      top: 3px;
+      margin-left: 2px;
+    }
+
+    > .nappaimiston-syottoyksikko {
+      float: right;
+    }
+  }
+
+  .nappi-peruuta {
+    max-width: 100%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+
+  // Painikkeiden säännöt
+
+  .nappaimiston-painikekentat {
+    width: 240px;
+    text-align: center;
+  }
+
+  .nappaimiston-painike {
+    display: inline-block;
+    vertical-align: top;
+    box-sizing: border-box;
+    width: @nappaimiston-painike-leveys;
+    height: @nappaimiston-painike-korkeus;
+    font-size: @nappaimiston-painike-teksti-koko;
+    font-weight: bold;
+    text-align: center;
+    padding-top: 3px;
+    color: @valkoinen;
+    background-color: @harmaa2;
+    border-color: @sininen4;
+    margin-right: 3px;
+    margin-bottom: 3px;
+
+    > svg {
+      width: 70%;
+      height: 70%;
+      position: relative;
+      top: 6px;
+    }
+  }
+
+  .nappaimiston-painike-leveys-tupla {
+    width: (@nappaimiston-painike-leveys * 2) + 1;
+  }
+
+  .nappaimiston-painike-leveys-puolet {
+    width: (@nappaimiston-leveys / 2%) - 8;
+  }
+
+  .nappaimiston-painike:active:not(.nappaimiston-painike-disabloitu) {
+    background-color: @nappi-aktiivinen;
+  }
+
+  .nappaimiston-painike-painettu {
+    background-color: @nappi-aktiivinen;
+  }
+
+  .nappaimiston-painike-ok {
+    background-color: @vihrea4;
+  }
+
+  .nappaimiston-painike-disabloitu {
+    background-color: @harmaa6;
+  }
+}
+
+// Erikoisnäppäimistöt
+
+.soratienappaimisto {
+  display: flex;
+
+  .soratienappaimiston-sarake-otsikko {
+    text-align: center;
+  }
+
+  .nappaimiston-painike {
+    width: 65px;
+    height: 55px;
+  }
+
+  .soratienappaimiston-sarake {
+    flex: 1;
+
+    > .nappaimiston-painike {
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+}
+
+// Responsiivisuus
+
+@media (max-width: @leveys-tabletti) {
+  .nappaimisto {
+    width: 100%;
+    flex-flow: row;
+    justify-content: space-between;
+
+    .nappaimisto-vasen {
+      min-width: 160px;
+    }
+
+    .nappaimiston-painikekentat {
+      width: @nappaimiston-leveys-pienempi;
+    }
+
+    .nappaimiston-painike {
+      width: @nappaimiston-painike-leveys-pienempi;
+      height: @nappaimiston-painike-korkeus-pienempi;
+      padding-top: 3px;
+      font-size: @nappaimiston-painike-teksti-koko-pienempi;
+    }
+
+    .nappaimiston-painike-leveys-tupla {
+      width: (@nappaimiston-painike-leveys-pienempi * 2) + 2;
+    }
+
+    .nappaimiston-painike-leveys-puolet {
+      width: (@nappaimiston-leveys-pienempi / 2%) - 14;
+    }
+
+    .nappi-peruuta {
+      width: 100%;
+      height: auto;
+    }
+
+    .mittaustiedot {
+      font-size: 0.9em;
+      padding-left: 5px;
+    }
+
+    .nappaimiston-syottokentta {
+      font-size: 20px;
+
+      > * {
+        vertical-align: top;
+      }
+    }
+  }
+
+  // Erikoisnäppäimistöt
+  .soratienappaimisto {
+    > .soratienappaimiston-sarake {
+      padding-left: 2px;
+      padding-right: 2px;
+
+      .nappaimiston-painike {
+        width: 50px;
+        height: 40px;
+      }
+    }
+  }
+}
+

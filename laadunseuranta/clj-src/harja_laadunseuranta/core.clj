@@ -1,210 +1,344 @@
 (ns harja-laadunseuranta.core
   (:require [taoensso.timbre :as log]
-            [gelfino.timbre :as gt]
-            [org.httpkit.server :as server]
-            [compojure.api.sweet :refer :all]
-            [ring.util.http-response :refer :all]            
+            [compojure.core :refer [GET]]
+            [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
             [ring.util.response :refer [redirect]]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [harja-laadunseuranta.tietokanta :as tietokanta]
             [harja-laadunseuranta.kyselyt :as q]
-            [harja-laadunseuranta.tarkastukset :as tarkastukset]
+            [harja-laadunseuranta.tarkastusreittimuunnin.tarkastusreittimuunnin :as reittimuunnin]
             [harja-laadunseuranta.schemas :as schemas]
-            [harja-laadunseuranta.utils :as utils :refer [respond]]
-            [harja-laadunseuranta.config :as c]
+            [harja-laadunseuranta.utils :as utils]
+            [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
             [schema.core :as s]
             [clojure.core.match :refer [match]]
             [clojure.java.jdbc :as jdbc]
             [compojure.route :as route]
-            [compojure.api.exception :as ex]
             [clojure.java.io :as io]
-            [clojure.data.codec.base64 :as b64])
+            [clojure.data.codec.base64 :as b64]
+            [com.stuartsierra.component :as component]
+            [clojure.walk :as walk]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.kyselyt.konversio :as konv]
+            [harja.pvm :as pvm]
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]
+            [harja.domain.roolit :as roolit])
   (:import (org.postgis PGgeometry))
   (:gen-class))
 
-(def db tietokanta/db)
+
+(defn- kayttajan-tarkastusurakat
+  [db kayttaja sijainti]
+  (let [urakat (kayttajatiedot/kayttajan-lahimmat-urakat
+                 db
+                 kayttaja
+                 (fn [urakka kayttaja]
+                   (oikeudet/voi-kirjata-ls-tyokalulla? kayttaja urakka))
+                 sijainti)
+        urakat (map
+                 #(assoc % :oma-urakka?
+                           (boolean ((set
+                                       (keys (:urakkaroolit kayttaja)))
+                                      (:id %))))
+                 urakat)
+        ;; Nostetaan lähin hoidon urakka kärkeen, jos sellainen löytyy
+        lahdin-hoidon-urakka (first (filter #(= (:tyyppi %) "hoito") urakat))
+        urakat (if lahdin-hoidon-urakka
+                 (concat [lahdin-hoidon-urakka]
+                         (remove #(= % lahdin-hoidon-urakka)
+                                 urakat))
+                 urakat)
+        ;; Siirretään testiurakat hännille
+        testiurakat (filter #(nil? (:urakkanro %)) urakat)
+        urakat (concat (remove #(nil? (:urakkanro %)) urakat)
+                       testiurakat)
+        ;; Siirretään mahdolliset omat urakat (ne joissa käyttäjällä urakkarooli) jonon kärkeen
+        omat-urakat (filter #(:oma-urakka? %) urakat)
+        urakat (concat omat-urakat (remove #(:oma-urakka? %) urakat))]
+    (into [] urakat)))
 
 (defn- tallenna-merkinta! [tx vakiohavainto-idt merkinta]
-  (q/tallenna-reittimerkinta! {:id (:id merkinta)
-                               :tarkastusajo (:tarkastusajo merkinta)
-                               :aikaleima (:aikaleima merkinta)
-                               :x (:lon (:sijainti merkinta))
-                               :y (:lat (:sijainti merkinta))
-                               :lampotila (get-in merkinta [:mittaukset :lampotila])
-                               :lumisuus (get-in merkinta [:mittaukset :lumisuus])
-                               :tasaisuus (get-in merkinta [:mittaukset :tasaisuus])
-                               :kitkamittaus (get-in merkinta [:mittaukset :kitkamittaus])
-                               :kiinteys (get-in merkinta [:mittaukset :kiinteys])
-                               :polyavyys (get-in merkinta [:mittaukset :polyavyys])
-                               :sivukaltevuus (get-in merkinta [:mittaukset :sivukaltevuus])
-                               :havainnot (mapv vakiohavainto-idt (:havainnot merkinta))
-                               :kuvaus (get-in merkinta [:kuvaus])
-                               :laadunalitus (get-in merkinta [:laadunalitus])
-                               :kuva (get-in merkinta [:kuva])}
-                              {:connection tx}))
+  (q/tallenna-reittimerkinta! tx {:id (:id merkinta)
+                                  :tarkastusajo (:tarkastusajo merkinta)
+                                  :aikaleima (:aikaleima merkinta)
+                                  :x (:lon (:sijainti merkinta))
+                                  :y (:lat (:sijainti merkinta))
+                                  :sijainti_tarkkuus (:accuracy (:sijainti merkinta))
+                                  :lampotila (get-in merkinta [:mittaukset :lampotila])
+                                  :lumisuus (get-in merkinta [:mittaukset :lumisuus])
+                                  :talvihoito_tasaisuus (get-in merkinta [:mittaukset :talvihoito-tasaisuus])
+                                  :soratie_tasaisuus (get-in merkinta [:mittaukset :soratie-tasaisuus])
+                                  :kitkamittaus (get-in merkinta [:mittaukset :kitkamittaus])
+                                  :kiinteys (get-in merkinta [:mittaukset :kiinteys])
+                                  :polyavyys (get-in merkinta [:mittaukset :polyavyys])
+                                  :sivukaltevuus (get-in merkinta [:mittaukset :sivukaltevuus])
+                                  :havainnot (mapv vakiohavainto-idt (:havainnot merkinta))
+                                  :kuvaus (get-in merkinta [:kuvaus])
+                                  :laadunalitus (true? (get-in merkinta [:laadunalitus]))
+                                  :kuva (get-in merkinta [:kuva])
+                                  :liittyy_merkintaan (get-in merkinta [:liittyy-havaintoon])
+                                  :tr_numero (get-in merkinta [:kayttajan-syottama-tr-osoite :tie])
+                                  :tr_alkuosa (get-in merkinta [:kayttajan-syottama-tr-osoite :aosa])
+                                  :tr_alkuetaisyys (get-in merkinta [:kayttajan-syottama-tr-osoite :aet])
+                                  :tr_loppuosa (get-in merkinta [:kayttajan-syottama-tr-osoite :losa])
+                                  :tr_loppuetaisyys (get-in merkinta [:kayttajan-syottama-tr-osoite :let])}))
 
-(defn- tallenna-kuva! [tx {:keys [data mime-type]} kayttaja-id]
-  (let [decoded-data (b64/decode (.getBytes data "UTF-8"))
-        oid (tietokanta/tallenna-lob (io/input-stream decoded-data))]
-    (:id (q/tallenna-kuva<! {:lahde "harja-ls-mobiili"
-                             :tyyppi mime-type
-                             :koko (count decoded-data)
-                             :pikkukuva (tietokanta/tee-thumbnail decoded-data)
-                             :oid oid
-                             :luoja kayttaja-id}
-                            {:connection tx}))))
+(defn- tallenna-multipart-kuva! [db {:keys [tempfile content-type size]} kayttaja-id]
+  (let [oid (tietokanta/tallenna-lob db (io/input-stream tempfile))]
+    (:id (q/tallenna-kuva<! db {:lahde "harja-ls-mobiili"
+                                :tyyppi content-type
+                                :koko size
+                                :pikkukuva (tietokanta/tee-thumbnail tempfile)
+                                :oid oid
+                                :luoja kayttaja-id}))))
 
-(defn- tallenna-multipart-kuva! [tx {:keys [tempfile content-type size]} kayttaja-id]
-  (let [oid (tietokanta/tallenna-lob (io/input-stream tempfile))]
-    (:id (q/tallenna-kuva<! {:lahde "harja-ls-mobiili"
-                             :tyyppi content-type
-                             :koko size
-                             :pikkukuva (tietokanta/tee-thumbnail tempfile)
-                             :oid oid
-                             :luoja kayttaja-id}
-                            {:connection tx}))))
-
-(defn- tallenna-merkinnat! [kirjaukset kayttaja-id]
-  (jdbc/with-db-transaction [tx @db]
+(defn- tallenna-merkinnat! [db kirjaukset kayttaja-id]
+  ;; Ei urakkaa tässä vaiheessa, ei voida tehdä oikeustarkistusta
+  ;; Palvelun käyttö vaatii kuitenkin frontilla pääsyn työkaluun
+  ;; ja Livi-tunnuksen, mikä on riittävä suoja.
+  (log/debug "Vastaanotettu merkintä: " (pr-str kirjaukset))
+  (jdbc/with-db-transaction [tx db]
     (let [vakiohavainto-idt (q/hae-vakiohavaintoavaimet tx)]
       (doseq [merkinta (:kirjaukset kirjaukset)]
         (tallenna-merkinta! tx vakiohavainto-idt merkinta)))))
 
-(defn merkitse-ajo-paattyneeksi! [tx tarkastusajo-id kayttaja]
-  (q/paata-tarkastusajo! {:id tarkastusajo-id
-                          :kayttaja (:id kayttaja)}
-                         {:connection tx}))
+(defn- merkitse-ajo-paattyneeksi! [tx tarkastusajo-id kayttaja]
+  (log/debug "Merkitään ajo päättyneeksi")
+  (q/paata-tarkastusajo! tx {:id tarkastusajo-id
+                             :kayttaja (:id kayttaja)}))
 
-(defn- paata-tarkastusajo! [tarkastusajo kayttaja]
-  (jdbc/with-db-transaction [tx @db]
+
+(defn- lisaa-reittimerkinnalle-lopullinen-tieosoite
+  "Lisää reittimerkintään ns. 'lopullisen tieosoitteen'.
+   Jos käyttäjä on itse syöttänyt merkintään tieosoitteen, katsotaan sen olevan oikea osoite.
+   Muussa tapauksessa käytetään sijainnin perusteella tieverkolle projisoitua osoitetta."
+  [reittimerkinta]
+  (let [tieverkolta-projisoitu-tieosoite? (boolean (:tie reittimerkinta))
+        kayttajan-syottama-tieosoite? (boolean (and (:kayttajan-syottama-tie reittimerkinta)
+                                                    (:kayttajan-syottama-aosa reittimerkinta)
+                                                    (:kayttajan-syottama-aet reittimerkinta)))
+        reittimerkinta-lopullisella-osoitteella
+        (if (or tieverkolta-projisoitu-tieosoite?
+                kayttajan-syottama-tieosoite?)
+          (assoc reittimerkinta :tr-osoite (if kayttajan-syottama-tieosoite?
+                                             {:tie (:kayttajan-syottama-tie reittimerkinta)
+                                              :aosa (:kayttajan-syottama-aosa reittimerkinta)
+                                              :aet (:kayttajan-syottama-aet reittimerkinta)
+                                              :losa (:kayttajan-syottama-losa reittimerkinta)
+                                              :let (:kayttajan-syottama-let reittimerkinta)}
+                                             (select-keys reittimerkinta [:tie :aosa :aet])))
+          reittimerkinta)]
+    (dissoc reittimerkinta-lopullisella-osoitteella
+            :tie :aosa :aet
+            :kayttajan-syottama-tie
+            :kayttajan-syottama-aosa
+            :kayttajan-syottama-aet
+            :kayttajan-syottama-losa
+            :kayttajan-syottama-let)))
+
+(defn lisaa-reittimerkinnoille-lopullinen-tieosoite [reittimerkinnat]
+  (mapv lisaa-reittimerkinnalle-lopullinen-tieosoite reittimerkinnat))
+
+(defn lisaa-tarkastuksille-urakka-id [{:keys [reitilliset-tarkastukset pistemaiset-tarkastukset]} urakka-id]
+  {:reitilliset-tarkastukset (mapv #(assoc % :urakka urakka-id) reitilliset-tarkastukset)
+   :pistemaiset-tarkastukset (mapv #(assoc % :urakka urakka-id) pistemaiset-tarkastukset)})
+
+(defn tallenna-muunnetut-tarkastukset-kantaan [tx tarkastukset kayttaja urakka-id]
+  (log/debug "Tallennetaan tarkastukset urakkaan " urakka-id)
+  (reittimuunnin/tallenna-tarkastukset! tx tarkastukset kayttaja)
+  (log/debug "Reittimerkitöjen muunto tarkastuksiksi suoritettu!"))
+
+(defn muunna-tarkastusajon-reittipisteet-tarkastuksiksi [tx tarkastusajo-id]
+  (log/debug "Muutetaan reittipisteet tarkastuksiksi")
+  (let [merkinnat-tr-osoitteilla (q/hae-reitin-merkinnat-tieosoitteilla
+                                   tx {:tarkastusajo tarkastusajo-id
+                                       :laheiset_tiet_threshold 100})
+        merkinnat-tr-osoitteilla (lisaa-reittimerkinnoille-lopullinen-tieosoite merkinnat-tr-osoitteilla)
+        tarkastukset (reittimuunnin/reittimerkinnat-tarkastuksiksi
+                       merkinnat-tr-osoitteilla
+                       {:analysoi-rampit? true
+                        :analysoi-ymparikaantymiset? true
+                        :analysoi-virheelliset-tiet? true})]
+    (log/debug "Reittipisteet muunnettu tarkastuksiksi.")
+    tarkastukset))
+
+(defn paata-tarkastusajo! [db tarkastusajo kayttaja]
+  (jdbc/with-db-transaction [tx db]
     (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)
-          urakka-id (:id (first (q/paattele-urakka {:tarkastusajo tarkastusajo-id}
-                                                   {:connection tx})))
-          merkinnat (q/hae-reitin-merkinnat {:tarkastusajo tarkastusajo-id
-                                             :treshold 100}
-                                            {:connection tx})
-          merkinnat-tr-osoitteilla (tarkastukset/lisaa-reittimerkinnoille-tieosoite merkinnat)
-          tarkastukset (-> (tarkastukset/reittimerkinnat-tarkastuksiksi merkinnat-tr-osoitteilla)
-                           (tarkastukset/lisaa-tarkastuksille-urakka-id urakka-id))]
-      (tarkastukset/tallenna-tarkastukset! tarkastukset kayttaja)
-      (merkitse-ajo-paattyneeksi! tx tarkastusajo-id kayttaja))))
+          urakka-id (:urakka tarkastusajo)
+          _ (oikeudet/vaadi-ls-tyokalun-kirjausoikeus kayttaja urakka-id)
+          ajo-paatetty (:paatetty (first (q/ajo-paatetty tx {:id tarkastusajo-id})))]
+      (if-not ajo-paatetty
+        (let [tarkastukset (muunna-tarkastusajon-reittipisteet-tarkastuksiksi
+                             tx
+                             tarkastusajo-id)
+              tarkastukset (lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)]
+          (tallenna-muunnetut-tarkastukset-kantaan tx tarkastukset kayttaja urakka-id)
+          (merkitse-ajo-paattyneeksi! tx tarkastusajo-id kayttaja))
+        (log/warn (format "Yritettiin päättää ajo %s, joka on jo päätetty!" tarkastusajo-id))))))
 
-(defn- tarkastustyypiksi [tyyppi]
-  (condp = tyyppi
-    :kelitarkastus 1
-    :soratietarkastus 2
-    :yllapitotarkastus 3
-    0))
+(defn- luo-uusi-tarkastusajo! [db tiedot kayttaja]
+  ;; Ei urakkaa tässä vaiheessa, ei voida tehdä oikeustarkistusta
+  ;; Palvelun käyttö vaatii kuitenkin frontilla pääsyn työkaluun
+  ;; ja Livi-tunnuksen, mikä on riittävä suoja.
+  (q/luo-uusi-tarkastusajo<! db {:ulkoinen_id 0
+                                 :kayttaja (:id kayttaja)}))
 
-(defn- luo-uusi-tarkastusajo! [tiedot kayttaja]
-  (q/luo-uusi-tarkastusajo<! {:ulkoinen_id 0
-                              :kayttaja (:id kayttaja)
-                              :tyyppi (tarkastustyypiksi (-> tiedot :tyyppi))}
-                             {:connection @db}))
+(defn- hae-tarkastusajon-reitti
+  "Debug-funktio, jota käytetään vain salaisesta TR-osiosta, vaatii jvh:n."
+  [db tiedot kayttaja]
+  (roolit/vaadi-rooli kayttaja roolit/jarjestelmavastaava)
+  (let [merkinnat (mapv
+                    #(assoc % :sijainti (let [geometria (.getGeometry (:sijainti %))]
+                                          [(.x geometria) (.y geometria)]))
+                    (q/hae-tarkastusajon-reitti db {:id (:tarkastusajo-id tiedot)}))]
+    merkinnat))
 
-(defn- hae-tr-osoite [lat lon treshold]
+(defn- hae-tr-osoite [db lat lon treshold]
   (try
-    (first (q/hae-tr-osoite {:y lat
-                             :x lon
-                             :treshold treshold}
-                            {:connection @db}))
+    (first (q/hae-tr-osoite db {:y lat
+                                :x lon
+                                :treshold treshold}))
     (catch Exception e
       nil)))
 
-(defn- hae-tr-tiedot [lat lon treshold]
+(defn- hae-tr-tiedot [db lat lon treshold]
   (let [pos {:y lat
              :x lon
              :treshold treshold}
-        talvihoitoluokka (q/hae-pisteen-hoitoluokka (assoc pos :tietolaji "talvihoito")
-                                                    {:connection @db})
-        soratiehoitoluokka (q/hae-pisteen-hoitoluokka (assoc pos :tietolaji "soratie")
-                                                      {:connection @db})]
+        talvihoitoluokka (q/hae-pisteen-hoitoluokka db (assoc pos :tietolaji "talvihoito"))
+        soratiehoitoluokka (q/hae-pisteen-hoitoluokka db (assoc pos :tietolaji "soratie"))]
     {:talvihoitoluokka (:hoitoluokka_pisteelle (first talvihoitoluokka))
      :soratiehoitoluokka (:hoitoluokka_pisteelle (first soratiehoitoluokka))
-     :tr-osoite (hae-tr-osoite lat lon treshold)}))
+     :tr-osoite (hae-tr-osoite db lat lon treshold)}))
 
-(defapi laadunseuranta-api
-  {:format {:formats [:transit-json]}
-   :exceptions {:handlers {::ex/default utils/poikkeuskasittelija}}}
-  
-  (POST "/reittimerkinta" []
-        :body [kirjaukset schemas/Havaintokirjaukset]
-        :summary "Tallentaa reittimerkinnat"
-        :kayttaja kayttaja
-        :return {:ok s/Str}
-        (respond (tallenna-merkinnat! kirjaukset (:id kayttaja))
-                 "Reittimerkinta tallennettu"))
+(defn- hae-urakkatyypin-urakat [db urakkatyyppi kayttaja]
+  (let [urakat (map
+                 #(assoc % :urakkaroolissa? (if ((set
+                                                   (keys (:urakkaroolit kayttaja)))
+                                                  (:id %))
+                                              true
+                                              false))
+                 (q/hae-urakkatyypin-urakat db
+                                            {:tyyppi urakkatyyppi}
+                                            ))]
+    urakat))
 
-  (POST "/paata-tarkastusajo" []
-        :body [tarkastusajo schemas/TarkastuksenPaattaminen]
-        :kayttaja kayttaja
-        :summary "Päättää tarkastusajon"
-        :return {:ok s/Str}
-        (respond (log/debug "Päätetään tarkastusajo " tarkastusajo)
-                 (paata-tarkastusajo! tarkastusajo kayttaja)
-                 "Tarkastusajo päätetty"))
-  
-  (POST "/uusi-tarkastusajo" []
-        :body [tiedot s/Any]
-        :kayttaja kayttaja
-        :summary "Luo uuden tarkastusajon"
-        :return {:ok s/Any}
-        (respond (log/debug "Luodaan uusi tarkastusajo " tiedot)
-                 (luo-uusi-tarkastusajo! tiedot kayttaja)))
+(defn- muunna-havainnot [{kirjaukset :kirjaukset :as tiedot}]
+  (if kirjaukset
+    (assoc tiedot :kirjaukset
+                  (mapv (fn [kirjaus]
+                          (if-let [havainnot (:havainnot kirjaus)]
+                            (assoc kirjaus :havainnot (into #{} (map keyword havainnot)))
+                            kirjaus)) kirjaukset))
+    tiedot))
 
-  (POST "/hae-tr-tiedot" []
-        :body [koordinaatit s/Any]
-        :summary "Hakee tierekisterin tiedot annetulle pisteelle"
-        :return {:ok s/Any}
-        (respond (log/debug "Haetaan tierekisteritietoja pisteelle " koordinaatit)
-                 (let [{:keys [lat lon treshold]} koordinaatit]
-                   (hae-tr-tiedot lat lon treshold))))
-  
-  (GET "/hae-kayttajatiedot" []
-       :summary "Hakee käyttäjän tiedot"
-       :kayttaja kayttaja
-       :return {:ok s/Any}
-       (respond (log/debug "Käyttäjän tietojen haku")
-                {:kayttajanimi (:kayttajanimi kayttaja)
-                 :nimi (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
-                 :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset @db)})))
+(defn kasittele-api-kutsu [skeema-sisaan ok-skeema kasittelija]
+  (let [skeema-ulos (schemas/api-vastaus ok-skeema)]
+    (fn [user tiedot]
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/laadunseuranta-kirjaus user)
+      (let [tiedot (->> tiedot
+                        walk/keywordize-keys
+                        muunna-havainnot
+                        (s/validate skeema-sisaan))
+            tulos (try {:ok (kasittelija user tiedot)}
+                       (catch Throwable t
+                         (log/error "Virhe LS API-kutsussa: " (.getMessage t) ".\nStack: " (.printStackTrace t) ".\nTiedot: " (pr-str tiedot))
+                         {:error (.getMessage t)}))]
+        (->> tulos
+             (s/validate skeema-ulos))))))
 
-(defn- lataa-kayttaja [kayttajanimi]
-  (first (q/hae-kayttajatiedot {:kayttajanimi kayttajanimi}
-                               {:connection @db})))
+(defn- laadunseuranta-api [db http]
+  (http-palvelin/julkaise-palvelut
+    http
 
-(defn- tallenna-liite [req]
-  (jdbc/with-db-transaction [tx @db]
-    (let [id (tallenna-multipart-kuva! tx (get-in req [:multipart-params "liite"]) (get-in req [:kayttaja :id]))]
-      {:status 200
-       :headers {"Content-Type" "text/plain"}
-       :body (str id)})))
+    :ls-reittimerkinta
+    (kasittele-api-kutsu
+      schemas/Havaintokirjaukset s/Str
+      (fn [user kirjaukset]
+        (tallenna-merkinnat! db kirjaukset (:id user))
+        "Reittimerkinta tallennettu"))
 
-(defroutes app
-  (GET "/" [] (redirect (utils/polku "/index.html")))
-  (middleware [(partial utils/wrap-kayttajatarkistus lataa-kayttaja)]
-              (context "/api" [] laadunseuranta-api))
-  (middleware [(partial utils/wrap-kayttajatarkistus lataa-kayttaja)
-               wrap-multipart-params]
-              (POST "/tallenna-liite" req tallenna-liite))
-  (route/resources "/")
-  (route/not-found "Page not found"))
+    :ls-paata-tarkastusajo
+    (kasittele-api-kutsu
+      schemas/TarkastuksenPaattaminen s/Str
+      (fn [user tarkastusajo]
+        (log/debug "Päätetään tarkastusajo " tarkastusajo)
+        (paata-tarkastusajo! db tarkastusajo user)
+        "Tarkastusajo päätetty"))
 
-(defonce server (atom nil))
+    :ls-uusi-tarkastusajo
+    (kasittele-api-kutsu
+      s/Any s/Any
+      (fn [user tiedot]
+        (log/debug "Luodaan uusi tarkastusajo " tiedot)
+        (luo-uusi-tarkastusajo! db tiedot user)))
 
-(defn stop-server []
-  (when-not (nil? @server)
-    (@server :timeout 2000)
-    (reset! server nil)))
+    :ls-simuloitu-reitti
+    (kasittele-api-kutsu
+      s/Any s/Any
+      (fn [user tiedot]
+        (log/debug "Palautetaan aiemmin ajettu tarkastusreitti simuloitua ajoa varten " tiedot)
+        (hae-tarkastusajon-reitti db tiedot user)))
 
-(defn- alusta-logitus []
-  (when-let [gelf (:gelf @c/config)]
-    (log/merge-config! {:appenders {:gelf (assoc gt/gelf-appender :min-level (:taso gelf))}
-                        :shared-appender-config {:gelf {:host (:palvelin gelf)}}})))
+    :ls-hae-tr-tiedot
+    (kasittele-api-kutsu
+      s/Any s/Any
+      (fn [user koordinaatit]
+        (log/debug "Haetaan tierekisteritietoja pisteelle " koordinaatit)
+        (let [{:keys [lat lon treshold]} koordinaatit]
+          (hae-tr-tiedot db lat lon treshold))))
 
-(defn start-server []
-  (alusta-logitus)
-  (server/run-server #'app (:http-palvelin @c/config)))
+    :ls-hae-kayttajatiedot
+    (kasittele-api-kutsu
+      s/Any s/Any
+      (fn [kayttaja tiedot]
+        (let [kayttajatiedot-kannassa (kayttajatiedot/hae-kayttaja db (:id kayttaja))
+              kayttajan-tarkastusurakat (kayttajan-tarkastusurakat db kayttaja (:sijainti tiedot))]
+          {:kayttajanimi (:kayttajanimi kayttajatiedot-kannassa)
+           :nimi (str (:etunimi kayttajatiedot-kannassa)
+                      " "
+                      (:sukunimi kayttajatiedot-kannassa))
+           :urakat kayttajan-tarkastusurakat
+           :organisaatio (:organisaatio kayttajatiedot-kannassa)})))))
 
-(defn -main []
-  (start-server))
+
+(defn- tallenna-liite [db req]
+  (let [id (tallenna-multipart-kuva! db (get-in req [:multipart-params "liite"]) (get-in req [:kayttaja :id]))]
+    {:status 200
+     :headers {"Content-Type" "text/plain"}
+     :body (str id)}))
+
+(defn luo-routet [db http]
+  ;; Reitti liitteen tallennukseen
+  (http-palvelin/julkaise-palvelu
+    http :ls-tallenna-liite
+    (wrap-multipart-params
+      (fn [req]
+        (println "SAATIIN UPLOAD: " req)
+        (tallenna-liite db req)))
+    {:ring-kasittelija? true})
+
+  ;; Laadunseurannan API kutsut
+  (laadunseuranta-api db http))
+
+(defrecord Laadunseuranta []
+  component/Lifecycle
+  (start [{db :db
+           http :http-palvelin
+           :as this}]
+    (tietokanta/aseta-tietokanta! db)
+    (log/info "Harja laadunseuranta käynnistyy")
+    (luo-routet db http)
+    this)
+
+  (stop [{http :http-palvelin :as this}]
+    (http-palvelin/poista-palvelut http
+                                   :ls-reittimerkinta
+                                   :ls-paata-tarkastusajo
+                                   :ls-uusi-tarkastusajo
+                                   :ls-paata-tarkastusajo
+                                   :ls-hae-kayttajatiedot
+                                   :ls-tallenna-liite)
+    this))

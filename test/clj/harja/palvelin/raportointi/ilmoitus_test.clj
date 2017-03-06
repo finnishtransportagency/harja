@@ -4,15 +4,16 @@
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
             [harja.testi :refer :all]
+            [taoensso.timbre :as log]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-lyhenne-ja-nimi +ilmoitustilat+]]
-            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [harja.palvelin.raportointi :refer :all]
             [harja.palvelin.raportointi.raportit.ilmoitus :as ilmoitusraportti]
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi :as raportointi]
-            [harja.palvelin.palvelut.raportit :as raportit]))
+            [harja.palvelin.palvelut.raportit :as raportit]
+            [harja.palvelin.raportointi.testiapurit :as apurit]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -39,16 +40,12 @@
                       urakkatieto-fixture))
 
 (deftest hae-ilmoitukset-raportille-test
-  ;; parametrit: db user hallintayksikko-id urakka-id urakoitsija urakkatyyppi
-  ;; +ilmoitustilat+ +ilmoitustyypit+ [alkupvm loppupvm] hakuehto
-    (let [db (tietokanta/luo-tietokanta testitietokanta)
-          [alkupvm loppupvm] (pvm/paivamaaran-hoitokausi (pvm/->pvm "1.11.2014"))
-          ilmoitukset (ilmoitusraportti/hae-ilmoitukset-raportille
-                       db +kayttaja-jvh+ nil nil nil nil
-                       +ilmoitustilat+ +ilmoitustyypit+
-                       [alkupvm loppupvm] "" nil)
-          ristisuon-ilmoitus (first (filter #(= (:paikankuvaus %) "Voimakas lumipyry nelostiellä Ristisuon kohdalla ja tiet auraamatta.")
-                                      ilmoitukset))]
-      (is (= (pvm/pvm (:ilmoitettu ristisuon-ilmoitus)) "26.01.2015"))
-      (is (not (empty? ilmoitukset)))
-      (is (> (count ilmoitukset) 2))))
+  (let [db (tietokanta/luo-tietokanta testitietokanta)
+        [alkupvm loppupvm] (pvm/paivamaaran-hoitokausi (pvm/->pvm "1.11.2016"))
+        ilmoitukset
+        (ilmoitusraportti/hae-ilmoitukset-raportille
+          db +kayttaja-jvh+ {:hallintayksikko-id  nil :urakka-id nil
+                             :urakoitsija nil :urakkatyyppi :hoito
+                             :alkupvm alkupvm :loppupvm loppupvm})]
+    (is (not (empty? ilmoitukset)))
+    (is (= (count ilmoitukset) 5))))

@@ -1,5 +1,5 @@
 -- name: hae-urakan-valitavoitteet
--- Hakee urakan kaikki välitavoitteet
+-- Hakee urakan kaikki välitavoitteet (urakkakohtaiset ja valtakunnalliset)
 SELECT
   v.id,
   v.nimi,
@@ -12,19 +12,19 @@ SELECT
   vv.takaraja as "valtakunnallinen-takaraja",
   vv.takaraja_toistopaiva as "valtakunnallinen-takarajan-toistopaiva",
   vv.takaraja_toistokuukausi as "valtakunnallinen-takarajan-toistokuukausi",
-  v.valmis_pvm,
-  v.valmis_kommentti,
-  v.valmis_merkitsija AS valmis_merkitsija_id,
-  v.valmis_merkitty,
-  k.etunimi         AS valmis_merkitsija_etunimi,
-  k.sukunimi        AS valmis_merkitsija_sukunimi,
+  v.valmis_pvm as "valmispvm",
+  v.valmis_kommentti "valmis-kommentti",
+  v.valmis_merkitsija as "valmis-merkitsija",
+  v.valmis_merkitty as "valmis-merkitty",
+  merkitsija.etunimi as "valmis-merkitsija-etunimi",
+  merkitsija.sukunimi as "valmis-merkitsija-sukunimi",
   v.luotu,
   v.muokattu,
   v.luoja,
   v.muokkaaja
 FROM valitavoite v
   LEFT JOIN valitavoite vv ON v.valtakunnallinen_valitavoite = vv.id
-  LEFT JOIN kayttaja k ON v.valmis_merkitsija = k.id
+  LEFT JOIN kayttaja merkitsija ON v.valmis_merkitsija = merkitsija.id
 WHERE v.poistettu = FALSE
       AND v.urakka = :urakka
 ORDER BY v.takaraja ASC;

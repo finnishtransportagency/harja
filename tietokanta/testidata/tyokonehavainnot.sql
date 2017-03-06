@@ -39,3 +39,10 @@ urakkaid, tehtavat) VALUES (
   (SELECT id FROM urakka WHERE nimi = 'Pudasjärven alueurakka 2007-2012'),
   ARRAY['muu']::suoritettavatehtava[]
 );
+
+INSERT INTO tyokonehavainto (tyokoneid, jarjestelma, organisaatio, viestitunniste,
+                             lahetysaika, vastaanotettu, tyokonetyyppi, sijainti, urakkaid,
+                             suunta, tehtavat)
+VALUES (673, 'Aurausjannut Oy', (SELECT id FROM organisaatio WHERE nimi='YIT Rakennus Oy'), 108323,
+             '2016-11-30 11:22:30', '2016-11-30 11:22:37', 'ajoneuvo', St_Point(480031.745918236, 7188116.027609303)::POINT, (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
+             191, '{auraus ja sohjonpoisto}');

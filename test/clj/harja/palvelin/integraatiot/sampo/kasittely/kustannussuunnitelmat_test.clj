@@ -13,7 +13,7 @@
                   {:alkupvm "2017-01-01T00:00:00.0", :loppupvm "2017-12-31T00:00:00.0", :summa 0}
                   {:alkupvm "2018-01-01T00:00:00.0", :loppupvm "2018-12-31T00:00:00.0", :summa 0}
                   {:alkupvm "2019-01-01T00:00:00.0", :loppupvm "2019-12-31T00:00:00.0", :summa 0}]
-        maksuera (maksuera/hae-maksuera db 17)
+        maksuera (hae-maksueran-tiedot db 17)
         vuosittaiset-summat (tee-vuosittaiset-summat db 17 maksuera)]
 
     (is (= 6 (count vuosittaiset-summat)))
@@ -27,27 +27,54 @@
                   {:alkupvm "2017-01-01T00:00:00.0", :loppupvm "2017-12-31T00:00:00.0", :summa 0}
                   {:alkupvm "2018-01-01T00:00:00.0", :loppupvm "2018-12-31T00:00:00.0", :summa 0}
                   {:alkupvm "2019-01-01T00:00:00.0", :loppupvm "2019-12-31T00:00:00.0", :summa 0}]
-        maksuera (maksuera/hae-maksuera db 18)
+        maksuera (hae-maksueran-tiedot db 18)
         vuosittaiset-summat (tee-vuosittaiset-summat db 18 maksuera)]
 
     (is (= 6 (count vuosittaiset-summat)))
     (is (= odotettu vuosittaiset-summat))))
 
+
+(deftest tarkista-muiden-maksuerien-vuosisummien-muodostus
+  (let [db (tietokanta/luo-tietokanta testitietokanta)
+        odotettu [{:alkupvm "2014-01-01T00:00:00.0"
+                   :loppupvm "2014-12-31T00:00:00.0"
+                   :summa 1}
+                  {:alkupvm "2015-01-01T00:00:00.0"
+                   :loppupvm "2015-12-31T00:00:00.0"
+                   :summa 1}
+                  {:alkupvm "2016-01-01T00:00:00.0"
+                   :loppupvm "2016-12-31T00:00:00.0"
+                   :summa 1}
+                  {:alkupvm "2017-01-01T00:00:00.0"
+                   :loppupvm "2017-12-31T00:00:00.0"
+                   :summa 1}
+                  {:alkupvm "2018-01-01T00:00:00.0"
+                   :loppupvm "2018-12-31T00:00:00.0"
+                   :summa 1}
+                  {:alkupvm "2019-01-01T00:00:00.0"
+                   :loppupvm "2019-12-31T00:00:00.0"
+                   :summa 1}]
+        maksuera (hae-maksueran-tiedot db 48)
+        vuosittaiset-summat (tee-vuosittaiset-summat db 48 maksuera)]
+
+    (is (= 6 (count vuosittaiset-summat)))
+    (is (= odotettu vuosittaiset-summat))))
+
 (deftest tarkista-lkp-tilinnumeron-paattely
-  (is (= "43020000" (valitse-lkp-tilinumero "20112" nil))
+  (is (= "43020000" (valitse-lkp-tilinumero 1 "20112" nil))
       "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
-  (is (= "43020000" (valitse-lkp-tilinumero nil 112))
+  (is (= "43020000" (valitse-lkp-tilinumero 1 nil 112))
       "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
-  (is (= "43020000" (valitse-lkp-tilinumero nil 536))
+  (is (= "43020000" (valitse-lkp-tilinumero 1 nil 536))
       "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
-  (is (= "12980010" (valitse-lkp-tilinumero nil 30))
+  (is (= "12980010" (valitse-lkp-tilinumero 1 nil 30))
       "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
-  (is (= "12980010" (valitse-lkp-tilinumero nil 242))
+  (is (= "12980010" (valitse-lkp-tilinumero 1 nil 242))
       "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
-  (is (= "12980010" (valitse-lkp-tilinumero nil 318))
+  (is (= "12980010" (valitse-lkp-tilinumero 1 nil 318))
       "Oikea LKP-tilinnumero valittu toimenpidekoodin perusteella")
-  (is (thrown? RuntimeException (valitse-lkp-tilinumero nil nil))
+  (is (thrown? RuntimeException (valitse-lkp-tilinumero 1 nil nil))
       "Jos LKP-tuotenumeroa ei voida päätellä, täytyy aiheutua poikkeus")
-  (is (thrown? RuntimeException (valitse-lkp-tilinumero nil 1))
+  (is (thrown? RuntimeException (valitse-lkp-tilinumero 1 nil 1))
       "Jos LKP-tuotenumeroa ei voida päätellä, täytyy aiheutua poikkeus"))
 

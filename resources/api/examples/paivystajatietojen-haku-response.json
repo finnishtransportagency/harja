@@ -11,8 +11,8 @@
           },
           "vaylamuoto": "tie",
           "tyyppi": "hoito",
-          "alkupvm": "2016-01-30T12:00:00Z",
-          "loppupvm": "2016-01-30T12:00:00Z"
+          "alkupvm": "2016-01-30T12:00:00+02:00",
+          "loppupvm": "2016-01-30T12:00:00+02:00"
         },
         "paivystykset": [
           {
@@ -26,8 +26,8 @@
                 "matkapuhelin": "4345455",
                 "tyopuhelin": "7849885769"
               },
-              "alku": "2015-01-30T12:00:00Z",
-              "loppu": "2016-01-30T12:00:00Z",
+              "alku": "2015-01-30T12:00:00+02:00",
+              "loppu": "2016-01-30T12:00:00+02:00",
               "vastuuhenkilo": true,
               "varahenkilo": true
             }

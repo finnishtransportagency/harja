@@ -10,14 +10,14 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-01-30T12:00:00Z"
+    "lahetysaika": "2016-01-30T12:00:00+02:00"
   },
   "siltatarkastus": {
     "tunniste": {
       "id": 34547744
     },
     "siltatunnus": "O-00003",
-    "tarkastusaika": "2016-01-30T12:00:00Z",
+    "tarkastusaika": "2016-01-30T12:00:00+02:00",
     "tarkastaja": {
       "etunimi": "Teija",
       "sukunimi": "Tarkkailija"

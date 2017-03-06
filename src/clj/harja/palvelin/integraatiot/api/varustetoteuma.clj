@@ -11,17 +11,12 @@
             [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.integraatiot.api.varusteet :as varusteet]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
-            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
             [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi]
-            [harja.palvelin.integraatiot.tierekisteri.tietolajin-kuvauksen-kasittely :as tr-tietolaji]
-            [clj-time.core :as t]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [clojure.string :as str]
-            [harja.geo :as geo])
+            [harja.domain.tierekisteri.tietolajit :as tietolajit])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (org.postgis GeometryCollection Geometry PGgeometry)))
 
@@ -124,24 +119,27 @@
           {:uusi-tunniste tunniste})))
     (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
 
-(defn- hae-toimenpiteen-geometria [db toimenpiteen-tiedot]
+(defn- hae-toimenpiteen-geometria
   "Muuntaa toimenpiteen tierekisteriosoitteen geometriaksi (PGgeometry)
    Jos geometriaa ei voida muodostaa, palauttaa nil (esim. poistotoimenpiteellä ei ole sijaintia"
+  [db toimenpiteen-tiedot]
   (log/debug "Tie: " (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie]))
   (let [tr-osoite (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
         viiva? (and (:losa tr-osoite)
                     (:let tr-osoite))
         geometria (when tr-osoite
-                    (:sijainti (first (toteumat-q/varustetoteuman-toimenpiteelle-sijainti
-                                       db {:tie (:numero tr-osoite)
-                                           :aosa (:aosa tr-osoite)
-                                           :aet (:aet tr-osoite)
-                                           :losa (if viiva?
-                                                   (:losa tr-osoite)
-                                                   (:aosa tr-osoite))
-                                           :let (if viiva?
-                                                  (:let tr-osoite)
-                                                  (:aet tr-osoite))}))))]
+                    (:sijainti
+                      (first
+                        (toteumat-q/varustetoteuman-toimenpiteelle-sijainti
+                          db {:tie (:numero tr-osoite)
+                              :aosa (:aosa tr-osoite)
+                              :aet (:aet tr-osoite)
+                              :losa (if viiva?
+                                      (:losa tr-osoite)
+                                      (:aosa tr-osoite))
+                              :let (if viiva?
+                                     (:let tr-osoite)
+                                     (:aet tr-osoite))}))))]
     geometria))
 
 (defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma toimenpiteen-tiedot tietolaji
@@ -181,7 +179,7 @@
 (defn- etsi-varustetoteuma
   "Etsii toimenpiteen varustetoteuman id:n kannasta annettujen tietojen perusteella"
   [db toteuma-id tunniste tietolaji toimenpiteen-tiedot tehty-toimenpide]
-  (first (toteumat-q/hae-varustetoteuma
+  (first (toteumat-q/hae-varustetoteuma-toteumalla
            db
            {:toteumaid toteuma-id
             :tunniste tunniste
@@ -215,7 +213,7 @@
                        (get-in toimenpiteen-tiedot [:varuste :tunniste]))
             tie (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
             tietolajin-arvot-string (when tietolajin-arvot
-                                      (varusteet/validoi-ja-muunna-arvot-merkkijonoksi
+                                      (tietolajit/validoi-ja-muunna-arvot-merkkijonoksi
                                         tierekisteri
                                         tietolajin-arvot
                                         tietolaji))
@@ -277,8 +275,7 @@
                   (hae-toimenpiteen-geometria db toimenpiteen-tiedot)))
               (get-in varustetoteuma [:varustetoteuma :toimenpiteet]))
         geometry-collection (GeometryCollection.
-                              (into-array Geometry
-                                          (map #(.getGeometry %) geometriat)))
+                              (into-array Geometry (map #(.getGeometry %) geometriat)))
         pg-geometry (PGgeometry. geometry-collection)]
     (toteumat-q/paivita-toteuman-reitti<! db {:reitti pg-geometry
                                               :id toteuma-id})))
@@ -323,7 +320,10 @@
 
 (defn- validoi-tehtavat [db varustetoteumat]
   (doseq [varustetoteuma varustetoteumat]
-    (toteuman-validointi/tarkista-tehtavat db (get-in varustetoteuma [:varustetoteuma :toteuma :tehtavat]))))
+    (toteuman-validointi/tarkista-tehtavat
+      db
+      (get-in varustetoteuma [:varustetoteuma :toteuma :tehtavat])
+      (get-in varustetoteuma [:varustetoteuma :toteuma :toteumatyyppi]))))
 
 (defn kirjaa-toteuma
   "Varustetoteuman kirjauksessa kirjataan yksi tai useampi toteuma.

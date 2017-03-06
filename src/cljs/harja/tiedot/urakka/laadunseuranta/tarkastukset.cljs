@@ -16,7 +16,21 @@
 
 (defonce tienumero (atom nil))                              ;; tienumero, tai kaikki
 (defonce tarkastustyyppi (atom nil))                        ;; nil = kaikki, :tiesto, :talvihoito, :soratie
-(defonce vain-laadunalitukset? (atom false))  ;; true = näytä vain laadunalitukset
+
+(def +naytettevat-tarkastukset-valinnat+
+  [[nil "Kaikki"]
+   [:havaintoja-sisaltavat "Havaintoja sisältävät"]
+   [:laadunalitukset "Vain laadunalitukset"]])
+
+(defonce naytettavat-tarkastukset (atom (first +naytettevat-tarkastukset-valinnat+)))
+
+(defonce vain-laadunalitukset? (reaction (case (first @naytettavat-tarkastukset)
+                                           :laadunalitukset true
+                                           false)))
+
+(defonce havaintoja-sisaltavat? (reaction (case (first @naytettavat-tarkastukset)
+                                            :havaintoja-sisaltavat true
+                                            false)))
 
 (defn hae-tarkastus
   "Hakee tarkastuksen kaikki tiedot urakan id:n ja tarkastuksen id:n perusteella. Tähän liittyy laatupoikkeamat sekä niiden reklamaatiot."
@@ -46,13 +60,14 @@
     (or kuukausi aikavali)))
 
 (defn kasaa-haun-parametrit [urakka-kaynnissa? urakka-id kuukausi aikavali tienumero tyyppi
-                             vain-laadunalitukset?]
+                             havaintoja-sisaltavat? vain-laadunalitukset?]
   (let [[alkupvm loppupvm] (naytettava-aikavali urakka-kaynnissa? kuukausi aikavali)]
     {:urakka-id urakka-id
      :alkupvm   alkupvm
      :loppupvm  loppupvm
      :tienumero tienumero
      :tyyppi    tyyppi
+     :havaintoja-sisaltavat? havaintoja-sisaltavat?
      :vain-laadunalitukset? vain-laadunalitukset?}))
 
 (defonce valittu-aikavali (atom nil))
@@ -66,11 +81,13 @@
                valilehti (nav/valittu-valilehti :laadunseuranta)
                tienumero @tienumero
                tyyppi @tarkastustyyppi
+               havaintoja-sisaltavat? @havaintoja-sisaltavat?
                vain-laadunalitukset? @vain-laadunalitukset?]
               {:odota 500
                :nil-kun-haku-kaynnissa? true}
               (let [parametrit (kasaa-haun-parametrit urakka-kaynnissa? urakka-id
                                                       kuukausi aikavali tienumero tyyppi
+                                                      havaintoja-sisaltavat?
                                                       vain-laadunalitukset?)]
                 (when (and laadunseurannassa? (= :tarkastukset valilehti)
                            (:urakka-id parametrit) (:alkupvm parametrit) (:loppupvm parametrit))

@@ -2,7 +2,7 @@
 
 /* harja.ui.yleiset namespacessa olevien yleisten komponenttien tyylejä */
 #app {
-  background-color: @harmaa10
+  background-color: @harmaa15;
 }
 
 .alasveto-ei-loydoksia {
@@ -13,13 +13,13 @@ div.tietorivi {
   border-bottom: solid 1px lightGray;
 
   & .nappi-ensisijainen {
-    height: calc(@input-korkeus * 0.85);
+    height: @input-korkeus-matalampi;
     padding-top: 3px;
     padding-bottom: 3px;
   }
 
   & .nappi-alasveto {
-    height: calc(@input-korkeus * 0.85);
+    height: @input-korkeus-matalampi;
 
     > .livicon-chevron-down {
       height: 4px;
@@ -101,9 +101,9 @@ button > .ajax-loader {
 
 .korosta {
   -webkit-animation-name: rivin-korostusanimaatio; /* Chrome, Safari, Opera */
-  -webkit-animation-duration: 4s; /* Chrome, Safari, Opera */
+  -webkit-animation-duration: 12s; /* Chrome, Safari, Opera */
   animation-name: rivin-korostusanimaatio;
-  animation-duration: 4s;
+  animation-duration: 12s;
 }
 
 .korostettu div.haku-lista-item-nimi {
@@ -173,9 +173,8 @@ button > .ajax-loader {
   }
 
   .haitari {
-    border: 1px ridge @harmaa7;
-    margin: 5px 5px 5px 5px;
-    background-color: @harmaa10;
+    border: 1px solid @harmaa7;
+    background-color: @harmaa15;
   }
 
   //Yksittäinen haitarin rivi
@@ -185,7 +184,9 @@ button > .ajax-loader {
 
   //Haitarin otsikko - "klikattava alue"
   .haitari-heading {
-    border: 1px ridge @harmaa3;
+    border-style: solid;
+    border-color: @harmaa7;
+    border-width: 0 0 1px 0;
   }
 
   // Caret
@@ -210,13 +211,14 @@ button > .ajax-loader {
   }
 
   .haitari-sisalto {
-    padding: 3px;
+
   }
 
   .haitari-kiinni {
     display: none;
   }
 }
+.haitari-levea { max-width: 100%; }
 
 .liitekomponentti {
   > div.file-upload {
@@ -288,3 +290,20 @@ button > .ajax-loader {
     margin-left: 15px;
   }
 }
+
+.vastuuhenkilo {
+  .vastuuhenkilo-ensisijainen {
+    font-weight: bold;
+  }
+}
+
+.sisalto-container {
+  padding: @fontin-koko-leipateksti;
+  border: solid 1px @harmaa7;
+  margin-bottom: @fontin-koko-leipateksti;
+
+  > h1 {
+    font-size: @font-size-h3;
+  }
+}
+

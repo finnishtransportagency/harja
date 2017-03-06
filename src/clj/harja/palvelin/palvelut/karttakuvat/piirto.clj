@@ -2,7 +2,7 @@
   "Hoitaa karttalla esitettävien asioiden piirtämisen Java Graphics2D
   piirtoalustaan."
   (:import (java.awt Color BasicStroke RenderingHints Font)
-           (java.awt.geom AffineTransform Line2D$Double)
+           (java.awt.geom AffineTransform Line2D$Double Path2D$Double)
            (javax.imageio ImageIO))
   (:require [harja.geo :as geo]
             [taoensso.timbre :as log]
@@ -19,19 +19,29 @@
 
 (defmulti piirra (fn [_ toteuma alue ruudukko] (:type alue)))
 
+(defn- luo-dash-array [[piirto vali]]
+  (float-array
+   [(px piirto) (px vali)]))
+
 (defn- aseta-viiva-tyyli [g {:keys [color width dash cap join miter]}]
-  ;;(println "COL: " color "; STROKE:  " width " => " (px width))
   (.setColor g  color)
   (.setStroke g (BasicStroke. (px width)
                               BasicStroke/CAP_ROUND
-                              BasicStroke/JOIN_MITER)))
+                              BasicStroke/JOIN_MITER
+                              10
+                              (when dash
+                                (luo-dash-array dash))
+                              0)))
 
 (defn- piirra-viiva [g {points :points} viiva]
   (aseta-viiva-tyyli g viiva)
-  (let [segmentit (partition 2 1 points)]
-    (doseq [[[x1 y1] [x2 y2]] segmentit
-            :let [line (Line2D$Double.  x1 y1 x2 y2)]]
-      (.draw g line))))
+  (let [[x y] (first points)
+        points (rest points)
+        path (Path2D$Double.)]
+    (.moveTo path x y)
+    (doseq [[x y] points]
+      (.lineTo path x y))
+    (.draw g path)))
 
 (defmacro save-transform [g & body]
   `(let [at# (.getTransform ~g)]
@@ -66,14 +76,21 @@
 
 (def ^{:doc "Ikonien tiheys, välimatkaksi otetaan alueen hypotenuusa jaettuna tällä.
 Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
-       :private true}
-  ikonien-tiheys 10)
+       :private true
+       :const true}
+  maksimi-etaisyys 10)
+
+(def ^{:doc "Ikonien minimitiheys. Käytetään erityisesti mutkittelevissa reiteissä, jotta
+ihan jokaiseen käännökseen ei laiteta nuolta. Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
+       :private true
+       :const true}
+minimi-etaisyys 40)
 
 (def ^{:doc "Raja, jota suuremmalla näkyvällä alueella ei enää piirretä ikoneita"
        :private true}
   ikonien-piirtoraja-m 1400000)
 
-(defn- nuolten-paikat [valimatka taitokset paikka]
+(defn- nuolten-paikat [min max taitokset paikka]
   (case paikka
     :alku
     (let [{:keys [sijainti rotaatio]} (first taitokset)]
@@ -84,7 +101,7 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
       [[(second sijainti) rotaatio]])
 
     :taitokset
-    (apurit/taitokset-valimatkoin valimatka (butlast taitokset))))
+    (apurit/taitokset-valimatkoin min max (butlast taitokset))))
 
 (defn- piirra-kuva
   ([g kuva skaala x y]
@@ -104,12 +121,13 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
 
 (defn- piirra-ikonit [g {points :points ikonit :ikonit} ruudukko]
   (let [hypotenuusa (geo/extent-hypotenuusa *extent*)
-        valimatka (/ hypotenuusa ikonien-tiheys)
+        max-et (/ hypotenuusa maksimi-etaisyys)
+        min-et (/ hypotenuusa minimi-etaisyys)
         taitokset (apurit/pisteiden-taitokset points)
         ikonin-skaala (partial apurit/ikonin-skaala hypotenuusa)]
     (when (< hypotenuusa ikonien-piirtoraja-m)
       (doseq [{:keys [img scale paikka]} ikonit
-              :let [paikat (mapcat (partial nuolten-paikat valimatka taitokset)
+              :let [paikat (mapcat (partial nuolten-paikat min-et max-et taitokset)
                                    paikka)
                     kuva (and img (hae-kuva img))
                     skaala (ikonin-skaala scale)]]
@@ -137,9 +155,9 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
   (let [viivat (reverse (sort-by :width viivat))]
     (doseq [viiva viivat
             line lines]
-      (piirra-viiva g line viiva)
-      (piirra-ikonit g {:points (:points line)
-                        :ikonit ikonit} ruudukko))))
+      (piirra-viiva g line viiva))
+    (piirra-ikonit g {:points (mapcat :points lines)
+                      :ikonit ikonit} ruudukko)))
 
 (def varoitusteksti
   "Paljon tuloksia, kaikkea ei ehditty piirtää! Tarkenna hakuehtoja tai zoomaa lähemmäs.")
@@ -165,6 +183,14 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
        (.drawString g teksti x y)))))
 
 (def piirron-aikakatkaisu-ms 20000)
+
+(defn- debug-piirra-tile-rajat
+  "Lisää kutsu tähän piirra-karttakuvaan, jos haluat nähdä tilerajat."
+  [g extent]
+  (let [[x1 y1 x2 y2] extent]
+    (piirra-viiva g {:points [[x1 y1] [x2 y1] [x2 y2] [x1 y2] [x1 y1]]}
+                  {:color java.awt.Color/WHITE
+                   :width 5})))
 
 (defn piirra-karttakuvaan [extent koko px-scale g asiat]
   (binding [*px-scale* px-scale

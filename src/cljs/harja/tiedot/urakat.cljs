@@ -14,12 +14,7 @@
   (map #(assoc % :type :ur)))
 
 (defn hae-hallintayksikon-urakat [hallintayksikko]
-  (let [ch (chan)]
-    (go
-      (let [res (<! (k/post! :hallintayksikon-urakat (:id hallintayksikko)))]
-        (>! ch (into [] urakka-xf res)))
-      (close! ch))
-    ch))
+  (k/post! :hallintayksikon-urakat (:id hallintayksikko) urakka-xf))
 
 (def urakka-haku
   "Yleinen urakoista hakeva hakulähde."
@@ -31,3 +26,6 @@
               (>! ch (into [] urakka-xf res))
               (close! ch)))
         ch))))
+
+(defn poista-indeksi-kaytosta! [ur]
+  (k/post! :poista-indeksi-kaytosta {:urakka-id (:id ur)}))

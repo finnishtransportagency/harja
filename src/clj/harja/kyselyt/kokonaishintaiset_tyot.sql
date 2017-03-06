@@ -49,8 +49,8 @@ WHERE toimenpideinstanssi = :toimenpideinstanssi AND sopimus = :sopimus
 -- name: lisaa-kokonaishintainen-tyo<!
 -- Lisää kokonaishintaisen tyon
 INSERT INTO kokonaishintainen_tyo
-(summa, maksupvm, toimenpideinstanssi, sopimus, vuosi, kuukausi)
-VALUES (:summa, :maksupvm, :toimenpideinstanssi, :sopimus, :vuosi, :kuukausi);
+(summa, maksupvm, toimenpideinstanssi, sopimus, vuosi, kuukausi, luoja)
+VALUES (:summa, :maksupvm, :toimenpideinstanssi, :sopimus, :vuosi, :kuukausi, :luoja);
 
 -- name: merkitse-kustannussuunnitelmat-likaisiksi!
 -- Merkitsee kokonaishintaisia töitä vastaavat kustannussuunnitelmat likaisiksi: lähtetetään seuraavassa päivittäisessä lähetyksessä

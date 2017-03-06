@@ -17,8 +17,10 @@
                     (component/start
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
-                        :liitteiden-hallinta (component/using (harja.palvelin.komponentit.liitteet/->Liitteet) [:db])
-                        ))))
+                        :liitteiden-hallinta
+                        (component/using
+                          (harja.palvelin.komponentit.liitteet/->Liitteet)
+                          [:db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 

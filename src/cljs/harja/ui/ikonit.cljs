@@ -312,7 +312,7 @@
   [:span.glyphicon.glyphicon-open])
 (defn saved []
   [:span.glyphicon.glyphicon-saved])
-(defn import []
+(defn import-ikoni []
   [:span.glyphicon.glyphicon-import])
 (defn export []
   [:span.glyphicon.glyphicon-export])
@@ -519,6 +519,8 @@
   [:span.livicon-question-circle])
 (defn livicon-search []
   [:span.livicon-search])
+(defn livicon-save []
+  [:span.livicon-save])
 (defn livicon-plus []
   [:span.livicon-plus])
 (defn livicon-pen []
@@ -541,6 +543,10 @@
   [:span.livicon-arrow-down])
 (defn livicon-check []
   [:span.livicon-check])
+(defn livicon-wrench []
+  [:span.livicon-wrench])
+(defn livicon-eye []
+  [:span.livicon-eye])
 
 ;; Tiettyjen toimintojen vakioikonit
 
@@ -556,3 +562,21 @@
   [:span.livicon-check])
 (defn livicon-kommentti []
   [:span.livicon-comment])
+
+;; Ikoni + jotain muuta -tyyppiset apurit
+
+(defn ikoni-ja-teksti [ikoni teksti]
+  [:span
+   ikoni
+   [:span (str " " teksti)]])
+
+(defn ikoni-ja-elementti [ikoni elementti]
+  [:span
+   ikoni
+   [:span " "]
+   elementti])
+
+(defn teksti-ja-ikoni [teksti ikoni]
+  [:span
+   [:span (str teksti " ")]
+   ikoni])

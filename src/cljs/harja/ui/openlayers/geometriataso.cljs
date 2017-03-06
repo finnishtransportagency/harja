@@ -2,7 +2,9 @@
   "Geometriataso, joka muodostaa tason vektorista mäppejä."
   (:require [harja.ui.openlayers.featuret :as featuret]
             [harja.ui.openlayers.taso :as taso :refer [Taso]]
-            [harja.loki :refer [log]]))
+            [harja.loki :refer [log]]
+            [cljs.core.async :as async])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- luo-feature [geom]
   (try
@@ -25,7 +27,8 @@
 
 (def ^{:doc "Tyypit, joille pitää kutsua aseta-tyylit" :private true}
   tyyppi-tarvitsee-tyylit
-  #{:polygon :point :circle :multipolygon :multiline :line})
+  #{:polygon :point :circle :multipolygon :multiline :line
+    :geometry-collection})
 
 (defn update-ol3-layer-geometries
   "Given a vector of ol3 layer and map of current geometries and a
@@ -89,4 +92,13 @@
   (selitteet [this]
     (-> this meta :selitteet))
   (paivita [items ol3 ol-layer aiempi-paivitystieto]
-    (update-ol3-layer-geometries ol3 ol-layer aiempi-paivitystieto items)))
+    (update-ol3-layer-geometries ol3 ol-layer aiempi-paivitystieto items))
+  (hae-asiat-pisteessa [this koordinaatti extent]
+    (let [ch (async/chan)]
+      (if-let [hae-asiat (-> this meta :hae-asiat)]
+        (go
+          (doseq [asia (hae-asiat koordinaatti)]
+            (>! ch asia))
+          (async/close! ch))
+        (async/close! ch))
+      ch)))

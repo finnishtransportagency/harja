@@ -15,17 +15,19 @@
             [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.roolit :as roolit]))
 
 (defn koko-maa []
   [:li
-   [:a.murupolkuteksti {:href     "#"
-                        :style    (when (nil? @nav/valittu-hallintayksikko)
-                                    {:text-decoration "none"
-                                     :color           "#323232"})
+   [:a.murupolkuteksti {:href "#"
+                        :style (when (nil? @nav/valittu-hallintayksikko)
+                                 {:text-decoration "none"
+                                  :color "#323232"})
                         :on-click #(do
-                                     (.preventDefault %)
-                                     (nav/valitse-hallintayksikko nil))}
+                                    (.preventDefault %)
+                                    (nav/valitse-hallintayksikko! nil))}
     "Koko maa"]])
 
 (defn hallintayksikko [valinta-auki]
@@ -35,10 +37,10 @@
      (let [vu @nav/valittu-urakka
            va @valinta-auki]
        (if (or (not (nil? vu)) (= va :hallintayksikko))
-         [:a.murupolkuteksti {:href     "#"
+         [:a.murupolkuteksti {:href "#"
                               :on-click #(do
-                                           (.preventDefault %)
-                                           (nav/valitse-hallintayksikko valittu))}
+                                          (.preventDefault %)
+                                          (nav/valitse-hallintayksikko! valittu))}
           (str (or (:nimi valittu) "- Hallintayksikkö -") " ")]
 
          [:span.valittu-hallintayksikko.murupolkuteksti (or (:nimi valittu) "- Hallintayksikkö -") " "]))
@@ -58,7 +60,7 @@
         [:li.harja-alasvetolistaitemi
          [linkki (hal/elynumero-ja-nimi muu-yksikko)
           #(do (reset! valinta-auki nil)
-               (nav/valitse-hallintayksikko muu-yksikko))]])]]))
+               (nav/valitse-hallintayksikko! muu-yksikko))]])]]))
 
 (defn urakka [valinta-auki]
   (when @nav/valittu-hallintayksikko
@@ -82,7 +84,7 @@
                                                              (pvm/jalkeen? (:loppupvm %) (pvm/nyt)))
                                                            @nav/suodatettu-urakkalista))]
           (if (empty? muut-kaynnissaolevat-urakat)
-            [alasveto-ei-loydoksia "Tästä hallintayksiköstä ei löydy muita urakoita valituilla hakukriteereillä."]
+            [alasveto-ei-loydoksia "Tästä hallintayksiköstä ei löydy muita urakoita, joita on oikeus tarkastella."]
 
             (for [urakka muut-kaynnissaolevat-urakat]
               ^{:key (str "urakka-" (:id urakka))}
@@ -109,11 +111,11 @@
 (defn urakkatyyppi []
   [:div.murupolku-urakkatyyppi
    [:div.livi-valikkonimio.murupolku-urakkatyyppi-otsikko "Urakkatyyppi"]
-   [livi-pudotusvalikko {:valinta    @nav/urakkatyyppi
-                         :format-fn  #(if % (:nimi %) "Kaikki")
+   [livi-pudotusvalikko {:valinta @nav/urakkatyyppi
+                         :format-fn #(if % (:nimi %) "Kaikki")
                          :valitse-fn nav/vaihda-urakkatyyppi!
-                         :class      (str "alasveto-urakkatyyppi" (when (boolean @nav/valittu-urakka) " disabled"))
-                         :disabled   (boolean @nav/valittu-urakka)}
+                         :class (str "alasveto-urakkatyyppi" (when (boolean @nav/valittu-urakka) " disabled"))
+                         :disabled (boolean @nav/valittu-urakka)}
     nav/+urakkatyypit+]])
 
 (defn murupolku
@@ -122,37 +124,34 @@
   (let [valinta-auki (atom nil)]
     (komp/luo
       (komp/kuuntelija
-      [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu
-       :urakka-valittu :urakkavalinta-poistettu]
-      #(reset! valinta-auki false)
-      ;; FIXME Tässä voisi käyttää (komp/klikattu-ulkopuolelle #(reset! valinta-auki false))
-      ;; Mutta aiheuttaa mystisen virheen kun raporteista poistutaan
-      :body-klikkaus
-      (fn [this {klikkaus :tapahtuma}]
-        (when-not (dom/sisalla? this klikkaus)
-          (reset! valinta-auki false))))
+        [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu
+         :urakka-valittu :urakkavalinta-poistettu]
+        #(reset! valinta-auki false)
+        ;; FIXME Tässä voisi käyttää (komp/klikattu-ulkopuolelle #(reset! valinta-auki false))
+        ;; Mutta aiheuttaa mystisen virheen kun raporteista poistutaan
+        :body-klikkaus
+        (fn [this {klikkaus :tapahtuma}]
+          (when-not (dom/sisalla? this klikkaus)
+            (reset! valinta-auki false))))
       {:component-did-update (fn [_]
                                (t/julkaise! {:aihe :murupolku-naytetty-domissa?
                                              :naytetty? @nav/murupolku-nakyvissa?}))}
       (fn []
-       (let [ur @nav/valittu-urakka
-             ei-urakkaa? (nil? ur)
-             urakoitsija? (-> @istunto/kayttaja
-                              :organisaatio
-                              :tyyppi
-                              (= :urakoitsija))]
-         [:span {:class (when (empty? @nav/tarvitsen-isoa-karttaa)
-                          (if @nav/murupolku-nakyvissa?
-                            ""
-                            "hide"))}
-          (if ei-urakkaa?
-            [:ol.murupolku
-             [:div.col-sm-6.murupolku-vasen
-              [koko-maa] [hallintayksikko valinta-auki] [urakka valinta-auki]]
-             [:div.col-sm-6.murupolku-oikea
-              (when-not urakoitsija?
-                [urakoitsija])
-              [urakkatyyppi]]]
-            [:ol.murupolku
-             [:div.col-sm-12.murupolku-vasen
-              [koko-maa] [hallintayksikko valinta-auki] [urakka valinta-auki]]])])))))
+        (let [ur @nav/valittu-urakka
+              ei-urakkaa? (nil? ur)
+              urakoitsija? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)]
+          [:span {:class (when (empty? @nav/tarvitsen-isoa-karttaa)
+                           (if @nav/murupolku-nakyvissa?
+                             ""
+                             "hide"))}
+           (if ei-urakkaa?
+             [:ol.murupolku
+              [:div.col-sm-6.murupolku-vasen
+               [koko-maa] [hallintayksikko valinta-auki] [urakka valinta-auki]]
+              [:div.col-sm-6.murupolku-oikea
+               (when-not urakoitsija?
+                 [urakoitsija])
+               [urakkatyyppi]]]
+             [:ol.murupolku
+              [:div.col-sm-12.murupolku-vasen
+               [koko-maa] [hallintayksikko valinta-auki] [urakka valinta-auki]]])])))))

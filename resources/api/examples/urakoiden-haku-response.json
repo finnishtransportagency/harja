@@ -11,8 +11,8 @@
           },
           "vaylamuoto": "tie",
           "tyyppi": "hoito",
-          "alkupvm": "2016-01-30T12:00:00Z",
-          "loppupvm": "2016-01-30T12:00:00Z"
+          "alkupvm": "2016-01-30T12:00:00+02:00",
+          "loppupvm": "2016-01-30T12:00:00+02:00"
         }
       }
     },
@@ -27,8 +27,8 @@
           },
           "vaylamuoto": "tie",
           "tyyppi": "paallystys",
-          "alkupvm": "2016-01-30T12:00:00Z",
-          "loppupvm": "2016-01-30T12:00:00Z"
+          "alkupvm": "2016-01-30T12:00:00+02:00",
+          "loppupvm": "2016-01-30T12:00:00+02:00"
         }
       }
     }

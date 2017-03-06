@@ -1,4 +1,4 @@
-(ns harja.palvelin.raportointi.toimenpidekilometrit-test
+(ns harja.palvelin.raportointi.toimenpideajat-test
   (:require [clojure.test :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
@@ -11,7 +11,8 @@
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
-            [harja.palvelin.palvelut.raportit :as raportit]))
+            [harja.palvelin.palvelut.raportit :as raportit]
+            [harja.palvelin.raportointi.testiapurit :as apurit]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -47,240 +48,87 @@
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
                                               :hoitoluokat #{1 2 3 4 5 6 8 7}
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi "hoito"}})
+        taulukko (apurit/taulukko-otsikolla vastaus "Toimenpiteiden ajoittuminen")]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Toimenpiteiden ajoittuminen"
-                     :orientaatio :landscape}
-                    [[:taulukko
-                      {:otsikko "Toimenpiteiden ajoittuminen"
-                       :rivi-ennen [{:sarakkeita 1
-                                     :teksti "Hoi­to­luok­ka"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "Is"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "I"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "Ib"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "TIb"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "II"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "III"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "K1"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "K2"}
-                                     {:sarakkeita 1
-                                      :teksti ""}]}
-                      [{:leveys 12
-                        :otsikko "Teh­tä­vä"}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 5
-                        :otsikko "Yht."
-                        :tasaa :oikea}]
-                      []]]]))))
+    (apurit/tarkista-raportti vastaus "Toimenpiteiden ajoittuminen")
 
+    (apurit/tarkista-taulukko-kaikki-rivit
+      taulukko
+      (fn [r]
+        (let [rivi (if (map? r) (:rivi r) r)
+              tehtava (first rivi)
+              kappalemaarat (rest rivi)]
+          (and
+            (and (string? tehtava)
+                 (not-empty tehtava))
+            (every?
+              (fn [solu]
+                (or (and (number? solu)
+                         (<= 0 solu))
+                    (nil? solu)))
+              kappalemaarat)))))
+
+    (log/debug (pr-str (nth taulukko 2)))
+
+    (apurit/tarkista-taulukko-sarakkeet
+      taulukko
+      {:otsikko "Teh­tä­vä", :leveys 12}
+      {:otsikko "< 6", :tasaa :keskita, :reunus :vasen, :leveys 83/54}
+      {:otsikko "6 - 10", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "10 - 14", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "14 - 18", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "18 - 22", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "22 - 02", :tasaa :keskita, :reunus :oikea, :leveys 83/54}
+      {:otsikko "< 6", :tasaa :keskita, :reunus :vasen, :leveys 83/54}
+      {:otsikko "6 - 10", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "10 - 14", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "14 - 18", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "18 - 22", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "22 - 02", :tasaa :keskita, :reunus :oikea, :leveys 83/54}
+      {:otsikko "< 6", :tasaa :keskita, :reunus :vasen, :leveys 83/54}
+      {:otsikko "6 - 10", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "10 - 14", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "14 - 18", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "18 - 22", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "22 - 02", :tasaa :keskita, :reunus :oikea, :leveys 83/54}
+      {:otsikko "< 6", :tasaa :keskita, :reunus :vasen, :leveys 83/54}
+      {:otsikko "6 - 10", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "10 - 14", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "14 - 18", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "18 - 22", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "22 - 02", :tasaa :keskita, :reunus :oikea, :leveys 83/54}
+      {:otsikko "< 6", :tasaa :keskita, :reunus :vasen, :leveys 83/54}
+      {:otsikko "6 - 10", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "10 - 14", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "14 - 18", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "18 - 22", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "22 - 02", :tasaa :keskita, :reunus :oikea, :leveys 83/54}
+      {:otsikko "< 6", :tasaa :keskita, :reunus :vasen, :leveys 83/54}
+      {:otsikko "6 - 10", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "10 - 14", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "14 - 18", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "18 - 22", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "22 - 02", :tasaa :keskita, :reunus :oikea, :leveys 83/54}
+      {:otsikko "< 6", :tasaa :keskita, :reunus :vasen, :leveys 83/54}
+      {:otsikko "6 - 10", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "10 - 14", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "14 - 18", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "18 - 22", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "22 - 02", :tasaa :keskita, :reunus :oikea, :leveys 83/54}
+      {:otsikko "< 6", :tasaa :keskita, :reunus :vasen, :leveys 83/54}
+      {:otsikko "6 - 10", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "10 - 14", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "14 - 18", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "18 - 22", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "22 - 02", :tasaa :keskita, :reunus :oikea, :leveys 83/54}
+      {:otsikko "< 6", :tasaa :keskita, :reunus :vasen, :leveys 83/54}
+      {:otsikko "6 - 10", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "10 - 14", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "14 - 18", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "18 - 22", :tasaa :keskita, :reunus :ei, :leveys 83/54}
+      {:otsikko "22 - 02", :tasaa :keskita, :reunus :oikea, :leveys 83/54}
+      {:otsikko "Yht.", :tasaa :oikea, :leveys 5})))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -292,239 +140,85 @@
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
                                               :hoitoluokat #{1 2 3 4 5 6 8 7}
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi "hoito"}})
+        taulukko (apurit/taulukko-otsikolla vastaus "Toimenpiteiden ajoittuminen")]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Toimenpiteiden ajoittuminen"
-                     :orientaatio :landscape}
-                    [[:taulukko
-                      {:otsikko "Toimenpiteiden ajoittuminen"
-                       :rivi-ennen [{:sarakkeita 1
-                                     :teksti "Hoi­to­luok­ka"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "Is"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "I"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "Ib"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "TIb"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "II"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "III"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "K1"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "K2"}
-                                     {:sarakkeita 1
-                                      :teksti ""}]}
-                      [{:leveys 12
-                        :otsikko "Teh­tä­vä"}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 5
-                        :otsikko "Yht."
-                        :tasaa :oikea}]
-                      []]]]))))
+    (apurit/tarkista-raportti vastaus "Toimenpiteiden ajoittuminen")
+
+    (apurit/tarkista-taulukko-kaikki-rivit
+      taulukko
+      (fn [r]
+        (let [rivi (if (map? r) (:rivi r) r)
+              tehtava (first rivi)
+              kappalemaarat (rest rivi)]
+          (and
+            (and (string? tehtava)
+                 (not-empty tehtava))
+            (every?
+              (fn [solu]
+                (or (and (number? solu)
+                         (<= 0 solu))
+                    (nil? solu)))
+              kappalemaarat)))))
+
+    (apurit/tarkista-taulukko-sarakkeet
+      taulukko
+      {:leveys 12 :otsikko "Teh­tä­vä"}
+      {:leveys 83/54 :otsikko "< 6" :reunus :vasen :tasaa :keskita}
+      {:leveys 83/54 :otsikko "6 - 10" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "10 - 14" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "14 - 18" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "18 - 22" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
+      {:leveys 83/54 :otsikko "< 6" :reunus :vasen :tasaa :keskita}
+      {:leveys 83/54 :otsikko "6 - 10" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "10 - 14" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "14 - 18" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "18 - 22" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
+      {:leveys 83/54 :otsikko "< 6" :reunus :vasen :tasaa :keskita}
+      {:leveys 83/54 :otsikko "6 - 10" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "10 - 14" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "14 - 18" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "18 - 22" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
+      {:leveys 83/54 :otsikko "< 6" :reunus :vasen :tasaa :keskita}
+      {:leveys 83/54 :otsikko "6 - 10" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "10 - 14" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "14 - 18" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "18 - 22" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
+      {:leveys 83/54 :otsikko "< 6" :reunus :vasen :tasaa :keskita}
+      {:leveys 83/54 :otsikko "6 - 10" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "10 - 14" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "14 - 18" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "18 - 22" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
+      {:leveys 83/54 :otsikko "< 6" :reunus :vasen :tasaa :keskita}
+      {:leveys 83/54 :otsikko "6 - 10" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "10 - 14" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "14 - 18" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "18 - 22" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
+      {:leveys 83/54 :otsikko "< 6" :reunus :vasen :tasaa :keskita}
+      {:leveys 83/54 :otsikko "6 - 10" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "10 - 14" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "14 - 18" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "18 - 22" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
+      {:leveys 83/54 :otsikko "< 6" :reunus :vasen :tasaa :keskita}
+      {:leveys 83/54 :otsikko "6 - 10" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "10 - 14" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "14 - 18" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "18 - 22" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
+      {:leveys 83/54 :otsikko "< 6" :reunus :vasen :tasaa :keskita}
+      {:leveys 83/54 :otsikko "6 - 10" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "10 - 14" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "14 - 18" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "18 - 22" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
+      {:leveys 5 :otsikko "Yht." :tasaa :oikea})))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -535,236 +229,82 @@
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 1 1))
                                               :loppupvm (c/to-date (t/local-date 2015 12 31))
                                               :hoitoluokat #{1 2 3 4 5 6 8 7}
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi "hoito"}})
+        taulukko (apurit/taulukko-otsikolla vastaus "Toimenpiteiden ajoittuminen")]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Toimenpiteiden ajoittuminen"
-                     :orientaatio :landscape}
-                    [[:taulukko
-                      {:otsikko "Toimenpiteiden ajoittuminen"
-                       :rivi-ennen [{:sarakkeita 1
-                                     :teksti "Hoi­to­luok­ka"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "Is"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "I"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "Ib"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "TIb"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "II"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "III"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "K1"}
-                                     {:sarakkeita 6
-                                      :tasaa :keskita
-                                      :teksti "K2"}
-                                     {:sarakkeita 1
-                                      :teksti ""}]}
-                      [{:leveys 12
-                        :otsikko "Teh­tä­vä"}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "< 6"
-                        :reunus :vasen
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "6 - 10"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "10 - 14"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "14 - 18"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "18 - 22"
-                        :reunus :ei
-                        :tasaa :keskita}
-                       {:leveys 83/48
-                        :otsikko "22 - 02"
-                        :reunus :oikea
-                        :tasaa :keskita}
-                       {:leveys 5
-                        :otsikko "Yht."
-                        :tasaa :oikea}]
-                      []]]]))))
+    (apurit/tarkista-raportti vastaus "Toimenpiteiden ajoittuminen")
+
+    (apurit/tarkista-taulukko-kaikki-rivit
+      taulukko
+      (fn [r]
+        (let [rivi (if (map? r) (:rivi r) r)
+              tehtava (first rivi)
+              kappalemaarat (rest rivi)]
+          (and
+            (and (string? tehtava)
+                 (not-empty tehtava))
+            (every?
+              (fn [solu]
+                (or (and (number? solu)
+                         (<= 0 solu))
+                    (nil? solu)))
+              kappalemaarat)))))
+
+    (apurit/tarkista-taulukko-sarakkeet
+      taulukko
+      {:leveys 12 :otsikko "Teh­tä­vä"}
+      {:leveys 83/54 :otsikko "< 6" :reunus :vasen :tasaa :keskita}
+      {:leveys 83/54 :otsikko "6 - 10" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "10 - 14" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "14 - 18" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "18 - 22" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
+      {:leveys 83/54 :otsikko "< 6" :reunus :vasen :tasaa :keskita}
+      {:leveys 83/54 :otsikko "6 - 10" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "10 - 14" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "14 - 18" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "18 - 22" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
+      {:leveys 83/54 :otsikko "< 6" :reunus :vasen :tasaa :keskita}
+      {:leveys 83/54 :otsikko "6 - 10" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "10 - 14" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "14 - 18" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "18 - 22" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
+      {:leveys 83/54 :otsikko "< 6" :reunus :vasen :tasaa :keskita}
+      {:leveys 83/54 :otsikko "6 - 10" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "10 - 14" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "14 - 18" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "18 - 22" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
+      {:leveys 83/54 :otsikko "< 6" :reunus :vasen :tasaa :keskita}
+      {:leveys 83/54 :otsikko "6 - 10" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "10 - 14" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "14 - 18" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "18 - 22" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
+      {:leveys 83/54 :otsikko "< 6" :reunus :vasen :tasaa :keskita}
+      {:leveys 83/54 :otsikko "6 - 10" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "10 - 14" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "14 - 18" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "18 - 22" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
+      {:leveys 83/54 :otsikko "< 6" :reunus :vasen :tasaa :keskita}
+      {:leveys 83/54 :otsikko "6 - 10" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "10 - 14" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "14 - 18" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "18 - 22" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
+      {:leveys 83/54 :otsikko "< 6" :reunus :vasen :tasaa :keskita}
+      {:leveys 83/54 :otsikko "6 - 10" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "10 - 14" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "14 - 18" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "18 - 22" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
+      {:leveys 83/54 :otsikko "< 6" :reunus :vasen :tasaa :keskita}
+      {:leveys 83/54 :otsikko "6 - 10" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "10 - 14" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "14 - 18" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "18 - 22" :reunus :ei :tasaa :keskita}
+      {:leveys 83/54 :otsikko "22 - 02" :reunus :oikea :tasaa :keskita}
+      {:leveys 5 :otsikko "Yht." :tasaa :oikea})))

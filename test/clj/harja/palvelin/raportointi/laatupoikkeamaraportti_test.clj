@@ -55,7 +55,8 @@
                      {:otsikko "Oulun alueurakka 2014-2019, Laatupoikkeamaraportti ajalta 01.10.2015 - 01.10.2016"
                       :sheet-nimi "Laatupoikkeamaraportti"
                       :tyhja nil}
-                     [{:leveys 15
+                     [{:fmt :pvm
+                       :leveys 15
                        :otsikko "Päi­vä­mää­rä"}
                       {:leveys 20
                        :otsikko "Koh­de"}
@@ -167,10 +168,11 @@
                      :orientaatio :landscape}
                     nil
                     [:taulukko
-                     {:otsikko "Pohjois-Pohjanmaa ja Kainuu, Laatupoikkeamaraportti ajalta 01.10.2015 - 01.10.2016"
+                     {:otsikko "Pohjois-Pohjanmaa, Laatupoikkeamaraportti ajalta 01.10.2015 - 01.10.2016"
                       :sheet-nimi "Laatupoikkeamaraportti"
                       :tyhja nil}
-                     [{:leveys 15
+                     [{:fmt :pvm
+                       :leveys 15
                        :otsikko "Päi­vä­mää­rä"}
                       {:leveys 20
                        :otsikko "Koh­de"}
@@ -285,7 +287,8 @@
                      {:otsikko "KOKO MAA, Laatupoikkeamaraportti ajalta 01.10.2015 - 01.10.2016"
                       :sheet-nimi "Laatupoikkeamaraportti"
                       :tyhja nil}
-                     [{:leveys 15
+                     [{:fmt :pvm
+                       :leveys 15
                        :otsikko "Päi­vä­mää­rä"}
                       {:leveys 20
                        :otsikko "Koh­de"}
@@ -381,7 +384,7 @@
                         "Sanktion sisältävä laatupoikkeama 6"
                         [:liitteet
                          []]]
-                       {:otsikko "Vantaan alueurakka 2014-2019"}
+                       {:otsikko "Vantaan alueurakka 2009-2019"}
                        ["11.10.2015"
                         "Testikohde"
                         "tilaaja"

@@ -121,7 +121,7 @@
       notify:
         - restart nginx
     - name: Download ActiveMQ
-      get_url: dest=/tmp/activemq.tar.gz url=http://www.nic.funet.fi/pub/mirrors/apache.org/activemq/5.12.3/apache-activemq-5.12.3-bin.tar.gz
+      get_url: dest=/tmp/activemq.tar.gz url=http://www.apache.org/dyn/closer.cgi?filename=/activemq/5.14.3/apache-activemq-5.14.3-bin.tar.gz&action=download
       register: get_activemq
     - name: Create ActiveMQ directory
       file: state=directory path=/opt/activemq mode=0777
@@ -131,9 +131,9 @@
     - name: Start ActiveMQ
       async: 10
       poll: 0
-      command: /opt/activemq/apache-activemq-5.12.3/bin/activemq restart
+      command: /opt/activemq/apache-activemq-5.14.3/bin/activemq restart
       args:
-        chdir: "/opt/activemq/apache-activemq-5.12.3"
+        chdir: "/opt/activemq/apache-activemq-5.14.3"
     - name: start nginx
       service: name=nginx state=started
     - name: add HTTPS to iptables IN_public_allow chain

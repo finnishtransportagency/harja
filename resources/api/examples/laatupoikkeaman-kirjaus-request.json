@@ -10,7 +10,7 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-01-30T12:00:00Z"
+    "lahetysaika": "2016-01-30T12:00:00+02:00"
   },
   "tunniste": {
     "id": 123
@@ -26,7 +26,7 @@
     "etunimi": "Ville",
     "sukunimi": "Vaara"
   },
-  "aika": "2016-01-30T12:00:00Z",
+  "aika": "2016-01-30T12:00:00+02:00",
   "liitteet": [
     {
       "liite": {

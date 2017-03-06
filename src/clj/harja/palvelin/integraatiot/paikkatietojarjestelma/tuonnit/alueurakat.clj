@@ -11,8 +11,8 @@
         geometria (.toString (:the_geom urakka))
         piirinumero (int (:piirinro urakka))]
     (if (first (u/hae-alueurakka-numerolla db (str (:gridcode urakka))))
-      (u/paivita-alueurakka! db urakkanumero geometria piirinumero)
-      (u/luo-alueurakka<!  db urakkanumero geometria piirinumero))))
+      (u/paivita-alueurakka! db geometria piirinumero urakkanumero)
+      (u/luo-alueurakka<! db urakkanumero geometria piirinumero))))
 
 (defn vie-urakka-entry [db urakka]
   (if (:the_geom urakka)

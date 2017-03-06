@@ -10,10 +10,10 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-01-30T12:00:00Z"
+    "lahetysaika": "2016-01-30T12:00:00+02:00"
   },
   "ilmoitustoimenpide": {
-    "aika": "2016-01-30T12:00:00Z",
+    "aika": "2016-01-30T12:00:00+02:00",
     "tyyppi": "vastaanotto",
     "ilmoittaja": {
       "henkilo": {

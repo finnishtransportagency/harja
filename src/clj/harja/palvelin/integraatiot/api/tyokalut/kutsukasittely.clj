@@ -10,6 +10,7 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.tyokalut.avaimet :as avaimet]
             [harja.kyselyt.kayttajat :as kayttajat]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konv])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import [java.sql SQLException]
@@ -117,8 +118,9 @@
   (tee-virhevastaus 403 virheet))
 
 (defn tee-vastaus
-  "Luo JSON-vastauksen joko annetulla statuksella tai oletuksena statuksella 200 (ok). Payload on Clojure dataa, joka
-  muunnetaan JSON-dataksi. Jokainen payload validoidaan annetulla skeemalla. Jos payload ei ole validi,
+  "Luo JSON-vastauksen joko annetulla statuksella tai oletuksena statuksella 200 (ok).
+  Payload on Clojure dataa, joka muunnetaan JSON-dataksi.
+  Jokainen payload validoidaan annetulla skeemalla. Jos payload ei ole validi,
   palautetaan status 500 (sisäinen käsittelyvirhe)."
   ([skeema payload] (tee-vastaus 200 skeema payload))
   ([status skeema payload]
@@ -137,31 +139,37 @@
      (if skeema
        (throw+ {:type virheet/+sisainen-kasittelyvirhe+
                 :virheet [{:koodi virheet/+tyhja-vastaus+
-                           :viesti "Tyhja vastaus vaikka skeema annettu"}]})
+                           :viesti "Tyhjä vastaus vaikka skeema annettu"}]})
        {:status status}))))
 
-(defn kasittele-invalidi-json [virheet resurssi]
-  (log/error (format "Resurssin: %s kutsun JSON on invalidi: %s" resurssi virheet))
+(defn kasittele-invalidi-json [virheet kutsu resurssi]
+  (log/error (format "Resurssin: %s kutsun JSON on invalidi: %s. JSON: %s. " resurssi virheet (pr-str kutsu)))
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-viallinen-kutsu-virhevastaus virheet))
 
-(defn kasittele-viallinen-kutsu [virheet resurssi]
-  (log/error (format "Resurssin: %s kutsu on viallinen: %s " resurssi virheet))
+(defn kasittele-viallinen-kutsu [virheet kutsu parametrit resurssi]
+  (log/error (format "Resurssin: %s kutsu on viallinen: %s. Parametrit: %s. Kutsu: %s." resurssi virheet parametrit (pr-str kutsu)))
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-viallinen-kutsu-virhevastaus virheet))
 
 (defn kasittele-ei-hakutuloksia [virheet resurssi]
   (log/error (format "Resurssin: %s kutsu ei palauttanut hakutuloksia: %s " resurssi virheet))
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-ei-hakutuloksia-virhevastaus virheet))
 
 (defn kasittele-puutteelliset-parametrit [virheet resurssi]
   (log/error (format "Resurssin: %s kutsussa puutteelliset parametrit: %s " resurssi virheet))
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-viallinen-kutsu-virhevastaus virheet))
 
 (defn kasittele-sisainen-kasittelyvirhe [virheet resurssi]
   (log/error (format "Resurssin: %s kutsussa tapahtui sisäinen käsittelyvirhe: %s" resurssi virheet))
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-sisainen-kasittelyvirhevastaus virheet))
 
 (defn kasittele-sisainen-autentikaatio-virhe [virheet resurssi]
   (log/error (format "Resurssin: %s kutsussa tapahtui autentikaatiovirhe: %s" resurssi virheet))
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-sisainen-autentikaatiovirhevastaus virheet))
 
 (defn tarkista-tyhja-kutsu [skeema body]
@@ -196,13 +204,14 @@
                  :virheet [{:koodi virheet/+tuntematon-kayttaja-koodi+
                             :viesti (str "Tuntematon käyttäjätunnus: " kayttajanimi)}]})))))
 
-(defn aja-virhekasittelyn-kanssa [resurssi ajo]
+(defn aja-virhekasittelyn-kanssa [resurssi kutsu parametrit ajo]
   (try+
     (ajo)
+    ;; Tunnetut poikkeustilanteet, virhetiedot voidaan julkaista
     (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
-      (kasittele-invalidi-json virheet resurssi))
+      (kasittele-invalidi-json virheet kutsu resurssi))
     (catch [:type virheet/+viallinen-kutsu+] {:keys [virheet]}
-      (kasittele-viallinen-kutsu virheet resurssi))
+      (kasittele-viallinen-kutsu virheet kutsu parametrit resurssi))
     (catch [:type virheet/+ei-hakutuloksia+] {:keys [virheet]}
       (kasittele-ei-hakutuloksia virheet resurssi))
     (catch [:type virheet/+puutteelliset-parametrit+] {:keys [virheet]}
@@ -215,11 +224,13 @@
       (kasittele-sisainen-kasittelyvirhe virheet resurssi))
     (catch [:type virheet/+tuntematon-kayttaja+] {:keys [virheet]}
       (kasittele-sisainen-autentikaatio-virhe virheet resurssi))
+    (catch [:type virheet/+kayttajalla-puutteelliset-oikeudet+] {:keys [virheet]}
+      (kasittele-sisainen-autentikaatio-virhe virheet resurssi))
     (catch #(get % :virheet) poikkeus
       (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus) resurssi))
     ;; Odottamattomat poikkeustilanteet (virhetietoja ei julkaista):
     (catch SQLException e
-      (log/error e (format "Resurssin kutsun: %s yhteydessä tapahtui SQL-poikkeus: " resurssi))
+      (log/error e (format "Resurssin kutsun: %s yhteydessä tapahtui SQL-poikkeus: %s." resurssi e))
       (let [w (StringWriter.)]
         (loop [ex (.getNextException e)]
           (when (not (nil? ex))
@@ -231,13 +242,13 @@
           :viesti "Sisäinen käsittelyvirhe"}]
         resurssi))
     (catch Exception e
-      (log/error e (format "Resurssin kutsun: %s yhteydessä tapahtui poikkeus: " resurssi))
+      (log/error e (format "Resurssin kutsun: %s yhteydessä tapahtui poikkeus: %s." resurssi e))
       (kasittele-sisainen-kasittelyvirhe
         [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
           :viesti "Sisäinen käsittelyvirhe"}]
         resurssi))
     (catch Object e
-      (log/error (:throwable &throw-context) (format "Resurssin kutsun: %s yhteydessä tapahtui poikkeus: " e))
+      (log/error (:throwable &throw-context) (format "Resurssin kutsun: %s yhteydessä tapahtui poikkeus: %s." resurssi e))
       (kasittele-sisainen-kasittelyvirhe
         [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
           :viesti "Sisäinen käsittelyvirhe"}]
@@ -264,11 +275,13 @@
   (let [body (lue-body request)
         tapahtuma-id (when integraatioloki
                        (lokita-kutsu integraatioloki resurssi request body))
+        parametrit (:params request)
         vastaus (aja-virhekasittelyn-kanssa
                   resurssi
+                  body
+                  parametrit
                   #(let
-                    [parametrit (:params request)
-                     kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+                    [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
                      kutsun-data (lue-kutsu kutsun-skeema request body)
                      vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
                     (tee-vastaus vastauksen-skeema vastauksen-data)))]
@@ -285,13 +298,16 @@
   käsittelyvirhe."
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
 
+  ;; mekanismi ei toimi asyncin kanssa, joten tämän alla oikeustarkistukset jäävät tarkistamatta
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
+
   (with-channel request channel
-                (go
-                  (let [vastaus (<! (thread (kasittele-kutsu db
-                                                             integraatioloki
-                                                             resurssi
-                                                             request
-                                                             kutsun-skeema
-                                                             vastauksen-skeema
-                                                             kasittele-kutsu-fn)))]
-                    (send! channel vastaus)))))
+    (go
+      (let [vastaus (<! (thread (kasittele-kutsu db
+                                                 integraatioloki
+                                                 resurssi
+                                                 request
+                                                 kutsun-skeema
+                                                 vastauksen-skeema
+                                                 kasittele-kutsu-fn)))]
+        (send! channel vastaus)))))

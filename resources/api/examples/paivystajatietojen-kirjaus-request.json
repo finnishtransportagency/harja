@@ -10,7 +10,7 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2015-01-03T12:00:00Z"
+    "lahetysaika": "2015-01-03T12:00:00+02:00"
   },
   "paivystykset": [
     {
@@ -25,8 +25,8 @@
           "tyopuhelin": "73553",
           "liviTunnus":"LX1234345"
         },
-        "alku": "2015-01-30T12:00:00Z",
-        "loppu": "2016-01-30T12:00:00Z",
+        "alku": "2015-01-30T12:00:00+02:00",
+        "loppu": "2016-01-30T12:00:00+02:00",
         "vastuuhenkilo": true,
         "varahenkilo": true
       }
@@ -42,8 +42,8 @@
           "matkapuhelin": "0287445698",
           "tyopuhelin": "73553"
         },
-        "alku": "2015-01-30T12:00:00Z",
-        "loppu": "2016-01-30T12:00:00Z",
+        "alku": "2015-01-30T12:00:00+02:00",
+        "loppu": "2016-01-30T12:00:00+02:00",
         "vastuuhenkilo": false,
         "varahenkilo": true
       }

@@ -12,7 +12,7 @@ VALUES ('Määräpäivän ylitys', ARRAY['C'::sanktiolaji], NULL),
 
        ('Talvihoito, päätiet (talvihoitoluokat Is ja I)', ARRAY['A'::sanktiolaji, 'B'::sanktiolaji], (SELECT id FROM toimenpidekoodi WHERE koodi='23104')),
        ('Talvihoito, muut tiet, ml kevyen liikenteen väylät (talvihoitoluokat TIb, Ib, II, III ja K) ja pysäkkikatosten talvihoito', ARRAY['A'::sanktiolaji, 'B'::sanktiolaji], (SELECT id FROM toimenpidekoodi WHERE koodi='23104')),
-       ('Liikenneympäristön hoito', ARRAY['A'::sanktiolaji, 'B'::sanktiolaji], (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
-       ('Sorateiden hoito ja ylläpito', ARRAY['A'::sanktiolaji, 'B'::sanktiolaji], (SELECT id FROM toimenpidekoodi WHERE koodi='23124'))
+       ('Liikenneympäristön hoito', ARRAY['A'::sanktiolaji, 'B'::sanktiolaji, 'muistutus'::sanktiolaji], (SELECT id FROM toimenpidekoodi WHERE koodi='23116')),
+       ('Sorateiden hoito ja ylläpito', ARRAY['A'::sanktiolaji, 'B'::sanktiolaji, 'muistutus'::sanktiolaji], (SELECT id FROM toimenpidekoodi WHERE koodi='23124'))
        ;
        

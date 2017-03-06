@@ -57,7 +57,7 @@
        [:button.nappi-toissijainen.grid-lisaa
         {:on-click
          (fn [e]
-           (nayta-sisalto-modaalissa-dialogissa "Lisätiedot kokonaisuudessaan" [:pre teksti]))}
+           (nayta-sisalto-modaalissa-dialogissa "Lisätiedot kokonaisuudessaan" [:pre {:style {:white-space "pre-line"}} teksti]))}
         (ikonit/eye-open)]]
       teksti)))
 
@@ -97,18 +97,19 @@
          [:div.container
           [grid
            {:otsikko "Viestit"}
-           [{:otsikko "Suunta" :nimi :suunta :leveys "10%" :tyyppi :komponentti
+           [{:otsikko "Suunta" :nimi :suunta :leveys 10 :tyyppi :komponentti
              :komponentti #(if (= "sisään" (:suunta %))
                             [:span.integraatioloki-onnistunut (ikonit/circle-arrow-right) " Sisään"]
                             [:span.integraatioloki-varoitus (ikonit/circle-arrow-left) " Ulos"])}
-            {:otsikko "Osoite" :nimi :osoite :leveys "30%"}
-            {:otsikko "Parametrit" :nimi :parametrit :leveys "20%" :tyyppi :komponentti
+            {:otsikko "Osoite" :nimi :osoite :leveys 30}
+            {:otsikko "Parametrit" :nimi :parametrit :leveys 20 :tyyppi :komponentti
              :komponentti #(fmt/leikkaa-merkkijono 50 (kartta-merkkijonoksi (:parametrit %)))}
-            {:otsikko "Otsikko" :nimi :otsikko :leveys "30%" :tyyppi :komponentti
+            {:otsikko "Otsikko" :nimi :otsikko :leveys 30 :tyyppi :komponentti
              :komponentti #(nayta-otsikko (:otsikko %))}
-            {:otsikko "Siirtotyyppi" :nimi :siirtotyyppi :leveys "20%"}
-            {:otsikko "Sisältötyyppi" :nimi :sisaltotyyppi :leveys "20%"}
-            {:otsikko "Sisältö" :nimi :sisalto :leveys "30%" :tyyppi :komponentti
+            {:otsikko "Siirtotyyppi" :nimi :siirtotyyppi :leveys 20}
+            {:otsikko "Sisältötyyppi" :nimi :sisaltotyyppi :leveys 20}
+            {:otsikko "Palvelin" :nimi :kasitteleva-palvelin :leveys 30 :fmt #(if (empty? %) "Ei tiedossa" %)}
+            {:otsikko "Sisältö" :nimi :sisalto :leveys 30 :tyyppi :komponentti
              :komponentti #(nayta-sisalto (:sisalto %))}]
            @viestit]]]))))
 
@@ -179,8 +180,7 @@
                                          (when-not (and @tiedot/valittu-jarjestelma
                                                         (contains? (:integraatiot @tiedot/valittu-jarjestelma)
                                                                    @tiedot/valittu-integraatio))
-                                           (reset! tiedot/valittu-integraatio nil)))
-                           :class "suunnittelu-alasveto"}
+                                           (reset! tiedot/valittu-integraatio nil)))}
       (vec (concat [nil] @tiedot/jarjestelmien-integraatiot))]]
 
     (when @tiedot/valittu-jarjestelma
@@ -188,8 +188,7 @@
        [:span.alasvedon-otsikko "Integraatio"]
        [livi-pudotusvalikko {:valinta @tiedot/valittu-integraatio
                              :format-fn #(if % (str %) "Kaikki integraatiot")
-                             :valitse-fn #(reset! tiedot/valittu-integraatio %)
-                             :class "suunnittelu-alasveto"}
+                             :valitse-fn #(reset! tiedot/valittu-integraatio %)}
         (vec (concat [nil] (:integraatiot @tiedot/valittu-jarjestelma)))]])
 
 
@@ -212,8 +211,7 @@
       :vetolaatikot (into {}
                           (map (juxt :id (fn [tapahtuma]
                                            [tapahtuman-tiedot tapahtuma]))
-                               @tiedot/haetut-tapahtumat))
-      }
+                               @tiedot/haetut-tapahtumat))}
 
      (vec
        (keep identity

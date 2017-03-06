@@ -32,15 +32,6 @@
 
     (tee-paivystys false false (first (first yhteyshenkilot)) urakka)
     (tee-paivystys true false (first (second yhteyshenkilot)) urakka)
-    (let [paivystaja (first (yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat db urakka))
-          oletettu-paivystaja (second yhteyshenkilot)]
-      (is (ovatko-sama-paivystaja? oletettu-paivystaja paivystaja) "Vastuuhenkilö valittu varahenkilön sijasta.")
-      (poista-paivystykset urakka))
-
-    (tee-paivystys false false (first (first yhteyshenkilot)) urakka)
-    (tee-paivystys true false (first (second yhteyshenkilot)) urakka)
-    (tee-paivystys true false (first (nth yhteyshenkilot 2)) urakka)
-    (let [paivystaja (first (yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat db urakka))
-          oletettu-paivystaja (second yhteyshenkilot)]
-      (is (ovatko-sama-paivystaja? oletettu-paivystaja paivystaja) "Ensimmäinen useammasta vastuuhenkilöstä valittu.")
+    (let [paivystajat (yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat db urakka)]
+      (is (= 2 (count paivystajat)) "Molemmat vastuuhenkilö ja varahenkilö haettu oikein")
       (poista-paivystykset urakka))))

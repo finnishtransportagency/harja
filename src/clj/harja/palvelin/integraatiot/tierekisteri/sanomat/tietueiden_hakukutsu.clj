@@ -13,12 +13,10 @@
   [:ns2:haeTietueet
    {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/haeTietueet"}
    [:tietolajitunniste tietolajitunniste]
-   (when voimassaolopvm [:voimassaolopvm (pvm/pvm->iso-8601
-                                           voimassaolopvm)])
+   (when voimassaolopvm [:voimassaolopvm (pvm/pvm->iso-8601 voimassaolopvm)])
    [:tie
     (map (fn [[avain arvo]] [avain arvo]) tierekisteriosoitevali)
-    (when tilannepvm [:tilannepvm (pvm/pvm->iso-8601
-                                    tilannepvm)])]])
+    (when tilannepvm [:tilannepvm (pvm/pvm->iso-8601 tilannepvm)])]])
 
 (defn muodosta-kutsu [tierekisteriosoitevali tietolajitunniste voimassaolopvm tilannepvm]
   (let [sisalto (muodosta-xml-sisalto tierekisteriosoitevali tietolajitunniste voimassaolopvm tilannepvm)

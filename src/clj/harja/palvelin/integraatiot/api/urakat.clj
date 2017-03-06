@@ -35,8 +35,9 @@
 
 (defn- urakan-tiedot [urakka]
   (-> urakka
-      (assoc :vaylamuoto "tie")
-      (dissoc :takuu)))
+      (select-keys #{:id :nimi :tyyppi :alkupvm :loppupvm
+                     :takuu_loppupvm :alueurakkanumero :urakoitsija})
+      (assoc :vaylamuoto "tie")))
 
 (defn muodosta-vastaus-urakan-haulle [db id urakka]
   {:urakka
@@ -55,14 +56,15 @@
     (let [urakka (some->> urakka-id (q-urakat/hae-urakka db) first konv/alaviiva->rakenne)]
       (muodosta-vastaus-urakan-haulle db urakka-id urakka))))
 
-(defn hae-urakka-ytunnuksella [db parametrit kayttaja]
-  (parametrivalidointi/tarkista-parametrit
-    parametrit
-    {:ytunnus "Y-tunnus puuttuu"})
+(defn hae-urakka-ytunnuksella [db parametrit {:keys [kayttajanimi] :as kayttaja}]
+  (parametrivalidointi/tarkista-parametrit parametrit {:ytunnus "Y-tunnus puuttuu"})
   (let [{ytunnus :ytunnus} parametrit]
     (log/debug "Haetaan urakat y-tunnuksella: " ytunnus)
     (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
-    (let [urakat (some->> ytunnus (q-urakat/hae-urakat-ytunnuksella db) konv/vector-mappien-alaviiva->rakenne)]
+    (let [organisaation-urakat (q-urakat/hae-urakat-ytunnuksella db ytunnus)
+          erillisoikeus-urakat (filter (fn [eu] (not-any? (fn [ou] (= (:id ou) (:id eu))) organisaation-urakat))
+                                       (q-urakat/hae-urakat-joihin-jarjestelmalla-erillisoikeus db kayttajanimi))
+          urakat (konv/vector-mappien-alaviiva->rakenne (into organisaation-urakat erillisoikeus-urakat))]
       (muodosta-vastaus-organisaation-urakoiden-haulle urakat))))
 
 (def hakutyypit

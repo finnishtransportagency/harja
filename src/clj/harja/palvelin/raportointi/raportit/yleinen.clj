@@ -6,7 +6,8 @@
              [local :as l]]
             [harja.pvm :as pvm]
             [jeesql.core :refer [defqueries]]
-            [harja.tyokalut.functor :refer [fmap]]))
+            [harja.tyokalut.functor :refer [fmap]]
+            [harja.fmt :as fmt]))
 
 
 (defqueries "harja/palvelin/raportointi/raportit/yleinen.sql")
@@ -68,11 +69,16 @@
        (kuukaudet alku)))))
 
 (defn kuukausivalit [alku loppu]
+  "Palauttaa kuukausivälejä ensimmäisestä viimeiseen päivään kellonajassa 00:00.000 koska SQL."
   (let [alku (l/to-local-date-time alku)
         loppu (l/to-local-date-time loppu)]
     (letfn [(kuukaudet [kk]
               (when-not (t/after? kk loppu)
-                (lazy-seq (cons (fmap c/to-date (pvm/kuukauden-aikavali kk))
+                (lazy-seq (cons (fmap (comp c/to-date
+                                            #(pvm/suomen-aikavyohykkeessa
+                                              (t/date-time (t/year %)
+                                                           (t/month %)
+                                                           (t/day %)))) (pvm/kuukauden-aikavali kk))
                                 (kuukaudet (t/plus kk (t/months 1)))))))]
       (kuukaudet alku))))
 
@@ -191,3 +197,14 @@
                  (inc lkm))
                (assoc! nahdyt avain true)
                rivit)))))
+
+(defn indeksitiedot [{:keys [perusluku kyseessa-kk-vali?
+                             alkupvm kkn-indeksiarvo]}]
+  [:teksti (str (str "Indeksilaskennan perusluku: " (fmt/desimaaliluku perusluku 1))
+                (when kyseessa-kk-vali?
+                  (str ". Kuukauden " (pvm/kuukausi-ja-vuosi alkupvm)
+                       " " (:nimi kkn-indeksiarvo)
+                       " indeksiarvo"
+                       (if kkn-indeksiarvo
+                         (str ": " (fmt/desimaaliluku (:arvo kkn-indeksiarvo) 1))
+                         " puuttuu."))))])

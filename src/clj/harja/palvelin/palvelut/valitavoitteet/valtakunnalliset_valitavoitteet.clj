@@ -1,5 +1,5 @@
 (ns harja.palvelin.palvelut.valitavoitteet.valtakunnalliset-valitavoitteet
-  "Palvelu välitavoitteiden hakemiseksi ja tallentamiseksi."
+  "Palvelu valtakunnallisten välitavoitteiden hakemiseksi ja tallentamiseksi."
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.valitavoitteet :as q]
@@ -12,56 +12,11 @@
             [clj-time.coerce :as c]
             [clj-time.core :as t]))
 
-(defn hae-urakan-valitavoitteet
-  "Hakee urakan välitavoitteet sekä valtakunnalliset välitavoitteet"
-  [db user urakka-id]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
-  (into []
-        (map konv/alaviiva->rakenne)
-        (q/hae-urakan-valitavoitteet db urakka-id)))
-
 (defn hae-valtakunnalliset-valitavoitteet [db user]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-valitavoitteet user)
   (into []
         (map #(konv/string->keyword % :urakkatyyppi :tyyppi))
         (q/hae-valtakunnalliset-valitavoitteet db)))
-
-(defn merkitse-valmiiksi! [db user {:keys [urakka-id valitavoite-id valmis-pvm kommentti] :as tiedot}]
-  (log/info "merkitse valmiiksi: " tiedot)
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
-  (jdbc/with-db-transaction [c db]
-    (and (= 1 (q/merkitse-valmiiksi! db (konv/sql-date valmis-pvm) kommentti
-                                     (:id user) urakka-id valitavoite-id))
-         (hae-urakan-valitavoitteet db user urakka-id))))
-
-(defn- poista-poistetut-urakan-valitavoitteet [db user valitavoitteet urakka-id]
-  (doseq [poistettava (filter :poistettu valitavoitteet)]
-    (q/poista-urakan-valitavoite! db (:id user) urakka-id (:id poistettava))))
-
-(defn- luo-uudet-urakan-valitavoitteet [db user valitavoitteet urakka-id]
-  (doseq [{:keys [takaraja nimi]} (filter
-                                    #(and (< (:id %) 0)
-                                          (not (:poistettu %)))
-                                    valitavoitteet)]
-    (q/lisaa-urakan-valitavoite<! db {:urakka urakka-id
-                                      :takaraja (konv/sql-date takaraja)
-                                      :nimi nimi
-                                      :valtakunnallinen_valitavoite nil
-                                      :luoja (:id user)})))
-
-(defn- paivita-urakan-valitavoitteet [db user valitavoitteet urakka-id]
-  (doseq [{:keys [id takaraja nimi]} (filter #(and (> (:id %) 0)
-                                                   (not (:poistettu %))) valitavoitteet)]
-    (q/paivita-urakan-valitavoite! db nimi (konv/sql-date takaraja) (:id user) urakka-id id)))
-
-(defn tallenna-urakan-valitavoitteet! [db user {:keys [urakka-id valitavoitteet]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
-  (log/debug "Tallenna urakan välitavoitteet " (pr-str valitavoitteet))
-  (jdbc/with-db-transaction [db db]
-    (poista-poistetut-urakan-valitavoitteet db user valitavoitteet urakka-id)
-    (luo-uudet-urakan-valitavoitteet db user valitavoitteet urakka-id)
-    (paivita-urakan-valitavoitteet db user valitavoitteet urakka-id)
-    (hae-urakan-valitavoitteet db user urakka-id)))
 
 (defn- poista-poistetut-valtakunnalliset-valitavoitteet
   "Poistaa valtakunnallisen välitavoitteen.
@@ -149,7 +104,10 @@
 
 (defn kopioi-valtakunnallinen-toistuva-valitavoite-sopiviin-urakoihin
   "Luo välitavoitteen annettuihin urakoihin kertaalleen per urakkavuosi
-  jos urakka on annettua tyyppiä eikä se ole päättynyt."
+  jos urakka on annettua tyyppiä eikä se ole päättynyt.
+
+  Ei kopioi välitavoitetta jos takarajaksi muodostuu aika, joka ei ole
+  urakan voimassaoloaikana tai on ennen järjestelmän käyttöönottoa."
   [db user {:keys [takaraja-toistopaiva urakkatyyppi takaraja-toistokuukausi nimi] :as valitavoite}
    valtakunnallinen-valitavoite-id urakat]
   (let [linkitettavat-urakat (filter
@@ -161,16 +119,18 @@
                                                       (t/year (c/from-date (:alkupvm urakka))))
                                                  (inc (t/year (c/from-date (:loppupvm urakka)))))]
         (doseq [vuosi urakan-jaljella-olevat-vuodet]
-          (log/debug "Lisätään toistuva välitavoite " nimi " urakkaan " (:nimi urakka) " takarajalla "
-                     vuosi "-" takaraja-toistokuukausi "-" takaraja-toistopaiva)
-          (q/lisaa-urakan-valitavoite<! db {:urakka (:id urakka)
-                                            :takaraja (konv/sql-date (c/to-date (t/local-date
-                                                                                  vuosi
-                                                                                  takaraja-toistokuukausi
-                                                                                  takaraja-toistopaiva)))
-                                            :nimi nimi
-                                            :valtakunnallinen_valitavoite valtakunnallinen-valitavoite-id
-                                            :luoja (:id user)}))))))
+          (let [tarkka-takaraja (t/local-date vuosi takaraja-toistokuukausi takaraja-toistopaiva)]
+            (when (and (t/after? tarkka-takaraja pvm/kayttoonottto)
+                       (pvm/valissa? tarkka-takaraja
+                                     (c/from-date (:alkupvm urakka))
+                                     (c/from-date (:loppupvm urakka))))
+              (log/debug "Lisätään toistuva välitavoite " nimi " urakkaan " (:nimi urakka) " takarajalla "
+                         vuosi "-" takaraja-toistokuukausi "-" takaraja-toistopaiva)
+              (q/lisaa-urakan-valitavoite<! db {:urakka (:id urakka)
+                                                :takaraja (konv/sql-date (c/to-date tarkka-takaraja))
+                                                :nimi nimi
+                                                :valtakunnallinen_valitavoite valtakunnallinen-valitavoite-id
+                                                :luoja (:id user)}))))))))
 
 (defn- luo-uudet-valtakunnalliset-toistuvat-valitavoitteet
   "Luo uudet valtakunnalliset toistuvat välitavoitteet ja aloittaa niiden kopioinnin urakoihin."
@@ -254,32 +214,3 @@
       (luo-uudet-valtakunnalliset-valitavoitteet db user valitavoitteet urakat-kaynnissa-tai-tulossa)
       (paivita-valtakunnalliset-valitavoitteet db user valitavoitteet urakat-kaynnissa-tai-tulossa)
       (hae-valtakunnalliset-valitavoitteet db user))))
-
-(defrecord Valitavoitteet []
-  component/Lifecycle
-  (start [this]
-    (julkaise-palvelu (:http-palvelin this) :hae-urakan-valitavoitteet
-                      (fn [user urakka-id]
-                        (hae-urakan-valitavoitteet (:db this) user urakka-id)))
-    (julkaise-palvelu (:http-palvelin this) :hae-valtakunnalliset-valitavoitteet
-                      (fn [user _]
-                        (hae-valtakunnalliset-valitavoitteet (:db this) user)))
-    (julkaise-palvelu (:http-palvelin this) :merkitse-valitavoite-valmiiksi
-                      (fn [user tiedot]
-                        (merkitse-valmiiksi! (:db this) user tiedot)))
-    (julkaise-palvelu (:http-palvelin this) :tallenna-urakan-valitavoitteet
-                      (fn [user tiedot]
-                        (tallenna-urakan-valitavoitteet! (:db this) user tiedot)))
-    (julkaise-palvelu (:http-palvelin this) :tallenna-valtakunnalliset-valitavoitteet
-                      (fn [user tiedot]
-                        (tallenna-valtakunnalliset-valitavoitteet! (:db this) user tiedot)))
-    this)
-
-  (stop [this]
-    (poista-palvelut (:http-palvelin this)
-                     :hae-valtakunnalliset-valitavoitteet
-                     :hae-urakan-valitavoitteet
-                     :merkitse-valitavoite-valmiiksi
-                     :tallenna-urakan-valitavoitteet
-                     :tallenna-valtakunnalliset-valitavoitteet)
-    this))

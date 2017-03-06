@@ -1,4 +1,3 @@
-
 events {
   worker_connections  4096;  ## Default: 1024
 }
@@ -24,11 +23,7 @@ upstream activemq {
   server localhost:8161;
 }
 
-upstream laadunseuranta {
-  server localhost:3001;
-}
-
-server { 
+server {
     listen       {{ansible_eth0.ipv4.address}}:443 ssl;
     listen       localhost:443 ssl;
     server_name  {{ ansible_fqdn }};
@@ -40,16 +35,16 @@ server {
     ssl_certificate_key /etc/nginx/server.key;
     #ssl_client_certificate /etc/nginx/ca.crt;
     #ssl_verify_client optional;
-    
+
     access_log /var/log/nginx/access.log;
     error_log /var/log/nginx/error.log error;
 
     location ~ /wmts/(?<path>.*)$ {
     	proxy_set_header Host "karttakuva.maanmittauslaitos.fi:443";
-        proxy_set_header Authorization "Basic TGlpa2VubmV2aXJrb2U6VGFtbWlrdXUyMDE2";
+        proxy_set_header Authorization "Basic TGlpa2VubmV2aXJrb2U6Sm91bHVrdXUyMzEyMjAxNg==";
         proxy_pass   https://wmts/$path$is_args$args;
         proxy_cache  kartat;
-	
+
         proxy_cache_key      $request_uri;
         proxy_cache_valid    200 480m;
         proxy_cache_revalidate  on;
@@ -65,13 +60,13 @@ server {
         proxy_set_header OAM_USER_MOBILE "1234567890";
         proxy_pass   http://backend;
     }
-    
+
     location ~ /harja/api/(?<path>.*)$ {
       # buffering off tarvitaan kun halutaan striimata chunked responseja
       proxy_buffering off;
       proxy_pass http://backend/api/$path$is_args$args;
     }
-    
+
     location ~ /harja/apidoc/(?<path>.*)$ {
       proxy_set_header Host $host;
       proxy_pass http://backend/apidoc/$path$is_args$args;
@@ -93,19 +88,19 @@ server {
           proxy_pass https://testisonja/harja/tierekisteri/$path$is_args$args;
         }
 
-    location ~ ^/harja/laadunseuranta/(?<path>.*)$ {
-      proxy_pass_request_headers on;
-      proxy_pass_header OAM_REMOTE_USER;
-      proxy_pass_header OAM_GROUPS;
-      proxy_buffering off;
-      proxy_pass http://laadunseuranta/$path$is_args$args;
-    }
-
     location ~ /harja/(?<path>.*)$ {
       proxy_pass_request_headers on;
-      proxy_set_header OAM_REMOTE_USER jvh;
+      # jos haluat pakottaa JVH:n esim. LS-työkalua varten, kopioi ao. headerit suoraan
+      # ko. testipannulle ja aja service nginx restart:
+      #proxy_set_header OAM_REMOTE_USER jvh;
+      #proxy_set_header OAM_GROUPS "Jarjestelmavastaava";
+      #proxy_set_header OAM_ORGANIZATION "Liikennevirasto";
+      #proxy_set_header OAM_USER_FIRST_NAME "Jalmari";
+      #proxy_set_header OAM_USER_LAST_NAME "Jarjestelmavastaava";
+      #proxy_set_header OAM_USER_EMAIL "harja@example.com";
+      #proxy_set_header OAM_USER_MOBILE "1234567890";
       proxy_pass http://backend/$path$is_args$args;
     }
-    
+
 }
 }

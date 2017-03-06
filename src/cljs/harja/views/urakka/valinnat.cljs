@@ -3,7 +3,7 @@
   (:require [harja.tiedot.urakka :as u]
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
-            [harja.ui.kentat :refer [tee-kentta]]
+            [harja.ui.kentat :refer [tee-otsikollinen-kentta]]
             [harja.ui.yleiset :refer [livi-pudotusvalikko]]
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
@@ -12,10 +12,9 @@
             [harja.ui.komponentti :as komp]))
 
 (defn tienumero [tienumero-atom]
-  [:span.label-ja-kentta
-   [:span.kentan-otsikko "Tienumero"]
-   [:div.kentta
-    [tee-kentta {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true} tienumero-atom]]])
+  [tee-otsikollinen-kentta "Tienumero"
+   {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true}
+   tienumero-atom])
 
 (defn urakan-sopimus [ur]
   (valinnat/urakan-sopimus ur u/valittu-sopimusnumero u/valitse-sopimusnumero!))
@@ -97,7 +96,6 @@
             [:span.alasvedon-otsikko "Aikaväli"]
             [livi-pudotusvalikko {:valinta    @valinta
                                   :format-fn  first
-                                  :class      "suunnittelu-alasveto"
                                   :valitse-fn (partial valitse urakka)}
              aikavali-valinnat]]
            (when @vapaa-aikavali?

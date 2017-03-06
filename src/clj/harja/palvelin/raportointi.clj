@@ -15,6 +15,7 @@
             [harja.palvelin.raportointi.raportit.ilmoitus]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
             [harja.palvelin.raportointi.raportit.materiaali]
+            [harja.palvelin.raportointi.raportit.muutos-ja-lisatyot]
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain]
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain]
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain]
@@ -25,6 +26,7 @@
             [harja.palvelin.raportointi.raportit.laatupoikkeama]
             [harja.palvelin.raportointi.raportit.siltatarkastus]
             [harja.palvelin.raportointi.raportit.sanktio]
+            [harja.palvelin.raportointi.raportit.sanktioraportti-yllapito]
             [harja.palvelin.raportointi.raportit.soratietarkastus]
             [harja.palvelin.raportointi.raportit.valitavoiteraportti]
             [harja.palvelin.raportointi.raportit.ymparisto]
@@ -35,7 +37,12 @@
             [harja.palvelin.raportointi.raportit.toimenpidekilometrit]
             [harja.palvelin.raportointi.raportit.indeksitarkistus]
             [harja.domain.oikeudet :as oikeudet]
-            [new-reliquary.core :as nr]))
+            [harja.domain.raportointi :as raportti-domain]
+            [harja.domain.roolit :as roolit]
+            [new-reliquary.core :as nr]
+            [hiccup.core :refer [html]]
+            [harja.transit :as t]
+            [slingshot.slingshot :refer [throw+]]))
 
 (def ^:dynamic *raportin-suoritus*
   "Tämä bindataan raporttia suoritettaessa nykyiseen raporttikomponenttiin, jotta
@@ -84,7 +91,34 @@
                 (conj t ["Urakoita käynnissä" (count (urakat-q/hae-kaynnissa-olevat-urakat db))])
                 t))))
 
-(defrecord Raportointi [raportit]
+(defmacro max-n-samaan-aikaan [n lkm-atomi tulos-jos-ruuhkaa & body]
+  `(let [n# ~n
+         lkm# ~lkm-atomi]
+     (if (>= @lkm# n#)
+       ~tulos-jos-ruuhkaa
+       (try
+         (swap! lkm# inc)
+         ~@body
+         (finally
+           (swap! lkm# dec))))))
+
+(defn raportoinnissa-ruuhkaa-sivu [polku params]
+  {:status 200
+   :headers {"Content-Type" "text/html; charset=UTF-8"}
+   :body (html
+          [:html
+           [:head
+            [:title "Raportoinnissa ruuhkaa"]
+            [:script {:type "text/javascript"}
+             "setTimeout(function() { window.location = '"
+             (str polku "?_=raportointi&parametrit="
+                  (java.net.URLEncoder/encode (t/clj->transit params)))
+             "'; }, 5000);"]]
+           [:body
+            [:div "Raportoinnissa on nyt ruuhkaa. Yritetään kohta uudelleen. "
+             "Sivu latautuu automaattisesti uudelleen hetken kuluttua."]]])})
+
+(defrecord Raportointi [raportit ajossa-olevien-raporttien-lkm]
   component/Lifecycle
   (start [{db :db
            pdf-vienti :pdf-vienti
@@ -97,16 +131,20 @@
      pdf-vienti :raportointi
      (fn [kayttaja params]
        (let [raportti (suorita-raportti this kayttaja params)]
-         (pdf/muodosta-pdf (liita-suorituskontekstin-kuvaus db params raportti)))))
+         (if (= :raportoinnissa-ruuhkaa raportti)
+           (raportoinnissa-ruuhkaa-sivu "pdf" params)
+           (pdf/muodosta-pdf (liita-suorituskontekstin-kuvaus db params raportti))))))
 
     (when excel-vienti
       (excel-vienti/rekisteroi-excel-kasittelija!
        excel-vienti :raportointi
        (fn [workbook kayttaja params]
          (let [raportti (suorita-raportti this kayttaja params)]
-           (log/info "RAPORTTI MUODOSTETTU, TEHDÄÄN EXCEL " workbook)
-           (excel/muodosta-excel (liita-suorituskontekstin-kuvaus db params raportti)
-                                 workbook)))))
+           (if (= :raportoinnissa-ruuhkaa raportti)
+             (raportoinnissa-ruuhkaa-sivu "excel" params)
+             (do (log/info "RAPORTTI MUODOSTETTU, TEHDÄÄN EXCEL " workbook)
+                 (excel/muodosta-excel (liita-suorituskontekstin-kuvaus db params raportti)
+                                       workbook)))))))
     this)
 
   (stop [this]
@@ -129,30 +167,35 @@
                       db-replica :db-replica
                       :as this} kayttaja {:keys [nimi konteksti parametrit]
                                           :as suorituksen-tiedot}]
-    (nr/with-newrelic-transaction
-      "Raportin suoritus"
-      (str nimi)
-      #(when-let [suoritettava-raportti (hae-raportti this nimi)]
+    (max-n-samaan-aikaan
+     5 ajossa-olevien-raporttien-lkm :raportoinnissa-ruuhkaa
+     (nr/with-newrelic-transaction
+       "Raportin suoritus"
+       (str nimi)
+       #(when-let [suoritettava-raportti (hae-raportti this nimi)]
+         (when-not (= "urakka" konteksti)
+           (when-not (raportti-domain/voi-nahda-laajemman-kontekstin-raportit? kayttaja)
+             (throw+ (roolit/->EiOikeutta (str "Käyttäjällä " (:kayttajanimi kayttaja) " ei ole oikeutta laajennetun kontekstin urakoihin")))))
          (oikeudet/vaadi-lukuoikeus (oikeudet/raporttioikeudet (:kuvaus suoritettava-raportti))
-                                    kayttaja (when (= "urakka" konteksti)
-                                  (:urakka-id suorituksen-tiedot)))
-         (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
-                    " parametreilla " parametrit)
-         (binding [*raportin-suoritus* this]
-           ((:suorita suoritettava-raportti)
-            (if (or (nil? db-replica)
-                    (tarvitsee-write-tietokannan nimi))
-              db
-              db-replica)
-            kayttaja
-            (condp = konteksti
-              "urakka" (assoc parametrit
-                              :urakka-id (:urakka-id suorituksen-tiedot))
-              "hallintayksikko" (assoc parametrit
-                                       :hallintayksikko-id
-                                       (:hallintayksikko-id suorituksen-tiedot))
-              "koko maa" parametrit)))))))
+                                     kayttaja (when (= "urakka" konteksti)
+                                                (:urakka-id suorituksen-tiedot)))
+          (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
+                     " parametreilla " parametrit)
+          (binding [*raportin-suoritus* this]
+            ((:suorita suoritettava-raportti)
+             (if (or (nil? db-replica)
+                     (tarvitsee-write-tietokannan nimi))
+               db
+               db-replica)
+             kayttaja
+             (condp = konteksti
+               "urakka" (assoc parametrit
+                               :urakka-id (:urakka-id suorituksen-tiedot))
+               "hallintayksikko" (assoc parametrit
+                                        :hallintayksikko-id
+                                        (:hallintayksikko-id suorituksen-tiedot))
+               "koko maa" parametrit))))))))
 
 
 (defn luo-raportointi []
-  (->Raportointi (atom nil)))
+  (->Raportointi (atom nil) (atom 0)))

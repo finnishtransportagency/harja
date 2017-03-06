@@ -20,5 +20,3 @@
                                  false
                                  asioiden-ulkoasu/tr-ikoni
                                  asioiden-ulkoasu/tr-viiva)}])))
-
-(tarkkaile! "TR-alkuosoite kartalla: " tr-alkupiste-kartalla)

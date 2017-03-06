@@ -10,7 +10,7 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-01-01T00:00:00Z"
+    "lahetysaika": "2016-01-01T00:00:00+02:00"
   },
   "varustetoteumat": [
     {
@@ -19,8 +19,8 @@
           "tunniste": {
             "id": 3
           },
-          "alkanut": "2016-01-01T00:00:00Z",
-          "paattynyt": "2016-01-01T00:00:00Z",
+          "alkanut": "2016-01-01T00:00:00+02:00",
+          "paattynyt": "2016-01-01T00:00:00+02:00",
           "toteumatyyppi": "yksikkohintainen",
           "sopimusId": 1,
           "suorittaja": {
@@ -46,11 +46,11 @@
                   "sukunimi": "Käsittelijä"
                 }
               },
-              "lisatty": "2016-01-01T00:00:00Z",
+              "lisatty": "2016-01-01T00:00:00+02:00",
               "varuste": {
-                "tilannepvm": "2016-01-01T00:00:00Z",
+                "tilannepvm": "2016-01-01T00:00:00+02:00",
                 "tietue": {
-                  "alkupvm": "2016-01-01T00:00:00Z",
+                  "alkupvm": "2016-01-01T00:00:00+02:00",
                   "sijainti": {
                     "tie": {
                       "numero": 89,
@@ -92,7 +92,7 @@
                   "sukunimi": "Käsittelijä"
                 }
               },
-              "poistettu": "2016-01-01T00:00:00Z",
+              "poistettu": "2016-01-01T00:00:00+02:00",
               "tunniste": "HARJ951547",
               "tietolajitunniste": "tl505"
             }
@@ -107,12 +107,12 @@
                   "sukunimi": "Käsittelijä"
                 }
               },
-              "paivitetty": "2016-01-01T00:00:00Z",
+              "paivitetty": "2016-01-01T00:00:00+02:00",
               "varuste": {
                 "tunniste": "HARJ951547",
-                "tilannepvm": "2016-01-01T00:00:00Z",
+                "tilannepvm": "2016-01-01T00:00:00+02:00",
                 "tietue": {
-                  "alkupvm": "2016-01-01T00:00:00Z",
+                  "alkupvm": "2016-01-01T00:00:00+02:00",
                   "sijainti": {
                     "tie": {
                       "numero": 89,
@@ -154,11 +154,11 @@
                   "sukunimi": "Käsittelijä"
                 }
               },
-              "tarkastettu": "2016-01-01T00:00:00Z",
+              "tarkastettu": "2016-01-01T00:00:00+02:00",
               "varuste": {
                 "tunniste": "HARJ951547",
                 "tietue": {
-                  "alkupvm": "2016-01-01T00:00:00Z",
+                  "alkupvm": "2016-01-01T00:00:00+02:00",
                   "sijainti": {
                     "tie": {
                       "numero": 89,

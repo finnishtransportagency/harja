@@ -9,18 +9,12 @@
 
 ;; Testataan, että virheellisistä syötteistä tulee oikein poikkeukset
 
-(deftest tuntematon-elementti-heittaa-poikkeuksen
-  (is (thrown? IllegalArgumentException
-               (muodosta-pdf [:foo "jotain_"]))))
+(deftest tuntematon-elementti-palauttaa-nil
+  (is (nil? (muodosta-pdf [:foo "jotain_"]))))
 
-(deftest ei-vektori-assertoi
-  (is (thrown? AssertionError
-               (muodosta-pdf {:jotain :ihan-muuta}))))
-
-(deftest muoto-oikein
-  (is (thrown? AssertionError
-               (muodosta-pdf ["ei keyword" "jotain"]))))
-
+(deftest ei-vektori-palauttaa-itsensa
+  (is (= {:jotain :ihan-muuta} (muodosta-pdf {:jotain :ihan-muuta})))
+  (is (= ["ei keyword" "jotain"] (muodosta-pdf ["ei keyword" "jotain"]))))
 
 ;; Testataan eri tyyppisten elementtien muodostus perustasolla
 

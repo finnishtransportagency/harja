@@ -1,7 +1,50 @@
-<b>Nykyinen versio: 0.2.4</b>
-<b>Julkaistu: 27.7.2016</b>
+<b>Nykyinen versio: 1.0.12</b>  
+<b>Julkaistu: 23.2.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.13 Julkaistu: 23.2.2017:
+    - Päivystäjätietojen haun rajapinnat palauttavat ainoastaan voimassa olevat ja tulevat päivystykset, mikäli kutsuja ei rajaa hakua aikavälillä.
+- Versionumero: 1.0.12 Julkaistu: 9.2.2017:
+    - Tietolajien haulla voidaan hakea kaikki tietolajin kuvaukset kerralla. Muutospäivämäärää ei enää voi antaa parametrinä.
+- Versionumero: 1.0.11 Julkaistu: 7.2.2017:
+    - Ylläpitokohteen päivityksessä ei voi enää päivittää tienumeroa kohteelle tai alikohteelle
+- Versionumero: 1.0.10 Julkaistu: 30.1.2017:
+    - Lisää rajapinta ylläpitokohteen määrämuutosten hallintaan
+- Versionumero: 1.0.9 Julkaistu: 24.1.2017:
+    - Salli tarkastuksille suppeammat tiedot tarkastajasta.
+- Versionumero: 1.0.8 Julkaistu: 13.1.2017:
+    - Päällystysilmoituksen kirjauksesta poistettu mahdollisuus kirjata taloudellinen osa (tyot-avaimen sisältö). Päällystysilmoituksella ei ole enää taloudellista osaa, vaan nämä tiedot käsitellään jatkossa omalla tietomallilla, jolle tulee myöhemmin oma API.
+- Versionumero: 1.0.7 Julkaistu: 2.1.2017:
+    - Lisätty toteumien ja tarkastusten poisto
+- Versionumero: 1.0.6 Julkaistu: 29.12.2016:
+    - Työkoneiden reaaliaikaseurannan rajapintaan lisätty jyrät uutena työkonetyyppinä.
+    - Lisätty uusi rajapinta ylläpitokohteen tietojen päivittämiselle
+- Versionumero: 1.0.5 Julkaistu: 21.12.2016:
+    - Urakan yhteystietorajapintaan lisätty tieto urakan vastuu- ja varahenkilöistä 
+- Versionumero: 1.0.4 Julkaistu: 16.11.2016:
+    - Poistettu päällystysilmoitukselta omat aikataulutiedot. Jatkossa päällystysilmoituksen aloituspvm, kohteen valmistumispvm ja päällystyksen valmistumispvm ovat sama asia kuin ilmoitukseen kuuluvan ylläpitokohteen vastaavat tiedot.
+    - Lisätty päällystysilmoituksen kirjaukseen uusi kenttä "valmis-kasiteltavaksi" (true/false/null). Jos tässä kentässä on arvona true, asetetaan päällystysilmoitus valmiiksi tilaajan käsiteltäväksi (ellei jo ole käsiteltävänä tai käsitelty).
+- Versionumero: 1.0.3 Julkaistu: 2.11.2016:
+    - Päällystys-/tiemerkintäurakan aikataulun kirjaus jaettu kahteen eri urakkatyypin mukaiseen endpointtiin (ks. API-dokumentaatio).
+- Versionumero: 1.0.2 Julkaistu: 11.10.2016:
+    - Päällystys-/tiemerkintäurakan aikataulun kirjaukseen lisätty uusi kenttä: tiemerkinta-takaraja. Aiemmin tämä laskettin automaattisesti kahden viikon päähän siitä hetkestä kun tiemerkinnän saa aloittaa, nyt syötetään käsin.
+- Versionumero: 1.0.1 Julkaistu: 5.10.2016:
+    - Turvallisuuspoikkeaman kirjauksessa kentistä "aiheutuneet_vammat" ja "vahingoittuneet_ruumiinosat" tallennetaan vain ensimmäinen arvo. TURI vastaanottaa näistä vain yhden arvon, joten myös Harjaan kirjataan jatkossa vain yksi arvo (EU-standardin mukaisesti). Itse rajapinta pysyy samana kuin ennenkin, muutos on pelkästään sisäinen.
+    - Estetty turvallisuuspoikkeaman tapahtumapäivämäärän kirjaaminen tulevaisuuteen API:n kautta.
+- Versionumero: 1.0.0 Julkaistu: 1.10.2016:
+    - Ensimmäinen virallinen versio
+- Versionumero: 0.3.1. Julkaistu: 28.9.2016:
+    - Lisätty ping-palvelu, jolla voidaan tarkistaa yhteys
+- Versionumero: 0.3.0. Julkaistu: 14.9.2016:
+    - Päivietty aikataulun skeemaan uudet termit: alku -> aloitettu, loppu -> valmis.
+- Versionumero: 0.2.9. Julkaistu: 9.9.2016:
+    - Lisätty uusi palvelu ylläpidon päällystys-/tiemerkintäurakoiden aikataulutietojen päivittämiselle. Päällystyksen ja kohteen valmistumisen aikataulutiedot voidaan kirjata vain siihen urakkaan, johon ylläpitokohde kuuluu. Tiemerkinnän aikataulu voidaan päivittää siihen urakkaan, joka on merkitty kohteelle suorittajaksi. Kirjattaessa aikataulutiedot päällystysilmoitukselle kyseisen ilmoituksen tulee olla lisätty Harjaan, muuten tietoja ei päivitetä.
+    - Lisätty päällystysilmoituksen kirjaukseen aikataulutietojen vastaanotto.
+    - Lisätty laskenta päällystysilmoituksen muutoshinnalle.
+- Versionumero: 0.2.8. Julkaistu: 7.9.2016:
+    - Urakan ylläpitokohteiden haku palauttaa jatkossa myös aikataulutiedot.
+- Versionumero: 0.2.7. Julkaistu: 1.9.2016:
+    - Haettaessa tietolajin kuvaus Harjasta ei enää palauteta sellaisia ominaisuuksia, joilla ei ole järjestysnumeroa.
 - Versionumero: 0.2.6. Julkaistu: 11.8.2016:
     - Työkoneiden reaaliaikaseurantaan on lisätty uudet tehtävät ylläpidon ajoneuvoja varten: asfaltointi (pääasfaltointilaite), tiemerkintä, kuumennus (kuumennus-/remix-laitteet), sekoitus tai stabilointi (sekoitus- ja stabilointijyrsimet), turvalaite (TMA-laitteet)
 - Versionumero: 0.2.5. Julkaistu 8.8.2016:

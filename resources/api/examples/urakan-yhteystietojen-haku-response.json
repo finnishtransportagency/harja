@@ -1,0 +1,81 @@
+{
+  "urakka": {
+    "alueurakkanro": "1234",
+    "elynro": 1,
+    "elynimi": "Uusimaa",
+    "nimi": "testiurakka",
+    "sampoid": "1121",
+    "alkupvm": "2016-10-1T12:00:00+02:00",
+    "loppupvm": "2017-09-30T12:00:00+02:00",
+    "urakoitsija": {
+      "nimi": "Yritys OY",
+      "ytunnus": "1234567-8",
+      "katuosoite": "Testitie 1",
+      "postinumero": "20930"
+    },
+    "yhteyshenkilot": [
+      {
+        "yhteyshenkilo": {
+          "rooli": "Urakan vastuuhenkilö",
+          "nimi": "Urho Urakoitsija",
+          "puhelinnumero": "589883920",
+          "sahkoposti": "urho@exmaple.com",
+          "organisaatio": "testiorganisaatio",
+          "vastuuhenkilo": true
+        },
+        "yhteyshenkilo": {
+          "rooli": "Urakan vastuuhenkilö",
+          "nimi": "Venla Varahenkilö",
+          "puhelinnumero": "978340",
+          "sahkoposti": "venla@exmaple.com",
+          "organisaatio": "testiorganisaatio",
+          "varahenkilo": true
+        },
+        "yhteyshenkilo": {
+          "rooli": "ELY urakanvalvoja",
+          "nimi": "Eija Elyläinen",
+          "puhelinnumero": "345344534534",
+          "sahkoposti": "eija@exmaple.com",
+          "organisaatio": "testiorganisaatio",
+          "vastuuhenkilo": true
+        },
+        "yhteyshenkilo": {
+          "rooli": "ELY urakanvalvoja",
+          "nimi": "Ville Varahenkilö",
+          "puhelinnumero": "987345",
+          "sahkoposti": "ville@exmaple.com",
+          "organisaatio": "testiorganisaatio",
+          "varahenkilo": true
+        },
+        "yhteyshenkilo": {
+          "rooli": "Sillanvalvoja",
+          "nimi": "Seija Sillanvalvoja",
+          "puhelinnumero": "3453453453",
+          "sahkoposti": "seija@exmaple.com",
+          "organisaatio": "testiorganisaatio"
+        },
+        "yhteyshenkilo": {
+          "rooli": "Kunnossapitopäällikkö",
+          "nimi": "Kimmo Kunnossapitäjä",
+          "puhelinnumero": "3453453453",
+          "sahkoposti": "kimmo@exmaple.com",
+          "organisaatio": "testiorganisaatio"
+        },
+        "yhteyshenkilo": {
+          "rooli": "Kelikeskus",
+          "nimi": "Testikelikeskus",
+          "puhelinnumero": "3453453453",
+          "sahkoposti": "kelikeskus@exmaple.com",
+          "organisaatio": "testiorganisaatio"
+        },
+        "yhteyshenkilo": {
+          "rooli": "Tieliikennekeskus",
+          "nimi": "Testitieliikennekeskus",
+          "puhelinnumero": "3453453453",
+          "sahkoposti": "tieliikennekeskus@exmaple.com",
+          "organisaatio": "testiorganisaatio"
+        }
+      }
+    ]
+  }
+}

@@ -191,7 +191,7 @@
                                                     7
                                                     8
                                                     9}
-                      :otsikko                    "Pohjois-Pohjanmaa ja Kainuu, Yksikköhintaiset työt kuukausittain ajalta 01.10.2015 - 30.09.2016"
+                      :otsikko                    "Pohjois-Pohjanmaa, Yksikköhintaiset työt kuukausittain ajalta 01.10.2015 - 30.09.2016"
                       :sheet-nimi                 "Yksikköhintaiset työt kuukausittain"
                       :tyhja                      nil}
                      '({:leveys  10

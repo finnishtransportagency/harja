@@ -66,7 +66,7 @@
 (defonce valittu-laatupoikkeama-id (atom nil))
 
 (defn uusi-laatupoikkeama []
-  {:tekija (roolit/osapuoli @istunto/kayttaja (:id @nav/valittu-urakka))
+  {:tekija (roolit/osapuoli @istunto/kayttaja)
    :aika (pvm/nyt)})
 
 (defonce valittu-laatupoikkeama

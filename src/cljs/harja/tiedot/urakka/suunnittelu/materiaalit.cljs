@@ -21,7 +21,7 @@
   materiaalikoodit)
 
 
-(defn hae-materiaalit [urakka-id]
+(defn hae-urakan-materiaalit [urakka-id]
   (k/post! :hae-urakan-materiaalit urakka-id))
 
 (defn hae-urakassa-kaytetyt-materiaalit [urakka-id alku loppu sopimus-id]
@@ -42,23 +42,14 @@
                                             :toteumamateriaalit toteumamateriaalit
                                             :hoitokausi hoitokausi
                                             :sopimus sopimus-id}))
-
-(defn hae-urakan-materiaalit [urakka-id]
-  (let [ch (chan)]
-    (go (>! ch (into []
-                     (<! (k/post! :hae-urakan-materiaalit urakka-id)))))
-    ch))
  
 (defn tallenna [urakka-id sopimus-id hoitokausi hoitokaudet tuleville-valittu materiaalit]
   (log "TALLENNETAAN MATSKUT: " (pr-str materiaalit))
-  (let [ch (chan)]
-    (go (>! ch (into []
-                     (<! (k/post! :tallenna-urakan-materiaalit
-                                  {:urakka-id   urakka-id
-                                   :sopimus-id  sopimus-id
-                                   :hoitokausi  hoitokausi
-                                   :hoitokaudet hoitokaudet
-                                   :tulevat-hoitokaudet-mukana? tuleville-valittu
-                                   :materiaalit (filter #(or (:pohjavesialue %)
-                                                             (not (nil? (:maara %)))) materiaalit)})))))
-    ch))
+  (k/post! :tallenna-suunnitellut-materiaalit
+           {:urakka-id   urakka-id
+            :sopimus-id  sopimus-id
+            :hoitokausi  hoitokausi
+            :hoitokaudet hoitokaudet
+            :tulevat-hoitokaudet-mukana? tuleville-valittu
+            :materiaalit (filter #(or (:pohjavesialue %)
+                                      (not (nil? (:maara %)))) materiaalit)}))

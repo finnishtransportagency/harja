@@ -8,7 +8,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.views.toimenpidekoodit :as tp]
-            [harja.views.indeksit :as i]
+            [harja.views.hallinta.indeksit :as i]
+            [harja.views.hallinta.yhteydenpito :as yhteydenpito]
             [harja.views.hallinta.lampotilat :as lampotilat]
             [harja.views.hallinta.integraatioloki :as integraatioloki]
             [harja.views.hallinta.valtakunnalliset-valitavoitteet :as valitavoitteet]
@@ -49,8 +50,14 @@
      ^{:key "integraatioloki"}
      [integraatioloki/integraatioloki])
 
+   "Yhteydenpito"
+   :yhteydenpito
+   (when (oikeudet/hallinta-yhteydenpito)
+     ^{:key "yhteydenpito"}
+     [yhteydenpito/yhteydenpito])
+
    "API-järjestelmätunnukset"
    :api-jarjestelmatunnukset
    (when (oikeudet/hallinta-api-jarjestelmatunnukset)
      ^{:key "jarjestelmatunnukset"}
-     [api-jarjestelmatunnukset/api-jarjestelmatunnukset])])
+     [api-jarjestelmatunnukset/api-jarjestelmatunnukset-paakomponentti])])

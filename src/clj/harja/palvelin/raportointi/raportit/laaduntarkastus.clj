@@ -13,7 +13,7 @@
             [harja.domain.hoitoluokat :as hoitoluokat]
             [clojure.string :as str]))
 
-(defn hae-tarkastukset [db {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero
+(defn hae-tarkastukset [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero
                                    laadunalitus]}]
   (tarkastukset-q/hae-laaduntarkastukset db
                                          {:urakka urakka-id
@@ -21,14 +21,15 @@
                                           :alku alkupvm
                                           :loppu loppupvm
                                           :tienumero tienumero
-                                          :laadunalitus laadunalitus}))
+                                          :laadunalitus laadunalitus
+                                          :kayttaja_on_urakoitsija (roolit/urakoitsija? user)}))
 
 
 (defn talvihoitomittaus [{:keys [talvihoitoluokka lumimaara tasaisuus kitka lampotila]}]
   (str/join
    " | "
    (remove nil?
-           [(when talvihoitoluokka (str "Thlk: " (hoitoluokat/talvihoitoluokan-nimi talvihoitoluokka)))
+           [(when talvihoitoluokka (str "Thlk: " (hoitoluokat/talvihoitoluokan-nimi-str talvihoitoluokka)))
             (when lumimaara (str "Lumi: " (fmt/desimaaliluku lumimaara 1)))
             (when tasaisuus (str "Tasaisuus: " (fmt/desimaaliluku tasaisuus 1)))
             (when kitka (str "Kitka: " (fmt/desimaaliluku kitka)))
@@ -57,7 +58,7 @@
                         :default :koko-maa)
         naytettavat-rivit (map konv/alaviiva->rakenne
                                (hae-tarkastukset
-                                db {:konteksti konteksti
+                                db user {:konteksti konteksti
                                     :urakka-id urakka-id
                                     :hallintayksikko-id hallintayksikko-id
                                     :alkupvm alkupvm
@@ -107,14 +108,10 @@
            (get-in rivi [:tr :loppuosa])
            (get-in rivi [:tr :loppuetaisyys])
            (:tarkastaja rivi)
-           (str (cond
-                  (:id (:talvihoitomittaus rivi))
-                  (talvihoitomittaus (:talvihoitomittaus rivi))
-
-                  (:id (:soratiemittaus rivi))
-                  (soratiemittaus (:soratiemittaus rivi))
-
-                  :default ""))
+           (str (when (:id (:talvihoitomittaus rivi))
+                  (talvihoitomittaus (:talvihoitomittaus rivi)))
+                (when (:id (:soratiemittaus rivi))
+                  (soratiemittaus (:soratiemittaus rivi))))
            (let [vakiohavainnot (:vakiohavainnot (konv/array->vec rivi :vakiohavainnot))]
              (str (formatoi-vakiohavainnot vakiohavainnot)
                   (:havainnot rivi)))

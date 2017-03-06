@@ -13,7 +13,7 @@
 
 (defn luo-organisaatio [db sampo-id nimi y-tunnus katuosoite postinumero]
   (log/debug "Luodaan uusi organisaatio.")
-  (let [uusi-id (:id (organisaatiot/luo-organisaatio<! db sampo-id nimi y-tunnus katuosoite postinumero))]
+  (let [uusi-id (:id (organisaatiot/luo-organisaatio<! db sampo-id nimi y-tunnus katuosoite postinumero "urakoitsija"))]
     (log/debug "Uusi organisaatio id on:" uusi-id)
     uusi-id))
 

@@ -103,6 +103,7 @@ WHERE t4.taso = 4 AND
       t4.id NOT IN (SELECT DISTINCT tehtava
                     FROM muutoshintainen_tyo
                     WHERE urakka = :urakka AND yksikkohinta IS NOT NULL AND poistettu IS FALSE) AND
+      (t4.poistettu IS NOT TRUE OR t4.id IN (SELECT DISTINCT tehtava FROM yksikkohintainen_tyo WHERE urakka = :urakka)) AND
       t3.id IN (SELECT toimenpide
                 FROM toimenpideinstanssi
                 WHERE urakka = :urakka);
@@ -140,3 +141,9 @@ WHERE t4.taso = 4 AND
                 WHERE urakka = :urakka) AND
       t4.poistettu = FALSE
 ORDER BY t4.jarjestys;
+
+--name: hae-tuote-kolmostason-toimenpidekoodilla
+SELECT tpk2.id, tpk2.nimi
+FROM toimenpidekoodi tpk3
+  JOIN toimenpidekoodi tpk2 ON tpk2.id = tpk3.emo
+WHERE tpk3.id = :id;

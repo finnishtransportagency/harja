@@ -244,7 +244,15 @@ SELECT
   o.nimi   AS nimi,
   o.tyyppi AS tyyppi
 FROM organisaatio o
-WHERE o.nimi = :nimi
+WHERE lower(o.nimi) = lower(:nimi)
+
+-- name: hae-organisaatio-idlla
+-- Hakee organisaation id:n, nimen ja tyypin id:n perusteella.
+SELECT id,nimi,tyyppi FROM organisaatio WHERE id = :id
+
+-- name: hae-organisaatio-y-tunnuksella
+-- Hakee organisaation id:n, nimen ja tyypin Y-tunnuksen perusteella.
+SELECT id,nimi,tyyppi FROM organisaatio WHERE ytunnus = :y-tunnus
 
 -- name: hae-organisaatioita
 -- Käyttäjän organisaatiohaku nimen osalla.
@@ -279,7 +287,11 @@ WHERE (k.kayttajanimi ILIKE :hakutermi
        OR k.etunimi ILIKE  :hakutermi
        OR k.sukunimi ILIKE  :hakutermi
       OR (CONCAT(k.etunimi, ' ' , k.sukunimi) ILIKE :hakutermi))
-      AND k.poistettu = FALSE
+  AND (:organisaatiotyyppi::organisaatiotyyppi != 'urakoitsija'::organisaatiotyyppi
+       OR k.organisaatio = :organisaatioid
+       OR k.organisaatio IN (SELECT id FROM organisaatio WHERE tyyppi != 'urakoitsija')) -- urakoitsijalle ei kerrota toisten urakoitsijoiden henkilötietoja
+      AND k.poistettu IS NOT TRUE
+      AND k.jarjestelma IS NOT TRUE -- ei paljasteta järjestelmäkäyttäjien käyttäjätunnuksia
 LIMIT 11;
 
 -- name: hae-kayttaja-kayttajanimella
@@ -331,6 +343,17 @@ SELECT exists(
     WHERE u.id = :urakka_id AND
           k.id = :kayttaja_id);
 
+-- name: onko-kayttajalla-lisaoikeus-urakkaan
+-- Tarkistaa onko käyttäjälle annettu lisäoikeudet urakkaan
+SELECT exists(
+    SELECT klu.id
+    FROM kayttajan_lisaoikeudet_urakkaan klu
+      JOIN kayttaja k ON klu.kayttaja = k.id
+    WHERE urakka = :urakka
+          AND klu.kayttaja = :kayttaja
+          AND k.jarjestelma IS TRUE
+          AND k.poistettu IS NOT TRUE);
+
 -- name: onko-kayttaja-organisaatiossa
 -- Tarkistaa onko käyttäjä organisaatiossa
 SELECT exists(
@@ -362,3 +385,26 @@ SELECT id FROM organisaatio WHERE tyyppi='urakoitsija' AND ytunnus=:ytunnus
 -- name: hae-kayttajan-yleisin-urakkatyyppi
 -- single?: true
 SELECT tyyppi FROM urakka WHERE id IN (:idt) GROUP BY tyyppi ORDER BY count(id) DESC LIMIT 1;
+
+-- name: onko-jarjestelma?
+-- single?: true
+SELECT jarjestelma
+FROM kayttaja
+WHERE kayttajanimi = :kayttajanimi;
+
+-- name: liikenneviraston-jarjestelma?
+-- single?: true
+SELECT exists(
+    SELECT k.id
+    FROM kayttaja k
+      JOIN organisaatio o ON k.organisaatio = o.id
+    WHERE k.kayttajanimi = :kayttajanimi AND
+          k.jarjestelma IS TRUE AND
+          o.tyyppi = 'liikennevirasto');
+
+-- name: hae-yhteydenpidon-vastaanottajat
+SELECT
+  etunimi,
+  sukunimi,
+  sahkoposti
+FROM kayttaja;

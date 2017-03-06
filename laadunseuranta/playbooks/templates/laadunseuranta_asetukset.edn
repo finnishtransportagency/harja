@@ -1,8 +1,0 @@
-{:url-prefix "/laadunseuranta"
- :http-palvelin {:port 3001}
- :tietokanta {:palvelin          "localhost"
-              :tietokanta        "harja"
-              :portti            5432
-              :yhteyspoolin-koko 16
-              :kayttaja          "harja"
-              :salasana          "harja123"}}

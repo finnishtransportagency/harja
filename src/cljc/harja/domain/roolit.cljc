@@ -138,7 +138,7 @@ rooleista."
        false))))
 
 (defn jvh? [kayttaja]
-  (roolissa? kayttaja jarjestelmavastuuhenkilo))
+  (roolissa? kayttaja jarjestelmavastaava))
 
 (defn rooli-urakassa?
   "Tarkistaa onko käyttäjällä tietty rooli urakassa."
@@ -181,18 +181,6 @@ rooleista."
          (backlog/warn viesti)
          (throw+ (->EiOikeutta viesti))))))
 
-
-(defn tilaajan-kayttaja?
-  [kayttaja]
-  (roolissa? kayttaja
-             #{jarjestelmavastuuhenkilo
-               tilaajan-kayttaja
-               urakanvalvoja
-               hallintayksikon-vastuuhenkilo
-               liikennepaivystaja
-               tilaajan-asiantuntija
-               tilaajan-laadunvalvontakonsultti}))
-
 (defn voi-kirjata-toteumia?
   "Käyttäjä voi kirjata toteumia, jos hänellä on toteumien kirjauksen rooli
   tai jos hän on urakan urakoitsijaorganisaation pääkäyttäjä"
@@ -202,12 +190,6 @@ rooleista."
        (and (organisaation-urakka? kayttaja urakka-id)
             (roolissa? kayttaja urakoitsijan-paakayttaja)))))
 
-(defn voi-nahda-raportit?
-  "Käyttäjä voi nähdä raportit, jos hän on tilaajaorganisaation edustaja (ELY tai LIVI)"
-  #?(:cljs ([] (voi-nahda-raportit? @istunto/kayttaja)))
-  ([kayttaja]
-   (tilaajan-kayttaja? kayttaja)))
-
 (defn lukuoikeus-kaikkiin-urakoihin?
   "Käyttäjä voi nähdä kaikki urakat, jos hän on tilaajaorganisaation edustaja (ELY tai LIVI)"
   #?(:cljs ([] (lukuoikeus-kaikkiin-urakoihin? @istunto/kayttaja)))
@@ -215,14 +197,28 @@ rooleista."
    (roolissa? kayttaja jarjestelmavastaava)))
 
 (defn osapuoli
-  "Päättelee kuka osapuoli on kyseessä roolien perusteella.
+  "Päättelee kuka osapuoli on kyseessä käyttäjän organisaation perusteella.
    Palauttaa avainsanan :urakoitsija, :konsultti tai :tilaaja."
-  [kayttaja urakka-id]
+  [kayttaja]
   (case (get-in kayttaja [:organisaatio :tyyppi])
     "liikennevirasto" :tilaaja
     "urakoitsija" :urakoitsija
     ;; FIXME: laadunvalvontakonsultti ?
     :tilaaja))
+
+(defn tilaajan-kayttaja?
+  [kayttaja]
+  (= :tilaaja (osapuoli kayttaja)))
+
+(defn urakoitsija?
+  [kayttaja]
+  (= :urakoitsija (osapuoli kayttaja)))
+
+(defn voi-nahda-raportit?
+  "Käyttäjä voi nähdä raportit, jos hän on tilaajaorganisaation edustaja (ELY tai LIVI)"
+  #?(:cljs ([] (voi-nahda-raportit? @istunto/kayttaja)))
+  ([kayttaja]
+   (tilaajan-kayttaja? kayttaja)))
 
 ;;VAIN FRONTILLA
 

@@ -31,12 +31,10 @@
   [sampo db _ maksueranumero]
   (assert (not (nil? maksueranumero)) " maksueranumero ei saa olla nil.")
   (log/debug "Lähetetään maksuera Sampoon, jonka numero on: " maksueranumero)
-  (let [tulos (sampo/laheta-maksuera-sampoon sampo maksueranumero)
-        tilat (hae-maksueran-ja-kustannussuunnitelman-tilat db maksueranumero)]
-    (log/debug "Maksueran (numero: " maksueranumero " lähetyksen tulos:" tulos)
+  (sampo/laheta-maksuera-sampoon sampo maksueranumero)
+  (let [tilat (hae-maksueran-ja-kustannussuunnitelman-tilat db maksueranumero)]
     (log/debug "Maksuerän tilat" tilat)
     tilat))
-
 
 (defn hae-urakan-maksuerat
   "Palvelu, joka palauttaa urakan maksuerät."
@@ -45,7 +43,7 @@
   (log/debug "Haetaan maksuerät urakalle: " urakka-id)
   (let [summat (into {}
                      (map (juxt :tpi_id identity))
-                     (q/hae-urakan-maksueratiedot db urakka-id))
+                     (q/hae-urakan-maksuerien-summat db urakka-id))
         maksuerat (into []
                         (comp maksuera-xf
                               (map (fn [maksuera]

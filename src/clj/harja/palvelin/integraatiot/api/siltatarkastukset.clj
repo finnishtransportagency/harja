@@ -134,6 +134,17 @@
                    :virheet [{:koodi virheet/+tuntematon-silta+
                               :viesti (str "Siltaa ei löydy tunnuksella: " siltatunnus)}]}))))))
 
+(defn poista-siltatarkastus [{id :id} data kayttaja db]
+  (log/info "Kirjataan siltatarkastus käyttäjältä: " kayttaja)
+  (let [urakka-id (Integer/parseInt id)
+        ulkoiset-idt (-> data :tarkastusten-tunnisteet)
+        kayttaja-id (:id kayttaja)]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (let [poistettujen-maara  (silta-q/poista-siltatarkastukset-ulkoisilla-idlla-ja-luojalla! db kayttaja-id ulkoiset-idt urakka-id)]
+      (tee-kirjausvastauksen-body {:ilmoitukset (if (pos? poistettujen-maara)
+                                                  (str poistettujen-maara " tarkastusta poistettu onnistuneesti")
+                                                  "Vastaavia tarkastuksia ei loytynyt")}))))
+
 (defrecord Siltatarkastukset []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
@@ -144,6 +155,13 @@
                          json-skeemat/siltatarkastuksen-kirjaus json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
                            (lisaa-siltatarkastus parametrit data kayttaja db)))))
+    (julkaise-reitti
+      http :poista-siltatarkastus
+      (DELETE "/api/urakat/:id/tarkastus/siltatarkastus" request
+        (kasittele-kutsu db integraatioloki :poista-siltatarkastus request
+                         json-skeemat/siltatarkastuksen-poisto json-skeemat/kirjausvastaus
+                         (fn [parametrit data kayttaja db]
+                           (poista-siltatarkastus parametrit data kayttaja db)))))
     this)
 
   (stop [{http :http-palvelin :as this}]

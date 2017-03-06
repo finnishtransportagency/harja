@@ -1,7 +1,7 @@
 -- name: luo-organisaatio<!
 -- Luo uuden organisaation.
-INSERT INTO organisaatio (sampoid, nimi, ytunnus, katuosoite, postinumero)
-VALUES (:sampoid, :nimi, :ytunnus, :katuosoite, :postinumero);
+INSERT INTO organisaatio (sampoid, nimi, ytunnus, katuosoite, postinumero, tyyppi)
+VALUES (:sampoid, :nimi, :ytunnus, :katuosoite, :postinumero, :tyyppi::organisaatiotyyppi);
 
 -- name: paivita-organisaatio!
 -- Paivittaa organisaation.
@@ -68,3 +68,11 @@ WHERE elynumero = :elynumero;
 SELECT id
 FROM organisaatio
 WHERE sampo_ely_hash = :ely_hash;
+
+-- name: listaa-organisaatiot
+SELECT
+  id,
+  ytunnus,
+  nimi,
+  tyyppi
+FROM organisaatio;

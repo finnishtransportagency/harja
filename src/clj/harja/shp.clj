@@ -1,7 +1,12 @@
 (ns harja.shp
   "Shape filejen käsittelyn apureita"
-  (:import (org.geotools.data.shapefile ShapefileDataStore)
-           (org.geotools.map MapContent FeatureLayer))
+  (:import (org.geotools.data Query)
+   (org.geotools.data.shapefile ShapefileDataStore)
+           (org.geotools.map MapContent FeatureLayer)
+           (org.geotools.filter SortByImpl)
+
+           (org.opengis.filter.expression PropertyName)
+           (org.opengis.filter.sort SortBy SortOrder))
   (:require [clojure.java.io :as io]
             [clojure.string :as str]))
 
@@ -9,7 +14,7 @@
   (-> tiedosto
       io/as-url
       ShapefileDataStore.))
-      
+
 
 (defn featuret
   "Palauttaa shapefilen featuret listana."
@@ -19,6 +24,31 @@
       .getFeatures
       .toArray
       seq))
+
+(defn- to-iterator [feature-iterator]
+  (let [closed? (volatile! false)]
+    (reify java.util.Iterator
+      (hasNext [_]
+        (if @closed?
+          false
+          (let [more? (.hasNext feature-iterator)]
+            (when-not more?
+              (.close feature-iterator)
+              (vreset! closed? true))
+            more?)))
+      (next [_]
+        (when @closed?
+          (throw (IllegalStateException. "Feature iterator has already been closed")))
+        (.next feature-iterator)))))
+
+(defn featuret-lazy
+  ([shp] (featuret-lazy shp nil))
+  ([shp q]
+   (let [get-features (if q
+                        #(.getFeatures % q)
+                        #(.getFeatures %))]
+     (-> shp .getFeatureSource get-features .features
+         to-iterator iterator-seq))))
 
 (defn feature-propertyt
   "Muuntaa yhden featuren kaikki property mäpiksi, jossa avain on keyword."
@@ -31,6 +61,29 @@
                (keyword (.toLowerCase (.getLocalPart (.getName p))))
                (.getValue p))
              ps))))
+
+(defn- sort-by-query [shp kentta ascending?]
+  (let [sort-by (-> shp .getFilterFactory
+                    (.sort kentta (if ascending?
+                                    SortOrder/ASCENDING
+                                    SortOrder/DESCENDING)))]
+    (doto (Query.)
+      (.setSortBy (into-array SortBy
+                              [sort-by])))))
+
+(defn featuret-ryhmiteltyna
+  "Palauttaa shapefilen featuret sortattuna annetun avaimen mukaan"
+  [shp kentta-keyword callback]
+
+  ;; Tämä pitää tehdä clojuren puolella, jos featureita hakee
+  ;; geotoolsin Sort queryllä, häviää featureita, ks. HAR-4685
+
+  (let [ryhmiteltyna (group-by kentta-keyword
+                               (map feature-propertyt (featuret-lazy shp)))]
+    (doseq [avain (sort (keys ryhmiteltyna))]
+      (callback (get ryhmiteltyna avain)))))
+
+
 
 (defn suljettu-rengas [koordinaatit]
   (let [koordinaatit (vec koordinaatit)

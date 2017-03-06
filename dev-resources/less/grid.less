@@ -73,14 +73,13 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       .huomautukset {
         display: none;
         position: relative;
-	word-break: break-word;
+        word-break: break-word;
       }
       .varoitus {
         .virhe-tai-varoitus-grid(@varoitus, @valkoinen);
       }
       .virhe {
-        .virhe-tai-varoitus-grid(@vaara
-	, @valkoinen);
+        .virhe-tai-varoitus-grid(@vaara, @valkoinen);
       }
       .huomautus {
         .virhe-tai-varoitus-grid(@huomautus, @valkoinen);
@@ -93,11 +92,11 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     }
 
     td:hover {
-      .varoitukset,
-      .virheet,
-      .huomautukset {
-        display: block;
-      }
+      > .varoitukset,
+      > .virheet,
+      > .huomautukset {
+            display: block;
+       }
     }
 
     width: 100%;
@@ -187,17 +186,17 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     position: relative;
   }
   tr.parillinen {
-    background-color: @harmaa9;
+    background-color: @harmaa10;
   }
   tr.pariton {
-    background-color: @harmaa10;
+    background-color: @harmaa15;
   }
   tr.rivi-valittu {
     color: @valkoinen;
     background-color: @harmaa7;
   }
   tr.yhteenveto {
-    background-color: @harmaa10;
+    background-color: @harmaa15;
     border-bottom: 2px solid @harmaa7;
     border-top: 2px solid @harmaa7;
     font-weight: bold;
@@ -217,10 +216,10 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     height: @livitaulukon-rivi-korkeus;
     padding: @livi-taulukon-padding-muokatessa;
     &.parillinen {
-      background-color: @harmaa9;
+      background-color: @harmaa10;
     }
     &.pariton {
-      background-color: @harmaa11;
+      background-color: @harmaa13;
     }
     td {
       &.ei-muokattava {
@@ -273,11 +272,11 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 }
 
 .livi-grid .pvm-aika-kentta {
-  > table > tbody > tr > td:first-child  {
+  > table > tbody > tr > td:first-child {
     width: 66.6%;
   }
 
-  > table > tbody > tr > td:nth-child(2)  {
+  > table > tbody > tr > td:nth-child(2) {
     width: 33.3%;
   }
 }
@@ -303,6 +302,7 @@ tr.otsikko {
 .grid-header-keskita {
   text-align: center;
 }
+
 .grid-header-oikea {
   text-align: right;
 }
@@ -326,9 +326,45 @@ tr.otsikko {
   border-left: none !important;
   border-right: none !important;
 }
+
 .grid-reunus-vasen {
   border-right: none !important;
 }
+
 .grid-reunus-oikea {
   border-left: none !important;
+}
+
+// Tyylejä yksittäisille soluille
+
+.grid-solu-varoitus {
+  color: @vaara;
+}
+
+.grid-solu-ennustettu { // Kuvaa numerollista kenttää, jonka määrä on ennustettu
+  color: @huomautus;
+}
+
+// Tyylejä tilallisille riveille
+
+.tila-odottaa-vastausta {
+  color: @varoitus;
+}
+
+.tila-lahetetty {
+  color: @onnistuminen;
+}
+
+.tila-virhe {
+  color: @vaara;
+}
+
+span.ajax-loader-pisteet {
+  padding-left: 10px;
+}
+
+// Tyylejä solujen huomio-osalle
+
+.grid-huomio-varoitus {
+  color: @varoitus;
 }

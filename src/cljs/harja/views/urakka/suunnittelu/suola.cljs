@@ -15,12 +15,13 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.napit :as napit]
             [harja.ui.viesti :as viesti]
-            [harja.tiedot.indeksit :as i]
+            [harja.tiedot.hallinta.indeksit :as i]
             [harja.tiedot.navigaatio :as nav]
             [harja.views.kartta :as kartta]
             [harja.fmt :as fmt]
             [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.urakka :as urakka])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
@@ -40,14 +41,11 @@
      (or (empty? ss)
          (some :kaytossa ss)))))
 
-;; Suolasakko on urakkakohtainen ja samat tiedot jokaiselle hoitokaudelle.
-;; Käytetään selkeyden vuoksi ensimmäistä hoitokautta tietojen näyttämiseen ja muokkaamiseen
-(def urakan-ensimmainen-hoitokausi
-  (reaction-writable (first @u/valitun-urakan-hoitokaudet)))
-
+;; Suolasakko on urakkakohtainen ja samat tiedot pitää tallentaa jokaiselle hoitokaudelle.
+;; Näytetään vanhin hoitokauden tiedot
 (defn yhden-hoitokauden-rivit [rivit]
-  (when-let [eka-hk @urakan-ensimmainen-hoitokausi]
-    (filter #(= (:hoitokauden_alkuvuosi %) (pvm/vuosi (first eka-hk))) rivit)))
+  (when-not (empty? rivit)
+    [(first (sort-by :hoitokauden-alkuvuosi rivit))]))
 
 (defonce syotettavat-tiedot
   (reaction-writable
@@ -102,7 +100,7 @@
                                                  :talvisuolaraja (:talvisuolaraja (get % tunnus)))))
                                   ;; tälle alueelle ei olemassaolevaa rajaa, lisätään uusi rivi
                                   (conj pohjavesialue-talvisuola
-                                        {:hoitokauden_alkuvuosi (pvm/vuosi (first @urakan-ensimmainen-hoitokausi))
+                                        {:hoitokauden_alkuvuosi (pvm/vuosi (first (first @u/valitun-urakan-hoitokaudet)))
                                          :pohjavesialue tunnus
                                          :talvisuolaraja (:talvisuolaraja (get % tunnus))}))))
                             (vec pohjavesialue-talvisuola)
@@ -118,12 +116,20 @@
   []
   (let [urakka @nav/valittu-urakka
         saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))
-        pohjavesialueita-muokattu? (atom false)]
+        pohjavesialueita-muokattu? (atom false)
+        tarkista-sakko-ja-bonus (fn [_ {maara :maara vainsakkomaara :vainsakkomaara}]
+                                  (when (and (number? vainsakkomaara)
+                                             (number? maara)
+                                             (not= vainsakkomaara maara)
+                                             (not= 0 vainsakkomaara)
+                                             (not= 0 maara))
+                                    "Sakko/bonus ja sakko eivät saa olla eri arvoja. Käytetään Sakko/bonus arvoa."))]
 
     (fn []
       (let [{:keys [pohjavesialueet]} @suolasakot-ja-lampotilat
             tiedot (:suolasakko @syotettavat-tiedot)
-            lampotilat @lampotilat]
+            lampotilat @lampotilat
+            valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit :hoito))] ;suolasakot hoitospesifistä
         [:span.suolasakkolomake
          [:h5 "Urakan suolasakkotiedot hoitokautta kohden"]
          [lomake {:muokkaa! (fn [uusi]
@@ -147,9 +153,6 @@
             :nimi :talvisuolaraja
             :tyyppi :positiivinen-numero :palstoja 1
             :yksikko "kuivatonnia" :placeholder "Ei rajoitusta"}
-           {:otsikko "Suolasakko" :pakollinen? true
-            :muokattava? (constantly saa-muokata?) :nimi :maara
-            :tyyppi :positiivinen-numero :palstoja 1 :yksikko "€ / ylittävä tonni"}
            {:otsikko "Maksukuukausi" :nimi :maksukuukausi :tyyppi :valinta :palstoja 1
             :valinta-arvo first :pakollinen? true
             :muokattava? (constantly saa-muokata?)
@@ -158,14 +161,27 @@
                              (if (nil? %) yleiset/+valitse-kuukausi+ (second %)))
             :valinnat [[5 "Toukokuu"] [6 "Kesäkuu"] [7 "Heinäkuu"]
                        [8 "Elokuu"] [9 "Syyskuu"]]}
-           {:otsikko "Indeksi" :nimi :indeksi :tyyppi :valinta
-            :muokattava? (constantly saa-muokata?)
-            :valinta-nayta #(if (not saa-muokata?)
-                             ""
-                             (if (nil? %) "Ei indeksiä" (str %)))
-            :valinnat (conj @i/indeksien-nimet nil)
 
-            :palstoja 1}
+           {:otsikko     "Suola\u00ADsakko/bonus"
+            :muokattava? (constantly saa-muokata?) :nimi :maara
+            :tyyppi      :positiivinen-numero :palstoja 1 :yksikko "€ / ylittävä tonni"
+            :varoita     [tarkista-sakko-ja-bonus]
+            :vihje       "Jos urakassa käytössä sekä suolasakko että -bonus, täytä vain tämä"}
+           {:otsikko     "Vain suola\u00ADsakko"
+            :muokattava? (constantly saa-muokata?) :nimi :vainsakkomaara
+            :tyyppi      :positiivinen-numero :palstoja 1 :yksikko "€ / ylittävä tonni"
+            :varoita     [tarkista-sakko-ja-bonus]
+            :vihje       "Jos urakassa käytössä vain suolasakko eikä bonusta, täytä vain tämä"}
+
+           (when (urakka/indeksi-kaytossa?)
+             {:otsikko "Indeksi" :nimi :indeksi :tyyppi :valinta
+              :muokattava? (constantly saa-muokata?)
+              :valinta-nayta #(if (not saa-muokata?)
+                                ""
+                                (if (nil? %) "Ei indeksiä" (str %)))
+              :valinnat (conj valittavat-indeksit nil)
+
+              :palstoja 1})
 
            (when-not (empty? pohjavesialueet)
              {:otsikko "Pohjavesialueiden käyttörajat"

@@ -1,4 +1,5 @@
 (ns harja.palvelin.integraatiot.api.tyokalut.virheet
+  (:require [harja.domain.oikeudet :as oikeudet])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (def +invalidi-json+ ::invalidi-json)
@@ -18,7 +19,12 @@
 (def +paivystajia-ei-loydy+ "paivystajia-ei-loydy")
 (def +tuntematon-kayttaja-koodi+ "tuntematon-kayttaja")
 (def +tuntematon-yllapitokohde+ "tuntematon-yllapitokohde")
+(def +urakkaan-kuulumaton-yllapitokohde+ "urakkaan-kuulumaton-yllapitokohde")
 (def +viallinen-yllapitokohteen-tai-alikohteen-sijainti+ "viallinen-yllapitokohteen-tai-alikohteen-sijainti")
+(def +tietokanta-yhteys-poikki+ "tietokanta-yhteys-poikki")
+(def +tuntematon-kustannussuunnitelma+ "tuntematon-kustannussuunnitelma")
+(def +tuntematon-maksuera+ "tuntematon-maksuera")
+(def +lukittu-yllapitokohde+ "lukittu-yllapitokohde")
 
 ;; Virhetyypit
 (def +virheellinen-liite+ "virheellinen-liite")
@@ -32,8 +38,10 @@
 (def +virheellinen-sijainti+ "virheellinen-sijainti")
 (def +virheellinen-paivamaara+ "virheellinen-paivamaara")
 (def +sopimusta-ei-loydy+ "sopimusta ei löydy")
+(def +paallystysilmoitus-lukittu+ "paallystysilmoitus-kukittu")
 
 (defn heita-poikkeus [tyyppi virheet]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (throw+
     (let [virheet (if (map? virheet) [virheet] virheet)]
       {:type    tyyppi

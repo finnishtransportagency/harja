@@ -2,7 +2,6 @@
   (:require [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]
             [harja.geo :as geo]
-            [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet])
   (:use [slingshot.slingshot :only [throw+]]))
 
@@ -68,9 +67,14 @@
    :ei_tietoa 14})
 
 (defn vammat->numerot [vammat]
-  (mapv
-    (fn [vammat] [:vammanlaatu (vamma->numero vammat)])
-    vammat))
+  ;; todo: Turi tukee tällä hetkellä vain yhtä arvoa tässä.
+  ;; Lähetetään (satunnainen) ensimmäinen arvo ja myöhemmin toivottavasti kaikki.
+  (let [vamma (first vammat)]
+    [(when vamma
+       [:vammanlaatu (vamma->numero vamma)])])
+  #_(mapv
+      (fn [vammat] [:vammanlaatu (vamma->numero vammat)])
+      vammat))
 
 (def vahingoittunut-ruumiinosa->numero
   {:paan_alue 1
@@ -87,20 +91,61 @@
    :koko_keho 12
    :ei_tietoa 13})
 
-(defn vahingoittuneet-ruumiinosat->numerot [vammat]
-  (mapv
-    (fn [vammat] [:vahingoittunutruumiinosa (vahingoittunut-ruumiinosa->numero vammat)])
-    vammat))
+(defn vahingoittuneet-ruumiinosat->numerot [vahingoittuneet-ruumiinosat]
+  ;; todo: Turi tukee tällä hetkellä vain yhtä arvoa tässä.
+  ;; Lähetetään (satunnainen) ensimmäinen arvo ja myöhemmin toivottavasti kaikki.
+  (let [vahingoittunut-ruumiinosa (first vahingoittuneet-ruumiinosat)]
+    [(when vahingoittunut-ruumiinosa
+       [:vahingoittunutruumiinosa (vahingoittunut-ruumiinosa->numero vahingoittunut-ruumiinosa)])])
+  #_(mapv
+      (fn [vammat] [:vahingoittunutruumiinosa (vahingoittunut-ruumiinosa->numero vammat)])
+      vahingoittuneet-ruumiinosat))
 
 (def korjaava-toimenpide-tila->numero
   {:avoin 0
    :siirretty 1
-   :suljettu 2})
+   :suljettu 2
+   :toteutettu 2})
+
+(def turvallisuuspoikkeaman-tila
+  {:avoin "Avoin"
+   :kasitelty "Käsitelty"
+   :taydennetty "Täydennetty"
+   :suljettu "Suljettu"})
+
+(def urakan-vaylamuoto
+  {:tie "Tie"
+   :rautatie "Rautatie"
+   :vesi "Vesiväylä"})
+
+(defn urakan-tyyppi [tyyppi]
+  (if (= tyyppi "hoito")
+    "hoito"
+    "ylläpito"))
+
+(defn rakenna-lahde [data]
+  [:lahde
+   [:lahdejarjestelma "Harja"]
+   [:lahdeid (:id data)]])
 
 (defn rakenna-tapahtumatiedot [data]
   (into [:tapahtumantiedot]
         (concat
+          (when-let [turi-id (:turi-id data)]
+            [[:id turi-id]])
+          [[:sampohankenimi (:urakka-nimi data)]]
+          [[:sampohankeid (:urakka-sampoid data)]]
+          [[:tilaajanvastuuhenkilokayttajatunnus (:tilaajanvastuuhenkilo-kayttajatunnus data)]]
+          [[:tilaajanvastuuhenkiloetunimi (:tilaajanvastuuhenkilo-etunimi data)]]
+          [[:tilaajanvastuuhenkilosukunimi (:tilaajanvastuuhenkilo-sukunimi data)]]
+          [[:tilaajanvastuuhenkilosposti (:tilaajanvastuuhenkilo-sposti data)]]
+          [[:sampourakkanimi (:hanke-nimi data)]]
           [[:sampourakkaid (:urakka-sampoid data)]]
+          [[:urakanpaattymispvm (xml/formatoi-paivamaara (:urakka-loppupvm data))]]
+          [[:urakkavaylamuoto (urakan-vaylamuoto (:vaylamuoto data))]]
+          [[:urakkatyyppi (urakan-tyyppi (:urakka-tyyppi data))]]
+          (when (:urakka-ely data) [[:elyalue (str (:urakka-ely data) " ELY")]])
+          [[:alueurakkanro (:alueurakkanro data)]]
           (poikkeamatyypit->numerot (:tyyppi data))
           [[:tapahtumapvm (xml/formatoi-paivamaara (:tapahtunut data))]
            [:tapahtumaaika (xml/formatoi-kellonaika (:tapahtunut data))]
@@ -123,7 +168,8 @@
         (concat
           [[:seuraukset (:seuraukset data)]
            (when (ammatti->numero (:tyontekijanammatti data)) [:ammatti (ammatti->numero (:tyontekijanammatti data))])
-           [:ammattimuutarkenne (:tyontekijanammattimuu data)]]
+           (when-let [ammatti-muu (:tyontekijanammattimuu data)]
+             [:ammattimuutarkenne ammatti-muu])]
           (vammat->numerot (:vammat data))
           (vahingoittuneet-ruumiinosat->numerot (:vahingoittuneetruumiinosat data))
           [[:sairauspoissaolot (or (:sairauspoissaolopaivat data) 0)]
@@ -133,13 +179,18 @@
 (defn rakenna-tapahtumakasittely [data]
   [:tapahtumankasittely
    [:otsikko (:tapahtuman-otsikko data)]
-   [:luontipvm (xml/formatoi-paivamaara (:luotu data))]])
+   [:luontipvm (xml/formatoi-paivamaara (:luotu data))]
+   [:tila (turvallisuuspoikkeaman-tila (:tila data))]])
 
 (defn rakenna-poikkeamatoimenpide [data]
   (mapv (fn [toimenpide]
           [:poikkeamatoimenpide
            [:otsikko (:otsikko toimenpide)]
            [:kuvaus (:kuvaus toimenpide)]
+           [:vastuuhenkilokayttajatunnus (:vastuuhenkilokayttajatunnus toimenpide)]
+           [:vastuuhenkiloetunimi (:vastuuhenkiloetunimi toimenpide)]
+           [:vastuuhenkilosukunimi (:vastuuhenkilosukunimi toimenpide)]
+           [:vastuuhenkilosposti (:vastuuhenkilosposti toimenpide)]
            [:toteuttaja (:toteuttaja toimenpide)]
            [:tila (korjaava-toimenpide-tila->numero (:tila toimenpide))]])
         (:korjaavattoimenpiteet data)))
@@ -148,13 +199,14 @@
   (mapv (fn [liite]
           [:poikkeamaliite
            [:tiedostonimi (:nimi liite)]
-           [:tiedosto (:sisalto liite)]])
+           [:tiedosto (String. (liitteet/enkoodaa-base64 (:data liite)))]])
         (:liitteet data)))
 
 (defn muodosta-viesti [data]
   (into [:imp:poikkeama {:xmlns:imp "http://restimport.xml.turi.oikeatoliot.fi"}]
         (concat
-          [(rakenna-tapahtumatiedot data)
+          [(rakenna-lahde data)
+           (rakenna-tapahtumatiedot data)
            (rakenna-tapahtumapaikka data)
            (rakenna-syyt-ja-seuraukset data)
            (rakenna-tapahtumakasittely data)]
@@ -165,7 +217,10 @@
   (let [sisalto (muodosta-viesti data)
         xml (xml/tee-xml-sanoma sisalto)]
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "poikkeama-rest.xsd" xml)]
-      (let [virheviesti (format "Turvallisuuspoikkeamaa ei voida lähettää. XML ei ole validia. Validointivirheet: %s " virheet)]
+      (let [virheviesti (format "Turvallisuuspoikkeaman TURI-lähetyksen XML ei ole validia.\n
+                                 Validointivirheet: %s\n
+                                 Muodostettu sanoma:\n
+                                 %s" virheet xml)]
         (log/error virheviesti)
         (throw+ {:type :invalidi-turvallisuuspoikkeama-xml
                  :error virheviesti}))

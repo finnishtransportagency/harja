@@ -11,11 +11,12 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakat :as urakat]
             [harja.atom :refer-macros [reaction<!]]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.komponentti :as komp]
+            [harja.tiedot.istunto :as istunto])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
-
 
 (def hakutermi (atom ""))
 
@@ -29,12 +30,12 @@
 (defn nayta-organisaation-yhteystiedot
   [o]
   (modal/nayta! {:otsikko (:nimi o)
-                 :luokka  "yhteystieto"
-                 :footer  [:span
-                           [:button.nappi-toissijainen {:type     "button"
-                                                        :on-click #(do (.preventDefault %)
-                                                                       (modal/piilota!))}
-                            "Sulje"]]}
+                 :luokka "yhteystieto"
+                 :footer [:span
+                          [:button.nappi-toissijainen {:type "button"
+                                                       :on-click #(do (.preventDefault %)
+                                                                      (modal/piilota!))}
+                           "Sulje"]]}
                 [:div.kayttajan-tiedot
                  [tietoja {}
                   "Org. tyyppi:" (name (:tyyppi o))
@@ -64,7 +65,7 @@
   [o]
   (if (= :urakoitsija (:tyyppi o))
     (nayta-organisaation-yhteystiedot o)
-    (nav/valitse-hallintayksikko o)))
+    (nav/valitse-hallintayksikko! o)))
 
 (defn- kayttajan-tiedot [{org :organisaatio
                           email :sahkoposti
@@ -75,10 +76,10 @@
   (let [org-nimi (:nimi org)
         org-tyyppi (:tyyppi org)
         uniikit-roolit #(when-not (empty? %)
-                          (str/join ", "
-                                    (into #{}
-                                          (mapcat (partial keep oikeudet/roolin-kuvaus)
-                                                  (vals %)))))]
+                         (str/join ", "
+                                   (into #{}
+                                         (mapcat (partial keep oikeudet/roolin-kuvaus)
+                                                 (vals %)))))]
     [:div.kayttajan-tiedot
      [kaksi-palstaa-otsikkoja-ja-arvoja {}
       "Organisaatio:" [:a.klikattava {:on-click #(do (.preventDefault %)
@@ -99,12 +100,12 @@
 (defn nayta-kayttaja
   [k]
   (modal/nayta! {:otsikko (str (:etunimi k) " " (:sukunimi k))
-                 :luokka  "yhteystieto"
-                 :footer  [:span
-                           [:button.nappi-toissijainen {:type     "button"
-                                                        :on-click #(do (.preventDefault %)
-                                                                       (modal/piilota!))}
-                            "Sulje"]]}
+                 :luokka "yhteystieto"
+                 :footer [:span
+                          [:button.nappi-toissijainen {:type "button"
+                                                       :on-click #(do (.preventDefault %)
+                                                                      (modal/piilota!))}
+                           "Sulje"]]}
 
                 (kayttajan-tiedot k)))
 
@@ -134,29 +135,33 @@
   (when-let [ryhmitellyt (vals (group-by :tyyppi tulokset))]
     (some #(> (count %) 10) ryhmitellyt)))
 
-(defn haku
-  []
-  (fn []
-    (let [tulokset @hakutulokset
-          termi @hakutermi]
+(defn haku []
+  (komp/luo
+    (komp/klikattu-ulkopuolelle #(do (reset! hakutulokset nil)
+                                     (reset! hakutermi nil)))
+    (fn []
       [:form.navbar-form.navbar-left {:role "search"}
        [:div.form-group.haku
-        [suodatettu-lista {:format         :hakusanat
-                           :haku           :hakusanat
-                           :term           (r/wrap termi (fn [uusi-termi]
-                                                           (reset! hakutermi
-                                                                   (str/triml (str/replace uusi-termi #"\s{2,}" " ")))))
-                           :ryhmittely     :tyyppi
+        [suodatettu-lista {:format :hakusanat
+                           :haku :hakusanat
+                           :term (r/wrap @hakutermi
+                                         (fn [uusi-termi]
+                                           (reset! hakutermi
+                                                   (str/triml (str/replace uusi-termi #"\s{2,}" " ")))))
+                           :ryhmittely :tyyppi
                            :ryhman-otsikko #(case %
-                                             :urakka "Urakat"
-                                             :kayttaja "Käyttäjät"
-                                             :organisaatio "Organisaatiot"
-                                             "Muut")
-                           :on-select      #(valitse-hakutulos %)
-                           :aputeksti      "Hae Harjasta"
-                           :tunniste       #((juxt :tyyppi :id) %)
-                           :vinkki         #(if (liikaa-osumia? tulokset)
-                                             "Paljon osumia, tarkenna hakua..."
-                                             (when (= [] tulokset)
-                                               (str "Ei tuloksia haulla " termi)))}
-         tulokset]]])))
+                                              :urakka "Urakat"
+                                              :kayttaja "Käyttäjät"
+                                              :organisaatio "Organisaatiot"
+                                              "Muut")
+                           :on-select #(valitse-hakutulos %)
+                           :aputeksti "Hae Harjasta"
+                           :tunniste #((juxt :tyyppi :id) %)
+                           :vinkki #(when-not (empty? @hakutermi)
+                                      (if (liikaa-osumia? @hakutulokset)
+                                        "Paljon osumia, tarkenna hakua..."
+                                        (if (nil? (:organisaatio @istunto/kayttaja))
+                                          "Käyttäjän organisaatiota ei tunnistettu, hakutoiminto ei käytössä. Ota yhteys pääkäyttäjään."
+                                          (when (= [] @hakutulokset)
+                                           (str "Ei tuloksia haulla " @hakutermi)))))}
+         @hakutulokset]]])))

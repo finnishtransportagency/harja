@@ -13,7 +13,8 @@
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
-            [harja.palvelin.palvelut.raportit :as raportit]))
+            [harja.palvelin.palvelut.raportit :as raportit]
+            [harja.palvelin.raportointi.testiapurit :as apurit]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -48,71 +49,41 @@
                                  :konteksti  "urakka"
                                  :urakka-id  (hae-oulun-alueurakan-2005-2012-id)
                                  :parametrit {:alkupvm  (c/to-date (t/local-date 2005 10 10))
-                                              :loppupvm (c/to-date (t/local-date 2010 10 10))}})]
+                                              :loppupvm (c/to-date (t/local-date 2010 10 10))}})
+        taulukko (apurit/taulukko-otsikolla vastaus "Oulun alueurakka 2005-2012, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010")
+        tyhja-raporttisolu? (fn [solu]
+                              )]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi        "Yksikköhintaiset työt tehtävittäin"
-                     :orientaatio :landscape}
-                    [:taulukko
-                     {:oikealle-tasattavat-kentat #{2
-                                                    5
-                                                    6}
-                      :otsikko                    "Oulun alueurakka 2005-2012, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010"
-                      :sheet-nimi                 "Yksikköhintaiset työt tehtävittäin"
-                      :tyhja                      nil
-                      :viimeinen-rivi-yhteenveto? true}
-                     '({:leveys  25
-                        :otsikko "Tehtävä"}
-                        {:leveys  5
-                         :otsikko "Yks."}
-                        {:fmt     :raha
-                         :leveys  10
-                         :otsikko "Yksikkö­hinta €"}
-                        {:fmt     :numero
-                         :leveys  10
-                         :otsikko "Suunniteltu määrä hoitokaudella"}
-                        {:fmt     :numero
-                         :leveys  10
-                         :otsikko "Toteutunut määrä"}
-                        {:leveys  15
-                         :otsikko "Suunnitellut kustannukset hoitokaudella €"
-                         :fmt :raha}
-                        {:leveys  15
-                         :otsikko "Toteutuneet kustannukset €"
-                         :fmt :raha})
-                     '(("Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen"
-                         [:info
-                          ""]
-                         [:info
-                          ""]
-                         [:info
-                          "Ei suunnitelmaa"]
-                         667M
-                         [:info
-                          ""]
-                         [:info
-                          ""])
-                        ("Pensaiden täydennysistutus"
-                          [:info
-                           ""]
-                          [:info
-                           ""]
-                          [:info
-                           "Ei suunnitelmaa"]
-                          668M
-                          [:info
-                           ""]
-                          [:info
-                           ""])
-                        ["Yhteensä"
-                         nil
-                         nil
-                         nil
-                         nil
-                         0
-                         0])]
-                    [:teksti
-                     "Suunnittelutiedot näytetään vain haettaessa urakan tiedot hoitokaudelta tai sen osalta."]]))))
+    (apurit/tarkista-raportti vastaus "Yksikköhintaiset työt tehtävittäin")
+    (apurit/tarkista-taulukko-rivit
+      taulukko
+      (fn [[tehtava yksikko hinta suunniteltu-maara toteutunut-maara suunnitellut-kustannukset
+            toteutuneet-kustannukset]]
+        (and (string? (apurit/raporttisolun-arvo tehtava))
+             (apurit/tyhja-raporttisolu? yksikko)
+             (apurit/tyhja-raporttisolu? hinta)
+             (and (apurit/raporttisolu? suunniteltu-maara) (string? (apurit/raporttisolun-arvo suunniteltu-maara)))
+             (number? toteutunut-maara)
+             (apurit/tyhja-raporttisolu? suunnitellut-kustannukset)
+             (apurit/tyhja-raporttisolu? toteutuneet-kustannukset)))
+      (fn [[tehtava yksikko hinta suunniteltu-maara toteutunut-maara suunnitellut-kustannukset
+            toteutuneet-kustannukset]]
+        (and (string? (apurit/raporttisolun-arvo tehtava))
+             (apurit/tyhja-raporttisolu? yksikko)
+             (apurit/tyhja-raporttisolu? hinta)
+             (and (apurit/raporttisolu? suunniteltu-maara) (string? (apurit/raporttisolun-arvo suunniteltu-maara)))
+             (number? toteutunut-maara)
+             (apurit/tyhja-raporttisolu? suunnitellut-kustannukset)
+             (apurit/tyhja-raporttisolu? toteutuneet-kustannukset)))
+      (fn [rivi]
+        (let [yhteenveto-otsikko (first rivi)
+              suunnitellut-yhteensa (nth rivi 5)
+              toteutuneet-yhteensa (last rivi)
+              loput (take 4 (rest rivi))]
+          (and (string? yhteenveto-otsikko)
+               (number? suunnitellut-yhteensa)
+               (number? toteutuneet-yhteensa)
+               (every? nil? loput)))))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -130,7 +101,7 @@
                      :orientaatio :landscape}
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{}
-                      :otsikko                    "Pohjois-Pohjanmaa ja Kainuu, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010"
+                      :otsikko                    "Pohjois-Pohjanmaa, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010"
                       :sheet-nimi                 "Yksikköhintaiset työt tehtävittäin"
                       :tyhja                      nil
                       :viimeinen-rivi-yhteenveto? true}

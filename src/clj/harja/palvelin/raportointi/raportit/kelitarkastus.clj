@@ -9,43 +9,49 @@
             [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.konversio :as konv]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+            [harja.domain.hoitoluokat :as hoitoluokat]))
 
-(defn hae-tarkastukset-urakalle [db {:keys [urakka-id alkupvm loppupvm tienumero]}]
+(defn hae-tarkastukset-urakalle [db user {:keys [urakka-id alkupvm loppupvm tienumero]}]
   (tarkastukset-q/hae-urakan-kelitarkastukset-liitteineen-raportille db
                                                                      urakka-id
                                                                      alkupvm
                                                                      loppupvm
                                                                      (not (nil? tienumero))
-                                                                     tienumero))
+                                                                     tienumero
+                                                                     (roolit/urakoitsija? user)))
 
-(defn hae-tarkastukset-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm tienumero urakkatyyppi]}]
+(defn hae-tarkastukset-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm tienumero urakkatyyppi]}]
   (tarkastukset-q/hae-hallintayksikon-kelitarkastukset-liitteineen-raportille db
                                                                               hallintayksikko-id
                                                                               (when urakkatyyppi (name urakkatyyppi))
                                                                               alkupvm
                                                                               loppupvm
                                                                               (not (nil? tienumero))
-                                                                              tienumero))
+                                                                              tienumero
+                                                                              (roolit/urakoitsija? user)))
 
-(defn hae-tarkastukset-koko-maalle [db {:keys [alkupvm loppupvm tienumero urakkatyyppi]}]
+(defn hae-tarkastukset-koko-maalle [db user {:keys [alkupvm loppupvm tienumero urakkatyyppi]}]
   (tarkastukset-q/hae-koko-maan-kelitarkastukset-liitteineen-raportille db
                                                                         (when urakkatyyppi (name urakkatyyppi))
                                                                         alkupvm
                                                                         loppupvm
                                                                         (not (nil? tienumero))
-                                                                        tienumero))
+                                                                        tienumero
+                                                                        (roolit/urakoitsija? user)))
 
-(defn hae-tarkastukset [db {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm tienumero urakkatyyppi]}]
+(defn hae-tarkastukset [db user {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm tienumero urakkatyyppi]}]
   (case konteksti
     :urakka
     (hae-tarkastukset-urakalle db
+                               user
                                {:urakka-id urakka-id
                                 :alkupvm   alkupvm
                                 :loppupvm  loppupvm
                                 :tienumero tienumero})
     :hallintayksikko
     (hae-tarkastukset-hallintayksikolle db
+                                        user
                                         {:hallintayksikko-id hallintayksikko-id
                                          :alkupvm alkupvm
                                          :loppupvm loppupvm
@@ -53,6 +59,7 @@
                                          :urakkatyyppi urakkatyyppi})
     :koko-maa
     (hae-tarkastukset-koko-maalle db
+                                  user
                                   {:alkupvm alkupvm
                                    :loppupvm loppupvm
                                    :tienumero tienumero
@@ -63,7 +70,8 @@
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         naytettavat-rivit (map konv/alaviiva->rakenne
-                               (hae-tarkastukset db {:konteksti konteksti
+                               (hae-tarkastukset db user
+                                                 {:konteksti konteksti
                                                      :urakka-id urakka-id
                                                      :hallintayksikko-id hallintayksikko-id
                                                      :alkupvm alkupvm
@@ -85,7 +93,7 @@
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")
                  :sheet-nimi raportin-nimi}
-      [{:leveys 10 :otsikko "Päivämäärä"}
+      [{:leveys 10 :otsikko "Päivämäärä" :fmt :pvm}
        {:leveys 5 :otsikko "Klo"}
        {:leveys 5 :otsikko "Tie"}
        {:leveys 5 :otsikko "Aosa"}
@@ -115,9 +123,9 @@
            (get-in rivi [:tr :alkuosa])
            (get-in rivi [:tr :alkuetaisyys])
            (get-in rivi [:tr :loppuosa])
-           (get-in rivi [:tr :loppyetaisyys])
+           (get-in rivi [:tr :loppuetaisyys])
            (:ajosuunta rivi)
-           (:talvihoitoluokka rivi)
+           (hoitoluokat/talvihoitoluokan-nimi-str (:talvihoitoluokka rivi))
            (:lumimaara rivi)
            (:tasaisuus rivi)
            (:kitka rivi)

@@ -1,7 +1,7 @@
 (ns harja.palvelin.komponentit.excel-vienti
   "Excel-viennin komponentti, tarjoaa reitin, jonka kautta Excel:n voi ladata selaimelle.
   Lisäksi tänne voi muut komponentit rekisteröidä Excel:n luontimekanismin.
-  Tämä komponentti ei ota kantaa Excel:n sisältöön, se vain antaa excel workbook kahvan 
+  Tämä komponentti ei ota kantaa Excel:n sisältöön, se vain antaa excel workbook kahvan
   rekisteröidylle funktiolle, joka mutatoi sitä haluamallaan tavalla."
   (:require [com.stuartsierra.component :as component]
             [dk.ative.docjure.spreadsheet :as excel]
@@ -63,7 +63,8 @@ workbookin, käyttäjän sekä HTTP request parametrit mäppeinä ja palauttaa t
                                      query-params :params
                                      :as req}]
   (let [tyyppi (keyword (get query-params "_"))
-        params (vienti/lue-body-parametrit body)
+        params (or (vienti/lue-get-parametrit req)
+                   (vienti/lue-body-parametrit body))
         kasittelija (get kasittelijat tyyppi)]
     (if-not kasittelija
       {:status 404
@@ -72,11 +73,16 @@ workbookin, käyttäjän sekä HTTP request parametrit mäppeinä ja palauttaa t
         (log/debug "Luodaan " tyyppi " Excel käyttäjälle " (:kayttajanimi kayttaja)
                    " parametreilla " params)
         (let [wb (luo-workbook)
-              nimi (kasittelija wb kayttaja params)]
-          {:status  200
-           :headers {"Content-Type" +mime-type+
-                     "Content-Disposition" (str "attachment; filename=\"" nimi ".xlsx\"")}
-           :body    (piped-input-stream #(kirjoita-workbook wb %))})
+              vastaus (kasittelija wb kayttaja params)]
+          (if (map? vastaus)
+            ;; Excel käsittelijä palautti Ring vastauksen, palauta se sellaisenaan
+            vastaus
+
+            ;; Generointi onnistui, vastauksessa on tiedoston nimi
+            {:status  200
+             :headers {"Content-Type" +mime-type+
+                       "Content-Disposition" (str "attachment; filename=\"" vastaus ".xlsx\"")}
+             :body    (piped-input-stream #(kirjoita-workbook wb %))}))
         (catch Exception e
           (log/warn e "Virhe Excel-muodostuksessa: " tyyppi ", käyttäjä: " kayttaja)
           {:status 500

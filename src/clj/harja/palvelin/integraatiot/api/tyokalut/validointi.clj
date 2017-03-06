@@ -8,9 +8,11 @@
     [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
     [harja.kyselyt.tieverkko :as q-tieverkko]
     [harja.kyselyt.kayttajat :as kayttajat]
-    [harja.kyselyt.suljetut-tieosuudet :as q-suljetut-tieosuudet]
+    [harja.kyselyt.tietyomaat :as q-tietyomaat]
     [harja.domain.roolit :as roolit]
-    [harja.domain.yllapitokohteet :as kohteet])
+    [harja.domain.oikeudet :as oikeudet]
+    [harja.domain.yllapitokohteet :as kohteet]
+    [harja.kyselyt.paallystys :as paallystys-q])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn tarkista-urakka [db urakka-id]
@@ -37,13 +39,16 @@
              :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Koordinaattien järjestys väärä"}]})))
 
 (defn tarkista-kayttajan-oikeudet-urakkaan [db urakka-id kayttaja]
-  (when-not (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja))
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
+  (when (and (not (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
+             (not (kayttajat/onko-kayttajalla-lisaoikeus-urakkaan? db urakka-id (:id kayttaja))))
     (throw+ {:type virheet/+viallinen-kutsu+
              :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti (str "Käyttäjällä: " (:kayttajanimi kayttaja) " ei ole oikeuksia urakkaan: "
                                      urakka-id)}]})))
 
 (defn tarkista-onko-kayttaja-organisaatiossa [db ytunnus kayttaja]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (when-not (kayttajat/onko-kayttaja-organisaatiossa? db ytunnus (:id kayttaja))
     (throw+ {:type virheet/+viallinen-kutsu+
              :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
@@ -57,10 +62,12 @@
                         :viesti (str "Käyttäjä " (:kayttajanimi kayttaja) " ei ole järjestelmä")}]})))
 
 (defn tarkista-urakka-ja-kayttaja [db urakka-id kayttaja]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tarkista-urakka db urakka-id)
   (tarkista-kayttajan-oikeudet-urakkaan db urakka-id kayttaja))
 
 (defn tarkista-rooli [kayttaja rooli]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (when-not (roolit/roolissa? kayttaja rooli)
     (throw+ {:type virheet/+viallinen-kutsu+
              :virheet [{:koodi virheet/+tuntematon-kayttaja-koodi+
@@ -72,6 +79,7 @@
   (tarkista-kayttajan-oikeudet-urakkaan db urakka-id kayttaja))
 
 (defn tarkista-oikeudet-urakan-paivystajatietoihin [db urakka-id kayttaja]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (when-not (or (roolit/roolissa? kayttaja roolit/liikennepaivystaja)
                 (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
     (throw+ {:type virheet/+viallinen-kutsu+
@@ -93,12 +101,12 @@
 
 (defn sijainneissa-virheita? [db tienumero sijainnit]
   (not-every? #(q-tieverkko/onko-tierekisteriosoite-validi?
-                db
-                tienumero
-                (:aosa %)
-                (:aet %)
-                (:losa %)
-                (:let %))
+                 db
+                 tienumero
+                 (:aosa %)
+                 (:aet %)
+                 (:losa %)
+                 (:let %))
               sijainnit))
 
 (defn validoi-kohteiden-sijainnit-tieverkolla [db tienumero kohteen-sijainti alikohteet]
@@ -135,11 +143,20 @@
   (tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
   (tarkista-alustatoimenpiteet db kohde-id kohteen-tienumero kohteen-sijainti alustatoimenpiteet))
 
-(defn tarkista-suljettu-tieosuus [db id jarjestelma]
-  (when (not (q-suljetut-tieosuudet/onko-olemassa? db {:id id :jarjestelma jarjestelma}))
+(defn tarkista-tietyomaa [db id jarjestelma]
+  (when (not (q-tietyomaat/onko-olemassa? db {:id id :jarjestelma jarjestelma}))
     (do
       (let [viesti (format "Suljettua tieosuutta (id: %s) ei löydy" id)]
         (log/warn viesti)
         (virheet/heita-poikkeus
           virheet/+viallinen-kutsu+
           [{:koodi virheet/+tuntematon-yllapitokohde+ :viesti viesti}])))))
+
+(defn tarkista-saako-kohteen-paivittaa [db kohde-id]
+  (when (paallystys-q/onko-olemassa-paallystysilmoitus? db kohde-id)
+    (do
+      (let [viesti (format "Kohteelle (id: %s) on jo kirjattu päällystysilmoitus. Päivitys ei ole sallittu" kohde-id)]
+        (log/warn viesti)
+        (virheet/heita-poikkeus
+          virheet/+viallinen-kutsu+
+          [{:koodi virheet/+lukittu-yllapitokohde+ :viesti viesti}])))))

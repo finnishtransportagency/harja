@@ -7,6 +7,7 @@
             [clj-time.coerce :as c]
 
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.kokonaishintaiset-tyot :as q]
             [harja.domain.oikeudet :as oikeudet]))
 
@@ -36,23 +37,26 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
   (into []
         (map #(assoc %
-               :summa (if (:summa %) (double (:summa %)))))
+                :summa (if (:summa %) (double (:summa %)))))
         (q/listaa-kokonaishintaiset-tyot db urakka-id)))
 
 (defn tallenna-kokonaishintaiset-tyot
   "Palvelu joka tallentaa urakan kokonaishintaiset tyot."
-  [db user {:keys [urakka-id sopimusnumero tyot]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
+  [db user {:keys [urakka sopimusnumero tyot]}]
+  (let [urakkatyyppi-kannassa (keyword (first (urakat-q/hae-urakan-tyyppi db (:id urakka))))]
+    (oikeudet/vaadi-kirjoitusoikeus
+      (oikeudet/tarkistettava-oikeus-kok-hint-tyot urakkatyyppi-kannassa) user (:id urakka)))
   (assert (vector? tyot) "tyot tulee olla vektori")
   (jdbc/with-db-transaction [c db]
-    (let [nykyiset-arvot (hae-urakan-kokonaishintaiset-tyot c user urakka-id)
+    (let [urakka-id (:id urakka)
+          nykyiset-arvot (hae-urakan-kokonaishintaiset-tyot c user urakka-id)
           valitut-vuosi-ja-kk (into #{} (map (juxt :vuosi :kuukausi) tyot))
           tyo-avain (fn [rivi]
                       [(:toimenpideinstanssi rivi) (:vuosi rivi) (:kuukausi rivi)])
           tyot-kannassa (into #{} (map tyo-avain
                                        (filter #(and
-                                                 (= (:sopimus %) sopimusnumero)
-                                                 (valitut-vuosi-ja-kk [(:vuosi %) (:kuukausi %)]))
+                                                  (= (:sopimus %) sopimusnumero)
+                                                  (valitut-vuosi-ja-kk [(:vuosi %) (:kuukausi %)]))
                                                nykyiset-arvot)))
           uniikit-toimenpideninstanssit (into #{} (map #(:toimenpideinstanssi %) tyot))]
       (doseq [tyo tyot]
@@ -63,7 +67,8 @@
             (q/lisaa-kokonaishintainen-tyo<! c (:summa tyo)
                                              (if (:maksupvm tyo) (konv/sql-date (:maksupvm tyo)) nil)
                                              (:toimenpideinstanssi tyo)
-                                             sopimusnumero (:vuosi tyo) (:kuukausi tyo))
+                                             sopimusnumero (:vuosi tyo) (:kuukausi tyo)
+                                             (:id user))
             ;;update
             (q/paivita-kokonaishintainen-tyo! c (:summa tyo)
                                               (if (:maksupvm tyo) (konv/sql-date (:maksupvm tyo)) nil)
@@ -72,5 +77,5 @@
 
       (when (not (empty? uniikit-toimenpideninstanssit))
         (log/info "Merkitään kustannussuunnitelmat likaiseksi toimenpideinstansseille: " uniikit-toimenpideninstanssit)
-        (q/merkitse-kustannussuunnitelmat-likaisiksi! c uniikit-toimenpideninstanssit)))
-    (hae-urakan-kokonaishintaiset-tyot c user urakka-id)))
+        (q/merkitse-kustannussuunnitelmat-likaisiksi! c uniikit-toimenpideninstanssit))
+      (hae-urakan-kokonaishintaiset-tyot c user urakka-id))))

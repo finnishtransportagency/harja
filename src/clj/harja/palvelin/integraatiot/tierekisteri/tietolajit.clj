@@ -18,9 +18,9 @@
   [tunniste muutospvm vastaus]
   (when (:onnistunut vastaus)
     (swap! tietolajien-kuvaukset-cache
-            assoc-in
-            [tunniste muutospvm]
-            vastaus)))
+           assoc-in
+           [tunniste muutospvm]
+           vastaus)))
 
 (defn tyhjenna-tietolajien-kuvaukset-cache []
   (reset! tietolajien-kuvaukset-cache nil))
@@ -52,9 +52,16 @@
 (defn- hae-tietolajin-kuvaus-cachesta [tunniste muutospvm]
   (get-in @tietolajien-kuvaukset-cache [tunniste muutospvm]))
 
-(defn hae-tietolajit
+(defn- suodata-jarjestysnumerottomat-ominaisuudet [{:keys [ominaisuudet] :as tietolajin-kuvaus}]
+  (let [suodatetut-ominaisuudet (filter #(some? (:jarjestysnumero %)) ominaisuudet)]
+    (assoc tietolajin-kuvaus :ominaisuudet suodatetut-ominaisuudet)))
+
+(defn hae-tietolaji
   "Hakee annetun tietolajin kuvauksen.
   Vastaus palautetaan cachesta jos löytyy, muuten haetaan uusin kuvaus tierekisteristä"
   [db integraatioloki url tunniste muutospvm]
-  (or (hae-tietolajin-kuvaus-cachesta tunniste muutospvm)
-      (hae-tietolajin-kuvaus-tierekisterista db integraatioloki url tunniste muutospvm)))
+  (let [vastaus (or (hae-tietolajin-kuvaus-cachesta tunniste muutospvm)
+                    (hae-tietolajin-kuvaus-tierekisterista db integraatioloki url tunniste muutospvm))
+        suodatettu-tietolajin-kuvaus (suodata-jarjestysnumerottomat-ominaisuudet (:tietolaji vastaus))
+        palautettava-vastaus (assoc vastaus :tietolaji suodatettu-tietolajin-kuvaus)]
+    palautettava-vastaus))

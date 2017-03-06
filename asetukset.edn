@@ -1,65 +1,63 @@
-{
- :kehitysmoodi         true
+{:kehitysmoodi true
 
- :testikayttajat       [{:kayttajanimi "tero" :kuvaus "Tero Toripolliisi, POP ely"}
-                        {:kayttajanimi "yit_pk" :kuvaus "YIT:n pääkäyttäjä"}
-                        {:kayttajanimi "yit_uuvh" :kuvaus "YIT:n urakan vastuuhenkilö"}]
+ :testikayttajat [{:kayttajanimi "tero" :kuvaus "Tero Toripolliisi, POP ely"}
+                  {:kayttajanimi "yit_pk" :kuvaus "YIT:n pääkäyttäjä"}
+                  {:kayttajanimi "yit_uuvh" :kuvaus "YIT:n urakan vastuuhenkilö"}]
 
- :http-palvelin        {:threads 16}
- :tietokanta           {:palvelin          "localhost"
-                        :tietokanta        "harja"
-                        :portti            5432
-                        :yhteyspoolin-koko 16
-                        :kayttaja          "harja"
-                        :salasana          ""}
- :tietokanta-replica   {:palvelin          "localhost"
-                        :tietokanta        "harja"
-                        :portti            5432
-                        :yhteyspoolin-koko 16
-                        :kayttaja          "harja"
-                        :salasana          ""}
- :fim                  {:url
-                        ;; ohjaa: ssh -L6666:testioag.liikennevirasto.fi:443 harja-app1-stg
-                        "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity"}
- :log                  {:gelf  {:taso     :debug
-                                :palvelin "localhost"}
-                        ;; :hipchat {:taso     :warn
-                        ;;           :huone-id 1396730
-                        ;;           :token    "h4egJmxnIjE1EiApo70VQZlJOl29g6Hzo5dcFGnD"}
+ :http-palvelin {:threads 16}
+ :tietokanta {:palvelin "localhost"
+              :tietokanta "harja"
+              :portti 5432
+              :yhteyspoolin-koko 16
+              :kayttaja "harja"
+              :salasana ""}
+ :tietokanta-replica {:palvelin "localhost"
+                      :tietokanta "harja"
+                      :portti 5432
+                      :yhteyspoolin-koko 16
+                      :kayttaja "harja"
+                      :salasana ""}
+ :fim {:url
+       "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity"
+       :tiedosto "dev-resources/fim.edn"}
+ :log {:gelf {:taso :debug
+              :palvelin "localhost"}
+       ;; :hipchat {:taso     :warn
+       ;;           :huone-id 1396730
+       ;;           :token    "h4egJmxnIjE1EiApo70VQZlJOl29g6Hzo5dcFGnD"}
 
-                        :email {:taso          :error
-                                :palvelin      "solita-service-1.solita.fi"
+       ;; :email {:taso          :error
+       ;;         :palvelin      "solita-service-1.solita.fi"
 
-                                ;; Lisää nimesi vektoriin, jos haluat spämmiä
-                                :vastaanottaja [;;"tatu.tarvainen@solita.fi"
-                                                ;;"jarno.vayrynen@solita.fi"
-                                                ;;"mikko.ronkkomaki@solita.fi"
-                                                ]}
-                        }
+       ;;         ;; Lisää nimesi vektoriin, jos haluat spämmiä
+       ;;         :vastaanottaja [;;"tatu.tarvainen@solita.fi"
+       ;;                         ;;"jarno.vayrynen@solita.fi"
+       ;;                         ;;"mikko.ronkkomaki@solita.fi"
+       ;;                         ]}
+       }
 
  :sonja
- {:url      "tcp://localhost:61616"
+ {:url "tcp://localhost:61616"
   :kayttaja "harja"
   :salasana "harjaxx"
-  :tyyppi   :activemq}
+  :tyyppi :activemq}
 
- :sampo                {:lahetysjono-sisaan       "Harja13-16.SampoToHarja.Msg"
-                        :kuittausjono-sisaan      "Harja13-16.HarjaToSampo.Ack"
-                        :lahetysjono-ulos         "Harja17.HarjaToSampo.Msg"
-                        :kuittausjono-ulos        "Harja17.SampoToHarja.Ack"
-                        :paivittainen-lahetysaika nil
-                        }
- :tloik                {:ilmoitusviestijono     "Harja.T-LOIKToHarja.Msg"
-                        :ilmoituskuittausjono   "Harja.T-LOIKToHarja.Ack"
-                        :toimenpideviestijono   "Harja.HarjaToT-LOIK.Msg"
-                        :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"
-                        :ilmoitukset {:google-static-maps-key #=(slurp "../.harja/google-static-maps-key")}
-                        :paivittainen-lahetysaika [12 11 00] }
+ :sampo {:lahetysjono-sisaan "Harja13-16.SampoToHarja.Msg"
+         :kuittausjono-sisaan "Harja13-16.HarjaToSampo.Ack"
+         :lahetysjono-ulos "Harja17.HarjaToSampo.Msg"
+         :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
+         :paivittainen-lahetysaika nil}
+ :tloik {:ilmoitusviestijono "Harja.T-LOIKToHarja.Msg"
+         :ilmoituskuittausjono "Harja.T-LOIKToHarja.Ack"
+         :toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"
+         :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"
+         :ilmoitukset {:google-static-maps-key #=(slurp "../.harja/google-static-maps-key")}
+         :uudelleenlahetysvali-minuuteissa 30}
 
- :turi                 {:url "https://testiextranet.liikennevirasto.fi/turvallisuuspoikkeama/api/poikkeamaTuonti"
-                        :kayttajatunnus "testi"
-                        :salasana #=(slurp "../.harja/turi-salasana")
-                        :paivittainen-lahetysaika [15 49 00]}
+ :turi {:url "https://testiextranet.liikennevirasto.fi/turvallisuuspoikkeama/api/poikkeamaTuonti"
+        :kayttajatunnus "testi"
+        :salasana #=(slurp "../.harja/turi-salasana")
+        :paivittainen-lahetysaika [15 49 00]}
 
  :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@liikennevirasto.fi"
                     :suora? true
@@ -69,13 +67,14 @@
                             :sahkoposti-ulos-jono ""
                             :sahkoposti-ulos-kuittausjono ""}}
 
- :tierekisteri         {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"}
+ :tierekisteri {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"
+                :uudelleenlahetys-aikavali-minuutteina 60}
 
- :integraatiot         {:paivittainen-lokin-puhdistusaika nil}
+ :integraatiot {:paivittainen-lokin-puhdistusaika nil}
 
- :ilmatieteenlaitos    {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
+ :ilmatieteenlaitos {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
 
- :geometriapaivitykset {:tuontivali         60
+ :geometriapaivitykset {:tuontivali 60
 
                         :tieosoiteverkon-shapefile                 "file://shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"
                         :tieosoiteverkon-alk-osoite                "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTK_tieosoiteverkko.shz"
@@ -97,20 +96,39 @@
                         :siltojen-alk-osoite                       "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_silta.shz"
                         :siltojen-alk-tuontikohde                  "./shp/Sillat/PTV_silta.shz"
 
-                        :urakoiden-shapefile                       "file://shp/Hoitourakat/PTV_Hoitourakat10_2015.shx"
-                        :urakoiden-alk-osoite                      "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_Hoitourakat10_2015.shz"
-                        :urakoiden-alk-tuontikohde                 "./shp/Hoitourakat/PTV_Hoitourakat10_2015.shz"
+                        :urakoiden-shapefile                       "file://shp/Hoitourakat/PTV_Hoitourakat10_2016.shx"
+                        :urakoiden-alk-osoite                      "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_Hoitourakat10_2016.shz"
+                        :urakoiden-alk-tuontikohde                 "./shp/Hoitourakat/PTV_Hoitourakat10_2016.shz"
 
                         :ely-alueiden-shapefile                    "file://shp/ELYt/ULKOISET_Elyt_infra.shp"
                         :ely-alueiden-alk-osoite                   "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/ULKOISET_Elyt_infra.shz"
                         :ely-alueiden-alk-tuontikohde              "./shp/ELYt/ULKOISET_Elyt_infra.shz"
+
+                        :valaistusurakoiden-shapefile             "file://shp/Valaistusurakat/PTV_tl167.shp"
+                        :valaistusurakoiden-alk-osoite            "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl167.shz"
+                        :valaistusurakoiden-alk-tuontikohde       "./shp/Valaistusurakat/PTV_tl167.shz"
+
+                        :paallystyspalvelusopimusten-shapefile    "file://shp/Paallystyspalvelusopimukset/PTV_tl151.shp"
+                        :paallystyspalvelusopimusten-alk-osoite   "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl151.shz"
+                        :paallystyspalvelusopimusten-alk-tuontikohde "./shp/Paallystyspalvelusopimukset/PTV_tl151.shz"
+
+                        :tekniset-laitteet-urakat-shapefile      "file://shp/Tekniset_laitteet_urakat/tekniset_laitteet_urakat.shp"
+
+                        :siltojenpalvelusopimusten-shapefile      "file://shp/Siltapalvelusopimukset/siltapalvelusopimukset.shp"
                         }
 
- :yha                  {:url                                       "https://harja-test.solitaservices.fi/harja/integraatiotesti/yha/"}
+ :yha {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/yha/"
+       :kayttajatunnus "restusr"
+       :salasana #=(slurp "../.harja/yha-salasana")}
 
  ;; Labyrintin SMS Gatewayn testaukseen tarvitaan SSH tunneli harja-app1-stg serverille porttiin 28080
- :labyrintti           {:url            "http://localhost:28080/sendsms"
-                        :kayttajatunnus "solita-2"
-                        :salasana       #=(slurp "../.harja/labyrintti-salasana")}
+ :labyrintti {:url "http://localhost:28080/sendsms"
+              :kayttajatunnus "solita-2"
+              :salasana #=(slurp "../.harja/labyrintti-salasana")}
 
+ ;; ClamAV REST palvelun osoite
+ :virustarkistus {:url "http://localhost:8080/scan"}
+
+ :paivystystarkistus  {:paivittainen-aika [12 11 00]}
+ :reittitarkistus  {:paivittainen-aika [00 30 00]}
  }

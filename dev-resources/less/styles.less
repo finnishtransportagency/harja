@@ -21,7 +21,12 @@
   width: @leveys;
   .livi-alasveto(@valintakontrollin-leveys);
 }
-
+.ei-kayttooikeutta-wrap {
+  margin: 5px 10px;
+}
+.ei-kayttooikeutta {
+  margin-top: 10px;
+}
 #footer {
   background-color: @harjan-taustavari;
   clear: both;
@@ -42,17 +47,6 @@
 #sivut {
   margin-top: 5px;
   padding-top: 0;
-}
-
-#palautelinkki {
-  color: @sininen4;
-  &:hover {
-    color: @sininen1;
-    text-decoration: underline;
-  }
-  &:visited {
-    color: @sininen4;
-  }
 }
 
 div.valilehti {
@@ -117,7 +111,19 @@ div.valilehti {
   height: 32px;
   width: 90px;
 }
-
+#testiharja {
+  color: @vaara;
+  font-size: .8 * @fontin-koko-leipateksti;
+  font-weight: bold;
+  position: absolute;
+  top: 3px;
+  left: 48px;
+  text-decoration: none;
+}
+.testiharja {
+  border: 1px solid @vaara;
+  background: #ffe6e6;
+}
 .selected {
   color: blue;
 }
@@ -183,6 +189,7 @@ tr.uusitehtavakoodi td {
 
 .pvm-kentta,
 .pvm-aika-kentta {
+  display: inline-block;
   position: relative;
   width: 100%;
 }

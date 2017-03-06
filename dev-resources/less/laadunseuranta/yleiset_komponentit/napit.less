@@ -1,0 +1,69 @@
+@nappien-vakioleveys: 200px;
+
+button, button:focus {
+  outline: 0; // Selaimen defaulttityyli pois
+}
+
+.nappi {
+  border: none;
+  box-sizing: border-box;
+  width: @nappien-vakioleveys;
+  max-width: 100%;
+  height: @input-komponentin-vakiokorkeus;
+  font-size: 1em;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  font-weight: normal;
+  padding: 5px;
+
+  svg {
+    width: 1em;
+    height: 1em;
+  }
+}
+
+.nappi-ensisijainen {
+  color: @valkoinen;
+  background-color: @sininen4;
+  border-color: @sininen4;
+}
+
+.nappi-ensisijainen:active:not(.nappi-disabloitu) {
+  background-color: @sininen5;
+}
+
+.nappi-toissijainen {
+  color: @sininen4;
+  background-color: @valkoinen;
+  border: 1px solid @sininen4;
+}
+
+.nappi-toissijainen:active:not(.nappi-disabloitu) {
+  background-color: @harmaa13;
+}
+
+.nappi-myonteinen {
+  color: @valkoinen;
+  background-color: @vihrea5;
+  border-color: @vihrea5;
+  font-weight: normal;
+}
+
+.nappi-myonteinen:active:not(.nappi-disabloitu) {
+  background-color: @vihrea6;
+}
+
+.nappi-kielteinen {
+  color: @valkoinen;
+  background-color: @punainen4;
+  border-color: @punainen4;
+  font-weight: normal;
+}
+
+.nappi-kielteinen:active:not(.nappi-disabloitu) {
+  background-color: @punainen7;
+}
+
+.nappi-disabloitu {
+  background-color: @harmaa6;
+}

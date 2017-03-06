@@ -2,7 +2,8 @@
   "Yleisiä apureita DOMin ja selaimen hallintaan"
   (:require [reagent.core :as r]
             [harja.asiakas.tapahtumat :as t]
-            [harja.loki :refer [log]])
+            [harja.loki :refer [log]]
+            [cljs.core.async :refer [<! timeout] :as async])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -44,8 +45,8 @@
    seuraava numero kertoo version. Versiossa 11 tätä ei välttämättä ole, mutta sillä ei ole väliä, koska
    tarkoitus on havaita nimenomaan versiota 11 vanhemmat selaimet."
   (let [ua (-> js/window .-navigator .-userAgent)
-                         ie-versio (maarita-ie-versio-user-agentista ua)]
-                       (and (integer? ie-versio) (<= 10 ie-versio))))
+        ie-versio (maarita-ie-versio-user-agentista ua)]
+    (and (integer? ie-versio) (<= 10 ie-versio))))
 
 (defonce korkeus (atom (-> js/window .-innerHeight)))
 (defonce leveys (atom (-> js/window .-innerWidth)))
@@ -69,6 +70,17 @@
 
 (defn elementti-idlla [id]
   (.getElementById js/document (name id)))
+
+(defn- elementti-idlla-odota
+  "Pollaa DOMia 10ms välein kunnes annettu elementti löytyy. Palauttaa kanavan, josta
+  elementin voi lukea."
+  [id]
+  (go (loop [elt (.getElementById js/document id)]
+        (if elt
+          elt
+          (do #_(log "odotellaan elementtiä " id)
+            (<! (timeout 10))
+            (recur (.getElementById js/document id)))))))
 
 (defn sijainti
   "Laskee DOM-elementin sijainnin, palauttaa [x y w h]."

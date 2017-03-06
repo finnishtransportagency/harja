@@ -19,7 +19,7 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
-    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+) [:db :integraatioloki])
+    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+ nil) [:db :integraatioloki])
     :api-varusteoteuma (component/using
                          (api-varustetoteuma/->Varustetoteuma)
                          [:http-palvelin :db :integraatioloki :tierekisteri])))
@@ -45,9 +45,7 @@
        (str +testi-tierekisteri-url+ "/paivitatietue") paivita-tietue-xml
        (str +testi-tierekisteri-url+ "/poistatietue") poista-tietue-xml
        #"http?://localhost" :allow]
-      (let [vastaus-lisays (api-tyokalut/post-kutsu varustetoteuma-api-url kayttaja portti
-                                                    payload)]
-
+      (let [vastaus-lisays (api-tyokalut/post-kutsu varustetoteuma-api-url kayttaja portti payload)]
         (is (= 200 (:status vastaus-lisays)))
         (let [varustetoteumat-pyynnon-jalkeen (ffirst (q
                                                         (str "SELECT count(*)
@@ -109,6 +107,36 @@
             (is (vector? tunnisteet))
             (is (= (count tunnisteet) 1))
             (is (str/starts-with? (first tunnisteet) "HAR"))))))))
+
+
+(deftest tallenna-varustetoteuma-huonolla-kayttajalla
+  (let [hae-tietolaji-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))
+        lisaa-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
+        paivita-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
+        poista-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
+        varustetoteumat-ennen-pyyntoa (ffirst (q
+                                                (str "SELECT count(*)
+                                                       FROM varustetoteuma")))
+        ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+        payload (-> "test/resurssit/api/varustetoteuma.json"
+                    slurp
+                    (.replace "__ID__" (str ulkoinen-id)))
+        varustetoteuma-api-url ["/api/urakat/" urakka "/toteumat/varuste"]]
+    (with-fake-http
+      [(str +testi-tierekisteri-url+ "/haetietolaji") hae-tietolaji-xml
+       (str +testi-tierekisteri-url+ "/lisaatietue") lisaa-tietue-xml
+       (str +testi-tierekisteri-url+ "/paivitatietue") paivita-tietue-xml
+       (str +testi-tierekisteri-url+ "/poistatietue") poista-tietue-xml
+       #"http?://localhost" :allow]
+      (let [vastaus-lisays (api-tyokalut/post-kutsu varustetoteuma-api-url "skanska" portti payload)]
+        (is (>= 400 (:status vastaus-lisays)))
+        (is (str/includes? (-> (:body vastaus-lisays)
+                               (json/read-str)
+                               (get "virheet")
+                               first
+                               (get "virhe")
+                               (get "koodi"))
+                           "kayttajalla-puutteelliset-oikeudet"))))))
 
 (deftest tarkista-virheellisen-varustetoteuman-kirjaaminen
   (let [hae-tietolaji-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))

@@ -3,34 +3,19 @@
             [harja.kyselyt.hankkeet :as hankkeet]
             [harja.kyselyt.urakat :as urakat]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]
-            [harja.palvelin.integraatiot.sampo.kasittely.urakkatyyppi :as urakkatyyppi]
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
-            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
-            [clojure.string :as str])
+            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn pura-alueurakkanro [alueurakkanro]
-  (let [osat (clojure.string/split alueurakkanro #"-")]
-    (if (= 2 (count osat))
-      {:tyypit (first osat) :alueurakkanro (second osat)}
-      {:tyypit nil :alueurakkanro alueurakkanro})))
-
-(defn pudota-etunollat [alueurakkanumero]
-  (str/replace alueurakkanumero #"^0+" ""))
-
-(defn kasittele-hanke [db {:keys [viesti-id nimi alkupvm loppupvm alueurakkanro sampo-id]}]
+(defn kasittele-hanke [db {:keys [viesti-id nimi alkupvm loppupvm sampo-id]}]
   (log/debug "Käsitellään hanke Sampo id:llä: " sampo-id)
   (try
-    (let [tyyppi-ja-alueurakkanro (pura-alueurakkanro alueurakkanro)
-          tyypit (:tyypit tyyppi-ja-alueurakkanro)
-          alueurakkanro (pudota-etunollat (:alueurakkanro tyyppi-ja-alueurakkanro))
-          urakkatyyppi (urakkatyyppi/paattele-urakkatyyppi tyypit)]
+    (let []
       (if (hankkeet/onko-tuotu-samposta? db sampo-id)
-        (hankkeet/paivita-hanke-samposta! db nimi alkupvm loppupvm alueurakkanro tyypit sampo-id)
-        (hankkeet/luo-hanke<! db nimi alkupvm loppupvm alueurakkanro tyypit sampo-id))
+        (hankkeet/paivita-hanke-samposta! db nimi alkupvm loppupvm sampo-id)
+        (hankkeet/luo-hanke<! db nimi alkupvm loppupvm sampo-id))
 
       (urakat/paivita-hankkeen-tiedot-urakalle! db sampo-id)
-      (urakat/paivita-tyyppi-hankkeen-urakoille! db urakkatyyppi sampo-id)
       (maksuerat/perusta-maksuerat-hoidon-urakoille db))
 
     (log/debug "Hanke käsitelty onnistuneesti")

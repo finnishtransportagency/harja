@@ -1,7 +1,7 @@
 #%RAML 0.8
 title: Harja API
-version: 0.2.0
-baseUri: https://harja/api/{version}
+version: 1.0.12
+baseUri: https://testioag.liikennevirasto.fi/harja/api (testi) & https://oag.liikennevirasto.fi/harja/api (tuotanto)
 protocols: [HTTPS]
 mediaType: application/json
 
@@ -36,8 +36,13 @@ schemas:
  - yllapitokohteiden-haku-response: !include schemas/urakan-yllapitokohteet-response.schema.json
  - yllapitokohteiden-haku-response: !include schemas/urakan-yllapitokohteet-response.schema.json
  - paallystysilmoituksen-kirjaus-request: !include schemas/paallystysilmoituksen-kirjaus-request.schema.json
- - suljetun-tieosuuden-kirjaus-request: !include schemas/suljetun-tieosuuden-kirjaus-request.schema.json
- - suljetun-tieosuuden-poisto-request: !include schemas/suljetun-tieosuuden-poisto-request.schema.json
+ - paallystyksen-aikataulun-kirjaus-request: !include schemas/tiemerkinnan-aikataulun-kirjaus-request.schema.json
+ - tiemerkinnan-aikataulun-kirjaus-request: !include schemas/paallystyksen-aikataulun-kirjaus-request.schema.json
+ - tietyomaan-kirjaus-request: !include schemas/tietyomaan-kirjaus-request.schema.json
+ - tietyomaan-poisto-request: !include schemas/tietyomaan-poisto-request.schema.json
+ - urakan-yhteystietojen-haku-response: !include schemas/urakan-yhteystietojen-haku-response.schema.json
+ - urakan-yllapitokohteen-paivitys-request: !include schemas/urakan-yllapitokohteen-paivitys-request.schema.json
+ - urakan-yllapitokohteen-maaramuutosten-kirjaus-request: !include schemas/urakan-yllapitokohteen-maaramuutosten-kirjaus-request.schema.json
 
 securitySchemes:
  - basic:
@@ -88,7 +93,7 @@ documentation:
   /{id}:
     get:
       is: [secured]
-      description: Palauttaa id:n mukaisen urakan tiedot sopimuksineen ja tehtävineen. Vastaus kertoo tehtävät, joille voidaan kirjata toteumia. Toteumat kirjataan aina tietyn urakan sopimuksen yksikkö- tai kokonaishintaiselle tehtävälle.
+      description: Palauttaa id:n mukaisen urakan tiedot sopimuksineen ja tehtävineen. Vastaus kertoo tehtävät, joille voidaan kirjata toteumia. Toteumat kirjataan aina tietyn urakan sopimuksen yksikkö- tai kokonaishintaiselle tehtävälle. Toteumat pitää myös kirjata aina tehtävälle palautuvassa yksikössä.
       responses:
         200:
           body:
@@ -109,7 +114,7 @@ documentation:
       /reitti:
         post:
           is: [secured]
-          description: Reittimuotoisten toteumien kirjaaminen urakalle. Yksittäinen reittipiste toteumalle tulisi kirjata aina, kun 1. ajettava tie muuttuu, 2. ajettava tieosa muuttuu, 3. ajettava suunta muuttuu, 4. suoritettava tehtävä muuttuu tai 5. materiaaliannostelijan (esim. suolasirottimen) asetukset muuttuuvat.
+          description: Reittimuotoisten toteumien kirjaaminen urakalle. Yksittäinen reittipiste toteumalle tulisi kirjata aina, kun 1. ajettava tie muuttuu, 2. ajettava tieosa muuttuu, 3. ajettava suunta muuttuu, 4. suoritettava tehtävä muuttuu tai 5. materiaaliannostelijan (esim. suolasirottimen) asetukset muuttuuvat. Toteumien tehtävät raportoidaan aina Harjan urakkahaun palauttamassa yksikössä. Harja ei tee yksikkömuunnoksia vaan olettaa, että määrät on annettu halutussa yksikössä. Sama koskee myös raportoituja materiaalien käyttöjä.
           body:
             application/json:
               example: !include examples/reittitoteuman-kirjaus-request.json
@@ -130,14 +135,60 @@ documentation:
               application/json:
                 example: !include examples/epaonnistunut-kirjaus-response.json
                 schema: virhe-response
+        delete:
+          is: [secured]
+          description: Poista reittitoteuma tunnisteella.
+          body:
+            application/json:
+              example: !include examples/reittitoteuman-poisto-request.json
+              schema: toteuman-poisto-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: virhe-response
       /piste:
         post:
           is: [secured]
-          description: Pistemäisten toteumien kirjaaminen urakalle.
+          description: Pistemäisten toteumien kirjaaminen urakalle. Toteumien tehtävät raportoidaan aina Harjan urakkahaun palauttamassa yksikössä. Harja ei tee yksikkömuunnoksia vaan olettaa, että määrät on annettu halutussa yksikössä. Sama koskee myös raportoituja materiaalien käyttöjä.
           body:
             application/json:
               example: !include examples/pistetoteuman-kirjaus-request.json
               schema: pistetoteuman-kirjaus-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: virhe-response
+        delete:
+          is: [secured]
+          description: Poista pistetoteuma tunnisteella.
+          body:
+            application/json:
+              schema: toteuman-poisto-request
+              example: !include examples/pistetoteuman-poisto-request.json
           responses:
            200:
             body:
@@ -204,6 +255,29 @@ documentation:
               application/json:
                 example: !include examples/virhe-response.json
                 schema: virhe-response
+        delete:
+          is: [secured]
+          description: Tiestötarkastuksen poisto.
+          body:
+            application/json:
+              example: !include examples/tiestotarkastuksen-poisto-request.json
+              schema: tarkastuksen-poisto-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: kirjaus-response
       /talvihoitotarkastus:
         post:
           is: [secured]
@@ -212,6 +286,29 @@ documentation:
             application/json:
               example: !include examples/talvihoitotarkastuksen-kirjaus-request.json
               schema: talvihoitotarkastuksen-kirjaus-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: kirjaus-response
+        delete:
+          is: [secured]
+          description: Talvihoitotarkastuksen poisto.
+          body:
+            application/json:
+              example: !include examples/talvihoitotarkastuksen-poisto-request.json
+              schema: tarkastuksen-poisto-request
           responses:
            200:
             body:
@@ -252,6 +349,28 @@ documentation:
               application/json:
                 example: !include examples/virhe-response.json
                 schema: virhe-response
+        delete:
+          is: [secured]
+          description: Soratietarkastuksen poisto.
+          body:
+            application/json:
+              schema: tarkastuksen-poisto-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: kirjaus-response
       /siltatarkastus:
         post:
           is: [secured]
@@ -276,6 +395,29 @@ documentation:
               application/json:
                 example: !include examples/virhe-response.json
                 schema: virhe-response
+        delete:
+          is: [secured]
+          description: Siltatarkastuksen poisto.
+          body:
+            application/json:
+              schema: tarkastuksen-poisto-request
+              example: !include examples/siltatarkastuksen-poisto-request.json
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: kirjaus-response
     /laatupoikkeama:
       post:
         is: [secured]
@@ -303,7 +445,7 @@ documentation:
     /turvallisuuspoikkeama:
       post:
         is: [secured]
-        description: Turvallisuuspoikkeamien kuten esim. onnettomuuksien, vaaratilanteiden yms. kirjaaminen. Vakavat turvallisuuspoikkeamat täytyy raportoida Harjaan 24h kuluessa. Lievät turvallisuuspoikkeamat täytyy taas raportoida 5 vuorokauden sisällä. Käsittelyyn liittyvät tiedot voidaan päivittää myöhemmi lähettämällä uusi kutsu samalla turvallisuuspoikkeaman tunnisteella.
+        description: Turvallisuuspoikkeamien kuten esim. onnettomuuksien, vaaratilanteiden yms. kirjaaminen. Vakavat turvallisuuspoikkeamat täytyy raportoida Harjaan 24h kuluessa. Lievät turvallisuuspoikkeamat täytyy taas raportoida 5 vuorokauden sisällä. Käsittelyyn liittyvät tiedot voidaan päivittää myöhemmi lähettämällä uusi kutsu samalla turvallisuuspoikkeaman tunnisteella. Vammojen ja vahingoittuneiden ruumiinosien osalta tallennetaan vain ensimmäinen.
         body:
           application/json:
             example: !include examples/turvallisuuspoikkeamien-kirjaus-request.json
@@ -483,13 +625,36 @@ documentation:
                   schema: virhe-response
         /{kohdeid}:
           description: Yksittäisen ylläpitokohteen hallinta
+          put:
+            is: [secured]
+            description: Ylläpitokohteen tietojen päivitys
+            body:
+              application/json:
+                example: !include examples/urakan-yllapitokohteen-paivitys-request.json
+                schema: urakan-yllapitokohteen-paivitys-request
+            responses:
+               200:
+                 body:
+                   application/json:
+                    example: !include examples/onnistunut-kirjaus-response.json
+                    schema: kirjaus-response
+               500:
+                 body:
+                   application/json:
+                     example: !include examples/virhe-response.json
+                     schema: virhe-response
+               400:
+                 body:
+                  application/json:
+                    example: !include examples/virhe-response.json
+                    schema: virhe-response
           /paallystysilmoitus:
             post:
               is: [secured]
-              description: Päällystysilmoituksen kirjaus. Päällystysilmoituksen kautta on mahdollista päivittää varsinaisen kohteen sijaintia sekä alikohteita. Alikohteet päivitetään aina vanhojen päälle. Alustalle tehdyt toimepiteet sekä alikohteet täytyvät aina osua pääkohteen sisään. Sen lisäksi alikohteiden osoitteisiin ei saa jäädä välejä eivätkä ne saa mennä päällekkäin.
+              description: Päällystysilmoituksen kirjaus. Päällystysilmoituksen kautta on mahdollista päivittää varsinaisen kohteen sijaintia sekä alikohteita. Alikohteet päivitetään aina vanhojen päälle. Alustalle tehtyjen toimepiteiden sekä alikohteiden täytyy aina osua pääkohteen sisään. Sen lisäksi alikohteiden osoitteisiin ei saa jäädä välejä eivätkä ne saa mennä päällekkäin. Jos valmis-kasiteltavaksi kentässä on arvona true, asetetaan päällystysilmoitus valmiiksi tilaajan käsiteltäväksi (ellei jo ole käsiteltävänä tai käsitelty).
               body:
                 application/json:
-                  example: !include examples/ilmoitustoimenpiteen-kirjaaminen-request.json
+                  example: !include examples/paallystysilmoituksen-kirjaus-request.json
                   schema: paallystysilmoituksen-kirjaus-request
               responses:
                 200:
@@ -507,14 +672,62 @@ documentation:
                    application/json:
                      example: !include examples/virhe-response.json
                      schema: virhe-response
-          /suljettu-tieosuus:
+          /aikataulu-paallystys:
+             post:
+               is: [secured]
+               description: Aikataulutietojen kirjaus päällystysurakan ylläpitokohteelle. Kirjattaessa aikataulutiedot päällystysilmoitukselle kyseisen ilmoituksen tulee olla lisätty Harjaan, muuten tietoja ei päivitetä.
+               body:
+                 application/json:
+                   example: !include examples/paallystyksen-aikataulun-kirjaus-request.json
+                   schema: paallystyksen-aikataulun-kirjaus-request
+               responses:
+                 200:
+                   body:
+                     application/json:
+                      example: !include examples/onnistunut-kirjaus-response.json
+                      schema: kirjaus-response
+                 500:
+                   body:
+                     application/json:
+                       example: !include examples/virhe-response.json
+                       schema: virhe-response
+                 400:
+                   body:
+                    application/json:
+                      example: !include examples/virhe-response.json
+                      schema: virhe-response
+          /aikataulu-tiemerkinta:
+             post:
+               is: [secured]
+               description: Aikataulutietojen kirjaus tiemerkintäurakan ylläpitokohteelle. Päivitettävän ylläpitokohteen täytyy olla merkitty urakkaan suorittavaksi tiemerkintäurakaksi.
+               body:
+                 application/json:
+                   example: !include examples/tiemerkinnan-aikataulun-kirjaus-request.json
+                   schema: tiemerkinnan-aikataulun-kirjaus-request
+               responses:
+                 200:
+                   body:
+                     application/json:
+                      example: !include examples/onnistunut-kirjaus-response.json
+                      schema: kirjaus-response
+                 500:
+                   body:
+                     application/json:
+                       example: !include examples/virhe-response.json
+                       schema: virhe-response
+                 400:
+                   body:
+                    application/json:
+                      example: !include examples/virhe-response.json
+                      schema: virhe-response
+          /tietyomaa:
             post:
               is: [secured]
-              description: Suljetun tieosuuden kirjaaminen. Uusi kirjaus tehdään aina, kun tieosuus suljetaan tai kun sen sijainti muuttuu. Osuuden sijanti määräytyy kohteen alkuun ja loppuun asetettujen liikenneohjausaitojen sijaintien perusteella.
+              description: Tietyömaan kirjaaminen. Uusi kirjaus tehdään aina, kun tietyömaa alkaa tai kun sen sijainti muuttuu. Osuuden sijanti määräytyy kohteen alkuun ja loppuun asetettujen liikenneohjausaitojen sijaintien perusteella.
               body:
                 application/json:
-                  example: !include examples/suljetun-tieosuuden-kirjaus-request.json
-                  schema: suljetun-tieosuuden-kirjaus-request
+                  example: !include examples/tietyomaan-kirjaus-request.json
+                  schema: tietyomaan-kirjaus-request
               responses:
                 200:
                   body:
@@ -533,11 +746,11 @@ documentation:
                      schema: virhe-response
             delete:
               is: [secured]
-              description: Suljetun tieosuuden poistaminen. Poisto tehdään, kun liikenteenohjausaidat on poistettu.
+              description: Tietyömaan poistaminen. Poisto tehdään, kun liikenteenohjausaidat on poistettu.
               body:
                 application/json:
-                  example: !include examples/suljetun-tieosuuden-poisto-request.json
-                  schema: suljetun-tieosuuden-poisto-request
+                  example: !include examples/tietyomaan-poisto-request.json
+                  schema: tietyomaan-poisto-request
               responses:
                 200:
                   body:
@@ -554,6 +767,53 @@ documentation:
                     application/json:
                      example: !include examples/virhe-response.json
                      schema: virhe-response
+          /maaramuutokset:
+            post:
+              is: [secured]
+              description: Kohteen määrämuutosten (taloudellisen osan kirjaus). Rajapinnan kautta voidana päivittää kohteen kulutiedot, kuten esim. yksittäiset työt, yksikköhintoineen ja määrineen. Yksittäinen kutsu rajapintaan poistaa saman käyttäjän luomat olemassaolevat tiedot ja päivittää ne annetuilla. Tarkoitus on siis, että kaikki kohteen määrämuutokset välitetään jokaisessa kutsussa. Kentistä "ennustettu-maara" ja "toteutunut-maara" on pakko antaa ainakin toinen.
+              body:
+                application/json:
+                  example: !include examples/urakan-yllapitokohteen-maaramuutosten-kirjaus-request.json
+                  schema: urakan-yllapitokohteen-maaramuutosten-kirjaus-request
+              responses:
+                200:
+                  body:
+                    application/json:
+                      example: !include examples/onnistunut-kirjaus-response.json
+                      schema: kirjaus-response
+                500:
+                  body:
+                    application/json:
+                     example: !include examples/virhe-response.json
+                     schema: virhe-response
+                400:
+                  body:
+                    application/json:
+                     example: !include examples/virhe-response.json
+                     schema: virhe-response
+  /yhteystiedot:
+    /{urakkanumero}:
+      get:
+        is: [secured]
+        description: Urakan yhteystietojen haku urakkanumerolla. Palauttaa urakan yhteystiedot sekä yhteyshenkiöt
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include examples/urakan-yhteystietojen-haku-response.json
+                schema: urakan-yhteystietojen-haku-response
+          400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+          500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+
+
 /varusteet:
   is: [secured]
   /haku:
@@ -630,10 +890,6 @@ documentation:
           description: Haettavan tietolajin tunniste
           type: string
           example: tl506
-        muutospaivamaara:
-          description: Haettavan tietolajin muutospäivämäärä
-          type: date
-          example: 2015-01-01
       responses:
          200:
           body:

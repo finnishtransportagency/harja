@@ -1,0 +1,48 @@
+.ilmoitukset {
+  -webkit-transition-property: bottom;
+  -webkit-transition-duration: 0.5s;
+  transition-property: bottom;
+  transition-duration: 0.5s;
+
+  background-color: @harmaa14;
+  color: @musta;
+  border: 1px solid black;
+  box-sizing: border-box;
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 15px;
+  padding: 5px;
+  z-index: @z-index-ilmoitukset;
+  text-align: center;
+
+  > .ilmoitus {
+    box-sizing: border-box;
+    padding: 5px;
+    display: inline-block;
+  }
+}
+.ilmoitus-tyyppi-onnistui {
+  background-color: @onnistuminen;
+  color: @valkoinen;
+}
+
+.ilmoitus-tyyppi-virhe {
+  background-color: @vaara;
+  color: @valkoinen;
+}
+
+.ilmoitus-tyyppi-varoitus {
+  background-color: @varoitus;
+  color: @valkoinen;
+}
+
+#taydenna-havaintoa {
+  background-color: @valkoinen;
+  color: #0000EE;
+  display: block;
+}
+
+.ilmoitus-container-piilossa {
+  bottom: -200px;
+}

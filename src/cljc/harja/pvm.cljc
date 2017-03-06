@@ -22,7 +22,8 @@
   #?(:cljs (:import (goog.date DateTime))
      :clj
      (:import (java.util Calendar Date)
-              (java.text SimpleDateFormat))))
+              (java.text SimpleDateFormat)
+              (org.joda.time DateTimeZone))))
 
 
 #?(:cljs
@@ -37,6 +38,21 @@
      (or (instance? org.joda.time.DateTime pvm)
          (instance? org.joda.time.LocalDate pvm)
          (instance? org.joda.time.LocalDateTime pvm))))
+
+#?(:clj
+   (def suomen-aikavyohyke (DateTimeZone/forID "Europe/Helsinki")))
+
+#?(:clj
+   (defn suomen-aikavyohykkeessa
+     "Antaa joda daten suomen aikavyöhykkeellä"
+     [joda-time]
+     (t/from-time-zone joda-time suomen-aikavyohyke)))
+
+#?(:clj
+   (defn suomen-aikavyohykkeeseen
+     "Antaa joda daten suomen aikavyöhykkeellä"
+     [joda-time]
+     (t/to-time-zone joda-time suomen-aikavyohyke)))
 
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
@@ -71,15 +87,19 @@
   (aikana dt 0 0 0 0))
 
 (defn paivan-alussa-opt [dt]
-  (when dt
-    (aikana dt 0 0 0 0)))
+  (when dt (paivan-alussa dt)))
 
 (defn paivan-lopussa [dt]
   (aikana dt 23 59 59 999))
 
 (defn paivan-lopussa-opt [dt]
-  (when dt
-    (aikana dt 23 59 59 999)))
+  (when dt (paivan-lopussa dt)))
+
+(defn keskipaiva [dt]
+  (aikana dt 12 0 0 0))
+
+(defn keskipaiva-opt [dt]
+  (when dt (keskipaiva dt)))
 
 (defn millisekunteina [pvm]
   (tc/to-long pvm))
@@ -100,11 +120,16 @@
        (tc/from-sql-time dt))))
 
 (defn nyt
-  "Frontissa palauttaa goog.date.Datetimen
+  "Frontissa palauttaa goog.date.Datetimen (käyttäjän laitteen aika)
   Backendissä palauttaa java.util.Daten"
   []
   #?(:cljs (DateTime.)
      :clj (Date.)))
+
+(defn pvm?
+  [pvm]
+  #?(:cljs (instance? DateTime pvm)
+     :clj  (joda-time? pvm)))
 
 (defn luo-pvm
   "Frontissa palauttaa goog.date.Datetimen
@@ -178,8 +203,9 @@
          (= (t/month eka) (t/month toka)))))
 
 (defn valissa?
-  "Tarkistaa onko annettu pvm alkupvm:n ja loppupvm:n välissä. Mahdollisuus verrata ilman kellonaikaa,
-  joka on oletuksena true."
+  "Tarkistaa, onko annettu pvm alkupvm:n ja loppupvm:n välissä.
+  Palauttaa true myös silloin jos pvm on sama kuin alku- tai loppupvm.
+  Mahdollisuus verrata ilman kellonaikaa, joka on oletuksena true."
   ([pvm alkupvm loppupvm] (valissa? pvm alkupvm loppupvm true))
   ([pvm alkupvm loppupvm ilman-kellonaikaa?]
    (and (sama-tai-jalkeen? pvm alkupvm ilman-kellonaikaa?)
@@ -230,6 +256,9 @@
 
 (def kokovuosi-ja-kuukausi-fmt
   (luo-format "yyyy/MM"))
+
+#?(:clj (def pgobject-format
+          (luo-format "yyyy-MM-dd HH:mm:ss")))
 
 (defn pvm-aika
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa"
@@ -372,7 +401,7 @@
 (defn- d [x]
   #?(:cljs x
      :clj (if (instance? Date x)
-            (tc/from-date x)
+            (suomen-aikavyohykkeeseen (tc/from-date x))
             x)))
 
 (defn vuosi
@@ -419,7 +448,6 @@
                 (dec kk))
         ]
     [ed-vuosi ed-kk]))
-
 
 (defn
   kuukauden-aikavali
@@ -638,7 +666,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn aikavali-paivina [alku loppu]
      (t/in-days (t/interval (joda-timeksi alku) (joda-timeksi loppu)))))
 
-(defn paivia-valissa
+(defn paivia-aikavalien-leikkauskohdassa
   "Ottaa kaksi aikaväliä ja kertoo, kuinka monta toisen aikavälin päivää osuu ensimmäiselle aikavälille."
   [[alkupvm loppupvm] [vali-alkupvm vali-loppupvm]]
   (let [pvm-vector (sort t/before? [alkupvm loppupvm vali-alkupvm vali-loppupvm])]
@@ -653,6 +681,15 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
       0
       (t/in-days (t/interval (nth pvm-vector 1)
                              (nth pvm-vector 2))))))
+
+(defn paivia-valissa
+  "Palauttaa kokonaisluvun, joka kertoo montako päivää kahden päivämäärän välissä on.
+   Annettujen päivämäärien ei tarvitse olla kronologisessa järjestyksessä."
+  [eka toka]
+  (if (t/before? eka toka)
+    (t/in-days (t/interval eka toka))
+    (t/in-days (t/interval toka eka))))
+
 #?(:clj
    (defn iso-8601->pvm
      "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon päivämääräksi."
@@ -668,3 +705,18 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 (defn edelliset-n-vuosivalia [n]
   (let [pvmt (take n (iterate #(t/minus % (t/years 1)) (t/now)))]
     (mapv t/year pvmt)))
+
+
+#?(:cljs
+   (defn paivaa-sitten [paivaa]
+     (-> paivaa t/days t/ago)))
+
+#?(:cljs
+   (defn tuntia-sitten [tuntia]
+     (t/minus (nyt) (t/hours tuntia))))
+
+#?(:clj
+   (defn tuntia-sitten [tuntia]
+     (-> tuntia t/hours t/ago)))
+
+(def kayttoonottto (t/local-date 2016 10 1))

@@ -10,12 +10,14 @@
          :urakat :yleiset
          :suunnittelu :kokonaishintaiset
          :toteumat :kokonaishintaiset-tyot
+         :toteutus :kokonaishintaiset-tyot
          :laskutus :laskutusyhteenveto
          :hallinta :indeksit
          :laadunseuranta :tarkastukset
          :kohdeluettelo-paallystys :paallystyskohteet
          :kohdeluettelo-paikkaus :paikkauskohteet
-         :raportit nil}))
+         :raportit nil
+         :tilannekuva :nykytilanne}))
 
 (defn aseta-valittu-valilehti!
   [osio valilehti]

@@ -165,6 +165,7 @@ WHERE t.id = :id AND t.urakka = :urakka;
 -- Hakee yksittäisen urakan turvallisuuspoikkeaman
 SELECT
   t.id,
+  t.turi_id                             AS "turi-id",
   t.urakka,
   t.tapahtunut,
   t.kasitelty,
@@ -201,10 +202,26 @@ SELECT
   t.turvallisuuskoordinaattori_sukunimi AS turvallisuuskoordinaattorisukunimi,
   t.aiheutuneet_seuraukset              AS seuraukset,
 
+  u.urakkanro                           AS alueurakkanro,
+
   u.sampoid                             AS "urakka-sampoid",
+  hlo.kayttajatunnus                    AS "tilaajanvastuuhenkilo-kayttajatunnus",
+  hlo.etunimi                           AS "tilaajanvastuuhenkilo-etunimi",
+  hlo.sukunimi                          AS "tilaajanvastuuhenkilo-sukunimi",
+  hlo.sahkoposti                        AS "tilaajanvastuuhenkilo-sposti",
+  u.tyyppi                              AS "urakka-tyyppi",
+  o.lyhenne                             AS "urakka-ely",
+  u.loppupvm                            AS "urakka-loppupvm",
+  u.nimi                                AS "urakka-nimi",
+  h.nimi                                AS "hanke-nimi",
+
 
   k.id                                  AS korjaavatoimenpide_id,
   k.kuvaus                              AS korjaavatoimenpide_kuvaus,
+  khlo.kayttajanimi                     AS korjaavatoimenpide_vastuuhenkilokayttajatunnus,
+  khlo.etunimi                          AS korjaavatoimenpide_vastuuhenkiloetunimi,
+  khlo.sukunimi                         AS korjaavatoimenpide_vastuuhenkilosukunimi,
+  khlo.sahkoposti                       AS korjaavatoimenpide_vastuuhenkilosposti,
   k.suoritettu                          AS korjaavatoimenpide_suoritettu,
   k.otsikko                             AS korjaavatoimenpide_otsikko,
   k.toteuttaja                          AS korjaavatoimenpide_toteuttaja,
@@ -236,6 +253,12 @@ FROM turvallisuuspoikkeama t
   LEFT JOIN urakka u
     ON t.urakka = u.id
 
+  LEFT JOIN urakanvastuuhenkilo hlo
+    ON hlo.urakka = u.id  AND hlo.id = (SELECT id from urakanvastuuhenkilo WHERE rooli = 'ELY_Urakanvalvoja' and urakka = u.id ORDER BY ensisijainen DESC LIMIT 1 )
+
+  LEFT JOIN hanke h
+    ON u.hanke = h.id
+
   LEFT JOIN korjaavatoimenpide k
     ON t.id = k.turvallisuuspoikkeama
        AND k.poistettu IS NOT TRUE
@@ -253,6 +276,10 @@ FROM turvallisuuspoikkeama t
 
   LEFT JOIN liite koml ON kom.liite = koml.id
 
+  LEFT JOIN kayttaja khlo ON k.vastuuhenkilo = khlo.id
+
+  LEFT JOIN organisaatio o ON u.hallintayksikko = o.id
+
 WHERE t.id = :id;
 
 -- name: onko-olemassa-ulkoisella-idlla
@@ -269,6 +296,19 @@ VALUES (:turvallisuuspoikkeama, :kommentti);
 -- name: liita-liite<!
 INSERT INTO turvallisuuspoikkeama_liite (turvallisuuspoikkeama, liite)
 VALUES (:turvallisuuspoikkeama, :liite);
+
+-- name: hae-turvallisuuspoikkeaman-liitteet
+-- Hakee annetun turvallisuuspoikkeaman kaikki liitteet
+SELECT
+  l.id        AS id,
+  l.tyyppi    AS tyyppi,
+  l.koko      AS koko,
+  l.nimi      AS nimi,
+  l.liite_oid AS oid
+FROM liite l
+  JOIN turvallisuuspoikkeama_liite hl ON l.id = hl.liite
+WHERE hl.turvallisuuspoikkeama = :turvallisuuspoikkeamaid
+ORDER BY l.luotu ASC;
 
 --name: paivita-korjaava-toimenpide<!
 UPDATE korjaavatoimenpide
@@ -475,7 +515,7 @@ VALUES
     :turvallisuuskoordinaattori_etunimi,
     :turvallisuuskoordinaattori_sukunimi,
     :ilmoittaja_etunimi,
-   :ilmoittaja_sukunimi,
+    :ilmoittaja_sukunimi,
    :ulkoinen_id,
    :ilmoitukset_lahetetty,
    :tapahtuman_otsikko,
@@ -520,4 +560,11 @@ WHERE (:kayttajanimi IS NULL OR lower(kayttajanimi) LIKE (CONCAT(lower(:kayttaja
       AND jarjestelma IS FALSE;
 
 -- name: hae-turvallisuuspoikkeaman-urakka
-SELECT urakka FROM turvallisuuspoikkeama WHERE id = :id;
+SELECT urakka
+FROM turvallisuuspoikkeama
+WHERE id = :id;
+
+-- name: tallenna-turvallisuuspoikkeaman-turi-id!
+UPDATE turvallisuuspoikkeama SET
+  turi_id = :turi_id
+WHERE id = :id;

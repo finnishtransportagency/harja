@@ -1,5 +1,16 @@
 (ns harja.palvelin.raportointi.pdf
-  "Raportoinnin elementtien renderöinti PDF:ksi"
+  "Raportoinnin elementtien renderöinti PDF:ksi
+
+  Harjan raportit ovat Clojuren tietorakenteita, joissa käytetään
+  tiettyä rakennetta ja tiettyjä avainsanoja. Nämä raportit annetaan
+  eteenpäin moottoreille, jotka luovat tietorakenteen pohjalta raportin.
+  Tärkeä yksityiskohta on, että raporttien olisi tarkoitus sisältää ns.
+  raakaa dataa, ja antaa raportin formatoida data oikeaan muotoon sarakkeen :fmt
+  tiedon perusteella.
+
+  Tärkein muodosta-pdf metodin toteutus on :taulukko. Mm. uusien saraketyyppien
+  tukeminen lisätään sinne.
+  "
   (:require [harja.tyokalut.xsl-fo :as fo]
             [clojure.string :as str]
             [harja.visualisointi :as vis]
@@ -18,12 +29,9 @@
           "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
           Dispatch tyypin mukaan (vektorin 1. elementti)."
           (fn [elementti]
-            (assert (and (vector? elementti)
-                         (> (count elementti) 1)
-                         (keyword? (first elementti)))
-                    (str "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä, sain: "
-                         (pr-str elementti)))
-            (first elementti)))
+            (if (raportti-domain/raporttielementti? elementti)
+              (first elementti)
+              :vain-arvo)))
 
 (def ^:const +max-rivimaara+ 1000)
 
@@ -40,15 +48,27 @@
 
 (def reunan-tyyli (str "solid 0.1mm " raportin-tehostevari))
 
+(defmethod muodosta-pdf :vain-arvo [arvo] arvo)
+
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
 
-(defmethod muodosta-pdf :arvo-ja-osuus [arvo-ja-osuus]
-  (let [tiedot (second arvo-ja-osuus)]
-    [:fo:inline
-     [:fo:inline (:arvo tiedot)]
-     [:fo:inline " "]
-     [:fo:inline {:font-size (str (- taulukon-fonttikoko 2) taulukon-fonttikoko-yksikko)} (str "( " (:osuus tiedot) "%)")]]))
+(defmethod muodosta-pdf :arvo-ja-osuus [[_ {:keys [arvo osuus fmt]}]]
+  [:fo:inline
+   [:fo:inline (if fmt (fmt arvo) arvo)]
+   [:fo:inline " "]
+   [:fo:inline {:font-size (str (- taulukon-fonttikoko 2) taulukon-fonttikoko-yksikko)} (str "( " osuus "%)")]])
+
+(defmethod muodosta-pdf :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt]}]]
+  [:fo:inline
+   [:fo:inline (if fmt (fmt arvo) arvo)]
+   [:fo:inline (str yksikko)]])
+
+(defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt]}]]
+  [:fo:inline
+   [:fo:inline {:color (or itsepaisesti-maaritelty-oma-vari (raportti-domain/virhetyylit tyyli) "black")}
+    (if fmt (fmt arvo) arvo)]])
+
 
 (def alareuna
   {:border-bottom reunan-tyyli})
@@ -116,18 +136,21 @@
                  :let [arvo-datassa (nth rivi i)
                        sarake (nth sarakkeet i)
                        fmt (case (:fmt sarake)
-                             :numero #(fmt/desimaaliluku-opt % 1 true)
-                             :prosentti #(fmt/prosentti-opt %)
-                             :raha #(fmt/desimaaliluku-opt % 2 true)
-                             :pvm #(fmt/pvm-opt %)
+                             ;; Jos halutaan tukea erityyppisiä sarakkeita,
+                             ;; pitää tänne lisätä formatter.
+                             :numero #(raportti-domain/yrita fmt/desimaaliluku-opt % 1 true)
+                             :prosentti #(raportti-domain/yrita fmt/prosentti-opt %)
+                             :raha #(raportti-domain/yrita fmt/euro-opt %)
+                             :pvm #(raportti-domain/yrita fmt/pvm-opt %)
                              str)
                        naytettava-arvo (or
                                          (cond
-                                           (raportti-domain/virhe? arvo-datassa)
-                                           (raportti-domain/virheen-viesti arvo-datassa)
-
-                                           (vector? arvo-datassa)
-                                           (muodosta-pdf arvo-datassa)
+                                           (raportti-domain/raporttielementti? arvo-datassa)
+                                           (muodosta-pdf
+                                             (if (raportti-domain/formatoi-solu? arvo-datassa)
+                                               (raportti-domain/raporttielementti-formatterilla
+                                                arvo-datassa fmt)
+                                               arvo-datassa))
 
                                            :else (fmt arvo-datassa))
                                          "")]]
@@ -293,3 +316,7 @@
                                    [(muodosta-pdf %)]))
                                sisalto))
                  #_[[:fo:block {:id "raportti-loppu"}]])))
+
+(defmethod muodosta-pdf :default [elementti]
+  (log/debug "PDF-raportti ei tue elementtiä " elementti)
+  nil)

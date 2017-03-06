@@ -29,8 +29,7 @@
             (into []
                   (if @tuleville?
                     (u/rivit-tulevillekin-kausille ur uudet-tyot valittu-hoitokausi)
-                    uudet-tyot
-                    ))
+                    uudet-tyot))
             res (<! (yks-hint-tyot/tallenna-urakan-yksikkohintaiset-tyot ur sopimusnumero muuttuneet))
             prosessoidut-tyorivit (s/prosessoi-tyorivit ur res)]
         (reset! tyot prosessoidut-tyorivit)
@@ -151,7 +150,9 @@
 
         tyorivit-joilla-hinta (reaction
                                 (keep #(if (:yksikkohinta %)
-                                        (identity %)) @tyorivit))]
+                                        (identity %)) @tyorivit))
+
+        toimenpiteen-kustannukset (reaction (reduce + 0 (keep :yhteensa @tyorivit-joilla-hinta)))]
 
     (hae-urakan-tiedot ur)
     (komp/luo
@@ -167,7 +168,7 @@
       (fn [ur]
         [:div.yksikkohintaiset-tyot
          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut ur]
-         
+
 
          [grid/grid
           {:otsikko "Urakkasopimuksen mukaiset yksikköhinnat"
@@ -175,6 +176,10 @@
            :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
                        #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi urakan-yks-hint-tyot %)
                        :ei-mahdollinen)
+           :tallenna-vain-muokatut false
+           :tallennus-ei-mahdollinen-tooltip (oikeudet/oikeuden-puute-kuvaus
+                                              :kirjoitus
+                                              oikeudet/urakat-suunnittelu-yksikkohintaisettyot)
            :peruuta #(reset! tuleville? false)
            :tunniste :tehtava
            :voi-lisata? false
@@ -183,7 +188,7 @@
                                  (ryhmittele-hinnoitellut @tyorivit))
            :piilota-toiminnot? true
            :muokkaa-footer (fn [g]
-                             [raksiboksi {:teksti "Tallenna tulevillekin hoitokausille"
+                             [raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi ur))
                                           :toiminto #(swap! tuleville? not)
                                           :info-teksti [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
                                           :nayta-infoteksti? @varoita-ylikirjoituksesta?}
@@ -207,6 +212,15 @@
          [vihje yleiset/+tehtavien-hinta-vaihtoehtoinen+]
 
          [:div.hoitokauden-kustannukset
+          [:div.summa.summa-toimenpiteen-hoitokausi
+           "Yksikköhintaisten töiden toimenpiteen hoitokausi yhteensä "
+           [:span (fmt/euro @toimenpiteen-kustannukset)]]
+          [:div.summa.summa-hoitokausi
+           "Yksikkohintaisten töiden hoitokausi yhteensä "
+           [:span (fmt/euro @valitun-hoitokauden-yks-hint-kustannukset)]]
+          [:div.summa.summa-hoitokaudet
+           "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "
+           [:span (fmt/euro @kaikkien-hoitokausien-kustannukset)]]
           [:div.piirakka-hoitokauden-kustannukset-per-kaikki.row
            [:div.col-xs-6.piirakka
             (let [valittu-kust @valitun-hoitokauden-yks-hint-kustannukset
@@ -225,9 +239,4 @@
                  [:h5.piirakka-label "Hoitokauden yksikköhintaisten töiden osuus kaikista töistä"]
                  [vis/pie
                   {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
-                  {"Yksikköhintaiset" yks-hint-yhteensa "Kokonaishintaiset" kok-hint-yhteensa}]]))]]
-
-          [:div.summa "Yksikkohintaisten töiden hoitokausi yhteensä "
-           [:span (fmt/euro @valitun-hoitokauden-yks-hint-kustannukset)]]
-          [:div.summa "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "
-           [:span (fmt/euro @kaikkien-hoitokausien-kustannukset)]]]]))))
+                  {"Yksikköhintaiset" yks-hint-yhteensa "Kokonaishintaiset" kok-hint-yhteensa}]]))]]]]))))

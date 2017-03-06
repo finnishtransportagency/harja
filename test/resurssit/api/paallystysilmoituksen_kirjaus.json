@@ -1,0 +1,87 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2016-01-30T12:00:00Z"
+  },
+
+  "paallystysilmoitus": {
+    "perustiedot": {
+      "takuupvm": "2015-02-15T12:00:00Z"
+    },
+    "yllapitokohde": {
+      "sijainti": {
+        "aosa": 1,
+        "aet": 1,
+        "losa": 5,
+        "let": 16,
+        "ajr": 1,
+        "kaista": 1
+      },
+      "alikohteet": [
+        {
+          "alikohde": {
+            "nimi": "1. testialikohde",
+            "tunnus": "A",
+            "sijainti": {
+              "aosa": 1,
+              "aet": 1,
+              "losa": 5,
+              "let": 16,
+              "ajr": 1,
+              "kaista": 1
+            },
+            "paallystetyyppi": "avoin asfaltti",
+            "raekoko": 12,
+            "massamenekki": 22,
+            "rc-prosentti": 54,
+            "tyomenetelma": "Uraremix",
+            "leveys": 1.2,
+            "kokonaismassamaara": 12.3,
+            "pinta-ala": 2.2,
+            "kuulamylly": "N14",
+            "kivi-ja-sideaineet": [
+              {
+                "kivi-ja-sideaine": {
+                  "esiintyma": "testi",
+                  "km-arvo": "testi",
+                  "muotoarvo": "testi",
+                  "sideainetyyppi": "20/30",
+                  "pitoisuus": 1.2,
+                  "lisa-aineet": "lisäaineet"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "alustatoimenpiteet": [
+      {
+        "alustatoimenpide": {
+          "sijainti": {
+            "aosa": 1,
+            "aet": 1,
+            "losa": 5,
+            "let": 15
+          },
+          "kasittelymenetelma": "Massanvaihto",
+          "paksuus": 1,
+          "verkkotyyppi": "Teräsverkko",
+          "verkon-tarkoitus": "Moniongelmaisen tukeminen",
+          "verkon-sijainti": "Päällysteessä",
+          "tekninen-toimenpide": "Rakentaminen"
+        }
+      }
+    ]
+  },
+  "valmis-kasiteltavaksi": __VALMIS__
+}

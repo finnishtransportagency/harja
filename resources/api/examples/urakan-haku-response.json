@@ -9,8 +9,8 @@
       },
       "vaylamuoto": "tie",
       "tyyppi": "paallystys",
-      "alkupvm": "2016-01-30T12:00:00Z",
-      "loppupvm": "2016-01-30T12:00:00Z",
+      "alkupvm": "2016-01-30T12:00:00+02:00",
+      "loppupvm": "2016-01-30T12:00:00+02:00",
       "alueurakkanumero": "1240"
     },
     "sopimukset": [
@@ -18,8 +18,8 @@
         "sopimus": {
           "id": 456789132,
           "nimi": "Kiviharjunlenkin asfaltointi",
-          "alkupvm": "2015-01-30T12:00:00Z",
-          "loppupvm": "2016-01-30T12:00:00Z"
+          "alkupvm": "2015-01-30T12:00:00+02:00",
+          "loppupvm": "2016-01-30T12:00:00+02:00"
         }
       }
     ],

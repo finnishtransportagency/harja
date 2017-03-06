@@ -32,12 +32,13 @@
 
   [paallystys :paallystys "Päällystystyöt"]
   [paikkaus :paikkaus "Paikkaustyöt"]
-  [suljetut-tiet :suljetut-tieosuudet "Suljetut tieosuudet"]
+  [tietyomaat :tietyomaat "Tietyömaat"]
   [paaasfalttilevitin "asfaltointi" "Pääasfalttilevittimet"]
   [tiemerkintakone "tiemerkinta" "Tiemerkintäkoneet"]
   [kuumennuslaite "kuumennus" "Kuumennuslaitteet"]
   [sekoitus-ja-stabilointijyrsin "sekoitus tai stabilointi" "Sekoitus- ja stabilointijyrsimet"]
   [tma-laite "turvalaite" "TMA-laitteet"]
+  [jyra "jyrays" "Jyrät"]
 
   [auraus-ja-sohjonpoisto "auraus ja sohjonpoisto" "Auraus ja sohjonpoisto"]
   [suolaus "suolaus" "Suolaus"]
@@ -88,10 +89,11 @@
   {:ilmoitukset {:tyypit [tpp tur urk]}
    :yllapito [paallystys
               paikkaus
-              suljetut-tiet
+              tietyomaat
               paaasfalttilevitin
               tiemerkintakone
               kuumennuslaite
+              jyra
               sekoitus-ja-stabilointijyrsin
               tma-laite]
    :yllapidon-reaaliaikaseuranta []
@@ -136,15 +138,16 @@
 (def yllapidon-reaaliaikaseurattavat
   #{(:id paaasfalttilevitin)
     (:id tiemerkintakone)
+    (:id jyra)
     (:id kuumennuslaite)
     (:id sekoitus-ja-stabilointijyrsin)
     (:id tma-laite)})
 
 (defn valitut-suodattimet
   "Ottaa nested map rakenteen, jossa viimeisellä tasolla avaimet ovat
-Suodatin recordeja ja arvot boolean. Palauttaa mäpin muuten samalla rakenteella,
-mutta viimeisen tason {suodatin boolean} mäpit on korvattu valittujen
-suodattimien id numeroilla."
+  Suodatin recordeja ja arvot boolean. Palauttaa mäpin muuten samalla rakenteella,
+  mutta viimeisen tason {suodatin boolean} mäpit on korvattu valittujen
+  suodattimien id numeroilla."
   [valinnat]
   (loop [m valinnat
          [[avain arvo] & loput] (seq valinnat)]
@@ -171,16 +174,65 @@ suodattimien id numeroilla."
       :else
       (recur m loput))))
 
+(defn suodatin-muutettuna
+  "Ottaa nested map rakenteen, jossa viimeisellä tasolla avaimet ovat
+  Suodatin recordeja ja arvot boolean. Lisäksi ottaa kahden parametrin funktion ja setin id:tä.
+  Kun löydetään id-settiin osuva suodatin, kutsutaan funktiota suodattimella ja boolean-arvolla.
+  Funktion paluu arvo korvaa vanhan [suodatin boolean] avain-arvoparin.
+  Mäp palautetaan samalla rakenteella."
+  [valinnat funktio id-set]
+  (loop [m valinnat
+         [[avain arvo] & loput] (seq valinnat)]
+    (cond
+      (nil? avain)
+      m
+
+      (and (map? arvo)
+           (every? suodatin? (keys arvo)))
+      (let [loytyy? (some #(id-set (:id %)) (keys arvo))
+            tulos (if-not loytyy?
+                    arvo
+                    (into {}
+                          (map
+                            (fn [[suodatin valittu? :as pari]]
+                              (if (id-set (:id suodatin)) (funktio suodatin valittu?) pari))
+                            (seq arvo))))]
+        (recur (assoc m avain tulos) loput))
+
+      (map? arvo)
+      (recur (assoc m avain (suodatin-muutettuna arvo funktio id-set)) loput)
+
+      :else
+      (recur m loput))))
+
 (defn valittu? [valitut-set suodatin]
-  (and valitut-set
-       (valitut-set (:id suodatin))))
+  (some?
+    (and valitut-set
+         (valitut-set (:id suodatin)))))
+
+(defn- valitut-kentat* [taulukko suodattimet]
+  (loop [t taulukko
+         [[avain arvo] & loput] (seq suodattimet)]
+    (cond
+      (nil? avain)
+      t
+
+      (and (map? arvo) (every? suodatin? (keys arvo)))
+      (recur (concat t (keep (fn [[suodatin valittu?]] (when valittu? suodatin)) (seq arvo))) loput)
+
+      (map? arvo)
+      (recur (valitut-kentat* t arvo) loput)
+
+      :else
+      (recur t loput))))
 
 (defn valitut-kentat [valinnat]
   "Valitsee joukosta suodattimia valitut, ja palauttaa itse suodattimet listassa."
-  (let [valitut-suodattimet (apply clojure.set/union (map val (valitut-suodattimet valinnat)))
-        kentat (filter #(valitut-suodattimet (:id %))
-                       (mapcat (fn [[_ suodatin-map]] (map key suodatin-map)) valinnat))]
-    kentat))
+  (valitut-kentat* [] valinnat))
+
+(defn valittujen-suodattimien-idt [valinnat]
+  (let [valitut-kentat (valitut-kentat valinnat)]
+    (into #{} (map :id valitut-kentat))))
 
 (defn yllapidon-reaaliaikaseurattava? [id]
   (yllapidon-reaaliaikaseurattavat id))

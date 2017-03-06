@@ -1,32 +1,40 @@
 (ns harja.palvelin.integraatiot.tloik.sanomat.harja-kuittaus-sanoma
   (:require [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
-            [harja.tyokalut.xml :as xml]))
+            [harja.tyokalut.xml :as xml]
+            [harja.tyokalut.merkkijono :as merkkijono]
+            [clojure.string :as str]))
 
 (def +xsd-polku+ "xsd/tloik/")
 
 (defn tee-xml-sanoma [sisalto]
   (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))
 
+(defn urakkatyyppi [urakkatyyppi]
+  (case (str/lower-case urakkatyyppi)
+    "siltakorjaus" "silta"
+    "tekniset-laitteet" "tekniset laitteet"
+    urakkatyyppi))
+
 (defn rakenna-urakka [urakka]
   (when urakka
     [:urakka
      [:id (:id urakka)]
-     [:nimi (:nimi urakka)]
-     [:tyyppi (:tyyppi urakka)]]))
+     [:nimi (merkkijono/leikkaa 256 (:nimi urakka))]
+     [:tyyppi (urakkatyyppi (:tyyppi urakka))]]))
 
 (defn rakenna-urakoitsija [urakka]
   (when urakka
     [:urakoitsija
-     [:nimi (:urakoitsija_nimi urakka)]
-     [:ytunnus (:urakoitsija_ytunnus urakka)]]))
+     [:nimi (merkkijono/leikkaa 128 (:urakoitsija_nimi urakka))]
+     [:ytunnus (merkkijono/leikkaa 9 (:urakoitsija_ytunnus urakka))]]))
 
 (defn rakenna-paivystaja [{:keys [etunimi sukunimi matkapuhelin tyopuhelin sahkoposti]}]
   [:paivystaja
-   [:etunimi etunimi]
-   [:sukunimi sukunimi]
-   [:matkapuhelin (or matkapuhelin tyopuhelin)]
-   [:sahkoposti sahkoposti]])
+   [:etunimi (merkkijono/leikkaa 32 etunimi)]
+   [:sukunimi (merkkijono/leikkaa 32 sukunimi)]
+   [:matkapuhelin (merkkijono/leikkaa 32 (or matkapuhelin tyopuhelin))]
+   [:sahkoposti (merkkijono/leikkaa 64 sahkoposti)]])
 
 (defn muodosta-viesti [viesti-id ilmoitus-id aika kuittaustyyppi urakka paivystajat virhe]
   [:harja:harja-kuittaus
@@ -35,7 +43,7 @@
    [:kuittaustyyppi kuittaustyyppi]
    [:viestiId viesti-id]
    (when virhe
-     [:virhe virhe])
+     [:virhe (merkkijono/leikkaa 255 virhe)])
    (when ilmoitus-id
      [:valitystiedot
       [:ilmoitusId ilmoitus-id]
@@ -49,5 +57,6 @@
     (if (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml)
       xml
       (do
-        (log/error "Kuittausta ei voida lähettää. Kuittaus XML ei ole validi.")
+        (log/error (format "Kuittausta T-LOIK:n ei voida lähettää viesti id:lle %s. Kuittaus XML ei ole validi. XML: %s"
+                           viesti-id xml))
         nil))))

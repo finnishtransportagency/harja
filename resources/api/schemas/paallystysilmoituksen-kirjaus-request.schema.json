@@ -17,6 +17,10 @@
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/paallystysilmoitus.schema.json",
       "required": true
+    },
+    "valmis-kasiteltavaksi": {
+      "id": "urn:harja/paallystysilmoitus_valmis_kasiteltavaksi",
+      "type": "boolean"
     }
   }
 }

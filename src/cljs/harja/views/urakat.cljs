@@ -17,7 +17,8 @@
             [harja.views.kartta :as kartta]
             [harja.views.urakka :as urakka]
             [harja.pvm :as pvm]
-            [harja.ui.komponentti :as komp])
+            [harja.ui.komponentti :as komp]
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn valitse-hallintayksikko []
@@ -32,7 +33,7 @@
           ^{:key "hy-lista"}
           [suodatettu-lista {:format hal/elynumero-ja-nimi :haku :nimi
                              :selection nav/valittu-hallintayksikko
-                             :on-select nav/valitse-hallintayksikko
+                             :on-select nav/valitse-hallintayksikko!
                              :aputeksti "Kirjoita hallintayksikön nimi tähän"}
            hallintayksikot]]])]
      [:div.col-md-8
@@ -40,7 +41,18 @@
 
 (defn valitse-urakka []
   (let [urakkalista @nav/hallintayksikon-urakkalista
-        suodatettu-urakkalista @nav/suodatettu-urakkalista]
+        suodatettu-urakkalista @nav/suodatettu-urakkalista
+        nyt (pvm/nyt)
+        tulevia? (some #(pvm/ennen? nyt (:alkupvm %)) suodatettu-urakkalista)
+        kaynnissaolevia? (some #(and
+                                 (pvm/jalkeen? nyt (:alkupvm %))
+                                 (pvm/ennen? nyt (:loppupvm %))) suodatettu-urakkalista)
+        paattyneita? (some #(pvm/jalkeen? nyt (:loppupvm %)) suodatettu-urakkalista)
+        naytettavat-ryhmat (into []
+                                 (keep identity)
+                                 [(when tulevia? :tulevat)
+                                  (when kaynnissaolevia? :kaynnissa)
+                                  (when paattyneita? :paattyneet)])]
     [:div.row
      [:div.col-md-4
       (if (nil? urakkalista)
@@ -51,17 +63,19 @@
           ^{:key "ur-lista"}
           [suodatettu-lista {:format         :nimi :haku :nimi
                              :selection      nav/valittu-urakka
-                             :nayta-ryhmat   [:kaynnissa :paattyneet]
-                             :ryhmittely     (let [nyt (pvm/nyt)]
-                                               #(if (pvm/jalkeen? nyt (:loppupvm %))
+                             :nayta-ryhmat   naytettavat-ryhmat
+                             :ryhmittely     #(if (pvm/ennen? nyt (:alkupvm %))
+                                               :tulevat
+                                               (if (pvm/jalkeen? nyt (:loppupvm %))
                                                  :paattyneet
                                                  :kaynnissa))
                              :ryhman-otsikko #(case %
+                                               :tulevat "Tulevat urakat"
                                                :kaynnissa "Käynnissä olevat urakat"
                                                :paattyneet "Päättyneet urakat")
                              :on-select      nav/valitse-urakka!
                              :vinkki         #(when (empty? suodatettu-urakkalista)
-                                               "Hakuehdoilla ei löytynyt urakoita")
+                                               "Hakuehdoilla ei löytynyt urakoita, joita on oikeus tarkastella.")
                              :aputeksti      "Kirjoita urakan nimi tähän"}
            suodatettu-urakkalista]]])]
      [:div.col-md-8
@@ -73,7 +87,7 @@
    Jos molemmat on valittu, palauttaa nil"
   []
   (komp/luo
-    {:component-did-mount (fn [& _] (kartta/zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))}
+    {:component-did-mount (fn [& _] (kartta-tiedot/zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))}
     (fn []
       (let [v-hal @nav/valittu-hallintayksikko
            v-ur @nav/valittu-urakka]

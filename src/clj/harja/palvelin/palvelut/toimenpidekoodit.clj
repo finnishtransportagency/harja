@@ -12,7 +12,13 @@
   "Palauttaa toimenpidekoodit listana"
   [db kayttaja]
   (into []
-        (map #(konv/array->vec % :hinnoittelu))
+        (comp (map konv/alaviiva->rakenne)
+              (map (fn [{luoja :luoja :as rivi}]
+                     (if-not (:id luoja)
+                       ;; Poista luoja, jos tietoja ei ole
+                       (assoc rivi :luoja nil)
+                       rivi)))
+              (map #(konv/array->vec % :hinnoittelu)))
         (q/hae-kaikki-toimenpidekoodit db)))
 
 (defn lisaa-toimenpidekoodi
@@ -35,8 +41,15 @@
 (defn muokkaa-toimenpidekoodi
   "Muokkaa toimenpidekoodin nimeä ja yksikköä. Palauttaa true jos muokkaus tehtiin, false muuten."
 
-  [db user {:keys [nimi emo yksikko id hinnoittelu api-seuranta] :as rivi}]
-  (= 1 (q/muokkaa-toimenpidekoodi! db (:id user) nimi yksikko (konv/seq->array hinnoittelu) api-seuranta id)))
+  [db user {:keys [nimi emo yksikko id hinnoittelu api-seuranta passivoitu?] :as rivi}]
+  (= 1 (q/muokkaa-toimenpidekoodi! db
+                                   {:id id
+                                    :kayttajaid (:id user)
+                                    :nimi nimi
+                                    :yksikko yksikko
+                                    :hinnoittelu (konv/seq->array hinnoittelu)
+                                    :apiseuranta api-seuranta
+                                    :poistettu passivoitu?})))
 
 (defn tallenna-tehtavat [db user {:keys [lisattavat muokattavat poistettavat]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-tehtavat user)
@@ -64,6 +77,7 @@
       (julkaise-palvelu
         :hae-toimenpidekoodit
         (fn [kayttaja]
+          (oikeudet/ei-oikeustarkistusta!)
           (hae-toimenpidekoodit (:db this) kayttaja))
         {:last-modified (fn [user]
                           (:muokattu (first (q/viimeisin-muokkauspvm (:db this)))))})
@@ -74,6 +88,7 @@
       (julkaise-palvelu
         :hae-reaaliaikaseurannan-tehtavat
         (fn [_]
+          (oikeudet/ei-oikeustarkistusta!)
           (hae-reaaliaikaseurannan-tehtavat))))
     this)
 

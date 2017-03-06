@@ -18,7 +18,11 @@
             [clojure.string :as str]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
-            [harja.geo :as geo])
+            [harja.geo :as geo]
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json]
+            [clj-time.core :as t]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [clojure.core.async :as async])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tarkista-ammatin-selitteen-tallennus [turvallisuuspoikkeamat]
@@ -68,7 +72,7 @@
                                                 (tallenna-ammatinselite? data))
                                        ammatinselite)
                         :kuvaus kuvaus
-                        :vammat (when (tallenna-henkilovahinko? data) (konv/seq->array aiheutuneetVammat))
+                        :vammat (when (tallenna-henkilovahinko? data) (konv/seq->array [(first aiheutuneetVammat)]))
                         :poissa (when (tallenna-henkilovahinko? data) sairauspoissaolopaivat)
                         :sairaalassa (when (tallenna-henkilovahinko? data) sairaalahoitovuorokaudet)
                         :vahinkoluokittelu (konv/seq->array vahinkoluokittelu)
@@ -92,7 +96,7 @@
                                     (geo/clj->pg {:type :point
                                                   :coordinates ((juxt :x :y) koordinaatit)}))
                         :vahingoittuneet_ruumiinosat (when (tallenna-henkilovahinko? data)
-                                                       (konv/seq->array vahingoittuneetRuumiinosat))
+                                                       (konv/seq->array [(first vahingoittuneetRuumiinosat)]))
                         :sairauspoissaolo_jatkuu (when (tallenna-henkilovahinko? data)
                                                    sairauspoissaoloJatkuu)
                         :aiheutuneet_seuraukset seuraukset
@@ -130,7 +134,7 @@
                       ammatinselite)
        :tehtava (when (tallenna-henkilovahinko? data) tyotehtava)
        :kuvaus kuvaus
-       :vammat (when (tallenna-henkilovahinko? data) (konv/seq->array aiheutuneetVammat))
+       :vammat (when (tallenna-henkilovahinko? data) (konv/seq->array [(first aiheutuneetVammat)]))
        :poissa (when (tallenna-henkilovahinko? data) sairauspoissaolopaivat)
        :sairaalassa (when (tallenna-henkilovahinko? data) sairaalahoitovuorokaudet)
        :tyyppi (konv/seq->array luokittelu)
@@ -154,7 +158,7 @@
                                       false)
        :paikan_kuvaus paikan_kuvaus
        :vahingoittuneet_ruumiinosat
-       (when (tallenna-henkilovahinko? data) (konv/seq->array vahingoittuneetRuumiinosat))
+       (when (tallenna-henkilovahinko? data) (konv/seq->array [(first vahingoittuneetRuumiinosat)]))
        :sairauspoissaolo_jatkuu (when (tallenna-henkilovahinko? data) sairauspoissaoloJatkuu)
        :aiheutuneet_seuraukset seuraukset
        :ilmoittaja_etunimi (:etunimi ilmoittaja)
@@ -207,9 +211,16 @@
          (catch Throwable t
            (log/info "Ongelma kirjattaessa korjaava toimenpide: " t)))))
 
+(defn vaadi-turvallisuuspoikkeama-ei-tulevaisuudessa [{:keys [tapahtumapaivamaara] :as data}]
+  (when (t/after? (json/aika-string->joda-time tapahtumapaivamaara) (t/now))
+    (throw+ {:type virheet/+viallinen-kutsu+
+             :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
+                        :viesti "Tapahtumapäivämäärä ei voi olla tulevaisuudessa"}]})))
+
 (defn tallenna-turvallisuuspoikkeama [liitteiden-hallinta db urakka-id kirjaaja data]
   (log/debug "Aloitetaan turvallisuuspoikkeaman tallennus.")
   (jdbc/with-db-transaction [db db]
+    (vaadi-turvallisuuspoikkeama-ei-tulevaisuudessa data)
     (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db urakka-id kirjaaja data)
           kommentit (:kommentit data)
           korjaavat (:korjaavatToimenpiteet data)
@@ -217,7 +228,8 @@
       (tallenna-korjaavat-toimenpiteet db tp-id kirjaaja korjaavat)
       (tallenna-kommentit db tp-id kirjaaja kommentit)
       (log/debug "Tallennetaan turvallisuuspoikkeamalle " tp-id " " (count liitteet) " liitettä.")
-      (tallenna-liitteet-turvallisuuspoikkeamalle db liitteiden-hallinta urakka-id tp-id kirjaaja liitteet))))
+      (tallenna-liitteet-turvallisuuspoikkeamalle db liitteiden-hallinta urakka-id tp-id kirjaaja liitteet)
+      tp-id)))
 
 (defn laheta-poikkeamat-turin [turi idt]
   (when turi
@@ -237,7 +249,7 @@
     (let [idt (mapv (fn [turvallisuuspoikkeama]
                       (tallenna-turvallisuuspoikkeama liitteiden-hallinta db urakka-id kirjaaja turvallisuuspoikkeama))
                     turvallisuuspoikkeamat)]
-      (laheta-poikkeamat-turin turi idt))
+      (async/thread (laheta-poikkeamat-turin turi idt)))
     (vastaus turvallisuuspoikkeamat)))
 
 (defrecord Turvallisuuspoikkeama []

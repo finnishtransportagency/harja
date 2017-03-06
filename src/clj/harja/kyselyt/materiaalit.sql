@@ -20,9 +20,7 @@ FROM materiaalikoodi
 WHERE materiaalityyppi != 'talvisuola' :: materiaalityyppi;
 
 -- name: hae-urakan-materiaalit
--- Hakee jokaisen materiaalin, joka liittyy urakkaan JA JOLLA ON RIVI MATERIAALIN_KAYTTO taulussa.
--- Oleellista on, että palauttaa yhden rivin per materiaali, ja laskee yhteen paljonko materiaalia
--- on käytetty.
+-- Hakee kaikki materiaalit, ja palauttaa materiaalin suunnittelutiedot, jos materiaalia on urakkaan suunniteltu.
 SELECT
   mk.id,
   mk.alkupvm,
@@ -31,13 +29,7 @@ SELECT
   mk.sopimus,
   m.id      AS materiaali_id,
   m.nimi    AS materiaali_nimi,
-  m.yksikko AS materiaali_yksikko,
-
-  (SELECT SUM(maara) AS kokonaismaara
-   FROM toteuma_materiaali
-   WHERE materiaalikoodi = mk.id AND toteuma IN (SELECT id
-                                                 FROM toteuma
-                                                 WHERE urakka = :urakka))
+  m.yksikko AS materiaali_yksikko
 FROM materiaalin_kaytto mk
   LEFT JOIN materiaalikoodi m ON mk.materiaali = m.id
 WHERE mk.urakka = :urakka AND
@@ -71,6 +63,9 @@ WHERE mat.maara != 0 OR mat.kokonaismaara != 0;
 
 -- name: paivita-sopimuksen-materiaalin-kaytto
 SELECT paivita_sopimuksen_materiaalin_kaytto(:sopimus::integer, :alkupvm::date);
+
+-- name: paivita-koko-sopimuksen-materiaalin-kaytto
+SELECT paivita_koko_sopimuksen_materiaalin_kaytto(:sopimus::integer);
 
 -- name: paivita-sopimuksen-materiaalin-kaytto-toteumapvm
 -- Päivittää sopimuksen materiaalin käytön annetun toteuman alkupäivämäärän
@@ -128,7 +123,7 @@ FROM toteuma_materiaali
                         AND alkanut :: DATE <= :loppu
                         AND toteuma.poistettu IS NOT TRUE
                         AND toteuma_materiaali.poistettu IS NOT TRUE
-  JOIN urakka ON urakka.id = toteuma.urakka
+  JOIN urakka ON (urakka.id = toteuma.urakka AND urakka.urakkanro IS NOT NULL)
 WHERE urakka.hallintayksikko = :hallintayksikko AND (:urakkatyyppi::urakkatyyppi IS NULL OR urakka.tyyppi = :urakkatyyppi :: urakkatyyppi)
 GROUP BY "materiaali-nimi", "urakka-nimi", materiaalikoodi.yksikko, toteuma_materiaali.id;
 
@@ -148,7 +143,7 @@ FROM toteuma_materiaali
                         AND alkanut :: DATE <= :loppu
                         AND toteuma.poistettu IS NOT TRUE
                         AND toteuma_materiaali.poistettu IS NOT TRUE
-  JOIN urakka ON urakka.id = toteuma.urakka
+  JOIN urakka ON (urakka.id = toteuma.urakka AND urakka.urakkanro IS NOT NULL)
   JOIN organisaatio o ON urakka.hallintayksikko = o.id
   WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR urakka.tyyppi = :urakkatyyppi :: urakkatyyppi)
 GROUP BY "materiaali-nimi", "urakka-nimi", o.nimi, materiaalikoodi.yksikko;
@@ -294,6 +289,7 @@ FROM (SELECT
         JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
         LEFT JOIN kayttaja k ON tm.luoja = k.id
       WHERE t.urakka = :urakka
+            AND t.sopimus = :sopimus
             AND tm.poistettu IS NOT TRUE
             AND k.jarjestelma IS NOT TRUE
             AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
@@ -314,6 +310,9 @@ FROM (SELECT
         JOIN kayttaja k ON tm.luoja = k.id
       WHERE k.jarjestelma = TRUE
             AND t.urakka = :urakka
+            AND t.poistettu IS NOT TRUE
+            AND tm.poistettu IS NOT TRUE
+            AND t.sopimus = :sopimus
             AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
             AND mk.materiaalityyppi = 'talvisuola' :: materiaalityyppi
       GROUP BY mk.id, mk.nimi, date_trunc('day', t.alkanut)) toteumat

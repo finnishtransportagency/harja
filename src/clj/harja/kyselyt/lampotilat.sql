@@ -1,16 +1,18 @@
 -- name: uusi-lampotila<!
-INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila)
-VALUES (:urakka, :alku, :loppu, :keskilampo, :pitkalampo);
+INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila,
+                        pitka_keskilampotila, pitka_keskilampotila_vanha)
+VALUES (:urakka, :alku, :loppu, :keskilampo, :pitkalampo, :pitkalampo_vanha);
 
 -- name: paivita-lampotila<!
 UPDATE lampotilat SET
-  urakka = :urakka, alkupvm = :alku, loppupvm = :loppu, keskilampotila = :keskilampo, pitka_keskilampotila = :pitkalampo
+  urakka = :urakka, alkupvm = :alku, loppupvm = :loppu, keskilampotila = :keskilampo,
+  pitka_keskilampotila = :pitkalampo, pitka_keskilampotila_vanha = :pitkalampo_vanha
 WHERE id = :id;
 
 -- name: hae-urakan-suolasakot
 -- Hakee urakan suolasakot urakan id:llä
 SELECT
-  ss.id, ss.maara, ss.hoitokauden_alkuvuosi, ss.maksukuukausi, ss.indeksi, ss.urakka,
+  ss.id, ss.maara, ss.vainsakkomaara, ss.hoitokauden_alkuvuosi, ss.maksukuukausi, ss.indeksi, ss.urakka,
   ss.kaytossa, ss.talvisuolaraja
 FROM suolasakko ss
   WHERE ss.urakka = :urakka;
@@ -22,7 +24,8 @@ SELECT
   alkupvm,
   loppupvm,
   keskilampotila,
-  pitka_keskilampotila as pitkakeskilampotila
+  pitka_keskilampotila as pitkakeskilampotila,
+  pitka_keskilampotila_vanha as pitkakeskilampotila_vanha
 FROM lampotilat
 WHERE urakka = :urakka;
 
@@ -33,12 +36,12 @@ SELECT *
 
 
 -- name: luo-suolasakko<!
-INSERT INTO suolasakko (maara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, luotu, luoja, talvisuolaraja)
-    VALUES (:maara, :hoitokauden_alkuvuosi, :maksukuukausi, :indeksi, :urakka, NOW(), :kayttaja, :talvisuolaraja);
+INSERT INTO suolasakko (maara, vainsakkomaara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, luotu, luoja, talvisuolaraja)
+    VALUES (:maara, :vainsakkomaara, :hoitokauden_alkuvuosi, :maksukuukausi, :indeksi, :urakka, NOW(), :kayttaja, :talvisuolaraja);
 
 -- name: paivita-suolasakko!
 UPDATE suolasakko
-   SET maara = :maara, maksukuukausi = :maksukuukausi,
+   SET maara = :maara, vainsakkomaara = :vainsakkomaara, maksukuukausi = :maksukuukausi,
        indeksi = :indeksi, muokattu = NOW(), muokkaaja = :kayttaja,
        talvisuolaraja = :talvisuolaraja
  WHERE id = :id;
@@ -56,8 +59,8 @@ INSERT INTO pohjavesialue_talvisuola
        (talvisuolaraja, urakka, hoitokauden_alkuvuosi, pohjavesialue)
 VALUES (:talvisuolaraja, :urakka, :hoitokauden_alkuvuosi, :pohjavesialue);
 
- 
- 
+
+
 -- name: aseta-suolasakon-kaytto!
 UPDATE suolasakko
    SET kaytossa = :kaytossa, muokattu = NOW(), muokkaaja = :kayttaja
@@ -74,7 +77,8 @@ SELECT
   lt.alkupvm as alkupvm,
   lt.loppupvm as loppupvm,
   lt.keskilampotila as keskilampotila,
-  lt.pitka_keskilampotila as pitkakeskilampotila
+  lt.pitka_keskilampotila as pitkakeskilampotila,
+  lt.pitka_keskilampotila_vanha as pitkakeskilampotila_vanha
 FROM urakka u
   LEFT JOIN lampotilat lt ON (lt.urakka = u.id AND lt.alkupvm = :alkupvm AND lt.loppupvm = :loppupvm)
 WHERE (u.tyyppi = 'hoito'::urakkatyyppi AND

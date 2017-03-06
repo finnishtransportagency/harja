@@ -34,6 +34,105 @@
     (log/debug "Vastaus: " vastaus)
     (is (>= (count vastaus) 4))))
 
+(deftest urakkakohtaisen-valitavoitteen-tallentaminen-toimii
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        valitavoitteet [{:nimi "testi566", :takaraja (c/to-date (t/now)),
+                         :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis!"}
+                        {:nimi "testi34554", :takaraja (c/to-date (t/now)),
+                         :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis tämäkin!"}
+                        {:nimi "melko tyhjä vt", :takaraja nil,
+                         :valmispvm nil, :valmis-kommentti nil}]
+        vt-ennen-testia (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                        urakka-id)
+        _ (kutsu-palvelua
+            (:http-palvelin jarjestelma)
+            :tallenna-urakan-valitavoitteet
+            +kayttaja-jvh+
+            {:urakka-id urakka-id
+             :valitavoitteet valitavoitteet})
+        vt-lisayksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                             :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                             urakka-id)]
+
+    ;; Määrä lisääntyi oikein
+    (is (= (+ (count vt-ennen-testia) 3)
+           (count vt-lisayksen-jalkeen)))
+
+    ;; Tiedot tallentuivat oikein
+    (let [vt1 (first (filter #(= (:nimi %) "testi566") vt-lisayksen-jalkeen))
+          vt2 (first (filter #(= (:nimi %) "testi34554") vt-lisayksen-jalkeen))
+          vt3 (first (filter #(= (:nimi %) "melko tyhjä vt") vt-lisayksen-jalkeen))]
+      (is vt1)
+      (is vt2)
+      (is vt3)
+
+      ;; VT1 tallentui oikein
+      (is (some? (:valmis-merkitsija vt1)))
+      (is (some? (:valmispvm vt1)))
+      (is (nil? (:valtakunnallinen-id vt1)))
+      (is (= (:urakka-id vt1) urakka-id))
+      (is (some? (:takaraja vt1)))
+      (is (= (:valmis-kommentti vt1) "valmis!"))
+
+      ;; VT2 tallentui oikein
+      (is (some? (:valmis-merkitsija vt2)))
+      (is (some? (:valmispvm vt2)))
+      (is (nil? (:valtakunnallinen-id vt2)))
+      (is (= (:urakka-id vt2) urakka-id))
+      (is (some? (:takaraja vt2)))
+      (is (= (:valmis-kommentti vt2) "valmis tämäkin!"))
+
+      ;; VT3 tallentui oikein
+      (is (nil? (:valmis-merkitsija vt3)))
+      (is (nil? (:valmispvm vt3)))
+      (is (nil? (:valtakunnallinen-id vt3)))
+      (is (= (:urakka-id vt3) urakka-id))
+      (is (nil? (:takaraja vt3)))
+      (is (nil? (:valmis-kommentti vt3))))
+
+    ;; Päivitys toimii
+    (let [muokattu-vt (->> vt-lisayksen-jalkeen
+                           (filter #(or (= (:nimi %) "testi566")
+                                        (= (:nimi %) "testi34554")))
+                           (mapv #(if (= (:nimi %) "testi566")
+                                    (assoc % :valmis-kommentti "hyvin tehty")
+                                    %)))
+          _ (kutsu-palvelua
+              (:http-palvelin jarjestelma)
+              :tallenna-urakan-valitavoitteet
+              +kayttaja-jvh+
+              {:urakka-id urakka-id
+               :valitavoitteet muokattu-vt})
+          vt-paivityksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                 :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                 urakka-id)]
+
+      ;; Määrä edelleen sama oikein
+      (is (= (count vt-lisayksen-jalkeen)
+             (count vt-paivityksen-jalkeen)))
+
+      ;; VT1 päivittyi oikein
+      (let [vt1 (first (filter #(= (:nimi %) "testi566") vt-paivityksen-jalkeen))]
+        (is (= (:valmis-kommentti vt1) "hyvin tehty"))))
+
+
+    ;; Siivoa sotkut
+    (u "DELETE FROM valitavoite WHERE nimi = 'testi566' OR nimi = '34554';")))
+
+(deftest urakkakohtaisen-valitavoitteen-tallentaminen-ei-toimi-ilman-oikeuksia
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        valitavoitteet [{:nimi "testi566", :takaraja (c/to-date (t/now)),
+                         :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis!"}
+                        {:nimi "testi34554", :takaraja (c/to-date (t/now)),
+                         :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis tämäkin!"}]]
+    (is (thrown? Exception (kutsu-palvelua
+                             (:http-palvelin jarjestelma)
+                             :tallenna-urakan-valitavoitteet
+                             +kayttaja-ulle+
+                             {:urakka-id urakka-id
+                              :valitavoitteet valitavoitteet})))))
+
 (deftest toistuvan-valtakunnallisen-valitavoitteen-lisaaminen-toimii
   (let [oulun-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                            :hae-urakan-valitavoitteet +kayttaja-jvh+
@@ -54,8 +153,8 @@
 
     ;; Oulun urakan jäljellä oleville vuosille luotiin uusi välitavoite
     (is (= (count oulun-urakan-paivitetyt-valitavoitteet)
-           (+ (count oulun-urakan-vanhat-valitavoitteet)
-              (count odotetut-toistovuodet))))
+           (-> (count oulun-urakan-vanhat-valitavoitteet)
+               (+ (count odotetut-toistovuodet)))))
     (is (not (empty? odotetut-toistovuodet))) ;; Urakka päättynyt, päivitä testi
 
     (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
@@ -64,11 +163,11 @@
 
 (deftest valtakunnallisten-valitavoitteiden-kasittely-toimii
   (let [oulun-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                    :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                                    (hae-oulun-alueurakan-2014-2019-id))
+                                                           :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                           (hae-oulun-alueurakan-2014-2019-id))
         muhoksen-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                       :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                                       (hae-muhoksen-paallystysurakan-id))
+                                                              :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                              (hae-muhoksen-paallystysurakan-id))
         lisatyt-valtakunnalliset
         (kutsu-palvelua
           (:http-palvelin jarjestelma)
@@ -103,10 +202,10 @@
     ;; Päivitä urakkakohtaista tavoitetta ja sen jälkeen valtakunnallista
     (let [random-tavoite-id-urakassa (first (first (q (str
                                                         "SELECT id FROM valitavoite
-                                                         WHERE urakka = 4
-                                                         AND valtakunnallinen_valitavoite IS NOT NULL
-                                                         AND poistettu IS NOT TRUE
-                                                         LIMIT 1;"))))
+                                                         WHERE urakka = " (hae-oulun-alueurakan-2014-2019-id)
+                                                        " AND valtakunnallinen_valitavoite IS NOT NULL
+                                                        AND poistettu IS NOT TRUE
+                                                        LIMIT 1;"))))
           _ (is (integer? random-tavoite-id-urakassa))
           _ (u (str "UPDATE valitavoite set muokattu = NOW() WHERE id = " random-tavoite-id-urakassa))
           paivitetyt-valtakunnalliset
@@ -139,10 +238,10 @@
       ;; Poistetaan valtakunnalliset välitavoitteet (mutta ei valmiita)
       (let [random-tavoite-id-urakassa (first (first (q (str
                                                           "SELECT id FROM valitavoite
-                                                           WHERE urakka = 4
-                                                           AND valtakunnallinen_valitavoite IS NOT NULL
-                                                           AND poistettu IS NOT TRUE
-                                                           LIMIT 1;"))))
+                                                           WHERE urakka = " (hae-oulun-alueurakan-2014-2019-id)
+                                                          " AND valtakunnallinen_valitavoite IS NOT NULL
+                                                          AND poistettu IS NOT TRUE
+                                                          LIMIT 1;"))))
             _ (is (integer? random-tavoite-id-urakassa))
             _ (u (str "UPDATE valitavoite set valmis_pvm = NOW() WHERE id = " random-tavoite-id-urakassa))
             poistetut-valtakunnalliset (kutsu-palvelua

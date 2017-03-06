@@ -1,4 +1,12 @@
 (ns harja.palvelin.integraatiot.tloik.tloik-komponentti
+  "T-LOIKin käyttöön tarvittavat palvelut.
+  T-LOIK on Tieliikennekeskuksen järjestelmä, missä ilmoitukset kirjataan ja välitetään Harjaan.
+
+  Tieliikennekeskuksen vastaanottamat ilmoitukset kirjataan T-LOIK-järjestelmään
+  (Tieliikennekeskuksen integroitu käyttöliittymä), josta ilmoitukset välitetään Harjaan.
+  Harjan vastuulla on päätellä annetun ilmoituksen käsittelevä urakka urakkatyypin
+  ja sijannin perusteella. Urakoitsijat lähettävät kuittauksia eli ns. ilmoitustoimenpiteitä
+  esim. vastaamaan kysymyksiin sekä kertomaaan työn edistymisestä."
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.sonja :as sonja]
@@ -39,7 +47,7 @@
       (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) toimenpidekuittausjono
       (fn [kuittaus] (tloik-kuittaus-sanoma/lue-kuittaus kuittaus))
       :viesti-id
-      (comp not :virhe)
+      #(and (not (:virhe %)) (not (= "virhe" (:kuittaustyyppi %))))
       (fn [_ viesti-id onnistunut]
         (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut)))))
 
@@ -56,20 +64,23 @@
       (sahkoposti/rekisteroi-kuuntelija!
         sonja-sahkoposti
         (fn [viesti]
-          (when-let [vastaus (sahkopostiviesti/vastaanota-sahkopostikuittaus jms-lahettaja db viesti)]
-            (sahkoposti/laheta-viesti! sonja-sahkoposti (sahkoposti/vastausosoite sonja-sahkoposti)
-                                       (:lahettaja viesti)
-                                       (:otsikko vastaus) (:sisalto vastaus))))))))
+          (try
+            (when-let [vastaus (sahkopostiviesti/vastaanota-sahkopostikuittaus jms-lahettaja db viesti)]
+              (sahkoposti/laheta-viesti! sonja-sahkoposti (sahkoposti/vastausosoite sonja-sahkoposti)
+                                         (:lahettaja viesti)
+                                         (:otsikko vastaus) (:sisalto vastaus)))
+            (catch Throwable t
+              (log/error t "Virhe T-LOIK kuittaussähköpostin vastaanotossa"))))))))
 
 (defn tee-ilmoitustoimenpide-jms-lahettaja [this asetukset]
   (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpideviestijono asetukset)))
 
-(defn tee-paivittainen-lahetys-tehtava [this jms-lahettaja aika]
-  (if aika
+(defn tee-ajastettu-uudelleenlahetys-tehtava [this jms-lahettaja aikavali]
+  (if aikavali
     (do
-      (log/debug "Ajastetaan lähettämättömien T-LOIK kuittausten lähetys ajettavaksi joka päivä kello: " aika)
-      (ajastettu-tehtava/ajasta-paivittain
-        aika
+      (log/debug (format "Ajastetaan lähettämättömien T-LOIK kuittausten lähetys ajettavaksi: %s minuutin välein." aikavali))
+      (ajastettu-tehtava/ajasta-minuutin-valein
+        aikavali
         (fn [_] (ilmoitustoimenpiteet/laheta-lahettamattomat-ilmoitustoimenpiteet jms-lahettaja (:db this)))))
     (constantly nil)))
 
@@ -78,7 +89,7 @@
   (start [{:keys [labyrintti sonja-sahkoposti] :as this}]
     (log/debug "Käynnistetään T-LOIK komponentti")
     (rekisteroi-kuittauskuuntelijat this asetukset)
-    (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono paivittainen-lahetysaika]} asetukset
+    (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono uudelleenlahetysvali-minuuteissa]} asetukset
           ilmoitusasetukset (merge (:ilmoitukset asetukset)
                                    {:sms labyrintti
                                     :email sonja-sahkoposti})
@@ -93,10 +104,10 @@
         :sonja-toimenpidekuittauskuuntelija (tee-toimenpidekuittauskuuntelija
                                               this
                                               toimenpidekuittausjono)
-        :paivittainen-lahetys-tehtava (tee-paivittainen-lahetys-tehtava
+        :paivittainen-lahetys-tehtava (tee-ajastettu-uudelleenlahetys-tehtava
                                         this
                                         jms-lahettaja
-                                        paivittainen-lahetysaika))))
+                                        uudelleenlahetysvali-minuuteissa))))
   (stop [this]
     (let [kuuntelijat [:sonja-ilmoitusviestikuuntelija
                        :sonja-toimenpidekuittauskuuntelija

@@ -175,6 +175,7 @@
     <xs:complexType name="kohde">
         <xs:sequence>
             <xs:element name="yha-id" type="xs:long" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="kohdenumero" type="kohdenumero" minOccurs="0" maxOccurs="1" nillable="true"/>
             <xs:element name="kohdetyyppi" nillable="false" minOccurs="1" maxOccurs="1" type="kohdetyyppi"/>
             <xs:element name="kohdetyotyyppi" nillable="false" minOccurs="1" maxOccurs="1" type="kohdetyotyyppi"/>
             <xs:element name="nimi" minOccurs="0" maxOccurs="1">
@@ -202,6 +203,7 @@
         <xs:sequence>
             <xs:element name="yha-id" type="xs:long" minOccurs="0" maxOccurs="1"/>
             <xs:element name="harja-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="kohdenumero" type="kohdenumero" minOccurs="0" maxOccurs="1" nillable="true"/>
             <xs:element name="kohdetyyppi" nillable="false" minOccurs="1" maxOccurs="1" type="kohdetyyppi"/>
             <xs:element name="kohdetyotyyppi" nillable="false" minOccurs="1" maxOccurs="1" type="kohdetyotyyppi"/>
             <xs:element name="nimi" minOccurs="0" maxOccurs="1">
@@ -346,7 +348,7 @@
             <xs:element name="kiviaineksen-km-arvo" type="xs:string" minOccurs="0" maxOccurs="1"/>
             <xs:element name="kiviaineksen-muotoarvo" type="xs:string" minOccurs="0" maxOccurs="1"/>
             <xs:element name="sideainetyyppi" type="sideainetyyppi" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="sideainepitoisuus" type="xs:integer" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="sideainepitoisuus" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
             <xs:element name="lisa-aineet" type="xs:string" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
@@ -355,7 +357,7 @@
         <xs:sequence>
             <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="kasittelymenetelma" type="alustamenetelma" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="kasittelypaksuus" type="xs:decimal" nillable="false" minOccurs="1" maxOccurs="1">
+            <xs:element name="kasittelypaksuus" type="xs:short" nillable="false" minOccurs="1" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>
                         Yksikkö: senttimetri
@@ -363,9 +365,9 @@
                 </xs:annotation>
             </xs:element>
             <xs:element name="verkkotyyppi" type="alustan-verkkotyyppi" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="verkon-tarkoitus" type="alustan-verkon-sijainti" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="verkon-tarkoitus" type="alustan-verkon-tarkoitus" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="verkon-sijainti" type="alustan-verkon-sijainti" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="tekninen-toimenpide" type="alustan-tekninen-toimenpide" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="tekninen-toimenpide" type="alustan-tekninen-toimenpide" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
 
@@ -1007,6 +1009,13 @@
                     <xs:documentation>BE-PAB</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="kohdenumero">
+        <xs:restriction base="xs:int">
+            <xs:minInclusive value="1"/>
+            <xs:maxInclusive value="9999"/>
         </xs:restriction>
     </xs:simpleType>
 

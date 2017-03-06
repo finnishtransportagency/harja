@@ -86,6 +86,12 @@
           }
         }
       }
+    },
+    "aikataulu": {
+      "type": "object",
+      "id": "urn:harja/yllapitokohde/aikataulu",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/aikataulu.schema.json"
     }
   }
 }

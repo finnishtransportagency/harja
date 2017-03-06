@@ -21,6 +21,10 @@
   (reaction (into #{} (filter #(= (:urakkatyyppi %) "tiemerkinta") @urakoitsijat))))
 (def urakoitsijat-valaistus
   (reaction (into #{} (filter #(= (:urakkatyyppi %) "valaistus") @urakoitsijat))))
+(def urakoitsijat-siltakorjaus
+  (reaction (into #{} (filter #(= (:urakkatyyppi %) "siltakorjaus") @urakoitsijat))))
+(def urakoitsijat-tekniset-laitteet
+  (reaction (into #{} (filter #(= (:urakkatyyppi %) "tekniset-laitteet") @urakoitsijat))))
 
 (defn ^:export hae-urakoitsijat []
   (let [ch (chan)]

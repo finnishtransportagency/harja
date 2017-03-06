@@ -48,7 +48,7 @@
                     (u/rivit-tulevillekin-kausille-kok-hint-tyot ur uudet-tyot valittu-hoitokausi)
                     uudet-tyot
                     ))
-            res (<! (kok-hint-tyot/tallenna-kokonaishintaiset-tyot (:id ur) sopimusnumero muuttuneet))
+            res (<! (kok-hint-tyot/tallenna-kokonaishintaiset-tyot ur sopimusnumero muuttuneet))
             res-jossa-hoitokausitieto (map #(kok-hint-tyot/aseta-hoitokausi hoitokaudet %) res)]
         (reset! tyot res-jossa-hoitokausitieto)
         (reset! tuleville? false)
@@ -67,10 +67,11 @@
               (concat [(grid/otsikko otsikko)] rivit))
             (seq otsikon-mukaan))))
 
-(defn kustannukset [valitun-hoitokauden-ja-tpin-kustannukset
-                    valitun-hoitokauden-kaikkien-tpin-kustannukset
-                    kaikkien-hoitokausien-taman-tpin-kustannukset
-                    yks-kustannukset]
+(defn hoidon-kustannusyhteenveto
+  [valitun-hoitokauden-ja-tpin-kustannukset
+   valitun-hoitokauden-kaikkien-tpin-kustannukset
+   kaikkien-hoitokausien-taman-tpin-kustannukset
+   yks-kustannukset]
   [:div.col-md-6.hoitokauden-kustannukset
    [:div.piirakka-hoitokauden-kustannukset-per-kaikki
     [:div.piirakka
@@ -101,10 +102,12 @@
                {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
                {"Kokonaishintaiset" kok-hint-yhteensa "Yksikkohintaiset" yks-hint-yhteensa}]]))]]
 
-   [:div.summa "Kokonaishintaisten töiden toimenpiteen hoitokausi yhteensä "
+   [:div.summa.summa-toimenpiteen-hoitokausi
+    "Kokonaishintaisten töiden toimenpiteen hoitokausi yhteensä "
     [:span (fmt/euro valitun-hoitokauden-ja-tpin-kustannukset)]]
 
-   [:div.summa "Kokonaishintaisten töiden toimenpiteiden kaikki hoitokaudet yhteensä "
+   [:div.summa.summa-toimenpiteiden-hoitokaudet
+    "Kokonaishintaisten töiden toimenpiteiden kaikki hoitokaudet yhteensä "
     [:span (fmt/euro kaikkien-hoitokausien-taman-tpin-kustannukset)]]])
 
 (defn kokonaishintaiset-tyot-tehtavalista [tehtavat tpi]
@@ -145,9 +148,7 @@
   (let [urakan-kok-hint-tyot u/urakan-kok-hint-tyot
         toimenpiteet u/urakan-toimenpideinstanssit
         urakka (atom nil)
-        hae-urakan-tiedot (fn [ur]
-                            (reset! urakka ur))
-
+        aseta-urakka! (fn [ur] (reset! urakka ur))
         ;; ryhmitellään valitun sopimusnumeron mukaan hoitokausittain
         sopimuksen-tyot-hoitokausittain
         (reaction (let [[sopimus-id _] @u/valittu-sopimusnumero
@@ -201,12 +202,12 @@
                                                   @kaikki-sopimuksen-ja-tpin-rivit))
                                                :summa))]
 
-      (hae-urakan-tiedot ur)
+    (aseta-urakka! ur)
 
     (komp/luo
      {:component-will-receive-props
       (fn [this & [_ ur]]
-        (hae-urakan-tiedot ur))
+        (aseta-urakka! ur))
 
       :component-will-unmount
       (fn [this]
@@ -233,9 +234,13 @@
              {:otsikko (str "Kokonaishintaiset työt: " (:tpi_nimi @u/valittu-toimenpideinstanssi))
               :piilota-toiminnot? true
               :tyhja (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
-              :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
+              :tallenna (if (oikeudet/voi-kirjoittaa?
+                              (oikeudet/tarkistettava-oikeus-kok-hint-tyot (:tyyppi ur)) (:id ur))
                           #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi urakan-kok-hint-tyot % tuleville?)
                           :ei-mahdollinen)
+              :tallennus-ei-mahdollinen-tooltip (oikeudet/oikeuden-puute-kuvaus
+                                                 :kirjoitus
+                                                 (oikeudet/tarkistettava-oikeus-kok-hint-tyot (:tyyppi ur)))
               :tallenna-vain-muokatut false
               :peruuta #(reset! tuleville? false)
               :tunniste #((juxt :vuosi :kuukausi) %)
@@ -243,7 +248,7 @@
               :voi-poistaa? (constantly false)
               :muokkaa-footer (fn [g]
                                 [:div.kok-hint-muokkaa-footer
-                                 [raksiboksi {:teksti "Tallenna tulevillekin hoitokausille"
+                                 [raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi @urakka))
                                               :toiminto #(swap! tuleville? not)
                                               :info-teksti  [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
                                               :nayta-infoteksti? (and @tuleville? @varoita-ylikirjoituksesta?)}
@@ -285,13 +290,16 @@
                                   (assoc tama-rivi :maksupvm maksu-pvm)))}]
              @tyorivit]
 
-            [kokonaishintaiset-tyot-tehtavalista
-             @u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
-             @u/valittu-toimenpideinstanssi]])
+            (when (not= (:tyyppi @urakka) :tiemerkinta)
+              [kokonaishintaiset-tyot-tehtavalista
+               @u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
+               @u/valittu-toimenpideinstanssi])])
 
-         ;; Näytetään kustannusten summat ja piirakkadiagrammit
-         [kustannukset
-          @valitun-hoitokauden-ja-tpin-kustannukset
-          @s/valitun-hoitokauden-kok-hint-kustannukset
-          @kaikkien-hoitokausien-taman-tpin-kustannukset
-          @valitun-hoitokauden-yks-hint-kustannukset]]]))))
+         ;; TODO Jos on tiemerkintä, niin pitäisi näyttää kok. hint. yhteensä, yks. hint yhteensä ja muut yhteensä,
+         ;; myös muilla välilehdillä
+         (when (not= (:tyyppi @urakka) :tiemerkinta)
+           [hoidon-kustannusyhteenveto
+            @valitun-hoitokauden-ja-tpin-kustannukset
+            @s/valitun-hoitokauden-kok-hint-kustannukset
+            @kaikkien-hoitokausien-taman-tpin-kustannukset
+            @valitun-hoitokauden-yks-hint-kustannukset])]]))))

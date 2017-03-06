@@ -17,7 +17,9 @@
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as urakka]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.ui.valinnat :as valinnat]
+            [cljs-time.core :as t])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -25,30 +27,26 @@
 
 (defn paikkauskohteet [ur]
   (komp/luo
-    (komp/ulos #(kartta/poista-popup!))
-    (komp/lippu paikkaus/paikkauskohteet-nakymassa?)
     (fn [ur]
       [:div.paikkauskohteet
        [kartta/kartan-paikka]
+
+       [valinnat/vuosi {}
+        (t/year (:alkupvm ur))
+        (t/year (:loppupvm ur))
+        urakka/valittu-urakan-vuosi
+        urakka/valitse-urakan-vuosi!]
+
        [yllapitokohteet-view/yllapitokohteet
         ur
         paikkaus/paikkauskohteet
         {:otsikko "Paikkauskohteet"
-         :nakyma :paikkaus
-         :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id ur))
-                     (fn [kohteet]
-                      (go (let [urakka-id (:id @nav/valittu-urakka)
-                                [sopimus-id _] @u/valittu-sopimusnumero
-                                _ (log "[PAIK] Tallennetaan paikkauskohteet: " (pr-str kohteet))
-                                vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet!
-                                              urakka-id sopimus-id
-                                              (mapv #(assoc % :tyyppi :paikkaus)
-                                                    kohteet)))]
-                            (if (k/virhe? vastaus)
-                              (viesti/nayta! "Kohteiden tallentaminen epännistui" :warning viesti/viestin-nayttoaika-keskipitka)
-                              (do
-                                (log "[PAIK]paikkaustyskohteet tallennettu: " (pr-str vastaus))
-                                (reset! paikkaus/paikkauskohteet vastaus)))))))
+         :kohdetyyppi :paikkaus
+         :tallenna
+         (yllapitokohteet/kasittele-tallennettavat-kohteet!
+           #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id ur))
+           :paikkaus
+           #(reset! paikkaus/paikkauskohteet %))
          :kun-onnistuu (fn [_]
                          (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]
 

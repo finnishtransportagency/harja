@@ -14,14 +14,19 @@
             [harja.pvm :as pvm]
             [harja.atom :refer-macros [reaction<! reaction-writable]]
             [cljs-time.core :as t]
-            [taoensso.truss :as truss :refer-macros [have]])
+            [taoensso.truss :as truss :refer-macros [have]]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.istunto :as istunto])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(defonce valittu-sopimusnumero (let [val (atom nil)]
-                                 (run! (reset! val (first (:sopimukset @nav/valittu-urakka))))
-                                 val))
+(defonce valittu-sopimusnumero
+  (reaction-writable
+    (let [{:keys [sopimukset paasopimus]} @nav/valittu-urakka]
+      (if paasopimus
+        [paasopimus (get sopimukset paasopimus)]
+        (first sopimukset)))))
 
 (defonce urakan-yks-hint-tyot (atom nil))
 (defonce urakan-kok-hint-tyot (atom nil))
@@ -30,18 +35,38 @@
   (reset! valittu-sopimusnumero sn))
 
 (defonce urakan-toimenpideinstanssit
-         (reaction<! [ur (:id @nav/valittu-urakka)]
-                     (when ur
-                       (urakan-toimenpiteet/hae-urakan-toimenpiteet ur))))
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and urakka-id
+                         (oikeudet/voi-lukea? oikeudet/urakat urakka-id @istunto/kayttaja))
+                (urakan-toimenpiteet/hae-urakan-toimenpiteet urakka-id))))
 
-(defonce valittu-toimenpideinstanssi (reaction-writable (first @urakan-toimenpideinstanssit)))
+(defonce valitun-toimenpideinstanssin-koodi (atom nil))
+
+(defonce valittu-toimenpideinstanssi
+  (reaction-writable
+   (let [koodi @valitun-toimenpideinstanssin-koodi
+         toimenpideinstanssit @urakan-toimenpideinstanssit]
+     (or (and koodi (first (filter #(= (:t3_koodi %) koodi) toimenpideinstanssit)))
+         (first toimenpideinstanssit)))))
 
 (defn urakan-toimenpideinstanssi-toimenpidekoodille [tpk]
   (have integer? tpk)
   (first (filter #(= tpk (:id %)) @urakan-toimenpideinstanssit)))
 
-(defn valitse-toimenpideinstanssi! [tpi]
-  (reset! valittu-toimenpideinstanssi tpi))
+(defn valitse-toimenpideinstanssi-koodilla!
+  "Valitsee urakan toimenpideinstanssin 3. tason SAMPO koodin perusteella."
+  [koodi]
+
+  (reset! valitun-toimenpideinstanssin-koodi koodi))
+
+(defn valitse-toimenpideinstanssi! [{koodi :t3_koodi :as tpi}]
+  (if-not koodi
+    ;; Kooditon erikoisvalinta, kuten "Kaikki" tai "Muut"
+    (reset! valittu-toimenpideinstanssi tpi)
+    (valitse-toimenpideinstanssi-koodilla! koodi)))
+
+
 
 (defn hoitokaudet
   "Palauttaa urakan hoitokaudet, jos kyseessä on hoidon alueurakka. Muille urakoille palauttaa
@@ -61,37 +86,21 @@
       ;; Muiden urakoiden sopimusaika pilkottuna vuosiin
       (pvm/urakan-vuodet alkupvm loppupvm))))
 
-(defn urakoiden-hoitokaudet
-  "Palauttaa urakoiden hoitokaudet aikaisimmasta viimeiseen. Ei kuitenkaan palauta yli N vuotta
-  vanhoja hoitokausia."
-  [urakat n]
-  (let [ensimmainen-vuosi (pvm/vuosi (t/earliest (map :alkupvm urakat)))
-        viimeinen-vuosi (t/year (t/now))
-        ensimmainen-vuosi (if (>= (- (t/year (t/now))
-                                     ensimmainen-vuosi)
-                                  n)
-                            (- (t/year (t/now)) n)
-                            ensimmainen-vuosi)]
-      (mapv (fn [vuosi]
-              [(pvm/hoitokauden-alkupvm vuosi)
-               (pvm/hoitokauden-loppupvm (inc vuosi))])
-            (range ensimmainen-vuosi viimeinen-vuosi))))
-
 (defn edelliset-hoitokaudet
   "Palauttaa N edellistä hoitokautta alkaen nykyajasta."
   ([n] (edelliset-hoitokaudet n false))
   ([n nykyinenkin?]
-   (let [ensimmainen-vuosi (- (t/year (t/now)) n)
-         viimeinen-vuosi (+ (t/year (t/now))
+   (let [ensimmainen-vuosi (- (t/year (pvm/nyt)) n)
+         viimeinen-vuosi (+ (t/year (pvm/nyt))
                             (if nykyinenkin? 1 0))]
-    (mapv (fn [vuosi]
-            [(pvm/hoitokauden-alkupvm vuosi)
-             (pvm/hoitokauden-loppupvm (inc vuosi))])
-          (range ensimmainen-vuosi viimeinen-vuosi)))))
+     (mapv (fn [vuosi]
+             [(pvm/hoitokauden-alkupvm vuosi)
+              (pvm/hoitokauden-loppupvm (inc vuosi))])
+           (range ensimmainen-vuosi viimeinen-vuosi)))))
 
 (defonce valitun-urakan-hoitokaudet
-         (reaction (when-let [ur @nav/valittu-urakka]
-                     (hoitokaudet ur))))
+  (reaction (when-let [ur @nav/valittu-urakka]
+              (hoitokaudet ur))))
 
 (defn hoitokausi-kaynnissa? [[alku loppu]]
   (pvm/valissa? (pvm/nyt) alku loppu))
@@ -103,6 +112,19 @@
 
 (defonce valittu-urakka-kaynnissa?
   (reaction (some hoitokausi-kaynnissa? @valitun-urakan-hoitokaudet)))
+
+(defn paivystys-kaytossa?
+  "Kertoo urakkatyypin perusteella onko päivystys käytössä."
+  [ur]
+  (boolean
+    (or
+      (= (:tyyppi ur) :hoito)
+      (= (:tyyppi ur) :valaistus)
+      (= (:tyyppi ur) :siltakorjaus)
+      (= (:tyyppi ur) :tekniset-laitteet)
+      (or
+        (and (= (:tyyppi ur) :paallystys)
+             (= (:sopimustyyppi ur) :palvelusopimus))))))
 
 (defn paattele-valittu-hoitokausi [hoitokaudet]
   (when-not (empty? hoitokaudet)
@@ -132,6 +154,8 @@
 
 (defonce valittu-aikavali (reaction-writable @valittu-hoitokausi))
 
+(defn valitse-aikavali! [alku loppu]
+  (reset! valittu-aikavali [alku loppu]))
 
 (defn valitse-hoitokausi! [hk]
   (log "------- VALITAAN HOITOKAUSI:" (pr-str hk))
@@ -140,36 +164,51 @@
 
 (def aseta-kuluva-kk-jos-hoitokaudella? (atom false))
 
+(defn- urakan-oletusvuosi [urakka]
+  (when urakka
+    (min (t/year (:loppupvm urakka))
+         (t/year (pvm/nyt)))))
+
+(def valittu-urakan-vuosi (reaction-writable
+                            (let [ur @nav/valittu-urakka]
+                              (urakan-oletusvuosi ur))))
+
+(defn valitse-urakan-vuosi! [uusi-vuosi]
+  (reset! valittu-urakan-vuosi uusi-vuosi))
+
+(defn valitse-urakan-oletusvuosi! [urakka]
+  (reset! valittu-urakan-vuosi (urakan-oletusvuosi urakka)))
+
 (defonce valittu-hoitokauden-kuukausi
-         (reaction-writable
-           (let [hk @valittu-hoitokausi
-                 ur @nav/valittu-urakka
-                 kuuluu-hoitokauteen? #(pvm/valissa? (second %) (first hk) (second hk))
-                 nykyinen-kk (pvm/kuukauden-aikavali (pvm/nyt))
-                 edellinen-kk (pvm/ed-kk-aikavalina (pvm/nyt))]
-             (when (and hk ur)
-               (cond
-                 ;; mm. toteumanäkymissä halutaan käynnissä oleva kuukausi,
-                 ;; heidän liputettava anna-kuluva-kk-jos-hoitokaudella
-                 (and @aseta-kuluva-kk-jos-hoitokaudella? (kuuluu-hoitokauteen? nykyinen-kk))
-                 nykyinen-kk
-                 ;; raportointinäkymissä halutaan edellinen kuukausi
-                 ;; Jos nykyhetkeä edeltävä kuukausi kuuluu valittuun hoitokauteen,
-                 ;; valitaan se. (yleensä raportoidaan aiempaa kuukautta)
-                 (kuuluu-hoitokauteen? edellinen-kk)
-                 edellinen-kk
+  (reaction-writable
+    (let [hk @valittu-hoitokausi
+          ur @nav/valittu-urakka
+          kuuluu-hoitokauteen? #(pvm/valissa? (second %) (first hk) (second hk))
+          nykyinen-kk (pvm/kuukauden-aikavali (pvm/nyt))
+          edellinen-kk (pvm/ed-kk-aikavalina (pvm/nyt))]
+      (when (and hk ur)
+        (cond
+          ;; mm. toteumanäkymissä halutaan käynnissä oleva kuukausi,
+          ;; heidän liputettava anna-kuluva-kk-jos-hoitokaudella
+          (and @aseta-kuluva-kk-jos-hoitokaudella? (kuuluu-hoitokauteen? nykyinen-kk))
+          nykyinen-kk
+          ;; raportointinäkymissä halutaan edellinen kuukausi
+          ;; Jos nykyhetkeä edeltävä kuukausi kuuluu valittuun hoitokauteen,
+          ;; valitaan se. (yleensä raportoidaan aiempaa kuukautta)
+          (kuuluu-hoitokauteen? edellinen-kk)
+          edellinen-kk
 
-                 ;; Valitaan tämä kuukausi, jos se kuuluu hoitokauteen
-                 (kuuluu-hoitokauteen? nykyinen-kk)
-                 nykyinen-kk
+          ;; Valitaan tämä kuukausi, jos se kuuluu hoitokauteen
+          (kuuluu-hoitokauteen? nykyinen-kk)
+          nykyinen-kk
 
-                 ;; Jos hoitokausi ei vielä ole alkanut, valitaan ensimmäinen
-                 (pvm/ennen? (pvm/nyt) (first hk))
-                 (first (pvm/hoitokauden-kuukausivalit hk))
+          ;; Jos hoitokausi ei vielä ole alkanut, valitaan ensimmäinen
+          (pvm/ennen? (pvm/nyt) (first hk))
+          (first (pvm/hoitokauden-kuukausivalit hk))
 
-                 ;; fallback on hoitokauden viimeinen kuukausi
-                 :default
-                 (last (pvm/hoitokauden-kuukausivalit hk)))))))
+          ;; fallback on hoitokauden viimeinen kuukausi
+          :default
+          (last (pvm/hoitokauden-kuukausivalit hk)))))))
 
 (defn valitse-hoitokauden-kuukausi! [hk-kk]
   (reset! valittu-hoitokauden-kuukausi hk-kk))
@@ -240,20 +279,22 @@
 
 
 (defonce urakan-toimenpiteet-ja-tehtavat
-  (reaction<! [ur (:id @nav/valittu-urakka)
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
                ;; pitää hakea uudelleen jos toimenpidekoodeja muokataan
                _ @toimenpidekoodit/koodit]
               {:nil-kun-haku-kaynnissa? true}
-              (when ur
-                (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat ur))))
+              (when (and urakka-id
+                         (oikeudet/voi-lukea? oikeudet/urakat urakka-id @istunto/kayttaja))
+                (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat urakka-id))))
 
 (defonce urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
-  (reaction<! [ur (:id @nav/valittu-urakka)
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
                ;; pitää hakea uudelleen jos toimenpidekoodeja muokataan
                _ @toimenpidekoodit/koodit]
               {:nil-kun-haku-kaynnissa? true}
-              (when ur
-                (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat ur))))
+              (when (and urakka-id
+                         (oikeudet/voi-lukea? oikeudet/urakat urakka-id @istunto/kayttaja))
+                (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat urakka-id))))
 
 (defonce valittu-kokonaishintainen-tehtava (atom nil))
 
@@ -261,22 +302,23 @@
   (reset! valittu-kokonaishintainen-tehtava tehtava))
 
 (defonce urakan-tpin-kokonaishintaiset-tehtavat
-         (reaction (let [tpi @valittu-toimenpideinstanssi
-                         tehtavat @urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat]
-                     (reset! valittu-kokonaishintainen-tehtava nil)
-                     (let [tehtavat (into [] (keep (fn [[_ _ t3 t4]]
-                                       (when (= (:koodi t3) (:t3_koodi tpi))
-                                         t4))
-                                     tehtavat))]
-                       (sort-by :nimi tehtavat)))))
+  (reaction (let [tpi @valittu-toimenpideinstanssi
+                  tehtavat @urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat]
+              (reset! valittu-kokonaishintainen-tehtava nil)
+              (let [tehtavat (into [] (keep (fn [[_ _ t3 t4]]
+                                              (when (= (:koodi t3) (:t3_koodi tpi))
+                                                t4))
+                                            tehtavat))]
+                (sort-by :nimi tehtavat)))))
 
 (defonce urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
-  (reaction<! [ur (:id @nav/valittu-urakka)
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
                ;; pitää hakea uudelleen jos toimenpidekoodeja muokataan
                _ @toimenpidekoodit/koodit]
               {:nil-kun-haku-kaynnissa? true}
-              (when ur
-                (urakan-toimenpiteet/hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat ur))))
+              (when (and urakka-id
+                         (oikeudet/voi-lukea? oikeudet/urakat urakka-id @istunto/kayttaja))
+                (urakan-toimenpiteet/hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat urakka-id))))
 
 (defonce valittu-yksikkohintainen-tehtava (atom nil))
 
@@ -284,21 +326,21 @@
   (reset! valittu-yksikkohintainen-tehtava tehtava))
 
 (defonce urakan-tpin-yksikkohintaiset-tehtavat
-         (reaction (let [tpi @valittu-toimenpideinstanssi
-                         tehtavat @urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat]
-                     (reset! valittu-yksikkohintainen-tehtava nil)
-                     (let [tehtavat (into [] (keep (fn [[_ _ t3 t4]]
-                                       (when (= (:koodi t3) (:t3_koodi tpi))
-                                         t4))
-                                     tehtavat))]
-                       (sort-by :nimi tehtavat)))))
+  (reaction (let [tpi @valittu-toimenpideinstanssi
+                  tehtavat @urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat]
+              (reset! valittu-yksikkohintainen-tehtava nil)
+              (let [tehtavat (into [] (keep (fn [[_ _ t3 t4]]
+                                              (when (= (:koodi t3) (:t3_koodi tpi))
+                                                t4))
+                                            tehtavat))]
+                (sort-by :nimi tehtavat)))))
 
 (defonce urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
   (reaction<! [ur (:id @nav/valittu-urakka)
 
                nakymassa? (or
-                           (= :muut (nav/valittu-valilehti :suunnittelu))
-                           (= :muut-tyot (nav/valittu-valilehti :toteumat)))]
+                            (= :muut (nav/valittu-valilehti :suunnittelu))
+                            (= :muut-tyot (nav/valittu-valilehti :toteumat)))]
               {:nil-kun-haku-kaynnissa? true}
               (when (and ur nakymassa?)
                 (urakan-toimenpiteet/hae-urakan-muutoshintaiset-toimenpiteet-ja-tehtavat ur))))
@@ -315,8 +357,8 @@
                toteuman-sivu (nav/valittu-valilehti :toteumat)]
               {:nil-kun-haku-kaynnissa? true}
               (when (and ur (or
-                             (= :muut suunnittelun-sivu)
-                             (= :muut-tyot toteuman-sivu)))
+                              (= :muut suunnittelun-sivu)
+                              (= :muut-tyot toteuman-sivu)))
                 (muut-tyot/hae-urakan-muutoshintaiset-tyot ur))))
 
 (defonce muut-tyot-hoitokaudella
@@ -340,7 +382,7 @@
 (defn vaihda-urakkatyyppi
   [urakka-id uusi-urakkatyyppi]
   (k/post! :tallenna-urakan-tyyppi
-           {:urakka-id    urakka-id
+           {:urakka-id urakka-id
             :urakkatyyppi uusi-urakkatyyppi}))
 
 (defn aseta-takuu-loppupvm [urakka-id loppupvm]
@@ -360,3 +402,43 @@
 (defn lukitse-urakan-yha-sidonta! [urakka-id]
   (when (= @nav/valittu-urakka-id urakka-id)
     (nav/paivita-urakan-tiedot! @nav/valittu-urakka-id assoc-in [:yhatiedot :sidonta-lukittu?] true)))
+
+(defn indeksi-kaytossa?
+  "Onko valitussa urakassa indeksi käytössä?"
+  []
+  (some? (:indeksi @nav/valittu-urakka)))
+
+(def urakan-tiedot-ladattu?
+  ;; Kertoo, onko ladattu urakasta kaikki sellaiset tiedot, joihin
+  ;; viitataan urakan eri näkymistä. Ei tulisi näyttää urakkaa,
+  ;; jos nämä tiedot puuttuu, sillä aiheuttaa ongelmia
+  ;; (esim. silloin kun tullaan suoraan lomakkeelle
+  ;; ja toimenpideinnstanssit puuttuu).
+  (reaction
+    (let [toimenpideinstanssit @urakan-toimenpideinstanssit
+          tehtavat @urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat]
+      (boolean (and toimenpideinstanssit tehtavat)))))
+
+(def urakkatyypin-sanktiolajit
+  (reaction<! [urakka @nav/valittu-urakka
+               sivu (nav/valittu-valilehti :laadunseuranta)]
+              (when (and urakka (or (= :laatupoikkeamat sivu)
+                                    (= :sanktiot sivu)))
+                (go
+                  (<! (k/post! :hae-urakkatyypin-sanktiolajit {:urakka-id (:id urakka)
+                                                               :urakkatyyppi (:tyyppi urakka)}))))))
+
+(def yllapitokohdeurakka?
+  (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
+              (or (= :paallystys urakkatyyppi)
+                  (= :paikkaus urakkatyyppi)
+                  (= :tiemerkinta urakkatyyppi)))))
+
+(def yllapidon-urakka?
+  (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
+              (or (= :paallystys urakkatyyppi)
+                  (= :paikkaus urakkatyyppi)
+                  (= :tiemerkinta urakkatyyppi)
+                  (= :valaistus urakkatyyppi)))))
+
+(def paallystysurakan-indeksitiedot (atom nil))

@@ -47,12 +47,13 @@
           (error errorObj)
           (k/post! :raportoi-selainvirhe
                    {:url    url
+                    :sijainti (-> js/window .-location .-href)
                     :viesti errorMsg
                     :rivi   lineNumber
                     :sarake column
                     :selain (.-userAgent (.-navigator js/window))
                     :stack (when errorObj (aget errorObj "stack"))})
-          (v/arsyttava-virhe errorMsg url lineNumber column errorObj)))
+          (v/arsyttava-virhe errorMsg " " url " " lineNumber ":" column " " errorObj)))
 
   (t/julkaise! {:aihe :harja-ladattu})
   (aset js/window "HARJA_LADATTU" true)

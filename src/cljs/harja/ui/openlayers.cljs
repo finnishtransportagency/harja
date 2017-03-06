@@ -64,17 +64,24 @@
 ;; kartan normaali toiminta.
 ;; Nämä ovat normaaleja cljs atomeja, eivätkä siten voi olla
 ;; reagent riippuvuuksia.
-(defonce klik-kasittelija (cljs.core/atom nil))
-(defonce hover-kasittelija (cljs.core/atom nil))
+(defonce klik-kasittelija (cljs.core/atom []))
+(defonce hover-kasittelija (cljs.core/atom []))
 
-(defn aseta-klik-kasittelija! [funktio]
-  (reset! klik-kasittelija funktio))
-(defn poista-klik-kasittelija! []
-  (aseta-klik-kasittelija! nil))
-(defn aseta-hover-kasittelija! [funktio]
-  (reset! hover-kasittelija funktio))
-(defn poista-hover-kasittelija! []
-  (aseta-hover-kasittelija! nil))
+(defn aseta-klik-kasittelija!
+  "Asettaa kartan click käsittelijän. Palauttaa funktion, jolla käsittelijä poistetaan.
+  Käsittelijöitä voi olla useita samaan aikaan, jolloin vain viimeisenä lisättyä kutsutaan."
+  [funktio]
+  (swap! klik-kasittelija conj funktio)
+  #(swap! klik-kasittelija (fn [kasittelijat]
+                             (filterv (partial not= funktio) kasittelijat))))
+
+(defn aseta-hover-kasittelija!
+  "Asettaa kartan hover käsittelijän. Palauttaa funktion, jolla käsittelijä poistetaan.
+  Käsittelijoitä voi olla useita samaan aikaan, jolloin vain viimeisenä lisättyä kutsutaan."
+  [funktio]
+  (swap! hover-kasittelija conj funktio)
+  #(swap! hover-kasittelija (fn [kasittelijat]
+                              (filterv (partial not= funktio) kasittelijat))))
 
 ;; Kanava, jolla voidaan komentaa karttaa
 (def komento-ch (chan))
@@ -156,6 +163,9 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                          (concat ["_" (name lahde)]
                                  parametri-nimet-ja-arvot)))
 
+(defn sama-kuvataso? [vanha uusi]
+  (kuvataso/sama? vanha uusi))
+
 (defn keskipiste
   "Laskee geometrian keskipisteen extent perusteella"
   [geometria]
@@ -199,28 +209,40 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 (defn- tapahtuman-geometria
   "Hakee annetulle ol3 tapahtumalle geometrian. Palauttaa ensimmäisen löytyneen
   geometrian."
-  [this e]
-  (let [geom (volatile! nil)
-        {:keys [ol3 geometry-layers]} (reagent/state this)]
-    (.forEachFeatureAtPixel ol3 (.-pixel e)
-                            (fn [feature layer]
-                              (vreset! geom (feature-geometria feature))
-                              true))
+  ([this e] (tapahtuman-geometria this e true))
+  ([this e lopeta-ensimmaiseen?]
+   (let [geom (volatile! [])
+         {:keys [ol3 geometry-layers]} (reagent/state this)]
+     (.forEachFeatureAtPixel ol3 (.-pixel e)
+                             (fn [feature layer]
+                               (vswap! geom conj (feature-geometria feature))
+                               lopeta-ensimmaiseen?)
+                             ;; Funktiolle voi antaa options, jossa hitTolerance. Eli radius, miltä featureita haetaan.
+                             )
 
-    @geom))
+     (cond
+       (empty? @geom)
+       nil
+
+       lopeta-ensimmaiseen?
+       (first @geom)
+
+       :else @geom))))
 
 (defn- laske-kartan-alue [ol3]
   (.calculateExtent (.getView ol3) (.getSize ol3)))
 
 (defn- tapahtuman-kuvaus
   "Tapahtuman kuvaus ulkoisille käsittelijöille"
-  [e]
+  [this e]
   (let [c (.-coordinate e)
         tyyppi (.-type e)]
     {:tyyppi   (case tyyppi
                  "pointermove" :hover
                  "click" :click
-                 "singleclick" :click)
+                 "singleclick" :click
+                 "dblclick" :dbl-click)
+     :geometria (tapahtuman-geometria this e)
      :sijainti [(aget c 0) (aget c 1)]
      :x        (aget (.-pixel e) 0)
      :y        (aget (.-pixel e) 1)}))
@@ -245,27 +267,29 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 (defn- aseta-klik-kasittelija [this ol3 on-click on-select]
   (.on ol3 "singleclick"
        (fn [e]
-         (if-let [kasittelija @klik-kasittelija]
-           (kasittelija (tapahtuman-kuvaus e))
-           (do (when on-click
-                 (on-click e))
-               (when on-select
-                 (when-let [g (tapahtuman-geometria this e)]
-                   (on-select g e))))))))
+         (if-let [kasittelija (peek @klik-kasittelija)]
+           (kasittelija (tapahtuman-kuvaus this e))
+
+           (if-let [g (tapahtuman-geometria this e false)]
+             (when on-select (on-select g e))
+             (when on-click (on-click e)))))))
 
 ;; dblclick on-clickille ei vielä tarvetta - zoomaus tulee muualta.
 (defn- aseta-dblclick-kasittelija [this ol3 on-click on-select]
-  (.on ol3 "dblclick" (fn [e]
-                        (when on-select
-                          (when-let [g (tapahtuman-geometria this e)]
-                            (on-select g e))))))
+  (.on ol3 "dblclick"
+       (fn [e]
+         (if-let [kasittelija (peek @klik-kasittelija)]
+           (kasittelija (tapahtuman-kuvaus this e))
+           (when on-select
+             (when-let [g (tapahtuman-geometria this e false)]
+               (on-select g e)))))))
 
 
 (defn aseta-hover-kasittelija [this ol3]
   (.on ol3 "pointermove"
        (fn [e]
-         (if-let [kasittelija @hover-kasittelija]
-           (kasittelija (tapahtuman-kuvaus e))
+         (if-let [kasittelija (peek @hover-kasittelija)]
+           (kasittelija (tapahtuman-kuvaus this e))
 
            (reagent/set-state this
                               (if-let [g (tapahtuman-geometria this e)]
@@ -417,7 +441,9 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                              :unmount-ch      unmount-ch})
 
     ;; If mapspec defines callbacks, bind them to ol3
-    (aseta-klik-kasittelija this ol3 (:on-click mapspec) (:on-select mapspec))
+    (aseta-klik-kasittelija this ol3
+                            (:on-click mapspec)
+                            (:on-select mapspec))
     (aseta-dblclick-kasittelija this ol3
                                 (:on-dblclick mapspec)
                                 (:on-dblclick-select mapspec))
@@ -489,7 +515,8 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                                         "N/A"))
                                     " " (name (first %)))
                               (seq new-geometry-layers))))
-          (reagent/set-state component {:geometry-layers new-geometry-layers}))
+          (reagent/set-state component {:geometry-layers new-geometry-layers
+                                        :geometries geometries}))
         (if-let [taso (get geometries layer)]
           (recur (assoc new-geometry-layers
                         layer (apply taso/paivita

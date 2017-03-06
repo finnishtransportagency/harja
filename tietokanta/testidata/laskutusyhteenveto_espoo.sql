@@ -65,14 +65,6 @@ INSERT INTO muutoshintainen_tyo (alkupvm, loppupvm, yksikko, yksikkohinta, tehta
 VALUES ((SELECT alkupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), 'tiekm', 100.0, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019') AND paasopimus IS null)),
        ((SELECT alkupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), 'ha', 100.0, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019') AND paasopimus IS null));
 
--- Suolauksen sallittu määrä
-INSERT INTO materiaalin_kaytto (alkupvm, loppupvm, maara, materiaali,
-                                urakka, sopimus, luotu, muokattu, luoja, muokkaaja, poistettu)
-     VALUES ('20141001', '20150930', 800, (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'),
-             (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'),
-             (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019') AND paasopimus IS null),
-             '2004-10-19 10:23:54+02', null, (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), null, false);
-
 -- Suolauksen toteuma (materiaalitoteuma)
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
      VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'),
@@ -81,7 +73,7 @@ INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, 
              'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', 'Y123', 'ESP-LYV-toteuma');
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara)
     VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'ESP-LYV-toteuma'), '2015-02-19 10:23:54+02',
-            (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'), 1000);
+            (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'), 2000);
 
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
 VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'),
@@ -152,17 +144,17 @@ VALUES
   ((SELECT id from toteuma where lisatieto = 'ESPlyv_akillinen_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10),
   ((SELECT id from toteuma where lisatieto = 'ESPlyv_vahinkojen-korjaukset_tot_elokuu_paivanhinta'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10);
 
-INSERT INTO toteuma_tehtava (toteuma, toimenpidekoodi, maara, paivan_hinta)
+INSERT INTO toteuma_tehtava (toteuma, toimenpidekoodi, maara, paivan_hinta, indeksi)
 VALUES
-  ((SELECT id FROM toteuma WHERE lisatieto = 'ESPlyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'ESPlyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'ESPlyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'ESPlyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'ESPlyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'ESPlyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'ESPlyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'ESPlyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'ESPlyv_akillinen_tot_elokuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000);
+  ((SELECT id FROM toteuma WHERE lisatieto = 'ESPlyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'ESPlyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'ESPlyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'ESPlyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'ESPlyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'ESPlyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'ESPlyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'ESPlyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'ESPlyv_akillinen_tot_elokuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false);
 
 --Erilliskustannukset
 INSERT INTO erilliskustannus (tyyppi,sopimus,urakka,toimenpideinstanssi,pvm,rahasumma,indeksin_nimi,lisatieto,luotu,luoja)
@@ -182,7 +174,7 @@ INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, pitka_keskila
 
 -- Suolasakon suuruus ja sidottava indeksi
 INSERT INTO suolasakko (maara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, talvisuolaraja)
-     VALUES (30.0, 2014, 8, 'MAKU 2010', (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), 800);
+     VALUES (30.0, 2014, 8, 'MAKU 2005', (SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), 800);
 
 -- Maksuerät
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Espoo Talvihoito TP 2014-2019'), 'kokonaishintainen', 'Espoo Talvihoito TP ME 2014-2019' );

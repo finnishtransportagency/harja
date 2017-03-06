@@ -17,7 +17,7 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
-    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+) [:db :integraatioloki])
+    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+ nil) [:db :integraatioloki])
     :api-varusteet (component/using
                      (varusteet/->Varusteet)
                      [:http-palvelin :db :integraatioloki :tierekisteri])))
@@ -38,14 +38,14 @@
 
 (deftest tarkista-tietolajin-virheellinen-haku
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))
-        virheellinen-kutsu "/api/varusteet/tietolaji"
+        virheellinen-kutsu "/api/varusteet/tietolaji?tunniste=666"
         tierekisteri-resurssi "/haetietolaji"
-        oletettu-vastaus "Pakollista parametria: tunniste ei ole annettu"]
+        oletettu-vastaus "Tietolajia ei voida hakea. Tuntematon tietolaji: 666"]
     (with-fake-http
       [(str +testi-tierekisteri-url+ tierekisteri-resurssi) vastaus-xml
        (str "http://localhost:" portti virheellinen-kutsu) :allow]
       (let [vastaus (api-tyokalut/get-kutsu [virheellinen-kutsu] kayttaja portti)]
-        (is (= 400 (:status vastaus)) "Haku puutteellisilla parametreillä palauttaa virheen")
+        (is (= 400 (:status vastaus)) "Haku tuntemattomalla tietolajilla palauttaa virheen")
         (is (.contains (:body vastaus) oletettu-vastaus) "Vastaus sisältää oikean virheilmoitukset")))))
 
 (deftest tarkista-tietueiden-haku

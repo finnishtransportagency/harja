@@ -5,7 +5,6 @@
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon kartalla-xf]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.toteumat :as toteumat]

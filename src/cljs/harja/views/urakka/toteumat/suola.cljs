@@ -14,7 +14,8 @@
             [harja.atom :refer [paivita!]]
             [cljs.core.async :refer [<! >!]]
             [harja.views.kartta :as kartta]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.fmt :as fmt])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -51,7 +52,8 @@
      (let [ur @nav/valittu-urakka
            [sopimus-id _] @tiedot-urakka/valittu-sopimusnumero
            muokattava? (comp not true? :koneellinen)
-           listaus  (reverse (sort-by :alkanut @toteumat))]
+           kaytetty-yhteensa (str "Käytetty yhteensä: " (fmt/desimaaliluku (reduce + (keep :maara @toteumat))))
+           listaus (reverse (sort-by :alkanut @toteumat))]
        [:div.suolatoteumat
         [kartta/kartan-paikka]
         [:span.valinnat
@@ -59,10 +61,15 @@
          [urakka-valinnat/urakan-hoitokausi-ja-kuukausi ur]]
 
         [grid/grid {:otsikko "Talvisuolan käyttö"
-                    :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-suola (:id @nav/valittu-urakka))
+                    :tallenna (if (oikeudet/voi-kirjoittaa?
+                                   oikeudet/urakat-toteumat-suola
+                                   (:id @nav/valittu-urakka))
                                 #(go (if-let [tulos (<! (suola/tallenna-toteumat (:id ur) sopimus-id %))]
                                        (paivita! toteumat)))
                                 :ei-mahdollinen)
+                    :tallennus-ei-mahdollinen-tooltip
+                    (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                                    oikeudet/urakat-toteumat-suola)
                     :tyhja (if (nil? @toteumat)
                              [yleiset/ajax-loader "Suolatoteumia haetaan..."]
                              "Ei suolatoteumia valitulle aikavälille")
@@ -85,4 +92,6 @@
                    (:lisatieto %)
                    (str (:lisatieto %) " (Koneellisesti raportoitu)"))}]
 
-         listaus]]))))
+          listaus]
+        (when-not (empty? @toteumat)
+          [:div.bold kaytetty-yhteensa])]))))

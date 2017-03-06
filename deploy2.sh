@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 function msg {
     echo "**************************************************************"
@@ -23,6 +23,7 @@ START_TS=`date +%s`
 
 CURRENT_BRANCH=`git symbolic-ref --short HEAD`
 HARJA_ENV=harja-dev$1
+DNS_SUFFIX=harjatest.solita.fi
 BRANCH=$3
 UNIT=$2
 
@@ -33,7 +34,7 @@ fi
 echo ""
 echo "Deployaan branchin $BRANCH ympäristöön $HARJA_ENV"
 
-git push $HARJA_ENV $BRANCH || error_exit "Push epäonnistui, tarkista että remote on olemassa: git remote add $HARJA_ENV ssh://root@$HARJA_ENV/opt/harja-repo"
+git push $HARJA_ENV $BRANCH || error_exit "Push epäonnistui, tarkista että remote on olemassa: git remote add $HARJA_ENV ssh://root@$HARJA_ENV.$DNS_SUFFIX/opt/harja-repo"
 
 pushd test_envs/upcloud
 ansible-playbook deploy2.yml -i inventory/harjadev --extra-vars "harja_migrate_only=false harja_branch=$BRANCH" --limit $HARJA_ENV || error_exit "Deploy epäonnistui"
@@ -43,10 +44,10 @@ popd
 
 msg "Deploy valmis palvelimelle $HARJA_ENV. Laitoin Harja Projekti HipChat-kanavalle tiedon asiasta."
 
-HIPCHAT_TOKEN=`cat .hipchat-token`
+HIPCHAT_TOKEN=`cat ../.harja/hipchat-token`
 # HipChat notifikaatio
 CONFIG="from=deploy2.sh&color=purple"
-MESSAGE="$USER deployasi juuri uuden Harja-version haarasta $BRANCH palvelimelle <a href=\"https://$HARJA_ENV\">$HARJA_ENV</a>"
+MESSAGE="$USER deployasi juuri uuden Harja-version haarasta $BRANCH palvelimelle <a href=\"https://$HARJA_ENV.harjatest.solita.fi\">$HARJA_ENV.harjatest.solita.fi</a>"
 curl -d $CONFIG --data-urlencode "message=${MESSAGE}" "https://api.hipchat.com/v2/room/914801/notification?auth_token=$HIPCHAT_TOKEN&format=json"
 
 END_TS=`date +%s`

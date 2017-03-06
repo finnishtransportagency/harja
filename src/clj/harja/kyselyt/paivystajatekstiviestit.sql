@@ -19,4 +19,9 @@ SELECT
 FROM paivystajatekstiviesti ptv
   JOIN ilmoitus i ON ptv.ilmoitus = i.id
 WHERE ptv.puhelinnumero = :puhelinnumero AND
-      ptv.viestinumero = :viestinumero;
+      ptv.viestinumero = :viestinumero AND
+      NOT exists(SELECT itp.id
+                 FROM ilmoitustoimenpide itp
+                 WHERE
+                   itp.ilmoitus = i.id AND
+                   itp.kuittaustyyppi = 'lopetus');

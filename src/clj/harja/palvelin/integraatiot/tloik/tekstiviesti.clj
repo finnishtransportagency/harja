@@ -8,14 +8,21 @@
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
             [harja.tyokalut.merkkijono :as merkkijono]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
+            [harja.domain.tierekisteri :as tierekisteri]
             [harja.fmt :as fmt]
-            [harja.domain.ilmoitukset :as ilm])
+            [harja.domain.ilmoitukset :as ilm]
+            [harja.kyselyt.ilmoitukset :as ilmoitukset])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def +ilmoitusviesti+
-  (str "Uusi toimenpidepyyntö %s: %s (id: %s, viestinumero: %s).\n\n"
+  (str "Uusi toimenpidepyyntö %s: %s (viestinumero: %s).\n\n"
+       "Tunniste: %s\n\n"
+       "Urakka: %s\n\n"
        "Yhteydenottopyyntö: %s\n\n"
+       "Ilmoittaja: %s\n\n"
+       "Lähettäjä: %s\n\n"
        "Paikka: %s\n\n"
+       "TR-osoite: %s\n\n"
        "Selitteet: %s.\n\n"
        "Lisätietoja: %s.\n\n"
        "Kuittauskoodit:\n"
@@ -23,7 +30,8 @@
        "A%s = aloitettu\n"
        "L%s = lopetettu\n"
        "M%s = muutettu\n"
-       "R%s = vastattu\n\n"
+       "R%s = vastattu\n"
+       "U%s = väärä urakka\n\n"
        "Vastaa lähettämällä kuittauskoodi sekä kommentti. Esim. A1 Työt aloitettu.\n"))
 
 (def +onnistunut-viesti+ "Kuittaus käsiteltiin onnistuneesti. Kiitos!")
@@ -41,6 +49,7 @@
     "L" "lopetus"
     "M" "muutos"
     "R" "vastaus"
+    "U" "vaara-urakka"
     (throw+ {:type :tuntematon-ilmoitustoimenpide
              :virheet [{:koodi :tuntematon-ilmoitustoimenpide
                         :viesti (format "Tuntematon ilmoitustoimenpide: %s" toimenpide)}]})))
@@ -73,18 +82,27 @@
 (defn vastaanota-tekstiviestikuittaus [jms-lahettaja db puhelinnumero viesti]
   (log/debug (format "Vastaanotettiin T-LOIK kuittaus tekstiviestillä. Numero: %s, viesti: %s." puhelinnumero viesti))
   (try+
-    (let [data (parsi-tekstiviesti viesti)
-          paivystajatekstiviesti (hae-paivystajatekstiviesti db (:viestinumero data) puhelinnumero)
-          paivystaja (yhteyshenkilot/hae-yhteyshenkilo db (:yhteyshenkilo paivystajatekstiviesti))
-          ilmoitustoimenpide-id (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
-                                  db
-                                  (:ilmoitus paivystajatekstiviesti)
-                                  (:ilmoitusid paivystajatekstiviesti)
-                                  (:vapaateksti data)
-                                  (:toimenpide data)
-                                  paivystaja)]
+    (let [{:keys [toimenpide vapaateksti viestinumero]} (parsi-tekstiviesti viesti)
+          {:keys [ilmoitus ilmoitusid yhteyshenkilo]} (hae-paivystajatekstiviesti db viestinumero puhelinnumero)
+          paivystaja (first (yhteyshenkilot/hae-yhteyshenkilo db yhteyshenkilo ))
+          tallenna (fn [toimenpide vapaateksti]
+                     (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
+                       db
+                       ilmoitus
+                       ilmoitusid
+                       vapaateksti
+                       toimenpide
+                       paivystaja
+                       "sisaan"
+                       "sms"))]
 
-      (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)
+      (when (and (= toimenpide "aloitus") (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
+        (let [aloitus-kuittaus-id (tallenna "vastaanotto" "Vastaanotettu")]
+          (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db aloitus-kuittaus-id)))
+
+      (let [ilmoitustoimenpide-id (tallenna toimenpide vapaateksti)]
+        (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id))
+
       +onnistunut-viesti+)
 
     (catch [:type :viestinumero-tai-toimenpide-puuttuu] {}
@@ -112,9 +130,12 @@
       +virhe-viesti+)))
 
 (defn ilmoitus-tekstiviesti [ilmoitus viestinumero]
-  (let [ilmoitus-id (:ilmoitus-id ilmoitus)
+  (let [tunniste (:tunniste ilmoitus)
         otsikko (:otsikko ilmoitus)
         paikankuvaus (:paikankuvaus ilmoitus)
+        tr-osoite (tierekisteri/tierekisteriosoite-tekstina
+                    (:sijainti ilmoitus)
+                    {:teksti-tie? false})
         lisatietoja (if (:lisatieto ilmoitus)
                       (merkkijono/leikkaa 500 (:lisatieto ilmoitus))
                       "")
@@ -124,12 +145,17 @@
       (format +ilmoitusviesti+
               virka-apupyynto
               otsikko
-              ilmoitus-id
               viestinumero
+              tunniste
+              (:urakkanimi ilmoitus)
               (fmt/totuus (:yhteydenottopyynto ilmoitus))
+              (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))
+              (apurit/nayta-henkilon-yhteystiedot (:lahettaja ilmoitus))
               paikankuvaus
+              tr-osoite
               selitteet
               lisatietoja
+              viestinumero
               viestinumero
               viestinumero
               viestinumero
@@ -145,7 +171,17 @@
         (let [viestinumero (paivystajatekstiviestit/kirjaa-uusi-viesti
                              db (:id paivystaja) (:ilmoitus-id ilmoitus) puhelinnumero)
               viesti (ilmoitus-tekstiviesti ilmoitus viestinumero)]
-          (sms/laheta sms puhelinnumero viesti)))
+          (sms/laheta sms puhelinnumero viesti)
+
+          (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
+            db
+            (:id ilmoitus)
+            (:ilmoitus-id ilmoitus)
+            viesti
+            "valitys"
+            paivystaja
+            "ulos"
+            "sms")))
       (log/warn "Ilmoitusta ei voida lähettää tekstiviestillä ilman puhelinnumeroa."))
     (catch Exception e
       (log/error "Ilmoituksen lähettämisessä tekstiviestillä tapahtui poikkeus." e))))

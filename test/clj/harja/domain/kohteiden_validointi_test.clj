@@ -14,10 +14,10 @@
 (deftest tarkista-kohteen-validius
   (is (thrown+?
         #(tasmaa-poikkeus
-          %
-          yllapitokohteet/+kohteissa-viallisia-sijainteja+
-          yllapitokohteet/+viallinen-yllapitokohteen-sijainti+
-          "Alkuosa on loppuosaa isompi. Sijainti: {:aosa 2, :aet 1, :losa 1, :let 1}")
+           %
+           yllapitokohteet/+kohteissa-viallisia-sijainteja+
+           yllapitokohteet/+viallinen-yllapitokohteen-sijainti+
+           "Alkuosa on loppuosaa isompi. Sijainti: {:aosa 2, :aet 1, :losa 1, :let 1}")
         (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 {:aosa 2 :aet 1 :losa 1 :let 1} nil))
       "Loppuosaa suurempi alkuosa otettiin kiini"))
 
@@ -31,10 +31,10 @@
                      :sijainti {:aosa 3, :aet 3, :losa 5, :let 5}}]]
     (is (thrown+?
           #(tasmaa-poikkeus
-            %
-            yllapitokohteet/+kohteissa-viallisia-sijainteja+
-            yllapitokohteet/+viallinen-yllapitokohdeosan-sijainti+
-            "Alikohde (tunnus: C) ei ole kohteen (id: 1) sisällä.")
+             %
+             yllapitokohteet/+kohteissa-viallisia-sijainteja+
+             yllapitokohteet/+viallinen-yllapitokohdeosan-sijainti+
+             "Alikohde (tunnus: C) ei ole kohteen (id: 1) sisällä.")
           (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde alikohteet))
         "Kohteen ulkopuolinen alikohde otettiin kiinni"))
 
@@ -49,10 +49,10 @@
                      :sijainti {:aosa 4, :aet 4, :losa 5, :let 5}}]]
     (is (thrown+?
           #(tasmaa-poikkeus
-            %
-            yllapitokohteet/+kohteissa-viallisia-sijainteja+
-            yllapitokohteet/+viallinen-yllapitokohdeosan-sijainti+
-            "Alikohteet (tunnus: C ja tunnus: D) eivät muodosta yhteistä osuutta")
+             %
+             yllapitokohteet/+kohteissa-viallisia-sijainteja+
+             yllapitokohteet/+viallinen-yllapitokohdeosan-sijainti+
+             "Alikohteet (tunnus: C ja tunnus: D) eivät muodosta yhteistä osuutta")
           (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde alikohteet))
         "Alikohteet jotka eivät muodosta yhtenäistä osaa otettiin kiinni"))
 
@@ -63,10 +63,10 @@
                      :sijainti {:aosa 2, :aet 2, :losa 3, :let 3}}]]
     (is (thrown+?
           #(tasmaa-poikkeus
-            %
-            yllapitokohteet/+kohteissa-viallisia-sijainteja+
-            yllapitokohteet/+viallinen-yllapitokohdeosan-sijainti+
-            "Alikohteet eivät täytä kohdetta (id: 1)")
+             %
+             yllapitokohteet/+kohteissa-viallisia-sijainteja+
+             yllapitokohteet/+viallinen-yllapitokohdeosan-sijainti+
+             "Alikohteet eivät täytä kohdetta (id: 1)")
           (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde alikohteet))
         "Alikohteet jotka eivät täytä kohdetta otettiin kiinni")))
 
@@ -105,10 +105,10 @@
                             {:sijainti {:aosa 2, :aet 2, :losa 5, :let 3}}]]
     (is (thrown+?
           #(tasmaa-poikkeus
-            %
-            yllapitokohteet/+kohteissa-viallisia-sijainteja+
-            yllapitokohteet/+viallinen-alustatoimenpiteen-sijainti+
-            "Alustatoimenpide ei ole kohteen (id: 1) sisällä")
+             %
+             yllapitokohteet/+kohteissa-viallisia-sijainteja+
+             yllapitokohteet/+viallinen-alustatoimenpiteen-sijainti+
+             "Alustatoimenpide ei ole kohteen (id: 1) sisällä")
           (yllapitokohteet/tarkista-alustatoimenpiteiden-sijainnit 1 kohde alustatoimenpiteet))
         "Kohteen ulkopuolinen alustatoimenpide otettiin kiinni")))
 
@@ -118,25 +118,36 @@
         alikohteet [{:tunnus "A" :sijainti {:aosa 1, :aet 1, :losa 2, :let -1}}]]
     (is (thrown+?
           #(tasmaa-poikkeus
-            %
-            yllapitokohteet/+kohteissa-viallisia-sijainteja+
-            yllapitokohteet/+viallinen-yllapitokohteen-sijainti+
-            "Alkuosa ei saa olla negatiivinen. Sijainti: {:aosa -1, :aet 1, :losa 2, :let 1}")
+             %
+             yllapitokohteet/+kohteissa-viallisia-sijainteja+
+             yllapitokohteet/+viallinen-yllapitokohteen-sijainti+
+             "Alkuosa ei saa olla negatiivinen. Sijainti: {:aosa -1, :aet 1, :losa 2, :let 1}")
           (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde alikohteet))
         "Kohteen negatiivinen alkuosa otettiin kiinni")
     (is (thrown+?
           #(tasmaa-poikkeus
-            %
-            yllapitokohteet/+kohteissa-viallisia-sijainteja+
-            yllapitokohteet/+viallinen-yllapitokohteen-sijainti+
-            "Loppuetäisyys ei saa olla negatiivinen. Sijainti: {:aosa 1, :aet 1, :losa 2, :let -1}")
+             %
+             yllapitokohteet/+kohteissa-viallisia-sijainteja+
+             yllapitokohteet/+viallinen-yllapitokohteen-sijainti+
+             "Loppuetäisyys ei saa olla negatiivinen. Sijainti: {:aosa 1, :aet 1, :losa 2, :let -1}")
           (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde alikohteet))
         "Alikohteen negatiivinen loppuetäisyys otettiin kiinni")
     (is (thrown+?
           #(tasmaa-poikkeus
-            %
-            yllapitokohteet/+kohteissa-viallisia-sijainteja+
-            yllapitokohteet/+viallinen-yllapitokohteen-sijainti+
-            "Alkuetäisyys ei saa olla negatiivinen. Sijainti: {:aosa 1, :aet -1, :losa 2, :let 2}")
+             %
+             yllapitokohteet/+kohteissa-viallisia-sijainteja+
+             yllapitokohteet/+viallinen-yllapitokohteen-sijainti+
+             "Alkuetäisyys ei saa olla negatiivinen. Sijainti: {:aosa 1, :aet -1, :losa 2, :let 2}")
           (yllapitokohteet/tarkista-alustatoimenpiteiden-sijainnit 1 kohde alustatoimenpiteet))
         "Alustatoimenpiteen negatiivinen alkuetäisyys otettiin kiinni")))
+
+(deftest tarkista-alikohteen-sisaltyminen-kohteeseen
+  (is (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 1 :aet 1 :losa 2 :let 1} {:aosa 1 :aet 1 :losa 2 :let 1}))
+  (is (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 1 :aet 1 :losa 3 :let 1} {:aosa 1 :aet 1 :losa 2 :let 1}))
+  (is (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 1 :aet 1 :losa 3 :let 1} {:aosa 1 :aet 1 :losa 2 :let 1000}))
+  (is (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 1 :aet 1 :losa 3 :let 1} {:aosa 2 :aet 1000 :losa 3 :let 1}))
+
+  (is (not (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 2 :aet 1 :losa 3 :let 1} {:aosa 1 :aet 1 :losa 3 :let 1})))
+  (is (not (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 1 :aet 2 :losa 3 :let 1} {:aosa 1 :aet 1 :losa 3 :let 1})))
+  (is (not (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 1 :aet 1 :losa 3 :let 1} {:aosa 1 :aet 1 :losa 4 :let 1})))
+  (is (not (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 1 :aet 1 :losa 3 :let 1} {:aosa 1 :aet 1 :losa 3 :let 2}))))

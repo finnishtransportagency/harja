@@ -3,8 +3,9 @@
             [com.stuartsierra.component :as component]
             [clojure.java.io :as io]
             [taoensso.timbre :as log]
-            [harja.tietoturva.liitteet :as t-liitteet]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.domain.liitteet :as t-liitteet]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.komponentit.virustarkistus :as virustarkistus])
   (:import (java.io InputStream ByteArrayOutputStream)
            (org.postgresql.largeobject LargeObjectManager)
            (com.mchange.v2.c3p0 C3P0ProxyConnection)
@@ -60,22 +61,24 @@
   (lataa-liite [this liitteen-id])
   (lataa-pikkukuva [this liitteen-id]))
 
-(defn- tallenna-liite [db luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahde-jarjestelma]
+(defn- tallenna-liite [db virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahde-jarjestelma]
   (log/debug "Vastaanotettu pyyntö tallentaa liite kantaan.")
   (log/debug "Tyyppi: " (pr-str tyyppi))
   (log/debug "Koko: " (pr-str koko))
   (let [liitetarkistus (t-liitteet/tarkista-liite {:tyyppi tyyppi :koko koko})]
     (if (:hyvaksytty liitetarkistus)
-      (let [pikkukuva (muodosta-pikkukuva (io/input-stream lahde))
-            oid (tallenna-lob db (io/input-stream lahde))
-            liite (liitteet/tallenna-liite<! db tiedostonimi tyyppi koko oid pikkukuva luoja urakka kuvaus lahde-jarjestelma)]
-        (log/debug "Liite tallennettu.")
-        liite)
+      (do
+        (virustarkistus/tarkista virustarkistus tiedostonimi (io/input-stream lahde))
+        (let [pikkukuva (muodosta-pikkukuva (io/input-stream lahde))
+                oid (tallenna-lob db (io/input-stream lahde))
+                liite (liitteet/tallenna-liite<! db tiedostonimi tyyppi koko oid pikkukuva luoja urakka kuvaus lahde-jarjestelma)]
+            (log/debug "Liite tallennettu.")
+            liite))
       (do
         (log/debug "Liite hylätty: " (:viesti liitetarkistus))
         (throw+ {:type virheet/+virheellinen-liite+ :virheet
-                       [{:koodi  virheet/+virheellinen-liite-koodi+
-                         :viesti (str "Virheellinen liite: " (:viesti liitetarkistus))}]})))))
+                 [{:koodi  virheet/+virheellinen-liite-koodi+
+                   :viesti (str "Virheellinen liite: " (:viesti liitetarkistus))}]})))))
 
 (defn- hae-liite [db liitteen-id]
   (let [liite (first (liitteet/hae-liite-lataukseen db liitteen-id))]
@@ -92,10 +95,10 @@
     this)
 
   LiitteidenHallinta
-  (luo-liite [{db :db} luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma]
-    (tallenna-liite db luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma))
+  (luo-liite [{db :db virustarkistus :virustarkistus}
+              luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma]
+    (tallenna-liite db virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma))
   (lataa-liite [{db :db} liitteen-id]
     (hae-liite db liitteen-id))
   (lataa-pikkukuva [{db :db} liitteen-id]
     (hae-pikkukuva db liitteen-id)))
-

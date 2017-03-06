@@ -4,7 +4,6 @@
             [reagent.core :refer [atom]]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.komponentti :as komp]
-            [harja.ui.listings :refer [suodatettu-lista]]
             [harja.ui.yleiset :refer [linkki staattinen-linkki-uuteen-ikkunaan ajax-loader livi-pudotusvalikko]]
             [harja.ui.dom :as dom]
             [harja.ui.modal :as modal]
@@ -23,6 +22,8 @@
             [harja.views.kartta :as kartta]
             [harja.views.hallinta :as hallinta]
             [harja.views.about :as about]
+            [harja.views.tierekisteri :as tierekisteri]
+
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.oikeudet :as oikeudet]
             [harja.asiakas.tapahtumat :as t]
@@ -57,10 +58,13 @@
         [#".*android.*" #".*ipad.*"]))
 
 (defn header [s]
-  [bs/navbar {}
-   [:img#harja-brand-icon {:alt      "HARJA"
-                           :src      "images/harja_logo_soft.svg"
-                           :on-click #(.reload js/window.location)}]
+  [bs/navbar {:luokka (when (k/kehitysymparistossa?) "testiharja")}
+   [:span
+    [:img#harja-brand-icon {:alt      "HARJA"
+                            :src      "images/harja_logo_soft.svg"
+                            :on-click #(.reload js/window.location)}]
+    (when (k/kehitysymparistossa?)
+      [:span#testiharja "TESTI"])]
    [haku/haku]
 
    [:ul#sivut.nav.nav-pills
@@ -88,7 +92,8 @@
     (when (and (mobiiliselain?)
                (oikeudet/laadunseuranta))
       [:li {:role "presentation"}
-       [staattinen-linkki-uuteen-ikkunaan "Laadunseurannan mobiilityökalu" (str k/+polku+ "laadunseuranta/")]])]
+       [staattinen-linkki-uuteen-ikkunaan "Laadunseurannan mobiilityökalu"
+        (str k/+polku+ "laadunseuranta")]])]
 
    :right
    [palaute/palaute-linkki @istunto/kayttaja (nav/nykyinen-url)]
@@ -160,7 +165,11 @@
         :ilmoitukset [ilmoitukset/ilmoitukset]
         :hallinta [hallinta/hallinta]
         :tilannekuva [tilannekuva/tilannekuva]
-        :about [about/about])]]]
+        :about [about/about]
+        :tr [tierekisteri/tierekisteri]
+
+        ;; jos käyttäjä kirjoittaa selaimeen invalidin urlin, estetään räsähdys
+        [urakat/urakat])]]]
    [modal/modal-container]
    [viesti-container]
 
@@ -168,7 +177,12 @@
    ;; asetetaan alkutyyli siten, että kartta on poissa näkyvistä, jos näkymässä on kartta,
    ;; se asemoidaan mountin jälkeen
    ^{:key "kartta-container"}
-   [:div#kartta-container {:style {:position "absolute" :top (- korkeus)}}
+   [:div#kartta-container {:style {:position "absolute"
+                                   :top (- korkeus)
+                                   ;; Estetään asioiden vuotaminen ulos kartalta kun kartta on avattu
+                                   :overflow (if @nav/kartta-nakyvissa?
+                                               "hidden"
+                                               "visible")}}
     [kartta/kartta]]])
 
 (defn varoita-jos-vanha-ie []
@@ -211,6 +225,8 @@
             (if (nil? kayttaja)
               [ladataan]
               (if (ei-kayttooikeutta? kayttaja)
-                [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
+                [:div.ei-kayttooikeutta-wrap
+                 [:img#harja-brand-icon {:src      "images/harja_logo_soft.svg"}]
+                 [:div.ei-kayttooikeutta "Ei käyttöoikeutta Harjaan. Ota yhteys organisaatiosi käyttövaltuusvastaavaan."]]
                 [paasisalto sivu korkeus]))))
         [ladataan]))))

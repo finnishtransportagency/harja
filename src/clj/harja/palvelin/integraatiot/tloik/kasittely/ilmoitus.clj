@@ -3,7 +3,15 @@
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
             [harja.palvelin.palvelut.urakat :as urakkapalvelu]
             [slingshot.slingshot :refer [throw+]]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]))
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [clojure.string :as str]
+            [harja.kyselyt.konversio :as konv]))
+
+(defn urakkatyyppi [urakkatyyppi]
+  (case (str/lower-case urakkatyyppi)
+    "silta" "siltakorjaus"
+    "tekniset laitteet" "tekniset-laitteet"
+    urakkatyyppi))
 
 (defn paivita-ilmoittaja [db id ilmoittaja]
   (ilmoitukset/paivita-ilmoittaja-ilmoitukselle!
@@ -24,39 +32,47 @@
     (:sahkoposti lahettaja)
     id))
 
-(defn paivita-ilmoitus [db id urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitetty otsikko paikankuvaus lisatieto yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
+(defn paivita-ilmoitus [db id urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi
+                                                valitetty otsikko paikankuvaus lisatieto
+                                                yhteydenottopyynto ilmoittaja lahettaja selitteet
+                                                sijainti vastaanottaja tunniste]}]
   (ilmoitukset/paivita-ilmoitus!
     db
-    urakka-id
-    ilmoitus-id
-    ilmoitettu
-    valitetty
-    yhteydenottopyynto
-    otsikko
-    paikankuvaus
-    lisatieto
-    ilmoitustyyppi
-    (str "{" (clojure.string/join "," (map name selitteet)) "}")
-    id)
+    {:urakka urakka-id
+     :ilmoitusid ilmoitus-id
+     :ilmoitettu ilmoitettu
+     :valitetty valitetty
+     :yhteydenottopyynto yhteydenottopyynto
+     :otsikko otsikko
+     :paikankuvaus paikankuvaus
+     :lisatieto lisatieto
+     :ilmoitustyyppi ilmoitustyyppi
+     :selitteet (konv/seq->array (map name selitteet))
+     :tunniste tunniste
+     :id id})
   (paivita-ilmoittaja db id ilmoittaja)
   (paivita-lahettaja db id lahettaja)
   (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)
   id)
 
-(defn luo-ilmoitus [db urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitetty urakkatyyppi otsikko paikankuvaus lisatieto yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
+(defn luo-ilmoitus [db urakka-id urakkatyyppi {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi
+                                                      valitetty otsikko paikankuvaus lisatieto
+                                                      yhteydenottopyynto ilmoittaja lahettaja selitteet
+                                                      sijainti vastaanottaja tunniste]}]
   (let [id (:id (ilmoitukset/luo-ilmoitus<!
                   db
-                  urakka-id
-                  ilmoitus-id
-                  ilmoitettu
-                  valitetty
-                  yhteydenottopyynto
-                  otsikko
-                  paikankuvaus
-                  lisatieto
-                  ilmoitustyyppi
-                  (str "{" (clojure.string/join "," (map name selitteet)) "}")
-                  urakkatyyppi))]
+                  {:urakka urakka-id
+                   :ilmoitusid ilmoitus-id
+                   :ilmoitettu ilmoitettu
+                   :valitetty valitetty
+                   :yhteydenottopyynto yhteydenottopyynto
+                   :otsikko otsikko
+                   :paikankuvaus paikankuvaus
+                   :lisatieto lisatieto
+                   :ilmoitustyyppi ilmoitustyyppi
+                   :selitteet (konv/seq->array (map name selitteet))
+                   :urakkatyyppi urakkatyyppi
+                   :tunniste tunniste}))]
     (paivita-ilmoittaja db id ilmoittaja)
     (paivita-lahettaja db id lahettaja)
     (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)
@@ -66,14 +82,15 @@
   (log/debug "Käsitellään ilmoitusta T-LOIK:sta id:llä: " (:ilmoitus-id ilmoitus) ", joka välitettiin viestillä id: " (:viesti-id ilmoitus))
   (let [ilmoitus-id (:ilmoitus-id ilmoitus)
         nykyinen-id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db ilmoitus-id)))
-        urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus)))
+        urakkatyyppi (urakkatyyppi (:urakkatyyppi ilmoitus))
+        urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db urakkatyyppi (:sijainti ilmoitus)))
         uusi-id (if nykyinen-id
                   (paivita-ilmoitus db nykyinen-id urakka-id ilmoitus)
-                  (luo-ilmoitus db urakka-id ilmoitus))]
-    (log/debug (format "Ilmoitus (id: %s) käsitelty onnistuneesti" ilmoitus))
+                  (luo-ilmoitus db urakka-id urakkatyyppi ilmoitus))]
+    (log/debug (format "Ilmoitus (id: %s) käsitelty onnistuneesti" (:ilmoitus-id ilmoitus)))
     (when-not urakka-id
       (throw+ {:type virheet/+urakkaa-ei-loydy+}))
     uusi-id))
 
-
-
+(defn hae-ilmoituksen-tieosoite [db ilmoitus-id]
+  (first (ilmoitukset/hae-ilmoituksen-tieosoite db ilmoitus-id)))

@@ -1,123 +1,149 @@
 <imp:poikkeama xmlns:imp="http://restimport.xml.turi.oikeatoliot.fi">
+    <lahde>
+        <lahdejarjestelma>Harja</lahdejarjestelma>
+        <lahdeid>123</lahdeid>
+    </lahde>
     <tapahtumantiedot>
-        <sampourakkaid>string</sampourakkaid>
-        <!--Zero or more repetitions:-->
+        <sampohankenimi>Esimerkkihanke</sampohankenimi>
+        <sampohankeid>432</sampohankeid>
+        <tilaajanvastuuhenkilokayttajatunnus>L947582</tilaajanvastuuhenkilokayttajatunnus>
+        <tilaajanvastuuhenkiloetunimi>Ylermi</tilaajanvastuuhenkiloetunimi>
+        <tilaajanvastuuhenkilosukunimi>Yhteyshenkilö</tilaajanvastuuhenkilosukunimi>
+        <tilaajanvastuuhenkilosposti>ylermi.yhteyshenkilo@liikennevirasto.invalid</tilaajanvastuuhenkilosposti>
+        <sampourakkanimi>Esimerkkiurakka</sampourakkanimi>
+        <sampourakkaid>1</sampourakkaid>
+        <urakanpaattymispvm>2017-05-01</urakanpaattymispvm>
+        <urakkavaylamuoto>Tie</urakkavaylamuoto>
+        <urakkatyyppi>hoito</urakkatyyppi>
+        <elyalue>POS ELY</elyalue>
+        <alueurakkanro>34</alueurakkanro>
         <tyyppi>32</tyyppi>
-        <tapahtumapvm>2007-10-26</tapahtumapvm>
-        <!--Optional:-->
-        <tapahtumaaika>20:44:14</tapahtumaaika>
-        <!--Optional:-->
+        <tyyppi>8</tyyppi>
+        <tapahtumapvm>2015-05-08</tapahtumapvm>
+        <tapahtumaaika>12:00:00</tapahtumaaika>
         <poikkeamalaji>2</poikkeamalaji>
-        <!--Optional:-->
-        <junanumero>3</junanumero>
-        <!--Optional:-->
-        <vaihtotyonvastuuyksikko>16</vaihtotyonvastuuyksikko>
-        <!--Optional:-->
-        <syy>8</syy>
-        <!--Optional:-->
-        <teknisenviantyyppi>1</teknisenviantyyppi>
-        <!--Optional:-->
+        <junanumero>334</junanumero>
+        <vaihtotyonvastuuyksikko>1</vaihtotyonvastuuyksikko>
+        <syy>2</syy>
+        <teknisenviantyyppi>4</teknisenviantyyppi>
         <virheentyyppi>1</virheentyyppi>
-        <!--Optional:-->
-        <ulkopuolisensyyntyyppi>8</ulkopuolisensyyntyyppi>
-        <!--Optional:-->
-        <muunsyynkuvaus>string</muunsyynkuvaus>
-        <kuvaus>string</kuvaus>
+        <ulkopuolisensyyntyyppi>1</ulkopuolisensyyntyyppi>
+        <muunsyynkuvaus>Muun syyn kuvaus.</muunsyynkuvaus>
+        <kuvaus>Koira jäi junan alle</kuvaus>
     </tapahtumantiedot>
     <tapahtumapaikka>
-        <!--Optional:-->
         <tapahtumapaikkaradalla>1</tapahtumapaikkaradalla>
-        <!--Optional:-->
-        <ratapaikka>Kjr</ratapaikka>
-        <!--Optional:-->
-        <paikantarkenne>256</paikantarkenne>
-        <!--Optional:-->
-        <kmsijainti>3</kmsijainti>
-        <!--Optional:-->
-        <paikka>string</paikka>
-        <!--Optional:-->
-        <tapahtumaalue>8</tapahtumaalue>
-        <!--Optional:-->
-        <eureffinn>1.051732E7</eureffinn>
-        <!--Optional:-->
-        <eureffine>1.051732E7</eureffine>
-        <!--Optional:-->
-        <tienimi>string</tienimi>
-        <!--Optional:-->
-        <tienumero>3</tienumero>
-        <!--Optional:-->
-        <tieaosa>3</tieaosa>
-        <!--Optional:-->
+        <ratapaikka>Olli-Prv</ratapaikka>
+        <paikantarkenne>2</paikantarkenne>
+        <kmsijainti>13</kmsijainti>
+        <paikka>Riihimäki, raide 22</paikka>
+        <tapahtumaalue>1</tapahtumaalue>
+        <eureffinn>334</eureffinn>
+        <eureffine>432</eureffine>
+        <tienimi>Tien nimi</tienimi>
+        <tienumero>51</tienumero>
+        <tieaosa>2</tieaosa>
         <tielosa>3</tielosa>
-        <!--Optional:-->
-        <tieaet>3</tieaet>
-        <!--Optional:-->
+        <tieaet>1</tieaet>
         <tielet>3</tielet>
     </tapahtumapaikka>
     <syytjaseuraukset>
-        <!--Optional:-->
-        <arviosyista>string</arviosyista>
-        <!--Zero or more repetitions:-->
-        <tapahtumaanliittyy>8</tapahtumaanliittyy>
-        <!--Optional:-->
-        <seuraukset>string</seuraukset>
-        <!--Optional:-->
-        <liikennekatkonkesto>3</liikennekatkonkesto>
-        <!--Optional:-->
-        <tehtava>string</tehtava>
-        <!--Optional:-->
-        <ammatti>7</ammatti>
-        <!--Optional:-->
-        <ammattimuutarkenne>anyType</ammattimuutarkenne>
-        <!--Optional:-->
-        <vammanlaatu>6</vammanlaatu>
-        <!--Optional:-->
-        <vahingoittunutruumiinosa>5</vahingoittunutruumiinosa>
-        <!--Optional:-->
-        <sairauspoissaolot>3</sairauspoissaolot>
-        <!--Optional:-->
+        <arviosyista>Arvio syistä.</arviosyista>
+        <tapahtumaanliittyy>1</tapahtumaanliittyy>
+        <seuraukset>Poikkeaman syyt ja seuraukset.</seuraukset>
+        <liikennekatkonkesto>2</liikennekatkonkesto>
+        <tehtava>Tehtävä</tehtava>
+        <ammatti>2</ammatti>
+        <ammattimuutarkenne>Ammatin tarkenne</ammattimuutarkenne>
+        <vammanlaatu>3</vammanlaatu>
+        <vahingoittunutruumiinosa>1</vahingoittunutruumiinosa>
+        <sairauspoissaolot>0</sairauspoissaolot>
         <sairauspoissaolojatkuu>false</sairauspoissaolojatkuu>
-        <!--Optional:-->
-        <sairaalahoitovuorokaudet>3</sairaalahoitovuorokaudet>
-        <!--Optional:-->
-        <toimenpiteet>string</toimenpiteet>
+        <sairaalahoitovuorokaudet>34</sairaalahoitovuorokaudet>
+        <toimenpiteet>Toimenpiteet</toimenpiteet>
     </syytjaseuraukset>
-    <!--Optional:-->
     <tapahtumankasittely>
-        <!--Optional:-->
-        <otsikko>string</otsikko>
-        <!--Optional:-->
-        <luontipvm>2019-08-19</luontipvm>
-        <!--Optional:-->
-        <ilmoittaja>string</ilmoittaja>
-        <!--Optional:-->
-        <ilmoittajaorganisaatio>string</ilmoittajaorganisaatio>
-        <!--Optional:-->
-        <vuorossaolija>string</vuorossaolija>
-        <!--Optional:-->
-        <ilmoitettupoliisille>true</ilmoitettupoliisille>
-        <!--Optional:-->
-        <lisatiedot>string</lisatiedot>
+        <otsikko>Otsikko</otsikko>
+        <luontipvm>2016-09-29</luontipvm>
+        <ilmoittaja>Ismo Ilmoittaja</ilmoittaja>
+        <ilmoittajaorganisaatio>Organisaatio Oy</ilmoittajaorganisaatio>
+        <vuorossaolija>Veikko Vuorossaolija</vuorossaolija>
+        <ilmoitettupoliisille>false</ilmoitettupoliisille>
+        <tila>Käsitelty</tila>
+        <lisatiedot>Tapauksen lisätiedot.</lisatiedot>
     </tapahtumankasittely>
-    <!--Zero or more repetitions:-->
     <poikkeamatoimenpide>
-        <!--Optional:-->
-        <otsikko>string</otsikko>
-        <!--Optional:-->
-        <kuvaus>string</kuvaus>
-        <!--Optional:-->
-        <toteuttaja>string</toteuttaja>
-        <!--Optional:-->
-        <toteutus>string</toteutus>
+        <otsikko>Toimenpiteen otsikko</otsikko>
+        <kuvaus>Toimenpiteen kuvaus</kuvaus>
+        <vastuuhenkilokayttajatunnus>L937581</vastuuhenkilokayttajatunnus>
+        <vastuuhenkiloetunimi>Virpi</vastuuhenkiloetunimi>
+        <vastuuhenkilosukunimi>Vastuuhenkilö</vastuuhenkilosukunimi>
+        <vastuuhenkilosposti>virpi.vastuuhenkilo@liikennevirasto.invalid</vastuuhenkilosposti>
+        <toteuttaja>N. N.</toteuttaja>
+        <toteutus>Toteutus</toteutus>
         <tila>1</tila>
-        <!--Optional:-->
-        <pakollinen>false</pakollinen>
-        <!--Optional:-->
-        <maarapvm>2002-11-16+02:00</maarapvm>
+        <pakollinen>true</pakollinen>
+        <maarapvm>2016-09-27</maarapvm>
     </poikkeamatoimenpide>
-    <!--Zero or more repetitions:-->
+    <poikkeamatoimenpide>
+        <otsikko>Toimenpiteen otsikko</otsikko>
+        <kuvaus>Toimenpiteen kuvaus</kuvaus>
+        <vastuuhenkilokayttajatunnus>L917482</vastuuhenkilokayttajatunnus>
+        <vastuuhenkiloetunimi>Veijo</vastuuhenkiloetunimi>
+        <vastuuhenkilosukunimi>Vastuuhenkilö</vastuuhenkilosukunimi>
+        <vastuuhenkilosposti>veijo.vastuuhenkilo@liikennevirasto.invalid</vastuuhenkilosposti>
+        <toteuttaja>N. N.</toteuttaja>
+        <toteutus>Toteutus</toteutus>
+        <tila>1</tila>
+        <pakollinen>false</pakollinen>
+        <maarapvm>2016-09-27</maarapvm>
+    </poikkeamatoimenpide>
     <poikkeamaliite>
-        <tiedostonimi>string</tiedostonimi>
-        <tiedosto>YWM=</tiedosto>
+        <tiedostonimi>wip.png</tiedostonimi>
+        <tiedosto>
+            iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAJUklEQVR42u1daWwVVRSe9968bd5r
+            oS20DdAFWcQVJIJUaEAkxBU0EH8giVBUImoghERMtAFFDSFign8A48IPA2rAP24kJGCImiImoCQG
+            DNGIghIBE1kULPXcdkbuO8xrp2+Wu7wzyYlLmW8O9zu999xzvzljGHTR5eeaMWNaDCzOWYzw9MHr
+            62EJbISnD15fUWaCJTkzS402wpMLz8vD2ANSnCV9Ok94kuB5eVgaLMNZ2qfzhCcJnpeHsQdkOcv4
+            dJ7wJMHr62Esm7TAcpyx/44Tnvp4Xh7GHpDnLOfTecKTBM/rwyo5y/t0Pk94cuB5WWMs7oED7H/6
+            cd7BGUB4YvEcjvtKMHIo4mhw9cCL2YWieG9biyxaa2hw9SHfdA0ArqiQ4QIgR4OrFflOpdA1AEy7
+            kuQEgEWDqxX5aa5SmCjIAez/keQCIEODqxWew+n/AeCWFDgB4Kc8SWTJh2dxlULGr+n2hxLc+kDk
+            64Pn5HFOAFzNLxcAJpGvFR5fKcwWndm5ACDy9cKr5AIg02vhx2e5WInBra0dfHMmk1mdTCZ3x2Kx
+            4/DjS7adANsFthKsWaNgcgLACvOUUPrBqKurvSmVSu0wTbPTNBNdQH4X/LiYdYJtA2vSYCapDPug
+            SPrBsCxrMRB/DqzLA/m8/QU2T/FlJF/W5MN0395DfL/J521FOR4U6fCb/3gR8jvA2uy1Pm7bcLBH
+            wb7GAcDuy2azi4h8xdZ8l2n/LNgjHmBYcJx3yGf3A85ZhknkKzINQsK3HZF/DqylH3CtcN95m/xu
+            Y5hEvhJbvUHjXLL9hf3Fy2YzT19ZQrqDCTDNkeVKfl6VNTCTSb+MyN9fCt60aVMGQr3gWzSTrC5H
+            8nMue0tpp8Fk0vwKZfsLSsWzrOyTKJi+KyfyldMENjY2NAFZ/6JMflipeM3NjQ2AdwnhNetCvnaa
+            wHg8Nh+RdSgA/z5HmE9pkDNpqwncishaG4B/KxDmTg3I11ITyEQOpxFZrQH4NwZh/g2WV5h8bTWB
+            UxFRp8ASAfn3A8J+UFHytdYErkMkvRugf+sR9psK1km01wR+7+Vwhyvvdvk4KPoNLKYQ+dprAkdE
+            SL5jE0kTKM80uDRi8tl9L5ImUJ41cFfE5DOMg6QJlIP8CrCLiKTRIfg3CKyTD6YhQ+qvI02g+Glw
+            LiL/SFj+Aflf8jMJCEWWkSZQ/DT4DgqA9WH5l06nV/HLCJwWfkqaQLHks5//jgJgelj+VVdX3Y5y
+            CKYcyio8fkqTz65JiPw/Bw+uSYfpHxw3/4wSyPuIfHHOr0HZ+Qdh+wfSsM1o97CRyBeHd8AoVO8u
+            Dv/IOX4PmnWOEfli8BrQPr+zqanhmgj8Sxs9CmM+CMbpTr6MmsAn+CIPZOQdEfr3IQqA53UmX1ZN
+            4Md8UQbeAnohQv8WoQDo0JF8mTWBFpB/gS/KwBZtcoT+1YNd5gKA/XutauQrqwmERGw2Tz5szY4J
+            8G8fmgUWqkK+8ppA2Iq9FezBTiAHRTsUIl9tTSD8xh+XjPzu18lhGcqQJjBk8quqBrZKSH73ffl8
+            7gHSBIY8DcKrXy/JSD67P51ObSJNYMhrIOz39yOyHhPo3yw+mGBp+ok0gSGSP2zY0FEw2Jc58tn2
+            a4go/2DKzwPxF/iZBJaoiaQJDGkahFe2l6Bp+hvR/qVSyZ1oGVkp0fjppQmEwcUl2FWi/YMDqOUo
+            h9gr0fjpowlkWyyjp3MXHwC3ivavvr7uBpSTsLeTayQZP600gTMR+azRY0ySmekA8m2+JOOnlSZw
+            AxrkNyTybw3ybZsk46eVJvAoGuTZEvmHpWlnjJ63lWUaP6XJvx4N8AWwnET+uYlT7yDyg8N7Bg3u
+            JxIO7tvIx1eJ/ODw9qLBXSLh4M5BPh4m8oPBq7a3VvzgNko4uOwVtX+Qn6N0IV+kJvBhEQc7AeEt
+            J02gf+e3Kko+u283aQL9Oe/W+EkV8tn9F0eMGN5AmsDSnZ+qMPndOLmctYA0gaU7jxs/bZF9TQXy
+            16Eu4++RJrB05wsaP4Ea+CHZ27JUVOTvKpxJzFOwDJgSka+MJnAkmlbZejpU9rYsLS0Tq4H002gZ
+            mSwJ+UppApfxaypIwfao0rIepv33UQ7xigT+KacJ3MUnVKAGelaVlvXQZr4NJZCHBPunnCawu/ET
+            n02zL4Go8s0eeE+RVS/73WaeNIFXrrmFatvkYQU/2LTH6EebedIEFm6ltvBbKWjOtEHBDzbhNvOf
+            CfBPPU0g2zLBdZLfSsHW6m4Fv9Z1reGhzTxpAhFeZWXFnWgffQaElykFTzHZdcTopc08aQJd8GC6
+            X4fKsVsVJZ9drxlF2syTJrAIHiR8h1ARZZ6i5LNrOgoA9pn6GIlDiuD1aOzlPdgJAi+RiE8i8ovg
+            9bxloy/57D54g3gtkW8U++hjcqfO5NvdzA4S+S54Y8aMrmONn3Qm38Gy28yTJhB14JyNBu6oYglf
+            UTzoG/AFH0xQKl5KmsCr8TahANigA/n22UA7mkk+UoH8qDWBv6AAmKkD+Qynpqb6NrSM9LvNvO6a
+            wFsQ+ew18JQO5DsGAfAjyiHuFeifdJrAdsOl554u5NuvkL+O/o4bBZIvnSYQd91s04n8Iv0Njgki
+            XzpNYJ1xdd/dOs3IN+wlDXc4GRcx+VJqAtvQoOzTkHzn2oH+rs9F6J+0mkA8KO2aku8W7B0R+Set
+            JtBtWhyvKfnFlrvakP2TWhOIE6NfNSa/WMK7MET/pNcE4sZPmzUn323Lu11pTSDU8OdAkeMPVQ5i
+            NMI7CTarj+AMXxPI3n0jsoThnehjZgpXEzhhwvgqIks4Xm/LUriaQPtFSCJLLJ44cciVAChwXuUE
+            TQW8ggAQqgxqbW2pcolcIitcvIKZRKgsbMqUSQNdpi0iK1y8gmVEqCZw7NgbE8WSEiIrNLyCHEK0
+            JjBGCZpYPBk0gUSWQDwZNIEniSxReOYJGTSBs+yKFJEVMflQhr/fxy+3ut8OJrwy/3Yw4ZXxt4MJ
+            r8y/HUx4JePp8e1gwisJT49vBxNeyXUcPb4dTHglVXAj0wTy9YLKALaOhBcMXiR9Avl6QT6ArSPh
+            BYsXap9Ai1tncgFsHQlPEjwv+0qnXpDlkowY4amP57WokOEs7dN5wpMEz2s5McVZ0qfzhCcJnteD
+            hCRnpk/nCU8SPC8PTGAjPH3wvERbnLMY4amP9x9gAmwm1iIt6gAAAABJRU5ErkJggg==
+        </tiedosto>
     </poikkeamaliite>
 </imp:poikkeama>

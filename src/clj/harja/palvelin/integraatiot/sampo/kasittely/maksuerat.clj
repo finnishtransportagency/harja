@@ -2,7 +2,6 @@
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [hiccup.core :refer [html]]
-            [harja.tyokalut.xml :as xml]
             [harja.kyselyt.maksuerat :as qm]
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.sampo.sanomat.maksuera_sanoma :as maksuera-sanoma]
@@ -10,27 +9,20 @@
             [harja.kyselyt.maksuerat :as maksuerat]
             [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.komponentit.sonja :as sonja])
+            [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [clojure.string :as str])
+  (:use [slingshot.slingshot :only [throw+]])
   (:import (java.util UUID)))
-
-(def +xsd-polku+ "xsd/sampo/outbound/")
 
 (def maksueratyypit ["kokonaishintainen" "yksikkohintainen" "lisatyo" "indeksi" "bonus" "sakko" "akillinen-hoitotyo" "muu"])
 
-(defn tee-xml-sanoma [sisalto]
-  (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))
-
-(defn hae-maksuera [db numero]
-  (let [{urakka-id :urakka-id :as maksuera} (konversio/alaviiva->rakenne (first (qm/hae-lahetettava-maksuera db numero)))
+(defn hae-maksuera [db numero summat]
+  (let [maksuera (konversio/alaviiva->rakenne (first (qm/hae-lahetettava-maksuera db numero)))
         tpi (get-in maksuera [:toimenpideinstanssi :id])
         tyyppi (keyword (get-in maksuera [:maksuera :tyyppi]))
-
-        ;; Haetaan maksuerätiedot ja valitaan niistä tämän toimenpideinstanssin rivi
-        summat (first (filter #(= (:tpi_id %) tpi)
-                              (qm/hae-urakan-maksueratiedot db urakka-id)))]
-    (assoc-in maksuera
-              [:maksuera :summa]
-              (get summat tyyppi))))
+        maksueran-summat (first (filter #(= (:tpi_id %) tpi) summat))]
+    (assoc-in maksuera [:maksuera :summa] (get maksueran-summat tyyppi))))
 
 (defn hae-maksueranumero [db lahetys-id]
   (:numero (first (qm/hae-maksueranumero-lahetys-idlla db lahetys-id))))
@@ -52,19 +44,6 @@
 (defn merkitse-maksuera-lahetetyksi [db numero]
   (log/debug "Merkitään maksuerä (numero:" numero ") lähetetyksi.")
   (= 1 (qm/merkitse-maksuera-lahetetyksi! db numero)))
-
-(defn muodosta-sampoon-lahetettava-maksuerasanoma [db numero]
-  (let [maksueran-tiedot (hae-maksuera db numero)
-        ;; Sakot lähetetään Sampoon negatiivisena
-        maksueran-tiedot (if (= (:tyyppi (:maksuera maksueran-tiedot)) "sakko")
-                           (update-in maksueran-tiedot [:maksuera :summa] -)
-                           maksueran-tiedot)
-        maksuera-xml (tee-xml-sanoma (maksuera-sanoma/muodosta maksueran-tiedot))]
-    (if (xml/validi-xml? +xsd-polku+ "nikuxog_product.xsd" maksuera-xml)
-      maksuera-xml
-      (do
-        (log/error "Maksuerää ei voida lähettää. Maksuerä XML ei ole validi.")
-        nil))))
 
 (defn tee-makseuran-nimi [toimenpiteen-nimi maksueratyyppi]
   (let [tyyppi (case maksueratyyppi
@@ -89,39 +68,51 @@
               maksueranumero (:numero (maksuerat/luo-maksuera<! db (:toimenpide_id tpi) maksueratyyppi maksueran-nimi))]
           (kustannussuunnitelmat/luo-kustannussuunnitelma<! db maksueranumero))))))
 
-(defn laheta-maksuera [sonja integraatioloki db lahetysjono-ulos numero]
-  (log/debug "Lähetetään maksuera (numero: " numero ") Sampoon.")
-  (let [tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "sampo" "maksuera-lahetys" nil nil)]
-    (try
-      (if (lukitse-maksuera db numero)
-        (if-let [maksuera-xml (muodosta-sampoon-lahetettava-maksuerasanoma db numero)]
-          (if-let [viesti-id (sonja/laheta sonja lahetysjono-ulos maksuera-xml)]
-            (do
-              (merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
-              (integraatioloki/kirjaa-jms-viesti integraatioloki tapahtuma-id viesti-id "ulos" maksuera-xml))
-            (do
-              (log/error "Maksuerän (numero: " numero ") lähetys Sonjaan epäonnistui.")
-              (integraatioloki/kirjaa-epaonnistunut-integraatio
-                integraatioloki (str "Maksuerän (numero: " numero ") lähetys Sonjaan epäonnistui.") nil tapahtuma-id nil)
-              (merkitse-maksueralle-lahetysvirhe db numero)
-              {:virhe :sonja-lahetys-epaonnistui}))
-          (do
-            (log/warn "Maksuerän (numero: " numero ") sanoman muodostus epäonnistui.")
+(defn tarkista-maksueran-tiedot [{:keys [toimenpideinstanssi numero]}]
+  (when (str/blank? (:talousosastopolku toimenpideinstanssi))
+    (let [virheviesti (format "Maksuerältä (numero: %s) puuttuu talousosastopolku. Maksuerää ei voi lähettää." numero)]
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi :puuttuva-talousosastopolku :viesti virheviesti}]})))
+  (when (str/blank? (:tuotepolku toimenpideinstanssi))
+    (let [virheviesti (format "Maksuerältä (numero: %s) puuttuu tuotepolku. Maksuerää ei voi lähettää." numero)]
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi :puuttuva-tuotepolku :viesti virheviesti}]}))))
+
+(defn hae-maksueran-tiedot [db numero summat]
+  (let [maksueran-tiedot (hae-maksuera db numero summat)
+        ;; Sakot lähetetään Sampoon negatiivisena
+        maksueran-tiedot (if (= (:tyyppi (:maksuera maksueran-tiedot)) "sakko")
+                           (update-in maksueran-tiedot [:maksuera :summa] -)
+                           maksueran-tiedot)]
+    maksueran-tiedot))
+
+(defn tee-maksuera-jms-lahettaja [sonja integraatioloki db jono]
+  (jms/jonolahettaja (integraatioloki/lokittaja integraatioloki db "sampo" "maksuera-lahetys") sonja jono))
+
+(defn laheta-maksuera [sonja integraatioloki db lahetysjono-ulos numero summat]
+  (log/debug (format "Lähetetään maksuera (numero: %s) Sampoon." numero))
+  (if (maksuerat/onko-olemassa? db numero)
+    (if (lukitse-maksuera db numero)
+      (let [jms-lahettaja (tee-maksuera-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
+            maksuera (hae-maksueran-tiedot db numero summat)
+            muodosta-xml (fn []
+                           (tarkista-maksueran-tiedot maksuera)
+                           (maksuera-sanoma/maksuera-xml maksuera))]
+        (try
+          (let [viesti-id (jms-lahettaja muodosta-xml nil)]
+            (merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
+            (log/debug (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero)))
+
+          (catch Exception e
+            (log/error e (format "Maksuerän (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
             (merkitse-maksueralle-lahetysvirhe db numero)
-            {:virhe :maksueran-lukitseminen-epaonnistui}))
-        (do
-          (log/warn "Maksuerän (numero: " numero ") lukitus epäonnistui.")
-          {:virhe :maksueran-lukitseminen-epaonnistui}))
-      (catch Exception e
-        (log/error e "Sampo maksuerälähetyksessä tapahtui poikkeus.")
-        (merkitse-maksueralle-lahetysvirhe db numero)
-        (integraatioloki/kirjaa-epaonnistunut-integraatio
-          integraatioloki
-          "Sampo maksuerälähetyksessä tapahtui poikkeus"
-          (str "Poikkeus: " (.getMessage e))
-          tapahtuma-id
-          nil)
-        {:virhe :poikkeus}))))
+            (throw e))))
+
+      (log/warn (format "Maksuerän (numero: %s) lukitus epäonnistui." numero)))
+    (let [virheviesti (format "Tuntematon maksuera (numero: %s)" numero)]
+      (log/error virheviesti)
+      (throw+ {:type virheet/+tuntematon-maksuera+
+               :virheet [{:koodi :tuntematon-maksuera :viesti virheviesti}]}))))
 
 (defn kasittele-maksuera-kuittaus [db kuittaus viesti-id]
   (jdbc/with-db-transaction [db db]

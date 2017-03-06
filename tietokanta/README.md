@@ -15,6 +15,3 @@ Testitietokannan voi päivittää ajamalla komennon: mvn clean compile -Pharjate
 sitten psql komento:
 
 > psql -h localhost -p 7777 -U flyway harja
-
-ja flyway salasana migrate123
-

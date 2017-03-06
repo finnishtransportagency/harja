@@ -3,14 +3,19 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.materiaalit :as q]
             [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.toteumat :as toteumat]
+            [harja.kyselyt.toteumat :as toteumat-q]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.id :refer [id-olemassa?]]
+            [harja.kyselyt.materiaalit :as materiaalit]
+            [harja.geo :as geo]
+            [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]))
 
 (defn hae-materiaalikoodit [db]
+  (oikeudet/ei-oikeustarkistusta!)
   (into []
         (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
         (q/hae-materiaalikoodit-ilman-talvisuolaa db)))
@@ -19,8 +24,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
-              (map #(assoc % :maara (double (:maara %))))
-              (map #(assoc % :kokonaismaara (if (:kokonaismaara %) (double (:kokonaismaara %)) 0))))
+              (map #(assoc % :maara (double (:maara %)))))
         (let [tulos (q/hae-urakan-materiaalit db urakka-id)]
           (log/debug "HAETAAN URAKAN MATERIAALIT")
           tulos)))
@@ -30,7 +34,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
-              (map #(assoc % :maara (if (:maara %) (double (:maara %)) 0)))
+              (map #(assoc % :maara (some-> % :maara double)))
               (map #(assoc % :kokonaismaara (if (:kokonaismaara %) (double (:kokonaismaara %)) 0))))
         (q/hae-urakassa-kaytetyt-materiaalit db (konv/sql-date hk-alkanut) (konv/sql-date hk-paattynyt) sopimus)))
 
@@ -45,7 +49,7 @@
                                                          materiaali-id
                                                          (konv/sql-date (first hoitokausi))
                                                          (konv/sql-date (second hoitokausi)))]
-          (log/debug "HAETAAN URAKAN TOTEUMAT MATERIAALEILLE ("sopimus materiaali-id")")
+          (log/debug "HAETAAN URAKAN TOTEUMAT MATERIAALEILLE (" sopimus materiaali-id ")")
           tulos)))
 
 (defn hae-toteuman-materiaalitiedot
@@ -87,14 +91,14 @@
     (log/debug "ID " id " poistetaan, sitä ei enää ole sisääntulevissa")
     (q/poista-materiaalinkaytto-id! c (:id user) id)))
 
-(defn tallenna-urakan-materiaalit [db user {:keys [urakka-id sopimus-id hoitokausi hoitokaudet tulevat-hoitokaudet-mukana?  materiaalit] :as tiedot}]
+(defn tallenna-suunnitellut-materiaalit [db user {:keys [urakka-id sopimus-id hoitokausi hoitokaudet tulevat-hoitokaudet-mukana? materiaalit] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (log/debug "MATERIAALIT PÄIVITETTÄVÄKSI: " tiedot)
   (jdbc/with-db-transaction [c db]
     (let [ryhmittele #(group-by (juxt :alkupvm :loppupvm) %)
           vanhat-materiaalit (ryhmittele
-                              (filter #(= sopimus-id (:sopimus %))
-                                      (hae-urakan-materiaalit c user urakka-id)))]
+                               (filter #(= sopimus-id (:sopimus %))
+                                       (hae-urakan-materiaalit c user urakka-id)))]
       ;; Ei materiaaleja, poista kaikki urakan materiaalit
       (when (empty? materiaalit)
         (log/debug "YHTÄÄN MATERIAALIA EI SAATU, poistetaan materiaalit valitulta hoitokaudelta")
@@ -110,8 +114,7 @@
               materiaalit-kannassa (into {}
                                          (map (juxt materiaali-avain identity)
                                               vanhat-materiaalit))
-              materiaalit-sisaan (into #{} (map materiaali-avain materiaalit))
-              ]
+              materiaalit-sisaan (into #{} (map materiaali-avain materiaalit))]
 
           ;; Muille materiaaleille, poistetaan jos ei ole enää sisääntulevissa
           (poista-materiaalit-joita-ei-sisaan-tulevissa materiaalit-kannassa materiaalit-sisaan user c)
@@ -129,13 +132,12 @@
                   (if (== (:maara materiaali) (:maara materiaali-kannassa))
                     (do (log/debug "Ei muutosta määrään, ei päivitetä."))
                     (do (log/debug "Määrä muuttunut " (:maara materiaali-kannassa) " => " (:maara materiaali) ", päivitetään!")
-                        (q/paivita-materiaalinkaytto-maara! c (:id user) (:maara materiaali) (:id materiaali-kannassa))
-                        )))
+                        (q/paivita-materiaalinkaytto-maara! c (:id user) (:maara materiaali) (:id materiaali-kannassa)))))
 
               (let [{:keys [alkupvm loppupvm maara materiaali]} materiaali]
                 (log/debug "TÄYSIN UUSI MATSKU: " alkupvm loppupvm maara materiaali)
                 (q/luo-materiaalinkaytto<! c (konv/sql-date alkupvm) (konv/sql-date loppupvm) maara (:id materiaali)
-                                    urakka-id sopimus-id (:id user)))))))
+                                           urakka-id sopimus-id (:id user)))))))
 
 
       ;; Ihan lopuksi haetaan koko urakan materiaalit uusiksi
@@ -148,10 +150,11 @@
   * Jos tähän funktioon tehdään muutoksia, pitäisi muutokset tehdä myös
   toteumat/tallenna-toteuma-ja-toteumamateriaalit funktioon (todnäk)"
   [db user urakka-id toteumamateriaalit hoitokausi sopimus]
-
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-materiaalit user urakka-id)
   (jdbc/with-db-transaction [c db]
     (doseq [tm toteumamateriaalit]
+      (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c (:toteuma tm) urakka-id)
+      (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c (:toteuma tm))
       ;; Positiivinen id = luodaan tai poistetaan toteuma-materiaali
       (if (and (:id tm) (pos? (:id tm)))
         (do
@@ -161,11 +164,11 @@
               (q/poista-toteuma-materiaali! c (:id user) (:id tm)))
             (do
               (log/debug "Päivitä materiaalitoteuma "
-                         (:id tm)" ("(:materiaalikoodi tm)", "(:maara tm)"), toteumassa " (:toteuma tm))
+                         (:id tm) " (" (:materiaalikoodi tm) ", " (:maara tm) "), toteumassa " (:toteuma tm))
               (q/paivita-toteuma-materiaali!
-               c (:materiaalikoodi tm) (:maara tm) (:id user) (:toteuma tm) (:id tm)))))
+                c (:materiaalikoodi tm) (:maara tm) (:id user) (:toteuma tm) (:id tm)))))
         (do
-          (log/debug "Luo uusi materiaalitoteuma ("(:materiaalikoodi tm)", "(:maara tm)") toteumalle " (:toteuma tm))
+          (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm) ", " (:maara tm) ") toteumalle " (:toteuma tm))
           (q/luo-toteuma-materiaali<! c (:toteuma tm) (:materiaalikoodi tm)
                                       (:maara tm) (:id user))))
 
@@ -189,62 +192,77 @@
     (when (:tmid tiedot)
       (q/poista-toteuma-materiaali! db (:id user) (:tmid tiedot)))
     (when (:tid tiedot)
-      (toteumat/poista-toteuma! db (:id user) (:tid tiedot)))
+      (toteumat-q/poista-toteuma! db (:id user) (:tid tiedot)))
     (when (:hk-alku tiedot)
       (hae-urakassa-kaytetyt-materiaalit
         db user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot) (:sopimus tiedot)))))
 
-(defn hae-suolatoteumat [db user {:keys [urakka-id alkupvm loppupvm]}]
+(defn hae-suolatoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (into []
         (map konv/alaviiva->rakenne)
-        (q/hae-suolatoteumat db urakka-id alkupvm loppupvm)))
+        (q/hae-suolatoteumat db {:urakka urakka-id
+                                 :sopimus sopimus-id
+                                 :alkupvm alkupvm
+                                 :loppupvm loppupvm})))
 
 (defn hae-suolamateriaalit [db user]
+  (oikeudet/ei-oikeustarkistusta!)
   (into []
         (q/hae-suolamateriaalit db)))
 
 (defn luo-suolatoteuma [db user urakka-id sopimus-id toteuma]
-  (let [t (toteumat/luo-toteuma<!
-           db urakka-id sopimus-id
-           (:alkanut toteuma) (:alkanut toteuma)
-           "kokonaishintainen"
-           (:id user) "" ""
-           (:lisatieto toteuma)
-           nil nil nil nil nil nil nil
-           "harja-ui")]
-    (toteumat/luo-toteuma-materiaali<!
-     db (:id t) (:id (:materiaali toteuma))
-     (:maara toteuma) (:id user))))
+  (let [t (toteumat-q/luo-toteuma<!
+            db urakka-id sopimus-id
+            (:alkanut toteuma) (:alkanut toteuma)
+            "kokonaishintainen"
+            (:id user) "" ""
+            (:lisatieto toteuma)
+            nil nil nil nil nil nil nil
+            "harja-ui")]
+    (toteumat-q/luo-toteuma-materiaali<!
+      db (:id t) (:id (:materiaali toteuma))
+      (:maara toteuma) (:id user))))
 
 (defn tallenna-suolatoteumat [db user {:keys [urakka-id sopimus-id toteumat]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-suola user urakka-id)
   (jdbc/with-db-transaction [db db]
     (doseq [toteuma toteumat]
+      (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db (:tid toteuma) urakka-id)
       (log/debug "TALLENNA SUOLATOTEUMA: " toteuma)
-      (if (neg? (:id toteuma))
+      (if-not (id-olemassa? (:tid toteuma))
         (luo-suolatoteuma db user urakka-id sopimus-id toteuma)
         (let [tmid (:tmid toteuma)]
           (if (:poistettu toteuma)
             (do
               (log/debug "poista toteuma materiaali id: " tmid)
-              (poista-toteuma-materiaali! db (:id user) toteuma))
+              (poista-toteuma-materiaali! db user toteuma))
             (do
               (log/debug "päivitä toteuma materiaali id: " tmid)
-              (toteumat/paivita-toteuma! db
-                                         (:alkanut toteuma) (or (:paattynyt toteuma) (:alkanut toteuma))
-                                         "kokonaishintainen"
-                                         (:id user)
-                                         (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma)
-                                         (:lisatieto toteuma)
-                                         (:reitti toteuma)
-                                         nil nil nil nil nil
-                                         (:tid toteuma)
-                                         urakka-id)
-              (toteumat/paivita-toteuma-materiaali!
-               db (:id (:materiaali toteuma))
-               (:maara toteuma) (:id user)
-               (:tmid toteuma) urakka-id))))))
+              (toteumat-q/paivita-toteuma! db
+                                           {:alkanut (:alkanut toteuma)
+                                            :paattynyt (or (:paattynyt toteuma) (:alkanut toteuma))
+                                            :tyyppi "kokonaishintainen"
+                                            :kayttaja (:id user)
+                                            :suorittaja (:suorittajan-nimi toteuma)
+                                            :ytunnus (:suorittajan-ytunnus toteuma)
+                                            :lisatieto (:lisatieto toteuma)
+                                            :numero nil
+                                            :alkuosa nil
+                                            :alkuetaisyys nil
+                                            :loppuosa nil
+                                            :loppuetaisyys nil
+                                            :id (:tid toteuma)
+                                            :urakka urakka-id})
+              (when (:reitti toteuma) (toteumat-q/paivita-toteuman-reitti! db
+                                                                           {:reitti (geo/geometry (geo/clj->pg (:reitti toteuma)))
+                                                                            :id (:tid toteuma)}))
+              (toteumat-q/paivita-toteuma-materiaali!
+                db (:id (:materiaali toteuma))
+                (:maara toteuma) (:id user)
+                (:tmid toteuma) urakka-id)))))
+      (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
+                                                             :alkupvm (:alkanut toteuma)}))
     true))
 
 (defrecord Materiaalit []
@@ -259,10 +277,6 @@
                       (fn [user urakka-id]
                         (hae-urakan-materiaalit (:db this) user urakka-id)))
     (julkaise-palvelu (:http-palvelin this)
-                      :poista-toteuma-materiaali!
-                      (fn [user tiedot]
-                        (poista-toteuma-materiaali! (:db this) user tiedot)))
-    (julkaise-palvelu (:http-palvelin this)
                       :hae-urakan-toteumat-materiaalille
                       (fn [user tiedot]
                         (hae-urakan-toteumat-materiaalille
@@ -274,9 +288,9 @@
                         (hae-toteuman-materiaalitiedot
                           (:db this) user (:urakka-id tiedot) (:toteuma-id tiedot))))
     (julkaise-palvelu (:http-palvelin this)
-                      :tallenna-urakan-materiaalit
+                      :tallenna-suunnitellut-materiaalit
                       (fn [user tiedot]
-                        (tallenna-urakan-materiaalit (:db this) user tiedot)))
+                        (tallenna-suunnitellut-materiaalit (:db this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
                       :tallenna-toteuma-materiaaleja!
                       (fn [user tiedot]
@@ -312,11 +326,10 @@
     (poista-palvelut (:http-palvelin this)
                      :hae-materiaalikoodit
                      :hae-urakan-materiaalit
-                     :tallenna-urakan-materiaalit
+                     :tallenna-suunnitellut-materiaalit
                      :hae-urakan-toteumat-materiaalille
                      :hae-toteuman-materiaalitiedot
                      :hae-urakassa-kaytetyt-materiaalit
-                     :poista-toteuma-materiaali!
                      :tallenna-toteuma-materiaaleja!
                      :hae-suolatoteumat
                      :hae-suolamateriaalit

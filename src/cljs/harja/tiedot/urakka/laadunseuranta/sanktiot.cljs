@@ -14,11 +14,15 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (def nakymassa? (atom false))
-(defn uusi-sanktio []
+(defn uusi-sanktio [urakkatyyppi]
   {:suorasanktio true
+   :laji (if (= :hoito urakkatyyppi)
+           :A
+           :yllapidon_sakko)
+   :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
+                          (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
    :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
-                    :paatos {:paatos "sanktio"}
-                    :aika (pvm/nyt)}})
+                    :paatos {:paatos "sanktio"}}})
 
 (defonce valittu-sanktio (atom nil))
 
@@ -38,15 +42,18 @@
                 (hae-urakan-sanktiot urakka hoitokausi))))
 
 (defn kasaa-tallennuksen-parametrit
-  [s]
-  {:sanktio  (dissoc s :laatupoikkeama)
-   :laatupoikkeama (if-not (get-in s [:laatupoikkeama :urakka])
-               (:laatupoikkeama (assoc-in s [:laatupoikkeama :urakka] (:id @nav/valittu-urakka)))
-               (:laatupoikkeama s))})
+  [s urakka-id]
+  {:sanktio        (dissoc s :laatupoikkeama :yllapitokohde)
+   :laatupoikkeama (assoc (:laatupoikkeama s) :urakka urakka-id
+                                              :yllapitokohde (:id (:yllapitokohde s)))
+   :hoitokausi     @urakka/valittu-hoitokausi})
 
 (defn tallenna-sanktio
-  [sanktio]
-  (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio)))
+  [sanktio urakka-id]
+  (go
+    (let [sanktiot-tallennuksen-jalkeen
+          (<! (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio urakka-id)))]
+     (reset! haetut-sanktiot sanktiot-tallennuksen-jalkeen))))
 
 (defn sanktion-tallennus-onnistui
   [palautettu-id sanktio]

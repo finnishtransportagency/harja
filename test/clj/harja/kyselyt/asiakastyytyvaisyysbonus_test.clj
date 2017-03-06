@@ -91,7 +91,7 @@
          ;; - maksupvm
          (let [ur @oulun-alueurakan-2014-2019-id
                indeksit (kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :indeksit +kayttaja-tero+)
+                                        :indeksit +kayttaja-jvh+)
                double-laskujen-tarkkuus 0.015]
 
            (prop/for-all [summa (gen/fmap #(BigDecimal. %) (gen/double* {:min 100 :max 500000 :NaN? false}))

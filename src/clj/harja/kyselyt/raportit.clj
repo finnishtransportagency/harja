@@ -14,21 +14,20 @@
   [db]
   (into {}
         (comp
-         (map #(konv/array->set % :konteksti))
-         (map (fn [raportti]
-                (as-> raportti r
-                  (dissoc r :id)
-                  (assoc r
-                         :nimi (keyword (:nimi r))
-                         :urakkatyyppi (keyword (:urakkatyyppi r))
-                         :parametrit (map #(dissoc % :id) (:parametrit r))))))
-         (map (juxt (comp keyword :nimi)
-                    (fn [raportti]
-                      (assoc raportti
-                             :suorita (eval (read-string (:koodi raportti))))))))
+          (map #(konv/array->set % :konteksti))
+          (map (fn [raportti]
+                 (as-> raportti r
+                       (dissoc r :id)
+                       (konv/string->keyword r :nimi)
+                       (assoc r :parametrit (map #(dissoc % :id) (:parametrit r)))
+                       (konv/array->keyword-set r :urakkatyyppi))))
+          (map (juxt (comp keyword :nimi)
+                     (fn [raportti]
+                       (assoc raportti
+                         :suorita (eval (read-string (:koodi raportti))))))))
 
         (konv/sarakkeet-vektoriin
-         (into []
-               (comp (map konv/alaviiva->rakenne))
-               (hae-raportit db))
-         {:parametri :parametrit})))
+          (into []
+                (comp (map konv/alaviiva->rakenne))
+                (hae-raportit db))
+          {:parametri :parametrit})))

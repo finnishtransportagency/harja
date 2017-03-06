@@ -10,7 +10,6 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.fmt :as fmt]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.ui.kentat :refer [tee-kentta]]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
             [harja.tiedot.urakka :as u]
@@ -23,12 +22,12 @@
             [harja.ui.napit :as napit]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka :as urakka]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.ui.valinnat :as valinnat]
+            [cljs-time.core :as t])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
-
-
 
 (defn lisaa-suoritteet-tyhjaan-toteumaan [toteumat]
   (if (or (nil? toteumat) (empty? toteumat))
@@ -139,7 +138,7 @@
        :kun-onnistuu (fn [vastaus]
                        (log "PAI Lomake tallennettu, vastaus: " (pr-str vastaus))
                        (urakka/lukitse-urakan-yha-sidonta! urakka-id)
-                       (reset! paikkaus/paikkaustoteumat vastaus)
+                       (reset! paikkaus/paikkausilmoitukset vastaus)
                        (reset! paikkaus/paikkausilmoitus-lomakedata nil))}]]))
 
 (defn paikkausilmoituslomake []
@@ -148,7 +147,6 @@
         kokonaishinta (reaction (minipot/laske-kokonaishinta (get-in @paikkaus/paikkausilmoitus-lomakedata [:ilmoitustiedot :toteumat])))]
 
     (komp/luo
-      (komp/ulos #(kartta/poista-popup!))
       (komp/lukko (lukko/muodosta-lukon-id "paikkausilmoitus" (:kohdenumero @paikkaus/paikkausilmoitus-lomakedata)))
       (fn []
         (let [kohteen-tiedot (r/wrap {:aloituspvm (:aloituspvm @paikkaus/paikkausilmoitus-lomakedata)
@@ -220,7 +218,7 @@
                                (:valmispvm-kohde @paikkaus/paikkausilmoitus-lomakedata)
                                (= :aloitettu (:tila @paikkaus/paikkausilmoitus-lomakedata)))
                          "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
-                :tyyppi :pvm :validoi [[:pvm-ei-annettu-ennen-toista :valmispvm-paikkaus "Kohdetta ei voi merkitä valmistuneeksi ennen kuin paikkaus on valmistunut."]]}
+                :tyyppi :pvm :validoi [[:toinen-arvo-annettu-ensin :valmispvm-paikkaus "Kohdetta ei voi merkitä valmistuneeksi ennen kuin paikkaus on valmistunut."]]}
                {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :positiivinen-numero :palstoja 1 :hae #(fmt/euro-opt @kokonaishinta) :muokattava? (constantly false)}
                (when (or (= :valmis (:tila @paikkaus/paikkausilmoitus-lomakedata))
                          (= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata)))
@@ -313,7 +311,6 @@
 (defn ilmoitusluettelo
   []
   (komp/luo
-    (komp/ulos #(kartta/poista-popup!))
     (komp/kuuntelija :avaa-paikkausilmoitus
                      (fn [_ rivi]
                        (avaa-paikkausilmoitus (:paikkauskohde-id rivi))))
@@ -322,7 +319,7 @@
        [:h3 "Paikkausilmoitukset"]
        [grid/grid
         {:otsikko ""
-         :tyhja (if (nil? @paikkaus/paikkaustoteumat) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
+         :tyhja (if (nil? @paikkaus/paikkausilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
          :tunniste :kohdenumero}
         [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 10}
          {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
@@ -345,16 +342,20 @@
                                 :hyvaksytty 0
                                 :hylatty 1
                                 3)))
-          @paikkaus/paikkaustoteumat)]])))
+          @paikkaus/paikkausilmoitukset)]])))
 
-(defn paikkausilmoitukset []
+(defn paikkausilmoitukset [urakka]
   (komp/luo
-    (komp/ulos #(kartta/poista-popup!))
     (komp/lippu paikkaus/paikkausilmoitukset-nakymassa?)
 
-    (fn []
+    (fn [urakka]
       [:span.paikkausilmoitukset
        [kartta/kartan-paikka]
+       [valinnat/vuosi {}
+        (t/year (:alkupvm urakka))
+        (t/year (:loppupvm urakka))
+        urakka/valittu-urakan-vuosi
+        urakka/valitse-urakan-vuosi!]
        (if @paikkaus/paikkausilmoitus-lomakedata
          [paikkausilmoituslomake]
          [ilmoitusluettelo])])))

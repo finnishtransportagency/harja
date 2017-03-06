@@ -29,8 +29,7 @@ checkbox-tila->luokka {:valittu "harja-checkbox-valittu"
   Lisäksi ottaa mapin erilaisia optioita"
   ([tila-atom] (checkbox tila-atom nil {}))
   ([tila-atom nimi] (checkbox tila-atom nimi {}))
-  ([tila-atom nimi {:keys [on-change
-                           width] :as optiot}]
+  ([tila-atom nimi {:keys [on-change width otsikon-luokka] :as optiot}]
    (let [tila @tila-atom
          vaihda-tila (fn []
                        (let [uusi-tila (case tila
@@ -51,4 +50,5 @@ checkbox-tila->luokka {:valittu "harja-checkbox-valittu"
           (when (= :valittu @tila-atom)
             [:img.harja-checkbox-rasti {:src "images/rasti.svg"}])]]]
        [:div.harja-checkbox-column
-        [:div.harja-checkbox-teksti nimi]]]])))
+        [:div {:class (str "harja-checkbox-teksti" (when otsikon-luokka (str " " otsikon-luokka)))}
+         nimi]]]])))

@@ -168,9 +168,9 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
         (harja.ui.ikonit/livicon-info-sign)
         [:span (str " " (first vihjeet))]
         (map-indexed
-         (fn [i vihje]
-           ^{:key i}
-           [:div.vihjeen-lisarivi (str "  " vihje)])
+          (fn [i vihje]
+            ^{:key i}
+            [:div.vihjeen-lisarivi (str "  " vihje)])
           (rest vihjeet))]])))
 
 (defn yleinen-huomautus
@@ -195,7 +195,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
     [:div.form-group {:class (str (or col-luokka
                                       (case (or palstoja 1)
                                         1 "col-xs-12 col-sm-6 col-md-5 col-lg-4"
-                                        2 "col-xs-12 col-sm-12 col-md-10 col-lg-8"))
+                                        2 "col-xs-12 col-sm-12 col-md-10 col-lg-8"
+                                        3 "col-xs-12 col-sm-12 col-md-12 col-lg-12"))
                                   (when pakollinen?
                                     " required")
                                   (when-not (empty? virheet)
@@ -210,7 +211,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
          [:span.kentan-label otsikko]
          (when yksikko [:span.kentan-yksikko yksikko])]])
      (if (= tyyppi :komponentti)
-       [:div.komponentti (komponentti {:muokkaa-lomaketta (muokkaa s)})]
+       [:div.komponentti (komponentti {:muokkaa-lomaketta (muokkaa s)
+                                       :data data})]
        (if muokattava?
          (do (have #(contains? % :tyyppi) s)
              [tee-kentta (assoc s :lomake? true) arvo])
@@ -297,19 +299,20 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                   submit nappi tms.
 
   :footer-fn      vaihtoehto :footer'lle, jolle annetaan footerin muodostava funktio
-                  funktiolle annetaan virheet ja varoitukset parametrina
+                  funktiolle annetaan validoitu data parametrina. Parametriin on liitetty
+                  avaimet ::virheet, ::varoitukset, ::huomautukset, ja ::puuttuvat-pakolliset-kentat
 
   :voi-muokata?   voiko lomaketta muokata, oletuksena true
   "
   [_ _ _]
   (let [fokus (atom nil)]
     (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset
-                 voi-muokata?] :as opts} skeema
+                 voi-muokata? ei-borderia?] :as opts} skeema
          {muokatut ::muokatut
           :as data}]
       (let [{virheet ::virheet
              varoitukset ::varoitukset
-             huomautukset ::huomautukset} (validoi data skeema)]
+             huomautukset ::huomautukset :as validoitu-data} (validoi data skeema)]
         (kasittele-virhe
           (let [voi-muokata? (if (some? voi-muokata?)
                                voi-muokata?
@@ -322,7 +325,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                                                        #{}) nimi))
                                            muokkaa!)))]
             ;(lovg "RENDER! fokus = " (pr-str @fokus))
-            [:div.lomake
+            [:div
+             {:class (str "lomake " (when ei-borderia? "lomake-ilman-borderia") )}
              (when otsikko
                [:h3.lomake-otsikko otsikko])
              (doall
@@ -334,8 +338,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                    (rest skeemat)
                                    skeemat)
                          rivi-ui [nayta-rivi skeemat
-                                  data
-                                  #(atomina % data (muokkaa-kenttaa-fn (:nimi %)))
+                                  validoitu-data
+                                  #(atomina % validoitu-data (muokkaa-kenttaa-fn (:nimi %)))
                                   voi-muokata?
                                   @fokus
                                   #(reset! fokus %)
@@ -353,7 +357,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                  (rivita skeema)))
 
              (when-let [footer (if footer-fn
-                                 (footer-fn virheet varoitukset huomautukset)
+                                 (footer-fn validoitu-data)
                                  footer)]
                [:div.lomake-footer.row
                 [:div.col-md-12 footer]])]))))))

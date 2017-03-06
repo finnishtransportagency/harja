@@ -48,7 +48,8 @@
                  c (:maara tyo) (:yksikko tyo) (:yksikkohinta tyo)
                  urakka-id sopimusnumero (:tehtava tyo)
                  (java.sql.Date. (.getTime (:alkupvm tyo)))
-                 (java.sql.Date. (.getTime (:loppupvm tyo)))))
+                 (java.sql.Date. (.getTime (:loppupvm tyo)))
+                 (:id user)))
               ;;update
               (do (log/debug " --> päivitetään vanha")
                   (q/paivita-urakan-yksikkohintainen-tyo!

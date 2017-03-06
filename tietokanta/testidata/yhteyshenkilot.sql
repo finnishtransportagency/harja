@@ -107,17 +107,124 @@ INSERT INTO yhteyshenkilo (etunimi, sukunimi, kayttajatunnus, tyopuhelin, matkap
 
 -- Liitetään urakoihin yhteyshenkilöitä
 
-INSERT INTO yhteyshenkilo_urakka (yhteyshenkilo, urakka, rooli) VALUES (1, 1, 'Urakanvastuuhenkilö');
-INSERT INTO yhteyshenkilo_urakka (yhteyshenkilo, urakka, rooli) VALUES (2, 1, 'Tilaajan edustaja');
+INSERT INTO yhteyshenkilo_urakka (yhteyshenkilo, urakka, rooli) VALUES (
+(SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Jouko' AND
+           sukunimi = 'Kasslin'
+         LIMIT 1),
+(SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2005-2012'),
+'Urakanvastuuhenkilö');
+INSERT INTO yhteyshenkilo_urakka (yhteyshenkilo, urakka, rooli) VALUES (
+(SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Marcus' AND
+           sukunimi = 'Kilpeläinen'
+         LIMIT 1),
+(SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2005-2012'),
+'Tilaajan edustaja');
+
+INSERT INTO yhteyshenkilo_urakka (yhteyshenkilo, urakka, rooli) values (
+(SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Taimi' AND
+           sukunimi = 'Mallat'
+         LIMIT 1),
+(SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2005-2012'),
+'Työmaapäällikkö');
+
+INSERT INTO yhteyshenkilo_urakka (urakka, rooli, yhteyshenkilo)
+VALUES ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Oulun alueurakka 2014-2019'),
+        'Kunnossapitopäällikkö',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Jouko' AND
+           sukunimi = 'Kasslin'
+         LIMIT 1));
+INSERT INTO yhteyshenkilo_urakka (urakka, rooli, yhteyshenkilo)
+VALUES ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Oulun alueurakka 2014-2019'),
+        'Sillanvalvoja',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Tiina' AND
+           sukunimi = 'Frösén'
+         LIMIT 1));
+
+INSERT INTO yhteyshenkilo_urakka (urakka, rooli, yhteyshenkilo)
+VALUES ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Muhoksen päällystysurakka'),
+        'Kunnossapitopäällikkö',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Vihtori' AND
+           sukunimi = 'Ollila'
+         LIMIT 1));
+INSERT INTO yhteyshenkilo_urakka (urakka, rooli, yhteyshenkilo)
+VALUES ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Muhoksen päällystysurakka'),
+        'Tieliikennekeskus',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Reijo' AND
+           sukunimi = 'Vänskä'
+         LIMIT 1));
+
+INSERT INTO yhteyshenkilo_urakka (urakka, rooli, yhteyshenkilo)
+VALUES ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Muhoksen paikkausurakka'),
+        'Kunnossapitopäällikkö',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Kristiina' AND
+           sukunimi = 'Suutari-Jääskö'
+         LIMIT 1));
+INSERT INTO yhteyshenkilo_urakka (urakka, rooli, yhteyshenkilo)
+VALUES ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Muhoksen paikkausurakka'),
+        'Tieliikennekeskus',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Jere' AND
+           sukunimi = 'Hurme'
+         LIMIT 1));
+
+-- Yhteyshenkilöiden organisaatio
 
 UPDATE yhteyshenkilo SET organisaatio=(SELECT id FROM organisaatio WHERE ytunnus='1565583-5');
 
-INSERT INTO yhteyshenkilo_urakka (yhteyshenkilo, urakka, rooli) values (3, 1, 'Työmaapäällikkö');
+-- Päivystykset
 
 INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo) VALUES (false, true, '2015-11-01 00:00:00.000000', '2015-11-11 00:00:00.000000', (SELECT id FROM urakka WHERE nimi ='Oulun alueurakka 2014-2019'), (SELECT id FROM yhteyshenkilo WHERE sahkoposti = 'ismoyit@example.org'));
 INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo) VALUES (false, true, '2015-11-13 00:00:00.000000', '2015-11-30 00:00:00.000000', (SELECT id FROM urakka WHERE nimi ='Oulun alueurakka 2014-2019'), (SELECT id FROM yhteyshenkilo WHERE sahkoposti = 'seppoyit@example.org'));
 INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo) VALUES (true, false, '2015-12-01 00:00:00.000000', '2015-12-06 00:00:00.000000', (SELECT id FROM urakka WHERE nimi ='Oulun alueurakka 2014-2019'), (SELECT id FROM yhteyshenkilo WHERE sahkoposti = 'kyostiyit@example.org'));
 
--- Päivystäjätekstiviestit
+INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo) VALUES (true, false, '2015-12-01 00:00:00.000000', '2020-12-06 00:00:00.000000', (SELECT id FROM urakka WHERE nimi ='Muhoksen päällystysurakka'), (SELECT id FROM yhteyshenkilo WHERE sahkoposti = 'kyostiyit@example.org'));
 
-INSERT INTO paivystajatekstiviesti (viestinumero, ilmoitus, yhteyshenkilo) VALUES (0, (SELECT id FROM ilmoitus WHERE otsikko = 'Soittakaa Sepolle'), (SELECT id FROM yhteyshenkilo WHERE sahkoposti = 'ismoyit@example.org'))
+-- Päivystäjätekstiviestit
+INSERT INTO paivystajatekstiviesti (viestinumero, ilmoitus, yhteyshenkilo) VALUES (0, (SELECT id FROM ilmoitus WHERE otsikko = 'Soittakaa Sepolle'), (SELECT id FROM yhteyshenkilo WHERE sahkoposti = 'ismoyit@example.org'));
+
+-- Urakan vastuuhenkilöt
+INSERT INTO urakanvastuuhenkilo (urakka, rooli, etunimi, sukunimi, puhelin, sahkoposti, kayttajatunnus, ensisijainen)
+ VALUES ((SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
+         'ELY_Urakanvalvoja', 'Erno', 'Penttikoski', '04012345678', 'erno@penttikoski.com','LXPENTTIER', true),
+	((SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
+	 'ELY_Urakanvalvoja', 'Max', 'Syöttöpaine', '04087654321','max@example.org','LXSYOTMAX', false),
+        ((SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
+         'vastuuhenkilo', 'Uuno', 'Urakoitsija','0911223344','uuno@example.org', 'LXUUU', true);

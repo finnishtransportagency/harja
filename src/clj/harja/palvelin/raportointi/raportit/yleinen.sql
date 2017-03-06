@@ -5,7 +5,7 @@ SELECT
   u.nimi         AS "nimi"
 FROM urakka u
 WHERE
-  (:urakka :: INTEGER IS NULL OR u.id = :urakka)
+  ((:urakka :: INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
   AND (:hallintayksikko :: INTEGER IS NULL OR hallintayksikko = :hallintayksikko)
   AND (:urakka :: INTEGER IS NOT NULL OR
        (:urakka :: INTEGER IS NULL AND (:urakkatyyppi :: urakkatyyppi IS NULL OR

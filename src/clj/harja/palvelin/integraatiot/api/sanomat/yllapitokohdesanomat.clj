@@ -1,5 +1,8 @@
 (ns harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat
-  (:require [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]))
+  (:require [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.domain.tiemerkinta :as tiemerkinta]
+            [clj-time.coerce :as c]
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json]))
 
 (defn rakenna-sijainti [kohde]
   {:numero (:tr-numero kohde)
@@ -17,7 +20,7 @@
               :sijainti (rakenna-sijainti alikohde)
               :toimenpide (:toimenpide alikohde)}})
 
-(defn rakenna-kohde [kohde]
+(defn rakenna-kohde [{:keys [paallystysilmoitus] :as kohde}]
   {:tunniste {:id (:id kohde)}
    :sopimus {:id (:sopimus kohde)}
    :kohdenumero (:kohdenumero kohde)
@@ -28,7 +31,16 @@
    :yllapitoluokka (:yllapitoluokka kohde)
    :keskimaarainen-vuorokausiliikenne (:keskimaarainen-vuorokausiliikenne kohde)
    :nykyinen-paallyste (paallystys-ja-paikkaus/hae-apin-paallyste-koodilla (:nykyinen-paallyste kohde))
-   :alikohteet (mapv (fn [alikohde] (rakenna-alikohde alikohde)) (:alikohteet kohde))})
+   :alikohteet (mapv (fn [alikohde] (rakenna-alikohde alikohde)) (:alikohteet kohde))
+   :aikataulu {:kohde-aloitettu (:kohde-alku kohde)
+               :paallystys-aloitettu (:paallystys-alku kohde)
+               :paallystys-valmis (:paallystys-loppu kohde)
+               :valmis-tiemerkintaan (:valmis-tiemerkintaan kohde)
+               :tiemerkinta-takaraja (:tiemerkinta-takaraja kohde)
+               :tiemerkinta-aloitettu (:tiemerkinta-alku kohde)
+               :tiemerkinta-valmis (:tiemerkinta-loppu kohde)
+               :kohde-valmis (:kohde-valmis kohde)
+               :paallystysilmoitus {:takuupvm (:takuupvm paallystysilmoitus)}}})
 
 (defn rakenna-kohteet [yllapitokohteet]
   {:yllapitokohteet

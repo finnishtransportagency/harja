@@ -13,26 +13,32 @@ WHERE lahetysid = :lahetysid;
 
 -- name: hae-likaiset-kustannussuunnitelmat
 -- Hakee maksuerät, jotka täytyy lähettää
-SELECT maksuera
-FROM kustannussuunnitelma
-WHERE likainen = TRUE;
+SELECT
+  k.maksuera,
+  u.id   AS urakkaid,
+  tpi.id AS tpi_id
+FROM kustannussuunnitelma k
+  JOIN maksuera m ON k.maksuera = m.numero
+  JOIN toimenpideinstanssi tpi ON m.toimenpideinstanssi = tpi.id
+  JOIN urakka u ON tpi.urakka = u.id
+WHERE k.likainen = TRUE;
 
 -- name: merkitse-kustannussuunnitelma-odottamaan-vastausta!
 -- Merkitsee kustannussuunnitelma lähetetyksi, kirjaa lähetyksen id:n, avaa lukon ja merkitsee puhtaaksi
 UPDATE kustannussuunnitelma
-SET lahetysid = :lahetysid, lukko = NULL, tila = 'odottaa_vastausta', likainen = FALSE
+SET lahetysid = :lahetysid, lukko = NULL, tila = 'odottaa_vastausta', likainen = FALSE, lahetetty = current_timestamp
 WHERE maksuera = :numero;
 
 -- name: merkitse-kustannussuunnitelma-lahetetyksi!
 -- Merkitsee kustannussuunnitelman lähetetyksi, kirjaa lähetyksen id:n ja avaa lukon
 UPDATE kustannussuunnitelma
-SET lahetetty = current_timestamp, tila = 'lahetetty'
+SET tila = 'lahetetty'
 WHERE maksuera = :numero;
 
 -- name: merkitse-kustannussuunnitelmalle-lahetysvirhe!
 -- Merkitsee kustannussuunnitelman lähetetyksi, kirjaa lähetyksen id:n ja avaa lukon
 UPDATE kustannussuunnitelma
-SET tila = 'virhe', lukko = null, lukittu = null
+SET tila = 'virhe', lukko = NULL, lukittu = NULL
 WHERE maksuera = :numero;
 
 -- name: luo-kustannussuunnitelma<!
@@ -65,3 +71,9 @@ FROM maksuera m
                                    yht.urakka = tpi.urakka
 WHERE m.numero = :maksuera
 GROUP BY Extract(YEAR FROM yht.alkupvm);
+
+-- name: onko-olemassa?
+-- single?: true
+SELECT exists(SELECT maksuera
+              FROM kustannussuunnitelma
+              WHERE maksuera = :numero :: BIGINT);

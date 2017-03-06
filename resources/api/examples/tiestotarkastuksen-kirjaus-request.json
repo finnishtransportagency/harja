@@ -10,7 +10,7 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-01-30T12:00:00Z"
+    "lahetysaika": "2016-01-30T12:00:00+02:00"
   },
   "tarkastukset": [
     {
@@ -21,7 +21,7 @@
         "tarkastusajo": {
           "id": 123
         },
-        "aika": "2015-07-06T15:01:00Z",
+        "aika": "2015-07-06T15:01:00+02:00",
         "alkusijainti": {
           "x": 441895,
           "y": 7199136

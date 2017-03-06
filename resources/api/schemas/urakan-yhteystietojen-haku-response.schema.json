@@ -1,0 +1,148 @@
+{
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-03/schema",
+  "id": "urn:harja",
+  "required": false,
+  "properties": {
+    "urakka": {
+      "type": "object",
+      "id": "urn:harja/urakka",
+      "required": false,
+      "properties": {
+        "alkupvm": {
+          "type": "string",
+          "id": "urn:harja/urakka/alkupvm",
+          "required": false
+        },
+        "alueurakkanro": {
+          "type": "string",
+          "id": "urn:harja/urakka/alueurakkanro",
+          "required": false
+        },
+        "elynro": {
+          "type": "number",
+          "id": "urn:harja/urakka/elynro",
+          "required": false
+        },
+        "elynimi": {
+          "type": "string",
+          "id": "urn:harja/urakka/elynimi",
+          "required": false
+        },
+        "loppupvm": {
+          "type": "string",
+          "id": "urn:harja/urakka/loppupvm",
+          "required": false
+        },
+        "nimi": {
+          "type": "string",
+          "id": "urn:harja/urakka/nimi",
+          "required": false
+        },
+        "sampoid": {
+          "type": "string",
+          "id": "urn:harja/urakka/sampoid",
+          "required": false
+        },
+        "urakoitsija": {
+          "type": "object",
+          "id": "urn:harja/urakka/urakoitsija",
+          "required": false,
+          "properties": {
+            "katuosoite": {
+              "type": "string",
+              "id": "urn:harja/urakka/urakoitsija/katuosoite",
+              "required": false
+            },
+            "nimi": {
+              "type": "string",
+              "id": "urn:harja/urakka/urakoitsija/nimi",
+              "required": false
+            },
+            "postinumero": {
+              "type": "string",
+              "id": "urn:harja/urakka/urakoitsija/postinumero",
+              "required": false
+            },
+            "ytunnus": {
+              "type": "string",
+              "id": "urn:harja/urakka/urakoitsija/ytunnus",
+              "required": false
+            }
+          }
+        },
+        "yhteyshenkilot": {
+          "type": "array",
+          "id": "urn:harja/urakka/yhteyshenkilot",
+          "required": false,
+          "items": {
+            "type": "object",
+            "id": "urn:harja/urakka/yhteyshenkilot/0",
+            "required": false,
+            "properties": {
+              "yhteyshenkilo": {
+                "type": "object",
+                "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo",
+                "required": false,
+                "properties": {
+                  "sahkoposti": {
+                    "type": "string",
+                    "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/email",
+                    "required": false
+                  },
+                  "nimi": {
+                    "type": "string",
+                    "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/nimi",
+                    "required": false
+                  },
+                  "puhelinnumero": {
+                    "type": "string",
+                    "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/puhelinnumero",
+                    "required": false
+                  },
+                  "rooli": {
+                    "type": "string",
+                    "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/rooli",
+                    "required": true,
+                    "enum": [
+                      "Urakan vastuuhenkilö",
+                      "ELY urakanvalvoja",
+                      "ELY laadunvalvoja",
+                      "ELY turvallisuusvastaava",
+                      "Tilaajan asiantuntija",
+                      "Tilaajan urakanvalvoja",
+                      "Tilaajan laadunvalvoja",
+                      "Tilaajan turvallisuusvastaava",
+                      "Paivystaja",
+                      "Laatupaallikko",
+                      "Kelikeskus",
+                      "Laadunvalvoja",
+                      "Sampo yhteyshenkilö",
+                      "Kunnossapitopäällikkö",
+                      "Sillanvalvoja",
+                      "Kelikeskus",
+                      "Tieliikennekeskus"
+                    ]
+                  },
+                  "vastuuhenkilo": {
+                    "type": "boolean",
+                    "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/vastuuhenkilo"
+                  },
+                  "varahenkilo": {
+                    "type": "boolean",
+                    "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/varahenkilo"
+                  },
+                  "organisaatio": {
+                    "type": "string",
+                    "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/rooli",
+                    "required": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

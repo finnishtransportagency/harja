@@ -1,5 +1,32 @@
 (ns harja.palvelin.raportointi.excel
-  "Harja raporttielementtien vienti Excel muotoon"
+  "Harja raporttielementtien vienti Excel muotoon.
+
+  Harjan raportit ovat Clojuren tietorakenteita, joissa käytetään
+  tiettyä rakennetta ja tiettyjä avainsanoja. Nämä raportit annetaan
+  eteenpäin moottoreille, jotka luovat tietorakenteen pohjalta raportin.
+  Tärkeä yksityiskohta on, että raporttien olisi tarkoitus sisältää ns.
+  raakaa dataa, ja antaa raportin formatoida data oikeaan muotoon sarakkeen :fmt
+  tiedon perusteella.
+
+  Excel-moottori koostuu lähinnä muodosta-excel multimetodista. Tärkein
+  näistä on :taulukko tyypin käsittelijä.
+
+  Koska moottori käyttää Apache POI kirjastoa, joudutaan koodissa käyttämään
+  ikäviä oliomaisuuksia. Tämä ilmenee erityisesti solujen tyylittelyssä.
+
+  EXCEL TYYLIT
+
+  POI sisältää sisäänrakennenttuja tyylejä, joita solulle voi asettaa.
+  Jos tarvitaan uusia custom tyylejä luoda Exceliä varten:
+  http://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/BuiltinFormats.html
+  Yllä olevasta linkistä voi katsoa mallia, missä muodossa format-str voi antaa.
+
+  Alla esimerkki miten luodaan custom Excel-formaatti, tulevia varten:
+  (defn luo-data-formaatti
+    \"Luo custom Excel tyyli. Format-str on esim '$#,##0_;[Red]($#,##0)'\"
+    [workbook format-str]
+    (.. (.getCreationHelper workbook) createDataFormat (getFormat format-str))"
+
   (:require [taoensso.timbre :as log]
             [dk.ative.docjure.spreadsheet :as excel]
             [clojure.string :as str]
@@ -11,12 +38,19 @@
   "Muodostaa Excel data annetulle raporttielementille.
   Dispatch tyypin mukaan (vektorin 1. elementti)."
   (fn [elementti workbook]
-    (assert (and (vector? elementti)
-                 (> (count elementti) 1)
-                 (keyword? (first elementti)))
-            (str "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi "
-                 "ja muut sen sisältöä, sain: " (pr-str elementti)))
+    (assert (raportti-domain/raporttielementti? elementti))
     (first elementti)))
+
+(defmulti muodosta-solu
+  "Raporttisolujen tyylittely täytyy Apache POI kirjaston takia tehdä niin,
+  että metodit palauttavat solun datan JA tyyliobjektin, jota ne ovat
+  mahdollisesti täydentäneet. Moottorissa on olmessa oletustyyli soluille,
+  jonka solut ottavat vastaan, ja muokkaavat. Solu voi esimerkiksi sisältää
+  virheen, jolloin Tyyliobjektiin asetetaan tieto, että fontin pitää olla punainen."
+  (fn [elementti tyyli]
+    (if (raportti-domain/raporttielementti? elementti)
+      (first elementti)
+      :vain-arvo)))
 
 
 (defn solu [rivi-nro sarake-nro]
@@ -40,21 +74,19 @@
     (.replace data "\u00AD" "")
     data))
 
-(defmulti erikoiskentta
-  (fn [elementti]
-    (assert (and (vector? elementti)
-                 (> (count elementti) 1)
-                 (keyword? (first elementti)))
-            (str "Erikoiskentän on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä, sain: "
-                 (pr-str elementti)))
-    (first elementti)))
+(defmethod muodosta-solu :vain-arvo [arvo solun-tyyli] [arvo solun-tyyli])
 
-(defmethod erikoiskentta :liitteet [liitteet]
-  (count (second liitteet)))
+(defmethod muodosta-solu :liitteet [[_ liitteet] solun-tyyli]
+  [(count liitteet) solun-tyyli])
 
-(defmethod erikoiskentta :info [solu] (raportti-domain/virheen-viesti solu))
-(defmethod erikoiskentta :varoitus [solu] (raportti-domain/virheen-viesti solu))
-(defmethod erikoiskentta :virhe [solu] (raportti-domain/virheen-viesti solu))
+(defmethod muodosta-solu :arvo-ja-osuus [[_ {:keys [arvo osuus]}] solun-tyyli]
+  [arvo solun-tyyli])
+
+(defmethod muodosta-solu :arvo-ja-yksikko [[_ {:keys [arvo yksikko]}] solun-tyyli]
+  [arvo solun-tyyli])
+
+(defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli]}] solun-tyyli]
+  [arvo (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))])
 
 (defn- taulukko-otsikkorivi [otsikko-rivi sarakkeet sarake-tyyli]
   (dorun
@@ -65,11 +97,16 @@
           (excel/set-cell-style! cell sarake-tyyli)))
       sarakkeet)))
 
+
 (defmethod muodosta-excel :taulukko [[_ optiot sarakkeet data] workbook]
   (try
     (let [nimi (:otsikko optiot)
+          viimeinen-rivi-yhteenveto? (:viimeinen-rivi-yhteenveto? optiot)
+          viimeinen-rivi (last data)
           aiempi-sheet (last (excel/sheet-seq workbook))
-          [sheet nolla] (if (and (nil? nimi) aiempi-sheet)
+          [sheet nolla] (if (and (nil? (:sheet-nimi optiot))
+                                 (nil? nimi)
+                                 aiempi-sheet)
                           [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
                           [(excel/add-sheet! workbook
                                              (WorkbookUtil/createSafeSheetName
@@ -114,20 +151,48 @@
                 row (.createRow sheet rivi-nro)]
             (dorun
              (map-indexed
-              (fn [sarake-nro sarake]
-                (let [cell (.createCell row sarake-nro)
-                      lihavoi? (:lihavoi? optiot)
-                      tyyli (excel/create-cell-style! workbook
-                                                      {:font {:bold lihavoi?}})
-                      arvo-datassa (nth data sarake-nro)
-                      naytettava-arvo (if (vector? arvo-datassa)
-                                        (erikoiskentta arvo-datassa)
-                                        arvo-datassa)]
+               (fn [sarake-nro sarake]
+                 (let [cell (.createCell row sarake-nro)
+                       lihavoi? (or (:lihavoi? optiot)
+                                    (and viimeinen-rivi-yhteenveto?
+                                         (= rivi viimeinen-rivi)))
+                       korosta? (:korosta? optiot)
+                       arvo-datassa (nth data sarake-nro)
+                       formatoi-solu? (raportti-domain/formatoi-solu? arvo-datassa)
+                       formaatti-fn (fn [tyyli]
+                                      ;; Jos halutaan tukea erityyppisiä sarakkeita,
+                                      ;; pitää tänne lisätä formatter.
+                                      (when formatoi-solu?
+                                        (case (:fmt sarake)
+                                         ;; .setDataFormat hakee indeksillä tyylejä.
+                                         ;; Tyylejä voi määritellä itse (https://poi.apache.org/apidocs/org/apache/poi/xssf/usermodel/XSSFDataFormat.html)
+                                         ;; tai voimme käyttää valmiita, sisäänrakennettuja tyylejä.
+                                         ;; http://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/BuiltinFormats.html
+                                         :raha (.setDataFormat tyyli 8)
+                                         :prosentti (.setDataFormat tyyli 10)
+                                         :numero (.setDataFormat tyyli 2)
+                                         :pvm (.setDataFormat tyyli 14)
+                                         :pvm-aika (.setDataFormat tyyli 22)
+                                         nil)))
+                       oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta?)
+                       [naytettava-arvo solun-tyyli] (if (raportti-domain/raporttielementti? arvo-datassa)
+                                         (muodosta-solu arvo-datassa oletustyyli)
+                                         [arvo-datassa oletustyyli])
+                       naytettava-arvo (if (and (number? naytettava-arvo) (= :prosentti (:fmt sarake)))
+                                         ;; Jos excelissä formatoidaan luku prosentiksi,
+                                         ;; excel olettaa, että kyseessä on sadasosia.
+                                         ;; Eli kokonaisluku 25 -> 2500%
+                                         ;; Muualla Harjassa prosenttilukuformatointi
+                                         ;; lisää lähinnä % merkin kokonaisluvun loppuun.
+                                         (/ naytettava-arvo 100)
+                                         naytettava-arvo)
+                       tyyli (doto (excel/create-cell-style! workbook solun-tyyli)
+                               formaatti-fn)]
 
-                  (if-let [kaava (:excel sarake)]
-                    (aseta-kaava! kaava cell rivi-nro sarake-nro)
-                    (excel/set-cell! cell (ilman-soft-hyphenia naytettava-arvo)))
-                  (excel/set-cell-style! cell tyyli)))
+                   (if-let [kaava (:excel sarake)]
+                     (aseta-kaava! kaava cell rivi-nro sarake-nro)
+                     (excel/set-cell! cell (ilman-soft-hyphenia naytettava-arvo)))
+                   (excel/set-cell-style! cell tyyli)))
               sarakkeet))))
         data))
 

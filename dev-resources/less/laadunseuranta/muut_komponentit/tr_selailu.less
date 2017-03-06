@@ -1,0 +1,38 @@
+.tr-selailu {
+  z-index: @z-index-tr-selailu;
+  position: absolute;
+  left: -400px;
+  top: 0;
+  max-width: 400px;
+  min-height: 200px;
+  max-height: 400px;
+  background-color: white;
+  transition-property: left;
+  transition-duration: 0.2s;
+  border: 1px solid lightgray;
+
+  p {
+    font-weight: bold;
+    padding-left: 20px;
+  }
+
+  .tr-tieto {
+    padding: 2px;
+    border-bottom: 1px solid lightgray;
+    margin: 10px;
+  }
+
+  .tr-tieto span:nth-child(1) {
+    display: inline-block;
+    width: 200px;
+    font-weight: bold;
+    font-size: 20px;
+    margin-right: 20px;
+  }
+}
+
+.tr-selailu-auki {
+  left: 0;
+  transition-property: left;
+  transition-duration: 0.2s;
+}

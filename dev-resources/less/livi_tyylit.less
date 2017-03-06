@@ -7,21 +7,24 @@
 
 /** VÄRIT */
 
-@musta:     #000000;
-@valkoinen: #ffffff;
-
 /** Harmaat */
-@harmaa1:  #191919;
-@harmaa2:  #323232;
-@harmaa3:  #4b4b4b;
-@harmaa4:  #646464;
-@harmaa5:  #7d7d7d;
-@harmaa6:  #969696;
-@harmaa7:  #afafaf;
-@harmaa8:  #c8c8c8;
-@harmaa9:  #e1e1e1;
-@harmaa10: #fafafa;
-@harmaa11: #f0f0f0;
+@musta:    rgb(0,0,0);
+@harmaa1: rgb(25,25,25);
+@harmaa2: rgb(50,50,50);
+@harmaa3: rgb(75,75,75);
+@harmaa4: rgb(100,100,100);
+@harmaa5: rgb(125,125,125);
+@harmaa6: rgb(150,150,150);
+@harmaa7: rgb(175,175,175);
+@harmaa8: rgb(200,200,200);
+@harmaa9: rgb(220,220,220);
+@harmaa10: rgb(225,225,225);
+@harmaa11: rgb(230,230,230);
+@harmaa12: rgb(235,235,235);
+@harmaa13: rgb(240,240,240);
+@harmaa14: rgb(245,245,245);
+@harmaa15: rgb(250,250,250);
+@valkoinen: rgb(255,255,255);
 
 /** Harmaat gradientit */
 .harmaa-gradientti1() { #gradient > .vertical(@start-color:  @harmaa3; @end-color: @harmaa1); }
@@ -30,8 +33,8 @@
 .harmaa-gradientti4() { #gradient > .vertical(@start-color:  @harmaa6; @end-color: @harmaa4); }
 .harmaa-gradientti5() { #gradient > .vertical(@start-color:  @harmaa7; @end-color: @harmaa5); }
 .harmaa-gradientti6() { #gradient > .vertical(@start-color:  @harmaa8; @end-color: @harmaa6); }
-.harmaa-gradientti7() { #gradient > .vertical(@start-color:  @harmaa9; @end-color: @harmaa7); }
-.harmaa-gradientti8() { #gradient > .vertical(@start-color: @harmaa10; @end-color: @harmaa8); }
+.harmaa-gradientti7() { #gradient > .vertical(@start-color:  @harmaa10; @end-color: @harmaa7); }
+.harmaa-gradientti8() { #gradient > .vertical(@start-color: @harmaa15; @end-color: @harmaa8); }
 
 /** Siniset */
 @sininen1: #0000cc;
@@ -80,7 +83,7 @@
 @huomautus:    @sininen5;
 @raportin-tehostevari: @primaari-sininen;
 
-@harjan-taustavari: @harmaa10;
+@harjan-taustavari: @harmaa15;
 @harja-nappien-valinen-etaisyys: 10px;
 @harja-myont-ja-kielt-napin-etaisyys: 100px;
 @valintakontrollin-leveys: 300px;
@@ -91,6 +94,7 @@
 
 /** INPUT */
 @input-korkeus: 28px;
+@input-korkeus-matalampi: calc(@input-korkeus * 0.85);
 @valintakontrollin-korkeus: @input-korkeus;
 
 /** TEKSTIT */
@@ -134,6 +138,7 @@
 
 
 @fontin-koko-taulukko: @fontin-koko-leipateksti;
+@fontin-koko-taulukko-pienempi: 0.675rem; // käytä jos hyvin paljon sarakkeita, esim. Kohdeluettelo
 @fontin-koko-raportti-pienempi:     0.6rem;
 
 
@@ -244,11 +249,11 @@
 
 /** TAULUKOT */
 table.table-striped {
-    background-color: @harmaa9;
+    background-color: @harmaa10;
     border: solid 1px @harmaa7;
 
     > tbody > tr:nth-of-type(odd) {
-        background-color: @harmaa10;
+        background-color: @harmaa15;
     }
 
     &.table-bordered th {
@@ -277,7 +282,7 @@ table.table-striped {
 
     .nappi-alasveto {
         &.disabled {
-            background-color: @harmaa9;
+            background-color: @harmaa10;
             color: @harmaa6;
         }
         height: @input-korkeus;
@@ -294,7 +299,7 @@ table.table-striped {
         .livicon-chevron-down {
             &.disabled {
                 background: none;
-                background-color: @harmaa9;
+                background-color: @harmaa10;
                 color: @harmaa6;
             }
             color: @sininen4;
@@ -312,23 +317,33 @@ table.table-striped {
     }
 }
 
+.livi-alasveto-250 {
+    margin: 1px 0;
+    .livi-alasveto(250px);
+}
+
 .livi-alasvetolista {
     border: 1px solid @sininen5;
     padding: 0;
 }
 
-.dropdown-menu .harja-alasvetolistaitemi > a {
-    background-color: @valkoinen;
-    border-color: @harmaa7;
-    color: @sininen4;
-    padding: 3px 6px;
-    &:hover,
-    &:focus,
-    &.focus,
-    &:active {
+.dropdown-menu .harja-alasvetolistaitemi {
+    &.bold > a {
+      font-weight: bold;
+    }
+    &> a {
+      background-color: @valkoinen;
+      border-color: @harmaa7;
+      color: @sininen4;
+      padding: 3px 6px;
+      &:hover,
+      &:focus,
+      &.focus,
+      &:active {
         background-color: @sininen5;
         color:            @valkoinen;
-    }
+      }
+  }
 }
 
 .dropdown-menu .harja-alasvetolista-ryhma:not(:last-child) {
@@ -359,21 +374,4 @@ line.ei-aktiiviset-paivat {
 
 .sisaltaa-virheen-tai-varoituksen (@vari) {
     border-bottom: solid 2px @vari !important;
-}
-
-.crash-component {
-  background: #d6ffd0;
-  border: 5px dashed @vihrea2;
-  padding: 5px;
-  span {
-    font-weight: bold;
-  }
-  .crash-details {
-    display: none;
-    color: black;
-    font-size: 10px;
-  }
-  .details-open {
-    display: block;
-  }
 }

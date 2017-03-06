@@ -1,10 +1,10 @@
 (ns harja.virhekasittely
   (:require [reagent.core :refer [atom]]
-            [harja.ui.palaute :as palaute]))
+            [harja.tiedot.palaute :as palaute]
+            [harja.ui.ikonit :as ikonit]))
 
 (def pahoitteluviesti
-  (str "Hupsista, Harja räsähti. Olemme pahoillamme. Kuulisimme mielellämme miten sait vian esiin. "
-       "Klikkaa tähän, niin näet tekniset tiedot ongelmasta."))
+  "Hupsista, Harja räsähti! Olemme pahoillamme. Kuulisimme mielellämme miten sait vian esiin. Klikkaa tähän, niin pääset lähettämään virheraportin.")
 
 (defn rendaa-virhe [e]
   (let [auki (atom false)
@@ -13,7 +13,12 @@
                             e))]
     (fn [e]
       [:div.crash-component {:on-click #(swap! auki not)}
-       [palaute/virhe-palaute (virhe-str e)]
+       [:a
+        {:href (palaute/mailto-linkki (palaute/mailto-kehitystiimi)
+                                      (palaute/palaute-body-virhe (virhe-str e))
+                                      "Kaatuminen")
+         :on-click #(.stopPropagation %)}
+        (ikonit/ikoni-ja-teksti (ikonit/envelope) pahoitteluviesti)]
        [:div.crash-details {:class (if @auki "details-open" "")}
         (virhe-str e)]])))
 

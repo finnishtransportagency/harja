@@ -23,7 +23,7 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
-    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+) [:db :integraatioloki])))
+    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+ nil) [:db :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
 
@@ -31,10 +31,11 @@
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]
-      (let [vastausdata (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)]
+      (let [vastausdata (tierekisteri/hae-tietolaji (:tierekisteri jarjestelma) "tl506" nil)]
         (is (true? (:onnistunut vastausdata)))
         (is (= "tl506" (get-in vastausdata [:tietolaji :tunniste])))
         (is (= 15 (count (get-in vastausdata [:tietolaji :ominaisuudet]))))
+        (is (every? :jarjestysnumero (get-in vastausdata [:tietolaji :ominaisuudet])))
         (let [ominaisuus (first (get-in vastausdata [:tietolaji :ominaisuudet]))
               odotettu-ominaisuus {:alaraja nil
                                    :desimaalit nil
@@ -56,18 +57,18 @@
     ;; Cache on tyhjä, joten vastaus haetaan tierekisteristä HTTP-kutsulla
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]
-      (let [vastausdata (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)]
+      (let [vastausdata (tierekisteri/hae-tietolaji (:tierekisteri jarjestelma) "tl506" nil)]
         (is (true? (:onnistunut vastausdata)))))
 
     ;; Tehdään kysely uudestaan, vastauksen täytyy palautua cachesta eli HTTP-requestia ei lähde
     (with-fake-http
       []
-      (let [vastausdata (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)]
+      (let [vastausdata (tierekisteri/hae-tietolaji (:tierekisteri jarjestelma) "tl506" nil)]
         (is (true? (:onnistunut vastausdata)))
         (is (= "tl506" (get-in vastausdata [:tietolaji :tunniste]))))
 
       ;; Haetaan eri parametreilla, joten vastaus ei saa tulla cachesta (tulee virhe, koska http-kutsut on estetty)
-      (is (thrown? Exception (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" (t/now)))))))
+      (is (thrown? Exception (tierekisteri/hae-tietolaji (:tierekisteri jarjestelma) "tl506" (t/now)))))))
 
 (deftest tarkista-tietueiden-haku
   (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
@@ -237,13 +238,33 @@
             vastausdata (tierekisteri/poista-tietue (:tierekisteri jarjestelma) tiedot)]
         (is (true? (:onnistunut vastausdata)))))))
 
+(deftest tarkista-varustetoteuman-lahettaminen
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))]
+    (with-fake-http
+      [(str +testi-tierekisteri-url+ "/lisaatietue") vastaus-xml]
+      (let [lisays-varustetoteuma (first (q "SELECT id FROM varustetoteuma WHERE toimenpide = 'lisatty' LIMIT 1;"))
+            vastausdata (tierekisteri/laheta-varustetoteuma (:tierekisteri jarjestelma) lisays-varustetoteuma)]
+        (is (true? (:onnistunut vastausdata)))))
+
+    (with-fake-http
+        [(str +testi-tierekisteri-url+ "/paivitatietue") vastaus-xml]
+        (let [muokkaus-varustetoteuma (first (q "SELECT id FROM varustetoteuma WHERE toimenpide = 'paivitetty' LIMIT 1;"))
+              vastausdata (tierekisteri/laheta-varustetoteuma (:tierekisteri jarjestelma) muokkaus-varustetoteuma)]
+          (is (true? (:onnistunut vastausdata)))))
+
+    (with-fake-http
+        [(str +testi-tierekisteri-url+ "/poistatietue") vastaus-xml]
+        (let [poisto-varustetoteuma (first (q "SELECT id FROM varustetoteuma WHERE toimenpide = 'poistettu' LIMIT 1;"))
+              vastausdata (tierekisteri/laheta-varustetoteuma (:tierekisteri jarjestelma) poisto-varustetoteuma)]
+          (is (true? (:onnistunut vastausdata)))))))
+
 (deftest tarkista-virhevastauksen-kasittely
   (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/virhe-vastaus-tietolajia-ei-loydy-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]
       (try+
-        (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)
+        (tierekisteri/hae-tietolaji (:tierekisteri jarjestelma) "tl506" nil)
         (is false "Pitäisi tapahtua poikkeus")
         (catch [:type "ulkoinen-kasittelyvirhe"] {:keys [virheet]}
           (is (.contains (:viesti (first virheet)) "Tietolajia ei löydy")))))))

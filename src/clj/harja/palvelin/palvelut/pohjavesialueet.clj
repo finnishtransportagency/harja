@@ -4,7 +4,8 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.geo :as geo]
             [harja.kyselyt.pohjavesialueet :as q]
-            ))
+
+            [harja.domain.oikeudet :as oikeudet]))
 
 
 (defn hae-pohjavesialueet [db user hallintayksikko]
@@ -19,6 +20,7 @@
     (julkaise-palvelu (:http-palvelin this)
                       :hae-pohjavesialueet
                       (fn [user hallintayksikko]
+                        (oikeudet/ei-oikeustarkistusta!)
                         (hae-pohjavesialueet (:db this) user hallintayksikko)))
     this)
 

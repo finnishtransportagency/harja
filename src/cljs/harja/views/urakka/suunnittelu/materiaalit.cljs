@@ -12,7 +12,8 @@
 
             [cljs.core.async :refer [<!]]
             [harja.views.urakka.valinnat :as valinnat]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [run! reaction]]
                    [harja.atom :refer [reaction-writable]]))
@@ -51,7 +52,7 @@
            :muokattava? (constantly false)
            :tyyppi :valinta :valinnat materiaalikoodit :valinta-nayta #(or (:nimi %) "- materiaali -")
            :validoi [[:ei-tyhja "Valitse materiaali"]]}
-          {:otsikko "Maksimi\u00ADmäärä" :nimi :maara :leveys "30%"
+          {:otsikko "Suunniteltu määrä" :nimi :maara :leveys "30%"
            :muokattava? (constantly true)
            :tyyppi :positiivinen-numero :tasaa :oikea}
           {:otsikko "Yks\u00ADikkö" :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "10%"
@@ -143,38 +144,45 @@
              voi-tallentaa? (and (or muokattu? @tuleville?) (not virheita?))
              voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-materiaalit (:id ur))]
          [:div.materiaalit
+
           [valinnat/urakan-sopimus-ja-hoitokausi ur]
+
           [yleiset-materiaalit-grid {:voi-muokata? voi-muokata?
                                      :virheet yleiset-materiaalit-virheet}
            ur @u/valittu-hoitokausi @u/valittu-sopimusnumero
            @yleiset-materiaalikoodit yleiset-materiaalit-muokattu]
 
+
           (when voi-muokata?
-            [raksiboksi {:teksti "Tallenna tulevillekin hoitokausille"
+            [raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi ur))
                          :toiminto #(swap! tuleville? not)
                          :info-teksti [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
                          :nayta-infoteksti? (and @tuleville? @varoita-ylikirjoituksesta?)}
              @tuleville?])
 
-          (when voi-muokata?
-            [:div.toiminnot
-             [:button.nappi-ensisijainen
-              {:disabled (not voi-tallentaa?)
-               :on-click #(do (.preventDefault %)
-                              (go
-                                (let [rivit (vals @yleiset-materiaalit-muokattu)
-                                      rivit (if @tuleville?
-                                              (u/rivit-tulevillekin-kausille ur rivit @u/valittu-hoitokausi)
-                                              rivit)
-                                      _ (logt rivit)
-                                      uudet-materiaalit (<! (t/tallenna (:id ur)
-                                                                        (first @u/valittu-sopimusnumero)
-                                                                        @u/valittu-hoitokausi
-                                                                        @u/valitun-urakan-hoitokaudet
-                                                                        @tuleville?
-                                                                        rivit))]
-                                  (when uudet-materiaalit
-                                    (viesti/nayta! "Materiaalit tallennettu." :success)
-                                    (reset! tuleville? false)
-                                    (reset! urakan-materiaalit uudet-materiaalit)))))}
-              "Tallenna materiaalit"]])])))))
+          [:div.toiminnot
+           (yleiset/wrap-if
+            (not voi-muokata?)
+            [yleiset/tooltip {} :%
+             (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                             oikeudet/urakat-suunnittelu-materiaalit)]
+            [:button.nappi-ensisijainen
+             {:disabled (not voi-tallentaa?)
+              :on-click #(do (.preventDefault %)
+                             (go
+                               (let [rivit (vals @yleiset-materiaalit-muokattu)
+                                     rivit (if @tuleville?
+                                             (u/rivit-tulevillekin-kausille ur rivit @u/valittu-hoitokausi)
+                                             rivit)
+                                     _ (logt rivit)
+                                     uudet-materiaalit (<! (t/tallenna (:id ur)
+                                                                       (first @u/valittu-sopimusnumero)
+                                                                       @u/valittu-hoitokausi
+                                                                       @u/valitun-urakan-hoitokaudet
+                                                                       @tuleville?
+                                                                       rivit))]
+                                 (when uudet-materiaalit
+                                   (viesti/nayta! "Materiaalit tallennettu." :success)
+                                   (reset! tuleville? false)
+                                   (reset! urakan-materiaalit uudet-materiaalit)))))}
+             "Tallenna materiaalit"])]])))))

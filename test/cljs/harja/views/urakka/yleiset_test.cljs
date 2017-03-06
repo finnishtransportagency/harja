@@ -1,7 +1,9 @@
 (ns harja.views.urakka.yleiset-test
   "Yleiset näkymän testi"
   (:require [cljs.test :as t :refer-macros [deftest is testing async]]
-            [harja.testutils :as u]
+            [harja.testutils.shared-testutils :as u]
+            [harja.testutils :refer [fake-palvelut-fixture fake-palvelukutsu
+                                     jvh-fixture]]
             [reagent.core :as r]
             [harja.views.urakka.yleiset :as yleiset]
             [harja.pvm :as pvm])
@@ -14,22 +16,22 @@
     :urakka_nimi "Oulun alueurakka 2014-2019", :sukunimi "Kallio", :varahenkilo false, :yhteyshenkilo_id 104,
     :urakka_loppupvm (pvm/->pvm "30.09.2019"), :urakka_alkupvm (pvm/->pvm "1.10.2014"), :id  3, :urakoitsija_ytunnus "1565583-5",
     :urakoitsija_id 11, :matkapuhelin "", :etunimi "Kyösti", :urakoitsija_tyyppi "urakoitsija", :alku (pvm/->pvm "1.12.2015"),
-    :urakka_id  4, :loppu (pvm/->pvm "6.12.2015"), :organisaatio {:tyyppi :hallintayksikko, :id 9, :nimi "Pohjois-Pohjanmaa ja Kainuu"}, :tyopuhelin ""}
+    :urakka_id  4, :loppu (pvm/->pvm "6.12.2015"), :organisaatio {:tyyppi :hallintayksikko, :id 9, :nimi "Pohjois-Pohjanmaa"}, :tyopuhelin ""}
    {:urakka_tyyppi "hoito", :vastuuhenkilo false, :sahkoposti "seppoyit@example.org", :urakoitsija_nimi "YIT Rakennus Oy",
     :urakka_nimi "Oulun alueurakka 2014-2019", :sukunimi "Taalasmaa", :varahenkilo true, :yhteyshenkilo_id 103,
     :urakka_loppupvm (pvm/->pvm "30.09.2019"), :urakka_alkupvm (pvm/->pvm "1.10.2014"), :id  2, :urakoitsija_ytunnus "1565583-5",
     :urakoitsija_id 11, :matkapuhelin "044", :etunimi "Seppo", :urakoitsija_tyyppi "urakoitsija", :alku (pvm/->pvm "13.11.2015"),
-    :urakka_id  4, :loppu (pvm/->pvm "30.11.2015"), :organisaatio {:tyyppi :hallintayksikko, :id 9, :nimi "Pohjois-Pohjanmaa ja Kainuu"}, :tyopuhelin "0505555555"}
+    :urakka_id  4, :loppu (pvm/->pvm "30.11.2015"), :organisaatio {:tyyppi :hallintayksikko, :id 9, :nimi "Pohjois-Pohjanmaa"}, :tyopuhelin "0505555555"}
    {:urakka_tyyppi "hoito", :vastuuhenkilo false, :sahkoposti "ismoyit@example.org", :urakoitsija_nimi "YIT Rakennus Oy",
     :urakka_nimi "Oulun alueurakka 2014-2019", :sukunimi "Laitela", :varahenkilo true, :yhteyshenkilo_id 102,
     :urakka_loppupvm (pvm/->pvm "30.09.2019"), :urakka_alkupvm (pvm/->pvm "1.10.2014"), :id  1, :urakoitsija_ytunnus "1565583-5",
     :urakoitsija_id 11, :matkapuhelin "0400123456", :etunimi "Ismo", :urakoitsija_tyyppi "urakoitsija", :alku (pvm/->pvm "1.11.2015"),
-    :urakka_id  4, :loppu (pvm/->pvm "11.11.2015"), :organisaatio {:tyyppi :hallintayksikko, :id 9, :nimi "Pohjois-Pohjanmaa ja Kainuu"}, :tyopuhelin "000"}])
+    :urakka_id  4, :loppu (pvm/->pvm "11.11.2015"), :organisaatio {:tyyppi :hallintayksikko, :id 9, :nimi "Pohjois-Pohjanmaa"}, :tyopuhelin "000"}])
 
 (def urakka
   {:id          4 :nimi "Oulun urakka"
    :urakoitsija {:nimi "YIT Rakennus Oyj" :id 2}
-   :hallintayksikko {:nimi "Pohjois-Pohjanmaa ja Kainuu" :id 9}})
+   :hallintayksikko {:nimi "Pohjois-Pohjanmaa" :id 9}})
 
 (deftest paivystajat
   (let [data (r/atom paivystajadata)]

@@ -22,7 +22,8 @@
     [harja.atom :refer-macros [reaction<! reaction-writable]]
     [harja.pvm :as pvm]
     [clojure.string :as str]
-    [harja.geo :as geo])
+    [harja.geo :as geo]
+    [harja.domain.oikeudet :as oikeudet])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]])
@@ -67,7 +68,7 @@
 ;; :S (näkyy Näytä kartta -nappi)
 ;; :M (matalampi täysleveä)
 ;; :L (korkeampi täysleveä)
-(def kartan-kokovalinta "Kartan koko" (atom :S))
+(defonce ^{:doc "Kartan koko"} kartan-kokovalinta (atom :S))
 
 (defn vaihda-kartan-koko! [uusi-koko]
   (let [vanha-koko @kartan-kokovalinta]
@@ -85,7 +86,9 @@
    {:nimi "Tiemerkintä" :arvo :tiemerkinta}
    {:nimi "Päällystys" :arvo :paallystys}
    {:nimi "Paikkaus" :arvo :paikkaus}
-   {:nimi "Valaistus" :arvo :valaistus}])
+   {:nimi "Valaistus" :arvo :valaistus}
+   {:nimi "Siltakorjaus" :arvo :siltakorjaus}
+   {:nimi "Tekniset laitteet" :arvo :tekniset-laitteet}])
 
 (defn urakkatyyppi-arvolle [tyyppi]
   (first (filter #(= tyyppi (:arvo %))
@@ -129,8 +132,10 @@
         (some #(when (= id (:id %)) %) urakat)))))
 
 
-(defonce valittu-urakkatyyppi (atom nil))
-
+;; Käyttäjän asettama urakkatyyppi. Todellinen UI:lla näkyvästi valittu urakkatyyppi
+;; ei kuitenkaan ole tämä, vaan alla oleva reaction (lue sitä, älä tätä)
+;; Älä myöskään aseta suoraan, käytä vaihda-urakkatyyppi!
+(defonce ^{:private true} valittu-urakkatyyppi (atom nil))
 
 ;; Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi
 ;; Jos käyttäjällä urakkarooleja, valitaan urakoista yleisin urakkatyyppi
@@ -140,6 +145,25 @@
           valittu-urakkatyyppi @valittu-urakkatyyppi
           urakan-urakkatyyppi (urakkatyyppi-arvolle (:tyyppi @valittu-urakka))]
       (or urakan-urakkatyyppi valittu-urakkatyyppi oletus-urakkatyyppi))))
+
+(defn vaihda-urakkatyyppi!
+  "Vaihtaa urakkatyypin ja resetoi valitun urakoitsijan, jos kyseinen urakoitsija ei
+   löydy valitun tyyppisten urakoitsijain listasta."
+  [ut]
+  (when (= @valittu-vaylamuoto :tie)
+    (reset! valittu-urakkatyyppi ut)
+    (swap! valittu-urakoitsija
+           #(let [nykyisen-urakkatyypin-urakoitsijat (case (:arvo ut)
+                                                       :hoito @urk/urakoitsijat-hoito
+                                                       :paallystys @urk/urakoitsijat-paallystys
+                                                       :paikkaus @urk/urakoitsijat-paikkaus
+                                                       :tiemerkinta @urk/urakoitsijat-tiemerkinta
+                                                       :valaistus @urk/urakoitsijat-valaistus
+                                                       :siltakorjaus @urk/urakoitsijat-siltakorjaus
+                                                       :tekniset-laitteet @urk/urakoitsijat-tekniset-laitteet)]
+              (if (nykyisen-urakkatyypin-urakoitsijat (:id %))
+                %
+                nil)))))
 
 (def tarvitsen-isoa-karttaa "Set käyttöliittymänäkymiä (keyword), jotka haluavat pakottaa kartan näkyviin.
   Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin :L kokoisena vaikka se ei olisikaan muuten näkyvissä."
@@ -188,31 +212,21 @@
   (reset! valittu-hallintayksikko-id hy-id)
   (valitse-urakka! ur))
 
+(defn aseta-hallintayksikko-ja-urakka-id! [hy-id ur-id]
+  (reset! valittu-hallintayksikko-id hy-id)
+  (reset! valittu-urakka-id ur-id))
+
 (defn valitse-urakoitsija! [u]
   (reset! valittu-urakoitsija u))
 
-(defn vaihda-urakkatyyppi!
-  "Vaihtaa urakkatyypin ja resetoi valitun urakoitsijan, jos kyseinen urakoitsija ei
-   löydy valitun tyyppisten urakoitsijain listasta."
-  [ut]
-  (when (= @valittu-vaylamuoto :tie)
-    (reset! valittu-urakkatyyppi ut)
-    (swap! valittu-urakoitsija
-           #(let [nykyisen-urakkatyypin-urakoitsijat (case (:arvo ut)
-                                                       :hoito @urk/urakoitsijat-hoito
-                                                       :paallystys @urk/urakoitsijat-paallystys
-                                                       :paikkaus @urk/urakoitsijat-paikkaus
-                                                       :tiemerkinta @urk/urakoitsijat-tiemerkinta
-                                                       :valaistus @urk/urakoitsijat-valaistus)]
-             (if (nykyisen-urakkatyypin-urakoitsijat (:id %))
-               %
-               nil)))))
-
 ;; Rajapinta hallintayksikön valitsemiseen, jota viewit voivat kutsua
-(defn valitse-hallintayksikko [yks]
-  (reset! valittu-hallintayksikko-id (:id yks))
+(defn valitse-hallintayksikko-id! [id]
+  (reset! valittu-hallintayksikko-id id)
   (reset! valittu-urakka-id nil)
   (paivita-url))
+
+(defn valitse-hallintayksikko! [yks]
+  (valitse-hallintayksikko-id! (:id yks)))
 
 (defonce ilmoita-hallintayksikkovalinnasta
   (run! (let [yks @valittu-hallintayksikko]
@@ -220,10 +234,13 @@
             (t/julkaise! (assoc yks :aihe :hallintayksikko-valittu))
             (t/julkaise! {:aihe :hallintayksikkovalinta-poistettu})))))
 
-(defn valitse-urakka! [ur]
-  (reset! valittu-urakka-id (:id ur))
-  (log "VALITTIIN URAKKA: " (pr-str (dissoc ur :alue)))
+(defn valitse-urakka-id! [id]
+  (reset! valittu-urakka-id id)
   (paivita-url))
+
+(defn valitse-urakka! [ur]
+  (valitse-urakka-id! (:id ur))
+  (log "VALITTIIN URAKKA: " (pr-str (dissoc ur :alue))))
 
 (defonce ilmoita-urakkavalinnasta
   (run! (let [ur @valittu-urakka]
@@ -277,7 +294,8 @@
           urakkalista @hallintayksikon-urakkalista]
       (into []
             (comp (filter #(= v-ur-tyyppi (:tyyppi %)))
-                  (filter #(or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %))))))
+                  (filter #(or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %)))))
+                  (filter #(oikeudet/voi-lukea? oikeudet/urakat (:id %) @istunto/kayttaja)))
             urakkalista))))
 
 (def urakat-kartalla "Sisältää suodatetuista urakoista aktiiviset"

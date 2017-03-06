@@ -13,57 +13,54 @@
             [cljs-time.core :as t]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.tilannekuva :as tk]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce nakymassa? (atom false))
-(defonce valittu-tila (atom :nykytilanne))
+(defonce valittu-tila (reaction (nav/valittu-valilehti :tilannekuva)))
 
 (def
   ^{:doc "Kuinka pitkä urakan nimi hyväksytään pudotusvalikkoon"
     :const true}
-  urakan-nimen-pituus 39)
+  urakan-nimen-pituus 38)
 
 (def ^{:doc "Aika joka odotetaan ennen uusien tietojen hakemista, kun
  parametrit muuttuvat"
        :const true}
 bufferi 1000)
 
-;; 10s riittää jos näkymä on paikallaan, tiedot haetaan heti uudelleen, jos
+;; 30s riittää jos näkymä on paikallaan, tiedot haetaan heti uudelleen, jos
 ;; karttaa siirretään tai zoomataan
 (def ^{:doc "Päivitystiheys tilanenkuvassa, kun parametrit eivät muutu"
        :const true}
-hakutiheys-nykytilanne 10000)
+hakutiheys-nykytilanne 30000)
 
 (def ^{:doc "Päivitystiheys historiakuvassa on 20 minuuttia."
        :const true}
 hakutiheys-historiakuva 1200000)
 
-(def ilmoitusten-tilat-nykytilanteessa #{:kuittaamaton :vastaanotto :aloitus :muutos :vastaus})
-(def ilmoitusten-tilat-historiakuvassa #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus})
-
 (def oletusalueet {})
 
 (def valittu-urakka-tilannekuvaan-tullessa (atom nil))
-(def valittu-hallintayksikko-tilannekuvaan-tullessa (atom nil))
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
 (defonce suodattimet
   (atom
     {:yllapito {tk/paallystys false
                 tk/paikkaus false
-                tk/suljetut-tiet false
+                tk/tietyomaat false
                 tk/paaasfalttilevitin false
                 tk/tiemerkintakone false
                 tk/kuumennuslaite false
                 tk/sekoitus-ja-stabilointijyrsin false
-                tk/tma-laite false}
+                tk/tma-laite false
+                tk/jyra false}
      :ilmoitukset {:tyypit {tk/tpp false
                             tk/tur false
-                            tk/urk false}
-                   :tilat ilmoitusten-tilat-nykytilanteessa}
+                            tk/urk false}}
      :turvallisuus {tk/turvallisuuspoikkeamat false}
      :laatupoikkeamat {tk/laatupoikkeama-tilaaja false
                        tk/laatupoikkeama-urakoitsija false
@@ -144,9 +141,9 @@ hakutiheys-historiakuva 1200000)
 
 (defn kasaa-parametrit [tila nakyva-alue suodattimet]
   (merge
-    {:urakat (apply clojure.set/union (map val (tk/valitut-suodattimet (:alueet suodattimet))))
+    {:urakat       (tk/valittujen-suodattimien-idt (:alueet suodattimet))
      :nykytilanne? (= :nykytilanne tila)
-     :alue nakyva-alue}
+     :alue         nakyva-alue}
     (tk/valitut-suodattimet (dissoc suodattimet :alueet))))
 
 (defn aikaparametrilla [parametrit]
@@ -160,106 +157,129 @@ hakutiheys-historiakuva 1200000)
               (pvm/nyt)
               (second @historiakuvan-aikavali))}))
 
+(defn aikaparametrilla-kuva
+  "Aikaparametri kuvatasolle: nykytilassa ei anneta aikoja, vaan aikavalinta.
+  Koska muuten kuvatason parametrit muuttuvat koko ajan ja karttataso vilkkuu koko ajan."
+  [parametrit]
+  (merge
+   parametrit
+   (if (= @valittu-tila :nykytilanne)
+     {:aikavalinta @nykytilanteen-aikasuodattimen-arvo}
+     {:alku (first @historiakuvan-aikavali)
+      :loppu (second @historiakuvan-aikavali)})))
+
+(defn- hyt-joiden-urakoilla-ei-arvoa* [alueet boolean-arvo]
+  (apply merge
+         (keep
+           (fn [[tyyppi aluekokonaisuudet]]
+             {tyyppi (into
+                       #{} (keep (fn [[nimi urakat]]
+                                   (when-not (empty? urakat)
+                                     (when-not (some
+                                                 (fn [[suodatin valittu?]]
+                                                   (= valittu? boolean-arvo))
+                                                 urakat)
+                                       nimi)))
+                                 aluekokonaisuudet))})
+           alueet)))
+
 (def hyt-joiden-urakoilla-ei-arvoa
   ;; Uusimmassa reagentissa tulee funktio r/track, jolla tämä
   ;; olisi hoitunut paljon mukavemmin, mutta onnistuu kai tämä näinkin
   (reaction
-    (let [funktio (fn [boolean-arvo]
-                    (into #{}
-                          (keep
-                            (fn [[nimi urakat]]
-                              (when-not (empty? urakat)
-                                (when-not (some
-                                            (fn [[suodatin valittu?]]
-                                              (= valittu? boolean-arvo))
-                                            urakat)
-                                  nimi)))
-                            (:alueet @suodattimet))))]
-      {true (funktio true)
+    (let [funktio (partial hyt-joiden-urakoilla-ei-arvoa* (:alueet @suodattimet))]
+      {true  (funktio true)
        false (funktio false)})))
+
+(defn- valitse-urakka?* [urakka-id hallintayksikko tyyppi valittu-urakka
+                         hallintayksikot-joista-ei-mitaan-valittu hallintayksikot-joista-kaikki-valittu]
+  (cond
+
+    ;; Jos murupolun kautta oli valittu urakka tilannekuvaan tultaessa,
+    ;; tarkasta, onko tämä urakka se
+    (= urakka-id valittu-urakka)
+    (do
+      true)
+
+    ;; Valitse urakka, jos se kuuluu hallintayksikköön, joista käyttäjä on valinnut
+    ;; kaikki urakat
+    (and
+      (get hallintayksikot-joista-kaikki-valittu tyyppi)
+      ((get hallintayksikot-joista-kaikki-valittu tyyppi) (:nimi hallintayksikko)))
+    (do
+      #_(log (:nimi hallintayksikko) " on hy, joista kaikki on valittu!")
+      true)
+
+    ;; Älä ikinä valitse urakkaa, jos se kuuluu hallintayksikköön, josta käyttäjä
+    ;; ei ole valinnut yhtään urakkaa (kaiki on false!)
+    (and
+      (get hallintayksikot-joista-ei-mitaan-valittu tyyppi)
+      ((get hallintayksikot-joista-ei-mitaan-valittu tyyppi) (:nimi hallintayksikko)))
+    (do
+      #_(log (:nimi hallintayksikko) " on hy, joista ei ole mitään valittu!")
+      false)
+
+    ;; Sisään tultaessa oli valittuna "koko maa"
+    :else
+    (do
+      #_(log "Koko maa valittu! :)")
+      false)))
 
 ;; Valitaanko palvelimelta palautettu suodatin vai ei.
 ;; Yhdistäminen tehdään muualla
-(defn- valitse-urakka? [urakka-id hallintayksikko]
-  (let [valittu-urakka (:id @valittu-urakka-tilannekuvaan-tullessa)
-        valittu-hallintayksikko (:id @valittu-hallintayksikko-tilannekuvaan-tullessa)
-        hallintayksikot-joista-ei-mitaan-valittu (get @hyt-joiden-urakoilla-ei-arvoa true)
-        hallintayksikot-joista-kaikki-valittu (get @hyt-joiden-urakoilla-ei-arvoa false)]
-    (cond
+(defn- valitse-urakka? [urakka-id hallintayksikko tyyppi]
+  (valitse-urakka?*
+    urakka-id hallintayksikko tyyppi
+    (:id @valittu-urakka-tilannekuvaan-tullessa)
+    (get @hyt-joiden-urakoilla-ei-arvoa true)
+    (get @hyt-joiden-urakoilla-ei-arvoa false)))
 
-      ;; Jos murupolun kautta oli valittu urakka tilannekuvaan tultaessa,
-      ;; tarkasta, onko tämä urakka se
-      (= urakka-id valittu-urakka)
-      (do
-        true)
+(defn- aluesuodattimet-nested-mapiksi [tulos]
+  (into {}
+        (map (fn [[tyyppi aluekokonaisuus]]
+               {tyyppi (into {}
+                             (map (fn [{:keys [hallintayksikko urakat]}]
+                                    {hallintayksikko
+                                     (into {}
+                                           (map (fn [{:keys [id nimi alue]}]
+                                                  [(tk/->Aluesuodatin id
+                                                                      (-> nimi
+                                                                          (clojure.string/replace " " "_")
+                                                                          (clojure.string/replace "," "_")
+                                                                          (clojure.string/replace "(" "_")
+                                                                          (clojure.string/replace ")" "_")
+                                                                          (keyword))
+                                                                      (format/lyhennetty-urakan-nimi urakan-nimen-pituus nimi)
+                                                                      alue)
+                                                   (valitse-urakka? id hallintayksikko tyyppi)])
+                                                urakat))})
+                                  aluekokonaisuus))}))
+        (group-by :tyyppi tulos)))
 
-      ;; Jos murupolun kautta tultaessa oli valittuna hallintayksikkö,
-      ;; tarkasta, kuuluuko tämä urakka siihen hallintayksikköön
-      (and (nil? valittu-urakka) (= valittu-hallintayksikko (:id hallintayksikko)))
-      (do
-        true)
-
-      ;; Valitse urakka, jos se kuuluu hallintayksikköön, joista käyttäjä on valinnut
-      ;; kaikki urakat
-      (hallintayksikot-joista-kaikki-valittu (:nimi hallintayksikko))
-      (do
-        #_(log (:nimi hallintayksikko) " on hy, joista kaikki on valittu!")
-        true)
-
-      ;; Älä ikinä valitse urakkaa, jos se kuuluu hallintayksikköön, josta käyttäjä
-      ;; ei ole valinnut yhtään urakkaa (kaiki on false!)
-      (hallintayksikot-joista-ei-mitaan-valittu (:nimi hallintayksikko))
-      (do
-        #_(log (:nimi hallintayksikko) " on hy, joista ei ole mitään valittu!")
-        false)
-
-      ;; Sisään tultaessa oli valittuna "koko maa"
-      :else
-      (do
-        #_(log "Koko maa valittu! :)")
-        false))))
-
-(defn- hae-aluesuodattimet [tila urakoitsija urakkatyyppi]
+(defn- hae-aluesuodattimet [tila urakoitsija]
   (go (let [tulos (<! (k/post! :hae-urakat-tilannekuvaan (aikaparametrilla
-                                                           {:urakoitsija (:id urakoitsija)
-                                                            :urakkatyyppi (:arvo urakkatyyppi)
+                                                           {:urakoitsija  (:id urakoitsija)
                                                             :nykytilanne? (= :nykytilanne tila)})))]
-        (into {}
-              (map
-                (fn [aluekokonaisuus]
-                  {(get-in aluekokonaisuus [:hallintayksikko])
-                   (into {}
-                         (map
-                           (fn [{:keys [id nimi alue]}]
-                             [(tk/->Aluesuodatin id
-                                                 (-> nimi
-                                                     (clojure.string/replace " " "_")
-                                                     (clojure.string/replace "," "_")
-                                                     (clojure.string/replace "(" "_")
-                                                     (clojure.string/replace ")" "_")
-                                                     (keyword))
-                                                 (format/lyhennetty-urakan-nimi urakan-nimen-pituus nimi)
-                                                 alue)
-                              (valitse-urakka? id (:hallintayksikko aluekokonaisuus))])
-                           (:urakat aluekokonaisuus)))})
-                tulos)))))
+        ;; tulos: [{:tyyppi :x :hallintayksikko {:id . :nimi .} :urakat [{:id :nimi}, ..]} {..}]
+        (aluesuodattimet-nested-mapiksi tulos)
+        ;; {:x {{:id . :nimi "Lappi"} [{:id 1 :nimi "Kuusamon urakka}]}
+        )))
 
-;; Alkuperäinen logiikka nojasi siihen, että valitaan AINA vanhan suodattimen arvo,
-;; jos sellainen löytyy. Jos ei löydy, niin sitten käytetään uuden suodattimen arvoa, jonka
-;; valintalogiikka löytyy valitse-urakka? funktiosta.
-;; Tämä funktio piti lisätä, koska tietyissä tapauksissa halutaan ylikirjoittaa vanha
-;; suodattimen arvo uudella.
-;; Esim: Valitse Oulun urakka -> Mene tilannekuvaan -> Ota Oulu pois päältä -> Mene vaikka toteumiin ->
-;; -> Mene takaisin Tilannekuvaan -> Tässä tapauksessa Oulun pitäisi mennä takaisin päälle!
-(defn uusi-tai-vanha-suodattimen-arvo [vanha-arvo uusi-arvo urakka hallintayksikko]
-  (let [arvo (cond
-               (nil? vanha-arvo) uusi-arvo
-               (= (:id urakka) (:id @valittu-urakka-tilannekuvaan-tullessa)) uusi-arvo
-               (and (nil? @valittu-urakka-tilannekuvaan-tullessa)
-                    (= (:id hallintayksikko) (:id @valittu-hallintayksikko-tilannekuvaan-tullessa))) uusi-arvo
-               :else vanha-arvo)]
-    #_(log "Urakalle " (pr-str (:nimi urakka)) " käytetään arvoa " (pr-str arvo) "(" (pr-str vanha-arvo) " => " (pr-str uusi-arvo) ")")
-    arvo))
+(defn aseta-urakka-valituksi! [id]
+  (swap! suodattimet assoc :alueet (tk/suodatin-muutettuna (:alueet @suodattimet) (fn [s val?] [s true]) #{id})))
+
+;; VALINTALOGIIKAN AIKAKIRJA:
+;; v1:  Kunnioitetaan aina vanhaa, eli käyttäjän tekemää valintaa. Palvelimelta palautettavat
+;;      alueet eivät ikinä ylikirjoita jo olemassa olevia valintoja.
+;; v2:  Logiikka muuttui tämä vaatimuksen takia:
+;;      Valitse Oulun urakka -> Mene tilannekuvaan -> Ota Oulu pois päältä -> Mene vaikka toteumiin ->
+;;      -> Mene takaisin Tilannekuvaan -> Tässä tapauksessa Oulun pitäisi mennä takaisin päälle!
+;; v3:  Ei ollut hyvä. Valitse murupolun kautta urakka -> tule tilannekuvaan -> poista urakan valinta
+;;      -> vaihda aikaväliä -> Urakka valittiin uudestaan!
+;;      Vaihdettiin takaisin versio #1. Jos käyttäjä itse ottaa urakan pois päältä, niin sopii olettaa
+;;      että hän ymmärtää sen olevan pois päältä myös takaisin tilannekuvaan tultaessa?
+(defn uusi-tai-vanha-suodattimen-arvo [vanha-arvo uusi-arvo]
+  (if (some? vanha-arvo) vanha-arvo uusi-arvo))
 
 (defn yhdista-aluesuodattimet [vanhat uudet]
   ;; Yhdistetään kaksi mäppiä, joka sisältää mäppiä
@@ -267,16 +287,19 @@ hakutiheys-historiakuva 1200000)
   ;; mutta jos avaimelle löytyy arvo vanhoista tiedoista, käytetään sitä.
   (into {}
         (map
-          (fn [[hallintayksikko urakat]]
-            [(:nimi hallintayksikko)
+          (fn [[tyyppi aluekokonaisuudet]]
+            {tyyppi
              (into {}
-                   (map
-                     (fn [[suodatin valittu?]]
-                       (let [vanha-arvo (get-in vanhat [(:nimi hallintayksikko) suodatin])
-                             arvo (uusi-tai-vanha-suodattimen-arvo vanha-arvo valittu?
-                                                                   suodatin hallintayksikko)]
-                         [suodatin arvo]))
-                     urakat))])
+                   (map (fn [[hallintayksikko urakat]]
+                          {(:nimi hallintayksikko)
+                           (into {}
+                                 (map
+                                   (fn [[suodatin valittu?]]
+                                     (let [vanha-arvo (get-in vanhat [tyyppi (:nimi hallintayksikko) suodatin])
+                                           arvo (uusi-tai-vanha-suodattimen-arvo vanha-arvo valittu?)]
+                                       [suodatin arvo]))
+                                   urakat))})
+                        aluekokonaisuudet))})
           uudet)))
 
 (def uudet-aluesuodattimet
@@ -285,7 +308,7 @@ hakutiheys-historiakuva 1200000)
                _ @nykytilanteen-aikasuodattimen-arvo
                _ @historiakuvan-aikavali]
               (go (when nakymassa?
-                    (let [tulos (<! (hae-aluesuodattimet tila @nav/valittu-urakoitsija @nav/urakkatyyppi))
+                    (let [tulos (<! (hae-aluesuodattimet tila @nav/valittu-urakoitsija))
                           yhdistetyt (yhdista-aluesuodattimet (:alueet @suodattimet) tulos)]
                       (swap! suodattimet assoc :alueet yhdistetyt)
                       tulos)))))
@@ -301,40 +324,11 @@ hakutiheys-historiakuva 1200000)
   (reaction
     (kasaa-parametrit @valittu-tila @nav/kartalla-nakyva-alue @suodattimet)))
 
-(defn yhdista-tyokonedata [uusi]
-  (let [vanhat (:tyokoneet @tilannekuva-kartalla/haetut-asiat)
-        uudet (:tyokoneet uusi)
-        uudet-idt (into #{} (keys uudet))]
-    (assoc uusi :tyokoneet
-                (into {}
-                      (filter
-                        (fn [[id _]]
-                          (uudet-idt id))
-                        (merge-with
-                          (fn [vanha uusi]
-                            (let [vanha-reitti (:reitti vanha)]
-                              (assoc uusi
-                                :reitti (if (= (:sijainti vanha) (:sijainti uusi))
-                                          vanha-reitti
-                                          (conj
-                                            (or vanha-reitti
-                                                [(:sijainti vanha)])
-                                            (:sijainti uusi))))))
-                          vanhat uudet))))))
-
 (def edellisen-haun-kayttajan-suodattimet
   (atom {:tila @valittu-tila
          :aikavali-nykytilanne @nykytilanteen-aikasuodattimen-arvo
          :aikavali-historia @historiakuvan-aikavali
          :suodattimet @suodattimet}))
-
-(def tyhjenna-popupit-kun-filtterit-muuttuu
-  (run!
-    @valittu-tila
-    @nykytilanteen-aikasuodattimen-arvo
-    @historiakuvan-aikavali
-    @suodattimet
-    (kartta/poista-popup!)))
 
 (defn kartan-tyypiksi [t avain tyyppi]
   (assoc t avain (map #(assoc % :tyyppi-kartalla tyyppi) (avain t))))
@@ -348,10 +342,11 @@ hakutiheys-historiakuva 1200000)
       (not= @suodattimet
             (:suodattimet @edellisen-haun-kayttajan-suodattimet))))
 
-(defn- julkaise-tyokonedata! [tulos]
-  (tapahtumat/julkaise! {:aihe :uusi-tyokonedata
-                         :tyokoneet (vals (:tyokoneet tulos))})
-  tulos)
+(defn- kasittele-tilannekuvan-hakutulos [tulos]
+  (let [paallystykset (yllapitokohteet/yllapitokohteet-kartalle (:paallystys tulos))
+        paikkaukset (yllapitokohteet/yllapitokohteet-kartalle (:paikkaus tulos))]
+  (assoc tulos :paallystys paallystykset
+               :paikkaus paikkaukset)))
 
 (defn hae-asiat [hakuparametrit]
   (log "Tilannekuva: Hae asiat (" (pr-str @valittu-tila) ") " (pr-str hakuparametrit))
@@ -369,12 +364,13 @@ hakutiheys-historiakuva 1200000)
     ;; Aikaparametri (nykytilanteessa) pitää tietenkin laskea joka haulle uudestaan, jotta
     ;; oikeasti haetaan nykyhetkestä esim. pari tuntia menneisyyteen.
     (reset! tilannekuva-kartalla/url-hakuparametrit
-            (k/url-parametri (aikaparametrilla (dissoc hakuparametrit :alue))))
+            (k/url-parametri (aikaparametrilla-kuva (dissoc hakuparametrit :alue))))
 
     (let [tulos (-> (<! (k/post! :hae-tilannekuvaan (aikaparametrilla hakuparametrit)))
-                    (yhdista-tyokonedata)
-                    (julkaise-tyokonedata!))]
+                    (assoc :tarkastukset (:tarkastukset hakuparametrit)))
+          tulos (kasittele-tilannekuvan-hakutulos tulos)]
       (when @nakymassa?
+        (reset! tilannekuva-kartalla/valittu-tila @valittu-tila)
         (reset! tilannekuva-kartalla/haetut-asiat tulos))
       (kartta/aseta-paivitetaan-karttaa-tila! false))))
 
@@ -384,7 +380,7 @@ hakutiheys-historiakuva 1200000)
                ;; Uusi haku myös kun aikasuodattimien arvot muuttuvat
                _ @nykytilanteen-aikasuodattimen-arvo
                _ @historiakuvan-aikavali]
-               ;; Kun vaihdetaan nykytilanteen ja historiakuvan välillä, haetaan uudet, 
+               ;; Kun vaihdetaan nykytilanteen ja historiakuvan välillä, haetaan uudet,
                ;; aikasuodattimeen ja tilaan sopivat urakat. Kun tämä haku on valmis,
                ;; lähdetään hakemaan kartalle piirrettävät jutut. Tämän takia emme halua tehdä
                ;; asioiden hakua tilaan sidottuna!
@@ -416,7 +412,8 @@ hakutiheys-historiakuva 1200000)
           (paivita-periodisesti asioiden-haku
                                 (case @valittu-tila
                                   :nykytilanne hakutiheys-nykytilanne
-                                  :historiakuva hakutiheys-historiakuva))))
+                                  :historiakuva hakutiheys-historiakuva
+                                  :tienakyma hakutiheys-historiakuva))))
 
 (defn lopeta-periodinen-haku-jos-kaynnissa []
   (when @lopeta-haku

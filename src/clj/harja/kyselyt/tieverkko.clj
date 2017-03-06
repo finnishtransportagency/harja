@@ -20,5 +20,4 @@
 
 (defn onko-tierekisteriosoite-validi? [db tie aosa aet losa loppuet]
   (let [osoite {:tie tie :aosa aosa :aet aet :losa losa :loppuet loppuet}]
-    (some? (:tierekisteriosoitteelle_viiva
-             (first (harja.kyselyt.tieverkko/tierekisteriosoite-viivaksi db osoite))))))
+    (some? (tierekisteriosoite-viivaksi db osoite))))

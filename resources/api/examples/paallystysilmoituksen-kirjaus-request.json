@@ -10,15 +10,19 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-01-30T12:00:00Z"
+    "lahetysaika": "2016-01-30T12:00:00+02:00"
   },
+
   "paallystysilmoitus": {
+    "perustiedot": {
+      "takuupvm": "2015-02-15T12:00:00+02:00"
+    },
     "yllapitokohde": {
       "sijainti": {
-        "aosa": 20,
+        "aosa": 1,
         "aet": 1,
         "losa": 5,
-        "let": 15
+        "let": 16
       },
       "alikohteet": [
         {
@@ -26,10 +30,10 @@
             "nimi": "1. testialikohde",
             "tunnus": "A",
             "sijainti": {
-              "aosa": 20,
+              "aosa": 1,
               "aet": 1,
               "losa": 5,
-              "let": 15
+              "let": 16
             },
             "paallystetyyppi": "avoin asfaltti",
             "raekoko": 12,
@@ -46,7 +50,7 @@
                   "esiintyma": "testi",
                   "km-arvo": "testi",
                   "muotoarvo": "testi",
-                  "sideainetyyppi": "1",
+                  "sideainetyyppi": "20/30",
                   "pitoisuus": 1.2,
                   "lisa-aineet": "lisäaineet"
                 }
@@ -60,29 +64,17 @@
       {
         "alustatoimenpide": {
           "sijainti": {
-            "aosa": 20,
+            "aosa": 1,
             "aet": 1,
             "losa": 5,
             "let": 15
           },
           "kasittelymenetelma": "Massanvaihto",
-          "paksuus": 1.2,
+          "paksuus": 1,
           "verkkotyyppi": "Teräsverkko",
-          "verkon-tarkoitus": "Muiden routavaurioiden ehkäisy",
+          "verkon-tarkoitus": "Moniongelmaisen tukeminen",
           "verkon-sijainti": "Päällysteessä",
           "tekninen-toimenpide": "Rakentaminen"
-        }
-      }
-    ],
-    "tyot": [
-      {
-        "tyo": {
-          "tyyppi": "Ajoradan päällyste",
-          "tyotehtava": "työtehtävä",
-          "tilattu-maara": 1.2,
-          "toteutunut-maara": 1.2,
-          "yksikko": "kpl",
-          "yksikkohinta": 55.4
         }
       }
     ]

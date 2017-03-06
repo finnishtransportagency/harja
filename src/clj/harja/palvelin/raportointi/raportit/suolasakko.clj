@@ -8,67 +8,36 @@
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [jeesql.core :refer [defqueries]]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
 
 (defqueries "harja/kyselyt/suolasakkoraportti.sql"
   {:positional? true})
 
-(defn muodosta-suolasakkoraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
-  (log/debug "Haetaan tiedot suolasakon raportille urakka-kontekstissa: " urakka-id alkupvm loppupvm)
-  (let [parametrit [db
-                    urakka-id
-                    (konv/sql-timestamp alkupvm)
-                    (konv/sql-timestamp loppupvm)
-                    (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
-                    (+ (.getYear (konv/sql-timestamp loppupvm)) 1900)]
-        raportin-tiedot (into [] (apply hae-tiedot-urakan-suolasakkoraportille parametrit))]
-    raportin-tiedot))
+(defn suorita [db user {:keys [urakka-id alkupvm loppupvm hallintayksikko-id urakkatyyppi]
+                        :as parametrit}]
+  (let [urakat (into #{}
+                     (map :urakka-id)
+                     (yleinen/hae-kontekstin-urakat db {:urakka urakka-id
+                                                        :hallintayksikko hallintayksikko-id
+                                                        :alku alkupvm
+                                                        :loppu loppupvm
+                                                        :urakkatyyppi "hoito"}))
+        raportin-data (hae-suolasakot db {:alkupvm (konv/sql-date alkupvm)
+                                          :loppupvm (konv/sql-date loppupvm)
+                                          :urakat  urakat})
+        konteksti (cond
+                    (and urakka-id alkupvm loppupvm)
+                    :urakka
 
+                    (and hallintayksikko-id alkupvm loppupvm)
+                    :hallintayksikko
 
-(defn muodosta-suolasakkoraportti-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm urakkatyyppi]}]
-  (log/debug "Haetaan tiedot suolasakon raportille hallintayksikkö-kontekstissa: " hallintayksikko-id alkupvm loppupvm urakkatyyppi)
-  (let [parametrit [db
-                    hallintayksikko-id
-                    (when urakkatyyppi (name urakkatyyppi))
-                    (konv/sql-timestamp alkupvm)
-                    (konv/sql-timestamp loppupvm)
-                    (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
-                    (+ (.getYear (konv/sql-timestamp loppupvm)) 1900)]
-        raportin-tiedot (into [] (apply hae-tiedot-hallintayksikon-suolasakkoraportille parametrit))]
-    raportin-tiedot))
+                    (and alkupvm loppupvm)
+                    :koko-maa
 
-(defn muodosta-suolasakkoraportti-koko-maalle [db user {:keys [alkupvm loppupvm urakkatyyppi]}]
-  (log/debug "Haetaan tiedot suolasakon raportille koko maa -kontekstissa: " alkupvm loppupvm urakkatyyppi)
-  (let [parametrit [db
-                    (when urakkatyyppi (name urakkatyyppi))
-                    (konv/sql-timestamp alkupvm)
-                    (konv/sql-timestamp loppupvm)
-                    (+ (.getYear (konv/sql-timestamp alkupvm)) 1900)
-                    (+ (.getYear (konv/sql-timestamp loppupvm)) 1900)]
-        raportin-tiedot (into [] (apply hae-tiedot-koko-maan-suolasakkoraportille parametrit))]
-    raportin-tiedot))
-
-(defn suorita [db user {:keys [urakka-id alkupvm loppupvm hallintayksikko-id urakkatyyppi] :as parametrit}]
-  (log/debug "Ajat:" (pr-str alkupvm loppupvm))
-  (let [[konteksti raportin-data]
-        (cond
-          (and urakka-id alkupvm loppupvm)
-          [:urakka (muodosta-suolasakkoraportti-urakalle db user {:urakka-id urakka-id
-                                                                  :alkupvm alkupvm
-                                                                  :loppupvm loppupvm})]
-
-          (and hallintayksikko-id alkupvm loppupvm)
-          [:hallintayksikko (muodosta-suolasakkoraportti-hallintayksikolle db user {:hallintayksikko-id hallintayksikko-id
-                                                                                    :alkupvm alkupvm
-                                                                                    :loppupvm loppupvm
-                                                                                    :urakkatyyppi urakkatyyppi})]
-          (and alkupvm loppupvm)
-          [:koko-maa (muodosta-suolasakkoraportti-koko-maalle db user {:alkupvm alkupvm
-                                                                       :loppupvm loppupvm
-                                                                       :urakkatyyppi urakkatyyppi})]
-
-          :default
-          nil)
+                    :default
+                    nil)
 
         suolasakot-hallintayksikoittain (sort (group-by :hallintayksikko_elynumero
                                                         raportin-data))
@@ -76,38 +45,28 @@
         otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio
+                                                    db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
-                  raportin-nimi alkupvm loppupvm)
-        laske-sakko (fn [rivi]
-                      (when (and (:ylitys rivi)
-                                 (> (:ylitys rivi) 0)
-                                 (:sakko_maara_per_tonni rivi))
-                        (* (:ylitys rivi)
-                           (:sakko_maara_per_tonni rivi))))
-        laske-indeksikorotettu-sakko (fn [rivi]
-                                       (when (and (:ylitys rivi)
-                                                  (> (:ylitys rivi) 0)
-                                                  (:kerroin rivi) (:ylitys rivi) (:sakko_maara_per_tonni rivi))
-                                         (* (:kerroin rivi)
-                                            (* (:ylitys rivi)
-                                               (:sakko_maara_per_tonni rivi)))))]
+                  raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true
                  :oikealle-tasattavat-kentat (set (range 1 14))}
       [{:leveys 10 :otsikko "Urakka"}
-       {:otsikko "Keski\u00ADlämpö\u00ADtila" :leveys 5 :fmt :numero}
-       {:otsikko "Pitkän aikavälin keski\u00ADlämpö\u00ADtila" :leveys 5 :fmt :numero}
-       {:otsikko "Talvi\u00ADsuolan max-määrä (t)" :leveys 5 :fmt :numero}
-       {:otsikko "Sakko\u00ADraja (t)" :leveys 5 :fmt :numero}
-       {:otsikko "Kerroin" :leveys 4 :fmt :numero}
-       {:otsikko "Kohtuul\u00ADlis\u00ADtarkis\u00ADtettu sakko\u00ADraja (t)" :leveys 5 :fmt :numero}
+       {:otsikko "Keski\u00ADlämpö\u00ADtila" :leveys 3 :fmt :numero}
+       {:otsikko "Pitkän aikavälin keski\u00ADlämpö\u00ADtila" :leveys 3 :fmt :numero}
+       {:otsikko "Talvi\u00ADsuolan max-määrä (t)" :leveys 4 :fmt :numero}
+       {:otsikko "Bonus\u00ADraja (t)" :leveys 4 :fmt :numero}
+       {:otsikko "Sakko\u00ADraja (t)" :leveys 4 :fmt :numero}
+       {:otsikko "Kerroin" :leveys 3 :fmt :numero}
+       {:otsikko "Kohtuul\u00ADlis\u00ADtarkis\u00ADtettu sakko\u00ADraja (t)" :leveys 4 :fmt :numero}
        {:otsikko "Käytetty suola\u00ADmäärä (t)" :leveys 5 :fmt :numero}
        {:otsikko "Suola\u00ADerotus (t)" :leveys 5 :fmt :numero}
-       {:otsikko "Sakko \u20AC / tonni" :leveys 4 :fmt :raha}
-       {:otsikko "Sakko €" :leveys 6 :fmt :raha}
+       {:otsikko "Sakko/\u00ADbonus \u20AC / t" :leveys 4 :fmt :raha}
+       {:otsikko "Sakko € / t" :leveys 4 :fmt :raha}
+       {:otsikko "Sakko/\u00ADbonus €" :leveys 6 :fmt :raha}
        {:otsikko "Indeksi €" :leveys 5 :fmt :raha}
        {:otsikko "Indeksi\u00ADkorotettu sakko €" :leveys 6 :fmt :raha}]
 
@@ -119,70 +78,55 @@
                                  :let [elynimi (:hallintayksikko_nimi (first hyn-suolasakot))]]
                              (concat
                                (for [rivi hyn-suolasakot]
-                                 (let [sakko (laske-sakko rivi)
-                                       indeksikorotettu-sakko (laske-indeksikorotettu-sakko rivi)]
-                                   [(:urakka_nimi rivi)
-                                    (:keskilampotila rivi)
-                                    (:pitkakeskilampotila rivi)
-                                    (:sakko_talvisuolaraja rivi)
-                                    (when (:sakko_talvisuolaraja rivi)
-                                      (* (:sakko_talvisuolaraja rivi) 1.05))
-                                    (or (:kerroin rivi) [:virhe "Indeksi puuttuu!"])
-                                    (when (:kohtuullistarkistettu_sakkoraja rivi)
-                                      (:kohtuullistarkistettu_sakkoraja rivi))
-                                    (:suola_kaytetty rivi)
-                                    (when (and (:suola_kaytetty rivi) (:kohtuullistarkistettu_sakkoraja rivi))
-                                      (- (:suola_kaytetty rivi) (:kohtuullistarkistettu_sakkoraja rivi)))
-                                    (:sakko_maara_per_tonni rivi)
-                                    (laske-sakko rivi)
-                                    (when (and sakko indeksikorotettu-sakko)
-                                      (- indeksikorotettu-sakko sakko))
-                                    (when (and (:kerroin rivi) sakko)
-                                      (* (:kerroin rivi) sakko))]))
+                                 [(:urakka_nimi rivi)
+                                  (:keskilampotila rivi)
+                                  (:pitkakeskilampotila rivi)
+                                  (:sallittu_suolankaytto rivi)
+                                  (:suolankayton_bonusraja rivi)
+                                  (:suolankayton_sakkoraja rivi)
+                                  [:varillinen-teksti {:arvo  (or (:kerroin rivi) "Lämpötila puuttuu")
+                                                       :tyyli (when-not (:kerroin rivi) :virhe)}]
+                                  (:sakkoraja rivi)
+                                  (:suolankaytto rivi)
+                                  (:erotus rivi)
+                                  (:maara rivi)
+                                  (:vainsakkomaara rivi)
+                                  (:suolasakko rivi)
+                                  (:korotus rivi)
+                                  (:korotettuna rivi)])
                                ;; jos koko maan rapsa, näytä kunkin Hallintayksikön summarivi
                                (when (and (= :koko-maa konteksti) elynum)
                                  [{:lihavoi? true
                                    :rivi
-                                             [(str elynum " " elynimi)
-                                              nil
-                                              nil
-                                              (reduce + (keep :sakko_talvisuolaraja hyn-suolasakot))
-                                              nil
-                                              nil
-                                              (reduce + (keep :kohtuullistarkistettu_sakkoraja hyn-suolasakot))
-                                              (reduce + (keep :suola_kaytetty hyn-suolasakot))
-                                              (-
-                                                (reduce + (keep :suola_kaytetty hyn-suolasakot))
-                                                (reduce + (keep :kohtuullistarkistettu_sakkoraja hyn-suolasakot)))
-                                              nil
-                                              (reduce + (keep
-                                                          (fn [rivi]
-                                                            (laske-sakko rivi))
-                                                          hyn-suolasakot))
-                                              nil
-                                              (reduce + (keep
-                                                          (fn [rivi]
-                                                            (laske-indeksikorotettu-sakko rivi))
-                                                          hyn-suolasakot))]}])))))
+                                   [(str elynum " " elynimi)
+                                    nil
+                                    nil
+                                    (reduce + (keep :sallittu_suolankaytto hyn-suolasakot))
+                                    (reduce + (keep :suolankayton_bonusraja hyn-suolasakot))
+                                    (reduce + (keep :suolankayton_sakkoraja hyn-suolasakot))
+                                    nil
+                                    (reduce + (keep :sakkoraja hyn-suolasakot))
+                                    (reduce + (keep :suolankaytto hyn-suolasakot))
+                                    (reduce + (keep :erotus hyn-suolasakot))
+                                    nil
+                                    nil
+                                    (reduce + (keep :suolasakko hyn-suolasakot))
+                                    (reduce + (keep :korotus hyn-suolasakot))
+                                    (reduce + (keep :korotettuna hyn-suolasakot))]}])))))
               (when (not (empty? raportin-data))
                 ["Yhteensä"
                  nil
                  nil
-                 (reduce + (keep :sakko_talvisuolaraja raportin-data))
+                 (reduce + (keep :sallittu_suolankaytto raportin-data))
+                 (reduce + (keep :suolankayton_bonusraja raportin-data))
+                 (reduce + (keep :suolankayton_sakkoraja raportin-data))
+                 nil
+                 (reduce + (keep :sakkoraja raportin-data))
+                 (reduce + (keep :suolankaytto raportin-data))
+                 (reduce + (keep :erotus raportin-data))
                  nil
                  nil
-                 (reduce + (keep :kohtuullistarkistettu_sakkoraja raportin-data))
-                 (reduce + (keep :suola_kaytetty raportin-data))
-                 (-
-                   (reduce + (keep :suola_kaytetty raportin-data))
-                   (reduce + (keep :kohtuullistarkistettu_sakkoraja raportin-data)))
-                 nil
-                 (reduce + (keep
-                             (fn [rivi]
-                               (laske-sakko rivi))
-                             raportin-data))
-                 nil
-                 (reduce + (keep
-                             (fn [rivi]
-                               (laske-indeksikorotettu-sakko rivi))
-                             raportin-data))])))]]))
+                 (reduce + (keep :suolasakko raportin-data))
+                 (reduce + (keep :korotus raportin-data))
+                 (reduce + (keep :korotettuna raportin-data))])))]
+     [:teksti "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."]]))

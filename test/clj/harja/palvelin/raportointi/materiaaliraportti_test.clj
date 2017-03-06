@@ -11,7 +11,8 @@
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
-            [harja.palvelin.palvelut.raportit :as raportit]))
+            [harja.palvelin.palvelut.raportit :as raportit]
+            [harja.palvelin.raportointi.testiapurit :as apurit]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -45,21 +46,23 @@
                                  :konteksti "urakka"
                                  :urakka-id (hae-oulun-alueurakan-2014-2019-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2015 10 1))}})]
+                                              :loppupvm (c/to-date (t/local-date 2015 10 1))}})
+        taulukko (apurit/taulukko-otsikolla vastaus "Oulun alueurakka 2014-2019, Materiaaliraportti ajalta 01.10.2014 - 01.10.2015")]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Materiaaliraportti"}
-                    [:taulukko
-                     {:otsikko "Oulun alueurakka 2014-2019, Materiaaliraportti ajalta 01.10.2014 - 01.10.2015"
-                      :sheet-nimi "Materiaaliraportti"
-                      :viimeinen-rivi-yhteenveto? true}
-                     [{:otsikko "Urakka"}
-                      {:fmt :numero
-                       :otsikko "Talvisuolaliuos NaCl (t)"}]
-                     [["Oulun alueurakka 2014-2019"
-                       1000M]
-                       ["Yhteensä"
-                        1000M]]]]))))
+    (apurit/tarkista-raportti vastaus "Materiaaliraportti")
+
+    (apurit/tarkista-taulukko-kaikki-rivit-ja-yhteenveto
+      taulukko
+      (fn [[urakka materiaali]]
+        (and (string? urakka)
+             (number? materiaali)))
+      (fn [[yhteenveto yhteensa]]
+        (and (string? yhteenveto)
+             (number? yhteensa))))
+
+    (apurit/tarkista-taulukko-yhteensa
+      taulukko
+      1)))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -70,23 +73,19 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi "hoito"}})
+        taulukko (apurit/taulukko-otsikolla vastaus "Pohjois-Pohjanmaa, Materiaaliraportti ajalta 01.10.2014 - 01.10.2015")]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Materiaaliraportti"}
-                    [:taulukko
-                     {:otsikko "Pohjois-Pohjanmaa ja Kainuu, Materiaaliraportti ajalta 01.10.2014 - 01.10.2015"
-                      :sheet-nimi "Materiaaliraportti"
-                      :viimeinen-rivi-yhteenveto? true}
-                     [{:otsikko "Urakka"}
-                      {:fmt :numero
-                       :otsikko "Talvisuolaliuos NaCl (t)"}]
-                     [["Oulun alueurakka 2014-2019"
-                       1000M]
-                       ["Kajaanin alueurakka 2014-2019"
-                        1000M]
-                       ["Yhteensä"
-                        2000M]]]]))))
+    (apurit/tarkista-raportti vastaus "Materiaaliraportti")
+    (apurit/tarkista-taulukko-kaikki-rivit-ja-yhteenveto
+      taulukko
+      (fn [[urakka materiaali]]
+        (and (string? urakka)
+             (number? materiaali)))
+      (fn [[yht summa]]
+        (and (string? yht)
+             (number? summa))))
+    (apurit/tarkista-taulukko-yhteensa taulukko 1)))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -96,20 +95,18 @@
                                  :konteksti "koko maa"
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi "hoito"}})
+        taulukko (apurit/taulukko-otsikolla vastaus "KOKO MAA, Materiaaliraportti ajalta 01.10.2014 - 01.10.2015")]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Materiaaliraportti"}
-                    [:taulukko
-                     {:otsikko "KOKO MAA, Materiaaliraportti ajalta 01.10.2014 - 01.10.2015"
-                      :sheet-nimi "Materiaaliraportti"
-                      :viimeinen-rivi-yhteenveto? true}
-                     [{:otsikko "Urakka"}
-                      {:fmt :numero
-                       :otsikko "Talvisuolaliuos NaCl (t)"}]
-                     [["Uusimaa"
-                       2000M]
-                       ["Pohjois-Pohjanmaa ja Kainuu"
-                        2000M]
-                       ["Yhteensä"
-                        4000M]]]]))))
+    (apurit/tarkista-raportti vastaus "Materiaaliraportti")
+    (apurit/tarkista-taulukko-kaikki-rivit-ja-yhteenveto
+      taulukko
+      (fn [[urakka materiaali]]
+        (and (string? urakka)
+             (number? materiaali)))
+      (fn [[yhteenveto yhteensa]]
+        (and (string? yhteenveto)
+             (number? yhteensa))))
+    (apurit/tarkista-taulukko-yhteensa
+      taulukko
+      1)))

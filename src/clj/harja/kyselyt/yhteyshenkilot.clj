@@ -6,23 +6,22 @@
   {:positional? true})
 
 (defn onko-olemassa-yhteyshenkilo-ulkoisella-idlla? [db ulkoinen-id]
-  (:exists (first (harja.kyselyt.yhteyshenkilot/onko-olemassa-yhteyshenkilo-ulkoisella-idlla db ulkoinen-id))))
+  (:exists (first (onko-olemassa-yhteyshenkilo-ulkoisella-idlla db ulkoinen-id))))
 
 (defn onko-olemassa-paivystys-jossa-yhteyshenkilona-id? [db paivystaja-id]
-  (:exists (first (harja.kyselyt.yhteyshenkilot/onko-olemassa-paivystys-jossa-yhteyshenkilona-id db paivystaja-id))))
+  (:exists (first (onko-olemassa-paivystys-jossa-yhteyshenkilona-id db paivystaja-id))))
 
 (defn onko-olemassa-paivystys-ulkoisella-idlla? [db kayttaja-id ulkoinen-id]
-  (:exists (first (harja.kyselyt.yhteyshenkilot/onko-olemassa-paivystys-ulkoisella-idlla db kayttaja-id ulkoinen-id))))
+  (:exists (first (onko-olemassa-paivystys-ulkoisella-idlla db kayttaja-id ulkoinen-id))))
 
 (defn hae-urakan-tamanhetkiset-paivystajat
-  "Palauttaa urakan tämän hetkiset päivystäjät, jotka ovat vastuuhenkilöitä (heille viesti)"
+  "Palauttaa urakan tämän hetkiset päivystäjät"
   [db urakkaid]
   (->> urakkaid
-       (hae-urakan-taman-hetkiset-paivystajat db)
-       (filter :vastuuhenkilo)))
+       (hae-urakan-taman-hetkiset-paivystajat db)))
 
 (defn luo-yhteyshenkilo [db etu suku tyopuhelin matkapuhelin email org sampoid kayttajatunnus ulkoinen_id]
-  (harja.kyselyt.yhteyshenkilot/luo-yhteyshenkilo<!
+  (luo-yhteyshenkilo<!
     db
     etu
     suku
@@ -35,7 +34,7 @@
     ulkoinen_id))
 
 (defn paivita-yhteyshenkilo [db etunimi sukunimi tyopuhelin matkapuhelin sahkoposti organisaatio id]
-  (harja.kyselyt.yhteyshenkilot/paivita-yhteyshenkilo<! db
+  (paivita-yhteyshenkilo<! db
                            etunimi
                            sukunimi
                            (puhelinnumero/kanonisoi tyopuhelin)

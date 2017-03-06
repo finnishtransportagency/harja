@@ -5,7 +5,9 @@
 
 (deftest tarkista-organisaation-tallentuminen
   (tuo-organisaatio)
-  (is (= 1 (count (hae-organisaatiot))) "Luonnin jälkeen organisaatio löytyy Sampo id:llä.")
+  (let [organisaatiot (hae-organisaatiot)]
+    (is (= 1 (count organisaatiot)) "Luonnin jälkeen organisaatio löytyy Sampo id:llä.")
+    (is (every? #(= "urakoitsija" (second %)) organisaatiot) "Jokainen organisaatio on luotu urakoitsijaksi"))
   (poista-organisaatio))
 
 (deftest tarkista-organisaation-paivittaminen

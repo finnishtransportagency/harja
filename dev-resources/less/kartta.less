@@ -76,7 +76,7 @@
     width: 150px;
     text-align: center;
     border: 1px solid @harmaa8;
-    background-color: @harmaa10;
+    background-color: @harmaa15;
 
     .ajax-loader {
         > img {
@@ -90,7 +90,7 @@
 .kartan-ohjelaatikko {
     top: 3px;
     right: 3px;
-    background-color: @harmaa10;
+    background-color: @harmaa15;
     border: 1px solid @harmaa6;
     padding: 2px;
 }
@@ -98,16 +98,14 @@
 .kartan-ikonien-selitykset {
     right: 5px;
     bottom: 5px;
-    font-size: 0.8em;
-    background-color: @harmaa10;
+    background-color: @harmaa15;
     border: 1px solid @harmaa6;
     padding: 2px;
 }
 
-// .kartan-ikonien-selitykset pitäisi sisältää oikea fontti, mutta jostain syystä joku sääntö
-// yliratsastaa sen. Siksi tehdään tekstille vielä oma luokka.
-.kartan-ikonin-selitys {
-    font-size: 0.8em;
+.kartan-ikonien-selitykset-vasen {
+  left: 5px;
+  width: 15%;
 }
 
 .kartan-ikonien-selitykset-selitys-sarake {
@@ -225,49 +223,6 @@
     }
 }
 
-.kartta-popup {
-    > .otsikot-ja-arvot {
-        font-size: 0.875rem;
-
-        .otsikko {
-            vertical-align: top;
-            min-width: 100px;
-            max-width: 100px;
-            padding-bottom: 0.3em;
-        }
-
-        .arvo {
-            vertical-align: top;
-            padding-left: 10px;
-            min-width: 200px;
-            max-width: 200px;
-        }
-    }
-
-    > .arvolistaus-linkki {
-        margin-top: 5px;
-        margin-bottom: 5px;
-        display: block;
-        text-align: center;
-    }
-
-    > .arvolistaus-nappi {
-        margin-top: 5px;
-        margin-bottom: 5px;
-        margin-left: auto;
-        margin-right: auto;
-        display: block;
-    }
-
-    .toteuma-tehtavat {
-        margin-bottom: 1em;
-    }
-
-    .toteuma-materiaalit {
-        margin-bottom: 1em 1em;
-    }
-}
-
 .kartta-progress {
   position: absolute;
   bottom: 0;
@@ -277,3 +232,44 @@
   width: 0;
   transition: width 250ms;
  }
+
+.kartan-infopaneeli {
+ position: absolute;
+ z-index: 901;
+ top: 0;
+ right: 0;
+ height: 100%;
+ width: 20%;
+ min-width: 200px;
+ max-width: 1000px;
+ background-color: fade(white, 90%);
+ padding: 0.5rem;
+ padding-top: 1rem;
+ overflow-y: auto;
+
+ .ip-otsikko {
+   font-weight: bold;
+   font-size: @fontin-koko-h3;
+ }
+
+ .ip-haitari-otsikko {
+   .ip-otsikko();
+   color: #0088cc;
+}
+
+ .ip-osio {
+   padding-top: 0.5rem;
+ }
+
+  .ip-loader {
+    float: right;
+  }
+
+ .kentan-label {
+   display: inline-block;
+   min-width: 100px;
+ }
+    .ip-toiminto {
+        margin: 5px 0 0 5px;
+    }
+}

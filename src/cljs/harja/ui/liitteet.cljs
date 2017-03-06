@@ -6,9 +6,10 @@
             [harja.ui.modal :as modal]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
-            [harja.tietoturva.liitteet :as t-liitteet]
+            [harja.domain.liitteet :as t-liitteet]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.yleiset :as yleiset]
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.img-with-exif :refer [img-with-exif]]
             [harja.fmt :as fmt])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -21,7 +22,8 @@
     false))
 
 (defn liitekuva-modalissa [liite]
-  [:img.kuva-modalissa {:src (k/liite-url (:id liite))}])
+  [img-with-exif {:class "kuva-modalissa"
+                  :src (k/liite-url (:id liite))}])
 
 (defn- nayta-liite-modalissa [liite]
   (modal/nayta!
@@ -50,11 +52,13 @@
   ([liite teksti] (liite-linkki liite teksti {}))
   ([liite teksti {:keys [nayta-tooltip?] :as optiot}]
   (if (naytettava-liite? liite)
-    [:a.klikattava {:title (let [tooltip (:nimi liite)]
-                             (if (nil? nayta-tooltip?)
-                              tooltip
-                              (when nayta-tooltip? tooltip)))
-                    :on-click #(nayta-liite-modalissa liite)}
+    [:a.klikattava {:title    (let [tooltip (:nimi liite)]
+                                (if (nil? nayta-tooltip?)
+                                  tooltip
+                                  (when nayta-tooltip? tooltip)))
+                    :on-click #(do
+                                 (.stopPropagation %)
+                                 (nayta-liite-modalissa liite))}
      teksti]
     [:a.klikattava {:title (:nimi liite)
                     :href (k/liite-url (:id liite))
@@ -131,7 +135,7 @@
          [:progress {:value edistyminen :max 100}] ;; Siirto menossa, näytetään progress
          [:span.liitekomponentti
           [:div {:class (str "file-upload nappi-toissijainen " (when grid? "nappi-grid"))}
-           [yleiset/ikoni-ja-teksti
+           [ikonit/ikoni-ja-teksti
             (ikonit/livicon-upload)
             (if @tiedosto
               (if grid?

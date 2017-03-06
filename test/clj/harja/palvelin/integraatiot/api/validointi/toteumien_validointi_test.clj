@@ -31,6 +31,9 @@
 
 (deftest tarkiasta-toteuman-tehtavien-tarkistus
   (let [db (tietokanta/luo-tietokanta testitietokanta)]
-    (validointi/tarkista-tehtavat db [{:tehtava {:id 1370}}])
-    (is (thrown? Exception (validointi/tarkista-tehtavat db [{:tehtava {:id 7777666}} {:tehtava {:id 1}}]))
-        "Poikkeusta ei heitetty, kun yksi toteuman tehtävistä ei ole urakalla")))
+    (validointi/tarkista-tehtavat db [{:tehtava {:id 1370}}] "kokonaishintainen")
+    (let [tehtavat [{:tehtava {:id 7777666}} {:tehtava {:id 1}}]]
+      (is (thrown? Exception (validointi/tarkista-tehtavat db tehtavat "kokonaishintainen"))
+          "Poikkeusta ei heitetty, kun yksi toteuman tehtävistä ei ole urakalla"))
+    (is (thrown? Exception (validointi/tarkista-tehtavat db {:tehtava {:id 1370}} "yksikköhintainen"))
+        "Poikkeusta ei heitetty, kun yritettiin kirjata yksikköhintaiselle toteumalle kokonaishintaisia tehtäviä")))

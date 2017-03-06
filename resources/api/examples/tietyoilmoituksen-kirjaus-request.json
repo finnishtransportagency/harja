@@ -10,7 +10,7 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-01-30T12:00:00Z"
+    "lahetysaika": "2016-01-30T12:00:00+02:00"
   },
   "tietyoilmoitus": {
     "tunniste": {
@@ -50,8 +50,8 @@
           "let": 1
         }
       },
-      "alkaa": "2016-01-30T12:00:00Z",
-      "paattyy": "2016-01-30T12:00:00Z",
+      "alkaa": "2016-01-30T12:00:00+02:00",
+      "paattyy": "2016-01-30T12:00:00+02:00",
       "tehtavatTyot": [
         "tienrakennus",
         "valaistustyo"

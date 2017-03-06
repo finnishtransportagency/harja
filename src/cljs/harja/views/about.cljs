@@ -124,6 +124,7 @@
 (defn varilista [& varit-ja-nimet]
   [:div
    (for [[nimi vari] (partition 2 varit-ja-nimet)]
+     ^{:key (str "varilista_" nimi)}
      [:div.kartan-ikoni-vari {:style {:background-color vari
                                       :width            "20px"
                                       :height           "20px"

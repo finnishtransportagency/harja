@@ -12,6 +12,21 @@
 (declare on-oikeus? on-muu-oikeus?)
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
+#?(:clj
+   (def ^:dynamic *oikeustarkistus-tehty*
+     "Onko tämän pyynnön käsittelyssä tehty jokin oikeustarkistus?
+  Pyynnön käsittelyn aikana bindattu atomiin, jonka alkuarvo on false.
+  Arvo on nil, jos ei ole pyyntöä käsittelemässä."
+     nil))
+
+#?(:clj
+   (defn merkitse-oikeustarkistus-tehdyksi! []
+     (when *oikeustarkistus-tehty*
+       (reset! *oikeustarkistus-tehty* true))))
+
+#?(:clj
+   (def ei-oikeustarkistusta! merkitse-oikeustarkistus-tehdyksi!))
+
 #?(:cljs
    (extend-type KayttoOikeus
      cljs.core/IFn
@@ -157,9 +172,10 @@
      ([oikeus kayttaja]
       (vaadi-lukuoikeus oikeus kayttaja nil))
      ([oikeus kayttaja urakka-id]
+      (merkitse-oikeustarkistus-tehdyksi!)
       (when-not (voi-lukea? oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
-                 (str "Käyttäjällä '" (:kayttajanimi kayttaja) "' ei lukuoikeutta "
+                 (str "Käyttäjällä '" (pr-str kayttaja) "' ei lukuoikeutta "
                       (:kuvaus oikeus)
                       (when urakka-id
                         (str " urakassa " urakka-id)))))))))
@@ -169,9 +185,10 @@
      ([oikeus kayttaja]
       (vaadi-kirjoitusoikeus oikeus kayttaja nil))
      ([oikeus kayttaja urakka-id]
+      (merkitse-oikeustarkistus-tehdyksi!)
       (when-not (voi-kirjoittaa? oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
-                 (str "Käyttäjällä '" (:kayttajanimi kayttaja) "' ei kirjoitusoikeutta "
+                 (str "Käyttäjällä '" (pr-str kayttaja) "' ei kirjoitusoikeutta "
                       (:kuvaus oikeus)
                       (when urakka-id
                         (str " urakassa " urakka-id)))))))))
@@ -180,12 +197,32 @@
      ([tyyppi oikeus kayttaja]
       (vaadi-oikeus tyyppi oikeus kayttaja nil))
      ([tyyppi oikeus kayttaja urakka-id]
+      (merkitse-oikeustarkistus-tehdyksi!)
       (when-not  (on-muu-oikeus? tyyppi oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
-                 (str "Käyttäjällä '" (:kayttajanimi kayttaja) "' ei oikeutta '" tyyppi "' "
+                 (str "Käyttäjällä '" (pr-str kayttaja) "' ei oikeutta '" tyyppi "' "
                       (:kuvaus oikeus)
                       (when urakka-id
                         (str " urakassa " urakka-id)))))))))
+
+#?(:clj
+   (defn voi-kirjata-ls-tyokalulla?
+     [kayttaja urakka-id]
+     (or
+       (voi-kirjoittaa?
+         urakat-laadunseuranta-tarkastukset
+         urakka-id kayttaja)
+       (voi-kirjoittaa?
+         laadunseuranta-kirjaus
+         urakka-id kayttaja))))
+#?(:clj
+   (defn vaadi-ls-tyokalun-kirjausoikeus
+     [kayttaja urakka-id]
+     (when-not (voi-kirjata-ls-tyokalulla? kayttaja urakka-id)
+       (throw+ (roolit/->EiOikeutta
+                 (str "Käyttäjällä '" (pr-str kayttaja) "' ei oikeutta tehdä tarkastustyökalulla kirjauksia "
+                      (when urakka-id
+                        (str " urakassa " urakka-id))))))))
 
 (def ilmoitus-ei-oikeutta-muokata-toteumaa
   "Käyttäjäroolillasi ei ole oikeutta muokata tätä toteumaa.")
@@ -194,4 +231,20 @@
   (:kuvaus (get roolit rooli)))
 
 (defn kayttajan-urakat [{urakkaroolit :urakkaroolit}]
+  #?(:clj (merkitse-oikeustarkistus-tehdyksi!))
   (into #{} (keys urakkaroolit)))
+
+(defn oikeuden-puute-kuvaus [oikeustyyppi oikeus]
+  (str "Käyttäjärooleissasi ei ole "
+       (case oikeustyyppi
+         :kirjoitus "kirjoitusoikeutta"
+         :luku "lukuoikeutta"
+         (str "\"" oikeustyyppi "\" oikeutta"))
+       ": "
+       (:kuvaus oikeus)))
+
+(defn tarkistettava-oikeus-kok-hint-tyot
+  [urakkatyyppi]
+  (if (= urakkatyyppi :tiemerkinta)
+    urakat-toteutus-kokonaishintaisettyot
+    urakat-suunnittelu-kokonaishintaisettyot))

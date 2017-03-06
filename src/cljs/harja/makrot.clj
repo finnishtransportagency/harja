@@ -43,6 +43,25 @@
              (harja.loki/log "VIRHE GO-blokissa: " e#)))
          (recur (cljs.core.async/<! c#))))))
 
+(defmacro with-items-from-channel
+  "Makro joka lukee loopissa viestejä annetusta kanavasta. Binding on vektori, jossa
+  ensimmäinen on arvon nimi (tai destrukturointi) ja toinen on kanava. Looppaa niin
+  kauan kuin kanavassa on tavaraa."
+  [[name chan :as binding] & body]
+  (assert (and (vector? binding)
+               (= 2 (count binding)))
+          "Binding must be vector of [name chan]")
+  `(let [c# ~chan]
+     (cljs.core.async.macros/go-loop []
+       (let [value# (cljs.core.async/<! c#)]
+         (when (some? value#)
+           (let [~name value#]
+             (try
+               ~@body
+               (catch :default e#
+                 (harja.loki/log "VIRHE with-items-from-channel blokissa: " e#))))
+           (recur))))))
+
 (defmacro nappaa-virhe [& body]
   `(try
      ~@body

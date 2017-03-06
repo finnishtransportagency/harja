@@ -11,7 +11,7 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :refer [livi-pudotusvalikko vihje] :as yleiset]
             [harja.tiedot.raportit :as raportit]
-            [cljs.core.async :refer [<! >! chan]]
+            [cljs.core.async :refer [<! >! chan timeout]]
             [harja.views.kartta :as kartta]
             [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.views.urakka.valinnat :as valinnat]
@@ -22,9 +22,11 @@
             [clojure.string :as str]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.hoitoluokat :as hoitoluokat]
+            [harja.domain.raportointi :as raportti-domain]
             [harja.tiedot.hallintayksikot :as hy]
             [cljs-time.core :as t]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.ui.viesti :as viesti])
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -33,18 +35,6 @@
 (defn- valitse-raporttityyppi! [nimi]
   (nav/aseta-valittu-valilehti! :raportit nimi))
 
-;; Mäppi raporttityyppejä, haetaan ensimmäisellä kerralla kun raportointiin tullaan
-(defonce raporttityypit (atom nil))
-
-(def valittu-raporttityyppi
-  (reaction (let [raporttityypit @raporttityypit]
-              (when raporttityypit
-                (get raporttityypit @valittu-raporttityyppi-nimi)))))
-
-(def muistetut-parametrit (local-storage (atom {}) :raportin-muistetut-parametrit))
-
-(tarkkaile! "Rapsat" raporttityypit)
-
 (defn- raportin-sort-avain
   "Raportin sort avain. Kuvauksen mukaan aakkosjärjestyksessä, paitsi työmaakokous ensin."
   [{kuvaus :kuvaus}]
@@ -52,22 +42,40 @@
     (= kuvaus "Työmaakokousraportti") ""
     :default kuvaus))
 
-(defonce mahdolliset-raporttityypit
+;; Mäppi raporttityyppejä, haetaan ensimmäisellä kerralla kun raportointiin tullaan
+(defonce raporttityypit (atom nil))
+
+(def mahdolliset-raporttityypit
   (reaction (let [v-ur @nav/valittu-urakka
                   v-hal @nav/valittu-hallintayksikko
-                  mahdolliset-kontekstit (into #{"koko maa"}
-                                               (keep identity [(when v-ur "urakka")
-                                                               (when v-hal "hallintayksikko")]))
+                  salli-laaja-konteksti? (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
+                  mahdolliset-kontekstit (if salli-laaja-konteksti?
+                                           (into #{"koko maa"}
+                                                 (keep identity [(when v-ur "urakka")
+                                                                 (when v-hal "hallintayksikko")]))
+
+                                           #{"urakka"})
                   urakkatyypin-raportit (filter
-                                          #(= (:urakkatyyppi %) (:arvo @nav/urakkatyyppi))
+                                          #((:urakkatyyppi %) (:arvo @nav/urakkatyyppi))
                                           (vals @raporttityypit))]
-              (sort-by raportin-sort-avain
-                       (into []
-                             (comp (filter #(some mahdolliset-kontekstit (:konteksti %)))
-                                   (filter #(oikeudet/voi-lukea?
-                                             (oikeudet/raporttioikeudet (:kuvaus %))
-                                             (:id v-ur))))
-                             urakkatyypin-raportit)))))
+
+              (if (and (not salli-laaja-konteksti?) (nil? v-ur))
+                nil
+
+                (sort-by raportin-sort-avain
+                         (into []
+                               (comp (filter #(some mahdolliset-kontekstit (:konteksti %)))
+                                     (filter #(oikeudet/voi-lukea?
+                                               (oikeudet/raporttioikeudet (:kuvaus %))
+                                               (:id v-ur))))
+                               urakkatyypin-raportit))))))
+
+(def valittu-raporttityyppi
+  (reaction (when-let [raporttityypit @raporttityypit]
+              (let [valittu-raportti (get raporttityypit @valittu-raporttityyppi-nimi)]
+                (when ((set @mahdolliset-raporttityypit) valittu-raportti) valittu-raportti)))))
+
+(def muistetut-parametrit (local-storage (atom {}) :raportin-muistetut-parametrit))
 
 (add-watch mahdolliset-raporttityypit :konteksti-muuttui
            (fn [_ _ old new]
@@ -101,13 +109,20 @@
 
 
 (defonce hoitourakassa? (reaction (= :hoito (:tyyppi @nav/valittu-urakka))))
+(defonce valittu-urakkatyyppi (reaction (:arvo @nav/urakkatyyppi)))
 
 (defonce valittu-hoitokausi (reaction-writable
-                             (if @hoitourakassa?
-                               @u/valittu-hoitokausi
-                               (pvm/paivamaaran-hoitokausi (pvm/nyt)))))
+                              (when (= @valittu-urakkatyyppi :hoito)
+                                (if @hoitourakassa?
+                                  @u/valittu-hoitokausi
+                                  (pvm/paivamaaran-hoitokausi (pvm/nyt))))))
 
-(def valittu-vuosi (atom nil))
+(def valittu-vuosi (reaction-writable
+                     (if (= @valittu-urakkatyyppi :hoito)
+                       nil
+                       ;; Ylläpidossa vuosi-valintaa käytetään kk:n valitsemiseen,
+                       ;; joten valitaan oletukseksi tämä vuosi
+                       (pvm/vuosi (pvm/nyt)))))
 
 (defonce kuukaudet (reaction
                      (let [hk @valittu-hoitokausi
@@ -131,7 +146,20 @@
 (defonce vapaa-aikavali? (atom false))
 (defonce vapaa-aikavali (atom [nil nil]))
 
-(def vain-hoitokausivalinta? #{:suolasakko})
+(defn vain-hoitokausivalinta? [raportti]
+  (#{:suolasakko} raportti))
+
+(defn vain-kuukausivalinta? [raportti urakka-valittu?]
+  ;; Näytetään vain kuukausivalinta, jos kyseessä on työmaakokous
+  ;; TAI jos kyseessä on tarkastusraportti, eikä ole valittu urakkaa.
+  (or (#{:tyomaakokous} raportti)
+      (and
+        (not urakka-valittu?)
+        (#{:kelitarkastusraportti
+          :laaduntarkastusraportti
+          :laatupoikkeamaraportti
+          :soratietarkastusraportti
+          :tiestotarkastusraportti} raportti))))
 
 (defonce paivita-aikavalinta
   (run! (let [hk @valittu-hoitokausi
@@ -141,7 +169,10 @@
               aikavali @vapaa-aikavali
               vain-hoitokausivalinta? (vain-hoitokausivalinta?
                                         (:nimi @valittu-raporttityyppi))
+              vain-kuukausivalinta? (vain-kuukausivalinta? (:nimi @valittu-raporttityyppi)
+                                                           (and @nav/valittu-urakka @nav/valittu-hallintayksikko))
               [alku loppu] (cond
+                             vain-kuukausivalinta? kk
                              vain-hoitokausivalinta? hk
                              vapaa-aikavali? aikavali
                              kk kk
@@ -162,7 +193,7 @@
 (defmethod raportin-parametri "aikavali" [p arvo]
   ;; Näytetään seuraavat valinnat
   ;; - vuosi (joko urakkavuodet tai generoitu lista)
-  ;; - hoitokaudet (joko urakan hoitokaudet tai generoitu lista)
+  ;; - hoitokaudet (joko urakan hoitokaudet tai generoitu lista, vain jos valittuna hoito-tyyppi)
   ;; - kuukausi (valitun urakan tai hoitokauden kuukaudet, tai kaikki)
   ;; - vapaa tekstisyöttö aikavälille
   ;;
@@ -170,6 +201,7 @@
   ;; ei näytetä hoitokausivalintaa.
   (let [ur @nav/valittu-urakka
         hoitourakassa? @hoitourakassa?
+        urakkatyyppi @valittu-urakkatyyppi
         hal @nav/valittu-hallintayksikko
         vuosi-eka (if ur
                     (pvm/vuosi (:alkupvm ur))
@@ -177,17 +209,28 @@
         vuosi-vika (if ur
                      (pvm/vuosi (:loppupvm ur))
                      (pvm/vuosi (pvm/nyt)))
-        vain-hoitokausivalinta? (vain-hoitokausivalinta? (:nimi @valittu-raporttityyppi))]
+        vain-hoitokausivalinta? (vain-hoitokausivalinta? (:nimi @valittu-raporttityyppi))
+        vain-kuukausivalinta? (vain-kuukausivalinta? (:nimi @valittu-raporttityyppi) ur)]
     [:span
      [:div.raportin-vuosi-hk-kk-valinta
-      [ui-valinnat/vuosi {:disabled (or @vapaa-aikavali?
-                                        vain-hoitokausivalinta?)}
+      [ui-valinnat/vuosi {:disabled
+                          (or @vapaa-aikavali?
+                              vain-hoitokausivalinta?
+                              (and vain-kuukausivalinta?
+                                   ;; Hoidossa valitaan ensin hoitokausi, ja se määrää minkä vuoden
+                                   ;; kuukauden voi valita.
+                                   ;; Ylläpidossa ei ole hoitokausivalintaa, joten on pakko valita
+                                   ;; ensin vuosi, joka sitten taas määrää minkä vuoden kuukauden voi valita.
+                                   ;; Tästä syystä, jos vain-kuukausivalinta on tosi,
+                                   ;; disabloidaan vuosi-valinta vain hoidon urakoille
+                                   (= urakkatyyppi :hoito)))}
        vuosi-eka vuosi-vika valittu-vuosi
        #(do
          (reset! valittu-vuosi %)
          (reset! valittu-hoitokausi nil)
          (reset! valittu-kuukausi nil))]
-      (when (or hoitourakassa? (nil? ur))
+      (when (and (= urakkatyyppi :hoito)
+                 (or hoitourakassa? (nil? ur)))
         [ui-valinnat/hoitokausi
          {:disabled @vapaa-aikavali?}
          (if hoitourakassa?
@@ -200,12 +243,20 @@
            (reset! valittu-kuukausi nil))])
       [ui-valinnat/kuukausi {:disabled (or @vapaa-aikavali?
                                            vain-hoitokausivalinta?)
-                             :nil-valinta (if @valittu-vuosi
-                                            "Koko vuosi"
-                                            "Koko hoitokausi")}
-       @kuukaudet valittu-kuukausi]]
+                             :nil-valinta (cond
+                                            vain-kuukausivalinta?
+                                            "Valitse kuukausi"
 
-     (when-not vain-hoitokausivalinta?
+                                            @valittu-vuosi
+                                            "Koko vuosi"
+
+                                            :else
+                                            "Koko hoitokausi")}
+       (cond-> @kuukaudet
+               vain-kuukausivalinta? rest)
+       valittu-kuukausi]]
+
+     (when-not (or vain-hoitokausivalinta? vain-kuukausivalinta?)
        [:div.raportin-valittu-aikavali
         [yleiset/raksiboksi {:teksti "Valittu aikaväli"
                              :toiminto #(swap! vapaa-aikavali? not)
@@ -270,10 +321,11 @@
 (def urakan-sillat (reaction<! [nakymassa? @raportit/raportit-nakymassa?
                                 urakka @nav/valittu-urakka]
                                {:nil-kun-haku-kaynnissa? true}
-                               (when (and urakka nakymassa?)
-                                 (k/post! :hae-urakan-sillat
-                                          {:urakka-id (:id urakka)
-                                           :listaus :kaikki}))))
+                               (let [oikeus? (oikeudet/urakat-laadunseuranta-siltatarkastukset urakka)]
+                                 (when (and urakka nakymassa? oikeus?)
+                                  (k/post! :hae-urakan-sillat
+                                           {:urakka-id (:id urakka)
+                                            :listaus :kaikki})))))
 
 (defmethod raportin-parametri "silta" [p arvo]
   (reset! arvo {:silta-id (if (= @silta :kaikki)
@@ -325,6 +377,7 @@
    "Laatupoikkeamat" :laatupoikkeamaraportti
    "Laskutusyhteenveto" :laskutusyhteenveto
    "Materiaaliraportti" :materiaaliraportti
+   "Muutos- ja lisätyöt" :muutos-ja-lisatyot
    "Sanktioiden yhteenveto" :sanktioraportti
    "Soratietarkastukset" :soratietarkastusraportti
    "Tiestötarkastukset" :tiestotarkastusraportti
@@ -434,6 +487,40 @@
           :on-click #(aseta-parametrit! id)}
          ikoni " " teksti]])]))
 
+(defn- suorita-raportti! [suorituksen-parametrit]
+  (go
+    (log "SUORITA-RAPORTTI! " (pr-str suorituksen-parametrit))
+    (reset! raportit/suoritettu-raportti :ladataan)
+    (let [[konteksti nimi arvot-nyt v-ur v-hal] suorituksen-parametrit
+          raportti (<! (case konteksti
+                         "koko maa"
+                         (raportit/suorita-raportti-koko-maa nimi arvot-nyt)
+                         "hallintayksikko"
+                         (raportit/suorita-raportti-hallintayksikko v-hal nimi arvot-nyt)
+                         "urakka"
+                         (raportit/suorita-raportti-urakka v-ur nimi arvot-nyt)))]
+      (log "[RAPORTTI] Raportin suoritus valmis")
+      (cond
+        (not= @raportit/suoritettu-raportti :ladataan)
+        (do (log "[RAPORTTI] Poistuttu latausnäkymästä, hylätään suoritettu raportti.")
+            raportti)
+
+        (not= @raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
+        (do (log "[RAPORTTI] Suoritettu raportti oli muu kuin mitä käyttäjä viimeksi pyysi, hylätään raportti")
+            raportti)
+
+        (k/virhe? raportti)
+        (do
+          (viesti/nayta! "Raportin suoritus epäonnistui." :warning viesti/viestin-nayttoaika-lyhyt)
+          (reset! raportit/suorituksessa-olevan-raportin-parametrit nil)
+          (reset! raportit/suoritettu-raportti nil)
+          raportti)
+
+        :default
+        (do (reset! raportit/suoritettu-raportti raportti)
+            (when-not (= :raportoinnissa-ruuhkaa raportti)
+              (reset! raportit/suorituksessa-olevan-raportin-parametrit nil)))))))
+
 (defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
   (let [parametrit (sort-by parametrin-sort-avain
                             (filter #(let [k (:konteksti %)]
@@ -513,51 +600,24 @@
                                            (:nimi raporttityyppi)
                                            arvot-nyt
                                            (:id v-ur)
-                                           (:id v-hal)]
-                   _ (reset! raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
-                   raportti
-                   (<! (case konteksti
-                         "koko maa"
-                         (raportit/suorita-raportti-koko-maa (:nimi raporttityyppi)
-                                                             arvot-nyt)
-                         "hallintayksikko"
-                         (raportit/suorita-raportti-hallintayksikko (:id v-hal)
-                                                                    (:nimi raporttityyppi)
-                                                                    arvot-nyt)
-                         "urakka"
-                         (raportit/suorita-raportti-urakka (:id v-ur)
-                                                           (:nimi raporttityyppi)
-                                                           arvot-nyt)))]
-               (log "[RAPORTTI] Raportin suoritus valmis")
-               (cond
-                 (not= @raportit/suoritettu-raportti :ladataan)
-                 (do (log "[RAPORTTI] Poistuttu latausnäkymästä, hylätään suoritettu raportti.")
-                     raportti)
-
-                 (not= @raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
-                 (do (log "[RAPORTTI] Suoritettu raportti oli muu kuin mitä käyttäjä viimeksi pyysi, hylätään raportti")
-                     raportti)
-
-                 (k/virhe? raportti)
-                 (do
-                   (reset! raportit/suorituksessa-olevan-raportin-parametrit nil)
-                   (reset! raportit/suoritettu-raportti nil)
-                     raportti)
-
-                 :default
-                 (do (reset! raportit/suoritettu-raportti raportti)
-                     (reset! raportit/suorituksessa-olevan-raportin-parametrit nil)))))
+                                           (:id v-hal)]]
+               (reset! raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
+               (<! (suorita-raportti! suorituksen-parametrit))))
            {:ikoni [ikonit/list]
             :disabled (not voi-suorittaa?)}])]]]]))
 
 (defn hallintayksikko-ja-urakkatyyppi [v-hal v-ur-tyyppi]
   [:span
    [yleiset/livi-pudotusvalikko
-    {:valitse-fn nav/valitse-hallintayksikko
-     :valinta v-hal
-     :class "raportti-alasveto"
-     :format-fn (fnil hy/elynumero-ja-nimi {:nimi "Kaikki ELYt"})}
-    (concat [nil]
+    {:valitse-fn nav/valitse-hallintayksikko!
+     :valinta    v-hal
+     :class      "raportti-alasveto"
+     :format-fn  (fnil hy/elynumero-ja-nimi {:nimi (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
+                                                     "Kaikki ELYt"
+                                                     "Valitse ELY")})}
+    (concat (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
+              [nil]
+              [])
             @hy/hallintayksikot)]
    " "
    [yleiset/livi-pudotusvalikko
@@ -566,6 +626,11 @@
      :class "raportti-alasveto"
      :format-fn :nimi}
     nav/+urakkatyypit+]])
+
+(defn ei-raportteja-saatavilla-viesti [urakkatyyppi]
+  (if (and (not (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)) (nil? @nav/valittu-urakka))
+    (str "Valitse hallintayksikkö ja urakka nähdäksesi raportit")
+    (str "Ei raportteja saatavilla urakkatyypissä " urakkatyyppi)))
 
 (defn raporttivalinnat []
   (komp/luo
@@ -596,15 +661,20 @@
                           :ryhmittely     (let [nyt (pvm/nyt)]
                                             #(if (pvm/jalkeen? nyt (:loppupvm %))
                                               :paattyneet
-                                              :kaynnissa))
+                                              (when (pvm/jalkeen? nyt (:alkupvm %))
+                                                :kaynnissa)))
                           :ryhman-otsikko #(case %
                                             :kaynnissa "Käynnissä olevat urakat"
                                             :paattyneet "Päättyneet urakat")
                           :format-fn      (fnil (comp
                                                   (partial fmt/lyhennetty-urakan-nimi urakan-nimen-pituus)
                                                   :nimi)
-                                                {:nimi "Kaikki urakat"})}
-                         (concat [nil]
+                                                {:nimi (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
+                                                         "Kaikki urakat"
+                                                         "Valitse urakka")})}
+                         (concat (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
+                                   [nil]
+                                   [])
                                  (map
                                    #(assoc % :nimi
                                              (fmt/lyhennetty-urakan-nimi urakan-nimen-pituus (:nimi %)))
@@ -613,7 +683,7 @@
                           (nil? @raporttityypit)
                           [:span "Raportteja haetaan..."]
                           (empty? @mahdolliset-raporttityypit)
-                          [:span (str "Ei raportteja saatavilla urakkatyypissä " (str/lower-case (:nimi v-ur-tyyppi)))]
+                          [:span (ei-raportteja-saatavilla-viesti (str/lower-case (:nimi v-ur-tyyppi)))]
                           :default
                           [livi-pudotusvalikko {:valinta @valittu-raporttityyppi
                                                 ;;\u2014 on väliviivan unikoodi
@@ -635,15 +705,39 @@
       [:span
        [raportti/muodosta-html (assoc-in r [1 :tunniste] (:nimi tyyppi))]])))
 
+(defn raporteissa-ruuhkaa []
+  (let [yrita-uudelleen? (atom true)
+        odota-sekuntia (atom nil)]
+
+    (go (loop [sekunnit 5]
+          (if (zero? sekunnit)
+            (when @yrita-uudelleen?
+              (<! (suorita-raportti! @raportit/suorituksessa-olevan-raportin-parametrit)))
+            (do (reset! odota-sekuntia sekunnit)
+                (<! (timeout 1000))
+                (recur (dec sekunnit))))))
+
+    (komp/luo
+     (komp/ulos #(reset! yrita-uudelleen? false))
+     (fn []
+       [:div "Raportin suoritus epäonnistui, palvelussa on ruuhkaa."
+        [:div.yrita-uudestaan "Yritetään uudestaan "
+         [:span.yrita-uudestaan-sekunnit @odota-sekuntia]
+         " sekunnin kuluttua."]]))))
+
 (defn raporttivalinnat-ja-raportti []
   (let [r @raportit/suoritettu-raportti]
     [:span
      [raporttivalinnat]
-     (cond (= :ladataan r)
-           [yleiset/ajax-loader "Raporttia suoritetaan..."]
+     (cond
+       (= :ladataan r)
+       [yleiset/ajax-loader "Raporttia suoritetaan..."]
 
-           (not (nil? r))
-           [nayta-raportti @valittu-raporttityyppi r])]))
+       (= :raportoinnissa-ruuhkaa r)
+       [raporteissa-ruuhkaa]
+
+       (not (nil? r))
+       [nayta-raportti @valittu-raporttityyppi r])]))
 
 (defn raportit []
   (komp/luo

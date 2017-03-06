@@ -20,9 +20,9 @@
   (first (q "SELECT id, matkapuhelin FROM yhteyshenkilo WHERE matkapuhelin IS NOT NULL LIMIT 1;")))
 
 (defn sulje-ilmoitus [ilmoitus-id]
-  (u (format "INSERT INTO ilmoitustoimenpide (ilmoitus, ilmoitusid, kuittaustyyppi, kuitattu) VALUES
+  (u (format "INSERT INTO ilmoitustoimenpide (ilmoitus, ilmoitusid, kuittaustyyppi, kuitattu, suunta) VALUES
   ((SELECT id FROM ilmoitus WHERE ilmoitusid = %s), %s,
-  'lopetus' :: kuittaustyyppi, now());" ilmoitus-id ilmoitus-id)))
+  'lopetus' , now(), 'sisaan'::viestisuunta);" ilmoitus-id ilmoitus-id)))
 
 (defn hae-seuraava-viestinumero [puhelinnumero]
   (first (first (q (format "SELECT hae_seuraava_vapaa_viestinumero('%s')" puhelinnumero)))))
@@ -59,3 +59,33 @@
     (poista-ilmoitustoimenpiteet)
     (poista-paivystajatekstiviestit paivystaja-id)
     (poista-ilmoitukset)))
+
+(deftest tarkista-viestinumeron-kierratys
+  (let [db (tietokanta/luo-tietokanta testitietokanta)
+        paivystaja (hae-paivystaja)
+        paivystaja-id (first paivystaja)
+        puhelin (second paivystaja)
+        ensimmainen-ilmoitus 1111
+        toinen-ilmoitus 2222]
+
+    (luo-ilmoitus ensimmainen-ilmoitus)
+
+    (is (= 1 (paivystajatekstiviestit/kirjaa-uusi-viesti db paivystaja-id ensimmainen-ilmoitus puhelin))
+        "Viestinumero on 1, kun ensimmäinen viesti lähetetään")
+
+    (is (= ensimmainen-ilmoitus (:ilmoitusid (first (paivystajatekstiviestit/hae-puhelin-ja-viestinumerolla db puhelin 1))))
+        "Oikea ilmoitus löytyy haulla")
+
+    (sulje-ilmoitus ensimmainen-ilmoitus)
+
+    (luo-ilmoitus toinen-ilmoitus)
+    (is (= 1 (paivystajatekstiviestit/kirjaa-uusi-viesti db paivystaja-id toinen-ilmoitus puhelin))
+        "Viestinumero on 1, kun toinen viesti lähetetään ja ensimmäinen on lopetettu")
+    (is (= toinen-ilmoitus (:ilmoitusid (first (paivystajatekstiviestit/hae-puhelin-ja-viestinumerolla db puhelin 1))))
+        "Oikea ilmoitus löytyy haulla, kun ensimmäinen ilmoitus on suljettu")
+
+    (poista-ilmoitustoimenpiteet)
+    (poista-paivystajatekstiviestit paivystaja-id)
+    (poista-ilmoitukset)))
+
+

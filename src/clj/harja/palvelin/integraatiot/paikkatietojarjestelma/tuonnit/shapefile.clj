@@ -13,3 +13,13 @@
       (if (instance? FileNotFoundException (.getCause e))
         (log/warn "Shape-fileä:" shapefile "ei voitu lukea. Tiedostoa ei löydy.")
         (throw e)))))
+
+(defn tuo-ryhmiteltyna [shapefile ryhma-kentta ryhma-callback]
+  (try
+    (let [sh (shp/lue-shapefile shapefile)]
+      (shp/featuret-ryhmiteltyna sh ryhma-kentta ryhma-callback)
+      (.dispose sh))
+    (catch RuntimeException e
+      (if (instance? FileNotFoundException (.getCause e))
+        (log/warn "Shape-fileä:" shapefile "ei voitu lukea. Tiedostoa ei löydy.")
+        (throw e)))))

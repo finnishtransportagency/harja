@@ -46,6 +46,10 @@
              (luo-tloik-komponentti)
              [:db :sonja :integraatioloki :klusterin-tapahtumat :labyrintti])))
 
+(defn tekstiviestin-rivit [ilmoitus]
+  (into #{} (str/split-lines
+              (tekstiviestit/ilmoitus-tekstiviesti ilmoitus 1234))))
+
 (use-fixtures :each jarjestelma-fixture)
 
 (deftest tarkista-kuittauksen-vastaanotto-tekstiviestilla
@@ -54,8 +58,8 @@
         db (:db jarjestelma)
         lokittaja (integraatioloki/lokittaja integraatioloki db "tloik" "toimenpiteen-lahetys")
         jms-lahettaja (jms/jonolahettaja lokittaja (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+)
-        ilmoitus (hae-ilmoitus)
-        ilmoitus-id (nth (first ilmoitus) 2)
+        ilmoitus (first (hae-testi-ilmoitukset))
+        ilmoitus-id (:ilmoitus-id ilmoitus)
         yhteyshenkilo (tee-testipaivystys)
         yhteyshenkilo-id (first yhteyshenkilo)
         puhelinnumero (second yhteyshenkilo)]
@@ -94,19 +98,21 @@
   (let [fake-vastaus [{:url +labyrintti-url+ :method :post} {:status 200}]
         paivystaja (hae-paivystaja)
         paivystaja {:id (first paivystaja) :matkapuhelin (second paivystaja)}
-        ilmoitus (first (hae-ilmoitus))
-        ilmoitus {:id (first ilmoitus) :ilmoitus-id (nth ilmoitus 2)}
+        ilmoitus (first (hae-testi-ilmoitukset))
         paivystajaviestien-maara (fn []
                                    (count
                                      (q (format "select * from paivystajatekstiviesti where yhteyshenkilo = %s and ilmoitus = %s;"
                                                 (:id paivystaja)
                                                 (:id ilmoitus)))))]
     (with-fake-http
-      [{:url +labyrintti-url+ :method :post} fake-vastaus]
+      [{:url +labyrintti-url+ :method :get} fake-vastaus]
 
       (let [viestien-maara-ennen (paivystajaviestien-maara)]
 
-        (tekstiviestit/laheta-ilmoitus-tekstiviestilla (:labyrintti jarjestelma) (:db jarjestelma) ilmoitus paivystaja)
+        (tekstiviestit/laheta-ilmoitus-tekstiviestilla (:labyrintti jarjestelma)
+                                                       (:db jarjestelma)
+                                                       ilmoitus
+                                                       paivystaja)
 
         (is (= (inc viestien-maara-ennen) (paivystajaviestien-maara))))
 
@@ -114,14 +120,54 @@
       (poista-ilmoitus))))
 
 (deftest tekstiviestin-muodostus
-  (let [ilmoitus {:ilmoitus-id 666
+  (let [ilmoitus {:tunniste "UV666"
                   :otsikko "Testiympäristö liekeissä!"
                   :paikankuvaus "Konesali"
+                  :sijainti {:tr-numero 1
+                             :tr-alkuosa 2
+                             :tr-alkuetaisyys 3
+                             :tr-loppuosa 4
+                             :tr-loppuetaisyys 5}
                   :lisatieto "Soittakaapa äkkiä"
                   :yhteydenottopyynto true
                   :selitteet #{:toimenpidekysely}}
-        rivit (into #{} (str/split-lines
-                         (tekstiviestit/ilmoitus-tekstiviesti ilmoitus 1234)))]
-    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (id: 666, viestinumero: 1234)."))
+        rivit (tekstiviestin-rivit ilmoitus)]
+    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (viestinumero: 1234)."))
     (is (rivit "Yhteydenottopyyntö: Kyllä"))
+    (is (rivit "Paikka: Konesali"))
+    (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
+    (is (rivit "TR-osoite: 1 / 2 / 3 / 4 / 5"))
+    (is (rivit "Selitteet: Toimenpidekysely."))))
+
+(deftest tekstiviestin-muodostus-pisteelle
+  (let [ilmoitus {:tunniste "UV666"
+                  :otsikko "Testiympäristö liekeissä!"
+                  :paikankuvaus "Konesali"
+                  :sijainti {:tr-numero 1
+                             :tr-alkuosa 2
+                             :tr-alkuetaisyys 3}
+                  :lisatieto "Soittakaapa äkkiä"
+                  :yhteydenottopyynto true
+                  :selitteet #{:toimenpidekysely}}
+        rivit (tekstiviestin-rivit ilmoitus)]
+    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (viestinumero: 1234)."))
+    (is (rivit "Yhteydenottopyyntö: Kyllä"))
+    (is (rivit "Paikka: Konesali"))
+    (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
+    (is (rivit "TR-osoite: 1 / 2 / 3"))
+    (is (rivit "Selitteet: Toimenpidekysely."))))
+
+(deftest tekstiviestin-muodostus-ilman-tr-osoitetta
+  (let [ilmoitus {:tunniste "UV666"
+                  :otsikko "Testiympäristö liekeissä!"
+                  :paikankuvaus "Kilpisjärvi"
+                  :lisatieto "Soittakaapa äkkiä"
+                  :yhteydenottopyynto false
+                  :selitteet #{:toimenpidekysely}}
+        rivit (tekstiviestin-rivit ilmoitus)]
+    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (viestinumero: 1234)."))
+    (is (rivit "Yhteydenottopyyntö: Ei"))
+    (is (rivit "Paikka: Kilpisjärvi"))
+    (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
+    (is (rivit "TR-osoite: Ei tierekisteriosoitetta"))
     (is (rivit "Selitteet: Toimenpidekysely."))))

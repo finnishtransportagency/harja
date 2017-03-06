@@ -1,22 +1,27 @@
 -- name: hae-kaikki-toimenpidekoodit
 -- Listaa kaikki toimenpidekoodit.
 SELECT
-  id,
-  koodi,
-  nimi,
-  emo,
-  taso,
-  yksikko,
-  jarjestys,
-  hinnoittelu,
-  api_seuranta as "api-seuranta"
-FROM toimenpidekoodi
-WHERE poistettu = FALSE;
+  t.id,
+  t.koodi,
+  t.nimi,
+  t.emo,
+  t.taso,
+  t.yksikko,
+  t.jarjestys,
+  t.hinnoittelu,
+  t.poistettu,
+  t.luoja        AS luoja_id,
+  k.kayttajanimi AS luoja_kayttajanimi,
+  k.etunimi      AS luoja_etunimi,
+  k.sukunimi     AS luoja_sukunimi,
+  api_seuranta   AS "api-seuranta"
+FROM toimenpidekoodi t
+  LEFT JOIN kayttaja k ON t.luoja = k.id
 
 -- name: lisaa-toimenpidekoodi<!
 -- Lisää uuden 4. tason toimenpidekoodin (tehtäväkoodi).
 INSERT INTO toimenpidekoodi (nimi, emo, taso, yksikko, hinnoittelu, api_seuranta, luoja, luotu, muokattu)
-VALUES (:nimi, :emo, 4, :yksikko, :hinnoittelu::hinnoittelutyyppi[], :apiseuranta, :kayttajaid, NOW(), NOW());
+VALUES (:nimi, :emo, 4, :yksikko, :hinnoittelu :: hinnoittelutyyppi [], :apiseuranta, :kayttajaid, NOW(), NOW());
 
 -- name: poista-toimenpidekoodi!
 -- Poistaa (merkitsee poistetuksi) annetun toimenpidekoodin.
@@ -27,7 +32,8 @@ WHERE id = :id;
 -- name: muokkaa-toimenpidekoodi!
 -- Muokkaa annetun toimenpidekoodin nimen.
 UPDATE toimenpidekoodi
-SET muokkaaja = :kayttajaid, muokattu = NOW(), nimi = :nimi, yksikko = :yksikko,
+SET muokkaaja = :kayttajaid, muokattu = NOW(), poistettu = :poistettu,
+  nimi        = :nimi, yksikko = :yksikko,
   hinnoittelu = :hinnoittelu :: hinnoittelutyyppi [], api_seuranta = :apiseuranta
 WHERE id = :id;
 
@@ -88,3 +94,8 @@ WHERE
   NOT tpk.poistettu AND
   tpk.api_seuranta AND
   tpk.hinnoittelu @> '{kokonaishintainen}';
+
+-- name: hae-hinnoittelu
+SELECT hinnoittelu
+FROM toimenpidekoodi
+WHERE id = :id;

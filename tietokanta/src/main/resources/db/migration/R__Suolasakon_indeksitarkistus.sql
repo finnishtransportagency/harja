@@ -26,6 +26,11 @@ BEGIN
   loppuv := talvikauden_alkuvuosi + 1;
   perusluku := hoitourakan_indeksilaskennan_perusluku(ur);
 
+  -- Indeksi ei käytössä palauta summa ja korotettuna samana
+  IF indeksinimi IS NULL THEN
+    RETURN (summa, summa, 0 :: NUMERIC);
+  END IF;
+
   IF perusluku IS NULL
   THEN
     RAISE NOTICE 'Suolasakon indeksitarkistusta ei voitu laskea koska urakan id=% peruslukua ei voitu laskea.', ur;
@@ -49,5 +54,22 @@ BEGIN
   -- Jos yhtään indeksilukuja ei ole, kerroin on NULL, jolloin myös
   -- tämä lasku palauttaa NULL.
   RETURN (summa, summa * kerroin, summa * kerroin - summa);
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Urakan suolasakon indeksitarkistus
+CREATE OR REPLACE FUNCTION laske_urakan_suolasakon_indeksitarkistus(
+                             urakka_id INTEGER, talvikauden_alkuvuosi INTEGER, summa NUMERIC)
+  RETURNS indeksitarkistettu_suolasakko_rivi AS $$
+DECLARE
+  indeksinimi TEXT;
+  it indeksitarkistettu_suolasakko_rivi;
+BEGIN
+   SELECT INTO indeksinimi indeksi
+     FROM suolasakko
+    WHERE urakka = urakka_id AND hoitokauden_alkuvuosi = talvikauden_alkuvuosi;
+   it := laske_suolasakon_indeksitarkistus(talvikauden_alkuvuosi, indeksinimi, summa, urakka_id);
+   RETURN it;
 END;
 $$ LANGUAGE plpgsql;

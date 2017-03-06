@@ -1,0 +1,167 @@
+// Lomakkeen yleinen tyyli
+
+.lomake-container {
+  background-color: @harmaa15;
+  z-index: @z-index-havaintolomake;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 10px;
+  font-size: 1em;
+  min-height: 100%;
+
+  .lomake-sisalto-container {
+    max-width: 700px;
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .lomake-title {
+    font-weight: bold;
+    font-size: 1.3em;
+    padding-bottom: 0.6em;
+  }
+
+  input {
+    font-size: 1em;
+  }
+
+  input:disabled {
+    background-color: @harmaa9;
+  }
+
+  textarea {
+    font-size: 1em;
+  }
+
+  .lomake-rivi {
+    margin-bottom: 1em;
+  }
+
+  .lomake-kentta {
+    display: inline-block;
+    margin-right: 10px;
+    max-width: 100%;
+
+    > .label {
+      font-weight: bold;
+    }
+  }
+
+  .lomake-footer {
+    margin-top: 20px;
+  }
+}
+
+// Tyylit erityyppisille lomake-kentille
+
+.lomake-container {
+  .tr-osoite {
+    display: inline-block;
+
+    input {
+      width: 90px;
+    }
+
+    .valiviiva {
+      position: relative;
+      display: inline-block;
+      width: 20px;
+      text-align: center;
+      height: 36px;
+      line-height: 36px;
+      padding: 0;
+      top: 1px;
+      border: 1px solid lightgray;
+      background-color: lightgray;
+      box-sizing: border-box;
+    }
+  }
+
+  textarea {
+    width: 400px;
+    max-width: 100%;
+    height: 100px;
+  }
+
+  .kameranappi {
+    display: inline-block;
+    border: 1px solid blue;
+    width: 120px;
+    height: 112px;
+    padding-left: 2px;
+    padding-top: 10px;
+    margin-left: 10px;
+    box-sizing: border-box;
+    position: relative;
+
+    > .kameranappi-sisalto {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translateX(-50%) translateY(-50%);
+
+      svg {
+        width: 28px;
+        height: 20px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .kamera-eikuvaa {
+        color: blue;
+        text-align: center;
+        width: 110px;
+      }
+
+      img {
+        height: 90px;
+      }
+    }
+  }
+
+  .liittyvat-havainnot {
+    padding-top: 0.5em;
+    display: flex;
+    flex-wrap: wrap;
+
+    > .liittyva-havainto {
+      width: 50%;
+      padding-bottom: 0.3em;
+      padding-right: 0.3em;
+      box-sizing: border-box;
+
+      > .liittyva-havainto-tiedot {
+        .aika, .tr-osoite {
+          font-size: 0.8em;
+        }
+      }
+
+      > svg {
+        color: @valkoinen;
+        float: left;
+        width: 36px;
+        height: 36px;
+        background-color: @napin-taustavari;
+        margin-right: 0.5em;
+        padding: 3px;
+      }
+    }
+
+    > .liittyva-havainto-aktiivinen {
+      > .liittyva-havainto-tiedot {
+        color: @primaari-sininen-valittuna;
+      }
+      > svg {
+        background-color: @nappi-aktiivinen;
+      }
+    }
+
+    .jatkuvat-havainnot-vihje {
+      margin-top: 0.5em;
+    }
+  }
+}

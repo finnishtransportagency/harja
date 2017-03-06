@@ -127,7 +127,7 @@
                     {:nimi "Tiestötarkastusraportti"
                      :orientaatio :landscape}
                     [:taulukko
-                     {:otsikko "Pohjois-Pohjanmaa ja Kainuu, Tiestötarkastusraportti ajalta 01.10.2014 - 01.10.2015"
+                     {:otsikko "Pohjois-Pohjanmaa, Tiestötarkastusraportti ajalta 01.10.2014 - 01.10.2015"
                       :sheet-nimi "Tiestötarkastusraportti"
                       :tyhja nil}
                      [{:leveys 10

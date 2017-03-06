@@ -1,0 +1,56 @@
+
+.alustuskomponentti-container {
+  .alustuskomponentti {
+    position: absolute;
+    width: 100%;
+    max-width: 350px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    -webkit-transform: translate(-50%, -50%);
+  }
+
+  .alustuskomponentti p {
+    text-align: center;
+    font-weight: bold;
+  }
+
+  .tarkistusrivi {
+    margin-left: 40px;
+
+    img {
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .tarkistusteksti {
+      margin-left: 7px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+  }
+
+  .liikenneturvallisuusmuistutus {
+    border: 2px solid black;
+    color: red;
+    font-weight: bold;
+    padding: 2px;
+    margin-bottom: 5px;
+  }
+
+  .screenlock-muistutus {
+    margin-top: 10px;
+    padding: 5px;
+  }
+
+  .alustus-varoitus {
+    padding-top: 0.5em;
+    color: @varoitus;
+    font-size: 0.8em;
+  }
+}
+
+#keep-alive-hack {
+  position: absolute;
+  left: -1200px;
+}

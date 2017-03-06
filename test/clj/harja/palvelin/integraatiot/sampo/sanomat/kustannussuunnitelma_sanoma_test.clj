@@ -51,12 +51,12 @@
                  :lkp-tilinumero "43020000"})
 
 (deftest tarkista-kustannussuunnitelman-validius
-  (let [kustannussuunnitelma (html (kustannussuunnitelma-sanoma/muodosta +maksuera+))
+  (let [kustannussuunnitelma (html (kustannussuunnitelma-sanoma/kustannussuunnitelma-xml +maksuera+))
         xsd "nikuxog_costPlan.xsd"]
     (is (xml/validi-xml? +xsd-polku+ xsd kustannussuunnitelma) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 
 (deftest tarkista-kulun-jakaminen-vuosille
-  (let [segmentit (kustannussuunnitelma-sanoma/luo-summat
+  (let [segmentit (kustannussuunnitelma-sanoma/summat
                     [{:alkupvm  "2014-01-01T00:00:00.0",
                       :loppupvm "2014-12-31T02:00:00.0",
                       :summa    300M}
@@ -85,5 +85,5 @@
 
 (deftest tarkista-kustannussuunnitelmajakson-muodostus
   (is (= "1.1.2015-31.12.2015"
-         (kustannussuunnitelma-sanoma/tee-kustannussuunnitelmajakso
+         (kustannussuunnitelma-sanoma/kustannussuunnitelmajakso
            (parsi-paivamaara "12.12.2015")))))

@@ -7,7 +7,6 @@
             [harja.palvelin.integraatiot.yha.sanomat.urakan-kohdehakuvastaussanoma :as urakan-kohdehakuvastaus]
             [harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma :as kohteen-lahetyssanoma]
             [harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetysvastaussanoma :as kohteen-lahetysvastaussanoma]
-            [org.httpkit.fake :refer [with-fake-http]]
             [harja.kyselyt.yha :as q-yha-tiedot]
             [harja.kyselyt.paallystys :as q-paallystys]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
@@ -59,7 +58,7 @@
     (str "YHA palautti seuraavat virheet: " virhe-viestit)))
 
 (defn kasittele-urakan-kohdelahetysvastaus [db sisalto otsikot kohteet]
-  (log/debug format "YHA palautti urakokan kohteiden kirjauksille vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
+  (log/debug format "YHA palautti urakan kohteiden kirjauksille vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
   (let [vastaus (kohteen-lahetysvastaussanoma/lue-sanoma sisalto)
         virheet (:virheet vastaus)
         onnistunut? (empty? virheet)
@@ -67,19 +66,25 @@
     (if onnistunut?
       (log/info "Kohteiden lähetys YHA:n onnistui")
       (log/error (str "Kohteiden lähetys YHA:n epäonnistui: " virhe-viesti)))
+
     (doseq [kohde kohteet]
       (let [kohde-id (:id (:kohde kohde))
             kohde-yha-id (:yhaid (:kohde kohde))
             virhe (first (filter #(= kohde-yha-id (:kohde-yha-id %)) (:virheet vastaus)))
             virhe-viesti (:selite virhe)]
-        (when (not onnistunut?)
-          (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s.\"" kohde-id virhe-viesti)))
+
+        (if onnistunut?
+          (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
+          (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s.\"" kohde-id virhe-viesti))
+              (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})))
+
         (q-yllapitokohteet/merkitse-kohteen-lahetystiedot!
           db
           {:lahetetty (pvm/nyt)
            :onnistunut onnistunut?
            :lahetysvirhe virhe-viesti
            :kohdeid kohde-id})))
+
     (when (not onnistunut?)
       (throw+ {:type +virhe-kohteen-lahetyksessa+
                :virheet {:virhe virhe-viesti}}))))
@@ -90,7 +95,7 @@
     parametrit))
 
 (defn hae-kohteen-paallystysilmoitus [db kohde-id]
-  (let [ilmoitus (first (q-paallystys/hae-urakan-paallystysilmoitus-paallystyskohteella db {:paallystyskohde kohde-id}))]
+  (let [ilmoitus (first (q-paallystys/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella db {:paallystyskohde kohde-id}))]
     (konv/jsonb->clojuremap ilmoitus :ilmoitustiedot)))
 
 (defn hae-alikohteet [db kohde-id paallystys-ilmoitus]
@@ -115,7 +120,7 @@
         {:type +virhe-kohteen-lahetyksessa+
          :virheet {:virhe virhe}}))))
 
-(defn hae-urakat-yhasta [integraatioloki db url yha-nimi sampotunniste vuosi]
+(defn hae-urakat-yhasta [integraatioloki db {:keys [url kayttajatunnus salasana]} yha-nimi sampotunniste vuosi]
   (let [url (str url "urakkahaku")]
     (log/debug (format "Haetaan YHA:sta urakata (tunniste: %s, sampotunnus: %s & vuosi: %s). URL: "
                        yha-nimi sampotunniste vuosi url))
@@ -126,14 +131,18 @@
                              (conj (when (not (empty? yha-nimi)) ["nimi" yha-nimi]))
                              (conj (when (not (empty? sampotunniste)) ["sampo-id" sampotunniste]))
                              (conj (when vuosi ["vuosi" vuosi])))
+              otsikot {"Content-Type" "text/xml; charset=utf-8"}
               http-asetukset {:metodi :GET
                               :url url
-                              :parametrit parametrit}
+                              :parametrit parametrit
+                              :kayttajatunnus kayttajatunnus
+                              :salasana salasana
+                              :otsikot otsikot}
               {body :body headers :headers}
               (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
           (kasittele-urakoiden-hakuvastaus body headers))))))
 
-(defn hae-urakan-kohteet-yhasta [integraatioloki db url urakka-id kayttajatunnus]
+(defn hae-urakan-kohteet-yhasta [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kayttajatunnus]
   (if-let [yha-id (q-yha-tiedot/hae-urakan-yha-id db {:urakkaid urakka-id})]
     (let [url (str url (format "haeUrakanKohteet" yha-id))
           vuosi (pvm/vuosi (pvm/nyt))]
@@ -145,7 +154,11 @@
                                (lisaa-http-parametri "yha-id" yha-id)
                                (lisaa-http-parametri "vuosi" vuosi)
                                (lisaa-http-parametri "kayttaja" kayttajatunnus))
-                http-asetukset {:metodi :GET :url url :parametrit parametrit}
+                http-asetukset {:metodi :GET
+                                :url url
+                                :parametrit parametrit
+                                :kayttajatunnus kayttajatunnus
+                                :salasana salasana}
                 {body :body headers :headers}
                 (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
             (kasittele-urakan-kohdehakuvastaus body headers)))))
@@ -156,17 +169,22 @@
           {:type +virhe-urakan-kohdehaussa+
            :virheet {:virhe virhe}})))))
 
-(defn laheta-kohteet-yhaan [integraatioloki db url urakka-id kohde-idt]
+(defn laheta-kohteet-yhaan [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-idt]
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHA:n URL:lla: %s." urakka-id kohde-idt url))
   (integraatiotapahtuma/suorita-integraatio
-    db integraatioloki "yha" "kohteiden-lahetys"
+    db integraatioloki "yha" "kohteiden-lahetys" nil
     (fn [konteksti]
       (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
         (let [urakka (assoc urakka :harjaid urakka-id :sampoid (q-urakat/hae-urakan-sampo-id db {:urakka urakka-id}))
               kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
               url (str url "toteumatiedot")
               kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)
-              http-asetukset {:metodi :POST :url url}
+              otsikot {"Content-Type" "text/xml; charset=utf-8"}
+              http-asetukset {:metodi :POST
+                              :url url
+                              :kayttajatunnus kayttajatunnus
+                              :salasana salasana
+                              :otsikot otsikot}
               {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
           (kasittele-urakan-kohdelahetysvastaus db body headers kohteet))
 
@@ -174,7 +192,10 @@
           (log/error virhe)
           (throw+
             {:type +virhe-kohteen-lahetyksessa+
-             :virheet {:virhe virhe}}))))))
+             :virheet {:virhe virhe}}))))
+    {:virhekasittelija (fn [_ _]
+                         (doseq [kohde-id kohde-idt]
+                           (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})))}))
 
 (defrecord Yha [asetukset]
   component/Lifecycle
@@ -184,8 +205,8 @@
   YllapidonUrakoidenHallinta
 
   (hae-urakat [this yha-nimi sampotunniste vuosi]
-    (hae-urakat-yhasta (:integraatioloki this) (:db this) (:url asetukset) yha-nimi sampotunniste vuosi))
+    (hae-urakat-yhasta (:integraatioloki this) (:db this) asetukset yha-nimi sampotunniste vuosi))
   (hae-kohteet [this urakka-id kayttajatunnus]
-    (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) (:url asetukset) urakka-id kayttajatunnus))
+    (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) asetukset urakka-id kayttajatunnus))
   (laheta-kohteet [this urakka-id kohde-idt]
-    (laheta-kohteet-yhaan (:integraatioloki this) (:db this) (:url asetukset) urakka-id kohde-idt)))
+    (laheta-kohteet-yhaan (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt)))

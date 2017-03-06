@@ -72,7 +72,7 @@
     args:
        chdir: /harja/checkout/tietokanta
   - name: Download ActiveMQ
-    get_url: dest=/harja/activemq.tar.gz url=http://www.nic.funet.fi/pub/mirrors/apache.org/activemq/5.12.3/apache-activemq-5.12.3-bin.tar.gz
+    get_url: dest=/harja/activemq.tar.gz url=http://www.apache.org/dyn/closer.cgi?filename=/activemq/5.14.3/apache-activemq-5.14.3-bin.tar.gz&action=download
     register: get_activemq
   - name: Create ActiveMQ directory
     file: state=directory path=/harja/activemq mode=0777

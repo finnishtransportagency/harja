@@ -10,7 +10,7 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-04-12T23:20:50Z"
+    "lahetysaika": "2016-04-12T23:20:50+02:00"
   },
   "varusteen-lisays": {
     "lisaaja": {
@@ -21,11 +21,11 @@
         "sukunimi": "Käsittelijä"
       }
     },
-    "lisatty": "2016-04-12T23:00:00Z",
+    "lisatty": "2016-04-12T23:00:00+02:00",
     "varuste": {
-      "tilannepvm": "2016-04-12T23:00:00Z",
+      "tilannepvm": "2016-04-12T23:00:00+02:00",
       "tietue": {
-        "alkupvm": "2016-04-12T23:00:00Z",
+        "alkupvm": "2016-04-12T23:00:00+02:00",
         "sijainti": {
           "tie": {
             "numero": 89,

@@ -11,7 +11,8 @@
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
-            [harja.palvelin.palvelut.raportit :as raportit]))
+            [harja.palvelin.palvelut.raportit :as raportit]
+            [harja.palvelin.raportointi.testiapurit :as apurit]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -47,226 +48,27 @@
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2015 10 1))
                                               :loppupvm (c/to-date (t/local-date 2016 10 1))}})]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Kelitarkastusraportti"
-                     :orientaatio :landscape}
-                    [:taulukko
-                     {:otsikko "Oulun alueurakka 2014-2019, Kelitarkastusraportti ajalta 01.10.2015 - 01.10.2016"
-                      :sheet-nimi "Kelitarkastusraportti"
-                      :tyhja nil}
-                     [{:leveys 10
-                       :otsikko "Päivämäärä"}
-                      {:leveys 5
-                       :otsikko "Klo"}
-                      {:leveys 5
-                       :otsikko "Tie"}
-                      {:leveys 5
-                       :otsikko "Aosa"}
-                      {:leveys 5
-                       :otsikko "Aet"}
-                      {:leveys 5
-                       :otsikko "Losa"}
-                      {:leveys 5
-                       :otsikko "Let"}
-                      {:leveys 5
-                       :otsikko "Ajo­suun­ta"}
-                      {:leveys 5
-                       :otsikko "Hoi­to­luok­ka"}
-                      {:fmt     :numero
-                       :leveys 5
-                       :otsikko "Lu­mi­mää­rä (cm)"}
-                      {:fmt     :numero
-                       :leveys 5
-                       :otsikko "Ta­sai­suus (cm)"}
-                      {:fmt     :numero
-                       :leveys 5
-                       :otsikko "Kit­ka"}
-                      {:fmt     :numero
-                       :leveys 5
-                       :otsikko "Ilman läm­pö­ti­la"}
-                      {:fmt     :numero
-                       :leveys 5
-                       :otsikko "Tien läm­pö­ti­la"}
-                      {:leveys 5
-                       :otsikko "Tar­kas­taja"}
-                      {:leveys 10
-                       :otsikko "Ha­vain­not"}
-                      {:leveys 3
-                       :otsikko "Laadun alitus"}
-                      {:leveys 5
-                       :otsikko "Liit­teet"
-                       :tyyppi :liite}]
-                     [["04.01.2016"
-                       "06:02"
-                       4
-                       364
-                       5
-                       nil
-                       nil
-                       1
-                       "A"
-                       10.00M
-                       6.00M
-                       0.40M
-                       -13.00M
-                       -6.00M
-                       "Matti"
-                       "järjestelmän raportoima testitarkastus 2"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["02.01.2016"
-                       "16:02"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "A"
-                       10.00M
-                       5.00M
-                       1.00M
-                       -16.00M
-                       -3.00M
-                       "Matti"
-                       "Urakoitsija on kirjannut tämän tarkastuksen Harjaan käsin"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["28.12.2015"
-                       "10:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "B"
-                       11.00M
-                       5.00M
-                       0.10M
-                       -14.00M
-                       -6.00M
-                       "Matti"
-                       "järjestelmän raportoima testitarkastus 1"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["23.11.2015"
-                       "11:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       2
-                       "A"
-                       9.00M
-                       6.00M
-                       0.30M
-                       -13.00M
-                       -3.00M
-                       "Matti"
-                       "järjestelmän raportoima testitarkastus 3"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["23.10.2015"
-                       "10:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "B"
-                       6.00M
-                       6.00M
-                       0.50M
-                       -15.00M
-                       -5.00M
-                       "Matti"
-                       "ok"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["23.10.2015"
-                       "10:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "B"
-                       6.00M
-                       6.00M
-                       0.50M
-                       -15.00M
-                       -5.00M
-                       "Matti"
-                       ""
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["23.10.2015"
-                       "10:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "B"
-                       6.00M
-                       6.00M
-                       0.50M
-                       -15.00M
-                       -5.00M
-                       "Matti"
-                       "Ok"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["23.10.2015"
-                       "10:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "B"
-                       6.00M
-                       6.00M
-                       0.50M
-                       -15.00M
-                       -5.00M
-                       "Matti"
-                       "järjestelmän raportoima testitarkastus 4"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["23.10.2015"
-                       "10:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "B"
-                       6.00M
-                       6.00M
-                       0.50M
-                       -15.00M
-                       -5.00M
-                       "Matti"
-                       "OK"
-                       "Ei"
-                       [:liitteet
-                        []]]]]]))))
+    (let [otsikko "Oulun alueurakka 2014-2019, Kelitarkastusraportti ajalta 01.10.2015 - 01.10.2016"
+          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                          {:otsikko "Päivämäärä"}
+                                          {:otsikko "Klo"}
+                                          {:otsikko "Tie"}
+                                          {:otsikko "Aosa"}
+                                          {:otsikko "Aet"}
+                                          {:otsikko "Losa"}
+                                          {:otsikko "Let"}
+                                          {:otsikko "Ajo\u00ADsuun\u00ADta"}
+                                          {:otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
+                                          {:otsikko "Lu\u00ADmi\u00ADmää\u00ADrä (cm)"}
+                                          {:otsikko "Ta\u00ADsai\u00ADsuus (cm)"}
+                                          {:otsikko "Kit\u00ADka"}
+                                          {:otsikko "Ilman läm\u00ADpö\u00ADti\u00ADla"}
+                                          {:otsikko "Tien läm\u00ADpö\u00ADti\u00ADla"}
+                                          {:otsikko "Tar\u00ADkas\u00ADtaja"}
+                                          {:otsikko "Ha\u00ADvain\u00ADnot"}
+                                          {:otsikko "Laadun alitus"}
+                                          {:otsikko "Liit\u00ADteet"}))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -279,227 +81,27 @@
                                               :loppupvm (c/to-date (t/local-date 2016 10 1))
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Kelitarkastusraportti"
-                     :orientaatio :landscape}
-                    [:taulukko
-                     {:otsikko "Pohjois-Pohjanmaa ja Kainuu, Kelitarkastusraportti ajalta 01.10.2015 - 01.10.2016"
-                      :sheet-nimi "Kelitarkastusraportti"
-                      :tyhja nil}
-                     [{:leveys 10
-                       :otsikko "Päivämäärä"}
-                      {:leveys 5
-                       :otsikko "Klo"}
-                      {:leveys 5
-                       :otsikko "Tie"}
-                      {:leveys 5
-                       :otsikko "Aosa"}
-                      {:leveys 5
-                       :otsikko "Aet"}
-                      {:leveys 5
-                       :otsikko "Losa"}
-                      {:leveys 5
-                       :otsikko "Let"}
-                      {:leveys 5
-                       :otsikko "Ajo­suun­ta"}
-                      {:leveys 5
-                       :otsikko "Hoi­to­luok­ka"}
-                      {:fmt     :numero
-                       :leveys 5
-                       :otsikko "Lu­mi­mää­rä (cm)"}
-                      {:fmt     :numero
-                       :leveys 5
-                       :otsikko "Ta­sai­suus (cm)"}
-                      {:fmt     :numero
-                       :leveys 5
-                       :otsikko "Kit­ka"}
-                      {:fmt     :numero
-                       :leveys 5
-                       :otsikko "Ilman läm­pö­ti­la"}
-                      {:fmt     :numero
-                       :leveys 5
-                       :otsikko "Tien läm­pö­ti­la"}
-                      {:leveys 5
-                       :otsikko "Tar­kas­taja"}
-                      {:leveys 10
-                       :otsikko "Ha­vain­not"}
-                      {:leveys 3
-                       :otsikko "Laadun alitus"}
-                      {:leveys 5
-                       :otsikko "Liit­teet"
-                       :tyyppi :liite}]
-                     [{:otsikko "Oulun alueurakka 2014-2019"}
-                      ["04.01.2016"
-                       "06:02"
-                       4
-                       364
-                       5
-                       nil
-                       nil
-                       1
-                       "A"
-                       10.00M
-                       6.00M
-                       0.40M
-                       -13.00M
-                       -6.00M
-                       "Matti"
-                       "järjestelmän raportoima testitarkastus 2"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["02.01.2016"
-                       "16:02"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "A"
-                       10.00M
-                       5.00M
-                       1.00M
-                       -16.00M
-                       -3.00M
-                       "Matti"
-                       "Urakoitsija on kirjannut tämän tarkastuksen Harjaan käsin"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["28.12.2015"
-                       "10:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "B"
-                       11.00M
-                       5.00M
-                       0.10M
-                       -14.00M
-                       -6.00M
-                       "Matti"
-                       "järjestelmän raportoima testitarkastus 1"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["23.11.2015"
-                       "11:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       2
-                       "A"
-                       9.00M
-                       6.00M
-                       0.30M
-                       -13.00M
-                       -3.00M
-                       "Matti"
-                       "järjestelmän raportoima testitarkastus 3"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["23.10.2015"
-                       "10:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "B"
-                       6.00M
-                       6.00M
-                       0.50M
-                       -15.00M
-                       -5.00M
-                       "Matti"
-                       "ok"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["23.10.2015"
-                       "10:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "B"
-                       6.00M
-                       6.00M
-                       0.50M
-                       -15.00M
-                       -5.00M
-                       "Matti"
-                       ""
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["23.10.2015"
-                       "10:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "B"
-                       6.00M
-                       6.00M
-                       0.50M
-                       -15.00M
-                       -5.00M
-                       "Matti"
-                       "Ok"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["23.10.2015"
-                       "10:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "B"
-                       6.00M
-                       6.00M
-                       0.50M
-                       -15.00M
-                       -5.00M
-                       "Matti"
-                       "järjestelmän raportoima testitarkastus 4"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["23.10.2015"
-                       "10:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "B"
-                       6.00M
-                       6.00M
-                       0.50M
-                       -15.00M
-                       -5.00M
-                       "Matti"
-                       "OK"
-                       "Ei"
-                       [:liitteet
-                        []]]]]]))))
+    (let [otsikko "Pohjois-Pohjanmaa, Kelitarkastusraportti ajalta 01.10.2015 - 01.10.2016"
+          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                          {:otsikko "Päivämäärä"}
+                                          {:otsikko "Klo"}
+                                          {:otsikko "Tie"}
+                                          {:otsikko "Aosa"}
+                                          {:otsikko "Aet"}
+                                          {:otsikko "Losa"}
+                                          {:otsikko "Let"}
+                                          {:otsikko "Ajo\u00ADsuun\u00ADta"}
+                                          {:otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
+                                          {:otsikko "Lu\u00ADmi\u00ADmää\u00ADrä (cm)"}
+                                          {:otsikko "Ta\u00ADsai\u00ADsuus (cm)"}
+                                          {:otsikko "Kit\u00ADka"}
+                                          {:otsikko "Ilman läm\u00ADpö\u00ADti\u00ADla"}
+                                          {:otsikko "Tien läm\u00ADpö\u00ADti\u00ADla"}
+                                          {:otsikko "Tar\u00ADkas\u00ADtaja"}
+                                          {:otsikko "Ha\u00ADvain\u00ADnot"}
+                                          {:otsikko "Laadun alitus"}
+                                          {:otsikko "Liit\u00ADteet"}))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -511,224 +113,24 @@
                                               :loppupvm (c/to-date (t/local-date 2016 10 1))
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Kelitarkastusraportti"
-                     :orientaatio :landscape}
-                    [:taulukko
-                     {:otsikko "KOKO MAA, Kelitarkastusraportti ajalta 01.10.2015 - 01.10.2016"
-                      :sheet-nimi "Kelitarkastusraportti"
-                      :tyhja nil}
-                     [{:leveys 10
-                       :otsikko "Päivämäärä"}
-                      {:leveys 5
-                       :otsikko "Klo"}
-                      {:leveys 5
-                       :otsikko "Tie"}
-                      {:leveys 5
-                       :otsikko "Aosa"}
-                      {:leveys 5
-                       :otsikko "Aet"}
-                      {:leveys 5
-                       :otsikko "Losa"}
-                      {:leveys 5
-                       :otsikko "Let"}
-                      {:leveys 5
-                       :otsikko "Ajo­suun­ta"}
-                      {:leveys 5
-                       :otsikko "Hoi­to­luok­ka"}
-                      {:fmt     :numero
-                       :leveys 5
-                       :otsikko "Lu­mi­mää­rä (cm)"}
-                      {:fmt     :numero
-                       :leveys 5
-                       :otsikko "Ta­sai­suus (cm)"}
-                      {:fmt     :numero
-                       :leveys 5
-                       :otsikko "Kit­ka"}
-                      {:fmt     :numero
-                       :leveys 5
-                       :otsikko "Ilman läm­pö­ti­la"}
-                      {:fmt     :numero
-                       :leveys 5
-                       :otsikko "Tien läm­pö­ti­la"}
-                      {:leveys 5
-                       :otsikko "Tar­kas­taja"}
-                      {:leveys 10
-                       :otsikko "Ha­vain­not"}
-                      {:leveys 3
-                       :otsikko "Laadun alitus"}
-                      {:leveys 5
-                       :otsikko "Liit­teet"
-                       :tyyppi :liite}]
-                     [{:otsikko "Oulun alueurakka 2014-2019"}
-                      ["04.01.2016"
-                       "06:02"
-                       4
-                       364
-                       5
-                       nil
-                       nil
-                       1
-                       "A"
-                       10.00M
-                       6.00M
-                       0.40M
-                       -13.00M
-                       -6.00M
-                       "Matti"
-                       "järjestelmän raportoima testitarkastus 2"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["02.01.2016"
-                       "16:02"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "A"
-                       10.00M
-                       5.00M
-                       1.00M
-                       -16.00M
-                       -3.00M
-                       "Matti"
-                       "Urakoitsija on kirjannut tämän tarkastuksen Harjaan käsin"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["28.12.2015"
-                       "10:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "B"
-                       11.00M
-                       5.00M
-                       0.10M
-                       -14.00M
-                       -6.00M
-                       "Matti"
-                       "järjestelmän raportoima testitarkastus 1"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["23.11.2015"
-                       "11:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       2
-                       "A"
-                       9.00M
-                       6.00M
-                       0.30M
-                       -13.00M
-                       -3.00M
-                       "Matti"
-                       "järjestelmän raportoima testitarkastus 3"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["23.10.2015"
-                       "10:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "B"
-                       6.00M
-                       6.00M
-                       0.50M
-                       -15.00M
-                       -5.00M
-                       "Matti"
-                       "ok"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["23.10.2015"
-                       "10:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "B"
-                       6.00M
-                       6.00M
-                       0.50M
-                       -15.00M
-                       -5.00M
-                       "Matti"
-                       ""
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["23.10.2015"
-                       "10:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "B"
-                       6.00M
-                       6.00M
-                       0.50M
-                       -15.00M
-                       -5.00M
-                       "Matti"
-                       "Ok"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["23.10.2015"
-                       "10:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "B"
-                       6.00M
-                       6.00M
-                       0.50M
-                       -15.00M
-                       -5.00M
-                       "Matti"
-                       "järjestelmän raportoima testitarkastus 4"
-                       "Ei"
-                       [:liitteet
-                        []]]
-                      ["23.10.2015"
-                       "10:00"
-                       4
-                       364
-                       8012
-                       nil
-                       nil
-                       1
-                       "B"
-                       6.00M
-                       6.00M
-                       0.50M
-                       -15.00M
-                       -5.00M
-                       "Matti"
-                       "OK"
-                       "Ei"
-                       [:liitteet
-                        []]]]]]))))
+    (let [otsikko "KOKO MAA, Kelitarkastusraportti ajalta 01.10.2015 - 01.10.2016"
+          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                          {:otsikko "Päivämäärä"}
+                                          {:otsikko "Klo"}
+                                          {:otsikko "Tie"}
+                                          {:otsikko "Aosa"}
+                                          {:otsikko "Aet"}
+                                          {:otsikko "Losa"}
+                                          {:otsikko "Let"}
+                                          {:otsikko "Ajo\u00ADsuun\u00ADta"}
+                                          {:otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
+                                          {:otsikko "Lu\u00ADmi\u00ADmää\u00ADrä (cm)"}
+                                          {:otsikko "Ta\u00ADsai\u00ADsuus (cm)"}
+                                          {:otsikko "Kit\u00ADka"}
+                                          {:otsikko "Ilman läm\u00ADpö\u00ADti\u00ADla"}
+                                          {:otsikko "Tien läm\u00ADpö\u00ADti\u00ADla"}
+                                          {:otsikko "Tar\u00ADkas\u00ADtaja"}
+                                          {:otsikko "Ha\u00ADvain\u00ADnot"}
+                                          {:otsikko "Laadun alitus"}
+                                          {:otsikko "Liit\u00ADteet"}))))

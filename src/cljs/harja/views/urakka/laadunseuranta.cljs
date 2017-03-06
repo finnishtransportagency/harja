@@ -7,10 +7,12 @@
             [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.views.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.views.urakka.laadunseuranta.sanktiot :as sanktiot]
+            [harja.views.urakka.laadunseuranta.mobiilityokalu :as mobiilityokalu]
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.views.urakka.laadunseuranta.siltatarkastukset :as siltatarkastukset]))
+            [harja.views.urakka.laadunseuranta.siltatarkastukset :as siltatarkastukset]
+            [harja.tiedot.urakka :as tiedot-urakka]))
 
 (defn laadunseuranta [ur]
   (komp/luo
@@ -28,7 +30,7 @@
        (when (oikeudet/urakat-laadunseuranta-laatupoikkeamat id)
          [laatupoikkeamat/laatupoikkeamat {:nakyma tyyppi}])
 
-       "Sanktiot" :sanktiot
+       (if @tiedot-urakka/yllapidon-urakka? "Sakot ja bonukset" "Sanktiot") :sanktiot
        (when (oikeudet/urakat-laadunseuranta-sanktiot id)
          [sanktiot/sanktiot {:nakyma tyyppi}])
 
@@ -36,5 +38,9 @@
        (when (and (= :hoito tyyppi)
                   (oikeudet/urakat-laadunseuranta-siltatarkastukset id))
          ^{:key "siltatarkastukset"}
-         [siltatarkastukset/siltatarkastukset])])))
+         [siltatarkastukset/siltatarkastukset])
+
+       "Mobiilityökalu" :mobiilityokalu
+       ^{:key "mobiilityokalu"}
+       [mobiilityokalu/mobiilityokalu]])))
 

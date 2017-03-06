@@ -58,6 +58,6 @@
 
 (defn suorita-raportti
   "Suorittaa raportin valmiiksi tehdyllä parametri payloadilla.
-ks. esim. suorita-raportti-urakka-parametrit"
+   ks. esim. suorita-raportti-urakka-parametrit"
   [parametrit]
   (k/post! :suorita-raportti parametrit))

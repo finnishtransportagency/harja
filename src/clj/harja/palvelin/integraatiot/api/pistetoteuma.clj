@@ -1,14 +1,13 @@
 (ns harja.palvelin.integraatiot.api.pistetoteuma
   "Pistetoteuman kirjaaminen urakalle"
   (:require [com.stuartsierra.component :as component]
-            [compojure.core :refer [POST GET]]
+            [compojure.core :refer [POST GET DELETE]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
-            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi])
@@ -41,9 +40,15 @@
     (doseq [sopimus-id sopimus-idt]
       (validointi/tarkista-urakka-sopimus-ja-kayttaja db urakka-id sopimus-id kirjaaja)))
   (when (:pistetoteuma data)
-    (toteuman-validointi/tarkista-tehtavat db (get-in data [:pistetoteuma :toteuma :tehtavat])))
+    (toteuman-validointi/tarkista-tehtavat
+      db
+      (get-in data [:pistetoteuma :toteuma :tehtavat])
+      (get-in data [:pistetoteuma :toteuma :toteumatyyppi])))
   (doseq [pistetoteuma (:pistetoteumat data)]
-    (toteuman-validointi/tarkista-tehtavat db (get-in pistetoteuma [:pistetoteuma :toteuma :tehtavat]))))
+    (toteuman-validointi/tarkista-tehtavat
+      db
+      (get-in pistetoteuma [:pistetoteuma :toteuma :tehtavat])
+      (get-in pistetoteuma [:pistetoteuma :toteuma :toteumatyyppi]))))
 
 (defn kirjaa-toteuma [db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
@@ -51,6 +56,14 @@
     (tarkista-pyynto db urakka-id kirjaaja data)
     (tallenna-kaikki-pyynnon-pistetoteumat db urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
+
+(defn poista-toteuma [db {id :id} data kirjaaja]
+  (let [urakka-id (Integer/parseInt id)
+        ulkoiset-idt (-> data :toteumien-tunnisteet)]
+    (log/debug "Poistetaan pistetoteumat jokilla id:t:" ulkoiset-idt "urakalta id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja)
+               " (id:" (:id kirjaaja) " tekemänä")
+    (tarkista-pyynto db urakka-id kirjaaja data)
+    (api-toteuma/poista-toteumat db kirjaaja ulkoiset-idt)))
 
 (defrecord Pistetoteuma []
   component/Lifecycle
@@ -60,6 +73,11 @@
       (POST "/api/urakat/:id/toteumat/piste" request
         (kasittele-kutsu db integraatioloki :lisaa-pistetoteuma request json-skeemat/pistetoteuman-kirjaus json-skeemat/kirjausvastaus
                          (fn [parametit data kayttaja db] (kirjaa-toteuma db parametit data kayttaja)))))
+    (julkaise-reitti
+      http :poista-pistetoteuma
+      (DELETE "/api/urakat/:id/toteumat/piste" request
+        (kasittele-kutsu db integraatioloki :poista-pistetoteuma request json-skeemat/pistetoteuman-poisto json-skeemat/kirjausvastaus
+                         (fn [parametit data kayttaja db] (poista-toteuma db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-pistetoteuma)

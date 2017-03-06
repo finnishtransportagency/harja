@@ -66,10 +66,12 @@
   (let [urakan-valitavoitteet (map first (q "SELECT nimi
                                   FROM valitavoite
                                   WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')"))]
+    (is (= (count urakan-valitavoitteet) 6))
+    ;; Kertaluontoiset lisättiin kerran
     (is (= (count (filter #(= "Koko Suomi aurattu" %) urakan-valitavoitteet)) 1))
     (is (= (count (filter #(= "Kaikkien urakoiden kalusto huollettu" %) urakan-valitavoitteet)) 1))
-    (is (= (count (filter #(= "Koko Suomen liikenneympäristö hoidettu" %) urakan-valitavoitteet)) 5))
-    (is (= (count urakan-valitavoitteet) 7))))
+    ;; Toistuvat lisättiin jokaiselle urakan jäljellä olevalle vuodelle (ei kuitenkaan 1.1.2016)
+    (is (= (count (filter #(= "Koko Suomen liikenneympäristö hoidettu" %) urakan-valitavoitteet)) 4))))
 
 (deftest tarkista-paallystysurakan-toimenpideinstanssin-luonti
   (let [viestit (atom [])]

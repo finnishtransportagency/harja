@@ -1,0 +1,252 @@
+@ylapalkin-korkeus: 65px;
+@ylapalkin-korkeus-pienempi: 50px;
+@ylapalkin-ikonin-koko: 30px;
+@ylapalkin-nappien-valinen-tyhja-tila: 8px;
+@ylapalkin-nappien-valinen-tyhja-tila-pienempi: 6px;
+@viiva-nappien-valissa: 1px solid rgb(40, 40, 40);
+
+#testiharja {
+  background-color: white;
+  color: #dd0000;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 10px;
+  padding: 2px;
+  position: absolute;
+  top: 5px;
+  left: 66px;
+  text-decoration: none;
+}
+
+.ylapalkki {
+  display: flex;
+  justify-content: space-between;
+  min-height: @ylapalkin-korkeus;
+  background-color: @harmaa1;
+  z-index: @z-index-ylapalkki;
+}
+
+.ylapalkki-vasen, .ylapalkki-oikea {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.ylapalkki .logo {
+  box-sizing: border-box;
+  position: relative;
+
+  img {
+    padding: @ylapalkin-nappien-valinen-tyhja-tila;
+    padding-top: 15px;
+    width: 130px;
+    height: auto;
+  }
+
+  #testiharja {
+    background-color: white;
+    color: #dd0000;
+    font-size: 10px;
+    font-weight: bold;
+    line-height: 10px;
+    padding: 2px;
+    position: absolute;
+    top: 5px;
+    left: 66px;
+    text-decoration: none;
+  }
+}
+
+.ol-zoom {
+  height: @ylapalkin-korkeus;
+  z-index: @z-index-ol-zoom;
+  box-sizing: border-box;
+}
+
+.ol-zoom button {
+  background-color: rgb(19, 19, 20);
+  color: white;
+  margin: 0;
+  padding: 0;
+  width: 45px;
+  font-size: 2em;
+  height: @ylapalkin-korkeus;
+  outline-width: 0;
+  border: none;
+  border-left: 1px solid rgb(40, 40, 40);
+  box-sizing: border-box;
+}
+
+.ylapalkki-button {
+  position: relative;
+  width: 65px;
+  color: @valkoinen;
+  box-sizing: border-box;
+  border-left: @viiva-nappien-valissa;
+  padding-left: @ylapalkin-nappien-valinen-tyhja-tila;
+  padding-right: @ylapalkin-nappien-valinen-tyhja-tila;
+  height: @ylapalkin-korkeus;
+
+  > svg {
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+  }
+}
+
+.ylapalkki-button-disabloitu {
+  color: @harmaa4;
+}
+
+.ylapalkki-button-aktiivinen {
+  background-color: @harmaa3;
+}
+
+.ylapalkki .tr-osoite {
+  border-left: @viiva-nappien-valissa;
+  color: white;
+  font-size: 1.4em;
+  width: 220px;
+  font-weight: normal;
+  line-height: @ylapalkin-korkeus;
+  padding-left: @ylapalkin-nappien-valinen-tyhja-tila;
+  padding-right: @ylapalkin-nappien-valinen-tyhja-tila;
+}
+
+.ylapalkin-metatiedot {
+  padding-top: 8px;
+  border-left: @viiva-nappien-valissa;
+  top: 0;
+  padding-left: @ylapalkin-nappien-valinen-tyhja-tila;
+  font-size: @ylapalkin-ikonin-koko;
+  max-width: 190px;
+  color: white;
+
+  > .ylapalkin-metatieto {
+    display: block;
+    margin: 3px 0;
+    padding-top: 0;
+    font-size: 15px;
+    height: 19px;
+    line-height: 20px;
+  }
+
+  > .urakkanimi {
+    display: block;
+    padding-top: 0;
+    font-size: 10px;
+    height: 19px;
+    line-height: 10px;
+    overflow-x: hidden;
+    word-break: break-all;
+  }
+}
+
+.kaynnistyspainike {
+  width: 220px;
+  height: 100%;
+  max-height: (@ylapalkin-korkeus + 2px); // Ei muka peitä koko riviä ilman +2px
+  font-weight: normal;
+  font-size: 16px;
+  line-height: @ylapalkin-korkeus;
+  color: white;
+  background-color: rgb(86, 198, 84);
+  padding-left: 10px;
+  padding-right: 10px;
+  text-align: center;
+
+  .kaynnispainike-nuoli {
+    margin-right: 10px;
+  }
+
+  > svg {
+    width: 22px;
+    height: 22px;
+    transform: rotate(90deg);
+    margin-right: 0.5em;
+    position: relative;
+    top: 5px;
+  }
+}
+
+.kaynnissa {
+  background-color: rgb(208, 0, 5);
+}
+
+.palvelinvirhe {
+  background-color: white;
+  border: 1px solid gray;
+  color: red;
+  font-size: 0.7em;
+  left: 0;
+  line-height: 10px;
+  overflow-y: hidden;
+  padding: 1px;
+  max-height: 40px;
+  z-index: @z-index-palvelinvirhe;
+}
+
+.ylapalkki.testiharja {
+  background-color: @testiharjan-taustavari;
+
+  .ol-zoom-in, .ol-zoom-out {
+    background-color: @testiharjan-taustavari;
+  }
+}
+
+// Responsiivisuus
+
+@media (max-width: @leveys-tabletti) {
+  .ylapalkki {
+    min-height: @ylapalkin-korkeus-pienempi;
+
+    .logo {
+      // Jos selain ei tue <picture> elementtiä, näytetään aina default img
+      // Varmista aina, että näyttää hyvältä (esim. kommentoimalla <source> testiksi)
+      img {
+        padding: 4px;
+        padding-top: 6px;
+        width: auto;
+        height: 36px;
+      }
+
+      #testiharja {
+        top: 5px;
+        left: 8px;
+      }
+    }
+  }
+
+  .ylapalkin-metatiedot {
+    padding-top: 0;
+  }
+
+  .ylapalkki-button {
+    height: @ylapalkin-korkeus-pienempi;
+    padding-left: @ylapalkin-nappien-valinen-tyhja-tila-pienempi;
+    padding-right: @ylapalkin-nappien-valinen-tyhja-tila-pienempi;
+    line-height: @ylapalkin-korkeus-pienempi;
+  }
+
+  .ylapalkki .tr-osoite {
+    font-size: 1em;
+    width: 160px;
+    line-height: 50px;
+  }
+
+  .kaynnistyspainike {
+    height: (@ylapalkin-korkeus-pienempi + 2px);
+    width: 50px;
+    line-height: @ylapalkin-korkeus-pienempi;
+
+    .kaynnispainike-nuoli {
+      margin-right: 5px;
+    }
+
+    > .kaynnistyspainike-teksti {
+      display: none;
+    }
+  }
+}

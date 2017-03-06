@@ -11,22 +11,3 @@
 
 (deftest mapin-keywordize-test
   (is (= (utils/keywordize-map {"foo" 1 "bar" 2}) {:foo 1 :bar 2})))
-
-(deftest mittausten-ja-havaintojen-erotus-test
-  (let [havainnot {:lampotila 12
-                   :lumisuus 5
-                   :tasaisuus 2
-                   :kitkamittaus 0.45
-                   :polyavyys 3
-                   :kiinteys 1
-                   :sivukaltevuus 3
-                   :liukasta true
-                   :lumista true}]
-    (is (= [:lumista :liukasta] (utils/erota-havainnot havainnot)))
-    (is (= {:lampotila 12
-            :lumisuus 5
-            :tasaisuus 2
-            :kitkamittaus 0.45
-            :polyavyys 3
-            :kiinteys 1
-            :sivukaltevuus 3} (utils/erota-mittaukset havainnot)))))

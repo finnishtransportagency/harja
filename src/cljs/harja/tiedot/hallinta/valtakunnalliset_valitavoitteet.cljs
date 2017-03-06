@@ -4,17 +4,22 @@
             [cljs.core.async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.pvm :as pvm]
-            [cljs-time.core :as time]
             [harja.atom :refer [paivita!]]
-            [cljs-time.core :as t]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.pvm :as pvm])
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
 (def nakymassa? (atom false))
+
+(def valtakunnalliset-kertaluontoiset-valitavoitteet-kaytossa
+  #{:hoito})
+(def valtakunnalliset-toistuvat-valitavoitteet-kaytossa
+  #{:hoito :tiemerkinta})
+
+(defn valtakunnalliset-valitavoitteet-kaytossa? [urakkatyyppi]
+  (boolean (or (valtakunnalliset-kertaluontoiset-valitavoitteet-kaytossa urakkatyyppi)
+               (valtakunnalliset-toistuvat-valitavoitteet-kaytossa urakkatyyppi))))
 
 (defn hae-valitavoitteet []
   (k/post! :hae-valtakunnalliset-valitavoitteet {}))
@@ -28,8 +33,6 @@
               {:nil-kun-haku-kaynnissa? true}
               (when nakymassa?
                 (hae-valitavoitteet))))
-
-(tarkkaile! "[VALVÄLI] Välitavoitteet: " valitavoitteet)
 
 (def kertaluontoiset-valitavoitteet
   (reaction (when @valitavoitteet

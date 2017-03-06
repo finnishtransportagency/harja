@@ -11,15 +11,26 @@
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [harja.domain.oikeudet :as oikeudet]
             [clj-time.core :as t]
+            [harja.id :refer [id-olemassa?]]
             [clj-time.coerce :as c]))
+
+(defn kasittele-vain-yksi-vamma-ja-ruumiinosa [turpo]
+  ;; Aiemmin oli mahdollista kirjata useampi ruumiinosa tai vamma, nyt vain yksi
+  ;; Kantaan tukee edelleen useaa arvoa tässä
+  ;; (vanhan datan takia ja jos tulevaisuudessa halutaankin kirjata useampi).
+  ;; Palautetaan satunnainen ensimmäinen arvo.
+  (-> turpo
+      (assoc :vammat (first (:vammat turpo)))
+      (assoc :vahingoittuneetruumiinosat (first (:vahingoittuneetruumiinosat turpo)))))
 
 (defn hae-urakan-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-turvallisuus user urakka-id)
-  (konv/sarakkeet-vektoriin
-    (into []
-          q/turvallisuuspoikkeama-xf
-          (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
-    {:korjaavatoimenpide :korjaavattoimenpiteet}))
+  (let [turpot (konv/sarakkeet-vektoriin
+     (into []
+           q/turvallisuuspoikkeama-xf
+           (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
+     {:korjaavatoimenpide :korjaavattoimenpiteet})]
+    (mapv kasittele-vain-yksi-vamma-ja-ruumiinosa turpot)))
 
 (defn- hae-vastuuhenkilon-tiedot [db kayttaja-id]
   (when kayttaja-id
@@ -35,10 +46,12 @@
                                                       :korjaavatoimenpide :korjaavattoimenpiteet
                                                       :liite :liitteet}))
                     turpo
+                    (kasittele-vain-yksi-vamma-ja-ruumiinosa turpo)
                     (assoc turpo :korjaavattoimenpiteet
                                  (mapv #(assoc % :vastuuhenkilo
                                                  (hae-vastuuhenkilon-tiedot db (:vastuuhenkilo %)))
                                        (:korjaavattoimenpiteet turpo)))
+                    (assoc turpo :liitteet (into [] (q/hae-turvallisuuspoikkeaman-liitteet db turvallisuuspoikkeama-id)))
                     (update-in turpo [:kommentit]
                                (fn [kommentit]
                                  (sort-by :aika (map #(if (nil? (:id (:liite %)))
@@ -60,7 +73,7 @@
     annettu turvallisuuspoikkeaman id.")
 
   (log/debug "Tallenna korjaava toimenpide " (pr-str korjaavatoimenpide))
-  (if-not (or (nil? id) (neg? id))
+  (if (id-olemassa? id)
     (q/paivita-korjaava-toimenpide<!
       db
       {:otsikko otsikko
@@ -125,7 +138,7 @@
                 :ammatti (some-> tyontekijanammatti name)
                 :ammatti_muu tyontekijanammattimuu
                 :kuvaus kuvaus
-                :vammat (konv/seq->array vammat)
+                :vammat (konv/seq->array [vammat])
                 :poissa sairauspoissaolopaivat
                 :sairaalassa sairaalavuorokaudet
                 :tyyppi (konv/seq->array tyyppi)
@@ -135,7 +148,7 @@
                 :toteuttaja toteuttaja
                 :tilaaja tilaaja
                 :sijainti sijainti
-                :vahingoittuneet_ruumiinosat (konv/seq->array vahingoittuneetruumiinosat)
+                :vahingoittuneet_ruumiinosat (konv/seq->array [vahingoittuneetruumiinosat])
                 :sairauspoissaolo_jatkuu sairauspoissaolojatkuu
                 :aiheutuneet_seuraukset seuraukset
                 :vaylamuoto (name vaylamuoto)
@@ -151,7 +164,7 @@
                 :tila (name tila)
                 :ilmoitukset_lahetetty (when ilmoituksetlahetetty
                                          (konv/sql-timestamp ilmoituksetlahetetty))})]
-    (if id
+    (if (id-olemassa? id)
       (do (q/paivita-turvallisuuspoikkeama! db (assoc parametrit :id id))
           id)
       (:id (q/luo-turvallisuuspoikkeama<! db parametrit)))))
@@ -172,15 +185,21 @@
                                                (:id user))]
       (q/liita-kommentti<! db tp-id (:id kommentti)))))
 
+(defn tallenna-turvallisuuspoikkeaman-liite [db turvallisuuspoikkeama]
+  (when-let [uusi-liite (:uusi-liite turvallisuuspoikkeama)]
+    (log/info "UUSI LIITE: " uusi-liite)
+    (q/liita-liite<! db (:id turvallisuuspoikkeama) (:id uusi-liite))))
+
 (defn tallenna-turvallisuuspoikkeama-kantaan [db user tp korjaavattoimenpiteet uusi-kommentti urakka]
   (jdbc/with-db-transaction [db db]
     (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db user tp)]
       (tallenna-turvallisuuspoikkeaman-kommentti db user uusi-kommentti (:urakka tp) tp-id)
+      (tallenna-turvallisuuspoikkeaman-liite db tp)
       (luo-tai-paivita-korjaavat-toimenpiteet db user korjaavattoimenpiteet tp-id urakka)
       tp-id)))
 
 (defn- vaadi-turvallisuuspoikkeaman-kuuluminen-urakkaan [db urakka-id turvallisuuspoikkeama-id]
-  (when turvallisuuspoikkeama-id
+  (when (id-olemassa? turvallisuuspoikkeama-id)
     (let [turpon-todellinen-urakka-id (:urakka (first
                                                  (q/hae-turvallisuuspoikkeaman-urakka db turvallisuuspoikkeama-id)))]
       (log/debug "Tarkistetaan, että väitetty urakka-id " urakka-id " = " turpon-todellinen-urakka-id)

@@ -29,7 +29,8 @@
     (if (xml/validi-xml? +xsd-polku+ "HarjaToSampoAcknowledgement.xsd" xml)
       xml
       (do
-        (log/error "Kuittausta ei voida lähettää. Kuittaus XML ei ole validi.")
+        (log/error (format "Kuittausta Sampoon ei voida lähettää viesti id:lle %s. Kuittaus XML ei ole validi. XML: %s"
+                           viesti-id xml))
         nil))))
 
 (defn muodosta-onnistunut-kuittaus [viesti-id viestityyppi]

@@ -7,7 +7,6 @@
             [harja.domain.ilmoitukset :as apurit]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
-            [harja.ui.kentat :refer [tee-kentta]]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.napit :refer [palvelinkutsu-nappi] :as napit]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
@@ -19,152 +18,184 @@
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.ui.viesti :as viesti]
             [harja.asiakas.tapahtumat :as tapahtumat]
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+            [harja.tiedot.ilmoitukset.viestit :as v]
+            [harja.ui.protokollat :as protokollat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn kasittele-kuittauskasityksen-vastaus [vastaus]
-  (when vastaus
-    (viesti/nayta! "Kuittaus lähetetty Tieliikennekeskukseen." :success)
-    (ilmoitukset/lisaa-kuittaus-valitulle-ilmoitukselle vastaus))
-  (tiedot/alusta-uusi-kuittaus ilmoitukset/valittu-ilmoitus)
-  (ilmoitukset/sulje-uusi-kuittaus!))
 
-(defn esta-lahetys? []
-  (let [kuittaus @tiedot/uusi-kuittaus]
-    (or (empty? (:vapaateksti kuittaus))
-        (not (some #(= (:tyyppi kuittaus) %) apurit/kuittaustyypit)))))
+(def fraasihaku
+  (reify protokollat/Haku
+    (hae [_ teksti]
+      (let [teksti (.toLowerCase teksti)]
+        (go (into []
+                  (filter #(not= -1 (.indexOf (.toLowerCase %) teksti)))
+                  apurit/+kuittauksen-vakiofraasit+))))))
 
-(defn uusi-kuittaus []
+(defn esta-lahetys? [kuittaus]
+  (or (:tallennus-kaynnissa? kuittaus)
+      (nil? (:tyyppi kuittaus))))
+
+(defn uusi-kuittaus [e! kuittaus]
   [:div
    {:class "uusi-kuittaus"}
    [lomake/lomake
-    {:muokkaa! #(reset! tiedot/uusi-kuittaus %)
-     :luokka   :horizontal
-     :footer   [:div
-                [napit/palvelinkutsu-nappi
-                 "Lähetä"
-                 #(tiedot/laheta-uusi-kuittaus @tiedot/uusi-kuittaus)
-                 {:ikoni        (ikonit/tallenna)
-                  :disabled     (esta-lahetys?)
-                  :kun-onnistuu (fn [vastaus]
-                                  (kasittele-kuittauskasityksen-vastaus vastaus)
-                                  (tapahtumat/julkaise!
-                                    {:aihe :ilmoituksen-kuittaustiedot-päivitetty
-                                     :id (:id @ilmoitukset/valittu-ilmoitus)}))
-                  :virheviesti  "Kuittauksen tallennuksessa tai lähetyksessä T-LOIK:n tapahtui virhe."
-                  :luokka       "nappi-ensisijainen"}]
-                [napit/peruuta
-                 "Peruuta"
-                 #(do
-                   (ilmoitukset/sulje-uusi-kuittaus!)
-                   (tiedot/alusta-uusi-kuittaus ilmoitukset/valittu-ilmoitus))
-                 {:luokka "pull-right"}]]}
-    [(lomake/ryhma {:otsikko    "Kuittaus"
-                    :leveys-col 3}
-                   {:nimi          :tyyppi
-                    :otsikko       "Tyyppi"
-                    :pakollinen?   true
-                    :tyyppi        :valinta
-                    :valinnat      apurit/kuittaustyypit
-                    :valinta-nayta apurit/kuittaustyypin-selite
-                    :leveys-col    3}
-                   {:nimi        :vapaateksti
-                    :otsikko     "Vapaateksti"
+    {:muokkaa! #(e! (v/->AsetaKuittausTiedot %))
+     :luokka :horizontal
+     :footer [:div
+              [napit/tallenna
+               "Lähetä"
+               #(e! (v/->Kuittaa))
+               {:tallennus-kaynnissa? (:tallennus-kaynnissa? kuittaus)
+                :ikoni (ikonit/tallenna)
+                :disabled (esta-lahetys? kuittaus)
+                :virheviesti "Kuittauksen tallennuksessa tai lähetyksessä T-LOIK:n tapahtui virhe."
+                :luokka "nappi-ensisijainen"}]
+              [napit/peruuta
+               "Peruuta"
+               #(e! (v/->SuljeUusiKuittaus))
+               {:luokka "pull-right"}]]}
+    [(lomake/ryhma {:otsikko "Kuittaus"}
+                   {:nimi :tyyppi
+                    :otsikko "Tyyppi"
                     :pakollinen? true
-                    :tyyppi      :text
-                    :leveys-col  3})
-     (lomake/ryhma {:otsikko    "Käsittelijä"
-                    :leveys-col 3}
-                   {:nimi       :kasittelija-etunimi
-                    :otsikko    "Etunimi"
-                    :leveys-col 3
-                    :tyyppi     :string}
-                   {:nimi       :kasittelija-sukunimi
-                    :otsikko    "Sukunimi"
-                    :leveys-col 3
-                    :tyyppi     :string}
-                   {:nimi       :kasittelija-matkapuhelin
-                    :otsikko    "Matkapuhelin"
-                    :leveys-col 3
-                    :tyyppi     :puhelin}
-                   {:nimi       :kasittelija-tyopuhelin
-                    :otsikko    "Työpuhelin"
-                    :leveys-col 3
-                    :tyyppi     :puhelin}
-                   {:nimi       :kasittelija-sahkoposti
-                    :otsikko    "Sähköposti"
-                    :leveys-col 3
-                    :tyyppi     :email}
-                   {:nimi       :kasittelija-organisaatio
-                    :otsikko    "Organisaation nimi"
-                    :leveys-col 3
-                    :tyyppi     :string}
-                   {:nimi       :kasittelija-ytunnus
-                    :otsikko    "Organisaation y-tunnus"
-                    :leveys-col 3
-                    :tyyppi     :string})]
-    @tiedot/uusi-kuittaus]])
+                    :tyyppi :valinta
+                    :valinnat apurit/kuittaustyypit
+                    :valinta-nayta #(if %
+                                      (apurit/kuittaustyypin-selite %)
+                                      "- Valitse kuittaustyyppi -")
+                    :vihje (when (= :vaara-urakka (:tyyppi kuittaus))
+                             "Oikean urakan tiedot pyydetään välitettäväksi vapaatekstikentässä.")}
+                   {:nimi :vakiofraasi
+                    :otsikko "Vakiofraasi"
+                    :tyyppi :haku
+                    :lahde fraasihaku
+                    :hae-kun-yli-n-merkkia 0}
+                   {:nimi :vapaateksti
+                    :otsikko "Vapaateksti"
+                    :tyyppi :text
+                    ;; pituus on XSD-skeeman maksimi 1024 - pisimmän vakiofraasin mitta (48)
+                    :pituus-max 976})
 
-(defn uusi-kuittaus-lomake []
-  (komp/luo
-    uusi-kuittaus))
+     (lomake/ryhma {:otsikko "Käsittelijä"
+                    :leveys-col 3}
+                   {:nimi :kasittelija-etunimi
+                    :otsikko "Etunimi"
+                    :leveys-col 3
+                    :tyyppi :string
+                    :pituus-max 32}
+                   {:nimi :kasittelija-sukunimi
+                    :otsikko "Sukunimi"
+                    :leveys-col 3
+                    :tyyppi :string
+                    :pituus-max 32}
+                   {:nimi :kasittelija-matkapuhelin
+                    :otsikko "Matkapuhelin"
+                    :leveys-col 3
+                    :tyyppi :puhelin
+                    :pituus-max 32}
+                   {:nimi :kasittelija-tyopuhelin
+                    :otsikko "Työpuhelin"
+                    :leveys-col 3
+                    :tyyppi :puhelin
+                    :pituus-max 32}
+                   {:nimi :kasittelija-sahkoposti
+                    :otsikko "Sähköposti"
+                    :leveys-col 3
+                    :tyyppi :email
+                    :pituus-max 64}
+                   {:nimi :kasittelija-organisaatio
+                    :otsikko "Organisaation nimi"
+                    :leveys-col 3
+                    :tyyppi :string
+                    :pituus-max 128}
+                   {:nimi :kasittelija-ytunnus
+                    :otsikko "Organisaation y-tunnus"
+                    :leveys-col 3
+                    :tyyppi :string
+                    :pituus-max 9})]
+    kuittaus]])
+
+(defn kanavan-ikoni [kuittaus]
+  (case (:kanava kuittaus)
+    :sms (ikonit/phone)
+    :sahkoposti (ikonit/envelope)
+    :ulkoinen_jarjestelma (ikonit/livicon-download)
+    :harja (ikonit/pencil)
+    nil))
 
 (defn kuittauksen-tiedot [kuittaus]
-  ^{:key (str "kuittaus-paneeli-" (:id kuittaus))}
-  [bs/panel
-   {:class "kuittaus-viesti"}
-   (capitalize (name (:kuittaustyyppi kuittaus)))
-   [:span
-    ^{:key "kuitattu"}
-    [yleiset/tietoja {}
-     "Kuitattu: " (pvm/pvm-aika-sek (:kuitattu kuittaus))
-     "Lisätiedot: " (:vapaateksti kuittaus)]
-    [:br]
-    ^{:key "kuittaaja"}
-    [yleiset/tietoja {}
-     "Kuittaaja: " (apurit/nayta-henkilo (:kuittaaja kuittaus))
-     "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kuittaaja kuittaus))
-     "Sähköposti: " (get-in kuittaus [:kuittaaja :sahkoposti])]
-    [:br]
-    (when (:kasittelija kuittaus)
-      ^{:key "kasittelija"}
+  (let [valitys? (apurit/valitysviesti? kuittaus)]
+    ^{:key (str "kuittaus-paneeli-" (:id kuittaus))}
+    [bs/panel
+     {:class (if valitys? "valitys-viesti" "kuittaus-viesti")}
+     [:span (str (apurit/kuittaustyypin-otsikko (:kuittaustyyppi kuittaus)) " ") (kanavan-ikoni kuittaus)]
+     [:span
+      ^{:key "kuitattu"}
       [yleiset/tietoja {}
-       "Käsittelijä: " (apurit/nayta-henkilo (:kasittelija kuittaus))
-       "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kasittelija kuittaus))
-       "Sähköposti: " (get-in kuittaus [:kasittelija :sahkoposti])])]])
+       (if valitys? "Lähetetty: " "Kuitattu: ") (pvm/pvm-aika-sek (:kuitattu kuittaus))
+       "Vakiofraasi: " (:vakiofraasi kuittaus)
 
-(defn kuittaa-monta-lomake [{:keys [ilmoitukset tyyppi vapaateksti] :as data} muokkaa!
-                            kuittaukset-tallennettu]
+       ;; Välitysviestien tapauksessa vapaatekstissä on viestin määrämittainen raakadata, eli sähköpostin tapauksessa
+       ;; HTML:ää. Ei näytetä sitä turhaan, tärkeää on joka tapauksessa tieto, kenelle välitysviesti on lähtenyt
+       "Vapaateksti: " (when-not valitys? (:vapaateksti kuittaus))
+       "Kanava: " (apurit/kanavan-otsikko (:kanava kuittaus))]
+      [:br]
+      ^{:key "kuittaaja"}
+      [yleiset/tietoja {}
+       (if valitys? "Vastaanottaja: " "Kuittaaja: ") (apurit/nayta-henkilo (:kuittaaja kuittaus))
+       "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kuittaaja kuittaus))
+       "Sähköposti: " (get-in kuittaus [:kuittaaja :sahkoposti])]
+      [:br]
+      (when (:kasittelija kuittaus)
+        ^{:key "kasittelija"}
+        [yleiset/tietoja {}
+         "Käsittelijä: " (apurit/nayta-henkilo (:kasittelija kuittaus))
+         "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kasittelija kuittaus))
+         "Sähköposti: " (get-in kuittaus [:kasittelija :sahkoposti])])]]))
+
+(defn kuittaa-monta-lomake [e! {:keys [ilmoitukset tyyppi vapaateksti tallennus-kaynnissa?]
+                                :as data}]
   (let [valittuna (count ilmoitukset)]
     [:div.ilmoitukset-kuittaa-monta
      [lomake/lomake
-      {:muokkaa! muokkaa!
-       :palstoja 2
+      {:muokkaa! #(e! (v/->AsetaKuittausTiedot %))
+       :palstoja 3
        :otsikko "Kuittaa monta ilmoitusta"}
-      [{:otsikko "Kuittaustyyppi"
-        :pakollinen? true
-        :tyyppi :valinta
-        :valinnat apurit/kuittaustyypit
-        :valinta-nayta #(or (apurit/kuittaustyypin-selite %) "- Valitse kuittaustyyppi -")
-        :nimi :tyyppi}
+      [
+       (lomake/rivi
+         {:otsikko "Kuittaustyyppi"
+          :pakollinen? true
+          :tyyppi :valinta
+          :valinnat apurit/kuittaustyypit
+          :valinta-nayta #(or (apurit/kuittaustyypin-selite %) "- Valitse kuittaustyyppi -")
+          :nimi :tyyppi
+          :vihje (when (= :vaara-urakka (:tyyppi data))
+                   "Oikean urakan tiedot pyydetään välitettäväksi vapaatekstikentässä.")}
+         {:otsikko "Vakiofraasi"
+          :tyyppi :haku
+          :hae-kun-yli-n-merkkia 0
+          :lahde fraasihaku
+          :nimi :vakiofraasi}
 
-       {:otsikko "Vapaateksti"
-        :pakollinen? true
-        :tyyppi :text
-        :koko [80 :auto]
-        :nimi :vapaateksti}]
+         {:otsikko "Vapaateksti"
+          :tyyppi :text
+          :koko [80 :auto]
+          :pituus-max 976
+          :nimi :vapaateksti})]
 
       data]
-     [napit/palvelinkutsu-nappi
+     [napit/tallenna
       (if (> valittuna 1)
         (str "Kuittaa " valittuna " ilmoitusta")
         "Kuittaa ilmoitus")
-      #(go (<! (tiedot/laheta-kuittaukset! ilmoitukset {:tyyppi tyyppi
-                                                        :vapaateksti vapaateksti}))
-           (kuittaukset-tallennettu))
+      #(e! (v/->Kuittaa))
 
-      {:luokka   "nappi-ensisijainen kuittaa-monta-tallennus"
-       :disabled (or (not (lomake/voi-tallentaa-ja-muokattu? data))
+      {:ikoni (ikonit/tallenna)
+       :tallennus-kaynnissa? tallennus-kaynnissa?
+       :luokka (str (when tallennus-kaynnissa? "disabled ") "nappi-ensisijainen kuittaa-monta-tallennus")
+       :disabled (or (:tallennus-kaynnissa? data)
+                     (not (lomake/voi-tallentaa-ja-muokattu? data))
                      (zero? valittuna))}]
-     [napit/peruuta "Peruuta" #(muokkaa! nil)]
+     [napit/peruuta "Peruuta" #(e! (v/->PeruMonenKuittaus))]
      [yleiset/vihje "Valitse kuitattavat ilmoitukset listalta."]]))

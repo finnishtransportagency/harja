@@ -21,7 +21,7 @@
           },
           "alkanut": "2016-01-01T00:00:00Z",
           "paattynyt": "2016-01-01T00:00:00Z",
-          "toteumatyyppi": "yksikkohintainen",
+          "toteumatyyppi": "kokonaishintainen",
           "sopimusId": 1,
           "suorittaja": {
             "nimi": "Tehotekijät Oy",
@@ -30,7 +30,7 @@
           "tehtavat": [
             {
               "tehtava": {
-                "id": 1
+                "id": 1365
               }
             }
           ]

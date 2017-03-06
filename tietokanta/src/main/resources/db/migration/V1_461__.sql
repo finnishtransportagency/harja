@@ -1,0 +1,1 @@
+CREATE INDEX talvihoitomittaus_tarkastus_idx ON talvihoitomittaus (tarkastus);

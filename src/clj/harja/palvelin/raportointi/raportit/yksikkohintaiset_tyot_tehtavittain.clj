@@ -3,6 +3,7 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.yksikkohintaiset-tyot :as q]
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
+            [harja.domain.raportointi :refer [info-solu]]
             [harja.fmt :as fmt]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
@@ -45,7 +46,7 @@
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         suunnittelutiedot (when (= :urakka konteksti)
-                            (yks-hint-tyot/hae-urakan-hoitokaudet db urakka-id))
+                            (yks-hint-tyot/suunnitellut-tehtavat db urakka-id))
         naytettavat-rivit (case konteksti
                             :urakka
                             (hae-summatut-tehtavat-urakalle db
@@ -101,18 +102,18 @@
       (keep identity
             (conj (mapv (fn [rivi]
                           (keep identity [(when urakoittain?
-                                            (or (:urakka_nimi rivi) [:info ""]))
-                                          (or (:nimi rivi) [:info ""])
-                                          (or (:yksikko rivi) [:info ""])
+                                            (or (:urakka_nimi rivi) (info-solu "")))
+                                          (or (:nimi rivi) (info-solu ""))
+                                          (or (:yksikko rivi) (info-solu ""))
                                           (when (= konteksti :urakka)
-                                            (or (:yksikkohinta rivi) [:info ""]))
+                                            (or (:yksikkohinta rivi) (info-solu "")))
                                           (when (= konteksti :urakka)
-                                            (or (:suunniteltu_maara rivi) [:info "Ei suunnitelmaa"]))
+                                            (or (:suunniteltu_maara rivi) (info-solu "Ei suunnitelmaa")))
                                           (or (:toteutunut_maara rivi) 0)
                                           (when (= konteksti :urakka)
-                                            (or (:suunnitellut_kustannukset rivi) [:info ""]))
+                                            (or (:suunnitellut_kustannukset rivi) (info-solu "")))
                                           (when (= konteksti :urakka)
-                                            (or (:toteutuneet_kustannukset rivi) [:info ""]))]))
+                                            (or (:toteutuneet_kustannukset rivi) (info-solu "")))]))
                         naytettavat-rivit)
                   (when (not (empty? naytettavat-rivit))
                     (if (= konteksti :urakka)

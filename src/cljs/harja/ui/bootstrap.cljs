@@ -5,6 +5,7 @@
             [harja.ui.komponentti :as komp]))
 
 
+
 (defn tabs
   "A tabbed panel. Takes a map of configuration parameters and alternating tab titles and tab components.
 The following keys are supported in the configuration:
@@ -37,17 +38,15 @@ The following keys are supported in the configuration:
            [:span "Ei käyttöoikeutta."]
            [:span
             [:ul.nav {:class style-class}
-             (map
-               (fn [[title keyword]]
-                 ^{:key title}
-                 [:li {:role  "presentation"
-                       :class (when (= keyword active-tab-keyword)
-                                "active")}
-                  [:a.klikattava {:on-click #(do
-                                              (.preventDefault %)
-                                              (reset! active keyword))}
-                   title]])
-               tabs)]
+             (for [[title keyword] tabs]
+               ^{:key title}
+               [:li {:role  "presentation"
+                     :class (when (= keyword active-tab-keyword)
+                              "active")}
+                [:a.klikattava {:on-click #(do
+                                             (.preventDefault %)
+                                             (reset! active keyword))}
+                 title]])]
             [:div.valilehti active-component]]))))))
 
 (defn navbar
@@ -60,10 +59,11 @@ The following keys are supported in the configuration:
                             "collapse.in"
                             "collapse")))]
     (fn [options header & items]
-      [:nav.navbar.navbar-default {:role "navigation"}
+      [:nav.navbar.navbar-default {:role "navigation"
+                                   :class (:luokka options)}
        [:div.container-fluid
 
-        ;; Brand and toggle get grouped for better mobile display 
+        ;; Brand and toggle get grouped for better mobile display
         [:div.navbar-header
          [:button.navbar-toggle.collapsed {:type "button"
                                            :on-click toggle!}  ;; toggle collapse:  data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
@@ -144,5 +144,3 @@ Opts can have the following keys:
        [:h3.panel-title title]])
     [:div.panel-body
      content]]))
-
-
