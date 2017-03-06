@@ -3,9 +3,11 @@
             [harja.pvm :as pvm]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u]
+            [harja.tiedot.urakka :as tiedot-urakka]
+            [harja.tiedot.urakat :as tiedot-urakat]
+            [harja.tiedot.hallintayksikot :as hy]
             [harja.loki :refer [log tarkkaile!]]
-            [cljs.core.async :refer [<!]]
+            [cljs.core.async :as async]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [tuck.core :as t]
@@ -19,10 +21,21 @@
   (reaction {:voi-hakea? true
              :hallintayksikko (:id @nav/valittu-hallintayksikko)
              :urakka (:id @nav/valittu-urakka)
-             :valitun-urakan-hoitokaudet @u/valitun-urakan-hoitokaudet
+             :valitun-urakan-hoitokaudet @tiedot-urakka/valitun-urakan-hoitokaudet
              :urakoitsija (:id @nav/valittu-urakoitsija)
              :urakkatyyppi (:arvo @nav/urakkatyyppi)
-             :hoitokausi @u/valittu-hoitokausi}))
+             :hoitokausi @tiedot-urakka/valittu-hoitokausi}))
+
+
+(defonce kayttajan-urakat
+  (reaction<! [hallintayksikot @hy/hallintayksikot]
+              (log "kayttajan-urakat kaynnistetty")
+              (when hallintayksikot ;; (and nakyvissa? hallintayksikot)
+                (go
+                  (async/<!
+                   (async/reduce conj []
+                                 (async/merge (mapv tiedot-urakat/hae-hallintayksikon-urakat
+                                                    hallintayksikot))))))))
 
 (defonce karttataso-ilmoitukset (atom false))
 
@@ -82,7 +95,7 @@
       (log "---> HaeIlmoitukset: valinnat:" (pr-str valinnat) ", app keys:" (pr-str (keys  app)))
       (go
         (tulos!
-         {:ilmoitukset (<! (k/post! :hae-tietyoilmoitukset (select-keys valinnat [:alkuaika :loppuaika] )))})))
+         {:ilmoitukset (async/<! (k/post! :hae-tietyoilmoitukset (select-keys valinnat [:alkuaika :loppuaika] )))})))
     (assoc app :ilmoitukset nil))
 
   IlmoitusHaku
@@ -95,7 +108,7 @@
   (process-event [{ilmoitus :ilmoitus} app]
     #_(let [tulos! (t/send-async! ->IlmoituksenTiedot)]
       (go
-        (tulos! (<! (k/post! :hae-ilmoitukset (:id ilmoitus))))))
+        (tulos! (async/<! (k/post! :hae-ilmoitukset (:id ilmoitus))))))
     #_(assoc app :ilmoituksen-haku-kaynnissa? true)
     (assoc app :valittu-ilmoitus ilmoitus))
 
