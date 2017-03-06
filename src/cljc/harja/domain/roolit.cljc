@@ -138,7 +138,7 @@ rooleista."
        false))))
 
 (defn jvh? [kayttaja]
-  (roolissa? kayttaja jarjestelmavastuuhenkilo))
+  (roolissa? kayttaja jarjestelmavastaava))
 
 (defn rooli-urakassa?
   "Tarkistaa onko käyttäjällä tietty rooli urakassa."

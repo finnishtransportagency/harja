@@ -23,6 +23,7 @@
     (if devmode
       [:html
        [:head
+        [:title "HARJA"]
         [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}]
         [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
         [:meta {:name "mobile-web-app-capable" :content "yes"}]
@@ -39,6 +40,7 @@
 
       [:html
        [:head
+        [:title "HARJA"]
         [:meta {:http-equiv "X-UA-Compatible" :content "IE=edge,chrome=1"}]
         [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}]
         [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
@@ -78,6 +80,7 @@
       (if devmode
         [:html
          [:head
+          [:title "HARJA Mobiili laadunseuranta"]
           [:meta {:charset "utf-8"}]
           [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}]
           [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
@@ -103,6 +106,7 @@
 
         [:html
          [:head
+          [:title "HARJA Mobiili laadunseuranta"]
           [:meta {:charset "utf-8"}]
           [:meta {:name "viewport" :content "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"}]
           [:meta {:name "apple-mobile-web-app-capable" :content "yes"}]
