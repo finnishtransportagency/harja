@@ -445,3 +445,18 @@
         vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)]
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "tuntematon-yllapitokohde"))))
+
+
+(deftest tarkastuksen-kirjaaminen-kohteelle-toimii
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+        hae-tarkastukset #(q-map "SELECT * FROM tarkastus WHERE yllapitokohde =" kohde-id)
+        tarkastukset-ennen-kirjausta (hae-tarkastukset)
+        polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tarkastus"]
+        kutsudata (slurp "test/resurssit/api/yllapitokohteen-tarkastuksen-kirjaus-request.json")
+        vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)
+        tarkastukset-kirjauksen-jalkeen (hae-tarkastukset)]
+    (is (= 200 (:status vastaus)) "Kirjaus tehtiin onnistuneesti")
+    (is (.contains (:body vastaus) "Tarkastus kirjattu onnistuneesti urakan: 5 ylläpitokohteelle: 5."))
+    (is (= (+ 1 (count tarkastukset-ennen-kirjausta)) (count tarkastukset-kirjauksen-jalkeen))
+        "Vain yksi uusi tarkastus on kirjautunut ylläpitokohteelle")))
