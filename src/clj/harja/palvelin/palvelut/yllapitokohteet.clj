@@ -178,9 +178,9 @@
                                              (and (nil? (:aikataulu-tiemerkinta-loppu kohde-kannassa))
                                                   (some? (:aikataulu-tiemerkinta-loppu tallennettava-kohde)))))
                                          kohteet)]
-    (go (viestinta/laheta-sposti-tiemerkinta-valmis {:db db :fim fim :email email
-                                                     :kohte-idt (mapv :id nyt-valmistuneet-kohteet)
-                                                     :ilmoittaja user}))))
+    (viestinta/laheta-sposti-tiemerkinta-valmis {:db db :fim fim :email email
+                                                 :kohte-idt (mapv :id nyt-valmistuneet-kohteet)
+                                                 :ilmoittaja user})))
 
 (defn- tallenna-tiemerkintakohteiden-aikataulu [{:keys [fim email db user kohteet tiemerkintaurakka-id
                                                         voi-tallentaa-tiemerkinnan-takarajan?] :as tiedot}]
