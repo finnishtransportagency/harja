@@ -22,9 +22,8 @@
 (defn poista-tiemerkintatoteuma [db kayttaja parametrit data]
   )
 
-(defn palvelut [liitteiden-hallinta]
-  [
-   {:palvelu :kirjaa-tiemerkintatoteuma
+(def palvelut
+  [{:palvelu :kirjaa-tiemerkintatoteuma
     :polku "/api/urakat/:id/toteumat/tiemerkinta"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/urakan-tiemerkintatoteuman-kirjaus-request
@@ -41,10 +40,10 @@
 
 (defrecord Tiemerkintatoteuma []
   component/Lifecycle
-  (start [{http :http-palvelin db :db integraatioloki :integraatioloki liitteiden-hallinta :liitteiden-hallinta :as this}]
-    (palvelut/julkaise http db integraatioloki (palvelut liitteiden-hallinta))
+  (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
+    (palvelut/julkaise http db integraatioloki palvelut)
     this)
   (stop [{http :http-palvelin :as this}]
-    (palvelut/poista http (palvelut nil))
+    (palvelut/poista http palvelut)
     this))
 

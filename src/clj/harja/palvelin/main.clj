@@ -93,6 +93,7 @@
     [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
     [harja.palvelin.integraatiot.api.ping :as api-ping]
     [harja.palvelin.integraatiot.api.yhteystiedot :as api-yhteystiedot]
+    [harja.palvelin.integraatiot.api.tiemerkintatoteuma :as api-tiemerkintatoteuma]
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
@@ -455,6 +456,10 @@
       :api-yhteystiedot (component/using
                           (api-yhteystiedot/->Yhteystiedot)
                           [:http-palvelin :db :integraatioloki :fim])
+
+      :api-tiemerkintatoteuma (component/using
+                                (api-tiemerkintatoteuma/->Tiemerkintatoteuma)
+                                [:http-palvelin :db :integraatioloki])
 
       ;; Ajastettu laskutusyhteenvetojen muodostus
       :laskutusyhteenvetojen-muodostus
