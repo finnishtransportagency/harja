@@ -343,6 +343,7 @@
   (let [urakka-id @muhoksen-paallystysurakan-id
         sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
         yllapitokohde-id (hae-yllapitokohde-oulaisten-ohitusramppi-jolla-ei-aikataulutietoja)
+        suorittava-tiemerkintaurakka-id (hae-lapin-tiemerkintaurakan-id)
         sahkoposti-valitetty (atom false)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
 
@@ -357,6 +358,7 @@
                        :sopimus-id sopimus-id
                        :vuosi 2017
                        :kohteet [{:id yllapitokohde-id
+                                  :suorittava-tiemerkintaurakka suorittava-tiemerkintaurakka-id
                                   :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
                                   :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00")}]})
       (kutsu-palvelua (:http-palvelin jarjestelma)
