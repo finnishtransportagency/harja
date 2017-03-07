@@ -7,10 +7,15 @@
             [harja.palvelin.palvelut.yllapitokohteet :refer :all]
             [harja.testi :refer :all]
             [clojure.core.match :refer [match]]
+            [harja.jms-test :refer [feikki-sonja]]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
             [clojure.java.io :as io]
-            [harja.palvelin.komponentit.sonja :as sonja])
+            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.komponentit.fim :as fim]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -19,22 +24,24 @@
                     (component/start
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
+                        :integraatioloki (component/using
+                                           (integraatioloki/->Integraatioloki nil)
+                                           [:db])
+                        :fim (component/using
+                               (fim/->FIM +testi-fim+)
+                               [:db :integraatioloki])
+                        :sonja (feikki-sonja)
+                        :sonja-sahkoposti (component/using
+                                            (sahkoposti/luo-sahkoposti "foo@example.com"
+                                                                       {:sahkoposti-sisaan-jono "email-to-harja"
+                                                                        :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
+                                                                        :sahkoposti-ulos-jono "harja-to-email"
+                                                                        :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
+                                            [:sonja :db :integraatioloki])
                         :http-palvelin (testi-http-palvelin)
-                        :urakan-yllapitokohteet (component/using
-                                                  (->Yllapitokohteet)
-                                                  [:http-palvelin :db])
-                        :tallenna-yllapitokohdeosat (component/using
-                                                      (->Yllapitokohteet)
-                                                      [:http-palvelin :db])
-                        :urakan-paallystysilmoitus-paallystyskohteella (component/using
-                                                                         (->Paallystys)
-                                                                         [:http-palvelin :db])
-                        :tallenna-paallystysilmoitus (component/using
-                                                       (->Paallystys)
-                                                       [:http-palvelin :db])
-                        :tallenna-paallystyskohde (component/using
-                                                    (->Paallystys)
-                                                    [:http-palvelin :db])))))
+                        :yllapitokohteet (component/using
+                                           (yllapitokohteet/->Yllapitokohteet)
+                                           [:http-palvelin :db :fim :sonja-sahkoposti])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
