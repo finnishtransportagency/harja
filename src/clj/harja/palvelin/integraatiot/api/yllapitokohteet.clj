@@ -34,6 +34,10 @@
   - Määrämuutoksilla seurataan yksittäisen kohteen kuluja rivitasolla. Yksittäinen rivi sisältää tiedon päällysteen mm.
     tyypistä, työstä, määristä sekä yksikkö hinnasta. Rajapintakutsu ylikirjoittaa koko kohteen taloudellisen osan,
     joten idea on, että rajapinnan kautta annetaan aina kokonaisena tiedot.
+
+  TARKASTUSTEN KIRJAUS KOHTEELLE
+  - Ylläpitokohteille on mahdollista kirjata mm. seuraavan tyyppisiä tarkastuksia: katselmus, pistokoe,
+    vastaanottotarkastus, takuutarkastus. Tarkastukset voidaan myös poistaa erillisen rajapinnan kautta.
   "
 
   (:require [com.stuartsierra.component :as component]
@@ -311,6 +315,12 @@
       (tee-kirjausvastauksen-body
         {:ilmoitukset (str "Määrämuutokset kirjattu onnistuneesti.")}))))
 
+(defn kirjaa-tarkastus [db kayttaja parametrit data]
+  )
+
+(defn poista-tarkastus [db kayttaja parametrit data]
+  )
+
 (def palvelut
   [{:palvelu :hae-yllapitokohteet
     :polku "/api/urakat/:id/yllapitokohteet"
@@ -366,7 +376,21 @@
     :kutsu-skeema json-skeemat/urakan-yllapitokohteen-maaramuutosten-kirjaus-request
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
-                    (kirjaa-maaramuutokset db kayttaja parametrit data))}])
+                    (kirjaa-maaramuutokset db kayttaja parametrit data))}
+   {:palvelu :kirjaa-tarkastus
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tarkastus"
+    :tyyppi :POST
+    :kutsu-skeema json-skeemat/urakan-yllapitokohteen-tarkastuksen-kirjaus-request
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db]
+                    (kirjaa-tarkastus db kayttaja parametrit data))}
+   {:palvelu :poista-tarkastus
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tarkastus"
+    :tyyppi :DELETE
+    :kutsu-skeema json-skeemat/urakan-yllapitokohteen-tarkastuksen-poisto
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db]
+                    (poista-tarkastus db kayttaja parametrit data))}])
 
 (defrecord Yllapitokohteet []
   component/Lifecycle
