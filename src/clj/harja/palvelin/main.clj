@@ -447,7 +447,7 @@
                           :tloik])
       :api-yllapitokohteet (component/using
                              (api-yllapitokohteet/->Yllapitokohteet)
-                             [:http-palvelin :db :integraatioloki])
+                             [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
       :api-ping (component/using
                   (api-ping/->Ping)
                   [:http-palvelin :db :integraatioloki])

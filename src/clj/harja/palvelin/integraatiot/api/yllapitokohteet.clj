@@ -61,7 +61,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as yllapitokohteet]
-            [harja.kyselyt.paallystys :as paallystys-q])
+            [harja.kyselyt.paallystys :as paallystys-q]
+            [harja.palvelin.integraatiot.api.kasittely.tarkastukset :as tarkastukset])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -106,7 +107,7 @@
         kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid kohde-id})))
         alikohteet (mapv #(-> (:alikohde %)
                               (assoc :ulkoinen-id (get-in % [:alikohde :tunniste :id]))
-                              (assoc-in [:sijainti :numero ] kohteen-tienumero))
+                              (assoc-in [:sijainti :numero] kohteen-tienumero))
                          (:alikohteet kohde))]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (vaadi-kohde-kuuluu-urakkaan db urakka-id urakan-tyyppi kohde-id)
@@ -315,86 +316,111 @@
       (tee-kirjausvastauksen-body
         {:ilmoitukset (str "Määrämuutokset kirjattu onnistuneesti.")}))))
 
-(defn kirjaa-tarkastus [db kayttaja parametrit data]
-  )
+(defn kirjaa-tarkastuksia [db liitteiden-hallinta kayttaja {:keys [urakka-id kohde-id]} {:keys [otsikko tarkastukset]}]
+  (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) tarkastuksia käyttäjän: %s toimesta"
+                     urakka-id
+                     kohde-id
+                     kayttaja))
 
-(defn poista-tarkastus [db kayttaja parametrit data]
+  (jdbc/with-db-transaction [db db]
+    (let [urakka-id (Integer/parseInt urakka-id)
+          kohde-id (Integer/parseInt kohde-id)
+          jarjestelma (get-in otsikko [:lahettaja :jarjestelma])]
+      (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+      (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+
+      (tarkastukset/kasittele-tarkastukset db  liitteiden-hallinta nil kayttaja urakka-id tarkastukset)
+
+                                      ;;id lahde aika tr tyyppi tarkastaja sijainti
+      ;;ulkoinen-id havainnot laadunalitus yllapitokohde
+      ;;nayta-urakoitsijalle
+
+      ;; tallenna liitteet erikseen
+
+
+      )
+    )
+
+  (tee-kirjausvastauksen-body
+    {:ilmoitukset (str "Tarkastus kirjattu onnistuneesti urakan: " urakka-id " ylläpitokohteelle: " kohde-id ".")}))
+
+(defn poista-tarkastuksia [db kayttaja parametrit data]
   )
 
 (def palvelut
   [{:palvelu :hae-yllapitokohteet
-    :polku "/api/urakat/:id/yllapitokohteet"
+    :polku " /api/urakat/:id/yllapitokohteet "
     :tyyppi :GET
     :vastaus-skeema json-skeemat/urakan-yllapitokohteiden-haku-vastaus
     :kasittely-fn (fn [parametit _ kayttaja db]
                     (hae-yllapitokohteet db parametit kayttaja))}
    {:palvelu :paivita-yllapitokohde
-    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id"
+    :polku " /api/urakat/:urakka-id/yllapitokohteet/:kohde-id "
     :tyyppi :PUT
     :kutsu-skeema json-skeemat/urakan-yllapitokohteen-paivitys-request
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (paivita-yllapitokohde db kayttaja parametrit data))}
    {:palvelu :kirjaa-paallystysilmoitus
-    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/paallystysilmoitus"
+    :polku " /api/urakat/:urakka-id/yllapitokohteet/:kohde-id/paallystysilmoitus "
     :tyyppi :POST
     :kutsu-skeema json-skeemat/paallystysilmoituksen-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (kirjaa-paallystysilmoitus db kayttaja parametrit data))}
    {:palvelu :kirjaa-paallystyksen-aikataulu
-    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu-paallystys"
+    :polku " /api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu-paallystys "
     :tyyppi :POST
     :kutsu-skeema json-skeemat/paallystyksen-aikataulun-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (kirjaa-aikataulu db kayttaja parametrit data :paallystys))}
    {:palvelu :kirjaa-tiemerkinnan-aikataulu
-    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu-tiemerkinta"
+    :polku " /api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu-tiemerkinta "
     :tyyppi :POST
     :kutsu-skeema json-skeemat/tiemerkinnan-aikataulun-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (kirjaa-aikataulu db kayttaja parametrit data :tiemerkinta))}
    {:palvelu :kirjaa-tietyomaa
-    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tietyomaa"
+    :polku " /api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tietyomaa "
     :tyyppi :POST
     :kutsu-skeema json-skeemat/tietyomaan-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (kirjaa-tietyomaa db kayttaja parametrit data))}
    {:palvelu :poista-tietyomaa
-    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tietyomaa"
+    :polku " /api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tietyomaa "
     :tyyppi :DELETE
     :kutsu-skeema json-skeemat/tietyomaan-poisto
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (poista-tietyomaa db kayttaja parametrit data))}
    {:palvelu :kirjaa-maaramuutokset
-    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/maaramuutokset"
+    :polku " /api/urakat/:urakka-id/yllapitokohteet/:kohde-id/maaramuutokset "
     :tyyppi :POST
     :kutsu-skeema json-skeemat/urakan-yllapitokohteen-maaramuutosten-kirjaus-request
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (kirjaa-maaramuutokset db kayttaja parametrit data))}
-   {:palvelu :kirjaa-tarkastus
-    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tarkastus"
+   {:palvelu :kirjaa-yllapitokohteen-tarkastus
+    :polku " /api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tarkastus "
     :tyyppi :POST
     :kutsu-skeema json-skeemat/urakan-yllapitokohteen-tarkastuksen-kirjaus-request
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
-                    (kirjaa-tarkastus db kayttaja parametrit data))}
-   {:palvelu :poista-tarkastus
-    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tarkastus"
+                    (kirjaa-tarkastuksia db nil kayttaja parametrit data))}
+   {:palvelu :poista-yllapitokohteen-tarkastus
+    :polku " /api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tarkastus "
     :tyyppi :DELETE
     :kutsu-skeema json-skeemat/urakan-yllapitokohteen-tarkastuksen-poisto
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
-                    (poista-tarkastus db kayttaja parametrit data))}])
+                    (poista-tarkastuksia db kayttaja parametrit data))}])
 
 (defrecord Yllapitokohteet []
   component/Lifecycle
-  (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
+  (start [{http :http-palvelin db :db integraatioloki :integraatioloki liitteiden-hallinta :liitteiden-hallinta :as this}]
     (palvelut/julkaise http db integraatioloki palvelut)
     this)
   (stop [{http :http-palvelin :as this}]

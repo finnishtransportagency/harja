@@ -19,7 +19,8 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja-paallystys
-    :api-yllapitokohteet (component/using (api-yllapitokohteet/->Yllapitokohteet) [:http-palvelin :db :integraatioloki])))
+    :api-yllapitokohteet (component/using (api-yllapitokohteet/->Yllapitokohteet)
+                                          [:http-palvelin :db :integraatioloki :liitteiden-hallinta])))
 
 (use-fixtures :each jarjestelma-fixture)
 
