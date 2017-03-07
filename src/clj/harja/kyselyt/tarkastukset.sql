@@ -216,7 +216,12 @@ FROM tarkastus t
 WHERE t.urakka = :urakka
       AND t.id = :id
       AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
-      AND t.poistettu IS NOT TRUE;
+      AND t.poistettu IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (t.yllapitokohde IS NULL
+          OR
+          t.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = t.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-tarkastuksen-liitteet
 -- Hakee annetun tarkastuksen kaikki liitteet
