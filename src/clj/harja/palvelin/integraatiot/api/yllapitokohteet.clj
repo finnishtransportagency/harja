@@ -326,13 +326,10 @@
           kohde-id (Integer/parseInt kohde-id)]
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
       (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
-      (let [varoitukset (tarkastukset/kasittele-tarkastukset db liitteiden-hallinta kayttaja nil urakka-id data kohde-id)]
-        ;; todo: hanskaa varoitukset
-
-        )))
-
-  (tee-kirjausvastauksen-body
-    {:ilmoitukset (str "Tarkastus kirjattu onnistuneesti urakan: " urakka-id " ylläpitokohteelle: " kohde-id ".")}))
+      (let [ilmoitukset (str "Tarkastus kirjattu onnistuneesti urakan: " urakka-id " ylläpitokohteelle: " kohde-id ".")
+            varoitukset (tarkastukset/kasittele-tarkastukset db liitteiden-hallinta kayttaja nil urakka-id data kohde-id)]
+        (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset
+                                     :varoitukset (when-not (empty? varoitukset) varoitukset)})))))
 
 (defn poista-tarkastuksia [db kayttaja parametrit data]
   )
