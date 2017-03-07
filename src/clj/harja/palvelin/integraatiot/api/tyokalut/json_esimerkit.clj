@@ -64,5 +64,11 @@
 
 (def +urakan-yllapitokohteen-maaramuutosten-kirjaus+ "api/examples/urakan-yllapitokohteen-maaramuutosten-kirjaus-request.json")
 
-(def +urakan-yllapitokohteen-tarkastuksen-kirjaus+ "api/examples/yllapitokohteen-tarkastuksen-kirjaus-request.json")
+(def +urakan-yllapitokohteen-tarkastuksen-kirjaus-request+ "api/examples/yllapitokohteen-tarkastuksen-kirjaus-request.json")
+
+(def +yllapitokohteen-tarkastuksen-poisto-request+ "api/examples/yllapitokohteen-tarkastuksen-poisto-request.json")
+
+(def +urakan-tiemerkintatoteuman-kirjaus-request+ "api/examples/urakan-tiemerkintatoteuman-kirjaus-request.json")
+
+(def +urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request+ "api/examples/urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request.json")
 

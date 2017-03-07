@@ -110,5 +110,12 @@
 
 (def +urakan-yllapitokohteen-tarkastuksen-kirjaus-request+ "api/schemas/yllapitokohteen-tarkastuksen-kirjaus-request.schema.json")
 (def urakan-yllapitokohteen-tarkastuksen-kirjaus-request (tee-validaattori +urakan-yllapitokohteen-tarkastuksen-kirjaus-request+))
-(def +urakan-yllapitokohteen-tarkastuksen-poisto+ "api/schemas/tarkastuksen-poisto-request.schema.json")
-(def urakan-yllapitokohteen-tarkastuksen-poisto (tee-validaattori "api/schemas/tarkastuksen-poisto-request.schema.json"))
+
+(def +urakan-yllapitokohteen-tarkastuksen-poisto-request+ "api/schemas/tarkastuksen-poisto-request.schema.json")
+(def urakan-yllapitokohteen-tarkastuksen-poisto-request (tee-validaattori +urakan-yllapitokohteen-tarkastuksen-poisto-request+))
+
+(def +urakan-tiemerkintatoteuman-kirjaus-request+ "api/schemas/urakan-tiemerkintatoteuman-kirjaus-request.schema.json")
+(def urakan-tiemerkintatoteuman-kirjaus-request (tee-validaattori "api/schemas/urakan-tiemerkintatoteuman-kirjaus-request.schema.json"))
+
+(def +urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request+ "api/schemas/urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request.schema.json")
+(def urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request (tee-validaattori "api/schemas/urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request.schema.json"))

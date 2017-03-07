@@ -416,7 +416,7 @@
    {:palvelu :poista-yllapitokohteen-tarkastus
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tarkastus"
     :tyyppi :DELETE
-    :kutsu-skeema json-skeemat/urakan-yllapitokohteen-tarkastuksen-poisto
+    :kutsu-skeema json-skeemat/urakan-yllapitokohteen-tarkastuksen-poisto-request
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (poista-tarkastuksia db kayttaja parametrit data))}])
