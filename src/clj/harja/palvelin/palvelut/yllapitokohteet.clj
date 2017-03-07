@@ -125,15 +125,14 @@
                                            tm-domain/tiemerkinta-oltava-valmis
                                            (c/to-date))
        :id kohde-id
-       :urakka urakka-id}))
+       :urakka urakka-id})
 
-  (valita-tieto-kohteen-valmiudesta-tiemerkintaan {:db db :fim fim :email email :kohde-id kohde-id
-                                                   :tiemerkintapvm tiemerkintapvm :user user})
+    (valita-tieto-kohteen-valmiudesta-tiemerkintaan {:db db :fim fim :email email :kohde-id kohde-id
+                                                     :tiemerkintapvm tiemerkintapvm :user user})
 
-  (hae-urakan-aikataulu db user {:urakka-id urakka-id
-                                 :sopimus-id sopimus-id
-                                 :vuosi vuosi}))
-
+    (hae-urakan-aikataulu db user {:urakka-id urakka-id
+                                   :sopimus-id sopimus-id
+                                   :vuosi vuosi})))
 
 (defn- tallenna-paallystyskohteiden-aikataulu [{:keys [db user kohteet paallystysurakka-id
                                                        voi-tallentaa-tiemerkinnan-takarajan?] :as tiedot}]
