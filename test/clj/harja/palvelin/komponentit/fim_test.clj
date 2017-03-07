@@ -55,7 +55,7 @@
                 (map :roolit (fim/suodata-kayttajaroolit kayttajat pida-vastuuhenkilo))))))
 
 (deftest kayttajien-haku-toimii
-  (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
+  (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))]
     (with-fake-http
       [+testi-fim+ vastaus-xml]
       (let [vastaus (fim/hae-urakan-kayttajat (:fim jarjestelma) "1242141-OULU2")]

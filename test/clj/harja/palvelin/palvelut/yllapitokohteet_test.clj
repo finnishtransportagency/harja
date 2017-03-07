@@ -345,7 +345,7 @@
         yllapitokohde-id (hae-yllapitokohde-oulaisten-ohitusramppi-jolla-ei-aikataulutietoja)
         suorittava-tiemerkintaurakka-id (hae-lapin-tiemerkintaurakan-id)
         sahkoposti-valitetty (atom false)
-        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-lapin-tiemerkintaurakan-kayttajat.xml"))]
 
     (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
 

@@ -159,7 +159,7 @@
     (is (= (count urakat-ilman-paivystysta) (count urakat)))))
 
 (deftest ilmoituksien-saajien-haku-toimii
-  (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
+  (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))]
     (with-fake-http
       [fim-test/+testi-fim+ vastaus-xml]
       (let [vastaus (paivystajatarkistukset/hae-ilmoituksen-saajat
