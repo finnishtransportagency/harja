@@ -38,12 +38,12 @@
               (:sahkoposti henkilo)
               (str "Harja: " viesti-otsikko)
               viesti-body)
-            (catch Object e
-              (log/error (format "Sähköpostin lähetys FIM-käyttäjälle %s epäonnistui: %s"
-                                 (pr-str henkilo) (when (instance? Throwable e) (.printStackTrace e)))))))))
-    (catch Object e
+            (catch Exception e
+              (log/error (format "Sähköpostin lähetys FIM-käyttäjälle %s epäonnistui. Virhe: %s"
+                                 (pr-str henkilo) (pr-str e))))))))
+    (catch Exception e
       (log/error (format "Sähköpostia ei voitu lähettää urakan %s FIM-käyttäjille %s. Virhe: %s"
-                         urakka-sampoid fim-kayttajaroolit (when (instance? Throwable e) (.printStackTrace e)))))))
+                         urakka-sampoid fim-kayttajaroolit (pr-str e))))))
 
 (defn laheta-tekstiviesti-fim-kayttajarooleille
   "Yrittää lähettää tekstiviestin annetun urakan FIM-käyttäjille, jotka ovat
@@ -65,10 +65,10 @@
         (doseq [henkilo viestin-saajat]
           (try+
             (sms/laheta sms (:puhelin henkilo) viesti)
-            (catch Object e
-              (log/error (format "Tekstiviestin lähetys FIM-käyttäjälle %s epäonnistui: %s"
-                                 (pr-str henkilo) (when (instance? Throwable e) (.printStackTrace e)))))))))
-    (catch Object e
+            (catch Exception e
+              (log/error (format "Tekstiviestin lähetys FIM-käyttäjälle %s epäonnistui. Virhe: %s"
+                                 (pr-str henkilo) (pr-str e))))))))
+    (catch Exception e
       (log/error (format "Tekstiviestiä ei voitu lähettää urakan %s FIM-käyttäjille %s. Virhe: %s"
-                         urakka-sampoid fim-kayttajaroolit (when (instance? Throwable e) (.printStackTrace e)))))))
+                         urakka-sampoid fim-kayttajaroolit (pr-str e))))))
 

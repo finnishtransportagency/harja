@@ -24,6 +24,7 @@
                     (component/start
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
+                        :http-palvelin (testi-http-palvelin)
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
@@ -47,9 +48,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures
-                      jarjestelma-fixture
-                      urakkatieto-fixture))
+(use-fixtures :once jarjestelma-fixture)
 
 (def yllapitokohde-testidata {:kohdenumero 999
                               :nimi "Testiramppi4564ddf"
@@ -342,6 +341,7 @@
 
 (deftest paallystyksen-merkitseminen-valmiiksi-toimii
   (let [urakka-id @muhoksen-paallystysurakan-id
+        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
         yllapitokohde-id (hae-yllapitokohde-oulaisten-ohitusramppi-jolla-ei-aikataulutietoja)
         sahkoposti-valitetty (atom false)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
@@ -351,10 +351,20 @@
     (with-fake-http
       [+testi-fim+ fim-vastaus]
       (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :tallenna-yllapitokohteiden-aikataulu
+                      +kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :sopimus-id sopimus-id
+                       :vuosi 2017
+                       :kohteet [{:id yllapitokohde-id
+                                  :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
+                                  :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00")}]})
+      (kutsu-palvelua (:http-palvelin jarjestelma)
                       :merkitse-kohde-valmiiksi-tiemerkintaan +kayttaja-jvh+
                       {:tiemerkintapvm (pvm/->pvm-aika "23.5.2017 12:00")
                        :kohde-id yllapitokohde-id
                        :urakka-id urakka-id
+                       :sopimus-id sopimus-id
                        :vuosi 2017})
 
       (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
@@ -365,16 +375,18 @@
         sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
         lapin-urakka-id (hae-lapin-tiemerkintaurakan-id)
         vuosi 2017
+        yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
         kohteet [{:kohdenumero "L03"
-                  :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00") :aikataulu-muokkaaja 2
-                  :urakka (hae-muhoksen-paallystysurakan-id),
+                  :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
+                  :aikataulu-muokkaaja (:id +kayttaja-jvh+)
+                  :urakka urakka-id,
                   :aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
                   :nimi "Leppäjärven ramppi",
                   :suorittava-tiemerkintaurakka lapin-urakka-id
                   :valmis-tiemerkintaan (pvm/->pvm-aika "23.5.2017 12:00")
                   :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00"),
-                  :id 1
-                  :sopimus (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+                  :id yllapitokohde-id
+                  :sopimus sopimus-id
                   :aikataulu-muokattu (pvm/->pvm-aika "29.5.2017 12:00")
                   :aikataulu-tiemerkinta-takaraja (pvm/->pvm "1.6.2017")
                   :aikataulu-tiemerkinta-alku nil,
