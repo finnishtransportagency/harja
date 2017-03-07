@@ -47,6 +47,7 @@
     [harja.palvelin.palvelut.yllapitokohteet.paikkaus :as paikkaus]
     [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
     [harja.palvelin.palvelut.ping :as ping]
+    [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
@@ -114,6 +115,7 @@
 
     ;; Metriikat
     [harja.palvelin.komponentit.metriikka :as metriikka])
+
   (:gen-class))
 
 (defn luo-jarjestelma [asetukset]
@@ -246,6 +248,9 @@
       :ping (component/using
               (ping/->Ping)
               [:http-palvelin :db])
+      :pois-kytketyt-ominaisuudet (component/using
+                                   (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet (:pois-kytketyt-ominaisuudet asetukset))
+                                   [:http-palvelin :db])
       :haku (component/using
               (haku/->Haku)
               [:http-palvelin :db])
