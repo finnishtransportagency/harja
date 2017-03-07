@@ -2,12 +2,16 @@
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :refer :all]
             [harja.palvelin.palvelut.yllapitokohteet :refer :all]
             [harja.testi :refer :all]
             [clojure.core.match :refer [match]]
             [com.stuartsierra.component :as component]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [clojure.java.io :as io]
+            [harja.palvelin.komponentit.sonja :as sonja])
+  (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -203,9 +207,9 @@
                                      (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
         kohteet-ennen-testia (kutsu-palvelua (:http-palvelin jarjestelma)
-                                         :urakan-yllapitokohteet +kayttaja-jvh+
-                                         {:urakka-id @muhoksen-paallystysurakan-id
-                                          :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id})
+                                             :urakan-yllapitokohteet +kayttaja-jvh+
+                                             {:urakka-id @muhoksen-paallystysurakan-id
+                                              :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id})
         kohde-jolla-ilmoitus (first (filter :paallystysilmoitus-id kohteet-ennen-testia))
         paivitetyt-kohteet (map
                              (fn [kohde] (if (= (:id kohde) (:id kohde-jolla-ilmoitus))
@@ -221,9 +225,9 @@
                                          (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
           kohteet-testin-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :urakan-yllapitokohteet
-                                           +kayttaja-jvh+ {:urakka-id urakka-id
-                                                           :sopimus-id sopimus-id})]
+                                                 :urakan-yllapitokohteet
+                                                 +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                 :sopimus-id sopimus-id})]
       (is (= maara-ennen-testia maara-testin-jalkeen))
       (is (= kohteet-testin-jalkeen kohteet-ennen-testia)))))
 
@@ -278,44 +282,47 @@
 (deftest tallenna-paallystysurakan-aikataulut
   (let [urakka-id @muhoksen-paallystysurakan-id
         sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+        yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
         vuosi 2017
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
         kohteet [{:kohdenumero "L03"
                   :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00") :aikataulu-muokkaaja 2
-                  :urakka (hae-muhoksen-paallystysurakan-id),
+                  :urakka urakka-id
                   :aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
                   :nimi "Leppäjärven ramppi",
                   :valmis-tiemerkintaan (pvm/->pvm-aika "23.5.2017 12:00")
                   :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00"),
-                  :id 1
-                  :sopimus (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+                  :id yllapitokohde-id
+                  :sopimus sopimus-id
                   :aikataulu-muokattu (pvm/->pvm-aika "29.5.2017 12:00")
                   :aikataulu-tiemerkinta-takaraja (pvm/->pvm "1.6.2017")
                   :aikataulu-tiemerkinta-alku nil,
                   :aikataulu-tiemerkinta-loppu (pvm/->pvm "26.5.2017")}]
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-yllapitokohteiden-aikataulu +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                                      :sopimus-id sopimus-id
-                                                                                      :vuosi vuosi
-                                                                                      :kohteet kohteet})
+                                :tallenna-yllapitokohteiden-aikataulu
+                                +kayttaja-jvh+
+                                {:urakka-id urakka-id
+                                 :sopimus-id sopimus-id
+                                 :vuosi vuosi
+                                 :kohteet kohteet})
         maara-paivityksen-jalkeen (ffirst (q
                                             (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
         vastaus-leppajarven-ramppi (first (filter #(= "Leppäjärven ramppi" (:nimi %)) vastaus))
         odotettu {:aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
-                  :aikataulu-muokkaaja 2
+                  :aikataulu-muokkaaja (:id +kayttaja-jvh+)
                   :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
                   :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00")
                   :aikataulu-tiemerkinta-takaraja (pvm/->pvm "1.6.2017")
                   :aikataulu-tiemerkinta-alku (pvm/->pvm-aika "22.5.2017 00:00")
                   :aikataulu-tiemerkinta-loppu (pvm/->pvm-aika "23.5.2017 00:00")
-                  :id 1
+                  :id yllapitokohde-id
                   :kohdenumero "L03"
                   :nimi "Leppäjärven ramppi"
-                  :sopimus 8
-                  :urakka 5
+                  :sopimus sopimus-id
+                  :urakka urakka-id
                   :valmis-tiemerkintaan (pvm/->pvm-aika "23.5.2017 12:00")}]
     (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
     (is (= (:aikataulu-paallystys-alku odotettu) (:aikataulu-paallystys-alku vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-paallystys-alku")
