@@ -62,6 +62,7 @@
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as yllapitokohteet]
             [harja.kyselyt.paallystys :as paallystys-q]
+            [harja.kyselyt.tarkastukset :as tarkastukset-q]
             [harja.palvelin.integraatiot.api.kasittely.tarkastukset :as tarkastukset])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
@@ -326,13 +327,28 @@
           kohde-id (Integer/parseInt kohde-id)]
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
       (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
-      (let [ilmoitukset (str "Tarkastus kirjattu onnistuneesti urakan: " urakka-id " ylläpitokohteelle: " kohde-id ".")
-            varoitukset (tarkastukset/kasittele-tarkastukset db liitteiden-hallinta kayttaja nil urakka-id data kohde-id)]
+      (let [ilmoitukset (format "Tarkastus kirjattu onnistuneesti urakan: %s ylläpitokohteelle: %s." urakka-id kohde-id)
+            varoitukset (tarkastukset/luo-tai-paivita-tarkastukset db liitteiden-hallinta kayttaja nil urakka-id data kohde-id)]
         (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset
                                      :varoitukset (when-not (empty? varoitukset) varoitukset)})))))
 
-(defn poista-tarkastuksia [db kayttaja parametrit data]
-  )
+(defn poista-tarkastuksia [db kayttaja {:keys [urakka-id kohde-id]} data]
+  (let [urakka-id (Long/parseLong urakka-id)
+        kohde-id (Long/parseLong kohde-id)
+        ulkoiset-idt (-> data :tarkastusten-tunnisteet)
+        kayttaja-id (:id kayttaja)]
+    (log/debug (format "Poistetaan urakan (id: %s) ylläpitokohteen (id: %s) tarkastukset ulkoisella id:llä: %s käyttäjän: %s toimesta. Data: %s"
+                       urakka-id
+                       kohde-id
+                       ulkoiset-idt
+                       kayttaja
+                       data))
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (let [poistettujen-maara (tarkastukset-q/poista-tarkastus! db kayttaja-id ulkoiset-idt)]
+      (let [ilmoitukset (if (pos? poistettujen-maara)
+                          (format "Tarkastukset poistettu onnistuneesti. Poistettiin: %s tarkastusta." poistettujen-maara)
+                          "Tunnisteita vastaavia tarkastuksia ei löytynyt käyttäjän kirjaamista tarkastuksista.")]
+        (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset})))))
 
 (defn palvelut [liitteiden-hallinta]
   [{:palvelu :hae-yllapitokohteet
