@@ -17,10 +17,10 @@
     :soratie (q-tarkastukset/luo-tai-paivita-soratiemittaus db id uusi? mittaus)
     nil))
 
-(defn kasittele-tarkastukset
+(defn luo-tai-paivita-tarkastukset
   "Käsittelee annetut tarkastukset ja palautta listan string-varoituksia."
   ([db liitteiden-hallinta kayttaja tyyppi urakka-id data]
-   (kasittele-tarkastukset db liitteiden-hallinta kayttaja tyyppi urakka-id data nil))
+   (luo-tai-paivita-tarkastukset db liitteiden-hallinta kayttaja tyyppi urakka-id data nil))
   ([db liitteiden-hallinta kayttaja tyyppi urakka-id data yllapitokohde]
    (let [tarkastukset (:tarkastukset data)]
      (remove
@@ -62,7 +62,9 @@
                                :yllapitokohde yllapitokohde
                                :laadunalitus (let [alitus (:laadunalitus tarkastus)]
                                                (if (nil? alitus)
-                                                 (not (str/blank? (:havainnot tarkastus)))
+                                                 (and
+                                                   (nil? yllapitokohde)
+                                                   (not (str/blank? (:havainnot tarkastus))))
                                                  alitus))
                                :nayta-urakoitsijalle true})
                          liitteet (:liitteet tarkastus)]
@@ -76,3 +78,4 @@
                  (log/warn t "Virhe tarkastuksen lisäämisessä")
                  (throw t)))))
          tarkastukset)))))
+

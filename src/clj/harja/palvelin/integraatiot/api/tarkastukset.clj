@@ -21,7 +21,7 @@
   (let [urakka-id (Long/parseLong id)]
     (log/debug (format "Kirjataan tarkastus tyyppiä: %s käyttäjän: %s toimesta. Data: %s" tyyppi (:kayttajanimi kayttaja) data))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (let [varoitukset (tarkastukset/kasittele-tarkastukset db liitteiden-hallinta kayttaja tyyppi urakka-id data)]
+    (let [varoitukset (tarkastukset/luo-tai-paivita-tarkastukset db liitteiden-hallinta kayttaja tyyppi urakka-id data)]
       (tee-onnistunut-vastaus (join ", " varoitukset)))))
 
 (defn poista-tarkastus [db _ kayttaja tyyppi {id :id} data]
