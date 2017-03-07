@@ -107,3 +107,6 @@
 
 (def +urakan-yllapitokohteen-maaramuutosten-kirjaus-request+ "api/schemas/urakan-yllapitokohteen-maaramuutosten-kirjaus-request.schema.json")
 (def urakan-yllapitokohteen-maaramuutosten-kirjaus-request (tee-validaattori +urakan-yllapitokohteen-maaramuutosten-kirjaus-request+))
+
+(def +urakan-yllapitokohteen-tarkastuksen-kirjaus-request+ "api/schemas/yllapitokohteen-tarkastuksen-kirjaus-request.schema.json")
+(def urakan-yllapitokohteen-tarkastuksen-kirjaus-request (tee-validaattori +urakan-yllapitokohteen-tarkastuksen-kirjaus-request+))

@@ -64,3 +64,5 @@
 
 (def +urakan-yllapitokohteen-maaramuutosten-kirjaus+ "api/examples/urakan-yllapitokohteen-maaramuutosten-kirjaus-request.json")
 
+(def +urakan-yllapitokohteen-tarkastuksen-kirjaus+ "api/examples/yllapitokohteen-tarkastuksen-kirjaus-request.jsont")
+
