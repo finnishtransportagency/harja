@@ -427,6 +427,11 @@
                    nimi = 'Leppäjärven ramppi'
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
 
+(defn hae-yllapitokohde-oulaisten-ohitusramppi-jolla-ei-aikataulutietoja []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   nimi = 'Oulaisten ohitusramppi';"))))
+
 (defn hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE

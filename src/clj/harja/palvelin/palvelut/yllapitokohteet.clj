@@ -113,7 +113,7 @@
   "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä.
    Palauttaa päivitetyt kohteet aikataulunäkymään"
   [db fim email user
-   {:keys [urakka-id sopimus-id tiemerkintapvm kohde-id] :as tiedot}]
+   {:keys [urakka-id sopimus-id vuosi tiemerkintapvm kohde-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Merkitään urakan " urakka-id " kohde " kohde-id " valmiiksi tiemerkintää päivämäärällä " tiemerkintapvm)
   (jdbc/with-db-transaction [db db]
@@ -131,7 +131,8 @@
                                                    :tiemerkintapvm tiemerkintapvm :user user})
 
   (hae-urakan-aikataulu db user {:urakka-id urakka-id
-                                 :sopimus-id sopimus-id}))
+                                 :sopimus-id sopimus-id
+                                 :vuosi vuosi}))
 
 
 (defn- tallenna-paallystyskohteiden-aikataulu [{:keys [db user kohteet paallystysurakka-id
@@ -208,7 +209,7 @@
            :suorittava_tiemerkintaurakka tiemerkintaurakka-id})))))
 
 (defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id vuosi kohteet]}]
-  (assert (and urakka-id sopimus-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
+  (assert (and urakka-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden aikataulutiedot: " kohteet)
   (let [voi-tallentaa-tiemerkinnan-takarajan?

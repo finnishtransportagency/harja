@@ -288,7 +288,8 @@
                                        (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
         kohteet [{:kohdenumero "L03"
-                  :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00") :aikataulu-muokkaaja 2
+                  :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
+                  :aikataulu-muokkaaja (:id +kayttaja-jvh+)
                   :urakka urakka-id
                   :aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
                   :nimi "Leppäjärven ramppi",
@@ -331,6 +332,26 @@
     (is (= (:aikataulu-tiemerkinta-alku odotettu) (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-tiemerkinta-alku")
     (is (= (:aikataulu-tiemerkinta-loppu odotettu) (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-tiemerkinta-loppu")
     (is (= (:aikataulu-kohde-valmis odotettu) (:aikataulu-kohde-valmis vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-kohde-valmis")))
+
+(deftest paallystyksen-merkitseminen-valmiiksi-toimii
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        yllapitokohde-id (hae-yllapitokohde-oulaisten-ohitusramppi-jolla-ei-aikataulutietoja)
+        sahkoposti-valitetty (atom false)
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
+
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+
+    (with-fake-http
+      [+testi-fim+ fim-vastaus]
+      (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :merkitse-kohde-valmiiksi-tiemerkintaan +kayttaja-jvh+
+                      {:tiemerkintapvm (pvm/->pvm-aika "23.5.2017 12:00")
+                       :kohde-id yllapitokohde-id
+                       :urakka-id urakka-id
+                       :vuosi 2017})
+
+      (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
+      (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin"))))
 
 (deftest yllapitokohteen-suorittavan-tiemerkintaurakan-vaihto-ei-toimi-jos-kirjauksia
   (let [urakka-id @muhoksen-paallystysurakan-id

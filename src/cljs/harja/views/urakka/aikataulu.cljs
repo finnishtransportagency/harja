@@ -29,10 +29,10 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn valmis-tiemerkintaan [kohde-id urakka-id paallystys-valmis? suorittava-urakka-annettu?]
+(defn valmis-tiemerkintaan [{:keys [kohde-id urakka-id vuosi paallystys-valmis? suorittava-urakka-annettu?]}]
   (let [valmis-tiemerkintaan-lomake (atom nil)
         valmis-tallennettavaksi? (reaction (some? (:valmis-tiemerkintaan @valmis-tiemerkintaan-lomake)))]
-    (fn [kohde-id urakka-id paallystys-valmis? suorittava-urakka-annettu?]
+    (fn [{:keys [kohde-id urakka-id paallystys-valmis? suorittava-urakka-annettu?]}]
       [:div
        {:title (cond (not paallystys-valmis?) "Päällystys ei ole valmis."
                      (not suorittava-urakka-annettu?) "Tiemerkinnän suorittava urakka puuttuu."
@@ -58,10 +58,11 @@
                          "Merkitse"
                          #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintää")
                               (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
-                                kohde-id
-                                (:valmis-tiemerkintaan @valmis-tiemerkintaan-lomake)
-                                urakka-id
-                                (first @u/valittu-sopimusnumero)))
+                                {:kohde-id kohde-id
+                                 :tiemerkintapvm (:valmis-tiemerkintaan @valmis-tiemerkintaan-lomake)
+                                 :urakka-id urakka-id
+                                 :sopimus-id (first @u/valittu-sopimusnumero)
+                                 :vuosi vuosi}))
                          {;:disabled (not @valmis-tallennettavaksi?) ; FIXME Ei päivity
                           :luokka "nappi-myonteinen"
                           :kun-onnistuu (fn [vastaus]
@@ -249,10 +250,11 @@
                                (if muokataan?
                                  [:span]
                                  [valmis-tiemerkintaan
-                                  (:id rivi)
-                                  urakka-id
-                                  (some? (:aikataulu-paallystys-loppu rivi))
-                                  (some? (:suorittava-tiemerkintaurakka rivi))])
+                                  {:kohde-id (:id rivi)
+                                   :urakka-id urakka-id
+                                   :vuosi vuosi
+                                   :paallystys-valmis? (some? (:aikataulu-paallystys-loppu rivi))
+                                   :suorittava-urakka-annettu? (some? (:suorittava-tiemerkintaurakka rivi))}])
                                [:span "Ei"])))}
            {:otsikko "Tie\u00ADmerkin\u00ADtä val\u00ADmis vii\u00ADmeis\u00ADtään"
             :leveys 6 :nimi :aikataulu-tiemerkinta-takaraja :tyyppi :pvm
