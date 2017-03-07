@@ -32,7 +32,12 @@ FROM laatupoikkeama lp
 WHERE lp.urakka = :urakka
       AND lp.poistettu IS NOT TRUE
       AND (aika >= :alku AND aika <= :loppu)
-      AND s.suorasanktio IS NOT TRUE;
+      AND s.suorasanktio IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (lp.yllapitokohde IS NULL
+          OR
+          lp.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-selvitysta-odottavat-laatupoikkeamat
 -- Hakee listaukseen kaikki urakan laatupoikkeamat, jotka odottavat urakoitsijalta selvitystä.
@@ -69,7 +74,12 @@ WHERE lp.urakka = :urakka
       AND lp.poistettu IS NOT TRUE
       AND (aika >= :alku AND aika <= :loppu)
       AND selvitys_pyydetty = TRUE AND selvitys_annettu = FALSE
-      AND s.suorasanktio IS NOT TRUE;
+      AND s.suorasanktio IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (lp.yllapitokohde IS NULL
+          OR
+          lp.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-kasitellyt-laatupoikkeamat
 -- Hakee listaukseen kaikki urakan laatupoikkeamat, jotka on käsitelty.
@@ -104,7 +114,12 @@ WHERE lp.urakka = :urakka
       AND lp.poistettu IS NOT TRUE
       AND (aika >= :alku AND aika <= :loppu)
       AND paatos IS NOT NULL
-      AND s.suorasanktio IS NOT TRUE;
+      AND s.suorasanktio IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (lp.yllapitokohde IS NULL
+          OR
+          lp.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-omat-laatupoikkeamat
 -- Hakee listaukseen kaikki urakan laatupoikkeamat, joiden luoja tai kommentoija on annettu henkilö.
@@ -144,7 +159,12 @@ WHERE lp.urakka = :urakka
            lp.id IN (SELECT hk.laatupoikkeama
                      FROM laatupoikkeama_kommentti hk JOIN kommentti k ON hk.kommentti = k.id
                     WHERE k.luoja = :kayttaja))
-      AND s.suorasanktio IS NOT TRUE;
+      AND s.suorasanktio IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (lp.yllapitokohde IS NULL
+          OR
+          lp.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
 
 
 -- name: hae-laatupoikkeaman-tiedot
@@ -185,7 +205,12 @@ FROM laatupoikkeama lp
   LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
 WHERE lp.urakka = :urakka
       AND lp.poistettu IS NOT TRUE
-      AND lp.id = :id;
+      AND lp.id = :id
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (lp.yllapitokohde IS NULL
+          OR
+          lp.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-laatupoikkeaman-kommentit
 -- Hakee annetun laatupoikkeaman kaikki kommentit (joita ei ole poistettu) sekä
