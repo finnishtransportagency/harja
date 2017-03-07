@@ -10,11 +10,11 @@
 
 (defn tallenna-mittaustulokset-tarkastukselle [db id tyyppi uusi? mittaus]
   (case tyyppi
-    :talvihoito (q-tarkastukset/luo-tai-paivita-talvihoitomittaus db id uusi?
+    "talvihoito" (q-tarkastukset/luo-tai-paivita-talvihoitomittaus db id uusi?
                                                                   (-> mittaus
                                                                       (assoc :lampotila-tie (:lampotilaTie mittaus))
                                                                       (assoc :lampotila-ilma (:lampotilaIlma mittaus))))
-    :soratie (q-tarkastukset/luo-tai-paivita-soratiemittaus db id uusi? mittaus)
+    "soratie" (q-tarkastukset/luo-tai-paivita-soratiemittaus db id uusi? mittaus)
     nil))
 
 (defn luo-tai-paivita-tarkastukset
