@@ -180,7 +180,7 @@
         sahkoposti-valitetty (atom false)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
 
-    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" #(reset! sahkoposti-valitetty true))
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
 
     (with-fake-http
       [+testi-fim+ fim-vastaus
