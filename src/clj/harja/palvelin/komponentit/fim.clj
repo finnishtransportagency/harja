@@ -102,6 +102,7 @@
   FIMHaku
   (hae-urakan-kayttajat
     [{:keys [url db integraatioloki]} urakan-sampo-id]
+    (assert urakan-sampo-id "Urakan sampo-id puutuu!")
     (when-not (empty? url)
       (integraatiotapahtuma/suorita-integraatio
         db integraatioloki "fim" "hae-urakan-kayttajat"
