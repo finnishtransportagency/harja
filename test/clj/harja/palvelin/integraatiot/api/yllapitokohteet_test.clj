@@ -455,8 +455,25 @@
         polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tarkastus"]
         kutsudata (slurp "test/resurssit/api/yllapitokohteen-tarkastuksen-kirjaus-request.json")
         vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)
-        tarkastukset-kirjauksen-jalkeen (hae-tarkastukset)]
+        tarkastukset-kirjauksen-jalkeen (hae-tarkastukset)
+        tarkastus (first tarkastukset-kirjauksen-jalkeen)]
+
     (is (= 200 (:status vastaus)) "Kirjaus tehtiin onnistuneesti")
     (is (.contains (:body vastaus) "Tarkastus kirjattu onnistuneesti urakan: 5 ylläpitokohteelle: 5."))
     (is (= (+ 1 (count tarkastukset-ennen-kirjausta)) (count tarkastukset-kirjauksen-jalkeen))
-        "Vain yksi uusi tarkastus on kirjautunut ylläpitokohteelle")))
+        "Vain yksi uusi tarkastus on kirjautunut ylläpitokohteelle")
+
+    (is (= 5 (:yllapitokohde tarkastus)) "Tarkastus on kirjattu oikealle ylläpitokohteelle")
+    (is (= "katselmus" (:tyyppi tarkastus)) "Tarkastus on oikeaa tyyppiä")
+    (is (= "Vanha päällyste on uusittava" (:havainnot tarkastus)) "Havainnot ovat oikein")
+
+    (let [kutsudata (.replace kutsudata "Vanha päällyste on uusittava" "Eipäs tarvikkaan")
+          vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)
+          tarkastukset-paivityksen-jalkeen (hae-tarkastukset)
+          paivitetty-tarkastus (first tarkastukset-paivityksen-jalkeen)]
+
+      (is (= 200 (:status vastaus)) "Päivitys tehtiin onnistuneesti")
+      (is (= (count tarkastukset-kirjauksen-jalkeen) (count tarkastukset-paivityksen-jalkeen)) "Kirjauksia päivityksen jälkeen on saman verran kuin aloittaessa.")
+
+      (is (.contains (:body vastaus) "Tarkastus kirjattu onnistuneesti urakan: 5 ylläpitokohteelle: 5."))
+      (is (= "Eipäs tarvikkaan" (:havainnot paivitetty-tarkastus)) "Havainnot ovat päivittyneet oikein"))))
