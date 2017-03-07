@@ -37,7 +37,6 @@
 
 (defn- poista-urakan-yllapitokohteet [db urakka-id]
   (log/debug "Poistetaan urakan " urakka-id " ylläpitokohteet")
-  (yha-q/poista-urakan-yllapitokohdeosat! db {:urakka urakka-id})
   (yha-q/poista-urakan-yllapitokohteet! db {:urakka urakka-id}))
 
 (defn- hae-urakan-yha-tiedot [db urakka-id]
