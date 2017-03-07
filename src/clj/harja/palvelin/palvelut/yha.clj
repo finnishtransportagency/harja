@@ -61,7 +61,6 @@
     (throw (SecurityException. "Sidonta lukittu!"))
     (jdbc/with-db-transaction [db db]
       (poista-urakan-yha-tiedot db harja-urakka-id)
-      (poista-urakan-yllapito-ilmoitukset db harja-urakka-id)
       (poista-urakan-yllapitokohteet db harja-urakka-id)
       (lisaa-urakalle-yha-tiedot db user harja-urakka-id yha-tiedot)
       (log/debug "YHA-tiedot sidottu. Palautetaan urakan YHA-tiedot")
