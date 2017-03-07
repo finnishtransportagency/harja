@@ -1,9 +1,11 @@
-<b>Nykyinen versio: 1.0.14</b>  
+<b>Nykyinen versio: 1.0.15</b>  
 <b>Julkaistu: 7.3.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.15 Julkaistu: 7.3.2017:
+    - Uudet rajapinnat tiemerkinnän toteumien kirjaamiselle ja poistamiselle
 - Versionumero: 1.0.14 Julkaistu: 7.3.2017:
-    - Uusi rajapinta ylläpitokohteiden tarkastusten kirjaamiselle
+    - Uusi rajapinta ylläpitokohteiden tarkastusten kirjaamiselle ja poistamiselle
 - Versionumero: 1.0.13 Julkaistu: 23.2.2017:
     - Päivystäjätietojen haun rajapinnat palauttavat ainoastaan voimassa olevat ja tulevat päivystykset, mikäli kutsuja ei rajaa hakua aikavälillä.
 - Versionumero: 1.0.12 Julkaistu: 9.2.2017:
