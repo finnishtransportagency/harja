@@ -101,13 +101,13 @@
                       [:tyovaihe "Työvaihetta koskeva ilmoitus"],
                       [:paattyminen "Työn päättymisilmoitus"]])
 
-(defn- projekti-valinnat []
-  (let [urakka-idt (:organisaation-urakat @istunto/kayttaja)
-        urakka-nimet (map str urakka-idt) ;; fixme
-        ]
-    (interleave urakka-idt urakka-nimet)))
 
-(defn ilmoituksen-tiedot [e! ilmoitus]
+(defn- projekti-valinnat [urakat]
+  (partition 2
+             (interleave
+              (mapv (comp str :id) urakat) (mapv :nimi urakat))))
+
+(defn ilmoituksen-tiedot [e! ilmoitus kayttajan-urakat]
   (fn [e! ilmoitus]
     [:div
      [:span
@@ -124,8 +124,10 @@
           :valinta-arvo first
           :muokattava? (constantly true)}
          {:nimi :projekti-tai-urakka
+          :otsikko "Projekti tai urakka:"
           :tyyppi :valinta
-          :valinnat (projekti-valinnat)
+          :valinnat (projekti-valinnat kayttajan-urakat)
+          ;; :valinnat [["1" "jeejee"]]
           :valinta-nayta second :valinta-arvo first
           :muokattava? (constantly true)
           }
@@ -164,7 +166,7 @@
                       #(do
                          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
                          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
-   (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
+   (fn [e! {valittu-ilmoitus :valittu-ilmoitus kayttajan-urakat :kayttajan-urakat :as app}]
      [:span
       #_[ui-debug/debug {:ilmoitukset @tiedot/ilmoitukset
                        ;;:tiedot/ulkoisetvalinnat @tiedot/ulkoisetvalinnat
@@ -172,5 +174,5 @@
       [ui-debug/debug  @tiedot/ilmoitukset]
       [kartta/kartan-paikka]
       (if valittu-ilmoitus
-        [ilmoituksen-tiedot e! valittu-ilmoitus]
-        [ilmoitusten-paanakyma e! ilmoitukset])])))
+        [ilmoituksen-tiedot e! valittu-ilmoitus kayttajan-urakat]
+        [ilmoitusten-paanakyma e! app])])))
