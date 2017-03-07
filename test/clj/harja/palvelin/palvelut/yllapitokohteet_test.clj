@@ -345,32 +345,64 @@
         yllapitokohde-id (hae-yllapitokohde-oulaisten-ohitusramppi-jolla-ei-aikataulutietoja)
         suorittava-tiemerkintaurakka-id (hae-lapin-tiemerkintaurakan-id)
         sahkoposti-valitetty (atom false)
-        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-lapin-tiemerkintaurakan-kayttajat.xml"))]
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-lapin-tiemerkintaurakan-kayttajat.xml"))
+        vuosi 2017]
 
     (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
 
     (with-fake-http
       [+testi-fim+ fim-vastaus]
-      (kutsu-palvelua (:http-palvelin jarjestelma)
-                      :tallenna-yllapitokohteiden-aikataulu
-                      +kayttaja-jvh+
-                      {:urakka-id urakka-id
-                       :sopimus-id sopimus-id
-                       :vuosi 2017
-                       :kohteet [{:id yllapitokohde-id
-                                  :suorittava-tiemerkintaurakka suorittava-tiemerkintaurakka-id
-                                  :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
-                                  :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00")}]})
-      (kutsu-palvelua (:http-palvelin jarjestelma)
-                      :merkitse-kohde-valmiiksi-tiemerkintaan +kayttaja-jvh+
-                      {:tiemerkintapvm (pvm/->pvm-aika "23.5.2017 12:00")
-                       :kohde-id yllapitokohde-id
-                       :urakka-id urakka-id
-                       :sopimus-id sopimus-id
-                       :vuosi 2017})
 
-      (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
-      (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin"))))
+      ;; Lisätään kohteelle ensin päällystyksen aikataulutiedot ja suorittava tiemerkintäurakka
+      (let [tiemerkintapvm (pvm/->pvm-aika "23.5.2017 12:00")
+            _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :tallenna-yllapitokohteiden-aikataulu
+                              +kayttaja-jvh+
+                              {:urakka-id urakka-id
+                               :sopimus-id sopimus-id
+                               :vuosi vuosi
+                               :kohteet [{:id yllapitokohde-id
+                                          :suorittava-tiemerkintaurakka suorittava-tiemerkintaurakka-id
+                                          :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
+                                          :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00")}]})
+            ;; Merkitään kohde valmiiksi tiemerkintään
+            aikataulu-ennen-testia (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :hae-yllapitourakan-aikataulu +kayttaja-jvh+
+                                                   {:urakka-id urakka-id
+                                                    :sopimus-id sopimus-id
+                                                    :vuosi vuosi})
+            oulaisten-ohitusramppi-ennen-testia (first (filter #(= (:nimi %) "Oulaisten ohitusramppi")
+                                                         aikataulu-ennen-testia))
+            muut-kohteet-ennen-testia (first (filter #(not= (:nimi %) "Oulaisten ohitusramppi")
+                                                     aikataulu-ennen-testia))
+            vastaus-kun-merkittu-valmiiksi (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                           :merkitse-kohde-valmiiksi-tiemerkintaan +kayttaja-jvh+
+                                                           {:tiemerkintapvm tiemerkintapvm
+                                                            :kohde-id yllapitokohde-id
+                                                            :urakka-id urakka-id
+                                                            :sopimus-id sopimus-id
+                                                            :vuosi vuosi})
+            oulaisten-ohitusramppi-testin-jalkeen (first (filter #(= (:nimi %) "Oulaisten ohitusramppi")
+                                                                 vastaus-kun-merkittu-valmiiksi))
+            muut-kohteet-testin-jalkeen (first (filter #(not= (:nimi %) "Oulaisten ohitusramppi")
+                                                       vastaus-kun-merkittu-valmiiksi))]
+
+        (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
+        (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")
+
+        ;; Valmiiksi merkitsemisen jälkeen tilanne on sama kuin ennen merkintää, sillä erotuksella, että
+        ;; valittu kohde merkittiin valmiiksi tiemerkintään
+        (is (= muut-kohteet-ennen-testia muut-kohteet-testin-jalkeen))
+        (is (= (dissoc oulaisten-ohitusramppi-ennen-testia
+                       :aikataulu-tiemerkinta-takaraja
+                       :tiemerkintaurakan-voi-vaihtaa?)
+               (dissoc oulaisten-ohitusramppi-ennen-testia
+                       :aikataulu-tiemerkinta-takaraja
+                       :tiemerkintaurakan-voi-vaihtaa?)))
+        (is (nil? (:aikataulu-tiemerkinta-takaraja oulaisten-ohitusramppi-ennen-testia)))
+        (is (nil? (:valmis-tiemerkintaan oulaisten-ohitusramppi-ennen-testia)))
+        (is (some? (:aikataulu-tiemerkinta-takaraja oulaisten-ohitusramppi-testin-jalkeen)))
+        (is (some? (:valmis-tiemerkintaan oulaisten-ohitusramppi-testin-jalkeen)))))))
 
 (deftest yllapitokohteen-suorittavan-tiemerkintaurakan-vaihto-ei-toimi-jos-kirjauksia
   (let [urakka-id @muhoksen-paallystysurakan-id
