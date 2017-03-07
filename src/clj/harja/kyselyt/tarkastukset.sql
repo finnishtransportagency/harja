@@ -73,6 +73,11 @@ WHERE t.urakka = :urakka
                          WHERE tarkastus = t.id)))
       AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE)
       AND t.poistettu IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (t.yllapitokohde IS NULL
+          OR
+          t.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = t.yllapitokohde) IS NOT TRUE)
 ORDER BY t.aika DESC
 LIMIT :maxrivimaara;
 
