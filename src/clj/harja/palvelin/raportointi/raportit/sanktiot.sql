@@ -58,8 +58,8 @@ SELECT
 FROM sanktio s
   LEFT JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
   JOIN sanktiotyyppi st ON s.tyyppi = st.id
-  LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
-  LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
+  LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id AND lp.poistettu IS NOT TRUE
+  LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id AND ypk.poistettu IS NOT TRUE
   JOIN urakka u ON (tpi.urakka = u.id OR lp.urakka = u.id)
   JOIN organisaatio o ON u.hallintayksikko = o.id
 WHERE ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka) -- varmistaa ettei testiurakka tule mukaan alueraportteihin
