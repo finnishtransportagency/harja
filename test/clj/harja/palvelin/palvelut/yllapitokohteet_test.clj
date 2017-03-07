@@ -410,18 +410,14 @@
         lapin-urakka-id (hae-lapin-tiemerkintaurakan-id)
         vuosi 2017
         yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
-        kohteet [{:kohdenumero "L03"
+        kohteet [{:urakka urakka-id
+                  :id yllapitokohde-id
+                  :sopimus sopimus-id
                   :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
-                  :aikataulu-muokkaaja (:id +kayttaja-jvh+)
-                  :urakka urakka-id,
                   :aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
-                  :nimi "Leppäjärven ramppi",
                   :suorittava-tiemerkintaurakka lapin-urakka-id
                   :valmis-tiemerkintaan (pvm/->pvm-aika "23.5.2017 12:00")
                   :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00"),
-                  :id yllapitokohde-id
-                  :sopimus sopimus-id
-                  :aikataulu-muokattu (pvm/->pvm-aika "29.5.2017 12:00")
                   :aikataulu-tiemerkinta-takaraja (pvm/->pvm "1.6.2017")
                   :aikataulu-tiemerkinta-alku nil,
                   :aikataulu-tiemerkinta-loppu (pvm/->pvm "26.5.2017")}]
