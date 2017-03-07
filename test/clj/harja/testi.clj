@@ -58,10 +58,10 @@
                        :kayttaja "harjatest"
                        :salasana nil})
 
-(defn odota-ehdon-tayttymista [ehto-fn viesti max-aika]
-  (loop [max-ts (+ max-aika (System/currentTimeMillis))]
+(defn odota-ehdon-tayttymista [ehto-fn viesti max-aika-ms]
+  (loop [max-ts (+ max-aika-ms (System/currentTimeMillis))]
     (if (> (System/currentTimeMillis) max-ts)
-      (assert false (str "Ehto '" viesti "' ei täyttynyt " max-aika " kuluessa"))
+      (assert false (str "Ehto '" viesti "' ei täyttynyt " max-aika-ms "ms kuluessa"))
       (when-not (ehto-fn)
         (recur max-ts)))))
 

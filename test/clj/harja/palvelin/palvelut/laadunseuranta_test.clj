@@ -156,10 +156,8 @@
     (with-fake-http
       [+testi-fim+ fim-vastaus
        +testi-sms-url+ (fn [_ _ _]
-                         (do
-                           (log/debug "Lähtee tekstiviesti!")
-                           (reset! tekstiviesti-valitetty true)
-                           "ok"))]
+                         (reset! tekstiviesti-valitetty true)
+                         "ok")]
       (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)
       (odota-ehdon-tayttymista #(true? @tekstiviesti-valitetty) "Tekstiviesti lähetettiin" 5000)
       (is (true? @tekstiviesti-valitetty) "Tekstiviesti lähetettiin"))))
@@ -179,16 +177,18 @@
                         :selvitys-pyydetty true
                         :tekija :tilaaja
                         :kohde "Kohde"}
-        sahkoposti-valitetty (atom false)]
+        sahkoposti-valitetty (atom false)
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
 
     (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" #(reset! sahkoposti-valitetty true))
 
     (with-fake-http
-      [+testi-fim+ (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))
+      [+testi-fim+ fim-vastaus
        +testi-sms-url+ "ok"]
       (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama))
 
-    (odota-ehdon-tayttymista @sahkoposti-valitetty "Sähköposti lähetettiin" 100000)))
+    (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
+    (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))
 
 (defn palvelukutsu-tallenna-suorasanktio [kayttaja s lp hk-alkupvm hk-loppupvm]
   (kutsu-http-palvelua
