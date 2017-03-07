@@ -5,6 +5,7 @@
             [harja.tyokalut.html :as html-tyokalut]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.palvelin.palvelut.viestinta :as viestinta]
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [harja.tyokalut.sms :as sms-tyokalut]
             [hiccup.core :refer [html]]
             [harja.domain.tierekisteri :as tierekisteri]
@@ -58,11 +59,9 @@
         "Aika" (pvm/pvm-aika-opt aika))
       "Laatupoikkeamat Harjassa: " linkki)))
 
-;; Viestien lähetykset (julkinen rajapinta)
+;; Sisäinen käsittely
 
-(defn laheta-sposti-laatupoikkeamasta-selvitys-pyydetty
-  "Lähettää urakoitsijan urakan vastuuhenkilölle sähköpostilla tiedon siitä, että laatupoikkeamasta
-   on pyydetty selvitys urakoitsijalta."
+(defn- laheta-sposti-laatupoikkeamasta-selvitys-pyydetty*
   [{:keys [db fim email urakka-id laatupoikkeama selvityksen-pyytaja]}]
   (log/debug (format "Lähetetään sähköposti: laatupoikkeamasta %s pyydetty selvitys" (:id laatupoikkeama)))
 
@@ -85,9 +84,7 @@
                        :tr-osoite (:tr laatupoikkeama)
                        :aika (:aika laatupoikkeama)})})))
 
-(defn laheta-tekstiviesti-laatupoikkeamasta-selvitys-pyydetty
-  "Lähettää urakoitsijan urakan vastuuhenkilölle tekstiviestillä tiedon siitä, että laatupoikkeamasta
-   on pyydetty selvitys urakoitsijalta."
+(defn- laheta-tekstiviesti-laatupoikkeamasta-selvitys-pyydetty*
   [{:keys [db fim sms urakka-id laatupoikkeama selvityksen-pyytaja]}]
   (log/debug (format "Lähetetään tekstiviesti: laatupoikkeamasta %s pyydetty selvitys" (:id laatupoikkeama)))
 
@@ -108,3 +105,23 @@
                   :kohde (:kohde laatupoikkeama)
                   :tr-osoite (:tr laatupoikkeama)
                   :aika (:aika laatupoikkeama)})})))
+
+;; Viestien lähetykset (julkinen rajapinta)
+
+(defn laheta-sposti-laatupoikkeamasta-selvitys-pyydetty
+  "Lähettää urakoitsijan urakan vastuuhenkilölle sähköpostilla tiedon siitä, että laatupoikkeamasta
+   on pyydetty selvitys urakoitsijalta."
+  [{:keys [db fim email urakka-id laatupoikkeama selvityksen-pyytaja]}]
+  (when (ominaisuus-kaytossa? :laatupoikkeaman-selvityksesta-lahtee-viesti)
+    (laheta-sposti-laatupoikkeamasta-selvitys-pyydetty*
+      {:db db :fim fim :email email :laatupoikkeama laatupoikkeama
+       :selvityksen-pyytaja selvityksen-pyytaja :urakka-id urakka-id})))
+
+(defn laheta-tekstiviesti-laatupoikkeamasta-selvitys-pyydetty
+  "Lähettää urakoitsijan urakan vastuuhenkilölle tekstiviestillä tiedon siitä, että laatupoikkeamasta
+   on pyydetty selvitys urakoitsijalta."
+  [{:keys [db fim sms urakka-id laatupoikkeama selvityksen-pyytaja]}]
+  (when (ominaisuus-kaytossa? :laatupoikkeaman-selvityksesta-lahtee-viesti)
+    (laheta-tekstiviesti-laatupoikkeamasta-selvitys-pyydetty*
+      {:db db :fim fim :sms sms :laatupoikkeama laatupoikkeama
+       :selvityksen-pyytaja selvityksen-pyytaja :urakka-id urakka-id})))
