@@ -112,7 +112,7 @@
   "Lähettää urakoitsijan urakan vastuuhenkilölle sähköpostilla tiedon siitä, että laatupoikkeamasta
    on pyydetty selvitys urakoitsijalta."
   [{:keys [db fim email urakka-id laatupoikkeama selvityksen-pyytaja]}]
-  (when (ominaisuus-kaytossa? :laatupoikkeaman-selvityksesta-lahtee-viesti)
+  (when (ominaisuus-kaytossa? :laatupoikkeaman-selvityspyynnosta-lahtee-viesti)
     (laheta-sposti-laatupoikkeamasta-selvitys-pyydetty*
       {:db db :fim fim :email email :laatupoikkeama laatupoikkeama
        :selvityksen-pyytaja selvityksen-pyytaja :urakka-id urakka-id})))
@@ -121,7 +121,7 @@
   "Lähettää urakoitsijan urakan vastuuhenkilölle tekstiviestillä tiedon siitä, että laatupoikkeamasta
    on pyydetty selvitys urakoitsijalta."
   [{:keys [db fim sms urakka-id laatupoikkeama selvityksen-pyytaja]}]
-  (when (ominaisuus-kaytossa? :laatupoikkeaman-selvityksesta-lahtee-viesti)
+  (when (ominaisuus-kaytossa? :laatupoikkeaman-selvityspyynnosta-lahtee-viesti)
     (laheta-tekstiviesti-laatupoikkeamasta-selvitys-pyydetty*
       {:db db :fim fim :sms sms :laatupoikkeama laatupoikkeama
        :selvityksen-pyytaja selvityksen-pyytaja :urakka-id urakka-id})))
