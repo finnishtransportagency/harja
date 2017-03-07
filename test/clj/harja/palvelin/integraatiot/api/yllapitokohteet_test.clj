@@ -11,7 +11,8 @@
             [harja.domain.skeema :as skeema]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [clojure.walk :as walk]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]))
 
 (def kayttaja-paallystys "skanska")
 (def kayttaja-tiemerkinta "tiemies")
@@ -476,4 +477,16 @@
       (is (= (count tarkastukset-kirjauksen-jalkeen) (count tarkastukset-paivityksen-jalkeen)) "Kirjauksia päivityksen jälkeen on saman verran kuin aloittaessa.")
 
       (is (.contains (:body vastaus) "Tarkastus kirjattu onnistuneesti urakan: 5 ylläpitokohteelle: 5."))
-      (is (= "Eipäs tarvikkaan" (:havainnot paivitetty-tarkastus)) "Havainnot ovat päivittyneet oikein"))))
+      (is (= "Eipäs tarvikkaan" (:havainnot paivitetty-tarkastus)) "Havainnot ovat päivittyneet oikein"))
+
+
+    (let [polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tarkastus"]
+          kutsudata (-> "test/resurssit/api/talvihoitotarkastus-poisto.json"
+                        slurp
+                        (.replace "__PVM__" "2017-01-01T12:00:00+02:00")
+                        (.replace "__ID__" "666"))
+          vastaus (api-tyokalut/delete-kutsu polku kayttaja-paallystys portti kutsudata)
+          poistettu? (:poistettu (first (hae-tarkastukset)))]
+      (is (= 200 (:status vastaus)) "Poisto tehtiin onnistuneesti")
+      (is (.contains (:body vastaus) "Tarkastukset poistettu onnistuneesti. Poistettiin: 1 tarkastusta."))
+      (is poistettu? "Tarkastus on merkitty poistetuksi onnistuneesti."))))
