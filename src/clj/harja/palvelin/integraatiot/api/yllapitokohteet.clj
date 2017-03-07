@@ -316,30 +316,20 @@
       (tee-kirjausvastauksen-body
         {:ilmoitukset (str "Määrämuutokset kirjattu onnistuneesti.")}))))
 
-(defn kirjaa-tarkastuksia [db liitteiden-hallinta kayttaja {:keys [urakka-id kohde-id]} {:keys [otsikko tarkastukset]}]
+(defn kirjaa-tarkastuksia [db liitteiden-hallinta kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) tarkastuksia käyttäjän: %s toimesta"
                      urakka-id
                      kohde-id
                      kayttaja))
-
   (jdbc/with-db-transaction [db db]
     (let [urakka-id (Integer/parseInt urakka-id)
-          kohde-id (Integer/parseInt kohde-id)
-          jarjestelma (get-in otsikko [:lahettaja :jarjestelma])]
+          kohde-id (Integer/parseInt kohde-id)]
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
       (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+      (let [varoitukset (tarkastukset/kasittele-tarkastukset db liitteiden-hallinta kayttaja nil urakka-id data kohde-id)]
+        ;; todo: hanskaa varoitukset
 
-      (tarkastukset/kasittele-tarkastukset db  liitteiden-hallinta nil kayttaja urakka-id tarkastukset)
-
-                                      ;;id lahde aika tr tyyppi tarkastaja sijainti
-      ;;ulkoinen-id havainnot laadunalitus yllapitokohde
-      ;;nayta-urakoitsijalle
-
-      ;; tallenna liitteet erikseen
-
-
-      )
-    )
+        )))
 
   (tee-kirjausvastauksen-body
     {:ilmoitukset (str "Tarkastus kirjattu onnistuneesti urakan: " urakka-id " ylläpitokohteelle: " kohde-id ".")}))
@@ -347,7 +337,7 @@
 (defn poista-tarkastuksia [db kayttaja parametrit data]
   )
 
-(def palvelut
+(defn palvelut [liitteiden-hallinta]
   [{:palvelu :hae-yllapitokohteet
     :polku "/api/urakat/:id/yllapitokohteet"
     :tyyppi :GET
@@ -409,7 +399,7 @@
     :kutsu-skeema json-skeemat/urakan-yllapitokohteen-tarkastuksen-kirjaus-request
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
-                    (kirjaa-tarkastuksia db nil kayttaja parametrit data))}
+                    (kirjaa-tarkastuksia db liitteiden-hallinta kayttaja parametrit data))}
    {:palvelu :poista-yllapitokohteen-tarkastus
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tarkastus"
     :tyyppi :DELETE
@@ -421,8 +411,8 @@
 (defrecord Yllapitokohteet []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki liitteiden-hallinta :liitteiden-hallinta :as this}]
-    (palvelut/julkaise http db integraatioloki palvelut)
+    (palvelut/julkaise http db integraatioloki (palvelut liitteiden-hallinta))
     this)
   (stop [{http :http-palvelin :as this}]
-    (palvelut/poista http palvelut)
+    (palvelut/poista http (palvelut nil))
     this))
