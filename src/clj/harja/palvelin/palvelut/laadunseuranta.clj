@@ -212,22 +212,22 @@
   (let [urakka-id (:urakka laatupoikkeama)]
     (log/info "Tuli laatupoikkeama: " laatupoikkeama)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
-    (jdbc/with-db-transaction [c db]
+    (jdbc/with-db-transaction [transaktio db]
       (let [osapuoli (roolit/osapuoli user)
             laatupoikkeama-kannassa-ennen-tallennusta
             (first (into []
                          yhteiset/laatupoikkeama-xf
-                         (laatupoikkeamat-q/hae-laatupoikkeaman-tiedot db urakka-id (:id laatupoikkeama))))
+                         (laatupoikkeamat-q/hae-laatupoikkeaman-tiedot transaktio urakka-id (:id laatupoikkeama))))
             laatupoikkeama (assoc laatupoikkeama
                              ;; Jos osapuoli ei ole urakoitsija, voidaan asettaa selvitys-pyydetty päälle
                              :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
                                                      (:selvitys-pyydetty laatupoikkeama)))]
 
-        (let [id (laatupoikkeamat-q/luo-tai-paivita-laatupoikkeama c user laatupoikkeama)]
-          (tallenna-laatupoikkeaman-kommentit {:db c :user user :urakka urakka-id
+        (let [id (laatupoikkeamat-q/luo-tai-paivita-laatupoikkeama transaktio user laatupoikkeama)]
+          (tallenna-laatupoikkeaman-kommentit {:db transaktio :user user :urakka urakka-id
                                                :laatupoikkeama laatupoikkeama :id id})
-          (tallenna-laatupoikkeaman-liitteet db laatupoikkeama id)
-          (tallenna-laatupoikkeaman-paatos {:db c :urakka urakka-id :user user
+          (tallenna-laatupoikkeaman-liitteet transaktio laatupoikkeama id)
+          (tallenna-laatupoikkeaman-paatos {:db transaktio :urakka urakka-id :user user
                                             :laatupoikkeama laatupoikkeama :id id})
 
           (when (and (not (:selvitys-pyydetty laatupoikkeama-kannassa-ennen-tallennusta))
@@ -238,7 +238,7 @@
                                                                               " "
                                                                               (:sukunimi user))}))
 
-          (hae-laatupoikkeaman-tiedot c user urakka-id id))))))
+          (hae-laatupoikkeaman-tiedot transaktio user urakka-id id))))))
 
 (defn hae-sanktiotyypit
   "Palauttaa kaikki sanktiotyypit, hyvin harvoin muuttuvaa dataa."
