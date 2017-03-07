@@ -150,14 +150,15 @@
                         :selvitys-pyydetty true
                         :tekija :tilaaja
                         :kohde "Kohde"}
-        tekstiviesti-valitetty (atom false)]
+        tekstiviesti-valitetty (atom false)
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
 
     (with-fake-http
-      [+testi-fim+ (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))
-       +testi-sms-url+ #(do
-                          (log/debug "LABYRINTTIÄ KUTSUTTIIN!")
-                          (reset! tekstiviesti-valitetty true)
-                          "ok")]
+      [+testi-fim+ fim-vastaus
+       +testi-sms-url+ (fn [_ _ _]
+                         (do
+                           (reset! tekstiviesti-valitetty true)
+                           "ok"))]
       (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama))
 
     (odota-ehdon-tayttymista #(some? @tekstiviesti-valitetty) "Tekstiviesti lähetettiin" 100000)))
