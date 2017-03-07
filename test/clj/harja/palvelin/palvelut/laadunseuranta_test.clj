@@ -157,11 +157,12 @@
       [+testi-fim+ fim-vastaus
        +testi-sms-url+ (fn [_ _ _]
                          (do
+                           (log/debug "Lähtee tekstiviesti!")
                            (reset! tekstiviesti-valitetty true)
                            "ok"))]
-      (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama))
-
-    (odota-ehdon-tayttymista #(some? @tekstiviesti-valitetty) "Tekstiviesti lähetettiin" 100000)))
+      (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)
+      (odota-ehdon-tayttymista #(true? @tekstiviesti-valitetty) "Tekstiviesti lähetettiin" 5000)
+      (is (true? @tekstiviesti-valitetty) "Tekstiviesti lähetettiin"))))
 
 (deftest laatupoikkeaman-selvityspyynnosta-lahtee-sahkoposti
   (let [laatupoikkeama {:sijainti {:type :point

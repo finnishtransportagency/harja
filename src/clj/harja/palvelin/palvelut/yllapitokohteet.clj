@@ -105,9 +105,9 @@
   (q/hae-tiemerkinnan-suorittavat-urakat db))
 
 (defn- valita-tieto-kohteen-valmiudesta-tiemerkintaan [{:keys [db fim email kohde-id tiemerkintapvm user]}]
-  (go (viestinta/laheta-sposti-kohde-valmis-merkintaan {:db db :fim fim :email email
-                                                        :kohde-id kohde-id :tiemerkintapvm tiemerkintapvm
-                                                        :ilmoittaja user})))
+  (viestinta/laheta-sposti-kohde-valmis-merkintaan {:db db :fim fim :email email
+                                                    :kohde-id kohde-id :tiemerkintapvm tiemerkintapvm
+                                                    :ilmoittaja user}))
 
 (defn merkitse-kohde-valmiiksi-tiemerkintaan
   "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä.
