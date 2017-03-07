@@ -24,7 +24,7 @@ VALUES
     308, 'Oulun ohitusramppi', 9000, 200, 565, 100, '2017-05-21 06:00:00+02',
     '2017-05-21 06:00:00+02', null, null, null,
                                           null, (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), NOW(), null, null, 'paallyste' :: yllapitokohdetyyppi,'paallystys'::yllapitokohdetyotyyppi, 54523243,
-                                          20, 4, 334, 10, 10, 1 ,1, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'), '{2017}', 300, fase),
+                                          20, 4, 334, 10, 10, 1 ,1, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'), '{2017}', 300, false),
   (9, (SELECT id FROM urakka WHERE  nimi = 'Muhoksen päällystysurakka'),
     (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null),
     'L010', 'Nakkilan ramppi', 500, 3457, 5, 6, '2017-05-26 06:00:00+02',
