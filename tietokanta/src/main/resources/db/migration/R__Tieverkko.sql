@@ -317,6 +317,66 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION yrita_tierekisteriosoite_pisteille_max(
+       apiste geometry, bpiste geometry, max_pituus NUMERIC)
+RETURNS tr_osoite AS $$
+DECLARE
+  r RECORD;
+  aosa INTEGER;
+  aet INTEGER;
+  alkukohta tr_osan_kohta;
+  losa INTEGER;
+  let INTEGER;
+  loppukohta tr_osan_kohta;
+  geom GEOMETRY;
+  tmp_osa INTEGER;
+  tmp_et INTEGER;
+  min_pituus NUMERIC;
+  pituus NUMERIC;
+BEGIN
+  -- Minimipituus on linnuntie (teleportaatiota ei sallittu)
+  -- miinus 10 metriä (varotoimi jos GPS pisteitä raportoitu ja niissä epätarkkuutta)
+  min_pituus := ST_Distance(apiste, bpiste) - 10.0;
+  FOR r IN SELECT a.tie,a.osa as alkuosa, a.ajorata, b.osa as loppuosa,
+           	  a.geom as alkuosa_geom, b.geom as loppuosa_geom,
+		  (ST_Distance(apiste, a.geom) + ST_Distance(bpiste, b.geom)) as d
+             FROM tr_osan_ajorata a JOIN tr_osan_ajorata b
+                  ON b.tie=a.tie AND b.ajorata=a.ajorata
+            WHERE a.geom IS NOT NULL AND
+                  b.geom IS NOT NULL AND
+	          ST_Intersects(apiste, a.envelope) AND
+                  ST_Intersects(bpiste, b.envelope)
+                 ORDER BY d ASC
+  LOOP
+    aosa := r.alkuosa;
+    alkukohta := laske_tr_osan_kohta(r.alkuosa_geom, apiste);
+    aet := alkukohta.etaisyys;
+    losa := r.loppuosa;
+    loppukohta := laske_tr_osan_kohta(r.loppuosa_geom, bpiste);
+    let := loppukohta.etaisyys;
+    -- Varmista TR-osoitteen suunta ajoradan mukaan
+    RAISE NOTICE 'ajorata %', r.ajorata;
+    IF (r.ajorata = 1 AND (aosa > losa OR (aosa=losa AND aet > let))) OR
+       (r.ajorata = 2 AND (aosa < losa OR (aosa=losa AND aet < let))) THEN
+      tmp_osa := aosa;
+      aosa := losa;
+      losa := tmp_osa;
+      tmp_et := aet;
+      aet := let;
+      let := tmp_et;
+    END IF;
+    geom := tr_osoitteelle_viiva3(r.tie, aosa, aet, losa, let);
+    pituus := ST_Length(geom);
+    IF(pituus >= min_pituus AND pituus <= max_pituus) THEN
+      RETURN ROW(r.tie, aosa, aet, losa, let, geom);
+    END IF;
+  END LOOP;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
 -- kuvaus: Yritä hakea TR osoite pisteille. Heitä poikkeus, jos ei löydy.
 CREATE OR REPLACE FUNCTION tierekisteriosoite_pisteille(
   alkupiste geometry,
@@ -377,6 +437,34 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Hakee annetuille pisteille viivan jokaiselle pistevälille, huomioiden
+-- pisteiden välisen ajan. Maksimi hyväksyttävä geometrisoitu pituus on
+-- pisteiden välinen aika sekunteina kertaa 30 m/s (108 km/h).
+CREATE OR REPLACE FUNCTION tieviivat_pisteille_aika(pisteet piste_aika[]) RETURNS SETOF RECORD AS $$
+DECLARE
+ alku piste_aika;
+ loppu piste_aika;
+ alkupiste GEOMETRY;
+ loppupiste GEOMETRY;
+ aika NUMERIC;
+ i INTEGER;
+ pisteita INTEGER;
+BEGIN
+ i := 1;
+ pisteita := array_length(pisteet, 1);
+ WHILE i < pisteita LOOP
+  alku := pisteet[i];
+  loppu := pisteet[i+1];
+  aika := EXTRACT(EPOCH FROM age(loppu.aika, alku.aika));
+  alkupiste := ST_MakePoint(alku.x, alku.y);
+  loppupiste := ST_MakePoint(loppu.x, loppu.y);
+  RETURN NEXT (alkupiste, loppupiste,
+               (SELECT ytp.geometria
+	          FROM yrita_tierekisteriosoite_pisteille_max(alkupiste, loppupiste, 30.0 * aika) ytp));
+  i := i + 1;
+ END LOOP;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Hakee alkupisteen tiegeometriasta, joka on linestring tai multilinestring
 CREATE OR REPLACE FUNCTION alkupiste(g geometry) RETURNS geometry AS $$

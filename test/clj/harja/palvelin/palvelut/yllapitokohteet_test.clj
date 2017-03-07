@@ -120,13 +120,12 @@
                                       FROM yllapitokohde
                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")
                                       AND vuodet @> ARRAY[2017]::int[]")))
-        kuusamontien-testi (first (filter #(= (:nimi %) "Kuusamontien testi") vastaus))
-        muut-kohteet (filter #(not= (:nimi %) "Kuusamontien testi") vastaus)]
+        ei-yha-kohde (first (filter #(= (:nimi %) "Ei YHA-kohde") vastaus))
+        muut-kohteet (filter #(not= (:nimi %) "Ei YHA-kohde") vastaus)]
     (is (> (count vastaus) 0) "Päällystyskohteita löytyi")
     (is (= (count vastaus) kohteiden-lkm) "Löytyi oikea määrä kohteita")
-
-    (is (true? (:yllapitokohteen-voi-poistaa? kuusamontien-testi))
-        "Kuusamontien testi -kohteen saa poistaa (ei ole mitään kirjauksia)")
+    (is (true? (:yllapitokohteen-voi-poistaa? ei-yha-kohde))
+        "Ei YHA -kohteen saa poistaa (ei ole mitään kirjauksia)")
     (is (every? false? (map :yllapitokohteen-voi-poistaa? muut-kohteet))
         "Muita kohteita ei saa poistaa (sisältävät kirjauksia)")))
 
@@ -203,16 +202,16 @@
         maara-ennen-testia (ffirst (q
                                      (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
-        nykyiset-kohteet (kutsu-palvelua (:http-palvelin jarjestelma)
+        kohteet-ennen-testia (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :urakan-yllapitokohteet +kayttaja-jvh+
                                          {:urakka-id @muhoksen-paallystysurakan-id
                                           :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id})
-        kohde-jolla-ilmoitus (first (filter :paallystysilmoitus-id nykyiset-kohteet))
+        kohde-jolla-ilmoitus (first (filter :paallystysilmoitus-id kohteet-ennen-testia))
         paivitetyt-kohteet (map
                              (fn [kohde] (if (= (:id kohde) (:id kohde-jolla-ilmoitus))
                                            (assoc kohde :poistettu true)
                                            kohde))
-                             nykyiset-kohteet)]
+                             kohteet-ennen-testia)]
 
     (kutsu-palvelua (:http-palvelin jarjestelma)
                     :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
@@ -221,12 +220,12 @@
     (let [maara-testin-jalkeen (ffirst (q
                                          (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
-          kohteet-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+          kohteet-testin-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :urakan-yllapitokohteet
                                            +kayttaja-jvh+ {:urakka-id urakka-id
                                                            :sopimus-id sopimus-id})]
       (is (= maara-ennen-testia maara-testin-jalkeen))
-      (is (= kohteet-kannassa nykyiset-kohteet)))))
+      (is (= kohteet-testin-jalkeen kohteet-ennen-testia)))))
 
 (deftest tallenna-yllapitokohdeosa-kantaan
   (let [yllapitokohde-id (yllapitokohde-id-jolla-on-paallystysilmoitus)]

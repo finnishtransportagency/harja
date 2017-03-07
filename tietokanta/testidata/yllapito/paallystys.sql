@@ -42,7 +42,14 @@ VALUES
     666, 'Kuusamontien testi', 500, 3457, 5, 6, null,
     null, null, null, null,
                                           null, (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), NOW(), null, null, 'paallyste' :: yllapitokohdetyyppi,'paallystys'::yllapitokohdetyotyyppi, 456896959,
-                                          20, 26, 1, 41, 15, 1 ,1, null, '{2017}', 66);
+                                          20, 26, 1, 41, 15, 1 ,1, null, '{2017}', 66) ,
+
+(2, (SELECT id FROM urakka WHERE  nimi = 'Muhoksen päällystysurakka'),
+(SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null),
+  3456, 'Ei YHA-kohde', 500, 3457, 5, 6, null,
+                                           null, null, null, null,
+                                                             null, (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), NOW(), null, null, 'paallyste' :: yllapitokohdetyyppi,'paallystys'::yllapitokohdetyotyyppi, NULL,
+  20, 26, 1, 41, 15, 1 ,1, null, '{2017}', 66);
 
 -- Testidatan kohdeosilla on hardkoodattu id, jotta päällystysilmoituksen ilmoitustiedoissa viitataan
 -- oikeaa id:n (ei voi hakea id:tä nimellä, koska ilmoitustiedot ovat JSON-muodossa)

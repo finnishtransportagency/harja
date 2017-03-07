@@ -282,8 +282,8 @@
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
                            {:varustetoteuma {:toiminto (fn [klikattu-varustetoteuma]
-                                                    (e! (v/->ValitseToteuma klikattu-varustetoteuma)))
-                                        :teksti "Valitse varustetoteuma"}})
+                                                         (e! (v/->ValitseToteuma klikattu-varustetoteuma)))
+                                             :teksti "Valitse varustetoteuma"}})
                          (nav/vaihda-kartan-koko! :M))
                       #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
                            (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
