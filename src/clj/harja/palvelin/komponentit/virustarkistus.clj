@@ -29,7 +29,7 @@
                            :vastaus body})))
 
         :default
-        (do (log/error "Virustarkistus epäonnistui! " status body)
+        (do (log/error "Virustarkistus epäonnistui! " status body url)
             :error)))))
 
 (defrecord Virustarkistus [url]
