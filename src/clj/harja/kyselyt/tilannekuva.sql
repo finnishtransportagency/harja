@@ -108,7 +108,12 @@ WHERE (l.urakka IN (:urakat) OR l.urakka IS NULL)
       AND (l.aika BETWEEN :alku AND :loppu OR
            l.kasittelyaika BETWEEN :alku AND :loppu) AND
       l.tekija :: TEXT IN (:tekijat)
-      AND l.poistettu IS NOT TRUE;
+      AND l.poistettu IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (lp.yllapitokohde IS NULL
+          OR
+          lp.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-tarkastukset
 -- fetch-size: 64
@@ -130,6 +135,11 @@ WHERE sijainti IS NOT NULL AND
       ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax)) AND
       t.tyyppi :: TEXT IN (:tyypit) AND
       (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (lp.yllapitokohde IS NULL
+          OR
+          lp.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
 ORDER BY t.laadunalitus ASC;
 
 -- name: hae-tarkastusten-asiat
@@ -154,7 +164,12 @@ WHERE sijainti IS NOT NULL AND
       (t.aika BETWEEN :alku AND :loppu) AND
       ST_Distance(t.sijainti, ST_MakePoint(:x, :y)) < :toleranssi AND
       t.tyyppi :: TEXT IN (:tyypit) AND
-      (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
+      (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (lp.yllapitokohde IS NULL
+          OR
+          lp.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);;
 
 
 -- jarjestelma & tyokoneid perusteella uniikit tehtävät
