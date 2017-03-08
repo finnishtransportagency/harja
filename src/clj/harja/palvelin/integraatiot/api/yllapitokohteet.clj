@@ -364,7 +364,19 @@
     (tee-kirjausvastauksen-body {:ilmoitukset "Tiemerkintätoteuma kirjattu onnistuneesti"})))
 
 (defn poista-tiemerkintatoteumia [db kayttaja {:keys [urakka-id kohde-id]} {toteumien-tunnisteet :toteumien-tunnisteet}]
-  )
+  (let [urakka-id (Integer/parseInt urakka-id)
+        kohde-id (Integer/parseInt kohde-id)]
+    (log/info (format "Poistetaan uraka (id: %s) ylläpitokohteen (id: %s) tiemerkintätoteumia käyttäjän (%s) toimesta. Toteumientunnisteet: %s."
+                      urakka-id
+                      kohde-id
+                      kayttaja
+                      toteumien-tunnisteet))
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (let [poistettujen-maara (tiemerkintatoteumat/poista-tiemerkintatoteumat db kayttaja urakka-id toteumien-tunnisteet)
+          ilmoitukset (if (and (not (nil? poistettujen-maara)) (pos? poistettujen-maara))
+                        (format "Toteumat poistettu onnistuneesti. Poistettiin: %s toteumaa." poistettujen-maara)
+                        "Tunnisteita vastaavia toteumia ei löytynyt käyttäjän kirjaamista toteumista.")]
+      (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset}))))
 
 (defn palvelut [liitteiden-hallinta]
   [{:palvelu :hae-yllapitokohteet
