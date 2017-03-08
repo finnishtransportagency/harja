@@ -447,7 +447,6 @@
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "tuntematon-yllapitokohde"))))
 
-
 (deftest tarkastuksen-kirjaaminen-kohteelle-toimii
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
@@ -479,7 +478,6 @@
       (is (.contains (:body vastaus) "Tarkastus kirjattu onnistuneesti urakan: 5 ylläpitokohteelle: 5."))
       (is (= "Eipäs tarvikkaan" (:havainnot paivitetty-tarkastus)) "Havainnot ovat päivittyneet oikein"))
 
-
     (let [polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tarkastus"]
           kutsudata (-> "test/resurssit/api/talvihoitotarkastus-poisto.json"
                         slurp
@@ -490,3 +488,32 @@
       (is (= 200 (:status vastaus)) "Poisto tehtiin onnistuneesti")
       (is (.contains (:body vastaus) "Tarkastukset poistettu onnistuneesti. Poistettiin: 1 tarkastusta."))
       (is poistettu? "Tarkastus on merkitty poistetuksi onnistuneesti."))))
+
+
+(deftest tiemerkintatoteuman-kirjaaminen-kohteelle-toimii
+  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        kohde-id (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka-id)
+        _ (println "---> " kohde-id)
+        hae-toteumat #(q-map "SELECT * FROM tiemerkinnan_yksikkohintainen_toteuma WHERE yllapitokohde = " kohde-id)
+        toteumat-ennen-kirjausta (hae-toteumat)
+        polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tiemerkintatoteuma"]
+        kutsudata (slurp "test/resurssit/api/yllapitokohteen-tiemerkintatoteuman-kirjaus-request.json")
+        vastaus (api-tyokalut/post-kutsu polku kayttaja-tiemerkinta portti kutsudata)
+        toteumat-kirjauksen-jalkeen (hae-toteumat)
+        toteuma (first toteumat-kirjauksen-jalkeen)]
+
+    (is (= 200 (:status vastaus)) "Kirjaus tehtiin onnistuneesti")
+    (is (.contains (:body vastaus) "Tiemerkintätoteuma kirjattu onnistuneesti"))
+    (is (= (+ 1 (count toteumat-ennen-kirjausta)) (count toteumat-kirjauksen-jalkeen))
+        "Vain yksi uusi tarkastus on kirjautunut ylläpitokohteelle")
+
+    (is (= urakka-id (:urakka toteuma)) "Toteuma on kirjattu oikealla urakalle")
+    (is (= kohde-id (:yllapitokohde toteuma)) "Toteuma on kirjattu oikealla yllapitokohteelle")
+    (is (= 500.00M (:hinta toteuma)) "Toteuma on kirjattu oikealla yllapitokohteelle")
+    (is (not (str/blank? (:hinta_kohteelle toteuma))) "Toteuma sisältää tiedon, mille kohteelle sen on kohdistettu")
+
+
+
+
+    )
+  )
