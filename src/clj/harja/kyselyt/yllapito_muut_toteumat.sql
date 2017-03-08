@@ -111,9 +111,9 @@ WHERE id = :id
 -- name: luo-tiemerkintaurakan-yksikkohintainen-tyo<!
 INSERT INTO tiemerkinnan_yksikkohintainen_toteuma
 (yllapitokohde, urakka, hinta, hintatyyppi, muutospvm, hinta_kohteelle, selite,
- tr_numero, yllapitoluokka, pituus)
+ tr_numero, yllapitoluokka, pituus, luoja, ulkoinen_id)
 VALUES (:yllapitokohde, :urakka, :hinta, :hintatyyppi :: tiemerkinta_toteuma_hintatyyppi, :muutospvm,
-        :hinta_kohteelle, :selite, :tr_numero, :yllapitoluokka, :pituus);
+        :hinta_kohteelle, :selite, :tr_numero, :yllapitoluokka, :pituus, :luoja, :ulkoinen_id);
 
 -- name: hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
 SELECT id

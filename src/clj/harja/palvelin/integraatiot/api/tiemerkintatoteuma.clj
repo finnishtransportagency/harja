@@ -12,15 +12,14 @@
             [harja.palvelin.integraatiot.api.kasittely.tiemerkintatoteumat :as tiemerkintatoteumat])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn kirjaa-tiemerkintatoteuma [db kayttaja parametrit data]
-  (let [urakka-id (Integer/parseInt (:id parametrit))
-        tiemerkintatoteumat (:tiemerkintatoteumat data)]
-    (log/info (format "Kirjataan urakalle (id: %s) tiemerkintä toteumia käyttäjän (%s) toimesta. Data: %s."
-                 urakka-id
-                 kayttaja
-                 data))
+(defn kirjaa-tiemerkintatoteuma [db kayttaja {urakka-id :id} {tiemerkintatoteumat :tiemerkintatoteumat}]
+  (let [urakka-id (Integer/parseInt urakka-id)]
+    (log/info (format "Kirjataan urakalle (id: %s) tiemerkintä toteumia käyttäjän (%s) toimesta. Toteumat: %s."
+                      urakka-id
+                      kayttaja
+                      tiemerkintatoteumat))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (tiemerkintatoteumat/luo-tai-paivita-tiemerkintatoteumat db kayttaja tiemerkintatoteumat)
+    (tiemerkintatoteumat/luo-tai-paivita-tiemerkintatoteumat db kayttaja urakka-id nil tiemerkintatoteumat)
     (tee-kirjausvastauksen-body {:ilmoitukset "Tiemerkintätoteuma kirjattu onnistuneesti"})))
 
 (defn poista-tiemerkintatoteuma [db kayttaja parametrit data]

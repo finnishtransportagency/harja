@@ -6,16 +6,20 @@
             [harja.kyselyt.yllapito-muut-toteumat :as yllapitototeuma-q]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.id :as id]
-            [harja.domain.tiemerkinta-toteumat :as d])
+            [harja.domain.tiemerkinta-toteumat :as d]
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn luo-tai-paivita-tiemerkintatoteumat [db kayttaja urakka-id yllapitokohde-id tiemerkintatoteumat]
-  (doseq [{:keys [tunniste hinta muutospvm selite tienumero pituus yllapitoluokka hintatyyppi]} tiemerkintatoteumat]
+  (doseq [{{:keys [tunniste hinta muutospvm selite tienumero pituus yllapitoluokka hintatyyppi] :as toteuma}
+           :tiemerkintatoteuma}
+          tiemerkintatoteumat]
     (let [ulkoinen-id (:id tunniste)
           luoja-id (:id kayttaja)
           id (yllapitototeuma-q/hae-tiemerkintakohteen-id-ulkoisella-idlla db luoja-id ulkoinen-id)
           yllapitokohde (when yllapitokohde-id (yllapitokohteet-q/hae-yllapitokohde db yllapitokohde-id))
-          hinta-kohteelle (d/maarittele-hinnan-kohde yllapitokohde)
+          hinta-kohteelle (when yllapitokohde-id (d/maarittele-hinnan-kohde yllapitokohde))
+          muutospvm (json/aika-string->java-sql-date muutospvm)
           sql-parametrit {:yllapitokohde yllapitokohde
                           :hinta hinta
                           :hintatyyppi hintatyyppi
@@ -24,7 +28,9 @@
                           :selite selite
                           :tr_numero (when-not yllapitokohde-id tienumero)
                           :yllapitoluokka (when-not yllapitokohde-id yllapitoluokka)
-                          :pituus (when-not yllapitokohde-id pituus)}]
+                          :pituus (when-not yllapitokohde-id pituus)
+                          :ulkoinen_id ulkoinen-id
+                          :luoja luoja-id}]
       (if (id/id-olemassa? id)
         (yllapitototeuma-q/paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
           db (merge sql-parametrit {:id id :urakka urakka-id :poistettu false}))

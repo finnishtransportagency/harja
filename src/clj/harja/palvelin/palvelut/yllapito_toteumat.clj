@@ -116,7 +116,9 @@
                             :selite selite
                             :tr_numero (when-not yllapitokohde-id tr-numero)
                             :yllapitoluokka (when-not yllapitokohde-id yllapitoluokka)
-                            :pituus (when-not yllapitokohde-id pituus)}]
+                            :pituus (when-not yllapitokohde-id pituus)
+                            :ulkoinen-id nil
+                            :luoja nil}]
         (if (id/id-olemassa? id)
           (q/paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
             db (merge sql-parametrit {:id id :urakka urakka-id
