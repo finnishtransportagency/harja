@@ -12,16 +12,19 @@
    {:leveys 1 :otsikko "Indeksi" :fmt :raha}
    {:leveys 1 :otsikko "Yhteensä" :fmt :raha}])
 
-(defn- raportin-rivit [db urakka-id]
+(defn- raportin-rivit [db urakka-id alkupvm loppupvm]
   (let [{:keys [kokonaishintainen-osa yksikkohintainen-osa muut-tyot sakot bonukset]}
-        (first (muodosta-tiemerkinnan-kustannusyhteenveto db {:urakkaid urakka-id}))
+        (first (muodosta-tiemerkinnan-kustannusyhteenveto db {:urakkaid urakka-id
+                                                              :alkupvm alkupvm
+                                                              :loppupvm loppupvm}))
         yhteensa (+ kokonaishintainen-osa yksikkohintainen-osa muut-tyot sakot bonukset)]
-    ;; TODO Mites indeksit? Aikaväli?
+    ;; TODO Mites indeksit?
+    ;; TODO Yksikköhintaisissa ei ole aikarajausta, koska ei ole pvm-tietoa. Pitäisikö olla?
     [["Kokonaishintaiset työt" kokonaishintainen-osa 0 kokonaishintainen-osa]
      ["Yksikköhintaiset työt" yksikkohintainen-osa 0 yksikkohintainen-osa]
      ["Muut työt" muut-tyot 0 muut-tyot]
-     ["Sakot" sakot 0 sakot]
-     ["Bonukset" bonukset 0 bonukset]
+     ["Sakot" sakot nil sakot]
+     ["Bonukset" bonukset nil bonukset]
      ["Yhteensä" yhteensa 0 yhteensa]]))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
@@ -43,4 +46,4 @@
                  :sheet-nimi raportin-nimi
                  :viimeinen-rivi-yhteenveto? true}
       (raportin-sarakkeet)
-      (raportin-rivit db urakka-id)]]))
+      (raportin-rivit db urakka-id alkupvm loppupvm)]]))
