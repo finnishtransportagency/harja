@@ -3,6 +3,20 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]))
 
+(defn- raportin-sarakkeet []
+  [{:leveys 2 :otsikko "Kustannuslaji"}
+   {:leveys 1 :otsikko "Hinta"}
+   {:leveys 1 :otsikko "Indeksi"}
+   {:leveys 1 :otsikko "Yhteensä"}])
+
+(defn- raportin-rivit []
+  [["Kokonaishintainen osa" 0 0 0]
+   ["Yksikköhintainen osa" 0 0 0]
+   ["Määrämuutokset" 0 0 0]
+   ["Arvonvähennykset" 0 0 0]
+   ["Bonukset" 0 0 0]
+   ["Sakot" 0 0 0]])
+
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
@@ -20,16 +34,5 @@
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavaa.")
                  :sheet-nimi raportin-nimi}
-      [{:leveys 4 :otsikko "Päivämäärä"}
-       {:leveys 2 :otsikko "Klo"}
-       {:leveys 2 :otsikko "Tie"}
-       {:leveys 2 :otsikko "Aosa"}
-       {:leveys 2 :otsikko "Aet"}
-       {:leveys 2 :otsikko "Losa"}
-       {:leveys 2 :otsikko "Let"}
-       {:leveys 3 :otsikko "Tar\u00ADkas\u00ADtaja"}
-       {:leveys 8 :otsikko "Mittaus"}
-       {:leveys 10 :otsikko "Ha\u00ADvain\u00ADnot"}
-       {:leveys 2 :otsikko "Laadun alitus"}
-       {:leveys 3 :otsikko "Liit\u00ADteet" :tyyppi :liite}]
-      []]]))
+      (raportin-sarakkeet)
+      (raportin-rivit)]]))
