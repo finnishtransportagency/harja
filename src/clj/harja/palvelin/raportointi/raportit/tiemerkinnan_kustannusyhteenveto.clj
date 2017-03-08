@@ -1,17 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.tiemerkinnan-kustannusyhteenveto
   (:require [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
-            [harja.kyselyt.tarkastukset :as tarkastukset-q]
-            [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
-            [harja.fmt :as fmt]
-            [harja.pvm :as pvm]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
-            [taoensso.timbre :as log]
-            [harja.domain.roolit :as roolit]
-            [harja.kyselyt.konversio :as konv]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
-            [harja.domain.hoitoluokat :as hoitoluokat]
-            [clojure.string :as str]))
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
