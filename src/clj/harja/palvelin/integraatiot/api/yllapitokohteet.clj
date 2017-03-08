@@ -63,7 +63,8 @@
             [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as yllapitokohteet]
             [harja.kyselyt.paallystys :as paallystys-q]
             [harja.kyselyt.tarkastukset :as tarkastukset-q]
-            [harja.palvelin.integraatiot.api.kasittely.tarkastukset :as tarkastukset])
+            [harja.palvelin.integraatiot.api.kasittely.tarkastukset :as tarkastukset]
+            [harja.palvelin.integraatiot.api.kasittely.tiemerkintatoteumat :as tiemerkintatoteumat])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -350,10 +351,19 @@
                           "Tunnisteita vastaavia tarkastuksia ei löytynyt käyttäjän kirjaamista tarkastuksista.")]
         (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset})))))
 
-(defn kirjaa-tiemerkintatoteumia [db liitteiden-hallinta kayttaja parametrit data]
-  )
+(defn kirjaa-tiemerkintatoteumia [db kayttaja {:keys [urakka-id kohde-id]} {tiemerkintatoteumat :tiemerkintatoteumat}]
+  (let [urakka-id (Integer/parseInt urakka-id)
+        kohde-id (Integer/parseInt kohde-id)]
+    (log/info (format "Kirjataan urakan (id: %s) ylläpitokohteelle (id: %s) tiemerkintätoteumia käyttäjän (%s) toimesta. Toteumat: %s."
+                      urakka-id
+                      kohde-id
+                      kayttaja
+                      tiemerkintatoteumat))
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (tiemerkintatoteumat/luo-tai-paivita-tiemerkintatoteumat db kayttaja urakka-id kohde-id tiemerkintatoteumat)
+    (tee-kirjausvastauksen-body {:ilmoitukset "Tiemerkintätoteuma kirjattu onnistuneesti"})))
 
-(defn poista-tiemerkintatoteumia [db kayttaja parametrit data]
+(defn poista-tiemerkintatoteumia [db kayttaja {:keys [urakka-id kohde-id]} {toteumien-tunnisteet :toteumien-tunnisteet}]
   )
 
 (defn palvelut [liitteiden-hallinta]
@@ -434,7 +444,7 @@
     :kutsu-skeema json-skeemat/urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
-                    (kirjaa-tiemerkintatoteumia db liitteiden-hallinta kayttaja parametrit data))}
+                    (kirjaa-tiemerkintatoteumia db kayttaja parametrit data))}
    {:palvelu :poista-yllapitokohteen-tiemerkintatoteuma
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tiemerkintatoteuma"
     :tyyppi :DELETE

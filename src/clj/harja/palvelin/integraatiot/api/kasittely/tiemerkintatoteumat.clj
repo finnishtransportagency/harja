@@ -21,10 +21,10 @@
      (let [ulkoinen-id (:id tunniste)
            luoja-id (:id kayttaja)
            id (yllapitototeuma-q/hae-tiemerkintatoteuman-id-ulkoisella-idlla db luoja-id ulkoinen-id)
-           yllapitokohde (when yllapitokohde-id (yllapitokohteet-q/hae-yllapitokohde db yllapitokohde-id))
+           yllapitokohde (when yllapitokohde-id (first (yllapitokohteet-q/hae-yllapitokohde db {:id yllapitokohde-id})))
            hinta-kohteelle (when yllapitokohde-id (d/maarittele-hinnan-kohde yllapitokohde))
            muutospvm (json/aika-string->java-sql-date muutospvm)
-           sql-parametrit {:yllapitokohde yllapitokohde
+           sql-parametrit {:yllapitokohde yllapitokohde-id
                            :hinta hinta
                            :hintatyyppi hintatyyppi
                            :muutospvm muutospvm
