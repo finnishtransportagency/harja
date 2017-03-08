@@ -136,10 +136,10 @@ WHERE sijainti IS NOT NULL AND
       t.tyyppi :: TEXT IN (:tyypit) AND
       (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
       -- Ei kuulu poistettuun ylläpitokohteeseen
-      AND (lp.yllapitokohde IS NULL
+      AND (t.yllapitokohde IS NULL
           OR
-          lp.yllapitokohde IS NOT NULL AND
-            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
+          t.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = t.yllapitokohde) IS NOT TRUE)
 ORDER BY t.laadunalitus ASC;
 
 -- name: hae-tarkastusten-asiat
@@ -159,6 +159,7 @@ SELECT
 FROM tarkastus t
      JOIN kayttaja k ON t.luoja = k.id
      JOIN organisaatio o ON o.id = k.organisaatio
+     LEFT JOIN yllapitokohde ypk ON t.yllapitokohde = ypk.id
 WHERE sijainti IS NOT NULL AND
       (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.aika BETWEEN :alku AND :loppu) AND
