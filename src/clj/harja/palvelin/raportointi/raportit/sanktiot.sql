@@ -81,5 +81,5 @@ WHERE ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
       AND (lp.yllapitokohde IS NULL
           OR
           lp.yllapitokohde IS NOT NULL AND
-            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
+            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE)
 ORDER BY yllapitoluokka;
