@@ -74,26 +74,26 @@ WHERE
 
 -- name: hae-laatupoikkeamat
 SELECT
-  l.id,
-  l.aika,
-  l.kohde,
-  l.tekija,
-  l.kuvaus,
-  ST_Simplify(l.sijainti, :toleranssi) AS sijainti,
-  l.tarkastuspiste,
+  lp.id,
+  lp.aika,
+  lp.kohde,
+  lp.tekija,
+  lp.kuvaus,
+  ST_Simplify(lp.sijainti, :toleranssi) AS sijainti,
+  lp.tarkastuspiste,
   CONCAT(k.etunimi, ' ', k.sukunimi) AS tekijanimi,
-  l.kasittelyaika                    AS paatos_kasittelyaika,
-  l.paatos                           AS paatos_paatos,
-  l.kasittelytapa                    AS paatos_kasittelytapa,
-  l.perustelu                        AS paatos_perustelu,
-  l.muu_kasittelytapa                AS paatos_muukasittelytapa,
-  l.selvitys_pyydetty                AS selvityspyydetty,
+  lp.kasittelyaika                    AS paatos_kasittelyaika,
+  lp.paatos                           AS paatos_paatos,
+  lp.kasittelytapa                    AS paatos_kasittelytapa,
+  lp.perustelu                        AS paatos_perustelu,
+  lp.muu_kasittelytapa                AS paatos_muukasittelytapa,
+  lp.selvitys_pyydetty                AS selvityspyydetty,
 
-  l.tr_numero,
-  l.tr_alkuosa,
-  l.tr_alkuetaisyys,
-  l.tr_loppuosa,
-  l.tr_loppuetaisyys,
+  lp.tr_numero,
+  lp.tr_alkuosa,
+  lp.tr_alkuetaisyys,
+  lp.tr_loppuosa,
+  lp.tr_loppuetaisyys,
   ypk.nimi AS yllapitokohde_nimi,
   ypk.kohdenumero AS yllapitokohde_numero,
   ypk.tr_numero AS yllapitokohde_tr_numero,
@@ -101,14 +101,19 @@ SELECT
   ypk.tr_alkuetaisyys AS yllapitokohde_tr_alkuetaisyys,
   ypk.tr_loppuosa AS yllapitokohde_tr_loppuosa,
   ypk.tr_loppuetaisyys AS yllapitokohde_tr_loppuetaisyys
-FROM laatupoikkeama l
-  JOIN kayttaja k ON l.luoja = k.id
-  LEFT JOIN yllapitokohde ypk ON l.yllapitokohde = ypk.id
-WHERE (l.urakka IN (:urakat) OR l.urakka IS NULL)
-      AND (l.aika BETWEEN :alku AND :loppu OR
-           l.kasittelyaika BETWEEN :alku AND :loppu) AND
-      l.tekija :: TEXT IN (:tekijat)
-      AND l.poistettu IS NOT TRUE;
+FROM laatupoikkeama lp
+  JOIN kayttaja k ON lp.luoja = k.id
+  LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
+WHERE (lp.urakka IN (:urakat) OR lp.urakka IS NULL)
+      AND (lp.aika BETWEEN :alku AND :loppu OR
+           lp.kasittelyaika BETWEEN :alku AND :loppu) AND
+      lp.tekija :: TEXT IN (:tekijat)
+      AND lp.poistettu IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (lp.yllapitokohde IS NULL
+          OR
+          lp.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-tarkastukset
 -- fetch-size: 64
@@ -157,6 +162,11 @@ WHERE sijainti IS NOT NULL AND
       ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax)) AND
       t.tyyppi :: TEXT IN (:tyypit) AND
       (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (t.yllapitokohde IS NULL
+          OR
+          t.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = t.yllapitokohde) IS NOT TRUE)
 ORDER BY t.laadunalitus ASC;
 
 -- name: hae-tarkastusten-asiat
@@ -193,8 +203,8 @@ SELECT
   t.tr_loppuosa AS tierekisteriosoite_loppuosa,
   t.tr_loppuetaisyys AS tierekisteriosoite_loppuetaisyys
 FROM tarkastus t
-  LEFT JOIN kayttaja k ON t.luoja = k.id
-  LEFT JOIN organisaatio o ON k.organisaatio = o.id
+  JOIN kayttaja k ON t.luoja = k.id
+  JOIN organisaatio o ON k.organisaatio = o.id
   LEFT JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   LEFT JOIN soratiemittaus stm ON t.id = stm.tarkastus
 WHERE sijainti IS NOT NULL AND
@@ -202,7 +212,12 @@ WHERE sijainti IS NOT NULL AND
       (t.aika BETWEEN :alku AND :loppu) AND
       ST_Distance(t.sijainti, ST_MakePoint(:x, :y)) < :toleranssi AND
       t.tyyppi :: TEXT IN (:tyypit) AND
-      (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
+      (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (t.yllapitokohde IS NULL
+          OR
+          t.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = t.yllapitokohde) IS NOT TRUE);
 
 
 -- jarjestelma & tyokoneid perusteella uniikit tehtävät

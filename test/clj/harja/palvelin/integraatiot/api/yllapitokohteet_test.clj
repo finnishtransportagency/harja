@@ -30,7 +30,7 @@
         leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi")
                                           yllapitokohteet))]
     (is (= 200 (:status vastaus)))
-    (is (= 5 (count yllapitokohteet)))
+    (is (= 6 (count yllapitokohteet)))
     (is (some? leppajarven-ramppi))
     (is (some? (:tiemerkinta-takaraja (:aikataulu leppajarven-ramppi))))
     (is (some? (:paallystys-aloitettu (:aikataulu leppajarven-ramppi))))

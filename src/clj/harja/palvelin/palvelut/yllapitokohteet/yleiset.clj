@@ -90,23 +90,14 @@
               (tieverkko/hae-osien-pituudet db tie min-osa max-osa))))
     (group-by :tr-numero yllapitokohteet)))
 
-(defn- yllapitokohde-sisaltaa-kirjauksia?
-  "Palauttaa true tai false sen mukaan onko ylläpitokohteeseen liitetty kirjauksia
-  (laatupoikkeamia, tarkastuksia, toteumia...)"
-  [db yllapitokohde-id]
-  (let [kirjaukset (first (q/hae-yllapitokohteeseen-liittyvien-kirjauksien-maara db {:id yllapitokohde-id}))
-        kirjauksia-yhteensa (reduce + (vals kirjaukset))]
-    (> kirjauksia-yhteensa 0)))
-
 (defn- yllapitokohde-sisaltaa-urakassa-tehtyja-kirjauksia?
   "Palauttaa true tai false sen mukaan onko ylläpitokohteeseen liitetty kirjauksia annetussa
    urakassa (laatupoikkeamia, tarkastuksia, toteumia...)"
   [db yllapitokohde-id urakka-id]
-  (let [kirjaukset (first (q/hae-yllapitokohteeseen-urakassa-liittyvien-kirjauksien-maara
-                            db {:yllapitokohde_id yllapitokohde-id
-                                :urakka_id urakka-id}))
-        kirjauksia-yhteensa (reduce + (vals kirjaukset))]
-    (> kirjauksia-yhteensa 0)))
+  (let [kirjauksia? (:kirjauksia (first (q/yllapitokohde-sisaltaa-kirjauksia-urakassa
+                                          db {:yllapitokohde_id yllapitokohde-id
+                                              :urakka_id urakka-id})))]
+    kirjauksia?))
 
 (defn- yllapitokohde-sisaltaa-tiemerkintaaikataulun?
   [db yllapitokohde-id]
@@ -118,7 +109,8 @@
 
 (defn yllapitokohteen-voi-poistaa?
   [db yllapitokohde-id]
-  (not (yllapitokohde-sisaltaa-kirjauksia? db yllapitokohde-id)))
+  (let [saa-poistaa? (:saa-poistaa (first (q/yllapitokohteen-saa-poistaa db {:id yllapitokohde-id})))]
+    saa-poistaa?))
 
 (defn yllapitokohteen-suorittavan-tiemerkintaurakan-voi-vaihtaa?
   [db yllapitokohde-id tiemerkintaurakka-id]

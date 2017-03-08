@@ -1226,7 +1226,7 @@ VALUES (
   20,
   'palvelusopimus' :: sopimustyyppi,
   'paallystys' :: urakkatyyppi,
-  '9992'
+  '3003'
 );
 
 -- Tampereen rantatunneli
