@@ -601,9 +601,6 @@
                    {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :nimi :kohdenumero
                     :tyyppi :string :leveys id-leveys
                     :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
-                   {:otsikko "YHA-koh\u00ADde\u00ADnu\u00ADme\u00ADro" :nimi :yha-kohdenumero
-                    :tyyppi :numero :leveys id-leveys
-                    :muokattava (constantly false)}
                    {:otsikko "Koh\u00ADteen ni\u00ADmi" :nimi :nimi
                     :tyyppi :string :leveys kohde-leveys}]
                   (tierekisteriosoite-sarakkeet
