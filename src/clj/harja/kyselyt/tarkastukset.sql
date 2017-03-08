@@ -166,8 +166,11 @@ SELECT
   stm.kiinteys             AS soratiemittaus_kiinteys,
   stm.polyavyys            AS soratiemittaus_polyavyys,
   stm.sivukaltevuus        AS soratiemittaus_sivukaltevuus,
-  yrita_tierekisteriosoite_pisteille2
-  (alkupiste(t.sijainti), loppupiste(t.sijainti), 1) :: TEXT AS tierekisteriosoite
+  t.tr_numero AS tierekisteriosoite_numero,
+  t.tr_alkuosa AS tierekisteriosoite_alkuosa,
+  t.tr_alkuetaisyys AS tierekisteriosoite_alkuetaisyys,
+  t.tr_loppuosa AS tierekisteriosoite_loppuosa,
+  t.tr_loppuetaisyys AS tierekisteriosoite_loppuetaisyys
 FROM tarkastus t
   LEFT JOIN kayttaja k ON t.luoja = k.id
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
