@@ -1,7 +1,7 @@
-(ns harja.views.ilmoitukset.tietyotilmoitukset
+(ns harja.views.ilmoitukset.tietyoilmoitukset
   (:require [reagent.core :refer [atom] :as r]
             [clojure.string :as s]
-            [harja.tiedot.ilmoitukset.tietyotilmoitukset :as tiedot]
+            [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tiedot]
             [harja.ui.bootstrap :as bs]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
