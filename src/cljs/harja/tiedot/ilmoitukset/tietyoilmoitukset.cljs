@@ -1,4 +1,4 @@
-(ns harja.tiedot.ilmoitukset.tietyotilmoitukset
+(ns harja.tiedot.ilmoitukset.tietyoilmoitukset
   (:require [reagent.core :refer [atom]]
             [harja.pvm :as pvm]
             [harja.asiakas.kommunikaatio :as k]
