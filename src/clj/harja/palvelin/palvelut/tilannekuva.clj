@@ -514,9 +514,12 @@
   "Hakee tarkastuksien tiedot pisteessä infopaneelia varten."
   [db user {x :x y :y :as parametrit}]
   (into []
-        (comp (map #(assoc % :tyyppi-kartalla :tarkastus))
-              (map #(konv/string->keyword % :tyyppi))
-              (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
+        (comp
+          (map #(konv/array->set % :vakiohavainnot))
+          (map #(assoc % :tyyppi-kartalla :tarkastus))
+          (map konv/alaviiva->rakenne)
+          (map #(konv/string->keyword % :tyyppi))
+          (map #(update % :tierekisteriosoite konv/lue-tr-osoite)))
         (q/hae-tarkastusten-asiat db
                                   (as-> parametrit p
                                     (suodattimet-parametreista p)

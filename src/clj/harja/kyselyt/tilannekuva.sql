@@ -115,15 +115,42 @@ WHERE (l.urakka IN (:urakat) OR l.urakka IS NULL)
 -- row-fn: geo/muunna-reitti
 SELECT
   ST_Simplify(t.sijainti, :toleranssi) AS reitti,
-  t.laadunalitus,
   t.tyyppi,
+  t.laadunalitus,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
-       THEN 'urakoitsija' :: osapuoli
-       ELSE 'tilaaja' :: osapuoli
-       END AS tekija
+    THEN 'urakoitsija' :: osapuoli
+  ELSE 'tilaaja' :: osapuoli
+  END                                  AS tekija,
+  -- Talvihoito- ja soratiemittauksesta riittää tieto, onko niitä tarkastuksella
+  CASE WHEN
+    thm.lumimaara IS NULL AND
+    thm.tasaisuus IS NULL AND
+    thm.kitka IS NULL AND
+    thm.lampotila_ilma IS NULL AND
+    thm.lampotila_tie IS NULL
+    THEN NULL
+  ELSE 'Talvihoitomittaus'
+  END AS talvihoitomittaus,
+  CASE WHEN
+    stm.tasaisuus IS NULL AND
+    stm.kiinteys IS NULL AND
+    stm.polyavyys IS NULL AND
+    stm.sivukaltevuus IS NULL
+    THEN NULL
+  ELSE 'Soratiemittaus'
+  END AS soratiemittaus,
+  -- Vakiohavainnot otetaan merkkijonona, koska tyyliin vaikuttaa tietyt avainsanat (esim. "Luminen")
+  (SELECT array_agg(nimi)
+   FROM tarkastus_vakiohavainto t_vh
+     JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
+   WHERE tarkastus = t.id)             AS vakiohavainnot,
+  t.havainnot AS havainnot
 FROM tarkastus t
-     JOIN kayttaja k ON t.luoja = k.id
-     JOIN organisaatio o ON o.id = k.organisaatio
+  LEFT JOIN kayttaja k ON t.luoja = k.id
+  LEFT JOIN organisaatio o ON k.organisaatio = o.id
+  -- Talvi- ja soratiemittaukset
+  LEFT JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
+  LEFT JOIN soratiemittaus stm ON t.id = stm.tarkastus
 WHERE sijainti IS NOT NULL AND
       (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.aika BETWEEN :alku AND :loppu) AND
@@ -136,19 +163,40 @@ ORDER BY t.laadunalitus ASC;
 -- Hakee tarkastusten asiat pisteessä
 SELECT
   t.id,
-  t.aika,
   t.tyyppi,
+  t.laadunalitus,
+  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+    THEN 'urakoitsija' :: osapuoli
+  ELSE 'tilaaja' :: osapuoli
+  END                                                        AS tekija,
+  t.aika,
   t.tarkastaja,
   t.havainnot,
-  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
-       THEN 'urakoitsija' :: osapuoli
-       ELSE 'tilaaja' :: osapuoli
-       END AS tekija,
-  yrita_tierekisteriosoite_pisteille2(
-     alkupiste(t.sijainti), loppupiste(t.sijainti), 1)::TEXT AS tierekisteriosoite
+  (SELECT array_agg(nimi)
+   FROM tarkastus_vakiohavainto t_vh
+     JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
+   WHERE tarkastus = t.id)                                   AS vakiohavainnot,
+  thm.talvihoitoluokka     AS talvihoitomittaus_hoitoluokka,
+  thm.lumimaara            AS talvihoitomittaus_lumimaara,
+  thm.tasaisuus            AS talvihoitomittaus_tasaisuus,
+  thm.kitka                AS talvihoitomittaus_kitka,
+  thm.lampotila_tie        AS talvihoitomittaus_lampotila_tie,
+  thm.lampotila_ilma       AS talvihoitomittaus_lampotila_ilma,
+  stm.hoitoluokka          AS soratiemittaus_hoitoluokka,
+  stm.tasaisuus            AS soratiemittaus_tasaisuus,
+  stm.kiinteys             AS soratiemittaus_kiinteys,
+  stm.polyavyys            AS soratiemittaus_polyavyys,
+  stm.sivukaltevuus        AS soratiemittaus_sivukaltevuus,
+  t.tr_numero AS tierekisteriosoite_numero,
+  t.tr_alkuosa AS tierekisteriosoite_alkuosa,
+  t.tr_alkuetaisyys AS tierekisteriosoite_alkuetaisyys,
+  t.tr_loppuosa AS tierekisteriosoite_loppuosa,
+  t.tr_loppuetaisyys AS tierekisteriosoite_loppuetaisyys
 FROM tarkastus t
-     JOIN kayttaja k ON t.luoja = k.id
-     JOIN organisaatio o ON o.id = k.organisaatio
+  LEFT JOIN kayttaja k ON t.luoja = k.id
+  LEFT JOIN organisaatio o ON k.organisaatio = o.id
+  LEFT JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
+  LEFT JOIN soratiemittaus stm ON t.id = stm.tarkastus
 WHERE sijainti IS NOT NULL AND
       (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.aika BETWEEN :alku AND :loppu) AND

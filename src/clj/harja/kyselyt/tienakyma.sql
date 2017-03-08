@@ -26,24 +26,46 @@ SELECT t.id,
 
 -- name: hae-tarkastukset
 -- fetch-size: 64
-SELECT t.id, t.aika, t.tyyppi, t.tarkastaja,
-       t.havainnot, t.laadunalitus,
-       t.sijainti,
-       CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
-       THEN 'urakoitsija' :: osapuoli
-       ELSE 'tilaaja' :: osapuoli
-       END AS tekija,
-       t.tr_numero AS tierekisteriosoite_numero,
-       t.tr_alkuosa AS tierekisteriosoite_alkuosa,
-       t.tr_alkuetaisyys AS tierekisteriosoite_alkuetaisyys,
-       t.tr_loppuosa AS tierekisteriosoite_loppuosa,
-       t.tr_loppuetaisyys AS tierekisteriosoite_loppuetaisyys
+SELECT
+  t.id,
+  t.tyyppi,
+  t.laadunalitus,
+  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+    THEN 'urakoitsija' :: osapuoli
+  ELSE 'tilaaja' :: osapuoli
+  END                                                        AS tekija,
+  t.aika,
+  t.tarkastaja,
+  t.havainnot,
+  t.sijainti,
+  (SELECT array_agg(nimi)
+   FROM tarkastus_vakiohavainto t_vh
+     JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
+   WHERE tarkastus = t.id)                                   AS vakiohavainnot,
+  thm.talvihoitoluokka     AS talvihoitomittaus_hoitoluokka,
+  thm.lumimaara            AS talvihoitomittaus_lumimaara,
+  thm.tasaisuus            AS talvihoitomittaus_tasaisuus,
+  thm.kitka                AS talvihoitomittaus_kitka,
+  thm.lampotila_tie        AS talvihoitomittaus_lampotila_tie,
+  thm.lampotila_ilma       AS talvihoitomittaus_lampotila_ilma,
+  stm.hoitoluokka          AS soratiemittaus_hoitoluokka,
+  stm.tasaisuus            AS soratiemittaus_tasaisuus,
+  stm.kiinteys             AS soratiemittaus_kiinteys,
+  stm.polyavyys            AS soratiemittaus_polyavyys,
+  stm.sivukaltevuus        AS soratiemittaus_sivukaltevuus,
+  t.tr_numero AS tierekisteriosoite_numero,
+  t.tr_alkuosa AS tierekisteriosoite_alkuosa,
+  t.tr_alkuetaisyys AS tierekisteriosoite_alkuetaisyys,
+  t.tr_loppuosa AS tierekisteriosoite_loppuosa,
+  t.tr_loppuetaisyys AS tierekisteriosoite_loppuetaisyys
 FROM tarkastus t
-     JOIN kayttaja k ON t.luoja = k.id
-     JOIN organisaatio o ON o.id = k.organisaatio
+  LEFT JOIN kayttaja k ON t.luoja = k.id
+  LEFT JOIN organisaatio o ON k.organisaatio = o.id
+  LEFT JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
+  LEFT JOIN soratiemittaus stm ON t.id = stm.tarkastus
 WHERE sijainti IS NOT NULL AND
       ST_Intersects(t.sijainti, :sijainti) AND
-      (t.aika BETWEEN :alku AND :loppu)
+      (t.aika BETWEEN :alku AND :loppu);
 
 -- name: hae-ilmoitukset
 SELECT i.id, i.urakka, i.ilmoitusid, i.tunniste, i.ilmoitettu,
