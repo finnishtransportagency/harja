@@ -1,14 +1,14 @@
 -- name: muodosta-tiemerkinnan-kustannusyhteenveto
 SELECT
   -- FIXME AIKARAJAT (mutta ei voi kaikkiin laittaa?)
-  (SELECT SUM(summa)
+  COALESCE((SELECT SUM(summa)
    FROM kokonaishintainen_tyo
    WHERE toimenpideinstanssi IN
          (SELECT id
           FROM toimenpideinstanssi
-          WHERE urakka = :urakkaid))
+          WHERE urakka = :urakkaid)), 0)
     AS "kokonaishintainen-osa",
-  (SELECT SUM(hinta)
+  COALESCE((SELECT SUM(hinta)
    FROM tiemerkinnan_yksikkohintainen_toteuma
    WHERE urakka = :urakkaid
          AND poistettu IS NOT TRUE
@@ -16,14 +16,14 @@ SELECT
          AND (yllapitokohde IS NULL OR (yllapitokohde IS NOT NULL AND (SELECT poistettu
                                                                        FROM yllapitokohde
                                                                        WHERE id = yllapitokohde) IS NOT
-                                                                      TRUE)))
+                                                                      TRUE))), 0)
     AS "yksikkohintainen-osa",
-  (SELECT SUM(hinta)
+  COALESCE((SELECT SUM(hinta)
    FROM yllapito_muu_toteuma
    WHERE urakka = :urakkaid AND poistettu IS NOT
-                                TRUE)
+                                TRUE), 0)
     AS "muut-tyot",
-  (SELECT SUM(maara)
+  COALESCE((SELECT SUM(maara)
    FROM sanktio
    WHERE poistettu IS NOT TRUE
          AND maara < 0
@@ -34,9 +34,9 @@ SELECT
                                            (lp.yllapitokohde IS NOT NULL AND (SELECT poistettu
                                                                               FROM yllapitokohde
                                                                               WHERE id = lp.yllapitokohde
-                                                                                         IS NOT TRUE)))))
+                                                                                         IS NOT TRUE))))), 0)
     AS "sakot",
-  (SELECT SUM(maara)
+  COALESCE((SELECT SUM(maara)
    FROM sanktio
    WHERE poistettu IS NOT TRUE
          AND maara > 0
@@ -47,7 +47,7 @@ SELECT
                                            (lp.yllapitokohde IS NOT NULL AND (SELECT poistettu
                                                                               FROM yllapitokohde
                                                                               WHERE id = lp.yllapitokohde
-                                                                                         IS NOT TRUE)))))
+                                                                                         IS NOT TRUE))))), 0)
     AS "bonukset"
 FROM urakka
 WHERE id = :urakkaid;
