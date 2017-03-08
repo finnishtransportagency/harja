@@ -167,10 +167,10 @@ WHERE sijainti IS NOT NULL AND
       t.tyyppi :: TEXT IN (:tyypit) AND
       (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
       -- Ei kuulu poistettuun ylläpitokohteeseen
-      AND (lp.yllapitokohde IS NULL
+      AND (t.yllapitokohde IS NULL
           OR
-          lp.yllapitokohde IS NOT NULL AND
-            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
+          t.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = t.yllapitokohde) IS NOT TRUE);
 
 
 -- jarjestelma & tyokoneid perusteella uniikit tehtävät
