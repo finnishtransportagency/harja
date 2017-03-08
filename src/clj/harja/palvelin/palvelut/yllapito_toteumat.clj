@@ -117,7 +117,7 @@
                             :tr_numero (when-not yllapitokohde-id tr-numero)
                             :yllapitoluokka (when-not yllapitokohde-id yllapitoluokka)
                             :pituus (when-not yllapitokohde-id pituus)
-                            :ulkoinen-id nil
+                            :ulkoinen_id nil
                             :luoja nil}]
         (if (id/id-olemassa? id)
           (q/paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
