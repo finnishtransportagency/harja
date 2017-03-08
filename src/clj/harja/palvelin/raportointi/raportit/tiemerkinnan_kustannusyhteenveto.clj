@@ -3,6 +3,8 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]))
 
+(defqueries "harja/palvelin/raportointi/raportit/tiemerkinnan_kustannusyhteenveto.sql")
+
 (defn- raportin-sarakkeet []
   [{:leveys 2 :otsikko "Kustannuslaji"}
    {:leveys 1 :otsikko "Hinta"}
