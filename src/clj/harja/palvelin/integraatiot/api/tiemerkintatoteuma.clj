@@ -19,7 +19,7 @@
                       kayttaja
                       tiemerkintatoteumat))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (tiemerkintatoteumat/luo-tai-paivita-tiemerkintatoteumat db kayttaja urakka-id nil tiemerkintatoteumat)
+    (tiemerkintatoteumat/luo-tai-paivita-tiemerkintatoteumat db kayttaja urakka-id tiemerkintatoteumat)
     (tee-kirjausvastauksen-body {:ilmoitukset "Tiemerkintätoteuma kirjattu onnistuneesti"})))
 
 (defn poista-tiemerkintatoteuma [db kayttaja {urakka-id :id} {toteumien-tunnisteet :toteumien-tunnisteet}]

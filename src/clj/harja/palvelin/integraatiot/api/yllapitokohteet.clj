@@ -350,6 +350,12 @@
                           "Tunnisteita vastaavia tarkastuksia ei löytynyt käyttäjän kirjaamista tarkastuksista.")]
         (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset})))))
 
+(defn kirjaa-tiemerkintatoteumia [db liitteiden-hallinta kayttaja parametrit data]
+  )
+
+(defn poista-tiemerkintatoteumia [db kayttaja parametrit data]
+  )
+
 (defn palvelut [liitteiden-hallinta]
   [{:palvelu :hae-yllapitokohteet
     :polku "/api/urakat/:id/yllapitokohteet"
@@ -419,7 +425,23 @@
     :kutsu-skeema json-skeemat/urakan-yllapitokohteen-tarkastuksen-poisto-request
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
-                    (poista-tarkastuksia db kayttaja parametrit data))}])
+                    (poista-tarkastuksia db kayttaja parametrit data))}
+
+
+   {:palvelu :kirjaa-yllapitokohteen-tiemerkintatoteuma
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tiemerkintatoteuma"
+    :tyyppi :POST
+    :kutsu-skeema json-skeemat/urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db]
+                    (kirjaa-tiemerkintatoteumia db liitteiden-hallinta kayttaja parametrit data))}
+   {:palvelu :poista-yllapitokohteen-tiemerkintatoteuma
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tiemerkintatoteuma"
+    :tyyppi :DELETE
+    :kutsu-skeema json-skeemat/pistetoteuman-poisto
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db]
+                    (poista-tiemerkintatoteumia db kayttaja parametrit data))}])
 
 (defrecord Yllapitokohteet []
   component/Lifecycle
