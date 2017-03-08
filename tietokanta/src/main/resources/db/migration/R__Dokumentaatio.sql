@@ -31,13 +31,12 @@ E'Päällystysilmoitus on ylläpitokohteeseen (paallystyskohde-sarake) liittyvä
   -- Ylläpito (tiemerkintä)
 
 COMMENT ON TABLE tiemerkinnan_yksikkohintainen_toteuma IS
-E'Tauluun tallentuu tiemerkintäurakassa tehdyt toteumat, jotka voivat liittyä ylläpitokohteeseen. Mikäli toteuma ei liity ylläpitokohteeseen, sille kirjataan oma tr-osoite ja pituus.\n\n
+E'Tauluun tallentuu tiemerkintäurakassa tehdyt toteumat, jotka voivat liittyä ylläpitokohteeseen. Mikäli toteuma ei liity ylläpitokohteeseen, sille kirjataan oma tr-osoite ja pituus. Jos linkittyy poistettuun ylläpitokohteeseen, tulkitaan myös itse toteuman olevan poistettu, vaikkei olisikaan eksplisiittisesti merkitty poistetuksi.\n\n
 
 hinta_kohteelle, string, jonka sisältönä on kohteen osoite sillä hetkellä kun hinta annettiin. Käytetään tunnistamaan tilanne, jossa hinta on annettu kohteen vanhalle osoitteelle';
 
--- FIXME ENABLOI TÄMÄ KUN HAR-4284 on tehty
--- COMMENT ON TABLE yllapito_muu_toteuma IS
--- E'Tätä taulua käytetään tallentamaan ylläpidon urakoiden muita toteumia (tiemerkintäurakan muut toteumat ja päällystysurakan muut kustannukset)';
+COMMENT ON TABLE yllapito_muu_toteuma IS
+E'Tätä taulua käytetään tallentamaan ylläpidon urakoiden muita toteumia (tiemerkintäurakan muut toteumat ja päällystysurakan muut kustannukset)';
 
 -- Mobiili laadunseuranta
 
@@ -91,15 +90,27 @@ E'Muokkauslukko-taulua käytetään lukitsemaan jokin muokattava näkymä/asia (
  - kayttaja (kertoo, kuka asian lukitsi)\n
  - aikaleima (kertoo, milloin lukko on viimeksi virkistetty)';
 
+ -- Toteumat
+
+COMMENT ON TABLE toteuma_tehtava IS
+E'- Toteuman tehtävä linkittyy aina toteumaan. Jos toteuma on poistettu, tulkitaan myös tehtävän olevan poistettu, vaikkei itse tehtävää olisikaan eksplisiittisesti merkitty poistetuksi.';
+
+ -- Laadunseuranta
+
+COMMENT ON TABLE tarkastus IS
+E'- Tarkastus voi linkittyä ylläpitokohteeseen. Jos ylläpitokohde on poistettu, tulkitaan myös tarkastuksen olevan poistettu, vaikkei itse tarkastusta olisikaan eksplisiittisesti merkitty poistetuksi.';
+
+COMMENT ON TABLE laatupoikkeama IS
+E'- Laatupoikkeama voi linkittyä ylläpitokohteeseen. Jos ylläpitokohde on poistettu, tulkitaan myös laatupoikkeaman olevan poistettu, vaikkei itse laatupoikkeamaa olisikaan eksplisiittisesti merkitty poistetuksi.';
+
 COMMENT ON TABLE sanktio IS
 E'Sanktio-tauluun kirjataan urakassa sanktio tai bonus.\n
  - Sanktion tyyppi määräytyy tarkemmin taulun sanktiotyyppi ja enumit sanktiolaji kautta\n
  - Sanktio tyypillisesti määrätään laadun alituksesta tai toistuvasta huolimattomuudesta\n
  - Bonus tyypillisesti myönnetään odotukset ylittävästä toiminnallisesta laadusta\n
  - Tietomallissa Sanktioon liittyy aina laatupoikkeama, vaikka sanktio olisikin ns. suorasanktio\n
- -- Suorasanktiot ovat sanktioita, jotka on luotu laatupoikkeamat/sanktiot näkymässä\n
- - Ylläpidon urakoissa sanktioihin voi liittyä vakiofraasi ja ylläpitokohde (laatupoikkeaman kautta linkitetty)';
-
+ - Suorasanktiot ovat sanktioita, jotka on luotu laatupoikkeamat/sanktiot näkymässä\n
+ - Ylläpidon urakoissa sanktioihin voi liittyä vakiofraasi ja ylläpitokohde (laatupoikkeaman kautta linkitetty). Jos sanktio liittyy poistettuun laatupoikkeamaan tai ylläpitokohteeseen, sen katsotaan olevan poistettu, vaikkei itse sanktiota olisikaan eksplisiittisesti merkitty poistetuksi.';
 
 COMMENT ON TABLE sanktiotyyppi IS
 E'Sanktiotyyppi-taulussa kerrotaan eri urakkatyyppien kannalta olennaiset sanktiotyypit.\n

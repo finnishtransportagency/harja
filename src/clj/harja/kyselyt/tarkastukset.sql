@@ -73,6 +73,11 @@ WHERE t.urakka = :urakka
                          WHERE tarkastus = t.id)))
       AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE)
       AND t.poistettu IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (t.yllapitokohde IS NULL
+          OR
+          t.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = t.yllapitokohde) IS NOT TRUE)
 ORDER BY t.aika DESC
 LIMIT :maxrivimaara;
 
@@ -211,7 +216,12 @@ FROM tarkastus t
 WHERE t.urakka = :urakka
       AND t.id = :id
       AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
-      AND t.poistettu IS NOT TRUE;
+      AND t.poistettu IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (t.yllapitokohde IS NULL
+          OR
+          t.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = t.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-tarkastuksen-liitteet
 -- Hakee annetun tarkastuksen kaikki liitteet
@@ -355,7 +365,12 @@ WHERE t.urakka = :urakka
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'tiesto' :: tarkastustyyppi
       AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
-      AND t.poistettu IS NOT TRUE;
+      AND t.poistettu IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (t.yllapitokohde IS NULL
+          OR
+          t.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = t.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-hallintayksikon-tiestotarkastukset-liitteineen-raportille
 -- Hakee urakan tiestötarkastukset aikavälin perusteella raportille
@@ -391,7 +406,12 @@ WHERE t.urakka IN (SELECT id
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'tiesto' :: tarkastustyyppi
       AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
-      AND t.poistettu IS NOT TRUE;
+      AND t.poistettu IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (t.yllapitokohde IS NULL
+          OR
+          t.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = t.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-koko-maan-tiestotarkastukset-liitteineen-raportille
 -- Hakee urakan tiestötarkastukset aikavälin perusteella raportille
@@ -425,7 +445,12 @@ WHERE t.urakka IN (SELECT id
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'tiesto' :: tarkastustyyppi
       AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
-      AND t.poistettu IS NOT TRUE;
+      AND t.poistettu IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (t.yllapitokohde IS NULL
+          OR
+          t.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = t.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-urakan-kelitarkastukset-liitteineen-raportille
 -- Hakee urakan kelitarkastukset (talvihoitomittaukset) aikavälin perusteella raportille
@@ -462,7 +487,12 @@ WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'talvihoito' :: tarkastustyyppi
-      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (t.yllapitokohde IS NULL
+          OR
+          t.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = t.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-hallintayksikon-kelitarkastukset-liitteineen-raportille
 -- Hakee hallintayksikön kelitarkastukset (talvihoitomittaukset) aikavälin perusteella raportille
@@ -505,7 +535,12 @@ WHERE t.urakka IN (SELECT id
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'talvihoito' :: tarkastustyyppi
       AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
-      AND t.poistettu IS NOT TRUE;
+      AND t.poistettu IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (t.yllapitokohde IS NULL
+          OR
+          t.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = t.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-koko-maan-kelitarkastukset-liitteineen-raportille
 -- Hakee koko maan kelitarkastukset (talvihoitomittaukset) aikavälin perusteella raportille
@@ -548,7 +583,12 @@ WHERE t.urakka IN (SELECT id
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'talvihoito' :: tarkastustyyppi
       AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
-      AND t.poistettu IS NOT TRUE;
+      AND t.poistettu IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (t.yllapitokohde IS NULL
+          OR
+          t.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = t.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-urakan-soratietarkastukset-raportille
 -- Hakee urakan soratietarkastukset aikavälin perusteella raportille
@@ -578,7 +618,12 @@ WHERE t.urakka = :urakka
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'soratie' :: tarkastustyyppi
       AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
-      AND t.poistettu IS NOT TRUE;
+      AND t.poistettu IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (t.yllapitokohde IS NULL
+          OR
+          t.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = t.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-hallintayksikon-soratietarkastukset-raportille
 -- Hakee hallintayksikön soratietarkastukset aikavälin perusteella raportille
@@ -613,7 +658,12 @@ WHERE t.urakka IN (SELECT id
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'soratie' :: tarkastustyyppi
       AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
-      AND t.poistettu IS NOT TRUE;
+      AND t.poistettu IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (t.yllapitokohde IS NULL
+          OR
+          t.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = t.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-koko-maan-soratietarkastukset-raportille
 -- Hakee koko maan soratietarkastukset aikavälin perusteella raportille
@@ -647,7 +697,12 @@ WHERE t.urakka IN (SELECT id
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND t.tyyppi = 'soratie' :: tarkastustyyppi
       AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
-      AND t.poistettu IS NOT TRUE;
+      AND t.poistettu IS NOT TRUE
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (t.yllapitokohde IS NULL
+          OR
+          t.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = t.yllapitokohde) IS NOT TRUE);
 
 -- name: liita-tarkastukselle-laatupoikkeama<!
 INSERT INTO tarkastus_laatupoikkeama (tarkastus, laatupoikkeama) VALUES (:tarkastus, :laatupoikkeama);
