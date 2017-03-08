@@ -108,7 +108,7 @@ WHERE (lp.urakka IN (:urakat) OR lp.urakka IS NULL)
       AND (lp.aika BETWEEN :alku AND :loppu OR
            lp.kasittelyaika BETWEEN :alku AND :loppu) AND
       lp.tekija :: TEXT IN (:tekijat)
-      AND l.poistettu IS NOT TRUE
+      AND lp.poistettu IS NOT TRUE
       -- Ei kuulu poistettuun ylläpitokohteeseen
       AND (lp.yllapitokohde IS NULL
           OR
