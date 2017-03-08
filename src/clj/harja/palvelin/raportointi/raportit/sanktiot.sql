@@ -34,7 +34,12 @@ WHERE ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
                                                                                         WHERE hallintayksikko =
                                                                                               :hallintayksikko) AND u.urakkanro IS NOT NULL))
       AND s.poistettu IS NOT TRUE
-      AND s.perintapvm BETWEEN :alku AND :loppu;
+      AND s.perintapvm BETWEEN :alku AND :loppu
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (lp.yllapitokohde IS NULL
+          OR
+          lp.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-sanktiot-yllapidon-raportille
 -- Hakee sanktiot
@@ -72,4 +77,9 @@ WHERE ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
                                                                                               :hallintayksikko) AND u.urakkanro IS NOT NULL))
       AND s.poistettu IS NOT TRUE
       AND s.perintapvm BETWEEN :alku AND :loppu
+    -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (lp.yllapitokohde IS NULL
+          OR
+          lp.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
 ORDER BY yllapitoluokka;

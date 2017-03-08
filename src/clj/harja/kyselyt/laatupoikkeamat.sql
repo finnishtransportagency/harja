@@ -376,7 +376,12 @@ FROM laatupoikkeama lp
 WHERE lp.urakka = :urakka
       AND lp.poistettu IS NOT TRUE
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
-      AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli);
+      AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli)
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (lp.yllapitokohde IS NULL
+          OR
+          lp.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-hallintayksikon-laatupoikkeamat-liitteineen-raportille
 -- Hakee hallintayksikön laatupoikkeamat aikavälin perusteella raportille
@@ -410,7 +415,12 @@ WHERE lp.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksik
                     AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
       AND lp.poistettu IS NOT TRUE
-      AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli);
+      AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli)
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (lp.yllapitokohde IS NULL
+          OR
+          lp.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-koko-maan-laatupoikkeamat-liitteineen-raportille
 -- Hakee koko maan laatupoikkeamat aikavälin perusteella raportille
@@ -443,4 +453,9 @@ FROM laatupoikkeama lp
 WHERE lp.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
       AND lp.poistettu IS NOT TRUE
-      AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli);
+      AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli)
+      -- Ei kuulu poistettuun ylläpitokohteeseen
+      AND (lp.yllapitokohde IS NULL
+          OR
+          lp.yllapitokohde IS NOT NULL AND
+            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
