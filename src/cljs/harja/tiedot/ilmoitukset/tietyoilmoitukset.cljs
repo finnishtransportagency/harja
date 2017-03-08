@@ -5,19 +5,15 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakat :as tiedot-urakat]
-            [harja.tiedot.hallintayksikot :as hy]
             [harja.loki :refer [log tarkkaile!]]
             [cljs.core.async :as async]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [tuck.core :as t]
-            [clojure.string :as str]
-            [cljs.pprint :refer [pprint]]
-            [reagent.core :as r])
+            [cljs.pprint :refer [pprint]])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-;; Valinnat jotka riippuvat ulkoisista atomeista
 (defonce ulkoisetvalinnat
          (reaction {:voi-hakea? true
                     :hallintayksikko (:id @nav/valittu-hallintayksikko)
@@ -30,7 +26,6 @@
 (defn- nil-hylkiva-concat [akku arvo]
   (if (or (nil? arvo) (nil? akku))
     nil
-    ;; else
     (concat akku arvo)))
 
 (defonce karttataso-ilmoitukset (atom false))
@@ -42,35 +37,19 @@
                             :valinnat {:alkuaika (pvm/tuntia-sitten 1)
                                        :loppuaika (pvm/nyt)}}))
 
-;; Vaihtaa valinnat
 (defrecord AsetaValinnat [valinnat])
-
-;; Kun valintojen reaktio muuttuu
 (defrecord YhdistaValinnat [ulkoisetvalinnat])
-
-(defrecord HaeIlmoitukset []) ;; laukaise ilmoitushaku
-(defrecord IlmoitusHaku [tulokset]) ;; Ilmoitusten palvelinhaun tulokset
-
-
-;; Valitsee ilmoituksen tarkasteltavaksi
+(defrecord HaeIlmoitukset [])
+(defrecord IlmoituksetHaettu [tulokset])
 (defrecord ValitseIlmoitus [ilmoitus])
-
-;; Palvelimelta palautuneet ilmoituksen tiedot
-(defrecord IlmoituksenTiedot [ilmoitus])
-
 (defrecord PoistaIlmoitusValinta [])
-
 (defrecord IlmoitustaMuokattu [ilmoitus])
-
 (defrecord HaeKayttajanUrakat [hallintayksikot])
-
 (defrecord KayttajanUrakatHaettu [urakat])
 
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
   (-> app
-      (assoc :ilmoitushaku-id (.setTimeout js/window
-                                           (t/send-async! ->HaeIlmoitukset)
-                                           1000))))
+      (assoc :ilmoitushaku-id (.setTimeout js/window (t/send-async! ->HaeIlmoitukset) 1000))))
 
 (extend-protocol t/Event
   AsetaValinnat
@@ -84,41 +63,21 @@
           app (assoc app :valinnat uudet-valinnat)]
       (hae-ilmoitukset app)))
 
-  HaeKayttajanUrakat
-  (process-event [{hallintayksikot :hallintayksikot} app]
-    (log "kayttajan-urakat kaynnistetty, hy id:t" (pr-str (mapv :id hallintayksikot)))
-    (let [tulos! (t/send-async! ->KayttajanUrakatHaettu)]
-      (when hallintayksikot
-        (go (tulos! (async/<!
-                      (async/reduce nil-hylkiva-concat []
-                                    (async/merge
-                                      (mapv tiedot-urakat/hae-hallintayksikon-urakat
-                                            hallintayksikot))))))))
-    (assoc app :kayttajan-urakat nil))
-
-  KayttajanUrakatHaettu
-  (process-event [{urakat :urakat} app]
-    (assoc app :kayttajan-urakat urakat))
-
   HaeIlmoitukset
   (process-event [_ {valinnat :valinnat :as app}]
-    (let [tulos! (t/send-async! ->IlmoitusHaku)]
+    (let [tulos! (t/send-async! ->IlmoituksetHaettu)]
       (go
         (tulos!
           {:ilmoitukset (async/<! (k/post! :hae-tietyoilmoitukset (select-keys valinnat [:alkuaika :loppuaika])))})))
     (assoc app :ilmoitukset nil))
 
-  IlmoitusHaku
+  IlmoituksetHaettu
   (process-event [vastaus {valittu :valittu-ilmoitus :as app}]
     (let [ilmoitukset (:ilmoitukset (:tulokset vastaus))]
       (assoc app :ilmoitukset ilmoitukset)))
 
   ValitseIlmoitus
   (process-event [{ilmoitus :ilmoitus} app]
-    #_(let [tulos! (t/send-async! ->IlmoituksenTiedot)]
-        (go
-          (tulos! (async/<! (k/post! :hae-ilmoitukset (:id ilmoitus))))))
-    #_(assoc app :ilmoituksen-haku-kaynnissa? true)
     (assoc app :valittu-ilmoitus ilmoitus))
 
   PoistaIlmoitusValinta
@@ -129,4 +88,17 @@
   (process-event [ilmoitus app]
     (log "IlmoitustaMuokattu: saatiin" (keys ilmoitus) "ja" (keys app))
     app)
-  )
+
+  HaeKayttajanUrakat
+  (process-event [{hallintayksikot :hallintayksikot} app]
+    (let [tulos! (t/send-async! ->KayttajanUrakatHaettu)]
+      (when hallintayksikot
+        (go (tulos! (async/<!
+                      (async/reduce nil-hylkiva-concat []
+                                    (async/merge
+                                      (mapv tiedot-urakat/hae-hallintayksikon-urakat hallintayksikot))))))))
+    (assoc app :kayttajan-urakat nil))
+
+  KayttajanUrakatHaettu
+  (process-event [{urakat :urakat} app]
+    (assoc app :kayttajan-urakat urakat)))
