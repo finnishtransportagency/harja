@@ -448,8 +448,6 @@
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (poista-tarkastuksia db kayttaja parametrit data))}
-
-
    {:palvelu :kirjaa-yllapitokohteen-tiemerkintatoteuma
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tiemerkintatoteuma"
     :tyyppi :POST
