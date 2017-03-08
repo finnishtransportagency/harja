@@ -169,7 +169,7 @@ WHERE sijainti IS NOT NULL AND
       AND (lp.yllapitokohde IS NULL
           OR
           lp.yllapitokohde IS NOT NULL AND
-            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);;
+            (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
 
 
 -- jarjestelma & tyokoneid perusteella uniikit tehtävät
