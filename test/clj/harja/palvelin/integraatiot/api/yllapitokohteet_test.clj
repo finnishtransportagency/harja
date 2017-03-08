@@ -495,12 +495,13 @@
         kohde-id (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka-id)
         _ (println "---> " kohde-id)
         hae-toteumat #(q-map "SELECT * FROM tiemerkinnan_yksikkohintainen_toteuma WHERE yllapitokohde = " kohde-id)
+        hae-testitoteuma #(q-map "SELECT * FROM tiemerkinnan_yksikkohintainen_toteuma WHERE yllapitokohde = " kohde-id)
         toteumat-ennen-kirjausta (hae-toteumat)
         polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tiemerkintatoteuma"]
         kutsudata (slurp "test/resurssit/api/yllapitokohteen-tiemerkintatoteuman-kirjaus-request.json")
         vastaus (api-tyokalut/post-kutsu polku kayttaja-tiemerkinta portti kutsudata)
         toteumat-kirjauksen-jalkeen (hae-toteumat)
-        toteuma (first toteumat-kirjauksen-jalkeen)]
+        toteuma (first (filter #(= 666777 (:ulkoinen_id %)) toteumat-kirjauksen-jalkeen))]
 
     (is (= 200 (:status vastaus)) "Kirjaus tehtiin onnistuneesti")
     (is (.contains (:body vastaus) "Tiemerkintätoteuma kirjattu onnistuneesti"))
@@ -509,11 +510,19 @@
 
     (is (= urakka-id (:urakka toteuma)) "Toteuma on kirjattu oikealla urakalle")
     (is (= kohde-id (:yllapitokohde toteuma)) "Toteuma on kirjattu oikealla yllapitokohteelle")
-    (is (= 500.00M (:hinta toteuma)) "Toteuma on kirjattu oikealla yllapitokohteelle")
+    (is (= 12345678.00M (:hinta toteuma)) "Toteuma on kirjattu oikealla yllapitokohteelle")
     (is (not (str/blank? (:hinta_kohteelle toteuma))) "Toteuma sisältää tiedon, mille kohteelle sen on kohdistettu")
 
+    (let [kutsudata (.replace kutsudata "12345678" "666")
+          vastaus (api-tyokalut/post-kutsu polku kayttaja-tiemerkinta portti kutsudata)
+          toteumat-paivityksen-jalkeen (hae-toteumat)
+          paivitetty-toteuma (first (filter #(= 666777 (:ulkoinen_id %)) toteumat-paivityksen-jalkeen))]
 
+      (is (= 200 (:status vastaus)) "Päivitys tehtiin onnistuneesti")
+      (is (= (count toteumat-kirjauksen-jalkeen) (count toteumat-paivityksen-jalkeen)) "Kirjauksia päivityksen jälkeen on saman verran kuin aloittaessa.")
+      (is (.contains (:body vastaus) "Tiemerkintätoteuma kirjattu onnistuneesti"))
+      (is (= 666.00M (:hinta paivitetty-toteuma)) "Hinta on päivittynyt oikein"))
 
-
+    
     )
   )
