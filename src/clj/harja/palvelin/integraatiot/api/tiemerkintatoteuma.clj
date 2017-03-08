@@ -14,7 +14,7 @@
 
 (defn kirjaa-tiemerkintatoteuma [db kayttaja {urakka-id :id} {tiemerkintatoteumat :tiemerkintatoteumat}]
   (let [urakka-id (Integer/parseInt urakka-id)]
-    (log/info (format "Kirjataan urakalle (id: %s) tiemerkintä toteumia käyttäjän (%s) toimesta. Toteumat: %s."
+    (log/info (format "Kirjataan urakalle (id: %s) tiemerkintätoteumia käyttäjän (%s) toimesta. Toteumat: %s."
                       urakka-id
                       kayttaja
                       tiemerkintatoteumat))
@@ -22,8 +22,18 @@
     (tiemerkintatoteumat/luo-tai-paivita-tiemerkintatoteumat db kayttaja urakka-id nil tiemerkintatoteumat)
     (tee-kirjausvastauksen-body {:ilmoitukset "Tiemerkintätoteuma kirjattu onnistuneesti"})))
 
-(defn poista-tiemerkintatoteuma [db kayttaja parametrit data]
-  )
+(defn poista-tiemerkintatoteuma [db kayttaja {urakka-id :id} {toteumien-tunnisteet :toteumien-tunnisteet}]
+  (let [urakka-id (Integer/parseInt urakka-id)]
+    (log/info (format "Poistetaan urakalle (id: %s) tiemerkintätoteumia käyttäjän (%s) toimesta. Toteumientunnisteet: %s."
+                      urakka-id
+                      kayttaja
+                      toteumien-tunnisteet))
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (let [poistettujen-maara (tiemerkintatoteumat/poista-tiemerkintatoteumat db kayttaja urakka-id toteumien-tunnisteet)
+          ilmoitukset (if (and (not (nil? poistettujen-maara)) (pos? poistettujen-maara))
+                        (format "Toteumat poistettu onnistuneesti. Poistettiin: %s toteumaa." poistettujen-maara)
+                        "Tunnisteita vastaavia toteumia ei löytynyt käyttäjän kirjaamista toteumista.")]
+      (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset}))))
 
 (def palvelut
   [{:palvelu :kirjaa-tiemerkintatoteuma

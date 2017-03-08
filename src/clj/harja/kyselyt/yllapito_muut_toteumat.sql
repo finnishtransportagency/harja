@@ -113,15 +113,23 @@ INSERT INTO tiemerkinnan_yksikkohintainen_toteuma
 (yllapitokohde, urakka, hinta, hintatyyppi, muutospvm, hinta_kohteelle, selite,
  tr_numero, yllapitoluokka, pituus, luoja, ulkoinen_id)
 VALUES (:yllapitokohde, :urakka, :hinta, :hintatyyppi :: tiemerkinta_toteuma_hintatyyppi, :muutospvm,
-        :hinta_kohteelle, :selite, :tr_numero, :yllapitoluokka, :pituus, :luoja, :ulkoinen_id);
+                        :hinta_kohteelle, :selite, :tr_numero, :yllapitoluokka, :pituus, :luoja, :ulkoinen_id);
 
 -- name: hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
 SELECT id
 FROM tiemerkinnan_yksikkohintainen_toteuma
 WHERE yllapitokohde = :yllapitokohde;
 
--- name: hae-tiemerkintakohteen-id-ulkoisella-idlla
+-- name: hae-tiemerkintatoteuman-id-ulkoisella-idlla
 -- single?: true
 SELECT id
 FROM tiemerkinnan_yksikkohintainen_toteuma
 WHERE luoja = :luoja AND ulkoinen_id = :ulkoinen_id;
+
+-- name: poista-tiemerkintatoteumat-ulkoisilla-idlla!
+UPDATE tiemerkinnan_yksikkohintainen_toteuma
+SET poistettu = TRUE
+WHERE ulkoinen_id = ANY (:ulkoiset_idt :: INT []) AND
+      luoja = :luoja_id AND
+      (:urakka_id :: INT IS NULL OR urakka = :urakka_id) AND
+      (:yllapitokohde_id :: INT IS NULL OR yllapitokohde = :yllapitokohde_id);
