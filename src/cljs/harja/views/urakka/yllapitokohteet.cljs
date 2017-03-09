@@ -213,7 +213,7 @@
                                     kohdeosat)
                             (tr/nouseva-jarjestys kohde))))
 
-(defn- validoi-osa-olemassa [osan-pituus {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa} osa]
+(defn- validoi-kohdeosa-olemassa [osan-pituus {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa} osa]
   (when-let [osa (and osa (js/parseInt osa))]
     (cond
       (< osa aosa)
@@ -248,23 +248,24 @@
         (when (> pituus pit)
           (str "Osan " osa " maksimietäisyys on " pit))))))
 
-(defn validoi-kohteen-osoite
+(defn validoi-yllapitokohteen-osoite
   [osan-pituudet-teille kentta _ {:keys [tr-numero tr-alkuosa tr-alkuetaisyys
                                          tr-loppuosa tr-loppuetaisyys] :as kohde}]
-  (let [osan-pituudet (osan-pituudet-teille tr-numero)]
-    (or
-      (cond
-        (and (= kentta :tr-alkuosa) (not (contains? osan-pituudet tr-alkuosa)))
-        (str "Tiellä " tr-numero " ei ole osaa " tr-alkuosa)
+  (when osan-pituudet-teille
+    (let [osan-pituudet (osan-pituudet-teille tr-numero)]
+     (or
+       (cond
+         (and (= kentta :tr-alkuosa) (not (contains? osan-pituudet tr-alkuosa)))
+         (str "Tiellä " tr-numero " ei ole osaa " tr-alkuosa)
 
-        (and (= kentta :tr-loppuosa) (not (contains? osan-pituudet tr-loppuosa)))
-        (str "Tiellä " tr-numero " ei ole osaa " tr-loppuosa))
+         (and (= kentta :tr-loppuosa) (not (contains? osan-pituudet tr-loppuosa)))
+         (str "Tiellä " tr-numero " ei ole osaa " tr-loppuosa))
 
-      (when (= kentta :tr-alkuetaisyys)
-        (validoi-osan-maksimipituus osan-pituudet :tr-alkuosa tr-alkuetaisyys kohde))
+       (when (= kentta :tr-alkuetaisyys)
+         (validoi-osan-maksimipituus osan-pituudet :tr-alkuosa tr-alkuetaisyys kohde))
 
-      (when (= kentta :tr-loppuetaisyys)
-        (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde)))))
+       (when (= kentta :tr-loppuetaisyys)
+         (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde))))))
 
 (defn yllapitokohdeosat
   [{:keys [kohdeosat-paivitetty-fn muokkaa!]}
@@ -330,14 +331,14 @@
                                 {:nimi :tr-kaista :muokattava? (constantly false)}
                                 {:nimi :tr-alkuosa :muokattava? (fn [_ rivi]
                                                                   (pos? rivi))
-                                 :validoi [(partial validoi-osa-olemassa osan-pituus kohde)]}
+                                 :validoi [(partial validoi-kohdeosa-olemassa osan-pituus kohde)]}
                                 {:nimi :tr-alkuetaisyys :muokattava? (fn [_ rivi]
                                                                        (pos? rivi))
                                  :validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-alkuosa)
                                            (partial validoi-alkuetaisyys-kohteen-sisalla kohde)]}
                                 {:nimi :tr-loppuosa :muokattava? (fn [_ rivi]
                                                                    (< rivi (dec kohdeosia)))
-                                 :validoi [(partial validoi-osa-olemassa osan-pituus kohde)]}
+                                 :validoi [(partial validoi-kohdeosa-olemassa osan-pituus kohde)]}
                                 {:nimi :tr-loppuetaisyys :muokattava? (fn [_ rivi]
                                                                         (< rivi (dec kohdeosia)))
                                  :validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-loppuosa)
@@ -580,9 +581,9 @@
                    (if (and @yha/yha-kohteiden-paivittaminen-kaynnissa? (:yha-sidottu? optiot))
                      :ei-mahdollinen
                      (:tallenna optiot)))
-        osan-pituudet-teille (atom {})
+        osan-pituudet-teille (atom nil)
         validoi-kohteen-osoite (fn [kentta arvo rivi]
-                                 (validoi-kohteen-osoite @osan-pituudet-teille kentta arvo rivi))]
+                                 (validoi-yllapitokohteen-osoite @osan-pituudet-teille kentta arvo rivi))]
     (komp/luo
       (fn [urakka kohteet-atom optiot]
         [:div.yllapitokohteet
@@ -610,9 +611,6 @@
                    {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :nimi :kohdenumero
                     :tyyppi :string :leveys id-leveys
                     :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
-                   {:otsikko "YHA-koh\u00ADde\u00ADnu\u00ADme\u00ADro" :nimi :yha-kohdenumero
-                    :tyyppi :numero :leveys id-leveys
-                    :muokattava (constantly false)}
                    {:otsikko "Koh\u00ADteen ni\u00ADmi" :nimi :nimi
                     :tyyppi :string :leveys kohde-leveys}]
                   (tierekisteriosoite-sarakkeet
