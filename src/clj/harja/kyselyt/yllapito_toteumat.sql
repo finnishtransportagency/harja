@@ -6,12 +6,12 @@ SELECT
   yt.pvm,
   yt.hinta,
   yt.yllapitoluokka,
-  lk.id as "laskentakohde-id",
-  lk.nimi as "laskentakohde-nimi"
+  lk.id   AS "laskentakohde-id",
+  lk.nimi AS "laskentakohde-nimi"
 FROM yllapito_muu_toteuma yt
   LEFT JOIN urakka_laskentakohde lk ON lk.id = yt.laskentakohde
 WHERE yt.urakka = :urakka AND yt.sopimus = :sopimus
-      AND yt.pvm::DATE BETWEEN :alkupvm and :loppupvm
+      AND yt.pvm :: DATE BETWEEN :alkupvm AND :loppupvm
       AND yt.poistettu IS NOT TRUE
 ORDER BY yt.pvm DESC;
 
@@ -23,8 +23,8 @@ SELECT
   yt.pvm,
   yt.hinta,
   yt.yllapitoluokka,
-  lk.id as "laskentakohde-id",
-  lk.nimi as "laskentakohde-nimi"
+  lk.id   AS "laskentakohde-id",
+  lk.nimi AS "laskentakohde-nimi"
 FROM yllapito_muu_toteuma yt
   LEFT JOIN urakka_laskentakohde lk ON lk.id = yt.laskentakohde
 WHERE yt.urakka = :urakka
@@ -39,20 +39,24 @@ VALUES (:urakka, :sopimus, :selite, :pvm, :hinta, :yllapitoluokka, :laskentakohd
 -- name: paivita-muu-tyo<!
 UPDATE yllapito_muu_toteuma
 SET
-  selite = :selite,
-  sopimus = :sopimus,
-  pvm = :pvm,
-  hinta = :hinta,
+  selite         = :selite,
+  sopimus        = :sopimus,
+  pvm            = :pvm,
+  hinta          = :hinta,
   yllapitoluokka = :yllapitoluokka,
-  laskentakohde = :laskentakohde,
-  muokattu = NOW(),
-  muokkaaja = :kayttaja,
-  poistettu = :poistettu
-WHERE id = :id and urakka = :urakka
+  laskentakohde  = :laskentakohde,
+  muokattu       = NOW(),
+  muokkaaja      = :kayttaja,
+  poistettu      = :poistettu
+WHERE id = :id AND urakka = :urakka
       AND poistettu IS NOT TRUE;
 
 -- name: hae-urakan-laskentakohteet
-SELECT id, urakka, nimi FROM urakka_laskentakohde
+SELECT
+  id,
+  urakka,
+  nimi
+FROM urakka_laskentakohde
 WHERE urakka = :urakka;
 
 -- name: luo-uusi-urakan_laskentakohde<!
@@ -63,49 +67,70 @@ VALUES (:urakka, :nimi, NOW(), :kayttaja);
 -- name: hae-tiemerkintaurakan-yksikkohintaiset-tyot
 SELECT
   id,
-  yllapitokohde                  AS "yllapitokohde-id",
+  yllapitokohde   AS "yllapitokohde-id",
   hinta,
   hintatyyppi,
-  hinta_kohteelle                AS "hinta-kohteelle",
+  hinta_kohteelle AS "hinta-kohteelle",
   muutospvm,
   yllapitoluokka,
   selite,
-  tr_numero                      AS "tr-numero",
+  tr_numero       AS "tr-numero",
   pituus
 FROM tiemerkinnan_yksikkohintainen_toteuma tyt
 WHERE
   poistettu IS NOT TRUE
   AND urakka = :urakka
   AND ((yllapitokohde IS NULL)
-      OR
-      (yllapitokohde IS NOT NULL
-      AND
-      (SELECT poistettu FROM yllapitokohde WHERE id = tyt.yllapitokohde) IS NOT TRUE));
+       OR
+       (yllapitokohde IS NOT NULL
+        AND
+        (SELECT poistettu
+         FROM yllapitokohde
+         WHERE id = tyt.yllapitokohde) IS NOT TRUE));
 
 -- name: paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
-UPDATE tiemerkinnan_yksikkohintainen_toteuma SET
-  yllapitokohde = :yllapitokohde,
-  hinta = :hinta,
-  hintatyyppi = :hintatyyppi::tiemerkinta_toteuma_hintatyyppi,
-  muutospvm = :muutospvm,
+UPDATE tiemerkinnan_yksikkohintainen_toteuma
+SET
+  yllapitokohde   = :yllapitokohde,
+  hinta           = :hinta,
+  hintatyyppi     = :hintatyyppi :: tiemerkinta_toteuma_hintatyyppi,
+  muutospvm       = :muutospvm,
   hinta_kohteelle = :hinta_kohteelle,
-  selite = :selite,
-  tr_numero = :tr_numero,
-  yllapitoluokka = :yllapitoluokka,
-  pituus = :pituus,
-  poistettu = :poistettu
+  selite          = :selite,
+  tr_numero       = :tr_numero,
+  yllapitoluokka  = :yllapitoluokka,
+  pituus          = :pituus,
+  poistettu       = :poistettu
 WHERE id = :id
-AND ((yllapitokohde IS NULL
-    OR
-    (SELECT suorittava_tiemerkintaurakka FROM yllapitokohde WHERE id = yllapitokohde) = :urakka));
+      AND ((yllapitokohde IS NULL
+            OR
+            (SELECT suorittava_tiemerkintaurakka
+             FROM yllapitokohde
+             WHERE id = yllapitokohde) = :urakka));
 
 -- name: luo-tiemerkintaurakan-yksikkohintainen-tyo<!
 INSERT INTO tiemerkinnan_yksikkohintainen_toteuma
 (yllapitokohde, urakka, hinta, hintatyyppi, muutospvm, hinta_kohteelle, selite,
-tr_numero, yllapitoluokka, pituus)
-VALUES (:yllapitokohde, :urakka, :hinta, :hintatyyppi::tiemerkinta_toteuma_hintatyyppi, :muutospvm,
-  :hinta_kohteelle, :selite, :tr_numero, :yllapitoluokka, :pituus);
+ tr_numero, yllapitoluokka, pituus, luoja, ulkoinen_id)
+VALUES (:yllapitokohde, :urakka, :hinta, :hintatyyppi :: tiemerkinta_toteuma_hintatyyppi, :muutospvm,
+                        :hinta_kohteelle, :selite, :tr_numero, :yllapitoluokka, :pituus, :luoja, :ulkoinen_id);
 
 -- name: hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
-SELECT id FROM tiemerkinnan_yksikkohintainen_toteuma
+SELECT id
+FROM tiemerkinnan_yksikkohintainen_toteuma
 WHERE yllapitokohde = :yllapitokohde;
+
+-- name: hae-tiemerkintatoteuman-id-ulkoisella-idlla
+-- single?: true
+SELECT id
+FROM tiemerkinnan_yksikkohintainen_toteuma
+WHERE luoja = :luoja AND ulkoinen_id = :ulkoinen_id;
+
+-- name: poista-tiemerkintatoteumat-ulkoisilla-idlla!
+UPDATE tiemerkinnan_yksikkohintainen_toteuma
+SET poistettu = TRUE
+WHERE poistettu IS NOT TRUE AND
+      ulkoinen_id = ANY (:ulkoiset_idt :: INT []) AND
+      luoja = :luoja_id AND
+      (:urakka_id :: INT IS NULL OR urakka = :urakka_id) AND
+      (:yllapitokohde_id :: INT IS NULL OR yllapitokohde = :yllapitokohde_id);
