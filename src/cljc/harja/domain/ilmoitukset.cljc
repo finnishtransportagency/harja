@@ -106,7 +106,7 @@
       (when-not (empty? tulos) tulos))))
 
 (defn nayta-henkilon-yhteystiedot
-  "Palauttaa merkkijonon mallia 'Etunimi Sukunimi, 55501202, etunumi.sukunimi@example.com, Organisaatio Y1234'"
+  "Palauttaa merkkijonon mallia 'Etunimi Sukunimi, 55501202, etunimi.sukunimi@example.com, Organisaatio Y1234'"
   [{:keys [etunimi sukunimi organisaatio ytunnus tyopuhelin matkapuhelin sahkoposti] :as henkilo}]
   (when henkilo
     (let [tulos
