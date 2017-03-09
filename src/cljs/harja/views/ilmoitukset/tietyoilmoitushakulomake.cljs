@@ -15,21 +15,28 @@
                                       kuvaus-ja-avainarvopareja]]
             [harja.ui.valinnat :as valinnat]))
 
-
-(defn ilmoitusten-hakuehdot [e! valinnat-nyt]
+(defn ilmoitusten-hakuehdot [e! valinnat-nyt kayttajan-urakat]
+  (log "--> " (pr-str (partition 2 (interleave (mapv (comp str :id) kayttajan-urakat) (mapv :nimi kayttajan-urakat)))))
   [lomake/lomake
    {:luokka :horizontal
     :muokkaa! #(e! (tiedot/->AsetaValinnat %))}
-   [(valinnat/aikavalivalitsin tiedot/aikavalit valinnat-nyt)]
+   [{:nimi :urakka
+     :otsikko "Urakka"
+     :tyyppi :valinta
+     :valinnat (partition 2 (interleave (mapv (comp str :id) kayttajan-urakat) (mapv :nimi kayttajan-urakat)))
+     :valinta-nayta second :valinta-arvo first
+     :muokattava? (constantly true)}
+    (valinnat/aikavalivalitsin tiedot/aikavalit valinnat-nyt)]
    valinnat-nyt])
 
 (defn hakulomake
   [e! {valinnat-nyt :valinnat
        haetut-ilmoitukset :ilmoitukset
-       ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa? :as ilmoitukset}]
+       ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
+       kayttajan-urakat :kayttajan-urakat
+       :as app}]
   [:span.tietyoilmoitukset
-
-   [ilmoitusten-hakuehdot e! valinnat-nyt]
+   [ilmoitusten-hakuehdot e! valinnat-nyt kayttajan-urakat]
    [:div
     [grid
      {:tyhja (if haetut-ilmoitukset
@@ -39,16 +46,13 @@
       :piilota-toiminnot true
       :max-rivimaara 500
       :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
-
-     [
-      {:otsikko "Urakka" :nimi :urakka_nimi :leveys 5
+     [{:otsikko "Urakka" :nimi :urakka_nimi :leveys 5
        :hae (comp fmt/lyhennetty-urakan-nimi :urakka_nimi)}
       {:otsikko "Tie" :nimi :tie
        :hae #(str (:tr_numero % "(ei tien numeroa)") " " (:tien_nimi % "(ei tien nimeä)"))
        :leveys 4}
       {:otsikko "Alkupvm" :nimi :alku
        :hae (comp pvm/pvm-aika :alku)
-
        :leveys 2}
       {:otsikko "Loppupvm" :nimi :loppu
        :hae (comp pvm/pvm-aika :loppu) :leveys 2}

@@ -262,7 +262,7 @@
 
 (defn tuo-ilmoitus []
   (let [ilmoitus (ilmoitussanoma/lue-viesti +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+)]
-    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
+    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus) urakka))
 
 (defn tuo-paallystysilmoitus []
   (let [sanoma (clojure.string/replace +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+

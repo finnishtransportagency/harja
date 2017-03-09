@@ -17,7 +17,7 @@
 (defonce ulkoisetvalinnat
          (reaction {:voi-hakea? true
                     :hallintayksikko (:id @nav/valittu-hallintayksikko)
-                    :urakka (:id @nav/valittu-urakka)
+                    :urakka @nav/valittu-urakka
                     :valitun-urakan-hoitokaudet @tiedot-urakka/valitun-urakan-hoitokaudet
                     :urakoitsija (:id @nav/valittu-urakoitsija)
                     :urakkatyyppi (:arvo @nav/urakkatyyppi)
@@ -39,10 +39,11 @@
 (defonce ilmoitukset (atom {:ilmoitusnakymassa? false
                             :valittu-ilmoitus nil
                             :haku-kaynnissa? false
-                            :ilmoitukset nil ;; haetut ilmoitukset
+                            :ilmoitukset nil
                             :valinnat {:vakioaikavali (first aikavalit)
                                        :alkuaika (pvm/tuntia-sitten 1)
-                                       :loppuaika (pvm/nyt)}}))
+                                       :loppuaika (pvm/nyt)
+                                       :urakka @nav/valittu-urakka}}))
 
 (defrecord AsetaValinnat [valinnat])
 (defrecord YhdistaValinnat [ulkoisetvalinnat])
