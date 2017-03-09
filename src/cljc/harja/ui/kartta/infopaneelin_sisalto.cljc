@@ -191,7 +191,7 @@
                         #{[:yllapitokohde paikkaus-valmis]}
                         #(get-in % [:yllapitokohde paikkaus-valmis]))})
               (when (get-in yllapitokohdeosa [:yllapitokohde kohde-valmis])
-                {:otsikko "Päällystyskohde valmistunut" :tyyppi :pvm-aika
+                {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika
                  :hae (hakufunktio
                         #{[:yllapitokohde kohde-valmis]}
                         #(get-in % [:yllapitokohde kohde-valmis]))})
