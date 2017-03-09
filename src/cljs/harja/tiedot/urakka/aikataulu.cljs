@@ -10,7 +10,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as urakka]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.tiedot.urakka.paallystys :as paallystys-tiedot])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -31,17 +32,21 @@
                                                     :urakka-id urakka-id
                                                     :sopimus-id sopimus-id}))
 
-(defonce aikataulurivit
+(def aikataulurivit
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @u/valittu-sopimusnumero
                nakymassa? @aikataulu-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                (go
-                  (sort-by tr-domain/tiekohteiden-jarjestys
-                           (<! (hae-aikataulu valittu-urakka-id
-                                              valittu-sopimus-id vuosi)))))))
+                (hae-aikataulu valittu-urakka-id valittu-sopimus-id vuosi))))
+
+(def aikataulurivit-suodatettu
+  (reaction (let [tienumero @paallystys-tiedot/tienumero
+                  aikataulurivit @aikataulurivit]
+              (->> aikataulurivit (filterv #(or (nil? tienumero)
+                                                (= (:tr-numero %) tienumero)))
+                   (sort-by tr-domain/tiekohteiden-jarjestys aikataulurivit)))))
 
 (defonce tiemerkinnan-suorittavat-urakat
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
@@ -88,7 +93,7 @@
   (reaction (group-by #(luokittele-valmiuden-mukaan %
                                                     (:arvo @nav/urakkatyyppi)
                                                     (pvm/nyt))
-                      @aikataulurivit)))
+                      @aikataulurivit-suodatettu)))
 
 (defn tallenna-yllapitokohteiden-aikataulu [urakka-id sopimus-id vuosi kohteet]
   (go

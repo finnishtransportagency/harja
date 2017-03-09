@@ -20,6 +20,8 @@
 (def kohdeluettelossa? (atom false))
 (def paallystysilmoitukset-nakymassa? (atom false))
 
+(def tienumero (atom nil))
+
 (defn hae-paallystysilmoitukset [urakka-id sopimus-id vuosi]
   (k/post! :urakan-paallystysilmoitukset {:urakka-id urakka-id
                                           :sopimus-id sopimus-id
@@ -44,6 +46,13 @@
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-paallystysilmoitukset valittu-urakka-id valittu-sopimus-id vuosi))))
 
+(def paallystysilmoitukset-suodatettu
+  (reaction (let [tienumero @tienumero
+                  kohteet (filterv #(or (nil? tienumero)
+                                        (= (:tr-numero %) tienumero))
+                                   @paallystysilmoitukset)]
+              kohteet)))
+
 (defonce paallystysilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 
 (defonce karttataso-paallystyskohteet (atom false))
@@ -57,9 +66,16 @@
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id vuosi))))
 
+(def yllapitokohteet-suodatettu
+  (reaction (let [tienumero @tienumero
+                  kohteet (filterv #(or (nil? tienumero)
+                                        (= (:tr-numero %) tienumero))
+                                   @yllapitokohteet)]
+              kohteet)))
+
 (def yhan-paallystyskohteet
   (reaction-writable
-    (let [kohteet @yllapitokohteet
+    (let [kohteet @yllapitokohteet-suodatettu
           yhan-paallystyskohteet (when kohteet
                                    (filter
                                      #(and (yllapitokohteet/yha-kohde? %)
@@ -69,7 +85,7 @@
 
 (def harjan-paikkauskohteet
   (reaction-writable
-    (let [kohteet @yllapitokohteet
+    (let [kohteet @yllapitokohteet-suodatettu
           harjan-paikkauskohteet (when kohteet
                                    (filter
                                      #(and (not (yllapitokohteet/yha-kohde? %))

@@ -40,7 +40,9 @@
             [harja.ui.debug :refer [debug]]
             [harja.ui.viesti :as viesti]
             [harja.ui.valinnat :as valinnat]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
+            [harja.views.urakka.valinnat :as u-valinnat])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -620,7 +622,7 @@
       (let [urakka-id (:id @nav/valittu-urakka)
             sopimus-id (first @u/valittu-sopimusnumero)
             urakan-vuosi @u/valittu-urakan-vuosi
-            paallystysilmoitukset (jarjesta-paallystysilmoitukset @paallystys/paallystysilmoitukset)]
+            paallystysilmoitukset (jarjesta-paallystysilmoitukset @paallystys/paallystysilmoitukset-suodatettu)]
         [:div
          [:h3 "Päällystysilmoitukset"]
          (paallystysilmoitukset-taulukko paallystysilmoitukset)
@@ -632,7 +634,7 @@
           urakka-id
           sopimus-id
           urakan-vuosi
-          @paallystys/paallystysilmoitukset]]))))
+          paallystysilmoitukset]]))))
 
 (defn paallystysilmoituslomake-historia [ilmoituslomake]
   (let [historia (historia/historia ilmoituslomake)]
@@ -667,4 +669,5 @@
            (t/year (:loppupvm urakka))
            urakka/valittu-urakan-vuosi
            urakka/valitse-urakan-vuosi!]
+          [u-valinnat/tienumero paallystys-tiedot/tienumero]
           [ilmoitusluettelo]])])))
