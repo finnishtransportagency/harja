@@ -53,6 +53,7 @@
 (defrecord IlmoitustaMuokattu [ilmoitus])
 (defrecord HaeKayttajanUrakat [hallintayksikot])
 (defrecord KayttajanUrakatHaettu [urakat])
+(defrecord PaivitaSijainti [sijainti])
 
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
   (-> app
@@ -75,7 +76,8 @@
     (let [tulos! (t/send-async! ->IlmoituksetHaettu)]
       (go
         (tulos!
-          {:ilmoitukset (async/<! (k/post! :hae-tietyoilmoitukset (select-keys valinnat [:alkuaika :loppuaika])))})))
+          (let [parametrit (select-keys valinnat [:alkuaika :loppuaika :sijainti :tierekisteri :urakka])]
+            {:ilmoitukset (async/<! (k/post! :hae-tietyoilmoitukset parametrit))}))))
     (assoc app :ilmoitukset nil))
 
   IlmoituksetHaettu
@@ -108,6 +110,10 @@
 
   KayttajanUrakatHaettu
   (process-event [{urakat :urakat} app]
-    (let [urakka ((comp str :id) (or @nav/valittu-urakka (first urakat)))]
+    (let [urakka (when @nav/valittu-urakka ((comp str :id)) @nav/valittu-urakka)]
       (assoc app :kayttajan-urakat urakat
-                 :valinnat (assoc (:valinnat app) :urakka urakka)))))
+                 :valinnat (assoc (:valinnat app) :urakka urakka))))
+
+  PaivitaSijainti
+  (process-event [{sijainti :sijainti} app]
+    (assoc-in app [:valinnat :sijainti] sijainti)))
