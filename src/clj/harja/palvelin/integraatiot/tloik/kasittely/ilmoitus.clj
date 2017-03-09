@@ -79,7 +79,7 @@
     id))
 
 (defn tallenna-ilmoitus [db urakka-id ilmoitus]
-  (log/debug (format "Käsitellään ilmoitusta T-LOIK:sta id:llä: %s, joka välitettiin viestillä id: % urakalle id: %s."
+  (log/debug (format "Käsitellään ilmoitusta T-LOIK:sta id:llä: %s, joka välitettiin viestillä id: %s urakalle id: %s."
                      (:ilmoitus-id ilmoitus)
                      (:viesti-id ilmoitus)
                      urakka-id))
