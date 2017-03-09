@@ -72,7 +72,8 @@
         kohteiden-lkm (ffirst (q
                                 (str "SELECT COUNT(*)
                                       FROM yllapitokohde
-                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")")))
+                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")
+                                      AND poistettu IS NOT TRUE;")))
         leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi")
                                           kohteet))]
     (is (= (count kohteet) kohteiden-lkm) "Päällystyskohteiden määrä")
@@ -119,7 +120,8 @@
                                 (str "SELECT COUNT(*)
                                       FROM yllapitokohde
                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")
-                                      AND vuodet @> ARRAY[2017]::int[]")))
+                                      AND vuodet @> ARRAY[2017]::int[]
+                                      AND poistettu IS NOT TRUE")))
         ei-yha-kohde (first (filter #(= (:nimi %) "Ei YHA-kohde") vastaus))
         muut-kohteet (filter #(not= (:nimi %) "Ei YHA-kohde") vastaus)]
     (is (> (count vastaus) 0) "Päällystyskohteita löytyi")
@@ -281,7 +283,8 @@
         vuosi 2017
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*) FROM yllapitokohde
-                                         WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
+                                         WHERE urakka = " urakka-id " AND sopimus= " sopimus-id "
+                                         AND poistettu IS NOT TRUE;")))
         kohteet [{:kohdenumero "L03"
                   :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00") :aikataulu-muokkaaja 2
                   :urakka (hae-muhoksen-paallystysurakan-id),
@@ -302,7 +305,8 @@
                                                                                       :kohteet kohteet})
         maara-paivityksen-jalkeen (ffirst (q
                                             (str "SELECT count(*) FROM yllapitokohde
-                                         WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
+                                         WHERE urakka = " urakka-id " AND sopimus= " sopimus-id "
+                                         AND poistettu IS NOT TRUE;")))
         vastaus-leppajarven-ramppi (first (filter #(= "Leppäjärven ramppi" (:nimi %)) vastaus))
         odotettu {:aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
                   :aikataulu-muokkaaja 2

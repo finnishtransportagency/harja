@@ -4,7 +4,8 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.domain.tiemerkinta-toteumat :as d])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -39,19 +40,11 @@
            {:urakka-id urakka-id
             :toteumat toteumat}))
 
-(defn maarittele-hinnan-kohde
-  "Palauttaa stringin, jossa on ylläpitokohteen tieosoitteen tiedot. Käytetään tunnistamaan tilanne,
-   jossa ylläpitokohteeseen liittyvä hinta on annettu ylläpitokohteen vanhalle tieosoitteelle."
-  [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys
-           tr-loppuosa tr-loppuetaisyys] :as kohde}]
-  (assert (and tr-numero tr-alkuosa tr-alkuetaisyys) "Puutteelliset parametrit")
-  ;; Tod.näk. et halua muuttaa tätä ainakaan migratoimatta kannassa olevaa dataa.
-  (str tr-numero " / " tr-alkuosa " / " tr-alkuetaisyys " / "
-       tr-loppuosa " / " tr-loppuetaisyys))
+
 
 (defn toteuman-hinnan-kohde-muuttunut? [{:keys [hinta-kohteelle] :as toteuma} kohde]
   (let [hinnan-kohde-eri-kuin-nykyinen-osoite? (and hinta-kohteelle kohde
-                                                    (not= (maarittele-hinnan-kohde kohde)
+                                                    (not= (d/maarittele-hinnan-kohde kohde)
                                                           hinta-kohteelle))]
     (boolean hinnan-kohde-eri-kuin-nykyinen-osoite?)))
 
@@ -61,7 +54,7 @@
                                      (map ;; Lisää :hinta-kohteelle jos linkitetty ylläpitokohteeseen
                                        #(if-let [kohde (paallystysurakan-kohde-idlla paallystysurakan-kohteet
                                                                                      (:yllapitokohde-id %))]
-                                          (assoc % :hinta-kohteelle (maarittele-hinnan-kohde kohde))
+                                          (assoc % :hinta-kohteelle (d/maarittele-hinnan-kohde kohde))
                                           %))
                                      (map spec-apurit/poista-nil-avaimet))
             vastaus (<! (tallenna-tiemerkinnan-toteumat urakka-id kasitellyt-toteumat))]
