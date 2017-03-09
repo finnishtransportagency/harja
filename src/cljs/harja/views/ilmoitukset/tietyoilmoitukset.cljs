@@ -44,4 +44,4 @@
 
        (if valittu-ilmoitus
          [tietyoilmoituslomake/lomake e! valittu-ilmoitus kayttajan-urakat]
-         [tietyoilmoitushakulomake/hakulomake e! app])])))
+         [tietyoilmoitushakulomake/hakulomake e! app @nav/valittu-urakka])])))

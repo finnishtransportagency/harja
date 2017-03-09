@@ -13,10 +13,12 @@
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+
                                       kuvaus-ja-avainarvopareja]]
-            [harja.ui.valinnat :as valinnat]))
+            [harja.ui.valinnat :as valinnat]
+            [harja.tiedot.navigaatio :as nav]))
 
 (defn ilmoitusten-hakuehdot [e! valinnat-nyt kayttajan-urakat]
-  (log "--> " (pr-str (partition 2 (interleave (mapv (comp str :id) kayttajan-urakat) (mapv :nimi kayttajan-urakat)))))
+  (log "----> " (first (partition 2 (interleave (mapv (comp str :id) kayttajan-urakat) (mapv :nimi kayttajan-urakat)))))
+
   [lomake/lomake
    {:luokka :horizontal
     :muokkaa! #(e! (tiedot/->AsetaValinnat %))}
@@ -24,7 +26,8 @@
      :otsikko "Urakka"
      :tyyppi :valinta
      :valinnat (partition 2 (interleave (mapv (comp str :id) kayttajan-urakat) (mapv :nimi kayttajan-urakat)))
-     :valinta-nayta second :valinta-arvo first
+     :valinta-nayta second
+     :valinta-arvo first
      :muokattava? (constantly true)}
     (valinnat/aikavalivalitsin tiedot/aikavalit valinnat-nyt)]
    valinnat-nyt])
@@ -34,9 +37,10 @@
        haetut-ilmoitukset :ilmoitukset
        ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
        kayttajan-urakat :kayttajan-urakat
-       :as app}]
+       :as app}
+   valittu-urakka]
   [:span.tietyoilmoitukset
-   [ilmoitusten-hakuehdot e! valinnat-nyt kayttajan-urakat]
+   [ilmoitusten-hakuehdot e! valinnat-nyt valittu-urakka kayttajan-urakat]
    [:div
     [grid
      {:tyhja (if haetut-ilmoitukset

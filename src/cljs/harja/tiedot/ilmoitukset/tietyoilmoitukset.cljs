@@ -42,8 +42,7 @@
                             :ilmoitukset nil
                             :valinnat {:vakioaikavali (first aikavalit)
                                        :alkuaika (pvm/tuntia-sitten 1)
-                                       :loppuaika (pvm/nyt)
-                                       :urakka @nav/valittu-urakka}}))
+                                       :loppuaika (pvm/nyt)}}))
 
 (defrecord AsetaValinnat [valinnat])
 (defrecord YhdistaValinnat [ulkoisetvalinnat])
@@ -109,4 +108,6 @@
 
   KayttajanUrakatHaettu
   (process-event [{urakat :urakat} app]
-    (assoc app :kayttajan-urakat urakat)))
+    (let [urakka (or @nav/valittu-urakka (first urakat))]
+      (assoc app :kayttajan-urakat urakat
+                 :valinnat (assoc (:valinnat app) :urakka urakka)))))
