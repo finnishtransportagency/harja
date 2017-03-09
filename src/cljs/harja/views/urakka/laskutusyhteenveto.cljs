@@ -55,7 +55,6 @@
             tiedot @laskutusyhteenvedon-tiedot
             valittu-aikavali @u/valittu-hoitokauden-kuukausi]
         [:span.laskutusyhteenveto
-         [:h3 "Laskutusyhteenveto"]
          [valinnat/urakan-hoitokausi ur]
          [valinnat/hoitokauden-kuukausi]
          

@@ -29,7 +29,6 @@
     (fn [urakka raportin-parametrit-atom raportin-tiedot-atom]
       (let []
         [:div
-         [:h3 "Kustannusyhteenveto"]
          [valinnat/urakan-hoitokausi urakka]
          [valinnat/hoitokauden-kuukausi]
 
