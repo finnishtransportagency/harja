@@ -281,7 +281,7 @@
             (str/replace "<urakkatyyppi>hoito</urakkatyyppi>" "<urakkatyyppi>tekniset laitteet</urakkatyyppi>")
             (str/replace "<x>452935</x>" "<x>326269</x>")
             (str/replace "<y>7186873</y>" "<y>6822985</y>"))
-        ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
+        ilmoitus (assoc (ilmoitussanoma/lue-viesti sanoma) :urakkatyyppi "tekniset-laitteet")]
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) (hae-ilmoituksen-urakka-id ilmoitus) ilmoitus)))
 
 (defn tuo-ilmoitus-siltapalvelusopimukselle []
@@ -290,7 +290,7 @@
             (str/replace "<urakkatyyppi>hoito</urakkatyyppi>" "<urakkatyyppi>silta</urakkatyyppi>")
             (str/replace "<x>452935</x>" "<x>595754</x>")
             (str/replace "<y>7186873</y>" "<y>6785914</y>"))
-        ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
+        ilmoitus (assoc (ilmoitussanoma/lue-viesti sanoma) :urakkatyyppi "siltakorjaus")]
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) (hae-ilmoituksen-urakka-id ilmoitus) ilmoitus)))
 
 (defn tuo-valaistusilmoitus []
