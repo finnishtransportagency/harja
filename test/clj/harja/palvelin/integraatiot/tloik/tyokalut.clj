@@ -12,7 +12,8 @@
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]
             [clojure.string :as str]
             [harja.kyselyt.konversio :as konv]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [harja.palvelin.palvelut.urakat :as urakkapalvelu]))
 
 (def +xsd-polku+ "xsd/tloik/")
 (def +tloik-ilmoitusviestijono+ "tloik-ilmoitusviestijono")
@@ -260,16 +261,19 @@
     (clojure.string/replace +testi-ilmoitus-sanoma+ "319130" "7186873")
     "414212" "7211797"))
 
+(defn hae-ilmoituksen-urakka-id [{:keys [urakkatyyppi sijainti]}]
+  (first (urakkapalvelu/hae-urakka-idt-sijainnilla (:db jarjestelma) urakkatyyppi sijainti)))
+
 (defn tuo-ilmoitus []
   (let [ilmoitus (ilmoitussanoma/lue-viesti +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+)]
-    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
+    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) (hae-ilmoituksen-urakka-id ilmoitus) ilmoitus)))
 
 (defn tuo-paallystysilmoitus []
   (let [sanoma (clojure.string/replace +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+
                                        "<urakkatyyppi>hoito</urakkatyyppi>"
                                        "<urakkatyyppi>paallystys</urakkatyyppi>")
         ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
-    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
+    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) (hae-ilmoituksen-urakka-id ilmoitus) ilmoitus)))
 
 (defn tuo-ilmoitus-teknisista-laitteista []
   (let [sanoma
@@ -278,7 +282,7 @@
             (str/replace "<x>452935</x>" "<x>326269</x>")
             (str/replace "<y>7186873</y>" "<y>6822985</y>"))
         ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
-    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
+    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) (hae-ilmoituksen-urakka-id ilmoitus) ilmoitus)))
 
 (defn tuo-ilmoitus-siltapalvelusopimukselle []
   (let [sanoma
@@ -287,16 +291,16 @@
             (str/replace "<x>452935</x>" "<x>595754</x>")
             (str/replace "<y>7186873</y>" "<y>6785914</y>"))
         ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
-    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
+    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) (hae-ilmoituksen-urakka-id ilmoitus) ilmoitus)))
 
 (defn tuo-valaistusilmoitus []
   (let [ilmoitus (ilmoitussanoma/lue-viesti +testi-valaistusilmoitus-sanoma+)]
-    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
+    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) (hae-ilmoituksen-urakka-id ilmoitus) ilmoitus)))
 
 (defn tuo-ilmoitus-ilman-tienumeroa []
   (let [sanoma (str/replace +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+ "<tienumero>4</tienumero>" "")
         ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
-    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
+    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) (hae-ilmoituksen-urakka-id ilmoitus) ilmoitus)))
 
 (defn hae-testi-ilmoitukset []
   (let [vastaus (mapv
