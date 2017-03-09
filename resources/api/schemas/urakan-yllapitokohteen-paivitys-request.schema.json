@@ -66,6 +66,41 @@
                     "required": false,
                     "type": "string",
                     "maxLength": 128
+                  },
+                  "paallystetyyppi": {
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/paallystetyyppi",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/paallyste.schema.json"
+                  },
+                  "raekoko": {
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/raekoko",
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 99
+                  },
+                  "tyomenetelma": {
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/tyomenetelma",
+                    "enum": [
+                      "Paksuudeltaan vakio laatta",
+                      "Massapintaus",
+                      "Kuumennuspintaus",
+                      "MP kuumalle, kuumajyrsitylle tas. pinnalle",
+                      "REMIX-pintaus",
+                      "2-kerroksinen remix-pintaus",
+                      "PAB-O/V:n remix-pintaus",
+                      "ART-pintaus",
+                      "Novachip-massapintaus",
+                      "Karhinta",
+                      "Hienojyrsintä",
+                      "Sirotepintaus",
+                      "Urapaikkaus",
+                      "Uraremix"
+                    ]
+                  },
+                  "kokonaismassamaara": {
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/kokonaismassamaara",
+                    "type": "number"
                   }
                 }
               }

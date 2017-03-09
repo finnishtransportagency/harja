@@ -69,7 +69,9 @@
                   },
                   "raekoko": {
                     "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/raekoko",
-                    "type": "integer"
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 99
                   },
                   "massamenekki": {
                     "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/massamenekki",
