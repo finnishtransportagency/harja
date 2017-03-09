@@ -297,7 +297,8 @@
 
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
                                   {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
-                                          tr-loppuetaisyys tr-ajorata tr-kaista toimenpide poistettu sijainti]}]
+                                          tr-loppuetaisyys tr-ajorata tr-kaista toimenpide poistettu
+                                          paallystetyyppi raekoko tyomenetelma massamaara]}]
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
   (when-not poistettu
     (q/luo-yllapitokohdeosa<! db
@@ -311,13 +312,18 @@
                                :tr_loppuetaisyys tr-loppuetaisyys
                                :tr_ajorata tr-ajorata
                                :tr_kaista tr-kaista
+                               :paallystetyyppi paallystetyyppi
+                               :raekoko raekoko
+                               :tyomenetelma tyomenetelma
+                               :massamaara massamaara
                                :toimenpide toimenpide
                                :ulkoinen-id nil})))
 
 (defn- paivita-yllapitokohdeosa [db user urakka-id
                                  {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys
                                          tr-loppuosa tr-loppuetaisyys tr-ajorata
-                                         tr-kaista toimenpide sijainti] :as kohdeosa}]
+                                         tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma massamaara]
+                                  :as kohdeosa}]
 
   (log/debug "Päivitetään ylläpitokohdeosa")
   (q/paivita-yllapitokohdeosa<! db
@@ -330,6 +336,10 @@
                                  :tr_loppuetaisyys tr-loppuetaisyys
                                  :tr_ajorata tr-ajorata
                                  :tr_kaista tr-kaista
+                                 :paallystetyyppi paallystetyyppi
+                                 :raekoko raekoko
+                                 :tyomenetelma tyomenetelma
+                                 :massamaara massamaara
                                  :toimenpide toimenpide
                                  :id id
                                  :urakka urakka-id}))
