@@ -58,33 +58,35 @@
   (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
     (with-fake-http
       [+testi-fim-+ vastaus-xml]
-      (let [vastaus (fim/hae-urakan-kayttajat
-                      (:fim jarjestelma)
-                      "1242141-OULU2")]
+      (let [vastaus (fim/hae-urakan-kayttajat (:fim jarjestelma) "1242141-OULU2")]
         (is (= vastaus [{:etunimi "Erkki"
                          :kayttajatunnus "A000001"
                          :organisaatio "ELY"
+                         :poistettu false
                          :puhelin ""
-                         :roolit ["ELY urakanvalvoja"]
                          :roolinimet ["ELY_Urakanvalvoja"]
+                         :roolit ["ELY urakanvalvoja"]
                          :sahkoposti "erkki.esimerkki@example.com"
                          :sukunimi "Esimerkki"
                          :tunniste nil}
-                         {:etunimi "Eero"
-                          :kayttajatunnus "A000002"
-                          :organisaatio "ELY"
-                          :puhelin "0400123456789"
-                          :roolit ["Urakan vastuuhenkilö"]
-                          :roolinimet ["vastuuhenkilo"]
-                          :sahkoposti "eero.esimerkki@example.com"
-                          :sukunimi "Esimerkki"
-                          :tunniste nil}
-                         {:etunimi "Eetvartti"
-                          :kayttajatunnus "A000003"
-                          :organisaatio "ELY"
-                          :puhelin "0400123456788"
-                          :roolit []
-                          :roolinimet []
-                          :sahkoposti "eetvartti.esimerkki@example.com"
-                          :sukunimi "Esimerkki"
-                          :tunniste nil}]))))))
+                        {:etunimi "Eero"
+                         :kayttajatunnus "A000002"
+                         :organisaatio "ELY"
+                         :poistettu false
+                         :puhelin "0400123456789"
+                         :roolinimet ["vastuuhenkilo"]
+                         :roolit ["Urakan vastuuhenkilö"]
+                         :sahkoposti "eero.esimerkki@example.com"
+                         :sukunimi "Esimerkki"
+                         :tunniste nil}
+                        {:etunimi "Eetvartti"
+                         :kayttajatunnus "A000003"
+                         :organisaatio "ELY"
+                         :poistettu false
+                         :puhelin "0400123456788"
+                         :roolinimet []
+                         :roolit []
+                         :sahkoposti "eetvartti.esimerkki@example.com"
+                         :sukunimi "Esimerkki"
+                         :tunniste nil}]))
+        (is (every? #(false? (:poistettu %)) vastaus) "Yhtään poistettua henkilöä ei ole listassa")))))

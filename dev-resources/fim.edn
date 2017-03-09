@@ -5,7 +5,8 @@
                    :sahkoposti "erno.penttikoski@example.com"
                    :puhelin "0123456789"
                    :roolit "1242141-OULU2_ELY_Urakanvalvoja"
-                   :organisaatio "foo"}
+                   :organisaatio "foo"
+                   :poistettu false}
                   {:tunniste 2
                    :kayttajatunnus "LXSYOTMAX"
                    :etunimi "Max"
@@ -13,7 +14,8 @@
                    :sahkoposti "max@syöttöpaine.org"
                    :puhelin "9876543210"
                    :roolit "1242141-OULU2_ELY_Urakanvalvoja"
-                   :organisaatio "bar"}
+                   :organisaatio "bar"
+                   :poistettu false}
                   {:tunniste 3
                    :kayttajatunnus "LXVALVA"
                    :etunimi "Valtteri"
@@ -21,7 +23,8 @@
                    :sahkoposti "valtteri.varamies@example.com"
                    :puhelin "555666777"
                    :roolit "1242141-OULU2_ELY_Urakanvalvoja"
-                   :organisaatio "baz"}
+                   :organisaatio "baz"
+                   :poistettu false}
                   {:tunniste 4
                    :kayttajatunnus "LXUUU"
                    :etunimi "Uuno"
@@ -29,4 +32,5 @@
                    :sahkoposti "uuno.urakoitsija@esimerkki.fi"
                    :puhelin "1122334455"
                    :roolit "1242141-OULU2_vastuuhenkilo"
-                   :organisaatio "urakoitsija"}]}
+                   :organisaatio "urakoitsija"
+                   :poistettu false}]}

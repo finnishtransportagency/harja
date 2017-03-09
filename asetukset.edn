@@ -18,9 +18,7 @@
                       :kayttaja "harja"
                       :salasana ""}
  :fim {:url
-       ;; ohjaa: ssh -L6666:testioag.liikennevirasto.fi:443 harja-app1-stg
        "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity"
-
        :tiedosto "dev-resources/fim.edn"}
  :log {:gelf {:taso :debug
               :palvelin "localhost"}
@@ -133,4 +131,6 @@
 
  :paivystystarkistus  {:paivittainen-aika [12 11 00]}
  :reittitarkistus  {:paivittainen-aika [00 30 00]}
+
+ :pois-kytketyt-ominaisuudet #{:tierekisterin-varusteet :tietyoilmoitukset}
  }

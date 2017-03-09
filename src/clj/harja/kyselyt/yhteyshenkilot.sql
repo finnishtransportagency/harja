@@ -365,3 +365,13 @@ SELECT
   ensisijainen
 FROM urakanvastuuhenkilo
 WHERE urakka = :id;
+
+-- name: onko-urakalla-paivystajia?
+-- single?: true
+SELECT exists(SELECT p.id
+              FROM paivystys p
+                INNER JOIN yhteyshenkilo yh ON p.yhteyshenkilo = yh.id
+              WHERE
+                urakka = :urakkaid AND
+                ((now() BETWEEN p.alku AND p.loppu) OR
+                 (now() <= p.alku AND loppu IS NULL)));

@@ -10,9 +10,11 @@
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
             [cljs.core.async :refer [<! >! chan timeout]]
             [harja.ui.tierekisteri :as tr]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.yleiset :as yleiset]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce tr (r/atom {}))
@@ -24,8 +26,11 @@
 (defonce valitse-kartalla? (r/atom false))
 (defonce valittu-osoite (r/atom nil))
 
-(defonce tarkastusajon-id (atom nil))
-(defonce piirrettyjen-reittipisteiden-idt (atom nil))
+(defonce tarkasteltava-asia (atom {:tyyppi :tarkastusajo
+                                   :id nil
+                                   :reitti nil
+                                   :pisteet nil}))
+
 
 (defn hae! []
   (tasot/poista-geometria! :tierekisteri-haettu-osoite)
@@ -87,26 +92,52 @@
                                               :radius 50)}))
       (reset! koordinaatin-osoite tulos))))
 
-(defn- poista-vanhat-reittipisteet-kartalta
-  [pisteet]
-  (doseq [piste pisteet]
-    (tasot/poista-geometria! (:id piste))))
+(defn- poista-vanhat-reitit-ja-pisteet
+  []
+  (let [{:keys [reitti pisteet]} @tarkasteltava-asia]
+    (when reitti
+      (tasot/poista-geometria! :tarkasteltava-reitti))
+    (doseq [piste pisteet]
+      (tasot/poista-geometria! (:id piste)))))
 
-(defn- piirra-tarkastusajon-reittipisteet
+(defn- piirra-reittipisteet
   [pisteet]
-  (poista-vanhat-reittipisteet-kartalta @piirrettyjen-reittipisteiden-idt)
-  (doseq [piste pisteet]
-    (tasot/nayta-geometria! (:id piste)
-                            {:alue (assoc (:sijainti piste)
-                                     :fill (integer? (first (:havainnot piste)))
-                                     :color "red")}))
-  (reset! piirrettyjen-reittipisteiden-idt pisteet))
+  (let [tyyppi (:tyyppi @tarkasteltava-asia)]
+    (doseq [piste pisteet]
+      (tasot/nayta-geometria! (:id piste)
+                              {:nimi (when-let [aika (:aika piste)]
+                                       (pvm/pvm-aika-sek aika))
+                               :type :reittipisteet
+                               :alue (assoc (:sijainti piste)
+                                            :fill (and (= tyyppi :tarkastusajo)
+                                                       (integer? (first (:havainnot piste))))
+                                            :color "red")}))))
 
-(defn hae-ja-nayta-tarkastusajon-reittipisteet []
-  (go
-    (let [pisteet (<! (k/post! :hae-tarkastusajon-reittipisteet
-                               {:tarkastusajon-id @tarkastusajon-id}))]
-      (piirra-tarkastusajon-reittipisteet pisteet))))
+(defn- piirra-reitti
+  [reitti]
+  (let [tyyppi (:tyyppi @tarkasteltava-asia)]
+    (tasot/nayta-geometria! :tarkasteltava-reitti
+                            {:alue reitti})))
+
+(defn hae-ja-nayta-reittipisteet []
+  (let [{:keys [tyyppi id]} @tarkasteltava-asia]
+    (case tyyppi
+      :tarkastusajo
+      (go
+        (let [pisteet (<!  (k/post! :hae-tarkastusajon-reittipisteet
+                                    {:tarkastusajon-id id}))]
+          (swap! tarkasteltava-asia assoc :pisteet pisteet)
+          (piirra-reittipisteet pisteet)))
+
+      :toteuma
+      (go
+        (let [{:keys [reitti reittipisteet]}
+              (<! (k/post! :debug-hae-toteuman-reitti-ja-pisteet id))]
+          (swap! tarkasteltava-asia assoc
+                 :reitti reitti
+                 :pisteet reittipisteet)
+          (piirra-reitti reitti)
+          (piirra-reittipisteet reittipisteet))))))
 
 (defn tr-haku []
   [:div.tierekisteri-tr-haku
@@ -150,18 +181,79 @@
      [:div (pr-str osoite)])])
 
 
-(defn tarkastusajon-reittipisteiden-haku
-  "Tarjoaa kälin jolla haetaan tarkastusajoid:llä reitti"
+(defn reittipisteiden-haku
+  "Tarjoaa kälin jolla haetaan reitillisen asian pisteet id:llä"
   []
-  [:div.tierekisteri-tarkastusajon-id
-   [:h5 "Hae tarkastusajon reittipisteet"]
-   [:label.tarkastusajoid-label "Tarkastusajon id"]
-   [:input {:type :text
-            :placeholder "Tietokannasta"
-            :on-change #(reset! tarkastusajon-id (-> % .-target .-value js/parseInt))}]
-   [:button.nappi-ensisijainen.btn-xs {:on-click hae-ja-nayta-tarkastusajon-reittipisteet
-             :disabled (when (nil? @tarkastusajon-id) "disabled")}
-    "Piirrä reitti"]])
+  (let [tyyppi (:tyyppi @tarkasteltava-asia)]
+    [:div.tierekisteri-tarkastusajon-id
+     [yleiset/pudotusvalikko "Hae" {:valinta tyyppi :format-fn name
+                                    :valitse-fn #(swap! tarkasteltava-asia assoc :tyyppi %)}
+      [:tarkastusajo
+       :toteuma]
+
+
+      ]
+     [:h5 "Hae " (case tyyppi
+                   :tarkastusajo "tarkastusajon reittipisteet"
+                   :toteuma "toteuman reitti ja reittipisteet")]
+     [:label.tarkastusajoid-label tyyppi " id"]
+     [:input {:type :text
+              :placeholder "tietokannassa"
+              :on-change #(do
+                            (poista-vanhat-reitit-ja-pisteet)
+                            (swap! tarkasteltava-asia assoc
+                                   :id (-> % .-target .-value js/parseInt)
+                                   :reitti nil
+                                   :pisteet nil))}]
+     [:button.nappi-ensisijainen.btn-xs {:on-click hae-ja-nayta-reittipisteet
+                                         :disabled (when (nil? (:id @tarkasteltava-asia)) "disabled")}
+      "Piirrä reitti"]]))
+
+(defonce reittitoteuman-piste-idt (atom nil))
+(defn- nayta-reittitoteuman-pisteet [payload]
+  (doseq [id @reittitoteuman-piste-idt]
+    (tasot/poista-geometria! id))
+  (reset! reittitoteuman-piste-idt [])
+  (let [tot (or (get-in payload "reittitoteuma")
+                (get-in payload ["reittitoteumat" 0 "reittitoteuma"]))
+        {reitti "reitti"} tot]
+    (doseq [{rp "reittipiste"} reitti
+            :let [aika (get rp "aika")
+                  {:strs [x y]} (get rp "koordinaatit")
+                  id (str "RP_" aika)]]
+      (swap! reittitoteuman-piste-idt conj id)
+      (tasot/nayta-geometria! id
+                              {:alue {:type :point
+                                      :coordinates [(js/parseFloat x) (js/parseFloat y)]}
+                               :nimi (str "RP " aika)
+                               :type :reittitoteuman-piste}))))
+
+(defn- geometrisoi-ja-nayta-reittitoteuma [json]
+  (go
+    (let [reitti (<! (k/post! :debug-geometrisoi-reittitoteuma
+                              json))]
+      (tasot/nayta-geometria! :geometrisoitu-reittitoteuma
+                              {:type :geometrisoitu-reittitoteuma
+                               :nimi "Geometrisoitu reittitoteuma"
+                               :alue reitti}))))
+
+(defn- reittitoteuma-payload []
+  (let [payload (atom "")]
+    (fn []
+      [:div
+       [:h5 "Reittitoteuma JSON pisteet"]
+       [:textarea {:rows 10
+                   :cols 80
+                   :placeholder "Pasteappa urakoitsijan lähettämä reittitoteuma JSON tähän"
+                   :value @payload
+                   :on-change #(let [v (-> % .-target .-value)]
+                                 (reset! payload v))}]
+       [:button {:on-click #(when-let [p (some-> @payload
+                                                 js/JSON.parse
+                                                 js->clj)]
+                              (nayta-reittitoteuman-pisteet p)
+                              (geometrisoi-ja-nayta-reittitoteuma @payload))}
+        "piirteleppä!"]])))
 
 (defn tierekisteri []
   (komp/luo
@@ -191,7 +283,8 @@
       (when-let [valittu @valittu-osoite]
         [:div (pr-str valittu)])
       [:hr]
-      [tarkastusajon-reittipisteiden-haku]])))
+      [reittipisteiden-haku]
+      [reittitoteuma-payload]])))
 
 ;; eism tie 20
 ;; x: 431418, y: 7213120

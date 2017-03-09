@@ -166,7 +166,7 @@
                                               {:urakka-id urakka-id
                                                :sopimus-id sopimus-id
                                                :vuosi 2017})]
-    (is (= (count paallystysilmoitukset) 5) "Päällystysilmoituksia löytyi vuodelle 2017")))
+    (is (= (count paallystysilmoitukset) 6) "Päällystysilmoituksia löytyi vuodelle 2017")))
 
 (deftest hae-yllapitokohteen-puuttuva-paallystysilmoitus
   ;; Testattavalla ylläpitokohteella ei ole päällystysilmoitusta, mutta palvelu lupaa palauttaa

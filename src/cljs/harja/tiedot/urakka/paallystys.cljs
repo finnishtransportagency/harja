@@ -6,6 +6,7 @@
     [harja.loki :refer [log tarkkaile!]]
     [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
+    [harja.tiedot.urakka.yllapitokohteet.muut-kustannukset :as muut-kustannukset]
     [cljs.core.async :refer [<!]]
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.navigaatio :as nav]
@@ -77,7 +78,8 @@
       (tr-domain/jarjesta-kohteiden-kohdeosat harjan-paikkauskohteet))))
 
 (def kaikki-kohteet
-  (reaction (concat @yhan-paallystyskohteet @harjan-paikkauskohteet)))
+  (reaction (concat @yhan-paallystyskohteet @harjan-paikkauskohteet (when muut-kustannukset/kohteet
+                                                                      @muut-kustannukset/kohteet))))
 
 (defonce paallystyskohteet-kartalla
   (reaction (let [taso @karttataso-paallystyskohteet

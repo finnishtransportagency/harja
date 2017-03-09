@@ -8,6 +8,7 @@
         <MobilePhone></MobilePhone>
         <Company>ELY</Company>
         <Role>1242141-OULU2_ELY_Urakanvalvoja</Role>
+        <Disabled>false</Disabled>
     </member>
     <member>
         <AccountName>A000002</AccountName>
@@ -18,6 +19,7 @@
         <MobilePhone>0400123456789</MobilePhone>
         <Company>ELY</Company>
         <Role>1242141-OULU2_vastuuhenkilo</Role>
+        <Disabled>false</Disabled>
     </member>
     <member>
         <AccountName>A000003</AccountName>
@@ -28,5 +30,17 @@
         <MobilePhone>0400123456788</MobilePhone>
         <Company>ELY</Company>
         <Role>1242141-OULU2_ELY_peruskäyttäjä</Role>
+        <Disabled>false</Disabled>
+    </member>
+    <member>
+        <AccountName>A000004</AccountName>
+        <FirstName>Piia</FirstName>
+        <LastName>Poistettu</LastName>
+        <DisplayName>Piia Poistettu</DisplayName>
+        <Email>piia.poistettu@example.com</Email>
+        <MobilePhone>8973453</MobilePhone>
+        <Company>ELY</Company>
+        <Role>1242141-OULU2_ELY_peruskäyttäjä</Role>
+        <Disabled>true</Disabled>
     </member>
 </Members>

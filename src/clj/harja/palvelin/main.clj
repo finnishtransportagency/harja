@@ -45,8 +45,9 @@
     [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
     [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
     [harja.palvelin.palvelut.yllapitokohteet.paikkaus :as paikkaus]
-    [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]
+    [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
     [harja.palvelin.palvelut.ping :as ping]
+    [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
@@ -59,6 +60,7 @@
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
     [harja.palvelin.palvelut.yha :as yha]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
+    [harja.palvelin.palvelut.tietyoilmoitukset :as tietyoilmoitukset]
     [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
     [harja.palvelin.palvelut.integraatioloki :as integraatioloki-palvelu]
     [harja.palvelin.palvelut.raportit :as raportit]
@@ -67,6 +69,7 @@
     [harja.palvelin.palvelut.status :as status]
     [harja.palvelin.palvelut.organisaatiot :as organisaatiot]
     [harja.palvelin.palvelut.tienakyma :as tienakyma]
+    [harja.palvelin.palvelut.debug :as debug]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -112,7 +115,9 @@
 
     ;; Metriikat
     [harja.palvelin.komponentit.metriikka :as metriikka])
+
   (:gen-class))
+
 
 (defn luo-jarjestelma [asetukset]
   (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
@@ -242,6 +247,9 @@
       :ping (component/using
               (ping/->Ping)
               [:http-palvelin :db])
+      :pois-kytketyt-ominaisuudet (component/using
+                                   (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet (:pois-kytketyt-ominaisuudet asetukset))
+                                   [:http-palvelin :db])
       :haku (component/using
               (haku/->Haku)
               [:http-palvelin :db])
@@ -325,6 +333,10 @@
                      (ilmoitukset/->Ilmoitukset)
                      [:http-palvelin :db :tloik])
 
+      :tietyoilmoitukset (component/using
+                     (tietyoilmoitukset/->Tietyoilmoitukset)
+                     [:http-palvelin :db :tloik])
+
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
                                 [:http-palvelin :db :turi])
@@ -379,6 +391,11 @@
       :karttakuvat (component/using
                      (karttakuvat/luo-karttakuvat)
                      [:http-palvelin :db])
+
+      :debug (component/using
+              (debug/->Debug)
+              {:db :db-replica
+               :http-palvelin :http-palvelin})
 
       :api-jarjestelmatunnukset (component/using
                                   (api-jarjestelmatunnukset/->APIJarjestelmatunnukset)

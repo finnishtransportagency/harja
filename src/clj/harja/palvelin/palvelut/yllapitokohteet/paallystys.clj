@@ -19,7 +19,7 @@
             [harja.domain.skeema :as skeema]
             [harja.domain.tierekisteri :as tierekisteri-domain]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]
+            [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]))
 
@@ -193,7 +193,7 @@
 
 (defn- paivita-asiatarkastus [db user urakka-id
                               {:keys [paallystyskohde-id asiatarkastus]}]
-  (let [{:keys [tarkastusaika tarkastaja tekninen-osa lisatiedot]} asiatarkastus]
+  (let [{:keys [tarkastusaika tarkastaja hyvaksytty lisatiedot]} asiatarkastus]
     (if (oikeudet/on-muu-oikeus? "asiatarkastus" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                  urakka-id user)
       (do (log/debug "Päivitetään päällystysilmoituksen asiatarkastus: " asiatarkastus)
@@ -201,7 +201,7 @@
             db
             {:asiatarkastus_pvm (konv/sql-date tarkastusaika)
              :asiatarkastus_tarkastaja tarkastaja
-             :asiatarkastus_tekninen_osa tekninen-osa
+             :asiatarkastus_hyvaksytty hyvaksytty
              :asiatarkastus_lisatiedot lisatiedot
              :muokkaaja (:id user)
              :id paallystyskohde-id

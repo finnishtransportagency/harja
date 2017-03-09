@@ -74,7 +74,7 @@
 (defn- kysely [palvelu metodi parametrit
                {:keys [transducer paasta-virhe-lapi? chan yritysten-maara] :as opts}]
   (let [cb (fn [[_ vastaus]]
-             (when-not (nil? vastaus)
+             (when (some? vastaus)
                (cond
                  (= (:status vastaus) 302)
                  (do (kasittele-istunto-vanhentunut)
@@ -89,7 +89,9 @@
 
                  :default
                  (do (put! chan (if transducer (into [] transducer vastaus) vastaus))
-                     (close! chan)))))]
+                     (close! chan)))
+               ;; else
+               (close! chan)))]
     (go
       (if-let [testipalvelu @testmode]
         (do
@@ -238,6 +240,13 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 
 (defn- kasittele-istunto-vanhentunut []
   (reset! istunto-vanhentunut? true))
+
+(defn kysy-pois-kytketyt-ominaisuudet! [pk-atomi]
+  (when-not @pk-atomi
+    (go
+      (let [pko (<! (post! :pois-kytketyt-ominaisuudet {}))]
+        (reset! pk-atomi pko)
+        (log "pois kytketyt ominaisuudet:" (pr-str pko))))))
 
 (defn lisaa-kuuntelija-selaimen-verkkotilalle []
   (.addEventListener js/window "offline" #(kasittele-yhteyskatkos nil)))

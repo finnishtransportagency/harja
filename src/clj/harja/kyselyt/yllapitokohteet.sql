@@ -71,6 +71,56 @@ WHERE
   ypk.suorittava_tiemerkintaurakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
 
+-- name: yllapitokohteen-saa-poistaa
+SELECT NOT (((SELECT COUNT(yhaid)
+              FROM yllapitokohde
+              WHERE id = :id AND yhaid IS NOT NULL) > 0) OR
+            ((SELECT COUNT(*)
+              FROM tiemerkinnan_yksikkohintainen_toteuma tyt
+              WHERE yllapitokohde = :id AND tyt.poistettu IS NOT TRUE) > 0) OR
+            ((SELECT COUNT(*)
+              FROM sanktio s
+              WHERE poistettu IS NOT TRUE AND laatupoikkeama IN
+              (SELECT id FROM laatupoikkeama lp WHERE yllapitokohde = :id AND lp.poistettu IS NOT TRUE)) > 0) OR
+            ((SELECT COUNT(*)
+              FROM paallystysilmoitus pi
+              WHERE paallystyskohde = :id AND pi.poistettu IS NOT TRUE) > 0) OR
+            ((SELECT COUNT(*)
+              FROM paikkausilmoitus pai
+              WHERE paikkauskohde = :id AND pai.poistettu IS NOT TRUE) > 0) OR
+            ((SELECT COUNT(*)
+              FROM tietyomaa ttm
+              WHERE yllapitokohde = :id) > 0) OR
+            ((SELECT COUNT(*)
+              FROM laatupoikkeama lp
+              WHERE yllapitokohde = :id AND lp.poistettu IS NOT TRUE) > 0) OR
+            ((SELECT COUNT(*)
+              FROM tarkastus t
+              WHERE yllapitokohde = :id AND t.poistettu IS NOT TRUE) > 0)) AS "saa-poistaa"
+FROM yllapitokohde
+WHERE id = :id;
+
+-- name: yllapitokohde-sisaltaa-kirjauksia-urakassa
+SELECT
+  (((SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma
+     WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) > 0) OR
+    -- Seuraavat asiat otetaan mukaan jos ylläpitokohteen urakka on annettu urakka
+  ((SELECT COUNT(*)
+    FROM sanktio s
+    WHERE poistettu IS NOT TRUE AND laatupoikkeama IN
+    (SELECT id FROM laatupoikkeama lp WHERE yllapitokohde = :yllapitokohde_id
+     AND urakka = :urakka_id AND lp.poistettu IS NOT TRUE)) > 0) OR
+   ((SELECT COUNT(*) FROM paallystysilmoitus WHERE paallystyskohde = :yllapitokohde_id
+                                             AND (SELECT urakka FROM yllapitokohde WHERE id = :yllapitokohde_id) = :urakka_id) > 0) OR
+   ((SELECT COUNT(*) FROM paikkausilmoitus WHERE paikkauskohde = :yllapitokohde_id
+                                           AND (SELECT urakka FROM yllapitokohde WHERE id = :yllapitokohde_id) = :urakka_id) > 0) OR
+   ((SELECT COUNT(*) FROM laatupoikkeama WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) > 0) OR
+   ((SELECT COUNT(*) FROM tietyomaa WHERE yllapitokohde = :yllapitokohde_id
+                                    AND (SELECT urakka FROM yllapitokohde WHERE id = :yllapitokohde_id) = :urakka_id) > 0) OR
+   ((SELECT COUNT(*) FROM tarkastus WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) > 0)) as kirjauksia
+FROM yllapitokohde
+WHERE id = :yllapitokohde_id;
+
 -- name: hae-urakan-sopimuksen-yllapitokohteet
 -- Hakee urakan sopimuksen kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
 SELECT
@@ -125,6 +175,26 @@ WHERE
        OR vuodet @> ARRAY[:vuosi]::int[]))
   AND ypk.poistettu IS NOT TRUE
 GROUP BY ypk.id, pi.id, pai.id, o.nimi, u.nimi;
+
+-- name: hae-tiemerkintaurakalle-osoitetut-yllapitokohteet
+-- Hakee urakan sopimuksen kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
+SELECT
+  ypk.id,
+  ypk.kohdenumero,
+  ypk.nimi,
+  ypk.tr_numero                         AS "tr-numero",
+  ypk.tr_alkuosa                        AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys                   AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa                       AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
+  ypk.tr_ajorata                        AS "tr-ajorata",
+  ypk.tr_kaista                         AS "tr-kaista",
+  ypk.yhaid                             AS "yha-id",
+  ypk.yha_kohdenumero                   AS "yha-kohdenumero"
+FROM yllapitokohde ypk
+WHERE
+  ypk.suorittava_tiemerkintaurakka = :urakka
+  AND ypk.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-yllapitokohteet-lomakkeelle
 -- Hakee urakan kaikki yllapitokohteet, listaten vain minimaalisen määrän tietoa
@@ -453,9 +523,6 @@ SET
 WHERE id = :id
       AND suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka;
 
-
-
-
 -- name: hae-yllapitokohteen-urakka-id
 SELECT urakka AS id
 FROM yllapitokohde
@@ -506,6 +573,14 @@ SELECT
   (SELECT viimeisin_paivitys
    FROM geometriapaivitys
    WHERE nimi = 'tieverkko') AS karttapvm
+FROM yllapitokohde
+WHERE id = :id;
+
+-- name: hae-yllapitokohteen-tiemerkintaaikataulu
+SELECT
+aikataulu_tiemerkinta_alku as "tiemerkinta-alku",
+aikataulu_tiemerkinta_loppu as "tiemerkinta-loppu",
+aikataulu_tiemerkinta_takaraja as "tiemerkinta-takaraja"
 FROM yllapitokohde
 WHERE id = :id;
 
@@ -590,48 +665,6 @@ WHERE id = :id;
 -- name: poista-yllapitokohteen-kohdeosat!
 DELETE FROM yllapitokohdeosa
 WHERE yllapitokohde = :id;
-
--- name: hae-tiemerkintaurakan-yksikkohintaiset-tyot
-SELECT
-  ypk.id,
-  kohdenumero,
-  nimi,
-  urakka,
-  sopimus,
-  tr_numero                      AS "tr-numero",
-  tr_alkuosa                     AS "tr-alkuosa",
-  tr_alkuetaisyys                AS "tr-alkuetaisyys",
-  tr_loppuosa                    AS "tr-loppuosa",
-  tr_loppuetaisyys               AS "tr-loppuetaisyys",
-  tr_ajorata                     AS "tr-ajorata",
-  tr_kaista                      AS "tr-kaista",
-  hinta,
-  hinta_kohteelle                AS "hinta-kohteelle",
-  hintatyyppi,
-  muutospvm,
-  yllapitoluokka
-FROM yllapitokohde ypk
-  LEFT JOIN yllapitokohde_tiemerkinta yt ON yt.yllapitokohde = ypk.id
-WHERE
-  suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
-  AND poistettu IS NOT TRUE;
-
--- name: paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
-UPDATE yllapitokohde_tiemerkinta SET
-  hinta = :hinta,
-  hintatyyppi = :hintatyyppi::yllapitokohde_tiemerkinta_hintatyyppi,
-  muutospvm = :muutospvm,
-  hinta_kohteelle = :hinta_kohteelle
-WHERE yllapitokohde = :yllapitokohde;
-
--- name: luo-tiemerkintaurakan-yksikkohintainen-tyo<!
-INSERT INTO yllapitokohde_tiemerkinta(yllapitokohde, hinta, hintatyyppi, muutospvm, hinta_kohteelle) VALUES
-  (:yllapitokohde, :hinta, :hintatyyppi::yllapitokohde_tiemerkinta_hintatyyppi, :muutospvm,
-  :hinta_kohteelle);
-
--- name: hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
-SELECT id FROM yllapitokohde_tiemerkinta
-WHERE yllapitokohde = :yllapitokohde;
 
 -- name: hae-kohteen-tienumero
 SELECT tr_numero FROM yllapitokohde WHERE id = :kohdeid;
