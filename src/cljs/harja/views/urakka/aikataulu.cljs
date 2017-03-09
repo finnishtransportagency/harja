@@ -25,7 +25,8 @@
             [harja.tiedot.urakka :as urakka]
             [harja.ui.yleiset :as yleiset]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.domain.yllapitokohteet :as yllapitokohteet-domain])
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.ui.viesti :as viesti])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -160,7 +161,14 @@
            :tyhja (if (nil? @tiedot/aikataulurivit)
                     [yleiset/ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :tallenna (if voi-tallentaa?
-                       #(tiedot/tallenna-yllapitokohteiden-aikataulu urakka-id sopimus-id vuosi %)
+                       #(tiedot/tallenna-yllapitokohteiden-aikataulu
+                          {:urakka-id urakka-id
+                           :opimus-id sopimus-id
+                           :vuosi vuosi
+                           :kohteet %
+                           :epaonnistui-fn (fn [] (viesti/nayta! "Tallennus epäonnistui!"
+                                                                 :warning
+                                                                 viesti/viestin-nayttoaika-lyhyt))})
                        :ei-mahdollinen)}
           [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
             :pituus-max 128 :muokattava? (constantly false)}
@@ -209,15 +217,11 @@
            ; FIXME Tallennus (ja validointi) epäonnistuu jos kellonaikaa ei anna
            {:otsikko "Pääl\u00ADlys\u00ADtys a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-paallystys-alku
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
-            :muokattava? #(and (= (:nakyma optiot) :paallystys)
-                               (constantly saa-muokata?)
-                               (:aikataulu-kohde-alku %))
+            :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
             :validoi (paallystys-aloitettu-validointi optiot)}
            {:otsikko "Pääl\u00ADlys\u00ADtys val\u00ADmis" :leveys 8 :nimi :aikataulu-paallystys-loppu
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
-            :muokattava? #(and (= (:nakyma optiot) :paallystys)
-                               (constantly saa-muokata?)
-                               (:aikataulu-paallystys-alku %))
+            :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-paallystys-alku
                        "Päällystystä ei ole merkitty aloitetuksi."]
                       [:pvm-kentan-jalkeen :aikataulu-paallystys-alku
@@ -285,9 +289,7 @@
                        "Valmistuminen ei voi olla ennen aloitusta."]]}
            {:otsikko "Päällystyskoh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
             :fmt pvm/pvm-opt
-            :muokattava? #(and (= (:nakyma optiot) :paallystys)
-                               (constantly saa-muokata?)
-                               (:aikataulu-kohde-alku %))
+            :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
             :validoi [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
                        "Kohde ei voi olla valmis ennen kuin se on aloitettu."]]}]
           (otsikoi-aikataulurivit @tiedot/aikataulurivit-valmiuden-mukaan)]
