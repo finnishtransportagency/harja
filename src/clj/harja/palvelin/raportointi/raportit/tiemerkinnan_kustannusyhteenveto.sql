@@ -1,5 +1,6 @@
 -- name: muodosta-tiemerkinnan-kustannusyhteenveto
 SELECT
+  -- FIXME AIKARAJAT (mutta ei voi kaikkiin laittaa?)
   COALESCE((SELECT SUM(summa)
    FROM kokonaishintainen_tyo kt
    WHERE toimenpideinstanssi IN
