@@ -1,4 +1,7 @@
 (ns harja.palvelin.integraatiot.api.kasittely.tiemerkintatoteumat
+  "Sisältää käsittelylogiikan tiemerkintätoteumien luomiseen, päivittämiseen ja poistamiseen Harja API:n kautta.
+   Käytetään käsiteltäessä urakan tai urakan ylläpitokohteen tiemerkintätoteumia."
+  
   (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
