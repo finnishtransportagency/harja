@@ -17,8 +17,6 @@
             [harja.tiedot.navigaatio :as nav]))
 
 (defn ilmoitusten-hakuehdot [e! valinnat-nyt kayttajan-urakat]
-  (log "----> " (first (partition 2 (interleave (mapv (comp str :id) kayttajan-urakat) (mapv :nimi kayttajan-urakat)))))
-
   [lomake/lomake
    {:luokka :horizontal
     :muokkaa! #(e! (tiedot/->AsetaValinnat %))}
@@ -37,10 +35,9 @@
        haetut-ilmoitukset :ilmoitukset
        ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
        kayttajan-urakat :kayttajan-urakat
-       :as app}
-   valittu-urakka]
+       :as app}]
   [:span.tietyoilmoitukset
-   [ilmoitusten-hakuehdot e! valinnat-nyt valittu-urakka kayttajan-urakat]
+   [ilmoitusten-hakuehdot e! valinnat-nyt kayttajan-urakat]
    [:div
     [grid
      {:tyhja (if haetut-ilmoitukset

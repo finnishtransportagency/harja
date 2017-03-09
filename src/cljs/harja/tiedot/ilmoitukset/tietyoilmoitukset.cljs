@@ -108,6 +108,6 @@
 
   KayttajanUrakatHaettu
   (process-event [{urakat :urakat} app]
-    (let [urakka (or @nav/valittu-urakka (first urakat))]
+    (let [urakka ((comp str :id) (or @nav/valittu-urakka (first urakat)))]
       (assoc app :kayttajan-urakat urakat
                  :valinnat (assoc (:valinnat app) :urakka urakka)))))
