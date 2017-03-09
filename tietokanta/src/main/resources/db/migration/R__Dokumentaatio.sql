@@ -18,7 +18,7 @@ Suoritettava toimenpide kirjataan seuraaviin kenttiin:\n
 - raekoko\n
 - tyomenetelma\n
 - massamaara\n
-Aiemmin näille oli käytössä yksi tekstikenttä "toimenpide".';
+- toimenpide (sanallinen selitys).';
 
 -- Ylläpito (päällystys)
 

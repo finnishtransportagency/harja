@@ -25,7 +25,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.validointi :as validointi]
             [harja.atom :refer [wrap-vain-luku]]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus])
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.tiedot.urakka.paallystys :as paallystys-tiedot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -59,7 +60,11 @@
 
 ;; Ylläpitokohdeosien sarakkeiden leveydet
 (def nimi-leveys 20)
-(def toimenpide-leveys 15)
+(def paallyste-leveys 10)
+(def raekoko-leveys 5)
+(def tyomenetelma-leveys 10)
+(def massamaara-leveys 5)
+(def toimenpide-leveys 10)
 
 (defn alkuosa-ei-lopun-jalkeen [aosa {losa :tr-loppuosa}]
   (when (and aosa losa (> aosa losa))
@@ -338,7 +343,11 @@
                                  :validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-loppuosa)
                                            (partial validoi-loppuetaisyys-kohteen-sisalla kohde)]}
                                 {:hae (partial tr/laske-tien-pituus osan-pituus)}])
-                             [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string
+                             [(assoc paallystys-tiedot/paallyste-grid-skeema :leveys paallyste-leveys)
+                              (assoc paallystys-tiedot/raekoko-grid-skeema :leveys raekoko-leveys)
+                              (assoc paallystys-tiedot/tyomenetelma-grid-skeema :leveys tyomenetelma-leveys)
+                              (assoc paallystys-tiedot/massamaara-grid-skeema :leveys massamaara-leveys)
+                              {:otsikko "Toimenpiteen selitys" :nimi :toimenpide :tyyppi :string
                                :leveys toimenpide-leveys}])))
 
             muokkaa-kohdeosat!

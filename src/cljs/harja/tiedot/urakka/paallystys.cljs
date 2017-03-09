@@ -11,7 +11,9 @@
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.navigaatio :as nav]
     [harja.tiedot.urakka :as urakka]
-    [harja.domain.tierekisteri :as tr-domain])
+    [harja.domain.tierekisteri :as tr-domain]
+    [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+    [harja.domain.paallystysilmoitus :as pot])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -68,9 +70,10 @@
 
 (def yllapitokohteet-suodatettu
   (reaction (let [tienumero @tienumero
-                  kohteet (filterv #(or (nil? tienumero)
-                                        (= (:tr-numero %) tienumero))
-                                   @yllapitokohteet)]
+                  yllapitokohteet @yllapitokohteet
+                  kohteet (when yllapitokohteet (filterv #(or (nil? tienumero)
+                                                              (= (:tr-numero %) tienumero))
+                                                         yllapitokohteet))]
               kohteet)))
 
 (def yhan-paallystyskohteet
@@ -107,3 +110,40 @@
                   lomakedata)))))
 
 (defonce kohteet-yha-lahetyksessa (atom nil))
+
+;; Yhteiset UI-asiat
+
+(def paallyste-grid-skeema
+  {:otsikko "Päällyste"
+   :nimi :paallystetyyppi
+   :tyyppi :valinta
+   :valinta-arvo :koodi
+   :valinta-nayta (fn [rivi muokattava?]
+                    (if rivi
+                      (str (:lyhenne rivi) " - " (:nimi rivi))
+                      (if muokattava?
+                        "- Valitse päällyste -"
+                        "")))
+   :valinnat paallystys-ja-paikkaus/+paallystetyypit+})
+
+(def raekoko-grid-skeema
+  {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :desimaalien-maara 0
+   :tasaa :oikea
+   :validoi [[:rajattu-numero nil 0 99]]})
+
+(def tyomenetelma-grid-skeema
+  {:otsikko "Pääll. työ\u00ADmenetelmä"
+   :nimi :tyomenetelma
+   :tyyppi :valinta
+   :valinta-arvo :koodi
+   :valinta-nayta (fn [rivi muokattava?]
+                    (if rivi
+                      (str (:lyhenne rivi) " - " (:nimi rivi))
+                      (if muokattava?
+                        "- Valitse menetelmä -"
+                        "")))
+   :valinnat pot/+tyomenetelmat+})
+
+(def massamaara-grid-skeema
+  {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara
+   :tyyppi :positiivinen-numero :tasaa :oikea})
