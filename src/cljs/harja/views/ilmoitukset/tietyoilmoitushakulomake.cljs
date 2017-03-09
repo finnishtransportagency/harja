@@ -27,7 +27,11 @@
      :valinta-nayta second
      :valinta-arvo first
      :muokattava? (constantly true)}
-    (valinnat/aikavalivalitsin tiedot/aikavalit valinnat-nyt)]
+    (valinnat/aikavalivalitsin tiedot/aikavalit valinnat-nyt)
+    {:nimi :tierekisteriosoite
+     :otsikko "Tierekisteriosoite"
+     :tyyppi :tierekisteriosoite
+     :sijainti (atom nil)}]
    valinnat-nyt])
 
 (defn hakulomake
