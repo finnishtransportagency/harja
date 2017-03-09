@@ -3,5 +3,5 @@
             [taoensso.timbre :as log]
             [harja.geo :as geo]))
 
-(defqueries "harja/kyselyt/yllapito_muut_toteumat.sql"
+(defqueries "harja/kyselyt/yllapito_toteumat.sql"
   {:positional? true})

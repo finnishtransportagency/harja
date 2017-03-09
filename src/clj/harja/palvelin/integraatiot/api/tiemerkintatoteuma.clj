@@ -1,5 +1,11 @@
 (ns harja.palvelin.integraatiot.api.tiemerkintatoteuma
-  "Pistetoteuman kirjaaminen urakalle"
+  "TIEMERKINTÄTOTEUMIEN RAJAPINTAKOMPONENTTI:
+
+  Tarjoaa seuraavat palvelut Harjan urakoitsija API:n
+
+  - Tiemerkinnän yksikköhintaisten toteumien kirjaus
+  - Tiemerkinnän yksikköhintaisten toteumien poisto"
+  
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST DELETE]]
             [taoensso.timbre :as log]

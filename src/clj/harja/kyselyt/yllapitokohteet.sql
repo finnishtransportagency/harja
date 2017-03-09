@@ -76,23 +76,27 @@ SELECT NOT (((SELECT COUNT(yhaid)
               FROM yllapitokohde
               WHERE id = :id AND yhaid IS NOT NULL) > 0) OR
             ((SELECT COUNT(*)
-              FROM tiemerkinnan_yksikkohintainen_toteuma
+              FROM tiemerkinnan_yksikkohintainen_toteuma tyt
+              WHERE yllapitokohde = :id AND tyt.poistettu IS NOT TRUE) > 0) OR
+            ((SELECT COUNT(*)
+              FROM sanktio s
+              WHERE poistettu IS NOT TRUE AND laatupoikkeama IN
+              (SELECT id FROM laatupoikkeama lp WHERE yllapitokohde = :id AND lp.poistettu IS NOT TRUE)) > 0) OR
+            ((SELECT COUNT(*)
+              FROM paallystysilmoitus pi
+              WHERE paallystyskohde = :id AND pi.poistettu IS NOT TRUE) > 0) OR
+            ((SELECT COUNT(*)
+              FROM paikkausilmoitus pai
+              WHERE paikkauskohde = :id AND pai.poistettu IS NOT TRUE) > 0) OR
+            ((SELECT COUNT(*)
+              FROM tietyomaa ttm
               WHERE yllapitokohde = :id) > 0) OR
             ((SELECT COUNT(*)
-              FROM paallystysilmoitus
-              WHERE paallystyskohde = :id) > 0) OR
+              FROM laatupoikkeama lp
+              WHERE yllapitokohde = :id AND lp.poistettu IS NOT TRUE) > 0) OR
             ((SELECT COUNT(*)
-              FROM paikkausilmoitus
-              WHERE paikkauskohde = :id) > 0) OR
-            ((SELECT COUNT(*)
-              FROM tietyomaa
-              WHERE yllapitokohde = :id) > 0) OR
-            ((SELECT COUNT(*)
-              FROM laatupoikkeama
-              WHERE yllapitokohde = :id) > 0) OR
-            ((SELECT COUNT(*)
-              FROM tarkastus
-              WHERE yllapitokohde = :id) > 0)) AS "saa-poistaa"
+              FROM tarkastus t
+              WHERE yllapitokohde = :id AND t.poistettu IS NOT TRUE) > 0)) AS "saa-poistaa"
 FROM yllapitokohde
 WHERE id = :id;
 
@@ -101,6 +105,11 @@ SELECT
   (((SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma
      WHERE yllapitokohde = :yllapitokohde_id AND urakka = :urakka_id) > 0) OR
     -- Seuraavat asiat otetaan mukaan jos ylläpitokohteen urakka on annettu urakka
+  ((SELECT COUNT(*)
+    FROM sanktio s
+    WHERE poistettu IS NOT TRUE AND laatupoikkeama IN
+    (SELECT id FROM laatupoikkeama lp WHERE yllapitokohde = :yllapitokohde_id
+     AND urakka = :urakka_id AND lp.poistettu IS NOT TRUE)) > 0) OR
    ((SELECT COUNT(*) FROM paallystysilmoitus WHERE paallystyskohde = :yllapitokohde_id
                                              AND (SELECT urakka FROM yllapitokohde WHERE id = :yllapitokohde_id) = :urakka_id) > 0) OR
    ((SELECT COUNT(*) FROM paikkausilmoitus WHERE paikkauskohde = :yllapitokohde_id
