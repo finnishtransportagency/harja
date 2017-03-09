@@ -276,6 +276,7 @@
             :fmt pvm/pvm-opt
             :muokattava? (fn [rivi]
                            (and (= (:nakyma optiot) :tiemerkinta)
+                                (:aikataulu-tiemerkinta-alku %)
                                 saa-merkita-valmiiksi?
                                 (:valmis-tiemerkintaan rivi)))
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
