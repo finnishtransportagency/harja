@@ -49,7 +49,7 @@ SELECT
   ypko.paallystetyyppi                  AS "kohdeosa_paallystetyyppi",
   ypko.raekoko                          AS "kohdeosa_raekoko",
   ypko.tyomenetelma                     AS "kohdeosa_tyomenetelma",
-  ypko.massamaara                       AS "kohdeosa_massamaara",
+  ypko.massamaara                       AS "kohdeosa_kokonaismassamaara",
   ypko.toimenpide                       AS "kohdeosa_toimenpide",
   pi.takuupvm                           AS "paallystysilmoitus_takuupvm"
 FROM yllapitokohde ypk
@@ -236,7 +236,7 @@ SELECT
   paallystetyyppi,
   raekoko,
   tyomenetelma,
-  massamaara,
+  massamaara            AS "kokonaismassamaara",
   toimenpide,
   sijainti
 FROM yllapitokohdeosa ypko
@@ -621,7 +621,7 @@ SELECT
   paallystetyyppi,
   raekoko,
   tyomenetelma,
-  massamaara,
+  massamaara                 AS "kokonaismassamaara",
   toimenpide,
   (SELECT viimeisin_paivitys
    FROM geometriapaivitys

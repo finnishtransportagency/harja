@@ -298,7 +298,7 @@
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
                                   {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
                                           tr-loppuetaisyys tr-ajorata tr-kaista toimenpide poistettu
-                                          paallystetyyppi raekoko tyomenetelma massamaara]}]
+                                          paallystetyyppi raekoko tyomenetelma kokonaismassamaara]}]
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
   (when-not poistettu
     (q/luo-yllapitokohdeosa<! db
@@ -315,14 +315,14 @@
                                :paallystetyyppi paallystetyyppi
                                :raekoko raekoko
                                :tyomenetelma tyomenetelma
-                               :massamaara massamaara
+                               :massamaara kokonaismassamaara
                                :toimenpide toimenpide
                                :ulkoinen-id nil})))
 
 (defn- paivita-yllapitokohdeosa [db user urakka-id
                                  {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys
                                          tr-loppuosa tr-loppuetaisyys tr-ajorata
-                                         tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma massamaara]
+                                         tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma kokonaismassamaara]
                                   :as kohdeosa}]
 
   (log/debug "Päivitetään ylläpitokohdeosa")
@@ -339,7 +339,7 @@
                                  :paallystetyyppi paallystetyyppi
                                  :raekoko raekoko
                                  :tyomenetelma tyomenetelma
-                                 :massamaara massamaara
+                                 :massamaara kokonaismassamaara
                                  :toimenpide toimenpide
                                  :id id
                                  :urakka urakka-id}))
