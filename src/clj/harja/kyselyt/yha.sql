@@ -30,15 +30,9 @@ FROM yhatiedot
 WHERE urakka = :urakka;
 
 -- name: poista-urakan-yllapitokohteet!
-DELETE FROM yllapitokohde
+UPDATE yllapitokohde
+set poistettu = TRUE
 WHERE urakka = :urakka;
-
--- name: poista-urakan-yllapitokohdeosat!
-DELETE FROM yllapitokohdeosa
-WHERE yllapitokohde IN
-      (SELECT id
-       FROM yllapitokohde
-       WHERE urakka = :urakka);
 
 -- name: hae-yllapitokohteen-kohdeosat
 SELECT

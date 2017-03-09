@@ -69,27 +69,27 @@ SELECT
   s.toimenpideinstanssi,
   s.vakiofraasi,
 
-  h.id                               AS laatupoikkeama_id,
-  h.kohde                            AS laatupoikkeama_kohde,
-  h.aika                             AS laatupoikkeama_aika,
-  h.tekija                           AS laatupoikkeama_tekija,
-  h.urakka                           AS laatupoikkeama_urakka,
+  lp.id                               AS laatupoikkeama_id,
+  lp.kohde                            AS laatupoikkeama_kohde,
+  lp.aika                             AS laatupoikkeama_aika,
+  lp.tekija                           AS laatupoikkeama_tekija,
+  lp.urakka                           AS laatupoikkeama_urakka,
   CONCAT(k.etunimi, ' ', k.sukunimi) AS laatupoikkeama_tekijanimi,
-  h.kasittelyaika                    AS laatupoikkeama_paatos_kasittelyaika,
-  h.paatos                           AS laatupoikkeama_paatos_paatos,
-  h.kasittelytapa                    AS laatupoikkeama_paatos_kasittelytapa,
-  h.muu_kasittelytapa                AS laatupoikkeama_paatos_muukasittelytapa,
-  h.kuvaus                           AS laatupoikkeama_kuvaus,
-  h.perustelu                        AS laatupoikkeama_paatos_perustelu,
-  h.tr_numero                        AS laatupoikkeama_tr_numero,
-  h.tr_alkuosa                       AS laatupoikkeama_tr_alkuosa,
-  h.tr_loppuosa                      AS laatupoikkeama_tr_loppuosa,
-  h.tr_alkuetaisyys                  AS laatupoikkeama_tr_alkuetaisyys,
-  h.tr_loppuetaisyys                 AS laatupoikkeama_tr_loppuetaisyys,
-  h.sijainti                         AS laatupoikkeama_sijainti,
-  h.tarkastuspiste                   AS laatupoikkeama_tarkastuspiste,
-  h.selvitys_pyydetty                AS laatupoikkeama_selvityspyydetty,
-  h.selvitys_annettu                 AS laatupoikkeama_selvitysannettu,
+  lp.kasittelyaika                    AS laatupoikkeama_paatos_kasittelyaika,
+  lp.paatos                           AS laatupoikkeama_paatos_paatos,
+  lp.kasittelytapa                    AS laatupoikkeama_paatos_kasittelytapa,
+  lp.muu_kasittelytapa                AS laatupoikkeama_paatos_muukasittelytapa,
+  lp.kuvaus                           AS laatupoikkeama_kuvaus,
+  lp.perustelu                        AS laatupoikkeama_paatos_perustelu,
+  lp.tr_numero                        AS laatupoikkeama_tr_numero,
+  lp.tr_alkuosa                       AS laatupoikkeama_tr_alkuosa,
+  lp.tr_loppuosa                      AS laatupoikkeama_tr_loppuosa,
+  lp.tr_alkuetaisyys                  AS laatupoikkeama_tr_alkuetaisyys,
+  lp.tr_loppuetaisyys                 AS laatupoikkeama_tr_loppuetaisyys,
+  lp.sijainti                         AS laatupoikkeama_sijainti,
+  lp.tarkastuspiste                   AS laatupoikkeama_tarkastuspiste,
+  lp.selvitys_pyydetty                AS laatupoikkeama_selvityspyydetty,
+  lp.selvitys_annettu                 AS laatupoikkeama_selvitysannettu,
 
   ypk.tr_numero        AS yllapitokohde_tr_numero,
   ypk.tr_alkuosa       AS yllapitokohde_tr_alkuosa,
@@ -105,14 +105,19 @@ SELECT
   t.toimenpidekoodi                  AS tyyppi_toimenpidekoodi
 
 FROM sanktio s
-  JOIN laatupoikkeama h ON s.laatupoikkeama = h.id
-  JOIN kayttaja k ON h.luoja = k.id
+  JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
+  JOIN kayttaja k ON lp.luoja = k.id
   LEFT JOIN sanktiotyyppi t ON s.tyyppi = t.id
-  LEFT JOIN yllapitokohde ypk ON h.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
 WHERE
-  h.urakka = :urakka
-  AND h.poistettu IS NOT TRUE AND s.poistettu IS NOT TRUE
-  AND s.perintapvm >= :alku AND s.perintapvm <= :loppu;
+  lp.urakka = :urakka
+  AND lp.poistettu IS NOT TRUE AND s.poistettu IS NOT TRUE
+  AND s.perintapvm >= :alku AND s.perintapvm <= :loppu
+  -- Ei kuulu poistettuun ylläpitokohteeseen
+  AND (lp.yllapitokohde IS NULL
+      OR
+      lp.yllapitokohde IS NOT NULL AND
+        (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
 
 -- name: merkitse-maksuera-likaiseksi!
 -- Merkitsee sanktiota vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
