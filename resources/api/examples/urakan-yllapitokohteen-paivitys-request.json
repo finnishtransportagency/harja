@@ -38,9 +38,9 @@
             "kaista": 1
           },
           "toimenpide": "testitoimenpide",
-          "paallystetyyppi": 1,
+          "paallystetyyppi": "betoni",
           "raekoko": 66,
-          "tyomenetelma": 12,
+          "tyomenetelma": "ART-pintaus",
           "kokonaismassamaara": 6.6
         }
       },
