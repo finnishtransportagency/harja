@@ -76,7 +76,12 @@
     (let [tulos! (t/send-async! ->IlmoituksetHaettu)]
       (go
         (tulos!
-          (let [parametrit (select-keys valinnat [:alkuaika :loppuaika :sijainti :tierekisteriosoite :urakka])]
+          (let [parametrit (select-keys valinnat [:alkuaika
+                                                  :loppuaika
+                                                  :sijainti
+                                                  :tierekisteriosoite
+                                                  :urakka
+                                                  :vain-kayttajan-luomat])]
             {:ilmoitukset (async/<! (k/post! :hae-tietyoilmoitukset parametrit))}))))
     (assoc app :ilmoitukset nil))
 
@@ -110,7 +115,7 @@
 
   KayttajanUrakatHaettu
   (process-event [{urakat :urakat} app]
-    (let [urakka (when @nav/valittu-urakka ((comp str :id)) @nav/valittu-urakka)]
+    (let [urakka (when @nav/valittu-urakka ((comp str :id) @nav/valittu-urakka))]
       (assoc app :kayttajan-urakat urakat
                  :valinnat (assoc (:valinnat app) :urakka urakka))))
 

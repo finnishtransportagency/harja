@@ -22,21 +22,27 @@
     [lomake/lomake
      {:luokka :horizontal
       :muokkaa! #(e! (tiedot/->AsetaValinnat %))}
-     [{:nimi :urakka
+     [(valinnat/aikavalivalitsin tiedot/aikavalit valinnat-nyt)
+      {:nimi :urakka
        :otsikko "Urakka"
        :tyyppi :valinta
        :pakollinen? true
        :valinnat urakkavalinnat
        :valinta-nayta second
        :valinta-arvo first
-       :muokattava? (constantly true)}
-      (valinnat/aikavalivalitsin tiedot/aikavalit valinnat-nyt)
+       :muokattava? (constantly true)
+       :palstoja 1}
       {:nimi :tierekisteriosoite
        :tyyppi :tierekisteriosoite
        :pakollinen? false
        :sijainti (r/wrap (:sijainti valinnat-nyt) #(e! (tiedot/->PaivitaSijainti %)))
        :otsikko "Tierekisteriosoite"
-       :validoi [(fn [_ {sijainti :sijainti}] (when (nil? sijainti) "Tarkista tierekisteriosoite"))]}]
+       :validoi [(fn [_ {sijainti :sijainti}] (when (nil? sijainti) "Tarkista tierekisteriosoite"))]
+       :palstoja 1}
+      {:nimi :vain-kayttajan-luomat
+       :tyyppi :checkbox
+       :teksti "Vain minun luomat"
+       :palstoja 1}]
      valinnat-nyt]))
 
 (defn hakulomake
