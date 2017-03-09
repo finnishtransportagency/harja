@@ -209,11 +209,15 @@
            ; FIXME Tallennus (ja validointi) epäonnistuu jos kellonaikaa ei anna
            {:otsikko "Pääl\u00ADlys\u00ADtys a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-paallystys-alku
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
-            :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
+            :muokattava? #(and (= (:nakyma optiot) :paallystys)
+                               (constantly saa-muokata?)
+                               (:aikataulu-kohde-alku %))
             :validoi (paallystys-aloitettu-validointi optiot)}
            {:otsikko "Pääl\u00ADlys\u00ADtys val\u00ADmis" :leveys 8 :nimi :aikataulu-paallystys-loppu
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
-            :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
+            :muokattava? #(and (= (:nakyma optiot) :paallystys)
+                               (constantly saa-muokata?)
+                               (:aikataulu-paallystys-alku %))
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-paallystys-alku
                        "Päällystystä ei ole merkitty aloitetuksi."]
                       [:pvm-kentan-jalkeen :aikataulu-paallystys-alku
@@ -278,13 +282,13 @@
                        "Tiemerkintää ei ole merkitty aloitetuksi."]
                       [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-alku
                        "Valmistuminen ei voi olla ennen aloitusta."]]}
-           {:otsikko "Koh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
+           {:otsikko "Päällystyskoh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
             :fmt pvm/pvm-opt
-            :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
-            :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-loppu
-                       "Tiemerkintää ei ole merkitty lopetetuksi."]
-                      [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-loppu
-                       "Kohde ei voi olla valmis ennen kuin tiemerkintä on valmistunut."]]}]
+            :muokattava? #(and (= (:nakyma optiot) :paallystys)
+                               (constantly saa-muokata?)
+                               (:aikataulu-kohde-alku %))
+            :validoi [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
+                       "Kohde ei voi olla valmis ennen kuin se on aloitettu."]]}]
           (otsikoi-aikataulurivit @tiedot/aikataulurivit-valmiuden-mukaan)]
          (if (= (:nakyma optiot) :tiemerkinta)
            [vihje "Tiemerkinnän valmistumisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle ja vastuuhenkilölle."])]))))
