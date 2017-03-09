@@ -156,6 +156,7 @@
          ^{:key "tiemerkinnan-kustannukset"}
          [tiemerkinnan-kustannukset/kustannukset
           ur
-          tiemerkinnan-kustannukset-tiedot/raportin-parametrit])]
+          tiemerkinnan-kustannukset-tiedot/raportin-parametrit
+          tiemerkinnan-kustannukset-tiedot/raportin-tiedot])]
 
       [ajax-loader "Ladataan urakan tietoja..."])))

@@ -23,10 +23,10 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-(defn kustannukset [urakka raportin-parametrit-atom]
+(defn kustannukset [urakka raportin-parametrit-atom raportin-tiedot-atom]
   (komp/luo
     (komp/lippu tiedot/kustannukset-valilehti-nakyvissa?)
-    (fn [urakka raportin-parametrit-atom]
+    (fn [urakka raportin-parametrit-atom raportin-tiedot-atom]
       (let []
         [:div
          [:h3 "Kustannusyhteenveto"]
@@ -36,5 +36,5 @@
          (when-let [parametrit @raportin-parametrit-atom]
            [upotettu-raportti/raportin-vientimuodot parametrit])
 
-         #_(when-let [tiedot @laskutusyhteenvedon-tiedot]
-           [muodosta-html (assoc-in tiedot [1 :tunniste] :laskutusyhteenveto)])]))))
+         (when-let [raportti @raportin-tiedot-atom]
+           [muodosta-html (assoc-in raportti [1 :tunniste] :tiemerkinnan-kustannusyhteenveto)])]))))

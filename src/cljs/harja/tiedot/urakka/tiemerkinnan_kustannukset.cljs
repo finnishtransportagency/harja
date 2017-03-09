@@ -24,3 +24,9 @@
                   :tiemerkinnan-kustannusyhteenveto
                   {:alkupvm  alkupvm
                    :loppupvm loppupvm})))))
+
+(defonce raportin-tiedot
+  (reaction<! [parametrit @raportin-parametrit]
+              {:nil-kun-haku-kaynnissa? true}
+              (when parametrit
+                (raportit/suorita-raportti parametrit))))
