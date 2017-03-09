@@ -76,7 +76,7 @@
                   "raekoko": {
                     "id": "urn:harja/raekoko",
                     "type": "object",
-                    "$ref": "file:resources/api/schemas/entities/paallyste_raekoko.schema.json"
+                    "$ref": "file:resources/api/schemas/entities/paallystys_raekoko.schema.json"
                   },
                   "tyomenetelma": {
                     "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/tyomenetelma",
