@@ -18,28 +18,26 @@
             [reagent.core :as r]))
 
 (defn ilmoitusten-hakuehdot [e! valinnat-nyt kayttajan-urakat]
-  (let [urakkavalinnat (into [[nil "Kaikki urakat"]](partition 2 (interleave (mapv (comp str :id) kayttajan-urakat) (mapv :nimi kayttajan-urakat))))]
-    (log "---> " (pr-str urakkavalinnat))
-
+  (let [urakkavalinnat (into [[nil "Kaikki urakat"]] (partition 2 (interleave (mapv (comp str :id) kayttajan-urakat) (mapv :nimi kayttajan-urakat))))]
     [lomake/lomake
-    {:luokka :horizontal
-     :muokkaa! #(e! (tiedot/->AsetaValinnat %))}
-    [{:nimi :urakka
-      :otsikko "Urakka"
-      :tyyppi :valinta
-      :pakollinen? true
-      :valinnat urakkavalinnat
-      :valinta-nayta second
-      :valinta-arvo first
-      :muokattava? (constantly true)}
-     (valinnat/aikavalivalitsin tiedot/aikavalit valinnat-nyt)
-     {:nimi :tierekisteriosoite
-      :tyyppi :tierekisteriosoite
-      :pakollinen? false
-      :sijainti (r/wrap (:sijainti valinnat-nyt) #(e! (tiedot/->PaivitaSijainti %)))
-      :otsikko "Tierekisteriosoite"
-      :validoi [(fn [_ {sijainti :sijainti}] (when (nil? sijainti) "Tarkista tierekisteriosoite"))]}]
-    valinnat-nyt]))
+     {:luokka :horizontal
+      :muokkaa! #(e! (tiedot/->AsetaValinnat %))}
+     [{:nimi :urakka
+       :otsikko "Urakka"
+       :tyyppi :valinta
+       :pakollinen? true
+       :valinnat urakkavalinnat
+       :valinta-nayta second
+       :valinta-arvo first
+       :muokattava? (constantly true)}
+      (valinnat/aikavalivalitsin tiedot/aikavalit valinnat-nyt)
+      {:nimi :tierekisteriosoite
+       :tyyppi :tierekisteriosoite
+       :pakollinen? false
+       :sijainti (r/wrap (:sijainti valinnat-nyt) #(e! (tiedot/->PaivitaSijainti %)))
+       :otsikko "Tierekisteriosoite"
+       :validoi [(fn [_ {sijainti :sijainti}] (when (nil? sijainti) "Tarkista tierekisteriosoite"))]}]
+     valinnat-nyt]))
 
 (defn hakulomake
   [e! {valinnat-nyt :valinnat

@@ -22,6 +22,7 @@
         (assoc t :nopeusrajoitukset (mapv #(konv/pgobject->map % :nopeusrajoitus :long :matka :long) (:nopeusrajoitukset t)))))
 
 (defn hae-tietyoilmoitukset [db user {:keys [alkuaika loppuaika] :as hakuehdot} max-maara]
+  (println "---> hakuehdot" hakuehdot)
   (let [kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
                            db
                            user

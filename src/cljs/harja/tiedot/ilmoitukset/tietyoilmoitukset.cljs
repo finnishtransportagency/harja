@@ -62,8 +62,8 @@
 (extend-protocol t/Event
   AsetaValinnat
   (process-event [{valinnat :valinnat} app]
-    (hae-ilmoitukset
-      (assoc app :valinnat valinnat)))
+    (log "---> asetetaan valinnat")
+    (hae-ilmoitukset (assoc app :valinnat valinnat)))
 
   YhdistaValinnat
   (process-event [{ulkoisetvalinnat :ulkoisetvalinnat :as e} app]
@@ -76,7 +76,7 @@
     (let [tulos! (t/send-async! ->IlmoituksetHaettu)]
       (go
         (tulos!
-          (let [parametrit (select-keys valinnat [:alkuaika :loppuaika :sijainti :tierekisteri :urakka])]
+          (let [parametrit (select-keys valinnat [:alkuaika :loppuaika :sijainti :tierekisteriosoite :urakka])]
             {:ilmoitukset (async/<! (k/post! :hae-tietyoilmoitukset parametrit))}))))
     (assoc app :ilmoitukset nil))
 
