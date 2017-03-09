@@ -11,30 +11,16 @@
             [harja.loki :refer [tarkkaile! log]]
             [cljs.pprint :refer [pprint]]
             [tuck.core :refer [tuck send-value! send-async!]]
-            [harja.ui.yleiset :as yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+
-                                                  kuvaus-ja-avainarvopareja]]))
+            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+
+                                      kuvaus-ja-avainarvopareja]]
+            [harja.ui.valinnat :as valinnat]))
 
-(defn aikavalivalitsin [valinnat-nyt]
-  (let [alkuaika (:alkuaika valinnat-nyt)
-        alkuaikakentta {:nimi :alkuaika
-                        :otsikko "Alku"
-                        :tyyppi :pvm-aika
-                        :validoi [[:ei-tyhja "Anna alkuaika"]]}
-        loppuaikakentta {:nimi :loppuaika
-                         :otsikko "Loppu"
-                         :tyyppi :pvm-aika
-                         :validoi [[:ei-tyhja "Anna loppuaika"]
-                                   [:pvm-toisen-pvmn-jalkeen alkuaika "Loppuajan on oltava alkuajan jälkeen"]]}]
-    (lomake/ryhma
-      {:rivi? true}
-      alkuaikakentta
-      loppuaikakentta)))
 
 (defn ilmoitusten-hakuehdot [e! valinnat-nyt]
   [lomake/lomake
    {:luokka :horizontal
     :muokkaa! #(e! (tiedot/->AsetaValinnat %))}
-   [(aikavalivalitsin valinnat-nyt)]
+   [(valinnat/aikavalivalitsin tiedot/aikavalit valinnat-nyt)]
    valinnat-nyt])
 
 (defn hakulomake

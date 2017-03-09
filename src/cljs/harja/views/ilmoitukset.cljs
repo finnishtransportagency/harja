@@ -83,41 +83,13 @@
          [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)]])
      (remove domain/valitysviesti? kuittaukset))])
 
-(defn aikavalivalitsin [valinnat-nyt]
-  (let [vapaa-aikavali? (get-in valinnat-nyt [:vakioaikavali :vapaa-aikavali])
-        alkuaika (:alkuaika valinnat-nyt)
-        vakio-aikavalikentta {:nimi :vakioaikavali
-                              :otsikko "Ilmoitettu aikavälillä"
-                              :fmt :nimi
-                              :tyyppi :valinta
-                              :valinnat tiedot/aikavalit
-                              :valinta-nayta :nimi}
-        alkuaikakentta {:nimi :alkuaika
-                        :otsikko "Alku"
-                        :tyyppi :pvm-aika
-                        :validoi [[:ei-tyhja "Anna alkuaika"]]}
-        loppuaikakentta {:nimi :loppuaika
-                         :otsikko "Loppu"
-                         :tyyppi :pvm-aika
-                         :validoi [[:ei-tyhja "Anna loppuaika"]
-                                   [:pvm-toisen-pvmn-jalkeen alkuaika "Loppuajan on oltava alkuajan jälkeen"]]}]
-
-    (if vapaa-aikavali?
-      (lomake/ryhma
-        {:rivi? true}
-        vakio-aikavalikentta
-        alkuaikakentta
-        loppuaikakentta)
-      (lomake/ryhma
-        {:rivi? true}
-        vakio-aikavalikentta))))
 
 (defn ilmoitusten-hakuehdot [e! {:keys [aikavali urakka valitun-urakan-hoitokaudet] :as valinnat-nyt}]
   [lomake/lomake
    {:luokka :horizontal
     :muokkaa! #(e! (v/->AsetaValinnat %))}
 
-   [(aikavalivalitsin valinnat-nyt)
+   [(valinnat/aikavalivalitsin tiedot/aikavalit valinnat-nyt)
     {:nimi :hakuehto :otsikko "Hakusana"
      :placeholder "Hae tekstillä..."
      :tyyppi :string

@@ -30,11 +30,18 @@
 
 (defonce karttataso-ilmoitukset (atom false))
 
+(def aikavalit [{:nimi "1 tunnin ajalta" :tunteja 1}
+                {:nimi "12 tunnin ajalta" :tunteja 12}
+                {:nimi "1 päivän ajalta" :tunteja 24}
+                {:nimi "1 viikon ajalta" :tunteja 168}
+                {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
+
 (defonce ilmoitukset (atom {:ilmoitusnakymassa? false
                             :valittu-ilmoitus nil
                             :haku-kaynnissa? false
                             :ilmoitukset nil ;; haetut ilmoitukset
-                            :valinnat {:alkuaika (pvm/tuntia-sitten 1)
+                            :valinnat {:vakioaikavali (first aikavalit)
+                                       :alkuaika (pvm/tuntia-sitten 1)
                                        :loppuaika (pvm/nyt)}}))
 
 (defrecord AsetaValinnat [valinnat])
