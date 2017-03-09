@@ -225,7 +225,9 @@
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-paallystys-alku
                        "Päällystystä ei ole merkitty aloitetuksi."]
                       [:pvm-kentan-jalkeen :aikataulu-paallystys-alku
-                       "Valmistuminen ei voi olla ennen aloitusta."]]}
+                       "Valmistuminen ei voi olla ennen aloitusta."]
+                      [:ei-tyhja-jos-toinen-arvo-annettu :valmis-tiemerkintaan
+                       "Arvoa ei voi poistaa, koska kohde on merkitty valmiiksi tiemerkintään"]]}
            (when (= (:nakyma optiot) :paallystys)
              {:otsikko "Tie\u00ADmer\u00ADkin\u00ADnän suo\u00ADrit\u00ADta\u00ADva u\u00ADrak\u00ADka"
               :leveys 10 :nimi :suorittava-tiemerkintaurakka
