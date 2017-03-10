@@ -138,7 +138,7 @@
                        :nimi :tyotyypit-d
                        :tyyppi :checkbox-group
                        :vaihtoehdot (map first tiedot/tyotyyppi-vaihtoehdot-muut)
-                       :vaihtoehto-nayta tiedot/tyotyyppi-vaihtoehdot-map
+                       :vaihtoehto-nayta tiedot/tyotyyppi-vaihtoehdot-map ;; -> muu
                        :disabloi? (constantly false)})
         (lomake/ryhma "Työaika"
                       {:otsikko "Päivittäinen työaika"
@@ -157,8 +157,42 @@
                        :tyyppi :checkbox-group
                        :nimi :tietyon_vaikutussuunta
                        :vaihtoehdot (map first tiedot/vaikutussuunta-vaihtoehdot-map)
-                       :vaihtoehto-nayta tiedot/vaikutussuunta-vaihtoehdot-map
-                       })
-        (lomake/ryhma "Vaikutussuunta")
+                       :vaihtoehto-nayta tiedot/vaikutussuunta-vaihtoehdot-map}
+
+                      {:otsikko "Nopeusrajoitus 50 km/h, metriä" ;; -> pituus-pituus-kenttä
+                       :tyyppi :string
+                       :nimi :nopeusrajoitukset}
+                      {:otsikko "Muu rajoitus, ?? km/h, metriä" ;; -> km/h-kenttä, pituus-kenttä
+                       :tyyppi :string
+                       :nimi :nopeusrajoitukset-b}
+                      {:otsikko "Kulkurajoituksia" ;; ei sql schemassa?
+                       :tyyppi :checkbox-group
+                       :nimi :kulkurajoituksia
+                       :vaihtoehdot ["Ulottumarajoituksia" ;; ->max leveys, korkeus
+                                     "Painorajoitus"] ;; -> max paino
+
+                       }
+                      {:otsikko "Tien pinta työmaalla"
+                       :tyyppi :checkbox-group
+                       :nimi :tienpinnat
+                       :vaihtoehdot ["Päällystetty", "Jyrsitty", "Murske", "Muu, mikä"] ;; --> muu
+                       ;; ___ metriä
+                       }
+                      {:otsikko "Kiertotie"
+                       :tyyppi :checkbox-group
+                       :nimi :kiertotien-pinnat-ja-mutkaisuus ;; scheman mutkaisuus + pinnat combo
+
+                       :valinnat ["Loivat mutkat", "Jyrkät mutkat (erkanee yli 45° kulmassa)" "Päällystetty" "Murske" "Kantavuus rajoittaa", "___ tonnia"]
+                       ;; ___ metriä
+                       ;; __ tonnia
+
+                       }
+                      {:otsikko "Kulkurajoituksia"
+                       :type :checkbox-group
+                       :nimi :kulkurajoituksia
+                       :vaihtoehdot ["Liikennevalot" "Liikenteen ohjaaja" "Satunnaisia (aikataulu, jos yli 5 min)" "Aikataulu:"]}
+                      )
+        (lomake/ryhma "Kaistajärjestelyt"
+                      )
         (lomake/ryhma "Muuta")]
        ilmoitus]]]))
