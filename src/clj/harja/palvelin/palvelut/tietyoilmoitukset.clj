@@ -24,11 +24,9 @@
 (defn hae-tietyoilmoitukset [db user {:keys [alkuaika
                                              loppuaika
                                              urakka
-                                             tierekisteriosoite
                                              sijainti
                                              vain-kayttajan-luomat]
                                       :as hakuehdot} max-maara]
-  (println "---> hakuehdot" hakuehdot)
   (let [kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
                            db
                            user
@@ -41,7 +39,6 @@
                         :luojaid (when vain-kayttajan-luomat (:id user))
                         :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
                         :maxmaara max-maara}
-        _ (println "---> sql" sql-parametrit)
         tietyoilmoitukset (q-tietyoilmoitukset/hae-tietyoilmoitukset db sql-parametrit)
         tulos (mapv (fn [tietyoilmoitus] (muunna-tietyoilmoitus tietyoilmoitus))
                     tietyoilmoitukset)]
