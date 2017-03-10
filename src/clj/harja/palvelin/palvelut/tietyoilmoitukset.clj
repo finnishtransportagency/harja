@@ -37,7 +37,7 @@
                            nil nil nil nil #inst "1900-01-01" #inst "2100-01-01")
         sql-parametrit {:alku (konv/sql-timestamp alkuaika)
                         :loppu (konv/sql-timestamp loppuaika)
-                        :urakat (if urakka [urakka] kayttajan-urakat)
+                        :urakat (if urakka [(int urakka)] kayttajan-urakat)
                         :luojaid (when vain-kayttajan-luomat (:id user))
                         :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
                         :maxmaara max-maara}
