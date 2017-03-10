@@ -22,7 +22,7 @@
     [lomake/lomake
      {:luokka :horizontal
       :muokkaa! #(e! (tiedot/->AsetaValinnat %))}
-     [(valinnat/aikavalivalitsin "Käynnissä aikavälillä" tiedot/aikavalit valinnat-nyt)
+     [(valinnat/aikavalivalitsin "Ilmoitettu" tiedot/aikavalit valinnat-nyt)
       {:nimi :urakka
        :otsikko "Urakka"
        :tyyppi :valinta

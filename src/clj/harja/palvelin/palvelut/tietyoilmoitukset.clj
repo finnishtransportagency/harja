@@ -37,10 +37,10 @@
                            nil nil nil nil #inst "1900-01-01" #inst "2100-01-01")
         sql-parametrit {:alku (konv/sql-timestamp alkuaika)
                         :loppu (konv/sql-timestamp loppuaika)
-                        :urakat nil  #_(if urakka [urakka] kayttajan-urakat)
-                        ;; :luoja-id (when vain-kayttajan-luomat (:id user))
+                        :urakat (if urakka [urakka] kayttajan-urakat)
+                        :luojaid (when vain-kayttajan-luomat (:id user))
                         :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
-                        :max-maara max-maara}
+                        :maxmaara max-maara}
         _ (println "---> sql" sql-parametrit)
         tietyoilmoitukset (q-tietyoilmoitukset/hae-tietyoilmoitukset db sql-parametrit)
         tulos (mapv (fn [tietyoilmoitus] (muunna-tietyoilmoitus tietyoilmoitus))
