@@ -290,6 +290,15 @@
       :alue (maarittele-feature varustetoteuma valittu?
                                 (ulkoasu/varustetoteuman-ikoni)))))
 
+(defmethod asia-kartalle :tietyoilmoitus [tietyoilmoitus valittu?]
+  (let [ikoni (ulkoasu/tietyoilmoituksen-ikoni)]
+    (assoc tietyoilmoitus
+      :type :tietyoilmoitus
+      :nimi (or (:tooltip tietyoilmoitus) "Tietyoilmoitus")
+      :selite {:teksti "Tietyoilmoitus"
+               :img    ikoni}
+      :alue (maarittele-feature tietyoilmoitus valittu? (ulkoasu/tietyoilmoituksen-ikoni)))))
+
 
 (defn paattele-turpon-ikoni [turpo]
   (let [kt (:korjaavattoimenpiteet turpo)]

@@ -112,7 +112,9 @@
    :ei-ok-tarkastus-urakoitsija "oranssi"
    :tarkastus-vakiohavainnolla "keltainen"
    :varustetoteuma "tummansininen"
-   :yllapito "pinkki"})
+   :yllapito "pinkki"
+   
+   :tietyoilmoitus "oranssi"})
 
 (def viivojen-varit
   {:yllapito-aloitettu puhtaat/keltainen
@@ -264,6 +266,9 @@
 
 (defn varustetoteuman-ikoni []
   (pinni-ikoni (:varustetoteuma ikonien-varit)))
+
+(defn tietyoilmoituksen-ikoni []
+  (pinni-ikoni (:tietyoilmoitus ikonien-varit)))
 
 (defn tarkastuksen-ikoni [valittu? ok? vakiohavainnot reitti? tekija]
   (cond

@@ -30,8 +30,8 @@
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                          (nav/vaihda-kartan-koko! :M)
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
-                           {:ilmoitus {:toiminto (fn [ilmoitus-infopaneelista]
-                                                   (e! (tiedot/->ValitseIlmoitus ilmoitus-infopaneelista)))
+                           {:tietyoilmoitus {:toiminto (fn [tietyoilmoitus-infopaneelista]
+                                                   (e! (tiedot/->ValitseIlmoitus tietyoilmoitus-infopaneelista)))
                                        :teksti "Valitse ilmoitus"}}))
                       #(do
                          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
