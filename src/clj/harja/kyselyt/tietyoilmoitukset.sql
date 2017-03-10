@@ -66,7 +66,9 @@ SELECT
   tti.liikenteenohjaaja,
   tti.huomautukset
 FROM tietyoilmoitus tti
- WHERE (:alku BETWEEN alku AND loppu) OR (:loppu BETWEEN alku AND loppu)
-  AND (tti.urakka IS NULL OR tti.urakka IN (:urakat))
+WHERE (:alku BETWEEN alku AND loppu) OR
+      (:loppu BETWEEN alku AND loppu) AND
+      (tti.urakka IS NULL OR tti.urakka IN (:urakat)) AND
+      (:sijainti :: GEOMETRY IS NULL OR st_dwithin(:sijainti, sijainti, 100))
 ORDER BY tti.luotu DESC
 LIMIT :max-maara :: INTEGER;
