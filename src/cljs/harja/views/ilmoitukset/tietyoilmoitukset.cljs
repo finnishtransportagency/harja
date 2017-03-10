@@ -23,24 +23,23 @@
   (e! (tiedot/->HaeKayttajanUrakat @hallintayksikot-tiedot/hallintayksikot))
   (e! (tiedot/->YhdistaValinnat @tiedot/ulkoisetvalinnat))
   (komp/luo
-    (komp/lippu tiedot/karttataso-ilmoitukset)
+    (komp/lippu tiedot/karttataso-tietyoilmoitukset)
     (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (tiedot/->ValitseIlmoitus i))))
     (komp/sisaan-ulos #(do
                          (notifikaatiot/pyyda-notifikaatiolupa)
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                          (nav/vaihda-kartan-koko! :M)
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
-                           {:ilmoitus {:toiminto (fn [ilmoitus-infopaneelista]
-                                                   (e! (tiedot/->ValitseIlmoitus ilmoitus-infopaneelista)))
+                           {:tietyoilmoitus {:toiminto (fn [tietyoilmoitus-infopaneelista]
+                                                   (e! (tiedot/->ValitseIlmoitus tietyoilmoitus-infopaneelista)))
                                        :teksti "Valitse ilmoitus"}}))
                       #(do
                          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
                          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
     (fn [e! {valittu-ilmoitus :valittu-ilmoitus kayttajan-urakat :kayttajan-urakat :as app}]
       [:span
-       [ui-debug/debug @tiedot/ilmoitukset]
+       [ui-debug/debug @tiedot/tietyoilmoitukset]
        [kartta/kartan-paikka]
-
 
        (if valittu-ilmoitus
          [tietyoilmoituslomake/lomake e! valittu-ilmoitus kayttajan-urakat]

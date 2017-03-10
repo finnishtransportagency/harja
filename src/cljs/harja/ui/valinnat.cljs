@@ -10,7 +10,8 @@
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.fmt :as fmt]
             [clojure.string :as str]
-            [cljs-time.core :as t]))
+            [cljs-time.core :as t]
+            [harja.ui.lomake :as lomake]))
 
 (defn urakan-sopimus
   [ur valittu-sopimusnumero-atom valitse-fn]
@@ -282,3 +283,32 @@
 
                           :valitse-fn #(reset! valittu-varustetoteumatyyppi-atom %)}
      varusteet/varustetoteumatyypit]]])
+
+(defn aikavalivalitsin [otsikko aikavalit valinnat-nyt]
+  (let [vapaa-aikavali? (get-in valinnat-nyt [:vakioaikavali :vapaa-aikavali])
+        alkuaika (:alkuaika valinnat-nyt)
+        vakio-aikavalikentta {:nimi :vakioaikavali
+                              :otsikko otsikko
+                              :fmt :nimi
+                              :tyyppi :valinta
+                              :valinnat aikavalit
+                              :valinta-nayta :nimi}
+        alkuaikakentta {:nimi :alkuaika
+                        :otsikko "Alku"
+                        :tyyppi :pvm-aika
+                        :validoi [[:ei-tyhja "Anna alkuaika"]]}
+        loppuaikakentta {:nimi :loppuaika
+                         :otsikko "Loppu"
+                         :tyyppi :pvm-aika
+                         :validoi [[:ei-tyhja "Anna loppuaika"]
+                                   [:pvm-toisen-pvmn-jalkeen alkuaika "Loppuajan on oltava alkuajan jälkeen"]]}]
+
+    (if vapaa-aikavali?
+      (lomake/ryhma
+        {:rivi? true}
+        vakio-aikavalikentta
+        alkuaikakentta
+        loppuaikakentta)
+      (lomake/ryhma
+        {:rivi? true}
+        vakio-aikavalikentta))))

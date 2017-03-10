@@ -21,7 +21,12 @@
         (konv/array->vec t :nopeusrajoitukset)
         (assoc t :nopeusrajoitukset (mapv #(konv/pgobject->map % :nopeusrajoitus :long :matka :long) (:nopeusrajoitukset t)))))
 
-(defn hae-tietyoilmoitukset [db user {:keys [alkuaika loppuaika] :as hakuehdot} max-maara]
+(defn hae-tietyoilmoitukset [db user {:keys [alkuaika
+                                             loppuaika
+                                             urakka
+                                             sijainti
+                                             vain-kayttajan-luomat]
+                                      :as hakuehdot} max-maara]
   (let [kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
                            db
                            user
@@ -30,11 +35,12 @@
                            nil nil nil nil #inst "1900-01-01" #inst "2100-01-01")
         sql-parametrit {:alku (konv/sql-timestamp alkuaika)
                         :loppu (konv/sql-timestamp loppuaika)
-                        :urakat kayttajan-urakat
-                        :max-maara max-maara}
+                        :urakat (if urakka [(int urakka)] kayttajan-urakat)
+                        :luojaid (when vain-kayttajan-luomat (:id user))
+                        :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
+                        :maxmaara max-maara}
         tietyoilmoitukset (q-tietyoilmoitukset/hae-tietyoilmoitukset db sql-parametrit)
-        tulos (mapv (fn [tietyoilmoitus] (muunna-tietyoilmoitus tietyoilmoitus))
-                    tietyoilmoitukset)]
+        tulos (mapv (fn [tietyoilmoitus] (muunna-tietyoilmoitus tietyoilmoitus)) tietyoilmoitukset)]
     tulos))
 
 (defrecord Tietyoilmoitukset []
