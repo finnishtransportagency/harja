@@ -45,17 +45,56 @@
        :palstoja 1}]
      valinnat-nyt]))
 
-(defn tietyoilmoituksen-vetolaatikko [tietyoilmoitus]
+(defn tietyoilmoituksen-vetolaatikko [e!
+                                      {haetut-ilmoitukset :tietyoilmoitukset
+                                       ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
+                                       :as app}
+                                      tietyoilmoitus]
   (log "---> " (pr-str tietyoilmoitus))
   [:div
-   [:h4 "Tiedot koko kohteesta"]
    [lomake/lomake
-    {:luokka :horizontal}
+    {:otsikko "Tiedot koko kohteesta"}
     [{:otsikko "Urakka"
       :nimi :urakka_nimi
       :hae (comp fmt/lyhennetty-urakan-nimi :urakka_nimi)
+      :muokattava? (constantly false)}
+     {:otsikko "Urakoitsijan yhteyshenkilo"
+      :nimi :urakoitsijan_yhteyshenkilo
+      :hae #(str
+              (:urakoitsijayhteyshenkilo_etunimi %) " "
+              (:urakoitsijayhteyshenkilo_sukunimi %) ", "
+              (:urakoitsijayhteyshenkilo_matkapuhelin %) ", "
+              (:urakoitsijayhteyshenkilo_sahkoposti %))
       :muokattava? (constantly false)}]
-    tietyoilmoitus]])
+    tietyoilmoitus]
+   [grid
+    {:otsikko "Työvaiheet"
+     :tyhja "Ei löytyneitä tietoja"
+     :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa? #(e! (tiedot/->ValitseIlmoitus %)))
+     :piilota-toiminnot true
+     :max-rivimaara 500
+     :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
+    [{:otsikko "Urakka" :nimi :urakka_nimi :leveys 5
+      :hae (comp fmt/lyhennetty-urakan-nimi :urakka_nimi)}
+     {:otsikko "Tie" :nimi :tie
+      :hae #(str (:tr_numero % "(ei tien numeroa)") " " (:tien_nimi % "(ei tien nimeä)"))
+      :leveys 4}
+     {:otsikko "Ilmoitettu" :nimi :ilmoitettu
+      :hae (comp pvm/pvm-aika :alku)
+      :leveys 2}
+     {:otsikko "Alkupvm" :nimi :alku
+      :hae (comp pvm/pvm-aika :alku)
+      :leveys 2}
+     {:otsikko "Loppupvm" :nimi :loppu
+      :hae (comp pvm/pvm-aika :loppu) :leveys 2}
+     {:otsikko "Työn tyyppi" :nimi :tyotyypit
+      :hae #(s/join ", " (->> % :tyotyypit (map :tyyppi)))
+      :leveys 4}
+     {:otsikko "Ilmoittaja" :nimi :ilmoittaja
+      :hae #(str (:ilmoittaja_etunimi %) " " (:ilmoittaja_sukunimi %))
+      :leveys 7}]
+    ;; todo: hae työvaiheet ilmoituksen sisältä
+    ]])
 
 (defn hakulomake
   [e! {valinnat-nyt :valinnat
@@ -75,7 +114,7 @@
       :max-rivimaara 500
       :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."
       :vetolaatikot (into {}
-                          (map (juxt :id (fn [rivi] [tietyoilmoituksen-vetolaatikko rivi])))
+                          (map (juxt :id (fn [rivi] [tietyoilmoituksen-vetolaatikko e! app rivi])))
                           haetut-ilmoitukset)}
      [{:tyyppi :vetolaatikon-tila :leveys 1}
       {:otsikko "Urakka" :nimi :urakka_nimi :leveys 5
