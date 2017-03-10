@@ -22,7 +22,7 @@
     [lomake/lomake
      {:luokka :horizontal
       :muokkaa! #(e! (tiedot/->AsetaValinnat %))}
-     [(valinnat/aikavalivalitsin tiedot/aikavalit valinnat-nyt)
+     [(valinnat/aikavalivalitsin "Käynnissä aikavälillä" tiedot/aikavalit valinnat-nyt)
       {:nimi :urakka
        :otsikko "Urakka"
        :tyyppi :valinta
@@ -45,6 +45,10 @@
        :palstoja 1}]
      valinnat-nyt]))
 
+(defn tietyoilmoituksen-vetolaatikko [tietyoilmoitus]
+  [:div
+   "Testi"])
+
 (defn hakulomake
   [e! {valinnat-nyt :valinnat
        haetut-ilmoitukset :ilmoitukset
@@ -61,12 +65,19 @@
       :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa? #(e! (tiedot/->ValitseIlmoitus %)))
       :piilota-toiminnot true
       :max-rivimaara 500
-      :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
-     [{:otsikko "Urakka" :nimi :urakka_nimi :leveys 5
+      :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."
+      :vetolaatikot (into {}
+                          (map (juxt :id (fn [rivi] [tietyoilmoituksen-vetolaatikko rivi])))
+                          haetut-ilmoitukset)}
+     [{:tyyppi :vetolaatikon-tila :leveys 1}
+      {:otsikko "Urakka" :nimi :urakka_nimi :leveys 5
        :hae (comp fmt/lyhennetty-urakan-nimi :urakka_nimi)}
       {:otsikko "Tie" :nimi :tie
        :hae #(str (:tr_numero % "(ei tien numeroa)") " " (:tien_nimi % "(ei tien nimeä)"))
        :leveys 4}
+      {:otsikko "Ilmoitettu" :nimi :ilmoitettu
+       :hae (comp pvm/pvm-aika :alku)
+       :leveys 2}
       {:otsikko "Alkupvm" :nimi :alku
        :hae (comp pvm/pvm-aika :alku)
        :leveys 2}

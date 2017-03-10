@@ -284,11 +284,11 @@
                           :valitse-fn #(reset! valittu-varustetoteumatyyppi-atom %)}
      varusteet/varustetoteumatyypit]]])
 
-(defn aikavalivalitsin [aikavalit valinnat-nyt]
+(defn aikavalivalitsin [otsikko aikavalit valinnat-nyt]
   (let [vapaa-aikavali? (get-in valinnat-nyt [:vakioaikavali :vapaa-aikavali])
         alkuaika (:alkuaika valinnat-nyt)
         vakio-aikavalikentta {:nimi :vakioaikavali
-                              :otsikko "Ilmoitettu aikavälillä"
+                              :otsikko otsikko
                               :fmt :nimi
                               :tyyppi :valinta
                               :valinnat aikavalit

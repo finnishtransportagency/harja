@@ -89,7 +89,7 @@
    {:luokka :horizontal
     :muokkaa! #(e! (v/->AsetaValinnat %))}
 
-   [(valinnat/aikavalivalitsin tiedot/aikavalit valinnat-nyt)
+   [(valinnat/aikavalivalitsin "Ilmoitettu aikavälillä" tiedot/aikavalit valinnat-nyt)
     {:nimi :hakuehto :otsikko "Hakusana"
      :placeholder "Hae tekstillä..."
      :tyyppi :string
