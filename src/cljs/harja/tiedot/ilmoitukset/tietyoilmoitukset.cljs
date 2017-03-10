@@ -102,3 +102,43 @@
   KayttajanUrakatHaettu
   (process-event [{urakat :urakat} app]
     (assoc app :kayttajan-urakat urakat)))
+
+(def tyotyyppi-vaihtoehdot-tienrakennus
+  [["Alikulkukäytävän rak." "Alikulkukäytävän rakennus"]
+   ["Kevyenliik. väylän rak." "Kevyenliikenteenväylän rakennus"]
+   ["Tienrakennus" "Tienrakennus"]])
+
+(def tyotyyppi-vaihtoehdot-huolto
+  [["Tienvarsilaitteiden huolto" "Tienvarsilaitteiden huolto"]
+   ["Vesakonraivaus/niittotyö" "Vesakonraivaus / niittotyö"]
+   ["Rakenteen parannus" "Rakenteen parannus"]
+   ["Tutkimus/mittaus" "Tutkimus / mittaus"]])
+
+(def tyotyyppi-vaihtoehdot-asennus
+  [
+   ["Jyrsintä-/stabilointityö" "Jyrsintä- / stabilointityö"]
+   ["Kaapelityö" "Kaapelityö"]
+   ["Kaidetyö" "Kaidetyö"]
+   ["Päällystystyö" "Päällystystyö"]
+   ["Räjäytystyö" "Räjäytystyö"]
+   ["Siltatyö" "Siltatyö"]
+   ["Tasoristeystyö" "Tasoristeystyö"]
+   ["Tiemerkintätyö" "Tiemerkintätyö"]
+   ["Viimeistely" "Viimeistely"]
+   ["Valaistustyö" "Valaistustyö"]])
+
+(def tyotyyppi-vaihtoehdot-muut [["Liittymä- ja kaistajärj." "Liittymä- ja kaistajärjestely"]
+                                 ["Silmukka-anturin asent." "Silmukka-anturin asentaminen"]
+                                 ["Muu, mikä?" "Muu, mikä?"]])
+
+(def tyotyyppi-vaihtoehdot-map (into {} (concat
+                                         tyotyyppi-vaihtoehdot-tienrakennus
+                                         tyotyyppi-vaihtoehdot-huolto
+                                         tyotyyppi-vaihtoehdot-asennus
+                                         tyotyyppi-vaihtoehdot-muut)))
+
+(def vaikutussuunta-vaihtoehdot-map {
+                             "ajokaistaSuljettu" "Yksi ajokaista suljettu"
+                             "ajorataSuljettu" "Yksi ajorata suljettu"
+                             "tieSuljettu" "Tie suljettu" ;; XX esiintyy meidän kantaschemassa mutta ei rautalangassa, kumpi oikein?
+                             "muu" "Muu, mikä" })
