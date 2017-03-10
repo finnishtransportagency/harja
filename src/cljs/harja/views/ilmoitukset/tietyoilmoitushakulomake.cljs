@@ -46,8 +46,16 @@
      valinnat-nyt]))
 
 (defn tietyoilmoituksen-vetolaatikko [tietyoilmoitus]
+  (log "---> " (pr-str tietyoilmoitus))
   [:div
-   "Testi"])
+   [:h4 "Tiedot koko kohteesta"]
+   [lomake/lomake
+    {:luokka :horizontal}
+    [{:otsikko "Urakka"
+      :nimi :urakka_nimi
+      :hae (comp fmt/lyhennetty-urakan-nimi :urakka_nimi)
+      :muokattava? (constantly false)}]
+    tietyoilmoitus]])
 
 (defn hakulomake
   [e! {valinnat-nyt :valinnat
