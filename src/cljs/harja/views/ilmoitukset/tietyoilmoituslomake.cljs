@@ -21,6 +21,45 @@
                       [:tyovaihe "Työvaihetta koskeva ilmoitus"],
                       [:paattyminen "Työn päättymisilmoitus"]])
 
+(def tyotyyppi-vaihtoehdot-tienrakennus
+  [["Alikulkukäytävän rak." "Alikulkukäytävän rakennus"]
+   ["Kevyenliik. väylän rak." "Kevyenliikenteenväylän rakennus"]
+   ["Tienrakennus" "Tienrakennus"]])
+
+(def tyotyyppi-vaihtoehdot-huolto
+  [["Tienvarsilaitteiden huolto" "Tienvarsilaitteiden huolto"]
+   ["Vesakonraivaus/niittotyö" "Vesakonraivaus / niittotyö"]
+   ["Rakenteen parannus" "Rakenteen parannus"]
+   ["Tutkimus/mittaus" "Tutkimus / mittaus"]])
+
+(def tyotyyppi-vaihtoehdot-asennus
+  [
+   ["Jyrsintä-/stabilointityö" "Jyrsintä- / stabilointityö"]
+   ["Kaapelityö" "Kaapelityö"]
+   ["Kaidetyö" "Kaidetyö"]
+   ["Päällystystyö" "Päällystystyö"]
+   ["Räjäytystyö" "Räjäytystyö"]
+   ["Siltatyö" "Siltatyö"]
+   ["Tasoristeystyö" "Tasoristeystyö"]
+   ["Tiemerkintätyö" "Tiemerkintätyö"]
+   ["Viimeistely" "Viimeistely"]
+   ["Valaistustyö" "Valaistustyö"]])
+
+(def tyotyyppi-vaihtoehdot-muut [["Liittymä- ja kaistajärj." "Liittymä- ja kaistajärjestely"]
+                                 ["Silmukka-anturin asent." "Silmukka-anturin asentaminen"]
+                                 ["Muu, mikä?" "Muu, mikä?"]])
+
+(def tyotyyppi-vaihtoehdot-map (into {} (concat
+                                         tyotyyppi-vaihtoehdot-tienrakennus
+                                         tyotyyppi-vaihtoehdot-huolto
+                                         tyotyyppi-vaihtoehdot-asennus
+                                         tyotyyppi-vaihtoehdot-muut)))
+
+(def vaikutussuunta-vaihtoehdot-map {
+                             "ajokaistaSuljettu" "Yksi ajokaista suljettu"
+                             "ajorataSuljettu" "Yksi ajorata suljettu"
+                             "tieSuljettu" "Tie suljettu" ;; XX esiintyy meidän kantaschemassa mutta ei rautalangassa, kumpi oikein?
+                             "muu" "Muu, mikä" })
 
 (defn- projekti-valinnat [urakat]
   (partition 2
@@ -33,6 +72,11 @@
 
 (defn lomake [e! ilmoitus kayttajan-urakat]
   (fn [e! ilmoitus]
+    #_(log (pr-str {:otsikko "Kaistajärjestelyt"
+                  :tyyppi :checkbox-group
+                  :vaihtoehdot (keys vaikutussuunta-vaihtoehdot-map)
+                  :vaihtoehto-nayta vaikutussuunta-vaihtoehdot-map
+                  }))
     [:div
      [:span
       [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (tiedot/->PoistaIlmoitusValinta))]
@@ -105,10 +149,61 @@
                        :tyyppi :positiivinen-numero
                        :hae #(pvm-vali-paivina (:alku %) (:loppu %))})
 
-        (lomake/ryhma "Työvaihe")
-        (lomake/ryhma "Työn tyyppi")
-        (lomake/ryhma "Työaika")
-        (lomake/ryhma "Vaikutukset liikenteelle")
+        (lomake/ryhma "Työvaihe"
+
+                      {:otsikko "Työn alkupiste (osoite, paikannimi)" :nimi :alkusijainnin_kuvaus_b
+                       :tyyppi :string}
+                      {:otsikko "Työn aloituspvm" :nimi :alku_b :tyyppi :pvm}
+                      {:otsikko "Työn loppupiste (osoite, paikannimi)" :nimi :loppusijainnin_kuvaus_b
+                       :tyyppi :string}
+                      {:otsikko "Työn lopetuspvm" :nimi :loppu_b :tyyppi :pvm}
+                      {:otsikko "Työn pituus" :nimi :tyon-pituus_b
+                       :tyyppi :positiivinen-numero
+                       :hae #(pvm-vali-paivina (:alku %) (:loppu %))}
+                      )
+        (lomake/ryhma "Työn tyyppi"
+                      {:otsikko "Tienrakennustyöt"
+                       :nimi :tyotyypit-a
+                       :tyyppi :checkbox-group
+                       :vaihtoehdot (map first tyotyyppi-vaihtoehdot-tienrakennus)
+                       :vaihtoehto-nayta tyotyyppi-vaihtoehdot-map
+                       :disabloi? (constantly false)}
+                      {:otsikko "Huolto- ja ylläpitotyöt"
+                       :nimi :tyotyypit-b
+                       :tyyppi :checkbox-group
+                       :vaihtoehdot (map first tyotyyppi-vaihtoehdot-huolto)
+                       :vaihtoehto-nayta tyotyyppi-vaihtoehdot-map
+                       :disabloi? (constantly false)}
+                      {:otsikko "Asennustyöt"
+                       :nimi :tyotyypit-c
+                       :tyyppi :checkbox-group
+                       :vaihtoehdot (map first tyotyyppi-vaihtoehdot-asennus)
+                       :vaihtoehto-nayta tyotyyppi-vaihtoehdot-map
+                       :disabloi? (constantly false)}
+                      {:otsikko "Muut"
+                       :nimi :tyotyypit-d
+                       :tyyppi :checkbox-group
+                       :vaihtoehdot (map first tyotyyppi-vaihtoehdot-muut)
+                       :vaihtoehto-nayta tyotyyppi-vaihtoehdot-map
+                       :disabloi? (constantly false)})
+        (lomake/ryhma "Työaika"
+                      {:otsikko "Päivittäinen työaika"
+                       :nimi :tyoaika
+                       :tyyppi :string
+                       :placeholder "(esim 8-16)"})
+        (lomake/ryhma "Vaikutukset liikenteelle"
+                      {:otsikko "Arvioitu viivytys normaalissa liikenteessä (min)"
+                       :nimi :viivastys_normaali_liikenteessa
+                       :tyyppi :positiivinen-numero}
+                      {:otsikko "Arvioitu viivytys ruuhka-aikana (min)"
+                       :nimi :viivastys_ruuhka_aikana
+                       :tyyppi :positiivinen-numero
+                       }
+                      {:otsikko "Kaistajärjestelyt"
+                       :tyyppi :checkbox-group
+                       :vaihtoehdot (into [] (keys vaikutussuunta-vaihtoehdot-map))
+                       :vaihtoehto-nayta vaikutussuunta-vaihtoehdot-map
+                       })
         (lomake/ryhma "Vaikutussuunta")
         (lomake/ryhma "Muuta")]
        ilmoitus]]]))
