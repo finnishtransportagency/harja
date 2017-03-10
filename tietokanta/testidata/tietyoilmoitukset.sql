@@ -121,7 +121,7 @@ VALUES (
    FROM kayttaja
    WHERE sahkoposti = 'tero.toripolliisi@example.com'),
   '{"(Tienrakennus,Rakennetaan tietä)"}',
-  st_makepoint(452935, 7186873),
+  st_makeline(st_makepoint(432725.469, 7214041.876), st_makepoint(433437.969, 7214482.376)),
   20,
   1,
   1,
