@@ -55,8 +55,6 @@
 
 (defonce karttataso-ilmoitukset (atom false))
 
-
-
 (defrecord AsetaValinnat [valinnat])
 (defrecord YhdistaValinnat [ulkoisetvalinnat])
 (defrecord HaeIlmoitukset [])
