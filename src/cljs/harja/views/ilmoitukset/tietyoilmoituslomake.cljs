@@ -28,12 +28,8 @@
                (mapv (comp str :id) urakat) (mapv :nimi urakat))))
 
 (defn- pvm-vali-paivina [p1 p2]
-
-  (let [pp1 (pvm/->pvm p1)
-        pp2 (pvm/->pvm p2)]
-    (log "pvm-vali-paivina kutsuttu" p1 p2 pp1 pp2)
-    (when (and pp1 pp2)
-      (/ (Math/abs (- p1 p2)) (* 1000 60 60 24)))))
+  (when (and p1 p2)
+    (.toFixed (/ (Math/abs (- p1 p2)) (* 1000 60 60 24)) 2)))
 
 (defn lomake [e! ilmoitus kayttajan-urakat]
   (fn [e! ilmoitus]
