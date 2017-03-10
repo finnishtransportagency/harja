@@ -10,6 +10,7 @@
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat-kartalla
              :as laatupoikkeamat]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
+            [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tietyoilmoitukset]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.urakka.turvallisuuspoikkeamat
              :as turvallisuuspoikkeamat]
@@ -41,6 +42,7 @@
     :laatupoikkeamat
     :turvallisuus
     :ilmoitukset
+    :tietyoilmoitukset
     :yks-hint-toteumat
     :kok-hint-toteumat
     :varusteet
@@ -157,6 +159,7 @@
    :sillat sillat/sillat-kartalla
    :turvallisuus turvallisuuspoikkeamat/turvallisuuspoikkeamat-kartalla
    :ilmoitukset ilmoitukset/ilmoitukset-kartalla
+   :tietyoilmoitukset tietyoilmoitukset/tietyoilmoitukset-kartalla
    :tarkastusreitit tarkastukset/tarkastusreitit-kartalla
    :laatupoikkeamat laatupoikkeamat/laatupoikkeamat-kartalla
    :yks-hint-toteumat yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla
@@ -218,6 +221,7 @@
        :laatupoikkeamat (taso :laatupoikkeamat)
        :turvallisuus (taso :turvallisuus)
        :ilmoitukset (taso :ilmoitukset)
+       :tietyoilmoitukset (taso :tietyoilmoitukset)
        :yks-hint-toteumat (taso :yks-hint-toteumat)
        :kok-hint-toteumat (taso :kok-hint-toteumat)
        :varusteet (taso :varusteet)
@@ -248,6 +252,7 @@
    :laatupoikkeamat laatupoikkeamat/karttataso-laatupoikkeamat
    :turvallisuus turvallisuuspoikkeamat/karttataso-turvallisuuspoikkeamat
    :ilmoitukset ilmoitukset/karttataso-ilmoitukset
+   :tietyoilmoitukset tietyoilmoitukset/karttataso-tietyoilmoitukset
    :yks-hint-toteumat yksikkohintaiset-tyot/karttataso-yksikkohintainen-toteuma
    :kok-hint-toteumat kokonaishintaiset-tyot/karttataso-kokonaishintainen-toteuma
    :varusteet varusteet/karttataso-varustetoteuma

@@ -14,6 +14,12 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
+(def aikavalit [{:nimi "1 tunnin ajalta" :tunteja 1}
+                {:nimi "12 tunnin ajalta" :tunteja 12}
+                {:nimi "1 päivän ajalta" :tunteja 24}
+                {:nimi "1 viikon ajalta" :tunteja 168}
+                {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
+
 (defonce ulkoisetvalinnat
          (reaction {:voi-hakea? true
                     :hallintayksikko (:id @nav/valittu-hallintayksikko)
@@ -23,6 +29,25 @@
                     :urakkatyyppi (:arvo @nav/urakkatyyppi)
                     :hoitokausi @tiedot-urakka/valittu-hoitokausi}))
 
+
+(defonce tietyoilmoitukset (atom {:ilmoitusnakymassa? false
+                                  :valittu-ilmoitus nil
+                                  :haku-kaynnissa? false
+                                  :tietyoilmoitukset nil
+                                  :valinnat {:vakioaikavali (first aikavalit)
+                                             :alkuaika (pvm/tuntia-sitten 1)
+                                             :loppuaika (pvm/nyt)}}))
+
+(defonce karttataso-tietyoilmoitukset (atom false))
+
+(defonce tietyoilmoitukset-kartalla
+         (reaction
+           (let [{:keys [tietyoilmoitukset valittu-ilmoitus]} @tietyoilmoitukset]
+             (when @karttataso-tietyoilmoitukset
+               (kartalla-esitettavaan-muotoon
+                 (map #(assoc % :tyyppi-kartalla :tietyoilmoitus) tietyoilmoitukset)
+                 #(= (:id %) (:id valittu-ilmoitus)))))))
+
 (defn- nil-hylkiva-concat [akku arvo]
   (if (or (nil? arvo) (nil? akku))
     nil
@@ -30,19 +55,7 @@
 
 (defonce karttataso-ilmoitukset (atom false))
 
-(def aikavalit [{:nimi "1 tunnin ajalta" :tunteja 1}
-                {:nimi "12 tunnin ajalta" :tunteja 12}
-                {:nimi "1 päivän ajalta" :tunteja 24}
-                {:nimi "1 viikon ajalta" :tunteja 168}
-                {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
 
-(defonce ilmoitukset (atom {:ilmoitusnakymassa? false
-                            :valittu-ilmoitus nil
-                            :haku-kaynnissa? false
-                            :ilmoitukset nil
-                            :valinnat {:vakioaikavali (first aikavalit)
-                                       :alkuaika (pvm/tuntia-sitten 1)
-                                       :loppuaika (pvm/nyt)}}))
 
 (defrecord AsetaValinnat [valinnat])
 (defrecord YhdistaValinnat [ulkoisetvalinnat])
@@ -80,13 +93,13 @@
                                                   :sijainti
                                                   :urakka
                                                   :vain-kayttajan-luomat])]
-            {:ilmoitukset (async/<! (k/post! :hae-tietyoilmoitukset parametrit))}))))
-    (assoc app :ilmoitukset nil))
+            {:tietyoilmoitukset (async/<! (k/post! :hae-tietyoilmoitukset parametrit))}))))
+    (assoc app :tietyoilmoitukset nil))
 
   IlmoituksetHaettu
   (process-event [vastaus {valittu :valittu-ilmoitus :as app}]
-    (let [ilmoitukset (:ilmoitukset (:tulokset vastaus))]
-      (assoc app :ilmoitukset ilmoitukset)))
+    (let [ilmoitukset (:tietyoilmoitukset (:tulokset vastaus))]
+      (assoc app :tietyoilmoitukset ilmoitukset)))
 
   ValitseIlmoitus
   (process-event [{ilmoitus :ilmoitus} app]

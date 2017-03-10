@@ -299,7 +299,6 @@
                :img    ikoni}
       :alue (maarittele-feature tietyoilmoitus valittu? (ulkoasu/tietyoilmoituksen-ikoni)))))
 
-
 (defn paattele-turpon-ikoni [turpo]
   (let [kt (:korjaavattoimenpiteet turpo)]
     (if (empty? kt)

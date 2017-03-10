@@ -51,7 +51,7 @@
 
 (defn hakulomake
   [e! {valinnat-nyt :valinnat
-       haetut-ilmoitukset :ilmoitukset
+       haetut-ilmoitukset :tietyoilmoitukset
        ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
        kayttajan-urakat :kayttajan-urakat
        :as app}]

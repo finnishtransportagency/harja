@@ -292,4 +292,4 @@
 
        "Tietyö"
        :tietyo
-       [tuck tietyoilmoitukset-tiedot/ilmoitukset tietyoilmoitukset-view/ilmoitukset*]])))
+       [tuck tietyoilmoitukset-tiedot/tietyoilmoitukset tietyoilmoitukset-view/ilmoitukset*]])))
