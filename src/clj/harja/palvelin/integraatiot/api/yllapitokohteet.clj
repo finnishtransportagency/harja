@@ -34,6 +34,10 @@
   - Määrämuutoksilla seurataan yksittäisen kohteen kuluja rivitasolla. Yksittäinen rivi sisältää tiedon päällysteen mm.
     tyypistä, työstä, määristä sekä yksikkö hinnasta. Rajapintakutsu ylikirjoittaa koko kohteen taloudellisen osan,
     joten idea on, että rajapinnan kautta annetaan aina kokonaisena tiedot.
+
+  TARKASTUSTEN KIRJAUS KOHTEELLE
+  - Ylläpitokohteille on mahdollista kirjata mm. seuraavan tyyppisiä tarkastuksia: katselmus, pistokoe,
+    vastaanottotarkastus, takuutarkastus. Tarkastukset voidaan myös poistaa erillisen rajapinnan kautta.
   "
 
   (:require [com.stuartsierra.component :as component]
@@ -57,7 +61,10 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as yllapitokohteet]
-            [harja.kyselyt.paallystys :as paallystys-q])
+            [harja.kyselyt.paallystys :as paallystys-q]
+            [harja.kyselyt.tarkastukset :as tarkastukset-q]
+            [harja.palvelin.integraatiot.api.kasittely.tarkastukset :as tarkastukset]
+            [harja.palvelin.integraatiot.api.kasittely.tiemerkintatoteumat :as tiemerkintatoteumat])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -102,7 +109,7 @@
         kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid kohde-id})))
         alikohteet (mapv #(-> (:alikohde %)
                               (assoc :ulkoinen-id (get-in % [:alikohde :tunniste :id]))
-                              (assoc-in [:sijainti :numero ] kohteen-tienumero))
+                              (assoc-in [:sijainti :numero] kohteen-tienumero))
                          (:alikohteet kohde))]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (vaadi-kohde-kuuluu-urakkaan db urakka-id urakan-tyyppi kohde-id)
@@ -311,7 +318,67 @@
       (tee-kirjausvastauksen-body
         {:ilmoitukset (str "Määrämuutokset kirjattu onnistuneesti.")}))))
 
-(def palvelut
+(defn kirjaa-tarkastuksia [db liitteiden-hallinta kayttaja {:keys [urakka-id kohde-id]} data]
+  (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) tarkastuksia käyttäjän: %s toimesta"
+                     urakka-id
+                     kohde-id
+                     kayttaja))
+  (jdbc/with-db-transaction [db db]
+    (let [urakka-id (Integer/parseInt urakka-id)
+          kohde-id (Integer/parseInt kohde-id)]
+      (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+      (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+      (let [ilmoitukset (format "Tarkastus kirjattu onnistuneesti urakan: %s ylläpitokohteelle: %s." urakka-id kohde-id)
+            varoitukset (tarkastukset/luo-tai-paivita-tarkastukset db liitteiden-hallinta kayttaja nil urakka-id data kohde-id)]
+        (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset
+                                     :varoitukset (when-not (empty? varoitukset) varoitukset)})))))
+
+(defn poista-tarkastuksia [db kayttaja {:keys [urakka-id kohde-id]} data]
+  (let [urakka-id (Long/parseLong urakka-id)
+        kohde-id (Long/parseLong kohde-id)
+        ulkoiset-idt (-> data :tarkastusten-tunnisteet)
+        kayttaja-id (:id kayttaja)]
+    (log/debug (format "Poistetaan urakan (id: %s) ylläpitokohteen (id: %s) tarkastukset ulkoisella id:llä: %s käyttäjän: %s toimesta. Data: %s"
+                       urakka-id
+                       kohde-id
+                       ulkoiset-idt
+                       kayttaja
+                       data))
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (let [poistettujen-maara (tarkastukset-q/poista-tarkastus! db kayttaja-id ulkoiset-idt)]
+      (let [ilmoitukset (if (pos? poistettujen-maara)
+                          (format "Tarkastukset poistettu onnistuneesti. Poistettiin: %s tarkastusta." poistettujen-maara)
+                          "Tunnisteita vastaavia tarkastuksia ei löytynyt käyttäjän kirjaamista tarkastuksista.")]
+        (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset})))))
+
+(defn kirjaa-tiemerkintatoteumia [db kayttaja {:keys [urakka-id kohde-id]} {tiemerkintatoteumat :tiemerkintatoteumat}]
+  (let [urakka-id (Integer/parseInt urakka-id)
+        kohde-id (Integer/parseInt kohde-id)]
+    (log/info (format "Kirjataan urakan (id: %s) ylläpitokohteelle (id: %s) tiemerkintätoteumia käyttäjän (%s) toimesta. Toteumat: %s."
+                      urakka-id
+                      kohde-id
+                      kayttaja
+                      tiemerkintatoteumat))
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (tiemerkintatoteumat/luo-tai-paivita-tiemerkintatoteumat db kayttaja urakka-id kohde-id tiemerkintatoteumat)
+    (tee-kirjausvastauksen-body {:ilmoitukset "Tiemerkintätoteuma kirjattu onnistuneesti"})))
+
+(defn poista-tiemerkintatoteumia [db kayttaja {:keys [urakka-id kohde-id]} {toteumien-tunnisteet :toteumien-tunnisteet}]
+  (let [urakka-id (Integer/parseInt urakka-id)
+        kohde-id (Integer/parseInt kohde-id)]
+    (log/info (format "Poistetaan uraka (id: %s) ylläpitokohteen (id: %s) tiemerkintätoteumia käyttäjän (%s) toimesta. Toteumientunnisteet: %s."
+                      urakka-id
+                      kohde-id
+                      kayttaja
+                      toteumien-tunnisteet))
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (let [poistettujen-maara (tiemerkintatoteumat/poista-tiemerkintatoteumat db kayttaja urakka-id toteumien-tunnisteet)
+          ilmoitukset (if (and (not (nil? poistettujen-maara)) (pos? poistettujen-maara))
+                        (format "Toteumat poistettu onnistuneesti. Poistettiin: %s toteumaa." poistettujen-maara)
+                        "Tunnisteita vastaavia toteumia ei löytynyt käyttäjän kirjaamista toteumista.")]
+      (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset}))))
+
+(defn palvelut [liitteiden-hallinta]
   [{:palvelu :hae-yllapitokohteet
     :polku "/api/urakat/:id/yllapitokohteet"
     :tyyppi :GET
@@ -366,13 +433,41 @@
     :kutsu-skeema json-skeemat/urakan-yllapitokohteen-maaramuutosten-kirjaus-request
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
-                    (kirjaa-maaramuutokset db kayttaja parametrit data))}])
+                    (kirjaa-maaramuutokset db kayttaja parametrit data))}
+   {:palvelu :kirjaa-yllapitokohteen-tarkastus
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tarkastus"
+    :tyyppi :POST
+    :kutsu-skeema json-skeemat/urakan-yllapitokohteen-tarkastuksen-kirjaus-request
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db]
+                    (kirjaa-tarkastuksia db liitteiden-hallinta kayttaja parametrit data))}
+   {:palvelu :poista-yllapitokohteen-tarkastus
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tarkastus"
+    :tyyppi :DELETE
+    :kutsu-skeema json-skeemat/urakan-yllapitokohteen-tarkastuksen-poisto-request
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db]
+                    (poista-tarkastuksia db kayttaja parametrit data))}
+   {:palvelu :kirjaa-yllapitokohteen-tiemerkintatoteuma
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tiemerkintatoteuma"
+    :tyyppi :POST
+    :kutsu-skeema json-skeemat/urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db]
+                    (kirjaa-tiemerkintatoteumia db kayttaja parametrit data))}
+   {:palvelu :poista-yllapitokohteen-tiemerkintatoteuma
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/tiemerkintatoteuma"
+    :tyyppi :DELETE
+    :kutsu-skeema json-skeemat/pistetoteuman-poisto
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db]
+                    (poista-tiemerkintatoteumia db kayttaja parametrit data))}])
 
 (defrecord Yllapitokohteet []
   component/Lifecycle
-  (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
-    (palvelut/julkaise http db integraatioloki palvelut)
+  (start [{http :http-palvelin db :db integraatioloki :integraatioloki liitteiden-hallinta :liitteiden-hallinta :as this}]
+    (palvelut/julkaise http db integraatioloki (palvelut liitteiden-hallinta))
     this)
   (stop [{http :http-palvelin :as this}]
-    (palvelut/poista http palvelut)
+    (palvelut/poista http (palvelut nil))
     this))

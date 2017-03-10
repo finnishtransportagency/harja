@@ -124,7 +124,8 @@
                      :nykyinen_paallyste nykyinen-paallyste
                      :nimi nimi
                      :vuodet (konv/seq->array [(t/year (pvm/suomen-aikavyohykkeeseen (t/now)))])
-                     :yha_kohdenumero yha-kohdenumero})]
+                     :yha_kohdenumero yha-kohdenumero
+                     :kohdenumero yha-kohdenumero})]
         (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
           (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
           (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!
