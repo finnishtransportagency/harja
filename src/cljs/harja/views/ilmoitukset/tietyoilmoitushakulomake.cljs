@@ -15,7 +15,9 @@
                                       kuvaus-ja-avainarvopareja]]
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [harja.domain.tierekisteri :as tr-domain]
+            [clojure.string :as str]))
 
 (defn ilmoitusten-hakuehdot [e! valinnat-nyt kayttajan-urakat]
   (let [urakkavalinnat (into [[nil "Kaikki urakat"]] (partition 2 (interleave (mapv (comp str :id) kayttajan-urakat) (mapv :nimi kayttajan-urakat))))]
@@ -51,7 +53,7 @@
                                        ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
                                        :as app}
                                       tietyoilmoitus]
-  (log "---> " (pr-str (dissoc tietyoilmoitus :sijainti )))
+  (log "---> " (pr-str (dissoc tietyoilmoitus :sijainti)))
   [:div
    [lomake/lomake
     {:otsikko "Tiedot koko kohteesta"
@@ -60,6 +62,9 @@
       :nimi :urakka_nimi
       :hae (comp fmt/lyhennetty-urakan-nimi :urakka_nimi)
       :muokattava? (constantly false)}
+     {:otsikko "Urakoitsija"
+      :nimi :urakoitsijan_nimi
+      :muokattava? (constantly false)}
      {:otsikko "Urakoitsijan yhteyshenkilo"
       :nimi :urakoitsijan_yhteyshenkilo
       :hae #(str
@@ -67,6 +72,50 @@
               (:urakoitsijayhteyshenkilo_sukunimi %) ", "
               (:urakoitsijayhteyshenkilo_matkapuhelin %) ", "
               (:urakoitsijayhteyshenkilo_sahkoposti %))
+      :muokattava? (constantly false)}
+     {:otsikko "Tilaaja"
+      :nimi :tilaajan_nimi
+      :muokattava? (constantly false)}
+     {:otsikko "Tilaajan yhteyshenkilo"
+      :nimi :tilaajan_yhteyshenkilo
+      :hae #(str
+              (:tilaajayhteyshenkilo_etunimi %) " "
+              (:tilaajayhteyshenkilo_sukunimi %) ", "
+              (:tilaajayhteyshenkilo_matkapuhelin %) ", "
+              (:tilaajayhteyshenkilo_sahkoposti %))
+      :muokattava? (constantly false)}
+     {:otsikko "Tierekisteriosoite"
+      :nimi :tierekisteriosoite
+      :hae #(str (:tr_numero %) "/"
+                 (:tr_alkuosa %) "/"
+                 (:tr_alkuetaisyys %) "/"
+                 (:tr_loppuosa %) "/"
+                 (:tr_loppuetaisyys %))
+      :muokattava? (constantly false)}
+     {:otsikko "Alkusijainti"
+      :nimi :alkusijainnin_kuvaus
+      :muokattava? (constantly false)}
+     {:otsikko "Alku"
+      :nimi :alku
+      :tyyppi :pvm-aika
+      :muokattava? (constantly false)}
+     {:otsikko "Loppusijainti"
+      :nimi :loppusijainnin_kuvaus
+      :muokattava? (constantly false)}
+     {:otsikko "Loppu"
+      :nimi :loppu
+      :tyyppi :pvm-aika
+      :muokattava? (constantly false)}
+     {:otsikko "Kunnat"
+      :nimi :kunnat
+      :muokattava? (constantly false)}
+     {:otsikko "Työtyypit"
+      :nimi :tyotyypit
+      :hae #(str/join ", " (map (fn [t]
+                                  (str (:tyyppi t)
+                                       (when (:selite t)
+                                         (str " (Selite: " (:selite t) ")"))))
+                                (:tyotyypit %)))
       :muokattava? (constantly false)}]
     tietyoilmoitus]
    [grid
