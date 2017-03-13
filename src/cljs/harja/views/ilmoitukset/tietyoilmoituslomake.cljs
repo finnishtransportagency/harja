@@ -35,7 +35,10 @@
      [:span
       [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (tiedot/->PoistaIlmoitusValinta))]
       [lomake/lomake {:otsikko "Muokkaa ilmoitusta"
-                      :muokkaa #(e! tiedot/->IlmoitustaMuokattu %)}
+                      :muokkaa! #(do
+
+                                   #_(log "muokkaa" (pr-str %))
+                                  (e! (tiedot/->IlmoitustaMuokattu %)))}
        [(lomake/ryhma
           "Ilmoitus koskee"
           {:nimi :koskee
@@ -188,11 +191,21 @@
 
                        }
                       {:otsikko "Kulkurajoituksia"
-                       :type :checkbox-group
+                       :tyyppi :checkbox-group
                        :nimi :kulkurajoituksia
                        :vaihtoehdot ["Liikennevalot" "Liikenteen ohjaaja" "Satunnaisia (aikataulu, jos yli 5 min)" "Aikataulu:"]}
                       )
-        (lomake/ryhma "Kaistajärjestelyt"
-                      )
+        (lomake/ryhma "Vaikutussuunta"
+                      {:otsikko ""
+                       :tyyppi :checkbox-group
+                       :nimi :vaikutussuunta
+                       :vaihtoehdot ["Haittaa molemmissa ajosuunnissa",
+                                     "Haittaa ajosuunnassa (lähin kaupunki)"] ;; -> kaupunki?
+                       }
+
+                      (when (-> ilmoitus :tietyon_vaikutussuunta #{"tienumeronKasvusuuntaan" "vastenTienumeronKasvusuuntaa"})
+                        {:otsikko ""
+                         :nimi :vaikutussuunta-kaupunki
+                         :tyyppi :string}))
         (lomake/ryhma "Muuta")]
        ilmoitus]]]))

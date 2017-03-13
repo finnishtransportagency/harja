@@ -86,8 +86,8 @@
 
   IlmoitustaMuokattu
   (process-event [ilmoitus app]
-    (log "IlmoitustaMuokattu: saatiin" (keys ilmoitus) "ja" (keys app))
-    app)
+    #_(log "IlmoitustaMuokattu: saatiin" (keys ilmoitus) "ja" (keys app))
+    (assoc app :valittu-ilmoitus (:ilmoitus ilmoitus)))
 
   HaeKayttajanUrakat
   (process-event [{hallintayksikot :hallintayksikot} app]
