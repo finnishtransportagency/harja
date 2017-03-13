@@ -16,7 +16,7 @@
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
             [reagent.core :as r]
-            [harja.domain.tierekisteri :as tr-domain]
+            [harja.domain.tietyoilmoitukset :as domain]
             [clojure.string :as str]
             [harja.ui.napit :as napit]))
 
@@ -139,6 +139,7 @@
                     :uusi-rivi? true}
                    {:otsikko "Kaistajärjestelyt"
                     :nimi :kaistajarjestelyt
+                    :hae #((keyword (:kaistajarjestelyt %)) domain/kaistajarjestelyt)
                     :muokattava? (constantly false)}
                    {:otsikko "Nopeusrajoitukset"
                     :nimi :nopeusrajoitukset

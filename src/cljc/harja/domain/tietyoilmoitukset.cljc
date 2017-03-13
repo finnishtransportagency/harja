@@ -1,8 +1,6 @@
-(ns harja.domain.turvallisuuspoikkeamat
-  (:require [clojure.string :as str]))
+(ns harja.domain.tietyoilmoitukset)
 
 (def kaistajarjestelyt
-  {:tyotapaturma "Työtapaturma"
-   :vaaratilanne "Vaaratilanne"
-   :turvallisuushavainto "Turvallisuushavainto"
-   :muu "Muu"})
+  {:ajokaistaSuljettu "Ajokaista suljettu"
+   :ajorataSuljettu "Ajorata suljettu"
+   :tieSuljettu "Tie suljettu"})
