@@ -319,6 +319,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                true)
                 muokkaa-kenttaa-fn (fn [nimi]
                                      (fn [uudet-tiedot]
+                                       (assert muokkaa! (str ":muokkaa! puuttuu, opts:" (pr-str opts)))
                                        (-> uudet-tiedot
                                            (validoi skeema)
                                            (assoc ::muokatut (conj (or (::muokatut uudet-tiedot)
