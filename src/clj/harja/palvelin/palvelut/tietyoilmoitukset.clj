@@ -7,7 +7,8 @@
             [harja.kyselyt.tietyoilmoitukset :as q-tietyoilmoitukset]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
-            [harja.geo :as geo]))
+            [harja.geo :as geo]
+            [clojure.string :as str]))
 
 (defn- muunna-tietyoilmoitus [tietyoilmoitus]
   (as-> tietyoilmoitus t
@@ -35,7 +36,7 @@
                            nil nil nil nil #inst "1900-01-01" #inst "2100-01-01")
         sql-parametrit {:alku (konv/sql-timestamp alkuaika)
                         :loppu (konv/sql-timestamp loppuaika)
-                        :urakat (if urakka [(int urakka)] kayttajan-urakat)
+                        :urakat (if (and urakka (not (str/blank? urakka))) [(Integer/parseInt urakka)] kayttajan-urakat)
                         :luojaid (when vain-kayttajan-luomat (:id user))
                         :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
                         :maxmaara max-maara}

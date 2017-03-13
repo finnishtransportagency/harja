@@ -15,7 +15,31 @@
                                       kuvaus-ja-avainarvopareja]]
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [harja.domain.tierekisteri :as tr-domain]
+            [clojure.string :as str]
+            [harja.ui.napit :as napit]))
+
+(defn tyotyypit [tyotyypit]
+  (str/join ", " (map (fn [t]
+                        (str (:tyyppi t)
+                             (when (:selite t)
+                               (str " (Selite: " (:selite t) ")"))))
+                      tyotyypit)))
+
+(defn nopeusrajoitukset [nopeusrajoitukset]
+  (str/join ", " (map (fn [n]
+                        (str (:nopeusrajoitus n) " km/h "
+                             (when (:matka n)
+                               (str " (" (:matka n) " metriä)"))))
+                      nopeusrajoitukset)))
+
+(defn tienpinnat [tienpinnat]
+  (str/join ", " (map (fn [n]
+                        (str (:materiaali n)
+                             (when (:matka n)
+                               (str " (" (:matka n) " metriä)"))))
+                      tienpinnat)))
 
 (defn ilmoitusten-hakuehdot [e! valinnat-nyt kayttajan-urakat]
   (let [urakkavalinnat (into [[nil "Kaikki urakat"]] (partition 2 (interleave (mapv (comp str :id) kayttajan-urakat) (mapv :nimi kayttajan-urakat))))]
@@ -37,8 +61,8 @@
        :pakollinen? false
        :sijainti (r/wrap (:sijainti valinnat-nyt) #(e! (tiedot/->PaivitaSijainti %)))
        :otsikko "Tierekisteriosoite"
-       :validoi [(fn [_ {sijainti :sijainti}] (when (nil? sijainti) "Tarkista tierekisteriosoite"))]
-       :palstoja 1}
+       :palstoja 1
+       :tyhjennys-sallittu? true}
       {:nimi :vain-kayttajan-luomat
        :tyyppi :checkbox
        :teksti "Vain minun luomat"
@@ -50,13 +74,17 @@
                                        ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
                                        :as app}
                                       tietyoilmoitus]
-  (log "---> " (pr-str tietyoilmoitus))
   [:div
    [lomake/lomake
-    {:otsikko "Tiedot koko kohteesta"}
+    {:otsikko "Tiedot koko kohteesta"
+     :ei-borderia? true}
     [{:otsikko "Urakka"
       :nimi :urakka_nimi
+      :palstoja 2
       :hae (comp fmt/lyhennetty-urakan-nimi :urakka_nimi)
+      :muokattava? (constantly false)}
+     {:otsikko "Urakoitsija"
+      :nimi :urakoitsijan_nimi
       :muokattava? (constantly false)}
      {:otsikko "Urakoitsijan yhteyshenkilo"
       :nimi :urakoitsijan_yhteyshenkilo
@@ -65,8 +93,73 @@
               (:urakoitsijayhteyshenkilo_sukunimi %) ", "
               (:urakoitsijayhteyshenkilo_matkapuhelin %) ", "
               (:urakoitsijayhteyshenkilo_sahkoposti %))
-      :muokattava? (constantly false)}]
+      :muokattava? (constantly false)}
+     {:otsikko "Tilaaja"
+      :nimi :tilaajan_nimi
+      :muokattava? (constantly false)}
+     {:otsikko "Tilaajan yhteyshenkilo"
+      :nimi :tilaajan_yhteyshenkilo
+      :hae #(str
+              (:tilaajayhteyshenkilo_etunimi %) " "
+              (:tilaajayhteyshenkilo_sukunimi %) ", "
+              (:tilaajayhteyshenkilo_matkapuhelin %) ", "
+              (:tilaajayhteyshenkilo_sahkoposti %))
+      :muokattava? (constantly false)}
+     {:otsikko "Tie"
+      :nimi :tie
+      :hae #(str (:tien_nimi %) ": "
+                 (:tr_numero %) " / "
+                 (:tr_alkuosa %) " / "
+                 (:tr_alkuetaisyys %) " / "
+                 (:tr_loppuosa %) " / "
+                 (:tr_loppuetaisyys %))
+      :muokattava? (constantly false)}
+     {:otsikko "Alkusijainti"
+      :nimi :alkusijainnin_kuvaus
+      :muokattava? (constantly false)}
+     {:otsikko "Alku"
+      :nimi :alku
+      :tyyppi :pvm-aika
+      :muokattava? (constantly false)}
+     {:otsikko "Loppusijainti"
+      :nimi :loppusijainnin_kuvaus
+      :muokattava? (constantly false)}
+     {:otsikko "Loppu"
+      :nimi :loppu
+      :tyyppi :pvm-aika
+      :muokattava? (constantly false)}
+     {:otsikko "Kunnat"
+      :nimi :kunnat
+      :muokattava? (constantly false)}
+     {:otsikko "Työtyypit"
+      :nimi :tyotyypit
+      :hae #(tyotyypit (:tyotyypit %))
+      :muokattava? (constantly false)}
+     (lomake/ryhma {:otsikko "Vaikutukset liikenteelle"
+                    :uusi-rivi? true}
+                   {:otsikko "Kaistajärjestelyt"
+                    :nimi :kaistajarjestelyt
+                    :muokattava? (constantly false)}
+                   {:otsikko "Nopeusrajoitukset"
+                    :nimi :nopeusrajoitukset
+                    :muokattava? (constantly false)
+                    :hae #(nopeusrajoitukset (:nopeusrajoitukset %))}
+                   {:otsikko "Tienpinta työmaalla"
+                    :nimi :tienpinnat
+                    :muokattava? (constantly false)
+                    :hae #(tienpinnat (:tienpinnat %))}
+                   {:otsikko (str "Kiertotie")
+                    :nimi :kiertotie
+                    :muokattava? (constantly false)
+                    :hae #(tienpinnat (:kiertotienpinnat %))}
+                   {:otsikko (str "Kulkurajoituksia")
+                    :nimi :kulkurajoitukset
+                    :muokattava? (constantly false)}
+                   {:otsikko (str "Haittaa suunnassa")
+                    :nimi :haittaa-suunnassa
+                    :muokattava? (constantly false)})]
     tietyoilmoitus]
+   [napit/muokkaa "Muokkaa" #(e! (tiedot/->ValitseIlmoitus tietyoilmoitus)) {}]
    [grid
     {:otsikko "Työvaiheet"
      :tyhja "Ei löytyneitä tietoja"
