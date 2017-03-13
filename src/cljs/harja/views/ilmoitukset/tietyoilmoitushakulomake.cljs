@@ -17,7 +17,8 @@
             [harja.tiedot.navigaatio :as nav]
             [reagent.core :as r]
             [harja.domain.tierekisteri :as tr-domain]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [harja.ui.napit :as napit]))
 
 (defn ilmoitusten-hakuehdot [e! valinnat-nyt kayttajan-urakat]
   (let [urakkavalinnat (into [[nil "Kaikki urakat"]] (partition 2 (interleave (mapv (comp str :id) kayttajan-urakat) (mapv :nimi kayttajan-urakat))))]
@@ -39,9 +40,8 @@
        :pakollinen? false
        :sijainti (r/wrap (:sijainti valinnat-nyt) #(e! (tiedot/->PaivitaSijainti %)))
        :otsikko "Tierekisteriosoite"
-       :validoi [(fn [_ {sijainti :sijainti}] (when (nil? sijainti) "Tarkista tierekisteriosoite"))]
        :palstoja 1
-       :tyhjenna? true}
+       :tyhjennys-sallittu? true}
       {:nimi :vain-kayttajan-luomat
        :tyyppi :checkbox
        :teksti "Vain minun luomat"
@@ -53,13 +53,13 @@
                                        ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
                                        :as app}
                                       tietyoilmoitus]
-  (log "---> " (pr-str (dissoc tietyoilmoitus :sijainti)))
   [:div
    [lomake/lomake
     {:otsikko "Tiedot koko kohteesta"
      :ei-borderia? true}
     [{:otsikko "Urakka"
       :nimi :urakka_nimi
+      :palstoja 2
       :hae (comp fmt/lyhennetty-urakan-nimi :urakka_nimi)
       :muokattava? (constantly false)}
      {:otsikko "Urakoitsija"
@@ -118,6 +118,7 @@
                                 (:tyotyypit %)))
       :muokattava? (constantly false)}]
     tietyoilmoitus]
+   [napit/palvelinkutsu-nappi "Muokkaa" #() {}]
    [grid
     {:otsikko "Työvaiheet"
      :tyhja "Ei löytyneitä tietoja"
