@@ -51,10 +51,11 @@
                                        ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
                                        :as app}
                                       tietyoilmoitus]
-  (log "---> " (pr-str tietyoilmoitus))
+  (log "---> " (pr-str (dissoc tietyoilmoitus :sijainti )))
   [:div
    [lomake/lomake
-    {:otsikko "Tiedot koko kohteesta"}
+    {:otsikko "Tiedot koko kohteesta"
+     :ei-borderia? true}
     [{:otsikko "Urakka"
       :nimi :urakka_nimi
       :hae (comp fmt/lyhennetty-urakan-nimi :urakka_nimi)

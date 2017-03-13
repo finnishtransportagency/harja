@@ -17,6 +17,8 @@ SELECT
   tti.ilmoittaja_sahkoposti,
   tti.urakka,
   tti.urakka_nimi,
+  tti.urakoitsija,
+  tti.urakoitsijan_nimi,
   tti.urakoitsijayhteyshenkilo,
   tti.urakoitsijayhteyshenkilo_etunimi,
   tti.urakoitsijayhteyshenkilo_sukunimi,
