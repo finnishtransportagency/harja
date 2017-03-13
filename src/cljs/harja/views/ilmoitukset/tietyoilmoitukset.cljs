@@ -38,7 +38,7 @@
                          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
     (fn [e! {valittu-ilmoitus :valittu-ilmoitus kayttajan-urakat :kayttajan-urakat :as app}]
       [:span
-       [ui-debug/debug @tiedot/tietyoilmoitukset]
+       #_[ui-debug/debug @tiedot/tietyoilmoitukset]
        [kartta/kartan-paikka]
 
        (if valittu-ilmoitus

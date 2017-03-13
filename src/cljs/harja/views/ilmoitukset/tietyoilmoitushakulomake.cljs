@@ -20,6 +20,27 @@
             [clojure.string :as str]
             [harja.ui.napit :as napit]))
 
+(defn tyotyypit [tyotyypit]
+  (str/join ", " (map (fn [t]
+                        (str (:tyyppi t)
+                             (when (:selite t)
+                               (str " (Selite: " (:selite t) ")"))))
+                      tyotyypit)))
+
+(defn nopeusrajoitukset [nopeusrajoitukset]
+  (str/join ", " (map (fn [n]
+                        (str (:nopeusrajoitus n) " km/h "
+                             (when (:matka n)
+                               (str " (" (:matka n) " metriä)"))))
+                      nopeusrajoitukset)))
+
+(defn tienpinnat [tienpinnat]
+  (str/join ", " (map (fn [n]
+                        (str (:materiaali n)
+                             (when (:matka n)
+                               (str " (" (:matka n) " metriä)"))))
+                      tienpinnat)))
+
 (defn ilmoitusten-hakuehdot [e! valinnat-nyt kayttajan-urakat]
   (let [urakkavalinnat (into [[nil "Kaikki urakat"]] (partition 2 (interleave (mapv (comp str :id) kayttajan-urakat) (mapv :nimi kayttajan-urakat))))]
     [lomake/lomake
@@ -84,12 +105,13 @@
               (:tilaajayhteyshenkilo_matkapuhelin %) ", "
               (:tilaajayhteyshenkilo_sahkoposti %))
       :muokattava? (constantly false)}
-     {:otsikko "Tierekisteriosoite"
-      :nimi :tierekisteriosoite
-      :hae #(str (:tr_numero %) "/"
-                 (:tr_alkuosa %) "/"
-                 (:tr_alkuetaisyys %) "/"
-                 (:tr_loppuosa %) "/"
+     {:otsikko "Tie"
+      :nimi :tie
+      :hae #(str (:tien_nimi %) ": "
+                 (:tr_numero %) " / "
+                 (:tr_alkuosa %) " / "
+                 (:tr_alkuetaisyys %) " / "
+                 (:tr_loppuosa %) " / "
                  (:tr_loppuetaisyys %))
       :muokattava? (constantly false)}
      {:otsikko "Alkusijainti"
@@ -111,12 +133,31 @@
       :muokattava? (constantly false)}
      {:otsikko "Työtyypit"
       :nimi :tyotyypit
-      :hae #(str/join ", " (map (fn [t]
-                                  (str (:tyyppi t)
-                                       (when (:selite t)
-                                         (str " (Selite: " (:selite t) ")"))))
-                                (:tyotyypit %)))
-      :muokattava? (constantly false)}]
+      :hae #(tyotyypit (:tyotyypit %))
+      :muokattava? (constantly false)}
+     (lomake/ryhma {:otsikko "Vaikutukset liikenteelle"
+                    :uusi-rivi? true}
+                   {:otsikko "Kaistajärjestelyt"
+                    :nimi :kaistajarjestelyt
+                    :muokattava? (constantly false)}
+                   {:otsikko "Nopeusrajoitukset"
+                    :nimi :nopeusrajoitukset
+                    :muokattava? (constantly false)
+                    :hae #(nopeusrajoitukset (:nopeusrajoitukset %))}
+                   {:otsikko "Tienpinta työmaalla"
+                    :nimi :tienpinnat
+                    :muokattava? (constantly false)
+                    :hae #(tienpinnat (:tienpinnat %))}
+                   {:otsikko (str "Kiertotie")
+                    :nimi :kiertotie
+                    :muokattava? (constantly false)
+                    :hae #(tienpinnat (:kiertotienpinnat %))}
+                   {:otsikko (str "Kulkurajoituksia")
+                    :nimi :kulkurajoitukset
+                    :muokattava? (constantly false)}
+                   {:otsikko (str "Haittaa suunnassa")
+                    :nimi :haittaa-suunnassa
+                    :muokattava? (constantly false)})]
     tietyoilmoitus]
    [napit/muokkaa "Muokkaa" #(e! (tiedot/->ValitseIlmoitus tietyoilmoitus)) {}]
    [grid
