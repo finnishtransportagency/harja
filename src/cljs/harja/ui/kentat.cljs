@@ -837,7 +837,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
 
 (defmethod tee-kentta :tierekisteriosoite [{:keys [tyyli lomake? ala-nayta-virhetta-komponentissa?
-                                                   sijainti pakollinen? tyhjenna?]} data]
+                                                   sijainti pakollinen? tyhjennys-sallittu?]} data]
   (let [osoite-alussa @data
 
         hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
