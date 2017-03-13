@@ -38,7 +38,8 @@
        :sijainti (r/wrap (:sijainti valinnat-nyt) #(e! (tiedot/->PaivitaSijainti %)))
        :otsikko "Tierekisteriosoite"
        :validoi [(fn [_ {sijainti :sijainti}] (when (nil? sijainti) "Tarkista tierekisteriosoite"))]
-       :palstoja 1}
+       :palstoja 1
+       :tyhjenna? true}
       {:nimi :vain-kayttajan-luomat
        :tyyppi :checkbox
        :teksti "Vain minun luomat"
