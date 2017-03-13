@@ -118,7 +118,7 @@
                                 (:tyotyypit %)))
       :muokattava? (constantly false)}]
     tietyoilmoitus]
-   [napit/palvelinkutsu-nappi "Muokkaa" #() {}]
+   [napit/muokkaa "Muokkaa" #(e! (tiedot/->ValitseIlmoitus tietyoilmoitus)) {}]
    [grid
     {:otsikko "Työvaiheet"
      :tyhja "Ei löytyneitä tietoja"
