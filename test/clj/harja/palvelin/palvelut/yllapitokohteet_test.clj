@@ -314,6 +314,8 @@
                                  :sopimus-id sopimus-id
                                  :vuosi vuosi
                                  :kohteet kohteet})
+        tiemerkinta-alku (pvm/->pvm "22.5.2017")
+        tiemerkinta-loppu (pvm/->pvm "23.5.2017")
         maara-paivityksen-jalkeen (ffirst (q
                                             (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id "
@@ -324,7 +326,10 @@
     (is (= aikataulu-kohde-alku (:aikataulu-kohde-alku vastaus-leppajarven-ramppi)))
     (is (= aikataulu-paallystys-alku (:aikataulu-paallystys-alku vastaus-leppajarven-ramppi)))
     (is (= aikataulu-paallystys-loppu (:aikataulu-paallystys-loppu vastaus-leppajarven-ramppi)))
-    (is (= aikataulu-kohde-valmis (:aikataulu-kohde-valmis vastaus-leppajarven-ramppi)))))
+    (is (= aikataulu-kohde-valmis (:aikataulu-kohde-valmis vastaus-leppajarven-ramppi)))
+    ;; Tiemerkinnän aikatauluun ei koskettu
+    (is (= tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
+    (is (= tiemerkinta-loppu (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))))
 
 (deftest paallystyksen-merkitseminen-valmiiksi-toimii
   (let [urakka-id @muhoksen-paallystysurakan-id
