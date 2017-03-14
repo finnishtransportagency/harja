@@ -99,9 +99,10 @@
     (konv/jsonb->clojuremap ilmoitus :ilmoitustiedot)))
 
 (defn hae-alikohteet [db kohde-id paallystys-ilmoitus]
-  (let [alikohteet (q-yllapitokohteet/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
+  (let [alikohteet (q-yha-tiedot/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
         osoitteet (get-in paallystys-ilmoitus [:ilmoitustiedot :osoitteet])]
     (mapv (fn [alikohde]
+
             (let [id (:id alikohde)
                   ilmoitustiedot (first (filter #(= id (:kohdeosa-id %)) osoitteet))]
               (apply merge ilmoitustiedot alikohde)))

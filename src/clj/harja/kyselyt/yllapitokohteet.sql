@@ -604,34 +604,6 @@ aikataulu_tiemerkinta_takaraja as "tiemerkinta-takaraja"
 FROM yllapitokohde
 WHERE id = :id;
 
--- name: hae-yllapitokohteen-kohdeosat
-SELECT
-  id,
-  yllapitokohde,
-  nimi,
-  tunnus,
-  tr_numero                  AS "tr-numero",
-  tr_alkuosa                 AS "tr-alkuosa",
-  tr_alkuetaisyys            AS "tr-alkuetaisyys",
-  tr_loppuosa                AS "tr-loppuosa",
-  tr_loppuetaisyys           AS "tr-loppuetaisyys",
-  tr_ajorata                 AS "tr-ajorata",
-  tr_kaista                  AS "tr-kaista",
-  poistettu,
-  sijainti,
-  yhaid,
-  paallystetyyppi,
-  raekoko,
-  tyomenetelma,
-  massamaara                 AS "kokonaismassamaara",
-  toimenpide,
-  (SELECT viimeisin_paivitys
-   FROM geometriapaivitys
-   WHERE nimi = 'tieverkko') AS karttapvm
-FROM yllapitokohdeosa
-WHERE yllapitokohde = :yllapitokohde AND
-      poistettu IS NOT TRUE;
-
 -- name: merkitse-kohteen-lahetystiedot!
 UPDATE yllapitokohde
 SET lahetetty = :lahetetty, lahetys_onnistunut = :onnistunut, lahetysvirhe = :lahetysvirhe
