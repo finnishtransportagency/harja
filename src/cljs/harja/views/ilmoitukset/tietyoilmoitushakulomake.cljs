@@ -17,7 +17,8 @@
             [reagent.core :as r]
             [harja.domain.tietyoilmoitukset :as domain]
             [clojure.string :as str]
-            [harja.ui.napit :as napit]))
+            [harja.ui.napit :as napit]
+            [harja.ui.komponentti :as komp]))
 
 (defn tyotyypit [tyotyypit]
   (str/join ", " (map (fn [t]
@@ -191,7 +192,8 @@
 (defn ilmoitukset [e! app haetut-ilmoitukset ilmoituksen-haku-kaynnissa?]
   [:div
    [grid
-    {:tyhja (if haetut-ilmoitukset
+    {:id "tietyoilmoitushakutulokset"
+     :tyhja (if haetut-ilmoitukset
               "Ei löytyneitä tietoja"
               [ajax-loader "Haetaan ilmoituksia"])
      :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa? #(e! (tiedot/->ValitseIlmoitus %)))
@@ -209,11 +211,16 @@
     haetut-ilmoitukset]])
 
 (defn hakulomake
-  [e! {valinnat-nyt :valinnat
-       haetut-ilmoitukset :tietyoilmoitukset
-       ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
-       kayttajan-urakat :kayttajan-urakat
-       :as app}]
-  [:span.tietyoilmoitukset
-   [ilmoitusten-hakuehdot e! valinnat-nyt kayttajan-urakat]
-   [ilmoitukset e! app haetut-ilmoitukset ilmoituksen-haku-kaynnissa?]])
+  [e! _]
+  (komp/luo
+    (komp/sisaan #(e! (tiedot/->HaeIlmoitukset)))
+    (fn [e! {valinnat-nyt :valinnat
+             haetut-ilmoitukset :tietyoilmoitukset
+             ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
+             kayttajan-urakat :kayttajan-urakat
+             :as app}]
+
+      (log "---> app" (pr-str app))
+      [:span.tietyoilmoitukset
+       [ilmoitusten-hakuehdot e! valinnat-nyt kayttajan-urakat]
+       [ilmoitukset e! app haetut-ilmoitukset ilmoituksen-haku-kaynnissa?]])))
