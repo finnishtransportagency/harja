@@ -75,7 +75,6 @@
                   },
                   "raekoko": {
                     "id": "urn:harja/raekoko",
-                    "type": "object",
                     "$ref": "file:resources/api/schemas/entities/paallystys_raekoko.schema.json"
                   },
                   "tyomenetelma": {

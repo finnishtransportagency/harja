@@ -1,14 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
   "id": "urn:harja",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "id": {
-      "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/raekoko",
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 99
-    }
-  }
+  "type": "integer",
+  "minimum": 0,
+  "maximum": 99
 }
