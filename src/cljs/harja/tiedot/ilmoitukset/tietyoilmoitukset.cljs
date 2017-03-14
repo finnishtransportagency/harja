@@ -66,8 +66,9 @@
 (defrecord PaivitaSijainti [sijainti])
 
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
-  (-> app
-      (assoc :ilmoitushaku-id (.setTimeout js/window (t/send-async! ->HaeIlmoitukset) 1000))))
+  (when haku
+    (.clearTimeout js/window haku))
+  (assoc app :ilmoitushaku-id (.setTimeout js/window (t/send-async! ->HaeIlmoitukset) 1000)))
 
 (extend-protocol t/Event
   AsetaValinnat

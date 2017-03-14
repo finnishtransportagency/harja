@@ -41,7 +41,9 @@
                       tienpinnat)))
 
 (defn ilmoitusten-hakuehdot [e! valinnat-nyt kayttajan-urakat]
-  (let [urakkavalinnat (into [[nil "Kaikki urakat"]] (partition 2 (interleave (mapv (comp str :id) kayttajan-urakat) (mapv :nimi kayttajan-urakat))))]
+  (let [urakkavalinnat (into [[nil "Kaikki urakat"]]
+                             (map (juxt (comp str :id) :nimi))
+                             kayttajan-urakat)]
     [lomake/lomake
      {:luokka :horizontal
       :muokkaa! #(e! (tiedot/->AsetaValinnat %))}
