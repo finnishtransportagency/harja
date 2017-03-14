@@ -91,46 +91,60 @@
                                :sillat (kartan-asioiden-z-indeksit :sillat)
                                oletus-zindex))))))
 
+(defn- urakat-ja-organisaatiot-kartalla*
+  [hals v-hal v-ur sivu valilehti urakat-kartalla]
+  (cond
+    ;; Näillä sivuilla ei ikinä näytetä murupolun kautta valittujen organisaatiorajoja
+    (#{:tilannekuva} sivu)
+    nil
+
+    ;; Ilmoituksissa ei haluta näyttää navigointiin
+    ;; tarkoitettuja geometrioita (kuten urakat), mutta jos esim HY on
+    ;; valittu, voidaan näyttää sen rajat.
+    (and (#{:ilmoitukset} sivu) (nil? v-hal))
+    nil
+
+    (and (#{:ilmoitukset} sivu)
+         (nil? v-ur))
+    [(assoc v-hal :valittu true)]
+
+    (and (#{:ilmoitukset} sivu) v-ur)
+    [(assoc v-ur :valittu true)]
+
+    ;; Ylläpitourakan rajoja ei haluta piirtää näkymissä, joissa piirretään
+    ;; urakan varsinaiset tiet. Ylläpitourakan rajat piirretään vaan näiden teiden ympärille,
+    ;; joten jos tiet piirretään jo kartalle, ovat rajat täysin turhaa informaatiota.
+    (and (#{:kohdeluettelo-paallystys :kohdeluettelo-paikkaus} valilehti)
+         (some? v-hal)
+         (some? v-ur))
+    nil
+
+    ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
+    (nil? v-hal)
+    hals
+
+    ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö
+    ;; ja sen urakat
+    (nil? v-ur)
+    (vec (concat [(assoc v-hal
+                    :valittu true)]
+                 urakat-kartalla))
+
+    ;; Valittu urakka, mitä näytetään?
+    :default [(assoc v-ur
+                :valittu true)]))
+
 (def urakat-ja-organisaatiot-kartalla
   (reaction
    (into []
          (keep organisaation-geometria)
-         (let [hals @hal/hallintayksikot
-               v-hal @nav/valittu-hallintayksikko
-               v-ur @nav/valittu-urakka
-               sivu @nav/valittu-sivu]
-           (cond
-             ;; Näillä sivuilla ei ikinä näytetä murupolun kautta valittujen organisaatiorajoja
-             (#{:tilannekuva} sivu)
-             nil
-
-             ;; Ilmoituksissa ei haluta näyttää navigointiin
-             ;; tarkoitettuja geometrioita (kuten urakat), mutta jos esim HY on
-             ;; valittu, voidaan näyttää sen rajat.
-             (and (#{:ilmoitukset} sivu) (nil? v-hal))
-             nil
-
-             (and (#{:ilmoitukset} sivu)
-                  (nil? @nav/valittu-urakka))
-             [(assoc v-hal :valittu true)]
-
-             (and (#{:ilmoitukset} sivu) @nav/valittu-urakka)
-             [(assoc v-ur :valittu true)]
-
-             ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
-             (nil? v-hal)
-             hals
-
-             ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö
-             ;; ja sen urakat
-             (nil? v-ur)
-             (vec (concat [(assoc v-hal
-                                  :valittu true)]
-                          @nav/urakat-kartalla))
-
-             ;; Valittu urakka, mitä näytetään?
-             :default [(assoc v-ur
-                              :valittu true)])))))
+         (urakat-ja-organisaatiot-kartalla*
+           @hal/hallintayksikot
+           @nav/valittu-hallintayksikko
+           @nav/valittu-urakka
+           @nav/valittu-sivu
+           (nav/valittu-valilehti @nav/valittu-sivu)
+           @nav/urakat-kartalla))))
 
 ;; Ad hoc geometrioiden näyttäminen näkymistä
 ;; Avain on avainsana ja arvo on itse geometria
