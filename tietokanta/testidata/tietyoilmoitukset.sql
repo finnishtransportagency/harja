@@ -58,7 +58,7 @@ INSERT INTO tietyoilmoitus (luotu,
                             urakoitsijan_nimi)
 
 VALUES (
-  '2016-06-06 06:06:06',
+  '2017-01-01 01:01:01',
   (SELECT id
    FROM kayttaja
    WHERE sahkoposti = 'yit_pk2@example.org'),
@@ -79,13 +79,13 @@ VALUES (
    WHERE sahkoposti = 'yit_pk2@example.org'),
   (SELECT id
    FROM urakka
-   WHERE nimi = 'Oulun alueurakka 2005-2012'),
+   WHERE nimi = 'Oulun alueurakka 2014-2019'),
   (SELECT nimi
    FROM urakka
-   WHERE nimi = 'Oulun alueurakka 2005-2012'),
+   WHERE nimi = 'Oulun alueurakka 2014-2019'),
   (SELECT tyyppi
    FROM urakka
-   WHERE nimi = 'Oulun alueurakka 2005-2012'),
+   WHERE nimi = 'Oulun alueurakka 2014-2019'),
   (SELECT id
    FROM kayttaja
    WHERE sahkoposti = 'yit_pk2@example.org'),
