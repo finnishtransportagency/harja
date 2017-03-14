@@ -528,8 +528,8 @@
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
         lapin-urakka-id (hae-oulun-tiemerkintaurakan-id)
         vuosi 2017
-        yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
-        kohteet [{:id yllapitokohde-id
+        leppajarven-ramppi-id (hae-lapin-tiemerkintaurakan-id)
+        kohteet [{:id leppajarven-ramppi-id
                   :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
                   :aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
                   :suorittava-tiemerkintaurakka lapin-urakka-id

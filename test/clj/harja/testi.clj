@@ -360,6 +360,11 @@
                    FROM   urakka
                    WHERE  nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'"))))
 
+(defn hae-lapin-tiemerkintaurakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Lapin tiemerkinnän palvelusopimus 2013-2018'"))))
+
 (defn hae-oulun-tiemerkintaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
                    FROM   sopimus
