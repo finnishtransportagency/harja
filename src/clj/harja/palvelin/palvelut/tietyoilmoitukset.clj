@@ -24,12 +24,16 @@
         (konv/array->vec t :nopeusrajoitukset)
         (assoc t :nopeusrajoitukset (mapv #(konv/pgobject->map % :nopeusrajoitus :long :matka :long) (:nopeusrajoitukset t)))))
 
-(defn hae-tietyoilmoitukset [db user {:keys [alkuaika
-                                             loppuaika
-                                             urakka
-                                             sijainti
-                                             vain-kayttajan-luomat]
-                                      :as hakuehdot} max-maara]
+(defn hae-tietyoilmoitukset [db
+                             user
+                             {:keys [alkuaika
+                                     loppuaika
+                                     urakka
+                                     sijainti
+                                     vain-kayttajan-luomat]
+                              :as hakuehdot}
+                             max-maara]
+  ;; todo: hae myös käyttäjän organisaation tekemät ilmoitukset
   (let [kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
                            db
                            user
@@ -42,9 +46,15 @@
                         :luojaid (when vain-kayttajan-luomat (:id user))
                         :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
                         :maxmaara max-maara}
-        tietyoilmoitukset (q-tietyoilmoitukset/hae-tietyoilmoitukset db sql-parametrit)
-        tulos (mapv (fn [tietyoilmoitus] (muunna-tietyoilmoitus tietyoilmoitus)) tietyoilmoitukset)]
-    tulos))
+        tietyoilmoitukset (map (fn [tietyoilmoitus]
+                                 (let [tietyoilmoitus (muunna-tietyoilmoitus tietyoilmoitus)
+                                       vaiheet (q-tietyoilmoitukset/hae-tietyoilmoituksen-vaiheet
+                                                 db
+                                                 {:paatietyoilmoitus (:id tietyoilmoitus)})
+                                       vaiheet (mapv (fn [vaihe] (muunna-tietyoilmoitus vaihe)) vaiheet)]
+                                   (assoc tietyoilmoitus :vaiheet vaiheet)))
+                               (q-tietyoilmoitukset/hae-tietyoilmoitukset db sql-parametrit))]
+    tietyoilmoitukset))
 
 (defn tietyoilmoitus-pdf [db user params]
   (println "MUODOSTA PDF: " params)

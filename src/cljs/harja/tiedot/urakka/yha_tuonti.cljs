@@ -275,10 +275,17 @@
 (defn kohdeluettelo-paivitetty [urakka]
   (if @yha-kohteiden-paivittaminen-kaynnissa?
     [ajax-loader "Kohteiden päivitys käynnissä"]
-    [:div (str "Kohdeluettelo päivitetty: "
-               (if-let [kohdeluettelo-paivitetty (get-in urakka [:yhatiedot :kohdeluettelo-paivitetty])]
-                 (pvm/pvm-aika kohdeluettelo-paivitetty)
-                 "ei koskaan"))]))
+    (let [yhatiedot (:yhatiedot urakka)
+          kohdeluettelo-paivitetty (:kohdeluettelo-paivitetty yhatiedot)
+          paivittajan-etunimi (:kohdeluettelo-paivittaja-etunimi yhatiedot)
+          paivittajan-sukunimi (:kohdeluettelo-paivittaja-sukunimi yhatiedot)
+          paivittajan-nimi (str " (" paivittajan-etunimi " " paivittajan-sukunimi ")")]
+      [:div (str "Kohdeluettelo päivitetty: "
+                 (if kohdeluettelo-paivitetty
+                   (str (pvm/pvm-aika kohdeluettelo-paivitetty)
+                        (when (or paivittajan-etunimi paivittajan-sukunimi)
+                          paivittajan-nimi))
+                   "ei koskaan"))])))
 
 (defn yha-lahetysnappi [oikeus urakka-id sopimus-id vuosi paallystysilmoitukset]
   (let [ilmoituksen-voi-lahettaa? (fn [paallystysilmoitus]

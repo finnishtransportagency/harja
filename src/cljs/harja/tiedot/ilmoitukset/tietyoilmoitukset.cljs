@@ -16,7 +16,7 @@
 
 (def aikavalit [{:nimi "1 päivän ajalta" :tunteja 24}
                 {:nimi "1 viikon ajalta" :tunteja 168}
-                {:nimi "1 kuukauden ajalta" :tunteja 672}
+                {:nimi "4 viikon ajalta" :tunteja 672}
                 {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
 
 (defonce ulkoisetvalinnat
@@ -66,8 +66,9 @@
 (defrecord PaivitaSijainti [sijainti])
 
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
-  (-> app
-      (assoc :ilmoitushaku-id (.setTimeout js/window (t/send-async! ->HaeIlmoitukset) 1000))))
+  (when haku
+    (.clearTimeout js/window haku))
+  (assoc app :ilmoitushaku-id (.setTimeout js/window (t/send-async! ->HaeIlmoitukset) 1000)))
 
 (extend-protocol t/Event
   AsetaValinnat
