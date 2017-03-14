@@ -422,7 +422,7 @@
                    WHERE
                    nimi = 'Nakkilan ramppi';"))))
 
-(defn hae-yllapitokohde-oulaisten-ohitusramppi-jolla-ei-aikataulutietoja []
+(defn hae-yllapitokohde-oulaisten-ohitusramppi []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE
                    nimi = 'Oulaisten ohitusramppi';"))))

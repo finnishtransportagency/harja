@@ -438,10 +438,44 @@
         (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
         (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))))
 
+(deftest merkitse-tiemerkintaurakan-usea-kohde-valmiiksi
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-paallystysurakan-kayttajat.xml"))
+        sahkoposti-valitetty (atom false)]
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (with-fake-http
+      [+testi-fim+ fim-vastaus]
+      (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+            sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+            oulaisten-ohitusramppi-id (hae-yllapitokohde-oulaisten-ohitusramppi)
+            nakkilan-ramppi-id (hae-yllapitokohde-nakkilan-ramppi)
+            vuosi 2017
+            aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
+            aikataulu-tiemerkinta-loppu (pvm/->pvm "28.5.2017")
+            kohteet [{:urakka urakka-id
+                      :id nakkilan-ramppi-id
+                      :sopimus sopimus-id
+                      :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
+                      :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}
+                     {:urakka urakka-id
+                      :id oulaisten-ohitusramppi-id
+                      :sopimus sopimus-id
+                      :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
+                      :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}]
+            _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :tallenna-yllapitokohteiden-aikataulu
+                              +kayttaja-jvh+
+                              {:urakka-id urakka-id
+                               :sopimus-id sopimus-id
+                               :vuosi vuosi
+                               :kohteet kohteet})]
+        ;; Usea kohde merkitään valmiiksi, pitäisi lähteä maili
+        (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
+        (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))))
+
 (deftest paallystyksen-merkitseminen-valmiiksi-toimii
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
-        oulaisten-ohitusramppi-id (hae-yllapitokohde-oulaisten-ohitusramppi-jolla-ei-aikataulutietoja)
+        oulaisten-ohitusramppi-id (hae-yllapitokohde-oulaisten-ohitusramppi)
         suorittava-tiemerkintaurakka-id (hae-oulun-tiemerkintaurakan-id)
         sahkoposti-valitetty (atom false)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
