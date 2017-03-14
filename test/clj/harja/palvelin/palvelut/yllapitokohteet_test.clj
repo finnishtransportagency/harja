@@ -15,6 +15,7 @@
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [clojure.core.async :refer [<!! timeout]]
             [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet])
   (:use org.httpkit.fake))
 
@@ -331,7 +332,9 @@
     (is (= (pvm/->pvm "23.5.2017") (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))))
 
 (deftest tallenna-tiemerkintaurakan-yllapitokohteen-aikataulu
-  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-lapin-tiemerkintaurakan-kayttajat.xml"))]
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-lapin-tiemerkintaurakan-kayttajat.xml"))
+        sahkoposti-valitetty (atom false)]
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
     (with-fake-http
       [+testi-fim+ fim-vastaus]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
@@ -365,7 +368,14 @@
         (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
         ;; Muokatut kentät päivittyivät
         (is (= aikataulu-tiemerkinta-loppu (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))
-        (is (= aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))))))
+        (is (= aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
+
+        ;; Odotetaan hetki varmistuaksemme siitä, ettei sähköpostia lähetetä tässä tilanteessa
+        ;; Kohde on jo merkitty valmiiksi, tässä testissä ainoastaan päivitetään päivämäärä
+        ;; Mailin on tarkoitus lentää vain silloin kun loppuaikataulu annetaan ensimmäisen kerran
+        ;; (muuttuu kannassa null -> pvm)
+        (<!! (timeout 2000))
+        (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")))))
 
 (deftest paallystyksen-merkitseminen-valmiiksi-toimii
   (let [urakka-id @muhoksen-paallystysurakan-id
