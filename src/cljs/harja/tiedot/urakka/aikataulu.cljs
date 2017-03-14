@@ -25,11 +25,12 @@
 (defn hae-tiemerkinnan-suorittavat-urakat [urakka-id]
   (k/post! :hae-tiemerkinnan-suorittavat-urakat {:urakka-id urakka-id}))
 
-(defn merkitse-kohde-valmiiksi-tiemerkintaan [kohde-id tiemerkintapvm urakka-id sopimus-id]
+(defn merkitse-kohde-valmiiksi-tiemerkintaan [{:keys [kohde-id tiemerkintapvm urakka-id sopimus-id vuosi]}]
   (k/post! :merkitse-kohde-valmiiksi-tiemerkintaan {:kohde-id kohde-id
                                                     :tiemerkintapvm tiemerkintapvm
                                                     :urakka-id urakka-id
-                                                    :sopimus-id sopimus-id}))
+                                                    :sopimus-id sopimus-id
+                                                    :vuosi vuosi}))
 
 (defonce aikataulurivit
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
@@ -39,9 +40,8 @@
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (go
-                  (sort-by tr-domain/tiekohteiden-jarjestys
-                           (<! (hae-aikataulu valittu-urakka-id
-                                              valittu-sopimus-id vuosi)))))))
+                  (<! (hae-aikataulu valittu-urakka-id
+                                     valittu-sopimus-id vuosi))))))
 
 (defonce tiemerkinnan-suorittavat-urakat
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)

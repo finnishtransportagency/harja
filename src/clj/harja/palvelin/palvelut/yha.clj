@@ -37,13 +37,7 @@
 
 (defn- poista-urakan-yllapitokohteet [db urakka-id]
   (log/debug "Poistetaan urakan " urakka-id " ylläpitokohteet")
-  (yha-q/poista-urakan-yllapitokohdeosat! db {:urakka urakka-id})
   (yha-q/poista-urakan-yllapitokohteet! db {:urakka urakka-id}))
-
-(defn- poista-urakan-yllapito-ilmoitukset [db urakka-id]
-  (log/debug "Poistetaan urakan " urakka-id " ylläpito-ilmoitukset")
-  (yha-q/poista-urakan-paallystysilmoitukset! db {:urakka urakka-id})
-  (yha-q/poista-urakan-paikkausilmoitukset! db {:urakka urakka-id}))
 
 (defn- hae-urakan-yha-tiedot [db urakka-id]
   (log/debug "Haetaan urakan " urakka-id " yha-tiedot")
@@ -61,7 +55,6 @@
     (throw (SecurityException. "Sidonta lukittu!"))
     (jdbc/with-db-transaction [db db]
       (poista-urakan-yha-tiedot db harja-urakka-id)
-      (poista-urakan-yllapito-ilmoitukset db harja-urakka-id)
       (poista-urakan-yllapitokohteet db harja-urakka-id)
       (lisaa-urakalle-yha-tiedot db user harja-urakka-id yha-tiedot)
       (log/debug "YHA-tiedot sidottu. Palautetaan urakan YHA-tiedot")
@@ -94,9 +87,10 @@
         _ (log/debug "Uusia kohteita oli " (count uudet-kohteet) " kpl.")]
     uudet-kohteet))
 
-(defn- merkitse-urakan-kohdeluettelo-paivitetyksi [db harja-urakka-id]
+(defn- merkitse-urakan-kohdeluettelo-paivitetyksi [db user harja-urakka-id]
   (log/debug "Merkitään urakan " harja-urakka-id " kohdeluettelo päivitetyksi")
-  (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi<! db {:urakka harja-urakka-id}))
+  (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi<! db {:urakka harja-urakka-id
+                                                            :kayttaja (:id user)}))
 
 (defn- tallenna-uudet-yha-kohteet
   "Tallentaa YHA:sta tulleet ylläpitokohteet. Olettaa, että ollaan tallentamassa vain
@@ -131,7 +125,8 @@
                      :nykyinen_paallyste nykyinen-paallyste
                      :nimi nimi
                      :vuodet (konv/seq->array [(t/year (pvm/suomen-aikavyohykkeeseen (t/now)))])
-                     :yha_kohdenumero yha-kohdenumero})]
+                     :yha_kohdenumero yha-kohdenumero
+                     :kohdenumero yha-kohdenumero})]
         (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
           (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
           (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!
@@ -149,7 +144,7 @@
               :yhaid yha-id})]
             (when-not (:sijainti uusi-kohdeosa)
               (log/warn "YHA:n kohdeosalle " (pr-str uusi-kohdeosa) " ei voitu muodostaa geometriaa"))))))
-    (merkitse-urakan-kohdeluettelo-paivitetyksi c urakka-id)
+    (merkitse-urakan-kohdeluettelo-paivitetyksi c user urakka-id)
     (log/debug "YHA-kohteet tallennettu, päivitetään urakan geometria")
     (yy/paivita-yllapitourakan-geometria c urakka-id)
     (log/debug "Geometria päivitetty.")

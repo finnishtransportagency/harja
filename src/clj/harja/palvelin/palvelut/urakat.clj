@@ -111,6 +111,9 @@
                                     :elyt (:yha_elyt %)
                                     :vuodet (:yha_vuodet %)
                                     :kohdeluettelo-paivitetty (:yha_kohdeluettelo_paivitetty %)
+                                    :kohdeluettelo-paivittaja (:yha_kohdeluettelo_paivittaja %)
+                                    :kohdeluettelo-paivittaja-etunimi (:yha_kohdeluettelo_paivittaja_etunimi %)
+                                    :kohdeluettelo-paivittaja-sukunimi (:yha_kohdeluettelo_paivittaja_sukunimi %)
                                     :sidonta-lukittu? (:yha_sidonta_lukittu %)})
                %))
 

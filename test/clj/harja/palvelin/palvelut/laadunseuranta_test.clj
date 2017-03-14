@@ -6,7 +6,17 @@
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.jms-test :refer [feikki-sonja]]
+            [harja.palvelin.komponentit.fim :as fim]
+            [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
+            [harja.palvelin.integraatiot.labyrintti.sms-test :refer [+testi-sms-url+]]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
+            [clojure.java.io :as io]
+            [harja.palvelin.komponentit.sonja :as sonja])
+  (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -18,86 +28,30 @@
                         :karttakuvat (component/using
                                        (karttakuvat/luo-karttakuvat)
                                        [:http-palvelin :db])
+                        :fim (component/using
+                               (fim/->FIM +testi-fim+)
+                               [:db :integraatioloki])
+                        :integraatioloki (component/using
+                                           (integraatioloki/->Integraatioloki nil)
+                                           [:db])
+                        :sonja (feikki-sonja)
+                        :sonja-sahkoposti (component/using
+                                            (sahkoposti/luo-sahkoposti "foo@example.com"
+                                                                       {:sahkoposti-sisaan-jono "email-to-harja"
+                                                                        :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
+                                                                        :sahkoposti-ulos-jono "harja-to-email"
+                                                                        :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
+                                            [:sonja :db :integraatioloki])
+                        :labyrintti (component/using (labyrintti/->Labyrintti +testi-sms-url+
+                                                                              "testi" "testi" (atom #{}))
+                                                     [:db :integraatioloki :http-palvelin])
                         :laadunseuranta (component/using
                                           (ls/->Laadunseuranta)
-                                          [:http-palvelin :db :karttakuvat])))))
+                                          [:http-palvelin :db :fim :sonja-sahkoposti :labyrintti])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
-(def soratietarkastus ;; soratietarkastus
-  {:uusi? true
-   :aika #inst "2006-07-06T09:43:00.000-00:00"
-   :tarkastaja "Jalmari Järjestelmävastuuhenkilö"
-   :sijainti nil
-   :tr {:alkuosa 2, :numero 1, :alkuetaisyys 3, :loppuetaisyys 5, :loppuosa 4}
-   :tyyppi :soratie
-   :soratiemittaus {:polyavyys 4
-                    :hoitoluokka 1
-                    :sivukaltevuus 5
-                    :tasaisuus 1
-                    :kiinteys 3}
-   :havainnot "kuvaus tähän"
-   :laadunalitus true})
-
 (use-fixtures :once jarjestelma-fixture)
-
-(deftest tallenna-ja-paivita-soratietarkastus
-  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
-        kuvaus (str "kuvaus nyt " (System/currentTimeMillis))
-        soratietarkastus (assoc-in soratietarkastus [:havainnot] kuvaus)
-        hae-tarkastukset #(kutsu-http-palvelua :hae-urakan-tarkastukset +kayttaja-jvh+
-                                               {:urakka-id urakka-id
-                                                :alkupvm #inst "2005-10-01T00:00:00.000-00:00"
-                                                :loppupvm #inst "2006-09-30T00:00:00.000-00:00"
-                                                :tienumero %
-                                                :vain-laadunalitukset? false})
-        tarkastuksia-ennen-kaikki (count (hae-tarkastukset nil))
-        tarkastuksia-ennen-tie1 (count (hae-tarkastukset 1))
-        tarkastuksia-ennen-tie2 (count (hae-tarkastukset 2))
-        tarkastus-id (atom nil)]
-
-    (testing "Soratietarkastuksen tallennus"
-      (let [vastaus (kutsu-http-palvelua :tallenna-tarkastus +kayttaja-jvh+
-                                         {:urakka-id urakka-id
-                                          :tarkastus soratietarkastus})
-            id (:id vastaus)]
-
-        (is (number? id) "Tallennus palauttaa uuden id:n")
-
-        ;; kaikki ja tie 1 listauksissa määrä kasvanut yhdellä
-        (is (= (count (hae-tarkastukset nil)) (inc tarkastuksia-ennen-kaikki)))
-
-        (let [listaus-tie1 (hae-tarkastukset 1)]
-          (is (= (count listaus-tie1) (inc tarkastuksia-ennen-tie1)))
-          (is (= :soratie
-                 (:tyyppi (first (filter #(= (:id %) id) listaus-tie1))))))
-
-
-        ;; tie 2 tarkastusmäärä ei ole kasvanut
-        (is (= (count (hae-tarkastukset 2)) tarkastuksia-ennen-tie2))
-
-        (reset! tarkastus-id id)))
-
-    (testing "Tarkastuksen haku ja muokkaus"
-      (let [tarkastus (kutsu-http-palvelua :hae-tarkastus +kayttaja-jvh+
-                                           {:urakka-id urakka-id
-                                            :tarkastus-id @tarkastus-id})]
-        (is (= kuvaus (:havainnot tarkastus)))
-
-        (testing "Muokataan tarkastusta"
-          (let [muokattu-tarkastus (kutsu-http-palvelua :tallenna-tarkastus +kayttaja-jvh+
-                                                        {:urakka-id urakka-id
-                                                         :tarkastus (-> tarkastus
-                                                                        (assoc-in [:soratiemittaus :tasaisuus] 5)
-                                                                        (assoc-in [:havainnot] "MUOKATTU KUVAUS"))})]
-
-            ;; id on edelleen sama
-            (is (= (:id muokattu-tarkastus) @tarkastus-id))
-
-            ;; muokatut kentät tallentuivat
-            (is (= "MUOKATTU KUVAUS" (get-in muokattu-tarkastus [:havainnot])))
-            (is (= 5 (get-in muokattu-tarkastus [:soratiemittaus :tasaisuus])))))))))
-; FIXME Siivoa tallennettu data
 
 (deftest tallenna-laatupoikkeama
   (let [laatupoikkeama {:yllapitokohde nil
@@ -161,11 +115,11 @@
       ;; tämä ei ole varsinaisesti toivottu mahdollisuus, eikä ole mahdollista normaalisti,
       ;; mutta tämä on vaan helppo tapa testata sanktion päivittymistä
       (let [vastaus (kutsu-http-palvelua :tallenna-laatupoikkeama
-                                 +kayttaja-jvh+
-                                 (assoc laatupoikkeama
-                                   :paatos paatos
-                                   :sanktiot [olemassa-oleva-sanktio
-                                              uusi-sanktio]))]
+                                         +kayttaja-jvh+
+                                         (assoc laatupoikkeama
+                                           :paatos paatos
+                                           :sanktiot [olemassa-oleva-sanktio
+                                                      uusi-sanktio]))]
         (is (number? (:id vastaus)) "Tallennus palauttaa uuden id:n")
         (is (= 2 (count (:sanktiot vastaus))) "Laatupoikkeamalla pitäisi olla kaksi sanktiota")
 
@@ -180,6 +134,61 @@
                                           :urakka 1
                                           :paatos paatos
                                           :sanktiot [olemassa-oleva-sanktio])))))))
+
+(deftest laatupoikkeaman-selvityspyynnosta-lahtee-sms
+  (let [laatupoikkeama {:sijainti {:type :point
+                                   :coordinates [382554.0523636384 6675978.549765582]}
+                        :kuvaus "Kuvaus"
+                        :aika #inst "2016-09-15T09:00:01.000-00:00"
+                        :tr {:alkuosa 1
+                             :numero 1
+                             :alkuetaisyys 1
+                             :loppuetaisyys 2
+                             :loppuosa 2}
+                        :urakka (hae-oulun-alueurakan-2014-2019-id)
+                        :sanktiot nil
+                        :selvitys-pyydetty true
+                        :tekija :tilaaja
+                        :kohde "Kohde"}
+        tekstiviesti-valitetty (atom false)
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))]
+
+    (with-fake-http
+      [+testi-fim+ fim-vastaus
+       +testi-sms-url+ (fn [_ _ _]
+                         (reset! tekstiviesti-valitetty true)
+                         "ok")]
+      (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)
+      (odota-ehdon-tayttymista #(true? @tekstiviesti-valitetty) "Tekstiviesti lähetettiin" 5000)
+      (is (true? @tekstiviesti-valitetty) "Tekstiviesti lähetettiin"))))
+
+(deftest laatupoikkeaman-selvityspyynnosta-lahtee-sahkoposti
+  (let [laatupoikkeama {:sijainti {:type :point
+                                   :coordinates [382554.0523636384 6675978.549765582]}
+                        :kuvaus "Kuvaus"
+                        :aika #inst "2016-09-15T09:00:01.000-00:00"
+                        :tr {:alkuosa 1
+                             :numero 1
+                             :alkuetaisyys 1
+                             :loppuetaisyys 2
+                             :loppuosa 2}
+                        :urakka (hae-oulun-alueurakan-2014-2019-id)
+                        :sanktiot nil
+                        :selvitys-pyydetty true
+                        :tekija :tilaaja
+                        :kohde "Kohde"}
+        sahkoposti-valitetty (atom false)
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))]
+
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+
+    (with-fake-http
+      [+testi-fim+ fim-vastaus
+       +testi-sms-url+ "ok"]
+      (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama))
+
+    (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
+    (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))
 
 (defn palvelukutsu-tallenna-suorasanktio [kayttaja s lp hk-alkupvm hk-loppupvm]
   (kutsu-http-palvelua
@@ -317,7 +326,7 @@
         hk-alkupvm (pvm/->pvm "1.10.2016")
         hk-loppupvm (pvm/->pvm "30.09.2017")
         sanktiot-suorasanktion-jalkeen (palvelukutsu-tallenna-suorasanktio
-                                 +kayttaja-jvh+ hoidon-sakko-suorasanktio laatupoikkeama-ss hk-alkupvm hk-loppupvm)
+                                         +kayttaja-jvh+ hoidon-sakko-suorasanktio laatupoikkeama-ss hk-alkupvm hk-loppupvm)
         sanktiot-lp-liittyvan-sanktion-jalkeen (palvelukutsu-tallenna-suorasanktio
                                                  +kayttaja-jvh+ hoidon-sakko-laatupoikkeamaan-liittyva laatupoikkeama-lp hk-alkupvm hk-loppupvm)
         lisatty-hoidon-sakko (first (filter #(= 637.27 (:summa %)) sanktiot-suorasanktion-jalkeen))
@@ -327,15 +336,15 @@
         lisatyn-sanktion-id-lp (:id lisatty-hoidon-sakko-lp)
         lisatyn-laatupoikkeaman-id-lp (:id (:laatupoikkeama lisatty-hoidon-sakko-lp))]
     (let [sanktiot-suorasanktion-poistamisen-jalkeen (palvelukutsu-tallenna-suorasanktio
-                                         +kayttaja-jvh+
-                                         (merge hoidon-sakko-suorasanktio {:id lisatyn-sanktion-id
-                                                                           :poistettu true})
-                                         (merge laatupoikkeama-ss {:id lisatyn-laatupoikkeaman-id}) hk-alkupvm hk-loppupvm)
-          sanktiot-lp-sanktion-poistamisen-jalkeen (palvelukutsu-tallenna-suorasanktio
                                                        +kayttaja-jvh+
-                                                       (merge hoidon-sakko-laatupoikkeamaan-liittyva {:id lisatyn-sanktion-id-lp
-                                                                                                      :poistettu true})
-                                                       (merge laatupoikkeama-lp {:id lisatyn-laatupoikkeaman-id-lp}) hk-alkupvm hk-loppupvm)
+                                                       (merge hoidon-sakko-suorasanktio {:id lisatyn-sanktion-id
+                                                                                         :poistettu true})
+                                                       (merge laatupoikkeama-ss {:id lisatyn-laatupoikkeaman-id}) hk-alkupvm hk-loppupvm)
+          sanktiot-lp-sanktion-poistamisen-jalkeen (palvelukutsu-tallenna-suorasanktio
+                                                     +kayttaja-jvh+
+                                                     (merge hoidon-sakko-laatupoikkeamaan-liittyva {:id lisatyn-sanktion-id-lp
+                                                                                                    :poistettu true})
+                                                     (merge laatupoikkeama-lp {:id lisatyn-laatupoikkeaman-id-lp}) hk-alkupvm hk-loppupvm)
           poistettu-suorasanktio-kannassa (q-sanktio-leftjoin-laatupoikkeama lisatyn-sanktion-id)
           poistettu-lp-sanktio-kannassa (q-sanktio-leftjoin-laatupoikkeama lisatyn-sanktion-id-lp)
           poistettu-hoidon-sakko (first (filter #(= 637.27 (:summa %)) sanktiot-suorasanktion-poistamisen-jalkeen))]
@@ -391,63 +400,6 @@
                                 :hae-sanktiotyypit +kayttaja-jvh+)]
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 9))))
-
-(deftest hae-urakan-tarkastukset
-  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-tarkastukset +kayttaja-jvh+
-                                {:urakka-id urakka-id
-                                 :alkupvm (pvm/luo-pvm (+ 1900 100) 9 1)
-                                 :loppupvm (pvm/luo-pvm (+ 1900 110) 8 30)
-                                 :tienumero nil
-                                 :tyyppi nil
-                                 :vain-laadunalitukset? false})]
-    (is (not (empty? vastaus)))
-    (is (>= (count vastaus) 1))
-    (let [tarkastus (first vastaus)]
-      (is (= #{:ok? :jarjestelma :havainnot :laadunalitus :vakiohavainnot :aika :soratiemittaus
-               :tr :tekija :id :tyyppi :tarkastaja :yllapitokohde :nayta-urakoitsijalle :liitteet}
-             (into #{} (keys tarkastus)))))))
-
-(deftest hae-urakan-tarkastukset-urakoitsijalle
-  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-tarkastukset +kayttaja-urakan-vastuuhenkilo+
-                                {:urakka-id urakka-id
-                                 :alkupvm (pvm/luo-pvm (+ 1900 100) 9 1)
-                                 :loppupvm (pvm/luo-pvm (+ 1900 130) 8 30)
-                                 :tienumero nil
-                                 :tyyppi nil
-                                 :vain-laadunalitukset? false})]
-    (is (not (empty? vastaus)))
-    (is (= (count vastaus) 1))))
-
-(deftest hae-tarkastus
-  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-tarkastus +kayttaja-jvh+ {:urakka-id urakka-id
-                                                               :tarkastus-id 1})]
-    (is (not (empty? vastaus)))
-    (is (>= (count vastaus) 1))))
-
-(deftest hae-tarkastus-joka-ei-nay-urakoitsijalle
-  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-tarkastus +kayttaja-urakan-vastuuhenkilo+
-                                {:urakka-id urakka-id
-                                 :tarkastus-id (ffirst (q "SELECT id FROM tarkastus
-                                                           WHERE havainnot != 'Tämä tarkastus näkyy myös urakoitsijalle';"))})]
-    (is (empty? vastaus))))
-
-(deftest hae-tarkastus-joka-nakyy-urakoitsijalle
-  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-tarkastus +kayttaja-urakan-vastuuhenkilo+
-                                {:urakka-id urakka-id
-                                 :tarkastus-id (ffirst (q "SELECT id FROM tarkastus
-                                                           WHERE havainnot = 'Tämä tarkastus näkyy myös urakoitsijalle';"))})]
-    (is (not (empty? vastaus)))
-    (is (= (:havainnot vastaus) "Tämä tarkastus näkyy myös urakoitsijalle"))))
 
 (deftest hae-urakan-sanktiot-test
   (is (oikeat-sarakkeet-palvelussa?

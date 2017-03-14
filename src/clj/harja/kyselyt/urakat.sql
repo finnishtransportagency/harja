@@ -90,8 +90,11 @@ SELECT
   yt.yhanimi                  AS yha_yhanimi,
   yt.elyt :: TEXT []          AS yha_elyt,
   yt.vuodet :: INTEGER []     AS yha_vuodet,
-  yt.kohdeluettelo_paivitetty AS yha_kohdeluettelo_paivitetty,
   yt.sidonta_lukittu          AS yha_sidonta_lukittu,
+  yt.kohdeluettelo_paivitetty AS yha_kohdeluettelo_paivitetty,
+  yt.kohdeluettelo_paivittaja AS yha_kohdeluettelo_paivittaja,
+  k.etunimi                   AS yha_kohdeluettelo_paivittaja_etunimi,
+  k.sukunimi                  AS yha_kohdeluettelo_paivittaja_sukunimi,
   u.takuu_loppupvm,
   (SELECT array_agg(concat((CASE WHEN paasopimus IS NULL
     THEN '*'
@@ -121,6 +124,7 @@ FROM urakka u
   LEFT JOIN tekniset_laitteet_urakka tlu ON u.urakkanro = tlu.urakkanro
   LEFT JOIN siltapalvelusopimus sps ON u.urakkanro = sps.urakkanro
   LEFT JOIN yhatiedot yt ON u.id = yt.urakka
+  LEFT JOIN kayttaja k ON k.id = yt.kohdeluettelo_paivittaja
 WHERE hallintayksikko = :hallintayksikko
       AND (u.id IN (:sallitut_urakat)
            OR (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
@@ -390,17 +394,6 @@ SELECT
   yt.vuodet :: INTEGER []                                       AS yha_vuodet,
   yt.kohdeluettelo_paivitetty                                   AS yha_kohdeluettelo_paivitetty,
   yt.sidonta_lukittu                                            AS yha_sidonta_lukittu,
-  (SELECT EXISTS(SELECT id
-                 FROM paallystysilmoitus
-                 WHERE paallystyskohde IN (SELECT id
-                                           FROM yllapitokohde
-                                           WHERE urakka = u.id)))
-  OR
-  (SELECT EXISTS(SELECT id
-                 FROM paikkausilmoitus
-                 WHERE paikkauskohde IN (SELECT id
-                                         FROM yllapitokohde
-                                         WHERE urakka = u.id))) AS sisaltaa_ilmoituksia,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)                                         AS sopimukset,
@@ -663,6 +656,7 @@ WHERE id = :urakka;
 
 -- name: hae-urakan-ely
 SELECT
+  o.id,
   o.nimi,
   o.elynumero,
   o.lyhenne

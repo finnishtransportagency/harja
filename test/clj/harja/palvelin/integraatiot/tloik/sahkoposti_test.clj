@@ -2,7 +2,7 @@
   (:require [harja.palvelin.integraatiot.tloik.sahkoposti :as sut]
             [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
-            [harja.sms-test :refer [feikki-labyrintti]]
+            [harja.palvelin.integraatiot.labyrintti.sms :refer [feikki-labyrintti]]
             [harja.jms-test :refer [feikki-sonja]]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
