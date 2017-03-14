@@ -1,4 +1,4 @@
-(ns harja.views.ilmoitukset.tietyohakulomake-test
+(ns harja.views.ilmoitukset.tietyoilmoitushakulomake-test
   (:require [tuck.core :refer [tuck]]
             [cljs.test :as t :refer-macros [deftest is]]
             [reagent.core :as r]
@@ -26,8 +26,7 @@
 
   (let [app tietyoilmoitukset-tiedot/tietyoilmoitukset
         haku (fake-palvelukutsu :hae-tietyoilmoitukset fakeilmoitushaku)]
-
-
+    
     (komponenttitesti
       [tuck app tietyoilmoitukset-view/ilmoitukset*]
       --
@@ -36,6 +35,14 @@
       (is (nil? (u/grid-solu "tietyoilmoitushakutulokset" 0 0)))
       (is (= "Ei löytyneitä tietoja" (u/text :.tyhja)))
       --
+
+      "Avataan aikahaku"
+      (u/click :button.nappi-alasveto)
+      --
+      (u/click ".harja-alasvetolistaitemi:nth-child(1) > a")
+      (<! haku)
+
+
       )
 
     )
