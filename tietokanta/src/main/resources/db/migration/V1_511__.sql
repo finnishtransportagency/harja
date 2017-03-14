@@ -1,5 +1,1 @@
-ALTER TABLE tietyoilmoitus
-  ADD COLUMN urakoitsija INTEGER REFERENCES organisaatio (id);
-
-ALTER TABLE tietyoilmoitus
-  ADD COLUMN urakoitsijan_nimi VARCHAR(128);
+ALTER TABLE yhatiedot ADD COLUMN kohdeluettelo_paivittaja INTEGER REFERENCES kayttaja (id);
