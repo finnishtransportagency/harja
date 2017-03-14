@@ -60,7 +60,7 @@
             "kaista": 1
           },
           "toimenpide": "testitoimenpide2",
-          "paallystetyyppi": 1,
+          "paallystetyyppi": "betoni",
           "raekoko": 66,
           "tyomenetelma": 12,
           "kokonaismassamaara": 6.6
