@@ -14,7 +14,6 @@
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+
                                       kuvaus-ja-avainarvopareja]]
             [harja.ui.valinnat :as valinnat]
-            [harja.tiedot.navigaatio :as nav]
             [reagent.core :as r]
             [harja.domain.tietyoilmoitukset :as domain]
             [clojure.string :as str]
@@ -69,10 +68,50 @@
        :palstoja 1}]
      valinnat-nyt]))
 
+(defn ilmoitustaulukon-kentat []
+  [{:tyyppi :vetolaatikon-tila :leveys 1}
+   {:otsikko "Urakka" :nimi :urakka_nimi :leveys 5
+    :hae (comp fmt/lyhennetty-urakan-nimi :urakka_nimi)}
+   {:otsikko "Tie" :nimi :tie
+    :hae #(str (:tr_numero % "(ei tien numeroa)") " " (:tien_nimi % "(ei tien nimeä)"))
+    :leveys 4}
+   {:otsikko "Ilmoitettu" :nimi :ilmoitettu
+    :hae (comp pvm/pvm-aika :alku)
+    :leveys 2}
+   {:otsikko "Alkupvm" :nimi :alku
+    :hae (comp pvm/pvm-aika :alku)
+    :leveys 2}
+   {:otsikko "Loppupvm" :nimi :loppu
+    :hae (comp pvm/pvm-aika :loppu) :leveys 2}
+   {:otsikko "Työn tyyppi" :nimi :tyotyypit
+    :hae #(s/join ", " (->> % :tyotyypit (map :tyyppi)))
+    :leveys 4}
+   {:otsikko "Ilmoittaja" :nimi :ilmoittaja
+    :hae #(str (:ilmoittaja_etunimi %) " " (:ilmoittaja_sukunimi %))
+    :leveys 7}])
+
+(defn vaikutukset-liikenteelle []
+  (lomake/ryhma {:otsikko "Vaikutukset liikenteelle"
+                 :uusi-rivi? true}
+                {:otsikko "Kaistajärjestelyt"
+                 :nimi :kaistajarjestelyt
+                 :hae #((keyword (:kaistajarjestelyt %)) domain/kaistajarjestelyt)
+                 :muokattava? (constantly false)}
+                {:otsikko "Nopeusrajoitukset"
+                 :nimi :nopeusrajoitukset
+                 :muokattava? (constantly false)
+                 :hae #(nopeusrajoitukset (:nopeusrajoitukset %))}
+                {:otsikko "Tienpinta työmaalla"
+                 :nimi :tienpinnat
+                 :muokattava? (constantly false)
+                 :hae #(tienpinnat (:tienpinnat %))}
+                {:otsikko (str "Kiertotie")
+                 :nimi :kiertotie
+                 :muokattava? (constantly false)
+                 :hae #(tienpinnat (:kiertotienpinnat %))}))
+
 (defn tietyoilmoituksen-vetolaatikko [e!
-                                      {haetut-ilmoitukset :tietyoilmoitukset
-                                       ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
-                                       :as app}
+                                      {ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa? :as app}
                                       tietyoilmoitus]
   [:div
    [lomake/lomake
@@ -135,30 +174,7 @@
       :nimi :tyotyypit
       :hae #(tyotyypit (:tyotyypit %))
       :muokattava? (constantly false)}
-     (lomake/ryhma {:otsikko "Vaikutukset liikenteelle"
-                    :uusi-rivi? true}
-                   {:otsikko "Kaistajärjestelyt"
-                    :nimi :kaistajarjestelyt
-                    :hae #((keyword (:kaistajarjestelyt %)) domain/kaistajarjestelyt)
-                    :muokattava? (constantly false)}
-                   {:otsikko "Nopeusrajoitukset"
-                    :nimi :nopeusrajoitukset
-                    :muokattava? (constantly false)
-                    :hae #(nopeusrajoitukset (:nopeusrajoitukset %))}
-                   {:otsikko "Tienpinta työmaalla"
-                    :nimi :tienpinnat
-                    :muokattava? (constantly false)
-                    :hae #(tienpinnat (:tienpinnat %))}
-                   {:otsikko (str "Kiertotie")
-                    :nimi :kiertotie
-                    :muokattava? (constantly false)
-                    :hae #(tienpinnat (:kiertotienpinnat %))}
-                   {:otsikko (str "Kulkurajoituksia")
-                    :nimi :kulkurajoitukset
-                    :muokattava? (constantly false)}
-                   {:otsikko (str "Haittaa suunnassa")
-                    :nimi :haittaa-suunnassa
-                    :muokattava? (constantly false)})]
+     (vaikutukset-liikenteelle)]
     tietyoilmoitus]
    [napit/muokkaa "Muokkaa" #(e! (tiedot/->ValitseIlmoitus tietyoilmoitus)) {}]
    [grid
@@ -168,27 +184,27 @@
      :piilota-toiminnot true
      :max-rivimaara 500
      :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
-    [{:otsikko "Urakka" :nimi :urakka_nimi :leveys 5
-      :hae (comp fmt/lyhennetty-urakan-nimi :urakka_nimi)}
-     {:otsikko "Tie" :nimi :tie
-      :hae #(str (:tr_numero % "(ei tien numeroa)") " " (:tien_nimi % "(ei tien nimeä)"))
-      :leveys 4}
-     {:otsikko "Ilmoitettu" :nimi :ilmoitettu
-      :hae (comp pvm/pvm-aika :alku)
-      :leveys 2}
-     {:otsikko "Alkupvm" :nimi :alku
-      :hae (comp pvm/pvm-aika :alku)
-      :leveys 2}
-     {:otsikko "Loppupvm" :nimi :loppu
-      :hae (comp pvm/pvm-aika :loppu) :leveys 2}
-     {:otsikko "Työn tyyppi" :nimi :tyotyypit
-      :hae #(s/join ", " (->> % :tyotyypit (map :tyyppi)))
-      :leveys 4}
-     {:otsikko "Ilmoittaja" :nimi :ilmoittaja
-      :hae #(str (:ilmoittaja_etunimi %) " " (:ilmoittaja_sukunimi %))
-      :leveys 7}]
-    ;; todo: hae työvaiheet ilmoituksen sisältä
-    ]])
+    (ilmoitustaulukon-kentat)]])
+
+(defn ilmoitukset [e! app haetut-ilmoitukset ilmoituksen-haku-kaynnissa?]
+  [:div
+   [grid
+    {:tyhja (if haetut-ilmoitukset
+              "Ei löytyneitä tietoja"
+              [ajax-loader "Haetaan ilmoituksia"])
+     :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa? #(e! (tiedot/->ValitseIlmoitus %)))
+     :piilota-toiminnot true
+     :max-rivimaara 500
+     :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."
+     :vetolaatikot (into {}
+                         (map (juxt :id (fn [rivi] [tietyoilmoituksen-vetolaatikko e! app rivi])))
+                         haetut-ilmoitukset)}
+    (into (ilmoitustaulukon-kentat)
+          [{:otsikko "Vaiheita"
+            :nimi :vaiheita
+            :hae #(count (:tyovaiheet %))
+            :leveys 2}])
+    haetut-ilmoitukset]])
 
 (defn hakulomake
   [e! {valinnat-nyt :valinnat
@@ -198,36 +214,4 @@
        :as app}]
   [:span.tietyoilmoitukset
    [ilmoitusten-hakuehdot e! valinnat-nyt kayttajan-urakat]
-   [:div
-    [grid
-     {:tyhja (if haetut-ilmoitukset
-               "Ei löytyneitä tietoja"
-               [ajax-loader "Haetaan ilmoituksia"])
-      :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa? #(e! (tiedot/->ValitseIlmoitus %)))
-      :piilota-toiminnot true
-      :max-rivimaara 500
-      :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."
-      :vetolaatikot (into {}
-                          (map (juxt :id (fn [rivi] [tietyoilmoituksen-vetolaatikko e! app rivi])))
-                          haetut-ilmoitukset)}
-     [{:tyyppi :vetolaatikon-tila :leveys 1}
-      {:otsikko "Urakka" :nimi :urakka_nimi :leveys 5
-       :hae (comp fmt/lyhennetty-urakan-nimi :urakka_nimi)}
-      {:otsikko "Tie" :nimi :tie
-       :hae #(str (:tr_numero % "(ei tien numeroa)") " " (:tien_nimi % "(ei tien nimeä)"))
-       :leveys 4}
-      {:otsikko "Ilmoitettu" :nimi :ilmoitettu
-       :hae (comp pvm/pvm-aika :alku)
-       :leveys 2}
-      {:otsikko "Alkupvm" :nimi :alku
-       :hae (comp pvm/pvm-aika :alku)
-       :leveys 2}
-      {:otsikko "Loppupvm" :nimi :loppu
-       :hae (comp pvm/pvm-aika :loppu) :leveys 2}
-      {:otsikko "Työn tyyppi" :nimi :tyotyypit
-       :hae #(s/join ", " (->> % :tyotyypit (map :tyyppi)))
-       :leveys 4}
-      {:otsikko "Ilmoittaja" :nimi :ilmoittaja
-       :hae #(str (:ilmoittaja_etunimi %) " " (:ilmoittaja_sukunimi %))
-       :leveys 7}]
-     haetut-ilmoitukset]]])
+   [ilmoitukset e! app haetut-ilmoitukset ilmoituksen-haku-kaynnissa?]])
