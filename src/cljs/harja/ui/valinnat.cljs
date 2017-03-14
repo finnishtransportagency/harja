@@ -292,7 +292,8 @@
                               :fmt :nimi
                               :tyyppi :valinta
                               :valinnat aikavalit
-                              :valinta-nayta :nimi}
+                              :valinta-nayta :nimi
+                              :alasveto-luokka "aikavalinta"}
         alkuaikakentta {:nimi :alkuaika
                         :otsikko "Alku"
                         :tyyppi :pvm-aika

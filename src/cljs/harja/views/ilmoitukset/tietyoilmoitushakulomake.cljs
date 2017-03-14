@@ -219,8 +219,6 @@
              ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
              kayttajan-urakat :kayttajan-urakat
              :as app}]
-
-      (log "---> app" (pr-str app))
       [:span.tietyoilmoitukset
        [ilmoitusten-hakuehdot e! valinnat-nyt kayttajan-urakat]
        [ilmoitukset e! app haetut-ilmoitukset ilmoituksen-haku-kaynnissa?]])))

@@ -26,7 +26,7 @@
 
   (let [app tietyoilmoitukset-tiedot/tietyoilmoitukset
         haku (fake-palvelukutsu :hae-tietyoilmoitukset fakeilmoitushaku)]
-    
+
     (komponenttitesti
       [tuck app tietyoilmoitukset-view/ilmoitukset*]
       --
@@ -38,7 +38,7 @@
 
       "Avataan aikahaku"
       (u/click :button.nappi-alasveto)
-      --
+      --        §
       (u/click ".harja-alasvetolistaitemi:nth-child(1) > a")
       (<! haku)
 
