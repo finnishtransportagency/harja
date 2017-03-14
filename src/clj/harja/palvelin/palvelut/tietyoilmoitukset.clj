@@ -31,7 +31,6 @@
                                      vain-kayttajan-luomat]
                               :as hakuehdot}
                              max-maara]
-  ;; todo: hae myös käyttäjän organisaation tekemät ilmoitukset
   (let [kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
                            db
                            user
@@ -43,7 +42,8 @@
                         :urakat (if (and urakka (not (str/blank? urakka))) [(Integer/parseInt urakka)] kayttajan-urakat)
                         :luojaid (when vain-kayttajan-luomat (:id user))
                         :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
-                        :maxmaara max-maara}
+                        :maxmaara max-maara
+                        :organisaatio (:id (:organisaatio user))}
         tietyoilmoitukset (map (fn [tietyoilmoitus]
                                  (let [tietyoilmoitus (muunna-tietyoilmoitus tietyoilmoitus)
                                        vaiheet (q-tietyoilmoitukset/hae-tietyoilmoituksen-vaiheet

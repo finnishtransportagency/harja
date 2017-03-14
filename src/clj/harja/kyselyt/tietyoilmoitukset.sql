@@ -68,8 +68,14 @@ SELECT
   tti.liikenteenohjaaja,
   tti.huomautukset
 FROM tietyoilmoitus tti
+  LEFT JOIN
+  kayttaja k ON k.id = tti.luoja
+  LEFT JOIN
+  organisaatio o ON o.id = k.organisaatio
 WHERE (tti.luotu BETWEEN :alku AND :loppu) AND
-      (tti.urakka IS NULL OR tti.urakka IN (:urakat)) AND
+      -- Joko urakan tai organisaation pitää olla sallittujen joukossa
+      ((tti.urakka IS NULL OR tti.urakka IN (:urakat)) OR
+       (o.id = :organisaatio)) AND
       (:sijainti :: GEOMETRY IS NULL OR st_intersects(st_buffer(:sijainti, 100), tti.sijainti)) AND
       (:luojaid :: INTEGER IS NULL OR tti.luoja = :luojaid) AND
       tti.paatietyoilmoitus IS NULL
