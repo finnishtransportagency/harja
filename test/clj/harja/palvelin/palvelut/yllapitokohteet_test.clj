@@ -49,7 +49,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (def yllapitokohde-testidata {:kohdenumero 999
                               :nimi "Testiramppi4564ddf"
@@ -383,7 +383,7 @@
         (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")))))
 
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-ilman-fim-kayttajia
-  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-paallystysurakan-kayttajat.xml"))
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
     (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
     (with-fake-http
@@ -406,7 +406,7 @@
                                      :sopimus-id sopimus-id
                                      :vuosi vuosi
                                      :kohteet kohteet})]
-        ;; Maili ei lähde, koska ei löydy FIM-käyttäjiä
+        ;; Maili ei lähde, koska ei löydy FIM-käyttäjiä (FIM-vastauksessa ei ole päällystys-käyttäjiä)
         (<!! (timeout 2000))
         (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")))))
 
@@ -435,12 +435,13 @@
                                :vuosi vuosi
                                :kohteet kohteet})]
         ;; Nakkilan ramppi merkitään valmistuneeksi, pitäisi lähteä maili
-        (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)))))
+        (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
+        (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))))
 
 (deftest paallystyksen-merkitseminen-valmiiksi-toimii
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
-        yllapitokohde-id (hae-yllapitokohde-oulaisten-ohitusramppi-jolla-ei-aikataulutietoja)
+        oulaisten-ohitusramppi-id (hae-yllapitokohde-oulaisten-ohitusramppi-jolla-ei-aikataulutietoja)
         suorittava-tiemerkintaurakka-id (hae-oulun-tiemerkintaurakan-id)
         sahkoposti-valitetty (atom false)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
@@ -459,7 +460,7 @@
                               {:urakka-id urakka-id
                                :sopimus-id sopimus-id
                                :vuosi vuosi
-                               :kohteet [{:id yllapitokohde-id
+                               :kohteet [{:id oulaisten-ohitusramppi-id
                                           :suorittava-tiemerkintaurakka suorittava-tiemerkintaurakka-id
                                           :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
                                           :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00")}]})
@@ -476,7 +477,7 @@
             vastaus-kun-merkittu-valmiiksi (kutsu-palvelua (:http-palvelin jarjestelma)
                                                            :merkitse-kohde-valmiiksi-tiemerkintaan +kayttaja-jvh+
                                                            {:tiemerkintapvm tiemerkintapvm
-                                                            :kohde-id yllapitokohde-id
+                                                            :kohde-id oulaisten-ohitusramppi-id
                                                             :urakka-id urakka-id
                                                             :sopimus-id sopimus-id
                                                             :vuosi vuosi})
