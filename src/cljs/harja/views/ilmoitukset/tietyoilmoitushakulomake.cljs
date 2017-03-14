@@ -187,7 +187,8 @@
      :piilota-toiminnot true
      :max-rivimaara 500
      :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
-    (ilmoitustaulukon-kentat)]])
+    (ilmoitustaulukon-kentat)
+    (:tyovaiheet tietyoilmoitus)]])
 
 (defn ilmoitukset [e! app haetut-ilmoitukset ilmoituksen-haku-kaynnissa?]
   [:div

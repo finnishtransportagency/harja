@@ -49,8 +49,8 @@
                                        vaiheet (q-tietyoilmoitukset/hae-tietyoilmoituksen-vaiheet
                                                  db
                                                  {:paatietyoilmoitus (:id tietyoilmoitus)})
-                                       vaiheet (mapv (fn [vaihe] (muunna-tietyoilmoitus vaihe)) vaiheet)]
-                                   (assoc tietyoilmoitus :vaiheet vaiheet)))
+                                       tyovaiheet (mapv (fn [vaihe] (muunna-tietyoilmoitus vaihe)) vaiheet)]
+                                   (assoc tietyoilmoitus :tyovaiheet tyovaiheet)))
                                (q-tietyoilmoitukset/hae-tietyoilmoitukset db sql-parametrit))]
     tietyoilmoitukset))
 
