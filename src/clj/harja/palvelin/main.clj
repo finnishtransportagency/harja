@@ -61,6 +61,7 @@
     [harja.palvelin.palvelut.laadunseuranta.tarkastukset :as tarkastukset]
     [harja.palvelin.palvelut.yha :as yha]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
+    [harja.palvelin.palvelut.tietyoilmoitukset :as tietyoilmoitukset]
     [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
     [harja.palvelin.palvelut.integraatioloki :as integraatioloki-palvelu]
     [harja.palvelin.palvelut.raportit :as raportit]
@@ -94,6 +95,7 @@
     [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
     [harja.palvelin.integraatiot.api.ping :as api-ping]
     [harja.palvelin.integraatiot.api.yhteystiedot :as api-yhteystiedot]
+    [harja.palvelin.integraatiot.api.tiemerkintatoteuma :as api-tiemerkintatoteuma]
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
@@ -117,6 +119,7 @@
     [harja.palvelin.komponentit.metriikka :as metriikka])
 
   (:gen-class))
+
 
 (defn luo-jarjestelma [asetukset]
   (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
@@ -338,6 +341,10 @@
                      (ilmoitukset/->Ilmoitukset)
                      [:http-palvelin :db :tloik])
 
+      :tietyoilmoitukset (component/using
+                     (tietyoilmoitukset/->Tietyoilmoitukset)
+                     [:http-palvelin :db :tloik])
+
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
                                 [:http-palvelin :db :turi])
@@ -454,7 +461,7 @@
                           :tloik])
       :api-yllapitokohteet (component/using
                              (api-yllapitokohteet/->Yllapitokohteet)
-                             [:http-palvelin :db :integraatioloki])
+                             [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
       :api-ping (component/using
                   (api-ping/->Ping)
                   [:http-palvelin :db :integraatioloki])
@@ -462,6 +469,10 @@
       :api-yhteystiedot (component/using
                           (api-yhteystiedot/->Yhteystiedot)
                           [:http-palvelin :db :integraatioloki :fim])
+
+      :api-tiemerkintatoteuma (component/using
+                                (api-tiemerkintatoteuma/->Tiemerkintatoteuma)
+                                [:http-palvelin :db :integraatioloki])
 
       ;; Ajastettu laskutusyhteenvetojen muodostus
       :laskutusyhteenvetojen-muodostus

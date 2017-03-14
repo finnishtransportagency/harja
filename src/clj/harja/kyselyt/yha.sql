@@ -30,15 +30,9 @@ FROM yhatiedot
 WHERE urakka = :urakka;
 
 -- name: poista-urakan-yllapitokohteet!
-DELETE FROM yllapitokohde
+UPDATE yllapitokohde
+set poistettu = TRUE
 WHERE urakka = :urakka;
-
--- name: poista-urakan-yllapitokohdeosat!
-DELETE FROM yllapitokohdeosa
-WHERE yllapitokohde IN
-      (SELECT id
-       FROM yllapitokohde
-       WHERE urakka = :urakka);
 
 -- name: hae-yllapitokohteen-kohdeosat
 SELECT
@@ -65,7 +59,7 @@ WHERE yt.yhaid IN (:yhaidt);
 INSERT INTO yllapitokohde
 (urakka, sopimus, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
  tr_ajorata, tr_kaista,
- yhatunnus, yhaid, yha_kohdenumero, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yllapitoluokka, keskimaarainen_vuorokausiliikenne,
+ yhatunnus, yhaid, yha_kohdenumero, kohdenumero, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yllapitoluokka, keskimaarainen_vuorokausiliikenne,
  nykyinen_paallyste, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, nimi, vuodet)
 VALUES (
   :urakka,
@@ -82,6 +76,7 @@ VALUES (
   :yhatunnus,
   :yhaid,
   :yha_kohdenumero,
+  :kohdenumero,
   :yllapitokohdetyyppi :: yllapitokohdetyyppi,
   :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi,
   :yllapitoluokka,

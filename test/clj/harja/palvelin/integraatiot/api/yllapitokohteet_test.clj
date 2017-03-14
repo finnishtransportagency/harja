@@ -11,7 +11,8 @@
             [harja.domain.skeema :as skeema]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
             [clojure.walk :as walk]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]))
 
 (def kayttaja-paallystys "skanska")
 (def kayttaja-tiemerkinta "tiemies")
@@ -19,7 +20,8 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja-paallystys
-    :api-yllapitokohteet (component/using (api-yllapitokohteet/->Yllapitokohteet) [:http-palvelin :db :integraatioloki])))
+    :api-yllapitokohteet (component/using (api-yllapitokohteet/->Yllapitokohteet)
+                                          [:http-palvelin :db :integraatioloki :liitteiden-hallinta])))
 
 (use-fixtures :each jarjestelma-fixture)
 
@@ -444,3 +446,89 @@
         vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)]
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "tuntematon-yllapitokohde"))))
+
+(deftest tarkastuksen-kirjaaminen-kohteelle-toimii
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+        hae-tarkastukset #(q-map "SELECT * FROM tarkastus WHERE yllapitokohde =" kohde-id)
+        tarkastukset-ennen-kirjausta (hae-tarkastukset)
+        polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tarkastus"]
+        kutsudata (slurp "test/resurssit/api/yllapitokohteen-tarkastuksen-kirjaus-request.json")
+        vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)
+        tarkastukset-kirjauksen-jalkeen (hae-tarkastukset)
+        tarkastus (first tarkastukset-kirjauksen-jalkeen)]
+
+    (is (= 200 (:status vastaus)) "Kirjaus tehtiin onnistuneesti")
+    (is (.contains (:body vastaus) "Tarkastus kirjattu onnistuneesti urakan: 5 ylläpitokohteelle: 5."))
+    (is (= (+ 1 (count tarkastukset-ennen-kirjausta)) (count tarkastukset-kirjauksen-jalkeen))
+        "Vain yksi uusi tarkastus on kirjautunut ylläpitokohteelle")
+
+    (is (= 5 (:yllapitokohde tarkastus)) "Tarkastus on kirjattu oikealle ylläpitokohteelle")
+    (is (= "katselmus" (:tyyppi tarkastus)) "Tarkastus on oikeaa tyyppiä")
+    (is (= "Vanha päällyste on uusittava" (:havainnot tarkastus)) "Havainnot ovat oikein")
+
+    (let [kutsudata (.replace kutsudata "Vanha päällyste on uusittava" "Eipäs tarvikkaan")
+          vastaus (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata)
+          tarkastukset-paivityksen-jalkeen (hae-tarkastukset)
+          paivitetty-tarkastus (first tarkastukset-paivityksen-jalkeen)]
+
+      (is (= 200 (:status vastaus)) "Päivitys tehtiin onnistuneesti")
+      (is (= (count tarkastukset-kirjauksen-jalkeen) (count tarkastukset-paivityksen-jalkeen)) "Kirjauksia päivityksen jälkeen on saman verran kuin aloittaessa.")
+
+      (is (.contains (:body vastaus) "Tarkastus kirjattu onnistuneesti urakan: 5 ylläpitokohteelle: 5."))
+      (is (= "Eipäs tarvikkaan" (:havainnot paivitetty-tarkastus)) "Havainnot ovat päivittyneet oikein"))
+
+    (let [polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tarkastus"]
+          kutsudata (-> "test/resurssit/api/talvihoitotarkastus-poisto.json"
+                        slurp
+                        (.replace "__PVM__" "2017-01-01T12:00:00+02:00")
+                        (.replace "__ID__" "666"))
+          vastaus (api-tyokalut/delete-kutsu polku kayttaja-paallystys portti kutsudata)
+          poistettu? (:poistettu (first (hae-tarkastukset)))]
+      (is (= 200 (:status vastaus)) "Poisto tehtiin onnistuneesti")
+      (is (.contains (:body vastaus) "Tarkastukset poistettu onnistuneesti. Poistettiin: 1 tarkastusta."))
+      (is poistettu? "Tarkastus on merkitty poistetuksi onnistuneesti."))))
+
+
+(deftest tiemerkintatoteuman-kirjaaminen-kohteelle-toimii
+  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        kohde-id (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka-id)
+        ulkoinen-id 666777
+        hae-toteumat #(q-map "SELECT * FROM tiemerkinnan_yksikkohintainen_toteuma WHERE yllapitokohde = " kohde-id)
+        toteumat-ennen-kirjausta (hae-toteumat)
+        polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tiemerkintatoteuma"]
+        kutsudata (slurp "test/resurssit/api/yllapitokohteen-tiemerkintatoteuman-kirjaus-request.json")
+        vastaus (api-tyokalut/post-kutsu polku kayttaja-tiemerkinta portti kutsudata)
+        toteumat-kirjauksen-jalkeen (hae-toteumat)
+        toteuma (first (filter #(= ulkoinen-id (:ulkoinen_id %)) toteumat-kirjauksen-jalkeen))]
+
+    (is (= 200 (:status vastaus)) "Kirjaus tehtiin onnistuneesti")
+    (is (.contains (:body vastaus) "Tiemerkintätoteuma kirjattu onnistuneesti"))
+    (is (= (+ 1 (count toteumat-ennen-kirjausta)) (count toteumat-kirjauksen-jalkeen))
+        "Vain yksi uusi tarkastus on kirjautunut ylläpitokohteelle")
+
+    (is (= urakka-id (:urakka toteuma)) "Toteuma on kirjattu oikealla urakalle")
+    (is (= kohde-id (:yllapitokohde toteuma)) "Toteuma on kirjattu oikealla yllapitokohteelle")
+    (is (= 12345678.00M (:hinta toteuma)) "Toteuma on kirjattu oikealla yllapitokohteelle")
+    (is (not (str/blank? (:hinta_kohteelle toteuma))) "Toteuma sisältää tiedon, mille kohteelle sen on kohdistettu")
+
+    (let [kutsudata (.replace kutsudata "12345678" "666")
+          vastaus (api-tyokalut/post-kutsu polku kayttaja-tiemerkinta portti kutsudata)
+          toteumat-paivityksen-jalkeen (hae-toteumat)
+          paivitetty-toteuma (first (filter #(= ulkoinen-id (:ulkoinen_id %)) toteumat-paivityksen-jalkeen))]
+
+      (is (= 200 (:status vastaus)) "Päivitys tehtiin onnistuneesti")
+      (is (= (count toteumat-kirjauksen-jalkeen) (count toteumat-paivityksen-jalkeen)) "Kirjauksia päivityksen jälkeen on saman verran kuin aloittaessa.")
+      (is (.contains (:body vastaus) "Tiemerkintätoteuma kirjattu onnistuneesti"))
+      (is (= 666.00M (:hinta paivitetty-toteuma)) "Hinta on päivittynyt oikein"))
+
+    (let [polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tiemerkintatoteuma"]
+          kutsudata (-> "test/resurssit/api/toteuman-poisto.json"
+                        slurp
+                        (.replace "__PVM__" "2017-01-01T12:00:00+02:00")
+                        (.replace "__ID__" (str ulkoinen-id)))
+          vastaus (api-tyokalut/delete-kutsu polku kayttaja-tiemerkinta portti kutsudata)
+          poistettu? (:poistettu (first (filter #(= ulkoinen-id (:ulkoinen_id %)) (hae-toteumat))))]
+      (is (= 200 (:status vastaus)) "Poisto tehtiin onnistuneesti")
+      (is (.contains (:body vastaus) "Toteumat poistettu onnistuneesti. Poistettiin: 1 toteumaa."))
+      (is poistettu? "Toteuma on merkitty poistetuksi onnistuneesti."))))

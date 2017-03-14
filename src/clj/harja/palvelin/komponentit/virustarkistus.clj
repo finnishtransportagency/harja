@@ -10,7 +10,7 @@
   (if-not url
     (do (log/error "Virustarkista ei voi tehdä, ClamAV rest palvelun URL ei asetettu.")
         :error)
-    (let [{:keys [status body]}
+    (let [{:keys [status body error]}
           @(http/post url
                       {:timeout 30000
                        :query-params {"name" nimi}
@@ -29,7 +29,7 @@
                            :vastaus body})))
 
         :default
-        (do (log/error "Virustarkistus epäonnistui! " status body)
+        (do (log/error "Virustarkistus epäonnistui! " status body url error)
             :error)))))
 
 (defrecord Virustarkistus [url]
