@@ -287,11 +287,15 @@
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
         (u (str "DELETE FROM yllapitokohdeosa WHERE nimi = 'Testiosa123456';"))))))
 
-(deftest tallenna-paallystysurakan-aikataulut
-  (let [urakka-id @muhoksen-paallystysurakan-id
-        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+(deftest tallenna-paallystysurakan-yllapitokohteen-aikataulu
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
         yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
         vuosi 2017
+        aikataulu-kohde-alku (pvm/->pvm "15.5.2017")
+        aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
+        aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00")
+        aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id "
@@ -299,13 +303,10 @@
         kohteet [{:urakka urakka-id
                   :id yllapitokohde-id
                   :sopimus sopimus-id
-                  :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
-                  :aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
-                  :valmis-tiemerkintaan (pvm/->pvm-aika "23.5.2017 12:00")
-                  :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00"),
-                  :aikataulu-tiemerkinta-takaraja (pvm/->pvm "1.6.2017")
-                  :aikataulu-tiemerkinta-alku nil,
-                  :aikataulu-tiemerkinta-loppu (pvm/->pvm "26.5.2017")}]
+                  :aikataulu-kohde-alku aikataulu-kohde-alku
+                  :aikataulu-paallystys-alku aikataulu-paallystys-alku
+                  :aikataulu-paallystys-loppu aikataulu-paallystys-loppu
+                  :aikataulu-kohde-valmis aikataulu-kohde-valmis}]
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-yllapitokohteiden-aikataulu
                                 +kayttaja-jvh+
@@ -317,27 +318,13 @@
                                             (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id "
                                          AND poistettu IS NOT TRUE;")))
-        vastaus-leppajarven-ramppi (first (filter #(= "Leppäjärven ramppi" (:nimi %)) vastaus))
-        odotettu {:aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
-                  :aikataulu-muokkaaja (:id +kayttaja-jvh+)
-                  :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
-                  :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2017 12:00")
-                  :aikataulu-tiemerkinta-takaraja (pvm/->pvm "1.6.2017")
-                  :aikataulu-tiemerkinta-alku (pvm/->pvm-aika "22.5.2017 00:00")
-                  :aikataulu-tiemerkinta-loppu (pvm/->pvm-aika "23.5.2017 00:00")
-                  :id yllapitokohde-id
-                  :kohdenumero "L03"
-                  :nimi "Leppäjärven ramppi"
-                  :sopimus sopimus-id
-                  :urakka urakka-id
-                  :valmis-tiemerkintaan (pvm/->pvm-aika "23.5.2017 12:00")}]
+        vastaus-leppajarven-ramppi (first (filter #(= "Leppäjärven ramppi" (:nimi %)) vastaus))]
     (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
-    (is (= (:aikataulu-paallystys-alku odotettu) (:aikataulu-paallystys-alku vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-paallystys-alku")
-    (is (= (:aikataulu-paallystys-loppu odotettu) (:aikataulu-paallystys-loppu vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-paallystys-loppu")
-    (is (= (:aikataulu-tiemerkinta-takaraja odotettu) (:aikataulu-tiemerkinta-takaraja vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-tiemerkinta-takaraja")
-    (is (= (:aikataulu-tiemerkinta-alku odotettu) (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-tiemerkinta-alku")
-    (is (= (:aikataulu-tiemerkinta-loppu odotettu) (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-tiemerkinta-loppu")
-    (is (= (:aikataulu-kohde-valmis odotettu) (:aikataulu-kohde-valmis vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-kohde-valmis")))
+    ;; Muokatut kentät päivittyivät
+    (is (= aikataulu-kohde-alku (:aikataulu-kohde-alku vastaus-leppajarven-ramppi)))
+    (is (= aikataulu-paallystys-alku (:aikataulu-paallystys-alku vastaus-leppajarven-ramppi)))
+    (is (= aikataulu-paallystys-loppu (:aikataulu-paallystys-loppu vastaus-leppajarven-ramppi)))
+    (is (= aikataulu-kohde-valmis (:aikataulu-kohde-valmis vastaus-leppajarven-ramppi)))))
 
 (deftest paallystyksen-merkitseminen-valmiiksi-toimii
   (let [urakka-id @muhoksen-paallystysurakan-id
