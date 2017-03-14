@@ -8,7 +8,9 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
             [harja.geo :as geo]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [harja.tyokalut.xsl-fo :as xsl-fo]))
 
 (defn- muunna-tietyoilmoitus [tietyoilmoitus]
   (as-> tietyoilmoitus t
@@ -44,18 +46,30 @@
         tulos (mapv (fn [tietyoilmoitus] (muunna-tietyoilmoitus tietyoilmoitus)) tietyoilmoitukset)]
     tulos))
 
+(defn tietyoilmoitus-pdf [user params]
+  (println "MUODOSTA PDF: " params)
+  (xsl-fo/dokumentti
+   {}
+   (xsl-fo/tietoja
+    {}
+    "Foo" "BAR")))
+
 (defrecord Tietyoilmoitukset []
   component/Lifecycle
   (start [{db :db
            tloik :tloik
            http :http-palvelin
+           pdf :pdf-vienti
            :as this}]
     (julkaise-palvelu http :hae-tietyoilmoitukset
                       (fn [user tiedot]
                         (hae-tietyoilmoitukset db user tiedot 501)))
+    (pdf-vienti/rekisteroi-pdf-kasittelija!
+     pdf :tietyoilmoitus #'tietyoilmoitus-pdf)
     this)
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
                      :hae-tietyoilmoitukset)
+    (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :tietyoilmoitus)
     this))
