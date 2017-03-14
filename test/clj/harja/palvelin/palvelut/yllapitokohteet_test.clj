@@ -49,7 +49,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :each jarjestelma-fixture)
+(use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (def yllapitokohde-testidata {:kohdenumero 999
                               :nimi "Testiramppi4564ddf"
