@@ -134,7 +134,7 @@ VALUES (
   'Oulu, Kiiminki',
   'Kuusamontien alussa',
   'Jossain Kiimingissä',
-  '2016-06-06 06:06:06',
+  '2017-01-01 01:01:01',
   '2017-07-07 07:07:07',
   NULL,
   'molemmat',
@@ -154,7 +154,7 @@ VALUES (
   'avotuli',
   TRUE,
   TRUE,
-  '2016-06-06 06:06:06',
+  '2017-01-01 01:01:01',
   '2017-07-07 07:07:07',
   'Tämä on testi-ilmoitus',
   (SELECT id
