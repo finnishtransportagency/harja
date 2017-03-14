@@ -74,3 +74,6 @@ WHERE (tti.luotu BETWEEN :alku AND :loppu) AND
       (:luojaid :: INTEGER IS NULL OR tti.luoja = :luojaid)
 ORDER BY tti.luotu DESC
 LIMIT :maxmaara :: INTEGER;
+
+-- name: hae-tietyoilmoitus
+SELECT * FROM tietyoilmoitus WHERE id=:id
