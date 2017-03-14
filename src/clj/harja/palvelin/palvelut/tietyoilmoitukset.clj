@@ -43,13 +43,14 @@
                         :luojaid (when vain-kayttajan-luomat (:id user))
                         :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
                         :maxmaara max-maara}
-        tietyoilmoitukset (doseq [tietyoilmoitus (q-tietyoilmoitukset/hae-tietyoilmoitukset db sql-parametrit)]
-                            (println "---> tietyoilmoitus" tietyoilmoitus)
-                            (let [tti (muunna-tietyoilmoitus tietyoilmoitus)
-                                  vaiheet (q-tietyoilmoitukset/hae-tietyoilmoituksen-vaiheet db {:paatietyoilmoitus (:id tti)})
-                                  vaiheet (mapv (fn [vaihe] (muunna-tietyoilmoitus vaihe)) vaiheet)]
-                              (assoc tietyoilmoitus :vaiheet vaiheet)))]
-    (println "---> tietyoilmoitukset:" tietyoilmoitukset)
+        tietyoilmoitukset (map (fn [tietyoilmoitus]
+                                 (let [tietyoilmoitus (muunna-tietyoilmoitus tietyoilmoitus)
+                                       vaiheet (q-tietyoilmoitukset/hae-tietyoilmoituksen-vaiheet
+                                                 db
+                                                 {:paatietyoilmoitus (:id tietyoilmoitus)})
+                                       vaiheet (mapv (fn [vaihe] (muunna-tietyoilmoitus vaihe)) vaiheet)]
+                                   (assoc tietyoilmoitus :vaiheet vaiheet)))
+                               (q-tietyoilmoitukset/hae-tietyoilmoitukset db sql-parametrit))]
     tietyoilmoitukset))
 
 (defrecord Tietyoilmoitukset []
