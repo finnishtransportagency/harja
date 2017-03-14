@@ -526,9 +526,9 @@
 (deftest yllapitokohteen-suorittavan-tiemerkintaurakan-vaihto-ei-toimi-jos-kirjauksia
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
-        lapin-urakka-id (hae-oulun-tiemerkintaurakan-id)
+        lapin-urakka-id (hae-lapin-tiemerkintaurakan-id)
         vuosi 2017
-        leppajarven-ramppi-id (hae-lapin-tiemerkintaurakan-id)
+        leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
         kohteet [{:id leppajarven-ramppi-id
                   :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
                   :aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
