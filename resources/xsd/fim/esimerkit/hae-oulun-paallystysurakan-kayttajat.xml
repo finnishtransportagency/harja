@@ -7,7 +7,7 @@
         <Email>erkki.esimerkki@example.com</Email>
         <MobilePhone></MobilePhone>
         <Company>ELY</Company>
-        <Role>4242523-AES4_ELY_Urakanvalvoja</Role>
+        <Role>4242523-TES2_ELY_Urakanvalvoja</Role>
         <Disabled>false</Disabled>
     </member>
     <member>
@@ -18,7 +18,7 @@
         <Email>eero.esimerkki@example.com</Email>
         <MobilePhone>0400123456789</MobilePhone>
         <Company>ELY</Company>
-        <Role>db4242523-AES4_vastuuhenkilo</Role>
+        <Role>4242523-TES2_vastuuhenkilo</Role>
         <Disabled>false</Disabled>
     </member>
     <member>
@@ -29,7 +29,7 @@
         <Email>eetvartti.esimerkki@example.com</Email>
         <MobilePhone>0400123456788</MobilePhone>
         <Company>ELY</Company>
-        <Role>db4242523-AES4_ELY_peruskäyttäjä</Role>
+        <Role>4242523-TES2_ELY_peruskäyttäjä</Role>
         <Disabled>false</Disabled>
     </member>
     <member>
@@ -40,7 +40,7 @@
         <Email>piia.poistettu@example.com</Email>
         <MobilePhone>8973453</MobilePhone>
         <Company>ELY</Company>
-        <Role>db4242523-AES4_ELY_peruskäyttäjä</Role>
+        <Role>4242523-TES2_ELY_peruskäyttäjä</Role>
         <Disabled>true</Disabled>
     </member>
 </Members>
