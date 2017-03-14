@@ -45,7 +45,7 @@
     [lomake/lomake
      {:luokka :horizontal
       :muokkaa! #(e! (tiedot/->AsetaValinnat %))}
-     [(valinnat/aikavalivalitsin "Ilmoitettu" tiedot/aikavalit valinnat-nyt)
+     [(valinnat/aikavalivalitsin "Luotu välillä" tiedot/aikavalit valinnat-nyt)
       {:nimi :urakka
        :otsikko "Urakka"
        :tyyppi :valinta

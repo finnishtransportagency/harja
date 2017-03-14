@@ -16,7 +16,7 @@
 
 (def aikavalit [{:nimi "1 päivän ajalta" :tunteja 24}
                 {:nimi "1 viikon ajalta" :tunteja 168}
-                {:nimi "1 kuukauden ajalta" :tunteja 672}
+                {:nimi "4 viikon ajalta" :tunteja 672}
                 {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
 
 (defonce ulkoisetvalinnat
