@@ -376,7 +376,7 @@
         (is (= aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
 
         ;; Odotetaan hetki varmistuaksemme siitä, ettei sähköpostia lähetetä tässä tilanteessa
-        ;; Leppäjärvi on jo merkitty valmiiksi ja Nakkilan rampille laitetitin vain aloituspvm.
+        ;; Leppäjärvi on jo merkitty valmiiksi ja Nakkilan rampille asetettiin vain aloituspvm.
         ;; Mailin on tarkoitus lentää vain silloin kun loppuaikataulu annetaan ensimmäisen kerran
         ;; (muuttuu kannassa null -> pvm)
         (<!! (timeout 2000))
