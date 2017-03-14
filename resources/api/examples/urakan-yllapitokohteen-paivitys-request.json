@@ -62,7 +62,7 @@
           "toimenpide": "testitoimenpide2",
           "paallystetyyppi": "betoni",
           "raekoko": 66,
-          "tyomenetelma": 12,
+          "tyomenetelma": "ART-pintaus",
           "kokonaismassamaara": 6.6
         }
       }
