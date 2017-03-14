@@ -58,10 +58,10 @@
                        :kayttaja "harjatest"
                        :salasana nil})
 
-(defn odota-ehdon-tayttymista [ehto-fn viesti max-aika]
-  (loop [max-ts (+ max-aika (System/currentTimeMillis))]
+(defn odota-ehdon-tayttymista [ehto-fn viesti max-aika-ms]
+  (loop [max-ts (+ max-aika-ms (System/currentTimeMillis))]
     (if (> (System/currentTimeMillis) max-ts)
-      (assert false (str "Ehto '" viesti "' ei täyttynyt " max-aika " kuluessa"))
+      (assert false (str "Ehto '" viesti "' ei täyttynyt " max-aika-ms "ms kuluessa"))
       (when-not (ehto-fn)
         (recur max-ts)))))
 
@@ -360,20 +360,15 @@
                    FROM   urakka
                    WHERE  nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'"))))
 
-(defn hae-oulun-tiemerkintaurakan-paasopimuksen-id []
-  (ffirst (q (str "SELECT id
-                   FROM   sopimus
-                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2013-2018'"))))
-
 (defn hae-lapin-tiemerkintaurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Lapin tiemerkinnän palvelusopimus 2013-2018'"))))
 
-(defn hae-lapin-tiemerkintaurakan-paasopimuksen-id []
+(defn hae-oulun-tiemerkintaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
                    FROM   sopimus
-                   WHERE  nimi = 'Lapin tiemerkinnän palvelusopimuksen pääsopimus 2013-2018'"))))
+                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2013-2018'"))))
 
 (defn hae-muhoksen-paikkausurakan-id []
   (ffirst (q (str "SELECT id
@@ -426,6 +421,16 @@
                    WHERE
                    nimi = 'Leppäjärven ramppi'
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
+
+(defn hae-yllapitokohde-nakkilan-ramppi []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   nimi = 'Nakkilan ramppi';"))))
+
+(defn hae-yllapitokohde-oulaisten-ohitusramppi []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   nimi = 'Oulaisten ohitusramppi';"))))
 
 (defn hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk

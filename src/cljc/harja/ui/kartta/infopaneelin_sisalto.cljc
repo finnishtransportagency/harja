@@ -104,7 +104,7 @@
             {:otsikko "Otsikko" :tyyppi :string :nimi :otsikko}
             {:otsikko "Paikan kuvaus" :tyyppi :string :nimi :paikankuvaus}
             {:otsikko "Lisätietoja" :tyyppi :string :nimi :lisatieto}
-            {:otsikko "Kuittaukset" :tyyppi :positiivinen-numero
+            {:otsikko "Kuittaukset" :tyyppi :positiivinen-numero :kokonaisluku? true
              :hae (hakufunktio :kuittaukset #(count (:kuittaukset %)))}]
    :data ilmoitus})
 

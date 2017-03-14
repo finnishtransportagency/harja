@@ -403,7 +403,8 @@ WHERE
   AND sopimus = :sopimus
   AND (:vuosi::INTEGER IS NULL OR (cardinality(vuodet) = 0
      OR vuodet @> ARRAY[:vuosi]::int[]))
-  AND poistettu IS NOT TRUE;
+  AND poistettu IS NOT TRUE
+ORDER BY aikataulu_kohde_alku;
 
 -- name: hae-tiemerkintaurakan-aikataulu
 -- Hakee tiemerkintäurakan kohteiden aikataulutiedot
@@ -435,7 +436,8 @@ WHERE
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
   AND (:vuosi::INTEGER IS NULL OR (cardinality(vuodet) = 0
      OR vuodet @> ARRAY[:vuosi]::int[]))
-  AND poistettu IS NOT TRUE;
+  AND poistettu IS NOT TRUE
+ORDER BY aikataulu_tiemerkinta_alku;
 
 -- name: hae-urakan-tyyppi
 SELECT tyyppi

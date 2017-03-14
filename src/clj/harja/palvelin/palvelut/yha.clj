@@ -87,9 +87,10 @@
         _ (log/debug "Uusia kohteita oli " (count uudet-kohteet) " kpl.")]
     uudet-kohteet))
 
-(defn- merkitse-urakan-kohdeluettelo-paivitetyksi [db harja-urakka-id]
+(defn- merkitse-urakan-kohdeluettelo-paivitetyksi [db user harja-urakka-id]
   (log/debug "Merkitään urakan " harja-urakka-id " kohdeluettelo päivitetyksi")
-  (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi<! db {:urakka harja-urakka-id}))
+  (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi<! db {:urakka harja-urakka-id
+                                                            :kayttaja (:id user)}))
 
 (defn- tallenna-uudet-yha-kohteet
   "Tallentaa YHA:sta tulleet ylläpitokohteet. Olettaa, että ollaan tallentamassa vain
@@ -143,7 +144,7 @@
               :yhaid yha-id})]
             (when-not (:sijainti uusi-kohdeosa)
               (log/warn "YHA:n kohdeosalle " (pr-str uusi-kohdeosa) " ei voitu muodostaa geometriaa"))))))
-    (merkitse-urakan-kohdeluettelo-paivitetyksi c urakka-id)
+    (merkitse-urakan-kohdeluettelo-paivitetyksi c user urakka-id)
     (log/debug "YHA-kohteet tallennettu, päivitetään urakan geometria")
     (yy/paivita-yllapitourakan-geometria c urakka-id)
     (log/debug "Geometria päivitetty.")

@@ -10,8 +10,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as urakka]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.pvm :as pvm]
-            [harja.tiedot.urakka.paallystys :as paallystys-tiedot])
+            [harja.pvm :as pvm])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -26,28 +25,23 @@
 (defn hae-tiemerkinnan-suorittavat-urakat [urakka-id]
   (k/post! :hae-tiemerkinnan-suorittavat-urakat {:urakka-id urakka-id}))
 
-(defn merkitse-kohde-valmiiksi-tiemerkintaan [kohde-id tiemerkintapvm urakka-id sopimus-id]
+(defn merkitse-kohde-valmiiksi-tiemerkintaan [{:keys [kohde-id tiemerkintapvm urakka-id sopimus-id vuosi]}]
   (k/post! :merkitse-kohde-valmiiksi-tiemerkintaan {:kohde-id kohde-id
                                                     :tiemerkintapvm tiemerkintapvm
                                                     :urakka-id urakka-id
-                                                    :sopimus-id sopimus-id}))
+                                                    :sopimus-id sopimus-id
+                                                    :vuosi vuosi}))
 
-(def aikataulurivit
+(defonce aikataulurivit
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @u/valittu-sopimusnumero
                nakymassa? @aikataulu-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                (hae-aikataulu valittu-urakka-id valittu-sopimus-id vuosi))))
-
-(def aikataulurivit-suodatettu
-  (reaction (let [tienumero @paallystys-tiedot/tienumero
-                  aikataulurivit @aikataulurivit]
-              (when aikataulurivit
-                (->> aikataulurivit (filterv #(or (nil? tienumero)
-                                                  (= (:tr-numero %) tienumero)))
-                     (sort-by tr-domain/tiekohteiden-jarjestys aikataulurivit))))))
+                (go
+                  (<! (hae-aikataulu valittu-urakka-id
+                                     valittu-sopimus-id vuosi))))))
 
 (defonce tiemerkinnan-suorittavat-urakat
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
@@ -94,7 +88,7 @@
   (reaction (group-by #(luokittele-valmiuden-mukaan %
                                                     (:arvo @nav/urakkatyyppi)
                                                     (pvm/nyt))
-                      @aikataulurivit-suodatettu)))
+                      @aikataulurivit)))
 
 (defn tallenna-yllapitokohteiden-aikataulu [urakka-id sopimus-id vuosi kohteet]
   (go
