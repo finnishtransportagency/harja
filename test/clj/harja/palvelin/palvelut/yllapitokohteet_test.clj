@@ -314,13 +314,12 @@
                                  :sopimus-id sopimus-id
                                  :vuosi vuosi
                                  :kohteet kohteet})
-        tiemerkinta-alku (pvm/->pvm "22.5.2017")
-        tiemerkinta-loppu (pvm/->pvm "23.5.2017")
         maara-paivityksen-jalkeen (ffirst (q
                                             (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id "
                                          AND poistettu IS NOT TRUE;")))
         vastaus-leppajarven-ramppi (first (filter #(= "Leppäjärven ramppi" (:nimi %)) vastaus))]
+    ;; Kohteiden määrä ei muuttunut
     (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
     ;; Muokatut kentät päivittyivät
     (is (= aikataulu-kohde-alku (:aikataulu-kohde-alku vastaus-leppajarven-ramppi)))
@@ -328,8 +327,45 @@
     (is (= aikataulu-paallystys-loppu (:aikataulu-paallystys-loppu vastaus-leppajarven-ramppi)))
     (is (= aikataulu-kohde-valmis (:aikataulu-kohde-valmis vastaus-leppajarven-ramppi)))
     ;; Tiemerkinnän aikatauluun ei koskettu
-    (is (= tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
-    (is (= tiemerkinta-loppu (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))))
+    (is (= (pvm/->pvm "22.5.2017") (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
+    (is (= (pvm/->pvm "23.5.2017") (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))))
+
+(deftest tallenna-tiemerkintaurakan-yllapitokohteen-aikataulu
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-lapin-tiemerkintaurakan-kayttajat.xml"))]
+    (with-fake-http
+      [+testi-fim+ fim-vastaus]
+      (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+            sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+            yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+            vuosi 2017
+            aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
+            aikataulu-tiemerkinta-loppu (pvm/->pvm "28.5.2017")
+            maara-ennen-lisaysta (ffirst (q
+                                           (str "SELECT count(*) FROM yllapitokohde
+                                         WHERE suorittava_tiemerkintaurakka = " urakka-id
+                                                " AND poistettu IS NOT TRUE;")))
+            kohteet [{:urakka urakka-id
+                      :id yllapitokohde-id
+                      :sopimus sopimus-id
+                      :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
+                      :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}]
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-yllapitokohteiden-aikataulu
+                                    +kayttaja-jvh+
+                                    {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi vuosi
+                                     :kohteet kohteet})
+            maara-paivityksen-jalkeen (ffirst (q
+                                                (str "SELECT count(*) FROM yllapitokohde
+                                         WHERE suorittava_tiemerkintaurakka = " urakka-id
+                                                     " AND poistettu IS NOT TRUE;")))
+            vastaus-leppajarven-ramppi (first (filter #(= "Leppäjärven ramppi" (:nimi %)) vastaus))]
+        ;; Kohteiden määrä ei muuttunut
+        (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
+        ;; Muokatut kentät päivittyivät
+        (is (= aikataulu-tiemerkinta-loppu (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))
+        (is (= aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))))))
 
 (deftest paallystyksen-merkitseminen-valmiiksi-toimii
   (let [urakka-id @muhoksen-paallystysurakan-id

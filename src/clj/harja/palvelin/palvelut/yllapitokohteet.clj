@@ -180,6 +180,9 @@
                                          kohteet)]
     (viestinta/laheta-sposti-tiemerkinta-valmis {:db db :fim fim :email email
                                                  :kohde-idt (mapv :id nyt-valmistuneet-kohteet)
+                                                 :valmistumispvmt
+                                                 (zipmap (map :id nyt-valmistuneet-kohteet)
+                                                         (map :aikataulu-tiemerkinta-loppu nyt-valmistuneet-kohteet))
                                                  :ilmoittaja user})))
 
 (defn- tallenna-tiemerkintakohteiden-aikataulu [{:keys [fim email db user kohteet tiemerkintaurakka-id

@@ -52,11 +52,11 @@
                                                    (str " (" puhelin ")")))]
                               ["Merkitsijän urakka" tiemerkintaurakka-nimi]])]))
 
-(defn- viesti-kohteiden-tiemerkinta-valmis [kohteet ilmoittaja]
+(defn- viesti-kohteiden-tiemerkinta-valmis [kohteet valmistumispvmt ilmoittaja]
   (html
     [:div
-     [:p "Seuraavat tiemerkintäkohteet on merkitty valmiiksi:"]
-     (for [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+     [:p "Seuraaville tiemerkintäkohteille on merkitty valmistumispäivämäärä:"]
+     (for [{:keys [id kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                    aikataulu-tiemerkinta-loppu tiemerkintaurakka-nimi paallystysurakka-nimi] :as kohteet} kohteet]
        [:div (html-tyokalut/taulukko [["Tiemerkintäurakka" paallystysurakka-nimi]
                                       ["Kohde" kohde-nimi]
@@ -67,7 +67,7 @@
                                                       :tr-loppuosa tr-loppuosa
                                                       :tr-loppuetaisyys tr-loppuetaisyys}
                                                      {:teksti-tie? false})]
-                                      ["Tiemerkintä valmistunut" (fmt/pvm aikataulu-tiemerkinta-loppu)]
+                                      ["Tiemerkintä valmistunut" (fmt/pvm (get valmistumispvmt id))]
                                       ["Tiemerkintäurakka" tiemerkintaurakka-nimi]])
         [:br]])
      [:div
@@ -79,12 +79,17 @@
 ;; Sisäinen käsittely
 
 (defn- kasittele-yhden-paallystysurakan-tiemerkityt-kohteet
-  [db fim email paallystysurakka-id yhden-paallystysurakan-kohde-idt ilmoittaja]
+  [{:keys [db fim email paallystysurakka-id yhden-paallystysurakan-kohde-idt ilmoittaja valmistumispvmt]}]
   (let [urakka-sampoid (urakat-q/hae-urakan-sampo-id db {:urakka paallystysurakka-id})
         kohteiden-tiedot (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
                            db
                            {:idt yhden-paallystysurakan-kohde-idt})
-        eka-kohde (first kohteiden-tiedot)]
+        eka-kohde (first kohteiden-tiedot)
+        eka-kohde-osoite {:numero (:tr-numero eka-kohde)
+                          :alkuosa (:tr-alkuosa eka-kohde)
+                          :alkuetaisyys (:tr-alkuetaisyys eka-kohde)
+                          :loppuosa (:tr-loppuosa eka-kohde)
+                          :loppuetaisyys (:tr-loppuetaisyys eka-kohde)}]
     (viestinta/laheta-sposti-fim-kayttajarooleille
       {:fim fim
        :email email
@@ -92,21 +97,21 @@
        :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö"}
        :viesti-otsikko
        (if (> (count yhden-paallystysurakan-kohde-idt) 1)
-         (format "Urakan '%s' tiemerkintäkohteita valmistunut" (:paallystysurakka-nimi eka-kohde))
-         (format "Urakan '%s' kohteen '%s' tiemerkintä on valmistunut %s"
+         (format "Urakan '%s' tiemerkintäkohteita merkitty valmistuneeksi" (:paallystysurakka-nimi eka-kohde))
+         (format "Urakan '%s' kohteen '%s' tiemerkintä on merkitty valmistuneeksi %s"
                  (:paallystysurakka-nimi eka-kohde)
                  (or (:kohde-nimi eka-kohde)
-                     (tierekisteri/tierekisteriosoite-tekstina (:kohde-osoite eka-kohde)))
-                 (fmt/pvm (:aikataulu-tiemerkinta-loppu eka-kohde))))
+                     (tierekisteri/tierekisteriosoite-tekstina eka-kohde-osoite))
+                 (get valmistumispvmt (:id eka-kohde))))
        :viesti-body (if (> (count yhden-paallystysurakan-kohde-idt) 1)
-                      (viesti-kohteiden-tiemerkinta-valmis kohteiden-tiedot ilmoittaja)
+                      (viesti-kohteiden-tiemerkinta-valmis kohteiden-tiedot valmistumispvmt ilmoittaja)
                       (viesti-kohteen-tiemerkinta-valmis
                         {:paallystysurakka-nimi (:paallystysurakka-nimi eka-kohde)
                          :tiemerkintaurakka-nimi (:tiemerkintaurakka-nimi eka-kohde)
                          :urakan-nimi (:paallystysurakka-nimi eka-kohde)
                          :kohde-nimi (:kohde-nimi eka-kohde)
                          :kohde-osoite (:kohde-osoite eka-kohde)
-                         :tiemerkinta-valmis (:aikataulu-tiemerkinta-loppu eka-kohde)
+                         :tiemerkinta-valmis (get valmistumispvmt (:id eka-kohde))
                          :ilmoittaja (:ilmoittaja eka-kohde)}))})))
 
 ;; Viestien lähetykset (julkinen rajapinta)
@@ -114,7 +119,7 @@
 (defn laheta-sposti-tiemerkinta-valmis
   "Lähettää päällystysurakoitsijalle sähköpostiviestillä ilmoituksen
    ylläpitokohteen tiemerkinnän valmistumisesta."
-  [{:keys [db fim email kohde-idt ilmoittaja]}]
+  [{:keys [db fim email kohde-idt ilmoittaja valmistumispvmt]}]
   (when-not (empty? kohde-idt)
     (log/debug (format "Lähetetään sähköposti tiemerkintäkohteiden %s valmistumisesta." (pr-str kohde-idt)))
     (let [kohteiden-tiedot
@@ -124,7 +129,9 @@
           paallystysurakoiden-kohteet (group-by :paallystysurakka-id kohteiden-tiedot)]
       (doseq [kohteet (vals paallystysurakoiden-kohteet)]
         (kasittele-yhden-paallystysurakan-tiemerkityt-kohteet
-          db fim email (:paallystysurakka-id (first kohteet)) (map :id kohteet) ilmoittaja)))))
+          {:db db :fim fim :email email :paallystysurakka-id (:paallystysurakka-id (first kohteet))
+           :yhden-paallystysurakan-kohde-idt (map :id kohteet)
+           :ilmoittaja ilmoittaja :valmistumispvmt valmistumispvmt})))))
 
 (defn laheta-sposti-kohde-valmis-merkintaan
   "Lähettää tiemerkintäurakoitsijalle sähköpostiviestillä ilmoituksen
