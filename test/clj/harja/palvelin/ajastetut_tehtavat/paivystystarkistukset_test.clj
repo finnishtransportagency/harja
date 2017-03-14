@@ -24,7 +24,7 @@
           :http-palvelin (testi-http-palvelin)
           :integraatioloki (component/using (integraatioloki/->Integraatioloki nil) [:db])
           :fim (component/using
-                 (fim/->FIM fim-test/+testi-fim-+)
+                 (fim/->FIM fim-test/+testi-fim+)
                  [:db :integraatioloki])))))
 
   (testit)
@@ -159,9 +159,9 @@
     (is (= (count urakat-ilman-paivystysta) (count urakat)))))
 
 (deftest ilmoituksien-saajien-haku-toimii
-  (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
+  (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))]
     (with-fake-http
-      [fim-test/+testi-fim-+ vastaus-xml]
+      [fim-test/+testi-fim+ vastaus-xml]
       (let [vastaus (paivystajatarkistukset/hae-ilmoituksen-saajat
                       (:fim jarjestelma)
                       "1242141-OULU2")]

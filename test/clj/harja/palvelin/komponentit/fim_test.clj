@@ -10,7 +10,7 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki])
   (:use org.httpkit.fake))
 
-(def +testi-fim-+ "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity")
+(def +testi-fim+ "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity")
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root
@@ -22,7 +22,7 @@
           :http-palvelin (testi-http-palvelin)
           :integraatioloki (component/using (integraatioloki/->Integraatioloki nil) [:db])
           :fim (component/using
-                 (fim/->FIM +testi-fim-+)
+                 (fim/->FIM +testi-fim+)
                  [:db :integraatioloki])))))
 
   (testit)
@@ -55,9 +55,9 @@
                 (map :roolit (fim/suodata-kayttajaroolit kayttajat pida-vastuuhenkilo))))))
 
 (deftest kayttajien-haku-toimii
-  (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
+  (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))]
     (with-fake-http
-      [+testi-fim-+ vastaus-xml]
+      [+testi-fim+ vastaus-xml]
       (let [vastaus (fim/hae-urakan-kayttajat (:fim jarjestelma) "1242141-OULU2")]
         (is (= vastaus [{:etunimi "Erkki"
                          :kayttajatunnus "A000001"
