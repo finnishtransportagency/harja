@@ -22,12 +22,15 @@
         (konv/array->vec t :nopeusrajoitukset)
         (assoc t :nopeusrajoitukset (mapv #(konv/pgobject->map % :nopeusrajoitus :long :matka :long) (:nopeusrajoitukset t)))))
 
-(defn hae-tietyoilmoitukset [db user {:keys [alkuaika
-                                             loppuaika
-                                             urakka
-                                             sijainti
-                                             vain-kayttajan-luomat]
-                                      :as hakuehdot} max-maara]
+(defn hae-tietyoilmoitukset [db
+                             user
+                             {:keys [alkuaika
+                                     loppuaika
+                                     urakka
+                                     sijainti
+                                     vain-kayttajan-luomat]
+                              :as hakuehdot}
+                             max-maara]
   (let [kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
                            db
                            user
@@ -40,9 +43,14 @@
                         :luojaid (when vain-kayttajan-luomat (:id user))
                         :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
                         :maxmaara max-maara}
-        tietyoilmoitukset (q-tietyoilmoitukset/hae-tietyoilmoitukset db sql-parametrit)
-        tulos (mapv (fn [tietyoilmoitus] (muunna-tietyoilmoitus tietyoilmoitus)) tietyoilmoitukset)]
-    tulos))
+        tietyoilmoitukset (doseq [tietyoilmoitus (q-tietyoilmoitukset/hae-tietyoilmoitukset db sql-parametrit)]
+                            (println "---> tietyoilmoitus" tietyoilmoitus)
+                            (let [tti (muunna-tietyoilmoitus tietyoilmoitus)
+                                  vaiheet (q-tietyoilmoitukset/hae-tietyoilmoituksen-vaiheet db {:paatietyoilmoitus (:id tti)})
+                                  vaiheet (mapv (fn [vaihe] (muunna-tietyoilmoitus vaihe)) vaiheet)]
+                              (assoc tietyoilmoitus :vaiheet vaiheet)))]
+    (println "---> tietyoilmoitukset:" tietyoilmoitukset)
+    tietyoilmoitukset))
 
 (defrecord Tietyoilmoitukset []
   component/Lifecycle
