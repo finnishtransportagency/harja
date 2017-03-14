@@ -31,6 +31,7 @@
                                      vain-kayttajan-luomat]
                               :as hakuehdot}
                              max-maara]
+  ;; todo: hae myös käyttäjän organisaation tekemät ilmoitukset
   (let [kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
                            db
                            user
