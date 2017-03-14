@@ -346,14 +346,10 @@
                                            (str "SELECT count(*) FROM yllapitokohde
                                          WHERE suorittava_tiemerkintaurakka = " urakka-id
                                                 " AND poistettu IS NOT TRUE;")))
-            kohteet [{:urakka urakka-id
-                      :id leppajarven-ramppi-id
-                      :sopimus sopimus-id
+            kohteet [{:id leppajarven-ramppi-id
                       :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}
-                     {:urakka urakka-id
-                      :id nakkilan-ramppi-id
-                      :sopimus sopimus-id
+                     {:id nakkilan-ramppi-id
                       :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku}]
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-yllapitokohteiden-aikataulu
@@ -445,14 +441,10 @@
             vuosi 2017
             aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
             aikataulu-tiemerkinta-loppu (pvm/->pvm "28.5.2017")
-            kohteet [{:urakka urakka-id
-                      :id nakkilan-ramppi-id
-                      :sopimus sopimus-id
+            kohteet [{:id nakkilan-ramppi-id
                       :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}
-                     {:urakka urakka-id
-                      :id oulaisten-ohitusramppi-id
-                      :sopimus sopimus-id
+                     {:id oulaisten-ohitusramppi-id
                       :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}]
             _ (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -537,9 +529,7 @@
         lapin-urakka-id (hae-oulun-tiemerkintaurakan-id)
         vuosi 2017
         yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
-        kohteet [{:urakka urakka-id
-                  :id yllapitokohde-id
-                  :sopimus sopimus-id
+        kohteet [{:id yllapitokohde-id
                   :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2017 12:00")
                   :aikataulu-kohde-valmis (pvm/->pvm "29.5.2017")
                   :suorittava-tiemerkintaurakka lapin-urakka-id
