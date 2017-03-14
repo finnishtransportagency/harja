@@ -78,12 +78,12 @@
 (deftest paallystyskohteet-haettu-oikein
   (let [kohteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :urakan-yllapitokohteet +kayttaja-jvh+
-                                {:urakka-id @muhoksen-paallystysurakan-id
-                                 :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id})
+                                {:urakka-id (hae-muhoksen-paallystysurakan-id)
+                                 :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)})
         kohteiden-lkm (ffirst (q
                                 (str "SELECT COUNT(*)
                                       FROM yllapitokohde
-                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")
+                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " (hae-muhoksen-paallystysurakan-id) ")
                                       AND poistettu IS NOT TRUE;")))
         leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi")
                                           kohteet))]
@@ -94,13 +94,13 @@
 (deftest paallystysurakan-aikatauluhaku-toimii
   (let [urakan-yllapitokohteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                :urakan-yllapitokohteet +kayttaja-jvh+
-                                               {:urakka-id @muhoksen-paallystysurakan-id
-                                                :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                                               {:urakka-id (hae-muhoksen-paallystysurakan-id)
+                                                :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
                                                 :vuosi 2017})
         aikataulu (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-yllapitourakan-aikataulu +kayttaja-jvh+
-                                  {:urakka-id @muhoksen-paallystysurakan-id
-                                   :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                                  {:urakka-id (hae-muhoksen-paallystysurakan-id)
+                                   :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
                                    :vuosi 2017})
         leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi") aikataulu))
         muut-kohteet (filter #(not= (:nimi %) "Leppäjärven ramppi") aikataulu)]
@@ -124,13 +124,13 @@
 (deftest paallystyskohteet-haettu-oikein-vuodelle-2017
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :urakan-yllapitokohteet +kayttaja-jvh+
-                                {:urakka-id @muhoksen-paallystysurakan-id
-                                 :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                                {:urakka-id (hae-muhoksen-paallystysurakan-id)
+                                 :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
                                  :vuosi 2017})
         kohteiden-lkm (ffirst (q
                                 (str "SELECT COUNT(*)
                                       FROM yllapitokohde
-                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")
+                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " (hae-muhoksen-paallystysurakan-id) ")
                                       AND vuodet @> ARRAY[2017]::int[]
                                       AND poistettu IS NOT TRUE")))
         ei-yha-kohde (first (filter #(= (:nimi %) "Ei YHA-kohde") vastaus))
@@ -145,15 +145,15 @@
 (deftest paallystyskohteet-haettu-oikein-vuodelle-2016
   (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
                             :urakan-yllapitokohteet +kayttaja-jvh+
-                            {:urakka-id @muhoksen-paallystysurakan-id
-                             :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                            {:urakka-id (hae-muhoksen-paallystysurakan-id)
+                             :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
                              :vuosi 2016})]
     (is (= (count res) 0) "Ei päällystyskohteita vuodelle 2016")))
 
 (deftest tallenna-paallystyskohde-kantaan
-  (let [urakka-id @muhoksen-paallystysurakan-id
-        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
-        urakan-geometria-ennen-muutosta (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+        urakan-geometria-ennen-muutosta (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERE id = " urakka-id ";"))
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))]
@@ -193,8 +193,8 @@
       (u (str "DELETE FROM yllapitokohde WHERE nimi = 'Testiramppi4564ddf';")))))
 
 (deftest tallenna-paallystyskohde-kantaan-vuodelle-2015
-  (let [urakka-id @muhoksen-paallystysurakan-id
-        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id]
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)]
 
     (kutsu-palvelua (:http-palvelin jarjestelma)
                     :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
@@ -204,21 +204,21 @@
     (let [kohteet-kannassa (ffirst (q
                                      (str "SELECT COUNT(*)
                                       FROM yllapitokohde
-                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")
+                                      WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " (hae-muhoksen-paallystysurakan-id) ")
                                       AND vuodet @> ARRAY[2015]::int[]")))]
       (is (= kohteet-kannassa 1) "Kohde tallentui oikein")
       (u (str "DELETE FROM yllapitokohde WHERE nimi = 'Testiramppi4564ddf';")))))
 
 (deftest ala-poista-paallystyskohdetta-jolla-ilmoitus
-  (let [urakka-id @muhoksen-paallystysurakan-id
-        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
         maara-ennen-testia (ffirst (q
                                      (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
         kohteet-ennen-testia (kutsu-palvelua (:http-palvelin jarjestelma)
                                              :urakan-yllapitokohteet +kayttaja-jvh+
-                                             {:urakka-id @muhoksen-paallystysurakan-id
-                                              :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id})
+                                             {:urakka-id (hae-muhoksen-paallystysurakan-id)
+                                              :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)})
         kohde-jolla-ilmoitus (first (filter :paallystysilmoitus-id kohteet-ennen-testia))
         paivitetyt-kohteet (map
                              (fn [kohde] (if (= (:id kohde) (:id kohde-jolla-ilmoitus))
@@ -244,8 +244,8 @@
   (let [yllapitokohde-id (yllapitokohde-id-jolla-on-paallystysilmoitus)]
     (is (not (nil? yllapitokohde-id)))
 
-    (let [urakka-id @muhoksen-paallystysurakan-id
-          sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+    (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+          sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
           urakan-geometria-ennen-muutosta (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))
           maara-ennen-lisaysta (ffirst (q
                                          (str "SELECT count(*) FROM yllapitokohdeosa
@@ -301,9 +301,7 @@
                                        (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id "
                                          AND poistettu IS NOT TRUE;")))
-        kohteet [{:urakka urakka-id
-                  :id yllapitokohde-id
-                  :sopimus sopimus-id
+        kohteet [{:id yllapitokohde-id
                   :aikataulu-kohde-alku aikataulu-kohde-alku
                   :aikataulu-paallystys-alku aikataulu-paallystys-alku
                   :aikataulu-paallystys-loppu aikataulu-paallystys-loppu
@@ -394,9 +392,7 @@
             vuosi 2017
             aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
             aikataulu-tiemerkinta-loppu (pvm/->pvm "28.5.2017")
-            kohteet [{:urakka urakka-id
-                      :id nakkilan-ramppi-id
-                      :sopimus sopimus-id
+            kohteet [{:id nakkilan-ramppi-id
                       :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}]
             _ (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -422,9 +418,7 @@
             vuosi 2017
             aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
             aikataulu-tiemerkinta-loppu (pvm/->pvm "28.5.2017")
-            kohteet [{:urakka urakka-id
-                      :id nakkilan-ramppi-id
-                      :sopimus sopimus-id
+            kohteet [{:id nakkilan-ramppi-id
                       :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}]
             _ (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -538,8 +532,8 @@
         (is (some? (:valmis-tiemerkintaan oulaisten-ohitusramppi-testin-jalkeen)))))))
 
 (deftest yllapitokohteen-suorittavan-tiemerkintaurakan-vaihto-ei-toimi-jos-kirjauksia
-  (let [urakka-id @muhoksen-paallystysurakan-id
-        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
         lapin-urakka-id (hae-oulun-tiemerkintaurakan-id)
         vuosi 2017
         yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
@@ -556,8 +550,8 @@
                   :aikataulu-tiemerkinta-loppu (pvm/->pvm "26.5.2017")}]
         aiempi-aikataulu (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :hae-yllapitourakan-aikataulu +kayttaja-jvh+
-                                         {:urakka-id @muhoksen-paallystysurakan-id
-                                          :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+                                         {:urakka-id (hae-muhoksen-paallystysurakan-id)
+                                          :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
                                           :vuosi vuosi})
         aiempi-aikataulu-leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi") aiempi-aikataulu))
         nykyinen-aikataulu (kutsu-palvelua (:http-palvelin jarjestelma)
