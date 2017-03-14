@@ -189,6 +189,8 @@
   (jdbc/with-db-transaction [db db]
     ;; Lähetetään ennen tallennusta sähköposti tiemerkinnän valmistumisesta, koska nyt on tieto siitä,
     ;; että tuleeko valmistumispäivämäärä muuttumaan kannassa nillistä päivämääräksi
+    (valita-tieto-tiemerkinnan-valmistumisesta {:db db :user user :fim fim
+                                                :email email :kohteet kohteet})
 
     (doseq [kohde kohteet]
       (q/tallenna-tiemerkintakohteen-aikataulu!
@@ -203,9 +205,7 @@
           db
           {:aikataulu_tiemerkinta_takaraja (:aikataulu-tiemerkinta-takaraja kohde)
            :id (:id kohde)
-           :suorittava_tiemerkintaurakka tiemerkintaurakka-id})))
-    (valita-tieto-tiemerkinnan-valmistumisesta {:db db :user user :fim fim
-                                                :email email :kohteet kohteet})))
+           :suorittava_tiemerkintaurakka tiemerkintaurakka-id})))))
 
 (defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (assert (and urakka-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
