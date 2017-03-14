@@ -13,6 +13,7 @@
             [harja.palvelin.palvelut.tietyoilmoitukset.pdf :as pdf]))
 
 (defn- muunna-tietyoilmoitus [tietyoilmoitus]
+  ;; FIXME: korvaa tämä specql datalla...
   (as-> tietyoilmoitus t
         (update t :sijainti geo/pg->clj)
         (konv/array->vec t :tyotyypit)
@@ -22,7 +23,20 @@
         (konv/array->vec t :kiertotienpinnat)
         (assoc t :kiertotienpinnat (mapv #(konv/pgobject->map % :materiaali :string :matka :long) (:kiertotienpinnat t)))
         (konv/array->vec t :nopeusrajoitukset)
-        (assoc t :nopeusrajoitukset (mapv #(konv/pgobject->map % :nopeusrajoitus :long :matka :long) (:nopeusrajoitukset t)))))
+        (assoc t :nopeusrajoitukset (mapv #(konv/pgobject->map % :nopeusrajoitus :long :matka :long) (:nopeusrajoitukset t)))
+        (konv/array->vec t :tyoajat)
+        (update t :tyoajat (fn [tyoajat]
+                             (mapv #(-> %
+                                        (konv/pgobject->map :alku :date :loppu :date :viikonpaivat :string)
+                                        (update :viikonpaivat
+                                                (fn [viikonpaivat-str]
+                                                  (into []
+                                                        (str/split (subs viikonpaivat-str
+                                                                         1 (dec (count viikonpaivat-str)))
+                                                                   #",")))))
+
+                                   tyoajat)))
+        ))
 
 (defn hae-tietyoilmoitukset [db
                              user
@@ -60,7 +74,7 @@
   (println "MUODOSTA PDF: " params)
   ;; FIXME: tarkista oikeus ilmoitukseen
   (pdf/tietyoilmoitus-pdf
-   (first (q-tietyoilmoitukset/hae-tietyoilmoitus db {:id (:id params)}))))
+   (muunna-tietyoilmoitus (first (q-tietyoilmoitukset/hae-tietyoilmoitus db {:id (:id params)})))))
 
 (defrecord Tietyoilmoitukset []
   component/Lifecycle
