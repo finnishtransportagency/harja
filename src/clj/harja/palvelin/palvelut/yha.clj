@@ -87,9 +87,10 @@
         _ (log/debug "Uusia kohteita oli " (count uudet-kohteet) " kpl.")]
     uudet-kohteet))
 
-(defn- merkitse-urakan-kohdeluettelo-paivitetyksi [db harja-urakka-id]
+(defn- merkitse-urakan-kohdeluettelo-paivitetyksi [db user harja-urakka-id]
   (log/debug "Merkitään urakan " harja-urakka-id " kohdeluettelo päivitetyksi")
-  (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi<! db {:urakka harja-urakka-id}))
+  (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi<! db {:urakka harja-urakka-id
+                                                            :kayttaja (:id user)}))
 
 (defn- tallenna-uudet-yha-kohteet
   "Tallentaa YHA:sta tulleet ylläpitokohteet. Olettaa, että ollaan tallentamassa vain
@@ -124,7 +125,8 @@
                      :nykyinen_paallyste nykyinen-paallyste
                      :nimi nimi
                      :vuodet (konv/seq->array [(t/year (pvm/suomen-aikavyohykkeeseen (t/now)))])
-                     :yha_kohdenumero yha-kohdenumero})]
+                     :yha_kohdenumero yha-kohdenumero
+                     :kohdenumero yha-kohdenumero})]
         (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
           (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
           (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!
@@ -142,7 +144,7 @@
               :yhaid yha-id})]
             (when-not (:sijainti uusi-kohdeosa)
               (log/warn "YHA:n kohdeosalle " (pr-str uusi-kohdeosa) " ei voitu muodostaa geometriaa"))))))
-    (merkitse-urakan-kohdeluettelo-paivitetyksi c urakka-id)
+    (merkitse-urakan-kohdeluettelo-paivitetyksi c user urakka-id)
     (log/debug "YHA-kohteet tallennettu, päivitetään urakan geometria")
     (yy/paivita-yllapitourakan-geometria c urakka-id)
     (log/debug "Geometria päivitetty.")
