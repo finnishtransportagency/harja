@@ -91,11 +91,11 @@
     :tiemerkinta
     (kohteen-aikataulun-tila tiemerkinta-aloitettu tiemerkinta-lopetettu pvm-nyt)))
 
-(defonce aikataulurivit-valmiuden-mukaan
-  (reaction (group-by #(luokittele-valmiuden-mukaan %
-                                                    (:arvo @nav/urakkatyyppi)
-                                                    (pvm/nyt))
-                      @aikataulurivit-suodatettu)))
+(defn aikataulurivit-valmiuden-mukaan [aikataulurivit urakkatyyppi]
+  (group-by #(luokittele-valmiuden-mukaan %
+                                          urakkatyyppi
+                                          (pvm/nyt))
+            aikataulurivit))
 
 (defn tallenna-yllapitokohteiden-aikataulu [urakka-id sopimus-id vuosi kohteet]
   (go
