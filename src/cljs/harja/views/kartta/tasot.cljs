@@ -276,25 +276,35 @@
    :nakyman-geometriat (atom true)
    :infopaneelin-merkki (atom true)})
 
-(defonce nykyiset-karttatasot
-  (reaction (into #{}
-                  (keep (fn [nimi]
-                          (when @(tasojen-nakyvyys-atomit nimi)
-                            nimi)))
-                  +karttatasot+)))
+(defn- nykyiset-karttatasot* [atomit nimet-set]
+  (->> atomit
+       (filter (comp deref val))
+       (filter (comp nimet-set key))
+       (map key)))
 
-(defonce karttatasot-muuttuneet
-  (ratom/run!
-   (let [tasot @nykyiset-karttatasot]
-     (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet
-                            :karttatasot tasot}))))
+(def nykyiset-karttatasot (partial nykyiset-karttatasot* tasojen-nakyvyys-atomit +karttatasot+))
+
+(defn- aktiiviset-nakymien-tasot*
+  [aktiiviset-tasot-nimet-set
+   ei-halutut-tasot-set
+   nimi-taso-map
+   filter-fn]
+  (->> aktiiviset-tasot-nimet-set
+       (remove ei-halutut-tasot-set)
+       (keep nimi-taso-map)
+       (filter filter-fn)))
+
+(defn aktiiviset-nakymien-tasot []
+  (aktiiviset-nakymien-tasot*
+           (nykyiset-karttatasot)
+           #{:organisaatio :nakyman-geometriat :infopaneelin-merkki :tr-valitsin}
+           @geometriat-kartalle
+           taso/aktiivinen?))
 
 (defn taso-paalle! [nimi]
-  (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :taso-paalle nimi})
   (log "Karttataso päälle: " (pr-str nimi))
   (reset! (tasojen-nakyvyys-atomit nimi) true))
 
 (defn taso-pois! [nimi]
-  (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :taso-pois nimi})
   (log "Karttataso pois: " (pr-str nimi))
   (reset! (tasojen-nakyvyys-atomit nimi) false))
