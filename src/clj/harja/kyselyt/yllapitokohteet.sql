@@ -419,7 +419,7 @@ WHERE
   AND (:vuosi::INTEGER IS NULL OR (cardinality(vuodet) = 0
      OR vuodet @> ARRAY[:vuosi]::int[]))
   AND poistettu IS NOT TRUE
-ORDER BY aikataulu_tiemerkinta_alku;
+ORDER BY aikataulu_paallystys_alku;
 
 -- name: hae-urakan-tyyppi
 SELECT tyyppi
