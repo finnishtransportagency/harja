@@ -131,6 +131,13 @@
             (tieto "Viikonpäivät" (str/join ", " (::t/paivat ta)))])))
 
 
+(defn- sisennetty-arvo [arvo selite]
+  [:fo:block {:margin-left "5mm"}
+   [:fo:inline-container {:width "1cm"}
+    [:fo:block
+     [:fo:inline {:text-decoration "underline"}
+      arvo]]]
+   " " selite])
 
 (defn- ajoneuvorajoitukset [ilm]
   (let [raj (::t/ajoneuvorajoitukset ilm)]
@@ -138,18 +145,9 @@
      (checkbox-lista [["Ulottumarajoituksia" true]]
                      #{(boolean (or (::t/max-leveys raj)
                                     (::t/max-korkeus raj)))})
-     [:fo:block {:margin-left "5mm"}
-      [:fo:inline-container {:width "1cm"}
-       [:fo:block
-        [:fo:inline {:text-decoration "underline"}
-         (::t/max-korkeus raj)]]]
-      " (m, ajoneuvon max. korkeus)"]
-     [:fo:block {:margin-left "5mm"}
-      [:fo:inline-container {:width "1cm"}
-       [:fo:block
-        [:fo:inline {:text-decoration "underline"}
-         (::t/max-leveys raj)]]]
-      " (m, ajoneuvon max. leveys)"]
+     (sisennetty-arvo (::t/max-korkeus raj) "(m, ajoneuvon max. korkeus)")
+     (sisennetty-arvo (::t/max-leveys raj) "(m, ajoneuvon max. leveys)")
+
      (checkbox-lista [["Painorajoitus" true
                        [:fo:inline
                         "  "
@@ -160,6 +158,18 @@
      (checkbox-lista [["Kuumennin käytössä (avotuli)" "avotuli"]
                       ["Työkoneita liikenteen seassa" "tyokoneitaLiikenteenSeassa"]]
                      (into #{} (::t/huomautukset ilm)))]))
+
+(defn- pvm-ja-aika [otsikko date]
+  (let [pvm (and date (pvm/pvm date))
+        aika (and date (pvm/aika date))]
+    [:fo:block {:margin-left "5mm"}
+     [:fo:inline-container {:width "2cm"}
+      [:fo:block otsikko " "]]
+     [:fo:inline {:text-decoration "underline"}
+      pvm]
+     " klo "
+     [:fo:inline {:text-decoration "underline"}
+      aika]]))
 
 (defn- vaikutukset [ilm]
   (tietotaulukko
@@ -177,9 +187,18 @@
     ;; Oikea puoli
     (tietotaulukko
      [(tieto "Pysäytyksiä"
-              "suomirokkia liikennevaloissa")]
+             [:fo:block
+              (checkbox-lista [["Liikennevalot" "liikennevalot"]
+                               ["Liikenteen ohjaaja" "lohj"]
+                               ["Satunnaisia" "satunnaisia"]]
+                              ;; FIXME: näytä pysäytykset
+                              #{})
+              (pvm-ja-aika "alkaa" (::t/pysaytysten_alku ilm))
+              (pvm-ja-aika "päättyy" (::t/pysaytysten_loppu ilm))])]
      [(tieto "Arvioitu viivytys"
-              "montako minsaa")]
+             [:fo:block
+              (sisennetty-arvo (::t/viivastys_normaali_liikenteessa ilm) "(min, normaali liikenne)")
+              (sisennetty-arvo (::t/viivastys_ruuhka_aikana ilm) "(min, ruuhka-aika)")])]
      [(tieto "Kulkurajoituksia"
              [:fo:block
               (ajoneuvorajoitukset ilm)
