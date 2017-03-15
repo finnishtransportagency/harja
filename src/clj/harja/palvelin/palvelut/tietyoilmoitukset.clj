@@ -10,7 +10,9 @@
             [harja.geo :as geo]
             [clojure.string :as str]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
-            [harja.palvelin.palvelut.tietyoilmoitukset.pdf :as pdf]))
+            [harja.palvelin.palvelut.tietyoilmoitukset.pdf :as pdf]
+            [harja.domain.tietyoilmoitukset :as t]
+            [specql.core :refer [fetch]]))
 
 (defn- muunna-tietyoilmoitus [tietyoilmoitus]
   ;; FIXME: korvaa tämä specql datalla...
@@ -72,9 +74,9 @@
 
 (defn tietyoilmoitus-pdf [db user params]
   (println "MUODOSTA PDF: " params)
-  ;; FIXME: tarkista oikeus ilmoitukseen
   (pdf/tietyoilmoitus-pdf
-   (muunna-tietyoilmoitus (first (q-tietyoilmoitukset/hae-tietyoilmoitus db {:id (:id params)})))))
+   (first (fetch db ::t/ilmoitus q-tietyoilmoitukset/kaikki-ilmoituksen-kentat
+                 {::t/id (:id params)}))))
 
 (defrecord Tietyoilmoitukset []
   component/Lifecycle

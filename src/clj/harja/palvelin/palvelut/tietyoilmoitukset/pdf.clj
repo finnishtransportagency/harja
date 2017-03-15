@@ -3,7 +3,8 @@
   Palauttaa XSL-FO kuvauksen hiccup muodossa."
   (:require [harja.tyokalut.xsl-fo :as xsl-fo]
             [harja.pvm :as pvm]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [harja.domain.tietyoilmoitukset :as t]))
 
 
 (def ^:private border "solid 0.1mm black")
@@ -36,7 +37,7 @@
    [:fo:block sisalto]])
 
 (defn- tietotaulukko [& tietorivi]
-  (let [max-columns (reduce max 0 (map count tietorivi))
+  (let [max-columns (reduce max 1 (map count tietorivi))
         w (str (int (/ 100.0 max-columns)) "%")]
     [:fo:table
      (for [i (range max-columns)]
@@ -61,43 +62,32 @@
       " "
       selite])])
 
-(defn- yhteyshenkilo [etunimi sukunimi matkapuhelin]
-  (str etunimi " " sukunimi
-       (when matkapuhelin
-         (str " (puh. " matkapuhelin ")"))))
+(defn- yhteyshenkilo [hlo]
+  (str (::t/etunimi hlo) " " (::t/sukunimi hlo)
+       (when-let [puh (::t/matkapuhelin hlo)]
+         (str " (puh. " puh ")"))))
 
-(defn- kohteen-tiedot [{:keys [tien_nimi
-                               tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys
-                               alkusijainnin_kuvaus loppusijainnin_kuvaus
-                               urakka_nimi
-                               tilaajayhteyshenkilo_etunimi tilaajayhteyshenkilo_sukunimi
-                               tilaajayhteyshenkilo_matkapuhelin
-                               urakoitsijayhteyshenkilo_etunimi urakoitsijayhteyshenkilo_sukunimi
-                               urakoitsijayhteyshenkilo_matkapuhelin
-                               alku loppu
-                               kunnat] :as tietyoilmoitus}]
+(defn- kohteen-tiedot [ilm]
   (tietotaulukko
-   [(tieto "Projekti / Urakka" urakka_nimi)]
+   [(tieto "Projekti / Urakka" (::t/urakka_nimi ilm))]
 
    [(tieto "Urakoitsijan yhteyshenkilö ja puh."
-           (yhteyshenkilo urakoitsijayhteyshenkilo_etunimi urakoitsijayhteyshenkilo_sukunimi
-                          urakoitsijayhteyshenkilo_matkapuhelin))]
+           (yhteyshenkilo (::t/urakoitsijayhteyshenkilo ilm)))]
 
    [(tieto  "Tilaajan yhteyshenkilö ja puh."
-            (yhteyshenkilo tilaajayhteyshenkilo_etunimi tilaajayhteyshenkilo_sukunimi
-                           tilaajayhteyshenkilo_matkapuhelin))]
+            (yhteyshenkilo (::t/tilaajayhteyshenkilo ilm)))]
 
    [(tieto "Tien numero ja nimi"
-           (str tr_numero " " tien_nimi))
-    (tieto "Kunnat" kunnat)]
+           (str (::t/tr_numero ilm) " " (::t/tien_nimi ilm)))
+    (tieto "Kunnat" (::t/kunnat ilm))]
 
    [(tieto "Työn alkupiste (osa/etäisyys) ja kuvaus"
-           (str tr_alkuosa " / " tr_alkuetaisyys " " alkusijainnin_kuvaus))
+           (str (::t/tr_alkuosa ilm) " / " (::t/tr_alkuetaisyys ilm) " " (::t/alkusijainnin_kuvaus ilm)))
     (tieto "Työn alku- ja loppupvm"
-           (str (pvm/pvm-opt alku) " \u2013 " (pvm/pvm-opt loppu)))]
+           (str (pvm/pvm-opt (::t/alku ilm)) " \u2013 " (pvm/pvm-opt (::t/loppu ilm))))]
 
    [(tieto "Työn loppupiste (osa/etäisyys) ja kuvaus"
-           (str tr_loppuosa " / " tr_loppuetaisyys " " loppusijainnin_kuvaus))
+           (str (::t/tr_loppuosa ilm) " / " (::t/tr_loppuetaisyys ilm) " " (::t/loppusijainnin_kuvaus ilm)))
     (tieto "Työn pituus"
            "FIXME: laske pituus metreinä")]
    ))
@@ -106,33 +96,59 @@
 (defn- tyovaihe [tietyoilmoitus]
   "FOO")
 
-(defn- tyoaika [{tyoajat :tyoajat}]
+(defn- tyoaika [{tyoajat ::t/tyoajat}]
   (apply tietotaulukko
-         (for [{:keys [alku loppu viikonpaivat]} tyoajat]
-           [(tieto "Alku" (pvm/pvm-opt alku))
-            (tieto "Loppu" (pvm/pvm-opt loppu))
-            (tieto "Viikonpäivät" (str/join ", " viikonpaivat))])))
+         (for [ta tyoajat]
+           [(tieto "Alku" (pvm/pvm-opt (::t/alku ta)))
+            (tieto "Loppu" (pvm/pvm-opt (::t/loppu ta)))
+            (tieto "Viikonpäivät" (str/join ", " (::t/paivat ta)))])))
 
 (defn checkbox-lista [vaihtoehdot valitut]
   [:fo:block
-   (for [vaihtoehto vaihtoehdot]
-     [:fo:block
-      (xsl-fo/checkbox 12 (valitut vaihtoehto))
-      " " vaihtoehto])])
+   (for [[otsikko vaihtoehto & sisalto] vaihtoehdot]
+     (into [:fo:block
+            (xsl-fo/checkbox 12 (valitut vaihtoehto))
+            " " otsikko]
+           sisalto))])
 
-(defn- vaikutukset [{:keys [kaistajarjestelyt nopeusrajoitukset tienpinnat kiertotien_mutkaisuus
-                            kiertotienpinnat liikenteenohjaus liikenteenohjaaja
-                            viivastys_normaali_liikenteessa viivastys_ruuhka_aikana
-                            ajoneuvo_max_korkeys ajoneuvo_max_leveys
-                            ajoneuvo_max_pituus ajoneuvo_max_paino] :as tietyoilmoitus}]
+(defn- ajoneuvorajoitukset [ilm]
+  (let [raj (::t/ajoneuvorajoitukset ilm)]
+    [:fo:block
+     (checkbox-lista [["Ulottumarajoituksia" true]]
+                     #{(boolean (or (::t/max-leveys raj)
+                                    (::t/max-korkeus raj)))})
+     [:fo:block {:margin-left "5mm"}
+      [:fo:inline-container {:width "1cm"}
+       [:fo:block
+        [:fo:inline {:text-decoration "underline"}
+         (::t/max-korkeus raj)]]]
+      " (m, ajoneuvon max. korkeus)"]
+     [:fo:block {:margin-left "5mm"}
+      [:fo:inline-container {:width "1cm"}
+       [:fo:block
+        [:fo:inline {:text-decoration "underline"}
+         (::t/max-leveys raj)]]]
+      " (m, ajoneuvon max. leveys)"]
+     (checkbox-lista [["Painorajoitus" true
+                       [:fo:inline
+                        "  "
+                        [:fo:inline {:text-decoration "underline"}
+                         (::t/max-paino raj)]
+                        " (tonnia)"]]]
+                     #{(not (nil? (::t/max-paino raj)))})
+     (checkbox-lista [["Kuumennin käytössä (avotuli)" "avotuli"]
+                      ["Työkoneita liikenteen seassa" "tyokoneitaLiikenteenSeassa"]]
+                     (into #{} (::t/huomautukset ilm)))]))
+
+(defn- vaikutukset [ilm]
   (tietotaulukko
    [;; Vasen puoli
     (tietotaulukko
      [(tieto "Kaistajärjestelyt"
-             (checkbox-lista ["Yksi ajokaista suljettu"
-                              "Yksi ajorata suljettu"
-                              "Muu"]
-                             #{"Yksi ajokaista suljettu"}))]
+             (checkbox-lista [["Yksi ajokaista suljettu" "ajokaistaSuljettu"]
+                              ["Yksi ajorata suljettu" "ajorataSuljettu"]
+                              ["Tie suljettu" "tieSuljettu"]]
+                             #{(::t/kaistajarjestelyt ilm)}))]
      [(tieto "Nopeusrajoitus" "bar")]
      [(tieto "Tien pinta työmaalla" "baz")]
      [(tieto "Kiertotien pituus" "pitkä se on")])
@@ -143,7 +159,10 @@
               "suomirokkia liikennevaloissa")]
      [(tieto "Arvioitu viivytys"
               "montako minsaa")]
-     [(tieto "Kulkurajoituksia" "onko niitä")])]))
+     [(tieto "Kulkurajoituksia"
+             [:fo:block
+              (ajoneuvorajoitukset ilm)
+              ])])]))
 
 (def ^:private osiot
   [["1 Ilmoitus koskee" #'ilmoitus-koskee]
