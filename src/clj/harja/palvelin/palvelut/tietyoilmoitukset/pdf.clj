@@ -25,7 +25,7 @@
         [:fo:block otsikko]]])
     (for [[osio sisalto] osiot-ja-sisalto]
       [:fo:table-row borders
-       [:fo:table-cell borders
+       [:fo:table-cell (merge borders {:padding "1mm"})
         [:fo:block {:font-weight "bold"} osio]]
        [:fo:table-cell (merge borders {:padding "1mm"})
         [:fo:block sisalto]]])]])
