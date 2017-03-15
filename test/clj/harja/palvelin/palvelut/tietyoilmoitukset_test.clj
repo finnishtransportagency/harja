@@ -6,16 +6,8 @@
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c]
             [harja.jms-test :refer [feikki-sonja]]
-            [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
-            [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
-            [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset])
-  (:import (java.util Date)))
-
-(def kayttaja "yit-rakennus")
+            [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -118,12 +110,10 @@
                     :urakka nil
                     :sijainti nil
                     :vain-kayttajan-luomat nil}
-
         tietyoilmoitukset (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :hae-tietyoilmoitukset
                                           +kayttaja-jvh+
                                           parametrit)]
-    (println (keys (first tietyoilmoitukset)))
     (is (= 1 (count tietyoilmoitukset)) "Ilmoituksia on palautunut oikea määrä")
     (is (= 1 (count (:tyovaiheet (first tietyoilmoitukset)))) "Ilmoituksella on työvaiheita oikea määrä")))
 
