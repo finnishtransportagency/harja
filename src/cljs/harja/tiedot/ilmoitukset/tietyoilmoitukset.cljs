@@ -97,6 +97,7 @@
   IlmoituksetHaettu
   (process-event [vastaus {valittu :valittu-ilmoitus :as app}]
     (let [ilmoitukset (:tietyoilmoitukset (:tulokset vastaus))]
+      (log "---> ilmoitukset" (pr-str (:sijainti (first ilmoitukset))))
       (assoc app :tietyoilmoitukset ilmoitukset)))
 
   ValitseIlmoitus

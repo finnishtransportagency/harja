@@ -336,7 +336,7 @@
 
       :tietyoilmoitukset (component/using
                      (tietyoilmoitukset/->Tietyoilmoitukset)
-                     [:http-palvelin :db :tloik])
+                     [:http-palvelin :db])
 
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)

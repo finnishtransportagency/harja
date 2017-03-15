@@ -57,7 +57,6 @@
 (defrecord Tietyoilmoitukset []
   component/Lifecycle
   (start [{db :db
-           tloik :tloik
            http :http-palvelin
            :as this}]
     (julkaise-palvelu http :hae-tietyoilmoitukset
