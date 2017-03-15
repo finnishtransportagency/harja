@@ -346,6 +346,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 ;; Luo usean checkboksin, jossa valittavissa N-kappaleita vaihtoehtoja. Arvo on setti ruksittuja asioita
 (defmethod tee-kentta :checkbox-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
                                                tyhjenna-kaikki? nayta-rivina? disabloi]} data]
+  (assert data)
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         valitut (set (or @data #{}))]
@@ -378,6 +379,55 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                           [:td cb])
                         checkboxit)]]]
          checkboxit))]))
+
+
+(defmethod tee-kentta :checkbox-group-muu [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
+                                                   disabloi muu-vaihtoehto muu-kentta]} data]
+  (assert data)
+  #_(tarkkaile! "muu data" data)
+  (let [vaihtoehto-nayta (or vaihtoehto-nayta
+                             #(clojure.string/capitalize (name %)))]
+    (log "cgm data alussa:" (pr-str @data) "vaihtoehdot alussa:" (pr-str  vaihtoehdot))
+    [:div.boolean-group
+     (let [;; vaihtoehdot-atom (atom valitut)
+           ;;vaihtoehdot-atom (r/cursor data [:vaihtoehdot])
+           ;;muu-atom (r/cursor data [:muu])
+           lue-muu! (fn []
+                      (let [eka-muu (or (first (clojure.set/difference @data (set vaihtoehdot)))
+                                        "")
+                            vanha-data @data]
+                        (assert (string? eka-muu))
+                        (reset! data (conj (clojure.set/intersection (set vaihtoehdot) @data) eka-muu))
+                        (assert (set? @data))
+                        (log "lue-muu!: eka-muu" (pr-str eka-muu) "reset data ->" (pr-str @data))
+                        eka-muu))
+           valitut (set (or @data #{}))
+           muu-atom (atom nil)
+           vaihda-muu! (fn [uusi-arvo]
+                         (log "vaihda-muu" (pr-str uusi-arvo) (pr-str @data) ) ;; <- tulee
+                         ;; (reset! muu-atom (first (clojure.set/difference @data vaihtoehdot)))
+                         (reset! data (conj (clojure.set/intersection (set vaihtoehdot) @data) uusi-arvo))
+                         (log "vaihda-muu: resetoitu data" (pr-str @data))
+                         (assert (set? @data)))
+           _ (log "renskataan checkboxit, valitut:" (pr-str valitut) ) ;; <- tänne ei tule
+           checkboxit (doall
+                       (for [v vaihtoehdot]
+                         ^{:key (str "boolean-group-" (name v))}
+                         [:div.checkbox
+                          [:label
+                           [:input {:type      "checkbox" :checked (if (valitut v) true false)
+                                    :disabled (if disabloi
+                                                (disabloi valitut v)
+                                                false)
+                                    :on-change #(let [valittu? (-> % .-target .-checked)]
+                                                  (reset! data ;; vaihtoehdot-atom
+                                                          ((if valittu? conj disj) valitut v)))}]
+                           (vaihtoehto-nayta v)
+                           (when (and (valitut v) (= muu-vaihtoehto v))
+                             (log  "lue-muu! ->" (pr-str (lue-muu!)))
+                             ;; (log (pr-str "muu-kentta data:" (pr-str @muu-atom)))
+                             (tee-kentta muu-kentta (r/wrap (lue-muu!) vaihda-muu!)))]]))]
+       checkboxit)]))
 
 ;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
 (defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina?]} data]
