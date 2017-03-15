@@ -149,4 +149,3 @@ SELECT
   tti.huomautukset
 FROM tietyoilmoitus tti
 WHERE tti.paatietyoilmoitus = :paatietyoilmoitus;
->>>>>>> 8ced129fefdbe55c0a6a350a345b43394e904eee
