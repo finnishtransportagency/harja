@@ -67,7 +67,7 @@
                        :tyyppi :string}
                       {:nimi :urakoitsijayhteyshenkilo_matkapuhelin
                        :otsikko "Puhelinnumero"
-                       :tyyppi :string}
+                       :tyyppi :puhelin}
                       {:nimi :tilaajan-nimi
                        :otsikko "Tilaajan nimi"
                        :muokattava? (constantly true)
@@ -79,7 +79,7 @@
                        :tyyppi :string}
                       {:nimi :tilaajayhteyshenkilo_matkapuhelin
                        :otsikko "Puhelinnumero"
-                       :tyyppi :string}
+                       :tyyppi :puhelin}
                       {:nimi :tr_numero
                        :otsikko "Tienumero"
                        :tyyppi :positiivinen-numero
@@ -139,10 +139,13 @@
                        :disabloi? (constantly false)}
                       {:otsikko "Muut"
                        :nimi :tyotyypit-d
-                       :tyyppi :checkbox-group
+                       :tyyppi :checkbox-group-muu
                        :vaihtoehdot (map first tiedot/tyotyyppi-vaihtoehdot-muut)
                        :vaihtoehto-nayta tiedot/tyotyyppi-vaihtoehdot-map ;; -> muu
-                       :disabloi? (constantly false)})
+                       :muu-vaihtoehto "Muu, mikä?"
+                       :muu-kentta {:otsikko "" :nimi :jotain :tyyppi :string :placeholder "(Muu tyyppi?)"}
+                       :disabloi? (constantly false)}
+                      )
         (lomake/ryhma "Työaika"
                       {:otsikko "Päivittäinen työaika"
                        :nimi :tyoaika
@@ -156,11 +159,11 @@
                        :nimi :viivastys_ruuhka_aikana
                        :tyyppi :positiivinen-numero
                        }
-                      {:otsikko "Kaistajärjestelyt"
+                      {:otsikko "Kaistajärjestelyt" ;; rautalangassa on muu-vaihtoehto, schemassa ei.
                        :tyyppi :checkbox-group
-                       :nimi :tietyon_vaikutussuunta
-                       :vaihtoehdot (map first tiedot/vaikutussuunta-vaihtoehdot-map)
-                       :vaihtoehto-nayta tiedot/vaikutussuunta-vaihtoehdot-map}
+                       :nimi :tietyon_kaistajarjestelyt
+                       :vaihtoehdot (map first tiedot/kaistajarjestelyt-vaihtoehdot-map)
+                       :vaihtoehto-nayta tiedot/kaistajarjestelyt-vaihtoehdot-map}
 
                       {:otsikko "Nopeusrajoitus 50 km/h, metriä" ;; -> pituus-pituus-kenttä
                        :tyyppi :string
@@ -175,12 +178,15 @@
                                      "Painorajoitus"] ;; -> max paino
 
                        }
-                      {:otsikko "Tien pinta työmaalla"
+                      {:otsikko "Tien pinta työmaalla" ;; vs scheman
                        :tyyppi :checkbox-group
                        :nimi :tienpinnat
-                       :vaihtoehdot ["Päällystetty", "Jyrsitty", "Murske", "Muu, mikä"] ;; --> muu
-                       ;; ___ metriä
+                       :vaihtoehdot ["Päällystetty", "Jyrsitty", "Murske"]
+
                        }
+                      {:otsikko "Metriä:"
+                       :tyyppi :positiivinen-numero
+                       :nimi}
                       {:otsikko "Kiertotie"
                        :tyyppi :checkbox-group
                        :nimi :kiertotien-pinnat-ja-mutkaisuus ;; scheman mutkaisuus + pinnat combo
@@ -199,13 +205,26 @@
                       {:otsikko ""
                        :tyyppi :checkbox-group
                        :nimi :vaikutussuunta
-                       :vaihtoehdot ["Haittaa molemmissa ajosuunnissa",
-                                     "Haittaa ajosuunnassa (lähin kaupunki)"] ;; -> kaupunki?
+                       :vaihtoehdot (map first tiedot/vaikutussuunta-vaihtoehdot-map) ;; -> kaupunki?
+                       :vaihtoehto-nayta tiedot/vaikutussuunta-vaihtoehdot-map
+                       :muu-vaihtoehto
                        }
 
-                      (when (-> ilmoitus :tietyon_vaikutussuunta #{"tienumeronKasvusuuntaan" "vastenTienumeronKasvusuuntaa"})
-                        {:otsikko ""
-                         :nimi :vaikutussuunta-kaupunki
-                         :tyyppi :string}))
-        (lomake/ryhma "Muuta")]
+                      )
+        (lomake/ryhma "Muuta"
+                      {:otsikko ""
+                       :nimi :muuta
+                       :tyyppi :string
+                       })
+        (lomake/ryhma "Ilmoittaja"
+                      {:otsikko "Nimi"
+                       :hae #(str (:ilmoittaja_etunimi %) " " (:ilmoittaja_sukunimi %))
+                       :nimi :luoja
+                       :tyyppi :string}
+                      {:otsikko "Puhelinnumero"
+                       :nimi :ilmoittaja_matkapuhelin
+                       :tyyppi :string}
+                      {:otsikko "Päivämäärä"
+                       :nimi :luotu
+                       :tyyppi :string})]
        ilmoitus]]]))
