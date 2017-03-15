@@ -72,13 +72,14 @@
             " " otsikko]
            sisalto))])
 
-(defn- ilmoitus-koskee [_]
+(defn- ilmoitus-koskee [ilm]
   (tietotaulukko
    [(checkbox-lista [["Ensimmäinen ilmoitus työstä" true]
                      ["Työvaihetta koskeva ilmoitus" false]]
-                    #{true})
+                    #{(nil? (::t/paatietyoilmoitus ilm))})
     (checkbox-lista [["Korjaus/muutos aiempaan tietoon" true]
                      ["Työn päättymisilmoitus" false]]
+                    ;; FIXME: mistä tämä päätellään
                     #{false})]))
 
 (defn- tyon-tyyppi [{tyypit :tyotyypit}]
