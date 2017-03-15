@@ -178,10 +178,14 @@
 (defn tietyoilmoitus-pdf [tietyoilmoitus]
   (println "ILMOTUS: " (pr-str tietyoilmoitus))
   (xsl-fo/dokumentti
-   {}
+   {:margin {:left "5mm" :right "5mm" :top "5mm" :bottom "5mm"
+             :body "0mm"}}
 
    (taulukko
     [:fo:block {:text-align "center"}
-     "Tämähän on tietyöilmoitus"]
+     [:fo:block {:font-weight "bold"}
+      [:fo:block "ILMOITUS LIIKENNETTÄ HAITTAAVASTA TYÖSTÄ"]
+      [:fo:block "LIIKENNEVIRASTON LIIKENNEKESKUKSEEN"]]
+     [:fo:block "Yllättävästä häiriöstä erikseen ilmoitus puhelimitse urakoitsijan linjalle 0200 21200"]]
     (for [[osio sisalto-fn] osiot]
       [osio (sisalto-fn tietyoilmoitus)]))))
