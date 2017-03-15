@@ -83,6 +83,8 @@
                     #{false})]))
 
 (defn- tyon-tyyppi [{tyypit :tyotyypit}]
+
+  ;; näytä rastiruutuun, vain "muu" valintaan lisäteksti
   [:fo:block
    (for [{:keys [tyyppi selite]} tyypit]
      [:fo:block
@@ -204,6 +206,7 @@
              [:fo:block
               (ajoneuvorajoitukset ilm)
               ])])]))
+
 
 (def ^:private osiot
   [["1 Ilmoitus koskee" #'ilmoitus-koskee]

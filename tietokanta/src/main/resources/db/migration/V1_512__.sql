@@ -19,7 +19,7 @@ CREATE TYPE tietyon_ajoneuvorajoitukset AS (
 
 DROP TABLE tietyoilmoitus;
 
-DROP ENUM tietyon_kaistajarjestelyt;
+DROP TYPE tietyon_kaistajarjestelyt;
 
 CREATE TYPE tietyon_kaistajarjestelytyyppi AS ENUM (
   'ajokaistaSuljettu',
@@ -80,7 +80,7 @@ CREATE TABLE tietyoilmoitus (
   nopeusrajoitukset                     tietyon_nopeusrajoitus [],
   tienpinnat                            tietyon_tienpinta [],
 
-  kiertotien_mutkaisuus                 tietyon_mutkat,
+  "kiertotien-mutkaisuus"               tietyon_mutkat,
   kiertotienpinnat                      tietyon_tienpinta [],
 
   liikenteenohjaus                      tietyon_liikenteenohjaus,
@@ -100,3 +100,5 @@ CREATE TABLE tietyoilmoitus (
   "urakoitsija-id"                      INTEGER REFERENCES organisaatio (id),
   "urakoitsijan-nimi"                   VARCHAR(128)
   );
+
+-- FIXME: tyoaika ei ole timestamp-timestamp, vaan alku- ja loppukellonaika
