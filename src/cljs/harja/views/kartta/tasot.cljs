@@ -55,6 +55,16 @@
     :tienakyma-valitut
     :tienakyma-muut})
 
+(def
+  ^{:doc
+    "Niiden tasojen nimet, jotka eivät ole 'näkymän tasoja', vaan ovat 'aina päällä'.
+    Näiden tasojen ei haluta esimerkiksi vaikuttavan kartan zoom-tasoon kuin erikoistapauksissa."}
+  +yleiset-tasot+
+  #{:organisaatio
+    :nakyman-geometriat
+    :infopaneelin-merkki
+    :tr-valitsin})
+
 (defn kartan-asioiden-z-indeksit [taso]
   (case taso
     :hallintayksikko 0
@@ -297,7 +307,7 @@
 (defn aktiiviset-nakymien-tasot []
   (aktiiviset-nakymien-tasot*
            (nykyiset-karttatasot)
-           #{:organisaatio :nakyman-geometriat :infopaneelin-merkki :tr-valitsin}
+           +yleiset-tasot+
            @geometriat-kartalle
            taso/aktiivinen?))
 
