@@ -158,7 +158,8 @@ SELECT
   ypk.aikataulu_kohde_valmis AS "kohde-valmispvm",
   sum(s.maara)                               AS "bonukset-ja-sakot",
   o.nimi                                AS "urakoitsija",
-  u.nimi AS "urakka"
+  u.nimi AS "urakka",
+  u.id   AS "urakka-id"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -174,7 +175,7 @@ WHERE
   AND (:vuosi::INTEGER IS NULL OR (cardinality(vuodet) = 0
        OR vuodet @> ARRAY[:vuosi]::int[]))
   AND ypk.poistettu IS NOT TRUE
-GROUP BY ypk.id, pi.id, pai.id, o.nimi, u.nimi;
+GROUP BY ypk.id, pi.id, pai.id, o.nimi, u.nimi, u.id;
 
 -- name: hae-tiemerkintaurakalle-osoitetut-yllapitokohteet
 -- Hakee urakan sopimuksen kaikki yllapitokohteet ja niihin liittyvät ilmoitukset

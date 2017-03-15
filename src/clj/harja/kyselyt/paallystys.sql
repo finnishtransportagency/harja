@@ -68,12 +68,14 @@ SELECT
   ypk.tr_alkuosa                 AS "tr-alkuosa",
   ypk.tr_alkuetaisyys            AS "tr-alkuetaisyys",
   ypk.tr_loppuosa                AS "tr-loppuosa",
-  ypk.tr_loppuetaisyys           AS "tr-loppuetaisyys"
+  ypk.tr_loppuetaisyys           AS "tr-loppuetaisyys",
+  u.id                           AS "urakka-id"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = :paallystyskohde
                                      AND pi.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohdeosa ypko ON ypko.yllapitokohde = :paallystyskohde
                                      AND ypko.poistettu IS NOT TRUE
+  LEFT JOIN urakka u ON u.id = ypk.urakka
 WHERE ypk.id = :paallystyskohde
       AND ypk.poistettu IS NOT TRUE;
 

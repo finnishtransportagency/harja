@@ -16,6 +16,8 @@
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.urakka.siirtymat :as siirtymat]
+            [harja.tiedot.kartta :as tiedot-kartta]
             [harja.tiedot.urakka.paallystys :as paallystys])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -27,6 +29,22 @@
   (komp/luo
     (komp/lippu paallystys/karttataso-paallystyskohteet)
     (komp/lippu paallystys/kohdeluettelossa?)
+
+    (komp/sisaan-ulos
+      #(do
+         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+         (nav/vaihda-kartan-koko! :M)
+         (tiedot-kartta/kasittele-infopaneelin-linkit!
+           {:paallystys
+            {:toiminto (fn [kohde]
+                         (siirtymat/avaa-paallystysilmoitus! {:paallystyskohde-id (:yllapitokohde-id kohde)
+                                                              :paallystysilmoitus-id (get-in kohde [:yllapitokohde :paallystysilmoitus-id])
+                                                              :kohteen-urakka-id (get-in kohde [:yllapitokohde :urakka-id])
+                                                              :valittu-urakka-id (:id @nav/valittu-urakka)}))
+             :teksti "Avaa päällystysilmoitus"}}))
+      #(do
+         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+         (tiedot-kartta/kasittele-infopaneelin-linkit! nil)))
     (fn [ur]
       (if (:yhatiedot ur)
         [:span.kohdeluettelo
