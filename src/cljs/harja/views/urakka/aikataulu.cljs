@@ -160,7 +160,7 @@
            :tallenna (if voi-tallentaa?
                        #(tiedot/tallenna-yllapitokohteiden-aikataulu
                           {:urakka-id urakka-id
-                           :opimus-id sopimus-id
+                           :sopimus-id sopimus-id
                            :vuosi vuosi
                            :kohteet %
                            :epaonnistui-fn (fn [] (viesti/nayta! "Tallennus epäonnistui!"
