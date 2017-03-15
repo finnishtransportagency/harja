@@ -58,6 +58,7 @@
     [harja.palvelin.palvelut.liitteet :as liitteet]
     [harja.palvelin.palvelut.muokkauslukko :as muokkauslukko]
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
+    [harja.palvelin.palvelut.laadunseuranta.tarkastukset :as tarkastukset]
     [harja.palvelin.palvelut.yha :as yha]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
     [harja.palvelin.palvelut.tietyoilmoitukset :as tietyoilmoitukset]
@@ -208,7 +209,9 @@
 
       ;; Labyrintti SMS Gateway
       :labyrintti (component/using
-                    (labyrintti/luo-labyrintti (:labyrintti asetukset))
+                    (if kehitysmoodi
+                      (labyrintti/feikki-labyrintti)
+                      (labyrintti/luo-labyrintti (:labyrintti asetukset)))
                     [:http-palvelin :db :integraatioloki])
 
       :turi (component/using
@@ -328,7 +331,11 @@
 
       :laadunseuranta (component/using
                         (laadunseuranta/->Laadunseuranta)
-                        [:http-palvelin :db :karttakuvat])
+                        [:http-palvelin :db :fim :sonja-sahkoposti :labyrintti])
+
+      :tarkastukset (component/using
+                      (tarkastukset/->Tarkastukset)
+                      [:http-palvelin :db :karttakuvat])
 
       :ilmoitukset (component/using
                      (ilmoitukset/->Ilmoitukset)

@@ -1,5 +1,5 @@
 (ns harja.palvelin.komponentit.fim
-  "Komponentti FIM käyttäjätietojen hakemiseen."
+  "Komponentti FIM-käyttäjätietojen hakemiseen."
   (:require [clojure.xml :refer [parse]]
             [clojure.zip :refer [xml-zip]]
             [clojure.data.zip.xml :as z]
@@ -16,7 +16,6 @@
   (hae-urakan-kayttajat
     [this sampoid]
     "Hakee urakkaan liitetyt käyttäjät."))
-
 
 ;; Kentät, joita voidaan hakea:
 ;; ObjectID EmployeeEndDate
@@ -103,6 +102,7 @@
   FIMHaku
   (hae-urakan-kayttajat
     [{:keys [url db integraatioloki]} urakan-sampo-id]
+    (assert urakan-sampo-id "Urakan sampo-id puutuu!")
     (when-not (empty? url)
       (integraatiotapahtuma/suorita-integraatio
         db integraatioloki "fim" "hae-urakan-kayttajat"
