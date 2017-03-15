@@ -6,6 +6,6 @@
             [clojure.spec :as s]
             [clojure.future :refer :all]))
 
-(def db {:connection-uri "jdbc:postgresql://localhost:5432/harja?user=harja"})
+(def db {:connection-uri "jdbc:postgresql://localhost/harjatest_template?user=postgres"})
 
 (s/def ::d/geometry any?)
