@@ -52,6 +52,6 @@
 
   (testing "Oletuksena muut suunnat kasvaa saman verran, paitsi ylöspäin aina enemmän."
     (let [extent [2 2 12 12]
-          [minx miny maxx maxy :as muutokset] (map - (geo/laajenna-extent-prosentilla extent) extent)]
+          [minx miny maxx maxy :as muutokset] (map (comp int -) (geo/laajenna-extent-prosentilla extent) extent)]
       (is (= (absolute minx) (absolute maxx)) "Oletuksena extentin pitäis laajeta vasemmalle ja oikealle saman verran")
       (is (< (absolute miny) (absolute maxy)) "Oletuksena extentin pitäis kasvaa ylöspäin enemmän kuin alaspäin"))))
