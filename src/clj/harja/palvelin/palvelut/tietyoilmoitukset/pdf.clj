@@ -27,8 +27,7 @@
       [:fo:table-row borders
        [:fo:table-cell borders
         [:fo:block {:font-weight "bold"} osio]]
-       [:fo:table-cell
-        borders
+       [:fo:table-cell (merge borders {:padding "1mm"})
         [:fo:block sisalto]]])]])
 
 (defn- tieto [otsikko sisalto]
@@ -38,21 +37,49 @@
 
 (defn- tietotaulukko [& tietorivi]
   (let [max-columns (reduce max 1 (map count tietorivi))
-        w (str (int (/ 100.0 max-columns)) "%")]
+        w (str (int (/ 100.0 max-columns)) "%")
+        riveja (count tietorivi)]
     [:fo:table
      (for [i (range max-columns)]
        [:fo:table-column {:column-width w}])
      [:fo:table-body
-      (for [rivi tietorivi
-            :let [columns (count rivi)
-                  colspan (if (= columns max-columns) 1
-                              (/ max-columns columns))]]
-        [:fo:table-row
-         (for [solu rivi]
-           [:fo:table-cell (merge borders {:number-columns-spanned colspan})
-            solu])])]]))
+      (map-indexed
+       (fn [rivi-idx rivi]
+         (let [soluja (count rivi)
+               border-bottom (when (< rivi-idx (dec riveja))
+                               border)
+               columns (count rivi)
+               colspan (if (= columns max-columns) 1
+                           (/ max-columns columns))]
+           [:fo:table-row
+            (map-indexed
+             (fn [solu-idx solu]
+               (let [border-right (when (< solu-idx (dec soluja))
+                                    border)]
+                 [:fo:table-cell {:padding "1mm"
+                                  :border-right border-right
+                                  :border-bottom border-bottom
+                                  :number-columns-spanned colspan}
+                  solu]))
+             rivi)]))
+       tietorivi)]]))
 
-(defn- ilmoitus-koskee [_] "FIXME: koskee mitä?")
+(defn checkbox-lista [vaihtoehdot valitut]
+  [:fo:block
+   (for [[otsikko vaihtoehto & sisalto] vaihtoehdot]
+     (into [:fo:block
+            (xsl-fo/checkbox 12 (contains? valitut vaihtoehto))
+            " " otsikko]
+           sisalto))])
+
+(defn- ilmoitus-koskee [_]
+  (tietotaulukko
+   [(checkbox-lista [["Ensimmäinen ilmoitus työstä" true]
+                     ["Työvaihetta koskeva ilmoitus" false]]
+                    #{true})
+    (checkbox-lista [["Korjaus/muutos aiempaan tietoon" true]
+                     ["Työn päättymisilmoitus" false]]
+                    #{false})]))
 
 (defn- tyon-tyyppi [{tyypit :tyotyypit}]
   [:fo:block
@@ -103,13 +130,7 @@
             (tieto "Loppu" (pvm/pvm-opt (::t/loppu ta)))
             (tieto "Viikonpäivät" (str/join ", " (::t/paivat ta)))])))
 
-(defn checkbox-lista [vaihtoehdot valitut]
-  [:fo:block
-   (for [[otsikko vaihtoehto & sisalto] vaihtoehdot]
-     (into [:fo:block
-            (xsl-fo/checkbox 12 (valitut vaihtoehto))
-            " " otsikko]
-           sisalto))])
+
 
 (defn- ajoneuvorajoitukset [ilm]
   (let [raj (::t/ajoneuvorajoitukset ilm)]
@@ -186,6 +207,8 @@
      [:fo:block {:font-weight "bold"}
       [:fo:block "ILMOITUS LIIKENNETTÄ HAITTAAVASTA TYÖSTÄ"]
       [:fo:block "LIIKENNEVIRASTON LIIKENNEKESKUKSEEN"]]
-     [:fo:block "Yllättävästä häiriöstä erikseen ilmoitus puhelimitse urakoitsijan linjalle 0200 21200"]]
+     [:fo:block
+      "Yllättävästä häiriöstä erikseen ilmoitus puhelimitse"
+      " urakoitsijan linjalle 0200 21200"]]
     (for [[osio sisalto-fn] osiot]
       [osio (sisalto-fn tietyoilmoitus)]))))
