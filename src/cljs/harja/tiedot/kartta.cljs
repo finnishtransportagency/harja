@@ -58,11 +58,10 @@
     ;; Näin näkymissä, missä karttataso on palvelimella piirretty kuva, ei zoomia
     ;; resetoida koko ajan näyttämään urakka.
     (let [extent (reduce geo/yhdista-extent
-                         (keep #(-> % meta :extent) (vals @tasot/geometriat-kartalle)))
-          extentin-margin-metreina geo/pisteen-extent-laajennus]
+                         (keep #(-> % meta :extent) (vals @tasot/geometriat-kartalle)))]
       (log "EXTENT TASOISTA: " (pr-str extent))
       (if (not-empty (tasot/aktiiviset-nakymien-tasot))
-        (when extent (keskita-kartta-alueeseen! (geo/laajenna-extent extent extentin-margin-metreina)))
+        (when extent (keskita-kartta-alueeseen! (geo/laajenna-extent-prosentilla extent)))
         (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))))
 
 (defn kuuntele-valittua! [atomi]
