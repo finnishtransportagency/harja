@@ -29,3 +29,20 @@
   (testing "Ylläpidon kohdeluetteloissa ei piirretä urakan rajoja"
     (is (nil? (tasot/urakat-ja-organisaatiot-kartalla* [{:id 1} {:id 3}] {:id 1} {:id 2} :urakat :kohdeluettelo-paallystys [{:id 2} {:id 4}])))
     (is (nil? (tasot/urakat-ja-organisaatiot-kartalla* [{:id 1} {:id 3}] {:id 1} {:id 2} :urakat :kohdeluettelo-paikkaus [{:id 2} {:id 4}])))))
+
+(deftest aktiivisten-tasojen-loytaminen
+  (let [tasot {:foo {:id 1 :aktiivinen? true}
+               :bar {:id 2 :aktiivinen? false}
+               :baz {:id 3 :aktiivinen? true}}]
+    (is (= '({:id 1 :aktiivinen? true})
+           (tasot/aktiiviset-nakymien-tasot* (keys tasot)
+                                             #{:baz}
+                                             tasot
+                                             :aktiivinen?)))))
+
+(deftest nykyiset-karttatasot
+  (let [atomit {:foo (atom true)
+                :bar (atom false)
+                :baz (atom true)}]
+    (is (= '(:foo)
+           (tasot/nykyiset-karttatasot* atomit #{:foo})))))
