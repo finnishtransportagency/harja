@@ -192,16 +192,16 @@
                  :hae (hakufunktio
                         #{[:yllapitokohde paikkaus-valmis]}
                         #(get-in % [:yllapitokohde paikkaus-valmis]))})
-              (when (get-in yllapitokohdeosa [:yllapitokohde kohde-valmis])
+              (when (get-in yllapitokohdeosa [:yllapitokohde tiemerkinta-aloitus])
                 {:otsikko "Tiemerkintä aloitettu" :tyyppi :pvm-aika
                  :hae (hakufunktio
                         #{[:yllapitokohde tiemerkinta-aloitus]}
-                        #(get-in % [:yllapitokohde kohde-valmis]))})
-              (when (get-in yllapitokohdeosa [:yllapitokohde kohde-valmis])
+                        #(get-in % [:yllapitokohde tiemerkinta-aloitus]))})
+              (when (get-in yllapitokohdeosa [:yllapitokohde tiemerkinta-valmis])
                 {:otsikko "Tiemerkintä valmistunut" :tyyppi :pvm-aika
                  :hae (hakufunktio
                         #{[:yllapitokohde tiemerkinta-valmis]}
-                        #(get-in % [:yllapitokohde kohde-valmis]))})
+                        #(get-in % [:yllapitokohde tiemerkinta-valmis]))})
               (when (get-in yllapitokohdeosa [:yllapitokohde kohde-valmis])
                 {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika
                  :hae (hakufunktio
