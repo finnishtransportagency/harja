@@ -5,7 +5,8 @@
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.fmt :as fmt]))
 
 (defqueries "harja/palvelin/raportointi/raportit/tiemerkinnan_kustannusyhteenveto.sql")
 
@@ -16,47 +17,64 @@
    #_{:leveys 1 :otsikko "Indeksi" :fmt :raha}
    {:leveys 1 :otsikko "Yhteensä" :fmt :raha}])
 
-(defn- raportin-rivit [db urakka-id alkupvm loppupvm]
-  (let [alku-paiva (t/day (pvm/suomen-aikavyohykkeeseen  (c/from-date alkupvm)))
-        alku-kuukausi (t/month (pvm/suomen-aikavyohykkeeseen  (c/from-date alkupvm)))
-        alku-vuosi (t/year (pvm/suomen-aikavyohykkeeseen  (c/from-date alkupvm)))
-        loppu-paiva (t/day (pvm/suomen-aikavyohykkeeseen  (c/from-date loppupvm)))
-        loppu-kuukausi (t/month (pvm/suomen-aikavyohykkeeseen  (c/from-date loppupvm)))
-        loppu-vuosi (t/year (pvm/suomen-aikavyohykkeeseen  (c/from-date loppupvm)))
+(defn- hae-raportin-tiedot [{:keys [db urakka-id alkupvm loppupvm]}]
+  (let [alku-paiva (t/day (pvm/suomen-aikavyohykkeeseen (c/from-date alkupvm)))
+        alku-kuukausi (t/month (pvm/suomen-aikavyohykkeeseen (c/from-date alkupvm)))
+        alku-vuosi (t/year (pvm/suomen-aikavyohykkeeseen (c/from-date alkupvm)))
+        loppu-paiva (t/day (pvm/suomen-aikavyohykkeeseen (c/from-date loppupvm)))
+        loppu-kuukausi (t/month (pvm/suomen-aikavyohykkeeseen (c/from-date loppupvm)))
+        loppu-vuosi (t/year (pvm/suomen-aikavyohykkeeseen (c/from-date loppupvm)))
         alkukuukauden-eka-paiva (t/day (t/first-day-of-the-month alku-vuosi alku-kuukausi))
         loppukuukauden-vika-paiva (t/day (t/last-day-of-the-month loppu-vuosi loppu-kuukausi))
         kk-vali? (and (= alku-paiva alkukuukauden-eka-paiva)
                       (= loppu-paiva loppukuukauden-vika-paiva))
-        ei-kk-vali-viesti "Kokonaishintainen osa voidaan näyttää vain kokonaisille kuukausille"
-        {:keys [kokonaishintainen-osa yksikkohintainen-osa muut-tyot sakot bonukset]}
-        (first (muodosta-tiemerkinnan-kustannusyhteenveto db {:urakkaid urakka-id
-                                                              :alkupvm alkupvm
-                                                              :loppupvm loppupvm}))
-        yhteensa (+ (if kk-vali? kokonaishintainen-osa 0)
-                    yksikkohintainen-osa
-                    muut-tyot
-                    sakot
-                    bonukset)]
+        {:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat yksikkohintaiset-suunnitellut-tyot
+                muut-tyot sakot bonukset]}
+        (first (hae-tiemerkinnan-kustannusyhteenveto db {:urakkaid urakka-id
+                                                         :alkupvm alkupvm
+                                                         :loppupvm loppupvm}))
+        toteumat-yhteensa (+ (if kk-vali? kokonaishintaiset-tyot 0)
+                             yksikkohintaiset-toteumat
+                             muut-tyot
+                             sakot
+                             bonukset)]
+
+    {:kokonaishintaiset-tyot kokonaishintaiset-tyot
+     :yksikkohintaiset-toteumat yksikkohintaiset-toteumat
+     :yksikkohintaiset-suunnitellut-tyot yksikkohintaiset-suunnitellut-tyot
+     :muut-tyot muut-tyot
+     :sakot sakot
+     :bonukset bonukset
+     :toteumat-yhteensa toteumat-yhteensa
+     :kk-vali? kk-vali?}))
+
+(defn- muodosta-raportin-rivit [raportin-tiedot]
+  (let [{:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat
+                muut-tyot sakot bonukset toteumat-yhteensa kk-vali?]} raportin-tiedot
+        ei-kk-vali-viesti "Kokonaishintainen osa voidaan näyttää vain kokonaisille kuukausille"]
 
     [["Kokonaishintaiset työt"
       (if kk-vali?
-        kokonaishintainen-osa
+        kokonaishintaiset-tyot
         [:varillinen-teksti {:arvo ei-kk-vali-viesti :tyyli :virhe}])
-      0
       (if kk-vali?
-        kokonaishintainen-osa
+        kokonaishintaiset-tyot
         [:varillinen-teksti {:arvo "-" :tyyli :virhe}])]
-     ["Yksikköhintaiset työt" yksikkohintainen-osa yksikkohintainen-osa]
+     ["Yksikköhintaiset työt" yksikkohintaiset-toteumat yksikkohintaiset-toteumat]
      ["Muut työt" muut-tyot muut-tyot]
      ["Sakot" sakot sakot]
      ["Bonukset" bonukset bonukset]
-     ["Yhteensä" yhteensa yhteensa]]))
+     ["Yhteensä" toteumat-yhteensa toteumat-yhteensa]]))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
-        naytettavat-rivit []
+        raportin-tiedot (hae-raportin-tiedot {:db db
+                                              :urakka-id urakka-id
+                                              :alkupvm alkupvm
+                                              :loppupvm loppupvm})
+        raportin-rivit (muodosta-raportin-rivit raportin-tiedot)
         raportin-nimi "Kustannusyhteenveto"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -67,8 +85,15 @@
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
-                 :tyhja (if (empty? naytettavat-rivit) "Ei raportoitavaa.")
+                 :tyhja (if (empty? raportin-rivit) "Ei raportoitavaa.")
                  :sheet-nimi raportin-nimi
                  :viimeinen-rivi-yhteenveto? true}
       (raportin-sarakkeet)
-      (raportin-rivit db urakka-id alkupvm loppupvm)]]))
+      raportin-rivit]
+     (let [yksikkohintaiset-suunnitellut-tyot (:yksikkohintaiset-suunnitellut-tyot raportin-tiedot)
+           toteumat-yhteensa (:toteumat-yhteensa raportin-tiedot)]
+       [:yhteenveto
+        [["Suunnitellut yksikköhintaiset työt yhteensä:" (fmt/euro-opt yksikkohintaiset-suunnitellut-tyot)]
+         ["Toteumat yhteensä:" (fmt/euro-opt toteumat-yhteensa)]
+         ["Kaikki yhteensä:" (fmt/euro-opt (+ toteumat-yhteensa
+                                              yksikkohintaiset-suunnitellut-tyot))]]])]))

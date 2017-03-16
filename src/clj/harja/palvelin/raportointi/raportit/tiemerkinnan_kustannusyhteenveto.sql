@@ -1,4 +1,4 @@
--- name: muodosta-tiemerkinnan-kustannusyhteenveto
+-- name: hae-tiemerkinnan-kustannusyhteenveto
 SELECT
   COALESCE((SELECT SUM(summa)
    FROM kokonaishintainen_tyo kt
@@ -10,7 +10,7 @@ SELECT
           -- annettu kuukausiväli, muuten ei ole mieltä näyttää kuukausittaisia kok. hint. töitä)
           AND to_date((kt.vuosi || '-' || kt.kuukausi || '-01'), 'YYYY-MM-DD') >= :alkupvm
           AND to_date((kt.vuosi || '-' || kt.kuukausi || '-01'), 'YYYY-MM-DD') <= :loppupvm), 0)
-    AS "kokonaishintainen-osa",
+    AS "kokonaishintaiset-tyot",
   COALESCE((SELECT SUM(hinta)
    FROM tiemerkinnan_yksikkohintainen_toteuma
    WHERE urakka = :urakkaid
@@ -21,7 +21,18 @@ SELECT
                                                                        FROM yllapitokohde
                                                                        WHERE id = yllapitokohde) IS NOT
                                                                       TRUE))), 0)
-    AS "yksikkohintainen-osa",
+    AS "yksikkohintaiset-toteumat",
+  COALESCE((SELECT SUM(hinta)
+   FROM tiemerkinnan_yksikkohintainen_toteuma
+   WHERE urakka = :urakkaid
+         AND poistettu IS NOT TRUE
+         AND hintatyyppi = 'suunnitelma'
+         AND paivamaara >= :alkupvm AND paivamaara <= :loppupvm
+         AND (yllapitokohde IS NULL OR (yllapitokohde IS NOT NULL AND (SELECT poistettu
+                                                                       FROM yllapitokohde
+                                                                       WHERE id = yllapitokohde) IS NOT
+                                                                      TRUE))), 0)
+    AS "yksikkohintaiset-suunnitellut-tyot",
   COALESCE((SELECT SUM(hinta)
    FROM yllapito_muu_toteuma
    WHERE urakka = :urakkaid
@@ -31,7 +42,7 @@ SELECT
   COALESCE((SELECT SUM(maara)
    FROM sanktio
    WHERE poistettu IS NOT TRUE
-         AND maara < 0
+         AND sakkoryhma = 'yllapidon_sakko'
          AND laatupoikkeama IN (SELECT id
                                 FROM laatupoikkeama lp
                                 WHERE urakka = :urakkaid AND poistettu IS NOT TRUE
@@ -45,7 +56,7 @@ SELECT
   COALESCE((SELECT SUM(maara)
    FROM sanktio
    WHERE poistettu IS NOT TRUE
-         AND maara > 0
+         AND sakkoryhma = 'yllapidon_bonus'
          AND laatupoikkeama IN (SELECT id
                                 FROM laatupoikkeama lp
                                 WHERE urakka = :urakkaid AND poistettu IS NOT TRUE
