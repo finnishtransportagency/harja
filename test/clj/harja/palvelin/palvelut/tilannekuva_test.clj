@@ -11,7 +11,8 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [harja.domain.tilannekuva :as tk]
-            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]))
+            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -286,25 +287,12 @@
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? (map
                                                        #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
                                                        (:ilmoitukset vastaus))))
-      (let [ ;; Tämä transducer on oleellinen paneelin sisällön kannalta,
-            ;; mutta löytyy valitettavasti tällä hetkellä vain .cljs puolelta.
-            ;; Siksi kopiotu tänne.
-            ;; Katso harja.tiedot.urakka.yllapitokohteet/yllapitokohteet-kartalle
-            yllapito-xf (comp
-                          (mapcat (fn [kohde]
-                                    (keep (fn [kohdeosa]
-                                            (assoc kohdeosa :yllapitokohde (dissoc kohde :kohdeosat)
-                                                            :tyyppi-kartalla (:yllapitokohdetyotyyppi kohde)
-                                                            :tila-kartalla (:tila-kartalla kohde)
-                                                            :yllapitokohde-id (:id kohde)))
-                                          (:kohdeosat kohde))))
-                          (keep #(and (:sijainti %) %)))]
-        (is (paneeli/skeeman-luonti-onnistuu-kaikille?
-              :paallystys
-              (into [] yllapito-xf (:paallystys vastaus))))
-        (is (paneeli/skeeman-luonti-onnistuu-kaikille?
-              :paikkaus
-              (into [] yllapito-xf (:paikkaus vastaus)))))
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille?
+            :paallystys
+            (into [] yllapitokohteet-domain/yllapitokohde-kartalle-xf (:paallystys vastaus))))
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille?
+            :paikkaus
+            (into [] yllapitokohteet-domain/yllapitokohde-kartalle-xf (:paikkaus vastaus))))
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama (:laatupoikkeamat vastaus)))
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :turvallisuuspoikkeama (:turvallisuuspoikkeamat vastaus)))))
 
