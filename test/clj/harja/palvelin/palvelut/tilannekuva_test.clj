@@ -35,7 +35,6 @@
 
 (use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
-(def nykytilanne false)
 (def alku (c/to-date (t/local-date 2000 1 1)))
 (def loppu (c/to-date (t/local-date 2030 1 1)))
 (def urakoitsija nil)
@@ -44,7 +43,7 @@
 (def parametrit-laaja-historia
   {:urakoitsija urakoitsija
    :urakkatyyppi urakkatyyppi
-   :nykytilanne? nykytilanne
+   :nykytilanne? false
    :alue {:xmin -550093.049087613, :ymin 6372322.595126259,
           :xmax 1527526.529326106, :ymax 7870243.751025201} ; Koko Suomi
    :alku alku
@@ -99,6 +98,8 @@
           tk/siltojen-puhdistus true
           tk/l-ja-p-alueiden-puhdistus true
           tk/muu true}})
+
+(def parametrit-laaja-nykytilanne (assoc parametrit-laaja-historia :nykytilanne? true))
 
 (defn aseta-filtterit-falseksi [parametrit ryhma]
   (assoc parametrit ryhma (reduce
@@ -295,6 +296,16 @@
             (into [] yllapitokohteet-domain/yllapitokohde-kartalle-xf (:paikkaus vastaus))))
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama (:laatupoikkeamat vastaus)))
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :turvallisuuspoikkeama (:turvallisuuspoikkeamat vastaus)))))
+
+  (testing "Päällystys / paikkaus haku nykytilanteeseen"
+    ;; Käyttää eri SQL-kyselyä historian ja nykytilanteen hakuun, joten hyvä testata erikseen vielä nykytilanne
+    (let [vastaus (hae-tk parametrit-laaja-nykytilanne)]
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille?
+            :paallystys
+            (into [] yllapitokohteet-domain/yllapitokohde-kartalle-xf (:paallystys vastaus))))
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille?
+            :paikkaus
+            (into [] yllapitokohteet-domain/yllapitokohde-kartalle-xf (:paikkaus vastaus))))))
 
   (testing "Infopaneeli saadaan luotua myös palvelimella piirretyille asioille."
     (let [toteuma (kutsu-karttakuvapalvelua
