@@ -134,6 +134,8 @@
   (let [aloitus :kohde-alkupvm
         paallystys-valmis :paallystys-loppupvm
         paikkaus-valmis :paikkaus-loppupvm
+        tiemerkinta-aloitus :tiemerkinta-alkupvm
+        tiemerkinta-valmis :tiemerkinta-loppupvm
         kohde-valmis :kohde-valmispvm]
     {:tyyppi (:yllapitokohdetyotyyppi (:yllapitokohde yllapitokohdeosa))
      :jarjesta-fn (let [fn #(get-in % [:yllapitokohde aloitus])]
@@ -176,7 +178,7 @@
                       #{[:yllapitokohde :tila]}
                       #(yllapitokohteet-domain/kuvaile-kohteen-tila (get-in % [:yllapitokohde :tila])))}
               (when (get-in yllapitokohdeosa [:yllapitokohde aloitus])
-                {:otsikko "Aloitettu" :tyyppi :pvm-aika
+                {:otsikko "Kohde aloitettu" :tyyppi :pvm-aika
                  :hae (hakufunktio
                         #{[:yllapitokohde aloitus]}
                         #(get-in % [:yllapitokohde aloitus]))})
@@ -190,6 +192,16 @@
                  :hae (hakufunktio
                         #{[:yllapitokohde paikkaus-valmis]}
                         #(get-in % [:yllapitokohde paikkaus-valmis]))})
+              (when (get-in yllapitokohdeosa [:yllapitokohde tiemerkinta-aloitus])
+                {:otsikko "Tiemerkintä aloitettu" :tyyppi :pvm-aika
+                 :hae (hakufunktio
+                        #{[:yllapitokohde tiemerkinta-aloitus]}
+                        #(get-in % [:yllapitokohde tiemerkinta-aloitus]))})
+              (when (get-in yllapitokohdeosa [:yllapitokohde tiemerkinta-valmis])
+                {:otsikko "Tiemerkintä valmistunut" :tyyppi :pvm-aika
+                 :hae (hakufunktio
+                        #{[:yllapitokohde tiemerkinta-valmis]}
+                        #(get-in % [:yllapitokohde tiemerkinta-valmis]))})
               (when (get-in yllapitokohdeosa [:yllapitokohde kohde-valmis])
                 {:otsikko "Kohde valmistunut" :tyyppi :pvm-aika
                  :hae (hakufunktio
