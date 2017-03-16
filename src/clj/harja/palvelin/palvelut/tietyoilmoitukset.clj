@@ -15,32 +15,6 @@
             [specql.core :refer [fetch]]
             [clojure.spec :as s]))
 
-(defn- muunna-tietyoilmoitus [tietyoilmoitus]
-  ;; FIXME: korvaa tämä specql datalla...
-  (as-> tietyoilmoitus t
-        (update t :sijainti geo/pg->clj)
-        (konv/array->vec t :tyotyypit)
-        (assoc t :tyotyypit (mapv #(konv/pgobject->map % :tyyppi :string :selite :string) (:tyotyypit t)))
-        (konv/array->vec t :tienpinnat)
-        (assoc t :tienpinnat (mapv #(konv/pgobject->map % :materiaali :string :matka :long) (:tienpinnat t)))
-        (konv/array->vec t :kiertotienpinnat)
-        (assoc t :kiertotienpinnat (mapv #(konv/pgobject->map % :materiaali :string :matka :long) (:kiertotienpinnat t)))
-        (konv/array->vec t :nopeusrajoitukset)
-        (assoc t :nopeusrajoitukset (mapv #(konv/pgobject->map % :nopeusrajoitus :long :matka :long) (:nopeusrajoitukset t)))
-        (konv/array->vec t :tyoajat)
-        (update t :tyoajat (fn [tyoajat]
-                             (mapv #(-> %
-                                        (konv/pgobject->map :alku :date :loppu :date :viikonpaivat :string)
-                                        (update :viikonpaivat
-                                                (fn [viikonpaivat-str]
-                                                  (into []
-                                                        (str/split (subs viikonpaivat-str
-                                                                         1 (dec (count viikonpaivat-str)))
-                                                                   #",")))))
-
-                                   tyoajat)))
-        ))
-
 (defn hae-tietyoilmoitukset [db user {:keys [alkuaika
                                              loppuaika
                                              urakka
@@ -49,29 +23,29 @@
                                       :as hakuehdot}
                              max-maara]
   (let [kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
-                          db
-                          user
-                          (fn [urakka-id kayttaja]
-                            (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset urakka-id kayttaja))
-                          nil nil nil nil #inst "1900-01-01" #inst "2100-01-01")]
-    (println "HAETAAN")
-    (q-tietyoilmoitukset/hae-ilmoitukset
-     db
-     {:alku (konv/sql-timestamp alkuaika)
-      :loppu (konv/sql-timestamp loppuaika)
-      :urakat (if (and urakka (not (str/blank? urakka)))
-                [(Integer/parseInt urakka)]
-                kayttajan-urakat)
-      :luojaid (when vain-kayttajan-luomat (:id user))
-      :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
-      :maxmaara max-maara
-      :organisaatio (:id (:organisaatio user))})))
+                           db
+                           user
+                           (fn [urakka-id kayttaja]
+                             (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset urakka-id kayttaja))
+                           nil nil nil nil #inst "1900-01-01" #inst "2100-01-01")
+        kyselyparametrit {:alku (konv/sql-timestamp alkuaika)
+                          :loppu (konv/sql-timestamp loppuaika)
+                          :urakat (if (and urakka (not (str/blank? urakka)))
+                                    [(Integer/parseInt urakka)]
+                                    kayttajan-urakat)
+                          :luojaid (when vain-kayttajan-luomat (:id user))
+                          :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
+                          :maxmaara max-maara
+                          :organisaatio (:id (:organisaatio user))}
+        tietyoilmoitukset (q-tietyoilmoitukset/hae-ilmoitukset db kyselyparametrit)]
+    (println "--->" tietyoilmoitukset)
+    tietyoilmoitukset))
 
 (defn tietyoilmoitus-pdf [db user params]
   (println "MUODOSTA PDF: " params)
   (pdf/tietyoilmoitus-pdf
-   (first (fetch db ::t/ilmoitus q-tietyoilmoitukset/kaikki-ilmoituksen-kentat
-                 {::t/id (:id params)}))))
+    (first (fetch db ::t/ilmoitus q-tietyoilmoitukset/kaikki-ilmoituksen-kentat
+                  {::t/id (:id params)}))))
 
 (s/def ::tietyoilmoitukset (s/coll-of ::t/ilmoitus))
 
@@ -87,7 +61,7 @@
                       {:vastaus-spec ::tietyoilmoitukset})
     (when pdf
       (pdf-vienti/rekisteroi-pdf-kasittelija!
-       pdf :tietyoilmoitus (partial #'tietyoilmoitus-pdf db)))
+        pdf :tietyoilmoitus (partial #'tietyoilmoitus-pdf db)))
     this)
 
   (stop [this]

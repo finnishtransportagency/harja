@@ -10,7 +10,9 @@
             [harja.domain.ilmoitukset :as ilmoitukset]
             [harja.geo :as geo]
             [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.domain.tierekisteri :as tr]
+            [harja.domain.tietyoilmoitukset :as tietyoilmoitukset]))
 
 #?(:clj (defn log [& things]
           (log/info things)))
@@ -299,7 +301,7 @@
       :selite {:teksti "Tietyoilmoitus"
                :img ikoni
                :tietyoilmoituksen-viiva (viivojen-varit-leveimmasta-kapeimpaan viiva)}
-      :alue (maarittele-feature tietyoilmoitus valittu? ikoni viiva))))
+      :alue (maarittele-feature (get-in tietyoilmoitus [::tietyoilmoitukset/osoite ::tr/geometria]) valittu? ikoni viiva))))
 
 (defn paattele-turpon-ikoni [turpo]
   (let [kt (:korjaavattoimenpiteet turpo)]

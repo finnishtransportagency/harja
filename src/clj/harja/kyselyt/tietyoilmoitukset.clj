@@ -1,6 +1,7 @@
 (ns harja.kyselyt.tietyoilmoitukset
   (:require [jeesql.core :refer [defqueries]]
             [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.tierekisteri :as tr]
             [specql.core :refer [define-tables fetch]]
             [specql.op :as op]
             [specql.rel :as rel]
@@ -10,7 +11,7 @@
 (defqueries "harja/kyselyt/tietyoilmoitukset.sql")
 
 (define-tables db
-  ["tr_osoite" ::t/tr-osoite]
+  ["tr_osoite" ::tr/tr-osoite]
   ["tietyon_henkilo" ::t/henkilo]
   ["tietyon_ajoneuvorajoitukset" ::t/ajoneuvorajoitukset*]
   ["tietyotyyppi" ::t/tietyotyyppi]
@@ -51,6 +52,7 @@
     ::t/urakka-id
     ::t/urakan-nimi
     ::t/urakkatyyppi
+    ::t/urakoitsijan-nimi
     ::t/urakoitsijayhteyshenkilo-id
     ::t/urakoitsijayhteyshenkilo
     ::t/tilaaja-id
