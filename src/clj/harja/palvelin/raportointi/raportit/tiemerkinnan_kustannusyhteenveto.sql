@@ -1,12 +1,13 @@
 -- name: muodosta-tiemerkinnan-kustannusyhteenveto
 SELECT
-  -- FIXME AIKARAJAT (mutta ei voi kaikkiin laittaa?)
   COALESCE((SELECT SUM(summa)
    FROM kokonaishintainen_tyo kt
    WHERE toimenpideinstanssi IN
          (SELECT id
           FROM toimenpideinstanssi
           WHERE urakka = :urakkaid)
+          -- Kok. hint. osuu aikavälille jos eka päivä osuu (raporttikoodi tarkistaa, että aikaväliksi on
+          -- annettu kuukausiväli, muuten ei ole mieltä näyttää kuukausittaisia kok. hint. töitä)
           AND to_date((kt.vuosi || '-' || kt.kuukausi || '-01'), 'YYYY-MM-DD') >= :alkupvm
           AND to_date((kt.vuosi || '-' || kt.kuukausi || '-01'), 'YYYY-MM-DD') <= :loppupvm), 0)
     AS "kokonaishintainen-osa",
@@ -15,6 +16,7 @@ SELECT
    WHERE urakka = :urakkaid
          AND poistettu IS NOT TRUE
          AND hintatyyppi = 'toteuma'
+         AND paivamaara >= :alkupvm AND paivamaara <= :loppupvm
          AND (yllapitokohde IS NULL OR (yllapitokohde IS NOT NULL AND (SELECT poistettu
                                                                        FROM yllapitokohde
                                                                        WHERE id = yllapitokohde) IS NOT
