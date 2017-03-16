@@ -1,7 +1,8 @@
 (ns harja.kyselyt.tietyoilmoitukset
   (:require [jeesql.core :refer [defqueries]]
             [harja.domain.tietyoilmoitukset :as t]
-            [specql.core :refer [define-tables]]
+            [specql.core :refer [define-tables fetch]]
+            [specql.op :as op]
             [specql.rel :as rel]
             [clojure.spec :as s]
             [harja.kyselyt.specql :refer [db]]))
@@ -86,6 +87,7 @@
                        ::t/ilmoittaja
                        ::t/osoite ::t/tien-nimi ::t/kunnat
                        ::t/alkusijainnin-kuvaus ::t/loppusijainnin-kuvaus
+                       ::t/tyoajat
                        ::t/alku ::t/loppu}]
     ::t/urakka-id
     ::t/urakan-nimi
@@ -119,3 +121,24 @@
     ::t/pysaytysten-alku
     ::t/pysaytysten-loppu
     ::t/lisatietoja})
+
+(defn intersects? [threshold geometry]
+  (reify op/Op
+    (to-sql [this value-accessor]
+      [(str "ST_Intersects(ST_Buffer(?,?), " value-accessor ")")
+       [geometry threshold]])))
+
+(defn hae-ilmoitukset [db {:keys [alku loppu urakat organisaatio kayttaja-id sijainti]}]
+  (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat
+         (op/and
+          (merge {::t/luotu (op/between alku loppu)
+                  ::t/paatietyoilmoitus op/null?}
+                 (when kayttaja-id
+                   {::t/luoja kayttaja-id})
+                 (when sijainti
+                   {::t/osoite {::t/geometria (intersects? 100 sijainti)}}))
+          (if organisaatio
+            (op/or
+             {::t/urakka-id (op/or op/null? (op/in urakat))}
+             {::t/urakoitsija-id organisaatio})
+            {::t/urakka-id (op/or op/null? (op/in urakat))}))))
