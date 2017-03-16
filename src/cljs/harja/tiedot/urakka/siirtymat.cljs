@@ -83,7 +83,7 @@
           (nav/vaihda-kartan-koko! :L))))))
 
 (defn avaa-paallystysilmoitus!
-  "Navigoi päällystysilmoitukseen (ent. POT-lomake) näyttäen tiedot."
+  "Navigoi päällystysilmoitukseen näyttäen tiedot."
   [{:keys [paallystyskohde-id kohteen-urakka-id valittu-urakka-id] :as tiedot}]
   (go
     (let [{:keys [yllapitokohde-id urakka-id hallintayksikko-id] :as vastaus}
