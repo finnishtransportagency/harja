@@ -41,8 +41,27 @@
 
 (deftest raportin-suoritus-urakalle-toimii
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
-        raportin-tiedot (raportti/hae-raportin-tiedot {:db (:db jarjestelma)
-                                                       :urakka-id urakka-id
-                                                       :alkupvm (pvm/luo-pvm 2000 1 1)
-                                                       :loppupvm (pvm/luo-pvm 2080 1 1)})]
-    (is (map? raportin-tiedot))))
+        sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+        tiemerkinnan-tpi (:id (first (q-map "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " LIMIT 1")))]
+
+    ;; Tyhjennetään testattavan urakan kaikki raportilla näkyvät tiedot ja luodaan tyhjästä omat.
+    ;; Nähdään, että raportissa käytetty data on laskettu oikein
+    (u (str "DELETE FROM kokonaishintainen_tyo WHERE toimenpideinstanssi IN
+  (SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id ");"))
+
+    (u (str "INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinstanssi,sopimus)
+    VALUES (2017, 10, 3500, '2017-10-15', " tiemerkinnan-tpi ", " sopimus-id ");"))
+    (u (str "INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinstanssi,sopimus)
+    VALUES (2017, 11, 100, '2017-10-15', " tiemerkinnan-tpi ", " sopimus-id ");"))
+    (u (str "INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinstanssi,sopimus)
+    VALUES (2007, 1, 666, '2017-10-15', " tiemerkinnan-tpi ", " sopimus-id ");")) ; Ei aikavälillä
+
+    (let [{:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat
+                  muut-tyot sakot bonukset toteumat-yhteensa kk-vali?]
+           :as raportin-tiedot}
+          (raportti/hae-raportin-tiedot {:db (:db jarjestelma)
+                                         :urakka-id urakka-id
+                                         :alkupvm (pvm/luo-pvm 2010 1 1)
+                                         :loppupvm (pvm/luo-pvm 2080 1 1)})]
+      (is (map? raportin-tiedot))
+      (is (== kokonaishintaiset-tyot 3600)))))
