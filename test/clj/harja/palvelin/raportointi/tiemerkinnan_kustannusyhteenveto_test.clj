@@ -35,26 +35,31 @@
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
-(use-fixtures :once (compose-fixtures
-                      jarjestelma-fixture
-                      urakkatieto-fixture))
+(use-fixtures :once (compose-fixtures jarjestelma-fixture urakkatieto-fixture))
 
 (deftest raportin-suoritus-urakalle-toimii
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
         sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
         tiemerkinnan-tpi (:id (first (q-map "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " LIMIT 1")))]
 
-    ;; Tyhjennetään testattavan urakan kaikki raportilla näkyvät tiedot ja luodaan tyhjästä omat.
-    ;; Nähdään, että raportissa käytetty data on laskettu oikein
+    ;; Tyhjennetään testattavan urakan kaikki raportilla näkyvät tiedot testin ajaksi
     (u (str "DELETE FROM kokonaishintainen_tyo WHERE toimenpideinstanssi IN
   (SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id ");"))
+    (u (str "DELETE FROM tiemerkinnan_yksikkohintainen_toteuma WHERE urakka = " urakka-id ";"))
+
+    ;; Luodaan tyhjästä uudet tiedot, jotta nähdään, että raportissa käytetty data on laskettu oikein
 
     (u (str "INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinstanssi,sopimus)
-    VALUES (2017, 10, 3500, '2017-10-15', " tiemerkinnan-tpi ", " sopimus-id ");"))
+    VALUES (2017, 10, 1, '2017-10-15', " tiemerkinnan-tpi ", " sopimus-id ");"))
     (u (str "INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinstanssi,sopimus)
-    VALUES (2017, 11, 100, '2017-10-15', " tiemerkinnan-tpi ", " sopimus-id ");"))
+    VALUES (2017, 11, 2, '2017-10-15', " tiemerkinnan-tpi ", " sopimus-id ");"))
     (u (str "INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinstanssi,sopimus)
-    VALUES (2007, 1, 666, '2017-10-15', " tiemerkinnan-tpi ", " sopimus-id ");")) ; Ei aikavälillä
+    VALUES (2007, 1, 999999, '2017-10-15', " tiemerkinnan-tpi ", " sopimus-id ");")) ; Ei aikavälillä
+
+    (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
+    paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
+    VALUES (" urakka-id " ,null, 1, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null,
+    'Testitoteuma 1', 20, 8, 5);"))
 
     (let [{:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat
                   muut-tyot sakot bonukset toteumat-yhteensa kk-vali?]
@@ -64,4 +69,5 @@
                                          :alkupvm (pvm/luo-pvm 2010 1 1)
                                          :loppupvm (pvm/luo-pvm 2080 1 1)})]
       (is (map? raportin-tiedot))
-      (is (== kokonaishintaiset-tyot 3600)))))
+      (is (== kokonaishintaiset-tyot 3))
+      (is (== yksikkohintaiset-toteumat 1)))))
