@@ -60,6 +60,22 @@
     paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
     VALUES (" urakka-id " ,null, 1, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null,
     'Testitoteuma 1', 20, 8, 5);"))
+    (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
+    paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
+    VALUES (" urakka-id " ,null, 100, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2018-01-01', null,
+    'Testitoteuma 2', 21, 8, 5);"))
+    (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
+    paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
+    VALUES (" urakka-id " ,null, 5, 'suunnitelma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null,
+    'Testitoteuma 1', 20, 8, 5);"))
+    (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
+    paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
+    VALUES (" urakka-id " ,null, 1, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2000-01-01', null,
+    'Testitoteuma 1', 20, 8, 5);")) ; Ei aikavälillä
+    (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
+    paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus, poistettu)
+    VALUES (" urakka-id " ,null, 1, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null,
+    'Testitoteuma 1', 20, 8, 5, true);")) ; Poistettu
 
     (let [{:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat
                   muut-tyot sakot bonukset toteumat-yhteensa kk-vali?]
@@ -70,4 +86,4 @@
                                          :loppupvm (pvm/luo-pvm 2080 1 1)})]
       (is (map? raportin-tiedot))
       (is (== kokonaishintaiset-tyot 3))
-      (is (== yksikkohintaiset-toteumat 1)))))
+      (is (== yksikkohintaiset-toteumat 101)))))
