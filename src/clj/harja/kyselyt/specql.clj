@@ -6,6 +6,10 @@
             [clojure.spec :as s]
             [clojure.future :refer :all]))
 
-(def db {:connection-uri "jdbc:postgresql://localhost/harjatest_template?user=postgres"})
+
+(def db {:connection-uri (let [{:keys [palvelin tietokanta portti kayttaja salasana]}
+                               (:tietokanta (read-string (slurp "asetukset.edn")))]
+                           (str "jdbc:postgresql://" palvelin ":" portti "/" tietokanta
+                                "?user=" kayttaja "&password=" salasana ))})
 
 (s/def ::d/geometry any?)
