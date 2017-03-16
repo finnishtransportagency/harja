@@ -131,7 +131,7 @@
 
   PaivitaSijainti
   (process-event [{sijainti :sijainti} app]
-    (assoc-in app [:valinnat :sijainti] sijainti))
+    (assoc-in app [:valinnat :sijainti] sijainti)))
 
 
 (def tyotyyppi-vaihtoehdot-tienrakennus
@@ -156,6 +156,7 @@
    ["Tasoristeystyö" "Tasoristeystyö"]
    ["Tiemerkintätyö" "Tiemerkintätyö"]
    ["Viimeistely" "Viimeistely"]
+
    ["Valaistustyö" "Valaistustyö"]])
 
 (def tyotyyppi-vaihtoehdot-muut [["Liittymä- ja kaistajärj." "Liittymä- ja kaistajärjestely"]
@@ -168,8 +169,11 @@
                                          tyotyyppi-vaihtoehdot-asennus
                                          tyotyyppi-vaihtoehdot-muut)))
 
-(def vaikutussuunta-vaihtoehdot-map {
-                             "ajokaistaSuljettu" "Yksi ajokaista suljettu"
-                             "ajorataSuljettu" "Yksi ajorata suljettu"
-                             "tieSuljettu" "Tie suljettu" ;; XX esiintyy meidän kantaschemassa mutta ei rautalangassa, kumpi oikein?
-                             "muu" "Muu, mikä" })
+(def kaistajarjestelyt-vaihtoehdot-map {"ajokaistaSuljettu" "Yksi ajokaista suljettu"
+                                        "ajorataSuljettu" "Yksi ajorata suljettu"
+                                        "tieSuljettu" "Tie suljettu"
+                                        "muu" "Muu, mikä" })
+
+(def vaikutussuunta-vaihtoehdot-map {"molemmat" "Haittaa molemmissa ajosuunnissa"
+                                     "tienumeronKasvusuuntaan" "Tienumeron kasvusuuntaan"
+                                     "vastenTienumeronKasvusuuntaa" "Vasten tienumeron kasvusuuntaa" })
