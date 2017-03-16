@@ -15,33 +15,45 @@
             [harja.tiedot.hallintayksikot :as hallintayksikot-tiedot]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.views.ilmoitukset.tietyoilmoitushakulomake :as tietyoilmoitushakulomake]
-            [harja.views.ilmoitukset.tietyoilmoituslomake :as tietyoilmoituslomake])
+            [harja.views.ilmoitukset.tietyoilmoituslomake :as tietyoilmoituslomake]
+            [harja.ui.napit :as napit]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.ikonit :as ikonit]
+            [harja.transit :as transit])
   (:require-macros
-    [cljs.core.async.macros :refer [go]]))
+   [cljs.core.async.macros :refer [go]]))
+
+(defn vie-pdf [id]
+  [:form {:target "_blank"
+          :method "POST"
+          :action (k/pdf-url :tietyoilmoitus)}
+   [:input {:type "hidden" :name "parametrit"
+            :value (transit/clj->transit {:id id})}]
+   [:button.nappi-ensisijainen.pull-right
+    {:type "submit"}
+    (ikonit/print) " Tallenna PDF"]])
 
 (defn ilmoitukset* [e! ilmoitukset]
   (e! (tiedot/->HaeKayttajanUrakat @hallintayksikot-tiedot/hallintayksikot))
   (e! (tiedot/->YhdistaValinnat @tiedot/ulkoisetvalinnat))
   (komp/luo
-    (komp/lippu tiedot/karttataso-ilmoitukset)
+    (komp/lippu tiedot/karttataso-tietyoilmoitukset)
     (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (tiedot/->ValitseIlmoitus i))))
     (komp/sisaan-ulos #(do
                          (notifikaatiot/pyyda-notifikaatiolupa)
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                          (nav/vaihda-kartan-koko! :M)
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
-                           {:ilmoitus {:toiminto (fn [ilmoitus-infopaneelista]
-                                                   (e! (tiedot/->ValitseIlmoitus ilmoitus-infopaneelista)))
+                           {:tietyoilmoitus {:toiminto (fn [tietyoilmoitus-infopaneelista]
+                                                   (e! (tiedot/->ValitseIlmoitus tietyoilmoitus-infopaneelista)))
                                        :teksti "Valitse ilmoitus"}}))
                       #(do
                          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
                          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
     (fn [e! {valittu-ilmoitus :valittu-ilmoitus kayttajan-urakat :kayttajan-urakat :as app}]
       [:span
-       [ui-debug/debug @tiedot/ilmoitukset]
        [kartta/kartan-paikka]
-
-
+       [vie-pdf 1]
        (if valittu-ilmoitus
          [tietyoilmoituslomake/lomake e! valittu-ilmoitus kayttajan-urakat]
          [tietyoilmoitushakulomake/hakulomake e! app])])))

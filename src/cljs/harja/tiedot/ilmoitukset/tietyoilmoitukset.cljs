@@ -14,14 +14,38 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
+(def aikavalit [{:nimi "1 päivän ajalta" :tunteja 24}
+                {:nimi "1 viikon ajalta" :tunteja 168}
+                {:nimi "4 viikon ajalta" :tunteja 672}
+                {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
+
 (defonce ulkoisetvalinnat
          (reaction {:voi-hakea? true
                     :hallintayksikko (:id @nav/valittu-hallintayksikko)
-                    :urakka (:id @nav/valittu-urakka)
+                    :urakka @nav/valittu-urakka
                     :valitun-urakan-hoitokaudet @tiedot-urakka/valitun-urakan-hoitokaudet
                     :urakoitsija (:id @nav/valittu-urakoitsija)
                     :urakkatyyppi (:arvo @nav/urakkatyyppi)
                     :hoitokausi @tiedot-urakka/valittu-hoitokausi}))
+
+
+(defonce tietyoilmoitukset (atom {:ilmoitusnakymassa? false
+                                  :valittu-ilmoitus nil
+                                  :haku-kaynnissa? false
+                                  :tietyoilmoitukset nil
+                                  :valinnat {:vakioaikavali (first aikavalit)
+                                             :alkuaika (pvm/tuntia-sitten 1)
+                                             :loppuaika (pvm/nyt)}}))
+
+(defonce karttataso-tietyoilmoitukset (atom false))
+
+(defonce tietyoilmoitukset-kartalla
+         (reaction
+           (let [{:keys [tietyoilmoitukset valittu-ilmoitus]} @tietyoilmoitukset]
+             (when @karttataso-tietyoilmoitukset
+               (kartalla-esitettavaan-muotoon
+                 (map #(assoc % :tyyppi-kartalla :tietyoilmoitus) tietyoilmoitukset)
+                 #(= (:id %) (:id valittu-ilmoitus)))))))
 
 (defn- nil-hylkiva-concat [akku arvo]
   (if (or (nil? arvo) (nil? akku))
@@ -29,13 +53,6 @@
     (concat akku arvo)))
 
 (defonce karttataso-ilmoitukset (atom false))
-
-(defonce ilmoitukset (atom {:ilmoitusnakymassa? false
-                            :valittu-ilmoitus nil
-                            :haku-kaynnissa? false
-                            :ilmoitukset nil ;; haetut ilmoitukset
-                            :valinnat {:alkuaika (pvm/tuntia-sitten 1)
-                                       :loppuaika (pvm/nyt)}}))
 
 (defrecord AsetaValinnat [valinnat])
 (defrecord YhdistaValinnat [ulkoisetvalinnat])
@@ -46,16 +63,17 @@
 (defrecord IlmoitustaMuokattu [ilmoitus])
 (defrecord HaeKayttajanUrakat [hallintayksikot])
 (defrecord KayttajanUrakatHaettu [urakat])
+(defrecord PaivitaSijainti [sijainti])
 
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
-  (-> app
-      (assoc :ilmoitushaku-id (.setTimeout js/window (t/send-async! ->HaeIlmoitukset) 1000))))
+  (when haku
+    (.clearTimeout js/window haku))
+  (assoc app :ilmoitushaku-id (.setTimeout js/window (t/send-async! ->HaeIlmoitukset) 1000)))
 
 (extend-protocol t/Event
   AsetaValinnat
   (process-event [{valinnat :valinnat} app]
-    (hae-ilmoitukset
-      (assoc app :valinnat valinnat)))
+    (hae-ilmoitukset (assoc app :valinnat valinnat)))
 
   YhdistaValinnat
   (process-event [{ulkoisetvalinnat :ulkoisetvalinnat :as e} app]
@@ -68,13 +86,19 @@
     (let [tulos! (t/send-async! ->IlmoituksetHaettu)]
       (go
         (tulos!
-          {:ilmoitukset (async/<! (k/post! :hae-tietyoilmoitukset (select-keys valinnat [:alkuaika :loppuaika])))})))
-    (assoc app :ilmoitukset nil))
+          (let [parametrit (select-keys valinnat [:alkuaika
+                                                  :loppuaika
+                                                  :sijainti
+                                                  :urakka
+                                                  :vain-kayttajan-luomat])]
+            {:tietyoilmoitukset (async/<! (k/post! :hae-tietyoilmoitukset parametrit))}))))
+    (assoc app :tietyoilmoitukset nil))
 
   IlmoituksetHaettu
   (process-event [vastaus {valittu :valittu-ilmoitus :as app}]
-    (let [ilmoitukset (:ilmoitukset (:tulokset vastaus))]
-      (assoc app :ilmoitukset ilmoitukset)))
+    (let [ilmoitukset (:tietyoilmoitukset (:tulokset vastaus))]
+      (log "---> ilmoitukset" (pr-str (:sijainti (first ilmoitukset))))
+      (assoc app :tietyoilmoitukset ilmoitukset)))
 
   ValitseIlmoitus
   (process-event [{ilmoitus :ilmoitus} app]
@@ -101,7 +125,14 @@
 
   KayttajanUrakatHaettu
   (process-event [{urakat :urakat} app]
-    (assoc app :kayttajan-urakat urakat)))
+    (let [urakka (when @nav/valittu-urakka ((comp str :id) @nav/valittu-urakka))]
+      (assoc app :kayttajan-urakat urakat
+                 :valinnat (assoc (:valinnat app) :urakka urakka))))
+
+  PaivitaSijainti
+  (process-event [{sijainti :sijainti} app]
+    (assoc-in app [:valinnat :sijainti] sijainti))
+
 
 (def tyotyyppi-vaihtoehdot-tienrakennus
   [["Alikulkukäytävän rak." "Alikulkukäytävän rakennus"]

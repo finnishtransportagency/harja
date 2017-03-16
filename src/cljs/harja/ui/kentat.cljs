@@ -872,7 +872,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
 
 (defmethod tee-kentta :tierekisteriosoite [{:keys [tyyli lomake? ala-nayta-virhetta-komponentissa?
-                                                   sijainti pakollinen?]} data]
+                                                   sijainti pakollinen? tyhjennys-sallittu?]} data]
   (let [osoite-alussa @data
 
         hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
@@ -975,20 +975,30 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
             [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa :loppuosa @karttavalinta-kaynnissa]
             [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys :loppuetaisyys @karttavalinta-kaynnissa]
             (if-not @karttavalinta-kaynnissa
-              [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
-                                                          (reset! osoite-ennen-karttavalintaa osoite)
-                                                          (reset! data {})
-                                                          (reset! karttavalinta-kaynnissa true))}
-               (ikonit/map-marker) (tr-valintanapin-teksti osoite-alussa osoite)]
+              [:span
+               (when tyhjennys-sallittu?
+                 [:button.nappi-tyhjenna.nappi-kielteinen {:on-click #(do (.preventDefault %)
+                                                                          (tasot/poista-geometria! :tr-valittu-osoite)
+                                                                          (reset! sijainti nil)
+                                                                          (reset! data {})
+                                                                          (reset! virheet nil))
+                                                           :disabled (when (empty? @data) "disabled")}
+                  (ikonit/livicon-delete)])
+               [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
+                                                           (reset! osoite-ennen-karttavalintaa osoite)
+                                                           (reset! data {})
+                                                           (reset! karttavalinta-kaynnissa true))}
+                (ikonit/map-marker) (tr-valintanapin-teksti osoite-alussa osoite)]]
               [tr/karttavalitsin {:kun-peruttu #(do
                                                   (reset! data @osoite-ennen-karttavalintaa)
                                                   (reset! karttavalinta-kaynnissa false))
-                                  :paivita     #(swap! data merge %)
-                                  :kun-valmis  #(do
-                                                  (reset! data %)
-                                                  (reset! karttavalinta-kaynnissa false)
-                                                  (log "Saatiin tr-osoite! " (pr-str %))
-                                                  (go (>! tr-osoite-ch %)))}])
+                                  :paivita #(swap! data merge %)
+                                  :kun-valmis #(do
+                                                 (reset! data %)
+                                                 (reset! karttavalinta-kaynnissa false)
+                                                 (log "Saatiin tr-osoite! " (pr-str %))
+                                                 (go (>! tr-osoite-ch %)))}])
+
             (when-let [sijainti (and hae-sijainti sijainti @sijainti)]
               (when (vkm/virhe? sijainti)
                 [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]))]])))))
