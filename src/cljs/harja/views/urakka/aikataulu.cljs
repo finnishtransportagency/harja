@@ -145,6 +145,8 @@
     (fn [urakka optiot]
       (let [{urakka-id :id :as ur} @nav/valittu-urakka
             sopimus-id (first @u/valittu-sopimusnumero)
+            aikataulurivit @tiedot/aikataulurivit
+            urakkatyyppi (:tyyppi urakka)
             vuosi @u/valittu-urakan-vuosi
             {:keys [voi-tallentaa? saa-muokata?
                     saa-asettaa-valmis-takarajan?
@@ -286,6 +288,6 @@
                        "Tiemerkintää ei ole merkitty lopetetuksi."]
                       [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-loppu
                        "Kohde ei voi olla valmis ennen kuin tiemerkintä on valmistunut."]]}]
-          (otsikoi-aikataulurivit @tiedot/aikataulurivit-valmiuden-mukaan)]
+          (otsikoi-aikataulurivit (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))]
          (if (= (:nakyma optiot) :tiemerkinta)
            [vihje "Tiemerkinnän valmistumisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle ja vastuuhenkilölle."])]))))
