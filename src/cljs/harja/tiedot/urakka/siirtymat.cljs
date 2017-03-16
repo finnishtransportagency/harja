@@ -113,4 +113,4 @@
                 (assoc vastaus
                   :kirjoitusoikeus?
                   (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                            (:id @nav/valittu-urakka))))))))
+                                            valittu-urakka-id)))))))
