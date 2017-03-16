@@ -34,3 +34,24 @@
               {:type :merkki
                :coordinates [20 20]}]]
     (is (every? validi? (map geo/extent geot)))))
+
+(defn absolute [x] (Math/abs x))
+
+(deftest extent-laajentaminen-prosentilla
+  (testing "Apufunktiot"
+    (let [extent [2 2 12 12]]
+      (is (= 0.0 (#'geo/kasvata-vasemmalle extent 0.2)))
+      (is (= 0.0 (#'geo/kasvata-alaspain extent 0.2)))
+      (is (= 14.0 (#'geo/kasvata-oikealle extent 0.2)))
+      (is (= 14.0 (#'geo/kasvata-ylospain extent 0.2)))))
+
+  (testing "Laajentaminen prosentilla"
+    (let [extent [2 2 12 12]]
+      (is (= [0.0 0.0 14.0 14.0] (geo/laajenna-extent-prosentilla extent [0.2 0.2 0.2 0.2])))
+      (is (= [2 2 14.0 12] (geo/laajenna-extent-prosentilla extent [0 0 0.2 0])))))
+
+  (testing "Oletuksena muut suunnat kasvaa saman verran, paitsi ylöspäin aina enemmän."
+    (let [extent [2 2 12 12]
+          [minx miny maxx maxy :as muutokset] (map - (geo/laajenna-extent-prosentilla extent) extent)]
+      (is (= (absolute (int minx)) (absolute (int maxx))) "Oletuksena extentin pitäis laajeta vasemmalle ja oikealle saman verran")
+      (is (< (absolute miny) (absolute maxy)) "Oletuksena extentin pitäis kasvaa ylöspäin enemmän kuin alaspäin"))))

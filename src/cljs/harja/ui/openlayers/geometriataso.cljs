@@ -91,6 +91,8 @@
     (or (-> this meta :opacity) 1))
   (selitteet [this]
     (-> this meta :selitteet))
+  (aktiivinen? [this]
+    (some? (taso/extent this)))
   (paivita [items ol3 ol-layer aiempi-paivitystieto]
     (update-ol3-layer-geometries ol3 ol-layer aiempi-paivitystieto items))
   (hae-asiat-pisteessa [this koordinaatti extent]

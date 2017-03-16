@@ -10,6 +10,7 @@
   (opacity [this]
            "Palauttaa tason opacityn 0 (täysin läpinäkyvä) - 1 välillä (ei läpinäkyvä lainkaan)")
   (selitteet [this] "Palauttaa tällä tasolla olevien asioiden selitteet")
+  (aktiivinen? [this] "Tason arvio siitä, sisältääkö taso asioita vai ei.")
   (paivita
    [this ol3 ol-layer aiempi-paivitystieto]
    "Päivitä ol-layer tai luo uusi layer. Tulee palauttaa vektori, jossa on
