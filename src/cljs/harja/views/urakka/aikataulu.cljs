@@ -22,8 +22,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
-            [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
-            [harja.views.urakka.valinnat :as u-valinnat])
+            [harja.ui.viesti :as viesti])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -153,7 +152,6 @@
                     saa-merkita-valmiiksi?]} (oikeudet urakka-id)]
         [:div.aikataulu
          [vuosivalinta ur]
-         [u-valinnat/tienumero paallystys-tiedot/tienumero]
          [grid/grid
           {:otsikko "Kohteiden aikataulu"
            :voi-poistaa? (constantly false)
@@ -162,7 +160,14 @@
            :tyhja (if (nil? @tiedot/aikataulurivit)
                     [yleiset/ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :tallenna (if voi-tallentaa?
-                       #(tiedot/tallenna-yllapitokohteiden-aikataulu urakka-id sopimus-id vuosi %)
+                       #(tiedot/tallenna-yllapitokohteiden-aikataulu
+                          {:urakka-id urakka-id
+                           :sopimus-id sopimus-id
+                           :vuosi vuosi
+                           :kohteet %
+                           :epaonnistui-fn (fn [] (viesti/nayta! "Tallennus epäonnistui!"
+                                                                 :warning
+                                                                 viesti/viestin-nayttoaika-lyhyt))})
                        :ei-mahdollinen)}
           [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
             :pituus-max 128 :muokattava? (constantly false)}
@@ -219,7 +224,9 @@
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-paallystys-alku
                        "Päällystystä ei ole merkitty aloitetuksi."]
                       [:pvm-kentan-jalkeen :aikataulu-paallystys-alku
-                       "Valmistuminen ei voi olla ennen aloitusta."]]}
+                       "Valmistuminen ei voi olla ennen aloitusta."]
+                      [:ei-tyhja-jos-toinen-arvo-annettu :valmis-tiemerkintaan
+                       "Arvoa ei voi poistaa, koska kohde on merkitty valmiiksi tiemerkintään"]]}
            (when (= (:nakyma optiot) :paallystys)
              {:otsikko "Tie\u00ADmer\u00ADkin\u00ADnän suo\u00ADrit\u00ADta\u00ADva u\u00ADrak\u00ADka"
               :leveys 10 :nimi :suorittava-tiemerkintaurakka
@@ -275,19 +282,18 @@
             :fmt pvm/pvm-opt
             :muokattava? (fn [rivi]
                            (and (= (:nakyma optiot) :tiemerkinta)
+                                (:aikataulu-tiemerkinta-alku rivi)
                                 saa-merkita-valmiiksi?
                                 (:valmis-tiemerkintaan rivi)))
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
                        "Tiemerkintää ei ole merkitty aloitetuksi."]
                       [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-alku
                        "Valmistuminen ei voi olla ennen aloitusta."]]}
-           {:otsikko "Koh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
+           {:otsikko "Päällystyskoh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
             :fmt pvm/pvm-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
-            :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-loppu
-                       "Tiemerkintää ei ole merkitty lopetetuksi."]
-                      [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-loppu
-                       "Kohde ei voi olla valmis ennen kuin tiemerkintä on valmistunut."]]}]
+            :validoi [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
+                       "Kohde ei voi olla valmis ennen kuin se on aloitettu."]]}]
           (otsikoi-aikataulurivit (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))]
          (if (= (:nakyma optiot) :tiemerkinta)
            [vihje "Tiemerkinnän valmistumisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle ja vastuuhenkilölle."])]))))

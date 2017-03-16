@@ -251,7 +251,7 @@
         {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :palstoja 1
          :varoita [tarkista-takuu-pvm]}
         {:otsikko "Päällystys valmistunut" :nimi :valmispvm-paallystys :tyyppi :pvm :palstoja 1 :muokattava? (constantly false)}
-        {:otsikko "Kohde valmistunut" :nimi :valmispvm-kohde :palstoja 1
+        {:otsikko "Päällystyskohde valmistunut" :nimi :valmispvm-kohde :palstoja 1
          :tyyppi :pvm :muokattava? (constantly false)}
         {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
          :hae #(-> % laske-hinta :toteuman-kokonaishinta)
