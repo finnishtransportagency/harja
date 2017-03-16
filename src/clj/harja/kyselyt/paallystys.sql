@@ -2,6 +2,7 @@
 -- Hakee urakan kaikki päällystysilmoitukset
 SELECT
   ypk.id                   AS "paallystyskohde-id",
+  ypk.tr_numero            AS "tr-numero",
   pi.tila,
   nimi,
   kohdenumero,

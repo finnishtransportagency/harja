@@ -652,7 +652,7 @@
        (apply nayta-infopaneelissa! nayta-nama-paneelissa))
 
      (when-not (empty? keskita-naihin)
-       (tiedot/keskita-kartta-alueeseen! (harja.geo/extent-monelle (map :alue keskita-naihin)))))))
+       (tiedot/keskita-kartta-alueeseen! (harja.geo/laajenna-extent-prosentilla (harja.geo/extent-monelle (map :alue keskita-naihin))))))))
 
 (defn- kasittele-dblclick-select! [item event]
   (kasittele-select! item event true))
