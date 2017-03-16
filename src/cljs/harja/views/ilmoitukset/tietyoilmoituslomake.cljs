@@ -4,6 +4,7 @@
             [harja.pvm :as pvm]
             [harja.ui.napit :as napit]
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tiedot]
+            [harja.domain.tietyoilmoitukset :as t]
             [reagent.core :refer [atom] :as r]
             [harja.ui.grid :refer [grid]]
             [harja.ui.kentat :refer [tee-kentta]]
@@ -14,26 +15,39 @@
             [harja.ui.yleiset :as yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+
                                                   kuvaus-ja-avainarvopareja]]))
 
-(def koskee-valinnat [[nil "Valitse..."]
+(def koskee-valinnat [[nil "Ilmoitus koskee..."]
                       [:ensimmainen "Ensimmäinen ilmoitus työstä"],
                       [:muutos "Korjaus/muutos aiempaan tietoon"],
                       [:tyovaihe "Työvaihetta koskeva ilmoitus"],
-                      [:paattyminen "Työn päättymisilmoitus"]])
+                      [:paattyminen "Työn päättymisilmoitus"]]) ;; pidetäänkö päättymisilmoitus, oliko puhetta että jätetään pois?
 
-(defn- projekti-valinnat [urakat]
-  (partition 2
-             (interleave
-               (mapv (comp str :id) urakat) (mapv :nimi urakat))))
+(defn- urakka-valinnat [urakat]
+  (into [[nil "Ei liity HARJA-urakkaan"]]
+        (map (juxt (comp str :id) :nimi))
+        urakat))
+
 
 (defn- pvm-vali-paivina [p1 p2]
   (when (and p1 p2)
     (.toFixed (/ (Math/abs (- p1 p2)) (* 1000 60 60 24)) 2)))
 
+(def tyhja-kentta {:nimi :blank
+                   :otsikko "" :hae (constantly "")
+                   :muokattava false
+                   :tyyppi :tyhja})
+
+(defn dp [val msg]
+  (log msg (with-out-str (cljs.pprint/pprint val)))
+  val)
+
 (defn lomake [e! ilmoitus kayttajan-urakat]
   (fn [e! ilmoitus]
+    ;; (log "rendataan ilmoitusta, tien-nimi:" (pr-str (::t/tien-nimi ilmoitus)))
+
+
     [:div
      [:span
-      [napit/takaisin "Takaisin ilmoitusluetteloon" #(e! (tiedot/->PoistaIlmoitusValinta))]
+      [napit/takaisin "Palaa ilmoitusluetteloon" #(e! (tiedot/->PoistaIlmoitusValinta))]
       [lomake/lomake {:otsikko "Muokkaa ilmoitusta"
                       :muokkaa! #(do
 
@@ -42,7 +56,7 @@
        [(lomake/ryhma
           "Ilmoitus koskee"
           {:nimi :koskee
-           :otsikko "Ilmoitus koskee:"
+           :otsikko ""
            :tyyppi :valinta
            :valinnat koskee-valinnat
            :valinta-nayta second
@@ -50,63 +64,83 @@
            :muokattava? (constantly true)}
           )
         (lomake/ryhma "Tiedot koko kohteesta"
-                      {:nimi :projekti-tai-urakka
-                       :otsikko "Projekti tai urakka:"
+                      {:nimi :urakan-nimi-valinta
+                       :otsikko "Liittyy urakkaan"
                        :tyyppi :valinta
-                       :valinnat (projekti-valinnat kayttajan-urakat)
+                       :valinnat (urakka-valinnat kayttajan-urakat)
                        :valinta-nayta second :valinta-arvo first
                        :muokattava? (constantly true)}
-                      {:nimi :urakoitsijan-nimi
+                      (if (:urakan-nimi-valinta ilmoitus)
+                        (assoc tyhja-kentta :nimi :blank-1)
+                        ;; else
+                        {:nimi :urakan-nimi-syotetty
+                         :otsikko "Projektin tai urakan nimi"
+                         :tyyppi :string
+                         :muokattava? (constantly true)})
+                      (if (:urakan-nimi-valinta ilmoitus)
+                        (assoc tyhja-kentta :nimi :blank-2)
+                        ;; else
+                        {:otsikko "Kohde urakassa"
+                         :nimi :kohde
+                         :tyyppi :string})
+
+                      {:nimi ::t/urakoitsijan-nimi
                        :otsikko "Urakoitsijan nimi"
                        :muokattava? (constantly true)
                        :tyyppi :string}
-                      {:nimi :urakoitsijan-yhteyshenkilo
+                      {:nimi :urakoitisijan-yhteyshenkilo-nimi
                        :otsikko "Urakoitsijan yhteyshenkilö"
-                       :hae #(str (:urakoitsijayhteyshenkilo_etunimi %) " " (:urakoitsijayhteyshenkilo_sukunimi %))
+                       ;; tuleeko yhdistämisessä muoakttaessa haankluuksia kun pitää taas erottaa?
+                       ;; -> ehkä täytyy poiketa rautalangasta tässä
+                       :hae #(-> %  ::t/urakoitsijayhteyshenkilo tiedot/henkilo->nimi)
                        :muokattava? (constantly true)
                        :tyyppi :string}
-                      {:nimi :urakoitsijayhteyshenkilo_matkapuhelin
+                      {:nimi :urakoitisijanyhteyshenkilo-matkapuhelin
                        :otsikko "Puhelinnumero"
+                       :hae #(-> % ::t/urakoitsijayhteyshenkilo ::t/matkapuhelin)
                        :tyyppi :puhelin}
-                      {:nimi :tilaajan-nimi
+                      {:nimi ::t/tilaajan-nimi
                        :otsikko "Tilaajan nimi"
                        :muokattava? (constantly true)
                        :tyyppi :string}
-                      {:nimi :tilaajan-yhteyshenkilo
+                      {:nimi :tilaajan-yhteyshenkilo-nimi
                        :otsikko "Tilaajan yhteyshenkilö"
-                       :hae #(str (:tilaajayhteyshenkilo_etunimi %) " " (:tilaajayhteyshenkilo_sukunimi %))
+                       :hae #(-> %  ::t/tilaajayhteyshenkilo tiedot/henkilo->nimi)
+
                        :muokattava? (constantly true)
                        :tyyppi :string}
-                      {:nimi :tilaajayhteyshenkilo_matkapuhelin
+                      {:nimi :tilaajan-yhteyshenkilo-matkapuhelin
                        :otsikko "Puhelinnumero"
+                       :hae #(-> % ::t/tilaajayhteyshenkilo ::t/matkapuhelin)
                        :tyyppi :puhelin}
-                      {:nimi :tr_numero
+                      #_{:nimi :tienumero
                        :otsikko "Tienumero"
                        :tyyppi :positiivinen-numero
                        :muokattava? (constantly true)}
-                      {:otsikko "Tierekisteriosoite"
-                       :nimi :tr-osoite
+                      {:otsikko "Osoite"
+                       :nimi ::t/osoite
                        :pakollinen? true
                        :tyyppi :tierekisteriosoite
                        :ala-nayta-virhetta-komponentissa? true
                        :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
-                       :sijainti (r/wrap (:sijainti lomake)
-                                         #(log "laitettas sijainti" (pr-str %)))}
-                      {:otsikko "Tien nimi" :nimi :tien_nimi
+                       :sijainti (r/wrap (:sijainti ilmoitus) #(e! (tiedot/->PaivitaSijainti %)))
+                       }
+                      {:otsikko "Tien nimi" :nimi ::t/tien-nimi
                        :tyyppi :string}
-                      {:otsikko "Kunta/kunnat" :nimi :kunnat
+                      {:otsikko "Kunta/kunnat" :nimi ::t/kunnat
                        :tyyppi :string}
-                      {:otsikko "Työn alkupiste (osoite, paikannimi)" :nimi :alkusijainnin_kuvaus
+                      {:otsikko "Työn alkupiste (osoite, paikannimi)" :nimi ::t/alkusijainnin-kuvaus
                        :tyyppi :string}
-                      {:otsikko "Työn aloituspvm" :nimi :alku :tyyppi :pvm}
-                      {:otsikko "Työn loppupiste (osoite, paikannimi)" :nimi :loppusijainnin_kuvaus
+                      {:otsikko "Työn aloituspvm" :nimi ::t/alku :tyyppi :pvm}
+                      {:otsikko "Työn loppupiste (osoite, paikannimi)" :nimi ::t/loppusijainnin-kuvaus
                        :tyyppi :string}
-                      {:otsikko "Työn lopetuspvm" :nimi :loppu :tyyppi :pvm}
+                      {:otsikko "Työn lopetuspvm" :nimi ::t/loppu :tyyppi :pvm}
                       {:otsikko "Työn pituus" :nimi :tyon-pituus
                        :tyyppi :positiivinen-numero
-                       :hae #(pvm-vali-paivina (:alku %) (:loppu %))})
+                       :placeholder "(Tyon pituus metreinä)"
+                       })
 
-        (lomake/ryhma "Työvaihe"
+        #_(lomake/ryhma "Työvaihe"
 
                       {:otsikko "Työn alkupiste (osoite, paikannimi)" :nimi :alkusijainnin_kuvaus_b
                        :tyyppi :string}
@@ -153,17 +187,20 @@
                        :placeholder "(esim 8-16)"})
         (lomake/ryhma "Vaikutukset liikenteelle"
                       {:otsikko "Arvioitu viivytys normaalissa liikenteessä (min)"
-                       :nimi :viivastys_normaali_liikenteessa
+                       :nimi ::t/viivastys-normaali-liikenteessa
                        :tyyppi :positiivinen-numero}
                       {:otsikko "Arvioitu viivytys ruuhka-aikana (min)"
-                       :nimi :viivastys_ruuhka_aikana
+                       :nimi ::t/viivastys-ruuhka-aikana
                        :tyyppi :positiivinen-numero
                        }
-                      {:otsikko "Kaistajärjestelyt" ;; rautalangassa on muu-vaihtoehto, schemassa ei.
-                       :tyyppi :checkbox-group
+                      {:otsikko "Kaistajärjestelyt"
+                       :tyyppi :checkbox-group-muu
                        :nimi :tietyon_kaistajarjestelyt
                        :vaihtoehdot (map first tiedot/kaistajarjestelyt-vaihtoehdot-map)
-                       :vaihtoehto-nayta tiedot/kaistajarjestelyt-vaihtoehdot-map}
+                       :vaihtoehto-nayta tiedot/kaistajarjestelyt-vaihtoehdot-map
+                       :muu-vaihtoehto "Muu"
+                       :muu-kentta {:otsikko "" :nimi :jotain :tyyppi :string :placeholder "(muu kaistajärjestely?)"}}
+
 
                       {:otsikko "Nopeusrajoitus 50 km/h, metriä" ;; -> pituus-pituus-kenttä
                        :tyyppi :string
@@ -171,22 +208,23 @@
                       {:otsikko "Muu rajoitus, ?? km/h, metriä" ;; -> km/h-kenttä, pituus-kenttä
                        :tyyppi :string
                        :nimi :nopeusrajoitukset-b}
-                      {:otsikko "Kulkurajoituksia" ;; ei sql schemassa?
+                      {:otsikko "Kulkurajoituksia"
                        :tyyppi :checkbox-group
                        :nimi :kulkurajoituksia
                        :vaihtoehdot ["Ulottumarajoituksia" ;; ->max leveys, korkeus
                                      "Painorajoitus"] ;; -> max paino
 
                        }
-                      {:otsikko "Tien pinta työmaalla" ;; vs scheman
+                      {:otsikko "Tien pinta työmaalla"
+                       ;; tehdään muokkaus-grid tähän?
                        :tyyppi :checkbox-group
-                       :nimi :tienpinnat
+                       :nimi :tienpinta-materiaali
                        :vaihtoehdot ["Päällystetty", "Jyrsitty", "Murske"]
 
                        }
                       {:otsikko "Metriä:"
                        :tyyppi :positiivinen-numero
-                       :nimi}
+                       :nimi :tienpinta-matka}
                       {:otsikko "Kiertotie"
                        :tyyppi :checkbox-group
                        :nimi :kiertotien-pinnat-ja-mutkaisuus ;; scheman mutkaisuus + pinnat combo
@@ -204,10 +242,10 @@
         (lomake/ryhma "Vaikutussuunta"
                       {:otsikko ""
                        :tyyppi :checkbox-group
-                       :nimi :vaikutussuunta
+                       :nimi ::t/vaikutussuunta
                        :vaihtoehdot (map first tiedot/vaikutussuunta-vaihtoehdot-map) ;; -> kaupunki?
                        :vaihtoehto-nayta tiedot/vaikutussuunta-vaihtoehdot-map
-                       :muu-vaihtoehto
+                       ;; muu?
                        }
 
                       )
@@ -217,14 +255,17 @@
                        :tyyppi :string
                        })
         (lomake/ryhma "Ilmoittaja"
-                      {:otsikko "Nimi"
-                       :hae #(str (:ilmoittaja_etunimi %) " " (:ilmoittaja_sukunimi %))
-                       :nimi :luoja
+                      {:nimi :ilmoittaja-nimi
+                       :otsikko "Nimi"
+                       :hae #(-> %  ::t/urakoitsijayhteyshenkilo tiedot/henkilo->nimi)
+                       :muokattava? (constantly true)
                        :tyyppi :string}
-                      {:otsikko "Puhelinnumero"
-                       :nimi :ilmoittaja_matkapuhelin
-                       :tyyppi :string}
+                      {:nimi :ilmoittaja-matkapuhelin
+                       :otsikko "Puhelinnumero"
+                       :hae #(-> % ::t/ilmoittaja ::t/matkapuhelin)
+                       :tyyppi :puhelin}
                       {:otsikko "Päivämäärä"
                        :nimi :luotu
-                       :tyyppi :string})]
+                       :tyyppi :string}
+)]
        ilmoitus]]]))

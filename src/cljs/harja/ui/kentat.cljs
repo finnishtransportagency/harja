@@ -757,6 +757,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 (defmethod tee-kentta :spinner [{:keys [viesti opts]}]
   [ajax-loader (or viesti "Lataa") opts])
 
+(defmethod tee-kentta :tyhja [{:keys [viesti opts]}]
+  [:span.tyhja])
+
 (defn hae-tr-geometria [osoite hakufn tr-osoite-ch virheet]
   (go
     (log "Haetaan geometria osoitteelle: " (pr-str osoite))
