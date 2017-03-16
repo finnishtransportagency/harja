@@ -46,6 +46,9 @@
     (u (str "DELETE FROM kokonaishintainen_tyo WHERE toimenpideinstanssi IN
   (SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id ");"))
     (u (str "DELETE FROM tiemerkinnan_yksikkohintainen_toteuma WHERE urakka = " urakka-id ";"))
+    (u (str "DELETE FROM yllapito_muu_toteuma WHERE urakka = " urakka-id ";"))
+    (u (str "DELETE FROM sanktio WHERE toimenpideinstanssi IN
+    (SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id ");"))
 
     ;; Luodaan tyhjästä uudet tiedot, jotta nähdään, että raportissa käytetty data on laskettu oikein
 
@@ -67,7 +70,7 @@
     (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
     paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
     VALUES (" urakka-id " ,null, 5, 'suunnitelma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null,
-    'Testitoteuma 1', 20, 8, 5);"))
+    'Testitoteuma 1', 20, 8, 5);")) ; Suunnitelma
     (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
     paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
     VALUES (" urakka-id " ,null, 1, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2000-01-01', null,
@@ -76,6 +79,23 @@
     paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus, poistettu)
     VALUES (" urakka-id " ,null, 1, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null,
     'Testitoteuma 1', 20, 8, 5, true);")) ; Poistettu
+
+    (u (str "INSERT INTO yllapito_muu_toteuma (urakka, sopimus, selite, pvm, hinta, yllapitoluokka,
+    laskentakohde, luotu, luoja) VALUES (" urakka-id ", " sopimus-id ", 'Selite 1', '2016-10-10', 1000, 1,
+    (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
+    (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));"))
+    (u (str "INSERT INTO yllapito_muu_toteuma (urakka, sopimus, selite, pvm, hinta, yllapitoluokka,
+    laskentakohde, luotu, luoja) VALUES (" urakka-id ", " sopimus-id ", 'Selite 1', '2014-10-10', 1001, 1,
+    (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
+    (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));"))
+    (u (str "INSERT INTO yllapito_muu_toteuma (urakka, sopimus, selite, pvm, hinta, yllapitoluokka,
+    laskentakohde, luotu, luoja) VALUES (" urakka-id ", " sopimus-id ", 'Selite 1', '2000-10-10', 1001, 1,
+    (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
+    (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));")) ; Ei aikavälillä
+    (u (str "INSERT INTO yllapito_muu_toteuma (urakka, sopimus, selite, pvm, hinta, yllapitoluokka,
+    laskentakohde, luotu, luoja, poistettu) VALUES (" urakka-id ", " sopimus-id ", 'Selite 1', '2014-10-10', 1001, 1,
+    (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
+    (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), true);")) ; Poistettu
 
     (let [{:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat
                   muut-tyot sakot bonukset toteumat-yhteensa kk-vali?]
@@ -86,4 +106,8 @@
                                          :loppupvm (pvm/luo-pvm 2080 1 1)})]
       (is (map? raportin-tiedot))
       (is (== kokonaishintaiset-tyot 3))
-      (is (== yksikkohintaiset-toteumat 101)))))
+      (is (== yksikkohintaiset-toteumat 101))
+      (is (== muut-tyot 2001))
+
+      (is (== toteumat-yhteensa 2106))
+      (is (false? kk-vali?)))))
