@@ -3,6 +3,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
+            [harja.palvelin.raportointi.raportit.tiemerkinnan-kustannusyhteenveto :as raportti]
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
@@ -39,4 +40,9 @@
                       urakkatieto-fixture))
 
 (deftest raportin-suoritus-urakalle-toimii
-  (is true "TODO TESTI"))
+  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        raportin-tiedot (raportti/hae-raportin-tiedot {:db (:db jarjestelma)
+                                                       :urakka-id urakka-id
+                                                       :alkupvm (pvm/luo-pvm 2000 1 1)
+                                                       :loppupvm (pvm/luo-pvm 2080 1 1)})]
+    (is (map? raportin-tiedot))))

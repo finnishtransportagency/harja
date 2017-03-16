@@ -17,7 +17,7 @@
    #_{:leveys 1 :otsikko "Indeksi" :fmt :raha}
    {:leveys 1 :otsikko "Yhteensä" :fmt :raha}])
 
-(defn- hae-raportin-tiedot [{:keys [db urakka-id alkupvm loppupvm]}]
+(defn hae-raportin-tiedot [{:keys [db urakka-id alkupvm loppupvm]}]
   (let [alku-paiva (t/day (pvm/suomen-aikavyohykkeeseen (c/from-date alkupvm)))
         alku-kuukausi (t/month (pvm/suomen-aikavyohykkeeseen (c/from-date alkupvm)))
         alku-vuosi (t/year (pvm/suomen-aikavyohykkeeseen (c/from-date alkupvm)))
