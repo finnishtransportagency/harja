@@ -17,15 +17,15 @@
   ["tietyon_tyypin_kuvaus" ::t/tietyon-tyyppi]
   ["viikonpaiva" ::t/viikonpaiva]
   ["tietyon_tyoaika" ::t/tyoaika]
-  ["tietyon_vaikutussuunta" ::t/vaikutussuunta]
+  ["tietyon_vaikutussuunta" ::t/vaikutussuunta*]
   ["tietyon_kaistajarjestelytyyppi" ::t/kaistajarjestelytyyppi]
-  ["tietyon_kaistajarjestelyt" ::t/kaistajarjestelyt]
+  ["tietyon_kaistajarjestelyt" ::t/kaistajarjestelyt*]
   ["nopeusrajoitus" ::t/nopeusrajoitusvalinta]
   ["tietyon_nopeusrajoitus" ::t/nopeusrajoitus]
   ["tietyon_pintamateriaalit" ::t/pintamateriaalit]
   ["tietyon_tienpinta" ::t/tien-pinta]
   ["tietyon_mutkat" ::t/mutkat]
-  ["tietyon_liikenteenohjaaja" ::t/liikenteenohjaaja]
+  ["tietyon_liikenteenohjaaja" ::t/liikenteenohjaaja*]
   ["tietyon_huomautukset" ::t/huomautustyypit]
   ["tietyoilmoitus" ::t/ilmoitus
    {::t/paailmoitus (rel/has-one ::t/paatietyoilmoitus
