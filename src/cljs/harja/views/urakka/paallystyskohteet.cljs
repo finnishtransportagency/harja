@@ -78,7 +78,7 @@
           (yllapitokohteet/kasittele-tallennettavat-kohteet!
             #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
             :paallystys
-            #(reset! paallystys-tiedot/yhan-paallystyskohteet (filter yllapitokohteet/yha-kohde? %)))
+            #(reset! paallystys-tiedot/yllapitokohteet %))
           :kun-onnistuu (fn [_]
                           (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]
 
@@ -92,7 +92,7 @@
           (yllapitokohteet/kasittele-tallennettavat-kohteet!
             #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
             :paikkaus
-            #(reset! paallystys-tiedot/harjan-paikkauskohteet (filter (comp not yllapitokohteet/yha-kohde?) %)))}]
+            #(reset! paallystys-tiedot/yllapitokohteet %))}]
 
         [muut-kustannukset-view/muut-kustannukset ur]
 
