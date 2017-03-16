@@ -37,7 +37,9 @@
 
 (use-fixtures :once (compose-fixtures jarjestelma-fixture urakkatieto-fixture))
 
-(defn testidata-uusiksi! []
+(defn testidata-uusiksi!
+  "Poistaa raporttiin liittyvän datan urakasta ja luo uuden (vuodesta 2010 eteenpäin)."
+  []
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
         sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
         tiemerkinnan-tpi (:id (first (q-map "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " LIMIT 1")))]
@@ -73,13 +75,17 @@
     VALUES (" urakka-id " ,null, 5, 'suunnitelma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null,
     'Testitoteuma 1', 20, 8, 5);")) ; Suunnitelma
     (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
+    paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus, poistettu)
+    VALUES (" urakka-id " ,null, 5, 'suunnitelma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null,
+    'Testitoteuma 1', 20, 8, 5, true);")) ; Poistettu suunnitelma
+    (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
     paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
-    VALUES (" urakka-id " ,null, 1, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2000-01-01', null,
-    'Testitoteuma 1', 20, 8, 5);")) ; Ei aikavälillä
+    VALUES (" urakka-id " ,null, 5, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2000-01-01', null,
+    'Testitoteuma 1', 20, 8, 5);")) ; Toteuma ei aikavälillä
     (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
     paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus, poistettu)
-    VALUES (" urakka-id " ,null, 1, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null,
-    'Testitoteuma 1', 20, 8, 5, true);")) ; Poistettu
+    VALUES (" urakka-id " ,null, 5, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null,
+    'Testitoteuma 1', 20, 8, 5, true);")) ; Poistettu toteuma
 
     (u (str "INSERT INTO yllapito_muu_toteuma (urakka, sopimus, selite, pvm, hinta, yllapitoluokka,
     laskentakohde, luotu, luoja) VALUES (" urakka-id ", " sopimus-id ", 'Selite 1', '2016-10-10', 1000, 1,
@@ -106,32 +112,53 @@
     (u (str "INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi,
     tyyppi, suorasanktio, luoja) VALUES ('yllapidon_sakko'::sanktiolaji, 1000, '2017-01-5 06:06.37', null,
     (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Ylläpitokohteeseeton suorasanktio 666')," tiemerkinnan-tpi ",
-    (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon sakko'), true, 2);\n"))))
+    (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon sakko'), true, 2);"))
+    ; Poistettuun laatupoikkeamaan liittyvä sanktio, jää huomiotta raportilla
+    (u (str "INSERT INTO laatupoikkeama (lahde, yllapitokohde, tekija, kasittelytapa, muu_kasittelytapa, paatos,
+    perustelu, tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka,
+    kuvaus, poistettu) VALUES ('harja-ui'::lahde, null, 'tilaaja'::osapuoli, 'puhelin'::laatupoikkeaman_kasittelytapa, '',
+    'hylatty'::laatupoikkeaman_paatostyyppi, 'Ei tässä ole mitään järkeä', 123, 1, NOW(), '2017-01-3 12:06.37',
+    '2017-01-05 13:06.37', false, false, " urakka-id ", 'Ylläpitokohteeseeton suorasanktio 667', true);"))
+    (u (str "INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi,
+    tyyppi, suorasanktio, luoja) VALUES ('yllapidon_sakko'::sanktiolaji, 1000, '2017-01-5 06:06.37', null,
+    (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Ylläpitokohteeseeton suorasanktio 667')," tiemerkinnan-tpi ",
+    (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon sakko'), true, 2);"))
+    ;; Poistettu sanktio, jää huomiotta raportilla
+    (u (str "INSERT INTO laatupoikkeama (lahde, yllapitokohde, tekija, kasittelytapa, muu_kasittelytapa, paatos,
+    perustelu, tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka,
+    kuvaus) VALUES ('harja-ui'::lahde, null, 'tilaaja'::osapuoli, 'puhelin'::laatupoikkeaman_kasittelytapa, '',
+    'hylatty'::laatupoikkeaman_paatostyyppi, 'Ei tässä ole mitään järkeä', 123, 1, NOW(), '2017-01-3 12:06.37',
+    '2017-01-05 13:06.37', false, false, " urakka-id ", 'Ylläpitokohteeseeton suorasanktio 668');"))
+    (u (str "INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi,
+    tyyppi, suorasanktio, luoja, poistettu) VALUES ('yllapidon_sakko'::sanktiolaji, 1000, '2017-01-5 06:06.37', null,
+    (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Ylläpitokohteeseeton suorasanktio 668')," tiemerkinnan-tpi ",
+    (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon sakko'), true, 2, true);"))))
 
 (deftest raportin-suoritus-urakalle-toimii
   (testidata-uusiksi!)
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
         {:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat
-                muut-tyot sakot bonukset toteumat-yhteensa kk-vali?]
+                muut-tyot sakot bonukset yksikkohintaiset-suunnitellut-tyot toteumat-yhteensa kk-vali?]
          :as raportin-tiedot}
         (raportti/hae-raportin-tiedot {:db (:db jarjestelma)
                                        :urakka-id urakka-id
                                        :alkupvm (pvm/luo-pvm 2010 1 1)
-                                       :loppupvm (pvm/luo-pvm 2080 1 1)})]
+                                       :loppupvm (pvm/luo-pvm 2080 1 31)})]
     (is (map? raportin-tiedot))
     (is (== kokonaishintaiset-tyot 3))
     (is (== yksikkohintaiset-toteumat 101))
+    (is (== yksikkohintaiset-suunnitellut-tyot 5))
     (is (== muut-tyot 2001))
     (is (== sakot 1000))
 
     (is (== toteumat-yhteensa 3102)) ;; Ei sis. kok. hint. töitä koska aikaväli ei ole kk-väli
     (is (false? kk-vali?))))
 
-(deftest raportin-suoritus-urakalle-toimii
+(deftest kok-hint-tyot-lasketaan-vain-kuukausivalille
   (testidata-uusiksi!)
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
         {:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat
-                muut-tyot sakot bonukset toteumat-yhteensa kk-vali?]
+                muut-tyot sakot bonukset yksikkohintaiset-suunnitellut-tyot toteumat-yhteensa kk-vali?]
          :as raportin-tiedot}
         (raportti/hae-raportin-tiedot {:db (:db jarjestelma)
                                        :urakka-id urakka-id
@@ -140,6 +167,7 @@
     (is (map? raportin-tiedot))
     (is (== kokonaishintaiset-tyot 3))
     (is (== yksikkohintaiset-toteumat 0))
+    (is (== yksikkohintaiset-suunnitellut-tyot 0))
     (is (== muut-tyot 0))
     (is (== sakot 0))
 
