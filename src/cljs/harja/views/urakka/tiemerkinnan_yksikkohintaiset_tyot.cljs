@@ -108,8 +108,8 @@
                               :suunnitelma "Suunnitelma"
                               :toteuma "Toteuma"
                               "- valitse -")}
-           {:otsikko "Muutospvm"
-            :nimi :muutospvm :tyyppi :pvm :leveys 3
+           {:otsikko "Päivämäärä"
+            :nimi :paivamaara :tyyppi :pvm :leveys 3
             :fmt pvm/pvm-opt}]
           (sort-by tr-domain/tiekohteiden-jarjestys @tiemerkinnan-toteumat-atom)]]))))
 

@@ -12,7 +12,8 @@
 (defn- raportin-sarakkeet []
   [{:leveys 2 :otsikko "Kustannuslaji" :fmt :raha}
    {:leveys 1 :otsikko "Hinta" :fmt :raha}
-   {:leveys 1 :otsikko "Indeksi" :fmt :raha}
+   ;; TODO Lisätään indeksit myöhemmin
+   #_{:leveys 1 :otsikko "Indeksi" :fmt :raha}
    {:leveys 1 :otsikko "Yhteensä" :fmt :raha}])
 
 (defn- raportin-rivit [db urakka-id alkupvm loppupvm]
@@ -36,8 +37,7 @@
                     muut-tyot
                     sakot
                     bonukset)]
-    ;; TODO Mites indeksit?
-    ;; TODO Yksikköhintaisissa ei ole aikarajausta, koska ei ole pvm-tietoa. Pitäisikö olla?
+
     [["Kokonaishintaiset työt"
       (if kk-vali?
         kokonaishintainen-osa
@@ -46,11 +46,11 @@
       (if kk-vali?
         kokonaishintainen-osa
         [:varillinen-teksti {:arvo "-" :tyyli :virhe}])]
-     ["Yksikköhintaiset työt" yksikkohintainen-osa 0 yksikkohintainen-osa]
-     ["Muut työt" muut-tyot 0 muut-tyot]
-     ["Sakot" sakot nil sakot]
-     ["Bonukset" bonukset nil bonukset]
-     ["Yhteensä" yhteensa 0 yhteensa]]))
+     ["Yksikköhintaiset työt" yksikkohintainen-osa yksikkohintainen-osa]
+     ["Muut työt" muut-tyot muut-tyot]
+     ["Sakot" sakot sakot]
+     ["Bonukset" bonukset bonukset]
+     ["Yhteensä" yhteensa yhteensa]]))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
