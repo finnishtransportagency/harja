@@ -12,7 +12,8 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.palvelut.tietyoilmoitukset.pdf :as pdf]
             [harja.domain.tietyoilmoitukset :as t]
-            [specql.core :refer [fetch]]))
+            [specql.core :refer [fetch]]
+            [clojure.spec :as s]))
 
 (defn- muunna-tietyoilmoitus [tietyoilmoitus]
   ;; FIXME: korvaa tämä specql datalla...
@@ -90,6 +91,8 @@
    (first (fetch db ::t/ilmoitus q-tietyoilmoitukset/kaikki-ilmoituksen-kentat
                  {::t/id (:id params)}))))
 
+(s/def ::tietyoilmoitukset (s/coll-of ::t/ilmoitus))
+
 (defrecord Tietyoilmoitukset []
   component/Lifecycle
   (start [{db :db
@@ -98,7 +101,8 @@
            :as this}]
     (julkaise-palvelu http :hae-tietyoilmoitukset
                       (fn [user tiedot]
-                        (hae-tietyoilmoitukset db user tiedot 501)))
+                        (hae-tietyoilmoitukset db user tiedot 501))
+                      {:vastaus-spec ::tietyoilmoitukset})
     (pdf-vienti/rekisteroi-pdf-kasittelija!
      pdf :tietyoilmoitus (partial #'tietyoilmoitus-pdf db))
     this)
