@@ -21,7 +21,7 @@ DROP TABLE tietyoilmoitus;
 DROP TYPE tietyon_kaistajarjestelyt;
 DROP TYPE tietyon_tyoaika;
 
-CREATE TYPE tietyon_tyoaika AS (alku TIME, loppu TIME, paivat viikonpaiva []);
+CREATE TYPE tietyon_tyoaika AS (alkuaika TIME, loppuaika TIME, paivat viikonpaiva []);
 
 CREATE TYPE tietyon_kaistajarjestelytyyppi AS ENUM (
   'ajokaistaSuljettu',
