@@ -284,7 +284,7 @@
       [tuck tiedot/ilmoitukset ilmoitukset*]
       ;; else
       [bs/tabs {:style :tabs :classes "tabs-taso1"
-                :active (nav/valittu-valilehti-atom :ilmoitukset-valilehti)}
+                :active (nav/valittu-valilehti-atom :ilmoitukset)}
 
        "Tieliikenne"
        :tieliikenne
