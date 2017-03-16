@@ -47,6 +47,7 @@
   (SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id ");"))
     (u (str "DELETE FROM tiemerkinnan_yksikkohintainen_toteuma WHERE urakka = " urakka-id ";"))
     (u (str "DELETE FROM yllapito_muu_toteuma WHERE urakka = " urakka-id ";"))
+    (u (str "DELETE FROM laatupoikkeama WHERE urakka = " urakka-id ";"))
     (u (str "DELETE FROM sanktio WHERE toimenpideinstanssi IN
     (SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id ");"))
 
@@ -97,6 +98,16 @@
     (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
     (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), true);")) ; Poistettu
 
+    (u (str "INSERT INTO laatupoikkeama (lahde, yllapitokohde, tekija, kasittelytapa, muu_kasittelytapa, paatos,
+    perustelu, tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka,
+    kuvaus) VALUES ('harja-ui'::lahde, null, 'tilaaja'::osapuoli, 'puhelin'::laatupoikkeaman_kasittelytapa, '',
+    'hylatty'::laatupoikkeaman_paatostyyppi, 'Ei tässä ole mitään järkeä', 123, 1, NOW(), '2017-01-3 12:06.37',
+    '2017-01-05 13:06.37', false, false, " urakka-id ", 'Ylläpitokohteeseeton suorasanktio 666');"))
+    (u (str "INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi,
+    tyyppi, suorasanktio, luoja) VALUES ('yllapidon_sakko'::sanktiolaji, 1000, '2017-01-5 06:06.37', null,
+    (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Ylläpitokohteeseeton suorasanktio 666')," tiemerkinnan-tpi ",
+    (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon sakko'), true, 2);\n"))
+
     (let [{:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat
                   muut-tyot sakot bonukset toteumat-yhteensa kk-vali?]
            :as raportin-tiedot}
@@ -108,6 +119,7 @@
       (is (== kokonaishintaiset-tyot 3))
       (is (== yksikkohintaiset-toteumat 101))
       (is (== muut-tyot 2001))
+      (is (== sakot 1000))
 
-      (is (== toteumat-yhteensa 2106))
+      (is (== toteumat-yhteensa 3105))
       (is (false? kk-vali?)))))
