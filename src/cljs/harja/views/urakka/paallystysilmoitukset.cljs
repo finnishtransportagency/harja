@@ -602,10 +602,10 @@
             paallystysilmoitukset (jarjesta-paallystysilmoitukset @paallystys/paallystysilmoitukset-suodatettu)]
         [:div
          [:h3 "Päällystysilmoitukset"]
-         (paallystysilmoitukset-taulukko paallystysilmoitukset)
+         [paallystysilmoitukset-taulukko paallystysilmoitukset]
          [:h3 "YHA-lähetykset"]
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHA:n."]
-         (yha-lahetykset-taulukko urakka-id sopimus-id urakan-vuosi paallystysilmoitukset)
+         [yha-lahetykset-taulukko urakka-id sopimus-id urakan-vuosi paallystysilmoitukset]
          [yha/yha-lahetysnappi
           oikeudet/urakat-kohdeluettelo-paallystyskohteet
           urakka-id
