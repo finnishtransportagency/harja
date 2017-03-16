@@ -202,10 +202,10 @@
     kuvaus) VALUES ('harja-ui'::lahde, (SELECT id FROM yllapitokohde WHERE nimi = 'Nopea poistettu testikohde'),
     'tilaaja'::osapuoli, 'puhelin'::laatupoikkeaman_kasittelytapa, '',
     'hylatty'::laatupoikkeaman_paatostyyppi, 'Ei tässä ole mitään järkeä', 123, 1, NOW(), '2017-01-3 12:06.37',
-    '2017-01-05 13:06.37', false, false, " urakka-id ", 'Ylläpitokohteeseeton suorasanktio 669');"))
+    '2017-01-05 13:06.37', false, false, " urakka-id ", 'Ylläpitokohteeseeton suorasanktio 869');"))
     (u (str "INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi,
     tyyppi, suorasanktio, luoja) VALUES ('yllapidon_bonus'::sanktiolaji, 1000, '2017-01-5 06:06.37', null,
-    (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Ylläpitokohteeseeton suorasanktio 669')," tiemerkinnan-tpi ",
+    (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Ylläpitokohteeseeton suorasanktio 869')," tiemerkinnan-tpi ",
     (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon sakko'), true, 2);"))))
 
 (deftest raportin-suoritus-urakalle-toimii
