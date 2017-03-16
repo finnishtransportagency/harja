@@ -63,6 +63,12 @@
     (u (str "INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinstanssi,sopimus)
     VALUES (2007, 1, 999999, '2017-10-15', " tiemerkinnan-tpi ", " sopimus-id ");")) ; Ei aikavälillä
 
+    ;; Ylläpitokohteet
+    (u "INSERT INTO yllapitokohde (urakka, nimi, yllapitokohdetyotyyppi)
+    VALUES (" urakka-id ", 'Nopea testikohde', 'paallystys');")
+    (u "INSERT INTO yllapitokohde (urakka, nimi, yllapitokohdetyotyyppi, poistettu)
+    VALUES (" urakka-id ", 'Nopea poistettu testikohde', 'paallystys', true);")
+
     ;; Yks. hint. työt
     (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
     paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
@@ -72,6 +78,16 @@
     paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
     VALUES (" urakka-id " ,null, 100, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2018-01-01', null,
     'Testitoteuma 2', 21, 8, 5);"))
+    (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
+    paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
+    VALUES (" urakka-id " ,(SELECT id FROM yllapitokohde WHERE nimi = 'Nopea testikohde'),
+    1, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', '',
+    'Testitoteuma 1', null, null, null);")) ; Ylläpitokohteeseen liittyvä työ
+    (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
+    paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
+    VALUES (" urakka-id " ,(SELECT id FROM yllapitokohde WHERE nimi = 'Nopea poistettu testikohde'),
+    1, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', '',
+    'Testitoteuma 1', null, null, null);")) ; Poistettuun ylläpitokohteeseen liittyvä työ, ei näy raportilla
     (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
     paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
     VALUES (" urakka-id " ,null, 5, 'suunnitelma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null,
@@ -181,13 +197,13 @@
                                        :loppupvm (pvm/luo-pvm 2080 1 31)})]
     (is (map? raportin-tiedot))
     (is (== kokonaishintaiset-tyot 3))
-    (is (== yksikkohintaiset-toteumat 101))
+    (is (== yksikkohintaiset-toteumat 102))
     (is (== yksikkohintaiset-suunnitellut-tyot 5))
     (is (== muut-tyot 2001))
     (is (== sakot 1000))
     (is (== bonukset -1))
 
-    (is (== toteumat-yhteensa 3101)) ;; Ei sis. kok. hint. töitä koska aikaväli ei ole kk-väli
+    (is (== toteumat-yhteensa 3102)) ;; Ei sis. kok. hint. töitä koska aikaväli ei ole kk-väli
     (is (false? kk-vali?))))
 
 (deftest kok-hint-tyot-lasketaan-vain-kuukausivalille
