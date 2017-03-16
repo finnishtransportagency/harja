@@ -50,11 +50,23 @@
                               :as hakuehdot}
                              max-maara]
   (let [kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
-                           db
-                           user
-                           (fn [urakka-id kayttaja]
-                             (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset urakka-id kayttaja))
-                           nil nil nil nil #inst "1900-01-01" #inst "2100-01-01")
+                          db
+                          user
+                          (fn [urakka-id kayttaja]
+                            (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset urakka-id kayttaja))
+                          nil nil nil nil #inst "1900-01-01" #inst "2100-01-01")]
+    (q-tietyoilmoitukset/hae-ilmoitukset
+     db
+     {:alku (konv/sql-timestamp alkuaika)
+      :loppu (konv/sql-timestamp loppuaika)
+      :urakat (if (and urakka (not (str/blank? urakka)))
+                [(Integer/parseInt urakka)]
+                kayttajan-urakat)
+      :luojaid (when vain-kayttajan-luomat (:id user))
+      :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
+      :maxmaara max-maara
+      :organisaatio (:id (:organisaatio user))}))
+  #_(let [
         sql-parametrit {:alku (konv/sql-timestamp alkuaika)
                         :loppu (konv/sql-timestamp loppuaika)
                         :urakat (if (and urakka (not (str/blank? urakka))) [(Integer/parseInt urakka)] kayttajan-urakat)
