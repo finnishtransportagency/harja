@@ -3,6 +3,7 @@
   (:require [schema.core :as s]
             [harja.domain.skeema :refer [pvm-tyyppi] :as skeema]
             [harja.domain.yleiset :refer [Tierekisteriosoite Osapuoli Teksti Sijainti]]
+            [clojure.string :as str]
     #?(:cljs [harja.loki :refer [log]]
        :clj
             [taoensso.timbre :as log])
@@ -102,6 +103,9 @@
   (let [virheet (validoi-laatupoikkeama data)]
     #?(:cljs (log "laatupoikkeama virheet: " (pr-str virheet)))
     (nil? virheet)))
+
+(defn tarkastuksen-havainto-ok? [data]
+  (boolean (#{"ok" "OK" "Ok" "oK"} (:havainnot data))))
 
 (def talvihoitomittauksen-lomakekentat
   [[:lumimaara] [:tasaisuus] [:kitka] [:lampotila :tie] [:lampotila :ilma]])

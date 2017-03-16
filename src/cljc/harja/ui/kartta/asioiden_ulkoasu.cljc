@@ -1,6 +1,7 @@
 (ns harja.ui.kartta.asioiden-ulkoasu
   (:require [harja.ui.kartta.varit.puhtaat :as puhtaat]
             [harja.ui.kartta.ikonit :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni]]
+            [harja.domain.laadunseuranta :as domain-laadunseuranta]
             [clojure.string :as str]))
 
 (def +valitun-skaala+ 1.5)
@@ -298,8 +299,10 @@
                :konsultti (:ei-ok-tarkastus-konsultti viivojen-varit)
                :urakoitsija (:ei-ok-tarkastus-urakoitsija viivojen-varit)
                (:ei-ok-tarkastus viivojen-varit))}
-     (if (or (not-empty vakiohavainnot) (not-empty havainnot)
-             (not-empty talvihoitomittaus) (not-empty soratiemittaus))
+     (if (or (not-empty vakiohavainnot)
+             (and (not-empty havainnot) (not (domain-laadunseuranta/tarkastuksen-havainto-ok? {:havainnot havainnot})))
+             (not-empty talvihoitomittaus)
+             (not-empty soratiemittaus))
        ;; on vakiohavaintoja. Erikoiskeissi lumista tai liukasta.
        (if (and
              (some? vakiohavainnot)
