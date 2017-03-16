@@ -9,7 +9,8 @@
             [cljs.core.async :as async]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
-            [tuck.core :as t]
+            [tuck.core :as tuck]
+            [harja.domain.tietyoilmoitukset :as t]
             [cljs.pprint :refer [pprint]])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -45,7 +46,7 @@
              (when @karttataso-tietyoilmoitukset
                (kartalla-esitettavaan-muotoon
                  (map #(assoc % :tyyppi-kartalla :tietyoilmoitus) tietyoilmoitukset)
-                 #(= (:id %) (:id valittu-ilmoitus)))))))
+                 #(= (::t/id %) (::t/id valittu-ilmoitus)))))))
 
 (defn- nil-hylkiva-concat [akku arvo]
   (if (or (nil? arvo) (nil? akku))
@@ -68,9 +69,9 @@
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
   (when haku
     (.clearTimeout js/window haku))
-  (assoc app :ilmoitushaku-id (.setTimeout js/window (t/send-async! ->HaeIlmoitukset) 1000)))
+  (assoc app :ilmoitushaku-id (.setTimeout js/window (tuck/send-async! ->HaeIlmoitukset) 1000)))
 
-(extend-protocol t/Event
+(extend-protocol tuck/Event
   AsetaValinnat
   (process-event [{valinnat :valinnat} app]
     (hae-ilmoitukset (assoc app :valinnat valinnat)))
@@ -83,7 +84,7 @@
 
   HaeIlmoitukset
   (process-event [_ {valinnat :valinnat :as app}]
-    (let [tulos! (t/send-async! ->IlmoituksetHaettu)]
+    (let [tulos! (tuck/send-async! ->IlmoituksetHaettu)]
       (go
         (tulos!
           (let [parametrit (select-keys valinnat [:alkuaika
@@ -115,7 +116,7 @@
 
   HaeKayttajanUrakat
   (process-event [{hallintayksikot :hallintayksikot} app]
-    (let [tulos! (t/send-async! ->KayttajanUrakatHaettu)]
+    (let [tulos! (tuck/send-async! ->KayttajanUrakatHaettu)]
       (when hallintayksikot
         (go (tulos! (async/<!
                       (async/reduce nil-hylkiva-concat []
