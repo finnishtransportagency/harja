@@ -55,6 +55,7 @@
 
     ;; Luodaan tyhjästä uudet tiedot, jotta nähdään, että raportissa käytetty data on laskettu oikein
 
+    ;; Kok. hint. työt
     (u (str "INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinstanssi,sopimus)
     VALUES (2017, 10, 1, '2017-10-15', " tiemerkinnan-tpi ", " sopimus-id ");"))
     (u (str "INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinstanssi,sopimus)
@@ -62,6 +63,7 @@
     (u (str "INSERT INTO kokonaishintainen_tyo (vuosi,kuukausi,summa,maksupvm,toimenpideinstanssi,sopimus)
     VALUES (2007, 1, 999999, '2017-10-15', " tiemerkinnan-tpi ", " sopimus-id ");")) ; Ei aikavälillä
 
+    ;; Yks. hint. työt
     (u (str "INSERT INTO tiemerkinnan_yksikkohintainen_toteuma(urakka, yllapitokohde, hinta, hintatyyppi,
     paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
     VALUES (" urakka-id " ,null, 1, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null,
@@ -87,6 +89,7 @@
     VALUES (" urakka-id " ,null, 5, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null,
     'Testitoteuma 1', 20, 8, 5, true);")) ; Poistettu toteuma
 
+    ;; Muut työt
     (u (str "INSERT INTO yllapito_muu_toteuma (urakka, sopimus, selite, pvm, hinta, yllapitoluokka,
     laskentakohde, luotu, luoja) VALUES (" urakka-id ", " sopimus-id ", 'Selite 1', '2016-10-10', 1000, 1,
     (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
@@ -104,6 +107,7 @@
     (SELECT id FROM urakka_laskentakohde WHERE nimi = 'Laskentakohde 1'),  NOW(),
     (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), true);")) ; Poistettu
 
+    ;; Sakot
     (u (str "INSERT INTO laatupoikkeama (lahde, yllapitokohde, tekija, kasittelytapa, muu_kasittelytapa, paatos,
     perustelu, tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka,
     kuvaus) VALUES ('harja-ui'::lahde, null, 'tilaaja'::osapuoli, 'puhelin'::laatupoikkeaman_kasittelytapa, '',
@@ -132,6 +136,37 @@
     (u (str "INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi,
     tyyppi, suorasanktio, luoja, poistettu) VALUES ('yllapidon_sakko'::sanktiolaji, 1000, '2017-01-5 06:06.37', null,
     (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Ylläpitokohteeseeton suorasanktio 668')," tiemerkinnan-tpi ",
+    (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon sakko'), true, 2, true);"))
+
+    ;; Bonukset
+    (u (str "INSERT INTO laatupoikkeama (lahde, yllapitokohde, tekija, kasittelytapa, muu_kasittelytapa, paatos,
+    perustelu, tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka,
+    kuvaus) VALUES ('harja-ui'::lahde, null, 'tilaaja'::osapuoli, 'puhelin'::laatupoikkeaman_kasittelytapa, '',
+    'hylatty'::laatupoikkeaman_paatostyyppi, 'Ei tässä ole mitään järkeä', 123, 1, NOW(), '2017-01-3 12:06.37',
+    '2017-01-05 13:06.37', false, false, " urakka-id ", 'Ylläpitokohteeseeton suorasanktio 866');"))
+    (u (str "INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi,
+    tyyppi, suorasanktio, luoja) VALUES ('yllapidon_bonus'::sanktiolaji, -1, '2017-01-5 06:06.37', null,
+    (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Ylläpitokohteeseeton suorasanktio 866')," tiemerkinnan-tpi ",
+    (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon sakko'), true, 2);"))
+    ; Poistettuun laatupoikkeamaan liittyvä bonus, jää huomiotta raportilla
+    (u (str "INSERT INTO laatupoikkeama (lahde, yllapitokohde, tekija, kasittelytapa, muu_kasittelytapa, paatos,
+    perustelu, tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka,
+    kuvaus, poistettu) VALUES ('harja-ui'::lahde, null, 'tilaaja'::osapuoli, 'puhelin'::laatupoikkeaman_kasittelytapa, '',
+    'hylatty'::laatupoikkeaman_paatostyyppi, 'Ei tässä ole mitään järkeä', 123, 1, NOW(), '2017-01-3 12:06.37',
+    '2017-01-05 13:06.37', false, false, " urakka-id ", 'Ylläpitokohteeseeton suorasanktio 867', true);"))
+    (u (str "INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi,
+    tyyppi, suorasanktio, luoja) VALUES ('yllapidon_bonus'::sanktiolaji, -1, '2017-01-5 06:06.37', null,
+    (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Ylläpitokohteeseeton suorasanktio 867')," tiemerkinnan-tpi ",
+    (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon sakko'), true, 2);"))
+    ;; Poistettu bonus, jää huomiotta raportilla
+    (u (str "INSERT INTO laatupoikkeama (lahde, yllapitokohde, tekija, kasittelytapa, muu_kasittelytapa, paatos,
+    perustelu, tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka,
+    kuvaus) VALUES ('harja-ui'::lahde, null, 'tilaaja'::osapuoli, 'puhelin'::laatupoikkeaman_kasittelytapa, '',
+    'hylatty'::laatupoikkeaman_paatostyyppi, 'Ei tässä ole mitään järkeä', 123, 1, NOW(), '2017-01-3 12:06.37',
+    '2017-01-05 13:06.37', false, false, " urakka-id ", 'Ylläpitokohteeseeton suorasanktio 868');"))
+    (u (str "INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi,
+    tyyppi, suorasanktio, luoja, poistettu) VALUES ('yllapidon_bonus'::sanktiolaji, -1, '2017-01-5 06:06.37', null,
+    (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Ylläpitokohteeseeton suorasanktio 868')," tiemerkinnan-tpi ",
     (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon sakko'), true, 2, true);"))))
 
 (deftest raportin-suoritus-urakalle-toimii
@@ -150,8 +185,9 @@
     (is (== yksikkohintaiset-suunnitellut-tyot 5))
     (is (== muut-tyot 2001))
     (is (== sakot 1000))
+    (is (== bonukset -1))
 
-    (is (== toteumat-yhteensa 3102)) ;; Ei sis. kok. hint. töitä koska aikaväli ei ole kk-väli
+    (is (== toteumat-yhteensa 3101)) ;; Ei sis. kok. hint. töitä koska aikaväli ei ole kk-väli
     (is (false? kk-vali?))))
 
 (deftest kok-hint-tyot-lasketaan-vain-kuukausivalille
@@ -170,6 +206,7 @@
     (is (== yksikkohintaiset-suunnitellut-tyot 0))
     (is (== muut-tyot 0))
     (is (== sakot 0))
+    (is (== bonukset 0))
 
     (is (== toteumat-yhteensa 3))
     (is (true? kk-vali?))))
