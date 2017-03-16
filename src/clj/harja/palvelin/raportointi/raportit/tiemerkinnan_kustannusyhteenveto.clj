@@ -14,8 +14,6 @@
 (defn- raportin-sarakkeet []
   [{:leveys 2 :otsikko "Kustannuslaji" :fmt :raha}
    {:leveys 1 :otsikko "Hinta" :fmt :raha}
-   ;; TODO Lisätään indeksit myöhemmin
-   #_{:leveys 1 :otsikko "Indeksi" :fmt :raha}
    {:leveys 1 :otsikko "Yhteensä" :fmt :raha}])
 
 (defn hae-raportin-tiedot [{:keys [db urakka-id alkupvm loppupvm]}]

@@ -49,9 +49,10 @@
   (SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id ");"))
     (u (str "DELETE FROM tiemerkinnan_yksikkohintainen_toteuma WHERE urakka = " urakka-id ";"))
     (u (str "DELETE FROM yllapito_muu_toteuma WHERE urakka = " urakka-id ";"))
-    (u (str "DELETE FROM laatupoikkeama WHERE urakka = " urakka-id ";"))
     (u (str "DELETE FROM sanktio WHERE toimenpideinstanssi IN
     (SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id ");"))
+    (u (str "DELETE FROM laatupoikkeama WHERE urakka = " urakka-id ";"))
+    (u (str "DELETE FROM yllapitokohde WHERE urakka = " urakka-id ";"))
 
     ;; Luodaan tyhjästä uudet tiedot, jotta nähdään, että raportissa käytetty data on laskettu oikein
 
@@ -153,6 +154,17 @@
     tyyppi, suorasanktio, luoja, poistettu) VALUES ('yllapidon_sakko'::sanktiolaji, 1000, '2017-01-5 06:06.37', null,
     (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Ylläpitokohteeseeton suorasanktio 668')," tiemerkinnan-tpi ",
     (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon sakko'), true, 2, true);"))
+    ;; Sanktio, joka liittyy laatupoikkeamaan, joka taas liittyy poistettuun ylläpitokohteeseen, ei näy
+    (u (str "INSERT INTO laatupoikkeama (lahde, yllapitokohde, tekija, kasittelytapa, muu_kasittelytapa, paatos,
+    perustelu, tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka,
+    kuvaus) VALUES ('harja-ui'::lahde, (SELECT id FROM yllapitokohde WHERE nimi = 'Nopea poistettu testikohde'),
+    'tilaaja'::osapuoli, 'puhelin'::laatupoikkeaman_kasittelytapa, '',
+    'hylatty'::laatupoikkeaman_paatostyyppi, 'Ei tässä ole mitään järkeä', 123, 1, NOW(), '2017-01-3 12:06.37',
+    '2017-01-05 13:06.37', false, false, " urakka-id ", 'Ylläpitokohteeseeton suorasanktio 669');"))
+    (u (str "INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi,
+    tyyppi, suorasanktio, luoja) VALUES ('yllapidon_sakko'::sanktiolaji, 1000, '2017-01-5 06:06.37', null,
+    (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Ylläpitokohteeseeton suorasanktio 669')," tiemerkinnan-tpi ",
+    (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon sakko'), true, 2);"))
 
     ;; Bonukset
     (u (str "INSERT INTO laatupoikkeama (lahde, yllapitokohde, tekija, kasittelytapa, muu_kasittelytapa, paatos,
@@ -183,7 +195,18 @@
     (u (str "INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi,
     tyyppi, suorasanktio, luoja, poistettu) VALUES ('yllapidon_bonus'::sanktiolaji, -1, '2017-01-5 06:06.37', null,
     (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Ylläpitokohteeseeton suorasanktio 868')," tiemerkinnan-tpi ",
-    (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon sakko'), true, 2, true);"))))
+    (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon sakko'), true, 2, true);"))
+    ;; Bonus, joka liittyy laatupoikkeamaan, joka taas liittyy poistettuun ylläpitokohteeseen, ei näy
+    (u (str "INSERT INTO laatupoikkeama (lahde, yllapitokohde, tekija, kasittelytapa, muu_kasittelytapa, paatos,
+    perustelu, tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka,
+    kuvaus) VALUES ('harja-ui'::lahde, (SELECT id FROM yllapitokohde WHERE nimi = 'Nopea poistettu testikohde'),
+    'tilaaja'::osapuoli, 'puhelin'::laatupoikkeaman_kasittelytapa, '',
+    'hylatty'::laatupoikkeaman_paatostyyppi, 'Ei tässä ole mitään järkeä', 123, 1, NOW(), '2017-01-3 12:06.37',
+    '2017-01-05 13:06.37', false, false, " urakka-id ", 'Ylläpitokohteeseeton suorasanktio 669');"))
+    (u (str "INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi,
+    tyyppi, suorasanktio, luoja) VALUES ('yllapidon_bonus'::sanktiolaji, 1000, '2017-01-5 06:06.37', null,
+    (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Ylläpitokohteeseeton suorasanktio 669')," tiemerkinnan-tpi ",
+    (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon sakko'), true, 2);"))))
 
 (deftest raportin-suoritus-urakalle-toimii
   (testidata-uusiksi!)

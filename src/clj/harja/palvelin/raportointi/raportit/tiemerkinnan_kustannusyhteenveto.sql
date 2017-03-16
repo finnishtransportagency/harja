@@ -50,8 +50,7 @@ SELECT
                                       AND (lp.yllapitokohde IS NULL OR
                                            (lp.yllapitokohde IS NOT NULL AND (SELECT poistettu
                                                                               FROM yllapitokohde
-                                                                              WHERE id = lp.yllapitokohde
-                                                                                         IS NOT TRUE))))), 0)
+                                                                              WHERE id = lp.yllapitokohde) IS NOT TRUE)))), 0)
     AS "sakot",
   COALESCE((SELECT SUM(maara)
    FROM sanktio
@@ -64,8 +63,7 @@ SELECT
                                       AND (lp.yllapitokohde IS NULL OR
                                            (lp.yllapitokohde IS NOT NULL AND (SELECT poistettu
                                                                               FROM yllapitokohde
-                                                                              WHERE id = lp.yllapitokohde
-                                                                                         IS NOT TRUE))))), 0)
+                                                                              WHERE id = lp.yllapitokohde) IS NOT TRUE)))), 0)
     AS "bonukset"
 FROM urakka
 WHERE id = :urakkaid;
