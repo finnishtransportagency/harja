@@ -160,7 +160,7 @@
            :voi-poistaa? (constantly false)
            :voi-lisata? false
            :piilota-toiminnot? true
-           :tyhja (if (nil? @tiedot/aikataulurivit)
+           :tyhja (if (nil? @tiedot/aikataulurivit-suodatettu)
                     [yleiset/ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :tallenna (if voi-tallentaa?
                        #(tiedot/tallenna-yllapitokohteiden-aikataulu
