@@ -146,7 +146,7 @@
     (fn [urakka optiot]
       (let [{urakka-id :id :as ur} @nav/valittu-urakka
             sopimus-id (first @u/valittu-sopimusnumero)
-            aikataulurivit @tiedot/aikataulurivit
+            aikataulurivit @tiedot/aikataulurivit-suodatettu
             urakkatyyppi (:tyyppi urakka)
             vuosi @u/valittu-urakan-vuosi
             {:keys [voi-tallentaa? saa-muokata?
@@ -160,7 +160,7 @@
            :voi-poistaa? (constantly false)
            :voi-lisata? false
            :piilota-toiminnot? true
-           :tyhja (if (nil? @tiedot/aikataulurivit-suodatettu)
+           :tyhja (if (nil? @tiedot/aikataulurivit)
                     [yleiset/ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :tallenna (if voi-tallentaa?
                        #(tiedot/tallenna-yllapitokohteiden-aikataulu
