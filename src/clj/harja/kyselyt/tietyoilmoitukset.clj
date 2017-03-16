@@ -32,9 +32,9 @@
    {::t/paailmoitus (rel/has-one ::t/paatietyoilmoitus
                                  ::t/ilmoitus
                                  ::t/id)
-    #_::t/vaiheilmoitukset #_(rel/has-many ::t/id
-                                       ::t/ilmoitus
-                                       ::t/paatietyoilmoitus)}])
+    ::t/tyovaiheet (rel/has-many ::t/id
+                                 ::t/ilmoitus
+                                 ::t/paatietyoilmoitus)}])
 
 (def kaikki-ilmoituksen-kentat
   #{::t/id
@@ -87,6 +87,11 @@
     ::t/pysaytysten-loppu
     ::t/lisatietoja})
 
+;; Hakee pääilmoituksen kaikki kentät, sekä siihen liittyvät työvaiheet
+(def kaikki-ilmoituksen-kentat-ja-tyovaiheet
+  (conj kaikki-ilmoituksen-kentat
+        [::t/tyovaiheet kaikki-ilmoituksen-kentat]))
+
 (def ilmoituslomakkeen-kentat
   #{[::t/paailmoitus #{::t/urakan-nimi ::t/urakoitsijayhteyshenkilo ::t/tilaajayhteyshenkilo
                        ::t/ilmoittaja
@@ -134,7 +139,7 @@
        [geometry threshold]])))
 
 (defn hae-ilmoitukset [db {:keys [alku loppu urakat organisaatio kayttaja-id sijainti]}]
-  (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat
+  (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
          (op/and
           (merge {::t/luotu (op/between alku loppu)
                   ::t/paatietyoilmoitus op/null?}
