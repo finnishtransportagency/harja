@@ -268,6 +268,29 @@
 (defn laajenna-extent [[minx miny maxx maxy] d]
   [(- minx d) (- miny d) (+ maxx d) (+ maxy d)])
 
+(defn- muuta-valimatkaa* [funktio a b prosentti] [(funktio a (* prosentti (Math/abs (- a b)))) b])
+
+(defn- kasvata-vasemmalle [[minx _ maxx _] prosentti]
+  (first (muuta-valimatkaa* - minx maxx prosentti)))
+
+(defn- kasvata-alaspain [[_ miny _ maxy] prosentti]
+  (first (muuta-valimatkaa* - miny maxy prosentti)))
+
+(defn- kasvata-oikealle [[minx _ maxx _] prosentti]
+  (first (muuta-valimatkaa* + maxx minx prosentti)))
+
+(defn- kasvata-ylospain [[_ miny _ maxy] prosentti]
+  (first (muuta-valimatkaa* + maxy miny prosentti)))
+
+
+(defn laajenna-extent-prosentilla
+  ([extent] (laajenna-extent-prosentilla extent [0.001 0.001 0.001 0.05]))
+  ([extent [vasen alas oikea ylos]]
+    [(kasvata-vasemmalle extent vasen)
+     (kasvata-alaspain extent alas)
+     (kasvata-oikealle extent oikea)
+     (kasvata-ylospain extent ylos)]))
+
 (defn extent-keskipiste [[minx miny maxx maxy]]
   (let [width (- maxx minx)
         height (- maxy miny)]

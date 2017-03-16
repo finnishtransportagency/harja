@@ -49,13 +49,19 @@
   (when @pida-geometriat-nakyvilla?
     ;; Haetaan kaikkien tasojen extentit ja yhdistetään ne laajentamalla
     ;; extentiä siten, että kaikki mahtuvat.
-    ;; Jos extentiä tasoista ei ole, zoomataan urakkaan tai hallintayksikköön.
+    ;; Jos näkymässä on näkymän omia aktiivisia tasoja (esim tarkastusnäkymässä tarkastusreitit),
+    ;; keskitetään kartta aina extenttiin. Jos ei ole aktiivisia näkymän tasoja ei ole,
+    ;; zoomataan urakkaan/hallintayksikköön.
+    ;; Frontilla piirretyt geometriatasot ovat "aktiivisia", jos niihin on piirretty asioita.
+    ;; Niiden extent on aina kaikkien tasolla olevien asioiden extent.
+    ;; Kuvatasot ovat aina "aktiivisia", ja niiden extent on aina nil.
+    ;; Näin näkymissä, missä karttataso on palvelimella piirretty kuva, ei zoomia
+    ;; resetoida koko ajan näyttämään urakka.
     (let [extent (reduce geo/yhdista-extent
-                         (keep #(-> % meta :extent) (vals @tasot/geometriat-kartalle)))
-          extentin-margin-metreina geo/pisteen-extent-laajennus]
+                         (keep #(-> % meta :extent) (vals @tasot/geometriat-kartalle)))]
       (log "EXTENT TASOISTA: " (pr-str extent))
-      (if extent
-        (keskita-kartta-alueeseen! (geo/laajenna-extent extent extentin-margin-metreina))
+      (if (not-empty (tasot/aktiiviset-nakymien-tasot))
+        (when extent (keskita-kartta-alueeseen! (geo/laajenna-extent-prosentilla extent)))
         (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))))
 
 (defn kuuntele-valittua! [atomi]

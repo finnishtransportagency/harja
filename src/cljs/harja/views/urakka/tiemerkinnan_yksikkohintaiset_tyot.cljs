@@ -195,6 +195,6 @@
 
 (defn yksikkohintaiset-tyot [urakka tiemerkinnan-toteumat-atom paallystysurakan-kohteet-atom]
   [:div.tiemerkinnan-yks-hint-tyot
-   [paallystysurakan-kohteet urakka @paallystysurakan-kohteet-atom]
    [toteutuneet-tiemerkinnat urakka tiemerkinnan-toteumat-atom @paallystysurakan-kohteet-atom]
-   [yhteenveto @tiemerkinnan-toteumat-atom]])
+   [yhteenveto @tiemerkinnan-toteumat-atom]
+   [paallystysurakan-kohteet urakka @paallystysurakan-kohteet-atom]])

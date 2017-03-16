@@ -9,14 +9,6 @@ INSERT INTO yhatiedot
 (urakka, yhatunnus, yhaid, yhanimi, elyt, vuodet, kohdeluettelo_paivitetty, luotu, linkittaja, muokattu)
 VALUES (:urakka, :yhatunnus, :yhaid, :yhanimi, :elyt :: TEXT [], :vuodet :: INTEGER [], NULL, NOW(), :kayttaja, NOW());
 
--- name: paivita-yhatietojen-kohdeluettelon-paivitysaika<!
--- Päivittää urakan YHA-tietoihin kohdeluettelon uudeksi päivitysajaksi nykyhetken
-UPDATE yhatiedot
-SET
-  kohdeluettelo_paivitetty = NOW(),
-  muokattu                 = NOW()
-WHERE urakka = :urakka;
-
 -- name: hae-urakan-yhatiedot
 SELECT
   yhatunnus,
@@ -25,8 +17,12 @@ SELECT
   elyt,
   vuodet,
   kohdeluettelo_paivitetty AS "kohdeluettelo-paivitetty",
+  kohdeluettelo_paivittaja AS "kohdeluettelo-paivittaja",
+  k.etunimi                AS "kohdeluettelo-paivittaja-etunimi",
+  k.sukunimi               AS "kohdeluettelo-paivittaja-sukunimi",
   sidonta_lukittu          AS "sidonta-lukittu"
-FROM yhatiedot
+FROM yhatiedot yt
+  LEFT JOIN kayttaja k ON k.id = yt.kohdeluettelo_paivittaja
 WHERE urakka = :urakka;
 
 -- name: poista-urakan-yllapitokohteet!
@@ -133,7 +129,8 @@ WHERE urakka = :urakkaid;
 -- name: merkitse-urakan-yllapitokohteet-paivitetyksi<!
 UPDATE yhatiedot
 SET
-  kohdeluettelo_paivitetty = NOW()
+  kohdeluettelo_paivitetty = NOW(),
+  kohdeluettelo_paivittaja = :kayttaja
 WHERE urakka = :urakka;
 
 -- name: luo-paallystysilmoitus<!

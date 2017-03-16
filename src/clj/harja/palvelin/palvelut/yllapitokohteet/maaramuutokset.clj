@@ -53,7 +53,6 @@
                                (map #(konv/string-polusta->keyword % [:tyyppi])))
                              (q/hae-yllapitokohteen-maaramuutokset db {:id yllapitokohde-id
                                                                        :urakka urakka-id}))]
-    (log/debug "Määrämuutokset saatu: " maaramuutokset)
     maaramuutokset))
 
 (defn- luo-maaramuutos [db user yllapitokohde-id
