@@ -1,6 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.tiemerkinnan-kustannusyhteenveto
   (:require [harja.kyselyt.urakat :as urakat-q]
             [jeesql.core :refer [defqueries]]
+            [taoensso.timbre :as log]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [clj-time.core :as t]

@@ -37,7 +37,7 @@
 
 (use-fixtures :once (compose-fixtures jarjestelma-fixture urakkatieto-fixture))
 
-(deftest raportin-suoritus-urakalle-toimii
+(defn testidata-uusiksi! []
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
         sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
         tiemerkinnan-tpi (:id (first (q-map "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " LIMIT 1")))]
@@ -106,20 +106,42 @@
     (u (str "INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi,
     tyyppi, suorasanktio, luoja) VALUES ('yllapidon_sakko'::sanktiolaji, 1000, '2017-01-5 06:06.37', null,
     (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Ylläpitokohteeseeton suorasanktio 666')," tiemerkinnan-tpi ",
-    (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon sakko'), true, 2);\n"))
+    (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon sakko'), true, 2);\n"))))
 
-    (let [{:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat
-                  muut-tyot sakot bonukset toteumat-yhteensa kk-vali?]
-           :as raportin-tiedot}
-          (raportti/hae-raportin-tiedot {:db (:db jarjestelma)
-                                         :urakka-id urakka-id
-                                         :alkupvm (pvm/luo-pvm 2010 1 1)
-                                         :loppupvm (pvm/luo-pvm 2080 1 1)})]
-      (is (map? raportin-tiedot))
-      (is (== kokonaishintaiset-tyot 3))
-      (is (== yksikkohintaiset-toteumat 101))
-      (is (== muut-tyot 2001))
-      (is (== sakot 1000))
+(deftest raportin-suoritus-urakalle-toimii
+  (testidata-uusiksi!)
+  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        {:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat
+                muut-tyot sakot bonukset toteumat-yhteensa kk-vali?]
+         :as raportin-tiedot}
+        (raportti/hae-raportin-tiedot {:db (:db jarjestelma)
+                                       :urakka-id urakka-id
+                                       :alkupvm (pvm/luo-pvm 2010 1 1)
+                                       :loppupvm (pvm/luo-pvm 2080 1 1)})]
+    (is (map? raportin-tiedot))
+    (is (== kokonaishintaiset-tyot 3))
+    (is (== yksikkohintaiset-toteumat 101))
+    (is (== muut-tyot 2001))
+    (is (== sakot 1000))
 
-      (is (== toteumat-yhteensa 3105))
-      (is (false? kk-vali?)))))
+    (is (== toteumat-yhteensa 3102)) ;; Ei sis. kok. hint. töitä koska aikaväli ei ole kk-väli
+    (is (false? kk-vali?))))
+
+(deftest raportin-suoritus-urakalle-toimii
+  (testidata-uusiksi!)
+  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        {:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat
+                muut-tyot sakot bonukset toteumat-yhteensa kk-vali?]
+         :as raportin-tiedot}
+        (raportti/hae-raportin-tiedot {:db (:db jarjestelma)
+                                       :urakka-id urakka-id
+                                       :alkupvm (pvm/luo-pvm 2017 9 1)
+                                       :loppupvm (pvm/luo-pvm 2017 10 30)})]
+    (is (map? raportin-tiedot))
+    (is (== kokonaishintaiset-tyot 3))
+    (is (== yksikkohintaiset-toteumat 0))
+    (is (== muut-tyot 0))
+    (is (== sakot 0))
+
+    (is (== toteumat-yhteensa 3))
+    (is (true? kk-vali?))))
