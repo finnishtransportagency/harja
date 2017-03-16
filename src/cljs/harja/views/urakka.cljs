@@ -31,7 +31,6 @@
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti
     :yleiset true
-    ;; voidaan siistiä tekemällä välitasoja kuten oikeudet-suunnittelu ja oikeudet-toteumat. Nyt otetaan first
     :suunnittelu (and (oikeudet/urakat-suunnittelu id)
                       (not= sopimustyyppi :kokonaisurakka)
                       (not= tyyppi :tiemerkinta))
