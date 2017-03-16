@@ -8,9 +8,14 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
             [harja.geo :as geo]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [harja.palvelin.palvelut.tietyoilmoitukset.pdf :as pdf]
+            [harja.domain.tietyoilmoitukset :as t]
+            [specql.core :refer [fetch]]))
 
 (defn- muunna-tietyoilmoitus [tietyoilmoitus]
+  ;; FIXME: korvaa tämä specql datalla...
   (as-> tietyoilmoitus t
         (update t :sijainti geo/pg->clj)
         (konv/array->vec t :tyotyypit)
@@ -20,7 +25,20 @@
         (konv/array->vec t :kiertotienpinnat)
         (assoc t :kiertotienpinnat (mapv #(konv/pgobject->map % :materiaali :string :matka :long) (:kiertotienpinnat t)))
         (konv/array->vec t :nopeusrajoitukset)
-        (assoc t :nopeusrajoitukset (mapv #(konv/pgobject->map % :nopeusrajoitus :long :matka :long) (:nopeusrajoitukset t)))))
+        (assoc t :nopeusrajoitukset (mapv #(konv/pgobject->map % :nopeusrajoitus :long :matka :long) (:nopeusrajoitukset t)))
+        (konv/array->vec t :tyoajat)
+        (update t :tyoajat (fn [tyoajat]
+                             (mapv #(-> %
+                                        (konv/pgobject->map :alku :date :loppu :date :viikonpaivat :string)
+                                        (update :viikonpaivat
+                                                (fn [viikonpaivat-str]
+                                                  (into []
+                                                        (str/split (subs viikonpaivat-str
+                                                                         1 (dec (count viikonpaivat-str)))
+                                                                   #",")))))
+
+                                   tyoajat)))
+        ))
 
 (defn hae-tietyoilmoitukset [db
                              user
@@ -54,17 +72,27 @@
                                (q-tietyoilmoitukset/hae-tietyoilmoitukset db sql-parametrit))]
     tietyoilmoitukset))
 
+(defn tietyoilmoitus-pdf [db user params]
+  (println "MUODOSTA PDF: " params)
+  (pdf/tietyoilmoitus-pdf
+   (first (fetch db ::t/ilmoitus q-tietyoilmoitukset/kaikki-ilmoituksen-kentat
+                 {::t/id (:id params)}))))
+
 (defrecord Tietyoilmoitukset []
   component/Lifecycle
   (start [{db :db
            http :http-palvelin
+           pdf :pdf-vienti
            :as this}]
     (julkaise-palvelu http :hae-tietyoilmoitukset
                       (fn [user tiedot]
                         (hae-tietyoilmoitukset db user tiedot 501)))
+    (pdf-vienti/rekisteroi-pdf-kasittelija!
+     pdf :tietyoilmoitus (partial #'tietyoilmoitus-pdf db))
     this)
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
                      :hae-tietyoilmoitukset)
+    (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :tietyoilmoitus)
     this))
