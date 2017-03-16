@@ -49,11 +49,11 @@
                 (hae-paallystysilmoitukset valittu-urakka-id valittu-sopimus-id vuosi))))
 
 (def paallystysilmoitukset-suodatettu
-  (reaction (let [tienumero @tienumero
-                  kohteet (filterv #(or (nil? tienumero)
-                                        (= (:tr-numero %) tienumero))
-                                   @paallystysilmoitukset)]
-              kohteet)))
+  (reaction (let [tienumero @tienumero]
+              (when @paallystysilmoitukset
+                (filterv #(or (nil? tienumero)
+                              (= (:tr-numero %) tienumero))
+                         @paallystysilmoitukset)))))
 
 (defonce paallystysilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 
