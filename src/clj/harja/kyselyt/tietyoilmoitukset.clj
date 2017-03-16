@@ -30,7 +30,10 @@
   ["tietyoilmoitus" ::t/ilmoitus
    {::t/paailmoitus (rel/has-one ::t/paatietyoilmoitus
                                  ::t/ilmoitus
-                                 ::t/id)}])
+                                 ::t/id)
+    #_::t/vaiheilmoitukset #_(rel/has-many ::t/id
+                                       ::t/ilmoitus
+                                       ::t/paatietyoilmoitus)}])
 
 (def kaikki-ilmoituksen-kentat
   #{::t/id

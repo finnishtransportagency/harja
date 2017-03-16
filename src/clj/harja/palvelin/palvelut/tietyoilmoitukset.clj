@@ -41,14 +41,12 @@
                                    tyoajat)))
         ))
 
-(defn hae-tietyoilmoitukset [db
-                             user
-                             {:keys [alkuaika
-                                     loppuaika
-                                     urakka
-                                     sijainti
-                                     vain-kayttajan-luomat]
-                              :as hakuehdot}
+(defn hae-tietyoilmoitukset [db user {:keys [alkuaika
+                                             loppuaika
+                                             urakka
+                                             sijainti
+                                             vain-kayttajan-luomat]
+                                      :as hakuehdot}
                              max-maara]
   (let [kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
                           db
@@ -56,6 +54,7 @@
                           (fn [urakka-id kayttaja]
                             (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset urakka-id kayttaja))
                           nil nil nil nil #inst "1900-01-01" #inst "2100-01-01")]
+    (println "HAETAAN")
     (q-tietyoilmoitukset/hae-ilmoitukset
      db
      {:alku (konv/sql-timestamp alkuaika)
@@ -66,24 +65,7 @@
       :luojaid (when vain-kayttajan-luomat (:id user))
       :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
       :maxmaara max-maara
-      :organisaatio (:id (:organisaatio user))}))
-  #_(let [
-        sql-parametrit {:alku (konv/sql-timestamp alkuaika)
-                        :loppu (konv/sql-timestamp loppuaika)
-                        :urakat (if (and urakka (not (str/blank? urakka))) [(Integer/parseInt urakka)] kayttajan-urakat)
-                        :luojaid (when vain-kayttajan-luomat (:id user))
-                        :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
-                        :maxmaara max-maara
-                        :organisaatio (:id (:organisaatio user))}
-        tietyoilmoitukset (map (fn [tietyoilmoitus]
-                                 (let [tietyoilmoitus (muunna-tietyoilmoitus tietyoilmoitus)
-                                       vaiheet (q-tietyoilmoitukset/hae-tietyoilmoituksen-vaiheet
-                                                 db
-                                                 {:paatietyoilmoitus (:id tietyoilmoitus)})
-                                       tyovaiheet (mapv (fn [vaihe] (muunna-tietyoilmoitus vaihe)) vaiheet)]
-                                   (assoc tietyoilmoitus :tyovaiheet tyovaiheet)))
-                               (q-tietyoilmoitukset/hae-tietyoilmoitukset db sql-parametrit))]
-    tietyoilmoitukset))
+      :organisaatio (:id (:organisaatio user))})))
 
 (defn tietyoilmoitus-pdf [db user params]
   (println "MUODOSTA PDF: " params)
@@ -103,12 +85,14 @@
                       (fn [user tiedot]
                         (hae-tietyoilmoitukset db user tiedot 501))
                       {:vastaus-spec ::tietyoilmoitukset})
-    (pdf-vienti/rekisteroi-pdf-kasittelija!
-     pdf :tietyoilmoitus (partial #'tietyoilmoitus-pdf db))
+    (when pdf
+      (pdf-vienti/rekisteroi-pdf-kasittelija!
+       pdf :tietyoilmoitus (partial #'tietyoilmoitus-pdf db)))
     this)
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
                      :hae-tietyoilmoitukset)
-    (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :tietyoilmoitus)
+    (when (:pdf-vienti this)
+      (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :tietyoilmoitus))
     this))
