@@ -56,7 +56,7 @@
     :laskutus (and (oikeudet/urakat-laskutus id)
                    (not= tyyppi :paallystys)
                    (not= tyyppi :tiemerkinta))
-    :tiemerkinnan-kustannukset (and #_(oikeudet/urakat-tiemerkinnan-kustannukkset id) ;; FIXME Päivitä Roolit-Excel
+    :tiemerkinnan-kustannukset (and (oikeudet/urakat-kustannukset id)
                                  (= tyyppi :tiemerkinta))
 
     false))
