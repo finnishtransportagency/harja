@@ -497,7 +497,7 @@ WHERE yllapitokohde = :id
            FROM yllapitokohde
            WHERE id = :id) = :urakka;
 
--- name: tallenna-yllapitokohteen-suorittava-tiemerkintaurakka
+-- name: tallenna-yllapitokohteen-suorittava-tiemerkintaurakka!
 -- Tallentaa ylläpitokohteen aikataulun
 UPDATE yllapitokohde
 SET

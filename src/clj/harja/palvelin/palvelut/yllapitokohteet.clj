@@ -152,7 +152,7 @@
            :aikataulu_muokkaaja (:id user)
            :id (:id kohde)
            :urakka paallystysurakka-id})
-        (q/tallenna-yllapitokohteen-suorittava-tiemerkintaurakka
+        (q/tallenna-yllapitokohteen-suorittava-tiemerkintaurakka!
           db
           {:suorittava_tiemerkintaurakka
            (if (= kayttajan-valitsema-suorittava-tiemerkintaurakka-id
