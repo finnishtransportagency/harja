@@ -1,7 +1,7 @@
 -- Refactoroi ylläpitokohteen aikataulutiedot omaan tauluun
 CREATE TABLE yllapitokohteen_aikataulu (
   id SERIAL PRIMARY KEY,
-  yllapitokohde INTEGER REFERENCES yllapitokohde(id) UNIQUE, -- Kohteella voi olla vain yksi aikataulu
+  yllapitokohde INTEGER REFERENCES yllapitokohde(id) UNIQUE NOT NULL, -- Kohteella voi olla vain yksi aikataulu
   kohde_alku DATE,
   paallystys_alku TIMESTAMP,
   paallystys_loppu TIMESTAMP,

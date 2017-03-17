@@ -253,29 +253,30 @@
                                        kaasuindeksi poistettu keskimaarainen-vuorokausiliikenne]}]
   (log/debug "Luodaan uusi ylläpitokohde tyyppiä " yllapitokohdetyotyyppi)
   (when-not poistettu
-    (q/luo-yllapitokohde<! db
-                           {:urakka urakka-id
-                            :sopimus sopimus-id
-                            :kohdenumero kohdenumero
-                            :nimi nimi
-                            :tr_numero tr-numero
-                            :tr_alkuosa tr-alkuosa
-                            :tr_alkuetaisyys tr-alkuetaisyys
-                            :tr_loppuosa tr-loppuosa
-                            :tr_loppuetaisyys tr-loppuetaisyys
-                            :tr_ajorata tr-ajorata
-                            :tr_kaista tr-kaista
-                            :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
-                            :yllapitoluokka (if (map? yllapitoluokka)
-                                              (:numero yllapitoluokka)
-                                              yllapitoluokka)
-                            :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
-                            :arvonvahennykset arvonvahennykset
-                            :bitumi_indeksi bitumi-indeksi
-                            :kaasuindeksi kaasuindeksi
-                            :yllapitokohdetyyppi (when yllapitokohdetyyppi (name yllapitokohdetyyppi))
-                            :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))
-                            :vuodet (konv/seq->array [vuosi])})))
+    (let [kohde (q/luo-yllapitokohde<! db
+                                       {:urakka urakka-id
+                                        :sopimus sopimus-id
+                                        :kohdenumero kohdenumero
+                                        :nimi nimi
+                                        :tr_numero tr-numero
+                                        :tr_alkuosa tr-alkuosa
+                                        :tr_alkuetaisyys tr-alkuetaisyys
+                                        :tr_loppuosa tr-loppuosa
+                                        :tr_loppuetaisyys tr-loppuetaisyys
+                                        :tr_ajorata tr-ajorata
+                                        :tr_kaista tr-kaista
+                                        :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
+                                        :yllapitoluokka (if (map? yllapitoluokka)
+                                                          (:numero yllapitoluokka)
+                                                          yllapitoluokka)
+                                        :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
+                                        :arvonvahennykset arvonvahennykset
+                                        :bitumi_indeksi bitumi-indeksi
+                                        :kaasuindeksi kaasuindeksi
+                                        :yllapitokohdetyyppi (when yllapitokohdetyyppi (name yllapitokohdetyyppi))
+                                        :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))
+                                        :vuodet (konv/seq->array [vuosi])})
+          _ (q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde (:id kohde)})])))
 
 (defn- paivita-yllapitokohde [db user urakka-id
                               {:keys [id kohdenumero nimi
