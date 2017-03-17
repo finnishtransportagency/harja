@@ -444,7 +444,7 @@ SELECT
   ypka.paallystys_loppu     AS "aikataulu-paallystys-loppu",
   ypka.tiemerkinta_takaraja AS "aikataulu-tiemerkinta-takaraja",
   ypka.tiemerkinta_alku     AS "aikataulu-tiemerkinta-alku",
-  ypka.iemerkinta_loppu     AS "aikataulu-tiemerkinta-loppu",
+  ypka.tiemerkinta_loppu    AS "aikataulu-tiemerkinta-loppu",
   ypka.kohde_valmis         AS "aikataulu-kohde-valmis",
   ypka.muokattu             AS "aikataulu-muokattu",
   ypka.muokkaaja            AS "aikataulu-muokkaaja",
@@ -457,7 +457,7 @@ SELECT
   tr_ajorata                AS "tr-ajorata",
   tr_kaista                 AS "tr-kaista",
   yllapitoluokka
-FROM yllapitokohde
+FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
@@ -484,13 +484,12 @@ WHERE (loppupvm IS NULL OR loppupvm >= NOW())
 -- Tallentaa ylläpitokohteen aikataulun
 UPDATE yllapitokohteen_aikataulu
 SET
-  kohde_alku                   = :aikataulu_kohde_alku,
-  paallystys_alku              = :aikataulu_paallystys_alku,
-  paallystys_loppu             = :aikataulu_paallystys_loppu,
-  kohde_valmis                 = :aikataulu_kohde_valmis,
-  muokattu                     = NOW(),
-  muokkaaja                    = :aikataulu_muokkaaja,
-  suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
+  kohde_alku       = :aikataulu_kohde_alku,
+  paallystys_alku  = :aikataulu_paallystys_alku,
+  paallystys_loppu = :aikataulu_paallystys_loppu,
+  kohde_valmis     = :aikataulu_kohde_valmis,
+  muokattu         = NOW(),
+  muokkaaja        = :aikataulu_muokkaaja
 WHERE yllapitokohde = :id
       AND (SELECT urakka
            FROM yllapitokohde
@@ -536,20 +535,20 @@ WHERE yllapitokohde = :id
 
 -- name: hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
 SELECT
-  ypk.id                          AS id,
-  ypk.nimi                        AS "kohde-nimi",
-  ypk.tr_numero                   AS "tr-numero",
-  ypk.tr_alkuosa                  AS "tr-alkuosa",
-  ypk.tr_alkuetaisyys             AS "tr-alkuetaisyys",
-  ypk.tr_loppuosa                 AS "tr-loppuosa",
-  ypk.tr_loppuetaisyys            AS "tr-loppuetaisyys",
+  ypk.id                 AS id,
+  ypk.nimi               AS "kohde-nimi",
+  ypk.tr_numero          AS "tr-numero",
+  ypk.tr_alkuosa         AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys    AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa        AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys   AS "tr-loppuetaisyys",
   ypka.tiemerkinta_loppu AS "aikataulu-tiemerkinta-loppu",
-  pu.id                           AS "paallystysurakka-id",
-  pu.nimi                         AS "paallystysurakka-nimi",
-  pu.sampoid                      AS "paallystysurakka-sampo-id",
-  tu.id                           AS "tiemerkintaurakka-id",
-  tu.nimi                         AS "tiemerkintaurakka-nimi",
-  tu.sampoid                      AS "tiemerkintaurakka-sampo-id"
+  pu.id                  AS "paallystysurakka-id",
+  pu.nimi                AS "paallystysurakka-nimi",
+  pu.sampoid             AS "paallystysurakka-sampo-id",
+  tu.id                  AS "tiemerkintaurakka-id",
+  tu.nimi                AS "tiemerkintaurakka-nimi",
+  tu.sampoid             AS "tiemerkintaurakka-sampo-id"
 FROM yllapitokohde ypk
   JOIN urakka pu ON ypk.urakka = pu.id
   JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
@@ -619,7 +618,7 @@ SELECT
   (SELECT viimeisin_paivitys
    FROM geometriapaivitys
    WHERE nimi = 'tieverkko') AS karttapvm
-FROM yllapitokohde
+FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE id = :id;
 
@@ -660,7 +659,7 @@ SET
   paallystys_alku      = :paallystys_alku,
   paallystys_loppu     = :paallystys_loppu,
   kohde_valmis         = :kohde_valmis,
-  valmis_tiemerkintaan           = :valmis_tiemerkintaan,
+  valmis_tiemerkintaan = :valmis_tiemerkintaan,
   tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja,
   muokattu             = NOW(),
   muokkaaja            = :muokkaaja
