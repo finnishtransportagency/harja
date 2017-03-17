@@ -15,7 +15,8 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def aikavalit [{:nimi "1 päivän ajalta" :tunteja 24}
+(def aikavalit [{:nimi "Ei rajausta" :ei-rajausta? true}
+                {:nimi "1 päivän ajalta" :tunteja 24}
                 {:nimi "1 viikon ajalta" :tunteja 168}
                 {:nimi "4 viikon ajalta" :tunteja 672}
                 {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
@@ -35,7 +36,7 @@
                                   :haku-kaynnissa? false
                                   :tietyoilmoitukset nil
                                   :valinnat {:vakioaikavali (first aikavalit)
-                                             :alkuaika (pvm/tuntia-sitten 1)
+                                             :alkuaika (pvm/tuntia-sitten 24)
                                              :loppuaika (pvm/nyt)}}))
 
 (defonce karttataso-tietyoilmoitukset (atom false))
@@ -90,6 +91,7 @@
         (tulos!
           (let [parametrit (select-keys valinnat [:alkuaika
                                                   :loppuaika
+                                                  :vakioaikavali
                                                   :sijainti
                                                   :urakka
                                                   :vain-kayttajan-luomat])]
@@ -99,7 +101,6 @@
   IlmoituksetHaettu
   (process-event [vastaus {valittu :valittu-ilmoitus :as app}]
     (let [ilmoitukset (:tietyoilmoitukset (:tulokset vastaus))]
-      (log "---> ilmoitukset" (pr-str (:sijainti (first ilmoitukset))))
       (assoc app :tietyoilmoitukset ilmoitukset)))
 
   ValitseIlmoitus
@@ -171,19 +172,19 @@
                                  ["Muu, mikä?" "Muu, mikä?"]])
 
 (def tyotyyppi-vaihtoehdot-map (into {} (concat
-                                         tyotyyppi-vaihtoehdot-tienrakennus
-                                         tyotyyppi-vaihtoehdot-huolto
-                                         tyotyyppi-vaihtoehdot-asennus
-                                         tyotyyppi-vaihtoehdot-muut)))
+                                          tyotyyppi-vaihtoehdot-tienrakennus
+                                          tyotyyppi-vaihtoehdot-huolto
+                                          tyotyyppi-vaihtoehdot-asennus
+                                          tyotyyppi-vaihtoehdot-muut)))
 
 (def kaistajarjestelyt-vaihtoehdot-map {"ajokaistaSuljettu" "Yksi ajokaista suljettu"
                                         "ajorataSuljettu" "Yksi ajorata suljettu"
                                         "tieSuljettu" "Tie suljettu"
-                                        "muu" "Muu, mikä" })
+                                        "muu" "Muu, mikä"})
 
 (def vaikutussuunta-vaihtoehdot-map {"molemmat" "Haittaa molemmissa ajosuunnissa"
                                      "tienumeronKasvusuuntaan" "Tienumeron kasvusuuntaan"
-                                     "vastenTienumeronKasvusuuntaa" "Vasten tienumeron kasvusuuntaa" })
+                                     "vastenTienumeronKasvusuuntaa" "Vasten tienumeron kasvusuuntaa"})
 
 (defn henkilo->nimi [henkilo]
   (str (::t/etunimi henkilo) " " (::t/sukunimi henkilo)))

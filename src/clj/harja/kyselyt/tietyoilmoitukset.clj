@@ -34,7 +34,12 @@
                                  ::t/id)
     ::t/tyovaiheet (rel/has-many ::t/id
                                  ::t/ilmoitus
-                                 ::t/paatietyoilmoitus)}])
+                                 ::t/paatietyoilmoitus)}]
+  ["tietyoilmoitus_pituus" ::t/ilmoitus+pituus
+   {::t/paailmoitus (rel/has-one ::t/paatietyoilmoitus
+                                 ::t/ilmoitus+pituus
+                                 ::t/id)}]
+  )
 
 (def kaikki-ilmoituksen-kentat
   #{::t/id
@@ -92,6 +97,11 @@
   (conj kaikki-ilmoituksen-kentat
         [::t/tyovaiheet kaikki-ilmoituksen-kentat]))
 
+(def ilmoitus-pdf-kentat
+  (conj kaikki-ilmoituksen-kentat
+        ::t/pituus
+        [::t/paailmoitus (conj kaikki-ilmoituksen-kentat ::t/pituus)]))
+
 (def ilmoituslomakkeen-kentat
   #{[::t/paailmoitus #{::t/urakan-nimi ::t/urakoitsijayhteyshenkilo ::t/tilaajayhteyshenkilo
                        ::t/ilmoittaja
@@ -141,8 +151,9 @@
 (defn hae-ilmoitukset [db {:keys [alku loppu urakat organisaatio kayttaja-id sijainti]}]
   (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
          (op/and
-          (merge {::t/luotu (op/between alku loppu)
-                  ::t/paatietyoilmoitus op/null?}
+          (merge {::t/paatietyoilmoitus op/null?}
+                 (when (and alku loppu)
+                   {::t/luotu (op/between alku loppu)})
                  (when kayttaja-id
                    {::t/luoja kayttaja-id})
                  (when sijainti

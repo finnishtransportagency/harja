@@ -103,4 +103,10 @@ CREATE TABLE tietyoilmoitus (
   "urakoitsijan-nimi"                   VARCHAR(128)
   );
 
--- FIXME: tyoaika ei ole timestamp-timestamp, vaan alku- ja loppukellonaika
+-- Luodaan view, joka automaattisesti laskee TR-osoitteen pituuden mukaan
+CREATE VIEW tietyoilmoitus_pituus AS
+  SELECT tti.*, ST_Length(tr_osoitteelle_viiva3(
+                           (tti.osoite).tie,
+			   (tti.osoite).aosa, (tti.osoite).aet,
+			   (tti.osoite).losa, (tti.osoite).let)) AS pituus
+    FROM tietyoilmoitus tti;
