@@ -2,7 +2,7 @@
 CREATE TABLE yllapitokohteen_aikataulu (
   id SERIAL PRIMARY KEY,
   yllapitokohde INTEGER REFERENCES yllapitokohde(id) UNIQUE, -- Kohteella voi olla vain yksi aikataulu
-  aikataulu_kohde_alku DATE,
+  kohde_alku DATE,
   paallystys_alku TIMESTAMP,
   paallystys_loppu TIMESTAMP,
   valmis_tiemerkintaan TIMESTAMP,
