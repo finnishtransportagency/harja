@@ -249,10 +249,10 @@
 (deftest aikataulun-kirjaaminen-paallystysurakan-kohteelle-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
-        vanhat-aikataulutiedot (first (q (str "SELECT aikataulu_paallystys_alku, aikataulu_paallystys_loppu,
-                                                 valmis_tiemerkintaan, aikataulu_tiemerkinta_alku,
-                                                 aikataulu_tiemerkinta_loppu FROM yllapitokohde
-                                                 WHERE id = " kohde)))
+        vanhat-aikataulutiedot (first (q (str "SELECT paallystys_alku, paallystys_loppu,
+                                                 valmis_tiemerkintaan, tiemerkinta_alku,
+                                                 tiemerkinta_loppu FROM yllapitokohteen_aikataulu
+                                                 WHERE yllapitokohde = " kohde)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
@@ -260,10 +260,10 @@
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
     (is (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta"))
 
-    (let [aikataulutiedot (first (q (str "SELECT aikataulu_paallystys_alku, aikataulu_paallystys_loppu,
-                                                 valmis_tiemerkintaan, aikataulu_tiemerkinta_alku,
-                                                 aikataulu_tiemerkinta_loppu, aikataulu_tiemerkinta_takaraja FROM yllapitokohde
-                                                 WHERE id = " kohde)))]
+    (let [aikataulutiedot (first (q (str "SELECT paallystys_alku, paallystys_loppu,
+                                                 valmis_tiemerkintaan, tiemerkinta_alku,
+                                                 tiemerkinta_loppu, tiemerkinta_takaraja FROM yllapitokohteen_aikataulu
+                                                 WHERE yllapitokohde = " kohde)))]
       ;; Uudet päällystyksen pvm:t tallentuivat oikein
       (is (some? (get aikataulutiedot 0)))
       (is (some? (get aikataulutiedot 1)))
@@ -276,10 +276,10 @@
 (deftest aikataulun-kirjaaminen-tiemerkintaurakan-kohteelle-toimii
   (let [urakka (hae-oulun-tiemerkintaurakan-id)
         kohde (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka)
-        vanhat-aikataulutiedot (first (q (str "SELECT aikataulu_paallystys_alku, aikataulu_paallystys_loppu,
-                                                 valmis_tiemerkintaan, aikataulu_tiemerkinta_alku,
-                                                 aikataulu_tiemerkinta_loppu FROM yllapitokohde
-                                                 WHERE id = " kohde)))
+        vanhat-aikataulutiedot (first (q (str "SELECT paallystys_alku, paallystys_loppu,
+                                                 valmis_tiemerkintaan, tiemerkinta_alku,
+                                                 tiemerkinta_loppu FROM yllapitokohteen_aikataulu
+                                                 WHERE yllapitokohde = " kohde)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-tiemerkinta"]
                                          kayttaja-tiemerkinta portti
                                          (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json"))]
@@ -287,10 +287,10 @@
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
     (is (not (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta")))
 
-    (let [aikataulutiedot (first (q (str "SELECT aikataulu_paallystys_alku, aikataulu_paallystys_loppu,
-                                                 valmis_tiemerkintaan, aikataulu_tiemerkinta_alku,
-                                                 aikataulu_tiemerkinta_loppu FROM yllapitokohde
-                                                 WHERE id = " kohde)))]
+    (let [aikataulutiedot (first (q (str "SELECT paallystys_alku, paallystys_loppu,
+                                                 valmis_tiemerkintaan, tiemerkinta_alku,
+                                                 tiemerkinta_loppu FROM yllapitokohteen_aikataulu
+                                                 WHERE yllapitokohde = " kohde)))]
       ; Päällystyksen tiedot eivät tallennu, koska päivitetään tiemerkintäurakkaa
       (is (= (get aikataulutiedot 0) (get vanhat-aikataulutiedot 0)))
       (is (= (get aikataulutiedot 1) (get vanhat-aikataulutiedot 1)))
