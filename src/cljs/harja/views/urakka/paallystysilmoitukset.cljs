@@ -201,7 +201,10 @@
                                                    :vuosi vuosi}))
       {:luokka "nappi-ensisijainen"
        :id "tallenna-paallystysilmoitus"
-       :disabled (false? valmis-tallennettavaksi?)
+       :disabled (or (false? valmis-tallennettavaksi?)
+                     (not (oikeudet/voi-kirjoittaa?
+                            oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                            urakka-id @istunto/kayttaja)))
        :ikoni (ikonit/tallenna)
        :virheviesti "Tallentaminen epäonnistui"
        :kun-onnistuu tallennus-onnistui}]]))
@@ -507,9 +510,7 @@
 (defn avaa-paallystysilmoitus [paallystyskohteen-id]
   (go
     (let [urakka-id (:id @nav/valittu-urakka)
-          [sopimus-id _] @u/valittu-sopimusnumero
           vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id paallystyskohteen-id))]
-      (log "Päällystysilmoitus kohteelle " paallystyskohteen-id " => " (pr-str vastaus))
       (if (k/virhe? vastaus)
         (viesti/nayta! "Päällystysilmoituksen haku epäonnistui." :warning viesti/viestin-nayttoaika-lyhyt)
         (reset! paallystys/paallystysilmoitus-lomakedata
@@ -601,10 +602,10 @@
             paallystysilmoitukset (jarjesta-paallystysilmoitukset @paallystys/paallystysilmoitukset-suodatettu)]
         [:div
          [:h3 "Päällystysilmoitukset"]
-         (paallystysilmoitukset-taulukko paallystysilmoitukset)
+         [paallystysilmoitukset-taulukko paallystysilmoitukset]
          [:h3 "YHA-lähetykset"]
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHA:n."]
-         (yha-lahetykset-taulukko urakka-id sopimus-id urakan-vuosi paallystysilmoitukset)
+         [yha-lahetykset-taulukko urakka-id sopimus-id urakan-vuosi paallystysilmoitukset]
          [yha/yha-lahetysnappi
           oikeudet/urakat-kohdeluettelo-paallystyskohteet
           urakka-id
