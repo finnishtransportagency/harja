@@ -13,23 +13,40 @@
             [harja.palvelin.palvelut.tietyoilmoitukset.pdf :as pdf]
             [harja.domain.tietyoilmoitukset :as t]
             [specql.core :refer [fetch]]
-            [clojure.spec :as s]))
+            [clojure.spec :as s]
+            [clj-time.coerce :as c]
+            [harja.pvm :as pvm]))
 
-(defn hae-tietyoilmoitukset [db user {:keys [alkuaika
-                                             loppuaika
-                                             urakka
+(defn aikavaliehto [{:keys [vakioaikavali aikavali alkuaika loppuaika]}]
+  (when (not (:ei-rajausta? vakioaikavali))
+    (if aikavali
+      aikavali
+      (if-let [tunteja (:tunteja vakioaikavali)]
+        [(c/to-date (pvm/tuntia-sitten tunteja)) (pvm/nyt)]
+        [alkuaika loppuaika]))))
+
+(defn hae-tietyoilmoitukset [db user {:keys [urakka
                                              sijainti
                                              vain-kayttajan-luomat]
                                       :as hakuehdot}
                              max-maara]
+  (println "---> hakuehdot" hakuehdot)
   (let [kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
                            db
                            user
                            (fn [urakka-id kayttaja]
                              (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset urakka-id kayttaja))
                            nil nil nil nil #inst "1900-01-01" #inst "2100-01-01")
-        kyselyparametrit {:alku (konv/sql-timestamp alkuaika)
-                          :loppu (konv/sql-timestamp loppuaika)
+        aikavali (aikavaliehto hakuehdot)
+        alku (when (first aikavali) (konv/sql-timestamp (first aikavali)))
+        loppu (when (second aikavali) (konv/sql-timestamp (second aikavali)))
+
+
+        _ (println "---> alku " alku)
+        _ (println "---> loppu " loppu)
+
+        kyselyparametrit {:alku alku
+                          :loppu loppu
                           :urakat (if (and urakka (not (str/blank? urakka)))
                                     [(Integer/parseInt urakka)]
                                     kayttajan-urakat)
@@ -38,14 +55,13 @@
                           :maxmaara max-maara
                           :organisaatio (:id (:organisaatio user))}
         tietyoilmoitukset (q-tietyoilmoitukset/hae-ilmoitukset db kyselyparametrit)]
-    (println "--->" tietyoilmoitukset)
     tietyoilmoitukset))
 
 (defn tietyoilmoitus-pdf [db user params]
   (pdf/tietyoilmoitus-pdf
-   (first (fetch db ::t/ilmoitus+pituus
-                 q-tietyoilmoitukset/ilmoitus-pdf-kentat
-                 {::t/id (:id params)}))))
+    (first (fetch db ::t/ilmoitus+pituus
+                  q-tietyoilmoitukset/ilmoitus-pdf-kentat
+                  {::t/id (:id params)}))))
 
 (s/def ::tietyoilmoitukset (s/coll-of ::t/ilmoitus))
 
