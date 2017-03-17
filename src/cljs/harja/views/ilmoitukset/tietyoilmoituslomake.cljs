@@ -6,7 +6,7 @@
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tiedot]
             [harja.domain.tietyoilmoitukset :as t]
             [reagent.core :refer [atom] :as r]
-            [harja.ui.grid :refer [grid]]
+            [harja.ui.grid :refer [muokkaus-grid]]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.loki :refer [tarkkaile! log]]
@@ -39,6 +39,18 @@
 (defn dp [val msg]
   (log msg (with-out-str (cljs.pprint/pprint val)))
   val)
+
+(defn nopeusrajoitukset-komponentti [nopeusrajoitus-tiedot]
+  (assert (map? nopeusrajoitus-tiedot))
+  (log "nr-komponentti, tiedot" (pr-str nopeusrajoitus-tiedot))
+  [:div
+   "seppo"
+   #_(for [[i rajoitus matka] (map-indexed #([%1 (:t/rajoitus %2) (:t/matka %2)]) nopeusrajoitus-tiedot)
+         {::t/keys [rajoitus matka]} nopeusrajoitus-tiedot
+         ]
+     (do
+       (log "rajoitus" rajoitus "matka" matka)
+       ^{:key i }[:span rajoitus matka]))])
 
 (defn lomake [e! ilmoitus kayttajan-urakat]
   (fn [e! ilmoitus]
@@ -122,7 +134,7 @@
                        :pakollinen? true
                        :tyyppi :tierekisteriosoite
                        :ala-nayta-virhetta-komponentissa? true
-                       :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
+                       :validoi [[:validi-tr "Reittiä ei saada tehtyä" [::t/osoite]]]
                        :sijainti (r/wrap (:sijainti ilmoitus) #(e! (tiedot/->PaivitaSijainti %)))
                        }
                       {:otsikko "Tien nimi" :nimi ::t/tien-nimi
@@ -202,12 +214,11 @@
                        :muu-kentta {:otsikko "" :nimi :jotain :tyyppi :string :placeholder "(muu kaistajärjestely?)"}}
 
 
-                      {:otsikko "Nopeusrajoitus 50 km/h, metriä" ;; -> pituus-pituus-kenttä
-                       :tyyppi :string
-                       :nimi :nopeusrajoitukset}
-                      {:otsikko "Muu rajoitus, ?? km/h, metriä" ;; -> km/h-kenttä, pituus-kenttä
-                       :tyyppi :string
-                       :nimi :nopeusrajoitukset-b}
+                      #_{:otsikko "Nopeusrajoitus 50 km/h, metriä"
+                       :tyyppi :komponentti
+                       :komponentti #(-> % :data ::t/nopeusrajoitukset nopeusrajoitukset-komponentti )
+                       :nimi :nopeusrajoitukset
+                       }
                       {:otsikko "Kulkurajoituksia"
                        :tyyppi :checkbox-group
                        :nimi :kulkurajoituksia
