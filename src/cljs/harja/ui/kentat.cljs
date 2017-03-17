@@ -758,7 +758,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
   [ajax-loader (or viesti "Lataa") opts])
 
 (defmethod tee-kentta :tyhja [{:keys [viesti opts]}]
-  [:spa])
+  [:span.tyhja])
 
 (defn hae-tr-geometria [osoite hakufn tr-osoite-ch virheet]
   (go
