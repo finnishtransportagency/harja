@@ -187,12 +187,9 @@
             urakan-geometria-poiston-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))]
 
         (is (nil? poistettu-kohde) "Poistettua kohdetta ei ole enää vastauksessa")
-        (is (not= urakan-geometria-lisayksen-jalkeen urakan-geometria-poiston-jalkeen "Geometria päivittyi")))
+        (is (not= urakan-geometria-lisayksen-jalkeen urakan-geometria-poiston-jalkeen "Geometria päivittyi"))))))
 
-      ;; Siivoa sotkut
-      (u (str "DELETE FROM yllapitokohde WHERE nimi = 'Testiramppi4564ddf';")))))
-
-(deftest tallenna-paallystyskohde-kantaan-vuodelle-2015
+(deftest tallenna-uusi-paallystyskohde-kantaan-vuodelle-2015
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)]
 
@@ -206,8 +203,7 @@
                                       FROM yllapitokohde
                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " (hae-muhoksen-paallystysurakan-id) ")
                                       AND vuodet @> ARRAY[2015]::int[]")))]
-      (is (= kohteet-kannassa 1) "Kohde tallentui oikein")
-      (u (str "DELETE FROM yllapitokohde WHERE nimi = 'Testiramppi4564ddf';")))))
+      (is (= kohteet-kannassa 1) "Kohde tallentui oikein"))))
 
 (deftest ala-poista-paallystyskohdetta-jolla-ilmoitus
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
@@ -285,8 +281,7 @@
                     :tr-numero 20
                     :toimenpide "Ei tehdä mitään"}
                    true))
-        (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
-        (u (str "DELETE FROM yllapitokohdeosa WHERE nimi = 'Testiosa123456';"))))))
+        (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))))))
 
 (deftest paivita-paallystysurakan-yllapitokohteen-aikataulu
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
