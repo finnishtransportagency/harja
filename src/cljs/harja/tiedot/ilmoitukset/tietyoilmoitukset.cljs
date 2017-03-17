@@ -65,6 +65,7 @@
 (defrecord HaeKayttajanUrakat [hallintayksikot])
 (defrecord KayttajanUrakatHaettu [urakat])
 (defrecord PaivitaSijainti [sijainti])
+(defrecord PaivitaNopeusrajoituksetGrid [nopeusrajoitukset])
 
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
   (when haku
@@ -132,7 +133,12 @@
 
   PaivitaSijainti
   (process-event [{sijainti :sijainti} app]
-    (assoc-in app [:valinnat :sijainti] sijainti)))
+    (assoc-in app [:valinnat :sijainti] sijainti))
+
+  PaivitaNopeusrajoituksetGrid
+  (process-event [{nopeusrajoitukset :nopeusrajoitukset} app]
+    (log "PaivitaNopeusrajoituksetGrid:" (pr-str nopeusrajoitukset))
+    (assoc-in app [:valittu-ilmoitus :nopeusrajoitukset] nopeusrajoitukset)))
 
 
 (def tyotyyppi-vaihtoehdot-tienrakennus
