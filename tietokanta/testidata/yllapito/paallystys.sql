@@ -410,6 +410,7 @@ VALUES
                                                          'paallyste' :: yllapitokohdetyyppi,
                                                          'paallystys' ::yllapitokohdetyotyyppi,
                                                          13, 239, 0, 239, 4894);
+INSERT INTO yllapitokohteen_aikataulu(yllapitokohde) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Vt13 Hartikkala - Pelkola'));
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti)
 VALUES ((SELECT id
          FROM yllapitokohde
@@ -451,6 +452,7 @@ VALUES
                                                          'Vt 13 Kähärilä - Liikka', 'paallyste' :: yllapitokohdetyyppi,
                                                          'paallystys' ::yllapitokohdetyotyyppi,
                                                          13, 241, 0, 241, 4723);
+INSERT INTO yllapitokohteen_aikataulu(yllapitokohde) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Vt 13 Kähärilä - Liikka'));
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti)
 VALUES ((SELECT id
          FROM yllapitokohde
@@ -472,6 +474,8 @@ INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi, yllapitokohdetyyp
                                                          'paallyste' :: yllapitokohdetyyppi,
                                                          'paallystys' ::yllapitokohdetyotyyppi,
                                                          387, 1, 2413, 2, 1988);
+INSERT INTO yllapitokohteen_aikataulu(yllapitokohde) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Mt 387 Mattila - Hanhi-Kemppi'));
+
 INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi, yllapitokohdetyyppi, yllapitokohdetyotyyppi,
                            tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys)
 VALUES
@@ -487,6 +491,8 @@ VALUES
                                                          'Mt 408 Pallo - Kivisalmi', 'paallyste' :: yllapitokohdetyyppi,
                                                          'paallystys' ::yllapitokohdetyotyyppi,
                                                          408, 1, 1989, 2, 127);
+INSERT INTO yllapitokohteen_aikataulu(yllapitokohde) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Mt 408 Pallo - Kivisalmi'));
+
 INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi, yllapitokohdetyyppi, yllapitokohdetyotyyppi,
                            tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys)
 VALUES
@@ -503,6 +509,8 @@ VALUES
                                                          'paallyste' :: yllapitokohdetyyppi,
                                                          'paallystys' ::yllapitokohdetyotyyppi,
                                                          62, 24, 0, 24, 4240);
+INSERT INTO yllapitokohteen_aikataulu(yllapitokohde) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Kt 62 Sotkulampi - Rajapatsas'));
+
 INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi, yllapitokohdetyyppi, yllapitokohdetyotyyppi,
                            tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys)
 VALUES
@@ -519,6 +527,8 @@ VALUES
                                                          'paallyste' :: yllapitokohdetyyppi,
                                                          'paallystys' ::yllapitokohdetyotyyppi,
                                                          62, 19, 7800, 22, 2800);
+INSERT INTO yllapitokohteen_aikataulu(yllapitokohde) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Kt 62 Haloniemi - Syyspohja'));
+
 INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi, yllapitokohdetyyppi, yllapitokohdetyotyyppi,
                            tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys)
 VALUES
@@ -535,3 +545,4 @@ VALUES
                                                          'paallyste' :: yllapitokohdetyyppi,
                                                          'paallystys' ::yllapitokohdetyotyyppi,
                                                          387, 3, 5955, 7, 55);
+INSERT INTO yllapitokohteen_aikataulu(yllapitokohde) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Tienpäällystysurakka KAS ELY 1 2015'));
