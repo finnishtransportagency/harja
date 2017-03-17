@@ -284,8 +284,8 @@ FROM yllapitokohde ypk
   LEFT JOIN yhteyshenkilo yh ON yh.id = yh_u.yhteyshenkilo
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paallystys'
-      AND (ypk.aikataulu_kohde_valmis IS NULL OR
-           (now() - ypk.aikataulu_kohde_valmis) < INTERVAL '7 days');
+      AND (ypka.kohde_valmis IS NULL OR
+           (now() - ypka.kohde_valmis) < INTERVAL '7 days');
 
 -- name: hae-paallystykset-historiakuvaan
 -- Hakee historiakuvaan kaikki päällystyskohteet, jotka ovat olleet aktiivisia
@@ -343,8 +343,8 @@ FROM yllapitokohde ypk
   LEFT JOIN yhteyshenkilo yh ON yh.id = yh_u.yhteyshenkilo
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paallystys'
-      AND (ypk.aikataulu_kohde_alku < :loppu
-      AND (ypk.aikataulu_kohde_valmis IS NULL OR ypk.aikataulu_kohde_valmis > :alku));
+      AND (ypka.kohde_alku < :loppu
+      AND (ypka.kohde_valmis IS NULL OR ypka.kohde_valmis > :alku));
 
 -- name: hae-paikkaukset-nykytilanteeseen
 -- Hakee nykytilanteeseen kaikki paikkauskohteet, jotka eivät ole valmiita tai ovat
