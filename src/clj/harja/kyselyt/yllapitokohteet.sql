@@ -622,7 +622,7 @@ SELECT
    WHERE nimi = 'tieverkko') AS karttapvm
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
-WHERE id = :id;
+WHERE ypk.id = :id;
 
 -- name: hae-yllapitokohteen-tiemerkintaaikataulu
 SELECT
