@@ -568,7 +568,7 @@ SET
 WHERE yllapitokohde = :id
       AND (SELECT suorittava_tiemerkintaurakka
            FROM yllapitokohde
-           WHERE id = :id) = :urakka;
+           WHERE id = :id) = :suorittava_tiemerkintaurakka;
 
 -- name: hae-yllapitokohteen-urakka-id
 SELECT urakka AS id
