@@ -422,7 +422,7 @@ SELECT
   tr_kaista                    AS "tr-kaista",
   yllapitoluokka,
   suorittava_tiemerkintaurakka AS "suorittava-tiemerkintaurakka"
-FROM yllapitokohde
+FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE
   urakka = :urakka
