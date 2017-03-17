@@ -758,7 +758,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
   [ajax-loader (or viesti "Lataa") opts])
 
 (defmethod tee-kentta :tyhja [{:keys [viesti opts]}]
-  [:span.tyhja])
+  [:spa])
 
 (defn hae-tr-geometria [osoite hakufn tr-osoite-ch virheet]
   (go
@@ -929,8 +929,6 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
     (komp/luo
       (komp/vanhat-ja-uudet-parametrit
         (fn [[_ vanha-osoite-atom :as vanhat] [_ uusi-osoite-atom :as uudet]]
-          (log (pr-str vanhat))
-          (log (pr-str uudet))
           (when (not= @vanha-osoite-atom @uusi-osoite-atom)
             (tee-tr-haku @uusi-osoite-atom))))
      (komp/kun-muuttuu
