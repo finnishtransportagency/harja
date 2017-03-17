@@ -18,8 +18,23 @@
             [harja.domain.tietyoilmoitukset :as t]
             [clojure.string :as str]
             [harja.ui.napit :as napit]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
-            [harja.domain.tierekisteri :as tr]))
+            [harja.domain.tierekisteri :as tr]
+            [harja.transit :as transit]
+            [harja.asiakas.kommunikaatio :as k]))
+
+(defn vie-pdf
+  "Nappi, joka avaa PDF-latauksen uuteen välilehteen."
+  [id]
+  [:form {:target "_blank"
+          :method "POST"
+          :action (k/pdf-url :tietyoilmoitus)}
+   [:input {:type "hidden" :name "parametrit"
+            :value (transit/clj->transit {:id id})}]
+   [:button.nappi-ensisijainen.pull-right
+    {:type "submit" :on-click #(.stopPropagation %)}
+    (ikonit/print) " PDF"]])
 
 (defn tyotyypit [tyypit]
   (str/join ", " (map (fn [t]
@@ -103,7 +118,13 @@
     :leveys 4}
    {:otsikko "Ilmoittaja" :nimi :ilmoittaja
     :hae (comp henkilo ::t/ilmoittaja)
-    :leveys 7}])
+    :leveys 7}
+   {:otsikko " "
+    :leveys 2
+    :nimi :vie-pdf
+    :tyyppi :komponentti
+    :komponentti (fn [{id ::t/id}]
+                   [vie-pdf id])}])
 
 (defn vaikutukset-liikenteelle []
   (lomake/ryhma {:otsikko "Vaikutukset liikenteelle"
@@ -179,15 +200,16 @@
      (vaikutukset-liikenteelle)]
     tietyoilmoitus]
    [napit/muokkaa "Muokkaa" #(e! (tiedot/->ValitseIlmoitus tietyoilmoitus)) {}]
-   #_[grid
-      {:otsikko "Työvaiheet"
-       :tyhja "Ei löytyneitä tietoja"
-       :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa? #(e! (tiedot/->ValitseIlmoitus %)))
-       :piilota-toiminnot true
-       :max-rivimaara 500
-       :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
-      (ilmoitustaulukon-kentat)
-      (:tyovaiheet tietyoilmoitus)]])
+   [grid
+    {:otsikko "Työvaiheet"
+     :tunniste ::t/id
+     :tyhja "Ei löytyneitä tietoja"
+     :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa? #(e! (tiedot/->ValitseIlmoitus %)))
+     :piilota-toiminnot true
+     :max-rivimaara 500
+     :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
+    (ilmoitustaulukon-kentat)
+    (::t/tyovaiheet tietyoilmoitus)]])
 
 (defn ilmoitukset [e! app haetut-ilmoitukset ilmoituksen-haku-kaynnissa?]
   [:div
@@ -207,8 +229,8 @@
     (into (ilmoitustaulukon-kentat)
           [{:otsikko "Vaiheita"
             :nimi :vaiheita
-            :hae #(count (:tyovaiheet %))
-            :leveys 2}])
+            :hae #(count (::t/tyovaiheet %))
+            :leveys 1}])
     haetut-ilmoitukset]])
 
 (defn hakulomake

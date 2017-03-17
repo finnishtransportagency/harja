@@ -16,22 +16,11 @@
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.views.ilmoitukset.tietyoilmoitushakulomake :as tietyoilmoitushakulomake]
             [harja.views.ilmoitukset.tietyoilmoituslomake :as tietyoilmoituslomake]
-            [harja.ui.napit :as napit]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.ikonit :as ikonit]
-            [harja.transit :as transit])
+            [harja.ui.napit :as napit])
   (:require-macros
    [cljs.core.async.macros :refer [go]]))
 
-(defn vie-pdf [id]
-  [:form {:target "_blank"
-          :method "POST"
-          :action (k/pdf-url :tietyoilmoitus)}
-   [:input {:type "hidden" :name "parametrit"
-            :value (transit/clj->transit {:id id})}]
-   [:button.nappi-ensisijainen.pull-right
-    {:type "submit"}
-    (ikonit/print) " Tallenna PDF"]])
+
 
 (defn ilmoitukset* [e! ilmoitukset]
   (e! (tiedot/->HaeKayttajanUrakat @hallintayksikot-tiedot/hallintayksikot))
@@ -54,7 +43,6 @@
       [:span
        [ui-debug/debug @tiedot/tietyoilmoitukset]
        [kartta/kartan-paikka]
-       [vie-pdf 1]
        (if valittu-ilmoitus
          [tietyoilmoituslomake/lomake e! valittu-ilmoitus kayttajan-urakat]
          [tietyoilmoitushakulomake/hakulomake e! app])])))
