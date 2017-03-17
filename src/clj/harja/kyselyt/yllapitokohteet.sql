@@ -398,7 +398,7 @@ WHERE id = :id
 -- name: hae-paallystysurakan-aikataulu
 -- Hakee päällystysurakan kohteiden aikataulutiedot
 SELECT
-  id,
+  ypk.id,
   kohdenumero,
   nimi,
   urakka,
@@ -435,7 +435,7 @@ ORDER BY ypka.kohde_alku;
 -- name: hae-tiemerkintaurakan-aikataulu
 -- Hakee tiemerkintäurakan kohteiden aikataulutiedot
 SELECT
-  id,
+  ypk.id,
   kohdenumero,
   nimi,
   urakka,
@@ -580,7 +580,7 @@ WHERE id = :id;
 
 -- name: hae-yllapitokohde
 SELECT
-  id,
+  ypk.id,
   sopimus,
   kohdenumero,
   nimi,
