@@ -200,15 +200,16 @@
      (vaikutukset-liikenteelle)]
     tietyoilmoitus]
    [napit/muokkaa "Muokkaa" #(e! (tiedot/->ValitseIlmoitus tietyoilmoitus)) {}]
-   #_[grid
-      {:otsikko "Työvaiheet"
-       :tyhja "Ei löytyneitä tietoja"
-       :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa? #(e! (tiedot/->ValitseIlmoitus %)))
-       :piilota-toiminnot true
-       :max-rivimaara 500
-       :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
-      (ilmoitustaulukon-kentat)
-      (:tyovaiheet tietyoilmoitus)]])
+   [grid
+    {:otsikko "Työvaiheet"
+     :tunniste ::t/id
+     :tyhja "Ei löytyneitä tietoja"
+     :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa? #(e! (tiedot/->ValitseIlmoitus %)))
+     :piilota-toiminnot true
+     :max-rivimaara 500
+     :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
+    (ilmoitustaulukon-kentat)
+    (::t/tyovaiheet tietyoilmoitus)]])
 
 (defn ilmoitukset [e! app haetut-ilmoitukset ilmoituksen-haku-kaynnissa?]
   [:div
