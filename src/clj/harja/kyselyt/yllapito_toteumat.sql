@@ -134,3 +134,8 @@ WHERE poistettu IS NOT TRUE AND
       luoja = :luoja_id AND
       (:urakka_id :: INT IS NULL OR urakka = :urakka_id) AND
       (:yllapitokohde_id :: INT IS NULL OR yllapitokohde = :yllapitokohde_id);
+
+-- name: muun-toteuman-urakka
+SELECT t.urakka
+FROM yllapito_muu_toteuma t
+WHERE t.id = :toteuma;
