@@ -523,7 +523,7 @@ SET
 WHERE yllapitokohde = :id
       AND (SELECT suorittava_tiemerkintaurakka
            FROM yllapitokohde
-           WHERE id = :id) = :urakka;
+           WHERE id = :id) = :suorittava_tiemerkintaurakka;
 
 -- name: merkitse-kohde-valmiiksi-tiemerkintaan<!
 UPDATE yllapitokohteen_aikataulu
