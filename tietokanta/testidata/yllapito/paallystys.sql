@@ -104,7 +104,7 @@ VALUES
                                         '2017-05-21 06:00:00+02', NULL, NULL, NULL,
                                         NULL, (SELECT id
                                                FROM kayttaja
-                                               WHERE kayttajanimi = 'jvh'), NOW(), NULL, NULL, ),
+                                               WHERE kayttajanimi = 'jvh'), NOW(), NULL, NULL),
   ((SELECT id
     FROM yllapitokohde
     WHERE nimi = 'Oulaisten ohitusramppi'), '2017-05-26 06:00:00+02',
