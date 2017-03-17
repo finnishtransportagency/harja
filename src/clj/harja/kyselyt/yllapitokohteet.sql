@@ -203,7 +203,9 @@ WHERE
   AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
                                      OR vuodet @> ARRAY [:vuosi] :: INT []))
   AND ypk.poistettu IS NOT TRUE
-GROUP BY ypk.id, pi.id, pai.id, o.nimi, u.nimi, u.id;
+GROUP BY ypk.id, pi.id, pai.id, o.nimi, u.nimi, u.id,
+  ypka.kohde_alku, ypka.paallystys_alku, ypka.paallystys_loppu, ypka.tiemerkinta_alku, ypka.tiemerkinta_loppu,
+  ypka.kohde_valmis;
 
 -- name: hae-tiemerkintaurakalle-osoitetut-yllapitokohteet
 -- Hakee urakan sopimuksen kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
