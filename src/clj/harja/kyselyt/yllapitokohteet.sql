@@ -351,7 +351,7 @@ VALUES (:yllapitokohde,
         :raekoko,
         :tyomenetelma,
         :massamaara,
-        :ulkoinen_id,
+        :ulkoinen-id,
         (SELECT tierekisteriosoitteelle_viiva AS geom
          FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
                                             CAST(:tr_alkuosa AS INTEGER),
