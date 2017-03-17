@@ -55,7 +55,7 @@ SELECT
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohdeosa ypko ON ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id AND pi.poistettu IS NOT TRUE
-  LEFT JOIN yllapitokohdeen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE
   (ypk.urakka = :urakka OR ypk.suorittava_tiemerkintaurakka = :urakka)
   AND ypk.poistettu IS NOT TRUE;
@@ -193,7 +193,7 @@ FROM yllapitokohde ypk
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN laatupoikkeama lp ON lp.yllapitokohde = ypk.id
   LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id
-  LEFT JOIN yllapitokohdeen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija
                                FROM urakka
                                WHERE id = ypk.urakka) = o.id
@@ -423,7 +423,7 @@ SELECT
   yllapitoluokka,
   suorittava_tiemerkintaurakka AS "suorittava-tiemerkintaurakka"
 FROM yllapitokohde
-  LEFT JOIN yllapitokohdeen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
@@ -458,7 +458,7 @@ SELECT
   tr_kaista                 AS "tr-kaista",
   yllapitoluokka
 FROM yllapitokohde
-  LEFT JOIN yllapitokohdeen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
   AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
@@ -553,7 +553,7 @@ SELECT
 FROM yllapitokohde ypk
   JOIN urakka pu ON ypk.urakka = pu.id
   JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
-  LEFT JOIN yllapitokohdeen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE ypk.id IN (:idt);
 
 -- name: tallenna-tiemerkintakohteen-aikataulu!
@@ -620,7 +620,7 @@ SELECT
    FROM geometriapaivitys
    WHERE nimi = 'tieverkko') AS karttapvm
 FROM yllapitokohde
-  LEFT JOIN yllapitokohdeen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE id = :id;
 
 -- name: hae-yllapitokohteen-tiemerkintaaikataulu

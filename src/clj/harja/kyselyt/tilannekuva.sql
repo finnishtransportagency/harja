@@ -278,7 +278,7 @@ FROM yllapitokohde ypk
   LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
-  LEFT JOIN yllapitokohdeen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
   LEFT JOIN yhteyshenkilo_urakka yh_u ON yh_u.urakka = ypk.urakka
   LEFT JOIN yhteyshenkilo yh ON yh.id = yh_u.yhteyshenkilo
@@ -337,7 +337,7 @@ FROM yllapitokohde ypk
   LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
-  LEFT JOIN yllapitokohdeen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
   LEFT JOIN yhteyshenkilo_urakka yh_u ON yh_u.urakka = ypk.urakka
   LEFT JOIN yhteyshenkilo yh ON yh.id = yh_u.yhteyshenkilo
@@ -396,7 +396,7 @@ FROM yllapitokohde ypk
   LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
-  LEFT JOIN yllapitokohdeen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
   LEFT JOIN yhteyshenkilo_urakka yh_u ON yh_u.urakka = ypk.urakka
   LEFT JOIN yhteyshenkilo yh ON yh.id = yh_u.yhteyshenkilo
@@ -455,7 +455,7 @@ FROM yllapitokohde ypk
   LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
-  LEFT JOIN yllapitokohdeen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
   LEFT JOIN yhteyshenkilo_urakka yh_u ON yh_u.urakka = ypk.urakka
   LEFT JOIN yhteyshenkilo yh ON yh.id = yh_u.yhteyshenkilo
