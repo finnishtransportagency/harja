@@ -34,7 +34,12 @@
                                  ::t/id)
     ::t/tyovaiheet (rel/has-many ::t/id
                                  ::t/ilmoitus
-                                 ::t/paatietyoilmoitus)}])
+                                 ::t/paatietyoilmoitus)}]
+  ["tietyoilmoitus_pituus" ::t/ilmoitus+pituus
+   {::t/paailmoitus (rel/has-one ::t/paatietyoilmoitus
+                                 ::t/ilmoitus+pituus
+                                 ::t/id)}]
+  )
 
 (def kaikki-ilmoituksen-kentat
   #{::t/id
@@ -91,6 +96,11 @@
 (def kaikki-ilmoituksen-kentat-ja-tyovaiheet
   (conj kaikki-ilmoituksen-kentat
         [::t/tyovaiheet kaikki-ilmoituksen-kentat]))
+
+(def ilmoitus-pdf-kentat
+  (conj kaikki-ilmoituksen-kentat
+        ::t/pituus
+        [::t/paailmoitus (conj kaikki-ilmoituksen-kentat ::t/pituus)]))
 
 (def ilmoituslomakkeen-kentat
   #{[::t/paailmoitus #{::t/urakan-nimi ::t/urakoitsijayhteyshenkilo ::t/tilaajayhteyshenkilo

@@ -4,7 +4,8 @@
   (:require [harja.tyokalut.xsl-fo :as xsl-fo]
             [harja.pvm :as pvm]
             [clojure.string :as str]
-            [harja.domain.tietyoilmoitukset :as t]))
+            [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.tierekisteri :as tr]))
 
 
 (def ^:private border "solid 0.1mm black")
@@ -97,34 +98,52 @@
        (when-let [puh (::t/matkapuhelin hlo)]
          (str " (puh. " puh ")"))))
 
+(defn- pituus [ilm]
+  (some->> ilm ::t/pituus (format "%.1f m")))
+
 (defn- kohteen-tiedot [ilm]
-  (tietotaulukko
-   [(tieto "Projekti / Urakka" (::t/urakka_nimi ilm))]
+  (println "PÄÄILMOITUS: " (::t/paailmoitus ilm))
+  (let [ilm (or (::t/paailmoitus ilm) ilm)
+        osoite (::t/osoite ilm)]
+    (tietotaulukko
+     [(tieto "Projekti / Urakka" (::t/urakka_nimi ilm))]
 
-   [(tieto "Urakoitsijan yhteyshenkilö ja puh."
-           (yhteyshenkilo (::t/urakoitsijayhteyshenkilo ilm)))]
+     [(tieto "Urakoitsijan yhteyshenkilö ja puh."
+             (yhteyshenkilo (::t/urakoitsijayhteyshenkilo ilm)))]
 
-   [(tieto  "Tilaajan yhteyshenkilö ja puh."
-            (yhteyshenkilo (::t/tilaajayhteyshenkilo ilm)))]
+     [(tieto  "Tilaajan yhteyshenkilö ja puh."
+              (yhteyshenkilo (::t/tilaajayhteyshenkilo ilm)))]
 
-   [(tieto "Tien numero ja nimi"
-           (str (::t/tr_numero ilm) " " (::t/tien_nimi ilm)))
-    (tieto "Kunnat" (::t/kunnat ilm))]
+     [(tieto "Tien numero ja nimi"
+             (str (::tr/tie osoite) " " (::t/tien-nimi ilm)))
+      (tieto "Kunnat" (::t/kunnat ilm))]
 
-   [(tieto "Työn alkupiste (osa/etäisyys) ja kuvaus"
-           (str (::t/tr_alkuosa ilm) " / " (::t/tr_alkuetaisyys ilm) " " (::t/alkusijainnin_kuvaus ilm)))
-    (tieto "Työn alku- ja loppupvm"
-           (str (pvm/pvm-opt (::t/alku ilm)) " \u2013 " (pvm/pvm-opt (::t/loppu ilm))))]
+     [(tieto "Työn alkupiste (osa/etäisyys) ja kuvaus"
+             (str (::tr/aosa osoite) " / " (::tr/aet osoite) " " (::t/alkusijainnin-kuvaus ilm)))
+      (tieto "Työn alku- ja loppupvm"
+             (str (pvm/pvm-opt (::t/alku ilm)) " \u2013 " (pvm/pvm-opt (::t/loppu ilm))))]
 
-   [(tieto "Työn loppupiste (osa/etäisyys) ja kuvaus"
-           (str (::t/tr_loppuosa ilm) " / " (::t/tr_loppuetaisyys ilm) " " (::t/loppusijainnin_kuvaus ilm)))
-    (tieto "Työn pituus"
-           "FIXME: laske pituus metreinä")]
-   ))
+     [(tieto "Työn loppupiste (osa/etäisyys) ja kuvaus"
+             (str (::tr/losa osoite) " / " (::tr/let osoite) " " (::t/loppusijainnin-kuvaus ilm)))
+      (tieto "Työn pituus"
+             (pituus ilm))]
+     )))
 
 
-(defn- tyovaihe [tietyoilmoitus]
-  "FOO")
+(defn- tyovaihe [{osoite ::t/osoite paatietyoilmoitus ::t/paatietyoilmoitus :as ilm}]
+  (if (nil? paatietyoilmoitus)
+    "Ensimmäinen ilmoitus työstä"
+
+    (tietotaulukko
+     [(tieto "Työvaiheen alkupiste (osa/etäisyys) ja kuvaus"
+             (str (::tr/aosa osoite) " / " (::tr/aet osoite) " " (::t/alkusijainnin-kuvaus ilm)))
+      (tieto "Työvaiheen alku- ja loppupvm"
+             (str (pvm/pvm-opt (::t/alku ilm)) " \u2013 " (pvm/pvm-opt (::t/loppu ilm))))]
+
+     [(tieto "Työvaiheen loppupiste (osa/etäisyys) ja kuvaus"
+             (str (::tr/losa osoite) " / " (::tr/let osoite) " " (::t/loppusijainnin-kuvaus ilm)))
+      (tieto "Työvaiheen pituus"
+             (pituus ilm))])))
 
 (defn- tyoaika [{tyoajat ::t/tyoajat}]
   (apply tietotaulukko

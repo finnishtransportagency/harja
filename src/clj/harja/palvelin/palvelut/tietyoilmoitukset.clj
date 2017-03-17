@@ -42,10 +42,10 @@
     tietyoilmoitukset))
 
 (defn tietyoilmoitus-pdf [db user params]
-  (println "MUODOSTA PDF: " params)
   (pdf/tietyoilmoitus-pdf
-    (first (fetch db ::t/ilmoitus q-tietyoilmoitukset/kaikki-ilmoituksen-kentat
-                  {::t/id (:id params)}))))
+   (first (fetch db ::t/ilmoitus+pituus
+                 q-tietyoilmoitukset/ilmoitus-pdf-kentat
+                 {::t/id (:id params)}))))
 
 (s/def ::tietyoilmoitukset (s/coll-of ::t/ilmoitus))
 
