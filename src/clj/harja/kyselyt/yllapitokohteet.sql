@@ -351,7 +351,7 @@ VALUES (:yllapitokohde,
         :raekoko,
         :tyomenetelma,
         :massamaara,
-        :ulkoinen - id,
+        :ulkoinen_id,
         (SELECT tierekisteriosoitteelle_viiva AS geom
          FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
                                             CAST(:tr_alkuosa AS INTEGER),
@@ -699,4 +699,4 @@ WHERE id = :kohdeid;
 SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka :: INTEGER);
 
 -- name: luo-yllapitokohteelle-tyhja-aikataulu<!
-INSERT INTO yllapitokohteen_aikataulu(yllapitokohde) VALUES (:yllapitokohde);
+INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES (:yllapitokohde);
