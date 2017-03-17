@@ -150,7 +150,11 @@
            :aikataulu_paallystys_loppu (:aikataulu-paallystys-loppu kohde)
            :aikataulu_kohde_valmis (:aikataulu-kohde-valmis kohde)
            :aikataulu_muokkaaja (:id user)
-           :suorittava_tiemerkintaurakka
+           :id (:id kohde)
+           :urakka paallystysurakka-id})
+        (q/tallenna-yllapitokohteen-suorittava-tiemerkintaurakka
+          db
+          {:suorittava_tiemerkintaurakka
            (if (= kayttajan-valitsema-suorittava-tiemerkintaurakka-id
                   kohteen-nykyinen-suorittava-tiemerkintaurakka-id)
              kohteen-nykyinen-suorittava-tiemerkintaurakka-id
