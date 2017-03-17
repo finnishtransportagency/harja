@@ -266,7 +266,22 @@
                               (string/join " & "))))]
     {:tyyppi :tarkastus
      :jarjesta-fn :aika
-     :otsikko (str (pvm/pvm-aika (:aika tarkastus)) " - " (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)))
+     :otsikko (let [tila (cond
+                           (not (:ok? tarkastus))
+                           "laadunalitus"
+
+                           (tarkastukset/luminen-vakiohavainto? tarkastus)
+                           "lunta"
+
+                           (tarkastukset/liukas-vakiohavainto? tarkastus)
+                           "liukasta"
+
+                           (tarkastukset/tarkastus-sisaltaa-havaintoja? tarkastus)
+                           "havaintoja"
+
+                           :else nil)
+                    tila-str (when tila (str ", " tila))]
+                (str (pvm/pvm-aika (:aika tarkastus)) " - " (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) tila-str))
      :tiedot [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
               {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite :nimi :tierekisteriosoite}
               {:otsikko "Tarkastaja" :nimi :tarkastaja}

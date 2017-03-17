@@ -255,12 +255,14 @@
                                 ikoni viiva))))
 
 (def tarkastus-selitteet
-  #{{:teksti "Tarkastus OK" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true nil nil))}
-    {:teksti "Tarkastus OK, urakoitsija " :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true nil :urakoitsija))}
-    {:teksti "Tarkastus havainnolla" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true "Vesakko raivaamatta" nil))}
-    {:teksti "Tie luminen tai liukas" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti true "Lumista" nil))}
-    {:teksti "Laadun\u00ADalitus" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti false nil nil))}
-    {:teksti "Laadun\u00ADalitus, urakoitsija" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti false nil :urakoitsija))}})
+  #{{:teksti "Tarkastus OK" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? true}))}
+    {:teksti "Tarkastus OK, urakoitsija " :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? true :tekija :urakoitsija}))}
+    {:teksti "Tarkastus havainnolla" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? true
+                                                                                                                :havainnot "Vesakko raivaamatta"}))}
+    {:teksti "Tie luminen tai liukas" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? true
+                                                                                                                 :havainnot "Vesakko raivaamatta"}))}
+    {:teksti "Laadun\u00ADalitus" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? false}))}
+    {:teksti "Laadun\u00ADalitus, urakoitsija" :vari (viivojen-varit-leveimmasta-kapeimpaan (ulkoasu/tarkastuksen-reitti {:ok? false :tekija :urakoitsija}))}})
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu?]
   (let [ikoni (ulkoasu/tarkastuksen-ikoni
@@ -269,10 +271,7 @@
                (:talvihoitomittaus tarkastus) (:soratiemittaus tarkastus)
                (reitillinen-asia? tarkastus)
                (:tekija tarkastus))
-        viiva (ulkoasu/tarkastuksen-reitti (:ok? tarkastus)
-                                           (:havainnot tarkastus) (:vakiohavainnot tarkastus)
-                                           (:talvihoitomittaus tarkastus) (:soratiemittaus tarkastus)
-                                           (:tekija tarkastus))
+        viiva (ulkoasu/tarkastuksen-reitti tarkastus)
         selite-teksti {:teksti (otsikko-tekijalla "Tarkastus" tarkastus)}
         selite (if ikoni
                  (assoc selite-teksti :img ikoni)

@@ -11,7 +11,7 @@
 
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [harja.domain.laadunseuranta :as laadunseuranta]
+            [harja.domain.laadunseuranta.tarkastukset :as laadunseuranta]
 
             [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]

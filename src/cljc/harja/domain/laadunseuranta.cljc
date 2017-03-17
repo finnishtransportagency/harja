@@ -91,11 +91,6 @@
    (s/optional-key :talvihoitomittaus) Talvihoitomittaus
    (s/optional-key :soratiemittaus)    Soratiemittaus})
 
-(defn tarkastus-tiedolla-onko-ok
-  "Tämä kertoo onko laadunalitus"
-  [{laadunalitus :laadunalitus :as tarkastus}]
-  (assoc tarkastus :ok? (not laadunalitus)))
-
 (defn validoi-laatupoikkeama [data]
   (skeema/tarkista Laatupoikkeama data))
 
@@ -103,16 +98,3 @@
   (let [virheet (validoi-laatupoikkeama data)]
     #?(:cljs (log "laatupoikkeama virheet: " (pr-str virheet)))
     (nil? virheet)))
-
-(defn tarkastuksen-havainto-ok? [data]
-  (boolean (#{"ok" "OK" "Ok" "oK"} (:havainnot data))))
-
-(def talvihoitomittauksen-lomakekentat
-  [[:lumimaara] [:tasaisuus] [:kitka] [:lampotila :tie] [:lampotila :ilma]])
-
-(def talvihoitomittauksen-kentat
-  [[:tarkastus] [:lumimaara] [:hoitoluokka] [:tasaisuus] [:kitka] [:ajosuunta]
-   [:lampotila :tie] [:lampotila :ilma]])
-
-(def soratiemittauksen-kentat
-  [[:tarkastus] [:tasaisuus] [:polyavyys] [:kiinteys] [:sivukaltevuus] [:hoitoluokka]])

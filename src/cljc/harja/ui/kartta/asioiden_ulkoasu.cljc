@@ -1,7 +1,7 @@
 (ns harja.ui.kartta.asioiden-ulkoasu
   (:require [harja.ui.kartta.varit.puhtaat :as puhtaat]
             [harja.ui.kartta.ikonit :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni]]
-            [harja.domain.laadunseuranta :as domain-laadunseuranta]
+            [harja.domain.laadunseuranta.tarkastukset :as domain-tarkastukset]
             [clojure.string :as str]))
 
 (def +valitun-skaala+ 1.5)
@@ -290,40 +290,32 @@
                    (:ok-tarkastus ikonien-varit))))) ;; Ei näytetä pistemäisiä ok-tarkastuksia jos ei ole valittu
 
 (defn tarkastuksen-reitti
-  ([ok? havainnot tekija]
-    (tarkastuksen-reitti ok? havainnot nil nil nil tekija))
-  ([ok? havainnot vakiohavainnot talvihoitomittaus soratiemittaus tekija]
-   (if-not ok? ;;laadunalitus
-     {:color (case tekija
-               :tilaaja (:ei-ok-tarkastus-tilaaja viivojen-varit)
-               :konsultti (:ei-ok-tarkastus-konsultti viivojen-varit)
-               :urakoitsija (:ei-ok-tarkastus-urakoitsija viivojen-varit)
-               (:ei-ok-tarkastus viivojen-varit))}
-     (if (or (not-empty vakiohavainnot)
-             (and (not-empty havainnot) (not (domain-laadunseuranta/tarkastuksen-havainto-ok? {:havainnot havainnot})))
-             (not-empty talvihoitomittaus)
-             (not-empty soratiemittaus))
-       ;; on vakiohavaintoja. Erikoiskeissi lumista tai liukasta.
-       (if (and
-             (some? vakiohavainnot)
-             (or (str/includes? vakiohavainnot "Liukasta")
-                (str/includes? vakiohavainnot "Lumista")))
-         (tarkastus-vakiohavainnolla-luminen-tai-liukas (case tekija
-                                                          :tilaaja (:ok-tarkastus-tilaaja viivojen-varit)
-                                                          :konsultti (:ok-tarkastus-konsultti viivojen-varit)
-                                                          :urakoitsija (:ok-tarkastus-urakoitsija viivojen-varit)
-                                                          (:ok-tarkastus viivojen-varit)))
-         (tarkastus-vakiohavainnolla (case tekija
-                                       :tilaaja (:ok-tarkastus-tilaaja viivojen-varit)
-                                       :konsultti (:ok-tarkastus-konsultti viivojen-varit)
-                                       :urakoitsija (:ok-tarkastus-urakoitsija viivojen-varit)
-                                       (:ok-tarkastus viivojen-varit))))
-       ;; kaikki OK
-       {:color (case tekija
-                 :tilaaja (:ok-tarkastus-tilaaja viivojen-varit)
-                 :konsultti (:ok-tarkastus-konsultti viivojen-varit)
-                 :urakoitsija (:ok-tarkastus-urakoitsija viivojen-varit)
-                 (:ok-tarkastus viivojen-varit))}))))
+  [{:keys [ok? tekija] :as tarkastus}]
+  (if-not ok? ;;laadunalitus
+    {:color (case tekija
+              :tilaaja (:ei-ok-tarkastus-tilaaja viivojen-varit)
+              :konsultti (:ei-ok-tarkastus-konsultti viivojen-varit)
+              :urakoitsija (:ei-ok-tarkastus-urakoitsija viivojen-varit)
+              (:ei-ok-tarkastus viivojen-varit))}
+    (if (domain-tarkastukset/tarkastus-sisaltaa-havaintoja? tarkastus)
+      ;; on vakiohavaintoja. Erikoiskeissi lumista tai liukasta.
+      (if (domain-tarkastukset/luminen-tai-liukas-vakiohavainto? tarkastus)
+        (tarkastus-vakiohavainnolla-luminen-tai-liukas (case tekija
+                                                         :tilaaja (:ok-tarkastus-tilaaja viivojen-varit)
+                                                         :konsultti (:ok-tarkastus-konsultti viivojen-varit)
+                                                         :urakoitsija (:ok-tarkastus-urakoitsija viivojen-varit)
+                                                         (:ok-tarkastus viivojen-varit)))
+        (tarkastus-vakiohavainnolla (case tekija
+                                      :tilaaja (:ok-tarkastus-tilaaja viivojen-varit)
+                                      :konsultti (:ok-tarkastus-konsultti viivojen-varit)
+                                      :urakoitsija (:ok-tarkastus-urakoitsija viivojen-varit)
+                                      (:ok-tarkastus viivojen-varit))))
+      ;; kaikki OK
+      {:color (case tekija
+                :tilaaja (:ok-tarkastus-tilaaja viivojen-varit)
+                :konsultti (:ok-tarkastus-konsultti viivojen-varit)
+                :urakoitsija (:ok-tarkastus-urakoitsija viivojen-varit)
+                (:ok-tarkastus viivojen-varit))})))
 
 (defn laatupoikkeaman-ikoni [tekija]
   (pinni-ikoni (case tekija

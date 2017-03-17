@@ -45,10 +45,10 @@
              [transit :as transit]]
             [harja.domain
              [ilmoitukset :as ilmoitukset-domain]
-             [laadunseuranta :as laadunseuranta]
              [oikeudet :as oikeudet]
              [roolit :as roolit]
              [tilannekuva :as tk]]
+            [harja.domain.laadunseuranta.tarkastukset :as laadunseuranta]
             [harja.kyselyt
              [hallintayksikot :as hal-q]
              [konversio :as konv]

@@ -60,3 +60,44 @@
 
 (defn formatoi-vakiohavainnot [vakiohavainnot]
   (str/join ", " (keep identity vakiohavainnot)))
+
+(defn tarkastuksen-havainto-ok? [data]
+  (boolean (#{"ok" "OK" "Ok" "oK"} (:havainnot data))))
+
+(defn tarkastus-sisaltaa-havaintoja? [data]
+  (boolean
+    (or (not-empty (:vakiohavainnot data))
+        (and (not-empty (:havainnot data)) (not (tarkastuksen-havainto-ok? data)))
+        (not-empty (:talvihoitomittaus data))
+        (not-empty (:soratiemittaus data)))))
+
+(defn liukas-vakiohavainto? [data]
+  (boolean
+    (and
+      (not-empty (:vakiohavainnot data))
+      (str/includes? (:vakiohavainnot data) "Liukasta"))))
+
+(defn luminen-vakiohavainto? [data]
+  (boolean
+    (and
+      (not-empty (:vakiohavainnot data))
+      (str/includes? (:vakiohavainnot data) "Lumista"))))
+
+(defn luminen-tai-liukas-vakiohavainto? [data]
+  (boolean
+    (or (liukas-vakiohavainto? data) (luminen-vakiohavainto? data))))
+
+(def talvihoitomittauksen-lomakekentat
+  [[:lumimaara] [:tasaisuus] [:kitka] [:lampotila :tie] [:lampotila :ilma]])
+
+(def talvihoitomittauksen-kentat
+  [[:tarkastus] [:lumimaara] [:hoitoluokka] [:tasaisuus] [:kitka] [:ajosuunta]
+   [:lampotila :tie] [:lampotila :ilma]])
+
+(def soratiemittauksen-kentat
+  [[:tarkastus] [:tasaisuus] [:polyavyys] [:kiinteys] [:sivukaltevuus] [:hoitoluokka]])
+
+(defn tarkastus-tiedolla-onko-ok
+  "Tämä kertoo onko laadunalitus"
+  [{laadunalitus :laadunalitus :as tarkastus}]
+  (assoc tarkastus :ok? (not laadunalitus)))
