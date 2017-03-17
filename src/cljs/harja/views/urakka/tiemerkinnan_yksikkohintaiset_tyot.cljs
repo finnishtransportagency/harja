@@ -108,8 +108,9 @@
                               :suunnitelma "Suunnitelma"
                               :toteuma "Toteuma"
                               "- valitse -")}
-           {:otsikko "Päivämäärä"
+           {:otsikko "Päivä\u00ADmäärä"
             :nimi :paivamaara :tyyppi :pvm :leveys 3
+            :validoi [[:ei-tyhja "Anna päivämäärä"]]
             :fmt pvm/pvm-opt}]
           (sort-by tr-domain/tiekohteiden-jarjestys @tiemerkinnan-toteumat-atom)]]))))
 
