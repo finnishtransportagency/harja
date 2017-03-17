@@ -134,10 +134,15 @@ VALUES
                                         NULL, (SELECT id
                                                FROM kayttaja
                                                WHERE kayttajanimi = 'jvh'), NOW(), NULL, NULL);
-
+INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES ((SELECT id
+                                                               FROM yllapitokohde
+                                                               WHERE nimi = 'Nakkilan ramppi'));
 INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES ((SELECT id
                                                                FROM yllapitokohde
                                                                WHERE nimi = 'Ei YHA-kohde'));
+INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES ((SELECT id
+                                                               FROM yllapitokohde
+                                                               WHERE nimi = 'POISTETTU KOHDE EI SAA NÄKYÄ MISSÄÄN'));
 
 -- Testidatan kohdeosilla on hardkoodattu id, jotta päällystysilmoituksen ilmoitustiedoissa viitataan
 -- oikeaa id:n (ei voi hakea id:tä nimellä, koska ilmoitustiedot ovat JSON-muodossa)
