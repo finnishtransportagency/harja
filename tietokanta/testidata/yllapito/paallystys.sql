@@ -34,6 +34,21 @@ VALUES
                        FROM urakka
                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
       308, 'Oulun ohitusramppi', 9000, 200, 565, 100, 'paallyste' :: yllapitokohdetyyppi,
+      'paallystys' ::yllapitokohdetyotyyppi, 54523243,
+                                             20, 12, 1, 19, 2, 1, 1, (SELECT id
+                                                                      FROM urakka
+                                                                      WHERE nimi =
+                                                                            'Oulun tiemerkinnän palvelusopimus 2013-2018'),
+                                             '{2017}', 605, FALSE),
+  (9, (SELECT id
+       FROM urakka
+       WHERE nimi = 'Muhoksen päällystysurakka'),
+      (SELECT id
+       FROM sopimus
+       WHERE urakka = (SELECT id
+                       FROM urakka
+                       WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
+      'L010', 'Nakkilan ramppi', 500, 3457, 5, 6, 'paallyste' :: yllapitokohdetyyppi,
       'paallystys' ::yllapitokohdetyotyyppi, 265257,
                                              20, 12, 1, 19, 2, 1, 1, (SELECT id
                                                                       FROM urakka
