@@ -64,10 +64,10 @@
 
 (defn tallenna-yllapito-toteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toteumat]}]
   (log/debug "Tallenna ylläpidon toteuma:" toteumat)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-muuttyot user urakka-id)
 
   (jdbc/with-db-transaction [db db]
     (doseq [{:keys [id] :as toteuma} toteumat]
-      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-muuttyot user urakka-id)
       (vaadi-toteuma-kuuluu-urakkaan db id urakka-id))
 
     (doseq [toteuma toteumat]
