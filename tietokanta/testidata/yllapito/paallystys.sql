@@ -545,4 +545,4 @@ VALUES
                                                          'paallyste' :: yllapitokohdetyyppi,
                                                          'paallystys' ::yllapitokohdetyotyyppi,
                                                          387, 3, 5955, 7, 55);
-INSERT INTO yllapitokohteen_aikataulu(yllapitokohde) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Tienpäällystysurakka KAS ELY 1 2015'));
+INSERT INTO yllapitokohteen_aikataulu(yllapitokohde) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Mt 387 Raippo - Koskenkylä'));
