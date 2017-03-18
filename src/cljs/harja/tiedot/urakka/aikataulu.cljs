@@ -46,10 +46,9 @@
   (reaction (let [tienumero @paallystys-tiedot/tienumero
                   aikataulurivit @aikataulurivit]
               (when aikataulurivit
-                (->> aikataulurivit
-                     (filterv #(or (nil? tienumero)
-                                   (= (:tr-numero %) tienumero)))
-                     (sort-by tr-domain/tiekohteiden-jarjestys))))))
+                (filterv #(or (nil? tienumero)
+                              (= (:tr-numero %) tienumero))
+                         aikataulurivit)))))
 
 (defonce tiemerkinnan-suorittavat-urakat
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
