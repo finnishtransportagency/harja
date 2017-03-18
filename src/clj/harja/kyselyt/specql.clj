@@ -8,10 +8,7 @@
             [clojure.future :refer :all]))
 
 
-(def db {:connection-uri (let [{:keys [palvelin tietokanta portti kayttaja salasana]}
-                               (:tietokanta (read-string (slurp "asetukset.edn")))]
-                           (str "jdbc:postgresql://" palvelin ":" portti "/" tietokanta
-                                "?user=" kayttaja "&password=" salasana ))})
+(def db {:connection-uri (slurp ".specql-db")})
 
 (s/def ::d/geometry any?)
 
