@@ -38,7 +38,7 @@
 
       "Avataan aikahaku"
       (u/click :button.nappi-alasveto)
-      --        §
+      --
       (u/click ".harja-alasvetolistaitemi:nth-child(1) > a")
       (<! haku)
 
@@ -47,4 +47,3 @@
 
     )
   )
-

@@ -24,7 +24,7 @@
 (defn- suorita-fake-palvelukutsu [palvelu parametrit]
   (let [[kanava vastaus-fn] (get @fake-palvelukutsut palvelu)
         ch (async/chan)]
-    (if kanava
+    (if vastaus-fn
       (go
         (let [vastaus (vastaus-fn parametrit)]
           (>! ch vastaus)
