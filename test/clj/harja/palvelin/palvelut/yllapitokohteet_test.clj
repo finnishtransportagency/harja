@@ -576,8 +576,8 @@
                (<= (get kohde 3) (get kohde 8))) "Alikohde on kohteen sisällä"))))
 
 (deftest testidatassa-validit-aikataulut
-  (let [yllapitokohteet (:maara (first (harja.testi/q-map "SELECT COUNT(*) as maara FROM yllapitokohde;")))
-        aikataulut (:maara (first (harja.testi/q-map "SELECT COUNT(*) as maara FROM yllapitokohteen_aikataulu;")))]
+  (let [yllapitokohteet (:maara (first (q-map "SELECT COUNT(*) as maara FROM yllapitokohde;")))
+        aikataulut (:maara (first (q-map "SELECT COUNT(*) as maara FROM yllapitokohteen_aikataulu;")))]
     (is (> yllapitokohteet 1))
     (is (> aikataulut 1))
     (is (= yllapitokohteet aikataulut) "Testidatassa tulisi olla jokaisella ylläpitokohteella aikataulu")))
