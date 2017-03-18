@@ -151,8 +151,9 @@
 (defn hae-ilmoitukset [db {:keys [alku loppu urakat organisaatio kayttaja-id sijainti]}]
   (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
          (op/and
-          (merge {::t/luotu (op/between alku loppu)
-                  ::t/paatietyoilmoitus op/null?}
+          (merge {::t/paatietyoilmoitus op/null?}
+                 (when (and alku loppu)
+                   {::t/luotu (op/between alku loppu)})
                  (when kayttaja-id
                    {::t/luoja kayttaja-id})
                  (when sijainti

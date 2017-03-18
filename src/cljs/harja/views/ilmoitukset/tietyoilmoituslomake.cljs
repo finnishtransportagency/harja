@@ -6,7 +6,7 @@
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tiedot]
             [harja.domain.tietyoilmoitukset :as t]
             [reagent.core :refer [atom] :as r]
-            [harja.ui.grid :refer [grid]]
+            [harja.ui.grid :refer [muokkaus-grid]]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.valinnat :refer [urakan-hoitokausi-ja-aikavali]]
             [harja.loki :refer [tarkkaile! log]]
@@ -40,10 +40,37 @@
   (log msg (with-out-str (cljs.pprint/pprint val)))
   val)
 
+(defn- muunna-nopeusrajoitukset-muokkaus-gridille [nr-tiedot]
+  ;; muuttaa ::t/nopeusrajoitukset -avaimen tiedont, esim:
+  ;; [{:harja.domain.tietyoilmoitukset/rajoitus "30", :harja.domain.tietyoilmoitukset/matka 100}])
+  ;; mapiksi {indeksi {rajoitus matka}} -tupleja, esim:
+  ;; {0 {:rajoitus 100, :matka 200}, 1 {:rajoitus 300, :matka 20}}
+  (apply merge
+         (map-indexed
+          (fn [indeksi rajoitus-map]
+            {indeksi {:rajoitus (::t/rajoitus rajoitus-map) :matka (::t/matka rajoitus-map)}})
+          nr-tiedot)))
+
+(defn nopeusrajoitukset-komponentti-grid [e! nr-tiedot]
+  (log "gridin dataksi r/wrapatty" (pr-str (muunna-nopeusrajoitukset-muokkaus-gridille nr-tiedot)))
+  (log "nr-tiedot oli" (pr-str nr-tiedot))
+  (if (some? nr-tiedot)
+    [muokkaus-grid {:otsikko ""
+                    :voi-muokata? (constantly true)
+                    :voi-poistaa? (constantly true)
+                    :piilota-toiminnot? false
+                    :tyhja "Ei nopeusrajoituksia"
+                    :jarjesta :jarjestysnro
+                    :tunniste :jarjestysnro}
+     [{:otsikko "Rajoitus (km/h)" :nimi :rajoitus :tyyppi :positiivinen-numero}
+      {:otsikko "Matka (m)" :nimi :matka :tyyppi :positiivinen-numero }]
+     (r/wrap (muunna-nopeusrajoitukset-muokkaus-gridille nr-tiedot)
+             #(e! (tiedot/->PaivitaNopeusrajoituksetGrid %)))]
+    ;; else
+    (log "nr-komponentti sai nil")))
+
 (defn lomake [e! ilmoitus kayttajan-urakat]
   (fn [e! ilmoitus]
-    ;; (log "rendataan ilmoitusta, tien-nimi:" (pr-str (::t/tien-nimi ilmoitus)))
-
 
     [:div
      [:span
@@ -122,7 +149,7 @@
                        :pakollinen? true
                        :tyyppi :tierekisteriosoite
                        :ala-nayta-virhetta-komponentissa? true
-                       :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
+                       :validoi [[:validi-tr "Reittiä ei saada tehtyä" [::t/osoite]]]
                        :sijainti (r/wrap (:sijainti ilmoitus) #(e! (tiedot/->PaivitaSijainti %)))
                        }
                       {:otsikko "Tien nimi" :nimi ::t/tien-nimi
@@ -200,14 +227,11 @@
                        :vaihtoehto-nayta tiedot/kaistajarjestelyt-vaihtoehdot-map
                        :muu-vaihtoehto "Muu"
                        :muu-kentta {:otsikko "" :nimi :jotain :tyyppi :string :placeholder "(muu kaistajärjestely?)"}}
-
-
-                      {:otsikko "Nopeusrajoitus 50 km/h, metriä" ;; -> pituus-pituus-kenttä
-                       :tyyppi :string
-                       :nimi :nopeusrajoitukset}
-                      {:otsikko "Muu rajoitus, ?? km/h, metriä" ;; -> km/h-kenttä, pituus-kenttä
-                       :tyyppi :string
-                       :nimi :nopeusrajoitukset-b}
+                      {:otsikko "Nopeusrajoitukset"
+                       :tyyppi :komponentti
+                       :komponentti #(->> % :data ::t/nopeusrajoitukset (nopeusrajoitukset-komponentti-grid e!))
+                       :nimi :nopeusrajoitukset
+                       }
                       {:otsikko "Kulkurajoituksia"
                        :tyyppi :checkbox-group
                        :nimi :kulkurajoituksia
