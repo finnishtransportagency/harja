@@ -11,7 +11,7 @@
             [harja.tiedot.urakka :as urakka]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.pvm :as pvm]
-            [harja.tiedot.urakka.yllapito :as yllapito-tiedot])
+            [harja.tiedot.urakka.paallystys :as paallystys-tiedot])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -43,13 +43,12 @@
                 (hae-aikataulu valittu-urakka-id valittu-sopimus-id vuosi))))
 
 (def aikataulurivit-suodatettu
-  (reaction (let [tienumero @yllapito-tiedot/tienumero
+  (reaction (let [tienumero @paallystys-tiedot/tienumero
                   aikataulurivit @aikataulurivit]
               (when aikataulurivit
-                (->> aikataulurivit
-                     (filterv #(or (nil? tienumero)
-                                   (= (:tr-numero %) tienumero)))
-                     (sort-by tr-domain/tiekohteiden-jarjestys))))))
+                (filterv #(or (nil? tienumero)
+                              (= (:tr-numero %) tienumero))
+                         aikataulurivit)))))
 
 (defonce tiemerkinnan-suorittavat-urakat
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
