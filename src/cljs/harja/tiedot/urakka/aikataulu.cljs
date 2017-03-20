@@ -43,7 +43,7 @@
                 (hae-aikataulu valittu-urakka-id valittu-sopimus-id vuosi))))
 
 (def aikataulurivit-suodatettu
-  (reaction (let [tienumero @paallystys-tiedot/tienumero
+  (reaction (let [tienumero @yllapito-tiedot/tienumero
                   aikataulurivit @aikataulurivit]
               (when aikataulurivit
                 (filterv #(or (nil? tienumero)
