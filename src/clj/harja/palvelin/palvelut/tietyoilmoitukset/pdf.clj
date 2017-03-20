@@ -110,7 +110,6 @@
                 "Muu, mikä?"])
 
 (defn- tyon-tyyppi [{tyypit ::t/tyotyypit}]
-  ;; [{:harja.domain.tietyoilmoitukset/tyyppi "Tienrakennus", :harja.domain.tietyoilmoitukset/kuvaus "Rakennetaan tietä"}]
   (let [valitut-tyypit (into {}
                              (map (juxt ::t/tyyppi ::t/kuvaus))
                              tyypit)]
@@ -132,7 +131,6 @@
   (some->> ilm ::t/pituus (format "%.1f m")))
 
 (defn- kohteen-tiedot [ilm]
-  (println "PÄÄILMOITUS: " (::t/paailmoitus ilm))
   (let [ilm (or (::t/paailmoitus ilm) ilm)
         osoite (::t/osoite ilm)]
     (tietotaulukko
@@ -318,7 +316,6 @@
 
 (defn tietyoilmoitus-pdf [tietyoilmoitus]
   (reset! ilm tietyoilmoitus)
-  (println "ILMOTUS: " (pr-str tietyoilmoitus))
   (xsl-fo/dokumentti
    {:margin {:left "5mm" :right "5mm" :top "5mm" :bottom "5mm"
              :body "0mm"}}
