@@ -11,7 +11,6 @@
 (defqueries "harja/kyselyt/tietyoilmoitukset.sql")
 
 (define-tables db
-  ["tr_osoite" ::tr/tr-osoite]
   ["tietyon_henkilo" ::t/henkilo]
   ["tietyon_ajoneuvorajoitukset" ::t/ajoneuvorajoitukset*]
   ["tietyotyyppi" ::t/tietyotyyppi]
