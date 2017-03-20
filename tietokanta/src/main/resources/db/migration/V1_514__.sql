@@ -28,7 +28,7 @@ BEGIN
   FOR rivi IN SELECT * FROM yllapitokohde
   LOOP
     INSERT INTO yllapitokohteen_aikataulu (yllapitokohde,
-                                           aikataulu_kohde_alku,
+                                           kohde_alku,
                                            paallystys_alku,
                                            paallystys_loppu,
                                            valmis_tiemerkintaan,
