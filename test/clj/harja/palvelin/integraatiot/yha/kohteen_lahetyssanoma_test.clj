@@ -192,7 +192,7 @@
 (def testikohteet
   [{:kohde testikohde,
     :alikohteet testialikohteet,
-    :paallystys-ilmoitus testipaallystysilmoitus}])
+    :paallystysilmoitus testipaallystysilmoitus}])
 
 (def testiurakka
   {:yhatunnus "YHA34434",
