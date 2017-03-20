@@ -53,7 +53,7 @@
                           :kaynnissa-alku kaynnissa-alku
                           :kaynnissa-loppu kaynnissa-loppu
                           :urakat (if (and urakka (not (str/blank? urakka)))
-                                    [(Integer/parseInt (str urakka))]
+                                    [(Integer/parseInt urakka)]
                                     kayttajan-urakat)
                           :luojaid (when vain-kayttajan-luomat (:id user))
                           :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
