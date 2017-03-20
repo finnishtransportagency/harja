@@ -11,7 +11,7 @@
             [harja.tiedot.urakka :as urakka]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.pvm :as pvm]
-            [harja.tiedot.urakka.paallystys :as paallystys-tiedot])
+            [harja.tiedot.urakka.yllapito :as yllapito-tiedot])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
