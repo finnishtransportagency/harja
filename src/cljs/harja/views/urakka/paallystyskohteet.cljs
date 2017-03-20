@@ -20,10 +20,9 @@
             [harja.ui.valinnat :as valinnat]
             [cljs-time.core :as t]
             [harja.tiedot.hallinta.indeksit :as indeksit]
-            [harja.tiedot.urakka.yllapitokohteet.muut-kustannukset :as muut-kustannukset-tiedot]
-            [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot-sanktiot]
             [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit]
-            [harja.views.urakka.valinnat :as u-valinnat])
+            [harja.views.urakka.valinnat :as u-valinnat]
+            [harja.tiedot.urakka.yllapito :as yllapito-tiedot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -66,7 +65,7 @@
          (t/year (:loppupvm ur))
          urakka/valittu-urakan-vuosi
          urakka/valitse-urakan-vuosi!]
-        [u-valinnat/tienumero paallystys-tiedot/tienumero]
+        [u-valinnat/tienumero yllapito-tiedot/tienumero]
 
         [yllapitokohteet-view/yllapitokohteet
          ur
