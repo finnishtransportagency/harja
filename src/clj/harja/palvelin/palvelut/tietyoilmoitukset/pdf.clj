@@ -33,7 +33,7 @@
 
 (defn- tieto [otsikko sisalto]
   [:fo:block {:margin-bottom "2mm"}
-   [:fo:block {:font-weight "bold" :font-size "10pt"} otsikko]
+   [:fo:block {:font-weight "bold" :font-size 8} otsikko]
    [:fo:block sisalto]])
 
 (defn- tietotaulukko [& tietorivi]
@@ -65,11 +65,16 @@
              rivi)]))
        tietorivi)]]))
 
+(defn checkbox [otsikko valittu?]
+  [:fo:block
+   (xsl-fo/checkbox 8 valittu?)
+   " " otsikko])
+
 (defn checkbox-lista [vaihtoehdot valitut]
   [:fo:block
    (for [[otsikko vaihtoehto & sisalto] vaihtoehdot]
      (into [:fo:block
-            (xsl-fo/checkbox 12 (contains? valitut vaihtoehto))
+            (xsl-fo/checkbox 8 (contains? valitut vaihtoehto))
             " " otsikko]
            sisalto))])
 
@@ -83,15 +88,40 @@
                     ;; FIXME: mistä tämä päätellään
                     #{false})]))
 
-(defn- tyon-tyyppi [{tyypit :tyotyypit}]
+(def tyotyypit ["Tienrakennus"
+                "Päällystystyö"
+                "Viimeistely"
+                "Rakenteen parannus"
+                "Jyrsintä-/stabilointityö"
+                "Tutkimus/mittaus"
+                "Alikulkukäytävän rak."
+                "Kaidetyö"
+                "Tienvarsilaitteiden huolto"
+                "Kevyenliik. väylän rak."
+                "Kaapelityö"
+                "Silmukka-anturin asent."
+                "Siltatyö"
+                "Valaistustyö"
+                "Tasoristeystyö"
+                "Liittymä- ja kaistajärj."
+                "Tiemerkintätyö"
+                "Vesakonraivaus/niittotyö"
+                "Räjäytystyö"
+                "Muu, mikä?"])
 
-  ;; näytä rastiruutuun, vain "muu" valintaan lisäteksti
-  [:fo:block
-   (for [{:keys [tyyppi selite]} tyypit]
-     [:fo:block
-      [:fo:inline {:font-weight "bold"} tyyppi]
-      " "
-      selite])])
+(defn- tyon-tyyppi [{tyypit ::t/tyotyypit}]
+  ;; [{:harja.domain.tietyoilmoitukset/tyyppi "Tienrakennus", :harja.domain.tietyoilmoitukset/kuvaus "Rakennetaan tietä"}]
+  (let [valitut-tyypit (into {}
+                             (map (juxt ::t/tyyppi ::t/kuvaus))
+                             tyypit)]
+    (apply tietotaulukko
+           (for [tyypit (partition-all 3 tyotyypit)
+                 :let [checkboxit (mapv #(checkbox % (contains? valitut-tyypit %)) tyypit)]]
+             (if (< (count tyypit) 3)
+               ;; Viimeinen rivi
+               (conj checkboxit
+                     [:fo:block (str (valitut-tyypit (last tyypit)))])
+               checkboxit)))))
 
 (defn- yhteyshenkilo [hlo]
   (str (::t/etunimi hlo) " " (::t/sukunimi hlo)
@@ -126,8 +156,7 @@
      [(tieto "Työn loppupiste (osa/etäisyys) ja kuvaus"
              (str (::tr/losa osoite) " / " (::tr/let osoite) " " (::t/loppusijainnin-kuvaus ilm)))
       (tieto "Työn pituus"
-             (pituus ilm))]
-     )))
+             (pituus ilm))])))
 
 
 (defn- tyovaihe [{osoite ::t/osoite paatietyoilmoitus ::t/paatietyoilmoitus :as ilm}]
@@ -146,11 +175,10 @@
              (pituus ilm))])))
 
 (defn- tyoaika [{tyoajat ::t/tyoajat}]
-  (apply tietotaulukko
-         (for [ta tyoajat]
-           [(tieto "Alku" (pvm/pvm-opt (::t/alku ta)))
-            (tieto "Loppu" (pvm/pvm-opt (::t/loppu ta)))
-            (tieto "Viikonpäivät" (str/join ", " (::t/paivat ta)))])))
+  [:fo:block
+   (for [ta tyoajat]
+     [:fo:block (str/join ", " (::t/paivat ta)) ": "
+      (str (::t/alkuaika ta)) " \u2013 " (str (::t/loppuaika ta))])])
 
 
 (defn- sisennetty-arvo [arvo selite]
@@ -193,39 +221,61 @@
      [:fo:inline {:text-decoration "underline"}
       aika]]))
 
-(defn- vaikutukset [ilm]
+(defn- vaikutukset [{kaistajarj ::t/kaistajarjestelyt :as ilm}]
+  (let [jarj (into {}
+                   (map (juxt ::t/jarjestely ::t/selite))
+                   kaistajarj)]
+    (tietotaulukko
+     [;; Vasen puoli
+      (tietotaulukko
+       [(tieto "Kaistajärjestelyt"
+               (checkbox-lista [["Yksi ajokaista suljettu" "ajokaistaSuljettu"]
+                                ["Yksi ajorata suljettu" "ajorataSuljettu"]
+                                ["Muu" "muu" (get jarj "muu")]]
+                               jarj))]
+       [(tieto "Nopeusrajoitus" "bar")]
+       [(tieto "Tien pinta työmaalla" "baz")]
+       [(tieto "Kiertotien pituus" "pitkä se on")])
+
+      ;; Oikea puoli
+      (tietotaulukko
+       [(tieto "Pysäytyksiä"
+               [:fo:block
+                (checkbox-lista [["Liikennevalot" "liikennevalot"]
+                                 ["Liikenteen ohjaaja" "lohj"]
+                                 ["Satunnaisia" "satunnaisia"]]
+                                ;; FIXME: näytä pysäytykset
+                                #{})
+                (pvm-ja-aika "alkaa" (::t/pysaytysten_alku ilm))
+                (pvm-ja-aika "päättyy" (::t/pysaytysten_loppu ilm))])]
+       [(tieto "Arvioitu viivytys"
+               [:fo:block
+                (sisennetty-arvo (::t/viivastys_normaali_liikenteessa ilm) "(min, normaali liikenne)")
+                (sisennetty-arvo (::t/viivastys_ruuhka_aikana ilm) "(min, ruuhka-aika)")])]
+       [(tieto "Kulkurajoituksia"
+               [:fo:block
+                (ajoneuvorajoitukset ilm)
+                ])])])))
+
+(defn- vaikutussuunta [{vs ::t/vaikutussuunta}]
   (tietotaulukko
-   [;; Vasen puoli
-    (tietotaulukko
-     [(tieto "Kaistajärjestelyt"
-             (checkbox-lista [["Yksi ajokaista suljettu" "ajokaistaSuljettu"]
-                              ["Yksi ajorata suljettu" "ajorataSuljettu"]
-                              ["Tie suljettu" "tieSuljettu"]]
-                             #{(::t/kaistajarjestelyt ilm)}))]
-     [(tieto "Nopeusrajoitus" "bar")]
-     [(tieto "Tien pinta työmaalla" "baz")]
-     [(tieto "Kiertotien pituus" "pitkä se on")])
+   [(checkbox "Haittaa molemmissa ajosuunnissa" (= "molemmat" vs))
+    (tieto "Haittaa ajosuunnassa (lähin kaupunki)"
+           [:fo:block
+            (case vs
+              "tienumeronKasvusuuntaan" "Tienumeron kasvusuuntaan"
+              "vastenTienumeronkasvusuuntaa" "Vasten tienumeron kasvusuuntaa"
+              "")])]))
 
-    ;; Oikea puoli
-    (tietotaulukko
-     [(tieto "Pysäytyksiä"
-             [:fo:block
-              (checkbox-lista [["Liikennevalot" "liikennevalot"]
-                               ["Liikenteen ohjaaja" "lohj"]
-                               ["Satunnaisia" "satunnaisia"]]
-                              ;; FIXME: näytä pysäytykset
-                              #{})
-              (pvm-ja-aika "alkaa" (::t/pysaytysten_alku ilm))
-              (pvm-ja-aika "päättyy" (::t/pysaytysten_loppu ilm))])]
-     [(tieto "Arvioitu viivytys"
-             [:fo:block
-              (sisennetty-arvo (::t/viivastys_normaali_liikenteessa ilm) "(min, normaali liikenne)")
-              (sisennetty-arvo (::t/viivastys_ruuhka_aikana ilm) "(min, ruuhka-aika)")])]
-     [(tieto "Kulkurajoituksia"
-             [:fo:block
-              (ajoneuvorajoitukset ilm)
-              ])])]))
+(defn- muuta [{m ::t/huomautukset}]
+  [:fo:block m])
 
+(defn- ilmoittaja [{ilmoittaja ::t/ilmoittaja luotu ::t/luotu muokattu ::t/muokattu}]
+  (tietotaulukko
+   [(tieto "Nimi, puh."
+           (yhteyshenkilo ilmoittaja))
+    (tieto "Pvm"
+           (pvm/pvm (or muokattu luotu)))]))
 
 (def ^:private osiot
   [["1 Ilmoitus koskee" #'ilmoitus-koskee]
@@ -234,23 +284,27 @@
    ["4 Työn tyyppi" #'tyon-tyyppi]
    ["5 Työaika" #'tyoaika]
    ["6 Vaikutukset liikenteelle" #'vaikutukset]
-   ["7 Vaikutussuunta" (constantly "vaikutussuuntaa")]
-   ["8 Muuta" (constantly "ei mitään muuta")]
-   ["9 Ilmoittaja" (constantly "ilmoittajan tiedot")]])
+   ["7 Vaikutussuunta" #'vaikutussuunta]
+   ["8 Muuta" #'muuta]
+   ["9 Ilmoittaja" #'ilmoittaja]])
+
+(defonce ilm (atom nil))
 
 (defn tietyoilmoitus-pdf [tietyoilmoitus]
+  (reset! ilm tietyoilmoitus)
   (println "ILMOTUS: " (pr-str tietyoilmoitus))
   (xsl-fo/dokumentti
    {:margin {:left "5mm" :right "5mm" :top "5mm" :bottom "5mm"
              :body "0mm"}}
 
-   (taulukko
-    [:fo:block {:text-align "center"}
-     [:fo:block {:font-weight "bold"}
-      [:fo:block "ILMOITUS LIIKENNETTÄ HAITTAAVASTA TYÖSTÄ"]
-      [:fo:block "LIIKENNEVIRASTON LIIKENNEKESKUKSEEN"]]
-     [:fo:block
-      "Yllättävästä häiriöstä erikseen ilmoitus puhelimitse"
-      " urakoitsijan linjalle 0200 21200"]]
-    (for [[osio sisalto-fn] osiot]
-      [osio (sisalto-fn tietyoilmoitus)]))))
+   [:fo:wrapper {:font-size 8}
+    (taulukko
+     [:fo:block {:text-align "center"}
+      [:fo:block {:font-weight "bold"}
+       [:fo:block "ILMOITUS LIIKENNETTÄ HAITTAAVASTA TYÖSTÄ"]
+       [:fo:block "LIIKENNEVIRASTON LIIKENNEKESKUKSEEN"]]
+      [:fo:block
+       "Yllättävästä häiriöstä erikseen ilmoitus puhelimitse"
+       " urakoitsijan linjalle 0200 21200"]]
+     (for [[osio sisalto-fn] osiot]
+       [osio (sisalto-fn tietyoilmoitus)]))]))
