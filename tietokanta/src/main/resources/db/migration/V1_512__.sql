@@ -82,6 +82,7 @@ CREATE TABLE tietyoilmoitus (
   nopeusrajoitukset                     tietyon_nopeusrajoitus [],
   tienpinnat                            tietyon_tienpinta [],
 
+  "kiertotien-pituus"                   INTEGER,
   "kiertotien-mutkaisuus"               tietyon_mutkat,
   kiertotienpinnat                      tietyon_tienpinta [],
 
