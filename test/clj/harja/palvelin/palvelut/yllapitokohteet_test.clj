@@ -409,6 +409,25 @@
         (<!! (timeout 2000))
         (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")))))
 
+(deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-ilman-fim-yhteytta
+  (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" #())
+  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+        nakkilan-ramppi-id (hae-yllapitokohde-nakkilan-ramppi)
+        vuosi 2017
+        aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
+        aikataulu-tiemerkinta-loppu (pvm/->pvm "28.5.2017")
+        kohteet [{:id nakkilan-ramppi-id
+                  :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
+                  :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}]
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :tallenna-yllapitokohteiden-aikataulu
+                          +kayttaja-jvh+
+                          {:urakka-id urakka-id
+                           :sopimus-id sopimus-id
+                           :vuosi vuosi
+                           :kohteet kohteet})]))
+
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-paallystysurakan-kayttajat.xml"))
         sahkoposti-valitetty (atom false)]
