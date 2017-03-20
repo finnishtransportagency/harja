@@ -313,12 +313,9 @@
                       (not (oikeudet/on-muu-oikeus? "sido" oikeus urakka-id @istunto/kayttaja)))
         :virheviestin-nayttoaika viesti/viestin-nayttoaika-pitka
         :kun-valmis #(reset! paallystys/kohteet-yha-lahetyksessa nil)
-        :kun-onnistuu (fn [paivitetyt-ilmoitukset]
-                        (if (every? #(or (:lahetys-onnistunut %)
-                                         (nil? (:lahetys-onnistunut %)))
-                                    paivitetyt-ilmoitukset)
-                          (do (log "[YHA] Kohteet lähetetty YHA:n. Päivitetyt ilmoitukset: " (pr-str paivitetyt-ilmoitukset))
-                              (viesti/nayta! "Kohteet lähetetty onnistuneesti." :success))
-                          (do (log "[YHA] Lähetys epäonnistui osalle kohteista YHA:n. Päivitetyt ilmoitukset: " (pr-str paivitetyt-ilmoitukset))
+        :kun-onnistuu (fn [vastaus]
+                        (if (:lahetys-onnistui? vastaus)
+                          (viesti/nayta! "Kohteet lähetetty onnistuneesti." :success)
+                          (do (log "[YHA] Lähetys epäonnistui osalle kohteista YHA:n. Vastaus: " (pr-str vastaus))
                               (viesti/nayta! "Lähetys epäonnistui osalle kohteista. Tarkista kohteiden tiedot." :warning)))
-                        (reset! paallystys/paallystysilmoitukset paivitetyt-ilmoitukset))}])))
+                        (reset! paallystys/paallystysilmoitukset (:paallystysilmoitukset vastaus)))}])))
