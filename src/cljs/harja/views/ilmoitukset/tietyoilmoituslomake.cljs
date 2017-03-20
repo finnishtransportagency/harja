@@ -13,7 +13,9 @@
             [cljs.pprint :refer [pprint]]
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.ui.yleiset :as yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+
-                                                  kuvaus-ja-avainarvopareja]]))
+                                                  kuvaus-ja-avainarvopareja]]
+            [harja.fmt :as fmt]
+            [clojure.string :as str]))
 
 (def koskee-valinnat [[nil "Ilmoitus koskee..."]
                       [:ensimmainen "Ensimmäinen ilmoitus työstä"],
@@ -68,6 +70,33 @@
              #(e! (tiedot/->PaivitaNopeusrajoituksetGrid %)))]
     ;; else
     (log "nr-komponentti sai nil")))
+
+(def paiva-lyhyt #(str/upper-case (subs % 0 2)))
+
+(defn tyoajat-komponentti-grid [e! tyoajat]
+  (log "TYÖAJAT: " (pr-str tyoajat))
+  [muokkaus-grid {:otsikko ""
+                  :voi-muokata? (constantly true)
+                  :voi-poistaa? (constantly true)
+                  :piilota-toiminnot? false
+                  :tyhja "Ei työaikoja"}
+   [{:otsikko "Viikonpäivät" :nimi ::t/paivat :tyyppi :checkbox-group
+     :tasaa :keskita
+     :vaihtoehdot ["maanantai" "tiistai" "keskiviikko" "torstai" "perjantai" "lauantai" "sunnuntai"]
+     :vaihtoehto-nayta paiva-lyhyt
+     :nayta-rivina? true
+     :leveys 5}
+    {:otsikko "Alkuaika" :tyyppi :aika :placeholder "esim. 08:00" :nimi ::t/alkuaika
+     :leveys 1}
+    {:otsikko "Loppuaika" :tyyppi :aika :placeholder "esim. 18:00" :nimi ::t/loppuaika
+     :leveys 1}
+    ]
+   (r/wrap (into {}
+                 (map-indexed (fn [i ta]
+                                [i (update ta ::t/paivat
+                                           #(into #{} %))]))
+                 tyoajat)
+           #(e! (tiedot/->PaivitaTyoajatGrid (vals %))))])
 
 (defn lomake [e! ilmoitus kayttajan-urakat]
   (fn [e! ilmoitus]
@@ -207,11 +236,11 @@
                        :muu-kentta {:otsikko "" :nimi :jotain :tyyppi :string :placeholder "(Muu tyyppi?)"}
                        :disabloi? (constantly false)}
                       )
-        (lomake/ryhma "Työaika"
-                      {:otsikko "Päivittäinen työaika"
-                       :nimi :tyoaika
-                       :tyyppi :string
-                       :placeholder "(esim 8-16)"})
+        {:otsikko "Päivittäinen työaika"
+         :nimi ::t/tyoajat
+         :tyyppi :komponentti
+         :komponentti #(->> % :data ::t/tyoajat (tyoajat-komponentti-grid e!))
+         :palstoja 2}
         (lomake/ryhma "Vaikutukset liikenteelle"
                       {:otsikko "Arvioitu viivytys normaalissa liikenteessä (min)"
                        :nimi ::t/viivastys-normaali-liikenteessa
