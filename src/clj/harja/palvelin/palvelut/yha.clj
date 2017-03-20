@@ -9,6 +9,7 @@
             [harja.domain.skeema :refer [Toteuma validoi]]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.yha :as yha-q]
+            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.kyselyt.paallystys :as paallystys-q]
@@ -126,7 +127,8 @@
                      :nimi nimi
                      :vuodet (konv/seq->array [(t/year (pvm/suomen-aikavyohykkeeseen (t/now)))])
                      :yha_kohdenumero yha-kohdenumero
-                     :kohdenumero yha-kohdenumero})]
+                     :kohdenumero yha-kohdenumero})
+            _ (yllapitokohteet-q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde (:id kohde)})]
         (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
           (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
           (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!

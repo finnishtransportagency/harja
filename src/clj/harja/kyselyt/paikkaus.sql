@@ -7,15 +7,16 @@ SELECT
   nimi,
   kohdenumero,
   pi.paatos,
-  ypk.aikataulu_kohde_alku AS "kohde-alkupvm",
-  ypk.aikataulu_paallystys_alku AS "paallystys-alkupvm",
-  ypk.aikataulu_paallystys_loppu AS "paallystys-loppupvm",
-  ypk.aikataulu_tiemerkinta_alku AS "tiemerkinta-alkupvm",
-  ypk.aikataulu_tiemerkinta_loppu AS "tiemerkinta-loppupvm",
-  ypk.aikataulu_kohde_valmis AS "kohde-valmispvm"
+  ypka.kohde_alku AS "kohde-alkupvm",
+  ypka.paallystys_alku AS "paallystys-alkupvm",
+  ypka.paallystys_loppu AS "paallystys-loppupvm",
+  ypka.tiemerkinta_alku AS "tiemerkinta-alkupvm",
+  ypka.tiemerkinta_loppu AS "tiemerkinta-loppupvm",
+  ypka.kohde_valmis AS "kohde-valmispvm"
 FROM yllapitokohde ypk
   LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = ypk.id
                                    AND pi.poistettu IS NOT TRUE
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE urakka = :urakka
       AND sopimus = :sopimus
       AND yllapitokohdetyotyyppi = 'paikkaus'::yllapitokohdetyotyyppi

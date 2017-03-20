@@ -199,12 +199,9 @@
             urakan-geometria-poiston-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))]
 
         (is (nil? poistettu-kohde) "Poistettua kohdetta ei ole enää vastauksessa")
-        (is (not= urakan-geometria-lisayksen-jalkeen urakan-geometria-poiston-jalkeen "Geometria päivittyi")))
+        (is (not= urakan-geometria-lisayksen-jalkeen urakan-geometria-poiston-jalkeen "Geometria päivittyi"))))))
 
-      ;; Siivoa sotkut
-      (u (str "DELETE FROM yllapitokohde WHERE nimi = 'Testiramppi4564ddf';")))))
-
-(deftest tallenna-paallystyskohde-kantaan-vuodelle-2015
+(deftest tallenna-uusi-paallystyskohde-kantaan-vuodelle-2015
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)]
 
@@ -218,8 +215,7 @@
                                       FROM yllapitokohde
                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " (hae-muhoksen-paallystysurakan-id) ")
                                       AND vuodet @> ARRAY[2015]::int[]")))]
-      (is (= kohteet-kannassa 1) "Kohde tallentui oikein")
-      (u (str "DELETE FROM yllapitokohde WHERE nimi = 'Testiramppi4564ddf';")))))
+      (is (= kohteet-kannassa 1) "Kohde tallentui oikein"))))
 
 (deftest ala-poista-paallystyskohdetta-jolla-ilmoitus
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
@@ -297,8 +293,7 @@
                     :tr-numero 20
                     :toimenpide "Ei tehdä mitään"}
                    true))
-        (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
-        (u (str "DELETE FROM yllapitokohdeosa WHERE nimi = 'Testiosa123456';"))))))
+        (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))))))
 
 (deftest paivita-paallystysurakan-yllapitokohteen-aikataulu
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
@@ -413,6 +408,25 @@
         ;; Maili ei lähde, koska ei löydy FIM-käyttäjiä (FIM-vastauksessa ei ole päällystys-käyttäjiä)
         (<!! (timeout 2000))
         (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")))))
+
+(deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-ilman-fim-yhteytta
+  (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" #())
+  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+        nakkilan-ramppi-id (hae-yllapitokohde-nakkilan-ramppi)
+        vuosi 2017
+        aikataulu-tiemerkinta-alku (pvm/->pvm "27.5.2017")
+        aikataulu-tiemerkinta-loppu (pvm/->pvm "28.5.2017")
+        kohteet [{:id nakkilan-ramppi-id
+                  :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
+                  :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}]
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :tallenna-yllapitokohteiden-aikataulu
+                          +kayttaja-jvh+
+                          {:urakka-id urakka-id
+                           :sopimus-id sopimus-id
+                           :vuosi vuosi
+                           :kohteet kohteet})]))
 
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-paallystysurakan-kayttajat.xml"))
@@ -591,3 +605,10 @@
                (<= (get kohde 1) (get kohde 8))) "Alikohde on kohteen sisällä")
       (is (and (>= (get kohde 3) (get kohde 6))
                (<= (get kohde 3) (get kohde 8))) "Alikohde on kohteen sisällä"))))
+
+(deftest testidatassa-validit-aikataulut
+  (let [yllapitokohteet (:maara (first (q-map "SELECT COUNT(*) as maara FROM yllapitokohde;")))
+        aikataulut (:maara (first (q-map "SELECT COUNT(*) as maara FROM yllapitokohteen_aikataulu;")))]
+    (is (> yllapitokohteet 1))
+    (is (> aikataulut 1))
+    (is (= yllapitokohteet aikataulut) "Testidatassa tulisi olla jokaisella ylläpitokohteella aikataulu")))
