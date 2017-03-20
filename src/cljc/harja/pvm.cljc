@@ -133,7 +133,9 @@
 
 (defn luo-pvm
   "Frontissa palauttaa goog.date.Datetimen
-  Backendissä palauttaa java.util.Daten"
+  Backendissä palauttaa java.util.Daten
+
+  Vuosi 1-index, kuukausi on 0-index ja pv on 1-index"
   [vuosi kk pv]
   #?(:cljs (DateTime. vuosi kk pv 0 0 0 0)
      :clj (Date. (- vuosi 1900) kk pv)))

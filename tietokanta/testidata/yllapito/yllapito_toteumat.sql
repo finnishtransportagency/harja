@@ -52,7 +52,7 @@ VALUES
 -- Tiemerkinnän yks. hint. tyot
 
 INSERT INTO tiemerkinnan_yksikkohintainen_toteuma
-(urakka, yllapitokohde, hinta, hintatyyppi, muutospvm, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
+(urakka, yllapitokohde, hinta, hintatyyppi, paivamaara, hinta_kohteelle, selite, tr_numero, yllapitoluokka, pituus)
 VALUES ((SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'),
 null, 666, 'toteuma':: tiemerkinta_toteuma_hintatyyppi, '2016-01-01', null, 'Testitoteuma 1', 20, 8, 5),
 ((SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'),
