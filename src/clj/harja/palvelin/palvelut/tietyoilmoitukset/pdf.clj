@@ -221,10 +221,17 @@
      [:fo:inline {:text-decoration "underline"}
       aika]]))
 
-(defn- vaikutukset [{kaistajarj ::t/kaistajarjestelyt :as ilm}]
+(defn- vaikutukset [{kaistajarj ::t/kaistajarjestelyt
+                     nopeusrajoitukset ::t/nopeusrajoitukset :as ilm}]
   (let [jarj (into {}
                    (map (juxt ::t/jarjestely ::t/selite))
-                   kaistajarj)]
+                   kaistajarj)
+        nopeus (into {}
+                     (map (juxt ::t/rajoitus ::t/matka))
+                     nopeusrajoitukset)
+        pinta (into {}
+                    (map (juxt ::t/materiaali ::t/matka))
+                    (::t/tienpinnat ilm))]
     (tietotaulukko
      [;; Vasen puoli
       (tietotaulukko
@@ -233,8 +240,28 @@
                                 ["Yksi ajorata suljettu" "ajorataSuljettu"]
                                 ["Muu" "muu" (get jarj "muu")]]
                                jarj))]
-       [(tieto "Nopeusrajoitus" "bar")]
-       [(tieto "Tien pinta työmaalla" "baz")]
+       [(tieto "Nopeusrajoitus"
+               [:fo:block
+                (checkbox (str "50 km/h "
+                               (when (contains? nopeus "50")
+                                 (str (get nopeus "50") " m"))) (contains? nopeus "50"))
+                (for [[raj matka] (sort-by first nopeus)
+                      :when (not= "50" raj)]
+                  (checkbox (str raj " km/h " matka " m") true))])]
+       [(tieto "Tien pinta työmaalla"
+               [:fo:block
+                (checkbox (str "Päällystetty "
+                               (when-let [m (pinta "paallystetty")]
+                                 (str m " m")))
+                          (contains? pinta "paallystetty"))
+                (checkbox (str "Jyrsitty "
+                               (when-let [m (pinta "jyrsitty")]
+                                 (str m " m")))
+                          (contains? pinta "jyrsitty"))
+                (checkbox (str "Murske "
+                               (when-let [m (pinta "murske")]
+                                 (str m " m")))
+                          (contains? pinta "murske"))])]
        [(tieto "Kiertotien pituus" "pitkä se on")])
 
       ;; Oikea puoli
@@ -254,8 +281,7 @@
                 (sisennetty-arvo (::t/viivastys_ruuhka_aikana ilm) "(min, ruuhka-aika)")])]
        [(tieto "Kulkurajoituksia"
                [:fo:block
-                (ajoneuvorajoitukset ilm)
-                ])])])))
+                (ajoneuvorajoitukset ilm)])])])))
 
 (defn- vaikutussuunta [{vs ::t/vaikutussuunta}]
   (tietotaulukko
