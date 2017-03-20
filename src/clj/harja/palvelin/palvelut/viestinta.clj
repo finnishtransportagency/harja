@@ -39,7 +39,7 @@
               (:sahkoposti henkilo)
               (str "Harja: " viesti-otsikko)
               viesti-body)
-            (catch Exception e
+            (catch Throwable e
               (log/error (format "Sähköpostin lähetys FIM-käyttäjälle %s epäonnistui. Virhe: %s"
                                  (pr-str henkilo) (pr-str e))))))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
@@ -66,7 +66,7 @@
         (doseq [henkilo viestin-saajat]
           (try+
             (sms/laheta sms (:puhelin henkilo) viesti)
-            (catch Exception e
+            (catch Throwable e
               (log/error (format "Tekstiviestin lähetys FIM-käyttäjälle %s epäonnistui. Virhe: %s"
                                  (pr-str henkilo) (pr-str e))))))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
