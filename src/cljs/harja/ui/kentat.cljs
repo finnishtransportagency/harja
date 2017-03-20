@@ -346,7 +346,8 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
 ;; Luo usean checkboksin, jossa valittavissa N-kappaleita vaihtoehtoja. Arvo on setti ruksittuja asioita
 (defmethod tee-kentta :checkbox-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
-                                               tyhjenna-kaikki? nayta-rivina? disabloi]} data]
+                                               tyhjenna-kaikki? nayta-rivina? disabloi
+                                               tasaa]} data]
   (assert data)
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
@@ -372,7 +373,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                                           ((if valittu? conj disj) valitut v)))}]
                            (vaihtoehto-nayta v)]]))]
        (if nayta-rivina?
-         [:table.boolean-group
+         [:table.boolean-group {:class (when (= tasaa :keskita) "keskita")}
           [:tbody
            [:tr
            (map-indexed (fn [i cb]
