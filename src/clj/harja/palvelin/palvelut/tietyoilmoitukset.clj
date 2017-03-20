@@ -23,19 +23,18 @@
       [(c/to-date (pvm/tuntia-sitten tunteja)) (pvm/nyt)]
       [alkuaika loppuaika])))
 
-(defn hae-tietyoilmoitukset [db user {:keys [urakka
+(defn hae-tietyoilmoitukset [db user {:keys [luotu-alkuaika
+                                             luotu-loppuaika
+                                             luotu-vakioaikavali
+                                             kaynnissa-alkuaika
+                                             kaynnissa-loppuaika
+                                             kaynnissa-vakioaikavali
                                              sijainti
+                                             urakka
                                              vain-kayttajan-luomat]
                                       :as hakuehdot}
                              max-maara]
-  (let [{:keys [luotu-alkuaika
-                luotu-loppuaika
-                luotu-vakioaikavali
-                kaynnissa-alkuaika
-                kaynnissa-loppuaika
-                kaynnissa-vakioaikavali
-                urakka]} hakuehdot
-        kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
+  (let [kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
                            db
                            user
                            (fn [urakka-id kayttaja]

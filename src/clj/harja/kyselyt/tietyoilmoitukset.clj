@@ -166,8 +166,8 @@
                   (when sijainti
                     {::t/osoite {::t/geometria (intersects? 100 sijainti)}}))
            (if (and kaynnissa-alku kaynnissa-loppu)
-             (op/or {::t/alku (op/between kaynnissa-alku kaynnissa-loppu)}
-                    {::t/loppu (op/between kaynnissa-alku kaynnissa-loppu)})
+             (op/and {::t/alku (op/<= kaynnissa-alku)}
+                     {::t/loppu (op/>= kaynnissa-loppu)})
              {::t/id op/not-null?})
            (if organisaatio
              (op/or
