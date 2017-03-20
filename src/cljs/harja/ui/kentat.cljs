@@ -816,7 +816,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
       muuttumaton? " Muokkaa reittiä"
       :else " Muuta valintaa")))
 
-(defn- tierekisterikentat-table [pakollinen? tie aosa aet losa loppuet karttavalinta virhe]
+(defn- tierekisterikentat-table [pakollinen? tie aosa aet losa loppuet sijainnin-tyhjennys karttavalinta virhe]
   [:table
    [:thead
     [:tr
@@ -838,6 +838,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
      [:td aet]
      [:td losa]
      [:td loppuet]
+     (when sijainnin-tyhjennys
+       [:td.sijannin-tyhjennys
+        sijainnin-tyhjennys])
      [:td.karttavalinta
       karttavalinta]
      (when virhe
@@ -846,7 +849,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 (defn- tierekisterikentat-rivitetty
   "Erilainen tyyli TR valitsimelle, jos lomake on hyvin kapea.
   Rivittää tierekisterivalinnan usealle riville."
-  [pakollinen? tie aosa aet losa loppuet karttavalinta virhe]
+  [pakollinen? tie aosa aet losa loppuet sijainnin-tyhjennys karttavalinta virhe]
   [:table
    [:tbody
     [:tr
@@ -867,6 +870,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
      [:td [:label.control-label [:span.kentan-label "Loppuetäisyys"]]]]
     [:tr
      [:td losa] [:td loppuet]]
+    (when sijainnin-tyhjennys
+      [:tr [:td.sijannin-tyhjennys
+            sijainnin-tyhjennys]])
     [:tr
      [:td {:colSpan 2} karttavalinta]]
     (when virhe
@@ -975,21 +981,20 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
             [tr-kentan-elementti lomake? kartta? muuta! blur "aet" alkuetaisyys :alkuetaisyys @karttavalinta-kaynnissa]
             [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa :loppuosa @karttavalinta-kaynnissa]
             [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys :loppuetaisyys @karttavalinta-kaynnissa]
+            (when  (and (not @karttavalinta-kaynnissa) tyhjennys-sallittu?)
+              [:button.nappi-tyhjenna.nappi-kielteinen {:on-click #(do (.preventDefault %)
+                                                                       (tasot/poista-geometria! :tr-valittu-osoite)
+                                                                       (reset! sijainti nil)
+                                                                       (reset! data {})
+                                                                       (reset! virheet nil))
+                                                        :disabled (when (empty? @data) "disabled")}
+               (ikonit/livicon-delete)])
             (if-not @karttavalinta-kaynnissa
-              [:span
-               (when tyhjennys-sallittu?
-                 [:button.nappi-tyhjenna.nappi-kielteinen {:on-click #(do (.preventDefault %)
-                                                                          (tasot/poista-geometria! :tr-valittu-osoite)
-                                                                          (reset! sijainti nil)
-                                                                          (reset! data {})
-                                                                          (reset! virheet nil))
-                                                           :disabled (when (empty? @data) "disabled")}
-                  (ikonit/livicon-delete)])
-               [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
-                                                           (reset! osoite-ennen-karttavalintaa osoite)
-                                                           (reset! data {})
-                                                           (reset! karttavalinta-kaynnissa true))}
-                (ikonit/map-marker) (tr-valintanapin-teksti osoite-alussa osoite)]]
+              [:button.nappi-ensisijainen {:on-click #(do (.preventDefault %)
+                                                          (reset! osoite-ennen-karttavalintaa osoite)
+                                                          (reset! data {})
+                                                          (reset! karttavalinta-kaynnissa true))}
+               (ikonit/map-marker) (tr-valintanapin-teksti osoite-alussa osoite)]
               [tr/karttavalitsin {:kun-peruttu #(do
                                                   (reset! data @osoite-ennen-karttavalintaa)
                                                   (reset! karttavalinta-kaynnissa false))
