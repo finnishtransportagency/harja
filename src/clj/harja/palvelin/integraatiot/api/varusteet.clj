@@ -20,7 +20,8 @@
             [clj-time.core :as t]
             [clojure.string :as str]
             [harja.domain.tierekisteri.tietolajit :as tietolajit]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn tarkista-parametrit [saadut vaaditut]
@@ -200,34 +201,41 @@
   "Käsittelee UI:lta tulleen varustehaun: hakee joko tunnisteen tai tietolajin ja
   tierekisteriosoitteen perusteella"
   [user tierekisteri {:keys [tunniste tierekisteriosoite tietolaji] :as tiedot}]
+  (oikeudet/ei-oikeustarkistusta!)
   (log/debug "Haetaan varusteita Tierekisteristä: " (pr-str tiedot))
 
-  (let [nyt (t/now)
-        tulos
-        (cond
-          (not (str/blank? tunniste))
-          (tierekisteri/hae-tietue tierekisteri tunniste tietolaji nyt)
+  (try+
+    (let [nyt (t/now)
+          tulos
+          (cond
+            (not (str/blank? tunniste))
+            (tierekisteri/hae-tietue tierekisteri tunniste tietolaji nyt)
 
-          (and tierekisteriosoite
-               (not (str/blank? tietolaji)))
-          (tierekisteri/hae-tietueet
-            tierekisteri
-            {:numero (:numero tierekisteriosoite)
-             :aet (:alkuetaisyys tierekisteriosoite)
-             :aosa (:alkuosa tierekisteriosoite)
-             :let (:loppuetaisyys tierekisteriosoite)
-             :losa (:loppuosa tierekisteriosoite)}
-            tietolaji
-            nyt nyt)
+            (and tierekisteriosoite
+                 (not (str/blank? tietolaji)))
+            (tierekisteri/hae-tietueet
+              tierekisteri
+              {:numero (:numero tierekisteriosoite)
+               :aet (:alkuetaisyys tierekisteriosoite)
+               :aosa (:alkuosa tierekisteriosoite)
+               :let (:loppuetaisyys tierekisteriosoite)
+               :losa (:loppuosa tierekisteriosoite)}
+              tietolaji
+              nyt nyt)
 
-          :default
-          {:error "Ei hakuehtoja"})]
+            :default
+            {:error "Ei hakuehtoja"})]
+      
+      (if (:onnistunut tulos)
 
-    (if (:onnistunut tulos)
-      (merge {:onnistunut true}
-             (hae-tietolaji-tunnisteella tierekisteri tietolaji)
-             (muodosta-tietueiden-hakuvastaus tierekisteri tulos))
-      tulos)))
+        (merge {:onnistunut true}
+               (hae-tietolaji-tunnisteella tierekisteri tietolaji)
+               (muodosta-tietueiden-hakuvastaus tierekisteri tulos))
+        tulos))
+
+    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+      {:onnistunut false
+       :virheet virheet})))
 
 (defrecord Varusteet []
   component/Lifecycle
