@@ -15,11 +15,17 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def aikavalit [{:nimi "Ei rajausta" :ei-rajausta? true}
-                {:nimi "1 päivän ajalta" :tunteja 24}
-                {:nimi "1 viikon ajalta" :tunteja 168}
-                {:nimi "4 viikon ajalta" :tunteja 672}
-                {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
+(def luonti-aikavalit [{:nimi "Ei rajausta" :ei-rajausta? true}
+                       {:nimi "1 päivän ajalta" :tunteja 24}
+                       {:nimi "1 viikon ajalta" :tunteja 168}
+                       {:nimi "4 viikon ajalta" :tunteja 672}
+                       {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
+
+(def kaynnissa-aikavalit [{:nimi "Ei rajausta" :ei-rajausta? true}
+                          {:nimi "1 päivän sisällä" :tunteja 24}
+                          {:nimi "1 viikon sisällä" :tunteja 168}
+                          {:nimi "4 viikon sisällä" :tunteja 672}
+                          {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
 
 (defonce ulkoisetvalinnat
          (reaction {:voi-hakea? true
@@ -35,9 +41,12 @@
                                   :valittu-ilmoitus nil
                                   :haku-kaynnissa? false
                                   :tietyoilmoitukset nil
-                                  :valinnat {:vakioaikavali (first aikavalit)
-                                             :alkuaika (pvm/tuntia-sitten 24)
-                                             :loppuaika (pvm/nyt)}}))
+                                  :valinnat {:luotu-vakioaikavali (second luonti-aikavalit)
+                                             :luotu-alkuaika (pvm/tuntia-sitten 24)
+                                             :luotu-loppuaika (pvm/nyt)
+                                             :kaynnissa-vakioaikavali (first kaynnissa-aikavalit)
+                                             :kaynnissa-alkuaika (pvm/tunnin-paasta 24)
+                                             :kaynnissa-loppuaika (pvm/tunnin-paasta 24)}}))
 
 (defonce karttataso-tietyoilmoitukset (atom false))
 
@@ -89,9 +98,12 @@
     (let [tulos! (tuck/send-async! ->IlmoituksetHaettu)]
       (go
         (tulos!
-          (let [parametrit (select-keys valinnat [:alkuaika
-                                                  :loppuaika
-                                                  :vakioaikavali
+          (let [parametrit (select-keys valinnat [:luotu-alkuaika
+                                                  :luotu-loppuaika
+                                                  :luotu-vakioaikavali
+                                                  :kaynnissa-alkuaika
+                                                  :kaynnissa-loppuaika
+                                                  :kaynnissa-vakioaikavali
                                                   :sijainti
                                                   :urakka
                                                   :vain-kayttajan-luomat])]

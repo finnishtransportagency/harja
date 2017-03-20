@@ -11,7 +11,6 @@
 (defqueries "harja/kyselyt/tietyoilmoitukset.sql")
 
 (define-tables db
-  ["tr_osoite" ::tr/tr-osoite]
   ["tietyon_henkilo" ::t/henkilo]
   ["tietyon_ajoneuvorajoitukset" ::t/ajoneuvorajoitukset*]
   ["tietyotyyppi" ::t/tietyotyyppi]
@@ -148,18 +147,28 @@
       [(str "ST_Intersects(ST_Buffer(?,?), " value-accessor ")")
        [geometry threshold]])))
 
-(defn hae-ilmoitukset [db {:keys [alku loppu urakat organisaatio kayttaja-id sijainti]}]
+(defn hae-ilmoitukset [db {:keys [luotu-alku
+                                  luotu-loppu
+                                  kaynnissa-alku
+                                  kaynnissa-loppu
+                                  urakat
+                                  organisaatio
+                                  kayttaja-id
+                                  sijainti]}]
   (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
          (op/and
-          (merge {::t/paatietyoilmoitus op/null?}
-                 (when (and alku loppu)
-                   {::t/luotu (op/between alku loppu)})
-                 (when kayttaja-id
-                   {::t/luoja kayttaja-id})
-                 (when sijainti
-                   {::t/osoite {::t/geometria (intersects? 100 sijainti)}}))
-          (if organisaatio
-            (op/or
-             {::t/urakka-id (op/or op/null? (op/in urakat))}
-             {::t/urakoitsija-id organisaatio})
-            {::t/urakka-id (op/or op/null? (op/in urakat))}))))
+           (merge {::t/paatietyoilmoitus op/null?}
+                  (when (and luotu-alku luotu-loppu)
+                    {::t/luotu (op/between luotu-alku luotu-loppu)})
+                  (when kayttaja-id
+                    {::t/luoja kayttaja-id})
+                  (when sijainti
+                    {::t/osoite {::tr/geometria (intersects? 100 sijainti)}}))
+           (when (and kaynnissa-alku kaynnissa-loppu)
+             (op/and {::t/alku (op/<= kaynnissa-alku)}
+                     {::t/loppu (op/>= kaynnissa-loppu)}))
+           (if organisaatio
+             (op/or
+               {::t/urakka-id (op/or op/null? (op/in urakat))}
+               {::t/urakoitsija-id organisaatio})
+             {::t/urakka-id (op/or op/null? (op/in urakat))}))))
