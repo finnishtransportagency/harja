@@ -25,7 +25,7 @@
   },
   {
     "title": "Tienäkymä",
-    "body": "<iframe width=\"560\" height=\"315\" src=\"https://youtu.be/S1t2FI7wc0o\" frameborder=\"0\" allowfullscreen></iframe>"
+    "body": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/S1t2FI7wc0o\" frameborder=\"0\" allowfullscreen></iframe>"
   },
   {
     "title": "Ilmoitusten työnkulkujen yleiskuva",
@@ -41,6 +41,6 @@
   },
   {
     "title": "Laadunseuranta ja mobiilityökalu",
-    "body": "<iframe width=\"560\" height=\"315\" src=\"  https://youtu.be/SStInOlD0v0\" frameborder=\"0\" allowfullscreen></iframe>"
+    "body": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/SStInOlD0v0\" frameborder=\"0\" allowfullscreen></iframe>"
   }
 ]
