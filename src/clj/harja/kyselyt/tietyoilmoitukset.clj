@@ -164,10 +164,9 @@
                     {::t/luoja kayttaja-id})
                   (when sijainti
                     {::t/osoite {::tr/geometria (intersects? 100 sijainti)}}))
-           (if (and kaynnissa-alku kaynnissa-loppu)
+           (when (and kaynnissa-alku kaynnissa-loppu)
              (op/and {::t/alku (op/<= kaynnissa-alku)}
-                     {::t/loppu (op/>= kaynnissa-loppu)})
-             {::t/id op/not-null?})
+                     {::t/loppu (op/>= kaynnissa-loppu)}))
            (if organisaatio
              (op/or
                {::t/urakka-id (op/or op/null? (op/in urakat))}
