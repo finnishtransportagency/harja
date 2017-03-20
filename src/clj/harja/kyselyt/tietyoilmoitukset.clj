@@ -164,7 +164,7 @@
                   (when kayttaja-id
                     {::t/luoja kayttaja-id})
                   (when sijainti
-                    {::t/osoite {::t/geometria (intersects? 100 sijainti)}}))
+                    {::t/osoite {::tr/geometria (intersects? 100 sijainti)}}))
            (if (and kaynnissa-alku kaynnissa-loppu)
              (op/and {::t/alku (op/<= kaynnissa-alku)}
                      {::t/loppu (op/>= kaynnissa-loppu)})
