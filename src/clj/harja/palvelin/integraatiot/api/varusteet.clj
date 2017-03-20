@@ -19,7 +19,8 @@
             [harja.pvm :as pvm]
             [clj-time.core :as t]
             [clojure.string :as str]
-            [harja.domain.tierekisteri.tietolajit :as tietolajit])
+            [harja.domain.tierekisteri.tietolajit :as tietolajit]
+            [harja.domain.oikeudet :as oikeudet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn tarkista-parametrit [saadut vaaditut]
@@ -76,7 +77,8 @@
   (let [vastausdata (tierekisteri/hae-kaikki-tietolajit tierekisteri nil)]
     (tierekisteri-sanomat/muunna-tietolajien-hakuvastaus vastausdata)))
 
-(defn hae-tietolaji [tierekisteri parametrit kayttaja]
+(defn hae-tietolajit [tierekisteri parametrit kayttaja]
+  (oikeudet/ei-oikeustarkistusta!)
   (let [tunniste (get parametrit "tunniste")]
     (if (not (str/blank? tunniste))
       (do
@@ -235,7 +237,7 @@
       (GET "/api/varusteet/tietolaji" request
         (kasittele-kutsu-async db integraatioloki :hae-tietolaji request nil json-skeemat/tietolajien-haku
                                (fn [parametrit _ kayttaja _]
-                                 (hae-tietolaji tierekisteri parametrit kayttaja)))))
+                                 (hae-tietolajit tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietueet
@@ -274,7 +276,8 @@
 
     (julkaise-palvelu http :hae-tietolajin-kuvaus
                       (fn [user tietolaji]
-                        (:tietolaji (hae-tietolaji tierekisteri {"tunniste" tietolaji} user))))
+                        (let [tietolajit (hae-tietolajit tierekisteri {"tunniste" tietolaji} user)]
+                          (:tietolaji (first (:tietolajit tietolajit))))))
 
     (julkaise-palvelu http :hae-varusteita
                       (fn [user tiedot]
