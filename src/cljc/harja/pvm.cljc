@@ -27,6 +27,9 @@
 
 
 #?(:cljs
+   (defrecord Aika [tunnit minuutit sekunnit]))
+
+#?(:cljs
    ;; Toteutetaan hash ja equiv, jotta voimme käyttää avaimena hashejä
    (extend-type DateTime
      IHash

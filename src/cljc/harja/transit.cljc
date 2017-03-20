@@ -1,6 +1,7 @@
 (ns harja.transit
   "Harjan transit laajennokset"
   (:require [cognitect.transit :as t]
+            [harja.pvm :as pvm]
             [harja.domain.roolit :as roolit]
             #?(:clj
                [harja.geo :as geo]
@@ -25,7 +26,6 @@
 
 #?(:cljs
    (do
-     (defrecord Aika [tunnit minuutit sekunnit])
      (deftype AikaHandler []
        Object
        (tag [_ v] "aika")
@@ -34,7 +34,7 @@
            (str tunnit ":" minuutit ":" (or sekunnit 0)))))
      (defn luo-aika [aika]
        (let [[t m h] (map js/parseInt (str/split aika #":"))]
-         (->Aika t m h)))))
+         (pvm/->Aika t m h)))))
 
 #?(:clj
    (def write-optiot {:handlers
@@ -62,7 +62,7 @@
    (def write-optiot {:handlers
                       {DateTime (DateTimeHandler.)
                        UtcDateTime (DateTimeHandler.)
-                       Aika (AikaHandler.)
+                       pvm/Aika (AikaHandler.)
                        }}))
 
 #?(:clj

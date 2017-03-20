@@ -621,6 +621,21 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
             (re-matches re t))
     (reset! atomi t)))
 
+(defn- aseta-aika! [aika-text aseta-fn!]
+  (if (re-matches #"\d{3}" aika-text)
+    ;; jos yritetään kirjoittaa aika käyttämättä : välimerkkiä,
+    ;; niin 3 merkin kohdalla lisätään se automaattisesti
+    (let [alku (js/parseInt (.substring aika-text 0 2))]
+      (if (< alku 24)
+        ;; 123 => 12:3
+        (aseta-fn! (str (subs aika-text 0 2) ":" (subs aika-text 2)))
+        ;; 645 => 6:45
+        (aseta-fn! (str (subs aika-text 0 1) ":" (subs aika-text 1)))))
+
+    (when (or (str/blank? aika-text)
+              (re-matches +aika-regex+ aika-text))
+      (aseta-fn! aika-text))))
+
 (defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus lomake? pakota-suunta]}
                                  data]
 
@@ -689,18 +704,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                             (reset! data nil)))))
 
              muuta-pvm!   #(resetoi-jos-tyhja-tai-matchaa % +pvm-regex+ pvm-teksti)
-             muuta-aika!  #(if (re-matches #"\d{3}" %)
-                             ;; jos yritetään kirjoittaa aika käyttämättä : välimerkkiä,
-                             ;; niin 3 merkin kohdalla lisätään se automaattisesti
-                             (let [alku (js/parseInt (.substring % 0 2))]
-                               (if (< alku 24)
-                                 ;; 123 => 12:3
-                                 (reset! aika-teksti
-                                         (str (.substring % 0 2) ":" (.substring % 2)))
-                                 ;; 645 => 6:45
-                                 (reset! aika-teksti
-                                         (str (.substring % 0 1) ":" (.substring % 1)))))
-                             (resetoi-jos-tyhja-tai-matchaa % +aika-regex+ aika-teksti))
+             muuta-aika!  #(aseta-aika! % (partial reset! aika-teksti))
 
              koske-aika! (fn [] (swap! pvm-aika-koskettu assoc 1 true))
              koske-pvm! (fn [] (swap! pvm-aika-koskettu assoc 0 true))
@@ -1028,3 +1032,31 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
    [:span.kentan-otsikko otsikko]
    [:div.kentta
     [tee-kentta kentta-params arvo-atom]]])
+
+(def aika-pattern #"^(\d{1,2})(:(\d{1,2}))(:(\d{1,2}))?$")
+
+(defn- parsi-aika [string]
+  (let [[_ t _ m _ s] (re-matches aika-pattern string)]
+    (if t
+      (pvm/map->Aika {:tunnit (js/parseInt t)
+                      :minuutit (js/parseInt m)
+                      :sekunnit (and s (js/parseInt s))})
+      {:keskenerainen string})))
+
+(defmethod tee-kentta :aika [{:keys [placeholder on-focus lomake?] :as opts} data]
+  (let [{:keys [tunnit minuutit sekunnit keskenerainen] :as aika} @data]
+      [:input {:class (when lomake? "form-control")
+               :placeholder placeholder
+               on-change* (fn [e]
+                            (let [v (-> e .-target .-value)
+                                  [v aika] (aseta-aika! v (juxt identity parsi-aika))]
+                              (when aika
+                                (if (:tunnit aika)
+                                  (swap! data merge (assoc aika :keskenerainen v))
+                                  (swap! data assoc
+                                         :tunnit nil
+                                         :minuutit nil
+                                         :sekunnit nil
+                                         :keskenerainen v)))))
+               :on-focus on-focus
+               :value (or keskenerainen (fmt/aika aika))}]))
