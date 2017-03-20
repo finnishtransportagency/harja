@@ -178,7 +178,7 @@
   (let [lahetys-onnistui? (yha/laheta-kohteet yha urakka-id kohde-idt)
         paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi)]
     {:paallystysilmoitukset paivitetyt-ilmoitukset
-    :lahetys-onnistui? lahetys-onnistui?}))
+     :lahetys-onnistui? lahetys-onnistui?}))
 
 (defrecord Yha []
   component/Lifecycle
