@@ -12,16 +12,23 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.palvelut.tietyoilmoitukset.pdf :as pdf]
             [harja.domain.tietyoilmoitukset :as t]
-            [specql.core :refer [fetch]]
+            [specql.core :refer [fetch upsert!]]
             [clojure.spec :as s]
             [clj-time.coerce :as c]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [specql.op :as op]))
 
 (defn aikavaliehto [vakioaikavali alkuaika loppuaika]
   (when (not (:ei-rajausta? vakioaikavali))
     (if-let [tunteja (:tunteja vakioaikavali)]
       [(c/to-date (pvm/tuntia-sitten tunteja)) (pvm/nyt)]
       [alkuaika loppuaika])))
+
+(defn- urakat [db user oikeus]
+  (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
+   db
+   user
+   (partial oikeus oikeudet/ilmoitukset-ilmoitukset)))
 
 (defn hae-tietyoilmoitukset [db user {:keys [luotu-alkuaika
                                              luotu-loppuaika
@@ -34,12 +41,7 @@
                                              vain-kayttajan-luomat]
                                       :as hakuehdot}
                              max-maara]
-  (let [kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
-                           db
-                           user
-                           (fn [urakka-id kayttaja]
-                             (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset urakka-id kayttaja))
-                           nil nil nil nil #inst "1900-01-01" #inst "2100-01-01")
+  (let [kayttajan-urakat (urakat db user oikeudet/voi-lukea?)
         alkuehto (fn [aikavali] (when (first aikavali) (konv/sql-timestamp (first aikavali))))
         loppuehto (fn [aikavali] (when (second aikavali) (konv/sql-timestamp (second aikavali))))
         luotu-aikavali (aikavaliehto luotu-vakioaikavali luotu-alkuaika luotu-loppuaika)
@@ -62,6 +64,13 @@
         tietyoilmoitukset (q-tietyoilmoitukset/hae-ilmoitukset db kyselyparametrit)]
     tietyoilmoitukset))
 
+(defn tallenna-tietyoilmoitus [db user ilmoitus]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user (::t/urakka-id ilmoitus))
+  (upsert! db ::t/ilmoitus
+           ilmoitus
+           {::t/urakka-id (op/in (urakat db user oikeudet/voi-kirjoittaa?))}))
+
+
 (defn tietyoilmoitus-pdf [db user params]
   (pdf/tietyoilmoitus-pdf
     (first (fetch db ::t/ilmoitus+pituus
@@ -80,6 +89,11 @@
                       (fn [user tiedot]
                         (hae-tietyoilmoitukset db user tiedot 501))
                       {:vastaus-spec ::tietyoilmoitukset})
+    (julkaise-palvelu http :tallenna-tietyoilmoitus
+                      (fn [user ilmoitus]
+                        (tallenna-tietyoilmoitus db user ilmoitus))
+                      {:kysely-spec ::t/ilmoitus
+                       :vastaus-spec ::t/ilmoitus})
     (when pdf
       (pdf-vienti/rekisteroi-pdf-kasittelija!
         pdf :tietyoilmoitus (partial #'tietyoilmoitus-pdf db)))
@@ -87,7 +101,8 @@
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
-                     :hae-tietyoilmoitukset)
+                     :hae-tietyoilmoitukset
+                     :tallenna-tietyoilmoitus)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :tietyoilmoitus))
     this))
