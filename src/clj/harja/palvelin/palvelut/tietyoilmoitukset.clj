@@ -28,7 +28,6 @@
                                              vain-kayttajan-luomat]
                                       :as hakuehdot}
                              max-maara]
-  (println "---> hakuehdot" hakuehdot)
   (let [{:keys [luotu-alkuaika
                 luotu-loppuaika
                 luotu-vakioaikavali
@@ -61,7 +60,6 @@
                           :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
                           :maxmaara max-maara
                           :organisaatio (:id (:organisaatio user))}
-        _ (println "---> kyselyparametrit" kyselyparametrit)
         tietyoilmoitukset (q-tietyoilmoitukset/hae-ilmoitukset db kyselyparametrit)]
     tietyoilmoitukset))
 
