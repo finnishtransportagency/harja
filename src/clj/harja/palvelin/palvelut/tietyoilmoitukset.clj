@@ -17,13 +17,11 @@
             [clj-time.coerce :as c]
             [harja.pvm :as pvm]))
 
-(defn aikavaliehto [{:keys [vakioaikavali aikavali alkuaika loppuaika]}]
+(defn aikavaliehto [vakioaikavali alkuaika loppuaika]
   (when (not (:ei-rajausta? vakioaikavali))
-    (if aikavali
-      aikavali
-      (if-let [tunteja (:tunteja vakioaikavali)]
-        [(c/to-date (pvm/tuntia-sitten tunteja)) (pvm/nyt)]
-        [alkuaika loppuaika]))))
+    (if-let [tunteja (:tunteja vakioaikavali)]
+      [(c/to-date (pvm/tuntia-sitten tunteja)) (pvm/nyt)]
+      [alkuaika loppuaika])))
 
 (defn hae-tietyoilmoitukset [db user {:keys [urakka
                                              sijainti
@@ -31,22 +29,31 @@
                                       :as hakuehdot}
                              max-maara]
   (println "---> hakuehdot" hakuehdot)
-  (let [kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
+  (let [{:keys [luotu-alkuaika
+                luotu-loppuaika
+                luotu-vakioaikavali
+                kaynnissa-alkuaika
+                kaynnissa-loppuaika
+                kaynnissa-vakioaikavali
+                urakka]} hakuehdot
+        kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
                            db
                            user
                            (fn [urakka-id kayttaja]
                              (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset urakka-id kayttaja))
                            nil nil nil nil #inst "1900-01-01" #inst "2100-01-01")
-        aikavali (aikavaliehto hakuehdot)
-        alku (when (first aikavali) (konv/sql-timestamp (first aikavali)))
-        loppu (when (second aikavali) (konv/sql-timestamp (second aikavali)))
-
-
-        _ (println "---> alku " alku)
-        _ (println "---> loppu " loppu)
-
-        kyselyparametrit {:alku alku
-                          :loppu loppu
+        alkuehto (fn [aikavali] (when (first aikavali) (konv/sql-timestamp (first aikavali))))
+        loppuehto (fn [aikavali] (when (second aikavali) (konv/sql-timestamp (second aikavali))))
+        luotu-aikavali (aikavaliehto luotu-vakioaikavali luotu-alkuaika luotu-loppuaika)
+        luotu-alku (alkuehto luotu-aikavali)
+        luotu-loppu (loppuehto luotu-aikavali)
+        kaynnissa-aikavali (aikavaliehto kaynnissa-vakioaikavali kaynnissa-alkuaika kaynnissa-loppuaika)
+        kaynnissa-alku (alkuehto kaynnissa-aikavali)
+        kaynnissa-loppu (loppuehto kaynnissa-aikavali)
+        kyselyparametrit {:luotu-alku luotu-alku
+                          :luotu-loppu luotu-loppu
+                          :kaynnissa-alku kaynnissa-alku
+                          :kaynnissa-loppu kaynnissa-loppu
                           :urakat (if (and urakka (not (str/blank? urakka)))
                                     [(Integer/parseInt urakka)]
                                     kayttajan-urakat)
@@ -54,6 +61,7 @@
                           :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
                           :maxmaara max-maara
                           :organisaatio (:id (:organisaatio user))}
+        _ (println "---> kyselyparametrit" kyselyparametrit)
         tietyoilmoitukset (q-tietyoilmoitukset/hae-ilmoitukset db kyselyparametrit)]
     tietyoilmoitukset))
 

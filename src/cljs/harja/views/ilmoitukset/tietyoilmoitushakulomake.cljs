@@ -74,7 +74,20 @@
     [lomake/lomake
      {:luokka :horizontal
       :muokkaa! #(e! (tiedot/->AsetaValinnat %))}
-     [(valinnat/aikavalivalitsin "Luotu välillä" tiedot/aikavalit valinnat-nyt)
+     [(valinnat/aikavalivalitsin
+        "Luotu välillä"
+        tiedot/luonti-aikavalit
+        valinnat-nyt
+        {:valokioaikavali :luotu-vakioaikavali
+         :alkuaika :luotu-alkuaika
+         :loppuaika :luotu-loppuaika})
+      (valinnat/aikavalivalitsin
+        "Käynnissä välillä"
+        tiedot/kaynnissa-aikavalit
+        valinnat-nyt
+        {:valokioaikavali :kaynnissa-vakioaikavali
+         :alkuaika :kaynnissa-alkuaika
+         :loppuaika :kaynnissa-loppuaika})
       {:nimi :urakka
        :otsikko "Urakka"
        :tyyppi :valinta
