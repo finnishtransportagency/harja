@@ -25,7 +25,6 @@
              :sideainetyyppi (paallystysilmoitus/sideainetyypin-koodi-nimella (:sideainetyyppi kivi))
              :paallystetyyppi (paallystys-ja-paikkaus/hae-koodi-apin-paallysteella (:paallystetyyppi alikohde))
              :kokonaismassamaara (:kokonaismassamaara alikohde)
-             :edellinen-paallystetyyppi (paallystys-ja-paikkaus/hae-koodi-apin-paallysteella (:edellinen-paallystetyyppi alikohde))}))
         (get-in paallystysilmoitus [:yllapitokohde :alikohteet])))
 
 (defn rakenna-alustatoimet [paallystysilmoitus]

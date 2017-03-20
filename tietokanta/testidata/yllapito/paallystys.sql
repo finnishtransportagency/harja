@@ -234,8 +234,7 @@ INSERT INTO paallystysilmoitus (paallystyskohde, tila, takuupvm, ilmoitustiedot)
         "tyomenetelma": 21,
         "sideainetyyppi": 2,
         "paallystetyyppi": 2,
-        "kokonaismassamaara": 12,
-        "edellinen-paallystetyyppi": 2
+        "kokonaismassamaara": 12
       },
       {
         "rc%": 12,
@@ -253,8 +252,7 @@ INSERT INTO paallystysilmoitus (paallystyskohde, tila, takuupvm, ilmoitustiedot)
         "tyomenetelma": 21,
         "sideainetyyppi": 2,
         "paallystetyyppi": 2,
-        "kokonaismassamaara": 12,
-        "edellinen-paallystetyyppi": 2
+        "kokonaismassamaara": 12
       }
     ],
     "alustatoimet": [
@@ -295,8 +293,7 @@ INSERT INTO paallystysilmoitus (paallystyskohde, tila, takuupvm, ilmoitustiedot)
         "tyomenetelma": 21,
         "sideainetyyppi": 2,
         "paallystetyyppi": 2,
-        "kokonaismassamaara": 12,
-        "edellinen-paallystetyyppi": 2
+        "kokonaismassamaara": 12
       }
     ],
     "alustatoimet": [
@@ -335,8 +332,7 @@ VALUES ((SELECT id
       "tyomenetelma": 21,
       "sideainetyyppi": 2,
       "paallystetyyppi": 2,
-      "kokonaismassamaara": 12,
-      "edellinen-paallystetyyppi": 2
+      "kokonaismassamaara": 12
     }
   ],
   "alustatoimet": [
@@ -375,8 +371,7 @@ VALUES ((SELECT id
       "tyomenetelma": 21,
       "sideainetyyppi": 2,
       "paallystetyyppi": 2,
-      "kokonaismassamaara": 12,
-      "edellinen-paallystetyyppi": 2
+      "kokonaismassamaara": 12
     }
   ],
   "alustatoimet": [
