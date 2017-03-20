@@ -5,10 +5,11 @@
             [harja.domain.tietyoilmoitukset :as t]
             [harja.domain.tierekisteri :as tr]
             [clojure.spec :as s]
-            [clojure.future :refer :all]))
+            [clojure.future :refer :all]
+            [clojure.string :refer [trim]]))
 
 
-(def db {:connection-uri (slurp ".specql-db")})
+(def db {:connection-uri (trim (slurp ".specql-db"))})
 
 (s/def ::d/geometry any?)
 
