@@ -39,8 +39,8 @@
                 "minimum": 0,
                 "required": true
               },
-              "muutospvm": {
-                "id": "urn:harja/tiemerkintatoteumat/0/tiemerkintatoteuma/muutospvm",
+              "paivamaara": {
+                "id": "urn:harja/tiemerkintatoteumat/0/tiemerkintatoteuma/paivamaara",
                 "type": "string",
                 "format": "date-time",
                 "required": true

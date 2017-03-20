@@ -19,7 +19,7 @@
           "id": 123
         },
         "hinta": 12345678,
-        "muutospvm": "2017-07-06T15:01:00+02:00",
+        "paivamaara": "2017-07-06T15:01:00+02:00",
         "selite": "Selite",
         "hintatyyppi": "toteuma"
       }

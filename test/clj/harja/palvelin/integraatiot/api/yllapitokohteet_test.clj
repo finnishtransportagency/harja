@@ -507,9 +507,9 @@
     (is (= (+ 1 (count toteumat-ennen-kirjausta)) (count toteumat-kirjauksen-jalkeen))
         "Vain yksi uusi tarkastus on kirjautunut ylläpitokohteelle")
 
-    (is (= urakka-id (:urakka toteuma)) "Toteuma on kirjattu oikealla urakalle")
-    (is (= kohde-id (:yllapitokohde toteuma)) "Toteuma on kirjattu oikealla yllapitokohteelle")
-    (is (= 12345678.00M (:hinta toteuma)) "Toteuma on kirjattu oikealla yllapitokohteelle")
+    (is (= urakka-id (:urakka toteuma)) "Toteuma on kirjattu oikealle urakalle")
+    (is (= kohde-id (:yllapitokohde toteuma)) "Toteuma on kirjattu oikealle yllapitokohteelle")
+    (is (= 12345678.00M (:hinta toteuma)) "Toteuma on kirjattu oikealle yllapitokohteelle")
     (is (not (str/blank? (:hinta_kohteelle toteuma))) "Toteuma sisältää tiedon, mille kohteelle sen on kohdistettu")
 
     (let [kutsudata (.replace kutsudata "12345678" "666")
