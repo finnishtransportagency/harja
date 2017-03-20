@@ -16,7 +16,8 @@
             [harja.ui.modal :as modal]
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.urakka.paallystys :as paallystys]
-            [cljs.core.async :as async])
+            [cljs.core.async :as async]
+            [harja.ui.napit :as napit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -295,7 +296,7 @@
         lahetettavat-ilmoitukset (filter ilmoituksen-voi-lahettaa? paallystysilmoitukset)
         kohde-idt (mapv :paallystyskohde-id lahetettavat-ilmoitukset)]
     (when-not @yha-kohteiden-paivittaminen-kaynnissa?
-      [harja.ui.napit/palvelinkutsu-nappi
+      [napit/palvelinkutsu-nappi
        (if (= 1 (count paallystysilmoitukset))
          (ikonit/teksti-ja-ikoni "Lähetä" (ikonit/livicon-arrow-right))
          "Lähetä kaikki kohteet YHA:n")
@@ -311,10 +312,11 @@
                       (empty? kohde-idt)
                       (not (oikeudet/on-muu-oikeus? "sido" oikeus urakka-id @istunto/kayttaja)))
         :virheviestin-nayttoaika viesti/viestin-nayttoaika-pitka
-        :virheviesti "Lähetys epäonnistui. Epäonnistuneiden päällystysilmoitusten lukko avattiin mahdollista muokkausta varten."
         :kun-valmis #(reset! paallystys/kohteet-yha-lahetyksessa nil)
         :kun-onnistuu (fn [paivitetyt-ilmoitukset]
-                        (if (every? #(or (:lahetys-onnistunut %) (nil? (:lahetys-onnistunut %))) paivitetyt-ilmoitukset)
+                        (if (every? #(or (:lahetys-onnistunut %)
+                                         (nil? (:lahetys-onnistunut %)))
+                                    paivitetyt-ilmoitukset)
                           (do (log "[YHA] Kohteet lähetetty YHA:n. Päivitetyt ilmoitukset: " (pr-str paivitetyt-ilmoitukset))
                               (viesti/nayta! "Kohteet lähetetty onnistuneesti." :success))
                           (do (log "[YHA] Lähetys epäonnistui osalle kohteista YHA:n. Päivitetyt ilmoitukset: " (pr-str paivitetyt-ilmoitukset))
