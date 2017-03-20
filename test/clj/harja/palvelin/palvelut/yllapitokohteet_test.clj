@@ -16,7 +16,9 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [clojure.core.async :refer [<!! timeout]]
-            [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet])
+            [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
+            [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
+            [harja.paneeliapurit :as paneeli])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -90,6 +92,16 @@
     (is (= (count kohteet) kohteiden-lkm) "Päällystyskohteiden määrä")
     (is (== (:maaramuutokset leppajarven-ramppi) 205)
         "Leppäjärven rampin määrämuutos laskettu oikein")))
+
+(deftest infopaneelin-skeemojen-luonti-yllapitokohteet-palvelulle
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :urakan-yllapitokohteet +kayttaja-jvh+
+                                {:urakka-id (hae-muhoksen-paallystysurakan-id)
+                                 :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+                                 :vuosi 2017})]
+    (is (paneeli/skeeman-luonti-onnistuu-kaikille?
+          :paallystys
+          (into [] yllapitokohteet-domain/yllapitokohde-kartalle-xf vastaus)))))
 
 (deftest paallystysurakan-aikatauluhaku-toimii
   (let [urakan-yllapitokohteet (kutsu-palvelua (:http-palvelin jarjestelma)
