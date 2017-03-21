@@ -80,7 +80,6 @@
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
       (is (match ilmoitustiedot
                  {:osoitteet [{:kohdeosa-id _
-                               :edellinen-paallystetyyppi nil
                                :lisaaineet "lisäaineet"
                                :leveys 1.2
                                :kokonaismassamaara 12.3
@@ -161,7 +160,6 @@
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
       (is (match ilmoitustiedot
                  {:osoitteet [{:kohdeosa-id _
-                               :edellinen-paallystetyyppi nil
                                :lisaaineet "lisäaineet"
                                :leveys 1.2
                                :kokonaismassamaara 12.3

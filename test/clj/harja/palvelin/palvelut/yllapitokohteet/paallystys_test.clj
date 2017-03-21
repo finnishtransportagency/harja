@@ -57,7 +57,6 @@
                                  :leveys 5
                                  :massamenekki 7
                                  :pinta-ala 8
-                                 :edellinen-paallystetyyppi 1
                                  :esiintyma "asd"
                                  :km-arvo "asd"
                                  :muotoarvo "asd"
@@ -81,7 +80,6 @@
                                  :leveys 5
                                  :massamenekki 7
                                  :pinta-ala 8
-                                 :edellinen-paallystetyyppi 1
                                  :esiintyma "asd"
                                  :km-arvo "asd"
                                  :muotoarvo "asd"
@@ -209,7 +207,7 @@
     ;; Kohdeosat on OK
     (is (= (count kohdeosat) 1))
     (is (= kohdeosat
-           [{:kohdeosa-id 666, :tr-kaista 1, :edellinen-paallystetyyppi 2, :lisaaineet "12",
+           [{:kohdeosa-id 666, :tr-kaista 1, :lisaaineet "12",
              :leveys 12, :kokonaismassamaara 12, :tr-ajorata 1, :sideainetyyppi 2, :muotoarvo "12",
              :esiintyma "12", :pitoisuus 12, :tr-loppuosa 3, :tunnus nil, :tr-alkuosa 1, :pinta-ala 12,
              :massamenekki 1, :kuulamylly 2, :tr-loppuetaisyys 0, :nimi "Leppäjärven kohdeosa", :raekoko 1,
@@ -255,8 +253,7 @@
                                 :verkon-tarkoitus 1}]
                 ;; Päällystysilmoituksen myötä kohteen kohdeosat päivitettiin vastaamaan
                 ;; päällystysilmoituksessa mainittuja osia
-                :osoitteet [{:edellinen-paallystetyyppi 1
-                             :esiintyma "asd"
+                :osoitteet [{:esiintyma "asd"
                              :km-arvo "asd"
                              :kohdeosa-id 14
                              :kokonaismassamaara 2
@@ -328,8 +325,7 @@
                                 :verkkotyyppi 1
                                 :verkon-sijainti 1
                                 :verkon-tarkoitus 1}]
-                :osoitteet [{:edellinen-paallystetyyppi 1
-                             :esiintyma "asd"
+                :osoitteet [{:esiintyma "asd"
                              :km-arvo "asd"
                              :kohdeosa-id 14
                              :kokonaismassamaara 2
@@ -404,7 +400,6 @@
                                                 :leveys 5
                                                 :massamenekki 7
                                                 :pinta-ala 8
-                                                :edellinen-paallystetyyppi 1
                                                 :esiintyma "asd"
                                                 :km-arvo "asd"
                                                 :muotoarvo "asd"

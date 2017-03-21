@@ -230,6 +230,8 @@
     (s/optional-key :kokonaismassamaara) (s/maybe s/Num) ;; tonnia
     (s/optional-key :pinta-ala) (s/maybe s/Num) ;; m2
     (s/optional-key :kuulamylly) (s/maybe +kuulamylly+)
+    ;; Edellinen päällystetyyppi -arvoa käytettiin lomakkeessa aiemmin, nykyään ei ole enää kiinnostava tieto
+    ;; Säilytetään skeemassa vanhan datan yhteensopivuuden vuoksi
     (s/optional-key :edellinen-paallystetyyppi) (s/maybe paallystys-ja-paikkaus/+paallystetyyppi+)
 
     ;; N kpl kiviainesesiintymiä
