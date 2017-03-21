@@ -11,10 +11,10 @@ CREATE TYPE tietyon_henkilo AS (
 
 -- Ajoneuvorajoitukset omaan tyyppiin
 CREATE TYPE tietyon_ajoneuvorajoitukset AS (
-  "max-korkeus"  double,
-  "max-leveys"   double,
-  "max-pituus"   double,
-  "max-paino"    double
+  "max-korkeus"  double precision,
+  "max-leveys"   double precision,
+  "max-pituus"   double precision,
+  "max-paino"    double precision
 );
 
 DROP TABLE tietyoilmoitus;
@@ -104,4 +104,3 @@ CREATE TABLE tietyoilmoitus (
   "urakoitsijan-nimi"                   VARCHAR(128),
   yllapitokohde                         INTEGER REFERENCES yllapitokohde (id)
   );
-
