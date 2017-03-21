@@ -26,6 +26,7 @@
   ["tietyon_tienpinta" ::t/tien-pinta]
   ["tietyon_mutkat" ::t/mutkat]
   ["tietyon_liikenteenohjaaja" ::t/liikenteenohjaaja*]
+  ["tietyon_liikenteenohjaus" ::t/liikenteenohjaus*]
   ["tietyon_huomautukset" ::t/huomautustyypit]
   ["tietyoilmoitus" ::t/ilmoitus
    {::t/paailmoitus (rel/has-one ::t/paatietyoilmoitus
