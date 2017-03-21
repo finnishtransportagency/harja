@@ -21,9 +21,9 @@
 
   #?(:cljs (:import (goog.date DateTime))
      :clj
-     (:import (java.util Calendar Date)
-              (java.text SimpleDateFormat)
-              (org.joda.time DateTimeZone))))
+           (:import (java.util Calendar Date)
+                    (java.text SimpleDateFormat)
+                    (org.joda.time DateTimeZone))))
 
 
 #?(:cljs
@@ -249,6 +249,10 @@
 
 (def iso8601-aikaleimalla
   (luo-format "yyyy-MM-dd'T'HH:mm:ss.S"))
+
+(defn aika-iso8601-ilman-millisekunteja
+  [pvm]
+  (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ss") pvm))
 
 (def kuukausi-ja-vuosi-fmt-valilyonnilla
   (luo-format "MM / yy"))
