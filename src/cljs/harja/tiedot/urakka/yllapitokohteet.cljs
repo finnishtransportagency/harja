@@ -15,6 +15,24 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+(defn yha-kohde? [kohde]
+  (some? (:yhaid kohde)))
+
+(defn suodata-yllapitokohteet-tienumerolla [kohteet tienumero]
+  (filterv #(or (nil? tienumero)
+                (= (:tr-numero %) tienumero))
+           kohteet))
+
+(defn suodata-yllapitokohteet-tyypin-ja-yhan-mukaan [kohteet
+                                                     yha-kohteet?
+                                                     yllapitokohdetyotyyppi]
+  (filterv
+    #(and (if yha-kohteet?
+            (yha-kohde? %)
+            (not (yha-kohde? %)))
+          (= (:yllapitokohdetyotyyppi %) yllapitokohdetyotyyppi))
+    kohteet))
+
 (defn hae-yllapitokohteet [urakka-id sopimus-id vuosi]
   (k/post! :urakan-yllapitokohteet {:urakka-id urakka-id
                                     :sopimus-id sopimus-id
@@ -44,11 +62,6 @@
                                      :vuosi vuosi
                                      :yllapitokohde-id yllapitokohde-id
                                      :maaramuutokset maaramuutokset}))
-
-
-
-(defn yha-kohde? [kohde]
-  (some? (:yhaid kohde)))
 
 (def alku (juxt :tr-alkuosa :tr-alkuetaisyys))
 (def loppu (juxt :tr-loppuosa :tr-loppuetaisyys))
