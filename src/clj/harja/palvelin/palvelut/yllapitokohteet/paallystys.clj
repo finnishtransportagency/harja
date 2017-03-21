@@ -102,6 +102,7 @@
         kokonaishinta (reduce + (keep paallystysilmoitus [:sopimuksen-mukaiset-tyot
                                                           :arvonvahennykset
                                                           :bitumi-indeksi
+                                                          :sakot-ja-bonukset
                                                           :kaasuindeksi]))
         kommentit (into []
                         (comp (map konv/alaviiva->rakenne)

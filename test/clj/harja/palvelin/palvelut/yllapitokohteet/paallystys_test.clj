@@ -241,6 +241,7 @@
         (is (not (nil? paallystysilmoitus-kannassa)))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
         (is (= (:tila paallystysilmoitus-kannassa) :valmis))
+        (is (== (:kokonaishinta paallystysilmoitus-kannassa) 4968))
         (is (= (:ilmoitustiedot paallystysilmoitus-kannassa)
                {:alustatoimet [{:kasittelymenetelma 1
                                 :paksuus 1234
