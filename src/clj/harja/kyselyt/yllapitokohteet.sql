@@ -423,9 +423,11 @@ SELECT
   tr_ajorata                   AS "tr-ajorata",
   tr_kaista                    AS "tr-kaista",
   yllapitoluokka,
-  suorittava_tiemerkintaurakka AS "suorittava-tiemerkintaurakka"
+  suorittava_tiemerkintaurakka AS "suorittava-tiemerkintaurakka",
+  tti.id                       AS "tietyoilmoitus-id"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN tietyoilmoitus tti ON ypk.id = tti.yllapitokohde
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
@@ -458,9 +460,11 @@ SELECT
   tr_loppuetaisyys          AS "tr-loppuetaisyys",
   tr_ajorata                AS "tr-ajorata",
   tr_kaista                 AS "tr-kaista",
-  yllapitoluokka
+  yllapitoluokka,
+  tti.id                    AS "tietyoilmoitus-id"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN tietyoilmoitus tti ON ypk.id = tti.yllapitokohde
 WHERE
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
   AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
