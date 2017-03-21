@@ -8,7 +8,8 @@
 
                :cljs
                [harja.pvm :as pvm])
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.fmt :as fmt])
   (:import #?@(:clj
                [(java.text SimpleDateFormat)
                 (java.time LocalTime)]
@@ -30,8 +31,7 @@
        Object
        (tag [_ v] "aika")
        (rep [_ v]
-         (let [{:keys [tunnit minuutit sekunnit]} v]
-           (str tunnit ":" minuutit ":" (or sekunnit 0)))))
+         (fmt/aika v)))
      (defn luo-aika [aika]
        (let [[t m h] (map js/parseInt (str/split aika #":"))]
          (pvm/->Aika t m h)))))
