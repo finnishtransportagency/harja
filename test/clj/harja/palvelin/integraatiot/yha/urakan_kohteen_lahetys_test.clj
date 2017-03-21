@@ -48,15 +48,27 @@
                         :urakan-kohteiden-toteumatietojen-kirjaus :urakka)
                kohde (xml/luetun-xmln-tagien-sisalto
                        urakka
-                       :kohteet :kohde)]
+                       :kohteet :kohde)
+               tr-osoite (xml/luetun-xmln-tagin-sisalto kohde :tierekisteriosoitevali)]
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :yha-id) [(str urakka-yhaid)]))
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :harja-id) [(str urakka-id)]))
+
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyyppi) ["1"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyotyyppi) ["paallystys"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :nimi) ["Leppäjärven ramppi"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :toiden-aloituspaivamaara) ["2017-05-19"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :paallystyksen-valmistumispaivamaara) ["2017-05-21"]))
-           )
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohteen-valmistumispaivamaara) ["2017-05-24"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :takuupaivamaara) ["2005-12-20"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :toteutunuthinta) ["5043.95"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :toteutunuthinta) ["5043.95"]))
+
+           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :karttapaivamaara) ["2017-03-21"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :tienumero) ["20"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aosa) ["1"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aet) ["0"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :losa) ["3"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :let) ["0"])))
          ;; Palautetaan vastaus
          onnistunut-kirjaus-vastaus)]
 
