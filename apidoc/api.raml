@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Harja API
-version: 1.0.11
+version: 1.0.15
 baseUri: https://testioag.liikennevirasto.fi/harja/api (testi) & https://oag.liikennevirasto.fi/harja/api (tuotanto)
 protocols: [HTTPS]
 mediaType: application/json
@@ -43,6 +43,9 @@ schemas:
  - urakan-yhteystietojen-haku-response: !include schemas/urakan-yhteystietojen-haku-response.schema.json
  - urakan-yllapitokohteen-paivitys-request: !include schemas/urakan-yllapitokohteen-paivitys-request.schema.json
  - urakan-yllapitokohteen-maaramuutosten-kirjaus-request: !include schemas/urakan-yllapitokohteen-maaramuutosten-kirjaus-request.schema.json
+ - yllapitokohteen-tarkastuksen-kirjaus-request: !include schemas/yllapitokohteen-tarkastuksen-kirjaus-request.schema.json
+ - urakan-tiemerkintatoteuman-kirjaus-request: !include schemas/urakan-tiemerkintatoteuman-kirjaus-request.schema.json
+ - urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request: !include schemas/urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request.schema.json
 
 securitySchemes:
  - basic:
@@ -229,6 +232,53 @@ documentation:
               application/json:
                 example: !include examples/epaonnistunut-kirjaus-response.json
                 schema: kirjaus-response
+      /tiemerkinta:
+        post:
+          is: [secured]
+          description: Tiemerkintätoteuman kirjaaminen, jota ei kohdisteta ylläpitokohteelle.
+          body:
+            application/json:
+              example: !include examples/urakan-tiemerkintatoteuman-kirjaus-request.json
+              schema: varustetoteuman-kirjaus-request
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           500:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: kirjaus-response yllapi
+        delete:
+          is: [secured]
+          description: Poista tiemerkintätoteuma tunnisteella.
+          body:
+            application/json:
+              schema: toteuman-poisto-request
+              example: !include examples/tiemerkintatoteuman-poisto-request.json
+          responses:
+           200:
+            body:
+              application/json:
+                example: !include examples/onnistunut-kirjaus-response.json
+                schema: kirjaus-response
+           400:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: virhe-response
+           500:
+            body:
+              application/json:
+                example: !include examples/epaonnistunut-kirjaus-response.json
+                schema: virhe-response
     /tarkastus:
       description: Tarkastusten kirjaaminen
       /tiestotarkastus:
@@ -791,6 +841,100 @@ documentation:
                     application/json:
                      example: !include examples/virhe-response.json
                      schema: virhe-response
+          /tarkastus:
+            post:
+              is: [secured]
+              description: Tarkastuksen kirjaaminen ylläpitokohteelle (katselmus, pistokoe, vastaanottotarkastus, takuutarkastus)
+              body:
+                application/json:
+                  example: !include examples/yllapitokohteen-tarkastuksen-kirjaus-request.json
+                  schema: yllapitokohteen-tarkastuksen-kirjaus-request
+              responses:
+               200:
+                body:
+                  application/json:
+                    example: !include examples/onnistunut-kirjaus-response.json
+                    schema: kirjaus-response
+               400:
+                body:
+                  application/json:
+                    example: !include examples/virhe-response.json
+                    schema: virhe-response
+               500:
+                body:
+                  application/json:
+                    example: !include examples/virhe-response.json
+                    schema: virhe-response
+            delete:
+              is: [secured]
+              description: Ylläpitokohteen tarkastuksen poisto
+              body:
+                application/json:
+                  schema: tarkastuksen-poisto-request
+                  example: !include examples/yllapitokohteen-tarkastuksen-poisto-request.json
+              responses:
+               200:
+                body:
+                  application/json:
+                    example: !include examples/onnistunut-kirjaus-response.json
+                    schema: kirjaus-response
+               400:
+                body:
+                  application/json:
+                    example: !include examples/virhe-response.json
+                    schema: virhe-response
+               500:
+                body:
+                  application/json:
+                    example: !include examples/virhe-response.json
+                    schema: kirjaus-response
+          /tiemerkintatoteuma:
+            post:
+              is: [secured]
+              description: Tiemerkinnän toteuman kirjaus ylläpitokohteelle
+              body:
+                application/json:
+                  example: !include examples/urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request.json
+                  schema: urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request
+              responses:
+               200:
+                body:
+                  application/json:
+                    example: !include examples/onnistunut-kirjaus-response.json
+                    schema: kirjaus-response
+               400:
+                body:
+                  application/json:
+                    example: !include examples/virhe-response.json
+                    schema: virhe-response
+               500:
+                body:
+                  application/json:
+                    example: !include examples/virhe-response.json
+                    schema: virhe-response
+            delete:
+              is: [secured]
+              description: Ylläpitokohteen tiemerkintätoteuman poistaminen
+              body:
+                application/json:
+                  schema: toteuman-poisto-request
+                  example: !include examples/tiemerkintatoteuman-poisto-request.json
+              responses:
+               200:
+                body:
+                  application/json:
+                    example: !include examples/onnistunut-kirjaus-response.json
+                    schema: kirjaus-response
+               400:
+                body:
+                  application/json:
+                    example: !include examples/virhe-response.json
+                    schema: virhe-response
+               500:
+                body:
+                  application/json:
+                    example: !include examples/virhe-response.json
+                    schema: kirjaus-response
   /yhteystiedot:
     /{urakkanumero}:
       get:
@@ -890,10 +1034,6 @@ documentation:
           description: Haettavan tietolajin tunniste
           type: string
           example: tl506
-        muutospaivamaara:
-          description: Haettavan tietolajin muutospäivämäärä
-          type: date
-          example: 2015-01-01
       responses:
          200:
           body:

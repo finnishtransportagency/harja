@@ -1,7 +1,19 @@
-<b>Nykyinen versio: 1.0.11</b>  
-<b>Julkaistu: 7.2.2017</b>
+<b>Nykyinen versio: 1.0.17</b>  
+<b>Julkaistu: 16.3.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.17 Julkaistu: 16.3.2017:
+    - Tiemerkinnän yks. hint. toteuman kirjauksessa käytetty muutospvm on nyt nimeltään paivamaara.
+- Versionumero: 1.0.16 Julkaistu: 9.3.2017:
+    - Lisätty ylläpitokohteen päivitykseen uudet alikohteen kentät: paallystetyyppi, raekoko, tyomenetelma & kokonaismassamaara.
+- Versionumero: 1.0.15 Julkaistu: 7.3.2017:
+    - Uudet rajapinnat tiemerkinnän toteumien kirjaamiselle ja poistamiselle
+- Versionumero: 1.0.14 Julkaistu: 7.3.2017:
+    - Uusi rajapinta ylläpitokohteiden tarkastusten kirjaamiselle ja poistamiselle
+- Versionumero: 1.0.13 Julkaistu: 23.2.2017:
+    - Päivystäjätietojen haun rajapinnat palauttavat ainoastaan voimassa olevat ja tulevat päivystykset, mikäli kutsuja ei rajaa hakua aikavälillä.
+- Versionumero: 1.0.12 Julkaistu: 9.2.2017:
+    - Tietolajien haulla voidaan hakea kaikki tietolajin kuvaukset kerralla. Muutospäivämäärää ei enää voi antaa parametrinä.
 - Versionumero: 1.0.11 Julkaistu: 7.2.2017:
     - Ylläpitokohteen päivityksessä ei voi enää päivittää tienumeroa kohteelle tai alikohteelle
 - Versionumero: 1.0.10 Julkaistu: 30.1.2017:
