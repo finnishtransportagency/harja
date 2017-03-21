@@ -117,10 +117,10 @@
   (when (and data (not (empty? data))) (Integer/parseInt data)))
 
 (defn parsi-desimaaliluku [data]
-  (when (and data (not (empty? data))) (Double/parseDouble data))
+  (when (and data (not (empty? data))) (Double/parseDouble data)))
 
-  (defn parsi-totuusarvo [data]
-    (when (and data (not (empty? data))) (Boolean/parseBoolean data))))
+(defn parsi-totuusarvo [data]
+  (when (and data (not (empty? data))) (Boolean/parseBoolean data)))
 
 (defn parsi-avain [data]
   (when (and data (not (empty? data))) (keyword (clojure.string/lower-case data))))
