@@ -93,11 +93,14 @@
   (luetun-tagin-sisalto (luetun-xmln-tagi luettu-xml tagi)))
 
 (defn luetun-xmln-tagien-sisalto
-  "Ottaa Clojure-muotoon muunnetun XML-sisällön ja palauttaa tagijonon sisällön."
+  "Ottaa Clojure-muotoon muunnetun XML-sisällön ja palauttaa tagijonon viimeisen tagin sisällön.
+
+   Kutsu esim.:
+   (luetun-xmln-tagien-sisalto xml :urakka :kohde)"
   [luettu-xml & tagit]
   (reduce
     (fn [tulos seuraava]
-      (harja.tyokalut.xml/luetun-xmln-tagin-sisalto tulos seuraava))
+      (luetun-xmln-tagin-sisalto tulos seuraava))
     luettu-xml
     tagit))
 
