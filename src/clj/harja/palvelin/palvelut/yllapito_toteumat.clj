@@ -18,7 +18,7 @@
             [harja.kyselyt.konversio :as konv]))
 
 (defn vaadi-toteuma-kuuluu-urakkaan [db toteuma-id vaitetty-urakka-id]
-  (log/debug "Tarkikistetaan, että toteuma " toteuma-id " kuuluu väitettyyn urakkaan " vaitetty-urakka-id)
+  (log/debug "Tarkistetaan, että toteuma " toteuma-id " kuuluu väitettyyn urakkaan " vaitetty-urakka-id)
   (assert vaitetty-urakka-id "Urakka id puuttuu!")
   (when toteuma-id
     (let [toteuman-todellinen-urakka-id (:urakka (first
