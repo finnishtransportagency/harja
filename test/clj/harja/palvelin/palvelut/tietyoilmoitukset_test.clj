@@ -39,12 +39,10 @@
                     :urakka nil
                     :sijainti nil
                     :vain-kayttajan-luomat nil}
-        _ (println "KUTSUTAAN")
         tietyoilmoitukset (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :hae-tietyoilmoitukset
                                           +kayttaja-jvh+
                                           parametrit)]
-    (println "kutsuttu")
     (is (= 1 (count tietyoilmoitukset)) "Ilmoituksia on palautunut oikea määrä")
     (is (= 1 (count (::t/tyovaiheet (first tietyoilmoitukset)))) "Ilmoituksella on työvaiheita oikea määrä")))
 
