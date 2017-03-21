@@ -150,7 +150,11 @@
            :aikataulu_paallystys_loppu (:aikataulu-paallystys-loppu kohde)
            :aikataulu_kohde_valmis (:aikataulu-kohde-valmis kohde)
            :aikataulu_muokkaaja (:id user)
-           :suorittava_tiemerkintaurakka
+           :id (:id kohde)
+           :urakka paallystysurakka-id})
+        (q/tallenna-yllapitokohteen-suorittava-tiemerkintaurakka!
+          db
+          {:suorittava_tiemerkintaurakka
            (if (= kayttajan-valitsema-suorittava-tiemerkintaurakka-id
                   kohteen-nykyinen-suorittava-tiemerkintaurakka-id)
              kohteen-nykyinen-suorittava-tiemerkintaurakka-id
@@ -249,29 +253,30 @@
                                        kaasuindeksi poistettu keskimaarainen-vuorokausiliikenne]}]
   (log/debug "Luodaan uusi ylläpitokohde tyyppiä " yllapitokohdetyotyyppi)
   (when-not poistettu
-    (q/luo-yllapitokohde<! db
-                           {:urakka urakka-id
-                            :sopimus sopimus-id
-                            :kohdenumero kohdenumero
-                            :nimi nimi
-                            :tr_numero tr-numero
-                            :tr_alkuosa tr-alkuosa
-                            :tr_alkuetaisyys tr-alkuetaisyys
-                            :tr_loppuosa tr-loppuosa
-                            :tr_loppuetaisyys tr-loppuetaisyys
-                            :tr_ajorata tr-ajorata
-                            :tr_kaista tr-kaista
-                            :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
-                            :yllapitoluokka (if (map? yllapitoluokka)
-                                              (:numero yllapitoluokka)
-                                              yllapitoluokka)
-                            :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
-                            :arvonvahennykset arvonvahennykset
-                            :bitumi_indeksi bitumi-indeksi
-                            :kaasuindeksi kaasuindeksi
-                            :yllapitokohdetyyppi (when yllapitokohdetyyppi (name yllapitokohdetyyppi))
-                            :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))
-                            :vuodet (konv/seq->array [vuosi])})))
+    (let [kohde (q/luo-yllapitokohde<! db
+                                       {:urakka urakka-id
+                                        :sopimus sopimus-id
+                                        :kohdenumero kohdenumero
+                                        :nimi nimi
+                                        :tr_numero tr-numero
+                                        :tr_alkuosa tr-alkuosa
+                                        :tr_alkuetaisyys tr-alkuetaisyys
+                                        :tr_loppuosa tr-loppuosa
+                                        :tr_loppuetaisyys tr-loppuetaisyys
+                                        :tr_ajorata tr-ajorata
+                                        :tr_kaista tr-kaista
+                                        :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
+                                        :yllapitoluokka (if (map? yllapitoluokka)
+                                                          (:numero yllapitoluokka)
+                                                          yllapitoluokka)
+                                        :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
+                                        :arvonvahennykset arvonvahennykset
+                                        :bitumi_indeksi bitumi-indeksi
+                                        :kaasuindeksi kaasuindeksi
+                                        :yllapitokohdetyyppi (when yllapitokohdetyyppi (name yllapitokohdetyyppi))
+                                        :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))
+                                        :vuodet (konv/seq->array [vuosi])})
+          _ (q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde (:id kohde)})])))
 
 (defn- paivita-yllapitokohde [db user urakka-id
                               {:keys [id kohdenumero nimi
@@ -318,7 +323,8 @@
         (luo-uusi-yllapitokohde c user urakka-id sopimus-id vuosi kohde)))
     (yy/paivita-yllapitourakan-geometria c urakka-id)
     (let [paallystyskohteet (hae-urakan-yllapitokohteet c user {:urakka-id urakka-id
-                                                                :sopimus-id sopimus-id})]
+                                                                :sopimus-id sopimus-id
+                                                                :vuosi vuosi})]
       (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str paallystyskohteet))
       paallystyskohteet)))
 

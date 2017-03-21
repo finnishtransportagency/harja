@@ -316,7 +316,7 @@
           :hae (comp pvm/pvm :alkanut)
           :leveys 12}
          {:otsikko "Määrä"
-          :nimi :maara
+          :nimi :maara :validoi [[:ei-tyhja "Anna määrä"]]
           :muokattava? (fn [rivi] (not (:jarjestelmanlisaama rivi)))
           :tyyppi :positiivinen-numero
           :leveys 15

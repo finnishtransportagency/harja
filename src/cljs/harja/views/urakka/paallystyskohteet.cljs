@@ -20,10 +20,9 @@
             [harja.ui.valinnat :as valinnat]
             [cljs-time.core :as t]
             [harja.tiedot.hallinta.indeksit :as indeksit]
-            [harja.tiedot.urakka.yllapitokohteet.muut-kustannukset :as muut-kustannukset-tiedot]
-            [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot-sanktiot]
             [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit]
-            [harja.views.urakka.valinnat :as u-valinnat])
+            [harja.views.urakka.valinnat :as u-valinnat]
+            [harja.tiedot.urakka.yllapito :as yllapito-tiedot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -66,7 +65,7 @@
          (t/year (:loppupvm ur))
          urakka/valittu-urakan-vuosi
          urakka/valitse-urakan-vuosi!]
-        [u-valinnat/tienumero paallystys-tiedot/tienumero]
+        [u-valinnat/tienumero yllapito-tiedot/tienumero]
 
         [yllapitokohteet-view/yllapitokohteet
          ur
@@ -78,7 +77,7 @@
           (yllapitokohteet/kasittele-tallennettavat-kohteet!
             #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
             :paallystys
-            #(reset! paallystys-tiedot/yhan-paallystyskohteet (filter yllapitokohteet/yha-kohde? %)))
+            #(reset! paallystys-tiedot/yllapitokohteet %))
           :kun-onnistuu (fn [_]
                           (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]
 
@@ -92,7 +91,7 @@
           (yllapitokohteet/kasittele-tallennettavat-kohteet!
             #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
             :paikkaus
-            #(reset! paallystys-tiedot/harjan-paikkauskohteet (filter (comp not yllapitokohteet/yha-kohde?) %)))}]
+            #(reset! paallystys-tiedot/yllapitokohteet %))}]
 
         [muut-kustannukset-view/muut-kustannukset ur]
 

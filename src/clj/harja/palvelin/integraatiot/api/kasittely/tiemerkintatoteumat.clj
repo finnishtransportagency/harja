@@ -20,7 +20,7 @@
    (luo-tai-paivita-tiemerkintatoteumat db kayttaja urakka-id nil tiemerkintatoteumat))
   ([db kayttaja urakka-id yllapitokohde-id tiemerkintatoteumat]
    (jdbc/with-db-transaction [db db]
-     (doseq [{{:keys [tunniste hinta muutospvm selite tienumero pituus yllapitoluokka hintatyyppi] :as toteuma}
+     (doseq [{{:keys [tunniste hinta paivamaara selite tienumero pituus yllapitoluokka hintatyyppi] :as toteuma}
               :tiemerkintatoteuma}
              tiemerkintatoteumat]
        (let [ulkoinen-id (:id tunniste)
@@ -28,11 +28,11 @@
              id (yllapitototeuma-q/hae-tiemerkintatoteuman-id-ulkoisella-idlla db luoja-id ulkoinen-id)
              yllapitokohde (when yllapitokohde-id (first (yllapitokohteet-q/hae-yllapitokohde db {:id yllapitokohde-id})))
              hinta-kohteelle (when yllapitokohde-id (d/maarittele-hinnan-kohde yllapitokohde))
-             muutospvm (json/aika-string->java-sql-date muutospvm)
+             paivamaara (json/aika-string->java-sql-date paivamaara)
              sql-parametrit {:yllapitokohde yllapitokohde-id
                              :hinta hinta
                              :hintatyyppi hintatyyppi
-                             :muutospvm muutospvm
+                             :paivamaara paivamaara
                              :hinta_kohteelle (when yllapitokohde-id hinta-kohteelle)
                              :selite selite
                              :tr_numero (when-not yllapitokohde-id tienumero)

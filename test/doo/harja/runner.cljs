@@ -27,6 +27,7 @@
             [harja.tiedot.tilannekuva.tilannekuva-test]
             [harja.views.urakka.tiemerkinnan-yksikkohintaiset-tyot-test]
             [harja.views.kartta.tasot-test]
+            [harja.tiedot.urakka.yllapitokohteet-test]
             ;; uusi testi tähän
             ))
 
@@ -56,6 +57,6 @@
            'harja.views.kartta-test
            'harja.tiedot.tilannekuva.tilannekuva-test
            'harja.views.urakka.tiemerkinnan-yksikkohintaiset-tyot-test
-           'harja.views.kartta.tasot-test
+           'harja.tiedot.urakka.yllapitokohteet-test
            ;; uusi testi tähän
            )

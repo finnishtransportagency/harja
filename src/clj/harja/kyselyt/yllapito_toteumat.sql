@@ -71,7 +71,7 @@ SELECT
   hinta,
   hintatyyppi,
   hinta_kohteelle AS "hinta-kohteelle",
-  muutospvm,
+  paivamaara,
   yllapitoluokka,
   selite,
   tr_numero       AS "tr-numero",
@@ -94,7 +94,7 @@ SET
   yllapitokohde   = :yllapitokohde,
   hinta           = :hinta,
   hintatyyppi     = :hintatyyppi :: tiemerkinta_toteuma_hintatyyppi,
-  muutospvm       = :muutospvm,
+  paivamaara      = :paivamaara,
   hinta_kohteelle = :hinta_kohteelle,
   selite          = :selite,
   tr_numero       = :tr_numero,
@@ -110,9 +110,9 @@ WHERE id = :id
 
 -- name: luo-tiemerkintaurakan-yksikkohintainen-tyo<!
 INSERT INTO tiemerkinnan_yksikkohintainen_toteuma
-(yllapitokohde, urakka, hinta, hintatyyppi, muutospvm, hinta_kohteelle, selite,
+(yllapitokohde, urakka, hinta, hintatyyppi, paivamaara, hinta_kohteelle, selite,
  tr_numero, yllapitoluokka, pituus, luoja, ulkoinen_id)
-VALUES (:yllapitokohde, :urakka, :hinta, :hintatyyppi :: tiemerkinta_toteuma_hintatyyppi, :muutospvm,
+VALUES (:yllapitokohde, :urakka, :hinta, :hintatyyppi :: tiemerkinta_toteuma_hintatyyppi, :paivamaara,
                         :hinta_kohteelle, :selite, :tr_numero, :yllapitoluokka, :pituus, :luoja, :ulkoinen_id);
 
 -- name: hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot

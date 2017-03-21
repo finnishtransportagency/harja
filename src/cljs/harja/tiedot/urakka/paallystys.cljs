@@ -13,7 +13,8 @@
     [harja.tiedot.urakka :as urakka]
     [harja.domain.tierekisteri :as tr-domain]
     [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-    [harja.domain.paallystysilmoitus :as pot])
+    [harja.domain.paallystysilmoitus :as pot]
+    [harja.tiedot.urakka.yllapito :as yllapito-tiedot])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -21,8 +22,6 @@
 
 (def kohdeluettelossa? (atom false))
 (def paallystysilmoitukset-nakymassa? (atom false))
-
-(def tienumero (atom nil))
 
 (defn hae-paallystysilmoitukset [urakka-id sopimus-id vuosi]
   (k/post! :urakan-paallystysilmoitukset {:urakka-id urakka-id
@@ -48,14 +47,15 @@
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-paallystysilmoitukset valittu-urakka-id valittu-sopimus-id vuosi))))
 
+
 (def paallystysilmoitukset-suodatettu
-  (reaction (let [tienumero @tienumero]
+  (reaction (let [tienumero @yllapito-tiedot/tienumero]
               (when @paallystysilmoitukset
                 (filterv #(or (nil? tienumero)
                               (= (:tr-numero %) tienumero))
                          @paallystysilmoitukset)))))
 
-(defonce paallystysilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
+(defonce paallystysilmoitus-lomakedata (atom nil))
 
 (defonce karttataso-paallystyskohteet (atom false))
 
@@ -69,31 +69,26 @@
                 (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id vuosi))))
 
 (def yllapitokohteet-suodatettu
-  (reaction (let [tienumero @tienumero
+  (reaction (let [tienumero @yllapito-tiedot/tienumero
                   yllapitokohteet @yllapitokohteet
-                  kohteet (when yllapitokohteet (filterv #(or (nil? tienumero)
-                                                              (= (:tr-numero %) tienumero))
-                                                         yllapitokohteet))]
+                  kohteet (when yllapitokohteet
+                            (yllapitokohteet/suodata-yllapitokohteet-tienumerolla yllapitokohteet tienumero))]
               kohteet)))
 
 (def yhan-paallystyskohteet
-  (reaction-writable
+  (reaction
     (let [kohteet @yllapitokohteet-suodatettu
           yhan-paallystyskohteet (when kohteet
-                                   (filter
-                                     #(and (yllapitokohteet/yha-kohde? %)
-                                           (= (:yllapitokohdetyotyyppi %) :paallystys))
-                                     kohteet))]
+                                   (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
+                                     kohteet true :paallystys))]
       (tr-domain/jarjesta-kohteiden-kohdeosat yhan-paallystyskohteet))))
 
 (def harjan-paikkauskohteet
-  (reaction-writable
+  (reaction
     (let [kohteet @yllapitokohteet-suodatettu
           harjan-paikkauskohteet (when kohteet
-                                   (filter
-                                     #(and (not (yllapitokohteet/yha-kohde? %))
-                                           (= (:yllapitokohdetyotyyppi %) :paikkaus))
-                                     kohteet))]
+                                   (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
+                                     kohteet false :paikkaus))]
       (tr-domain/jarjesta-kohteiden-kohdeosat harjan-paikkauskohteet))))
 
 (def kaikki-kohteet
