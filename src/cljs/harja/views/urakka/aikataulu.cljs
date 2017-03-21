@@ -24,7 +24,9 @@
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.views.urakka.valinnat :as u-valinnat]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.ui.ikonit :as ikonit]
+            [harja.tiedot.urakka.siirtymat :as siirtymat])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -296,7 +298,21 @@
             :fmt pvm/pvm-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
             :validoi [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
-                       "Kohde ei voi olla valmis ennen kuin se on aloitettu."]]}]
+                       "Kohde ei voi olla valmis ennen kuin se on aloitettu."]]}
+
+
+           (when (istunto/ominaisuus-kaytossa? :tietyoilmoitukset)
+             {:otsikko "Tietyöilmoitus"
+              :leveys 6
+              :nimi :tietyoilmoitus
+              :tyyppi :komponentti
+              :komponentti (fn [{tietyoilmoitus-id :tietyoilmoitus-id}]
+                             [:button.nappi-ensisijainen.nappi-grid
+                              {:on-click #(siirtymat/avaa-tietyoilmoitus
+                                            {:tietyoilmoitus-id tietyoilmoitus-id})}
+                              (if tietyoilmoitus-id
+                                [ikonit/ikoni-ja-teksti (ikonit/livicon-eye) " Avaa"]
+                                [ikonit/ikoni-ja-teksti (ikonit/livicon-plus) " Lisää"])])})]
           (otsikoi-aikataulurivit (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))]
          (if (= (:nakyma optiot) :tiemerkinta)
            [vihje "Tiemerkinnän valmistumisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle ja vastuuhenkilölle."])]))))
