@@ -255,3 +255,18 @@ yllapitoluokkanimi->numero
     :valmis "Valmis"
     :aloitettu "Aloitettu"
     "Ei aloitettu"))
+
+(def yllapitokohde-kartalle-xf
+  ;; Ylläpitokohde näytetään kartalla 'kohdeosina'.
+  ;; Tämä transducer olettaa saavansa vectorin ylläpitokohteita ja palauttaa
+  ;; ylläpitokohteiden kohdeosat valmiina näytettäväksi kartalle.
+  ;; Palautuneilla kohdeosilla on pääkohteen tiedot :yllapitokohde avaimen takana.
+  (comp
+    (mapcat (fn [kohde]
+              (keep (fn [kohdeosa]
+                      (assoc kohdeosa :yllapitokohde (dissoc kohde :kohdeosat)
+                                      :tyyppi-kartalla (:yllapitokohdetyotyyppi kohde)
+                                      :tila-kartalla (:tila-kartalla kohde)
+                                      :yllapitokohde-id (:id kohde)))
+                    (:kohdeosat kohde))))
+    (keep #(and (:sijainti %) %))))

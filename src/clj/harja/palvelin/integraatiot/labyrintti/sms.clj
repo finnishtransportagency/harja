@@ -101,3 +101,20 @@
 
 (defn luo-labyrintti [asetukset]
   (->Labyrintti (:url asetukset) (:kayttajatunnus asetukset) (:salasana asetukset) (atom #{})))
+
+(defrecord FeikkiLabyrintti []
+  component/Lifecycle
+  (start [this] this)
+  (stop [this] this)
+
+  Sms
+  (rekisteroi-kuuntelija! [this kasittelija]
+    (log/info "Feikki Labyrintti EI tue kuuntelijan rekisteröintiä")
+    #(log/info "Poistetaan Feikki Labyrintin kuuntelija"))
+  (laheta [this numero viesti]
+    (log/info "Feikki Labyrintti lähettää muka viestin numeroon " numero ": " viesti)))
+
+(defn feikki-labyrintti []
+  (->FeikkiLabyrintti))
+
+

@@ -55,6 +55,16 @@
     :tienakyma-valitut
     :tienakyma-muut})
 
+(def
+  ^{:doc
+    "Niiden tasojen nimet, jotka eivät ole 'näkymän tasoja', vaan ovat 'aina päällä'.
+    Näiden tasojen ei haluta esimerkiksi vaikuttavan kartan zoom-tasoon kuin erikoistapauksissa."}
+  +yleiset-tasot+
+  #{:organisaatio
+    :nakyman-geometriat
+    :infopaneelin-merkki
+    :tr-valitsin})
+
 (defn kartan-asioiden-z-indeksit [taso]
   (case taso
     :hallintayksikko 0
@@ -91,46 +101,60 @@
                                :sillat (kartan-asioiden-z-indeksit :sillat)
                                oletus-zindex))))))
 
+(defn- urakat-ja-organisaatiot-kartalla*
+  [hals v-hal v-ur sivu valilehti urakat-kartalla]
+  (cond
+    ;; Näillä sivuilla ei ikinä näytetä murupolun kautta valittujen organisaatiorajoja
+    (#{:tilannekuva} sivu)
+    nil
+
+    ;; Ilmoituksissa ei haluta näyttää navigointiin
+    ;; tarkoitettuja geometrioita (kuten urakat), mutta jos esim HY on
+    ;; valittu, voidaan näyttää sen rajat.
+    (and (#{:ilmoitukset} sivu) (nil? v-hal))
+    nil
+
+    (and (#{:ilmoitukset} sivu)
+         (nil? v-ur))
+    [(assoc v-hal :valittu true)]
+
+    (and (#{:ilmoitukset} sivu) v-ur)
+    [(assoc v-ur :valittu true)]
+
+    ;; Ylläpitourakan rajoja ei haluta piirtää näkymissä, joissa piirretään
+    ;; urakan varsinaiset tiet. Ylläpitourakan rajat piirretään vaan näiden teiden ympärille,
+    ;; joten jos tiet piirretään jo kartalle, ovat rajat täysin turhaa informaatiota.
+    (and (#{:kohdeluettelo-paallystys :kohdeluettelo-paikkaus} valilehti)
+         (some? v-hal)
+         (some? v-ur))
+    nil
+
+    ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
+    (nil? v-hal)
+    hals
+
+    ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö
+    ;; ja sen urakat
+    (nil? v-ur)
+    (vec (concat [(assoc v-hal
+                    :valittu true)]
+                 urakat-kartalla))
+
+    ;; Valittu urakka, mitä näytetään?
+    :default [(assoc v-ur
+                :valittu true)]))
+
 (def urakat-ja-organisaatiot-kartalla
   (reaction
    (into []
          (keep organisaation-geometria)
-         (let [hals @hal/hallintayksikot
-               v-hal @nav/valittu-hallintayksikko
-               v-ur @nav/valittu-urakka
-               sivu @nav/valittu-sivu]
-           (cond
-             ;; Näillä sivuilla ei ikinä näytetä murupolun kautta valittujen organisaatiorajoja
-             (#{:tilannekuva} sivu)
-             nil
-
-             ;; Ilmoituksissa ei haluta näyttää navigointiin
-             ;; tarkoitettuja geometrioita (kuten urakat), mutta jos esim HY on
-             ;; valittu, voidaan näyttää sen rajat.
-             (and (#{:ilmoitukset} sivu) (nil? v-hal))
-             nil
-
-             (and (#{:ilmoitukset} sivu)
-                  (nil? @nav/valittu-urakka))
-             [(assoc v-hal :valittu true)]
-
-             (and (#{:ilmoitukset} sivu) @nav/valittu-urakka)
-             [(assoc v-ur :valittu true)]
-
-             ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
-             (nil? v-hal)
-             hals
-
-             ;; Ei valittua urakkaa, näytetään valittu hallintayksikkö
-             ;; ja sen urakat
-             (nil? v-ur)
-             (vec (concat [(assoc v-hal
-                                  :valittu true)]
-                          @nav/urakat-kartalla))
-
-             ;; Valittu urakka, mitä näytetään?
-             :default [(assoc v-ur
-                              :valittu true)])))))
+         (urakat-ja-organisaatiot-kartalla*
+           @hal/hallintayksikot
+           @nav/valittu-hallintayksikko
+           @nav/valittu-urakka
+           @nav/valittu-sivu
+           (nav/valittu-valilehti @nav/valittu-sivu)
+           @nav/urakat-kartalla))))
 
 ;; Ad hoc geometrioiden näyttäminen näkymistä
 ;; Avain on avainsana ja arvo on itse geometria
@@ -262,25 +286,35 @@
    :nakyman-geometriat (atom true)
    :infopaneelin-merkki (atom true)})
 
-(defonce nykyiset-karttatasot
-  (reaction (into #{}
-                  (keep (fn [nimi]
-                          (when @(tasojen-nakyvyys-atomit nimi)
-                            nimi)))
-                  +karttatasot+)))
+(defn- nykyiset-karttatasot* [atomit nimet-set]
+  (->> atomit
+       (filter (comp deref val))
+       (filter (comp nimet-set key))
+       (map key)))
 
-(defonce karttatasot-muuttuneet
-  (ratom/run!
-   (let [tasot @nykyiset-karttatasot]
-     (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet
-                            :karttatasot tasot}))))
+(def nykyiset-karttatasot (partial nykyiset-karttatasot* tasojen-nakyvyys-atomit +karttatasot+))
+
+(defn- aktiiviset-nakymien-tasot*
+  [aktiiviset-tasot-nimet-set
+   ei-halutut-tasot-set
+   nimi-taso-map
+   filter-fn]
+  (->> aktiiviset-tasot-nimet-set
+       (remove ei-halutut-tasot-set)
+       (keep nimi-taso-map)
+       (filter filter-fn)))
+
+(defn aktiiviset-nakymien-tasot []
+  (aktiiviset-nakymien-tasot*
+           (nykyiset-karttatasot)
+           +yleiset-tasot+
+           @geometriat-kartalle
+           taso/aktiivinen?))
 
 (defn taso-paalle! [nimi]
-  (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :taso-paalle nimi})
   (log "Karttataso päälle: " (pr-str nimi))
   (reset! (tasojen-nakyvyys-atomit nimi) true))
 
 (defn taso-pois! [nimi]
-  (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :taso-pois nimi})
   (log "Karttataso pois: " (pr-str nimi))
   (reset! (tasojen-nakyvyys-atomit nimi) false))

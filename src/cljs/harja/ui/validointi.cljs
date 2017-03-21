@@ -156,6 +156,12 @@
           (nil? (avain rivi)))
     viesti))
 
+(defmethod validoi-saanto :ei-tyhja-jos-toinen-arvo-annettu [_ _ data rivi _ & [avain viesti]]
+  (when (and
+          (nil? data)
+          (some? (avain rivi)))
+    viesti))
+
 (defmethod validoi-saanto :ainakin-toinen-annettu [_ _ data rivi _ & [[avain1 avain2] viesti]]
   (when-not (or (avain1 rivi)
                 (avain2 rivi))
