@@ -45,6 +45,7 @@ SELECT
   ypk.arvonvahennykset,
   ypk.bitumi_indeksi           AS "bitumi-indeksi",
   ypk.kaasuindeksi,
+  sum(s.maara)                 AS "sakot-ja-bonukset",
   ypk.yllapitokohdetyyppi,
   ilmoitustiedot,
   paatos_tekninen_osa          AS "tekninen-osa_paatos",
@@ -77,9 +78,13 @@ FROM yllapitokohde ypk
   LEFT JOIN yllapitokohdeosa ypko ON ypko.yllapitokohde = :paallystyskohde
                                      AND ypko.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON u.id = ypk.urakka
+  LEFT JOIN laatupoikkeama lp ON lp.yllapitokohde = ypk.id
+  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE ypk.id = :paallystyskohde
-      AND ypk.poistettu IS NOT TRUE;
+      AND ypk.poistettu IS NOT TRUE
+GROUP BY pi.id, ypk.id, ypko.id, ypka.kohde_alku, ypka.kohde_valmis, ypka.paallystys_loppu,
+  u.id;
 
 -- name: hae-paallystysilmoitus-paallystyskohteella
 SELECT

@@ -6,14 +6,10 @@
 
 (def +xsd-polku+ "xsd/yha/")
 
-(defn laske-hinta-kokonaishinta [{:keys [sopimuksen-mukaiset-tyot muutoshinta bitumi-indeksi arvonvahennykset kaasuindeksi]}]
-  (reduce (fn [a b] (+ a (or b 0)))
-          0
-          [sopimuksen-mukaiset-tyot
-           muutoshinta
-           bitumi-indeksi
-           arvonvahennykset
-           kaasuindeksi]))
+(defn laske-hinta-kokonaishinta [{:keys [sopimuksen-mukaiset-tyot muutoshinta bitumi-indeksi
+                                         arvonvahennykset kaasuindeksi sakot-ja-bonukset] :as kohde}]
+  (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot muutoshinta bitumi-indeksi
+                            arvonvahennykset kaasuindeksi sakot-ja-bonukset])))
 
 (defn kasittele-kohteen-tyyppi [tyyppi]
   (case tyyppi
