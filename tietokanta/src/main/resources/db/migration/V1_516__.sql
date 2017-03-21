@@ -11,10 +11,10 @@ CREATE TYPE tietyon_henkilo AS (
 
 -- Ajoneuvorajoitukset omaan tyyppiin
 CREATE TYPE tietyon_ajoneuvorajoitukset AS (
-  "max-korkeus"                  DECIMAL,
-  "max-leveys"                   DECIMAL,
-  "max-pituus"                   DECIMAL,
-  "max-paino"                    DECIMAL
+  "max-korkeus"  double,
+  "max-leveys"   double,
+  "max-pituus"   double,
+  "max-paino"    double
 );
 
 DROP TABLE tietyoilmoitus;
