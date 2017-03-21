@@ -41,7 +41,7 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.valinnat :as valinnat]
             [cljs-time.core :as t]
-            [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
+            [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.views.urakka.valinnat :as u-valinnat])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -201,7 +201,10 @@
                                                    :vuosi vuosi}))
       {:luokka "nappi-ensisijainen"
        :id "tallenna-paallystysilmoitus"
-       :disabled (false? valmis-tallennettavaksi?)
+       :disabled (or (false? valmis-tallennettavaksi?)
+                     (not (oikeudet/voi-kirjoittaa?
+                            oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                            urakka-id @istunto/kayttaja)))
        :ikoni (ikonit/tallenna)
        :virheviesti "Tallentaminen epäonnistui"
        :kun-onnistuu tallennus-onnistui}]]))
@@ -322,20 +325,20 @@
            :voi-muokata? voi-muokata?
            :virheet (wrap-virheet :paallystystoimenpide)
            :rivinumerot? true}
-          [(assoc paallystys-tiedot/paallyste-grid-skeema :leveys 30)
-           (assoc paallystys-tiedot/raekoko-grid-skeema :leveys 10)
+          [(assoc paallystys/paallyste-grid-skeema :leveys 30)
+           (assoc paallystys/raekoko-grid-skeema :leveys 10)
            {:otsikko "Massa\u00ADmenek\u00ADki (kg/m2)" :nimi :massamenekki
             :tyyppi :positiivinen-numero :desimaalien-maara 0
             :tasaa :oikea :leveys 10}
            {:otsikko "RC-%" :nimi :rc% :leveys 10 :tyyppi :numero :desimaalien-maara 0
             :tasaa :oikea :pituus-max 100
             :validoi [[:rajattu-numero nil 0 100]]}
-           (assoc paallystys-tiedot/tyomenetelma-grid-skeema
+           (assoc paallystys/tyomenetelma-grid-skeema
              :leveys 30
              :validoi [[:ei-tyhja "Valitse päällystysmenetelmä"]])
            {:otsikko "Leveys (m)" :nimi :leveys :leveys 10 :tyyppi :positiivinen-numero
             :tasaa :oikea}
-           (assoc paallystys-tiedot/massamaara-grid-skeema :leveys 15)
+           (assoc paallystys/massamaara-grid-skeema :leveys 15)
            {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys 10 :tyyppi :positiivinen-numero
             :tasaa :oikea}
            {:otsikko "Edellinen päällyste"
@@ -507,9 +510,7 @@
 (defn avaa-paallystysilmoitus [paallystyskohteen-id]
   (go
     (let [urakka-id (:id @nav/valittu-urakka)
-          [sopimus-id _] @u/valittu-sopimusnumero
           vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id paallystyskohteen-id))]
-      (log "Päällystysilmoitus kohteelle " paallystyskohteen-id " => " (pr-str vastaus))
       (if (k/virhe? vastaus)
         (viesti/nayta! "Päällystysilmoituksen haku epäonnistui." :warning viesti/viestin-nayttoaika-lyhyt)
         (reset! paallystys/paallystysilmoitus-lomakedata
@@ -645,5 +646,5 @@
            (t/year (:loppupvm urakka))
            urakka/valittu-urakan-vuosi
            urakka/valitse-urakan-vuosi!]
-          [u-valinnat/tienumero paallystys-tiedot/tienumero]
+          [u-valinnat/tienumero yllapito-tiedot/tienumero]
           [ilmoitusluettelo]])])))
