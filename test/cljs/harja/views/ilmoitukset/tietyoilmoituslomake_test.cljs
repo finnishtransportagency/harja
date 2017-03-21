@@ -1,5 +1,6 @@
 (ns harja.views.ilmoitukset.tietyoilmoituslomake-test
   (:require [tuck.core :refer [tuck]]
+            [harja.pvm :as pvm]
             [cljs.test :as t :refer-macros [deftest is]]
             [reagent.core :as r]
             [clojure.string :as str]
@@ -34,7 +35,7 @@
                 "tero.toripolliisi@example.com",
                 :harja.domain.tietyoilmoitukset/etunimi "Tero"},
                :harja.domain.tietyoilmoitukset/pysaytysten-loppu
-               #inst "2017-07-07T07:07:07.000000000-00:00",
+                    (pvm/->pvm-aika  "07.07.2017 07:07"),
                :harja.domain.tietyoilmoitukset/tilaajan-nimi "Pohjois-Pohjanmaa",
                :harja.domain.tietyoilmoitukset/vaikutussuunta "molemmat",
                :harja.domain.tietyoilmoitukset/huomautukset ["avotuli"],
@@ -55,16 +56,16 @@
                [{:harja.domain.tietyoilmoitukset/rajoitus "30",
                  :harja.domain.tietyoilmoitukset/matka 100}],
                :harja.domain.tietyoilmoitukset/alku
-               #inst "2017-01-01T01:01:01.000000000-00:00",
+                    (pvm/->pvm-aika  "01.01.2017 01:01"),
                :harja.domain.tietyoilmoitukset/tienpinnat
                [{:harja.domain.tietyoilmoitukset/materiaali "paallystetty",
                  :harja.domain.tietyoilmoitukset/matka 100}],
                :harja.domain.tietyoilmoitukset/tilaajayhteyshenkilo-id 1,
                :harja.domain.tietyoilmoitukset/lisatietoja "Tämä on testi-ilmoitus",
                :harja.domain.tietyoilmoitukset/luotu
-               #inst "2017-01-01T01:01:01.000000000-00:00",
+                    (pvm/->pvm-aika  "01.01.2017 01:01"),
                :harja.domain.tietyoilmoitukset/loppu
-               #inst "2017-07-07T07:07:07.000000000-00:00",
+                    (pvm/->pvm-aika  "07.07.2017 07:07"),
                :harja.domain.tietyoilmoitukset/liikenteenohjaaja "liikennevalot",
                :harja.domain.tietyoilmoitukset/urakka-id 4,
                :harja.domain.tietyoilmoitukset/ajoittain-suljettu-tie true,
@@ -98,7 +99,7 @@
                   "tero.toripolliisi@example.com",
                   :harja.domain.tietyoilmoitukset/sukunimi "Toripolliisi"},
                  :harja.domain.tietyoilmoitukset/pysaytysten-loppu
-                 #inst "2017-07-07T07:07:07.000000000-00:00",
+                 (pvm/->pvm-aika  "07.07.2017 07:07"),
                  :harja.domain.tietyoilmoitukset/tilaajan-nimi "Pohjois-Pohjanmaa",
                  :harja.domain.tietyoilmoitukset/vaikutussuunta "molemmat",
                  :harja.domain.tietyoilmoitukset/huomautukset ["avotuli"],
@@ -119,7 +120,7 @@
                  [{:harja.domain.tietyoilmoitukset/rajoitus "30",
                    :harja.domain.tietyoilmoitukset/matka 100}],
                  :harja.domain.tietyoilmoitukset/alku
-                 #inst "2017-06-01T01:01:01.000000000-00:00",
+                 (pvm/->pvm-aika  "01.06.2017 01:01"),
                  :harja.domain.tietyoilmoitukset/tienpinnat
                  [{:harja.domain.tietyoilmoitukset/materiaali "paallystetty",
                    :harja.domain.tietyoilmoitukset/matka 100}],
@@ -127,9 +128,9 @@
                  :harja.domain.tietyoilmoitukset/lisatietoja
                  "Tämä on testi-ilmoitus",
                  :harja.domain.tietyoilmoitukset/luotu
-                 #inst "2017-01-01T01:01:01.000000000-00:00",
+                 (pvm/->pvm-aika  "01.01.2017 01:01"),
                  :harja.domain.tietyoilmoitukset/loppu
-                 #inst "2017-06-20T07:07:07.000000000-00:00",
+                 (pvm/->pvm-aika  "20.06.2017 07:07"),
                  :harja.domain.tietyoilmoitukset/liikenteenohjaaja "liikennevalot",
                  :harja.domain.tietyoilmoitukset/urakka-id 4,
                  :harja.domain.tietyoilmoitukset/ajoittain-suljettu-tie true,
@@ -174,7 +175,7 @@
                  [{:harja.domain.tietyoilmoitukset/materiaali "murske",
                    :harja.domain.tietyoilmoitukset/matka 100}],
                  :harja.domain.tietyoilmoitukset/pysaytysten-alku
-                 #inst "2017-01-01T01:01:01.000000000-00:00"}],
+                 (pvm/->pvm-aika  "01.01.2017 01:01")}],
                :harja.domain.tietyoilmoitukset/kiertotien-mutkaisuus "loivatMutkat",
                :harja.domain.tietyoilmoitukset/urakkatyyppi "hoito",
                :harja.domain.tietyoilmoitukset/urakoitsijayhteyshenkilo-id 6,
@@ -203,13 +204,13 @@
                [{:harja.domain.tietyoilmoitukset/materiaali "murske",
                  :harja.domain.tietyoilmoitukset/matka 100}],
                :harja.domain.tietyoilmoitukset/pysaytysten-alku
-               #inst "2017-01-01T01:01:01.000000000-00:00"}
+                    (pvm/->pvm-aika  "01.01.2017 01:01")}
   )
 
 (defn lomake-mock-komponentti [e! app]
   (let [valittu-ilmoitus (:valittu-ilmoitus app)
-        kayttajan-urakat [5]])
-  [tietyoilmoituslomake-view/lomake e! valittu-lmoitus kayttajan-urakat])
+        kayttajan-urakat [5]]
+    [tietyoilmoituslomake-view/lomake e! valittu-ilmoitus kayttajan-urakat]))
 
 
 (defn query-selector [q]
@@ -220,22 +221,7 @@
 
 
     (komponenttitesti
-     [tuck lomake-mock-komponentti]
+     [tuck app lomake-mock-komponentti]
      --
-     (is (pos?) (query-selector "label[for]"))
-     ;; (<! haku)
 
-     ;; (is (nil? (u/grid-solu "tietyoilmoitushakutulokset" 0 0)))
-     ;; (is (= "Ei löytyneitä tietoja" (u/text :.tyhja)))
-     ;; --
-
-     ;; "Avataan aikahaku"
-     ;; (u/click :button.nappi-alasveto)
-     ;; --
-     ;; (u/click ".harja-alasvetolistaitemi:nth-child(1) > a")
-     ;; (<! haku)
-
-     )
-
-    )
-  )
+     (is (string? (.getAttribute (query-selector "label[for]") "for"))))))
