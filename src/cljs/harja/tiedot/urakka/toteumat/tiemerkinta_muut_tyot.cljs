@@ -50,10 +50,10 @@
 
 (defn hae-toteumat [{:keys [urakka sopimus alkupvm loppupvm] :as hakuparametrit}]
   (let [tulos! (t/send-async! ->ToteumatHaettu)]
-    (go (let [tyot (<! (k/post! :hae-yllapito-toteumat {:urakka   urakka
-                                                   :sopimus  sopimus
-                                                   :alkupvm  alkupvm
-                                                   :loppupvm loppupvm}))]
+    (go (let [tyot (<! (k/post! :hae-yllapito-toteumat {:urakka urakka
+                                                        :sopimus sopimus
+                                                        :alkupvm alkupvm
+                                                        :loppupvm loppupvm}))]
           (when-not (k/virhe? tyot)
             (tulos! tyot))))))
 
@@ -74,27 +74,28 @@
                                 uusi-laskentakohde] :as mappi} laskentakohteet]
   (let [laskentakohde-luettelossa? (first (filter #(= (second %) uusi-laskentakohde) laskentakohteet))
         laskentakohde (or laskentakohde-luettelossa? (:laskentakohde toteuma))
-        hyotykuorma (assoc toteuma :urakka urakka
-                                   :sopimus sopimus
-                                   :alkupvm alkupvm
-                                   :loppupvm loppupvm
-                                   :laskentakohde laskentakohde
-                                   :uusi-laskentakohde (when (and (not laskentakohde-luettelossa?)
-                                                                  (not (empty? uusi-laskentakohde)))
-                                                         uusi-laskentakohde))]
-    (k/post! :tallenna-yllapito-toteuma hyotykuorma)))
+        tallennettava-toteuma (assoc toteuma
+                                :laskentakohde laskentakohde
+                                :uusi-laskentakohde (when (and (not laskentakohde-luettelossa?)
+                                                               (not (empty? uusi-laskentakohde)))
+                                                      uusi-laskentakohde))]
+    (k/post! :tallenna-yllapito-toteumat {:urakka-id urakka
+                                          :sopimus-id sopimus
+                                          :alkupvm alkupvm
+                                          :loppupvm loppupvm
+                                          :toteumat [tallennettava-toteuma]})))
 
 (def laskentakohdehaku
-    (reify protokollat/Haku
-      (hae [_ teksti]
-        (go (let [haku second
-                  laskentakohteet (:laskentakohteet @muut-tyot)
-                  itemit (if (< (count teksti) 1)
-                           laskentakohteet
-                           (filter #(not= (.indexOf (.toLowerCase (haku %))
-                                                    (.toLowerCase teksti)) -1)
-                                   laskentakohteet))]
-              (vec (sort itemit)))))))
+  (reify protokollat/Haku
+    (hae [_ teksti]
+      (go (let [haku second
+                laskentakohteet (:laskentakohteet @muut-tyot)
+                itemit (if (< (count teksti) 1)
+                         laskentakohteet
+                         (filter #(not= (.indexOf (.toLowerCase (haku %))
+                                                  (.toLowerCase teksti)) -1)
+                                 laskentakohteet))]
+            (vec (sort itemit)))))))
 
 (extend-protocol t/Event
 

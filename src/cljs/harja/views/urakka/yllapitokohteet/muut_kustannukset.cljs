@@ -53,7 +53,7 @@
    (fn [urakka]
      [:div.muut-kustannukset
       [grid/grid (assoc grid-opts
-                        :tallenna #(tiedot/tallenna-lomake! urakka tiedot/muiden-kustannusten-tiedot %)
+                        :tallenna #(tiedot/tallenna-muut-kustannukset! urakka tiedot/muiden-kustannusten-tiedot %)
                         :tyhja (if (nil? @tiedot/muiden-kustannusten-tiedot)
                                  [ajax-loader "Haetaan kustannuksia..."]
                                  "Ei kustannuksia"))
