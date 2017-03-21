@@ -24,7 +24,7 @@
              :tyomenetelma (paallystysilmoitus/tyomenetelman-koodi-nimella (:tyomenetelma alikohde))
              :sideainetyyppi (paallystysilmoitus/sideainetyypin-koodi-nimella (:sideainetyyppi kivi))
              :paallystetyyppi (paallystys-ja-paikkaus/hae-koodi-apin-paallysteella (:paallystetyyppi alikohde))
-             :kokonaismassamaara (:kokonaismassamaara alikohde)))
+             :kokonaismassamaara (:kokonaismassamaara alikohde)}))
         (get-in paallystysilmoitus [:yllapitokohde :alikohteet])))
 
 (defn rakenna-alustatoimet [paallystysilmoitus]
