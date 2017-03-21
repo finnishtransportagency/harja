@@ -50,8 +50,8 @@
      [:Products
       [:Product {:name                  (apply str (take 80 (or (:nimi (:maksuera maksuera)) "N/A")))
                  :financialProjectClass "INVCLASS"
-                 :start                 (pvm/aika-iso8601 alkupvm)
-                 :finish                (.replace (pvm/aika-iso8601 loppupvm) "00:00:00.0" "17:00:00.0")
+                 :start                 (pvm/aika-iso8601-ilman-millisekunteja alkupvm)
+                 :finish                (.replace (pvm/aika-iso8601-ilman-millisekunteja loppupvm) "00:00:00.0" "17:00:00.0")
                  :financialWipClass     "WIPCLASS"
                  :financialDepartment   talousosasto
                  :managerUserName       vastuuhenkilo
@@ -91,7 +91,7 @@
                                 (custom-information {"code"                 instance-code
                                                          ;; PENDING: Taloushallinnosta pitää kertoa mikä on oikea maksupäivä.
                                                          ;; Nyt maksuerät ovat koko urakan ajan kestoisia.
-                                                         "vv_payment_date"      (pvm/aika-iso8601 (Date.))
+                                                         "vv_payment_date"      (pvm/aika-iso8601-ilman-millisekunteja (Date.))
                                                          "vv_paym_sum"          (:summa (:maksuera maksuera))
                                                          "vv_paym_sum_currency" "EUR"
                                                          "name"                 "Laskutus- ja maksutiedot"})])]]]))
