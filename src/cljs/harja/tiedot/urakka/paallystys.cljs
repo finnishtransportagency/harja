@@ -47,6 +47,7 @@
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-paallystysilmoitukset valittu-urakka-id valittu-sopimus-id vuosi))))
 
+
 (def paallystysilmoitukset-suodatettu
   (reaction (let [tienumero @yllapito-tiedot/tienumero]
               (when @paallystysilmoitukset
@@ -54,7 +55,7 @@
                               (= (:tr-numero %) tienumero))
                          @paallystysilmoitukset)))))
 
-(defonce paallystysilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
+(defonce paallystysilmoitus-lomakedata (atom nil))
 
 (defonce karttataso-paallystyskohteet (atom false))
 
@@ -70,29 +71,24 @@
 (def yllapitokohteet-suodatettu
   (reaction (let [tienumero @yllapito-tiedot/tienumero
                   yllapitokohteet @yllapitokohteet
-                  kohteet (when yllapitokohteet (filterv #(or (nil? tienumero)
-                                                              (= (:tr-numero %) tienumero))
-                                                         yllapitokohteet))]
+                  kohteet (when yllapitokohteet
+                            (yllapitokohteet/suodata-yllapitokohteet-tienumerolla yllapitokohteet tienumero))]
               kohteet)))
 
 (def yhan-paallystyskohteet
-  (reaction-writable
+  (reaction
     (let [kohteet @yllapitokohteet-suodatettu
           yhan-paallystyskohteet (when kohteet
-                                   (filter
-                                     #(and (yllapitokohteet/yha-kohde? %)
-                                           (= (:yllapitokohdetyotyyppi %) :paallystys))
-                                     kohteet))]
+                                   (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
+                                     kohteet true :paallystys))]
       (tr-domain/jarjesta-kohteiden-kohdeosat yhan-paallystyskohteet))))
 
 (def harjan-paikkauskohteet
-  (reaction-writable
+  (reaction
     (let [kohteet @yllapitokohteet-suodatettu
           harjan-paikkauskohteet (when kohteet
-                                   (filter
-                                     #(and (not (yllapitokohteet/yha-kohde? %))
-                                           (= (:yllapitokohdetyotyyppi %) :paikkaus))
-                                     kohteet))]
+                                   (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
+                                     kohteet false :paikkaus))]
       (tr-domain/jarjesta-kohteiden-kohdeosat harjan-paikkauskohteet))))
 
 (def kaikki-kohteet

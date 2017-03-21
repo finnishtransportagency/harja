@@ -10,6 +10,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as urakka]
             [harja.domain.tierekisteri :as tr-domain]
+            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot])
   (:require-macros [harja.atom :refer [reaction<!]]
@@ -46,9 +47,7 @@
   (reaction (let [tienumero @yllapito-tiedot/tienumero
                   aikataulurivit @aikataulurivit]
               (when aikataulurivit
-                (filterv #(or (nil? tienumero)
-                              (= (:tr-numero %) tienumero))
-                         aikataulurivit)))))
+                (yllapitokohteet/suodata-yllapitokohteet-tienumerolla aikataulurivit tienumero)))))
 
 (defonce tiemerkinnan-suorittavat-urakat
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)

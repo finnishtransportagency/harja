@@ -323,7 +323,8 @@
         (luo-uusi-yllapitokohde c user urakka-id sopimus-id vuosi kohde)))
     (yy/paivita-yllapitourakan-geometria c urakka-id)
     (let [paallystyskohteet (hae-urakan-yllapitokohteet c user {:urakka-id urakka-id
-                                                                :sopimus-id sopimus-id})]
+                                                                :sopimus-id sopimus-id
+                                                                :vuosi vuosi})]
       (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str paallystyskohteet))
       paallystyskohteet)))
 
