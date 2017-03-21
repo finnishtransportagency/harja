@@ -5,7 +5,8 @@
             [taoensso.timbre :as log]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
-            [harja.palvelin.integraatiot.yha.tyokalut :refer :all])
+            [harja.palvelin.integraatiot.yha.tyokalut :refer :all]
+            [harja.tyokalut.xml :as xml])
   (:use [slingshot.slingshot :only [try+]]))
 
 (def kayttaja "jvh")
@@ -19,9 +20,6 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
-(defn hae-urakka-id [kohde-id]
-  (first (first (q (format "SELECT urakka FROM yllapitokohde WHERE id = %s;" kohde-id)))))
-
 (defn tee-url []
   (str +yha-url+ "toteumatiedot"))
 
@@ -34,15 +32,33 @@
   (u (format "UPDATE yllapitokohde SET lahetetty = NULL, lahetys_onnistunut = NULL WHERE id = %s" kohde-id)))
 
 (deftest tarkista-yllapitokohteen-lahetys
-  (let [kohde-id 1
-        urakka-id (hae-urakka-id 1)
+  (let [kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        urakka-id (hae-muhoksen-paallystysurakan-id)
+        urakka-yhaid (:yhaid (first (q-map (str "SELECT yhaid FROM yhatiedot WHERE urakka = " urakka-id ";"))))
         url (tee-url)
         onnistunut-kirjaus-vastaus "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<urakan-kohteiden-toteumatietojen-kirjausvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">\n</urakan-kohteiden-toteumatietojen-kirjausvastaus>"]
-    (with-fake-http [{:url url :method :post}
-                     (fn [_ opts _]
-                       ;; TODO Lähetetty request kaipailisi testejä (arvot lähetetään oikein)
-                       (is (= url (:url opts)) "Kutsu tehdään oikeaan osoitteeseen")
-                       onnistunut-kirjaus-vastaus)]
+    (with-fake-http
+      [{:url url :method :post}
+       (fn [_ {:keys [url body] :as opts} _]
+         (is (= url (:url opts)) "Kutsu tehdään oikeaan osoitteeseen")
+         ;; Tarkistetaan, että lähtevässä XML:ssä on oikea data
+         (let [luettu-xml (-> (xml/lue body))
+               urakka (xml/luetun-xmln-tagien-sisalto
+                        luettu-xml
+                        :urakan-kohteiden-toteumatietojen-kirjaus :urakka)
+               kohde (xml/luetun-xmln-tagien-sisalto
+                       urakka
+                       :kohteet :kohde)]
+           (is (= (xml/luetun-xmln-tagin-sisalto urakka :yha-id) [(str urakka-yhaid)]))
+           (is (= (xml/luetun-xmln-tagin-sisalto urakka :harja-id) [(str urakka-id)]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyyppi) ["1"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyotyyppi) ["paallystys"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :nimi) ["Leppäjärven ramppi"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :toiden-aloituspaivamaara) ["2017-05-19"]))
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :paallystyksen-valmistumispaivamaara) ["2017-05-21"]))
+           )
+         ;; Palautetaan vastaus
+         onnistunut-kirjaus-vastaus)]
 
       (let [onnistui? (yha/laheta-kohteet (:yha jarjestelma) urakka-id [kohde-id])
             lahetystiedot (hae-kohteen-lahetystiedot kohde-id)]
@@ -52,8 +68,8 @@
       (tyhjenna-kohteen-lahetystiedot kohde-id))))
 
 (deftest tarkista-yllapitokohteen-lahetys-ilman-yha-yhteytta
-  (let [kohde-id 1
-        urakka-id (hae-urakka-id 1)
+  (let [kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        urakka-id (hae-muhoksen-paallystysurakan-id)
         onnistui? (yha/laheta-kohteet (:yha jarjestelma) urakka-id [kohde-id])
         lahetystiedot (hae-kohteen-lahetystiedot kohde-id)]
     (is (false? onnistui?))
