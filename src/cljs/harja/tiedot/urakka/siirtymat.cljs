@@ -114,3 +114,8 @@
                   :kirjoitusoikeus?
                   (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                             valittu-urakka-id)))))))
+
+(defn avaa-tietyoilmoitus
+  "Navigoi tietyoilmoitukseen"
+  [{:keys [paallystyskohde-id kohteen-urakka-id valittu-urakka-id] :as tiedot}]
+  )

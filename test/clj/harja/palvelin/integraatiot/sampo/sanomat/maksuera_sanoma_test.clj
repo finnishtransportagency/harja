@@ -42,7 +42,7 @@
 (deftest tarkista-maksueran-sisalto
   (let [maksuera-xml (xml-zip (parse (ByteArrayInputStream. (.getBytes (html (maksuera_sanoma/maksuera-xml +maksuera+)) "UTF-8"))))]
     (is (= "2015-12-12T00:00:00" (z/xml1-> maksuera-xml :Products :Product (z/attr :start))))
-    (is (= "2017-01-01T17:00:00" (z/xml1-> maksuera-xml :Products :Product (z/attr :finish))))
+    (is (= "2017-01-01T00:00:00" (z/xml1-> maksuera-xml :Products :Product (z/attr :finish))))
     (is (= "A009717" (z/xml1-> maksuera-xml :Products :Product (z/attr :managerUserName))))
     (is (= "Testimaksuera" (z/xml1-> maksuera-xml :Products :Product (z/attr :name))))
     (is (= "HA123456789" (z/xml1-> maksuera-xml :Products :Product (z/attr :objectID))))
