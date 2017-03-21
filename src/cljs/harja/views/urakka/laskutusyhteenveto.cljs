@@ -1,5 +1,5 @@
 (ns harja.views.urakka.laskutusyhteenveto
-  "Urakan Laskutusyhteenveto välilehti:"
+  "Urakan Laskutusyhteenveto-välilehti"
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<! >! chan]]
 
@@ -10,6 +10,7 @@
             [harja.tiedot.raportit :as raportit]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
+            [harja.ui.upotettu-raportti :as upotettu-raportti]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt tarkkaile!]]
@@ -54,28 +55,11 @@
             tiedot @laskutusyhteenvedon-tiedot
             valittu-aikavali @u/valittu-hoitokauden-kuukausi]
         [:span.laskutusyhteenveto
-         [:h3 "Laskutusyhteenveto"]
          [valinnat/urakan-hoitokausi ur]
          [valinnat/hoitokauden-kuukausi]
          
          (when-let [p @laskutusyhteenvedon-parametrit]
-           [:span
-            ^{:key "raporttixls"}
-            [:form {:style {:float "right"} :target "_blank" :method "POST"
-                    :action (k/excel-url :raportointi)}
-             [:input {:type "hidden" :name "parametrit"
-                      :value (t/clj->transit p)}]
-             [:button.nappi-ensisijainen {:type "submit"}
-              (ikonit/print)
-              " Tallenna Excel"]]
-            ^{:key "raporttipdf"}
-            [:form {:style {:float "right"} :target "_blank" :method "POST"
-                    :action (k/pdf-url :raportointi)}
-            [:input {:type "hidden" :name "parametrit"
-                     :value (t/clj->transit p)}]
-            [:button.nappi-ensisijainen {:type "submit"}
-             (ikonit/print)
-             " Tallenna PDF"]]])
+           [upotettu-raportti/raportin-vientimuodot])
          
          (when-let [tiedot @laskutusyhteenvedon-tiedot]
            [muodosta-html (assoc-in tiedot [1 :tunniste] :laskutusyhteenveto)])]))))

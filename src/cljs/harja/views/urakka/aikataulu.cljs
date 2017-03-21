@@ -22,7 +22,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
-            [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
+            [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.views.urakka.valinnat :as u-valinnat]
             [harja.ui.viesti :as viesti])
   (:require-macros [reagent.ratom :refer [reaction run!]]
@@ -154,7 +154,7 @@
                     saa-merkita-valmiiksi?]} (oikeudet urakka-id)]
         [:div.aikataulu
          [vuosivalinta ur]
-         [u-valinnat/tienumero paallystys-tiedot/tienumero]
+         [u-valinnat/tienumero yllapito-tiedot/tienumero]
          [grid/grid
           {:otsikko "Kohteiden aikataulu"
            :voi-poistaa? (constantly false)

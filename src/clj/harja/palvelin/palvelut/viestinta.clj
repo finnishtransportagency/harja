@@ -9,7 +9,8 @@
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [hiccup.core :refer [html]]
             [harja.palvelin.komponentit.fim :as fim]
-            [harja.palvelin.integraatiot.labyrintti.sms :as sms])
+            [harja.palvelin.integraatiot.labyrintti.sms :as sms]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn laheta-sposti-fim-kayttajarooleille
@@ -38,12 +39,12 @@
               (:sahkoposti henkilo)
               (str "Harja: " viesti-otsikko)
               viesti-body)
-            (catch Exception e
+            (catch Throwable e
               (log/error (format "Sähköpostin lähetys FIM-käyttäjälle %s epäonnistui. Virhe: %s"
                                  (pr-str henkilo) (pr-str e))))))))
-    (catch Exception e
+    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (log/error (format "Sähköpostia ei voitu lähettää urakan %s FIM-käyttäjille %s. Virhe: %s"
-                         urakka-sampoid fim-kayttajaroolit (pr-str e))))))
+                         urakka-sampoid fim-kayttajaroolit (pr-str virheet))))))
 
 (defn laheta-tekstiviesti-fim-kayttajarooleille
   "Yrittää lähettää tekstiviestin annetun urakan FIM-käyttäjille, jotka ovat
@@ -65,10 +66,10 @@
         (doseq [henkilo viestin-saajat]
           (try+
             (sms/laheta sms (:puhelin henkilo) viesti)
-            (catch Exception e
+            (catch Throwable e
               (log/error (format "Tekstiviestin lähetys FIM-käyttäjälle %s epäonnistui. Virhe: %s"
                                  (pr-str henkilo) (pr-str e))))))))
-    (catch Exception e
+    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (log/error (format "Tekstiviestiä ei voitu lähettää urakan %s FIM-käyttäjille %s. Virhe: %s"
-                         urakka-sampoid fim-kayttajaroolit (pr-str e))))))
+                         urakka-sampoid fim-kayttajaroolit (pr-str virheet))))))
 
