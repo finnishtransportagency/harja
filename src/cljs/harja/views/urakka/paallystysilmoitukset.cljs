@@ -341,18 +341,6 @@
            (assoc paallystys/massamaara-grid-skeema :leveys 15)
            {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys 10 :tyyppi :positiivinen-numero
             :tasaa :oikea}
-           {:otsikko "Edellinen päällyste"
-            :nimi :edellinen-paallystetyyppi
-            :tyyppi :valinta
-            :valinta-arvo :koodi
-            :valinta-nayta (fn [rivi muokattava?]
-                             (if rivi
-                               (str (:lyhenne rivi) " - " (:nimi rivi))
-                               (if muokattava?
-                                 "- Valitse päällyste -"
-                                 "")))
-            :valinnat paallystys-ja-paikkaus/+paallystetyypit+
-            :leveys 30}
            {:otsikko "Kuulamylly"
             :nimi :kuulamylly
             :tyyppi :valinta

@@ -30,7 +30,6 @@
                                :tyomenetelma "Uraremix",
                                :rc-prosentti 54,
                                :paallystetyyppi "avoin asfaltti",
-                               :edellinen-paallystetyyppi "pehmeä asfalttibetoni (v)",
                                :id 36}]},
                             :alustatoimenpiteet
                             [{:sijainti {:aosa 1, :aet 1, :losa 5, :let 15},
@@ -63,7 +62,6 @@
                               :paallystetyyppi "avoin asfaltti"}]}
         ilmoitusdata (clojure.walk/keywordize-keys (cheshire/decode (paallystysilmoitus/rakenna paallystysilmoitus)))
         odotettu-data {:osoitteet [{:kohdeosa-id 36,
-                                    :edellinen-paallystetyyppi 22,
                                     :lisaaineet "lisäaineet",
                                     :leveys 1.2,
                                     :kokonaismassamaara 12.3,

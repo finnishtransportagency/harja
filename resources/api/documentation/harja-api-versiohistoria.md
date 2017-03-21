@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.17</b>  
-<b>Julkaistu: 16.3.2017</b>
+<b>Nykyinen versio: 1.0.18</b>  
+<b>Julkaistu: 20.3.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.18 Julkaistu: 20.3.2017:
+    - Päällystysilmoituksen kirjauksesta poistettu kenttä edellinen-paallyste.
 - Versionumero: 1.0.17 Julkaistu: 16.3.2017:
     - Tiemerkinnän yks. hint. toteuman kirjauksessa käytetty muutospvm on nyt nimeltään paivamaara.
 - Versionumero: 1.0.16 Julkaistu: 9.3.2017:
