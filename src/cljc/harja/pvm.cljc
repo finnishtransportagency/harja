@@ -252,7 +252,7 @@
 
 (defn aika-iso8601-ilman-millisekunteja
   [pvm]
-  (formatoi iso8601-aikaleimalla pvm))
+  (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ss") pvm))
 
 (def kuukausi-ja-vuosi-fmt-valilyonnilla
   (luo-format "MM / yy"))
