@@ -29,7 +29,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
@@ -112,10 +112,10 @@
                ::tr/aet 1}
    ::t/urakan-nimi "Oulun alueurakka 2014-2019",
    ::t/ilmoittaja-id 6,
-   ::t/ajoneuvorajoitukset {::t/max-korkeus 4M,
-                            ::t/max-paino 4000M,
-                            ::t/max-pituus 10M,
-                            ::t/max-leveys 3M}
+   ::t/ajoneuvorajoitukset {::t/max-korkeus 4.0,
+                            ::t/max-paino 4000.0,
+                            ::t/max-pituus 10.0,
+                            ::t/max-leveys 3.0}
    ::t/kiertotienpinnat [{::t/materiaali "murske",
                           ::t/matka 100}]
    ::t/pysaytysten-alku #inst "2017-01-01T01:01:01.000000000-00:00"})
