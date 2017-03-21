@@ -57,7 +57,7 @@
     [:div
      [:p "Seuraaville tiemerkintäkohteille on merkitty valmistumispäivämäärä:"]
      (for [{:keys [id kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
-                   aikataulu-tiemerkinta-loppu tiemerkintaurakka-nimi paallystysurakka-nimi] :as kohteet} kohteet]
+                   tiemerkintaurakka-nimi paallystysurakka-nimi] :as kohteet} kohteet]
        [:div (html-tyokalut/taulukko [["Tiemerkintäurakka" paallystysurakka-nimi]
                                       ["Kohde" kohde-nimi]
                                       ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina

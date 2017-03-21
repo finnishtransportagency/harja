@@ -133,7 +133,9 @@
 
 (defn luo-pvm
   "Frontissa palauttaa goog.date.Datetimen
-  Backendissä palauttaa java.util.Daten"
+  Backendissä palauttaa java.util.Daten
+
+  Vuosi 1-index, kuukausi on 0-index ja pv on 1-index"
   [vuosi kk pv]
   #?(:cljs (DateTime. vuosi kk pv 0 0 0 0)
      :clj (Date. (- vuosi 1900) kk pv)))
@@ -592,12 +594,11 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                         (kuukauden-aikavali kk))
                   (t/plus kk (t/months 1))))))))
 
-#?(:cljs
-   (defn ed-kk-aikavalina
-     [p]
-     (let [pvm-ed-kkna (t/minus p (t/months 1))]
-       [(t/first-day-of-the-month pvm-ed-kkna)
-        (t/last-day-of-the-month pvm-ed-kkna)])))
+(defn ed-kk-aikavalina
+  [p]
+  (let [pvm-ed-kkna (t/minus p (t/months 1))]
+    [(aikana (t/first-day-of-the-month pvm-ed-kkna) 0 0 0 0)
+     (aikana (t/last-day-of-the-month pvm-ed-kkna) 23 59 59 999)]))
 
 #?(:clj
    (defn kyseessa-kk-vali?

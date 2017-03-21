@@ -2,6 +2,7 @@
 -- Hakee urakan kaikki päällystysilmoitukset
 SELECT
   ypk.id                   AS "paallystyskohde-id",
+  ypk.tr_numero            AS "tr-numero",
   pi.tila,
   nimi,
   kohdenumero,
@@ -33,47 +34,50 @@ WHERE paallystyskohde = :paallystyskohde;
 SELECT
   pi.id,
   tila,
-  ypk.aikataulu_kohde_alku,
-  ypk.aikataulu_kohde_valmis     AS "valmispvm-kohde",
-  ypk.aikataulu_paallystys_loppu AS "valmispvm-paallystys",
+  ypka.kohde_alku              AS "aloituspvm",
+  ypka.kohde_valmis            AS "valmispvm-kohde",
+  ypka.paallystys_loppu        AS "valmispvm-paallystys",
   takuupvm,
-  ypk.id                         AS "yllapitokohde-id",
-  ypk.nimi                       AS kohdenimi,
+  ypk.id                       AS "yllapitokohde-id",
+  ypk.nimi                     AS kohdenimi,
   ypk.kohdenumero,
-  ypk.sopimuksen_mukaiset_tyot   AS "sopimuksen-mukaiset-tyot",
+  ypk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
   ypk.arvonvahennykset,
-  ypk.bitumi_indeksi             AS "bitumi-indeksi",
+  ypk.bitumi_indeksi           AS "bitumi-indeksi",
   ypk.kaasuindeksi,
   ypk.yllapitokohdetyyppi,
   ilmoitustiedot,
-  paatos_tekninen_osa            AS "tekninen-osa_paatos",
-  perustelu_tekninen_osa         AS "tekninen-osa_perustelu",
-  kasittelyaika_tekninen_osa     AS "tekninen-osa_kasittelyaika",
-  asiatarkastus_pvm              AS "asiatarkastus_tarkastusaika",
-  asiatarkastus_tarkastaja       AS "asiatarkastus_tarkastaja",
-  asiatarkastus_hyvaksytty       AS "asiatarkastus_hyvaksytty",
-  asiatarkastus_lisatiedot       AS "asiatarkastus_lisatiedot",
-  ypko.id                        AS kohdeosa_id,
-  ypko.nimi                      AS kohdeosa_nimi,
-  ypko.tunnus                    AS kohdeosa_tunnus,
-  ypko.tr_numero                 AS "kohdeosa_tr-numero",
-  ypko.tr_alkuosa                AS "kohdeosa_tr-alkuosa",
-  ypko.tr_alkuetaisyys           AS "kohdeosa_tr-alkuetaisyys",
-  ypko.tr_loppuosa               AS "kohdeosa_tr-loppuosa",
-  ypko.tr_loppuetaisyys          AS "kohdeosa_tr-loppuetaisyys",
-  ypko.tr_ajorata                AS "kohdeosa_tr-ajorata",
-  ypko.tr_kaista                 AS "kohdeosa_tr-kaista",
-  ypko.toimenpide                AS "kohdeosa_toimenpide",
-  ypk.tr_numero                  AS "tr-numero",
-  ypk.tr_alkuosa                 AS "tr-alkuosa",
-  ypk.tr_alkuetaisyys            AS "tr-alkuetaisyys",
-  ypk.tr_loppuosa                AS "tr-loppuosa",
-  ypk.tr_loppuetaisyys           AS "tr-loppuetaisyys"
+  paatos_tekninen_osa          AS "tekninen-osa_paatos",
+  perustelu_tekninen_osa       AS "tekninen-osa_perustelu",
+  kasittelyaika_tekninen_osa   AS "tekninen-osa_kasittelyaika",
+  asiatarkastus_pvm            AS "asiatarkastus_tarkastusaika",
+  asiatarkastus_tarkastaja     AS "asiatarkastus_tarkastaja",
+  asiatarkastus_hyvaksytty     AS "asiatarkastus_hyvaksytty",
+  asiatarkastus_lisatiedot     AS "asiatarkastus_lisatiedot",
+  ypko.id                      AS kohdeosa_id,
+  ypko.nimi                    AS kohdeosa_nimi,
+  ypko.tunnus                  AS kohdeosa_tunnus,
+  ypko.tr_numero               AS "kohdeosa_tr-numero",
+  ypko.tr_alkuosa              AS "kohdeosa_tr-alkuosa",
+  ypko.tr_alkuetaisyys         AS "kohdeosa_tr-alkuetaisyys",
+  ypko.tr_loppuosa             AS "kohdeosa_tr-loppuosa",
+  ypko.tr_loppuetaisyys        AS "kohdeosa_tr-loppuetaisyys",
+  ypko.tr_ajorata              AS "kohdeosa_tr-ajorata",
+  ypko.tr_kaista               AS "kohdeosa_tr-kaista",
+  ypko.toimenpide              AS "kohdeosa_toimenpide",
+  ypk.tr_numero                AS "tr-numero",
+  ypk.tr_alkuosa               AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys          AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa              AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys         AS "tr-loppuetaisyys",
+  u.id                         AS "urakka-id"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = :paallystyskohde
                                      AND pi.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohdeosa ypko ON ypko.yllapitokohde = :paallystyskohde
                                      AND ypko.poistettu IS NOT TRUE
+  LEFT JOIN urakka u ON u.id = ypk.urakka
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE ypk.id = :paallystyskohde
       AND ypk.poistettu IS NOT TRUE;
 
@@ -125,12 +129,12 @@ WHERE paallystyskohde = :id
 -- Päivittää päällystysilmoituksen asiatarkastuksen
 UPDATE paallystysilmoitus
 SET
-  asiatarkastus_pvm          = :asiatarkastus_pvm,
-  asiatarkastus_tarkastaja   = :asiatarkastus_tarkastaja,
-  asiatarkastus_hyvaksytty   = :asiatarkastus_hyvaksytty,
-  asiatarkastus_lisatiedot   = :asiatarkastus_lisatiedot,
-  muokattu                   = NOW(),
-  muokkaaja                  = :muokkaaja
+  asiatarkastus_pvm        = :asiatarkastus_pvm,
+  asiatarkastus_tarkastaja = :asiatarkastus_tarkastaja,
+  asiatarkastus_hyvaksytty = :asiatarkastus_hyvaksytty,
+  asiatarkastus_lisatiedot = :asiatarkastus_lisatiedot,
+  muokattu                 = NOW(),
+  muokkaaja                = :muokkaaja
 WHERE paallystyskohde = :id
       AND paallystyskohde IN (SELECT id
                               FROM yllapitokohde
@@ -192,14 +196,14 @@ WHERE ym.id = :id;
 SELECT
   ym.id,
   yllapitokohde,
-  tyon_tyyppi               AS "tyyppi",
+  tyon_tyyppi      AS "tyyppi",
   tyo,
   yksikko,
-  tilattu_maara             AS "tilattu-maara",
-  ennustettu_maara          AS "ennustettu-maara",
-  toteutunut_maara          AS "toteutunut-maara",
+  tilattu_maara    AS "tilattu-maara",
+  ennustettu_maara AS "ennustettu-maara",
+  toteutunut_maara AS "toteutunut-maara",
   yksikkohinta,
-  k.jarjestelma             AS "jarjestelman-lisaama"
+  k.jarjestelma    AS "jarjestelman-lisaama"
 FROM yllapitokohteen_maaramuutos ym
   LEFT JOIN kayttaja k ON ym.luoja = k.id
 WHERE yllapitokohde = :id
@@ -213,8 +217,8 @@ INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo, yksikk
                                          ennustettu_maara, toteutunut_maara,
                                          yksikkohinta, luoja, ulkoinen_id, jarjestelma)
 VALUES (:yllapitokohde, :tyon_tyyppi :: maaramuutos_tyon_tyyppi, :tyo, :yksikko, :tilattu_maara,
-        :ennustettu_maara, :toteutunut_maara,
-        :yksikkohinta, :luoja, :ulkoinen_id, :jarjestelma);
+                        :ennustettu_maara, :toteutunut_maara,
+                        :yksikkohinta, :luoja, :ulkoinen_id, :jarjestelma);
 
 -- name: paivita-yllapitokohteen-maaramuutos<!
 UPDATE yllapitokohteen_maaramuutos
@@ -246,10 +250,10 @@ WHERE yllapitokohde = :yllapitokohdeid AND
 
 -- name: avaa-paallystysilmoituksen-lukko!
 UPDATE paallystysilmoitus
-SET tila = 'valmis'::paallystystila
+SET tila = 'valmis' :: paallystystila
 WHERE paallystyskohde = :yllapitokohde_id
 
 -- name: lukitse-paallystysilmoitus!
 UPDATE paallystysilmoitus
-SET tila = 'lukittu'::paallystystila
+SET tila = 'lukittu' :: paallystystila
 WHERE paallystyskohde = :yllapitokohde_id

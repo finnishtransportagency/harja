@@ -1,7 +1,11 @@
-<b>Nykyinen versio: 1.0.15</b>  
-<b>Julkaistu: 7.3.2017</b>
+<b>Nykyinen versio: 1.0.17</b>  
+<b>Julkaistu: 16.3.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.17 Julkaistu: 16.3.2017:
+    - Tiemerkinnän yks. hint. toteuman kirjauksessa käytetty muutospvm on nyt nimeltään paivamaara.
+- Versionumero: 1.0.16 Julkaistu: 9.3.2017:
+    - Lisätty ylläpitokohteen päivitykseen uudet alikohteen kentät: paallystetyyppi, raekoko, tyomenetelma & kokonaismassamaara.
 - Versionumero: 1.0.15 Julkaistu: 7.3.2017:
     - Uudet rajapinnat tiemerkinnän toteumien kirjaamiselle ja poistamiselle
 - Versionumero: 1.0.14 Julkaistu: 7.3.2017:

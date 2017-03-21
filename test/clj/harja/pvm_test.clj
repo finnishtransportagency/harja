@@ -1,7 +1,7 @@
 (ns harja.pvm-test
   "Harjan pvm-namespacen backendin testit"
   (:require
-    [clojure.test :refer [deftest is use-fixtures]]
+    [clojure.test :refer [deftest is use-fixtures testing]]
     [harja.pvm :as pvm]
     [clj-time.core :as t]))
 
@@ -114,3 +114,23 @@
                                                  [(t/minus nyt (t/days 3))
                           (t/minus nyt (t/days 2))])
          0)))
+
+(deftest aikavalit
+  (testing "Kuukauden aikaväli"
+    (let [tulos (pvm/kuukauden-aikavali nyt)]
+      (is (= 2 (count tulos)))
+      (is (= 0 (t/hour (first tulos))))
+      (is (= 0 (t/minute (first tulos))))
+      (is (= 23 (t/hour (second tulos))))
+      (is (= 59 (t/minute (second tulos))))))
+
+  (testing "Edellinen kuukausi aikavälina"
+    (let [tulos (pvm/ed-kk-aikavalina nyt)]
+      (is (= 2 (count tulos)))
+      (is (= (t/month (first tulos))
+             (t/month (second tulos))
+             (t/month (t/minus nyt (t/months 1)))))
+      (is (= 0 (t/hour (first tulos))))
+      (is (= 0 (t/minute (first tulos))))
+      (is (= 23 (t/hour (second tulos))))
+      (is (= 59 (t/minute (second tulos)))))))
