@@ -2,6 +2,7 @@
   (:require [reagent.core :as r]
             [harja.ui.lomake :as lomake]
             [harja.pvm :as pvm]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tiedot]
             [harja.domain.tietyoilmoitukset :as t]
@@ -261,9 +262,9 @@
                        :komponentti #(->> % :data ::t/nopeusrajoitukset (nopeusrajoitukset-komponentti-grid e!))
                        :nimi :nopeusrajoitukset
                        }
-                      {:otsikko "Kulkurajoituksia"
+                      {:otsikko "Kokorajoituksia"
                        :tyyppi :checkbox-group
-                       :nimi :kulkurajoituksia
+                       :nimi :kokorajoituksia
                        :vaihtoehdot ["Ulottumarajoituksia" ;; ->max leveys, korkeus
                                      "Painorajoitus"] ;; -> max paino
 
@@ -288,9 +289,13 @@
 
                        }
                       {:otsikko "Kulkurajoituksia"
-                       :tyyppi :checkbox-group
-                       :nimi :kulkurajoituksia
-                       :vaihtoehdot ["Liikennevalot" "Liikenteen ohjaaja" "Satunnaisia (aikataulu, jos yli 5 min)" "Aikataulu:"]}
+                       :tyyppi :checkbox-group-muu
+                       :nimi :liikenteenohjaus
+                       :vaihtoehdot ["Liikennevalot" "Liikenteen ohjaaja" "Satunnaisia (aikataulu, jos yli 5 min)" "Aikataulu:"]
+                       :vaihtoehto-nayta identity
+                       :muu-vaihtoehto "Aikataulu:"
+                       :muu-kentta {:otsikko "" :nimi :jotain :tyyppi :string :placeholder "(muu kaistajärjestely?)"}
+                       }
                       )
         (lomake/ryhma "Vaikutussuunta"
                       {:otsikko ""
@@ -320,5 +325,10 @@
                       {:otsikko "Päivämäärä"
                        :nimi :luotu
                        :tyyppi :string}
-)]
-       ilmoitus]]]))
+                      )
+        ]
+       ilmoitus]]
+     [napit/tallenna
+      "Tallenna ilmoitus"
+      #(e! (tiedot/->TallennaLomake))
+      {:ikoni (ikonit/tallenna)}]]))
