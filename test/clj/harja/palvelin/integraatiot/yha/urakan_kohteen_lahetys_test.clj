@@ -2,6 +2,7 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [com.stuartsierra.component :as component]
             [org.httpkit.fake :refer [with-fake-http]]
+            [taoensso.timbre :as log]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.palvelin.integraatiot.yha.tyokalut :refer :all])
@@ -39,6 +40,7 @@
         onnistunut-kirjaus-vastaus "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<urakan-kohteiden-toteumatietojen-kirjausvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">\n</urakan-kohteiden-toteumatietojen-kirjausvastaus>"]
     (with-fake-http [{:url url :method :post}
                      (fn [_ opts _]
+                       ;; TODO Lähetetty request kaipailisi testejä (arvot lähetetään oikein)
                        (is (= url (:url opts)) "Kutsu tehdään oikeaan osoitteeseen")
                        onnistunut-kirjaus-vastaus)]
 
