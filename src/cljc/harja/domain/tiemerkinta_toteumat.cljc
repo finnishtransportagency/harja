@@ -7,14 +7,12 @@
     [harja.domain.yllapitokohteet :as yllapitokohteet]
     [harja.domain.tierekisteri :as tr-domain]
     [harja.tyokalut.spec-apurit :as apurit]
-    #?@(:clj [
-    [clojure.future :refer :all]])))
+    #?@(:clj [[clojure.future :refer :all]])))
 
 ;; Toteuma
 
 (s/def ::selite string?)
-(s/def ::muutospvm #?(:clj  inst?
-                      :cljs inst?))
+(s/def ::paivamaara inst?)
 (s/def ::hintatyyppi #{:toteuma :suunnitelma})
 (s/def ::yllapitoluokka (s/nilable ::yllapitokohteet/yllapitoluokka)) ;; nil = ei ylläpitoluokkaa
 (s/def ::id (s/nilable int?))
@@ -31,7 +29,7 @@
                    ;; tai sitten on kohteeseen kuulumaton toteuma
                    (or (and ::yllapitokohde-id ::hinta-kohteelle)
                        (and ::tr-numero ::pituus))]
-          :opt-un [::poistettu ::muutospvm ::yllapitoluokka]))
+          :opt-un [::poistettu ::paivamaara ::yllapitoluokka]))
 
 ;; Haut
 

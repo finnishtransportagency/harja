@@ -36,6 +36,7 @@
             [harja.palvelin.raportointi.raportit.toimenpidepaivat]
             [harja.palvelin.raportointi.raportit.toimenpidekilometrit]
             [harja.palvelin.raportointi.raportit.indeksitarkistus]
+            [harja.palvelin.raportointi.raportit.tiemerkinnan-kustannusyhteenveto]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.raportointi :as raportti-domain]
             [harja.domain.roolit :as roolit]
