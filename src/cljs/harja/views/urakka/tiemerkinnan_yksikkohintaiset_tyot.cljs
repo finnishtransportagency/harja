@@ -108,8 +108,9 @@
                               :suunnitelma "Suunnitelma"
                               :toteuma "Toteuma"
                               "- valitse -")}
-           {:otsikko "Muutospvm"
-            :nimi :muutospvm :tyyppi :pvm :leveys 3
+           {:otsikko "Päivä\u00ADmäärä"
+            :nimi :paivamaara :tyyppi :pvm :leveys 3
+            :validoi [[:ei-tyhja "Anna päivämäärä"]]
             :fmt pvm/pvm-opt}]
           (sort-by tr-domain/tiekohteiden-jarjestys @tiemerkinnan-toteumat-atom)]]))))
 
@@ -195,6 +196,6 @@
 
 (defn yksikkohintaiset-tyot [urakka tiemerkinnan-toteumat-atom paallystysurakan-kohteet-atom]
   [:div.tiemerkinnan-yks-hint-tyot
-   [paallystysurakan-kohteet urakka @paallystysurakan-kohteet-atom]
    [toteutuneet-tiemerkinnat urakka tiemerkinnan-toteumat-atom @paallystysurakan-kohteet-atom]
-   [yhteenveto @tiemerkinnan-toteumat-atom]])
+   [yhteenveto @tiemerkinnan-toteumat-atom]
+   [paallystysurakan-kohteet urakka @paallystysurakan-kohteet-atom]])

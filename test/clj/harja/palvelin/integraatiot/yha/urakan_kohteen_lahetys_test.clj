@@ -41,9 +41,19 @@
                      (fn [_ opts _]
                        (is (= url (:url opts)) "Kutsu tehdään oikeaan osoitteeseen")
                        onnistunut-kirjaus-vastaus)]
-      (yha/laheta-kohteet (:yha jarjestelma) urakka-id [kohde-id])
-      (let [lahetystiedot (hae-kohteen-lahetystiedot kohde-id)]
+
+      (let [onnistui? (yha/laheta-kohteet (:yha jarjestelma) urakka-id [kohde-id])
+            lahetystiedot (hae-kohteen-lahetystiedot kohde-id)]
+        (is (true? onnistui?))
         (is (not (nil? (:lahetetty lahetystiedot))) "Lähetysaika on merkitty")
         (is (true? (:lahetys_onnistunut lahetystiedot))) "Lähetys on merkitty onnistuneeksi")
       (tyhjenna-kohteen-lahetystiedot kohde-id))))
+
+(deftest tarkista-yllapitokohteen-lahetys-ilman-yha-yhteytta
+  (let [kohde-id 1
+        urakka-id (hae-urakka-id 1)
+        onnistui? (yha/laheta-kohteet (:yha jarjestelma) urakka-id [kohde-id])
+        lahetystiedot (hae-kohteen-lahetystiedot kohde-id)]
+    (is (false? onnistui?))
+    (is (false? (:lahetys_onnistunut lahetystiedot)) "Lähetys on merkitty epäonnistuneeksi")))
 

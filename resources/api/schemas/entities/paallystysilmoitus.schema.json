@@ -68,8 +68,8 @@
                     "type": "string"
                   },
                   "raekoko": {
-                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/raekoko",
-                    "type": "integer"
+                    "id": "urn:harja/raekoko",
+                    "$ref": "file:resources/api/schemas/entities/paallystys_raekoko.schema.json"
                   },
                   "massamenekki": {
                     "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/massamenekki",
@@ -81,22 +81,9 @@
                   },
                   "tyomenetelma": {
                     "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/tyomenetelma",
-                    "enum": [
-                      "Paksuudeltaan vakio laatta",
-                      "Massapintaus",
-                      "Kuumennuspintaus",
-                      "MP kuumalle, kuumajyrsitylle tas. pinnalle",
-                      "REMIX-pintaus",
-                      "2-kerroksinen remix-pintaus",
-                      "PAB-O/V:n remix-pintaus",
-                      "ART-pintaus",
-                      "Novachip-massapintaus",
-                      "Karhinta",
-                      "Hienojyrsintä",
-                      "Sirotepintaus",
-                      "Urapaikkaus",
-                      "Uraremix"
-                    ]
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/paallystys_tyomenetelma.schema.json"
                   },
                   "leveys": {
                     "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/leveys",

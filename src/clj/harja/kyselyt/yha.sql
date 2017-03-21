@@ -33,15 +33,26 @@ WHERE urakka = :urakka;
 -- name: hae-yllapitokohteen-kohdeosat
 SELECT
   id,
-  tr_numero        AS "tr-numero",
-  tr_alkuosa       AS "tr-alkuosa",
-  tr_alkuetaisyys  AS "tr-alkuetaisyys",
-  tr_loppuosa      AS "tr-loppuosa",
-  tr_loppuetaisyys AS "tr-loppuetaisyys",
-  tr_ajorata       AS "tr-ajorata",
-  tr_kaista        AS "tr-kaista"
+  yllapitokohde,
+  nimi,
+  tunnus,
+  tr_numero                  AS "tr-numero",
+  tr_alkuosa                 AS "tr-alkuosa",
+  tr_alkuetaisyys            AS "tr-alkuetaisyys",
+  tr_loppuosa                AS "tr-loppuosa",
+  tr_loppuetaisyys           AS "tr-loppuetaisyys",
+  tr_ajorata                 AS "tr-ajorata",
+  tr_kaista                  AS "tr-kaista",
+  poistettu,
+  sijainti,
+  yhaid,
+  toimenpide,
+  (SELECT viimeisin_paivitys
+   FROM geometriapaivitys
+   WHERE nimi = 'tieverkko') AS karttapvm
 FROM yllapitokohdeosa
-WHERE yllapitokohde = :id;
+WHERE yllapitokohde = :yllapitokohde AND
+      poistettu IS NOT TRUE;
 
 -- name: hae-urakoiden-sidontatiedot
 SELECT

@@ -132,5 +132,11 @@
  :paivystystarkistus  {:paivittainen-aika [12 11 00]}
  :reittitarkistus  {:paivittainen-aika [00 30 00]}
 
- :pois-kytketyt-ominaisuudet #{}
+ ;; Seuraavat ominaisuudet on mahdollista kytkeä pois päältä eri ympäristöissä lisäämällä avaimen settiin:
+ ;; :laatupoikkeaman-selvityspyynnosta-lahtee-viesti  Kun laatupoikkeamasta pyydetään selvitystä urakoitsijalta,
+ ;;                                                   lähetetään laatupoikkeaman urakan vastuuhenkilöille
+ ;;                                                   tieto tästä SMS/email viestinä. Viesti sisältää linkin
+ ;;                                                   tuotantoharjaan.
+ ;; :tierekisterin-varusteet
+ :pois-kytketyt-ominaisuudet #{:tierekisterin-varusteet :tietyoilmoitukset}
  }

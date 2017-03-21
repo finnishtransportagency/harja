@@ -106,12 +106,12 @@
 
     (log/debug "Tallennetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
 
-    (doseq [{:keys [hinta hintatyyppi muutospvm id yllapitokohde-id poistettu
+    (doseq [{:keys [hinta hintatyyppi paivamaara id yllapitokohde-id poistettu
                     selite tr-numero yllapitoluokka pituus hinta-kohteelle] :as kohde} toteumat]
       (let [sql-parametrit {:yllapitokohde yllapitokohde-id
                             :hinta hinta
                             :hintatyyppi (when hintatyyppi (name hintatyyppi))
-                            :muutospvm muutospvm
+                            :paivamaara paivamaara
                             :hinta_kohteelle (when yllapitokohde-id hinta-kohteelle)
                             :selite selite
                             :tr_numero (when-not yllapitokohde-id tr-numero)

@@ -6,6 +6,7 @@
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.urakka :as urakka]
     [harja.tiedot.urakka :as u]
+    [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
     [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.navigaatio :as nav]
     [harja.ui.viesti :as viesti])
@@ -191,13 +192,5 @@
          karttamuodossa (kartalla-esitettavaan-muotoon
                          yllapitokohteet
                          #(= (id lomakedata) (id %))
-                         (comp
-                           (mapcat (fn [kohde]
-                                     (keep (fn [kohdeosa]
-                                             (assoc kohdeosa :yllapitokohde (dissoc kohde :kohdeosat)
-                                                             :tyyppi-kartalla (:yllapitokohdetyotyyppi kohde)
-                                                             :tila-kartalla (:tila-kartalla kohde)
-                                                             :yllapitokohde-id (:id kohde)))
-                                           (:kohdeosat kohde))))
-                           (keep #(and (:sijainti %) %))))]
+                         yllapitokohteet-domain/yllapitokohde-kartalle-xf)]
     karttamuodossa)))

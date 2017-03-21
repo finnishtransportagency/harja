@@ -13,10 +13,12 @@
             [harja.views.urakka.yllapitokohteet.paikkauksen-kohdeluettelo :as paikkauksen-kohdeluettelo]
             [harja.views.urakka.aikataulu :as aikataulu]
             [harja.views.urakka.valitavoitteet :as valitavoitteet]
+            [harja.views.urakka.tiemerkinnan-kustannukset :as tiemerkinnan-kustannukset]
             [harja.tiedot.urakka.suunnittelu.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.tiedot.urakka.suunnittelu.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
+            [harja.tiedot.urakka.tiemerkinnan-kustannukset :as tiemerkinnan-kustannukset-tiedot]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.views.urakka.laadunseuranta :as laadunseuranta]
             [harja.views.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
@@ -31,7 +33,6 @@
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti
     :yleiset true
-    ;; voidaan siistiä tekemällä välitasoja kuten oikeudet-suunnittelu ja oikeudet-toteumat. Nyt otetaan first
     :suunnittelu (and (oikeudet/urakat-suunnittelu id)
                       (not= sopimustyyppi :kokonaisurakka)
                       (not= tyyppi :tiemerkinta))
@@ -55,6 +56,8 @@
     :laskutus (and (oikeudet/urakat-laskutus id)
                    (not= tyyppi :paallystys)
                    (not= tyyppi :tiemerkinta))
+    :tiemerkinnan-kustannukset (and (oikeudet/urakat-kustannukset id)
+                                 (= tyyppi :tiemerkinta))
 
     false))
 
@@ -69,8 +72,8 @@
                             (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))
                           (when (oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
                             (go (reset! u/urakan-yks-hint-tyot
-                                       (s/prosessoi-tyorivit ur
-                                                             (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur))))))))]
+                                        (s/prosessoi-tyorivit ur
+                                                              (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur))))))))]
 
     ;; Luetaan toimenpideinstanssi, jotta se ei menetä arvoaan kun vaihdetaan välilehtiä
     @u/valittu-toimenpideinstanssi
@@ -78,70 +81,81 @@
     (hae-urakan-tyot ur)
     (if @u/urakan-tiedot-ladattu?
       [bs/tabs {:style :tabs :classes "tabs-taso1"
-               :active (nav/valittu-valilehti-atom :urakat)}
-      "Yleiset"
-      :yleiset
-      (when (oikeudet/urakat-yleiset (:id ur))
-        ^{:key "yleiset"}
-        [urakka-yleiset/yleiset ur])
+                :active (nav/valittu-valilehti-atom :urakat)}
+       "Yleiset"
+       :yleiset
+       (when (oikeudet/urakat-yleiset (:id ur))
+         ^{:key "yleiset"}
+         [urakka-yleiset/yleiset ur])
 
-      "Suunnittelu"
-      :suunnittelu
-      (when (valilehti-mahdollinen? :suunnittelu ur)
-        ^{:key "suunnittelu"}
-        [suunnittelu/suunnittelu ur])
+       "Suunnittelu"
+       :suunnittelu
+       (when (valilehti-mahdollinen? :suunnittelu ur)
+         ^{:key "suunnittelu"}
+         [suunnittelu/suunnittelu ur])
 
-      "Toteumat"
-      :toteumat
-      (when (valilehti-mahdollinen? :toteumat ur)
-        ^{:key "toteumat"}
-        [toteumat/toteumat ur])
+       "Toteumat"
+       :toteumat
+       (when (valilehti-mahdollinen? :toteumat ur)
+         ^{:key "toteumat"}
+         [toteumat/toteumat ur])
 
-      "Toteutus"
-      :toteutus
-      (when (valilehti-mahdollinen? :toteutus ur)
-        ^{:key "toteutus"}
-        [toteutus/toteutus ur])
+       "Toteutus"
+       :toteutus
+       (when (valilehti-mahdollinen? :toteutus ur)
+         ^{:key "toteutus"}
+         [toteutus/toteutus ur])
 
-      "Aikataulu"
-      :aikataulu
-      (when (valilehti-mahdollinen? :aikataulu ur)
-        ^{:key "aikataulu"}
-        [aikataulu/aikataulu ur {:nakyma (:tyyppi ur)}])
+       "Aikataulu"
+       :aikataulu
+       (when (valilehti-mahdollinen? :aikataulu ur)
+         ^{:key "aikataulu"}
+         [aikataulu/aikataulu ur {:nakyma (:tyyppi ur)}])
 
-      "Kohdeluettelo"
-      :kohdeluettelo-paallystys
-      (when (valilehti-mahdollinen? :kohdeluettelo-paallystys ur)
-        ^{:key "kohdeluettelo"}
-        [paallystyksen-kohdeluettelo/kohdeluettelo ur])
+       "Kohdeluettelo"
+       :kohdeluettelo-paallystys
+       (when (valilehti-mahdollinen? :kohdeluettelo-paallystys ur)
+         ^{:key "kohdeluettelo"}
+         [paallystyksen-kohdeluettelo/kohdeluettelo ur])
 
-      "Kohdeluettelo"
-      :kohdeluettelo-paikkaus
-      (when (valilehti-mahdollinen? :kohdeluettelo-paikkaus ur)
-        ^{:key "kohdeluettelo"}
-        [paikkauksen-kohdeluettelo/kohdeluettelo ur])
+       "Kohdeluettelo"
+       :kohdeluettelo-paikkaus
+       (when (valilehti-mahdollinen? :kohdeluettelo-paikkaus ur)
+         ^{:key "kohdeluettelo"}
+         [paikkauksen-kohdeluettelo/kohdeluettelo ur])
 
-      "Laadunseuranta"
-      :laadunseuranta
-      (when (valilehti-mahdollinen? :laadunseuranta ur)
-        ^{:key "laadunseuranta"}
-        [laadunseuranta/laadunseuranta ur])
+       "Laadunseuranta"
+       :laadunseuranta
+       (when (valilehti-mahdollinen? :laadunseuranta ur)
+         ^{:key "laadunseuranta"}
+         [laadunseuranta/laadunseuranta ur])
 
-      "Välitavoitteet"
-      :valitavoitteet
-      (when (valilehti-mahdollinen? :valitavoitteet ur)
-        ^{:key "valitavoitteet"}
-        [valitavoitteet/valitavoitteet ur])
+       "Välitavoitteet"
+       :valitavoitteet
+       (when (valilehti-mahdollinen? :valitavoitteet ur)
+         ^{:key "valitavoitteet"}
+         [valitavoitteet/valitavoitteet ur])
 
-      "Turvallisuus"
-      :turvallisuuspoikkeamat
-      (when (valilehti-mahdollinen? :turvallisuuspoikkeamat ur)
-        ^{:key "turvallisuuspoikkeamat"}
-        [turvallisuuspoikkeamat/turvallisuuspoikkeamat])
+       "Turvallisuus"
+       :turvallisuuspoikkeamat
+       (when (valilehti-mahdollinen? :turvallisuuspoikkeamat ur)
+         ^{:key "turvallisuuspoikkeamat"}
+         [turvallisuuspoikkeamat/turvallisuuspoikkeamat])
 
-      "Laskutus"
-      :laskutus
-      (when (valilehti-mahdollinen? :laskutus ur)
-        ^{:key "laskutus"}
-        [laskutus/laskutus])]
+       "Laskutus"
+       :laskutus
+       (when (valilehti-mahdollinen? :laskutus ur)
+         ^{:key "laskutus"}
+         [laskutus/laskutus])
+
+
+       "Kustannukset"
+       :tiemerkinnan-kustannukset
+       (when (valilehti-mahdollinen? :tiemerkinnan-kustannukset ur)
+         ^{:key "tiemerkinnan-kustannukset"}
+         [tiemerkinnan-kustannukset/kustannukset
+          ur
+          tiemerkinnan-kustannukset-tiedot/raportin-parametrit
+          tiemerkinnan-kustannukset-tiedot/raportin-tiedot])]
+
       [ajax-loader "Ladataan urakan tietoja..."])))

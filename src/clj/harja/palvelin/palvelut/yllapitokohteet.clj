@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.yllapitokohteet
   "Tässä namespacessa on palvelut ylläpitokohteiden ja -kohdeosien hakuun ja tallentamiseen."
   (:require [clojure.java.jdbc :as jdbc]
+            [clojure.core.async :refer [go <! >! thread >!! timeout] :as async]
             [clojure.set :as set]
             [com.stuartsierra.component :as component]
             [harja.domain
@@ -103,11 +104,16 @@
   (log/debug "Haetaan tiemerkinnän suorittavat urakat.")
   (q/hae-tiemerkinnan-suorittavat-urakat db))
 
+(defn- valita-tieto-kohteen-valmiudesta-tiemerkintaan [{:keys [db fim email kohde-id tiemerkintapvm user]}]
+  (viestinta/laheta-sposti-kohde-valmis-merkintaan {:db db :fim fim :email email
+                                                    :kohde-id kohde-id :tiemerkintapvm tiemerkintapvm
+                                                    :ilmoittaja user}))
+
 (defn merkitse-kohde-valmiiksi-tiemerkintaan
   "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä.
    Palauttaa päivitetyt kohteet aikataulunäkymään"
   [db fim email user
-   {:keys [urakka-id sopimus-id tiemerkintapvm kohde-id] :as tiedot}]
+   {:keys [urakka-id sopimus-id vuosi tiemerkintapvm kohde-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Merkitään urakan " urakka-id " kohde " kohde-id " valmiiksi tiemerkintää päivämäärällä " tiemerkintapvm)
   (jdbc/with-db-transaction [db db]
@@ -119,14 +125,14 @@
                                            tm-domain/tiemerkinta-oltava-valmis
                                            (c/to-date))
        :id kohde-id
-       :urakka urakka-id}))
+       :urakka urakka-id})
 
-  (viestinta/sahkoposti-kohde-valmis-merkintaan db fim email
-                                                kohde-id tiemerkintapvm user)
+    (valita-tieto-kohteen-valmiudesta-tiemerkintaan {:db db :fim fim :email email :kohde-id kohde-id
+                                                     :tiemerkintapvm tiemerkintapvm :user user})
 
-  (hae-urakan-aikataulu db user {:urakka-id urakka-id
-                                 :sopimus-id sopimus-id}))
-
+    (hae-urakan-aikataulu db user {:urakka-id urakka-id
+                                   :sopimus-id sopimus-id
+                                   :vuosi vuosi})))
 
 (defn- tallenna-paallystyskohteiden-aikataulu [{:keys [db user kohteet paallystysurakka-id
                                                        voi-tallentaa-tiemerkinnan-takarajan?] :as tiedot}]
@@ -144,7 +150,11 @@
            :aikataulu_paallystys_loppu (:aikataulu-paallystys-loppu kohde)
            :aikataulu_kohde_valmis (:aikataulu-kohde-valmis kohde)
            :aikataulu_muokkaaja (:id user)
-           :suorittava_tiemerkintaurakka
+           :id (:id kohde)
+           :urakka paallystysurakka-id})
+        (q/tallenna-yllapitokohteen-suorittava-tiemerkintaurakka!
+          db
+          {:suorittava_tiemerkintaurakka
            (if (= kayttajan-valitsema-suorittava-tiemerkintaurakka-id
                   kohteen-nykyinen-suorittava-tiemerkintaurakka-id)
              kohteen-nykyinen-suorittava-tiemerkintaurakka-id
@@ -162,11 +172,34 @@
            :id (:id kohde)
            :urakka paallystysurakka-id})))))
 
+(defn- valita-tieto-tiemerkinnan-valmistumisesta [{:keys [db user fim email kohteet]}]
+  ;; Täytyy ajaa samassa transaktiossa tallennuksen kanssa
+  (let [kohteet-kannassa (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                    db {:idt (map :id kohteet)}))
+        nyt-valmistuneet-kohteet (filter (fn [tallennettava-kohde]
+                                           (let [kohde-kannassa (first (filter #(= (:id tallennettava-kohde) (:id %))
+                                                                               kohteet-kannassa))]
+                                             (and (nil? (:aikataulu-tiemerkinta-loppu kohde-kannassa))
+                                                  (some? (:aikataulu-tiemerkinta-loppu tallennettava-kohde)))))
+                                         kohteet)]
+    (viestinta/laheta-sposti-tiemerkinta-valmis {:db db :fim fim :email email
+                                                 :kohde-idt (mapv :id nyt-valmistuneet-kohteet)
+                                                 :valmistumispvmt
+                                                 (zipmap (map :id nyt-valmistuneet-kohteet)
+                                                         (map :aikataulu-tiemerkinta-loppu nyt-valmistuneet-kohteet))
+                                                 :ilmoittaja user})))
+
 (defn- tallenna-tiemerkintakohteiden-aikataulu [{:keys [fim email db user kohteet tiemerkintaurakka-id
                                                         voi-tallentaa-tiemerkinnan-takarajan?] :as tiedot}]
   (log/debug "Tallennetaan tiemerkintäurakan " tiemerkintaurakka-id " ylläpitokohteiden aikataulutiedot.")
-  (doseq [kohde kohteet]
-    (jdbc/with-db-transaction [db db]
+
+  (jdbc/with-db-transaction [db db]
+    ;; Lähetetään ennen tallennusta sähköposti tiemerkinnän valmistumisesta, koska nyt on tieto siitä,
+    ;; että tuleeko valmistumispäivämäärä muuttumaan kannassa nillistä päivämääräksi
+    (valita-tieto-tiemerkinnan-valmistumisesta {:db db :user user :fim fim
+                                                :email email :kohteet kohteet})
+
+    (doseq [kohde kohteet]
       (q/tallenna-tiemerkintakohteen-aikataulu!
         db
         {:aikataulu_tiemerkinta_alku (:aikataulu-tiemerkinta-alku kohde)
@@ -179,12 +212,10 @@
           db
           {:aikataulu_tiemerkinta_takaraja (:aikataulu-tiemerkinta-takaraja kohde)
            :id (:id kohde)
-           :suorittava_tiemerkintaurakka tiemerkintaurakka-id}))))
-
-  (viestinta/sahkoposti-tiemerkinta-valmis db fim email (map :id kohteet) user))
+           :suorittava_tiemerkintaurakka tiemerkintaurakka-id})))))
 
 (defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id vuosi kohteet]}]
-  (assert (and urakka-id sopimus-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
+  (assert (and urakka-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden aikataulutiedot: " kohteet)
   (let [voi-tallentaa-tiemerkinnan-takarajan?
@@ -193,7 +224,7 @@
                                  urakka-id
                                  user)]
     (case (hae-urakkatyyppi db urakka-id)
-      ;; NOTE Päällystysurakoitsija ja tiemerkkari eivät saa muokata samoja asioita,
+      ;; Päällystysurakoitsija ja tiemerkkari eivät saa muokata samoja asioita,
       ;; siksi urakkatyypin mukainen kysely
       :paallystys
       (tallenna-paallystyskohteiden-aikataulu
@@ -222,29 +253,30 @@
                                        kaasuindeksi poistettu keskimaarainen-vuorokausiliikenne]}]
   (log/debug "Luodaan uusi ylläpitokohde tyyppiä " yllapitokohdetyotyyppi)
   (when-not poistettu
-    (q/luo-yllapitokohde<! db
-                           {:urakka urakka-id
-                            :sopimus sopimus-id
-                            :kohdenumero kohdenumero
-                            :nimi nimi
-                            :tr_numero tr-numero
-                            :tr_alkuosa tr-alkuosa
-                            :tr_alkuetaisyys tr-alkuetaisyys
-                            :tr_loppuosa tr-loppuosa
-                            :tr_loppuetaisyys tr-loppuetaisyys
-                            :tr_ajorata tr-ajorata
-                            :tr_kaista tr-kaista
-                            :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
-                            :yllapitoluokka (if (map? yllapitoluokka)
-                                              (:numero yllapitoluokka)
-                                              yllapitoluokka)
-                            :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
-                            :arvonvahennykset arvonvahennykset
-                            :bitumi_indeksi bitumi-indeksi
-                            :kaasuindeksi kaasuindeksi
-                            :yllapitokohdetyyppi (when yllapitokohdetyyppi (name yllapitokohdetyyppi))
-                            :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))
-                            :vuodet (konv/seq->array [vuosi])})))
+    (let [kohde (q/luo-yllapitokohde<! db
+                                       {:urakka urakka-id
+                                        :sopimus sopimus-id
+                                        :kohdenumero kohdenumero
+                                        :nimi nimi
+                                        :tr_numero tr-numero
+                                        :tr_alkuosa tr-alkuosa
+                                        :tr_alkuetaisyys tr-alkuetaisyys
+                                        :tr_loppuosa tr-loppuosa
+                                        :tr_loppuetaisyys tr-loppuetaisyys
+                                        :tr_ajorata tr-ajorata
+                                        :tr_kaista tr-kaista
+                                        :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
+                                        :yllapitoluokka (if (map? yllapitoluokka)
+                                                          (:numero yllapitoluokka)
+                                                          yllapitoluokka)
+                                        :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
+                                        :arvonvahennykset arvonvahennykset
+                                        :bitumi_indeksi bitumi-indeksi
+                                        :kaasuindeksi kaasuindeksi
+                                        :yllapitokohdetyyppi (when yllapitokohdetyyppi (name yllapitokohdetyyppi))
+                                        :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))
+                                        :vuodet (konv/seq->array [vuosi])})
+          _ (q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde (:id kohde)})])))
 
 (defn- paivita-yllapitokohde [db user urakka-id
                               {:keys [id kohdenumero nimi
@@ -297,7 +329,8 @@
 
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
                                   {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
-                                          tr-loppuetaisyys tr-ajorata tr-kaista toimenpide poistettu sijainti]}]
+                                          tr-loppuetaisyys tr-ajorata tr-kaista toimenpide poistettu
+                                          paallystetyyppi raekoko tyomenetelma kokonaismassamaara]}]
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
   (when-not poistettu
     (q/luo-yllapitokohdeosa<! db
@@ -311,13 +344,18 @@
                                :tr_loppuetaisyys tr-loppuetaisyys
                                :tr_ajorata tr-ajorata
                                :tr_kaista tr-kaista
+                               :paallystetyyppi paallystetyyppi
+                               :raekoko raekoko
+                               :tyomenetelma tyomenetelma
+                               :massamaara kokonaismassamaara
                                :toimenpide toimenpide
                                :ulkoinen-id nil})))
 
 (defn- paivita-yllapitokohdeosa [db user urakka-id
                                  {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys
                                          tr-loppuosa tr-loppuetaisyys tr-ajorata
-                                         tr-kaista toimenpide sijainti] :as kohdeosa}]
+                                         tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma kokonaismassamaara]
+                                  :as kohdeosa}]
 
   (log/debug "Päivitetään ylläpitokohdeosa")
   (q/paivita-yllapitokohdeosa<! db
@@ -330,6 +368,10 @@
                                  :tr_loppuetaisyys tr-loppuetaisyys
                                  :tr_ajorata tr-ajorata
                                  :tr_kaista tr-kaista
+                                 :paallystetyyppi paallystetyyppi
+                                 :raekoko raekoko
+                                 :tyomenetelma tyomenetelma
+                                 :massamaara kokonaismassamaara
                                  :toimenpide toimenpide
                                  :id id
                                  :urakka urakka-id}))

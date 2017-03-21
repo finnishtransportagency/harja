@@ -3,7 +3,9 @@
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-kirjausvastauksen-body]]
-            [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet])
+            [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn paivita-alikohteet [db kohde alikohteet]
@@ -21,6 +23,10 @@
                         :tr_loppuetaisyys (:let sijainti)
                         :tr_ajorata (:ajr sijainti)
                         :tr_kaista (:kaista sijainti)
+                        :paallystetyyppi (paallystys-ja-paikkaus/hae-koodi-apin-paallysteella (:paallystetyyppi alikohde))
+                        :raekoko (:raekoko alikohde)
+                        :tyomenetelma (paallystysilmoitus/tyomenetelman-koodi-nimella (:tyomenetelma alikohde))
+                        :massamaara (:kokonaismassamaara alikohde)
                         :toimenpide (:toimenpide alikohde)
                         :ulkoinen-id (:ulkoinen-id alikohde)}]
         (assoc alikohde :id (:id (q-yllapitokohteet/luo-yllapitokohdeosa<! db parametrit)))))
