@@ -401,10 +401,10 @@ WHERE id = :id
 -- Hakee päällystysurakan kohteiden aikataulutiedot
 SELECT
   ypk.id,
-  kohdenumero,
-  nimi,
-  urakka,
-  sopimus,
+  ypk.kohdenumero,
+  ypk.nimi,
+  ypk.urakka,
+  ypk.sopimus,
   ypka.kohde_alku              AS "aikataulu-kohde-alku",
   ypka.paallystys_alku         AS "aikataulu-paallystys-alku",
   ypka.paallystys_loppu        AS "aikataulu-paallystys-loppu",
@@ -415,35 +415,35 @@ SELECT
   ypka.muokattu                AS "aikataulu-muokattu",
   ypka.muokkaaja               AS "aikataulu-muokkaaja",
   ypka.valmis_tiemerkintaan    AS "valmis-tiemerkintaan",
-  tr_numero                    AS "tr-numero",
-  tr_alkuosa                   AS "tr-alkuosa",
-  tr_alkuetaisyys              AS "tr-alkuetaisyys",
-  tr_loppuosa                  AS "tr-loppuosa",
-  tr_loppuetaisyys             AS "tr-loppuetaisyys",
-  tr_ajorata                   AS "tr-ajorata",
-  tr_kaista                    AS "tr-kaista",
-  yllapitoluokka,
-  suorittava_tiemerkintaurakka AS "suorittava-tiemerkintaurakka",
+  ypk.tr_numero                    AS "tr-numero",
+  ypk.tr_alkuosa                   AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys              AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa                  AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys             AS "tr-loppuetaisyys",
+  ypk.tr_ajorata                   AS "tr-ajorata",
+  ypk.tr_kaista                    AS "tr-kaista",
+  ypk.yllapitoluokka,
+  ypk.suorittava_tiemerkintaurakka AS "suorittava-tiemerkintaurakka",
   tti.id                       AS "tietyoilmoitus-id"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN tietyoilmoitus tti ON ypk.id = tti.yllapitokohde
 WHERE
-  urakka = :urakka
-  AND sopimus = :sopimus
+  ypk.urakka = :urakka
+  AND ypk.sopimus = :sopimus
   AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
-                                     OR vuodet @> ARRAY [:vuosi] :: INT []))
-  AND poistettu IS NOT TRUE
+                                     OR ypk.vuodet @> ARRAY [:vuosi] :: INT []))
+  AND ypk.poistettu IS NOT TRUE
 ORDER BY ypka.kohde_alku;
 
 -- name: hae-tiemerkintaurakan-aikataulu
 -- Hakee tiemerkintäurakan kohteiden aikataulutiedot
 SELECT
   ypk.id,
-  kohdenumero,
-  nimi,
-  urakka,
-  sopimus,
+  ypk.kohdenumero,
+  ypk.nimi,
+  ypk.urakka,
+  ypk.sopimus,
   ypka.paallystys_alku      AS "aikataulu-paallystys-alku",
   ypka.paallystys_loppu     AS "aikataulu-paallystys-loppu",
   ypka.tiemerkinta_takaraja AS "aikataulu-tiemerkinta-takaraja",
@@ -453,23 +453,23 @@ SELECT
   ypka.muokattu             AS "aikataulu-muokattu",
   ypka.muokkaaja            AS "aikataulu-muokkaaja",
   ypka.valmis_tiemerkintaan AS "valmis-tiemerkintaan",
-  tr_numero                 AS "tr-numero",
-  tr_alkuosa                AS "tr-alkuosa",
-  tr_alkuetaisyys           AS "tr-alkuetaisyys",
-  tr_loppuosa               AS "tr-loppuosa",
-  tr_loppuetaisyys          AS "tr-loppuetaisyys",
-  tr_ajorata                AS "tr-ajorata",
-  tr_kaista                 AS "tr-kaista",
-  yllapitoluokka,
+  ypk.tr_numero                 AS "tr-numero",
+  ypk.tr_alkuosa                AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys           AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa               AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys          AS "tr-loppuetaisyys",
+  ypk.tr_ajorata                AS "tr-ajorata",
+  ypk.tr_kaista                 AS "tr-kaista",
+  ypk.yllapitoluokka,
   tti.id                    AS "tietyoilmoitus-id"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN tietyoilmoitus tti ON ypk.id = tti.yllapitokohde
 WHERE
-  suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
-  AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
-                                     OR vuodet @> ARRAY [:vuosi] :: INT []))
-  AND poistettu IS NOT TRUE
+  ypk.suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
+  AND (:vuosi :: INTEGER IS NULL OR (cardinality(ypk.vuodet) = 0
+                                     OR ypk.vuodet @> ARRAY [:vuosi] :: INT []))
+  AND ypk.poistettu IS NOT TRUE
 ORDER BY ypka.paallystys_alku;
 
 -- name: hae-urakan-tyyppi
