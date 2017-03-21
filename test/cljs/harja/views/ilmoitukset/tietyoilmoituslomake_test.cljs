@@ -41,15 +41,15 @@
                :harja.domain.tietyoilmoitukset/ajoittaiset-pysatykset true,
                :harja.domain.tietyoilmoitukset/tyoajat
                [{:harja.domain.tietyoilmoitukset/alkuaika
-                 #object[java.time.LocalTime 0x3c760b34 "08:00"],
+                 {:tunnit 8 :minuutit 0}
                  :harja.domain.tietyoilmoitukset/loppuaika
-                 #object[java.time.LocalTime 0x472398d9 "17:00"],
+                 {:tunnit 17 :minuutit 0}
                  :harja.domain.tietyoilmoitukset/paivat
                  ["maanantai" "tiistai" "keskiviikko"]}
                 {:harja.domain.tietyoilmoitukset/alkuaika
-                 #object[java.time.LocalTime 0x27c1ade9 "07:00"],
+                 {:tunnit 7 :minuutit 0}
                  :harja.domain.tietyoilmoitukset/loppuaika
-                 #object[java.time.LocalTime 0xe6b274f "21:00"],
+                 {:tunnit 21 :minuutit 0}
                  :harja.domain.tietyoilmoitukset/paivat ["lauantai" "sunnuntai"]}],
                :harja.domain.tietyoilmoitukset/nopeusrajoitukset
                [{:harja.domain.tietyoilmoitukset/rajoitus "30",
@@ -105,15 +105,15 @@
                  :harja.domain.tietyoilmoitukset/ajoittaiset-pysatykset true,
                  :harja.domain.tietyoilmoitukset/tyoajat
                  [{:harja.domain.tietyoilmoitukset/alkuaika
-                   #object[java.time.LocalTime 0x248b21d "06:00"],
+                   {:tunnit 6 :minuutit 0}
                    :harja.domain.tietyoilmoitukset/loppuaika
-                   #object[java.time.LocalTime 0x59f617dd "18:15"],
+                   {:tunnit 18 :minuutit 15}
                    :harja.domain.tietyoilmoitukset/paivat
                    ["maanantai" "tiistai" "keskiviikko"]}
                   {:harja.domain.tietyoilmoitukset/alkuaika
-                   #object[java.time.LocalTime 0x73f247ef "20:00"],
+                   {:tunnit 20 :minuutit 0}
                    :harja.domain.tietyoilmoitukset/loppuaika
-                   #object[java.time.LocalTime 0x24744781 "23:00"],
+                   {:tunnit 23 :minuutit 0}
                    :harja.domain.tietyoilmoitukset/paivat ["lauantai" "sunnuntai"]}],
                  :harja.domain.tietyoilmoitukset/nopeusrajoitukset
                  [{:harja.domain.tietyoilmoitukset/rajoitus "30",
