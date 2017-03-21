@@ -3,7 +3,7 @@
             [cljs.test :as test :refer-macros [deftest is]]
             [harja.loki :refer [log]]))
 
-(def testikohteet
+(def testikohteet-kartalle
   [{:id 1
     :yllapitokohdetyotyyppi :paallystys
     :tilakartalla :valmis
@@ -21,11 +21,89 @@
   (first (filter #(= (:id %) id) testikohteet)))
 
 (deftest yllapitokohteet-kartalle-toimii
-  (let [kohteet-kartalla (yllapitokohteet/yllapitokohteet-kartalle testikohteet)]
+  (let [kohteet-kartalla (yllapitokohteet/yllapitokohteet-kartalle testikohteet-kartalle)]
     (doseq [kohde kohteet-kartalla]
       (let [kohde-id (get-in kohde [:yllapitokohde :id])]
-        (is (every? some? ((juxt  :selite :type :alue) kohde))
+        (is (every? some? ((juxt :selite :type :alue) kohde))
             "Kohteet muutettiin karttamuotoon")
         (is (= (:yllapitokohde kohde)
-               (dissoc (testikohde-idlla kohde-id testikohteet) :kohdeosat))
+               (dissoc (testikohde-idlla kohde-id testikohteet-kartalle) :kohdeosat))
             "Ylläpitokohteet esitetään kohdeosina, joilla on pääkohteen tiedot")))))
+
+
+(def testikohteet-suodatukseen
+  [;; Tie 20
+   {:tr-numero 20
+    :yllapitokohdetyotyyppi :paallystys
+    :yhaid 666}
+   {:tr-numero 20
+    :yllapitokohdetyotyyppi :paallystys
+    :yhaid nil}
+   {:tr-numero 20
+    :yllapitokohdetyotyyppi :paikkaus
+    :yhaid 666}
+   {:tr-numero 20
+    :yllapitokohdetyotyyppi :paikkaus
+    :yhaid nil}
+   ;; Tie 4
+   {:tr-numero 4
+    :yllapitokohdetyotyyppi :paallystys
+    :yhaid 666}
+   {:tr-numero 4
+    :yllapitokohdetyotyyppi :paallystys
+    :yhaid nil}
+   {:tr-numero 4
+    :yllapitokohdetyotyyppi :paikkaus
+    :yhaid 666}
+   {:tr-numero 4
+    :yllapitokohdetyotyyppi :paikkaus
+    :yhaid nil}])
+
+(deftest suodata-yllapitokohteet-tienumerolla
+  (let [suodatut-kohteet (yllapitokohteet/suodata-yllapitokohteet-tienumerolla testikohteet-suodatukseen 4)]
+    (is (= suodatut-kohteet [{:tr-numero 4
+                              :yllapitokohdetyotyyppi :paallystys
+                              :yhaid 666}
+                             {:tr-numero 4
+                              :yllapitokohdetyotyyppi :paallystys
+                              :yhaid nil}
+                             {:tr-numero 4
+                              :yllapitokohdetyotyyppi :paikkaus
+                              :yhaid 666}
+                             {:tr-numero 4
+                              :yllapitokohdetyotyyppi :paikkaus
+                              :yhaid nil}]))))
+
+(deftest suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
+  (is (= (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
+           testikohteet-suodatukseen true :paallystys)
+         [{:tr-numero 20
+           :yllapitokohdetyotyyppi :paallystys
+           :yhaid 666}
+          {:tr-numero 4
+           :yllapitokohdetyotyyppi :paallystys
+           :yhaid 666}]))
+  (is (= (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
+           testikohteet-suodatukseen true :paikkaus)
+         [{:tr-numero 20
+           :yllapitokohdetyotyyppi :paikkaus
+           :yhaid 666}
+          {:tr-numero 4
+           :yllapitokohdetyotyyppi :paikkaus
+           :yhaid 666}]))
+  (is (= (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
+           testikohteet-suodatukseen false :paallystys)
+         [{:tr-numero 20
+           :yllapitokohdetyotyyppi :paallystys
+           :yhaid nil}
+          {:tr-numero 4
+           :yllapitokohdetyotyyppi :paallystys
+           :yhaid nil}]))
+  (is (= (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
+           testikohteet-suodatukseen false :paikkaus)
+         [{:tr-numero 20
+           :yllapitokohdetyotyyppi :paikkaus
+           :yhaid nil}
+          {:tr-numero 4
+           :yllapitokohdetyotyyppi :paikkaus
+           :yhaid nil}])))
