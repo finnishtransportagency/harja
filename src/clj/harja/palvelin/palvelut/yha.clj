@@ -132,18 +132,18 @@
         (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
           (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
           (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!
-             c
-             {:yllapitokohde (:id kohde)
-              :nimi nimi
-              :tunnus tunnus
-              :tr_numero (:tienumero tierekisteriosoitevali)
-              :tr_alkuosa (:aosa tierekisteriosoitevali)
-              :tr_alkuetaisyys (:aet tierekisteriosoitevali)
-              :tr_loppuosa (:losa tierekisteriosoitevali)
-              :tr_loppuetaisyys (:let tierekisteriosoitevali)
-              :tr_ajorata (:ajorata tierekisteriosoitevali)
-              :tr_kaista (:kaista tierekisteriosoitevali)
-              :yhaid yha-id})]
+                                c
+                                {:yllapitokohde (:id kohde)
+                                 :nimi nimi
+                                 :tunnus tunnus
+                                 :tr_numero (:tienumero tierekisteriosoitevali)
+                                 :tr_alkuosa (:aosa tierekisteriosoitevali)
+                                 :tr_alkuetaisyys (:aet tierekisteriosoitevali)
+                                 :tr_loppuosa (:losa tierekisteriosoitevali)
+                                 :tr_loppuetaisyys (:let tierekisteriosoitevali)
+                                 :tr_ajorata (:ajorata tierekisteriosoitevali)
+                                 :tr_kaista (:kaista tierekisteriosoitevali)
+                                 :yhaid yha-id})]
             (when-not (:sijainti uusi-kohdeosa)
               (log/warn "YHA:n kohdeosalle " (pr-str uusi-kohdeosa) " ei voitu muodostaa geometriaa"))))))
     (merkitse-urakan-kohdeluettelo-paivitetyksi c user urakka-id)
@@ -158,18 +158,18 @@
   [db kohde-idt]
   (doseq [kohde-id kohde-idt]
     (let [paallystysilmoitus (first (into []
-                                    (comp (map konv/alaviiva->rakenne)
-                                          (map #(konv/string-poluista->keyword
-                                                 %
-                                                 [[:tekninen-osa :paatos]
-                                                  [:tila]])))
-                                    (paallystys-q/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
-                                      db
-                                      {:paallystyskohde kohde-id})))]
+                                          (comp (map konv/alaviiva->rakenne)
+                                                (map #(konv/string-poluista->keyword
+                                                        %
+                                                        [[:tekninen-osa :paatos]
+                                                         [:tila]])))
+                                          (paallystys-q/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
+                                            db
+                                            {:paallystyskohde kohde-id})))]
       (when-not (and (= :hyvaksytty (get-in paallystysilmoitus [:tekninen-osa :paatos]))
                      (or (= :valmis (:tila paallystysilmoitus))
                          (= :lukittu (:tila paallystysilmoitus))))
-       (throw (SecurityException. (str "Kohteen " kohde-id " päällystysilmoituksen lähetys ei ole sallittu.")))))))
+        (throw (SecurityException. (str "Kohteen " kohde-id " päällystysilmoituksen lähetys ei ole sallittu.")))))))
 
 (defn laheta-kohteet-yhaan
   "Lähettää annetut kohteet teknisine tietoineen YHA:n."
@@ -177,9 +177,10 @@
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (tarkista-lahetettavat-kohteet db kohde-idt)
   (log/debug (format "Lähetetään kohteet: %s YHA:n" kohde-idt))
-  (yha/laheta-kohteet yha urakka-id kohde-idt)
-  (let [paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi)]
-    paivitetyt-ilmoitukset))
+  (let [lahetys-onnistui? (yha/laheta-kohteet yha urakka-id kohde-idt)
+        paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi)]
+    {:paallystysilmoitukset paivitetyt-ilmoitukset
+     :lahetys-onnistui? lahetys-onnistui?}))
 
 (defrecord Yha []
   component/Lifecycle
