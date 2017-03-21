@@ -101,5 +101,7 @@ CREATE TABLE tietyoilmoitus (
   "pysaytysten-loppu"                   TIMESTAMP,
   lisatietoja                           TEXT,
   "urakoitsija-id"                      INTEGER REFERENCES organisaatio (id),
-  "urakoitsijan-nimi"                   VARCHAR(128)
+  "urakoitsijan-nimi"                   VARCHAR(128),
+  yllapitokohde                         INTEGER REFERENCES yllapitokohde (id)
   );
+
