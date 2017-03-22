@@ -138,7 +138,3 @@
                         "- Valitse menetelmä -"
                         "")))
    :valinnat pot/+tyomenetelmat+})
-
-(def massamaara-grid-skeema
-  {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara
-   :tyyppi :positiivinen-numero :tasaa :oikea})

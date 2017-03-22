@@ -26,7 +26,7 @@
                         :paallystetyyppi (paallystys-ja-paikkaus/hae-koodi-apin-paallysteella (:paallystetyyppi alikohde))
                         :raekoko (:raekoko alikohde)
                         :tyomenetelma (paallystysilmoitus/tyomenetelman-koodi-nimella (:tyomenetelma alikohde))
-                        :massamaara (:kokonaismassamaara alikohde)
+                        :massamaara (:massamaara alikohde)
                         :toimenpide (:toimenpide alikohde)
                         :ulkoinen-id (:ulkoinen-id alikohde)}]
         (assoc alikohde :id (:id (q-yllapitokohteet/luo-yllapitokohdeosa<! db parametrit)))))

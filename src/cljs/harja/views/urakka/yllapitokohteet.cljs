@@ -347,7 +347,8 @@
                              [(assoc paallystys-tiedot/paallyste-grid-skeema :leveys paallyste-leveys)
                               (assoc paallystys-tiedot/raekoko-grid-skeema :leveys raekoko-leveys)
                               (assoc paallystys-tiedot/tyomenetelma-grid-skeema :leveys tyomenetelma-leveys)
-                              (assoc paallystys-tiedot/massamaara-grid-skeema :leveys massamaara-leveys)
+                              {:otsikko "Massa\u00ADmäärä (kg/m²)" :nimi :massamaara
+                               :tyyppi :positiivinen-numero :tasaa :oikea :leveys massamaara-leveys}
                               {:otsikko "Toimenpiteen selitys" :nimi :toimenpide :tyyppi :string
                                :leveys toimenpide-leveys}])))
 

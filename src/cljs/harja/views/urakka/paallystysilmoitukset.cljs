@@ -327,7 +327,7 @@
            :rivinumerot? true}
           [(assoc paallystys/paallyste-grid-skeema :leveys 30)
            (assoc paallystys/raekoko-grid-skeema :leveys 10)
-           {:otsikko "Massa\u00ADmenek\u00ADki (kg/m2)" :nimi :massamenekki
+           {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)" :nimi :massamenekki
             :tyyppi :positiivinen-numero :desimaalien-maara 0
             :tasaa :oikea :leveys 10}
            {:otsikko "RC-%" :nimi :rc% :leveys 10 :tyyppi :numero :desimaalien-maara 0
@@ -338,8 +338,9 @@
              :validoi [[:ei-tyhja "Valitse päällystysmenetelmä"]])
            {:otsikko "Leveys (m)" :nimi :leveys :leveys 10 :tyyppi :positiivinen-numero
             :tasaa :oikea}
-           (assoc paallystys/massamaara-grid-skeema :leveys 15)
-           {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys 10 :tyyppi :positiivinen-numero
+           {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara
+            :tyyppi :positiivinen-numero :tasaa :oikea}
+           {:otsikko "Pinta-ala (mkg/m²)" :nimi :pinta-ala :leveys 10 :tyyppi :positiivinen-numero
             :tasaa :oikea}
            {:otsikko "Kuulamylly"
             :nimi :kuulamylly
