@@ -76,7 +76,7 @@
               kohteet)))
 
 (def yhan-paallystyskohteet
-  (reaction
+  (reaction-writable
     (let [kohteet @yllapitokohteet-suodatettu
           yhan-paallystyskohteet (when kohteet
                                    (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
@@ -84,7 +84,7 @@
       (tr-domain/jarjesta-kohteiden-kohdeosat yhan-paallystyskohteet))))
 
 (def harjan-paikkauskohteet
-  (reaction
+  (reaction-writable
     (let [kohteet @yllapitokohteet-suodatettu
           harjan-paikkauskohteet (when kohteet
                                    (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan

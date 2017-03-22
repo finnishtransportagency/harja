@@ -609,8 +609,7 @@
                 (concat
                   [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
                    {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :nimi :kohdenumero
-                    :tyyppi :string :leveys id-leveys
-                    :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
+                    :tyyppi :string :leveys id-leveys}
                    {:otsikko "Koh\u00ADteen ni\u00ADmi" :nimi :nimi
                     :tyyppi :string :leveys kohde-leveys}]
                   (tierekisteriosoite-sarakkeet
