@@ -4,6 +4,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-kirjausvastauksen-body]]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
+            [taoensso.timbre :as log]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus])
   (:use [slingshot.slingshot :only [throw+ try+]]))
@@ -12,6 +13,7 @@
   (q-yllapitokohteet/poista-yllapitokohteen-kohdeosat! db {:id (:id kohde)})
   (mapv
     (fn [alikohde]
+      (log/debug "ALIKOHDE ON: " (pr-str alikohde))
       (let [sijainti (:sijainti alikohde)
             parametrit {:yllapitokohde (:id kohde)
                         :nimi (:nimi alikohde)
