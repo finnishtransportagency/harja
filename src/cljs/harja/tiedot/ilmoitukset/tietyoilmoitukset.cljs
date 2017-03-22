@@ -11,7 +11,8 @@
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [tuck.core :as tuck]
             [harja.domain.tietyoilmoitukset :as t]
-            [cljs.pprint :refer [pprint]])
+            [cljs.pprint :refer [pprint]]
+            [harja.ui.viesti :as viesti])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -39,6 +40,7 @@
 
 (defonce tietyoilmoitukset (atom {:ilmoitusnakymassa? false
                                   :valittu-ilmoitus nil
+                                  :tallennus-kaynnissa? false
                                   :haku-kaynnissa? false
                                   :tietyoilmoitukset nil
                                   :valinnat {:luotu-vakioaikavali (second luonti-aikavalit)
@@ -77,7 +79,8 @@
 (defrecord PaivitaSijainti [sijainti])
 (defrecord PaivitaNopeusrajoituksetGrid [nopeusrajoitukset])
 (defrecord PaivitaTyoajatGrid [tyoajat])
-(defrecord TallennaLomake [])
+(defrecord TallennaIlmoitus [ilmoitus])
+(defrecord IlmoitusTallennettu [ilmoitus])
 
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
   (when haku
@@ -159,11 +162,27 @@
   (process-event [{tyoajat :tyoajat} app]
     (assoc-in app [:valittu-ilmoitus ::t/tyoajat] tyoajat))
 
-  TallennaLomake
-  (process-event [_ app]
-    (go
-      (k/post! :tallenna-tietyoilmoitus (:valittu-ilmoitus app)))
-    app))
+  TallennaIlmoitus
+  (process-event [{ilmoitus :ilmoitus} app]
+    (let [tulos! (tuck/send-async! ->IlmoitusTallennettu)]
+      (go
+        (let [tulos (k/post! :tallenna-tietyoilmoitus
+                             (-> ilmoitus
+                                 (dissoc ::t/tyovaiheet)))]
+          (if (k/virhe? tulos)
+            (viesti/nayta! [:span "Virhe tallennuksessa! Ilmoitusta EI tallennettu"]
+                           :danger)
+            (do
+
+              (tulos! tulos))))))
+    (assoc app :tallennus-kaynnissa? true))
+
+  IlmoitusTallennettu
+  (process-event [{ilmoitus :ilmoitus} app]
+    (viesti/nayta! "Ilmoitus tallennettu!")
+    (assoc app
+           :tallennus-kaynnissa? false
+           :valittu-ilmoitus nil)))
 
 
 (def tyotyyppi-vaihtoehdot-tienrakennus
