@@ -16,7 +16,8 @@
             [clojure.spec :as s]
             [clj-time.coerce :as c]
             [harja.pvm :as pvm]
-            [specql.op :as op]))
+            [specql.op :as op]
+            [harja.domain.tierekisteri :as tr]))
 
 (defn aikavaliehto [vakioaikavali alkuaika loppuaika]
   (when (not (:ei-rajausta? vakioaikavali))
@@ -67,7 +68,9 @@
 (defn tallenna-tietyoilmoitus [db user ilmoitus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user (::t/urakka-id ilmoitus))
   (upsert! db ::t/ilmoitus
-           ilmoitus
+           (update-in ilmoitus
+                      [::t/osoite ::tr/geometria]
+                      #(when % (geo/geometry (geo/clj->pg %))))
            {::t/urakka-id (op/in (urakat db user oikeudet/voi-kirjoittaa?))}))
 
 
