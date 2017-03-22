@@ -307,7 +307,7 @@
               :nimi :tietyoilmoitus
               :tyyppi :komponentti
               :komponentti (fn [{tietyoilmoitus-id :tietyoilmoitus-id}]
-                             [:button.nappi-ensisijainen.nappi-grid
+                             [:button.nappi-toissijainen.nappi-grid
                               {:on-click #(siirtymat/avaa-tietyoilmoitus
                                             {:tietyoilmoitus-id tietyoilmoitus-id})}
                               (if tietyoilmoitus-id
