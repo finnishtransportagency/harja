@@ -77,6 +77,7 @@
 (defrecord PaivitaSijainti [sijainti])
 (defrecord PaivitaNopeusrajoituksetGrid [nopeusrajoitukset])
 (defrecord PaivitaTyoajatGrid [tyoajat])
+(defrecord TallennaLomake [])
 
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
   (when haku
@@ -156,7 +157,13 @@
 
   PaivitaTyoajatGrid
   (process-event [{tyoajat :tyoajat} app]
-    (assoc-in app [:valittu-ilmoitus ::t/tyoajat] tyoajat)))
+    (assoc-in app [:valittu-ilmoitus ::t/tyoajat] tyoajat))
+
+  TallennaLomake
+  (process-event [_ app]
+    (go
+      (k/post! :tallenna-tietyoilmoitus (:valittu-ilmoitus app)))
+    app))
 
 
 (def tyotyyppi-vaihtoehdot-tienrakennus
