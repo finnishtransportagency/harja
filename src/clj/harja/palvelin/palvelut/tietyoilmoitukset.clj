@@ -67,6 +67,7 @@
 
 (defn hae-tietyoilmoitus [db user tietyoilmoitus-id]
   ;; todo: lisää oikeustarkistus, kun tiedetään miten se pitää tehdä
+  (println "---> tiet" tietyoilmoitus-id)
   (q-tietyoilmoitukset/hae-ilmoitus db tietyoilmoitus-id))
 
 (defn tallenna-tietyoilmoitus [db user ilmoitus]
@@ -100,12 +101,12 @@
     (julkaise-palvelu http :hae-tietyoilmoitus
                       (fn [user tietyoilmoitus-id]
                         (hae-tietyoilmoitus db user tietyoilmoitus-id))
-                      {:kysely-spec ::t/ilmoitus
-                       :vastaus-spec ::t/ilmoitus})
+                      {:vastaus-spec ::t/ilmoitus})
     (julkaise-palvelu http :tallenna-tietyoilmoitus
                       (fn [user ilmoitus]
                         (tallenna-tietyoilmoitus db user ilmoitus))
-                      {:vastaus-spec ::t/ilmoitus})
+                      {:kysely-spec ::t/ilmoitus
+                       :vastaus-spec ::t/ilmoitus})
     (when pdf
       (pdf-vienti/rekisteroi-pdf-kasittelija!
         pdf :tietyoilmoitus (partial #'tietyoilmoitus-pdf db)))
