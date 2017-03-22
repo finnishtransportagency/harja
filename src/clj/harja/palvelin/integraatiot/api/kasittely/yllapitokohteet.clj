@@ -16,18 +16,18 @@
             parametrit {:yllapitokohde (:id kohde)
                         :nimi (:nimi alikohde)
                         :tunnus (:tunnus alikohde)
-                        :tr_numero (:numero sijainti)
+                        :tr_numero (:numero sijainti) ;; TODO EI ANNETA, OTA PÄÄKOHTEELTA
                         :tr_alkuosa (:aosa sijainti)
                         :tr_alkuetaisyys (:aet sijainti)
                         :tr_loppuosa (:losa sijainti)
                         :tr_loppuetaisyys (:let sijainti)
-                        :tr_ajorata (:ajr sijainti)
+                        :tr_ajorata (:ajr sijainti) ;; TODO ANNETAANKO NÄITÄKÄÄN!?
                         :tr_kaista (:kaista sijainti)
-                        :paallystetyyppi (paallystys-ja-paikkaus/hae-koodi-apin-paallysteella (:paallystetyyppi alikohde))
-                        :raekoko (:raekoko alikohde)
-                        :tyomenetelma (paallystysilmoitus/tyomenetelman-koodi-nimella (:tyomenetelma alikohde))
-                        :massamaara (:massamaara alikohde)
-                        :toimenpide (:toimenpide alikohde)
+                        :paallystetyyppi nil
+                        :raekoko nil
+                        :tyomenetelma nil
+                        :massamaara nil
+                        :toimenpide nil
                         :ulkoinen-id (:ulkoinen-id alikohde)}]
         (assoc alikohde :id (:id (q-yllapitokohteet/luo-yllapitokohdeosa<! db parametrit)))))
     alikohteet))
