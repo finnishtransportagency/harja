@@ -374,31 +374,38 @@
                                 :verkkotyyppi 1
                                 :verkon-sijainti 1
                                 :verkon-tarkoitus 1}]
-                :osoitteet [{:esiintyma "asd"
-                             :km-arvo "asd"
-                             :kohdeosa-id 14
-                             :kokonaismassamaara 2
-                             :leveys 5
-                             :lisaaineet "asd"
-                             :massamenekki 7
-                             :muotoarvo "asd"
+                :osoitteet [{;; Alikohteen tiedot
                              :nimi "Tie 666"
-                             :paallystetyyppi 1
-                             :pinta-ala 8
-                             :pitoisuus 54
-                             :raekoko 1
-                             :rc% 3
-                             :sideainetyyppi 1
-                             :toimenpide nil
-                             :tr-ajorata 1
-                             :tr-alkuetaisyys 3
-                             :tr-alkuosa 2
-                             :tr-kaista 1
-                             :tr-loppuetaisyys 5
-                             :tr-loppuosa 4
+                             :tunnus "T"
+                             :kohdeosa-id 14
                              :tr-numero 666
-                             :tunnus nil
-                             :tyomenetelma 12}]}))
+                             :tr-alkuosa 2
+                             :tr-alkuetaisyys 3
+                             :tr-loppuosa 4
+                             :tr-loppuetaisyys 5
+                             :tr-ajorata 1
+                             :tr-kaista 1
+                             :paallystetyyppi 1
+                             :raekoko 1
+                             :tyomenetelma 12
+                             :massamaara 2
+                             :toimenpide "Wut"
+                             ;; Päällystetoimenpiteen tiedot
+                             :toimenpide-paallystetyyppi 1
+                             :toimenpide-raekoko 1
+                             :kokonaismassamaara 2.00M
+                             :rc% 3
+                             :toimenpide-tyomenetelma 12
+                             :leveys 5
+                             :massamenekki 7
+                             :pinta-ala 8
+                             ;; Kiviaines- ja sideainetiedot
+                             :esiintyma "asd"
+                             :km-arvo "asd"
+                             :muotoarvo "asd"
+                             :sideainetyyppi 1
+                             :pitoisuus 54
+                             :lisaaineet "asd"}]}))
 
         ; Lukittu, ei voi enää päivittää
         (log/debug "Tarkistetaan, ettei voi muokata lukittua ilmoitusta.")
@@ -433,22 +440,31 @@
 
       (let [kohteita-ennen-lisaysta (hae-kohteiden-maara)
             paallystysilmoitus (update-in paallystysilmoitus [:ilmoitustiedot :osoitteet]
-                                          conj {:nimi "Tie 4242"
-                                                :tr-numero 4242
-                                                :tr-alkuosa 5
-                                                :tr-alkuetaisyys 6
-                                                :tr-loppuosa 7
-                                                :tr-loppuetaisyys 8
+                                          conj {;; Alikohteen tiedot
+                                                :nimi "Tie 123"
+                                                :tunnus "T"
+                                                :tr-numero 666
+                                                :tr-alkuosa 2
+                                                :tr-alkuetaisyys 3
+                                                :tr-loppuosa 4
+                                                :tr-loppuetaisyys 5
                                                 :tr-ajorata 1
                                                 :tr-kaista 1
                                                 :paallystetyyppi 1
                                                 :raekoko 1
+                                                :tyomenetelma 12
+                                                :massamaara 2
+                                                :toimenpide "Wut"
+                                                ;; Päällystetoimenpiteen tiedot
+                                                :toimenpide-paallystetyyppi 1
+                                                :toimenpide-raekoko 1
                                                 :kokonaismassamaara 2
                                                 :rc% 3
-                                                :tyomenetelma 12
+                                                :toimenpide-tyomenetelma 12
                                                 :leveys 5
                                                 :massamenekki 7
                                                 :pinta-ala 8
+                                                ;; Kiviaines- ja sideainetiedot
                                                 :esiintyma "asd"
                                                 :km-arvo "asd"
                                                 :muotoarvo "asd"
