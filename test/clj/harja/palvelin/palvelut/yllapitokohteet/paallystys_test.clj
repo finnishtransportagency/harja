@@ -388,12 +388,12 @@
                              :paallystetyyppi 1
                              :raekoko 1
                              :tyomenetelma 12
-                             :massamaara 2
+                             :massamaara 2.00M
                              :toimenpide "Wut"
                              ;; Päällystetoimenpiteen tiedot
                              :toimenpide-paallystetyyppi 1
                              :toimenpide-raekoko 1
-                             :kokonaismassamaara 2.00M
+                             :kokonaismassamaara 2
                              :rc% 3
                              :toimenpide-tyomenetelma 12
                              :leveys 5
