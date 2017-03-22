@@ -249,9 +249,9 @@
     :tr-loppuetaisyys s/Int
     :kasittelymenetelma +alustamenetelma+
     :paksuus s/Int ;; cm
-    :verkkotyyppi +verkkotyyppi+
-    :verkon-tarkoitus +verkon-tarkoitus+
-    :verkon-sijainti +verkon-sijainti+
+    :verkkotyyppi (s/maybe +verkkotyyppi+)
+    :verkon-tarkoitus (s/maybe +verkon-tarkoitus+)
+    :verkon-sijainti (s/maybe +verkon-sijainti+)
     (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+)}])
 
 ;; Kantaan tallennettavan päällystysilmoituksen ilmoitustiedot
