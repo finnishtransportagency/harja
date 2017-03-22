@@ -41,6 +41,12 @@
                                  ::t/id)}]
   )
 
+(s/def ::t/max-korkeus number?)
+(s/def ::t/max-paino number?)
+(s/def ::t/max-pituus number?)
+(s/def ::t/max-leveys number?)
+
+
 (def kaikki-ilmoituksen-kentat
   #{::t/id
     ::t/tloik-id
