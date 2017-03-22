@@ -22,9 +22,6 @@
   (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:paallystyskohde-id paallystyskohde-id
                                                            :urakka-id urakka-id}))
 
-(defn- hae-tietyoilmoituksen-tiedot [tietyoilmoitus-id]
-  (k/post! :hae-tietyoilmoitus tietyoilmoitus-id))
-
 (defn- odota-arvoa
   "Pollaa annettua atomia 100ms välein kunnes sen arvo on tosi arvo-pred mukaan.
   Lopettaa odotuksen, jos arvo ei täsmää timeout-ms kuluessa. Palauttaa kanavan,
@@ -121,13 +118,10 @@
 
 (defn avaa-tietyoilmoitus
   "Navigoi joko luomaan uutta tietyöilmoitusta tai avaa annetun tietyöilmoituksen näkymässä"
-  [{:keys [tietyoilmoitus-id paallystyskohde-id kohteen-urakka-id valittu-urakka-id] :as tiedot}]
+  [{:keys [tietyoilmoitus-id] :as yllapitokohde}]
   (go
     (nav/aseta-valittu-valilehti! :sivu :ilmoitukset)
     (nav/aseta-valittu-valilehti! :ilmoitukset :tietyo)
-
-    (let [tietyoilmoitus (<! (hae-tietyoilmoituksen-tiedot tietyoilmoitus-id))]
-      (swap! tietyoilmoitukset/tietyoilmoitukset #(assoc % :valittu-ilmoitus tietyoilmoitus
-                                                           :tallennus-kaynnissa? false)))))
+    (tietyoilmoitukset/avaa-tietyoilmoitus tietyoilmoitus-id yllapitokohde)))
 
 
