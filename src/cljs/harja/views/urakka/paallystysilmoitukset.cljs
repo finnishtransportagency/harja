@@ -325,21 +325,20 @@
            :voi-muokata? voi-muokata?
            :virheet (wrap-virheet :paallystystoimenpide)
            :rivinumerot? true}
-          [(assoc paallystys/paallyste-grid-skeema :leveys 30)
-           (assoc paallystys/raekoko-grid-skeema :leveys 10)
+          [(assoc paallystys/paallyste-grid-skeema :nimi :toimenpide-paallystetyyppi :leveys 30)
+           (assoc paallystys/raekoko-grid-skeema :nimi :toimenpide-raekoko :leveys 10)
            {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)" :nimi :massamenekki
             :tyyppi :positiivinen-numero :desimaalien-maara 0
             :tasaa :oikea :leveys 10}
            {:otsikko "RC-%" :nimi :rc% :leveys 10 :tyyppi :numero :desimaalien-maara 0
             :tasaa :oikea :pituus-max 100
             :validoi [[:rajattu-numero nil 0 100]]}
-           (assoc paallystys/tyomenetelma-grid-skeema
-             :leveys 30
+           (assoc paallystys/tyomenetelma-grid-skeema :nimi :toimenpide-tyomenetelma :leveys 30
              :validoi [[:ei-tyhja "Valitse päällystysmenetelmä"]])
            {:otsikko "Leveys (m)" :nimi :leveys :leveys 10 :tyyppi :positiivinen-numero
             :tasaa :oikea}
            {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara
-            :tyyppi :positiivinen-numero :tasaa :oikea}
+            :tyyppi :positiivinen-numero :tasaa :oikea :leveys 10}
            {:otsikko "Pinta-ala (mkg/m²)" :nimi :pinta-ala :leveys 10 :tyyppi :positiivinen-numero
             :tasaa :oikea}
            {:otsikko "Kuulamylly"
