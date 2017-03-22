@@ -39,10 +39,12 @@
                       #(do
                          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
                          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
-    (fn [e! {valittu-ilmoitus :valittu-ilmoitus kayttajan-urakat :kayttajan-urakat :as app}]
+    (fn [e! {valittu-ilmoitus :valittu-ilmoitus
+             tallennus-kaynnissa? :tallennus-kaynnissa?
+             kayttajan-urakat :kayttajan-urakat :as app}]
       [:span
        [ui-debug/debug @tiedot/tietyoilmoitukset]
        [kartta/kartan-paikka]
        (if valittu-ilmoitus
-         [tietyoilmoituslomake/lomake e! valittu-ilmoitus kayttajan-urakat]
+         [tietyoilmoituslomake/lomake e! tallennus-kaynnissa? valittu-ilmoitus kayttajan-urakat]
          [tietyoilmoitushakulomake/hakulomake e! app])])))

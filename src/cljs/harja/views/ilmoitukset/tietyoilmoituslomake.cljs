@@ -99,7 +99,7 @@
                  tyoajat)
            #(e! (tiedot/->PaivitaTyoajatGrid (vals %))))])
 
-(defn lomake [e! ilmoitus kayttajan-urakat]
+(defn lomake [e! tallennus-kaynnissa? ilmoitus kayttajan-urakat]
   (fn [e! ilmoitus]
 
     [:div
@@ -330,5 +330,7 @@
        ilmoitus]]
      [napit/tallenna
       "Tallenna ilmoitus"
-      #(e! (tiedot/->TallennaLomake))
-      {:ikoni (ikonit/tallenna)}]]))
+      #(e! (tiedot/->TallennaIlmoitus (lomake/ilman-lomaketietoja ilmoitus)))
+      {:disabled tallennus-kaynnissa?
+       :tallennus-kaynnissa? tallennus-kaynnissa?
+       :ikoni (ikonit/tallenna)}]]))
