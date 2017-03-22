@@ -11,7 +11,8 @@
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.paallystys :as paallystys]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tietyoilmoitukset])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- hae-toteuman-siirtymatiedot [toteuma-id]
@@ -117,15 +118,10 @@
 
 (defn avaa-tietyoilmoitus
   "Navigoi joko luomaan uutta tietyöilmoitusta tai avaa annetun tietyöilmoituksen näkymässä"
-  [{:keys [tietyoilmoitus-id paallystyskohde-id kohteen-urakka-id valittu-urakka-id] :as tiedot}]
-  (log "---> avataan tietyöilmoitusta")
+  [{:keys [tietyoilmoitus-id] :as yllapitokohde}]
   (go
-    (let []
-
-      (nav/aseta-valittu-valilehti! :sivu :ilmoitukset)
-      (nav/aseta-valittu-valilehti! :ilmoitukset :tietyo)
-      
-      
-      )))
+    (nav/aseta-valittu-valilehti! :sivu :ilmoitukset)
+    (nav/aseta-valittu-valilehti! :ilmoitukset :tietyo)
+    (tietyoilmoitukset/avaa-tietyoilmoitus tietyoilmoitus-id yllapitokohde)))
 
 

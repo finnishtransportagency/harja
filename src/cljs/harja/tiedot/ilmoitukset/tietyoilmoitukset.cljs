@@ -11,6 +11,7 @@
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [tuck.core :as tuck]
             [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.tierekisteri :as tr]
             [cljs.pprint :refer [pprint]]
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.local-storage :refer [local-storage-atom]])
@@ -70,6 +71,33 @@
     (concat akku arvo)))
 
 (defonce karttataso-ilmoitukset (atom false))
+
+(defn- hae-tietyoilmoituksen-tiedot [tietyoilmoitus-id]
+  (k/post! :hae-tietyoilmoitus tietyoilmoitus-id))
+
+(defn esitayta-tietyoilmoitus-paallystyskohteella [{:keys [id
+                                                           urakka
+                                                           aikataulu-kohde-alku
+                                                           aikataulu-kohde-valmis
+                                                           tr-loppuosa
+                                                           tr-alkuosa
+                                                           tr-loppuetaisyys
+                                                           tr-alkuetaisyys
+                                                           tr-numero]}]
+
+  (let [{:keys [urakoitsija hallintayksikko]}
+        (first (filter #(= (:id %) urakka) (:kayttajan-urakat @tietyoilmoitukset)))]
+    {:urakan-nimi-valinta (str urakka)
+     ::t/yllapitokohde id
+     ::t/alku aikataulu-kohde-alku
+     ::t/loppu aikataulu-kohde-valmis
+     ::t/urakoitsijan-nimi (:nimi urakoitsija)
+     ::t/tilaajan-nimi (:nimi hallintayksikko)
+     ::t/osoite {::tr/tie tr-numero
+                 ::tr/aosa tr-alkuosa
+                 ::tr/aet tr-alkuetaisyys
+                 ::tr/losa tr-loppuosa
+                 ::tr/let tr-loppuetaisyys}}))
 
 (defrecord AsetaValinnat [valinnat])
 (defrecord YhdistaValinnat [ulkoisetvalinnat])
@@ -185,8 +213,8 @@
   (process-event [{ilmoitus :ilmoitus} app]
     (viesti/nayta! "Ilmoitus tallennettu!")
     (assoc app
-           :tallennus-kaynnissa? false
-           :valittu-ilmoitus nil)))
+      :tallennus-kaynnissa? false
+      :valittu-ilmoitus nil)))
 
 
 (def tyotyyppi-vaihtoehdot-tienrakennus
@@ -235,3 +263,12 @@
 
 (defn henkilo->nimi [henkilo]
   (str (::t/etunimi henkilo) " " (::t/sukunimi henkilo)))
+
+(defn avaa-tietyoilmoitus
+  [tietyoilmoitus-id yllapitokohde]
+  (go
+    (let [tietyoilmoitus (if tietyoilmoitus-id
+                           (<! (hae-tietyoilmoituksen-tiedot tietyoilmoitus-id))
+                           (esitayta-tietyoilmoitus-paallystyskohteella yllapitokohde))]
+      (swap! tietyoilmoitukset #(assoc % :valittu-ilmoitus tietyoilmoitus
+                                         :tallennus-kaynnissa? false)))))

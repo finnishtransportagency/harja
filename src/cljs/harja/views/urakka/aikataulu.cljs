@@ -306,10 +306,9 @@
               :leveys 6
               :nimi :tietyoilmoitus
               :tyyppi :komponentti
-              :komponentti (fn [{tietyoilmoitus-id :tietyoilmoitus-id}]
+              :komponentti (fn [{tietyoilmoitus-id :tietyoilmoitus-id :as kohde}]
                              [:button.nappi-toissijainen.nappi-grid
-                              {:on-click #(siirtymat/avaa-tietyoilmoitus
-                                            {:tietyoilmoitus-id tietyoilmoitus-id})}
+                              {:on-click #(siirtymat/avaa-tietyoilmoitus kohde)}
                               (if tietyoilmoitus-id
                                 [ikonit/ikoni-ja-teksti (ikonit/livicon-eye) " Avaa"]
                                 [ikonit/ikoni-ja-teksti (ikonit/livicon-plus) " Lisää"])])})]
