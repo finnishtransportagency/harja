@@ -80,14 +80,20 @@
                                                            tr-loppuetaisyys
                                                            tr-alkuetaisyys
                                                            tr-numero]}]
-  {:urakan-nimi-valinta (str urakka)
-   ::t/alku aikataulu-kohde-alku
-   ::t/loppu aikataulu-kohde-valmis
-   ::t/osoite {::tr/tie tr-numero
-               ::tr/aosa tr-alkuosa
-               ::tr/aet tr-alkuetaisyys
-               ::tr/losa tr-loppuosa
-               ::tr/let tr-loppuetaisyys}})
+
+  (let [{:keys [urakoitsija hallintayksikko]}
+        (first (filter #(= (:id %) urakka) (:kayttajan-urakat @tietyoilmoitukset)))]
+    {:urakan-nimi-valinta (str urakka)
+     ::t/yllapitokohde id
+     ::t/alku aikataulu-kohde-alku
+     ::t/loppu aikataulu-kohde-valmis
+     ::t/urakoitsijan-nimi (:nimi urakoitsija)
+     ::t/tilaajan-nimi (:nimi hallintayksikko)
+     ::t/osoite {::tr/tie tr-numero
+                 ::tr/aosa tr-alkuosa
+                 ::tr/aet tr-alkuetaisyys
+                 ::tr/losa tr-loppuosa
+                 ::tr/let tr-loppuetaisyys}}))
 
 (defrecord AsetaValinnat [valinnat])
 (defrecord YhdistaValinnat [ulkoisetvalinnat])
