@@ -364,9 +364,9 @@
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="verkkotyyppi" type="alustan-verkkotyyppi" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="verkon-tarkoitus" type="alustan-verkon-tarkoitus" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="verkon-sijainti" type="alustan-verkon-sijainti" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="verkkotyyppi" type="alustan-verkkotyyppi" nillable="true" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="verkon-tarkoitus" type="alustan-verkon-tarkoitus" nillable="true" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="verkon-sijainti" type="alustan-verkon-sijainti" nillable="true" minOccurs="1" maxOccurs="1"/>
             <xs:element name="tekninen-toimenpide" type="alustan-tekninen-toimenpide" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
