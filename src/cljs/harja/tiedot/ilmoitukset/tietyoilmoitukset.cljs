@@ -12,7 +12,8 @@
             [tuck.core :as tuck]
             [harja.domain.tietyoilmoitukset :as t]
             [cljs.pprint :refer [pprint]]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.tyokalut.local-storage :refer [local-storage-atom]])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -38,17 +39,20 @@
                     :hoitokausi @tiedot-urakka/valittu-hoitokausi}))
 
 
-(defonce tietyoilmoitukset (atom {:ilmoitusnakymassa? false
-                                  :valittu-ilmoitus nil
-                                  :tallennus-kaynnissa? false
-                                  :haku-kaynnissa? false
-                                  :tietyoilmoitukset nil
-                                  :valinnat {:luotu-vakioaikavali (second luonti-aikavalit)
-                                             :luotu-alkuaika (pvm/tuntia-sitten 24)
-                                             :luotu-loppuaika (pvm/nyt)
-                                             :kaynnissa-vakioaikavali (first kaynnissa-aikavalit)
-                                             :kaynnissa-alkuaika (pvm/tunnin-paasta 24)
-                                             :kaynnissa-loppuaika (pvm/tunnin-paasta 24)}}))
+(defonce tietyoilmoitukset
+  (local-storage-atom
+   :tietyoilmoitukset
+   {:ilmoitusnakymassa? false
+    :valittu-ilmoitus nil
+    :tallennus-kaynnissa? false
+    :haku-kaynnissa? false
+    :tietyoilmoitukset nil
+    :valinnat {:luotu-vakioaikavali (second luonti-aikavalit)
+               :luotu-alkuaika (pvm/tuntia-sitten 24)
+               :luotu-loppuaika (pvm/nyt)
+               :kaynnissa-vakioaikavali (first kaynnissa-aikavalit)
+               :kaynnissa-alkuaika (pvm/tunnin-paasta 24)
+               :kaynnissa-loppuaika (pvm/tunnin-paasta 24)}}))
 
 (defonce karttataso-tietyoilmoitukset (atom false))
 
