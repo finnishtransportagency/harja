@@ -206,12 +206,11 @@
    ["Siltatyö" "Siltatyö"]
    ["Tasoristeystyö" "Tasoristeystyö"]
    ["Tiemerkintätyö" "Tiemerkintätyö"]
-   ["Viimeistely" "Viimeistely"]
-
    ["Valaistustyö" "Valaistustyö"]])
 
 (def tyotyyppi-vaihtoehdot-muut [["Liittymä- ja kaistajärj." "Liittymä- ja kaistajärjestely"]
                                  ["Silmukka-anturin asent." "Silmukka-anturin asentaminen"]
+                                 ["Viimeistely" "Viimeistely"]
                                  ["Muu, mikä?" "Muu, mikä?"]])
 
 (def tyotyyppi-vaihtoehdot-map (into {} (concat
