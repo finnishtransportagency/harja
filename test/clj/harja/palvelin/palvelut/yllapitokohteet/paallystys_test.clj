@@ -43,6 +43,7 @@
    :takuupvm (pvm/luo-pvm 2005 9 3)
    :ilmoitustiedot {:osoitteet [{;; Alikohteen tiedot
                                  :nimi "Tie 666"
+                                 :tunnus "T"
                                  :tr-numero 666
                                  :tr-alkuosa 2
                                  :tr-alkuetaisyys 3
@@ -74,6 +75,7 @@
                                 {;; Alikohteen tiedot
                                  :poistettu true ;; HUOMAA POISTETTU, EI SAA TALLENTUA!
                                  :nimi "Tie 555"
+                                 :tunnus nil
                                  :tr-numero 555
                                  :tr-alkuosa 2
                                  :tr-alkuetaisyys 3
@@ -293,33 +295,38 @@
                                 :verkkotyyppi 1
                                 :verkon-sijainti 1
                                 :verkon-tarkoitus 1}]
-                ;; Päällystysilmoituksen myötä kohteen kohdeosat päivitettiin vastaamaan
-                ;; päällystysilmoituksessa mainittuja osia
-                :osoitteet [{:esiintyma "asd"
-                             :km-arvo "asd"
-                             :kohdeosa-id 14
-                             :kokonaismassamaara 2
-                             :leveys 5
-                             :lisaaineet "asd"
-                             :massamenekki 7
-                             :muotoarvo "asd"
+                :osoitteet [{;; Alikohteen tiedot
                              :nimi "Tie 666"
-                             :paallystetyyppi 1
-                             :pinta-ala 8
-                             :pitoisuus 54
-                             :raekoko 1
-                             :rc% 3
-                             :sideainetyyppi 1
-                             :toimenpide nil
-                             :tr-ajorata 1
-                             :tr-alkuetaisyys 3
-                             :tr-alkuosa 2
-                             :tr-kaista 1
-                             :tr-loppuetaisyys 5
-                             :tr-loppuosa 4
+                             :kohdeosa-id 14
+                             :tunnus "T"
                              :tr-numero 666
-                             :tunnus nil
-                             :tyomenetelma 12}]}))
+                             :tr-alkuosa 2
+                             :tr-alkuetaisyys 3
+                             :tr-loppuosa 4
+                             :tr-loppuetaisyys 5
+                             :tr-ajorata 1
+                             :tr-kaista 1
+                             :paallystetyyppi 1
+                             :raekoko 1
+                             :tyomenetelma 12
+                             :massamaara 2.00M
+                             :toimenpide "Wut"
+                             ;; Päällystetoimenpiteen tiedot
+                             :toimenpide-paallystetyyppi 1
+                             :toimenpide-raekoko 1
+                             :kokonaismassamaara 2
+                             :rc% 3
+                             :toimenpide-tyomenetelma 12
+                             :leveys 5
+                             :massamenekki 7
+                             :pinta-ala 8
+                             ;; Kiviaines- ja sideainetiedot
+                             :esiintyma "asd"
+                             :km-arvo "asd"
+                             :muotoarvo "asd"
+                             :sideainetyyppi 1
+                             :pitoisuus 54
+                             :lisaaineet "asd"}]}))
         (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))))))
 
 
