@@ -100,15 +100,13 @@
 (defn- muunna-tallennetut-ilmoitustiedot-lomakemuotoon
   "Muuntaa päällystysilmoituksen ilmoitustiedot lomakkeessa esitettävään muotoon."
   [ilmoitustiedot]
-  (log/debug "ILMOITUSTIEDOT ENNEN: " (pr-str ilmoitustiedot))
   (let [paivitetyt-osoitteet (mapv
                                (fn [osoite]
                                  (clojure.set/rename-keys osoite
                                                           {:paallystetyyppi :toimenpide-paallystetyyppi
                                                            :raekoko :toimenpide-raekoko
                                                            :tyomenetelma :toimenpide-tyomenetelma}))
-                               (:osoitteet ilmoitustiedot))
-        _ (log/debug "ILMOITUSTIEDOT SITTEN " (pr-str (assoc ilmoitustiedot :osoitteet paivitetyt-osoitteet)))]
+                               (:osoitteet ilmoitustiedot))]
     (assoc ilmoitustiedot :osoitteet paivitetyt-osoitteet)))
 
 
