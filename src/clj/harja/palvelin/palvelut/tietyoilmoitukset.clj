@@ -65,6 +65,10 @@
         tietyoilmoitukset (q-tietyoilmoitukset/hae-ilmoitukset db kyselyparametrit)]
     tietyoilmoitukset))
 
+(defn hae-tietyoilmoitus [db user tietyoilmoitus-id]
+  ;; todo: lisää oikeustarkistus, kun tiedetään miten se pitää tehdä
+  (q-tietyoilmoitukset/hae-ilmoitus db tietyoilmoitus-id))
+
 (defn tallenna-tietyoilmoitus [db user ilmoitus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user (::t/urakka-id ilmoitus))
   (upsert! db ::t/ilmoitus
@@ -82,6 +86,7 @@
 
 (s/def ::tietyoilmoitukset (s/coll-of ::t/ilmoitus))
 
+
 (defrecord Tietyoilmoitukset []
   component/Lifecycle
   (start [{db :db
@@ -92,11 +97,15 @@
                       (fn [user tiedot]
                         (hae-tietyoilmoitukset db user tiedot 501))
                       {:vastaus-spec ::tietyoilmoitukset})
+    (julkaise-palvelu http :hae-tietyoilmoitus
+                      (fn [user tietyoilmoitus-id]
+                        (hae-tietyoilmoitus db user tietyoilmoitus-id))
+                      {:kysely-spec ::t/ilmoitus
+                       :vastaus-spec ::t/ilmoitus})
     (julkaise-palvelu http :tallenna-tietyoilmoitus
                       (fn [user ilmoitus]
                         (tallenna-tietyoilmoitus db user ilmoitus))
-                      {:kysely-spec ::t/ilmoitus
-                       :vastaus-spec ::t/ilmoitus})
+                      {:vastaus-spec ::t/ilmoitus})
     (when pdf
       (pdf-vienti/rekisteroi-pdf-kasittelija!
         pdf :tietyoilmoitus (partial #'tietyoilmoitus-pdf db)))
@@ -105,6 +114,7 @@
   (stop [this]
     (poista-palvelut (:http-palvelin this)
                      :hae-tietyoilmoitukset
+                     :hae-tietyoilmoitus
                      :tallenna-tietyoilmoitus)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :tietyoilmoitus))
