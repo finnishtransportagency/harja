@@ -179,3 +179,7 @@
                {::t/urakka-id (op/or op/null? (op/in urakat))}
                {::t/urakoitsija-id organisaatio})
              {::t/urakka-id (op/or op/null? (op/in urakat))}))))
+
+(defn hae-ilmoitus [db tietyoilmoitus-id]
+  (first (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
+          {::t/id tietyoilmoitus-id})))

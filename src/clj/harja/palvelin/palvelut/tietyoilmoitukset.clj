@@ -65,6 +65,11 @@
         tietyoilmoitukset (q-tietyoilmoitukset/hae-ilmoitukset db kyselyparametrit)]
     tietyoilmoitukset))
 
+(defn hae-tietyoilmoitus [db user tietyoilmoitus-id]
+  ;; todo: lisää oikeustarkistus, kun tiedetään miten se pitää tehdä
+  (println "---> tiet" tietyoilmoitus-id)
+  (q-tietyoilmoitukset/hae-ilmoitus db tietyoilmoitus-id))
+
 (defn tallenna-tietyoilmoitus [db user ilmoitus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user (::t/urakka-id ilmoitus))
   (upsert! db ::t/ilmoitus
@@ -82,6 +87,7 @@
 
 (s/def ::tietyoilmoitukset (s/coll-of ::t/ilmoitus))
 
+
 (defrecord Tietyoilmoitukset []
   component/Lifecycle
   (start [{db :db
@@ -92,6 +98,10 @@
                       (fn [user tiedot]
                         (hae-tietyoilmoitukset db user tiedot 501))
                       {:vastaus-spec ::tietyoilmoitukset})
+    (julkaise-palvelu http :hae-tietyoilmoitus
+                      (fn [user tietyoilmoitus-id]
+                        (hae-tietyoilmoitus db user tietyoilmoitus-id))
+                      {:vastaus-spec ::t/ilmoitus})
     (julkaise-palvelu http :tallenna-tietyoilmoitus
                       (fn [user ilmoitus]
                         (tallenna-tietyoilmoitus db user ilmoitus))
@@ -105,6 +115,7 @@
   (stop [this]
     (poista-palvelut (:http-palvelin this)
                      :hae-tietyoilmoitukset
+                     :hae-tietyoilmoitus
                      :tallenna-tietyoilmoitus)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :tietyoilmoitus))
