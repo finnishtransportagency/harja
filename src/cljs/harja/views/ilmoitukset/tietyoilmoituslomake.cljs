@@ -307,9 +307,9 @@
                        }
 
                       )
-        (lomake/ryhma "Muuta"
+        (lomake/ryhma "Lisätietoja"
                       {:otsikko ""
-                       :nimi :muuta
+                       :nimi ::t/lisatietoja
                        :tyyppi :string
                        })
         (lomake/ryhma "Ilmoittaja"
