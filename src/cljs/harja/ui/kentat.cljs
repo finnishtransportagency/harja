@@ -31,7 +31,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.kartta.varit.puhtaat :as puhtaat]
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
-            [harja.ui.yleiset :as y])
+            [harja.ui.yleiset :as y]
+            [harja.domain.tierekisteri :as trd])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.makrot :refer [nappaa-virhe]]))
 
@@ -885,8 +886,12 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
        [:td {:colSpan 2} virhe]])]])
 
 
+(def ^:const tr-osoite-domain-avaimet [::trd/tie ::trd/aosa ::trd/aet ::trd/losa ::trd/let])
+(def ^:const tr-osoite-raaka-avaimet [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys])
+
 (defmethod tee-kentta :tierekisteriosoite [{:keys [tyyli lomake? ala-nayta-virhetta-komponentissa?
-                                                   sijainti pakollinen? tyhjennys-sallittu?]} data]
+                                                   sijainti pakollinen? tyhjennys-sallittu?
+                                                   avaimet]} data]
   (let [osoite-alussa @data
 
         hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
@@ -921,6 +926,13 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                           asioiden-ulkoasu/tr-viiva)
                                   :type :tr-valittu-osoite})
                                (keskita-kartta! arvo)))))
+
+        hae-tr (if avaimet
+                 (fn [tr-osoite-ch virheet osoite]
+                   (hae-tr tr-osoite-ch virheet
+                           (zipmap tr-osoite-raaka-avaimet
+                                   (map #(osoite %) avaimet))))
+                 hae-tr)
 
         tee-tr-haku (partial hae-tr tr-osoite-ch virheet)]
     (when hae-sijainti
@@ -961,10 +973,22 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                    (kartta/zoomaa-geometrioihin)))
 
       (fn [{:keys [tyyli lomake? sijainti]} data]
-        (let [tierekisterikentat (if (= tyyli :rivitetty)
+        (let [avaimet (or avaimet tr-osoite-raaka-avaimet)
+              _ (assert (= 5 (count avaimet))
+                        (str "TR-osoitekenttä tarvii 5 avainta (tie,aosa,aet,losa,let), saatiin: "
+                             (count avaimet)))
+              [numero-avain alkuosa-avain alkuetaisyys-avain loppuosa-avain loppuetaisyys-avain]
+              avaimet
+
+              tierekisterikentat (if (= tyyli :rivitetty)
                                    tierekisterikentat-rivitetty
                                    tierekisterikentat-table)
-              {:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys] :as osoite} @data
+
+              osoite @data
+
+              [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]
+              (map #(when osoite (osoite %)) avaimet)
+
               muuta! (fn [kentta]
                        #(let [v (-> % .-target .-value)
                               tr (swap! data assoc kentta (when (and (not (= "" v))
@@ -972,7 +996,8 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                                             (js/parseInt (-> % .-target .-value))))]))
               blur (when hae-sijainti
                      #(tee-tr-haku osoite))
-              kartta? @karttavalinta-kaynnissa]
+              kartta? @karttavalinta-kaynnissa
+              valinta-kaynnissa? @karttavalinta-kaynnissa]
           [:span.tierekisteriosoite-kentta (when @virheet {:class "sisaltaa-virheen"})
            (when (and @virheet (false? ala-nayta-virhetta-komponentissa?))
              [:div {:class "virheet"}
@@ -981,11 +1006,11 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
            [tierekisterikentat
             pakollinen?
-            [tr-kentan-elementti lomake? kartta? muuta! blur "Tie" numero :numero @karttavalinta-kaynnissa]
-            [tr-kentan-elementti lomake? kartta? muuta! blur "aosa" alkuosa :alkuosa @karttavalinta-kaynnissa]
-            [tr-kentan-elementti lomake? kartta? muuta! blur "aet" alkuetaisyys :alkuetaisyys @karttavalinta-kaynnissa]
-            [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa :loppuosa @karttavalinta-kaynnissa]
-            [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys :loppuetaisyys @karttavalinta-kaynnissa]
+            [tr-kentan-elementti lomake? kartta? muuta! blur "Tie" numero numero-avain valinta-kaynnissa?]
+            [tr-kentan-elementti lomake? kartta? muuta! blur "aosa" alkuosa alkuosa-avain valinta-kaynnissa?]
+            [tr-kentan-elementti lomake? kartta? muuta! blur "aet" alkuetaisyys alkuetaisyys-avain valinta-kaynnissa?]
+            [tr-kentan-elementti lomake? kartta? muuta! blur "losa" loppuosa loppuosa-avain valinta-kaynnissa?]
+            [tr-kentan-elementti lomake? kartta? muuta! blur "let" loppuetaisyys loppuetaisyys-avain valinta-kaynnissa?]
             (when  (and (not @karttavalinta-kaynnissa) tyhjennys-sallittu?)
               [:button.nappi-tyhjenna.nappi-kielteinen {:on-click #(do (.preventDefault %)
                                                                        (tasot/poista-geometria! :tr-valittu-osoite)
