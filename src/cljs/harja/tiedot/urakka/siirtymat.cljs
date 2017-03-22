@@ -11,7 +11,8 @@
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.paallystys :as paallystys]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tietyoilmoitukset])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- hae-toteuman-siirtymatiedot [toteuma-id]
@@ -20,6 +21,9 @@
 (defn- hae-paallystysilmoituksen-tiedot [{:keys [paallystyskohde-id urakka-id]}]
   (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:paallystyskohde-id paallystyskohde-id
                                                            :urakka-id urakka-id}))
+
+(defn- hae-tietyoilmoituksen-tiedot [tietyoilmoitus-id]
+  (k/post! :hae-tietyoilmoitus tietyoilmoitus-id))
 
 (defn- odota-arvoa
   "Pollaa annettua atomia 100ms välein kunnes sen arvo on tosi arvo-pred mukaan.
@@ -118,14 +122,12 @@
 (defn avaa-tietyoilmoitus
   "Navigoi joko luomaan uutta tietyöilmoitusta tai avaa annetun tietyöilmoituksen näkymässä"
   [{:keys [tietyoilmoitus-id paallystyskohde-id kohteen-urakka-id valittu-urakka-id] :as tiedot}]
-  (log "---> avataan tietyöilmoitusta")
   (go
-    (let []
+    (nav/aseta-valittu-valilehti! :sivu :ilmoitukset)
+    (nav/aseta-valittu-valilehti! :ilmoitukset :tietyo)
 
-      (nav/aseta-valittu-valilehti! :sivu :ilmoitukset)
-      (nav/aseta-valittu-valilehti! :ilmoitukset :tietyo)
-      
-      
-      )))
+    (let [tietyoilmoitus (<! (hae-tietyoilmoituksen-tiedot tietyoilmoitus-id))]
+      (swap! tietyoilmoitukset/tietyoilmoitukset #(assoc % :valittu-ilmoitus tietyoilmoitus
+                                                           :tallennus-kaynnissa? false)))))
 
 
