@@ -106,11 +106,9 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
     [otsikko viesti]))
 
 (defn viestin-kuittaustyyppi [sisalto]
-  (println "---> sisältö" sisalto)
   (when-let [nimi (some->> sisalto
                            (re-find kuittaustyyppi-pattern)
                            second)]
-    (println "---> nimi " nimi)
     (second (first (filter #(= (first %) nimi) kuittaustyypit)))))
 
 (defn viesti-ilman-kuittaustyyppia-ja-ohjetta [sisalto]
@@ -124,9 +122,6 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
   (let [[_ urakka-id ilmoitus-id] (re-matches otsikko-pattern otsikko)
         kuittaustyyppi (viestin-kuittaustyyppi sisalto)
         kommentti (str/trim (viesti-ilman-kuittaustyyppia-ja-ohjetta sisalto))]
-    (println "---> urakka-id" urakka-id)
-    (println "---> ilmoitus-id" ilmoitus-id)
-    (println "---> kuittaustyyppi" kuittaustyyppi)
     (if (and urakka-id ilmoitus-id kuittaustyyppi)
       {:urakka-id (Long/parseLong urakka-id)
        :ilmoitus-id (Long/parseLong ilmoitus-id)
