@@ -41,7 +41,8 @@
    :valmispvm-kohde (pvm/luo-pvm 2005 9 2)
    :valmispvm-paallystys (pvm/luo-pvm 2005 9 2)
    :takuupvm (pvm/luo-pvm 2005 9 3)
-   :ilmoitustiedot {:osoitteet [{:nimi "Tie 666"
+   :ilmoitustiedot {:osoitteet [{;; Alikohteen tiedot
+                                 :nimi "Tie 666"
                                  :tr-numero 666
                                  :tr-alkuosa 2
                                  :tr-alkuetaisyys 3
@@ -51,35 +52,50 @@
                                  :tr-kaista 1
                                  :paallystetyyppi 1
                                  :raekoko 1
+                                 :tyomenetelma 12
+                                 :massamaara 2
+                                 :toimenpide "Wut"
+                                 ;; Päällystetoimenpiteen tiedot
+                                 :toimenpide-paallystetyyppi 1
+                                 :toimenpide-raekoko 1
                                  :kokonaismassamaara 2
                                  :rc% 3
-                                 :tyomenetelma 12
+                                 :toimenpide-tyomenetelma 12
                                  :leveys 5
                                  :massamenekki 7
                                  :pinta-ala 8
+                                 ;; Kiviaines- ja sideainetiedot
                                  :esiintyma "asd"
                                  :km-arvo "asd"
                                  :muotoarvo "asd"
                                  :sideainetyyppi 1
                                  :pitoisuus 54
                                  :lisaaineet "asd"}
-                                {:poistettu true ;; HUOMAA POISTETTU, EI SAA TALLENTUA!
+                                {;; Alikohteen tiedot
+                                 :poistettu true ;; HUOMAA POISTETTU, EI SAA TALLENTUA!
                                  :nimi "Tie 555"
                                  :tr-numero 555
                                  :tr-alkuosa 2
                                  :tr-alkuetaisyys 3
-                                 :tr-loppuosa 4
+                                 :tr-loppuosa 4 ;; Päällystetoimenpiteen tiedot
                                  :tr-loppuetaisyys 5
                                  :tr-ajorata 1
                                  :tr-kaista 1
                                  :paallystetyyppi 1
                                  :raekoko 1
+                                 :tyomenetelma 12
+                                 :massamaara 2
+                                 :toimenpide "Emt"
+                                 ;; Päällystetoimenpiteen tiedot
+                                 :toimenpide-paallystetyyppi 1
+                                 :toimenpide-raekoko 1
                                  :kokonaismassamaara 2
                                  :rc% 3
-                                 :tyomenetelma 12
+                                 :toimenpide-tyomenetelma 12
                                  :leveys 5
                                  :massamenekki 7
                                  :pinta-ala 8
+                                 ;; Kiviaines- ja sideainetiedot
                                  :esiintyma "asd"
                                  :km-arvo "asd"
                                  :muotoarvo "asd"
@@ -207,12 +223,39 @@
     ;; Kohdeosat on OK
     (is (= (count kohdeosat) 1))
     (is (= kohdeosat
-           [{:kohdeosa-id 666, :tr-kaista 1, :lisaaineet "12",
-             :leveys 12, :kokonaismassamaara 12, :tr-ajorata 1, :sideainetyyppi 2, :muotoarvo "12",
-             :esiintyma "12", :pitoisuus 12, :tr-loppuosa 3, :tunnus nil, :tr-alkuosa 1, :pinta-ala 12,
-             :massamenekki 1, :kuulamylly 2, :tr-loppuetaisyys 0, :nimi "Leppäjärven kohdeosa", :raekoko 1,
-             :tyomenetelma 21, :rc% 12, :paallystetyyppi 2, :tr-alkuetaisyys 0, :tr-numero 20, :toimenpide nil,
-             :km-arvo "12"}]))
+           [{;; Alikohteen tiedot
+             :kohdeosa-id 666
+             :nimi "Leppäjärven kohdeosa"
+             :tunnus nil
+             :tr-ajorata 1
+             :tr-alkuetaisyys 0
+             :tr-alkuosa 1
+             :tr-kaista 1
+             :tr-loppuetaisyys 0
+             :tr-loppuosa 3
+             :tr-numero 20
+             :paallystetyyppi nil
+             :raekoko nil
+             :tyomenetelma nil
+             :massamaara nil
+             :toimenpide nil
+             ;; Päällystetoimenpiteen tiedot
+             :toimenpide-paallystetyyppi 2
+             :toimenpide-raekoko 1
+             :toimenpide-tyomenetelma 21
+             :kokonaismassamaara 12
+             :kuulamylly 2
+             :leveys 12
+             :massamenekki 1
+             :pinta-ala 12
+             :rc% 12
+             ;; Kiviaines- ja sideainetiedot
+             :esiintyma "12"
+             :km-arvo "12"
+             :lisaaineet "12"
+             :muotoarvo "12"
+             :pitoisuus 12
+             :sideainetyyppi 2}]))
     (is (every? #(number? (:kohdeosa-id %)) kohdeosat))))
 
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
@@ -372,8 +415,8 @@
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
           paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
           hae-kohteiden-maara #(count (q (str "SELECT * FROM yllapitokohdeosa"
-                                   " WHERE poistettu IS NOT TRUE "
-                                   " AND yllapitokohde = " paallystyskohde-id ";")))]
+                                              " WHERE poistettu IS NOT TRUE "
+                                              " AND yllapitokohde = " paallystyskohde-id ";")))]
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paallystysilmoitus +kayttaja-jvh+
