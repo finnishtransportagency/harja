@@ -13,6 +13,7 @@
             [harja.domain.tietyoilmoitukset :as t]
             [harja.domain.tierekisteri :as tr]
             [cljs.pprint :refer [pprint]]
+            [harja.tyokalut.functor :refer [fmap]]
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.local-storage :refer [local-storage-atom]]
             [harja.tyokalut.spec-apurit :as spec-apurit])
@@ -134,6 +135,41 @@
     (.clearTimeout js/window haku))
   (assoc app :ilmoitushaku-id (.setTimeout js/window (tuck/send-async! ->HaeIlmoitukset) 1000)))
 
+
+(declare tyotyyppi-vaihtoehdot-map)
+(defn- yhdista-tyotyypit [ilmoitus]
+  (let [yhdistetty (apply merge (vals (select-keys ilmoitus [:tyotyypit-a :tyotyypit-b :tyotyypit-c :tyotyypit-d])))
+        _ (log "yhdista-tyotyypit: yhdistetty =" (pr-str yhdistetty))
+        yhdistetty-kantamuoto (fn [vaihtoehto-koodi]
+                                [vaihtoehto-koodi (get tyotyyppi-vaihtoehdot-map vaihtoehto-koodi)])]
+    (assoc ilmoitus ::t/tyotyypit (mapv yhdistetty-kantamuoto yhdistetty))))
+
+
+(defn nopeusrajoitukset-kanta->grid [nr-tiedot]
+  ;; muuttaa ::t/nopeusrajoitukset -avaimen tiedont, esim:
+  ;; [{:harja.domain.tietyoilmoitukset/rajoitus "30", :harja.domain.tietyoilmoitukset/matka 100}])
+  ;; mapiksi {indeksi {rajoitus matka}} -tupleja, esim:
+  ;; {0 {::t/rajoitus 100, ::t/matka 200}, 1 {::t/rajoitus 300, ::t/matka 20}}
+  (apply merge
+         (map-indexed
+          (fn [indeksi rajoitus-map]
+            {indeksi (select-keys rajoitus-map [::t/matka ::t/rajoitus])})
+          nr-tiedot)))
+
+(defn nopeusrajoitukset-grid->kanta* [grid-rajoitukset]
+  ;; {0 {:rajoitus "30", :matka 100}, -1 {:id -1, :koskematon true}}
+  ;; -> [{:harja.domain.tietyoilmoitukset/rajoitus "30", :harja.domain.tietyoilmoitukset/matka 100}])
+
+  (let [r (vals grid-rajoitukset)]
+    (log "grid-rajoitukset:" (pr-str grid-rajoitukset))
+    r))
+
+(defn- nopeusrajoitukset-grid->kanta [ilmoitus]
+  (let [grid-nopeusrajoitukset (:nopeusrajoitukset ilmoitus)
+        kanta-nopeusrajoitukset (nopeusrajoitukset-grid->kanta* grid-nopeusrajoitukset)]
+    (-> ilmoitus (dissoc :nopeusrajoitukset)
+        (assoc ::t/nopeusrajoitukset kanta-nopeusrajoitukset))))
+
 (extend-protocol tuck/Event
   AsetaValinnat
   (process-event [{valinnat :valinnat} app]
@@ -216,6 +252,7 @@
         (let [tulos (k/post! :tallenna-tietyoilmoitus
                              (-> ilmoitus
                                  (dissoc ::t/tyovaiheet)
+                                 nopeusrajoitukset-grid->kanta
                                  (spec-apurit/poista-nil-avaimet)))]
           (if (k/virhe? tulos)
             (viesti/nayta! [:span "Virhe tallennuksessa! Ilmoitusta EI tallennettu"]
