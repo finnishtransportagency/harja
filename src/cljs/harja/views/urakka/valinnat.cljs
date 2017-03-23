@@ -19,7 +19,7 @@
     :luokka "label-ja-kentta-puolikas"}
    "Tienumero"])
 
-(defn kohdenumero [kohdenumero-atom]
+(defn yllapitokohteen-kohdenumero [kohdenumero-atom]
   [tee-otsikollinen-kentta
    {:otsikko "Kohdenumero"
     :kentta-params {:tyyppi :string :placeholder "Rajaa kohdenumerolla"}
