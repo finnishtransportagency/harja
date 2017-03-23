@@ -27,7 +27,7 @@
 
 (defn- urakka-valinnat [urakat]
   (into [[nil "Ei liity HARJA-urakkaan"]]
-        (map (juxt (comp str :id) :nimi))
+        (map (juxt :id :nimi))
         urakat))
 
 
@@ -194,11 +194,12 @@
        )
       (lomake/ryhma
        "Urakka"
-       {:nimi :urakan-nimi-valinta
+       {:nimi ::t/urakka-id
         :otsikko "Liittyy urakkaan"
         :tyyppi :valinta
         :valinnat (urakka-valinnat kayttajan-urakat)
-        :valinta-nayta second :valinta-arvo first
+        :valinta-nayta second
+        :valinta-arvo first
         :muokattava? (constantly true)}
        (if (:urakan-nimi-valinta ilmoitus)
          (assoc tyhja-kentta :nimi :blank-1)

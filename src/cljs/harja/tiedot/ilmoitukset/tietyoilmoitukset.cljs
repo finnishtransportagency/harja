@@ -81,6 +81,7 @@
 
 (defn esitayta-tietyoilmoitus-paallystyskohteella [{:keys [id
                                                            urakka-id
+                                                           urakka-nimi
                                                            alku
                                                            loppu
                                                            urakoitsija-nimi
@@ -93,7 +94,8 @@
                                                            tr-loppuosa
                                                            tr-loppuetaisyys]
                                                     :as yllapitokohde}]
-  {;; ::t/urakka-id (str urakka-id)
+  {::t/urakka-id urakka-id
+   ::t/urakka-nimi urakka-nimi
    ::t/luotu (pvm/nyt)
    ::t/yllapitokohde id
    ::t/alku alku

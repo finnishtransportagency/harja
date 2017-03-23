@@ -27,9 +27,9 @@
 
 (defn- urakat [db user oikeus]
   (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
-   db
-   user
-   (partial oikeus oikeudet/ilmoitukset-ilmoitukset)))
+    db
+    user
+    (partial oikeus oikeudet/ilmoitukset-ilmoitukset)))
 
 (defn hae-tietyoilmoitukset [db user {:keys [luotu-alkuaika
                                              luotu-loppuaika
@@ -55,8 +55,8 @@
                           :luotu-loppu luotu-loppu
                           :kaynnissa-alku kaynnissa-alku
                           :kaynnissa-loppu kaynnissa-loppu
-                          :urakat (if (and urakka (not (str/blank? urakka)))
-                                    [(Integer/parseInt urakka)]
+                          :urakat (if urakka
+                                    [urakka]
                                     kayttajan-urakat)
                           :luojaid (when vain-kayttajan-luomat (:id user))
                           :sijainti (when sijainti (geo/geometry (geo/clj->pg sijainti)))
