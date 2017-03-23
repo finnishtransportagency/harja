@@ -93,7 +93,8 @@
                                                            tr-alkuosa
                                                            tr-alkuetaisyys
                                                            tr-loppuosa
-                                                           tr-loppuetaisyys]
+                                                           tr-loppuetaisyys
+                                                           geometria]
                                                     :as yllapitokohde}]
   {::t/urakka-id urakka-id
    ::t/urakan-nimi urakka-nimi
@@ -109,7 +110,8 @@
    ::t/tilaajayhteyshenkilo {::t/etunimi (:etunimi tilaajan-yhteyshenkilo)
                              ::t/sukunimi (:sukunimi tilaajan-yhteyshenkilo)
                              ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)}
-   ::t/osoite {::tr/tie tr-numero
+   ::t/osoite {::tr/geometria  geometria
+               ::tr/tie tr-numero
                ::tr/aosa tr-alkuosa
                ::tr/aet tr-alkuetaisyys
                ::tr/losa tr-loppuosa

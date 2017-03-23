@@ -31,7 +31,8 @@
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.id :refer [id-olemassa?]]
-            [harja.palvelin.komponentit.fim :as fim])
+            [harja.palvelin.komponentit.fim :as fim]
+            [harja.palvelin.palvelut.tierek-haku :as tr-haku])
   (:use org.httpkit.fake))
 
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
@@ -415,8 +416,20 @@
 
 (defn hae-yllapitokohteen-tiedot-tietyoilmoitukselle [db fim user yllapitokohde-id]
   ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
-  (let [{:keys [urakka-sampo-id] :as yllapitokohde}
-        (first (q/hae-yllapitokohteen-tiedot-tietyoilmoitukselle db {:kohdeid yllapitokohde-id}))]
+  (let [{:keys [urakka-sampo-id
+                tr-numero
+                tr-alkuosa
+                tr-alkuetaisyys
+                tr-loppuosa
+                tr-loppuetaisyys]
+         :as yllapitokohde}
+        (first (q/hae-yllapitokohteen-tiedot-tietyoilmoitukselle db {:kohdeid yllapitokohde-id}))
+        geometria (tr-haku/hae-tr-viiva db {:numero tr-numero
+                                            :alkuosa tr-alkuosa
+                                            :alkuetaisyys tr-alkuetaisyys
+                                            :loppuosa tr-loppuosa
+                                            :loppuetaisyys tr-loppuetaisyys})
+        yllapitokohde (assoc yllapitokohde :geometria geometria)]
     (if urakka-sampo-id
       (let [kayttajat (fim/hae-urakan-kayttajat fim urakka-sampo-id)
             hae (fn [rooli] (first (filter (fn [k] (some #(= rooli %) (:roolinimet k))) kayttajat)))
