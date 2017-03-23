@@ -339,7 +339,7 @@
             :tasaa :oikea}
            {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara
             :tyyppi :positiivinen-numero :tasaa :oikea :leveys 10}
-           {:otsikko "Pinta-ala (mkg/m²)" :nimi :pinta-ala :leveys 10 :tyyppi :positiivinen-numero
+           {:otsikko "Pinta-ala (m²)" :nimi :pinta-ala :leveys 10 :tyyppi :positiivinen-numero
             :tasaa :oikea}
            {:otsikko "Kuulamylly"
             :nimi :kuulamylly
