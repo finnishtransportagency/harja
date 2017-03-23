@@ -95,7 +95,7 @@
                                                            tr-loppuetaisyys]
                                                     :as yllapitokohde}]
   {::t/urakka-id urakka-id
-   ::t/urakka-nimi urakka-nimi
+   ::t/urakan-nimi urakka-nimi
    ::t/luotu (pvm/nyt)
    ::t/yllapitokohde id
    ::t/alku alku
@@ -103,8 +103,7 @@
    ::t/urakoitsijan-nimi urakoitsija-nimi
    ::t/urakoitsijayhteyshenkilo {::t/etunimi (:etunimi urakoitsijan-yhteyshenkilo)
                                  ::t/sukunimi (:sukunimi urakoitsijan-yhteyshenkilo)
-                                 ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)
-                                 }
+                                 ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)}
    ::t/tilaajan-nimi tilaaja-nimi
    ::t/tilaajayhteyshenkilo {::t/etunimi (:etunimi tilaajan-yhteyshenkilo)
                              ::t/sukunimi (:sukunimi tilaajan-yhteyshenkilo)
