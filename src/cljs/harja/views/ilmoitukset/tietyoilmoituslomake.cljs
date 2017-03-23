@@ -267,7 +267,7 @@
                      :tyyppi :positiivinen-numero
                      }
                     {:otsikko "Kaistajärjestelyt"
-                     :tyyppi :checkbox-group-muu
+                     :tyyppi :checkbox-group
                      :nimi :tietyon_kaistajarjestelyt
                      :vaihtoehdot (map first tiedot/kaistajarjestelyt-vaihtoehdot-map)
                      :vaihtoehto-nayta tiedot/kaistajarjestelyt-vaihtoehdot-map
@@ -305,7 +305,7 @@
 
                      }
                     {:otsikko "Kulkurajoituksia"
-                     :tyyppi :checkbox-group-muu
+                     :tyyppi :checkbox-group
                      :nimi :liikenteenohjaus
                      :vaihtoehdot ["Liikennevalot" "Liikenteen ohjaaja" "Satunnaisia (aikataulu, jos yli 5 min)" "Aikataulu:"]
                      :vaihtoehto-nayta identity
