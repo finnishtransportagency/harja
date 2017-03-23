@@ -347,17 +347,37 @@ VALUES (:yllapitokohde,
   :tr_ajorata,
   :tr_kaista,
   :toimenpide,
-        :paallystetyyppi,
-        :raekoko,
-        :tyomenetelma,
-        :massamaara,
-        :ulkoinen-id,
-        (SELECT tierekisteriosoitteelle_viiva AS geom
-         FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
-                                            CAST(:tr_alkuosa AS INTEGER),
-                                            CAST(:tr_alkuetaisyys AS INTEGER),
-                                            CAST(:tr_loppuosa AS INTEGER),
-                                            CAST(:tr_loppuetaisyys AS INTEGER))));
+  :paallystetyyppi,
+  :raekoko,
+  :tyomenetelma,
+  :massamaara,
+  :ulkoinen-id,
+  (SELECT tierekisteriosoitteelle_viiva AS geom
+   FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
+                                      CAST(:tr_alkuosa AS INTEGER),
+                                      CAST(:tr_alkuetaisyys AS INTEGER),
+                                      CAST(:tr_loppuosa AS INTEGER),
+                                      CAST(:tr_loppuetaisyys AS INTEGER))));
+
+-- name: luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
+-- Luo uuden yllapitokohdeosan
+INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tunnus, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+                              tr_loppuosa, tr_loppuetaisyys, ulkoinen_id, sijainti)
+VALUES (:yllapitokohde,
+  :nimi,
+  :tunnus,
+  :tr_numero,
+  :tr_alkuosa,
+  :tr_alkuetaisyys,
+  :tr_loppuosa,
+  :tr_loppuetaisyys,
+  :ulkoinen-id,
+  (SELECT tierekisteriosoitteelle_viiva AS geom
+   FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
+                                      CAST(:tr_alkuosa AS INTEGER),
+                                      CAST(:tr_alkuetaisyys AS INTEGER),
+                                      CAST(:tr_loppuosa AS INTEGER),
+                                      CAST(:tr_loppuetaisyys AS INTEGER))));
 
 -- name: paivita-yllapitokohdeosa<!
 -- Päivittää yllapitokohdeosan

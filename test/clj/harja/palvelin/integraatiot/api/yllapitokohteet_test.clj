@@ -5,7 +5,6 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
-            [clojure.core.match :refer [match]]
             [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.skeema :as skeema]
@@ -61,7 +60,8 @@
                                          kayttaja-paallystys portti
                                          (-> "test/resurssit/api/paallystysilmoituksen_kirjaus.json"
                                              slurp
-                                             (.replace "__VALMIS__" (str false))))]
+                                             (.replace "__VALMIS__" (str false))))
+        kohdeosa-id (ffirst (q (str "SELECT id FROM yllapitokohdeosa WHERE yllapitokohde = " kohde " LIMIT 1;")))]
 
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
@@ -78,34 +78,32 @@
       (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitustiedot))
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
-      (is (match ilmoitustiedot
-                 {:osoitteet [{:kohdeosa-id _
-                               :lisaaineet "lisäaineet"
-                               :leveys 1.2
-                               :kokonaismassamaara 12.3
-                               :sideainetyyppi 1
-                               :muotoarvo "testi"
-                               :esiintyma "testi"
-                               :pitoisuus 1.2
-                               :pinta-ala 2.2
-                               :massamenekki 22
-                               :kuulamylly 4
-                               :raekoko 12
-                               :tyomenetelma 72
-                               :rc% 54
-                               :paallystetyyppi 11
-                               :km-arvo "testi"}],
-                  :alustatoimet [{:verkkotyyppi 1
-                                  :tr-alkuosa 1
-                                  :tr-loppuetaisyys 15
-                                  :verkon-tarkoitus 5
-                                  :kasittelymenetelma 1
-                                  :tr-loppuosa 5
-                                  :tr-alkuetaisyys 1
-                                  :tekninen-toimenpide 1
-                                  :paksuus 1
-                                  :verkon-sijainti 1}]}
-                 true))
+      (is (= ilmoitustiedot {:osoitteet [{:kohdeosa-id kohdeosa-id
+                                          :lisaaineet "lisäaineet"
+                                          :leveys 1.2
+                                          :kokonaismassamaara 12.3
+                                          :sideainetyyppi 1
+                                          :muotoarvo "testi"
+                                          :esiintyma "testi"
+                                          :pitoisuus 1.2
+                                          :pinta-ala 2.2
+                                          :massamenekki 22
+                                          :kuulamylly 4
+                                          :raekoko 12
+                                          :tyomenetelma 72
+                                          :rc% 54
+                                          :paallystetyyppi 11
+                                          :km-arvo "testi"}],
+                             :alustatoimet [{:verkkotyyppi 1
+                                             :tr-alkuosa 1
+                                             :tr-loppuetaisyys 15
+                                             :verkon-tarkoitus 5
+                                             :kasittelymenetelma 1
+                                             :tr-loppuosa 5
+                                             :tr-alkuetaisyys 1
+                                             :tekninen-toimenpide 1
+                                             :paksuus 1
+                                             :verkon-sijainti 1}]}))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
       (is (= (get paallystysilmoitus 2) "aloitettu") "Ei asetettu käsiteltäväksi, joten tila on aloitettu")
 
@@ -150,42 +148,40 @@
     (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, tila
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
           ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))
-          paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))]
+          paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
+          kohdeosa-id (ffirst (q (str "SELECT id FROM yllapitokohdeosa WHERE yllapitokohde = " kohde " LIMIT 1;")))]
       ;; Pottien määrä pysyy samana
       (is (= paallystysilmoitusten-maara-kannassa-ennen paallystysilmoitusten-maara-kannassa-jalkeen))
       ;; Tiedot ovat skeeman mukaiset
-      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
-                          ilmoitustiedot))
+      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitustiedot))
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
-      (is (match ilmoitustiedot
-                 {:osoitteet [{:kohdeosa-id _
-                               :lisaaineet "lisäaineet"
-                               :leveys 1.2
-                               :kokonaismassamaara 12.3
-                               :sideainetyyppi 1
-                               :muotoarvo "testi"
-                               :esiintyma "testi"
-                               :pitoisuus 1.2
-                               :pinta-ala 2.2
-                               :massamenekki 22
-                               :kuulamylly 4
-                               :raekoko 12
-                               :tyomenetelma 72
-                               :rc% 54
-                               :paallystetyyppi 11
-                               :km-arvo "testi"}],
-                  :alustatoimet [{:verkkotyyppi 1
-                                  :tr-alkuosa 1
-                                  :tr-loppuetaisyys 15
-                                  :verkon-tarkoitus 5
-                                  :kasittelymenetelma 1
-                                  :tr-loppuosa 5
-                                  :tr-alkuetaisyys 1
-                                  :tekninen-toimenpide 1
-                                  :paksuus 1
-                                  :verkon-sijainti 1}]}
-                 true))
+      (is (= ilmoitustiedot {:osoitteet [{:kohdeosa-id kohdeosa-id
+                                          :lisaaineet "lisäaineet"
+                                          :leveys 1.2
+                                          :kokonaismassamaara 12.3
+                                          :sideainetyyppi 1
+                                          :muotoarvo "testi"
+                                          :esiintyma "testi"
+                                          :pitoisuus 1.2
+                                          :pinta-ala 2.2
+                                          :massamenekki 22
+                                          :kuulamylly 4
+                                          :raekoko 12
+                                          :tyomenetelma 72
+                                          :rc% 54
+                                          :paallystetyyppi 11
+                                          :km-arvo "testi"}],
+                             :alustatoimet [{:verkkotyyppi 1
+                                             :tr-alkuosa 1
+                                             :tr-loppuetaisyys 15
+                                             :verkon-tarkoitus 5
+                                             :kasittelymenetelma 1
+                                             :tr-loppuosa 5
+                                             :tr-alkuetaisyys 1
+                                             :tekninen-toimenpide 1
+                                             :paksuus 1
+                                             :verkon-sijainti 1}]}))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
       (is (= (get paallystysilmoitus 2) (get vanha-paallystysilmoitus 2)) "Tila ei muuttunut miksikään"))))
 

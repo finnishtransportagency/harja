@@ -32,6 +32,24 @@
         (assoc alikohde :id (:id (q-yllapitokohteet/luo-yllapitokohdeosa<! db parametrit)))))
     alikohteet))
 
+(defn paivita-alikohteet-paallystysilmoituksesta [db kohde alikohteet]
+  (q-yllapitokohteet/poista-yllapitokohteen-kohdeosat! db {:id (:id kohde)})
+  (mapv
+    (fn [alikohde]
+      (let [sijainti (:sijainti alikohde)
+            parametrit {:yllapitokohde (:id kohde)
+                        :nimi (:nimi alikohde)
+                        :tunnus (:tunnus alikohde)
+                        :tr_numero (:numero sijainti)
+                        :tr_alkuosa (:aosa sijainti)
+                        :tr_alkuetaisyys (:aet sijainti)
+                        :tr_loppuosa (:losa sijainti)
+                        :tr_loppuetaisyys (:let sijainti)
+                        :ulkoinen-id (:ulkoinen-id alikohde)}]
+        (assoc alikohde :id (:id (q-yllapitokohteet/luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
+                                   db parametrit)))))
+    alikohteet))
+
 (defn paivita-kohde [db kohde-id kohteen-sijainti]
   (q-yllapitokohteet/paivita-yllapitokohteen-sijainti!
     db (assoc (clojure.set/rename-keys
