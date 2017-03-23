@@ -143,6 +143,36 @@
                           :aseta #(aseta-tyotyypin-kuvaus %1 "Muu, mikä?" %2)
                           :placeholder "(Muu tyyppi?)"}}))))
 
+(defn yhteyshenkilo [otsikko avain & kentat-ennen]
+  (apply
+   lomake/ryhma
+   otsikko
+
+   (concat kentat-ennen
+           [{:nimi (keyword (name avain) "-etunimi")
+             :otsikko "Yhteyshenkilön etunimi"
+             :uusi-rivi? true
+             :hae #(-> % avain ::t/etunimi)
+             :aseta #(assoc-in %1 [avain ::t/etunimi] %2)
+             :muokattava? (constantly true)
+             :tyyppi :string}
+            {:nimi (keyword (name avain) "-sukunimi")
+             :otsikko "Yhteyshenkilön sukunimi"
+             :hae #(-> % avain ::t/sukunimi)
+             :aseta #(assoc-in %1 [avain ::t/sukunimi] %2)
+             :muokattava? (constantly true)
+             :tyyppi :string}
+            {:nimi (keyword (name avain) "-matkapuhelin")
+             :otsikko "Yhteyshenkilön puhelinnumero"
+             :hae #(-> % avain ::t/matkapuhelin)
+             :aseta #(assoc-in %1 [avain ::t/matkapuhelin] %2)
+             :tyyppi :puhelin}
+            {:nimi (keyword (name avain) "-sahkoposti")
+             :otsikko "Yhteyshenkilön sähköposti"
+             :hae #(-> % avain ::t/sahkoposti)
+             :aseta #(assoc-in %1 [avain ::t/sahkoposti] %2)
+             :tyyppi :string}])))
+
 (defn lomake [e! tallennus-kaynnissa? ilmoitus kayttajan-urakat]
   [:div
    [:span
@@ -162,83 +192,64 @@
         :valinta-arvo first
         :muokattava? (constantly true)}
        )
-      (lomake/ryhma "Tiedot koko kohteesta"
-                    {:nimi :urakan-nimi-valinta
-                     :otsikko "Liittyy urakkaan"
-                     :tyyppi :valinta
-                     :valinnat (urakka-valinnat kayttajan-urakat)
-                     :valinta-nayta second :valinta-arvo first
-                     :muokattava? (constantly true)}
-                    (if (:urakan-nimi-valinta ilmoitus)
-                      (assoc tyhja-kentta :nimi :blank-1)
-                      ;; else
-                      {:nimi :urakan-nimi-syotetty
-                       :otsikko "Projektin tai urakan nimi"
-                       :tyyppi :string
-                       :muokattava? (constantly true)})
-                    (if (:urakan-nimi-valinta ilmoitus)
-                      (assoc tyhja-kentta :nimi :blank-2)
-                      ;; else
-                      {:otsikko "Kohde urakassa"
-                       :nimi :kohde
-                       :tyyppi :string})
+      (lomake/ryhma
+       "Urakka"
+       {:nimi :urakan-nimi-valinta
+        :otsikko "Liittyy urakkaan"
+        :tyyppi :valinta
+        :valinnat (urakka-valinnat kayttajan-urakat)
+        :valinta-nayta second :valinta-arvo first
+        :muokattava? (constantly true)}
+       (if (:urakan-nimi-valinta ilmoitus)
+         (assoc tyhja-kentta :nimi :blank-1)
+         ;; else
+         {:nimi :urakan-nimi-syotetty
+          :uusi-rivi? true
+          :otsikko "Projektin tai urakan nimi"
+          :tyyppi :string
+          :muokattava? (constantly true)})
+       (if (:urakan-nimi-valinta ilmoitus)
+         (assoc tyhja-kentta :nimi :blank-2)
+         ;; else
+         {:otsikko "Kohde urakassa"
+          :nimi :kohde
+          :tyyppi :string}))
 
-                    {:nimi ::t/urakoitsijan-nimi
-                     :otsikko "Urakoitsijan nimi"
-                     :muokattava? (constantly true)
-                     :tyyppi :string}
-                    {:nimi :urakoitisijan-yhteyshenkilo-nimi
-                     :otsikko "Urakoitsijan yhteyshenkilö"
-                     ;; tuleeko yhdistämisessä muoakttaessa haankluuksia kun pitää taas erottaa?
-                     ;; -> ehkä täytyy poiketa rautalangasta tässä
-                     :hae #(-> %  ::t/urakoitsijayhteyshenkilo tiedot/henkilo->nimi)
-                     :muokattava? (constantly true)
-                     :tyyppi :string}
-                    {:nimi :urakoitisijanyhteyshenkilo-matkapuhelin
-                     :otsikko "Puhelinnumero"
-                     :hae #(-> % ::t/urakoitsijayhteyshenkilo ::t/matkapuhelin)
-                     :tyyppi :puhelin}
-                    {:nimi ::t/tilaajan-nimi
-                     :otsikko "Tilaajan nimi"
-                     :muokattava? (constantly true)
-                     :tyyppi :string}
-                    {:nimi :tilaajan-yhteyshenkilo-nimi
-                     :otsikko "Tilaajan yhteyshenkilö"
-                     :hae #(-> %  ::t/tilaajayhteyshenkilo tiedot/henkilo->nimi)
+      (yhteyshenkilo "Urakoitsijan yhteyshenkilo" ::t/urakoitsijayhteyshenkilo
+                     {:nimi ::t/urakoitsijan-nimi
+                      :otsikko "Nimi"
+                      :muokattava? (constantly true)
+                      :tyyppi :string})
 
-                     :muokattava? (constantly true)
-                     :tyyppi :string}
-                    {:nimi :tilaajan-yhteyshenkilo-matkapuhelin
-                     :otsikko "Puhelinnumero"
-                     :hae #(-> % ::t/tilaajayhteyshenkilo ::t/matkapuhelin)
-                     :tyyppi :puhelin}
-                    #_{:nimi :tienumero
-                       :otsikko "Tienumero"
-                       :tyyppi :positiivinen-numero
-                       :muokattava? (constantly true)}
-                    {:otsikko "Osoite"
-                     :nimi ::t/osoite
-                     :pakollinen? true
-                     :tyyppi :tierekisteriosoite
-                     :avaimet kentat/tr-osoite-domain-avaimet
-                     :ala-nayta-virhetta-komponentissa? true
-                     :validoi [[:validi-tr "Reittiä ei saada tehtyä" [::t/osoite]]]
-                     :sijainti (r/wrap (:sijainti ilmoitus) #(e! (tiedot/->PaivitaSijainti %)))
-                     }
-                    {:otsikko "Tien nimi" :nimi ::t/tien-nimi
-                     :tyyppi :string}
-                    {:otsikko "Kunta/kunnat" :nimi ::t/kunnat
-                     :tyyppi :string}
-                    {:otsikko "Työn alkupiste (osoite, paikannimi)" :nimi ::t/alkusijainnin-kuvaus
-                     :tyyppi :string}
-                    {:otsikko "Työn aloituspvm" :nimi ::t/alku :tyyppi :pvm}
-                    {:otsikko "Työn loppupiste (osoite, paikannimi)" :nimi ::t/loppusijainnin-kuvaus
-                     :tyyppi :string}
-                    {:otsikko "Työn lopetuspvm" :nimi ::t/loppu :tyyppi :pvm}
-                    {:otsikko "Työn pituus" :nimi :tyon-pituus
-                     :tyyppi :positiivinen-numero
-                     :placeholder "(Tyon pituus metreinä)"
-                     })
+      (yhteyshenkilo "Tilaaja" ::t/tilaajayhteyshenkilo
+                     {:nimi ::t/tilaajan-nimi
+                      :otsikko "Tilaajan nimi"
+                      :muokattava? (constantly true)
+                      :tyyppi :string})
+
+      {:otsikko "Osoite"
+       :nimi ::t/osoite
+       :pakollinen? true
+       :tyyppi :tierekisteriosoite
+       :avaimet kentat/tr-osoite-domain-avaimet
+       :ala-nayta-virhetta-komponentissa? true
+       :validoi [[:validi-tr "Reittiä ei saada tehtyä" [::t/osoite]]]
+       :sijainti (r/wrap (:sijainti ilmoitus) #(e! (tiedot/->PaivitaSijainti %)))
+       }
+      {:otsikko "Tien nimi" :nimi ::t/tien-nimi
+       :tyyppi :string}
+      {:otsikko "Kunta/kunnat" :nimi ::t/kunnat
+       :tyyppi :string}
+      {:otsikko "Työn alkupiste (osoite, paikannimi)" :nimi ::t/alkusijainnin-kuvaus
+       :tyyppi :string}
+      {:otsikko "Työn aloituspvm" :nimi ::t/alku :tyyppi :pvm}
+      {:otsikko "Työn loppupiste (osoite, paikannimi)" :nimi ::t/loppusijainnin-kuvaus
+       :tyyppi :string}
+      {:otsikko "Työn lopetuspvm" :nimi ::t/loppu :tyyppi :pvm}
+      {:otsikko "Työn pituus" :nimi :tyon-pituus
+       :tyyppi :positiivinen-numero
+       :placeholder "(Tyon pituus metreinä)"
+       }
 
       #_(lomake/ryhma "Työvaihe"
 
@@ -328,20 +339,8 @@
                      :nimi ::t/lisatietoja
                      :tyyppi :string
                      })
-      (lomake/ryhma "Ilmoittaja"
-                    {:nimi :ilmoittaja-nimi
-                     :otsikko "Nimi"
-                     :hae #(-> %  ::t/urakoitsijayhteyshenkilo tiedot/henkilo->nimi)
-                     :muokattava? (constantly true)
-                     :tyyppi :string}
-                    {:nimi :ilmoittaja-matkapuhelin
-                     :otsikko "Puhelinnumero"
-                     :hae #(-> % ::t/ilmoittaja ::t/matkapuhelin)
-                     :tyyppi :puhelin}
-                    {:otsikko "Päivämäärä"
-                     :nimi :luotu
-                     :tyyppi :string}
-                    )
+      (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja)
+
       ]
      ilmoitus]]
    [napit/tallenna
