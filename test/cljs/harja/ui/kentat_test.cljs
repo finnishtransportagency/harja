@@ -334,3 +334,64 @@
      (<! hae-tr-viivaksi)
      --
      (is (= (:type @sijainti) :multiline) "Sijainti haettu uudestaan"))))
+
+(deftest checkbox-group
+  (let [data (r/atom #{})
+        vaihtoehdot ["Foo" "Bar" "Baz" "Quux"]
+        dump #(println "------\n" (.-innerHTML (u/sel1 :div.boolean-group)))
+        valitut (fn []
+                  (filter #(.-checked %) (u/sel "input[type='checkbox']")))]
+    (komponenttitesti
+     [kentat/tee-kentta {:tyyppi :checkbox-group
+                         :vaihtoehdot vaihtoehdot
+                         :vaihtoehto-nayta str} data]
+
+     "Alkutilassa ei ole yhtään valittua checkboxia"
+     (is (zero? (count (valitut))))
+     --
+     "Klikataan ensimmäistä"
+     (u/change :input true)
+     --
+     (is (= 1 (count (valitut))))
+     (is (= #{"Foo"} @data))
+     --
+     "Poistetaan valinta"
+     (u/change :input false)
+     --
+     (is (= #{} @data))
+     --
+     "Ohjelmallisesti asetettu valitut"
+     (reset! data #{"Bar" "Quux"})
+     --
+     (is (= 2 (count (valitut)))))))
+
+(deftest checkbox-group-muu
+  (let [data (r/atom {"Foo" true
+                      "Bar" false
+                      "Muu" false
+                      :muu "MUUTA"})
+        valitut (fn []
+                  (filter #(.-checked %) (u/sel "input[type='checkbox']")))]
+    (komponenttitesti
+     [kentat/tee-kentta {:tyyppi :checkbox-group
+                         :vaihtoehdot ["Foo" "Bar" "Muu"]
+                         :vaihtoehto-nayta str
+                         :valittu-fn get
+                         :valitse-fn assoc
+                         :muu-vaihtoehto "Muu"
+                         :muu-kentta {:tyyppi :string
+                                      :nimi :muu}} data]
+     "Alkutilanteessa Foo valittu ja muu kenttä ei näy"
+     (is (= 1 (count (valitut))))
+     (is (nil? (u/sel1 ".muu input")))
+
+     "Valitaan muu niin kenttä ilmestyy näkyviin"
+     (u/change (nth (u/sel :input) 2) true)
+     --
+     (is (= 2 (count (valitut))))
+     (is (= "MUUTA" (some-> ".muu input" u/sel1 .-value)))
+
+     "Muutetaan muu valintaa"
+     (u/change ".muu input" "JOTAIN")
+     --
+     (is (= {"Foo" true "Bar" false "Muu" true :muu "JOTAIN"} @data)))))

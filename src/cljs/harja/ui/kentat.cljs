@@ -372,16 +372,16 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
        [:button.nappi-toissijainen {:on-click #(swap! data clojure.set/union (into #{} vaihtoehdot))}
         [ikonit/ikoni-ja-teksti [ikonit/livicon-check] "Tyhjennä kaikki"]])
      (let [checkboxit (doall
-                       (for [v vaihtoehdot]
+                       (for [v vaihtoehdot
+                             :let [valittu? (valitut v)]]
                          ^{:key (str "boolean-group-" (name v))}
                          [:div.checkbox
                           [:label
-                           [:input {:type      "checkbox" :checked (if (valitut v) true false)
+                           [:input {:type      "checkbox" :checked (boolean valittu?)
                                     :disabled (if disabloi
                                                 (disabloi valitut v)
                                                 false)
-                                    :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                  (swap! data valitse v valittu?))}]
+                                    :on-change #(swap! data valitse v (not valittu?))}]
                            (vaihtoehto-nayta v)]]))
            muu (when (and muu-vaihtoehto
                           (valitut muu-vaihtoehto))
@@ -397,8 +397,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                          checkboxit)
             (when muu
               ^{:key "muu"}
-              [:td muu])]]]
-         [:span checkboxit muu]))]))
+              [:td.muu muu])]]]
+         [:span checkboxit
+          [:span.muu muu]]))]))
 
 
 ;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
