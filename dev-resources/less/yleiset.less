@@ -140,7 +140,7 @@ button > .ajax-loader {
   .livi-alasveto(@valintakontrollin-leveys);
   input {
     height: @valintakontrollin-korkeus;
-    max-width: @valintakontrollin-leveys;
+    width: 100%;
   }
 }
 
@@ -186,8 +186,8 @@ button > .ajax-loader {
 .label-ja-kentta-puolikas {
   .label-ja-kentta();
   width: @valintakontrollin-leveys / 2;
-  min-width: @valintakontrollin-leveys / 2;
-  max-width: @valintakontrollin-leveys / 2;
+  min-width: initial;
+  max-width: initial;
 }
 
 .testikaytto-alasveto {
