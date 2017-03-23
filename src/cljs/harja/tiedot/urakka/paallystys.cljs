@@ -72,23 +72,25 @@
   (reaction (let [tienumero @yllapito-tiedot/tienumero
                   yllapitokohteet @yllapitokohteet
                   kohteet (when yllapitokohteet
-                            (yllapitokohteet/suodata-yllapitokohteet-tienumerolla yllapitokohteet tienumero))]
+                            (yllapitokohteet/suodata-yllapitokohteet yllapitokohteet {:tienumero tienumero}))]
               kohteet)))
 
 (def yhan-paallystyskohteet
   (reaction-writable
     (let [kohteet @yllapitokohteet-suodatettu
           yhan-paallystyskohteet (when kohteet
-                                   (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
-                                     kohteet true :paallystys))]
+                                   (yllapitokohteet/suodata-yllapitokohteet
+                                     kohteet
+                                     {:yha-kohde? true :yllapitokohdetyotyyppi :paallystys}))]
       (tr-domain/jarjesta-kohteiden-kohdeosat yhan-paallystyskohteet))))
 
 (def harjan-paikkauskohteet
   (reaction-writable
     (let [kohteet @yllapitokohteet-suodatettu
           harjan-paikkauskohteet (when kohteet
-                                   (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
-                                     kohteet false :paikkaus))]
+                                   (yllapitokohteet/suodata-yllapitokohteet
+                                     kohteet
+                                     {:yha-kohde? false :yllapitokohdetyotyyppi :paikkaus}))]
       (tr-domain/jarjesta-kohteiden-kohdeosat harjan-paikkauskohteet))))
 
 (def kaikki-kohteet

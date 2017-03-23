@@ -47,7 +47,7 @@
   (reaction (let [tienumero @yllapito-tiedot/tienumero
                   aikataulurivit @aikataulurivit]
               (when aikataulurivit
-                (yllapitokohteet/suodata-yllapitokohteet-tienumerolla aikataulurivit tienumero)))))
+                (yllapitokohteet/suodata-yllapitokohteet aikataulurivit {:tienumero tienumero})))))
 
 (defonce tiemerkinnan-suorittavat-urakat
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)

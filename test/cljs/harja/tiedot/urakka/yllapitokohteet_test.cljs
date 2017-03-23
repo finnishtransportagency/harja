@@ -60,7 +60,7 @@
     :yhaid nil}])
 
 (deftest suodata-yllapitokohteet-tienumerolla
-  (let [suodatut-kohteet (yllapitokohteet/suodata-yllapitokohteet-tienumerolla testikohteet-suodatukseen 4)]
+  (let [suodatut-kohteet (yllapitokohteet/suodata-yllapitokohteet testikohteet-suodatukseen {:tienumero 4})]
     (is (= suodatut-kohteet [{:tr-numero 4
                               :yllapitokohdetyotyyppi :paallystys
                               :yhaid 666}
@@ -75,32 +75,36 @@
                               :yhaid nil}]))))
 
 (deftest suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
-  (is (= (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
-           testikohteet-suodatukseen true :paallystys)
+  (is (= (yllapitokohteet/suodata-yllapitokohteet
+           testikohteet-suodatukseen
+           {:yha-kohde true :yllapitokohdetyotyyppi :paallystys})
          [{:tr-numero 20
            :yllapitokohdetyotyyppi :paallystys
            :yhaid 666}
           {:tr-numero 4
            :yllapitokohdetyotyyppi :paallystys
            :yhaid 666}]))
-  (is (= (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
-           testikohteet-suodatukseen true :paikkaus)
+  (is (= (yllapitokohteet/suodata-yllapitokohteet
+           testikohteet-suodatukseen
+           {:yha-kohde true :yllapitokohdetyotyyppi :paikkaus})
          [{:tr-numero 20
            :yllapitokohdetyotyyppi :paikkaus
            :yhaid 666}
           {:tr-numero 4
            :yllapitokohdetyotyyppi :paikkaus
            :yhaid 666}]))
-  (is (= (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
-           testikohteet-suodatukseen false :paallystys)
+  (is (= (yllapitokohteet/suodata-yllapitokohteet
+           testikohteet-suodatukseen
+           {:yha-kohde false :yllapitokohdetyotyyppi :paallystys})
          [{:tr-numero 20
            :yllapitokohdetyotyyppi :paallystys
            :yhaid nil}
           {:tr-numero 4
            :yllapitokohdetyotyyppi :paallystys
            :yhaid nil}]))
-  (is (= (yllapitokohteet/suodata-yllapitokohteet-tyypin-ja-yhan-mukaan
-           testikohteet-suodatukseen false :paikkaus)
+  (is (= (yllapitokohteet/suodata-yllapitokohteet
+           testikohteet-suodatukseen
+           {:yha-kohde false :yllapitokohdetyotyyppi :paikkaus})
          [{:tr-numero 20
            :yllapitokohdetyotyyppi :paikkaus
            :yhaid nil}
