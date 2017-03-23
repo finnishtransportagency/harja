@@ -220,7 +220,7 @@
                   #(= koodi (:koodi %))
                   +paallystystyon-tyypit+))))
 
-(def paallystysilmoitus-osoitteet
+(def paallystysilmoitus-osoitteet ;; Kantaan tallennettava päällystysilmoitus
   [;; Linkki ylläpitokohdeosaan
    {:kohdeosa-id s/Int
 
