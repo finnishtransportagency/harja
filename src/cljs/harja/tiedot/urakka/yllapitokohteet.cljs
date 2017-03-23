@@ -30,11 +30,13 @@
   (let [yha-kohde-fn yha-kohde?
         {:keys [tienumero yha-kohde? yllapitokohdetyotyyppi kohdenumero]} suodatusoptiot]
     (filterv
-     #(and (or (nil? yha-kohde?) (if yha-kohde? (yha-kohde-fn %) (not (yha-kohde-fn %))))
-           (or (nil? tienumero) (= (:tr-numero %) tienumero))
-           (or (nil? yllapitokohdetyotyyppi) (= (:yllapitokohdetyotyyppi %) yllapitokohdetyotyyppi))
-           (or (str/blank? kohdenumero) (= (str/lower-case (:kohdenumero %)) (str/lower-case kohdenumero))))
-     kohteet)))
+      #(and (or (nil? yha-kohde?) (if yha-kohde? (yha-kohde-fn %) (not (yha-kohde-fn %))))
+            (or (nil? tienumero) (= (:tr-numero %) tienumero))
+            (or (nil? yllapitokohdetyotyyppi) (= (:yllapitokohdetyotyyppi %) yllapitokohdetyotyyppi))
+            (or (str/blank? kohdenumero) (str/blank? (:kohdenumero %))
+                (= (str/lower-case (:kohdenumero %))
+                   (str/lower-case kohdenumero))))
+      kohteet)))
 
 (defn hae-yllapitokohteet [urakka-id sopimus-id vuosi]
   (k/post! :urakan-yllapitokohteet {:urakka-id urakka-id
