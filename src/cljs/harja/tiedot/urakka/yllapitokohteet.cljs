@@ -25,13 +25,15 @@
    :yllapitokohdetyotyyppi keyword (:paallystys / :paikkaus)
    :kohdenumero int
    Jos jotain arvoa ei anneta, sitä ei huomioida suodatuksessa"
-  [kohteet {:keys [tienumero yha-kohde? yllapitokohdetyotyyppi kohdenumero] :as suodatusoptiot}]
-  (filterv
-    #(and (or (nil? yha-kohde?) (if yha-kohde? (yha-kohde? %) (not (yha-kohde? %))))
-          (or (nil? tienumero) (= (:tr-numero %) tienumero))
-          (or (nil? yllapitokohdetyotyyppi) (= (:yllapitokohdetyotyyppi %) yllapitokohdetyotyyppi))
-          (or (nil? kohdenumero) (= (:kohdenumero %) kohdenumero)))
-    kohteet))
+  [kohteet suodatusoptiot]
+  (let [yha-kohde-fn yha-kohde?
+        {:keys [tienumero yha-kohde? yllapitokohdetyotyyppi kohdenumero]} suodatusoptiot]
+    (filterv
+     #(and (or (nil? yha-kohde?) (if yha-kohde? (yha-kohde-fn %) (not (yha-kohde-fn %))))
+           (or (nil? tienumero) (= (:tr-numero %) tienumero))
+           (or (nil? yllapitokohdetyotyyppi) (= (:yllapitokohdetyotyyppi %) yllapitokohdetyotyyppi))
+           (or (nil? kohdenumero) (= (:kohdenumero %) kohdenumero)))
+     kohteet)))
 
 (defn hae-yllapitokohteet [urakka-id sopimus-id vuosi]
   (k/post! :urakan-yllapitokohteet {:urakka-id urakka-id
