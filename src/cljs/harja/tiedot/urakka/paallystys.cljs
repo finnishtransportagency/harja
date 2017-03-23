@@ -49,11 +49,11 @@
 
 
 (def paallystysilmoitukset-suodatettu
-  (reaction (let [tienumero @yllapito-tiedot/tienumero]
+  (reaction (let [tienumero @yllapito-tiedot/tienumero
+                  kohdenumero @yllapito-tiedot/kohdenumero]
               (when @paallystysilmoitukset
-                (filterv #(or (nil? tienumero)
-                              (= (:tr-numero %) tienumero))
-                         @paallystysilmoitukset)))))
+                (yllapitokohteet/suodata-yllapitokohteet @paallystysilmoitukset {:tienumero tienumero
+                                                                                 :kohdenumero kohdenumero})))))
 
 (defonce paallystysilmoitus-lomakedata (atom nil))
 
@@ -71,8 +71,10 @@
 (def yllapitokohteet-suodatettu
   (reaction (let [tienumero @yllapito-tiedot/tienumero
                   yllapitokohteet @yllapitokohteet
+                  kohdenumero @yllapito-tiedot/kohdenumero
                   kohteet (when yllapitokohteet
-                            (yllapitokohteet/suodata-yllapitokohteet yllapitokohteet {:tienumero tienumero}))]
+                            (yllapitokohteet/suodata-yllapitokohteet yllapitokohteet {:tienumero tienumero
+                                                                                      :kohdenumero kohdenumero}))]
               kohteet)))
 
 (def yhan-paallystyskohteet

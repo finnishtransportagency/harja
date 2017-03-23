@@ -16,6 +16,11 @@
    {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true}
    tienumero-atom])
 
+(defn kohdenumero [kohdenumero-atom]
+  [tee-otsikollinen-kentta "Kohdenumero"
+   {:tyyppi :string :placeholder "Rajaa kohdenumerolla"}
+   kohdenumero-atom])
+
 (defn urakan-sopimus [ur]
   (valinnat/urakan-sopimus ur u/valittu-sopimusnumero u/valitse-sopimusnumero!))
 

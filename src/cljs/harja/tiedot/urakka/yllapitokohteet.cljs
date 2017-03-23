@@ -9,7 +9,8 @@
     [harja.domain.yllapitokohteet :as yllapitokohteet-domain]
     [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.navigaatio :as nav]
-    [harja.ui.viesti :as viesti])
+    [harja.ui.viesti :as viesti]
+    [clojure.string :as str])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -32,7 +33,7 @@
      #(and (or (nil? yha-kohde?) (if yha-kohde? (yha-kohde-fn %) (not (yha-kohde-fn %))))
            (or (nil? tienumero) (= (:tr-numero %) tienumero))
            (or (nil? yllapitokohdetyotyyppi) (= (:yllapitokohdetyotyyppi %) yllapitokohdetyotyyppi))
-           (or (nil? kohdenumero) (= (:kohdenumero %) kohdenumero)))
+           (or (str/blank? kohdenumero) (= (str/lower-case (:kohdenumero %)) (str/lower-case kohdenumero))))
      kohteet)))
 
 (defn hae-yllapitokohteet [urakka-id sopimus-id vuosi]
