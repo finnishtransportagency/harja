@@ -75,29 +75,33 @@
 (defn- hae-tietyoilmoituksen-tiedot [tietyoilmoitus-id]
   (k/post! :hae-tietyoilmoitus tietyoilmoitus-id))
 
-(defn esitayta-tietyoilmoitus-paallystyskohteella [{:keys [id
-                                                           urakka
-                                                           aikataulu-kohde-alku
-                                                           aikataulu-kohde-valmis
-                                                           tr-loppuosa
-                                                           tr-alkuosa
-                                                           tr-loppuetaisyys
-                                                           tr-alkuetaisyys
-                                                           tr-numero]}]
+(defn- hae-yllapitokohteen-tiedot-tietyoilmoitukselle [yllapitokohde-id]
+  (k/post! :hae-yllapitokohteen-tiedot-tietyoilmoitukselle yllapitokohde-id))
 
-  (let [{:keys [urakoitsija hallintayksikko]}
-        (first (filter #(= (:id %) urakka) (:kayttajan-urakat @tietyoilmoitukset)))]
-    {:urakan-nimi-valinta (str urakka)
-     ::t/yllapitokohde id
-     ::t/alku aikataulu-kohde-alku
-     ::t/loppu aikataulu-kohde-valmis
-     ::t/urakoitsijan-nimi (:nimi urakoitsija)
-     ::t/tilaajan-nimi (:nimi hallintayksikko)
-     ::t/osoite {::tr/tie tr-numero
-                 ::tr/aosa tr-alkuosa
-                 ::tr/aet tr-alkuetaisyys
-                 ::tr/losa tr-loppuosa
-                 ::tr/let tr-loppuetaisyys}}))
+(defn esitayta-tietyoilmoitus-paallystyskohteella [{:keys [id
+                                                           urakka-id
+                                                           alku
+                                                           loppu
+                                                           urakoitsija-nimi
+                                                           tilaaja-nimi
+                                                           tr-numero
+                                                           tr-alkuosa
+                                                           tr-alkuetaisyys
+                                                           tr-loppuosa
+                                                           tr-loppuetaisyys]
+                                                    :as yllapitokohde}]
+  (log "---> yllapitokohde" (pr-str yllapitokohde))
+  {:urakan-nimi-valinta (str urakka-id)
+   ::t/yllapitokohde id
+   ::t/alku alku
+   ::t/loppu loppu
+   ::t/urakoitsijan-nimi urakoitsija-nimi
+   ::t/tilaajan-nimi tilaaja-nimi
+   ::t/osoite {::tr/tie tr-numero
+               ::tr/aosa tr-alkuosa
+               ::tr/aet tr-alkuetaisyys
+               ::tr/losa tr-loppuosa
+               ::tr/let tr-loppuetaisyys}})
 
 (defrecord AsetaValinnat [valinnat])
 (defrecord YhdistaValinnat [ulkoisetvalinnat])
@@ -148,7 +152,7 @@
     (assoc app :tietyoilmoitukset nil))
 
   IlmoituksetHaettu
-  (process-event [vastaus {valittu :valittu-ilmoitus :as app}]
+  (process-event [vastaus app]
     (let [ilmoitukset (:tietyoilmoitukset (:tulokset vastaus))]
       (assoc app :tietyoilmoitukset ilmoitukset)))
 
@@ -266,9 +270,11 @@
 
 (defn avaa-tietyoilmoitus
   [tietyoilmoitus-id yllapitokohde]
+  (log "---> avaa-tietyoilmoitus" (pr-str tietyoilmoitus-id) ", " (pr-str yllapitokohde))
   (go
     (let [tietyoilmoitus (if tietyoilmoitus-id
                            (<! (hae-tietyoilmoituksen-tiedot tietyoilmoitus-id))
-                           (esitayta-tietyoilmoitus-paallystyskohteella yllapitokohde))]
+                           (esitayta-tietyoilmoitus-paallystyskohteella
+                             (<! (hae-yllapitokohteen-tiedot-tietyoilmoitukselle (:id yllapitokohde)))))]
       (swap! tietyoilmoitukset #(assoc % :valittu-ilmoitus tietyoilmoitus
                                          :tallennus-kaynnissa? false)))))

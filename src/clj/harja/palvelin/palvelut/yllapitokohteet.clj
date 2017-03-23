@@ -413,16 +413,19 @@
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
         (sort-by tr/tiekohteiden-jarjestys yllapitokohdeosat)))))
 
-(defn hae-yllapitokohteen-tiedot-tietyoilmoitukselle [db fim user {yllapitokohde-id :yllapitokohde-id}]
+(defn hae-yllapitokohteen-tiedot-tietyoilmoitukselle [db fim user yllapitokohde-id]
   ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
-  (when-let [{:keys [urakka-sampo-id] :as yllapitokohde}
-             (first (q/hae-yllapitokohteen-tiedot-tietyoilmoitukselle db {:kohdeid yllapitokohde-id}))]
-    (let [kayttajat (fim/hae-urakan-kayttajat fim urakka-sampo-id)
-          hae (fn [rooli] (first (filter (fn [k] (some #(= rooli %) (:roolinimet k))) kayttajat)))
-          urakoitsijan-yhteyshenkilo (hae "vastuuhenkilo")
-          tilaajan-yhteyshenkilo (hae "ELY_Urakanvalvoja")]
-      (assoc yllapitokohde :urakoitsijan-yhteyshenkilo urakoitsijan-yhteyshenkilo
-                           :tilaajan-yhteyshenkilo tilaajan-yhteyshenkilo))))
+  (let [{:keys [urakka-sampo-id] :as yllapitokohde}
+        (first (q/hae-yllapitokohteen-tiedot-tietyoilmoitukselle db {:kohdeid yllapitokohde-id}))]
+    (if urakka-sampo-id
+      (let [kayttajat (fim/hae-urakan-kayttajat fim urakka-sampo-id)
+            hae (fn [rooli] (first (filter (fn [k] (some #(= rooli %) (:roolinimet k))) kayttajat)))
+            urakoitsijan-yhteyshenkilo (hae "vastuuhenkilo")
+            tilaajan-yhteyshenkilo (hae "ELY_Urakanvalvoja")
+            yllapitokohde (assoc yllapitokohde :urakoitsijan-yhteyshenkilo urakoitsijan-yhteyshenkilo
+                                               :tilaajan-yhteyshenkilo tilaajan-yhteyshenkilo)]
+        yllapitokohde)
+      yllapitokohde)))
 
 (defrecord Yllapitokohteet []
   component/Lifecycle

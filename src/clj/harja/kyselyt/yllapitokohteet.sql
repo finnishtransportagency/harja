@@ -707,6 +707,7 @@ INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES (:yllapitokohde);
 
 -- name: hae-yllapitokohteen-tiedot-tietyoilmoitukselle
 SELECT
+  ypk.id,
   ypk.tr_numero        AS "tr-numero",
   ypk.tr_alkuosa       AS "tr-alkuosa",
   ypk.tr_alkuetaisyys  AS "tr-alkuetaisyys",
