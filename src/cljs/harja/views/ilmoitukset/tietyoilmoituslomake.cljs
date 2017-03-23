@@ -44,19 +44,10 @@
   (log msg (with-out-str (cljs.pprint/pprint val)))
   val)
 
-(defn- muunna-nopeusrajoitukset-muokkaus-gridille [nr-tiedot]
-  ;; muuttaa ::t/nopeusrajoitukset -avaimen tiedont, esim:
-  ;; [{:harja.domain.tietyoilmoitukset/rajoitus "30", :harja.domain.tietyoilmoitukset/matka 100}])
-  ;; mapiksi {indeksi {rajoitus matka}} -tupleja, esim:
-  ;; {0 {:rajoitus 100, :matka 200}, 1 {:rajoitus 300, :matka 20}}
-  (apply merge
-         (map-indexed
-          (fn [indeksi rajoitus-map]
-            {indeksi {:rajoitus (::t/rajoitus rajoitus-map) :matka (::t/matka rajoitus-map)}})
-          nr-tiedot)))
+
 
 (defn nopeusrajoitukset-komponentti-grid [e! nr-tiedot]
-  (log "gridin dataksi r/wrapatty" (pr-str (muunna-nopeusrajoitukset-muokkaus-gridille nr-tiedot)))
+  (log "gridin dataksi r/wrapatty" (pr-str (tiedot/nopeusrajoitukset-kanta->grid nr-tiedot)))
   (log "nr-tiedot oli" (pr-str nr-tiedot))
   (if (some? nr-tiedot)
     [muokkaus-grid {:otsikko ""
@@ -66,9 +57,9 @@
                     :tyhja "Ei nopeusrajoituksia"
                     :jarjesta :jarjestysnro
                     :tunniste :jarjestysnro}
-     [{:otsikko "Rajoitus (km/h)" :nimi :rajoitus :tyyppi :positiivinen-numero}
-      {:otsikko "Matka (m)" :nimi :matka :tyyppi :positiivinen-numero }]
-     (r/wrap (muunna-nopeusrajoitukset-muokkaus-gridille nr-tiedot)
+     [{:otsikko "Rajoitus (km/h)" :nimi ::t/rajoitus :tyyppi :positiivinen-numero}
+      {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero }]
+     (r/wrap (tiedot/nopeusrajoitukset-kanta->grid nr-tiedot)
              #(e! (tiedot/->PaivitaNopeusrajoituksetGrid %)))]
     ;; else
     (log "nr-komponentti sai nil")))
