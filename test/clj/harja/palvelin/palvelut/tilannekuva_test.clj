@@ -62,6 +62,7 @@
                           tk/tur true}
                  :tilat #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus}}
    :turvallisuus {tk/turvallisuuspoikkeamat true}
+   :tietyoilmoitukset {tk/tietyoilmoitukset true}
    :laatupoikkeamat {tk/laatupoikkeama-tilaaja true
                      tk/laatupoikkeama-urakoitsija true
                      tk/laatupoikkeama-konsultti true}
@@ -295,7 +296,8 @@
             :paikkaus
             (into [] yllapitokohteet-domain/yllapitokohde-kartalle-xf (:paikkaus vastaus))))
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama (:laatupoikkeamat vastaus)))
-      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :turvallisuuspoikkeama (:turvallisuuspoikkeamat vastaus)))))
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :turvallisuuspoikkeama (:turvallisuuspoikkeamat vastaus)))
+      (is (paneeli/skeeman-luonti-onnistuu-kaikille? :tietyoilmoitus (:tietyoilmoitukset vastaus)))))
 
   (testing "Päällystys / paikkaus haku nykytilanteeseen"
     ;; Käyttää eri SQL-kyselyä historian ja nykytilanteen hakuun, joten hyvä testata erikseen vielä nykytilanne
