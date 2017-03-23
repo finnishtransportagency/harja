@@ -325,21 +325,21 @@
            :voi-muokata? voi-muokata?
            :virheet (wrap-virheet :paallystystoimenpide)
            :rivinumerot? true}
-          [(assoc paallystys/paallyste-grid-skeema :leveys 30)
-           (assoc paallystys/raekoko-grid-skeema :leveys 10)
-           {:otsikko "Massa\u00ADmenek\u00ADki (kg/m2)" :nimi :massamenekki
+          [(assoc paallystys/paallyste-grid-skeema :nimi :toimenpide-paallystetyyppi :leveys 30)
+           (assoc paallystys/raekoko-grid-skeema :nimi :toimenpide-raekoko :leveys 10)
+           {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)" :nimi :massamenekki
             :tyyppi :positiivinen-numero :desimaalien-maara 0
             :tasaa :oikea :leveys 10}
            {:otsikko "RC-%" :nimi :rc% :leveys 10 :tyyppi :numero :desimaalien-maara 0
             :tasaa :oikea :pituus-max 100
             :validoi [[:rajattu-numero nil 0 100]]}
-           (assoc paallystys/tyomenetelma-grid-skeema
-             :leveys 30
+           (assoc paallystys/tyomenetelma-grid-skeema :nimi :toimenpide-tyomenetelma :leveys 30
              :validoi [[:ei-tyhja "Valitse päällystysmenetelmä"]])
            {:otsikko "Leveys (m)" :nimi :leveys :leveys 10 :tyyppi :positiivinen-numero
             :tasaa :oikea}
-           (assoc paallystys/massamaara-grid-skeema :leveys 15)
-           {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys 10 :tyyppi :positiivinen-numero
+           {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara
+            :tyyppi :positiivinen-numero :tasaa :oikea :leveys 10}
+           {:otsikko "Pinta-ala (m²)" :nimi :pinta-ala :leveys 10 :tyyppi :positiivinen-numero
             :tasaa :oikea}
            {:otsikko "Kuulamylly"
             :nimi :kuulamylly
@@ -349,8 +349,7 @@
                              (if rivi
                                (:nimi rivi)
                                "- Valitse kuulamylly -"))
-            :valinnat (conj pot/+kuulamyllyt+
-                            {:nimi "Ei kuulamyllyä" :lyhenne "Ei kuulamyllyä" :koodi nil})
+            :valinnat pot/+kuulamyllyt+
             :leveys 30}]
           paallystystoimenpiteet]
 
@@ -423,24 +422,21 @@
                     :valinta-arvo :koodi
                     :valinta-nayta #(if % (:nimi %) "- Valitse verkkotyyppi -")
                     :valinnat pot/+verkkotyypit+
-                    :leveys 25
-                    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+                    :leveys 25}
                    {:otsikko "Verkon sijainti"
                     :nimi :verkon-sijainti
                     :tyyppi :valinta
                     :valinta-arvo :koodi
                     :valinta-nayta #(if % (:nimi %) "- Valitse verkon sijainti -")
                     :valinnat pot/+verkon-sijainnit+
-                    :leveys 25
-                    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+                    :leveys 25}
                    {:otsikko "Verkon tarkoitus"
                     :nimi :verkon-tarkoitus
                     :tyyppi :valinta
                     :valinta-arvo :koodi
                     :valinta-nayta #(if % (:nimi %) "- Valitse verkon tarkoitus -")
                     :valinnat pot/+verkon-tarkoitukset+
-                    :leveys 25
-                    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+                    :leveys 25}
                    {:otsikko "Tekninen toimen\u00ADpide"
                     :nimi :tekninen-toimenpide
                     :tyyppi :valinta

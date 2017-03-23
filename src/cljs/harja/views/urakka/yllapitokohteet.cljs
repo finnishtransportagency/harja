@@ -347,7 +347,8 @@
                              [(assoc paallystys-tiedot/paallyste-grid-skeema :leveys paallyste-leveys)
                               (assoc paallystys-tiedot/raekoko-grid-skeema :leveys raekoko-leveys)
                               (assoc paallystys-tiedot/tyomenetelma-grid-skeema :leveys tyomenetelma-leveys)
-                              (assoc paallystys-tiedot/massamaara-grid-skeema :leveys massamaara-leveys)
+                              {:otsikko "Massa\u00ADmäärä (kg/m²)" :nimi :massamaara
+                               :tyyppi :positiivinen-numero :tasaa :oikea :leveys massamaara-leveys}
                               {:otsikko "Toimenpiteen selitys" :nimi :toimenpide :tyyppi :string
                                :leveys toimenpide-leveys}])))
 
@@ -609,8 +610,7 @@
                 (concat
                   [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
                    {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :nimi :kohdenumero
-                    :tyyppi :string :leveys id-leveys
-                    :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
+                    :tyyppi :string :leveys id-leveys}
                    {:otsikko "Koh\u00ADteen ni\u00ADmi" :nimi :nimi
                     :tyyppi :string :leveys kohde-leveys}]
                   (tierekisteriosoite-sarakkeet

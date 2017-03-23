@@ -25,7 +25,7 @@ kuittaustyypit [["Vastaanotettu" :vastaanotettu]
                 ["Väärä urakka" :vaara-urakka]])
 
 (def ^{:doc "Kuittaustyypin tunnistava regex pattern" :const true :private true}
-kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Lopetettu)\]")
+kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Lopetettu|Muutettu|Vastattu|Väärä urakka)\]")
 
 (def ^{:doc "Viesti, joka lähetetään vastaanottajalle kun saadaan sisään sähköposti, jota ei tunnisteta" :private true}
 +virheellinen-toimenpide-viesti+
