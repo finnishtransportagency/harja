@@ -123,10 +123,10 @@
                                   @maksuerarivit))
       (reset! kuittausta-odottavat-maksuerat uudet-kuittausta-odottavat)))
 
-(defn- laheta-maksuerat [maksuerat]
+(defn- laheta-maksuerat [maksuerat urakka-id]
   (let [lahetettavat-maksueranumerot (hae-lahetettavat-maksueranumerot maksuerat @kuittausta-odottavat-maksuerat)]
     (go (reset! kuittausta-odottavat-maksuerat (into #{} (clojure.set/union @kuittausta-odottavat-maksuerat lahetettavat-maksueranumerot)))
-        (let [vastaus (<! (maksuerat/laheta-maksuerat lahetettavat-maksueranumerot))
+        (let [vastaus (<! (maksuerat/laheta-maksuerat lahetettavat-maksueranumerot urakka-id))
               paivittyneet-maksuerat (rakenna-paivittyneet-maksuerat vastaus)
               samana-pysyneet (rakenna-samana-pysyneet-maksuerat lahetettavat-maksueranumerot @maksuerat/maksuerat)
               uudet-maksuerat (rakenna-uudet-maksuerat samana-pysyneet paivittyneet-maksuerat)
@@ -179,7 +179,8 @@
     (komp/ulos #(lopeta-pollaus))
     (komp/lippu maksuerat/nakymassa?)
     (fn []
-      (let [kuittausta-odottavat @kuittausta-odottavat-maksuerat
+      (let [urakka-id (:id @nav/valittu-urakka)
+            kuittausta-odottavat @kuittausta-odottavat-maksuerat
             maksuerarivit @maksuerarivit
             maksuerarivit-ilman-otsikkoja (filter (fn [rivi]
                                                     (not (contains? rivi :teksti)))
@@ -215,7 +216,7 @@
                               (not kustannussuunnitelma-odottanut-liian-kauan))
                      {:disabled true})
                    {:type "button"
-                    :on-click #(laheta-maksuerat #{maksueranumero})})
+                    :on-click #(laheta-maksuerat #{maksueranumero} urakka-id)})
                  "Lähetä"]))
             :leveys "10%"}]
           maksuerarivit]
@@ -228,4 +229,6 @@
            :disabled (nil? maksuerarivit)
            :on-click #(do (.preventDefault %)
                           (laheta-maksuerat
-                            (into #{} maksuerarivit-ilman-otsikkoja)))} "Lähetä kaikki"]]))))
+                            (into #{} maksuerarivit-ilman-otsikkoja)
+                            urakka-id))}
+          "Lähetä kaikki"]]))))
