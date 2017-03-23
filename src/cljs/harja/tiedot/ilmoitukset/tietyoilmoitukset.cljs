@@ -136,15 +136,6 @@
   (assoc app :ilmoitushaku-id (.setTimeout js/window (tuck/send-async! ->HaeIlmoitukset) 1000)))
 
 
-(declare tyotyyppi-vaihtoehdot-map)
-(defn- yhdista-tyotyypit [ilmoitus]
-  (let [yhdistetty (apply merge (vals (select-keys ilmoitus [:tyotyypit-a :tyotyypit-b :tyotyypit-c :tyotyypit-d])))
-        _ (log "yhdista-tyotyypit: yhdistetty =" (pr-str yhdistetty))
-        yhdistetty-kantamuoto (fn [vaihtoehto-koodi]
-                                [vaihtoehto-koodi (get tyotyyppi-vaihtoehdot-map vaihtoehto-koodi)])]
-    (assoc ilmoitus ::t/tyotyypit (mapv yhdistetty-kantamuoto yhdistetty))))
-
-
 (defn nopeusrajoitukset-kanta->grid [nr-tiedot]
   ;; muuttaa ::t/nopeusrajoitukset -avaimen tiedont, esim:
   ;; [{:harja.domain.tietyoilmoitukset/rajoitus "30", :harja.domain.tietyoilmoitukset/matka 100}])
