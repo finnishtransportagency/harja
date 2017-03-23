@@ -81,11 +81,9 @@
 (defn tallenna-paallystysilmoitus [db kayttaja urakka-id kohde paallystysilmoitus valmis-kasiteltavaksi]
   (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
         kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid (:id kohde)})))
-        alikohteet (map #(assoc-in % [:sijainti :numero] kohteen-tienumero)
-                        (:alikohteet paallystysilmoitus))]
+        alikohteet (map #(assoc-in % [:sijainti :numero] kohteen-tienumero) (:alikohteet paallystysilmoitus))]
     (yllapitokohteet/paivita-kohde db (:id kohde) kohteen-sijainti)
-    (let [paivitetyt-alikohteet (yllapitokohteet/paivita-alikohteet
-                                  db kohde (mapv #(select-keys % #{:nimi :tunnus :sijainti}) alikohteet))
+    (let [paivitetyt-alikohteet (yllapitokohteet/paivita-alikohteet-paallystysilmoituksesta db kohde alikohteet)
           ;; Päivittyneiden alikohteiden id:t pitää päivittää päällystysilmoituksille
           paallystysilmoitus (assoc-in paallystysilmoitus [:yllapitokohde :alikohteet] paivitetyt-alikohteet)]
       (luo-tai-paivita-paallystysilmoitus db kayttaja urakka-id (:id kohde) paallystysilmoitus valmis-kasiteltavaksi))))
