@@ -53,22 +53,24 @@
     (is (.contains (:body vastaus) "tuntematon-urakka"))))
 
 (deftest uuden-paallystysilmoituksen-kirjaaminen-toimii
-  (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-yllapitokohde-tielta-20-jolla-ei-paallystysilmoitusta)
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-tielta-20-jolla-ei-paallystysilmoitusta)
         paallystysilmoitusten-maara-kannassa-ennen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
                                          (-> "test/resurssit/api/paallystysilmoituksen_kirjaus.json"
                                              slurp
                                              (.replace "__VALMIS__" (str false))))
-        kohdeosa-id (ffirst (q (str "SELECT id FROM yllapitokohdeosa WHERE yllapitokohde = " kohde " LIMIT 1;")))]
+        kohdeosa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+        tr_loppuosa, tr_loppuetaisyys, toimenpide, tunnus, paallystetyyppi, raekoko, tyomenetelma, massamaara
+        FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " LIMIT 1;")))]
 
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
     ;; Tarkistetaan, että tiedot tallentuivat oikein
     (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, tila, id
-                                             FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
+                                             FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id)))
           ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))
           paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))]
       ;; Päällystysilmoitusten määrä kasvoi yhdellä
@@ -78,7 +80,7 @@
       (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitustiedot))
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
-      (is (= ilmoitustiedot {:osoitteet [{:kohdeosa-id kohdeosa-id
+      (is (= ilmoitustiedot {:osoitteet [{:kohdeosa-id (:id kohdeosa)
                                           :lisaaineet "lisäaineet"
                                           :leveys 1.2
                                           :kokonaismassamaara 12.3
@@ -104,10 +106,24 @@
                                              :tekninen-toimenpide 1
                                              :paksuus 1
                                              :verkon-sijainti 1}]}))
+      (is (= (dissoc kohdeosa :id)
+             {:massamaara nil
+              :nimi "1. testialikohde"
+              :paallystetyyppi nil
+              :raekoko nil
+              :toimenpide nil
+              :tr_numero 20
+              :tr_alkuosa 1
+              :tr_alkuetaisyys 1
+              :tr_loppuosa 5
+              :tr_loppuetaisyys 16
+              :tunnus "A"
+              :tyomenetelma nil
+              :yllapitokohde kohde-id}))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
       (is (= (get paallystysilmoitus 2) "aloitettu") "Ei asetettu käsiteltäväksi, joten tila on aloitettu")
 
-      (let [alikohteet (q-map (str "SELECT sijainti, tr_numero FROM yllapitokohdeosa WHERE yllapitokohde = " kohde))]
+      (let [alikohteet (q-map (str "SELECT sijainti, tr_numero FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id))]
         (is (every? #(and (not (nil? (:sijainti %))) (not (nil? (:tr_numero %)))) alikohteet)
             "Kaikilla alikohteilla on sijainti & tienumero"))
 
@@ -130,12 +146,12 @@
       (is (= tila "valmis")))))
 
 (deftest paallystysilmoituksen-paivittaminen-toimii
-  (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-yllapitokohde-tielta-20-jolla-paallystysilmoitus)
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-tielta-20-jolla-paallystysilmoitus)
         paallystysilmoitusten-maara-kannassa-ennen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
         vanha-paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, tila
-                                             FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
+                                             FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id)))
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/paallystysilmoitus"]
                                          kayttaja-paallystys portti
                                          (-> "test/resurssit/api/paallystysilmoituksen_kirjaus.json"
                                              slurp
@@ -146,17 +162,19 @@
 
     ;; Tarkistetana, että tiedot tallentuivat oikein
     (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, tila
-                                             FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
+                                             FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id)))
           ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))
           paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
-          kohdeosa-id (ffirst (q (str "SELECT id FROM yllapitokohdeosa WHERE yllapitokohde = " kohde " LIMIT 1;")))]
+          kohdeosa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+        tr_loppuosa, tr_loppuetaisyys, toimenpide, tunnus, paallystetyyppi, raekoko, tyomenetelma, massamaara
+        FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " LIMIT 1;")))]
       ;; Pottien määrä pysyy samana
       (is (= paallystysilmoitusten-maara-kannassa-ennen paallystysilmoitusten-maara-kannassa-jalkeen))
       ;; Tiedot ovat skeeman mukaiset
       (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitustiedot))
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
-      (is (= ilmoitustiedot {:osoitteet [{:kohdeosa-id kohdeosa-id
+      (is (= ilmoitustiedot {:osoitteet [{:kohdeosa-id (:id kohdeosa)
                                           :lisaaineet "lisäaineet"
                                           :leveys 1.2
                                           :kokonaismassamaara 12.3
@@ -182,6 +200,20 @@
                                              :tekninen-toimenpide 1
                                              :paksuus 1
                                              :verkon-sijainti 1}]}))
+      (is (= (dissoc kohdeosa :id)
+             {:massamaara nil
+              :nimi "1. testialikohde"
+              :paallystetyyppi nil
+              :raekoko nil
+              :toimenpide nil
+              :tr_numero 20
+              :tr_alkuosa 1
+              :tr_alkuetaisyys 1
+              :tr_loppuosa 5
+              :tr_loppuetaisyys 16
+              :tunnus "A"
+              :tyomenetelma nil
+              :yllapitokohde kohde-id}))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
       (is (= (get paallystysilmoitus 2) (get vanha-paallystysilmoitus 2)) "Tila ei muuttunut miksikään"))))
 
