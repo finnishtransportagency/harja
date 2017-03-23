@@ -57,6 +57,11 @@
                               :nimi "Testiramppi4564ddf"
                               :yllapitokohdetyotyyppi :paallystys
                               :sopimuksen_mukaiset_tyot 400
+                              :tr-numero 20
+                              :tr-alkuosa 1
+                              :tr-alkuetaisyys 1
+                              :tr-loppuosa 1
+                              :tr-loppuetaisyys 1
                               :bitumi_indeksi 123
                               :kaasuindeksi 123})
 
