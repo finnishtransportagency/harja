@@ -57,7 +57,9 @@
                     :tyhja "Ei nopeusrajoituksia"
                     :jarjesta :jarjestysnro
                     :tunniste :jarjestysnro}
-     [{:otsikko "Rajoitus (km/h)" :nimi ::t/rajoitus :tyyppi :string}
+     [{:otsikko "Rajoitus (km/h)" :nimi ::t/rajoitus :tyyppi :string
+       :validoi [#(when-not (contains? #{"30" "40" "50" "60" "70" "80" "90" "100"} %)
+                    "Sallitut: 30, 40, 50, 60, 70, 80, 90, 100")]}
       {:otsikko "Matka (m)" :nimi ::t/matka :tyyppi :positiivinen-numero}]
      (r/wrap (tiedot/nopeusrajoitukset-kanta->grid nr-tiedot)
              #(e! (tiedot/->PaivitaNopeusrajoituksetGrid %)))]
@@ -280,6 +282,7 @@
                      :tyyppi :komponentti
                      :komponentti #(->> % :data ::t/nopeusrajoitukset (nopeusrajoitukset-komponentti-grid e!))
                      :nimi ::t/nopeusrajoitukset
+
                      }
                     {:otsikko "Kokorajoituksia"
                      :tyyppi :checkbox-group
