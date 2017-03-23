@@ -83,20 +83,28 @@
                                                            alku
                                                            loppu
                                                            urakoitsija-nimi
+                                                           urakoitsijan-yhteyshenkilo
                                                            tilaaja-nimi
+                                                           tilaajan-yhteyshenkilo
                                                            tr-numero
                                                            tr-alkuosa
                                                            tr-alkuetaisyys
                                                            tr-loppuosa
                                                            tr-loppuetaisyys]
                                                     :as yllapitokohde}]
-  (log "---> yllapitokohde" (pr-str yllapitokohde))
   {:urakan-nimi-valinta (str urakka-id)
    ::t/yllapitokohde id
    ::t/alku alku
    ::t/loppu loppu
    ::t/urakoitsijan-nimi urakoitsija-nimi
+   ::t/urakoitsijayhteyshenkilo {::t/etunimi (:etunimi urakoitsijan-yhteyshenkilo)
+                                 ::t/sukunimi (:sukunimi urakoitsijan-yhteyshenkilo)
+                                 ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)
+                                 }
    ::t/tilaajan-nimi tilaaja-nimi
+   ::t/tilaajayhteyshenkilo {::t/etunimi (:etunimi tilaajan-yhteyshenkilo)
+                             ::t/sukunimi (:sukunimi tilaajan-yhteyshenkilo)
+                             ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)}
    ::t/osoite {::tr/tie tr-numero
                ::tr/aosa tr-alkuosa
                ::tr/aet tr-alkuetaisyys
