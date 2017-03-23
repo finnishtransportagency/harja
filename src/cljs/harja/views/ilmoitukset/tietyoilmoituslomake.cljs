@@ -76,7 +76,6 @@
 (def paiva-lyhyt #(str/upper-case (subs % 0 2)))
 
 (defn tyoajat-komponentti-grid [e! tyoajat]
-  (log "TYÖAJAT: " (pr-str tyoajat))
   [muokkaus-grid {:otsikko ""
                   :voi-muokata? (constantly true)
                   :voi-poistaa? (constantly true)
@@ -99,6 +98,50 @@
                                            #(into #{} %))]))
                  tyoajat)
            #(e! (tiedot/->PaivitaTyoajatGrid (vals %))))])
+
+(defn- valittu-tyon-tyyppi? [tyotyypit tyyppi]
+  (some #(= (::t/tyyppi %) tyyppi) tyotyypit))
+
+(defn- valitse-tyon-tyyppi [tyotyypit tyyppi valittu?]
+  (if-not valittu?
+    (vec (remove #(= (::t/tyyppi %) tyyppi) tyotyypit))
+    (conj (or tyotyypit [])
+          {::t/tyyppi tyyppi})))
+
+(defn- tyotyypin-kuvaus [tyotyypit tyyppi]
+  (some #(when (= (::t/tyyppi %) tyyppi)
+           (::t/kuvaus %)) tyotyypit))
+
+(defn- aseta-tyotyypin-kuvaus [tyotyypit tyyppi kuvaus]
+  (mapv (fn [tt]
+          (if (= (::t/tyyppi tt) tyyppi)
+            (assoc tt ::t/kuvaus kuvaus)
+            tt))
+        tyotyypit))
+
+(defn- tyotyypit []
+  (let [osio (fn [nimi otsikko vaihtoehdot]
+               {:otsikko "Tienrakennustyöt"
+                :nimi nimi
+                :hae ::t/tyotyypit
+                :aseta #(assoc %1 ::t/tyotyypit %2)
+                :tyyppi :checkbox-group
+                :vaihtoehdot (map first vaihtoehdot)
+                :vaihtoehto-nayta tiedot/tyotyyppi-vaihtoehdot-map
+                :disabloi? (constantly false)
+                :valittu-fn valittu-tyon-tyyppi?
+                :valitse-fn valitse-tyon-tyyppi})]
+    (lomake/ryhma
+     "Työn tyyppi"
+     (osio :tyotyypit-a "Tienrakennustyöt" tiedot/tyotyyppi-vaihtoehdot-tienrakennus)
+     (osio :tyotyypit-b "Huolto- ja ylläpitotyöt" tiedot/tyotyyppi-vaihtoehdot-huolto)
+     (osio :tyotyypit-c "Asennustyöt" tiedot/tyotyyppi-vaihtoehdot-asennus)
+     (merge (osio :tyotyypit-d "Muut"  tiedot/tyotyyppi-vaihtoehdot-muut)
+            {:muu-vaihtoehto "Muu, mikä?"
+             :muu-kentta {:otsikko "" :nimi :muu-tyotyyppi-kuvaus :tyyppi :string
+                          :hae #(tyotyypin-kuvaus % "Muu, mikä?")
+                          :aseta #(aseta-tyotyypin-kuvaus %1 "Muu, mikä?" %2)
+                          :placeholder "(Muu tyyppi?)"}}))))
 
 (defn lomake [e! tallennus-kaynnissa? ilmoitus kayttajan-urakat]
   [:div
@@ -209,34 +252,7 @@
                        :tyyppi :positiivinen-numero
                        :hae #(pvm-vali-paivina (:alku %) (:loppu %))}
                       )
-      (lomake/ryhma "Työn tyyppi"
-                    {:otsikko "Tienrakennustyöt"
-                     :nimi :tyotyypit-a
-                     :tyyppi :checkbox-group
-                     :vaihtoehdot (map first tiedot/tyotyyppi-vaihtoehdot-tienrakennus)
-                     :vaihtoehto-nayta tiedot/tyotyyppi-vaihtoehdot-map
-                     :disabloi? (constantly false)}
-                    {:otsikko "Huolto- ja ylläpitotyöt"
-                     :nimi :tyotyypit-b
-                     :tyyppi :checkbox-group
-                     :vaihtoehdot (map first tiedot/tyotyyppi-vaihtoehdot-huolto)
-                     :vaihtoehto-nayta tiedot/tyotyyppi-vaihtoehdot-map
-                     :disabloi? (constantly false)}
-                    {:otsikko "Asennustyöt"
-                     :nimi :tyotyypit-c
-                     :tyyppi :checkbox-group
-                     :vaihtoehdot (map first tiedot/tyotyyppi-vaihtoehdot-asennus)
-                     :vaihtoehto-nayta tiedot/tyotyyppi-vaihtoehdot-map
-                     :disabloi? (constantly false)}
-                    {:otsikko "Muut"
-                     :nimi :tyotyypit-d
-                     :tyyppi :checkbox-group-muu
-                     :vaihtoehdot (map first tiedot/tyotyyppi-vaihtoehdot-muut)
-                     :vaihtoehto-nayta tiedot/tyotyyppi-vaihtoehdot-map ;; -> muu
-                     :muu-vaihtoehto "Muu, mikä?"
-                     :muu-kentta {:otsikko "" :nimi :jotain :tyyppi :string :placeholder "(Muu tyyppi?)"}
-                     :disabloi? (constantly false)}
-                    )
+      (tyotyypit)
       {:otsikko "Päivittäinen työaika"
        :nimi ::t/tyoajat
        :tyyppi :komponentti

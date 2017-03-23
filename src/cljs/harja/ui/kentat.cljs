@@ -346,13 +346,24 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
   [:span ((or valinta-nayta str) @data)])
 
 ;; Luo usean checkboksin, jossa valittavissa N-kappaleita vaihtoehtoja. Arvo on setti ruksittuja asioita
-(defmethod tee-kentta :checkbox-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
-                                               tyhjenna-kaikki? nayta-rivina? disabloi
-                                               tasaa]} data]
+(defmethod tee-kentta :checkbox-group
+  [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
+           tyhjenna-kaikki? nayta-rivina? disabloi tasaa
+           muu-vaihtoehto muu-kentta
+           valitse-fn valittu-fn]} data]
   (assert data)
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
-        valitut (set (or @data #{}))]
+        data-nyt @data
+        valitut (if valittu-fn
+                  (partial valittu-fn @data)
+                  (set (or data-nyt #{})))
+        valitse (if valitse-fn
+                  valitse-fn
+                  (fn [data valinta valittu?]
+                    (if valittu?
+                      (conj data valinta)
+                      (disj data valinta))))]
     [:div.boolean-group
      (when tyhjenna-kaikki?
        [:button.nappi-toissijainen {:on-click #(reset! data (apply disj @data vaihtoehdot))}
@@ -370,51 +381,25 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                                 (disabloi valitut v)
                                                 false)
                                     :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                  (reset! data
-                                                          ((if valittu? conj disj) valitut v)))}]
-                           (vaihtoehto-nayta v)]]))]
+                                                  (swap! data valitse v valittu?))}]
+                           (vaihtoehto-nayta v)]]))
+           muu (when (and muu-vaihtoehto
+                          (valitut muu-vaihtoehto))
+                 [tee-kentta muu-kentta
+                  (atomina muu-kentta data-nyt (partial reset! data))])]
        (if nayta-rivina?
          [:table.boolean-group {:class (when (= tasaa :keskita) "keskita")}
           [:tbody
            [:tr
-           (map-indexed (fn [i cb]
-                          ^{:key i}
-                          [:td cb])
-                        checkboxit)]]]
-         checkboxit))]))
+            (map-indexed (fn [i cb]
+                           ^{:key i}
+                           [:td cb])
+                         checkboxit)
+            (when muu
+              ^{:key "muu"}
+              [:td muu])]]]
+         [:span checkboxit muu]))]))
 
-
-(defmethod tee-kentta :checkbox-group-muu [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
-                                                   disabloi muu-vaihtoehto muu-kentta]} data]
-  (assert data)
-  (let [vaihtoehto-nayta (or vaihtoehto-nayta
-                             #(str/capitalize (name %)))]
-    [:div.boolean-group
-     (let [lue-muu! (fn []
-                      (let [eka-muu (or (first (s/difference @data (set vaihtoehdot)))
-                                        "")]
-                        (reset! data (conj (s/intersection (set vaihtoehdot) @data) eka-muu))
-                        eka-muu))
-           valitut (set (or @data #{}))
-           muu-atom (atom nil)
-           vaihda-muu! (fn [uusi-arvo]
-                         (reset! data (conj (s/intersection (set vaihtoehdot) @data) uusi-arvo)))
-           checkboxit (doall
-                       (for [v vaihtoehdot]
-                         ^{:key (str "boolean-group-" (name v))}
-                         [:div.checkbox
-                          [:label
-                           [:input {:type      "checkbox" :checked (if (valitut v) true false)
-                                    :disabled (if disabloi
-                                                (disabloi valitut v)
-                                                false)
-                                    :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                  (reset! data
-                                                          ((if valittu? conj disj) valitut v)))}]
-                           (vaihtoehto-nayta v)
-                           (when (and (valitut v) (= muu-vaihtoehto v))
-                             (tee-kentta muu-kentta (r/wrap (lue-muu!) vaihda-muu!)))]]))]
-       checkboxit)]))
 
 ;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
 (defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina?]} data]
