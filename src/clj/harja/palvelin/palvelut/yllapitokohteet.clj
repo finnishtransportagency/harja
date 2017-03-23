@@ -30,7 +30,8 @@
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
-            [harja.id :refer [id-olemassa?]])
+            [harja.id :refer [id-olemassa?]]
+            [harja.palvelin.komponentit.fim :as fim])
   (:use org.httpkit.fake))
 
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi]}]
@@ -412,6 +413,19 @@
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
         (sort-by tr/tiekohteiden-jarjestys yllapitokohdeosat)))))
 
+(defn hae-yllapitokohteen-tiedot-tietyoilmoitukselle [db fim user yllapitokohde-id]
+  ;; todo: lisää oikeustarkastus, kun tiedetään mitä tarvitaan
+  (let [{:keys [urakka-sampo-id] :as yllapitokohde}
+        (first (q/hae-yllapitokohteen-tiedot-tietyoilmoitukselle db {:kohdeid yllapitokohde-id}))]
+    (if urakka-sampo-id
+      (let [kayttajat (fim/hae-urakan-kayttajat fim urakka-sampo-id)
+            hae (fn [rooli] (first (filter (fn [k] (some #(= rooli %) (:roolinimet k))) kayttajat)))
+            urakoitsijan-yhteyshenkilo (hae "vastuuhenkilo")
+            tilaajan-yhteyshenkilo (hae "ELY_Urakanvalvoja")
+            yllapitokohde (assoc yllapitokohde :urakoitsijan-yhteyshenkilo urakoitsijan-yhteyshenkilo
+                                               :tilaajan-yhteyshenkilo tilaajan-yhteyshenkilo)]
+        yllapitokohde)
+      yllapitokohde)))
 
 (defrecord Yllapitokohteet []
   component/Lifecycle
@@ -450,6 +464,9 @@
       (julkaise-palvelu http :merkitse-kohde-valmiiksi-tiemerkintaan
                         (fn [user tiedot]
                           (merkitse-kohde-valmiiksi-tiemerkintaan db fim email user tiedot)))
+      (julkaise-palvelu http :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
+                        (fn [user tiedot]
+                          (hae-yllapitokohteen-tiedot-tietyoilmoitukselle db fim user tiedot)))
 
       this))
 
@@ -462,5 +479,6 @@
       :tallenna-yllapitokohteet
       :tallenna-yllapitokohdeosat
       :hae-yllapitourakan-aikataulu
-      :tallenna-yllapitokohteiden-aikataulu)
+      :tallenna-yllapitokohteiden-aikataulu
+      :hae-yllapitokohteen-tiedot-tietyoilmoitukselle)
     this))

@@ -210,7 +210,7 @@
 (defn lomake-mock-komponentti [e! app]
   (let [valittu-ilmoitus (:valittu-ilmoitus app)
         kayttajan-urakat [5]]
-    [tietyoilmoituslomake-view/lomake e! valittu-ilmoitus kayttajan-urakat]))
+    [tietyoilmoituslomake-view/lomake e! false valittu-ilmoitus kayttajan-urakat]))
 
 
 (defn query-selector [q]
@@ -219,32 +219,9 @@
 (defn kentan-label-loytyy [kentan-id]
   (some? (query-selector (clojure.string/replace "label[for=\"XX\"]" "XX" kentan-id))))
 
-(def kenttien-labelit #{"koskee" "urakan-nimi-valinta" "urakan-nimi-syotetty"
-                        "kohde" "urakoitsijan-nimi" "urakoitisijan-yhteyshenkilo-nimi"
-                        "urakoitisijanyhteyshenkilo-matkapuhelin" "tilaajan-nimi"
-                        "tilaajan-yhteyshenkilo-nimi" "tilaajan-yhteyshenkilo-matkapuhelin"
-                        "tien-nimi" "kunnat" "alkusijainnin-kuvaus" "alku"
-                        "loppusijainnin-kuvaus" "loppu" "tyon-pituus" "tyotyypit-a"
-                        "tyotyypit-b" "tyotyypit-c" "tyotyypit-d" "tyoajat"
-                        "viivastys-normaali-liikenteessa" "viivastys-ruuhka-aikana"
-                        "tietyon_kaistajarjestelyt" "nopeusrajoitukset" "kokorajoituksia"
-                        "tienpinta-materiaali" "tienpinta-matka" "kiertotien-pinnat-ja-mutkaisuus"
-                        "liikenteenohjaus" "vaikutussuunta" "muuta" "ilmoittaja-nimi"
-                        "ilmoittaja-matkapuhelin" "luotu"})
-
-(deftest lomake-muodostuu (let [
-        app (atom {:valittu-ilmoitus mock-ilmoitus})]
-
-
+(deftest lomake-muodostuu
+  (let [app (atom {:valittu-ilmoitus mock-ilmoitus})]
     (komponenttitesti
      [tuck app lomake-mock-komponentti]
-     --
-
-     #_(is (= "Oulun alueurakka 2005-2012" (.-text (js/document.querySelector "label[for=urakan-nimi-valinta] + div > ul > li:nth-last-child(1) > a"))))
-
-     #_(let [x (js/document.querySelectorAll "label[for=urakan-nimi-valinta]")
-           x1 (aget x 0)
-           x1-for (.getAttribute x1 "for")]
-       (println "x, x1, x1-for" x x1 x1-for))
-     (is (= "Kuusamontie" (.-value (js/document.querySelector "label[for=tien-nimi] + input"))))
-     (doseq [nimi kenttien-labelit] (is (kentan-label-loytyy nimi))))))
+     (is (= "Tämä on testi-ilmoitus"
+            (.-value (u/sel1 "label[for=lisatietoja] + input")))))))

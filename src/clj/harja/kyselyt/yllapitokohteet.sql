@@ -405,16 +405,16 @@ SELECT
   ypk.nimi,
   ypk.urakka,
   ypk.sopimus,
-  ypka.kohde_alku              AS "aikataulu-kohde-alku",
-  ypka.paallystys_alku         AS "aikataulu-paallystys-alku",
-  ypka.paallystys_loppu        AS "aikataulu-paallystys-loppu",
-  ypka.tiemerkinta_takaraja    AS "aikataulu-tiemerkinta-takaraja",
-  ypka.tiemerkinta_alku        AS "aikataulu-tiemerkinta-alku",
-  ypka.tiemerkinta_loppu       AS "aikataulu-tiemerkinta-loppu",
-  ypka.kohde_valmis            AS "aikataulu-kohde-valmis",
-  ypka.muokattu                AS "aikataulu-muokattu",
-  ypka.muokkaaja               AS "aikataulu-muokkaaja",
-  ypka.valmis_tiemerkintaan    AS "valmis-tiemerkintaan",
+  ypka.kohde_alku                  AS "aikataulu-kohde-alku",
+  ypka.paallystys_alku             AS "aikataulu-paallystys-alku",
+  ypka.paallystys_loppu            AS "aikataulu-paallystys-loppu",
+  ypka.tiemerkinta_takaraja        AS "aikataulu-tiemerkinta-takaraja",
+  ypka.tiemerkinta_alku            AS "aikataulu-tiemerkinta-alku",
+  ypka.tiemerkinta_loppu           AS "aikataulu-tiemerkinta-loppu",
+  ypka.kohde_valmis                AS "aikataulu-kohde-valmis",
+  ypka.muokattu                    AS "aikataulu-muokattu",
+  ypka.muokkaaja                   AS "aikataulu-muokkaaja",
+  ypka.valmis_tiemerkintaan        AS "valmis-tiemerkintaan",
   ypk.tr_numero                    AS "tr-numero",
   ypk.tr_alkuosa                   AS "tr-alkuosa",
   ypk.tr_alkuetaisyys              AS "tr-alkuetaisyys",
@@ -424,7 +424,7 @@ SELECT
   ypk.tr_kaista                    AS "tr-kaista",
   ypk.yllapitoluokka,
   ypk.suorittava_tiemerkintaurakka AS "suorittava-tiemerkintaurakka",
-  tti.id                       AS "tietyoilmoitus-id"
+  tti.id                           AS "tietyoilmoitus-id"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN tietyoilmoitus tti ON ypk.id = tti.yllapitokohde
@@ -453,13 +453,13 @@ SELECT
   ypka.muokattu             AS "aikataulu-muokattu",
   ypka.muokkaaja            AS "aikataulu-muokkaaja",
   ypka.valmis_tiemerkintaan AS "valmis-tiemerkintaan",
-  ypk.tr_numero                 AS "tr-numero",
-  ypk.tr_alkuosa                AS "tr-alkuosa",
-  ypk.tr_alkuetaisyys           AS "tr-alkuetaisyys",
-  ypk.tr_loppuosa               AS "tr-loppuosa",
-  ypk.tr_loppuetaisyys          AS "tr-loppuetaisyys",
-  ypk.tr_ajorata                AS "tr-ajorata",
-  ypk.tr_kaista                 AS "tr-kaista",
+  ypk.tr_numero             AS "tr-numero",
+  ypk.tr_alkuosa            AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys       AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa           AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys      AS "tr-loppuetaisyys",
+  ypk.tr_ajorata            AS "tr-ajorata",
+  ypk.tr_kaista             AS "tr-kaista",
   ypk.yllapitoluokka,
   tti.id                    AS "tietyoilmoitus-id"
 FROM yllapitokohde ypk
@@ -704,3 +704,27 @@ SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka :: INTEGER);
 
 -- name: luo-yllapitokohteelle-tyhja-aikataulu<!
 INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES (:yllapitokohde);
+
+-- name: hae-yllapitokohteen-tiedot-tietyoilmoitukselle
+SELECT
+  ypk.id,
+  ypk.tr_numero        AS "tr-numero",
+  ypk.tr_alkuosa       AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys  AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa      AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys AS "tr-loppuetaisyys",
+  ypkat.kohde_alku     AS alku,
+  ypkat.kohde_valmis   AS loppu,
+  u.id                 AS "urakka-id",
+  u.nimi               AS "urakka-nimi",
+  u.sampoid            AS "urakka-sampo-id",
+  urk.id               AS "urakoitsija-id",
+  urk.nimi             AS "urakoitsija-nimi",
+  ely.id               AS "tilaaja-id",
+  ely.nimi             AS "tilaaja-nimi"
+FROM yllapitokohde ypk
+  JOIN yllapitokohteen_aikataulu ypkat ON ypk.id = ypkat.yllapitokohde
+  JOIN urakka u ON ypk.urakka = u.id
+  JOIN organisaatio urk ON u.urakoitsija = urk.id
+  JOIN organisaatio ely ON u.hallintayksikko = ely.id
+WHERE ypk.id = :kohdeid;

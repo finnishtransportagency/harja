@@ -11,8 +11,12 @@
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [tuck.core :as tuck]
             [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.tierekisteri :as tr]
             [cljs.pprint :refer [pprint]]
-            [harja.ui.viesti :as viesti])
+            [harja.tyokalut.functor :refer [fmap]]
+            [harja.ui.viesti :as viesti]
+            [harja.tyokalut.local-storage :refer [local-storage-atom]]
+            [harja.tyokalut.spec-apurit :as spec-apurit])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -38,17 +42,20 @@
                     :hoitokausi @tiedot-urakka/valittu-hoitokausi}))
 
 
-(defonce tietyoilmoitukset (atom {:ilmoitusnakymassa? false
-                                  :valittu-ilmoitus nil
-                                  :tallennus-kaynnissa? false
-                                  :haku-kaynnissa? false
-                                  :tietyoilmoitukset nil
-                                  :valinnat {:luotu-vakioaikavali (second luonti-aikavalit)
-                                             :luotu-alkuaika (pvm/tuntia-sitten 24)
-                                             :luotu-loppuaika (pvm/nyt)
-                                             :kaynnissa-vakioaikavali (first kaynnissa-aikavalit)
-                                             :kaynnissa-alkuaika (pvm/tunnin-paasta 24)
-                                             :kaynnissa-loppuaika (pvm/tunnin-paasta 24)}}))
+(defonce tietyoilmoitukset
+  (local-storage-atom
+   :tietyoilmoitukset
+   {:ilmoitusnakymassa? false
+    :valittu-ilmoitus nil
+    :tallennus-kaynnissa? false
+    :haku-kaynnissa? false
+    :tietyoilmoitukset nil
+    :valinnat {:luotu-vakioaikavali (second luonti-aikavalit)
+               :luotu-alkuaika (pvm/tuntia-sitten 24)
+               :luotu-loppuaika (pvm/nyt)
+               :kaynnissa-vakioaikavali (first kaynnissa-aikavalit)
+               :kaynnissa-alkuaika (pvm/tunnin-paasta 24)
+               :kaynnissa-loppuaika (pvm/tunnin-paasta 24)}}))
 
 (defonce karttataso-tietyoilmoitukset (atom false))
 
@@ -66,6 +73,47 @@
     (concat akku arvo)))
 
 (defonce karttataso-ilmoitukset (atom false))
+
+(defn- hae-tietyoilmoituksen-tiedot [tietyoilmoitus-id]
+  (k/post! :hae-tietyoilmoitus tietyoilmoitus-id))
+
+(defn- hae-yllapitokohteen-tiedot-tietyoilmoitukselle [yllapitokohde-id]
+  (k/post! :hae-yllapitokohteen-tiedot-tietyoilmoitukselle yllapitokohde-id))
+
+(defn esitayta-tietyoilmoitus-paallystyskohteella [{:keys [id
+                                                           urakka-id
+                                                           urakka-nimi
+                                                           alku
+                                                           loppu
+                                                           urakoitsija-nimi
+                                                           urakoitsijan-yhteyshenkilo
+                                                           tilaaja-nimi
+                                                           tilaajan-yhteyshenkilo
+                                                           tr-numero
+                                                           tr-alkuosa
+                                                           tr-alkuetaisyys
+                                                           tr-loppuosa
+                                                           tr-loppuetaisyys]
+                                                    :as yllapitokohde}]
+  {::t/urakka-id urakka-id
+   ::t/urakan-nimi urakka-nimi
+   ::t/luotu (pvm/nyt)
+   ::t/yllapitokohde id
+   ::t/alku alku
+   ::t/loppu loppu
+   ::t/urakoitsijan-nimi urakoitsija-nimi
+   ::t/urakoitsijayhteyshenkilo {::t/etunimi (:etunimi urakoitsijan-yhteyshenkilo)
+                                 ::t/sukunimi (:sukunimi urakoitsijan-yhteyshenkilo)
+                                 ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)}
+   ::t/tilaajan-nimi tilaaja-nimi
+   ::t/tilaajayhteyshenkilo {::t/etunimi (:etunimi tilaajan-yhteyshenkilo)
+                             ::t/sukunimi (:sukunimi tilaajan-yhteyshenkilo)
+                             ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)}
+   ::t/osoite {::tr/tie tr-numero
+               ::tr/aosa tr-alkuosa
+               ::tr/aet tr-alkuetaisyys
+               ::tr/losa tr-loppuosa
+               ::tr/let tr-loppuetaisyys}})
 
 (defrecord AsetaValinnat [valinnat])
 (defrecord YhdistaValinnat [ulkoisetvalinnat])
@@ -86,6 +134,41 @@
   (when haku
     (.clearTimeout js/window haku))
   (assoc app :ilmoitushaku-id (.setTimeout js/window (tuck/send-async! ->HaeIlmoitukset) 1000)))
+
+
+(declare tyotyyppi-vaihtoehdot-map)
+(defn- yhdista-tyotyypit [ilmoitus]
+  (let [yhdistetty (apply merge (vals (select-keys ilmoitus [:tyotyypit-a :tyotyypit-b :tyotyypit-c :tyotyypit-d])))
+        _ (log "yhdista-tyotyypit: yhdistetty =" (pr-str yhdistetty))
+        yhdistetty-kantamuoto (fn [vaihtoehto-koodi]
+                                [vaihtoehto-koodi (get tyotyyppi-vaihtoehdot-map vaihtoehto-koodi)])]
+    (assoc ilmoitus ::t/tyotyypit (mapv yhdistetty-kantamuoto yhdistetty))))
+
+
+(defn nopeusrajoitukset-kanta->grid [nr-tiedot]
+  ;; muuttaa ::t/nopeusrajoitukset -avaimen tiedont, esim:
+  ;; [{:harja.domain.tietyoilmoitukset/rajoitus "30", :harja.domain.tietyoilmoitukset/matka 100}])
+  ;; mapiksi {indeksi {rajoitus matka}} -tupleja, esim:
+  ;; {0 {::t/rajoitus 100, ::t/matka 200}, 1 {::t/rajoitus 300, ::t/matka 20}}
+  (apply merge
+         (map-indexed
+          (fn [indeksi rajoitus-map]
+            {indeksi (select-keys rajoitus-map [::t/matka ::t/rajoitus])})
+          nr-tiedot)))
+
+(defn nopeusrajoitukset-grid->kanta* [grid-rajoitukset]
+  ;; {0 {:rajoitus "30", :matka 100}, -1 {:id -1, :koskematon true}}
+  ;; -> [{:harja.domain.tietyoilmoitukset/rajoitus "30", :harja.domain.tietyoilmoitukset/matka 100}])
+
+  (let [r (vals grid-rajoitukset)]
+    (log "grid-rajoitukset:" (pr-str grid-rajoitukset))
+    r))
+
+(defn- nopeusrajoitukset-grid->kanta [ilmoitus]
+  (let [grid-nopeusrajoitukset (:nopeusrajoitukset ilmoitus)
+        kanta-nopeusrajoitukset (nopeusrajoitukset-grid->kanta* grid-nopeusrajoitukset)]
+    (-> ilmoitus (dissoc :nopeusrajoitukset)
+        (assoc ::t/nopeusrajoitukset kanta-nopeusrajoitukset))))
 
 (extend-protocol tuck/Event
   AsetaValinnat
@@ -116,7 +199,7 @@
     (assoc app :tietyoilmoitukset nil))
 
   IlmoituksetHaettu
-  (process-event [vastaus {valittu :valittu-ilmoitus :as app}]
+  (process-event [vastaus app]
     (let [ilmoitukset (:tietyoilmoitukset (:tulokset vastaus))]
       (assoc app :tietyoilmoitukset ilmoitukset)))
 
@@ -156,7 +239,7 @@
   PaivitaNopeusrajoituksetGrid
   (process-event [{nopeusrajoitukset :nopeusrajoitukset} app]
     (log "PaivitaNopeusrajoituksetGrid:" (pr-str nopeusrajoitukset))
-    (assoc-in app [:valittu-ilmoitus :nopeusrajoitukset] nopeusrajoitukset))
+    (assoc-in app [:valittu-ilmoitus ::t/nopeusrajoitukset] (nopeusrajoitukset-grid->kanta* nopeusrajoitukset)))
 
   PaivitaTyoajatGrid
   (process-event [{tyoajat :tyoajat} app]
@@ -168,7 +251,9 @@
       (go
         (let [tulos (k/post! :tallenna-tietyoilmoitus
                              (-> ilmoitus
-                                 (dissoc ::t/tyovaiheet)))]
+                                 (dissoc ::t/tyovaiheet)
+                                 nopeusrajoitukset-grid->kanta
+                                 (spec-apurit/poista-nil-avaimet)))]
           (if (k/virhe? tulos)
             (viesti/nayta! [:span "Virhe tallennuksessa! Ilmoitusta EI tallennettu"]
                            :danger)
@@ -181,8 +266,8 @@
   (process-event [{ilmoitus :ilmoitus} app]
     (viesti/nayta! "Ilmoitus tallennettu!")
     (assoc app
-           :tallennus-kaynnissa? false
-           :valittu-ilmoitus nil)))
+      :tallennus-kaynnissa? false
+      :valittu-ilmoitus nil)))
 
 
 (def tyotyyppi-vaihtoehdot-tienrakennus
@@ -206,12 +291,11 @@
    ["Siltatyö" "Siltatyö"]
    ["Tasoristeystyö" "Tasoristeystyö"]
    ["Tiemerkintätyö" "Tiemerkintätyö"]
-   ["Viimeistely" "Viimeistely"]
-
    ["Valaistustyö" "Valaistustyö"]])
 
 (def tyotyyppi-vaihtoehdot-muut [["Liittymä- ja kaistajärj." "Liittymä- ja kaistajärjestely"]
                                  ["Silmukka-anturin asent." "Silmukka-anturin asentaminen"]
+                                 ["Viimeistely" "Viimeistely"]
                                  ["Muu, mikä?" "Muu, mikä?"]])
 
 (def tyotyyppi-vaihtoehdot-map (into {} (concat
@@ -231,3 +315,13 @@
 
 (defn henkilo->nimi [henkilo]
   (str (::t/etunimi henkilo) " " (::t/sukunimi henkilo)))
+
+(defn avaa-tietyoilmoitus
+  [tietyoilmoitus-id yllapitokohde]
+  (go
+    (let [tietyoilmoitus (if tietyoilmoitus-id
+                           (<! (hae-tietyoilmoituksen-tiedot tietyoilmoitus-id))
+                           (esitayta-tietyoilmoitus-paallystyskohteella
+                             (<! (hae-yllapitokohteen-tiedot-tietyoilmoitukselle (:id yllapitokohde)))))]
+      (swap! tietyoilmoitukset #(assoc % :valittu-ilmoitus tietyoilmoitus
+                                         :tallennus-kaynnissa? false)))))
