@@ -55,7 +55,8 @@
              [tilannekuva :as q]
              [turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
              [urakat :as urakat-q]
-             [toteumat :as toteumat-q]]
+             [toteumat :as toteumat-q]
+             [tietyoilmoitukset :as tietyoilmoitukset-q]]
             [harja.palvelin.komponentit.http-palvelin
              :refer
              [julkaise-palvelu poista-palvelut]]
@@ -134,6 +135,15 @@
                                                      (mapv name haettavat)))
                             {:kuittaus :kuittaukset})]
            ilmoitukset))))))
+
+(defn- hae-tietyoilmoitukset [db user {:keys [tietyoilmoitukset nykytilanne?] :as tiedot} urakat]
+  (when (tk/valittu? tietyoilmoitukset tk/tietyoilmoitukset)
+    (when (or (not (empty? urakat))
+              (oikeudet/voi-lukea? (if nykytilanne?
+                                     oikeudet/tilannekuva-nykytilanne
+                                     oikeudet/tilannekuva-historia)
+                                   nil user))
+      (tietyoilmoitukset-q/hae-ilmoitukset-tilannekuvaan db (assoc tiedot :urakat urakat)))))
 
 (defn- hae-yllapitokohteet
   [db user {:keys [toleranssi alku loppu yllapito nykytilanne? tyyppi]} urakat]
@@ -329,12 +339,12 @@
                                                       oikeudet/tilannekuva-historia)
                                                     nil user))
     (when (tk/valittu? yllapito tk/tietyomaat)
-      (vec (map (comp #(konv/array->vec % :kaistat)
-                      #(konv/array->vec % :ajoradat))
-                (q/hae-tietyomaat db {:x1 (:xmin alue)
-                                               :y1 (:ymin alue)
-                                               :x2 (:xmax alue)
-                                               :y2 (:ymax alue)}))))))
+      (mapv (comp #(konv/array->vec % :kaistat)
+                 #(konv/array->vec % :ajoradat))
+           (q/hae-tietyomaat db {:x1 (:xmin alue)
+                                 :y1 (:ymin alue)
+                                 :x2 (:xmax alue)
+                                 :y2 (:ymax alue)})))))
 
 (defn- hae-toteumien-selitteet
   [db user {:keys [alue alku loppu] :as tiedot} urakat]
@@ -348,7 +358,8 @@
 
 (def tilannekuvan-osiot
   #{:toteumat :tyokoneet :turvallisuuspoikkeamat
-    :laatupoikkeamat :paikkaus :paallystys :ilmoitukset :tietyomaat})
+    :laatupoikkeamat :paikkaus :paallystys :ilmoitukset :tietyomaat
+    :tietyoilmoitukset})
 
 (defmulti hae-osio (fn [db user tiedot urakat osio] osio))
 (defmethod hae-osio :toteumat [db user tiedot urakat _]
@@ -383,6 +394,13 @@
 (defmethod hae-osio :tietyomaat [db user tiedot urakat _]
   (tulosta-tulos! "suljettua tieosuutta"
                   (hae-tietyomaat db user tiedot urakat)))
+
+(defmethod hae-osio :tietyoilmoitukset [db user tiedot urakat _]
+  (when
+    (harja.palvelin.palvelut.pois-kytketyt-ominaisuudet/ominaisuus-kaytossa?
+     :tietyoilmoitukset)
+    (tulosta-tulos! "tietyoilmoitusta"
+                    (hae-tietyoilmoitukset db user tiedot urakat))))
 
 (defn yrita-hakea-osio [db user tiedot urakat osio]
   (try

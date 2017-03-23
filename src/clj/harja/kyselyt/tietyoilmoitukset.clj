@@ -6,7 +6,8 @@
             [specql.op :as op]
             [specql.rel :as rel]
             [clojure.spec :as s]
-            [harja.kyselyt.specql :refer [db]]))
+            [harja.kyselyt.specql :refer [db]]
+            [harja.domain.roolit :as roolit]))
 
 (defqueries "harja/kyselyt/tietyoilmoitukset.sql")
 
@@ -154,6 +155,21 @@
       [(str "ST_Intersects(ST_Buffer(?,?), " value-accessor ")")
        [geometry threshold]])))
 
+(defn intersects-envelope? [{:keys [xmin ymin xmax ymax]}]
+  (reify op/Op
+    (to-sql [this val]
+      [(str "ST_Intersects("val ", ST_MakeEnvelope(?,?,?,?))")
+       [xmin ymin xmax ymax]])))
+
+(defn overlaps? [rivi-alku rivi-loppu alku loppu]
+  (op/or {rivi-alku (op/between alku loppu) rivi-loppu (op/between alku loppu)}))
+
+(defn interval? [start fn comp interval]
+  (reify op/Op
+    (to-sql [this value]
+      [(str "? ? "value" ? INTERVAL '?'")
+       [start fn comp interval]])))
+
 (defn hae-ilmoitukset [db {:keys [luotu-alku
                                   luotu-loppu
                                   kaynnissa-alku
@@ -179,6 +195,21 @@
                {::t/urakka-id (op/or op/null? (op/in urakat))}
                {::t/urakoitsija-id organisaatio})
              {::t/urakka-id (op/or op/null? (op/in urakat))}))))
+
+(defn hae-ilmoitukset-tilannekuvaan [db {:keys [nykytilanne?
+                                                tilaaja?
+                                                urakat
+                                                alku
+                                                loppu
+                                                alue]}]
+  (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
+         (op/and
+           (if nykytilanne?
+             {::t/loppu (interval? loppu - < "7 days")}
+             (overlaps? ::t/alku ::t/loppu alku loppu))
+           (when-not tilaaja?
+             {::t/urakka-id (op/or op/null? (op/in urakat))})
+           {::t/osoite {::tr/geometria (intersects-envelope? alue)}})))
 
 (defn hae-ilmoitus [db tietyoilmoitus-id]
   (first (fetch db ::t/ilmoitus kaikki-ilmoituksen-kentat-ja-tyovaiheet
