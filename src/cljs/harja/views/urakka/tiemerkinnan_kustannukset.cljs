@@ -15,9 +15,10 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.ui.raportti :refer [muodosta-html]] 
+            [harja.ui.raportti :refer [muodosta-html]]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.transit :as t])
+            [harja.transit :as t]
+            [harja.ui.yleiset :as yleiset])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -35,5 +36,6 @@
          (when-let [parametrit @raportin-parametrit-atom]
            [upotettu-raportti/raportin-vientimuodot parametrit])
 
-         (when-let [raportti @raportin-tiedot-atom]
-           [muodosta-html (assoc-in raportti [1 :tunniste] :tiemerkinnan-kustannusyhteenveto)])]))))
+         (if-let [raportti @raportin-tiedot-atom]
+           [muodosta-html (assoc-in raportti [1 :tunniste] :tiemerkinnan-kustannusyhteenveto)]
+           [yleiset/ajax-loader "Raporttia suoritetaan..."])]))))

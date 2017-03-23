@@ -325,14 +325,15 @@
         (luo-uusi-yllapitokohde c user urakka-id sopimus-id vuosi kohde)))
     (yy/paivita-yllapitourakan-geometria c urakka-id)
     (let [paallystyskohteet (hae-urakan-yllapitokohteet c user {:urakka-id urakka-id
-                                                                :sopimus-id sopimus-id})]
+                                                                :sopimus-id sopimus-id
+                                                                :vuosi vuosi})]
       (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str paallystyskohteet))
       paallystyskohteet)))
 
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
                                   {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
                                           tr-loppuetaisyys tr-ajorata tr-kaista toimenpide poistettu
-                                          paallystetyyppi raekoko tyomenetelma kokonaismassamaara]}]
+                                          paallystetyyppi raekoko tyomenetelma massamaara]}]
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
   (when-not poistettu
     (q/luo-yllapitokohdeosa<! db
@@ -349,14 +350,14 @@
                                :paallystetyyppi paallystetyyppi
                                :raekoko raekoko
                                :tyomenetelma tyomenetelma
-                               :massamaara kokonaismassamaara
+                               :massamaara massamaara
                                :toimenpide toimenpide
                                :ulkoinen-id nil})))
 
 (defn- paivita-yllapitokohdeosa [db user urakka-id
                                  {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys
                                          tr-loppuosa tr-loppuetaisyys tr-ajorata
-                                         tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma kokonaismassamaara]
+                                         tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma massamaara]
                                   :as kohdeosa}]
 
   (log/debug "Päivitetään ylläpitokohdeosa")
@@ -373,7 +374,7 @@
                                  :paallystetyyppi paallystetyyppi
                                  :raekoko raekoko
                                  :tyomenetelma tyomenetelma
-                                 :massamaara kokonaismassamaara
+                                 :massamaara massamaara
                                  :toimenpide toimenpide
                                  :id id
                                  :urakka urakka-id}))

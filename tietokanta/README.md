@@ -15,3 +15,18 @@ Testitietokannan voi päivittää ajamalla komennon: mvn clean compile -Pharjate
 sitten psql komento:
 
 > psql -h localhost -p 7777 -U flyway harja
+
+
+## Tietokannan lokitus paikallisessa Docker-kontissa. Tällä sisään kantakoneelle:
+> docker exec -it harjadb /bin/bash
+### Aseta haluamasi lokitustaso, ohjeet: https://www.postgresql.org/docs/9.5/static/runtime-config-logging.html
+> nano /etc/postgresql/9.5/main/postgresql.conf
+### Jos nano tai muu haluamasi tekstinkäsittelyohjelma puuttui
+> apt-get update
+> apt-get install nano
+### log-tason muutoksen voimaannuttamiseksi, restart possu
+> service postgresql restart
+### tarkkaile lokin häntää
+> tail -f /var/log/postgresql/postgresql-9.5-main.log
+
+Jos osaat ja ehdit, voit tehdä yo. tehtäviin skriptejä esim Sedin avulla, esim. log-localdb.sh

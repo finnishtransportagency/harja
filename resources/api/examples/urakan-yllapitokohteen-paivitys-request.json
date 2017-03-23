@@ -41,7 +41,7 @@
           "paallystetyyppi": "betoni",
           "raekoko": 66,
           "tyomenetelma": "ART-pintaus",
-          "kokonaismassamaara": 6.6
+          "massamaara": 6.6
         }
       },
       {
@@ -63,7 +63,7 @@
           "paallystetyyppi": "betoni",
           "raekoko": 66,
           "tyomenetelma": "ART-pintaus",
-          "kokonaismassamaara": 6.6
+          "massamaara": 6.6
         }
       }
     ]

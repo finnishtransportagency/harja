@@ -49,7 +49,7 @@ SELECT
   ypko.paallystetyyppi                  AS "kohdeosa_paallystetyyppi",
   ypko.raekoko                          AS "kohdeosa_raekoko",
   ypko.tyomenetelma                     AS "kohdeosa_tyomenetelma",
-  ypko.massamaara                       AS "kohdeosa_kokonaismassamaara",
+  ypko.massamaara                       AS "kohdeosa_massamaara",
   ypko.toimenpide                       AS "kohdeosa_toimenpide",
   pi.takuupvm                           AS "paallystysilmoitus_takuupvm"
 FROM yllapitokohde ypk
@@ -263,7 +263,7 @@ SELECT
   paallystetyyppi,
   raekoko,
   tyomenetelma,
-  massamaara            AS "kokonaismassamaara",
+  massamaara            AS "massamaara",
   toimenpide,
   sijainti
 FROM yllapitokohdeosa ypko
@@ -347,17 +347,37 @@ VALUES (:yllapitokohde,
   :tr_ajorata,
   :tr_kaista,
   :toimenpide,
-        :paallystetyyppi,
-        :raekoko,
-        :tyomenetelma,
-        :massamaara,
-        :ulkoinen-id,
-        (SELECT tierekisteriosoitteelle_viiva AS geom
-         FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
-                                            CAST(:tr_alkuosa AS INTEGER),
-                                            CAST(:tr_alkuetaisyys AS INTEGER),
-                                            CAST(:tr_loppuosa AS INTEGER),
-                                            CAST(:tr_loppuetaisyys AS INTEGER))));
+  :paallystetyyppi,
+  :raekoko,
+  :tyomenetelma,
+  :massamaara,
+  :ulkoinen-id,
+  (SELECT tierekisteriosoitteelle_viiva AS geom
+   FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
+                                      CAST(:tr_alkuosa AS INTEGER),
+                                      CAST(:tr_alkuetaisyys AS INTEGER),
+                                      CAST(:tr_loppuosa AS INTEGER),
+                                      CAST(:tr_loppuetaisyys AS INTEGER))));
+
+-- name: luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
+-- Luo uuden yllapitokohdeosan
+INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tunnus, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+                              tr_loppuosa, tr_loppuetaisyys, ulkoinen_id, sijainti)
+VALUES (:yllapitokohde,
+  :nimi,
+  :tunnus,
+  :tr_numero,
+  :tr_alkuosa,
+  :tr_alkuetaisyys,
+  :tr_loppuosa,
+  :tr_loppuetaisyys,
+  :ulkoinen-id,
+  (SELECT tierekisteriosoitteelle_viiva AS geom
+   FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
+                                      CAST(:tr_alkuosa AS INTEGER),
+                                      CAST(:tr_alkuetaisyys AS INTEGER),
+                                      CAST(:tr_loppuosa AS INTEGER),
+                                      CAST(:tr_loppuetaisyys AS INTEGER))));
 
 -- name: paivita-yllapitokohdeosa<!
 -- Päivittää yllapitokohdeosan

@@ -77,16 +77,19 @@
     [:let tr-loppuetaisyys]]
    [:kasittelymenetelma kasittelymenetelma]
    [:kasittelypaksuus paksuus]
-   [:verkkotyyppi verkkotyyppi]
-   [:verkon-tarkoitus verkon-tarkoitus]
-   [:verkon-sijainti verkon-sijainti]
+   (when verkkotyyppi
+     [:verkkotyyppi verkkotyyppi])
+   (when verkon-tarkoitus
+     [:verkon-tarkoitus verkon-tarkoitus])
+   (when verkon-sijainti
+     [:verkon-sijainti verkon-sijainti])
    (when tekninen-toimenpide
      [:tekninen-toimenpide tekninen-toimenpide])])
 
 (defn tee-kohde [{:keys [yhaid yha-kohdenumero id yllapitokohdetyyppi yllapitokohdetyotyyppi tr-numero
                          karttapvm nimi] :as kohde}
                  alikohteet
-                 {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm ilmoitustiedot] :as paallystys-ilmoitus}]
+                 {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm ilmoitustiedot] :as paallystysilmoitus}]
   [:kohde
    (when yhaid [:yha-id yhaid])
    [:harja-id id]
@@ -98,7 +101,7 @@
    (when valmispvm-paallystys [:paallystyksen-valmistumispaivamaara (xml/formatoi-paivamaara valmispvm-paallystys)])
    (when valmispvm-kohde [:kohteen-valmistumispaivamaara (xml/formatoi-paivamaara valmispvm-kohde)])
    (when takuupvm [:takuupaivamaara (xml/formatoi-paivamaara takuupvm)])
-   [:toteutunuthinta (laske-hinta-kokonaishinta paallystys-ilmoitus)]
+   [:toteutunuthinta (laske-hinta-kokonaishinta paallystysilmoitus)]
    (tee-tierekisteriosoitevali kohde)
    (when (:alustatoimet ilmoitustiedot)
      (reduce conj [:alustalle-tehdyt-toimet]
@@ -116,7 +119,7 @@
     [:harja-id harjaid]
     [:sampotunnus sampoid]
     [:tunnus yhatunnus]
-    (reduce conj [:kohteet] (mapv #(tee-kohde (:kohde %) (:alikohteet %) (:paallystys-ilmoitus %)) kohteet))]])
+    (reduce conj [:kohteet] (mapv #(tee-kohde (:kohde %) (:alikohteet %) (:paallystysilmoitus %)) kohteet))]])
 
 (defn muodosta [urakka kohteet]
   (let [sisalto (muodosta-sanoma urakka kohteet)

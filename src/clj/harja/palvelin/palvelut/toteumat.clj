@@ -306,7 +306,7 @@
           (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c toteuma-id urakka-id)
           (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c toteuma-id)
           (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava)))
-          (toteumat-q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (:poistettu tehtava)
+          (toteumat-q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (or (:maara tehtava) 0) (:poistettu tehtava)
                                                 (:paivanhinta tehtava) (:tehtava_id tehtava)))
 
         (log/debug "Merkitään tehtavien: " tehtavatidt " maksuerät likaisiksi")

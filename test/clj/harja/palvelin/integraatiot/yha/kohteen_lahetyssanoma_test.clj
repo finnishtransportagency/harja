@@ -48,7 +48,6 @@
 (def testialikohteet
   [{:kohdeosa-id 59,
     :yllapitokohde 49,
-    :edellinen-paallystetyyppi 1,
     :lisaaineet "lölöklö",
     :leveys 11,
     :sijainti nil,
@@ -82,7 +81,6 @@
     :yhaid 254915666}
    {:kohdeosa-id 60,
     :yllapitokohde 49,
-    :edellinen-paallystetyyppi 1,
     :lisaaineet "asd",
     :leveys 2,
     :sijainti nil,
@@ -140,7 +138,6 @@
    :kasittelyaika-tekninen-osa nil,
    :takuupvm (tee-pvm),
    :ilmoitustiedot {:osoitteet [{:kohdeosa-id 59,
-                                 :edellinen-paallystetyyppi 1,
                                  :lisaaineet "lölöklö",
                                  :leveys 11,
                                  :massa 1,
@@ -158,7 +155,6 @@
                                  :paallystetyyppi 21,
                                  :km-arvo "klaösdkföa"}
                                 {:kohdeosa-id 60,
-                                 :edellinen-paallystetyyppi 1,
                                  :lisaaineet "asd",
                                  :leveys 2,
                                  :massa 22,
@@ -192,7 +188,7 @@
 (def testikohteet
   [{:kohde testikohde,
     :alikohteet testialikohteet,
-    :paallystys-ilmoitus testipaallystysilmoitus}])
+    :paallystysilmoitus testipaallystysilmoitus}])
 
 (def testiurakka
   {:yhatunnus "YHA34434",
