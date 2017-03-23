@@ -33,9 +33,10 @@
       #(and (or (nil? yha-kohde?) (if yha-kohde? (yha-kohde-fn %) (not (yha-kohde-fn %))))
             (or (nil? tienumero) (= (:tr-numero %) tienumero))
             (or (nil? yllapitokohdetyotyyppi) (= (:yllapitokohdetyotyyppi %) yllapitokohdetyotyyppi))
-            (or (str/blank? kohdenumero) (str/blank? (:kohdenumero %))
-                (= (str/lower-case (:kohdenumero %))
-                   (str/lower-case kohdenumero))))
+            (or (str/blank? kohdenumero)
+                (and (:kohdenumero %)
+                     (= (str/lower-case (:kohdenumero %))
+                        (str/lower-case kohdenumero)))))
       kohteet)))
 
 (defn hae-yllapitokohteet [urakka-id sopimus-id vuosi]
