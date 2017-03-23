@@ -93,7 +93,8 @@
                                                            tr-loppuosa
                                                            tr-loppuetaisyys]
                                                     :as yllapitokohde}]
-  { ;; ::t/urakka-id (str urakka-id)
+  {;; ::t/urakka-id (str urakka-id)
+   ::t/luotu (pvm/nyt)
    ::t/yllapitokohde id
    ::t/alku alku
    ::t/loppu loppu
