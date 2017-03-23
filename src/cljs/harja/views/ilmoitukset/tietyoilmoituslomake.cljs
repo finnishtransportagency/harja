@@ -332,8 +332,8 @@
       (lomake/ryhma "Lisätietoja"
                     {:otsikko ""
                      :nimi ::t/lisatietoja
-                     :tyyppi :string
-                     })
+                     :tyyppi :text
+                     :koko [90 8]})
       (yhteyshenkilo "Ilmoittaja" ::t/ilmoittaja)
 
       ]
