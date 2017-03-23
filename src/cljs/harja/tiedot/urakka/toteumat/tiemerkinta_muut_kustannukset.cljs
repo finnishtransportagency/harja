@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.toteumat.tiemerkinta-muut-tyot
+(ns harja.tiedot.urakka.toteumat.tiemerkinta-muut-kustannukset
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log logt]]

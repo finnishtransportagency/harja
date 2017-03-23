@@ -1,6 +1,6 @@
-(ns harja.tiedot.urakka.toteumat.tiemerkinta-muut-tyot-test
+(ns harja.tiedot.urakka.toteumat.tiemerkinta-muut-kustannukset-test
   (:require
-    [harja.tiedot.urakka.toteumat.tiemerkinta-muut-tyot :as muut-tyot]
+    [harja.tiedot.urakka.toteumat.tiemerkinta-muut-kustannukset :as muut-tyot]
     [cljs-time.core :as t]
     [cljs.test :as test :refer-macros [deftest is]]
     [harja.loki :refer [log]]

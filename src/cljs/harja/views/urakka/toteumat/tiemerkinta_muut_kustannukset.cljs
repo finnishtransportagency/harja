@@ -1,4 +1,4 @@
-(ns harja.views.urakka.toteumat.tiemerkinta-muut-tyot
+(ns harja.views.urakka.toteumat.tiemerkinta-muut-kustannukset
   (:require [reagent.core :refer [atom] :as r]
             [harja.atom :refer [paivita!] :refer-macros [reaction<!]]
             [harja.ui.grid :as grid]
@@ -7,7 +7,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.lomake :as lomake :refer [lomake]]
             [harja.loki :refer [log logt tarkkaile!]]
-            [harja.tiedot.urakka.toteumat.tiemerkinta-muut-tyot :as tiedot]
+            [harja.tiedot.urakka.toteumat.tiemerkinta-muut-kustannukset :as tiedot]
             [cljs.core.async :refer [<! >! chan timeout]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
@@ -144,7 +144,7 @@
            :valittu-hoitokausi u/valittu-hoitokausi
            :valitse-hoitokausi u/valitse-hoitokausi!}])])))
 
-(defn muut-tyot []
+(defn muut-kustannukset []
   (komp/luo
     (fn []
       [tuck tiedot/muut-tyot muut-tyot-paakomponentti])))
