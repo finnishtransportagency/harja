@@ -239,7 +239,7 @@
   PaivitaNopeusrajoituksetGrid
   (process-event [{nopeusrajoitukset :nopeusrajoitukset} app]
     (log "PaivitaNopeusrajoituksetGrid:" (pr-str nopeusrajoitukset))
-    (assoc-in app [:valittu-ilmoitus :nopeusrajoitukset] nopeusrajoitukset))
+    (assoc-in app [:valittu-ilmoitus ::t/nopeusrajoitukset] (nopeusrajoitukset-grid->kanta* nopeusrajoitukset)))
 
   PaivitaTyoajatGrid
   (process-event [{tyoajat :tyoajat} app]
