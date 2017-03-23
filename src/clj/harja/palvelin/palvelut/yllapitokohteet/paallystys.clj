@@ -326,7 +326,6 @@
              ", päällystyskohde-id:" (:paallystyskohde-id paallystysilmoitus))
 
   (log/debug "Aloitetaan päällystysilmoituksen tallennus")
-  (log/debug "TALLENTELE: " (pr-str paallystysilmoitus))
   (jdbc/with-db-transaction [c db]
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
     (let [paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
