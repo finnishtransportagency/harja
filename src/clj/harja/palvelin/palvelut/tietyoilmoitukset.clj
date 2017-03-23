@@ -67,7 +67,6 @@
 
 (defn hae-tietyoilmoitus [db user tietyoilmoitus-id]
   ;; todo: lisää oikeustarkistus, kun tiedetään miten se pitää tehdä
-  (println "---> tiet" tietyoilmoitus-id)
   (q-tietyoilmoitukset/hae-ilmoitus db tietyoilmoitus-id))
 
 (defn tallenna-tietyoilmoitus [db user ilmoitus]

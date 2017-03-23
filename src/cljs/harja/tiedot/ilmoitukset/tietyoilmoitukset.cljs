@@ -14,7 +14,8 @@
             [harja.domain.tierekisteri :as tr]
             [cljs.pprint :refer [pprint]]
             [harja.ui.viesti :as viesti]
-            [harja.tyokalut.local-storage :refer [local-storage-atom]])
+            [harja.tyokalut.local-storage :refer [local-storage-atom]]
+            [harja.tyokalut.spec-apurit :as spec-apurit])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -92,7 +93,7 @@
                                                            tr-loppuosa
                                                            tr-loppuetaisyys]
                                                     :as yllapitokohde}]
-  {:urakan-nimi-valinta (str urakka-id)
+  { ;; ::t/urakka-id (str urakka-id)
    ::t/yllapitokohde id
    ::t/alku alku
    ::t/loppu loppu
@@ -212,7 +213,8 @@
       (go
         (let [tulos (k/post! :tallenna-tietyoilmoitus
                              (-> ilmoitus
-                                 (dissoc ::t/tyovaiheet)))]
+                                 (dissoc ::t/tyovaiheet)
+                                 (spec-apurit/poista-nil-avaimet)))]
           (if (k/virhe? tulos)
             (viesti/nayta! [:span "Virhe tallennuksessa! Ilmoitusta EI tallennettu"]
                            :danger)
@@ -277,7 +279,6 @@
 
 (defn avaa-tietyoilmoitus
   [tietyoilmoitus-id yllapitokohde]
-  (log "---> avaa-tietyoilmoitus" (pr-str tietyoilmoitus-id) ", " (pr-str yllapitokohde))
   (go
     (let [tietyoilmoitus (if tietyoilmoitus-id
                            (<! (hae-tietyoilmoituksen-tiedot tietyoilmoitus-id))
