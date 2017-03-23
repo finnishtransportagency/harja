@@ -13,7 +13,6 @@
   (q-yllapitokohteet/poista-yllapitokohteen-kohdeosat! db {:id (:id kohde)})
   (mapv
     (fn [alikohde]
-      (log/debug "ALIKOHDE ON: " (pr-str alikohde))
       (let [sijainti (:sijainti alikohde)
             parametrit {:yllapitokohde (:id kohde)
                         :nimi (:nimi alikohde)
