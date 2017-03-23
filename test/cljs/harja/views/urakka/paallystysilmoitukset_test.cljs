@@ -59,32 +59,43 @@
    :bitumi-indeksi nil
    :id 8
    :takuupvm nil
-   :ilmoitustiedot {:osoitteet [{:tr-numero 20
+   :ilmoitustiedot {:osoitteet [{;; Alikohteen tiedot
+                                 :tr-numero 20
                                  :tr-alkuosa 1 :tr-alkuetaisyys 1
                                  :tr-loppuosa 3 :tr-loppuetaisyys 42
                                  :kohdeosa-id 30 :tr-kaista 1 :tr-ajorata 0
                                  :tunnus "p" :nimi "piru 1"
-                                 :tyomenetelma 12
-                                 :toimenpide "eka?"}
-                                {:tr-numero 20
+                                 :toimenpide "eka?"
+                                 ;; Päällystetoimenpiteen tiedot
+                                 :toimenpide-tyomenetelma 12}
+                                {;; Alikohteen tiedot
+                                 :tr-numero 20
                                  :tr-alkuosa 3 :tr-alkuetaisyys 42
                                  :tr-loppuosa 3 :tr-loppuetaisyys 123
-                                 :kohdeosa-id 32 :tr-kaista nil :lisaaineet "huono tyyri"
-                                 :tr-ajorata nil :sideainetyyppi 13 :muotoarvo "1"
-                                 :esiintyma "kovasti kovestä" :pitoisuus 44
-                                 :tunnus "y" :nimi "piru 1.5"
+                                 :kohdeosa-id 32 :tr-kaista nil
+                                 :tr-ajorata nil
                                  :toimenpide "toka!"
-                                 :tyomenetelma 12
+                                 :tunnus "y" :nimi "piru 1.5"
+                                 ;; Päällystetoimenpiteen tiedot
+                                 :toimenpide-tyomenetelma 12
+                                 ; Kiviaines- ja sideainetiedot
+                                 :lisaaineet "huono tyyri"
+                                 :sideainetyyppi 13 :muotoarvo "1"
+                                 :esiintyma "kovasti kovestä" :pitoisuus 44
                                  :km-arvo "9"}
-                                {:tr-numero 20
-                                 :tr-alkuosa 3 :tr-alkuetaisyys 123
+                                {;; Alikohteen tiedot
+                                 :tr-alkuosa 3 :tr-alkuetaisyys 123 :tr-numero 20
                                  :tr-loppuosa 5 :tr-loppuetaisyys 100
                                  :kohdeosa-id 31 :tr-kaista 26 :tr-ajorata 2
-                                 :tunnus "k" :massamenekki 42
-                                 :nimi "piru 2" :raekoko 66
+                                 :tunnus "k"
+                                 :nimi "piru 2"
+                                 :raekoko 6
                                  :paallystetyyppi 1
                                  :toimenpide "ja kolomas"
-                                 :tyomenetelma 12}]
+                                 :tyomenetelma 12
+                                 ;; Päällystetoimenpiteen tiedot
+                                 :massamenekki 42 :toimenpide-raekoko 66
+                                 :toimenpide-paallystetyyppi 1 :toimenpide-tyomenetelma 12}]
                     :alustatoimet []}
    :asiatarkastus {:lisatiedot nil :tarkastusaika nil :tarkastaja nil}
    :arvonvahennykset nil

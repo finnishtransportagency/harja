@@ -4,6 +4,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-kirjausvastauksen-body]]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
+            [taoensso.timbre :as log]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus])
   (:use [slingshot.slingshot :only [throw+ try+]]))
@@ -12,6 +13,7 @@
   (q-yllapitokohteet/poista-yllapitokohteen-kohdeosat! db {:id (:id kohde)})
   (mapv
     (fn [alikohde]
+      (log/debug "ALIKOHDE ON: " (pr-str alikohde))
       (let [sijainti (:sijainti alikohde)
             parametrit {:yllapitokohde (:id kohde)
                         :nimi (:nimi alikohde)
@@ -30,6 +32,24 @@
                         :toimenpide (:toimenpide alikohde)
                         :ulkoinen-id (:ulkoinen-id alikohde)}]
         (assoc alikohde :id (:id (q-yllapitokohteet/luo-yllapitokohdeosa<! db parametrit)))))
+    alikohteet))
+
+(defn paivita-alikohteet-paallystysilmoituksesta [db kohde alikohteet]
+  (q-yllapitokohteet/poista-yllapitokohteen-kohdeosat! db {:id (:id kohde)})
+  (mapv
+    (fn [alikohde]
+      (let [sijainti (:sijainti alikohde)
+            parametrit {:yllapitokohde (:id kohde)
+                        :nimi (:nimi alikohde)
+                        :tunnus (:tunnus alikohde)
+                        :tr_numero (:numero sijainti)
+                        :tr_alkuosa (:aosa sijainti)
+                        :tr_alkuetaisyys (:aet sijainti)
+                        :tr_loppuosa (:losa sijainti)
+                        :tr_loppuetaisyys (:let sijainti)
+                        :ulkoinen-id (:ulkoinen-id alikohde)}]
+        (assoc alikohde :id (:id (q-yllapitokohteet/luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
+                                   db parametrit)))))
     alikohteet))
 
 (defn paivita-kohde [db kohde-id kohteen-sijainti]
