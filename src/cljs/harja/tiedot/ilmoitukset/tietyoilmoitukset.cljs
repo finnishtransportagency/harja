@@ -75,29 +75,41 @@
 (defn- hae-tietyoilmoituksen-tiedot [tietyoilmoitus-id]
   (k/post! :hae-tietyoilmoitus tietyoilmoitus-id))
 
-(defn esitayta-tietyoilmoitus-paallystyskohteella [{:keys [id
-                                                           urakka
-                                                           aikataulu-kohde-alku
-                                                           aikataulu-kohde-valmis
-                                                           tr-loppuosa
-                                                           tr-alkuosa
-                                                           tr-loppuetaisyys
-                                                           tr-alkuetaisyys
-                                                           tr-numero]}]
+(defn- hae-yllapitokohteen-tiedot-tietyoilmoitukselle [yllapitokohde-id]
+  (k/post! :hae-yllapitokohteen-tiedot-tietyoilmoitukselle yllapitokohde-id))
 
-  (let [{:keys [urakoitsija hallintayksikko]}
-        (first (filter #(= (:id %) urakka) (:kayttajan-urakat @tietyoilmoitukset)))]
-    {:urakan-nimi-valinta (str urakka)
-     ::t/yllapitokohde id
-     ::t/alku aikataulu-kohde-alku
-     ::t/loppu aikataulu-kohde-valmis
-     ::t/urakoitsijan-nimi (:nimi urakoitsija)
-     ::t/tilaajan-nimi (:nimi hallintayksikko)
-     ::t/osoite {::tr/tie tr-numero
-                 ::tr/aosa tr-alkuosa
-                 ::tr/aet tr-alkuetaisyys
-                 ::tr/losa tr-loppuosa
-                 ::tr/let tr-loppuetaisyys}}))
+(defn esitayta-tietyoilmoitus-paallystyskohteella [{:keys [id
+                                                           urakka-id
+                                                           alku
+                                                           loppu
+                                                           urakoitsija-nimi
+                                                           urakoitsijan-yhteyshenkilo
+                                                           tilaaja-nimi
+                                                           tilaajan-yhteyshenkilo
+                                                           tr-numero
+                                                           tr-alkuosa
+                                                           tr-alkuetaisyys
+                                                           tr-loppuosa
+                                                           tr-loppuetaisyys]
+                                                    :as yllapitokohde}]
+  {:urakan-nimi-valinta (str urakka-id)
+   ::t/yllapitokohde id
+   ::t/alku alku
+   ::t/loppu loppu
+   ::t/urakoitsijan-nimi urakoitsija-nimi
+   ::t/urakoitsijayhteyshenkilo {::t/etunimi (:etunimi urakoitsijan-yhteyshenkilo)
+                                 ::t/sukunimi (:sukunimi urakoitsijan-yhteyshenkilo)
+                                 ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)
+                                 }
+   ::t/tilaajan-nimi tilaaja-nimi
+   ::t/tilaajayhteyshenkilo {::t/etunimi (:etunimi tilaajan-yhteyshenkilo)
+                             ::t/sukunimi (:sukunimi tilaajan-yhteyshenkilo)
+                             ::t/matkapuhelin (:puhelin urakoitsijan-yhteyshenkilo)}
+   ::t/osoite {::tr/tie tr-numero
+               ::tr/aosa tr-alkuosa
+               ::tr/aet tr-alkuetaisyys
+               ::tr/losa tr-loppuosa
+               ::tr/let tr-loppuetaisyys}})
 
 (defrecord AsetaValinnat [valinnat])
 (defrecord YhdistaValinnat [ulkoisetvalinnat])
@@ -148,7 +160,7 @@
     (assoc app :tietyoilmoitukset nil))
 
   IlmoituksetHaettu
-  (process-event [vastaus {valittu :valittu-ilmoitus :as app}]
+  (process-event [vastaus app]
     (let [ilmoitukset (:tietyoilmoitukset (:tulokset vastaus))]
       (assoc app :tietyoilmoitukset ilmoitukset)))
 
@@ -238,12 +250,11 @@
    ["Siltatyö" "Siltatyö"]
    ["Tasoristeystyö" "Tasoristeystyö"]
    ["Tiemerkintätyö" "Tiemerkintätyö"]
-   ["Viimeistely" "Viimeistely"]
-
    ["Valaistustyö" "Valaistustyö"]])
 
 (def tyotyyppi-vaihtoehdot-muut [["Liittymä- ja kaistajärj." "Liittymä- ja kaistajärjestely"]
                                  ["Silmukka-anturin asent." "Silmukka-anturin asentaminen"]
+                                 ["Viimeistely" "Viimeistely"]
                                  ["Muu, mikä?" "Muu, mikä?"]])
 
 (def tyotyyppi-vaihtoehdot-map (into {} (concat
@@ -266,9 +277,11 @@
 
 (defn avaa-tietyoilmoitus
   [tietyoilmoitus-id yllapitokohde]
+  (log "---> avaa-tietyoilmoitus" (pr-str tietyoilmoitus-id) ", " (pr-str yllapitokohde))
   (go
     (let [tietyoilmoitus (if tietyoilmoitus-id
                            (<! (hae-tietyoilmoituksen-tiedot tietyoilmoitus-id))
-                           (esitayta-tietyoilmoitus-paallystyskohteella yllapitokohde))]
+                           (esitayta-tietyoilmoitus-paallystyskohteella
+                             (<! (hae-yllapitokohteen-tiedot-tietyoilmoitukselle (:id yllapitokohde)))))]
       (swap! tietyoilmoitukset #(assoc % :valittu-ilmoitus tietyoilmoitus
                                          :tallennus-kaynnissa? false)))))
