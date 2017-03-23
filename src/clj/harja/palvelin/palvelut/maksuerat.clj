@@ -60,9 +60,7 @@
   [db user {:keys [sampo maksueranumerot urakka-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-maksuerat user urakka-id)
   (mapv (fn [maksueranumero]
-          (laheta-maksuera-sampoon sampo db user (if (map? maksueranumero) ; lähettäessä kaikki kerralla, parsittava numero
-                                                   (:numero maksueranumero)
-                                                   maksueranumero)))
+          (laheta-maksuera-sampoon sampo db user maksueranumero))
         maksueranumerot))
 
 

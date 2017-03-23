@@ -229,6 +229,6 @@
            :disabled (nil? maksuerarivit)
            :on-click #(do (.preventDefault %)
                           (laheta-maksuerat
-                            (into #{} maksuerarivit-ilman-otsikkoja)
+                            (into #{} (map :numero maksuerarivit-ilman-otsikkoja))
                             urakka-id))}
           "Lähetä kaikki"]]))))
