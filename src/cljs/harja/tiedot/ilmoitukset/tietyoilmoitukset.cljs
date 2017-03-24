@@ -42,6 +42,7 @@
                     :hoitokausi @tiedot-urakka/valittu-hoitokausi}))
 
 
+
 (defonce tietyoilmoitukset
   (local-storage-atom
    :tietyoilmoitukset
@@ -132,6 +133,7 @@
 (defrecord PaivitaTyoajatGrid [tyoajat])
 (defrecord TallennaIlmoitus [ilmoitus])
 (defrecord IlmoitusTallennettu [ilmoitus])
+(defrecord IlmoitusEiTallennettu [virhe])
 
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
   (when haku
@@ -172,16 +174,13 @@
   (vals grid-pinnat))
 
 (defn- nopeusrajoitukset-grid->kanta [ilmoitus]
-  (let [grid-nopeusrajoitukset (:nopeusrajoitukset ilmoitus)
-        kanta-nopeusrajoitukset (nopeusrajoitukset-grid->kanta* grid-nopeusrajoitukset)]
-    (-> ilmoitus (dissoc :nopeusrajoitukset)
-        (assoc ::t/nopeusrajoitukset kanta-nopeusrajoitukset))))
+  (update ilmoitus ::t/nopeusrajoitukset nopeusrajoitukset-grid->kanta*))
 
 (defn- tienpinnat-grid->kanta [ilmoitus]
   {:post [(some? %)]}
   (let [grid-tienpinnat (::t/tienpinnat ilmoitus)
         kanta-tienpinnat (tienpinnat-grid->kanta* grid-tienpinnat)]
-    (log "tienpinnat-grid->kanta: muutetaan tienpinnat, grid oli" (pr-str grid-tienpinnat) "-> kanta" (pr-str kanta-tienpinnat))
+    ;; (log "tienpinnat-grid->kanta: muutetaan tienpinnat, grid oli" (pr-str grid-tienpinnat) "-> kanta" (pr-str kanta-tienpinnat))
     (-> ilmoitus (dissoc ::t/tienpinnat)
         (assoc ::t/tienpinnat kanta-tienpinnat))))
 
@@ -268,20 +267,23 @@
 
   TallennaIlmoitus
   (process-event [{ilmoitus :ilmoitus} app]
-    (let [tulos! (tuck/send-async! ->IlmoitusTallennettu)]
+    (let [tulos! (tuck/send-async! ->IlmoitusTallennettu)
+          fail! (tuck/send-async! ->IlmoitusEiTallennettu)]
       (go
-        (let [tulos (k/post! :tallenna-tietyoilmoitus
-                             (-> ilmoitus
-                                 (dissoc ::t/tyovaiheet)
-                                 nopeusrajoitukset-grid->kanta
-                                 tienpinnat-grid->kanta
-                                 (spec-apurit/poista-nil-avaimet)))]
-          (if (k/virhe? tulos)
-            (viesti/nayta! [:span "Virhe tallennuksessa! Ilmoitusta EI tallennettu"]
-                           :danger)
-            (do
-
-              (tulos! tulos))))))
+        (try
+          (let [tulos (k/post! :tallenna-tietyoilmoitus
+                               (-> ilmoitus
+                                   (dissoc ::t/tyovaiheet)
+                                   nopeusrajoitukset-grid->kanta
+                                   tienpinnat-grid->kanta
+                                   (spec-apurit/poista-nil-avaimet)))]
+            (if (k/virhe? tulos)
+              (fail! tulos)
+              (tulos! tulos)))
+          (catch :default e
+            (log "poikkeus lomakkeen tallennuksessa: " (pr-str e))
+            (fail! nil)
+            (throw e)))))
     (assoc app :tallennus-kaynnissa? true))
 
   IlmoitusTallennettu
@@ -289,7 +291,15 @@
     (viesti/nayta! "Ilmoitus tallennettu!")
     (assoc app
       :tallennus-kaynnissa? false
-      :valittu-ilmoitus nil)))
+      :valittu-ilmoitus nil))
+
+  IlmoitusEiTallennettu
+  (process-event [{virhe :virhe} app]
+    (viesti/nayta! [:span "Virhe tallennuksessa! Ilmoitusta EI tallennettu"]
+                   :danger)
+    (assoc app
+           :tallennus-kaynnissa? false
+           :valittu-ilmoitus nil)))
 
 
 (def tyotyyppi-vaihtoehdot-tienrakennus
